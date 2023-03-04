@@ -3,9 +3,11 @@ import AftermathProvider from "../aftermathProvider/aftermathProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	EventsWithCursor,
+	PoolDepositEvent,
 	PoolDynamicFields,
 	PoolObject,
 	PoolSwapEvent,
+	PoolWithdrawEvent,
 } from "aftermath-sdk";
 import { ApiEventsBody } from "../types/apiTypes";
 import { Pool } from "./pool";
@@ -50,6 +52,32 @@ export class Pools extends AftermathProvider {
 	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
+
+	public async getDepositEvents(
+		cursor?: EventId,
+		limit?: number
+	): Promise<EventsWithCursor<PoolDepositEvent>> {
+		return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
+			"events/deposits",
+			{
+				cursor,
+				limit,
+			}
+		);
+	}
+
+	public async getWithdrawEvents(
+		cursor?: EventId,
+		limit?: number
+	): Promise<EventsWithCursor<PoolWithdrawEvent>> {
+		return this.fetchApi<
+			EventsWithCursor<PoolWithdrawEvent>,
+			ApiEventsBody
+		>("events/withdraws", {
+			cursor,
+			limit,
+		});
+	}
 
 	public async getTradeEvents(
 		cursor?: EventId,
