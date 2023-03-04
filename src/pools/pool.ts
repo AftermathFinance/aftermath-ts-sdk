@@ -10,16 +10,13 @@ import {
 	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
-	indicesPoolDepositLpMintAmount,
-	indicesPoolSpotPrice,
-	indicesPoolSwapAmountInGivenOut,
-	indicesPoolSwapAmountOutGivenIn,
 } from "aftermath-sdk";
 import {
 	ApiPoolDepositBody,
 	ApiPoolSwapBody,
 	ApiPoolWithdrawBody,
 } from "../types/apiTypes";
+import { Cmmm } from "./utils/cmmm";
 
 export class Pool extends AftermathProvider {
 	constructor(
@@ -100,7 +97,7 @@ export class Pool extends AftermathProvider {
 		coinInAmount: Balance,
 		coinOut: CoinType
 	): Balance {
-		return indicesPoolSwapAmountOutGivenIn(
+		return Cmmm.swapAmountOutGivenIn(
 			this.pool,
 			this.dynamicFields,
 			{
@@ -116,7 +113,7 @@ export class Pool extends AftermathProvider {
 		coinOutAmount: Balance,
 		coinIn: CoinType
 	): Balance {
-		return indicesPoolSwapAmountInGivenOut(
+		return Cmmm.swapAmountInGivenOut(
 			this.pool,
 			this.dynamicFields,
 			{
@@ -128,16 +125,11 @@ export class Pool extends AftermathProvider {
 	}
 
 	public getSpotPrice(coinIn: CoinType, coinOut: CoinType): number {
-		return indicesPoolSpotPrice(
-			this.pool,
-			this.dynamicFields,
-			coinIn,
-			coinOut
-		);
+		return Cmmm.spotPrice(this.pool, this.dynamicFields, coinIn, coinOut);
 	}
 
 	public getDepositLpMintAmount(coinsToBalance: CoinsToBalance): Balance {
-		return indicesPoolDepositLpMintAmount(
+		return Cmmm.depositLpMintAmount(
 			this.pool,
 			this.dynamicFields,
 			coinsToBalance
