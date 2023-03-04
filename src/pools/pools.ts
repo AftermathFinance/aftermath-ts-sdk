@@ -10,13 +10,6 @@ export class Pools extends AftermathProvider {
 		super(network, "indices/pools");
 	}
 
-	callFetchApi<Output, BodyType = undefined>(
-		url: string,
-		body?: BodyType | undefined
-	): Promise<Output> {
-		return this.fetchApi(url, body);
-	}
-
 	public async getPool(poolObjectId: ObjectId): Promise<Pool> {
 		const pool = await this.fetchApi<PoolObject>(`${poolObjectId}`);
 		return new Pool(this.network, pool);
