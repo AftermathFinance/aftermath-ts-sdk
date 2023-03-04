@@ -5,19 +5,49 @@ import {
 	Balance,
 	CoinType,
 	CoinsToBalance,
+	IndicesPoolDataPoint,
+	IndicesPoolVolumeDataTimeframeKey,
+	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
+	indicesPoolDepositLpMintAmount,
+	indicesPoolSpotPrice,
+	indicesPoolSwapAmountInGivenOut,
+	indicesPoolSwapAmountOutGivenIn,
 } from "aftermath-sdk";
-import { ApiPoolDepositBody, ApiPoolSwapBody } from "../types/apiTypes";
+import {
+	ApiPoolDepositBody,
+	ApiPoolSwapBody,
+	ApiPoolWithdrawBody,
+} from "../types/apiTypes";
 
 export class Pool extends AftermathProvider {
 	constructor(
 		public readonly network: SuiNetwork,
-		public readonly pool: PoolObject
+		public readonly pool: PoolObject,
+		public readonly dynamicFields: PoolDynamicFields
 	) {
 		super(network, `indices/pools/${pool.objectId}`);
 		this.pool = pool;
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Stats
+	/////////////////////////////////////////////////////////////////////
+
+	public async getStats(): Promise<PoolStats> {
+		return this.fetchApi("stats");
+	}
+
+	public async getVolume(
+		timeframe: IndicesPoolVolumeDataTimeframeKey
+	): Promise<IndicesPoolDataPoint[]> {
+		return this.fetchApi(`volume/${timeframe}`);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
 
 	public async getDepositTransactions(
 		walletAddress: SuiAddress,
@@ -28,6 +58,21 @@ export class Pool extends AftermathProvider {
 			{
 				walletAddress,
 				depositCoinAmounts,
+			}
+		);
+	}
+
+	public async getWithdrawTransactions(
+		walletAddress: SuiAddress,
+		withdrawCoinAmounts: CoinsToBalance,
+		withdrawLpTotal: Balance
+	): Promise<SignableTransaction[]> {
+		return this.fetchApi<SignableTransaction[], ApiPoolWithdrawBody>(
+			"withdraw",
+			{
+				walletAddress,
+				withdrawCoinAmounts,
+				withdrawLpTotal,
 			}
 		);
 	}
@@ -46,7 +91,56 @@ export class Pool extends AftermathProvider {
 		});
 	}
 
-	public async getStats(): Promise<PoolStats> {
-		return this.fetchApi("stats");
+	/////////////////////////////////////////////////////////////////////
+	//// Calculations
+	/////////////////////////////////////////////////////////////////////
+
+	public getTradeAmountOut(
+		coinIn: CoinType,
+		coinInAmount: Balance,
+		coinOut: CoinType
+	): Balance {
+		return indicesPoolSwapAmountOutGivenIn(
+			this.pool,
+			this.dynamicFields,
+			{
+				coin: coinIn,
+				balance: coinInAmount,
+			},
+			coinOut
+		);
+	}
+
+	public getTradeAmountIn(
+		coinOut: CoinType,
+		coinOutAmount: Balance,
+		coinIn: CoinType
+	): Balance {
+		return indicesPoolSwapAmountInGivenOut(
+			this.pool,
+			this.dynamicFields,
+			{
+				coin: coinOut,
+				balance: coinOutAmount,
+			},
+			coinIn
+		);
+	}
+
+	public getSpotPrice(coinIn: CoinType, coinOut: CoinType): number {
+		return indicesPoolSpotPrice(
+			this.pool,
+			this.dynamicFields,
+			coinIn,
+			coinOut
+		);
+	}
+
+	public getDepositLpMintAmount(coinsToBalance: CoinsToBalance): Balance {
+		return indicesPoolDepositLpMintAmount(
+			this.pool,
+			this.dynamicFields,
+			coinsToBalance
+		);
 	}
 }
