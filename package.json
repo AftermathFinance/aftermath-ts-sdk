@@ -2,8 +2,8 @@
 	"name": "aftermath-ts-sdk",
 	"version": "0.0.1",
 	"description": "Aftermath SDK",
-	"main": "dist/src/index.js",
-	"types": "dist/src/index.d.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"scripts": {
 		"clean": "rm -rf ./dist",
 		"build": "npm run clean && tsc",
@@ -21,7 +21,7 @@
 	"author": "Aftermath",
 	"license": "Apache-2.0",
 	"files": [
-		"dist/**/*"
+		"dist/*"
 	],
 	"bugs": {
 		"url": "https://github.com/AftermathFinance/aftermath-ts-sdk/issues"

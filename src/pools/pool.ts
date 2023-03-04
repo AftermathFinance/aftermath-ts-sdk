@@ -1,5 +1,5 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import { AftermathProvider } from "../provider/provider";
+import AftermathProvider from "../aftermathProvider/aftermathProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	Balance,
@@ -15,7 +15,7 @@ export class Pool extends AftermathProvider {
 		public readonly network: SuiNetwork,
 		public readonly pool: PoolObject
 	) {
-		super(network, `/indices/pools/${pool.objectId}`);
+		super(network, `indices/pools/${pool.objectId}`);
 		this.pool = pool;
 	}
 

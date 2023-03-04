@@ -1,13 +1,24 @@
 import { Url } from "aftermath-sdk";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 
-export abstract class AftermathProvider {
+export default abstract class AftermathProvider {
+	private readonly baseUrl: Url;
+
 	constructor(
 		public readonly network: SuiNetwork,
 		private readonly urlPrefix: Url = ""
 	) {
 		this.network = network;
 		this.urlPrefix = urlPrefix;
+		this.baseUrl = AftermathProvider.baseUrlForNetwork(network);
+	}
+
+	private static baseUrlForNetwork(network: SuiNetwork): Url {
+		if (network === "DEVNET") return "https://devnet.aftermath.finance";
+		if (network === "TESTNET") return "https://testnet.aftermath.finance";
+
+		// LOCAL
+		return "http://localhost:3000";
 	}
 
 	private static isNumber = (str: string): boolean =>
@@ -41,17 +52,14 @@ export abstract class AftermathProvider {
 		return output as OutputType;
 	}
 
-	private static urlForApiCall = (url: string, network: SuiNetwork): Url =>
-		`/api/${network}/${url[0] === "/" ? url.replace("/", "") : url}`;
+	private urlForApiCall = (url: string): Url =>
+		`${this.baseUrl}/api/${this.network}/${this.urlPrefix}/${url}`;
 
 	protected async fetchApi<Output, BodyType = undefined>(
 		url: Url,
 		body?: BodyType
 	): Promise<Output> {
-		const apiCallUrl = AftermathProvider.urlForApiCall(
-			this.urlPrefix + url,
-			this.network
-		);
+		const apiCallUrl = this.urlForApiCall(url);
 		const response = await (body === undefined
 			? fetch(apiCallUrl)
 			: fetch(apiCallUrl, {

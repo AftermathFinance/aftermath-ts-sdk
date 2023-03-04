@@ -1,13 +1,13 @@
 import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
-import { AftermathProvider } from "../provider/provider";
+import AftermathProvider from "../aftermathProvider/aftermathProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import { EventsWithCursor, PoolObject, PoolSwapEvent } from "aftermath-sdk";
-import { Pool } from "./pool";
 import { ApiEventsBody } from "../types/apiTypes";
+import { Pool } from "./pool";
 
 export class Pools extends AftermathProvider {
 	constructor(public readonly network: SuiNetwork) {
-		super(network, "/indices/pools/");
+		super(network, "indices/pools");
 	}
 
 	callFetchApi<Output, BodyType = undefined>(
