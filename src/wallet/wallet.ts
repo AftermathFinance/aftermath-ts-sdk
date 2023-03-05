@@ -1,12 +1,12 @@
 import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import ApiProvider from "../apiProvider/apiProvider";
-import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	Balance,
 	CoinType,
 	CoinWithBalance,
 	ApiTransactionsBody,
 	TransactionsWithCursor,
+	SuiNetwork,
 } from "../types";
 
 export class Wallet extends ApiProvider {

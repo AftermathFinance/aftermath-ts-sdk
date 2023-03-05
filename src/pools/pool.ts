@@ -1,6 +1,5 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import ApiProvider from "../apiProvider/apiProvider";
-import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	ApiPoolDepositBody,
 	ApiPoolSwapBody,
@@ -13,6 +12,7 @@ import {
 	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
+	SuiNetwork,
 } from "../types";
 import { Cmmm } from "./utils/cmmm";
 
@@ -136,4 +136,25 @@ export class Pool extends ApiProvider {
 			coinsToBalance
 		);
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public weightForCoin = (coin: CoinType) => {
+		const coinIndex = this.pool.fields.coins.findIndex(
+			(aCoin) => aCoin === coin
+		);
+		if (coinIndex < 0) throw new Error("coin not found in pool object");
+		return this.pool.fields.weights[coinIndex];
+	};
+
+	public balanceForCoin = (coin: CoinType) => {
+		const poolBalance = this.dynamicFields.amountFields.find(
+			(field) => field.coin === coin
+		);
+		if (!poolBalance)
+			throw new Error("coin not found in pool dynamic fields");
+		return poolBalance.value;
+	};
 }

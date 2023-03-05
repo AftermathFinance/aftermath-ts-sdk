@@ -1,10 +1,10 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import ApiProvider from "../apiProvider/apiProvider";
-import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	ApiCancelDelegationRequestBody,
 	ApiRequestWithdrawDelegationBody,
 	DelegatedStakePosition,
+	SuiNetwork,
 } from "../types";
 
 export class StakePosition extends ApiProvider {

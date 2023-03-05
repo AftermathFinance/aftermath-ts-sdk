@@ -1,6 +1,5 @@
 import { EventId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import ApiProvider from "../apiProvider/apiProvider";
-import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	ApiEventsBody,
 	ApiRequestAddDelegationBody,
@@ -12,6 +11,7 @@ import {
 	StakeValidator,
 	StakeRequestWithdrawDelegationEvent,
 	StakingStats,
+	SuiNetwork,
 } from "../types";
 import { StakePosition } from "./stakePosition";
 

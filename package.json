@@ -29,7 +29,7 @@
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
 		"@mysten/sui.js": "^0.29.1",
-		"aftermath-sdk": "file:../aftermath-sdk"
+		"dayjs": "^1.11.7"
 	},
 	"devDependencies": {
 		"prettier": "^2.8.1",
