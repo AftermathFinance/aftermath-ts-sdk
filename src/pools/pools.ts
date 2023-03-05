@@ -17,7 +17,7 @@ import {
 	SuiNetwork,
 } from "../types";
 import { Pool } from "./pool";
-import { Coins } from "../coin/coin";
+import { Coin } from "../coin/coin";
 import { Helpers } from "../utils/helpers";
 
 export class Pools extends ApiProvider {
@@ -175,7 +175,7 @@ export class Pools extends ApiProvider {
 	public static findPoolForLpCoin = (lpCoin: CoinType, pools: PoolObject[]) =>
 		pools.find((pool) => {
 			return pool.fields.lpType.includes(
-				Coins.coinTypeSymbol(Coins.extractInnerCoinType(lpCoin))
+				Coin.coinTypeSymbol(Coin.extractInnerCoinType(lpCoin))
 			);
 		});
 
@@ -210,7 +210,7 @@ export class Pools extends ApiProvider {
 		Number(swapFee) / 10 ** Pools.constants.swapFeeDecimals;
 
 	public static normalizeLpCoinBalance = (balance: number) =>
-		Coins.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
+		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
 
 	public static normalizeLpCoinType = (lpCoinType: CoinType) => {
 		return `0x${lpCoinType.replaceAll("<", "<0x")}`;
@@ -221,7 +221,7 @@ export class Pools extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////
 
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
-		Coins.coinTypeSymbol(Coins.coinTypeFromKeyType(lpCoinType))
+		Coin.coinTypeSymbol(Coin.coinTypeFromKeyType(lpCoinType))
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")

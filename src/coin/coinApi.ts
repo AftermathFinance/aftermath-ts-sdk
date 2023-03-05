@@ -1,8 +1,8 @@
 import { CoinMetadata } from "@mysten/sui.js";
 import { Pools } from "../pools/pools";
-import { Coins } from "./coins";
+import { Coin } from "./coin";
 
-export class CoinsApi {
+export class CoinApi {
 	/////////////////////////////////////////////////////////////////////
 	//// API
 	/////////////////////////////////////////////////////////////////////
@@ -28,8 +28,9 @@ export class CoinsApi {
 				};
 			}
 
-			const symbol = Coins.coinTypeSymbol(coin);
-			const packageName = Coins.coinTypePackageName(coin);
+			const coinClass = new Coin(coin);
+			const symbol = coinClass.coinTypeSymbol;
+			const packageName = coinClass.coinTypePackageName;
 			return {
 				symbol: symbol.toUpperCase(),
 				id: null,

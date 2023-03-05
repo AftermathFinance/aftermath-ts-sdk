@@ -1,3 +1,4 @@
+import { Coin as SuiCoin } from "@mysten/sui.js";
 import {
 	Balance,
 	CoinDecimal,
@@ -8,7 +9,59 @@ import {
 	KeyType,
 } from "../types";
 
-export class Coins {
+export class Coin extends SuiCoin {
+	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly coinTypePackageName: string;
+	public readonly coinTypeSymbol: string;
+
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
+	constructor(public readonly coinType: CoinType) {
+		super();
+		this.coinType = coinType;
+		this.coinTypePackageName = this.getCoinTypePackageName();
+		this.coinTypeSymbol = Coin.getCoinSymbol(coinType);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Coin Type
+	/////////////////////////////////////////////////////////////////////
+
+	// TODO: remove in favor of sui js implementation Coin.getCoinStructTag() if it is the same
+	private getCoinTypePackageName = (): string => {
+		Coin.getCoinStructTag;
+		const splitCoin = this.coinType.split("::");
+		const packageName = splitCoin[splitCoin.length - 2];
+		if (!packageName) throw new Error("no coin type package name found");
+		return packageName;
+	};
+
+	// TODO: remove in favor of sui js implementation
+	private getCoinTypeSymbol = (): string => {
+		const startIndex = this.coinType.lastIndexOf("::") + 2;
+		if (startIndex <= 1) throw new Error("no coin type found");
+
+		const foundEndIndex = this.coinType.indexOf(">");
+		const endIndex =
+			foundEndIndex < 0 ? this.coinType.length : foundEndIndex;
+
+		const displayType = this.coinType.slice(startIndex, endIndex);
+		return displayType;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Static Methods
+	/////////////////////////////////////////////////////////////////////
+
 	/////////////////////////////////////////////////////////////////////
 	//// Coin Type
 	/////////////////////////////////////////////////////////////////////
@@ -17,24 +70,6 @@ export class Coins {
 		const startIndex = keyType.lastIndexOf("<") + 1;
 		const endIndex = keyType.indexOf(">", startIndex);
 		return keyType.slice(startIndex, endIndex);
-	};
-
-	public static coinTypePackageName = (coinType: CoinType): string => {
-		const splitCoin = coinType.split("::");
-		const packageName = splitCoin[splitCoin.length - 2];
-		if (!packageName) throw new Error("no coin type package name found");
-		return packageName;
-	};
-
-	public static coinTypeSymbol = (coinType: CoinType): string => {
-		const startIndex = coinType.lastIndexOf("::") + 2;
-		if (startIndex <= 1) throw new Error("no coin type found");
-
-		const foundEndIndex = coinType.indexOf(">");
-		const endIndex = foundEndIndex < 0 ? coinType.length : foundEndIndex;
-
-		const displayType = coinType.slice(startIndex, endIndex);
-		return displayType;
 	};
 
 	public static extractInnerCoinType = (coin: CoinType) =>
@@ -111,6 +146,6 @@ export class Coins {
 		decimals: number,
 		price: number
 	) => {
-		return Coins.balanceWithDecimals(amount, decimals) * price;
+		return Coin.balanceWithDecimals(amount, decimals) * price;
 	};
 }

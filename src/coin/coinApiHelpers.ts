@@ -1,5 +1,4 @@
 import {
-	Coin,
 	GetObjectDataResponse,
 	getObjectId,
 	ObjectId,
@@ -8,9 +7,9 @@ import {
 } from "@mysten/sui.js";
 import { Balance, CoinDecimal, CoinType, GasBudget } from "../types";
 import { Helpers } from "../utils/helpers";
-import { Coins } from "./coins";
+import { Coin } from "./coin";
 
-export class CoinsApiHelpers {
+export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
@@ -51,7 +50,7 @@ export class CoinsApiHelpers {
 	}> => {
 		// i. obtain object ids of coin to swap from
 		const response =
-			await CoinsApiHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await CoinApiHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				coin,
 				coinAmount
@@ -62,7 +61,7 @@ export class CoinsApiHelpers {
 		// ii. the user doesn't have a coin of type `coin` with exact
 		// value of `balance`, so we need to create it
 		const joinAndSplitTransactions =
-			CoinsApiHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			CoinApiHelpers.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				coin,
@@ -89,22 +88,22 @@ export class CoinsApiHelpers {
 		coin: CoinType,
 		amount: number
 	) => {
-		const decimals = await CoinsApiHelpers.fetchCoinDecimals(coin);
-		return Coins.normalizeBalance(amount, decimals);
+		const decimals = await CoinApiHelpers.fetchCoinDecimals(coin);
+		return Coin.normalizeBalance(amount, decimals);
 	};
 
 	public static fetchCoinDecimalsApplyToBalance = async (
 		coin: CoinType,
 		balance: Balance
 	) => {
-		const decimals = await CoinsApiHelpers.fetchCoinDecimals(coin);
-		return Coins.balanceWithDecimals(balance, decimals);
+		const decimals = await CoinApiHelpers.fetchCoinDecimals(coin);
+		return Coin.balanceWithDecimals(balance, decimals);
 	};
 
 	public static fetchCoinsToDecimals = async (coins: CoinType[]) => {
 		let allDecimals: number[] = [];
 		for (const coin of coins) {
-			const decimals = await CoinsApiHelpers.fetchCoinDecimals(coin);
+			const decimals = await CoinApiHelpers.fetchCoinDecimals(coin);
 			allDecimals.push(decimals);
 		}
 
@@ -122,7 +121,7 @@ export class CoinsApiHelpers {
 		const normalizedAmounts = await Promise.all(
 			coins.map(
 				async (coin, index) =>
-					await CoinsApiHelpers.fetchCoinDecimalsNormalizeBalance(
+					await CoinApiHelpers.fetchCoinDecimalsNormalizeBalance(
 						coin,
 						amounts[index]
 					)
@@ -145,7 +144,7 @@ export class CoinsApiHelpers {
 	> {
 		const [coinsToPrices, coinsToDecimals] = await Promise.all([
 			fetchCoinsToPythPrices(coins),
-			CoinsApiHelpers.fetchCoinsToDecimals(coins),
+			CoinApiHelpers.fetchCoinsToDecimals(coins),
 		]);
 
 		const coinsToDecimalsAndPrices = Object.keys(coinsToPrices).reduce(
@@ -166,7 +165,7 @@ export class CoinsApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Transactions
+	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
 	private static coinJoinVecTransaction = (
@@ -255,7 +254,7 @@ export class CoinsApiHelpers {
 		//       and needs to remove `coinBalance` - `amount` from the coin.
 		if (coinBalance > amount)
 			return [
-				CoinsApiHelpers.coinSplitTransaction(
+				CoinApiHelpers.coinSplitTransaction(
 					coinId,
 					coinType,
 					coinBalance - amount
@@ -270,7 +269,7 @@ export class CoinsApiHelpers {
 		//       these coins need to be joined.
 		if (joinedBalance === amount)
 			return [
-				CoinsApiHelpers.coinJoinVecTransaction(
+				CoinApiHelpers.coinJoinVecTransaction(
 					coinId,
 					coinIdsToJoin,
 					coinType
@@ -281,7 +280,7 @@ export class CoinsApiHelpers {
 		//       `amount`, so these coins need to be joined and `joinedBalance` - `amount`
 		//       needs to be removed from the coin.
 		return [
-			CoinsApiHelpers.coinJoinVecAndSplitTransaction(
+			CoinApiHelpers.coinJoinVecAndSplitTransaction(
 				coinId,
 				coinIdsToJoin,
 				coinType,
