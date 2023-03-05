@@ -20,6 +20,7 @@ import {
 	ApiCancelDelegationRequestBody,
 	StakingStats,
 } from "../types";
+import { StakePosition } from "./stakePosition";
 
 export class Staking extends AftermathProvider {
 	constructor(public readonly network: SuiNetwork) {
@@ -30,10 +31,16 @@ export class Staking extends AftermathProvider {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public async getDelegatedStakePositions(
+	public async getStakePositions(
 		walletAddress: SuiAddress
-	): Promise<DelegatedStakePosition[]> {
-		return this.fetchApi(`${walletAddress}/stakes`);
+	): Promise<StakePosition[]> {
+		const delegatedStakePositions = this.fetchApi<DelegatedStakePosition[]>(
+			`${walletAddress}/stakes`
+		);
+		return (await delegatedStakePositions).map(
+			(position) =>
+				new StakePosition(this.network, walletAddress, position)
+		);
 	}
 
 	public async getStakeValidators(): Promise<StakeValidator[]> {
@@ -107,38 +114,6 @@ export class Staking extends AftermathProvider {
 			walletAddress,
 			validatorAddress,
 			coinAmount,
-		});
-	}
-
-	public async getRequestWithdrawDelegationTransactions(
-		walletAddress: SuiAddress,
-		principalAmount: Balance,
-		stakedSuiObjectId: ObjectId,
-		delegationObjectId: ObjectId
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiRequestWithdrawDelegationBody
-		>("transactions/requestWithdrawDelegation", {
-			walletAddress,
-			principalAmount,
-			stakedSuiObjectId,
-			delegationObjectId,
-		});
-	}
-
-	public async getCancelDelegationRequestTransactions(
-		walletAddress: SuiAddress,
-		principalAmount: Balance,
-		stakedSuiObjectId: ObjectId
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiCancelDelegationRequestBody
-		>("transactions/cancelDelegationRequest", {
-			walletAddress,
-			principalAmount,
-			stakedSuiObjectId,
 		});
 	}
 }
