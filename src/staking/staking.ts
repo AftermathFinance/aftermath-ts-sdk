@@ -13,7 +13,7 @@ import { ApiEventsBody, ApiRequestAddDelegationBody } from "../types/apiTypes";
 export class Staking extends AftermathProvider {
 	constructor(public readonly network: SuiNetwork) {
 		// TODO: change to staking
-		super(network, "stake");
+		super(network, "staking");
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -23,7 +23,7 @@ export class Staking extends AftermathProvider {
 	public async getDelegatedStakePositions(
 		walletAddress: SuiAddress
 	): Promise<DelegatedStakePosition[]> {
-		return this.fetchApi(`stakes/${walletAddress}`);
+		return this.fetchApi(`${walletAddress}/stakes`);
 	}
 
 	public async getStakeValidators(): Promise<StakeValidator[]> {
@@ -45,7 +45,7 @@ export class Staking extends AftermathProvider {
 		return this.fetchApi<
 			EventsWithCursor<StakeRequestAddDelegationEvent>,
 			ApiEventsBody
-		>("events/stakes", {
+		>("events/addStake", {
 			cursor,
 			limit,
 		});
@@ -63,8 +63,9 @@ export class Staking extends AftermathProvider {
 		return this.fetchApi<
 			SignableTransaction[],
 			ApiRequestAddDelegationBody
-		>(`requestAddDelegation/${validatorAddress}`, {
+		>("transactions/requestAddDelegation", {
 			walletAddress,
+			validatorAddress,
 			coinAmount,
 		});
 	}

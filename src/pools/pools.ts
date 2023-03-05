@@ -14,7 +14,7 @@ import { Pool } from "./pool";
 
 export class Pools extends AftermathProvider {
 	constructor(public readonly network: SuiNetwork) {
-		super(network, "indices/pools");
+		super(network, "pools");
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ export class Pools extends AftermathProvider {
 		limit?: number
 	): Promise<EventsWithCursor<PoolDepositEvent>> {
 		return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
-			"events/deposits",
+			"events/deposit",
 			{
 				cursor,
 				limit,
@@ -73,7 +73,7 @@ export class Pools extends AftermathProvider {
 		return this.fetchApi<
 			EventsWithCursor<PoolWithdrawEvent>,
 			ApiEventsBody
-		>("events/withdraws", {
+		>("events/withdraw", {
 			cursor,
 			limit,
 		});
@@ -84,7 +84,7 @@ export class Pools extends AftermathProvider {
 		limit?: number
 	): Promise<EventsWithCursor<PoolSwapEvent>> {
 		return this.fetchApi<EventsWithCursor<PoolSwapEvent>, ApiEventsBody>(
-			"events/swaps",
+			"events/trade",
 			{
 				cursor,
 				limit,

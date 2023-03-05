@@ -24,7 +24,7 @@ export class Pool extends AftermathProvider {
 		public readonly pool: PoolObject,
 		public readonly dynamicFields: PoolDynamicFields
 	) {
-		super(network, `indices/pools/${pool.objectId}`);
+		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;
 	}
 
@@ -51,7 +51,7 @@ export class Pool extends AftermathProvider {
 		depositCoinAmounts: CoinsToBalance
 	): Promise<SignableTransaction[]> {
 		return this.fetchApi<SignableTransaction[], ApiPoolDepositBody>(
-			"deposit",
+			"transactions/deposit",
 			{
 				walletAddress,
 				depositCoinAmounts,
@@ -65,7 +65,7 @@ export class Pool extends AftermathProvider {
 		withdrawLpTotal: Balance
 	): Promise<SignableTransaction[]> {
 		return this.fetchApi<SignableTransaction[], ApiPoolWithdrawBody>(
-			"withdraw",
+			"transactions/withdraw",
 			{
 				walletAddress,
 				withdrawCoinAmounts,
@@ -80,12 +80,15 @@ export class Pool extends AftermathProvider {
 		fromCoinAmount: Balance,
 		toCoin: CoinType
 	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolSwapBody>("swap", {
-			walletAddress,
-			fromCoin,
-			fromCoinAmount,
-			toCoin,
-		});
+		return this.fetchApi<SignableTransaction[], ApiPoolSwapBody>(
+			"transactions/trade",
+			{
+				walletAddress,
+				fromCoin,
+				fromCoinAmount,
+				toCoin,
+			}
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////

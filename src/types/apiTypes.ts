@@ -37,17 +37,20 @@ export interface ApiUnstakeBody {
 export interface ApiRequestAddDelegationBody {
 	walletAddress: SuiAddress;
 	coinAmount: Balance;
+	validatorAddress: SuiAddress;
 }
 
 export interface ApiRequestWithdrawDelegationBody {
 	walletAddress: SuiAddress;
 	principalAmount: Balance;
+	stakedSuiObjectId: ObjectId;
 	delegationObjectId: ObjectId;
 }
 
 export interface ApiCancelDelegationRequestBody {
 	walletAddress: SuiAddress;
 	principalAmount: Balance;
+	stakedSuiObjectId: ObjectId;
 }
 
 export interface ApiStakeCapyBody {
@@ -59,7 +62,8 @@ export interface ApiUnstakeCapyBody {
 }
 
 export interface ApiWithdrawCapyFeesAmountBody {
-	amount: Balance;
+	amount: Balance | undefined;
+	stakingReceiptObjectId: ObjectId;
 }
 
 export interface ApiBreedCapyBody {
@@ -128,3 +132,7 @@ export type ApiTradeTransactionsBody =
 			path: IndicesRouterPath;
 			fromCoinId: ObjectId;
 	  };
+
+export interface ApiFaucetRequestBody {
+	coin: CoinType;
+}
