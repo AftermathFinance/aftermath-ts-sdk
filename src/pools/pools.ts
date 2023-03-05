@@ -17,6 +17,8 @@ import {
 	SuiNetwork,
 } from "../types";
 import { Pool } from "./pool";
+import { Coins } from "../coin/coin";
+import { Helpers } from "../utils/helpers";
 
 export class Pools extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////
@@ -173,7 +175,7 @@ export class Pools extends ApiProvider {
 	public static findPoolForLpCoin = (lpCoin: CoinType, pools: PoolObject[]) =>
 		pools.find((pool) => {
 			return pool.fields.lpType.includes(
-				coinTypeSymbol(extractInnerCoinType(lpCoin))
+				Coins.coinTypeSymbol(Coins.extractInnerCoinType(lpCoin))
 			);
 		});
 
@@ -208,7 +210,7 @@ export class Pools extends ApiProvider {
 		Number(swapFee) / 10 ** Pools.constants.swapFeeDecimals;
 
 	public static normalizeLpCoinBalance = (balance: number) =>
-		normalizeBalance(balance, Pools.constants.lpCoinDecimals);
+		Coins.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
 
 	public static normalizeLpCoinType = (lpCoinType: CoinType) => {
 		return `0x${lpCoinType.replaceAll("<", "<0x")}`;
@@ -219,10 +221,10 @@ export class Pools extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////
 
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
-		coinTypeSymbol(coinTypeFromKeyType(lpCoinType))
+		Coins.coinTypeSymbol(Coins.coinTypeFromKeyType(lpCoinType))
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")
-			.map((word) => capitalizeOnlyFirstLetter(word))
+			.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
 			.join(" ") + " LP";
 }
