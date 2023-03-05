@@ -1,5 +1,4 @@
-import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
-import { Url } from "../types";
+import { SuiNetwork, SuiNetworkOrNone, Url } from "../types";
 
 export default abstract class ApiProvider {
 	private readonly baseUrl: Url;
@@ -9,12 +8,13 @@ export default abstract class ApiProvider {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
-		public readonly network: SuiNetwork,
+		public readonly network: SuiNetworkOrNone,
 		private readonly urlPrefix: Url = ""
 	) {
 		this.network = network;
 		this.urlPrefix = urlPrefix;
-		this.baseUrl = ApiProvider.baseUrlForNetwork(network);
+		this.baseUrl =
+			network === "NONE" ? "" : ApiProvider.baseUrlForNetwork(network);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -70,6 +70,9 @@ export default abstract class ApiProvider {
 		url: Url,
 		body?: BodyType
 	): Promise<Output> {
+		if (this.network === "NONE")
+			throw new Error("network set to NONE, unable to fetch data");
+
 		const apiCallUrl = this.urlForApiCall(url);
 		const response = await (body === undefined
 			? fetch(apiCallUrl)

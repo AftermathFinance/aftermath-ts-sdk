@@ -1,7 +1,6 @@
 import { SignableTransaction } from "@mysten/sui.js";
 import ApiProvider from "../apiProvider/apiProvider";
-import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
-import { CoinType, ApiFaucetRequestBody } from "../types";
+import { CoinType, ApiFaucetRequestBody, SuiNetwork } from "../types";
 
 export class Faucet extends ApiProvider {
 	constructor(public readonly network: SuiNetwork) {

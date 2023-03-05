@@ -8,6 +8,7 @@ import { Balance } from "./generalTypes";
 // TODO: change this once mainnet is live
 // also is this deprecated within mysten's sui js ?
 export type SuiNetwork = "DEVNET" | "TESTNET" | "LOCAL";
+export type SuiNetworkOrNone = SuiNetwork | "NONE";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects

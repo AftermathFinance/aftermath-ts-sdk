@@ -12,13 +12,13 @@ import {
 	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
-	SuiNetwork,
+	SuiNetworkOrNone,
 } from "../types";
-import { Cmmm } from "./utils/cmmm";
+import { CmmmCalculations } from "./utils/cmmmCalculations";
 
 export class Pool extends ApiProvider {
 	constructor(
-		public readonly network: SuiNetwork,
+		public readonly network: SuiNetworkOrNone,
 		public readonly pool: PoolObject,
 		public readonly dynamicFields: PoolDynamicFields
 	) {
@@ -93,50 +93,80 @@ export class Pool extends ApiProvider {
 	//// Calculations
 	/////////////////////////////////////////////////////////////////////
 
-	public getTradeAmountOut(
+	public getTradeAmountOut = (
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType
-	): Balance {
-		return Cmmm.swapAmountOutGivenIn(
-			this.pool,
-			this.dynamicFields,
-			{
-				coin: coinIn,
-				balance: coinInAmount,
-			},
-			coinOut
-		);
-	}
+	) => {
+		const coinInPoolBalance = this.balanceForCoin(coinIn);
+		const coinOutPoolBalance = this.balanceForCoin(coinOut);
+		const coinInWeight = this.weightForCoin(coinIn);
+		const coinOutWeight = this.weightForCoin(coinOut);
 
-	public getTradeAmountIn(
+		return CmmmCalculations.calcOutGivenIn(
+			coinInPoolBalance,
+			coinInWeight,
+			coinOutPoolBalance,
+			coinOutWeight,
+			coinInAmount,
+			this.pool.fields.swapFee
+		);
+	};
+
+	public getTradeAmountIn = (
 		coinOut: CoinType,
 		coinOutAmount: Balance,
 		coinIn: CoinType
-	): Balance {
-		return Cmmm.swapAmountInGivenOut(
-			this.pool,
-			this.dynamicFields,
-			{
-				coin: coinOut,
-				balance: coinOutAmount,
-			},
-			coinIn
+	) => {
+		const coinOutPoolBalance = this.balanceForCoin(coinOut);
+		const coinInPoolBalance = this.balanceForCoin(coinIn);
+		const coinOutWeight = this.weightForCoin(coinOut);
+		const coinInWeight = this.weightForCoin(coinIn);
+
+		return CmmmCalculations.calcInGivenOut(
+			coinInPoolBalance,
+			coinInWeight,
+			coinOutPoolBalance,
+			coinOutWeight,
+			coinOutAmount,
+			this.pool.fields.swapFee
 		);
-	}
+	};
 
-	public getSpotPrice(coinIn: CoinType, coinOut: CoinType): number {
-		return Cmmm.spotPrice(this.pool, this.dynamicFields, coinIn, coinOut);
-	}
+	public getSpotPrice = (coinIn: CoinType, coinOut: CoinType) => {
+		const coinInPoolBalance = this.balanceForCoin(coinIn);
+		const coinOutPoolBalance = this.balanceForCoin(coinOut);
+		const coinInWeight = this.weightForCoin(coinIn);
+		const coinOutWeight = this.weightForCoin(coinOut);
 
-	public getDepositLpMintAmount(coinsToBalance: CoinsToBalance): Balance {
-		return Cmmm.depositLpMintAmount(
-			this.pool,
-			this.dynamicFields,
-			coinsToBalance
+		return CmmmCalculations.calcSpotPrice(
+			coinInPoolBalance,
+			coinInWeight,
+			coinOutPoolBalance,
+			coinOutWeight
 		);
-	}
+	};
 
+	public getDepositLpMintAmount = (coinsToBalance: CoinsToBalance) => {
+		const lpTotalSupply = this.dynamicFields.lpFields[0].value;
+		const poolCoinBalances = this.dynamicFields.amountFields.map(
+			(field) => field.value
+		);
+		const depositCoinBalances = this.pool.fields.coins.map((coin) => {
+			const foundBalance = Object.entries(coinsToBalance).find(
+				(coinAndBalance) => coinAndBalance[0] === coin
+			)?.[1];
+			return foundBalance ?? BigInt(0);
+		});
+
+		return CmmmCalculations.calcLpOutGivenExactTokensIn(
+			poolCoinBalances,
+			this.pool.fields.weights,
+			depositCoinBalances,
+			lpTotalSupply,
+			this.pool.fields.swapFee
+		);
+	};
 	/////////////////////////////////////////////////////////////////////
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////

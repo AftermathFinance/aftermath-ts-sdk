@@ -1,10 +1,3 @@
-import {
-	balanceWithDecimals,
-	normalizeBalance,
-	poolSwapFeeWithDecimals,
-	poolWeightWithDecimals,
-} from "aftermath-sdk";
-
 import { Balance, PoolSwapFee, PoolWeight } from "../../types";
 
 // This file is the typescript version of on-chain calculations. See the .move file for license info.
@@ -44,7 +37,7 @@ export class CmmmCalculations {
 	// Invariant is used to collect protocol swap fees by comparing its value between two times.
 	// So we can round always to the same direction. It is also used to initiate the LP amount
 	// and, because there is a minimum LP, we round down the ; invariant.
-	protected static calcInvariant = (
+	public static calcInvariant = (
 		weights: PoolWeight[],
 		balances: Balance[]
 	): number => {
@@ -72,7 +65,7 @@ export class CmmmCalculations {
 
 	// Computes how many tokens can be taken out of a pool if `amountIn` are sent, given the
 	// current balances and weights.
-	protected static calcOutGivenIn = (
+	public static calcOutGivenIn = (
 		balanceIn: Balance,
 		weightIn: PoolWeight,
 		balanceOut: Balance,
@@ -115,7 +108,7 @@ export class CmmmCalculations {
 
 	// Computes how many tokens must be sent to a pool in order to take `amountOut`, given the
 	// current balances and weights.
-	protected static calcInGivenOut = (
+	public static calcInGivenOut = (
 		balanceIn: Balance,
 		weightIn: PoolWeight,
 		balanceOut: Balance,
@@ -161,7 +154,7 @@ export class CmmmCalculations {
 		);
 	};
 
-	protected static calcLpOutGivenExactTokensIn = (
+	public static calcLpOutGivenExactTokensIn = (
 		balances: Balance[],
 		weights: PoolWeight[],
 		amountsIn: Balance[],
@@ -231,7 +224,7 @@ export class CmmmCalculations {
 			: BigInt(0);
 	};
 
-	protected static calcLpOutGivenExactTokenIn = (
+	public static calcLpOutGivenExactTokenIn = (
 		balance: Balance,
 		weight: PoolWeight,
 		amountIn: Balance,
@@ -287,7 +280,7 @@ export class CmmmCalculations {
 			: BigInt(0);
 	};
 
-	protected static calcTokenInGivenExactLpOut = (
+	public static calcTokenInGivenExactLpOut = (
 		balance: Balance,
 		weight: PoolWeight,
 		lpAmountOut: Balance,
@@ -334,7 +327,7 @@ export class CmmmCalculations {
 		);
 	};
 
-	protected static calcAllTokensInGivenExactLpOut = (
+	public static calcAllTokensInGivenExactLpOut = (
 		balances: Balance[],
 		lpAmountOut: Balance,
 		totalLp: Balance
@@ -365,7 +358,7 @@ export class CmmmCalculations {
 		return amountsIn;
 	};
 
-	protected static calcLpInGivenExactTokensOut = (
+	public static calcLpInGivenExactTokensOut = (
 		balances: Balance[],
 		weights: PoolWeight[],
 		amountsOut: Balance[],
@@ -430,7 +423,7 @@ export class CmmmCalculations {
 		);
 	};
 
-	protected static calcRequestedTokensOutGivenExactLpIn = (
+	public static calcRequestedTokensOutGivenExactLpIn = (
 		balances: Balance[],
 		requestedAmountsOut: Balance[],
 		weights: PoolWeight[],
@@ -618,7 +611,7 @@ export class CmmmCalculations {
 		return actualOuts;
 	};
 
-	protected static calcLpInGivenExactTokenOut = (
+	public static calcLpInGivenExactTokenOut = (
 		balance: Balance,
 		weight: PoolWeight,
 		amountOut: Balance,
@@ -668,7 +661,7 @@ export class CmmmCalculations {
 		);
 	};
 
-	protected static calcTokenOutGivenExactLpIn = (
+	public static calcTokenOutGivenExactLpIn = (
 		balance: Balance,
 		weight: PoolWeight,
 		lpAmountIn: Balance,
@@ -721,7 +714,7 @@ export class CmmmCalculations {
 		);
 	};
 
-	protected static calcTokensOutGivenExactLpIn = (
+	public static calcTokensOutGivenExactLpIn = (
 		balances: Balance[],
 		lpAmountIn: Balance,
 		totalLp: Balance
@@ -763,7 +756,7 @@ export class CmmmCalculations {
 	 * @param total_supply - the total supply of the Pool's LP.
 	 * @param weight - the normalized weight of the token to be added (normalized relative to final weights)
 	 */
-	protected static calcLpOutAddToken = (
+	public static calcLpOutAddToken = (
 		totalSupply: Balance,
 		weight: PoolWeight
 	): Balance => {
@@ -797,7 +790,7 @@ export class CmmmCalculations {
 
 	// spot price is given in units of Cin / Cout
 	// spot price formula for fixed point
-	protected static calcSpotPrice = (
+	public static calcSpotPrice = (
 		balanceIn: Balance,
 		weightIn: PoolWeight,
 		balanceOut: Balance,
@@ -809,7 +802,7 @@ export class CmmmCalculations {
 			poolWeightWithDecimals(weightOut));
 
 	// Cheaper to calculate ideal swap ratio but does not consider price_impact. Does consider trading fees.
-	protected static calcIdealOutGivenIn = (
+	public static calcIdealOutGivenIn = (
 		balanceIn: Balance,
 		weightIn: PoolWeight,
 		balanceOut: Balance,
@@ -832,7 +825,7 @@ export class CmmmCalculations {
 	};
 
 	// Calculate price impact for this trade
-	protected static calcPriceImpactFully = (
+	public static calcPriceImpactFully = (
 		balanceIn: Balance,
 		weightIn: PoolWeight,
 		balanceOut: Balance,
