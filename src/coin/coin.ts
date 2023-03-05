@@ -1,4 +1,9 @@
-import { Coin as SuiCoin } from "@mysten/sui.js";
+import {
+	CoinMetadata,
+	GetObjectDataResponse,
+	Coin as SuiCoin,
+	SuiMoveObject,
+} from "@mysten/sui.js";
 import {
 	Balance,
 	CoinDecimal,
@@ -7,25 +12,44 @@ import {
 	CoinWithAmount,
 	CoinWithAmountOrUndefined,
 	KeyType,
+	SuiNetwork,
 } from "../types";
+import ApiProvider from "../apiProvider/apiProvider";
 
-export class Coin extends SuiCoin {
+export class Coin extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly coinTypePackageName: string;
 	public readonly coinTypeSymbol: string;
+	public readonly innerCoinType: string;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly coinType: CoinType) {
-		super();
+	constructor(
+		public readonly coinType: CoinType,
+		public readonly network?: SuiNetwork
+	) {
+		super(network, "coins");
 		this.coinType = coinType;
 		this.coinTypePackageName = this.getCoinTypePackageName();
-		this.coinTypeSymbol = Coin.getCoinSymbol(coinType);
+		this.coinTypeSymbol = SuiCoin.getCoinSymbol(coinType);
+		this.innerCoinType = this.getInnerCoinType();
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Public Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public async getCoinMetadata(): Promise<CoinMetadata> {
+		return this.fetchApi(this.coinType);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -38,14 +62,13 @@ export class Coin extends SuiCoin {
 
 	// TODO: remove in favor of sui js implementation Coin.getCoinStructTag() if it is the same
 	private getCoinTypePackageName = (): string => {
-		Coin.getCoinStructTag;
 		const splitCoin = this.coinType.split("::");
 		const packageName = splitCoin[splitCoin.length - 2];
 		if (!packageName) throw new Error("no coin type package name found");
 		return packageName;
 	};
 
-	// TODO: remove in favor of sui js implementation
+	// TODO: remove in favor of sui js implementation ?
 	private getCoinTypeSymbol = (): string => {
 		const startIndex = this.coinType.lastIndexOf("::") + 2;
 		if (startIndex <= 1) throw new Error("no coin type found");
@@ -58,8 +81,10 @@ export class Coin extends SuiCoin {
 		return displayType;
 	};
 
+	private getInnerCoinType = () => this.coinType.split("<")[1].slice(0, -1);
+
 	/////////////////////////////////////////////////////////////////////
-	//// Static Methods
+	//// Public Static Methods
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
@@ -71,9 +96,6 @@ export class Coin extends SuiCoin {
 		const endIndex = keyType.indexOf(">", startIndex);
 		return keyType.slice(startIndex, endIndex);
 	};
-
-	public static extractInnerCoinType = (coin: CoinType) =>
-		coin.split("<")[1].slice(0, -1);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Helpers
@@ -120,6 +142,10 @@ export class Coin extends SuiCoin {
 	//// Balance
 	/////////////////////////////////////////////////////////////////////
 
+	/////////////////////////////////////////////////////////////////////
+	//// Convervsions
+	/////////////////////////////////////////////////////////////////////
+
 	/*
         Convert user-inputted values into their onchain counterparts (e.g. u64)
         TO-DO: change name
@@ -148,4 +174,16 @@ export class Coin extends SuiCoin {
 	) => {
 		return Coin.balanceWithDecimals(amount, decimals) * price;
 	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Sui Coin Wrappers
+	/////////////////////////////////////////////////////////////////////
+
+	public static getBalance = (
+		data: GetObjectDataResponse | SuiMoveObject
+	): Balance | undefined => SuiCoin.getBalance(data);
+
+	public static totalBalance = (
+		coins: (GetObjectDataResponse | SuiMoveObject)[]
+	): Balance => SuiCoin.totalBalance(coins);
 }

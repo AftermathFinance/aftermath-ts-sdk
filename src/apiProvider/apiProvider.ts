@@ -1,20 +1,22 @@
-import { SuiNetwork, SuiNetworkOrNone, Url } from "../types";
+import { SuiNetwork, Url } from "../types";
 
 export default abstract class ApiProvider {
-	private readonly baseUrl: Url;
+	private readonly baseUrl?: Url;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
-		public readonly network: SuiNetworkOrNone,
+		public readonly network?: SuiNetwork,
 		private readonly urlPrefix: Url = ""
 	) {
 		this.network = network;
 		this.urlPrefix = urlPrefix;
 		this.baseUrl =
-			network === "NONE" ? "" : ApiProvider.baseUrlForNetwork(network);
+			network === undefined
+				? undefined
+				: ApiProvider.baseUrlForNetwork(network);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -59,8 +61,12 @@ export default abstract class ApiProvider {
 		return output as OutputType;
 	}
 
-	private urlForApiCall = (url: string): Url =>
-		`${this.baseUrl}/api/${this.network}/${this.urlPrefix}/${url}`;
+	private urlForApiCall = (url: string): Url => {
+		if (this.network === undefined || this.baseUrl === undefined)
+			throw new Error("no network, no baseUrl: unable to fetch data");
+
+		return `${this.baseUrl}/api/${this.network}/${this.urlPrefix}/${url}`;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Protected
@@ -70,9 +76,6 @@ export default abstract class ApiProvider {
 		url: Url,
 		body?: BodyType
 	): Promise<Output> {
-		if (this.network === "NONE")
-			throw new Error("network set to NONE, unable to fetch data");
-
 		const apiCallUrl = this.urlForApiCall(url);
 		const response = await (body === undefined
 			? fetch(apiCallUrl)

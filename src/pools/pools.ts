@@ -37,7 +37,7 @@ export class Pools extends ApiProvider {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "pools");
 	}
 
@@ -50,7 +50,7 @@ export class Pools extends ApiProvider {
 			this.fetchApi<PoolObject>(`${poolObjectId}`),
 			this.fetchApi<PoolDynamicFields>(`${poolObjectId}/dynamicFields`),
 		]);
-		return new Pool(this.network, pool, poolDynamicFields);
+		return new Pool(pool, poolDynamicFields, this.network);
 	}
 
 	public async getPools(poolObjectIds: ObjectId[]): Promise<Pool[]> {
@@ -69,7 +69,7 @@ export class Pools extends ApiProvider {
 		);
 		return pools.map(
 			(pool, index) =>
-				new Pool(this.network, pool, poolDynamicFields[index])
+				new Pool(pool, poolDynamicFields[index], this.network)
 		);
 	}
 
@@ -175,7 +175,7 @@ export class Pools extends ApiProvider {
 	public static findPoolForLpCoin = (lpCoin: CoinType, pools: PoolObject[]) =>
 		pools.find((pool) => {
 			return pool.fields.lpType.includes(
-				Coin.coinTypeSymbol(Coin.extractInnerCoinType(lpCoin))
+				new Coin(new Coin(lpCoin).innerCoinType).coinTypeSymbol
 			);
 		});
 
@@ -221,7 +221,7 @@ export class Pools extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////
 
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
-		Coin.coinTypeSymbol(Coin.coinTypeFromKeyType(lpCoinType))
+		new Coin(Coin.coinTypeFromKeyType(lpCoinType)).coinTypeSymbol
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")

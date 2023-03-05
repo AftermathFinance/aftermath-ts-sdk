@@ -12,15 +12,15 @@ import {
 	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
-	SuiNetworkOrNone,
+	SuiNetwork,
 } from "../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 
 export class Pool extends ApiProvider {
 	constructor(
-		public readonly network: SuiNetworkOrNone,
 		public readonly pool: PoolObject,
-		public readonly dynamicFields: PoolDynamicFields
+		public readonly dynamicFields: PoolDynamicFields,
+		public readonly network?: SuiNetwork
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;
