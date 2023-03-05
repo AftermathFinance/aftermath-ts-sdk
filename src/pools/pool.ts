@@ -2,6 +2,9 @@ import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import AftermathProvider from "../aftermathProvider/aftermathProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
+	ApiPoolDepositBody,
+	ApiPoolSwapBody,
+	ApiPoolWithdrawBody,
 	Balance,
 	CoinType,
 	CoinsToBalance,
@@ -10,12 +13,7 @@ import {
 	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
-} from "aftermath-sdk";
-import {
-	ApiPoolDepositBody,
-	ApiPoolSwapBody,
-	ApiPoolWithdrawBody,
-} from "../types/apiTypes";
+} from "../types";
 import { Cmmm } from "./utils/cmmm";
 
 export class Pool extends AftermathProvider {

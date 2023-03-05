@@ -1,3 +1,3 @@
 export * from "./pools/pools";
 
-export * from "./types/apiTypes";
+export * from "./types";

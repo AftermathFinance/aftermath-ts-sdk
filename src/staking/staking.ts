@@ -2,13 +2,14 @@ import { EventId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import AftermathProvider from "../aftermathProvider/aftermathProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
+	ApiEventsBody,
+	ApiRequestAddDelegationBody,
 	Balance,
 	DelegatedStakePosition,
 	EventsWithCursor,
 	StakeRequestAddDelegationEvent,
 	StakeValidator,
-} from "aftermath-sdk";
-import { ApiEventsBody, ApiRequestAddDelegationBody } from "../types/apiTypes";
+} from "../types";
 
 export class Staking extends AftermathProvider {
 	constructor(public readonly network: SuiNetwork) {

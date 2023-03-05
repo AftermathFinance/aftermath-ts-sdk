@@ -1,12 +1,11 @@
+import { poolBalanceForCoin, poolWeightForCoin } from "aftermath-sdk";
 import {
-	poolBalanceForCoin,
-	poolWeightForCoin,
 	CoinType,
 	CoinWithBalance,
 	CoinsToBalance,
 	PoolDynamicFields,
 	PoolObject,
-} from "aftermath-sdk";
+} from "../../types";
 
 import { CmmmCalculations } from "./cmmmCalculations";
 

@@ -1,5 +1,5 @@
-import { Url } from "aftermath-sdk";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
+import { Url } from "../types";
 
 export default abstract class AftermathProvider {
 	private readonly baseUrl: Url;

@@ -2,14 +2,14 @@ import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import AftermathProvider from "../aftermathProvider/aftermathProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
+	ApiEventsBody,
 	EventsWithCursor,
 	PoolDepositEvent,
 	PoolDynamicFields,
 	PoolObject,
 	PoolSwapEvent,
 	PoolWithdrawEvent,
-} from "aftermath-sdk";
-import { ApiEventsBody } from "../types/apiTypes";
+} from "../types";
 import { Pool } from "./pool";
 
 export class Pools extends AftermathProvider {

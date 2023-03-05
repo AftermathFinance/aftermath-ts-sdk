@@ -3,37 +3,35 @@ import {
 	normalizeBalance,
 	poolSwapFeeWithDecimals,
 	poolWeightWithDecimals,
-	Balance,
-	NativeNumber,
-	SwapFee,
-	PoolWeight,
 } from "aftermath-sdk";
+
+import { Balance, PoolSwapFee, PoolWeight } from "../../types";
 
 // This file is the typescript version of on-chain calculations. See the .move file for license info.
 // These calculations are useful for estimating values on-chain but the JS number format is LESS PRECISE!
 // Do not expect these values to be identical to their on-chain counterparts.
 
 export class CmmmCalculations {
-	private static minWeight: NativeNumber = 0.01;
+	private static minWeight: number = 0.01;
 	// Having a minimum normalized weight imposes a limit on the maximum number of tokens;
 	// i.e., the largest possible pool is one where all tokens have exactly the minimum weight.
-	private static maxWeightedTokens: NativeNumber = 100;
+	private static maxWeightedTokens: number = 100;
 
 	// Pool limits that arise from limitations in the fixed point power function (and the imposed 1:100 maximum weight
 	// ratio).
 
 	// Swap limits: amounts swapped may not be larger than this percentage of total balance.
-	private static maxInRatio: NativeNumber = 0.3;
-	private static maxOutRatio: NativeNumber = 0.3;
+	private static maxInRatio: number = 0.3;
+	private static maxOutRatio: number = 0.3;
 
 	// Invariant shrink limit: non-proportional exits cannot cause the invariant to decrease by less than this ratio.
-	private static minInvariantRatio: NativeNumber = 0.7;
+	private static minInvariantRatio: number = 0.7;
 	// Invariant growth limit: non-proportional joins cannot cause the invariant to increase by more than this ratio.
-	private static maxInvariantRatio: NativeNumber = 3;
+	private static maxInvariantRatio: number = 3;
 
-	private static readBalance = (fixed: bigint, digits = 9): NativeNumber =>
+	private static readBalance = (fixed: bigint, digits = 9): number =>
 		balanceWithDecimals(fixed, digits);
-	private static unreadBalance = (native: NativeNumber, digits = 9) =>
+	private static unreadBalance = (native: number, digits = 9) =>
 		normalizeBalance(native, digits);
 
 	// About swap fees on joins and exits:
@@ -49,7 +47,7 @@ export class CmmmCalculations {
 	protected static calcInvariant = (
 		weights: PoolWeight[],
 		balances: Balance[]
-	): NativeNumber => {
+	): number => {
 		/*********************************************************************************************
     // invariant               _____                                                             //
     // wi = weight index i      | |      wi                                                      //
@@ -80,7 +78,7 @@ export class CmmmCalculations {
 		balanceOut: Balance,
 		weightOut: PoolWeight,
 		amountIn: Balance,
-		swapFee: SwapFee
+		swapFee: PoolSwapFee
 	): Balance => {
 		let readBalanceIn = CmmmCalculations.readBalance(balanceIn);
 		let readWeightIn = poolWeightWithDecimals(weightIn);
@@ -123,7 +121,7 @@ export class CmmmCalculations {
 		balanceOut: Balance,
 		weightOut: PoolWeight,
 		amountOut: Balance,
-		swapFee: SwapFee
+		swapFee: PoolSwapFee
 	): Balance => {
 		let readBalanceIn = CmmmCalculations.readBalance(balanceIn);
 		let readWeightIn = poolWeightWithDecimals(weightIn);
@@ -168,7 +166,7 @@ export class CmmmCalculations {
 		weights: PoolWeight[],
 		amountsIn: Balance[],
 		lpTotalSupply: Balance,
-		swapFeePercentage: SwapFee
+		swapFeePercentage: PoolSwapFee
 	): Balance => {
 		let readLpTotalSupply = CmmmCalculations.readBalance(lpTotalSupply);
 		let readSwapFeePercentage = poolSwapFeeWithDecimals(swapFeePercentage);
@@ -238,7 +236,7 @@ export class CmmmCalculations {
 		weight: PoolWeight,
 		amountIn: Balance,
 		lpTotalSupply: Balance,
-		swapFeePercentage: SwapFee
+		swapFeePercentage: PoolSwapFee
 	): Balance => {
 		let redBalance = CmmmCalculations.readBalance(balance);
 		let readWeight = poolWeightWithDecimals(weight);
@@ -294,7 +292,7 @@ export class CmmmCalculations {
 		weight: PoolWeight,
 		lpAmountOut: Balance,
 		lpTotalSupply: Balance,
-		swapFeePercentage: SwapFee
+		swapFeePercentage: PoolSwapFee
 	): Balance => {
 		let redBalance = CmmmCalculations.readBalance(balance);
 		let readWeight = poolWeightWithDecimals(weight);
@@ -372,14 +370,14 @@ export class CmmmCalculations {
 		weights: PoolWeight[],
 		amountsOut: Balance[],
 		lpTotalSupply: Balance,
-		swapFeePercentage: SwapFee
+		swapFeePercentage: PoolSwapFee
 	): Balance => {
 		let readLpTotalSupply = CmmmCalculations.readBalance(lpTotalSupply);
 		let readSwapFeePercentage = poolSwapFeeWithDecimals(swapFeePercentage);
 
 		// LP in, so we round up overall.
 
-		let balanceRatiosWithoutFee: NativeNumber[] = [];
+		let balanceRatiosWithoutFee: number[] = [];
 		let invariantRatioWithoutFee = 0;
 		for (let i = 0; i < balances.length; ++i) {
 			let balancesI = CmmmCalculations.readBalance(balances[i]);
@@ -438,7 +436,7 @@ export class CmmmCalculations {
 		weights: PoolWeight[],
 		lpAmountIn: Balance,
 		lpTotalSupply: Balance,
-		swapFeePercentage: SwapFee
+		swapFeePercentage: PoolSwapFee
 	): Balance[] => {
 		let readLpTotalSupply = CmmmCalculations.readBalance(lpTotalSupply);
 		let readLpAmountIn = CmmmCalculations.readBalance(lpAmountIn);
@@ -625,7 +623,7 @@ export class CmmmCalculations {
 		weight: PoolWeight,
 		amountOut: Balance,
 		lpTotalSupply: Balance,
-		swapFeePercentage: SwapFee
+		swapFeePercentage: PoolSwapFee
 	): Balance => {
 		let redBalance = CmmmCalculations.readBalance(balance);
 		let readWeight = poolWeightWithDecimals(weight);
@@ -675,7 +673,7 @@ export class CmmmCalculations {
 		weight: PoolWeight,
 		lpAmountIn: Balance,
 		lpTotalSupply: Balance,
-		swapFeePercentage: SwapFee
+		swapFeePercentage: PoolSwapFee
 	): Balance => {
 		let redBalance = CmmmCalculations.readBalance(balance);
 		let readWeight = poolWeightWithDecimals(weight);
@@ -804,7 +802,7 @@ export class CmmmCalculations {
 		weightIn: PoolWeight,
 		balanceOut: Balance,
 		weightOut: PoolWeight
-	): NativeNumber =>
+	): number =>
 		CmmmCalculations.readBalance(balanceIn) /
 		poolWeightWithDecimals(weightIn) /
 		(CmmmCalculations.readBalance(balanceOut) /
@@ -817,7 +815,7 @@ export class CmmmCalculations {
 		balanceOut: Balance,
 		weightOut: PoolWeight,
 		amountIn: Balance,
-		swapFee: SwapFee
+		swapFee: PoolSwapFee
 	): Balance => {
 		let readAmountIn = CmmmCalculations.readBalance(amountIn);
 		let readSwapFee = poolSwapFeeWithDecimals(swapFee);
@@ -840,7 +838,7 @@ export class CmmmCalculations {
 		balanceOut: Balance,
 		weightOut: PoolWeight,
 		amountIn: Balance,
-		swapFee: SwapFee
+		swapFee: PoolSwapFee
 	): Balance => {
 		return (
 			CmmmCalculations.calcIdealOutGivenIn(
