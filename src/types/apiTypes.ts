@@ -39,10 +39,15 @@ export interface ApiRequestAddDelegationBody {
 	coinAmount: Balance;
 }
 
-export interface ApiCancelOrRequestWithdrawDelegationBody {
+export interface ApiRequestWithdrawDelegationBody {
 	walletAddress: SuiAddress;
 	principalAmount: Balance;
-	delegationObjectId: ObjectId | undefined;
+	delegationObjectId: ObjectId;
+}
+
+export interface ApiCancelDelegationRequestBody {
+	walletAddress: SuiAddress;
+	principalAmount: Balance;
 }
 
 export interface ApiStakeCapyBody {
