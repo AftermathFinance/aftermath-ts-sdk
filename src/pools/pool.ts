@@ -1,5 +1,5 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import AftermathProvider from "../aftermathProvider/aftermathProvider";
+import ApiProvider from "../apiProvider/apiProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	ApiPoolDepositBody,
@@ -16,7 +16,7 @@ import {
 } from "../types";
 import { Cmmm } from "./utils/cmmm";
 
-export class Pool extends AftermathProvider {
+export class Pool extends ApiProvider {
 	constructor(
 		public readonly network: SuiNetwork,
 		public readonly pool: PoolObject,

@@ -1,5 +1,5 @@
-import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
-import AftermathProvider from "../aftermathProvider/aftermathProvider";
+import { EventId, ObjectId } from "@mysten/sui.js";
+import ApiProvider from "../apiProvider/apiProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	ApiEventsBody,
@@ -12,7 +12,7 @@ import {
 } from "../types";
 import { Pool } from "./pool";
 
-export class Pools extends AftermathProvider {
+export class Pools extends ApiProvider {
 	constructor(public readonly network: SuiNetwork) {
 		super(network, "pools");
 	}

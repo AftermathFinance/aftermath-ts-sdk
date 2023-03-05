@@ -1,7 +1,7 @@
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import { Url } from "../types";
 
-export default abstract class AftermathProvider {
+export default abstract class ApiProvider {
 	private readonly baseUrl: Url;
 
 	/////////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@ export default abstract class AftermathProvider {
 	) {
 		this.network = network;
 		this.urlPrefix = urlPrefix;
-		this.baseUrl = AftermathProvider.baseUrlForNetwork(network);
+		this.baseUrl = ApiProvider.baseUrlForNetwork(network);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ export default abstract class AftermathProvider {
 			if (
 				unsafeStringNumberConversion &&
 				typeof value === "string" &&
-				AftermathProvider.isNumber(value)
+				ApiProvider.isNumber(value)
 			) {
 				return BigInt(value);
 			}
@@ -55,7 +55,7 @@ export default abstract class AftermathProvider {
 		response: Response
 	): Promise<OutputType> {
 		const json = JSON.stringify(await response.json());
-		const output = AftermathProvider.parseJsonWithBigint(json);
+		const output = ApiProvider.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
 
@@ -78,6 +78,6 @@ export default abstract class AftermathProvider {
 					body: JSON.stringify(body),
 			  }));
 
-		return await AftermathProvider.fetchResponseToType<Output>(response);
+		return await ApiProvider.fetchResponseToType<Output>(response);
 	}
 }

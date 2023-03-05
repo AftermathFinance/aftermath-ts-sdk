@@ -1,5 +1,5 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import AftermathProvider from "../aftermathProvider/aftermathProvider";
+import ApiProvider from "../apiProvider/apiProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	ApiCancelDelegationRequestBody,
@@ -7,7 +7,7 @@ import {
 	DelegatedStakePosition,
 } from "../types";
 
-export class StakePosition extends AftermathProvider {
+export class StakePosition extends ApiProvider {
 	constructor(
 		public readonly network: SuiNetwork,
 		public readonly stakerAddress: SuiAddress,

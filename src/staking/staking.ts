@@ -1,5 +1,5 @@
 import { EventId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import AftermathProvider from "../aftermathProvider/aftermathProvider";
+import ApiProvider from "../apiProvider/apiProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
 	ApiEventsBody,
@@ -15,7 +15,7 @@ import {
 } from "../types";
 import { StakePosition } from "./stakePosition";
 
-export class Staking extends AftermathProvider {
+export class Staking extends ApiProvider {
 	constructor(public readonly network: SuiNetwork) {
 		super(network, "staking");
 	}
