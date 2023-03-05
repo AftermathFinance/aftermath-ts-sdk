@@ -1,9 +1,4 @@
-import {
-	EventId,
-	ObjectId,
-	SignableTransaction,
-	SuiAddress,
-} from "@mysten/sui.js";
+import { EventId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import AftermathProvider from "../aftermathProvider/aftermathProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
@@ -16,8 +11,6 @@ import {
 	StakeRequestAddDelegationEvent,
 	StakeValidator,
 	StakeRequestWithdrawDelegationEvent,
-	ApiRequestWithdrawDelegationBody,
-	ApiCancelDelegationRequestBody,
 	StakingStats,
 } from "../types";
 import { StakePosition } from "./stakePosition";
