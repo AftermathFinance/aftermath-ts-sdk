@@ -1,4 +1,9 @@
-import { EventId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
+import {
+	EventId,
+	ObjectId,
+	SignableTransaction,
+	SuiAddress,
+} from "@mysten/sui.js";
 import AftermathProvider from "../aftermathProvider/aftermathProvider";
 import { SuiNetwork } from "aftermath-sdk/dist/src/config/configTypes";
 import {
@@ -7,8 +12,13 @@ import {
 	Balance,
 	DelegatedStakePosition,
 	EventsWithCursor,
+	StakeCancelDelegationRequestEvent,
 	StakeRequestAddDelegationEvent,
 	StakeValidator,
+	StakeRequestWithdrawDelegationEvent,
+	ApiRequestWithdrawDelegationBody,
+	ApiCancelDelegationRequestBody,
+	StakingStats,
 } from "../types";
 
 export class Staking extends AftermathProvider {
@@ -34,11 +44,15 @@ export class Staking extends AftermathProvider {
 	//// Stats
 	/////////////////////////////////////////////////////////////////////
 
+	public async getStats(): Promise<StakingStats> {
+		return this.fetchApi("stats");
+	}
+
 	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakeEvents(
+	public async getAddStakeEvents(
 		cursor?: EventId,
 		limit?: number
 	): Promise<EventsWithCursor<StakeRequestAddDelegationEvent>> {
@@ -46,6 +60,32 @@ export class Staking extends AftermathProvider {
 			EventsWithCursor<StakeRequestAddDelegationEvent>,
 			ApiEventsBody
 		>("events/addStake", {
+			cursor,
+			limit,
+		});
+	}
+
+	public async getWithdrawStakeEvents(
+		cursor?: EventId,
+		limit?: number
+	): Promise<EventsWithCursor<StakeRequestWithdrawDelegationEvent>> {
+		return this.fetchApi<
+			EventsWithCursor<StakeRequestWithdrawDelegationEvent>,
+			ApiEventsBody
+		>("events/withdrawStake", {
+			cursor,
+			limit,
+		});
+	}
+
+	public async getCancelStakeEvents(
+		cursor?: EventId,
+		limit?: number
+	): Promise<EventsWithCursor<StakeCancelDelegationRequestEvent>> {
+		return this.fetchApi<
+			EventsWithCursor<StakeCancelDelegationRequestEvent>,
+			ApiEventsBody
+		>("events/cancelStake", {
 			cursor,
 			limit,
 		});
@@ -67,6 +107,38 @@ export class Staking extends AftermathProvider {
 			walletAddress,
 			validatorAddress,
 			coinAmount,
+		});
+	}
+
+	public async getRequestWithdrawDelegationTransactions(
+		walletAddress: SuiAddress,
+		principalAmount: Balance,
+		stakedSuiObjectId: ObjectId,
+		delegationObjectId: ObjectId
+	): Promise<SignableTransaction[]> {
+		return this.fetchApi<
+			SignableTransaction[],
+			ApiRequestWithdrawDelegationBody
+		>("transactions/requestWithdrawDelegation", {
+			walletAddress,
+			principalAmount,
+			stakedSuiObjectId,
+			delegationObjectId,
+		});
+	}
+
+	public async getCancelDelegationRequestTransactions(
+		walletAddress: SuiAddress,
+		principalAmount: Balance,
+		stakedSuiObjectId: ObjectId
+	): Promise<SignableTransaction[]> {
+		return this.fetchApi<
+			SignableTransaction[],
+			ApiCancelDelegationRequestBody
+		>("transactions/cancelDelegationRequest", {
+			walletAddress,
+			principalAmount,
+			stakedSuiObjectId,
 		});
 	}
 }

@@ -72,6 +72,11 @@ export interface StakeCancelDelegationRequestEvent extends Event {
 //// Stats
 /////////////////////////////////////////////////////////////////////
 
+export interface StakingStats {
+	topStakers: StakeStakeEventAccumulation[];
+	stakeTvl: Balance;
+}
+
 export interface StakeStakeEventAccumulation {
 	staker: SuiAddress;
 	totalAmountStaked: Balance;
