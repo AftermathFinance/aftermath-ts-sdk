@@ -4,6 +4,10 @@ import { Url } from "../types";
 export default abstract class AftermathProvider {
 	private readonly baseUrl: Url;
 
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
 	constructor(
 		public readonly network: SuiNetwork,
 		private readonly urlPrefix: Url = ""
@@ -13,14 +17,17 @@ export default abstract class AftermathProvider {
 		this.baseUrl = AftermathProvider.baseUrlForNetwork(network);
 	}
 
+	/////////////////////////////////////////////////////////////////////
+	//// Private
+	/////////////////////////////////////////////////////////////////////
+
 	private static baseUrlForNetwork(network: SuiNetwork): Url {
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
 		if (network === "TESTNET") return "https://testnet.aftermath.finance";
-
-		// LOCAL
-		return "http://localhost:3000";
+		return "http://localhost:3000"; // LOCAL
 	}
 
+	// TODO: move this and other functions to helpers file
 	private static isNumber = (str: string): boolean =>
 		/^\d*\.?\d*$/g.test(str);
 
@@ -54,6 +61,10 @@ export default abstract class AftermathProvider {
 
 	private urlForApiCall = (url: string): Url =>
 		`${this.baseUrl}/api/${this.network}/${this.urlPrefix}/${url}`;
+
+	/////////////////////////////////////////////////////////////////////
+	//// Protected
+	/////////////////////////////////////////////////////////////////////
 
 	protected async fetchApi<Output, BodyType = undefined>(
 		url: Url,
