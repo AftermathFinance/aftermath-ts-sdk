@@ -13,7 +13,6 @@ import {
 
 export class Staking extends AftermathProvider {
 	constructor(public readonly network: SuiNetwork) {
-		// TODO: change to staking
 		super(network, "staking");
 	}
 
