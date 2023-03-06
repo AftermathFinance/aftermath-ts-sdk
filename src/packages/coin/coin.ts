@@ -25,10 +25,6 @@ export class Coin extends ApiProvider {
 		suiCoinType: "0x0000000000000000000000000000000000000002::sui::SUI",
 	};
 
-	private static readonly eventNames = {
-		currencyCreated: "CurrencyCreated",
-	};
-
 	public readonly coinTypePackageName: string;
 	public readonly coinTypeSymbol: string;
 	public readonly innerCoinType: string;

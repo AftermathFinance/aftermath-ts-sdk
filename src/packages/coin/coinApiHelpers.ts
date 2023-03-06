@@ -10,6 +10,7 @@ import { Helpers } from "../../general/utils/helpers";
 import { Coin } from "./coin";
 import { RpcProvider } from "../../general/providers/rpcProvider";
 import { CoinApi } from "./coinApi";
+import { Events } from "../../general/api/events";
 
 export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -37,11 +38,22 @@ export class CoinApiHelpers {
 						name: "split_vec",
 						defaultGasBudget: 2000,
 					},
+					zero: {
+						name: "zero",
+						defaultGasBudget: 1000,
+					},
+					joinVecAndSplit: {
+						name: "join_vec_and_split",
+						defaultGasBudget: 2000,
+					},
 				},
 			},
 			coin: {
 				name: "coin",
 			},
+		},
+		eventNames: {
+			currencyCreated: "CurrencyCreated",
 		},
 	};
 
@@ -209,6 +221,17 @@ export class CoinApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
+	//// Event Types
+	/////////////////////////////////////////////////////////////////////
+
+	public coinCreatedCurrencyEventType = () =>
+		Events.createEventType(
+			RpcProvider.constants.packages.sui.packageId,
+			CoinApiHelpers.constants.modules.coin.name,
+			CoinApiHelpers.constants.eventNames.currencyCreated
+		);
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -263,8 +286,8 @@ export class CoinApiHelpers {
 		coins: ObjectId[],
 		coinType: CoinType,
 		amount: Balance,
-		gasBudget: GasBudget = config.utilities.pay.functions.joinVecAndSplit
-			.defaultGasBudget
+		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
+			.joinVecAndSplit.defaultGasBudget
 	): SignableTransaction => {
 		const utiliesPackageId =
 			this.rpcProvider.addresses.utilies?.packages.utilities;
@@ -274,8 +297,10 @@ export class CoinApiHelpers {
 			kind: "moveCall",
 			data: {
 				packageObjectId: utiliesPackageId,
-				module: config.utilities.pay.module,
-				function: config.utilities.pay.functions.joinVecAndSplit.name,
+				module: CoinApiHelpers.constants.modules.pay.name,
+				function:
+					CoinApiHelpers.constants.modules.pay.functions
+						.joinVecAndSplit.name,
 				typeArguments: [coinType],
 				arguments: [coin, coins, amount.toString()],
 				gasBudget: gasBudget,

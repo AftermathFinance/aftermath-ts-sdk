@@ -7,25 +7,11 @@ export class RpcProvider {
 	/////////////////////////////////////////////////////////////////////
 
 	public static readonly constants = {
+		// TODO: change this into modules ?
 		packages: {
 			sui: {
 				packageId: "0x0000000000000000000000000000000000000002",
 				systemStateId: "0x0000000000000000000000000000000000000005",
-			},
-			utilities: {
-				pay: {
-					module: "pay",
-					functions: {
-						zero: {
-							name: "zero",
-							defaultGasBudget: 1000,
-						},
-						joinVecAndSplit: {
-							name: "join_vec_and_split",
-							defaultGasBudget: 2000,
-						},
-					},
-				},
 			},
 		},
 	};

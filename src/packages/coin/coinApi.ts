@@ -53,15 +53,4 @@ export class CoinApi {
 			};
 		}
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Event Types
-	/////////////////////////////////////////////////////////////////////
-
-	public coinCreatedCurrencyEventType = () =>
-		Events(
-			config.sui.packageId,
-			config.sui.coin.module,
-			eventNames.sui.coin.currencyCreated
-		);
 }
