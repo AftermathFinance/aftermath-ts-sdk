@@ -19,11 +19,11 @@ import {
 	SuiNetwork,
 	UnstakeCapyEvent,
 } from "../../types";
-import { ApiProvider } from "../../general/providers/apiProvider";
+import { Aftermath } from "../../general/providers/aftermath";
 import { Capy } from "./capy";
 import { StakedCapyReceipt } from "./stakedCapyReceipt";
 
-export class Capys extends ApiProvider {
+export class Capys extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////

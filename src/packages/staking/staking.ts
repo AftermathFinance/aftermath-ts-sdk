@@ -13,14 +13,14 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { StakePosition } from "./stakePosition";
-import { ApiProvider } from "../../general/providers/apiProvider";
+import { Aftermath } from "../../general/providers/aftermath";
 
 // TODO: move these types to staking api class
 
 // stakedSuiType: "0x2::staking_pool::StakedSui",
 // delegationType: "0x2::staking_pool::Delegation",
 
-export class Staking extends ApiProvider {
+export class Staking extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@ export class Staking extends ApiProvider {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "staking");
 	}
 
@@ -51,7 +51,7 @@ export class Staking extends ApiProvider {
 		);
 		return (await delegatedStakePositions).map(
 			(position) =>
-				new StakePosition(this.network, walletAddress, position)
+				new StakePosition(walletAddress, position, this.network)
 		);
 	}
 

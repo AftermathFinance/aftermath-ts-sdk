@@ -14,9 +14,13 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
-import { ApiProvider } from "../../general/providers/apiProvider";
+import { Aftermath } from "../../general/providers/aftermath";
 
-export class Pool extends ApiProvider {
+export class Pool extends Aftermath {
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
 	constructor(
 		public readonly pool: PoolObject,
 		public readonly dynamicFields: PoolDynamicFields,

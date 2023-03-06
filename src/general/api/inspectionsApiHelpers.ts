@@ -1,14 +1,14 @@
 import { MoveCallTransaction } from "@mysten/sui.js";
-import { RpcProvider } from "../providers/rpcProvider";
-import { RpcApiHelpers } from "./rpc";
+import { AftermathApi } from "../providers/aftermathApi";
+import { RpcApiHelpers } from "./rpcApiHelpers";
 import { Byte } from "../../types";
 
-export class Inspections {
+export class InspectionsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: RpcProvider) {
+	constructor(private readonly rpcProvider: AftermathApi) {
 		this.rpcProvider = rpcProvider;
 	}
 

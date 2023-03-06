@@ -1,8 +1,8 @@
 import { SignableTransaction } from "@mysten/sui.js";
-import { ApiProvider } from "../../general/providers/apiProvider";
+import { Aftermath } from "../../general/providers/aftermath";
 import { CoinType, ApiFaucetRequestBody, SuiNetwork } from "../../types";
 
-export class Faucet extends ApiProvider {
+export class Faucet extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -19,7 +19,7 @@ export class Faucet extends ApiProvider {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "faucet");
 	}
 

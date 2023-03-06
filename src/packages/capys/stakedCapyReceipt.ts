@@ -7,11 +7,11 @@ import {
 	StakedCapyReceiptObject,
 	SuiNetwork,
 } from "../../types";
-import { ApiProvider } from "../../general/providers/apiProvider";
+import { Aftermath } from "../../general/providers/aftermath";
 import { Capys } from "./capys";
 import { Capy } from "./capy";
 
-export class StakedCapyReceipt extends ApiProvider {
+export class StakedCapyReceipt extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////

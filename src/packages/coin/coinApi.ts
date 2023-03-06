@@ -1,6 +1,6 @@
 import { CoinMetadata } from "@mysten/sui.js";
 import { Coin } from "./coin";
-import { RpcProvider } from "../../general/providers/rpcProvider";
+import { AftermathApi } from "../../general/providers/aftermathApi";
 import { CoinType } from "../../types";
 import { Helpers } from "../../general/utils/helpers";
 import { Pools } from "../pools/pools";
@@ -10,7 +10,7 @@ export class CoinApi {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: RpcProvider) {
+	constructor(private readonly rpcProvider: AftermathApi) {
 		this.rpcProvider = rpcProvider;
 	}
 

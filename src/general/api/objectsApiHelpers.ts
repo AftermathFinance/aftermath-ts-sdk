@@ -5,7 +5,7 @@ import {
 	SuiObjectInfo,
 	getObjectOwner,
 } from "@mysten/sui.js";
-import { RpcProvider } from "../providers/rpcProvider";
+import { AftermathApi } from "../providers/aftermathApi";
 import { PackageId } from "../../types";
 
 export class ObjectsApiHelpers {
@@ -13,7 +13,7 @@ export class ObjectsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: RpcProvider) {
+	constructor(private readonly rpcProvider: AftermathApi) {
 		this.rpcProvider = rpcProvider;
 	}
 

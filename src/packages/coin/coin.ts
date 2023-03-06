@@ -14,9 +14,9 @@ import {
 	KeyType,
 	SuiNetwork,
 } from "../../types";
-import { ApiProvider } from "../../general/providers/apiProvider";
+import { Aftermath } from "../../general/providers/aftermath";
 
-export class Coin extends ApiProvider {
+export class Coin extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////

@@ -3,14 +3,14 @@ import {
 	TransactionDigestsWithCursor,
 	TransactionsWithCursor,
 } from "../../types";
-import { RpcProvider } from "../providers/rpcProvider";
+import { AftermathApi } from "../providers/aftermathApi";
 
 export class TransactionsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: RpcProvider) {
+	constructor(private readonly rpcProvider: AftermathApi) {
 		this.rpcProvider = rpcProvider;
 	}
 

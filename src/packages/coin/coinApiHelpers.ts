@@ -8,9 +8,9 @@ import {
 import { Balance, CoinDecimal, CoinType, GasBudget } from "../../types";
 import { Helpers } from "../../general/utils/helpers";
 import { Coin } from "./coin";
-import { RpcProvider } from "../../general/providers/rpcProvider";
+import { AftermathApi } from "../../general/providers/aftermathApi";
 import { CoinApi } from "./coinApi";
-import { EventsApiHelpers } from "../../general/api/events";
+import { EventsApiHelpers } from "../../general/api/eventsApiHelpers";
 
 export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ export class CoinApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: RpcProvider) {
+	constructor(private readonly rpcProvider: AftermathApi) {
 		this.rpcProvider = rpcProvider;
 	}
 
@@ -226,7 +226,7 @@ export class CoinApiHelpers {
 
 	public coinCreatedCurrencyEventType = () =>
 		EventsApiHelpers.createEventType(
-			RpcProvider.constants.packages.sui.packageId,
+			AftermathApi.constants.packages.sui.packageId,
 			CoinApiHelpers.constants.modules.coin.name,
 			CoinApiHelpers.constants.eventNames.currencyCreated
 		);
@@ -249,7 +249,7 @@ export class CoinApiHelpers {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: RpcProvider.constants.packages.sui.packageId,
+				packageObjectId: AftermathApi.constants.packages.sui.packageId,
 				module: CoinApiHelpers.constants.modules.pay.name,
 				function:
 					CoinApiHelpers.constants.modules.pay.functions.joinVec.name,
@@ -270,7 +270,7 @@ export class CoinApiHelpers {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: RpcProvider.constants.packages.sui.packageId,
+				packageObjectId: AftermathApi.constants.packages.sui.packageId,
 				module: CoinApiHelpers.constants.modules.pay.name,
 				function:
 					CoinApiHelpers.constants.modules.pay.functions.split.name,

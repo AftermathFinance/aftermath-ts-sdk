@@ -1,6 +1,13 @@
-import { SuiNetwork, Url } from "../../types";
+import { SuiAddress } from "@mysten/sui.js";
+import { Pools } from "../../packages/pools/pools";
+import { CoinType, SuiNetwork, Url } from "../../types";
+import { Wallet } from "../wallet/wallet";
+import { Capys } from "../../packages/capys/capys";
+import { Coin } from "../../packages/coin/coin";
+import { Faucet } from "../../packages/faucet/faucet";
+import { Staking } from "../../packages/staking/staking";
 
-export abstract class ApiProvider {
+export abstract class Aftermath {
 	private readonly baseUrl?: Url;
 
 	/////////////////////////////////////////////////////////////////////
@@ -16,11 +23,31 @@ export abstract class ApiProvider {
 		this.baseUrl =
 			network === undefined
 				? undefined
-				: ApiProvider.baseUrlForNetwork(network);
+				: Aftermath.baseUrlForNetwork(network);
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Private
+	//// Public Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Class Object Creation
+	/////////////////////////////////////////////////////////////////////
+
+	public Pools = () => new Pools(this.network);
+
+	public Staking = () => new Staking(this.network);
+
+	public Capys = () => new Capys(this.network);
+
+	public Faucet = () => new Faucet(this.network);
+
+	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
+
+	public Coin = (coinType: CoinType) => new Coin(coinType, this.network);
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
 	private static baseUrlForNetwork(network: SuiNetwork): Url {
@@ -46,7 +73,7 @@ export abstract class ApiProvider {
 			if (
 				unsafeStringNumberConversion &&
 				typeof value === "string" &&
-				ApiProvider.isNumber(value)
+				Aftermath.isNumber(value)
 			) {
 				return BigInt(value);
 			}
@@ -57,7 +84,7 @@ export abstract class ApiProvider {
 		response: Response
 	): Promise<OutputType> {
 		const json = JSON.stringify(await response.json());
-		const output = ApiProvider.parseJsonWithBigint(json);
+		const output = Aftermath.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
 
@@ -69,7 +96,7 @@ export abstract class ApiProvider {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Protected
+	//// Protected Methods
 	/////////////////////////////////////////////////////////////////////
 
 	protected async fetchApi<Output, BodyType = undefined>(
@@ -84,6 +111,6 @@ export abstract class ApiProvider {
 					body: JSON.stringify(body),
 			  }));
 
-		return await ApiProvider.fetchResponseToType<Output>(response);
+		return await Aftermath.fetchResponseToType<Output>(response);
 	}
 }

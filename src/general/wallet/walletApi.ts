@@ -2,14 +2,14 @@ import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { CoinType, CoinWithBalance } from "../../types";
 import { Helpers } from "../utils/helpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
-import { RpcProvider } from "../providers/rpcProvider";
+import { AftermathApi } from "../providers/aftermathApi";
 
 export class WalletApi {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: RpcProvider) {
+	constructor(private readonly rpcProvider: AftermathApi) {
 		this.rpcProvider = rpcProvider;
 	}
 

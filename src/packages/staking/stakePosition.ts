@@ -5,13 +5,13 @@ import {
 	DelegatedStakePosition,
 	SuiNetwork,
 } from "../../types";
-import { ApiProvider } from "../../general/providers/apiProvider";
+import { Aftermath } from "../../general/providers/aftermath";
 
-export class StakePosition extends ApiProvider {
+export class StakePosition extends Aftermath {
 	constructor(
-		public readonly network: SuiNetwork,
 		public readonly stakerAddress: SuiAddress,
-		public readonly stakePosition: DelegatedStakePosition
+		public readonly stakePosition: DelegatedStakePosition,
+		public readonly network?: SuiNetwork
 	) {
 		super(network, "staking");
 		this.stakePosition = stakePosition;

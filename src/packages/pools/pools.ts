@@ -17,10 +17,10 @@ import {
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
-import { ApiProvider } from "../../general/providers/apiProvider";
+import { Aftermath } from "../../general/providers/aftermath";
 import { Helpers } from "../../general/utils/helpers";
 
-export class Pools extends ApiProvider {
+export class Pools extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
