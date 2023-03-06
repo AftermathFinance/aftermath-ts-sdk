@@ -1,0 +1,69 @@
+import { SignableTransaction } from "@mysten/sui.js";
+import {
+	ApiUnstakeCapyBody,
+	ApiWithdrawCapyFeesAmountBody,
+	Balance,
+	CapyFeesEarned,
+	StakedCapyReceiptObject,
+	SuiNetwork,
+} from "../../types";
+import { ApiProvider } from "../../general/providers/apiProvider";
+import { Capys } from "./capys";
+import { Capy } from "./capy";
+
+export class StakedCapyReceipt extends ApiProvider {
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
+	constructor(
+		public readonly stakedCapyReceipt: StakedCapyReceiptObject,
+		public readonly network?: SuiNetwork
+	) {
+		super(network, "capys");
+		this.stakedCapyReceipt = stakedCapyReceipt;
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Class Objects
+	/////////////////////////////////////////////////////////////////////
+
+	public async getCapy(): Promise<Capy> {
+		return await new Capys(this.network).getCapy(
+			this.stakedCapyReceipt.capyId
+		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public async getFeesEarned(): Promise<CapyFeesEarned> {
+		return this.fetchApi(`${this.stakedCapyReceipt.objectId}/feesEarned`);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public async getUnstakeCapyTransactions(): Promise<SignableTransaction[]> {
+		return this.fetchApi<SignableTransaction[], ApiUnstakeCapyBody>(
+			"transactions/stake",
+			{
+				stakingReceiptId: this.stakedCapyReceipt.objectId,
+			}
+		);
+	}
+
+	public async getWithdrawFeesTransactions(
+		amount: Balance | undefined
+	): Promise<SignableTransaction[]> {
+		return this.fetchApi<
+			SignableTransaction[],
+			ApiWithdrawCapyFeesAmountBody
+		>("transactions/withdrawFees", {
+			amount,
+			stakingReceiptObjectId: this.stakedCapyReceipt.objectId,
+		});
+	}
+}

@@ -26,26 +26,26 @@ export interface CapyFields {
 	attributes: CapyAttribute[];
 }
 
-export interface Capy {
+export interface CapyObject {
 	objectId: ObjectId;
 	fields: CapyFields;
 }
 
-export interface StakedCapy {
+export interface StakedCapyObject {
 	objectId: ObjectId;
-	capy: Capy;
+	capy: CapyObject;
 	collectedFees: Balance;
 }
 
-export interface StakingReceipt {
+export interface StakedCapyReceiptObject {
 	objectId: ObjectId;
 	capyId: ObjectId;
 	unlockEpoch: EpochTimeLock;
 }
 
-export interface StakingReceiptWithCapy {
+export interface StakedCapyReceiptWithCapyObject {
 	objectId: ObjectId;
-	capy: Capy;
+	capy: CapyObject;
 	unlockEpoch: EpochTimeLock;
 }
 
