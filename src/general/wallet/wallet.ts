@@ -7,7 +7,7 @@ import {
 	ApiTransactionsBody,
 	TransactionsWithCursor,
 	SuiNetwork,
-} from "../types";
+} from "../../types";
 
 export class Wallet extends ApiProvider {
 	constructor(

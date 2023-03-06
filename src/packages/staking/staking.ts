@@ -1,5 +1,4 @@
 import { EventId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import { ApiProvider } from "../providers/apiProvider";
 import {
 	ApiEventsBody,
 	ApiRequestAddDelegationBody,
@@ -12,8 +11,9 @@ import {
 	StakeRequestWithdrawDelegationEvent,
 	StakingStats,
 	SuiNetwork,
-} from "../types";
+} from "../../types";
 import { StakePosition } from "./stakePosition";
+import { ApiProvider } from "../../general/providers/apiProvider";
 
 // TODO: move these types to staking api class
 

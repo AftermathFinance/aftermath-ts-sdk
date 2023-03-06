@@ -1,11 +1,11 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import { ApiProvider } from "../providers/apiProvider";
 import {
 	ApiCancelDelegationRequestBody,
 	ApiRequestWithdrawDelegationBody,
 	DelegatedStakePosition,
 	SuiNetwork,
-} from "../types";
+} from "../../types";
+import { ApiProvider } from "../../general/providers/apiProvider";
 
 export class StakePosition extends ApiProvider {
 	constructor(

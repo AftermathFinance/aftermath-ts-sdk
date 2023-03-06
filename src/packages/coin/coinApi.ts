@@ -1,9 +1,9 @@
-import { CoinMetadata, JsonRpcProvider } from "@mysten/sui.js";
-import { Pools } from "../../pools/pools";
+import { CoinMetadata } from "@mysten/sui.js";
 import { Coin } from "./coin";
 import { RpcProvider } from "../../general/providers/rpcProvider";
 import { CoinType } from "../../types";
 import { Helpers } from "../../general/utils/helpers";
+import { Pools } from "../pools/pools";
 
 export class CoinApi {
 	/////////////////////////////////////////////////////////////////////

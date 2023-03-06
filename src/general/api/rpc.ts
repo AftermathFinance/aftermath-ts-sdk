@@ -3,7 +3,7 @@ export class Rpc {
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
-	private static constants = {
+	public static constants = {
 		devInspectSigner: "0xedd30fda5ea992615d73ca8eca9e381a7fe025db",
 		rpcVersion: "2.0",
 		rpcId: 1,

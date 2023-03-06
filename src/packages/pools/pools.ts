@@ -1,5 +1,4 @@
 import { EventId, ObjectId } from "@mysten/sui.js";
-import { ApiProvider } from "../providers/apiProvider";
 import {
 	AnyObjectType,
 	ApiEventsBody,
@@ -15,10 +14,11 @@ import {
 	PoolWeight,
 	PoolWithdrawEvent,
 	SuiNetwork,
-} from "../types";
+} from "../../types";
 import { Pool } from "./pool";
-import { Coin } from "../packages/coin/coin";
-import { Helpers } from "../utils/helpers";
+import { Coin } from "../../packages/coin/coin";
+import { ApiProvider } from "../../general/providers/apiProvider";
+import { Helpers } from "../../general/utils/helpers";
 
 export class Pools extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////

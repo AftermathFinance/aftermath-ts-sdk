@@ -1,5 +1,4 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import { ApiProvider } from "../providers/apiProvider";
 import {
 	ApiPoolDepositBody,
 	ApiPoolSwapBody,
@@ -13,8 +12,9 @@ import {
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
-} from "../types";
+} from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
+import { ApiProvider } from "../../general/providers/apiProvider";
 
 export class Pool extends ApiProvider {
 	constructor(
