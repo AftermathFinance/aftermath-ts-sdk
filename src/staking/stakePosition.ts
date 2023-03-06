@@ -1,5 +1,5 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import ApiProvider from "../apiProvider/apiProvider";
+import { ApiProvider } from "../providers/apiProvider";
 import {
 	ApiCancelDelegationRequestBody,
 	ApiRequestWithdrawDelegationBody,

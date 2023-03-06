@@ -1,5 +1,5 @@
 import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
-import ApiProvider from "../apiProvider/apiProvider";
+import { ApiProvider } from "../providers/apiProvider";
 import {
 	Balance,
 	CoinType,

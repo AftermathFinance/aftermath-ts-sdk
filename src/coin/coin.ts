@@ -14,12 +14,20 @@ import {
 	KeyType,
 	SuiNetwork,
 } from "../types";
-import ApiProvider from "../apiProvider/apiProvider";
+import { ApiProvider } from "../providers/apiProvider";
 
 export class Coin extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
+
+	public static readonly constants = {
+		suiCoinType: "0x0000000000000000000000000000000000000002::sui::SUI",
+	};
+
+	private static readonly eventNames = {
+		currencyCreated: "CurrencyCreated",
+	};
 
 	public readonly coinTypePackageName: string;
 	public readonly coinTypeSymbol: string;

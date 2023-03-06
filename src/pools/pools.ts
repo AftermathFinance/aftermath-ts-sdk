@@ -1,5 +1,5 @@
 import { EventId, ObjectId } from "@mysten/sui.js";
-import ApiProvider from "../apiProvider/apiProvider";
+import { ApiProvider } from "../providers/apiProvider";
 import {
 	AnyObjectType,
 	ApiEventsBody,
@@ -31,6 +31,12 @@ export class Pools extends ApiProvider {
 		spotPriceDecimals: 18,
 		swapFeeDecimals: 18,
 		maxSwapFee: BigInt(1000000000000000000),
+	};
+
+	private static readonly eventNames = {
+		swap: "SwapEvent",
+		deposit: "DepositEvent",
+		withdraw: "WithdrawEvent",
 	};
 
 	/////////////////////////////////////////////////////////////////////

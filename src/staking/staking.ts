@@ -1,5 +1,5 @@
 import { EventId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import ApiProvider from "../apiProvider/apiProvider";
+import { ApiProvider } from "../providers/apiProvider";
 import {
 	ApiEventsBody,
 	ApiRequestAddDelegationBody,
@@ -15,7 +15,26 @@ import {
 } from "../types";
 import { StakePosition } from "./stakePosition";
 
+// TODO: move these types to staking api class
+
+// stakedSuiType: "0x2::staking_pool::StakedSui",
+// delegationType: "0x2::staking_pool::Delegation",
+
 export class Staking extends ApiProvider {
+	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly eventNames = {
+		requestAddDelegation: "RequestAddDelegationEvent",
+		requestWithdrawDelegation: "RequestWithdrawDelegationEvent",
+		cancelDelegationRequest: "CancelDelegationRequestEvent",
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
 	constructor(public readonly network: SuiNetwork) {
 		super(network, "staking");
 	}

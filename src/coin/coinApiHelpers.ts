@@ -8,39 +8,82 @@ import {
 import { Balance, CoinDecimal, CoinType, GasBudget } from "../types";
 import { Helpers } from "../utils/helpers";
 import { Coin } from "./coin";
+import { RpcProvider } from "../providers/rpcProvider";
+import { CoinApi } from "./coinApi";
 
 export class CoinApiHelpers {
+	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		modules: {
+			pay: {
+				name: "pay",
+				functions: {
+					join: {
+						name: "join",
+						defaultGasBudget: 1000,
+					},
+					joinVec: {
+						name: "join_vec",
+						defaultGasBudget: 2000,
+					},
+					split: {
+						name: "split",
+						defaultGasBudget: 1000,
+					},
+					splitVec: {
+						name: "split_vec",
+						defaultGasBudget: 2000,
+					},
+				},
+			},
+			coin: {
+				name: "coin",
+			},
+		},
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
+	constructor(private readonly rpcProvider: RpcProvider) {
+		this.rpcProvider = rpcProvider;
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Public Methods
+	/////////////////////////////////////////////////////////////////////
+
 	/////////////////////////////////////////////////////////////////////
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public static fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual =
-		async (
-			walletAddress: SuiAddress,
-			coinType: CoinType,
-			coinAmount: Balance
-		): Promise<GetObjectDataResponse[]> => {
-			const response = (
-				await provider.selectCoinSetWithCombinedBalanceGreaterThanOrEqual(
-					walletAddress,
-					coinAmount,
-					Helpers.stripLeadingZeroesFromType(coinType)
-				)
-			).filter(
-				// Safe check to avoid coins with value 0
-				(getObjectDataResponse) =>
-					Coin.getBalance(getObjectDataResponse)
-			);
+	public fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual = async (
+		walletAddress: SuiAddress,
+		coinType: CoinType,
+		coinAmount: Balance
+	): Promise<GetObjectDataResponse[]> => {
+		const response = (
+			await this.rpcProvider.provider.selectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+				walletAddress,
+				coinAmount,
+				Helpers.stripLeadingZeroesFromType(coinType)
+			)
+		).filter(
+			// Safe check to avoid coins with value 0
+			(getObjectDataResponse) => Coin.getBalance(getObjectDataResponse)
+		);
 
-			if (response.length === 0)
-				throw new Error(
-					"wallet does not have coins of sufficient balance"
-				);
-			return response;
-		};
+		if (response.length === 0)
+			throw new Error("wallet does not have coins of sufficient balance");
+		return response;
+	};
 
 	// TODO: use this everywhere in sdk ! (instead of just router)
-	public static fetchCoinJoinAndSplitWithExactAmountTransactions = async (
+	public fetchCoinJoinAndSplitWithExactAmountTransactions = async (
 		walletAddress: SuiAddress,
 		coin: CoinType,
 		coinAmount: Balance
@@ -50,7 +93,7 @@ export class CoinApiHelpers {
 	}> => {
 		// i. obtain object ids of coin to swap from
 		const response =
-			await CoinApiHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				coin,
 				coinAmount
@@ -61,7 +104,7 @@ export class CoinApiHelpers {
 		// ii. the user doesn't have a coin of type `coin` with exact
 		// value of `balance`, so we need to create it
 		const joinAndSplitTransactions =
-			CoinApiHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			this.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				coin,
@@ -74,36 +117,39 @@ export class CoinApiHelpers {
 		};
 	};
 
-	public static fetchCoinDecimals = async (coin: CoinType) => {
-		const coinMetadata = await fetchCoinMetadata(coin);
+	public fetchCoinDecimals = async (coin: CoinType) => {
+		const coinMetadata = await new CoinApi(
+			this.rpcProvider
+		).fetchCoinMetadata(coin);
 		const decimals = coinMetadata?.decimals;
 		if (decimals === undefined)
 			throw Error("unable to obtain decimals for coin: " + coin);
 
 		return decimals as CoinDecimal;
 	};
+
 	// TODO: use this everywhere in backend calls
 	// TODO: handle coins where there is no coin metadata on chain
-	public static fetchCoinDecimalsNormalizeBalance = async (
+	public fetchCoinDecimalsNormalizeBalance = async (
 		coin: CoinType,
 		amount: number
 	) => {
-		const decimals = await CoinApiHelpers.fetchCoinDecimals(coin);
+		const decimals = await this.fetchCoinDecimals(coin);
 		return Coin.normalizeBalance(amount, decimals);
 	};
 
-	public static fetchCoinDecimalsApplyToBalance = async (
+	public fetchCoinDecimalsApplyToBalance = async (
 		coin: CoinType,
 		balance: Balance
 	) => {
-		const decimals = await CoinApiHelpers.fetchCoinDecimals(coin);
+		const decimals = await this.fetchCoinDecimals(coin);
 		return Coin.balanceWithDecimals(balance, decimals);
 	};
 
-	public static fetchCoinsToDecimals = async (coins: CoinType[]) => {
+	public fetchCoinsToDecimals = async (coins: CoinType[]) => {
 		let allDecimals: number[] = [];
 		for (const coin of coins) {
-			const decimals = await CoinApiHelpers.fetchCoinDecimals(coin);
+			const decimals = await this.fetchCoinDecimals(coin);
 			allDecimals.push(decimals);
 		}
 
@@ -114,14 +160,14 @@ export class CoinApiHelpers {
 		return coinsToDecimals;
 	};
 
-	public static fetchNormalizeCoinAmounts = async (
+	public fetchNormalizeCoinAmounts = async (
 		coins: CoinType[],
 		amounts: number[]
 	) => {
 		const normalizedAmounts = await Promise.all(
 			coins.map(
 				async (coin, index) =>
-					await CoinApiHelpers.fetchCoinDecimalsNormalizeBalance(
+					await this.fetchCoinDecimalsNormalizeBalance(
 						coin,
 						amounts[index]
 					)
@@ -131,9 +177,7 @@ export class CoinApiHelpers {
 		return normalizedAmounts;
 	};
 
-	public static async fetchCoinsToDecimalsAndPrices(
-		coins: CoinType[]
-	): Promise<
+	public async fetchCoinsToDecimalsAndPrices(coins: CoinType[]): Promise<
 		Record<
 			CoinType,
 			{
@@ -144,7 +188,7 @@ export class CoinApiHelpers {
 	> {
 		const [coinsToPrices, coinsToDecimals] = await Promise.all([
 			fetchCoinsToPythPrices(coins),
-			CoinApiHelpers.fetchCoinsToDecimals(coins),
+			this.fetchCoinsToDecimals(coins),
 		]);
 
 		const coinsToDecimalsAndPrices = Object.keys(coinsToPrices).reduce(
@@ -165,21 +209,27 @@ export class CoinApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	private static coinJoinVecTransaction = (
+	private coinJoinVecTransaction = (
 		coin: ObjectId,
 		coins: ObjectId[],
 		coinType: CoinType,
-		gasBudget: GasBudget = config.sui.pay.functions.joinVec.defaultGasBudget
+		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
+			.joinVec.defaultGasBudget
 	): SignableTransaction => {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: config.sui.packageId,
-				module: config.sui.pay.module,
-				function: config.sui.pay.functions.joinVec.name,
+				packageObjectId: RpcProvider.constants.packages.sui.packageId,
+				module: CoinApiHelpers.constants.modules.pay.name,
+				function:
+					CoinApiHelpers.constants.modules.pay.functions.joinVec.name,
 				typeArguments: [coinType],
 				arguments: [coin, coins],
 				gasBudget: gasBudget,
@@ -187,18 +237,20 @@ export class CoinApiHelpers {
 		};
 	};
 
-	private static coinSplitTransaction = (
+	private coinSplitTransaction = (
 		coin: ObjectId,
 		coinType: CoinType,
 		amount: Balance,
-		gasBudget: GasBudget = config.sui.pay.functions.split.defaultGasBudget
+		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
+			.split.defaultGasBudget
 	): SignableTransaction => {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: config.sui.packageId,
-				module: config.sui.pay.module,
-				function: config.sui.pay.functions.split.name,
+				packageObjectId: RpcProvider.constants.packages.sui.packageId,
+				module: CoinApiHelpers.constants.modules.pay.name,
+				function:
+					CoinApiHelpers.constants.modules.pay.functions.split.name,
 				typeArguments: [coinType],
 				arguments: [coin, amount.toString()],
 				gasBudget: gasBudget,
@@ -206,7 +258,7 @@ export class CoinApiHelpers {
 		};
 	};
 
-	private static coinJoinVecAndSplitTransaction = (
+	private coinJoinVecAndSplitTransaction = (
 		coin: ObjectId,
 		coins: ObjectId[],
 		coinType: CoinType,
@@ -214,10 +266,13 @@ export class CoinApiHelpers {
 		gasBudget: GasBudget = config.utilities.pay.functions.joinVecAndSplit
 			.defaultGasBudget
 	): SignableTransaction => {
+		const utiliesPackageId =
+			this.rpcProvider.addresses.utilies?.packages.utilities;
+		if (!utiliesPackageId) throw new Error("utilies package id is unset");
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: config.utilities.packageId,
+				packageObjectId: utiliesPackageId,
 				module: config.utilities.pay.module,
 				function: config.utilities.pay.functions.joinVecAndSplit.name,
 				typeArguments: [coinType],
@@ -236,7 +291,7 @@ export class CoinApiHelpers {
         @returns: undefined if `Coin.getBalance(coin)` returns undefined, an array of 
         `SignableTransactions` otherwise.
     */
-	public static coinJoinAndSplitWithExactAmountTransactions = (
+	private coinJoinAndSplitWithExactAmountTransactions = (
 		coin: GetObjectDataResponse,
 		coinsToJoin: GetObjectDataResponse[],
 		coinType: CoinType,
@@ -254,7 +309,7 @@ export class CoinApiHelpers {
 		//       and needs to remove `coinBalance` - `amount` from the coin.
 		if (coinBalance > amount)
 			return [
-				CoinApiHelpers.coinSplitTransaction(
+				this.coinSplitTransaction(
 					coinId,
 					coinType,
 					coinBalance - amount
@@ -269,18 +324,14 @@ export class CoinApiHelpers {
 		//       these coins need to be joined.
 		if (joinedBalance === amount)
 			return [
-				CoinApiHelpers.coinJoinVecTransaction(
-					coinId,
-					coinIdsToJoin,
-					coinType
-				),
+				this.coinJoinVecTransaction(coinId, coinIdsToJoin, coinType),
 			];
 
 		//   iv. the user has multiple coins of type `coinType` whose sum is greater than
 		//       `amount`, so these coins need to be joined and `joinedBalance` - `amount`
 		//       needs to be removed from the coin.
 		return [
-			CoinApiHelpers.coinJoinVecAndSplitTransaction(
+			this.coinJoinVecAndSplitTransaction(
 				coinId,
 				coinIdsToJoin,
 				coinType,
@@ -293,6 +344,6 @@ export class CoinApiHelpers {
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	public static formatCoinTypesForMoveCall = (coins: CoinType[]) =>
+	private formatCoinTypesForMoveCall = (coins: CoinType[]) =>
 		coins.map((coin) => u8VectorFromString(coin.slice(2))); // slice to remove 0x
 }

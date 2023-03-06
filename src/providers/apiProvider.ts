@@ -1,13 +1,13 @@
 import { SuiNetwork, Url } from "../types";
 
-export default abstract class ApiProvider {
+export abstract class ApiProvider {
 	private readonly baseUrl?: Url;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(
+	protected constructor(
 		public readonly network?: SuiNetwork,
 		private readonly urlPrefix: Url = ""
 	) {

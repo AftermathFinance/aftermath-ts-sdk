@@ -1,8 +1,24 @@
 import { SignableTransaction } from "@mysten/sui.js";
-import ApiProvider from "../apiProvider/apiProvider";
+import { ApiProvider } from "../providers/apiProvider";
 import { CoinType, ApiFaucetRequestBody, SuiNetwork } from "../types";
 
 export class Faucet extends ApiProvider {
+	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	public static readonly constants = {
+		defaultRequestAmountUsd: 10,
+	};
+
+	private static readonly eventNames = {
+		mintedCoin: "MintedCoin",
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
 	constructor(public readonly network: SuiNetwork) {
 		super(network, "faucet");
 	}
