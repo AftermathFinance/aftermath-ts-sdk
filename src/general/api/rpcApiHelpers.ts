@@ -1,4 +1,4 @@
-export class Rpc {
+export class RpcApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -22,9 +22,9 @@ export class Rpc {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchRpcCall = async (method: string, params: any[]) => {
-		const jsonrpc = Rpc.constants.rpcVersion;
+		const jsonrpc = RpcApiHelpers.constants.rpcVersion;
 		const prefixedMethod = `sui_${method}`;
-		const id = Rpc.constants.rpcId;
+		const id = RpcApiHelpers.constants.rpcId;
 
 		const data = {
 			jsonrpc: jsonrpc,

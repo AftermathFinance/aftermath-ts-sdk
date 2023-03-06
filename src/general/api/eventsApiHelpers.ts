@@ -11,7 +11,7 @@ import {
 import dayjs, { QUnitType, OpUnitType } from "dayjs";
 import { RpcProvider } from "../providers/rpcProvider";
 
-export class Events {
+export class EventsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -203,15 +203,18 @@ export class Events {
 	) => {
 		const foundEvent = transaction.effects.events?.find(
 			(event) =>
-				Events.moveEventOfTypeOrUndefined(event, eventType) !==
-				undefined
+				EventsApiHelpers.moveEventOfTypeOrUndefined(
+					event,
+					eventType
+				) !== undefined
 		);
 		if (!foundEvent) return;
 
-		const eventEnvelope = Events.eventEnvelopeFromEventAndTransaction(
-			foundEvent,
-			transaction
-		);
+		const eventEnvelope =
+			EventsApiHelpers.eventEnvelopeFromEventAndTransaction(
+				foundEvent,
+				transaction
+			);
 
 		const castedEvent = castFunction(eventEnvelope as EventTypeOnChain);
 		return castedEvent;
@@ -229,7 +232,7 @@ export class Events {
 
 		const foundEvent = transactions
 			.map((transaction) =>
-				Events.findCastEventInTransactionOrUndefined(
+				EventsApiHelpers.findCastEventInTransactionOrUndefined(
 					transaction,
 					eventType,
 					castFunction

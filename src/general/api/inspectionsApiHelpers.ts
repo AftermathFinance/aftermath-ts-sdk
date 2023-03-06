@@ -1,6 +1,6 @@
 import { MoveCallTransaction } from "@mysten/sui.js";
 import { RpcProvider } from "../providers/rpcProvider";
-import { Rpc } from "./rpc";
+import { RpcApiHelpers } from "./rpc";
 import { Byte } from "../../types";
 
 export class Inspections {
@@ -23,7 +23,7 @@ export class Inspections {
 	public fetchBytesFromMoveCallTransaction = async (
 		moveCallTransaction: MoveCallTransaction
 	) => {
-		const signer = Rpc.constants.devInspectSigner;
+		const signer = RpcApiHelpers.constants.devInspectSigner;
 
 		const response = await this.rpcProvider.provider.devInspectTransaction(
 			signer,

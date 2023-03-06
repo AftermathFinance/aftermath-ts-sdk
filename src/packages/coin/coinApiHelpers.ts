@@ -10,7 +10,7 @@ import { Helpers } from "../../general/utils/helpers";
 import { Coin } from "./coin";
 import { RpcProvider } from "../../general/providers/rpcProvider";
 import { CoinApi } from "./coinApi";
-import { Events } from "../../general/api/events";
+import { EventsApiHelpers } from "../../general/api/events";
 
 export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -225,7 +225,7 @@ export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public coinCreatedCurrencyEventType = () =>
-		Events.createEventType(
+		EventsApiHelpers.createEventType(
 			RpcProvider.constants.packages.sui.packageId,
 			CoinApiHelpers.constants.modules.coin.name,
 			CoinApiHelpers.constants.eventNames.currencyCreated

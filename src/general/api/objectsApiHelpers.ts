@@ -8,7 +8,7 @@ import {
 import { RpcProvider } from "../providers/rpcProvider";
 import { PackageId } from "../../types";
 
-export class Objects {
+export class ObjectsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ export class Objects {
 		address: ObjectId | SuiAddress | PackageId
 	) => {
 		const object = await this.rpcProvider.provider.getObject(address);
-		return Objects.objectExists(object);
+		return ObjectsApiHelpers.objectExists(object);
 	};
 
 	public fetchIsObjectOwnedByAddress = async (
