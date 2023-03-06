@@ -17,7 +17,7 @@ import {
 	SuiNetwork,
 } from "../types";
 import { Pool } from "./pool";
-import { Coin } from "../coin/coin";
+import { Coin } from "../packages/coin/coin";
 import { Helpers } from "../utils/helpers";
 
 export class Pools extends ApiProvider {

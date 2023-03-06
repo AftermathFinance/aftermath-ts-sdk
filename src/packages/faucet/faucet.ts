@@ -1,6 +1,6 @@
 import { SignableTransaction } from "@mysten/sui.js";
-import { ApiProvider } from "../providers/apiProvider";
-import { CoinType, ApiFaucetRequestBody, SuiNetwork } from "../types";
+import { ApiProvider } from "../../general/providers/apiProvider";
+import { CoinType, ApiFaucetRequestBody, SuiNetwork } from "../../types";
 
 export class Faucet extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////

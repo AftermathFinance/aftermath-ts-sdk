@@ -1,4 +1,4 @@
-import { AnyObjectType } from "../types";
+import { AnyObjectType } from "../../types";
 
 export class Helpers {
 	/////////////////////////////////////////////////////////////////////

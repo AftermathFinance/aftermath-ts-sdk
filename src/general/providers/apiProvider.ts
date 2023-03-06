@@ -1,4 +1,4 @@
-import { SuiNetwork, Url } from "../types";
+import { SuiNetwork, Url } from "../../types";
 
 export abstract class ApiProvider {
 	private readonly baseUrl?: Url;

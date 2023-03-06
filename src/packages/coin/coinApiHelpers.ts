@@ -5,10 +5,10 @@ import {
 	SignableTransaction,
 	SuiAddress,
 } from "@mysten/sui.js";
-import { Balance, CoinDecimal, CoinType, GasBudget } from "../types";
-import { Helpers } from "../utils/helpers";
+import { Balance, CoinDecimal, CoinType, GasBudget } from "../../types";
+import { Helpers } from "../../general/utils/helpers";
 import { Coin } from "./coin";
-import { RpcProvider } from "../providers/rpcProvider";
+import { RpcProvider } from "../../general/providers/rpcProvider";
 import { CoinApi } from "./coinApi";
 
 export class CoinApiHelpers {
@@ -269,6 +269,7 @@ export class CoinApiHelpers {
 		const utiliesPackageId =
 			this.rpcProvider.addresses.utilies?.packages.utilities;
 		if (!utiliesPackageId) throw new Error("utilies package id is unset");
+
 		return {
 			kind: "moveCall",
 			data: {

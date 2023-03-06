@@ -1,4 +1,4 @@
-export * from "./faucet/faucet";
+export * from "./packages/faucet/faucet";
 
 export * from "./pools/pools";
 export * from "./pools/pool";

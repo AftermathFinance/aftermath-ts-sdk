@@ -13,8 +13,8 @@ import {
 	CoinWithAmountOrUndefined,
 	KeyType,
 	SuiNetwork,
-} from "../types";
-import { ApiProvider } from "../providers/apiProvider";
+} from "../../types";
+import { ApiProvider } from "../../general/providers/apiProvider";
 
 export class Coin extends ApiProvider {
 	/////////////////////////////////////////////////////////////////////

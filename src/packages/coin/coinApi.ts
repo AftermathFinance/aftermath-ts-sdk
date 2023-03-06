@@ -1,9 +1,9 @@
 import { CoinMetadata, JsonRpcProvider } from "@mysten/sui.js";
-import { Pools } from "../pools/pools";
+import { Pools } from "../../pools/pools";
 import { Coin } from "./coin";
-import { RpcProvider } from "../providers/rpcProvider";
-import { CoinType } from "../types";
-import { Helpers } from "../utils/helpers";
+import { RpcProvider } from "../../general/providers/rpcProvider";
+import { CoinType } from "../../types";
+import { Helpers } from "../../general/utils/helpers";
 
 export class CoinApi {
 	/////////////////////////////////////////////////////////////////////
@@ -53,4 +53,15 @@ export class CoinApi {
 			};
 		}
 	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Event Types
+	/////////////////////////////////////////////////////////////////////
+
+	public coinCreatedCurrencyEventType = () =>
+		Events(
+			config.sui.packageId,
+			config.sui.coin.module,
+			eventNames.sui.coin.currencyCreated
+		);
 }
