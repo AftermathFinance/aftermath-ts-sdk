@@ -20,7 +20,7 @@ import {
 	PoolLpDynamicFieldOnChain,
 	PoolSingleDepositEventOnChain,
 	PoolSingleWithdrawEventOnChain,
-	PoolSwapEventOnChain as PoolTradeEventOnChain,
+	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsCastingTypes";
 import { Pools } from "../pools";

@@ -39,8 +39,8 @@ export class FaucetApiHelpers {
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	public faucetAddresses: FaucetAddresses;
-	public coinTypes: {
+	public readonly faucetAddresses: FaucetAddresses;
+	public readonly coinTypes: {
 		af: CoinType;
 		afSui: CoinType;
 	};

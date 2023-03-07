@@ -46,7 +46,7 @@ export interface PoolCreateEventOnChain {
 	bcs: string;
 }
 
-export type PoolSwapEventOnChain = EventOnChain<{
+export type PoolTradeEventOnChain = EventOnChain<{
 	pool_id: ObjectId;
 	issuer: SuiAddress;
 	type_in: CoinType;

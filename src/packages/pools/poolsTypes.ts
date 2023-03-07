@@ -131,8 +131,8 @@ export interface IndicesPoolDataPoint {
 	value: number;
 }
 
-export type IndicesPoolVolumeDataTimeframeKey = "1D" | "1W" | "1M" | "3M";
-export interface IndicesPoolVolumeDataTimeframe {
+export type PoolVolumeDataTimeframeKey = "1D" | "1W" | "1M" | "3M";
+export interface PoolVolumeDataTimeframe {
 	time: Timestamp;
 	timeUnit: ManipulateType;
 }

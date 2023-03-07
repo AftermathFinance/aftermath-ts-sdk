@@ -7,7 +7,7 @@ import {
 	CoinType,
 	CoinsToBalance,
 	IndicesPoolDataPoint,
-	IndicesPoolVolumeDataTimeframeKey,
+	PoolVolumeDataTimeframeKey,
 	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
@@ -39,7 +39,7 @@ export class Pool extends Aftermath {
 	}
 
 	public async getVolume(
-		timeframe: IndicesPoolVolumeDataTimeframeKey
+		timeframe: PoolVolumeDataTimeframeKey
 	): Promise<IndicesPoolDataPoint[]> {
 		return this.fetchApi(`volume/${timeframe}`);
 	}

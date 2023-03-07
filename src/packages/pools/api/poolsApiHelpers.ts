@@ -8,8 +8,24 @@ import {
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Balance, CoinType, GasBudget, PoolsAddresses } from "../../../types";
+import {
+	Balance,
+	CoinDecimal,
+	CoinType,
+	GasBudget,
+	IndicesPoolDataPoint,
+	PoolVolumeDataTimeframe,
+	PoolVolumeDataTimeframeKey,
+	PoolDynamicFields,
+	PoolObject,
+	PoolTradeEvent,
+	PoolsAddresses,
+} from "../../../types";
 import { CoinApiHelpers } from "../../coin/api/coinApiHelpers";
+import { Coin } from "../../coin/coin";
+import { Pools } from "../pools";
+import dayjs, { ManipulateType } from "dayjs";
+import { PoolsApi } from "./poolsApi";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -48,9 +64,32 @@ export class PoolsApiHelpers {
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	public poolsAddresses: PoolsAddresses;
+	public readonly poolsAddresses: PoolsAddresses;
 
-	private coinApiHelpers: CoinApiHelpers;
+	protected readonly coinApiHelpers: CoinApiHelpers;
+	protected readonly eventsApiHelpers: EventsApiHelpers;
+
+	protected readonly poolVolumeDataTimeframes: Record<
+		PoolVolumeDataTimeframeKey,
+		PoolVolumeDataTimeframe
+	> = {
+		"1D": {
+			time: 24,
+			timeUnit: "hour",
+		},
+		"1W": {
+			time: 7,
+			timeUnit: "day",
+		},
+		"1M": {
+			time: 30,
+			timeUnit: "day",
+		},
+		"3M": {
+			time: 90,
+			timeUnit: "day",
+		},
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -67,6 +106,7 @@ export class PoolsApiHelpers {
 		this.poolsAddresses = poolsAddresses;
 
 		this.coinApiHelpers = new CoinApiHelpers(this.rpcProvider);
+		this.eventsApiHelpers = new EventsApiHelpers(this.rpcProvider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -314,7 +354,7 @@ export class PoolsApiHelpers {
 
 	// TODO: abstract i and ii into a new function that can also be called by swap/deposit/withdraw.
 
-	protected buildTradeTransactions = async (
+	protected fetchBuildTradeTransactions = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
@@ -360,7 +400,7 @@ export class PoolsApiHelpers {
 		return transactions;
 	};
 
-	protected buildDepositTransactions = async (
+	protected fetchBuildDepositTransactions = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
@@ -422,7 +462,7 @@ export class PoolsApiHelpers {
 		return transactions;
 	};
 
-	protected buildWithdrawTransactions = async (
+	protected fetchBuildWithdrawTransactions = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
@@ -468,6 +508,158 @@ export class PoolsApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Helpers
+	//// Stats
 	/////////////////////////////////////////////////////////////////////
+
+	// NOTE: should this volume calculation also take into account deposits and withdraws
+	// (not just swaps) ?
+	protected fetchCalcPoolVolume = (
+		poolObjectId: ObjectId,
+		poolCoins: CoinType[],
+		swapEvents: PoolTradeEvent[],
+		prices: number[],
+		coinsToDecimals: Record<CoinType, CoinDecimal>
+	) => {
+		const swapsForPool = swapEvents.filter(
+			(swap) => swap.poolId === poolObjectId
+		);
+
+		let volume = 0;
+		for (const swap of swapsForPool) {
+			const decimals = coinsToDecimals[swap.typeIn];
+			const swapAmount = Coin.balanceWithDecimals(
+				swap.amountIn,
+				decimals
+			);
+
+			const priceIndex = poolCoins.findIndex(
+				(coin) => coin === swap.typeIn
+			);
+			const coinInPrice = prices[priceIndex];
+
+			const amountUsd = swapAmount * coinInPrice;
+			volume += amountUsd;
+		}
+
+		return volume;
+	};
+
+	protected fetchCalcPoolTvl = async (
+		dynamicFields: PoolDynamicFields,
+		prices: number[],
+		coinsToDecimals: Record<CoinType, CoinDecimal>
+	) => {
+		const amountsWithDecimals: number[] = [];
+		for (const amountField of dynamicFields.amountFields) {
+			const amountWithDecimals = Coin.balanceWithDecimals(
+				amountField.value,
+				coinsToDecimals[amountField.coin]
+			);
+			amountsWithDecimals.push(amountWithDecimals);
+		}
+
+		const tvl = amountsWithDecimals
+			.map((amount, index) => amount * prices[index])
+			.reduce((prev, cur) => prev + cur, 0);
+
+		return tvl;
+	};
+
+	protected calcPoolSupplyPerLps = (dynamicFields: PoolDynamicFields) => {
+		const lpSupply = dynamicFields.lpFields[0].value;
+		const supplyPerLps = dynamicFields.amountFields.map(
+			(field) => Number(field.value) / Number(lpSupply)
+		);
+
+		return supplyPerLps;
+	};
+
+	protected calcPoolLpPrice = (
+		dynamicFields: PoolDynamicFields,
+		tvl: Number
+	) => {
+		const lpSupply = dynamicFields.lpFields[0].value;
+		const lpCoinDecimals = Pools.constants.lpCoinDecimals;
+		const lpPrice = Number(
+			Number(tvl) / Coin.balanceWithDecimals(lpSupply, lpCoinDecimals)
+		);
+
+		return lpPrice;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Prices
+	/////////////////////////////////////////////////////////////////////
+
+	protected findPriceForCoinInPool = (
+		coin: CoinType,
+		lpCoins: CoinType[],
+		nonLpCoins: CoinType[],
+		lpPrices: number[],
+		nonLpPrices: number[]
+	) => {
+		if (Pools.isLpCoin(coin)) {
+			const index = lpCoins.findIndex((lpCoin) => lpCoin === coin);
+			return lpPrices[index];
+		}
+
+		const index = nonLpCoins.findIndex((nonLpCoin) => nonLpCoin === coin);
+		return nonLpPrices[index];
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Graph Data
+	/////////////////////////////////////////////////////////////////////
+
+	protected fetchCalcPoolVolumeData = async (
+		pool: PoolObject,
+		tradeEvents: PoolTradeEvent[],
+		timeUnit: ManipulateType,
+		time: number,
+		buckets: number
+	) => {
+		// TODO: use promise.all for pool fetching and swap fetching
+
+		const coinsToDecimalsAndPrices =
+			await this.coinApiHelpers.fetchCoinsToDecimalsAndPrices(
+				pool.fields.coins
+			);
+
+		const now = Date.now();
+		const maxTimeAgo = dayjs(now).subtract(time, timeUnit);
+		const timeGap = dayjs(now).diff(maxTimeAgo);
+
+		const bucketTimestampSize = timeGap / buckets;
+		const emptyDataPoints: IndicesPoolDataPoint[] = Array(buckets)
+			.fill({
+				time: 0,
+				value: 0,
+			})
+			.map((dataPoint, index) => {
+				return {
+					...dataPoint,
+					time: maxTimeAgo.valueOf() + index * bucketTimestampSize,
+				};
+			});
+
+		const dataPoints = tradeEvents.reduce((acc, swap) => {
+			const bucketIndex =
+				acc.length -
+				Math.floor(
+					dayjs(now).diff(swap.timestamp) / bucketTimestampSize
+				) -
+				1;
+			const amountUsd = Coin.balanceWithDecimalsUsd(
+				swap.amountIn,
+				coinsToDecimalsAndPrices[swap.typeIn].decimals,
+				coinsToDecimalsAndPrices[swap.typeIn].price
+			);
+
+			acc[bucketIndex].value += amountUsd;
+
+			return acc;
+		}, emptyDataPoints);
+
+		return dataPoints;
+	};
 }
