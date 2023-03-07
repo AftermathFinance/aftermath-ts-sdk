@@ -15,7 +15,6 @@ import {
 import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
 import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
 import { Coin } from "../../coin/coin";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import {
 	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
@@ -34,7 +33,6 @@ export class PoolsApi extends PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	private inspectionsApiHelpers: InspectionsApiHelpers;
-	private eventsApiHelpers: EventsApiHelpers;
 	private dynamicFieldsApiHelpers: DynamicFieldsApiHelpers;
 	private objectsApiHelpers: ObjectsApiHelpers;
 
@@ -46,7 +44,6 @@ export class PoolsApi extends PoolsApiHelpers {
 		super(rpcProvider);
 
 		this.inspectionsApiHelpers = new InspectionsApiHelpers(rpcProvider);
-		this.eventsApiHelpers = new EventsApiHelpers(rpcProvider);
 		this.dynamicFieldsApiHelpers = new DynamicFieldsApiHelpers(rpcProvider);
 		this.objectsApiHelpers = new ObjectsApiHelpers(rpcProvider);
 	}
