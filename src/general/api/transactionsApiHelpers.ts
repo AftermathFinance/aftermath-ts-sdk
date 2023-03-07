@@ -10,8 +10,8 @@ export class TransactionsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ export class TransactionsApiHelpers {
 		limit?: number
 	): Promise<TransactionDigestsWithCursor> => {
 		const transactionDigestsWithCursor =
-			await this.rpcProvider.provider.getTransactions(
+			await this.Provider.provider.getTransactions(
 				query,
 				cursor ?? null,
 				limit ?? null
@@ -49,7 +49,7 @@ export class TransactionsApiHelpers {
 			await this.fetchTransactionDigestsWithCursor(query, cursor, limit);
 
 		const transactions =
-			await this.rpcProvider.provider.getTransactionWithEffectsBatch(
+			await this.Provider.provider.getTransactionWithEffectsBatch(
 				transactionDigestsWithCursor.transactionDigests
 			);
 

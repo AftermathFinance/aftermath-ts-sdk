@@ -1,8 +1,5 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { CoinApiHelpers } from "../../coin/api/coinApiHelpers";
-import { ObjectsApiHelpers } from "../../../general/api/objectsApiHelpers";
 import { Faucet } from "../faucet";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { EventId } from "@mysten/sui.js";
 import { FaucetApiCasting } from "./faucetApiCasting";
 import { CoinType } from "../../coin/coinTypes";
@@ -15,8 +12,8 @@ export class FaucetApi extends FaucetApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(rpcProvider: AftermathApi) {
-		super(rpcProvider);
+	constructor(Provider: AftermathApi) {
+		super(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -24,8 +21,7 @@ export class FaucetApi extends FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchFaucetSupportedCoins = () => {
-		const faucetPackageId =
-			this.rpcProvider.addresses.faucet?.packages.faucet;
+		const faucetPackageId = this.Provider.addresses.faucet?.packages.faucet;
 		if (!faucetPackageId) throw new Error("faucet package id is unset");
 
 		const coinSymbols = [
@@ -61,13 +57,10 @@ export class FaucetApi extends FaucetApiHelpers {
 	// };
 
 	public fetchIsFaucetPackageOnChain = () => {
-		const faucetPackageId =
-			this.rpcProvider.addresses.faucet?.packages.faucet;
+		const faucetPackageId = this.Provider.addresses.faucet?.packages.faucet;
 		if (!faucetPackageId) throw new Error("faucet package id is unset");
 
-		return new ObjectsApiHelpers(this.rpcProvider).fetchDoesObjectExist(
-			faucetPackageId
-		);
+		return this.Provider.Objects.fetchDoesObjectExist(faucetPackageId);
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -81,9 +74,11 @@ export class FaucetApi extends FaucetApiHelpers {
 		if (price === 0) throw new Error("price of 0");
 
 		const requestAmount = Faucet.constants.defaultRequestAmountUsd / price;
-		const requestAmountWithDecimals = await new CoinApiHelpers(
-			this.rpcProvider
-		).fetchCoinDecimalsNormalizeBalance(coin, requestAmount);
+		const requestAmountWithDecimals =
+			await this.Provider.CoinHelpers.fetchCoinDecimalsNormalizeBalance(
+				coin,
+				requestAmount
+			);
 
 		const transaction = this.faucetRequestCoinAmountTransaction(
 			coin as CoinType,
@@ -101,13 +96,13 @@ export class FaucetApi extends FaucetApiHelpers {
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
-		await new EventsApiHelpers(this.rpcProvider).fetchCastEventsWithCursor<
+		await this.Provider.Events.fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
 			FaucetMintCoinEvent
 		>(
 			{
 				MoveEvent: new FaucetApiHelpers(
-					this.rpcProvider
+					this.Provider
 				).faucetMintCoinEventType(),
 			},
 			FaucetApiCasting.faucetMintCoinEventFromOnChain,

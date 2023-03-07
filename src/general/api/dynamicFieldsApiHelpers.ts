@@ -12,8 +12,8 @@ export class DynamicFieldsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -155,7 +155,7 @@ export class DynamicFieldsApiHelpers {
 		limit?: number
 	) => {
 		const dynamicFieldsResponse =
-			await this.rpcProvider.provider.getDynamicFields(
+			await this.Provider.provider.getDynamicFields(
 				parentObjectId,
 				cursor,
 				limit

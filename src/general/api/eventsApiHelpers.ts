@@ -16,8 +16,8 @@ export class EventsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ export class EventsApiHelpers {
 		onEvent: (event: SuiEventEnvelope) => void
 	): Promise<number> => {
 		const userEventSubscriptionId =
-			await this.rpcProvider.provider.subscribeEvent(
+			await this.Provider.provider.subscribeEvent(
 				{
 					SenderAddress: address,
 				},
@@ -45,7 +45,7 @@ export class EventsApiHelpers {
 	public fetchUnsubscribeFromEvents = async (
 		subscriptionId: number
 	): Promise<boolean> => {
-		const success = await this.rpcProvider.provider.unsubscribeEvent(
+		const success = await this.Provider.provider.unsubscribeEvent(
 			subscriptionId
 		);
 		return success;
@@ -57,7 +57,7 @@ export class EventsApiHelpers {
 		cursor?: EventId,
 		eventLimit?: number
 	): Promise<EventsWithCursor<EventOnChainType>> => {
-		const fetchedEvents = await this.rpcProvider.provider.getEvents(
+		const fetchedEvents = await this.Provider.provider.getEvents(
 			query,
 			cursor === undefined ? null : cursor,
 			eventLimit || null // defaultEventLimit ?
@@ -75,7 +75,7 @@ export class EventsApiHelpers {
 		cursor?: EventId,
 		eventLimit?: number
 	) => {
-		const fetchedEvents = await this.rpcProvider.provider.getEvents(
+		const fetchedEvents = await this.Provider.provider.getEvents(
 			query,
 			cursor === undefined ? null : cursor,
 			eventLimit || null // defaultEventLimit ?

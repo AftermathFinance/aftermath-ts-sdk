@@ -13,8 +13,8 @@ export class ObjectsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ export class ObjectsApiHelpers {
 	public fetchDoesObjectExist = async (
 		address: ObjectId | SuiAddress | PackageId
 	) => {
-		const object = await this.rpcProvider.provider.getObject(address);
+		const object = await this.Provider.provider.getObject(address);
 		return ObjectsApiHelpers.objectExists(object);
 	};
 
@@ -57,7 +57,7 @@ export class ObjectsApiHelpers {
 		filter?: (suiObjectInfo: SuiObjectInfo) => boolean
 	): Promise<SuiObjectInfo[]> => {
 		const objectsOwnedByAddress =
-			await this.rpcProvider.provider.getObjectsOwnedByAddress(
+			await this.Provider.provider.getObjectsOwnedByAddress(
 				walletAddress
 			);
 
@@ -69,7 +69,7 @@ export class ObjectsApiHelpers {
 	public fetchObject = async (
 		objectId: ObjectId
 	): Promise<GetObjectDataResponse> => {
-		const object = await this.rpcProvider.provider.getObject(objectId);
+		const object = await this.Provider.provider.getObject(objectId);
 		if (object.status !== "Exists")
 			throw new Error("object does not exist");
 		return object;
@@ -85,7 +85,7 @@ export class ObjectsApiHelpers {
 	public fetchObjectBatch = async (
 		objectIds: ObjectId[]
 	): Promise<GetObjectDataResponse[]> => {
-		const objectBatch = await this.rpcProvider.provider.getObjectBatch(
+		const objectBatch = await this.Provider.provider.getObjectBatch(
 			objectIds
 		);
 		const objectDataResponses = objectBatch.filter(
@@ -105,7 +105,7 @@ export class ObjectsApiHelpers {
 			getObjectDataResponse: GetObjectDataResponse
 		) => ObjectType
 	): Promise<ObjectType[]> => {
-		return (await this.rpcProvider.provider.getObjectBatch(objectIds)).map(
+		return (await this.Provider.provider.getObjectBatch(objectIds)).map(
 			(getObjectDataResponse: GetObjectDataResponse) => {
 				return objectFromGetObjectDataResponse(getObjectDataResponse);
 			}
@@ -119,7 +119,7 @@ export class ObjectsApiHelpers {
 			data: GetObjectDataResponse
 		) => ObjectType
 	): Promise<ObjectType[]> => {
-		return (await this.rpcProvider.provider.getObjectBatch(objectIds))
+		return (await this.Provider.provider.getObjectBatch(objectIds))
 			.filter((data) => filterGetObjectDataResponse(data))
 			.map((getObjectDataResponse: GetObjectDataResponse) => {
 				return objectFromGetObjectDataResponse(getObjectDataResponse);

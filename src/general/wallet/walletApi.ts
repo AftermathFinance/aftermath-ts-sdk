@@ -9,8 +9,8 @@ export class WalletApi {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@ export class WalletApi {
 		account: SuiAddress,
 		coin: CoinType
 	) => {
-		const coinBalance = await this.rpcProvider.provider.getBalance(
+		const coinBalance = await this.Provider.provider.getBalance(
 			account,
 			Helpers.stripLeadingZeroesFromType(coin)
 		);
@@ -33,7 +33,7 @@ export class WalletApi {
 	public fetchWalletAllCoinBalances = async (
 		address: SuiAddress
 	): Promise<CoinWithBalance[]> => {
-		const allBalances = await this.rpcProvider.provider.getAllBalances(
+		const allBalances = await this.Provider.provider.getAllBalances(
 			address
 		);
 		// TODO: make this into object [coinType]: Balance ?
@@ -53,7 +53,7 @@ export class WalletApi {
 		limit?: number
 	) => {
 		const transactionsWithCursor = await new TransactionsApiHelpers(
-			this.rpcProvider
+			this.Provider
 		).fetchTransactionsWithCursor(
 			{
 				FromAddress: address,

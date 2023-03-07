@@ -11,8 +11,8 @@ export class CoinApi extends CoinApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(rpcProvider: AftermathApi) {
-		super(rpcProvider);
+	constructor(Provider: AftermathApi) {
+		super(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -23,10 +23,9 @@ export class CoinApi extends CoinApiHelpers {
 		coin: CoinType
 	): Promise<CoinMetadata> => {
 		try {
-			const coinMetadata =
-				await this.rpcProvider.provider.getCoinMetadata(
-					Helpers.stripLeadingZeroesFromType(coin)
-				);
+			const coinMetadata = await this.Provider.provider.getCoinMetadata(
+				Helpers.stripLeadingZeroesFromType(coin)
+			);
 			return coinMetadata;
 		} catch (error) {
 			if (Pools.isLpCoin(coin)) {

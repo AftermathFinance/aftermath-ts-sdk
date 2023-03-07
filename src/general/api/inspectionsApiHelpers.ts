@@ -8,8 +8,8 @@ export class InspectionsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ export class InspectionsApiHelpers {
 	) => {
 		const signer = RpcApiHelpers.constants.devInspectSigner;
 
-		const response = await this.rpcProvider.provider.devInspectTransaction(
+		const response = await this.Provider.provider.devInspectTransaction(
 			signer,
 			{
 				kind: "moveCall",

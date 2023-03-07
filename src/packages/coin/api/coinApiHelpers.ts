@@ -10,8 +10,8 @@ import { Helpers } from "../../../general/utils/helpers";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinApi } from "./coinApi";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -62,8 +62,8 @@ export class CoinApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(protected readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ export class CoinApiHelpers {
 		coinAmount: Balance
 	): Promise<GetObjectDataResponse[]> => {
 		const response = (
-			await this.rpcProvider.provider.selectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.provider.selectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				coinAmount,
 				Helpers.stripLeadingZeroesFromType(coinType)
@@ -131,9 +131,9 @@ export class CoinApiHelpers {
 	};
 
 	public fetchCoinDecimals = async (coin: CoinType) => {
-		const coinMetadata = await new CoinApi(
-			this.rpcProvider
-		).fetchCoinMetadata(coin);
+		const coinMetadata = await new CoinApi(this.Provider).fetchCoinMetadata(
+			coin
+		);
 		const decimals = coinMetadata?.decimals;
 		if (decimals === undefined)
 			throw Error("unable to obtain decimals for coin: " + coin);
@@ -358,7 +358,7 @@ export class CoinApiHelpers {
 			.joinVecAndSplit.defaultGasBudget
 	): SignableTransaction => {
 		const utiliesPackageId =
-			this.rpcProvider.addresses.utilies?.packages.utilities;
+			this.Provider.addresses.utilies?.packages.utilities;
 		if (!utiliesPackageId) throw new Error("utilies package id is unset");
 
 		return {

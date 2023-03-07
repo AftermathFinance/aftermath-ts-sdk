@@ -25,7 +25,6 @@ import { CoinApiHelpers } from "../../coin/api/coinApiHelpers";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
-import { PoolsApi } from "./poolsApi";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -66,9 +65,6 @@ export class PoolsApiHelpers {
 
 	public readonly poolsAddresses: PoolsAddresses;
 
-	protected readonly coinApiHelpers: CoinApiHelpers;
-	protected readonly eventsApiHelpers: EventsApiHelpers;
-
 	protected readonly poolVolumeDataTimeframes: Record<
 		PoolVolumeDataTimeframeKey,
 		PoolVolumeDataTimeframe
@@ -95,18 +91,15 @@ export class PoolsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly rpcProvider: AftermathApi) {
-		const poolsAddresses = this.rpcProvider.addresses.pools;
+	constructor(protected readonly Provider: AftermathApi) {
+		const poolsAddresses = this.Provider.addresses.pools;
 		if (!poolsAddresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.rpcProvider = rpcProvider;
+		this.Provider = Provider;
 		this.poolsAddresses = poolsAddresses;
-
-		this.coinApiHelpers = new CoinApiHelpers(this.rpcProvider);
-		this.eventsApiHelpers = new EventsApiHelpers(this.rpcProvider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -364,7 +357,7 @@ export class PoolsApiHelpers {
 	): Promise<SignableTransaction[]> => {
 		// i. obtain object ids of coin to swap from
 		const response =
-			await this.coinApiHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				fromCoinType,
 				fromCoinAmount
@@ -376,7 +369,7 @@ export class PoolsApiHelpers {
 		// ii. the user doesn't have a coin of type `fromCoinType` with exact
 		// value of `fromCoinAmount`, so we need to create it
 		const joinAndSplitTransactions =
-			this.coinApiHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				fromCoinType,
@@ -411,7 +404,7 @@ export class PoolsApiHelpers {
 		const responses = (
 			await Promise.all(
 				coinTypes.map((coinType, index) =>
-					this.coinApiHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+					this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 						walletAddress,
 						coinType,
 						coinAmounts[index]
@@ -432,7 +425,7 @@ export class PoolsApiHelpers {
 		// value of `coinAmount`, so we need to create it
 		responses.forEach((response, index) => {
 			const joinAndSplitTransactions =
-				this.coinApiHelpers.coinJoinAndSplitWithExactAmountTransactions(
+				this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
 					response[0],
 					response.slice(1),
 					coinTypes[index],
@@ -472,7 +465,7 @@ export class PoolsApiHelpers {
 	): Promise<SignableTransaction[]> => {
 		// i. obtain object ids of `lpCoinType` to burn
 		const response =
-			await this.coinApiHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				poolLpType,
 				lpCoinAmount
@@ -484,7 +477,7 @@ export class PoolsApiHelpers {
 		// ii. the user doesn't have a coin of type `fromCoinType` with exact
 		// value of `fromCoinAmount`, so we need to create it
 		const joinAndSplitTransactions =
-			this.coinApiHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				poolLpType,
@@ -621,7 +614,7 @@ export class PoolsApiHelpers {
 		// TODO: use promise.all for pool fetching and swap fetching
 
 		const coinsToDecimalsAndPrices =
-			await this.coinApiHelpers.fetchCoinsToDecimalsAndPrices(
+			await this.Provider.CoinHelpers.fetchCoinsToDecimalsAndPrices(
 				pool.fields.coins
 			);
 

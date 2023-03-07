@@ -13,7 +13,6 @@ import {
 	PoolWithdrawEvent,
 } from "../../../types";
 import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
-import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
 import { Coin } from "../../coin/coin";
 import {
 	PoolCreateEventOnChain,
@@ -23,29 +22,15 @@ import {
 	PoolWithdrawEventOnChain,
 } from "./poolsCastingTypes";
 import { PoolsApiCasting } from "./poolsApiCasting";
-import { DynamicFieldsApiHelpers } from "../../../general/api/dynamicFieldsApiHelpers";
-import { ObjectsApiHelpers } from "../../../general/api/objectsApiHelpers";
 import { Pools } from "../pools";
 
 export class PoolsApi extends PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
-
-	private inspectionsApiHelpers: InspectionsApiHelpers;
-	private dynamicFieldsApiHelpers: DynamicFieldsApiHelpers;
-	private objectsApiHelpers: ObjectsApiHelpers;
-
-	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(rpcProvider: AftermathApi) {
-		super(rpcProvider);
-
-		this.inspectionsApiHelpers = new InspectionsApiHelpers(rpcProvider);
-		this.dynamicFieldsApiHelpers = new DynamicFieldsApiHelpers(rpcProvider);
-		this.objectsApiHelpers = new ObjectsApiHelpers(rpcProvider);
+	constructor(Provider: AftermathApi) {
+		super(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -69,7 +54,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			lpCoinType
 		);
 		const bytes =
-			await this.inspectionsApiHelpers.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return CastingApiHelpers.bigIntFromBytes(bytes);
@@ -90,7 +75,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			coinInBalance
 		);
 		const bytes =
-			await this.inspectionsApiHelpers.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return CastingApiHelpers.bigIntFromBytes(bytes);
@@ -111,7 +96,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			balances
 		);
 		const bytes =
-			await this.inspectionsApiHelpers.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return CastingApiHelpers.bigIntFromBytes(bytes);
@@ -132,7 +117,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			balances
 		);
 		const bytes =
-			await this.inspectionsApiHelpers.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return CastingApiHelpers.bigIntFromBytes(bytes);
@@ -143,7 +128,7 @@ export class PoolsApi extends PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchTradeEvents = async (cursor?: EventId, eventLimit?: number) =>
-		await this.eventsApiHelpers.fetchCastEventsWithCursor<
+		await this.Provider.Events.fetchCastEventsWithCursor<
 			PoolTradeEventOnChain,
 			PoolTradeEvent
 		>(
@@ -174,7 +159,7 @@ export class PoolsApi extends PoolsApiHelpers {
 	// 	);
 
 	public fetchDepositEvents = async (cursor?: EventId, eventLimit?: number) =>
-		await this.eventsApiHelpers.fetchCastEventsWithCursor<
+		await this.Provider.Events.fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
 			PoolDepositEvent
 		>(
@@ -206,7 +191,7 @@ export class PoolsApi extends PoolsApiHelpers {
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
-		await this.eventsApiHelpers.fetchCastEventsWithCursor<
+		await this.Provider.Events.fetchCastEventsWithCursor<
 			PoolWithdrawEventOnChain,
 			PoolWithdrawEvent
 		>(
@@ -223,7 +208,7 @@ export class PoolsApi extends PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchPool = async (objectId: ObjectId) => {
-		const object = await this.rpcProvider.provider.getObject(objectId);
+		const object = await this.Provider.provider.getObject(objectId);
 		if (object.status !== "Exists")
 			throw new Error("pool object does not exist");
 
@@ -234,9 +219,7 @@ export class PoolsApi extends PoolsApiHelpers {
 	};
 
 	public fetchPools = async (objectIds: ObjectId[]) => {
-		const objects = await this.objectsApiHelpers.fetchObjectBatch(
-			objectIds
-		);
+		const objects = await this.Provider.Objects.fetchObjectBatch(objectIds);
 		const poolObjects = objects.map((data) =>
 			PoolsApiCasting.poolObjectFromSuiObject(data.details as SuiObject)
 		);
@@ -244,7 +227,7 @@ export class PoolsApi extends PoolsApiHelpers {
 	};
 
 	public fetchAllPools = async () => {
-		const paginatedEvents = await this.rpcProvider.provider.getEvents(
+		const paginatedEvents = await this.Provider.provider.getEvents(
 			{
 				MoveEvent: `${this.poolsAddresses.packages.cmmm}::events::CreatedPoolEvent`,
 			}, // query
@@ -273,13 +256,13 @@ export class PoolsApi extends PoolsApiHelpers {
 
 	public fetchPoolDynamicFields = async (poolId: ObjectId) => {
 		const allDynamicFields =
-			await this.dynamicFieldsApiHelpers.fetchAllDynamicFieldsOfType(
+			await this.Provider.DynamicFields.fetchAllDynamicFieldsOfType(
 				poolId
 			);
 		const objectIds = allDynamicFields.map((field) => field.objectId);
 
 		const dynamicFieldsAsSuiObjects =
-			await this.objectsApiHelpers.fetchObjectBatch(objectIds);
+			await this.Provider.Objects.fetchObjectBatch(objectIds);
 		const dynamicFieldsOnChain = dynamicFieldsAsSuiObjects.map(
 			(dynamicField) =>
 				dynamicField.details as SuiObject as PoolDynamicFieldOnChain
@@ -378,12 +361,12 @@ export class PoolsApi extends PoolsApiHelpers {
 		const poolCoins = pool.fields.coins;
 
 		const prices = await fetchPythPrices(poolCoins);
-		const coinsToDecimals = await this.coinApiHelpers.fetchCoinsToDecimals(
+		const coinsToDecimals = await this.Provider.Coin.fetchCoinsToDecimals(
 			poolCoins
 		);
 
 		const swapEventsWithinTime =
-			await this.eventsApiHelpers.fetchEventsWithinTime(
+			await this.Provider.Events.fetchEventsWithinTime(
 				this.fetchTradeEvents,
 				"hour",
 				24
@@ -488,7 +471,7 @@ export class PoolsApi extends PoolsApiHelpers {
 		const [pool, tradeEvents] = await Promise.all([
 			this.fetchPool(poolObjectId),
 			(
-				await this.eventsApiHelpers.fetchEventsWithinTime(
+				await this.Provider.Events.fetchEventsWithinTime(
 					this.fetchTradeEvents,
 					timeframeValue.timeUnit,
 					timeframeValue.time

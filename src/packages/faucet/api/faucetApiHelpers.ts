@@ -49,14 +49,14 @@ export class FaucetApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly rpcProvider: AftermathApi) {
-		const faucetAddresses = this.rpcProvider.addresses.faucet;
+	constructor(protected readonly Provider: AftermathApi) {
+		const faucetAddresses = this.Provider.addresses.faucet;
 		if (!faucetAddresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.rpcProvider = rpcProvider;
+		this.Provider = Provider;
 		this.faucetAddresses = faucetAddresses;
 
 		this.coinTypes = {

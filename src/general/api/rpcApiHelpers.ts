@@ -1,3 +1,5 @@
+import { AftermathApi } from "../providers/aftermathApi";
+
 export class RpcApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
@@ -5,16 +7,14 @@ export class RpcApiHelpers {
 
 	public static constants = {
 		devInspectSigner: "0xedd30fda5ea992615d73ca8eca9e381a7fe025db",
-		rpcVersion: "2.0",
-		rpcId: 1,
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly rpcEndpoint: string) {
-		this.rpcEndpoint = rpcEndpoint;
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -22,24 +22,10 @@ export class RpcApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchRpcCall = async (method: string, params: any[]) => {
-		const jsonrpc = RpcApiHelpers.constants.rpcVersion;
-		const prefixedMethod = `sui_${method}`;
-		const id = RpcApiHelpers.constants.rpcId;
+		const rpcClient = this.Provider.provider.options.rpcClient;
+		if (!rpcClient) throw new Error("rpcClient is unset");
 
-		const data = {
-			jsonrpc: jsonrpc,
-			id: id,
-			method: prefixedMethod,
-			params: params,
-		};
-
-		const responseJson = await fetch(this.rpcEndpoint, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(data),
-		});
+		const responseJson = await rpcClient.request(method, params);
 
 		try {
 			const response = await responseJson.json();
