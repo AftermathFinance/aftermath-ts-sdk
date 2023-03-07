@@ -1,6 +1,6 @@
 import { SuiAddress } from "@mysten/sui.js";
-import { Event } from "./generalTypes";
-import { CoinType } from "./coinTypes";
+import { Event } from "../../general/types/generalTypes";
+import { CoinType } from "../coin/coinTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Events

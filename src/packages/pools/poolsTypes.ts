@@ -1,8 +1,8 @@
 import { SignableTransaction } from "@mysten/sui.js";
-import { Balance, Event, Timestamp } from "./generalTypes";
+import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
-import { CoinsToBalance, CoinType } from "./coinTypes";
+import { CoinsToBalance, CoinType } from "../coin/coinTypes";
 
 // TODO: create LpCoinType ?
 

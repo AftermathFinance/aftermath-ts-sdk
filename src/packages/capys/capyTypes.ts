@@ -1,7 +1,11 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Balance, Event, Url } from "./generalTypes";
-import { EpochTimeLock } from "./suiTypes";
-import { AmountInCoinAndUsd, CoinType, CoinWithBalance } from "./coinTypes";
+import { Balance, Event, Url } from "../../general/types/generalTypes";
+import { EpochTimeLock } from "../../general/types/suiTypes";
+import {
+	AmountInCoinAndUsd,
+	CoinType,
+	CoinWithBalance,
+} from "../coin/coinTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects

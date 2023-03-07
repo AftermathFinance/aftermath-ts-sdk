@@ -1,4 +1,4 @@
-import { Balance } from "./generalTypes";
+import { Balance } from "../../general/types/generalTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
