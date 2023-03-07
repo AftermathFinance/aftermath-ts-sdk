@@ -1,11 +1,14 @@
+import { FaucetMintCoinEventOnChain } from "./faucetCastingTypes";
+import { FaucetMintCoinEvent } from "../faucetTypes";
+
 export class FaucetApiCasting {
 	/////////////////////////////////////////////////////////////////////
-	//// Casting
+	//// Events
 	/////////////////////////////////////////////////////////////////////
 
 	public static faucetMintCoinEventFromOnChain = (
 		eventOnChain: FaucetMintCoinEventOnChain
-	) => {
+	): FaucetMintCoinEvent => {
 		const fields = eventOnChain.event.moveEvent.fields;
 		return {
 			minter: fields.user,
@@ -13,6 +16,6 @@ export class FaucetApiCasting {
 			balanceMinted: BigInt(fields.amount),
 			timestamp: eventOnChain.timestamp,
 			txnDigest: eventOnChain.txDigest,
-		} as FaucetMintCoinEvent;
+		};
 	};
 }

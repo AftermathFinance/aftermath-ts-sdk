@@ -1,16 +1,22 @@
-import { AftermathApi } from "../../general/providers/aftermathApi";
-import { CoinType } from "../../types";
-import { CoinApiHelpers } from "../coin/coinApiHelpers";
-import { ObjectsApiHelpers } from "../../general/api/objectsApiHelpers";
-import { Faucet } from "./faucet";
+import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { CoinApiHelpers } from "../../coin/api/coinApiHelpers";
+import { ObjectsApiHelpers } from "../../../general/api/objectsApiHelpers";
+import { Faucet } from "../faucet";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventId } from "@mysten/sui.js";
+import { FaucetApiCasting } from "./faucetApiCasting";
+import { CoinType } from "../../coin/coinTypes";
+import { FaucetMintCoinEventOnChain } from "./faucetCastingTypes";
+import { FaucetMintCoinEvent } from "../faucetTypes";
+import { FaucetApiHelpers } from "./faucetApiHelpers";
 
-export class FaucetApi {
+export class FaucetApi extends FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(rpcProvider: AftermathApi) {
+		super(rpcProvider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -79,7 +85,7 @@ export class FaucetApi {
 			this.rpcProvider
 		).fetchCoinDecimalsNormalizeBalance(coin, requestAmount);
 
-		const transaction = faucetRequestCoinAmountTransaction(
+		const transaction = this.faucetRequestCoinAmountTransaction(
 			coin as CoinType,
 			requestAmountWithDecimals
 		);
@@ -95,14 +101,16 @@ export class FaucetApi {
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
-		await fetchCastEventsWithCursor<
+		await new EventsApiHelpers(this.rpcProvider).fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
 			FaucetMintCoinEvent
 		>(
 			{
-				MoveEvent: faucetMintCoinEventType(),
+				MoveEvent: new FaucetApiHelpers(
+					this.rpcProvider
+				).faucetMintCoinEventType(),
 			},
-			faucetMintCoinEventFromOnChain,
+			FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			cursor,
 			eventLimit
 		);

@@ -72,9 +72,9 @@ export interface PoolDynamicFields {
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-export interface PoolSwapEvent extends Event {
+export interface PoolTradeEvent extends Event {
 	poolId: ObjectId;
-	swapper: SuiAddress;
+	trader: SuiAddress;
 	typeIn: CoinType;
 	amountIn: Balance;
 	typeOut: CoinType;

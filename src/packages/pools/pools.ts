@@ -9,7 +9,7 @@ import {
 	PoolDepositEvent,
 	PoolDynamicFields,
 	PoolObject,
-	PoolSwapEvent,
+	PoolTradeEvent,
 	PoolSwapFee,
 	PoolWeight,
 	PoolWithdrawEvent,
@@ -31,12 +31,6 @@ export class Pools extends Aftermath {
 		spotPriceDecimals: 18,
 		swapFeeDecimals: 18,
 		maxSwapFee: BigInt(1000000000000000000),
-	};
-
-	private static readonly eventNames = {
-		swap: "SwapEvent",
-		deposit: "DepositEvent",
-		withdraw: "WithdrawEvent",
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -112,8 +106,8 @@ export class Pools extends Aftermath {
 	public async getTradeEvents(
 		cursor?: EventId,
 		limit?: number
-	): Promise<EventsWithCursor<PoolSwapEvent>> {
-		return this.fetchApi<EventsWithCursor<PoolSwapEvent>, ApiEventsBody>(
+	): Promise<EventsWithCursor<PoolTradeEvent>> {
+		return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
 			"events/trade",
 			{
 				cursor,

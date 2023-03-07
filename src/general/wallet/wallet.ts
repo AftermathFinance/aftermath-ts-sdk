@@ -1,13 +1,12 @@
 import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { Aftermath } from "../providers/aftermath";
+import { SuiNetwork } from "../types/suiTypes";
 import {
-	Balance,
-	CoinType,
-	CoinWithBalance,
 	ApiTransactionsBody,
+	Balance,
 	TransactionsWithCursor,
-	SuiNetwork,
-} from "../../types";
+} from "../types/generalTypes";
+import { CoinType, CoinWithBalance } from "../../packages/coin/coinTypes";
 
 export class Wallet extends Aftermath {
 	constructor(

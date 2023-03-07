@@ -1,42 +1,56 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 
 /////////////////////////////////////////////////////////////////////
-//// Addresses
+//// All Addresses
 /////////////////////////////////////////////////////////////////////
 
 export interface ConfigAddresses {
-	capys: {
-		packages: {
-			capy: SuiAddress;
-			capyVault: SuiAddress;
-		};
-		objects: {
-			capyVault: ObjectId;
-			capyRegistry: ObjectId;
-		};
+	faucet: FaucetAddresses;
+	staking: StakingAddresses;
+	pools: PoolsAddresses;
+	utilies: UtilitiesAddresses;
+	capys: CapysAddresses;
+}
+
+/////////////////////////////////////////////////////////////////////
+//// Addresses By Package
+/////////////////////////////////////////////////////////////////////
+
+export interface FaucetAddresses {
+	packages: {
+		faucet: SuiAddress;
 	};
-	utilies: {
-		packages: {
-			utilities: SuiAddress;
-		};
+	objects: {
+		faucet: ObjectId;
+		faucetRegistry: ObjectId;
 	};
-	pools: {
-		packages: {
-			cmmm: SuiAddress;
-		};
+}
+
+export interface StakingAddresses {
+	packages: {
+		liquidStakingDerivative: SuiAddress;
 	};
-	faucet: {
-		packages: {
-			faucet: SuiAddress;
-		};
-		objects: {
-			faucet: ObjectId;
-			faucetRegistry: ObjectId;
-		};
+}
+
+export interface PoolsAddresses {
+	packages: {
+		cmmm: SuiAddress;
 	};
-	staking: {
-		packages: {
-			liquidStakingDerivative: SuiAddress;
-		};
+}
+
+export interface UtilitiesAddresses {
+	packages: {
+		utilities: SuiAddress;
+	};
+}
+
+export interface CapysAddresses {
+	packages: {
+		capy: SuiAddress;
+		capyVault: SuiAddress;
+	};
+	objects: {
+		capyVault: ObjectId;
+		capyRegistry: ObjectId;
 	};
 }

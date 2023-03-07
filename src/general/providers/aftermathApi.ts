@@ -1,5 +1,5 @@
 import { JsonRpcProvider } from "@mysten/sui.js";
-import { ConfigAddresses } from "../../types/configTypes";
+import { ConfigAddresses } from "../types/configTypes";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////

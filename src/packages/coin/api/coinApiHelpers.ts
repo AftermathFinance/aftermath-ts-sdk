@@ -5,12 +5,13 @@ import {
 	SignableTransaction,
 	SuiAddress,
 } from "@mysten/sui.js";
-import { Balance, CoinDecimal, CoinType, GasBudget } from "../../types";
-import { Helpers } from "../../general/utils/helpers";
-import { Coin } from "./coin";
-import { AftermathApi } from "../../general/providers/aftermathApi";
+import { Balance, CoinDecimal, CoinType, GasBudget } from "../../../types";
+import { Helpers } from "../../../general/utils/helpers";
+import { Coin } from "../coin";
+import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinApi } from "./coinApi";
-import { EventsApiHelpers } from "../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
 
 export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -61,7 +62,7 @@ export class CoinApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
+	constructor(protected readonly rpcProvider: AftermathApi) {
 		this.rpcProvider = rpcProvider;
 	}
 
@@ -232,81 +233,13 @@ export class CoinApiHelpers {
 		);
 
 	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
+	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transaction Creation
-	/////////////////////////////////////////////////////////////////////
-
-	private coinJoinVecTransaction = (
-		coin: ObjectId,
-		coins: ObjectId[],
-		coinType: CoinType,
-		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
-			.joinVec.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: AftermathApi.constants.packages.sui.packageId,
-				module: CoinApiHelpers.constants.modules.pay.name,
-				function:
-					CoinApiHelpers.constants.modules.pay.functions.joinVec.name,
-				typeArguments: [coinType],
-				arguments: [coin, coins],
-				gasBudget: gasBudget,
-			},
-		};
-	};
-
-	private coinSplitTransaction = (
-		coin: ObjectId,
-		coinType: CoinType,
-		amount: Balance,
-		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
-			.split.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: AftermathApi.constants.packages.sui.packageId,
-				module: CoinApiHelpers.constants.modules.pay.name,
-				function:
-					CoinApiHelpers.constants.modules.pay.functions.split.name,
-				typeArguments: [coinType],
-				arguments: [coin, amount.toString()],
-				gasBudget: gasBudget,
-			},
-		};
-	};
-
-	private coinJoinVecAndSplitTransaction = (
-		coin: ObjectId,
-		coins: ObjectId[],
-		coinType: CoinType,
-		amount: Balance,
-		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
-			.joinVecAndSplit.defaultGasBudget
-	): SignableTransaction => {
-		const utiliesPackageId =
-			this.rpcProvider.addresses.utilies?.packages.utilities;
-		if (!utiliesPackageId) throw new Error("utilies package id is unset");
-
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: utiliesPackageId,
-				module: CoinApiHelpers.constants.modules.pay.name,
-				function:
-					CoinApiHelpers.constants.modules.pay.functions
-						.joinVecAndSplit.name,
-				typeArguments: [coinType],
-				arguments: [coin, coins, amount.toString()],
-				gasBudget: gasBudget,
-			},
-		};
-	};
+	public static formatCoinTypesForMoveCall = (coins: CoinType[]) =>
+		coins.map((coin) =>
+			CastingApiHelpers.u8VectorFromString(coin.slice(2))
+		); // slice to remove 0x
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Builders
@@ -317,7 +250,7 @@ export class CoinApiHelpers {
         @returns: undefined if `Coin.getBalance(coin)` returns undefined, an array of 
         `SignableTransactions` otherwise.
     */
-	private coinJoinAndSplitWithExactAmountTransactions = (
+	public coinJoinAndSplitWithExactAmountTransactions = (
 		coin: GetObjectDataResponse,
 		coinsToJoin: GetObjectDataResponse[],
 		coinType: CoinType,
@@ -367,9 +300,79 @@ export class CoinApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Helpers
+	//// Protected Methods
 	/////////////////////////////////////////////////////////////////////
 
-	private formatCoinTypesForMoveCall = (coins: CoinType[]) =>
-		coins.map((coin) => u8VectorFromString(coin.slice(2))); // slice to remove 0x
+	/////////////////////////////////////////////////////////////////////
+	//// Transaction Creation
+	/////////////////////////////////////////////////////////////////////
+
+	protected coinJoinVecTransaction = (
+		coin: ObjectId,
+		coins: ObjectId[],
+		coinType: CoinType,
+		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
+			.joinVec.defaultGasBudget
+	): SignableTransaction => {
+		return {
+			kind: "moveCall",
+			data: {
+				packageObjectId: AftermathApi.constants.packages.sui.packageId,
+				module: CoinApiHelpers.constants.modules.pay.name,
+				function:
+					CoinApiHelpers.constants.modules.pay.functions.joinVec.name,
+				typeArguments: [coinType],
+				arguments: [coin, coins],
+				gasBudget: gasBudget,
+			},
+		};
+	};
+
+	protected coinSplitTransaction = (
+		coin: ObjectId,
+		coinType: CoinType,
+		amount: Balance,
+		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
+			.split.defaultGasBudget
+	): SignableTransaction => {
+		return {
+			kind: "moveCall",
+			data: {
+				packageObjectId: AftermathApi.constants.packages.sui.packageId,
+				module: CoinApiHelpers.constants.modules.pay.name,
+				function:
+					CoinApiHelpers.constants.modules.pay.functions.split.name,
+				typeArguments: [coinType],
+				arguments: [coin, amount.toString()],
+				gasBudget: gasBudget,
+			},
+		};
+	};
+
+	protected coinJoinVecAndSplitTransaction = (
+		coin: ObjectId,
+		coins: ObjectId[],
+		coinType: CoinType,
+		amount: Balance,
+		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
+			.joinVecAndSplit.defaultGasBudget
+	): SignableTransaction => {
+		const utiliesPackageId =
+			this.rpcProvider.addresses.utilies?.packages.utilities;
+		if (!utiliesPackageId) throw new Error("utilies package id is unset");
+
+		return {
+			kind: "moveCall",
+			data: {
+				packageObjectId: utiliesPackageId,
+				module: CoinApiHelpers.constants.modules.pay.name,
+				function:
+					CoinApiHelpers.constants.modules.pay.functions
+						.joinVecAndSplit.name,
+				typeArguments: [coinType],
+				arguments: [coin, coins, amount.toString()],
+				gasBudget: gasBudget,
+			},
+		};
+	};
 }

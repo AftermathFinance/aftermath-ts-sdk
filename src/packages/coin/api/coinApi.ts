@@ -1,17 +1,18 @@
 import { CoinMetadata } from "@mysten/sui.js";
-import { Coin } from "./coin";
-import { AftermathApi } from "../../general/providers/aftermathApi";
-import { CoinType } from "../../types";
-import { Helpers } from "../../general/utils/helpers";
-import { Pools } from "../pools/pools";
+import { Coin } from "../coin";
+import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { CoinType } from "../../../types";
+import { Helpers } from "../../../general/utils/helpers";
+import { Pools } from "../../pools/pools";
+import { CoinApiHelpers } from "./coinApiHelpers";
 
-export class CoinApi {
+export class CoinApi extends CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly rpcProvider: AftermathApi) {
-		this.rpcProvider = rpcProvider;
+	constructor(rpcProvider: AftermathApi) {
+		super(rpcProvider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
