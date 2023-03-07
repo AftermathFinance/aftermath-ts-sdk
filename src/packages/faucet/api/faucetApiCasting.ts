@@ -1,4 +1,4 @@
-import { FaucetMintCoinEventOnChain } from "./faucetCastingTypes";
+import { FaucetMintCoinEventOnChain } from "./faucetApiCastingTypes";
 import { FaucetMintCoinEvent } from "../faucetTypes";
 
 export class FaucetApiCasting {

@@ -5,7 +5,13 @@ import {
 	SignableTransaction,
 	SuiAddress,
 } from "@mysten/sui.js";
-import { Balance, CoinDecimal, CoinType, GasBudget } from "../../../types";
+import {
+	AnyObjectType,
+	Balance,
+	CoinDecimal,
+	CoinType,
+	GasBudget,
+} from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -55,6 +61,9 @@ export class CoinApiHelpers {
 		},
 		eventNames: {
 			currencyCreated: "CurrencyCreated",
+		},
+		eventTypes: {
+			currencyCreated: CoinApiHelpers.currencyCreatedEventType(),
 		},
 	};
 
@@ -222,17 +231,6 @@ export class CoinApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Event Types
-	/////////////////////////////////////////////////////////////////////
-
-	public coinCreatedCurrencyEventType = () =>
-		EventsApiHelpers.createEventType(
-			AftermathApi.constants.packages.sui.packageId,
-			CoinApiHelpers.constants.modules.coin.name,
-			CoinApiHelpers.constants.eventNames.currencyCreated
-		);
-
-	/////////////////////////////////////////////////////////////////////
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
@@ -375,4 +373,20 @@ export class CoinApiHelpers {
 			},
 		};
 	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Event Types
+	/////////////////////////////////////////////////////////////////////
+
+	private static currencyCreatedEventType(): AnyObjectType {
+		return EventsApiHelpers.createEventType(
+			AftermathApi.constants.packages.sui.packageId,
+			CoinApiHelpers.constants.modules.coin.name,
+			CoinApiHelpers.constants.eventNames.currencyCreated
+		);
+	}
 }

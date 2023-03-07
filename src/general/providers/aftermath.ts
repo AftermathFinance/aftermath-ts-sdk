@@ -7,7 +7,7 @@ import { Coin } from "../../packages/coin/coin";
 import { Faucet } from "../../packages/faucet/faucet";
 import { Staking } from "../../packages/staking/staking";
 
-export abstract class Aftermath {
+export class Aftermath {
 	private readonly baseUrl?: Url;
 
 	/////////////////////////////////////////////////////////////////////

@@ -20,7 +20,7 @@ import {
 	PoolDynamicFieldOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
-} from "./poolsCastingTypes";
+} from "./poolsApiCastingTypes";
 import { PoolsApiCasting } from "./poolsApiCasting";
 import { Pools } from "../pools";
 
@@ -229,7 +229,7 @@ export class PoolsApi extends PoolsApiHelpers {
 	public fetchAllPools = async () => {
 		const paginatedEvents = await this.Provider.provider.getEvents(
 			{
-				MoveEvent: `${this.poolsAddresses.packages.cmmm}::events::CreatedPoolEvent`,
+				MoveEvent: `${this.addresses.packages.cmmm}::events::CreatedPoolEvent`,
 			}, // query
 			null, // cursor
 			null, // limit
@@ -265,7 +265,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			await this.Provider.Objects.fetchObjectBatch(objectIds);
 		const dynamicFieldsOnChain = dynamicFieldsAsSuiObjects.map(
 			(dynamicField) =>
-				dynamicField.details as SuiObject as PoolDynamicFieldOnChain
+				dynamicField.details as SuiObject as PoolDynamicFieldOnChain<any>
 		);
 
 		const lpFields = dynamicFieldsOnChain

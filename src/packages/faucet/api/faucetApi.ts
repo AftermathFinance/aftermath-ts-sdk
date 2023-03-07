@@ -3,7 +3,7 @@ import { Faucet } from "../faucet";
 import { EventId } from "@mysten/sui.js";
 import { FaucetApiCasting } from "./faucetApiCasting";
 import { CoinType } from "../../coin/coinTypes";
-import { FaucetMintCoinEventOnChain } from "./faucetCastingTypes";
+import { FaucetMintCoinEventOnChain } from "./faucetApiCastingTypes";
 import { FaucetMintCoinEvent } from "../faucetTypes";
 import { FaucetApiHelpers } from "./faucetApiHelpers";
 

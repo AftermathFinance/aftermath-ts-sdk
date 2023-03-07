@@ -3,6 +3,7 @@ import {
 	ObjectId,
 	SignableTransaction,
 	SuiAddress,
+	SuiObjectInfo,
 } from "@mysten/sui.js";
 import {
 	ApiBreedCapyBody,
@@ -37,14 +38,6 @@ export class Capys extends Aftermath {
 				breedStakedWithStakedAndKeep: BigInt(10_000_000), // MIST -> 0.01 SUI
 			},
 		},
-	};
-
-	private static readonly eventNames = {
-		capyBorn: "CapyBorn",
-		breedCapy: "BreedCapyEvent",
-		stakeCapy: "StakeCapyEvent",
-		unstakeCapy: "UnstakeCapyEvent",
-		withdrawFees: "WithdrawFeesEvent",
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -182,6 +175,18 @@ export class Capys extends Aftermath {
 	public async getStats(): Promise<CapyStats> {
 		return this.fetchApi("stats");
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public isStakedCapyReceiptObjectType = (
+		suiObjectInfo: SuiObjectInfo
+	): boolean =>
+		suiObjectInfo.type === config.capyVault.capyStakingReceiptType;
+
+	public isCapyObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
+		suiObjectInfo.type === config.capy.capyType;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Static Methods

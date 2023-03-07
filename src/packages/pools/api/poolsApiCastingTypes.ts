@@ -97,54 +97,42 @@ export interface PoolSpotPriceEventOnChain {
 //// Dynamic Fields
 /////////////////////////////////////////////////////////////////////
 
-export interface PoolDynamicFieldOnChain {
+export interface PoolDynamicFieldOnChain<FieldsType> {
 	data: {
-		fields: any;
+		fields: FieldsType;
 		type: AnyObjectType;
 	};
 }
 
-export interface PoolLpDynamicFieldOnChain {
-	data: {
-		fields: {
-			id: {
-				id: ObjectId;
-			};
-			value: {
-				fields: {
-					value: BigIntAsString;
-				};
-			};
-		};
+export type PoolLpDynamicFieldOnChain = PoolDynamicFieldOnChain<{
+	id: {
+		id: ObjectId;
 	};
-}
-
-export interface PoolBalanceDynamicFieldOnChain {
-	data: {
+	value: {
 		fields: {
-			id: {
-				id: ObjectId;
-			};
 			value: BigIntAsString;
-			name: {
-				type: KeyType;
-			};
 		};
 	};
-}
+}>;
 
-export interface PoolAmountDynamicFieldOnChain {
-	data: {
+export type PoolBalanceDynamicFieldOnChain = PoolDynamicFieldOnChain<{
+	id: {
+		id: ObjectId;
+	};
+	value: BigIntAsString;
+	name: {
+		type: KeyType;
+	};
+}>;
+
+export type PoolAmountDynamicFieldOnChain = PoolDynamicFieldOnChain<{
+	id: {
+		id: ObjectId;
+	};
+	value: BigIntAsString;
+	name: {
 		fields: {
-			id: {
-				id: ObjectId;
-			};
-			value: BigIntAsString;
-			name: {
-				fields: {
-					type_name: CoinType;
-				};
-			};
+			type_name: CoinType;
 		};
 	};
-}
+}>;

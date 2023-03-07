@@ -53,7 +53,7 @@ export interface StakedCapyReceiptWithCapyObject {
 	unlockEpoch: EpochTimeLock;
 }
 
-export interface CapyVault {
+export interface CapyVaultObject {
 	objectId: ObjectId;
 	bredCapys: bigint;
 	stakedCapys: bigint;

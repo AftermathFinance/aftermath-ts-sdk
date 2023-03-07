@@ -22,7 +22,7 @@ import {
 	PoolSingleWithdrawEventOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
-} from "./poolsCastingTypes";
+} from "./poolsApiCastingTypes";
 import { Pools } from "../pools";
 import { Coin } from "../../coin/coin";
 
@@ -170,7 +170,7 @@ export class PoolsApiCasting {
 	/////////////////////////////////////////////////////////////////////
 
 	public static poolLpDynamicFieldFromOnChain = (
-		dynamicField: PoolDynamicFieldOnChain
+		dynamicField: PoolDynamicFieldOnChain<any>
 	) => {
 		if (!Pools.isLpKeyType(dynamicField.data.type))
 			throw new Error("not lp key type");
@@ -182,7 +182,7 @@ export class PoolsApiCasting {
 	};
 
 	public static poolBalanceDynamicFieldFromOnChain = (
-		dynamicField: PoolDynamicFieldOnChain
+		dynamicField: PoolDynamicFieldOnChain<any>
 	) => {
 		if (!Pools.isBalanceKeyType(dynamicField.data.type))
 			throw new Error("not balance key type");
@@ -195,7 +195,7 @@ export class PoolsApiCasting {
 	};
 
 	public static poolAmountDynamicFieldFromOnChain = (
-		dynamicField: PoolDynamicFieldOnChain
+		dynamicField: PoolDynamicFieldOnChain<any>
 	) => {
 		if (!Pools.isAmountKeyType(dynamicField.data.type))
 			throw new Error("not amount key type");

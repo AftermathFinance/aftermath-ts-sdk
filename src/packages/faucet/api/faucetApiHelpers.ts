@@ -6,7 +6,12 @@ import {
 	SignableTransaction,
 } from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
-import { Balance, FaucetAddresses, GasBudget } from "../../../types";
+import {
+	AnyObjectType,
+	Balance,
+	FaucetAddresses,
+	GasBudget,
+} from "../../../types";
 
 export class FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -44,6 +49,9 @@ export class FaucetApiHelpers {
 		af: CoinType;
 		afSui: CoinType;
 	};
+	public readonly eventTypes: {
+		mintCoin: AnyObjectType;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -63,23 +71,11 @@ export class FaucetApiHelpers {
 			af: `${faucetAddresses.packages.faucet}::af::AF`,
 			afSui: `${faucetAddresses.packages.faucet}::afsui::AFSUI`,
 		};
+
+		this.eventTypes = {
+			mintCoin: this.mintCoinEventType(),
+		};
 	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Event Types
-	/////////////////////////////////////////////////////////////////////
-
-	public faucetMintCoinEventType = () => {
-		return EventsApiHelpers.createEventType(
-			AftermathApi.constants.packages.sui.packageId,
-			this.faucetAddresses.packages.faucet,
-			FaucetApiHelpers.constants.eventNames.mintedCoin
-		);
-	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Protected Methods
@@ -161,5 +157,21 @@ export class FaucetApiHelpers {
 			typeArguments: [],
 			arguments: [this.faucetAddresses.objects.faucetRegistry],
 		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Event Types
+	/////////////////////////////////////////////////////////////////////
+
+	private mintCoinEventType = () => {
+		return EventsApiHelpers.createEventType(
+			AftermathApi.constants.packages.sui.packageId,
+			this.faucetAddresses.packages.faucet,
+			FaucetApiHelpers.constants.eventNames.mintedCoin
+		);
 	};
 }
