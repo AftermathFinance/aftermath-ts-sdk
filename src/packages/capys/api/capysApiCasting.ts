@@ -1,5 +1,5 @@
 import { GetObjectDataResponse, SuiObjectInfo, getObjectFields, getObjectId } from "@mysten/sui.js";
-import { BreedCapyEvent, CapyBornEvent, CapyObject, CapyVaultObject, StakeCapyEvent, StakedCapyReceiptObject, StakedCapyReceiptWithCapyObject, UnstakeCapyEvent } from "../capysTypes";
+import { BreedCapysEvent, CapyBornEvent, CapyObject, CapyVaultObject, StakeCapyEvent, StakedCapyReceiptObject, StakedCapyReceiptWithCapyObject, UnstakeCapyEvent } from "../capysTypes";
 import { BreedCapyEventOnChain, CapyBornEventOnChain, CapyFieldsOnChain, CapyVaultFieldsOnChain, StakeCapyEventOnChain, StakedCapyReceiptFieldsOnChain, UnstakeCapyEventOnChain } from "./capysApiCastingTypes";
 import { Capys } from "../capys";
 
@@ -88,7 +88,7 @@ public static capyBornEventFromOnChain = (
 
 public static breedCapyEventFromOnChain = (
 	eventOnChain: BreedCapyEventOnChain
-): BreedCapyEvent => {
+): BreedCapysEvent => {
 	const fields = eventOnChain.event.moveEvent.fields;
 	return {
 		breeder: eventOnChain.event.moveEvent.sender,

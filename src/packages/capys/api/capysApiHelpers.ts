@@ -3,17 +3,24 @@ import {
 	ObjectId,
 	SignableTransaction,
 	SuiAddress,
+	SuiObjectInfo,
 	getObjectId,
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
+	AmountInCoinAndUsd,
 	AnyObjectType,
 	Balance,
+	CapyAttribute,
+	CapyObject,
+	CapyVaultObject,
 	CapysAddresses,
+	CoinDecimal,
 	GasBudget,
 } from "../../../types";
 import { Capys } from "../capys";
+import { Coin } from "../../coin/coin";
 
 export class CapysApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -135,14 +142,6 @@ export class CapysApiHelpers {
 			unstakeCapy: this.unstakeCapyEventType(),
 		};
 	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Fetching
-	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
 	//// Protected Methods
@@ -567,6 +566,62 @@ export class CapysApiHelpers {
 
 		return transactions;
 	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Stats
+	/////////////////////////////////////////////////////////////////////
+
+	protected fetchCapyVaultStats = async (
+		capyVault: CapyVaultObject,
+		feeCoinDecimals: CoinDecimal,
+		feeCoinPrice: number
+	) => {
+		const globalFeesWithDecimals = Coin.balanceWithDecimals(
+			capyVault.globalFees,
+			feeCoinDecimals
+		);
+		const globalFeesUsd = feeCoinPrice * globalFeesWithDecimals;
+		const breedingFeesGlobal = {
+			amount: globalFeesWithDecimals,
+			amountUsd: globalFeesUsd,
+		} as AmountInCoinAndUsd;
+
+		return {
+			bredCapys: capyVault.bredCapys,
+			stakedCapys: capyVault.stakedCapys,
+			breedingFeesGlobal,
+		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Capy Attribute Filtering
+	/////////////////////////////////////////////////////////////////////
+
+	protected filterCapysWithAttributes = (
+		capys: CapyObject[],
+		attributes: CapyAttribute[]
+	) =>
+		capys.filter((capy) =>
+			attributes.every((attribute) =>
+				capy.fields.attributes.some(
+					(capyAttribute) =>
+						capyAttribute.name === attribute.name &&
+						capyAttribute.value === attribute.value
+				)
+			)
+		);
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	protected isStakedCapyReceiptObjectType = (
+		suiObjectInfo: SuiObjectInfo
+	): boolean =>
+		suiObjectInfo.type === this.objectTypes.stakedCapyReceiptObjectType;
+
+	protected isCapyObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
+		suiObjectInfo.type === this.objectTypes.capyObjectType;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Methods

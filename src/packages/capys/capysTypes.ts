@@ -64,7 +64,7 @@ export interface CapyVaultObject {
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-export interface BreedCapyEvent extends Event {
+export interface BreedCapysEvent extends Event {
 	breeder: SuiAddress;
 	capyParentOneId: ObjectId;
 	capyParentTwoId: ObjectId;

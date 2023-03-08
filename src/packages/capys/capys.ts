@@ -9,7 +9,7 @@ import {
 	ApiBreedCapyBody,
 	ApiDynamicFieldsBody,
 	ApiEventsBody,
-	BreedCapyEvent,
+	BreedCapysEvent,
 	CapyAttribute,
 	CapyObject,
 	CapyStats,
@@ -109,8 +109,8 @@ export class Capys extends Aftermath {
 	public async getBreedCapyEvents(
 		cursor?: EventId,
 		limit?: number
-	): Promise<EventsWithCursor<BreedCapyEvent>> {
-		return this.fetchApi<EventsWithCursor<BreedCapyEvent>, ApiEventsBody>(
+	): Promise<EventsWithCursor<BreedCapysEvent>> {
+		return this.fetchApi<EventsWithCursor<BreedCapysEvent>, ApiEventsBody>(
 			"events/breedCapy",
 			{
 				cursor,
@@ -175,18 +175,6 @@ export class Capys extends Aftermath {
 	public async getStats(): Promise<CapyStats> {
 		return this.fetchApi("stats");
 	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
-
-	public isStakedCapyReceiptObjectType = (
-		suiObjectInfo: SuiObjectInfo
-	): boolean =>
-		suiObjectInfo.type === config.capyVault.capyStakingReceiptType;
-
-	public isCapyObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
-		suiObjectInfo.type === config.capy.capyType;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Static Methods
