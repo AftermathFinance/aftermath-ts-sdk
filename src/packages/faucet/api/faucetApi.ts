@@ -101,9 +101,7 @@ export class FaucetApi extends FaucetApiHelpers {
 			FaucetMintCoinEvent
 		>(
 			{
-				MoveEvent: new FaucetApiHelpers(
-					this.Provider
-				).faucetMintCoinEventType(),
+				MoveEvent: this.eventTypes.mintCoin,
 			},
 			FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			cursor,

@@ -17,13 +17,17 @@ import { Aftermath } from "../../general/providers/aftermath";
 
 // TODO: move these types to staking api class
 
-// stakedSuiType: "0x2::staking_pool::StakedSui",
-// delegationType: "0x2::staking_pool::Delegation",
-
 export class Staking extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
+
+	public static readonly constants = {
+		objectTypes: {
+			stakedSuiType: "0x2::staking_pool::StakedSui",
+			delegationType: "0x2::staking_pool::Delegation",
+		},
+	};
 
 	private static readonly eventNames = {
 		requestAddDelegation: "RequestAddDelegationEvent",
