@@ -343,7 +343,7 @@ export class PoolsApiHelpers {
 	): Promise<SignableTransaction[]> => {
 		// i. obtain object ids of coin to swap from
 		const response =
-			await this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				fromCoinType,
 				fromCoinAmount
@@ -355,7 +355,7 @@ export class PoolsApiHelpers {
 		// ii. the user doesn't have a coin of type `fromCoinType` with exact
 		// value of `fromCoinAmount`, so we need to create it
 		const joinAndSplitTransactions =
-			this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				fromCoinType,
@@ -390,7 +390,7 @@ export class PoolsApiHelpers {
 		const responses = (
 			await Promise.all(
 				coinTypes.map((coinType, index) =>
-					this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+					this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 						walletAddress,
 						coinType,
 						coinAmounts[index]
@@ -411,7 +411,7 @@ export class PoolsApiHelpers {
 		// value of `coinAmount`, so we need to create it
 		responses.forEach((response, index) => {
 			const joinAndSplitTransactions =
-				this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
+				this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
 					response[0],
 					response.slice(1),
 					coinTypes[index],
@@ -451,7 +451,7 @@ export class PoolsApiHelpers {
 	): Promise<SignableTransaction[]> => {
 		// i. obtain object ids of `lpCoinType` to burn
 		const response =
-			await this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				poolLpType,
 				lpCoinAmount
@@ -463,7 +463,7 @@ export class PoolsApiHelpers {
 		// ii. the user doesn't have a coin of type `fromCoinType` with exact
 		// value of `fromCoinAmount`, so we need to create it
 		const joinAndSplitTransactions =
-			this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				poolLpType,
@@ -600,7 +600,7 @@ export class PoolsApiHelpers {
 		// TODO: use promise.all for pool fetching and swap fetching
 
 		const coinsToDecimalsAndPrices =
-			await this.Provider.CoinHelpers.fetchCoinsToDecimalsAndPrices(
+			await this.Provider.Coin.fetchCoinsToDecimalsAndPrices(
 				pool.fields.coins
 			);
 

@@ -68,14 +68,11 @@ export class FaucetApi extends FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchFaucetRequestCoinAmountTransaction = async (coin: CoinType) => {
-		const prices = await fetchPythPrices([coin]);
-
-		const price = prices[0];
-		if (price === 0) throw new Error("price of 0");
+		const price = await this.Provider.Prices.fetchPrice(coin);
 
 		const requestAmount = Faucet.constants.defaultRequestAmountUsd / price;
 		const requestAmountWithDecimals =
-			await this.Provider.CoinHelpers.fetchCoinDecimalsNormalizeBalance(
+			await this.Provider.Coin.fetchCoinDecimalsNormalizeBalance(
 				coin,
 				requestAmount
 			);

@@ -133,7 +133,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			PoolTradeEvent
 		>(
 			{
-				MoveEvent: this.tradeEventType(),
+				MoveEvent: this.eventTypes.trade,
 			},
 			PoolsApiCasting.poolTradeEventFromOnChain,
 			cursor,
@@ -164,7 +164,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			PoolDepositEvent
 		>(
 			{
-				MoveEvent: this.depositEventType(),
+				MoveEvent: this.eventTypes.deposit,
 			},
 			PoolsApiCasting.poolDepositEventFromOnChain,
 			cursor,
@@ -196,7 +196,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			PoolWithdrawEvent
 		>(
 			{
-				MoveEvent: this.withdrawEventType(),
+				MoveEvent: this.eventTypes.withdraw,
 			},
 			PoolsApiCasting.poolWithdrawEventFromOnChain,
 			cursor,
@@ -360,7 +360,7 @@ export class PoolsApi extends PoolsApiHelpers {
 		const pool = await this.fetchPool(poolObjectId);
 		const poolCoins = pool.fields.coins;
 
-		const prices = await fetchPythPrices(poolCoins);
+		const prices = await this.Provider.Prices.fetchPrices(poolCoins);
 		const coinsToDecimals = await this.Provider.Coin.fetchCoinsToDecimals(
 			poolCoins
 		);
@@ -437,7 +437,9 @@ export class PoolsApi extends PoolsApiHelpers {
 			const lpPrices =
 				lpCoins.length > 0 ? await this.fetchLpCoinPrices(lpCoins) : [];
 			const nonLpPrices =
-				nonLpCoins.length > 0 ? await fetchPythPrices(nonLpCoins) : [];
+				nonLpCoins.length > 0
+					? await this.Provider.Prices.fetchPrices(nonLpCoins)
+					: [];
 
 			let prices: number[] = [];
 			for (const coin of coins) {

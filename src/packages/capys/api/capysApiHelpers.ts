@@ -454,7 +454,7 @@ export class CapysApiHelpers {
 
 		// i. obtain object ids of Coin to pay breeding fee with
 		const response =
-			await this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				feeCoinType,
 				feeCoinAmount
@@ -466,7 +466,7 @@ export class CapysApiHelpers {
 		// ii. the user doesn't have a `Coin<SUI>` with exact value of `feeCoinAmount`,
 		// so we need to create it.
 		transactions.push(
-			...this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			...this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				feeCoinType,
@@ -497,7 +497,7 @@ export class CapysApiHelpers {
 
 		// i. obtain object ids of Coin to pay breeding fee with
 		const response =
-			await this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				feeCoinType,
 				feeCoinAmount
@@ -509,7 +509,7 @@ export class CapysApiHelpers {
 		// ii. the user doesn't have a `Coin<SUI>` with exact value of `feeCoinAmount`,
 		// so we need to create it.
 		transactions.push(
-			...this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			...this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				feeCoinType,
@@ -539,7 +539,7 @@ export class CapysApiHelpers {
 
 		// i. obtain object ids of Coin to pay breeding fee with
 		const response =
-			await this.Provider.CoinHelpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				feeCoinType,
 				feeCoinAmount
@@ -551,7 +551,7 @@ export class CapysApiHelpers {
 		// ii. the user doesn't have a `Coin<SUI>` with exact value of `feeCoinAmount`,
 		// so we need to create it.
 		transactions.push(
-			...this.Provider.CoinHelpers.coinJoinAndSplitWithExactAmountTransactions(
+			...this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				feeCoinType,

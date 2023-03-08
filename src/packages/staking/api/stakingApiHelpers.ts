@@ -196,7 +196,7 @@ export class StakingApiHelpers {
 
 		// i. create a coin of type `coinType` with value `coinAmount`.
 		const { coinObjectId: coinId, joinAndSplitTransactions } =
-			await this.Provider.CoinHelpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
+			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
 				Coin.constants.suiCoinType,
 				amount
@@ -225,7 +225,7 @@ export class StakingApiHelpers {
 
 		// i. create a coin of type `coinType` with value `amount`.
 		const { coinObjectId: coinId, joinAndSplitTransactions } =
-			await this.Provider.CoinHelpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
+			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
 				this.Provider.Faucet.coinTypes.afSui,
 				amount

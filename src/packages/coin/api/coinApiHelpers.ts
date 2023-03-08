@@ -18,6 +18,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinApi } from "./coinApi";
 import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { Sui } from "../../sui/sui";
 
 export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -209,7 +210,7 @@ export class CoinApiHelpers {
 		>
 	> {
 		const [coinsToPrices, coinsToDecimals] = await Promise.all([
-			fetchCoinsToPythPrices(coins),
+			this.Provider.Prices.fetchCoinsToPrice(coins),
 			this.fetchCoinsToDecimals(coins),
 		]);
 
@@ -315,7 +316,7 @@ export class CoinApiHelpers {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: AftermathApi.constants.packages.sui.packageId,
+				packageObjectId: Sui.constants.addresses.suiPackageId,
 				module: CoinApiHelpers.constants.modules.pay.name,
 				function:
 					CoinApiHelpers.constants.modules.pay.functions.joinVec.name,
@@ -336,7 +337,7 @@ export class CoinApiHelpers {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: AftermathApi.constants.packages.sui.packageId,
+				packageObjectId: Sui.constants.addresses.suiPackageId,
 				module: CoinApiHelpers.constants.modules.pay.name,
 				function:
 					CoinApiHelpers.constants.modules.pay.functions.split.name,
@@ -384,7 +385,7 @@ export class CoinApiHelpers {
 
 	private static currencyCreatedEventType(): AnyObjectType {
 		return EventsApiHelpers.createEventType(
-			AftermathApi.constants.packages.sui.packageId,
+			Sui.constants.addresses.suiPackageId,
 			CoinApiHelpers.constants.modules.coin.name,
 			CoinApiHelpers.constants.eventNames.currencyCreated
 		);

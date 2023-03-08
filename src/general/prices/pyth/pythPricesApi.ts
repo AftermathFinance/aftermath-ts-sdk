@@ -19,13 +19,27 @@ export class PythPricesApi
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCoinsToPrice = async (coins: CoinType[]) => {
-		const fetchedPrices = await this.fetchPriceFeeds(coins);
-		const prices = fetchedPrices.map((price) => {
-			if (price === undefined) return -1; // TODO: handle this differently ? - will cause breaking changes in FE
-			return price.getPriceAsNumberUnchecked();
+	public fetchPrice = async (coin: CoinType) => {
+		return (await this.fetchPrices([coin]))[0];
+	};
+
+	public fetchPrices = async (coins: CoinType[]) => {
+		const priceFeeds = await this.fetchPriceFeeds(coins);
+		const prices = priceFeeds.map((priceFeed) => {
+			// TODO: handle this differently ? - will cause breaking changes in FE
+			if (priceFeed === undefined) return -1;
+
+			const price = priceFeed.getPriceAsNumberUnchecked();
+			if (price <= 0) return -1;
+
+			return price;
 		});
 
+		return prices;
+	};
+
+	public fetchCoinsToPrice = async (coins: CoinType[]) => {
+		const prices = await this.fetchPrices(coins);
 		const coinsToPrice: Record<CoinType, number> = coins.reduce(
 			(acc, coin, index) => {
 				return {

@@ -38,7 +38,11 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCoinsToPrice = async (coins: CoinType[]) => {
+	public fetchPrice = async (coin: CoinType) => {
+		return (await this.fetchPrices([coin]))[0];
+	};
+
+	public fetchPrices = async (coins: CoinType[]) => {
 		const prices = coins.map((coin) =>
 			new Coin(coin).coinTypeSymbol.toLowerCase() in
 			PlaceholderPricesApi.constants.prices
@@ -49,6 +53,11 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 				  ]
 				: -1
 		);
+		return prices;
+	};
+
+	public fetchCoinsToPrice = async (coins: CoinType[]) => {
+		const prices = await this.fetchPrices(coins);
 
 		const coinsToPrice: Record<CoinType, number> = coins.reduce(
 			(acc, coin, index) => {

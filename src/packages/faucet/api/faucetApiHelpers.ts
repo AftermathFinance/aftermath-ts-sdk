@@ -12,6 +12,7 @@ import {
 	FaucetAddresses,
 	GasBudget,
 } from "../../../types";
+import { Sui } from "../../sui/sui";
 
 export class FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -166,7 +167,7 @@ export class FaucetApiHelpers {
 
 	private mintCoinEventType = () => {
 		return EventsApiHelpers.createEventType(
-			AftermathApi.constants.packages.sui.packageId,
+			Sui.constants.addresses.suiPackageId,
 			this.addresses.packages.faucet,
 			FaucetApiHelpers.constants.eventNames.mintedCoin
 		);

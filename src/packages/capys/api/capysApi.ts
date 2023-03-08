@@ -432,7 +432,7 @@ export class CapysApi extends CapysApiHelpers {
 		const feeCoinDecimals = (
 			await this.Provider.Coin.fetchCoinMetadata(feeCoin)
 		).decimals;
-		const feeCoinPrice = (await fetchPythPrices([feeCoin]))[0];
+		const feeCoinPrice = await this.Provider.Prices.fetchPrice(feeCoin);
 
 		const breedingFeesDaily = this.calcCapyBreedingFees(
 			breedCapyEventsWithinTime,
