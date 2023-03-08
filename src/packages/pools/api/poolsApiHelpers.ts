@@ -33,7 +33,7 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	private static readonly constants = {
-		modules: {
+		moduleNames: {
 			pools: "interface",
 			math: "math",
 			events: "events",
@@ -138,7 +138,7 @@ export class PoolsApiHelpers {
 	): MoveCallTransaction => {
 		return {
 			packageObjectId: this.addresses.packages.cmmm,
-			module: PoolsApiHelpers.constants.modules.math,
+			module: PoolsApiHelpers.constants.moduleNames.math,
 			function: "calc_spot_price",
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [poolId],
@@ -154,7 +154,7 @@ export class PoolsApiHelpers {
 	): MoveCallTransaction => {
 		return {
 			packageObjectId: this.addresses.packages.cmmm,
-			module: PoolsApiHelpers.constants.modules.math,
+			module: PoolsApiHelpers.constants.moduleNames.math,
 			function: "calc_swap_amount_out",
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [poolId, coinInAmount.toString()],
@@ -169,7 +169,7 @@ export class PoolsApiHelpers {
 	): MoveCallTransaction => {
 		return {
 			packageObjectId: this.addresses.packages.cmmm,
-			module: PoolsApiHelpers.constants.modules.math,
+			module: PoolsApiHelpers.constants.moduleNames.math,
 			function: "dev_inspect_calc_deposit_lp_mint_amount_u8",
 			typeArguments: [lpCoinType],
 			arguments: [
@@ -188,7 +188,7 @@ export class PoolsApiHelpers {
 	): MoveCallTransaction => {
 		return {
 			packageObjectId: this.addresses.packages.cmmm,
-			module: PoolsApiHelpers.constants.modules.math,
+			module: PoolsApiHelpers.constants.moduleNames.math,
 			function: "dev_inspect_calc_withdraw_amount_out_u8",
 			typeArguments: [lpCoinType],
 			arguments: [
@@ -217,7 +217,7 @@ export class PoolsApiHelpers {
 			kind: "moveCall",
 			data: {
 				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.modules.pools,
+				module: PoolsApiHelpers.constants.moduleNames.pools,
 				function: "swap",
 				typeArguments: [lpCoinType, coinInType, coinOutType],
 				arguments: [poolId, coinInId, coinOutMin.toString()],
@@ -239,7 +239,7 @@ export class PoolsApiHelpers {
 			kind: "moveCall",
 			data: {
 				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.modules.pools,
+				module: PoolsApiHelpers.constants.moduleNames.pools,
 				function: "single_coin_deposit",
 				typeArguments: [lpCoinType, coinType],
 				arguments: [poolId, coinId, lpMintMin.toString()],
@@ -267,7 +267,7 @@ export class PoolsApiHelpers {
 			kind: "moveCall",
 			data: {
 				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.modules.pools,
+				module: PoolsApiHelpers.constants.moduleNames.pools,
 				function: `deposit_${poolSize}_coins`,
 				typeArguments: [lpCoinType, ...coinTypes],
 				arguments: [poolId, ...coinIds, lpMintMin.toString()],
@@ -289,7 +289,7 @@ export class PoolsApiHelpers {
 			kind: "moveCall",
 			data: {
 				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.modules.pools,
+				module: PoolsApiHelpers.constants.moduleNames.pools,
 				function: "single_coin_withdraw",
 				typeArguments: [lpCoinType, coinOutType],
 				arguments: [poolId, lpCoinId, amountOutMin.toString()],
@@ -312,7 +312,7 @@ export class PoolsApiHelpers {
 			kind: "moveCall",
 			data: {
 				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.modules.pools,
+				module: PoolsApiHelpers.constants.moduleNames.pools,
 				function: `withdraw_${poolSize}_coins`,
 				typeArguments: [lpCoinType, ...coinsOutType],
 				arguments: [
@@ -654,21 +654,21 @@ export class PoolsApiHelpers {
 	private tradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.cmmm,
-			PoolsApiHelpers.constants.modules.events,
+			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.swap
 		);
 
 	private depositEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.cmmm,
-			PoolsApiHelpers.constants.modules.events,
+			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.deposit
 		);
 
 	private withdrawEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.cmmm,
-			PoolsApiHelpers.constants.modules.events,
+			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);
 }

@@ -29,12 +29,6 @@ export class Staking extends Aftermath {
 		},
 	};
 
-	private static readonly eventNames = {
-		requestAddDelegation: "RequestAddDelegationEvent",
-		requestWithdrawDelegation: "RequestWithdrawDelegationEvent",
-		cancelDelegationRequest: "CancelDelegationRequestEvent",
-	};
-
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////

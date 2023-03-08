@@ -5,7 +5,12 @@ import {
 	ObjectContentFields,
 	SuiObjectInfo,
 } from "@mysten/sui.js";
-import { Delegation, StakedSui, SuiBalance } from "../../../types";
+import {
+	AnyObjectType,
+	Delegation,
+	StakedSui,
+	SuiBalance,
+} from "../../../types";
 import {
 	DelegationFieldsOnChain,
 	StakedSuiFieldsOnChain,
@@ -30,7 +35,7 @@ export class SuiApiCasting {
 
 	public static stakedSuiFromGetObjectDataResponse = (
 		data: GetObjectDataResponse
-	) => {
+	): StakedSui => {
 		const stakedSuiMoveFields = getObjectFields(
 			data
 		) as StakedSuiFieldsOnChain;
@@ -42,12 +47,12 @@ export class SuiApiCasting {
 			delegationRequestEpoch:
 				stakedSuiMoveFields.delegation_request_epoch,
 			principal: BigInt(stakedSuiMoveFields.principal),
-		} as StakedSui;
+		};
 	};
 
 	public static delegationFromGetObjectDataResponse = (
 		data: GetObjectDataResponse
-	) => {
+	): Delegation => {
 		const delegationMoveFields = getObjectFields(
 			data
 		) as DelegationFieldsOnChain;
@@ -59,7 +64,7 @@ export class SuiApiCasting {
 			principalSuiAmount: BigInt(
 				delegationMoveFields.principal_sui_amount
 			),
-		} as Delegation;
+		};
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -71,4 +76,7 @@ export class SuiApiCasting {
 
 	public static isDelegation = (suiObjectInfo: SuiObjectInfo): boolean =>
 		suiObjectInfo.type === Staking.constants.objectTypes.delegationType;
+
+	public static isStakeVaultKeyType = (type: AnyObjectType) =>
+		type.split(",")[0].includes("VaultKey");
 }

@@ -12,22 +12,10 @@ import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
 import { RpcApiHelpers } from "../api/rpcApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { SuiApi } from "../../packages/sui/api/suiApi";
+import { SuiApiHelpers } from "../../packages/sui/api/suiApiHelpers";
 
 export class AftermathApi {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
-
-	public static readonly constants = {
-		// TODO: change this into modules ?
-		packages: {
-			sui: {
-				packageId: "0x0000000000000000000000000000000000000002",
-				systemStateId: "0x0000000000000000000000000000000000000005",
-			},
-		},
-	};
-
 	/////////////////////////////////////////////////////////////////////
 	//// Class Object Class Members
 	/////////////////////////////////////////////////////////////////////
@@ -56,12 +44,17 @@ export class AftermathApi {
 	public readonly Coin;
 	public readonly CoinHelpers;
 
+	public readonly Sui;
+	public readonly SuiHelpers;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	public constructor(
 		public readonly provider: JsonRpcProvider,
+		// TODO: accept ALL addresses or remove the class instantiations
+		// below to be functions not constants
 		public readonly addresses: Partial<ConfigAddresses>
 	) {
 		this.provider = provider;
@@ -93,5 +86,8 @@ export class AftermathApi {
 
 		this.Coin = new CoinApi(this);
 		this.CoinHelpers = new CoinApiHelpers(this);
+
+		this.Sui = new SuiApi(this);
+		this.SuiHelpers = new SuiApiHelpers(this);
 	}
 }

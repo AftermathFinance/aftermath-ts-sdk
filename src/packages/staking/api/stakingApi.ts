@@ -1,0 +1,306 @@
+import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
+import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { StakingApiHelpers } from "./stakingApiHelpers";
+import {
+	StakeCancelDelegationRequestEvent,
+	StakeRequestAddDelegationEvent,
+	StakeRequestWithdrawDelegationEvent,
+	StakeStakeEventAccumulation,
+} from "../stakingTypes";
+import { Helpers } from "../../../general/utils/helpers";
+import { Balance, Delegation, StakedSui } from "../../../types";
+import { SuiApiCasting } from "../../sui/api/suiApiCasting";
+import {
+	StakingCancelDelegationRequestEventOnChain,
+	StakingRequestAddDelegationEventOnChain,
+	StakingRequestWithdrawDelegationEventOnChain,
+} from "./stakingApiCastingTypes";
+import { StakingApiCasting } from "./stakingApiCasting";
+
+export class StakingApi extends StakingApiHelpers {
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
+	constructor(Provider: AftermathApi) {
+		super(Provider);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Public Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchStakeValidators = async () => {
+		const validatorMetadatas = await this.Provider.provider.getValidators();
+
+		const validators = validatorMetadatas.map(
+			StakingApiCasting.stakeValidatorFromValidatorMetadata
+		);
+
+		return validators;
+	};
+
+	public fetchDelegatedStakePositions = async (address: SuiAddress) => {
+		const delegatedStakes = await this.Provider.provider.getDelegatedStakes(
+			address
+		);
+		const delegatedStakePositions = delegatedStakes.map(
+			StakingApiCasting.delegatedStakePositionFromDelegatedStake
+		);
+		return delegatedStakePositions;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchStakeRequestAddDelegationEvents = async (
+		cursor?: EventId,
+		eventLimit?: number
+	) =>
+		await this.Provider.Events.fetchCastEventsWithCursor<
+			StakingRequestAddDelegationEventOnChain,
+			StakeRequestAddDelegationEvent
+		>(
+			{
+				MoveEvent: this.eventTypes.stakeRequestAddDelegation,
+			},
+			StakingApiCasting.stakeRequestAddDelegationEventFromOnChain,
+			cursor,
+			eventLimit
+		);
+
+	public fetchStakeRequestWithdrawDelegationEvents = async (
+		cursor?: EventId,
+		eventLimit?: number
+	) =>
+		await this.Provider.Events.fetchCastEventsWithCursor<
+			StakingRequestWithdrawDelegationEventOnChain,
+			StakeRequestWithdrawDelegationEvent
+		>(
+			{
+				MoveEvent: this.eventTypes.stakeRequestWithdrawDelegation,
+			},
+			StakingApiCasting.stakeRequestWithdrawDelegationEventFromOnChain,
+			cursor,
+			eventLimit
+		);
+
+	public fetchStakeCancelDelegationRequestEvents = async (
+		cursor?: EventId,
+		eventLimit?: number
+	) =>
+		await this.Provider.Events.fetchCastEventsWithCursor<
+			StakingCancelDelegationRequestEventOnChain,
+			StakeCancelDelegationRequestEvent
+		>(
+			{
+				MoveEvent: this.eventTypes.stakeCancelDelegationRequest,
+			},
+			StakingApiCasting.stakeCancelDelegationRequestEventFromOnChain,
+			cursor,
+			eventLimit
+		);
+
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Delegation Objects
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchDelegationObjects = async (
+		delegationIds: ObjectId[]
+	): Promise<Delegation[]> => {
+		return this.Provider.Objects.fetchCastObjectBatch<Delegation>(
+			delegationIds,
+			SuiApiCasting.delegationFromGetObjectDataResponse
+		);
+	};
+
+	public fetchDelegationObjectsOwnedByAddress = async (
+		walletAddress: SuiAddress
+	): Promise<Delegation[]> => {
+		return await this.Provider.Objects.fetchFilterAndCastObjectsOwnedByAddress(
+			walletAddress,
+			SuiApiCasting.isDelegation,
+			this.fetchDelegationObjects
+		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Staked SUI Objects
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchStakedSuiObjects = async (
+		stakedSuiIds: ObjectId[]
+	): Promise<StakedSui[]> => {
+		return this.Provider.Objects.fetchCastObjectBatch<StakedSui>(
+			stakedSuiIds,
+			SuiApiCasting.stakedSuiFromGetObjectDataResponse
+		);
+	};
+
+	public fetchStakedSuiObjectsOwnedByAddress = async (
+		walletAddress: SuiAddress
+	): Promise<StakedSui[]> => {
+		return await this.Provider.Objects.fetchFilterAndCastObjectsOwnedByAddress(
+			walletAddress,
+			SuiApiCasting.isStakedSui,
+			this.fetchStakedSuiObjects
+		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchRequestAddDelegationTransactions = async (
+		walletAddress: SuiAddress,
+		amount: Balance,
+		validator: SuiAddress
+	) =>
+		this.fetchBuildRequestAddDelegationTransactions(
+			walletAddress,
+			amount,
+			validator
+		);
+
+	public fetchCancelOrRequestWithdrawDelegationTransactions = async (
+		walletAddress: SuiAddress,
+		amount: Balance,
+		stakedSui: ObjectId,
+		delegation?: ObjectId
+	) =>
+		// i. Build the `cancel_delegation_request` or `request_withdraw_delegation` transactions.
+		this.fetchBuildCancelOrRequestWithdrawDelegationTransactions(
+			walletAddress,
+			amount,
+			stakedSui,
+			delegation
+		);
+
+	public fetchRequestWithdrawDelegationTransactions = async (
+		walletAddress: SuiAddress,
+		amount: Balance,
+		stakedSui: ObjectId,
+		delegation: ObjectId
+	) =>
+		this.fetchCancelOrRequestWithdrawDelegationTransactions(
+			walletAddress,
+			amount,
+			stakedSui,
+			delegation
+		);
+
+	public fetchCancelDelegationRequestTransactions = async (
+		walletAddress: SuiAddress,
+		amount: Balance,
+		stakedSui: ObjectId
+	) =>
+		this.fetchCancelOrRequestWithdrawDelegationTransactions(
+			walletAddress,
+			amount,
+			stakedSui
+		);
+
+	/////////////////////////////////////////////////////////////////////
+	//// Stats
+	/////////////////////////////////////////////////////////////////////
+
+	// TODO: fetch top stakers and tvl in this single function ? (no need to calc TVL twice)
+	public fetchStakeTopStakers = async () => {
+		let stakersAccumulation: Record<
+			SuiAddress,
+			StakeStakeEventAccumulation
+		> = {};
+
+		// TODO: should keep fetching stakes until there are none left - is this the same as undefined eventLimit ?
+		const stakesWithCursor =
+			await this.fetchStakeRequestAddDelegationEvents();
+		const stakes = stakesWithCursor.events;
+
+		for (const stake of stakes) {
+			if (stake.issuer in stakersAccumulation) {
+				const stakerAccumulation = stakersAccumulation[stake.issuer];
+
+				const totalAmountStaked =
+					stakerAccumulation.totalAmountStaked + stake.amount;
+
+				const curLatestStakeTimestamp =
+					stakerAccumulation.latestStakeTimestamp;
+				const latestStakeTimestamp =
+					stake.timestamp > curLatestStakeTimestamp
+						? stake.timestamp
+						: curLatestStakeTimestamp;
+
+				const curFirstStakeTimestamp =
+					stakerAccumulation.firstStakeTimestamp;
+				const firstStakeTimestamp =
+					stake.timestamp < curFirstStakeTimestamp
+						? stake.timestamp
+						: curFirstStakeTimestamp;
+
+				const curLargestStake = stakerAccumulation.largestStake;
+				const largestStake =
+					stake.amount > curLargestStake
+						? stake.amount
+						: curLargestStake;
+
+				stakersAccumulation[stake.issuer] = {
+					...stakerAccumulation,
+					totalAmountStaked,
+					latestStakeTimestamp,
+					firstStakeTimestamp,
+					largestStake,
+				};
+			} else {
+				stakersAccumulation[stake.issuer] = {
+					staker: stake.issuer,
+					totalAmountStaked: stake.amount,
+					latestStakeTimestamp: stake.timestamp,
+					firstStakeTimestamp: stake.timestamp,
+					largestStake: stake.amount,
+				};
+			}
+		}
+
+		// TODO: move this to promise.all above ? (can do this fetching async)
+		const unstakesWithCursor =
+			await this.fetchStakeRequestWithdrawDelegationEvents();
+		const unstakes = unstakesWithCursor.events;
+
+		for (const unstake of unstakes) {
+			if (!(unstake.issuer in stakersAccumulation)) continue;
+
+			const stakerAccumulation = stakersAccumulation[unstake.issuer];
+			const totalAmountStaked =
+				stakerAccumulation.totalAmountStaked - unstake.amount;
+
+			stakersAccumulation[unstake.issuer] = {
+				...stakerAccumulation,
+				totalAmountStaked,
+			};
+		}
+
+		const topStakers = Object.values(stakersAccumulation).sort((a, b) =>
+			Number(b.totalAmountStaked - a.totalAmountStaked)
+		);
+		const stakeTvl = Helpers.sumBigInt(
+			topStakers.map((staker) => staker.totalAmountStaked)
+		);
+		return {
+			topStakers,
+			stakeTvl,
+		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Prices
+	/////////////////////////////////////////////////////////////////////
+}

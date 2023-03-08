@@ -44,7 +44,7 @@ export class FaucetApiHelpers {
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	public readonly faucetAddresses: FaucetAddresses;
+	public readonly addresses: FaucetAddresses;
 	public readonly coinTypes: {
 		af: CoinType;
 		afSui: CoinType;
@@ -65,7 +65,7 @@ export class FaucetApiHelpers {
 			);
 
 		this.Provider = Provider;
-		this.faucetAddresses = faucetAddresses;
+		this.addresses = faucetAddresses;
 
 		this.coinTypes = {
 			af: `${faucetAddresses.packages.faucet}::af::AF`,
@@ -94,11 +94,11 @@ export class FaucetApiHelpers {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: this.faucetAddresses.packages.faucet,
+				packageObjectId: this.addresses.packages.faucet,
 				module: FaucetApiHelpers.constants.faucetModuleName,
 				function: FaucetApiHelpers.constants.functions.add.name,
 				typeArguments: [treasuryCapType],
-				arguments: [this.faucetAddresses.objects.faucet, treasuryCapId],
+				arguments: [this.addresses.objects.faucet, treasuryCapId],
 				gasBudget: gasBudget,
 			},
 		};
@@ -113,15 +113,12 @@ export class FaucetApiHelpers {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: this.faucetAddresses.packages.faucet,
+				packageObjectId: this.addresses.packages.faucet,
 				module: FaucetApiHelpers.constants.faucetModuleName,
 				function:
 					FaucetApiHelpers.constants.functions.requestAmount.name,
 				typeArguments: [coinType],
-				arguments: [
-					this.faucetAddresses.objects.faucet,
-					amount.toString(),
-				],
+				arguments: [this.addresses.objects.faucet, amount.toString()],
 				gasBudget: gasBudget,
 			},
 		};
@@ -135,11 +132,11 @@ export class FaucetApiHelpers {
 		return {
 			kind: "moveCall",
 			data: {
-				packageObjectId: this.faucetAddresses.packages.faucet,
+				packageObjectId: this.addresses.packages.faucet,
 				module: FaucetApiHelpers.constants.faucetModuleName,
 				function: FaucetApiHelpers.constants.functions.request.name,
 				typeArguments: [coinType],
-				arguments: [this.faucetAddresses.objects.faucet],
+				arguments: [this.addresses.objects.faucet],
 				gasBudget: gasBudget,
 			},
 		};
@@ -151,11 +148,11 @@ export class FaucetApiHelpers {
 
 	protected faucetSupportedCoinsMoveCall = (): MoveCallTransaction => {
 		return {
-			packageObjectId: this.faucetAddresses.packages.faucet,
+			packageObjectId: this.addresses.packages.faucet,
 			module: FaucetApiHelpers.constants.faucetRegistryModuleName,
 			function: "typenames",
 			typeArguments: [],
-			arguments: [this.faucetAddresses.objects.faucetRegistry],
+			arguments: [this.addresses.objects.faucetRegistry],
 		};
 	};
 
@@ -170,7 +167,7 @@ export class FaucetApiHelpers {
 	private mintCoinEventType = () => {
 		return EventsApiHelpers.createEventType(
 			AftermathApi.constants.packages.sui.packageId,
-			this.faucetAddresses.packages.faucet,
+			this.addresses.packages.faucet,
 			FaucetApiHelpers.constants.eventNames.mintedCoin
 		);
 	};
