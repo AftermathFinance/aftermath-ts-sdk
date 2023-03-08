@@ -1,8 +1,8 @@
-import { SignableTransaction } from "@mysten/sui.js";
 import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
 import { CoinsToBalance, CoinType } from "../coin/coinTypes";
+import { RouterPath } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
 
@@ -138,27 +138,6 @@ export interface PoolVolumeDataTimeframe {
 }
 
 /////////////////////////////////////////////////////////////////////
-//// Router
-/////////////////////////////////////////////////////////////////////
-
-export interface IndicesRouterPath {
-	pool: PoolObject;
-	baseAsset: CoinType;
-	quoteAsset: CoinType;
-	weight: number;
-}
-
-export interface IndicesRouterSwapPathInfo {
-	spotPrice: number;
-	paths: IndicesRouterPath[];
-}
-
-export type IndicesRouterSwapPathInfoWithTransactions =
-	IndicesRouterSwapPathInfo & {
-		transactions: SignableTransaction[];
-	};
-
-/////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
@@ -211,9 +190,9 @@ export type ApiTradeTransactionsBody =
 	| {
 			walletAddress: SuiAddress;
 			fromCoinAmount: Balance;
-			path: IndicesRouterPath;
+			path: RouterPath;
 	  }
 	| {
-			path: IndicesRouterPath;
+			path: RouterPath;
 			fromCoinId: ObjectId;
 	  };
