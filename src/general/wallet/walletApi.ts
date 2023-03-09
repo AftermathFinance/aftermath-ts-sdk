@@ -2,7 +2,11 @@ import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { Helpers } from "../utils/helpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { AftermathApi } from "../providers/aftermathApi";
-import { CoinType, CoinWithBalance } from "../../packages/coin/coinTypes";
+import {
+	CoinType,
+	CoinWithBalance,
+	CoinsToBalance,
+} from "../../packages/coin/coinTypes";
 
 export class WalletApi {
 	/////////////////////////////////////////////////////////////////////
@@ -17,10 +21,11 @@ export class WalletApi {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchWalletCoinBalance = async (
-		account: SuiAddress,
-		coin: CoinType
-	) => {
+	/////////////////////////////////////////////////////////////////////
+	//// Coins
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchCoinBalance = async (account: SuiAddress, coin: CoinType) => {
 		const coinBalance = await this.Provider.provider.getBalance(
 			account,
 			Helpers.stripLeadingZeroesFromType(coin)
@@ -28,26 +33,36 @@ export class WalletApi {
 		return BigInt(Math.floor(coinBalance.totalBalance));
 	};
 
-	// TODO: make toBigIntSafe function
+	// TODO: make toBigIntSafe function ?
 	// TODO: return prices here as well and sort ?
-	public fetchWalletAllCoinBalances = async (
+	// TODO: remove all CoinWithBalance and similar types
+	public fetchAllCoinBalances = async (
 		address: SuiAddress
-	): Promise<CoinWithBalance[]> => {
+	): Promise<CoinsToBalance> => {
 		const allBalances = await this.Provider.provider.getAllBalances(
 			address
 		);
-		// TODO: make this into object [coinType]: Balance ?
-		return allBalances
-			.map((coinBalance) => {
+
+		const coinsToBalance: CoinsToBalance = allBalances.reduce(
+			(acc, balance, index) => {
 				return {
-					coin: coinBalance.coinType,
-					balance: BigInt(Math.floor(coinBalance.totalBalance)),
+					...acc,
+					[balance.coinType]: BigInt(
+						Math.floor(balance.totalBalance)
+					),
 				};
-			})
-			.sort((a, b) => Number(b.balance - a.balance));
+			},
+			{}
+		);
+
+		return coinsToBalance;
 	};
 
-	public fetchWalletTransactionHistory = async (
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchTransactionHistory = async (
 		address: SuiAddress,
 		cursor?: TransactionDigest,
 		limit?: number
