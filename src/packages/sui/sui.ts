@@ -20,4 +20,6 @@ export class Sui extends Aftermath {
 	constructor(public readonly network?: SuiNetwork) {
 		super(network, "sui");
 	}
+
+	// TODO: add fetching here for eopch, system state, etc.
 }

@@ -13,6 +13,8 @@ import { SuiApi } from "../../packages/sui/api/suiApi";
 import { WalletApi } from "../wallet/walletApi";
 import { RouterApi } from "../../packages/router/api/routerApi";
 import { PlaceholderPricesApi } from "../prices/placeholder/placeholderPricesApi";
+import { CapysApi } from "../../packages/capys/api/capysApi";
+import { StakingApi } from "../../packages/staking/api/stakingApi";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
@@ -91,4 +93,6 @@ export class AftermathApi {
 	public Pools = () => new PoolsApi(this);
 	public Faucet = () => new FaucetApi(this);
 	public Router = () => new RouterApi(this);
+	public Capys = () => new CapysApi(this);
+	public Staking = () => new StakingApi(this);
 }

@@ -58,7 +58,7 @@ export class StakingApi extends StakingApiHelpers {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakeRequestAddDelegationEvents = async (
+	public fetchRequestAddDelegationEvents = async (
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
@@ -74,7 +74,7 @@ export class StakingApi extends StakingApiHelpers {
 			eventLimit
 		);
 
-	public fetchStakeRequestWithdrawDelegationEvents = async (
+	public fetchRequestWithdrawDelegationEvents = async (
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
@@ -90,7 +90,7 @@ export class StakingApi extends StakingApiHelpers {
 			eventLimit
 		);
 
-	public fetchStakeCancelDelegationRequestEvents = async (
+	public fetchCancelDelegationRequestEvents = async (
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
@@ -214,15 +214,14 @@ export class StakingApi extends StakingApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	// TODO: fetch top stakers and tvl in this single function ? (no need to calc TVL twice)
-	public fetchStakeTopStakers = async () => {
+	public fetchTopStakers = async () => {
 		let stakersAccumulation: Record<
 			SuiAddress,
 			StakeStakeEventAccumulation
 		> = {};
 
 		// TODO: should keep fetching stakes until there are none left - is this the same as undefined eventLimit ?
-		const stakesWithCursor =
-			await this.fetchStakeRequestAddDelegationEvents();
+		const stakesWithCursor = await this.fetchRequestAddDelegationEvents();
 		const stakes = stakesWithCursor.events;
 
 		for (const stake of stakes) {
@@ -272,7 +271,7 @@ export class StakingApi extends StakingApiHelpers {
 
 		// TODO: move this to promise.all above ? (can do this fetching async)
 		const unstakesWithCursor =
-			await this.fetchStakeRequestWithdrawDelegationEvents();
+			await this.fetchRequestWithdrawDelegationEvents();
 		const unstakes = unstakesWithCursor.events;
 
 		for (const unstake of unstakes) {
@@ -299,8 +298,4 @@ export class StakingApi extends StakingApiHelpers {
 			stakeTvl,
 		};
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Prices
-	/////////////////////////////////////////////////////////////////////
 }
