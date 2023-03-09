@@ -13,7 +13,7 @@ import {
 	UnstakeCapyEvent,
 } from "../capysTypes";
 import {
-	BreedCapyEventOnChain,
+	BreedCapyEventOnChain as BreedCapysEventOnChain,
 	CapyBornEventOnChain,
 	CapyFieldsOnChain,
 	CapyVaultFieldsOnChain,
@@ -106,8 +106,8 @@ export class CapysApiCasting {
 		};
 	};
 
-	public static breedCapyEventFromOnChain = (
-		eventOnChain: BreedCapyEventOnChain
+	public static breedCapysEventFromOnChain = (
+		eventOnChain: BreedCapysEventOnChain
 	): BreedCapysEvent => {
 		const fields = eventOnChain.event.moveEvent.fields;
 		return {
