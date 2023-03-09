@@ -6,8 +6,9 @@ import { Capys } from "../../packages/capys/capys";
 import { Coin } from "../../packages/coin/coin";
 import { Faucet } from "../../packages/faucet/faucet";
 import { Staking } from "../../packages/staking/staking";
+import { Helpers } from "../utils/helpers";
 
-export class Aftermath {
+export class Aftermath extends Helpers {
 	private readonly baseUrl?: Url;
 
 	/////////////////////////////////////////////////////////////////////
@@ -18,6 +19,8 @@ export class Aftermath {
 		public readonly network?: SuiNetwork,
 		private readonly urlPrefix: Url = ""
 	) {
+		super();
+
 		this.network = network;
 		this.urlPrefix = urlPrefix;
 		this.baseUrl =
@@ -35,15 +38,11 @@ export class Aftermath {
 	/////////////////////////////////////////////////////////////////////
 
 	public Pools = () => new Pools(this.network);
-
 	public Staking = () => new Staking(this.network);
-
 	public Capys = () => new Capys(this.network);
-
 	public Faucet = () => new Faucet(this.network);
 
 	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
-
 	public Coin = (coinType: CoinType) => new Coin(coinType, this.network);
 
 	/////////////////////////////////////////////////////////////////////
@@ -56,35 +55,11 @@ export class Aftermath {
 		return "http://localhost:3000"; // LOCAL
 	}
 
-	// TODO: move this and other functions to helpers file
-	private static isNumber = (str: string): boolean =>
-		/^\d*\.?\d*$/g.test(str);
-
-	private static parseJsonWithBigint = (
-		json: string,
-		unsafeStringNumberConversion = false
-	): string =>
-		JSON.parse(json, (key, value) => {
-			// handles bigint casting
-			if (typeof value === "string" && /^\d+n$/.test(value)) {
-				return BigInt(value.slice(0, value.length - 1));
-			}
-
-			if (
-				unsafeStringNumberConversion &&
-				typeof value === "string" &&
-				Aftermath.isNumber(value)
-			) {
-				return BigInt(value);
-			}
-			return value;
-		});
-
 	private static async fetchResponseToType<OutputType>(
 		response: Response
 	): Promise<OutputType> {
 		const json = JSON.stringify(await response.json());
-		const output = Aftermath.parseJsonWithBigint(json);
+		const output = this.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
 

@@ -3,6 +3,7 @@ import { Aftermath } from "../../general/providers/aftermath";
 import { Pool } from "../pools/pool";
 import { SignableTransaction } from "@mysten/sui.js";
 
+// TODO: create router object
 export class Router extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor

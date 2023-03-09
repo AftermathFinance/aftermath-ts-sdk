@@ -18,7 +18,7 @@ import {
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
 import { Aftermath } from "../../general/providers/aftermath";
-import { Helpers } from "../../general/utils/helpers";
+import { Router } from "../router/router";
 
 export class Pools extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
@@ -43,6 +43,10 @@ export class Pools extends Aftermath {
 
 	/////////////////////////////////////////////////////////////////////
 	//// Class Objects
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Pool Class
 	/////////////////////////////////////////////////////////////////////
 
 	public async getPool(poolObjectId: ObjectId): Promise<Pool> {
@@ -71,6 +75,16 @@ export class Pools extends Aftermath {
 			(pool, index) =>
 				new Pool(pool, poolDynamicFields[index], this.network)
 		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Router Class
+	/////////////////////////////////////////////////////////////////////
+
+	// NOTE: should this function be named `getRouter` or just `Router` ?
+	public async getRouter(): Promise<Router> {
+		const pools = await this.getAllPools();
+		return new Router(pools, this.network);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -225,6 +239,6 @@ export class Pools extends Aftermath {
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")
-			.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
+			.map((word) => this.capitalizeOnlyFirstLetter(word))
 			.join(" ") + " LP";
 }
