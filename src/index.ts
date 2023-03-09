@@ -1,3 +1,5 @@
-export * from "./general/providers/aftermath";
-export * from "./general/providers/aftermathApi";
+export * from "./general";
+
+export * from "./packages";
+
 export * from "./types";
