@@ -125,7 +125,7 @@ export interface ApiBreedCapyBody {
 	capyParentTwoId: ObjectId;
 }
 
-export interface CapyFeesEarned {
-	capyFeesEarnedIndividual: Balance;
-	capyFeesEarnedGlobal: Balance;
+export interface StakedCapyFeesEarned {
+	individualFees: Balance;
+	globalFees: Balance;
 }

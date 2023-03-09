@@ -21,6 +21,7 @@ import {
 } from "../../../types";
 import { Capys } from "../capys";
 import { Coin } from "../../coin/coin";
+import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
 
 export class CapysApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -565,6 +566,35 @@ export class CapysApiHelpers {
 		);
 
 		return transactions;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Staked Capy Fees
+	/////////////////////////////////////////////////////////////////////
+
+	protected fetchStakedCapyFeesEarnedIndividual = async (
+		stakingReceiptId: ObjectId
+	) => {
+		const moveCallTransaction =
+			this.capyFeesEarnedIndividualMoveCall(stakingReceiptId);
+		const bytes =
+			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
+				moveCallTransaction
+			);
+		return CastingApiHelpers.bigIntFromBytes(bytes);
+	};
+
+	protected fetchStakedCapyFeesEarnedGlobal = async () => {
+		const moveCallTransaction = this.capyFeesEarnedGlobalMoveCall();
+		const bytes =
+			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
+				moveCallTransaction
+			);
+		return CastingApiHelpers.bigIntFromBytes(bytes);
 	};
 
 	/////////////////////////////////////////////////////////////////////

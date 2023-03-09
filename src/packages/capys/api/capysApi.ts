@@ -11,6 +11,7 @@ import {
 	BreedCapysEvent,
 	CapyAttribute,
 	CapyBornEvent,
+	StakedCapyFeesEarned,
 	CapyObject,
 	CapyStats,
 	CapyVaultObject,
@@ -50,25 +51,21 @@ export class CapysApi extends CapysApiHelpers {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakedCapyFeesEarnedIndividual = async (
-		stakingReceiptId: ObjectId
-	) => {
-		const moveCallTransaction =
-			this.capyFeesEarnedIndividualMoveCall(stakingReceiptId);
-		const bytes =
-			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
-				moveCallTransaction
-			);
-		return CastingApiHelpers.bigIntFromBytes(bytes);
-	};
+	public fetchStakedCapyFeesEarned = async (
+		stakedCapyReceiptObjectId: ObjectId
+	): Promise<StakedCapyFeesEarned> => {
+		const [capyFeesEarnedIndividual, capyFeesEarnedGlobal] =
+			await Promise.all([
+				this.fetchStakedCapyFeesEarnedIndividual(
+					stakedCapyReceiptObjectId
+				),
+				this.fetchStakedCapyFeesEarnedGlobal(),
+			]);
 
-	public fetchCapyFeesEarnedGlobal = async () => {
-		const moveCallTransaction = this.capyFeesEarnedGlobalMoveCall();
-		const bytes =
-			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
-				moveCallTransaction
-			);
-		return CastingApiHelpers.bigIntFromBytes(bytes);
+		return {
+			individualFees: capyFeesEarnedIndividual,
+			globalFees: capyFeesEarnedGlobal,
+		};
 	};
 
 	public fetchIsCapyPackageOnChain = () =>

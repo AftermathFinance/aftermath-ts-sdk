@@ -3,7 +3,7 @@ import {
 	ApiUnstakeCapyBody,
 	ApiWithdrawCapyFeesAmountBody,
 	Balance,
-	CapyFeesEarned,
+	StakedCapyFeesEarned,
 	StakedCapyReceiptObject,
 	SuiNetwork,
 } from "../../types";
@@ -38,7 +38,7 @@ export class StakedCapyReceipt extends Aftermath {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public async getFeesEarned(): Promise<CapyFeesEarned> {
+	public async getFeesEarned(): Promise<StakedCapyFeesEarned> {
 		return this.fetchApi(`${this.stakedCapyReceipt.objectId}/feesEarned`);
 	}
 
