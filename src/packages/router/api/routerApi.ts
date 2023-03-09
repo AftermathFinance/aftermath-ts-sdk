@@ -23,10 +23,10 @@ export class RouterApi extends RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchIndicesRouterGraph = async () => {
-		const pools = await this.Provider.Pools.fetchAllPools();
+		const pools = await this.Provider.Pools().fetchAllPools();
 		const poolDynamicFields = await Promise.all(
 			pools.map((pool) =>
-				this.Provider.Pools.fetchPoolDynamicFields(pool.objectId)
+				this.Provider.Pools().fetchPoolDynamicFields(pool.objectId)
 			)
 		);
 

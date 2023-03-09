@@ -116,7 +116,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet.addresses.objects.faucet,
+					this.Provider.Faucet().addresses.objects.faucet,
 					coinId,
 					validator,
 				],
@@ -145,7 +145,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet.addresses.objects.faucet,
+					this.Provider.Faucet().addresses.objects.faucet,
 					delegation,
 					stakedSui,
 					afSui,
@@ -174,7 +174,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet.addresses.objects.faucet,
+					this.Provider.Faucet().addresses.objects.faucet,
 					stakedSui,
 					afSui,
 				],
@@ -227,7 +227,7 @@ export class StakingApiHelpers {
 		const { coinObjectId: coinId, joinAndSplitTransactions } =
 			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
-				this.Provider.Faucet.coinTypes.afSui,
+				this.Provider.Faucet().coinTypes.afSui,
 				amount
 			);
 		transactions.push(...joinAndSplitTransactions);

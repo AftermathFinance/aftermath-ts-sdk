@@ -25,21 +25,19 @@ export interface PoolCompleteObject {
 
 export interface PoolObject {
 	objectId: ObjectId;
-	fields: PoolFields;
+	fields: {
+		name: PoolName;
+		creator: SuiAddress;
+		coins: CoinType[];
+		weights: PoolWeight[];
+		tradeFee: PoolTradeFee;
+		lpType: CoinType;
+		curveType: PoolCurveType;
+	};
 }
 
 export enum PoolCurveType {
 	Uncorrelated = 0,
-}
-
-export interface PoolFields {
-	name: PoolName;
-	creator: SuiAddress;
-	coins: CoinType[];
-	weights: PoolWeight[];
-	tradeFee: PoolTradeFee;
-	lpType: CoinType;
-	curveType: PoolCurveType;
 }
 
 /////////////////////////////////////////////////////////////////////
