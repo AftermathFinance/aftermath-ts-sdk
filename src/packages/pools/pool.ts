@@ -1,7 +1,7 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
-	ApiPoolSwapBody,
+	ApiPoolTradeBody,
 	ApiPoolWithdrawBody,
 	Balance,
 	CoinType,
@@ -82,7 +82,7 @@ export class Pool extends Aftermath {
 		fromCoinAmount: Balance,
 		toCoin: CoinType
 	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolSwapBody>(
+		return this.fetchApi<SignableTransaction[], ApiPoolTradeBody>(
 			"transactions/trade",
 			{
 				walletAddress,
@@ -113,7 +113,7 @@ export class Pool extends Aftermath {
 			coinOutPoolBalance,
 			coinOutWeight,
 			coinInAmount,
-			this.pool.fields.swapFee
+			this.pool.fields.tradeFee
 		);
 	};
 
@@ -133,7 +133,7 @@ export class Pool extends Aftermath {
 			coinOutPoolBalance,
 			coinOutWeight,
 			coinOutAmount,
-			this.pool.fields.swapFee
+			this.pool.fields.tradeFee
 		);
 	};
 
@@ -168,7 +168,7 @@ export class Pool extends Aftermath {
 			this.pool.fields.weights,
 			depositCoinBalances,
 			lpTotalSupply,
-			this.pool.fields.swapFee
+			this.pool.fields.tradeFee
 		);
 	};
 

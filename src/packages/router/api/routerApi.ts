@@ -65,12 +65,12 @@ export class RouterApi extends RouterApiHelpers {
 				fromCoinAmount
 			);
 
-		const swapTransactions = this.intermediateTradeTransactions(
+		const tradeTransactions = this.intermediateTradeTransactions(
 			path,
 			coinObjectId
 		);
 
-		return [...joinAndSplitTransactions, ...swapTransactions];
+		return [...joinAndSplitTransactions, ...tradeTransactions];
 	};
 
 	/////////////////////////////////////////////////////////////////////

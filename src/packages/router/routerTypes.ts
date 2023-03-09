@@ -5,7 +5,7 @@ import {
 	PoolObject,
 	PoolCompleteObject,
 	PoolWeight,
-	PoolSwapFee,
+	PoolTradeFee,
 	PoolName,
 } from "../pools/poolsTypes";
 
@@ -55,7 +55,7 @@ export interface PseudoPool {
 	weights: {
 		[key: CoinType]: PoolWeight;
 	};
-	swapFee: PoolSwapFee;
+	tradeFee: PoolTradeFee;
 }
 
 export interface Edge {

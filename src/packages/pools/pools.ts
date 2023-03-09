@@ -10,7 +10,7 @@ import {
 	PoolDynamicFields,
 	PoolObject,
 	PoolTradeEvent,
-	PoolSwapFee,
+	PoolTradeFee,
 	PoolWeight,
 	PoolWithdrawEvent,
 	SuiNetwork,
@@ -29,8 +29,8 @@ export class Pools extends Aftermath {
 		lpCoinDecimals: 9,
 		coinWeightDecimals: 18,
 		spotPriceDecimals: 18,
-		swapFeeDecimals: 18,
-		maxSwapFee: BigInt(1000000000000000000),
+		tradeFeeDecimals: 18,
+		maxTradeFee: BigInt(1000000000000000000),
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -206,8 +206,8 @@ export class Pools extends Aftermath {
 	public static spotPriceWithDecimals = (spotPrice: Balance) =>
 		Number(spotPrice) / 10 ** Pools.constants.spotPriceDecimals;
 
-	public static swapFeeWithDecimals = (swapFee: PoolSwapFee) =>
-		Number(swapFee) / 10 ** Pools.constants.swapFeeDecimals;
+	public static tradeFeeWithDecimals = (tradeFee: PoolTradeFee) =>
+		Number(tradeFee) / 10 ** Pools.constants.tradeFeeDecimals;
 
 	public static normalizeLpCoinBalance = (balance: number) =>
 		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);

@@ -30,7 +30,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 	) => {
 		const coinId = fromCoinId;
 
-		const swapTransaction = this.tradeTransaction(
+		const tradeTransaction = this.tradeTransaction(
 			path.pool.objectId,
 			coinId,
 			path.baseAsset,
@@ -38,7 +38,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 			path.quoteAsset,
 			path.pool.fields.lpType
 		);
-		return [swapTransaction];
+		return [tradeTransaction];
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 		for (let i = 0; i < coinTypes.length; ++i)
 			weights[coinTypes[i]] = pool.pool.fields.weights[i];
 
-		const swapFee = pool.pool.fields.swapFee;
+		const tradeFee = pool.pool.fields.tradeFee;
 
 		const g = graph.startingPoints;
 		pool.pool.fields.coins.map((coinType: CoinType) => {
@@ -92,7 +92,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 						balances: Object.assign({}, balances),
 						originalBalances: balances,
 						weights,
-						swapFee,
+						tradeFee: tradeFee,
 					},
 					// spotPrice: indicesPoolCalcSpotPrice(
 					// 	balances[coinTypes[i]],
@@ -110,7 +110,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 						balances: Object.assign({}, balances),
 						originalBalances: balances,
 						weights,
-						swapFee,
+						tradeFee: tradeFee,
 					},
 					// spotPrice: indicesPoolCalcSpotPrice(
 					// 	balances[coinTypes[j]],
@@ -212,7 +212,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 					// 	pool.balances[typeTo],
 					// 	pool.weights[typeTo],
 					// 	balance,
-					// 	pool.swapFee
+					// 	pool.tradeFee
 					// );
 					const newBalance = BigInt(0);
 					pool.balances[typeFrom] += balance;

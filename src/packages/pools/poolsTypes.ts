@@ -12,7 +12,7 @@ import { RouterPath } from "../router/routerTypes";
 
 export type PoolName = string;
 export type PoolWeight = bigint;
-export type PoolSwapFee = bigint;
+export type PoolTradeFee = bigint;
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -37,7 +37,7 @@ export interface PoolFields {
 	creator: SuiAddress;
 	coins: CoinType[];
 	weights: PoolWeight[];
-	swapFee: PoolSwapFee;
+	tradeFee: PoolTradeFee;
 	lpType: CoinType;
 	curveType: PoolCurveType;
 }
@@ -146,7 +146,7 @@ export interface ApiPoolSpotPriceBody {
 	coinOutType: CoinType;
 }
 
-export interface ApiPoolSwapAmountOutBody {
+export interface ApiPoolTradeAmountOutBody {
 	coinInType: CoinType;
 	coinInAmount: Balance;
 	coinOutType: CoinType;
@@ -167,7 +167,7 @@ export interface ApiPoolWithdrawBody {
 	withdrawLpTotal: Balance;
 }
 
-export interface ApiPoolSwapBody {
+export interface ApiPoolTradeBody {
 	walletAddress: SuiAddress;
 	fromCoin: CoinType;
 	fromCoinAmount: Balance;

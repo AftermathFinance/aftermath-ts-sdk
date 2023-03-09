@@ -495,28 +495,28 @@ export class PoolsApiHelpers {
 	protected fetchCalcPoolVolume = (
 		poolObjectId: ObjectId,
 		poolCoins: CoinType[],
-		swapEvents: PoolTradeEvent[],
+		tradeEvents: PoolTradeEvent[],
 		prices: number[],
 		coinsToDecimals: Record<CoinType, CoinDecimal>
 	) => {
-		const swapsForPool = swapEvents.filter(
-			(swap) => swap.poolId === poolObjectId
+		const tradesForPool = tradeEvents.filter(
+			(trade) => trade.poolId === poolObjectId
 		);
 
 		let volume = 0;
-		for (const swap of swapsForPool) {
-			const decimals = coinsToDecimals[swap.typeIn];
-			const swapAmount = Coin.balanceWithDecimals(
-				swap.amountIn,
+		for (const trade of tradesForPool) {
+			const decimals = coinsToDecimals[trade.typeIn];
+			const tradeAmount = Coin.balanceWithDecimals(
+				trade.amountIn,
 				decimals
 			);
 
 			const priceIndex = poolCoins.findIndex(
-				(coin) => coin === swap.typeIn
+				(coin) => coin === trade.typeIn
 			);
 			const coinInPrice = prices[priceIndex];
 
-			const amountUsd = swapAmount * coinInPrice;
+			const amountUsd = tradeAmount * coinInPrice;
 			volume += amountUsd;
 		}
 
@@ -621,17 +621,17 @@ export class PoolsApiHelpers {
 				};
 			});
 
-		const dataPoints = tradeEvents.reduce((acc, swap) => {
+		const dataPoints = tradeEvents.reduce((acc, trade) => {
 			const bucketIndex =
 				acc.length -
 				Math.floor(
-					dayjs(now).diff(swap.timestamp) / bucketTimestampSize
+					dayjs(now).diff(trade.timestamp) / bucketTimestampSize
 				) -
 				1;
 			const amountUsd = Coin.balanceWithDecimalsUsd(
-				swap.amountIn,
-				coinsToDecimalsAndPrices[swap.typeIn].decimals,
-				coinsToDecimalsAndPrices[swap.typeIn].price
+				trade.amountIn,
+				coinsToDecimalsAndPrices[trade.typeIn].decimals,
+				coinsToDecimalsAndPrices[trade.typeIn].price
 			);
 
 			acc[bucketIndex].value += amountUsd;
@@ -650,7 +650,6 @@ export class PoolsApiHelpers {
 	//// Event Types
 	/////////////////////////////////////////////////////////////////////
 
-	// TODO: change all swap naming to trade
 	private tradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.cmmm,

@@ -365,7 +365,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			poolCoins
 		);
 
-		const swapEventsWithinTime =
+		const tradeEventsWithinTime =
 			await this.Provider.Events.fetchEventsWithinTime(
 				this.fetchTradeEvents,
 				"hour",
@@ -374,7 +374,7 @@ export class PoolsApi extends PoolsApiHelpers {
 		const volume = this.fetchCalcPoolVolume(
 			poolObjectId,
 			poolCoins,
-			swapEventsWithinTime,
+			tradeEventsWithinTime,
 			prices,
 			coinsToDecimals
 		);
@@ -478,7 +478,7 @@ export class PoolsApi extends PoolsApiHelpers {
 					timeframeValue.timeUnit,
 					timeframeValue.time
 				)
-			).filter((swap) => swap.poolId === poolObjectId),
+			).filter((trade) => trade.poolId === poolObjectId),
 		]);
 
 		return await this.fetchCalcPoolVolumeData(
