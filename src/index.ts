@@ -1,4 +1,2 @@
-export * from "./pools/pool";
-export * from "./pools/pools";
-
-export * from "./types/apiTypes";
+export * from "./general/providers/aftermath";
+export * from "./general/providers/aftermathApi";
