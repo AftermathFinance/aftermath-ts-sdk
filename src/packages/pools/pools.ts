@@ -225,6 +225,9 @@ export class Pools extends Aftermath {
 	public static normalizeLpCoinBalance = (balance: number) =>
 		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
 
+	public static lpCoinBalanceWithDecimals = (balance: Balance) =>
+		Number(balance) / 10 ** Pools.constants.lpCoinDecimals;
+
 	public static normalizeLpCoinType = (lpCoinType: CoinType) => {
 		return `0x${lpCoinType.replaceAll("<", "<0x")}`;
 	};
