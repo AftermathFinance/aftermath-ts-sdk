@@ -124,7 +124,7 @@ export interface PoolStats {
 	aprRange: [number, number];
 }
 
-export interface IndicesPoolDataPoint {
+export interface PoolDataPoint {
 	time: Timestamp;
 	value: number;
 }

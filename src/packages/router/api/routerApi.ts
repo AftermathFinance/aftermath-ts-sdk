@@ -19,8 +19,18 @@ export class RouterApi extends RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Graph
+	//// Inspections
 	/////////////////////////////////////////////////////////////////////
+
+	public fetchSupportedCoins = async () => {
+		const pools = await this.Provider.Pools().fetchAllPools();
+		const allCoins: CoinType[] = pools
+			.map((pool) => pool.fields.coins)
+			.reduce((prev, cur) => [...prev, ...cur], []);
+
+		const uniqueCoins = [...new Set(allCoins)];
+		return uniqueCoins;
+	};
 
 	public fetchGraph = async () => {
 		const pools = await this.Provider.Pools().fetchAllPools();
@@ -74,7 +84,7 @@ export class RouterApi extends RouterApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Info
+	//// Path Info
 	/////////////////////////////////////////////////////////////////////
 
 	public getTradePathInfo = (

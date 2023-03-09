@@ -20,7 +20,7 @@ export class FaucetApi extends FaucetApiHelpers {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchFaucetSupportedCoins = () => {
+	public fetchSupportedCoins = () => {
 		const faucetPackageId = this.Provider.addresses.faucet?.packages.faucet;
 		if (!faucetPackageId) throw new Error("faucet package id is unset");
 
@@ -56,7 +56,7 @@ export class FaucetApi extends FaucetApiHelpers {
 	// 	return stringFromBytes(bytes);
 	// };
 
-	public fetchIsFaucetPackageOnChain = () => {
+	public fetchIsPackageOnChain = () => {
 		const faucetPackageId = this.Provider.addresses.faucet?.packages.faucet;
 		if (!faucetPackageId) throw new Error("faucet package id is unset");
 
@@ -67,7 +67,7 @@ export class FaucetApi extends FaucetApiHelpers {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchFaucetRequestCoinAmountTransaction = async (coin: CoinType) => {
+	public fetchRequestCoinAmountTransaction = async (coin: CoinType) => {
 		const price = await this.Provider.Prices.fetchPrice(coin);
 
 		const requestAmount = Faucet.constants.defaultRequestAmountUsd / price;
@@ -89,7 +89,7 @@ export class FaucetApi extends FaucetApiHelpers {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchFaucetMintCoinEvents = async (
+	public fetchMintCoinEvents = async (
 		cursor?: EventId,
 		eventLimit?: number
 	) =>

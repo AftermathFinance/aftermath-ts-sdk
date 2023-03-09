@@ -13,7 +13,7 @@ import {
 	CoinDecimal,
 	CoinType,
 	GasBudget,
-	IndicesPoolDataPoint,
+	PoolDataPoint,
 	PoolVolumeDataTimeframe,
 	PoolVolumeDataTimeframeKey,
 	PoolDynamicFields,
@@ -609,7 +609,7 @@ export class PoolsApiHelpers {
 		const timeGap = dayjs(now).diff(maxTimeAgo);
 
 		const bucketTimestampSize = timeGap / buckets;
-		const emptyDataPoints: IndicesPoolDataPoint[] = Array(buckets)
+		const emptyDataPoints: PoolDataPoint[] = Array(buckets)
 			.fill({
 				time: 0,
 				value: 0,

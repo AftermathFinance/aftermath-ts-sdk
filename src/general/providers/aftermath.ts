@@ -15,7 +15,7 @@ export class Aftermath extends Helpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	protected constructor(
+	constructor(
 		public readonly network?: SuiNetwork,
 		private readonly urlPrefix: Url = ""
 	) {

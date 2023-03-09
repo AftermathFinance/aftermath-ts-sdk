@@ -199,7 +199,6 @@ export class Pools extends Aftermath {
 
 	// remove this once all LP coins have coin metadata ?
 	public static isLpCoin = (coin: CoinType) => {
-		// const poolsPackageId = config.indices.packages.pools;
 		// return coin.includes(poolsPackageId);
 		return coin.includes("AF_LP_");
 	};
