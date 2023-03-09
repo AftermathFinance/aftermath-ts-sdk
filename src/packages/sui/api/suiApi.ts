@@ -39,4 +39,9 @@ export class SuiApi extends SuiApiHelpers {
 	public fetchCurrentEpoch = async (): Promise<EpochTimeStamp> => {
 		return (await this.fetchCommitteeInfo()).epoch;
 	};
+
+	public fetchSystemState = async () => {
+		const suiSystemState = await this.Provider.provider.getSuiSystemState();
+		return suiSystemState;
+	};
 }

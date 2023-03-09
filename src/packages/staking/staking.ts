@@ -1,4 +1,9 @@
-import { EventId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
+import {
+	EventId,
+	SignableTransaction,
+	SuiAddress,
+	SuiSystemState,
+} from "@mysten/sui.js";
 import {
 	ApiEventsBody,
 	ApiRequestAddDelegationBody,
@@ -126,4 +131,46 @@ export class Staking extends Aftermath {
 			coinAmount,
 		});
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Calculations
+	/////////////////////////////////////////////////////////////////////
+
+	public static calcStakingRewards = (
+		suiSystemState: SuiSystemState,
+		delegation: DelegatedStakePosition
+	): Balance => {
+		if (delegation.status === "pending") return BigInt(0);
+
+		const validatorAddress = delegation.validatorAddress;
+		const activeValidators = suiSystemState.validators.active_validators;
+
+		const validator = activeValidators.find(
+			(validator) =>
+				validator.delegation_staking_pool.validator_address ===
+				validatorAddress
+		);
+		if (!validator) return BigInt(0);
+
+		const poolTokens = delegation.status.active.poolCoinsAmount;
+
+		const delegationTokenSupply = BigInt(
+			validator.delegation_staking_pool.delegation_token_supply.value
+		);
+
+		const suiBalance = BigInt(
+			validator.delegation_staking_pool.sui_balance
+		);
+
+		const principalAmount = delegation.status.active.principalSuiAmount;
+
+		const currentSuiWorth =
+			(poolTokens * suiBalance) / delegationTokenSupply;
+
+		return currentSuiWorth - principalAmount;
+	};
 }
