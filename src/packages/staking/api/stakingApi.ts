@@ -171,20 +171,6 @@ export class StakingApi extends StakingApiHelpers {
 			validator
 		);
 
-	public fetchCancelOrRequestWithdrawDelegationTransactions = async (
-		walletAddress: SuiAddress,
-		amount: Balance,
-		stakedSui: ObjectId,
-		delegation?: ObjectId
-	) =>
-		// i. Build the `cancel_delegation_request` or `request_withdraw_delegation` transactions.
-		this.fetchBuildCancelOrRequestWithdrawDelegationTransactions(
-			walletAddress,
-			amount,
-			stakedSui,
-			delegation
-		);
-
 	public fetchRequestWithdrawDelegationTransactions = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
