@@ -1,6 +1,23 @@
 import { AnyObjectType } from "../../types";
+import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
+import { EventsApiHelpers } from "../api/eventsApiHelpers";
+import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
+import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
+import { RpcApiHelpers } from "../api/rpcApiHelpers";
+import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 
 export class Helpers {
+	/////////////////////////////////////////////////////////////////////
+	//// Api Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public static dynamicFields = DynamicFieldsApiHelpers;
+	public static events = EventsApiHelpers;
+	public static inspections = InspectionsApiHelpers;
+	public static objects = ObjectsApiHelpers;
+	public static rpc = RpcApiHelpers;
+	public static transactions = TransactionsApiHelpers;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Type Manipulation
 	/////////////////////////////////////////////////////////////////////

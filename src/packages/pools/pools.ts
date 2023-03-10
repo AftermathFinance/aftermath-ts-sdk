@@ -19,6 +19,7 @@ import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
 import { Aftermath } from "../../general/providers/aftermath";
 import { Router } from "../router/router";
+import { Helpers } from "../../general/utils/helpers";
 
 export class Pools extends Aftermath {
 	/////////////////////////////////////////////////////////////////////
@@ -241,6 +242,6 @@ export class Pools extends Aftermath {
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")
-			.map((word) => this.capitalizeOnlyFirstLetter(word))
+			.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
 			.join(" ") + " LP";
 }

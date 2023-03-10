@@ -67,9 +67,9 @@ export class StakingApi extends StakingApiHelpers {
 			StakeRequestAddDelegationEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.stakeRequestAddDelegation,
+				MoveEvent: this.eventTypes.requestAddDelegation,
 			},
-			StakingApiCasting.stakeRequestAddDelegationEventFromOnChain,
+			StakingApiCasting.requestAddDelegationEventFromOnChain,
 			cursor,
 			eventLimit
 		);
@@ -83,9 +83,9 @@ export class StakingApi extends StakingApiHelpers {
 			StakeRequestWithdrawDelegationEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.stakeRequestWithdrawDelegation,
+				MoveEvent: this.eventTypes.requestWithdrawDelegation,
 			},
-			StakingApiCasting.stakeRequestWithdrawDelegationEventFromOnChain,
+			StakingApiCasting.requestWithdrawDelegationEventFromOnChain,
 			cursor,
 			eventLimit
 		);
@@ -99,9 +99,9 @@ export class StakingApi extends StakingApiHelpers {
 			StakeCancelDelegationRequestEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.stakeCancelDelegationRequest,
+				MoveEvent: this.eventTypes.cancelDelegationRequest,
 			},
-			StakingApiCasting.stakeCancelDelegationRequestEventFromOnChain,
+			StakingApiCasting.cancelDelegationRequestEventFromOnChain,
 			cursor,
 			eventLimit
 		);

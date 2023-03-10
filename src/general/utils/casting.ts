@@ -1,8 +1,25 @@
+import {
+	CapysApiCasting,
+	FaucetApiCasting,
+	PoolsApiCasting,
+	StakingApiCasting,
+	SuiApiCasting,
+} from "../../packages";
 import { Byte } from "../types";
 
-export class CastingApiHelpers {
+export class Casting {
 	/////////////////////////////////////////////////////////////////////
-	//// Helpers
+	//// Api Casting
+	/////////////////////////////////////////////////////////////////////
+
+	public static pools = PoolsApiCasting;
+	public static capys = CapysApiCasting;
+	public static faucet = FaucetApiCasting;
+	public static staking = StakingApiCasting;
+	public static sui = SuiApiCasting;
+
+	/////////////////////////////////////////////////////////////////////
+	//// Casting
 	/////////////////////////////////////////////////////////////////////
 
 	public static stringFromBytes = (bytes: Byte[]) =>

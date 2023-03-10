@@ -7,8 +7,9 @@ import { Coin } from "../../packages/coin/coin";
 import { Faucet } from "../../packages/faucet/faucet";
 import { Staking } from "../../packages/staking/staking";
 import { Helpers } from "../utils/helpers";
+import { Casting } from "../utils/casting";
 
-export class Aftermath extends Helpers {
+export class Aftermath {
 	private readonly baseUrl?: Url;
 
 	/////////////////////////////////////////////////////////////////////
@@ -19,8 +20,6 @@ export class Aftermath extends Helpers {
 		public readonly network?: SuiNetwork,
 		private readonly urlPrefix: Url = ""
 	) {
-		super();
-
 		this.network = network;
 		this.urlPrefix = urlPrefix;
 		this.baseUrl =
@@ -46,6 +45,13 @@ export class Aftermath extends Helpers {
 	public Coin = (coinType: CoinType) => new Coin(coinType, this.network);
 
 	/////////////////////////////////////////////////////////////////////
+	//// Utils
+	/////////////////////////////////////////////////////////////////////
+
+	public static helpers = Helpers;
+	public static casting = Casting;
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -59,7 +65,7 @@ export class Aftermath extends Helpers {
 		response: Response
 	): Promise<OutputType> {
 		const json = JSON.stringify(await response.json());
-		const output = this.parseJsonWithBigint(json);
+		const output = this.helpers.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
 

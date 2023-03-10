@@ -12,7 +12,7 @@ import {
 	PoolTradeEvent,
 	PoolWithdrawEvent,
 } from "../../../types";
-import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
+import { Casting } from "../../../general/utils/casting";
 import { Coin } from "../../coin/coin";
 import {
 	PoolCreateEventOnChain,
@@ -57,7 +57,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
-		return CastingApiHelpers.bigIntFromBytes(bytes);
+		return Casting.bigIntFromBytes(bytes);
 	};
 
 	public fetchTradeAmountOut = async (
@@ -78,7 +78,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
-		return CastingApiHelpers.bigIntFromBytes(bytes);
+		return Casting.bigIntFromBytes(bytes);
 	};
 
 	public fetchDepositLpMintAmount = async (
@@ -99,7 +99,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
-		return CastingApiHelpers.bigIntFromBytes(bytes);
+		return Casting.bigIntFromBytes(bytes);
 	};
 
 	public fetchWithdrawAmountOut = async (
@@ -120,7 +120,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
-		return CastingApiHelpers.bigIntFromBytes(bytes);
+		return Casting.bigIntFromBytes(bytes);
 	};
 
 	/////////////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@ import {
 } from "../../../types";
 import { Capys } from "../capys";
 import { Coin } from "../../coin/coin";
-import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
+import { Casting } from "../../../general/utils/casting";
 
 export class CapysApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -585,7 +585,7 @@ export class CapysApiHelpers {
 			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
-		return CastingApiHelpers.bigIntFromBytes(bytes);
+		return Casting.bigIntFromBytes(bytes);
 	};
 
 	protected fetchStakedCapyFeesEarnedGlobal = async () => {
@@ -594,7 +594,7 @@ export class CapysApiHelpers {
 			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
-		return CastingApiHelpers.bigIntFromBytes(bytes);
+		return Casting.bigIntFromBytes(bytes);
 	};
 
 	/////////////////////////////////////////////////////////////////////

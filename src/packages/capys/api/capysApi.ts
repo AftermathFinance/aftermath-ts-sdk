@@ -26,7 +26,7 @@ import {
 	StakeCapyEventOnChain,
 	UnstakeCapyEventOnChain,
 } from "./capysApiCastingTypes";
-import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
+import { Casting } from "../../../general/utils/casting";
 import { AmountInCoinAndUsd, CoinDecimal } from "../../coin/coinTypes";
 import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils/helpers";

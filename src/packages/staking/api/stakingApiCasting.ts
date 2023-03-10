@@ -13,7 +13,7 @@ import {
 	StakingRequestAddDelegationEventOnChain,
 	StakingRequestWithdrawDelegationEventOnChain,
 } from "./stakingApiCastingTypes";
-import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
+import { Casting } from "../../../general/utils/casting";
 
 export class StakingApiCasting {
 	/////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ export class StakingApiCasting {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public static stakeRequestAddDelegationEventFromOnChain = (
+	public static requestAddDelegationEventFromOnChain = (
 		eventOnChain: StakingRequestAddDelegationEventOnChain
 	): StakeRequestAddDelegationEvent => {
 		const event = eventOnChain.event.moveEvent;
@@ -47,7 +47,7 @@ export class StakingApiCasting {
 		};
 	};
 
-	public static stakeRequestWithdrawDelegationEventFromOnChain = (
+	public static requestWithdrawDelegationEventFromOnChain = (
 		eventOnChain: StakingRequestWithdrawDelegationEventOnChain
 	): StakeRequestWithdrawDelegationEvent => {
 		const event = eventOnChain.event.moveEvent;
@@ -61,7 +61,7 @@ export class StakingApiCasting {
 		};
 	};
 
-	public static stakeCancelDelegationRequestEventFromOnChain = (
+	public static cancelDelegationRequestEventFromOnChain = (
 		eventOnChain: StakingCancelDelegationRequestEventOnChain
 	): StakeCancelDelegationRequestEvent => {
 		const event = eventOnChain.event.moveEvent;
@@ -85,7 +85,7 @@ export class StakingApiCasting {
 		const stringFromBytesOrUndefined = (data: any[] | null) =>
 			data === null || data.length === 0
 				? undefined
-				: CastingApiHelpers.stringFromBytes(data);
+				: Casting.stringFromBytes(data);
 
 		const stringFromStringBytesOrUndefined = (
 			data: string | any[] | null
@@ -95,7 +95,7 @@ export class StakingApiCasting {
 		const name =
 			typeof validator.name === "string"
 				? validator.name
-				: CastingApiHelpers.stringFromBytes(validator.name);
+				: Casting.stringFromBytes(validator.name);
 
 		return {
 			name,

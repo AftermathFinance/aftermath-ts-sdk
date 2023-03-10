@@ -48,9 +48,9 @@ export class StakingApiHelpers {
 
 	public readonly addresses: StakingAddresses;
 	public readonly eventTypes: {
-		stakeRequestAddDelegation: AnyObjectType;
-		stakeRequestWithdrawDelegation: AnyObjectType;
-		stakeCancelDelegationRequest: AnyObjectType;
+		requestAddDelegation: AnyObjectType;
+		requestWithdrawDelegation: AnyObjectType;
+		cancelDelegationRequest: AnyObjectType;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -68,11 +68,10 @@ export class StakingApiHelpers {
 		this.addresses = addresses;
 
 		this.eventTypes = {
-			stakeRequestAddDelegation:
-				this.stakeRequestAddDelegationEventType(),
-			stakeRequestWithdrawDelegation:
+			requestAddDelegation: this.stakeRequestAddDelegationEventType(),
+			requestWithdrawDelegation:
 				this.stakeRequestWithdrawDelegationEventType(),
-			stakeCancelDelegationRequest:
+			cancelDelegationRequest:
 				this.stakeCancelDelegationRequestEventType(),
 		};
 	}
