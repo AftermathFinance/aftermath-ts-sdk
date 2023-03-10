@@ -1,10 +1,8 @@
-import {
-	CapysApiCasting,
-	FaucetApiCasting,
-	PoolsApiCasting,
-	StakingApiCasting,
-	SuiApiCasting,
-} from "../../packages";
+import { CapysApiCasting } from "../../packages/capys/api/capysApiCasting";
+import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
+import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
+import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
+import { SuiApiCasting } from "../../packages/sui/api/suiApiCasting";
 import { Byte } from "../types";
 
 export class Casting {
