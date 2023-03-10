@@ -17,11 +17,11 @@ import {
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
-import { Aftermath } from "../../general/providers/aftermath";
 import { Router } from "../router/router";
 import { Helpers } from "../../general/utils/helpers";
+import { Caller } from "../../general/utils/caller";
 
-export class Pools extends Aftermath {
+export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////

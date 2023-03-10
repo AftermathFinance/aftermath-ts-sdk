@@ -1,5 +1,4 @@
 import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
-import { Aftermath } from "../providers/aftermath";
 import { SuiNetwork } from "../types/suiTypes";
 import {
 	ApiTransactionsBody,
@@ -7,8 +6,9 @@ import {
 	TransactionsWithCursor,
 } from "../types/generalTypes";
 import { CoinType, CoinWithBalance } from "../../packages/coin/coinTypes";
+import { Caller } from "../utils/caller";
 
-export class Wallet extends Aftermath {
+export class Wallet extends Caller {
 	constructor(
 		public readonly address: SuiAddress,
 		public readonly network?: SuiNetwork

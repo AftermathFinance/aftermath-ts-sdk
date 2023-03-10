@@ -22,10 +22,10 @@ import {
 	PoolsAddresses,
 	AnyObjectType,
 } from "../../../types";
-import { CoinApiHelpers } from "../../coin/api/coinApiHelpers";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
+import { CoinApiHelpers } from "../../coin/api/coinApiHelpers";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ export class PoolsApiHelpers {
 		withdraw: AnyObjectType;
 	};
 
-	protected readonly poolVolumeDataTimeframes: Record<
+	public readonly poolVolumeDataTimeframes: Record<
 		PoolVolumeDataTimeframeKey,
 		PoolVolumeDataTimeframe
 	> = {
@@ -97,7 +97,7 @@ export class PoolsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(public readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.pools;
 		if (!addresses)
 			throw new Error(
@@ -123,14 +123,14 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Protected Methods
+	//// public Methods
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
 	//// Move Calls
 	/////////////////////////////////////////////////////////////////////
 
-	protected spotPriceMoveCall = (
+	public spotPriceMoveCall = (
 		poolId: ObjectId,
 		coinInType: CoinType,
 		coinOutType: CoinType,
@@ -145,7 +145,7 @@ export class PoolsApiHelpers {
 		};
 	};
 
-	protected tradeAmountOutMoveCall = (
+	public tradeAmountOutMoveCall = (
 		poolId: ObjectId,
 		coinInType: CoinType,
 		coinOutType: CoinType,
@@ -161,7 +161,7 @@ export class PoolsApiHelpers {
 		};
 	};
 
-	protected depositLpMintAmountMoveCall = (
+	public depositLpMintAmountMoveCall = (
 		poolId: ObjectId,
 		lpCoinType: CoinType,
 		coinTypes: CoinType[],
@@ -180,7 +180,7 @@ export class PoolsApiHelpers {
 		};
 	};
 
-	protected withdrawAmountOutMoveCall = (
+	public withdrawAmountOutMoveCall = (
 		poolId: ObjectId,
 		lpCoinType: CoinType,
 		coinTypes: CoinType[],
@@ -203,7 +203,7 @@ export class PoolsApiHelpers {
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	protected tradeTransaction = (
+	public tradeTransaction = (
 		poolId: ObjectId,
 		coinInId: ObjectId,
 		coinInType: CoinType,
@@ -226,7 +226,7 @@ export class PoolsApiHelpers {
 		};
 	};
 
-	protected singleCoinDepositTransaction = (
+	public singleCoinDepositTransaction = (
 		poolId: ObjectId,
 		coinId: ObjectId,
 		coinType: CoinType,
@@ -248,7 +248,7 @@ export class PoolsApiHelpers {
 		};
 	};
 
-	protected multiCoinDepositTransaction = (
+	public multiCoinDepositTransaction = (
 		poolId: ObjectId,
 		coinIds: ObjectId[],
 		coinTypes: CoinType[],
@@ -276,7 +276,7 @@ export class PoolsApiHelpers {
 		};
 	};
 
-	protected singleCoinWithdrawTransaction = (
+	public singleCoinWithdrawTransaction = (
 		poolId: ObjectId,
 		lpCoinId: ObjectId,
 		lpCoinType: CoinType,
@@ -298,7 +298,7 @@ export class PoolsApiHelpers {
 		};
 	};
 
-	protected multiCoinWithdrawTransaction = (
+	public multiCoinWithdrawTransaction = (
 		poolId: ObjectId,
 		lpCoinId: ObjectId,
 		lpCoinType: CoinType,
@@ -333,7 +333,7 @@ export class PoolsApiHelpers {
 
 	// TODO: abstract i and ii into a new function that can also be called by swap/deposit/withdraw.
 
-	protected fetchBuildTradeTransactions = async (
+	public fetchBuildTradeTransactions = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
@@ -343,7 +343,7 @@ export class PoolsApiHelpers {
 	): Promise<SignableTransaction[]> => {
 		// i. obtain object ids of coin to swap from
 		const response =
-			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				fromCoinType,
 				fromCoinAmount
@@ -355,7 +355,7 @@ export class PoolsApiHelpers {
 		// ii. the user doesn't have a coin of type `fromCoinType` with exact
 		// value of `fromCoinAmount`, so we need to create it
 		const joinAndSplitTransactions =
-			this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
+			this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				fromCoinType,
@@ -379,7 +379,7 @@ export class PoolsApiHelpers {
 		return transactions;
 	};
 
-	protected fetchBuildDepositTransactions = async (
+	public fetchBuildDepositTransactions = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
@@ -390,7 +390,7 @@ export class PoolsApiHelpers {
 		const responses = (
 			await Promise.all(
 				coinTypes.map((coinType, index) =>
-					this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+					this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 						walletAddress,
 						coinType,
 						coinAmounts[index]
@@ -411,7 +411,7 @@ export class PoolsApiHelpers {
 		// value of `coinAmount`, so we need to create it
 		responses.forEach((response, index) => {
 			const joinAndSplitTransactions =
-				this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
+				this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
 					response[0],
 					response.slice(1),
 					coinTypes[index],
@@ -441,7 +441,7 @@ export class PoolsApiHelpers {
 		return transactions;
 	};
 
-	protected fetchBuildWithdrawTransactions = async (
+	public fetchBuildWithdrawTransactions = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
@@ -451,7 +451,7 @@ export class PoolsApiHelpers {
 	): Promise<SignableTransaction[]> => {
 		// i. obtain object ids of `lpCoinType` to burn
 		const response =
-			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				poolLpType,
 				lpCoinAmount
@@ -463,7 +463,7 @@ export class PoolsApiHelpers {
 		// ii. the user doesn't have a coin of type `fromCoinType` with exact
 		// value of `fromCoinAmount`, so we need to create it
 		const joinAndSplitTransactions =
-			this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
+			this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				poolLpType,
@@ -492,7 +492,7 @@ export class PoolsApiHelpers {
 
 	// NOTE: should this volume calculation also take into account deposits and withdraws
 	// (not just swaps) ?
-	protected fetchCalcPoolVolume = (
+	public fetchCalcPoolVolume = (
 		poolObjectId: ObjectId,
 		poolCoins: CoinType[],
 		tradeEvents: PoolTradeEvent[],
@@ -523,7 +523,7 @@ export class PoolsApiHelpers {
 		return volume;
 	};
 
-	protected fetchCalcPoolTvl = async (
+	public fetchCalcPoolTvl = async (
 		dynamicFields: PoolDynamicFields,
 		prices: number[],
 		coinsToDecimals: Record<CoinType, CoinDecimal>
@@ -544,7 +544,7 @@ export class PoolsApiHelpers {
 		return tvl;
 	};
 
-	protected calcPoolSupplyPerLps = (dynamicFields: PoolDynamicFields) => {
+	public calcPoolSupplyPerLps = (dynamicFields: PoolDynamicFields) => {
 		const lpSupply = dynamicFields.lpFields[0].value;
 		const supplyPerLps = dynamicFields.amountFields.map(
 			(field) => Number(field.value) / Number(lpSupply)
@@ -553,7 +553,7 @@ export class PoolsApiHelpers {
 		return supplyPerLps;
 	};
 
-	protected calcPoolLpPrice = (
+	public calcPoolLpPrice = (
 		dynamicFields: PoolDynamicFields,
 		tvl: Number
 	) => {
@@ -570,7 +570,7 @@ export class PoolsApiHelpers {
 	//// Prices
 	/////////////////////////////////////////////////////////////////////
 
-	protected findPriceForCoinInPool = (
+	public findPriceForCoinInPool = (
 		coin: CoinType,
 		lpCoins: CoinType[],
 		nonLpCoins: CoinType[],
@@ -590,7 +590,7 @@ export class PoolsApiHelpers {
 	//// Graph Data
 	/////////////////////////////////////////////////////////////////////
 
-	protected fetchCalcPoolVolumeData = async (
+	public fetchCalcPoolVolumeData = async (
 		pool: PoolObject,
 		tradeEvents: PoolTradeEvent[],
 		timeUnit: ManipulateType,
@@ -600,7 +600,7 @@ export class PoolsApiHelpers {
 		// TODO: use promise.all for pool fetching and swap fetching
 
 		const coinsToDecimalsAndPrices =
-			await this.Provider.Coin.fetchCoinsToDecimalsAndPrices(
+			await this.Provider.Coin().Helpers.fetchCoinsToDecimalsAndPrices(
 				pool.fields.coins
 			);
 

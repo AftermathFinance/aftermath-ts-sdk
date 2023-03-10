@@ -1,7 +1,7 @@
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 import { SuiNetwork } from "../../types";
 
-export class Sui extends Aftermath {
+export class Sui extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////

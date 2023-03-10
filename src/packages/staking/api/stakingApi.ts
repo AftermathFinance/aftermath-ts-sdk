@@ -17,13 +17,19 @@ import {
 } from "./stakingApiCastingTypes";
 import { StakingApiCasting } from "./stakingApiCasting";
 
-export class StakingApi extends StakingApiHelpers {
+export class StakingApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly Helpers;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(Provider: AftermathApi) {
-		super(Provider);
+	constructor(private readonly Provider: AftermathApi) {
+		this.Helpers = new StakingApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -62,12 +68,12 @@ export class StakingApi extends StakingApiHelpers {
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
-		await this.Provider.Events.fetchCastEventsWithCursor<
+		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingRequestAddDelegationEventOnChain,
 			StakeRequestAddDelegationEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.requestAddDelegation,
+				MoveEvent: this.Helpers.eventTypes.requestAddDelegation,
 			},
 			StakingApiCasting.requestAddDelegationEventFromOnChain,
 			cursor,
@@ -78,12 +84,12 @@ export class StakingApi extends StakingApiHelpers {
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
-		await this.Provider.Events.fetchCastEventsWithCursor<
+		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingRequestWithdrawDelegationEventOnChain,
 			StakeRequestWithdrawDelegationEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.requestWithdrawDelegation,
+				MoveEvent: this.Helpers.eventTypes.requestWithdrawDelegation,
 			},
 			StakingApiCasting.requestWithdrawDelegationEventFromOnChain,
 			cursor,
@@ -94,12 +100,12 @@ export class StakingApi extends StakingApiHelpers {
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
-		await this.Provider.Events.fetchCastEventsWithCursor<
+		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingCancelDelegationRequestEventOnChain,
 			StakeCancelDelegationRequestEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.cancelDelegationRequest,
+				MoveEvent: this.Helpers.eventTypes.cancelDelegationRequest,
 			},
 			StakingApiCasting.cancelDelegationRequestEventFromOnChain,
 			cursor,
@@ -117,7 +123,7 @@ export class StakingApi extends StakingApiHelpers {
 	public fetchDelegationObjects = async (
 		delegationIds: ObjectId[]
 	): Promise<Delegation[]> => {
-		return this.Provider.Objects.fetchCastObjectBatch<Delegation>(
+		return this.Provider.Objects().fetchCastObjectBatch<Delegation>(
 			delegationIds,
 			SuiApiCasting.delegationFromGetObjectDataResponse
 		);
@@ -126,7 +132,7 @@ export class StakingApi extends StakingApiHelpers {
 	public fetchDelegationObjectsOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<Delegation[]> => {
-		return await this.Provider.Objects.fetchFilterAndCastObjectsOwnedByAddress(
+		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
 			walletAddress,
 			SuiApiCasting.isDelegation,
 			this.fetchDelegationObjects
@@ -140,7 +146,7 @@ export class StakingApi extends StakingApiHelpers {
 	public fetchStakedSuiObjects = async (
 		stakedSuiIds: ObjectId[]
 	): Promise<StakedSui[]> => {
-		return this.Provider.Objects.fetchCastObjectBatch<StakedSui>(
+		return this.Provider.Objects().fetchCastObjectBatch<StakedSui>(
 			stakedSuiIds,
 			SuiApiCasting.stakedSuiFromGetObjectDataResponse
 		);
@@ -149,7 +155,7 @@ export class StakingApi extends StakingApiHelpers {
 	public fetchStakedSuiObjectsOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<StakedSui[]> => {
-		return await this.Provider.Objects.fetchFilterAndCastObjectsOwnedByAddress(
+		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
 			walletAddress,
 			SuiApiCasting.isStakedSui,
 			this.fetchStakedSuiObjects
@@ -165,7 +171,7 @@ export class StakingApi extends StakingApiHelpers {
 		amount: Balance,
 		validator: SuiAddress
 	) =>
-		this.fetchBuildRequestAddDelegationTransactions(
+		this.Helpers.fetchBuildRequestAddDelegationTransactions(
 			walletAddress,
 			amount,
 			validator
@@ -177,7 +183,7 @@ export class StakingApi extends StakingApiHelpers {
 		stakedSui: ObjectId,
 		delegation: ObjectId
 	) =>
-		this.fetchCancelOrRequestWithdrawDelegationTransactions(
+		this.Helpers.fetchCancelOrRequestWithdrawDelegationTransactions(
 			walletAddress,
 			amount,
 			stakedSui,
@@ -189,7 +195,7 @@ export class StakingApi extends StakingApiHelpers {
 		amount: Balance,
 		stakedSui: ObjectId
 	) =>
-		this.fetchCancelOrRequestWithdrawDelegationTransactions(
+		this.Helpers.fetchCancelOrRequestWithdrawDelegationTransactions(
 			walletAddress,
 			amount,
 			stakedSui

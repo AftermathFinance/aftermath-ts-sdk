@@ -18,11 +18,11 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { StakePosition } from "./stakePosition";
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 
 // TODO: move these types to staking api class
 
-export class Staking extends Aftermath {
+export class Staking extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////

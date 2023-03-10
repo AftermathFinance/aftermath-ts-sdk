@@ -8,24 +8,15 @@ import { Faucet } from "../../packages/faucet/faucet";
 import { Staking } from "../../packages/staking/staking";
 import { Helpers } from "../utils/helpers";
 import { Casting } from "../utils/casting";
+import { Caller } from "../utils/caller";
 
-export class Aftermath {
-	private readonly baseUrl?: Url;
-
+export class Aftermath extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(
-		public readonly network?: SuiNetwork,
-		private readonly urlPrefix: Url = ""
-	) {
-		this.network = network;
-		this.urlPrefix = urlPrefix;
-		this.baseUrl =
-			network === undefined
-				? undefined
-				: Aftermath.baseUrlForNetwork(network);
+	constructor(network?: SuiNetwork) {
+		super(network);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -50,48 +41,4 @@ export class Aftermath {
 
 	public static helpers = Helpers;
 	public static casting = Casting;
-
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
-	/////////////////////////////////////////////////////////////////////
-
-	private static baseUrlForNetwork(network: SuiNetwork): Url {
-		if (network === "DEVNET") return "https://devnet.aftermath.finance";
-		if (network === "TESTNET") return "https://testnet.aftermath.finance";
-		return "http://localhost:3000"; // LOCAL
-	}
-
-	private static async fetchResponseToType<OutputType>(
-		response: Response
-	): Promise<OutputType> {
-		const json = JSON.stringify(await response.json());
-		const output = this.helpers.parseJsonWithBigint(json);
-		return output as OutputType;
-	}
-
-	private urlForApiCall = (url: string): Url => {
-		if (this.network === undefined || this.baseUrl === undefined)
-			throw new Error("no network, no baseUrl: unable to fetch data");
-
-		return `${this.baseUrl}/api/${this.network}/${this.urlPrefix}/${url}`;
-	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Protected Methods
-	/////////////////////////////////////////////////////////////////////
-
-	protected async fetchApi<Output, BodyType = undefined>(
-		url: Url,
-		body?: BodyType
-	): Promise<Output> {
-		const apiCallUrl = this.urlForApiCall(url);
-		const response = await (body === undefined
-			? fetch(apiCallUrl)
-			: fetch(apiCallUrl, {
-					method: "POST",
-					body: JSON.stringify(body),
-			  }));
-
-		return await Aftermath.fetchResponseToType<Output>(response);
-	}
 }

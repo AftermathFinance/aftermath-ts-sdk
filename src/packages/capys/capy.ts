@@ -1,8 +1,8 @@
 import { ObjectId, SignableTransaction } from "@mysten/sui.js";
 import { ApiStakeCapyBody, SuiNetwork, CapyObject } from "../../types";
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 
-export class Capy extends Aftermath {
+export class Capy extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////

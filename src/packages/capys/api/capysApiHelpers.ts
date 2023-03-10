@@ -121,7 +121,7 @@ export class CapysApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.capys;
 		if (!addresses)
 			throw new Error(
@@ -145,14 +145,10 @@ export class CapysApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Protected Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
 	//// Move Calls
 	/////////////////////////////////////////////////////////////////////
 
-	protected capyFeesEarnedIndividualMoveCall = (
+	public capyFeesEarnedIndividualMoveCall = (
 		stakingReceiptId: ObjectId
 	): MoveCallTransaction => {
 		return {
@@ -167,7 +163,7 @@ export class CapysApiHelpers {
 		};
 	};
 
-	protected capyFeesEarnedGlobalMoveCall = (): MoveCallTransaction => {
+	public capyFeesEarnedGlobalMoveCall = (): MoveCallTransaction => {
 		return {
 			packageObjectId: this.addresses.packages.capyVault,
 			module: CapysApiHelpers.constants.capyVault.modules.capyVault
@@ -188,7 +184,7 @@ export class CapysApiHelpers {
 	//// Breeding Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	protected stakeBreedAndKeepTransaction = (
+	public stakeBreedAndKeepTransaction = (
 		coinId: ObjectId,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
@@ -217,7 +213,7 @@ export class CapysApiHelpers {
 		};
 	};
 
-	protected stakeBreedWithStakedAndKeepTransaction = (
+	public stakeBreedWithStakedAndKeepTransaction = (
 		coinId: ObjectId,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
@@ -246,7 +242,7 @@ export class CapysApiHelpers {
 		};
 	};
 
-	protected stakeBreedStakedWithStakedAndKeepTransaction = (
+	public stakeBreedStakedWithStakedAndKeepTransaction = (
 		coinId: ObjectId,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
@@ -279,7 +275,7 @@ export class CapysApiHelpers {
 	//// Staking Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	protected capyStakeCapyTransaction = (
+	public capyStakeCapyTransaction = (
 		capyId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.stakeCapy.defaultGasBudget
@@ -300,7 +296,7 @@ export class CapysApiHelpers {
 		};
 	};
 
-	protected capyUnstakeCapyTransaction = (
+	public capyUnstakeCapyTransaction = (
 		stakingReceiptId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.unstakeCapy.defaultGasBudget
@@ -321,7 +317,7 @@ export class CapysApiHelpers {
 		};
 	};
 
-	protected capyTransferTransaction = (
+	public capyTransferTransaction = (
 		stakingReceiptId: ObjectId,
 		recipient: SuiAddress,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
@@ -351,7 +347,7 @@ export class CapysApiHelpers {
 	//// Fee Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	protected capyWithdrawFeesTransaction = (
+	public capyWithdrawFeesTransaction = (
 		stakingReceiptId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.withdrawFees.defaultGasBudget
@@ -372,7 +368,7 @@ export class CapysApiHelpers {
 		};
 	};
 
-	protected capyWithdrawFeesAmountTransaction = (
+	public capyWithdrawFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
 		amount: Balance,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
@@ -406,7 +402,7 @@ export class CapysApiHelpers {
 	//// Breeding Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	protected fetchCapyBuildBreedTransactions = async (
+	public fetchCapyBuildBreedTransactions = async (
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentOneIsOwned: boolean,
@@ -444,7 +440,7 @@ export class CapysApiHelpers {
 		}
 	};
 
-	protected fetchBuildBreedWithStakedAndKeepTransactions = async (
+	public fetchBuildBreedWithStakedAndKeepTransactions = async (
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
@@ -455,7 +451,7 @@ export class CapysApiHelpers {
 
 		// i. obtain object ids of Coin to pay breeding fee with
 		const response =
-			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				feeCoinType,
 				feeCoinAmount
@@ -467,7 +463,7 @@ export class CapysApiHelpers {
 		// ii. the user doesn't have a `Coin<SUI>` with exact value of `feeCoinAmount`,
 		// so we need to create it.
 		transactions.push(
-			...this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
+			...this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				feeCoinType,
@@ -487,7 +483,7 @@ export class CapysApiHelpers {
 		return transactions;
 	};
 
-	protected fetchBuildBreedStakedWithStakedAndKeepTransactions = async (
+	public fetchBuildBreedStakedWithStakedAndKeepTransactions = async (
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
@@ -498,7 +494,7 @@ export class CapysApiHelpers {
 
 		// i. obtain object ids of Coin to pay breeding fee with
 		const response =
-			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				feeCoinType,
 				feeCoinAmount
@@ -510,7 +506,7 @@ export class CapysApiHelpers {
 		// ii. the user doesn't have a `Coin<SUI>` with exact value of `feeCoinAmount`,
 		// so we need to create it.
 		transactions.push(
-			...this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
+			...this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				feeCoinType,
@@ -530,7 +526,7 @@ export class CapysApiHelpers {
 		return transactions;
 	};
 
-	protected fetchBuildBreedAndKeepTransactions = async (
+	public fetchBuildBreedAndKeepTransactions = async (
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
@@ -540,7 +536,7 @@ export class CapysApiHelpers {
 
 		// i. obtain object ids of Coin to pay breeding fee with
 		const response =
-			await this.Provider.Coin.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+			await this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
 				walletAddress,
 				feeCoinType,
 				feeCoinAmount
@@ -552,7 +548,7 @@ export class CapysApiHelpers {
 		// ii. the user doesn't have a `Coin<SUI>` with exact value of `feeCoinAmount`,
 		// so we need to create it.
 		transactions.push(
-			...this.Provider.Coin.coinJoinAndSplitWithExactAmountTransactions(
+			...this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
 				response[0],
 				response.slice(1),
 				feeCoinType,
@@ -576,22 +572,22 @@ export class CapysApiHelpers {
 	//// Staked Capy Fees
 	/////////////////////////////////////////////////////////////////////
 
-	protected fetchStakedCapyFeesEarnedIndividual = async (
+	public fetchStakedCapyFeesEarnedIndividual = async (
 		stakingReceiptId: ObjectId
 	) => {
 		const moveCallTransaction =
 			this.capyFeesEarnedIndividualMoveCall(stakingReceiptId);
 		const bytes =
-			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
 	};
 
-	protected fetchStakedCapyFeesEarnedGlobal = async () => {
+	public fetchStakedCapyFeesEarnedGlobal = async () => {
 		const moveCallTransaction = this.capyFeesEarnedGlobalMoveCall();
 		const bytes =
-			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
@@ -601,7 +597,7 @@ export class CapysApiHelpers {
 	//// Stats
 	/////////////////////////////////////////////////////////////////////
 
-	protected fetchCapyVaultStats = async (
+	public fetchCapyVaultStats = async (
 		capyVault: CapyVaultObject,
 		feeCoinDecimals: CoinDecimal,
 		feeCoinPrice: number
@@ -627,7 +623,7 @@ export class CapysApiHelpers {
 	//// Capy Attribute Filtering
 	/////////////////////////////////////////////////////////////////////
 
-	protected filterCapysWithAttributes = (
+	public filterCapysWithAttributes = (
 		capys: CapyObject[],
 		attributes: CapyAttribute[]
 	) =>
@@ -645,12 +641,12 @@ export class CapysApiHelpers {
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	protected isStakedCapyReceiptObjectType = (
+	public isStakedCapyReceiptObjectType = (
 		suiObjectInfo: SuiObjectInfo
 	): boolean =>
 		suiObjectInfo.type === this.objectTypes.stakedCapyReceiptObjectType;
 
-	protected isCapyObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
+	public isCapyObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
 		suiObjectInfo.type === this.objectTypes.capyObjectType;
 
 	/////////////////////////////////////////////////////////////////////

@@ -5,13 +5,19 @@ import { PoolCompleteObject } from "../../pools/poolsTypes";
 import { Graph, RouterPath, RouterPathInfo } from "../routerTypes";
 import { Balance, CoinType } from "../../../types";
 
-export class RouterApi extends RouterApiHelpers {
+export class RouterApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly Helpers;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(Provider: AftermathApi) {
-		super(Provider);
+	constructor(private readonly Provider: AftermathApi) {
+		this.Helpers = new RouterApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -61,7 +67,7 @@ export class RouterApi extends RouterApiHelpers {
 	public getIntermediateTradeTransactions = (
 		path: RouterPath,
 		fromCoinId: ObjectId
-	) => this.intermediateTradeTransactions(path, fromCoinId);
+	) => this.Helpers.intermediateTradeTransactions(path, fromCoinId);
 
 	public fetchFirstTradeTransactions = async (
 		walletAddress: SuiAddress,
@@ -69,13 +75,13 @@ export class RouterApi extends RouterApiHelpers {
 		path: RouterPath
 	): Promise<SignableTransaction[]> => {
 		const { coinObjectId, joinAndSplitTransactions } =
-			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
+			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
 				path.baseAsset,
 				fromCoinAmount
 			);
 
-		const tradeTransactions = this.intermediateTradeTransactions(
+		const tradeTransactions = this.Helpers.intermediateTradeTransactions(
 			path,
 			coinObjectId
 		);

@@ -1,10 +1,10 @@
 import { SuiNetwork } from "../../types";
-import { Aftermath } from "../../general/providers/aftermath";
 import { Pool } from "../pools/pool";
 import { SignableTransaction } from "@mysten/sui.js";
+import { Caller } from "../../general/utils/caller";
 
 // TODO: create router object
-export class Router extends Aftermath {
+export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////

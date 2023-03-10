@@ -24,13 +24,19 @@ import {
 import { PoolsApiCasting } from "./poolsApiCasting";
 import { Pools } from "../pools";
 
-export class PoolsApi extends PoolsApiHelpers {
+export class PoolsApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly Helpers;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(Provider: AftermathApi) {
-		super(Provider);
+	constructor(private readonly Provider: AftermathApi) {
+		this.Helpers = new PoolsApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -47,14 +53,14 @@ export class PoolsApi extends PoolsApiHelpers {
 		coinInType: CoinType,
 		coinOutType: CoinType
 	): Promise<Balance> => {
-		const moveCallTransaction = this.spotPriceMoveCall(
+		const moveCallTransaction = this.Helpers.spotPriceMoveCall(
 			poolId,
 			coinInType,
 			coinOutType,
 			lpCoinType
 		);
 		const bytes =
-			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
@@ -67,7 +73,7 @@ export class PoolsApi extends PoolsApiHelpers {
 		lpCoinType: CoinType,
 		coinInBalance: Balance
 	) => {
-		const moveCallTransaction = this.tradeAmountOutMoveCall(
+		const moveCallTransaction = this.Helpers.tradeAmountOutMoveCall(
 			poolId,
 			coinInType,
 			coinOutType,
@@ -75,7 +81,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			coinInBalance
 		);
 		const bytes =
-			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
@@ -89,14 +95,14 @@ export class PoolsApi extends PoolsApiHelpers {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
 			depositCoinsToBalance
 		);
-		const moveCallTransaction = this.depositLpMintAmountMoveCall(
+		const moveCallTransaction = this.Helpers.depositLpMintAmountMoveCall(
 			poolId,
 			lpCoinType,
 			coins,
 			balances
 		);
 		const bytes =
-			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
@@ -110,14 +116,14 @@ export class PoolsApi extends PoolsApiHelpers {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
 			withdrawCoinsToBalance
 		);
-		const moveCallTransaction = this.withdrawAmountOutMoveCall(
+		const moveCallTransaction = this.Helpers.withdrawAmountOutMoveCall(
 			poolId,
 			lpCoinType,
 			coins,
 			balances
 		);
 		const bytes =
-			await this.Provider.Inspections.fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
@@ -128,12 +134,12 @@ export class PoolsApi extends PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchTradeEvents = async (cursor?: EventId, eventLimit?: number) =>
-		await this.Provider.Events.fetchCastEventsWithCursor<
+		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolTradeEventOnChain,
 			PoolTradeEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.trade,
+				MoveEvent: this.Helpers.eventTypes.trade,
 			},
 			PoolsApiCasting.poolTradeEventFromOnChain,
 			cursor,
@@ -159,12 +165,12 @@ export class PoolsApi extends PoolsApiHelpers {
 	// 	);
 
 	public fetchDepositEvents = async (cursor?: EventId, eventLimit?: number) =>
-		await this.Provider.Events.fetchCastEventsWithCursor<
+		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
 			PoolDepositEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.deposit,
+				MoveEvent: this.Helpers.eventTypes.deposit,
 			},
 			PoolsApiCasting.poolDepositEventFromOnChain,
 			cursor,
@@ -191,12 +197,12 @@ export class PoolsApi extends PoolsApiHelpers {
 		cursor?: EventId,
 		eventLimit?: number
 	) =>
-		await this.Provider.Events.fetchCastEventsWithCursor<
+		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolWithdrawEventOnChain,
 			PoolWithdrawEvent
 		>(
 			{
-				MoveEvent: this.eventTypes.withdraw,
+				MoveEvent: this.Helpers.eventTypes.withdraw,
 			},
 			PoolsApiCasting.poolWithdrawEventFromOnChain,
 			cursor,
@@ -219,7 +225,9 @@ export class PoolsApi extends PoolsApiHelpers {
 	};
 
 	public fetchPools = async (objectIds: ObjectId[]) => {
-		const objects = await this.Provider.Objects.fetchObjectBatch(objectIds);
+		const objects = await this.Provider.Objects().fetchObjectBatch(
+			objectIds
+		);
 		const poolObjects = objects.map((data) =>
 			PoolsApiCasting.poolObjectFromSuiObject(data.details as SuiObject)
 		);
@@ -229,7 +237,7 @@ export class PoolsApi extends PoolsApiHelpers {
 	public fetchAllPools = async () => {
 		const paginatedEvents = await this.Provider.provider.getEvents(
 			{
-				MoveEvent: `${this.addresses.packages.cmmm}::events::CreatedPoolEvent`,
+				MoveEvent: `${this.Helpers.addresses.packages.cmmm}::events::CreatedPoolEvent`,
 			}, // query
 			null, // cursor
 			null, // limit
@@ -256,13 +264,13 @@ export class PoolsApi extends PoolsApiHelpers {
 
 	public fetchPoolDynamicFields = async (poolId: ObjectId) => {
 		const allDynamicFields =
-			await this.Provider.DynamicFields.fetchAllDynamicFieldsOfType(
+			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType(
 				poolId
 			);
 		const objectIds = allDynamicFields.map((field) => field.objectId);
 
 		const dynamicFieldsAsSuiObjects =
-			await this.Provider.Objects.fetchObjectBatch(objectIds);
+			await this.Provider.Objects().fetchObjectBatch(objectIds);
 		const dynamicFieldsOnChain = dynamicFieldsAsSuiObjects.map(
 			(dynamicField) =>
 				dynamicField.details as SuiObject as PoolDynamicFieldOnChain<any>
@@ -299,7 +307,7 @@ export class PoolsApi extends PoolsApiHelpers {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
 			depositCoinsToBalance
 		);
-		const transactions = await this.fetchBuildDepositTransactions(
+		const transactions = await this.Helpers.fetchBuildDepositTransactions(
 			walletAddress,
 			poolObjectId,
 			poolLpType,
@@ -319,7 +327,7 @@ export class PoolsApi extends PoolsApiHelpers {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
 			withdrawCoinsToBalance
 		);
-		const transactions = await this.fetchBuildWithdrawTransactions(
+		const transactions = await this.Helpers.fetchBuildWithdrawTransactions(
 			walletAddress,
 			poolObjectId,
 			poolLpType,
@@ -338,7 +346,7 @@ export class PoolsApi extends PoolsApiHelpers {
 		fromCoinBalance: Balance,
 		toCoinType: CoinType
 	) => {
-		const transactions = await this.fetchBuildTradeTransactions(
+		const transactions = await this.Helpers.fetchBuildTradeTransactions(
 			walletAddress,
 			poolObjectId,
 			poolLpType,
@@ -360,18 +368,17 @@ export class PoolsApi extends PoolsApiHelpers {
 		const pool = await this.fetchPool(poolObjectId);
 		const poolCoins = pool.fields.coins;
 
-		const prices = await this.Provider.Prices.fetchPrices(poolCoins);
-		const coinsToDecimals = await this.Provider.Coin.fetchCoinsToDecimals(
-			poolCoins
-		);
+		const prices = await this.Provider.Prices().fetchPrices(poolCoins);
+		const coinsToDecimals =
+			await this.Provider.Coin().Helpers.fetchCoinsToDecimals(poolCoins);
 
 		const tradeEventsWithinTime =
-			await this.Provider.Events.fetchEventsWithinTime(
+			await this.Provider.Events().fetchEventsWithinTime(
 				this.fetchTradeEvents,
 				"hour",
 				24
 			);
-		const volume = this.fetchCalcPoolVolume(
+		const volume = this.Helpers.fetchCalcPoolVolume(
 			poolObjectId,
 			poolCoins,
 			tradeEventsWithinTime,
@@ -388,13 +395,13 @@ export class PoolsApi extends PoolsApiHelpers {
 			pool
 		);
 
-		const tvl = await this.fetchCalcPoolTvl(
+		const tvl = await this.Helpers.fetchCalcPoolTvl(
 			dynamicFields,
 			prices,
 			coinsToDecimals
 		);
-		const supplyPerLps = this.calcPoolSupplyPerLps(dynamicFields);
-		const lpPrice = this.calcPoolLpPrice(dynamicFields, tvl);
+		const supplyPerLps = this.Helpers.calcPoolSupplyPerLps(dynamicFields);
+		const lpPrice = this.Helpers.calcPoolLpPrice(dynamicFields, tvl);
 
 		return {
 			volume,
@@ -438,13 +445,13 @@ export class PoolsApi extends PoolsApiHelpers {
 				lpCoins.length > 0 ? await this.fetchLpCoinPrices(lpCoins) : [];
 			const nonLpPrices =
 				nonLpCoins.length > 0
-					? await this.Provider.Prices.fetchPrices(nonLpCoins)
+					? await this.Provider.Prices().fetchPrices(nonLpCoins)
 					: [];
 
 			let prices: number[] = [];
 			for (const coin of coins) {
 				prices.push(
-					this.findPriceForCoinInPool(
+					this.Helpers.findPriceForCoinInPool(
 						coin,
 						lpCoins,
 						nonLpCoins,
@@ -468,12 +475,12 @@ export class PoolsApi extends PoolsApiHelpers {
 		poolObjectId: ObjectId,
 		timeframe: PoolVolumeDataTimeframeKey
 	) => {
-		const timeframeValue = this.poolVolumeDataTimeframes[timeframe];
+		const timeframeValue = this.Helpers.poolVolumeDataTimeframes[timeframe];
 
 		const [pool, tradeEvents] = await Promise.all([
 			this.fetchPool(poolObjectId),
 			(
-				await this.Provider.Events.fetchEventsWithinTime(
+				await this.Provider.Events().fetchEventsWithinTime(
 					this.fetchTradeEvents,
 					timeframeValue.timeUnit,
 					timeframeValue.time
@@ -481,7 +488,7 @@ export class PoolsApi extends PoolsApiHelpers {
 			).filter((trade) => trade.poolId === poolObjectId),
 		]);
 
-		return await this.fetchCalcPoolVolumeData(
+		return await this.Helpers.fetchCalcPoolVolumeData(
 			pool,
 			tradeEvents,
 			timeframeValue.timeUnit,

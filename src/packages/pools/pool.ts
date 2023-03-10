@@ -14,9 +14,9 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 
-export class Pool extends Aftermath {
+export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////

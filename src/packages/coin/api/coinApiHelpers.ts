@@ -72,7 +72,7 @@ export class CoinApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
 
@@ -210,7 +210,7 @@ export class CoinApiHelpers {
 		>
 	> {
 		const [coinsToPrices, coinsToDecimals] = await Promise.all([
-			this.Provider.Prices.fetchCoinsToPrice(coins),
+			this.Provider.Prices().fetchCoinsToPrice(coins),
 			this.fetchCoinsToDecimals(coins),
 		]);
 

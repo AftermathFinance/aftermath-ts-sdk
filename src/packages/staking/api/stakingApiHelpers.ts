@@ -57,7 +57,7 @@ export class StakingApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(public readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.staking;
 		if (!addresses)
 			throw new Error(
@@ -77,10 +77,6 @@ export class StakingApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Protected Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
 	//// Move Calls
 	/////////////////////////////////////////////////////////////////////
 
@@ -88,7 +84,7 @@ export class StakingApiHelpers {
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	protected stakeRequestAddDelegationTransaction = (
+	public stakeRequestAddDelegationTransaction = (
 		coinId: ObjectId,
 		validator: SuiAddress,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
@@ -107,7 +103,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet().addresses.objects.faucet,
+					this.Provider.Faucet().Helpers.addresses.objects.faucet,
 					coinId,
 					validator,
 				],
@@ -116,7 +112,7 @@ export class StakingApiHelpers {
 		};
 	};
 
-	protected stakeRequestWithdrawDelegationTransaction = (
+	public stakeRequestWithdrawDelegationTransaction = (
 		stakedSui: ObjectId,
 		delegation: ObjectId,
 		afSui: ObjectId,
@@ -136,7 +132,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet().addresses.objects.faucet,
+					this.Provider.Faucet().Helpers.addresses.objects.faucet,
 					delegation,
 					stakedSui,
 					afSui,
@@ -146,7 +142,7 @@ export class StakingApiHelpers {
 		};
 	};
 
-	protected stakeCancelDelegationRequestTransaction = (
+	public stakeCancelDelegationRequestTransaction = (
 		stakedSui: ObjectId,
 		afSui: ObjectId,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
@@ -165,7 +161,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet().addresses.objects.faucet,
+					this.Provider.Faucet().Helpers.addresses.objects.faucet,
 					stakedSui,
 					afSui,
 				],
@@ -178,7 +174,7 @@ export class StakingApiHelpers {
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	protected fetchCancelOrRequestWithdrawDelegationTransactions = async (
+	public fetchCancelOrRequestWithdrawDelegationTransactions = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
@@ -192,7 +188,7 @@ export class StakingApiHelpers {
 			delegation
 		);
 
-	protected fetchBuildRequestAddDelegationTransactions = async (
+	public fetchBuildRequestAddDelegationTransactions = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		validator: SuiAddress
@@ -201,7 +197,7 @@ export class StakingApiHelpers {
 
 		// i. create a coin of type `coinType` with value `coinAmount`.
 		const { coinObjectId: coinId, joinAndSplitTransactions } =
-			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
+			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
 				Coin.constants.suiCoinType,
 				amount
@@ -220,7 +216,7 @@ export class StakingApiHelpers {
 	// Undelegate Coin
 	//**************************************************************************************************
 
-	protected fetchBuildCancelOrRequestWithdrawDelegationTransactions = async (
+	public fetchBuildCancelOrRequestWithdrawDelegationTransactions = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
@@ -230,9 +226,9 @@ export class StakingApiHelpers {
 
 		// i. create a coin of type `coinType` with value `amount`.
 		const { coinObjectId: coinId, joinAndSplitTransactions } =
-			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
+			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
-				this.Provider.Faucet().coinTypes.afSui,
+				this.Provider.Faucet().Helpers.coinTypes.afSui,
 				amount
 			);
 		transactions.push(...joinAndSplitTransactions);

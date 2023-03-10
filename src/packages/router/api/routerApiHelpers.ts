@@ -14,7 +14,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(public readonly Provider: AftermathApi) {
 		super(Provider);
 
 		this.Provider = Provider;
@@ -45,11 +45,11 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 	//// Graph Creation
 	/////////////////////////////////////////////////////////////////////
 
-	protected static calcRouteSpotPrice = (route: Route) => {
+	public static calcRouteSpotPrice = (route: Route) => {
 		return route.path.reduce((acc, path) => path.spotPrice * acc, 1);
 	};
 
-	protected static newGraph = (): Graph => {
+	public static newGraph = (): Graph => {
 		const startingPoints = new Map();
 		return {
 			pools: {},
@@ -57,7 +57,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 		};
 	};
 
-	protected static addPool = (graph: Graph, pool: PoolCompleteObject) => {
+	public static addPool = (graph: Graph, pool: PoolCompleteObject) => {
 		const coinTypes = pool.pool.fields.coins;
 
 		const balances: { [key: CoinType]: Balance } = {};
@@ -124,15 +124,15 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 		}
 	};
 
-	protected static pathStart = (path: GraphPath): Node => path[0].nodeFrom;
+	public static pathStart = (path: GraphPath): Node => path[0].nodeFrom;
 
-	protected static pathEnd = (path: GraphPath): Node =>
+	public static pathEnd = (path: GraphPath): Node =>
 		path[path.length - 1].nodeTo;
 
-	protected static shrinkCoinType = (coinType: CoinType): string =>
+	public static shrinkCoinType = (coinType: CoinType): string =>
 		coinType.split(":").pop() || "[empty]";
 
-	protected static pathToString = (path: GraphPath): string => {
+	public static pathToString = (path: GraphPath): string => {
 		let line = RouterApiHelpers.shrinkCoinType(path[0].nodeFrom.coinType);
 		for (let step of path)
 			line += ` --${
@@ -141,7 +141,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 		return line;
 	};
 
-	protected static getPaths = (
+	public static getPaths = (
 		graph: Graph,
 		coinStart: CoinType,
 		coinEnd: CoinType,
@@ -180,7 +180,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 			);
 	};
 
-	protected static getRoutes = (
+	public static getRoutes = (
 		graph: Graph,
 		coinStart: CoinType,
 		coinEnd: CoinType,
@@ -230,7 +230,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 			}
 		);
 
-	protected static getBestRoute = (
+	public static getBestRoute = (
 		graph: Graph,
 		coinStart: CoinType,
 		coinEnd: CoinType,

@@ -14,9 +14,9 @@ import {
 	KeyType,
 	SuiNetwork,
 } from "../../types";
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 
-export class Coin extends Aftermath {
+export class Coin extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////

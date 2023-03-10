@@ -5,9 +5,9 @@ import {
 	DelegatedStakePosition,
 	SuiNetwork,
 } from "../../types";
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 
-export class StakePosition extends Aftermath {
+export class StakePosition extends Caller {
 	constructor(
 		public readonly stakerAddress: SuiAddress,
 		public readonly stakePosition: DelegatedStakePosition,

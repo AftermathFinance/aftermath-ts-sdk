@@ -3,7 +3,6 @@ import {
 	ObjectId,
 	SignableTransaction,
 	SuiAddress,
-	SuiObjectInfo,
 } from "@mysten/sui.js";
 import {
 	ApiBreedCapyBody,
@@ -20,11 +19,11 @@ import {
 	SuiNetwork,
 	UnstakeCapyEvent,
 } from "../../types";
-import { Aftermath } from "../../general/providers/aftermath";
 import { Capy } from "./capy";
 import { StakedCapyReceipt } from "./stakedCapyReceipt";
+import { Caller } from "../../general/utils/caller";
 
-export class Capys extends Aftermath {
+export class Capys extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
