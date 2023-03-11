@@ -8,6 +8,7 @@ import {
 } from "../../../types";
 import { PoolsApiHelpers } from "../../pools/api/poolsApiHelpers";
 import { Graph, GraphPath, Node, Route, RouterPath } from "../routerTypes";
+import { Pool } from "../../pools";
 
 export class RouterApiHelpers extends PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -16,7 +17,6 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 
 	constructor(public readonly Provider: AftermathApi) {
 		super(Provider);
-
 		this.Provider = Provider;
 	}
 
@@ -79,6 +79,8 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 				});
 		});
 
+		const poolClass = new Pool(pool.pool, pool.dynamicFields);
+
 		for (let i = 0; i < coinTypes.length; ++i) {
 			for (let j = i + 1; j < coinTypes.length; ++j) {
 				const nodeI = g.get(coinTypes[i]);
@@ -94,13 +96,10 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 						weights,
 						tradeFee: tradeFee,
 					},
-					// spotPrice: indicesPoolCalcSpotPrice(
-					// 	balances[coinTypes[i]],
-					// 	weights[coinTypes[i]],
-					// 	balances[coinTypes[j]],
-					// 	weights[coinTypes[j]]
-					// ),
-					spotPrice: 0,
+					spotPrice: poolClass.getSpotPrice(
+						coinTypes[i],
+						coinTypes[j]
+					),
 				});
 				nodeJ.routes.push({
 					nodeFrom: nodeJ.sourceNode,
@@ -112,13 +111,10 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 						weights,
 						tradeFee: tradeFee,
 					},
-					// spotPrice: indicesPoolCalcSpotPrice(
-					// 	balances[coinTypes[j]],
-					// 	weights[coinTypes[j]],
-					// 	balances[coinTypes[i]],
-					// 	weights[coinTypes[i]]
-					// ),
-					spotPrice: 0,
+					spotPrice: poolClass.getSpotPrice(
+						coinTypes[j],
+						coinTypes[i]
+					),
 				});
 			}
 		}

@@ -40,7 +40,7 @@ export class Coin extends Caller {
 		super(network, "coins");
 		this.coinType = coinType;
 		this.coinTypePackageName = this.getCoinTypePackageName();
-		this.coinTypeSymbol = SuiCoin.getCoinSymbol(coinType);
+		this.coinTypeSymbol = this.getCoinTypeSymbol();
 		this.innerCoinType = this.getInnerCoinType();
 	}
 
@@ -85,7 +85,10 @@ export class Coin extends Caller {
 		return displayType;
 	};
 
-	private getInnerCoinType = () => this.coinType.split("<")[1].slice(0, -1);
+	private getInnerCoinType = () =>
+		this.coinType.includes("<")
+			? this.coinType.split("<")[1].slice(0, -1)
+			: "";
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Static Methods
