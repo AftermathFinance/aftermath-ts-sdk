@@ -36,6 +36,7 @@ export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 		this.Helpers = new PoolsApiHelpers(Provider);
 	}
 

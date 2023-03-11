@@ -17,6 +17,7 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 		this.Helpers = new RouterApiHelpers(Provider);
 	}
 

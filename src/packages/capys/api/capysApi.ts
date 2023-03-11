@@ -45,6 +45,7 @@ export class CapysApi {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 		this.Helpers = new CapysApiHelpers(Provider);
 	}
 

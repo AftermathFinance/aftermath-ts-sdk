@@ -63,9 +63,9 @@ export class CoinApiHelpers {
 		eventNames: {
 			currencyCreated: "CurrencyCreated",
 		},
-		eventTypes: {
-			currencyCreated: CoinApiHelpers.currencyCreatedEventType(),
-		},
+		// eventTypes: {
+		// 	currencyCreated: CoinApiHelpers.currencyCreatedEventType(),
+		// },
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -381,11 +381,11 @@ export class CoinApiHelpers {
 	//// Event Types
 	/////////////////////////////////////////////////////////////////////
 
-	private static currencyCreatedEventType(): AnyObjectType {
-		return EventsApiHelpers.createEventType(
-			Sui.constants.addresses.suiPackageId,
-			CoinApiHelpers.constants.modules.coin.name,
-			CoinApiHelpers.constants.eventNames.currencyCreated
-		);
-	}
+	// private static currencyCreatedEventType(): AnyObjectType {
+	// 	return EventsApiHelpers.createEventType(
+	// 		Sui.constants.addresses.suiPackageId,
+	// 		CoinApiHelpers.constants.modules.coin.name,
+	// 		CoinApiHelpers.constants.eventNames.currencyCreated
+	// 	);
+	// }
 }

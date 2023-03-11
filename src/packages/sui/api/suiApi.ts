@@ -15,6 +15,7 @@ export class SuiApi {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
 		this.Helpers = new SuiApiHelpers(Provider);
 	}
 
