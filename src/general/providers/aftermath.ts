@@ -10,7 +10,7 @@ import { Helpers } from "../utils/helpers";
 import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
-import { Sui } from "../../packages";
+import { Router, Sui } from "../../packages";
 
 export class Aftermath extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -37,6 +37,7 @@ export class Aftermath extends Caller {
 	public Staking = () => new Staking(this.network);
 	public Capys = () => new Capys(this.network);
 	public Faucet = () => new Faucet(this.network);
+	public Router = () => new Router(this.network);
 
 	/////////////////////////////////////////////////////////////////////
 	//// General

@@ -19,11 +19,11 @@ export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
-		public readonly pools: Pool[],
+		// public readonly pools: Pool[],
 		public readonly network?: SuiNetwork
 	) {
 		super(network, "router");
-		this.pools = pools;
+		// this.pools = pools;
 
 		// create graph ?
 	}

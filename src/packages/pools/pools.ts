@@ -17,7 +17,6 @@ import {
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
-import { Router } from "../router/router";
 import { Helpers } from "../../general/utils/helpers";
 import { Caller } from "../../general/utils/caller";
 
@@ -83,10 +82,12 @@ export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	// NOTE: should this function be named `getRouter` or just `Router` ?
-	public async getRouter(): Promise<Router> {
-		const pools = await this.getAllPools();
-		return new Router(pools, this.network);
-	}
+	// should this even be here or just off of aftermath class ?
+
+	// public async getRouter(): Promise<Router> {
+	// 	const pools = await this.getAllPools();
+	// 	return new Router(pools, this.network);
+	// }
 
 	/////////////////////////////////////////////////////////////////////
 	//// Events
