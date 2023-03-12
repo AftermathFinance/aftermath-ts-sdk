@@ -2,11 +2,7 @@ import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { Helpers } from "../utils/helpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { AftermathApi } from "../providers/aftermathApi";
-import {
-	CoinType,
-	CoinWithBalance,
-	CoinsToBalance,
-} from "../../packages/coin/coinTypes";
+import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
 
 export class WalletApi {
 	/////////////////////////////////////////////////////////////////////
@@ -35,7 +31,6 @@ export class WalletApi {
 
 	// TODO: make toBigIntSafe function ?
 	// TODO: return prices here as well and sort ?
-	// TODO: remove all CoinWithBalance and similar types
 	public fetchAllCoinBalances = async (
 		address: SuiAddress
 	): Promise<CoinsToBalance> => {

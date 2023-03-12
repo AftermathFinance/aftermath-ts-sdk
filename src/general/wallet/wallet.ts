@@ -5,7 +5,7 @@ import {
 	Balance,
 	TransactionsWithCursor,
 } from "../types/generalTypes";
-import { CoinType, CoinWithBalance } from "../../packages/coin/coinTypes";
+import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 
 export class Wallet extends Caller {
@@ -30,8 +30,7 @@ export class Wallet extends Caller {
 		return balances;
 	}
 
-	// TODO: change return type to Record<Coin, Balance> !
-	public async getAllBalances(): Promise<CoinWithBalance[]> {
+	public async getAllBalances(): Promise<CoinsToBalance> {
 		return this.fetchApi("balances");
 	}
 

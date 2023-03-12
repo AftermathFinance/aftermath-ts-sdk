@@ -9,6 +9,7 @@ import { Staking } from "../../packages/staking/staking";
 import { Helpers } from "../utils/helpers";
 import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
+import { Prices } from "../prices/prices";
 
 export class Aftermath extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -27,11 +28,20 @@ export class Aftermath extends Caller {
 	//// Class Object Creation
 	/////////////////////////////////////////////////////////////////////
 
+	/////////////////////////////////////////////////////////////////////
+	//// Packages
+	/////////////////////////////////////////////////////////////////////
+
 	public Pools = () => new Pools(this.network);
 	public Staking = () => new Staking(this.network);
 	public Capys = () => new Capys(this.network);
 	public Faucet = () => new Faucet(this.network);
 
+	/////////////////////////////////////////////////////////////////////
+	//// General
+	/////////////////////////////////////////////////////////////////////
+
+	public Prices = () => new Prices(this.network);
 	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
 	public Coin = (coinType: CoinType) => new Coin(coinType, this.network);
 

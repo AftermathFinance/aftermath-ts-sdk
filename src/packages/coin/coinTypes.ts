@@ -13,10 +13,6 @@ export type CoinSymbol = string;
 /////////////////////////////////////////////////////////////////////
 
 export type CoinWithBalance = { coin: CoinType; balance: Balance };
-export type CoinWithBalanceOrUndefined = {
-	coin: CoinType;
-	balance: Balance | undefined;
-};
 
 export interface CoinWithAmount {
 	coin: CoinType;
