@@ -2,7 +2,6 @@ import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
 import { CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { RouterPath } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
 
@@ -171,26 +170,3 @@ export interface ApiPoolTradeBody {
 	fromCoinAmount: Balance;
 	toCoin: CoinType;
 }
-
-export interface ApiTradeBody {
-	walletAddress: SuiAddress;
-	fromCoin: CoinType;
-	fromCoinAmount: Balance;
-	toCoin: CoinType;
-}
-
-export interface ApiTradeInfoBody {
-	fromCoin: CoinType;
-	toCoin: CoinType;
-}
-
-export type ApiTradeTransactionsBody =
-	| {
-			walletAddress: SuiAddress;
-			fromCoinAmount: Balance;
-			path: RouterPath;
-	  }
-	| {
-			path: RouterPath;
-			fromCoinId: ObjectId;
-	  };

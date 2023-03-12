@@ -1,4 +1,4 @@
-import { SignableTransaction } from "@mysten/sui.js";
+import { ObjectId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import { Balance } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import {
@@ -10,7 +10,7 @@ import {
 } from "../pools/poolsTypes";
 
 /////////////////////////////////////////////////////////////////////
-//// Router
+//// Paths
 /////////////////////////////////////////////////////////////////////
 
 export interface RouterPath {
@@ -26,7 +26,7 @@ export interface RouterPathInfo {
 }
 
 /////////////////////////////////////////////////////////////////////
-//// Router Graph
+//// Graph
 /////////////////////////////////////////////////////////////////////
 
 export type PathStep = Edge;
@@ -73,4 +73,24 @@ export interface NodeWithOuts {
 export interface Graph {
 	pools: { [key: PoolName]: PseudoPool };
 	startingPoints: Map<CoinType, NodeWithOuts>;
+}
+
+/////////////////////////////////////////////////////////////////////
+//// API
+/////////////////////////////////////////////////////////////////////
+
+export interface ApiRouterPathInfoBody {
+	fromCoin: CoinType;
+	toCoin: CoinType;
+}
+
+export interface ApiRouterFirstTradeTransactionsBody {
+	walletAddress: SuiAddress;
+	fromCoinAmount: Balance;
+	path: RouterPath;
+}
+
+export interface ApiRouterIntermediateTradeTransactionsBody {
+	path: RouterPath;
+	fromCoinId: ObjectId;
 }
