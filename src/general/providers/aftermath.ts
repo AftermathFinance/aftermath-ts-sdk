@@ -10,6 +10,7 @@ import { Helpers } from "../utils/helpers";
 import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
+import { Sui } from "../../packages";
 
 export class Aftermath extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -41,6 +42,7 @@ export class Aftermath extends Caller {
 	//// General
 	/////////////////////////////////////////////////////////////////////
 
+	public Sui = () => new Sui(this.network);
 	public Prices = () => new Prices(this.network);
 	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
 	public Coin = (coinType: CoinType) => new Coin(coinType, this.network);

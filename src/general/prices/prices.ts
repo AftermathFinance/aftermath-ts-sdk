@@ -3,6 +3,10 @@ import { CoinType } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 
 export class Prices extends Caller {
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
 	constructor(public readonly network?: SuiNetwork) {
 		super(network, "prices");
 	}

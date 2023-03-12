@@ -21,5 +21,11 @@ export class Sui extends Caller {
 		super(network, "sui");
 	}
 
-	// TODO: add fetching here for eopch, system state, etc.
+	/////////////////////////////////////////////////////////////////////
+	//// Chain Info
+	/////////////////////////////////////////////////////////////////////
+
+	public async getCurrentEpoch(): Promise<EpochTimeStamp> {
+		return this.fetchApi("epoch");
+	}
 }
