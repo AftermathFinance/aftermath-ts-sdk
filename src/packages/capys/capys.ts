@@ -76,11 +76,18 @@ export class Capys extends Caller {
 	public async getStakedCapyReceipts(
 		walletAddress: SuiAddress
 	): Promise<StakedCapyReceipt[]> {
-		return (
-			await this.fetchApi<StakedCapyReceiptObject[]>(
-				`${walletAddress}/stakedCapyReceipts`
-			)
-		).map((receipt) => new StakedCapyReceipt(receipt, this.network));
+		const stakedCapyReceipts = await this.fetchApi<
+			StakedCapyReceiptObject[]
+		>(`${walletAddress}/stakedCapyReceipts`);
+
+		const stakedCapys = await this.getCapys(
+			stakedCapyReceipts.map((receipt) => receipt.capyId)
+		);
+
+		return stakedCapyReceipts.map(
+			(receipt, index) =>
+				new StakedCapyReceipt(stakedCapys[index], receipt, this.network)
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////

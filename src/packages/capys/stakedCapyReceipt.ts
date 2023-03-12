@@ -7,7 +7,6 @@ import {
 	StakedCapyReceiptObject,
 	SuiNetwork,
 } from "../../types";
-import { Capys } from "./capys";
 import { Capy } from "./capy";
 import { Caller } from "../../general/utils/caller";
 
@@ -17,21 +16,12 @@ export class StakedCapyReceipt extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
+		public readonly stakedCapy: Capy,
 		public readonly stakedCapyReceipt: StakedCapyReceiptObject,
 		public readonly network?: SuiNetwork
 	) {
 		super(network, "capys");
 		this.stakedCapyReceipt = stakedCapyReceipt;
-	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Class Objects
-	/////////////////////////////////////////////////////////////////////
-
-	public async getCapy(): Promise<Capy> {
-		return await new Capys(this.network).getCapy(
-			this.stakedCapyReceipt.capyId
-		);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -46,8 +36,8 @@ export class StakedCapyReceipt extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getUnstakeCapyTransactions(): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiUnstakeCapyBody>(
+	public async getUnstakeCapyTransaction(): Promise<SignableTransaction> {
+		return this.fetchApi<SignableTransaction, ApiUnstakeCapyBody>(
 			"transactions/stake",
 			{
 				stakingReceiptId: this.stakedCapyReceipt.objectId,
@@ -55,11 +45,11 @@ export class StakedCapyReceipt extends Caller {
 		);
 	}
 
-	public async getWithdrawFeesTransactions(
+	public async getWithdrawFeesTransaction(
 		amount: Balance | undefined
-	): Promise<SignableTransaction[]> {
+	): Promise<SignableTransaction> {
 		return this.fetchApi<
-			SignableTransaction[],
+			SignableTransaction,
 			ApiWithdrawCapyFeesAmountBody
 		>("transactions/withdrawFees", {
 			amount,

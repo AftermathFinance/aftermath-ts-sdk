@@ -67,15 +67,16 @@ export class Coin extends Caller {
 	// TODO: remove in favor of sui js implementation Coin.getCoinStructTag() if it is the same
 	private getCoinTypePackageName = (): string => {
 		const splitCoin = this.coinType.split("::");
+		if (splitCoin.length !== 3) return "";
 		const packageName = splitCoin[splitCoin.length - 2];
-		if (!packageName) throw new Error("no coin type package name found");
+		if (!packageName) return "";
 		return packageName;
 	};
 
 	// TODO: remove in favor of sui js implementation ?
 	private getCoinTypeSymbol = (): string => {
 		const startIndex = this.coinType.lastIndexOf("::") + 2;
-		if (startIndex <= 1) throw new Error("no coin type found");
+		if (startIndex <= 1) return "";
 
 		const foundEndIndex = this.coinType.indexOf(">");
 		const endIndex =

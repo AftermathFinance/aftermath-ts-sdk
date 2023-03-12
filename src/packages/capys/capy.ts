@@ -19,13 +19,11 @@ export class Capy extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakeTransactions(
-		capyId: ObjectId
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiStakeCapyBody>(
+	public async getStakeTransaction(): Promise<SignableTransaction> {
+		return this.fetchApi<SignableTransaction, ApiStakeCapyBody>(
 			"transactions/stake",
 			{
-				capyId,
+				capyId: this.capy.objectId,
 			}
 		);
 	}
