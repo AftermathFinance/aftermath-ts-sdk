@@ -69,7 +69,7 @@ export class Capys extends Caller {
 
 	public async getOwnedCapys(walletAddress: SuiAddress): Promise<Capy[]> {
 		return (
-			await this.fetchApi<CapyObject[]>(`${walletAddress}/ownedCapys`)
+			await this.fetchApi<CapyObject[]>(`ownedCapys/${walletAddress}`)
 		).map((capy) => new Capy(capy, this.network));
 	}
 
@@ -78,7 +78,7 @@ export class Capys extends Caller {
 	): Promise<StakedCapyReceipt[]> {
 		const stakedCapyReceipts = await this.fetchApi<
 			StakedCapyReceiptObject[]
-		>(`${walletAddress}/stakedCapyReceipts`);
+		>(`stakedCapyReceipts/${walletAddress}`);
 
 		const stakedCapys = await this.getCapys(
 			stakedCapyReceipts.map((receipt) => receipt.capyId)
@@ -86,7 +86,11 @@ export class Capys extends Caller {
 
 		return stakedCapyReceipts.map(
 			(receipt, index) =>
-				new StakedCapyReceipt(stakedCapys[index], receipt, this.network)
+				new StakedCapyReceipt(
+					new Capy(stakedCapys[index].capy, this.network, true),
+					receipt,
+					this.network
+				)
 		);
 	}
 
@@ -98,14 +102,23 @@ export class Capys extends Caller {
 		attributes?: CapyAttribute[],
 		cursor?: ObjectId,
 		limit?: number
-	): Promise<DynamicFieldObjectsWithCursor<CapyObject>> {
-		return this.fetchApi<
+	): Promise<DynamicFieldObjectsWithCursor<Capy>> {
+		const capysWithCursor = await this.fetchApi<
 			DynamicFieldObjectsWithCursor<CapyObject>,
 			ApiDynamicFieldsBody
 		>(`stakedCapys${Capys.createCapyAttributesQueryString(attributes)}`, {
 			cursor,
 			limit,
 		});
+
+		const capys = capysWithCursor.dynamicFieldObjects.map(
+			(capy) => new Capy(capy, this.network, true)
+		);
+
+		return {
+			dynamicFieldObjects: capys,
+			nextCursor: capysWithCursor.nextCursor,
+		};
 	}
 
 	/////////////////////////////////////////////////////////////////////

@@ -29,7 +29,7 @@ export class StakedCapyReceipt extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getFeesEarned(): Promise<StakedCapyFeesEarned> {
-		return this.fetchApi(`${this.stakedCapyReceipt.objectId}/feesEarned`);
+		return this.fetchApi(`feesEarned/${this.stakedCapyReceipt.objectId}`);
 	}
 
 	/////////////////////////////////////////////////////////////////////

@@ -50,7 +50,7 @@ export class Staking extends Caller {
 		walletAddress: SuiAddress
 	): Promise<StakePosition[]> {
 		const delegatedStakePositions = this.fetchApi<DelegatedStakePosition[]>(
-			`${walletAddress}/stakes`
+			`stakePositions/${walletAddress}`
 		);
 		return (await delegatedStakePositions).map(
 			(position) =>
