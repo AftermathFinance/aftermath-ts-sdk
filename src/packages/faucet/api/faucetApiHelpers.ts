@@ -58,7 +58,7 @@ export class FaucetApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(public readonly Provider: AftermathApi) {
 		const faucetAddresses = this.Provider.addresses.faucet;
 		if (!faucetAddresses)
 			throw new Error(
@@ -79,14 +79,10 @@ export class FaucetApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Protected Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
 	//// Transcations
 	/////////////////////////////////////////////////////////////////////
 
-	protected faucetAddCoinTransaction = (
+	public faucetAddCoinTransaction = (
 		treasuryCapId: ObjectId,
 		treasuryCapType: CoinType,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions.add
@@ -105,7 +101,7 @@ export class FaucetApiHelpers {
 		};
 	};
 
-	protected faucetRequestCoinAmountTransaction = (
+	public faucetRequestCoinAmountTransaction = (
 		coinType: CoinType,
 		amount: Balance,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions
@@ -125,7 +121,7 @@ export class FaucetApiHelpers {
 		};
 	};
 
-	protected faucetRequestCoinTransaction = (
+	public faucetRequestCoinTransaction = (
 		coinType: CoinType,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions.request
 			.defaultGasBudget
@@ -147,7 +143,7 @@ export class FaucetApiHelpers {
 	//// Move Calls
 	/////////////////////////////////////////////////////////////////////
 
-	protected faucetSupportedCoinsMoveCall = (): MoveCallTransaction => {
+	public faucetSupportedCoinsMoveCall = (): MoveCallTransaction => {
 		return {
 			packageObjectId: this.addresses.packages.faucet,
 			module: FaucetApiHelpers.constants.faucetRegistryModuleName,

@@ -1,12 +1,12 @@
 import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
-	ApiPoolSwapBody,
+	ApiPoolTradeBody,
 	ApiPoolWithdrawBody,
 	Balance,
 	CoinType,
 	CoinsToBalance,
-	IndicesPoolDataPoint,
+	PoolDataPoint as PoolDataPoint,
 	PoolVolumeDataTimeframeKey,
 	PoolDynamicFields,
 	PoolObject,
@@ -14,9 +14,9 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 
-export class Pool extends Aftermath {
+export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ export class Pool extends Aftermath {
 
 	public async getVolume(
 		timeframe: PoolVolumeDataTimeframeKey
-	): Promise<IndicesPoolDataPoint[]> {
+	): Promise<PoolDataPoint[]> {
 		return this.fetchApi(`volume/${timeframe}`);
 	}
 
@@ -82,7 +82,7 @@ export class Pool extends Aftermath {
 		fromCoinAmount: Balance,
 		toCoin: CoinType
 	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolSwapBody>(
+		return this.fetchApi<SignableTransaction[], ApiPoolTradeBody>(
 			"transactions/trade",
 			{
 				walletAddress,
@@ -113,7 +113,7 @@ export class Pool extends Aftermath {
 			coinOutPoolBalance,
 			coinOutWeight,
 			coinInAmount,
-			this.pool.fields.swapFee
+			this.pool.fields.tradeFee
 		);
 	};
 
@@ -133,7 +133,7 @@ export class Pool extends Aftermath {
 			coinOutPoolBalance,
 			coinOutWeight,
 			coinOutAmount,
-			this.pool.fields.swapFee
+			this.pool.fields.tradeFee
 		);
 	};
 
@@ -168,7 +168,7 @@ export class Pool extends Aftermath {
 			this.pool.fields.weights,
 			depositCoinBalances,
 			lpTotalSupply,
-			this.pool.fields.swapFee
+			this.pool.fields.tradeFee
 		);
 	};
 

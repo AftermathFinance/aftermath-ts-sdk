@@ -69,6 +69,7 @@ export interface BreedCapysEvent extends Event {
 	capyParentOneId: ObjectId;
 	capyParentTwoId: ObjectId;
 	capyChildId: ObjectId;
+	// TODO: remove all CoinWithBalance types
 	feeCoinWithBalance: CoinWithBalance;
 }
 
@@ -125,7 +126,7 @@ export interface ApiBreedCapyBody {
 	capyParentTwoId: ObjectId;
 }
 
-export interface CapyFeesEarned {
-	capyFeesEarnedIndividual: Balance;
-	capyFeesEarnedGlobal: Balance;
+export interface StakedCapyFeesEarned {
+	individualFees: Balance;
+	globalFees: Balance;
 }

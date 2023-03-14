@@ -1,7 +1,7 @@
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 import { SuiNetwork } from "../../types";
 
-export class Sui extends Aftermath {
+export class Sui extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -19,5 +19,13 @@ export class Sui extends Aftermath {
 
 	constructor(public readonly network?: SuiNetwork) {
 		super(network, "sui");
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Chain Info
+	/////////////////////////////////////////////////////////////////////
+
+	public async getCurrentEpoch(): Promise<EpochTimeStamp> {
+		return this.fetchApi("epoch");
 	}
 }

@@ -48,16 +48,16 @@ export class StakingApiHelpers {
 
 	public readonly addresses: StakingAddresses;
 	public readonly eventTypes: {
-		stakeRequestAddDelegation: AnyObjectType;
-		stakeRequestWithdrawDelegation: AnyObjectType;
-		stakeCancelDelegationRequest: AnyObjectType;
+		requestAddDelegation: AnyObjectType;
+		requestWithdrawDelegation: AnyObjectType;
+		cancelDelegationRequest: AnyObjectType;
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(public readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.staking;
 		if (!addresses)
 			throw new Error(
@@ -68,26 +68,13 @@ export class StakingApiHelpers {
 		this.addresses = addresses;
 
 		this.eventTypes = {
-			stakeRequestAddDelegation:
-				this.stakeRequestAddDelegationEventType(),
-			stakeRequestWithdrawDelegation:
+			requestAddDelegation: this.stakeRequestAddDelegationEventType(),
+			requestWithdrawDelegation:
 				this.stakeRequestWithdrawDelegationEventType(),
-			stakeCancelDelegationRequest:
+			cancelDelegationRequest:
 				this.stakeCancelDelegationRequestEventType(),
 		};
 	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Fetching
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Protected Methods
-	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
 	//// Move Calls
@@ -97,7 +84,7 @@ export class StakingApiHelpers {
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	protected stakeRequestAddDelegationTransaction = (
+	public stakeRequestAddDelegationTransaction = (
 		coinId: ObjectId,
 		validator: SuiAddress,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
@@ -116,7 +103,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet.addresses.objects.faucet,
+					this.Provider.Faucet().Helpers.addresses.objects.faucet,
 					coinId,
 					validator,
 				],
@@ -125,7 +112,7 @@ export class StakingApiHelpers {
 		};
 	};
 
-	protected stakeRequestWithdrawDelegationTransaction = (
+	public stakeRequestWithdrawDelegationTransaction = (
 		stakedSui: ObjectId,
 		delegation: ObjectId,
 		afSui: ObjectId,
@@ -145,7 +132,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet.addresses.objects.faucet,
+					this.Provider.Faucet().Helpers.addresses.objects.faucet,
 					delegation,
 					stakedSui,
 					afSui,
@@ -155,7 +142,7 @@ export class StakingApiHelpers {
 		};
 	};
 
-	protected stakeCancelDelegationRequestTransaction = (
+	public stakeCancelDelegationRequestTransaction = (
 		stakedSui: ObjectId,
 		afSui: ObjectId,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
@@ -174,7 +161,7 @@ export class StakingApiHelpers {
 				typeArguments: [],
 				arguments: [
 					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet.addresses.objects.faucet,
+					this.Provider.Faucet().Helpers.addresses.objects.faucet,
 					stakedSui,
 					afSui,
 				],
@@ -187,7 +174,21 @@ export class StakingApiHelpers {
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	protected fetchBuildRequestAddDelegationTransactions = async (
+	public fetchCancelOrRequestWithdrawDelegationTransactions = async (
+		walletAddress: SuiAddress,
+		amount: Balance,
+		stakedSui: ObjectId,
+		delegation?: ObjectId
+	) =>
+		// i. Build the `cancel_delegation_request` or `request_withdraw_delegation` transactions.
+		this.fetchBuildCancelOrRequestWithdrawDelegationTransactions(
+			walletAddress,
+			amount,
+			stakedSui,
+			delegation
+		);
+
+	public fetchBuildRequestAddDelegationTransactions = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		validator: SuiAddress
@@ -196,7 +197,7 @@ export class StakingApiHelpers {
 
 		// i. create a coin of type `coinType` with value `coinAmount`.
 		const { coinObjectId: coinId, joinAndSplitTransactions } =
-			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
+			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
 				Coin.constants.suiCoinType,
 				amount
@@ -215,7 +216,7 @@ export class StakingApiHelpers {
 	// Undelegate Coin
 	//**************************************************************************************************
 
-	protected fetchBuildCancelOrRequestWithdrawDelegationTransactions = async (
+	public fetchBuildCancelOrRequestWithdrawDelegationTransactions = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
@@ -225,9 +226,9 @@ export class StakingApiHelpers {
 
 		// i. create a coin of type `coinType` with value `amount`.
 		const { coinObjectId: coinId, joinAndSplitTransactions } =
-			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
+			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
-				this.Provider.Faucet.coinTypes.afSui,
+				this.Provider.Faucet().Helpers.coinTypes.afSui,
 				amount
 			);
 		transactions.push(...joinAndSplitTransactions);

@@ -3,20 +3,20 @@ import {
 	ApiUnstakeCapyBody,
 	ApiWithdrawCapyFeesAmountBody,
 	Balance,
-	CapyFeesEarned,
+	StakedCapyFeesEarned,
 	StakedCapyReceiptObject,
 	SuiNetwork,
 } from "../../types";
-import { Aftermath } from "../../general/providers/aftermath";
-import { Capys } from "./capys";
 import { Capy } from "./capy";
+import { Caller } from "../../general/utils/caller";
 
-export class StakedCapyReceipt extends Aftermath {
+export class StakedCapyReceipt extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
+		public readonly stakedCapy: Capy,
 		public readonly stakedCapyReceipt: StakedCapyReceiptObject,
 		public readonly network?: SuiNetwork
 	) {
@@ -25,29 +25,19 @@ export class StakedCapyReceipt extends Aftermath {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Class Objects
-	/////////////////////////////////////////////////////////////////////
-
-	public async getCapy(): Promise<Capy> {
-		return await new Capys(this.network).getCapy(
-			this.stakedCapyReceipt.capyId
-		);
-	}
-
-	/////////////////////////////////////////////////////////////////////
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public async getFeesEarned(): Promise<CapyFeesEarned> {
-		return this.fetchApi(`${this.stakedCapyReceipt.objectId}/feesEarned`);
+	public async getFeesEarned(): Promise<StakedCapyFeesEarned> {
+		return this.fetchApi(`feesEarned/${this.stakedCapyReceipt.objectId}`);
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getUnstakeCapyTransactions(): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiUnstakeCapyBody>(
+	public async getUnstakeCapyTransaction(): Promise<SignableTransaction> {
+		return this.fetchApi<SignableTransaction, ApiUnstakeCapyBody>(
 			"transactions/stake",
 			{
 				stakingReceiptId: this.stakedCapyReceipt.objectId,
@@ -55,11 +45,11 @@ export class StakedCapyReceipt extends Aftermath {
 		);
 	}
 
-	public async getWithdrawFeesTransactions(
+	public async getWithdrawFeesTransaction(
 		amount: Balance | undefined
-	): Promise<SignableTransaction[]> {
+	): Promise<SignableTransaction> {
 		return this.fetchApi<
-			SignableTransaction[],
+			SignableTransaction,
 			ApiWithdrawCapyFeesAmountBody
 		>("transactions/withdrawFees", {
 			amount,

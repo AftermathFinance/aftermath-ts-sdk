@@ -1,14 +1,14 @@
 import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
-import { Aftermath } from "../providers/aftermath";
 import { SuiNetwork } from "../types/suiTypes";
 import {
 	ApiTransactionsBody,
 	Balance,
 	TransactionsWithCursor,
 } from "../types/generalTypes";
-import { CoinType, CoinWithBalance } from "../../packages/coin/coinTypes";
+import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
+import { Caller } from "../utils/caller";
 
-export class Wallet extends Aftermath {
+export class Wallet extends Caller {
 	constructor(
 		public readonly address: SuiAddress,
 		public readonly network?: SuiNetwork
@@ -30,8 +30,7 @@ export class Wallet extends Aftermath {
 		return balances;
 	}
 
-	// TODO: change return type to Record<Coin, Balance> !
-	public async getAllBalances(): Promise<CoinWithBalance[]> {
+	public async getAllBalances(): Promise<CoinsToBalance> {
 		return this.fetchApi("balances");
 	}
 

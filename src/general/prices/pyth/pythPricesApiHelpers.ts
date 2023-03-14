@@ -1,5 +1,5 @@
 import { AptosPriceServiceConnection } from "@pythnetwork/pyth-aptos-js";
-import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { AftermathApi } from "../../providers/aftermathApi";
 import { Coin } from "../../../packages/coin/coin";
 import { CoinType } from "../../../types";
 
@@ -40,7 +40,7 @@ export class PythPricesApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 
 		this.connection = new AptosPriceServiceConnection(

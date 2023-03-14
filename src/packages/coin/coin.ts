@@ -14,9 +14,9 @@ import {
 	KeyType,
 	SuiNetwork,
 } from "../../types";
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 
-export class Coin extends Aftermath {
+export class Coin extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ export class Coin extends Aftermath {
 		super(network, "coins");
 		this.coinType = coinType;
 		this.coinTypePackageName = this.getCoinTypePackageName();
-		this.coinTypeSymbol = SuiCoin.getCoinSymbol(coinType);
+		this.coinTypeSymbol = this.getCoinTypeSymbol();
 		this.innerCoinType = this.getInnerCoinType();
 	}
 
@@ -67,15 +67,16 @@ export class Coin extends Aftermath {
 	// TODO: remove in favor of sui js implementation Coin.getCoinStructTag() if it is the same
 	private getCoinTypePackageName = (): string => {
 		const splitCoin = this.coinType.split("::");
+		if (splitCoin.length !== 3) return "";
 		const packageName = splitCoin[splitCoin.length - 2];
-		if (!packageName) throw new Error("no coin type package name found");
+		if (!packageName) return "";
 		return packageName;
 	};
 
 	// TODO: remove in favor of sui js implementation ?
 	private getCoinTypeSymbol = (): string => {
 		const startIndex = this.coinType.lastIndexOf("::") + 2;
-		if (startIndex <= 1) throw new Error("no coin type found");
+		if (startIndex <= 1) return "";
 
 		const foundEndIndex = this.coinType.indexOf(">");
 		const endIndex =
@@ -85,7 +86,10 @@ export class Coin extends Aftermath {
 		return displayType;
 	};
 
-	private getInnerCoinType = () => this.coinType.split("<")[1].slice(0, -1);
+	private getInnerCoinType = () =>
+		this.coinType.includes("<")
+			? this.coinType.split("<")[1].slice(0, -1)
+			: "";
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Static Methods

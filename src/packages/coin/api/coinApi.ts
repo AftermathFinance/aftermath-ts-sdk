@@ -6,13 +6,20 @@ import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
 import { CoinApiHelpers } from "./coinApiHelpers";
 
-export class CoinApi extends CoinApiHelpers {
+export class CoinApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly Helpers;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(Provider: AftermathApi) {
-		super(Provider);
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
+		this.Helpers = new CoinApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////

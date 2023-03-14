@@ -1,8 +1,8 @@
 import { SignableTransaction } from "@mysten/sui.js";
-import { Aftermath } from "../../general/providers/aftermath";
 import { CoinType, ApiFaucetRequestBody, SuiNetwork } from "../../types";
+import { Caller } from "../../general/utils/caller";
 
-export class Faucet extends Aftermath {
+export class Faucet extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////

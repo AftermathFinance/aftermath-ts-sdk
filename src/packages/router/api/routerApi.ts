@@ -5,13 +5,20 @@ import { PoolCompleteObject } from "../../pools/poolsTypes";
 import { Graph, RouterPath, RouterPathInfo } from "../routerTypes";
 import { Balance, CoinType } from "../../../types";
 
-export class RouterApi extends RouterApiHelpers {
+export class RouterApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly Helpers;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(Provider: AftermathApi) {
-		super(Provider);
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
+		this.Helpers = new RouterApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -19,14 +26,24 @@ export class RouterApi extends RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Graph
+	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchIndicesRouterGraph = async () => {
-		const pools = await this.Provider.Pools.fetchAllPools();
+	public fetchSupportedCoins = async () => {
+		const pools = await this.Provider.Pools().fetchAllPools();
+		const allCoins: CoinType[] = pools
+			.map((pool) => pool.fields.coins)
+			.reduce((prev, cur) => [...prev, ...cur], []);
+
+		const uniqueCoins = [...new Set(allCoins)];
+		return uniqueCoins;
+	};
+
+	public fetchGraph = async () => {
+		const pools = await this.Provider.Pools().fetchAllPools();
 		const poolDynamicFields = await Promise.all(
 			pools.map((pool) =>
-				this.Provider.Pools.fetchPoolDynamicFields(pool.objectId)
+				this.Provider.Pools().fetchPoolDynamicFields(pool.objectId)
 			)
 		);
 
@@ -51,7 +68,7 @@ export class RouterApi extends RouterApiHelpers {
 	public getIntermediateTradeTransactions = (
 		path: RouterPath,
 		fromCoinId: ObjectId
-	) => this.intermediateTradeTransactions(path, fromCoinId);
+	) => this.Helpers.intermediateTradeTransactions(path, fromCoinId);
 
 	public fetchFirstTradeTransactions = async (
 		walletAddress: SuiAddress,
@@ -59,22 +76,22 @@ export class RouterApi extends RouterApiHelpers {
 		path: RouterPath
 	): Promise<SignableTransaction[]> => {
 		const { coinObjectId, joinAndSplitTransactions } =
-			await this.Provider.Coin.fetchCoinJoinAndSplitWithExactAmountTransactions(
+			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
 				walletAddress,
 				path.baseAsset,
 				fromCoinAmount
 			);
 
-		const swapTransactions = this.intermediateTradeTransactions(
+		const tradeTransactions = this.Helpers.intermediateTradeTransactions(
 			path,
 			coinObjectId
 		);
 
-		return [...joinAndSplitTransactions, ...swapTransactions];
+		return [...joinAndSplitTransactions, ...tradeTransactions];
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Info
+	//// Path Info
 	/////////////////////////////////////////////////////////////////////
 
 	public getTradePathInfo = (

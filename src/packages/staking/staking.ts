@@ -18,11 +18,11 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { StakePosition } from "./stakePosition";
-import { Aftermath } from "../../general/providers/aftermath";
+import { Caller } from "../../general/utils/caller";
 
 // TODO: move these types to staking api class
 
-export class Staking extends Aftermath {
+export class Staking extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ export class Staking extends Aftermath {
 		walletAddress: SuiAddress
 	): Promise<StakePosition[]> {
 		const delegatedStakePositions = this.fetchApi<DelegatedStakePosition[]>(
-			`${walletAddress}/stakes`
+			`stakePositions/${walletAddress}`
 		);
 		return (await delegatedStakePositions).map(
 			(position) =>

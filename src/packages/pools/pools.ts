@@ -10,17 +10,17 @@ import {
 	PoolDynamicFields,
 	PoolObject,
 	PoolTradeEvent,
-	PoolSwapFee,
+	PoolTradeFee,
 	PoolWeight,
 	PoolWithdrawEvent,
 	SuiNetwork,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
-import { Aftermath } from "../../general/providers/aftermath";
 import { Helpers } from "../../general/utils/helpers";
+import { Caller } from "../../general/utils/caller";
 
-export class Pools extends Aftermath {
+export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -29,8 +29,8 @@ export class Pools extends Aftermath {
 		lpCoinDecimals: 9,
 		coinWeightDecimals: 18,
 		spotPriceDecimals: 18,
-		swapFeeDecimals: 18,
-		maxSwapFee: BigInt(1000000000000000000),
+		tradeFeeDecimals: 18,
+		maxTradeFee: BigInt(1000000000000000000),
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -43,6 +43,10 @@ export class Pools extends Aftermath {
 
 	/////////////////////////////////////////////////////////////////////
 	//// Class Objects
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Pool Class
 	/////////////////////////////////////////////////////////////////////
 
 	public async getPool(poolObjectId: ObjectId): Promise<Pool> {
@@ -72,6 +76,18 @@ export class Pools extends Aftermath {
 				new Pool(pool, poolDynamicFields[index], this.network)
 		);
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Router Class
+	/////////////////////////////////////////////////////////////////////
+
+	// NOTE: should this function be named `getRouter` or just `Router` ?
+	// should this even be here or just off of aftermath class ?
+
+	// public async getRouter(): Promise<Router> {
+	// 	const pools = await this.getAllPools();
+	// 	return new Router(pools, this.network);
+	// }
 
 	/////////////////////////////////////////////////////////////////////
 	//// Events
@@ -185,7 +201,6 @@ export class Pools extends Aftermath {
 
 	// remove this once all LP coins have coin metadata ?
 	public static isLpCoin = (coin: CoinType) => {
-		// const poolsPackageId = config.indices.packages.pools;
 		// return coin.includes(poolsPackageId);
 		return coin.includes("AF_LP_");
 	};
@@ -206,11 +221,14 @@ export class Pools extends Aftermath {
 	public static spotPriceWithDecimals = (spotPrice: Balance) =>
 		Number(spotPrice) / 10 ** Pools.constants.spotPriceDecimals;
 
-	public static swapFeeWithDecimals = (swapFee: PoolSwapFee) =>
-		Number(swapFee) / 10 ** Pools.constants.swapFeeDecimals;
+	public static tradeFeeWithDecimals = (tradeFee: PoolTradeFee) =>
+		Number(tradeFee) / 10 ** Pools.constants.tradeFeeDecimals;
 
 	public static normalizeLpCoinBalance = (balance: number) =>
 		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
+
+	public static lpCoinBalanceWithDecimals = (balance: Balance) =>
+		Number(balance) / 10 ** Pools.constants.lpCoinDecimals;
 
 	public static normalizeLpCoinType = (lpCoinType: CoinType) => {
 		return `0x${lpCoinType.replaceAll("<", "<0x")}`;

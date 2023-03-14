@@ -3,13 +3,20 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { AuthorityPublicKeyBytes } from "../../../types";
 import { SuiApiHelpers } from "./suiApiHelpers";
 
-export class SuiApi extends SuiApiHelpers {
+export class SuiApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly Helpers;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(Provider: AftermathApi) {
-		super(Provider);
+	constructor(private readonly Provider: AftermathApi) {
+		this.Provider = Provider;
+		this.Helpers = new SuiApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -18,7 +25,7 @@ export class SuiApi extends SuiApiHelpers {
 
 	public fetchCommitteeInfo = async (): Promise<CommitteeInfo> => {
 		const committeeInfoOnChain = (
-			await this.Provider.Rpc.fetchRpcCall("getCommitteeInfo", [])
+			await this.Provider.Rpc().fetchRpcCall("getCommitteeInfo", [])
 		).result;
 
 		const committeeInfo = {

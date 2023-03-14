@@ -16,7 +16,7 @@ import { Helpers } from "../../../general/utils/helpers";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinApi } from "./coinApi";
-import { CastingApiHelpers } from "../../../general/api/castingApiHelpers";
+import { Casting } from "../../../general/utils/casting";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Sui } from "../../sui/sui";
 
@@ -63,16 +63,16 @@ export class CoinApiHelpers {
 		eventNames: {
 			currencyCreated: "CurrencyCreated",
 		},
-		eventTypes: {
-			currencyCreated: CoinApiHelpers.currencyCreatedEventType(),
-		},
+		// eventTypes: {
+		// 	currencyCreated: CoinApiHelpers.currencyCreatedEventType(),
+		// },
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
 
@@ -210,7 +210,7 @@ export class CoinApiHelpers {
 		>
 	> {
 		const [coinsToPrices, coinsToDecimals] = await Promise.all([
-			this.Provider.Prices.fetchCoinsToPrice(coins),
+			this.Provider.Prices().fetchCoinsToPrice(coins),
 			this.fetchCoinsToDecimals(coins),
 		]);
 
@@ -236,9 +236,7 @@ export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public static formatCoinTypesForMoveCall = (coins: CoinType[]) =>
-		coins.map((coin) =>
-			CastingApiHelpers.u8VectorFromString(coin.slice(2))
-		); // slice to remove 0x
+		coins.map((coin) => Casting.u8VectorFromString(coin.slice(2))); // slice to remove 0x
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Builders
@@ -383,11 +381,11 @@ export class CoinApiHelpers {
 	//// Event Types
 	/////////////////////////////////////////////////////////////////////
 
-	private static currencyCreatedEventType(): AnyObjectType {
-		return EventsApiHelpers.createEventType(
-			Sui.constants.addresses.suiPackageId,
-			CoinApiHelpers.constants.modules.coin.name,
-			CoinApiHelpers.constants.eventNames.currencyCreated
-		);
-	}
+	// private static currencyCreatedEventType(): AnyObjectType {
+	// 	return EventsApiHelpers.createEventType(
+	// 		Sui.constants.addresses.suiPackageId,
+	// 		CoinApiHelpers.constants.modules.coin.name,
+	// 		CoinApiHelpers.constants.eventNames.currencyCreated
+	// 	);
+	// }
 }

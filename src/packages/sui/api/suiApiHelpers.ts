@@ -5,7 +5,7 @@ export class SuiApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
 }

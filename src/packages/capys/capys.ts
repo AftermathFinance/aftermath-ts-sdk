@@ -3,7 +3,6 @@ import {
 	ObjectId,
 	SignableTransaction,
 	SuiAddress,
-	SuiObjectInfo,
 } from "@mysten/sui.js";
 import {
 	ApiBreedCapyBody,
@@ -20,11 +19,11 @@ import {
 	SuiNetwork,
 	UnstakeCapyEvent,
 } from "../../types";
-import { Aftermath } from "../../general/providers/aftermath";
 import { Capy } from "./capy";
 import { StakedCapyReceipt } from "./stakedCapyReceipt";
+import { Caller } from "../../general/utils/caller";
 
-export class Capys extends Aftermath {
+export class Capys extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -70,18 +69,29 @@ export class Capys extends Aftermath {
 
 	public async getOwnedCapys(walletAddress: SuiAddress): Promise<Capy[]> {
 		return (
-			await this.fetchApi<CapyObject[]>(`${walletAddress}/ownedCapys`)
+			await this.fetchApi<CapyObject[]>(`ownedCapys/${walletAddress}`)
 		).map((capy) => new Capy(capy, this.network));
 	}
 
 	public async getStakedCapyReceipts(
 		walletAddress: SuiAddress
 	): Promise<StakedCapyReceipt[]> {
-		return (
-			await this.fetchApi<StakedCapyReceiptObject[]>(
-				`${walletAddress}/stakedCapyReceipts`
-			)
-		).map((receipt) => new StakedCapyReceipt(receipt, this.network));
+		const stakedCapyReceipts = await this.fetchApi<
+			StakedCapyReceiptObject[]
+		>(`stakedCapyReceipts/${walletAddress}`);
+
+		const stakedCapys = await this.getCapys(
+			stakedCapyReceipts.map((receipt) => receipt.capyId)
+		);
+
+		return stakedCapyReceipts.map(
+			(receipt, index) =>
+				new StakedCapyReceipt(
+					new Capy(stakedCapys[index].capy, this.network, true),
+					receipt,
+					this.network
+				)
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -92,14 +102,23 @@ export class Capys extends Aftermath {
 		attributes?: CapyAttribute[],
 		cursor?: ObjectId,
 		limit?: number
-	): Promise<DynamicFieldObjectsWithCursor<CapyObject>> {
-		return this.fetchApi<
+	): Promise<DynamicFieldObjectsWithCursor<Capy>> {
+		const capysWithCursor = await this.fetchApi<
 			DynamicFieldObjectsWithCursor<CapyObject>,
 			ApiDynamicFieldsBody
 		>(`stakedCapys${Capys.createCapyAttributesQueryString(attributes)}`, {
 			cursor,
 			limit,
 		});
+
+		const capys = capysWithCursor.dynamicFieldObjects.map(
+			(capy) => new Capy(capy, this.network, true)
+		);
+
+		return {
+			dynamicFieldObjects: capys,
+			nextCursor: capysWithCursor.nextCursor,
+		};
 	}
 
 	/////////////////////////////////////////////////////////////////////

@@ -8,15 +8,15 @@ import {
 } from "../../../types";
 import { PoolsApiHelpers } from "../../pools/api/poolsApiHelpers";
 import { Graph, GraphPath, Node, Route, RouterPath } from "../routerTypes";
+import { Pool } from "../../pools";
 
 export class RouterApiHelpers extends PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(protected readonly Provider: AftermathApi) {
+	constructor(public readonly Provider: AftermathApi) {
 		super(Provider);
-
 		this.Provider = Provider;
 	}
 
@@ -30,7 +30,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 	) => {
 		const coinId = fromCoinId;
 
-		const swapTransaction = this.tradeTransaction(
+		const tradeTransaction = this.tradeTransaction(
 			path.pool.objectId,
 			coinId,
 			path.baseAsset,
@@ -38,18 +38,18 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 			path.quoteAsset,
 			path.pool.fields.lpType
 		);
-		return [swapTransaction];
+		return [tradeTransaction];
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Graph Creation
 	/////////////////////////////////////////////////////////////////////
 
-	protected static calcRouteSpotPrice = (route: Route) => {
+	public static calcRouteSpotPrice = (route: Route) => {
 		return route.path.reduce((acc, path) => path.spotPrice * acc, 1);
 	};
 
-	protected static newGraph = (): Graph => {
+	public static newGraph = (): Graph => {
 		const startingPoints = new Map();
 		return {
 			pools: {},
@@ -57,7 +57,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 		};
 	};
 
-	protected static addPool = (graph: Graph, pool: PoolCompleteObject) => {
+	public static addPool = (graph: Graph, pool: PoolCompleteObject) => {
 		const coinTypes = pool.pool.fields.coins;
 
 		const balances: { [key: CoinType]: Balance } = {};
@@ -68,7 +68,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 		for (let i = 0; i < coinTypes.length; ++i)
 			weights[coinTypes[i]] = pool.pool.fields.weights[i];
 
-		const swapFee = pool.pool.fields.swapFee;
+		const tradeFee = pool.pool.fields.tradeFee;
 
 		const g = graph.startingPoints;
 		pool.pool.fields.coins.map((coinType: CoinType) => {
@@ -78,6 +78,8 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 					routes: [],
 				});
 		});
+
+		const poolClass = new Pool(pool.pool, pool.dynamicFields);
 
 		for (let i = 0; i < coinTypes.length; ++i) {
 			for (let j = i + 1; j < coinTypes.length; ++j) {
@@ -92,15 +94,12 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 						balances: Object.assign({}, balances),
 						originalBalances: balances,
 						weights,
-						swapFee,
+						tradeFee: tradeFee,
 					},
-					// spotPrice: indicesPoolCalcSpotPrice(
-					// 	balances[coinTypes[i]],
-					// 	weights[coinTypes[i]],
-					// 	balances[coinTypes[j]],
-					// 	weights[coinTypes[j]]
-					// ),
-					spotPrice: 0,
+					spotPrice: poolClass.getSpotPrice(
+						coinTypes[i],
+						coinTypes[j]
+					),
 				});
 				nodeJ.routes.push({
 					nodeFrom: nodeJ.sourceNode,
@@ -110,29 +109,26 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 						balances: Object.assign({}, balances),
 						originalBalances: balances,
 						weights,
-						swapFee,
+						tradeFee: tradeFee,
 					},
-					// spotPrice: indicesPoolCalcSpotPrice(
-					// 	balances[coinTypes[j]],
-					// 	weights[coinTypes[j]],
-					// 	balances[coinTypes[i]],
-					// 	weights[coinTypes[i]]
-					// ),
-					spotPrice: 0,
+					spotPrice: poolClass.getSpotPrice(
+						coinTypes[j],
+						coinTypes[i]
+					),
 				});
 			}
 		}
 	};
 
-	protected static pathStart = (path: GraphPath): Node => path[0].nodeFrom;
+	public static pathStart = (path: GraphPath): Node => path[0].nodeFrom;
 
-	protected static pathEnd = (path: GraphPath): Node =>
+	public static pathEnd = (path: GraphPath): Node =>
 		path[path.length - 1].nodeTo;
 
-	protected static shrinkCoinType = (coinType: CoinType): string =>
+	public static shrinkCoinType = (coinType: CoinType): string =>
 		coinType.split(":").pop() || "[empty]";
 
-	protected static pathToString = (path: GraphPath): string => {
+	public static pathToString = (path: GraphPath): string => {
 		let line = RouterApiHelpers.shrinkCoinType(path[0].nodeFrom.coinType);
 		for (let step of path)
 			line += ` --${
@@ -141,7 +137,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 		return line;
 	};
 
-	protected static getPaths = (
+	public static getPaths = (
 		graph: Graph,
 		coinStart: CoinType,
 		coinEnd: CoinType,
@@ -180,7 +176,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 			);
 	};
 
-	protected static getRoutes = (
+	public static getRoutes = (
 		graph: Graph,
 		coinStart: CoinType,
 		coinEnd: CoinType,
@@ -212,7 +208,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 					// 	pool.balances[typeTo],
 					// 	pool.weights[typeTo],
 					// 	balance,
-					// 	pool.swapFee
+					// 	pool.tradeFee
 					// );
 					const newBalance = BigInt(0);
 					pool.balances[typeFrom] += balance;
@@ -230,7 +226,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 			}
 		);
 
-	protected static getBestRoute = (
+	public static getBestRoute = (
 		graph: Graph,
 		coinStart: CoinType,
 		coinEnd: CoinType,

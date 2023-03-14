@@ -2,7 +2,6 @@ import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
 import { CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { RouterPath } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
 
@@ -12,7 +11,7 @@ import { RouterPath } from "../router/routerTypes";
 
 export type PoolName = string;
 export type PoolWeight = bigint;
-export type PoolSwapFee = bigint;
+export type PoolTradeFee = bigint;
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -25,21 +24,19 @@ export interface PoolCompleteObject {
 
 export interface PoolObject {
 	objectId: ObjectId;
-	fields: PoolFields;
+	fields: {
+		name: PoolName;
+		creator: SuiAddress;
+		coins: CoinType[];
+		weights: PoolWeight[];
+		tradeFee: PoolTradeFee;
+		lpType: CoinType;
+		curveType: PoolCurveType;
+	};
 }
 
 export enum PoolCurveType {
 	Uncorrelated = 0,
-}
-
-export interface PoolFields {
-	name: PoolName;
-	creator: SuiAddress;
-	coins: CoinType[];
-	weights: PoolWeight[];
-	swapFee: PoolSwapFee;
-	lpType: CoinType;
-	curveType: PoolCurveType;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -126,7 +123,7 @@ export interface PoolStats {
 	aprRange: [number, number];
 }
 
-export interface IndicesPoolDataPoint {
+export interface PoolDataPoint {
 	time: Timestamp;
 	value: number;
 }
@@ -146,7 +143,7 @@ export interface ApiPoolSpotPriceBody {
 	coinOutType: CoinType;
 }
 
-export interface ApiPoolSwapAmountOutBody {
+export interface ApiPoolTradeAmountOutBody {
 	coinInType: CoinType;
 	coinInAmount: Balance;
 	coinOutType: CoinType;
@@ -167,32 +164,9 @@ export interface ApiPoolWithdrawBody {
 	withdrawLpTotal: Balance;
 }
 
-export interface ApiPoolSwapBody {
+export interface ApiPoolTradeBody {
 	walletAddress: SuiAddress;
 	fromCoin: CoinType;
 	fromCoinAmount: Balance;
 	toCoin: CoinType;
 }
-
-export interface ApiTradeBody {
-	walletAddress: SuiAddress;
-	fromCoin: CoinType;
-	fromCoinAmount: Balance;
-	toCoin: CoinType;
-}
-
-export interface ApiTradeInfoBody {
-	fromCoin: CoinType;
-	toCoin: CoinType;
-}
-
-export type ApiTradeTransactionsBody =
-	| {
-			walletAddress: SuiAddress;
-			fromCoinAmount: Balance;
-			path: RouterPath;
-	  }
-	| {
-			path: RouterPath;
-			fromCoinId: ObjectId;
-	  };
