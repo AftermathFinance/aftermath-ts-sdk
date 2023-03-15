@@ -2,7 +2,7 @@ import { ObjectId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
 import { PoolCompleteObject } from "../../pools/poolsTypes";
-import { Graph, RouterPath, RouterPathInfo } from "../routerTypes";
+import { Graph, RouterPath, RouterCompleteRoute } from "../routerTypes";
 import { Balance, CoinType } from "../../../types";
 
 export class RouterApi {
@@ -98,7 +98,7 @@ export class RouterApi {
 		graph: Graph,
 		fromCoinType: CoinType,
 		toCoinType: CoinType
-	): RouterPathInfo => {
+	): RouterCompleteRoute => {
 		const route = RouterApiHelpers.getBestRoute(
 			graph,
 			fromCoinType,
