@@ -35,7 +35,7 @@ export class Router extends Caller {
 	) {
 		super(network, "router");
 
-		if (pools.length <= 0) throw new Error("pools has length of 0");
+		// if (pools.length <= 0) throw new Error("pools has length of 0");
 		this.pools = pools;
 	}
 
@@ -249,6 +249,7 @@ export class Router extends Caller {
 				coinOutAmount:
 					paths[bestPool.pool.objectId].coinOutAmount + coinOutAmount,
 				spotPrice: bestPool.getSpotPrice(coinIn, coinOut),
+				tradeFee: bestPool.pool.fields.tradeFee,
 			},
 		};
 
@@ -268,6 +269,7 @@ export class Router extends Caller {
 					coinInAmount: 0,
 					coinOutAmount: 0,
 					spotPrice: -1,
+					tradeFee: BigInt(-1),
 				},
 			};
 		}, {});
@@ -285,9 +287,16 @@ export class Router extends Caller {
 			(acc, cur) => acc + cur.coinOutAmount,
 			BigInt(0)
 		);
+
 		const spotPrice =
 			Object.values(paths).reduce((acc, cur) => acc + cur.spotPrice, 0) /
 			Object.keys(paths).length;
+
+		const tradeFee =
+			Object.values(paths).reduce(
+				(acc, cur) => acc + cur.tradeFee,
+				BigInt(0)
+			) / BigInt(Object.keys(paths).length);
 
 		return {
 			coinIn,
@@ -295,6 +304,7 @@ export class Router extends Caller {
 			coinInAmount,
 			coinOutAmount,
 			spotPrice,
+			tradeFee,
 			paths,
 		};
 	};

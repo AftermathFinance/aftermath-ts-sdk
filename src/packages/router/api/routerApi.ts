@@ -1,9 +1,7 @@
-import { ObjectId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
 import { PoolCompleteObject } from "../../pools/poolsTypes";
-import { Graph, RouterPath, RouterCompleteRoute } from "../routerTypes";
-import { Balance, CoinType } from "../../../types";
+import { CoinType } from "../../../types";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -39,85 +37,85 @@ export class RouterApi {
 		return uniqueCoins;
 	};
 
-	public fetchGraph = async () => {
-		const pools = await this.Provider.Pools().fetchAllPools();
-		const poolDynamicFields = await Promise.all(
-			pools.map((pool) =>
-				this.Provider.Pools().fetchPoolDynamicFields(pool.objectId)
-			)
-		);
+	// public fetchGraph = async () => {
+	// 	const pools = await this.Provider.Pools().fetchAllPools();
+	// 	const poolDynamicFields = await Promise.all(
+	// 		pools.map((pool) =>
+	// 			this.Provider.Pools().fetchPoolDynamicFields(pool.objectId)
+	// 		)
+	// 	);
 
-		const completePools: PoolCompleteObject[] = pools.map((pool, index) => {
-			return {
-				pool,
-				dynamicFields: poolDynamicFields[index],
-			};
-		});
+	// 	const completePools: PoolCompleteObject[] = pools.map((pool, index) => {
+	// 		return {
+	// 			pool,
+	// 			dynamicFields: poolDynamicFields[index],
+	// 		};
+	// 	});
 
-		const graph = RouterApiHelpers.newGraph();
+	// 	const graph = RouterApiHelpers.newGraph();
 
-		completePools.map((pool) => RouterApiHelpers.addPool(graph, pool));
+	// 	completePools.map((pool) => RouterApiHelpers.addPool(graph, pool));
 
-		return graph;
-	};
+	// 	return graph;
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public getIntermediateTradeTransactions = (
-		path: RouterPath,
-		fromCoinId: ObjectId
-	) => this.Helpers.intermediateTradeTransactions(path, fromCoinId);
+	// public getIntermediateTradeTransactions = (
+	// 	path: RouterPath,
+	// 	fromCoinId: ObjectId
+	// ) => this.Helpers.intermediateTradeTransactions(path, fromCoinId);
 
-	public fetchFirstTradeTransactions = async (
-		walletAddress: SuiAddress,
-		fromCoinAmount: Balance,
-		path: RouterPath
-	): Promise<SignableTransaction[]> => {
-		const { coinObjectId, joinAndSplitTransactions } =
-			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
-				walletAddress,
-				path.baseAsset,
-				fromCoinAmount
-			);
+	// public fetchFirstTradeTransactions = async (
+	// 	walletAddress: SuiAddress,
+	// 	fromCoinAmount: Balance,
+	// 	path: RouterPath
+	// ): Promise<SignableTransaction[]> => {
+	// 	const { coinObjectId, joinAndSplitTransactions } =
+	// 		await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
+	// 			walletAddress,
+	// 			path.baseAsset,
+	// 			fromCoinAmount
+	// 		);
 
-		const tradeTransactions = this.Helpers.intermediateTradeTransactions(
-			path,
-			coinObjectId
-		);
+	// 	const tradeTransactions = this.Helpers.intermediateTradeTransactions(
+	// 		path,
+	// 		coinObjectId
+	// 	);
 
-		return [...joinAndSplitTransactions, ...tradeTransactions];
-	};
+	// 	return [...joinAndSplitTransactions, ...tradeTransactions];
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Path Info
 	/////////////////////////////////////////////////////////////////////
 
-	public getTradePathInfo = (
-		graph: Graph,
-		fromCoinType: CoinType,
-		toCoinType: CoinType
-	): RouterCompleteRoute => {
-		const route = RouterApiHelpers.getBestRoute(
-			graph,
-			fromCoinType,
-			toCoinType,
-			BigInt(1),
-			3
-		);
+	// public getTradePathInfo = (
+	// 	graph: Graph,
+	// 	fromCoinType: CoinType,
+	// 	toCoinType: CoinType
+	// ): RouterCompleteRoute => {
+	// 	const route = RouterApiHelpers.getBestRoute(
+	// 		graph,
+	// 		fromCoinType,
+	// 		toCoinType,
+	// 		BigInt(1),
+	// 		3
+	// 	);
 
-		const paths: RouterPath[] = route.path.map((path) => {
-			return {
-				baseAsset: path.nodeFrom.coinType,
-				quoteAsset: path.nodeTo.coinType,
-				pool: path.alongPool.source.pool,
-				weight: 0,
-			};
-		});
+	// 	const paths: RouterPath[] = route.path.map((path) => {
+	// 		return {
+	// 			baseAsset: path.nodeFrom.coinType,
+	// 			quoteAsset: path.nodeTo.coinType,
+	// 			pool: path.alongPool.source.pool,
+	// 			weight: 0,
+	// 		};
+	// 	});
 
-		const spotPrice = RouterApiHelpers.calcRouteSpotPrice(route);
+	// 	const spotPrice = RouterApiHelpers.calcRouteSpotPrice(route);
 
-		return { spotPrice, paths };
-	};
+	// 	return { spotPrice, paths };
+	// };
 }

@@ -2,6 +2,7 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Balance } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { Pool } from "../pools";
+import { PoolTradeFee } from "../pools/poolsTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Paths
@@ -13,6 +14,7 @@ export interface RouterCompleteRoute {
 	coinInAmount: Balance;
 	coinOutAmount: Balance;
 	spotPrice: number;
+	tradeFee: PoolTradeFee;
 	paths: RouterPaths;
 }
 
@@ -22,6 +24,7 @@ export interface RouterPath {
 	coinInAmount: Balance;
 	coinOutAmount: Balance;
 	spotPrice: number;
+	tradeFee: PoolTradeFee;
 }
 
 /////////////////////////////////////////////////////////////////////
