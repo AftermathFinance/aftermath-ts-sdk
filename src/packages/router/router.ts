@@ -22,7 +22,7 @@ export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	private static readonly constants = {
-		tradePartitionCount: BigInt(100),
+		tradePartitionCount: BigInt(1000),
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -189,9 +189,7 @@ export class Router extends Caller {
 			coinInAmount % Router.constants.tradePartitionCount;
 
 		let currentPools = pools;
-		let currentPaths = Router.createEmptyPaths(
-			pools.map((pool) => pool.pool.objectId)
-		);
+		let currentPaths: RouterPaths = {};
 
 		const emptyArray = Array(
 			Number(Router.constants.tradePartitionCount) + 1
@@ -240,14 +238,26 @@ export class Router extends Caller {
 		let newPools = [...pools];
 		newPools[indexOfBestPool] = updatedPool;
 
+		const updatedPoolPath =
+			bestPool.pool.objectId in paths
+				? {
+						...paths[bestPool.pool.objectId],
+						coinInAmount:
+							paths[bestPool.pool.objectId].coinInAmount +
+							coinInAmount,
+						coinOutAmount:
+							paths[bestPool.pool.objectId].coinOutAmount +
+							coinOutAmount,
+				  }
+				: {
+						coinInAmount,
+						coinOutAmount,
+				  };
+
 		const newPaths: RouterPaths = {
 			...paths,
 			[bestPool.pool.objectId]: {
-				...paths[bestPool.pool.objectId],
-				coinInAmount:
-					paths[bestPool.pool.objectId].coinInAmount + coinInAmount,
-				coinOutAmount:
-					paths[bestPool.pool.objectId].coinOutAmount + coinOutAmount,
+				...updatedPoolPath,
 				spotPrice: bestPool.getSpotPrice(coinIn, coinOut),
 				tradeFee: bestPool.pool.fields.tradeFee,
 			},
@@ -257,24 +267,6 @@ export class Router extends Caller {
 			pools: newPools,
 			paths: newPaths,
 		};
-	};
-
-	private static createEmptyPaths = (
-		poolObjectIds: ObjectId[]
-	): RouterPaths => {
-		let emptyPaths: RouterPaths = poolObjectIds.reduce((acc, cur) => {
-			return {
-				...acc,
-				[cur]: {
-					coinInAmount: 0,
-					coinOutAmount: 0,
-					spotPrice: -1,
-					tradeFee: BigInt(-1),
-				},
-			};
-		}, {});
-
-		return { ...emptyPaths };
 	};
 
 	private static completeRouteFromPaths = (
@@ -288,15 +280,24 @@ export class Router extends Caller {
 			BigInt(0)
 		);
 
-		const spotPrice =
-			Object.values(paths).reduce((acc, cur) => acc + cur.spotPrice, 0) /
-			Object.keys(paths).length;
+		const spotPrice = Object.values(paths).reduce(
+			(acc, cur) =>
+				acc +
+				(Number(cur.coinInAmount / coinInAmount) /
+					Object.keys(paths).length) *
+					cur.spotPrice,
+			0
+		);
 
-		const tradeFee =
-			Object.values(paths).reduce(
-				(acc, cur) => acc + cur.tradeFee,
-				BigInt(0)
-			) / BigInt(Object.keys(paths).length);
+		const tradeFee = Object.values(paths).reduce(
+			(acc, cur) =>
+				acc +
+				(cur.coinInAmount /
+					coinInAmount /
+					BigInt(Object.keys(paths).length)) *
+					cur.tradeFee,
+			BigInt(0)
+		);
 
 		return {
 			coinIn,
