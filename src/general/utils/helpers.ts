@@ -114,4 +114,6 @@ export class Helpers {
 
 		return maxIndex;
 	};
+
+	public static uniqueArray = <T>(arr: T[]): T[] => [...new Set(arr)];
 }
