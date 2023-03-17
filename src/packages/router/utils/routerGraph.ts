@@ -56,11 +56,9 @@ export class RouterGraph extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
-		public readonly pools: Pool[],
+		public readonly pools: Pool[] = [],
 		public readonly network?: SuiNetwork
 	) {
-		// if (pools.length <= 0) throw new Error("pools has length of 0");
-
 		super(network, "router");
 
 		// check handle remove duplicate pools (same object Id)
@@ -82,6 +80,8 @@ export class RouterGraph extends Caller {
 		coinOut: CoinType,
 		maxRouteLength: number = RouterGraph.constants.defaultMaxRouteLength
 	): RouterCompleteTradeRoute {
+		if (this.pools.length <= 0) throw new Error("pools has length of 0");
+
 		const routes = RouterGraph.findRoutes(
 			this.graph,
 			coinIn,
@@ -392,13 +392,19 @@ export class RouterGraph extends Caller {
 		pools: Pools,
 		route: RouterTradeRoute,
 		coinInAmount: Balance
-	) => {
+	): {
+		updatedPools: Pools;
+		updatedRoute: RouterTradeRoute;
+		coinOutAmount: Balance;
+	} => {
 		let currentPools = Helpers.deepCopy(pools);
 		let currentCoinInAmount = coinInAmount;
 		let newRoute: RouterTradeRoute = { ...route, paths: [] };
+		let routeSpotPrice = 1;
 
 		for (const path of route.paths) {
 			const pool = currentPools[path.poolObjectId];
+			const spotPrice = pool.getSpotPrice(path.coinIn, path.coinOut);
 			const coinOutAmount = pool.getTradeAmountOut(
 				path.coinIn,
 				currentCoinInAmount,
@@ -415,11 +421,9 @@ export class RouterGraph extends Caller {
 
 			let newPath = {
 				...path,
-
 				coinInAmount: path.coinInAmount + currentCoinInAmount,
 				coinOutAmount: path.coinOutAmount + coinOutAmount,
-
-				spotPrice: pool.getSpotPrice(path.coinIn, path.coinOut),
+				spotPrice,
 				tradeFee: pool.pool.fields.tradeFee,
 			};
 
@@ -433,12 +437,15 @@ export class RouterGraph extends Caller {
 				...currentPools,
 				[path.poolObjectId]: updatedPool,
 			};
+
+			routeSpotPrice *= spotPrice;
 		}
 
-		const updatedRoute = {
+		const updatedRoute: RouterTradeRoute = {
 			...newRoute,
 			coinInAmount: newRoute.coinInAmount + coinInAmount,
 			coinOutAmount: newRoute.coinOutAmount + currentCoinInAmount,
+			spotPrice: routeSpotPrice,
 		};
 
 		return {
@@ -495,6 +502,13 @@ export class RouterGraph extends Caller {
 			(acc, cur) => acc + cur.coinOutAmount,
 			BigInt(0)
 		);
+		const spotPrice = nonZeroRoutes.reduce(
+			(acc, cur) =>
+				acc +
+				(Number(cur.coinInAmount) / Number(coinInAmount)) *
+					cur.spotPrice,
+			0
+		);
 
 		return {
 			coinIn,
@@ -503,7 +517,7 @@ export class RouterGraph extends Caller {
 			coinOutAmount: totalCoinOutAmount,
 			routes: nonZeroRoutes,
 			tradeFee: BigInt(0),
-			spotPrice: 0,
+			spotPrice,
 		};
 	};
 }

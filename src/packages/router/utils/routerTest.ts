@@ -16,10 +16,14 @@ const runMe = async () => {
 	const pools = await AftermathSdk.Pools().getAllPools();
 	const router = await AftermathSdk.Router(pools);
 
-	const coinIn = "0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdt::WHUSDT";
-	const coinOut =
-		"0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdc::WHUSDC";
-	const coinInAmount = tradeAmounts.large;
+	const supportedCoins = await router.getSupportedCoins();
+
+	const coinIn = supportedCoins.find((coin) => coin.includes("lzeth")) ?? "";
+	const coinOut = supportedCoins.find((coin) => coin.includes("wheth")) ?? "";
+	// const coinIn = "0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdt::WHUSDT";
+	// const coinOut =
+	// 	"0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdc::WHUSDC";
+	const coinInAmount = tradeAmounts.medium;
 
 	console.log("START");
 	console.log("\n");
@@ -55,10 +59,10 @@ const runRoute = (
 	);
 	const end = performance.now();
 
-	// console.log({
-	// 	completeRoute,
-	// 	numberOfRoutes: completeRoute.routes.length,
-	// });
+	console.log({
+		completeRoute,
+		numberOfRoutes: completeRoute.routes.length,
+	});
 
 	const stableCoinPercentLoss =
 		(Number(coinInAmount - completeRoute.coinOutAmount) /
