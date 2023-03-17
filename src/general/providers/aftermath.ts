@@ -38,7 +38,7 @@ export class Aftermath extends Caller {
 	public Capys = () => new Capys(this.network);
 	public Faucet = () => new Faucet(this.network);
 	// public Router = (pools: Pool[]) => new Router(pools, this.network);
-	public Router = (pools: Pool[]) => new RouterGraph(pools);
+	public Router = (pools: Pool[]) => new RouterGraph(pools, this.network);
 
 	/////////////////////////////////////////////////////////////////////
 	//// General
