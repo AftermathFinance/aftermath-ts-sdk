@@ -1,312 +1,312 @@
-import {
-	ApiRouterFirstTradeTransactionsBody,
-	ApiRouterIntermediateTradeTransactionsBody,
-	ApiRouterPathInfoBody,
-	Balance,
-	CoinType,
-	RouterPath,
-	RouterCompleteRoute,
-	SuiNetwork,
-	PoolDynamicFields,
-	RouterPaths,
-} from "../../types";
-import { Pool } from "../pools/pool";
-import { ObjectId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
-import { Caller } from "../../general/utils/caller";
-import { Helpers } from "../../general/utils/helpers";
+// import {
+// 	ApiRouterFirstTradeTransactionsBody,
+// 	ApiRouterIntermediateTradeTransactionsBody,
+// 	ApiRouterPathInfoBody,
+// 	Balance,
+// 	CoinType,
+// 	RouterPath,
+// 	RouterCompleteRoute,
+// 	SuiNetwork,
+// 	PoolDynamicFields,
+// 	RouterPaths,
+// } from "../../types";
+// import { Pool } from "../pools/pool";
+// import { ObjectId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
+// import { Caller } from "../../general/utils/caller";
+// import { Helpers } from "../../general/utils/helpers";
 
-// TODO: create router object
-export class Router extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Private Static Contstants
-	/////////////////////////////////////////////////////////////////////
+// // TODO: create router object
+// export class Router extends Caller {
+// 	/////////////////////////////////////////////////////////////////////
+// 	//// Private Static Contstants
+// 	/////////////////////////////////////////////////////////////////////
 
-	private static readonly constants = {
-		tradePartitionCount: BigInt(1000),
-	};
+// 	private static readonly constants = {
+// 		tradePartitionCount: BigInt(1000),
+// 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+// 	/////////////////////////////////////////////////////////////////////
+// 	//// Constructor
+// 	/////////////////////////////////////////////////////////////////////
 
-	constructor(
-		public readonly pools: Pool[],
-		public readonly network?: SuiNetwork
-	) {
-		super(network, "router");
+// 	constructor(
+// 		public readonly pools: Pool[],
+// 		public readonly network?: SuiNetwork
+// 	) {
+// 		super(network, "router");
 
-		// if (pools.length <= 0) throw new Error("pools has length of 0");
-		this.pools = pools;
-	}
+// 		// if (pools.length <= 0) throw new Error("pools has length of 0");
+// 		this.pools = pools;
+// 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+// 	/////////////////////////////////////////////////////////////////////
+// 	//// Public Methods
+// 	/////////////////////////////////////////////////////////////////////
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+// 	/////////////////////////////////////////////////////////////////////
+// 	//// Inspections
+// 	/////////////////////////////////////////////////////////////////////
 
-	public async getSupportedCoins(): Promise<CoinType[]> {
-		return this.fetchApi("supportedCoins");
-	}
+// 	public async getSupportedCoins(): Promise<CoinType[]> {
+// 		return this.fetchApi("supportedCoins");
+// 	}
 
-	public getRoute(
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType
-	): RouterCompleteRoute {
-		const filteredPools = Router.filterPoolsContainingCoins(
-			this.pools,
-			coinIn,
-			coinOut
-		);
+// 	public getRoute(
+// 		coinIn: CoinType,
+// 		coinInAmount: Balance,
+// 		coinOut: CoinType
+// 	): RouterCompleteRoute {
+// 		const filteredPools = Router.filterPoolsContainingCoins(
+// 			this.pools,
+// 			coinIn,
+// 			coinOut
+// 		);
 
-		const paths = Router.createPaths(
-			filteredPools,
-			coinIn,
-			coinInAmount,
-			coinOut
-		);
+// 		const paths = Router.createPaths(
+// 			filteredPools,
+// 			coinIn,
+// 			coinInAmount,
+// 			coinOut
+// 		);
 
-		const completeRoute = Router.completeRouteFromPaths(
-			paths,
-			coinIn,
-			coinInAmount,
-			coinOut
-		);
+// 		const completeRoute = Router.completeRouteFromPaths(
+// 			paths,
+// 			coinIn,
+// 			coinInAmount,
+// 			coinOut
+// 		);
 
-		return completeRoute;
-	}
+// 		return completeRoute;
+// 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+// 	/////////////////////////////////////////////////////////////////////
+// 	//// Transactions
+// 	/////////////////////////////////////////////////////////////////////
 
-	public async getFirstTradeTransactions(
-		walletAddress: SuiAddress,
-		path: RouterPath,
-		fromCoinAmount: Balance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiRouterFirstTradeTransactionsBody
-		>("transactions/trade", {
-			walletAddress,
-			fromCoinAmount,
-			path,
-		});
-	}
+// 	public async getFirstTradeTransactions(
+// 		walletAddress: SuiAddress,
+// 		path: RouterPath,
+// 		fromCoinAmount: Balance
+// 	): Promise<SignableTransaction[]> {
+// 		return this.fetchApi<
+// 			SignableTransaction[],
+// 			ApiRouterFirstTradeTransactionsBody
+// 		>("transactions/trade", {
+// 			walletAddress,
+// 			fromCoinAmount,
+// 			path,
+// 		});
+// 	}
 
-	public async getIntermediateTradeTransactions(
-		path: RouterPath,
-		fromCoinId: ObjectId
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiRouterIntermediateTradeTransactionsBody
-		>("transactions/trade", {
-			fromCoinId,
-			path,
-		});
-	}
+// 	public async getIntermediateTradeTransactions(
+// 		path: RouterPath,
+// 		fromCoinId: ObjectId
+// 	): Promise<SignableTransaction[]> {
+// 		return this.fetchApi<
+// 			SignableTransaction[],
+// 			ApiRouterIntermediateTradeTransactionsBody
+// 		>("transactions/trade", {
+// 			fromCoinId,
+// 			path,
+// 		});
+// 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Private Static Methods
-	/////////////////////////////////////////////////////////////////////
+// 	/////////////////////////////////////////////////////////////////////
+// 	//// Private Static Methods
+// 	/////////////////////////////////////////////////////////////////////
 
-	private static indexOfBestPoolForTrade = (
-		pools: Pool[],
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType
-	) => {
-		return Helpers.indexOfMax(
-			pools.map((pool) =>
-				pool.getTradeAmountOut(coinIn, coinInAmount, coinOut)
-			)
-		);
-	};
+// 	private static indexOfBestPoolForTrade = (
+// 		pools: Pool[],
+// 		coinIn: CoinType,
+// 		coinInAmount: Balance,
+// 		coinOut: CoinType
+// 	) => {
+// 		return Helpers.indexOfMax(
+// 			pools.map((pool) =>
+// 				pool.getTradeAmountOut(coinIn, coinInAmount, coinOut)
+// 			)
+// 		);
+// 	};
 
-	private static getUpdatedPoolAndAmountOutAfterTrade = (
-		pool: Pool,
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType
-	) => {
-		const coinOutAmount = pool.getTradeAmountOut(
-			coinIn,
-			coinInAmount,
-			coinOut
-		);
+// 	private static getUpdatedPoolAndAmountOutAfterTrade = (
+// 		pool: Pool,
+// 		coinIn: CoinType,
+// 		coinInAmount: Balance,
+// 		coinOut: CoinType
+// 	) => {
+// 		const coinOutAmount = pool.getTradeAmountOut(
+// 			coinIn,
+// 			coinInAmount,
+// 			coinOut
+// 		);
 
-		const poolDynamicFields = pool.dynamicFields;
-		const poolAmountDynamicFields = poolDynamicFields.amountFields;
+// 		const poolDynamicFields = pool.dynamicFields;
+// 		const poolAmountDynamicFields = poolDynamicFields.amountFields;
 
-		const coinInDynamicFieldIndex = poolAmountDynamicFields.findIndex(
-			(field) => field.coin === coinIn
-		);
-		const coinOutDynamicFieldIndex = poolAmountDynamicFields.findIndex(
-			(field) => field.coin === coinOut
-		);
+// 		const coinInDynamicFieldIndex = poolAmountDynamicFields.findIndex(
+// 			(field) => field.coin === coinIn
+// 		);
+// 		const coinOutDynamicFieldIndex = poolAmountDynamicFields.findIndex(
+// 			(field) => field.coin === coinOut
+// 		);
 
-		let newAmountDynamicFields = [...poolAmountDynamicFields];
-		newAmountDynamicFields[coinInDynamicFieldIndex].value += coinInAmount;
-		newAmountDynamicFields[coinOutDynamicFieldIndex].value -= coinOutAmount;
+// 		let newAmountDynamicFields = [...poolAmountDynamicFields];
+// 		newAmountDynamicFields[coinInDynamicFieldIndex].value += coinInAmount;
+// 		newAmountDynamicFields[coinOutDynamicFieldIndex].value -= coinOutAmount;
 
-		const newDynamicFields: PoolDynamicFields = {
-			...poolDynamicFields,
-			amountFields: newAmountDynamicFields,
-		};
+// 		const newDynamicFields: PoolDynamicFields = {
+// 			...poolDynamicFields,
+// 			amountFields: newAmountDynamicFields,
+// 		};
 
-		return {
-			coinOutAmount,
-			pool: new Pool(pool.pool, newDynamicFields, pool.network),
-		};
-	};
+// 		return {
+// 			coinOutAmount,
+// 			pool: new Pool(pool.pool, newDynamicFields, pool.network),
+// 		};
+// 	};
 
-	private static filterPoolsContainingCoins = (
-		pools: Pool[],
-		coinIn: CoinType,
-		coinOut: CoinType
-	) => {
-		return pools.filter(
-			(pool) =>
-				pool.pool.fields.coins.includes(coinIn) &&
-				pool.pool.fields.coins.includes(coinOut)
-		);
-	};
+// 	private static filterPoolsContainingCoins = (
+// 		pools: Pool[],
+// 		coinIn: CoinType,
+// 		coinOut: CoinType
+// 	) => {
+// 		return pools.filter(
+// 			(pool) =>
+// 				pool.pool.fields.coins.includes(coinIn) &&
+// 				pool.pool.fields.coins.includes(coinOut)
+// 		);
+// 	};
 
-	private static createPaths = (
-		pools: Pool[],
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType
-	): RouterPaths => {
-		const coinInPartitionAmount =
-			coinInAmount / Router.constants.tradePartitionCount;
-		const coinInRemainderAmount =
-			coinInAmount % Router.constants.tradePartitionCount;
+// 	private static createPaths = (
+// 		pools: Pool[],
+// 		coinIn: CoinType,
+// 		coinInAmount: Balance,
+// 		coinOut: CoinType
+// 	): RouterPaths => {
+// 		const coinInPartitionAmount =
+// 			coinInAmount / Router.constants.tradePartitionCount;
+// 		const coinInRemainderAmount =
+// 			coinInAmount % Router.constants.tradePartitionCount;
 
-		let currentPools = pools;
-		let currentPaths: RouterPaths = {};
+// 		let currentPools = pools;
+// 		let currentPaths: RouterPaths = {};
 
-		const emptyArray = Array(
-			Number(Router.constants.tradePartitionCount) + 1
-		).fill(undefined);
+// 		const emptyArray = Array(
+// 			Number(Router.constants.tradePartitionCount) + 1
+// 		).fill(undefined);
 
-		for (const i of emptyArray) {
-			const { pools: updatedPools, paths: updatedPaths } =
-				Router.findNextPathAndUpdatePoolsAndPaths(
-					currentPools,
-					currentPaths,
-					coinIn,
-					i === 0 ? coinInRemainderAmount : coinInPartitionAmount,
-					coinOut
-				);
+// 		for (const i of emptyArray) {
+// 			const { pools: updatedPools, paths: updatedPaths } =
+// 				Router.findNextPathAndUpdatePoolsAndPaths(
+// 					currentPools,
+// 					currentPaths,
+// 					coinIn,
+// 					i === 0 ? coinInRemainderAmount : coinInPartitionAmount,
+// 					coinOut
+// 				);
 
-			currentPools = updatedPools;
-			currentPaths = updatedPaths;
-		}
+// 			currentPools = updatedPools;
+// 			currentPaths = updatedPaths;
+// 		}
 
-		return currentPaths;
-	};
+// 		return currentPaths;
+// 	};
 
-	private static findNextPathAndUpdatePoolsAndPaths = (
-		pools: Pool[],
-		paths: RouterPaths,
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType
-	) => {
-		const indexOfBestPool = Router.indexOfBestPoolForTrade(
-			pools,
-			coinIn,
-			coinInAmount,
-			coinOut
-		);
+// 	private static findNextPathAndUpdatePoolsAndPaths = (
+// 		pools: Pool[],
+// 		paths: RouterPaths,
+// 		coinIn: CoinType,
+// 		coinInAmount: Balance,
+// 		coinOut: CoinType
+// 	) => {
+// 		const indexOfBestPool = Router.indexOfBestPoolForTrade(
+// 			pools,
+// 			coinIn,
+// 			coinInAmount,
+// 			coinOut
+// 		);
 
-		const bestPool = pools[indexOfBestPool];
-		const { pool: updatedPool, coinOutAmount } =
-			Router.getUpdatedPoolAndAmountOutAfterTrade(
-				bestPool,
-				coinIn,
-				coinInAmount,
-				coinOut
-			);
+// 		const bestPool = pools[indexOfBestPool];
+// 		const { pool: updatedPool, coinOutAmount } =
+// 			Router.getUpdatedPoolAndAmountOutAfterTrade(
+// 				bestPool,
+// 				coinIn,
+// 				coinInAmount,
+// 				coinOut
+// 			);
 
-		let newPools = [...pools];
-		newPools[indexOfBestPool] = updatedPool;
+// 		let newPools = [...pools];
+// 		newPools[indexOfBestPool] = updatedPool;
 
-		const updatedPoolPath =
-			bestPool.pool.objectId in paths
-				? {
-						...paths[bestPool.pool.objectId],
-						coinInAmount:
-							paths[bestPool.pool.objectId].coinInAmount +
-							coinInAmount,
-						coinOutAmount:
-							paths[bestPool.pool.objectId].coinOutAmount +
-							coinOutAmount,
-				  }
-				: {
-						coinInAmount,
-						coinOutAmount,
-				  };
+// 		const updatedPoolPath =
+// 			bestPool.pool.objectId in paths
+// 				? {
+// 						...paths[bestPool.pool.objectId],
+// 						coinInAmount:
+// 							paths[bestPool.pool.objectId].coinInAmount +
+// 							coinInAmount,
+// 						coinOutAmount:
+// 							paths[bestPool.pool.objectId].coinOutAmount +
+// 							coinOutAmount,
+// 				  }
+// 				: {
+// 						coinInAmount,
+// 						coinOutAmount,
+// 				  };
 
-		const newPaths: RouterPaths = {
-			...paths,
-			[bestPool.pool.objectId]: {
-				...updatedPoolPath,
-				spotPrice: bestPool.getSpotPrice(coinIn, coinOut),
-				tradeFee: bestPool.pool.fields.tradeFee,
-			},
-		};
+// 		const newPaths: RouterPaths = {
+// 			...paths,
+// 			[bestPool.pool.objectId]: {
+// 				...updatedPoolPath,
+// 				spotPrice: bestPool.getSpotPrice(coinIn, coinOut),
+// 				tradeFee: bestPool.pool.fields.tradeFee,
+// 			},
+// 		};
 
-		return {
-			pools: newPools,
-			paths: newPaths,
-		};
-	};
+// 		return {
+// 			pools: newPools,
+// 			paths: newPaths,
+// 		};
+// 	};
 
-	private static completeRouteFromPaths = (
-		paths: RouterPaths,
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType
-	): RouterCompleteRoute => {
-		const coinOutAmount = Object.values(paths).reduce(
-			(acc, cur) => acc + cur.coinOutAmount,
-			BigInt(0)
-		);
+// 	private static completeRouteFromPaths = (
+// 		paths: RouterPaths,
+// 		coinIn: CoinType,
+// 		coinInAmount: Balance,
+// 		coinOut: CoinType
+// 	): RouterCompleteRoute => {
+// 		const coinOutAmount = Object.values(paths).reduce(
+// 			(acc, cur) => acc + cur.coinOutAmount,
+// 			BigInt(0)
+// 		);
 
-		const spotPrice = Object.values(paths).reduce(
-			(acc, cur) =>
-				acc +
-				(Number(cur.coinInAmount / coinInAmount) /
-					Object.keys(paths).length) *
-					cur.spotPrice,
-			0
-		);
+// 		const spotPrice = Object.values(paths).reduce(
+// 			(acc, cur) =>
+// 				acc +
+// 				(Number(cur.coinInAmount / coinInAmount) /
+// 					Object.keys(paths).length) *
+// 					cur.spotPrice,
+// 			0
+// 		);
 
-		const tradeFee = Object.values(paths).reduce(
-			(acc, cur) =>
-				acc +
-				(cur.coinInAmount /
-					coinInAmount /
-					BigInt(Object.keys(paths).length)) *
-					cur.tradeFee,
-			BigInt(0)
-		);
+// 		const tradeFee = Object.values(paths).reduce(
+// 			(acc, cur) =>
+// 				acc +
+// 				(cur.coinInAmount /
+// 					coinInAmount /
+// 					BigInt(Object.keys(paths).length)) *
+// 					cur.tradeFee,
+// 			BigInt(0)
+// 		);
 
-		return {
-			coinIn,
-			coinOut,
-			coinInAmount,
-			coinOutAmount,
-			spotPrice,
-			tradeFee,
-			paths,
-		};
-	};
-}
+// 		return {
+// 			coinIn,
+// 			coinOut,
+// 			coinInAmount,
+// 			coinOutAmount,
+// 			spotPrice,
+// 			tradeFee,
+// 			paths,
+// 		};
+// 	};
+// }
