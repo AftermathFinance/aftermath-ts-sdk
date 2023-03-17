@@ -26,6 +26,15 @@ const runMe = async () => {
 			console.log("\n\n");
 			console.log(route.paths);
 		}
+
+		const stableCoinPercentLoss =
+			(
+				(Number(coinInAmount - completeRoute.coinOutAmount) /
+					Number(coinInAmount)) *
+				100
+			).toFixed(2) + "%";
+
+		console.log(stableCoinPercentLoss, "loss");
 	} catch (e) {
 		console.error(e);
 	}

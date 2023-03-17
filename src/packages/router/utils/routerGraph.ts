@@ -41,7 +41,7 @@ export class RouterGraph extends Caller {
 
 	private static readonly constants = {
 		// NOTE: should this default value be public ?
-		defaultMaxRouteLength: 2,
+		defaultMaxRouteLength: 3,
 		tradePartitionCount: BigInt(1000),
 	};
 
