@@ -42,7 +42,7 @@ export class RouterGraph extends Caller {
 	private static readonly constants = {
 		// NOTE: should this default value be public ?
 		defaultMaxRouteLength: 3,
-		tradePartitionCount: BigInt(1000),
+		tradePartitionCount: BigInt(100),
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -146,10 +146,6 @@ export class RouterGraph extends Caller {
 
 		let newCoinNodes: CoinNodes = { ...coinNodes };
 
-		// for (const [index, coinA] of poolObject.fields.coins
-		// 	.slice(0, -1)
-		// 	.entries()) {
-		// 	for (const coinB of poolObject.fields.coins.slice(index + 1)) {
 		for (const coinA of poolObject.fields.coins) {
 			for (const coinB of poolObject.fields.coins) {
 				if (coinA === coinB) continue;
@@ -277,28 +273,24 @@ export class RouterGraph extends Caller {
 			for (const route of currentRoutes) {
 				const lastPath = route.paths[route.paths.length - 1];
 
-				if (
-					route.paths.length >= maxRouteLength ||
-					lastPath.coinOut === coinOut
-				) {
+				if (lastPath.coinOut === coinOut) {
 					completeRoutes = [...completeRoutes, route];
 					continue;
 				}
+
+				if (route.paths.length >= maxRouteLength) continue;
 
 				for (const [toCoin, throughPools] of Object.entries(
 					graph.coinNodes[lastPath.coinOut].toCoinThroughPoolEdges
 				)) {
 					for (const poolObjectId of throughPools) {
 						if (
-							route.paths.some(
-								(path) =>
-									// ((path.coinIn === lastPath.coinOut &&
-									// 	path.coinOut === toCoin) ||
-									// 	(path.coinOut === lastPath.coinOut &&
-									// 		path.coinIn === toCoin)) &&
-									// path.poolObjectId === poolObjectId
-									path.poolObjectId === poolObjectId
-							)
+							// route.paths.some(
+							// 	// NOTE: would it ever make sense to go back into a pool ?
+							// 	// (could relax this restriction)
+							// 	(path) => path.poolObjectId === poolObjectId
+							// )
+							lastPath.poolObjectId === poolObjectId
 						)
 							continue;
 
@@ -350,8 +342,8 @@ export class RouterGraph extends Caller {
 
 			const { updatedPools, updatedRoutes } =
 				this.findNextRouteAndUpdatePoolsAndRoutes(
-					currentPools,
-					currentRoutes,
+					Helpers.deepCopy(currentPools),
+					Helpers.deepCopy(currentRoutes),
 					i === 0 ? coinInRemainderAmount : coinInPartitionAmount
 				);
 
@@ -370,19 +362,22 @@ export class RouterGraph extends Caller {
 		updatedPools: Pools;
 		updatedRoutes: RouterTradeRoute[];
 	} => {
-		const indexOfBestRoute = this.indexOfBestRouteForTrade(
-			pools,
-			routes,
-			coinInAmount
+		const updatedRoutesAndPools = routes.map((route) =>
+			RouterGraph.getUpdatedPoolsAndRouteAfterTrade(
+				Helpers.deepCopy(pools),
+				Helpers.deepCopy(route),
+				coinInAmount
+			)
 		);
 
-		const bestRoute = routes[indexOfBestRoute];
+		const indexOfBestRoute = Helpers.indexOfMax(
+			updatedRoutesAndPools.map(
+				(updatedData) => updatedData.coinOutAmount
+			)
+		);
+
 		const { updatedPools, updatedRoute } =
-			RouterGraph.getUpdatedPoolsAndRouteAfterTrade(
-				bestRoute,
-				pools,
-				coinInAmount
-			);
+			updatedRoutesAndPools[indexOfBestRoute];
 
 		let updatedRoutes = [...routes];
 		updatedRoutes[indexOfBestRoute] = updatedRoute;
@@ -393,30 +388,12 @@ export class RouterGraph extends Caller {
 		};
 	};
 
-	private static indexOfBestRouteForTrade = (
-		pools: Pools,
-		routes: RouterTradeRoute[],
-		coinInAmount: Balance
-	) => {
-		return Helpers.indexOfMax(
-			routes.map((route) =>
-				route.paths.reduce((acc, path) => {
-					return pools[path.poolObjectId].getTradeAmountOut(
-						path.coinIn,
-						acc,
-						path.coinOut
-					);
-				}, coinInAmount)
-			)
-		);
-	};
-
 	private static getUpdatedPoolsAndRouteAfterTrade = (
-		route: RouterTradeRoute,
 		pools: Pools,
+		route: RouterTradeRoute,
 		coinInAmount: Balance
 	) => {
-		let currentPools = { ...pools };
+		let currentPools = Helpers.deepCopy(pools);
 		let currentCoinInAmount = coinInAmount;
 		let newRoute: RouterTradeRoute = { ...route, paths: [] };
 
@@ -467,6 +444,7 @@ export class RouterGraph extends Caller {
 		return {
 			updatedPools: currentPools,
 			updatedRoute,
+			coinOutAmount: currentCoinInAmount,
 		};
 	};
 
@@ -477,7 +455,7 @@ export class RouterGraph extends Caller {
 		coinOut: CoinType,
 		coinOutAmount: Balance
 	) => {
-		const poolDynamicFields = pool.dynamicFields;
+		const poolDynamicFields = Helpers.deepCopy(pool.dynamicFields);
 		const poolAmountDynamicFields = poolDynamicFields.amountFields;
 
 		const coinInDynamicFieldIndex = poolAmountDynamicFields.findIndex(
@@ -496,7 +474,11 @@ export class RouterGraph extends Caller {
 			amountFields: newAmountDynamicFields,
 		};
 
-		const newPool = new Pool(pool.pool, newDynamicFields, pool.network);
+		const newPool = new Pool(
+			Helpers.deepCopy(pool.pool),
+			newDynamicFields,
+			pool.network
+		);
 		return newPool;
 	};
 
@@ -509,14 +491,16 @@ export class RouterGraph extends Caller {
 		const nonZeroRoutes = routes.filter(
 			(route) => route.coinInAmount > BigInt(0)
 		);
+		const totalCoinOutAmount = nonZeroRoutes.reduce(
+			(acc, cur) => acc + cur.coinOutAmount,
+			BigInt(0)
+		);
+
 		return {
 			coinIn,
 			coinOut,
 			coinInAmount,
-			coinOutAmount: nonZeroRoutes.reduce(
-				(acc, cur) => acc + cur.coinOutAmount,
-				BigInt(0)
-			),
+			coinOutAmount: totalCoinOutAmount,
 			routes: nonZeroRoutes,
 			tradeFee: BigInt(0),
 			spotPrice: 0,
