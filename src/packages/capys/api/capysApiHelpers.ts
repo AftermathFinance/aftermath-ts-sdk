@@ -195,7 +195,7 @@ export class CapysApiHelpers {
 	): Transaction => {
 		tx.add({
 			kind: "MoveCall",
-			target: Helpers.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -225,7 +225,7 @@ export class CapysApiHelpers {
 	): Transaction => {
 		tx.add({
 			kind: "MoveCall",
-			target: Helpers.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -245,33 +245,34 @@ export class CapysApiHelpers {
 		return tx;
 	};
 
-	public stakeBreedStakedWithStakedAndKeepTransaction = (
+	public addStakeBreedStakedWithStakedAndKeepCommandToTransaction = (
+		tx: Transaction,
 		coinId: ObjectId,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.breedStakedWithStakedAndKeep.defaultGasBudget
 	): Transaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.capyVault,
-				module: CapysApiHelpers.constants.capyVault.modules.interface
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.capyVault,
+				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
-				function:
-					CapysApiHelpers.constants.capyVault.modules.interface
-						.functions.breedStakedWithStakedAndKeep.name,
-				typeArguments: [],
-				arguments: [
-					this.addresses.objects.capyVault,
-					this.addresses.objects.capyRegistry,
-					coinId,
-					parentOneId,
-					parentTwoId,
-				],
-				gasBudget: gasBudget,
-			},
-		};
+				CapysApiHelpers.constants.capyVault.modules.interface.functions
+					.breedStakedWithStakedAndKeep.name
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.capyVault),
+				tx.object(this.addresses.objects.capyRegistry),
+				tx.object(coinId),
+				tx.object(parentOneId),
+				tx.object(parentTwoId),
+			],
+			// gasBudget: gasBudget,
+		});
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -283,20 +284,25 @@ export class CapysApiHelpers {
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.stakeCapy.defaultGasBudget
 	): Transaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.capyVault,
-				module: CapysApiHelpers.constants.capyVault.modules.interface
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.capyVault,
+				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
-				function:
-					CapysApiHelpers.constants.capyVault.modules.interface
-						.functions.stakeCapy.name,
-				typeArguments: [],
-				arguments: [this.addresses.objects.capyVault, capyId],
-				gasBudget: gasBudget,
-			},
-		};
+				CapysApiHelpers.constants.capyVault.modules.interface.functions
+					.stakeCapy.name
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.capyVault),
+				tx.object(capyId),
+			],
+		});
+		tx.setGasBudget(gasBudget);
+
+		return tx;
 	};
 
 	public capyUnstakeCapyTransaction = (
@@ -304,20 +310,27 @@ export class CapysApiHelpers {
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.unstakeCapy.defaultGasBudget
 	): Transaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.capyVault,
-				module: CapysApiHelpers.constants.capyVault.modules.interface
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.capyVault,
+
+				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
-				function:
-					CapysApiHelpers.constants.capyVault.modules.interface
-						.functions.unstakeCapy.name,
-				typeArguments: [],
-				arguments: [this.addresses.objects.capyVault, stakingReceiptId],
-				gasBudget: gasBudget,
-			},
-		};
+
+				CapysApiHelpers.constants.capyVault.modules.interface.functions
+					.unstakeCapy.name
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.capyVault),
+				tx.object(stakingReceiptId),
+			],
+		});
+		tx.setGasBudget(gasBudget);
+
+		return tx;
 	};
 
 	public capyTransferTransaction = (
@@ -326,24 +339,26 @@ export class CapysApiHelpers {
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.transfer.defaultGasBudget
 	): Transaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.capyVault,
-				module: CapysApiHelpers.constants.capyVault.modules.interface
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.capyVault,
+				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
-				function:
-					CapysApiHelpers.constants.capyVault.modules.interface
-						.functions.transfer.name,
-				typeArguments: [],
-				arguments: [
-					this.addresses.objects.capyVault,
-					stakingReceiptId,
-					recipient,
-				],
-				gasBudget: gasBudget,
-			},
-		};
+				CapysApiHelpers.constants.capyVault.modules.interface.functions
+					.transfer.name
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.capyVault),
+				tx.object(stakingReceiptId),
+				tx.pure(recipient),
+			],
+		});
+		tx.setGasBudget(gasBudget);
+
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -355,32 +370,37 @@ export class CapysApiHelpers {
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.withdrawFees.defaultGasBudget
 	): Transaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.capyVault,
-				module: CapysApiHelpers.constants.capyVault.modules.interface
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.capyVault,
+				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
-				function:
-					CapysApiHelpers.constants.capyVault.modules.interface
-						.functions.withdrawFees.name,
-				typeArguments: [],
-				arguments: [this.addresses.objects.capyVault, stakingReceiptId],
-				gasBudget: gasBudget,
-			},
-		};
+				CapysApiHelpers.constants.capyVault.modules.interface.functions
+					.withdrawFees.name
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.capyVault),
+				tx.object(stakingReceiptId),
+			],
+		});
+		tx.setGasBudget(gasBudget);
+
+		return tx;
 	};
 
-	public addCapyWithdrawFeesAmountCommandToTransaction = (
-		tx: Transaction,
+	public capyWithdrawFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
 		amount: Balance,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.withdrawFeesAmount.defaultGasBudget
 	): Transaction => {
-		tx.add({
-			kind: "MoveCall",
-			target: Helpers.createTransactionTarget(
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -393,8 +413,8 @@ export class CapysApiHelpers {
 				tx.object(stakingReceiptId),
 				tx.pure(amount.toString()),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -449,43 +469,30 @@ export class CapysApiHelpers {
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
-	): Promise<Transaction[]> => {
+	): Promise<Transaction> => {
+		const tx = new Transaction();
+
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedWithStakedAndKeep;
 
-		// i. obtain object ids of Coin to pay breeding fee with
-		const response =
-			await this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+		const { mergedCoinObjectId, transaction } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				tx,
 				walletAddress,
 				feeCoinType,
 				feeCoinAmount
 			);
 
-		const coinId = getObjectId(response[0]);
-
-		let transaction: Transaction[] = [];
-		// ii. the user doesn't have a `Coin<SUI>` with exact value of `feeCoinAmount`,
-		// so we need to create it.
-		transaction.push(
-			...this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransaction(
-				response[0],
-				response.slice(1),
-				feeCoinType,
-				feeCoinAmount
-			)
-		);
-
-		// iii. breed the two capy's together
-		transaction.push(
-			this.stakeBreedWithStakedAndKeepTransaction(
-				coinId,
+		const finalTransaction =
+			this.addStakeBreedWithStakedAndKeepCommandToTransaction(
+				transaction,
+				mergedCoinObjectId,
 				parentOneId,
 				parentTwoId
-			)
-		);
+			);
 
-		return transaction;
+		return finalTransaction;
 	};
 
 	public fetchBuildBreedStakedWithStakedAndKeepTransaction = async (

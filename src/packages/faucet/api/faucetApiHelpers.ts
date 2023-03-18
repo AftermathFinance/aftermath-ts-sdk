@@ -88,7 +88,7 @@ export class FaucetApiHelpers {
 		const tx = new Transaction();
 
 		tx.moveCall({
-			target: Helpers.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
 				FaucetApiHelpers.constants.functions.add.name
@@ -113,7 +113,7 @@ export class FaucetApiHelpers {
 		const tx = new Transaction();
 
 		tx.moveCall({
-			target: Helpers.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
 				FaucetApiHelpers.constants.functions.requestAmount.name
@@ -137,7 +137,7 @@ export class FaucetApiHelpers {
 		const tx = new Transaction();
 
 		tx.moveCall({
-			target: Helpers.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
 				FaucetApiHelpers.constants.functions.request.name

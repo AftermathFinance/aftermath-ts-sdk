@@ -331,32 +331,38 @@ export class CapysApi {
 	//// Capy Staking
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakeCapyTransaction = (capyId: ObjectId): Transaction =>
-		this.Helpers.capyStakeCapyTransaction(capyId);
+	public fetchStakeCapyTransaction = (
+		capyId: ObjectId
+	): SerializedTransaction =>
+		this.Helpers.capyStakeCapyTransaction(capyId).serialize();
 
 	public fetchUnstakeCapyTransaction = (
 		stakingReceiptId: ObjectId
-	): Transaction => this.Helpers.capyUnstakeCapyTransaction(stakingReceiptId);
+	): SerializedTransaction =>
+		this.Helpers.capyUnstakeCapyTransaction(stakingReceiptId).serialize();
 
 	public fetchWithdrawStakedCapyFeesTransaction = (
 		stakingReceiptId: ObjectId
-	): Transaction =>
-		this.Helpers.capyWithdrawFeesTransaction(stakingReceiptId);
+	): SerializedTransaction =>
+		this.Helpers.capyWithdrawFeesTransaction(stakingReceiptId).serialize();
 
 	public fetchWithdrawStakedCapyFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
 		amount: Balance
-	): Transaction =>
+	): SerializedTransaction =>
 		this.Helpers.capyWithdrawFeesAmountTransaction(
 			stakingReceiptId,
 			amount
-		);
+		).serialize();
 
 	public fetchCapyTransferTransaction = (
 		stakingReceiptId: ObjectId,
 		recipient: SuiAddress
-	): Transaction =>
-		this.Helpers.capyTransferTransaction(stakingReceiptId, recipient);
+	): SerializedTransaction =>
+		this.Helpers.capyTransferTransaction(
+			stakingReceiptId,
+			recipient
+		).serialize();
 
 	/////////////////////////////////////////////////////////////////////
 	//// Capy Breeding
