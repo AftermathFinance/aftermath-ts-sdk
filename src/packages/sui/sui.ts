@@ -1,3 +1,4 @@
+import { SuiSystemState } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import { SuiNetwork } from "../../types";
 
@@ -27,5 +28,9 @@ export class Sui extends Caller {
 
 	public async getCurrentEpoch(): Promise<EpochTimeStamp> {
 		return this.fetchApi("epoch");
+	}
+
+	public async getSystemState(): Promise<SuiSystemState> {
+		return this.fetchApi("systemState");
 	}
 }
