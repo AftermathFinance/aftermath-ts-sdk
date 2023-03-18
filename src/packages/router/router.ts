@@ -1,32 +1,38 @@
 import {
-	ApiRouterFirstTradeTransactionsBody,
-	ApiRouterIntermediateTradeTransactionsBody,
-	ApiRouterPathInfoBody,
 	Balance,
 	CoinType,
-	RouterPath,
-	RouterPathInfo,
+	RouterCompleteTradeRoute,
 	SuiNetwork,
 } from "../../types";
 import { Pool } from "../pools/pool";
-import { ObjectId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
+import { RouterGraph } from "./utils/routerGraph";
 
-// TODO: create router object
 export class Router extends Caller {
+	/////////////////////////////////////////////////////////////////////
+	//// Public Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly graph: RouterGraph;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
-		// public readonly pools: Pool[],
+		public readonly pools: Pool[] = [],
 		public readonly network?: SuiNetwork
 	) {
 		super(network, "router");
-		// this.pools = pools;
 
-		// create graph ?
+		// check handle remove duplicate pools (same object Id)
+		this.pools = pools;
+		this.graph = new RouterGraph(pools);
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Public Methods
+	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
 	//// Inspections
@@ -36,48 +42,21 @@ export class Router extends Caller {
 		return this.fetchApi("supportedCoins");
 	}
 
-	public async getPathInfo(
-		fromCoin: CoinType,
-		toCoin: CoinType
-	): Promise<RouterPathInfo> {
-		return this.fetchApi<RouterPathInfo, ApiRouterPathInfoBody>(
-			"pathInfo",
-			{
-				fromCoin,
-				toCoin,
-			}
+	public getCompleteRoute(
+		coinIn: CoinType,
+		coinInAmount: Balance,
+		coinOut: CoinType,
+		maxRouteLength?: number
+	): RouterCompleteTradeRoute {
+		return this.graph.getCompleteRoute(
+			coinIn,
+			coinInAmount,
+			coinOut,
+			maxRouteLength
 		);
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
-
-	public async getFirstTradeTransactions(
-		walletAddress: SuiAddress,
-		path: RouterPath,
-		fromCoinAmount: Balance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiRouterFirstTradeTransactionsBody
-		>("transactions/trade", {
-			walletAddress,
-			fromCoinAmount,
-			path,
-		});
-	}
-
-	public async getIntermediateTradeTransactions(
-		path: RouterPath,
-		fromCoinId: ObjectId
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiRouterIntermediateTradeTransactionsBody
-		>("transactions/trade", {
-			fromCoinId,
-			path,
-		});
-	}
 }
