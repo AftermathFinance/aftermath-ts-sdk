@@ -1,5 +1,5 @@
 import {
-	GetObjectDataResponse,
+	SuiObjectResponse,
 	MoveCallTransaction,
 	ObjectId,
 	SignableTransaction,
@@ -399,9 +399,7 @@ export class PoolsApiHelpers {
 			)
 		)
 			// safe check as responses is guaranteed to not contain undefined
-			.filter(
-				(response): response is GetObjectDataResponse[] => !!response
-			);
+			.filter((response): response is SuiObjectResponse[] => !!response);
 
 		let allCoinIds: ObjectId[] = [];
 		let allCoinIdsToJoin: [ObjectId[]] = [[]];
@@ -421,7 +419,7 @@ export class PoolsApiHelpers {
 			transactions.push(...joinAndSplitTransactions);
 
 			const [coinId, ...coinIdsToJoin] = response.map(
-				(getObjectDataResponse) => getObjectId(getObjectDataResponse)
+				(SuiObjectResponse) => getObjectId(SuiObjectResponse)
 			);
 			allCoinIds.push(coinId);
 			allCoinIdsToJoin.push(coinIdsToJoin);

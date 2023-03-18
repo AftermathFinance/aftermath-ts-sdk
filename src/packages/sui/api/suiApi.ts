@@ -1,4 +1,4 @@
-import { CommitteeInfo } from "@mysten/sui.js";
+import { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { AuthorityPublicKeyBytes } from "../../../types";
 import { SuiApiHelpers } from "./suiApiHelpers";
@@ -47,8 +47,9 @@ export class SuiApi {
 		return (await this.fetchCommitteeInfo()).epoch;
 	};
 
-	public fetchSystemState = async () => {
-		const suiSystemState = await this.Provider.provider.getSuiSystemState();
+	public fetchSystemState = async (): Promise<SuiSystemStateSummary> => {
+		const suiSystemState =
+			await this.Provider.provider.getLatestSuiSystemState();
 		return suiSystemState;
 	};
 }

@@ -247,8 +247,8 @@ export class PoolsApi {
 
 		let poolObjects: PoolObject[] = [];
 
-		for (const suiEventEnvelope of paginatedEvents.data) {
-			const event = suiEventEnvelope.event;
+		for (const SuiEvent of paginatedEvents.data) {
+			const event = SuiEvent.event;
 			if (!("moveEvent" in event)) continue;
 
 			const createEvent = event.moveEvent as PoolCreateEventOnChain;

@@ -1,9 +1,4 @@
-import {
-	EventId,
-	ObjectId,
-	SignableTransaction,
-	SuiAddress,
-} from "@mysten/sui.js";
+import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	ApiBreedCapyBody,
 	ApiDynamicFieldsBody,
@@ -14,6 +9,7 @@ import {
 	CapyStats,
 	DynamicFieldObjectsWithCursor,
 	EventsWithCursor,
+	SerializedTransaction,
 	StakeCapyEvent,
 	StakedCapyReceiptObject,
 	SuiNetwork,
@@ -166,15 +162,15 @@ export class Capys extends Caller {
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
 
-	public async getBreedCapysTransactions(
+	public async getBreedCapysTransaction(
 		walletAddress: SuiAddress,
 		capyParentOneId: ObjectId,
 		capyParentTwoId: ObjectId
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiBreedCapyBody>(
-			"transactions/breed",
+	): Promise<SerializedTransaction> {
+		return this.fetchApi<SerializedTransaction, ApiBreedCapyBody>(
+			"transactions/bree",
 			{
 				walletAddress,
 				capyParentOneId,

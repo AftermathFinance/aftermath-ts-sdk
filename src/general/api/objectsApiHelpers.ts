@@ -1,12 +1,11 @@
 import {
-	GetObjectDataResponse,
 	ObjectId,
 	SuiAddress,
-	SuiObjectInfo,
+	SuiObjectResponse,
 	getObjectOwner,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
-import { PackageId } from "../../types";
+import { AnyObjectType, PackageId } from "../../types";
 
 export class ObjectsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -25,10 +24,8 @@ export class ObjectsApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchDoesObjectExist = async (
-		address: ObjectId | SuiAddress | PackageId
-	) => {
-		const object = await this.Provider.provider.getObject(address);
+	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
+		const object = await this.Provider.provider.getObject({ id: objectId });
 		return ObjectsApiHelpers.objectExists(object);
 	};
 
@@ -52,24 +49,25 @@ export class ObjectsApiHelpers {
 		return false;
 	};
 
-	public fetchObjectsOwnedByAddress = async (
+	public fetchObjectsOfTypeOwnedByAddress = async (
 		walletAddress: SuiAddress,
-		filter?: (suiObjectInfo: SuiObjectInfo) => boolean
-	): Promise<SuiObjectInfo[]> => {
+		objectType: AnyObjectType
+	): Promise<SuiObjectResponse[]> => {
 		const objectsOwnedByAddress =
-			await this.Provider.provider.getObjectsOwnedByAddress(
-				walletAddress
-			);
+			await this.Provider.provider.getOwnedObjects({
+				owner: walletAddress,
+				filter: {
+					StructType: objectType,
+				},
+			});
 
-		return filter
-			? objectsOwnedByAddress.filter((object) => filter(object))
-			: objectsOwnedByAddress;
+		return objectsOwnedByAddress.data;
 	};
 
 	public fetchObject = async (
 		objectId: ObjectId
-	): Promise<GetObjectDataResponse> => {
-		const object = await this.Provider.provider.getObject(objectId);
+	): Promise<SuiObjectResponse> => {
+		const object = await this.Provider.provider.getObject({ id: objectId });
 		if (object.status !== "Exists")
 			throw new Error("object does not exist");
 		return object;
@@ -77,17 +75,17 @@ export class ObjectsApiHelpers {
 
 	public fetchCastObject = async <ObjectType>(
 		objectId: ObjectId,
-		castFunc: (getObjectDataResponse: GetObjectDataResponse) => ObjectType
+		castFunc: (SuiObjectResponse: SuiObjectResponse) => ObjectType
 	): Promise<ObjectType> => {
 		return castFunc(await this.fetchObject(objectId));
 	};
 
 	public fetchObjectBatch = async (
 		objectIds: ObjectId[]
-	): Promise<GetObjectDataResponse[]> => {
-		const objectBatch = await this.Provider.provider.getObjectBatch(
-			objectIds
-		);
+	): Promise<SuiObjectResponse[]> => {
+		const objectBatch = await this.Provider.provider.multiGetObjects({
+			ids: objectIds,
+		});
 		const objectDataResponses = objectBatch.filter(
 			(data) => data.status === "Exists"
 		);
@@ -99,47 +97,34 @@ export class ObjectsApiHelpers {
 		return objectDataResponses;
 	};
 
-	public fetchCastObjectBatch = async <ObjectType>(
-		objectIds: ObjectId[],
-		objectFromGetObjectDataResponse: (
-			getObjectDataResponse: GetObjectDataResponse
-		) => ObjectType
-	): Promise<ObjectType[]> => {
-		return (await this.Provider.provider.getObjectBatch(objectIds)).map(
-			(getObjectDataResponse: GetObjectDataResponse) => {
-				return objectFromGetObjectDataResponse(getObjectDataResponse);
-			}
-		);
-	};
-
 	public fetchFilterAndCastObjectBatch = async <ObjectType>(
 		objectIds: ObjectId[],
-		filterGetObjectDataResponse: (data: GetObjectDataResponse) => boolean,
-		objectFromGetObjectDataResponse: (
-			data: GetObjectDataResponse
-		) => ObjectType
+		filterSuiObjectResponse: (data: SuiObjectResponse) => boolean,
+		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType
 	): Promise<ObjectType[]> => {
-		return (await this.Provider.provider.getObjectBatch(objectIds))
-			.filter((data) => filterGetObjectDataResponse(data))
-			.map((getObjectDataResponse: GetObjectDataResponse) => {
-				return objectFromGetObjectDataResponse(getObjectDataResponse);
+		return (await this.fetchObjectBatch(objectIds))
+			.filter((data) => filterSuiObjectResponse(data))
+			.map((SuiObjectResponse: SuiObjectResponse) => {
+				return objectFromSuiObjectResponse(SuiObjectResponse);
 			});
 	};
 
-	public fetchFilterAndCastObjectsOwnedByAddress = async <ObjectType>(
+	public fetchCastObjectsOwnedByAddressOfType = async <ObjectType>(
 		walletAddress: SuiAddress,
-		filter: (suiObjectInfo: SuiObjectInfo) => boolean,
-		fetchObjectsFromObjectIds: (
-			objectIds: ObjectId[]
-		) => Promise<ObjectType[]>
+		objectType: AnyObjectType,
+		objectFromSuiObjectResponse: (
+			SuiObjectResponse: SuiObjectResponse
+		) => ObjectType
 	): Promise<ObjectType[]> => {
 		// i. obtain all owned object IDs
-		const objectIds = (
-			await this.fetchObjectsOwnedByAddress(walletAddress, filter)
-		).map((suiObjectInfo) => suiObjectInfo.objectId);
-
-		// ii. obtain a object from each ObjectId
-		const objects = fetchObjectsFromObjectIds(objectIds);
+		const objects = (
+			await this.fetchObjectsOfTypeOwnedByAddress(
+				walletAddress,
+				objectType
+			)
+		).map((SuiObjectResponse: SuiObjectResponse) => {
+			return objectFromSuiObjectResponse(SuiObjectResponse);
+		});
 
 		return objects;
 	};
@@ -148,6 +133,6 @@ export class ObjectsApiHelpers {
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	public static objectExists = (data: GetObjectDataResponse) =>
+	public static objectExists = (data: SuiObjectResponse) =>
 		data.status === "Exists";
 }

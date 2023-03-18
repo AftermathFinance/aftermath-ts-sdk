@@ -1,5 +1,5 @@
 import {
-	GetObjectDataResponse,
+	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
 } from "@mysten/sui.js";
@@ -28,8 +28,8 @@ export class CapysApiCasting {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public static capyObjectFromGetObjectDataResponse = (
-		data: GetObjectDataResponse
+	public static capyObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
 	): CapyObject => {
 		const capyObjectFields = getObjectFields(data) as CapyFieldsOnChain;
 		return {
@@ -48,8 +48,8 @@ export class CapysApiCasting {
 		};
 	};
 
-	public static stakedCapyReceiptObjectFromGetObjectDataResponse = (
-		data: GetObjectDataResponse
+	public static stakedCapyReceiptObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
 	): StakedCapyReceiptObject => {
 		const objectFields = getObjectFields(
 			data
@@ -61,22 +61,22 @@ export class CapysApiCasting {
 		};
 	};
 
-	// public static stakedCapyReceiptWithCapyObjectFromGetObjectDataResponse = async (
-	// 	data: GetObjectDataResponse
+	// public static stakedCapyReceiptWithCapyObjectFromSuiObjectResponse = async (
+	// 	data: SuiObjectResponse
 	// ): Promise<StakedCapyReceiptWithCapyObject> => {
 	// 	const objectFields = getObjectFields(data) as StakedCapyReceiptFieldsOnChain;
 
 	// 	return {
 	// 		objectId: getObjectId(data),
-	// 		capy: this.capyObjectFromGetObjectDataResponse(
+	// 		capy: this.capyObjectFromSuiObjectResponse(
 	// 			await provider.getObject(objectFields.capy_id)
 	// 		),
 	// 		unlockEpoch: objectFields.unlock_epoch.fields,
 	// 	};
 	// };
 
-	public static capyVaultObjectFromGetObjectDataResponse = (
-		data: GetObjectDataResponse
+	public static capyVaultObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
 	): CapyVaultObject => {
 		const objectFields = getObjectFields(data) as CapyVaultFieldsOnChain;
 

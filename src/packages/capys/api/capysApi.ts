@@ -194,14 +194,14 @@ export class CapysApi {
 		return this.Provider.Objects().fetchFilterAndCastObjectBatch<CapyObject>(
 			capyIds,
 			ObjectsApiHelpers.objectExists,
-			CapysApiCasting.capyObjectFromGetObjectDataResponse
+			CapysApiCasting.capyObjectFromSuiObjectResponse
 		);
 	};
 
 	public fetchCapysOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<CapyObject[]> => {
-		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
+		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
 			this.Helpers.isCapyObjectType,
 			this.fetchCapys
@@ -213,7 +213,7 @@ export class CapysApi {
 	): Promise<CapyObject[]> => {
 		return this.Provider.Objects().fetchCastObjectBatch<CapyObject>(
 			capyIds,
-			CapysApiCasting.capyObjectFromGetObjectDataResponse
+			CapysApiCasting.capyObjectFromSuiObjectResponse
 		);
 	};
 
@@ -236,7 +236,7 @@ export class CapysApi {
 	): Promise<CapyVaultObject> => {
 		return this.Provider.Objects().fetchCastObject<CapyVaultObject>(
 			capyVaultId,
-			CapysApiCasting.capyVaultObjectFromGetObjectDataResponse
+			CapysApiCasting.capyVaultObjectFromSuiObjectResponse
 		);
 	};
 
@@ -265,7 +265,7 @@ export class CapysApi {
 	): Promise<StakedCapyReceiptObject> => {
 		return this.Provider.Objects().fetchCastObject<StakedCapyReceiptObject>(
 			capyStakingReceipt,
-			CapysApiCasting.stakedCapyReceiptObjectFromGetObjectDataResponse
+			CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse
 		);
 	};
 
@@ -274,14 +274,14 @@ export class CapysApi {
 	): Promise<StakedCapyReceiptObject[]> => {
 		return this.Provider.Objects().fetchCastObjectBatch<StakedCapyReceiptObject>(
 			capyStakingReceipts,
-			CapysApiCasting.stakedCapyReceiptObjectFromGetObjectDataResponse
+			CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse
 		);
 	};
 
 	public fetchStakedCapyReceiptOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<StakedCapyReceiptObject[]> => {
-		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
+		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
 			this.Helpers.isStakedCapyReceiptObjectType,
 			this.fetchStakedCapyReceipts

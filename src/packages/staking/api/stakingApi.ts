@@ -126,14 +126,14 @@ export class StakingApi {
 	): Promise<Delegation[]> => {
 		return this.Provider.Objects().fetchCastObjectBatch<Delegation>(
 			delegationIds,
-			SuiApiCasting.delegationFromGetObjectDataResponse
+			SuiApiCasting.delegationFromSuiObjectResponse
 		);
 	};
 
 	public fetchDelegationObjectsOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<Delegation[]> => {
-		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
+		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
 			SuiApiCasting.isDelegation,
 			this.fetchDelegationObjects
@@ -149,14 +149,14 @@ export class StakingApi {
 	): Promise<StakedSui[]> => {
 		return this.Provider.Objects().fetchCastObjectBatch<StakedSui>(
 			stakedSuiIds,
-			SuiApiCasting.stakedSuiFromGetObjectDataResponse
+			SuiApiCasting.stakedSuiFromSuiObjectResponse
 		);
 	};
 
 	public fetchStakedSuiObjectsOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<StakedSui[]> => {
-		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
+		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
 			SuiApiCasting.isStakedSui,
 			this.fetchStakedSuiObjects

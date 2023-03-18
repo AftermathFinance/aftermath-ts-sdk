@@ -10,7 +10,7 @@ import {
 //// On Chain
 /////////////////////////////////////////////////////////////////////
 
-interface MoveEventOnChain<Fields> {
+interface SuiEventOnChain<Fields> {
 	bsc: string;
 	fields: Fields;
 	packageId: ObjectId;
@@ -21,7 +21,7 @@ interface MoveEventOnChain<Fields> {
 
 export interface EventOnChain<Fields> {
 	event: {
-		moveEvent: MoveEventOnChain<Fields>;
+		moveEvent: SuiEventOnChain<Fields>;
 	};
 	// NOTE: do we want/need this info ?
 	// id: {

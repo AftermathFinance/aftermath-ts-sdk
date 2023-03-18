@@ -1,6 +1,6 @@
 import {
 	CoinMetadata,
-	GetObjectDataResponse,
+	SuiObjectResponse,
 	Coin as SuiCoin,
 	SuiMoveObject,
 } from "@mysten/sui.js";
@@ -188,10 +188,10 @@ export class Coin extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public static getBalance = (
-		data: GetObjectDataResponse | SuiMoveObject
+		data: SuiObjectResponse | SuiMoveObject
 	): Balance | undefined => SuiCoin.getBalance(data);
 
 	public static totalBalance = (
-		coins: (GetObjectDataResponse | SuiMoveObject)[]
+		coins: (SuiObjectResponse | SuiMoveObject)[]
 	): Balance => SuiCoin.totalBalance(coins);
 }

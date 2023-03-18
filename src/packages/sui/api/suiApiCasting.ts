@@ -1,7 +1,7 @@
 import {
 	getObjectFields,
 	getObjectId,
-	GetObjectDataResponse,
+	SuiObjectResponse,
 	ObjectContentFields,
 	SuiObjectInfo,
 } from "@mysten/sui.js";
@@ -22,8 +22,8 @@ export class SuiApiCasting {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public static balanceFromGetObjectDataResponse(
-		data: GetObjectDataResponse
+	public static balanceFromSuiObjectResponse(
+		data: SuiObjectResponse
 	): SuiBalance {
 		const balanceMoveFields = getObjectFields(data) as ObjectContentFields;
 
@@ -33,8 +33,8 @@ export class SuiApiCasting {
 		} as SuiBalance;
 	}
 
-	public static stakedSuiFromGetObjectDataResponse = (
-		data: GetObjectDataResponse
+	public static stakedSuiFromSuiObjectResponse = (
+		data: SuiObjectResponse
 	): StakedSui => {
 		const stakedSuiMoveFields = getObjectFields(
 			data
@@ -50,8 +50,8 @@ export class SuiApiCasting {
 		};
 	};
 
-	public static delegationFromGetObjectDataResponse = (
-		data: GetObjectDataResponse
+	public static delegationFromSuiObjectResponse = (
+		data: SuiObjectResponse
 	): Delegation => {
 		const delegationMoveFields = getObjectFields(
 			data

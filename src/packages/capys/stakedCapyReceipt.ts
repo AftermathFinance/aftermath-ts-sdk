@@ -1,8 +1,8 @@
-import { SignableTransaction } from "@mysten/sui.js";
 import {
 	ApiUnstakeCapyBody,
 	ApiWithdrawCapyFeesAmountBody,
 	Balance,
+	SerializedTransaction,
 	StakedCapyFeesEarned,
 	StakedCapyReceiptObject,
 	SuiNetwork,
@@ -36,8 +36,8 @@ export class StakedCapyReceipt extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getUnstakeCapyTransaction(): Promise<SignableTransaction> {
-		return this.fetchApi<SignableTransaction, ApiUnstakeCapyBody>(
+	public async getUnstakeCapyTransaction(): Promise<SerializedTransaction> {
+		return this.fetchApi<SerializedTransaction, ApiUnstakeCapyBody>(
 			"transactions/stake",
 			{
 				stakingReceiptId: this.stakedCapyReceipt.objectId,
@@ -47,9 +47,9 @@ export class StakedCapyReceipt extends Caller {
 
 	public async getWithdrawFeesTransaction(
 		amount: Balance | undefined
-	): Promise<SignableTransaction> {
+	): Promise<SerializedTransaction> {
 		return this.fetchApi<
-			SignableTransaction,
+			SerializedTransaction,
 			ApiWithdrawCapyFeesAmountBody
 		>("transactions/withdrawFees", {
 			amount,
