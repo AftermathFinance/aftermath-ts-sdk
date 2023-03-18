@@ -7,9 +7,7 @@ import {
 	PoolDynamicFields,
 	RouterCompleteTradeRoute,
 	RouterTradeRoute,
-	SuiNetwork,
 } from "../../../types";
-import { Caller } from "../../../general/utils/caller";
 
 /////////////////////////////////////////////////////////////////////
 //// Internal Types
@@ -34,7 +32,7 @@ type ToCoinThroughPoolEdges = Record<CoinType, ObjectId[]>;
 //// Class
 /////////////////////////////////////////////////////////////////////
 
-export class RouterGraph extends Caller {
+export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 	//// Private Static Contstants
 	/////////////////////////////////////////////////////////////////////
@@ -55,13 +53,7 @@ export class RouterGraph extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(
-		public readonly pools: Pool[] = [],
-		public readonly network?: SuiNetwork
-	) {
-		super(network, "router");
-
-		// check handle remove duplicate pools (same object Id)
+	constructor(public readonly pools: Pool[]) {
 		this.pools = pools;
 		this.graph = RouterGraph.createGraph(pools);
 	}
@@ -69,10 +61,6 @@ export class RouterGraph extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods
 	/////////////////////////////////////////////////////////////////////
-
-	public async getSupportedCoins(): Promise<CoinType[]> {
-		return this.fetchApi("supportedCoins");
-	}
 
 	public getCompleteRoute(
 		coinIn: CoinType,

@@ -1,7 +1,7 @@
 import { Aftermath } from "../../../general/providers";
 import { Balance } from "../../../types";
 import { CoinType } from "../../coin/coinTypes";
-import { RouterGraph } from "./routerGraph";
+import { Router } from "../router";
 
 const tradeAmounts = {
 	max: BigInt(9_223_372_036_854_775_807),
@@ -44,7 +44,7 @@ const runMe = async () => {
 };
 
 const runRoute = (
-	router: RouterGraph,
+	router: Router,
 	coinIn: CoinType,
 	coinInAmount: Balance,
 	coinOut: CoinType,
