@@ -149,32 +149,46 @@ export class CapysApiHelpers {
 	//// Move Calls
 	/////////////////////////////////////////////////////////////////////
 
-	public capyFeesEarnedIndividualMoveCall = (
+	public capyFeesEarnedIndividualDevInspectTransaction = (
 		stakingReceiptId: ObjectId
-	): MoveCallTransaction => {
-		return {
-			packageObjectId: this.addresses.packages.capyVault,
-			module: CapysApiHelpers.constants.capyVault.modules.capyVault
-				.moduleName,
-			function:
+	): Transaction => {
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.capyVault,
+				CapysApiHelpers.constants.capyVault.modules.capyVault
+					.moduleName,
+
 				CapysApiHelpers.constants.capyVault.modules.capyVault.functions
-					.feesEarnedIndividual.name,
+					.feesEarnedIndividual.name
+			),
 			typeArguments: [],
-			arguments: [this.addresses.objects.capyVault, stakingReceiptId],
-		};
+			arguments: [
+				tx.object(this.addresses.objects.capyVault),
+				tx.object(stakingReceiptId),
+			],
+		});
+
+		return tx;
 	};
 
-	public capyFeesEarnedGlobalMoveCall = (): MoveCallTransaction => {
-		return {
-			packageObjectId: this.addresses.packages.capyVault,
-			module: CapysApiHelpers.constants.capyVault.modules.capyVault
-				.moduleName,
-			function:
+	public capyFeesEarnedGlobalDevInspectTransaction = (): Transaction => {
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.capyVault,
+				CapysApiHelpers.constants.capyVault.modules.capyVault
+					.moduleName,
 				CapysApiHelpers.constants.capyVault.modules.capyVault.functions
-					.feesEarnedGlobal.name,
+					.feesEarnedGlobal.name
+			),
 			typeArguments: [],
-			arguments: [this.addresses.objects.capyVault],
-		};
+			arguments: [tx.object(this.addresses.objects.capyVault)],
+		});
+
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -564,21 +578,19 @@ export class CapysApiHelpers {
 	public fetchStakedCapyFeesEarnedIndividual = async (
 		stakingReceiptId: ObjectId
 	) => {
-		const moveCallTransaction =
-			this.capyFeesEarnedIndividualMoveCall(stakingReceiptId);
-		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
-				moveCallTransaction
+		const tx =
+			this.capyFeesEarnedIndividualDevInspectTransaction(
+				stakingReceiptId
 			);
+		const bytes =
+			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 
 	public fetchStakedCapyFeesEarnedGlobal = async () => {
-		const moveCallTransaction = this.capyFeesEarnedGlobalMoveCall();
+		const tx = this.capyFeesEarnedGlobalDevInspectTransaction();
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
-				moveCallTransaction
-			);
+			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 

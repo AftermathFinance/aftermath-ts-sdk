@@ -61,7 +61,7 @@ export class PoolsApi {
 			lpCoinType
 		);
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
@@ -82,7 +82,7 @@ export class PoolsApi {
 			coinInBalance
 		);
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
@@ -103,7 +103,7 @@ export class PoolsApi {
 			balances
 		);
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
@@ -124,7 +124,7 @@ export class PoolsApi {
 			balances
 		);
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
+			await this.Provider.Inspections().fetchBytesFromTransaction(
 				moveCallTransaction
 			);
 		return Casting.bigIntFromBytes(bytes);
