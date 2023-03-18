@@ -1,9 +1,4 @@
-import {
-	EventId,
-	ObjectId,
-	SignableTransaction,
-	SuiAddress,
-} from "@mysten/sui.js";
+import { EventId, ObjectId, SuiAddress, Transaction } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CapysApiCasting } from "./capysApiCasting";
 import { CapysApiHelpers } from "./capysApiHelpers";
@@ -31,7 +26,11 @@ import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils/helpers";
 import { ObjectsApiHelpers } from "../../../general/api/objectsApiHelpers";
 import { Capys } from "../capys";
-import { Balance, DynamicFieldObjectsWithCursor } from "../../../types";
+import {
+	Balance,
+	DynamicFieldObjectsWithCursor,
+	SerializedTransaction,
+} from "../../../types";
 
 export class CapysApi {
 	/////////////////////////////////////////////////////////////////////
@@ -332,44 +331,42 @@ export class CapysApi {
 	//// Capy Staking
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakeCapyTransactions = (
-		capyId: ObjectId
-	): SignableTransaction => this.Helpers.capyStakeCapyTransaction(capyId);
+	public fetchStakeCapyTransaction = (capyId: ObjectId): Transaction =>
+		this.Helpers.capyStakeCapyTransaction(capyId);
 
-	public fetchUnstakeCapyTransactions = (
+	public fetchUnstakeCapyTransaction = (
 		stakingReceiptId: ObjectId
-	): SignableTransaction =>
-		this.Helpers.capyUnstakeCapyTransaction(stakingReceiptId);
+	): Transaction => this.Helpers.capyUnstakeCapyTransaction(stakingReceiptId);
 
-	public fetchWithdrawStakedCapyFeesTransactions = (
+	public fetchWithdrawStakedCapyFeesTransaction = (
 		stakingReceiptId: ObjectId
-	): SignableTransaction =>
+	): Transaction =>
 		this.Helpers.capyWithdrawFeesTransaction(stakingReceiptId);
 
-	public fetchWithdrawStakedCapyFeesAmountTransactions = (
+	public fetchWithdrawStakedCapyFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
 		amount: Balance
-	): SignableTransaction =>
+	): Transaction =>
 		this.Helpers.capyWithdrawFeesAmountTransaction(
 			stakingReceiptId,
 			amount
 		);
 
-	public fetchCapyTransferTransactions = (
+	public fetchCapyTransferTransaction = (
 		stakingReceiptId: ObjectId,
 		recipient: SuiAddress
-	): SignableTransaction =>
+	): Transaction =>
 		this.Helpers.capyTransferTransaction(stakingReceiptId, recipient);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Capy Breeding
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchBreedCapysTransactions = async (
+	public fetchBreedCapysTransaction = async (
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
-	) => {
+	): Promise<SerializedTransaction> => {
 		const [parentOneIsOwned, parentTwoIsOwned] = await Promise.all([
 			this.Provider.Objects().fetchIsObjectOwnedByAddress(
 				parentOneId,
@@ -380,14 +377,16 @@ export class CapysApi {
 				walletAddress
 			),
 		]);
-		const transactions = await this.Helpers.fetchCapyBuildBreedTransactions(
+
+		const transaction = await this.Helpers.fetchCapyBuildBreedTransaction(
 			walletAddress,
 			parentOneId,
 			parentOneIsOwned,
 			parentTwoId,
 			parentTwoIsOwned
 		);
-		return transactions;
+
+		return transaction.serialize();
 	};
 
 	/////////////////////////////////////////////////////////////////////

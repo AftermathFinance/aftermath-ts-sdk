@@ -23,6 +23,7 @@ export type Byte = number;
 //// string
 /////////////////////////////////////////////////////////////////////
 
+export type SerializedTransaction = string;
 export type TxBytes = string;
 export type BigIntAsString = string;
 export type KeyType = string;

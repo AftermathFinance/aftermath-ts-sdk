@@ -30,9 +30,9 @@ export class CoinApi {
 		coin: CoinType
 	): Promise<CoinMetadata> => {
 		try {
-			const coinMetadata = await this.Provider.provider.getCoinMetadata(
-				Helpers.stripLeadingZeroesFromType(coin)
-			);
+			const coinMetadata = await this.Provider.provider.getCoinMetadata({
+				coinType: Helpers.stripLeadingZeroesFromType(coin),
+			});
 			return coinMetadata;
 		} catch (error) {
 			if (Pools.isLpCoin(coin)) {

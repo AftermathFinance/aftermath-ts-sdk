@@ -6,6 +6,7 @@ import { CoinType } from "../../coin/coinTypes";
 import { FaucetMintCoinEventOnChain } from "./faucetApiCastingTypes";
 import { FaucetMintCoinEvent } from "../faucetTypes";
 import { FaucetApiHelpers } from "./faucetApiHelpers";
+import { SerializedTransaction } from "../../../types";
 
 export class FaucetApi {
 	/////////////////////////////////////////////////////////////////////
@@ -74,7 +75,9 @@ export class FaucetApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestCoinAmountTransaction = async (coin: CoinType) => {
+	public fetchRequestCoinAmountTransaction = async (
+		coin: CoinType
+	): Promise<SerializedTransaction> => {
 		const price = await this.Provider.Prices().fetchPrice(coin);
 
 		const requestAmount = Faucet.constants.defaultRequestAmountUsd / price;
@@ -89,7 +92,7 @@ export class FaucetApi {
 			requestAmountWithDecimals
 		);
 
-		return transaction;
+		return transaction.serialize();
 	};
 
 	/////////////////////////////////////////////////////////////////////
