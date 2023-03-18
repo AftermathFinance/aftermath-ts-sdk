@@ -490,7 +490,7 @@ export class CapysApiHelpers {
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedWithStakedAndKeep;
 
-		const { mergedCoinObjectId, transaction } =
+		const { coinWithAmountObjectId, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -498,15 +498,14 @@ export class CapysApiHelpers {
 				feeCoinAmount
 			);
 
-		const finalTransaction =
-			this.addStakeBreedWithStakedAndKeepCommandToTransaction(
-				transaction,
-				mergedCoinObjectId,
-				parentOneId,
-				parentTwoId
-			);
+		const finalTx = this.addStakeBreedWithStakedAndKeepCommandToTransaction(
+			txWithCoinWithAmount,
+			coinWithAmountObjectId,
+			parentOneId,
+			parentTwoId
+		);
 
-		return finalTransaction;
+		return finalTx;
 	};
 
 	public fetchBuildBreedStakedWithStakedAndKeepTransaction = async (
@@ -520,7 +519,7 @@ export class CapysApiHelpers {
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedStakedWithStakedAndKeep;
 
-		const { mergedCoinObjectId, transaction } =
+		const { coinWithAmountObjectId, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -528,15 +527,14 @@ export class CapysApiHelpers {
 				feeCoinAmount
 			);
 
-		const finalTransaction =
-			this.addStakeBreedWithStakedAndKeepCommandToTransaction(
-				transaction,
-				mergedCoinObjectId,
-				parentOneId,
-				parentTwoId
-			);
+		const finalTx = this.addStakeBreedWithStakedAndKeepCommandToTransaction(
+			txWithCoinWithAmount,
+			coinWithAmountObjectId,
+			parentOneId,
+			parentTwoId
+		);
 
-		return finalTransaction;
+		return finalTx;
 	};
 
 	public fetchBuildBreedAndKeepTransaction = async (
@@ -549,7 +547,7 @@ export class CapysApiHelpers {
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount = Capys.constants.breedingFees.amounts.breedAndKeep;
 
-		const { mergedCoinObjectId, transaction } =
+		const { coinWithAmountObjectId, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -557,14 +555,14 @@ export class CapysApiHelpers {
 				feeCoinAmount
 			);
 
-		const finalTransaction = this.addStakeBreedAndKeepCommandToTransaction(
-			transaction,
-			mergedCoinObjectId,
+		const finalTx = this.addStakeBreedAndKeepCommandToTransaction(
+			txWithCoinWithAmount,
+			coinWithAmountObjectId,
 			parentOneId,
 			parentTwoId
 		);
 
-		return finalTransaction;
+		return finalTx;
 	};
 
 	/////////////////////////////////////////////////////////////////////

@@ -74,7 +74,7 @@ export class StakingApi {
 			StakeRequestAddDelegationEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.requestAddDelegation,
+				MoveEventType: this.Helpers.eventTypes.requestAddDelegation,
 			},
 			StakingApiCasting.requestAddDelegationEventFromOnChain,
 			cursor,
@@ -90,7 +90,8 @@ export class StakingApi {
 			StakeRequestWithdrawDelegationEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.requestWithdrawDelegation,
+				MoveEventType:
+					this.Helpers.eventTypes.requestWithdrawDelegation,
 			},
 			StakingApiCasting.requestWithdrawDelegationEventFromOnChain,
 			cursor,
@@ -106,7 +107,7 @@ export class StakingApi {
 			StakeCancelDelegationRequestEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.cancelDelegationRequest,
+				MoveEventType: this.Helpers.eventTypes.cancelDelegationRequest,
 			},
 			StakingApiCasting.cancelDelegationRequestEventFromOnChain,
 			cursor,
@@ -167,7 +168,7 @@ export class StakingApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestAddDelegationTransactions = async (
+	public fetchRequestAddDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		validator: SuiAddress
@@ -178,7 +179,7 @@ export class StakingApi {
 			validator
 		);
 
-	public fetchRequestWithdrawDelegationTransactions = async (
+	public fetchRequestWithdrawDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
@@ -191,7 +192,7 @@ export class StakingApi {
 			delegation
 		);
 
-	public fetchCancelDelegationRequestTransactions = async (
+	public fetchCancelDelegationRequestTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId

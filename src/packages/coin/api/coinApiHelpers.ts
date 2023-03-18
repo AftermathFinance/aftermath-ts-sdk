@@ -1,4 +1,9 @@
-import { ObjectId, SuiAddress, Transaction } from "@mysten/sui.js";
+import {
+	ObjectId,
+	PaginatedCoins,
+	SuiAddress,
+	Transaction,
+} from "@mysten/sui.js";
 import { Balance, CoinDecimal, CoinType } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { Coin } from "../coin";
@@ -131,8 +136,8 @@ export class CoinApiHelpers {
 		coinType: CoinType,
 		coinAmount: Balance
 	): Promise<{
-		mergedCoinObjectId: ObjectId;
-		transaction: Transaction;
+		coinWithAmountObjectId: ObjectId;
+		txWithCoinWithAmount: Transaction;
 	}> => {
 		// TODO: handle cursoring until necessary coin amount is found
 		const paginatedCoins = await this.Provider.provider.getCoins({
@@ -140,6 +145,77 @@ export class CoinApiHelpers {
 			coinType,
 		});
 
+		return CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
+			tx,
+			paginatedCoins,
+			coinAmount
+		);
+	};
+
+	public fetchAddCoinsWithAmountCommandsToTransaction = async (
+		tx: Transaction,
+		walletAddress: SuiAddress,
+		coinTypes: CoinType[],
+		coinAmounts: Balance[]
+	): Promise<{
+		coinWithAmountObjectIds: ObjectId[];
+		txWithCoinsWithAmount: Transaction;
+	}> => {
+		// TODO: handle cursoring until necessary coin amount is found
+		const allPaginatedCoins = await Promise.all(
+			coinTypes.map((coinType) =>
+				this.Provider.provider.getCoins({
+					owner: walletAddress,
+					coinType,
+				})
+			)
+		);
+
+		const coinObjectIdsAndTransaction = allPaginatedCoins.reduce<{
+			coinWithAmountObjectIds: ObjectId[];
+			txWithCoinsWithAmount: Transaction;
+		}>(
+			(acc, paginatedCoins, index) => {
+				const { coinWithAmountObjectId, txWithCoinWithAmount } =
+					CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
+						acc.txWithCoinsWithAmount,
+						paginatedCoins,
+						coinAmounts[index]
+					);
+
+				return {
+					coinWithAmountObjectIds: [
+						...acc.coinWithAmountObjectIds,
+						coinWithAmountObjectId,
+					],
+					txWithCoinsWithAmount: txWithCoinWithAmount,
+				};
+			},
+			{
+				coinWithAmountObjectIds: [],
+				txWithCoinsWithAmount: tx,
+			}
+		);
+
+		return coinObjectIdsAndTransaction;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	private static addCoinWithAmountCommandsToTransaction = (
+		tx: Transaction,
+		paginatedCoins: PaginatedCoins,
+		coinAmount: Balance
+	): {
+		coinWithAmountObjectId: ObjectId;
+		txWithCoinWithAmount: Transaction;
+	} => {
 		const totalCoinBalance = Helpers.sum(
 			paginatedCoins.data.map((data) => data.balance)
 		);
@@ -156,8 +232,8 @@ export class CoinApiHelpers {
 
 		if (coinObjectIds.length === 1)
 			return {
-				mergedCoinObjectId,
-				transaction: tx,
+				coinWithAmountObjectId: mergedCoinObjectId,
+				txWithCoinWithAmount: tx,
 			};
 
 		tx.add({
@@ -172,8 +248,8 @@ export class CoinApiHelpers {
 		});
 
 		return {
-			mergedCoinObjectId,
-			transaction: tx,
+			coinWithAmountObjectId: mergedCoinObjectId,
+			txWithCoinWithAmount: tx,
 		};
 	};
 }

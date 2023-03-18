@@ -97,16 +97,15 @@ export class ObjectsApiHelpers {
 		return objectDataResponses;
 	};
 
-	public fetchFilterAndCastObjectBatch = async <ObjectType>(
+	public fetchCastObjectBatch = async <ObjectType>(
 		objectIds: ObjectId[],
-		filterSuiObjectResponse: (data: SuiObjectResponse) => boolean,
 		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType
 	): Promise<ObjectType[]> => {
-		return (await this.fetchObjectBatch(objectIds))
-			.filter((data) => filterSuiObjectResponse(data))
-			.map((SuiObjectResponse: SuiObjectResponse) => {
+		return (await this.fetchObjectBatch(objectIds)).map(
+			(SuiObjectResponse: SuiObjectResponse) => {
 				return objectFromSuiObjectResponse(SuiObjectResponse);
-			});
+			}
+		);
 	};
 
 	public fetchCastObjectsOwnedByAddressOfType = async <ObjectType>(

@@ -1,4 +1,4 @@
-import { ObjectId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
+import { ObjectId, Transaction, SuiAddress } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -89,7 +89,7 @@ export class StakingApiHelpers {
 		validator: SuiAddress,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.requestAddDelegation.defaultGasBudget
-	): SignableTransaction => {
+	): Transaction => {
 		return {
 			kind: "moveCall",
 			data: {
@@ -118,7 +118,7 @@ export class StakingApiHelpers {
 		afSui: ObjectId,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.requestWithdrawDelegation.defaultGasBudget
-	): SignableTransaction => {
+	): Transaction => {
 		return {
 			kind: "moveCall",
 			data: {
@@ -147,7 +147,7 @@ export class StakingApiHelpers {
 		afSui: ObjectId,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.cancelDelegationRequest.defaultGasBudget
-	): SignableTransaction => {
+	): Transaction => {
 		return {
 			kind: "moveCall",
 			data: {
@@ -174,7 +174,7 @@ export class StakingApiHelpers {
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCancelOrRequestWithdrawDelegationTransactions = async (
+	public fetchCancelOrRequestWithdrawDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
@@ -188,12 +188,12 @@ export class StakingApiHelpers {
 			delegation
 		);
 
-	public fetchBuildRequestAddDelegationTransactions = async (
+	public fetchBuildRequestAddDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		validator: SuiAddress
-	): Promise<SignableTransaction[]> => {
-		let transactions: SignableTransaction[] = [];
+	): Promise<Transaction> => {
+		let transactions: Transaction = [];
 
 		// i. create a coin of type `coinType` with value `coinAmount`.
 		const { coinObjectId: coinId, joinAndSplitTransactions } =
@@ -216,13 +216,13 @@ export class StakingApiHelpers {
 	// Undelegate Coin
 	//**************************************************************************************************
 
-	public fetchBuildCancelOrRequestWithdrawDelegationTransactions = async (
+	public fetchBuildCancelOrRequestWithdrawDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
 		delegation?: ObjectId
-	): Promise<SignableTransaction[]> => {
-		let transactions: SignableTransaction[] = [];
+	): Promise<Transaction> => {
+		let transactions: Transaction = [];
 
 		// i. create a coin of type `coinType` with value `amount`.
 		const { coinObjectId: coinId, joinAndSplitTransactions } =

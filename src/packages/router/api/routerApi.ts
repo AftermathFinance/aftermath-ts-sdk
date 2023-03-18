@@ -68,11 +68,11 @@ export class RouterApi {
 	// 	fromCoinId: ObjectId
 	// ) => this.Helpers.intermediateTradeTransactions(path, fromCoinId);
 
-	// public fetchFirstTradeTransactions = async (
+	// public fetchFirstTradeTransaction = async (
 	// 	walletAddress: SuiAddress,
 	// 	fromCoinAmount: Balance,
 	// 	path: RouterPath
-	// ): Promise<SignableTransaction[]> => {
+	// ): Promise<Transaction> => {
 	// 	const { coinObjectId, joinAndSplitTransactions } =
 	// 		await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
 	// 			walletAddress,

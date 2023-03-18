@@ -1,11 +1,4 @@
-import {
-	SuiObjectResponse,
-	MoveCallTransaction,
-	ObjectId,
-	SignableTransaction,
-	SuiAddress,
-	getObjectId,
-} from "@mysten/sui.js";
+import { ObjectId, Transaction, SuiAddress } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -25,7 +18,6 @@ import {
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
-import { CoinApiHelpers } from "../../coin/api/coinApiHelpers";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -119,91 +111,96 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Fetching
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// public Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
 	//// Move Calls
 	/////////////////////////////////////////////////////////////////////
 
-	public spotPriceMoveCall = (
-		poolId: ObjectId,
-		coinInType: CoinType,
-		coinOutType: CoinType,
-		lpCoinType: CoinType
-	): MoveCallTransaction => {
-		return {
-			packageObjectId: this.addresses.packages.cmmm,
-			module: PoolsApiHelpers.constants.moduleNames.math,
-			function: "calc_spot_price",
-			typeArguments: [lpCoinType, coinInType, coinOutType],
-			arguments: [poolId],
-		};
-	};
+	// public spotPriceDevInspectTransaction = (
+	// 	poolId: ObjectId,
+	// 	coinInType: CoinType,
+	// 	coinOutType: CoinType,
+	// 	lpCoinType: CoinType
+	// ): Transaction => {
+	// 	const tx = new Transaction();
 
-	public tradeAmountOutMoveCall = (
-		poolId: ObjectId,
-		coinInType: CoinType,
-		coinOutType: CoinType,
-		lpCoinType: CoinType,
-		coinInAmount: bigint
-	): MoveCallTransaction => {
-		return {
-			packageObjectId: this.addresses.packages.cmmm,
-			module: PoolsApiHelpers.constants.moduleNames.math,
-			function: "calc_swap_amount_out",
-			typeArguments: [lpCoinType, coinInType, coinOutType],
-			arguments: [poolId, coinInAmount.toString()],
-		};
-	};
+	// 	tx.moveCall({
+	// 		target: AftermathApi.helpers.transactions.createTransactionTarget(
+	// 			this.addresses.packages.cmmm,
+	// 			PoolsApiHelpers.constants.moduleNames.math,
+	// 			"calc_spot_price"
+	// 		),
+	// 		typeArguments: [lpCoinType, coinInType, coinOutType],
+	// 		arguments: [tx.object(poolId)],
+	// 	});
 
-	public depositLpMintAmountMoveCall = (
-		poolId: ObjectId,
-		lpCoinType: CoinType,
-		coinTypes: CoinType[],
-		coinAmounts: Balance[]
-	): MoveCallTransaction => {
-		return {
-			packageObjectId: this.addresses.packages.cmmm,
-			module: PoolsApiHelpers.constants.moduleNames.math,
-			function: "dev_inspect_calc_deposit_lp_mint_amount_u8",
-			typeArguments: [lpCoinType],
-			arguments: [
-				poolId,
-				CoinApiHelpers.formatCoinTypesForMoveCall(coinTypes),
-				coinAmounts.map((amount) => amount.toString()),
-			],
-		};
-	};
+	// 	return tx;
+	// };
 
-	public withdrawAmountOutMoveCall = (
-		poolId: ObjectId,
-		lpCoinType: CoinType,
-		coinTypes: CoinType[],
-		coinAmounts: Balance[]
-	): MoveCallTransaction => {
-		return {
-			packageObjectId: this.addresses.packages.cmmm,
-			module: PoolsApiHelpers.constants.moduleNames.math,
-			function: "dev_inspect_calc_withdraw_amount_out_u8",
-			typeArguments: [lpCoinType],
-			arguments: [
-				poolId,
-				CoinApiHelpers.formatCoinTypesForMoveCall(coinTypes),
-				coinAmounts.map((amount) => amount.toString()),
-			],
-		};
-	};
+	// public tradeAmountOutDevInspectTransaction = (
+	// 	poolId: ObjectId,
+	// 	coinInType: CoinType,
+	// 	coinOutType: CoinType,
+	// 	lpCoinType: CoinType,
+	// 	coinInAmount: bigint
+	// ): Transaction => {
+	// 	const tx = new Transaction();
+
+	// 	tx.moveCall({
+	// 		target: AftermathApi.helpers.transactions.createTransactionTarget(
+	// 			this.addresses.packages.cmmm,
+	// 			PoolsApiHelpers.constants.moduleNames.math,
+	// 			"calc_swap_amount_out"
+	// 		),
+	// 		typeArguments: [lpCoinType, coinInType, coinOutType],
+	// 		arguments: [tx.object(poolId), tx.pure(coinInAmount.toString())],
+	// 	});
+
+	// 	return tx;
+	// };
+
+	// public depositLpMintAmountDevInspectTransaction = (
+	// 	poolId: ObjectId,
+	// 	lpCoinType: CoinType,
+	// 	coinTypes: CoinType[],
+	// 	coinAmounts: Balance[]
+	// ): Transaction => {
+	// 	return {
+	// 		 this.addresses.packages.cmmm,
+	// 		 PoolsApiHelpers.constants.moduleNames.math,
+	// 		 "dev_inspect_calc_deposit_lp_mint_amount_u8",
+	// 		typeArguments: [lpCoinType],
+	// 		arguments: [
+	// 			poolId,
+	// 			CoinApiHelpers.formatCoinTypesForMoveCall(coinTypes),
+	// 			coinAmounts.map((amount) => amount.toString()),
+	// 		],
+	// 	};
+	// };
+
+	// public withdrawAmountOutDevInspectTransaction = (
+	// 	poolId: ObjectId,
+	// 	lpCoinType: CoinType,
+	// 	coinTypes: CoinType[],
+	// 	coinAmounts: Balance[]
+	// ): Transaction => {
+	// 	return {
+	// 		 this.addresses.packages.cmmm,
+	// 		 PoolsApiHelpers.constants.moduleNames.math,
+	// 		 "dev_inspect_calc_withdraw_amount_out_u8",
+	// 		typeArguments: [lpCoinType],
+	// 		arguments: [
+	// 			poolId,
+	// 			CoinApiHelpers.formatCoinTypesForMoveCall(coinTypes),
+	// 			coinAmounts.map((amount) => amount.toString()),
+	// 		],
+	// 	};
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	public tradeTransaction = (
+	public addTradeCommandToTransaction = (
+		tx: Transaction,
 		poolId: ObjectId,
 		coinInId: ObjectId,
 		coinInType: CoinType,
@@ -212,21 +209,28 @@ export class PoolsApiHelpers {
 		lpCoinType: CoinType,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.swap
 			.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.moduleNames.pools,
-				function: "swap",
-				typeArguments: [lpCoinType, coinInType, coinOutType],
-				arguments: [poolId, coinInId, coinOutMin.toString()],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.cmmm,
+				PoolsApiHelpers.constants.moduleNames.pools,
+				"swap"
+			),
+			typeArguments: [lpCoinType, coinInType, coinOutType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(coinInId),
+				tx.pure(coinOutMin.toString()),
+			],
+			// gasBudget: gasBudget,
+		});
+
+		return tx;
 	};
 
-	public singleCoinDepositTransaction = (
+	public addSingleCoinDepositCommandToTransaction = (
+		tx: Transaction,
 		poolId: ObjectId,
 		coinId: ObjectId,
 		coinType: CoinType,
@@ -234,21 +238,28 @@ export class PoolsApiHelpers {
 		lpCoinType: CoinType,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.deposit
 			.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.moduleNames.pools,
-				function: "single_coin_deposit",
-				typeArguments: [lpCoinType, coinType],
-				arguments: [poolId, coinId, lpMintMin.toString()],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.cmmm,
+				PoolsApiHelpers.constants.moduleNames.pools,
+				"single_coin_deposit"
+			),
+			typeArguments: [lpCoinType, coinType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(coinId),
+				tx.pure(lpMintMin.toString()),
+			],
+			// gasBudget: gasBudget,
+		});
+
+		return tx;
 	};
 
-	public multiCoinDepositTransaction = (
+	public addMultiCoinDepositCommandToTransaction = (
+		tx: Transaction,
 		poolId: ObjectId,
 		coinIds: ObjectId[],
 		coinTypes: CoinType[],
@@ -256,27 +267,34 @@ export class PoolsApiHelpers {
 		lpCoinType: CoinType,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.deposit
 			.defaultGasBudget
-	): SignableTransaction => {
+	): Transaction => {
 		const poolSize = coinTypes.length;
 		if (poolSize != coinIds.length)
 			throw new Error(
 				`invalid coinIds size: ${coinIds.length} != ${poolSize}`
 			);
 
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.moduleNames.pools,
-				function: `deposit_${poolSize}_coins`,
-				typeArguments: [lpCoinType, ...coinTypes],
-				arguments: [poolId, ...coinIds, lpMintMin.toString()],
-				gasBudget: gasBudget,
-			},
-		};
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.cmmm,
+				PoolsApiHelpers.constants.moduleNames.pools,
+				`deposit_${poolSize}_coins`
+			),
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				tx.object(poolId),
+				...coinIds.map(tx.object),
+				tx.pure(lpMintMin.toString()),
+			],
+			// gasBudget: gasBudget,
+		});
+
+		return tx;
 	};
 
-	public singleCoinWithdrawTransaction = (
+	public addSingleCoinWithdrawCommandToTransaction = (
+		tx: Transaction,
 		poolId: ObjectId,
 		lpCoinId: ObjectId,
 		lpCoinType: CoinType,
@@ -284,21 +302,28 @@ export class PoolsApiHelpers {
 		coinOutType: CoinType,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.withdraw
 			.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.moduleNames.pools,
-				function: "single_coin_withdraw",
-				typeArguments: [lpCoinType, coinOutType],
-				arguments: [poolId, lpCoinId, amountOutMin.toString()],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.cmmm,
+				PoolsApiHelpers.constants.moduleNames.pools,
+				"single_coin_withdraw"
+			),
+			typeArguments: [lpCoinType, coinOutType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(lpCoinId),
+				tx.pure(amountOutMin.toString()),
+			],
+			// gasBudget: gasBudget,
+		});
+
+		return tx;
 	};
 
-	public multiCoinWithdrawTransaction = (
+	public addMultiCoinWithdrawCommandToTransaction = (
+		tx: Transaction,
 		poolId: ObjectId,
 		lpCoinId: ObjectId,
 		lpCoinType: CoinType,
@@ -306,25 +331,28 @@ export class PoolsApiHelpers {
 		coinsOutType: CoinType[],
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.withdraw
 			.defaultGasBudget
-	): SignableTransaction => {
+	): Transaction => {
 		const poolSize = coinsOutType.length;
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.cmmm,
-				module: PoolsApiHelpers.constants.moduleNames.pools,
-				function: `withdraw_${poolSize}_coins`,
-				typeArguments: [lpCoinType, ...coinsOutType],
-				arguments: [
-					poolId,
-					lpCoinId,
-					amountsOutMin.map((amountOutMin) =>
-						amountOutMin.toString()
-					),
-				],
-				gasBudget: gasBudget,
-			},
-		};
+
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.cmmm,
+				PoolsApiHelpers.constants.moduleNames.pools,
+				`withdraw_${poolSize}_coins`
+			),
+			typeArguments: [lpCoinType, ...coinsOutType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(lpCoinId),
+				tx.pure(
+					amountsOutMin.map((amountOutMin) => amountOutMin.toString())
+				),
+			],
+			// gasBudget: gasBudget,
+		});
+
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -333,155 +361,94 @@ export class PoolsApiHelpers {
 
 	// TODO: abstract i and ii into a new function that can also be called by swap/deposit/withdraw.
 
-	public fetchBuildTradeTransactions = async (
+	public fetchBuildTradeTransaction = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		fromCoinType: CoinType,
 		fromCoinAmount: Balance,
 		toCoinType: CoinType
-	): Promise<SignableTransaction[]> => {
-		// i. obtain object ids of coin to swap from
-		const response =
-			await this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+	): Promise<Transaction> => {
+		const tx = new Transaction();
+
+		const { coinWithAmountObjectId: coinInId, txWithCoinWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				tx,
 				walletAddress,
 				fromCoinType,
 				fromCoinAmount
 			);
 
-		const coinInId = getObjectId(response[0]);
-
-		let transactions: SignableTransaction[] = [];
-		// ii. the user doesn't have a coin of type `fromCoinType` with exact
-		// value of `fromCoinAmount`, so we need to create it
-		const joinAndSplitTransactions =
-			this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
-				response[0],
-				response.slice(1),
-				fromCoinType,
-				fromCoinAmount
-			);
-
-		transactions.push(...joinAndSplitTransactions);
-
-		// iii. trade `coinInId` to for coins of type `toCoinType`
-		transactions.push(
-			this.tradeTransaction(
-				poolObjectId,
-				coinInId,
-				fromCoinType,
-				BigInt(0), // TODO: calc slippage amount
-				toCoinType,
-				poolLpType
-			)
+		const finalTx = this.addTradeCommandToTransaction(
+			txWithCoinWithAmount,
+			poolObjectId,
+			coinInId,
+			fromCoinType,
+			BigInt(0), // TODO: calc slippage amount
+			toCoinType,
+			poolLpType
 		);
 
-		return transactions;
+		return finalTx;
 	};
 
-	public fetchBuildDepositTransactions = async (
+	public fetchBuildDepositTransaction = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[]
-	): Promise<SignableTransaction[]> => {
-		// i. obtain object ids of `coinTypes` to deposit
-		const responses = (
-			await Promise.all(
-				coinTypes.map((coinType, index) =>
-					this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
-						walletAddress,
-						coinType,
-						coinAmounts[index]
-					)
-				)
-			)
-		)
-			// safe check as responses is guaranteed to not contain undefined
-			.filter((response): response is SuiObjectResponse[] => !!response);
+	): Promise<Transaction> => {
+		const tx = new Transaction();
 
-		let allCoinIds: ObjectId[] = [];
-		let allCoinIdsToJoin: [ObjectId[]] = [[]];
-
-		let transactions: SignableTransaction[] = [];
-		// ii. the user doesn't have a coin of type `coinType` with exact
-		// value of `coinAmount`, so we need to create it
-		responses.forEach((response, index) => {
-			const joinAndSplitTransactions =
-				this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
-					response[0],
-					response.slice(1),
-					coinTypes[index],
-					coinAmounts[index]
-				);
-			if (!joinAndSplitTransactions) return;
-			transactions.push(...joinAndSplitTransactions);
-
-			const [coinId, ...coinIdsToJoin] = response.map(
-				(SuiObjectResponse) => getObjectId(SuiObjectResponse)
-			);
-			allCoinIds.push(coinId);
-			allCoinIdsToJoin.push(coinIdsToJoin);
-		});
-
-		// iii. deposit `allCoinIds` into `pool.objectId`
-		transactions.push(
-			this.multiCoinDepositTransaction(
-				poolObjectId,
-				allCoinIds,
+		const { coinWithAmountObjectIds, txWithCoinsWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
+				tx,
+				walletAddress,
 				coinTypes,
-				BigInt(0), // TODO: calc slippage amount
-				poolLpType
-			)
+				coinAmounts
+			);
+
+		const finalTx = this.addMultiCoinDepositCommandToTransaction(
+			txWithCoinsWithAmount,
+			poolObjectId,
+			coinWithAmountObjectIds,
+			coinTypes,
+			BigInt(0), // TODO: calc slippage amount
+			poolLpType
 		);
 
-		return transactions;
+		return finalTx;
 	};
 
-	public fetchBuildWithdrawTransactions = async (
+	public fetchBuildWithdrawTransaction = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		lpCoinAmount: Balance,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[]
-	): Promise<SignableTransaction[]> => {
-		// i. obtain object ids of `lpCoinType` to burn
-		const response =
-			await this.Provider.Coin().Helpers.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
+	): Promise<Transaction> => {
+		const tx = new Transaction();
+
+		const { coinWithAmountObjectId: lpCoinInId, txWithCoinWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				tx,
 				walletAddress,
 				poolLpType,
 				lpCoinAmount
 			);
 
-		const lpCoinInId = getObjectId(response[0]);
-
-		let transactions: SignableTransaction[] = [];
-		// ii. the user doesn't have a coin of type `fromCoinType` with exact
-		// value of `fromCoinAmount`, so we need to create it
-		const joinAndSplitTransactions =
-			this.Provider.Coin().Helpers.coinJoinAndSplitWithExactAmountTransactions(
-				response[0],
-				response.slice(1),
-				poolLpType,
-				lpCoinAmount
-			);
-
-		transactions.push(...joinAndSplitTransactions);
-
-		// iii. burn `lpCoinInId` and withdraw a pro-rata amount of the Pool's underlying coins.
-		transactions.push(
-			this.multiCoinWithdrawTransaction(
-				poolObjectId,
-				lpCoinInId,
-				poolLpType,
-				coinAmounts, // TODO: calc slippage amount
-				coinTypes
-			)
+		const finalTx = this.addMultiCoinWithdrawCommandToTransaction(
+			txWithCoinWithAmount,
+			poolObjectId,
+			lpCoinInId,
+			poolLpType,
+			coinAmounts, // TODO: calc slippage amount
+			coinTypes
 		);
 
-		return transactions;
+		return finalTx;
 	};
 
 	/////////////////////////////////////////////////////////////////////

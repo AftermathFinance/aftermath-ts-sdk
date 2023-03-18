@@ -154,7 +154,7 @@ export class FaucetApiHelpers {
 	//// Move Calls
 	/////////////////////////////////////////////////////////////////////
 
-	// public faucetSupportedCoinsMoveCall = (): MoveCallTransaction => {
+	// public faucetSupportedCoinsMoveCall = (): Transaction => {
 	// 	return {
 	// 		packageObjectId: this.addresses.packages.faucet,
 	// 		module: FaucetApiHelpers.constants.faucetRegistryModuleName,

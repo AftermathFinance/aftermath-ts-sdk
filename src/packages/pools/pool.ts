@@ -1,4 +1,4 @@
-import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
+import { Transaction, SuiAddress } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -51,8 +51,8 @@ export class Pool extends Caller {
 	public async getDepositTransactions(
 		walletAddress: SuiAddress,
 		depositCoinAmounts: CoinsToBalance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolDepositBody>(
+	): Promise<Transaction> {
+		return this.fetchApi<Transaction, ApiPoolDepositBody>(
 			"transactions/deposit",
 			{
 				walletAddress,
@@ -65,8 +65,8 @@ export class Pool extends Caller {
 		walletAddress: SuiAddress,
 		withdrawCoinAmounts: CoinsToBalance,
 		withdrawLpTotal: Balance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolWithdrawBody>(
+	): Promise<Transaction> {
+		return this.fetchApi<Transaction, ApiPoolWithdrawBody>(
 			"transactions/withdraw",
 			{
 				walletAddress,
@@ -81,8 +81,8 @@ export class Pool extends Caller {
 		fromCoin: CoinType,
 		fromCoinAmount: Balance,
 		toCoin: CoinType
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolTradeBody>(
+	): Promise<Transaction> {
+		return this.fetchApi<Transaction, ApiPoolTradeBody>(
 			"transactions/trade",
 			{
 				walletAddress,

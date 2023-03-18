@@ -1,8 +1,4 @@
-import {
-	SignableTransaction,
-	SuiAddress,
-	SuiSystemState,
-} from "@mysten/sui.js";
+import { Transaction, SuiAddress, SuiSystemState } from "@mysten/sui.js";
 import {
 	ApiCancelDelegationRequestBody,
 	ApiRequestWithdrawDelegationBody,
@@ -26,36 +22,32 @@ export class StakePosition extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getRequestWithdrawTransactions(): Promise<
-		SignableTransaction[]
-	> {
+	public async getRequestWithdrawTransactions(): Promise<Transaction> {
 		if (this.stakePosition.status === "pending")
 			throw new Error(
 				"stake position unable to withdraw, current status is pending"
 			);
 
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiRequestWithdrawDelegationBody
-		>("transactions/requestWithdrawDelegation", {
-			walletAddress: this.stakerAddress,
-			principalAmount: this.stakePosition.principalAmount,
-			stakedSuiObjectId: this.stakePosition.stakedSuiId,
-			delegationObjectId: this.stakePosition.status.active.id,
-		});
+		return this.fetchApi<Transaction, ApiRequestWithdrawDelegationBody>(
+			"transactions/requestWithdrawDelegation",
+			{
+				walletAddress: this.stakerAddress,
+				principalAmount: this.stakePosition.principalAmount,
+				stakedSuiObjectId: this.stakePosition.stakedSuiId,
+				delegationObjectId: this.stakePosition.status.active.id,
+			}
+		);
 	}
 
-	public async getCancelRequestTransactions(): Promise<
-		SignableTransaction[]
-	> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiCancelDelegationRequestBody
-		>("transactions/cancelDelegationRequest", {
-			walletAddress: this.stakerAddress,
-			principalAmount: this.stakePosition.principalAmount,
-			stakedSuiObjectId: this.stakePosition.stakedSuiId,
-		});
+	public async getCancelRequestTransactions(): Promise<Transaction> {
+		return this.fetchApi<Transaction, ApiCancelDelegationRequestBody>(
+			"transactions/cancelDelegationRequest",
+			{
+				walletAddress: this.stakerAddress,
+				principalAmount: this.stakePosition.principalAmount,
+				stakedSuiObjectId: this.stakePosition.stakedSuiId,
+			}
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////

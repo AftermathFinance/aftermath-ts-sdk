@@ -1,6 +1,6 @@
 import {
 	EventId,
-	SignableTransaction,
+	Transaction,
 	SuiAddress,
 	SuiSystemState,
 } from "@mysten/sui.js";
@@ -121,14 +121,14 @@ export class Staking extends Caller {
 		walletAddress: SuiAddress,
 		validatorAddress: SuiAddress,
 		coinAmount: Balance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiRequestAddDelegationBody
-		>("transactions/requestAddDelegation", {
-			walletAddress,
-			validatorAddress,
-			coinAmount,
-		});
+	): Promise<Transaction> {
+		return this.fetchApi<Transaction, ApiRequestAddDelegationBody>(
+			"transactions/requestAddDelegation",
+			{
+				walletAddress,
+				validatorAddress,
+				coinAmount,
+			}
+		);
 	}
 }

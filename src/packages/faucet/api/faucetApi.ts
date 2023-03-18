@@ -59,8 +59,8 @@ export class FaucetApi {
 
 	// public fetchFaucetSupportedCoins = async () => {
 	// 	const signer: SuiAddress = config.constants.devInspectSigner;
-	// 	const moveCallTransaction = faucetSupportedCoinsMoveCall();
-	// 	const bytes = await fetchBytesFromMoveCallTransaction(signer, moveCallTransaction);
+	// 	const Transaction = faucetSupportedCoinsMoveCall();
+	// 	const bytes = await fetchBytesFromTransaction(signer, Transaction);
 	// 	return stringFromBytes(bytes);
 	// };
 
@@ -108,7 +108,7 @@ export class FaucetApi {
 			FaucetMintCoinEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.mintCoin,
+				MoveEventType: this.Helpers.eventTypes.mintCoin,
 			},
 			FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			cursor,

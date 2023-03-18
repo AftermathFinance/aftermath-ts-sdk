@@ -24,7 +24,6 @@ import {
 import { AmountInCoinAndUsd, CoinDecimal } from "../../coin/coinTypes";
 import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils/helpers";
-import { ObjectsApiHelpers } from "../../../general/api/objectsApiHelpers";
 import { Capys } from "../capys";
 import {
 	Balance,
@@ -127,7 +126,7 @@ export class CapysApi {
 			CapyBornEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.capyBorn,
+				MoveEventType: this.Helpers.eventTypes.capyBorn,
 			},
 			CapysApiCasting.capyBornEventFromOnChain,
 			cursor,
@@ -143,7 +142,7 @@ export class CapysApi {
 			BreedCapysEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.breedCapys,
+				MoveEventType: this.Helpers.eventTypes.breedCapys,
 			},
 			CapysApiCasting.breedCapysEventFromOnChain,
 			cursor,
@@ -159,7 +158,7 @@ export class CapysApi {
 			StakeCapyEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.stakeCapy,
+				MoveEventType: this.Helpers.eventTypes.stakeCapy,
 			},
 			CapysApiCasting.stakeCapyEventFromOnChain,
 			cursor,
@@ -175,7 +174,7 @@ export class CapysApi {
 			UnstakeCapyEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.unstakeCapy,
+				MoveEventType: this.Helpers.eventTypes.unstakeCapy,
 			},
 			CapysApiCasting.unstakeCapyEventFromOnChain,
 			cursor,
@@ -191,9 +190,8 @@ export class CapysApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchCapys = async (capyIds: ObjectId[]): Promise<CapyObject[]> => {
-		return this.Provider.Objects().fetchFilterAndCastObjectBatch<CapyObject>(
+		return this.Provider.Objects().fetchCastObjectBatch<CapyObject>(
 			capyIds,
-			ObjectsApiHelpers.objectExists,
 			CapysApiCasting.capyObjectFromSuiObjectResponse
 		);
 	};
@@ -203,8 +201,8 @@ export class CapysApi {
 	): Promise<CapyObject[]> => {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
-			this.Helpers.isCapyObjectType,
-			this.fetchCapys
+			this.Helpers.objectTypes.capyObjectType,
+			CapysApiCasting.capyObjectFromSuiObjectResponse
 		);
 	};
 
@@ -283,8 +281,8 @@ export class CapysApi {
 	): Promise<StakedCapyReceiptObject[]> => {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
-			this.Helpers.isStakedCapyReceiptObjectType,
-			this.fetchStakedCapyReceipts
+			this.Helpers.objectTypes.stakedCapyReceiptObjectType,
+			CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse
 		);
 	};
 
