@@ -25,7 +25,7 @@ export class StakePosition extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getRequestWithdrawTransactions(
+	public async getRequestWithdrawTransaction(
 		stake: StakeObject
 	): Promise<Transaction> {
 		if (stake.status === "Pending")
@@ -44,7 +44,7 @@ export class StakePosition extends Caller {
 		);
 	}
 
-	public async getCancelRequestTransactions(
+	public async getCancelRequestTransaction(
 		stake: StakeObject
 	): Promise<Transaction> {
 		return this.fetchApi<Transaction, ApiCancelDelegationRequestBody>(

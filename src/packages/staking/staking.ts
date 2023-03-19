@@ -109,7 +109,7 @@ export class Staking extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getRequestAddDelegationTransactions(
+	public async getRequestAddDelegationTransaction(
 		walletAddress: SuiAddress,
 		validatorAddress: SuiAddress,
 		coinAmount: Balance
