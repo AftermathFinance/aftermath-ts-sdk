@@ -10,6 +10,7 @@ import {
 	ApiRequestAddDelegationBody,
 	Balance,
 	EventsWithCursor,
+	SerializedTransaction,
 	StakeCancelDelegationRequestEvent,
 	StakeRequestAddDelegationEvent,
 	StakeRequestWithdrawDelegationEvent,
@@ -114,13 +115,15 @@ export class Staking extends Caller {
 		validatorAddress: SuiAddress,
 		coinAmount: Balance
 	): Promise<Transaction> {
-		return this.fetchApi<Transaction, ApiRequestAddDelegationBody>(
-			"transactions/requestAddDelegation",
-			{
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiRequestAddDelegationBody
+			>("transactions/requestAddDelegation", {
 				walletAddress,
 				validatorAddress,
 				coinAmount,
-			}
+			})
 		);
 	}
 }

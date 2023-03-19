@@ -65,7 +65,8 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventOnChainType>> => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
-			cursor,
+			// PRODUCTION: uncomment below once cursor is fixed in sui sdk
+			// cursor,
 			limit, // defaultlimit ?
 		});
 
@@ -83,7 +84,8 @@ export class EventsApiHelpers {
 	) => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
-			cursor,
+			// PRODUCTION: uncomment below once cursor is fixed in sui sdk
+			// cursor,
 			limit, // defaultlimit ?
 		});
 		const eventsOnChain =

@@ -1,4 +1,4 @@
-import { SuiAddress } from "@mysten/sui.js";
+import { SuiAddress, Transaction } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -49,48 +49,54 @@ export class Pool extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getDepositTransactions(
+	public async getDepositTransaction(
 		walletAddress: SuiAddress,
 		depositCoinAmounts: CoinsToBalance
-	): Promise<SerializedTransaction> {
-		return this.fetchApi<SerializedTransaction, ApiPoolDepositBody>(
-			"transactions/deposit",
-			{
-				walletAddress,
-				depositCoinAmounts,
-			}
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<SerializedTransaction, ApiPoolDepositBody>(
+				"transactions/deposit",
+				{
+					walletAddress,
+					depositCoinAmounts,
+				}
+			)
 		);
 	}
 
-	public async getWithdrawTransactions(
+	public async getWithdrawTransaction(
 		walletAddress: SuiAddress,
 		withdrawCoinAmounts: CoinsToBalance,
 		withdrawLpTotal: Balance
-	): Promise<SerializedTransaction> {
-		return this.fetchApi<SerializedTransaction, ApiPoolWithdrawBody>(
-			"transactions/withdraw",
-			{
-				walletAddress,
-				withdrawCoinAmounts,
-				withdrawLpTotal,
-			}
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<SerializedTransaction, ApiPoolWithdrawBody>(
+				"transactions/withdraw",
+				{
+					walletAddress,
+					withdrawCoinAmounts,
+					withdrawLpTotal,
+				}
+			)
 		);
 	}
 
-	public async getTradeTransactions(
+	public async getTradeTransaction(
 		walletAddress: SuiAddress,
 		fromCoin: CoinType,
 		fromCoinAmount: Balance,
 		toCoin: CoinType
-	): Promise<SerializedTransaction> {
-		return this.fetchApi<SerializedTransaction, ApiPoolTradeBody>(
-			"transactions/trade",
-			{
-				walletAddress,
-				fromCoin,
-				fromCoinAmount,
-				toCoin,
-			}
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<SerializedTransaction, ApiPoolTradeBody>(
+				"transactions/trade",
+				{
+					walletAddress,
+					fromCoin,
+					fromCoinAmount,
+					toCoin,
+				}
+			)
 		);
 	}
 

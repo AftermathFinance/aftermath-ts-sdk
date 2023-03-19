@@ -7,6 +7,7 @@ import {
 import {
 	ApiCancelDelegationRequestBody,
 	ApiRequestWithdrawDelegationBody,
+	SerializedTransaction,
 	SuiNetwork,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
@@ -33,27 +34,32 @@ export class StakePosition extends Caller {
 				"stake unable to withdraw, current status is pending"
 			);
 
-		return this.fetchApi<Transaction, ApiRequestWithdrawDelegationBody>(
-			"transactions/requestWithdrawDelegation",
-			{
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiRequestWithdrawDelegationBody
+			>("transactions/requestWithdrawDelegation", {
 				walletAddress: this.stakerAddress,
 				principalAmount: BigInt(stake.principal),
 				stakedSuiObjectId: stake.stakedSuiId,
-				// delegationObjectId: stake,
-			}
+				// PRODUCTION: find out what should really be here for delegationObjectId
+				delegationObjectId: "undefined",
+			})
 		);
 	}
 
 	public async getCancelRequestTransaction(
 		stake: StakeObject
 	): Promise<Transaction> {
-		return this.fetchApi<Transaction, ApiCancelDelegationRequestBody>(
-			"transactions/cancelDelegationRequest",
-			{
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiCancelDelegationRequestBody
+			>("transactions/cancelDelegationRequest", {
 				walletAddress: this.stakerAddress,
 				principalAmount: BigInt(stake.principal),
 				stakedSuiObjectId: stake.stakedSuiId,
-			}
+			})
 		);
 	}
 }

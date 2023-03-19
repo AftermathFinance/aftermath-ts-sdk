@@ -1,6 +1,10 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
-import { CoinType, RouterCompleteTradeRoute } from "../../../types";
+import {
+	CoinType,
+	RouterCompleteTradeRoute,
+	SerializedTransaction,
+} from "../../../types";
 import { SuiAddress, Transaction } from "@mysten/sui.js";
 
 export class RouterApi {
@@ -44,7 +48,7 @@ export class RouterApi {
 	public async getTransactionForCompleteTradeRoute(
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute
-	): Promise<Transaction> {
+	): Promise<SerializedTransaction> {
 		const startTx = new Transaction();
 
 		const { coinWithAmountObjectId: coinInId, txWithCoinWithAmount } =
@@ -83,7 +87,7 @@ export class RouterApi {
 			}
 		}
 
-		return tx;
+		return tx.serialize();
 	}
 
 	/////////////////////////////////////////////////////////////////////
