@@ -1,4 +1,4 @@
-import { SuiMoveObject, SuiObject } from "@mysten/sui.js";
+import { SuiMoveObject } from "@mysten/sui.js";
 import {
 	PoolAmountDynamicField,
 	PoolBalanceDynamicField,
@@ -7,7 +7,7 @@ import {
 	PoolObject,
 	PoolSingleDepositEvent,
 	PoolSingleWithdrawEvent,
-	PoolTradeEvent as PoolTradeEvent,
+	PoolTradeEvent,
 	PoolWithdrawEvent,
 } from "../poolsTypes";
 import {
@@ -31,7 +31,7 @@ export class PoolsApiCasting {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public static poolObjectFromSuiObject = (suiObject: SuiObject) => {
+	public static poolObjectFromSuiObject = (suiObject: SuiMoveObject) => {
 		const objectId = suiObject.reference.objectId;
 		const suiMoveObject = suiObject.data as SuiMoveObject;
 		const poolFieldsOnChain = suiMoveObject.fields as PoolFieldsOnChain;

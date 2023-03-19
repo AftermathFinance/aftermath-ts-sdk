@@ -1,4 +1,4 @@
-import { Transaction, SuiAddress } from "@mysten/sui.js";
+import { SuiAddress } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -6,12 +6,13 @@ import {
 	Balance,
 	CoinType,
 	CoinsToBalance,
-	PoolDataPoint as PoolDataPoint,
+	PoolDataPoint,
 	PoolVolumeDataTimeframeKey,
 	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
+	SerializedTransaction,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -51,8 +52,8 @@ export class Pool extends Caller {
 	public async getDepositTransactions(
 		walletAddress: SuiAddress,
 		depositCoinAmounts: CoinsToBalance
-	): Promise<Transaction> {
-		return this.fetchApi<Transaction, ApiPoolDepositBody>(
+	): Promise<SerializedTransaction> {
+		return this.fetchApi<SerializedTransaction, ApiPoolDepositBody>(
 			"transactions/deposit",
 			{
 				walletAddress,
@@ -65,8 +66,8 @@ export class Pool extends Caller {
 		walletAddress: SuiAddress,
 		withdrawCoinAmounts: CoinsToBalance,
 		withdrawLpTotal: Balance
-	): Promise<Transaction> {
-		return this.fetchApi<Transaction, ApiPoolWithdrawBody>(
+	): Promise<SerializedTransaction> {
+		return this.fetchApi<SerializedTransaction, ApiPoolWithdrawBody>(
 			"transactions/withdraw",
 			{
 				walletAddress,
@@ -81,8 +82,8 @@ export class Pool extends Caller {
 		fromCoin: CoinType,
 		fromCoinAmount: Balance,
 		toCoin: CoinType
-	): Promise<Transaction> {
-		return this.fetchApi<Transaction, ApiPoolTradeBody>(
+	): Promise<SerializedTransaction> {
+		return this.fetchApi<SerializedTransaction, ApiPoolTradeBody>(
 			"transactions/trade",
 			{
 				walletAddress,

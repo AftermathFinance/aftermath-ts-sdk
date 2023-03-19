@@ -1,6 +1,5 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
-import { PoolCompleteObject } from "../../pools/poolsTypes";
 import { CoinType } from "../../../types";
 
 export class RouterApi {

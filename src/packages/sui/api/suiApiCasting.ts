@@ -71,12 +71,6 @@ export class SuiApiCasting {
 	//// Type Checking
 	/////////////////////////////////////////////////////////////////////
 
-	public static isStakedSui = (suiObjectInfo: SuiObjectInfo): boolean =>
-		suiObjectInfo.type === Staking.constants.objectTypes.stakedSuiType;
-
-	public static isDelegation = (suiObjectInfo: SuiObjectInfo): boolean =>
-		suiObjectInfo.type === Staking.constants.objectTypes.delegationType;
-
 	public static isStakeVaultKeyType = (type: AnyObjectType) =>
 		type.split(",")[0].includes("VaultKey");
 }

@@ -8,7 +8,12 @@ import {
 	StakeStakeEventAccumulation,
 } from "../stakingTypes";
 import { Helpers } from "../../../general/utils/helpers";
-import { Balance, Delegation, StakedSui } from "../../../types";
+import {
+	Balance,
+	Delegation,
+	SerializedTransaction,
+	StakedSui,
+} from "../../../types";
 import { SuiApiCasting } from "../../sui/api/suiApiCasting";
 import {
 	StakingCancelDelegationRequestEventOnChain,
@@ -16,6 +21,7 @@ import {
 	StakingRequestWithdrawDelegationEventOnChain,
 } from "./stakingApiCastingTypes";
 import { StakingApiCasting } from "./stakingApiCasting";
+import { Staking } from "../staking";
 
 export class StakingApi {
 	/////////////////////////////////////////////////////////////////////
@@ -42,7 +48,9 @@ export class StakingApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchStakeValidators = async () => {
-		const validatorMetadatas = await this.Provider.provider.getValidators();
+		const validatorMetadatas = (
+			await this.Provider.provider.getLatestSuiSystemState()
+		).activeValidators;
 
 		const validators = validatorMetadatas.map(
 			StakingApiCasting.stakeValidatorFromValidatorMetadata
@@ -52,9 +60,9 @@ export class StakingApi {
 	};
 
 	public fetchDelegatedStakePositions = async (address: SuiAddress) => {
-		const delegatedStakes = await this.Provider.provider.getDelegatedStakes(
-			address
-		);
+		const delegatedStakes = await this.Provider.provider.getStakes({
+			owner: address,
+		});
 		const delegatedStakePositions = delegatedStakes.map(
 			StakingApiCasting.delegatedStakePositionFromDelegatedStake
 		);
@@ -125,7 +133,7 @@ export class StakingApi {
 	public fetchDelegationObjects = async (
 		delegationIds: ObjectId[]
 	): Promise<Delegation[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<Delegation>(
+		return this.Provider.Objects().fetchCastObjectBatch(
 			delegationIds,
 			SuiApiCasting.delegationFromSuiObjectResponse
 		);
@@ -136,8 +144,8 @@ export class StakingApi {
 	): Promise<Delegation[]> => {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
-			SuiApiCasting.isDelegation,
-			this.fetchDelegationObjects
+			Staking.constants.objectTypes.delegationType,
+			SuiApiCasting.delegationFromSuiObjectResponse
 		);
 	};
 
@@ -148,7 +156,7 @@ export class StakingApi {
 	public fetchStakedSuiObjects = async (
 		stakedSuiIds: ObjectId[]
 	): Promise<StakedSui[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<StakedSui>(
+		return this.Provider.Objects().fetchCastObjectBatch(
 			stakedSuiIds,
 			SuiApiCasting.stakedSuiFromSuiObjectResponse
 		);
@@ -159,8 +167,8 @@ export class StakingApi {
 	): Promise<StakedSui[]> => {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
-			SuiApiCasting.isStakedSui,
-			this.fetchStakedSuiObjects
+			Staking.constants.objectTypes.stakedSuiType,
+			SuiApiCasting.stakedSuiFromSuiObjectResponse
 		);
 	};
 
@@ -172,36 +180,44 @@ export class StakingApi {
 		walletAddress: SuiAddress,
 		amount: Balance,
 		validator: SuiAddress
-	) =>
-		this.Helpers.fetchBuildRequestAddDelegationTransactions(
+	): Promise<SerializedTransaction> => {
+		const tx = await this.Helpers.fetchBuildRequestAddDelegationTransaction(
 			walletAddress,
 			amount,
 			validator
 		);
+		return tx.serialize();
+	};
 
 	public fetchRequestWithdrawDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
 		delegation: ObjectId
-	) =>
-		this.Helpers.fetchCancelOrRequestWithdrawDelegationTransactions(
-			walletAddress,
-			amount,
-			stakedSui,
-			delegation
-		);
+	): Promise<SerializedTransaction> => {
+		const tx =
+			await this.Helpers.fetchBuildCancelOrRequestWithdrawDelegationTransaction(
+				walletAddress,
+				amount,
+				stakedSui,
+				delegation
+			);
+		return tx.serialize();
+	};
 
 	public fetchCancelDelegationRequestTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId
-	) =>
-		this.Helpers.fetchCancelOrRequestWithdrawDelegationTransactions(
-			walletAddress,
-			amount,
-			stakedSui
-		);
+	): Promise<SerializedTransaction> => {
+		const tx =
+			await this.Helpers.fetchBuildCancelOrRequestWithdrawDelegationTransaction(
+				walletAddress,
+				amount,
+				stakedSui
+			);
+		return tx.serialize();
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Stats
