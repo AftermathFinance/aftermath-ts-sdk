@@ -132,7 +132,7 @@ export class PoolsApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchTradeEvents = async (cursor?: EventId, eventLimit?: number) =>
+	public fetchTradeEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolTradeEventOnChain,
 			PoolTradeEvent
@@ -142,14 +142,14 @@ export class PoolsApi {
 			},
 			Casting.pools.poolTradeEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	// NOTE: the below functions can be used if we want to only look at single events
 
 	// const fetchSingleDepositEvents = async (
 	// 	cursor?: EventId,
-	// 	eventLimit?: number
+	// 	limit?: number
 	// ) =>
 	// 	await fetchCastEventsWithCursor<
 	// 		PoolSingleDepositEventOnChain,
@@ -160,10 +160,10 @@ export class PoolsApi {
 	// 		},
 	// 		poolSingleDepositEventFromOnChain,
 	// 		cursor,
-	// 		eventLimit
+	// 		limit
 	// 	);
 
-	public fetchDepositEvents = async (cursor?: EventId, eventLimit?: number) =>
+	public fetchDepositEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
 			PoolDepositEvent
@@ -173,12 +173,12 @@ export class PoolsApi {
 			},
 			Casting.pools.poolDepositEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	// const fetchSingleWithdrawEvents = async (
 	// 	cursor?: EventId,
-	// 	eventLimit?: number
+	// 	limit?: number
 	// ) =>
 	// 	await fetchCastEventsWithCursor<
 	// 		PoolSingleWithdrawEventOnChain,
@@ -189,13 +189,10 @@ export class PoolsApi {
 	// 		},
 	// 		poolSingleWithdrawEventFromOnChain,
 	// 		cursor,
-	// 		eventLimit
+	// 		limit
 	// 	);
 
-	public fetchWithdrawEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchWithdrawEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolWithdrawEventOnChain,
 			PoolWithdrawEvent
@@ -205,7 +202,7 @@ export class PoolsApi {
 			},
 			Casting.pools.poolWithdrawEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	/////////////////////////////////////////////////////////////////////

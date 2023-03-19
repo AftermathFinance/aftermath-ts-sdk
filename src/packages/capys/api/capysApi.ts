@@ -117,10 +117,7 @@ export class CapysApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCapyBornEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchCapyBornEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			CapyBornEventOnChain,
 			CapyBornEvent
@@ -130,13 +127,10 @@ export class CapysApi {
 			},
 			CapysApiCasting.capyBornEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
-	public fetchBreedCapysEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchBreedCapysEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			BreedCapyEventOnChain,
 			BreedCapysEvent
@@ -146,13 +140,10 @@ export class CapysApi {
 			},
 			CapysApiCasting.breedCapysEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
-	public fetchStakeCapyEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchStakeCapyEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeCapyEventOnChain,
 			StakeCapyEvent
@@ -162,13 +153,10 @@ export class CapysApi {
 			},
 			CapysApiCasting.stakeCapyEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
-	public fetchUnstakeCapyEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchUnstakeCapyEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeCapyEventOnChain,
 			UnstakeCapyEvent
@@ -178,7 +166,7 @@ export class CapysApi {
 			},
 			CapysApiCasting.unstakeCapyEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	/////////////////////////////////////////////////////////////////////

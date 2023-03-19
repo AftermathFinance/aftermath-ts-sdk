@@ -99,10 +99,7 @@ export class FaucetApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchMintCoinEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchMintCoinEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
 			FaucetMintCoinEvent
@@ -112,6 +109,6 @@ export class FaucetApi {
 			},
 			FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 }

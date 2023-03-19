@@ -182,16 +182,4 @@ export class Coin extends Caller {
 	) => {
 		return Coin.balanceWithDecimals(amount, decimals) * price;
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Sui Coin Wrappers
-	/////////////////////////////////////////////////////////////////////
-
-	public static getBalance = (
-		data: SuiObjectResponse | SuiMoveObject
-	): Balance | undefined => SuiCoin.getBalance(data);
-
-	public static totalBalance = (
-		coins: (SuiObjectResponse | SuiMoveObject)[]
-	): Balance => SuiCoin.totalBalance(coins);
 }

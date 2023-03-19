@@ -8,20 +8,13 @@ import {
 	StakeStakeEventAccumulation,
 } from "../stakingTypes";
 import { Helpers } from "../../../general/utils/helpers";
-import {
-	Balance,
-	Delegation,
-	SerializedTransaction,
-	StakedSui,
-} from "../../../types";
-import { SuiApiCasting } from "../../sui/api/suiApiCasting";
+import { Balance, SerializedTransaction } from "../../../types";
 import {
 	StakingCancelDelegationRequestEventOnChain,
 	StakingRequestAddDelegationEventOnChain,
 	StakingRequestWithdrawDelegationEventOnChain,
 } from "./stakingApiCastingTypes";
-import { StakingApiCasting } from "./stakingApiCasting";
-import { Staking } from "../staking";
+import { Casting } from "../../../general/utils/casting";
 
 export class StakingApi {
 	/////////////////////////////////////////////////////////////////////
@@ -61,7 +54,7 @@ export class StakingApi {
 
 	public fetchRequestAddDelegationEvents = async (
 		cursor?: EventId,
-		eventLimit?: number
+		limit?: number
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingRequestAddDelegationEventOnChain,
@@ -70,14 +63,14 @@ export class StakingApi {
 			{
 				MoveEventType: this.Helpers.eventTypes.requestAddDelegation,
 			},
-			StakingApiCasting.requestAddDelegationEventFromOnChain,
+			Casting.staking.requestAddDelegationEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	public fetchRequestWithdrawDelegationEvents = async (
 		cursor?: EventId,
-		eventLimit?: number
+		limit?: number
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingRequestWithdrawDelegationEventOnChain,
@@ -87,14 +80,14 @@ export class StakingApi {
 				MoveEventType:
 					this.Helpers.eventTypes.requestWithdrawDelegation,
 			},
-			StakingApiCasting.requestWithdrawDelegationEventFromOnChain,
+			Casting.staking.requestWithdrawDelegationEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	public fetchCancelDelegationRequestEvents = async (
 		cursor?: EventId,
-		eventLimit?: number
+		limit?: number
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingCancelDelegationRequestEventOnChain,
@@ -103,33 +96,33 @@ export class StakingApi {
 			{
 				MoveEventType: this.Helpers.eventTypes.cancelDelegationRequest,
 			},
-			StakingApiCasting.cancelDelegationRequestEventFromOnChain,
+			Casting.staking.cancelDelegationRequestEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Staked SUI Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakedSuiObjects = async (
-		stakedSuiIds: ObjectId[]
-	): Promise<StakedSui[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch(
-			stakedSuiIds,
-			SuiApiCasting.stakedSuiFromSuiObjectResponse
-		);
-	};
+	// public fetchStakedSuiObjects = async (
+	// 	stakedSuiIds: ObjectId[]
+	// ): Promise<StakedSui[]> => {
+	// 	return this.Provider.Objects().fetchCastObjectBatch(
+	// 		stakedSuiIds,
+	// 		SuiApiCasting.stakedSuiFromSuiObjectResponse
+	// 	);
+	// };
 
-	public fetchStakedSuiObjectsOwnedByAddress = async (
-		walletAddress: SuiAddress
-	): Promise<StakedSui[]> => {
-		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-			walletAddress,
-			Staking.constants.objectTypes.stakedSuiType,
-			SuiApiCasting.stakedSuiFromSuiObjectResponse
-		);
-	};
+	// public fetchStakedSuiObjectsOwnedByAddress = async (
+	// 	walletAddress: SuiAddress
+	// ): Promise<StakedSui[]> => {
+	// 	return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
+	// 		walletAddress,
+	// 		Staking.constants.objectTypes.stakedSuiType,
+	// 		SuiApiCasting.stakedSuiFromSuiObjectResponse
+	// 	);
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
@@ -189,7 +182,7 @@ export class StakingApi {
 			StakeStakeEventAccumulation
 		> = {};
 
-		// TODO: should keep fetching stakes until there are none left - is this the same as undefined eventLimit ?
+		// TODO: should keep fetching stakes until there are none left - is this the same as undefined limit ?
 		const stakesWithCursor = await this.fetchRequestAddDelegationEvents();
 		const stakes = stakesWithCursor.events;
 

@@ -11,6 +11,14 @@ import { AftermathApi } from "../providers/aftermathApi";
 
 export class EventsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
+	//// Private Static Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		defaultLimitStepSize: 500,
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
@@ -53,12 +61,12 @@ export class EventsApiHelpers {
 	public fetchEventsOnChainWithCursor = async <EventOnChainType>(
 		query: SuiEventFilter,
 		cursor?: EventId,
-		eventLimit?: number
+		limit?: number
 	): Promise<EventsWithCursor<EventOnChainType>> => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
-			cursor: cursor === undefined ? null : cursor,
-			limit: eventLimit || null, // defaultEventLimit ?
+			cursor,
+			limit, // defaultlimit ?
 		});
 
 		const events = fetchedEvents.data as EventOnChainType[];
@@ -71,12 +79,12 @@ export class EventsApiHelpers {
 		query: SuiEventFilter,
 		eventFromEventOnChain: (eventOnChain: EventOnChainType) => EventType,
 		cursor?: EventId,
-		eventLimit?: number
+		limit?: number
 	) => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
-			cursor: cursor === undefined ? null : cursor,
-			limit: eventLimit || null, // defaultEventLimit ?
+			cursor,
+			limit, // defaultlimit ?
 		});
 		const eventsOnChain =
 			fetchedEvents.data as unknown as EventOnChainType[];
@@ -90,18 +98,18 @@ export class EventsApiHelpers {
 	public fetchEventsWithinTime = async <T extends Event>(
 		fetchEventsFunc: (
 			cursor?: EventId,
-			eventLimit?: number
+			limit?: number
 		) => Promise<EventsWithCursor<T>>,
 		timeUnit: QUnitType | OpUnitType,
 		time: number,
-		eventLimitStepSize: number = 500
+		limitStepSize: number = EventsApiHelpers.constants.defaultLimitStepSize
 	) => {
 		let eventsWithinTime: T[] = [];
 		let cursor: EventId | undefined = undefined;
 		do {
 			const eventsWithCursor: EventsWithCursor<T> = await fetchEventsFunc(
 				cursor,
-				eventLimitStepSize
+				limitStepSize
 			);
 			const events = eventsWithCursor.events;
 
@@ -125,19 +133,20 @@ export class EventsApiHelpers {
 		} while (true);
 	};
 
+	// NOTE: is this the same as cursor and limit set to undefined/null ?
 	public fetchAllEvents = async <T extends Event>(
 		fetchEventsFunc: (
 			cursor?: EventId,
-			eventLimit?: number
+			limit?: number
 		) => Promise<EventsWithCursor<T>>,
-		eventLimitStepSize: number = 500
+		limitStepSize: number = EventsApiHelpers.constants.defaultLimitStepSize
 	) => {
 		let allEvents: T[] = [];
 		let cursor: EventId | undefined = undefined;
 		do {
 			const eventsWithCursor: EventsWithCursor<T> = await fetchEventsFunc(
 				cursor,
-				eventLimitStepSize
+				limitStepSize
 			);
 			const events = eventsWithCursor.events;
 			allEvents = [...allEvents, ...events];

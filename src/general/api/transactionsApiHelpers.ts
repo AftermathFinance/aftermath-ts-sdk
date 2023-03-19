@@ -1,8 +1,5 @@
-import { TransactionDigest } from "@mysten/sui.js";
-import {
-	TransactionDigestsWithCursor,
-	TransactionsWithCursor,
-} from "../../types";
+import { SuiTransactionResponseQuery, TransactionDigest } from "@mysten/sui.js";
+import { TransactionsWithCursor } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 
 export class TransactionsApiHelpers {
@@ -22,40 +19,21 @@ export class TransactionsApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchTransactionDigestsWithCursor = async (
-		query: TransactionQuery,
-		cursor?: TransactionDigest,
-		limit?: number
-	): Promise<TransactionDigestsWithCursor> => {
-		const transactionDigestsWithCursor =
-			await this.Provider.provider.getTransactions(
-				query,
-				cursor ?? null,
-				limit ?? null
-			);
-
-		return {
-			transactionDigests: transactionDigestsWithCursor.data,
-			nextCursor: transactionDigestsWithCursor.nextCursor,
-		};
-	};
-
 	public fetchTransactionsWithCursor = async (
-		query: TransactionQuery,
+		query: SuiTransactionResponseQuery,
 		cursor?: TransactionDigest,
 		limit?: number
 	): Promise<TransactionsWithCursor> => {
-		const transactionDigestsWithCursor =
-			await this.fetchTransactionDigestsWithCursor(query, cursor, limit);
-
-		const transactions =
-			await this.Provider.provider.getTransactionWithEffectsBatch(
-				transactionDigestsWithCursor.transactionDigests
-			);
+		const transactionsWithCursor =
+			await this.Provider.provider.queryTransactions({
+				...query,
+				cursor,
+				limit,
+			});
 
 		return {
-			transactions,
-			nextCursor: transactionDigestsWithCursor.nextCursor,
+			transactions: transactionsWithCursor.data,
+			nextCursor: transactionsWithCursor.nextCursor,
 		};
 	};
 

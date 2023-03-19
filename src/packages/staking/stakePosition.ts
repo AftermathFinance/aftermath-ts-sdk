@@ -1,4 +1,9 @@
-import { Transaction, SuiAddress, DelegatedStake } from "@mysten/sui.js";
+import {
+	Transaction,
+	SuiAddress,
+	DelegatedStake,
+	StakeObject,
+} from "@mysten/sui.js";
 import {
 	ApiCancelDelegationRequestBody,
 	ApiRequestWithdrawDelegationBody,
@@ -20,30 +25,34 @@ export class StakePosition extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getRequestWithdrawTransactions(): Promise<Transaction> {
-		if (this.stakePosition.status === "pending")
+	public async getRequestWithdrawTransactions(
+		stake: StakeObject
+	): Promise<Transaction> {
+		if (stake.status === "Pending")
 			throw new Error(
-				"stake position unable to withdraw, current status is pending"
+				"stake unable to withdraw, current status is pending"
 			);
 
 		return this.fetchApi<Transaction, ApiRequestWithdrawDelegationBody>(
 			"transactions/requestWithdrawDelegation",
 			{
 				walletAddress: this.stakerAddress,
-				principalAmount: this.stakePosition.principalAmount,
-				stakedSuiObjectId: this.stakePosition.stakedSuiId,
-				delegationObjectId: this.stakePosition.status.active.id,
+				principalAmount: BigInt(stake.principal),
+				stakedSuiObjectId: stake.stakedSuiId,
+				// delegationObjectId: stake,
 			}
 		);
 	}
 
-	public async getCancelRequestTransactions(): Promise<Transaction> {
+	public async getCancelRequestTransactions(
+		stake: StakeObject
+	): Promise<Transaction> {
 		return this.fetchApi<Transaction, ApiCancelDelegationRequestBody>(
 			"transactions/cancelDelegationRequest",
 			{
 				walletAddress: this.stakerAddress,
-				principalAmount: this.stakePosition.principalAmount,
-				stakedSuiObjectId: this.stakePosition.stakedSuiId,
+				principalAmount: BigInt(stake.principal),
+				stakedSuiObjectId: stake.stakedSuiId,
 			}
 		);
 	}

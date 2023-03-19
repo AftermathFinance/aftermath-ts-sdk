@@ -9,7 +9,6 @@ import {
 	GasBudget,
 } from "../../../types";
 import { Sui } from "../../sui/sui";
-import { Helpers } from "../../../general/utils/helpers";
 
 export class FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////

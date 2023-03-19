@@ -68,10 +68,6 @@ export interface DynamicFieldObjectsWithCursor<ObjectType> {
 //// Transactions
 /////////////////////////////////////////////////////////////////////
 
-export interface TransactionDigestsWithCursor {
-	transactionDigests: TransactionDigest[];
-	nextCursor: TransactionDigest | null;
-}
 export interface TransactionsWithCursor {
 	transactions: SuiTransactionResponse[];
 	nextCursor: TransactionDigest | null;

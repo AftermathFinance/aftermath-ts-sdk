@@ -31,7 +31,7 @@
 	},
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
-		"@mysten/sui.js": "^0.0.0-experimental-20230318202209",
+		"@mysten/sui.js": "^0.0.0-experimental-20230319172139",
 		"@pythnetwork/pyth-aptos-js": "^1.0.0",
 		"dayjs": "^1.11.7"
 	},
