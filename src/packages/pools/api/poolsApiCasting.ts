@@ -1,4 +1,9 @@
-import { SuiMoveObject } from "@mysten/sui.js";
+import {
+	SuiObjectResponse,
+	getObjectFields,
+	getObjectId,
+	getObjectType,
+} from "@mysten/sui.js";
 import {
 	PoolAmountDynamicField,
 	PoolBalanceDynamicField,
@@ -31,10 +36,25 @@ export class PoolsApiCasting {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public static poolObjectFromSuiObject = (suiObject: SuiMoveObject) => {
-		const objectId = suiObject.reference.objectId;
-		const suiMoveObject = suiObject.data as SuiMoveObject;
-		const poolFieldsOnChain = suiMoveObject.fields as PoolFieldsOnChain;
+	public static poolDynamicFieldsFromSuiObject = (
+		suiObject: SuiObjectResponse
+	): PoolDynamicFieldOnChain<any> => {
+		const type = getObjectType(suiObject);
+		if (!type) throw new Error("no type found for pool dynamic fields");
+
+		return {
+			data: {
+				fields: getObjectFields(suiObject),
+				type,
+			},
+		};
+	};
+
+	public static poolObjectFromSuiObject = (suiObject: SuiObjectResponse) => {
+		const objectId = getObjectId(suiObject);
+		const poolFieldsOnChain = getObjectFields(
+			suiObject
+		) as PoolFieldsOnChain;
 
 		// TODO: handle failed casts ^ ?
 

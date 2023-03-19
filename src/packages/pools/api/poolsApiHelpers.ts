@@ -202,7 +202,17 @@ export class PoolsApiHelpers {
 	public addTradeCommandToTransaction = (
 		tx: Transaction,
 		poolId: ObjectId,
-		coinInId: ObjectId,
+		coinInId:
+			| ObjectId
+			| {
+					kind: "Result";
+					index: number;
+			  }
+			| {
+					kind: "NestedResult";
+					index: number;
+					resultIndex: number;
+			  },
 		coinInType: CoinType,
 		coinOutMin: Balance,
 		coinOutType: CoinType,
@@ -220,7 +230,7 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(coinInId),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(coinOutMin.toString()),
 			],
 			// gasBudget: gasBudget,

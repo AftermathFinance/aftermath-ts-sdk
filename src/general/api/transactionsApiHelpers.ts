@@ -1,4 +1,4 @@
-import { TransactionDigest, TransactionQuery } from "@mysten/sui.js";
+import { TransactionDigest } from "@mysten/sui.js";
 import {
 	TransactionDigestsWithCursor,
 	TransactionsWithCursor,

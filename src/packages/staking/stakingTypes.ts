@@ -16,41 +16,6 @@ export interface StakeBalanceDynamicField {
 	value: Balance;
 }
 
-export interface StakeValidator {
-	name: string;
-	description: string | undefined;
-	projectUrl: Url | undefined;
-	imageUrl: Url | undefined;
-	suiAddress: SuiAddress;
-	nextEpoch: {
-		commissionRate: number;
-		delegation: Balance;
-		gasPrice: Balance;
-		stake: Balance;
-	};
-}
-
-type DelegatedStakePositionStatus =
-	| "pending"
-	| {
-			active: {
-				id: ObjectId;
-				stakedSuiId: ObjectId;
-				principalSuiAmount: Balance;
-				poolCoinsAmount: Balance;
-			};
-	  };
-
-export interface DelegatedStakePosition {
-	stakedSuiId: ObjectId;
-	validatorAddress: SuiAddress;
-	poolStartingEpoch: EpochTimeStamp;
-	delegationRequestEpoch: EpochTimeStamp;
-	principalAmount: Balance;
-	suiCoinLock: number | undefined;
-	status: DelegatedStakePositionStatus;
-}
-
 /////////////////////////////////////////////////////////////////////
 //// Events
 /////////////////////////////////////////////////////////////////////

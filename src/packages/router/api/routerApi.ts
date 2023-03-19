@@ -1,6 +1,7 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
-import { CoinType } from "../../../types";
+import { CoinType, RouterCompleteTradeRoute } from "../../../types";
+import { SuiAddress, Transaction } from "@mysten/sui.js";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -36,6 +37,59 @@ export class RouterApi {
 		return uniqueCoins;
 	};
 
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public async getTransactionForCompleteTradeRoute(
+		walletAddress: SuiAddress,
+		completeRoute: RouterCompleteTradeRoute
+	): Promise<Transaction> {
+		const startTx = new Transaction();
+
+		const { coinWithAmountObjectId: coinInId, txWithCoinWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				startTx,
+				walletAddress,
+				completeRoute.coinIn,
+				completeRoute.coinInAmount
+			);
+
+		let tx = txWithCoinWithAmount;
+
+		for (const route of completeRoute.routes) {
+			tx.add({
+				kind: "SplitCoin",
+				coin: tx.object(coinInId),
+				amount: tx.pure(route.coinInAmount),
+			});
+
+			for (const [index, path] of route.paths.entries()) {
+				tx =
+					await this.Provider.Pools().Helpers.addTradeCommandToTransaction(
+						tx,
+						path.poolObjectId,
+						index === 0
+							? coinInId
+							: {
+									kind: "Result",
+									index: 0,
+							  },
+						path.coinIn,
+						BigInt(0), // TODO: calc slippage amount
+						path.coinOut,
+						path.poolLpCoinType
+					);
+			}
+		}
+
+		return tx;
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Graph
+	/////////////////////////////////////////////////////////////////////
+
 	// public fetchGraph = async () => {
 	// 	const pools = await this.Provider.Pools().fetchAllPools();
 	// 	const poolDynamicFields = await Promise.all(
@@ -56,65 +110,5 @@ export class RouterApi {
 	// 	completePools.map((pool) => RouterApiHelpers.addPool(graph, pool));
 
 	// 	return graph;
-	// };
-
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
-
-	// public getIntermediateTradeTransactions = (
-	// 	path: RouterPath,
-	// 	fromCoinId: ObjectId
-	// ) => this.Helpers.intermediateTradeTransactions(path, fromCoinId);
-
-	// public fetchFirstTradeTransaction = async (
-	// 	walletAddress: SuiAddress,
-	// 	fromCoinAmount: Balance,
-	// 	path: RouterPath
-	// ): Promise<Transaction> => {
-	// 	const { coinObjectId, joinAndSplitTransactions } =
-	// 		await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
-	// 			walletAddress,
-	// 			path.baseAsset,
-	// 			fromCoinAmount
-	// 		);
-
-	// 	const tradeTransactions = this.Helpers.intermediateTradeTransactions(
-	// 		path,
-	// 		coinObjectId
-	// 	);
-
-	// 	return [...joinAndSplitTransactions, ...tradeTransactions];
-	// };
-
-	/////////////////////////////////////////////////////////////////////
-	//// Path Info
-	/////////////////////////////////////////////////////////////////////
-
-	// public getTradePathInfo = (
-	// 	graph: Graph,
-	// 	fromCoinType: CoinType,
-	// 	toCoinType: CoinType
-	// ): RouterCompleteRoute => {
-	// 	const route = RouterApiHelpers.getBestRoute(
-	// 		graph,
-	// 		fromCoinType,
-	// 		toCoinType,
-	// 		BigInt(1),
-	// 		3
-	// 	);
-
-	// 	const paths: RouterPath[] = route.path.map((path) => {
-	// 		return {
-	// 			baseAsset: path.nodeFrom.coinType,
-	// 			quoteAsset: path.nodeTo.coinType,
-	// 			pool: path.alongPool.source.pool,
-	// 			weight: 0,
-	// 		};
-	// 	});
-
-	// 	const spotPrice = RouterApiHelpers.calcRouteSpotPrice(route);
-
-	// 	return { spotPrice, paths };
 	// };
 }

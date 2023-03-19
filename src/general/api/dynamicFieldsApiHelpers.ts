@@ -1,11 +1,11 @@
 import { ObjectId } from "@mysten/sui.js";
 import {
 	AnyObjectType,
-	DynamicField,
 	DynamicFieldObjectsWithCursor,
 	DynamicFieldsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
+import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
 export class DynamicFieldsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ export class DynamicFieldsApiHelpers {
 			| ((objectType: AnyObjectType) => boolean),
 		cursor?: ObjectId,
 		limit?: number
-	) => {
+	): Promise<DynamicFieldObjectsWithCursor<ObjectType>> => {
 		const { dynamicFields, nextCursor } =
 			await this.fetchDynamicFieldsOfTypeWithCursor(
 				parentObjectId,
@@ -51,7 +51,7 @@ export class DynamicFieldsApiHelpers {
 		return {
 			dynamicFieldObjects,
 			nextCursor,
-		} as DynamicFieldObjectsWithCursor<ObjectType>;
+		};
 	};
 
 	public fetchAllDynamicFieldsOfType = async (
@@ -61,7 +61,7 @@ export class DynamicFieldsApiHelpers {
 			| ((objectType: AnyObjectType) => boolean),
 		limitStepSize: number = 500
 	) => {
-		let allDynamicFields: DynamicField[] = [];
+		let allDynamicFields: DynamicFieldInfo[] = [];
 		let cursor: ObjectId | undefined = undefined;
 		do {
 			const dynamicFieldsWithCursor: DynamicFieldsWithCursor =
@@ -153,13 +153,13 @@ export class DynamicFieldsApiHelpers {
 			| ((objectType: AnyObjectType) => boolean),
 		cursor?: ObjectId,
 		limit?: number
-	) => {
+	): Promise<DynamicFieldsWithCursor> => {
 		const dynamicFieldsResponse =
-			await this.Provider.provider.getDynamicFields(
-				parentObjectId,
+			await this.Provider.provider.getDynamicFields({
+				parentId: parentObjectId,
 				cursor,
-				limit
-			);
+				limit,
+			});
 
 		const dynamicFields =
 			dynamicFieldType === undefined
@@ -174,6 +174,6 @@ export class DynamicFieldsApiHelpers {
 		return {
 			dynamicFields,
 			nextCursor,
-		} as DynamicFieldsWithCursor;
+		};
 	};
 }

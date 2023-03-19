@@ -1,9 +1,7 @@
-import { Transaction, SuiAddress, SuiSystemState } from "@mysten/sui.js";
+import { Transaction, SuiAddress, DelegatedStake } from "@mysten/sui.js";
 import {
 	ApiCancelDelegationRequestBody,
 	ApiRequestWithdrawDelegationBody,
-	Balance,
-	DelegatedStakePosition,
 	SuiNetwork,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
@@ -11,7 +9,7 @@ import { Caller } from "../../general/utils/caller";
 export class StakePosition extends Caller {
 	constructor(
 		public readonly stakerAddress: SuiAddress,
-		public readonly stakePosition: DelegatedStakePosition,
+		public readonly stakePosition: DelegatedStake,
 		public readonly network?: SuiNetwork
 	) {
 		super(network, "staking");
@@ -49,40 +47,4 @@ export class StakePosition extends Caller {
 			}
 		);
 	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Calculations
-	/////////////////////////////////////////////////////////////////////
-
-	public calcStakingRewards = (suiSystemState: SuiSystemState): Balance => {
-		if (this.stakePosition.status === "pending") return BigInt(0);
-
-		const validatorAddress = this.stakePosition.validatorAddress;
-		const activeValidators = suiSystemState.validators.active_validators;
-
-		const validator = activeValidators.find(
-			(validator) =>
-				validator.delegation_staking_pool.validator_address ===
-				validatorAddress
-		);
-		if (!validator) return BigInt(0);
-
-		const poolTokens = this.stakePosition.status.active.poolCoinsAmount;
-
-		const delegationTokenSupply = BigInt(
-			validator.delegation_staking_pool.delegation_token_supply.value
-		);
-
-		const suiBalance = BigInt(
-			validator.delegation_staking_pool.sui_balance
-		);
-
-		const principalAmount =
-			this.stakePosition.status.active.principalSuiAmount;
-
-		const currentSuiWorth =
-			(poolTokens * suiBalance) / delegationTokenSupply;
-
-		return currentSuiWorth - principalAmount;
-	};
 }

@@ -2,17 +2,16 @@ import {
 	EventId,
 	Transaction,
 	SuiAddress,
-	SuiSystemState,
+	Delegation,
+	DelegatedStake,
 } from "@mysten/sui.js";
 import {
 	ApiEventsBody,
 	ApiRequestAddDelegationBody,
 	Balance,
-	DelegatedStakePosition,
 	EventsWithCursor,
 	StakeCancelDelegationRequestEvent,
 	StakeRequestAddDelegationEvent,
-	StakeValidator,
 	StakeRequestWithdrawDelegationEvent,
 	StakingStats,
 	SuiNetwork,
@@ -46,20 +45,13 @@ export class Staking extends Caller {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakePositions(
+	public async getStakePosition(
 		walletAddress: SuiAddress
-	): Promise<StakePosition[]> {
-		const delegatedStakePositions = this.fetchApi<DelegatedStakePosition[]>(
+	): Promise<StakePosition> {
+		const position = await this.fetchApi<DelegatedStake>(
 			`stakePositions/${walletAddress}`
 		);
-		return (await delegatedStakePositions).map(
-			(position) =>
-				new StakePosition(walletAddress, position, this.network)
-		);
-	}
-
-	public async getStakeValidators(): Promise<StakeValidator[]> {
-		return this.fetchApi("validators");
+		return new StakePosition(walletAddress, position, this.network);
 	}
 
 	/////////////////////////////////////////////////////////////////////

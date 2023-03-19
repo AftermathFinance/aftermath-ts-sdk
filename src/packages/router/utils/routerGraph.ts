@@ -198,6 +198,7 @@ export class RouterGraph {
 	): RouterTradeRoute[] => {
 		const coinInEdges = graph.coinNodes[coinIn].toCoinThroughPoolEdges;
 		const startingRoutes = this.createStartingRoutes(
+			graph.pools,
 			coinInEdges,
 			coinIn,
 			coinOut
@@ -214,6 +215,7 @@ export class RouterGraph {
 	};
 
 	private static createStartingRoutes = (
+		pools: Pools,
 		coinInEdges: ToCoinThroughPoolEdges,
 		coinIn: CoinType,
 		coinOut: CoinType
@@ -231,6 +233,8 @@ export class RouterGraph {
 					paths: [
 						{
 							poolObjectId,
+							poolLpCoinType:
+								pools[poolObjectId].pool.fields.lpType,
 							coinIn,
 							coinOut: toCoin,
 							coinInAmount: BigInt(0),
@@ -288,6 +292,9 @@ export class RouterGraph {
 								...route.paths,
 								{
 									poolObjectId,
+									poolLpCoinType:
+										graph.pools[poolObjectId].pool.fields
+											.lpType,
 									coinIn: lastPath.coinOut,
 									coinOut: toCoin,
 									coinInAmount: BigInt(0),

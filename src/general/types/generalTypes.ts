@@ -4,6 +4,7 @@ import {
 	SuiTransactionResponse,
 	TransactionDigest,
 } from "@mysten/sui.js";
+import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
 /////////////////////////////////////////////////////////////////////
 //// bigint
@@ -54,17 +55,8 @@ export interface Event {
 /////////////////////////////////////////////////////////////////////
 
 export interface DynamicFieldsWithCursor {
-	dynamicFields: DynamicField[];
+	dynamicFields: DynamicFieldInfo[];
 	nextCursor: ObjectId | null;
-}
-
-export interface DynamicField {
-	digest: TransactionDigest;
-	objectId: ObjectId;
-	version: number;
-	type: "DynamicField" | "DynamicObject";
-	name: string;
-	objectType: AnyObjectType;
 }
 
 export interface DynamicFieldObjectsWithCursor<ObjectType> {

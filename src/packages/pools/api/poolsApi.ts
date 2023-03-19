@@ -7,23 +7,20 @@ import {
 	PoolVolumeDataTimeframeKey,
 	PoolDepositEvent,
 	PoolDynamicFields,
-	PoolObject,
 	PoolStats,
 	PoolTradeEvent,
 	PoolWithdrawEvent,
 	SerializedTransaction,
 } from "../../../types";
-import { Casting } from "../../../general/utils/casting";
 import { Coin } from "../../coin/coin";
 import {
 	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
-	PoolDynamicFieldOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
-import { PoolsApiCasting } from "./poolsApiCasting";
 import { Pools } from "../pools";
+import { Casting } from "../../../general/utils/casting";
 
 export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
@@ -143,7 +140,7 @@ export class PoolsApi {
 			{
 				MoveEventType: this.Helpers.eventTypes.trade,
 			},
-			PoolsApiCasting.poolTradeEventFromOnChain,
+			Casting.pools.poolTradeEventFromOnChain,
 			cursor,
 			eventLimit
 		);
@@ -174,7 +171,7 @@ export class PoolsApi {
 			{
 				MoveEventType: this.Helpers.eventTypes.deposit,
 			},
-			PoolsApiCasting.poolDepositEventFromOnChain,
+			Casting.pools.poolDepositEventFromOnChain,
 			cursor,
 			eventLimit
 		);
@@ -206,7 +203,7 @@ export class PoolsApi {
 			{
 				MoveEventType: this.Helpers.eventTypes.withdraw,
 			},
-			PoolsApiCasting.poolWithdrawEventFromOnChain,
+			Casting.pools.poolWithdrawEventFromOnChain,
 			cursor,
 			eventLimit
 		);
@@ -218,14 +215,14 @@ export class PoolsApi {
 	public fetchPool = async (objectId: ObjectId) => {
 		return this.Provider.Objects().fetchCastObject(
 			objectId,
-			PoolsApiCasting.poolObjectFromSuiObject
+			Casting.pools.poolObjectFromSuiObject
 		);
 	};
 
 	public fetchPools = async (objectIds: ObjectId[]) => {
 		return this.Provider.Objects().fetchCastObjectBatch(
 			objectIds,
-			PoolsApiCasting.poolObjectFromSuiObject
+			Casting.pools.poolObjectFromSuiObject
 		);
 	};
 
@@ -240,7 +237,7 @@ export class PoolsApi {
 		});
 
 		const poolObjects = paginatedEvents.data.map((event) =>
-			PoolsApiCasting.poolObjectFromPoolCreateEventOnChain(
+			Casting.pools.poolObjectFromPoolCreateEventOnChain(
 				event.parsedJson as PoolCreateEventOnChain
 			)
 		);
@@ -258,20 +255,17 @@ export class PoolsApi {
 		const dynamicFieldsAsSuiObjects =
 			await this.Provider.Objects().fetchObjectBatch(objectIds);
 		const dynamicFieldsOnChain = dynamicFieldsAsSuiObjects.map(
-			(dynamicField) =>
-				dynamicField.details as SuiObject as PoolDynamicFieldOnChain<any>
+			Casting.pools.poolDynamicFieldsFromSuiObject
 		);
 
 		const lpFields = dynamicFieldsOnChain
 			.filter((field) => Pools.isLpKeyType(field.data.type))
-			.map((field) =>
-				PoolsApiCasting.poolLpDynamicFieldFromOnChain(field)
-			);
+			.map((field) => Casting.pools.poolLpDynamicFieldFromOnChain(field));
 
 		const amountFields = dynamicFieldsOnChain
 			.filter((field) => Pools.isAmountKeyType(field.data.type))
 			.map((field) =>
-				PoolsApiCasting.poolAmountDynamicFieldFromOnChain(field)
+				Casting.pools.poolAmountDynamicFieldFromOnChain(field)
 			);
 
 		return {

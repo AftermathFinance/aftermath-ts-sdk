@@ -17,6 +17,7 @@ export type RouterTradeRoute = RouterTradeInfo & {
 
 export type RouterTradePath = RouterTradeInfo & {
 	poolObjectId: ObjectId;
+	poolLpCoinType: CoinType;
 };
 
 interface RouterTradeInfo {

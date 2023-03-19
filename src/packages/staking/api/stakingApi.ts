@@ -1,4 +1,4 @@
-import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
+import { DelegatedStake, EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
 import {
@@ -47,26 +47,12 @@ export class StakingApi {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakeValidators = async () => {
-		const validatorMetadatas = (
-			await this.Provider.provider.getLatestSuiSystemState()
-		).activeValidators;
-
-		const validators = validatorMetadatas.map(
-			StakingApiCasting.stakeValidatorFromValidatorMetadata
-		);
-
-		return validators;
-	};
-
-	public fetchDelegatedStakePositions = async (address: SuiAddress) => {
-		const delegatedStakes = await this.Provider.provider.getStakes({
+	public fetchDelegatedStakePositions = async (
+		address: SuiAddress
+	): Promise<DelegatedStake[]> => {
+		return this.Provider.provider.getStakes({
 			owner: address,
 		});
-		const delegatedStakePositions = delegatedStakes.map(
-			StakingApiCasting.delegatedStakePositionFromDelegatedStake
-		);
-		return delegatedStakePositions;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -121,33 +107,6 @@ export class StakingApi {
 			cursor,
 			eventLimit
 		);
-
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Delegation Objects
-	/////////////////////////////////////////////////////////////////////
-
-	public fetchDelegationObjects = async (
-		delegationIds: ObjectId[]
-	): Promise<Delegation[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch(
-			delegationIds,
-			SuiApiCasting.delegationFromSuiObjectResponse
-		);
-	};
-
-	public fetchDelegationObjectsOwnedByAddress = async (
-		walletAddress: SuiAddress
-	): Promise<Delegation[]> => {
-		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-			walletAddress,
-			Staking.constants.objectTypes.delegationType,
-			SuiApiCasting.delegationFromSuiObjectResponse
-		);
-	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Staked SUI Objects
