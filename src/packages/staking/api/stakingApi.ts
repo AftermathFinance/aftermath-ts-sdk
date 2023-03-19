@@ -1,4 +1,10 @@
-import { DelegatedStake, EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
+import {
+	DelegatedStake,
+	EventId,
+	ObjectId,
+	SuiAddress,
+	SuiValidatorSummary,
+} from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
 import {
@@ -37,15 +43,19 @@ export class StakingApi {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Inspections
+	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchDelegatedStakePositions = async (
+	public fetchDelegatedStakes = async (
 		address: SuiAddress
 	): Promise<DelegatedStake[]> => {
 		return this.Provider.provider.getStakes({
 			owner: address,
 		});
+	};
+
+	public fetchActiveValidators = async (): Promise<SuiValidatorSummary[]> => {
+		return (await this.Provider.Sui().fetchSystemState()).activeValidators;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -100,29 +110,6 @@ export class StakingApi {
 			cursor,
 			limit
 		);
-
-	/////////////////////////////////////////////////////////////////////
-	//// Staked SUI Objects
-	/////////////////////////////////////////////////////////////////////
-
-	// public fetchStakedSuiObjects = async (
-	// 	stakedSuiIds: ObjectId[]
-	// ): Promise<StakedSui[]> => {
-	// 	return this.Provider.Objects().fetchCastObjectBatch(
-	// 		stakedSuiIds,
-	// 		SuiApiCasting.stakedSuiFromSuiObjectResponse
-	// 	);
-	// };
-
-	// public fetchStakedSuiObjectsOwnedByAddress = async (
-	// 	walletAddress: SuiAddress
-	// ): Promise<StakedSui[]> => {
-	// 	return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-	// 		walletAddress,
-	// 		Staking.constants.objectTypes.stakedSuiType,
-	// 		SuiApiCasting.stakedSuiFromSuiObjectResponse
-	// 	);
-	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions

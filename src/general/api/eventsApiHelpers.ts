@@ -175,10 +175,7 @@ export class EventsApiHelpers {
 			? event
 			: undefined;
 
-	public static castEventEnvelopeOfTypeOrUndefined = <
-		EventTypeOnChain,
-		EventType
-	>(
+	public static castEventOfTypeOrUndefined = <EventTypeOnChain, EventType>(
 		event: SuiEvent,
 		eventType: AnyObjectType | (() => AnyObjectType),
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
