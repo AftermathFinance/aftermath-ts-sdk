@@ -51,7 +51,7 @@ const runRoute = (
 	maxRouteLength: number
 ) => {
 	const start = performance.now();
-	const completeRoute = router.getCompleteRoute(
+	const completeRoute = router.getCompleteTradeRoute(
 		coinIn,
 		coinInAmount,
 		coinOut,

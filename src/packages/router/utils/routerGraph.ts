@@ -54,6 +54,7 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(public readonly pools: Pool[]) {
+		// TODO: check handle remove duplicate pools (same object Id) to avoid errors ?
 		this.pools = pools;
 		this.graph = RouterGraph.createGraph(pools);
 	}

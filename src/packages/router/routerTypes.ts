@@ -29,41 +29,19 @@ interface RouterTradeInfo {
 	spotPrice: number;
 }
 
-// export interface RouterCompleteRoute {
-// 	coinIn: CoinType;
-// 	coinOut: CoinType;
-// 	coinInAmount: Balance;
-// 	coinOutAmount: Balance;
-// 	spotPrice: number;
-// 	tradeFee: PoolTradeFee;
-// 	paths: RouterPaths;
-// }
-
-// export type RouterPaths = Record<ObjectId, RouterPath>;
-
-// export interface RouterPath {
-// 	coinInAmount: Balance;
-// 	coinOutAmount: Balance;
-// 	spotPrice: number;
-// 	tradeFee: PoolTradeFee;
-// }
-
 /////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
-// export interface ApiRouterPathInfoBody {
-// 	fromCoin: CoinType;
-// 	toCoin: CoinType;
+// NOTE: is this needed ?
+// export interface ApiRouterCompleteTradeRouteBody {
+// 	coinIn: CoinType;
+// 	coinInAmount: Balance;
+// 	coinOut: CoinType;
+// 	maxRouteLength?: number;
 // }
 
-// export interface ApiRouterFirstTradeTransactionsBody {
-// 	walletAddress: SuiAddress;
-// 	fromCoinAmount: Balance;
-// 	path: RouterPath;
-// }
-
-// export interface ApiRouterIntermediateTradeTransactionsBody {
-// 	path: RouterPath;
-// 	fromCoinId: ObjectId;
-// }
+export interface ApiRouterTransactionForCompleteTradeRouteBody {
+	walletAddress: SuiAddress;
+	completeRoute: RouterCompleteTradeRoute;
+}

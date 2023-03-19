@@ -1,21 +1,22 @@
 import {
+	ApiRouterTransactionForCompleteTradeRouteBody,
 	Balance,
 	CoinType,
 	RouterCompleteTradeRoute,
+	SerializedTransaction,
 	SuiNetwork,
 } from "../../types";
 import { Pool } from "../pools/pool";
 import { Caller } from "../../general/utils/caller";
 import { RouterGraph } from "./utils/routerGraph";
-import { Transaction } from "@mysten/sui.js";
-import { PoolsApiHelpers } from "../pools/api/poolsApiHelpers";
+import { SuiAddress, Transaction } from "@mysten/sui.js";
 
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
-	//// Public Class Members
+	//// Private Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	public readonly graph: RouterGraph;
+	private readonly graph: RouterGraph;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -27,7 +28,6 @@ export class Router extends Caller {
 	) {
 		super(network, "router");
 
-		// check handle remove duplicate pools (same object Id)
 		this.pools = pools;
 		this.graph = new RouterGraph(pools);
 	}
@@ -44,7 +44,7 @@ export class Router extends Caller {
 		return this.fetchApi("supportedCoins");
 	}
 
-	public getCompleteRoute(
+	public getCompleteTradeRoute(
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
@@ -55,6 +55,25 @@ export class Router extends Caller {
 			coinInAmount,
 			coinOut,
 			maxRouteLength
+		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public async getTransactionForCompleteTradeRoute(
+		walletAddress: SuiAddress,
+		completeRoute: RouterCompleteTradeRoute
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiRouterTransactionForCompleteTradeRouteBody
+			>("transactions/trade", {
+				walletAddress,
+				completeRoute,
+			})
 		);
 	}
 }
