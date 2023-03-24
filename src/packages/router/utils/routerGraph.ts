@@ -39,8 +39,8 @@ export class RouterGraph {
 
 	private static readonly constants = {
 		// NOTE: should this default value be public ?
-		defaultMaxRouteLength: 4,
-		tradePartitionCount: BigInt(100),
+		defaultMaxRouteLength: 5,
+		tradePartitionCount: 100,
 		minRoutesToCheck: 25,
 	};
 
@@ -323,16 +323,22 @@ export class RouterGraph {
 		coinInAmount: Balance
 	): RouterTradeRoute[] => {
 		const coinInPartitionAmount =
-			coinInAmount / this.constants.tradePartitionCount;
+			coinInAmount /
+			BigInt(Math.floor(this.constants.tradePartitionCount));
 		const coinInRemainderAmount =
-			coinInAmount % this.constants.tradePartitionCount;
+			coinInAmount %
+			BigInt(Math.floor(this.constants.tradePartitionCount));
 
 		let currentPools = graph.pools;
 		let currentRoutes = routes;
 
-		const emptyArray = Array(
-			Number(this.constants.tradePartitionCount) + 1
-		).fill(undefined);
+		const emptyArray = Array(this.constants.tradePartitionCount + 1).fill(
+			undefined
+		);
+
+		const linearCutStepSize =
+			(routes.length - this.constants.minRoutesToCheck) /
+			this.constants.tradePartitionCount;
 
 		for (const [i] of emptyArray.entries()) {
 			if (i === 0 && coinInRemainderAmount <= BigInt(0)) continue;
@@ -341,7 +347,8 @@ export class RouterGraph {
 				this.findNextRouteAndUpdatePoolsAndRoutes(
 					Helpers.deepCopy(currentPools),
 					Helpers.deepCopy(currentRoutes),
-					i === 0 ? coinInRemainderAmount : coinInPartitionAmount
+					i === 0 ? coinInRemainderAmount : coinInPartitionAmount,
+					linearCutStepSize
 				);
 
 			currentPools = updatedPools;
@@ -354,7 +361,8 @@ export class RouterGraph {
 	private static findNextRouteAndUpdatePoolsAndRoutes = (
 		pools: Pools,
 		routes: RouterTradeRoute[],
-		coinInAmount: Balance
+		coinInAmount: Balance,
+		linearCutStepSize: number
 	): {
 		updatedPools: Pools;
 		updatedRoutes: RouterTradeRoute[];
@@ -367,7 +375,11 @@ export class RouterGraph {
 			)
 		);
 
-		return this.cutUpdatedRoutesAndPools(updatedRoutesAndPools);
+		return this.cutUpdatedRoutesAndPools(
+			updatedRoutesAndPools
+			// "LINEAR",
+			// linearCutStepSize
+		);
 	};
 
 	private static cutUpdatedRoutesAndPools = (
@@ -376,11 +388,18 @@ export class RouterGraph {
 			updatedRoute: RouterTradeRoute;
 			coinOutAmount: Balance;
 			startingRoute: RouterTradeRoute;
-		}[]
+		}[],
+		routeDecreaseType: "QUADRATIC" | "LINEAR" = "QUADRATIC",
+		linearCutStepSize?: number
 	): {
 		updatedRoutes: RouterTradeRoute[];
 		updatedPools: Pools;
 	} => {
+		if (routeDecreaseType === "LINEAR" && linearCutStepSize === undefined)
+			throw new Error("linear cut step size has not been provided");
+
+		// TODO: speed this up further by not sorting routesAndPools is already at minRoutesToCheck length
+
 		const sortedRoutesAndPools = routesAndPools.sort((a, b) =>
 			Number(b.coinOutAmount - a.coinOutAmount)
 		);
@@ -389,15 +408,29 @@ export class RouterGraph {
 			(route) => route.coinOutAmount <= BigInt(0)
 		);
 
-		const minRouteIndexToCheck =
-			firstUnusedRouteIndex > this.constants.minRoutesToCheck
-				? firstUnusedRouteIndex
-				: this.constants.minRoutesToCheck;
-		const newEndIndex = Math.floor(
-			(minRouteIndexToCheck + sortedRoutesAndPools.length) / 2
-		);
+		let newEndIndex;
+		if (routeDecreaseType === "QUADRATIC") {
+			const minRouteIndexToCheck =
+				firstUnusedRouteIndex > this.constants.minRoutesToCheck
+					? firstUnusedRouteIndex
+					: this.constants.minRoutesToCheck;
 
-		const cutRoutesAndPools = sortedRoutesAndPools.slice(0, newEndIndex);
+			newEndIndex = Math.floor(
+				(minRouteIndexToCheck + sortedRoutesAndPools.length) / 2
+			);
+		} else {
+			newEndIndex =
+				sortedRoutesAndPools.length - (linearCutStepSize ?? 0);
+		}
+
+		const cutRoutesAndPools = sortedRoutesAndPools.slice(
+			0,
+			newEndIndex > sortedRoutesAndPools.length
+				? sortedRoutesAndPools.length
+				: newEndIndex < this.constants.minRoutesToCheck
+				? this.constants.minRoutesToCheck
+				: newEndIndex
+		);
 
 		const updatedRoutes = [
 			cutRoutesAndPools[0].updatedRoute,
