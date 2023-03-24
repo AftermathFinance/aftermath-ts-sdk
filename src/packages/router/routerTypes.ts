@@ -1,5 +1,5 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Balance } from "../../general/types/generalTypes";
+import { AnyObjectType, Balance } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolTradeFee } from "../pools/poolsTypes";
 
@@ -17,6 +17,7 @@ export type RouterTradeRoute = RouterTradeInfo & {
 
 export type RouterTradePath = RouterTradeInfo & {
 	poolObjectId: ObjectId;
+	poolLpCoinType: AnyObjectType;
 };
 
 interface RouterTradeInfo {

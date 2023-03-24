@@ -18,24 +18,26 @@ const runMe = async () => {
 
 	const supportedCoins = await router.getSupportedCoins();
 
-	const coinIn = supportedCoins.find((coin) => coin.includes("lzeth")) ?? "";
-	const coinOut = supportedCoins.find((coin) => coin.includes("wheth")) ?? "";
-	// const coinIn = "0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdt::WHUSDT";
-	// const coinOut =
-	// 	"0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdc::WHUSDC";
-	const coinInAmount = tradeAmounts.medium;
+	// const coinIn = supportedCoins.find((coin) => coin.includes("lzeth")) ?? "";
+	// const coinOut = supportedCoins.find((coin) => coin.includes("wheth")) ?? "";
+	// const coinInAmount = tradeAmounts.medium;
+
+	const coinIn = "0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdt::WHUSDT";
+	const coinOut =
+		"0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdc::WHUSDC";
+	const coinInAmount = tradeAmounts.large;
 
 	console.log("START");
 	console.log("\n");
 
 	try {
-		runRoute(router, coinIn, coinInAmount, coinOut, 1);
-		runRoute(router, coinIn, coinInAmount, coinOut, 2);
-		runRoute(router, coinIn, coinInAmount, coinOut, 3);
+		// runRoute(router, coinIn, coinInAmount, coinOut, 1);
+		// runRoute(router, coinIn, coinInAmount, coinOut, 2);
+		// runRoute(router, coinIn, coinInAmount, coinOut, 3);
 		runRoute(router, coinIn, coinInAmount, coinOut, 4);
-		runRoute(router, coinIn, coinInAmount, coinOut, 5);
-		runRoute(router, coinIn, coinInAmount, coinOut, 6);
-		runRoute(router, coinIn, coinInAmount, coinOut, 7);
+		// runRoute(router, coinIn, coinInAmount, coinOut, 5);
+		// runRoute(router, coinIn, coinInAmount, coinOut, 6);
+		// runRoute(router, coinIn, coinInAmount, coinOut, 7);
 	} catch (e) {
 		console.error(e);
 	}
@@ -43,7 +45,7 @@ const runMe = async () => {
 	console.log("END");
 };
 
-const runRoute = (
+const runRoute = async (
 	router: Router,
 	coinIn: CoinType,
 	coinInAmount: Balance,
@@ -51,7 +53,7 @@ const runRoute = (
 	maxRouteLength: number
 ) => {
 	const start = performance.now();
-	const completeRoute = router.getCompleteRoute(
+	const completeRoute = await router.getCompleteTradeRoute(
 		coinIn,
 		coinInAmount,
 		coinOut,

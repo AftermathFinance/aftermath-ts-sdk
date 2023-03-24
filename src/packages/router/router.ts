@@ -42,13 +42,13 @@ export class Router extends Caller {
 		return this.fetchApi("supportedCoins");
 	}
 
-	public getCompleteRoute(
+	public async getCompleteTradeRoute(
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
 		maxRouteLength?: number
-	): RouterCompleteTradeRoute {
-		return this.graph.getCompleteRoute(
+	): Promise<RouterCompleteTradeRoute> {
+		return await this.graph.getCompleteRoute(
 			coinIn,
 			coinInAmount,
 			coinOut,
