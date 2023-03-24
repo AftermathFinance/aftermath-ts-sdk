@@ -59,7 +59,7 @@ export class WalletApi {
 
 	// TODO: make this only look at aftermath relevant addresses in to address
 	// TODO: restrict all filtering for events, etc. similarly using updated sdk filters
-	public fetchTransactionHistory = async (
+	public fetchPastAftermathTransactions = async (
 		address: SuiAddress,
 		cursor?: TransactionDigest,
 		limit?: number

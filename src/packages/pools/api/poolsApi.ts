@@ -140,6 +140,15 @@ export class PoolsApi {
 			{
 				MoveEventType: this.Helpers.eventTypes.trade,
 			},
+			// All: [
+			// 	{ MoveEventType: this.Helpers.eventTypes.trade },
+			// 	{
+			// 		MoveEventField: {
+			// 			path: "pool_id",
+			// 			value: poolObjectId,
+			// 		},
+			// 	},
+			// ],
 			Casting.pools.poolTradeEventFromOnChain,
 			cursor,
 			limit

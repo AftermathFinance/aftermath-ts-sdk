@@ -242,9 +242,9 @@ export class CoinApiHelpers {
 			sources: coinObjectIds.slice(1).map(tx.object),
 		});
 		tx.add({
-			kind: "SplitCoin",
+			kind: "SplitCoins",
 			coin: tx.object(mergedCoinObjectId),
-			amount: tx.pure(coinAmount),
+			amounts: [tx.pure(coinAmount)],
 		});
 
 		return {

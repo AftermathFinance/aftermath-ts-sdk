@@ -1,4 +1,4 @@
-import { SuiAddress, Transaction } from "@mysten/sui.js";
+import { EventId, SuiAddress, Transaction } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -13,6 +13,11 @@ import {
 	PoolStats,
 	SuiNetwork,
 	SerializedTransaction,
+	EventsWithCursor,
+	PoolDepositEvent,
+	ApiEventsBody,
+	PoolWithdrawEvent,
+	PoolTradeEvent,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -99,6 +104,49 @@ export class Pool extends Caller {
 			)
 		);
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	// public async getDepositEvents(
+	// 	cursor?: EventId,
+	// 	limit?: number
+	// ): Promise<EventsWithCursor<PoolDepositEvent>> {
+	// 	return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
+	// 		"events/deposit",
+	// 		{
+	// 			cursor,
+	// 			limit,
+	// 		}
+	// 	);
+	// }
+
+	// public async getWithdrawEvents(
+	// 	cursor?: EventId,
+	// 	limit?: number
+	// ): Promise<EventsWithCursor<PoolWithdrawEvent>> {
+	// 	return this.fetchApi<
+	// 		EventsWithCursor<PoolWithdrawEvent>,
+	// 		ApiEventsBody
+	// 	>("events/withdraw", {
+	// 		cursor,
+	// 		limit,
+	// 	});
+	// }
+
+	// public async getTradeEvents(
+	// 	cursor?: EventId,
+	// 	limit?: number
+	// ): Promise<EventsWithCursor<PoolTradeEvent>> {
+	// 	return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
+	// 		"events/trade",
+	// 		{
+	// 			cursor,
+	// 			limit,
+	// 		}
+	// 	);
+	// }
 
 	/////////////////////////////////////////////////////////////////////
 	//// Calculations

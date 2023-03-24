@@ -2,7 +2,6 @@ import {
 	EventId,
 	Transaction,
 	SuiAddress,
-	Delegation,
 	DelegatedStake,
 	SuiValidatorSummary,
 	StakeObject,
@@ -22,8 +21,6 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-
-// TODO: move these types to staking api class
 
 export class Staking extends Caller {
 	/////////////////////////////////////////////////////////////////////

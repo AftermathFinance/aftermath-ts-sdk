@@ -68,7 +68,7 @@ export class RouterGraph {
 		coinInAmount: Balance,
 		coinOut: CoinType,
 		maxRouteLength: number = RouterGraph.constants.defaultMaxRouteLength
-	): RouterCompleteTradeRoute {
+	): Promise<RouterCompleteTradeRoute> {
 		if (this.pools.length <= 0) throw new Error("pools has length of 0");
 
 		const routes = RouterGraph.findRoutes(
@@ -91,7 +91,7 @@ export class RouterGraph {
 			coinOut
 		);
 
-		return completeRoute;
+		return Promise.resolve(completeRoute);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -328,6 +328,8 @@ export class RouterGraph {
 
 		let currentPools = graph.pools;
 		let currentRoutes = routes;
+
+		console.log("routes", routes.length);
 
 		const emptyArray = Array(
 			Number(this.constants.tradePartitionCount) + 1

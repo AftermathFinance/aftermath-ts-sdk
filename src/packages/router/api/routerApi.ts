@@ -64,9 +64,9 @@ export class RouterApi {
 
 		for (const route of completeRoute.routes) {
 			tx.add({
-				kind: "SplitCoin",
+				kind: "SplitCoins",
 				coin: tx.object(coinInId),
-				amount: tx.pure(route.coinInAmount),
+				amounts: [tx.pure(route.coinInAmount)],
 			});
 
 			for (const [index, path] of route.paths.entries()) {
