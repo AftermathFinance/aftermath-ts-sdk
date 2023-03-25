@@ -6,6 +6,7 @@ import {
 	Balance,
 	PoolDynamicFields,
 	RouterCompleteTradeRoute,
+	RouterTradeInfo,
 	RouterTradeRoute,
 } from "../../../types";
 
@@ -64,25 +65,62 @@ export class RouterGraph {
 	//// Public Methods
 	/////////////////////////////////////////////////////////////////////
 
-	public getCompleteRoute(
+	public getCompleteRouteGivenAmountIn(
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
+		maxRouteLength?: number
+	): Promise<RouterCompleteTradeRoute> {
+		return this.getCompleteRoute(
+			coinIn,
+			coinInAmount,
+			coinOut,
+			false,
+			maxRouteLength
+		);
+	}
+
+	public getCompleteRouteGivenAmountOut(
+		coinIn: CoinType,
+		coinOut: CoinType,
+		coinOutAmount: Balance,
+		maxRouteLength?: number
+	): Promise<RouterCompleteTradeRoute> {
+		return this.getCompleteRoute(
+			coinIn,
+			coinOutAmount,
+			coinOut,
+			true,
+			maxRouteLength
+		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	private getCompleteRoute(
+		coinIn: CoinType,
+		coinInAmount: Balance,
+		coinOut: CoinType,
+		isGivenAmountOut: boolean,
 		maxRouteLength: number = RouterGraph.constants.defaultMaxRouteLength
 	): Promise<RouterCompleteTradeRoute> {
 		if (this.pools.length <= 0) throw new Error("pools has length of 0");
 
 		const routes = RouterGraph.findRoutes(
-			this.graph,
+			Helpers.deepCopy(this.graph),
 			coinIn,
 			coinOut,
-			maxRouteLength
+			maxRouteLength,
+			isGivenAmountOut
 		);
 
 		const routesAfterTrades = RouterGraph.splitTradeBetweenRoutes(
-			this.graph,
+			Helpers.deepCopy(this.graph),
 			routes,
-			coinInAmount
+			coinInAmount,
+			isGivenAmountOut
 		);
 
 		const completeRoute = RouterGraph.completeRouteFromRoutes(
@@ -92,11 +130,15 @@ export class RouterGraph {
 			coinOut
 		);
 
-		return Promise.resolve(completeRoute);
+		const finalRoute = isGivenAmountOut
+			? RouterGraph.transformCompleteRouteIfGivenAmountOut(completeRoute)
+			: completeRoute;
+
+		return Promise.resolve(finalRoute);
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
+	//// Private Static Methods
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
@@ -196,7 +238,8 @@ export class RouterGraph {
 		graph: CoinGraph,
 		coinIn: CoinType,
 		coinOut: CoinType,
-		maxRouteLength: number
+		maxRouteLength: number,
+		isGivenAmountOut: boolean
 	): RouterTradeRoute[] => {
 		const coinInEdges = graph.coinNodes[coinIn].toCoinThroughPoolEdges;
 		const startingRoutes = this.createStartingRoutes(
@@ -210,7 +253,8 @@ export class RouterGraph {
 			graph,
 			startingRoutes,
 			coinOut,
-			maxRouteLength
+			maxRouteLength,
+			isGivenAmountOut
 		);
 
 		return routes;
@@ -256,7 +300,8 @@ export class RouterGraph {
 		graph: CoinGraph,
 		routes: RouterTradeRoute[],
 		coinOut: CoinType,
-		maxRouteLength: number
+		maxRouteLength: number,
+		isGivenAmountOut: boolean
 	): RouterTradeRoute[] => {
 		let currentRoutes = [...routes];
 		let completeRoutes: RouterTradeRoute[] = [];
@@ -314,13 +359,23 @@ export class RouterGraph {
 			currentRoutes = [...newCurrentRoutes];
 		}
 
-		return completeRoutes;
+		const finalRoutes = isGivenAmountOut
+			? completeRoutes.map((route) => {
+					const newRoute = Helpers.deepCopy(route);
+					return {
+						...newRoute,
+						paths: newRoute.paths.reverse(),
+					};
+			  })
+			: completeRoutes;
+		return finalRoutes;
 	};
 
 	private static splitTradeBetweenRoutes = (
 		graph: CoinGraph,
 		routes: RouterTradeRoute[],
-		coinInAmount: Balance
+		coinInAmount: Balance,
+		isGivenAmountOut: boolean
 	): RouterTradeRoute[] => {
 		const coinInPartitionAmount =
 			coinInAmount /
@@ -348,7 +403,8 @@ export class RouterGraph {
 					Helpers.deepCopy(currentPools),
 					Helpers.deepCopy(currentRoutes),
 					i === 0 ? coinInRemainderAmount : coinInPartitionAmount,
-					linearCutStepSize
+					linearCutStepSize,
+					isGivenAmountOut
 				);
 
 			currentPools = updatedPools;
@@ -362,21 +418,24 @@ export class RouterGraph {
 		pools: Pools,
 		routes: RouterTradeRoute[],
 		coinInAmount: Balance,
-		linearCutStepSize: number
+		linearCutStepSize: number,
+		isGivenAmountOut: boolean
 	): {
 		updatedPools: Pools;
 		updatedRoutes: RouterTradeRoute[];
 	} => {
 		const updatedRoutesAndPools = routes.map((route) =>
-			RouterGraph.getUpdatedPoolsAndRouteAfterTrade(
+			this.getUpdatedPoolsAndRouteAfterTrade(
 				Helpers.deepCopy(pools),
 				Helpers.deepCopy(route),
-				coinInAmount
+				coinInAmount,
+				isGivenAmountOut
 			)
 		);
 
 		return this.cutUpdatedRoutesAndPools(
-			updatedRoutesAndPools
+			updatedRoutesAndPools,
+			isGivenAmountOut
 			// "LINEAR",
 			// linearCutStepSize
 		);
@@ -389,6 +448,7 @@ export class RouterGraph {
 			coinOutAmount: Balance;
 			startingRoute: RouterTradeRoute;
 		}[],
+		isGivenAmountOut: boolean,
 		routeDecreaseType: "QUADRATIC" | "LINEAR" = "QUADRATIC",
 		linearCutStepSize?: number
 	): {
@@ -401,7 +461,9 @@ export class RouterGraph {
 		// TODO: speed this up further by not sorting routesAndPools is already at minRoutesToCheck length
 
 		const sortedRoutesAndPools = routesAndPools.sort((a, b) =>
-			Number(b.coinOutAmount - a.coinOutAmount)
+			isGivenAmountOut
+				? Number(a.coinOutAmount - b.coinOutAmount)
+				: Number(b.coinOutAmount - a.coinOutAmount)
 		);
 
 		const firstUnusedRouteIndex = sortedRoutesAndPools.findIndex(
@@ -448,7 +510,8 @@ export class RouterGraph {
 	private static getUpdatedPoolsAndRouteAfterTrade = (
 		pools: Pools,
 		route: RouterTradeRoute,
-		coinInAmount: Balance
+		coinInAmount: Balance,
+		isGivenAmountOut: boolean
 	): {
 		updatedPools: Pools;
 		updatedRoute: RouterTradeRoute;
@@ -464,18 +527,25 @@ export class RouterGraph {
 		for (const path of originalRoute.paths) {
 			const pool = currentPools[path.poolObjectId];
 			const spotPrice = pool.getSpotPrice(path.coinIn, path.coinOut);
-			const coinOutAmount = pool.getTradeAmountOut(
-				path.coinIn,
-				currentCoinInAmount,
-				path.coinOut
-			);
+			const coinOutAmount = isGivenAmountOut
+				? pool.getTradeAmountIn(
+						path.coinOut,
+						currentCoinInAmount,
+						path.coinIn
+				  )
+				: pool.getTradeAmountOut(
+						path.coinIn,
+						currentCoinInAmount,
+						path.coinOut
+				  );
 
 			const updatedPool = this.getUpdatedPoolAfterTrade(
 				pool,
 				path.coinIn,
 				currentCoinInAmount,
 				path.coinOut,
-				coinOutAmount
+				coinOutAmount,
+				isGivenAmountOut
 			);
 
 			let newPath = {
@@ -520,7 +590,8 @@ export class RouterGraph {
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
-		coinOutAmount: Balance
+		coinOutAmount: Balance,
+		isGivenAmountOut: boolean
 	) => {
 		const poolDynamicFields = Helpers.deepCopy(pool.dynamicFields);
 		const poolAmountDynamicFields = poolDynamicFields.amountFields;
@@ -533,8 +604,17 @@ export class RouterGraph {
 		);
 
 		let newAmountDynamicFields = [...poolAmountDynamicFields];
-		newAmountDynamicFields[coinInDynamicFieldIndex].value += coinInAmount;
-		newAmountDynamicFields[coinOutDynamicFieldIndex].value -= coinOutAmount;
+		if (isGivenAmountOut) {
+			newAmountDynamicFields[coinInDynamicFieldIndex].value +=
+				coinOutAmount;
+			newAmountDynamicFields[coinOutDynamicFieldIndex].value -=
+				coinInAmount;
+		} else {
+			newAmountDynamicFields[coinInDynamicFieldIndex].value +=
+				coinInAmount;
+			newAmountDynamicFields[coinOutDynamicFieldIndex].value -=
+				coinOutAmount;
+		}
 
 		const newDynamicFields: PoolDynamicFields = {
 			...poolDynamicFields,
@@ -578,6 +658,44 @@ export class RouterGraph {
 			routes: nonZeroRoutes,
 			tradeFee: BigInt(0),
 			spotPrice,
+		};
+	};
+
+	private static transformCompleteRouteIfGivenAmountOut = (
+		completeRoute: RouterCompleteTradeRoute
+	): RouterCompleteTradeRoute => {
+		const newCompleteRoute =
+			this.transformRouterTradeInfoIfGivenAmountOut(completeRoute);
+		const newRoutes = completeRoute.routes.map((route) => {
+			const newRoute =
+				this.transformRouterTradeInfoIfGivenAmountOut(route);
+			let newPaths = route.paths.map(
+				this.transformRouterTradeInfoIfGivenAmountOut
+			);
+			newPaths.reverse();
+
+			return {
+				...newRoute,
+				paths: newPaths,
+			};
+		});
+
+		return {
+			...newCompleteRoute,
+			routes: newRoutes,
+		};
+	};
+
+	private static transformRouterTradeInfoIfGivenAmountOut = <
+		T extends Required<RouterTradeInfo>
+	>(
+		tradeInfo: T
+	) => {
+		const { coinInAmount, coinOutAmount } = tradeInfo;
+		return {
+			...tradeInfo,
+			coinInAmount: coinOutAmount,
+			coinOutAmount: coinInAmount,
 		};
 	};
 }
