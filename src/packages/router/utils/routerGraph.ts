@@ -70,7 +70,7 @@ export class RouterGraph {
 		coinInAmount: Balance,
 		coinOut: CoinType,
 		maxRouteLength?: number
-	): Promise<RouterCompleteTradeRoute> {
+	): RouterCompleteTradeRoute {
 		return this.getCompleteRoute(
 			coinIn,
 			coinInAmount,
@@ -85,7 +85,7 @@ export class RouterGraph {
 		coinOut: CoinType,
 		coinOutAmount: Balance,
 		maxRouteLength?: number
-	): Promise<RouterCompleteTradeRoute> {
+	): RouterCompleteTradeRoute {
 		return this.getCompleteRoute(
 			coinIn,
 			coinOutAmount,
@@ -105,7 +105,7 @@ export class RouterGraph {
 		coinOut: CoinType,
 		isGivenAmountOut: boolean,
 		maxRouteLength: number = RouterGraph.constants.defaultMaxRouteLength
-	): Promise<RouterCompleteTradeRoute> {
+	): RouterCompleteTradeRoute {
 		if (this.pools.length <= 0) throw new Error("pools has length of 0");
 
 		const routes = RouterGraph.findRoutes(
@@ -134,7 +134,7 @@ export class RouterGraph {
 			? RouterGraph.transformCompleteRouteIfGivenAmountOut(completeRoute)
 			: completeRoute;
 
-		return Promise.resolve(finalRoute);
+		return finalRoute;
 	}
 
 	/////////////////////////////////////////////////////////////////////

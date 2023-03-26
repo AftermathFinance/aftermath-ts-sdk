@@ -1,33 +1,19 @@
 import {
+	ApiRouterCompleteTradeRouteBody,
 	Balance,
 	CoinType,
 	RouterCompleteTradeRoute,
 	SuiNetwork,
 } from "../../types";
-import { Pool } from "../pools/pool";
 import { Caller } from "../../general/utils/caller";
-import { RouterGraph } from "./utils/routerGraph";
 
 export class Router extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Public Class Members
-	/////////////////////////////////////////////////////////////////////
-
-	public readonly graph: RouterGraph;
-
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(
-		public readonly pools: Pool[] = [],
-		public readonly network?: SuiNetwork
-	) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "router");
-
-		// check handle remove duplicate pools (same object Id)
-		this.pools = pools;
-		this.graph = new RouterGraph(pools);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -45,29 +31,31 @@ export class Router extends Caller {
 	public async getCompleteTradeRouteGivenAmountIn(
 		coinIn: CoinType,
 		coinInAmount: Balance,
-		coinOut: CoinType,
-		maxRouteLength?: number
+		coinOut: CoinType
 	): Promise<RouterCompleteTradeRoute> {
-		return await this.graph.getCompleteRouteGivenAmountIn(
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("tradeRoute", {
 			coinIn,
 			coinInAmount,
 			coinOut,
-			maxRouteLength
-		);
+		});
 	}
 
 	public async getCompleteTradeRouteGivenAmountOut(
 		coinIn: CoinType,
 		coinOut: CoinType,
-		coinOutAmount: Balance,
-		maxRouteLength?: number
+		coinOutAmount: Balance
 	): Promise<RouterCompleteTradeRoute> {
-		return await this.graph.getCompleteRouteGivenAmountOut(
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("tradeRoute", {
 			coinIn,
 			coinOut,
 			coinOutAmount,
-			maxRouteLength
-		);
+		});
 	}
 
 	/////////////////////////////////////////////////////////////////////

@@ -1,7 +1,9 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
 import { PoolCompleteObject } from "../../pools/poolsTypes";
-import { CoinType } from "../../../types";
+import { Balance, CoinType, RouterCompleteTradeRoute } from "../../../types";
+import { Pool } from "../../pools";
+import { RouterGraph } from "../utils/routerGraph";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -37,85 +39,33 @@ export class RouterApi {
 		return uniqueCoins;
 	};
 
-	// public fetchGraph = async () => {
-	// 	const pools = await this.Provider.Pools().fetchAllPools();
-	// 	const poolDynamicFields = await Promise.all(
-	// 		pools.map((pool) =>
-	// 			this.Provider.Pools().fetchPoolDynamicFields(pool.objectId)
-	// 		)
-	// 	);
+	public fetchCompleteTradeRouteGivenAmountIn = async (
+		pools: Pool[],
+		coinIn: CoinType,
+		coinInAmount: Balance,
+		coinOut: CoinType,
+		maxRouteLength?: number
+	): Promise<RouterCompleteTradeRoute> => {
+		return new RouterGraph(pools).getCompleteRouteGivenAmountIn(
+			coinIn,
+			coinInAmount,
+			coinOut,
+			maxRouteLength
+		);
+	};
 
-	// 	const completePools: PoolCompleteObject[] = pools.map((pool, index) => {
-	// 		return {
-	// 			pool,
-	// 			dynamicFields: poolDynamicFields[index],
-	// 		};
-	// 	});
-
-	// 	const graph = RouterApiHelpers.newGraph();
-
-	// 	completePools.map((pool) => RouterApiHelpers.addPool(graph, pool));
-
-	// 	return graph;
-	// };
-
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
-
-	// public getIntermediateTradeTransactions = (
-	// 	path: RouterPath,
-	// 	fromCoinId: ObjectId
-	// ) => this.Helpers.intermediateTradeTransactions(path, fromCoinId);
-
-	// public fetchFirstTradeTransactions = async (
-	// 	walletAddress: SuiAddress,
-	// 	fromCoinAmount: Balance,
-	// 	path: RouterPath
-	// ): Promise<SignableTransaction[]> => {
-	// 	const { coinObjectId, joinAndSplitTransactions } =
-	// 		await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
-	// 			walletAddress,
-	// 			path.baseAsset,
-	// 			fromCoinAmount
-	// 		);
-
-	// 	const tradeTransactions = this.Helpers.intermediateTradeTransactions(
-	// 		path,
-	// 		coinObjectId
-	// 	);
-
-	// 	return [...joinAndSplitTransactions, ...tradeTransactions];
-	// };
-
-	/////////////////////////////////////////////////////////////////////
-	//// Path Info
-	/////////////////////////////////////////////////////////////////////
-
-	// public getTradePathInfo = (
-	// 	graph: Graph,
-	// 	fromCoinType: CoinType,
-	// 	toCoinType: CoinType
-	// ): RouterCompleteRoute => {
-	// 	const route = RouterApiHelpers.getBestRoute(
-	// 		graph,
-	// 		fromCoinType,
-	// 		toCoinType,
-	// 		BigInt(1),
-	// 		3
-	// 	);
-
-	// 	const paths: RouterPath[] = route.path.map((path) => {
-	// 		return {
-	// 			baseAsset: path.nodeFrom.coinType,
-	// 			quoteAsset: path.nodeTo.coinType,
-	// 			pool: path.alongPool.source.pool,
-	// 			weight: 0,
-	// 		};
-	// 	});
-
-	// 	const spotPrice = RouterApiHelpers.calcRouteSpotPrice(route);
-
-	// 	return { spotPrice, paths };
-	// };
+	public fetchCompleteTradeRouteGivenAmountOut = async (
+		pools: Pool[],
+		coinIn: CoinType,
+		coinOut: CoinType,
+		coinOutAmount: Balance,
+		maxRouteLength?: number
+	): Promise<RouterCompleteTradeRoute> => {
+		return new RouterGraph(pools).getCompleteRouteGivenAmountOut(
+			coinIn,
+			coinOut,
+			coinOutAmount,
+			maxRouteLength
+		);
+	};
 }
