@@ -248,7 +248,7 @@ export class EventsApiHelpers {
 
 	// public static eventEnvelopeFromEventAndTransaction = (
 	// 	event: SuiEvent,
-	// 	transaction: SuiTransactionResponse
+	// 	transaction: SuiTransactionBlockResponse
 	// ): SuiEvent => {
 	// 	const txDigest = transaction.digest;
 	// 	const eventWithData = {

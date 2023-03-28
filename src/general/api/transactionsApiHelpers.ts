@@ -32,6 +32,9 @@ export class TransactionsApiHelpers {
 				...query,
 				cursor,
 				limit,
+				options: {
+					showEvents: true,
+				},
 			});
 
 		return {
