@@ -14,7 +14,7 @@ const tradeAmounts = {
 const runMe = async () => {
 	const AftermathSdk = new Aftermath("LOCAL");
 	const pools = await AftermathSdk.Pools().getAllPools();
-	const router = await AftermathSdk.Router(pools);
+	const router = await AftermathSdk.Router();
 
 	const supportedCoins = await router.getSupportedCoins();
 
@@ -67,14 +67,14 @@ const runRoute = async (
 		? await router.getCompleteTradeRouteGivenAmountOut(
 				coinIn,
 				coinOut,
-				coinInAmount,
-				maxRouteLength
+				coinInAmount
+				// maxRouteLength
 		  )
 		: await router.getCompleteTradeRouteGivenAmountIn(
 				coinIn,
 				coinInAmount,
-				coinOut,
-				maxRouteLength
+				coinOut
+				// maxRouteLength
 		  );
 
 	const end = performance.now();
