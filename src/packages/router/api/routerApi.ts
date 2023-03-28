@@ -1,5 +1,9 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
+import { PoolCompleteObject } from "../../pools/poolsTypes";
+import { Balance, CoinType, RouterCompleteTradeRoute } from "../../../types";
+import { Pool } from "../../pools";
+import { RouterGraph } from "../utils/routerGraph";
 import {
 	CoinType,
 	RouterCompleteTradeRoute,
@@ -40,6 +44,36 @@ export class RouterApi {
 
 		const uniqueCoins = Helpers.uniqueArray(allCoins);
 		return uniqueCoins;
+	};
+
+  public fetchCompleteTradeRouteGivenAmountIn = async (
+		pools: Pool[],
+		coinIn: CoinType,
+		coinInAmount: Balance,
+		coinOut: CoinType,
+		maxRouteLength?: number
+	): Promise<RouterCompleteTradeRoute> => {
+		return new RouterGraph(pools).getCompleteRouteGivenAmountIn(
+			coinIn,
+			coinInAmount,
+			coinOut,
+			maxRouteLength
+		);
+	};
+
+	public fetchCompleteTradeRouteGivenAmountOut = async (
+		pools: Pool[],
+		coinIn: CoinType,
+		coinOut: CoinType,
+		coinOutAmount: Balance,
+		maxRouteLength?: number
+	): Promise<RouterCompleteTradeRoute> => {
+		return new RouterGraph(pools).getCompleteRouteGivenAmountOut(
+			coinIn,
+			coinOut,
+			coinOutAmount,
+			maxRouteLength
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -90,4 +124,5 @@ export class RouterApi {
 
 		return tx.serialize();
 	}
+
 }

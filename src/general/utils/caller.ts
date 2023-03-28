@@ -56,6 +56,11 @@ export class Caller {
 		url: Url,
 		body?: BodyType
 	): Promise<Output> {
+		// this allows BigInt to be JSON serialized (as string)
+		(BigInt.prototype as any).toJSON = function () {
+			return this.toString() + "n";
+		};
+
 		const apiCallUrl = this.urlForApiCall(url);
 		const response = await (body === undefined
 			? fetch(apiCallUrl)

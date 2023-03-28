@@ -1,4 +1,5 @@
 import {
+	ApiRouterCompleteTradeRouteBody,
 	ApiRouterTransactionForCompleteTradeRouteBody,
 	Balance,
 	CoinType,
@@ -6,30 +7,17 @@ import {
 	SerializedTransaction,
 	SuiNetwork,
 } from "../../types";
-import { Pool } from "../pools/pool";
 import { Caller } from "../../general/utils/caller";
 import { RouterGraph } from "./utils/routerGraph";
 import { SuiAddress, Transaction } from "@mysten/sui.js";
 
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
-	//// Private Class Members
-	/////////////////////////////////////////////////////////////////////
-
-	private readonly graph: RouterGraph;
-
-	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(
-		public readonly pools: Pool[] = [],
-		public readonly network?: SuiNetwork
-	) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "router");
-
-		this.pools = pools;
-		this.graph = new RouterGraph(pools);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -44,18 +32,34 @@ export class Router extends Caller {
 		return this.fetchApi("supportedCoins");
 	}
 
-	public async getCompleteTradeRoute(
+	public async getCompleteTradeRouteGivenAmountIn(
 		coinIn: CoinType,
 		coinInAmount: Balance,
-		coinOut: CoinType,
-		maxRouteLength?: number
+		coinOut: CoinType
 	): Promise<RouterCompleteTradeRoute> {
-		return this.graph.getCompleteRoute(
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("tradeRoute", {
 			coinIn,
 			coinInAmount,
 			coinOut,
-			maxRouteLength
-		);
+		});
+	}
+
+	public async getCompleteTradeRouteGivenAmountOut(
+		coinIn: CoinType,
+		coinOut: CoinType,
+		coinOutAmount: Balance
+	): Promise<RouterCompleteTradeRoute> {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("tradeRoute", {
+			coinIn,
+			coinOut,
+			coinOutAmount,
+		});
 	}
 
 	/////////////////////////////////////////////////////////////////////

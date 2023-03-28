@@ -24,6 +24,12 @@ import { Caller } from "../../general/utils/caller";
 
 export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
+	//// Public Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public stats: PoolStats | undefined;
+
+	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
@@ -34,6 +40,7 @@ export class Pool extends Caller {
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;
+		this.dynamicFields = dynamicFields;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -41,7 +48,13 @@ export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getStats(): Promise<PoolStats> {
-		return this.fetchApi("stats");
+		const stats = await this.fetchApi<PoolStats>("stats");
+		this.stats = stats;
+		return stats;
+	}
+
+	public setStats(stats: PoolStats) {
+		this.stats = stats;
 	}
 
 	public async getVolume(

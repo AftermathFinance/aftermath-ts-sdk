@@ -14,7 +14,7 @@ const tradeAmounts = {
 const runMe = async () => {
 	const AftermathSdk = new Aftermath("LOCAL");
 	const pools = await AftermathSdk.Pools().getAllPools();
-	const router = await AftermathSdk.Router(pools);
+	const router = await AftermathSdk.Router();
 
 	const supportedCoins = await router.getSupportedCoins();
 
@@ -31,13 +31,21 @@ const runMe = async () => {
 	console.log("\n");
 
 	try {
-		runRoute(router, coinIn, coinInAmount, coinOut, 1);
-		runRoute(router, coinIn, coinInAmount, coinOut, 2);
-		runRoute(router, coinIn, coinInAmount, coinOut, 3);
-		runRoute(router, coinIn, coinInAmount, coinOut, 4);
-		runRoute(router, coinIn, coinInAmount, coinOut, 5);
-		runRoute(router, coinIn, coinInAmount, coinOut, 6);
-		runRoute(router, coinIn, coinInAmount, coinOut, 7);
+		// await runRoute(router, coinIn, coinInAmount, coinOut, 1);
+		const coinOutAmount = await runRoute(
+			router,
+			coinIn,
+			coinInAmount,
+			coinOut,
+			5,
+			false
+		);
+		await runRoute(router, coinIn, coinOutAmount, coinOut, 5, true);
+		// await runRoute(router, coinIn, coinInAmount, coinOut, 3);
+		// await runRoute(router, coinIn, coinInAmount, coinOut, 4);
+		// await runRoute(router, coinIn, coinInAmount, coinOut, 5);
+		// await runRoute(router, coinIn, coinInAmount, coinOut, 6);
+		// await runRoute(router, coinIn, coinInAmount, coinOut, 7);
 	} catch (e) {
 		console.error(e);
 	}
@@ -50,25 +58,30 @@ const runRoute = async (
 	coinIn: CoinType,
 	coinInAmount: Balance,
 	coinOut: CoinType,
-	maxRouteLength: number
-) => {
+	maxRouteLength: number,
+	isGivenAmountOut: boolean
+): Promise<Balance> => {
 	const start = performance.now();
-	const completeRoute = await router.getCompleteTradeRoute(
-		coinIn,
-		coinInAmount,
-		coinOut,
-		maxRouteLength
-	);
+
+	const completeRoute = isGivenAmountOut
+		? await router.getCompleteTradeRouteGivenAmountOut(
+				coinIn,
+				coinOut,
+				coinInAmount
+				// maxRouteLength
+		  )
+		: await router.getCompleteTradeRouteGivenAmountIn(
+				coinIn,
+				coinInAmount,
+				coinOut
+				// maxRouteLength
+		  );
+
 	const end = performance.now();
 
-	console.log({
-		completeRoute,
-		numberOfRoutes: completeRoute.routes.length,
-	});
-
 	const stableCoinPercentLoss =
-		(Number(coinInAmount - completeRoute.coinOutAmount) /
-			Number(coinInAmount)) *
+		(Number(completeRoute.coinInAmount - completeRoute.coinOutAmount) /
+			Number(completeRoute.coinInAmount)) *
 		100;
 
 	console.log("Max Route Length:", maxRouteLength);
@@ -98,6 +111,8 @@ const runRoute = async (
 	);
 	console.log("Execution time:", end - start, "ms");
 	console.log("\n");
+
+	return completeRoute.coinOutAmount;
 };
 
 runMe();

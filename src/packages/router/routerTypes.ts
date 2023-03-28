@@ -1,5 +1,5 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Balance } from "../../general/types/generalTypes";
+import { AnyObjectType, Balance } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolTradeFee } from "../pools/poolsTypes";
 
@@ -20,7 +20,7 @@ export type RouterTradePath = RouterTradeInfo & {
 	poolLpCoinType: CoinType;
 };
 
-interface RouterTradeInfo {
+export interface RouterTradeInfo {
 	coinIn: CoinType;
 	coinOut: CoinType;
 	coinInAmount: Balance;
@@ -33,13 +33,17 @@ interface RouterTradeInfo {
 //// API
 /////////////////////////////////////////////////////////////////////
 
-// NOTE: is this needed ?
-// export interface ApiRouterCompleteTradeRouteBody {
-// 	coinIn: CoinType;
-// 	coinInAmount: Balance;
-// 	coinOut: CoinType;
-// 	maxRouteLength?: number;
-// }
+export type ApiRouterCompleteTradeRouteBody = {
+	coinIn: CoinType;
+	coinOut: CoinType;
+} & (
+	| {
+			coinInAmount: Balance;
+	  }
+	| {
+			coinOutAmount: Balance;
+	  }
+);
 
 export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	walletAddress: SuiAddress;
