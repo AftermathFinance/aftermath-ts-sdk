@@ -1,6 +1,6 @@
 import {
 	EventId,
-	Transaction,
+	TransactionBlock,
 	SuiAddress,
 	DelegatedStake,
 	SuiValidatorSummary,
@@ -117,8 +117,8 @@ export class Staking extends Caller {
 		walletAddress: SuiAddress,
 		validatorAddress: SuiAddress,
 		coinAmount: Balance
-	): Promise<Transaction> {
-		return Transaction.from(
+	): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiRequestAddDelegationBody
@@ -137,13 +137,13 @@ export class Staking extends Caller {
 	public async getRequestWithdrawTransaction(
 		walletAddress: SuiAddress,
 		stake: StakeObject
-	): Promise<Transaction> {
+	): Promise<TransactionBlock> {
 		if (stake.status === "Pending")
 			throw new Error(
 				"stake unable to withdraw, current status is pending"
 			);
 
-		return Transaction.from(
+		return TransactionBlock.from(
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiRequestWithdrawDelegationBody
@@ -160,8 +160,8 @@ export class Staking extends Caller {
 	public async getCancelRequestTransaction(
 		walletAddress: SuiAddress,
 		stake: StakeObject
-	): Promise<Transaction> {
-		return Transaction.from(
+	): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiCancelDelegationRequestBody

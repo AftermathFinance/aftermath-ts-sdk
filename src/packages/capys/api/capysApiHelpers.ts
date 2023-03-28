@@ -1,9 +1,9 @@
 import {
-	MoveCallCommand,
+	MoveCallSuiCommand,
 	ObjectId,
 	SuiAddress,
 	SuiObjectInfo,
-	Transaction,
+	TransactionBlock,
 	getObjectId,
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -151,8 +151,8 @@ export class CapysApiHelpers {
 
 	public capyFeesEarnedIndividualDevInspectTransaction = (
 		stakingReceiptId: ObjectId
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -173,8 +173,8 @@ export class CapysApiHelpers {
 		return tx;
 	};
 
-	public capyFeesEarnedGlobalDevInspectTransaction = (): Transaction => {
-		const tx = new Transaction();
+	public capyFeesEarnedGlobalDevInspectTransaction = (): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -200,13 +200,13 @@ export class CapysApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public addStakeBreedAndKeepCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		coinId: ObjectId,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.breedAndKeep.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -230,13 +230,13 @@ export class CapysApiHelpers {
 	};
 
 	public addStakeBreedWithStakedAndKeepCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		coinId: ObjectId,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.breedWithStakedAndKeep.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -260,13 +260,13 @@ export class CapysApiHelpers {
 	};
 
 	public addStakeBreedStakedWithStakedAndKeepCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		coinId: ObjectId,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.breedStakedWithStakedAndKeep.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -297,8 +297,8 @@ export class CapysApiHelpers {
 		capyId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.stakeCapy.defaultGasBudget
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -323,8 +323,8 @@ export class CapysApiHelpers {
 		stakingReceiptId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.unstakeCapy.defaultGasBudget
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -352,8 +352,8 @@ export class CapysApiHelpers {
 		recipient: SuiAddress,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.transfer.defaultGasBudget
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -383,8 +383,8 @@ export class CapysApiHelpers {
 		stakingReceiptId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.withdrawFees.defaultGasBudget
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -410,8 +410,8 @@ export class CapysApiHelpers {
 		amount: Balance,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
 			.interface.functions.withdrawFeesAmount.defaultGasBudget
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -447,7 +447,7 @@ export class CapysApiHelpers {
 		parentOneIsOwned: boolean,
 		parentTwoId: ObjectId,
 		parentTwoIsOwned: boolean
-	): Promise<Transaction> => {
+	): Promise<TransactionBlock> => {
 		if (parentOneIsOwned && parentTwoIsOwned) {
 			// i. both capys are owned
 			return this.fetchBuildBreedAndKeepTransaction(
@@ -483,8 +483,8 @@ export class CapysApiHelpers {
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
-	): Promise<Transaction> => {
-		const tx = new Transaction();
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
 
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount =
@@ -512,8 +512,8 @@ export class CapysApiHelpers {
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
-	): Promise<Transaction> => {
-		const tx = new Transaction();
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
 
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount =
@@ -541,8 +541,8 @@ export class CapysApiHelpers {
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
-	): Promise<Transaction> => {
-		const tx = new Transaction();
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
 
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount = Capys.constants.breedingFees.amounts.breedAndKeep;

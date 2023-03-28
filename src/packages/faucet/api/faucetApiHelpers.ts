@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
-import { ObjectId, Transaction } from "@mysten/sui.js";
+import { ObjectId, TransactionBlock } from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
 import {
 	AnyObjectType,
@@ -83,8 +83,8 @@ export class FaucetApiHelpers {
 		treasuryCapType: CoinType,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions.add
 			.defaultGasBudget
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -108,8 +108,8 @@ export class FaucetApiHelpers {
 		amount: Balance,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions
 			.requestAmount.defaultGasBudget
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -132,8 +132,8 @@ export class FaucetApiHelpers {
 		coinType: CoinType,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions.request
 			.defaultGasBudget
-	): Transaction => {
-		const tx = new Transaction();
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(

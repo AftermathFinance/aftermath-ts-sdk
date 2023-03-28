@@ -8,8 +8,7 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { RouterGraph } from "./utils/routerGraph";
-import { SuiAddress, Transaction } from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -69,8 +68,8 @@ export class Router extends Caller {
 	public async getTransactionForCompleteTradeRoute(
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute
-	): Promise<Transaction> {
-		return Transaction.from(
+	): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiRouterTransactionForCompleteTradeRouteBody

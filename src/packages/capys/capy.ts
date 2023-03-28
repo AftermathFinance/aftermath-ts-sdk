@@ -5,7 +5,7 @@ import {
 	SerializedTransaction,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { Transaction } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js";
 
 export class Capy extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -26,11 +26,11 @@ export class Capy extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakeTransaction(): Promise<Transaction> {
+	public async getStakeTransaction(): Promise<TransactionBlock> {
 		if (this.isStaked)
 			throw new Error("unable to stake already staked capy");
 
-		return Transaction.from(
+		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiStakeCapyBody>(
 				"transactions/stake",
 				{

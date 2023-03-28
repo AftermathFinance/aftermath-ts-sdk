@@ -1,4 +1,4 @@
-import { Transaction } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
 import { RpcApiHelpers } from "./rpcApiHelpers";
 import { Byte } from "../../types";
@@ -20,13 +20,14 @@ export class InspectionsApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchBytesFromTransaction = async (transaction: Transaction) => {
+	public fetchBytesFromTransaction = async (tx: TransactionBlock) => {
 		const signer = RpcApiHelpers.constants.devInspectSigner;
 
-		const response = await this.Provider.provider.devInspectTransaction({
-			sender: signer,
-			transaction,
-		});
+		const response =
+			await this.Provider.provider.devInspectTransactionBlock({
+				sender: signer,
+				transactionBlock: tx,
+			});
 
 		if (response.effects.status.status === "failure")
 			throw Error("dev inspect move call failed");

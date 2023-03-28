@@ -26,7 +26,7 @@ export class ObjectsApiHelpers {
 
 	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
 		const object = await this.Provider.provider.getObject({ id: objectId });
-		return ObjectsApiHelpers.objectExists(object);
+		return object.error !== undefined;
 	};
 
 	public fetchIsObjectOwnedByAddress = async (
@@ -68,8 +68,10 @@ export class ObjectsApiHelpers {
 		objectId: ObjectId
 	): Promise<SuiObjectResponse> => {
 		const object = await this.Provider.provider.getObject({ id: objectId });
-		if (object.status !== "Exists")
-			throw new Error("object does not exist");
+		if (object.error !== undefined)
+			throw new Error(
+				`an error occured fetching object: ${object.error?.tag}`
+			);
 		return object;
 	};
 
@@ -87,7 +89,7 @@ export class ObjectsApiHelpers {
 			ids: objectIds,
 		});
 		const objectDataResponses = objectBatch.filter(
-			(data) => data.status === "Exists"
+			(data) => data.error !== undefined
 		);
 
 		if (objectDataResponses.length <= 0)
@@ -127,11 +129,4 @@ export class ObjectsApiHelpers {
 
 		return objects;
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
-
-	public static objectExists = (data: SuiObjectResponse) =>
-		data.status === "Exists";
 }

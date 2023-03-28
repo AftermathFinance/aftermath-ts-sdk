@@ -1,4 +1,4 @@
-import { ObjectId, Transaction, SuiAddress } from "@mysten/sui.js";
+import { ObjectId, TransactionBlock, SuiAddress } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -85,12 +85,12 @@ export class StakingApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public addRequestAddDelegationCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		coinId: ObjectId,
 		validator: SuiAddress,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.requestAddDelegation.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -114,13 +114,13 @@ export class StakingApiHelpers {
 	};
 
 	public addRequestWithdrawDelegationCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		stakedSui: ObjectId,
 		delegation: ObjectId,
 		afSui: ObjectId,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.requestWithdrawDelegation.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -145,12 +145,12 @@ export class StakingApiHelpers {
 	};
 
 	public addCancelDelegationRequestCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		stakedSui: ObjectId,
 		afSui: ObjectId,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.cancelDelegationRequest.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -181,8 +181,8 @@ export class StakingApiHelpers {
 		walletAddress: SuiAddress,
 		amount: Balance,
 		validator: SuiAddress
-	): Promise<Transaction> => {
-		const tx = new Transaction();
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
 
 		const { coinWithAmountObjectId, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
@@ -204,8 +204,8 @@ export class StakingApiHelpers {
 		amount: Balance,
 		stakedSui: ObjectId,
 		delegation?: ObjectId
-	): Promise<Transaction> => {
-		const tx = new Transaction();
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
 
 		const { coinWithAmountObjectId, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(

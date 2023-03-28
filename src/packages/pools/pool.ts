@@ -1,4 +1,4 @@
-import { EventId, SuiAddress, Transaction } from "@mysten/sui.js";
+import { EventId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -70,8 +70,8 @@ export class Pool extends Caller {
 	public async getDepositTransaction(
 		walletAddress: SuiAddress,
 		depositCoinAmounts: CoinsToBalance
-	): Promise<Transaction> {
-		return Transaction.from(
+	): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolDepositBody>(
 				"transactions/deposit",
 				{
@@ -86,8 +86,8 @@ export class Pool extends Caller {
 		walletAddress: SuiAddress,
 		withdrawCoinAmounts: CoinsToBalance,
 		withdrawLpTotal: Balance
-	): Promise<Transaction> {
-		return Transaction.from(
+	): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolWithdrawBody>(
 				"transactions/withdraw",
 				{
@@ -104,8 +104,8 @@ export class Pool extends Caller {
 		fromCoin: CoinType,
 		fromCoinAmount: Balance,
 		toCoin: CoinType
-	): Promise<Transaction> {
-		return Transaction.from(
+	): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolTradeBody>(
 				"transactions/trade",
 				{

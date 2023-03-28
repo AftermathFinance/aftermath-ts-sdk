@@ -1,4 +1,9 @@
-import { EventId, ObjectId, SuiAddress, Transaction } from "@mysten/sui.js";
+import {
+	EventId,
+	ObjectId,
+	SuiAddress,
+	TransactionBlock,
+} from "@mysten/sui.js";
 import {
 	ApiBreedCapyBody,
 	ApiDynamicFieldsBody,
@@ -168,8 +173,8 @@ export class Capys extends Caller {
 		walletAddress: SuiAddress,
 		capyParentOneId: ObjectId,
 		capyParentTwoId: ObjectId
-	): Promise<Transaction> {
-		return Transaction.from(
+	): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiBreedCapyBody>(
 				"transactions/bree",
 				{

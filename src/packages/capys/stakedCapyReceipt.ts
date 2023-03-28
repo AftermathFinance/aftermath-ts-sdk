@@ -9,7 +9,7 @@ import {
 } from "../../types";
 import { Capy } from "./capy";
 import { Caller } from "../../general/utils/caller";
-import { Transaction } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js";
 
 export class StakedCapyReceipt extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -37,8 +37,8 @@ export class StakedCapyReceipt extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getUnstakeCapyTransaction(): Promise<Transaction> {
-		return Transaction.from(
+	public async getUnstakeCapyTransaction(): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiUnstakeCapyBody>(
 				"transactions/stake",
 				{
@@ -50,8 +50,8 @@ export class StakedCapyReceipt extends Caller {
 
 	public async getWithdrawFeesTransaction(
 		amount: Balance | undefined
-	): Promise<Transaction> {
-		return Transaction.from(
+	): Promise<TransactionBlock> {
+		return TransactionBlock.from(
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiWithdrawCapyFeesAmountBody

@@ -1,4 +1,4 @@
-import { EventId, ObjectId, SuiAddress, Transaction } from "@mysten/sui.js";
+import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CapysApiCasting } from "./capysApiCasting";
 import { CapysApiHelpers } from "./capysApiHelpers";

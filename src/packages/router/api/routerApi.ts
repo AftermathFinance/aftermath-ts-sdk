@@ -1,15 +1,14 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
-import { PoolCompleteObject } from "../../pools/poolsTypes";
-import { Balance, CoinType, RouterCompleteTradeRoute } from "../../../types";
 import { Pool } from "../../pools";
 import { RouterGraph } from "../utils/routerGraph";
 import {
+	Balance,
 	CoinType,
 	RouterCompleteTradeRoute,
 	SerializedTransaction,
 } from "../../../types";
-import { SuiAddress, Transaction } from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { Helpers } from "../../../general/utils/helpers";
 
 export class RouterApi {
@@ -46,7 +45,7 @@ export class RouterApi {
 		return uniqueCoins;
 	};
 
-  public fetchCompleteTradeRouteGivenAmountIn = async (
+	public fetchCompleteTradeRouteGivenAmountIn = async (
 		pools: Pool[],
 		coinIn: CoinType,
 		coinInAmount: Balance,
@@ -84,7 +83,7 @@ export class RouterApi {
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute
 	): Promise<SerializedTransaction> {
-		const startTx = new Transaction();
+		const startTx = new TransactionBlock();
 
 		const { coinWithAmountObjectId: coinInId, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
@@ -124,5 +123,4 @@ export class RouterApi {
 
 		return tx.serialize();
 	}
-
 }

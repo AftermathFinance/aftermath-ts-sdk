@@ -1,4 +1,7 @@
-import { SuiTransactionResponseQuery, TransactionDigest } from "@mysten/sui.js";
+import {
+	SuiTransactionBlockResponseQuery,
+	TransactionDigest,
+} from "@mysten/sui.js";
 import { TransactionsWithCursor } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 
@@ -20,12 +23,12 @@ export class TransactionsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchTransactionsWithCursor = async (
-		query: SuiTransactionResponseQuery,
+		query: SuiTransactionBlockResponseQuery,
 		cursor?: TransactionDigest,
 		limit?: number
 	): Promise<TransactionsWithCursor> => {
 		const transactionsWithCursor =
-			await this.Provider.provider.queryTransactions({
+			await this.Provider.provider.queryTransactionBlocks({
 				...query,
 				cursor,
 				limit,

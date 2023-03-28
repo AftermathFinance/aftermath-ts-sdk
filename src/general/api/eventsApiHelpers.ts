@@ -4,7 +4,7 @@ import {
 	SuiAddress,
 	SuiEvent,
 	SuiEventFilter,
-	SuiTransactionResponse,
+	SuiTransactionBlockResponse,
 } from "@mysten/sui.js";
 import dayjs, { QUnitType, OpUnitType } from "dayjs";
 import { AftermathApi } from "../providers/aftermathApi";
@@ -196,7 +196,7 @@ export class EventsApiHelpers {
 		EventTypeOnChain,
 		EventType
 	>(
-		transaction: SuiTransactionResponse,
+		transaction: SuiTransactionBlockResponse,
 		eventType: AnyObjectType | (() => AnyObjectType),
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
 	) => {
@@ -221,7 +221,7 @@ export class EventsApiHelpers {
 		EventTypeOnChain,
 		EventType
 	>(
-		transactions: SuiTransactionResponse[],
+		transactions: SuiTransactionBlockResponse[],
 		eventType: AnyObjectType | (() => AnyObjectType),
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
 	) => {

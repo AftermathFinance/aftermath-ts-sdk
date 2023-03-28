@@ -2,7 +2,7 @@ import {
 	ObjectId,
 	PaginatedCoins,
 	SuiAddress,
-	Transaction,
+	TransactionBlock,
 } from "@mysten/sui.js";
 import { Balance, CoinDecimal, CoinType } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
@@ -131,13 +131,13 @@ export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchAddCoinWithAmountCommandsToTransaction = async (
-		tx: Transaction,
+		tx: TransactionBlock,
 		walletAddress: SuiAddress,
 		coinType: CoinType,
 		coinAmount: Balance
 	): Promise<{
 		coinWithAmountObjectId: ObjectId;
-		txWithCoinWithAmount: Transaction;
+		txWithCoinWithAmount: TransactionBlock;
 	}> => {
 		// TODO: handle cursoring until necessary coin amount is found
 		const paginatedCoins = await this.Provider.provider.getCoins({
@@ -153,13 +153,13 @@ export class CoinApiHelpers {
 	};
 
 	public fetchAddCoinsWithAmountCommandsToTransaction = async (
-		tx: Transaction,
+		tx: TransactionBlock,
 		walletAddress: SuiAddress,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[]
 	): Promise<{
 		coinWithAmountObjectIds: ObjectId[];
-		txWithCoinsWithAmount: Transaction;
+		txWithCoinsWithAmount: TransactionBlock;
 	}> => {
 		// TODO: handle cursoring until necessary coin amount is found
 		const allPaginatedCoins = await Promise.all(
@@ -173,7 +173,7 @@ export class CoinApiHelpers {
 
 		const coinObjectIdsAndTransaction = allPaginatedCoins.reduce<{
 			coinWithAmountObjectIds: ObjectId[];
-			txWithCoinsWithAmount: Transaction;
+			txWithCoinsWithAmount: TransactionBlock;
 		}>(
 			(acc, paginatedCoins, index) => {
 				const { coinWithAmountObjectId, txWithCoinWithAmount } =
@@ -209,12 +209,12 @@ export class CoinApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	private static addCoinWithAmountCommandsToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		paginatedCoins: PaginatedCoins,
 		coinAmount: Balance
 	): {
 		coinWithAmountObjectId: ObjectId;
-		txWithCoinWithAmount: Transaction;
+		txWithCoinWithAmount: TransactionBlock;
 	} => {
 		const totalCoinBalance = Helpers.sum(
 			paginatedCoins.data.map((data) => data.balance)

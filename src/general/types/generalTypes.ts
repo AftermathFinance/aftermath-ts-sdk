@@ -1,7 +1,7 @@
 import {
 	EventId,
 	ObjectId,
-	SuiTransactionResponse,
+	SuiTransactionBlockResponse,
 	TransactionDigest,
 } from "@mysten/sui.js";
 import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
@@ -69,7 +69,7 @@ export interface DynamicFieldObjectsWithCursor<ObjectType> {
 /////////////////////////////////////////////////////////////////////
 
 export interface TransactionsWithCursor {
-	transactions: SuiTransactionResponse[];
+	transactions: SuiTransactionBlockResponse[];
 	nextCursor: TransactionDigest | null;
 }
 

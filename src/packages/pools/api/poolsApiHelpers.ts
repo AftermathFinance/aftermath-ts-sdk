@@ -1,4 +1,4 @@
-import { ObjectId, Transaction, SuiAddress } from "@mysten/sui.js";
+import { ObjectId, TransactionBlock, SuiAddress } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -200,7 +200,7 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public addTradeCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		poolId: ObjectId,
 		coinInId:
 			| ObjectId
@@ -219,7 +219,7 @@ export class PoolsApiHelpers {
 		lpCoinType: CoinType,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.swap
 			.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -240,7 +240,7 @@ export class PoolsApiHelpers {
 	};
 
 	public addSingleCoinDepositCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		poolId: ObjectId,
 		coinId: ObjectId,
 		coinType: CoinType,
@@ -248,7 +248,7 @@ export class PoolsApiHelpers {
 		lpCoinType: CoinType,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.deposit
 			.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -269,7 +269,7 @@ export class PoolsApiHelpers {
 	};
 
 	public addMultiCoinDepositCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		poolId: ObjectId,
 		coinIds: ObjectId[],
 		coinTypes: CoinType[],
@@ -277,7 +277,7 @@ export class PoolsApiHelpers {
 		lpCoinType: CoinType,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.deposit
 			.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		const poolSize = coinTypes.length;
 		if (poolSize != coinIds.length)
 			throw new Error(
@@ -304,7 +304,7 @@ export class PoolsApiHelpers {
 	};
 
 	public addSingleCoinWithdrawCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		poolId: ObjectId,
 		lpCoinId: ObjectId,
 		lpCoinType: CoinType,
@@ -312,7 +312,7 @@ export class PoolsApiHelpers {
 		coinOutType: CoinType,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.withdraw
 			.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -333,7 +333,7 @@ export class PoolsApiHelpers {
 	};
 
 	public addMultiCoinWithdrawCommandToTransaction = (
-		tx: Transaction,
+		tx: TransactionBlock,
 		poolId: ObjectId,
 		lpCoinId: ObjectId,
 		lpCoinType: CoinType,
@@ -341,7 +341,7 @@ export class PoolsApiHelpers {
 		coinsOutType: CoinType[],
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.withdraw
 			.defaultGasBudget
-	): Transaction => {
+	): TransactionBlock => {
 		const poolSize = coinsOutType.length;
 
 		tx.add({
@@ -378,8 +378,8 @@ export class PoolsApiHelpers {
 		fromCoinType: CoinType,
 		fromCoinAmount: Balance,
 		toCoinType: CoinType
-	): Promise<Transaction> => {
-		const tx = new Transaction();
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
 
 		const { coinWithAmountObjectId: coinInId, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
@@ -408,8 +408,8 @@ export class PoolsApiHelpers {
 		poolLpType: CoinType,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[]
-	): Promise<Transaction> => {
-		const tx = new Transaction();
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
 
 		const { coinWithAmountObjectIds, txWithCoinsWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
@@ -438,8 +438,8 @@ export class PoolsApiHelpers {
 		lpCoinAmount: Balance,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[]
-	): Promise<Transaction> => {
-		const tx = new Transaction();
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
 
 		const { coinWithAmountObjectId: lpCoinInId, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
