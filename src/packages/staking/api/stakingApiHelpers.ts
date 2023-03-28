@@ -1,4 +1,4 @@
-import { ObjectId, SignableTransaction, SuiAddress } from "@mysten/sui.js";
+import { ObjectId, Transaction, SuiAddress } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -84,180 +84,154 @@ export class StakingApiHelpers {
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	public stakeRequestAddDelegationTransaction = (
+	public addRequestAddDelegationCommandToTransaction = (
+		tx: Transaction,
 		coinId: ObjectId,
 		validator: SuiAddress,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.requestAddDelegation.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId:
-					this.addresses.packages.liquidStakingDerivative,
-				module: StakingApiHelpers.constants.modules.interface
-					.moduleName,
-				function:
-					StakingApiHelpers.constants.modules.interface.functions
-						.requestAddDelegation.name,
-				typeArguments: [],
-				arguments: [
-					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet().Helpers.addresses.objects.faucet,
-					coinId,
-					validator,
-				],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.liquidStakingDerivative,
+				StakingApiHelpers.constants.modules.interface.moduleName,
+				StakingApiHelpers.constants.modules.interface.functions
+					.requestAddDelegation.name
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(Sui.constants.addresses.suiSystemStateId),
+				tx.object(
+					this.Provider.Faucet().Helpers.addresses.objects.faucet
+				),
+				tx.object(coinId),
+				tx.object(validator),
+			],
+			// gasBudget: gasBudget,
+		});
+		return tx;
 	};
 
-	public stakeRequestWithdrawDelegationTransaction = (
+	public addRequestWithdrawDelegationCommandToTransaction = (
+		tx: Transaction,
 		stakedSui: ObjectId,
 		delegation: ObjectId,
 		afSui: ObjectId,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.requestWithdrawDelegation.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId:
-					this.addresses.packages.liquidStakingDerivative,
-				module: StakingApiHelpers.constants.modules.interface
-					.moduleName,
-				function:
-					StakingApiHelpers.constants.modules.interface.functions
-						.requestWithdrawDelegation.name,
-				typeArguments: [],
-				arguments: [
-					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet().Helpers.addresses.objects.faucet,
-					delegation,
-					stakedSui,
-					afSui,
-				],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.liquidStakingDerivative,
+				StakingApiHelpers.constants.modules.interface.moduleName,
+				StakingApiHelpers.constants.modules.interface.functions
+					.requestWithdrawDelegation.name
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(Sui.constants.addresses.suiSystemStateId),
+				tx.object(
+					this.Provider.Faucet().Helpers.addresses.objects.faucet
+				),
+				tx.object(delegation),
+				tx.object(stakedSui),
+				tx.object(afSui),
+			],
+			// gasBudget: gasBudget,
+		});
+		return tx;
 	};
 
-	public stakeCancelDelegationRequestTransaction = (
+	public addCancelDelegationRequestCommandToTransaction = (
+		tx: Transaction,
 		stakedSui: ObjectId,
 		afSui: ObjectId,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.cancelDelegationRequest.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId:
-					this.addresses.packages.liquidStakingDerivative,
-				module: StakingApiHelpers.constants.modules.interface
-					.moduleName,
-				function:
-					StakingApiHelpers.constants.modules.interface.functions
-						.cancelDelegationRequest.name,
-				typeArguments: [],
-				arguments: [
-					Sui.constants.addresses.suiSystemStateId,
-					this.Provider.Faucet().Helpers.addresses.objects.faucet,
-					stakedSui,
-					afSui,
-				],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.liquidStakingDerivative,
+				StakingApiHelpers.constants.modules.interface.moduleName,
+				StakingApiHelpers.constants.modules.interface.functions
+					.cancelDelegationRequest.name
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(Sui.constants.addresses.suiSystemStateId),
+				tx.object(
+					this.Provider.Faucet().Helpers.addresses.objects.faucet
+				),
+				tx.object(stakedSui),
+				tx.object(afSui),
+			],
+			// gasBudget: gasBudget,
+		});
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCancelOrRequestWithdrawDelegationTransactions = async (
-		walletAddress: SuiAddress,
-		amount: Balance,
-		stakedSui: ObjectId,
-		delegation?: ObjectId
-	) =>
-		// i. Build the `cancel_delegation_request` or `request_withdraw_delegation` transactions.
-		this.fetchBuildCancelOrRequestWithdrawDelegationTransactions(
-			walletAddress,
-			amount,
-			stakedSui,
-			delegation
-		);
-
-	public fetchBuildRequestAddDelegationTransactions = async (
+	public fetchBuildRequestAddDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		validator: SuiAddress
-	): Promise<SignableTransaction[]> => {
-		let transactions: SignableTransaction[] = [];
+	): Promise<Transaction> => {
+		const tx = new Transaction();
 
-		// i. create a coin of type `coinType` with value `coinAmount`.
-		const { coinObjectId: coinId, joinAndSplitTransactions } =
-			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
+		const { coinWithAmountObjectId, txWithCoinWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				tx,
 				walletAddress,
 				Coin.constants.suiCoinType,
 				amount
 			);
-		transactions.push(...joinAndSplitTransactions);
 
-		// ii. delegate `coinId` to `validator`.
-		transactions.push(
-			this.stakeRequestAddDelegationTransaction(coinId, validator)
+		return this.addRequestAddDelegationCommandToTransaction(
+			txWithCoinWithAmount,
+			coinWithAmountObjectId,
+			validator
 		);
-
-		return transactions;
 	};
 
-	//**************************************************************************************************
-	// Undelegate Coin
-	//**************************************************************************************************
-
-	public fetchBuildCancelOrRequestWithdrawDelegationTransactions = async (
+	public fetchBuildCancelOrRequestWithdrawDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
 		delegation?: ObjectId
-	): Promise<SignableTransaction[]> => {
-		let transactions: SignableTransaction[] = [];
+	): Promise<Transaction> => {
+		const tx = new Transaction();
 
-		// i. create a coin of type `coinType` with value `amount`.
-		const { coinObjectId: coinId, joinAndSplitTransactions } =
-			await this.Provider.Coin().Helpers.fetchCoinJoinAndSplitWithExactAmountTransactions(
+		const { coinWithAmountObjectId, txWithCoinWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				tx,
 				walletAddress,
 				this.Provider.Faucet().Helpers.coinTypes.afSui,
 				amount
 			);
-		transactions.push(...joinAndSplitTransactions);
 
-		if (delegation === undefined) {
-			// iia. if Delegation is not present then cancel add delegation request.
-			transactions.push(
-				this.stakeCancelDelegationRequestTransaction(stakedSui, coinId)
+		if (delegation === undefined)
+			return this.addCancelDelegationRequestCommandToTransaction(
+				txWithCoinWithAmount,
+				stakedSui,
+				coinWithAmountObjectId
 			);
-		} else {
-			// iib. if Delegation is present then request to withdraw delegation.
-			transactions.push(
-				this.stakeRequestWithdrawDelegationTransaction(
-					stakedSui,
-					delegation,
-					coinId
-				)
-			);
-		}
 
-		return transactions;
+		return this.addRequestWithdrawDelegationCommandToTransaction(
+			txWithCoinWithAmount,
+			stakedSui,
+			delegation,
+			coinWithAmountObjectId
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Stats
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Private
+	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////

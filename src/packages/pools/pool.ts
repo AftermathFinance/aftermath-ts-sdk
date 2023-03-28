@@ -1,4 +1,4 @@
-import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
+import { EventId, SuiAddress, Transaction } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -12,6 +12,12 @@ import {
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
+	SerializedTransaction,
+	EventsWithCursor,
+	PoolDepositEvent,
+	ApiEventsBody,
+	PoolWithdrawEvent,
+	PoolTradeEvent,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -61,50 +67,99 @@ export class Pool extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getDepositTransactions(
+	public async getDepositTransaction(
 		walletAddress: SuiAddress,
 		depositCoinAmounts: CoinsToBalance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolDepositBody>(
-			"transactions/deposit",
-			{
-				walletAddress,
-				depositCoinAmounts,
-			}
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<SerializedTransaction, ApiPoolDepositBody>(
+				"transactions/deposit",
+				{
+					walletAddress,
+					depositCoinAmounts,
+				}
+			)
 		);
 	}
 
-	public async getWithdrawTransactions(
+	public async getWithdrawTransaction(
 		walletAddress: SuiAddress,
 		withdrawCoinAmounts: CoinsToBalance,
 		withdrawLpTotal: Balance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolWithdrawBody>(
-			"transactions/withdraw",
-			{
-				walletAddress,
-				withdrawCoinAmounts,
-				withdrawLpTotal,
-			}
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<SerializedTransaction, ApiPoolWithdrawBody>(
+				"transactions/withdraw",
+				{
+					walletAddress,
+					withdrawCoinAmounts,
+					withdrawLpTotal,
+				}
+			)
 		);
 	}
 
-	public async getTradeTransactions(
+	public async getTradeTransaction(
 		walletAddress: SuiAddress,
 		fromCoin: CoinType,
 		fromCoinAmount: Balance,
 		toCoin: CoinType
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolTradeBody>(
-			"transactions/trade",
-			{
-				walletAddress,
-				fromCoin,
-				fromCoinAmount,
-				toCoin,
-			}
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<SerializedTransaction, ApiPoolTradeBody>(
+				"transactions/trade",
+				{
+					walletAddress,
+					fromCoin,
+					fromCoinAmount,
+					toCoin,
+				}
+			)
 		);
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	// public async getDepositEvents(
+	// 	cursor?: EventId,
+	// 	limit?: number
+	// ): Promise<EventsWithCursor<PoolDepositEvent>> {
+	// 	return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
+	// 		"events/deposit",
+	// 		{
+	// 			cursor,
+	// 			limit,
+	// 		}
+	// 	);
+	// }
+
+	// public async getWithdrawEvents(
+	// 	cursor?: EventId,
+	// 	limit?: number
+	// ): Promise<EventsWithCursor<PoolWithdrawEvent>> {
+	// 	return this.fetchApi<
+	// 		EventsWithCursor<PoolWithdrawEvent>,
+	// 		ApiEventsBody
+	// 	>("events/withdraw", {
+	// 		cursor,
+	// 		limit,
+	// 	});
+	// }
+
+	// public async getTradeEvents(
+	// 	cursor?: EventId,
+	// 	limit?: number
+	// ): Promise<EventsWithCursor<PoolTradeEvent>> {
+	// 	return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
+	// 		"events/trade",
+	// 		{
+	// 			cursor,
+	// 			limit,
+	// 		}
+	// 	);
+	// }
 
 	/////////////////////////////////////////////////////////////////////
 	//// Calculations

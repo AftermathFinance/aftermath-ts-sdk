@@ -1,10 +1,5 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import {
-	Balance,
-	Event,
-	Timestamp,
-	Url,
-} from "../../general/types/generalTypes";
+import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 
 /////////////////////////////////////////////////////////////////////
@@ -14,41 +9,6 @@ import { CoinType } from "../coin/coinTypes";
 export interface StakeBalanceDynamicField {
 	objectId: ObjectId;
 	value: Balance;
-}
-
-export interface StakeValidator {
-	name: string;
-	description: string | undefined;
-	projectUrl: Url | undefined;
-	imageUrl: Url | undefined;
-	suiAddress: SuiAddress;
-	nextEpoch: {
-		commissionRate: number;
-		delegation: Balance;
-		gasPrice: Balance;
-		stake: Balance;
-	};
-}
-
-type DelegatedStakePositionStatus =
-	| "pending"
-	| {
-			active: {
-				id: ObjectId;
-				stakedSuiId: ObjectId;
-				principalSuiAmount: Balance;
-				poolCoinsAmount: Balance;
-			};
-	  };
-
-export interface DelegatedStakePosition {
-	stakedSuiId: ObjectId;
-	validatorAddress: SuiAddress;
-	poolStartingEpoch: EpochTimeStamp;
-	delegationRequestEpoch: EpochTimeStamp;
-	principalAmount: Balance;
-	suiCoinLock: number | undefined;
-	status: DelegatedStakePositionStatus;
 }
 
 /////////////////////////////////////////////////////////////////////

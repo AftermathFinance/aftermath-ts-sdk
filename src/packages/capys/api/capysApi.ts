@@ -1,9 +1,4 @@
-import {
-	EventId,
-	ObjectId,
-	SignableTransaction,
-	SuiAddress,
-} from "@mysten/sui.js";
+import { EventId, ObjectId, SuiAddress, Transaction } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CapysApiCasting } from "./capysApiCasting";
 import { CapysApiHelpers } from "./capysApiHelpers";
@@ -29,9 +24,12 @@ import {
 import { AmountInCoinAndUsd, CoinDecimal } from "../../coin/coinTypes";
 import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils/helpers";
-import { ObjectsApiHelpers } from "../../../general/api/objectsApiHelpers";
 import { Capys } from "../capys";
-import { Balance, DynamicFieldObjectsWithCursor } from "../../../types";
+import {
+	Balance,
+	DynamicFieldObjectsWithCursor,
+	SerializedTransaction,
+} from "../../../types";
 
 export class CapysApi {
 	/////////////////////////////////////////////////////////////////////
@@ -119,68 +117,56 @@ export class CapysApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCapyBornEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchCapyBornEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			CapyBornEventOnChain,
 			CapyBornEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.capyBorn,
+				MoveEventType: this.Helpers.eventTypes.capyBorn,
 			},
 			CapysApiCasting.capyBornEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
-	public fetchBreedCapysEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchBreedCapysEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			BreedCapyEventOnChain,
 			BreedCapysEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.breedCapys,
+				MoveEventType: this.Helpers.eventTypes.breedCapys,
 			},
 			CapysApiCasting.breedCapysEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
-	public fetchStakeCapyEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchStakeCapyEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeCapyEventOnChain,
 			StakeCapyEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.stakeCapy,
+				MoveEventType: this.Helpers.eventTypes.stakeCapy,
 			},
 			CapysApiCasting.stakeCapyEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
-	public fetchUnstakeCapyEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchUnstakeCapyEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeCapyEventOnChain,
 			UnstakeCapyEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.unstakeCapy,
+				MoveEventType: this.Helpers.eventTypes.unstakeCapy,
 			},
 			CapysApiCasting.unstakeCapyEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	/////////////////////////////////////////////////////////////////////
@@ -192,20 +178,19 @@ export class CapysApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchCapys = async (capyIds: ObjectId[]): Promise<CapyObject[]> => {
-		return this.Provider.Objects().fetchFilterAndCastObjectBatch<CapyObject>(
+		return this.Provider.Objects().fetchCastObjectBatch<CapyObject>(
 			capyIds,
-			ObjectsApiHelpers.objectExists,
-			CapysApiCasting.capyObjectFromGetObjectDataResponse
+			CapysApiCasting.capyObjectFromSuiObjectResponse
 		);
 	};
 
 	public fetchCapysOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<CapyObject[]> => {
-		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
+		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
-			this.Helpers.isCapyObjectType,
-			this.fetchCapys
+			this.Helpers.objectTypes.capyObjectType,
+			CapysApiCasting.capyObjectFromSuiObjectResponse
 		);
 	};
 
@@ -214,7 +199,7 @@ export class CapysApi {
 	): Promise<CapyObject[]> => {
 		return this.Provider.Objects().fetchCastObjectBatch<CapyObject>(
 			capyIds,
-			CapysApiCasting.capyObjectFromGetObjectDataResponse
+			CapysApiCasting.capyObjectFromSuiObjectResponse
 		);
 	};
 
@@ -237,7 +222,7 @@ export class CapysApi {
 	): Promise<CapyVaultObject> => {
 		return this.Provider.Objects().fetchCastObject<CapyVaultObject>(
 			capyVaultId,
-			CapysApiCasting.capyVaultObjectFromGetObjectDataResponse
+			CapysApiCasting.capyVaultObjectFromSuiObjectResponse
 		);
 	};
 
@@ -266,7 +251,7 @@ export class CapysApi {
 	): Promise<StakedCapyReceiptObject> => {
 		return this.Provider.Objects().fetchCastObject<StakedCapyReceiptObject>(
 			capyStakingReceipt,
-			CapysApiCasting.stakedCapyReceiptObjectFromGetObjectDataResponse
+			CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse
 		);
 	};
 
@@ -275,17 +260,17 @@ export class CapysApi {
 	): Promise<StakedCapyReceiptObject[]> => {
 		return this.Provider.Objects().fetchCastObjectBatch<StakedCapyReceiptObject>(
 			capyStakingReceipts,
-			CapysApiCasting.stakedCapyReceiptObjectFromGetObjectDataResponse
+			CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse
 		);
 	};
 
 	public fetchStakedCapyReceiptOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<StakedCapyReceiptObject[]> => {
-		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
+		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			walletAddress,
-			this.Helpers.isStakedCapyReceiptObjectType,
-			this.fetchStakedCapyReceipts
+			this.Helpers.objectTypes.stakedCapyReceiptObjectType,
+			CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse
 		);
 	};
 
@@ -332,44 +317,48 @@ export class CapysApi {
 	//// Capy Staking
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakeCapyTransactions = (
+	public fetchStakeCapyTransaction = (
 		capyId: ObjectId
-	): SignableTransaction => this.Helpers.capyStakeCapyTransaction(capyId);
+	): SerializedTransaction =>
+		this.Helpers.capyStakeCapyTransaction(capyId).serialize();
 
-	public fetchUnstakeCapyTransactions = (
+	public fetchUnstakeCapyTransaction = (
 		stakingReceiptId: ObjectId
-	): SignableTransaction =>
-		this.Helpers.capyUnstakeCapyTransaction(stakingReceiptId);
+	): SerializedTransaction =>
+		this.Helpers.capyUnstakeCapyTransaction(stakingReceiptId).serialize();
 
-	public fetchWithdrawStakedCapyFeesTransactions = (
+	public fetchWithdrawStakedCapyFeesTransaction = (
 		stakingReceiptId: ObjectId
-	): SignableTransaction =>
-		this.Helpers.capyWithdrawFeesTransaction(stakingReceiptId);
+	): SerializedTransaction =>
+		this.Helpers.capyWithdrawFeesTransaction(stakingReceiptId).serialize();
 
-	public fetchWithdrawStakedCapyFeesAmountTransactions = (
+	public fetchWithdrawStakedCapyFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
 		amount: Balance
-	): SignableTransaction =>
+	): SerializedTransaction =>
 		this.Helpers.capyWithdrawFeesAmountTransaction(
 			stakingReceiptId,
 			amount
-		);
+		).serialize();
 
-	public fetchCapyTransferTransactions = (
+	public fetchCapyTransferTransaction = (
 		stakingReceiptId: ObjectId,
 		recipient: SuiAddress
-	): SignableTransaction =>
-		this.Helpers.capyTransferTransaction(stakingReceiptId, recipient);
+	): SerializedTransaction =>
+		this.Helpers.capyTransferTransaction(
+			stakingReceiptId,
+			recipient
+		).serialize();
 
 	/////////////////////////////////////////////////////////////////////
 	//// Capy Breeding
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchBreedCapysTransactions = async (
+	public fetchBreedCapysTransaction = async (
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
-	) => {
+	): Promise<SerializedTransaction> => {
 		const [parentOneIsOwned, parentTwoIsOwned] = await Promise.all([
 			this.Provider.Objects().fetchIsObjectOwnedByAddress(
 				parentOneId,
@@ -380,14 +369,16 @@ export class CapysApi {
 				walletAddress
 			),
 		]);
-		const transactions = await this.Helpers.fetchCapyBuildBreedTransactions(
+
+		const transaction = await this.Helpers.fetchCapyBuildBreedTransaction(
 			walletAddress,
 			parentOneId,
 			parentOneIsOwned,
 			parentTwoId,
 			parentTwoIsOwned
 		);
-		return transactions;
+
+		return transaction.serialize();
 	};
 
 	/////////////////////////////////////////////////////////////////////

@@ -105,7 +105,7 @@ export class RouterGraph {
 		coinOut: CoinType,
 		isGivenAmountOut: boolean,
 		maxRouteLength: number = RouterGraph.constants.defaultMaxRouteLength
-	): RouterCompleteTradeRoute {
+	): Promise<RouterCompleteTradeRoute> {
 		if (this.pools.length <= 0) throw new Error("pools has length of 0");
 
 		const routes = RouterGraph.findRoutes(

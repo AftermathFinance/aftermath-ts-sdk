@@ -1,10 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
-import {
-	MoveCallTransaction,
-	ObjectId,
-	SignableTransaction,
-} from "@mysten/sui.js";
+import { ObjectId, Transaction } from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
 import {
 	AnyObjectType,
@@ -87,18 +83,24 @@ export class FaucetApiHelpers {
 		treasuryCapType: CoinType,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions.add
 			.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.faucet,
-				module: FaucetApiHelpers.constants.faucetModuleName,
-				function: FaucetApiHelpers.constants.functions.add.name,
-				typeArguments: [treasuryCapType],
-				arguments: [this.addresses.objects.faucet, treasuryCapId],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.faucet,
+				FaucetApiHelpers.constants.faucetModuleName,
+				FaucetApiHelpers.constants.functions.add.name
+			),
+			typeArguments: [treasuryCapType],
+			arguments: [
+				tx.object(this.addresses.objects.faucet),
+				tx.object(treasuryCapId),
+			],
+		});
+		tx.setGasBudget(gasBudget);
+
+		return tx;
 	};
 
 	public faucetRequestCoinAmountTransaction = (
@@ -106,52 +108,60 @@ export class FaucetApiHelpers {
 		amount: Balance,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions
 			.requestAmount.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.faucet,
-				module: FaucetApiHelpers.constants.faucetModuleName,
-				function:
-					FaucetApiHelpers.constants.functions.requestAmount.name,
-				typeArguments: [coinType],
-				arguments: [this.addresses.objects.faucet, amount.toString()],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.faucet,
+				FaucetApiHelpers.constants.faucetModuleName,
+				FaucetApiHelpers.constants.functions.requestAmount.name
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.faucet),
+				tx.pure(amount.toString()),
+			],
+		});
+		tx.setGasBudget(gasBudget);
+
+		return tx;
 	};
 
 	public faucetRequestCoinTransaction = (
 		coinType: CoinType,
 		gasBudget: GasBudget = FaucetApiHelpers.constants.functions.request
 			.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: this.addresses.packages.faucet,
-				module: FaucetApiHelpers.constants.faucetModuleName,
-				function: FaucetApiHelpers.constants.functions.request.name,
-				typeArguments: [coinType],
-				arguments: [this.addresses.objects.faucet],
-				gasBudget: gasBudget,
-			},
-		};
+	): Transaction => {
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.faucet,
+				FaucetApiHelpers.constants.faucetModuleName,
+				FaucetApiHelpers.constants.functions.request.name
+			),
+			typeArguments: [coinType],
+			arguments: [tx.object(this.addresses.objects.faucet)],
+		});
+		tx.setGasBudget(gasBudget);
+
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Move Calls
 	/////////////////////////////////////////////////////////////////////
 
-	public faucetSupportedCoinsMoveCall = (): MoveCallTransaction => {
-		return {
-			packageObjectId: this.addresses.packages.faucet,
-			module: FaucetApiHelpers.constants.faucetRegistryModuleName,
-			function: "typenames",
-			typeArguments: [],
-			arguments: [this.addresses.objects.faucetRegistry],
-		};
-	};
+	// public faucetSupportedCoinsMoveCall = (): Transaction => {
+	// 	return {
+	// 		packageObjectId: this.addresses.packages.faucet,
+	// 		module: FaucetApiHelpers.constants.faucetRegistryModuleName,
+	// 		function: "typenames",
+	// 		typeArguments: [],
+	// 		arguments: [this.addresses.objects.faucetRegistry],
+	// 	};
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Methods

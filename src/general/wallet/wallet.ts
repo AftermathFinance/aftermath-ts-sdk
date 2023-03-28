@@ -38,7 +38,7 @@ export class Wallet extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getPastTransactions(
+	public async getPastAftermathTransactions(
 		cursor?: TransactionDigest,
 		limit?: number
 	): Promise<TransactionsWithCursor> {

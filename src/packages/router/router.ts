@@ -1,11 +1,15 @@
 import {
 	ApiRouterCompleteTradeRouteBody,
+	ApiRouterTransactionForCompleteTradeRouteBody,
 	Balance,
 	CoinType,
 	RouterCompleteTradeRoute,
+	SerializedTransaction,
 	SuiNetwork,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { RouterGraph } from "./utils/routerGraph";
+import { SuiAddress, Transaction } from "@mysten/sui.js";
 
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -61,4 +65,19 @@ export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
+
+	public async getTransactionForCompleteTradeRoute(
+		walletAddress: SuiAddress,
+		completeRoute: RouterCompleteTradeRoute
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiRouterTransactionForCompleteTradeRouteBody
+			>("transactions/trade", {
+				walletAddress,
+				completeRoute,
+			})
+		);
+	}
 }

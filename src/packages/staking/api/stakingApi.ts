@@ -1,4 +1,10 @@
-import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
+import {
+	DelegatedStake,
+	EventId,
+	ObjectId,
+	SuiAddress,
+	SuiValidatorSummary,
+} from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
 import {
@@ -8,14 +14,13 @@ import {
 	StakeStakeEventAccumulation,
 } from "../stakingTypes";
 import { Helpers } from "../../../general/utils/helpers";
-import { Balance, Delegation, StakedSui } from "../../../types";
-import { SuiApiCasting } from "../../sui/api/suiApiCasting";
+import { Balance, SerializedTransaction } from "../../../types";
 import {
 	StakingCancelDelegationRequestEventOnChain,
 	StakingRequestAddDelegationEventOnChain,
 	StakingRequestWithdrawDelegationEventOnChain,
 } from "./stakingApiCastingTypes";
-import { StakingApiCasting } from "./stakingApiCasting";
+import { Casting } from "../../../general/utils/casting";
 
 export class StakingApi {
 	/////////////////////////////////////////////////////////////////////
@@ -38,27 +43,19 @@ export class StakingApi {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Inspections
+	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakeValidators = async () => {
-		const validatorMetadatas = await this.Provider.provider.getValidators();
-
-		const validators = validatorMetadatas.map(
-			StakingApiCasting.stakeValidatorFromValidatorMetadata
-		);
-
-		return validators;
+	public fetchDelegatedStakes = async (
+		address: SuiAddress
+	): Promise<DelegatedStake[]> => {
+		return this.Provider.provider.getStakes({
+			owner: address,
+		});
 	};
 
-	public fetchDelegatedStakePositions = async (address: SuiAddress) => {
-		const delegatedStakes = await this.Provider.provider.getDelegatedStakes(
-			address
-		);
-		const delegatedStakePositions = delegatedStakes.map(
-			StakingApiCasting.delegatedStakePositionFromDelegatedStake
-		);
-		return delegatedStakePositions;
+	public fetchActiveValidators = async (): Promise<SuiValidatorSummary[]> => {
+		return (await this.Provider.Sui().fetchSystemState()).activeValidators;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -67,140 +64,99 @@ export class StakingApi {
 
 	public fetchRequestAddDelegationEvents = async (
 		cursor?: EventId,
-		eventLimit?: number
+		limit?: number
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingRequestAddDelegationEventOnChain,
 			StakeRequestAddDelegationEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.requestAddDelegation,
+				MoveEventType: this.Helpers.eventTypes.requestAddDelegation,
 			},
-			StakingApiCasting.requestAddDelegationEventFromOnChain,
+			Casting.staking.requestAddDelegationEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	public fetchRequestWithdrawDelegationEvents = async (
 		cursor?: EventId,
-		eventLimit?: number
+		limit?: number
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingRequestWithdrawDelegationEventOnChain,
 			StakeRequestWithdrawDelegationEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.requestWithdrawDelegation,
+				MoveEventType:
+					this.Helpers.eventTypes.requestWithdrawDelegation,
 			},
-			StakingApiCasting.requestWithdrawDelegationEventFromOnChain,
+			Casting.staking.requestWithdrawDelegationEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	public fetchCancelDelegationRequestEvents = async (
 		cursor?: EventId,
-		eventLimit?: number
+		limit?: number
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingCancelDelegationRequestEventOnChain,
 			StakeCancelDelegationRequestEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.cancelDelegationRequest,
+				MoveEventType: this.Helpers.eventTypes.cancelDelegationRequest,
 			},
-			StakingApiCasting.cancelDelegationRequestEventFromOnChain,
+			Casting.staking.cancelDelegationRequestEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
-
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Delegation Objects
-	/////////////////////////////////////////////////////////////////////
-
-	public fetchDelegationObjects = async (
-		delegationIds: ObjectId[]
-	): Promise<Delegation[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<Delegation>(
-			delegationIds,
-			SuiApiCasting.delegationFromGetObjectDataResponse
-		);
-	};
-
-	public fetchDelegationObjectsOwnedByAddress = async (
-		walletAddress: SuiAddress
-	): Promise<Delegation[]> => {
-		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
-			walletAddress,
-			SuiApiCasting.isDelegation,
-			this.fetchDelegationObjects
-		);
-	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Staked SUI Objects
-	/////////////////////////////////////////////////////////////////////
-
-	public fetchStakedSuiObjects = async (
-		stakedSuiIds: ObjectId[]
-	): Promise<StakedSui[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<StakedSui>(
-			stakedSuiIds,
-			SuiApiCasting.stakedSuiFromGetObjectDataResponse
-		);
-	};
-
-	public fetchStakedSuiObjectsOwnedByAddress = async (
-		walletAddress: SuiAddress
-	): Promise<StakedSui[]> => {
-		return await this.Provider.Objects().fetchFilterAndCastObjectsOwnedByAddress(
-			walletAddress,
-			SuiApiCasting.isStakedSui,
-			this.fetchStakedSuiObjects
-		);
-	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestAddDelegationTransactions = async (
+	public fetchRequestAddDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		validator: SuiAddress
-	) =>
-		this.Helpers.fetchBuildRequestAddDelegationTransactions(
+	): Promise<SerializedTransaction> => {
+		const tx = await this.Helpers.fetchBuildRequestAddDelegationTransaction(
 			walletAddress,
 			amount,
 			validator
 		);
+		return tx.serialize();
+	};
 
-	public fetchRequestWithdrawDelegationTransactions = async (
+	public fetchRequestWithdrawDelegationTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId,
 		delegation: ObjectId
-	) =>
-		this.Helpers.fetchCancelOrRequestWithdrawDelegationTransactions(
-			walletAddress,
-			amount,
-			stakedSui,
-			delegation
-		);
+	): Promise<SerializedTransaction> => {
+		const tx =
+			await this.Helpers.fetchBuildCancelOrRequestWithdrawDelegationTransaction(
+				walletAddress,
+				amount,
+				stakedSui,
+				delegation
+			);
+		return tx.serialize();
+	};
 
-	public fetchCancelDelegationRequestTransactions = async (
+	public fetchCancelDelegationRequestTransaction = async (
 		walletAddress: SuiAddress,
 		amount: Balance,
 		stakedSui: ObjectId
-	) =>
-		this.Helpers.fetchCancelOrRequestWithdrawDelegationTransactions(
-			walletAddress,
-			amount,
-			stakedSui
-		);
+	): Promise<SerializedTransaction> => {
+		const tx =
+			await this.Helpers.fetchBuildCancelOrRequestWithdrawDelegationTransaction(
+				walletAddress,
+				amount,
+				stakedSui
+			);
+		return tx.serialize();
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Stats
@@ -213,7 +169,7 @@ export class StakingApi {
 			StakeStakeEventAccumulation
 		> = {};
 
-		// TODO: should keep fetching stakes until there are none left - is this the same as undefined eventLimit ?
+		// TODO: should keep fetching stakes until there are none left - is this the same as undefined limit ?
 		const stakesWithCursor = await this.fetchRequestAddDelegationEvents();
 		const stakes = stakesWithCursor.events;
 

@@ -6,6 +6,7 @@ import { CoinType } from "../../coin/coinTypes";
 import { FaucetMintCoinEventOnChain } from "./faucetApiCastingTypes";
 import { FaucetMintCoinEvent } from "../faucetTypes";
 import { FaucetApiHelpers } from "./faucetApiHelpers";
+import { SerializedTransaction } from "../../../types";
 
 export class FaucetApi {
 	/////////////////////////////////////////////////////////////////////
@@ -58,8 +59,8 @@ export class FaucetApi {
 
 	// public fetchFaucetSupportedCoins = async () => {
 	// 	const signer: SuiAddress = config.constants.devInspectSigner;
-	// 	const moveCallTransaction = faucetSupportedCoinsMoveCall();
-	// 	const bytes = await fetchBytesFromMoveCallTransaction(signer, moveCallTransaction);
+	// 	const Transaction = faucetSupportedCoinsMoveCall();
+	// 	const bytes = await fetchBytesFromTransaction(signer, Transaction);
 	// 	return stringFromBytes(bytes);
 	// };
 
@@ -74,7 +75,9 @@ export class FaucetApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestCoinAmountTransaction = async (coin: CoinType) => {
+	public fetchRequestCoinAmountTransaction = async (
+		coin: CoinType
+	): Promise<SerializedTransaction> => {
 		const price = await this.Provider.Prices().fetchPrice(coin);
 
 		const requestAmount = Faucet.constants.defaultRequestAmountUsd / price;
@@ -89,26 +92,23 @@ export class FaucetApi {
 			requestAmountWithDecimals
 		);
 
-		return transaction;
+		return transaction.serialize();
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchMintCoinEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchMintCoinEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
 			FaucetMintCoinEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.mintCoin,
+				MoveEventType: this.Helpers.eventTypes.mintCoin,
 			},
 			FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 }

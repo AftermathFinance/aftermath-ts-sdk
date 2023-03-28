@@ -1,4 +1,4 @@
-import { EventId, ObjectId, SuiAddress, SuiObject } from "@mysten/sui.js";
+import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { PoolsApiHelpers } from "./poolsApiHelpers";
 import { CoinType, CoinsToBalance } from "../../coin/coinTypes";
@@ -7,22 +7,20 @@ import {
 	PoolVolumeDataTimeframeKey,
 	PoolDepositEvent,
 	PoolDynamicFields,
-	PoolObject,
 	PoolStats,
 	PoolTradeEvent,
 	PoolWithdrawEvent,
+	SerializedTransaction,
 } from "../../../types";
-import { Casting } from "../../../general/utils/casting";
 import { Coin } from "../../coin/coin";
 import {
 	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
-	PoolDynamicFieldOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
-import { PoolsApiCasting } from "./poolsApiCasting";
 import { Pools } from "../pools";
+import { Casting } from "../../../general/utils/casting";
 
 export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
@@ -48,110 +46,119 @@ export class PoolsApi {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchSpotPrice = async (
-		poolId: ObjectId,
-		lpCoinType: CoinType,
-		coinInType: CoinType,
-		coinOutType: CoinType
-	): Promise<Balance> => {
-		const moveCallTransaction = this.Helpers.spotPriceMoveCall(
-			poolId,
-			coinInType,
-			coinOutType,
-			lpCoinType
-		);
-		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
-				moveCallTransaction
-			);
-		return Casting.bigIntFromBytes(bytes);
-	};
+	// public fetchSpotPrice = async (
+	// 	poolId: ObjectId,
+	// 	lpCoinType: CoinType,
+	// 	coinInType: CoinType,
+	// 	coinOutType: CoinType
+	// ): Promise<Balance> => {
+	// 	const Transaction = this.Helpers.spotPriceMoveCall(
+	// 		poolId,
+	// 		coinInType,
+	// 		coinOutType,
+	// 		lpCoinType
+	// 	);
+	// 	const bytes =
+	// 		await this.Provider.Inspections().fetchBytesFromTransaction(
+	// 			Transaction
+	// 		);
+	// 	return Casting.bigIntFromBytes(bytes);
+	// };
 
-	public fetchTradeAmountOut = async (
-		poolId: ObjectId,
-		coinInType: CoinType,
-		coinOutType: CoinType,
-		lpCoinType: CoinType,
-		coinInBalance: Balance
-	) => {
-		const moveCallTransaction = this.Helpers.tradeAmountOutMoveCall(
-			poolId,
-			coinInType,
-			coinOutType,
-			lpCoinType,
-			coinInBalance
-		);
-		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
-				moveCallTransaction
-			);
-		return Casting.bigIntFromBytes(bytes);
-	};
+	// public fetchTradeAmountOut = async (
+	// 	poolId: ObjectId,
+	// 	coinInType: CoinType,
+	// 	coinOutType: CoinType,
+	// 	lpCoinType: CoinType,
+	// 	coinInBalance: Balance
+	// ) => {
+	// 	const Transaction = this.Helpers.tradeAmountOutMoveCall(
+	// 		poolId,
+	// 		coinInType,
+	// 		coinOutType,
+	// 		lpCoinType,
+	// 		coinInBalance
+	// 	);
+	// 	const bytes =
+	// 		await this.Provider.Inspections().fetchBytesFromTransaction(
+	// 			Transaction
+	// 		);
+	// 	return Casting.bigIntFromBytes(bytes);
+	// };
 
-	public fetchDepositLpMintAmount = async (
-		poolId: ObjectId,
-		lpCoinType: CoinType,
-		depositCoinsToBalance: CoinsToBalance
-	) => {
-		const { coins, balances } = Coin.coinsAndBalancesOverZero(
-			depositCoinsToBalance
-		);
-		const moveCallTransaction = this.Helpers.depositLpMintAmountMoveCall(
-			poolId,
-			lpCoinType,
-			coins,
-			balances
-		);
-		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
-				moveCallTransaction
-			);
-		return Casting.bigIntFromBytes(bytes);
-	};
+	// public fetchDepositLpMintAmount = async (
+	// 	poolId: ObjectId,
+	// 	lpCoinType: CoinType,
+	// 	depositCoinsToBalance: CoinsToBalance
+	// ) => {
+	// 	const { coins, balances } = Coin.coinsAndBalancesOverZero(
+	// 		depositCoinsToBalance
+	// 	);
+	// 	const Transaction = this.Helpers.depositLpMintAmountMoveCall(
+	// 		poolId,
+	// 		lpCoinType,
+	// 		coins,
+	// 		balances
+	// 	);
+	// 	const bytes =
+	// 		await this.Provider.Inspections().fetchBytesFromTransaction(
+	// 			Transaction
+	// 		);
+	// 	return Casting.bigIntFromBytes(bytes);
+	// };
 
-	public fetchWithdrawAmountOut = async (
-		poolId: ObjectId,
-		lpCoinType: CoinType,
-		withdrawCoinsToBalance: CoinsToBalance
-	) => {
-		const { coins, balances } = Coin.coinsAndBalancesOverZero(
-			withdrawCoinsToBalance
-		);
-		const moveCallTransaction = this.Helpers.withdrawAmountOutMoveCall(
-			poolId,
-			lpCoinType,
-			coins,
-			balances
-		);
-		const bytes =
-			await this.Provider.Inspections().fetchBytesFromMoveCallTransaction(
-				moveCallTransaction
-			);
-		return Casting.bigIntFromBytes(bytes);
-	};
+	// public fetchWithdrawAmountOut = async (
+	// 	poolId: ObjectId,
+	// 	lpCoinType: CoinType,
+	// 	withdrawCoinsToBalance: CoinsToBalance
+	// ) => {
+	// 	const { coins, balances } = Coin.coinsAndBalancesOverZero(
+	// 		withdrawCoinsToBalance
+	// 	);
+	// 	const Transaction = this.Helpers.withdrawAmountOutMoveCall(
+	// 		poolId,
+	// 		lpCoinType,
+	// 		coins,
+	// 		balances
+	// 	);
+	// 	const bytes =
+	// 		await this.Provider.Inspections().fetchBytesFromTransaction(
+	// 			Transaction
+	// 		);
+	// 	return Casting.bigIntFromBytes(bytes);
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchTradeEvents = async (cursor?: EventId, eventLimit?: number) =>
+	public fetchTradeEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolTradeEventOnChain,
 			PoolTradeEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.trade,
+				MoveEventType: this.Helpers.eventTypes.trade,
 			},
-			PoolsApiCasting.poolTradeEventFromOnChain,
+			// All: [
+			// 	{ MoveEventType: this.Helpers.eventTypes.trade },
+			// 	{
+			// 		MoveEventField: {
+			// 			path: "pool_id",
+			// 			value: poolObjectId,
+			// 		},
+			// 	},
+			// ],
+			Casting.pools.poolTradeEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	// NOTE: the below functions can be used if we want to only look at single events
 
 	// const fetchSingleDepositEvents = async (
 	// 	cursor?: EventId,
-	// 	eventLimit?: number
+	// 	limit?: number
 	// ) =>
 	// 	await fetchCastEventsWithCursor<
 	// 		PoolSingleDepositEventOnChain,
@@ -162,25 +169,25 @@ export class PoolsApi {
 	// 		},
 	// 		poolSingleDepositEventFromOnChain,
 	// 		cursor,
-	// 		eventLimit
+	// 		limit
 	// 	);
 
-	public fetchDepositEvents = async (cursor?: EventId, eventLimit?: number) =>
+	public fetchDepositEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
 			PoolDepositEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.deposit,
+				MoveEventType: this.Helpers.eventTypes.deposit,
 			},
-			PoolsApiCasting.poolDepositEventFromOnChain,
+			Casting.pools.poolDepositEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	// const fetchSingleWithdrawEvents = async (
 	// 	cursor?: EventId,
-	// 	eventLimit?: number
+	// 	limit?: number
 	// ) =>
 	// 	await fetchCastEventsWithCursor<
 	// 		PoolSingleWithdrawEventOnChain,
@@ -191,23 +198,20 @@ export class PoolsApi {
 	// 		},
 	// 		poolSingleWithdrawEventFromOnChain,
 	// 		cursor,
-	// 		eventLimit
+	// 		limit
 	// 	);
 
-	public fetchWithdrawEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchWithdrawEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolWithdrawEventOnChain,
 			PoolWithdrawEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.withdraw,
+				MoveEventType: this.Helpers.eventTypes.withdraw,
 			},
-			PoolsApiCasting.poolWithdrawEventFromOnChain,
+			Casting.pools.poolWithdrawEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
 		);
 
 	/////////////////////////////////////////////////////////////////////
@@ -215,50 +219,34 @@ export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchPool = async (objectId: ObjectId) => {
-		const object = await this.Provider.provider.getObject(objectId);
-		if (object.status !== "Exists")
-			throw new Error("pool object does not exist");
-
-		const poolObject = PoolsApiCasting.poolObjectFromSuiObject(
-			object.details as SuiObject
+		return this.Provider.Objects().fetchCastObject(
+			objectId,
+			Casting.pools.poolObjectFromSuiObject
 		);
-		return poolObject;
 	};
 
 	public fetchPools = async (objectIds: ObjectId[]) => {
-		const objects = await this.Provider.Objects().fetchObjectBatch(
-			objectIds
+		return this.Provider.Objects().fetchCastObjectBatch(
+			objectIds,
+			Casting.pools.poolObjectFromSuiObject
 		);
-		const poolObjects = objects.map((data) =>
-			PoolsApiCasting.poolObjectFromSuiObject(data.details as SuiObject)
-		);
-		return poolObjects;
 	};
 
 	public fetchAllPools = async () => {
-		const paginatedEvents = await this.Provider.provider.getEvents(
-			{
-				MoveEvent: `${this.Helpers.addresses.packages.cmmm}::events::CreatedPoolEvent`,
-			}, // query
-			null, // cursor
-			null, // limit
-			"ascending" // order
+		const paginatedEvents = await this.Provider.provider.queryEvents({
+			query: {
+				MoveEventType: `${this.Helpers.addresses.packages.cmmm}::events::CreatedPoolEvent`,
+			},
+			cursor: null,
+			limit: null,
+			order: "ascending",
+		});
+
+		const poolObjects = paginatedEvents.data.map((event) =>
+			Casting.pools.poolObjectFromPoolCreateEventOnChain(
+				event.parsedJson as PoolCreateEventOnChain
+			)
 		);
-
-		let poolObjects: PoolObject[] = [];
-
-		for (const suiEventEnvelope of paginatedEvents.data) {
-			const event = suiEventEnvelope.event;
-			if (!("moveEvent" in event)) continue;
-
-			const createEvent = event.moveEvent as PoolCreateEventOnChain;
-
-			poolObjects.push(
-				PoolsApiCasting.poolObjectFromPoolCreateEventOnChain(
-					createEvent
-				)
-			);
-		}
 
 		return poolObjects;
 	};
@@ -273,20 +261,17 @@ export class PoolsApi {
 		const dynamicFieldsAsSuiObjects =
 			await this.Provider.Objects().fetchObjectBatch(objectIds);
 		const dynamicFieldsOnChain = dynamicFieldsAsSuiObjects.map(
-			(dynamicField) =>
-				dynamicField.details as SuiObject as PoolDynamicFieldOnChain<any>
+			Casting.pools.poolDynamicFieldsFromSuiObject
 		);
 
 		const lpFields = dynamicFieldsOnChain
 			.filter((field) => Pools.isLpKeyType(field.data.type))
-			.map((field) =>
-				PoolsApiCasting.poolLpDynamicFieldFromOnChain(field)
-			);
+			.map((field) => Casting.pools.poolLpDynamicFieldFromOnChain(field));
 
 		const amountFields = dynamicFieldsOnChain
 			.filter((field) => Pools.isAmountKeyType(field.data.type))
 			.map((field) =>
-				PoolsApiCasting.poolAmountDynamicFieldFromOnChain(field)
+				Casting.pools.poolAmountDynamicFieldFromOnChain(field)
 			);
 
 		return {
@@ -299,36 +284,36 @@ export class PoolsApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchDepositTransactions = async (
+	public fetchDepositTransaction = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		depositCoinsToBalance: CoinsToBalance
-	) => {
+	): Promise<SerializedTransaction> => {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
 			depositCoinsToBalance
 		);
-		const transactions = await this.Helpers.fetchBuildDepositTransactions(
+		const transaction = await this.Helpers.fetchBuildDepositTransaction(
 			walletAddress,
 			poolObjectId,
 			poolLpType,
 			coins,
 			balances
 		);
-		return transactions;
+		return transaction.serialize();
 	};
 
-	public fetchWithdrawTransactions = async (
+	public fetchWithdrawTransaction = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		withdrawCoinsToBalance: CoinsToBalance,
 		withdrawLpTotal: Balance
-	) => {
+	): Promise<SerializedTransaction> => {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
 			withdrawCoinsToBalance
 		);
-		const transactions = await this.Helpers.fetchBuildWithdrawTransactions(
+		const transaction = await this.Helpers.fetchBuildWithdrawTransaction(
 			walletAddress,
 			poolObjectId,
 			poolLpType,
@@ -336,18 +321,18 @@ export class PoolsApi {
 			coins,
 			balances
 		);
-		return transactions;
+		return transaction.serialize();
 	};
 
-	public fetchTradeTransactions = async (
+	public fetchTradeTransaction = async (
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		fromCoin: CoinType,
 		fromCoinBalance: Balance,
 		toCoinType: CoinType
-	) => {
-		const transactions = await this.Helpers.fetchBuildTradeTransactions(
+	): Promise<SerializedTransaction> => {
+		const transaction = await this.Helpers.fetchBuildTradeTransaction(
 			walletAddress,
 			poolObjectId,
 			poolLpType,
@@ -355,7 +340,7 @@ export class PoolsApi {
 			fromCoinBalance,
 			toCoinType
 		);
-		return transactions;
+		return transaction.serialize();
 	};
 
 	/////////////////////////////////////////////////////////////////////

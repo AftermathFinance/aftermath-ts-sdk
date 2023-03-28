@@ -4,6 +4,13 @@ import { PoolCompleteObject } from "../../pools/poolsTypes";
 import { Balance, CoinType, RouterCompleteTradeRoute } from "../../../types";
 import { Pool } from "../../pools";
 import { RouterGraph } from "../utils/routerGraph";
+import {
+	CoinType,
+	RouterCompleteTradeRoute,
+	SerializedTransaction,
+} from "../../../types";
+import { SuiAddress, Transaction } from "@mysten/sui.js";
+import { Helpers } from "../../../general/utils/helpers";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -35,11 +42,11 @@ export class RouterApi {
 			.map((pool) => pool.fields.coins)
 			.reduce((prev, cur) => [...prev, ...cur], []);
 
-		const uniqueCoins = [...new Set(allCoins)];
+		const uniqueCoins = Helpers.uniqueArray(allCoins);
 		return uniqueCoins;
 	};
 
-	public fetchCompleteTradeRouteGivenAmountIn = async (
+  public fetchCompleteTradeRouteGivenAmountIn = async (
 		pools: Pool[],
 		coinIn: CoinType,
 		coinInAmount: Balance,
@@ -68,4 +75,54 @@ export class RouterApi {
 			maxRouteLength
 		);
 	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public async getTransactionForCompleteTradeRoute(
+		walletAddress: SuiAddress,
+		completeRoute: RouterCompleteTradeRoute
+	): Promise<SerializedTransaction> {
+		const startTx = new Transaction();
+
+		const { coinWithAmountObjectId: coinInId, txWithCoinWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				startTx,
+				walletAddress,
+				completeRoute.coinIn,
+				completeRoute.coinInAmount
+			);
+
+		let tx = txWithCoinWithAmount;
+
+		for (const route of completeRoute.routes) {
+			tx.add({
+				kind: "SplitCoins",
+				coin: tx.object(coinInId),
+				amounts: [tx.pure(route.coinInAmount)],
+			});
+
+			for (const [index, path] of route.paths.entries()) {
+				tx =
+					await this.Provider.Pools().Helpers.addTradeCommandToTransaction(
+						tx,
+						path.poolObjectId,
+						index === 0
+							? coinInId
+							: {
+									kind: "Result",
+									index: 0,
+							  },
+						path.coinIn,
+						BigInt(0), // TODO: calc slippage amount
+						path.coinOut,
+						path.poolLpCoinType
+					);
+			}
+		}
+
+		return tx.serialize();
+	}
+
 }

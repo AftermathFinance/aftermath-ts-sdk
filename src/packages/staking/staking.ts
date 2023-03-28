@@ -1,26 +1,26 @@
 import {
 	EventId,
-	SignableTransaction,
+	Transaction,
 	SuiAddress,
-	SuiSystemState,
+	DelegatedStake,
+	SuiValidatorSummary,
+	StakeObject,
 } from "@mysten/sui.js";
 import {
+	ApiCancelDelegationRequestBody,
 	ApiEventsBody,
 	ApiRequestAddDelegationBody,
+	ApiRequestWithdrawDelegationBody,
 	Balance,
-	DelegatedStakePosition,
 	EventsWithCursor,
+	SerializedTransaction,
 	StakeCancelDelegationRequestEvent,
 	StakeRequestAddDelegationEvent,
-	StakeValidator,
 	StakeRequestWithdrawDelegationEvent,
 	StakingStats,
 	SuiNetwork,
 } from "../../types";
-import { StakePosition } from "./stakePosition";
 import { Caller } from "../../general/utils/caller";
-
-// TODO: move these types to staking api class
 
 export class Staking extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -48,18 +48,14 @@ export class Staking extends Caller {
 
 	public async getStakePositions(
 		walletAddress: SuiAddress
-	): Promise<StakePosition[]> {
-		const delegatedStakePositions = this.fetchApi<DelegatedStakePosition[]>(
+	): Promise<DelegatedStake[]> {
+		return this.fetchApi<DelegatedStake[]>(
 			`stakePositions/${walletAddress}`
-		);
-		return (await delegatedStakePositions).map(
-			(position) =>
-				new StakePosition(walletAddress, position, this.network)
 		);
 	}
 
-	public async getStakeValidators(): Promise<StakeValidator[]> {
-		return this.fetchApi("validators");
+	public async getActiveValidators(): Promise<SuiValidatorSummary[]> {
+		return this.fetchApi("activeValidators");
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -117,18 +113,63 @@ export class Staking extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getRequestAddDelegationTransactions(
+	public async getRequestAddDelegationTransaction(
 		walletAddress: SuiAddress,
 		validatorAddress: SuiAddress,
 		coinAmount: Balance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<
-			SignableTransaction[],
-			ApiRequestAddDelegationBody
-		>("transactions/requestAddDelegation", {
-			walletAddress,
-			validatorAddress,
-			coinAmount,
-		});
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiRequestAddDelegationBody
+			>("transactions/requestAddDelegation", {
+				walletAddress,
+				validatorAddress,
+				coinAmount,
+			})
+		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public async getRequestWithdrawTransaction(
+		walletAddress: SuiAddress,
+		stake: StakeObject
+	): Promise<Transaction> {
+		if (stake.status === "Pending")
+			throw new Error(
+				"stake unable to withdraw, current status is pending"
+			);
+
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiRequestWithdrawDelegationBody
+			>("transactions/requestWithdrawDelegation", {
+				walletAddress: walletAddress,
+				principalAmount: BigInt(stake.principal),
+				stakedSuiObjectId: stake.stakedSuiId,
+				// PRODUCTION: find out what should really be here for delegationObjectId
+				delegationObjectId: "undefined",
+			})
+		);
+	}
+
+	public async getCancelRequestTransaction(
+		walletAddress: SuiAddress,
+		stake: StakeObject
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiCancelDelegationRequestBody
+			>("transactions/cancelDelegationRequest", {
+				walletAddress: walletAddress,
+				principalAmount: BigInt(stake.principal),
+				stakedSuiObjectId: stake.stakedSuiId,
+			})
+		);
 	}
 }

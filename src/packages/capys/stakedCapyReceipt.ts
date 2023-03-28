@@ -1,14 +1,15 @@
-import { SignableTransaction } from "@mysten/sui.js";
 import {
 	ApiUnstakeCapyBody,
 	ApiWithdrawCapyFeesAmountBody,
 	Balance,
+	SerializedTransaction,
 	StakedCapyFeesEarned,
 	StakedCapyReceiptObject,
 	SuiNetwork,
 } from "../../types";
 import { Capy } from "./capy";
 import { Caller } from "../../general/utils/caller";
+import { Transaction } from "@mysten/sui.js";
 
 export class StakedCapyReceipt extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -36,24 +37,28 @@ export class StakedCapyReceipt extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getUnstakeCapyTransaction(): Promise<SignableTransaction> {
-		return this.fetchApi<SignableTransaction, ApiUnstakeCapyBody>(
-			"transactions/stake",
-			{
-				stakingReceiptId: this.stakedCapyReceipt.objectId,
-			}
+	public async getUnstakeCapyTransaction(): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<SerializedTransaction, ApiUnstakeCapyBody>(
+				"transactions/stake",
+				{
+					stakingReceiptId: this.stakedCapyReceipt.objectId,
+				}
+			)
 		);
 	}
 
 	public async getWithdrawFeesTransaction(
 		amount: Balance | undefined
-	): Promise<SignableTransaction> {
-		return this.fetchApi<
-			SignableTransaction,
-			ApiWithdrawCapyFeesAmountBody
-		>("transactions/withdrawFees", {
-			amount,
-			stakingReceiptObjectId: this.stakedCapyReceipt.objectId,
-		});
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<
+				SerializedTransaction,
+				ApiWithdrawCapyFeesAmountBody
+			>("transactions/withdrawFees", {
+				amount,
+				stakingReceiptObjectId: this.stakedCapyReceipt.objectId,
+			})
+		);
 	}
 }

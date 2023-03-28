@@ -1,6 +1,11 @@
-import { SignableTransaction } from "@mysten/sui.js";
-import { CoinType, ApiFaucetRequestBody, SuiNetwork } from "../../types";
+import {
+	CoinType,
+	ApiFaucetRequestBody,
+	SuiNetwork,
+	SerializedTransaction,
+} from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { Transaction } from "@mysten/sui.js";
 
 export class Faucet extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -43,12 +48,14 @@ export class Faucet extends Caller {
 
 	public async getRequestCoinTransaction(
 		coin: CoinType
-	): Promise<SignableTransaction> {
-		return this.fetchApi<SignableTransaction, ApiFaucetRequestBody>(
-			"transactions/request",
-			{
-				coin,
-			}
+	): Promise<Transaction> {
+		return Transaction.from(
+			await this.fetchApi<SerializedTransaction, ApiFaucetRequestBody>(
+				"transactions/request",
+				{
+					coin,
+				}
+			)
 		);
 	}
 }

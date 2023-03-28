@@ -1,13 +1,21 @@
 import { ObjectId } from "@mysten/sui.js";
 import {
 	AnyObjectType,
-	DynamicField,
 	DynamicFieldObjectsWithCursor,
 	DynamicFieldsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
+import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
 export class DynamicFieldsApiHelpers {
+	/////////////////////////////////////////////////////////////////////
+	//// Private Static Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		defaultLimitStepSize: 500,
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -32,7 +40,7 @@ export class DynamicFieldsApiHelpers {
 			| ((objectType: AnyObjectType) => boolean),
 		cursor?: ObjectId,
 		limit?: number
-	) => {
+	): Promise<DynamicFieldObjectsWithCursor<ObjectType>> => {
 		const { dynamicFields, nextCursor } =
 			await this.fetchDynamicFieldsOfTypeWithCursor(
 				parentObjectId,
@@ -51,7 +59,7 @@ export class DynamicFieldsApiHelpers {
 		return {
 			dynamicFieldObjects,
 			nextCursor,
-		} as DynamicFieldObjectsWithCursor<ObjectType>;
+		};
 	};
 
 	public fetchAllDynamicFieldsOfType = async (
@@ -59,9 +67,10 @@ export class DynamicFieldsApiHelpers {
 		dynamicFieldType?:
 			| AnyObjectType
 			| ((objectType: AnyObjectType) => boolean),
-		limitStepSize: number = 500
+		limitStepSize: number = DynamicFieldsApiHelpers.constants
+			.defaultLimitStepSize
 	) => {
-		let allDynamicFields: DynamicField[] = [];
+		let allDynamicFields: DynamicFieldInfo[] = [];
 		let cursor: ObjectId | undefined = undefined;
 		do {
 			const dynamicFieldsWithCursor: DynamicFieldsWithCursor =
@@ -89,7 +98,8 @@ export class DynamicFieldsApiHelpers {
 		dynamicFieldType?:
 			| AnyObjectType
 			| ((objectType: AnyObjectType) => boolean),
-		limitStepSize: number = 500
+		limitStepSize: number = DynamicFieldsApiHelpers.constants
+			.defaultLimitStepSize
 	) => {
 		const dynamicFields = await this.fetchAllDynamicFieldsOfType(
 			parentObjectId,
@@ -112,7 +122,8 @@ export class DynamicFieldsApiHelpers {
 		) => Promise<DynamicFieldObjectsWithCursor<ObjectType>>,
 		isComplete: (dynamicFieldObjects: ObjectType[]) => boolean,
 		cursor?: ObjectId,
-		limitStepSize: number = 500
+		limitStepSize: number = DynamicFieldsApiHelpers.constants
+			.defaultLimitStepSize
 	): Promise<DynamicFieldObjectsWithCursor<ObjectType>> => {
 		let allDynamicFields: ObjectType[] = [];
 		let currentCursor = cursor ?? null;
@@ -153,13 +164,13 @@ export class DynamicFieldsApiHelpers {
 			| ((objectType: AnyObjectType) => boolean),
 		cursor?: ObjectId,
 		limit?: number
-	) => {
+	): Promise<DynamicFieldsWithCursor> => {
 		const dynamicFieldsResponse =
-			await this.Provider.provider.getDynamicFields(
-				parentObjectId,
+			await this.Provider.provider.getDynamicFields({
+				parentId: parentObjectId,
 				cursor,
-				limit
-			);
+				limit,
+			});
 
 		const dynamicFields =
 			dynamicFieldType === undefined
@@ -174,6 +185,6 @@ export class DynamicFieldsApiHelpers {
 		return {
 			dynamicFields,
 			nextCursor,
-		} as DynamicFieldsWithCursor;
+		};
 	};
 }

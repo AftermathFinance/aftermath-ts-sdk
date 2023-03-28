@@ -17,7 +17,7 @@ export type RouterTradeRoute = RouterTradeInfo & {
 
 export type RouterTradePath = RouterTradeInfo & {
 	poolObjectId: ObjectId;
-	poolLpCoinType: AnyObjectType;
+	poolLpCoinType: CoinType;
 };
 
 export interface RouterTradeInfo {
@@ -44,3 +44,8 @@ export type ApiRouterCompleteTradeRouteBody = {
 			coinOutAmount: Balance;
 	  }
 );
+
+export interface ApiRouterTransactionForCompleteTradeRouteBody {
+	walletAddress: SuiAddress;
+	completeRoute: RouterCompleteTradeRoute;
+}
