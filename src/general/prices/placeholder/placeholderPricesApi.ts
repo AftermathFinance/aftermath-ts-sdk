@@ -38,22 +38,12 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
+	/////////////////////////////////////////////////////////////////////
+	//// Public
+	/////////////////////////////////////////////////////////////////////
+
 	public fetchPrice = async (coin: CoinType) => {
 		return (await this.fetchPrices([coin]))[0];
-	};
-
-	public fetchPrices = async (coins: CoinType[]) => {
-		const prices = coins.map((coin) =>
-			new Coin(coin).coinTypeSymbol.toLowerCase() in
-			PlaceholderPricesApi.constants.prices
-				? PlaceholderPricesApi.constants.prices[
-						new Coin(
-							coin
-						).coinTypeSymbol.toLowerCase() as keyof typeof PlaceholderPricesApi.constants.prices
-				  ]
-				: -1
-		);
-		return prices;
 	};
 
 	public fetchCoinsToPrice = async (coins: CoinType[]) => {
@@ -69,5 +59,23 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 			{}
 		);
 		return coinsToPrice;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private
+	/////////////////////////////////////////////////////////////////////
+
+	private fetchPrices = async (coins: CoinType[]) => {
+		const prices = coins.map((coin) =>
+			new Coin(coin).coinTypeSymbol.toLowerCase() in
+			PlaceholderPricesApi.constants.prices
+				? PlaceholderPricesApi.constants.prices[
+						new Coin(
+							coin
+						).coinTypeSymbol.toLowerCase() as keyof typeof PlaceholderPricesApi.constants.prices
+				  ]
+				: -1
+		);
+		return prices;
 	};
 }

@@ -176,9 +176,9 @@ export class Pools extends Caller {
 		return sortedDynamicFields;
 	};
 
-	public static findPoolForLpCoin = (lpCoin: CoinType, pools: PoolObject[]) =>
+	public static findPoolForLpCoin = (lpCoin: CoinType, pools: Pool[]) =>
 		pools.find((pool) => {
-			return pool.fields.lpType.includes(
+			return pool.pool.fields.lpType.includes(
 				new Coin(new Coin(lpCoin).innerCoinType).coinTypeSymbol
 			);
 		});

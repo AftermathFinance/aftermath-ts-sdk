@@ -1,7 +1,7 @@
 import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { PoolsApiHelpers } from "./poolsApiHelpers";
-import { CoinType, CoinsToBalance } from "../../coin/coinTypes";
+import { CoinType, CoinsToBalance, CoinsToPrice } from "../../coin/coinTypes";
 import {
 	Balance,
 	PoolVolumeDataTimeframeKey,
@@ -21,6 +21,7 @@ import {
 } from "./poolsApiCastingTypes";
 import { Pools } from "../pools";
 import { Casting } from "../../../general/utils/casting";
+import { Pool } from "..";
 
 export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
@@ -349,12 +350,14 @@ export class PoolsApi {
 
 	// TODO: use promise.all to execute some of this fetching in parallel
 	public fetchPoolStats = async (
-		poolObjectId: ObjectId
+		pool: Pool,
+		coinsToPrice: CoinsToPrice
 	): Promise<PoolStats> => {
-		const pool = await this.fetchPool(poolObjectId);
-		const poolCoins = pool.fields.coins;
+		const poolObjectId = pool.pool.objectId;
+		const poolCoins = pool.pool.fields.coins;
 
-		const prices = await this.Provider.Prices().fetchPrices(poolCoins);
+		const prices = Object.entries(coinsToPrice).map(([_, price]) => price);
+
 		const coinsToDecimals =
 			await this.Provider.Coin().Helpers.fetchCoinsToDecimals(poolCoins);
 
@@ -378,7 +381,7 @@ export class PoolsApi {
 
 		const dynamicFields = Pools.sortDynamicFieldsToMatchPoolCoinOrdering(
 			fetchedDynamicFields,
-			pool
+			pool.pool
 		);
 
 		const tvl = await this.Helpers.fetchCalcPoolTvl(
@@ -404,53 +407,35 @@ export class PoolsApi {
 	//// Prices
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchLpCoinPrices = async (lpCoins: CoinType[]) => {
-		const pools = await this.fetchAllPools();
-
-		let lpPrices: number[] = [];
-		for (const lpCoin of lpCoins) {
-			const lpPool = Pools.findPoolForLpCoin(lpCoin, pools);
-			if (!lpPool) throw Error("no pool found for given lp coin type");
-
-			const poolStats = await this.fetchPoolStats(lpPool.objectId);
-			lpPrices.push(poolStats.lpPrice);
-		}
-
-		return lpPrices;
-	};
-
 	// TODO: make this faster this is slow as shit when LP balances are involved...
 	// (so much fetching!)
 	// TODO: rename this function and/or move it ?
-	public fetchAllCoinPrices = async (coins: CoinType[]) => {
-		try {
-			const lpCoins = coins.filter((coin) => Pools.isLpCoin(coin));
-			const nonLpCoins = coins.filter((coin) => !Pools.isLpCoin(coin));
+	public fetchLpCoinsToPrice = async (pools: Pool[], lpCoins: CoinType[]) => {
+		const filteredlpCoins = lpCoins.filter((lpCoin) =>
+			Pools.isLpCoin(lpCoin)
+		);
 
-			const lpPrices =
-				lpCoins.length > 0 ? await this.fetchLpCoinPrices(lpCoins) : [];
-			const nonLpPrices =
-				nonLpCoins.length > 0
-					? await this.Provider.Prices().fetchPrices(nonLpCoins)
-					: [];
+		const poolStats = await Promise.all(
+			filteredlpCoins.map((lpCoin) => {
+				const lpPool = Pools.findPoolForLpCoin(lpCoin, pools);
+				if (!lpPool)
+					throw Error("no pool found for given lp coin type");
 
-			let prices: number[] = [];
-			for (const coin of coins) {
-				prices.push(
-					this.Helpers.findPriceForCoinInPool(
-						coin,
-						lpCoins,
-						nonLpCoins,
-						lpPrices,
-						nonLpPrices
-					)
-				);
-			}
-			return prices;
-		} catch (e) {
-			console.error(e);
-			throw new Error();
+				return lpPool.getStats();
+			})
+		);
+
+		let lpCoinsToPrice: CoinsToPrice = {};
+
+		for (const [index, lpCoin] of filteredlpCoins.entries()) {
+			const stats = poolStats[index];
+			lpCoinsToPrice = {
+				...lpCoinsToPrice,
+				[lpCoin]: stats.lpPrice,
+			};
 		}
+
+		return lpCoinsToPrice;
 	};
 
 	/////////////////////////////////////////////////////////////////////
