@@ -15,11 +15,11 @@ export class Prices extends Caller {
 	//// Prices
 	/////////////////////////////////////////////////////////////////////
 
-	public async getPrice(coin: CoinType): Promise<number> {
+	public async getCoinPrice(coin: CoinType): Promise<number> {
 		return this.fetchApi(JSON.stringify([coin]));
 	}
 
-	public async getCoinsPrice(coins: CoinType[]): Promise<CoinsToPrice> {
+	public async getCoinsToPrice(coins: CoinType[]): Promise<CoinsToPrice> {
 		return this.fetchApi(JSON.stringify(coins));
 	}
 }
