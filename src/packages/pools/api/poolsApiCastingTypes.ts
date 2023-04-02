@@ -33,7 +33,7 @@ export interface PoolCreateEventOnChain {
 	transactionModule: string;
 	sender: SuiAddress;
 	type: string;
-	fields: {
+	parsedJson: {
 		coins: CoinType[];
 		creator: SuiAddress;
 		pool_id: ObjectId;
@@ -43,7 +43,6 @@ export interface PoolCreateEventOnChain {
 		name: string;
 		curve_type: PoolCurveType;
 	};
-	bcs: string;
 }
 
 export type PoolTradeEventOnChain = EventOnChain<{

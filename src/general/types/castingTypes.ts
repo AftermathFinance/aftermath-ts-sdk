@@ -5,29 +5,22 @@ import {
 	SuiMoveModuleId,
 	TransactionDigest,
 } from "@mysten/sui.js";
+import { AnyObjectType, ModuleName } from "./generalTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// On Chain
 /////////////////////////////////////////////////////////////////////
 
-interface SuiEventOnChain<Fields> {
-	bsc: string;
-	fields: Fields;
-	packageId: ObjectId;
-	sender: SuiAddress;
-	transactionModule: SuiMoveModuleId;
-	type: string;
-}
-
 export interface EventOnChain<Fields> {
-	event: {
-		moveEvent: SuiEventOnChain<Fields>;
+	id: {
+		txDigest: TransactionDigest;
+		eventSeq: number;
 	};
-	// NOTE: do we want/need this info ?
-	// id: {
-	// 	tsSeq: SequenceNumber;
-	// 	eventSeq: SequenceNumber;
-	// };
-	timestamp: number;
-	txDigest: TransactionDigest;
+	packageId: ObjectId;
+	transactionModule: ModuleName;
+	sender: SuiAddress;
+	type: AnyObjectType;
+	parsedJson: Fields; // | undefined;
+	bcs: string; // | undefined;
+	timestampMs: number; // | undefined;
 }

@@ -95,23 +95,23 @@ export class CapysApiCasting {
 	public static capyBornEventFromOnChain = (
 		eventOnChain: CapyBornEventOnChain
 	): CapyBornEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			breeder: fields.bred_by,
 			capyParentOneId: fields.parent_one,
 			capyParentTwoId: fields.parent_two,
 			capyChildId: fields.id,
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
 	public static breedCapysEventFromOnChain = (
 		eventOnChain: BreedCapysEventOnChain
 	): BreedCapysEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
-			breeder: eventOnChain.event.moveEvent.sender,
+			breeder: eventOnChain.sender,
 			capyParentOneId: fields.parentOneId,
 			capyParentTwoId: fields.parentTwoId,
 			capyChildId: fields.id,
@@ -119,34 +119,34 @@ export class CapysApiCasting {
 				coin: Capys.constants.breedingFees.coinType,
 				balance: BigInt(fields.fee),
 			},
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
 	public static stakeCapyEventFromOnChain = (
 		eventOnChain: StakeCapyEventOnChain
 	): StakeCapyEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			staker: fields.issuer,
 			capyId: fields.capy_id,
 			// TODO: generalize casting of event types with passing of
 			// timestamp and txnDigest (create wrapper)
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
 	public static unstakeCapyEventFromOnChain = (
 		eventOnChain: UnstakeCapyEventOnChain
 	): UnstakeCapyEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			unstaker: fields.issuer,
 			capyId: fields.capy_id,
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 }

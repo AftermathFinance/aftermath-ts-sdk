@@ -9,13 +9,13 @@ export class FaucetApiCasting {
 	public static faucetMintCoinEventFromOnChain = (
 		eventOnChain: FaucetMintCoinEventOnChain
 	): FaucetMintCoinEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			minter: fields.user,
 			coinMinted: fields.type,
 			balanceMinted: BigInt(fields.amount),
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 }

@@ -32,42 +32,39 @@ export class StakingApiCasting {
 	public static requestAddDelegationEventFromOnChain = (
 		eventOnChain: StakingRequestAddDelegationEventOnChain
 	): StakeRequestAddDelegationEvent => {
-		const event = eventOnChain.event.moveEvent;
-		const fields = event.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			issuer: fields.issuer,
 			amount: BigInt(fields.amount),
 			validator: fields.validator,
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
 	public static requestWithdrawDelegationEventFromOnChain = (
 		eventOnChain: StakingRequestWithdrawDelegationEventOnChain
 	): StakeRequestWithdrawDelegationEvent => {
-		const event = eventOnChain.event.moveEvent;
-		const fields = event.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			issuer: fields.issuer,
 			amount: BigInt(fields.amount),
 			validator: fields.validator,
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
 	public static cancelDelegationRequestEventFromOnChain = (
 		eventOnChain: StakingCancelDelegationRequestEventOnChain
 	): StakeCancelDelegationRequestEvent => {
-		const event = eventOnChain.event.moveEvent;
-		const fields = event.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			issuer: fields.issuer,
 			amount: BigInt(fields.amount),
 			validator: fields.validator,
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 }
