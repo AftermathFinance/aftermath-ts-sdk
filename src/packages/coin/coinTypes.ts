@@ -33,7 +33,8 @@ export interface AmountInCoinAndUsd {
 }
 
 /////////////////////////////////////////////////////////////////////
-//// Coins with Amounts
+//// Coins To Data
 /////////////////////////////////////////////////////////////////////
 
 export type CoinsToBalance = Record<CoinType, Balance>;
+export type CoinsToPrice = Record<CoinType, number>;

@@ -56,34 +56,6 @@ export class PythPricesApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	protected fetchPrices = async (coins: CoinType[]) => {
-		const prices: Record<CoinType, number> = {
-			usdc: 1,
-			whusdc: 1,
-			lzusdc: 1,
-			axlusdc: 1,
-			afsui: 3.12,
-			sui: 3.02,
-			whusdt: 1,
-			lzusdt: 1,
-			axldai: 1,
-			usdt: 1,
-			wheth: 1687.234,
-			lzeth: 1687.234,
-			whbtc: 24_681.2,
-			btcb: 24_681.2,
-			af: 5.19,
-		};
-
-		const coinPrices = coins.map((coin) =>
-			new Coin(coin).coinTypeSymbol.toLowerCase() in prices
-				? prices[new Coin(coin).coinTypeSymbol.toLowerCase()]
-				: -1
-		);
-
-		return coinPrices;
-	};
-
 	protected fetchPriceFeeds = async (coins: CoinType[]) => {
 		const filteredPriceIds = coins.map((coin) => {
 			const key = new Coin(coin).coinTypeSymbol.toLowerCase();
