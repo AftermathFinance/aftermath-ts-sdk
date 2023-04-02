@@ -30,6 +30,7 @@ import {
 } from "./poolsApiCastingTypes";
 import { Pools } from "../pools";
 import { Coin } from "../../coin/coin";
+import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
 export class PoolsApiCasting {
 	/////////////////////////////////////////////////////////////////////
@@ -39,6 +40,7 @@ export class PoolsApiCasting {
 	public static poolDynamicFieldsFromSuiObject = (
 		suiObject: SuiObjectResponse
 	): PoolDynamicFieldOnChain<any> => {
+		// console.log("suiObject", suiObject);
 		const type = getObjectType(suiObject);
 		if (!type) throw new Error("no type found for pool dynamic fields");
 
@@ -80,6 +82,8 @@ export class PoolsApiCasting {
 	public static poolObjectFromPoolCreateEventOnChain = (
 		createEvent: PoolCreateEventOnChain
 	): PoolObject => {
+		// console.log("createEvent", createEvent);
+
 		const { coins, weights } = Pools.sortCoinsByWeights(
 			createEvent.parsedJson.coins,
 			createEvent.parsedJson.weights.map((weight) => BigInt(weight))

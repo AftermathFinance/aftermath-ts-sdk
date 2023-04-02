@@ -81,7 +81,7 @@ export class CapysApi {
 		attributes: CapyAttribute[],
 		limit: number,
 		cursor?: ObjectId,
-		limitStepSize: number = 500
+		limitStepSize: number = 256
 	) => {
 		const isComplete = (capys: CapyObject[]) => {
 			return (

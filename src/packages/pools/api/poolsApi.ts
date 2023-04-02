@@ -243,9 +243,13 @@ export class PoolsApi {
 			order: "ascending",
 		});
 
-		const poolObjects = paginatedEvents.data.map((event) =>
+		// console.log("paginatedEvents", paginatedEvents);
+
+		// REMOVE ME
+
+		const poolObjects = [paginatedEvents.data[0]].map((event) =>
 			Casting.pools.poolObjectFromPoolCreateEventOnChain(
-				event.parsedJson as PoolCreateEventOnChain
+				event as PoolCreateEventOnChain
 			)
 		);
 
@@ -257,10 +261,23 @@ export class PoolsApi {
 			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType(
 				poolId
 			);
-		const objectIds = allDynamicFields.map((field) => field.objectId);
+		// console.log("allDynamicFields", allDynamicFields[0].name.value);
+		// const objectIds = allDynamicFields.map((field) => field.objectId);
 
-		const dynamicFieldsAsSuiObjects =
-			await this.Provider.Objects().fetchObjectBatch(objectIds);
+		// const dynamicFieldsAsSuiObjects =
+		// 	await this.Provider.Objects().fetchObjectBatch(objectIds);
+
+		const dynamicFieldsAsSuiObjects = await Promise.all(
+			allDynamicFields.map((field) =>
+				this.Provider.provider.getDynamicFieldObject({
+					parentId: poolId,
+					name: field.name,
+				})
+			)
+		);
+
+		// console.log("dynamicFieldsAsSuiObjects", dynamicFieldsAsSuiObjects);
+
 		const dynamicFieldsOnChain = dynamicFieldsAsSuiObjects.map(
 			Casting.pools.poolDynamicFieldsFromSuiObject
 		);

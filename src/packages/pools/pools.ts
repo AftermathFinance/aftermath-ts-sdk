@@ -159,6 +159,8 @@ export class Pools extends Caller {
 	) => {
 		const poolCoins = pool.fields.coins;
 
+		// console.log("dynamicFields", dynamicFields);
+
 		let amountFields: PoolAmountDynamicField[] = [];
 		for (const poolCoin of poolCoins) {
 			const amountField = dynamicFields.amountFields.find(

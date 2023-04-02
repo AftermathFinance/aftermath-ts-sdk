@@ -16,7 +16,8 @@ export class Prices extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getCoinPrice(coin: CoinType): Promise<number> {
-		return this.fetchApi(JSON.stringify([coin]));
+		const coinsToPrice = await this.getCoinsToPrice([coin]);
+		return Object.values(coinsToPrice)[0];
 	}
 
 	public async getCoinsToPrice(coins: CoinType[]): Promise<CoinsToPrice> {

@@ -26,7 +26,7 @@ export class ObjectsApiHelpers {
 
 	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
 		const object = await this.Provider.provider.getObject({ id: objectId });
-		return object.error !== undefined;
+		return object.error === undefined;
 	};
 
 	public fetchIsObjectOwnedByAddress = async (
@@ -67,7 +67,15 @@ export class ObjectsApiHelpers {
 	public fetchObject = async (
 		objectId: ObjectId
 	): Promise<SuiObjectResponse> => {
-		const object = await this.Provider.provider.getObject({ id: objectId });
+		const object = await this.Provider.provider.getObject({
+			id: objectId,
+			options: {
+				showContent: true,
+				// showDisplay: true,
+				showOwner: true,
+				showType: true,
+			},
+		});
 		if (object.error !== undefined)
 			throw new Error(
 				`an error occured fetching object: ${object.error?.tag}`
@@ -87,6 +95,12 @@ export class ObjectsApiHelpers {
 	): Promise<SuiObjectResponse[]> => {
 		const objectBatch = await this.Provider.provider.multiGetObjects({
 			ids: objectIds,
+			options: {
+				showContent: true,
+				// showDisplay: true,
+				showOwner: true,
+				showType: true,
+			},
 		});
 		const objectDataResponses = objectBatch.filter(
 			(data) => data.error !== undefined

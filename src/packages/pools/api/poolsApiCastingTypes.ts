@@ -27,23 +27,16 @@ export interface PoolFieldsOnChain {
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-// TODO: update this type to match same pattern as those below
-export interface PoolCreateEventOnChain {
-	packageId: ObjectId;
-	transactionModule: string;
-	sender: SuiAddress;
-	type: string;
-	parsedJson: {
-		coins: CoinType[];
-		creator: SuiAddress;
-		pool_id: ObjectId;
-		weights: BigIntAsString[];
-		swap_fee: BigIntAsString;
-		lp_type: CoinType; // TODO: make seperate LpCoinType ?
-		name: string;
-		curve_type: PoolCurveType;
-	};
-}
+export type PoolCreateEventOnChain = EventOnChain<{
+	coins: CoinType[];
+	creator: SuiAddress;
+	pool_id: ObjectId;
+	weights: BigIntAsString[];
+	swap_fee: BigIntAsString;
+	lp_type: CoinType; // TODO: make seperate LpCoinType ?
+	name: string;
+	curve_type: PoolCurveType;
+}>;
 
 export type PoolTradeEventOnChain = EventOnChain<{
 	pool_id: ObjectId;
