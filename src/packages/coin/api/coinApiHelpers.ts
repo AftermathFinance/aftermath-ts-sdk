@@ -230,17 +230,16 @@ export class CoinApiHelpers {
 
 		const mergedCoinObjectId = coinObjectIds[0];
 
-		if (coinObjectIds.length === 1)
-			return {
-				coinWithAmountObjectId: mergedCoinObjectId,
-				txWithCoinWithAmount: tx,
-			};
+		if (coinObjectIds.length > 1) {
+			tx.add({
+				kind: "MergeCoins",
+				destination: tx.object(mergedCoinObjectId),
+				sources: coinObjectIds
+					.slice(1)
+					.map((coinId) => tx.object(coinId)),
+			});
+		}
 
-		tx.add({
-			kind: "MergeCoins",
-			destination: tx.object(mergedCoinObjectId),
-			sources: coinObjectIds.slice(1).map(tx.object),
-		});
 		tx.add({
 			kind: "SplitCoins",
 			coin: tx.object(mergedCoinObjectId),

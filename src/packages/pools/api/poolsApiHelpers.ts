@@ -1,4 +1,4 @@
-import { ObjectId, TransactionBlock, SuiAddress } from "@mysten/sui.js";
+import { ObjectId, TransactionBlock, SuiAddress, VECTOR } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -33,15 +33,15 @@ export class PoolsApiHelpers {
 		functions: {
 			swap: {
 				name: "swap",
-				defaultGasBudget: 10000,
+				defaultGasBudget: 100000000,
 			},
 			deposit: {
 				name: "deposit_X_coins",
-				defaultGasBudget: 20000,
+				defaultGasBudget: 2000000,
 			},
 			withdraw: {
 				name: "withdraw_X_coins",
-				defaultGasBudget: 20000,
+				defaultGasBudget: 2000000,
 			},
 			// publish 30000
 		},
@@ -233,8 +233,8 @@ export class PoolsApiHelpers {
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(coinOutMin.toString()),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -262,8 +262,8 @@ export class PoolsApiHelpers {
 				tx.object(coinId),
 				tx.pure(lpMintMin.toString()),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -294,11 +294,11 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
-				...coinIds.map(tx.object),
+				...coinIds.map((coinId) => tx.object(coinId)),
 				tx.pure(lpMintMin.toString()),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -326,8 +326,8 @@ export class PoolsApiHelpers {
 				tx.object(lpCoinId),
 				tx.pure(amountOutMin.toString()),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -359,8 +359,8 @@ export class PoolsApiHelpers {
 					amountsOutMin.map((amountOutMin) => amountOutMin.toString())
 				),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};

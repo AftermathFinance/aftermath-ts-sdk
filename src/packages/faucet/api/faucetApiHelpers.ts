@@ -21,15 +21,15 @@ export class FaucetApiHelpers {
 		functions: {
 			add: {
 				name: "add_coin",
-				defaultGasBudget: 1000,
+				defaultGasBudget: 10000000,
 			},
 			request: {
 				name: "request_coin",
-				defaultGasBudget: 1000,
+				defaultGasBudget: 10000000,
 			},
 			requestAmount: {
 				name: "request_coin_amount",
-				defaultGasBudget: 1000,
+				defaultGasBudget: 10000000,
 			},
 		},
 		eventNames: {

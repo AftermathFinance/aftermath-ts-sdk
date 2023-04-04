@@ -43,35 +43,35 @@ export class CapysApiHelpers {
 					functions: {
 						stakeCapy: {
 							name: "stake_capy",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 						unstakeCapy: {
 							name: "unstake_capy",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 						withdrawFees: {
 							name: "withdraw_fees",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 						withdrawFeesAmount: {
 							name: "withdraw_fees_amount",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 						breedAndKeep: {
 							name: "breed_and_keep",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 						breedWithStakedAndKeep: {
 							name: "breed_with_staked_and_keep",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 						breedStakedWithStakedAndKeep: {
 							name: "breed_staked_with_staked_and_keep",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 						transfer: {
 							name: "transfer",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 					},
 				},
@@ -80,11 +80,11 @@ export class CapysApiHelpers {
 					functions: {
 						feesEarnedIndividual: {
 							name: "fees_earned_individual",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 						feesEarnedGlobal: {
 							name: "fees_earned_global",
-							defaultGasBudget: 10000,
+							defaultGasBudget: 100000000,
 						},
 					},
 				},
@@ -222,8 +222,9 @@ export class CapysApiHelpers {
 				tx.object(parentOneId),
 				tx.object(parentTwoId),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
+
 		return tx;
 	};
 
@@ -252,8 +253,9 @@ export class CapysApiHelpers {
 				tx.object(parentOneId),
 				tx.object(parentTwoId),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
+
 		return tx;
 	};
 
@@ -282,8 +284,9 @@ export class CapysApiHelpers {
 				tx.object(parentOneId),
 				tx.object(parentTwoId),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
+
 		return tx;
 	};
 

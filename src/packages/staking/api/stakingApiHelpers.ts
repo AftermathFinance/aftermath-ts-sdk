@@ -22,15 +22,15 @@ export class StakingApiHelpers {
 				functions: {
 					requestAddDelegation: {
 						name: "request_add_delegation",
-						defaultGasBudget: 2000,
+						defaultGasBudget: 200000,
 					},
 					requestWithdrawDelegation: {
 						name: "request_withdraw_delegation",
-						defaultGasBudget: 2000,
+						defaultGasBudget: 200000,
 					},
 					cancelDelegationRequest: {
 						name: "cancel_delegation_request",
-						defaultGasBudget: 2000,
+						defaultGasBudget: 200000,
 					},
 				},
 			},
@@ -108,8 +108,9 @@ export class StakingApiHelpers {
 				tx.object(coinId),
 				tx.object(validator),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
+
 		return tx;
 	};
 
@@ -139,8 +140,9 @@ export class StakingApiHelpers {
 				tx.object(stakedSui),
 				tx.object(afSui),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
+
 		return tx;
 	};
 
@@ -168,8 +170,9 @@ export class StakingApiHelpers {
 				tx.object(stakedSui),
 				tx.object(afSui),
 			],
-			// gasBudget: gasBudget,
 		});
+		tx.setGasBudget(gasBudget);
+
 		return tx;
 	};
 
