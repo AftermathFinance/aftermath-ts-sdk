@@ -1,4 +1,10 @@
-import { ObjectId, TransactionBlock, SuiAddress, VECTOR } from "@mysten/sui.js";
+import {
+	ObjectId,
+	TransactionBlock,
+	SuiAddress,
+	VECTOR,
+	TransactionArgument,
+} from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -202,17 +208,7 @@ export class PoolsApiHelpers {
 	public addTradeCommandToTransaction = (
 		tx: TransactionBlock,
 		poolId: ObjectId,
-		coinInId:
-			| ObjectId
-			| {
-					kind: "Result";
-					index: number;
-			  }
-			| {
-					kind: "NestedResult";
-					index: number;
-					resultIndex: number;
-			  },
+		coinInId: ObjectId | TransactionArgument,
 		coinInType: CoinType,
 		coinOutMin: Balance,
 		coinOutType: CoinType,
@@ -271,7 +267,7 @@ export class PoolsApiHelpers {
 	public addMultiCoinDepositCommandToTransaction = (
 		tx: TransactionBlock,
 		poolId: ObjectId,
-		coinIds: ObjectId[],
+		coinIds: ObjectId[] | TransactionArgument[],
 		coinTypes: CoinType[],
 		lpMintMin: Balance,
 		lpCoinType: CoinType,
@@ -294,7 +290,9 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
-				...coinIds.map((coinId) => tx.object(coinId)),
+				...coinIds.map((coinId) =>
+					typeof coinId === "string" ? tx.object(coinId) : coinId
+				),
 				tx.pure(lpMintMin.toString()),
 			],
 		});
@@ -335,7 +333,7 @@ export class PoolsApiHelpers {
 	public addMultiCoinWithdrawCommandToTransaction = (
 		tx: TransactionBlock,
 		poolId: ObjectId,
-		lpCoinId: ObjectId,
+		lpCoinId: ObjectId | TransactionArgument,
 		lpCoinType: CoinType,
 		amountsOutMin: Balance[],
 		coinsOutType: CoinType[],
@@ -354,7 +352,7 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinsOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(lpCoinId),
+				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
 				tx.pure(
 					amountsOutMin.map((amountOutMin) => amountOutMin.toString())
 				),
@@ -381,7 +379,7 @@ export class PoolsApiHelpers {
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		const { coinWithAmountObjectId: coinInId, txWithCoinWithAmount } =
+		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -392,7 +390,7 @@ export class PoolsApiHelpers {
 		const finalTx = this.addTradeCommandToTransaction(
 			txWithCoinWithAmount,
 			poolObjectId,
-			coinInId,
+			coinArgument,
 			fromCoinType,
 			BigInt(0), // TODO: calc slippage amount
 			toCoinType,
@@ -411,7 +409,7 @@ export class PoolsApiHelpers {
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		const { coinWithAmountObjectIds, txWithCoinsWithAmount } =
+		const { coinArguments, txWithCoinsWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -422,7 +420,7 @@ export class PoolsApiHelpers {
 		const finalTx = this.addMultiCoinDepositCommandToTransaction(
 			txWithCoinsWithAmount,
 			poolObjectId,
-			coinWithAmountObjectIds,
+			coinArguments,
 			coinTypes,
 			BigInt(0), // TODO: calc slippage amount
 			poolLpType
@@ -441,7 +439,7 @@ export class PoolsApiHelpers {
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		const { coinWithAmountObjectId: lpCoinInId, txWithCoinWithAmount } =
+		const { coinArgument: lpCoinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -452,7 +450,7 @@ export class PoolsApiHelpers {
 		const finalTx = this.addMultiCoinWithdrawCommandToTransaction(
 			txWithCoinWithAmount,
 			poolObjectId,
-			lpCoinInId,
+			lpCoinArgument,
 			poolLpType,
 			coinAmounts, // TODO: calc slippage amount
 			coinTypes

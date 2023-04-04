@@ -2,6 +2,7 @@ import {
 	ObjectId,
 	SuiAddress,
 	SuiObjectInfo,
+	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -199,7 +200,7 @@ export class CapysApiHelpers {
 
 	public addStakeBreedAndKeepCommandToTransaction = (
 		tx: TransactionBlock,
-		coinId: ObjectId,
+		coinId: ObjectId | TransactionArgument,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
@@ -218,7 +219,7 @@ export class CapysApiHelpers {
 			arguments: [
 				tx.object(this.addresses.objects.capyVault),
 				tx.object(this.addresses.objects.capyRegistry),
-				tx.object(coinId),
+				typeof coinId === "string" ? tx.object(coinId) : coinId,
 				tx.object(parentOneId),
 				tx.object(parentTwoId),
 			],
@@ -230,7 +231,7 @@ export class CapysApiHelpers {
 
 	public addStakeBreedWithStakedAndKeepCommandToTransaction = (
 		tx: TransactionBlock,
-		coinId: ObjectId,
+		coinId: ObjectId | TransactionArgument,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId,
 		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
@@ -249,7 +250,7 @@ export class CapysApiHelpers {
 			arguments: [
 				tx.object(this.addresses.objects.capyVault),
 				tx.object(this.addresses.objects.capyRegistry),
-				tx.object(coinId),
+				typeof coinId === "string" ? tx.object(coinId) : coinId,
 				tx.object(parentOneId),
 				tx.object(parentTwoId),
 			],
@@ -491,7 +492,7 @@ export class CapysApiHelpers {
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedWithStakedAndKeep;
 
-		const { coinWithAmountObjectId, txWithCoinWithAmount } =
+		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -501,7 +502,7 @@ export class CapysApiHelpers {
 
 		const finalTx = this.addStakeBreedWithStakedAndKeepCommandToTransaction(
 			txWithCoinWithAmount,
-			coinWithAmountObjectId,
+			coinArgument,
 			parentOneId,
 			parentTwoId
 		);
@@ -520,7 +521,7 @@ export class CapysApiHelpers {
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedStakedWithStakedAndKeep;
 
-		const { coinWithAmountObjectId, txWithCoinWithAmount } =
+		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -530,7 +531,7 @@ export class CapysApiHelpers {
 
 		const finalTx = this.addStakeBreedWithStakedAndKeepCommandToTransaction(
 			txWithCoinWithAmount,
-			coinWithAmountObjectId,
+			coinArgument,
 			parentOneId,
 			parentTwoId
 		);
@@ -548,7 +549,7 @@ export class CapysApiHelpers {
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount = Capys.constants.breedingFees.amounts.breedAndKeep;
 
-		const { coinWithAmountObjectId, txWithCoinWithAmount } =
+		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -558,7 +559,7 @@ export class CapysApiHelpers {
 
 		const finalTx = this.addStakeBreedAndKeepCommandToTransaction(
 			txWithCoinWithAmount,
-			coinWithAmountObjectId,
+			coinArgument,
 			parentOneId,
 			parentTwoId
 		);

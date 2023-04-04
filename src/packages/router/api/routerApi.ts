@@ -85,7 +85,7 @@ export class RouterApi {
 	): Promise<SerializedTransaction> {
 		const startTx = new TransactionBlock();
 
-		const { coinWithAmountObjectId: coinInId, txWithCoinWithAmount } =
+		const { coinArgument: coinInArg, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				startTx,
 				walletAddress,
@@ -96,9 +96,9 @@ export class RouterApi {
 		let tx = txWithCoinWithAmount;
 
 		for (const route of completeRoute.routes) {
-			tx.add({
+			const [splitCoinArg] = tx.add({
 				kind: "SplitCoins",
-				coin: tx.object(coinInId),
+				coin: coinInArg,
 				amounts: [tx.pure(route.coinInAmount)],
 			});
 
@@ -107,12 +107,7 @@ export class RouterApi {
 					await this.Provider.Pools().Helpers.addTradeCommandToTransaction(
 						tx,
 						path.poolObjectId,
-						index === 0
-							? coinInId
-							: {
-									kind: "Result",
-									index: 0,
-							  },
+						index === 0 ? coinInArg : splitCoinArg,
 						path.coinIn,
 						BigInt(0), // TODO: calc slippage amount
 						path.coinOut,

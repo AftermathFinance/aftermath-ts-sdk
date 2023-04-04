@@ -2,7 +2,9 @@ import {
 	ObjectId,
 	PaginatedCoins,
 	SuiAddress,
+	TransactionArgument,
 	TransactionBlock,
+	TransactionBlockInput,
 } from "@mysten/sui.js";
 import { Balance, CoinDecimal, CoinType } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
@@ -136,7 +138,7 @@ export class CoinApiHelpers {
 		coinType: CoinType,
 		coinAmount: Balance
 	): Promise<{
-		coinWithAmountObjectId: ObjectId;
+		coinArgument: TransactionArgument;
 		txWithCoinWithAmount: TransactionBlock;
 	}> => {
 		// TODO: handle cursoring until necessary coin amount is found
@@ -158,7 +160,7 @@ export class CoinApiHelpers {
 		coinTypes: CoinType[],
 		coinAmounts: Balance[]
 	): Promise<{
-		coinWithAmountObjectIds: ObjectId[];
+		coinArguments: TransactionArgument[];
 		txWithCoinsWithAmount: TransactionBlock;
 	}> => {
 		// TODO: handle cursoring until necessary coin amount is found
@@ -172,11 +174,11 @@ export class CoinApiHelpers {
 		);
 
 		const coinObjectIdsAndTransaction = allPaginatedCoins.reduce<{
-			coinWithAmountObjectIds: ObjectId[];
+			coinArguments: TransactionArgument[];
 			txWithCoinsWithAmount: TransactionBlock;
 		}>(
 			(acc, paginatedCoins, index) => {
-				const { coinWithAmountObjectId, txWithCoinWithAmount } =
+				const { coinArgument, txWithCoinWithAmount } =
 					CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
 						acc.txWithCoinsWithAmount,
 						paginatedCoins,
@@ -184,15 +186,12 @@ export class CoinApiHelpers {
 					);
 
 				return {
-					coinWithAmountObjectIds: [
-						...acc.coinWithAmountObjectIds,
-						coinWithAmountObjectId,
-					],
+					coinArguments: [...acc.coinArguments, coinArgument],
 					txWithCoinsWithAmount: txWithCoinWithAmount,
 				};
 			},
 			{
-				coinWithAmountObjectIds: [],
+				coinArguments: [],
 				txWithCoinsWithAmount: tx,
 			}
 		);
@@ -213,7 +212,7 @@ export class CoinApiHelpers {
 		paginatedCoins: PaginatedCoins,
 		coinAmount: Balance
 	): {
-		coinWithAmountObjectId: ObjectId;
+		coinArgument: TransactionArgument;
 		txWithCoinWithAmount: TransactionBlock;
 	} => {
 		const totalCoinBalance = Helpers.sum(
@@ -240,14 +239,14 @@ export class CoinApiHelpers {
 			});
 		}
 
-		tx.add({
+		const [splitCoin] = tx.add({
 			kind: "SplitCoins",
 			coin: tx.object(mergedCoinObjectId),
 			amounts: [tx.pure(coinAmount)],
 		});
 
 		return {
-			coinWithAmountObjectId: mergedCoinObjectId,
+			coinArgument: splitCoin,
 			txWithCoinWithAmount: tx,
 		};
 	};

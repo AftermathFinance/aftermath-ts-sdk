@@ -1,4 +1,9 @@
-import { ObjectId, TransactionBlock, SuiAddress } from "@mysten/sui.js";
+import {
+	ObjectId,
+	TransactionBlock,
+	SuiAddress,
+	TransactionArgument,
+} from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -86,7 +91,7 @@ export class StakingApiHelpers {
 
 	public addRequestAddDelegationCommandToTransaction = (
 		tx: TransactionBlock,
-		coinId: ObjectId,
+		coinId: ObjectId | TransactionArgument,
 		validator: SuiAddress,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.requestAddDelegation.defaultGasBudget
@@ -105,7 +110,7 @@ export class StakingApiHelpers {
 				tx.object(
 					this.Provider.Faucet().Helpers.addresses.objects.faucet
 				),
-				tx.object(coinId),
+				typeof coinId === "string" ? tx.object(coinId) : coinId,
 				tx.object(validator),
 			],
 		});
@@ -118,7 +123,7 @@ export class StakingApiHelpers {
 		tx: TransactionBlock,
 		stakedSui: ObjectId,
 		delegation: ObjectId,
-		afSui: ObjectId,
+		afSui: ObjectId | TransactionArgument,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.requestWithdrawDelegation.defaultGasBudget
 	): TransactionBlock => {
@@ -138,7 +143,7 @@ export class StakingApiHelpers {
 				),
 				tx.object(delegation),
 				tx.object(stakedSui),
-				tx.object(afSui),
+				typeof afSui === "string" ? tx.object(afSui) : afSui,
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -149,7 +154,7 @@ export class StakingApiHelpers {
 	public addCancelDelegationRequestCommandToTransaction = (
 		tx: TransactionBlock,
 		stakedSui: ObjectId,
-		afSui: ObjectId,
+		afSui: ObjectId | TransactionArgument,
 		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
 			.functions.cancelDelegationRequest.defaultGasBudget
 	): TransactionBlock => {
@@ -168,7 +173,7 @@ export class StakingApiHelpers {
 					this.Provider.Faucet().Helpers.addresses.objects.faucet
 				),
 				tx.object(stakedSui),
-				tx.object(afSui),
+				typeof afSui === "string" ? tx.object(afSui) : afSui,
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -187,7 +192,7 @@ export class StakingApiHelpers {
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		const { coinWithAmountObjectId, txWithCoinWithAmount } =
+		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -197,7 +202,7 @@ export class StakingApiHelpers {
 
 		return this.addRequestAddDelegationCommandToTransaction(
 			txWithCoinWithAmount,
-			coinWithAmountObjectId,
+			coinArgument,
 			validator
 		);
 	};
@@ -210,7 +215,7 @@ export class StakingApiHelpers {
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		const { coinWithAmountObjectId, txWithCoinWithAmount } =
+		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
@@ -222,14 +227,14 @@ export class StakingApiHelpers {
 			return this.addCancelDelegationRequestCommandToTransaction(
 				txWithCoinWithAmount,
 				stakedSui,
-				coinWithAmountObjectId
+				coinArgument
 			);
 
 		return this.addRequestWithdrawDelegationCommandToTransaction(
 			txWithCoinWithAmount,
 			stakedSui,
 			delegation,
-			coinWithAmountObjectId
+			coinArgument
 		);
 	};
 
