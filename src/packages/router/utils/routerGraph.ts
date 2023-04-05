@@ -4,9 +4,9 @@ import { Pool } from "../../pools";
 import { Helpers } from "../../../general/utils/helpers";
 import {
 	Balance,
-	PoolDynamicFields,
 	RouterCompleteTradeRoute,
 	RouterTradeInfo,
+	RouterTradePath,
 	RouterTradeRoute,
 } from "../../../types";
 
@@ -175,11 +175,12 @@ export class RouterGraph {
 		pool: Pool
 	): CoinNodes => {
 		const poolObject = pool.pool;
+		const coinTypes = Object.keys(poolObject.coins);
 
 		let newCoinNodes: CoinNodes = { ...coinNodes };
 
-		for (const coinA of poolObject.fields.coins) {
-			for (const coinB of poolObject.fields.coins) {
+		for (const coinA of coinTypes) {
+			for (const coinB of coinTypes) {
 				if (coinA === coinB) continue;
 
 				newCoinNodes =
@@ -270,22 +271,31 @@ export class RouterGraph {
 		for (const [toCoin, throughPools] of Object.entries(coinInEdges)) {
 			for (const poolObjectId of throughPools) {
 				routes.push({
-					coinIn,
-					coinOut,
-					coinInAmount: BigInt(0),
-					coinOutAmount: BigInt(0),
-					tradeFee: BigInt(0),
+					coinIn: {
+						type: coinIn,
+						amount: BigInt(0),
+						tradeFee: BigInt(0),
+					},
+					coinOut: {
+						type: coinOut,
+						amount: BigInt(0),
+						tradeFee: BigInt(0),
+					},
 					spotPrice: 0,
 					paths: [
 						{
 							poolObjectId,
-							poolLpCoinType:
-								pools[poolObjectId].pool.fields.lpType,
-							coinIn,
-							coinOut: toCoin,
-							coinInAmount: BigInt(0),
-							coinOutAmount: BigInt(0),
-							tradeFee: BigInt(0),
+							poolLpCoinType: pools[poolObjectId].pool.lpCoinType,
+							coinIn: {
+								type: coinIn,
+								amount: BigInt(0),
+								tradeFee: BigInt(0),
+							},
+							coinOut: {
+								type: toCoin,
+								amount: BigInt(0),
+								tradeFee: BigInt(0),
+							},
 							spotPrice: 0,
 						},
 					],
@@ -312,7 +322,7 @@ export class RouterGraph {
 			for (const route of currentRoutes) {
 				const lastPath = route.paths[route.paths.length - 1];
 
-				if (lastPath.coinOut === coinOut) {
+				if (lastPath.coinOut.type === coinOut) {
 					completeRoutes = [...completeRoutes, route];
 					continue;
 				}
@@ -320,7 +330,8 @@ export class RouterGraph {
 				if (route.paths.length >= maxRouteLength) continue;
 
 				for (const [toCoin, throughPools] of Object.entries(
-					graph.coinNodes[lastPath.coinOut].toCoinThroughPoolEdges
+					graph.coinNodes[lastPath.coinOut.type]
+						.toCoinThroughPoolEdges
 				)) {
 					for (const poolObjectId of throughPools) {
 						if (
@@ -340,13 +351,14 @@ export class RouterGraph {
 								{
 									poolObjectId,
 									poolLpCoinType:
-										graph.pools[poolObjectId].pool.fields
-											.lpType,
+										graph.pools[poolObjectId].pool
+											.lpCoinType,
 									coinIn: lastPath.coinOut,
-									coinOut: toCoin,
-									coinInAmount: BigInt(0),
-									coinOutAmount: BigInt(0),
-									tradeFee: BigInt(0),
+									coinOut: {
+										type: toCoin,
+										amount: BigInt(0),
+										tradeFee: BigInt(0),
+									},
 									spotPrice: 0,
 								},
 							],
@@ -526,34 +538,44 @@ export class RouterGraph {
 
 		for (const path of originalRoute.paths) {
 			const pool = currentPools[path.poolObjectId];
-			const spotPrice = pool.getSpotPrice(path.coinIn, path.coinOut);
+			const spotPrice = pool.getSpotPrice(
+				path.coinIn.type,
+				path.coinOut.type
+			);
 			const coinOutAmount = isGivenAmountOut
 				? pool.getTradeAmountIn(
-						path.coinOut,
+						path.coinOut.type,
 						currentCoinInAmount,
-						path.coinIn
+						path.coinIn.type
 				  )
 				: pool.getTradeAmountOut(
-						path.coinIn,
+						path.coinIn.type,
 						currentCoinInAmount,
-						path.coinOut
+						path.coinOut.type
 				  );
 
 			const updatedPool = this.getUpdatedPoolAfterTrade(
 				pool,
-				path.coinIn,
+				path.coinIn.type,
 				currentCoinInAmount,
-				path.coinOut,
+				path.coinOut.type,
 				coinOutAmount,
 				isGivenAmountOut
 			);
 
-			let newPath = {
+			let newPath: RouterTradePath = {
 				...path,
-				coinInAmount: path.coinInAmount + currentCoinInAmount,
-				coinOutAmount: path.coinOutAmount + coinOutAmount,
+				coinIn: {
+					...path.coinIn,
+					amount: path.coinIn.amount + currentCoinInAmount,
+					tradeFee: pool.pool.coins[path.coinIn.type].tradeFeeIn,
+				},
+				coinOut: {
+					...path.coinIn,
+					amount: path.coinOut.amount + coinOutAmount,
+					tradeFee: pool.pool.coins[path.coinOut.type].tradeFeeOut,
+				},
 				spotPrice,
-				tradeFee: pool.pool.fields.tradeFee,
 			};
 
 			newRoute = {
@@ -572,8 +594,14 @@ export class RouterGraph {
 
 		const updatedRoute: RouterTradeRoute = {
 			...newRoute,
-			coinInAmount: newRoute.coinInAmount + coinInAmount,
-			coinOutAmount: newRoute.coinOutAmount + currentCoinInAmount,
+			coinIn: {
+				...newRoute.coinIn,
+				amount: newRoute.coinIn.amount + coinInAmount,
+			},
+			coinOut: {
+				...newRoute.coinOut,
+				amount: newRoute.coinOut.amount + currentCoinInAmount,
+			},
 			spotPrice: routeSpotPrice,
 		};
 
@@ -593,39 +621,17 @@ export class RouterGraph {
 		coinOutAmount: Balance,
 		isGivenAmountOut: boolean
 	) => {
-		const poolDynamicFields = Helpers.deepCopy(pool.dynamicFields);
-		const poolAmountDynamicFields = poolDynamicFields.amountFields;
+		let newPoolObject = Helpers.deepCopy(pool.pool);
 
-		const coinInDynamicFieldIndex = poolAmountDynamicFields.findIndex(
-			(field) => field.coin === coinIn
-		);
-		const coinOutDynamicFieldIndex = poolAmountDynamicFields.findIndex(
-			(field) => field.coin === coinOut
-		);
-
-		let newAmountDynamicFields = [...poolAmountDynamicFields];
 		if (isGivenAmountOut) {
-			newAmountDynamicFields[coinInDynamicFieldIndex].value +=
-				coinOutAmount;
-			newAmountDynamicFields[coinOutDynamicFieldIndex].value -=
-				coinInAmount;
+			newPoolObject.coins[coinIn].balance += coinOutAmount;
+			newPoolObject.coins[coinOut].balance += coinInAmount;
 		} else {
-			newAmountDynamicFields[coinInDynamicFieldIndex].value +=
-				coinInAmount;
-			newAmountDynamicFields[coinOutDynamicFieldIndex].value -=
-				coinOutAmount;
+			newPoolObject.coins[coinIn].balance += coinInAmount;
+			newPoolObject.coins[coinOut].balance += coinOutAmount;
 		}
 
-		const newDynamicFields: PoolDynamicFields = {
-			...poolDynamicFields,
-			amountFields: newAmountDynamicFields,
-		};
-
-		const newPool = new Pool(
-			Helpers.deepCopy(pool.pool),
-			newDynamicFields,
-			pool.network
-		);
+		const newPool = new Pool(Helpers.deepCopy(newPoolObject), pool.network);
 		return newPool;
 	};
 
@@ -636,27 +642,32 @@ export class RouterGraph {
 		coinOut: CoinType
 	): RouterCompleteTradeRoute => {
 		const nonZeroRoutes = routes.filter(
-			(route) => route.coinInAmount > BigInt(0)
+			(route) => route.coinIn.amount > BigInt(0)
 		);
 		const totalCoinOutAmount = nonZeroRoutes.reduce(
-			(acc, cur) => acc + cur.coinOutAmount,
+			(acc, cur) => acc + cur.coinOut.amount,
 			BigInt(0)
 		);
 		const spotPrice = nonZeroRoutes.reduce(
 			(acc, cur) =>
 				acc +
-				(Number(cur.coinInAmount) / Number(coinInAmount)) *
+				(Number(cur.coinIn.amount) / Number(coinInAmount)) *
 					cur.spotPrice,
 			0
 		);
 
 		return {
-			coinIn,
-			coinOut,
-			coinInAmount,
-			coinOutAmount: totalCoinOutAmount,
+			coinIn: {
+				type: coinIn,
+				amount: coinInAmount,
+				tradeFee: BigInt(0),
+			},
+			coinOut: {
+				type: coinOut,
+				amount: totalCoinOutAmount,
+				tradeFee: BigInt(0),
+			},
 			routes: nonZeroRoutes,
-			tradeFee: BigInt(0),
 			spotPrice,
 		};
 	};
@@ -691,11 +702,17 @@ export class RouterGraph {
 	>(
 		tradeInfo: T
 	) => {
-		const { coinInAmount, coinOutAmount } = tradeInfo;
+		const { coinIn, coinOut } = tradeInfo;
 		return {
 			...tradeInfo,
-			coinInAmount: coinOutAmount,
-			coinOutAmount: coinInAmount,
+			coinIn: {
+				...coinIn,
+				amount: coinOut.amount,
+			},
+			coinOut: {
+				...coinOut,
+				amount: coinIn.amount,
+			},
 		};
 	};
 }

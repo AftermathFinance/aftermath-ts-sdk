@@ -79,7 +79,7 @@ export class PoolsApiCasting {
 			creator: fields.creator,
 			// lpCoinSupply: ,
 			// illiquidLpCoinSupply: ,
-			flatness: fields.flatness,
+			flatness: BigInt(fields.flatness),
 			coins,
 		};
 	};

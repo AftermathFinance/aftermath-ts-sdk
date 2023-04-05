@@ -80,8 +80,8 @@ const runRoute = async (
 	const end = performance.now();
 
 	const stableCoinPercentLoss =
-		(Number(completeRoute.coinInAmount - completeRoute.coinOutAmount) /
-			Number(completeRoute.coinInAmount)) *
+		(Number(completeRoute.coinIn.amount - completeRoute.coinOut.amount) /
+			Number(completeRoute.coinIn.amount)) *
 		100;
 
 	console.log("Max Route Length:", maxRouteLength);
@@ -94,25 +94,25 @@ const runRoute = async (
 	// 			return {
 	// 				pool: path.poolObjectId,
 	// 				coinIn: path.coinIn,
-	// 				coinInAmount: path.coinInAmount,
+	// 				coinInAmount: path.coinIn.amount,
 	// 				coinOut: path.coinOut,
-	// 				coinOutAmount: path.coinOutAmount,
+	// 				coinOutAmount: path.coinOut.amount,
 	// 			};
 	// 		})
 	// 	);
 	// }
 
-	console.log("Coin In Amount:", completeRoute.coinInAmount);
-	console.log("Coin Out Amount:", completeRoute.coinOutAmount);
+	console.log("Coin In Amount:", completeRoute.coinIn.amount);
+	console.log("Coin Out Amount:", completeRoute.coinOut.amount);
 	console.log(
 		"Stable Coin Loss:",
-		completeRoute.coinInAmount - completeRoute.coinOutAmount,
+		completeRoute.coinIn.amount - completeRoute.coinOut.amount,
 		`${stableCoinPercentLoss.toFixed(2)}%`
 	);
 	console.log("Execution time:", end - start, "ms");
 	console.log("\n");
 
-	return completeRoute.coinOutAmount;
+	return completeRoute.coinOut.amount;
 };
 
 runMe();

@@ -1,13 +1,10 @@
 import { EventId, ObjectId } from "@mysten/sui.js";
 import {
-	AnyObjectType,
 	ApiEventsBody,
 	Balance,
 	CoinType,
 	EventsWithCursor,
-	PoolAmountDynamicField,
 	PoolDepositEvent,
-	PoolDynamicFields,
 	PoolObject,
 	PoolTradeEvent,
 	PoolTradeFee,
@@ -50,11 +47,8 @@ export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getPool(poolObjectId: ObjectId): Promise<Pool> {
-		const [pool, poolDynamicFields] = await Promise.all([
-			this.fetchApi<PoolObject>(`${poolObjectId}`),
-			this.fetchApi<PoolDynamicFields>(`${poolObjectId}/dynamicFields`),
-		]);
-		return new Pool(pool, poolDynamicFields, this.network);
+		const pool = await this.fetchApi<PoolObject>(`${poolObjectId}`);
+		return new Pool(pool, this.network);
 	}
 
 	public async getPools(poolObjectIds: ObjectId[]): Promise<Pool[]> {
@@ -64,17 +58,7 @@ export class Pools extends Caller {
 
 	public async getAllPools(): Promise<Pool[]> {
 		const pools = await this.fetchApi<PoolObject[]>("");
-		const poolDynamicFields = await Promise.all(
-			pools.map((pool) =>
-				this.fetchApi<PoolDynamicFields>(
-					`${pool.objectId}/dynamicFields`
-				)
-			)
-		);
-		return pools.map(
-			(pool, index) =>
-				new Pool(pool, poolDynamicFields[index], this.network)
-		);
+		return pools.map((pool) => new Pool(pool, this.network));
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -153,34 +137,9 @@ export class Pools extends Caller {
 		};
 	};
 
-	public static sortDynamicFieldsToMatchPoolCoinOrdering = (
-		dynamicFields: PoolDynamicFields,
-		pool: PoolObject
-	) => {
-		const poolCoins = pool.fields.coins;
-
-		// console.log("dynamicFields", dynamicFields);
-
-		let amountFields: PoolAmountDynamicField[] = [];
-		for (const poolCoin of poolCoins) {
-			const amountField = dynamicFields.amountFields.find(
-				(field) => field.coin === poolCoin
-			);
-			if (!amountField) throw Error("coin not found in dynamic field");
-
-			amountFields.push({ ...amountField });
-		}
-
-		const sortedDynamicFields = {
-			...dynamicFields,
-			amountFields,
-		} as PoolDynamicFields;
-		return sortedDynamicFields;
-	};
-
 	public static findPoolForLpCoin = (lpCoin: CoinType, pools: Pool[]) =>
 		pools.find((pool) => {
-			return pool.pool.fields.lpType.includes(
+			return pool.pool.lpCoinType.includes(
 				new Coin(new Coin(lpCoin).innerCoinType).coinTypeSymbol
 			);
 		});
@@ -194,12 +153,6 @@ export class Pools extends Caller {
 		// return coin.includes(poolsPackageId);
 		return coin.includes("AF_LP_");
 	};
-
-	public static isLpKeyType = (type: AnyObjectType) => type.includes("LpKey");
-	public static isBalanceKeyType = (type: AnyObjectType) =>
-		type.includes("BalanceKey");
-	public static isAmountKeyType = (type: AnyObjectType) =>
-		type.includes("AmountKey");
 
 	/////////////////////////////////////////////////////////////////////
 	//// Conversions

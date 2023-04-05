@@ -2,7 +2,6 @@ import {
 	ObjectId,
 	TransactionBlock,
 	SuiAddress,
-	VECTOR,
 	TransactionArgument,
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -15,7 +14,6 @@ import {
 	PoolDataPoint,
 	PoolVolumeDataTimeframe,
 	PoolVolumeDataTimeframeKey,
-	PoolDynamicFields,
 	PoolObject,
 	PoolTradeEvent,
 	PoolsAddresses,

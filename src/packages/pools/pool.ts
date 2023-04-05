@@ -12,6 +12,7 @@ import {
 	PoolStats,
 	SuiNetwork,
 	SerializedTransaction,
+	PoolCoins,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -169,9 +170,9 @@ export class Pool extends Caller {
 			coinIn.balance,
 			coinIn.weight,
 			coinOut.balance,
-			coinOut.weight
+			coinOut.weight,
 			coinInAmount,
-			this.pool.fields.tradeFee
+			this.pool.coins[coinInType].tradeFeeIn
 		);
 	};
 
@@ -187,9 +188,9 @@ export class Pool extends Caller {
 			coinIn.balance,
 			coinIn.weight,
 			coinOut.balance,
-			coinOut.weight
+			coinOut.weight,
 			coinOutAmount,
-			this.pool.fields.tradeFee
+			this.pool.coins[coinInType].tradeFeeIn
 		);
 	};
 
@@ -205,23 +206,33 @@ export class Pool extends Caller {
 		);
 	};
 
-	public getDepositLpMintAmount = (coinsToBalance: CoinsToBalance) => {
-		const poolCoinBalances = this.dynamicFields.amountFields.map(
-			(field) => field.value
+	public getDepositLpMintAmount = (
+		pool: PoolObject,
+		coinsToBalance: CoinsToBalance
+	) => {
+		const poolCoins = pool.coins;
+		const poolCoinBalances = Object.values(poolCoins).map(
+			(coin) => coin.balance
 		);
-		const depositCoinBalances = this.pool.fields.coins.map((coin) => {
-			const foundBalance = Object.entries(coinsToBalance).find(
-				(coinAndBalance) => coinAndBalance[0] === coin
-			)?.[1];
-			return foundBalance ?? BigInt(0);
-		});
+		const poolCoinWeights = Object.values(poolCoins).map(
+			(coin) => coin.weight
+		);
+
+		const depositCoinBalances = Object.entries(poolCoins).map(
+			([coinType, poolCoin]) => {
+				const foundBalance = Object.entries(coinsToBalance).find(
+					(coinAndBalance) => coinAndBalance[0] === coinType
+				)?.[1];
+				return foundBalance ?? BigInt(0);
+			}
+		);
 
 		return CmmmCalculations.calcLpOutGivenExactTokensIn(
 			poolCoinBalances,
-			this.pool.fields.weights,
+			poolCoinWeights,
 			depositCoinBalances,
-			lpTotalSupply,
-			this.pool.fields.tradeFee
+			pool.lpCoinSupply,
+			pool.coins[Object.keys(coinsToBalance)[0]].tradeFeeIn
 		);
 	};
 }

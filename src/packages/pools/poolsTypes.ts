@@ -17,7 +17,7 @@ import { CoinsToBalance, CoinType } from "../coin/coinTypes";
 export type PoolName = string;
 export type PoolWeight = bigint;
 export type PoolTradeFee = bigint;
-export type PoolFlatness = number;
+export type PoolFlatness = bigint;
 
 /////////////////////////////////////////////////////////////////////
 //// Objects

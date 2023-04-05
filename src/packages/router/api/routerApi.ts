@@ -38,7 +38,7 @@ export class RouterApi {
 	public fetchSupportedCoins = async () => {
 		const pools = await this.Provider.Pools().fetchAllPools();
 		const allCoins: CoinType[] = pools
-			.map((pool) => pool.fields.coins)
+			.map((pool) => Object.keys(pool.coins))
 			.reduce((prev, cur) => [...prev, ...cur], []);
 
 		const uniqueCoins = Helpers.uniqueArray(allCoins);
@@ -89,8 +89,8 @@ export class RouterApi {
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				startTx,
 				walletAddress,
-				completeRoute.coinIn,
-				completeRoute.coinInAmount
+				completeRoute.coinIn.type,
+				completeRoute.coinIn.amount
 			);
 
 		let tx = txWithCoinWithAmount;
@@ -99,7 +99,7 @@ export class RouterApi {
 			const [splitCoinArg] = tx.add({
 				kind: "SplitCoins",
 				coin: coinInArg,
-				amounts: [tx.pure(route.coinInAmount)],
+				amounts: [tx.pure(route.coinIn.amount)],
 			});
 
 			for (const [index, path] of route.paths.entries()) {
@@ -107,9 +107,9 @@ export class RouterApi {
 					tx,
 					path.poolObjectId,
 					index === 0 ? coinInArg : splitCoinArg,
-					path.coinIn,
+					path.coinIn.type,
 					BigInt(0), // TODO: calc slippage amount
-					path.coinOut,
+					path.coinOut.type,
 					path.poolLpCoinType
 				);
 			}
