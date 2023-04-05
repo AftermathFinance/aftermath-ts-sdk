@@ -1,42 +1,41 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import {
-	AnyObjectType,
 	Balance,
 	BigIntAsString,
 	CoinType,
 	EventOnChain,
-	KeyType,
+	PoolName,
 } from "../../../types";
-import { PoolCurveType } from "../../../types";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
 export interface PoolFieldsOnChain {
+	name: PoolName;
 	creator: SuiAddress;
-	name: string;
-	swap_fee: BigIntAsString;
+	// lp_supply:
+	// illiquid_lp_supply:
 	type_names: CoinType[];
+	balances: BigIntAsString[];
 	weights: BigIntAsString[];
-	lp_type: CoinType;
-	curve_type: PoolCurveType;
+	flatness: BigIntAsString;
+	fees_swap_in: BigIntAsString[];
+	fees_swap_out: BigIntAsString[];
+	fees_deposit: BigIntAsString[];
+	fees_withdraw: BigIntAsString[];
 }
 
 /////////////////////////////////////////////////////////////////////
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-export type PoolCreateEventOnChain = EventOnChain<{
-	coins: CoinType[];
-	creator: SuiAddress;
-	pool_id: ObjectId;
-	weights: BigIntAsString[];
-	swap_fee: BigIntAsString;
-	lp_type: CoinType; // TODO: make seperate LpCoinType ?
-	name: string;
-	curve_type: PoolCurveType;
-}>;
+export type PoolCreateEventOnChain = EventOnChain<
+	{
+		pool_id: ObjectId;
+		lp_type: CoinType; // TODO: make seperate LpCoinType ?
+	} & PoolFieldsOnChain
+>;
 
 export type PoolTradeEventOnChain = EventOnChain<{
 	pool_id: ObjectId;
@@ -79,52 +78,9 @@ export type PoolWithdrawEventOnChain = EventOnChain<{
 	lp_coins_burned: Balance;
 }>;
 
-export interface PoolSpotPriceEventOnChain {
-	fields: {
-		spot_price: BigIntAsString;
-	};
-}
-
-/////////////////////////////////////////////////////////////////////
-//// Dynamic Fields
-/////////////////////////////////////////////////////////////////////
-
-export interface PoolDynamicFieldOnChain<FieldsType> {
-	data: {
-		fields: FieldsType;
-		type: AnyObjectType;
-	};
-}
-
-export type PoolLpDynamicFieldOnChain = PoolDynamicFieldOnChain<{
-	id: {
-		id: ObjectId;
-	};
-	value: {
-		fields: {
-			value: BigIntAsString;
-		};
-	};
-}>;
-
-export type PoolBalanceDynamicFieldOnChain = PoolDynamicFieldOnChain<{
-	id: {
-		id: ObjectId;
-	};
-	value: BigIntAsString;
-	name: {
-		type: KeyType;
-	};
-}>;
-
-export type PoolAmountDynamicFieldOnChain = PoolDynamicFieldOnChain<{
-	id: {
-		id: ObjectId;
-	};
-	value: BigIntAsString;
-	name: {
-		fields: {
-			type_name: CoinType;
-		};
-	};
+export type PoolSpotPriceEventOnChain = EventOnChain<{
+	pool_id: ObjectId;
+	base_type: CoinType;
+	quote_type: CoinType;
+	spot_price: BigIntAsString;
 }>;

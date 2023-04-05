@@ -1,4 +1,4 @@
-import { EventId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -8,16 +8,10 @@ import {
 	CoinsToBalance,
 	PoolDataPoint,
 	PoolVolumeDataTimeframeKey,
-	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
 	SerializedTransaction,
-	EventsWithCursor,
-	PoolDepositEvent,
-	ApiEventsBody,
-	PoolWithdrawEvent,
-	PoolTradeEvent,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -35,12 +29,10 @@ export class Pool extends Caller {
 
 	constructor(
 		public readonly pool: PoolObject,
-		public readonly dynamicFields: PoolDynamicFields,
 		public readonly network?: SuiNetwork
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;
-		this.dynamicFields = dynamicFields;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -166,61 +158,54 @@ export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public getTradeAmountOut = (
-		coinIn: CoinType,
+		coinInType: CoinType,
 		coinInAmount: Balance,
-		coinOut: CoinType
+		coinOutType: CoinType
 	) => {
-		const coinInPoolBalance = this.balanceForCoin(coinIn);
-		const coinOutPoolBalance = this.balanceForCoin(coinOut);
-		const coinInWeight = this.weightForCoin(coinIn);
-		const coinOutWeight = this.weightForCoin(coinOut);
+		const coinIn = this.pool.coins[coinInType];
+		const coinOut = this.pool.coins[coinOutType];
 
 		return CmmmCalculations.calcOutGivenIn(
-			coinInPoolBalance,
-			coinInWeight,
-			coinOutPoolBalance,
-			coinOutWeight,
+			coinIn.balance,
+			coinIn.weight,
+			coinOut.balance,
+			coinOut.weight
 			coinInAmount,
 			this.pool.fields.tradeFee
 		);
 	};
 
 	public getTradeAmountIn = (
-		coinOut: CoinType,
+		coinOutType: CoinType,
 		coinOutAmount: Balance,
-		coinIn: CoinType
+		coinInType: CoinType
 	) => {
-		const coinOutPoolBalance = this.balanceForCoin(coinOut);
-		const coinInPoolBalance = this.balanceForCoin(coinIn);
-		const coinOutWeight = this.weightForCoin(coinOut);
-		const coinInWeight = this.weightForCoin(coinIn);
+		const coinIn = this.pool.coins[coinInType];
+		const coinOut = this.pool.coins[coinOutType];
 
 		return CmmmCalculations.calcInGivenOut(
-			coinInPoolBalance,
-			coinInWeight,
-			coinOutPoolBalance,
-			coinOutWeight,
+			coinIn.balance,
+			coinIn.weight,
+			coinOut.balance,
+			coinOut.weight
 			coinOutAmount,
 			this.pool.fields.tradeFee
 		);
 	};
 
-	public getSpotPrice = (coinIn: CoinType, coinOut: CoinType) => {
-		const coinInPoolBalance = this.balanceForCoin(coinIn);
-		const coinOutPoolBalance = this.balanceForCoin(coinOut);
-		const coinInWeight = this.weightForCoin(coinIn);
-		const coinOutWeight = this.weightForCoin(coinOut);
+	public getSpotPrice = (coinInType: CoinType, coinOutType: CoinType) => {
+		const coinIn = this.pool.coins[coinInType];
+		const coinOut = this.pool.coins[coinOutType];
 
 		return CmmmCalculations.calcSpotPrice(
-			coinInPoolBalance,
-			coinInWeight,
-			coinOutPoolBalance,
-			coinOutWeight
+			coinIn.balance,
+			coinIn.weight,
+			coinOut.balance,
+			coinOut.weight
 		);
 	};
 
 	public getDepositLpMintAmount = (coinsToBalance: CoinsToBalance) => {
-		const lpTotalSupply = this.dynamicFields.lpFields[0].value;
 		const poolCoinBalances = this.dynamicFields.amountFields.map(
 			(field) => field.value
 		);
@@ -238,26 +223,5 @@ export class Pool extends Caller {
 			lpTotalSupply,
 			this.pool.fields.tradeFee
 		);
-	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
-
-	public weightForCoin = (coin: CoinType) => {
-		const coinIndex = this.pool.fields.coins.findIndex(
-			(aCoin) => aCoin === coin
-		);
-		if (coinIndex < 0) throw new Error("coin not found in pool object");
-		return this.pool.fields.weights[coinIndex];
-	};
-
-	public balanceForCoin = (coin: CoinType) => {
-		const poolBalance = this.dynamicFields.amountFields.find(
-			(field) => field.coin === coin
-		);
-		if (!poolBalance)
-			throw new Error("coin not found in pool dynamic fields");
-		return poolBalance.value;
 	};
 }

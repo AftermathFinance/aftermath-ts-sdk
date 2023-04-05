@@ -20,6 +20,8 @@ import {
 	PoolTradeEvent,
 	PoolsAddresses,
 	AnyObjectType,
+	PoolCoins,
+	CoinsToPrice,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
@@ -497,15 +499,15 @@ export class PoolsApiHelpers {
 	};
 
 	public fetchCalcPoolTvl = async (
-		dynamicFields: PoolDynamicFields,
-		prices: number[],
+		poolCoins: PoolCoins,
+		prices: CoinsToPrice,
 		coinsToDecimals: Record<CoinType, CoinDecimal>
 	) => {
 		const amountsWithDecimals: number[] = [];
-		for (const amountField of dynamicFields.amountFields) {
+		for (const [poolCoinType, poolCoin] of Object.entries(poolCoins)) {
 			const amountWithDecimals = Coin.balanceWithDecimals(
-				amountField.value,
-				coinsToDecimals[amountField.coin]
+				poolCoin.balance,
+				coinsToDecimals[poolCoinType]
 			);
 			amountsWithDecimals.push(amountWithDecimals);
 		}
@@ -517,20 +519,15 @@ export class PoolsApiHelpers {
 		return tvl;
 	};
 
-	public calcPoolSupplyPerLps = (dynamicFields: PoolDynamicFields) => {
-		const lpSupply = dynamicFields.lpFields[0].value;
-		const supplyPerLps = dynamicFields.amountFields.map(
-			(field) => Number(field.value) / Number(lpSupply)
+	public calcPoolSupplyPerLps = (poolCoins: PoolCoins, lpSupply: Balance) => {
+		const supplyPerLps = Object.values(poolCoins).map(
+			(poolCoin) => Number(poolCoin.balance) / Number(lpSupply)
 		);
 
 		return supplyPerLps;
 	};
 
-	public calcPoolLpPrice = (
-		dynamicFields: PoolDynamicFields,
-		tvl: Number
-	) => {
-		const lpSupply = dynamicFields.lpFields[0].value;
+	public calcPoolLpPrice = (lpSupply: Balance, tvl: number) => {
 		const lpCoinDecimals = Pools.constants.lpCoinDecimals;
 		const lpPrice = Number(
 			Number(tvl) / Coin.balanceWithDecimals(lpSupply, lpCoinDecimals)
@@ -574,7 +571,7 @@ export class PoolsApiHelpers {
 
 		const coinsToDecimalsAndPrices =
 			await this.Provider.Coin().Helpers.fetchCoinsToDecimalsAndPrices(
-				pool.fields.coins
+				Object.keys(pool.coins)
 			);
 
 		const now = Date.now();

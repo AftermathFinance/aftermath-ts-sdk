@@ -1,5 +1,5 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Balance, Event, Url } from "../../general/types/generalTypes";
+import { Balance, Event, Object, Url } from "../../general/types/generalTypes";
 import { EpochTimeLock } from "../../general/types/suiTypes";
 import {
 	AmountInCoinAndUsd,
@@ -30,31 +30,27 @@ export interface CapyFields {
 	attributes: CapyAttribute[];
 }
 
-export interface CapyObject {
-	objectId: ObjectId;
+export interface CapyObject extends Object {
+	// TODO: remove fields such that object data is in line with object id itself
 	fields: CapyFields;
 }
 
-export interface StakedCapyObject {
-	objectId: ObjectId;
+export interface StakedCapyObject extends Object {
 	capy: CapyObject;
 	collectedFees: Balance;
 }
 
-export interface StakedCapyReceiptObject {
-	objectId: ObjectId;
+export interface StakedCapyReceiptObject extends Object {
 	capyId: ObjectId;
 	unlockEpoch: EpochTimeLock;
 }
 
-export interface StakedCapyReceiptWithCapyObject {
-	objectId: ObjectId;
+export interface StakedCapyReceiptWithCapyObject extends Object {
 	capy: CapyObject;
 	unlockEpoch: EpochTimeLock;
 }
 
-export interface CapyVaultObject {
-	objectId: ObjectId;
+export interface CapyVaultObject extends Object {
 	bredCapys: bigint;
 	stakedCapys: bigint;
 	globalFees: Balance;

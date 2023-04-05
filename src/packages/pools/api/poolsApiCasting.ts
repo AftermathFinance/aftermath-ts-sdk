@@ -1,14 +1,12 @@
 import {
+	ObjectId,
 	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
-	getObjectType,
 } from "@mysten/sui.js";
 import {
-	PoolAmountDynamicField,
-	PoolBalanceDynamicField,
+	PoolCoins,
 	PoolDepositEvent,
-	PoolLpDynamicField,
 	PoolObject,
 	PoolSingleDepositEvent,
 	PoolSingleWithdrawEvent,
@@ -16,41 +14,21 @@ import {
 	PoolWithdrawEvent,
 } from "../poolsTypes";
 import {
-	PoolAmountDynamicFieldOnChain,
-	PoolBalanceDynamicFieldOnChain,
 	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
-	PoolDynamicFieldOnChain,
 	PoolFieldsOnChain,
-	PoolLpDynamicFieldOnChain,
 	PoolSingleDepositEventOnChain,
 	PoolSingleWithdrawEventOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Pools } from "../pools";
-import { Coin } from "../../coin/coin";
-import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
+import { CoinType } from "../../coin/coinTypes";
 
 export class PoolsApiCasting {
 	/////////////////////////////////////////////////////////////////////
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
-
-	public static poolDynamicFieldsFromSuiObject = (
-		suiObject: SuiObjectResponse
-	): PoolDynamicFieldOnChain<any> => {
-		// console.log("suiObject", suiObject);
-		const type = getObjectType(suiObject);
-		if (!type) throw new Error("no type found for pool dynamic fields");
-
-		return {
-			data: {
-				fields: getObjectFields(suiObject),
-				type,
-			},
-		};
-	};
 
 	public static poolObjectFromSuiObject = (suiObject: SuiObjectResponse) => {
 		const objectId = getObjectId(suiObject);
@@ -58,50 +36,51 @@ export class PoolsApiCasting {
 			suiObject
 		) as PoolFieldsOnChain;
 
-		// TODO: handle failed casts ^ ?
-
-		const { coins, weights } = Pools.sortCoinsByWeights(
-			poolFieldsOnChain.type_names,
-			poolFieldsOnChain.weights.map((weight) => BigInt(weight))
-		);
-		const poolObject: PoolObject = {
+		return this.poolObjectFromPoolFieldsOnChain(
 			objectId,
-			fields: {
-				name: poolFieldsOnChain.name,
-				creator: poolFieldsOnChain.creator,
-				coins: coins.map((coin) => "0x" + coin),
-				weights,
-				tradeFee: BigInt(poolFieldsOnChain.swap_fee),
-				lpType: Pools.normalizeLpCoinType(poolFieldsOnChain.lp_type),
-				curveType: poolFieldsOnChain.curve_type,
-			},
-		};
-		return poolObject;
+			LP_TYPE,
+			poolFieldsOnChain
+		);
 	};
 
 	public static poolObjectFromPoolCreateEventOnChain = (
 		createEvent: PoolCreateEventOnChain
 	): PoolObject => {
-		// console.log("createEvent", createEvent);
-
-		const { coins, weights } = Pools.sortCoinsByWeights(
-			createEvent.parsedJson.coins,
-			createEvent.parsedJson.weights.map((weight) => BigInt(weight))
+		return this.poolObjectFromPoolFieldsOnChain(
+			createEvent.parsedJson.pool_id,
+			createEvent.parsedJson.lp_type,
+			createEvent.parsedJson
 		);
+	};
+
+	private static poolObjectFromPoolFieldsOnChain = (
+		objectId: ObjectId,
+		lpCoinType: CoinType,
+		fields: PoolFieldsOnChain
+	): PoolObject => {
+		const coins: PoolCoins = fields.type_names.reduce((acc, cur, index) => {
+			return {
+				...acc,
+				["0x" + cur]: {
+					weight: BigInt(fields.weights[index]),
+					balance: BigInt(fields.balances[index]),
+					tradeFeeIn: BigInt(fields.fees_swap_in[index]),
+					tradeFeeOut: BigInt(fields.fees_swap_out[index]),
+					depositFee: BigInt(fields.fees_deposit[index]),
+					withdrawFee: BigInt(fields.fees_withdraw[index]),
+				},
+			};
+		}, {} as PoolCoins);
+
 		return {
-			objectId: createEvent.parsedJson.pool_id,
-			// type: "",
-			fields: {
-				creator: createEvent.parsedJson.creator,
-				coins: coins.map((coin) => "0x" + coin),
-				weights,
-				tradeFee: BigInt(createEvent.parsedJson.swap_fee),
-				lpType: Pools.normalizeLpCoinType(
-					createEvent.parsedJson.lp_type
-				),
-				name: createEvent.parsedJson.name,
-				curveType: createEvent.parsedJson.curve_type,
-			},
+			objectId,
+			lpCoinType: Pools.normalizeLpCoinType(lpCoinType),
+			name: fields.name,
+			creator: fields.creator,
+			// lpCoinSupply: ,
+			// illiquidLpCoinSupply: ,
+			flatness: fields.flatness,
+			coins,
 		};
 	};
 
@@ -184,47 +163,5 @@ export class PoolsApiCasting {
 			timestamp: withdrawEventFromFetched.timestampMs,
 			txnDigest: withdrawEventFromFetched.id.txDigest,
 		};
-	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Dynamic Fields
-	/////////////////////////////////////////////////////////////////////
-
-	public static poolLpDynamicFieldFromOnChain = (
-		dynamicField: PoolDynamicFieldOnChain<any>
-	) => {
-		if (!Pools.isLpKeyType(dynamicField.data.type))
-			throw new Error("not lp key type");
-		const lpField = dynamicField as PoolLpDynamicFieldOnChain;
-		return {
-			objectId: lpField.data.fields.id.id,
-			value: BigInt(lpField.data.fields.value.fields.value),
-		} as PoolLpDynamicField;
-	};
-
-	public static poolBalanceDynamicFieldFromOnChain = (
-		dynamicField: PoolDynamicFieldOnChain<any>
-	) => {
-		if (!Pools.isBalanceKeyType(dynamicField.data.type))
-			throw new Error("not balance key type");
-		const balanceField = dynamicField as PoolBalanceDynamicFieldOnChain;
-		return {
-			objectId: balanceField.data.fields.id.id,
-			value: BigInt(balanceField.data.fields.value),
-			coin: Coin.coinTypeFromKeyType(balanceField.data.fields.name.type),
-		} as PoolBalanceDynamicField;
-	};
-
-	public static poolAmountDynamicFieldFromOnChain = (
-		dynamicField: PoolDynamicFieldOnChain<any>
-	) => {
-		if (!Pools.isAmountKeyType(dynamicField.data.type))
-			throw new Error("not amount key type");
-		const amountField = dynamicField as PoolAmountDynamicFieldOnChain;
-		return {
-			objectId: amountField.data.fields.id.id,
-			value: BigInt(amountField.data.fields.value),
-			coin: "0x" + amountField.data.fields.name.fields.type_name,
-		} as PoolAmountDynamicField;
 	};
 }

@@ -1,4 +1,9 @@
-import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
+import {
+	Balance,
+	Event,
+	Object,
+	Timestamp,
+} from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
 import { CoinsToBalance, CoinType } from "../coin/coinTypes";
@@ -12,57 +17,31 @@ import { CoinsToBalance, CoinType } from "../coin/coinTypes";
 export type PoolName = string;
 export type PoolWeight = bigint;
 export type PoolTradeFee = bigint;
+export type PoolFlatness = number;
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
-export interface PoolCompleteObject {
-	pool: PoolObject;
-	dynamicFields: PoolDynamicFields;
+export type PoolCoins = Record<CoinType, PoolCoin>;
+
+export interface PoolCoin {
+	weight: PoolWeight;
+	balance: Balance;
+	tradeFeeIn: PoolTradeFee;
+	tradeFeeOut: PoolTradeFee;
+	depositFee: PoolTradeFee;
+	withdrawFee: PoolTradeFee;
 }
 
-export interface PoolObject {
-	objectId: ObjectId;
-	fields: {
-		name: PoolName;
-		creator: SuiAddress;
-		coins: CoinType[];
-		weights: PoolWeight[];
-		tradeFee: PoolTradeFee;
-		lpType: CoinType;
-		curveType: PoolCurveType;
-	};
-}
-
-export enum PoolCurveType {
-	Uncorrelated = 0,
-}
-
-/////////////////////////////////////////////////////////////////////
-//// Dynamic Fields
-/////////////////////////////////////////////////////////////////////
-
-export interface PoolLpDynamicField {
-	objectId: ObjectId;
-	value: Balance;
-}
-
-export interface PoolBalanceDynamicField {
-	objectId: ObjectId;
-	coin: CoinType;
-	value: Balance;
-}
-
-export interface PoolAmountDynamicField {
-	objectId: ObjectId;
-	coin: CoinType;
-	value: Balance;
-}
-
-export interface PoolDynamicFields {
-	lpFields: PoolLpDynamicField[];
-	amountFields: PoolAmountDynamicField[];
+export interface PoolObject extends Object {
+	name: PoolName;
+	creator: SuiAddress;
+	lpCoinType: CoinType;
+	lpCoinSupply: Balance;
+	illiquidLpCoinSupply: Balance;
+	flatness: PoolFlatness;
+	coins: PoolCoins;
 }
 
 /////////////////////////////////////////////////////////////////////

@@ -103,16 +103,15 @@ export class RouterApi {
 			});
 
 			for (const [index, path] of route.paths.entries()) {
-				tx =
-					await this.Provider.Pools().Helpers.addTradeCommandToTransaction(
-						tx,
-						path.poolObjectId,
-						index === 0 ? coinInArg : splitCoinArg,
-						path.coinIn,
-						BigInt(0), // TODO: calc slippage amount
-						path.coinOut,
-						path.poolLpCoinType
-					);
+				tx = this.Provider.Pools().Helpers.addTradeCommandToTransaction(
+					tx,
+					path.poolObjectId,
+					index === 0 ? coinInArg : splitCoinArg,
+					path.coinIn,
+					BigInt(0), // TODO: calc slippage amount
+					path.coinOut,
+					path.poolLpCoinType
+				);
 			}
 		}
 

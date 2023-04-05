@@ -6,7 +6,6 @@ import {
 	Balance,
 	PoolVolumeDataTimeframeKey,
 	PoolDepositEvent,
-	PoolDynamicFields,
 	PoolStats,
 	PoolTradeEvent,
 	PoolWithdrawEvent,
@@ -243,10 +242,6 @@ export class PoolsApi {
 			order: "ascending",
 		});
 
-		// console.log("paginatedEvents", paginatedEvents);
-
-		// REMOVE ME
-
 		const poolObjects = [paginatedEvents.data[0]].map((event) =>
 			Casting.pools.poolObjectFromPoolCreateEventOnChain(
 				event as PoolCreateEventOnChain
@@ -254,48 +249,6 @@ export class PoolsApi {
 		);
 
 		return poolObjects;
-	};
-
-	public fetchPoolDynamicFields = async (poolId: ObjectId) => {
-		const allDynamicFields =
-			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType(
-				poolId
-			);
-		// console.log("allDynamicFields", allDynamicFields[0].name.value);
-		// const objectIds = allDynamicFields.map((field) => field.objectId);
-
-		// const dynamicFieldsAsSuiObjects =
-		// 	await this.Provider.Objects().fetchObjectBatch(objectIds);
-
-		const dynamicFieldsAsSuiObjects = await Promise.all(
-			allDynamicFields.map((field) =>
-				this.Provider.provider.getDynamicFieldObject({
-					parentId: poolId,
-					name: field.name,
-				})
-			)
-		);
-
-		// console.log("dynamicFieldsAsSuiObjects", dynamicFieldsAsSuiObjects);
-
-		const dynamicFieldsOnChain = dynamicFieldsAsSuiObjects.map(
-			Casting.pools.poolDynamicFieldsFromSuiObject
-		);
-
-		const lpFields = dynamicFieldsOnChain
-			.filter((field) => Pools.isLpKeyType(field.data.type))
-			.map((field) => Casting.pools.poolLpDynamicFieldFromOnChain(field));
-
-		const amountFields = dynamicFieldsOnChain
-			.filter((field) => Pools.isAmountKeyType(field.data.type))
-			.map((field) =>
-				Casting.pools.poolAmountDynamicFieldFromOnChain(field)
-			);
-
-		return {
-			lpFields,
-			amountFields,
-		} as PoolDynamicFields;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -371,12 +324,15 @@ export class PoolsApi {
 		coinsToPrice: CoinsToPrice
 	): Promise<PoolStats> => {
 		const poolObjectId = pool.pool.objectId;
-		const poolCoins = pool.pool.fields.coins;
+		const poolCoins = pool.pool.coins;
+		const poolCoinTypes = Object.keys(poolCoins);
 
 		const prices = Object.entries(coinsToPrice).map(([_, price]) => price);
 
 		const coinsToDecimals =
-			await this.Provider.Coin().Helpers.fetchCoinsToDecimals(poolCoins);
+			await this.Provider.Coin().Helpers.fetchCoinsToDecimals(
+				poolCoinTypes
+			);
 
 		const tradeEventsWithinTime =
 			await this.Provider.Events().fetchEventsWithinTime(
@@ -386,28 +342,25 @@ export class PoolsApi {
 			);
 		const volume = this.Helpers.fetchCalcPoolVolume(
 			poolObjectId,
-			poolCoins,
+			poolCoinTypes,
 			tradeEventsWithinTime,
 			prices,
 			coinsToDecimals
 		);
 
-		const fetchedDynamicFields = await this.fetchPoolDynamicFields(
-			poolObjectId
-		);
-
-		const dynamicFields = Pools.sortDynamicFieldsToMatchPoolCoinOrdering(
-			fetchedDynamicFields,
-			pool.pool
-		);
-
 		const tvl = await this.Helpers.fetchCalcPoolTvl(
-			dynamicFields,
-			prices,
+			pool.pool.coins,
+			coinsToPrice,
 			coinsToDecimals
 		);
-		const supplyPerLps = this.Helpers.calcPoolSupplyPerLps(dynamicFields);
-		const lpPrice = this.Helpers.calcPoolLpPrice(dynamicFields, tvl);
+		const supplyPerLps = this.Helpers.calcPoolSupplyPerLps(
+			poolCoins,
+			pool.pool.lpCoinSupply
+		);
+		const lpPrice = this.Helpers.calcPoolLpPrice(
+			pool.pool.lpCoinSupply,
+			tvl
+		);
 
 		return {
 			volume,
