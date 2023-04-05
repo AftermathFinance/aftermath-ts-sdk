@@ -5,7 +5,7 @@ import {
 	SuiMoveModuleId,
 	TransactionDigest,
 } from "@mysten/sui.js";
-import { AnyObjectType, ModuleName } from "./generalTypes";
+import { AnyObjectType, BigIntAsString, ModuleName } from "./generalTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// On Chain
@@ -23,4 +23,21 @@ export interface EventOnChain<Fields> {
 	parsedJson: Fields; // | undefined;
 	bcs: string; // | undefined;
 	timestampMs: number; // | undefined;
+}
+
+export interface TableOnChain {
+	type: AnyObjectType;
+	fields: {
+		id: {
+			id: ObjectId;
+		};
+		size: BigIntAsString;
+	};
+}
+
+export interface SupplyOnChain {
+	type: AnyObjectType;
+	fields: {
+		value: BigIntAsString;
+	};
 }

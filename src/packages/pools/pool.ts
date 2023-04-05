@@ -206,11 +206,10 @@ export class Pool extends Caller {
 		);
 	};
 
-	public getDepositLpMintAmount = (
-		pool: PoolObject,
-		coinsToBalance: CoinsToBalance
-	) => {
+	public getDepositLpMintAmount = (coinsToBalance: CoinsToBalance) => {
+		const pool = this.pool;
 		const poolCoins = pool.coins;
+
 		const poolCoinBalances = Object.values(poolCoins).map(
 			(coin) => coin.balance
 		);
@@ -232,7 +231,7 @@ export class Pool extends Caller {
 			poolCoinWeights,
 			depositCoinBalances,
 			pool.lpCoinSupply,
-			pool.coins[Object.keys(coinsToBalance)[0]].tradeFeeIn
+			pool.coins[Object.keys(poolCoins)[0]].tradeFeeIn
 		);
 	};
 }

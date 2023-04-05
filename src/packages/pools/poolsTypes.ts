@@ -39,6 +39,7 @@ export interface PoolObject extends Object {
 	creator: SuiAddress;
 	lpCoinType: CoinType;
 	lpCoinSupply: Balance;
+	illiquidLpCoinSupply: Balance;
 	flatness: PoolFlatness;
 	coins: PoolCoins;
 }

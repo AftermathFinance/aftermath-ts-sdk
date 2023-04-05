@@ -27,7 +27,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 	// 		path.baseAsset,
 	// 		BigInt(0),
 	// 		path.quoteAsset,
-	// 		path.pool.fields.lpType
+	// 		path.pool.lpCoinType
 	// 	);
 	// 	return [tradeTransaction];
 	// };
@@ -49,7 +49,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 	// };
 
 	// public static addPool = (graph: Graph, pool: PoolCompleteObject) => {
-	// 	const coinTypes = pool.pool.fields.coins;
+	// 	const coinTypes = pool.pool.coins;
 
 	// 	const balances: { [key: CoinType]: Balance } = {};
 	// 	for (const amount of pool.dynamicFields.amountFields)
@@ -62,7 +62,7 @@ export class RouterApiHelpers extends PoolsApiHelpers {
 	// 	const tradeFee = pool.pool.fields.tradeFee;
 
 	// 	const g = graph.startingPoints;
-	// 	pool.pool.fields.coins.map((coinType: CoinType) => {
+	// 	pool.pool.coins.map((coinType: CoinType) => {
 	// 		if (!g.has(coinType))
 	// 			g.set(coinType, {
 	// 				sourceNode: { coinType },

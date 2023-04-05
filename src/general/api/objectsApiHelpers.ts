@@ -102,15 +102,15 @@ export class ObjectsApiHelpers {
 				showType: true,
 			},
 		});
-		const objectDataResponses = objectBatch.filter(
-			(data) => data.error !== undefined
-		);
+		// const objectDataResponses = objectBatch.filter(
+		// 	(data) => data.error !== undefined
+		// );
 
-		if (objectDataResponses.length <= 0)
+		if (objectBatch.length <= 0)
 			throw new Error("no existing objects found with fetchObjectBatch");
 		// REVIEW: throw error on any objects that don't exist ?
 		// or don't throw any errors and return empty array ?
-		return objectDataResponses;
+		return objectBatch;
 	};
 
 	public fetchCastObjectBatch = async <ObjectType>(

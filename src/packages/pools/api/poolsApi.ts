@@ -43,92 +43,6 @@ export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
-
-	// public fetchSpotPrice = async (
-	// 	poolId: ObjectId,
-	// 	lpCoinType: CoinType,
-	// 	coinInType: CoinType,
-	// 	coinOutType: CoinType
-	// ): Promise<Balance> => {
-	// 	const Transaction = this.Helpers.spotPriceMoveCall(
-	// 		poolId,
-	// 		coinInType,
-	// 		coinOutType,
-	// 		lpCoinType
-	// 	);
-	// 	const bytes =
-	// 		await this.Provider.Inspections().fetchBytesFromTransaction(
-	// 			Transaction
-	// 		);
-	// 	return Casting.bigIntFromBytes(bytes);
-	// };
-
-	// public fetchTradeAmountOut = async (
-	// 	poolId: ObjectId,
-	// 	coinInType: CoinType,
-	// 	coinOutType: CoinType,
-	// 	lpCoinType: CoinType,
-	// 	coinInBalance: Balance
-	// ) => {
-	// 	const Transaction = this.Helpers.tradeAmountOutMoveCall(
-	// 		poolId,
-	// 		coinInType,
-	// 		coinOutType,
-	// 		lpCoinType,
-	// 		coinInBalance
-	// 	);
-	// 	const bytes =
-	// 		await this.Provider.Inspections().fetchBytesFromTransaction(
-	// 			Transaction
-	// 		);
-	// 	return Casting.bigIntFromBytes(bytes);
-	// };
-
-	// public fetchDepositLpMintAmount = async (
-	// 	poolId: ObjectId,
-	// 	lpCoinType: CoinType,
-	// 	depositCoinsToBalance: CoinsToBalance
-	// ) => {
-	// 	const { coins, balances } = Coin.coinsAndBalancesOverZero(
-	// 		depositCoinsToBalance
-	// 	);
-	// 	const Transaction = this.Helpers.depositLpMintAmountMoveCall(
-	// 		poolId,
-	// 		lpCoinType,
-	// 		coins,
-	// 		balances
-	// 	);
-	// 	const bytes =
-	// 		await this.Provider.Inspections().fetchBytesFromTransaction(
-	// 			Transaction
-	// 		);
-	// 	return Casting.bigIntFromBytes(bytes);
-	// };
-
-	// public fetchWithdrawAmountOut = async (
-	// 	poolId: ObjectId,
-	// 	lpCoinType: CoinType,
-	// 	withdrawCoinsToBalance: CoinsToBalance
-	// ) => {
-	// 	const { coins, balances } = Coin.coinsAndBalancesOverZero(
-	// 		withdrawCoinsToBalance
-	// 	);
-	// 	const Transaction = this.Helpers.withdrawAmountOutMoveCall(
-	// 		poolId,
-	// 		lpCoinType,
-	// 		coins,
-	// 		balances
-	// 	);
-	// 	const bytes =
-	// 		await this.Provider.Inspections().fetchBytesFromTransaction(
-	// 			Transaction
-	// 		);
-	// 	return Casting.bigIntFromBytes(bytes);
-	// };
-
-	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
@@ -242,13 +156,11 @@ export class PoolsApi {
 			order: "ascending",
 		});
 
-		const poolObjects = [paginatedEvents.data[0]].map((event) =>
-			Casting.pools.poolObjectFromPoolCreateEventOnChain(
-				event as PoolCreateEventOnChain
-			)
+		const poolObjectIds = paginatedEvents.data.map(
+			(event) => (event as PoolCreateEventOnChain).parsedJson.pool_id
 		);
 
-		return poolObjects;
+		return this.fetchPools(poolObjectIds);
 	};
 
 	/////////////////////////////////////////////////////////////////////

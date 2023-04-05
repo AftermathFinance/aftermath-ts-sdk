@@ -171,7 +171,7 @@ export class DynamicFieldsApiHelpers {
 				cursor,
 				limit,
 			});
-		// console.log("dynamicFieldType", dynamicFieldType);
+
 		const dynamicFields =
 			dynamicFieldType === undefined
 				? dynamicFieldsResponse.data
@@ -180,8 +180,6 @@ export class DynamicFieldsApiHelpers {
 							? dynamicField.objectType === dynamicFieldType
 							: dynamicFieldType(dynamicField.objectType)
 				  );
-
-		// console.log("dynamicFields", dynamicFields);
 
 		const nextCursor = dynamicFieldsResponse.nextCursor;
 		return {

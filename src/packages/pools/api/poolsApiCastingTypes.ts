@@ -6,6 +6,8 @@ import {
 	CoinType,
 	EventOnChain,
 	PoolName,
+	SupplyOnChain,
+	TableOnChain,
 } from "../../../types";
 
 /////////////////////////////////////////////////////////////////////
@@ -15,12 +17,8 @@ import {
 export interface PoolFieldsOnChain {
 	name: PoolName;
 	creator: SuiAddress;
-	lp_supply: {
-		type: AnyObjectType;
-		fields: {
-			value: BigIntAsString;
-		};
-	};
+	lp_supply: SupplyOnChain;
+	illiquid_lp_supply: BigIntAsString;
 	type_names: CoinType[];
 	balances: BigIntAsString[];
 	weights: BigIntAsString[];

@@ -14,7 +14,6 @@ import {
 	PoolWithdrawEvent,
 } from "../poolsTypes";
 import {
-	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
 	PoolFieldsOnChain,
 	PoolSingleDepositEventOnChain,
@@ -23,7 +22,6 @@ import {
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Pools } from "../pools";
-import { CoinType } from "../../coin/coinTypes";
 import { Coin } from "../../coin";
 
 export class PoolsApiCasting {
@@ -31,8 +29,11 @@ export class PoolsApiCasting {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public static poolObjectFromSuiObject = (suiObject: SuiObjectResponse) => {
+	public static poolObjectFromSuiObject = (
+		suiObject: SuiObjectResponse
+	): PoolObject => {
 		const objectId = getObjectId(suiObject);
+
 		const poolFieldsOnChain = getObjectFields(
 			suiObject
 		) as PoolFieldsOnChain;
@@ -40,49 +41,39 @@ export class PoolsApiCasting {
 		const lpCoinType = new Coin(poolFieldsOnChain.lp_supply.type)
 			.innerCoinType;
 
-		return this.poolObjectFromPoolFieldsOnChain(
-			objectId,
-			lpCoinType,
-			poolFieldsOnChain
+		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
+			(acc, cur, index) => {
+				return {
+					...acc,
+					["0x" + cur]: {
+						weight: BigInt(poolFieldsOnChain.weights[index]),
+						balance: BigInt(poolFieldsOnChain.balances[index]),
+						tradeFeeIn: BigInt(
+							poolFieldsOnChain.fees_swap_in[index]
+						),
+						tradeFeeOut: BigInt(
+							poolFieldsOnChain.fees_swap_out[index]
+						),
+						depositFee: BigInt(
+							poolFieldsOnChain.fees_deposit[index]
+						),
+						withdrawFee: BigInt(
+							poolFieldsOnChain.fees_withdraw[index]
+						),
+					},
+				};
+			},
+			{} as PoolCoins
 		);
-	};
-
-	public static poolObjectFromPoolCreateEventOnChain = (
-		createEvent: PoolCreateEventOnChain
-	): PoolObject => {
-		return this.poolObjectFromPoolFieldsOnChain(
-			createEvent.parsedJson.pool_id,
-			createEvent.parsedJson.lp_type,
-			createEvent.parsedJson
-		);
-	};
-
-	private static poolObjectFromPoolFieldsOnChain = (
-		objectId: ObjectId,
-		lpCoinType: CoinType,
-		fields: PoolFieldsOnChain
-	): PoolObject => {
-		const coins: PoolCoins = fields.type_names.reduce((acc, cur, index) => {
-			return {
-				...acc,
-				["0x" + cur]: {
-					weight: BigInt(fields.weights[index]),
-					balance: BigInt(fields.balances[index]),
-					tradeFeeIn: BigInt(fields.fees_swap_in[index]),
-					tradeFeeOut: BigInt(fields.fees_swap_out[index]),
-					depositFee: BigInt(fields.fees_deposit[index]),
-					withdrawFee: BigInt(fields.fees_withdraw[index]),
-				},
-			};
-		}, {} as PoolCoins);
 
 		return {
 			objectId,
 			lpCoinType: Pools.normalizeLpCoinType(lpCoinType),
-			name: fields.name,
-			creator: fields.creator,
-			lpCoinSupply: BigInt(fields.lp_supply.fields.value),
-			flatness: BigInt(fields.flatness),
+			name: poolFieldsOnChain.name,
+			creator: poolFieldsOnChain.creator,
+			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
+			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
+			flatness: BigInt(poolFieldsOnChain.flatness),
 			coins,
 		};
 	};
