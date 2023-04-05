@@ -1,5 +1,6 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import {
+	AnyObjectType,
 	Balance,
 	BigIntAsString,
 	CoinType,
@@ -14,8 +15,12 @@ import {
 export interface PoolFieldsOnChain {
 	name: PoolName;
 	creator: SuiAddress;
-	// lp_supply:
-	// illiquid_lp_supply:
+	lp_supply: {
+		type: AnyObjectType;
+		fields: {
+			value: BigIntAsString;
+		};
+	};
 	type_names: CoinType[];
 	balances: BigIntAsString[];
 	weights: BigIntAsString[];

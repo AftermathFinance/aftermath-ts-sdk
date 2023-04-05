@@ -24,6 +24,7 @@ import {
 } from "./poolsApiCastingTypes";
 import { Pools } from "../pools";
 import { CoinType } from "../../coin/coinTypes";
+import { Coin } from "../../coin";
 
 export class PoolsApiCasting {
 	/////////////////////////////////////////////////////////////////////
@@ -36,9 +37,12 @@ export class PoolsApiCasting {
 			suiObject
 		) as PoolFieldsOnChain;
 
+		const lpCoinType = new Coin(poolFieldsOnChain.lp_supply.type)
+			.innerCoinType;
+
 		return this.poolObjectFromPoolFieldsOnChain(
 			objectId,
-			LP_TYPE,
+			lpCoinType,
 			poolFieldsOnChain
 		);
 	};
@@ -77,8 +81,7 @@ export class PoolsApiCasting {
 			lpCoinType: Pools.normalizeLpCoinType(lpCoinType),
 			name: fields.name,
 			creator: fields.creator,
-			// lpCoinSupply: ,
-			// illiquidLpCoinSupply: ,
+			lpCoinSupply: BigInt(fields.lp_supply.fields.value),
 			flatness: BigInt(fields.flatness),
 			coins,
 		};
