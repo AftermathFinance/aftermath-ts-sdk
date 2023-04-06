@@ -571,7 +571,7 @@ export class RouterGraph {
 					tradeFee: pool.pool.coins[path.coinIn.type].tradeFeeIn,
 				},
 				coinOut: {
-					...path.coinIn,
+					...path.coinOut,
 					amount: path.coinOut.amount + coinOutAmount,
 					tradeFee: pool.pool.coins[path.coinOut.type].tradeFeeOut,
 				},

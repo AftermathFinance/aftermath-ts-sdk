@@ -104,14 +104,14 @@ export class RouterApi {
 				amounts: [tx.pure(route.coinIn.amount)],
 			});
 
-			let coinOut = splitCoinArg;
+			let coinIn = splitCoinArg;
 
 			for (const path of route.paths) {
-				const { tx: newTx, coinOut: newCoinOut } =
+				const { tx: newTx, coinOut: newCoinIn } =
 					this.Provider.Pools().Helpers.addTradeCommandWithCoinOutToTransaction(
 						tx,
 						path.poolObjectId,
-						coinOut,
+						coinIn,
 						path.coinIn.type,
 						path.coinOut.amount,
 						path.coinOut.type,
@@ -119,7 +119,7 @@ export class RouterApi {
 						slippage
 					);
 				tx = newTx;
-				coinOut = newCoinOut;
+				coinIn = newCoinIn;
 			}
 		}
 
