@@ -403,7 +403,8 @@ export class PoolsApiHelpers {
 				fromCoinAmount
 			);
 
-		const amountOut = CmmmCalculations.calcOutGivenIn();
+		// PRODUCTION: do calc here !
+		const amountOut = BigInt(0);
 
 		const finalTx = this.addTradeCommandToTransaction(
 			txWithCoinWithAmount,
@@ -437,7 +438,8 @@ export class PoolsApiHelpers {
 				coinAmounts
 			);
 
-		const expectedLpRatio = CmmmCalculations.
+		// PRODUCTION: do calc here !
+		const expectedLpRatio = BigInt(0);
 
 		const finalTx = this.addMultiCoinDepositCommandToTransaction(
 			txWithCoinsWithAmount,
@@ -462,7 +464,8 @@ export class PoolsApiHelpers {
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		const lpCoinAmount = CmmmCalculations.
+		// PRODUCTION: do calc here !
+		const lpCoinAmount = BigInt(0);
 
 		const { coinArgument: lpCoinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
