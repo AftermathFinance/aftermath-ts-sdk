@@ -48,6 +48,7 @@ export interface PoolsAddresses {
 		cmmm: SuiAddress;
 	};
 	objects: {
+		poolRegistry: ObjectId;
 		protocolFeeVault: ObjectId;
 		treasury: ObjectId;
 		insuranceFund: ObjectId;

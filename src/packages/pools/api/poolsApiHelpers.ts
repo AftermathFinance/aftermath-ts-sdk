@@ -40,6 +40,7 @@ export class PoolsApiHelpers {
 			swap: "swap",
 			math: "math",
 			events: "events",
+			poolRegistry: "pool_registry",
 		},
 		functions: {
 			swap: {
@@ -122,89 +123,26 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Move Calls
+	//// Dev Inspects
 	/////////////////////////////////////////////////////////////////////
 
-	// public spotPriceDevInspectTransaction = (
-	// 	poolId: ObjectId,
-	// 	coinInType: CoinType,
-	// 	coinOutType: CoinType,
-	// 	lpCoinType: CoinType
-	// ): Transaction => {
-	// 	const tx = new Transaction();
+	public poolObjectIdForLpCoinTypeDevInspectTransaction = (
+		lpCoinType: CoinType
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
 
-	// 	tx.moveCall({
-	// 		target: AftermathApi.helpers.transactions.createTransactionTarget(
-	// 			this.addresses.packages.cmmm,
-	// 			PoolsApiHelpers.constants.moduleNames.math,
-	// 			"calc_spot_price"
-	// 		),
-	// 		typeArguments: [lpCoinType, coinInType, coinOutType],
-	// 		arguments: [tx.object(poolId)],
-	// 	});
+		tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.cmmm,
+				PoolsApiHelpers.constants.moduleNames.poolRegistry,
+				"lp_type_to_pool_id"
+			),
+			typeArguments: [lpCoinType],
+			arguments: [tx.object(this.addresses.objects.poolRegistry)],
+		});
 
-	// 	return tx;
-	// };
-
-	// public tradeAmountOutDevInspectTransaction = (
-	// 	poolId: ObjectId,
-	// 	coinInType: CoinType,
-	// 	coinOutType: CoinType,
-	// 	lpCoinType: CoinType,
-	// 	coinInAmount: bigint
-	// ): Transaction => {
-	// 	const tx = new Transaction();
-
-	// 	tx.moveCall({
-	// 		target: AftermathApi.helpers.transactions.createTransactionTarget(
-	// 			this.addresses.packages.cmmm,
-	// 			PoolsApiHelpers.constants.moduleNames.math,
-	// 			"calc_swap_amount_out"
-	// 		),
-	// 		typeArguments: [lpCoinType, coinInType, coinOutType],
-	// 		arguments: [tx.object(poolId), tx.pure(coinInAmount.toString())],
-	// 	});
-
-	// 	return tx;
-	// };
-
-	// public depositLpMintAmountDevInspectTransaction = (
-	// 	poolId: ObjectId,
-	// 	lpCoinType: CoinType,
-	// 	coinTypes: CoinType[],
-	// 	coinAmounts: Balance[]
-	// ): Transaction => {
-	// 	return {
-	// 		 this.addresses.packages.cmmm,
-	// 		 PoolsApiHelpers.constants.moduleNames.math,
-	// 		 "dev_inspect_calc_deposit_lp_mint_amount_u8",
-	// 		typeArguments: [lpCoinType],
-	// 		arguments: [
-	// 			poolId,
-	// 			CoinApiHelpers.formatCoinTypesForMoveCall(coinTypes),
-	// 			coinAmounts.map((amount) => amount.toString()),
-	// 		],
-	// 	};
-	// };
-
-	// public withdrawAmountOutDevInspectTransaction = (
-	// 	poolId: ObjectId,
-	// 	lpCoinType: CoinType,
-	// 	coinTypes: CoinType[],
-	// 	coinAmounts: Balance[]
-	// ): Transaction => {
-	// 	return {
-	// 		 this.addresses.packages.cmmm,
-	// 		 PoolsApiHelpers.constants.moduleNames.math,
-	// 		 "dev_inspect_calc_withdraw_amount_out_u8",
-	// 		typeArguments: [lpCoinType],
-	// 		arguments: [
-	// 			poolId,
-	// 			CoinApiHelpers.formatCoinTypesForMoveCall(coinTypes),
-	// 			coinAmounts.map((amount) => amount.toString()),
-	// 		],
-	// 	};
-	// };
+		return tx;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Creation

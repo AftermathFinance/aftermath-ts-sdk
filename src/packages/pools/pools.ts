@@ -1,6 +1,7 @@
 import { ObjectId } from "@mysten/sui.js";
 import {
 	ApiEventsBody,
+	ApiPoolObjectIdForLpCoinTypeBody,
 	Balance,
 	CoinType,
 	EventsWithCursor,
@@ -95,15 +96,20 @@ export class Pools extends Caller {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Helpers
+	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public static findPoolForLpCoin = (lpCoin: CoinType, pools: Pool[]) =>
-		pools.find((pool) => {
-			return pool.pool.lpCoinType.includes(
-				new Coin(new Coin(lpCoin).innerCoinType).coinTypeSymbol
-			);
-		});
+	public getPoolObjectIdForLpCoinType = (
+		inputs: ApiPoolObjectIdForLpCoinTypeBody
+	) => {
+		if (!Pools.isLpCoin(inputs.lpCoinType))
+			throw Error("invalid LP coin type");
+
+		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
+			"poolObjectId",
+			inputs
+		);
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Type Checking

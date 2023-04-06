@@ -23,6 +23,7 @@ import { Pools } from "../pools";
 import { Casting } from "../../../general/utils/casting";
 import { Pool } from "..";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { Aftermath } from "../../../general/providers";
 
 export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
@@ -236,6 +237,22 @@ export class PoolsApi {
 	};
 
 	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchPoolObjectIdForLpCoinTypeDevInspectTransaction = async (
+		lpCoinType: CoinType
+	): Promise<ObjectId> => {
+		const tx =
+			this.Helpers.poolObjectIdForLpCoinTypeDevInspectTransaction(
+				lpCoinType
+			);
+		const bytes =
+			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+		return Casting.stringFromBytes(bytes);
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Stats
 	/////////////////////////////////////////////////////////////////////
 
@@ -301,24 +318,27 @@ export class PoolsApi {
 	// TODO: make this faster this is slow as shit when LP balances are involved...
 	// (so much fetching!)
 	// TODO: rename this function and/or move it ?
-	public fetchLpCoinsToPrice = async (pools: Pool[], lpCoins: CoinType[]) => {
-		const filteredlpCoins = lpCoins.filter((lpCoin) =>
-			Pools.isLpCoin(lpCoin)
+	public fetchLpCoinsToPrice = async (
+		provider: Aftermath,
+		lpCoinTypes: CoinType[]
+	) => {
+		const lpCoins = lpCoinTypes.filter(Pools.isLpCoin);
+		const lpCoinPoolObjectIds = await Promise.all(
+			lpCoins.map((lpCoinType) =>
+				provider.Pools().getPoolObjectIdForLpCoinType({ lpCoinType })
+			)
 		);
+		const lpCoinPools = await provider
+			.Pools()
+			.getPools(lpCoinPoolObjectIds);
 
 		const poolStats = await Promise.all(
-			filteredlpCoins.map((lpCoin) => {
-				const lpPool = Pools.findPoolForLpCoin(lpCoin, pools);
-				if (!lpPool)
-					throw Error("no pool found for given lp coin type");
-
-				return lpPool.getStats();
-			})
+			lpCoinPools.map((lpPool) => lpPool.getStats())
 		);
 
 		let lpCoinsToPrice: CoinsToPrice = {};
 
-		for (const [index, lpCoin] of filteredlpCoins.entries()) {
+		for (const [index, lpCoin] of lpCoins.entries()) {
 			const stats = poolStats[index];
 			lpCoinsToPrice = {
 				...lpCoinsToPrice,
