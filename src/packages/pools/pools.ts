@@ -1,4 +1,4 @@
-import { EventId, ObjectId } from "@mysten/sui.js";
+import { ObjectId } from "@mysten/sui.js";
 import {
 	ApiEventsBody,
 	Balance,
@@ -68,76 +68,35 @@ export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getDepositEvents(
-		cursor?: EventId,
-		limit?: number
+		inputs: ApiEventsBody
 	): Promise<EventsWithCursor<PoolDepositEvent>> {
 		return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
 			"events/deposit",
-			{
-				cursor,
-				limit,
-			}
+			inputs
 		);
 	}
 
 	public async getWithdrawEvents(
-		cursor?: EventId,
-		limit?: number
+		inputs: ApiEventsBody
 	): Promise<EventsWithCursor<PoolWithdrawEvent>> {
 		return this.fetchApi<
 			EventsWithCursor<PoolWithdrawEvent>,
 			ApiEventsBody
-		>("events/withdraw", {
-			cursor,
-			limit,
-		});
+		>("events/withdraw", inputs);
 	}
 
 	public async getTradeEvents(
-		cursor?: EventId,
-		limit?: number
+		inputs: ApiEventsBody
 	): Promise<EventsWithCursor<PoolTradeEvent>> {
 		return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
 			"events/trade",
-			{
-				cursor,
-				limit,
-			}
+			inputs
 		);
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
-
-	public static sortCoinsByWeights = (
-		coins: CoinType[],
-		weights: PoolWeight[]
-	) => {
-		if (coins.length !== weights.length)
-			throw new Error("coins and weights arrays are different lengths");
-		const sortedCoinsWithWeights = weights
-			.map((weight, index) => {
-				return {
-					coin: coins[index],
-					weight: weight,
-				};
-			})
-			.sort((a, b) =>
-				Pools.coinWeightWithDecimals(a.weight) <
-				Pools.coinWeightWithDecimals(b.weight)
-					? 1
-					: Pools.coinWeightWithDecimals(a.weight) >
-					  Pools.coinWeightWithDecimals(b.weight)
-					? -1
-					: 0
-			);
-
-		return {
-			coins: sortedCoinsWithWeights.map((coin) => coin.coin),
-			weights: sortedCoinsWithWeights.map((coin) => coin.weight),
-		};
-	};
 
 	public static findPoolForLpCoin = (lpCoin: CoinType, pools: Pool[]) =>
 		pools.find((pool) => {

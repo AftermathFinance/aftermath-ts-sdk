@@ -32,33 +32,21 @@ export class Router extends Caller {
 	}
 
 	public async getCompleteTradeRouteGivenAmountIn(
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType
+		inputs: ApiRouterCompleteTradeRouteBody
 	): Promise<RouterCompleteTradeRoute> {
 		return this.fetchApi<
 			RouterCompleteTradeRoute,
 			ApiRouterCompleteTradeRouteBody
-		>("tradeRoute", {
-			coinIn,
-			coinInAmount,
-			coinOut,
-		});
+		>("tradeRoute", inputs);
 	}
 
 	public async getCompleteTradeRouteGivenAmountOut(
-		coinIn: CoinType,
-		coinOut: CoinType,
-		coinOutAmount: Balance
+		inputs: ApiRouterCompleteTradeRouteBody
 	): Promise<RouterCompleteTradeRoute> {
 		return this.fetchApi<
 			RouterCompleteTradeRoute,
 			ApiRouterCompleteTradeRouteBody
-		>("tradeRoute", {
-			coinIn,
-			coinOut,
-			coinOutAmount,
-		});
+		>("tradeRoute", inputs);
 	}
 
 	/////////////////////////////////////////////////////////////////////

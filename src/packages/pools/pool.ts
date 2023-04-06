@@ -1,4 +1,4 @@
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -12,8 +12,11 @@ import {
 	PoolStats,
 	SuiNetwork,
 	SerializedTransaction,
-	PoolCoins,
-	Slippage,
+	ApiEventsBody,
+	EventsWithCursor,
+	PoolDepositEvent,
+	PoolWithdrawEvent,
+	PoolTradeEvent,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -51,10 +54,10 @@ export class Pool extends Caller {
 		this.stats = stats;
 	}
 
-	public async getVolume(
-		timeframe: PoolVolumeDataTimeframeKey
-	): Promise<PoolDataPoint[]> {
-		return this.fetchApi(`volume/${timeframe}`);
+	public async getVolume(inputs: {
+		timeframe: PoolVolumeDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> {
+		return this.fetchApi(`volume/${inputs.timeframe}`);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -62,58 +65,34 @@ export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getDepositTransaction(
-		walletAddress: SuiAddress,
-		depositCoinAmounts: CoinsToBalance,
-		slippage: Slippage
+		inputs: ApiPoolDepositBody
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolDepositBody>(
 				"transactions/deposit",
-				{
-					walletAddress,
-					depositCoinAmounts,
-					slippage,
-				}
+				inputs
 			)
 		);
 	}
 
 	public async getWithdrawTransaction(
-		walletAddress: SuiAddress,
-		withdrawCoinAmounts: CoinsToBalance,
-		withdrawLpTotal: Balance,
-		slippage: Slippage
+		inputs: ApiPoolWithdrawBody
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolWithdrawBody>(
 				"transactions/withdraw",
-				{
-					walletAddress,
-					withdrawCoinAmounts,
-					withdrawLpTotal,
-					slippage,
-				}
+				inputs
 			)
 		);
 	}
 
 	public async getTradeTransaction(
-		walletAddress: SuiAddress,
-		fromCoin: CoinType,
-		fromCoinAmount: Balance,
-		toCoin: CoinType,
-		slippage: Slippage
+		inputs: ApiPoolTradeBody
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolTradeBody>(
 				"transactions/trade",
-				{
-					walletAddress,
-					fromCoin,
-					fromCoinAmount,
-					toCoin,
-					slippage,
-				}
+				inputs
 			)
 		);
 	}
@@ -122,88 +101,79 @@ export class Pool extends Caller {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	// public async getDepositEvents(
-	// 	cursor?: EventId,
-	// 	limit?: number
-	// ): Promise<EventsWithCursor<PoolDepositEvent>> {
-	// 	return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
-	// 		"events/deposit",
-	// 		{
-	// 			cursor,
-	// 			limit,
-	// 		}
-	// 	);
-	// }
+	public async getDepositEvents(
+		inputs: ApiEventsBody
+	): Promise<EventsWithCursor<PoolDepositEvent>> {
+		return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
+			"events/deposit",
+			inputs
+		);
+	}
 
-	// public async getWithdrawEvents(
-	// 	cursor?: EventId,
-	// 	limit?: number
-	// ): Promise<EventsWithCursor<PoolWithdrawEvent>> {
-	// 	return this.fetchApi<
-	// 		EventsWithCursor<PoolWithdrawEvent>,
-	// 		ApiEventsBody
-	// 	>("events/withdraw", {
-	// 		cursor,
-	// 		limit,
-	// 	});
-	// }
+	public async getWithdrawEvents(
+		inputs: ApiEventsBody
+	): Promise<EventsWithCursor<PoolWithdrawEvent>> {
+		return this.fetchApi<
+			EventsWithCursor<PoolWithdrawEvent>,
+			ApiEventsBody
+		>("events/withdraw", inputs);
+	}
 
-	// public async getTradeEvents(
-	// 	cursor?: EventId,
-	// 	limit?: number
-	// ): Promise<EventsWithCursor<PoolTradeEvent>> {
-	// 	return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
-	// 		"events/trade",
-	// 		{
-	// 			cursor,
-	// 			limit,
-	// 		}
-	// 	);
-	// }
+	public async getTradeEvents(
+		inputs: ApiEventsBody
+	): Promise<EventsWithCursor<PoolTradeEvent>> {
+		return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
+			"events/trade",
+			inputs
+		);
+	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Calculations
 	/////////////////////////////////////////////////////////////////////
 
-	public getTradeAmountOut = (
-		coinInType: CoinType,
-		coinInAmount: Balance,
-		coinOutType: CoinType
-	) => {
-		const coinIn = this.pool.coins[coinInType];
-		const coinOut = this.pool.coins[coinOutType];
+	public getTradeAmountOut = (inputs: {
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+	}) => {
+		const coinIn = this.pool.coins[inputs.coinInType];
+		const coinOut = this.pool.coins[inputs.coinOutType];
 
 		return CmmmCalculations.calcOutGivenIn(
 			coinIn.balance,
 			coinIn.weight,
 			coinOut.balance,
 			coinOut.weight,
-			coinInAmount,
-			this.pool.coins[coinInType].tradeFeeIn
+			inputs.coinInAmount,
+			this.pool.coins[inputs.coinInType].tradeFeeIn
 		);
 	};
 
-	public getTradeAmountIn = (
-		coinOutType: CoinType,
-		coinOutAmount: Balance,
-		coinInType: CoinType
-	) => {
-		const coinIn = this.pool.coins[coinInType];
-		const coinOut = this.pool.coins[coinOutType];
+	public getTradeAmountIn = (inputs: {
+		coinOutType: CoinType;
+		coinOutAmount: Balance;
+		coinInType: CoinType;
+	}) => {
+		const coinIn = this.pool.coins[inputs.coinInType];
+		const coinOut = this.pool.coins[inputs.coinOutType];
 
 		return CmmmCalculations.calcInGivenOut(
 			coinIn.balance,
 			coinIn.weight,
 			coinOut.balance,
 			coinOut.weight,
-			coinOutAmount,
-			this.pool.coins[coinInType].tradeFeeIn
+			inputs.coinOutAmount,
+			this.pool.coins[inputs.coinInType].tradeFeeIn
 		);
 	};
 
-	public getSpotPrice = (coinInType: CoinType, coinOutType: CoinType) => {
-		const coinIn = this.pool.coins[coinInType];
-		const coinOut = this.pool.coins[coinOutType];
+	public getSpotPrice = (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}) => {
+		const coinIn = this.pool.coins[inputs.coinInType];
+		const coinOut = this.pool.coins[inputs.coinOutType];
 
 		return CmmmCalculations.calcSpotPrice(
 			coinIn.balance,
@@ -213,7 +183,9 @@ export class Pool extends Caller {
 		);
 	};
 
-	public getDepositLpMintAmount = (coinsToBalance: CoinsToBalance) => {
+	public getDepositLpMintAmount = (inputs: {
+		coinsToBalance: CoinsToBalance;
+	}) => {
 		const pool = this.pool;
 		const poolCoins = pool.coins;
 
@@ -226,7 +198,7 @@ export class Pool extends Caller {
 
 		const depositCoinBalances = Object.entries(poolCoins).map(
 			([coinType, poolCoin]) => {
-				const foundBalance = Object.entries(coinsToBalance).find(
+				const foundBalance = Object.entries(inputs.coinsToBalance).find(
 					(coinAndBalance) => coinAndBalance[0] === coinType
 				)?.[1];
 				return foundBalance ?? BigInt(0);

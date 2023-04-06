@@ -1,5 +1,4 @@
 import {
-	ObjectId,
 	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
@@ -8,16 +7,12 @@ import {
 	PoolCoins,
 	PoolDepositEvent,
 	PoolObject,
-	PoolSingleDepositEvent,
-	PoolSingleWithdrawEvent,
 	PoolTradeEvent,
 	PoolWithdrawEvent,
 } from "../poolsTypes";
 import {
 	PoolDepositEventOnChain,
 	PoolFieldsOnChain,
-	PoolSingleDepositEventOnChain,
-	PoolSingleWithdrawEventOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
@@ -98,21 +93,6 @@ export class PoolsApiCasting {
 		};
 	};
 
-	public static poolSingleDepositEventFromOnChain = (
-		singleDepositEventFromFetched: PoolSingleDepositEventOnChain
-	): PoolSingleDepositEvent => {
-		const fields = singleDepositEventFromFetched.parsedJson;
-		return {
-			poolId: fields.pool_id,
-			depositor: fields.issuer,
-			type: "0x" + fields.type,
-			amount: fields.value,
-			lpMinted: fields.lp_coins_minted,
-			timestamp: singleDepositEventFromFetched.timestampMs,
-			txnDigest: singleDepositEventFromFetched.id.txDigest,
-		};
-	};
-
 	public static poolDepositEventFromOnChain = (
 		depositEventFromFetched: PoolDepositEventOnChain
 	): PoolDepositEvent => {
@@ -126,21 +106,6 @@ export class PoolsApiCasting {
 			lpMinted: fields.lp_coins_minted,
 			timestamp: depositEventFromFetched.timestampMs,
 			txnDigest: depositEventFromFetched.id.txDigest,
-		};
-	};
-
-	public static poolSingleWithdrawEventFromOnChain = (
-		singleWithdrawEventFromFetched: PoolSingleWithdrawEventOnChain
-	): PoolSingleWithdrawEvent => {
-		const fields = singleWithdrawEventFromFetched.parsedJson;
-		return {
-			poolId: fields.pool_id,
-			withdrawer: fields.issuer,
-			type: "0x" + fields.type,
-			amount: fields.value,
-			lpBurned: fields.lp_coins_burned,
-			timestamp: singleWithdrawEventFromFetched.timestampMs,
-			txnDigest: singleWithdrawEventFromFetched.id.txDigest,
 		};
 	};
 

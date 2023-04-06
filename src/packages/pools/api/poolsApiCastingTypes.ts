@@ -49,28 +49,12 @@ export type PoolTradeEventOnChain = EventOnChain<{
 	value_out: Balance;
 }>;
 
-export type PoolSingleDepositEventOnChain = EventOnChain<{
-	pool_id: ObjectId;
-	issuer: SuiAddress;
-	type: CoinType;
-	value: Balance;
-	lp_coins_minted: Balance;
-}>;
-
 export type PoolDepositEventOnChain = EventOnChain<{
 	pool_id: ObjectId;
 	issuer: SuiAddress;
 	types: CoinType[];
 	deposits: Balance[];
 	lp_coins_minted: Balance;
-}>;
-
-export type PoolSingleWithdrawEventOnChain = EventOnChain<{
-	pool_id: ObjectId;
-	issuer: SuiAddress;
-	type: CoinType;
-	value: Balance;
-	lp_coins_burned: Balance;
 }>;
 
 export type PoolWithdrawEventOnChain = EventOnChain<{

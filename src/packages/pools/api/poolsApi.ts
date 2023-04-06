@@ -48,49 +48,82 @@ export class PoolsApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchTradeEvents = async (cursor?: EventId, limit?: number) =>
+	public fetchTradeEvents = async (
+		cursor?: EventId,
+		limit?: number,
+		poolObjectId?: ObjectId
+	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolTradeEventOnChain,
 			PoolTradeEvent
 		>(
-			{
-				MoveEventType: this.Helpers.eventTypes.trade,
-			},
-			// All: [
-			// 	{ MoveEventType: this.Helpers.eventTypes.trade },
-			// 	{
-			// 		MoveEventField: {
-			// 			path: "pool_id",
-			// 			value: poolObjectId,
-			// 		},
-			// 	},
-			// ],
+			poolObjectId
+				? {
+						All: [
+							{ MoveEventType: this.Helpers.eventTypes.trade },
+							{
+								MoveEventField: {
+									path: "pool_id",
+									value: poolObjectId,
+								},
+							},
+						],
+				  }
+				: { MoveEventType: this.Helpers.eventTypes.trade },
 			Casting.pools.poolTradeEventFromOnChain,
 			cursor,
 			limit
 		);
 
-	public fetchDepositEvents = async (cursor?: EventId, limit?: number) =>
+	public fetchDepositEvents = async (
+		cursor?: EventId,
+		limit?: number,
+		poolObjectId?: ObjectId
+	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
 			PoolDepositEvent
 		>(
-			{
-				MoveEventType: this.Helpers.eventTypes.deposit,
-			},
+			poolObjectId
+				? {
+						All: [
+							{ MoveEventType: this.Helpers.eventTypes.deposit },
+							{
+								MoveEventField: {
+									path: "pool_id",
+									value: poolObjectId,
+								},
+							},
+						],
+				  }
+				: { MoveEventType: this.Helpers.eventTypes.deposit },
 			Casting.pools.poolDepositEventFromOnChain,
 			cursor,
 			limit
 		);
 
-	public fetchWithdrawEvents = async (cursor?: EventId, limit?: number) =>
+	public fetchWithdrawEvents = async (
+		cursor?: EventId,
+		limit?: number,
+		poolObjectId?: ObjectId
+	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolWithdrawEventOnChain,
 			PoolWithdrawEvent
 		>(
-			{
-				MoveEventType: this.Helpers.eventTypes.withdraw,
-			},
+			poolObjectId
+				? {
+						All: [
+							{ MoveEventType: this.Helpers.eventTypes.withdraw },
+							{
+								MoveEventField: {
+									path: "pool_id",
+									value: poolObjectId,
+								},
+							},
+						],
+				  }
+				: { MoveEventType: this.Helpers.eventTypes.withdraw },
 			Casting.pools.poolWithdrawEventFromOnChain,
 			cursor,
 			limit
