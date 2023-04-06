@@ -538,21 +538,21 @@ export class RouterGraph {
 
 		for (const path of originalRoute.paths) {
 			const pool = currentPools[path.poolObjectId];
-			const spotPrice = pool.getSpotPrice(
-				path.coinIn.type,
-				path.coinOut.type
-			);
+			const spotPrice = pool.getSpotPrice({
+				coinInType: path.coinIn.type,
+				coinOutType: path.coinOut.type,
+			});
 			const coinOutAmount = isGivenAmountOut
-				? pool.getTradeAmountIn(
-						path.coinOut.type,
-						currentCoinInAmount,
-						path.coinIn.type
-				  )
-				: pool.getTradeAmountOut(
-						path.coinIn.type,
-						currentCoinInAmount,
-						path.coinOut.type
-				  );
+				? pool.getTradeAmountIn({
+						coinOutType: path.coinOut.type,
+						coinOutAmount: currentCoinInAmount,
+						coinInType: path.coinIn.type,
+				  })
+				: pool.getTradeAmountOut({
+						coinInType: path.coinIn.type,
+						coinInAmount: currentCoinInAmount,
+						coinOutType: path.coinOut.type,
+				  });
 
 			const updatedPool = this.getUpdatedPoolAfterTrade(
 				pool,

@@ -65,15 +65,11 @@ const runRoute = async (
 
 	const completeRoute = isGivenAmountOut
 		? await router.getCompleteTradeRouteGivenAmountOut(
-				coinIn,
-				coinOut,
-				coinInAmount
+				{ coinIn, coinOut, coinInAmount }
 				// maxRouteLength
 		  )
 		: await router.getCompleteTradeRouteGivenAmountIn(
-				coinIn,
-				coinInAmount,
-				coinOut
+				{ coinIn, coinInAmount, coinOut }
 				// maxRouteLength
 		  );
 
