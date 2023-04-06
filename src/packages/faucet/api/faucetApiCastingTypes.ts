@@ -12,3 +12,8 @@ export type FaucetMintCoinEventOnChain = EventOnChain<{
 	type: CoinType;
 	user: SuiAddress;
 }>;
+
+export type FaucetAddCoinEventOnChain = EventOnChain<{
+	symbol: string;
+	type: CoinType;
+}>;

@@ -8,7 +8,6 @@ import {
 	FaucetAddresses,
 	GasBudget,
 } from "../../../types";
-import { Sui } from "../../sui/sui";
 
 export class FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -33,7 +32,8 @@ export class FaucetApiHelpers {
 			},
 		},
 		eventNames: {
-			mintedCoin: "MintedCoin",
+			mintCoin: "mintCoin",
+			addCoin: "addCoinEvent",
 		},
 	};
 
@@ -48,6 +48,7 @@ export class FaucetApiHelpers {
 	};
 	public readonly eventTypes: {
 		mintCoin: AnyObjectType;
+		addCoin: AnyObjectType;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -71,6 +72,7 @@ export class FaucetApiHelpers {
 
 		this.eventTypes = {
 			mintCoin: this.mintCoinEventType(),
+			addCoin: this.addCoinEventType(),
 		};
 	}
 
@@ -150,32 +152,26 @@ export class FaucetApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Move Calls
-	/////////////////////////////////////////////////////////////////////
-
-	// public faucetSupportedCoinsMoveCall = (): Transaction => {
-	// 	return {
-	// 		packageObjectId: this.addresses.packages.faucet,
-	// 		module: FaucetApiHelpers.constants.faucetRegistryModuleName,
-	// 		function: "typenames",
-	// 		typeArguments: [],
-	// 		arguments: [this.addresses.objects.faucetRegistry],
-	// 	};
-	// };
-
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
+	//// Protected Methods
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
 	//// Event Types
 	/////////////////////////////////////////////////////////////////////
 
-	private mintCoinEventType = () => {
+	protected mintCoinEventType = () => {
 		return EventsApiHelpers.createEventType(
-			Sui.constants.addresses.suiPackageId,
 			this.addresses.packages.faucet,
-			FaucetApiHelpers.constants.eventNames.mintedCoin
+			FaucetApiHelpers.constants.faucetModuleName,
+			FaucetApiHelpers.constants.eventNames.mintCoin
+		);
+	};
+
+	protected addCoinEventType = () => {
+		return EventsApiHelpers.createEventType(
+			this.addresses.packages.faucet,
+			FaucetApiHelpers.constants.faucetModuleName,
+			FaucetApiHelpers.constants.eventNames.addCoin
 		);
 	};
 }

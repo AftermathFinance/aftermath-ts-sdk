@@ -1,5 +1,8 @@
-import { FaucetMintCoinEventOnChain } from "./faucetApiCastingTypes";
-import { FaucetMintCoinEvent } from "../faucetTypes";
+import {
+	FaucetAddCoinEventOnChain,
+	FaucetMintCoinEventOnChain,
+} from "./faucetApiCastingTypes";
+import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
 
 export class FaucetApiCasting {
 	/////////////////////////////////////////////////////////////////////
@@ -14,6 +17,18 @@ export class FaucetApiCasting {
 			minter: fields.user,
 			coinMinted: fields.type,
 			balanceMinted: BigInt(fields.amount),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+		};
+	};
+
+	public static faucetAddCoinEventFromOnChain = (
+		eventOnChain: FaucetAddCoinEventOnChain
+	): FaucetAddCoinEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			symbol: fields.symbol,
+			type: fields.type,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 		};
