@@ -3,6 +3,8 @@ import {
 	TransactionBlock,
 	SuiAddress,
 	TransactionArgument,
+	OPTION,
+	Option,
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -236,6 +238,7 @@ export class PoolsApiHelpers {
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure({ None: true }, OPTION),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -274,6 +277,7 @@ export class PoolsApiHelpers {
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure({ None: true }, OPTION),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -319,6 +323,7 @@ export class PoolsApiHelpers {
 				),
 				tx.pure(expectedLpRatio.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure({ None: true }, OPTION),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -355,6 +360,7 @@ export class PoolsApiHelpers {
 				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
 				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
 				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure({ None: true }, OPTION),
 			],
 		});
 		tx.setGasBudget(gasBudget);
