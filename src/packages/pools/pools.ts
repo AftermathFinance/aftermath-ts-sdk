@@ -137,10 +137,6 @@ export class Pools extends Caller {
 	public static normalizeSlippage = (slippage: Slippage) =>
 		Coin.normalizeBalance(slippage, Pools.constants.slippageDecimals);
 
-	public static normalizeLpCoinType = (lpCoinType: CoinType) => {
-		return `0x${lpCoinType.replaceAll("<", "<0x")}`;
-	};
-
 	/////////////////////////////////////////////////////////////////////
 	//// Display
 	/////////////////////////////////////////////////////////////////////

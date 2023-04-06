@@ -54,17 +54,13 @@ export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getTransactionForCompleteTradeRoute(
-		walletAddress: SuiAddress,
-		completeRoute: RouterCompleteTradeRoute
+		inputs: ApiRouterTransactionForCompleteTradeRouteBody
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiRouterTransactionForCompleteTradeRouteBody
-			>("transactions/trade", {
-				walletAddress,
-				completeRoute,
-			})
+			>("transactions/trade", inputs)
 		);
 	}
 }

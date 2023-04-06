@@ -63,7 +63,7 @@ export class PoolsApiCasting {
 
 		return {
 			objectId,
-			lpCoinType: Pools.normalizeLpCoinType(lpCoinType),
+			lpCoinType: lpCoinType,
 			name: poolFieldsOnChain.name,
 			creator: poolFieldsOnChain.creator,
 			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),

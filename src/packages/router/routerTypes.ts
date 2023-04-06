@@ -51,4 +51,5 @@ export type ApiRouterCompleteTradeRouteBody = {
 export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	walletAddress: SuiAddress;
 	completeRoute: RouterCompleteTradeRoute;
+	slippage: number;
 }

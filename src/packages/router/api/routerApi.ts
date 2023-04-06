@@ -80,7 +80,7 @@ export class RouterApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getTransactionForCompleteTradeRoute(
+	public async fetchTransactionForCompleteTradeRoute(
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,
 		slippage: Slippage
