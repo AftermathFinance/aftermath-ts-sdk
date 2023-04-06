@@ -10,6 +10,7 @@ import {
 	PoolTradeEvent,
 	PoolWithdrawEvent,
 	SerializedTransaction,
+	Slippage,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import {
@@ -21,6 +22,7 @@ import {
 import { Pools } from "../pools";
 import { Casting } from "../../../general/utils/casting";
 import { Pool } from "..";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
@@ -68,24 +70,6 @@ export class PoolsApi {
 			limit
 		);
 
-	// NOTE: the below functions can be used if we want to only look at single events
-
-	// const fetchSingleDepositEvents = async (
-	// 	cursor?: EventId,
-	// 	limit?: number
-	// ) =>
-	// 	await fetchCastEventsWithCursor<
-	// 		PoolSingleDepositEventOnChain,
-	// 		PoolSingleDepositEvent
-	// 	>(
-	// 		{
-	// 			MoveEvent: `${config.indices.packages.pools}::events::SingleAssetDepositEvent`,
-	// 		},
-	// 		poolSingleDepositEventFromOnChain,
-	// 		cursor,
-	// 		limit
-	// 	);
-
 	public fetchDepositEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
@@ -98,22 +82,6 @@ export class PoolsApi {
 			cursor,
 			limit
 		);
-
-	// const fetchSingleWithdrawEvents = async (
-	// 	cursor?: EventId,
-	// 	limit?: number
-	// ) =>
-	// 	await fetchCastEventsWithCursor<
-	// 		PoolSingleWithdrawEventOnChain,
-	// 		PoolSingleWithdrawEvent
-	// 	>(
-	// 		{
-	// 			MoveEvent: `${config.indices.packages.pools}::events::SingleAssetWithdrawEvent`,
-	// 		},
-	// 		poolSingleWithdrawEventFromOnChain,
-	// 		cursor,
-	// 		limit
-	// 	);
 
 	public fetchWithdrawEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
@@ -149,7 +117,11 @@ export class PoolsApi {
 	public fetchAllPools = async () => {
 		const paginatedEvents = await this.Provider.provider.queryEvents({
 			query: {
-				MoveEventType: `${this.Helpers.addresses.packages.cmmm}::events::CreatedPoolEvent`,
+				MoveEventType: EventsApiHelpers.createEventType(
+					this.Helpers.addresses.packages.cmmm,
+					"events",
+					"CreatedPoolEvent"
+				),
 			},
 			cursor: null,
 			limit: null,
@@ -171,7 +143,8 @@ export class PoolsApi {
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
-		depositCoinsToBalance: CoinsToBalance
+		depositCoinsToBalance: CoinsToBalance,
+		slippage: Slippage
 	): Promise<SerializedTransaction> => {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
 			depositCoinsToBalance
@@ -181,7 +154,8 @@ export class PoolsApi {
 			poolObjectId,
 			poolLpType,
 			coins,
-			balances
+			balances,
+			slippage
 		);
 		return transaction.serialize();
 	};
@@ -191,7 +165,7 @@ export class PoolsApi {
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		withdrawCoinsToBalance: CoinsToBalance,
-		withdrawLpTotal: Balance
+		slippage: Slippage
 	): Promise<SerializedTransaction> => {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
 			withdrawCoinsToBalance
@@ -200,9 +174,9 @@ export class PoolsApi {
 			walletAddress,
 			poolObjectId,
 			poolLpType,
-			withdrawLpTotal,
 			coins,
-			balances
+			balances,
+			slippage
 		);
 		return transaction.serialize();
 	};
@@ -213,7 +187,8 @@ export class PoolsApi {
 		poolLpType: CoinType,
 		fromCoin: CoinType,
 		fromCoinBalance: Balance,
-		toCoinType: CoinType
+		toCoinType: CoinType,
+		slippage: Slippage
 	): Promise<SerializedTransaction> => {
 		const transaction = await this.Helpers.fetchBuildTradeTransaction(
 			walletAddress,
@@ -221,7 +196,8 @@ export class PoolsApi {
 			poolLpType,
 			fromCoin,
 			fromCoinBalance,
-			toCoinType
+			toCoinType,
+			slippage
 		);
 		return transaction.serialize();
 	};

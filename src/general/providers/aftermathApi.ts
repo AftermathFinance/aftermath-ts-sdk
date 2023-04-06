@@ -53,7 +53,7 @@ export class AftermathApi {
 
 	public constructor(
 		public readonly provider: JsonRpcProvider,
-		public readonly addresses: Partial<ConfigAddresses>
+		public readonly addresses: ConfigAddresses
 	) {
 		this.provider = provider;
 		this.addresses = addresses;

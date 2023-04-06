@@ -13,6 +13,7 @@ import {
 	SuiNetwork,
 	SerializedTransaction,
 	PoolCoins,
+	Slippage,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -62,7 +63,8 @@ export class Pool extends Caller {
 
 	public async getDepositTransaction(
 		walletAddress: SuiAddress,
-		depositCoinAmounts: CoinsToBalance
+		depositCoinAmounts: CoinsToBalance,
+		slippage: Slippage
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolDepositBody>(
@@ -70,6 +72,7 @@ export class Pool extends Caller {
 				{
 					walletAddress,
 					depositCoinAmounts,
+					slippage,
 				}
 			)
 		);
@@ -78,7 +81,8 @@ export class Pool extends Caller {
 	public async getWithdrawTransaction(
 		walletAddress: SuiAddress,
 		withdrawCoinAmounts: CoinsToBalance,
-		withdrawLpTotal: Balance
+		withdrawLpTotal: Balance,
+		slippage: Slippage
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolWithdrawBody>(
@@ -87,6 +91,7 @@ export class Pool extends Caller {
 					walletAddress,
 					withdrawCoinAmounts,
 					withdrawLpTotal,
+					slippage,
 				}
 			)
 		);
@@ -96,7 +101,8 @@ export class Pool extends Caller {
 		walletAddress: SuiAddress,
 		fromCoin: CoinType,
 		fromCoinAmount: Balance,
-		toCoin: CoinType
+		toCoin: CoinType,
+		slippage: Slippage
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiPoolTradeBody>(
@@ -106,6 +112,7 @@ export class Pool extends Caller {
 					fromCoin,
 					fromCoinAmount,
 					toCoin,
+					slippage,
 				}
 			)
 		);

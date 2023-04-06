@@ -10,6 +10,7 @@ import {
 	PoolTradeFee,
 	PoolWeight,
 	PoolWithdrawEvent,
+	Slippage,
 	SuiNetwork,
 } from "../../types";
 import { Pool } from "./pool";
@@ -27,6 +28,7 @@ export class Pools extends Caller {
 		coinWeightDecimals: 18,
 		spotPriceDecimals: 18,
 		tradeFeeDecimals: 18,
+		slippageDecimals: 18,
 		maxTradeFee: BigInt(1000000000000000000),
 	};
 
@@ -172,6 +174,9 @@ export class Pools extends Caller {
 
 	public static lpCoinBalanceWithDecimals = (balance: Balance) =>
 		Number(balance) / 10 ** Pools.constants.lpCoinDecimals;
+
+	public static normalizeSlippage = (slippage: Slippage) =>
+		Coin.normalizeBalance(slippage, Pools.constants.slippageDecimals);
 
 	public static normalizeLpCoinType = (lpCoinType: CoinType) => {
 		return `0x${lpCoinType.replaceAll("<", "<0x")}`;

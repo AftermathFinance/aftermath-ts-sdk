@@ -20,10 +20,12 @@ import {
 	AnyObjectType,
 	PoolCoins,
 	CoinsToPrice,
+	Slippage,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
+import { CmmmCalculations } from "../utils/cmmmCalculations";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -33,6 +35,7 @@ export class PoolsApiHelpers {
 	private static readonly constants = {
 		moduleNames: {
 			pools: "interface",
+			swap: "swap",
 			math: "math",
 			events: "events",
 		},
@@ -210,9 +213,10 @@ export class PoolsApiHelpers {
 		poolId: ObjectId,
 		coinInId: ObjectId | TransactionArgument,
 		coinInType: CoinType,
-		coinOutMin: Balance,
+		expectedAmountOut: Balance,
 		coinOutType: CoinType,
 		lpCoinType: CoinType,
+		slippage: Slippage,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.swap
 			.defaultGasBudget
 	): TransactionBlock => {
@@ -221,13 +225,21 @@ export class PoolsApiHelpers {
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.cmmm,
 				PoolsApiHelpers.constants.moduleNames.pools,
-				"swap"
+				"swap_exact_in"
 			),
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
+				tx.object(
+					this.Provider.addresses.aftermath.objects.protocolFeeVault
+				),
+				tx.object(this.Provider.addresses.aftermath.objects.treasury),
+				tx.object(
+					this.Provider.addresses.aftermath.objects.insuranceFund
+				),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(coinOutMin.toString()),
+				tx.pure(expectedAmountOut.toString()),
+				tx.pure(Pools.normalizeSlippage(slippage)),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -235,33 +247,49 @@ export class PoolsApiHelpers {
 		return tx;
 	};
 
-	public addSingleCoinDepositCommandToTransaction = (
+	public addTradeCommandWithCoinOutToTransaction = (
 		tx: TransactionBlock,
 		poolId: ObjectId,
-		coinId: ObjectId,
-		coinType: CoinType,
-		lpMintMin: Balance,
+		coinInId: ObjectId | TransactionArgument,
+		coinInType: CoinType,
+		expectedAmountOut: Balance,
+		coinOutType: CoinType,
 		lpCoinType: CoinType,
-		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.deposit
+		slippage: Slippage,
+		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.swap
 			.defaultGasBudget
-	): TransactionBlock => {
-		tx.add({
+	): {
+		tx: TransactionBlock;
+		coinOut: TransactionArgument;
+	} => {
+		const [coinOut] = tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.pools,
-				"single_coin_deposit"
+				PoolsApiHelpers.constants.moduleNames.swap,
+				"swap_exact_in"
 			),
-			typeArguments: [lpCoinType, coinType],
+			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(coinId),
-				tx.pure(lpMintMin.toString()),
+				tx.object(
+					this.Provider.addresses.aftermath.objects.protocolFeeVault
+				),
+				tx.object(this.Provider.addresses.aftermath.objects.treasury),
+				tx.object(
+					this.Provider.addresses.aftermath.objects.insuranceFund
+				),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.pure(expectedAmountOut.toString()),
+				tx.pure(Pools.normalizeSlippage(slippage)),
 			],
 		});
 		tx.setGasBudget(gasBudget);
 
-		return tx;
+		return {
+			tx,
+			coinOut,
+		};
 	};
 
 	public addMultiCoinDepositCommandToTransaction = (
@@ -269,8 +297,9 @@ export class PoolsApiHelpers {
 		poolId: ObjectId,
 		coinIds: ObjectId[] | TransactionArgument[],
 		coinTypes: CoinType[],
-		lpMintMin: Balance,
+		expectedLpRatio: Balance,
 		lpCoinType: CoinType,
+		slippage: Slippage,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.deposit
 			.defaultGasBudget
 	): TransactionBlock => {
@@ -290,39 +319,18 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
+				tx.object(
+					this.Provider.addresses.aftermath.objects.protocolFeeVault
+				),
+				tx.object(this.Provider.addresses.aftermath.objects.treasury),
+				tx.object(
+					this.Provider.addresses.aftermath.objects.insuranceFund
+				),
 				...coinIds.map((coinId) =>
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
-				tx.pure(lpMintMin.toString()),
-			],
-		});
-		tx.setGasBudget(gasBudget);
-
-		return tx;
-	};
-
-	public addSingleCoinWithdrawCommandToTransaction = (
-		tx: TransactionBlock,
-		poolId: ObjectId,
-		lpCoinId: ObjectId,
-		lpCoinType: CoinType,
-		amountOutMin: Balance,
-		coinOutType: CoinType,
-		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.withdraw
-			.defaultGasBudget
-	): TransactionBlock => {
-		tx.add({
-			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.pools,
-				"single_coin_withdraw"
-			),
-			typeArguments: [lpCoinType, coinOutType],
-			arguments: [
-				tx.object(poolId),
-				tx.object(lpCoinId),
-				tx.pure(amountOutMin.toString()),
+				tx.pure(expectedLpRatio.toString()),
+				tx.pure(Pools.normalizeSlippage(slippage)),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -335,8 +343,9 @@ export class PoolsApiHelpers {
 		poolId: ObjectId,
 		lpCoinId: ObjectId | TransactionArgument,
 		lpCoinType: CoinType,
-		amountsOutMin: Balance[],
+		expectedAmountsOut: Balance[],
 		coinsOutType: CoinType[],
+		slippage: Slippage,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.withdraw
 			.defaultGasBudget
 	): TransactionBlock => {
@@ -352,10 +361,16 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinsOutType],
 			arguments: [
 				tx.object(poolId),
-				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
-				tx.pure(
-					amountsOutMin.map((amountOutMin) => amountOutMin.toString())
+				tx.object(
+					this.Provider.addresses.aftermath.objects.protocolFeeVault
 				),
+				tx.object(this.Provider.addresses.aftermath.objects.treasury),
+				tx.object(
+					this.Provider.addresses.aftermath.objects.insuranceFund
+				),
+				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
+				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
+				tx.pure(Pools.normalizeSlippage(slippage)),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -375,7 +390,8 @@ export class PoolsApiHelpers {
 		poolLpType: CoinType,
 		fromCoinType: CoinType,
 		fromCoinAmount: Balance,
-		toCoinType: CoinType
+		toCoinType: CoinType,
+		slippage: Slippage
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
@@ -387,14 +403,17 @@ export class PoolsApiHelpers {
 				fromCoinAmount
 			);
 
+		const amountOut = CmmmCalculations.calcOutGivenIn();
+
 		const finalTx = this.addTradeCommandToTransaction(
 			txWithCoinWithAmount,
 			poolObjectId,
 			coinArgument,
 			fromCoinType,
-			BigInt(0), // TODO: calc slippage amount
+			amountOut,
 			toCoinType,
-			poolLpType
+			poolLpType,
+			slippage
 		);
 
 		return finalTx;
@@ -405,7 +424,8 @@ export class PoolsApiHelpers {
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		coinTypes: CoinType[],
-		coinAmounts: Balance[]
+		coinAmounts: Balance[],
+		slippage: Slippage
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
@@ -417,13 +437,16 @@ export class PoolsApiHelpers {
 				coinAmounts
 			);
 
+		const expectedLpRatio = CmmmCalculations.
+
 		const finalTx = this.addMultiCoinDepositCommandToTransaction(
 			txWithCoinsWithAmount,
 			poolObjectId,
 			coinArguments,
 			coinTypes,
-			BigInt(0), // TODO: calc slippage amount
-			poolLpType
+			expectedLpRatio,
+			poolLpType,
+			slippage
 		);
 
 		return finalTx;
@@ -433,11 +456,13 @@ export class PoolsApiHelpers {
 		walletAddress: SuiAddress,
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
-		lpCoinAmount: Balance,
 		coinTypes: CoinType[],
-		coinAmounts: Balance[]
+		coinAmounts: Balance[],
+		slippage: Slippage
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+
+		const lpCoinAmount = CmmmCalculations.
 
 		const { coinArgument: lpCoinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
@@ -453,7 +478,8 @@ export class PoolsApiHelpers {
 			lpCoinArgument,
 			poolLpType,
 			coinAmounts, // TODO: calc slippage amount
-			coinTypes
+			coinTypes,
+			slippage
 		);
 
 		return finalTx;

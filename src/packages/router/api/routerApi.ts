@@ -7,6 +7,7 @@ import {
 	CoinType,
 	RouterCompleteTradeRoute,
 	SerializedTransaction,
+	Slippage,
 } from "../../../types";
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { Helpers } from "../../../general/utils/helpers";
@@ -81,7 +82,8 @@ export class RouterApi {
 
 	public async getTransactionForCompleteTradeRoute(
 		walletAddress: SuiAddress,
-		completeRoute: RouterCompleteTradeRoute
+		completeRoute: RouterCompleteTradeRoute,
+		slippage: Slippage
 	): Promise<SerializedTransaction> {
 		const startTx = new TransactionBlock();
 
@@ -102,16 +104,22 @@ export class RouterApi {
 				amounts: [tx.pure(route.coinIn.amount)],
 			});
 
-			for (const [index, path] of route.paths.entries()) {
-				tx = this.Provider.Pools().Helpers.addTradeCommandToTransaction(
-					tx,
-					path.poolObjectId,
-					index === 0 ? coinInArg : splitCoinArg,
-					path.coinIn.type,
-					BigInt(0), // TODO: calc slippage amount
-					path.coinOut.type,
-					path.poolLpCoinType
-				);
+			let coinOut = splitCoinArg;
+
+			for (const path of route.paths) {
+				const { tx: newTx, coinOut: newCoinOut } =
+					this.Provider.Pools().Helpers.addTradeCommandWithCoinOutToTransaction(
+						tx,
+						path.poolObjectId,
+						coinOut,
+						path.coinIn.type,
+						path.coinOut.amount,
+						path.coinOut.type,
+						path.poolLpCoinType,
+						slippage
+					);
+				tx = newTx;
+				coinOut = newCoinOut;
 			}
 		}
 

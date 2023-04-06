@@ -10,7 +10,14 @@ export type RpcEndpoint = string;
 //// All Addresses
 /////////////////////////////////////////////////////////////////////
 
-export interface ConfigAddresses {
+export type ConfigAddresses = RequiredConfigAddresses &
+	Partial<OptionalConfigAddresses>;
+
+interface RequiredConfigAddresses {
+	aftermath: AftermathAddresses;
+}
+
+interface OptionalConfigAddresses {
 	faucet: FaucetAddresses;
 	staking: StakingAddresses;
 	pools: PoolsAddresses;
@@ -21,6 +28,14 @@ export interface ConfigAddresses {
 /////////////////////////////////////////////////////////////////////
 //// Addresses By Package
 /////////////////////////////////////////////////////////////////////
+
+export interface AftermathAddresses {
+	objects: {
+		protocolFeeVault: ObjectId;
+		treasury: ObjectId;
+		insuranceFund: ObjectId;
+	};
+}
 
 export interface FaucetAddresses {
 	packages: {

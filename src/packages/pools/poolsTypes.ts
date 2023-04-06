@@ -2,6 +2,7 @@ import {
 	Balance,
 	Event,
 	Object,
+	Slippage,
 	Timestamp,
 } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
@@ -57,28 +58,12 @@ export interface PoolTradeEvent extends Event {
 	amountOut: Balance;
 }
 
-export interface PoolSingleDepositEvent extends Event {
-	poolId: ObjectId;
-	depositor: SuiAddress;
-	type: CoinType;
-	amount: Balance;
-	lpMinted: Balance;
-}
-
 export interface PoolDepositEvent extends Event {
 	poolId: ObjectId;
 	depositor: SuiAddress;
 	types: CoinType[];
 	deposits: Balance[];
 	lpMinted: Balance;
-}
-
-export interface PoolSingleWithdrawEvent extends Event {
-	poolId: ObjectId;
-	withdrawer: SuiAddress;
-	type: CoinType;
-	amount: Balance;
-	lpBurned: Balance;
 }
 
 export interface PoolWithdrawEvent extends Event {
@@ -117,35 +102,23 @@ export interface PoolVolumeDataTimeframe {
 //// API
 /////////////////////////////////////////////////////////////////////
 
-export interface ApiPoolSpotPriceBody {
-	coinInType: CoinType;
-	coinOutType: CoinType;
-}
-
-export interface ApiPoolTradeAmountOutBody {
-	coinInType: CoinType;
-	coinInAmount: Balance;
-	coinOutType: CoinType;
-}
-
-export interface ApiPoolDepositLpMintAmountBody {
-	depositCoinAmounts: CoinsToBalance;
+export interface ApiPoolTradeBody {
+	walletAddress: SuiAddress;
+	fromCoin: CoinType;
+	fromCoinAmount: Balance;
+	toCoin: CoinType;
+	slippage: Slippage;
 }
 
 export interface ApiPoolDepositBody {
 	walletAddress: SuiAddress;
 	depositCoinAmounts: CoinsToBalance;
+	slippage: Slippage;
 }
 
 export interface ApiPoolWithdrawBody {
 	walletAddress: SuiAddress;
 	withdrawCoinAmounts: CoinsToBalance;
 	withdrawLpTotal: Balance;
-}
-
-export interface ApiPoolTradeBody {
-	walletAddress: SuiAddress;
-	fromCoin: CoinType;
-	fromCoinAmount: Balance;
-	toCoin: CoinType;
+	slippage: Slippage;
 }

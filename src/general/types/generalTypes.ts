@@ -19,6 +19,7 @@ export type Balance = bigint;
 export type GasBudget = number;
 export type Timestamp = number;
 export type Byte = number;
+export type Slippage = number;
 
 /////////////////////////////////////////////////////////////////////
 //// string
