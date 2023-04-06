@@ -119,6 +119,10 @@ export interface ApiPoolDepositBody {
 export interface ApiPoolWithdrawBody {
 	walletAddress: SuiAddress;
 	withdrawCoinAmounts: CoinsToBalance;
-	withdrawLpTotal: Balance;
 	slippage: Slippage;
+}
+
+export interface ApiPoolSpotPriceBody {
+	coinInType: CoinType;
+	coinOutType: CoinType;
 }

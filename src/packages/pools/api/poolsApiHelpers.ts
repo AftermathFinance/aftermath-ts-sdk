@@ -230,13 +230,9 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(
-					this.Provider.addresses.aftermath.objects.protocolFeeVault
-				),
-				tx.object(this.Provider.addresses.aftermath.objects.treasury),
-				tx.object(
-					this.Provider.addresses.aftermath.objects.insuranceFund
-				),
+				tx.object(this.addresses.objects.protocolFeeVault),
+				tx.object(this.addresses.objects.treasury),
+				tx.object(this.addresses.objects.insuranceFund),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
@@ -272,13 +268,9 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(
-					this.Provider.addresses.aftermath.objects.protocolFeeVault
-				),
-				tx.object(this.Provider.addresses.aftermath.objects.treasury),
-				tx.object(
-					this.Provider.addresses.aftermath.objects.insuranceFund
-				),
+				tx.object(this.addresses.objects.protocolFeeVault),
+				tx.object(this.addresses.objects.treasury),
+				tx.object(this.addresses.objects.insuranceFund),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
@@ -319,13 +311,9 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
-				tx.object(
-					this.Provider.addresses.aftermath.objects.protocolFeeVault
-				),
-				tx.object(this.Provider.addresses.aftermath.objects.treasury),
-				tx.object(
-					this.Provider.addresses.aftermath.objects.insuranceFund
-				),
+				tx.object(this.addresses.objects.protocolFeeVault),
+				tx.object(this.addresses.objects.treasury),
+				tx.object(this.addresses.objects.insuranceFund),
 				...coinIds.map((coinId) =>
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
@@ -361,13 +349,9 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinsOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(
-					this.Provider.addresses.aftermath.objects.protocolFeeVault
-				),
-				tx.object(this.Provider.addresses.aftermath.objects.treasury),
-				tx.object(
-					this.Provider.addresses.aftermath.objects.insuranceFund
-				),
+				tx.object(this.addresses.objects.protocolFeeVault),
+				tx.object(this.addresses.objects.treasury),
+				tx.object(this.addresses.objects.insuranceFund),
 				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
 				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
 				tx.pure(Pools.normalizeSlippage(slippage)),
