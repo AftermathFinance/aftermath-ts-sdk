@@ -15,12 +15,16 @@ export class Prices extends Caller {
 	//// Prices
 	/////////////////////////////////////////////////////////////////////
 
-	public async getCoinPrice(coin: CoinType): Promise<number> {
-		const coinsToPrice = await this.getCoinsToPrice([coin]);
+	public async getCoinPrice(inputs: { coin: CoinType }): Promise<number> {
+		const coinsToPrice = await this.getCoinsToPrice({
+			coins: [inputs.coin],
+		});
 		return Object.values(coinsToPrice)[0];
 	}
 
-	public async getCoinsToPrice(coins: CoinType[]): Promise<CoinsToPrice> {
-		return this.fetchApi(JSON.stringify(coins));
+	public async getCoinsToPrice(inputs: {
+		coins: CoinType[];
+	}): Promise<CoinsToPrice> {
+		return this.fetchApi(JSON.stringify(inputs.coins));
 	}
 }

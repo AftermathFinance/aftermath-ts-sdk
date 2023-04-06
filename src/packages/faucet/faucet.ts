@@ -47,14 +47,12 @@ export class Faucet extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getRequestCoinTransaction(
-		coin: CoinType
+		inputs: ApiFaucetRequestBody
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiFaucetRequestBody>(
 				"transactions/request",
-				{
-					coin,
-				}
+				inputs
 			)
 		);
 	}
