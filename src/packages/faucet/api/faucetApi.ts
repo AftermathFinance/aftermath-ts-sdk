@@ -10,7 +10,6 @@ import {
 import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
 import { FaucetApiHelpers } from "./faucetApiHelpers";
 import { SerializedTransaction } from "../../../types";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 export class FaucetApi {
 	/////////////////////////////////////////////////////////////////////

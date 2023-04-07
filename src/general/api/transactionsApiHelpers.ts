@@ -60,4 +60,9 @@ export class TransactionsApiHelpers {
 		functionName: string
 	): `${string}::${string}::${string}` =>
 		`${packageAddress}::${packageName}::${functionName}`;
+
+	public static createOptionObject = <InnerType>(
+		inner: InnerType | undefined
+	): { None: true } | { Some: InnerType } =>
+		inner === undefined ? { None: true } : { Some: inner };
 }

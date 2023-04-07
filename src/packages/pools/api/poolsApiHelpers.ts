@@ -28,6 +28,7 @@ import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
 import { CmmmCalculations } from "../utils/cmmmCalculations";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -157,6 +158,7 @@ export class PoolsApiHelpers {
 		coinOutType: CoinType,
 		lpCoinType: CoinType,
 		slippage: Slippage,
+		referrer?: SuiAddress,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.swap
 			.defaultGasBudget
 	): TransactionBlock => {
@@ -176,7 +178,10 @@ export class PoolsApiHelpers {
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-				tx.pure({ None: true }, OPTION),
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(referrer),
+					OPTION
+				),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -193,6 +198,7 @@ export class PoolsApiHelpers {
 		coinOutType: CoinType,
 		lpCoinType: CoinType,
 		slippage: Slippage,
+		referrer?: SuiAddress,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.swap
 			.defaultGasBudget
 	): {
@@ -215,7 +221,10 @@ export class PoolsApiHelpers {
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-				tx.pure({ None: true }, OPTION),
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(referrer),
+					OPTION
+				),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -234,6 +243,7 @@ export class PoolsApiHelpers {
 		expectedLpRatio: Balance,
 		lpCoinType: CoinType,
 		slippage: Slippage,
+		referrer?: SuiAddress,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.deposit
 			.defaultGasBudget
 	): TransactionBlock => {
@@ -261,7 +271,10 @@ export class PoolsApiHelpers {
 				),
 				tx.pure(expectedLpRatio.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-				tx.pure({ None: true }, OPTION),
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(referrer),
+					OPTION
+				),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -277,6 +290,7 @@ export class PoolsApiHelpers {
 		expectedAmountsOut: Balance[],
 		coinsOutType: CoinType[],
 		slippage: Slippage,
+		referrer?: SuiAddress,
 		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.withdraw
 			.defaultGasBudget
 	): TransactionBlock => {
@@ -298,7 +312,10 @@ export class PoolsApiHelpers {
 				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
 				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-				tx.pure({ None: true }, OPTION),
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(referrer),
+					OPTION
+				),
 			],
 		});
 		tx.setGasBudget(gasBudget);
@@ -319,7 +336,8 @@ export class PoolsApiHelpers {
 		fromCoinType: CoinType,
 		fromCoinAmount: Balance,
 		toCoinType: CoinType,
-		slippage: Slippage
+		slippage: Slippage,
+		referrer?: SuiAddress
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
@@ -342,7 +360,8 @@ export class PoolsApiHelpers {
 			amountOut,
 			toCoinType,
 			poolLpType,
-			slippage
+			slippage,
+			referrer
 		);
 
 		return finalTx;
@@ -354,7 +373,8 @@ export class PoolsApiHelpers {
 		poolLpType: CoinType,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[],
-		slippage: Slippage
+		slippage: Slippage,
+		referrer?: SuiAddress
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
@@ -376,7 +396,8 @@ export class PoolsApiHelpers {
 			coinTypes,
 			expectedLpRatio,
 			poolLpType,
-			slippage
+			slippage,
+			referrer
 		);
 
 		return finalTx;
@@ -389,7 +410,8 @@ export class PoolsApiHelpers {
 		coinTypes: CoinType[],
 		coinAmounts: Balance[],
 		lpCoinAmount: Balance,
-		slippage: Slippage
+		slippage: Slippage,
+		referrer?: SuiAddress
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
@@ -411,7 +433,8 @@ export class PoolsApiHelpers {
 			poolLpType,
 			coinAmounts, // TODO: calc slippage amount
 			coinTypes,
-			slippage
+			slippage,
+			referrer
 		);
 
 		return finalTx;

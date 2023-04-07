@@ -1,5 +1,5 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Balance } from "../../general/types/generalTypes";
+import { Balance, Slippage } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolTradeFee } from "../pools/poolsTypes";
 
@@ -51,5 +51,6 @@ export type ApiRouterCompleteTradeRouteBody = {
 export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	walletAddress: SuiAddress;
 	completeRoute: RouterCompleteTradeRoute;
-	slippage: number;
+	slippage: Slippage;
+	referrer?: SuiAddress;
 }

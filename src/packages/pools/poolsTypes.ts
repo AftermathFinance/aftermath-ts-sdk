@@ -108,12 +108,14 @@ export interface ApiPoolTradeBody {
 	fromCoinAmount: Balance;
 	toCoin: CoinType;
 	slippage: Slippage;
+	referrer?: SuiAddress;
 }
 
 export interface ApiPoolDepositBody {
 	walletAddress: SuiAddress;
 	depositCoinAmounts: CoinsToBalance;
 	slippage: Slippage;
+	referrer?: SuiAddress;
 }
 
 export interface ApiPoolWithdrawBody {
@@ -121,6 +123,7 @@ export interface ApiPoolWithdrawBody {
 	withdrawCoinAmounts: CoinsToBalance;
 	lpCoinAmount: Balance;
 	slippage: Slippage;
+	referrer?: SuiAddress;
 }
 
 export interface ApiPoolSpotPriceBody {

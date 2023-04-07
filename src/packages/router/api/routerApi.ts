@@ -83,7 +83,8 @@ export class RouterApi {
 	public async fetchTransactionForCompleteTradeRoute(
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,
-		slippage: Slippage
+		slippage: Slippage,
+		referrer?: SuiAddress
 	): Promise<SerializedTransaction> {
 		const startTx = new TransactionBlock();
 
@@ -116,7 +117,8 @@ export class RouterApi {
 						path.coinOut.amount,
 						path.coinOut.type,
 						path.poolLpCoinType,
-						slippage
+						slippage,
+						referrer
 					);
 				tx = newTx;
 				coinIn = newCoinIn;
