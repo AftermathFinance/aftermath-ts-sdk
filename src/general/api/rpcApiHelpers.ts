@@ -32,8 +32,7 @@ export class RpcApiHelpers {
 			const response = await responseJson.json();
 			return response;
 		} catch (error) {
-			console.error(error);
-			throw new Error(`${method} rpcCall failed`);
+			throw new Error(`${method} rpcCall failed with error: ${error}`);
 		}
 	};
 }

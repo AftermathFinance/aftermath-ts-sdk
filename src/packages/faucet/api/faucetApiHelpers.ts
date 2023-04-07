@@ -32,8 +32,8 @@ export class FaucetApiHelpers {
 			},
 		},
 		eventNames: {
-			mintCoin: "mintCoin",
-			addCoin: "addCoinEvent",
+			mintCoin: "MintedCoin",
+			addCoin: "AddedCoinEvent",
 		},
 	};
 

@@ -35,7 +35,10 @@ export class FaucetApi {
 	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
 		const addCoinEvents = await this.fetchAddCoinEvents();
 		const coins = addCoinEvents.events.map((event) => event.type);
-		return coins;
+		const coinsWithoutAfSui = coins.filter(
+			(coin) => !coin.toLowerCase().includes("afsui")
+		);
+		return coinsWithoutAfSui;
 	};
 
 	public fetchIsPackageOnChain = () => {
