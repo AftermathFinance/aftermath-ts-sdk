@@ -492,26 +492,6 @@ export class PoolsApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Prices
-	/////////////////////////////////////////////////////////////////////
-
-	public findPriceForCoinInPool = (
-		coin: CoinType,
-		lpCoins: CoinType[],
-		nonLpCoins: CoinType[],
-		lpPrices: number[],
-		nonLpPrices: number[]
-	) => {
-		if (Pools.isLpCoin(coin)) {
-			const index = lpCoins.findIndex((lpCoin) => lpCoin === coin);
-			return lpPrices[index];
-		}
-
-		const index = nonLpCoins.findIndex((nonLpCoin) => nonLpCoin === coin);
-		return nonLpPrices[index];
-	};
-
-	/////////////////////////////////////////////////////////////////////
 	//// Graph Data
 	/////////////////////////////////////////////////////////////////////
 
@@ -565,6 +545,19 @@ export class PoolsApiHelpers {
 		}, emptyDataPoints);
 
 		return dataPoints;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	// NOTE: should this perform a dev inspect to pool registry instead of using string alone ?
+	public isLpCoin = (coin: CoinType) => {
+		return (
+			coin.split("::").length > 0 &&
+			coin.split("::")[0] === this.addresses.packages.cmmm &&
+			coin.includes("AF_LP")
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////

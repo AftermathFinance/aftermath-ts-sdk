@@ -247,6 +247,7 @@ export class PoolsApi {
 			this.Helpers.poolObjectIdForLpCoinTypeDevInspectTransaction(
 				lpCoinType
 			);
+
 		const bytes =
 			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
 		return Casting.stringFromBytes(bytes);
@@ -322,7 +323,7 @@ export class PoolsApi {
 		provider: Aftermath,
 		lpCoinTypes: CoinType[]
 	) => {
-		const lpCoins = lpCoinTypes.filter(Pools.isLpCoin);
+		const lpCoins = lpCoinTypes.filter(this.Helpers.isLpCoin);
 		const lpCoinPoolObjectIds = await Promise.all(
 			lpCoins.map((lpCoinType) =>
 				provider.Pools().getPoolObjectIdForLpCoinType({ lpCoinType })

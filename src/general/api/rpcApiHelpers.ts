@@ -6,7 +6,8 @@ export class RpcApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public static constants = {
-		devInspectSigner: "0xedd30fda5ea992615d73ca8eca9e381a7fe025db",
+		devInspectSigner:
+			"0x195b73858cbc1762e8c837fd403637e5475d312c80f3a0b4d96e2abae3e69229",
 	};
 
 	/////////////////////////////////////////////////////////////////////

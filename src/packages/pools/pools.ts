@@ -102,23 +102,10 @@ export class Pools extends Caller {
 	public getPoolObjectIdForLpCoinType = (
 		inputs: ApiPoolObjectIdForLpCoinTypeBody
 	) => {
-		if (!Pools.isLpCoin(inputs.lpCoinType))
-			throw Error("invalid LP coin type");
-
 		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
 			"poolObjectId",
 			inputs
 		);
-	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Type Checking
-	/////////////////////////////////////////////////////////////////////
-
-	// remove this once all LP coins have coin metadata ?
-	public static isLpCoin = (coin: CoinType) => {
-		// return coin.includes(poolsPackageId);
-		return coin.includes("AF_LP_");
 	};
 
 	/////////////////////////////////////////////////////////////////////

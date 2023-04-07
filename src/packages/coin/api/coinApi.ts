@@ -35,7 +35,7 @@ export class CoinApi {
 			});
 			return coinMetadata;
 		} catch (error) {
-			if (Pools.isLpCoin(coin)) {
+			if (this.Provider.Pools().Helpers.isLpCoin(coin)) {
 				const coinName = Pools.displayLpCoinType(coin);
 				return {
 					symbol: coinName.split(" ")[0].toUpperCase(),
