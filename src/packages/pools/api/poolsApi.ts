@@ -268,12 +268,15 @@ export class PoolsApi {
 		const poolCoins = pool.pool.coins;
 		const poolCoinTypes = Object.keys(poolCoins);
 
-		const prices = Object.entries(coinsToPrice).map(([_, price]) => price);
+		const prices = Object.entries(coinsToPrice).map(([, price]) => price);
 
+		// TODO: move this outside of func to be called externally via provider !
 		const coinsToDecimals =
 			await this.Provider.Coin().Helpers.fetchCoinsToDecimals(
 				poolCoinTypes
 			);
+
+		console.log("coinsToDecimals", coinsToDecimals);
 
 		const tradeEventsWithinTime =
 			await this.Provider.Events().fetchEventsWithinTime(

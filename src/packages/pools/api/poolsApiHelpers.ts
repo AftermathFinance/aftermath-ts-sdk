@@ -459,18 +459,15 @@ export class PoolsApiHelpers {
 		prices: CoinsToPrice,
 		coinsToDecimals: Record<CoinType, CoinDecimal>
 	) => {
-		const amountsWithDecimals: number[] = [];
+		let tvl = 0;
+
 		for (const [poolCoinType, poolCoin] of Object.entries(poolCoins)) {
 			const amountWithDecimals = Coin.balanceWithDecimals(
 				poolCoin.balance,
 				coinsToDecimals[poolCoinType]
 			);
-			amountsWithDecimals.push(amountWithDecimals);
+			tvl += amountWithDecimals * prices[poolCoinType];
 		}
-
-		const tvl = amountsWithDecimals
-			.map((amount, index) => amount * prices[index])
-			.reduce((prev, cur) => prev + cur, 0);
 
 		return tvl;
 	};
