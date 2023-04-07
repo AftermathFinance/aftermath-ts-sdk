@@ -199,6 +199,7 @@ export class PoolsApi {
 		poolObjectId: ObjectId,
 		poolLpType: CoinType,
 		withdrawCoinsToBalance: CoinsToBalance,
+		lpCoinAmount: Balance,
 		slippage: Slippage
 	): Promise<SerializedTransaction> => {
 		const { coins, balances } = Coin.coinsAndBalancesOverZero(
@@ -210,6 +211,7 @@ export class PoolsApi {
 			poolLpType,
 			coins,
 			balances,
+			lpCoinAmount,
 			slippage
 		);
 		return transaction.serialize();

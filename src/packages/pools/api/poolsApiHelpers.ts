@@ -388,12 +388,13 @@ export class PoolsApiHelpers {
 		poolLpType: CoinType,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[],
+		lpCoinAmount: Balance,
 		slippage: Slippage
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
 		// PRODUCTION: do calc here !
-		const lpCoinAmount = BigInt(0);
+		// const lpCoinAmount = BigInt(0);
 
 		const { coinArgument: lpCoinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
