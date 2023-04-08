@@ -34,6 +34,7 @@ export class EventsApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
+	// TODO: make this filter by looking ONLY at all relevant AF packages
 	public fetchSubscribeToUserEvents = async (
 		address: SuiAddress,
 		onEvent: (event: SuiEvent) => void

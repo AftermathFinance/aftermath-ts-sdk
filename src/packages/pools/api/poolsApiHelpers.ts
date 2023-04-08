@@ -572,12 +572,12 @@ export class PoolsApiHelpers {
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	// NOTE: should this perform a dev inspect to pool registry instead of using string alone ?
+	// PRODUCTION: should this perform a dev inspect to pool registry instead of using string alone ?
 	public isLpCoin = (coin: CoinType) => {
 		return (
-			coin.split("::").length > 0 &&
-			coin.split("::")[0] === this.addresses.packages.cmmm &&
-			coin.includes("AF_LP")
+			coin.split("::").length === 3 &&
+			coin.split("::")[1].includes("af_lp_") &&
+			coin.split("::")[2].includes("AF_LP_")
 		);
 	};
 

@@ -282,8 +282,6 @@ export class PoolsApi {
 				poolCoinTypes
 			);
 
-		console.log("coinsToDecimals", coinsToDecimals);
-
 		const tradeEventsWithinTime =
 			await this.Provider.Events().fetchEventsWithinTime(
 				this.fetchTradeEvents,
@@ -332,9 +330,8 @@ export class PoolsApi {
 	// TODO: rename this function and/or move it ?
 	public fetchLpCoinsToPrice = async (
 		provider: Aftermath,
-		lpCoinTypes: CoinType[]
+		lpCoins: CoinType[]
 	) => {
-		const lpCoins = lpCoinTypes.filter(this.Helpers.isLpCoin);
 		const lpCoinPoolObjectIds = await Promise.all(
 			lpCoins.map((lpCoinType) =>
 				provider.Pools().getPoolObjectIdForLpCoinType({ lpCoinType })
@@ -342,7 +339,7 @@ export class PoolsApi {
 		);
 		const lpCoinPools = await provider
 			.Pools()
-			.getPools(lpCoinPoolObjectIds);
+			.getPools({ objectIds: lpCoinPoolObjectIds });
 
 		const poolStats = await Promise.all(
 			lpCoinPools.map((lpPool) => lpPool.getStats())

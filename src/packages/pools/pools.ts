@@ -49,13 +49,15 @@ export class Pools extends Caller {
 	//// Pool Class
 	/////////////////////////////////////////////////////////////////////
 
-	public async getPool(poolObjectId: ObjectId): Promise<Pool> {
-		const pool = await this.fetchApi<PoolObject>(`${poolObjectId}`);
+	public async getPool(inputs: { objectId: ObjectId }): Promise<Pool> {
+		const pool = await this.fetchApi<PoolObject>(`${inputs.objectId}`);
 		return new Pool(pool, this.network);
 	}
 
-	public async getPools(poolObjectIds: ObjectId[]): Promise<Pool[]> {
-		const pools = await Promise.all(poolObjectIds.map(this.getPool));
+	public async getPools(inputs: { objectIds: ObjectId[] }): Promise<Pool[]> {
+		const pools = await Promise.all(
+			inputs.objectIds.map((objectId) => this.getPool({ objectId }))
+		);
 		return pools;
 	}
 
