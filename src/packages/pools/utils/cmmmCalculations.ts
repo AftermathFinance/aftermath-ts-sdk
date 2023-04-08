@@ -1,5 +1,5 @@
 import { Coin } from "../../coin/coin";
-import { Balance, PoolTradeFee, PoolWeight } from "../../../types";
+import { Balance, CoinType, PoolObject, PoolTradeFee, PoolWeight } from "../../../types";
 import { Pools } from "../pools";
 
 // This file is the typescript version of on-chain calculations. See the .move file for license info.
@@ -24,48 +24,268 @@ export class CmmmCalculations {
 	// Invariant growth limit: non-proportional joins cannot cause the invariant to increase by more than this ratio.
 	private static maxInvariantRatio: number = 3;
 
-	private static readBalance = (fixed: bigint, digits = 9): number =>
-		Coin.balanceWithDecimals(fixed, digits);
-	private static unreadBalance = (native: number, digits = 9) =>
-		Coin.normalizeBalance(native, digits);
+	private static maxNewtonAttempts: number = 255;
+	private static convergenceBound: number = 0.000_000_001;
 
-	// About swap fees on joins and exits:
-	// Any join or exit that is not perfectly balanced (e.g. all single token joins or exits) is mathematically
-	// equivalent to a perfectly balanced join or exit followed by a series of swaps. Since these swaps would charge
-	// swap fees, it follows that (some) joins and exits should as well.
-	// On these operations, we split the token amounts in 'taxable' and 'non-taxable' portions, where the 'taxable' part
-	// is the one to which swap fees are applied.
+	// pools assume coins are stored in raw integer format
+	// every other fixed point nubmer is in 18 point format
+	private static convertFromInt = (n: bigint): number => Number(n);
+	private static directCast = (n: bigint): number => Coin.balanceWithDecimals(n, 18);
 
-	// Invariant is used to collect protocol swap fees by comparing its value between two times.
-	// So we can round always to the same direction. It is also used to initiate the LP amount
-	// and, because there is a minimum LP, we round down the ; invariant.
+	// Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
+	// the invariant (ignoring fees) and investments change the invariant without changing the distribution of balances.
+	// Invariant and pool lp are almost in 1:1 correspondence -- e.g. burning lp in a withdraw proportionally lowers the pool invariant.
+	// The difference is as swap fees are absorbed they increase the invariant without incrasing total lp, increasing lp worth.
+	// Every pool operation either explicitly or implicity calls this function.
 	public static calcInvariant = (
-		weights: PoolWeight[],
-		balances: Balance[]
+		pool: PoolObject,
 	): number => {
-		/*********************************************************************************************
-    // invariant               _____                                                             //
-    // wi = weight index i      | |      wi                                                      //
-    // bi = balance index i     | |  bi ^   = i                                                  //
-    // i = invariant                                                                             //
-    **********************************************************************************************/
+		let flatness = CmmmCalculations.directCast(pool.flatness);
 
-		let inv = 1;
+		// The value for h which we want is the one for which the balances vector B lies on the curve through T.
+		// That is, C(T) = C(B). This turns out to be a quadratic equation which can be solved with
+		// h = [sqrt[P(B) * (P(B) * (A*A + 4*(1-A)) + 8*A*S(B))] - A*P(B)] / 2.
+		let sum = 0;
+		let prod = 0;
 		let balance;
 		let weight;
-		for (let i = 0; i < balances.length; ++i) {
-			balance = CmmmCalculations.readBalance(balances[i]);
-			weight = Pools.coinWeightWithDecimals(weights[i]);
-			if (weight < CmmmCalculations.minWeight)
-				throw Error("weight too small");
-			inv = inv * Math.pow(balance, weight);
-		}
+		for (let coin of Object.values(pool.coins)) {
+			balance = CmmmCalculations.convertFromInt(coin.balance);
+			weight = CmmmCalculations.directCast(coin.weight);
+			sum += weight * balance;
+			prod += weight * Math.log(balance);
+		};
+		prod = Math.exp(prod);
 
-		if (inv <= 0) throw Error("invariant must be positive");
-		return inv;
+		return this.calcInvariantQuadratic(
+			prod,
+			sum,
+			flatness
+		);
 	};
+	
+    // The invariant for stables comes from a quadratic equation coming from the reference point T = (h,h,...,h).
+    // h = [sqrt[p * (p * (A*A + 4*(1-A)) + 8*A*s)] - A*p] / 2.
+	public static calcInvariantQuadratic = (
+        prod: number,
+        sum: number,
+        flatness: number,
+    ): number => (Math.sqrt(prod * (prod * (flatness * flatness) + ((1-flatness) << 2)) + ((flatness * sum) << 3)) - flatness * prod) >> 1;
 
-	// Computes how many tokens can be taken out of a pool if `amountIn` are sent, given the
+
+	// This function is used for 1d optimization. It computes the full invariant components and their
+    // portions which omit contribution from the balance in the `index` coordinate.
+    // It returns (prod, sum, p0, s0, h) where:
+    // prod = b1^w1 * ... * bn^wn
+    // sum = w1*b1 + ... + wn*bn
+    // p0 = b1^w1 * ... * [bi^w1] * ... * bn^wn (remove bi from prod)
+    // s0 = w1*b1 + ... + [wi*bi] + ... + wn*bn (remove bi from sum)
+    // h is the invariant
+    public static calcInvariantComponents = (
+        pool: PoolObject,
+		index: CoinType,
+    ): [
+		prod: number,
+		sum: number,
+		p0: number,
+		s0: number,
+		h: number,
+	] => {
+		let flatness = CmmmCalculations.directCast(pool.flatness);
+        let prod = 0;
+        let sum = 0;
+        let p0 = 0;
+        let s0 = 0;
+
+        let balance;
+        let weight;
+        let p;
+        let s;
+        for (let [coinType, coin] of Object.entries(pool.coins)) {
+			balance = CmmmCalculations.convertFromInt(coin.balance);
+			weight = CmmmCalculations.directCast(coin.weight);
+
+            p = weight * Math.log(balance);
+            s = weight * balance;
+
+            prod = prod + p;
+            sum = sum + s;
+
+            if (coinType != index) {
+                p0 = p0 + p;
+                s0 = s0 + s;
+            };
+        };
+        prod = Math.exp(prod);
+        p0 = Math.exp(p0);
+
+        return [
+			prod,
+			sum,
+			p0,
+			s0,
+			CmmmCalculations.calcInvariantQuadratic(prod, sum, flatness)
+		];
+    };
+
+	// This function calculates the balance of a given token (index) given all the other balances (combined in p0, s0)
+    // and the invariant along with an initial estimate. It is useful for 1d optimization.
+    private static getTokenBalanceGivenInvariantAndAllOtherBalances = (
+        flatness: number,
+        w: number,
+        h: number,
+        xi: number, // initial estimate -- default can be (P(X) / p0)^n
+        p0: number, // P(B) / xi^(1/n) (everything but the missing part)
+        s0: number, // S(B) - xi / n (everything but the missing part)
+    ): number => {
+        // Standard Newton method used here
+
+        // ---------------- setting constants ----------------
+
+        // c1 = 2*A*w*w
+        // c2 = 2*(1-A)*w*p0
+        // c3 = A*(2*w*s0+t)
+        // c4 = t*t/p0
+        // c5 = (1-A)*p0
+        // c6 = A*(2*s0+w*t)
+        // c7 = 2*A*w*(w+1)
+        // c8 = 2*(1-A)*p0
+        // c9 = 2*A*w*s0
+        // c10= A*w*t
+
+        let ac = 1 - flatness;
+        let aw = flatness * w;
+        let acw = ac * w;
+        let as0 = flatness * s0;
+        let ah = flatness * h;
+
+        let c1 = (aw * w) << 1;
+        let c2 = (acw * p0) << 1;
+        let c3 = ((w * as0) << 1) + ah;
+        let c4 = (h * h) / p0;
+        let c5 = ac * p0;
+        let c6 = (as0 << 1) + (w * ah);
+        let c7 = (aw * (w + 1)) << 1;
+        let c8 = (acw * p0) << 1;
+        let c9 = (aw * s0) << 1;
+        let c10= (aw * h);
+
+        // ---------------- iterating ----------------
+
+        //x = (
+        //    x * (
+        //        (
+        //            x^w * (
+        //                c1 * x + c2 * x^w + c3
+        //            ) + c4
+        //        ) - x^w * (
+        //            c5 * x^w + c6
+        //        )
+        //    )
+        //) / (
+        //    x^w * (
+        //        (
+        //            c7 * x + c8 * x^w + c9
+        //        ) - c10
+        //    )
+        //)
+
+        let x = xi;
+        let xw; // x^w
+
+        let top_pos;
+        let top_neg;
+        let bottom_pos;
+        //let bottom_neg;
+
+        let prev_x = x;
+
+        let i = 0;
+        while (i < CmmmCalculations.maxNewtonAttempts) {
+            xw = Math.pow(x, w);
+
+            top_pos = x * ((xw * (c1 * x + c2 * xw + c3)) + c4);
+            top_neg = x * (xw * (c5 * xw + c6));
+            bottom_pos = c7 * x + c8 * xw + c9;
+            //bottom_neg = c10;
+
+            // If x jumps too much (bad initial estimate) then g(x) might overshoot into a negative number.
+            // This only happens if x is supposed to be small. In this case, replace x with a small number and try again.
+            // Once x is close enough to the true value g(x) won't overshoot anymore and this test will be skipped from then on.
+            if (top_pos < top_neg || bottom_pos < c10) {
+                x = 1 >> i;
+                i = i + 1;
+                continue
+            };
+
+            x = (top_pos - top_neg) / (xw * (bottom_pos - c10));
+
+            if (Math.abs(x - prev_x) <= CmmmCalculations.convergenceBound) {
+                return x
+            };
+
+			prev_x = x;
+            i = i + 1;
+        };
+		throw Error("Newton diverged");
+    }
+
+	// 1d optimized swap function for finding out given in. Returns t such that t*expected_out is the true out.
+    // Lower t favors the pool.
+    public static calc_out_given_in = (
+        pool: PoolObject,
+		coinTypeIn: CoinType,
+        coinTypeOut: CoinType,
+		amountIn: number,
+    ): number => {
+        if (coinTypeIn == coinTypeOut) throw Error("In and out must be different coins");
+		let coinIn = pool.coins[coinTypeIn];
+		let coinOut = pool.coins[coinTypeOut];
+        let swapFeeIn = CmmmCalculations.directCast(coinIn.tradeFeeIn);
+        let swapFeeOut = CmmmCalculations.directCast(coinOut.tradeFeeOut);
+		if (swapFeeIn >= 1 || swapFeeOut >= 1) {
+            // this swap is disabled
+            return 0
+        };
+
+        let flatness = CmmmCalculations.directCast(pool.flatness);
+        let oldIn = CmmmCalculations.convertFromInt(coinIn.balance);
+        let oldOut = CmmmCalculations.convertFromInt(coinOut.balance);
+
+        let wIn = CmmmCalculations.directCast(coinIn.weight);
+		let [prod, sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
+			pool,
+			coinTypeIn
+		);
+
+        let feedAmountIn = (1 - swapFeeIn) * amountIn;
+        let newIn = oldIn + feedAmountIn;
+        let prodRatio = Math.pow(newIn / oldIn, wIn);
+
+        let newP0 = p0 * prodRatio;
+        // the initial estimate (xi) is from if there were only the product part of the curve
+        let xi = Math.pow(
+			prod / newP0,
+            1 / wIn
+        );
+        let newS0 = s0 + wIn * feedAmountIn;
+
+        let wOut = CmmmCalculations.directCast(coinOut.weight);
+
+        let tokenAmountOut = CmmmCalculations.getTokenBalanceGivenInvariantAndAllOtherBalances(
+            flatness,
+            wOut,
+            h,
+            xi, // initial estimate -- default can be (P(X) / p0)^n
+            newP0, // P(B) / xi^(1/n) (everything but the missing part)
+            newS0 // S(B) - xi / n (everything but the missing part)
+        );
+
+        let amountOut = (oldOut - tokenAmountOut) * (1 - swapFeeOut);
+		return amountOut;
+    }
+
+	/*// Computes how many tokens can be taken out of a pool if `amountIn` are sent, given the
 	// current balances and weights.
 	public static calcOutGivenIn = (
 		balanceIn: Balance,
@@ -82,16 +302,7 @@ export class CmmmCalculations {
 		let readAmountIn = CmmmCalculations.readBalance(amountIn);
 		let readSwapFee = Pools.tradeFeeWithDecimals(swapFee);
 
-		/*********************************************************************************************
-    // outGivenIn                                                                                //
-    // aO = amountOut                                                                           //
-    // bO = balance_out                                                                          //
-    // bI = balance_in              /      /            bI              \  (wI / wO) \           //
-    // aI = amountIn     aO = bO * |  1 - | -------------------------- | ^          |           //
-    // wI = weight_in               \      \       ( bI + aI )          /            /           //
-    // wO = weight_out                                                                           //
-    **********************************************************************************************/
-
+	
 		// NOTE: removed the below check to allow for large amounts of coins
 		// to be simulated on front end without throwing errors
 
@@ -124,15 +335,6 @@ export class CmmmCalculations {
 		let readWeightOut = Pools.coinWeightWithDecimals(weightOut);
 		let readAmountOut = CmmmCalculations.readBalance(amountOut);
 		let readSwapFee = Pools.tradeFeeWithDecimals(swapFee);
-		/*********************************************************************************************
-    // inGivenOut                                                                                //
-    // aO = amountOut                                                                            //
-    // bO = balance_out                                                                          //
-    // bI = balance_in             /  /            bO              \   (wO / wI)     \           //
-    // aI = amountIn    aI = bI * |  | ---------------------------- | ^          - 1 | / (1 - s) //
-    // wI = weight_in              \  \       ( bO - aO )          /                 /           //
-    // wO = weight_out                                                                           //
-    **********************************************************************************************/
 
 		// Amount in, so we round up overall.
 
@@ -298,14 +500,6 @@ export class CmmmCalculations {
 		let readSwapFeePercentage =
 			Pools.tradeFeeWithDecimals(swapFeePercentage);
 
-		/*****************************************************************************************
-    // token_in_for_exact_lp_out                                                             //
-    // a = amountIn                                                                          //
-    // b = balance                      /  /     totalLp + lp_out       \  (1 / w)       \   //
-    // lp_out = lpAmountOut     a = b * |  | -------------------------- | ^          - 1 |   //
-    // lp = totalLp                     \  \        totalLp             /                /   //
-    // w = weight                                                                            //
-    ******************************************************************************************/
 
 		// Token in, so we round up overall.
 
@@ -339,14 +533,6 @@ export class CmmmCalculations {
 	): Balance[] => {
 		let readLpAmountOut = CmmmCalculations.readBalance(lpAmountOut);
 		let readTotalLp = CmmmCalculations.readBalance(totalLp);
-		/***********************************************************************************
-    // tokens_in_for_exact_lp_out                                                      //
-    // (per token)                                                                     //
-    // aI = amountIn                    /    lp_out    \                               //
-    // b = balance             aI = b * | ------------ |                               //
-    // lp_out = lpAmountOut             \   totalLp    /                               //
-    // lp = totalLp                                                                    //
-    ************************************************************************************/
 
 		// Tokens in, so we round up overall.
 		let lpRatio = readLpAmountOut / readTotalLp;
@@ -558,7 +744,7 @@ export class CmmmCalculations {
 			// set current_p to be G(current_p)
 			// if current_p >= M, replace it with M - offset, halve offset, and try again
 			// these halving steps are only for the initial guess and don't count towards the convergence (j)
-			while (true /*aborts from offset vanishing, never infinite loop*/) {
+			while (true) {// aborts from offset vanishing, never infinite loop) {
 				// checking for out of bounds
 				if (currentP >= m) {
 					// out of bounds so try again
@@ -682,15 +868,6 @@ export class CmmmCalculations {
 		let readSwapFeePercentage =
 			CmmmCalculations.readBalance(swapFeePercentage);
 
-		/****************************************************************************************
-    // exact_lp_in_for_token_out                                                            //
-    // a = amountOut                                                                        //
-    // b = balance                     /      /     totalLp - lp_in        \  (1 / w)  \    //
-    // lp_in = lpAmountIn      a = b * |  1 - | -------------------------- | ^         |    //
-    // lp = totalLp                    \      \        totalLp             /           /    //
-    // w = weight                                                                           //
-    *****************************************************************************************/
-
 		// Token out, so we round down overall. The multiplication rounds down, but the power rounds up (so the base
 		// rounds up). Because (totalLp - lp_in) / totalLp <= 1, the exponent rounds down.
 
@@ -729,15 +906,6 @@ export class CmmmCalculations {
 		let readLpAmountIn = CmmmCalculations.readBalance(lpAmountIn);
 		let readTotalLp = CmmmCalculations.readBalance(totalLp);
 
-		/*********************************************************************************************
-    // exact_lp_in_for_tokens_out                                                                //
-    // (per token)                                                                               //
-    // aO = amountOut                   /        lp_in          \                                //
-    // b = balance             a0 = b * | --------------------- |                                //
-    // lp_in = lpAmountIn               \       totalLp         /                                //
-    // LP = totalLp                                                                              //
-    **********************************************************************************************/
-
 		// Since we're computing an amount out, we round down overall. This means rounding down on both the
 		// multiplication and division.
 
@@ -754,15 +922,6 @@ export class CmmmCalculations {
 
 		return amountsOut;
 	};
-
-	/*
-	 * @dev Calculate the amount of LP which should be minted when adding a new token to the Pool.
-	 *
-	 * Note that weight is set that it corresponds to the desired weight of this token *after* adding it.
-	 * i.e. For a two token 50:50 pool which we want to turn into a 33:33:33 pool, we use a normalized weight of 33%
-	 * @param total_supply - the total supply of the Pool's LP.
-	 * @param weight - the normalized weight of the token to be added (normalized relative to final weights)
-	 */
 	public static calcLpOutAddToken = (
 		totalSupply: Balance,
 		weight: PoolWeight
@@ -858,5 +1017,5 @@ export class CmmmCalculations {
 				swapFee
 			)
 		);
-	};
+	};*/
 }
