@@ -218,7 +218,8 @@ export class CmmmCalculations {
 
 			x = (top_pos - top_neg) / (xw * (bottom_pos - c10));
 
-			if (Math.abs(x - prev_x) <= CmmmCalculations.convergenceBound) {
+			// using relative error here (easier to pass) because js numbers are less precise
+			if (Math.abs(x - prev_x) / x <= CmmmCalculations.convergenceBound) {
 				return x;
 			}
 
