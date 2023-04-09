@@ -137,16 +137,15 @@ export class Pool extends Caller {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 	}) => {
-		const coinIn = this.pool.coins[inputs.coinInType];
-		const coinOut = this.pool.coins[inputs.coinOutType];
-
-		return CmmmCalculations.calcOutGivenIn(
-			coinIn.balance,
-			coinIn.weight,
-			coinOut.balance,
-			coinOut.weight,
-			inputs.coinInAmount,
-			this.pool.coins[inputs.coinInType].tradeFeeIn
+		return BigInt(
+			Math.floor(
+				CmmmCalculations.calc_out_given_in(
+					this.pool,
+					inputs.coinInType,
+					inputs.coinOutType,
+					Number(inputs.coinInAmount)
+				)
+			)
 		);
 	};
 
@@ -155,62 +154,65 @@ export class Pool extends Caller {
 		coinOutAmount: Balance;
 		coinInType: CoinType;
 	}) => {
-		const coinIn = this.pool.coins[inputs.coinInType];
-		const coinOut = this.pool.coins[inputs.coinOutType];
+		return BigInt(1);
+		// const coinIn = this.pool.coins[inputs.coinInType];
+		// const coinOut = this.pool.coins[inputs.coinOutType];
 
-		return CmmmCalculations.calcInGivenOut(
-			coinIn.balance,
-			coinIn.weight,
-			coinOut.balance,
-			coinOut.weight,
-			inputs.coinOutAmount,
-			this.pool.coins[inputs.coinInType].tradeFeeIn
-		);
+		// return CmmmCalculations.calcInGivenOut(
+		// 	coinIn.balance,
+		// 	coinIn.weight,
+		// 	coinOut.balance,
+		// 	coinOut.weight,
+		// 	inputs.coinOutAmount,
+		// 	this.pool.coins[inputs.coinInType].tradeFeeIn
+		// );
 	};
 
 	public getSpotPrice = (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}) => {
-		const coinIn = this.pool.coins[inputs.coinInType];
-		const coinOut = this.pool.coins[inputs.coinOutType];
+		return 1;
+		// const coinIn = this.pool.coins[inputs.coinInType];
+		// const coinOut = this.pool.coins[inputs.coinOutType];
 
-		return CmmmCalculations.calcSpotPrice(
-			coinIn.balance,
-			coinIn.weight,
-			coinOut.balance,
-			coinOut.weight
-		);
+		// return CmmmCalculations.calcSpotPrice(
+		// 	coinIn.balance,
+		// 	coinIn.weight,
+		// 	coinOut.balance,
+		// 	coinOut.weight
+		// );
 	};
 
 	public getDepositLpMintAmount = (inputs: {
 		coinsToBalance: CoinsToBalance;
 	}) => {
-		const pool = this.pool;
-		const poolCoins = pool.coins;
+		return BigInt(1);
+		// const pool = this.pool;
+		// const poolCoins = pool.coins;
 
-		const poolCoinBalances = Object.values(poolCoins).map(
-			(coin) => coin.balance
-		);
-		const poolCoinWeights = Object.values(poolCoins).map(
-			(coin) => coin.weight
-		);
+		// const poolCoinBalances = Object.values(poolCoins).map(
+		// 	(coin) => coin.balance
+		// );
+		// const poolCoinWeights = Object.values(poolCoins).map(
+		// 	(coin) => coin.weight
+		// );
 
-		const depositCoinBalances = Object.entries(poolCoins).map(
-			([coinType, poolCoin]) => {
-				const foundBalance = Object.entries(inputs.coinsToBalance).find(
-					(coinAndBalance) => coinAndBalance[0] === coinType
-				)?.[1];
-				return foundBalance ?? BigInt(0);
-			}
-		);
+		// const depositCoinBalances = Object.entries(poolCoins).map(
+		// 	([coinType, poolCoin]) => {
+		// 		const foundBalance = Object.entries(inputs.coinsToBalance).find(
+		// 			(coinAndBalance) => coinAndBalance[0] === coinType
+		// 		)?.[1];
+		// 		return foundBalance ?? BigInt(0);
+		// 	}
+		// );
 
-		return CmmmCalculations.calcLpOutGivenExactTokensIn(
-			poolCoinBalances,
-			poolCoinWeights,
-			depositCoinBalances,
-			pool.lpCoinSupply,
-			pool.coins[Object.keys(poolCoins)[0]].tradeFeeIn
-		);
+		// return CmmmCalculations.calcLpOutGivenExactTokensIn(
+		// 	poolCoinBalances,
+		// 	poolCoinWeights,
+		// 	depositCoinBalances,
+		// 	pool.lpCoinSupply,
+		// 	pool.coins[Object.keys(poolCoins)[0]].tradeFeeIn
+		// );
 	};
 }

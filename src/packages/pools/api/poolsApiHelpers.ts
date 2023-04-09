@@ -29,6 +29,7 @@ import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
 import { CmmmCalculations } from "../utils/cmmmCalculations";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
+import { Pool } from "..";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -331,8 +332,7 @@ export class PoolsApiHelpers {
 
 	public fetchBuildTradeTransaction = async (
 		walletAddress: SuiAddress,
-		poolObjectId: ObjectId,
-		poolLpType: CoinType,
+		pool: Pool,
 		fromCoinType: CoinType,
 		fromCoinAmount: Balance,
 		toCoinType: CoinType,
@@ -349,17 +349,20 @@ export class PoolsApiHelpers {
 				fromCoinAmount
 			);
 
-		// PRODUCTION: do calc here !
-		const amountOut = BigInt(0);
+		const amountOut = pool.getTradeAmountOut({
+			coinInAmount: fromCoinAmount,
+			coinInType: fromCoinType,
+			coinOutType: toCoinType,
+		});
 
 		const finalTx = this.addTradeCommandToTransaction(
 			txWithCoinWithAmount,
-			poolObjectId,
+			pool.pool.objectId,
 			coinArgument,
 			fromCoinType,
 			amountOut,
 			toCoinType,
-			poolLpType,
+			pool.pool.lpCoinType,
 			slippage,
 			referrer
 		);
@@ -369,8 +372,7 @@ export class PoolsApiHelpers {
 
 	public fetchBuildDepositTransaction = async (
 		walletAddress: SuiAddress,
-		poolObjectId: ObjectId,
-		poolLpType: CoinType,
+		pool: Pool,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[],
 		slippage: Slippage,
@@ -391,11 +393,11 @@ export class PoolsApiHelpers {
 
 		const finalTx = this.addMultiCoinDepositCommandToTransaction(
 			txWithCoinsWithAmount,
-			poolObjectId,
+			pool.pool.objectId,
 			coinArguments,
 			coinTypes,
 			expectedLpRatio,
-			poolLpType,
+			pool.pool.lpCoinType,
 			slippage,
 			referrer
 		);
@@ -405,8 +407,7 @@ export class PoolsApiHelpers {
 
 	public fetchBuildWithdrawTransaction = async (
 		walletAddress: SuiAddress,
-		poolObjectId: ObjectId,
-		poolLpType: CoinType,
+		pool: Pool,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[],
 		lpCoinAmount: Balance,
@@ -422,15 +423,15 @@ export class PoolsApiHelpers {
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
-				poolLpType,
+				pool.pool.lpCoinType,
 				lpCoinAmount
 			);
 
 		const finalTx = this.addMultiCoinWithdrawCommandToTransaction(
 			txWithCoinWithAmount,
-			poolObjectId,
+			pool.pool.objectId,
 			lpCoinArgument,
-			poolLpType,
+			pool.pool.lpCoinType,
 			coinAmounts, // TODO: calc slippage amount
 			coinTypes,
 			slippage,

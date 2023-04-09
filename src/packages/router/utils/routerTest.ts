@@ -18,14 +18,13 @@ const runMe = async () => {
 
 	const supportedCoins = await router.getSupportedCoins();
 
-	// const coinIn = supportedCoins.find((coin) => coin.includes("lzeth")) ?? "";
-	// const coinOut = supportedCoins.find((coin) => coin.includes("wheth")) ?? "";
-	// const coinInAmount = tradeAmounts.medium;
-
-	const coinIn = "0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdt::WHUSDT";
+	const coinIn =
+		supportedCoins.find((coin) => coin.toLowerCase().includes("wheth")) ??
+		"";
 	const coinOut =
-		"0xc6d6a60b8edc8f50cb07f4ef64935e9ecbe43e8e::whusdc::WHUSDC";
-	const coinInAmount = tradeAmounts.large;
+		supportedCoins.find((coin) => coin.toLowerCase().includes("whbtc")) ??
+		"";
+	const coinInAmount = tradeAmounts.medium;
 
 	console.log("START");
 	console.log("\n");
@@ -40,7 +39,7 @@ const runMe = async () => {
 			5,
 			false
 		);
-		await runRoute(router, coinIn, coinOutAmount, coinOut, 5, true);
+		// await runRoute(router, coinIn, coinOutAmount, coinOut, 5, true);
 		// await runRoute(router, coinIn, coinInAmount, coinOut, 3);
 		// await runRoute(router, coinIn, coinInAmount, coinOut, 4);
 		// await runRoute(router, coinIn, coinInAmount, coinOut, 5);

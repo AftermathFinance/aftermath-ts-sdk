@@ -11,6 +11,7 @@ import {
 	PoolWithdrawEvent,
 	SerializedTransaction,
 	Slippage,
+	PoolObject,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import {
@@ -175,8 +176,7 @@ export class PoolsApi {
 
 	public fetchDepositTransaction = async (
 		walletAddress: SuiAddress,
-		poolObjectId: ObjectId,
-		poolLpType: CoinType,
+		pool: Pool,
 		depositCoinsToBalance: CoinsToBalance,
 		slippage: Slippage,
 		referrer?: SuiAddress
@@ -186,8 +186,7 @@ export class PoolsApi {
 		);
 		const transaction = await this.Helpers.fetchBuildDepositTransaction(
 			walletAddress,
-			poolObjectId,
-			poolLpType,
+			pool,
 			coins,
 			balances,
 			slippage,
@@ -198,8 +197,7 @@ export class PoolsApi {
 
 	public fetchWithdrawTransaction = async (
 		walletAddress: SuiAddress,
-		poolObjectId: ObjectId,
-		poolLpType: CoinType,
+		pool: Pool,
 		withdrawCoinsToBalance: CoinsToBalance,
 		lpCoinAmount: Balance,
 		slippage: Slippage,
@@ -210,8 +208,7 @@ export class PoolsApi {
 		);
 		const transaction = await this.Helpers.fetchBuildWithdrawTransaction(
 			walletAddress,
-			poolObjectId,
-			poolLpType,
+			pool,
 			coins,
 			balances,
 			lpCoinAmount,
@@ -223,20 +220,18 @@ export class PoolsApi {
 
 	public fetchTradeTransaction = async (
 		walletAddress: SuiAddress,
-		poolObjectId: ObjectId,
-		poolLpType: CoinType,
+		pool: Pool,
 		fromCoin: CoinType,
-		fromCoinBalance: Balance,
+		fromCoinAmount: Balance,
 		toCoinType: CoinType,
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> => {
 		const transaction = await this.Helpers.fetchBuildTradeTransaction(
 			walletAddress,
-			poolObjectId,
-			poolLpType,
+			pool,
 			fromCoin,
-			fromCoinBalance,
+			fromCoinAmount,
 			toCoinType,
 			slippage,
 			referrer
