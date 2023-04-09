@@ -73,12 +73,9 @@ export class CmmmCalculations {
 		sum: number,
 		flatness: number
 	): number =>
-		(Math.sqrt(
-			prod * (prod * (flatness * flatness) + (1 - flatness) * 4) +
-				flatness * sum * 8
-		) -
-			flatness * prod) /
-		2;
+		(Math.sqrt(prod * (
+			prod * (flatness * flatness + (1 - flatness) * 4) + flatness * sum * 8
+		)) - flatness * prod) / 2;
 
 	// This function is used for 1d optimization. It computes the full invariant components and their
 	// portions which omit contribution from the balance in the `index` coordinate.
@@ -257,7 +254,7 @@ export class CmmmCalculations {
         let wIn = CmmmCalculations.directCast(coinIn.weight);
 		let [prod, _sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
 			pool,
-			coinTypeIn
+			coinTypeOut
 		);
 
 		let feedAmountIn =
