@@ -542,6 +542,15 @@ export class RouterGraph {
 				coinInType: path.coinIn.type,
 				coinOutType: path.coinOut.type,
 			});
+
+			console.log("amnt", currentCoinInAmount);
+			console.log(
+				Object.values(pool.pool.coins).map((coin) => coin.balance)
+			);
+			console.log("objectId", pool.pool.objectId);
+			console.log("coinIn", path.coinIn.type);
+			console.log("coinOut", path.coinOut.type);
+
 			const coinOutAmount = isGivenAmountOut
 				? pool.getTradeAmountIn({
 						coinOutType: path.coinOut.type,

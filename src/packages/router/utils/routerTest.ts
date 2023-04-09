@@ -1,6 +1,8 @@
 import { Aftermath } from "../../../general/providers";
-import { Balance } from "../../../types";
+import { Helpers } from "../../../general/utils/helpers";
+import { Balance, PoolObject } from "../../../types";
 import { CoinType } from "../../coin/coinTypes";
+import { Pool } from "../../pools";
 import { Router } from "../router";
 
 const tradeAmounts = {
@@ -12,32 +14,49 @@ const tradeAmounts = {
 };
 
 const runMe = async () => {
-	const AftermathSdk = new Aftermath("LOCAL");
-	const router = AftermathSdk.Router();
+	const sdk = new Aftermath("LOCAL");
+	// const router = sdk.Router();
 
-	const supportedCoins = await router.getSupportedCoins();
+	// const supportedCoins = await router.getSupportedCoins();
 
-	const coinIn =
-		supportedCoins.find((coin) => coin.toLowerCase().includes("wheth")) ??
-		"";
-	const coinOut =
-		supportedCoins.find((coin) => coin.toLowerCase().includes("whbtc")) ??
-		"";
-	const coinInAmount = tradeAmounts.medium;
+	// const coinIn =
+	// 	supportedCoins.find((coin) => coin.toLowerCase().includes("wheth")) ??
+	// 	"";
+	// const coinOut =
+	// 	supportedCoins.find((coin) => coin.toLowerCase().includes("whbtc")) ??
+	// 	"";
+	// const coinInAmount = tradeAmounts.medium;
 
 	console.log("START");
 	console.log("\n");
 
 	try {
 		// await runRoute(router, coinIn, coinInAmount, coinOut, 1);
-		const coinOutAmount = await runRoute(
-			router,
-			coinIn,
-			coinInAmount,
-			coinOut,
-			5,
-			false
+		// const coinOutAmount = await runRoute(
+		// 	router,
+		// 	coinIn,
+		// 	coinInAmount,
+		// 	coinOut,
+		// 	5,
+		// 	false
+		// );
+		// const pool = await sdk.Pools().getPool({
+		// 	objectId:
+		// 		"0xbc8bdb27d73b28f9ba9cd1b56e256f21bf9584d1e80ccc460a24e46bd4078950",
+		// });
+		const pool = new Pool(
+			Helpers.parseJsonWithBigint(
+				`{"objectId":"0xbc8bdb27d73b28f9ba9cd1b56e256f21bf9584d1e80ccc460a24e46bd4078950","lpCoinType":"0xef7ba1db7f5604bee5f86cf444c3636d6e5d711fbba280954fa9d2f654ef7db7::af_lp_eth::AF_LP_ETH","name":"ETH Pool","creator":"0x4b02b9b45f2a9597363fbaacb2fd6e7fb8ed9329bb6f716631b5717048908ace","lpCoinSupply":"3675123799120n","illiquidLpCoinSupply":"1000n","flatness":"0n","coins":{"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::af::AF":{"weight":"250000000000000000n","balance":"1000000000000000n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::afsui::AFSUI":{"weight":"250000000000000000n","balance":"876843564864654n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::lzeth::LZETH":{"weight":"250000000000000000n","balance":"45612457575n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::wheth::WHETH":{"weight":"250000000000000000n","balance":"4561233457n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"}}}`
+			) as unknown as PoolObject
 		);
+		const amountOut = pool.getTradeAmountOut({
+			coinInType:
+				"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::wheth::WHETH",
+			coinOutType:
+				"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::af::AF",
+			coinInAmount: BigInt(10000000),
+		});
+		console.log("amountOut", amountOut);
 		// await runRoute(router, coinIn, coinOutAmount, coinOut, 5, true);
 		// await runRoute(router, coinIn, coinInAmount, coinOut, 3);
 		// await runRoute(router, coinIn, coinInAmount, coinOut, 4);
