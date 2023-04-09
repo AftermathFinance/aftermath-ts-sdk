@@ -87,6 +87,8 @@ export class RouterApi {
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> {
 		const startTx = new TransactionBlock();
+		// PRODUCTION: setSender on all transactions that gather coins !
+		startTx.setSender(walletAddress);
 
 		const { coinArgument: coinInArg, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
@@ -97,6 +99,7 @@ export class RouterApi {
 			);
 
 		let tx = txWithCoinWithAmount;
+		let coinsOut = [];
 
 		for (const route of completeRoute.routes) {
 			const [splitCoinArg] = tx.add({
@@ -123,7 +126,12 @@ export class RouterApi {
 				tx = newTx;
 				coinIn = newCoinIn;
 			}
+
+			coinsOut.push(coinIn);
 		}
+
+		if (coinsOut.length > 1) tx.mergeCoins(coinsOut[0], coinsOut.slice(1));
+		tx.transferObjects([coinsOut[0], coinInArg], tx.pure(walletAddress));
 
 		return tx.serialize();
 	}

@@ -419,8 +419,8 @@ export class RouterGraph {
 					isGivenAmountOut
 				);
 
-			currentPools = updatedPools;
-			currentRoutes = updatedRoutes;
+			currentPools = Helpers.deepCopy(updatedPools);
+			currentRoutes = Helpers.deepCopy(updatedRoutes);
 		}
 
 		return currentRoutes;
@@ -509,8 +509,8 @@ export class RouterGraph {
 		const updatedRoutes = [
 			cutRoutesAndPools[0].updatedRoute,
 			...cutRoutesAndPools
-				.map((udpatedData) => udpatedData.startingRoute)
-				.slice(1),
+				.slice(1)
+				.map((udpatedData) => udpatedData.startingRoute),
 		];
 
 		return {
@@ -542,14 +542,6 @@ export class RouterGraph {
 				coinInType: path.coinIn.type,
 				coinOutType: path.coinOut.type,
 			});
-
-			console.log("amnt", currentCoinInAmount);
-			console.log(
-				Object.values(pool.pool.coins).map((coin) => coin.balance)
-			);
-			console.log("objectId", pool.pool.objectId);
-			console.log("coinIn", path.coinIn.type);
-			console.log("coinOut", path.coinOut.type);
 
 			const coinOutAmount = isGivenAmountOut
 				? pool.getTradeAmountIn({
@@ -634,10 +626,10 @@ export class RouterGraph {
 
 		if (isGivenAmountOut) {
 			newPoolObject.coins[coinIn].balance += coinOutAmount;
-			newPoolObject.coins[coinOut].balance += coinInAmount;
+			newPoolObject.coins[coinOut].balance -= coinInAmount;
 		} else {
 			newPoolObject.coins[coinIn].balance += coinInAmount;
-			newPoolObject.coins[coinOut].balance += coinOutAmount;
+			newPoolObject.coins[coinOut].balance -= coinOutAmount;
 		}
 
 		const newPool = new Pool(Helpers.deepCopy(newPoolObject), pool.network);
