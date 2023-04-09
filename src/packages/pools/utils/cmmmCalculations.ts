@@ -232,7 +232,7 @@ export class CmmmCalculations {
 
 	// 1d optimized swap function for finding out given in. Returns t such that t*expected_out is the true out.
     // Lower t favors the pool.
-    public static calc_out_given_in = (
+    public static calcOutGivenIn = (
         pool: PoolObject,
 		coinTypeIn: CoinType,
         coinTypeOut: CoinType,
@@ -253,7 +253,7 @@ export class CmmmCalculations {
         let oldOut = CmmmCalculations.convertFromInt(coinOut.balance);
 
         let wIn = CmmmCalculations.directCast(coinIn.weight);
-		let [prod, sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
+		let [prod, _sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
 			pool,
 			coinTypeIn
 		);
