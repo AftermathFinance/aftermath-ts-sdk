@@ -232,7 +232,7 @@ export class CmmmCalculations {
 	};
 
 	// 1d optimized swap function for finding out given in. Returns t such that t*expected_out is the true out.
-    // Lower t favors the pool.
+	// Lower t favors the pool.
     public static calcOutGivenIn = (
         pool: PoolObject,
 		coinTypeIn: CoinType,
