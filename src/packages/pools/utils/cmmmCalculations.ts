@@ -70,7 +70,7 @@ export class CmmmCalculations {
         prod: number,
         sum: number,
         flatness: number,
-    ): number => (Math.sqrt(prod * (prod * (flatness * flatness) + ((1-flatness) << 2)) + ((flatness * sum) << 3)) - flatness * prod) >> 1;
+    ): number => (Math.sqrt(prod * (prod * (flatness * flatness) + ((1-flatness) * 4)) + ((flatness * sum) * 8)) - flatness * prod) / 2;
 
 
 	// This function is used for 1d optimization. It computes the full invariant components and their
@@ -159,16 +159,16 @@ export class CmmmCalculations {
         let as0 = flatness * s0;
         let ah = flatness * h;
 
-        let c1 = (aw * w) << 1;
-        let c2 = (acw * p0) << 1;
-        let c3 = ((w * as0) << 1) + ah;
-        let c4 = (h * h) / p0;
+        let c1 = 2 * aw * w;
+        let c2 = 2 * acw * p0;
+        let c3 = 2 * w * as0 + ah;
+        let c4 = h * h / p0;
         let c5 = ac * p0;
-        let c6 = (as0 << 1) + (w * ah);
-        let c7 = (aw * (w + 1)) << 1;
-        let c8 = (acw * p0) << 1;
-        let c9 = (aw * s0) << 1;
-        let c10= (aw * h);
+        let c6 = 2 * as0 + w * ah;
+        let c7 = 2 * aw * (w + 1);
+        let c8 = 2 * acw * p0;
+        let c9 = 2 * aw * s0;
+        let c10= aw * h;
 
         // ---------------- iterating ----------------
 
@@ -213,7 +213,7 @@ export class CmmmCalculations {
             // This only happens if x is supposed to be small. In this case, replace x with a small number and try again.
             // Once x is close enough to the true value g(x) won't overshoot anymore and this test will be skipped from then on.
             if (top_pos < top_neg || bottom_pos < c10) {
-                x = 1 >> i;
+                x = 1 / (2 ** i);
                 i = i + 1;
                 continue
             };
