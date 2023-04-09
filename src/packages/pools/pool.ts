@@ -143,7 +143,7 @@ export class Pool extends Caller {
 					this.pool,
 					inputs.coinInType,
 					inputs.coinOutType,
-					Number(inputs.coinInAmount)
+					inputs.coinInAmount
 				)
 			)
 		);

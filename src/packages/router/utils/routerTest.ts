@@ -13,8 +13,7 @@ const tradeAmounts = {
 
 const runMe = async () => {
 	const AftermathSdk = new Aftermath("LOCAL");
-	const pools = await AftermathSdk.Pools().getAllPools();
-	const router = await AftermathSdk.Router();
+	const router = AftermathSdk.Router();
 
 	const supportedCoins = await router.getSupportedCoins();
 
