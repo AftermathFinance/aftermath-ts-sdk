@@ -236,7 +236,7 @@ export class CmmmCalculations {
         pool: PoolObject,
 		coinTypeIn: CoinType,
         coinTypeOut: CoinType,
-		amountIn: number,
+		amountIn: Balance,
     ): number => {
         if (coinTypeIn == coinTypeOut) throw Error("In and out must be different coins");
 		let coinIn = pool.coins[coinTypeIn];
@@ -258,7 +258,7 @@ export class CmmmCalculations {
 			coinTypeIn
 		);
 
-        let feedAmountIn = (1 - swapFeeIn) * amountIn;
+        let feedAmountIn = (1 - swapFeeIn) * CmmmCalculations.convertFromInt(amountIn);
         let newIn = oldIn + feedAmountIn;
         let prodRatio = Math.pow(newIn / oldIn, wIn);
 
