@@ -139,7 +139,7 @@ export class Pool extends Caller {
 	}) => {
 		return BigInt(
 			Math.floor(
-				CmmmCalculations.calc_out_given_in(
+				CmmmCalculations.calcOutGivenIn(
 					this.pool,
 					inputs.coinInType,
 					inputs.coinOutType,
