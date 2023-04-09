@@ -3,8 +3,6 @@ import {
 	TransactionBlock,
 	SuiAddress,
 	TransactionArgument,
-	OPTION,
-	Option,
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -27,7 +25,6 @@ import {
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
-import { CmmmCalculations } from "../utils/cmmmCalculations";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 import { Pool } from "..";
 
@@ -181,7 +178,7 @@ export class PoolsApiHelpers {
 				tx.pure(Pools.normalizeSlippage(slippage)),
 				tx.pure(
 					TransactionsApiHelpers.createOptionObject(referrer),
-					OPTION
+					"Option<address>"
 				),
 			],
 		});
@@ -224,7 +221,7 @@ export class PoolsApiHelpers {
 				tx.pure(Pools.normalizeSlippage(slippage)),
 				tx.pure(
 					TransactionsApiHelpers.createOptionObject(referrer),
-					OPTION
+					"Option<address>"
 				),
 			],
 		});
@@ -274,7 +271,7 @@ export class PoolsApiHelpers {
 				tx.pure(Pools.normalizeSlippage(slippage)),
 				tx.pure(
 					TransactionsApiHelpers.createOptionObject(referrer),
-					OPTION
+					"Option<address>"
 				),
 			],
 		});
@@ -315,7 +312,7 @@ export class PoolsApiHelpers {
 				tx.pure(Pools.normalizeSlippage(slippage)),
 				tx.pure(
 					TransactionsApiHelpers.createOptionObject(referrer),
-					OPTION
+					"Option<address>"
 				),
 			],
 		});
