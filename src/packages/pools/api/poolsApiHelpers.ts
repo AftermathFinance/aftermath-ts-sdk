@@ -325,8 +325,6 @@ export class PoolsApiHelpers {
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	// TODO: abstract i and ii into a new function that can also be called by swap/deposit/withdraw.
-
 	public fetchBuildTradeTransaction = async (
 		walletAddress: SuiAddress,
 		pool: Pool,
@@ -337,6 +335,7 @@ export class PoolsApiHelpers {
 		referrer?: SuiAddress
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
@@ -376,6 +375,7 @@ export class PoolsApiHelpers {
 		referrer?: SuiAddress
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		const { coinArguments, txWithCoinsWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
@@ -412,6 +412,7 @@ export class PoolsApiHelpers {
 		referrer?: SuiAddress
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		// PRODUCTION: do calc here !
 		// const lpCoinAmount = BigInt(0);

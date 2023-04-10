@@ -86,53 +86,13 @@ export class RouterApi {
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> {
-		const startTx = new TransactionBlock();
-		// PRODUCTION: setSender on all transactions that gather coins !
-		startTx.setSender(walletAddress);
-
-		const { coinArgument: coinInArg, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
-				startTx,
+		const tx =
+			await this.Helpers.fetchBuildTransactionForCompleteTradeRoute(
 				walletAddress,
-				completeRoute.coinIn.type,
-				completeRoute.coinIn.amount
+				completeRoute,
+				slippage,
+				referrer
 			);
-
-		let tx = txWithCoinWithAmount;
-		let coinsOut = [];
-
-		for (const route of completeRoute.routes) {
-			const [splitCoinArg] = tx.add({
-				kind: "SplitCoins",
-				coin: coinInArg,
-				amounts: [tx.pure(route.coinIn.amount)],
-			});
-
-			let coinIn = splitCoinArg;
-
-			for (const path of route.paths) {
-				const { tx: newTx, coinOut: newCoinIn } =
-					this.Provider.Pools().Helpers.addTradeCommandWithCoinOutToTransaction(
-						tx,
-						path.poolObjectId,
-						coinIn,
-						path.coinIn.type,
-						path.coinOut.amount,
-						path.coinOut.type,
-						path.poolLpCoinType,
-						slippage,
-						referrer
-					);
-				tx = newTx;
-				coinIn = newCoinIn;
-			}
-
-			coinsOut.push(coinIn);
-		}
-
-		if (coinsOut.length > 1) tx.mergeCoins(coinsOut[0], coinsOut.slice(1));
-		tx.transferObjects([coinsOut[0], coinInArg], tx.pure(walletAddress));
-
 		return tx.serialize();
 	}
 }

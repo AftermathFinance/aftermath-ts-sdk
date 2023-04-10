@@ -487,6 +487,7 @@ export class CapysApiHelpers {
 		parentTwoId: ObjectId
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount =
@@ -516,6 +517,7 @@ export class CapysApiHelpers {
 		parentTwoId: ObjectId
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount =
@@ -545,6 +547,7 @@ export class CapysApiHelpers {
 		parentTwoId: ObjectId
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount = Capys.constants.breedingFees.amounts.breedAndKeep;

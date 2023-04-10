@@ -141,6 +141,8 @@ export class CoinApiHelpers {
 		coinArgument: TransactionArgument;
 		txWithCoinWithAmount: TransactionBlock;
 	}> => {
+		tx.setSender(walletAddress);
+
 		// TODO: handle cursoring until necessary coin amount is found
 		const paginatedCoins = await this.Provider.provider.getCoins({
 			owner: walletAddress,
@@ -163,6 +165,8 @@ export class CoinApiHelpers {
 		coinArguments: TransactionArgument[];
 		txWithCoinsWithAmount: TransactionBlock;
 	}> => {
+		tx.setSender(walletAddress);
+
 		// TODO: handle cursoring until necessary coin amount is found
 		const allPaginatedCoins = await Promise.all(
 			coinTypes.map((coinType) =>
