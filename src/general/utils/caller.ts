@@ -54,7 +54,8 @@ export class Caller {
 
 	protected async fetchApi<Output, BodyType = undefined>(
 		url: Url,
-		body?: BodyType
+		body?: BodyType,
+		signal?: AbortSignal
 	): Promise<Output> {
 		// this allows BigInt to be JSON serialized (as string)
 		(BigInt.prototype as any).toJSON = function () {
@@ -63,10 +64,11 @@ export class Caller {
 
 		const apiCallUrl = this.urlForApiCall(url);
 		const response = await (body === undefined
-			? fetch(apiCallUrl)
+			? fetch(apiCallUrl, { signal })
 			: fetch(apiCallUrl, {
 					method: "POST",
 					body: JSON.stringify(body),
+					signal,
 			  }));
 
 		return await Caller.fetchResponseToType<Output>(response);
