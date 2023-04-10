@@ -15,6 +15,7 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { Helpers } from "../../general/utils/helpers";
 
 export class Coin extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -104,6 +105,10 @@ export class Coin extends Caller {
 		const endIndex = keyType.indexOf(">", startIndex);
 		return keyType.slice(startIndex, endIndex);
 	};
+
+	public static isSuiCoin = (coin: string) =>
+		Helpers.stripLeadingZeroesFromType(coin) ===
+		Helpers.stripLeadingZeroesFromType(Coin.constants.suiCoinType);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Helpers

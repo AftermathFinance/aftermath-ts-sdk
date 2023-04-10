@@ -11,12 +11,12 @@ export class Helpers {
 	//// Api Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	public static dynamicFields = DynamicFieldsApiHelpers;
-	public static events = EventsApiHelpers;
-	public static inspections = InspectionsApiHelpers;
-	public static objects = ObjectsApiHelpers;
-	public static rpc = RpcApiHelpers;
-	public static transactions = TransactionsApiHelpers;
+	public static readonly dynamicFields = DynamicFieldsApiHelpers;
+	public static readonly events = EventsApiHelpers;
+	public static readonly inspections = InspectionsApiHelpers;
+	public static readonly objects = ObjectsApiHelpers;
+	public static readonly rpc = RpcApiHelpers;
+	public static readonly transactions = TransactionsApiHelpers;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Type Manipulation
@@ -52,7 +52,7 @@ export class Helpers {
 	public static parseJsonWithBigint = (
 		json: string,
 		unsafeStringNumberConversion = false
-	): string =>
+	) =>
 		JSON.parse(json, (key, value) => {
 			// handles bigint casting
 			if (typeof value === "string" && /^\d+n$/.test(value)) {
@@ -116,4 +116,9 @@ export class Helpers {
 	};
 
 	public static uniqueArray = <T>(arr: T[]): T[] => [...new Set(arr)];
+
+	public static sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+	public static createUid = () =>
+		Date.now().toString(36) + Math.random().toString(36).substring(2);
 }

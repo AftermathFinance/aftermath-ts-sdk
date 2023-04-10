@@ -16,8 +16,8 @@ import {
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
-import { Helpers } from "../../general/utils/helpers";
 import { Caller } from "../../general/utils/caller";
+import { Helpers } from "../../general/utils/helpers";
 
 export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ export class Pools extends Caller {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Conversions
+	//// With Decimals Conversions
 	/////////////////////////////////////////////////////////////////////
 
 	public static coinWeightWithDecimals = (weight: PoolWeight) =>
@@ -123,11 +123,22 @@ export class Pools extends Caller {
 	public static tradeFeeWithDecimals = (tradeFee: PoolTradeFee) =>
 		Number(tradeFee) / 10 ** Pools.constants.tradeFeeDecimals;
 
-	public static normalizeLpCoinBalance = (balance: number) =>
-		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
-
 	public static lpCoinBalanceWithDecimals = (balance: Balance) =>
 		Number(balance) / 10 ** Pools.constants.lpCoinDecimals;
+
+	/////////////////////////////////////////////////////////////////////
+	//// Normalize Conversions
+	/////////////////////////////////////////////////////////////////////
+
+	public static normalizePoolTradeFee = (tradeFee: PoolTradeFee) => {
+		return Coin.balanceWithDecimals(
+			tradeFee,
+			Pools.constants.tradeFeeDecimals
+		);
+	};
+
+	public static normalizeLpCoinBalance = (balance: number) =>
+		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
 
 	public static normalizeSlippage = (slippage: Slippage) =>
 		Coin.normalizeBalance(slippage, Pools.constants.slippageDecimals);

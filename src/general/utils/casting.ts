@@ -42,4 +42,8 @@ export class Casting {
 		}
 		return uint8s;
 	};
+
+	public static normalizeSlippageTolerance = (slippageTolerance: number) => {
+		return slippageTolerance / 100;
+	};
 }
