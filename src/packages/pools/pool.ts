@@ -160,18 +160,13 @@ export class Pool extends Caller {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
-	}) => {
-		return BigInt(
-			Math.floor(
-				CmmmCalculations.calcOutGivenIn(
-					this.pool,
-					inputs.coinInType,
-					inputs.coinOutType,
-					inputs.coinInAmount
-				)
-			)
+	}) =>
+		CmmmCalculations.calcOutGivenIn(
+			this.pool,
+			inputs.coinInType,
+			inputs.coinOutType,
+			inputs.coinInAmount
 		);
-	};
 
 	public getTradeAmountIn = (inputs: {
 		coinOutType: CoinType;
