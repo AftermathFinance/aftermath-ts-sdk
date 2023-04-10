@@ -36,13 +36,14 @@ export class CmmmCalculations {
 
 	// pools assume coins are stored in raw integer format
 	// every other fixed point nubmer is in 18 point format
+	// these terms come from their on chain equivalents where direct cast means (x: u64 as u256)
 	private static convertFromInt = (n: bigint): number => Number(n);
+	private static convertToInt = (n: number): ApproximateBalance => BigInt(Math.floor(n));
 	private static directCast = (n: bigint): number =>
 		Coin.balanceWithDecimals(n, 18);
-	private static convertToInt = (n: number): ApproximateBalance =>
+	private static directUncast = (n: number): ApproximateBalance =>
 		Coin.normalizeBalance(n, 18);
-	private static directUncast = (n: number): ApproximateBalance => BigInt(n);
-
+	
 	// Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
 	// the invariant (ignoring fees) and investments change the invariant without changing the distribution of balances.
 	// Invariant and pool lp are almost in 1:1 correspondence -- e.g. burning lp in a withdraw proportionally lowers the pool invariant.
