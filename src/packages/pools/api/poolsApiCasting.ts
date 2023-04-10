@@ -83,11 +83,11 @@ export class PoolsApiCasting {
 		const fields = tradeEventFromFetched.parsedJson;
 		return {
 			poolId: fields.pool_id,
-			trader: fields.issuer, // issuer
-			typeIn: "0x" + fields.type_in,
-			amountIn: fields.value_in, // "value" might refer to the constant value function, "amount" is raw amount
-			typeOut: "0x" + fields.type_out,
-			amountOut: fields.value_out, // "value" might refer to the constant value function, "amount" is raw amount
+			trader: fields.issuer,
+			typesIn: fields.types_in.map((type) => "0x" + type),
+			amountsIn: fields.amounts_in,
+			typesOut: fields.types_out.map((type) => "0x" + type),
+			amountsOut: fields.amounts_out,
 			timestamp: tradeEventFromFetched.timestampMs,
 			txnDigest: tradeEventFromFetched.id.txDigest,
 		};

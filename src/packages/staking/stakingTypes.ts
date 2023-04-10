@@ -45,8 +45,8 @@ export interface StakingStats {
 export interface StakeStakeEventAccumulation {
 	staker: SuiAddress;
 	totalAmountStaked: Balance;
-	latestStakeTimestamp: Timestamp;
-	firstStakeTimestamp: Timestamp;
+	latestStakeTimestamp: Timestamp | undefined;
+	firstStakeTimestamp: Timestamp | undefined;
 	largestStake: Balance;
 }
 

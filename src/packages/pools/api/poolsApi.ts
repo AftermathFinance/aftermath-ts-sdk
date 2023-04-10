@@ -52,26 +52,27 @@ export class PoolsApi {
 
 	public fetchTradeEvents = async (
 		cursor?: EventId,
-		limit?: number,
-		poolObjectId?: ObjectId
+		limit?: number
+		// poolObjectId?: ObjectId
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolTradeEventOnChain,
 			PoolTradeEvent
 		>(
-			poolObjectId
-				? {
-						All: [
-							{ MoveEventType: this.Helpers.eventTypes.trade },
-							{
-								MoveEventField: {
-									path: "pool_id",
-									value: poolObjectId,
-								},
-							},
-						],
-				  }
-				: { MoveEventType: this.Helpers.eventTypes.trade },
+			// poolObjectId
+			// 	? {
+			// 			And: [
+			// 				{ MoveEventType: this.Helpers.eventTypes.trade },
+			// 				{
+			// 					MoveEventField: {
+			// 						path: "pool_id",
+			// 						value: poolObjectId,
+			// 					},
+			// 				},
+			// 			],
+			// 	  }
+			// 	: { MoveEventType: this.Helpers.eventTypes.trade },
+			{ MoveEventType: this.Helpers.eventTypes.trade },
 			Casting.pools.poolTradeEventFromOnChain,
 			cursor,
 			limit
@@ -79,26 +80,27 @@ export class PoolsApi {
 
 	public fetchDepositEvents = async (
 		cursor?: EventId,
-		limit?: number,
-		poolObjectId?: ObjectId
+		limit?: number
+		// poolObjectId?: ObjectId
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
 			PoolDepositEvent
 		>(
-			poolObjectId
-				? {
-						All: [
-							{ MoveEventType: this.Helpers.eventTypes.deposit },
-							{
-								MoveEventField: {
-									path: "pool_id",
-									value: poolObjectId,
-								},
-							},
-						],
-				  }
-				: { MoveEventType: this.Helpers.eventTypes.deposit },
+			// poolObjectId
+			// 	? {
+			// 			And: [
+			// 				{ MoveEventType: this.Helpers.eventTypes.deposit },
+			// 				{
+			// 					MoveEventField: {
+			// 						path: "pool_id",
+			// 						value: poolObjectId,
+			// 					},
+			// 				},
+			// 			],
+			// 	  }
+			// 	: { MoveEventType: this.Helpers.eventTypes.deposit },
+			{ MoveEventType: this.Helpers.eventTypes.deposit },
 			Casting.pools.poolDepositEventFromOnChain,
 			cursor,
 			limit
@@ -106,26 +108,27 @@ export class PoolsApi {
 
 	public fetchWithdrawEvents = async (
 		cursor?: EventId,
-		limit?: number,
-		poolObjectId?: ObjectId
+		limit?: number
+		// poolObjectId?: ObjectId
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolWithdrawEventOnChain,
 			PoolWithdrawEvent
 		>(
-			poolObjectId
-				? {
-						All: [
-							{ MoveEventType: this.Helpers.eventTypes.withdraw },
-							{
-								MoveEventField: {
-									path: "pool_id",
-									value: poolObjectId,
-								},
-							},
-						],
-				  }
-				: { MoveEventType: this.Helpers.eventTypes.withdraw },
+			// poolObjectId
+			// 	? {
+			// 			And: [
+			// 				{ MoveEventType: this.Helpers.eventTypes.withdraw },
+			// 				{
+			// 					MoveEventField: {
+			// 						path: "pool_id",
+			// 						value: poolObjectId,
+			// 					},
+			// 				},
+			// 			],
+			// 	  }
+			// 	: { MoveEventType: this.Helpers.eventTypes.withdraw },
+			{ MoveEventType: this.Helpers.eventTypes.withdraw },
 			Casting.pools.poolWithdrawEventFromOnChain,
 			cursor,
 			limit
@@ -269,25 +272,27 @@ export class PoolsApi {
 		const poolCoins = pool.pool.coins;
 		const poolCoinTypes = Object.keys(poolCoins);
 
-		const prices = Object.entries(coinsToPrice).map(([, price]) => price);
-
-		// TODO: move this outside of func to be called externally via provider !
+		// TODO: move this outside of func to be called externally via provider in api ?
 		const coinsToDecimals =
 			await this.Provider.Coin().Helpers.fetchCoinsToDecimals(
 				poolCoinTypes
 			);
 
-		const tradeEventsWithinTime =
-			await this.Provider.Events().fetchEventsWithinTime(
-				this.fetchTradeEvents,
-				"hour",
-				24
-			);
+		// const tradeEventsWithinTime =
+		// 	await this.Provider.Events().fetchEventsWithinTime(
+		// 		(cursor, limit) =>
+		// 			pool.getTradeEvents({
+		// 				cursor,
+		// 				limit,
+		// 			}),
+		// 		"hour",
+		// 		24
+		// 	);
+		const tradeEventsWithinTime = (await pool.getTradeEvents({})).events;
 		const volume = this.Helpers.fetchCalcPoolVolume(
 			poolObjectId,
-			poolCoinTypes,
 			tradeEventsWithinTime,
-			prices,
+			coinsToPrice,
 			coinsToDecimals
 		);
 
@@ -367,6 +372,7 @@ export class PoolsApi {
 			this.fetchPool(poolObjectId),
 			(
 				await this.Provider.Events().fetchEventsWithinTime(
+					// TODO: fetch only pool's events
 					this.fetchTradeEvents,
 					timeframeValue.timeUnit,
 					timeframeValue.time

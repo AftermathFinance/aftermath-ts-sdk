@@ -180,15 +180,17 @@ export class StakingApi {
 				const totalAmountStaked =
 					stakerAccumulation.totalAmountStaked + stake.amount;
 
+				if (!stake.timestamp) continue;
+
 				const curLatestStakeTimestamp =
-					stakerAccumulation.latestStakeTimestamp;
+					stakerAccumulation.latestStakeTimestamp ?? 0;
 				const latestStakeTimestamp =
 					stake.timestamp > curLatestStakeTimestamp
 						? stake.timestamp
 						: curLatestStakeTimestamp;
 
 				const curFirstStakeTimestamp =
-					stakerAccumulation.firstStakeTimestamp;
+					stakerAccumulation.firstStakeTimestamp ?? 0;
 				const firstStakeTimestamp =
 					stake.timestamp < curFirstStakeTimestamp
 						? stake.timestamp

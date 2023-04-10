@@ -22,7 +22,7 @@ export interface EventOnChain<Fields> {
 	type: AnyObjectType;
 	parsedJson: Fields; // | undefined;
 	bcs: string; // | undefined;
-	timestampMs: number; // | undefined;
+	timestampMs: number | undefined;
 }
 
 export interface TableOnChain {

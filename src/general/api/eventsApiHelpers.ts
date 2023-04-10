@@ -98,6 +98,7 @@ export class EventsApiHelpers {
 		return { events, nextCursor } as EventsWithCursor<EventType>;
 	};
 
+	// TODO: make this function use timestamp passing as one of event filter args
 	public fetchEventsWithinTime = async <T extends Event>(
 		fetchEventsFunc: (
 			cursor?: EventId,

@@ -52,10 +52,10 @@ export interface PoolObject extends Object {
 export interface PoolTradeEvent extends Event {
 	poolId: ObjectId;
 	trader: SuiAddress;
-	typeIn: CoinType;
-	amountIn: Balance;
-	typeOut: CoinType;
-	amountOut: Balance;
+	typesIn: CoinType[];
+	amountsIn: Balance[];
+	typesOut: CoinType[];
+	amountsOut: Balance[];
 }
 
 export interface PoolDepositEvent extends Event {

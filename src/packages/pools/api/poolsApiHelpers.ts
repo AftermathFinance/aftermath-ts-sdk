@@ -447,9 +447,8 @@ export class PoolsApiHelpers {
 	// (not just swaps) ?
 	public fetchCalcPoolVolume = (
 		poolObjectId: ObjectId,
-		poolCoins: CoinType[],
 		tradeEvents: PoolTradeEvent[],
-		prices: number[],
+		coinsToPrice: CoinsToPrice,
 		coinsToDecimals: Record<CoinType, CoinDecimal>
 	) => {
 		const tradesForPool = tradeEvents.filter(
@@ -458,19 +457,18 @@ export class PoolsApiHelpers {
 
 		let volume = 0;
 		for (const trade of tradesForPool) {
-			const decimals = coinsToDecimals[trade.typeIn];
-			const tradeAmount = Coin.balanceWithDecimals(
-				trade.amountIn,
-				decimals
-			);
+			for (const [index, typeIn] of trade.typesIn.entries()) {
+				const decimals = coinsToDecimals[typeIn];
+				const tradeAmount = Coin.balanceWithDecimals(
+					trade.amountsIn[index],
+					decimals
+				);
 
-			const priceIndex = poolCoins.findIndex(
-				(coin) => coin === trade.typeIn
-			);
-			const coinInPrice = prices[priceIndex];
+				const coinInPrice = coinsToPrice[typeIn];
 
-			const amountUsd = tradeAmount * coinInPrice;
-			volume += amountUsd;
+				const amountUsd = tradeAmount * coinInPrice;
+				volume += amountUsd;
+			}
 		}
 
 		return volume;
@@ -553,11 +551,15 @@ export class PoolsApiHelpers {
 					dayjs(now).diff(trade.timestamp) / bucketTimestampSize
 				) -
 				1;
-			const amountUsd = Coin.balanceWithDecimalsUsd(
-				trade.amountIn,
-				coinsToDecimalsAndPrices[trade.typeIn].decimals,
-				coinsToDecimalsAndPrices[trade.typeIn].price
-			);
+
+			const amountUsd = trade.typesIn.reduce((acc, cur, index) => {
+				const amountInUsd = Coin.balanceWithDecimalsUsd(
+					trade.amountsIn[index],
+					coinsToDecimalsAndPrices[cur].decimals,
+					coinsToDecimalsAndPrices[cur].price
+				);
+				return acc + amountInUsd;
+			}, 0);
 
 			acc[bucketIndex].value += amountUsd;
 

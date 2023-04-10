@@ -104,28 +104,52 @@ export class Pool extends Caller {
 	public async getDepositEvents(
 		inputs: ApiEventsBody
 	): Promise<EventsWithCursor<PoolDepositEvent>> {
-		return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
-			"events/deposit",
-			inputs
-		);
+		const eventsWithCursor = await this.fetchApi<
+			EventsWithCursor<PoolDepositEvent>,
+			ApiEventsBody
+		>("events/deposit", inputs);
+
+		// PRODUCTION: temporary until "Any" filter can be used for event filtering
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.poolId === this.pool.objectId
+			),
+		};
 	}
 
 	public async getWithdrawEvents(
 		inputs: ApiEventsBody
 	): Promise<EventsWithCursor<PoolWithdrawEvent>> {
-		return this.fetchApi<
+		const eventsWithCursor = await this.fetchApi<
 			EventsWithCursor<PoolWithdrawEvent>,
 			ApiEventsBody
 		>("events/withdraw", inputs);
+
+		// PRODUCTION: temporary until "Any" filter can be used for event filtering
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.poolId === this.pool.objectId
+			),
+		};
 	}
 
 	public async getTradeEvents(
 		inputs: ApiEventsBody
 	): Promise<EventsWithCursor<PoolTradeEvent>> {
-		return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
-			"events/trade",
-			inputs
-		);
+		const eventsWithCursor = await this.fetchApi<
+			EventsWithCursor<PoolTradeEvent>,
+			ApiEventsBody
+		>("events/trade", inputs);
+
+		// PRODUCTION: temporary until "Any" filter can be used for event filtering
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.poolId === this.pool.objectId
+			),
+		};
 	}
 
 	/////////////////////////////////////////////////////////////////////

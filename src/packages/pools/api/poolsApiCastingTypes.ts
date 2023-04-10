@@ -43,10 +43,10 @@ export type PoolCreateEventOnChain = EventOnChain<
 export type PoolTradeEventOnChain = EventOnChain<{
 	pool_id: ObjectId;
 	issuer: SuiAddress;
-	type_in: CoinType;
-	value_in: Balance;
-	type_out: CoinType;
-	value_out: Balance;
+	types_in: CoinType[];
+	amounts_in: Balance[];
+	types_out: CoinType[];
+	amounts_out: Balance[];
 }>;
 
 export type PoolDepositEventOnChain = EventOnChain<{
