@@ -39,13 +39,13 @@ export class Caller {
 	}
 
 	private urlForApiCall = (url: string): Url => {
-		if (this.network === undefined || this.baseUrl === undefined)
-			throw new Error("no network, no baseUrl: unable to fetch data");
+		if (this.baseUrl === undefined)
+			throw new Error("no baseUrl: unable to fetch data");
 
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.baseUrl}/api/${
-			this.network === "LOCAL" ? "DEVNET" : this.network
-		}/${this.urlPrefix === "" ? "" : this.urlPrefix + "/"}${url}`;
+			this.urlPrefix === "" ? "" : this.urlPrefix + "/"
+		}${url}`;
 	};
 
 	/////////////////////////////////////////////////////////////////////

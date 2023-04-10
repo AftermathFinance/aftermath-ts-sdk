@@ -31,8 +31,7 @@ export class CmmmCalculations {
 	private static maxInvariantRatio: number = 3;
 
 	private static maxNewtonAttempts: number = 255;
-	// private static convergenceBound: number = 0.000_000_001;
-	private static convergenceBound: number = 0.1;
+	private static convergenceBound: number = 0.000_000_001;
 
 	// pools assume coins are stored in raw integer format
 	// every other fixed point nubmer is in 18 point format
@@ -73,9 +72,13 @@ export class CmmmCalculations {
 		sum: number,
 		flatness: number
 	): number =>
-		(Math.sqrt(prod * (
-			prod * (flatness * flatness + (1 - flatness) * 4) + flatness * sum * 8
-		)) - flatness * prod) / 2;
+		(Math.sqrt(
+			prod *
+				(prod * (flatness * flatness + (1 - flatness) * 4) +
+					flatness * sum * 8)
+		) -
+			flatness * prod) /
+		2;
 
 	// This function is used for 1d optimization. It computes the full invariant components and their
 	// portions which omit contribution from the balance in the `index` coordinate.
@@ -231,8 +234,8 @@ export class CmmmCalculations {
 
 	// 1d optimized swap function for finding out given in. Returns t such that t*expected_out is the true out.
 	// Lower t favors the pool.
-    public static calcOutGivenIn = (
-        pool: PoolObject,
+	public static calcOutGivenIn = (
+		pool: PoolObject,
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
 		amountIn: Balance
@@ -252,7 +255,7 @@ export class CmmmCalculations {
 		let oldIn = CmmmCalculations.convertFromInt(coinIn.balance);
 		let oldOut = CmmmCalculations.convertFromInt(coinOut.balance);
 
-        let wIn = CmmmCalculations.directCast(coinIn.weight);
+		let wIn = CmmmCalculations.directCast(coinIn.weight);
 		let [prod, _sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
 			pool,
 			coinTypeOut
