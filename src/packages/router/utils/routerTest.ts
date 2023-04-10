@@ -42,7 +42,7 @@ const runMe = async () => {
 		);
 		// const pool = await sdk.Pools().getPool({
 		// 	objectId:
-		// 		"0xbc8bdb27d73b28f9ba9cd1b56e256f21bf9584d1e80ccc460a24e46bd4078950",
+		// 		"0x5dbf77deddfc68f446b96b2a17b7160faf4a015544df9ab3db81bf7b5ffc0570",
 		// });
 		// const pool = new Pool(
 		// 	Helpers.parseJsonWithBigint(
@@ -50,11 +50,11 @@ const runMe = async () => {
 		// 	) as unknown as PoolObject
 		// );
 		// const amountOut = pool.getTradeAmountOut({
-		// coinInType:
-		// 	"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::wheth::WHETH",
-		// coinOutType:
-		// 	"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::af::AF",
-		// coinInAmount: BigInt(10000000),
+		// 	coinInType:
+		// 		"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::axlusdc::AXLUSDC",
+		// 	coinOutType:
+		// 		"0xfa9a96ded27547caf042ae0cde633b1699a8da7344e5e0bee2d0fd00556086df::afsui::AFSUI",
+		// 	coinInAmount: BigInt(5000000),
 		// });
 		// console.log("amountOut", amountOut);
 		// await runRoute(router, coinIn, coinOutAmount, coinOut, 5, true);
