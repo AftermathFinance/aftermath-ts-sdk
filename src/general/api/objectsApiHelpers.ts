@@ -78,7 +78,7 @@ export class ObjectsApiHelpers {
 		});
 		if (object.error !== undefined)
 			throw new Error(
-				`an error occured fetching object: ${object.error?.tag}`
+				`an error occured fetching object: ${object.error.error}`
 			);
 		return object;
 	};
