@@ -236,8 +236,7 @@ export class CmmmCalculations {
 		throw Error("Newton diverged");
 	};
 
-	// 1d optimized swap function for finding out given in. Returns t such that t*expected_out is the true out.
-	// Lower t favors the pool.
+	// 1d optimized swap function for finding out given in. Returns the amount out.
 	public static calcOutGivenIn = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -245,7 +244,7 @@ export class CmmmCalculations {
 		amountIn: Balance
 	): ApproximateBalance => {
 		if (coinTypeIn == coinTypeOut)
-			throw Error("In and out must be different coins");
+			throw Error("in and out must be different coins");
 		let coinIn = pool.coins[coinTypeIn];
 		let coinOut = pool.coins[coinTypeOut];
 		let swapFeeIn = CmmmCalculations.directCast(coinIn.tradeFeeIn);
@@ -289,5 +288,60 @@ export class CmmmCalculations {
 
 		let amountOut = (oldOut - tokenAmountOut) * (1 - swapFeeOut);
 		return CmmmCalculations.convertToInt(amountOut);
+	};
+
+	// 1d optimized swap function for finding in given out. Returns the amount in.
+	public static calcInGivenOut = (
+		pool: PoolObject,
+		coinTypeIn: CoinType,
+		coinTypeOut: CoinType,
+		amountOut: Balance
+	): ApproximateBalance => {
+		if (coinTypeIn == coinTypeOut)
+			throw Error("in and out must be different coins");
+		let coinIn = pool.coins[coinTypeIn];
+		let coinOut = pool.coins[coinTypeOut];
+		let swapFeeIn = CmmmCalculations.directCast(coinIn.tradeFeeIn);
+		let swapFeeOut = CmmmCalculations.directCast(coinOut.tradeFeeOut);
+		if (swapFeeIn >= 1 || swapFeeOut >= 1) {
+			// this swap is disabled
+			if (amountOut == BigInt(0)) return BigInt(0);
+			throw Error("this swap is disabled");
+		}
+
+		let flatness = CmmmCalculations.directCast(pool.flatness);
+		let oldIn = CmmmCalculations.convertFromInt(coinIn.balance);
+		let oldOut = CmmmCalculations.convertFromInt(coinOut.balance);
+
+		let wOut = CmmmCalculations.directCast(coinOut.weight);
+		let [prod, _sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
+			pool,
+			coinTypeIn
+		);
+
+		let feedAmountOut =
+			CmmmCalculations.convertFromInt(amountOut) / (1 - swapFeeOut);
+		let newOut = oldOut - feedAmountOut;
+		let prodRatio = Math.pow(newOut / oldOut, wOut);
+
+		let newP0 = p0 * prodRatio;
+		// the initial estimate (xi) is from if there were only the product part of the curve
+		let xi = Math.pow(prod / newP0, 1 / wOut);
+		let newS0 = s0 - wOut * feedAmountOut;
+
+		let wIn = CmmmCalculations.directCast(coinIn.weight);
+
+		let tokenAmountIn =
+			CmmmCalculations.getTokenBalanceGivenInvariantAndAllOtherBalances(
+				flatness,
+				wIn,
+				h,
+				xi, // initial estimate -- default can be (P(X) / p0)^n
+				newP0, // P(B) / xi^(1/n) (everything but the missing part)
+				newS0 // S(B) - xi / n (everything but the missing part)
+			);
+
+		let amountIn = (tokenAmountIn - oldIn) / (1 - swapFeeIn);
+		return CmmmCalculations.convertToInt(amountIn);
 	};
 }
