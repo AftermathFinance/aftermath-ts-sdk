@@ -8,6 +8,7 @@ import {
 	PoolWeight,
 } from "../../../types";
 import { Pools } from "../pools";
+import { Helpers } from "../../../general/utils";
 
 // This file is the typescript version of on-chain calculations. See the .move file for license info.
 // These calculations are useful for estimating values on-chain but the JS number format is LESS PRECISE!
@@ -227,7 +228,7 @@ export class CmmmCalculations {
 			x = (top_pos - top_neg) / (xw * (bottom_pos - c10));
 
 			// using relative error here (easier to pass) because js numbers are less precise
-			if (Math.abs(x - prev_x) / x <= CmmmCalculations.convergenceBound) {
+			if (Helpers.closeEnough(x, prev_x, CmmmCalculations.convergenceBound)) {
 				return x;
 			}
 

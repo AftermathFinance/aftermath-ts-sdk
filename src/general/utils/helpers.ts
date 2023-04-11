@@ -38,6 +38,9 @@ export class Helpers {
 
 	public static isNumber = (str: string): boolean => /^\d*\.?\d*$/g.test(str);
 
+	public static closeEnough = (a: number, b: number, tolerance: number) => Math.abs(a - b) <= tolerance * Math.max(a, b);
+	public static closeEnoughn = (a: bigint, b: bigint, tolerance: number) => Helpers.closeEnough(Number(a), Number(b), tolerance);
+
 	/////////////////////////////////////////////////////////////////////
 	//// Display
 	/////////////////////////////////////////////////////////////////////
