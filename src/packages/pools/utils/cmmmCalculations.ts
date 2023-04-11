@@ -39,12 +39,13 @@ export class CmmmCalculations {
 	// every other fixed point nubmer is in 18 point format
 	// these terms come from their on chain equivalents where direct cast means (x: u64 as u256)
 	private static convertFromInt = (n: bigint): number => Number(n);
-	private static convertToInt = (n: number): ApproximateBalance => BigInt(Math.floor(n));
+	private static convertToInt = (n: number): ApproximateBalance =>
+		BigInt(Math.floor(n));
 	private static directCast = (n: bigint): number =>
 		Coin.balanceWithDecimals(n, 18);
 	private static directUncast = (n: number): ApproximateBalance =>
 		Coin.normalizeBalance(n, 18);
-	
+
 	// Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
 	// the invariant (ignoring fees) and investments change the invariant without changing the distribution of balances.
 	// Invariant and pool lp are almost in 1:1 correspondence -- e.g. burning lp in a withdraw proportionally lowers the pool invariant.
@@ -352,6 +353,106 @@ export class CmmmCalculations {
 		let amountOut = (oldOut - tokenAmountOut) * (1 - swapFeeOut);
 		return CmmmCalculations.convertToInt(amountOut);
 	};
+
+	// test = {
+	// 	objectId:
+	// 		"0x75cb1461bea5429cb18cfe234389528533578921f534884f0311e1c9ecb51d9e",
+	// 	lpCoinType:
+	// 		"0x87be783f3093915f10dc23a01e9ca6e0dee24beecb00741c1fc5b4596e1f80a3::af_lp_stable::AF_LP_STABLE",
+	// 	name: "Stable Pool",
+	// 	creator:
+	// 		"0x4b02b9b45f2a9597363fbaacb2fd6e7fb8ed9329bb6f716631b5717048908ace",
+	// 	lpCoinSupply: "308116554360n",
+	// 	illiquidLpCoinSupply: "1000n",
+	// 	flatness: "1000000000000000000n",
+	// 	coins: {
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::af::AF":
+	// 			{
+	// 				weight: "111111111111111112n",
+	// 				balance: "5456897134685n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::afsui::AFSUI":
+	// 			{
+	// 				weight: "111111111111111111n",
+	// 				balance: "192676784512n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::axldai::AXLDAI":
+	// 			{
+	// 				weight: "111111111111111111n",
+	// 				balance: "46127894512n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::axlusdc::AXLUSDC":
+	// 			{
+	// 				weight: "111111111111111111n",
+	// 				balance: "46135795247n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::lzusdc::LZUSDC":
+	// 			{
+	// 				weight: "111111111111111111n",
+	// 				balance: "47248354785n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::lzusdt::LZUSDT":
+	// 			{
+	// 				weight: "111111111111111111n",
+	// 				balance: "47251239515n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::usdc::USDC":
+	// 			{
+	// 				weight: "111111111111111111n",
+	// 				balance: "47195712865n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::whusdc::WHUSDC":
+	// 			{
+	// 				weight: "111111111111111111n",
+	// 				balance: "47075486207n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 		"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::whusdt::WHUSDT":
+	// 			{
+	// 				weight: "111111111111111111n",
+	// 				balance: "47116487516n",
+	// 				tradeFeeIn: "100000000000000n",
+	// 				tradeFeeOut: "0n",
+	// 				depositFee: "0n",
+	// 				withdrawFee: "0n",
+	// 			},
+	// 	},
+	// };
+	//   coinTypeIn: '0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::lzusdc::LZUSDC'
+	// } {
+	//   coinTypeOut: '0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::usdc::USDC'
+	// } { amountIn: 168388532386656n }
 
 	// 1d optimized swap function for finding in given out. Returns the amount in.
 	public static calcInGivenOut = (

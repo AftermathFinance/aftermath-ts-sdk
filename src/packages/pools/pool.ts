@@ -20,6 +20,8 @@ import {
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
+import { Pools } from ".";
+import { Helpers } from "../../general/utils";
 
 export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -160,13 +162,30 @@ export class Pool extends Caller {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
-	}) =>
-		CmmmCalculations.calcOutGivenIn(
-			this.pool,
+	}) => {
+		const pool = Helpers.deepCopy(this.pool);
+
+		if (inputs.coinInAmount >= pool.coins[inputs.coinOutType].balance)
+			return BigInt(0);
+
+		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
+			pool,
 			inputs.coinInType,
 			inputs.coinOutType,
 			inputs.coinInAmount
 		);
+
+		// PRODUCTION: figure out how to set this error exactly
+		const error = 0.01;
+		if (
+			Number(coinOutAmount) /
+				Number(pool.coins[inputs.coinOutType].balance) >=
+			Pools.constants.maxSwapPercentageOfPoolBalanceOut - error
+		)
+			return BigInt(0); // NOTE: should we throw an error here instead/also ?
+
+		return coinOutAmount;
+	};
 
 	public getTradeAmountIn = (inputs: {
 		coinOutType: CoinType;

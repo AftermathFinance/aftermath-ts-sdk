@@ -31,6 +31,7 @@ export class Pools extends Caller {
 		tradeFeeDecimals: 18,
 		slippageDecimals: 18,
 		maxTradeFee: BigInt(1000000000000000000),
+		maxSwapPercentageOfPoolBalanceOut: 0.3, // 30%
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -141,7 +142,7 @@ export class Pools extends Caller {
 		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
 
 	public static normalizeSlippage = (slippage: Slippage) =>
-		Coin.normalizeBalance(slippage, Pools.constants.slippageDecimals);
+		Coin.normalizeBalance(1 - slippage, Pools.constants.slippageDecimals);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Display

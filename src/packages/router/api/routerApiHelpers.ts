@@ -65,6 +65,7 @@ export class RouterApiHelpers {
 		if (coinsOut.length > 1) tx.mergeCoins(coinsOut[0], coinsOut.slice(1));
 		tx.transferObjects([coinsOut[0], coinInArg], tx.pure(walletAddress));
 
+		tx.setGasBudget(1000000000); // 1 sui
 		return tx;
 	}
 }
