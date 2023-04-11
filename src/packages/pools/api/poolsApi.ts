@@ -167,7 +167,8 @@ export class PoolsApi {
 		});
 
 		const poolObjectIds = paginatedEvents.data.map(
-			(event) => (event as PoolCreateEventOnChain).parsedJson.pool_id
+			(event) =>
+				(event as unknown as PoolCreateEventOnChain).parsedJson.pool_id
 		);
 
 		return this.fetchPools(poolObjectIds);

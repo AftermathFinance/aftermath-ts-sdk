@@ -26,7 +26,7 @@ export class WalletApi {
 			owner: account,
 			coinType: Helpers.stripLeadingZeroesFromType(coin),
 		});
-		return BigInt(Math.floor(coinBalance.totalBalance));
+		return BigInt(coinBalance.totalBalance);
 	};
 
 	// TODO: make toBigIntSafe function ?
@@ -42,9 +42,7 @@ export class WalletApi {
 			(acc, balance, index) => {
 				return {
 					...acc,
-					[balance.coinType]: BigInt(
-						Math.floor(balance.totalBalance)
-					),
+					[balance.coinType]: BigInt(balance.totalBalance),
 				};
 			},
 			{}

@@ -219,8 +219,8 @@ export class CoinApiHelpers {
 		coinArgument: TransactionArgument;
 		txWithCoinWithAmount: TransactionBlock;
 	} => {
-		const totalCoinBalance = Helpers.sum(
-			paginatedCoins.data.map((data) => data.balance)
+		const totalCoinBalance = Helpers.sumBigInt(
+			paginatedCoins.data.map((data) => BigInt(data.balance))
 		);
 
 		if (totalCoinBalance < coinAmount)
@@ -228,7 +228,7 @@ export class CoinApiHelpers {
 
 		// TODO: handle data.lockedUntilEpoch ?
 		const coinObjectIds = paginatedCoins.data
-			.filter((data) => data.balance > 0)
+			.filter((data) => BigInt(data.balance) > BigInt(0))
 			.map((data) => data.coinObjectId);
 
 		const mergedCoinObjectId = coinObjectIds[0];
