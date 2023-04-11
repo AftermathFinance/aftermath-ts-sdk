@@ -238,6 +238,60 @@ export class CmmmCalculations {
 		throw Error("Newton diverged");
 	};
 
+	// spot price is given in units of Bin / Bout
+    public static calcSpotPriceWithFees(
+		pool: PoolObject,
+		coinTypeIn: CoinType,
+		coinTypeOut: CoinType,
+    ): number {
+        let a = CmmmCalculations.directCast(pool.flatness);
+        let part1 = CmmmCalculations.calcSpotPriceBody(pool);
+
+		let coinIn = pool.coins[coinTypeIn];
+		let coinOut = pool.coins[coinTypeOut];
+        let balanceIn = CmmmCalculations.convertFromInt(coinIn.balance);
+        let balanceOut = CmmmCalculations.convertFromInt(coinOut.balance);
+		let weightIn = CmmmCalculations.directCast(coinIn.weight);
+		let weightOut = CmmmCalculations.directCast(coinOut.weight);
+		let swapFeeIn = CmmmCalculations.directCast(coinIn.tradeFeeIn);
+		let swapFeeOut = CmmmCalculations.directCast(coinIn.tradeFeeOut);
+
+        let sbi = weightOut * balanceIn;
+        // this is the only place where fee values are used
+        let sbo = (1 - swapFeeIn) * (1 - swapFeeOut) * weightIn * balanceOut;
+
+        return (sbi * (part1 + 2*a*balanceOut)) / (sbo * (part1 + 2*a*balanceIn));
+    }
+
+    // The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
+    private static calcSpotPriceBody = (
+		pool: PoolObject
+    ): number => {
+        // The spot price formula comes from the partial derivatives of Cf, specifically -(dCf / dx_out) / (dCf / dx_in)
+        let a: number = CmmmCalculations.directCast(pool.flatness);
+        let ac: number = 1 - a;
+
+        let prod: number = 0;
+        let sum: number = 0;
+        let balance: number;
+        let weight: number;
+
+        // The spot price formula requires knowing the value of the invariant. We need the prod and sum parts
+        // also later on so no need to compute them twice by calling calc_invariant, just evaluate here.
+        for (let coin of Object.values(pool.coins)) {
+            balance = CmmmCalculations.convertFromInt(coin.balance);
+            weight = CmmmCalculations.directCast(coin.weight);
+
+            prod += weight * Math.log(balance);
+			sum += weight * balance;
+        };
+        prod = Math.exp(prod);
+
+        let invarnt = CmmmCalculations.calcInvariantQuadratic(prod, sum, a);
+
+        return (invarnt * invarnt) / prod + ac * prod;
+    }
+
 	// 1d optimized swap function for finding out given in. Returns the amount out.
 	public static calcOutGivenIn = (
 		pool: PoolObject,

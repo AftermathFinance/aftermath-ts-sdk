@@ -1,30 +1,10 @@
 import { Helpers } from "../dist/general/utils/helpers.js";
-import { Pool } from "../dist/packages/pools/pool.js";
 import { CmmmCalculations } from "../dist/packages/pools/utils/cmmmCalculations.js";
 
-// to run this file: clear; npm run build; node tests/stableUnitTests.mjs
+// intended execution call: clear; npm run build; node tests/stableUnitTests.mjs
 
 const FixedOne = 1_000_000_000_000_000_000n;
-
-const pool = new Pool(
-    Helpers.parseJsonWithBigint(
-        `{"objectId":"0x75cb1461bea5429cb18cfe234389528533578921f534884f0311e1c9ecb51d9e","lpCoinType":"0x87be783f3093915f10dc23a01e9ca6e0dee24beecb00741c1fc5b4596e1f80a3::af_lp_stable::AF_LP_STABLE","name":"Stable Pool","creator":"0x4b02b9b45f2a9597363fbaacb2fd6e7fb8ed9329bb6f716631b5717048908ace","lpCoinSupply":"308116554360n","illiquidLpCoinSupply":"1000n","flatness":"1000000000000000000n","coins":{"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::af::AF":{"weight":"111111111111111112n","balance":"5456897134685n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::afsui::AFSUI":{"weight":"111111111111111111n","balance":"192676784512n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::axldai::AXLDAI":{"weight":"111111111111111111n","balance":"46127894512n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::axlusdc::AXLUSDC":{"weight":"111111111111111111n","balance":"46135795247n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::lzusdc::LZUSDC":{"weight":"111111111111111111n","balance":"168435780741441n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::lzusdt::LZUSDT":{"weight":"111111111111111111n","balance":"47251239515n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::usdc::USDC":{"weight":"111111111111111111n","balance":"0n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::whusdc::WHUSDC":{"weight":"111111111111111111n","balance":"47075486207n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"},"0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::whusdt::WHUSDT":{"weight":"111111111111111111n","balance":"47116487516n","tradeFeeIn":"100000000000000n","tradeFeeOut":"0n","depositFee":"0n","withdrawFee":"0n"}}}`
-    )
-);
-
-// const amountOut = pool.getTradeAmountOut({
-//     coinInType:
-//         "0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::lzusdc::LZUSDC",
-//     coinOutType:
-//         "0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::afsui::AFSUI",
-//     coinInAmount: BigInt(47157255648),
-// });
-
-//console.log(amountOut);
-
-// --------------------------------------------------------------------------------------
-// ----------------------------------------   tests   -----------------------------------
-// --------------------------------------------------------------------------------------
+const Tolerance = 0.000_000_000_000_1;
 
 const tests = {
     testGetTokenBalanceGivenInvariantAndAllOtherBalances: () => {
@@ -88,6 +68,68 @@ const tests = {
         if (relErr > 0.000000001) throw Error("did not find correct balance");
 
         console.log("testGetTokenBalanceGivenInvariantAndAllOtherBalances passed");
+    },
+    testCalcSpotPrice() {
+        let flatness = 0.712;
+
+        let coins = {
+            coin0: {
+                weight: BigInt(280_000_000_000_000_000),
+                balance: BigInt(700000),
+                tradeFeeIn: BigInt(100_000_000_000_000_000),
+                tradeFeeOut: BigInt(30_000_000_000_000_000),
+            },
+            coin1: {
+                weight: BigInt(448_000_000_000_000_000),
+                balance: BigInt(400000),
+                tradeFeeIn: BigInt(100_000_000_000_000_000),
+                tradeFeeOut: BigInt(30_000_000_000_000_000),
+            },
+            coin2: {
+                weight: BigInt(272_000_000_000_000_000),
+                balance: BigInt(500000),
+                tradeFeeIn: BigInt(100_000_000_000_000_000),
+                tradeFeeOut: BigInt(30_000_000_000_000_000),
+            },
+        };
+
+        let pool = {
+            flatness: CmmmCalculations.directUncast(flatness),
+            coins: coins,
+        };
+
+        let indexIn = "coin0";
+        let indexOut = "coin2";
+
+        let expectedSpotPrice = 1.289_263_269_312_546_800;
+
+        let calculatedSpotPrice = CmmmCalculations.calcSpotPriceWithFees(
+            pool,
+            indexIn,
+            indexOut
+        );
+
+        if (!Helpers.closeEnough(expectedSpotPrice, calculatedSpotPrice, Tolerance)) {
+            throw Error("testCalcSpotPrice failed");
+        }
+
+        // Suppose we want to trade 1000 coin 1 for coin 2.
+        let amountIn = 1000n;
+
+        // We naively expect the amount out to be amount in / spot price.
+        let spotOut = BigInt(Math.floor(Number(amountIn) / calculatedSpotPrice));
+
+        // Let's see how wrong that was.
+        let amountOut = CmmmCalculations.calcOutGivenIn(
+            pool,
+            indexIn,
+            indexOut,
+            amountIn
+        );
+
+        // It should be essentially the same. We allow +- 1 to account for rounding.
+        if (Math.abs(Number(spotOut - amountOut)) > 1) throw Error("testCalcSpotPrice failed");
+        console.log("testCalcSpotPrice passed");
     },
     testCalcOutGivenIn: () => {
         let flatness = 3 / 7;
