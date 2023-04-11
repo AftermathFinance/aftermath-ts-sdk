@@ -249,7 +249,7 @@ export class CmmmCalculations {
 		pool: PoolObject,
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
-		skipFees?: boolean,
+		ignoreFees?: boolean,
     ): number => {
         let a = CmmmCalculations.directCast(pool.flatness);
         let part1 = CmmmCalculations.calcSpotPriceBody(pool);
@@ -260,8 +260,8 @@ export class CmmmCalculations {
         let balanceOut = CmmmCalculations.convertFromInt(coinOut.balance);
 		let weightIn = CmmmCalculations.directCast(coinIn.weight);
 		let weightOut = CmmmCalculations.directCast(coinOut.weight);
-		let swapFeeIn = skipFees? 0: CmmmCalculations.directCast(coinIn.tradeFeeIn);
-		let swapFeeOut = skipFees? 0: CmmmCalculations.directCast(coinIn.tradeFeeOut);
+		let swapFeeIn = ignoreFees? 0: CmmmCalculations.directCast(coinIn.tradeFeeIn);
+		let swapFeeOut = ignoreFees? 0: CmmmCalculations.directCast(coinIn.tradeFeeOut);
 
         let sbi = weightOut * balanceIn;
         // this is the only place where fee values are used
