@@ -238,12 +238,19 @@ export class CmmmCalculations {
 		throw Error("Newton diverged");
 	};
 
-	// spot price is given in units of Bin / Bout
-    public static calcSpotPriceWithFees(
+	public static calcSpotPrice = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
-    ): number {
+	): number => CmmmCalculations.calcSpotPriceWithFees(pool, coinTypeIn, coinTypeOut, true);
+
+	// spot price is given in units of Bin / Bout
+    public static calcSpotPriceWithFees = (
+		pool: PoolObject,
+		coinTypeIn: CoinType,
+		coinTypeOut: CoinType,
+		skipFees?: boolean,
+    ): number => {
         let a = CmmmCalculations.directCast(pool.flatness);
         let part1 = CmmmCalculations.calcSpotPriceBody(pool);
 
@@ -253,8 +260,8 @@ export class CmmmCalculations {
         let balanceOut = CmmmCalculations.convertFromInt(coinOut.balance);
 		let weightIn = CmmmCalculations.directCast(coinIn.weight);
 		let weightOut = CmmmCalculations.directCast(coinOut.weight);
-		let swapFeeIn = CmmmCalculations.directCast(coinIn.tradeFeeIn);
-		let swapFeeOut = CmmmCalculations.directCast(coinIn.tradeFeeOut);
+		let swapFeeIn = skipFees? 0: CmmmCalculations.directCast(coinIn.tradeFeeIn);
+		let swapFeeOut = skipFees? 0: CmmmCalculations.directCast(coinIn.tradeFeeOut);
 
         let sbi = weightOut * balanceIn;
         // this is the only place where fee values are used
