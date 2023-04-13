@@ -40,6 +40,9 @@ const runMe = async () => {
 			5,
 			false
 		);
+
+		await runRoute(router, coinIn, coinOutAmount, coinOut, 5, true);
+
 		// const pool = await sdk.Pools().getPool({
 		// 	objectId:
 		// 		"0x5dbf77deddfc68f446b96b2a17b7160faf4a015544df9ab3db81bf7b5ffc0570",

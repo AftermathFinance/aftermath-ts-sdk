@@ -580,8 +580,10 @@ export class RouterGraph {
 				isGivenAmountOut
 			);
 
-			// NOTE: should this be flipped for isGivenAmountOut ?
-			const totalCoinInAmount = currentCoinInAmount + path.coinIn.amount;
+			// BUG: should this be flipped for isGivenAmountOut ?
+			const totalCoinInAmount = isGivenAmountOut
+				? currentCoinInAmount + path.coinOut.amount
+				: currentCoinInAmount + path.coinIn.amount;
 
 			const totalCoinOutAmount = isGivenAmountOut
 				? poolBeforePathTrades.getTradeAmountIn({
@@ -641,12 +643,10 @@ export class RouterGraph {
 				coinIn: {
 					...path.coinIn,
 					amount: totalCoinInAmount,
-					tradeFee: pool.pool.coins[path.coinIn.type].tradeFeeIn,
 				},
 				coinOut: {
 					...path.coinOut,
 					amount: totalCoinOutAmount,
-					tradeFee: pool.pool.coins[path.coinOut.type].tradeFeeOut,
 				},
 				spotPrice,
 			};
@@ -669,11 +669,12 @@ export class RouterGraph {
 			...newRoute,
 			coinIn: {
 				...newRoute.coinIn,
-				amount: newRoute.coinIn.amount + coinInAmount,
+				amount: newRoute.paths[0].coinIn.amount,
 			},
 			coinOut: {
 				...newRoute.coinOut,
-				amount: newRoute.coinOut.amount + currentCoinInAmount,
+				amount: newRoute.paths[newRoute.paths.length - 1].coinOut
+					.amount,
 			},
 			spotPrice: routeSpotPrice,
 		};

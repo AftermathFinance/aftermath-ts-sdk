@@ -25,6 +25,14 @@ import { Helpers } from "../../general/utils";
 
 export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
+	//// Privatae Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		percentageMarginOfError: 0.00001,
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Public Class Members
 	/////////////////////////////////////////////////////////////////////
 
@@ -162,7 +170,7 @@ export class Pool extends Caller {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
-		// PRODUCTION: count referral here
+		// PRODUCTION: pass referral here for router
 		referral?: boolean;
 	}) => {
 		const pool = Helpers.deepCopy(this.pool);
@@ -173,6 +181,13 @@ export class Pool extends Caller {
 			amount: inputs.coinInAmount,
 		});
 
+		if (
+			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+				Pool.constants.percentageMarginOfError
+		)
+			return BigInt(0);
+
 		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
 			pool,
 			inputs.coinInType,
@@ -182,37 +197,57 @@ export class Pool extends Caller {
 
 		if (coinOutAmount <= 0) return BigInt(0);
 
-		// PRODUCTION: figure out how to set this error exactly
-		const error = 0.05;
 		if (
 			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
-				Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
-					error ||
-			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
-				Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut - error
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+				Pool.constants.percentageMarginOfError
 		)
-			return BigInt(0); // NOTE: should we throw an error here instead/also ?
+			return BigInt(0);
 
+		// NOTE: should we throw an error when returning 0 instead/also ?
 		return coinOutAmount;
 	};
 
 	public getTradeAmountIn = (inputs: {
-		coinOutType: CoinType;
-		coinOutAmount: Balance;
 		coinInType: CoinType;
+		coinOutAmount: Balance;
+		coinOutType: CoinType;
+		// PRODUCTION: pass referral here for router
+		referral?: boolean;
 	}) => {
-		return BigInt(1);
-		// const coinIn = this.pool.coins[inputs.coinInType];
-		// const coinOut = this.pool.coins[inputs.coinOutType];
+		const pool = Helpers.deepCopy(this.pool);
+		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
+		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
-		// return CmmmCalculations.calcInGivenOut(
-		// 	coinIn.balance,
-		// 	coinIn.weight,
-		// 	coinOut.balance,
-		// 	coinOut.weight,
-		// 	inputs.coinOutAmount,
-		// 	this.pool.coins[inputs.coinInType].tradeFeeIn
-		// );
+		if (
+			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+				Pool.constants.percentageMarginOfError
+		)
+			return BigInt(0);
+
+		const coinInAmount = CmmmCalculations.calcInGivenOut(
+			pool,
+			inputs.coinInType,
+			inputs.coinOutType,
+			inputs.coinOutAmount
+		);
+
+		if (coinInAmount <= 0) return BigInt(0);
+
+		if (
+			Number(coinInAmount) / Number(coinInPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+				Pool.constants.percentageMarginOfError
+		)
+			return BigInt(0);
+
+		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
+			amount: coinInAmount,
+		});
+
+		// NOTE: should we throw an error when returning 0 instead/also ?
+		return coinInAmountWithoutFees;
 	};
 
 	public getSpotPrice = (inputs: {

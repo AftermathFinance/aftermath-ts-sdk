@@ -149,6 +149,26 @@ export class Pools extends Caller {
 		);
 	};
 
+	public static getAmountWithoutProtocolFees = (inputs: {
+		amount: Balance;
+		withReferral?: boolean;
+	}) => {
+		const referralDiscount = inputs.withReferral
+			? this.constants.feePercentages.totalProtocol *
+			  this.constants.feePercentages.treasury *
+			  this.constants.referralPercentages.discount
+			: 0;
+		return BigInt(
+			Math.floor(
+				Number(inputs.amount) *
+					(1 /
+						(1 -
+							(this.constants.feePercentages.totalProtocol -
+								referralDiscount)))
+			)
+		);
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// With Decimals Conversions
 	/////////////////////////////////////////////////////////////////////
