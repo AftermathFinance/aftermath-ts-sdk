@@ -162,25 +162,34 @@ export class Pool extends Caller {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
+		// PRODUCTION: count referral here
+		referral?: boolean;
 	}) => {
 		const pool = Helpers.deepCopy(this.pool);
+		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
+		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
-		if (inputs.coinInAmount >= pool.coins[inputs.coinOutType].balance)
-			return BigInt(0);
+		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
+			amount: inputs.coinInAmount,
+		});
 
 		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
 			pool,
 			inputs.coinInType,
 			inputs.coinOutType,
-			inputs.coinInAmount
+			coinInAmountWithFees
 		);
 
+		if (coinOutAmount <= 0) return BigInt(0);
+
 		// PRODUCTION: figure out how to set this error exactly
-		const error = 0.01;
+		const error = 0.05;
 		if (
-			Number(coinOutAmount) /
-				Number(pool.coins[inputs.coinOutType].balance) >=
-			Pools.constants.maxSwapPercentageOfPoolBalanceOut - error
+			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
+				Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+					error ||
+			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
+				Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut - error
 		)
 			return BigInt(0); // NOTE: should we throw an error here instead/also ?
 

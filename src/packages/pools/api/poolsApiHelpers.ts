@@ -501,7 +501,7 @@ export class PoolsApiHelpers {
 	};
 
 	public calcPoolLpPrice = (lpSupply: Balance, tvl: number) => {
-		const lpCoinDecimals = Pools.constants.lpCoinDecimals;
+		const lpCoinDecimals = Pools.constants.decimals.lpCoinDecimals;
 		const lpPrice = Number(
 			Number(tvl) / Coin.balanceWithDecimals(lpSupply, lpCoinDecimals)
 		);

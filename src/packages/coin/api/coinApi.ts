@@ -42,7 +42,7 @@ export class CoinApi {
 					id: null,
 					description: "Aftermath Finance LP",
 					name: coinName,
-					decimals: Pools.constants.lpCoinDecimals,
+					decimals: Pools.constants.decimals.lpCoinDecimals,
 					iconUrl: null,
 				};
 			}

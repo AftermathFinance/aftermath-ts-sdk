@@ -19,17 +19,17 @@ const runMe = async () => {
 
 	const supportedCoins = await router.getSupportedCoins();
 
+	// PRODUCTOIN: add asserts for coins not in pool or same coin trades
 	const coinIn =
-		supportedCoins.find((coin) => coin.toLowerCase().includes("wheth")) ??
+		supportedCoins.find((coin) => coin.toLowerCase().includes("afsui")) ??
 		"";
 	const coinOut =
-		supportedCoins.find((coin) => coin.toLowerCase().includes("whbtc")) ??
+		supportedCoins.find((coin) => coin.toLowerCase().includes("::af::")) ??
 		"";
-	const coinInAmount = tradeAmounts.medium;
+	const coinInAmount = BigInt(223447384370);
 
 	console.log("START");
 	console.log("\n");
-
 	try {
 		// await runRoute(router, coinIn, coinInAmount, coinOut, 1);
 		const coinOutAmount = await runRoute(
@@ -89,6 +89,8 @@ const runRoute = async (
 				{ coinIn, coinInAmount, coinOut }
 				// maxRouteLength
 		  );
+
+	console.log({ coinIn, coinInAmount, coinOut });
 
 	const end = performance.now();
 

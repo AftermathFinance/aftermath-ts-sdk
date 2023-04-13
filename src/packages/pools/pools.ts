@@ -25,13 +25,28 @@ export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public static readonly constants = {
-		lpCoinDecimals: 9,
-		coinWeightDecimals: 18,
-		spotPriceDecimals: 18,
-		tradeFeeDecimals: 18,
-		slippageDecimals: 18,
-		maxTradeFee: BigInt(1000000000000000000),
-		maxSwapPercentageOfPoolBalanceOut: 0.3, // 30%
+		decimals: {
+			lpCoinDecimals: 9,
+			coinWeightDecimals: 18,
+			spotPriceDecimals: 18,
+			tradeFeeDecimals: 18,
+			slippageDecimals: 18,
+		},
+		feePercentages: {
+			totalProtocol: 0.00005, // 0.005%
+			// following fees are taked as portions of total protocol fees above
+			treasury: 0.5, // 50%
+			insuranceFund: 0.3, // 30%
+			devWallet: 0.2, // 20%
+		},
+		referralPercentages: {
+			// these percantages are relative to treasury allocation
+			discount: 0.05, // 5%
+			rebate: 0.05, // 5%
+		},
+		bounds: {
+			maxSwapPercentageOfPoolBalanceOut: 0.3, // 30%
+		},
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -112,20 +127,43 @@ export class Pools extends Caller {
 	};
 
 	/////////////////////////////////////////////////////////////////////
+	//// Fees
+	/////////////////////////////////////////////////////////////////////
+
+	public static getAmountWithProtocolFees = (inputs: {
+		amount: Balance;
+		withReferral?: boolean;
+	}) => {
+		const referralDiscount = inputs.withReferral
+			? this.constants.feePercentages.totalProtocol *
+			  this.constants.feePercentages.treasury *
+			  this.constants.referralPercentages.discount
+			: 0;
+		return BigInt(
+			Math.floor(
+				Number(inputs.amount) *
+					(1 -
+						(this.constants.feePercentages.totalProtocol -
+							referralDiscount))
+			)
+		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// With Decimals Conversions
 	/////////////////////////////////////////////////////////////////////
 
 	public static coinWeightWithDecimals = (weight: PoolWeight) =>
-		Number(weight) / 10 ** Pools.constants.coinWeightDecimals;
+		Number(weight) / 10 ** Pools.constants.decimals.coinWeightDecimals;
 
 	public static spotPriceWithDecimals = (spotPrice: Balance) =>
-		Number(spotPrice) / 10 ** Pools.constants.spotPriceDecimals;
+		Number(spotPrice) / 10 ** Pools.constants.decimals.spotPriceDecimals;
 
 	public static tradeFeeWithDecimals = (tradeFee: PoolTradeFee) =>
-		Number(tradeFee) / 10 ** Pools.constants.tradeFeeDecimals;
+		Number(tradeFee) / 10 ** Pools.constants.decimals.tradeFeeDecimals;
 
 	public static lpCoinBalanceWithDecimals = (balance: Balance) =>
-		Number(balance) / 10 ** Pools.constants.lpCoinDecimals;
+		Number(balance) / 10 ** Pools.constants.decimals.lpCoinDecimals;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Normalize Conversions
@@ -134,15 +172,18 @@ export class Pools extends Caller {
 	public static normalizePoolTradeFee = (tradeFee: PoolTradeFee) => {
 		return Coin.balanceWithDecimals(
 			tradeFee,
-			Pools.constants.tradeFeeDecimals
+			Pools.constants.decimals.tradeFeeDecimals
 		);
 	};
 
 	public static normalizeLpCoinBalance = (balance: number) =>
-		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
+		Coin.normalizeBalance(balance, Pools.constants.decimals.lpCoinDecimals);
 
 	public static normalizeSlippage = (slippage: Slippage) =>
-		Coin.normalizeBalance(1 - slippage, Pools.constants.slippageDecimals);
+		Coin.normalizeBalance(
+			1 - slippage,
+			Pools.constants.decimals.slippageDecimals
+		);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Display
