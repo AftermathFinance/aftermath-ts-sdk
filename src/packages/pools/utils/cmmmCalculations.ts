@@ -229,7 +229,13 @@ export class CmmmCalculations {
 			x = (top_pos - top_neg) / (xw * (bottom_pos - c10));
 
 			// using relative error here (easier to pass) because js numbers are less precise
-			if (Helpers.closeEnough(x, prev_x, CmmmCalculations.convergenceBound)) {
+			if (
+				Helpers.closeEnough(
+					x,
+					prev_x,
+					CmmmCalculations.convergenceBound
+				)
+			) {
 				return x;
 			}
 
@@ -242,63 +248,74 @@ export class CmmmCalculations {
 	public static calcSpotPrice = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
-		coinTypeOut: CoinType,
-	): number => CmmmCalculations.calcSpotPriceWithFees(pool, coinTypeIn, coinTypeOut, true);
+		coinTypeOut: CoinType
+	): number =>
+		CmmmCalculations.calcSpotPriceWithFees(
+			pool,
+			coinTypeIn,
+			coinTypeOut,
+			true
+		);
 
 	// spot price is given in units of Bin / Bout
-    public static calcSpotPriceWithFees = (
+	public static calcSpotPriceWithFees = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
-		ignoreFees?: boolean,
-    ): number => {
-        let a = CmmmCalculations.directCast(pool.flatness);
-        let part1 = CmmmCalculations.calcSpotPriceBody(pool);
+		ignoreFees?: boolean
+	): number => {
+		let a = CmmmCalculations.directCast(pool.flatness);
+		let part1 = CmmmCalculations.calcSpotPriceBody(pool);
 
 		let coinIn = pool.coins[coinTypeIn];
 		let coinOut = pool.coins[coinTypeOut];
-        let balanceIn = CmmmCalculations.convertFromInt(coinIn.balance);
-        let balanceOut = CmmmCalculations.convertFromInt(coinOut.balance);
+		let balanceIn = CmmmCalculations.convertFromInt(coinIn.balance);
+		let balanceOut = CmmmCalculations.convertFromInt(coinOut.balance);
 		let weightIn = CmmmCalculations.directCast(coinIn.weight);
 		let weightOut = CmmmCalculations.directCast(coinOut.weight);
-		let swapFeeIn = ignoreFees? 0: CmmmCalculations.directCast(coinIn.tradeFeeIn);
-		let swapFeeOut = ignoreFees? 0: CmmmCalculations.directCast(coinIn.tradeFeeOut);
+		let swapFeeIn = ignoreFees
+			? 0
+			: CmmmCalculations.directCast(coinIn.tradeFeeIn);
+		let swapFeeOut = ignoreFees
+			? 0
+			: CmmmCalculations.directCast(coinIn.tradeFeeOut);
 
-        let sbi = weightOut * balanceIn;
-        // this is the only place where fee values are used
-        let sbo = (1 - swapFeeIn) * (1 - swapFeeOut) * weightIn * balanceOut;
+		let sbi = weightOut * balanceIn;
+		// this is the only place where fee values are used
+		let sbo = (1 - swapFeeIn) * (1 - swapFeeOut) * weightIn * balanceOut;
 
-        return (sbi * (part1 + 2*a*balanceOut)) / (sbo * (part1 + 2*a*balanceIn));
-    }
+		return (
+			(sbi * (part1 + 2 * a * balanceOut)) /
+			(sbo * (part1 + 2 * a * balanceIn))
+		);
+	};
 
-    // The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
-    private static calcSpotPriceBody = (
-		pool: PoolObject
-    ): number => {
-        // The spot price formula comes from the partial derivatives of Cf, specifically -(dCf / dx_out) / (dCf / dx_in)
-        let a: number = CmmmCalculations.directCast(pool.flatness);
-        let ac: number = 1 - a;
+	// The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
+	private static calcSpotPriceBody = (pool: PoolObject): number => {
+		// The spot price formula comes from the partial derivatives of Cf, specifically -(dCf / dx_out) / (dCf / dx_in)
+		let a: number = CmmmCalculations.directCast(pool.flatness);
+		let ac: number = 1 - a;
 
-        let prod: number = 0;
-        let sum: number = 0;
-        let balance: number;
-        let weight: number;
+		let prod: number = 0;
+		let sum: number = 0;
+		let balance: number;
+		let weight: number;
 
-        // The spot price formula requires knowing the value of the invariant. We need the prod and sum parts
-        // also later on so no need to compute them twice by calling calc_invariant, just evaluate here.
-        for (let coin of Object.values(pool.coins)) {
-            balance = CmmmCalculations.convertFromInt(coin.balance);
-            weight = CmmmCalculations.directCast(coin.weight);
+		// The spot price formula requires knowing the value of the invariant. We need the prod and sum parts
+		// also later on so no need to compute them twice by calling calc_invariant, just evaluate here.
+		for (let coin of Object.values(pool.coins)) {
+			balance = CmmmCalculations.convertFromInt(coin.balance);
+			weight = CmmmCalculations.directCast(coin.weight);
 
-            prod += weight * Math.log(balance);
+			prod += weight * Math.log(balance);
 			sum += weight * balance;
-        };
-        prod = Math.exp(prod);
+		}
+		prod = Math.exp(prod);
 
-        let invarnt = CmmmCalculations.calcInvariantQuadratic(prod, sum, a);
+		let invarnt = CmmmCalculations.calcInvariantQuadratic(prod, sum, a);
 
-        return (invarnt * invarnt) / prod + ac * prod;
-    }
+		return (invarnt * invarnt) / prod + ac * prod;
+	};
 
 	// 1d optimized swap function for finding out given in. Returns the amount out.
 	public static calcOutGivenIn = (

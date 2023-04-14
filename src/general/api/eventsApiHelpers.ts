@@ -116,10 +116,12 @@ export class EventsApiHelpers {
 			const events = eventsWithCursor.events;
 
 			const now = Date.now();
-			const endIndex = events.findIndex(
-				(event) =>
-					dayjs(now).diff(event.timestamp, timeUnit, true) > time
-			);
+			const endIndex = events.findIndex((event) => {
+				if (event.timestamp === undefined) return false;
+
+				const eventDate = dayjs.unix(event.timestamp / 1000);
+				return dayjs(now).diff(eventDate, timeUnit, true) > time;
+			});
 			eventsWithinTime = [
 				...eventsWithinTime,
 				...(endIndex < 0 ? events : events.slice(0, endIndex)),

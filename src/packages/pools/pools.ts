@@ -45,7 +45,7 @@ export class Pools extends Caller {
 			rebate: 0.05, // 5%
 		},
 		bounds: {
-			maxSwapPercentageOfPoolBalanceOut: 0.3, // 30%
+			maxSwapPercentageOfPoolBalance: 0.3, // 30%
 		},
 	};
 

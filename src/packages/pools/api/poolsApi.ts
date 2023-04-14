@@ -269,7 +269,6 @@ export class PoolsApi {
 		pool: Pool,
 		coinsToPrice: CoinsToPrice
 	): Promise<PoolStats> => {
-		const poolObjectId = pool.pool.objectId;
 		const poolCoins = pool.pool.coins;
 		const poolCoinTypes = Object.keys(poolCoins);
 
@@ -279,19 +278,17 @@ export class PoolsApi {
 				poolCoinTypes
 			);
 
-		// const tradeEventsWithinTime =
-		// 	await this.Provider.Events().fetchEventsWithinTime(
-		// 		(cursor, limit) =>
-		// 			pool.getTradeEvents({
-		// 				cursor,
-		// 				limit,
-		// 			}),
-		// 		"hour",
-		// 		24
-		// 	);
-		const tradeEventsWithinTime = (await pool.getTradeEvents({})).events;
+		const tradeEventsWithinTime =
+			await this.Provider.Events().fetchEventsWithinTime(
+				(cursor, limit) =>
+					pool.getTradeEvents({
+						cursor,
+						limit,
+					}),
+				"hour",
+				24
+			);
 		const volume = this.Helpers.fetchCalcPoolVolume(
-			poolObjectId,
 			tradeEventsWithinTime,
 			coinsToPrice,
 			coinsToDecimals

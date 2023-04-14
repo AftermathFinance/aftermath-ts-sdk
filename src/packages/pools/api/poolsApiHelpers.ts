@@ -345,11 +345,12 @@ export class PoolsApiHelpers {
 				fromCoinAmount
 			);
 
-		const amountOut = pool.getTradeAmountOut({
+		const { coinOutAmount: amountOut, error } = pool.getTradeAmountOut({
 			coinInAmount: fromCoinAmount,
 			coinInType: fromCoinType,
 			coinOutType: toCoinType,
 		});
+		if (error !== undefined) throw new Error(error);
 
 		const finalTx = this.addTradeCommandToTransaction(
 			txWithCoinWithAmount,
@@ -446,17 +447,12 @@ export class PoolsApiHelpers {
 	// NOTE: should this volume calculation also take into account deposits and withdraws
 	// (not just swaps) ?
 	public fetchCalcPoolVolume = (
-		poolObjectId: ObjectId,
 		tradeEvents: PoolTradeEvent[],
 		coinsToPrice: CoinsToPrice,
 		coinsToDecimals: Record<CoinType, CoinDecimal>
 	) => {
-		const tradesForPool = tradeEvents.filter(
-			(trade) => trade.poolId === poolObjectId
-		);
-
 		let volume = 0;
-		for (const trade of tradesForPool) {
+		for (const trade of tradeEvents) {
 			for (const [index, typeIn] of trade.typesIn.entries()) {
 				const decimals = coinsToDecimals[typeIn];
 				const tradeAmount = Coin.balanceWithDecimals(
@@ -466,7 +462,8 @@ export class PoolsApiHelpers {
 
 				const coinInPrice = coinsToPrice[typeIn];
 
-				const amountUsd = tradeAmount * coinInPrice;
+				const amountUsd =
+					coinInPrice < 0 ? 0 : tradeAmount * coinInPrice;
 				volume += amountUsd;
 			}
 		}
@@ -519,6 +516,7 @@ export class PoolsApiHelpers {
 		timeUnit: ManipulateType,
 		time: number,
 		buckets: number
+		// PRODUCTION: pass in prices/decimals from elsewhere
 	) => {
 		// TODO: use promise.all for pool fetching and swap fetching
 
@@ -545,11 +543,12 @@ export class PoolsApiHelpers {
 			});
 
 		const dataPoints = tradeEvents.reduce((acc, trade) => {
+			if (trade.timestamp === undefined) return acc;
+
+			const tradeDate = dayjs.unix(trade.timestamp / 1000);
 			const bucketIndex =
 				acc.length -
-				Math.floor(
-					dayjs(now).diff(trade.timestamp) / bucketTimestampSize
-				) -
+				Math.floor(dayjs(now).diff(tradeDate) / bucketTimestampSize) -
 				1;
 
 			const amountUsd = trade.typesIn.reduce((acc, cur, index) => {
@@ -558,7 +557,7 @@ export class PoolsApiHelpers {
 					coinsToDecimalsAndPrices[cur].decimals,
 					coinsToDecimalsAndPrices[cur].price
 				);
-				return acc + amountInUsd;
+				return acc + (amountInUsd < 0 ? 0 : amountInUsd);
 			}, 0);
 
 			acc[bucketIndex].value += amountUsd;

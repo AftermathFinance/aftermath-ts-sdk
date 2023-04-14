@@ -172,7 +172,10 @@ export class Pool extends Caller {
 		coinOutType: CoinType;
 		// PRODUCTION: pass referral here for router
 		referral?: boolean;
-	}) => {
+	}): {
+		coinOutAmount: Balance;
+		error?: string;
+	} => {
 		const pool = Helpers.deepCopy(this.pool);
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
@@ -183,10 +186,13 @@ export class Pool extends Caller {
 
 		if (
 			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
 				Pool.constants.percentageMarginOfError
 		)
-			return BigInt(0);
+			return {
+				coinOutAmount: BigInt(0),
+				error: "coinInAmountWithFees / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
+			};
 
 		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
 			pool,
@@ -195,17 +201,23 @@ export class Pool extends Caller {
 			coinInAmountWithFees
 		);
 
-		if (coinOutAmount <= 0) return BigInt(0);
+		if (coinOutAmount <= 0)
+			return {
+				coinOutAmount: BigInt(0),
+				error: "coinOutAmount <= 0",
+			};
 
 		if (
 			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
 				Pool.constants.percentageMarginOfError
 		)
-			return BigInt(0);
+			return {
+				coinOutAmount: BigInt(0),
+				error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
+			};
 
-		// NOTE: should we throw an error when returning 0 instead/also ?
-		return coinOutAmount;
+		return { coinOutAmount };
 	};
 
 	public getTradeAmountIn = (inputs: {
@@ -214,17 +226,23 @@ export class Pool extends Caller {
 		coinOutType: CoinType;
 		// PRODUCTION: pass referral here for router
 		referral?: boolean;
-	}) => {
+	}): {
+		coinInAmount: Balance;
+		error?: string;
+	} => {
 		const pool = Helpers.deepCopy(this.pool);
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
 		if (
 			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
 				Pool.constants.percentageMarginOfError
 		)
-			return BigInt(0);
+			return {
+				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+				error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
+			};
 
 		const coinInAmount = CmmmCalculations.calcInGivenOut(
 			pool,
@@ -233,37 +251,40 @@ export class Pool extends Caller {
 			inputs.coinOutAmount
 		);
 
-		if (coinInAmount <= 0) return BigInt(0);
+		if (coinInAmount <= 0)
+			return {
+				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+				error: "coinInAmount <= 0",
+			};
 
 		if (
 			Number(coinInAmount) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalanceOut -
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
 				Pool.constants.percentageMarginOfError
 		)
-			return BigInt(0);
+			return {
+				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+				error: "coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
+			};
 
 		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
 			amount: coinInAmount,
 		});
 
-		// NOTE: should we throw an error when returning 0 instead/also ?
-		return coinInAmountWithoutFees;
+		return { coinInAmount: coinInAmountWithoutFees };
 	};
 
 	public getSpotPrice = (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
+		withFees?: boolean;
 	}) => {
-		return 1;
-		// const coinIn = this.pool.coins[inputs.coinInType];
-		// const coinOut = this.pool.coins[inputs.coinOutType];
-
-		// return CmmmCalculations.calcSpotPrice(
-		// 	coinIn.balance,
-		// 	coinIn.weight,
-		// 	coinOut.balance,
-		// 	coinOut.weight
-		// );
+		return CmmmCalculations.calcSpotPriceWithFees(
+			Helpers.deepCopy(this.pool),
+			inputs.coinInType,
+			inputs.coinOutType,
+			!inputs.withFees
+		);
 	};
 
 	public getDepositLpMintAmount = (inputs: {
