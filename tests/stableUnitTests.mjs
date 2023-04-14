@@ -6,99 +6,6 @@ import { CmmmCalculations } from "../dist/packages/pools/utils/cmmmCalculations.
 const FixedOne = 1_000_000_000_000_000_000n;
 const Tolerance = 0.000_000_000_000_1;
 
-let pool = {
-    objectId: "0xbc145d0a10a1e8561d23b6e45b70397dca129e8cc2e18a741ce203edb928e722",
-    lpCoinType: "0x87be783f3093915f10dc23a01e9ca6e0dee24beecb00741c1fc5b4596e1f80a3::af_lp_btc::AF_LP_BTC",
-    name: "BTC Pool",
-    creator: "0x4b02b9b45f2a9597363fbaacb2fd6e7fb8ed9329bb6f716631b5717048908ace",
-    lpCoinSupply: 5889559772396n,
-    illiquidLpCoinSupply: 1000n,
-    flatness: 0n,
-    coins: {
-        "0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::afsui::AFSUI": {
-            weight: 100000000000000000n,
-            balance: 741470912333n,
-            tradeFeeIn: 100000000000000n,
-            tradeFeeOut: 0n,
-            depositFee: 0n,
-            withdrawFee: 0n,
-        },
-        "0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::btcb::BTCB": {
-            weight: 300000000000000000n,
-            balance: 41757437841n,
-            tradeFeeIn: 100000000000000n,
-            tradeFeeOut: 0n,
-            depositFee: 0n,
-            withdrawFee: 0n,
-        },
-        "0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::lzusdc::LZUSDC": {
-            weight: 100000000000000000n,
-            balance: 234512478645789124n,
-            tradeFeeIn: 100000000000000n,
-            tradeFeeOut: 0n,
-            depositFee: 0n,
-            withdrawFee: 0n,
-        },
-        "0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::usdc::USDC": {
-            weight: 100000000000000000n,
-            balance: 234511741265487521n,
-            tradeFeeIn: 100000000000000n,
-            tradeFeeOut: 0n,
-            depositFee: 0n,
-            withdrawFee: 0n,
-        },
-        "0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::whbtc::WHBTC": {
-            weight: 300000000000000000n,
-            balance: 4475124n,
-            tradeFeeIn: 100000000000000n,
-            tradeFeeOut: 0n,
-            depositFee: 0n,
-            withdrawFee: 0n,
-        },
-        "0xa8ea7b79c307136b0159502ae4c188660707d2a6d4345a04ae03a8093aa49928::whusdc::WHUSDC": {
-            weight: 100000000000000000n,
-            balance: 234523914571651720n,
-            tradeFeeIn: 100000000000000n,
-            tradeFeeOut: 0n,
-            depositFee: 0n,
-            withdrawFee: 0n,
-        },
-    },
-};
-
-function shortName(line) {
-    let lines = line.split("::");
-    return lines[lines.length - 1];
-}
-
-function checkVsSpotPrice(pool, indexIn, indexOut) {
-    let coinOut = pool.coins[indexOut];
-    let spotPrice = BigInt(Math.floor((10 ** 18) * CmmmCalculations.calcSpotPriceWithFees(pool, indexIn, indexOut)));
-    let amountOut = coinOut.balance >> 20n;
-    let spotIn;
-    let amountIn;
-    do {
-        amountOut = amountOut >> 1n;
-        spotIn = (amountOut * spotPrice) / FixedOne;
-        amountIn = CmmmCalculations.calcInGivenOut(
-            pool,
-            indexIn,
-            indexOut,
-            amountOut
-        );
-    } while (amountOut > 0n && Math.abs(Number(spotIn - amountIn)) <= 1);
-    console.log(shortName(indexIn) + " " + shortName(indexOut) + ": " + amountOut);
-    console.log(Number(amountOut) / Number(coinOut.balance));
-}
-
-for (let indexIn of Object.keys(pool.coins)) {
-    for (let indexOut of Object.keys(pool.coins)) {
-        if (indexIn == indexOut) continue;
-        checkVsSpotPrice(pool, indexIn, indexOut);
-    }
-}
-
-
 const tests = {
     testGetTokenBalanceGivenInvariantAndAllOtherBalances: () => {
         let flatness = 3 / 7;
@@ -340,6 +247,51 @@ const tests = {
         };
         console.log("testCalcInGivenOut passed");
     },
+    testCalcDepositFixedAmounts: () => {
+        let coins = {
+            coin1: {
+                balance: 700000n,
+                weight: 280_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 40_000_000_000_000_000n,
+            },
+            coin2: {
+                balance: 400000n,
+                weight: 448_000_000_000_000_000n,
+                tradeFeeIn: 200_000_000_000_000_000n,
+                tradeFeeOut: 20_000_000_000_000_000n,
+            },
+            coin3: {
+                balance: 500000n,
+                weight: 272_000_000_000_000_000n,
+                tradeFeeIn: 300_000_000_000_000_000n,
+                tradeFeeOut: 30_000_000_000_000_000n,
+            },
+        };
+
+        let flatness = 712_000_000_000_000_000n;
+
+        let pool = {
+            flatness: flatness,
+            coins: coins,
+        };
+
+        let amountsIn = {
+            coin1: 200n,
+            coin2: 300n,
+            coin3: 0n,
+        };
+
+        let expectedLpRatio = 999_642_153_369_341_210n;
+
+        let calculated_ratio = CmmmCalculations.calcDepositFixedAmounts(
+            pool,
+            amountsIn,
+        );
+
+        if (!Helpers.closeEnoughn(expectedLpRatio, calculated_ratio, Tolerance)) throw Error("testCalcDepositFixedAmounts failed");
+        console.log("testCalcDepositFixedAmounts passed");
+    }
 }
 
 function testAll() {
