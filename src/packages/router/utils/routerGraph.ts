@@ -40,10 +40,10 @@ export class RouterGraph {
 
 	private static readonly constants = {
 		// NOTE: should these default values be public ?
-		maxRouteLength: 3,
-		tradePartitionCount: 50,
-		minRoutesToCheck: 25,
-		maxPoolHopsForCompleteRoute: 9,
+		defaultMaxRouteLength: 5,
+		tradePartitionCount: 75,
+		minRoutesToCheck: 10,
+		maxPoolHopsForCompleteRoute: 10,
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ export class RouterGraph {
 		coinInAmount: Balance,
 		coinOut: CoinType,
 		isGivenAmountOut: boolean,
-		maxRouteLength: number = RouterGraph.constants.maxRouteLength
+		maxRouteLength: number = RouterGraph.constants.defaultMaxRouteLength
 	): RouterCompleteTradeRoute {
 		if (this.pools.length <= 0) throw new Error("pools has length of 0");
 
