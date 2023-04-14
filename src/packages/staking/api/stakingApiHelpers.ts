@@ -27,15 +27,12 @@ export class StakingApiHelpers {
 				functions: {
 					requestAddDelegation: {
 						name: "request_add_delegation",
-						defaultGasBudget: 200000,
 					},
 					requestWithdrawDelegation: {
 						name: "request_withdraw_delegation",
-						defaultGasBudget: 200000,
 					},
 					cancelDelegationRequest: {
 						name: "cancel_delegation_request",
-						defaultGasBudget: 200000,
 					},
 				},
 			},
@@ -92,9 +89,7 @@ export class StakingApiHelpers {
 	public addRequestAddDelegationCommandToTransaction = (
 		tx: TransactionBlock,
 		coinId: ObjectId | TransactionArgument,
-		validator: SuiAddress,
-		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
-			.functions.requestAddDelegation.defaultGasBudget
+		validator: SuiAddress
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
@@ -114,7 +109,6 @@ export class StakingApiHelpers {
 				tx.object(validator),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -123,9 +117,7 @@ export class StakingApiHelpers {
 		tx: TransactionBlock,
 		stakedSui: ObjectId,
 		delegation: ObjectId,
-		afSui: ObjectId | TransactionArgument,
-		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
-			.functions.requestWithdrawDelegation.defaultGasBudget
+		afSui: ObjectId | TransactionArgument
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
@@ -146,7 +138,6 @@ export class StakingApiHelpers {
 				typeof afSui === "string" ? tx.object(afSui) : afSui,
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -154,9 +145,7 @@ export class StakingApiHelpers {
 	public addCancelDelegationRequestCommandToTransaction = (
 		tx: TransactionBlock,
 		stakedSui: ObjectId,
-		afSui: ObjectId | TransactionArgument,
-		gasBudget: GasBudget = StakingApiHelpers.constants.modules.interface
-			.functions.cancelDelegationRequest.defaultGasBudget
+		afSui: ObjectId | TransactionArgument
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
@@ -176,7 +165,6 @@ export class StakingApiHelpers {
 				typeof afSui === "string" ? tx.object(afSui) : afSui,
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};

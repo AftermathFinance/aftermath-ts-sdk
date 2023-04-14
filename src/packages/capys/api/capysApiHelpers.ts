@@ -16,12 +16,10 @@ import {
 	CapyVaultObject,
 	CapysAddresses,
 	CoinDecimal,
-	GasBudget,
 } from "../../../types";
 import { Capys } from "../capys";
 import { Coin } from "../../coin/coin";
 import { Casting } from "../../../general/utils/casting";
-import { Helpers } from "../../../general/utils/helpers";
 
 export class CapysApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -44,35 +42,27 @@ export class CapysApiHelpers {
 					functions: {
 						stakeCapy: {
 							name: "stake_capy",
-							defaultGasBudget: 100000000,
 						},
 						unstakeCapy: {
 							name: "unstake_capy",
-							defaultGasBudget: 100000000,
 						},
 						withdrawFees: {
 							name: "withdraw_fees",
-							defaultGasBudget: 100000000,
 						},
 						withdrawFeesAmount: {
 							name: "withdraw_fees_amount",
-							defaultGasBudget: 100000000,
 						},
 						breedAndKeep: {
 							name: "breed_and_keep",
-							defaultGasBudget: 100000000,
 						},
 						breedWithStakedAndKeep: {
 							name: "breed_with_staked_and_keep",
-							defaultGasBudget: 100000000,
 						},
 						breedStakedWithStakedAndKeep: {
 							name: "breed_staked_with_staked_and_keep",
-							defaultGasBudget: 100000000,
 						},
 						transfer: {
 							name: "transfer",
-							defaultGasBudget: 100000000,
 						},
 					},
 				},
@@ -81,11 +71,9 @@ export class CapysApiHelpers {
 					functions: {
 						feesEarnedIndividual: {
 							name: "fees_earned_individual",
-							defaultGasBudget: 100000000,
 						},
 						feesEarnedGlobal: {
 							name: "fees_earned_global",
-							defaultGasBudget: 100000000,
 						},
 					},
 				},
@@ -202,9 +190,7 @@ export class CapysApiHelpers {
 		tx: TransactionBlock,
 		coinId: ObjectId | TransactionArgument,
 		parentOneId: ObjectId,
-		parentTwoId: ObjectId,
-		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
-			.interface.functions.breedAndKeep.defaultGasBudget
+		parentTwoId: ObjectId
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
@@ -224,7 +210,6 @@ export class CapysApiHelpers {
 				tx.object(parentTwoId),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -233,9 +218,7 @@ export class CapysApiHelpers {
 		tx: TransactionBlock,
 		coinId: ObjectId | TransactionArgument,
 		parentOneId: ObjectId,
-		parentTwoId: ObjectId,
-		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
-			.interface.functions.breedWithStakedAndKeep.defaultGasBudget
+		parentTwoId: ObjectId
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
@@ -255,7 +238,6 @@ export class CapysApiHelpers {
 				tx.object(parentTwoId),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -264,9 +246,7 @@ export class CapysApiHelpers {
 		tx: TransactionBlock,
 		coinId: ObjectId,
 		parentOneId: ObjectId,
-		parentTwoId: ObjectId,
-		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
-			.interface.functions.breedStakedWithStakedAndKeep.defaultGasBudget
+		parentTwoId: ObjectId
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
@@ -286,7 +266,6 @@ export class CapysApiHelpers {
 				tx.object(parentTwoId),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -295,11 +274,7 @@ export class CapysApiHelpers {
 	//// Staking Transaction
 	/////////////////////////////////////////////////////////////////////
 
-	public capyStakeCapyTransaction = (
-		capyId: ObjectId,
-		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
-			.interface.functions.stakeCapy.defaultGasBudget
-	): TransactionBlock => {
+	public capyStakeCapyTransaction = (capyId: ObjectId): TransactionBlock => {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
@@ -316,15 +291,12 @@ export class CapysApiHelpers {
 				tx.object(capyId),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
 
 	public capyUnstakeCapyTransaction = (
-		stakingReceiptId: ObjectId,
-		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
-			.interface.functions.unstakeCapy.defaultGasBudget
+		stakingReceiptId: ObjectId
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
@@ -344,16 +316,13 @@ export class CapysApiHelpers {
 				tx.object(stakingReceiptId),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
 
 	public capyTransferTransaction = (
 		stakingReceiptId: ObjectId,
-		recipient: SuiAddress,
-		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
-			.interface.functions.transfer.defaultGasBudget
+		recipient: SuiAddress
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
@@ -372,7 +341,6 @@ export class CapysApiHelpers {
 				tx.pure(recipient),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -382,9 +350,7 @@ export class CapysApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public capyWithdrawFeesTransaction = (
-		stakingReceiptId: ObjectId,
-		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
-			.interface.functions.withdrawFees.defaultGasBudget
+		stakingReceiptId: ObjectId
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
@@ -402,16 +368,13 @@ export class CapysApiHelpers {
 				tx.object(stakingReceiptId),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
 
 	public capyWithdrawFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
-		amount: Balance,
-		gasBudget: GasBudget = CapysApiHelpers.constants.capyVault.modules
-			.interface.functions.withdrawFeesAmount.defaultGasBudget
+		amount: Balance
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
@@ -430,7 +393,6 @@ export class CapysApiHelpers {
 				tx.pure(amount.toString()),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};

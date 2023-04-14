@@ -20,15 +20,12 @@ export class FaucetApiHelpers {
 		functions: {
 			add: {
 				name: "add_coin",
-				defaultGasBudget: 10000000,
 			},
 			request: {
 				name: "request_coin",
-				defaultGasBudget: 10000000,
 			},
 			requestAmount: {
 				name: "request_coin_amount",
-				defaultGasBudget: 10000000,
 			},
 		},
 		eventNames: {
@@ -82,9 +79,7 @@ export class FaucetApiHelpers {
 
 	public faucetAddCoinTransaction = (
 		treasuryCapId: ObjectId,
-		treasuryCapType: CoinType,
-		gasBudget: GasBudget = FaucetApiHelpers.constants.functions.add
-			.defaultGasBudget
+		treasuryCapType: CoinType
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
@@ -100,16 +95,13 @@ export class FaucetApiHelpers {
 				tx.object(treasuryCapId),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
 
 	public faucetRequestCoinAmountTransaction = (
 		coinType: CoinType,
-		amount: Balance,
-		gasBudget: GasBudget = FaucetApiHelpers.constants.functions
-			.requestAmount.defaultGasBudget
+		amount: Balance
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
@@ -125,15 +117,12 @@ export class FaucetApiHelpers {
 				tx.pure(amount.toString()),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
 
 	public faucetRequestCoinTransaction = (
-		coinType: CoinType,
-		gasBudget: GasBudget = FaucetApiHelpers.constants.functions.request
-			.defaultGasBudget
+		coinType: CoinType
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
@@ -146,7 +135,6 @@ export class FaucetApiHelpers {
 			typeArguments: [coinType],
 			arguments: [tx.object(this.addresses.objects.faucet)],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};

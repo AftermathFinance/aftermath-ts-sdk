@@ -44,15 +44,12 @@ export class PoolsApiHelpers {
 		functions: {
 			swap: {
 				name: "swap",
-				defaultGasBudget: 100000000,
 			},
 			deposit: {
 				name: "deposit_X_coins",
-				defaultGasBudget: 2000000,
 			},
 			withdraw: {
 				name: "withdraw_X_coins",
-				defaultGasBudget: 2000000,
 			},
 			// publish 30000
 		},
@@ -156,9 +153,7 @@ export class PoolsApiHelpers {
 		coinOutType: CoinType,
 		lpCoinType: CoinType,
 		slippage: Slippage,
-		referrer?: SuiAddress,
-		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.swap
-			.defaultGasBudget
+		referrer?: SuiAddress
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
@@ -182,7 +177,6 @@ export class PoolsApiHelpers {
 				),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -196,9 +190,7 @@ export class PoolsApiHelpers {
 		coinOutType: CoinType,
 		lpCoinType: CoinType,
 		slippage: Slippage,
-		referrer?: SuiAddress,
-		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.swap
-			.defaultGasBudget
+		referrer?: SuiAddress
 	): {
 		tx: TransactionBlock;
 		coinOut: TransactionArgument;
@@ -225,7 +217,6 @@ export class PoolsApiHelpers {
 				),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return {
 			tx,
@@ -241,9 +232,7 @@ export class PoolsApiHelpers {
 		expectedLpRatio: Balance,
 		lpCoinType: CoinType,
 		slippage: Slippage,
-		referrer?: SuiAddress,
-		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.deposit
-			.defaultGasBudget
+		referrer?: SuiAddress
 	): TransactionBlock => {
 		const poolSize = coinTypes.length;
 		if (poolSize != coinIds.length)
@@ -275,7 +264,6 @@ export class PoolsApiHelpers {
 				),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
@@ -288,9 +276,7 @@ export class PoolsApiHelpers {
 		expectedAmountsOut: Balance[],
 		coinsOutType: CoinType[],
 		slippage: Slippage,
-		referrer?: SuiAddress,
-		gasBudget: GasBudget = PoolsApiHelpers.constants.functions.withdraw
-			.defaultGasBudget
+		referrer?: SuiAddress
 	): TransactionBlock => {
 		const poolSize = coinsOutType.length;
 
@@ -316,7 +302,6 @@ export class PoolsApiHelpers {
 				),
 			],
 		});
-		tx.setGasBudget(gasBudget);
 
 		return tx;
 	};
