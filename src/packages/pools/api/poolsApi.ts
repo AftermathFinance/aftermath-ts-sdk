@@ -196,7 +196,9 @@ export class PoolsApi {
 			slippage,
 			referrer
 		);
-		return transaction.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			transaction
+		);
 	};
 
 	public fetchWithdrawTransaction = async (
@@ -219,7 +221,9 @@ export class PoolsApi {
 			slippage,
 			referrer
 		);
-		return transaction.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			transaction
+		);
 	};
 
 	public fetchTradeTransaction = async (
@@ -240,7 +244,9 @@ export class PoolsApi {
 			slippage,
 			referrer
 		);
-		return transaction.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			transaction
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////

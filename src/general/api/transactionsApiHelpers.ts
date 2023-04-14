@@ -1,9 +1,12 @@
 import {
 	SuiTransactionBlockResponseQuery,
+	TransactionBlock,
 	TransactionDigest,
+	getTotalGasUsedUpperBound,
 } from "@mysten/sui.js";
-import { TransactionsWithCursor } from "../../types";
+import { SerializedTransaction, TransactionsWithCursor } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
+import { RpcApiHelpers } from "./rpcApiHelpers";
 
 export class TransactionsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -45,6 +48,28 @@ export class TransactionsApiHelpers {
 			nextCursor: transactionsWithCursor.nextCursor,
 		};
 	};
+
+	public fetchSetGasBudgetForTransaction = async (
+		tx: TransactionBlock
+	): Promise<TransactionBlock> => {
+		const signer = RpcApiHelpers.constants.devInspectSigner;
+		const response =
+			await this.Provider.provider.devInspectTransactionBlock({
+				sender: tx.blockData.sender ?? signer,
+				transactionBlock: tx,
+			});
+
+		const gasUsed = getTotalGasUsedUpperBound(response.effects);
+		if (gasUsed === undefined) throw Error("dev inspect move call failed");
+
+		tx.setGasBudget(gasUsed);
+		return tx;
+	};
+
+	public fetchSetGasBudgetAndSerializeTransaction = async (
+		tx: TransactionBlock
+	): Promise<SerializedTransaction> =>
+		(await this.fetchSetGasBudgetForTransaction(tx)).serialize();
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Static Methods

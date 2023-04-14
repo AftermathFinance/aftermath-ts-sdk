@@ -68,7 +68,9 @@ export class FaucetApi {
 			requestAmountWithDecimals
 		);
 
-		return transaction.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			transaction
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////

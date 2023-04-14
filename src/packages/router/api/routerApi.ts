@@ -93,6 +93,8 @@ export class RouterApi {
 				slippage,
 				referrer
 			);
-		return tx.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			tx
+		);
 	}
 }

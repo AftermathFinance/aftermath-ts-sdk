@@ -319,36 +319,43 @@ export class CapysApi {
 
 	public fetchStakeCapyTransaction = (
 		capyId: ObjectId
-	): SerializedTransaction =>
-		this.Helpers.capyStakeCapyTransaction(capyId).serialize();
+	): Promise<SerializedTransaction> =>
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.capyStakeCapyTransaction(capyId)
+		);
 
 	public fetchUnstakeCapyTransaction = (
 		stakingReceiptId: ObjectId
-	): SerializedTransaction =>
-		this.Helpers.capyUnstakeCapyTransaction(stakingReceiptId).serialize();
+	): Promise<SerializedTransaction> =>
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.capyUnstakeCapyTransaction(stakingReceiptId)
+		);
 
 	public fetchWithdrawStakedCapyFeesTransaction = (
 		stakingReceiptId: ObjectId
-	): SerializedTransaction =>
-		this.Helpers.capyWithdrawFeesTransaction(stakingReceiptId).serialize();
+	): Promise<SerializedTransaction> =>
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.capyWithdrawFeesTransaction(stakingReceiptId)
+		);
 
 	public fetchWithdrawStakedCapyFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
 		amount: Balance
-	): SerializedTransaction =>
-		this.Helpers.capyWithdrawFeesAmountTransaction(
-			stakingReceiptId,
-			amount
-		).serialize();
+	): Promise<SerializedTransaction> =>
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.capyWithdrawFeesAmountTransaction(
+				stakingReceiptId,
+				amount
+			)
+		);
 
 	public fetchCapyTransferTransaction = (
 		stakingReceiptId: ObjectId,
 		recipient: SuiAddress
-	): SerializedTransaction =>
-		this.Helpers.capyTransferTransaction(
-			stakingReceiptId,
-			recipient
-		).serialize();
+	): Promise<SerializedTransaction> =>
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.capyTransferTransaction(stakingReceiptId, recipient)
+		);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Capy Breeding
@@ -378,7 +385,9 @@ export class CapysApi {
 			parentTwoIsOwned
 		);
 
-		return transaction.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			transaction
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////

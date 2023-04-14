@@ -125,7 +125,9 @@ export class StakingApi {
 			amount,
 			validator
 		);
-		return tx.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			tx
+		);
 	};
 
 	public fetchRequestWithdrawDelegationTransaction = async (
@@ -141,7 +143,9 @@ export class StakingApi {
 				stakedSui,
 				delegation
 			);
-		return tx.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			tx
+		);
 	};
 
 	public fetchCancelDelegationRequestTransaction = async (
@@ -155,7 +159,9 @@ export class StakingApi {
 				amount,
 				stakedSui
 			);
-		return tx.serialize();
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			tx
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////
