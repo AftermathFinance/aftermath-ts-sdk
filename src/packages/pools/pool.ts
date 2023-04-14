@@ -180,6 +180,8 @@ export class Pool extends Caller {
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
+		// PRODUCTION: check amount bound
+
 		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
 			amount: inputs.coinInAmount,
 		});
@@ -233,6 +235,8 @@ export class Pool extends Caller {
 		const pool = Helpers.deepCopy(this.pool);
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
+
+		// PRODUCTION: check amount bound
 
 		if (
 			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=

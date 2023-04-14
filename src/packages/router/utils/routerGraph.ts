@@ -42,7 +42,7 @@ export class RouterGraph {
 		// NOTE: should these default values be public ?
 		defaultMaxRouteLength: 5,
 		tradePartitionCount: 75,
-		minRoutesToCheck: 10,
+		minRoutesToCheck: 20,
 		maxPoolHopsForCompleteRoute: 10,
 	};
 
@@ -400,7 +400,7 @@ export class RouterGraph {
 		let currentPools = graph.pools;
 		let currentRoutes = routes;
 
-		const emptyArray = Array(this.constants.tradePartitionCount + 1).fill(
+		const emptyArray = Array(this.constants.tradePartitionCount).fill(
 			undefined
 		);
 
@@ -409,13 +409,13 @@ export class RouterGraph {
 			this.constants.tradePartitionCount;
 
 		for (const [i] of emptyArray.entries()) {
-			if (i === 0 && coinInRemainderAmount <= BigInt(0)) continue;
-
 			const { updatedPools, updatedRoutes } =
 				this.findNextRouteAndUpdatePoolsAndRoutes(
 					Helpers.deepCopy(currentPools),
 					Helpers.deepCopy(currentRoutes),
-					i === 0 ? coinInRemainderAmount : coinInPartitionAmount,
+					i === 0
+						? coinInRemainderAmount + coinInPartitionAmount
+						: coinInPartitionAmount,
 					linearCutStepSize,
 					isGivenAmountOut
 				);
@@ -449,12 +449,45 @@ export class RouterGraph {
 			)
 		);
 
-		return this.cutUpdatedRoutesAndPools(
-			updatedRoutesAndPools,
-			isGivenAmountOut
-			// "LINEAR",
-			// linearCutStepSize
+		const routesAndPoolsUnderMaxHops = updatedRoutesAndPools.filter(
+			(data) => !data.isOverMaxHops
 		);
+		if (routesAndPoolsUnderMaxHops.length > 0) {
+			const firstCheck = this.cutUpdatedRoutesAndPools(
+				Helpers.deepCopy(routesAndPoolsUnderMaxHops),
+				isGivenAmountOut
+				// "LINEAR",
+				// linearCutStepSize
+			);
+
+			if (
+				isGivenAmountOut
+					? firstCheck.coinOutAmount < BigInt("0xFFFFFFFFFFFFFFFF")
+					: firstCheck.coinOutAmount > BigInt(0)
+			)
+				return firstCheck;
+		}
+
+		const routesAndPoolsOverMaxHops = updatedRoutesAndPools.filter(
+			(data) => data.isOverMaxHops
+		);
+		if (routesAndPoolsOverMaxHops.length > 0) {
+			const finalCheck = this.cutUpdatedRoutesAndPools(
+				Helpers.deepCopy(routesAndPoolsOverMaxHops),
+				isGivenAmountOut
+				// "LINEAR",
+				// linearCutStepSize
+			);
+
+			if (
+				isGivenAmountOut
+					? finalCheck.coinOutAmount < BigInt("0xFFFFFFFFFFFFFFFF")
+					: finalCheck.coinOutAmount > BigInt(0)
+			)
+				return finalCheck;
+		}
+
+		throw Error("unable to find route");
 	};
 
 	private static cutUpdatedRoutesAndPools = (
@@ -470,6 +503,7 @@ export class RouterGraph {
 	): {
 		updatedRoutes: RouterTradeRoute[];
 		updatedPools: PoolsById;
+		coinOutAmount: Balance;
 	} => {
 		if (routeDecreaseType === "LINEAR" && linearCutStepSize === undefined)
 			throw new Error("linear cut step size has not been provided");
@@ -523,6 +557,7 @@ export class RouterGraph {
 		return {
 			updatedPools: cutRoutesAndPools[0].updatedPools,
 			updatedRoutes,
+			coinOutAmount: cutRoutesAndPools[0].updatedRoute.coinOut.amount,
 		};
 	};
 
@@ -537,22 +572,18 @@ export class RouterGraph {
 		updatedRoute: RouterTradeRoute;
 		coinOutAmount: Balance;
 		startingRoute: RouterTradeRoute;
+		isOverMaxHops: boolean;
 	} => {
 		const originalRoute = Helpers.deepCopy(route);
 
-		if (
+		const isOverMaxHops =
 			originalRoute.coinIn.amount <= BigInt(0) &&
 			originalRoute.paths.length + currentTotalHops >
-				this.constants.maxPoolHopsForCompleteRoute
-		)
-			return {
-				updatedPools: pools,
-				updatedRoute: route,
-				coinOutAmount: isGivenAmountOut
-					? BigInt("0xFFFFFFFFFFFFFFFF")
-					: BigInt(0),
-				startingRoute: route,
-			};
+				this.constants.maxPoolHopsForCompleteRoute;
+
+		const failedAmount = isGivenAmountOut
+			? BigInt("0xFFFFFFFFFFFFFFFF")
+			: BigInt(0);
 
 		let currentPools = Helpers.deepCopy(pools);
 		let currentCoinInAmount = coinInAmount;
@@ -577,8 +608,9 @@ export class RouterGraph {
 			);
 
 			const totalCoinInAmount = currentCoinInAmount + path.coinIn.amount;
+			// (isGivenAmountOut ? path.coinOut.amount : path.coinIn.amount);
 
-			const totalCoinOutAmount = isGivenAmountOut
+			let totalCoinOutAmount = isGivenAmountOut
 				? poolBeforePathTrades.getTradeAmountIn({
 						coinInType: path.coinIn.type,
 						coinOutType: path.coinOut.type,
@@ -590,21 +622,32 @@ export class RouterGraph {
 						coinInAmount: totalCoinInAmount,
 				  }).coinOutAmount;
 
-			const coinOutAmountFromTrade =
+			let coinOutAmountFromTrade =
 				totalCoinOutAmount >= path.coinOut.amount
 					? totalCoinOutAmount - path.coinOut.amount
-					: isGivenAmountOut
-					? BigInt("0xFFFFFFFFFFFFFFFF")
-					: BigInt(0);
+					: failedAmount;
 
-			const updatedPool = this.getUpdatedPoolAfterTrade(
-				pool,
-				path.coinIn.type,
-				currentCoinInAmount,
-				path.coinOut.type,
-				coinOutAmountFromTrade,
-				isGivenAmountOut
-			);
+			let updatedPool: Pool;
+			if (
+				(totalCoinOutAmount ||
+					coinOutAmountFromTrade ||
+					currentCoinInAmount) === failedAmount
+			) {
+				totalCoinOutAmount = failedAmount;
+				coinOutAmountFromTrade = failedAmount;
+				currentCoinInAmount = failedAmount;
+
+				updatedPool = Helpers.deepCopy(pool);
+			} else {
+				updatedPool = this.getUpdatedPoolAfterTrade(
+					pool,
+					path.coinIn.type,
+					currentCoinInAmount,
+					path.coinOut.type,
+					coinOutAmountFromTrade,
+					isGivenAmountOut
+				);
+			}
 
 			let newPath: RouterTradePath = {
 				...path,
@@ -652,6 +695,7 @@ export class RouterGraph {
 			updatedRoute,
 			coinOutAmount: currentCoinInAmount,
 			startingRoute: route,
+			isOverMaxHops,
 		};
 	};
 
