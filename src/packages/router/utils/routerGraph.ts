@@ -135,12 +135,6 @@ export class RouterGraph {
 			? RouterGraph.transformCompleteRouteIfGivenAmountOut(completeRoute)
 			: completeRoute;
 
-		// const startingPools = Helpers.deepCopy(this.graph.pools);
-		// const finalRoute = RouterGraph.calculateFinalAmountsOutForCompleteRoute(
-		// 	startingPools,
-		// 	transformedRoute
-		// );
-
 		return transformedRoute;
 	}
 
@@ -582,10 +576,6 @@ export class RouterGraph {
 				isGivenAmountOut
 			);
 
-			// BUG: should this be flipped for isGivenAmountOut ?
-			// const totalCoinInAmount = isGivenAmountOut
-			// 	? currentCoinInAmount + path.coinOut.amount
-			// 	: currentCoinInAmount + path.coinIn.amount;
 			const totalCoinInAmount = currentCoinInAmount + path.coinIn.amount;
 
 			const totalCoinOutAmount = isGivenAmountOut
@@ -606,18 +596,6 @@ export class RouterGraph {
 					: isGivenAmountOut
 					? BigInt("0xFFFFFFFFFFFFFFFF")
 					: BigInt(0);
-
-			// let coinOutAmount = isGivenAmountOut
-			// 	? pool.getTradeAmountIn({
-			// 			coinOutType: path.coinOut.type,
-			// 			coinOutAmount: currentCoinInAmount,
-			// 			coinInType: path.coinIn.type,
-			// 	  })
-			// 	: pool.getTradeAmountOut({
-			// 			coinInType: path.coinIn.type,
-			// 			coinInAmount: currentCoinInAmount,
-			// 			coinOutType: path.coinOut.type,
-			// 	  });
 
 			const updatedPool = this.getUpdatedPoolAfterTrade(
 				pool,
@@ -779,132 +757,6 @@ export class RouterGraph {
 			},
 		};
 	};
-
-	// private static calculateFinalAmountsOutForCompleteRoute = (
-	// 	startingPools: PoolsById,
-	// 	completeRoute: RouterCompleteTradeRoute
-	// ): RouterCompleteTradeRoute => {
-	// 	let pools = Helpers.deepCopy(startingPools);
-	// 	let finalRoutes = [];
-
-	// 	for (const route of completeRoute.routes) {
-	// 		const { updatedPools, updatedRoute, coinOutAmount } =
-	// 			this.getUpdatedPoolsAndRouteFinalAmountsOut(
-	// 				Helpers.deepCopy(pools),
-	// 				Helpers.deepCopy({ ...route })
-	// 			);
-
-	// 		pools = updatedPools;
-
-	// 		finalRoutes.push(updatedRoute);
-	// 	}
-
-	// 	const finalAmountOut = finalRoutes.reduce(
-	// 		(acc, route) => acc + route.coinOut.amount,
-	// 		BigInt(0)
-	// 	);
-
-	// 	return {
-	// 		...completeRoute,
-	// 		routes: finalRoutes,
-	// 		coinOut: {
-	// 			...completeRoute.coinOut,
-	// 			amount: finalAmountOut,
-	// 		},
-	// 	};
-	// };
-
-	// private static getUpdatedPoolsAndRouteFinalAmountsOut = (
-	// 	pools: PoolsById,
-	// 	route: RouterTradeRoute
-	// ): {
-	// 	updatedPools: PoolsById;
-	// 	updatedRoute: RouterTradeRoute;
-	// 	coinOutAmount: Balance;
-	// 	startingRoute: RouterTradeRoute;
-	// } => {
-	// 	const originalRoute = Helpers.deepCopy(route);
-	// 	const coinInAmount = originalRoute.paths[0].coinIn.amount;
-
-	// 	let currentPools = Helpers.deepCopy(pools);
-	// 	let newRoute: RouterTradeRoute = { ...originalRoute, paths: [] };
-	// 	let currentCoinInAmount = coinInAmount;
-	// 	let routeSpotPrice = 1;
-
-	// 	for (const path of originalRoute.paths) {
-	// 		const pool = currentPools[path.poolObjectId];
-
-	// 		const spotPrice = pool.getSpotPrice({
-	// 			coinInType: path.coinIn.type,
-	// 			coinOutType: path.coinOut.type,
-	// 		});
-
-	// 		let { coinOutAmount, error } = pool.getTradeAmountOut({
-	// 			coinInType: path.coinIn.type,
-	// 			coinInAmount: currentCoinInAmount,
-	// 			coinOutType: path.coinOut.type,
-	// 		});
-
-	// 		// PRODUCTION: error ????
-
-	// 		const updatedPool = this.getUpdatedPoolAfterTrade(
-	// 			pool,
-	// 			path.coinIn.type,
-	// 			currentCoinInAmount,
-	// 			path.coinOut.type,
-	// 			coinOutAmount,
-	// 			false
-	// 		);
-
-	// 		let newPath: RouterTradePath = {
-	// 			...path,
-	// 			coinIn: {
-	// 				...path.coinIn,
-	// 				amount: currentCoinInAmount,
-	// 				tradeFee: pool.pool.coins[path.coinIn.type].tradeFeeIn,
-	// 			},
-	// 			coinOut: {
-	// 				...path.coinOut,
-	// 				amount: coinOutAmount,
-	// 				tradeFee: pool.pool.coins[path.coinOut.type].tradeFeeOut,
-	// 			},
-	// 			spotPrice,
-	// 		};
-
-	// 		newRoute = {
-	// 			...newRoute,
-	// 			paths: [...newRoute.paths, newPath],
-	// 		};
-
-	// 		currentCoinInAmount = coinOutAmount;
-	// 		currentPools = {
-	// 			...currentPools,
-	// 			[path.poolObjectId]: updatedPool,
-	// 		};
-
-	// 		routeSpotPrice *= spotPrice;
-	// 	}
-
-	// 	const updatedRoute: RouterTradeRoute = {
-	// 		...newRoute,
-	// 		coinIn: {
-	// 			...newRoute.coinIn,
-	// 			amount: coinInAmount,
-	// 		},
-	// 		coinOut: {
-	// 			...newRoute.coinOut,
-	// 			amount: currentCoinInAmount,
-	// 		},
-	// 		spotPrice: routeSpotPrice,
-	// 	};
-
-	// 	return {
-	// 		updatedPools: currentPools,
-	// 		updatedRoute,
-	// 		coinOutAmount: currentCoinInAmount,
-	// 		startingRoute: route,
-	// 	};
-	// };
 
 	private static totalHopsInRoutes = (routes: RouterTradeRoute[]) =>
 		routes
