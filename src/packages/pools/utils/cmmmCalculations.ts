@@ -206,7 +206,11 @@ export class CmmmCalculations {
 		let topPos;
 		let topNeg;
 		let bottomPos;
+<<<<<<< HEAD
 		//let bottomNeg;
+=======
+		//let bottom_neg;
+>>>>>>> deposit estimator
 
 		let prevX = x;
 
@@ -217,7 +221,11 @@ export class CmmmCalculations {
 			topPos = x * (xw * (c1 * x + c2 * xw + c3) + c4);
 			topNeg = x * (xw * (c5 * xw + c6));
 			bottomPos = c7 * x + c8 * xw + c9;
+<<<<<<< HEAD
 			//bottomNeg = c10;
+=======
+			//bottom_neg = c10;
+>>>>>>> deposit estimator
 
 			// If x jumps too much (bad initial estimate) then g(x) might overshoot into a negative number.
 			// This only happens if x is supposed to be small. In this case, replace x with a small number and try again.
@@ -554,6 +562,7 @@ export class CmmmCalculations {
 		}
 		throw Error("Newton diverged");
 	}
+<<<<<<< HEAD
 
 	// Return the expected amounts out for this withdrawal
 	public static calcWithdrawFlpAmountsOut = (
@@ -717,4 +726,6 @@ export class CmmmCalculations {
 		}
 		throw Error("Newton diverged");
 	}
+=======
+>>>>>>> deposit estimator
 }
