@@ -7,7 +7,7 @@ import {
 	getObjectOwner,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, ObjectDisplay, PackageId } from "../../types";
+import { AnyObjectType, NftDisplay, PackageId } from "../../types";
 
 export class ObjectsApiHelpers {
 	/////////////////////////////////////////////////////////////////////

@@ -66,7 +66,7 @@ export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getPool(inputs: { objectId: ObjectId }): Promise<Pool> {
-		const pool = await this.fetchApi<PoolObject>(`${inputs.objectId}`);
+		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
 		return new Pool(pool, this.network);
 	}
 

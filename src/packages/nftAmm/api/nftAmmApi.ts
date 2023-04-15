@@ -1,7 +1,7 @@
-import { ObjectId, getObjectDisplay } from "@mysten/sui.js";
+import { ObjectId } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { NftAmmApiHelpers } from "./nftAmmApiHelpers";
-import { ObjectInfoWithDisplay } from "../nftAmmTypes";
+import { Nft } from "../nftAmmTypes";
 import { NftAmmApiCasting } from "./nftAmmApiCasting";
 
 export class NftAmmApi {
@@ -24,15 +24,11 @@ export class NftAmmApi {
 	//// Public Methods
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchObjectsInfoWithDisplay = async (
-		objectIds: ObjectId[]
-	): Promise<ObjectInfoWithDisplay[]> => {
+	public fetchNfts = async (objectIds: ObjectId[]): Promise<Nft[]> => {
 		const objects = await this.Provider.Objects().fetchObjectBatch(
 			objectIds,
 			true
 		);
-		return objects.map(
-			NftAmmApiCasting.objectInfoWithDisplayFromSuiObjectResponse
-		);
+		return objects.map(NftAmmApiCasting.nftFromSuiObjectResponse);
 	};
 }

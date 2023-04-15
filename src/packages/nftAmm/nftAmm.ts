@@ -1,5 +1,6 @@
+import { ObjectId } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork } from "../../types";
+import { Nft, SuiNetwork } from "../../types";
 
 export class NftAmm extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -15,4 +16,18 @@ export class NftAmm extends Caller {
 	constructor(public readonly network?: SuiNetwork) {
 		super(network, "nftAmm");
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	// public async getNft(inputs: { objectId: ObjectId }): Promise<Nft> {
+	// 	return this.fetchApi(`nfts/${inputs.objectId}`);
+	// }
+
+	// public async getNfts(inputs: { objectIds: ObjectId[] }): Promise<Nft[]> {
+	// 	return Promise.all(
+	// 		inputs.objectIds.map((objectId) => this.getNft({ objectId }))
+	// 	);
+	// }
 }

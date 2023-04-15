@@ -4,11 +4,11 @@ import {
 	getObjectDisplay,
 } from "@mysten/sui.js";
 import {
-	ObjectDisplay,
-	ObjectInfo,
-	ObjectInfoWithDisplay,
-	OtherObjectDisplay,
-	SuggestedObjectDisplay,
+	NftDisplay,
+	NftInfo,
+	Nft,
+	OtherNftDisplay,
+	SuggestedNftDisplay,
 } from "../nftAmmTypes";
 import { Helpers } from "../../../general/utils";
 
@@ -18,19 +18,19 @@ export class NftAmmApiCasting {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Object Display
+	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public static objectInfoWithDisplayFromSuiObjectResponse = (
+	public static nftFromSuiObjectResponse = (
 		object: SuiObjectResponse
-	): ObjectInfoWithDisplay => {
-		const info = this.objectInfoFromSuiObjectResponse(object);
+	): Nft => {
+		const info = this.nftInfoFromSuiObjectResponse(object);
 
 		const displayFields = getObjectDisplay(object);
-		const objectDisplay =
-			this.objectDisplayFromDisplayFieldsResponse(displayFields);
+		const nftDisplay =
+			this.nftDisplayFromDisplayFieldsResponse(displayFields);
 		const display =
-			Object.keys(objectDisplay).length === 0 ? undefined : objectDisplay;
+			Object.keys(nftDisplay).length === 0 ? undefined : nftDisplay;
 
 		return {
 			info,
@@ -43,12 +43,12 @@ export class NftAmmApiCasting {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Object Display
+	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public static objectInfoFromSuiObjectResponse = (
+	private static nftInfoFromSuiObjectResponse = (
 		object: SuiObjectResponse
-	): ObjectInfo => {
+	): NftInfo => {
 		if (object.error !== undefined || object.data === undefined)
 			throw new Error(
 				"unable to obtain object info from sui object response"
@@ -62,14 +62,14 @@ export class NftAmmApiCasting {
 		};
 	};
 
-	private static objectDisplayFromDisplayFieldsResponse = (
+	private static nftDisplayFromDisplayFieldsResponse = (
 		displayFields: DisplayFieldsResponse
-	): ObjectDisplay => {
+	): NftDisplay => {
 		const fields = displayFields.data;
 		if (fields === null || displayFields.error !== null) return {};
 
 		const suggestedFields: {
-			offChain: keyof SuggestedObjectDisplay;
+			offChain: keyof SuggestedNftDisplay;
 			onChain: string;
 		}[] = [
 			{
@@ -98,8 +98,8 @@ export class NftAmmApiCasting {
 			},
 		];
 
-		let suggested: SuggestedObjectDisplay | undefined = {};
-		let other: OtherObjectDisplay | undefined = Helpers.deepCopy(fields);
+		let suggested: SuggestedNftDisplay | undefined = {};
+		let other: OtherNftDisplay | undefined = Helpers.deepCopy(fields);
 
 		for (const field of suggestedFields) {
 			if (!(field.onChain in field)) continue;

@@ -5,24 +5,24 @@ import { AnyObjectType, Url } from "../../types";
 //// Object Display
 /////////////////////////////////////////////////////////////////////
 
-export interface ObjectInfoWithDisplay {
-	info: ObjectInfo;
-	display?: ObjectDisplay;
+export interface Nft {
+	info: NftInfo;
+	display?: NftDisplay;
 }
 
-export interface ObjectInfo {
+export interface NftInfo {
 	objectId: ObjectId;
 	version: string;
 	digest: TransactionDigest;
 	type?: AnyObjectType;
 }
 
-export interface ObjectDisplay {
-	suggested?: SuggestedObjectDisplay;
-	other?: OtherObjectDisplay;
+export interface NftDisplay {
+	suggested?: SuggestedNftDisplay;
+	other?: OtherNftDisplay;
 }
 
-export interface SuggestedObjectDisplay {
+export interface SuggestedNftDisplay {
 	name?: string;
 	link?: Url;
 	imageUrl?: Url;
@@ -31,4 +31,4 @@ export interface SuggestedObjectDisplay {
 	creator?: string;
 }
 
-export type OtherObjectDisplay = Record<string, string>;
+export type OtherNftDisplay = Record<string, string>;
