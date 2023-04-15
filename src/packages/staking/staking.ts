@@ -50,12 +50,12 @@ export class Staking extends Caller {
 		walletAddress: SuiAddress
 	): Promise<DelegatedStake[]> {
 		return this.fetchApi<DelegatedStake[]>(
-			`stakePositions/${walletAddress}`
+			`stake-positions/${walletAddress}`
 		);
 	}
 
 	public async getActiveValidators(): Promise<SuiValidatorSummary[]> {
-		return this.fetchApi("activeValidators");
+		return this.fetchApi("active-validators");
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ export class Staking extends Caller {
 		return this.fetchApi<
 			EventsWithCursor<StakeRequestAddDelegationEvent>,
 			ApiEventsBody
-		>("events/addStake", {
+		>("events/add-stake", {
 			cursor,
 			limit,
 		});
@@ -90,7 +90,7 @@ export class Staking extends Caller {
 		return this.fetchApi<
 			EventsWithCursor<StakeRequestWithdrawDelegationEvent>,
 			ApiEventsBody
-		>("events/withdrawStake", {
+		>("events/withdraw-stake", {
 			cursor,
 			limit,
 		});
@@ -103,7 +103,7 @@ export class Staking extends Caller {
 		return this.fetchApi<
 			EventsWithCursor<StakeCancelDelegationRequestEvent>,
 			ApiEventsBody
-		>("events/cancelStake", {
+		>("events/cancel-stake", {
 			cursor,
 			limit,
 		});
@@ -122,7 +122,7 @@ export class Staking extends Caller {
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiRequestAddDelegationBody
-			>("transactions/requestAddDelegation", {
+			>("transactions/request-add-delegation", {
 				walletAddress,
 				validatorAddress,
 				coinAmount,
@@ -147,7 +147,7 @@ export class Staking extends Caller {
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiRequestWithdrawDelegationBody
-			>("transactions/requestWithdrawDelegation", {
+			>("transactions/request-withdraw-delegation", {
 				walletAddress: walletAddress,
 				principalAmount: BigInt(stake.principal),
 				stakedSuiObjectId: stake.stakedSuiId,
@@ -165,7 +165,7 @@ export class Staking extends Caller {
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiCancelDelegationRequestBody
-			>("transactions/cancelDelegationRequest", {
+			>("transactions/cancel-delegation-request", {
 				walletAddress: walletAddress,
 				principalAmount: BigInt(stake.principal),
 				stakedSuiObjectId: stake.stakedSuiId,

@@ -31,6 +31,6 @@ export class Sui extends Caller {
 	}
 
 	public async getSystemState(): Promise<SuiSystemStateSummary> {
-		return this.fetchApi("systemState");
+		return this.fetchApi("system-state");
 	}
 }

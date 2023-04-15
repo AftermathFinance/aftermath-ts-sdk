@@ -70,7 +70,7 @@ export class Capys extends Caller {
 
 	public async getOwnedCapys(walletAddress: SuiAddress): Promise<Capy[]> {
 		return (
-			await this.fetchApi<CapyObject[]>(`ownedCapys/${walletAddress}`)
+			await this.fetchApi<CapyObject[]>(`owned-capys/${walletAddress}`)
 		).map((capy) => new Capy(capy, this.network));
 	}
 
@@ -79,7 +79,7 @@ export class Capys extends Caller {
 	): Promise<StakedCapyReceipt[]> {
 		const stakedCapyReceipts = await this.fetchApi<
 			StakedCapyReceiptObject[]
-		>(`stakedCapyReceipts/${walletAddress}`);
+		>(`staked-capy-receipts/${walletAddress}`);
 
 		const stakedCapys = await this.getCapys(
 			stakedCapyReceipts.map((receipt) => receipt.capyId)
@@ -107,7 +107,7 @@ export class Capys extends Caller {
 		const capysWithCursor = await this.fetchApi<
 			DynamicFieldObjectsWithCursor<CapyObject>,
 			ApiDynamicFieldsBody
-		>(`stakedCapys${Capys.createCapyAttributesQueryString(attributes)}`, {
+		>(`staked-capys${Capys.createCapyAttributesQueryString(attributes)}`, {
 			cursor,
 			limit,
 		});
@@ -131,7 +131,7 @@ export class Capys extends Caller {
 		limit?: number
 	): Promise<EventsWithCursor<BreedCapysEvent>> {
 		return this.fetchApi<EventsWithCursor<BreedCapysEvent>, ApiEventsBody>(
-			"events/breedCapy",
+			"events/breed-capys",
 			{
 				cursor,
 				limit,
@@ -144,7 +144,7 @@ export class Capys extends Caller {
 		limit?: number
 	): Promise<EventsWithCursor<StakeCapyEvent>> {
 		return this.fetchApi<EventsWithCursor<StakeCapyEvent>, ApiEventsBody>(
-			"events/stakeCapy",
+			"events/stake-capy",
 			{
 				cursor,
 				limit,
@@ -157,7 +157,7 @@ export class Capys extends Caller {
 		limit?: number
 	): Promise<EventsWithCursor<UnstakeCapyEvent>> {
 		return this.fetchApi<EventsWithCursor<UnstakeCapyEvent>, ApiEventsBody>(
-			"events/unstakeCapy",
+			"events/unstake-capy",
 			{
 				cursor,
 				limit,
@@ -176,7 +176,7 @@ export class Capys extends Caller {
 	): Promise<TransactionBlock> {
 		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, ApiBreedCapyBody>(
-				"transactions/bree",
+				"transactions/breed",
 				{
 					walletAddress,
 					capyParentOneId,

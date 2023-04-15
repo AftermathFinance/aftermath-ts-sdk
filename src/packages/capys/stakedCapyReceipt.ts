@@ -30,7 +30,7 @@ export class StakedCapyReceipt extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getFeesEarned(): Promise<StakedCapyFeesEarned> {
-		return this.fetchApi(`feesEarned/${this.stakedCapyReceipt.objectId}`);
+		return this.fetchApi(`fees-earned/${this.stakedCapyReceipt.objectId}`);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ export class StakedCapyReceipt extends Caller {
 			await this.fetchApi<
 				SerializedTransaction,
 				ApiWithdrawCapyFeesAmountBody
-			>("transactions/withdrawFees", {
+			>("transactions/withdraw-fees", {
 				amount,
 				stakingReceiptObjectId: this.stakedCapyReceipt.objectId,
 			})

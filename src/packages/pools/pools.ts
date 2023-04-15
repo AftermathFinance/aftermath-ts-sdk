@@ -121,7 +121,7 @@ export class Pools extends Caller {
 		inputs: ApiPoolObjectIdForLpCoinTypeBody
 	) => {
 		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
-			"poolObjectId",
+			"pool-object-id",
 			inputs
 		);
 	};

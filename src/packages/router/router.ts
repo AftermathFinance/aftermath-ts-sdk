@@ -28,7 +28,7 @@ export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getSupportedCoins(): Promise<CoinType[]> {
-		return this.fetchApi("supportedCoins");
+		return this.fetchApi("supported-coins");
 	}
 
 	public async getCompleteTradeRouteGivenAmountIn(
@@ -38,7 +38,7 @@ export class Router extends Caller {
 		return this.fetchApi<
 			RouterCompleteTradeRoute,
 			ApiRouterCompleteTradeRouteBody
-		>("tradeRoute", inputs, abortSignal);
+		>("trade-route", inputs, abortSignal);
 	}
 
 	public async getCompleteTradeRouteGivenAmountOut(
@@ -48,7 +48,7 @@ export class Router extends Caller {
 		return this.fetchApi<
 			RouterCompleteTradeRoute,
 			ApiRouterCompleteTradeRouteBody
-		>("tradeRoute", inputs, abortSignal);
+		>("trade-route", inputs, abortSignal);
 	}
 
 	/////////////////////////////////////////////////////////////////////
