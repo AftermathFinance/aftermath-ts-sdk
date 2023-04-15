@@ -15,19 +15,10 @@ export type Balance = bigint;
 // Approximate balances come from js-side numerical methods. This type distinction is to remind us
 // that js-produced values are not equal to their on chain equivalent.
 export type ApproximateBalance = bigint;
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 export const useApproximateBalance = (
 	approximation: ApproximateBalance
 ): Balance => approximation;
-=======
-=======
->>>>>>> deposit estimator
-export const useApproximateBalance = (approximation: ApproximateBalance): Balance => approximation;
->>>>>>> deposit estimator
-
-export type F18Ratio = bigint;
 
 export type F18Ratio = bigint;
 
