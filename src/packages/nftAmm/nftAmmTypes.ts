@@ -7,7 +7,7 @@ import { AnyObjectType, Url } from "../../types";
 
 export interface Nft {
 	info: NftInfo;
-	display?: NftDisplay;
+	display: NftDisplay;
 }
 
 export interface NftInfo {
@@ -18,8 +18,8 @@ export interface NftInfo {
 }
 
 export interface NftDisplay {
-	suggested?: SuggestedNftDisplay;
-	other?: OtherNftDisplay;
+	suggested: SuggestedNftDisplay;
+	other: OtherNftDisplay;
 }
 
 export interface SuggestedNftDisplay {

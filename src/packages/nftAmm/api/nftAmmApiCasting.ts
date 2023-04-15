@@ -27,10 +27,7 @@ export class NftAmmApiCasting {
 		const info = this.nftInfoFromSuiObjectResponse(object);
 
 		const displayFields = getObjectDisplay(object);
-		const nftDisplay =
-			this.nftDisplayFromDisplayFieldsResponse(displayFields);
-		const display =
-			Object.keys(nftDisplay).length === 0 ? undefined : nftDisplay;
+		const display = this.nftDisplayFromDisplayFieldsResponse(displayFields);
 
 		return {
 			info,
@@ -66,7 +63,11 @@ export class NftAmmApiCasting {
 		displayFields: DisplayFieldsResponse
 	): NftDisplay => {
 		const fields = displayFields.data;
-		if (fields === null || displayFields.error !== null) return {};
+		if (fields === null || displayFields.error !== null)
+			return {
+				suggested: {},
+				other: {},
+			};
 
 		const suggestedFields: {
 			offChain: keyof SuggestedNftDisplay;
@@ -98,8 +99,8 @@ export class NftAmmApiCasting {
 			},
 		];
 
-		let suggested: SuggestedNftDisplay | undefined = {};
-		let other: OtherNftDisplay | undefined = Helpers.deepCopy(fields);
+		let suggested: SuggestedNftDisplay = {};
+		let other: OtherNftDisplay = Helpers.deepCopy(fields);
 
 		for (const field of suggestedFields) {
 			if (!(field.onChain in field)) continue;
@@ -107,9 +108,6 @@ export class NftAmmApiCasting {
 			suggested[field.offChain] = fields[field.onChain];
 			delete other[field.offChain];
 		}
-
-		if (Object.keys(suggested).length === 0) suggested = undefined;
-		if (Object.keys(other).length === 0) other = undefined;
 
 		return {
 			suggested,
