@@ -52,6 +52,9 @@ export class Helpers {
 	public static numberToF18 = (a: number): bigint => BigInt(Math.floor(a * Helpers.FixedOneNum));
 	public static numberFromF18 = (a: F18Ratio): number => Number(a) / Helpers.FixedOneNum;
 
+	public static scaleNumBigInt = (scalar: number, int: bigint): bigint => BigInt(Math.floor(scalar * Number(int)))
+	
+
 	/////////////////////////////////////////////////////////////////////
 	//// Display
 	/////////////////////////////////////////////////////////////////////

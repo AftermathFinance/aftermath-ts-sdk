@@ -206,7 +206,7 @@ export class CmmmCalculations {
 		let topPos;
 		let topNeg;
 		let bottomPos;
-		//let bottom_neg;
+		//let bottomNeg;
 
 		let prevX = x;
 
@@ -217,7 +217,7 @@ export class CmmmCalculations {
 			topPos = x * (xw * (c1 * x + c2 * xw + c3) + c4);
 			topNeg = x * (xw * (c5 * xw + c6));
 			bottomPos = c7 * x + c8 * xw + c9;
-			//bottom_neg = c10;
+			//bottomNeg = c10;
 
 			// If x jumps too much (bad initial estimate) then g(x) might overshoot into a negative number.
 			// This only happens if x is supposed to be small. In this case, replace x with a small number and try again.
@@ -234,7 +234,7 @@ export class CmmmCalculations {
 			if (
 				Helpers.closeEnough(
 					x,
-					prev_x,
+					prevX,
 					CmmmCalculations.convergenceBound
 				)
 			) {
@@ -294,7 +294,7 @@ export class CmmmCalculations {
 
 	// The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
 	private static calcSpotPriceBody = (pool: PoolObject): number => {
-		// The spot price formula comes from the partial derivatives of Cf, specifically -(dCf / dx_out) / (dCf / dx_in)
+		// The spot price formula comes from the partial derivatives of Cf, specifically -(dCf / dxOut) / (dCf / dxIn)
 		let a: number = CmmmCalculations.directCast(pool.flatness);
 		let ac: number = 1 - a;
 
@@ -304,7 +304,7 @@ export class CmmmCalculations {
 		let weight: number;
 
 		// The spot price formula requires knowing the value of the invariant. We need the prod and sum parts
-		// also later on so no need to compute them twice by calling calc_invariant, just evaluate here.
+		// also later on so no need to compute them twice by calling calcInvariant, just evaluate here.
 		for (let coin of Object.values(pool.coins)) {
 			balance = CmmmCalculations.convertFromInt(coin.balance);
 			weight = CmmmCalculations.directCast(coin.weight);
@@ -550,6 +550,169 @@ export class CmmmCalculations {
 			}
 
 			prevR = r;
+			i += 1;
+		}
+		throw Error("Newton diverged");
+	}
+
+	// Return the expected amounts out for this withdrawal
+	public static calcWithdrawFlpAmountsOut = (
+		pool: PoolObject,
+		amountsOutDirection: CoinAmounts,
+		lpRatio: F18Ratio,
+	): CoinAmounts => {
+		let invariant = CmmmCalculations.calcInvariant(pool);
+		let coins = pool.coins;
+		let lpr = Helpers.numberFromF18(lpRatio);
+        let lpc = 1 - lpr;
+        let scaledInvariant = invariant * lpr;
+        let a = CmmmCalculations.directCast(pool.flatness);
+        let ac = 1 - a;
+        let i;
+        let keepT: boolean;
+        let t;
+        let prevT = 0;
+        let cf;
+        let tMin;
+        let cfMin;
+        let tMax;
+        let cfMax;
+        let balance;
+        let weight;
+        let amountOut;
+        let fee;
+        let prod;
+        let prod1;
+        let sum;
+        let sum1;
+        let part1;
+        let part2;
+        let part3;
+        let part4;
+
+		// the biggest cfMax can possibly be is f(0) which is this:
+		tMax = 0;
+		prod = 0;
+		sum = 0;
+		for (let coin of Object.values(coins)) {
+			balance = CmmmCalculations.convertFromInt(coin.balance);
+			weight = CmmmCalculations.directCast(coin.weight);
+			fee = CmmmCalculations.directCast(coin.tradeFeeIn);
+			part1 = balance * (1 + lpr * fee - fee);
+			prod += weight * Math.log(part1);
+			sum += weight * part1;
+		}
+		prod = Math.exp(prod);
+		cfMax = 2 * a * prod * sum / (prod + scaledInvariant) + ac * prod;
+
+		// the smallest cfMin can be is 0 which occurs when the pool is drained
+		cfMin = 0;
+		tMin = Number.POSITIVE_INFINITY;
+		for (let [coinType, coin] of Object.entries(coins)) {
+			t = CmmmCalculations.convertFromInt(coin.balance)
+            	* (1 - CmmmCalculations.directCast(coin.tradeFeeOut) * lpr)
+            	/ CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
+			if (t < tMin) tMin = t;
+		}
+
+		// remaining test points are the CF discontinuities: where B0 - t*D = R*B0
+		for (let [coinTypeT, coinT] of Object.entries(coins)) {
+			amountOut = CmmmCalculations.convertFromInt(amountsOutDirection[coinTypeT]);
+			if (amountOut == 0) continue;
+			balance = CmmmCalculations.convertFromInt(coinT.balance);
+			t = balance * lpc / amountOut;
+			prod = 0;
+			sum = 0;
+			keepT = true;
+			for (let [coinType, coin] of Object.entries(coins)) {
+				balance = CmmmCalculations.convertFromInt(coin.balance);
+				weight = CmmmCalculations.directCast(coin.weight);
+				amountOut = CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
+				part1 = t * amountOut;
+				if (part1 >= balance) {
+					// this t is too large to be a bound because B0 - t*D overdraws the pool
+                    keepT = false;
+                    break;
+				}
+				part1 = balance - part1;
+				part2 = lpr * balance;
+				part3 = (part1 >= part2)?
+					part2 + (1 - CmmmCalculations.directCast(coin.tradeFeeIn)) * (part1 - part2):
+					part2 - (part1 - part1) / (1 - CmmmCalculations.directCast(coin.tradeFeeOut));
+				prod += weight * Math.log(part3);
+				sum += weight * part3;
+			}
+			if (keepT) {
+				prod = Math.exp(prod);
+				cf = 2 * a * prod * sum / (prod + scaledInvariant) + ac * prod;
+				if (cf >= scaledInvariant) {
+					// upper bound, check against cfMax
+					if (cf <= cfMax) {
+						tMax = t;
+						cfMax = cf;
+					}
+				}
+				if (cf <= scaledInvariant) {
+					// lower bound, check against cfMin
+					if (cf >= cfMin) {
+						tMin = t;
+						cfMin = cf;
+					}
+				}
+			}
+		}
+
+		// initial estimate is the linear interpolation between discontinuity bounds
+		t = (cfMax == cfMin)? tMin:
+			(tMin * cfMax + tMax * scaledInvariant - tMax * cfMin - tMin * scaledInvariant) / cfMax - cfMin;
+		
+		let fees: Record<CoinType, number> = {};
+		for (let [coinType, coin] of Object.entries(coins)) {
+			balance = CmmmCalculations.convertFromInt(coin.balance);
+			amountOut = CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
+			fees[coinType] = (balance * lpc >= t * amountOut)?
+				1 - CmmmCalculations.directCast(coin.tradeFeeIn):
+				1 / (1 - CmmmCalculations.directCast(coin.tradeFeeOut));
+		}
+
+		i = 0;
+		while (i < CmmmCalculations.maxNewtonAttempts) {
+			prod = 0;
+			prod1 = 0;
+			sum = 0;
+			sum1 = 0;
+			for (let [coinType, coin] of Object.entries(coins)) {
+				balance = CmmmCalculations.convertFromInt(coin.balance);
+				weight = CmmmCalculations.directCast(coin.weight);
+				amountOut = CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
+				fee = fees[coinType];
+
+				part1 = balance * (lpr + lpc * fee) - fee * t * amountOut;
+				part2 = weight * fee * amountOut;
+
+				prod += weight * Math.log(part1);
+				prod1 += part2 / part1;
+				sum += weight * part1;
+				sum1 += part2;
+			}
+			prod = Math.exp(prod);
+
+			part1 = prod / scaledInvariant;
+			part2 = 2 * a * sum;
+			part3 = ac * (prod * part1 + 2 * prod + scaledInvariant) + part2;
+			part4 = part3 * prod1 + 2 * a * (part1 + 1) * sum1;
+
+			t = (t * part4 + part3 + part1 * part2 - prod - scaledInvariant * (2 + scaledInvariant / prod)) / part4;
+
+			if (Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBound)) {
+				let returner: CoinAmounts = {};
+				for (let coinType of Object.keys(coins)) {
+					returner[coinType] = Helpers.scaleNumBigInt(t, amountsOutDirection[coinType]);
+				}
+				return returner;
+			}
+
+			prevT = t;
 			i += 1;
 		}
 		throw Error("Newton diverged");

@@ -289,9 +289,69 @@ const tests = {
             amountsIn,
         );
 
-        if (!Helpers.closeEnoughn(expectedLpRatio, calculated_ratio, Tolerance)) throw Error("testCalcDepositFixedAmounts failed");
+        if (!Helpers.closeEnoughBigInt(expectedLpRatio, calculated_ratio, Tolerance)) throw Error("testCalcDepositFixedAmounts failed");
         console.log("testCalcDepositFixedAmounts passed");
-    }
+    },
+    testCalcWithdrawFlpAmountsOut: () => {
+        let coins = {
+            coin1: {
+                balance: 700000000n,
+                weight: 280_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 40_000_000_000_000_000n,
+            },
+            coin2: {
+                balance: 400000000n,
+                weight: 448_000_000_000_000_000n,
+                tradeFeeIn: 200_000_000_000_000_000n,
+                tradeFeeOut: 20_000_000_000_000_000n,
+            },
+            coin3: {
+                balance: 500000000n,
+                weight: 272_000_000_000_000_000n,
+                tradeFeeIn: 300_000_000_000_000_000n,
+                tradeFeeOut: 30_000_000_000_000_000n,
+            },
+        };
+
+        let flatness = 712_000_000_000_000_000n;
+
+        let pool = {
+            flatness: flatness,
+            coins: coins,
+        };
+
+        let lpRatio = 729_000_000_000_000_000n;
+
+        let amountsOutDirection = {
+            coin1: 3000000n,
+            coin2: 50000000n,
+            coin3: 10000000n,
+        };
+
+        let expectedScalar = 4.055_189_826_679_962_800;
+
+        let expectedAmountsOut = {
+            coin1: Helpers.scaleNumBigInt(expectedScalar, amountsOutDirection.coin1),
+            coin2: Helpers.scaleNumBigInt(expectedScalar, amountsOutDirection.coin2),
+            coin3: Helpers.scaleNumBigInt(expectedScalar, amountsOutDirection.coin3),
+        };
+
+        let calculatedAmountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
+            pool,
+            amountsOutDirection,
+            lpRatio,
+        );
+
+        for (let coinType of Object.keys(coins)) {
+            if (!Helpers.closeEnoughBigInt(
+                expectedAmountsOut[coinType],
+                calculatedAmountsOut[coinType],
+                Tolerance
+            )) throw Error("testCalcWithdrawFlpAmountsOut failed");
+        }
+        console.log("testCalcWithdrawFlpAmountsOut passed");
+    },
 }
 
 function testAll() {
