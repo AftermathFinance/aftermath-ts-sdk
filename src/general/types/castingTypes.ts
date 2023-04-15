@@ -1,10 +1,4 @@
-import {
-	ObjectId,
-	SequenceNumber,
-	SuiAddress,
-	SuiMoveModuleId,
-	TransactionDigest,
-} from "@mysten/sui.js";
+import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { AnyObjectType, BigIntAsString, ModuleName } from "./generalTypes";
 
 /////////////////////////////////////////////////////////////////////

@@ -1,5 +1,6 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { BigIntAsString, EventOnChain } from "../../../types";
+import { BigIntAsString } from "../../../types";
+import { EventOnChain } from "../../../general/types/castingTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Dynamic Fields

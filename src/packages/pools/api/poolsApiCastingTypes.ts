@@ -4,11 +4,12 @@ import {
 	Balance,
 	BigIntAsString,
 	CoinType,
-	EventOnChain,
 	PoolName,
-	SupplyOnChain,
-	TableOnChain,
 } from "../../../types";
+import {
+	EventOnChain,
+	SupplyOnChain,
+} from "../../../general/types/castingTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects

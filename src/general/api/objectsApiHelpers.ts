@@ -1,4 +1,5 @@
 import {
+	DisplayFieldsResponse,
 	ObjectId,
 	SuiAddress,
 	SuiObjectResponse,
@@ -156,13 +157,5 @@ export class ObjectsApiHelpers {
 		});
 
 		return objects;
-	};
-
-	public fetchObjectDisplays = async (
-		objectIds: ObjectId[]
-	): Promise<ObjectDisplay[]> => {
-		const objects = await this.fetchObjectBatch(objectIds, true);
-		const displays = objects.map(getObjectDisplay);
-		return displays;
 	};
 }
