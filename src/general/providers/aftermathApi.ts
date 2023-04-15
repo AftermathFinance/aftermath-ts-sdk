@@ -15,6 +15,7 @@ import { RouterApi } from "../../packages/router/api/routerApi";
 import { PlaceholderPricesApi } from "../prices/placeholder/placeholderPricesApi";
 import { CapysApi } from "../../packages/capys/api/capysApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
+import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
@@ -97,4 +98,5 @@ export class AftermathApi {
 	public Router = () => new RouterApi(this);
 	public Capys = () => new CapysApi(this);
 	public Staking = () => new StakingApi(this);
+	public NftAmm = () => new NftAmmApi(this);
 }

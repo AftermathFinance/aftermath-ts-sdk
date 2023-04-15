@@ -21,6 +21,7 @@ interface OptionalConfigAddresses {
 	pools: PoolsAddresses;
 	utilies: UtilitiesAddresses;
 	capys: CapysAddresses;
+	nftAmm: NftAmmAddresses;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -70,4 +71,9 @@ export interface CapysAddresses {
 		capyVault: ObjectId;
 		capyRegistry: ObjectId;
 	};
+}
+
+export interface NftAmmAddresses {
+	packages: {};
+	objects: {};
 }

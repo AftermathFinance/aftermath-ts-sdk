@@ -17,7 +17,9 @@ export type Balance = bigint;
 
 export type ApproximateBalance = bigint;
 
-export const useApproximateBalance = (approximation: ApproximateBalance): Balance => approximation;
+export const useApproximateBalance = (
+	approximation: ApproximateBalance
+): Balance => approximation;
 
 /////////////////////////////////////////////////////////////////////
 //// number
@@ -65,6 +67,8 @@ export interface Event {
 export interface Object {
 	objectId: ObjectId;
 }
+
+export interface ObjectDisplay {}
 
 /////////////////////////////////////////////////////////////////////
 //// Dynamic Fields

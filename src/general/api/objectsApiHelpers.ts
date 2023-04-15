@@ -2,10 +2,11 @@ import {
 	ObjectId,
 	SuiAddress,
 	SuiObjectResponse,
+	getObjectDisplay,
 	getObjectOwner,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, PackageId } from "../../types";
+import { AnyObjectType, ObjectDisplay, PackageId } from "../../types";
 
 export class ObjectsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -155,5 +156,13 @@ export class ObjectsApiHelpers {
 		});
 
 		return objects;
+	};
+
+	public fetchObjectDisplays = async (
+		objectIds: ObjectId[]
+	): Promise<ObjectDisplay[]> => {
+		const objects = await this.fetchObjectBatch(objectIds, true);
+		const displays = objects.map(getObjectDisplay);
+		return displays;
 	};
 }
