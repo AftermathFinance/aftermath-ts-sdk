@@ -12,16 +12,6 @@ import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
 export type Balance = bigint;
 
-// Approximate balances come from js-side numerical methods. This type distinction is to remind us
-// that js-produced values are not equal to their on chain equivalent.
-export type ApproximateBalance = bigint;
-
-export const useApproximateBalance = (
-	approximation: ApproximateBalance
-): Balance => approximation;
-
-export type F18Ratio = bigint;
-
 /////////////////////////////////////////////////////////////////////
 //// number
 /////////////////////////////////////////////////////////////////////

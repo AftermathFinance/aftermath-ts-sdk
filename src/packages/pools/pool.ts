@@ -119,7 +119,7 @@ export class Pool extends Caller {
 			ApiEventsBody
 		>("events/deposit", inputs);
 
-		// PRODUCTION: temporary until "Any" filter can be used for event filtering
+		// PRODUCTION: temporary until "And" filter can be used for event filtering
 		return {
 			...eventsWithCursor,
 			events: eventsWithCursor.events.filter(
@@ -136,7 +136,7 @@ export class Pool extends Caller {
 			ApiEventsBody
 		>("events/withdraw", inputs);
 
-		// PRODUCTION: temporary until "Any" filter can be used for event filtering
+		// PRODUCTION: temporary until "And" filter can be used for event filtering
 		return {
 			...eventsWithCursor,
 			events: eventsWithCursor.events.filter(
@@ -153,7 +153,7 @@ export class Pool extends Caller {
 			ApiEventsBody
 		>("events/trade", inputs);
 
-		// PRODUCTION: temporary until "Any" filter can be used for event filtering
+		// PRODUCTION: temporary until "And" filter can be used for event filtering
 		return {
 			...eventsWithCursor,
 			events: eventsWithCursor.events.filter(
@@ -179,8 +179,6 @@ export class Pool extends Caller {
 		const pool = Helpers.deepCopy(this.pool);
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
-
-		// PRODUCTION: check amount bound
 
 		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
 			amount: inputs.coinInAmount,
@@ -236,8 +234,6 @@ export class Pool extends Caller {
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
-		// PRODUCTION: check amount bound
-
 		if (
 			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
 			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
@@ -291,35 +287,65 @@ export class Pool extends Caller {
 		);
 	};
 
-	public getDepositLpMintAmount = (inputs: {
-		coinsToBalance: CoinsToBalance;
-	}) => {
-		return BigInt(1);
-		// const pool = this.pool;
-		// const poolCoins = pool.coins;
+	public getDepositLpAmountOut = (inputs: {
+		amountsIn: CoinsToBalance;
+		// PRODUCTION: account for referral in calculation
+		referral?: boolean;
+	}): {
+		lpAmountOut: Balance;
+		error?: string;
+	} => {
+		const calcedLpAmount = CmmmCalculations.calcDepositFixedAmounts(
+			this.pool,
+			inputs.amountsIn
+		);
 
-		// const poolCoinBalances = Object.values(poolCoins).map(
-		// 	(coin) => coin.balance
-		// );
-		// const poolCoinWeights = Object.values(poolCoins).map(
-		// 	(coin) => coin.weight
-		// );
+		let lpAmountOut = calcedLpAmount;
+		let error = undefined;
 
-		// const depositCoinBalances = Object.entries(poolCoins).map(
-		// 	([coinType, poolCoin]) => {
-		// 		const foundBalance = Object.entries(inputs.coinsToBalance).find(
-		// 			(coinAndBalance) => coinAndBalance[0] === coinType
-		// 		)?.[1];
-		// 		return foundBalance ?? BigInt(0);
-		// 	}
-		// );
+		if (calcedLpAmount <= BigInt(0)) {
+			error = "lpAmountOut <= 0";
+			lpAmountOut = BigInt(0);
+		}
 
-		// return CmmmCalculations.calcLpOutGivenExactTokensIn(
-		// 	poolCoinBalances,
-		// 	poolCoinWeights,
-		// 	depositCoinBalances,
-		// 	pool.lpCoinSupply,
-		// 	pool.coins[Object.keys(poolCoins)[0]].tradeFeeIn
-		// );
+		return {
+			lpAmountOut,
+			error,
+		};
+	};
+
+	public getWithdrawAmountsOut = (inputs: {
+		lpRatio: number;
+		amountsOutDirection: CoinsToBalance;
+		// PRODUCTION: account for referral in calculation
+		referral?: boolean;
+	}): {
+		amountsOut: CoinsToBalance;
+		error?: string;
+	} => {
+		const calcedAmountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
+			this.pool,
+			inputs.amountsOutDirection,
+			inputs.lpRatio
+		);
+
+		let amountsOut = { ...calcedAmountsOut };
+		let error = undefined;
+
+		for (const coin in Object.keys(calcedAmountsOut)) {
+			if (calcedAmountsOut[coin] <= BigInt(0)) {
+				if (error === undefined) error = "";
+
+				error += `amountsOut[${coin}] <= 0 `;
+				amountsOut[coin] = BigInt(0);
+			}
+		}
+
+		if (error !== undefined) error = error.trim();
+
+		return {
+			amountsOut,
+			error,
+		};
 	};
 }

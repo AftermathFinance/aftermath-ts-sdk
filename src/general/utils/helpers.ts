@@ -1,4 +1,4 @@
-import { AnyObjectType, F18Ratio } from "../../types";
+import { AnyObjectType } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
@@ -46,14 +46,6 @@ export class Helpers {
 		b: bigint,
 		tolerance: number
 	) => Helpers.closeEnough(Number(a), Number(b), tolerance);
-
-	public static FixedOne: bigint = BigInt("1000000000000000000");
-	public static FixedOneNum: number = Number(Helpers.FixedOne);
-	public static numberToF18 = (a: number): bigint => BigInt(Math.floor(a * Helpers.FixedOneNum));
-	public static numberFromF18 = (a: F18Ratio): number => Number(a) / Helpers.FixedOneNum;
-
-	public static scaleNumBigInt = (scalar: number, int: bigint): bigint => BigInt(Math.floor(scalar * Number(int)))
-	
 
 	/////////////////////////////////////////////////////////////////////
 	//// Display

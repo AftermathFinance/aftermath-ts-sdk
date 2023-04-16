@@ -21,12 +21,14 @@ import {
 	PoolCoins,
 	CoinsToPrice,
 	Slippage,
+	CoinsToBalance,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 import { Pool } from "..";
+import { Casting } from "../../../general/utils";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -322,6 +324,14 @@ export class PoolsApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
+		const { coinOutAmount: amountOut, error } = pool.getTradeAmountOut({
+			coinInAmount: fromCoinAmount,
+			coinInType: fromCoinType,
+			coinOutType: toCoinType,
+			referral: referrer !== undefined,
+		});
+		if (error !== undefined) throw new Error(error);
+
 		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
@@ -329,13 +339,6 @@ export class PoolsApiHelpers {
 				fromCoinType,
 				fromCoinAmount
 			);
-
-		const { coinOutAmount: amountOut, error } = pool.getTradeAmountOut({
-			coinInAmount: fromCoinAmount,
-			coinInType: fromCoinType,
-			coinOutType: toCoinType,
-		});
-		if (error !== undefined) throw new Error(error);
 
 		const finalTx = this.addTradeCommandToTransaction(
 			txWithCoinWithAmount,
@@ -355,13 +358,26 @@ export class PoolsApiHelpers {
 	public fetchBuildDepositTransaction = async (
 		walletAddress: SuiAddress,
 		pool: Pool,
-		coinTypes: CoinType[],
-		coinAmounts: Balance[],
+		amountsIn: CoinsToBalance,
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
+
+		const { coins: coinTypes, balances: coinAmounts } =
+			Coin.coinsAndBalancesOverZero(amountsIn);
+
+		const { lpAmountOut, error } = pool.getDepositLpAmountOut({
+			amountsIn,
+			referral: referrer !== undefined,
+		});
+		if (error !== undefined) throw new Error(error);
+
+		// TODO: move this somewhere else and into its own func
+		const expectedLpRatio =
+			Number(pool.pool.lpCoinSupply - lpAmountOut) /
+			Number(pool.pool.lpCoinSupply);
 
 		const { coinArguments, txWithCoinsWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
@@ -371,15 +387,12 @@ export class PoolsApiHelpers {
 				coinAmounts
 			);
 
-		// PRODUCTION: do calc here !
-		const expectedLpRatio = BigInt(0);
-
 		const finalTx = this.addMultiCoinDepositCommandToTransaction(
 			txWithCoinsWithAmount,
 			pool.pool.objectId,
 			coinArguments,
 			coinTypes,
-			expectedLpRatio,
+			Casting.numberToFixedBigInt(expectedLpRatio),
 			pool.pool.lpCoinType,
 			slippage,
 			referrer
@@ -391,8 +404,7 @@ export class PoolsApiHelpers {
 	public fetchBuildWithdrawTransaction = async (
 		walletAddress: SuiAddress,
 		pool: Pool,
-		coinTypes: CoinType[],
-		coinAmounts: Balance[],
+		amountsOutDirection: CoinsToBalance,
 		lpCoinAmount: Balance,
 		slippage: Slippage,
 		referrer?: SuiAddress
@@ -400,8 +412,19 @@ export class PoolsApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		// PRODUCTION: do calc here !
-		// const lpCoinAmount = BigInt(0);
+		// TODO: move this somewhere else and into its own func
+		const lpRatio =
+			Number(pool.pool.lpCoinSupply + lpCoinAmount) /
+			Number(pool.pool.lpCoinSupply);
+		const { amountsOut, error } = pool.getWithdrawAmountsOut({
+			lpRatio,
+			amountsOutDirection,
+			referral: referrer !== undefined,
+		});
+		if (error !== undefined) throw new Error(error);
+
+		const { coins: coinTypes, balances: coinAmounts } =
+			Coin.coinsAndBalancesOverZero(amountsOut);
 
 		const { coinArgument: lpCoinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
@@ -416,7 +439,7 @@ export class PoolsApiHelpers {
 			pool.pool.objectId,
 			lpCoinArgument,
 			pool.pool.lpCoinType,
-			coinAmounts, // TODO: calc slippage amount
+			coinAmounts,
 			coinTypes,
 			slippage,
 			referrer

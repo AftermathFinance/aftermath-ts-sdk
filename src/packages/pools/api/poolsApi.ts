@@ -185,14 +185,10 @@ export class PoolsApi {
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> => {
-		const { coins, balances } = Coin.coinsAndBalancesOverZero(
-			depositCoinsToBalance
-		);
 		const transaction = await this.Helpers.fetchBuildDepositTransaction(
 			walletAddress,
 			pool,
-			coins,
-			balances,
+			depositCoinsToBalance,
 			slippage,
 			referrer
 		);
@@ -209,14 +205,10 @@ export class PoolsApi {
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> => {
-		const { coins, balances } = Coin.coinsAndBalancesOverZero(
-			withdrawCoinsToBalance
-		);
 		const transaction = await this.Helpers.fetchBuildWithdrawTransaction(
 			walletAddress,
 			pool,
-			coins,
-			balances,
+			withdrawCoinsToBalance,
 			lpCoinAmount,
 			slippage,
 			referrer

@@ -1,16 +1,6 @@
 import { Coin } from "../../coin/coin";
-import {
-	ApproximateBalance,
-	Balance,
-	CoinAmounts,
-	CoinType,
-	F18Ratio,
-	PoolObject,
-	PoolTradeFee,
-	PoolWeight,
-} from "../../../types";
-import { Pools } from "../pools";
-import { Helpers } from "../../../general/utils";
+import { Balance, CoinType, CoinsToBalance, PoolObject } from "../../../types";
+import { Casting, Helpers } from "../../../general/utils";
 
 // This file is the typescript version of on-chain calculations. See the .move file for license info.
 // These calculations are useful for estimating values on-chain but the JS number format is LESS PRECISE!
@@ -41,11 +31,10 @@ export class CmmmCalculations {
 	// every other fixed point nubmer is in 18 point format
 	// these terms come from their on chain equivalents where direct cast means (x: u64 as u256)
 	private static convertFromInt = (n: bigint): number => Number(n);
-	private static convertToInt = (n: number): ApproximateBalance =>
-		BigInt(Math.floor(n));
+	private static convertToInt = (n: number): Balance => BigInt(Math.floor(n));
 	private static directCast = (n: bigint): number =>
 		Coin.balanceWithDecimals(n, 18);
-	private static directUncast = (n: number): ApproximateBalance =>
+	private static directUncast = (n: number): Balance =>
 		Coin.normalizeBalance(n, 18);
 
 	// Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
@@ -232,11 +221,7 @@ export class CmmmCalculations {
 
 			// using relative error here (easier to pass) because js numbers are less precise
 			if (
-				Helpers.closeEnough(
-					x,
-					prevX,
-					CmmmCalculations.convergenceBound
-				)
+				Helpers.closeEnough(x, prevX, CmmmCalculations.convergenceBound)
 			) {
 				return x;
 			}
@@ -325,7 +310,7 @@ export class CmmmCalculations {
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
 		amountIn: Balance
-	): ApproximateBalance => {
+	): Balance => {
 		if (coinTypeIn == coinTypeOut)
 			throw Error("in and out must be different coins");
 		let coinIn = pool.coins[coinTypeIn];
@@ -379,7 +364,7 @@ export class CmmmCalculations {
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
 		amountOut: Balance
-	): ApproximateBalance => {
+	): Balance => {
 		if (coinTypeIn == coinTypeOut)
 			throw Error("in and out must be different coins");
 		let coinIn = pool.coins[coinTypeIn];
@@ -431,8 +416,8 @@ export class CmmmCalculations {
 	// Return the expected lp ratio for this deposit
 	public static calcDepositFixedAmounts = (
 		pool: PoolObject,
-		amountsIn: CoinAmounts,
-	): F18Ratio => {
+		amountsIn: CoinsToBalance
+	): Balance => {
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
 		let a = CmmmCalculations.directCast(pool.flatness);
@@ -443,13 +428,15 @@ export class CmmmCalculations {
 		let sum = 0;
 		let n = Object.keys(coins).length;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = CmmmCalculations.convertFromInt(coin.balance + amountsIn[coinType]);
+			balance = CmmmCalculations.convertFromInt(
+				coin.balance + amountsIn[coinType]
+			);
 			weight = CmmmCalculations.directCast(coin.weight);
 			prod += weight * Math.log(balance);
 			sum += weight * balance;
 		}
 		prod = Math.exp(prod);
-		let cfMax = 2 * a * prod * sum / (prod + invariant) + ac * prod;
+		let cfMax = (2 * a * prod * sum) / (prod + invariant) + ac * prod;
 
 		let r;
 		let rMin = 0;
@@ -473,17 +460,24 @@ export class CmmmCalculations {
 				part1 = r * (balance + amount);
 				if (part1 >= balance) {
 					// r * (B0 + Din) >= B0 so use fees in
-					part1 = balance + (1 - CmmmCalculations.directCast(coin2.tradeFeeIn)) * (part1 - balance);
+					part1 =
+						balance +
+						(1 - CmmmCalculations.directCast(coin2.tradeFeeIn)) *
+							(part1 - balance);
 				} else {
 					// r * (B0 + Din) < B0 so use fees out
-					part1 = balance - (balance - part1) / (1 - CmmmCalculations.directCast(coin2.tradeFeeOut));
+					part1 =
+						balance -
+						(balance - part1) /
+							(1 -
+								CmmmCalculations.directCast(coin2.tradeFeeOut));
 				}
 				prod += weight * Math.log(part1);
 				sum += weight * part1;
 			}
 			prod = Math.exp(prod);
 
-			cf = 2 * a * prod * sum / (prod + invariant) + ac * prod;
+			cf = (2 * a * prod * sum) / (prod + invariant) + ac * prod;
 			if (cf <= invariant) {
 				// is a lower bound, check min
 				if (cf >= cfMin) {
@@ -500,16 +494,21 @@ export class CmmmCalculations {
 			}
 		}
 
-		r = (cfMin == cfMax)? rMin: (rMin * cfMax + (rMax - rMin) * invariant - rMax * cfMin) / (cfMax - cfMin);
+		r =
+			cfMin == cfMax
+				? rMin
+				: (rMin * cfMax + (rMax - rMin) * invariant - rMax * cfMin) /
+				  (cfMax - cfMin);
 		let prevR = r;
 
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = CmmmCalculations.convertFromInt(coin.balance);
 			amount = CmmmCalculations.convertFromInt(amountsIn[coinType]);
-			fees[coinType] = (r * (balance + amount) >= balance)?
-				1 - CmmmCalculations.directCast(coin.tradeFeeIn):
-				1 / (1 - CmmmCalculations.directCast(coin.tradeFeeOut));
+			fees[coinType] =
+				r * (balance + amount) >= balance
+					? 1 - CmmmCalculations.directCast(coin.tradeFeeIn)
+					: 1 / (1 - CmmmCalculations.directCast(coin.tradeFeeOut));
 		}
 
 		let i = 0;
@@ -542,53 +541,58 @@ export class CmmmCalculations {
 
 			part3 = a * invariant * prod1;
 			part4 = 2 * prod1 * (a * sum + ac * prod) + 2 * a * sum1;
-			r = (r * part4 + invariant * (1 + invariant / prod) - (r * part3 + 2 * a * sum + ac * (prod + invariant)))
-			/ (part4 - part3);
+			r =
+				(r * part4 +
+					invariant * (1 + invariant / prod) -
+					(r * part3 + 2 * a * sum + ac * (prod + invariant))) /
+				(part4 - part3);
 
-			if (Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)) {
-				return Helpers.numberToF18(r);
+			if (
+				Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)
+			) {
+				return Casting.numberToFixedBigInt(r);
 			}
 
 			prevR = r;
 			i += 1;
 		}
 		throw Error("Newton diverged");
-	}
+	};
 
 	// Return the expected amounts out for this withdrawal
 	public static calcWithdrawFlpAmountsOut = (
 		pool: PoolObject,
-		amountsOutDirection: CoinAmounts,
-		lpRatio: F18Ratio,
-	): CoinAmounts => {
+		amountsOutDirection: CoinsToBalance,
+		lpRatio: number
+	): CoinsToBalance => {
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
-		let lpr = Helpers.numberFromF18(lpRatio);
-        let lpc = 1 - lpr;
-        let scaledInvariant = invariant * lpr;
-        let a = CmmmCalculations.directCast(pool.flatness);
-        let ac = 1 - a;
-        let i;
-        let keepT: boolean;
-        let t;
-        let prevT = 0;
-        let cf;
-        let tMin;
-        let cfMin;
-        let tMax;
-        let cfMax;
-        let balance;
-        let weight;
-        let amountOut;
-        let fee;
-        let prod;
-        let prod1;
-        let sum;
-        let sum1;
-        let part1;
-        let part2;
-        let part3;
-        let part4;
+		let lpr = lpRatio;
+		let lpc = 1 - lpr;
+		let scaledInvariant = invariant * lpr;
+		let a = CmmmCalculations.directCast(pool.flatness);
+		let ac = 1 - a;
+		let i;
+		let keepT: boolean;
+		let t;
+		let prevT = 0;
+		let cf;
+		let tMin;
+		let cfMin;
+		let tMax;
+		let cfMax;
+		let balance;
+		let weight;
+		let amountOut;
+		let fee;
+		let prod;
+		let prod1;
+		let sum;
+		let sum1;
+		let part1;
+		let part2;
+		let part3;
+		let part4;
 
 		// the biggest cfMax can possibly be is f(0) which is this:
 		tMax = 0;
@@ -603,48 +607,62 @@ export class CmmmCalculations {
 			sum += weight * part1;
 		}
 		prod = Math.exp(prod);
-		cfMax = 2 * a * prod * sum / (prod + scaledInvariant) + ac * prod;
+		cfMax = (2 * a * prod * sum) / (prod + scaledInvariant) + ac * prod;
 
 		// the smallest cfMin can be is 0 which occurs when the pool is drained
 		cfMin = 0;
 		tMin = Number.POSITIVE_INFINITY;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			t = CmmmCalculations.convertFromInt(coin.balance)
-            	* (1 - CmmmCalculations.directCast(coin.tradeFeeOut) * lpr)
-            	/ CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
+			t =
+				(CmmmCalculations.convertFromInt(coin.balance) *
+					(1 - CmmmCalculations.directCast(coin.tradeFeeOut) * lpr)) /
+				CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
 			if (t < tMin) tMin = t;
 		}
 
 		// remaining test points are the CF discontinuities: where B0 - t*D = R*B0
 		for (let [coinTypeT, coinT] of Object.entries(coins)) {
-			amountOut = CmmmCalculations.convertFromInt(amountsOutDirection[coinTypeT]);
+			amountOut = CmmmCalculations.convertFromInt(
+				amountsOutDirection[coinTypeT]
+			);
 			if (amountOut == 0) continue;
 			balance = CmmmCalculations.convertFromInt(coinT.balance);
-			t = balance * lpc / amountOut;
+			t = (balance * lpc) / amountOut;
 			prod = 0;
 			sum = 0;
 			keepT = true;
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = CmmmCalculations.convertFromInt(coin.balance);
 				weight = CmmmCalculations.directCast(coin.weight);
-				amountOut = CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
+				amountOut = CmmmCalculations.convertFromInt(
+					amountsOutDirection[coinType]
+				);
 				part1 = t * amountOut;
 				if (part1 >= balance) {
 					// this t is too large to be a bound because B0 - t*D overdraws the pool
-                    keepT = false;
-                    break;
+					keepT = false;
+					break;
 				}
 				part1 = balance - part1;
 				part2 = lpr * balance;
-				part3 = (part1 >= part2)?
-					part2 + (1 - CmmmCalculations.directCast(coin.tradeFeeIn)) * (part1 - part2):
-					part2 - (part1 - part1) / (1 - CmmmCalculations.directCast(coin.tradeFeeOut));
+				part3 =
+					part1 >= part2
+						? part2 +
+						  (1 - CmmmCalculations.directCast(coin.tradeFeeIn)) *
+								(part1 - part2)
+						: part2 -
+						  (part1 - part1) /
+								(1 -
+									CmmmCalculations.directCast(
+										coin.tradeFeeOut
+									));
 				prod += weight * Math.log(part3);
 				sum += weight * part3;
 			}
 			if (keepT) {
 				prod = Math.exp(prod);
-				cf = 2 * a * prod * sum / (prod + scaledInvariant) + ac * prod;
+				cf =
+					(2 * a * prod * sum) / (prod + scaledInvariant) + ac * prod;
 				if (cf >= scaledInvariant) {
 					// upper bound, check against cfMax
 					if (cf <= cfMax) {
@@ -663,16 +681,26 @@ export class CmmmCalculations {
 		}
 
 		// initial estimate is the linear interpolation between discontinuity bounds
-		t = (cfMax == cfMin)? tMin:
-			(tMin * cfMax + tMax * scaledInvariant - tMax * cfMin - tMin * scaledInvariant) / cfMax - cfMin;
-		
+		t =
+			cfMax == cfMin
+				? tMin
+				: (tMin * cfMax +
+						tMax * scaledInvariant -
+						tMax * cfMin -
+						tMin * scaledInvariant) /
+						cfMax -
+				  cfMin;
+
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = CmmmCalculations.convertFromInt(coin.balance);
-			amountOut = CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
-			fees[coinType] = (balance * lpc >= t * amountOut)?
-				1 - CmmmCalculations.directCast(coin.tradeFeeIn):
-				1 / (1 - CmmmCalculations.directCast(coin.tradeFeeOut));
+			amountOut = CmmmCalculations.convertFromInt(
+				amountsOutDirection[coinType]
+			);
+			fees[coinType] =
+				balance * lpc >= t * amountOut
+					? 1 - CmmmCalculations.directCast(coin.tradeFeeIn)
+					: 1 / (1 - CmmmCalculations.directCast(coin.tradeFeeOut));
 		}
 
 		i = 0;
@@ -684,7 +712,9 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = CmmmCalculations.convertFromInt(coin.balance);
 				weight = CmmmCalculations.directCast(coin.weight);
-				amountOut = CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
+				amountOut = CmmmCalculations.convertFromInt(
+					amountsOutDirection[coinType]
+				);
 				fee = fees[coinType];
 
 				part1 = balance * (lpr + lpc * fee) - fee * t * amountOut;
@@ -702,12 +732,23 @@ export class CmmmCalculations {
 			part3 = ac * (prod * part1 + 2 * prod + scaledInvariant) + part2;
 			part4 = part3 * prod1 + 2 * a * (part1 + 1) * sum1;
 
-			t = (t * part4 + part3 + part1 * part2 - prod - scaledInvariant * (2 + scaledInvariant / prod)) / part4;
+			t =
+				(t * part4 +
+					part3 +
+					part1 * part2 -
+					prod -
+					scaledInvariant * (2 + scaledInvariant / prod)) /
+				part4;
 
-			if (Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBound)) {
-				let returner: CoinAmounts = {};
+			if (
+				Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBound)
+			) {
+				let returner: CoinsToBalance = {};
 				for (let coinType of Object.keys(coins)) {
-					returner[coinType] = Helpers.scaleNumBigInt(t, amountsOutDirection[coinType]);
+					returner[coinType] = Casting.scaleNumberByBigInt(
+						t,
+						amountsOutDirection[coinType]
+					);
 				}
 				return returner;
 			}
@@ -716,5 +757,5 @@ export class CmmmCalculations {
 			i += 1;
 		}
 		throw Error("Newton diverged");
-	}
+	};
 }
