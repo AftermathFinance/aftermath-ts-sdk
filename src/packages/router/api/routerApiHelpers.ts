@@ -1,8 +1,8 @@
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { PoolsApiHelpers } from "../../pools/api/poolsApiHelpers";
 import { RouterCompleteTradeRoute } from "../routerTypes";
-import { SerializedTransaction, Slippage } from "../../../types";
+import { Slippage, SuiNetwork } from "../../../types";
+import { createRouterPool } from "../utils/routerPoolInterface";
 
 export class RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -14,6 +14,7 @@ export class RouterApiHelpers {
 	}
 
 	public async fetchBuildTransactionForCompleteTradeRoute(
+		network: SuiNetwork,
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,
 		slippage: Slippage,
@@ -44,17 +45,20 @@ export class RouterApiHelpers {
 
 			for (const path of route.paths) {
 				const { tx: newTx, coinOut: newCoinIn } =
-					this.Provider.Pools().Helpers.addTradeCommandWithCoinOutToTransaction(
+					await createRouterPool({
+						protocolName: path.protocolName,
+						pool: path.pool,
+						network,
+					}).addTradeCommandToTransaction({
 						tx,
-						path.poolObjectId,
 						coinIn,
-						path.coinIn.type,
-						path.coinOut.amount,
-						path.coinOut.type,
-						path.poolLpCoinType,
+						coinInType: path.coinIn.type,
+						coinOutType: path.coinOut.type,
+						expectedAmountOut: path.coinOut.amount,
 						slippage,
-						referrer
-					);
+						referrer,
+					});
+
 				tx = newTx;
 				coinIn = newCoinIn;
 			}
@@ -65,7 +69,6 @@ export class RouterApiHelpers {
 		if (coinsOut.length > 1) tx.mergeCoins(coinsOut[0], coinsOut.slice(1));
 		tx.transferObjects([coinsOut[0], coinInArg], tx.pure(walletAddress));
 
-		tx.setGasBudget(1000000000); // 1 sui
 		return tx;
 	}
 }

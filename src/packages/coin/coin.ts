@@ -142,7 +142,7 @@ export class Coin extends Caller {
 		return { coins, balances };
 	};
 
-	public static tryToCoinWithAmount = (
+	public static trycoinOutWithAmount = (
 		uncheckedCoinWithAmount: CoinWithAmountOrUndefined | undefined
 	): CoinWithAmount | undefined =>
 		uncheckedCoinWithAmount === undefined

@@ -2,12 +2,14 @@ import {
 	Balance,
 	Event,
 	Object,
+	SerializedTransaction,
 	Slippage,
 	Timestamp,
 } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
 import { CoinsToBalance, CoinType } from "../coin/coinTypes";
+import { TransactionArgument } from "@mysten/sui.js";
 
 // TODO: create LpCoinType ?
 
@@ -104,9 +106,9 @@ export interface PoolVolumeDataTimeframe {
 
 export interface ApiPoolTradeBody {
 	walletAddress: SuiAddress;
-	fromCoin: CoinType;
-	fromCoinAmount: Balance;
-	toCoin: CoinType;
+	coinIn: CoinType;
+	coinInAmount: Balance;
+	coinOut: CoinType;
 	slippage: Slippage;
 	referrer?: SuiAddress;
 }
@@ -125,6 +127,16 @@ export interface ApiPoolWithdrawBody {
 	slippage: Slippage;
 	referrer?: SuiAddress;
 }
+
+export type ApiPoolAddTradeCommandBody = {
+	tx: SerializedTransaction;
+	coinIn: ObjectId | TransactionArgument;
+	expectedAmountOut: Balance;
+	coinInType: CoinType;
+	coinOutType: CoinType;
+	slippage: Slippage;
+	referrer?: SuiAddress;
+};
 
 export interface ApiPoolSpotPriceBody {
 	coinInType: CoinType;

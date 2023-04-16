@@ -315,9 +315,9 @@ export class PoolsApiHelpers {
 	public fetchBuildTradeTransaction = async (
 		walletAddress: SuiAddress,
 		pool: Pool,
-		fromCoinType: CoinType,
-		fromCoinAmount: Balance,
-		toCoinType: CoinType,
+		coinInType: CoinType,
+		coinInAmount: Balance,
+		coinOutType: CoinType,
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<TransactionBlock> => {
@@ -325,9 +325,9 @@ export class PoolsApiHelpers {
 		tx.setSender(walletAddress);
 
 		const { coinOutAmount: amountOut, error } = pool.getTradeAmountOut({
-			coinInAmount: fromCoinAmount,
-			coinInType: fromCoinType,
-			coinOutType: toCoinType,
+			coinInAmount: coinInAmount,
+			coinInType: coinInType,
+			coinOutType: coinOutType,
 			referral: referrer !== undefined,
 		});
 		if (error !== undefined) throw new Error(error);
@@ -336,17 +336,17 @@ export class PoolsApiHelpers {
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				walletAddress,
-				fromCoinType,
-				fromCoinAmount
+				coinInType,
+				coinInAmount
 			);
 
 		const finalTx = this.addTradeCommandToTransaction(
 			txWithCoinWithAmount,
 			pool.pool.objectId,
 			coinArgument,
-			fromCoinType,
+			coinInType,
 			amountOut,
-			toCoinType,
+			coinOutType,
 			pool.pool.lpCoinType,
 			slippage,
 			referrer

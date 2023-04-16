@@ -1,7 +1,21 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
+import { SuiAddress } from "@mysten/sui.js";
 import { Balance, Slippage } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
-import { PoolTradeFee } from "../pools/poolsTypes";
+import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
+import { SuiNetwork } from "../../types";
+
+/////////////////////////////////////////////////////////////////////
+//// Name Only
+/////////////////////////////////////////////////////////////////////
+
+export type UniqueId = string;
+
+/////////////////////////////////////////////////////////////////////
+//// Router Pools
+/////////////////////////////////////////////////////////////////////
+
+export type SerializablePool = PoolObject;
+export type ProtocolName = "Aftermath";
 
 /////////////////////////////////////////////////////////////////////
 //// Paths
@@ -16,8 +30,8 @@ export type RouterTradeRoute = RouterTradeInfo & {
 };
 
 export type RouterTradePath = RouterTradeInfo & {
-	poolObjectId: ObjectId;
-	poolLpCoinType: CoinType;
+	protocolName: ProtocolName;
+	pool: SerializablePool;
 };
 
 export interface RouterTradeInfo {

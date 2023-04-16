@@ -8,9 +8,11 @@ import {
 	RouterCompleteTradeRoute,
 	SerializedTransaction,
 	Slippage,
+	SuiNetwork,
 } from "../../../types";
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { SuiAddress } from "@mysten/sui.js";
 import { Helpers } from "../../../general/utils/helpers";
+import { createRouterPool } from "../utils/routerPoolInterface";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -47,13 +49,22 @@ export class RouterApi {
 	};
 
 	public fetchCompleteTradeRouteGivenAmountIn = async (
+		network: SuiNetwork,
 		pools: Pool[],
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
 		maxRouteLength?: number
 	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(pools).getCompleteRouteGivenAmountIn(
+		return new RouterGraph(
+			pools.map((pool) =>
+				createRouterPool({
+					protocolName: "Aftermath",
+					pool: pool.pool,
+					network,
+				})
+			)
+		).getCompleteRouteGivenAmountIn(
 			coinIn,
 			coinInAmount,
 			coinOut,
@@ -62,13 +73,22 @@ export class RouterApi {
 	};
 
 	public fetchCompleteTradeRouteGivenAmountOut = async (
+		network: SuiNetwork,
 		pools: Pool[],
 		coinIn: CoinType,
 		coinOut: CoinType,
 		coinOutAmount: Balance,
 		maxRouteLength?: number
 	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(pools).getCompleteRouteGivenAmountOut(
+		return new RouterGraph(
+			pools.map((pool) =>
+				createRouterPool({
+					protocolName: "Aftermath",
+					pool: pool.pool,
+					network,
+				})
+			)
+		).getCompleteRouteGivenAmountOut(
 			coinIn,
 			coinOut,
 			coinOutAmount,
@@ -81,6 +101,8 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public async fetchTransactionForCompleteTradeRoute(
+		// TODO: make it so that api can be called with different rpc nodes ?
+		network: SuiNetwork,
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,
 		slippage: Slippage,
@@ -88,6 +110,7 @@ export class RouterApi {
 	): Promise<SerializedTransaction> {
 		const tx =
 			await this.Helpers.fetchBuildTransactionForCompleteTradeRoute(
+				network,
 				walletAddress,
 				completeRoute,
 				slippage,

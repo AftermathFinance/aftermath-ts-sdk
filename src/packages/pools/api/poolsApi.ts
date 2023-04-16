@@ -1,4 +1,10 @@
-import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
+import {
+	EventId,
+	ObjectId,
+	SuiAddress,
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { PoolsApiHelpers } from "./poolsApiHelpers";
 import { CoinType, CoinsToBalance, CoinsToPrice } from "../../coin/coinTypes";
@@ -221,24 +227,58 @@ export class PoolsApi {
 	public fetchTradeTransaction = async (
 		walletAddress: SuiAddress,
 		pool: Pool,
-		fromCoin: CoinType,
-		fromCoinAmount: Balance,
-		toCoinType: CoinType,
+		coinIn: CoinType,
+		coinInAmount: Balance,
+		coinOutType: CoinType,
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> => {
 		const transaction = await this.Helpers.fetchBuildTradeTransaction(
 			walletAddress,
 			pool,
-			fromCoin,
-			fromCoinAmount,
-			toCoinType,
+			coinIn,
+			coinInAmount,
+			coinOutType,
 			slippage,
 			referrer
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			transaction
 		);
+	};
+
+	public fetchAddTradeCommandToTransaction = async (
+		tx: TransactionBlock,
+		coinIn: ObjectId | TransactionArgument,
+		expectedAmountOut: Balance,
+		pool: Pool,
+		coinInType: CoinType,
+		coinOutType: CoinType,
+		slippage: Slippage,
+		referrer?: SuiAddress
+	): Promise<{ tx: SerializedTransaction; coinOut: TransactionArgument }> => {
+		const { tx: updatedTx, coinOut } =
+			await this.Helpers.addTradeCommandWithCoinOutToTransaction(
+				tx,
+				pool.pool.objectId,
+				coinIn,
+				coinInType,
+				expectedAmountOut,
+				coinOutType,
+				pool.pool.lpCoinType,
+				slippage,
+				referrer
+			);
+
+		const serializedTx =
+			await this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+				updatedTx
+			);
+
+		return {
+			tx: serializedTx,
+			coinOut,
+		};
 	};
 
 	/////////////////////////////////////////////////////////////////////

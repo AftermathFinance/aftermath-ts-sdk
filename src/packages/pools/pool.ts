@@ -1,4 +1,4 @@
-import { TransactionBlock } from "@mysten/sui.js";
+import { TransactionArgument, TransactionBlock } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -17,6 +17,7 @@ import {
 	PoolDepositEvent,
 	PoolWithdrawEvent,
 	PoolTradeEvent,
+	ApiPoolAddTradeCommandBody,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -105,6 +106,26 @@ export class Pool extends Caller {
 				inputs
 			)
 		);
+	}
+
+	public async addTradeCommandToTransaction(
+		inputs: ApiPoolAddTradeCommandBody
+	): Promise<{
+		tx: TransactionBlock;
+		coinOut: TransactionArgument;
+	}> {
+		const { tx, coinOut } = await this.fetchApi<
+			{
+				tx: SerializedTransaction;
+				coinOut: TransactionArgument;
+			},
+			ApiPoolAddTradeCommandBody
+		>("transactions/add-trade-command", inputs);
+
+		return {
+			tx: TransactionBlock.from(tx),
+			coinOut,
+		};
 	}
 
 	/////////////////////////////////////////////////////////////////////
