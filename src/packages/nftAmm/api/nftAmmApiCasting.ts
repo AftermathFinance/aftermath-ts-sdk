@@ -7,8 +7,8 @@ import {
 	NftDisplay,
 	NftInfo,
 	Nft,
-	OtherNftDisplay,
-	SuggestedNftDisplay,
+	NftDisplayOther,
+	NftDisplaySuggested,
 } from "../nftAmmTypes";
 import { Helpers } from "../../../general/utils";
 
@@ -70,7 +70,7 @@ export class NftAmmApiCasting {
 			};
 
 		const suggestedFields: {
-			offChain: keyof SuggestedNftDisplay;
+			offChain: keyof NftDisplaySuggested;
 			onChain: string;
 		}[] = [
 			{
@@ -99,8 +99,8 @@ export class NftAmmApiCasting {
 			},
 		];
 
-		let suggested: SuggestedNftDisplay = {};
-		let other: OtherNftDisplay = Helpers.deepCopy(fields);
+		let suggested: NftDisplaySuggested = {};
+		let other: NftDisplayOther = Helpers.deepCopy(fields);
 
 		for (const field of suggestedFields) {
 			if (!(field.onChain in field)) continue;

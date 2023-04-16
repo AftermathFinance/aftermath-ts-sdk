@@ -18,11 +18,11 @@ export interface NftInfo {
 }
 
 export interface NftDisplay {
-	suggested: SuggestedNftDisplay;
-	other: OtherNftDisplay;
+	suggested: NftDisplaySuggested;
+	other: NftDisplayOther;
 }
 
-export interface SuggestedNftDisplay {
+export interface NftDisplaySuggested {
 	name?: string;
 	link?: Url;
 	imageUrl?: Url;
@@ -31,4 +31,4 @@ export interface SuggestedNftDisplay {
 	creator?: string;
 }
 
-export type OtherNftDisplay = Record<string, string>;
+export type NftDisplayOther = Record<string, string>;
