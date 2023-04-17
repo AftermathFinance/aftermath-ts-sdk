@@ -18,8 +18,9 @@ class RouterPool implements RouterPoolInterface {
 
 	constructor(pool: PoolObject, network: SuiNetwork) {
 		this.pool = pool;
-		this.uid = pool.objectId;
 		this.network = network;
+		this.uid = pool.objectId;
+		this.coinTypes = Object.keys(pool.coins);
 		this.poolClass = new Pool(pool, network);
 	}
 
@@ -28,10 +29,13 @@ class RouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
 
 	readonly protocolName = "Aftermath";
-	readonly limitToSingleHops = false;
+	// readonly limitToSingleHops = false;
+	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
+
 	readonly pool: PoolObject;
 	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
+	readonly coinTypes: CoinType[];
 
 	private readonly poolClass: Pool;
 

@@ -61,7 +61,9 @@ export interface RouterPoolInterface {
 	readonly pool: SerializablePool;
 	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
-	readonly limitToSingleHops: boolean;
+	// readonly limitToSingleHops: boolean;
+	readonly expectedGasCostPerHop: Balance; // in SUI
+	readonly coinTypes: CoinType[];
 
 	/////////////////////////////////////////////////////////////////////
 	//// Functions
