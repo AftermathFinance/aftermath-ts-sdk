@@ -12,7 +12,10 @@ import {
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
 import { Helpers } from "../../../general/utils/helpers";
-import { createRouterPool } from "../utils/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	createRouterPool,
+} from "../utils/routerPoolInterface";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -49,22 +52,13 @@ export class RouterApi {
 	};
 
 	public fetchCompleteTradeRouteGivenAmountIn = async (
-		network: SuiNetwork,
-		pools: Pool[],
+		pools: RouterPoolInterface[],
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
 		maxRouteLength?: number
 	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(
-			pools.map((pool) =>
-				createRouterPool({
-					protocolName: "Aftermath",
-					pool: pool.pool,
-					network,
-				})
-			)
-		).getCompleteRouteGivenAmountIn(
+		return new RouterGraph(pools).getCompleteRouteGivenAmountIn(
 			coinIn,
 			coinInAmount,
 			coinOut,
@@ -73,22 +67,13 @@ export class RouterApi {
 	};
 
 	public fetchCompleteTradeRouteGivenAmountOut = async (
-		network: SuiNetwork,
-		pools: Pool[],
+		pools: RouterPoolInterface[],
 		coinIn: CoinType,
 		coinOut: CoinType,
 		coinOutAmount: Balance,
 		maxRouteLength?: number
 	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(
-			pools.map((pool) =>
-				createRouterPool({
-					protocolName: "Aftermath",
-					pool: pool.pool,
-					network,
-				})
-			)
-		).getCompleteRouteGivenAmountOut(
+		return new RouterGraph(pools).getCompleteRouteGivenAmountOut(
 			coinIn,
 			coinOut,
 			coinOutAmount,

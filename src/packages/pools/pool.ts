@@ -30,7 +30,7 @@ export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	private static readonly constants = {
-		percentageMarginOfError: 0.00001,
+		percentageBoundsMarginOfError: 0.00001,
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ export class Pool extends Caller {
 		if (
 			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
 			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
-				Pool.constants.percentageMarginOfError
+				Pool.constants.percentageBoundsMarginOfError
 		)
 			return {
 				coinOutAmount: BigInt(0),
@@ -231,7 +231,7 @@ export class Pool extends Caller {
 		if (
 			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
 			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
-				Pool.constants.percentageMarginOfError
+				Pool.constants.percentageBoundsMarginOfError
 		)
 			return {
 				coinOutAmount: BigInt(0),
@@ -258,7 +258,7 @@ export class Pool extends Caller {
 		if (
 			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
 			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
-				Pool.constants.percentageMarginOfError
+				Pool.constants.percentageBoundsMarginOfError
 		)
 			return {
 				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
@@ -281,7 +281,7 @@ export class Pool extends Caller {
 		if (
 			Number(coinInAmount) / Number(coinInPoolBalance) >=
 			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
-				Pool.constants.percentageMarginOfError
+				Pool.constants.percentageBoundsMarginOfError
 		)
 			return {
 				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
