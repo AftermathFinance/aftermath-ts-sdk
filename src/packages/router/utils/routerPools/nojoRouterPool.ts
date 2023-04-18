@@ -10,6 +10,7 @@ import { RouterPoolInterface } from "../routerPoolInterface";
 import { Helpers } from "../../../../general/utils";
 import { Pool, PoolFields } from "@kunalabs-io/amm/src/amm/pool/structs";
 import { AftermathApi } from "../../../../general/providers";
+import { Balance as NojoBalance } from "@kunalabs-io/amm/src/framework/balance";
 
 export type NojoPoolObject = {
 	fields: PoolFields;
@@ -54,8 +55,8 @@ class NojoRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 	}) => {
 		const spotPriceAOverB =
-			Number(this.pool.fields.balanceA) /
-			Number(this.pool.fields.balanceB);
+			Number(this.pool.fields.balanceA.value) /
+			Number(this.pool.fields.balanceB.value);
 
 		if (this.isCoinA(inputs.coinInType)) return spotPriceAOverB;
 
@@ -74,8 +75,11 @@ class NojoRouterPool implements RouterPoolInterface {
 		const { coinInAmount, coinInType } = inputs;
 
 		const [poolBalanceCoinIn, poolBalanceCoinOut] = this.isCoinA(coinInType)
-			? [this.pool.fields.balanceA, this.pool.fields.balanceB]
-			: [this.pool.fields.balanceB, this.pool.fields.balanceA];
+			? [this.pool.fields.balanceA.value, this.pool.fields.balanceB.value]
+			: [
+					this.pool.fields.balanceB.value,
+					this.pool.fields.balanceA.value,
+			  ];
 
 		const lpFee =
 			(Number(coinInAmount) / this.basisPointsIn100Percent) *
@@ -133,8 +137,11 @@ class NojoRouterPool implements RouterPoolInterface {
 		const { coinOutAmount, coinInType } = inputs;
 
 		const [poolBalanceCoinIn, poolBalanceCoinOut] = this.isCoinA(coinInType)
-			? [this.pool.fields.balanceA, this.pool.fields.balanceB]
-			: [this.pool.fields.balanceB, this.pool.fields.balanceA];
+			? [this.pool.fields.balanceA.value, this.pool.fields.balanceB.value]
+			: [
+					this.pool.fields.balanceB.value,
+					this.pool.fields.balanceA.value,
+			  ];
 
 		const numerator = Number(
 			// @ts-ignore
@@ -172,24 +179,32 @@ class NojoRouterPool implements RouterPoolInterface {
 		coinOut: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface => {
-		let newPoolObject = Helpers.deepCopy(this.pool);
+		const [newBalanceA, newBalanceB] = this.isCoinA(inputs.coinIn)
+			? [
+					this.pool.fields.balanceA.value + inputs.coinInAmount,
+					this.pool.fields.balanceB.value - inputs.coinOutAmount,
+			  ]
+			: [
+					this.pool.fields.balanceA.value - inputs.coinInAmount,
+					this.pool.fields.balanceB.value + inputs.coinOutAmount,
+			  ];
 
-		if (this.isCoinA(inputs.coinIn)) {
-			// @ts-ignore
-			newPoolObject.fields.balanceA += inputs.coinInAmount;
-			// @ts-ignore
-			newPoolObject.fields.balanceB -= inputs.coinOutAmount;
-		} else {
-			// @ts-ignore
-			newPoolObject.fields.balanceA -= inputs.coinInAmount;
-			// @ts-ignore
-			newPoolObject.fields.balanceB += inputs.coinOutAmount;
-		}
+		const newPool: NojoPoolObject = {
+			...this.pool,
+			fields: {
+				...this.pool.fields,
+				balanceA: new NojoBalance(
+					this.pool.fields.balanceA.$typeArg,
+					newBalanceA
+				),
+				balanceB: new NojoBalance(
+					this.pool.fields.balanceB.$typeArg,
+					newBalanceB
+				),
+			},
+		};
 
-		return new NojoRouterPool(
-			Helpers.deepCopy(newPoolObject),
-			this.network
-		);
+		return new NojoRouterPool(newPool, this.network);
 	};
 
 	/////////////////////////////////////////////////////////////////////

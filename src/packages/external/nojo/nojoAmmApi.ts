@@ -10,7 +10,6 @@ import { NojoAmmApiHelpers } from "./nojoAmmApiHelpers";
 import { CoinType } from "../../coin/coinTypes";
 import { Balance } from "../../../types";
 import { swapACoin, swapBCoin } from "@kunalabs-io/amm/src/amm/util/functions";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Helpers } from "../../../general/utils";
 
 export class NojoAmmApi {
