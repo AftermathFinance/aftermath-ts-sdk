@@ -21,7 +21,7 @@ import {
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
 import { Pools } from ".";
-import { Helpers } from "../../general/utils";
+import { Casting, Helpers } from "../../general/utils";
 
 export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -293,23 +293,32 @@ export class Pool extends Caller {
 		referral?: boolean;
 	}): {
 		lpAmountOut: Balance;
+		lpRatio: number;
 		error?: string;
 	} => {
-		const calcedLpAmount = CmmmCalculations.calcDepositFixedAmounts(
+		let calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
 			this.pool,
 			inputs.amountsIn
 		);
 
-		let lpAmountOut = calcedLpAmount;
 		let error = undefined;
+		let lpAmountOut: Balance;
+		let lpRatio: number;
 
-		if (calcedLpAmount <= BigInt(0)) {
-			error = "lpAmountOut <= 0";
+		if (calcedLpRatio >= Casting.fixedOneBigInt) {
+			error = "lpRatio >= 1";
+			lpRatio = 1;
 			lpAmountOut = BigInt(0);
+		} else {
+			lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
+			lpAmountOut = BigInt(
+				Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
+			);
 		}
 
 		return {
 			lpAmountOut,
+			lpRatio,
 			error,
 		};
 	};

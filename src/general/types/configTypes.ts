@@ -54,6 +54,7 @@ export interface PoolsAddresses {
 		protocolFeeVault: ObjectId;
 		treasury: ObjectId;
 		insuranceFund: ObjectId;
+		referralVault: ObjectId;
 	};
 }
 

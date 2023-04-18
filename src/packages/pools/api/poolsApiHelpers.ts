@@ -170,6 +170,7 @@ export class PoolsApiHelpers {
 				tx.object(this.addresses.objects.protocolFeeVault),
 				tx.object(this.addresses.objects.treasury),
 				tx.object(this.addresses.objects.insuranceFund),
+				tx.object(this.addresses.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
@@ -210,6 +211,7 @@ export class PoolsApiHelpers {
 				tx.object(this.addresses.objects.protocolFeeVault),
 				tx.object(this.addresses.objects.treasury),
 				tx.object(this.addresses.objects.insuranceFund),
+				tx.object(this.addresses.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
@@ -242,6 +244,7 @@ export class PoolsApiHelpers {
 				`invalid coinIds size: ${coinIds.length} != ${poolSize}`
 			);
 
+		console.log("expectedLpRatio", expectedLpRatio);
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -255,6 +258,7 @@ export class PoolsApiHelpers {
 				tx.object(this.addresses.objects.protocolFeeVault),
 				tx.object(this.addresses.objects.treasury),
 				tx.object(this.addresses.objects.insuranceFund),
+				tx.object(this.addresses.objects.referralVault),
 				...coinIds.map((coinId) =>
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
@@ -295,6 +299,7 @@ export class PoolsApiHelpers {
 				tx.object(this.addresses.objects.protocolFeeVault),
 				tx.object(this.addresses.objects.treasury),
 				tx.object(this.addresses.objects.insuranceFund),
+				tx.object(this.addresses.objects.referralVault),
 				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
 				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
 				tx.pure(Pools.normalizeSlippage(slippage)),
@@ -368,16 +373,14 @@ export class PoolsApiHelpers {
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsIn);
 
-		const { lpAmountOut, error } = pool.getDepositLpAmountOut({
+		const { lpRatio, error } = pool.getDepositLpAmountOut({
 			amountsIn,
 			referral: referrer !== undefined,
 		});
 		if (error !== undefined) throw new Error(error);
 
 		// TODO: move this somewhere else and into its own func
-		const expectedLpRatio =
-			Number(pool.pool.lpCoinSupply - lpAmountOut) /
-			Number(pool.pool.lpCoinSupply);
+		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
 		const { coinArguments, txWithCoinsWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
@@ -392,7 +395,7 @@ export class PoolsApiHelpers {
 			pool.pool.objectId,
 			coinArguments,
 			coinTypes,
-			Casting.numberToFixedBigInt(expectedLpRatio),
+			expectedLpRatio,
 			pool.pool.lpCoinType,
 			slippage,
 			referrer
@@ -414,8 +417,13 @@ export class PoolsApiHelpers {
 
 		// TODO: move this somewhere else and into its own func
 		const lpRatio =
-			Number(pool.pool.lpCoinSupply + lpCoinAmount) /
+			Number(pool.pool.lpCoinSupply - lpCoinAmount) /
 			Number(pool.pool.lpCoinSupply);
+		console.log({
+			lpRatio,
+			amountsOutDirection,
+			referral: referrer !== undefined,
+		});
 		const { amountsOut, error } = pool.getWithdrawAmountsOut({
 			lpRatio,
 			amountsOutDirection,

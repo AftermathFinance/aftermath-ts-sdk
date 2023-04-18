@@ -418,6 +418,8 @@ export class CmmmCalculations {
 		pool: PoolObject,
 		amountsIn: CoinsToBalance
 	): Balance => {
+		if (Object.keys(amountsIn).length === 0) return Casting.fixedOneBigInt;
+
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
 		let a = CmmmCalculations.directCast(pool.flatness);
@@ -574,6 +576,8 @@ export class CmmmCalculations {
 		amountsOutDirection: CoinsToBalance,
 		lpRatio: number
 	): CoinsToBalance => {
+		if (Object.keys(amountsOutDirection).length === 0) return {};
+
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
 		let lpr = lpRatio;
@@ -625,14 +629,20 @@ export class CmmmCalculations {
 			t =
 				(CmmmCalculations.convertFromInt(coin.balance) *
 					(1 - CmmmCalculations.directCast(coin.tradeFeeOut) * lpr)) /
-				CmmmCalculations.convertFromInt(amountsOutDirection[coinType]);
+				CmmmCalculations.convertFromInt(
+					coinType in amountsOutDirection
+						? amountsOutDirection[coinType]
+						: BigInt(0)
+				);
 			if (t < tMin) tMin = t;
 		}
 
 		// remaining test points are the CF discontinuities: where B0 - t*D = R*B0
 		for (let [coinTypeT, coinT] of Object.entries(coins)) {
 			amountOut = CmmmCalculations.convertFromInt(
-				amountsOutDirection[coinTypeT]
+				coinTypeT in amountsOutDirection
+					? amountsOutDirection[coinTypeT]
+					: BigInt(0)
 			);
 			if (amountOut == 0) continue;
 			balance = CmmmCalculations.convertFromInt(coinT.balance);
@@ -644,7 +654,9 @@ export class CmmmCalculations {
 				balance = CmmmCalculations.convertFromInt(coin.balance);
 				weight = CmmmCalculations.directCast(coin.weight);
 				amountOut = CmmmCalculations.convertFromInt(
-					amountsOutDirection[coinType]
+					coinType in amountsOutDirection
+						? amountsOutDirection[coinType]
+						: BigInt(0)
 				);
 				part1 = t * amountOut;
 				if (part1 >= balance) {
@@ -704,7 +716,9 @@ export class CmmmCalculations {
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = CmmmCalculations.convertFromInt(coin.balance);
 			amountOut = CmmmCalculations.convertFromInt(
-				amountsOutDirection[coinType]
+				coinType in amountsOutDirection
+					? amountsOutDirection[coinType]
+					: BigInt(0)
 			);
 			fees[coinType] =
 				balance * lpc >= t * amountOut
@@ -722,7 +736,9 @@ export class CmmmCalculations {
 				balance = CmmmCalculations.convertFromInt(coin.balance);
 				weight = CmmmCalculations.directCast(coin.weight);
 				amountOut = CmmmCalculations.convertFromInt(
-					amountsOutDirection[coinType]
+					coinType in amountsOutDirection
+						? amountsOutDirection[coinType]
+						: BigInt(0)
 				);
 				fee = fees[coinType];
 
@@ -756,7 +772,9 @@ export class CmmmCalculations {
 				for (let coinType of Object.keys(coins)) {
 					returner[coinType] = Casting.scaleNumberByBigInt(
 						t,
-						amountsOutDirection[coinType]
+						coinType in amountsOutDirection
+							? amountsOutDirection[coinType]
+							: BigInt(0)
 					);
 				}
 				return returner;
