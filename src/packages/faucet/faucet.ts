@@ -33,7 +33,7 @@ export class Faucet extends Caller {
 	}
 
 	public async getSupportedCoins(): Promise<CoinType[]> {
-		return this.fetchApi("supportedCoins");
+		return this.fetchApi("supported-coins");
 	}
 
 	/////////////////////////////////////////////////////////////////////

@@ -422,14 +422,15 @@ export class CmmmCalculations {
 		let coins = pool.coins;
 		let a = CmmmCalculations.directCast(pool.flatness);
 		let ac = 1 - a;
-		let balance;
-		let weight;
+		let balance: number;
+		let weight: number;
 		let prod = 0;
 		let sum = 0;
-		let n = Object.keys(coins).length;
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = CmmmCalculations.convertFromInt(
-				coin.balance + amountsIn[coinType]
+				coin.balance + coinType in amountsIn
+					? amountsIn[coinType]
+					: BigInt(0)
 			);
 			weight = CmmmCalculations.directCast(coin.weight);
 			prod += weight * Math.log(balance);
@@ -438,17 +439,19 @@ export class CmmmCalculations {
 		prod = Math.exp(prod);
 		let cfMax = (2 * a * prod * sum) / (prod + invariant) + ac * prod;
 
-		let r;
+		let r: number;
 		let rMin = 0;
 		let rMax = 1;
-		let amount;
-		let part1;
-		let cf;
+		let amount: number;
+		let part1: number;
+		let cf: number;
 		let cfMin = 0;
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = CmmmCalculations.convertFromInt(coin.balance);
 			weight = CmmmCalculations.directCast(coin.weight);
-			amount = CmmmCalculations.convertFromInt(amountsIn[coinType]);
+			amount = CmmmCalculations.convertFromInt(
+				coinType in amountsIn ? amountsIn[coinType] : BigInt(0)
+			);
 			r = balance / (balance + amount);
 
 			prod = 0;
@@ -456,7 +459,9 @@ export class CmmmCalculations {
 			for (let [coinType2, coin2] of Object.entries(coins)) {
 				balance = CmmmCalculations.convertFromInt(coin2.balance);
 				weight = CmmmCalculations.directCast(coin2.weight);
-				amount = CmmmCalculations.convertFromInt(amountsIn[coinType2]);
+				amount = CmmmCalculations.convertFromInt(
+					coinType2 in amountsIn ? amountsIn[coinType2] : BigInt(0)
+				);
 				part1 = r * (balance + amount);
 				if (part1 >= balance) {
 					// r * (B0 + Din) >= B0 so use fees in
@@ -504,7 +509,9 @@ export class CmmmCalculations {
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = CmmmCalculations.convertFromInt(coin.balance);
-			amount = CmmmCalculations.convertFromInt(amountsIn[coinType]);
+			amount = CmmmCalculations.convertFromInt(
+				coinType in amountsIn ? amountsIn[coinType] : BigInt(0)
+			);
 			fees[coinType] =
 				r * (balance + amount) >= balance
 					? 1 - CmmmCalculations.directCast(coin.tradeFeeIn)
@@ -512,12 +519,12 @@ export class CmmmCalculations {
 		}
 
 		let i = 0;
-		let prod1;
-		let sum1;
-		let fee;
-		let part2;
-		let part3;
-		let part4;
+		let prod1: number;
+		let sum1: number;
+		let fee: number;
+		let part2: number;
+		let part3: number;
+		let part4: number;
 		while (i < CmmmCalculations.maxNewtonAttempts) {
 			prod = 0;
 			prod1 = 0;
@@ -526,7 +533,9 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = CmmmCalculations.convertFromInt(coin.balance);
 				weight = CmmmCalculations.directCast(coin.weight);
-				amount = CmmmCalculations.convertFromInt(amountsIn[coinType]);
+				amount = CmmmCalculations.convertFromInt(
+					coinType in amountsIn ? amountsIn[coinType] : BigInt(0)
+				);
 				fee = fees[coinType];
 				part1 = balance + amount;
 				part2 = fee * r * part1 + balance - fee * balance;

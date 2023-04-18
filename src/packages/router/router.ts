@@ -8,7 +8,7 @@ import {
 	SuiNetwork,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js";
 
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////

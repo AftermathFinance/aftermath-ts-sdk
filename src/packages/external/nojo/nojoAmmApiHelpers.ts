@@ -65,7 +65,7 @@ export class NojoAmmApiHelpers {
 	//// Casting
 	/////////////////////////////////////////////////////////////////////
 
-	public nojoPoolObjectFromClass = (pool: Pool): NojoPoolObject => {
+	public static nojoPoolObjectFromClass = (pool: Pool): NojoPoolObject => {
 		const {
 			id,
 			balanceA,

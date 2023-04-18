@@ -1,4 +1,4 @@
-import { TransactionArgument, TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -17,7 +17,6 @@ import {
 	PoolDepositEvent,
 	PoolWithdrawEvent,
 	PoolTradeEvent,
-	ApiPoolAddTradeCommandBody,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";

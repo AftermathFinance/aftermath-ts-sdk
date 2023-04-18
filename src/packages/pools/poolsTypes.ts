@@ -128,16 +128,6 @@ export interface ApiPoolWithdrawBody {
 	referrer?: SuiAddress;
 }
 
-export type ApiPoolAddTradeCommandBody = {
-	tx: SerializedTransaction;
-	coinIn: ObjectId | TransactionArgument;
-	expectedAmountOut: Balance;
-	coinInType: CoinType;
-	coinOutType: CoinType;
-	slippage: Slippage;
-	referrer?: SuiAddress;
-};
-
 export interface ApiPoolSpotPriceBody {
 	coinInType: CoinType;
 	coinOutType: CoinType;
