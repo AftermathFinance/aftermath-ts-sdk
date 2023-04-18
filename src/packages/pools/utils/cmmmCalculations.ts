@@ -64,10 +64,9 @@ export class CmmmCalculations {
 	// Invariant growth limit: non-proportional joins cannot cause the invariant to increase by more than this ratio.
 	private static maxInvariantRatio: LocalNumber = 3;
 
-	private static maxNewtonAttempts: LocalNumber = 255;
-	private static convergenceBound: LocalNumber = 0.000_000_001;
-	private static tolerance: LocalNumber = 0.000_000_000_000_1;
-	private static validityTolerance: LocalNumber = 0.000_001;
+	private static maxNewtonAttempts: number = 255;
+	private static convergenceBound: number = 0.000_000_001;
+	private static convergenceBoundLoose: number = 0.000_001;
 
     // Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
 	// the invariant (ignoring fees) and investments change the invariant without changing the distribution of balances.
@@ -1686,9 +1685,24 @@ export class CmmmCalculations {
         // Wout * (E + 2*A * Bout) / (1-Sout) * Bout
         // depending on whether the balance is coming in or going out
 
-		let coins = pool.coins;
-        let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
-        let a = Fixed.directCast(pool.flatness);
+			if (
+				Helpers.closeEnough(
+					t,
+					prevT,
+					CmmmCalculations.convergenceBoundLoose
+				)
+			) {
+				let returner: CoinsToBalance = {};
+				for (let coinType of Object.keys(coins)) {
+					returner[coinType] = Casting.scaleNumberByBigInt(
+						t,
+						coinType in amountsOutDirection
+							? amountsOutDirection[coinType]
+							: BigInt(0)
+					);
+				}
+				return returner;
+			}
 
         // dot(B0, g)
         let d1 = 0;
