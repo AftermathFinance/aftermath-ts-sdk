@@ -22,21 +22,17 @@ import { AftermathApi } from "../../../general/providers";
 /////////////////////////////////////////////////////////////////////
 
 export function createRouterPool(inputs: {
-	protocolName: ProtocolName;
 	pool: SerializablePool;
 	// NOTE: should this be optional and passed in only upon transaction creation or another way ?
 	network: SuiNetwork;
 }): RouterPoolInterface {
-	const protocolNamesToConstructor: Record<
-		ProtocolName,
-		RouterPoolConstructor
-	> = {
-		Aftermath: AftermathRouterPool,
-		Nojo: NojoRouterPool,
-	};
+	const { pool, network } = inputs;
 
-	const constructor = protocolNamesToConstructor[inputs.protocolName];
-	return new constructor(inputs.pool, inputs.network);
+	const constructedPool =
+		"typeArgs" in pool
+			? new NojoRouterPool(pool, network)
+			: new AftermathRouterPool(pool, network);
+	return constructedPool;
 }
 
 /////////////////////////////////////////////////////////////////////

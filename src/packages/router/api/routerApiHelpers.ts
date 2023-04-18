@@ -46,7 +46,6 @@ export class RouterApiHelpers {
 
 			for (const path of route.paths) {
 				const { tx: newTx, coinOut: newCoinIn } = createRouterPool({
-					protocolName: path.protocolName,
 					pool: path.pool,
 					network,
 				}).addTradeCommandToTransaction({
