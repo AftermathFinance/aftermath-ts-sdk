@@ -1,6 +1,9 @@
+import { ObjectId } from "@mysten/sui.js";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { NojoAddresses } from "../../../types";
 import { Pool, PoolRegistry } from "@kunalabs-io/amm/src/amm/pool/structs";
+import { EventOnChain } from "../../../general/types/castingTypes";
 
 export class NojoAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -31,6 +34,27 @@ export class NojoAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
+
+	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
+		const paginatedEvents =
+			await this.Provider.Events().fetchCastEventsWithCursor<
+				EventOnChain<{
+					id: ObjectId;
+				}>,
+				ObjectId
+			>(
+				{
+					MoveEventType: EventsApiHelpers.createEventType(
+						this.addresses.packages.pool,
+						"pool",
+						"PoolCreationEvent"
+					),
+				},
+				(eventOnChain) => eventOnChain.parsedJson.id
+			);
+
+		return paginatedEvents.events;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Methods

@@ -81,7 +81,7 @@ export class EventsApiHelpers {
 		eventFromEventOnChain: (eventOnChain: EventOnChainType) => EventType,
 		cursor?: EventId,
 		limit?: number
-	) => {
+	): Promise<EventsWithCursor<EventType>> => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
 			cursor,
@@ -93,7 +93,7 @@ export class EventsApiHelpers {
 			eventFromEventOnChain(event)
 		);
 		const nextCursor = fetchedEvents.nextCursor;
-		return { events, nextCursor } as EventsWithCursor<EventType>;
+		return { events, nextCursor };
 	};
 
 	// TODO: make this function use timestamp passing as one of event filter args

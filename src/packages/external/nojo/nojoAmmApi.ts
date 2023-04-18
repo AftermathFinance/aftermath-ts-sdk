@@ -1,7 +1,6 @@
 import { AftermathApi } from "../../../general/providers";
 import { initLoaderIfNeeded } from "@kunalabs-io/amm/src/init";
-import { poolValues } from "@kunalabs-io/amm/src/amm/pool/functions";
-import { Pool, PoolRegistry } from "@kunalabs-io/amm/src/amm/pool/structs";
+import { Pool } from "@kunalabs-io/amm/src/amm/pool/structs";
 import {
 	ObjectId,
 	TransactionArgument,
@@ -11,6 +10,7 @@ import { NojoAmmApiHelpers } from "./nojoAmmApiHelpers";
 import { CoinType } from "../../coin/coinTypes";
 import { Balance } from "../../../types";
 import { swapACoin, swapBCoin } from "@kunalabs-io/amm/src/amm/util/functions";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 export class NojoAmmApi {
 	/////////////////////////////////////////////////////////////////////
@@ -41,12 +41,16 @@ export class NojoAmmApi {
 		return Pool.fetch(this.Provider.provider, objectId);
 	};
 
+	public fetchAllPools = async (): Promise<Pool[]> => {
+		const poolObjectIds = await this.Helpers.fetchAllPoolObjectIds();
+		return Promise.all(
+			poolObjectIds.map((objectId) => this.fetchPool(objectId))
+		);
+	};
+
 	// public fetchPoolForCoinTypes = async (coinTypeA: CoinType, coinTypeB: CoinType) => {
-
 	//     const poolRegistry = await this.Helpers.fetchPoolRegistry()
-
 	//     poolRegistry.table
-
 	// 	return this.fetchPool(objectId)
 	// };
 
