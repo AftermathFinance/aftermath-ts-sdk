@@ -26,6 +26,7 @@ export class CmmmCalculations {
 
 	private static maxNewtonAttempts: number = 255;
 	private static convergenceBound: number = 0.000_000_001;
+	private static convergenceBoundLoose: number = 0.000_001;
 
 	// pools assume coins are stored in raw integer format
 	// every other fixed point nubmer is in 18 point format
@@ -741,7 +742,7 @@ export class CmmmCalculations {
 				part4;
 
 			if (
-				Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBound)
+				Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBoundLoose)
 			) {
 				let returner: CoinsToBalance = {};
 				for (let coinType of Object.keys(coins)) {
