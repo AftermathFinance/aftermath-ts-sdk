@@ -16,6 +16,7 @@ import {
 	RouterPoolInterface,
 	createRouterPool,
 } from "../utils/routerPoolInterface";
+import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -32,6 +33,12 @@ export class RouterApi {
 		this.Provider = Provider;
 		this.Helpers = new RouterApiHelpers(Provider);
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// External Packages
+	/////////////////////////////////////////////////////////////////////
+
+	public Nojo = () => new NojoAmmApi(this.Provider);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods

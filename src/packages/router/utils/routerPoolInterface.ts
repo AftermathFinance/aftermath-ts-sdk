@@ -13,7 +13,9 @@ import {
 	UniqueId,
 } from "../../../types";
 import { CoinType } from "../../coin/coinTypes";
-import RouterPool from "./routerPool";
+import AftermathRouterPool from "./routerPools/aftermathRouterPool";
+import NojoRouterPool from "./routerPools/nojoRouterPool";
+import { AftermathApi } from "../../../general/providers";
 
 /////////////////////////////////////////////////////////////////////
 //// Creation
@@ -29,7 +31,8 @@ export function createRouterPool(inputs: {
 		ProtocolName,
 		RouterPoolConstructor
 	> = {
-		Aftermath: RouterPool,
+		Aftermath: AftermathRouterPool,
+		Nojo: NojoRouterPool,
 	};
 
 	const constructor = protocolNamesToConstructor[inputs.protocolName];
@@ -86,6 +89,7 @@ export interface RouterPoolInterface {
 	};
 
 	addTradeCommandToTransaction: (inputs: {
+		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
 		coinInType: CoinType;
@@ -93,10 +97,10 @@ export interface RouterPoolInterface {
 		expectedAmountOut: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}) => Promise<{
+	}) => {
 		tx: TransactionBlock;
 		coinOut: TransactionArgument;
-	}>;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Functions

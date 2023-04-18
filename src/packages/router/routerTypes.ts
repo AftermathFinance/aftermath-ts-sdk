@@ -3,6 +3,7 @@ import { Balance, Slippage } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
 import { SuiNetwork } from "../../types";
+import { NojoPoolObject } from "./utils/routerPools/nojoRouterPool";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -14,8 +15,8 @@ export type UniqueId = string;
 //// Router Pools
 /////////////////////////////////////////////////////////////////////
 
-export type SerializablePool = PoolObject;
-export type ProtocolName = "Aftermath";
+export type SerializablePool = PoolObject | NojoPoolObject;
+export type ProtocolName = "Aftermath" | "Nojo";
 
 /////////////////////////////////////////////////////////////////////
 //// Paths

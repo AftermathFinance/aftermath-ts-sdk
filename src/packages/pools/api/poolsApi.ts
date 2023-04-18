@@ -247,40 +247,6 @@ export class PoolsApi {
 		);
 	};
 
-	public fetchAddTradeCommandToTransaction = async (
-		tx: TransactionBlock,
-		coinIn: ObjectId | TransactionArgument,
-		expectedAmountOut: Balance,
-		pool: Pool,
-		coinInType: CoinType,
-		coinOutType: CoinType,
-		slippage: Slippage,
-		referrer?: SuiAddress
-	): Promise<{ tx: SerializedTransaction; coinOut: TransactionArgument }> => {
-		const { tx: updatedTx, coinOut } =
-			await this.Helpers.addTradeCommandWithCoinOutToTransaction(
-				tx,
-				pool.pool.objectId,
-				coinIn,
-				coinInType,
-				expectedAmountOut,
-				coinOutType,
-				pool.pool.lpCoinType,
-				slippage,
-				referrer
-			);
-
-		const serializedTx =
-			await this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-				updatedTx
-			);
-
-		return {
-			tx: serializedTx,
-			coinOut,
-		};
-	};
-
 	/////////////////////////////////////////////////////////////////////
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////

@@ -15,6 +15,7 @@ export class RouterApiHelpers {
 
 	public async fetchBuildTransactionForCompleteTradeRoute(
 		network: SuiNetwork,
+		provider: AftermathApi,
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,
 		slippage: Slippage,
@@ -44,20 +45,20 @@ export class RouterApiHelpers {
 			let coinIn = splitCoinArg;
 
 			for (const path of route.paths) {
-				const { tx: newTx, coinOut: newCoinIn } =
-					await createRouterPool({
-						protocolName: path.protocolName,
-						pool: path.pool,
-						network,
-					}).addTradeCommandToTransaction({
-						tx,
-						coinIn,
-						coinInType: path.coinIn.type,
-						coinOutType: path.coinOut.type,
-						expectedAmountOut: path.coinOut.amount,
-						slippage,
-						referrer,
-					});
+				const { tx: newTx, coinOut: newCoinIn } = createRouterPool({
+					protocolName: path.protocolName,
+					pool: path.pool,
+					network,
+				}).addTradeCommandToTransaction({
+					provider,
+					tx,
+					coinIn,
+					coinInType: path.coinIn.type,
+					coinOutType: path.coinOut.type,
+					expectedAmountOut: path.coinOut.amount,
+					slippage,
+					referrer,
+				});
 
 				tx = newTx;
 				coinIn = newCoinIn;

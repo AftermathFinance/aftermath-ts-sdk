@@ -4,14 +4,15 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
-import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../types";
-import { CoinType } from "../../coin/coinTypes";
-import { PoolObject } from "../../pools/poolsTypes";
-import { RouterPoolInterface } from "./routerPoolInterface";
-import { Pool } from "../../pools";
-import { Helpers } from "../../../general/utils";
+import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../../types";
+import { CoinType } from "../../../coin/coinTypes";
+import { PoolObject } from "../../../pools/poolsTypes";
+import { RouterPoolInterface } from "../routerPoolInterface";
+import { Pool } from "../../../pools";
+import { Helpers } from "../../../../general/utils";
+import { AftermathApi } from "../../../../general/providers";
 
-class RouterPool implements RouterPoolInterface {
+class AftermathRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -57,6 +58,7 @@ class RouterPool implements RouterPoolInterface {
 	} => this.poolClass.getTradeAmountOut(inputs);
 
 	addTradeCommandToTransaction = (inputs: {
+		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
 		coinInType: CoinType;
@@ -64,14 +66,24 @@ class RouterPool implements RouterPoolInterface {
 		expectedAmountOut: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): Promise<{
+	}): {
 		tx: TransactionBlock;
 		coinOut: TransactionArgument;
-	}> =>
-		this.poolClass.addTradeCommandToTransaction({
-			...inputs,
-			tx: inputs.tx.serialize(),
-		});
+	} => {
+		return inputs.provider
+			.Pools()
+			.Helpers.addTradeCommandWithCoinOutToTransaction(
+				inputs.tx,
+				this.pool.objectId,
+				inputs.coinIn,
+				inputs.coinInType,
+				inputs.expectedAmountOut,
+				inputs.coinOutType,
+				this.pool.lpCoinType,
+				inputs.slippage,
+				inputs.referrer
+			);
+	};
 
 	getTradeAmountIn = (inputs: {
 		coinInType: CoinType;
@@ -106,8 +118,11 @@ class RouterPool implements RouterPoolInterface {
 		newPoolObject.coins[inputs.coinIn].balance += inputs.coinInAmount;
 		newPoolObject.coins[inputs.coinOut].balance -= inputs.coinOutAmount;
 
-		return new RouterPool(Helpers.deepCopy(newPoolObject), this.network);
+		return new AftermathRouterPool(
+			Helpers.deepCopy(newPoolObject),
+			this.network
+		);
 	};
 }
 
-export default RouterPool;
+export default AftermathRouterPool;

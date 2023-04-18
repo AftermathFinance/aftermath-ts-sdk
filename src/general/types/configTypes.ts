@@ -22,6 +22,7 @@ interface OptionalConfigAddresses {
 	utilies: UtilitiesAddresses;
 	capys: CapysAddresses;
 	nftAmm: NftAmmAddresses;
+	externalRouter: ExternalRouterAddresses;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -76,4 +77,14 @@ export interface CapysAddresses {
 export interface NftAmmAddresses {
 	packages: {};
 	objects: {};
+}
+
+export interface ExternalRouterAddresses {
+	nojo: NojoAddresses;
+}
+
+export interface NojoAddresses {
+	packages: {
+		pool: SuiAddress;
+	};
 }
