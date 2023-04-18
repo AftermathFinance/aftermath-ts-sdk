@@ -108,26 +108,6 @@ export class Pool extends Caller {
 		);
 	}
 
-	public async addTradeCommandToTransaction(
-		inputs: ApiPoolAddTradeCommandBody
-	): Promise<{
-		tx: TransactionBlock;
-		coinOut: TransactionArgument;
-	}> {
-		const { tx, coinOut } = await this.fetchApi<
-			{
-				tx: SerializedTransaction;
-				coinOut: TransactionArgument;
-			},
-			ApiPoolAddTradeCommandBody
-		>("transactions/add-trade-command", inputs);
-
-		return {
-			tx: TransactionBlock.from(tx),
-			coinOut,
-		};
-	}
-
 	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
