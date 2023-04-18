@@ -7,7 +7,6 @@ import {
 import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
-import {} from "../../../pools";
 import { Helpers } from "../../../../general/utils";
 import { Pool, PoolFields } from "@kunalabs-io/amm/src/amm/pool/structs";
 import { AftermathApi } from "../../../../general/providers";
@@ -55,7 +54,8 @@ class NojoRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 	}) => {
 		const spotPriceAOverB =
-			this.pool.fields.balanceA / this.pool.fields.balanceB;
+			Number(this.pool.fields.balanceA) /
+			Number(this.pool.fields.balanceB);
 
 		if (this.isCoinA(inputs.coinInType)) return spotPriceAOverB;
 
@@ -137,6 +137,7 @@ class NojoRouterPool implements RouterPoolInterface {
 			: [this.pool.fields.balanceB, this.pool.fields.balanceA];
 
 		const numerator = Number(
+			// @ts-ignore
 			coinOutAmount * poolBalanceCoinIn - poolBalanceCoinOut
 		);
 		const denominator =
@@ -174,10 +175,14 @@ class NojoRouterPool implements RouterPoolInterface {
 		let newPoolObject = Helpers.deepCopy(this.pool);
 
 		if (this.isCoinA(inputs.coinIn)) {
+			// @ts-ignore
 			newPoolObject.fields.balanceA += inputs.coinInAmount;
+			// @ts-ignore
 			newPoolObject.fields.balanceB -= inputs.coinOutAmount;
 		} else {
+			// @ts-ignore
 			newPoolObject.fields.balanceA -= inputs.coinInAmount;
+			// @ts-ignore
 			newPoolObject.fields.balanceB += inputs.coinOutAmount;
 		}
 

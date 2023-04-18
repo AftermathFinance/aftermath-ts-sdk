@@ -11,6 +11,7 @@ import { CoinType } from "../../coin/coinTypes";
 import { Balance } from "../../../types";
 import { swapACoin, swapBCoin } from "@kunalabs-io/amm/src/amm/util/functions";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { Helpers } from "../../../general/utils";
 
 export class NojoAmmApi {
 	/////////////////////////////////////////////////////////////////////
@@ -57,6 +58,15 @@ export class NojoAmmApi {
 	/////////////////////////////////////////////////////////////////////
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
+
+	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
+		const pools = await this.fetchAllPools();
+		const allCoins = pools.reduce(
+			(acc, pool) => [...acc, ...pool.$typeArgs],
+			[] as CoinType[]
+		);
+		return Helpers.uniqueArray(allCoins);
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
