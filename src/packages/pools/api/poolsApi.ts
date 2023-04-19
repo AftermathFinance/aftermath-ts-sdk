@@ -261,6 +261,7 @@ export class PoolsApi {
 
 		const bytes =
 			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+		console.log("bytes", bytes);
 		return Casting.stringFromBytes(bytes);
 	};
 
@@ -282,18 +283,18 @@ export class PoolsApi {
 				poolCoinTypes
 			);
 
-		// const tradeEventsWithinTime =
-		// 	await this.Provider.Events().fetchEventsWithinTime(
-		// 		(cursor, limit) =>
-		// 			pool.getTradeEvents({
-		// 				cursor,
-		// 				limit,
-		// 			}),
-		// 		"hour",
-		// 		24
-		// 	);
+		const tradeEventsWithinTime =
+			await this.Provider.Events().fetchEventsWithinTime(
+				(cursor, limit) =>
+					pool.getTradeEvents({
+						cursor,
+						limit,
+					}),
+				"hour",
+				24
+			);
 		const volume = this.Helpers.fetchCalcPoolVolume(
-			[],
+			tradeEventsWithinTime,
 			coinsToPrice,
 			coinsToDecimals
 		);

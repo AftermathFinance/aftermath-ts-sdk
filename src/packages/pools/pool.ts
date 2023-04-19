@@ -25,7 +25,7 @@ import { Casting, Helpers } from "../../general/utils";
 
 export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
-	//// Privatae Constants
+	//// Private Constants
 	/////////////////////////////////////////////////////////////////////
 
 	private static readonly constants = {
@@ -194,30 +194,37 @@ export class Pool extends Caller {
 				error: "coinInAmountWithFees / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
 			};
 
-		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
-			pool,
-			inputs.coinInType,
-			inputs.coinOutType,
-			coinInAmountWithFees
-		);
+		try {
+			const coinOutAmount = CmmmCalculations.calcOutGivenIn(
+				pool,
+				inputs.coinInType,
+				inputs.coinOutType,
+				coinInAmountWithFees
+			);
 
-		if (coinOutAmount <= 0)
+			if (coinOutAmount <= 0)
+				return {
+					coinOutAmount: BigInt(0),
+					error: "coinOutAmount <= 0",
+				};
+
+			if (
+				Number(coinOutAmount) / Number(coinOutPoolBalance) >=
+				Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+					Pool.constants.percentageBoundsMarginOfError
+			)
+				return {
+					coinOutAmount: BigInt(0),
+					error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
+				};
+
+			return { coinOutAmount };
+		} catch (e) {
 			return {
 				coinOutAmount: BigInt(0),
-				error: "coinOutAmount <= 0",
+				error: "calculation failed",
 			};
-
-		if (
-			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
-				Pool.constants.percentageBoundsMarginOfError
-		)
-			return {
-				coinOutAmount: BigInt(0),
-				error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
-			};
-
-		return { coinOutAmount };
+		}
 	};
 
 	public getTradeAmountIn = (inputs: {
@@ -244,34 +251,41 @@ export class Pool extends Caller {
 				error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
 			};
 
-		const coinInAmount = CmmmCalculations.calcInGivenOut(
-			pool,
-			inputs.coinInType,
-			inputs.coinOutType,
-			inputs.coinOutAmount
-		);
+		try {
+			const coinInAmount = CmmmCalculations.calcInGivenOut(
+				pool,
+				inputs.coinInType,
+				inputs.coinOutType,
+				inputs.coinOutAmount
+			);
 
-		if (coinInAmount <= 0)
+			if (coinInAmount <= 0)
+				return {
+					coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+					error: "coinInAmount <= 0",
+				};
+
+			if (
+				Number(coinInAmount) / Number(coinInPoolBalance) >=
+				Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+					Pool.constants.percentageBoundsMarginOfError
+			)
+				return {
+					coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+					error: "coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
+				};
+
+			const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
+				amount: coinInAmount,
+			});
+
+			return { coinInAmount: coinInAmountWithoutFees };
+		} catch (e) {
 			return {
 				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
-				error: "coinInAmount <= 0",
+				error: "calculation failed",
 			};
-
-		if (
-			Number(coinInAmount) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
-				Pool.constants.percentageBoundsMarginOfError
-		)
-			return {
-				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
-				error: "coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
-			};
-
-		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
-			amount: coinInAmount,
-		});
-
-		return { coinInAmount: coinInAmountWithoutFees };
+		}
 	};
 
 	public getSpotPrice = (inputs: {
@@ -296,31 +310,39 @@ export class Pool extends Caller {
 		lpRatio: number;
 		error?: string;
 	} => {
-		let calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
-			this.pool,
-			inputs.amountsIn
-		);
-
-		let error = undefined;
-		let lpAmountOut: Balance;
-		let lpRatio: number;
-
-		if (calcedLpRatio >= Casting.fixedOneBigInt) {
-			error = "lpRatio >= 1";
-			lpRatio = 1;
-			lpAmountOut = BigInt(0);
-		} else {
-			lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
-			lpAmountOut = BigInt(
-				Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
+		try {
+			let calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
+				this.pool,
+				inputs.amountsIn
 			);
-		}
 
-		return {
-			lpAmountOut,
-			lpRatio,
-			error,
-		};
+			let error = undefined;
+			let lpAmountOut: Balance;
+			let lpRatio: number;
+
+			if (calcedLpRatio >= Casting.fixedOneBigInt) {
+				error = "lpRatio >= 1";
+				lpRatio = 1;
+				lpAmountOut = BigInt(0);
+			} else {
+				lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
+				lpAmountOut = BigInt(
+					Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
+				);
+			}
+
+			return {
+				lpAmountOut,
+				lpRatio,
+				error,
+			};
+		} catch (e) {
+			return {
+				lpRatio: 1,
+				lpAmountOut: BigInt(0),
+				error: "calculation failed",
+			};
+		}
 	};
 
 	public getWithdrawAmountsOut = (inputs: {
@@ -332,29 +354,35 @@ export class Pool extends Caller {
 		amountsOut: CoinsToBalance;
 		error?: string;
 	} => {
-		const calcedAmountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
-			this.pool,
-			inputs.amountsOutDirection,
-			inputs.lpRatio
-		);
+		try {
+			const calcedAmountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
+				this.pool,
+				inputs.amountsOutDirection,
+				inputs.lpRatio
+			);
 
-		let amountsOut = { ...calcedAmountsOut };
-		let error = undefined;
+			let amountsOut = { ...calcedAmountsOut };
+			let error = undefined;
 
-		for (const coin in Object.keys(calcedAmountsOut)) {
-			if (calcedAmountsOut[coin] <= BigInt(0)) {
-				if (error === undefined) error = "";
+			for (const coin in Object.keys(calcedAmountsOut)) {
+				if (calcedAmountsOut[coin] <= BigInt(0)) {
+					if (error === undefined) error = "";
 
-				error += `amountsOut[${coin}] <= 0 `;
-				amountsOut[coin] = BigInt(0);
+					error += `amountsOut[${coin}] <= 0 `;
+					amountsOut = {};
+				}
 			}
+			if (error !== undefined) error = error.trim();
+
+			return {
+				amountsOut,
+				error,
+			};
+		} catch (e) {
+			return {
+				amountsOut: {},
+				error: "calculation failed",
+			};
 		}
-
-		if (error !== undefined) error = error.trim();
-
-		return {
-			amountsOut,
-			error,
-		};
 	};
 }

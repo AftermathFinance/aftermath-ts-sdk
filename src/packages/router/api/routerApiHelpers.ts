@@ -1,8 +1,9 @@
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterCompleteTradeRoute } from "../routerTypes";
+import { RouterCompleteTradeRoute, RouterExternalFee } from "../routerTypes";
 import { Slippage, SuiNetwork } from "../../../types";
 import { createRouterPool } from "../utils/routerPoolInterface";
+import { Router } from "../router";
 
 export class RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -21,6 +22,16 @@ export class RouterApiHelpers {
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<TransactionBlock> {
+		const externalFee = completeRoute.externalFee;
+		if (
+			externalFee &&
+			externalFee.feePercentage >=
+				Router.constants.maxExternalFeePercentage
+		)
+			throw new Error(
+				`external fee percentage exceeds max of ${Router.constants.maxExternalFeePercentage}`
+			);
+
 		const startTx = new TransactionBlock();
 		startTx.setSender(walletAddress);
 
@@ -66,8 +77,25 @@ export class RouterApiHelpers {
 			coinsOut.push(coinIn);
 		}
 
-		if (coinsOut.length > 1) tx.mergeCoins(coinsOut[0], coinsOut.slice(1));
-		tx.transferObjects([coinsOut[0], coinInArg], tx.pure(walletAddress));
+		const coinOut = coinsOut[0];
+
+		// merge all coinsOut into a single coin
+		if (coinsOut.length > 1) tx.mergeCoins(coinOut, coinsOut.slice(1));
+
+		if (externalFee) {
+			const feeAmount =
+				externalFee.feePercentage *
+				Number(completeRoute.coinOut.amount);
+
+			const [feeCoin] = tx.add({
+				kind: "SplitCoins",
+				coin: coinOut,
+				amounts: [tx.pure(feeAmount)],
+			});
+			tx.transferObjects([feeCoin], tx.pure(externalFee.recipient));
+		}
+
+		tx.transferObjects([coinOut, coinInArg], tx.pure(walletAddress));
 
 		return tx;
 	}

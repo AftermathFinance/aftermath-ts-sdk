@@ -5,6 +5,7 @@ import { RouterGraph } from "../utils/routerGraph";
 import {
 	Balance,
 	CoinType,
+	RouterExternalFee,
 	RouterCompleteTradeRoute,
 	SerializedTransaction,
 	Slippage,
@@ -63,13 +64,17 @@ export class RouterApi {
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
-		maxRouteLength?: number
+		referrer?: SuiAddress,
+		externalFee?: RouterExternalFee
+		// TODO: add options to set all these params ?
+		// maxRouteLength?: number,
 	): Promise<RouterCompleteTradeRoute> => {
 		return new RouterGraph(pools).getCompleteRouteGivenAmountIn(
 			coinIn,
 			coinInAmount,
 			coinOut,
-			maxRouteLength
+			referrer,
+			externalFee
 		);
 	};
 
@@ -78,13 +83,15 @@ export class RouterApi {
 		coinIn: CoinType,
 		coinOut: CoinType,
 		coinOutAmount: Balance,
-		maxRouteLength?: number
+		referrer?: SuiAddress,
+		externalFee?: RouterExternalFee
 	): Promise<RouterCompleteTradeRoute> => {
 		return new RouterGraph(pools).getCompleteRouteGivenAmountOut(
 			coinIn,
 			coinOut,
 			coinOutAmount,
-			maxRouteLength
+			referrer,
+			externalFee
 		);
 	};
 

@@ -2,6 +2,7 @@ import {
 	DisplayFieldsResponse,
 	ObjectId,
 	SuiAddress,
+	SuiObjectDataOptions,
 	SuiObjectResponse,
 	getObjectDisplay,
 	getObjectOwner,
@@ -103,16 +104,20 @@ export class ObjectsApiHelpers {
 
 	public fetchObjectBatch = async (
 		objectIds: ObjectId[],
-		withDisplay?: boolean
+		withDisplay?: boolean,
+		options?: SuiObjectDataOptions
 	): Promise<SuiObjectResponse[]> => {
 		const objectBatch = await this.Provider.provider.multiGetObjects({
 			ids: objectIds,
-			options: {
-				showContent: true,
-				showDisplay: withDisplay,
-				showOwner: true,
-				showType: true,
-			},
+			options:
+				options === undefined
+					? {
+							showContent: true,
+							showDisplay: withDisplay,
+							showOwner: true,
+							showType: true,
+					  }
+					: options,
 		});
 		// const objectDataResponses = objectBatch.filter(
 		// 	(data) => data.error !== undefined

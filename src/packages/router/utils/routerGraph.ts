@@ -3,12 +3,16 @@ import { Helpers } from "../../../general/utils/helpers";
 import {
 	Balance,
 	RouterCompleteTradeRoute,
+	RouterExternalFee,
+	RouterTradeCoin,
 	RouterTradeInfo,
 	RouterTradePath,
 	RouterTradeRoute,
 	UniqueId,
 } from "../../../types";
 import { RouterPoolInterface } from "./routerPoolInterface";
+import { SuiAddress } from "@mysten/sui.js";
+import { Router } from "../router";
 
 /////////////////////////////////////////////////////////////////////
 //// Internal Types
@@ -85,14 +89,16 @@ export class RouterGraph {
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
-		maxRouteLength?: number
+		referrer?: SuiAddress,
+		externalFee?: RouterExternalFee
 	): RouterCompleteTradeRoute {
 		return this.getCompleteRoute(
 			coinIn,
 			coinInAmount,
 			coinOut,
 			false,
-			maxRouteLength
+			referrer,
+			externalFee
 		);
 	}
 
@@ -100,14 +106,16 @@ export class RouterGraph {
 		coinIn: CoinType,
 		coinOut: CoinType,
 		coinOutAmount: Balance,
-		maxRouteLength?: number
+		referrer?: SuiAddress,
+		externalFee?: RouterExternalFee
 	): RouterCompleteTradeRoute {
 		return this.getCompleteRoute(
 			coinIn,
 			coinOutAmount,
 			coinOut,
 			true,
-			maxRouteLength
+			referrer,
+			externalFee
 		);
 	}
 
@@ -120,9 +128,19 @@ export class RouterGraph {
 		coinInAmount: Balance,
 		coinOut: CoinType,
 		isGivenAmountOut: boolean,
+		referrer?: SuiAddress,
+		externalFee?: RouterExternalFee,
 		maxRouteLength: number = RouterGraph.constants.defaultMaxRouteLength
 	): RouterCompleteTradeRoute {
 		if (this.pools.length <= 0) throw new Error("pools has length of 0");
+		if (
+			externalFee &&
+			externalFee.feePercentage >=
+				Router.constants.maxExternalFeePercentage
+		)
+			throw new Error(
+				`external fee percentage exceeds max of ${Router.constants.maxExternalFeePercentage}`
+			);
 
 		const routes = RouterGraph.findRoutes(
 			Helpers.deepCopy(this.graph),
@@ -150,13 +168,14 @@ export class RouterGraph {
 			? RouterGraph.transformCompleteRouteIfGivenAmountOut(completeRoute)
 			: completeRoute;
 
-		const routerCompleteTradeRoute =
+		const completeTradeRoute =
 			RouterGraph.routerCompleteTradeRouteFromCompleteTradeRoute(
 				transformedRoute,
-				this.graph.pools
+				this.graph.pools,
+				externalFee
 			);
 
-		return routerCompleteTradeRoute;
+		return completeTradeRoute;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -393,6 +412,9 @@ export class RouterGraph {
 			}
 			currentRoutes = [...newCurrentRoutes];
 		}
+
+		if (completeRoutes.length === 0)
+			throw new Error("no routes found for this coin pair");
 
 		const finalRoutes = isGivenAmountOut
 			? completeRoutes.map((route) => {
@@ -832,7 +854,8 @@ export class RouterGraph {
 
 	private static routerCompleteTradeRouteFromCompleteTradeRoute = (
 		completeRoute: CompleteTradeRoute,
-		pools: PoolsById
+		pools: PoolsById,
+		externalFee?: RouterExternalFee
 	): RouterCompleteTradeRoute => {
 		const { coinIn, coinOut, spotPrice } = completeRoute;
 
@@ -861,10 +884,23 @@ export class RouterGraph {
 			}
 		);
 
+		const newCoinOut: RouterTradeCoin = externalFee
+			? {
+					...coinOut,
+					amount: BigInt(
+						Math.floor(
+							(1 - externalFee.feePercentage) *
+								Number(coinOut.amount)
+						)
+					),
+			  }
+			: coinOut;
+
 		return {
 			coinIn,
-			coinOut,
+			coinOut: newCoinOut,
 			spotPrice,
+			externalFee,
 			routes: newRoutes,
 		};
 	};

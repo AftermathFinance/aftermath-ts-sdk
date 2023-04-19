@@ -55,10 +55,7 @@ export class NojoAmmApiHelpers {
 						"PoolCreationEvent"
 					),
 				},
-				(eventOnChain) => {
-					console.log(eventOnChain);
-					return eventOnChain.parsedJson.pool_id;
-				}
+				(eventOnChain) => eventOnChain.parsedJson.pool_id
 			);
 
 		return paginatedEvents.events;

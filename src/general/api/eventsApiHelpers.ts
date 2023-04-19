@@ -129,6 +129,7 @@ export class EventsApiHelpers {
 
 			if (
 				events.length === 0 ||
+				events.length < limitStepSize ||
 				eventsWithCursor.nextCursor === null ||
 				endIndex >= 0
 			)

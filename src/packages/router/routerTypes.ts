@@ -1,8 +1,11 @@
 import { SuiAddress } from "@mysten/sui.js";
-import { Balance, Slippage } from "../../general/types/generalTypes";
+import {
+	Balance,
+	Percentage,
+	Slippage,
+} from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
-import { SuiNetwork } from "../../types";
 import { NojoPoolObject } from "./utils/routerPools/nojoRouterPool";
 
 /////////////////////////////////////////////////////////////////////
@@ -12,11 +15,20 @@ import { NojoPoolObject } from "./utils/routerPools/nojoRouterPool";
 export type UniqueId = string;
 
 /////////////////////////////////////////////////////////////////////
+//// General
+/////////////////////////////////////////////////////////////////////
+
+export interface RouterExternalFee {
+	recipient: SuiAddress;
+	feePercentage: Percentage;
+}
+
+/////////////////////////////////////////////////////////////////////
 //// Router Pools
 /////////////////////////////////////////////////////////////////////
 
-export type SerializablePool = PoolObject | NojoPoolObject;
-export type ProtocolName = "Aftermath" | "Nojo";
+export type RouterSerializablePool = PoolObject | NojoPoolObject;
+export type RouterProtocolName = "Aftermath" | "Nojo";
 
 /////////////////////////////////////////////////////////////////////
 //// Paths
@@ -24,6 +36,7 @@ export type ProtocolName = "Aftermath" | "Nojo";
 
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
+	externalFee?: RouterExternalFee;
 };
 
 export type RouterTradeRoute = RouterTradeInfo & {
@@ -31,8 +44,8 @@ export type RouterTradeRoute = RouterTradeInfo & {
 };
 
 export type RouterTradePath = RouterTradeInfo & {
-	protocolName: ProtocolName;
-	pool: SerializablePool;
+	protocolName: RouterProtocolName;
+	pool: RouterSerializablePool;
 };
 
 export interface RouterTradeInfo {
@@ -54,6 +67,8 @@ export interface RouterTradeCoin {
 export type ApiRouterCompleteTradeRouteBody = {
 	coinIn: CoinType;
 	coinOut: CoinType;
+	referrer?: SuiAddress;
+	externalFee?: RouterExternalFee;
 } & (
 	| {
 			coinInAmount: Balance;
@@ -68,4 +83,5 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	completeRoute: RouterCompleteTradeRoute;
 	slippage: Slippage;
 	referrer?: SuiAddress;
+	externalFee?: RouterExternalFee;
 }

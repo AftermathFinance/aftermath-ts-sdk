@@ -3,6 +3,7 @@ import { initLoaderIfNeeded } from "@kunalabs-io/amm/src/init";
 import { Pool } from "@kunalabs-io/amm/src/amm/pool/structs";
 import {
 	ObjectId,
+	SuiParsedData,
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
@@ -43,9 +44,19 @@ export class NojoAmmApi {
 
 	public fetchAllPools = async (): Promise<Pool[]> => {
 		const poolObjectIds = await this.Helpers.fetchAllPoolObjectIds();
-		return Promise.all(
-			poolObjectIds.map((objectId) => this.fetchPool(objectId))
+		const poolSuiObjects = this.Provider.Objects().fetchObjectBatch(
+			poolObjectIds,
+			false,
+			{
+				showContent: true,
+			}
 		);
+		return (await poolSuiObjects).map((poolSuiObject) => {
+			const content = poolSuiObject.data?.content;
+			if (content === undefined)
+				throw new Error("no content found on fetched pool object");
+			return Pool.fromSuiParsedData(content);
+		});
 	};
 
 	// public fetchPoolForCoinTypes = async (coinTypeA: CoinType, coinTypeB: CoinType) => {

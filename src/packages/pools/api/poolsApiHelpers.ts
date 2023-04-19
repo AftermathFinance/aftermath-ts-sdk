@@ -244,7 +244,6 @@ export class PoolsApiHelpers {
 				`invalid coinIds size: ${coinIds.length} != ${poolSize}`
 			);
 
-		console.log("expectedLpRatio", expectedLpRatio);
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -293,6 +292,14 @@ export class PoolsApiHelpers {
 				PoolsApiHelpers.constants.moduleNames.pools,
 				`withdraw_${poolSize}_coins`
 			),
+
+			// lpCoinAmount: 332063831n,
+			// coinTypes: [
+			//   '0xfba70806991b0054557f1a2fb4bdaf7976fceacff12eae381d3d9fa5f950e244::axlusdc::AXLUSDC',
+			//   '0xfba70806991b0054557f1a2fb4bdaf7976fceacff12eae381d3d9fa5f950e244::lzusdc::LZUSDC'
+			// ],
+			// coinAmounts: [ 1921540940n, 1921545363n ]
+
 			typeArguments: [lpCoinType, ...coinsOutType],
 			arguments: [
 				tx.object(poolId),
@@ -419,11 +426,7 @@ export class PoolsApiHelpers {
 		const lpRatio =
 			Number(pool.pool.lpCoinSupply - lpCoinAmount) /
 			Number(pool.pool.lpCoinSupply);
-		console.log({
-			lpRatio,
-			amountsOutDirection,
-			referral: referrer !== undefined,
-		});
+
 		const { amountsOut, error } = pool.getWithdrawAmountsOut({
 			lpRatio,
 			amountsOutDirection,
@@ -441,12 +444,6 @@ export class PoolsApiHelpers {
 				pool.pool.lpCoinType,
 				lpCoinAmount
 			);
-
-		console.log({
-			lpCoinAmount,
-			coinTypes,
-			coinAmounts,
-		});
 
 		const finalTx = this.addMultiCoinWithdrawCommandToTransaction(
 			txWithCoinWithAmount,

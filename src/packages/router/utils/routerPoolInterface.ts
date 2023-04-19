@@ -6,8 +6,8 @@ import {
 } from "@mysten/sui.js";
 import {
 	Balance,
-	ProtocolName,
-	SerializablePool,
+	RouterProtocolName,
+	RouterSerializablePool,
 	Slippage,
 	SuiNetwork,
 	UniqueId,
@@ -22,7 +22,7 @@ import { AftermathApi } from "../../../general/providers";
 /////////////////////////////////////////////////////////////////////
 
 export function createRouterPool(inputs: {
-	pool: SerializablePool;
+	pool: RouterSerializablePool;
 	// NOTE: should this be optional and passed in only upon transaction creation or another way ?
 	network: SuiNetwork;
 }): RouterPoolInterface {
@@ -40,7 +40,10 @@ export function createRouterPool(inputs: {
 /////////////////////////////////////////////////////////////////////
 
 interface RouterPoolConstructor {
-	new (pool: SerializablePool, network: SuiNetwork): RouterPoolInterface;
+	new (
+		pool: RouterSerializablePool,
+		network: SuiNetwork
+	): RouterPoolInterface;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -56,8 +59,8 @@ export interface RouterPoolInterface {
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
-	readonly protocolName: ProtocolName;
-	readonly pool: SerializablePool;
+	readonly protocolName: RouterProtocolName;
+	readonly pool: RouterSerializablePool;
 	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	// readonly limitToSingleHops: boolean;

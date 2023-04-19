@@ -12,6 +12,14 @@ import { TransactionBlock } from "@mysten/sui.js";
 
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	public static readonly constants = {
+		maxExternalFeePercentage: 0.5, // 50%
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
@@ -34,21 +42,33 @@ export class Router extends Caller {
 	public async getCompleteTradeRouteGivenAmountIn(
 		inputs: ApiRouterCompleteTradeRouteBody,
 		abortSignal?: AbortSignal
-	): Promise<RouterCompleteTradeRoute> {
-		return this.fetchApi<
-			RouterCompleteTradeRoute,
-			ApiRouterCompleteTradeRouteBody
-		>("trade-route", inputs, abortSignal);
+	): Promise<RouterCompleteTradeRoute | { error: string }> {
+		try {
+			return this.fetchApi<
+				RouterCompleteTradeRoute,
+				ApiRouterCompleteTradeRouteBody
+			>("trade-route", inputs, abortSignal);
+		} catch (e) {
+			return {
+				error: "No possible routes exist.",
+			};
+		}
 	}
 
 	public async getCompleteTradeRouteGivenAmountOut(
 		inputs: ApiRouterCompleteTradeRouteBody,
 		abortSignal?: AbortSignal
-	): Promise<RouterCompleteTradeRoute> {
-		return this.fetchApi<
-			RouterCompleteTradeRoute,
-			ApiRouterCompleteTradeRouteBody
-		>("trade-route", inputs, abortSignal);
+	): Promise<RouterCompleteTradeRoute | { error: string }> {
+		try {
+			return this.fetchApi<
+				RouterCompleteTradeRoute,
+				ApiRouterCompleteTradeRouteBody
+			>("trade-route", inputs, abortSignal);
+		} catch (e) {
+			return {
+				error: "No possible routes exist.",
+			};
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////////

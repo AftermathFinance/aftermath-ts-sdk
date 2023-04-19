@@ -20,6 +20,7 @@ export type GasBudget = number;
 export type Timestamp = number;
 export type Byte = number;
 export type Slippage = number;
+export type Percentage = number; // 1 = 100%
 
 /////////////////////////////////////////////////////////////////////
 //// string
