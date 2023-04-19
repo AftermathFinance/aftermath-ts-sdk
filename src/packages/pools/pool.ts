@@ -171,7 +171,7 @@ export class Pool extends Caller {
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			return {
-				coinOutAmount: BigInt(0),
+				coinOutAmount: Casting.zeroBigInt,
 				error: "coinInAmountWithFees / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
 			};
 
@@ -185,7 +185,7 @@ export class Pool extends Caller {
 
 			if (coinOutAmount <= 0)
 				return {
-					coinOutAmount: BigInt(0),
+					coinOutAmount: Casting.zeroBigInt,
 					error: "coinOutAmount <= 0",
 				};
 
@@ -195,14 +195,14 @@ export class Pool extends Caller {
 					Pool.constants.percentageBoundsMarginOfError
 			)
 				return {
-					coinOutAmount: BigInt(0),
+					coinOutAmount: Casting.zeroBigInt,
 					error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
 				};
 
 			return { coinOutAmount };
 		} catch (e) {
 			return {
-				coinOutAmount: BigInt(0),
+				coinOutAmount: Casting.zeroBigInt,
 				error: "calculation failed",
 			};
 		}
@@ -228,7 +228,7 @@ export class Pool extends Caller {
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			return {
-				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+				coinInAmount: Casting.u64MaxBigInt,
 				error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
 			};
 
@@ -242,7 +242,7 @@ export class Pool extends Caller {
 
 			if (coinInAmount <= 0)
 				return {
-					coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+					coinInAmount: Casting.u64MaxBigInt,
 					error: "coinInAmount <= 0",
 				};
 
@@ -252,7 +252,7 @@ export class Pool extends Caller {
 					Pool.constants.percentageBoundsMarginOfError
 			)
 				return {
-					coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+					coinInAmount: Casting.u64MaxBigInt,
 					error: "coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
 				};
 
@@ -263,7 +263,7 @@ export class Pool extends Caller {
 			return { coinInAmount: coinInAmountWithoutFees };
 		} catch (e) {
 			return {
-				coinInAmount: BigInt("0xFFFFFFFFFFFFFFFF"),
+				coinInAmount: Casting.u64MaxBigInt,
 				error: "calculation failed",
 			};
 		}
@@ -304,7 +304,7 @@ export class Pool extends Caller {
 			if (calcedLpRatio >= Casting.fixedOneBigInt) {
 				error = "lpRatio >= 1";
 				lpRatio = 1;
-				lpAmountOut = BigInt(0);
+				lpAmountOut = Casting.zeroBigInt;
 			} else {
 				lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
 				lpAmountOut = BigInt(
@@ -320,7 +320,7 @@ export class Pool extends Caller {
 		} catch (e) {
 			return {
 				lpRatio: 1,
-				lpAmountOut: BigInt(0),
+				lpAmountOut: Casting.zeroBigInt,
 				error: "calculation failed",
 			};
 		}
@@ -346,7 +346,7 @@ export class Pool extends Caller {
 			let error = undefined;
 
 			for (const coin in Object.keys(calcedAmountsOut)) {
-				if (calcedAmountsOut[coin] <= BigInt(0)) {
+				if (calcedAmountsOut[coin] <= Casting.zeroBigInt) {
 					if (error === undefined) error = "";
 
 					error += `amountsOut[${coin}] <= 0 `;

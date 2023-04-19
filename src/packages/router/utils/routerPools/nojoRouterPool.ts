@@ -7,7 +7,7 @@ import {
 import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
-import { Helpers } from "../../../../general/utils";
+import { Casting, Helpers } from "../../../../general/utils";
 import { Pool, PoolFields } from "@kunalabs-io/amm/src/amm/pool/structs";
 import { AftermathApi } from "../../../../general/providers";
 import { Balance as NojoBalance } from "@kunalabs-io/amm/src/framework/balance";
@@ -91,6 +91,18 @@ class NojoRouterPool implements RouterPoolInterface {
 		const coinOutAmount =
 			(coinInAmountWithFee * Number(poolBalanceCoinOut)) / denominator;
 
+		if (coinOutAmount <= 0)
+			return {
+				coinOutAmount: Casting.zeroBigInt,
+				error: "coinOutAmount <= 0",
+			};
+
+		if (coinOutAmount >= poolBalanceCoinOut)
+			return {
+				coinOutAmount: Casting.zeroBigInt,
+				error: "coinOutAmount >= poolBalanceCoinOut",
+			};
+
 		return {
 			coinOutAmount: BigInt(Math.floor(coinOutAmount)),
 		};
@@ -142,15 +154,27 @@ class NojoRouterPool implements RouterPoolInterface {
 					this.pool.fields.balanceA.value,
 			  ];
 
-		const numerator =
-			coinOutAmount *
-			poolBalanceCoinIn *
-			BigInt(this.basisPointsIn100Percent);
+		if (coinOutAmount >= poolBalanceCoinOut)
+			return {
+				coinInAmount: Casting.u64MaxBigInt,
+				error: "coinOutAmount >= poolBalanceCoinOut",
+			};
 
-		const denominator =
-			(poolBalanceCoinOut - coinOutAmount) * this.pool.fields.lpFeeBps;
+		const part1 = 1 - Number(coinOutAmount) / Number(poolBalanceCoinOut);
+		const part2 =
+			(Number(coinOutAmount) * Number(poolBalanceCoinIn)) /
+			Number(poolBalanceCoinOut);
+		const part3 =
+			1 -
+			Number(this.pool.fields.lpFeeBps) / this.basisPointsIn100Percent;
 
-		const coinInAmount = numerator / denominator;
+		const coinInAmount = BigInt(Math.floor(part1 * part2 * part3));
+
+		if (coinInAmount <= 0)
+			return {
+				coinInAmount: Casting.u64MaxBigInt,
+				error: "coinInAmount <= 0",
+			};
 
 		return {
 			coinInAmount,

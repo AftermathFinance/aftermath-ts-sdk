@@ -29,7 +29,7 @@ export class Casting {
 	public static fixedOneBigInt: bigint = BigInt("1000000000000000000");
 	public static fixedOneNumber: number = Number(this.fixedOneBigInt);
 	public static u64MaxBigInt: bigint = BigInt("0xFFFFFFFFFFFFFFFF");
-	public static zeroBigInt: bigint = BigInt("0xFFFFFFFFFFFFFFFF");
+	public static zeroBigInt: bigint = BigInt(0);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Functions
