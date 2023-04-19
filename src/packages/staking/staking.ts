@@ -70,43 +70,34 @@ export class Staking extends Caller {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async getAddStakeEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<StakeRequestAddDelegationEvent>> {
-		return this.fetchApi<
-			EventsWithCursor<StakeRequestAddDelegationEvent>,
-			ApiEventsBody
-		>("events/add-stake", {
-			cursor,
-			limit,
-		});
+	public async getAddStakeEvents(cursor?: EventId, limit?: number) {
+		return this.fetchApiEvents<StakeRequestAddDelegationEvent>(
+			"events/add-stake",
+			{
+				cursor,
+				limit,
+			}
+		);
 	}
 
-	public async getWithdrawStakeEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<StakeRequestWithdrawDelegationEvent>> {
-		return this.fetchApi<
-			EventsWithCursor<StakeRequestWithdrawDelegationEvent>,
-			ApiEventsBody
-		>("events/withdraw-stake", {
-			cursor,
-			limit,
-		});
+	public async getWithdrawStakeEvents(cursor?: EventId, limit?: number) {
+		return this.fetchApiEvents<StakeRequestWithdrawDelegationEvent>(
+			"events/withdraw-stake",
+			{
+				cursor,
+				limit,
+			}
+		);
 	}
 
-	public async getCancelStakeEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<StakeCancelDelegationRequestEvent>> {
-		return this.fetchApi<
-			EventsWithCursor<StakeCancelDelegationRequestEvent>,
-			ApiEventsBody
-		>("events/cancel-stake", {
-			cursor,
-			limit,
-		});
+	public async getCancelStakeEvents(cursor?: EventId, limit?: number) {
+		return this.fetchApiEvents<StakeCancelDelegationRequestEvent>(
+			"events/cancel-stake",
+			{
+				cursor,
+				limit,
+			}
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -117,16 +108,14 @@ export class Staking extends Caller {
 		walletAddress: SuiAddress,
 		validatorAddress: SuiAddress,
 		coinAmount: Balance
-	): Promise<TransactionBlock> {
-		return TransactionBlock.from(
-			await this.fetchApi<
-				SerializedTransaction,
-				ApiRequestAddDelegationBody
-			>("transactions/request-add-delegation", {
+	) {
+		return this.fetchApiTransaction<ApiRequestAddDelegationBody>(
+			"transactions/request-add-delegation",
+			{
 				walletAddress,
 				validatorAddress,
 				coinAmount,
-			})
+			}
 		);
 	}
 
@@ -137,39 +126,35 @@ export class Staking extends Caller {
 	public async getRequestWithdrawTransaction(
 		walletAddress: SuiAddress,
 		stake: StakeObject
-	): Promise<TransactionBlock> {
+	) {
 		if (stake.status === "Pending")
 			throw new Error(
 				"stake unable to withdraw, current status is pending"
 			);
 
-		return TransactionBlock.from(
-			await this.fetchApi<
-				SerializedTransaction,
-				ApiRequestWithdrawDelegationBody
-			>("transactions/request-withdraw-delegation", {
+		return this.fetchApiTransaction<ApiRequestWithdrawDelegationBody>(
+			"transactions/request-withdraw-delegation",
+			{
 				walletAddress: walletAddress,
 				principalAmount: BigInt(stake.principal),
 				stakedSuiObjectId: stake.stakedSuiId,
 				// PRODUCTION: find out what should really be here for delegationObjectId
 				delegationObjectId: "undefined",
-			})
+			}
 		);
 	}
 
 	public async getCancelRequestTransaction(
 		walletAddress: SuiAddress,
 		stake: StakeObject
-	): Promise<TransactionBlock> {
-		return TransactionBlock.from(
-			await this.fetchApi<
-				SerializedTransaction,
-				ApiCancelDelegationRequestBody
-			>("transactions/cancel-delegation-request", {
+	) {
+		return this.fetchApiTransaction<ApiCancelDelegationRequestBody>(
+			"transactions/cancel-delegation-request",
+			{
 				walletAddress: walletAddress,
 				principalAmount: BigInt(stake.principal),
 				stakedSuiObjectId: stake.stakedSuiId,
-			})
+			}
 		);
 	}
 }

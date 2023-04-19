@@ -37,28 +37,22 @@ export class StakedCapyReceipt extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getUnstakeCapyTransaction(): Promise<TransactionBlock> {
-		return TransactionBlock.from(
-			await this.fetchApi<SerializedTransaction, ApiUnstakeCapyBody>(
-				"transactions/stake",
-				{
-					stakingReceiptId: this.stakedCapyReceipt.objectId,
-				}
-			)
+	public async getUnstakeCapyTransaction() {
+		return this.fetchApiTransaction<ApiUnstakeCapyBody>(
+			"transactions/stake",
+			{
+				stakingReceiptId: this.stakedCapyReceipt.objectId,
+			}
 		);
 	}
 
-	public async getWithdrawFeesTransaction(
-		amount: Balance | undefined
-	): Promise<TransactionBlock> {
-		return TransactionBlock.from(
-			await this.fetchApi<
-				SerializedTransaction,
-				ApiWithdrawCapyFeesAmountBody
-			>("transactions/withdraw-fees", {
+	public async getWithdrawFeesTransaction(amount: Balance | undefined) {
+		return this.fetchApiTransaction<ApiWithdrawCapyFeesAmountBody>(
+			"transactions/withdraw-fees",
+			{
 				amount,
 				stakingReceiptObjectId: this.stakedCapyReceipt.objectId,
-			})
+			}
 		);
 	}
 }

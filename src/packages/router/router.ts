@@ -35,40 +35,29 @@ export class Router extends Caller {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public async getSupportedCoins(): Promise<CoinType[]> {
-		return this.fetchApi("supported-coins");
+	public async getSupportedCoins() {
+		return this.fetchApi<CoinType[]>("supported-coins");
 	}
 
 	public async getCompleteTradeRouteGivenAmountIn(
 		inputs: ApiRouterCompleteTradeRouteBody,
 		abortSignal?: AbortSignal
-	): Promise<RouterCompleteTradeRoute | { error: string }> {
-		try {
-			return this.fetchApi<
-				RouterCompleteTradeRoute,
-				ApiRouterCompleteTradeRouteBody
-			>("trade-route", inputs, abortSignal);
-		} catch (e) {
-			return {
-				error: "No possible routes exist.",
-			};
-		}
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route", inputs, abortSignal);
 	}
 
+	// TODO: add all of these errors to return types !
 	public async getCompleteTradeRouteGivenAmountOut(
 		inputs: ApiRouterCompleteTradeRouteBody,
 		abortSignal?: AbortSignal
-	): Promise<RouterCompleteTradeRoute | { error: string }> {
-		try {
-			return this.fetchApi<
-				RouterCompleteTradeRoute,
-				ApiRouterCompleteTradeRouteBody
-			>("trade-route", inputs, abortSignal);
-		} catch (e) {
-			return {
-				error: "No possible routes exist.",
-			};
-		}
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route", inputs, abortSignal);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -77,12 +66,10 @@ export class Router extends Caller {
 
 	public async getTransactionForCompleteTradeRoute(
 		inputs: ApiRouterTransactionForCompleteTradeRouteBody
-	): Promise<TransactionBlock> {
-		return TransactionBlock.from(
-			await this.fetchApi<
-				SerializedTransaction,
-				ApiRouterTransactionForCompleteTradeRouteBody
-			>("transactions/trade", inputs)
+	) {
+		return this.fetchApiTransaction<ApiRouterTransactionForCompleteTradeRouteBody>(
+			"transactions/trade",
+			inputs
 		);
 	}
 }

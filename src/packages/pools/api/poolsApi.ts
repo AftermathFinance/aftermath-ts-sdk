@@ -283,18 +283,21 @@ export class PoolsApi {
 				poolCoinTypes
 			);
 
-		const tradeEventsWithinTime =
-			await this.Provider.Events().fetchEventsWithinTime(
-				(cursor, limit) =>
-					pool.getTradeEvents({
-						cursor,
-						limit,
-					}),
-				"hour",
-				24
-			);
+		// PRODUCTION: remove all notions of sdk from api functions !
+
+		// const tradeEventsWithinTime =
+		// 	await this.Provider.Events().fetchEventsWithinTime(
+		// 		(cursor, limit) =>
+		// 			pool.getTradeEvents({
+		// 				cursor,
+		// 				limit,
+		// 			}),
+		// 		"hour",
+		// 		24
+		// 	);
+
 		const volume = this.Helpers.fetchCalcPoolVolume(
-			tradeEventsWithinTime,
+			[], // tradeEventsWithinTime,
 			coinsToPrice,
 			coinsToDecimals
 		);
@@ -335,30 +338,33 @@ export class PoolsApi {
 		provider: Aftermath,
 		lpCoins: CoinType[]
 	) => {
-		const lpCoinPoolObjectIds = await Promise.all(
-			lpCoins.map((lpCoinType) =>
-				provider.Pools().getPoolObjectIdForLpCoinType({ lpCoinType })
-			)
-		);
-		const lpCoinPools = await provider
-			.Pools()
-			.getPools({ objectIds: lpCoinPoolObjectIds });
+		// PRODUCTION: remove all notions of sdk from api functions !
 
-		const poolStats = await Promise.all(
-			lpCoinPools.map((lpPool) => lpPool.getStats())
-		);
+		// const lpCoinPoolObjectIds = await Promise.all(
+		// 	lpCoins.map((lpCoinType) =>
+		// 		provider.Pools().getPoolObjectIdForLpCoinType({ lpCoinType })
+		// 	)
+		// );
+		// const lpCoinPools = await provider
+		// 	.Pools()
+		// 	.getPools({ objectIds: lpCoinPoolObjectIds });
 
-		let lpCoinsToPrice: CoinsToPrice = {};
+		// const poolStats = await Promise.all(
+		// 	lpCoinPools.map((lpPool) => lpPool.getStats())
+		// );
 
-		for (const [index, lpCoin] of lpCoins.entries()) {
-			const stats = poolStats[index];
-			lpCoinsToPrice = {
-				...lpCoinsToPrice,
-				[lpCoin]: stats.lpPrice,
-			};
-		}
+		// let lpCoinsToPrice: CoinsToPrice = {};
 
-		return lpCoinsToPrice;
+		// for (const [index, lpCoin] of lpCoins.entries()) {
+		// 	const stats = poolStats[index];
+		// 	lpCoinsToPrice = {
+		// 		...lpCoinsToPrice,
+		// 		[lpCoin]: stats.lpPrice,
+		// 	};
+		// }
+
+		// return lpCoinsToPrice;
+		return {};
 	};
 
 	/////////////////////////////////////////////////////////////////////

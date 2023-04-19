@@ -93,11 +93,6 @@ const runRoute = async (
 				// maxRouteLength
 		  );
 
-	if ("error" in completeRoute) {
-		console.log(completeRoute.error);
-		return BigInt(0);
-	}
-
 	console.log({ coinIn, coinInAmount, coinOut });
 
 	const end = performance.now();

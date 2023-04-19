@@ -19,9 +19,9 @@ export class RouterApiHelpers {
 		provider: AftermathApi,
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,
-		slippage: Slippage,
-		referrer?: SuiAddress
+		slippage: Slippage
 	): Promise<TransactionBlock> {
+		const referrer = completeRoute.referrer;
 		const externalFee = completeRoute.externalFee;
 		if (
 			externalFee &&

@@ -1,10 +1,4 @@
 import {
-	CoinMetadata,
-	SuiObjectResponse,
-	Coin as SuiCoin,
-	SuiMoveObject,
-} from "@mysten/sui.js";
-import {
 	Balance,
 	CoinDecimal,
 	CoinsToBalance,
@@ -16,6 +10,7 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
+import { CoinMetadata } from "@mysten/sui.js";
 
 export class Coin extends Caller {
 	/////////////////////////////////////////////////////////////////////

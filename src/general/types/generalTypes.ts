@@ -95,3 +95,12 @@ export interface ApiDataWithCursorBody<CursorType> {
 export type ApiEventsBody = ApiDataWithCursorBody<EventId>;
 export type ApiDynamicFieldsBody = ApiDataWithCursorBody<ObjectId>;
 export type ApiTransactionsBody = ApiDataWithCursorBody<TransactionDigest>;
+
+/////////////////////////////////////////////////////////////////////
+//// SDK
+/////////////////////////////////////////////////////////////////////
+
+export interface CallerResult<ReponseType> {
+	response?: ReponseType;
+	error?: string;
+}

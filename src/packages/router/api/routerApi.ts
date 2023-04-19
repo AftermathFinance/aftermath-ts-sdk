@@ -105,8 +105,7 @@ export class RouterApi {
 		provider: AftermathApi,
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,
-		slippage: Slippage,
-		referrer?: SuiAddress
+		slippage: Slippage
 	): Promise<SerializedTransaction> {
 		const tx =
 			await this.Helpers.fetchBuildTransactionForCompleteTradeRoute(
@@ -114,8 +113,7 @@ export class RouterApi {
 				provider,
 				walletAddress,
 				completeRoute,
-				slippage,
-				referrer
+				slippage
 			);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			tx

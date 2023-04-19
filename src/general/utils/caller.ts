@@ -1,4 +1,12 @@
-import { SuiNetwork, Url } from "../../types";
+import { TransactionBlock } from "@mysten/sui.js";
+import {
+	ApiEventsBody,
+	CallerResult,
+	EventsWithCursor,
+	SerializedTransaction,
+	SuiNetwork,
+	Url,
+} from "../../types";
 import { Helpers } from "./helpers";
 
 export class Caller {
@@ -63,7 +71,8 @@ export class Caller {
 		};
 
 		const apiCallUrl = this.urlForApiCall(url);
-		const response = await (body === undefined
+
+		const uncastResponse = await (body === undefined
 			? fetch(apiCallUrl, { signal })
 			: fetch(apiCallUrl, {
 					method: "POST",
@@ -71,6 +80,35 @@ export class Caller {
 					signal,
 			  }));
 
-		return await Caller.fetchResponseToType<Output>(response);
+		const response = await Caller.fetchResponseToType<Output>(
+			uncastResponse
+		);
+		return response;
+	}
+
+	protected async fetchApiTransaction<BodyType = undefined>(
+		url: Url,
+		body?: BodyType,
+		signal?: AbortSignal
+	) {
+		return TransactionBlock.from(
+			await this.fetchApi<SerializedTransaction, BodyType>(
+				url,
+				body,
+				signal
+			)
+		);
+	}
+
+	protected async fetchApiEvents<EventType, BodyType = ApiEventsBody>(
+		url: Url,
+		body: BodyType,
+		signal?: AbortSignal
+	) {
+		return this.fetchApi<EventsWithCursor<EventType>, BodyType>(
+			url,
+			body,
+			signal
+		);
 	}
 }

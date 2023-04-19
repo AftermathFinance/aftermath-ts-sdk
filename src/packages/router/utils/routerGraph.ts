@@ -154,7 +154,8 @@ export class RouterGraph {
 			Helpers.deepCopy(this.graph),
 			routes,
 			coinInAmount,
-			isGivenAmountOut
+			isGivenAmountOut,
+			referrer
 		);
 
 		const completeRoute = RouterGraph.completeRouteFromRoutes(
@@ -172,6 +173,7 @@ export class RouterGraph {
 			RouterGraph.routerCompleteTradeRouteFromCompleteTradeRoute(
 				transformedRoute,
 				this.graph.pools,
+				referrer,
 				externalFee
 			);
 
@@ -432,7 +434,8 @@ export class RouterGraph {
 		graph: CoinGraph,
 		routes: TradeRoute[],
 		coinInAmount: Balance,
-		isGivenAmountOut: boolean
+		isGivenAmountOut: boolean,
+		referrer?: SuiAddress
 	): TradeRoute[] => {
 		const coinInPartitionAmount =
 			coinInAmount /
@@ -461,7 +464,8 @@ export class RouterGraph {
 						? coinInRemainderAmount + coinInPartitionAmount
 						: coinInPartitionAmount,
 					linearCutStepSize,
-					isGivenAmountOut
+					isGivenAmountOut,
+					referrer
 				);
 
 			currentPools = Helpers.deepCopy(updatedPools);
@@ -476,7 +480,8 @@ export class RouterGraph {
 		routes: TradeRoute[],
 		coinInAmount: Balance,
 		linearCutStepSize: number,
-		isGivenAmountOut: boolean
+		isGivenAmountOut: boolean,
+		referrer?: SuiAddress
 	): {
 		updatedPools: PoolsById;
 		updatedRoutes: TradeRoute[];
@@ -489,7 +494,8 @@ export class RouterGraph {
 				Helpers.deepCopy(route),
 				coinInAmount,
 				currentGasCost,
-				isGivenAmountOut
+				isGivenAmountOut,
+				referrer
 			)
 		);
 		const updatedRoutesAndPools = routesAndPools.filter(
@@ -603,7 +609,8 @@ export class RouterGraph {
 		route: TradeRoute,
 		coinInAmount: Balance,
 		currentGasCost: Balance,
-		isGivenAmountOut: boolean
+		isGivenAmountOut: boolean,
+		referrer?: SuiAddress
 	):
 		| {
 				updatedPools: PoolsById;
@@ -656,11 +663,13 @@ export class RouterGraph {
 						coinInType: path.coinIn.type,
 						coinOutType: path.coinOut.type,
 						coinOutAmount: totalCoinInAmount,
+						referrer,
 				  })
 				: poolBeforePathTrades.getTradeAmountOut({
 						coinInType: path.coinIn.type,
 						coinOutType: path.coinOut.type,
 						coinInAmount: totalCoinInAmount,
+						referrer,
 				  });
 
 			const totalCoinOutAmount =
@@ -855,6 +864,7 @@ export class RouterGraph {
 	private static routerCompleteTradeRouteFromCompleteTradeRoute = (
 		completeRoute: CompleteTradeRoute,
 		pools: PoolsById,
+		referrer?: SuiAddress,
 		externalFee?: RouterExternalFee
 	): RouterCompleteTradeRoute => {
 		const { coinIn, coinOut, spotPrice } = completeRoute;
@@ -900,8 +910,9 @@ export class RouterGraph {
 			coinIn,
 			coinOut: newCoinOut,
 			spotPrice,
-			externalFee,
 			routes: newRoutes,
+			externalFee,
+			referrer,
 		};
 	};
 }

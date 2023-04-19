@@ -65,19 +65,21 @@ export class Pools extends Caller {
 	//// Pool Class
 	/////////////////////////////////////////////////////////////////////
 
-	public async getPool(inputs: { objectId: ObjectId }): Promise<Pool> {
+	public async getPool(inputs: { objectId: ObjectId }) {
 		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
 		return new Pool(pool, this.network);
 	}
 
-	public async getPools(inputs: { objectIds: ObjectId[] }): Promise<Pool[]> {
+	public async getPools(inputs: { objectIds: ObjectId[] }) {
+		// NOTE: should this pass array of pools directly instead (caching performance though...)
+		// could put logic for handling into api itself (prob best idea)
 		const pools = await Promise.all(
 			inputs.objectIds.map((objectId) => this.getPool({ objectId }))
 		);
 		return pools;
 	}
 
-	public async getAllPools(): Promise<Pool[]> {
+	public async getAllPools() {
 		const pools = await this.fetchApi<PoolObject[]>("");
 		return pools.map((pool) => new Pool(pool, this.network));
 	}
@@ -86,31 +88,19 @@ export class Pools extends Caller {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async getDepositEvents(
-		inputs: ApiEventsBody
-	): Promise<EventsWithCursor<PoolDepositEvent>> {
-		return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
-			"events/deposit",
+	public async getDepositEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<PoolDepositEvent>("events/deposit", inputs);
+	}
+
+	public async getWithdrawEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<PoolWithdrawEvent>(
+			"events/withdraw",
 			inputs
 		);
 	}
 
-	public async getWithdrawEvents(
-		inputs: ApiEventsBody
-	): Promise<EventsWithCursor<PoolWithdrawEvent>> {
-		return this.fetchApi<
-			EventsWithCursor<PoolWithdrawEvent>,
-			ApiEventsBody
-		>("events/withdraw", inputs);
-	}
-
-	public async getTradeEvents(
-		inputs: ApiEventsBody
-	): Promise<EventsWithCursor<PoolTradeEvent>> {
-		return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
-			"events/trade",
-			inputs
-		);
+	public async getTradeEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<PoolTradeEvent>("events/trade", inputs);
 	}
 
 	/////////////////////////////////////////////////////////////////////

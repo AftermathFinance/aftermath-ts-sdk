@@ -25,9 +25,7 @@ export class Wallet extends Caller {
 	}
 
 	// TODO: change return type to Record<Coin, Balance> ?
-	public async getBalances(inputs: {
-		coins: CoinType[];
-	}): Promise<Balance[]> {
+	public async getBalances(inputs: { coins: CoinType[] }) {
 		const balances = await Promise.all(
 			inputs.coins.map((coin) => this.getBalance({ coin }))
 		);
@@ -42,9 +40,7 @@ export class Wallet extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getPastAftermathTransactions(
-		inputs: ApiTransactionsBody
-	): Promise<TransactionsWithCursor> {
+	public async getPastAftermathTransactions(inputs: ApiTransactionsBody) {
 		return this.fetchApi<TransactionsWithCursor, ApiTransactionsBody>(
 			"transactions",
 			inputs

@@ -36,6 +36,7 @@ export type RouterProtocolName = "Aftermath" | "Nojo";
 
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
+	referrer?: SuiAddress;
 	externalFee?: RouterExternalFee;
 };
 
@@ -82,6 +83,4 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	walletAddress: SuiAddress;
 	completeRoute: RouterCompleteTradeRoute;
 	slippage: Slippage;
-	referrer?: SuiAddress;
-	externalFee?: RouterExternalFee;
 }

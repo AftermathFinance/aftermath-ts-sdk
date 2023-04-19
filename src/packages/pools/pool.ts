@@ -54,9 +54,8 @@ export class Pool extends Caller {
 	//// Stats
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStats(): Promise<PoolStats> {
+	public async getStats() {
 		const stats = await this.fetchApi<PoolStats>("stats");
-		this.stats = stats;
 		return stats;
 	}
 
@@ -74,36 +73,24 @@ export class Pool extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getDepositTransaction(
-		inputs: ApiPoolDepositBody
-	): Promise<TransactionBlock> {
-		return TransactionBlock.from(
-			await this.fetchApi<SerializedTransaction, ApiPoolDepositBody>(
-				"transactions/deposit",
-				inputs
-			)
+	public async getDepositTransaction(inputs: ApiPoolDepositBody) {
+		return this.fetchApiTransaction<ApiPoolDepositBody>(
+			"transactions/deposit",
+			inputs
 		);
 	}
 
-	public async getWithdrawTransaction(
-		inputs: ApiPoolWithdrawBody
-	): Promise<TransactionBlock> {
-		return TransactionBlock.from(
-			await this.fetchApi<SerializedTransaction, ApiPoolWithdrawBody>(
-				"transactions/withdraw",
-				inputs
-			)
+	public async getWithdrawTransaction(inputs: ApiPoolWithdrawBody) {
+		return this.fetchApiTransaction<ApiPoolWithdrawBody>(
+			"transactions/withdraw",
+			inputs
 		);
 	}
 
-	public async getTradeTransaction(
-		inputs: ApiPoolTradeBody
-	): Promise<TransactionBlock> {
-		return TransactionBlock.from(
-			await this.fetchApi<SerializedTransaction, ApiPoolTradeBody>(
-				"transactions/trade",
-				inputs
-			)
+	public async getTradeTransaction(inputs: ApiPoolTradeBody) {
+		return this.fetchApiTransaction<ApiPoolTradeBody>(
+			"transactions/trade",
+			inputs
 		);
 	}
 
@@ -111,13 +98,11 @@ export class Pool extends Caller {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async getDepositEvents(
-		inputs: ApiEventsBody
-	): Promise<EventsWithCursor<PoolDepositEvent>> {
-		const eventsWithCursor = await this.fetchApi<
-			EventsWithCursor<PoolDepositEvent>,
-			ApiEventsBody
-		>("events/deposit", inputs);
+	public async getDepositEvents(inputs: ApiEventsBody) {
+		const eventsWithCursor = await this.fetchApiEvents<PoolDepositEvent>(
+			"events/deposit",
+			inputs
+		);
 
 		// PRODUCTION: temporary until "And" filter can be used for event filtering
 		return {
@@ -128,13 +113,11 @@ export class Pool extends Caller {
 		};
 	}
 
-	public async getWithdrawEvents(
-		inputs: ApiEventsBody
-	): Promise<EventsWithCursor<PoolWithdrawEvent>> {
-		const eventsWithCursor = await this.fetchApi<
-			EventsWithCursor<PoolWithdrawEvent>,
-			ApiEventsBody
-		>("events/withdraw", inputs);
+	public async getWithdrawEvents(inputs: ApiEventsBody) {
+		const eventsWithCursor = await this.fetchApiEvents<PoolWithdrawEvent>(
+			"events/withdraw",
+			inputs
+		);
 
 		// PRODUCTION: temporary until "And" filter can be used for event filtering
 		return {
@@ -145,13 +128,11 @@ export class Pool extends Caller {
 		};
 	}
 
-	public async getTradeEvents(
-		inputs: ApiEventsBody
-	): Promise<EventsWithCursor<PoolTradeEvent>> {
-		const eventsWithCursor = await this.fetchApi<
-			EventsWithCursor<PoolTradeEvent>,
-			ApiEventsBody
-		>("events/trade", inputs);
+	public async getTradeEvents(inputs: ApiEventsBody) {
+		const eventsWithCursor = await this.fetchApiEvents<PoolTradeEvent>(
+			"events/trade",
+			inputs
+		);
 
 		// PRODUCTION: temporary until "And" filter can be used for event filtering
 		return {

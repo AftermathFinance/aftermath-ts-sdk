@@ -4,7 +4,7 @@ import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
 import { SuiApiCasting } from "../../packages/sui/api/suiApiCasting";
-import { Byte } from "../types";
+import { Byte, CallerResult } from "../types";
 
 export class Casting {
 	/////////////////////////////////////////////////////////////////////
@@ -77,4 +77,14 @@ export class Casting {
 	public static normalizeSlippageTolerance = (slippageTolerance: number) => {
 		return slippageTolerance / 100;
 	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Value Extraction
+	/////////////////////////////////////////////////////////////////////
+
+	// public static responseOrError = <T>(result: CallerResult<T>): T => {
+	// 	const response = result?.response;
+	// 	if (!response) throw new Error(result.error);
+	// 	return response;
+	// };
 }

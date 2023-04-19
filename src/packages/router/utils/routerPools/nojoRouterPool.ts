@@ -142,30 +142,18 @@ class NojoRouterPool implements RouterPoolInterface {
 					this.pool.fields.balanceA.value,
 			  ];
 
-		const numerator = Number(
-			coinOutAmount * poolBalanceCoinIn - poolBalanceCoinOut
-		);
+		const numerator =
+			coinOutAmount *
+			poolBalanceCoinIn *
+			BigInt(this.basisPointsIn100Percent);
+
 		const denominator =
-			(1 - Number(coinOutAmount)) *
-			(1 /
-				(1 -
-					Number(this.pool.fields.lpFeeBps) /
-						this.basisPointsIn100Percent));
+			(poolBalanceCoinOut - coinOutAmount) * this.pool.fields.lpFeeBps;
 
 		const coinInAmount = numerator / denominator;
 
-		// console.log({
-		// 	poolBalanceCoinIn,
-		// 	poolBalanceCoinOut,
-		// 	lpFee,
-		// 	coinInAmount,
-		// 	coinInAmountWithFee,
-		// 	denominator,
-		// 	coinOutAmount,
-		// });
-
 		return {
-			coinInAmount: BigInt(Math.floor(coinInAmount)),
+			coinInAmount,
 		};
 	};
 

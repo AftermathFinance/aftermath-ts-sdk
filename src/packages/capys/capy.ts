@@ -26,17 +26,15 @@ export class Capy extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakeTransaction(): Promise<TransactionBlock> {
+	public async getStakeTransaction() {
 		if (this.isStaked)
 			throw new Error("unable to stake already staked capy");
 
-		return TransactionBlock.from(
-			await this.fetchApi<SerializedTransaction, ApiStakeCapyBody>(
-				"transactions/stake",
-				{
-					capyId: this.capy.objectId,
-				}
-			)
+		return this.fetchApiTransaction<ApiStakeCapyBody>(
+			"transactions/stake",
+			{
+				capyId: this.capy.objectId,
+			}
 		);
 	}
 }
