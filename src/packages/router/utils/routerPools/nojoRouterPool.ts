@@ -82,15 +82,14 @@ class NojoRouterPool implements RouterPoolInterface {
 			  ];
 
 		const lpFee =
-			(Number(coinInAmount) / this.basisPointsIn100Percent) *
-			(Number(this.pool.fields.lpFeeBps) / this.basisPointsIn100Percent);
+			(Number(coinInAmount) * Number(this.pool.fields.lpFeeBps)) /
+			this.basisPointsIn100Percent;
 
 		const coinInAmountWithFee = Number(coinInAmount) - lpFee;
 
 		const denominator = Number(poolBalanceCoinIn) + coinInAmountWithFee;
 		const coinOutAmount =
-			(coinInAmountWithFee / denominator) *
-			(Number(poolBalanceCoinOut) / denominator);
+			(coinInAmountWithFee * Number(poolBalanceCoinOut)) / denominator;
 
 		return {
 			coinOutAmount: BigInt(Math.floor(coinOutAmount)),
@@ -144,7 +143,6 @@ class NojoRouterPool implements RouterPoolInterface {
 			  ];
 
 		const numerator = Number(
-			// @ts-ignore
 			coinOutAmount * poolBalanceCoinIn - poolBalanceCoinOut
 		);
 		const denominator =
@@ -155,6 +153,16 @@ class NojoRouterPool implements RouterPoolInterface {
 						this.basisPointsIn100Percent));
 
 		const coinInAmount = numerator / denominator;
+
+		// console.log({
+		// 	poolBalanceCoinIn,
+		// 	poolBalanceCoinOut,
+		// 	lpFee,
+		// 	coinInAmount,
+		// 	coinInAmountWithFee,
+		// 	denominator,
+		// 	coinOutAmount,
+		// });
 
 		return {
 			coinInAmount: BigInt(Math.floor(coinInAmount)),
@@ -185,8 +193,8 @@ class NojoRouterPool implements RouterPoolInterface {
 					this.pool.fields.balanceB.value - inputs.coinOutAmount,
 			  ]
 			: [
-					this.pool.fields.balanceA.value - inputs.coinInAmount,
-					this.pool.fields.balanceB.value + inputs.coinOutAmount,
+					this.pool.fields.balanceA.value - inputs.coinOutAmount,
+					this.pool.fields.balanceB.value + inputs.coinInAmount,
 			  ];
 
 		const newPool: NojoPoolObject = {

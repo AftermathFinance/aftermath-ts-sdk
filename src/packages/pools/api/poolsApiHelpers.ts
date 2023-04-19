@@ -442,6 +442,12 @@ export class PoolsApiHelpers {
 				lpCoinAmount
 			);
 
+		console.log({
+			lpCoinAmount,
+			coinTypes,
+			coinAmounts,
+		});
+
 		const finalTx = this.addMultiCoinWithdrawCommandToTransaction(
 			txWithCoinWithAmount,
 			pool.pool.objectId,

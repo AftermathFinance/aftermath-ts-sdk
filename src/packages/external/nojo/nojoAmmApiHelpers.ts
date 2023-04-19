@@ -44,7 +44,7 @@ export class NojoAmmApiHelpers {
 		const paginatedEvents =
 			await this.Provider.Events().fetchCastEventsWithCursor<
 				EventOnChain<{
-					id: ObjectId;
+					pool_id: ObjectId;
 				}>,
 				ObjectId
 			>(
@@ -55,7 +55,10 @@ export class NojoAmmApiHelpers {
 						"PoolCreationEvent"
 					),
 				},
-				(eventOnChain) => eventOnChain.parsedJson.id
+				(eventOnChain) => {
+					console.log(eventOnChain);
+					return eventOnChain.parsedJson.pool_id;
+				}
 			);
 
 		return paginatedEvents.events;
