@@ -153,10 +153,7 @@ export class Pool extends Caller {
 		coinOutType: CoinType;
 		// PRODUCTION: handle referral in calculation
 		referral?: boolean;
-	}): {
-		coinOutAmount: Balance;
-		error?: string;
-	} => {
+	}): Balance => {
 		const pool = Helpers.deepCopy(this.pool);
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
@@ -170,42 +167,29 @@ export class Pool extends Caller {
 			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
-			return {
-				coinOutAmount: Casting.zeroBigInt,
-				error: "coinInAmountWithFees / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
-			};
-
-		try {
-			const coinOutAmount = CmmmCalculations.calcOutGivenIn(
-				pool,
-				inputs.coinInType,
-				inputs.coinOutType,
-				coinInAmountWithFees
+			throw new Error(
+				"coinInAmountWithFees / coinInPoolBalance >= maxSwapPercentageOfPoolBalance"
 			);
 
-			if (coinOutAmount <= 0)
-				return {
-					coinOutAmount: Casting.zeroBigInt,
-					error: "coinOutAmount <= 0",
-				};
+		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
+			pool,
+			inputs.coinInType,
+			inputs.coinOutType,
+			coinInAmountWithFees
+		);
 
-			if (
-				Number(coinOutAmount) / Number(coinOutPoolBalance) >=
-				Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
-					Pool.constants.percentageBoundsMarginOfError
-			)
-				return {
-					coinOutAmount: Casting.zeroBigInt,
-					error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
-				};
+		if (coinOutAmount <= 0) throw new Error("coinOutAmount <= 0");
 
-			return { coinOutAmount };
-		} catch (e) {
-			return {
-				coinOutAmount: Casting.zeroBigInt,
-				error: "calculation failed",
-			};
-		}
+		if (
+			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+				Pool.constants.percentageBoundsMarginOfError
+		)
+			throw new Error(
+				"coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance"
+			);
+
+		return coinOutAmount;
 	};
 
 	public getTradeAmountIn = (inputs: {
@@ -214,10 +198,7 @@ export class Pool extends Caller {
 		coinOutType: CoinType;
 		// PRODUCTION: handle referral in calculation
 		referral?: boolean;
-	}): {
-		coinInAmount: Balance;
-		error?: string;
-	} => {
+	}): Balance => {
 		const pool = Helpers.deepCopy(this.pool);
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
@@ -227,46 +208,33 @@ export class Pool extends Caller {
 			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
-			return {
-				coinInAmount: Casting.u64MaxBigInt,
-				error: "coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance",
-			};
-
-		try {
-			const coinInAmount = CmmmCalculations.calcInGivenOut(
-				pool,
-				inputs.coinInType,
-				inputs.coinOutType,
-				inputs.coinOutAmount
+			throw new Error(
+				"coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance"
 			);
 
-			if (coinInAmount <= 0)
-				return {
-					coinInAmount: Casting.u64MaxBigInt,
-					error: "coinInAmount <= 0",
-				};
+		const coinInAmount = CmmmCalculations.calcInGivenOut(
+			pool,
+			inputs.coinInType,
+			inputs.coinOutType,
+			inputs.coinOutAmount
+		);
 
-			if (
-				Number(coinInAmount) / Number(coinInPoolBalance) >=
-				Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
-					Pool.constants.percentageBoundsMarginOfError
-			)
-				return {
-					coinInAmount: Casting.u64MaxBigInt,
-					error: "coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance",
-				};
+		if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
 
-			const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
-				amount: coinInAmount,
-			});
+		if (
+			Number(coinInAmount) / Number(coinInPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+				Pool.constants.percentageBoundsMarginOfError
+		)
+			throw new Error(
+				"coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance"
+			);
 
-			return { coinInAmount: coinInAmountWithoutFees };
-		} catch (e) {
-			return {
-				coinInAmount: Casting.u64MaxBigInt,
-				error: "calculation failed",
-			};
-		}
+		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
+			amount: coinInAmount,
+		});
+
+		return coinInAmountWithoutFees;
 	};
 
 	public getSpotPrice = (inputs: {
@@ -289,41 +257,24 @@ export class Pool extends Caller {
 	}): {
 		lpAmountOut: Balance;
 		lpRatio: number;
-		error?: string;
 	} => {
-		try {
-			let calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
-				this.pool,
-				inputs.amountsIn
-			);
+		const calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
+			this.pool,
+			inputs.amountsIn
+		);
 
-			let error = undefined;
-			let lpAmountOut: Balance;
-			let lpRatio: number;
+		if (calcedLpRatio >= Casting.fixedOneBigInt)
+			throw new Error("lpRatio >= 1");
 
-			if (calcedLpRatio >= Casting.fixedOneBigInt) {
-				error = "lpRatio >= 1";
-				lpRatio = 1;
-				lpAmountOut = Casting.zeroBigInt;
-			} else {
-				lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
-				lpAmountOut = BigInt(
-					Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
-				);
-			}
+		const lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
+		const lpAmountOut = BigInt(
+			Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
+		);
 
-			return {
-				lpAmountOut,
-				lpRatio,
-				error,
-			};
-		} catch (e) {
-			return {
-				lpRatio: 1,
-				lpAmountOut: Casting.zeroBigInt,
-				error: "calculation failed",
-			};
-		}
+		return {
+			lpAmountOut,
+			lpRatio,
+		};
 	};
 
 	public getWithdrawAmountsOut = (inputs: {
@@ -331,40 +282,19 @@ export class Pool extends Caller {
 		amountsOutDirection: CoinsToBalance;
 		// PRODUCTION: account for referral in calculation
 		referral?: boolean;
-	}): {
-		amountsOut: CoinsToBalance;
-		error?: string;
-	} => {
-		try {
-			const calcedAmountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
-				this.pool,
-				inputs.amountsOutDirection,
-				inputs.lpRatio
-			);
+	}): CoinsToBalance => {
+		const amountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
+			this.pool,
+			inputs.amountsOutDirection,
+			inputs.lpRatio
+		);
 
-			let amountsOut = { ...calcedAmountsOut };
-			let error = undefined;
-
-			for (const coin in Object.keys(calcedAmountsOut)) {
-				if (calcedAmountsOut[coin] <= Casting.zeroBigInt) {
-					if (error === undefined) error = "";
-
-					error += `amountsOut[${coin}] <= 0 `;
-					amountsOut = {};
-				}
-			}
-			if (error !== undefined) error = error.trim();
-
-			return {
-				amountsOut,
-				error,
-			};
-		} catch (e) {
-			return {
-				amountsOut: {},
-				error: "calculation failed",
-			};
+		for (const coin in Object.keys(amountsOut)) {
+			if (amountsOut[coin] <= Casting.zeroBigInt)
+				throw new Error(`amountsOut[${coin}] <= 0 `);
 		}
+
+		return amountsOut;
 	};
 
 	public getWithdrawLpRatio = (inputs: { lpCoinAmountOut: bigint }): number =>

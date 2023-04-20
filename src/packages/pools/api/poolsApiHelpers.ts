@@ -328,13 +328,12 @@ export class PoolsApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const { coinOutAmount: amountOut, error } = pool.getTradeAmountOut({
-			coinInAmount: coinInAmount,
-			coinInType: coinInType,
-			coinOutType: coinOutType,
+		const amountOut = pool.getTradeAmountOut({
+			coinInAmount,
+			coinInType,
+			coinOutType,
 			referral: referrer !== undefined,
 		});
-		if (error !== undefined) throw new Error(error);
 
 		const { coinArgument, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
@@ -372,11 +371,10 @@ export class PoolsApiHelpers {
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsIn);
 
-		const { lpRatio, error } = pool.getDepositLpAmountOut({
+		const { lpRatio } = pool.getDepositLpAmountOut({
 			amountsIn,
 			referral: referrer !== undefined,
 		});
-		if (error !== undefined) throw new Error(error);
 
 		// TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
@@ -418,12 +416,11 @@ export class PoolsApiHelpers {
 			lpCoinAmountOut: lpCoinAmount,
 		});
 
-		const { amountsOut, error } = pool.getWithdrawAmountsOut({
+		const amountsOut = pool.getWithdrawAmountsOut({
 			lpRatio,
 			amountsOutDirection,
 			referral: referrer !== undefined,
 		});
-		if (error !== undefined) throw new Error(error);
 
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsOut);

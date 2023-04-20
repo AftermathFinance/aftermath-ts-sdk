@@ -82,10 +82,7 @@ export interface RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}) => {
-		coinOutAmount: Balance;
-		error?: string;
-	};
+	}) => Balance;
 
 	addTradeCommandToTransaction: (inputs: {
 		provider: AftermathApi;
@@ -116,10 +113,7 @@ export interface RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}) => {
-		coinInAmount: Balance;
-		error?: string;
-	};
+	}) => Balance;
 
 	getUpdatedPoolBeforeTrade: (inputs: {
 		coinIn: CoinType;

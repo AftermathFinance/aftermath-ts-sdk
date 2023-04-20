@@ -72,4 +72,19 @@ export class NftAmmApi {
 			})
 		);
 	};
+
+	public fetchWithdrawTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		market: NftAmmMarket;
+		lpCoinAmount: Balance;
+		nftObjectIds: ObjectId[];
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.fetchBuildWithdrawTransaction({
+				...inputs,
+			})
+		);
+	};
 }

@@ -74,13 +74,12 @@ export class NftAmmApiHelpers {
 		const { market } = inputs;
 		const marketObject = market.market;
 
-		const { lpRatio, error } = market.pool.getDepositLpAmountOut({
+		const { lpRatio } = market.pool.getDepositLpAmountOut({
 			amountsIn: {
 				[marketObject.assetCoinType]: inputs.assetCoinAmountIn,
 			},
 			referral: inputs.referrer !== undefined,
 		});
-		if (error !== undefined) throw new Error(error);
 
 		// // TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
@@ -125,7 +124,7 @@ export class NftAmmApiHelpers {
 			lpCoinAmountOut: inputs.lpCoinAmount,
 		});
 
-		const { amountsOut, error } = pool.getWithdrawAmountsOut({
+		const amountsOut = pool.getWithdrawAmountsOut({
 			lpRatio,
 			amountsOutDirection: {
 				[marketObject.fractionalizedCoinType]:
@@ -134,7 +133,6 @@ export class NftAmmApiHelpers {
 			},
 			referral: inputs.referrer !== undefined,
 		});
-		if (error !== undefined) throw new Error(error);
 
 		const { balances: coinAmountsOut } =
 			Coin.coinsAndBalancesOverZero(amountsOut);
@@ -155,6 +153,50 @@ export class NftAmmApiHelpers {
 			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),
 			expectedAssetCoinAmountOut,
 			lpCoin,
+			withTransfer: true,
+		});
+
+		return tx;
+	};
+
+	public fetchBuildBuyTransaction = async (inputs: {
+		market: NftAmmMarket;
+		walletAddress: SuiAddress;
+		nftObjectIds: ObjectId[];
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const { market } = inputs;
+		const marketObject = market.market;
+		const pool = market.pool;
+
+		const expectedAssetCoinAmountIn = pool.getTradeAmountIn({
+			coinOutAmount:
+				BigInt(inputs.nftObjectIds.length) *
+				marketObject.fractionalizedCoinAmount,
+			coinInType: marketObject.assetCoinType,
+			coinOutType: marketObject.fractionalizedCoinType,
+			referral: inputs.referrer !== undefined,
+		});
+
+		const { coinArgument: assetCoin, txWithCoinWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				tx,
+				inputs.walletAddress,
+				marketObject.assetCoinType,
+				expectedAssetCoinAmountIn
+			);
+
+		this.addBuyCommandToTransaction({
+			tx: txWithCoinWithAmount,
+			...inputs,
+			marketObjectId: marketObject.objectId,
+			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),
+			assetCoin,
+			expectedAssetCoinAmountIn,
 			withTransfer: true,
 		});
 

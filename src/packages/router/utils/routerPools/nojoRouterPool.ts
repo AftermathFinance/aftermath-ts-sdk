@@ -7,7 +7,6 @@ import {
 import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
-import { Casting, Helpers } from "../../../../general/utils";
 import { Pool, PoolFields } from "@kunalabs-io/amm/src/amm/pool/structs";
 import { AftermathApi } from "../../../../general/providers";
 import { Balance as NojoBalance } from "@kunalabs-io/amm/src/framework/balance";
@@ -68,10 +67,7 @@ class NojoRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): {
-		coinOutAmount: Balance;
-		error?: string;
-	} => {
+	}): Balance => {
 		const { coinInAmount, coinInType } = inputs;
 
 		const [poolBalanceCoinIn, poolBalanceCoinOut] = this.isCoinA(coinInType)
@@ -91,21 +87,12 @@ class NojoRouterPool implements RouterPoolInterface {
 		const coinOutAmount =
 			(coinInAmountWithFee * Number(poolBalanceCoinOut)) / denominator;
 
-		if (coinOutAmount <= 0)
-			return {
-				coinOutAmount: Casting.zeroBigInt,
-				error: "coinOutAmount <= 0",
-			};
+		if (coinOutAmount <= 0) throw new Error("coinOutAmount <= 0");
 
 		if (coinOutAmount >= poolBalanceCoinOut)
-			return {
-				coinOutAmount: Casting.zeroBigInt,
-				error: "coinOutAmount >= poolBalanceCoinOut",
-			};
+			throw new Error("coinOutAmount >= poolBalanceCoinOut");
 
-		return {
-			coinOutAmount: BigInt(Math.floor(coinOutAmount)),
-		};
+		return BigInt(Math.floor(coinOutAmount));
 	};
 
 	addTradeCommandToTransaction = (inputs: {
@@ -141,10 +128,7 @@ class NojoRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): {
-		coinInAmount: Balance;
-		error?: string;
-	} => {
+	}): Balance => {
 		const { coinOutAmount, coinInType } = inputs;
 
 		const [poolBalanceCoinIn, poolBalanceCoinOut] = this.isCoinA(coinInType)
@@ -155,10 +139,7 @@ class NojoRouterPool implements RouterPoolInterface {
 			  ];
 
 		if (coinOutAmount >= poolBalanceCoinOut)
-			return {
-				coinInAmount: Casting.u64MaxBigInt,
-				error: "coinOutAmount >= poolBalanceCoinOut",
-			};
+			throw new Error("coinOutAmount >= poolBalanceCoinOut");
 
 		const part1 = 1 - Number(coinOutAmount) / Number(poolBalanceCoinOut);
 		const part2 =
@@ -170,15 +151,9 @@ class NojoRouterPool implements RouterPoolInterface {
 
 		const coinInAmount = BigInt(Math.floor(part1 * part2 * part3));
 
-		if (coinInAmount <= 0)
-			return {
-				coinInAmount: Casting.u64MaxBigInt,
-				error: "coinInAmount <= 0",
-			};
+		if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
 
-		return {
-			coinInAmount,
-		};
+		return coinInAmount;
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {

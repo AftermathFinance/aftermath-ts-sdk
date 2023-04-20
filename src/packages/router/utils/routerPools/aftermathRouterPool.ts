@@ -52,10 +52,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): {
-		coinOutAmount: Balance;
-		error?: string;
-	} => this.poolClass.getTradeAmountOut(inputs);
+	}): Balance => this.poolClass.getTradeAmountOut(inputs);
 
 	addTradeCommandToTransaction = (inputs: {
 		provider: AftermathApi;
@@ -90,10 +87,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): {
-		coinInAmount: Balance;
-		error?: string;
-	} => this.poolClass.getTradeAmountIn(inputs);
+	}): Balance => this.poolClass.getTradeAmountIn(inputs);
 
 	getUpdatedPoolBeforeTrade = (inputs: {
 		coinIn: CoinType;
