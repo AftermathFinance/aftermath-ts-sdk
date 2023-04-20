@@ -65,7 +65,7 @@ export class Casting {
 		);
 
 	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
-		bcs.de("address", new Uint8Array(bytes));
+		"0x" + bcs.de("address", new Uint8Array(bytes));
 
 	public static u8VectorFromString = (str: string) => {
 		const textEncode = new TextEncoder();
