@@ -1,14 +1,11 @@
 import {
 	ApiRouterCompleteTradeRouteBody,
 	ApiRouterTransactionForCompleteTradeRouteBody,
-	Balance,
 	CoinType,
 	RouterCompleteTradeRoute,
-	SerializedTransaction,
 	SuiNetwork,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { TransactionBlock } from "@mysten/sui.js";
 
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -16,6 +13,9 @@ export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public static readonly constants = {
+		/**
+		 * Max fee percentage that third parties can charge on router trades
+		 */
 		maxExternalFeePercentage: 0.5, // 50%
 	};
 
@@ -23,6 +23,12 @@ export class Router extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Creates `Router` provider to call api.
+	 *
+	 * @param network - The Sui network to interact with
+	 * @returns New `Router` instance
+	 */
 	constructor(public readonly network?: SuiNetwork) {
 		super(network, "router");
 	}
@@ -35,10 +41,22 @@ export class Router extends Caller {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Queries all coins that router can trade between.
+	 *
+	 * @returns Array of supported coin types
+	 */
 	public async getSupportedCoins() {
 		return this.fetchApi<CoinType[]>("supported-coins");
 	}
 
+	/**
+	 * Creates route across multiple pools and protocols for best trade execution price
+	 *
+	 * @fix
+	 * @param abortSignal - Optional signal to abort passed to fetch call
+	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
+	 */
 	public async getCompleteTradeRouteGivenAmountIn(
 		inputs: ApiRouterCompleteTradeRouteBody,
 		abortSignal?: AbortSignal
@@ -49,7 +67,13 @@ export class Router extends Caller {
 		>("trade-route", inputs, abortSignal);
 	}
 
-	// TODO: add all of these errors to return types !
+	/**
+	 * Creates route across multiple pools and protocols for best trade execution price
+	 *
+	 * @fix
+	 * @param abortSignal - Optional signal to abort passed to fetch call
+	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
+	 */
 	public async getCompleteTradeRouteGivenAmountOut(
 		inputs: ApiRouterCompleteTradeRouteBody,
 		abortSignal?: AbortSignal
@@ -64,6 +88,12 @@ export class Router extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Creates `TranscationBlock` from previously created complete trade route
+	 *
+	 * @fix
+	 * @returns Executable `TranscationBlock` trading from `coinIn` to `coinOut`
+	 */
 	public async getTransactionForCompleteTradeRoute(
 		inputs: ApiRouterTransactionForCompleteTradeRouteBody
 	) {

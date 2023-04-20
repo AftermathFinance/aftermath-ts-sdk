@@ -18,8 +18,19 @@ export type UniqueId = string;
 //// General
 /////////////////////////////////////////////////////////////////////
 
+/**
+ * Fee info for third party packages wanting to fee route transactions
+ */
 export interface RouterExternalFee {
+	/**
+	 * Address of recipient for collected fees
+	 */
 	recipient: SuiAddress;
+	/**
+	 * Percent of fees to be collected from final coin out amount
+	 *
+	 * @remarks 0.54 = 54%
+	 */
 	feePercentage: Percentage;
 }
 
@@ -65,22 +76,49 @@ export interface RouterTradeCoin {
 //// API
 /////////////////////////////////////////////////////////////////////
 
+/**
+ * Details for router to construct trade route
+ */
 export type ApiRouterCompleteTradeRouteBody = {
+	/**
+	 * Coin type of coin being given away
+	 */
 	coinIn: CoinType;
+	/**
+	 * Coin type of coin being received
+	 */
 	coinOut: CoinType;
+	/**
+	 * Optional address for referrer of the route creator
+	 */
 	referrer?: SuiAddress;
+	/** {@fix RouterExternalFee} */
 	externalFee?: RouterExternalFee;
 } & (
 	| {
+			/**
+			 * Amount of coin being given away
+			 */
 			coinInAmount: Balance;
 	  }
 	| {
+			/**
+			 * Amount of coin expected to receive
+			 */
 			coinOutAmount: Balance;
 	  }
 );
 
+/**
+ * Info to construct router trade transaction from complete route
+ */
 export interface ApiRouterTransactionForCompleteTradeRouteBody {
+	/**
+	 * Sender address (trader)
+	 */
 	walletAddress: SuiAddress;
+	/** {@fix RouterCompleteTradeRoute} */
 	completeRoute: RouterCompleteTradeRoute;
+	/** {@fix Slippage} */
 	slippage: Slippage;
 }

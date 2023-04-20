@@ -17,6 +17,12 @@ export class Aftermath extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Creates `Aftermath` provider to call api.
+	 *
+	 * @param network - The Sui network to interact with
+	 * @returns New `Aftermath` instance
+	 */
 	constructor(network?: SuiNetwork) {
 		super(network);
 	}
