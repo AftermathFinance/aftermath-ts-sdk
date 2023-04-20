@@ -53,7 +53,6 @@ export class PoolsApiHelpers {
 			withdraw: {
 				name: "withdraw_X_coins",
 			},
-			// publish 30000
 		},
 		eventNames: {
 			swap: "SwapEvent",
@@ -233,7 +232,7 @@ export class PoolsApiHelpers {
 		poolId: ObjectId,
 		coinIds: ObjectId[] | TransactionArgument[],
 		coinTypes: CoinType[],
-		expectedLpRatio: Balance,
+		expectedLpRatio: bigint,
 		lpCoinType: CoinType,
 		slippage: Slippage,
 		referrer?: SuiAddress

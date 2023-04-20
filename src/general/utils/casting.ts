@@ -1,3 +1,4 @@
+import { SuiAddress, bcs } from "@mysten/sui.js";
 import { CapysApiCasting } from "../../packages/capys/api/capysApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
@@ -48,7 +49,7 @@ export class Casting {
 		BigInt(Math.floor(scalar * Number(int)));
 
 	/////////////////////////////////////////////////////////////////////
-	//// Misc.
+	//// Bytes
 	/////////////////////////////////////////////////////////////////////
 
 	public static stringFromBytes = (bytes: Byte[]) =>
@@ -62,6 +63,9 @@ export class Casting {
 					.map((byte) => byte.toString(16).padStart(2, "0"))
 					.join("")
 		);
+
+	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
+		bcs.de("address", new Uint8Array(bytes));
 
 	public static u8VectorFromString = (str: string) => {
 		const textEncode = new TextEncoder();

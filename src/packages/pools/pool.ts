@@ -151,7 +151,7 @@ export class Pool extends Caller {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
-		// PRODUCTION: pass referral here for router
+		// PRODUCTION: handle referral in calculation
 		referral?: boolean;
 	}): {
 		coinOutAmount: Balance;
@@ -212,7 +212,7 @@ export class Pool extends Caller {
 		coinInType: CoinType;
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
-		// PRODUCTION: pass referral here for router
+		// PRODUCTION: handle referral in calculation
 		referral?: boolean;
 	}): {
 		coinInAmount: Balance;

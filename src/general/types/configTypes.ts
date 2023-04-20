@@ -76,8 +76,15 @@ export interface CapysAddresses {
 }
 
 export interface NftAmmAddresses {
-	packages: {};
-	objects: {};
+	packages: {
+		nftAmm: SuiAddress;
+	};
+	objects: {
+		protocolFeeVault: ObjectId;
+		treasury: ObjectId;
+		insuranceFund: ObjectId;
+		referralVault: ObjectId;
+	};
 }
 
 export interface ExternalRouterAddresses {

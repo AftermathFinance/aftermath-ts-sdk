@@ -4,6 +4,7 @@ import {
 	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
+	bcs,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { PoolsApiHelpers } from "./poolsApiHelpers";
@@ -261,8 +262,8 @@ export class PoolsApi {
 
 		const bytes =
 			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
-		console.log("bytes", bytes);
-		return Casting.stringFromBytes(bytes);
+
+		return Casting.addressFromBytes(bytes);
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -285,19 +286,19 @@ export class PoolsApi {
 
 		// PRODUCTION: remove all notions of sdk from api functions !
 
-		// const tradeEventsWithinTime =
-		// 	await this.Provider.Events().fetchEventsWithinTime(
-		// 		(cursor, limit) =>
-		// 			pool.getTradeEvents({
-		// 				cursor,
-		// 				limit,
-		// 			}),
-		// 		"hour",
-		// 		24
-		// 	);
+		const tradeEventsWithinTime =
+			await this.Provider.Events().fetchEventsWithinTime(
+				(cursor, limit) =>
+					pool.getTradeEvents({
+						cursor,
+						limit,
+					}),
+				"hour",
+				24
+			);
 
 		const volume = this.Helpers.fetchCalcPoolVolume(
-			[], // tradeEventsWithinTime,
+			tradeEventsWithinTime,
 			coinsToPrice,
 			coinsToDecimals
 		);
@@ -340,31 +341,30 @@ export class PoolsApi {
 	) => {
 		// PRODUCTION: remove all notions of sdk from api functions !
 
-		// const lpCoinPoolObjectIds = await Promise.all(
-		// 	lpCoins.map((lpCoinType) =>
-		// 		provider.Pools().getPoolObjectIdForLpCoinType({ lpCoinType })
-		// 	)
-		// );
-		// const lpCoinPools = await provider
-		// 	.Pools()
-		// 	.getPools({ objectIds: lpCoinPoolObjectIds });
+		const lpCoinPoolObjectIds = await Promise.all(
+			lpCoins.map((lpCoinType) =>
+				provider.Pools().getPoolObjectIdForLpCoinType({ lpCoinType })
+			)
+		);
+		const lpCoinPools = await provider
+			.Pools()
+			.getPools({ objectIds: lpCoinPoolObjectIds });
 
-		// const poolStats = await Promise.all(
-		// 	lpCoinPools.map((lpPool) => lpPool.getStats())
-		// );
+		const poolStats = await Promise.all(
+			lpCoinPools.map((lpPool) => lpPool.getStats())
+		);
 
-		// let lpCoinsToPrice: CoinsToPrice = {};
+		let lpCoinsToPrice: CoinsToPrice = {};
 
-		// for (const [index, lpCoin] of lpCoins.entries()) {
-		// 	const stats = poolStats[index];
-		// 	lpCoinsToPrice = {
-		// 		...lpCoinsToPrice,
-		// 		[lpCoin]: stats.lpPrice,
-		// 	};
-		// }
+		for (const [index, lpCoin] of lpCoins.entries()) {
+			const stats = poolStats[index];
+			lpCoinsToPrice = {
+				...lpCoinsToPrice,
+				[lpCoin]: stats.lpPrice,
+			};
+		}
 
-		// return lpCoinsToPrice;
-		return {};
+		return lpCoinsToPrice;
 	};
 
 	/////////////////////////////////////////////////////////////////////

@@ -9,6 +9,7 @@ import {
 	Nft,
 	NftDisplayOther,
 	NftDisplaySuggested,
+	MarketObject,
 } from "../nftAmmTypes";
 import { Helpers } from "../../../general/utils";
 
@@ -20,6 +21,55 @@ export class NftAmmApiCasting {
 	/////////////////////////////////////////////////////////////////////
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
+
+	public static marketObjectFromSuiObject = (
+		suiObject: SuiObjectResponse
+	): MarketObject => {
+		const objectId = getObjectId(suiObject);
+
+		const poolFieldsOnChain = getObjectFields(
+			suiObject
+		) as PoolFieldsOnChain;
+
+		const lpCoinType = new Coin(poolFieldsOnChain.lp_supply.type)
+			.innerCoinType;
+
+		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
+			(acc, cur, index) => {
+				return {
+					...acc,
+					["0x" + cur]: {
+						weight: BigInt(poolFieldsOnChain.weights[index]),
+						balance: BigInt(poolFieldsOnChain.balances[index]),
+						tradeFeeIn: BigInt(
+							poolFieldsOnChain.fees_swap_in[index]
+						),
+						tradeFeeOut: BigInt(
+							poolFieldsOnChain.fees_swap_out[index]
+						),
+						depositFee: BigInt(
+							poolFieldsOnChain.fees_deposit[index]
+						),
+						withdrawFee: BigInt(
+							poolFieldsOnChain.fees_withdraw[index]
+						),
+					},
+				};
+			},
+			{} as PoolCoins
+		);
+
+		return {
+			objectId,
+			lpCoinType: lpCoinType,
+			name: poolFieldsOnChain.name,
+			creator: poolFieldsOnChain.creator,
+			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
+			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
+			flatness: BigInt(poolFieldsOnChain.flatness),
+			coins,
+		};
+	};
 
 	public static nftFromSuiObjectResponse = (
 		object: SuiObjectResponse
