@@ -1,7 +1,6 @@
 import { TransactionBlock } from "@mysten/sui.js";
 import {
 	ApiEventsBody,
-	CallerResult,
 	EventsWithCursor,
 	SerializedTransaction,
 	SuiNetwork,

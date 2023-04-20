@@ -16,6 +16,7 @@ import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelp
 import { Pools } from "../../pools";
 import { Casting, Helpers } from "../../../general/utils";
 import { NftAmmMarket } from "../nftAmmMarket";
+import { Coin } from "../../coin";
 
 export class NftAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -99,6 +100,61 @@ export class NftAmmApiHelpers {
 			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),
 			expectedLpRatio,
 			assetCoin,
+			withTransfer: true,
+		});
+
+		return tx;
+	};
+
+	public fetchBuildWithdrawTransaction = async (inputs: {
+		market: NftAmmMarket;
+		walletAddress: SuiAddress;
+		lpCoinAmount: Balance;
+		nftObjectIds: ObjectId[];
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const { market } = inputs;
+		const marketObject = market.market;
+		const pool = market.pool;
+
+		const lpRatio = pool.getWithdrawLpRatio({
+			lpCoinAmountOut: inputs.lpCoinAmount,
+		});
+
+		const { amountsOut, error } = pool.getWithdrawAmountsOut({
+			lpRatio,
+			amountsOutDirection: {
+				[marketObject.fractionalizedCoinType]:
+					marketObject.fractionalizedCoinAmount *
+					BigInt(inputs.nftObjectIds.length),
+			},
+			referral: inputs.referrer !== undefined,
+		});
+		if (error !== undefined) throw new Error(error);
+
+		const { balances: coinAmountsOut } =
+			Coin.coinsAndBalancesOverZero(amountsOut);
+		const expectedAssetCoinAmountOut = coinAmountsOut[0];
+
+		const { coinArgument: lpCoin, txWithCoinWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				tx,
+				inputs.walletAddress,
+				marketObject.lpCoinType,
+				inputs.lpCoinAmount
+			);
+
+		this.addWithdrawCommandToTransaction({
+			tx: txWithCoinWithAmount,
+			...inputs,
+			marketObjectId: marketObject.objectId,
+			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),
+			expectedAssetCoinAmountOut,
+			lpCoin,
 			withTransfer: true,
 		});
 

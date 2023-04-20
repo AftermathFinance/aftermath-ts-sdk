@@ -366,4 +366,8 @@ export class Pool extends Caller {
 			};
 		}
 	};
+
+	public getWithdrawLpRatio = (inputs: { lpCoinAmountOut: bigint }): number =>
+		Number(this.pool.lpCoinSupply - inputs.lpCoinAmountOut) /
+		Number(this.pool.lpCoinSupply);
 }

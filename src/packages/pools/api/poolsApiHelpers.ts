@@ -292,13 +292,6 @@ export class PoolsApiHelpers {
 				`withdraw_${poolSize}_coins`
 			),
 
-			// lpCoinAmount: 332063831n,
-			// coinTypes: [
-			//   '0xfba70806991b0054557f1a2fb4bdaf7976fceacff12eae381d3d9fa5f950e244::axlusdc::AXLUSDC',
-			//   '0xfba70806991b0054557f1a2fb4bdaf7976fceacff12eae381d3d9fa5f950e244::lzusdc::LZUSDC'
-			// ],
-			// coinAmounts: [ 1921540940n, 1921545363n ]
-
 			typeArguments: [lpCoinType, ...coinsOutType],
 			arguments: [
 				tx.object(poolId),
@@ -421,10 +414,9 @@ export class PoolsApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		// TODO: move this somewhere else and into its own func
-		const lpRatio =
-			Number(pool.pool.lpCoinSupply - lpCoinAmount) /
-			Number(pool.pool.lpCoinSupply);
+		const lpRatio = pool.getWithdrawLpRatio({
+			lpCoinAmountOut: lpCoinAmount,
+		});
 
 		const { amountsOut, error } = pool.getWithdrawAmountsOut({
 			lpRatio,
@@ -600,7 +592,7 @@ export class PoolsApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Private
+	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
