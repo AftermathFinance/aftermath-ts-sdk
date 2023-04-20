@@ -1,6 +1,7 @@
 import { ObjectId } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
-import { Nft, SuiNetwork } from "../../types";
+import { Nft, NftAmmMarketObject, SuiNetwork } from "../../types";
+import { NftAmmMarket } from "./nftAmmMarket";
 
 export class NftAmm extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -15,6 +16,33 @@ export class NftAmm extends Caller {
 
 	constructor(public readonly network?: SuiNetwork) {
 		super(network, "nft-amm");
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Class Objects
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Market Class
+	/////////////////////////////////////////////////////////////////////
+
+	public async getMarket(inputs: { objectId: ObjectId }) {
+		const market = await this.fetchApi<NftAmmMarketObject>(
+			`markets/${inputs.objectId}`
+		);
+		return new NftAmmMarket(market, this.network);
+	}
+
+	public async getMarkets(inputs: { objectIds: ObjectId[] }) {
+		const markets = await Promise.all(
+			inputs.objectIds.map((objectId) => this.getMarket({ objectId }))
+		);
+		return markets;
+	}
+
+	public async getAllMarkets() {
+		const markets = await this.fetchApi<NftAmmMarketObject[]>("markets");
+		return markets.map((pool) => new NftAmmMarket(pool, this.network));
 	}
 
 	/////////////////////////////////////////////////////////////////////
