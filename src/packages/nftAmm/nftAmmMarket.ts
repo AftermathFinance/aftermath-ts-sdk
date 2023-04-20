@@ -1,5 +1,10 @@
-import { SuiNetwork, MarketObject, ApiNftAmmDepositBody } from "../../types";
+import {
+	SuiNetwork,
+	NftAmmMarketObject,
+	ApiNftAmmDepositBody,
+} from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { Pool } from "../pools";
 
 export class NftAmmMarket extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -12,18 +17,19 @@ export class NftAmmMarket extends Caller {
 	//// Public Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	// public stats: PoolStats | undefined;
+	public pool: Pool;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
-		public readonly market: MarketObject,
+		public readonly market: NftAmmMarketObject,
 		public readonly network?: SuiNetwork
 	) {
 		super(network, `nft-amm/markets/${market.objectId}`);
 		this.market = market;
+		this.pool = new Pool(market.pool, network);
 	}
 
 	/////////////////////////////////////////////////////////////////////

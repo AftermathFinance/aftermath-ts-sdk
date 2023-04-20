@@ -104,7 +104,6 @@ export class ObjectsApiHelpers {
 
 	public fetchObjectBatch = async (
 		objectIds: ObjectId[],
-		withDisplay?: boolean,
 		options?: SuiObjectDataOptions
 	): Promise<SuiObjectResponse[]> => {
 		const objectBatch = await this.Provider.provider.multiGetObjects({
@@ -113,7 +112,6 @@ export class ObjectsApiHelpers {
 				options === undefined
 					? {
 							showContent: true,
-							showDisplay: withDisplay,
 							showOwner: true,
 							showType: true,
 					  }
@@ -133,9 +131,9 @@ export class ObjectsApiHelpers {
 	public fetchCastObjectBatch = async <ObjectType>(
 		objectIds: ObjectId[],
 		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType,
-		withDisplay?: boolean
+		options?: SuiObjectDataOptions
 	): Promise<ObjectType[]> => {
-		return (await this.fetchObjectBatch(objectIds, withDisplay)).map(
+		return (await this.fetchObjectBatch(objectIds, options)).map(
 			(SuiObjectResponse: SuiObjectResponse) => {
 				return objectFromSuiObjectResponse(SuiObjectResponse);
 			}

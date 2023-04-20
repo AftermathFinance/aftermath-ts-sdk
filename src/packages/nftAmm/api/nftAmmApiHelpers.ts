@@ -6,16 +6,14 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers";
 import {
-	AnyObjectType,
 	Balance,
 	CoinType,
 	NftAmmAddresses,
 	NftAmmInterfaceGenericTypes,
-	NftAmmInterfaceGenericTypesUnordered,
 	Slippage,
 } from "../../../types";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
-import { Pool, Pools } from "../../pools";
+import { Pools } from "../../pools";
 import { Casting } from "../../../general/utils";
 import { NftAmmMarket } from "../nftAmmMarket";
 
@@ -61,26 +59,23 @@ export class NftAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchBuildDepositTransaction = async (inputs: {
-		// PASSS MARKET HERE DIRECT INSTEAD !!
 		market: NftAmmMarket;
 		walletAddress: SuiAddress; // NOTE: is this needed ?
-		marketObjectId: ObjectId;
-		assetCoin: ObjectId | TransactionArgument;
 		assetCoinAmountIn: Balance;
 		nftObjectIds: ObjectId[];
-		expectedLpRatio: number;
 		// NOTE: should we pass market here instead ?
-		assetCoinType: CoinType;
-		nftType: AnyObjectType;
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const { lpRatio, error } = inputs.pool.getDepositLpAmountOut({
+		const { market } = inputs;
+		const marketObject = market.market;
+
+		const { lpRatio, error } = market.pool.getDepositLpAmountOut({
 			amountsIn: {
-				[inputs.assetCoinType]: inputs.assetCoinAmountIn,
+				[marketObject.assetCoinType]: inputs.assetCoinAmountIn,
 			},
 			referral: inputs.referrer !== undefined,
 		});
@@ -89,24 +84,21 @@ export class NftAmmApiHelpers {
 		// // TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
-		const { coinArgument, txWithCoinWithAmount } =
+		const { coinArgument: assetCoin, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				inputs.walletAddress,
-				inputs.assetCoinType,
+				marketObject.assetCoinType,
 				inputs.assetCoinAmountIn
 			);
 
 		this.addDepositCommandToTransaction({
 			tx: txWithCoinWithAmount,
 			...inputs,
-			genericTypes: [
-				inputs.pool.pool.lpCoinType,
-				fractionalizedCoinType,
-				inputs.assetCoinType,
-				nftType,
-			],
+			marketObjectId: marketObject.objectId,
+			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),
 			expectedLpRatio,
+			assetCoin,
 		});
 
 		return tx;
@@ -152,5 +144,26 @@ export class NftAmmApiHelpers {
 				),
 			],
 		});
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public static genericTypesForMarket = (inputs: {
+		market: NftAmmMarket;
+	}): [
+		lpCoinType: CoinType,
+		fractionalizedCoinType: CoinType,
+		assetCoinType: CoinType,
+		nftType: CoinType
+	] => {
+		const marketObject = inputs.market.market;
+		return [
+			marketObject.lpCoinType,
+			marketObject.fractionalizedCoinType,
+			marketObject.assetCoinType,
+			marketObject.nftType,
+		];
 	};
 }

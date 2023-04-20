@@ -1,11 +1,4 @@
-import {
-	EventId,
-	ObjectId,
-	SuiAddress,
-	TransactionArgument,
-	TransactionBlock,
-	bcs,
-} from "@mysten/sui.js";
+import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { PoolsApiHelpers } from "./poolsApiHelpers";
 import { CoinType, CoinsToBalance, CoinsToPrice } from "../../coin/coinTypes";
@@ -18,16 +11,13 @@ import {
 	PoolWithdrawEvent,
 	SerializedTransaction,
 	Slippage,
-	PoolObject,
 } from "../../../types";
-import { Coin } from "../../coin/coin";
 import {
 	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
-import { Pools } from "../pools";
 import { Casting } from "../../../general/utils/casting";
 import { Pool } from "..";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";

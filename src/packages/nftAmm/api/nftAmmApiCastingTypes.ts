@@ -1,17 +1,17 @@
-import { SuiAddress } from "@mysten/sui.js/dist/types";
-import { BigIntAsString, CoinType, PoolName } from "../../../types";
+import { BigIntAsString } from "../../../types";
 import {
 	SupplyOnChain,
 	TableOnChain,
 } from "../../../general/types/castingTypes";
+import { SuiObjectResponse } from "@mysten/sui.js";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
-export interface MarketFieldsOnChain {
-	nfts: TableOnChain; // NOTE: should this be object table on chain
+export interface NftAmmMarketFieldsOnChain {
+	nfts: TableOnChain; // NOTE: should this be object table on chain ?
 	supply: SupplyOnChain;
-	pool: any;
+	pool: SuiObjectResponse;
 	fractions_amount: BigIntAsString;
 }

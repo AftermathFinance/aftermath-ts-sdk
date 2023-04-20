@@ -4,6 +4,7 @@ import {
 	Balance,
 	CoinType,
 	Object,
+	PoolObject,
 	Slippage,
 	Url,
 } from "../../types";
@@ -12,11 +13,18 @@ import {
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
-export interface MarketObject extends Object {
-	nftsTableObjectId: ObjectId;
-	poolObjectId: ObjectId;
-	supply: Balance;
-	fractionsCoinAmount: Balance;
+export interface NftAmmMarketObject extends Object {
+	nftsTable: {
+		objectId: ObjectId;
+		size: bigint;
+	};
+	pool: PoolObject;
+	fractionalizedSupply: Balance;
+	fractionalizedCoinAmount: Balance;
+	fractionalizedCoinType: CoinType;
+	assetCoinType: CoinType;
+	lpCoinType: CoinType;
+	nftType: AnyObjectType;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -54,13 +62,6 @@ export type NftDisplayOther = Record<string, string>;
 /////////////////////////////////////////////////////////////////////
 //// Generic Types
 /////////////////////////////////////////////////////////////////////
-
-// export interface NftAmmInterfaceGenericTypesUnordered {
-// 	lpCoinType: CoinType;
-// 	fractionalizedCoinType: CoinType;
-// 	assetCoinType: CoinType;
-// 	nftType: AnyObjectType;
-// }
 
 export type NftAmmInterfaceGenericTypes = [
 	lpCoinType: CoinType,

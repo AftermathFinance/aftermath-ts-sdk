@@ -67,9 +67,9 @@ export class TransactionsApiHelpers {
 	};
 
 	public fetchSetGasBudgetAndSerializeTransaction = async (
-		tx: TransactionBlock
+		tx: TransactionBlock | Promise<TransactionBlock>
 	): Promise<SerializedTransaction> =>
-		(await this.fetchSetGasBudgetForTransaction(tx)).serialize();
+		(await this.fetchSetGasBudgetForTransaction(await tx)).serialize();
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Static Methods

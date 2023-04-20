@@ -46,7 +46,6 @@ export class NojoAmmApi {
 		const poolObjectIds = await this.Helpers.fetchAllPoolObjectIds();
 		const poolSuiObjects = this.Provider.Objects().fetchObjectBatch(
 			poolObjectIds,
-			false,
 			{
 				showContent: true,
 			}

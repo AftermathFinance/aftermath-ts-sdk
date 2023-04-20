@@ -2,6 +2,9 @@ import {
 	DisplayFieldsResponse,
 	SuiObjectResponse,
 	getObjectDisplay,
+	getObjectFields,
+	getObjectId,
+	getObjectType,
 } from "@mysten/sui.js";
 import {
 	NftDisplay,
@@ -9,9 +12,12 @@ import {
 	Nft,
 	NftDisplayOther,
 	NftDisplaySuggested,
-	MarketObject,
+	NftAmmMarketObject,
 } from "../nftAmmTypes";
 import { Helpers } from "../../../general/utils";
+import { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
+import { Coin } from "../../coin";
+import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
 
 export class NftAmmApiCasting {
 	/////////////////////////////////////////////////////////////////////
@@ -24,60 +30,45 @@ export class NftAmmApiCasting {
 
 	public static marketObjectFromSuiObject = (
 		suiObject: SuiObjectResponse
-	): MarketObject => {
+	): NftAmmMarketObject => {
 		const objectId = getObjectId(suiObject);
+		const marketType = getObjectType(suiObject);
+		if (!marketType) throw new Error("no type found on object");
 
-		const poolFieldsOnChain = getObjectFields(
-			suiObject
-		) as PoolFieldsOnChain;
+		const fields = getObjectFields(suiObject) as NftAmmMarketFieldsOnChain;
 
-		const lpCoinType = new Coin(poolFieldsOnChain.lp_supply.type)
+		const pool = PoolsApiCasting.poolObjectFromSuiObject(fields.pool);
+
+		const fractionalizedCoinType = new Coin(fields.supply.type)
 			.innerCoinType;
 
-		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
-			(acc, cur, index) => {
-				return {
-					...acc,
-					["0x" + cur]: {
-						weight: BigInt(poolFieldsOnChain.weights[index]),
-						balance: BigInt(poolFieldsOnChain.balances[index]),
-						tradeFeeIn: BigInt(
-							poolFieldsOnChain.fees_swap_in[index]
-						),
-						tradeFeeOut: BigInt(
-							poolFieldsOnChain.fees_swap_out[index]
-						),
-						depositFee: BigInt(
-							poolFieldsOnChain.fees_deposit[index]
-						),
-						withdrawFee: BigInt(
-							poolFieldsOnChain.fees_withdraw[index]
-						),
-					},
-				};
-			},
-			{} as PoolCoins
-		);
+		const innerMarketTypes = new Coin(marketType).innerCoinType;
+		const genericTypes = innerMarketTypes.replaceAll(" ", "").split(",");
+
+		const assetCoinType = genericTypes[2];
+		const nftType = genericTypes[3];
 
 		return {
 			objectId,
-			lpCoinType: lpCoinType,
-			name: poolFieldsOnChain.name,
-			creator: poolFieldsOnChain.creator,
-			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
-			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
-			flatness: BigInt(poolFieldsOnChain.flatness),
-			coins,
+			pool,
+			nftsTable: {
+				objectId: fields.nfts.fields.id.id,
+				size: BigInt(fields.nfts.fields.size),
+			},
+			fractionalizedSupply: BigInt(fields.supply.fields.value),
+			fractionalizedCoinAmount: BigInt(fields.fractions_amount),
+			fractionalizedCoinType,
+			assetCoinType,
+			lpCoinType: pool.lpCoinType,
+			nftType,
 		};
 	};
 
-	public static nftFromSuiObjectResponse = (
-		object: SuiObjectResponse
-	): Nft => {
-		const info = this.nftInfoFromSuiObjectResponse(object);
+	public static nftFromSuiObject = (object: SuiObjectResponse): Nft => {
+		const info = this.nftInfoFromSuiObject(object);
 
 		const displayFields = getObjectDisplay(object);
-		const display = this.nftDisplayFromDisplayFieldsResponse(displayFields);
+		const display = this.nftDisplayFromDisplayFields(displayFields);
 
 		return {
 			info,
@@ -93,7 +84,7 @@ export class NftAmmApiCasting {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	private static nftInfoFromSuiObjectResponse = (
+	private static nftInfoFromSuiObject = (
 		object: SuiObjectResponse
 	): NftInfo => {
 		if (object.error !== undefined || object.data === undefined)
@@ -109,7 +100,7 @@ export class NftAmmApiCasting {
 		};
 	};
 
-	private static nftDisplayFromDisplayFieldsResponse = (
+	private static nftDisplayFromDisplayFields = (
 		displayFields: DisplayFieldsResponse
 	): NftDisplay => {
 		const fields = displayFields.data;
