@@ -130,4 +130,15 @@ export class Helpers {
 
 	public static createUid = () =>
 		Date.now().toString(36) + Math.random().toString(36).substring(2);
+
+	/////////////////////////////////////////////////////////////////////
+	//// Type Checking
+	/////////////////////////////////////////////////////////////////////
+
+	public static isArrayOfStrings(value: unknown): value is string[] {
+		return (
+			Array.isArray(value) &&
+			value.every((item) => typeof item === "string")
+		);
+	}
 }

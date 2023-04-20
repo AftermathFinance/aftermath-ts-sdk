@@ -68,6 +68,7 @@ export class NftAmmApi {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildDepositTransaction({
 				...inputs,
+				nfts: inputs.nftObjectIds,
 			})
 		);
 	};

@@ -14,7 +14,7 @@ import {
 } from "../../../types";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 import { Pools } from "../../pools";
-import { Casting } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import { NftAmmMarket } from "../nftAmmMarket";
 
 export class NftAmmApiHelpers {
@@ -25,6 +25,7 @@ export class NftAmmApiHelpers {
 	private static readonly constants = {
 		moduleNames: {
 			interface: "interface",
+			actions: "actions",
 			market: "market",
 		},
 	};
@@ -60,10 +61,9 @@ export class NftAmmApiHelpers {
 
 	public fetchBuildDepositTransaction = async (inputs: {
 		market: NftAmmMarket;
-		walletAddress: SuiAddress; // NOTE: is this needed ?
+		walletAddress: SuiAddress;
 		assetCoinAmountIn: Balance;
-		nftObjectIds: ObjectId[];
-		// NOTE: should we pass market here instead ?
+		nfts: (ObjectId | TransactionArgument)[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
@@ -99,6 +99,7 @@ export class NftAmmApiHelpers {
 			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),
 			expectedLpRatio,
 			assetCoin,
+			withTransfer: true,
 		});
 
 		return tx;
@@ -110,20 +111,22 @@ export class NftAmmApiHelpers {
 
 	public addDepositCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
-		walletAddress: SuiAddress; // NOTE: is this needed ?
 		marketObjectId: ObjectId;
 		assetCoin: ObjectId | TransactionArgument;
-		nftObjectIds: ObjectId[];
+		nfts: (ObjectId | TransactionArgument)[];
 		expectedLpRatio: bigint;
 		genericTypes: NftAmmInterfaceGenericTypes;
 		slippage: Slippage;
+		withTransfer?: boolean;
 		referrer?: SuiAddress;
 	}) => {
-		const { tx, assetCoin, genericTypes } = inputs;
+		const { tx, assetCoin, genericTypes, nfts } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.nftAmm,
-				NftAmmApiHelpers.constants.moduleNames.interface,
+				inputs.withTransfer
+					? NftAmmApiHelpers.constants.moduleNames.interface
+					: NftAmmApiHelpers.constants.moduleNames.actions,
 				"deposit"
 			),
 			typeArguments: genericTypes,
@@ -136,6 +139,12 @@ export class NftAmmApiHelpers {
 				typeof assetCoin === "string"
 					? tx.object(assetCoin)
 					: assetCoin,
+				tx.makeMoveVec({
+					objects: Helpers.isArrayOfStrings(nfts)
+						? nfts.map((nft) => tx.object(nft))
+						: (nfts as TransactionArgument[]),
+					type: genericTypes[3],
+				}),
 				tx.pure(inputs.expectedLpRatio.toString()),
 				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
 				tx.pure(
@@ -146,11 +155,147 @@ export class NftAmmApiHelpers {
 		});
 	};
 
+	public addWithdrawCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		marketObjectId: ObjectId;
+		lpCoin: ObjectId | TransactionArgument;
+		nftObjectIds: ObjectId[];
+		expectedAssetCoinAmountOut: Balance;
+		genericTypes: NftAmmInterfaceGenericTypes;
+		slippage: Slippage;
+		withTransfer?: boolean;
+		referrer?: SuiAddress;
+	}) => {
+		const { tx, lpCoin, genericTypes, nftObjectIds } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.nftAmm,
+				inputs.withTransfer
+					? NftAmmApiHelpers.constants.moduleNames.interface
+					: NftAmmApiHelpers.constants.moduleNames.actions,
+				"withdraw"
+			),
+			typeArguments: genericTypes,
+			arguments: [
+				tx.object(inputs.marketObjectId),
+				tx.object(this.addresses.objects.protocolFeeVault),
+				tx.object(this.addresses.objects.treasury),
+				tx.object(this.addresses.objects.insuranceFund),
+				tx.object(this.addresses.objects.referralVault),
+				typeof lpCoin === "string" ? tx.object(lpCoin) : lpCoin,
+				tx.makeMoveVec({
+					objects: nftObjectIds.map((id) => tx.object(id)),
+					type: "ID",
+				}),
+				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
+				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(inputs.referrer),
+					"Option<address>"
+				),
+			],
+		});
+	};
+
+	public addBuyCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		marketObjectId: ObjectId;
+		assetCoin: ObjectId | TransactionArgument;
+		nftObjectIds: ObjectId[];
+		expectedAssetCoinAmountIn: Balance;
+		genericTypes: NftAmmInterfaceGenericTypes;
+		slippage: Slippage;
+		withTransfer?: boolean;
+		referrer?: SuiAddress;
+	}) => {
+		const { tx, assetCoin, genericTypes, nftObjectIds } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.nftAmm,
+				inputs.withTransfer
+					? NftAmmApiHelpers.constants.moduleNames.interface
+					: NftAmmApiHelpers.constants.moduleNames.actions,
+				"buy"
+			),
+			typeArguments: genericTypes,
+			arguments: [
+				tx.object(inputs.marketObjectId),
+				tx.object(this.addresses.objects.protocolFeeVault),
+				tx.object(this.addresses.objects.treasury),
+				tx.object(this.addresses.objects.insuranceFund),
+				tx.object(this.addresses.objects.referralVault),
+				typeof assetCoin === "string"
+					? tx.object(assetCoin)
+					: assetCoin,
+				tx.makeMoveVec({
+					objects: nftObjectIds.map((id) => tx.object(id)),
+					type: "ID",
+				}),
+				tx.pure(inputs.expectedAssetCoinAmountIn.toString()),
+				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(inputs.referrer),
+					"Option<address>"
+				),
+			],
+		});
+	};
+
+	public addSellCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		marketObjectId: ObjectId;
+		assetCoin: ObjectId | TransactionArgument;
+		nfts: (ObjectId | TransactionArgument)[];
+		expectedAssetCoinAmountOut: Balance;
+		genericTypes: NftAmmInterfaceGenericTypes;
+		slippage: Slippage;
+		withTransfer?: boolean;
+		referrer?: SuiAddress;
+	}) => {
+		const { tx, assetCoin, genericTypes, nfts } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.nftAmm,
+				inputs.withTransfer
+					? NftAmmApiHelpers.constants.moduleNames.interface
+					: NftAmmApiHelpers.constants.moduleNames.actions,
+				"sell"
+			),
+			typeArguments: genericTypes,
+			arguments: [
+				tx.object(inputs.marketObjectId),
+				tx.object(this.addresses.objects.protocolFeeVault),
+				tx.object(this.addresses.objects.treasury),
+				tx.object(this.addresses.objects.insuranceFund),
+				tx.object(this.addresses.objects.referralVault),
+				typeof assetCoin === "string"
+					? tx.object(assetCoin)
+					: assetCoin,
+				tx.makeMoveVec({
+					objects: Helpers.isArrayOfStrings(nfts)
+						? nfts.map((nft) => tx.object(nft))
+						: (nfts as TransactionArgument[]),
+					type: genericTypes[3],
+				}),
+				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
+				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(inputs.referrer),
+					"Option<address>"
+				),
+			],
+		});
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
 	/////////////////////////////////////////////////////////////////////
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	public static genericTypesForMarket = (inputs: {
+	private static genericTypesForMarket = (inputs: {
 		market: NftAmmMarket;
 	}): [
 		lpCoinType: CoinType,
