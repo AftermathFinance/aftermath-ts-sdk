@@ -20,6 +20,19 @@ export class Aftermath extends Caller {
 	/**
 	 * Creates `Aftermath` provider to call api.
 	 *
+	 * @example
+	 * ```
+	 * // Create new provider
+	 * const aftermath = new Aftermath("testnet");
+	 * // Create package provider
+	 * const router = aftermath.Router();
+	 * // Call sdk from package provider
+	 * const supportedCoins = await router.getSupportedCoins();
+	 *
+	 * // Or do it all in one go
+	 * const supportedCoins = await (new Aftermath("testnet")).Router().getSupportedCoins();
+	 * ```
+	 *
 	 * @param network - The Sui network to interact with
 	 * @returns New `Aftermath` instance
 	 */

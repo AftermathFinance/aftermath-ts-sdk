@@ -91,6 +91,12 @@ export class Router extends Caller {
 	/**
 	 * Creates `TranscationBlock` from previously created complete trade route
 	 *
+	 * @example
+	 * ```
+	 * const completeRoute = await router.getCompleteTradeRouteGivenAmountIn(routeDetails);
+	 * const tx = await router.getTransactionForCompleteTradeRoute(completeRoute);
+	 * ```
+	 *
 	 * @fix
 	 * @returns Executable `TranscationBlock` trading from `coinIn` to `coinOut`
 	 */
