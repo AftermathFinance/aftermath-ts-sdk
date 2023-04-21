@@ -35,9 +35,12 @@ export class NftAmmApi {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchNfts = async (objectIds: ObjectId[]): Promise<Nft[]> => {
-		const objects = await this.Provider.Objects().fetchObjectBatch(
-			objectIds,
+	public fetchNfts = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<Nft[]> => {
+		return this.Provider.Objects().fetchCastObjectBatch(
+			inputs.objectIds,
+			NftAmmApiCasting.nftFromSuiObject,
 			{
 				// NOTE: do we need all of this ?
 				showContent: true,
@@ -46,7 +49,6 @@ export class NftAmmApi {
 				showDisplay: true,
 			}
 		);
-		return objects.map(NftAmmApiCasting.nftFromSuiObject);
 	};
 
 	public fetchNftsInMarketTable = async (inputs: {
@@ -56,20 +58,29 @@ export class NftAmmApi {
 	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
 		return await this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
 			inputs.marketTableObjectId,
-			this.fetchNfts,
+			(objectIds) => this.fetchNfts({ objectIds }),
 			() => true,
 			inputs.cursor,
 			inputs.limit
 		);
 	};
 
-	public fetchMarkets = async (
-		objectIds: ObjectId[]
-	): Promise<NftAmmMarketObject[]> => {
-		const objects = await this.Provider.Objects().fetchObjectBatch(
-			objectIds
+	public fetchMarket = async (inputs: {
+		objectId: ObjectId;
+	}): Promise<NftAmmMarketObject> => {
+		return this.Provider.Objects().fetchCastObject(
+			inputs.objectId,
+			NftAmmApiCasting.marketObjectFromSuiObject
 		);
-		return objects.map(NftAmmApiCasting.marketObjectFromSuiObject);
+	};
+
+	public fetchMarkets = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<NftAmmMarketObject[]> => {
+		return this.Provider.Objects().fetchCastObjectBatch(
+			inputs.objectIds,
+			NftAmmApiCasting.marketObjectFromSuiObject
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////
