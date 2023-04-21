@@ -31,7 +31,6 @@
 	},
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
-		"@kunalabs-io/amm": "file:../sui-smart-contracts/amm/sdk",
 		"@mysten/sui.js": "^0.32.1",
 		"@pythnetwork/pyth-aptos-js": "^1.0.0",
 		"dayjs": "^1.11.7",

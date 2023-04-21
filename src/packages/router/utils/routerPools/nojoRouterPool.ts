@@ -7,9 +7,12 @@ import {
 import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
-import { Pool, PoolFields } from "@kunalabs-io/amm/src/amm/pool/structs";
+import {
+	Pool,
+	PoolFields,
+	Balance as NojoBalance,
+} from "../../../../external/nojo";
 import { AftermathApi } from "../../../../general/providers";
-import { Balance as NojoBalance } from "@kunalabs-io/amm/src/framework/balance";
 
 export type NojoPoolObject = {
 	fields: PoolFields;

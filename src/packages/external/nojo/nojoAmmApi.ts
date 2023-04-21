@@ -1,16 +1,18 @@
 import { AftermathApi } from "../../../general/providers";
-import { initLoaderIfNeeded } from "@kunalabs-io/amm/src/init";
-import { Pool } from "@kunalabs-io/amm/src/amm/pool/structs";
+import {
+	Pool,
+	swapACoin,
+	swapBCoin,
+	initLoaderIfNeeded,
+} from "../../../external/nojo";
 import {
 	ObjectId,
-	SuiParsedData,
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
 import { NojoAmmApiHelpers } from "./nojoAmmApiHelpers";
 import { CoinType } from "../../coin/coinTypes";
 import { Balance } from "../../../types";
-import { swapACoin, swapBCoin } from "@kunalabs-io/amm/src/amm/util/functions";
 import { Helpers } from "../../../general/utils";
 
 export class NojoAmmApi {

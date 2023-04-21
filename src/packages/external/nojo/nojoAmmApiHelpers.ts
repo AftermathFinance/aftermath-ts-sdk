@@ -2,11 +2,7 @@ import { ObjectId } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { NojoAddresses } from "../../../types";
-import {
-	Pool,
-	PoolFields,
-	PoolRegistry,
-} from "@kunalabs-io/amm/src/amm/pool/structs";
+import { Pool, PoolFields, PoolRegistry } from "../../../external/nojo";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import { NojoPoolObject } from "../../router/utils/routerPools/nojoRouterPool";
 
