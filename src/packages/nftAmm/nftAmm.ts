@@ -49,13 +49,13 @@ export class NftAmm extends Caller {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	// public async getNft(inputs: { objectId: ObjectId }): Promise<Nft> {
-	// 	return this.fetchApi(`nfts/${inputs.objectId}`);
-	// }
+	public async getNft(inputs: { objectId: ObjectId }): Promise<Nft> {
+		return this.fetchApi(`nfts/${inputs.objectId}`);
+	}
 
-	// public async getNfts(inputs: { objectIds: ObjectId[] }): Promise<Nft[]> {
-	// 	return Promise.all(
-	// 		inputs.objectIds.map((objectId) => this.getNft({ objectId }))
-	// 	);
-	// }
+	public async getNfts(inputs: { objectIds: ObjectId[] }): Promise<Nft[]> {
+		return Promise.all(
+			inputs.objectIds.map((objectId) => this.getNft({ objectId }))
+		);
+	}
 }

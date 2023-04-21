@@ -5,9 +5,14 @@ import {
 	Balance,
 	ApiNftAmmWithdrawBody,
 	ApiNftAmmBuyBody,
+	Nft,
+	DynamicFieldObjectsWithCursor,
+	ApiDynamicFieldsBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
+import { ObjectId } from "@mysten/sui.js";
+import { NftAmm } from "./nftAmm";
 
 export class NftAmmMarket extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -33,6 +38,17 @@ export class NftAmmMarket extends Caller {
 		super(network, `nft-amm/markets/${market.objectId}`);
 		this.market = market;
 		this.pool = new Pool(market.pool, network);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	public async getNfts(inputs: { cursor?: ObjectId; limit?: number }) {
+		return this.fetchApi<
+			DynamicFieldObjectsWithCursor<Nft>,
+			ApiDynamicFieldsBody
+		>("nfts", inputs);
 	}
 
 	/////////////////////////////////////////////////////////////////////

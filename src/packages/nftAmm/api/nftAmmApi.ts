@@ -4,7 +4,12 @@ import { NftAmmApiHelpers } from "./nftAmmApiHelpers";
 import { Nft, NftAmmMarketObject } from "../nftAmmTypes";
 import { NftAmmApiCasting } from "./nftAmmApiCasting";
 import { NftAmmMarket } from "../nftAmmMarket";
-import { Balance, SerializedTransaction, Slippage } from "../../../types";
+import {
+	Balance,
+	DynamicFieldObjectsWithCursor,
+	SerializedTransaction,
+	Slippage,
+} from "../../../types";
 
 export class NftAmmApi {
 	/////////////////////////////////////////////////////////////////////
@@ -42,6 +47,20 @@ export class NftAmmApi {
 			}
 		);
 		return objects.map(NftAmmApiCasting.nftFromSuiObject);
+	};
+
+	public fetchNftsInMarketTable = async (inputs: {
+		marketTableObjectId: ObjectId;
+		cursor?: ObjectId;
+		limit?: number;
+	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
+		return await this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
+			inputs.marketTableObjectId,
+			this.fetchNfts,
+			() => true,
+			inputs.cursor,
+			inputs.limit
+		);
 	};
 
 	public fetchMarkets = async (
