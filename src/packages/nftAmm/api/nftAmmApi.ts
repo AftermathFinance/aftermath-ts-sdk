@@ -87,6 +87,34 @@ export class NftAmmApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
+	public fetchBuyTransaction = async (inputs: {
+		market: NftAmmMarket;
+		walletAddress: SuiAddress;
+		nftObjectIds: ObjectId[];
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.fetchBuildBuyTransaction({
+				...inputs,
+			})
+		);
+	};
+
+	public fetchSellTransaction = async (inputs: {
+		market: NftAmmMarket;
+		walletAddress: SuiAddress;
+		nftObjectIds: ObjectId[];
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.fetchBuildSellTransaction({
+				...inputs,
+			})
+		);
+	};
+
 	public fetchDepositTransaction = async (inputs: {
 		walletAddress: SuiAddress;
 		market: NftAmmMarket;
@@ -113,20 +141,6 @@ export class NftAmmApi {
 	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildWithdrawTransaction({
-				...inputs,
-			})
-		);
-	};
-
-	public fetchBuyTransaction = async (inputs: {
-		market: NftAmmMarket;
-		walletAddress: SuiAddress;
-		nftObjectIds: ObjectId[];
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<SerializedTransaction> => {
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.fetchBuildBuyTransaction({
 				...inputs,
 			})
 		);
