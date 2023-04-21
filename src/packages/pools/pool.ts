@@ -1,4 +1,3 @@
-import { TransactionBlock } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -11,9 +10,7 @@ import {
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
-	SerializedTransaction,
 	ApiEventsBody,
-	EventsWithCursor,
 	PoolDepositEvent,
 	PoolWithdrawEvent,
 	PoolTradeEvent,
@@ -147,6 +144,19 @@ export class Pool extends Caller {
 	//// Calculations
 	/////////////////////////////////////////////////////////////////////
 
+	public getSpotPrice = (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		withFees?: boolean;
+	}) => {
+		return CmmmCalculations.calcSpotPriceWithFees(
+			Helpers.deepCopy(this.pool),
+			inputs.coinInType,
+			inputs.coinOutType,
+			!inputs.withFees
+		);
+	};
+
 	public getTradeAmountOut = (inputs: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
@@ -235,19 +245,6 @@ export class Pool extends Caller {
 		});
 
 		return coinInAmountWithoutFees;
-	};
-
-	public getSpotPrice = (inputs: {
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		withFees?: boolean;
-	}) => {
-		return CmmmCalculations.calcSpotPriceWithFees(
-			Helpers.deepCopy(this.pool),
-			inputs.coinInType,
-			inputs.coinOutType,
-			!inputs.withFees
-		);
 	};
 
 	public getDepositLpAmountOut = (inputs: {

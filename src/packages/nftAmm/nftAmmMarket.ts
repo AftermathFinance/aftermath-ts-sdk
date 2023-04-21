@@ -87,6 +87,38 @@ export class NftAmmMarket extends Caller {
 	//// Calculations
 	/////////////////////////////////////////////////////////////////////
 
+	public getNftSpotPriceInAssetCoin = (inputs?: {
+		withFees: boolean;
+	}): Balance => {
+		const assetToFractionalizedSpotPrice =
+			this.getAssetCoinToFractionalizeCoinSpotPrice(inputs);
+
+		return BigInt(
+			assetToFractionalizedSpotPrice *
+				Number(this.market.fractionalizedCoinAmount)
+		);
+	};
+
+	public getFractionalizedCoinToAssetCoinSpotPrice = (inputs?: {
+		withFees: boolean;
+	}): number => {
+		return this.pool.getSpotPrice({
+			coinInType: this.market.fractionalizedCoinType,
+			coinOutType: this.market.assetCoinType,
+			withFees: inputs?.withFees,
+		});
+	};
+
+	public getAssetCoinToFractionalizeCoinSpotPrice = (inputs?: {
+		withFees: boolean;
+	}): number => {
+		return this.pool.getSpotPrice({
+			coinInType: this.market.assetCoinType,
+			coinOutType: this.market.fractionalizedCoinType,
+			withFees: inputs?.withFees,
+		});
+	};
+
 	public getBuyAssetCoinAmountIn = (inputs: {
 		nftsCount: number;
 		referral?: boolean;
