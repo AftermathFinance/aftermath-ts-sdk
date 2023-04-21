@@ -74,10 +74,27 @@ export type NftAmmInterfaceGenericTypes = [
 //// API
 /////////////////////////////////////////////////////////////////////
 
+export interface ApiNftAmmBuyBody {
+	marketObjectId: ObjectId;
+	walletAddress: SuiAddress;
+	nftObjectIds: ObjectId[];
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}
+
 export interface ApiNftAmmDepositBody {
 	walletAddress: SuiAddress;
 	marketObjectId: ObjectId;
 	assetCoinAmountIn: Balance;
+	nftObjectIds: ObjectId[];
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}
+
+export interface ApiNftAmmWithdrawBody {
+	walletAddress: SuiAddress;
+	marketObjectId: ObjectId;
+	lpCoinAmount: Balance;
 	nftObjectIds: ObjectId[];
 	slippage: Slippage;
 	referrer?: SuiAddress;

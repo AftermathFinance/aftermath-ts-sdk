@@ -3,6 +3,8 @@ import {
 	NftAmmMarketObject,
 	ApiNftAmmDepositBody,
 	Balance,
+	ApiNftAmmWithdrawBody,
+	ApiNftAmmBuyBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
@@ -44,6 +46,20 @@ export class NftAmmMarket extends Caller {
 		);
 	}
 
+	public async getWithdrawTransaction(inputs: ApiNftAmmWithdrawBody) {
+		return this.fetchApiTransaction<ApiNftAmmWithdrawBody>(
+			"transactions/withdraw",
+			inputs
+		);
+	}
+
+	public async getBuyTransaction(inputs: ApiNftAmmBuyBody) {
+		return this.fetchApiTransaction<ApiNftAmmBuyBody>(
+			"transactions/buy",
+			inputs
+		);
+	}
+
 	/////////////////////////////////////////////////////////////////////
 	//// Calculations
 	/////////////////////////////////////////////////////////////////////
@@ -57,6 +73,21 @@ export class NftAmmMarket extends Caller {
 				BigInt(inputs.nftsCount) * this.market.fractionalizedCoinAmount,
 			coinInType: this.market.assetCoinType,
 			coinOutType: this.market.fractionalizedCoinType,
+			referral: inputs.referral,
+		});
+	};
+
+	public getDepositLpAmountOut = (inputs: {
+		assetCoinAmountIn: Balance;
+		referral?: boolean;
+	}): {
+		lpAmountOut: Balance;
+		lpRatio: number;
+	} => {
+		return this.pool.getDepositLpAmountOut({
+			amountsIn: {
+				[this.market.assetCoinType]: inputs.assetCoinAmountIn,
+			},
 			referral: inputs.referral,
 		});
 	};

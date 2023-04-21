@@ -74,10 +74,8 @@ export class NftAmmApiHelpers {
 		const { market } = inputs;
 		const marketObject = market.market;
 
-		const { lpRatio } = market.pool.getDepositLpAmountOut({
-			amountsIn: {
-				[marketObject.assetCoinType]: inputs.assetCoinAmountIn,
-			},
+		const { lpRatio } = market.getDepositLpAmountOut({
+			assetCoinAmountIn: inputs.assetCoinAmountIn,
 			referral: inputs.referrer !== undefined,
 		});
 
