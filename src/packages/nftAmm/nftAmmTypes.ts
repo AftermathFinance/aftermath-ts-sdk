@@ -82,6 +82,14 @@ export interface ApiNftAmmBuyBody {
 	referrer?: SuiAddress;
 }
 
+export interface ApiNftAmmSellBody {
+	marketObjectId: ObjectId;
+	walletAddress: SuiAddress;
+	nftObjectIds: ObjectId[];
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}
+
 export interface ApiNftAmmDepositBody {
 	walletAddress: SuiAddress;
 	marketObjectId: ObjectId;

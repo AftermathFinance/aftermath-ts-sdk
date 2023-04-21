@@ -1,6 +1,6 @@
 import { ObjectId } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
-import { Nft, NftAmmMarketObject, SuiNetwork } from "../../types";
+import { NftAmmMarketObject, SuiNetwork } from "../../types";
 import { NftAmmMarket } from "./nftAmmMarket";
 
 export class NftAmm extends Caller {
@@ -49,13 +49,13 @@ export class NftAmm extends Caller {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public async getNft(inputs: { objectId: ObjectId }): Promise<Nft> {
-		return this.fetchApi(`nfts/${inputs.objectId}`);
-	}
+	// public async getNft(inputs: { objectId: ObjectId }): Promise<Nft> {
+	// 	return this.fetchApi(`nfts/${inputs.objectId}`);
+	// }
 
-	public async getNfts(inputs: { objectIds: ObjectId[] }): Promise<Nft[]> {
-		return Promise.all(
-			inputs.objectIds.map((objectId) => this.getNft({ objectId }))
-		);
-	}
+	// public async getNfts(inputs: { objectIds: ObjectId[] }): Promise<Nft[]> {
+	// 	return Promise.all(
+	// 		inputs.objectIds.map((objectId) => this.getNft({ objectId }))
+	// 	);
+	// }
 }

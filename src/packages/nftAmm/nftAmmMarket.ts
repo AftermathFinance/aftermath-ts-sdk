@@ -8,11 +8,11 @@ import {
 	Nft,
 	DynamicFieldObjectsWithCursor,
 	ApiDynamicFieldsBody,
+	ApiNftAmmSellBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
 import { ObjectId } from "@mysten/sui.js";
-import { NftAmm } from "./nftAmm";
 
 export class NftAmmMarket extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -55,6 +55,20 @@ export class NftAmmMarket extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
+	public async getBuyTransaction(inputs: ApiNftAmmBuyBody) {
+		return this.fetchApiTransaction<ApiNftAmmBuyBody>(
+			"transactions/buy",
+			inputs
+		);
+	}
+
+	public async getSellTransaction(inputs: ApiNftAmmSellBody) {
+		return this.fetchApiTransaction<ApiNftAmmSellBody>(
+			"transactions/sell",
+			inputs
+		);
+	}
+
 	public async getDepositTransaction(inputs: ApiNftAmmDepositBody) {
 		return this.fetchApiTransaction<ApiNftAmmDepositBody>(
 			"transactions/deposit",
@@ -69,18 +83,11 @@ export class NftAmmMarket extends Caller {
 		);
 	}
 
-	public async getBuyTransaction(inputs: ApiNftAmmBuyBody) {
-		return this.fetchApiTransaction<ApiNftAmmBuyBody>(
-			"transactions/buy",
-			inputs
-		);
-	}
-
 	/////////////////////////////////////////////////////////////////////
 	//// Calculations
 	/////////////////////////////////////////////////////////////////////
 
-	public getBuyAmountIn = (inputs: {
+	public getBuyAssetCoinAmountIn = (inputs: {
 		nftsCount: number;
 		referral?: boolean;
 	}): Balance => {
@@ -93,7 +100,20 @@ export class NftAmmMarket extends Caller {
 		});
 	};
 
-	public getDepositLpAmountOut = (inputs: {
+	public getSellAssetCoinAmountOut = (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}): Balance => {
+		return this.pool.getTradeAmountOut({
+			coinInAmount:
+				BigInt(inputs.nftsCount) * this.market.fractionalizedCoinAmount,
+			coinInType: this.market.fractionalizedCoinType,
+			coinOutType: this.market.assetCoinType,
+			referral: inputs.referral,
+		});
+	};
+
+	public getDepositLpCoinAmountOut = (inputs: {
 		assetCoinAmountIn: Balance;
 		referral?: boolean;
 	}): {
