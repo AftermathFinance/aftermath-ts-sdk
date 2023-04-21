@@ -2,6 +2,7 @@ import {
 	SuiNetwork,
 	NftAmmMarketObject,
 	ApiNftAmmDepositBody,
+	Balance,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
@@ -42,4 +43,55 @@ export class NftAmmMarket extends Caller {
 			inputs
 		);
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Calculations
+	/////////////////////////////////////////////////////////////////////
+
+	public getBuyAmountIn = (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}): Balance => {
+		return this.pool.getTradeAmountIn({
+			coinOutAmount:
+				BigInt(inputs.nftsCount) * this.market.fractionalizedCoinAmount,
+			coinInType: this.market.assetCoinType,
+			coinOutType: this.market.fractionalizedCoinType,
+			referral: inputs.referral,
+		});
+	};
+
+	public getWithdrawFractionalizedCoinAmountOut = (inputs: {
+		// NOTE: do we need a better direction approximation here ?
+		lpCoinAmount: Balance;
+		referral?: boolean;
+	}): Balance => {
+		const lpRatio = this.pool.getWithdrawLpRatio({
+			lpCoinAmountOut: inputs.lpCoinAmount,
+		});
+
+		const amountsOut = this.pool.getWithdrawAmountsOut({
+			lpRatio,
+			amountsOutDirection: {
+				[this.market.fractionalizedCoinType]:
+					this.market.fractionalizedCoinAmount,
+			},
+			referral: inputs.referral,
+		});
+
+		const fractionalizedCoinAmountOut = amountsOut[0];
+		return fractionalizedCoinAmountOut;
+	};
+
+	public getWithdrawNftsCountOut = (inputs: {
+		lpCoinAmount: Balance;
+		referral?: boolean;
+	}): bigint => {
+		const fractionalizedCoinAmountOut =
+			this.getWithdrawFractionalizedCoinAmountOut(inputs);
+		const minNftsCountOut =
+			fractionalizedCoinAmountOut / this.market.fractionalizedCoinAmount;
+
+		return minNftsCountOut;
+	};
 }

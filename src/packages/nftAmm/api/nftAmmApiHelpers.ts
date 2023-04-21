@@ -118,24 +118,16 @@ export class NftAmmApiHelpers {
 
 		const { market } = inputs;
 		const marketObject = market.market;
-		const pool = market.pool;
 
-		const lpRatio = pool.getWithdrawLpRatio({
-			lpCoinAmountOut: inputs.lpCoinAmount,
+		const fractionalizedCoinAmountOut =
+			market.getWithdrawFractionalizedCoinAmountOut({
+				lpCoinAmount: inputs.lpCoinAmount,
+				referral: inputs.referrer !== undefined,
+			});
+
+		const { balances: coinAmountsOut } = Coin.coinsAndBalancesOverZero({
+			[marketObject.fractionalizedCoinType]: fractionalizedCoinAmountOut,
 		});
-
-		const amountsOut = pool.getWithdrawAmountsOut({
-			lpRatio,
-			amountsOutDirection: {
-				[marketObject.fractionalizedCoinType]:
-					marketObject.fractionalizedCoinAmount *
-					BigInt(inputs.nftObjectIds.length),
-			},
-			referral: inputs.referrer !== undefined,
-		});
-
-		const { balances: coinAmountsOut } =
-			Coin.coinsAndBalancesOverZero(amountsOut);
 		const expectedAssetCoinAmountOut = coinAmountsOut[0];
 
 		const { coinArgument: lpCoin, txWithCoinWithAmount } =
@@ -171,14 +163,9 @@ export class NftAmmApiHelpers {
 
 		const { market } = inputs;
 		const marketObject = market.market;
-		const pool = market.pool;
 
-		const expectedAssetCoinAmountIn = pool.getTradeAmountIn({
-			coinOutAmount:
-				BigInt(inputs.nftObjectIds.length) *
-				marketObject.fractionalizedCoinAmount,
-			coinInType: marketObject.assetCoinType,
-			coinOutType: marketObject.fractionalizedCoinType,
+		const expectedAssetCoinAmountIn = market.getBuyAmountIn({
+			nftsCount: inputs.nftObjectIds.length,
 			referral: inputs.referrer !== undefined,
 		});
 
