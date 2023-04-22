@@ -7,6 +7,17 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
+/**
+ * @class Router Provider
+ *
+ * @example
+ * ```
+ * // Create provider
+ * const router = (new Aftermath("testnet")).Router();
+ * // Call sdk
+ * const supportedCoins = await router.getSupportedCoins();
+ * ```
+ */
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
@@ -93,8 +104,13 @@ export class Router extends Caller {
 	 *
 	 * @example
 	 * ```
-	 * const completeRoute = await router.getCompleteTradeRouteGivenAmountIn(routeDetails);
-	 * const tx = await router.getTransactionForCompleteTradeRoute(completeRoute);
+	 * const route = await router.getCompleteTradeRouteGivenAmountIn(routeDetails);
+	 * const tx = await router.getTransactionForCompleteTradeRoute({
+	 * 	completeRoute: route,
+	 * 	walletAddress: "0xBEEF",
+	 * 	slippage: 0.01
+	 * });
+	 * // sign and execute tx using wallet
 	 * ```
 	 *
 	 * @param inputs - Info to construct router trade transaction from complete route

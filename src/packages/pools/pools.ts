@@ -4,7 +4,6 @@ import {
 	ApiPoolObjectIdForLpCoinTypeBody,
 	Balance,
 	CoinType,
-	EventsWithCursor,
 	PoolDepositEvent,
 	PoolObject,
 	PoolTradeEvent,
@@ -19,6 +18,17 @@ import { Coin } from "../../packages/coin/coin";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 
+/**
+ * @class Pools Provider
+ *
+ * @example
+ * ```
+ * // Create provider
+ * const pools = (new Aftermath("testnet")).Pools();
+ * // Call sdk
+ * const pool = await pools.getPool({ objectId: "0xBEEF" });
+ * ```
+ */
 export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
@@ -53,6 +63,12 @@ export class Pools extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Creates `Pools` provider to call api.
+	 *
+	 * @param network - The Sui network to interact with
+	 * @returns New `Pools` instance
+	 */
 	constructor(public readonly network?: SuiNetwork) {
 		super(network, "pools");
 	}
@@ -65,11 +81,23 @@ export class Pools extends Caller {
 	//// Pool Class
 	/////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Creates new `Pool` class from queried pool object
+	 *
+	 * @param objectId - Object id of pool to fetch
+	 * @returns New `Pool` instance
+	 */
 	public async getPool(inputs: { objectId: ObjectId }) {
 		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
 		return new Pool(pool, this.network);
 	}
 
+	/**
+	 * Creates `Pool[]` of classes from queried pool objects
+	 *
+	 * @param objectIds - Object ids of pools to fetch
+	 * @returns New `Pool[]` instances
+	 */
 	public async getPools(inputs: { objectIds: ObjectId[] }) {
 		// NOTE: should this pass array of pools directly instead (caching performance though...)
 		// could put logic for handling into api itself (prob best idea)
