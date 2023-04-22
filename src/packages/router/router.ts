@@ -53,7 +53,7 @@ export class Router extends Caller {
 	/**
 	 * Creates route across multiple pools and protocols for best trade execution price
 	 *
-	 * @fix
+	 * @param inputs - Details for router to construct trade route
 	 * @param abortSignal - Optional signal to abort passed to fetch call
 	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
 	 */
@@ -70,7 +70,7 @@ export class Router extends Caller {
 	/**
 	 * Creates route across multiple pools and protocols for best trade execution price
 	 *
-	 * @fix
+	 * @param inputs - Details for router to construct trade route
 	 * @param abortSignal - Optional signal to abort passed to fetch call
 	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
 	 */
@@ -97,7 +97,7 @@ export class Router extends Caller {
 	 * const tx = await router.getTransactionForCompleteTradeRoute(completeRoute);
 	 * ```
 	 *
-	 * @fix
+	 * @param inputs - Info to construct router trade transaction from complete route
 	 * @returns Executable `TranscationBlock` trading from `coinIn` to `coinOut`
 	 */
 	public async getTransactionForCompleteTradeRoute(

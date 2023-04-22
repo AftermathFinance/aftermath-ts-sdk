@@ -92,7 +92,9 @@ export type ApiRouterCompleteTradeRouteBody = {
 	 * Optional address for referrer of the route creator
 	 */
 	referrer?: SuiAddress;
-	/** {@fix RouterExternalFee} */
+	/**
+	 * Fee info for third party packages wanting to fee route transactions
+	 */
 	externalFee?: RouterExternalFee;
 } & (
 	| {
@@ -117,8 +119,12 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 * Sender address (trader)
 	 */
 	walletAddress: SuiAddress;
-	/** {@fix RouterCompleteTradeRoute} */
+	/**
+	 * Complete route followed by `coinIn` to get to `coinOut`
+	 */
 	completeRoute: RouterCompleteTradeRoute;
-	/** {@fix Slippage} */
+	/**
+	 * Allowable percent loss for trade
+	 */
 	slippage: Slippage;
 }
