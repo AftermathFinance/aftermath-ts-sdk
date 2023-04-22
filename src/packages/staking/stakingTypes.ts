@@ -1,6 +1,5 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -15,15 +14,15 @@ export interface StakeBalanceDynamicField {
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-export interface StakingStakeEvent extends Event {
+export interface StakeEvent extends Event {
 	suiWrapperId: ObjectId;
 }
 
-export interface StakingUnstakeEvent extends Event {
+export interface UnstakeEvent extends Event {
 	afSuiWrapperId: ObjectId;
 }
 
-export interface StakingFailedStakeEvent extends Event {
+export interface FailedStakeEvent extends Event {
 	staker: SuiAddress;
 	validatorAddress: SuiAddress;
 	epoch: bigint;
@@ -35,11 +34,11 @@ export interface StakingFailedStakeEvent extends Event {
 /////////////////////////////////////////////////////////////////////
 
 export interface StakingStats {
-	topStakers: StakingStakeEventAccumulation[];
+	topStakers: StakeEventAccumulation[];
 	stakeTvl: Balance;
 }
 
-export interface StakingStakeEventAccumulation {
+export interface StakeEventAccumulation {
 	staker: SuiAddress;
 	totalAmountStaked: Balance;
 	latestStakeTimestamp: Timestamp | undefined;

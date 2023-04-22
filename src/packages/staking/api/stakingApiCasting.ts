@@ -1,8 +1,4 @@
-import {
-	StakingFailedStakeEvent,
-	StakingStakeEvent,
-	StakingUnstakeEvent,
-} from "../../../types";
+import { FailedStakeEvent, StakeEvent, UnstakeEvent } from "../../../types";
 import {
 	StakingFailedStakeEventOnChain,
 	StakingStakeEventOnChain,
@@ -16,7 +12,7 @@ export class StakingApiCasting {
 
 	public static stakeEventFromOnChain = (
 		eventOnChain: StakingStakeEventOnChain
-	): StakingStakeEvent => {
+	): StakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			suiWrapperId: fields.sui_wrapper_id,
@@ -27,7 +23,7 @@ export class StakingApiCasting {
 
 	public static unstakeEventFromOnChain = (
 		eventOnChain: StakingUnstakeEventOnChain
-	): StakingUnstakeEvent => {
+	): UnstakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			afSuiWrapperId: fields.afsui_wrapper_id,
@@ -38,7 +34,7 @@ export class StakingApiCasting {
 
 	public static failedStakeEventFromOnChain = (
 		eventOnChain: StakingFailedStakeEventOnChain
-	): StakingFailedStakeEvent => {
+	): FailedStakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			staker: fields.staker,

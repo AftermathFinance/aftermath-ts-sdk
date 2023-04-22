@@ -8,10 +8,10 @@ import {
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
 import {
-	StakingFailedStakeEvent,
-	StakingStakeEvent,
-	StakingUnstakeEvent,
-	StakingStakeEventAccumulation,
+	FailedStakeEvent,
+	StakeEvent,
+	UnstakeEvent,
+	StakeEventAccumulation,
 } from "../stakingTypes";
 import { Helpers } from "../../../general/utils/helpers";
 import { Balance, SerializedTransaction } from "../../../types";
@@ -68,7 +68,7 @@ export class StakingApi {
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingStakeEventOnChain,
-			StakingStakeEvent
+			StakeEvent
 		>(
 			{
 				MoveEventType: this.Helpers.eventTypes.stake,
@@ -84,7 +84,7 @@ export class StakingApi {
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingUnstakeEventOnChain,
-			StakingUnstakeEvent
+			UnstakeEvent
 		>(
 			{
 				MoveEventType: this.Helpers.eventTypes.unstake,
@@ -100,7 +100,7 @@ export class StakingApi {
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakingFailedStakeEventOnChain,
-			StakingFailedStakeEvent
+			FailedStakeEvent
 		>(
 			{
 				MoveEventType: this.Helpers.eventTypes.failedStake,

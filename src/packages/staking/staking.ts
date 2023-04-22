@@ -6,9 +6,9 @@ import {
 import {
 	ApiStakingStakeBody,
 	ApiStakingUnstakeBody,
-	StakingFailedStakeEvent,
-	StakingStakeEvent,
-	StakingUnstakeEvent,
+	FailedStakeEvent,
+	StakeEvent,
+	UnstakeEvent,
 	StakingStats,
 	SuiNetwork,
 	ApiEventsBody,
@@ -64,18 +64,15 @@ export class Staking extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getStakeEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<StakingStakeEvent>("events/stake", inputs);
+		return this.fetchApiEvents<StakeEvent>("events/stake", inputs);
 	}
 
 	public async getUnstakeEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<StakingUnstakeEvent>(
-			"events/unstake",
-			inputs
-		);
+		return this.fetchApiEvents<UnstakeEvent>("events/unstake", inputs);
 	}
 
 	public async getFailedStakeEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<StakingFailedStakeEvent>(
+		return this.fetchApiEvents<FailedStakeEvent>(
 			"events/failed-stake",
 			inputs
 		);
