@@ -8,17 +8,17 @@ import {
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
 import {
-	StakeCancelDelegationRequestEvent,
-	StakeRequestAddDelegationEvent,
-	StakeRequestWithdrawDelegationEvent,
-	StakeStakeEventAccumulation,
+	StakingFailedStakeEvent,
+	StakingStakeEvent,
+	StakingUnstakeEvent,
+	StakingStakeEventAccumulation,
 } from "../stakingTypes";
 import { Helpers } from "../../../general/utils/helpers";
 import { Balance, SerializedTransaction } from "../../../types";
 import {
-	StakingCancelDelegationRequestEventOnChain,
-	StakingRequestAddDelegationEventOnChain,
-	StakingRequestWithdrawDelegationEventOnChain,
+	StakingFailedStakeEventOnChain,
+	StakingStakeEventOnChain,
+	StakingUnstakeEventOnChain,
 } from "./stakingApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
 
@@ -62,105 +62,78 @@ export class StakingApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestAddDelegationEvents = async (
-		cursor?: EventId,
-		limit?: number
-	) =>
+	public fetchStakeEvents = async (inputs: {
+		cursor?: EventId;
+		limit?: number;
+	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakingRequestAddDelegationEventOnChain,
-			StakeRequestAddDelegationEvent
+			StakingStakeEventOnChain,
+			StakingStakeEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.requestAddDelegation,
+				MoveEventType: this.Helpers.eventTypes.stake,
 			},
-			Casting.staking.requestAddDelegationEventFromOnChain,
-			cursor,
-			limit
+			Casting.staking.stakeEventFromOnChain,
+			inputs.cursor,
+			inputs.limit
 		);
 
-	public fetchRequestWithdrawDelegationEvents = async (
-		cursor?: EventId,
-		limit?: number
-	) =>
+	public fetchUnstakeEvents = async (inputs: {
+		cursor?: EventId;
+		limit?: number;
+	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakingRequestWithdrawDelegationEventOnChain,
-			StakeRequestWithdrawDelegationEvent
+			StakingUnstakeEventOnChain,
+			StakingUnstakeEvent
 		>(
 			{
-				MoveEventType:
-					this.Helpers.eventTypes.requestWithdrawDelegation,
+				MoveEventType: this.Helpers.eventTypes.unstake,
 			},
-			Casting.staking.requestWithdrawDelegationEventFromOnChain,
-			cursor,
-			limit
+			Casting.staking.unstakeEventFromOnChain,
+			inputs.cursor,
+			inputs.limit
 		);
 
-	public fetchCancelDelegationRequestEvents = async (
-		cursor?: EventId,
-		limit?: number
-	) =>
+	public fetchFailedStakeEvents = async (inputs: {
+		cursor?: EventId;
+		limit?: number;
+	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakingCancelDelegationRequestEventOnChain,
-			StakeCancelDelegationRequestEvent
+			StakingFailedStakeEventOnChain,
+			StakingFailedStakeEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.cancelDelegationRequest,
+				MoveEventType: this.Helpers.eventTypes.failedStake,
 			},
-			Casting.staking.cancelDelegationRequestEventFromOnChain,
-			cursor,
-			limit
+			Casting.staking.failedStakeEventFromOnChain,
+			inputs.cursor,
+			inputs.limit
 		);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestAddDelegationTransaction = async (
-		walletAddress: SuiAddress,
-		amount: Balance,
-		validator: SuiAddress
-	): Promise<SerializedTransaction> => {
-		const tx = await this.Helpers.fetchBuildRequestAddDelegationTransaction(
-			walletAddress,
-			amount,
-			validator
-		);
+	public fetchStakeTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		suiStakeAmount: Balance;
+		validatorAddress: SuiAddress;
+	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			tx
+			this.Helpers.fetchBuildStakeTransaction({
+				...inputs,
+			})
 		);
 	};
 
-	public fetchRequestWithdrawDelegationTransaction = async (
-		walletAddress: SuiAddress,
-		amount: Balance,
-		stakedSui: ObjectId,
-		delegation: ObjectId
-	): Promise<SerializedTransaction> => {
-		const tx =
-			await this.Helpers.fetchBuildCancelOrRequestWithdrawDelegationTransaction(
-				walletAddress,
-				amount,
-				stakedSui,
-				delegation
-			);
+	public fetchUnstakeTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		afSuiUnstakeAmount: Balance;
+	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			tx
-		);
-	};
-
-	public fetchCancelDelegationRequestTransaction = async (
-		walletAddress: SuiAddress,
-		amount: Balance,
-		stakedSui: ObjectId
-	): Promise<SerializedTransaction> => {
-		const tx =
-			await this.Helpers.fetchBuildCancelOrRequestWithdrawDelegationTransaction(
-				walletAddress,
-				amount,
-				stakedSui
-			);
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			tx
+			this.Helpers.fetchBuildUnstakeTransaction({
+				...inputs,
+			})
 		);
 	};
 
@@ -168,91 +141,92 @@ export class StakingApi {
 	//// Stats
 	/////////////////////////////////////////////////////////////////////
 
-	// TODO: fetch top stakers and tvl in this single function ? (no need to calc TVL twice)
-	public fetchTopStakers = async () => {
-		let stakersAccumulation: Record<
-			SuiAddress,
-			StakeStakeEventAccumulation
-		> = {};
+	// TODO: calc some stats such as tvl, etc.
 
-		// TODO: should keep fetching stakes until there are none left - is this the same as undefined limit ?
-		const stakesWithCursor = await this.fetchRequestAddDelegationEvents();
-		const stakes = stakesWithCursor.events;
+	// // TODO: fetch top stakers and tvl in this single function ? (no need to calc TVL twice)
+	// public fetchTopStakers = async () => {
+	// 	let stakersAccumulation: Record<
+	// 		SuiAddress,
+	// 		StakingStakeEventAccumulation
+	// 	> = {};
 
-		for (const stake of stakes) {
-			if (stake.issuer in stakersAccumulation) {
-				const stakerAccumulation = stakersAccumulation[stake.issuer];
+	// 	// TODO: should keep fetching stakes until there are none left - is this the same as undefined limit ?
+	// 	const stakesWithCursor = await this.fetchStakeEvents();
+	// 	const stakes = stakesWithCursor.events;
 
-				const totalAmountStaked =
-					stakerAccumulation.totalAmountStaked + stake.amount;
+	// 	for (const stake of stakes) {
+	// 		if (stake.issuer in stakersAccumulation) {
+	// 			const stakerAccumulation = stakersAccumulation[stake.issuer];
 
-				if (!stake.timestamp) continue;
+	// 			const totalAmountStaked =
+	// 				stakerAccumulation.totalAmountStaked + stake.amount;
 
-				const curLatestStakeTimestamp =
-					stakerAccumulation.latestStakeTimestamp ?? 0;
-				const latestStakeTimestamp =
-					stake.timestamp > curLatestStakeTimestamp
-						? stake.timestamp
-						: curLatestStakeTimestamp;
+	// 			if (!stake.timestamp) continue;
 
-				const curFirstStakeTimestamp =
-					stakerAccumulation.firstStakeTimestamp ?? 0;
-				const firstStakeTimestamp =
-					stake.timestamp < curFirstStakeTimestamp
-						? stake.timestamp
-						: curFirstStakeTimestamp;
+	// 			const curLatestStakeTimestamp =
+	// 				stakerAccumulation.latestStakeTimestamp ?? 0;
+	// 			const latestStakeTimestamp =
+	// 				stake.timestamp > curLatestStakeTimestamp
+	// 					? stake.timestamp
+	// 					: curLatestStakeTimestamp;
 
-				const curLargestStake = stakerAccumulation.largestStake;
-				const largestStake =
-					stake.amount > curLargestStake
-						? stake.amount
-						: curLargestStake;
+	// 			const curFirstStakeTimestamp =
+	// 				stakerAccumulation.firstStakeTimestamp ?? 0;
+	// 			const firstStakeTimestamp =
+	// 				stake.timestamp < curFirstStakeTimestamp
+	// 					? stake.timestamp
+	// 					: curFirstStakeTimestamp;
 
-				stakersAccumulation[stake.issuer] = {
-					...stakerAccumulation,
-					totalAmountStaked,
-					latestStakeTimestamp,
-					firstStakeTimestamp,
-					largestStake,
-				};
-			} else {
-				stakersAccumulation[stake.issuer] = {
-					staker: stake.issuer,
-					totalAmountStaked: stake.amount,
-					latestStakeTimestamp: stake.timestamp,
-					firstStakeTimestamp: stake.timestamp,
-					largestStake: stake.amount,
-				};
-			}
-		}
+	// 			const curLargestStake = stakerAccumulation.largestStake;
+	// 			const largestStake =
+	// 				stake.amount > curLargestStake
+	// 					? stake.amount
+	// 					: curLargestStake;
 
-		// TODO: move this to promise.all above ? (can do this fetching async)
-		const unstakesWithCursor =
-			await this.fetchRequestWithdrawDelegationEvents();
-		const unstakes = unstakesWithCursor.events;
+	// 			stakersAccumulation[stake.issuer] = {
+	// 				...stakerAccumulation,
+	// 				totalAmountStaked,
+	// 				latestStakeTimestamp,
+	// 				firstStakeTimestamp,
+	// 				largestStake,
+	// 			};
+	// 		} else {
+	// 			stakersAccumulation[stake.issuer] = {
+	// 				staker: stake.issuer,
+	// 				totalAmountStaked: stake.amount,
+	// 				latestStakeTimestamp: stake.timestamp,
+	// 				firstStakeTimestamp: stake.timestamp,
+	// 				largestStake: stake.amount,
+	// 			};
+	// 		}
+	// 	}
 
-		for (const unstake of unstakes) {
-			if (!(unstake.issuer in stakersAccumulation)) continue;
+	// 	// TODO: move this to promise.all above ? (can do this fetching async)
+	// 	const unstakesWithCursor = await this.fetchUnstakeEvents();
+	// 	const unstakes = unstakesWithCursor.events;
 
-			const stakerAccumulation = stakersAccumulation[unstake.issuer];
-			const totalAmountStaked =
-				stakerAccumulation.totalAmountStaked - unstake.amount;
+	// 	for (const unstake of unstakes) {
+	// 		if (!(unstake.issuer in stakersAccumulation)) continue;
 
-			stakersAccumulation[unstake.issuer] = {
-				...stakerAccumulation,
-				totalAmountStaked,
-			};
-		}
+	// 		const stakerAccumulation = stakersAccumulation[unstake.issuer];
+	// 		const totalAmountStaked =
+	// 			stakerAccumulation.totalAmountStaked - unstake.amount;
 
-		const topStakers = Object.values(stakersAccumulation).sort((a, b) =>
-			Number(b.totalAmountStaked - a.totalAmountStaked)
-		);
-		const stakeTvl = Helpers.sumBigInt(
-			topStakers.map((staker) => staker.totalAmountStaked)
-		);
-		return {
-			topStakers,
-			stakeTvl,
-		};
-	};
+	// 		stakersAccumulation[unstake.issuer] = {
+	// 			...stakerAccumulation,
+	// 			totalAmountStaked,
+	// 		};
+	// 	}
+
+	// 	const topStakers = Object.values(stakersAccumulation).sort((a, b) =>
+	// 		Number(b.totalAmountStaked - a.totalAmountStaked)
+	// 	);
+	// 	const stakeTvl = Helpers.sumBigInt(
+	// 		topStakers.map((staker) => staker.totalAmountStaked)
+	// 	);
+	// 	return {
+	// 		topStakers,
+	// 		stakeTvl,
+	// 	};
+	// };
 }

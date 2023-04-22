@@ -15,22 +15,19 @@ export interface StakeBalanceDynamicField {
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-export interface StakeRequestAddDelegationEvent extends Event {
-	issuer: SuiAddress;
-	amount: Balance;
-	validator: SuiAddress;
+export interface StakingStakeEvent extends Event {
+	suiWrapperId: ObjectId;
 }
 
-export interface StakeRequestWithdrawDelegationEvent extends Event {
-	issuer: SuiAddress;
-	amount: Balance;
-	validator: SuiAddress;
+export interface StakingUnstakeEvent extends Event {
+	afSuiWrapperId: ObjectId;
 }
 
-export interface StakeCancelDelegationRequestEvent extends Event {
-	issuer: SuiAddress;
-	amount: Balance;
-	validator: SuiAddress;
+export interface StakingFailedStakeEvent extends Event {
+	staker: SuiAddress;
+	validatorAddress: SuiAddress;
+	epoch: bigint;
+	stakedSuiAmount: Balance;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -38,11 +35,11 @@ export interface StakeCancelDelegationRequestEvent extends Event {
 /////////////////////////////////////////////////////////////////////
 
 export interface StakingStats {
-	topStakers: StakeStakeEventAccumulation[];
+	topStakers: StakingStakeEventAccumulation[];
 	stakeTvl: Balance;
 }
 
-export interface StakeStakeEventAccumulation {
+export interface StakingStakeEventAccumulation {
 	staker: SuiAddress;
 	totalAmountStaked: Balance;
 	latestStakeTimestamp: Timestamp | undefined;
@@ -54,33 +51,13 @@ export interface StakeStakeEventAccumulation {
 //// API
 /////////////////////////////////////////////////////////////////////
 
-export interface ApiStakeBody {
+export interface ApiStakingStakeBody {
 	walletAddress: SuiAddress;
-	coinAmount: Balance;
-	stakedCoinType: CoinType;
-}
-
-export interface ApiUnstakeBody {
-	walletAddress: SuiAddress;
-	coinAmount: Balance;
-	unstakedCoinType: CoinType;
-}
-
-export interface ApiRequestAddDelegationBody {
-	walletAddress: SuiAddress;
-	coinAmount: Balance;
+	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
 }
 
-export interface ApiRequestWithdrawDelegationBody {
+export interface ApiStakingUnstakeBody {
 	walletAddress: SuiAddress;
-	principalAmount: Balance;
-	stakedSuiObjectId: ObjectId;
-	delegationObjectId: ObjectId;
-}
-
-export interface ApiCancelDelegationRequestBody {
-	walletAddress: SuiAddress;
-	principalAmount: Balance;
-	stakedSuiObjectId: ObjectId;
+	afSuiUnstakeAmount: Balance;
 }

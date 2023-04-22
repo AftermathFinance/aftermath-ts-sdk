@@ -43,6 +43,9 @@ export interface StakingAddresses {
 	packages: {
 		liquidStakingDerivative: SuiAddress;
 	};
+	objects: {
+		staking: ObjectId;
+	};
 }
 
 export interface PoolsAddresses {

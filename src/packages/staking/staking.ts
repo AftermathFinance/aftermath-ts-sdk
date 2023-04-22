@@ -1,24 +1,17 @@
 import {
-	EventId,
-	TransactionBlock,
 	SuiAddress,
 	DelegatedStake,
 	SuiValidatorSummary,
-	StakeObject,
 } from "@mysten/sui.js";
 import {
-	ApiCancelDelegationRequestBody,
-	ApiEventsBody,
-	ApiRequestAddDelegationBody,
-	ApiRequestWithdrawDelegationBody,
-	Balance,
-	EventsWithCursor,
-	SerializedTransaction,
-	StakeCancelDelegationRequestEvent,
-	StakeRequestAddDelegationEvent,
-	StakeRequestWithdrawDelegationEvent,
+	ApiStakingStakeBody,
+	ApiStakingUnstakeBody,
+	StakingFailedStakeEvent,
+	StakingStakeEvent,
+	StakingUnstakeEvent,
 	StakingStats,
 	SuiNetwork,
+	ApiEventsBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -70,33 +63,21 @@ export class Staking extends Caller {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async getAddStakeEvents(cursor?: EventId, limit?: number) {
-		return this.fetchApiEvents<StakeRequestAddDelegationEvent>(
-			"events/add-stake",
-			{
-				cursor,
-				limit,
-			}
+	public async getStakeEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<StakingStakeEvent>("events/stake", inputs);
+	}
+
+	public async getUnstakeEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<StakingUnstakeEvent>(
+			"events/unstake",
+			inputs
 		);
 	}
 
-	public async getWithdrawStakeEvents(cursor?: EventId, limit?: number) {
-		return this.fetchApiEvents<StakeRequestWithdrawDelegationEvent>(
-			"events/withdraw-stake",
-			{
-				cursor,
-				limit,
-			}
-		);
-	}
-
-	public async getCancelStakeEvents(cursor?: EventId, limit?: number) {
-		return this.fetchApiEvents<StakeCancelDelegationRequestEvent>(
-			"events/cancel-stake",
-			{
-				cursor,
-				limit,
-			}
+	public async getFailedStakeEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<StakingFailedStakeEvent>(
+			"events/failed-stake",
+			inputs
 		);
 	}
 
@@ -104,57 +85,17 @@ export class Staking extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getRequestAddDelegationTransaction(
-		walletAddress: SuiAddress,
-		validatorAddress: SuiAddress,
-		coinAmount: Balance
-	) {
-		return this.fetchApiTransaction<ApiRequestAddDelegationBody>(
-			"transactions/request-add-delegation",
-			{
-				walletAddress,
-				validatorAddress,
-				coinAmount,
-			}
+	public async getStakeTransaction(inputs: ApiStakingStakeBody) {
+		return this.fetchApiTransaction<ApiStakingStakeBody>(
+			"transactions/stake",
+			inputs
 		);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
-
-	public async getRequestWithdrawTransaction(
-		walletAddress: SuiAddress,
-		stake: StakeObject
-	) {
-		if (stake.status === "Pending")
-			throw new Error(
-				"stake unable to withdraw, current status is pending"
-			);
-
-		return this.fetchApiTransaction<ApiRequestWithdrawDelegationBody>(
-			"transactions/request-withdraw-delegation",
-			{
-				walletAddress: walletAddress,
-				principalAmount: BigInt(stake.principal),
-				stakedSuiObjectId: stake.stakedSuiId,
-				// PRODUCTION: find out what should really be here for delegationObjectId
-				delegationObjectId: "undefined",
-			}
-		);
-	}
-
-	public async getCancelRequestTransaction(
-		walletAddress: SuiAddress,
-		stake: StakeObject
-	) {
-		return this.fetchApiTransaction<ApiCancelDelegationRequestBody>(
-			"transactions/cancel-delegation-request",
-			{
-				walletAddress: walletAddress,
-				principalAmount: BigInt(stake.principal),
-				stakedSuiObjectId: stake.stakedSuiId,
-			}
+	public async getUnstakeTransaction(inputs: ApiStakingUnstakeBody) {
+		return this.fetchApiTransaction<ApiStakingUnstakeBody>(
+			"transactions/unstake",
+			inputs
 		);
 	}
 }

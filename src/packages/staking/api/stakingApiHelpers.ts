@@ -6,14 +6,8 @@ import {
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	AnyObjectType,
-	Balance,
-	GasBudget,
-	StakingAddresses,
-} from "../../../types";
+import { AnyObjectType, Balance, StakingAddresses } from "../../../types";
 import { Coin } from "../../coin/coin";
-import { Sui } from "../../sui/sui";
 
 export class StakingApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -22,25 +16,12 @@ export class StakingApiHelpers {
 
 	private static readonly constants = {
 		modules: {
-			interface: {
-				moduleName: "interface",
-				functions: {
-					requestAddDelegation: {
-						name: "request_add_delegation",
-					},
-					requestWithdrawDelegation: {
-						name: "request_withdraw_delegation",
-					},
-					cancelDelegationRequest: {
-						name: "cancel_delegation_request",
-					},
-				},
-			},
+			interface: "interface",
 		},
 		eventNames: {
-			requestAddDelegation: "RequestAddDelegationEvent",
-			requestWithdrawDelegation: "RequestWithdrawDelegationEvent",
-			cancelDelegationRequest: "CancelDelegationRequestEvent",
+			stake: "StakeWasRequestedEvent",
+			unstake: "WithdrawWasRequestedEvent",
+			failedStake: "StakeWasFailedSUIReturnedEvent",
 		},
 	};
 
@@ -50,9 +31,9 @@ export class StakingApiHelpers {
 
 	public readonly addresses: StakingAddresses;
 	public readonly eventTypes: {
-		requestAddDelegation: AnyObjectType;
-		requestWithdrawDelegation: AnyObjectType;
-		cancelDelegationRequest: AnyObjectType;
+		stake: AnyObjectType;
+		unstake: AnyObjectType;
+		failedStake: AnyObjectType;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -70,11 +51,9 @@ export class StakingApiHelpers {
 		this.addresses = addresses;
 
 		this.eventTypes = {
-			requestAddDelegation: this.stakeRequestAddDelegationEventType(),
-			requestWithdrawDelegation:
-				this.stakeRequestWithdrawDelegationEventType(),
-			cancelDelegationRequest:
-				this.stakeCancelDelegationRequestEventType(),
+			stake: this.stakeEventType(),
+			unstake: this.unstakeEventType(),
+			failedStake: this.failedStakeEventType(),
 		};
 	}
 
@@ -86,144 +65,99 @@ export class StakingApiHelpers {
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	public addRequestAddDelegationCommandToTransaction = (
-		tx: TransactionBlock,
-		coinId: ObjectId | TransactionArgument,
-		validator: SuiAddress
-	): TransactionBlock => {
-		tx.add({
-			kind: "MoveCall",
+	public addStakeCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		suiCoin: ObjectId | TransactionArgument;
+		validatorAddress: SuiAddress;
+	}) => {
+		const { tx, suiCoin } = inputs;
+		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.liquidStakingDerivative,
-				StakingApiHelpers.constants.modules.interface.moduleName,
-				StakingApiHelpers.constants.modules.interface.functions
-					.requestAddDelegation.name
+				StakingApiHelpers.constants.modules.interface,
+				"request_add_stake"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(Sui.constants.addresses.suiSystemStateId),
-				tx.object(
-					this.Provider.Faucet().Helpers.addresses.objects.faucet
-				),
-				typeof coinId === "string" ? tx.object(coinId) : coinId,
-				tx.object(validator),
+				tx.object(this.addresses.objects.staking),
+				typeof suiCoin === "string" ? tx.object(suiCoin) : suiCoin,
+				tx.pure(inputs.validatorAddress, "address"),
 			],
 		});
-
-		return tx;
 	};
 
-	public addRequestWithdrawDelegationCommandToTransaction = (
-		tx: TransactionBlock,
-		stakedSui: ObjectId,
-		delegation: ObjectId,
-		afSui: ObjectId | TransactionArgument
-	): TransactionBlock => {
-		tx.add({
-			kind: "MoveCall",
+	public addUnstakeCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		afSuiCoin: ObjectId | TransactionArgument;
+	}) => {
+		const { tx, afSuiCoin } = inputs;
+		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.packages.liquidStakingDerivative,
-				StakingApiHelpers.constants.modules.interface.moduleName,
-				StakingApiHelpers.constants.modules.interface.functions
-					.requestWithdrawDelegation.name
+				StakingApiHelpers.constants.modules.interface,
+				"request_unstake"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(Sui.constants.addresses.suiSystemStateId),
-				tx.object(
-					this.Provider.Faucet().Helpers.addresses.objects.faucet
-				),
-				tx.object(delegation),
-				tx.object(stakedSui),
-				typeof afSui === "string" ? tx.object(afSui) : afSui,
+				tx.object(this.addresses.objects.staking),
+				typeof afSuiCoin === "string"
+					? tx.object(afSuiCoin)
+					: afSuiCoin,
 			],
 		});
-
-		return tx;
-	};
-
-	public addCancelDelegationRequestCommandToTransaction = (
-		tx: TransactionBlock,
-		stakedSui: ObjectId,
-		afSui: ObjectId | TransactionArgument
-	): TransactionBlock => {
-		tx.add({
-			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.packages.liquidStakingDerivative,
-				StakingApiHelpers.constants.modules.interface.moduleName,
-				StakingApiHelpers.constants.modules.interface.functions
-					.cancelDelegationRequest.name
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(Sui.constants.addresses.suiSystemStateId),
-				tx.object(
-					this.Provider.Faucet().Helpers.addresses.objects.faucet
-				),
-				tx.object(stakedSui),
-				typeof afSui === "string" ? tx.object(afSui) : afSui,
-			],
-		});
-
-		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchBuildRequestAddDelegationTransaction = async (
-		walletAddress: SuiAddress,
-		amount: Balance,
-		validator: SuiAddress
-	): Promise<TransactionBlock> => {
+	public fetchBuildStakeTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		suiStakeAmount: Balance;
+		validatorAddress: SuiAddress;
+	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
 
-		const { coinArgument, txWithCoinWithAmount } =
+		const { coinArgument: suiCoin, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
-				walletAddress,
+				inputs.walletAddress,
 				Coin.constants.suiCoinType,
-				amount
+				inputs.suiStakeAmount
 			);
 
-		return this.addRequestAddDelegationCommandToTransaction(
-			txWithCoinWithAmount,
-			coinArgument,
-			validator
-		);
+		this.addStakeCommandToTransaction({
+			tx: txWithCoinWithAmount,
+			...inputs,
+			suiCoin,
+		});
+
+		return tx;
 	};
 
-	public fetchBuildCancelOrRequestWithdrawDelegationTransaction = async (
-		walletAddress: SuiAddress,
-		amount: Balance,
-		stakedSui: ObjectId,
-		delegation?: ObjectId
-	): Promise<TransactionBlock> => {
+	public fetchBuildUnstakeTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		afSuiUnstakeAmount: Balance;
+	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
 
-		const { coinArgument, txWithCoinWithAmount } =
+		const { coinArgument: afSuiCoin, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
-				walletAddress,
-				this.Provider.Faucet().Helpers.coinTypes.afSui,
-				amount
+				inputs.walletAddress,
+				Coin.constants.suiCoinType,
+				inputs.afSuiUnstakeAmount
 			);
 
-		if (delegation === undefined)
-			return this.addCancelDelegationRequestCommandToTransaction(
-				txWithCoinWithAmount,
-				stakedSui,
-				coinArgument
-			);
+		this.addUnstakeCommandToTransaction({
+			tx: txWithCoinWithAmount,
+			...inputs,
+			afSuiCoin,
+		});
 
-		return this.addRequestWithdrawDelegationCommandToTransaction(
-			txWithCoinWithAmount,
-			stakedSui,
-			delegation,
-			coinArgument
-		);
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -234,24 +168,24 @@ export class StakingApiHelpers {
 	//// Event Types
 	/////////////////////////////////////////////////////////////////////
 
-	private stakeRequestAddDelegationEventType = () =>
+	private stakeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface.moduleName,
-			StakingApiHelpers.constants.eventNames.requestAddDelegation
+			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.eventNames.stake
 		);
 
-	private stakeRequestWithdrawDelegationEventType = () =>
+	private unstakeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface.moduleName,
-			StakingApiHelpers.constants.eventNames.requestWithdrawDelegation
+			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.eventNames.unstake
 		);
 
-	private stakeCancelDelegationRequestEventType = () =>
+	private failedStakeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface.moduleName,
-			StakingApiHelpers.constants.eventNames.cancelDelegationRequest
+			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.eventNames.failedStake
 		);
 }

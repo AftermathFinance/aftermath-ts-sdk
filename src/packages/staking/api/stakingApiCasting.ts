@@ -1,68 +1,50 @@
 import {
-	StakeBalanceDynamicField,
-	StakeCancelDelegationRequestEvent,
-	StakeRequestAddDelegationEvent,
-	StakeRequestWithdrawDelegationEvent,
+	StakingFailedStakeEvent,
+	StakingStakeEvent,
+	StakingUnstakeEvent,
 } from "../../../types";
 import {
-	StakeBalanceDynamicFieldOnChain,
-	StakingCancelDelegationRequestEventOnChain,
-	StakingRequestAddDelegationEventOnChain,
-	StakingRequestWithdrawDelegationEventOnChain,
+	StakingFailedStakeEventOnChain,
+	StakingStakeEventOnChain,
+	StakingUnstakeEventOnChain,
 } from "./stakingApiCastingTypes";
 
 export class StakingApiCasting {
 	/////////////////////////////////////////////////////////////////////
-	//// Dynamic Fields
-	/////////////////////////////////////////////////////////////////////
-
-	public static stakeBalanceDynamicFieldFromOnChain = (
-		dataOnChain: StakeBalanceDynamicFieldOnChain
-	) => {
-		return {
-			objectId: dataOnChain.fields.id.id,
-			value: BigInt(dataOnChain.fields.value),
-		} as StakeBalanceDynamicField;
-	};
-
-	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public static requestAddDelegationEventFromOnChain = (
-		eventOnChain: StakingRequestAddDelegationEventOnChain
-	): StakeRequestAddDelegationEvent => {
+	public static stakeEventFromOnChain = (
+		eventOnChain: StakingStakeEventOnChain
+	): StakingStakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			issuer: fields.issuer,
-			amount: BigInt(fields.amount),
-			validator: fields.validator,
+			suiWrapperId: fields.sui_wrapper_id,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
-	public static requestWithdrawDelegationEventFromOnChain = (
-		eventOnChain: StakingRequestWithdrawDelegationEventOnChain
-	): StakeRequestWithdrawDelegationEvent => {
+	public static unstakeEventFromOnChain = (
+		eventOnChain: StakingUnstakeEventOnChain
+	): StakingUnstakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			issuer: fields.issuer,
-			amount: BigInt(fields.amount),
-			validator: fields.validator,
+			afSuiWrapperId: fields.afsui_wrapper_id,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
-	public static cancelDelegationRequestEventFromOnChain = (
-		eventOnChain: StakingCancelDelegationRequestEventOnChain
-	): StakeCancelDelegationRequestEvent => {
+	public static failedStakeEventFromOnChain = (
+		eventOnChain: StakingFailedStakeEventOnChain
+	): StakingFailedStakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			issuer: fields.issuer,
-			amount: BigInt(fields.amount),
-			validator: fields.validator,
+			staker: fields.staker,
+			validatorAddress: fields.validator,
+			epoch: BigInt(fields.epoch),
+			stakedSuiAmount: BigInt(fields.amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 		};
