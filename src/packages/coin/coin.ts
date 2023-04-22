@@ -11,6 +11,7 @@ import {
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { CoinMetadata } from "@mysten/sui.js";
+import { Prices } from "../../general/prices/prices";
 
 export class Coin extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -21,9 +22,16 @@ export class Coin extends Caller {
 		suiCoinType: "0x0000000000000000000000000000000000000002::sui::SUI",
 	};
 
+	/////////////////////////////////////////////////////////////////////
+	//// Public Members
+	/////////////////////////////////////////////////////////////////////
+
 	public readonly coinTypePackageName: string;
 	public readonly coinTypeSymbol: string;
 	public readonly innerCoinType: string;
+
+	public metadata: CoinMetadata | undefined;
+	public price: number | undefined;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -35,9 +43,10 @@ export class Coin extends Caller {
 	) {
 		super(network, "coins");
 		this.coinType = coinType;
-		this.coinTypePackageName = this.getCoinTypePackageName();
-		this.coinTypeSymbol = this.getCoinTypeSymbol();
-		this.innerCoinType = this.getInnerCoinType();
+
+		this.coinTypePackageName = Coin.getCoinTypePackageName(this.coinType);
+		this.coinTypeSymbol = Coin.getCoinTypeSymbol(this.coinType);
+		this.innerCoinType = Coin.getInnerCoinType(this.coinType);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -49,43 +58,34 @@ export class Coin extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getCoinMetadata(): Promise<CoinMetadata> {
-		return this.fetchApi(this.coinType);
+		if (this.metadata) return this.metadata;
+
+		const metadata = await this.fetchApi<CoinMetadata>(this.coinType);
+		this.setCoinMetadata(metadata);
+		return metadata;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
-	/////////////////////////////////////////////////////////////////////
+	public setCoinMetadata(metadata: CoinMetadata) {
+		this.metadata = metadata;
+	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Coin Type
-	/////////////////////////////////////////////////////////////////////
+	public async getPrice(): Promise<number> {
+		if (this.price !== undefined) return this.price;
 
-	// TODO: remove in favor of sui js implementation Coin.getCoinStructTag() if it is the same
-	private getCoinTypePackageName = (): string => {
-		const splitCoin = this.coinType.split("::");
-		if (splitCoin.length !== 3) return "";
-		const packageName = splitCoin[splitCoin.length - 2];
-		if (!packageName) return "";
-		return packageName;
-	};
+		const price = await new Prices(this.network).getCoinPrice({
+			coin: this.coinType,
+		});
 
-	// TODO: remove in favor of sui js implementation ?
-	private getCoinTypeSymbol = (): string => {
-		const startIndex = this.coinType.lastIndexOf("::") + 2;
-		if (startIndex <= 1) return "";
+		// NOTE: do we want this here ? (unexpected behavior)
+		// if (price <= 0) throw new Error("No price found.")
 
-		const foundEndIndex = this.coinType.indexOf(">");
-		const endIndex =
-			foundEndIndex < 0 ? this.coinType.length : foundEndIndex;
+		this.setPrice(price);
+		return price;
+	}
 
-		const displayType = this.coinType.slice(startIndex, endIndex);
-		return displayType;
-	};
-
-	private getInnerCoinType = () =>
-		this.coinType.includes("<")
-			? this.coinType.split("<")[1].slice(0, -1)
-			: "";
+	public setPrice(price: number) {
+		this.price = price;
+	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Static Methods
@@ -95,13 +95,37 @@ export class Coin extends Caller {
 	//// Coin Type
 	/////////////////////////////////////////////////////////////////////
 
+	// TODO: remove in favor of sui js implementation Coin.getCoinStructTag() if it is the same
+	public static getCoinTypePackageName = (coin: CoinType): string => {
+		const splitCoin = coin.split("::");
+		if (splitCoin.length !== 3) return "";
+		const packageName = splitCoin[splitCoin.length - 2];
+		if (!packageName) return "";
+		return packageName;
+	};
+
+	// TODO: remove in favor of sui js implementation ?
+	public static getCoinTypeSymbol = (coin: CoinType): string => {
+		const startIndex = coin.lastIndexOf("::") + 2;
+		if (startIndex <= 1) return "";
+
+		const foundEndIndex = coin.indexOf(">");
+		const endIndex = foundEndIndex < 0 ? coin.length : foundEndIndex;
+
+		const displayType = coin.slice(startIndex, endIndex);
+		return displayType;
+	};
+
+	public static getInnerCoinType = (coin: CoinType) =>
+		coin.includes("<") ? coin.split("<")[1].slice(0, -1) : "";
+
 	public static coinTypeFromKeyType = (keyType: KeyType) => {
 		const startIndex = keyType.lastIndexOf("<") + 1;
 		const endIndex = keyType.indexOf(">", startIndex);
 		return keyType.slice(startIndex, endIndex);
 	};
 
-	public static isSuiCoin = (coin: string) =>
+	public static isSuiCoin = (coin: CoinType) =>
 		Helpers.stripLeadingZeroesFromType(coin) ===
 		Helpers.stripLeadingZeroesFromType(Coin.constants.suiCoinType);
 

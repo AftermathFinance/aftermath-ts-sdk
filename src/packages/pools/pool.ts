@@ -52,8 +52,7 @@ export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public async getStats() {
-		const stats = await this.fetchApi<PoolStats>("stats");
-		return stats;
+		return this.fetchApi<PoolStats>("stats");
 	}
 
 	public setStats(stats: PoolStats) {
