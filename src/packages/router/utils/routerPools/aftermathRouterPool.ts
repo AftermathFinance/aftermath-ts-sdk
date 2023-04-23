@@ -77,8 +77,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 				inputs.expectedAmountOut,
 				inputs.coinOutType,
 				this.pool.lpCoinType,
-				inputs.slippage,
-				inputs.referrer
+				inputs.slippage
 			);
 	};
 

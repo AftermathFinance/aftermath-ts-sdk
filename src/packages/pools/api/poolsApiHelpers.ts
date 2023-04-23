@@ -10,7 +10,6 @@ import {
 	Balance,
 	CoinDecimal,
 	CoinType,
-	GasBudget,
 	PoolDataPoint,
 	PoolVolumeDataTimeframe,
 	PoolVolumeDataTimeframeKey,
@@ -22,13 +21,14 @@ import {
 	CoinsToPrice,
 	Slippage,
 	CoinsToBalance,
+	ReferralVaultAddresses,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
-import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 import { Pool } from "..";
 import { Casting } from "../../../general/utils";
+import { PoolCreateEventOnChain } from "./poolsApiCastingTypes";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -65,7 +65,10 @@ export class PoolsApiHelpers {
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	public readonly addresses: PoolsAddresses;
+	public readonly addresses: {
+		pools: PoolsAddresses;
+		referralVault: ReferralVaultAddresses;
+	};
 	public readonly eventTypes: {
 		trade: AnyObjectType;
 		deposit: AnyObjectType;
@@ -99,13 +102,17 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(public readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.pools;
-		if (!addresses)
+		const addresses = {
+			pools: this.Provider.addresses.pools,
+			referralVault: this.Provider.addresses.referralVault,
+		};
+		if (!addresses.pools || !addresses.referralVault)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
 		this.Provider = Provider;
+		// @ts-ignore
 		this.addresses = addresses;
 
 		this.eventTypes = {
@@ -120,6 +127,32 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
+		const paginatedEvents = await this.Provider.provider.queryEvents({
+			query: {
+				MoveEventType: EventsApiHelpers.createEventType(
+					this.addresses.pools.packages.cmmm,
+					"events",
+					"CreatedPoolEvent"
+				),
+			},
+			cursor: null,
+			limit: null,
+			order: "ascending",
+		});
+
+		const poolObjectIds = paginatedEvents.data.map(
+			(event) =>
+				(event as unknown as PoolCreateEventOnChain).parsedJson.pool_id
+		);
+
+		return poolObjectIds;
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Dev Inspects
 	/////////////////////////////////////////////////////////////////////
 
@@ -130,12 +163,12 @@ export class PoolsApiHelpers {
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.packages.cmmm,
+				this.addresses.pools.packages.cmmm,
 				PoolsApiHelpers.constants.moduleNames.poolRegistry,
 				"lp_type_to_pool_id"
 			),
 			typeArguments: [lpCoinType],
-			arguments: [tx.object(this.addresses.objects.poolRegistry)],
+			arguments: [tx.object(this.addresses.pools.objects.poolRegistry)],
 		});
 
 		return tx;
@@ -153,30 +186,25 @@ export class PoolsApiHelpers {
 		expectedAmountOut: Balance,
 		coinOutType: CoinType,
 		lpCoinType: CoinType,
-		slippage: Slippage,
-		referrer?: SuiAddress
+		slippage: Slippage
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.packages.cmmm,
+				this.addresses.pools.packages.cmmm,
 				PoolsApiHelpers.constants.moduleNames.pools,
 				"swap_exact_in"
 			),
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(this.addresses.objects.protocolFeeVault),
-				tx.object(this.addresses.objects.treasury),
-				tx.object(this.addresses.objects.insuranceFund),
-				tx.object(this.addresses.objects.referralVault),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(referrer),
-					"Option<address>"
-				),
 			],
 		});
 
@@ -191,8 +219,7 @@ export class PoolsApiHelpers {
 		expectedAmountOut: Balance,
 		coinOutType: CoinType,
 		lpCoinType: CoinType,
-		slippage: Slippage,
-		referrer?: SuiAddress
+		slippage: Slippage
 	): {
 		tx: TransactionBlock;
 		coinOut: TransactionArgument;
@@ -200,24 +227,20 @@ export class PoolsApiHelpers {
 		const [coinOut] = tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.packages.cmmm,
+				this.addresses.pools.packages.cmmm,
 				PoolsApiHelpers.constants.moduleNames.swap,
 				"swap_exact_in"
 			),
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(this.addresses.objects.protocolFeeVault),
-				tx.object(this.addresses.objects.treasury),
-				tx.object(this.addresses.objects.insuranceFund),
-				tx.object(this.addresses.objects.referralVault),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(referrer),
-					"Option<address>"
-				),
 			],
 		});
 
@@ -234,8 +257,7 @@ export class PoolsApiHelpers {
 		coinTypes: CoinType[],
 		expectedLpRatio: bigint,
 		lpCoinType: CoinType,
-		slippage: Slippage,
-		referrer?: SuiAddress
+		slippage: Slippage
 	): TransactionBlock => {
 		const poolSize = coinTypes.length;
 		if (poolSize != coinIds.length)
@@ -246,26 +268,22 @@ export class PoolsApiHelpers {
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.packages.cmmm,
+				this.addresses.pools.packages.cmmm,
 				PoolsApiHelpers.constants.moduleNames.pools,
 				`deposit_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
-				tx.object(this.addresses.objects.protocolFeeVault),
-				tx.object(this.addresses.objects.treasury),
-				tx.object(this.addresses.objects.insuranceFund),
-				tx.object(this.addresses.objects.referralVault),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 				...coinIds.map((coinId) =>
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
 				tx.pure(expectedLpRatio.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(referrer),
-					"Option<address>"
-				),
 			],
 		});
 
@@ -279,15 +297,14 @@ export class PoolsApiHelpers {
 		lpCoinType: CoinType,
 		expectedAmountsOut: Balance[],
 		coinsOutType: CoinType[],
-		slippage: Slippage,
-		referrer?: SuiAddress
+		slippage: Slippage
 	): TransactionBlock => {
 		const poolSize = coinsOutType.length;
 
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.packages.cmmm,
+				this.addresses.pools.packages.cmmm,
 				PoolsApiHelpers.constants.moduleNames.pools,
 				`withdraw_${poolSize}_coins`
 			),
@@ -295,17 +312,13 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinsOutType],
 			arguments: [
 				tx.object(poolId),
-				tx.object(this.addresses.objects.protocolFeeVault),
-				tx.object(this.addresses.objects.treasury),
-				tx.object(this.addresses.objects.insuranceFund),
-				tx.object(this.addresses.objects.referralVault),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
 				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(referrer),
-					"Option<address>"
-				),
 			],
 		});
 
@@ -351,8 +364,7 @@ export class PoolsApiHelpers {
 			amountOut,
 			coinOutType,
 			pool.pool.lpCoinType,
-			slippage,
-			referrer
+			slippage
 		);
 
 		return finalTx;
@@ -394,8 +406,7 @@ export class PoolsApiHelpers {
 			coinTypes,
 			expectedLpRatio,
 			pool.pool.lpCoinType,
-			slippage,
-			referrer
+			slippage
 		);
 
 		return finalTx;
@@ -440,8 +451,7 @@ export class PoolsApiHelpers {
 			pool.pool.lpCoinType,
 			coinAmounts,
 			coinTypes,
-			slippage,
-			referrer
+			slippage
 		);
 
 		return finalTx;
@@ -598,21 +608,21 @@ export class PoolsApiHelpers {
 
 	private tradeEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.cmmm,
+			this.addresses.pools.packages.cmmm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.swap
 		);
 
 	private depositEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.cmmm,
+			this.addresses.pools.packages.cmmm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.deposit
 		);
 
 	private withdrawEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.cmmm,
+			this.addresses.pools.packages.cmmm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);

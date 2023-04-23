@@ -97,7 +97,8 @@ export class NftAmmApi {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildBuyTransaction({
 				...inputs,
-			})
+			}),
+			inputs.referrer
 		);
 	};
 
@@ -111,7 +112,8 @@ export class NftAmmApi {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildSellTransaction({
 				...inputs,
-			})
+			}),
+			inputs.referrer
 		);
 	};
 
@@ -127,7 +129,8 @@ export class NftAmmApi {
 			this.Helpers.fetchBuildDepositTransaction({
 				...inputs,
 				nfts: inputs.nftObjectIds,
-			})
+			}),
+			inputs.referrer
 		);
 	};
 
@@ -142,7 +145,8 @@ export class NftAmmApi {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildWithdrawTransaction({
 				...inputs,
-			})
+			}),
+			inputs.referrer
 		);
 	};
 }

@@ -23,6 +23,7 @@ interface OptionalConfigAddresses {
 	capys: CapysAddresses;
 	nftAmm: NftAmmAddresses;
 	externalRouter: ExternalRouterAddresses;
+	referralVault: ReferralVaultAddresses;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -57,7 +58,6 @@ export interface PoolsAddresses {
 		protocolFeeVault: ObjectId;
 		treasury: ObjectId;
 		insuranceFund: ObjectId;
-		referralVault: ObjectId;
 	};
 }
 
@@ -97,5 +97,14 @@ export interface ExternalRouterAddresses {
 export interface NojoAddresses {
 	packages: {
 		pool: SuiAddress;
+	};
+}
+
+export interface ReferralVaultAddresses {
+	packages: {
+		referralVault: SuiAddress;
+	};
+	objects: {
+		referralVault: ObjectId;
 	};
 }

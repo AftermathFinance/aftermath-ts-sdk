@@ -16,6 +16,7 @@ import { PlaceholderPricesApi } from "../prices/placeholder/placeholderPricesApi
 import { CapysApi } from "../../packages/capys/api/capysApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
+import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
@@ -99,4 +100,5 @@ export class AftermathApi {
 	public Capys = () => new CapysApi(this);
 	public Staking = () => new StakingApi(this);
 	public NftAmm = () => new NftAmmApi(this);
+	public ReferralVault = () => new ReferralVaultApi(this);
 }

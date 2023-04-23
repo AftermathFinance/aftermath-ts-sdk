@@ -1,4 +1,5 @@
 import {
+	SuiAddress,
 	SuiTransactionBlockResponseQuery,
 	TransactionBlock,
 	TransactionDigest,
@@ -67,9 +68,29 @@ export class TransactionsApiHelpers {
 	};
 
 	public fetchSetGasBudgetAndSerializeTransaction = async (
-		tx: TransactionBlock | Promise<TransactionBlock>
-	): Promise<SerializedTransaction> =>
-		(await this.fetchSetGasBudgetForTransaction(await tx)).serialize();
+		tx: TransactionBlock | Promise<TransactionBlock>,
+		referrer?: SuiAddress
+	): Promise<SerializedTransaction> => {
+		const txBlock = await tx;
+
+		let newTx: TransactionBlock;
+		if (referrer) {
+			newTx = new TransactionBlock();
+
+			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+				{
+					tx: newTx,
+					referrer,
+				}
+			);
+
+			txBlock.blockData.transactions.map((command) => newTx.add(command));
+		} else {
+			newTx = txBlock;
+		}
+
+		return (await this.fetchSetGasBudgetForTransaction(newTx)).serialize();
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Static Methods

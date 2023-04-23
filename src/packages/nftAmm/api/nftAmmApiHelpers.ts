@@ -232,7 +232,6 @@ export class NftAmmApiHelpers {
 		genericTypes: NftAmmInterfaceGenericTypes;
 		slippage: Slippage;
 		withTransfer?: boolean;
-		referrer?: SuiAddress;
 	}) => {
 		const { tx, assetCoin, genericTypes, nftObjectIds } = inputs;
 		return tx.moveCall({
@@ -259,10 +258,6 @@ export class NftAmmApiHelpers {
 				}),
 				tx.pure(inputs.expectedAssetCoinAmountIn.toString()),
 				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(inputs.referrer),
-					"Option<address>"
-				),
 			],
 		});
 	};
@@ -275,7 +270,6 @@ export class NftAmmApiHelpers {
 		genericTypes: NftAmmInterfaceGenericTypes;
 		slippage: Slippage;
 		withTransfer?: boolean;
-		referrer?: SuiAddress;
 	}) => {
 		const { tx, genericTypes, nfts } = inputs;
 		return tx.moveCall({
@@ -301,10 +295,6 @@ export class NftAmmApiHelpers {
 				}),
 				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(inputs.referrer),
-					"Option<address>"
-				),
 			],
 		});
 	};
@@ -318,7 +308,6 @@ export class NftAmmApiHelpers {
 		genericTypes: NftAmmInterfaceGenericTypes;
 		slippage: Slippage;
 		withTransfer?: boolean;
-		referrer?: SuiAddress;
 	}) => {
 		const { tx, assetCoin, genericTypes, nfts } = inputs;
 		return tx.moveCall({
@@ -347,10 +336,6 @@ export class NftAmmApiHelpers {
 				}),
 				tx.pure(inputs.expectedLpRatio.toString()),
 				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(inputs.referrer),
-					"Option<address>"
-				),
 			],
 		});
 	};
@@ -364,7 +349,6 @@ export class NftAmmApiHelpers {
 		genericTypes: NftAmmInterfaceGenericTypes;
 		slippage: Slippage;
 		withTransfer?: boolean;
-		referrer?: SuiAddress;
 	}) => {
 		const { tx, lpCoin, genericTypes, nftObjectIds } = inputs;
 		return tx.moveCall({
@@ -389,10 +373,6 @@ export class NftAmmApiHelpers {
 				}),
 				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(inputs.referrer),
-					"Option<address>"
-				),
 			],
 		});
 	};

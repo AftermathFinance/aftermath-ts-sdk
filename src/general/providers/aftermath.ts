@@ -10,7 +10,7 @@ import { Helpers } from "../utils/helpers";
 import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
-import { NftAmm, Router, Sui } from "../../packages";
+import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
 
 /**
  * @class Aftermath Provider
@@ -18,14 +18,14 @@ import { NftAmm, Router, Sui } from "../../packages";
  * @example
  * ```
  * // Create provider
- * const aftermath = new Aftermath("testnet");
+ * const aftermath = new Aftermath("TESTNET");
  * // Create package provider
  * const router = aftermath.Router();
  * // Call sdk from package provider
  * const supportedCoins = await router.getSupportedCoins();
  *
  * // Or do it all in one go
- * const supportedCoins = await (new Aftermath("testnet")).Router().getSupportedCoins();
+ * const supportedCoins = await (new Aftermath("TESTNET")).Router().getSupportedCoins();
  * ```
  */
 export class Aftermath extends Caller {
@@ -61,6 +61,7 @@ export class Aftermath extends Caller {
 	public Faucet = () => new Faucet(this.network);
 	public Router = () => new Router(this.network);
 	public NftAmm = () => new NftAmm(this.network);
+	public ReferralVault = () => new ReferralVault(this.network);
 
 	/////////////////////////////////////////////////////////////////////
 	//// General

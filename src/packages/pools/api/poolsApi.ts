@@ -150,24 +150,7 @@ export class PoolsApi {
 	};
 
 	public fetchAllPools = async () => {
-		const paginatedEvents = await this.Provider.provider.queryEvents({
-			query: {
-				MoveEventType: EventsApiHelpers.createEventType(
-					this.Helpers.addresses.packages.cmmm,
-					"events",
-					"CreatedPoolEvent"
-				),
-			},
-			cursor: null,
-			limit: null,
-			order: "ascending",
-		});
-
-		const poolObjectIds = paginatedEvents.data.map(
-			(event) =>
-				(event as unknown as PoolCreateEventOnChain).parsedJson.pool_id
-		);
-
+		const poolObjectIds = await this.Helpers.fetchAllPoolObjectIds();
 		return this.fetchPools(poolObjectIds);
 	};
 
@@ -190,7 +173,8 @@ export class PoolsApi {
 			referrer
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction
+			transaction,
+			referrer
 		);
 	};
 
@@ -211,7 +195,8 @@ export class PoolsApi {
 			referrer
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction
+			transaction,
+			referrer
 		);
 	};
 
@@ -234,7 +219,8 @@ export class PoolsApi {
 			referrer
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction
+			transaction,
+			referrer
 		);
 	};
 
