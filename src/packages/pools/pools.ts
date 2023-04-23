@@ -228,7 +228,7 @@ export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
-		new Coin(Coin.coinTypeFromKeyType(lpCoinType)).coinTypeSymbol
+		new Coin(lpCoinType).coinTypeSymbol
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")
