@@ -1,5 +1,5 @@
 {
-	"name": "@aftermath/aftermath-ts-sdk",
+	"name": "aftermath-ts-sdk",
 	"version": "0.0.1",
 	"description": "Aftermath SDK",
 	"main": "dist/index.js",
