@@ -47,11 +47,6 @@ export class ReferralVaultApi {
 		const bytes =
 			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
 
-		console.log(
-			"Casting.optionAddressFromBytes(bytes);",
-			Casting.optionAddressFromBytes(bytes)
-		);
-
 		return Casting.optionAddressFromBytes(bytes);
 	};
 }

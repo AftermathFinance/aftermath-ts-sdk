@@ -228,7 +228,7 @@ export class PoolsApi {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchPoolObjectIdForLpCoinTypeDevInspectTransaction = async (
+	public fetchPoolObjectIdForLpCoinType = async (
 		lpCoinType: CoinType
 	): Promise<ObjectId> => {
 		const tx =
