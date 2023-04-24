@@ -33,7 +33,9 @@ export class Caller {
 
 	private static baseUrlForNetwork(network: SuiNetwork): Url {
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
-		if (network === "TESTNET") return "https://testnet.aftermath.finance";
+		// if (network === "TESTNET") return "https://testnet.aftermath.finance";
+		if (network === "TESTNET")
+			return "https://aftermath-frontend-git-collin-aftermath-ex-64e0c3-vercel-admins.vercel.app";
 		return "http://localhost:3000"; // LOCAL
 	}
 
