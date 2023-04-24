@@ -47,6 +47,9 @@ export class Helpers {
 		tolerance: number
 	) => Helpers.closeEnough(Number(a), Number(b), tolerance);
 
+	public static veryCloseInt = (a: number, b: number, fixedOne: number) =>
+		Math.abs(Math.floor(a / fixedOne) - Math.floor(b / fixedOne)) <= 1;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Display
 	/////////////////////////////////////////////////////////////////////
