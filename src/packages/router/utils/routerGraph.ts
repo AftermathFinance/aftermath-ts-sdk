@@ -61,7 +61,7 @@ export class RouterGraph {
 	private static readonly constants = {
 		// NOTE: should these default values be public ?
 		defaultMaxRouteLength: 3,
-		tradePartitionCount: 50,
+		tradePartitionCount: 10,
 		minRoutesToCheck: 20,
 		maxGasCost: BigInt(1_000_000_000), // 1 SUI
 	};
