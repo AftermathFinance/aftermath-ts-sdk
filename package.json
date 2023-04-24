@@ -19,7 +19,9 @@
 		"aftermath finance",
 		"sui",
 		"aftermath sdk",
-		"aftermath finance sdk"
+		"aftermath finance sdk",
+		"aftermath typescript sdk",
+		"aftermath finance typescript sdk"
 	],
 	"author": "Aftermath",
 	"license": "Apache-2.0",
