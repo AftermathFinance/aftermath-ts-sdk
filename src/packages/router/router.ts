@@ -1,33 +1,47 @@
 import {
-	Balance,
+	ApiRouterCompleteTradeRouteBody,
+	ApiRouterTransactionForCompleteTradeRouteBody,
 	CoinType,
 	RouterCompleteTradeRoute,
 	SuiNetwork,
 } from "../../types";
-import { Pool } from "../pools/pool";
 import { Caller } from "../../general/utils/caller";
-import { RouterGraph } from "./utils/routerGraph";
 
+/**
+ * @class Router Provider
+ *
+ * @example
+ * ```
+ * // Create provider
+ * const router = (new Aftermath("testnet")).Router();
+ * // Call sdk
+ * const supportedCoins = await router.getSupportedCoins();
+ * ```
+ */
 export class Router extends Caller {
 	/////////////////////////////////////////////////////////////////////
-	//// Public Class Members
+	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
-	public readonly graph: RouterGraph;
+	public static readonly constants = {
+		/**
+		 * Max fee percentage that third parties can charge on router trades
+		 */
+		maxExternalFeePercentage: 0.5, // 50%
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(
-		public readonly pools: Pool[] = [],
-		public readonly network?: SuiNetwork
-	) {
+	/**
+	 * Creates `Router` provider to call api.
+	 *
+	 * @param network - The Sui network to interact with
+	 * @returns New `Router` instance
+	 */
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "router");
-
-		// check handle remove duplicate pools (same object Id)
-		this.pools = pools;
-		this.graph = new RouterGraph(pools);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -38,39 +52,76 @@ export class Router extends Caller {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public async getSupportedCoins(): Promise<CoinType[]> {
-		return this.fetchApi("supportedCoins");
+	/**
+	 * Queries all coins that router can trade between.
+	 *
+	 * @returns Array of supported coin types
+	 */
+	public async getSupportedCoins() {
+		return this.fetchApi<CoinType[]>("supported-coins");
 	}
 
+	/**
+	 * Creates route across multiple pools and protocols for best trade execution price
+	 *
+	 * @param inputs - Details for router to construct trade route
+	 * @param abortSignal - Optional signal to abort passed to fetch call
+	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
+	 */
 	public async getCompleteTradeRouteGivenAmountIn(
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType,
-		maxRouteLength?: number
-	): Promise<RouterCompleteTradeRoute> {
-		return await this.graph.getCompleteRouteGivenAmountIn(
-			coinIn,
-			coinInAmount,
-			coinOut,
-			maxRouteLength
-		);
+		inputs: ApiRouterCompleteTradeRouteBody,
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route", inputs, abortSignal);
 	}
 
+	/**
+	 * Creates route across multiple pools and protocols for best trade execution price
+	 *
+	 * @param inputs - Details for router to construct trade route
+	 * @param abortSignal - Optional signal to abort passed to fetch call
+	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
+	 */
 	public async getCompleteTradeRouteGivenAmountOut(
-		coinIn: CoinType,
-		coinOut: CoinType,
-		coinOutAmount: Balance,
-		maxRouteLength?: number
-	): Promise<RouterCompleteTradeRoute> {
-		return await this.graph.getCompleteRouteGivenAmountOut(
-			coinIn,
-			coinOut,
-			coinOutAmount,
-			maxRouteLength
-		);
+		inputs: ApiRouterCompleteTradeRouteBody,
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route", inputs, abortSignal);
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Creates `TranscationBlock` from previously created complete trade route
+	 *
+	 * @example
+	 * ```
+	 * const route = await router.getCompleteTradeRouteGivenAmountIn(routeDetails);
+	 * const tx = await router.getTransactionForCompleteTradeRoute({
+	 * 	completeRoute: route,
+	 * 	walletAddress: "0xBEEF",
+	 * 	slippage: 0.01
+	 * });
+	 * // sign and execute tx using wallet
+	 * ```
+	 *
+	 * @param inputs - Info to construct router trade transaction from complete route
+	 * @returns Executable `TranscationBlock` trading from `coinIn` to `coinOut`
+	 */
+	public async getTransactionForCompleteTradeRoute(
+		inputs: ApiRouterTransactionForCompleteTradeRouteBody
+	) {
+		return this.fetchApiTransaction<ApiRouterTransactionForCompleteTradeRouteBody>(
+			"transactions/trade",
+			inputs
+		);
+	}
 }

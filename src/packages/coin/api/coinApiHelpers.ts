@@ -1,73 +1,19 @@
 import {
-	GetObjectDataResponse,
-	getObjectId,
 	ObjectId,
-	SignableTransaction,
+	PaginatedCoins,
 	SuiAddress,
+	TransactionArgument,
+	TransactionBlock,
+	TransactionBlockInput,
 } from "@mysten/sui.js";
-import {
-	AnyObjectType,
-	Balance,
-	CoinDecimal,
-	CoinType,
-	GasBudget,
-} from "../../../types";
+import { Balance, CoinDecimal, CoinType } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinApi } from "./coinApi";
 import { Casting } from "../../../general/utils/casting";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
-import { Sui } from "../../sui/sui";
 
 export class CoinApiHelpers {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
-
-	private static readonly constants = {
-		modules: {
-			pay: {
-				name: "pay",
-				functions: {
-					join: {
-						name: "join",
-						defaultGasBudget: 1000,
-					},
-					joinVec: {
-						name: "join_vec",
-						defaultGasBudget: 2000,
-					},
-					split: {
-						name: "split",
-						defaultGasBudget: 1000,
-					},
-					splitVec: {
-						name: "split_vec",
-						defaultGasBudget: 2000,
-					},
-					zero: {
-						name: "zero",
-						defaultGasBudget: 1000,
-					},
-					joinVecAndSplit: {
-						name: "join_vec_and_split",
-						defaultGasBudget: 2000,
-					},
-				},
-			},
-			coin: {
-				name: "coin",
-			},
-		},
-		eventNames: {
-			currencyCreated: "CurrencyCreated",
-		},
-		// eventTypes: {
-		// 	currencyCreated: CoinApiHelpers.currencyCreatedEventType(),
-		// },
-	};
-
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -84,62 +30,6 @@ export class CoinApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual = async (
-		walletAddress: SuiAddress,
-		coinType: CoinType,
-		coinAmount: Balance
-	): Promise<GetObjectDataResponse[]> => {
-		const response = (
-			await this.Provider.provider.selectCoinSetWithCombinedBalanceGreaterThanOrEqual(
-				walletAddress,
-				coinAmount,
-				Helpers.stripLeadingZeroesFromType(coinType)
-			)
-		).filter(
-			// Safe check to avoid coins with value 0
-			(getObjectDataResponse) => Coin.getBalance(getObjectDataResponse)
-		);
-
-		if (response.length === 0)
-			throw new Error("wallet does not have coins of sufficient balance");
-		return response;
-	};
-
-	// TODO: use this everywhere in sdk ! (instead of just router)
-	public fetchCoinJoinAndSplitWithExactAmountTransactions = async (
-		walletAddress: SuiAddress,
-		coin: CoinType,
-		coinAmount: Balance
-	): Promise<{
-		coinObjectId: ObjectId;
-		joinAndSplitTransactions: SignableTransaction[];
-	}> => {
-		// i. obtain object ids of coin to swap from
-		const response =
-			await this.fetchSelectCoinSetWithCombinedBalanceGreaterThanOrEqual(
-				walletAddress,
-				coin,
-				coinAmount
-			);
-
-		const coinObjectId = getObjectId(response[0]);
-
-		// ii. the user doesn't have a coin of type `coin` with exact
-		// value of `balance`, so we need to create it
-		const joinAndSplitTransactions =
-			this.coinJoinAndSplitWithExactAmountTransactions(
-				response[0],
-				response.slice(1),
-				coin,
-				coinAmount
-			);
-
-		return {
-			coinObjectId,
-			joinAndSplitTransactions,
-		};
-	};
-
 	public fetchCoinDecimals = async (coin: CoinType) => {
 		const coinMetadata = await new CoinApi(this.Provider).fetchCoinMetadata(
 			coin
@@ -151,7 +41,7 @@ export class CoinApiHelpers {
 		return decimals as CoinDecimal;
 	};
 
-	// TODO: use this everywhere in backend calls
+	// TODO: use this everywhere in backend calls ?
 	// TODO: handle coins where there is no coin metadata on chain
 	public fetchCoinDecimalsNormalizeBalance = async (
 		coin: CoinType,
@@ -242,150 +132,126 @@ export class CoinApiHelpers {
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	/*
-        @assumes: the combined balance of `coin` + `coinsToJoin` is at least `amount`.
-        @returns: undefined if `Coin.getBalance(coin)` returns undefined, an array of 
-        `SignableTransactions` otherwise.
-    */
-	public coinJoinAndSplitWithExactAmountTransactions = (
-		coin: GetObjectDataResponse,
-		coinsToJoin: GetObjectDataResponse[],
+	public fetchAddCoinWithAmountCommandsToTransaction = async (
+		tx: TransactionBlock,
+		walletAddress: SuiAddress,
 		coinType: CoinType,
-		amount: Balance
-	): SignableTransaction[] => {
-		const coinBalance = Coin.getBalance(coin);
-		if (!coinBalance)
-			throw new Error("wallet does not have balance of coin");
-		// there are now four scenarios:
-		//    i. the user has a coin of type `coinType` with balance equal to `amount`.
-		if (coinBalance === amount) return [];
+		coinAmount: Balance
+	): Promise<{
+		coinArgument: TransactionArgument;
+		txWithCoinWithAmount: TransactionBlock;
+	}> => {
+		tx.setSender(walletAddress);
 
-		const coinId = getObjectId(coin);
-		//   ii. the user has a coin of type `coinType` with balance greater than `amount`
-		//       and needs to remove `coinBalance` - `amount` from the coin.
-		if (coinBalance > amount)
-			return [
-				this.coinSplitTransaction(
-					coinId,
-					coinType,
-					coinBalance - amount
-				),
-			];
+		// TODO: handle cursoring until necessary coin amount is found
+		const paginatedCoins = await this.Provider.provider.getCoins({
+			owner: walletAddress,
+			coinType,
+		});
 
-		const joinedBalance = coinBalance + Coin.totalBalance(coinsToJoin);
-		const coinIdsToJoin = coinsToJoin.map((getObjectDataResponse) =>
-			getObjectId(getObjectDataResponse)
+		return CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
+			tx,
+			paginatedCoins,
+			coinAmount
 		);
-		//  iii. the user has multiple coins of type `coinType` that sum to `amount`, so
-		//       these coins need to be joined.
-		if (joinedBalance === amount)
-			return [
-				this.coinJoinVecTransaction(coinId, coinIdsToJoin, coinType),
-			];
+	};
 
-		//   iv. the user has multiple coins of type `coinType` whose sum is greater than
-		//       `amount`, so these coins need to be joined and `joinedBalance` - `amount`
-		//       needs to be removed from the coin.
-		return [
-			this.coinJoinVecAndSplitTransaction(
-				coinId,
-				coinIdsToJoin,
-				coinType,
-				joinedBalance - amount
-			),
-		];
+	public fetchAddCoinsWithAmountCommandsToTransaction = async (
+		tx: TransactionBlock,
+		walletAddress: SuiAddress,
+		coinTypes: CoinType[],
+		coinAmounts: Balance[]
+	): Promise<{
+		coinArguments: TransactionArgument[];
+		txWithCoinsWithAmount: TransactionBlock;
+	}> => {
+		tx.setSender(walletAddress);
+
+		// TODO: handle cursoring until necessary coin amount is found
+		const allPaginatedCoins = await Promise.all(
+			coinTypes.map((coinType) =>
+				this.Provider.provider.getCoins({
+					owner: walletAddress,
+					coinType,
+				})
+			)
+		);
+
+		const coinObjectIdsAndTransaction = allPaginatedCoins.reduce<{
+			coinArguments: TransactionArgument[];
+			txWithCoinsWithAmount: TransactionBlock;
+		}>(
+			(acc, paginatedCoins, index) => {
+				const { coinArgument, txWithCoinWithAmount } =
+					CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
+						acc.txWithCoinsWithAmount,
+						paginatedCoins,
+						coinAmounts[index]
+					);
+
+				return {
+					coinArguments: [...acc.coinArguments, coinArgument],
+					txWithCoinsWithAmount: txWithCoinWithAmount,
+				};
+			},
+			{
+				coinArguments: [],
+				txWithCoinsWithAmount: tx,
+			}
+		);
+
+		return coinObjectIdsAndTransaction;
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Protected Methods
+	//// Private Static Methods
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Transaction Creation
+	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	protected coinJoinVecTransaction = (
-		coin: ObjectId,
-		coins: ObjectId[],
-		coinType: CoinType,
-		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
-			.joinVec.defaultGasBudget
-	): SignableTransaction => {
+	private static addCoinWithAmountCommandsToTransaction = (
+		tx: TransactionBlock,
+		paginatedCoins: PaginatedCoins,
+		coinAmount: Balance
+	): {
+		coinArgument: TransactionArgument;
+		txWithCoinWithAmount: TransactionBlock;
+	} => {
+		const totalCoinBalance = Helpers.sumBigInt(
+			paginatedCoins.data.map((data) => BigInt(data.balance))
+		);
+
+		if (totalCoinBalance < coinAmount)
+			throw new Error("wallet does not have coins of sufficient balance");
+
+		// TODO: handle data.lockedUntilEpoch ?
+		const coinObjectIds = paginatedCoins.data
+			.filter((data) => BigInt(data.balance) > BigInt(0))
+			.map((data) => data.coinObjectId);
+
+		const mergedCoinObjectId = coinObjectIds[0];
+
+		if (coinObjectIds.length > 1) {
+			tx.add({
+				kind: "MergeCoins",
+				destination: tx.object(mergedCoinObjectId),
+				sources: coinObjectIds
+					.slice(1)
+					.map((coinId) => tx.object(coinId)),
+			});
+		}
+
+		const [splitCoin] = tx.add({
+			kind: "SplitCoins",
+			coin: tx.object(mergedCoinObjectId),
+			amounts: [tx.pure(coinAmount)],
+		});
+
 		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: Sui.constants.addresses.suiPackageId,
-				module: CoinApiHelpers.constants.modules.pay.name,
-				function:
-					CoinApiHelpers.constants.modules.pay.functions.joinVec.name,
-				typeArguments: [coinType],
-				arguments: [coin, coins],
-				gasBudget: gasBudget,
-			},
+			coinArgument: splitCoin,
+			txWithCoinWithAmount: tx,
 		};
 	};
-
-	protected coinSplitTransaction = (
-		coin: ObjectId,
-		coinType: CoinType,
-		amount: Balance,
-		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
-			.split.defaultGasBudget
-	): SignableTransaction => {
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: Sui.constants.addresses.suiPackageId,
-				module: CoinApiHelpers.constants.modules.pay.name,
-				function:
-					CoinApiHelpers.constants.modules.pay.functions.split.name,
-				typeArguments: [coinType],
-				arguments: [coin, amount.toString()],
-				gasBudget: gasBudget,
-			},
-		};
-	};
-
-	protected coinJoinVecAndSplitTransaction = (
-		coin: ObjectId,
-		coins: ObjectId[],
-		coinType: CoinType,
-		amount: Balance,
-		gasBudget: GasBudget = CoinApiHelpers.constants.modules.pay.functions
-			.joinVecAndSplit.defaultGasBudget
-	): SignableTransaction => {
-		const utiliesPackageId =
-			this.Provider.addresses.utilies?.packages.utilities;
-		if (!utiliesPackageId) throw new Error("utilies package id is unset");
-
-		return {
-			kind: "moveCall",
-			data: {
-				packageObjectId: utiliesPackageId,
-				module: CoinApiHelpers.constants.modules.pay.name,
-				function:
-					CoinApiHelpers.constants.modules.pay.functions
-						.joinVecAndSplit.name,
-				typeArguments: [coinType],
-				arguments: [coin, coins, amount.toString()],
-				gasBudget: gasBudget,
-			},
-		};
-	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Event Types
-	/////////////////////////////////////////////////////////////////////
-
-	// private static currencyCreatedEventType(): AnyObjectType {
-	// 	return EventsApiHelpers.createEventType(
-	// 		Sui.constants.addresses.suiPackageId,
-	// 		CoinApiHelpers.constants.modules.coin.name,
-	// 		CoinApiHelpers.constants.eventNames.currencyCreated
-	// 	);
-	// }
 }

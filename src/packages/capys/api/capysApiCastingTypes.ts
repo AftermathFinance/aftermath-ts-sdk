@@ -5,9 +5,9 @@ import {
 	CapyAttribute,
 	CapyGenes,
 	EpochTimeLock,
-	EventOnChain,
 	Url,
 } from "../../../types";
+import { EventOnChain } from "../../../general/types/castingTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects

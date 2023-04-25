@@ -1,4 +1,11 @@
-import { SuiNetwork, Url } from "../../types";
+import { TransactionBlock } from "@mysten/sui.js";
+import {
+	ApiEventsBody,
+	EventsWithCursor,
+	SerializedTransaction,
+	SuiNetwork,
+	Url,
+} from "../../types";
 import { Helpers } from "./helpers";
 
 export class Caller {
@@ -39,13 +46,13 @@ export class Caller {
 	}
 
 	private urlForApiCall = (url: string): Url => {
-		if (this.network === undefined || this.baseUrl === undefined)
-			throw new Error("no network, no baseUrl: unable to fetch data");
+		if (this.baseUrl === undefined)
+			throw new Error("no baseUrl: unable to fetch data");
 
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.baseUrl}/api/${
-			this.network === "LOCAL" ? "DEVNET" : this.network
-		}/${this.urlPrefix === "" ? "" : this.urlPrefix + "/"}${url}`;
+			this.urlPrefix === "" ? "" : this.urlPrefix + "/"
+		}${url}`;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -54,16 +61,53 @@ export class Caller {
 
 	protected async fetchApi<Output, BodyType = undefined>(
 		url: Url,
-		body?: BodyType
+		body?: BodyType,
+		signal?: AbortSignal
 	): Promise<Output> {
+		// this allows BigInt to be JSON serialized (as string)
+		(BigInt.prototype as any).toJSON = function () {
+			return this.toString() + "n";
+		};
+
 		const apiCallUrl = this.urlForApiCall(url);
-		const response = await (body === undefined
-			? fetch(apiCallUrl)
+
+		const uncastResponse = await (body === undefined
+			? fetch(apiCallUrl, { signal })
 			: fetch(apiCallUrl, {
 					method: "POST",
 					body: JSON.stringify(body),
+					signal,
 			  }));
 
-		return await Caller.fetchResponseToType<Output>(response);
+		const response = await Caller.fetchResponseToType<Output>(
+			uncastResponse
+		);
+		return response;
+	}
+
+	protected async fetchApiTransaction<BodyType = undefined>(
+		url: Url,
+		body?: BodyType,
+		signal?: AbortSignal
+	) {
+		return TransactionBlock.from(
+			await this.fetchApi<SerializedTransaction, BodyType>(
+				url,
+				body,
+				signal
+			)
+		);
+	}
+
+	protected async fetchApiEvents<EventType, BodyType = ApiEventsBody>(
+		url: Url,
+		body: BodyType,
+		signal?: AbortSignal
+	) {
+		return this.fetchApi<EventsWithCursor<EventType>, BodyType>(
+			url,
+			body,
+			signal
+		);
 	}
 }

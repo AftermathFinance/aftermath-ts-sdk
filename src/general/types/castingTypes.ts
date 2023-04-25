@@ -1,33 +1,37 @@
-import {
-	ObjectId,
-	SequenceNumber,
-	SuiAddress,
-	SuiMoveModuleId,
-	TransactionDigest,
-} from "@mysten/sui.js";
+import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
+import { AnyObjectType, BigIntAsString, ModuleName } from "./generalTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// On Chain
 /////////////////////////////////////////////////////////////////////
 
-interface MoveEventOnChain<Fields> {
-	bsc: string;
-	fields: Fields;
+export interface EventOnChain<Fields> {
+	id: {
+		txDigest: TransactionDigest;
+		eventSeq: number;
+	};
 	packageId: ObjectId;
+	transactionModule: ModuleName;
 	sender: SuiAddress;
-	transactionModule: SuiMoveModuleId;
-	type: string;
+	type: AnyObjectType;
+	parsedJson: Fields; // | undefined;
+	bcs: string; // | undefined;
+	timestampMs: number | undefined;
 }
 
-export interface EventOnChain<Fields> {
-	event: {
-		moveEvent: MoveEventOnChain<Fields>;
+export interface TableOnChain {
+	type: AnyObjectType;
+	fields: {
+		id: {
+			id: ObjectId;
+		};
+		size: BigIntAsString;
 	};
-	// NOTE: do we want/need this info ?
-	// id: {
-	// 	tsSeq: SequenceNumber;
-	// 	eventSeq: SequenceNumber;
-	// };
-	timestamp: number;
-	txDigest: TransactionDigest;
+}
+
+export interface SupplyOnChain {
+	type: AnyObjectType;
+	fields: {
+		value: BigIntAsString;
+	};
 }

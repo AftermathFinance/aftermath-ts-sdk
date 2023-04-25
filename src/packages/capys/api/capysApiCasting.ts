@@ -1,5 +1,5 @@
 import {
-	GetObjectDataResponse,
+	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
 } from "@mysten/sui.js";
@@ -28,8 +28,8 @@ export class CapysApiCasting {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public static capyObjectFromGetObjectDataResponse = (
-		data: GetObjectDataResponse
+	public static capyObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
 	): CapyObject => {
 		const capyObjectFields = getObjectFields(data) as CapyFieldsOnChain;
 		return {
@@ -48,8 +48,8 @@ export class CapysApiCasting {
 		};
 	};
 
-	public static stakedCapyReceiptObjectFromGetObjectDataResponse = (
-		data: GetObjectDataResponse
+	public static stakedCapyReceiptObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
 	): StakedCapyReceiptObject => {
 		const objectFields = getObjectFields(
 			data
@@ -61,22 +61,22 @@ export class CapysApiCasting {
 		};
 	};
 
-	// public static stakedCapyReceiptWithCapyObjectFromGetObjectDataResponse = async (
-	// 	data: GetObjectDataResponse
+	// public static stakedCapyReceiptWithCapyObjectFromSuiObjectResponse = async (
+	// 	data: SuiObjectResponse
 	// ): Promise<StakedCapyReceiptWithCapyObject> => {
 	// 	const objectFields = getObjectFields(data) as StakedCapyReceiptFieldsOnChain;
 
 	// 	return {
 	// 		objectId: getObjectId(data),
-	// 		capy: this.capyObjectFromGetObjectDataResponse(
+	// 		capy: this.capyObjectFromSuiObjectResponse(
 	// 			await provider.getObject(objectFields.capy_id)
 	// 		),
 	// 		unlockEpoch: objectFields.unlock_epoch.fields,
 	// 	};
 	// };
 
-	public static capyVaultObjectFromGetObjectDataResponse = (
-		data: GetObjectDataResponse
+	public static capyVaultObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
 	): CapyVaultObject => {
 		const objectFields = getObjectFields(data) as CapyVaultFieldsOnChain;
 
@@ -95,23 +95,23 @@ export class CapysApiCasting {
 	public static capyBornEventFromOnChain = (
 		eventOnChain: CapyBornEventOnChain
 	): CapyBornEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			breeder: fields.bred_by,
 			capyParentOneId: fields.parent_one,
 			capyParentTwoId: fields.parent_two,
 			capyChildId: fields.id,
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
 	public static breedCapysEventFromOnChain = (
 		eventOnChain: BreedCapysEventOnChain
 	): BreedCapysEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
-			breeder: eventOnChain.event.moveEvent.sender,
+			breeder: eventOnChain.sender,
 			capyParentOneId: fields.parentOneId,
 			capyParentTwoId: fields.parentTwoId,
 			capyChildId: fields.id,
@@ -119,34 +119,34 @@ export class CapysApiCasting {
 				coin: Capys.constants.breedingFees.coinType,
 				balance: BigInt(fields.fee),
 			},
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
 	public static stakeCapyEventFromOnChain = (
 		eventOnChain: StakeCapyEventOnChain
 	): StakeCapyEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			staker: fields.issuer,
 			capyId: fields.capy_id,
 			// TODO: generalize casting of event types with passing of
 			// timestamp and txnDigest (create wrapper)
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 
 	public static unstakeCapyEventFromOnChain = (
 		eventOnChain: UnstakeCapyEventOnChain
 	): UnstakeCapyEvent => {
-		const fields = eventOnChain.event.moveEvent.fields;
+		const fields = eventOnChain.parsedJson;
 		return {
 			unstaker: fields.issuer,
 			capyId: fields.capy_id,
-			timestamp: eventOnChain.timestamp,
-			txnDigest: eventOnChain.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 		};
 	};
 }

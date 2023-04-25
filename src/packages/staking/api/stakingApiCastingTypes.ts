@@ -1,37 +1,22 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { BigIntAsString, EventOnChain } from "../../../types";
-
-/////////////////////////////////////////////////////////////////////
-//// Dynamic Fields
-/////////////////////////////////////////////////////////////////////
-
-export interface StakeBalanceDynamicFieldOnChain {
-	fields: {
-		id: {
-			id: ObjectId;
-		};
-		value: BigIntAsString;
-	};
-}
+import { SuiAddress } from "@mysten/sui.js";
+import { BigIntAsString } from "../../../types";
+import { EventOnChain } from "../../../general/types/castingTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-export type StakingRequestAddDelegationEventOnChain = EventOnChain<{
-	issuer: SuiAddress;
-	amount: BigIntAsString;
-	validator: SuiAddress;
+export type StakingStakeEventOnChain = EventOnChain<{
+	sui_wrapper_id: SuiAddress;
 }>;
 
-export type StakingRequestWithdrawDelegationEventOnChain = EventOnChain<{
-	issuer: SuiAddress;
-	amount: BigIntAsString;
-	validator: SuiAddress;
+export type StakingUnstakeEventOnChain = EventOnChain<{
+	afsui_wrapper_id: SuiAddress;
 }>;
 
-export type StakingCancelDelegationRequestEventOnChain = EventOnChain<{
-	issuer: SuiAddress;
-	amount: BigIntAsString;
+export type StakingFailedStakeEventOnChain = EventOnChain<{
+	staker: SuiAddress;
 	validator: SuiAddress;
+	epoch: BigIntAsString;
+	amount: BigIntAsString;
 }>;

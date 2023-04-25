@@ -1,11 +1,5 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import {
-	Balance,
-	Event,
-	Timestamp,
-	Url,
-} from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
+import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -16,61 +10,23 @@ export interface StakeBalanceDynamicField {
 	value: Balance;
 }
 
-export interface StakeValidator {
-	name: string;
-	description: string | undefined;
-	projectUrl: Url | undefined;
-	imageUrl: Url | undefined;
-	suiAddress: SuiAddress;
-	nextEpoch: {
-		commissionRate: number;
-		delegation: Balance;
-		gasPrice: Balance;
-		stake: Balance;
-	};
-}
-
-type DelegatedStakePositionStatus =
-	| "pending"
-	| {
-			active: {
-				id: ObjectId;
-				stakedSuiId: ObjectId;
-				principalSuiAmount: Balance;
-				poolCoinsAmount: Balance;
-			};
-	  };
-
-export interface DelegatedStakePosition {
-	stakedSuiId: ObjectId;
-	validatorAddress: SuiAddress;
-	poolStartingEpoch: EpochTimeStamp;
-	delegationRequestEpoch: EpochTimeStamp;
-	principalAmount: Balance;
-	suiCoinLock: number | undefined;
-	status: DelegatedStakePositionStatus;
-}
-
 /////////////////////////////////////////////////////////////////////
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-export interface StakeRequestAddDelegationEvent extends Event {
-	issuer: SuiAddress;
-	amount: Balance;
-	validator: SuiAddress;
+export interface StakeEvent extends Event {
+	suiWrapperId: ObjectId;
 }
 
-export interface StakeRequestWithdrawDelegationEvent extends Event {
-	issuer: SuiAddress;
-	amount: Balance;
-	validator: SuiAddress;
+export interface UnstakeEvent extends Event {
+	afSuiWrapperId: ObjectId;
 }
 
-export interface StakeCancelDelegationRequestEvent extends Event {
-	issuer: SuiAddress;
-	amount: Balance;
-	validator: SuiAddress;
+export interface FailedStakeEvent extends Event {
+	staker: SuiAddress;
+	validatorAddress: SuiAddress;
+	epoch: bigint;
+	stakedSuiAmount: Balance;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -78,15 +34,15 @@ export interface StakeCancelDelegationRequestEvent extends Event {
 /////////////////////////////////////////////////////////////////////
 
 export interface StakingStats {
-	topStakers: StakeStakeEventAccumulation[];
+	topStakers: StakeEventAccumulation[];
 	stakeTvl: Balance;
 }
 
-export interface StakeStakeEventAccumulation {
+export interface StakeEventAccumulation {
 	staker: SuiAddress;
 	totalAmountStaked: Balance;
-	latestStakeTimestamp: Timestamp;
-	firstStakeTimestamp: Timestamp;
+	latestStakeTimestamp: Timestamp | undefined;
+	firstStakeTimestamp: Timestamp | undefined;
 	largestStake: Balance;
 }
 
@@ -94,33 +50,13 @@ export interface StakeStakeEventAccumulation {
 //// API
 /////////////////////////////////////////////////////////////////////
 
-export interface ApiStakeBody {
+export interface ApiStakingStakeBody {
 	walletAddress: SuiAddress;
-	coinAmount: Balance;
-	stakedCoinType: CoinType;
-}
-
-export interface ApiUnstakeBody {
-	walletAddress: SuiAddress;
-	coinAmount: Balance;
-	unstakedCoinType: CoinType;
-}
-
-export interface ApiRequestAddDelegationBody {
-	walletAddress: SuiAddress;
-	coinAmount: Balance;
+	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
 }
 
-export interface ApiRequestWithdrawDelegationBody {
+export interface ApiStakingUnstakeBody {
 	walletAddress: SuiAddress;
-	principalAmount: Balance;
-	stakedSuiObjectId: ObjectId;
-	delegationObjectId: ObjectId;
-}
-
-export interface ApiCancelDelegationRequestBody {
-	walletAddress: SuiAddress;
-	principalAmount: Balance;
-	stakedSuiObjectId: ObjectId;
+	afSuiUnstakeAmount: Balance;
 }

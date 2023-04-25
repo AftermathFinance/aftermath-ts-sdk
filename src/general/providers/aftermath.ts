@@ -1,6 +1,6 @@
 import { SuiAddress } from "@mysten/sui.js";
 import { Pools } from "../../packages/pools/pools";
-import { CoinType, SuiNetwork, Url } from "../../types";
+import { CoinType, SuiNetwork } from "../../types";
 import { Wallet } from "../wallet/wallet";
 import { Capys } from "../../packages/capys/capys";
 import { Coin } from "../../packages/coin/coin";
@@ -10,13 +10,35 @@ import { Helpers } from "../utils/helpers";
 import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
-import { Pool, Router, Sui } from "../../packages";
+import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
 
+/**
+ * @class Aftermath Provider
+ *
+ * @example
+ * ```
+ * // Create provider
+ * const aftermath = new Aftermath("TESTNET");
+ * // Create package provider
+ * const router = aftermath.Router();
+ * // Call sdk from package provider
+ * const supportedCoins = await router.getSupportedCoins();
+ *
+ * // Or do it all in one go
+ * const supportedCoins = await (new Aftermath("TESTNET")).Router().getSupportedCoins();
+ * ```
+ */
 export class Aftermath extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Creates `Aftermath` provider to call api.
+	 *
+	 * @param network - The Sui network to interact with
+	 * @returns New `Aftermath` instance
+	 */
 	constructor(network?: SuiNetwork) {
 		super(network);
 	}
@@ -37,7 +59,9 @@ export class Aftermath extends Caller {
 	public Staking = () => new Staking(this.network);
 	public Capys = () => new Capys(this.network);
 	public Faucet = () => new Faucet(this.network);
-	public Router = (pools?: Pool[]) => new Router(pools, this.network);
+	public Router = () => new Router(this.network);
+	public NftAmm = () => new NftAmm(this.network);
+	public ReferralVault = () => new ReferralVault(this.network);
 
 	/////////////////////////////////////////////////////////////////////
 	//// General

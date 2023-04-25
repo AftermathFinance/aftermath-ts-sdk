@@ -1,6 +1,11 @@
-import { SignableTransaction } from "@mysten/sui.js";
-import { ApiStakeCapyBody, SuiNetwork, CapyObject } from "../../types";
+import {
+	ApiStakeCapyBody,
+	SuiNetwork,
+	CapyObject,
+	SerializedTransaction,
+} from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { TransactionBlock } from "@mysten/sui.js";
 
 export class Capy extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -21,11 +26,11 @@ export class Capy extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakeTransaction(): Promise<SignableTransaction> {
+	public async getStakeTransaction() {
 		if (this.isStaked)
 			throw new Error("unable to stake already staked capy");
 
-		return this.fetchApi<SignableTransaction, ApiStakeCapyBody>(
+		return this.fetchApiTransaction<ApiStakeCapyBody>(
 			"transactions/stake",
 			{
 				capyId: this.capy.objectId,

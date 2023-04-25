@@ -20,13 +20,15 @@ export class Wallet extends Caller {
 	//// Balances
 	/////////////////////////////////////////////////////////////////////
 
-	public async getBalance(coin: CoinType): Promise<Balance> {
-		return this.fetchApi(`balances/${coin}`);
+	public async getBalance(inputs: { coin: CoinType }): Promise<Balance> {
+		return this.fetchApi(`balances/${inputs.coin}`);
 	}
 
 	// TODO: change return type to Record<Coin, Balance> ?
-	public async getBalances(coins: CoinType[]): Promise<Balance[]> {
-		const balances = await Promise.all(coins.map(this.getBalance));
+	public async getBalances(inputs: { coins: CoinType[] }) {
+		const balances = await Promise.all(
+			inputs.coins.map((coin) => this.getBalance({ coin }))
+		);
 		return balances;
 	}
 
@@ -38,16 +40,10 @@ export class Wallet extends Caller {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getPastTransactions(
-		cursor?: TransactionDigest,
-		limit?: number
-	): Promise<TransactionsWithCursor> {
+	public async getPastAftermathTransactions(inputs: ApiTransactionsBody) {
 		return this.fetchApi<TransactionsWithCursor, ApiTransactionsBody>(
 			"transactions",
-			{
-				cursor,
-				limit,
-			}
+			inputs
 		);
 	}
 }

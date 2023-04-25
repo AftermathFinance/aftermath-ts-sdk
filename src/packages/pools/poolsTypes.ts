@@ -1,7 +1,15 @@
-import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
+import {
+	Balance,
+	Event,
+	Object,
+	SerializedTransaction,
+	Slippage,
+	Timestamp,
+} from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
 import { CoinsToBalance, CoinType } from "../coin/coinTypes";
+import { TransactionArgument } from "@mysten/sui.js";
 
 // TODO: create LpCoinType ?
 
@@ -12,57 +20,31 @@ import { CoinsToBalance, CoinType } from "../coin/coinTypes";
 export type PoolName = string;
 export type PoolWeight = bigint;
 export type PoolTradeFee = bigint;
+export type PoolFlatness = bigint;
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
-export interface PoolCompleteObject {
-	pool: PoolObject;
-	dynamicFields: PoolDynamicFields;
+export type PoolCoins = Record<CoinType, PoolCoin>;
+
+export interface PoolCoin {
+	weight: PoolWeight;
+	balance: Balance;
+	tradeFeeIn: PoolTradeFee;
+	tradeFeeOut: PoolTradeFee;
+	depositFee: PoolTradeFee;
+	withdrawFee: PoolTradeFee;
 }
 
-export interface PoolObject {
-	objectId: ObjectId;
-	fields: {
-		name: PoolName;
-		creator: SuiAddress;
-		coins: CoinType[];
-		weights: PoolWeight[];
-		tradeFee: PoolTradeFee;
-		lpType: CoinType;
-		curveType: PoolCurveType;
-	};
-}
-
-export enum PoolCurveType {
-	Uncorrelated = 0,
-}
-
-/////////////////////////////////////////////////////////////////////
-//// Dynamic Fields
-/////////////////////////////////////////////////////////////////////
-
-export interface PoolLpDynamicField {
-	objectId: ObjectId;
-	value: Balance;
-}
-
-export interface PoolBalanceDynamicField {
-	objectId: ObjectId;
-	coin: CoinType;
-	value: Balance;
-}
-
-export interface PoolAmountDynamicField {
-	objectId: ObjectId;
-	coin: CoinType;
-	value: Balance;
-}
-
-export interface PoolDynamicFields {
-	lpFields: PoolLpDynamicField[];
-	amountFields: PoolAmountDynamicField[];
+export interface PoolObject extends Object {
+	name: PoolName;
+	creator: SuiAddress;
+	lpCoinType: CoinType;
+	lpCoinSupply: Balance;
+	illiquidLpCoinSupply: Balance;
+	flatness: PoolFlatness;
+	coins: PoolCoins;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -72,18 +54,10 @@ export interface PoolDynamicFields {
 export interface PoolTradeEvent extends Event {
 	poolId: ObjectId;
 	trader: SuiAddress;
-	typeIn: CoinType;
-	amountIn: Balance;
-	typeOut: CoinType;
-	amountOut: Balance;
-}
-
-export interface PoolSingleDepositEvent extends Event {
-	poolId: ObjectId;
-	depositor: SuiAddress;
-	type: CoinType;
-	amount: Balance;
-	lpMinted: Balance;
+	typesIn: CoinType[];
+	amountsIn: Balance[];
+	typesOut: CoinType[];
+	amountsOut: Balance[];
 }
 
 export interface PoolDepositEvent extends Event {
@@ -92,14 +66,6 @@ export interface PoolDepositEvent extends Event {
 	types: CoinType[];
 	deposits: Balance[];
 	lpMinted: Balance;
-}
-
-export interface PoolSingleWithdrawEvent extends Event {
-	poolId: ObjectId;
-	withdrawer: SuiAddress;
-	type: CoinType;
-	amount: Balance;
-	lpBurned: Balance;
 }
 
 export interface PoolWithdrawEvent extends Event {
@@ -138,35 +104,35 @@ export interface PoolVolumeDataTimeframe {
 //// API
 /////////////////////////////////////////////////////////////////////
 
+export interface ApiPoolTradeBody {
+	walletAddress: SuiAddress;
+	coinIn: CoinType;
+	coinInAmount: Balance;
+	coinOut: CoinType;
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}
+
+export interface ApiPoolDepositBody {
+	walletAddress: SuiAddress;
+	amountsIn: CoinsToBalance;
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}
+
+export interface ApiPoolWithdrawBody {
+	walletAddress: SuiAddress;
+	amountsOutDirection: CoinsToBalance;
+	lpCoinAmount: Balance;
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}
+
 export interface ApiPoolSpotPriceBody {
 	coinInType: CoinType;
 	coinOutType: CoinType;
 }
 
-export interface ApiPoolTradeAmountOutBody {
-	coinInType: CoinType;
-	coinInAmount: Balance;
-	coinOutType: CoinType;
-}
-
-export interface ApiPoolDepositLpMintAmountBody {
-	depositCoinAmounts: CoinsToBalance;
-}
-
-export interface ApiPoolDepositBody {
-	walletAddress: SuiAddress;
-	depositCoinAmounts: CoinsToBalance;
-}
-
-export interface ApiPoolWithdrawBody {
-	walletAddress: SuiAddress;
-	withdrawCoinAmounts: CoinsToBalance;
-	withdrawLpTotal: Balance;
-}
-
-export interface ApiPoolTradeBody {
-	walletAddress: SuiAddress;
-	fromCoin: CoinType;
-	fromCoinAmount: Balance;
-	toCoin: CoinType;
+export interface ApiPoolObjectIdForLpCoinTypeBody {
+	lpCoinType: CoinType;
 }

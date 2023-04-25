@@ -1,5 +1,5 @@
 import { SuiNetwork } from "../types/suiTypes";
-import { CoinType } from "../../packages/coin/coinTypes";
+import { CoinType, CoinsToPrice } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 
 export class Prices extends Caller {
@@ -15,12 +15,16 @@ export class Prices extends Caller {
 	//// Prices
 	/////////////////////////////////////////////////////////////////////
 
-	public async getPrice(coin: CoinType): Promise<number> {
-		return this.fetchApi(JSON.stringify([coin]));
+	public async getCoinPrice(inputs: { coin: CoinType }): Promise<number> {
+		const coinsToPrice = await this.getCoinsToPrice({
+			coins: [inputs.coin],
+		});
+		return Object.values(coinsToPrice)[0];
 	}
 
-	// TODO: change return type to Record<Coin, number> ?
-	public async getPrices(coins: CoinType[]): Promise<number[]> {
-		return this.fetchApi(JSON.stringify(coins));
+	public async getCoinsToPrice(inputs: {
+		coins: CoinType[];
+	}): Promise<CoinsToPrice> {
+		return this.fetchApi(JSON.stringify(inputs.coins));
 	}
 }

@@ -1,8 +1,8 @@
 import {
 	EventId,
 	ObjectId,
-	SignableTransaction,
 	SuiAddress,
+	TransactionBlock,
 } from "@mysten/sui.js";
 import {
 	ApiBreedCapyBody,
@@ -14,6 +14,7 @@ import {
 	CapyStats,
 	DynamicFieldObjectsWithCursor,
 	EventsWithCursor,
+	SerializedTransaction,
 	StakeCapyEvent,
 	StakedCapyReceiptObject,
 	SuiNetwork,
@@ -55,30 +56,31 @@ export class Capys extends Caller {
 	//// Class Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public async getCapy(capyObjectId: ObjectId): Promise<Capy> {
-		return (await this.getCapys([capyObjectId]))[0];
+	public async getCapy(capyObjectId: ObjectId) {
+		const capys = await this.getCapys([capyObjectId]);
+		return capys[0];
 	}
 
-	public async getCapys(capyObjectIds: ObjectId[]): Promise<Capy[]> {
-		return (
-			await this.fetchApi<CapyObject[]>(
-				`${JSON.stringify(capyObjectIds)}`
-			)
-		).map((capy) => new Capy(capy, this.network));
+	public async getCapys(capyObjectIds: ObjectId[]) {
+		const capys = await this.fetchApi<CapyObject[]>(
+			`${JSON.stringify(capyObjectIds)}`
+		);
+
+		return capys.map((capy) => new Capy(capy, this.network));
 	}
 
-	public async getOwnedCapys(walletAddress: SuiAddress): Promise<Capy[]> {
-		return (
-			await this.fetchApi<CapyObject[]>(`ownedCapys/${walletAddress}`)
-		).map((capy) => new Capy(capy, this.network));
+	public async getOwnedCapys(walletAddress: SuiAddress) {
+		const ownedCapys = await this.fetchApi<CapyObject[]>(
+			`owned-capys/${walletAddress}`
+		);
+
+		return ownedCapys.map((capy) => new Capy(capy, this.network));
 	}
 
-	public async getStakedCapyReceipts(
-		walletAddress: SuiAddress
-	): Promise<StakedCapyReceipt[]> {
+	public async getStakedCapyReceipts(walletAddress: SuiAddress) {
 		const stakedCapyReceipts = await this.fetchApi<
 			StakedCapyReceiptObject[]
-		>(`stakedCapyReceipts/${walletAddress}`);
+		>(`staked-capy-receipts/${walletAddress}`);
 
 		const stakedCapys = await this.getCapys(
 			stakedCapyReceipts.map((receipt) => receipt.capyId)
@@ -106,7 +108,7 @@ export class Capys extends Caller {
 		const capysWithCursor = await this.fetchApi<
 			DynamicFieldObjectsWithCursor<CapyObject>,
 			ApiDynamicFieldsBody
-		>(`stakedCapys${Capys.createCapyAttributesQueryString(attributes)}`, {
+		>(`staked-capys${Capys.createCapyAttributesQueryString(attributes)}`, {
 			cursor,
 			limit,
 		});
@@ -125,55 +127,37 @@ export class Capys extends Caller {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async getBreedCapyEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<BreedCapysEvent>> {
-		return this.fetchApi<EventsWithCursor<BreedCapysEvent>, ApiEventsBody>(
-			"events/breedCapy",
-			{
-				cursor,
-				limit,
-			}
-		);
+	public async getBreedCapyEvents(cursor?: EventId, limit?: number) {
+		return this.fetchApiEvents<BreedCapysEvent>("events/breed-capys", {
+			cursor,
+			limit,
+		});
 	}
 
-	public async getStakeCapyEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<StakeCapyEvent>> {
-		return this.fetchApi<EventsWithCursor<StakeCapyEvent>, ApiEventsBody>(
-			"events/stakeCapy",
-			{
-				cursor,
-				limit,
-			}
-		);
+	public async getStakeCapyEvents(cursor?: EventId, limit?: number) {
+		return this.fetchApiEvents<StakeCapyEvent>("events/stake-capy", {
+			cursor,
+			limit,
+		});
 	}
 
-	public async getUnstakeCapyEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<UnstakeCapyEvent>> {
-		return this.fetchApi<EventsWithCursor<UnstakeCapyEvent>, ApiEventsBody>(
-			"events/unstakeCapy",
-			{
-				cursor,
-				limit,
-			}
-		);
+	public async getUnstakeCapyEvents(cursor?: EventId, limit?: number) {
+		return this.fetchApiEvents<UnstakeCapyEvent>("events/unstake-capy", {
+			cursor,
+			limit,
+		});
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
 
-	public async getBreedCapysTransactions(
+	public async getBreedCapysTransaction(
 		walletAddress: SuiAddress,
 		capyParentOneId: ObjectId,
 		capyParentTwoId: ObjectId
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiBreedCapyBody>(
+	) {
+		return this.fetchApiTransaction<ApiBreedCapyBody>(
 			"transactions/breed",
 			{
 				walletAddress,

@@ -3,9 +3,13 @@ import { Faucet } from "../faucet";
 import { EventId } from "@mysten/sui.js";
 import { FaucetApiCasting } from "./faucetApiCasting";
 import { CoinType } from "../../coin/coinTypes";
-import { FaucetMintCoinEventOnChain } from "./faucetApiCastingTypes";
-import { FaucetMintCoinEvent } from "../faucetTypes";
+import {
+	FaucetAddCoinEventOnChain,
+	FaucetMintCoinEventOnChain,
+} from "./faucetApiCastingTypes";
+import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
 import { FaucetApiHelpers } from "./faucetApiHelpers";
+import { SerializedTransaction } from "../../../types";
 
 export class FaucetApi {
 	/////////////////////////////////////////////////////////////////////
@@ -27,41 +31,14 @@ export class FaucetApi {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchSupportedCoins = () => {
-		const faucetPackageId = this.Provider.addresses.faucet?.packages.faucet;
-		if (!faucetPackageId) throw new Error("faucet package id is unset");
-
-		const coinSymbols = [
-			"usdc",
-			"whusdc",
-			"lzusdc",
-			"axlusdc",
-			"whusdt",
-			"lzusdt",
-			"axldai",
-			"wheth",
-			"lzeth",
-			"whbtc",
-			"btcb",
-			"af",
-		];
-
-		const coinTypes: CoinType[] = coinSymbols.map(
-			(coinSymbol) =>
-				`${faucetPackageId}::${coinSymbol.toLowerCase()}::${coinSymbol.toUpperCase()}`
+	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
+		const addCoinEvents = await this.fetchAddCoinEvents();
+		const coins = addCoinEvents.events.map((event) => "0x" + event.type);
+		const coinsWithoutAfSui = coins.filter(
+			(coin) => !coin.toLowerCase().includes("afsui")
 		);
-		return coinTypes;
+		return coinsWithoutAfSui;
 	};
-
-	// TODO: replace above function with below once support is added in contract
-	// for typenames function
-
-	// public fetchFaucetSupportedCoins = async () => {
-	// 	const signer: SuiAddress = config.constants.devInspectSigner;
-	// 	const moveCallTransaction = faucetSupportedCoinsMoveCall();
-	// 	const bytes = await fetchBytesFromMoveCallTransaction(signer, moveCallTransaction);
-	// 	return stringFromBytes(bytes);
-	// };
 
 	public fetchIsPackageOnChain = () => {
 		const faucetPackageId = this.Provider.addresses.faucet?.packages.faucet;
@@ -74,7 +51,9 @@ export class FaucetApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestCoinAmountTransaction = async (coin: CoinType) => {
+	public fetchRequestCoinAmountTransaction = async (
+		coin: CoinType
+	): Promise<SerializedTransaction> => {
 		const price = await this.Provider.Prices().fetchPrice(coin);
 
 		const requestAmount = Faucet.constants.defaultRequestAmountUsd / price;
@@ -89,26 +68,38 @@ export class FaucetApi {
 			requestAmountWithDecimals
 		);
 
-		return transaction;
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			transaction
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchMintCoinEvents = async (
-		cursor?: EventId,
-		eventLimit?: number
-	) =>
+	public fetchMintCoinEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
 			FaucetMintCoinEvent
 		>(
 			{
-				MoveEvent: this.Helpers.eventTypes.mintCoin,
+				MoveEventType: this.Helpers.eventTypes.mintCoin,
 			},
 			FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			cursor,
-			eventLimit
+			limit
+		);
+
+	public fetchAddCoinEvents = async (cursor?: EventId, limit?: number) =>
+		await this.Provider.Events().fetchCastEventsWithCursor<
+			FaucetAddCoinEventOnChain,
+			FaucetAddCoinEvent
+		>(
+			{
+				MoveEventType: this.Helpers.eventTypes.addCoin,
+			},
+			FaucetApiCasting.faucetAddCoinEventFromOnChain,
+			cursor,
+			limit
 		);
 }

@@ -22,11 +22,11 @@ export class WalletApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchCoinBalance = async (account: SuiAddress, coin: CoinType) => {
-		const coinBalance = await this.Provider.provider.getBalance(
-			account,
-			Helpers.stripLeadingZeroesFromType(coin)
-		);
-		return BigInt(Math.floor(coinBalance.totalBalance));
+		const coinBalance = await this.Provider.provider.getBalance({
+			owner: account,
+			coinType: Helpers.stripLeadingZeroesFromType(coin),
+		});
+		return BigInt(coinBalance.totalBalance);
 	};
 
 	// TODO: make toBigIntSafe function ?
@@ -34,17 +34,15 @@ export class WalletApi {
 	public fetchAllCoinBalances = async (
 		address: SuiAddress
 	): Promise<CoinsToBalance> => {
-		const allBalances = await this.Provider.provider.getAllBalances(
-			address
-		);
+		const allBalances = await this.Provider.provider.getAllBalances({
+			owner: address,
+		});
 
 		const coinsToBalance: CoinsToBalance = allBalances.reduce(
 			(acc, balance, index) => {
 				return {
 					...acc,
-					[balance.coinType]: BigInt(
-						Math.floor(balance.totalBalance)
-					),
+					[balance.coinType]: BigInt(balance.totalBalance),
 				};
 			},
 			{}
@@ -57,7 +55,9 @@ export class WalletApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchTransactionHistory = async (
+	// TODO: make this only look at aftermath relevant addresses in to address
+	// TODO: restrict all filtering for events, etc. similarly using updated sdk filters
+	public fetchPastAftermathTransactions = async (
 		address: SuiAddress,
 		cursor?: TransactionDigest,
 		limit?: number
@@ -66,7 +66,9 @@ export class WalletApi {
 			this.Provider
 		).fetchTransactionsWithCursor(
 			{
-				FromAddress: address,
+				filter: {
+					FromAddress: address,
+				},
 			},
 			cursor,
 			limit

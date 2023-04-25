@@ -1,7 +1,45 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { AnyObjectType, Balance } from "../../general/types/generalTypes";
+import { SuiAddress } from "@mysten/sui.js";
+import {
+	Balance,
+	Percentage,
+	Slippage,
+} from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
-import { PoolTradeFee } from "../pools/poolsTypes";
+import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
+import { NojoPoolObject } from "./utils/routerPools/nojoRouterPool";
+
+/////////////////////////////////////////////////////////////////////
+//// Name Only
+/////////////////////////////////////////////////////////////////////
+
+export type UniqueId = string;
+
+/////////////////////////////////////////////////////////////////////
+//// General
+/////////////////////////////////////////////////////////////////////
+
+/**
+ * Fee info for third party packages wanting to fee route transactions
+ */
+export interface RouterExternalFee {
+	/**
+	 * Address of recipient for collected fees
+	 */
+	recipient: SuiAddress;
+	/**
+	 * Percent of fees to be collected from final coin out amount
+	 *
+	 * @remarks 0.54 = 54%
+	 */
+	feePercentage: Percentage;
+}
+
+/////////////////////////////////////////////////////////////////////
+//// Router Pools
+/////////////////////////////////////////////////////////////////////
+
+export type RouterSerializablePool = PoolObject | NojoPoolObject;
+export type RouterProtocolName = "Aftermath" | "Nojo";
 
 /////////////////////////////////////////////////////////////////////
 //// Paths
@@ -9,6 +47,8 @@ import { PoolTradeFee } from "../pools/poolsTypes";
 
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
+	referrer?: SuiAddress;
+	externalFee?: RouterExternalFee;
 };
 
 export type RouterTradeRoute = RouterTradeInfo & {
@@ -16,54 +56,75 @@ export type RouterTradeRoute = RouterTradeInfo & {
 };
 
 export type RouterTradePath = RouterTradeInfo & {
-	poolObjectId: ObjectId;
-	poolLpCoinType: AnyObjectType;
+	protocolName: RouterProtocolName;
+	pool: RouterSerializablePool;
 };
 
 export interface RouterTradeInfo {
-	coinIn: CoinType;
-	coinOut: CoinType;
-	coinInAmount: Balance;
-	coinOutAmount: Balance;
-	tradeFee: PoolTradeFee;
+	coinIn: RouterTradeCoin;
+	coinOut: RouterTradeCoin;
 	spotPrice: number;
 }
 
-// export interface RouterCompleteRoute {
-// 	coinIn: CoinType;
-// 	coinOut: CoinType;
-// 	coinInAmount: Balance;
-// 	coinOutAmount: Balance;
-// 	spotPrice: number;
-// 	tradeFee: PoolTradeFee;
-// 	paths: RouterPaths;
-// }
-
-// export type RouterPaths = Record<ObjectId, RouterPath>;
-
-// export interface RouterPath {
-// 	coinInAmount: Balance;
-// 	coinOutAmount: Balance;
-// 	spotPrice: number;
-// 	tradeFee: PoolTradeFee;
-// }
+export interface RouterTradeCoin {
+	type: CoinType;
+	amount: Balance;
+	tradeFee: PoolTradeFee;
+}
 
 /////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
-// export interface ApiRouterPathInfoBody {
-// 	fromCoin: CoinType;
-// 	toCoin: CoinType;
-// }
+/**
+ * Details for router to construct trade route
+ */
+export type ApiRouterCompleteTradeRouteBody = {
+	/**
+	 * Coin type of coin being given away
+	 */
+	coinIn: CoinType;
+	/**
+	 * Coin type of coin being received
+	 */
+	coinOut: CoinType;
+	/**
+	 * Optional address for referrer of the route creator
+	 */
+	referrer?: SuiAddress;
+	/**
+	 * Fee info for third party packages wanting to fee route transactions
+	 */
+	externalFee?: RouterExternalFee;
+} & (
+	| {
+			/**
+			 * Amount of coin being given away
+			 */
+			coinInAmount: Balance;
+	  }
+	| {
+			/**
+			 * Amount of coin expected to receive
+			 */
+			coinOutAmount: Balance;
+	  }
+);
 
-// export interface ApiRouterFirstTradeTransactionsBody {
-// 	walletAddress: SuiAddress;
-// 	fromCoinAmount: Balance;
-// 	path: RouterPath;
-// }
-
-// export interface ApiRouterIntermediateTradeTransactionsBody {
-// 	path: RouterPath;
-// 	fromCoinId: ObjectId;
-// }
+/**
+ * Info to construct router trade transaction from complete route
+ */
+export interface ApiRouterTransactionForCompleteTradeRouteBody {
+	/**
+	 * Sender address (trader)
+	 */
+	walletAddress: SuiAddress;
+	/**
+	 * Complete route followed by `coinIn` to get to `coinOut`
+	 */
+	completeRoute: RouterCompleteTradeRoute;
+	/**
+	 * Allowable percent loss for trade
+	 */
+	slippage: Slippage;
+}

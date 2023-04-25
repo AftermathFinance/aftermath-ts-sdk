@@ -4,63 +4,50 @@ import {
 	Balance,
 	BigIntAsString,
 	CoinType,
-	EventOnChain,
-	KeyType,
+	PoolName,
 } from "../../../types";
-import { PoolCurveType } from "../../../types";
+import {
+	EventOnChain,
+	SupplyOnChain,
+} from "../../../general/types/castingTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
 export interface PoolFieldsOnChain {
+	name: PoolName;
 	creator: SuiAddress;
-	name: string;
-	swap_fee: BigIntAsString;
+	lp_supply: SupplyOnChain;
+	illiquid_lp_supply: BigIntAsString;
 	type_names: CoinType[];
+	balances: BigIntAsString[];
 	weights: BigIntAsString[];
-	lp_type: CoinType;
-	curve_type: PoolCurveType;
+	flatness: BigIntAsString;
+	fees_swap_in: BigIntAsString[];
+	fees_swap_out: BigIntAsString[];
+	fees_deposit: BigIntAsString[];
+	fees_withdraw: BigIntAsString[];
 }
 
 /////////////////////////////////////////////////////////////////////
 //// Events
 /////////////////////////////////////////////////////////////////////
 
-// TODO: update this type to match same pattern as those below
-export interface PoolCreateEventOnChain {
-	packageId: ObjectId;
-	transactionModule: string;
-	sender: SuiAddress;
-	type: string;
-	fields: {
-		coins: CoinType[];
-		creator: SuiAddress;
+export type PoolCreateEventOnChain = EventOnChain<
+	{
 		pool_id: ObjectId;
-		weights: BigIntAsString[];
-		swap_fee: BigIntAsString;
 		lp_type: CoinType; // TODO: make seperate LpCoinType ?
-		name: string;
-		curve_type: PoolCurveType;
-	};
-	bcs: string;
-}
+	} & PoolFieldsOnChain
+>;
 
 export type PoolTradeEventOnChain = EventOnChain<{
 	pool_id: ObjectId;
 	issuer: SuiAddress;
-	type_in: CoinType;
-	value_in: Balance;
-	type_out: CoinType;
-	value_out: Balance;
-}>;
-
-export type PoolSingleDepositEventOnChain = EventOnChain<{
-	pool_id: ObjectId;
-	issuer: SuiAddress;
-	type: CoinType;
-	value: Balance;
-	lp_coins_minted: Balance;
+	types_in: CoinType[];
+	amounts_in: Balance[];
+	types_out: CoinType[];
+	amounts_out: Balance[];
 }>;
 
 export type PoolDepositEventOnChain = EventOnChain<{
@@ -71,14 +58,6 @@ export type PoolDepositEventOnChain = EventOnChain<{
 	lp_coins_minted: Balance;
 }>;
 
-export type PoolSingleWithdrawEventOnChain = EventOnChain<{
-	pool_id: ObjectId;
-	issuer: SuiAddress;
-	type: CoinType;
-	value: Balance;
-	lp_coins_burned: Balance;
-}>;
-
 export type PoolWithdrawEventOnChain = EventOnChain<{
 	pool_id: ObjectId;
 	issuer: SuiAddress;
@@ -87,52 +66,9 @@ export type PoolWithdrawEventOnChain = EventOnChain<{
 	lp_coins_burned: Balance;
 }>;
 
-export interface PoolSpotPriceEventOnChain {
-	fields: {
-		spot_price: BigIntAsString;
-	};
-}
-
-/////////////////////////////////////////////////////////////////////
-//// Dynamic Fields
-/////////////////////////////////////////////////////////////////////
-
-export interface PoolDynamicFieldOnChain<FieldsType> {
-	data: {
-		fields: FieldsType;
-		type: AnyObjectType;
-	};
-}
-
-export type PoolLpDynamicFieldOnChain = PoolDynamicFieldOnChain<{
-	id: {
-		id: ObjectId;
-	};
-	value: {
-		fields: {
-			value: BigIntAsString;
-		};
-	};
-}>;
-
-export type PoolBalanceDynamicFieldOnChain = PoolDynamicFieldOnChain<{
-	id: {
-		id: ObjectId;
-	};
-	value: BigIntAsString;
-	name: {
-		type: KeyType;
-	};
-}>;
-
-export type PoolAmountDynamicFieldOnChain = PoolDynamicFieldOnChain<{
-	id: {
-		id: ObjectId;
-	};
-	value: BigIntAsString;
-	name: {
-		fields: {
-			type_name: CoinType;
-		};
-	};
+export type PoolSpotPriceEventOnChain = EventOnChain<{
+	pool_id: ObjectId;
+	base_type: CoinType;
+	quote_type: CoinType;
+	spot_price: BigIntAsString;
 }>;

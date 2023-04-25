@@ -1,42 +1,74 @@
-import { EventId, ObjectId } from "@mysten/sui.js";
+import { ObjectId } from "@mysten/sui.js";
 import {
-	AnyObjectType,
 	ApiEventsBody,
+	ApiPoolObjectIdForLpCoinTypeBody,
 	Balance,
 	CoinType,
-	EventsWithCursor,
-	PoolAmountDynamicField,
 	PoolDepositEvent,
-	PoolDynamicFields,
 	PoolObject,
 	PoolTradeEvent,
 	PoolTradeFee,
 	PoolWeight,
 	PoolWithdrawEvent,
+	Slippage,
 	SuiNetwork,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
-import { Helpers } from "../../general/utils/helpers";
 import { Caller } from "../../general/utils/caller";
+import { Helpers } from "../../general/utils/helpers";
 
+/**
+ * @class Pools Provider
+ *
+ * @example
+ * ```
+ * // Create provider
+ * const pools = (new Aftermath("testnet")).Pools();
+ * // Call sdk
+ * const pool = await pools.getPool({ objectId: "0xBEEF" });
+ * ```
+ */
 export class Pools extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
 	public static readonly constants = {
-		lpCoinDecimals: 9,
-		coinWeightDecimals: 18,
-		spotPriceDecimals: 18,
-		tradeFeeDecimals: 18,
-		maxTradeFee: BigInt(1000000000000000000),
+		decimals: {
+			lpCoinDecimals: 9,
+			coinWeightDecimals: 18,
+			spotPriceDecimals: 18,
+			tradeFeeDecimals: 18,
+			slippageDecimals: 18,
+		},
+		feePercentages: {
+			totalProtocol: 0.00005, // 0.005%
+			// following fees are taked as portions of total protocol fees above
+			treasury: 0.5, // 50%
+			insuranceFund: 0.3, // 30%
+			devWallet: 0.2, // 20%
+		},
+		referralPercentages: {
+			// these percantages are relative to treasury allocation
+			discount: 0.05, // 5%
+			rebate: 0.05, // 5%
+		},
+		bounds: {
+			maxSwapPercentageOfPoolBalance: 0.3, // 30%
+		},
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Creates `Pools` provider to call api.
+	 *
+	 * @param network - The Sui network to interact with
+	 * @returns New `Pools` instance
+	 */
 	constructor(public readonly network?: SuiNetwork) {
 		super(network, "pools");
 	}
@@ -49,197 +81,154 @@ export class Pools extends Caller {
 	//// Pool Class
 	/////////////////////////////////////////////////////////////////////
 
-	public async getPool(poolObjectId: ObjectId): Promise<Pool> {
-		const [pool, poolDynamicFields] = await Promise.all([
-			this.fetchApi<PoolObject>(`${poolObjectId}`),
-			this.fetchApi<PoolDynamicFields>(`${poolObjectId}/dynamicFields`),
-		]);
-		return new Pool(pool, poolDynamicFields, this.network);
+	/**
+	 * Creates new `Pool` class from queried pool object
+	 *
+	 * @param objectId - Object id of pool to fetch
+	 * @returns New `Pool` instance
+	 */
+	public async getPool(inputs: { objectId: ObjectId }) {
+		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
+		return new Pool(pool, this.network);
 	}
 
-	public async getPools(poolObjectIds: ObjectId[]): Promise<Pool[]> {
-		const pools = await Promise.all(poolObjectIds.map(this.getPool));
+	/**
+	 * Creates `Pool[]` of classes from queried pool objects
+	 *
+	 * @param objectIds - Object ids of pools to fetch
+	 * @returns New `Pool[]` instances
+	 */
+	public async getPools(inputs: { objectIds: ObjectId[] }) {
+		// NOTE: should this pass array of pools directly instead (caching performance though...)
+		// could put logic for handling into api itself (prob best idea)
+		const pools = await Promise.all(
+			inputs.objectIds.map((objectId) => this.getPool({ objectId }))
+		);
 		return pools;
 	}
 
-	public async getAllPools(): Promise<Pool[]> {
+	public async getAllPools() {
 		const pools = await this.fetchApi<PoolObject[]>("");
-		const poolDynamicFields = await Promise.all(
-			pools.map((pool) =>
-				this.fetchApi<PoolDynamicFields>(
-					`${pool.objectId}/dynamicFields`
-				)
-			)
-		);
-		return pools.map(
-			(pool, index) =>
-				new Pool(pool, poolDynamicFields[index], this.network)
-		);
+		return pools.map((pool) => new Pool(pool, this.network));
 	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Router Class
-	/////////////////////////////////////////////////////////////////////
-
-	// NOTE: should this function be named `getRouter` or just `Router` ?
-	// should this even be here or just off of aftermath class ?
-
-	// public async getRouter(): Promise<Router> {
-	// 	const pools = await this.getAllPools();
-	// 	return new Router(pools, this.network);
-	// }
 
 	/////////////////////////////////////////////////////////////////////
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async getDepositEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<PoolDepositEvent>> {
-		return this.fetchApi<EventsWithCursor<PoolDepositEvent>, ApiEventsBody>(
-			"events/deposit",
-			{
-				cursor,
-				limit,
-			}
+	public async getDepositEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<PoolDepositEvent>("events/deposit", inputs);
+	}
+
+	public async getWithdrawEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<PoolWithdrawEvent>(
+			"events/withdraw",
+			inputs
 		);
 	}
 
-	public async getWithdrawEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<PoolWithdrawEvent>> {
-		return this.fetchApi<
-			EventsWithCursor<PoolWithdrawEvent>,
-			ApiEventsBody
-		>("events/withdraw", {
-			cursor,
-			limit,
-		});
+	public async getTradeEvents(inputs: ApiEventsBody) {
+		return this.fetchApiEvents<PoolTradeEvent>("events/trade", inputs);
 	}
 
-	public async getTradeEvents(
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<PoolTradeEvent>> {
-		return this.fetchApi<EventsWithCursor<PoolTradeEvent>, ApiEventsBody>(
-			"events/trade",
-			{
-				cursor,
-				limit,
-			}
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public getPoolObjectIdForLpCoinType = (
+		inputs: ApiPoolObjectIdForLpCoinTypeBody
+	) => {
+		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
+			"pool-object-id",
+			inputs
 		);
-	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
-
-	public static sortCoinsByWeights = (
-		coins: CoinType[],
-		weights: PoolWeight[]
-	) => {
-		if (coins.length !== weights.length)
-			throw new Error("coins and weights arrays are different lengths");
-		const sortedCoinsWithWeights = weights
-			.map((weight, index) => {
-				return {
-					coin: coins[index],
-					weight: weight,
-				};
-			})
-			.sort((a, b) =>
-				Pools.coinWeightWithDecimals(a.weight) <
-				Pools.coinWeightWithDecimals(b.weight)
-					? 1
-					: Pools.coinWeightWithDecimals(a.weight) >
-					  Pools.coinWeightWithDecimals(b.weight)
-					? -1
-					: 0
-			);
-
-		return {
-			coins: sortedCoinsWithWeights.map((coin) => coin.coin),
-			weights: sortedCoinsWithWeights.map((coin) => coin.weight),
-		};
 	};
 
-	public static sortDynamicFieldsToMatchPoolCoinOrdering = (
-		dynamicFields: PoolDynamicFields,
-		pool: PoolObject
-	) => {
-		const poolCoins = pool.fields.coins;
+	/////////////////////////////////////////////////////////////////////
+	//// Fees
+	/////////////////////////////////////////////////////////////////////
 
-		let amountFields: PoolAmountDynamicField[] = [];
-		for (const poolCoin of poolCoins) {
-			const amountField = dynamicFields.amountFields.find(
-				(field) => field.coin === poolCoin
-			);
-			if (!amountField) throw Error("coin not found in dynamic field");
-
-			amountFields.push({ ...amountField });
-		}
-
-		const sortedDynamicFields = {
-			...dynamicFields,
-			amountFields,
-		} as PoolDynamicFields;
-		return sortedDynamicFields;
+	public static getAmountWithProtocolFees = (inputs: {
+		amount: Balance;
+		withReferral?: boolean;
+	}) => {
+		const referralDiscount = inputs.withReferral
+			? this.constants.feePercentages.totalProtocol *
+			  this.constants.feePercentages.treasury *
+			  this.constants.referralPercentages.discount
+			: 0;
+		return BigInt(
+			Math.floor(
+				Number(inputs.amount) *
+					(1 -
+						(this.constants.feePercentages.totalProtocol -
+							referralDiscount))
+			)
+		);
 	};
 
-	public static findPoolForLpCoin = (lpCoin: CoinType, pools: PoolObject[]) =>
-		pools.find((pool) => {
-			return pool.fields.lpType.includes(
-				new Coin(new Coin(lpCoin).innerCoinType).coinTypeSymbol
-			);
-		});
-
-	/////////////////////////////////////////////////////////////////////
-	//// Type Checking
-	/////////////////////////////////////////////////////////////////////
-
-	// remove this once all LP coins have coin metadata ?
-	public static isLpCoin = (coin: CoinType) => {
-		// return coin.includes(poolsPackageId);
-		return coin.includes("AF_LP_");
+	public static getAmountWithoutProtocolFees = (inputs: {
+		amount: Balance;
+		withReferral?: boolean;
+	}) => {
+		const referralDiscount = inputs.withReferral
+			? this.constants.feePercentages.totalProtocol *
+			  this.constants.feePercentages.treasury *
+			  this.constants.referralPercentages.discount
+			: 0;
+		return BigInt(
+			Math.floor(
+				Number(inputs.amount) *
+					(1 /
+						(1 -
+							(this.constants.feePercentages.totalProtocol -
+								referralDiscount)))
+			)
+		);
 	};
 
-	public static isLpKeyType = (type: AnyObjectType) => type.includes("LpKey");
-	public static isBalanceKeyType = (type: AnyObjectType) =>
-		type.includes("BalanceKey");
-	public static isAmountKeyType = (type: AnyObjectType) =>
-		type.includes("AmountKey");
-
 	/////////////////////////////////////////////////////////////////////
-	//// Conversions
+	//// With Decimals Conversions
 	/////////////////////////////////////////////////////////////////////
 
 	public static coinWeightWithDecimals = (weight: PoolWeight) =>
-		Number(weight) / 10 ** Pools.constants.coinWeightDecimals;
+		Number(weight) / 10 ** Pools.constants.decimals.coinWeightDecimals;
 
 	public static spotPriceWithDecimals = (spotPrice: Balance) =>
-		Number(spotPrice) / 10 ** Pools.constants.spotPriceDecimals;
+		Number(spotPrice) / 10 ** Pools.constants.decimals.spotPriceDecimals;
 
 	public static tradeFeeWithDecimals = (tradeFee: PoolTradeFee) =>
-		Number(tradeFee) / 10 ** Pools.constants.tradeFeeDecimals;
-
-	public static normalizeLpCoinBalance = (balance: number) =>
-		Coin.normalizeBalance(balance, Pools.constants.lpCoinDecimals);
+		Number(tradeFee) / 10 ** Pools.constants.decimals.tradeFeeDecimals;
 
 	public static lpCoinBalanceWithDecimals = (balance: Balance) =>
-		Number(balance) / 10 ** Pools.constants.lpCoinDecimals;
+		Number(balance) / 10 ** Pools.constants.decimals.lpCoinDecimals;
 
-	public static normalizeLpCoinType = (lpCoinType: CoinType) => {
-		return `0x${lpCoinType.replaceAll("<", "<0x")}`;
+	/////////////////////////////////////////////////////////////////////
+	//// Normalize Conversions
+	/////////////////////////////////////////////////////////////////////
+
+	public static normalizePoolTradeFee = (tradeFee: PoolTradeFee) => {
+		return Coin.balanceWithDecimals(
+			tradeFee,
+			Pools.constants.decimals.tradeFeeDecimals
+		);
 	};
+
+	public static normalizeLpCoinBalance = (balance: number) =>
+		Coin.normalizeBalance(balance, Pools.constants.decimals.lpCoinDecimals);
+
+	public static normalizeSlippage = (slippage: Slippage) =>
+		Coin.normalizeBalance(
+			1 - slippage,
+			Pools.constants.decimals.slippageDecimals
+		);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Display
 	/////////////////////////////////////////////////////////////////////
 
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
-		new Coin(Coin.coinTypeFromKeyType(lpCoinType)).coinTypeSymbol
+		new Coin(lpCoinType).coinTypeSymbol
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")

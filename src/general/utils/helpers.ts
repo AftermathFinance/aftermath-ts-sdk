@@ -11,12 +11,12 @@ export class Helpers {
 	//// Api Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	public static dynamicFields = DynamicFieldsApiHelpers;
-	public static events = EventsApiHelpers;
-	public static inspections = InspectionsApiHelpers;
-	public static objects = ObjectsApiHelpers;
-	public static rpc = RpcApiHelpers;
-	public static transactions = TransactionsApiHelpers;
+	public static readonly dynamicFields = DynamicFieldsApiHelpers;
+	public static readonly events = EventsApiHelpers;
+	public static readonly inspections = InspectionsApiHelpers;
+	public static readonly objects = ObjectsApiHelpers;
+	public static readonly rpc = RpcApiHelpers;
+	public static readonly transactions = TransactionsApiHelpers;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Type Manipulation
@@ -30,13 +30,22 @@ export class Helpers {
 	//// Numbers
 	/////////////////////////////////////////////////////////////////////
 
+	public static isNumber = (str: string): boolean => /^\d*\.?\d*$/g.test(str);
+
 	public static sum = (arr: number[]) =>
 		arr.reduce((prev, cur) => prev + cur, 0);
 
 	public static sumBigInt = (arr: bigint[]) =>
 		arr.reduce((prev, cur) => prev + cur, BigInt(0));
 
-	public static isNumber = (str: string): boolean => /^\d*\.?\d*$/g.test(str);
+	public static closeEnough = (a: number, b: number, tolerance: number) =>
+		Math.abs(a - b) <= tolerance * Math.max(a, b);
+
+	public static closeEnoughBigInt = (
+		a: bigint,
+		b: bigint,
+		tolerance: number
+	) => Helpers.closeEnough(Number(a), Number(b), tolerance);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Display
@@ -52,7 +61,7 @@ export class Helpers {
 	public static parseJsonWithBigint = (
 		json: string,
 		unsafeStringNumberConversion = false
-	): string =>
+	) =>
 		JSON.parse(json, (key, value) => {
 			// handles bigint casting
 			if (typeof value === "string" && /^\d+n$/.test(value)) {
@@ -116,4 +125,20 @@ export class Helpers {
 	};
 
 	public static uniqueArray = <T>(arr: T[]): T[] => [...new Set(arr)];
+
+	public static sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+	public static createUid = () =>
+		Date.now().toString(36) + Math.random().toString(36).substring(2);
+
+	/////////////////////////////////////////////////////////////////////
+	//// Type Checking
+	/////////////////////////////////////////////////////////////////////
+
+	public static isArrayOfStrings(value: unknown): value is string[] {
+		return (
+			Array.isArray(value) &&
+			value.every((item) => typeof item === "string")
+		);
+	}
 }

@@ -1,12 +1,14 @@
 import {
-	GetObjectDataResponse,
+	DisplayFieldsResponse,
 	ObjectId,
 	SuiAddress,
-	SuiObjectInfo,
+	SuiObjectDataOptions,
+	SuiObjectResponse,
+	getObjectDisplay,
 	getObjectOwner,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
-import { PackageId } from "../../types";
+import { AnyObjectType, NftDisplay, PackageId } from "../../types";
 
 export class ObjectsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -25,11 +27,9 @@ export class ObjectsApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchDoesObjectExist = async (
-		address: ObjectId | SuiAddress | PackageId
-	) => {
-		const object = await this.Provider.provider.getObject(address);
-		return ObjectsApiHelpers.objectExists(object);
+	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
+		const object = await this.Provider.provider.getObject({ id: objectId });
+		return object.error === undefined;
 	};
 
 	public fetchIsObjectOwnedByAddress = async (
@@ -52,102 +52,113 @@ export class ObjectsApiHelpers {
 		return false;
 	};
 
-	public fetchObjectsOwnedByAddress = async (
+	public fetchObjectsOfTypeOwnedByAddress = async (
 		walletAddress: SuiAddress,
-		filter?: (suiObjectInfo: SuiObjectInfo) => boolean
-	): Promise<SuiObjectInfo[]> => {
+		objectType: AnyObjectType,
+		withDisplay?: boolean
+	): Promise<SuiObjectResponse[]> => {
 		const objectsOwnedByAddress =
-			await this.Provider.provider.getObjectsOwnedByAddress(
-				walletAddress
-			);
+			await this.Provider.provider.getOwnedObjects({
+				owner: walletAddress,
+				filter: {
+					StructType: objectType,
+				},
+				options: {
+					showContent: true,
+					showDisplay: withDisplay,
+					showOwner: true,
+					showType: true,
+				},
+			});
 
-		return filter
-			? objectsOwnedByAddress.filter((object) => filter(object))
-			: objectsOwnedByAddress;
+		return objectsOwnedByAddress.data;
 	};
 
 	public fetchObject = async (
-		objectId: ObjectId
-	): Promise<GetObjectDataResponse> => {
-		const object = await this.Provider.provider.getObject(objectId);
-		if (object.status !== "Exists")
-			throw new Error("object does not exist");
+		objectId: ObjectId,
+		withDisplay?: boolean
+	): Promise<SuiObjectResponse> => {
+		const object = await this.Provider.provider.getObject({
+			id: objectId,
+			options: {
+				showContent: true,
+				showDisplay: withDisplay,
+				showOwner: true,
+				showType: true,
+			},
+		});
+		if (object.error !== undefined)
+			throw new Error(
+				`an error occured fetching object: ${object.error.error}`
+			);
 		return object;
 	};
 
 	public fetchCastObject = async <ObjectType>(
 		objectId: ObjectId,
-		castFunc: (getObjectDataResponse: GetObjectDataResponse) => ObjectType
+		castFunc: (SuiObjectResponse: SuiObjectResponse) => ObjectType,
+		withDisplay?: boolean
 	): Promise<ObjectType> => {
-		return castFunc(await this.fetchObject(objectId));
+		return castFunc(await this.fetchObject(objectId, withDisplay));
 	};
 
 	public fetchObjectBatch = async (
-		objectIds: ObjectId[]
-	): Promise<GetObjectDataResponse[]> => {
-		const objectBatch = await this.Provider.provider.getObjectBatch(
-			objectIds
-		);
-		const objectDataResponses = objectBatch.filter(
-			(data) => data.status === "Exists"
-		);
+		objectIds: ObjectId[],
+		options?: SuiObjectDataOptions
+	): Promise<SuiObjectResponse[]> => {
+		const objectBatch = await this.Provider.provider.multiGetObjects({
+			ids: objectIds,
+			options:
+				options === undefined
+					? {
+							showContent: true,
+							showOwner: true,
+							showType: true,
+					  }
+					: options,
+		});
+		// const objectDataResponses = objectBatch.filter(
+		// 	(data) => data.error !== undefined
+		// );
 
-		if (objectDataResponses.length <= 0)
+		if (objectBatch.length <= 0)
 			throw new Error("no existing objects found with fetchObjectBatch");
 		// REVIEW: throw error on any objects that don't exist ?
 		// or don't throw any errors and return empty array ?
-		return objectDataResponses;
+		return objectBatch;
 	};
 
 	public fetchCastObjectBatch = async <ObjectType>(
 		objectIds: ObjectId[],
-		objectFromGetObjectDataResponse: (
-			getObjectDataResponse: GetObjectDataResponse
-		) => ObjectType
+		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType,
+		options?: SuiObjectDataOptions
 	): Promise<ObjectType[]> => {
-		return (await this.Provider.provider.getObjectBatch(objectIds)).map(
-			(getObjectDataResponse: GetObjectDataResponse) => {
-				return objectFromGetObjectDataResponse(getObjectDataResponse);
+		return (await this.fetchObjectBatch(objectIds, options)).map(
+			(SuiObjectResponse: SuiObjectResponse) => {
+				return objectFromSuiObjectResponse(SuiObjectResponse);
 			}
 		);
 	};
 
-	public fetchFilterAndCastObjectBatch = async <ObjectType>(
-		objectIds: ObjectId[],
-		filterGetObjectDataResponse: (data: GetObjectDataResponse) => boolean,
-		objectFromGetObjectDataResponse: (
-			data: GetObjectDataResponse
-		) => ObjectType
-	): Promise<ObjectType[]> => {
-		return (await this.Provider.provider.getObjectBatch(objectIds))
-			.filter((data) => filterGetObjectDataResponse(data))
-			.map((getObjectDataResponse: GetObjectDataResponse) => {
-				return objectFromGetObjectDataResponse(getObjectDataResponse);
-			});
-	};
-
-	public fetchFilterAndCastObjectsOwnedByAddress = async <ObjectType>(
+	public fetchCastObjectsOwnedByAddressOfType = async <ObjectType>(
 		walletAddress: SuiAddress,
-		filter: (suiObjectInfo: SuiObjectInfo) => boolean,
-		fetchObjectsFromObjectIds: (
-			objectIds: ObjectId[]
-		) => Promise<ObjectType[]>
+		objectType: AnyObjectType,
+		objectFromSuiObjectResponse: (
+			SuiObjectResponse: SuiObjectResponse
+		) => ObjectType,
+		withDisplay?: boolean
 	): Promise<ObjectType[]> => {
 		// i. obtain all owned object IDs
-		const objectIds = (
-			await this.fetchObjectsOwnedByAddress(walletAddress, filter)
-		).map((suiObjectInfo) => suiObjectInfo.objectId);
-
-		// ii. obtain a object from each ObjectId
-		const objects = fetchObjectsFromObjectIds(objectIds);
+		const objects = (
+			await this.fetchObjectsOfTypeOwnedByAddress(
+				walletAddress,
+				objectType,
+				withDisplay
+			)
+		).map((SuiObjectResponse: SuiObjectResponse) => {
+			return objectFromSuiObjectResponse(SuiObjectResponse);
+		});
 
 		return objects;
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
-
-	public static objectExists = (data: GetObjectDataResponse) =>
-		data.status === "Exists";
 }

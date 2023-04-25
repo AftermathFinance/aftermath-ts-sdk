@@ -1,4 +1,3 @@
-import { SignableTransaction, SuiAddress } from "@mysten/sui.js";
 import {
 	ApiPoolDepositBody,
 	ApiPoolTradeBody,
@@ -8,15 +7,28 @@ import {
 	CoinsToBalance,
 	PoolDataPoint,
 	PoolVolumeDataTimeframeKey,
-	PoolDynamicFields,
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
+	ApiEventsBody,
+	PoolDepositEvent,
+	PoolWithdrawEvent,
+	PoolTradeEvent,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
+import { Pools } from ".";
+import { Casting, Helpers } from "../../general/utils";
 
 export class Pool extends Caller {
+	/////////////////////////////////////////////////////////////////////
+	//// Private Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		percentageBoundsMarginOfError: 0.00001,
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Public Class Members
 	/////////////////////////////////////////////////////////////////////
@@ -29,180 +41,259 @@ export class Pool extends Caller {
 
 	constructor(
 		public readonly pool: PoolObject,
-		public readonly dynamicFields: PoolDynamicFields,
 		public readonly network?: SuiNetwork
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;
-		this.dynamicFields = dynamicFields;
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Stats
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStats(): Promise<PoolStats> {
-		const stats = await this.fetchApi<PoolStats>("stats");
-		this.stats = stats;
-		return stats;
+	public async getStats() {
+		return this.fetchApi<PoolStats>("stats");
 	}
 
 	public setStats(stats: PoolStats) {
 		this.stats = stats;
 	}
 
-	public async getVolume(
-		timeframe: PoolVolumeDataTimeframeKey
-	): Promise<PoolDataPoint[]> {
-		return this.fetchApi(`volume/${timeframe}`);
+	public async getVolume(inputs: {
+		timeframe: PoolVolumeDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> {
+		return this.fetchApi(`volume/${inputs.timeframe}`);
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getDepositTransactions(
-		walletAddress: SuiAddress,
-		depositCoinAmounts: CoinsToBalance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolDepositBody>(
+	public async getDepositTransaction(inputs: ApiPoolDepositBody) {
+		return this.fetchApiTransaction<ApiPoolDepositBody>(
 			"transactions/deposit",
-			{
-				walletAddress,
-				depositCoinAmounts,
-			}
+			inputs
 		);
 	}
 
-	public async getWithdrawTransactions(
-		walletAddress: SuiAddress,
-		withdrawCoinAmounts: CoinsToBalance,
-		withdrawLpTotal: Balance
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolWithdrawBody>(
+	public async getWithdrawTransaction(inputs: ApiPoolWithdrawBody) {
+		return this.fetchApiTransaction<ApiPoolWithdrawBody>(
 			"transactions/withdraw",
-			{
-				walletAddress,
-				withdrawCoinAmounts,
-				withdrawLpTotal,
-			}
+			inputs
 		);
 	}
 
-	public async getTradeTransactions(
-		walletAddress: SuiAddress,
-		fromCoin: CoinType,
-		fromCoinAmount: Balance,
-		toCoin: CoinType
-	): Promise<SignableTransaction[]> {
-		return this.fetchApi<SignableTransaction[], ApiPoolTradeBody>(
+	public async getTradeTransaction(inputs: ApiPoolTradeBody) {
+		return this.fetchApiTransaction<ApiPoolTradeBody>(
 			"transactions/trade",
-			{
-				walletAddress,
-				fromCoin,
-				fromCoinAmount,
-				toCoin,
-			}
+			inputs
 		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	public async getDepositEvents(inputs: ApiEventsBody) {
+		const eventsWithCursor = await this.fetchApiEvents<PoolDepositEvent>(
+			"events/deposit",
+			inputs
+		);
+
+		// PRODUCTION: temporary until "And" filter can be used for event filtering
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.poolId === this.pool.objectId
+			),
+		};
+	}
+
+	public async getWithdrawEvents(inputs: ApiEventsBody) {
+		const eventsWithCursor = await this.fetchApiEvents<PoolWithdrawEvent>(
+			"events/withdraw",
+			inputs
+		);
+
+		// PRODUCTION: temporary until "And" filter can be used for event filtering
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.poolId === this.pool.objectId
+			),
+		};
+	}
+
+	public async getTradeEvents(inputs: ApiEventsBody) {
+		const eventsWithCursor = await this.fetchApiEvents<PoolTradeEvent>(
+			"events/trade",
+			inputs
+		);
+
+		// PRODUCTION: temporary until "And" filter can be used for event filtering
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.poolId === this.pool.objectId
+			),
+		};
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Calculations
 	/////////////////////////////////////////////////////////////////////
 
-	public getTradeAmountOut = (
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType
-	) => {
-		const coinInPoolBalance = this.balanceForCoin(coinIn);
-		const coinOutPoolBalance = this.balanceForCoin(coinOut);
-		const coinInWeight = this.weightForCoin(coinIn);
-		const coinOutWeight = this.weightForCoin(coinOut);
-
-		return CmmmCalculations.calcOutGivenIn(
-			coinInPoolBalance,
-			coinInWeight,
-			coinOutPoolBalance,
-			coinOutWeight,
-			coinInAmount,
-			this.pool.fields.tradeFee
+	public getSpotPrice = (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		withFees?: boolean;
+	}) => {
+		return CmmmCalculations.calcSpotPriceWithFees(
+			Helpers.deepCopy(this.pool),
+			inputs.coinInType,
+			inputs.coinOutType,
+			!inputs.withFees
 		);
 	};
 
-	public getTradeAmountIn = (
-		coinOut: CoinType,
-		coinOutAmount: Balance,
-		coinIn: CoinType
-	) => {
-		const coinOutPoolBalance = this.balanceForCoin(coinOut);
-		const coinInPoolBalance = this.balanceForCoin(coinIn);
-		const coinOutWeight = this.weightForCoin(coinOut);
-		const coinInWeight = this.weightForCoin(coinIn);
+	public getTradeAmountOut = (inputs: {
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		// PRODUCTION: handle referral in calculation
+		referral?: boolean;
+	}): Balance => {
+		const pool = Helpers.deepCopy(this.pool);
+		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
+		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
-		return CmmmCalculations.calcInGivenOut(
-			coinInPoolBalance,
-			coinInWeight,
-			coinOutPoolBalance,
-			coinOutWeight,
-			coinOutAmount,
-			this.pool.fields.tradeFee
-		);
-	};
-
-	public getSpotPrice = (coinIn: CoinType, coinOut: CoinType) => {
-		const coinInPoolBalance = this.balanceForCoin(coinIn);
-		const coinOutPoolBalance = this.balanceForCoin(coinOut);
-		const coinInWeight = this.weightForCoin(coinIn);
-		const coinOutWeight = this.weightForCoin(coinOut);
-
-		return CmmmCalculations.calcSpotPrice(
-			coinInPoolBalance,
-			coinInWeight,
-			coinOutPoolBalance,
-			coinOutWeight
-		);
-	};
-
-	public getDepositLpMintAmount = (coinsToBalance: CoinsToBalance) => {
-		const lpTotalSupply = this.dynamicFields.lpFields[0].value;
-		const poolCoinBalances = this.dynamicFields.amountFields.map(
-			(field) => field.value
-		);
-		const depositCoinBalances = this.pool.fields.coins.map((coin) => {
-			const foundBalance = Object.entries(coinsToBalance).find(
-				(coinAndBalance) => coinAndBalance[0] === coin
-			)?.[1];
-			return foundBalance ?? BigInt(0);
+		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
+			amount: inputs.coinInAmount,
 		});
 
-		return CmmmCalculations.calcLpOutGivenExactTokensIn(
-			poolCoinBalances,
-			this.pool.fields.weights,
-			depositCoinBalances,
-			lpTotalSupply,
-			this.pool.fields.tradeFee
+		if (
+			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+				Pool.constants.percentageBoundsMarginOfError
+		)
+			throw new Error(
+				"coinInAmountWithFees / coinInPoolBalance >= maxSwapPercentageOfPoolBalance"
+			);
+
+		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
+			pool,
+			inputs.coinInType,
+			inputs.coinOutType,
+			coinInAmountWithFees
 		);
+
+		if (coinOutAmount <= 0) throw new Error("coinOutAmount <= 0");
+
+		if (
+			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+				Pool.constants.percentageBoundsMarginOfError
+		)
+			throw new Error(
+				"coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance"
+			);
+
+		return coinOutAmount;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
+	public getTradeAmountIn = (inputs: {
+		coinInType: CoinType;
+		coinOutAmount: Balance;
+		coinOutType: CoinType;
+		// PRODUCTION: handle referral in calculation
+		referral?: boolean;
+	}): Balance => {
+		const pool = Helpers.deepCopy(this.pool);
+		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
+		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
-	public weightForCoin = (coin: CoinType) => {
-		const coinIndex = this.pool.fields.coins.findIndex(
-			(aCoin) => aCoin === coin
+		if (
+			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+				Pool.constants.percentageBoundsMarginOfError
+		)
+			throw new Error(
+				"coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance"
+			);
+
+		const coinInAmount = CmmmCalculations.calcInGivenOut(
+			pool,
+			inputs.coinInType,
+			inputs.coinOutType,
+			inputs.coinOutAmount
 		);
-		if (coinIndex < 0) throw new Error("coin not found in pool object");
-		return this.pool.fields.weights[coinIndex];
+
+		if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
+
+		if (
+			Number(coinInAmount) / Number(coinInPoolBalance) >=
+			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+				Pool.constants.percentageBoundsMarginOfError
+		)
+			throw new Error(
+				"coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance"
+			);
+
+		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
+			amount: coinInAmount,
+		});
+
+		return coinInAmountWithoutFees;
 	};
 
-	public balanceForCoin = (coin: CoinType) => {
-		const poolBalance = this.dynamicFields.amountFields.find(
-			(field) => field.coin === coin
+	public getDepositLpAmountOut = (inputs: {
+		amountsIn: CoinsToBalance;
+		// PRODUCTION: account for referral in calculation
+		referral?: boolean;
+	}): {
+		lpAmountOut: Balance;
+		lpRatio: number;
+	} => {
+		const calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
+			this.pool,
+			inputs.amountsIn
 		);
-		if (!poolBalance)
-			throw new Error("coin not found in pool dynamic fields");
-		return poolBalance.value;
+
+		if (calcedLpRatio >= Casting.fixedOneBigInt)
+			throw new Error("lpRatio >= 1");
+
+		const lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
+		const lpAmountOut = BigInt(
+			Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
+		);
+
+		return {
+			lpAmountOut,
+			lpRatio,
+		};
 	};
+
+	public getWithdrawAmountsOut = (inputs: {
+		lpRatio: number;
+		amountsOutDirection: CoinsToBalance;
+		// PRODUCTION: account for referral in calculation
+		referral?: boolean;
+	}): CoinsToBalance => {
+		const amountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
+			this.pool,
+			inputs.amountsOutDirection,
+			inputs.lpRatio
+		);
+
+		for (const coin in Object.keys(amountsOut)) {
+			if (amountsOut[coin] <= Casting.zeroBigInt)
+				throw new Error(`amountsOut[${coin}] <= 0 `);
+		}
+
+		return amountsOut;
+	};
+
+	public getWithdrawLpRatio = (inputs: { lpCoinAmountOut: bigint }): number =>
+		Number(this.pool.lpCoinSupply - inputs.lpCoinAmountOut) /
+		Number(this.pool.lpCoinSupply);
 }
