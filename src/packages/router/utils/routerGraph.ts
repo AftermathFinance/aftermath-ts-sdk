@@ -608,16 +608,6 @@ export class RouterGraph {
 				sortedRoutesAndPoolsByAmountOut.length -
 				(linearCutStepSize ?? 0);
 		}
-		console.log("\n");
-		console.log("strat lent", sortedRoutesAndPoolsByAmountOut.length);
-		console.log(
-			"BEFORE",
-			newEndIndex > sortedRoutesAndPoolsByAmountOut.length
-				? sortedRoutesAndPoolsByAmountOut.length
-				: newEndIndex < this.constants.minRoutesToCheck
-				? this.constants.minRoutesToCheck
-				: newEndIndex
-		);
 
 		const cutRoutesAndPools = sortedRoutesAndPoolsByAmountOut.slice(
 			0,
@@ -627,8 +617,6 @@ export class RouterGraph {
 				? this.constants.minRoutesToCheck
 				: newEndIndex
 		);
-
-		// console.log("LENGTH", updatedRoutes.length);
 
 		return {
 			updatedPools: cutRoutesAndPools[0].updatedPools,
@@ -668,23 +656,6 @@ export class RouterGraph {
 		try {
 			for (const path of originalRoute.paths) {
 				const pool = currentPools[path.poolUid];
-
-				// console.log("\n");
-				// console.log("\n");
-
-				// console.log(
-				// 	"---------------------------------------------POOL------------------------------"
-				// );
-
-				// console.log(currentCoinInAmount + path.coinIn.amount);
-
-				// console.log("\n");
-				// console.log("\n");
-
-				// Object.keys(pool.pool).map((key) =>
-				// 	//@ts-ignore
-				// 	console.log(pool.pool[key])
-				// );
 
 				const spotPrice = pool.getSpotPrice({
 					coinInType: path.coinIn.type,
@@ -805,13 +776,7 @@ export class RouterGraph {
 				isOverMaxGasCost,
 			};
 		} catch (e) {
-			// console.log("\n");
-			// console.log("\n");
-
-			console.error((e as any).toString());
-			// console.log("\n");
-			// console.log("\n");
-
+			// console.error((e as any).toString());
 			return undefined;
 		}
 	};

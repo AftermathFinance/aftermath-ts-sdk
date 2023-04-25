@@ -173,8 +173,7 @@ export class PoolsApi {
 			referrer
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction,
-			referrer
+			transaction
 		);
 	};
 
@@ -195,8 +194,7 @@ export class PoolsApi {
 			referrer
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction,
-			referrer
+			transaction
 		);
 	};
 
@@ -219,8 +217,7 @@ export class PoolsApi {
 			referrer
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction,
-			referrer
+			transaction
 		);
 	};
 

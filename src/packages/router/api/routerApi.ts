@@ -116,8 +116,7 @@ export class RouterApi {
 				slippage
 			);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			tx,
-			completeRoute.referrer
+			tx
 		);
 	}
 }

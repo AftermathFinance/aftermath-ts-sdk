@@ -68,30 +68,11 @@ export class TransactionsApiHelpers {
 	};
 
 	public fetchSetGasBudgetAndSerializeTransaction = async (
-		tx: TransactionBlock | Promise<TransactionBlock>,
-		referrer?: SuiAddress
+		tx: TransactionBlock | Promise<TransactionBlock>
 	): Promise<SerializedTransaction> => {
-		const txBlock = await tx;
-
-		let newTx: TransactionBlock;
-		if (referrer) {
-			newTx = new TransactionBlock();
-
-			// this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-			// 	{
-			// 		tx: newTx,
-			// 		referrer,
-			// 	}
-			// );
-
-			for (const command of txBlock.blockData.transactions) {
-				newTx.add(command);
-			}
-		} else {
-			newTx = txBlock;
-		}
-
-		return (await this.fetchSetGasBudgetForTransaction(newTx)).serialize();
+		return (
+			await this.fetchSetGasBudgetForTransaction(await tx)
+		).serialize();
 	};
 
 	/////////////////////////////////////////////////////////////////////

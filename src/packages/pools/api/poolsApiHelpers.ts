@@ -341,6 +341,14 @@ export class PoolsApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
+		if (referrer)
+			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+				{
+					tx,
+					referrer,
+				}
+			);
+
 		const amountOut = pool.getTradeAmountOut({
 			coinInAmount,
 			coinInType,
@@ -379,6 +387,14 @@ export class PoolsApiHelpers {
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+				{
+					tx,
+					referrer,
+				}
+			);
 
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsIn);
@@ -422,6 +438,14 @@ export class PoolsApiHelpers {
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+				{
+					tx,
+					referrer,
+				}
+			);
 
 		const lpRatio = pool.getWithdrawLpRatio({
 			lpCoinAmountOut: lpCoinAmount,

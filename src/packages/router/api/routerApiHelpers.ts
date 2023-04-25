@@ -35,6 +35,14 @@ export class RouterApiHelpers {
 		const startTx = new TransactionBlock();
 		startTx.setSender(walletAddress);
 
+		if (referrer)
+			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+				{
+					tx: startTx,
+					referrer,
+				}
+			);
+
 		const { coinArgument: coinInArg, txWithCoinWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				startTx,
