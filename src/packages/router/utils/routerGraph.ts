@@ -60,10 +60,10 @@ export class RouterGraph {
 
 	private static readonly constants = {
 		// NOTE: should these default values be public ?
-		defaultMaxRouteLength: 2,
-		tradePartitionCount: 35,
+		defaultMaxRouteLength: 3,
+		tradePartitionCount: 20,
 		minRoutesToCheck: 20,
-		maxGasCost: BigInt(1_000_000_000), // 1 SUI
+		maxGasCost: BigInt(500_000_000), // 0.5 SUI
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -508,32 +508,60 @@ export class RouterGraph {
 			isOverMaxGasCost: boolean;
 		}[];
 
+		let cutRoutesAndPools:
+			| {
+					updatedRoute: TradeRoute;
+					updatedPools: PoolsById;
+					coinOutAmount: Balance;
+			  }
+			| undefined = undefined;
+
 		const routesAndPoolsUnderGasCost = updatedRoutesAndPools.filter(
 			(data) => !data.isOverMaxGasCost
 		);
 		if (routesAndPoolsUnderGasCost.length > 0)
-			return this.cutUpdatedRoutesAndPools(
+			cutRoutesAndPools = this.cutUpdatedRouteAndPools(
 				Helpers.deepCopy(routesAndPoolsUnderGasCost),
 				isGivenAmountOut
 				// "LINEAR",
 				// linearCutStepSize
 			);
 
-		const routesAndPoolsOverGasCost = updatedRoutesAndPools.filter(
-			(data) => data.isOverMaxGasCost
-		);
-		if (routesAndPoolsOverGasCost.length > 0)
-			return this.cutUpdatedRoutesAndPools(
-				Helpers.deepCopy(routesAndPoolsOverGasCost),
-				isGivenAmountOut
-				// "LINEAR",
-				// linearCutStepSize
+		if (cutRoutesAndPools === undefined) {
+			const routesAndPoolsOverGasCost = updatedRoutesAndPools.filter(
+				(data) => data.isOverMaxGasCost
 			);
+			if (routesAndPoolsOverGasCost.length > 0)
+				cutRoutesAndPools = this.cutUpdatedRouteAndPools(
+					Helpers.deepCopy(routesAndPoolsOverGasCost),
+					isGivenAmountOut
+					// "LINEAR",
+					// linearCutStepSize
+				);
+		}
 
-		throw Error("unable to find route");
+		if (cutRoutesAndPools === undefined)
+			throw Error("unable to find route");
+
+		const oldRouteIndex = routes.findIndex(
+			(route) =>
+				JSON.stringify(route.paths.map((path) => path.poolUid)) ===
+				JSON.stringify(
+					cutRoutesAndPools?.updatedRoute.paths.map(
+						(path) => path.poolUid
+					)
+				)
+		);
+		let updatedRoutes = Helpers.deepCopy(routes);
+		updatedRoutes[oldRouteIndex] = cutRoutesAndPools.updatedRoute;
+
+		return {
+			updatedRoutes: Helpers.deepCopy(updatedRoutes),
+			updatedPools: cutRoutesAndPools.updatedPools,
+		};
 	};
 
-	private static cutUpdatedRoutesAndPools = (
+	private static cutUpdatedRouteAndPools = (
 		routesAndPools: {
 			updatedPools: PoolsById;
 			updatedRoute: TradeRoute;
@@ -544,7 +572,7 @@ export class RouterGraph {
 		routeDecreaseType: "QUADRATIC" | "LINEAR" = "QUADRATIC",
 		linearCutStepSize?: number
 	): {
-		updatedRoutes: TradeRoute[];
+		updatedRoute: TradeRoute;
 		updatedPools: PoolsById;
 		coinOutAmount: Balance;
 	} => {
@@ -580,6 +608,16 @@ export class RouterGraph {
 				sortedRoutesAndPoolsByAmountOut.length -
 				(linearCutStepSize ?? 0);
 		}
+		console.log("\n");
+		console.log("strat lent", sortedRoutesAndPoolsByAmountOut.length);
+		console.log(
+			"BEFORE",
+			newEndIndex > sortedRoutesAndPoolsByAmountOut.length
+				? sortedRoutesAndPoolsByAmountOut.length
+				: newEndIndex < this.constants.minRoutesToCheck
+				? this.constants.minRoutesToCheck
+				: newEndIndex
+		);
 
 		const cutRoutesAndPools = sortedRoutesAndPoolsByAmountOut.slice(
 			0,
@@ -590,16 +628,11 @@ export class RouterGraph {
 				: newEndIndex
 		);
 
-		const updatedRoutes = [
-			cutRoutesAndPools[0].updatedRoute,
-			...cutRoutesAndPools
-				.slice(1)
-				.map((udpatedData) => udpatedData.startingRoute),
-		];
+		// console.log("LENGTH", updatedRoutes.length);
 
 		return {
 			updatedPools: cutRoutesAndPools[0].updatedPools,
-			updatedRoutes,
+			updatedRoute: cutRoutesAndPools[0].updatedRoute,
 			coinOutAmount: cutRoutesAndPools[0].updatedRoute.coinOut.amount,
 		};
 	};
@@ -636,24 +669,41 @@ export class RouterGraph {
 			for (const path of originalRoute.paths) {
 				const pool = currentPools[path.poolUid];
 
+				// console.log("\n");
+				// console.log("\n");
+
+				// console.log(
+				// 	"---------------------------------------------POOL------------------------------"
+				// );
+
+				// console.log(currentCoinInAmount + path.coinIn.amount);
+
+				// console.log("\n");
+				// console.log("\n");
+
+				// Object.keys(pool.pool).map((key) =>
+				// 	//@ts-ignore
+				// 	console.log(pool.pool[key])
+				// );
+
 				const spotPrice = pool.getSpotPrice({
 					coinInType: path.coinIn.type,
 					coinOutType: path.coinOut.type,
 				});
 
-				const poolBeforePathTrades = pool.getUpdatedPoolAfterTrade(
-					isGivenAmountOut
+				const poolBeforePathTrades = pool.getUpdatedPoolBeforeTrade(
+					!isGivenAmountOut
 						? {
 								coinIn: path.coinIn.type,
-								coinInAmount: -path.coinIn.amount,
+								coinInAmount: path.coinIn.amount,
 								coinOut: path.coinOut.type,
-								coinOutAmount: -path.coinOut.amount,
+								coinOutAmount: path.coinOut.amount,
 						  }
 						: {
 								coinIn: path.coinIn.type,
-								coinInAmount: -path.coinOut.amount,
+								coinInAmount: path.coinOut.amount,
 								coinOut: path.coinOut.type,
-								coinOutAmount: -path.coinIn.amount,
+								coinOutAmount: path.coinIn.amount,
 						  }
 				);
 
@@ -690,7 +740,7 @@ export class RouterGraph {
 				// 	updatedPool = Helpers.deepCopy(pool);
 				// } else {
 				const updatedPool = pool.getUpdatedPoolAfterTrade(
-					isGivenAmountOut
+					!isGivenAmountOut
 						? {
 								coinIn: path.coinIn.type,
 								coinInAmount: currentCoinInAmount,
@@ -755,7 +805,13 @@ export class RouterGraph {
 				isOverMaxGasCost,
 			};
 		} catch (e) {
+			// console.log("\n");
+			// console.log("\n");
+
 			console.error((e as any).toString());
+			// console.log("\n");
+			// console.log("\n");
+
 			return undefined;
 		}
 	};

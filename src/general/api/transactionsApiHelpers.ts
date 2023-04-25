@@ -77,14 +77,16 @@ export class TransactionsApiHelpers {
 		if (referrer) {
 			newTx = new TransactionBlock();
 
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx: newTx,
-					referrer,
-				}
-			);
+			// this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+			// 	{
+			// 		tx: newTx,
+			// 		referrer,
+			// 	}
+			// );
 
-			txBlock.blockData.transactions.map((command) => newTx.add(command));
+			for (const command of txBlock.blockData.transactions) {
+				newTx.add(command);
+			}
 		} else {
 			newTx = txBlock;
 		}
