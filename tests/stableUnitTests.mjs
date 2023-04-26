@@ -47,7 +47,7 @@ const tests = {
         );
 
         let relErr = Math.abs(bi - bi0) / Math.max(bi, bi0);
-        if (relErr > 0.000000001) throw Error("did not find correct balance");
+        if (relErr > 0.000000001) return false;
 
         flatness = 1 - flatness;
         h = CmmmCalculations.calcInvariantQuadratic(
@@ -66,9 +66,8 @@ const tests = {
         );
 
         relErr = Math.abs(bi - bi0) / Math.max(bi, bi0);
-        if (relErr > 0.000000001) throw Error("did not find correct balance");
-
-        console.log("testGetTokenBalanceGivenInvariantAndAllOtherBalances passed");
+        if (relErr > 0.000000001) return false;
+        return true;
     },
     testCalcSpotPrice() {
         let flatness = 0.712;
@@ -110,9 +109,7 @@ const tests = {
             indexOut
         );
 
-        if (!Helpers.closeEnough(expectedSpotPrice, calculatedSpotPrice, Tolerance)) {
-            throw Error("testCalcSpotPrice failed");
-        }
+        if (!Helpers.closeEnough(expectedSpotPrice, calculatedSpotPrice, Tolerance)) return false;
 
         // Suppose we want to trade 1000 coin 1 for coin 2.
         let amountIn = 1000n;
@@ -129,8 +126,8 @@ const tests = {
         );
 
         // It should be essentially the same. We allow +- 1 to account for rounding.
-        if (Math.abs(Number(spotOut - amountOut)) > 1) throw Error("testCalcSpotPrice failed");
-        console.log("testCalcSpotPrice passed");
+        if (Math.abs(Number(spotOut - amountOut)) > 1) return false;
+        return true;
     },
     testCalcOutGivenIn: () => {
         let flatness = 3 / 7;
@@ -185,10 +182,8 @@ const tests = {
 
         let postInvariant = CmmmCalculations.calcInvariant(pool);
 
-        if (!Helpers.closeEnough(invariant, postInvariant, Number(FixedOne / amountOut) / Number(FixedOne))) {
-            throw Error("testCalcOutGivenIn failed");
-        };
-        console.log("testCalcOutGivenIn passed");
+        if (!Helpers.closeEnough(invariant, postInvariant, Number(FixedOne / amountOut) / Number(FixedOne))) return false;
+        return true;
     },
     testCalcInGivenOut: () => {
         let flatness = 3 / 7;
@@ -243,10 +238,8 @@ const tests = {
 
         let postInvariant = CmmmCalculations.calcInvariant(pool);
 
-        if (!Helpers.closeEnough(invariant, postInvariant, Number(FixedOne / amountOut) / Number(FixedOne))) {
-            throw Error("testCalcInGivenOut failed");
-        };
-        console.log("testCalcInGivenOut passed");
+        if (!Helpers.closeEnough(invariant, postInvariant, Number(FixedOne / amountOut) / Number(FixedOne))) return false;
+        return true;
     },
     testCalcDepositFixedAmounts: () => {
         let coins = {
@@ -290,8 +283,8 @@ const tests = {
             amountsIn,
         );
 
-        if (!Helpers.closeEnoughBigInt(expectedLpRatio, calculated_ratio, Tolerance)) throw Error("testCalcDepositFixedAmounts failed");
-        console.log("testCalcDepositFixedAmounts passed");
+        if (!Helpers.closeEnoughBigInt(expectedLpRatio, calculated_ratio, Tolerance)) return false;
+        return true;
     },
     testCalcWithdrawFlpAmountsOut: () => {
         let coins = {
@@ -349,9 +342,9 @@ const tests = {
                 expectedAmountsOut[coinType],
                 calculatedAmountsOut[coinType],
                 Tolerance
-            )) throw Error("testCalcWithdrawFlpAmountsOut failed");
+            )) return false;
         }
-        console.log("testCalcWithdrawFlpAmountsOut passed");
+        return true;
     },
     testDepositEstimate: () => {
         let flatness = 650_000_000_000_000_000n;
@@ -397,8 +390,8 @@ const tests = {
             pool,
             amountsIn,
             Fixed.directUncast(lpEstimate)
-        )) throw Error("testDepositEstimate failed");
-        console.log("testDepositEstimate passed");
+        )) return false;
+        return true;
     },
     testWithdrawEstimate: () => {
         let flatness = 650_000_000_000_000_000n;
@@ -454,8 +447,8 @@ const tests = {
             pool,
             amountsOut,
             lpRatio,
-        )) throw Error("testWithdrawEstimate failed");
-        console.log("testWithdrawEstimate passed");
+        )) return false;
+        return true;
     },
     testSwapEstimate: () => {
         let flatness = 650_000_000_000_000_000n;
@@ -520,8 +513,8 @@ const tests = {
             estimatePrecision,
             Fixed.fixedOneB,
             0.01 // estimate accurate to within 1%
-        )) throw Error("testSwapEstimate failed");
-        console.log("testSwapEstimate passed");
+        )) return false;
+        return true;
     },
     testCalcInvariantFull() {
         let flatness = 650_000_000_000_000_000n;
@@ -551,7 +544,7 @@ const tests = {
         let [prod, sum, p0, s0, t] = CmmmCalculations.calcInvariantComponents(pool, index);
 
         let test = (a, b) => {
-            if (!Helpers.closeEnough(a, b, Tolerance)) throw Error("testCalcInvariantfull failed");
+            if (!Helpers.closeEnough(a, b, Tolerance)) return false;
         }
 
         test(prod, 515143925.447_469_251_864_559_616);
@@ -559,8 +552,7 @@ const tests = {
         test(p0, 1707588.492_537_516_776_164_208);
         test(s0, 330432000.000_000_000_000_000_000);
         test(t, 522971680.916_556_698_095_690_258);
-
-        console.log("testCalcInvariantFull passed");
+        return true;
     },
     testCalcSwapFixedIn: () => {
         let flatness = 0.712;
@@ -613,9 +605,8 @@ const tests = {
 
         // for some reason this expected value is not as close to the true value as expected
         // (expected came from desmos)
-        if (!Helpers.closeEnough(Fixed.directCast(computedScalar), expectedScalar, 0.00000001))
-            throw Error("testCalcSwapFixedIn failed");
-        console.log("testCalcSwapFixedOut passed");
+        if (!Helpers.closeEnough(Fixed.directCast(computedScalar), expectedScalar, 0.00000001)) return false;
+        return true;
     },
     testCalcSwapFixedOut: () => {
         let flatness = 0.712;
@@ -666,9 +657,8 @@ const tests = {
             )
         );
 
-        if (!CmmmCalculations.checkValidSwap(pool, expectedAmountsIn, computedScalar, amountsOut, 1))
-            throw Error("testCalcSwapFixedOut failed");
-        console.log("testCalcSwapFixedOut passed");
+        if (!CmmmCalculations.checkValidSwap(pool, expectedAmountsIn, computedScalar, amountsOut, 1)) return false;
+        return true;
     },
     swapTestTest: () => {
         let flatness = 0.712;
@@ -731,8 +721,8 @@ const tests = {
             1,
             amountsOut,
             1,
-        )) throw Error("swapTestTest failed");
-        console.log("swapTestTest passed");
+        )) return false;
+        return true;
     },
     testCalcInGivenOut2: () => {
         let balances = [
@@ -810,13 +800,14 @@ const tests = {
             "coin" + (indexOut + 1),
             amountIn,
         );
-        console.log("testCalcInGivenOut2 passed");
+        return true;
     }
 }
 
 function testAll() {
     for (let testName in tests) {
-        tests[testName]();
+        if (!tests[testName]()) throw Error(testName + " failed");
+        else console.log(testName + " passed");
     }
 }
 
