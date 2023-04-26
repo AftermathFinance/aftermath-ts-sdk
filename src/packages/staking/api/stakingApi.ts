@@ -16,9 +16,9 @@ import {
 import { Helpers } from "../../../general/utils/helpers";
 import { Balance, SerializedTransaction } from "../../../types";
 import {
-	StakingFailedStakeEventOnChain,
-	StakingStakeEventOnChain,
-	StakingUnstakeEventOnChain,
+	StakeFailedEventOnChain,
+	StakeRequestEventOnChain,
+	UnstakeRequestEventOnChain,
 } from "./stakingApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
 
@@ -62,16 +62,16 @@ export class StakingApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchStakeEvents = async (inputs: {
+	public fetchStakeRequestEvents = async (inputs: {
 		cursor?: EventId;
 		limit?: number;
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakingStakeEventOnChain,
+			StakeRequestEventOnChain,
 			StakeEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.stake,
+				MoveEventType: this.Helpers.eventTypes.stakeRequest,
 			},
 			Casting.staking.stakeEventFromOnChain,
 			inputs.cursor,
@@ -83,11 +83,11 @@ export class StakingApi {
 		limit?: number;
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakingUnstakeEventOnChain,
+			UnstakeRequestEventOnChain,
 			UnstakeEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.unstake,
+				MoveEventType: this.Helpers.eventTypes.unstakeRequest,
 			},
 			Casting.staking.unstakeEventFromOnChain,
 			inputs.cursor,
@@ -99,11 +99,11 @@ export class StakingApi {
 		limit?: number;
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakingFailedStakeEventOnChain,
+			StakeFailedEventOnChain,
 			FailedStakeEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.failedStake,
+				MoveEventType: this.Helpers.eventTypes.stakeFailed,
 			},
 			Casting.staking.failedStakeEventFromOnChain,
 			inputs.cursor,

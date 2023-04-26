@@ -19,9 +19,12 @@ export class StakingApiHelpers {
 			interface: "interface",
 		},
 		eventNames: {
-			stake: "StakeWasRequestedEvent",
-			unstake: "WithdrawWasRequestedEvent",
-			failedStake: "StakeWasFailedSUIReturnedEvent",
+			stakeRequest: "StakeWasRequestedEvent",
+			unstakeRequest: "WithdrawWasRequestedEvent",
+			stakeSuccess: "StakeSucceededEvent",
+			unstakeSuccess: "WithdrawSucceededEvent",
+			stakeFailed: "StakeWasFailedSUIReturnedEvent",
+			afSuiMinted: "AFSUIWasMintedToStakerAccount",
 		},
 	};
 
@@ -31,9 +34,12 @@ export class StakingApiHelpers {
 
 	public readonly addresses: StakingAddresses;
 	public readonly eventTypes: {
-		stake: AnyObjectType;
-		unstake: AnyObjectType;
-		failedStake: AnyObjectType;
+		stakeRequest: AnyObjectType;
+		unstakeRequest: AnyObjectType;
+		stakeSuccess: AnyObjectType;
+		unstakeSuccess: AnyObjectType;
+		stakeFailed: AnyObjectType;
+		afSuiMinted: AnyObjectType;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -51,9 +57,12 @@ export class StakingApiHelpers {
 		this.addresses = addresses;
 
 		this.eventTypes = {
-			stake: this.stakeEventType(),
-			unstake: this.unstakeEventType(),
-			failedStake: this.failedStakeEventType(),
+			stakeRequest: this.stakeRequestEventType(),
+			unstakeRequest: this.unstakeRequestEventType(),
+			stakeSuccess: this.stakeSuccessEventType(),
+			unstakeSuccess: this.unstakeSuccessEventType(),
+			stakeFailed: this.stakeFailedEventType(),
+			afSuiMinted: this.afSuiMintedEventType(),
 		};
 	}
 
@@ -168,24 +177,45 @@ export class StakingApiHelpers {
 	//// Event Types
 	/////////////////////////////////////////////////////////////////////
 
-	private stakeEventType = () =>
+	private stakeRequestEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
 			StakingApiHelpers.constants.modules.interface,
-			StakingApiHelpers.constants.eventNames.stake
+			StakingApiHelpers.constants.eventNames.stakeRequest
 		);
 
-	private unstakeEventType = () =>
+	private unstakeRequestEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
 			StakingApiHelpers.constants.modules.interface,
-			StakingApiHelpers.constants.eventNames.unstake
+			StakingApiHelpers.constants.eventNames.unstakeRequest
 		);
 
-	private failedStakeEventType = () =>
+	private stakeFailedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
 			StakingApiHelpers.constants.modules.interface,
-			StakingApiHelpers.constants.eventNames.failedStake
+			StakingApiHelpers.constants.eventNames.stakeFailed
+		);
+
+	private stakeSuccessEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.liquidStakingDerivative,
+			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.eventNames.stakeSuccess
+		);
+
+	private unstakeSuccessEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.liquidStakingDerivative,
+			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.eventNames.unstakeSuccess
+		);
+
+	private afSuiMintedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.liquidStakingDerivative,
+			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.eventNames.afSuiMinted
 		);
 }

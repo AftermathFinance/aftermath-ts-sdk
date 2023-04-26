@@ -1,8 +1,8 @@
 import { FailedStakeEvent, StakeEvent, UnstakeEvent } from "../../../types";
 import {
-	StakingFailedStakeEventOnChain,
-	StakingStakeEventOnChain,
-	StakingUnstakeEventOnChain,
+	StakeFailedEventOnChain,
+	StakeRequestEventOnChain,
+	UnstakeRequestEventOnChain,
 } from "./stakingApiCastingTypes";
 
 export class StakingApiCasting {
@@ -11,7 +11,7 @@ export class StakingApiCasting {
 	/////////////////////////////////////////////////////////////////////
 
 	public static stakeEventFromOnChain = (
-		eventOnChain: StakingStakeEventOnChain
+		eventOnChain: StakeRequestEventOnChain
 	): StakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -22,7 +22,7 @@ export class StakingApiCasting {
 	};
 
 	public static unstakeEventFromOnChain = (
-		eventOnChain: StakingUnstakeEventOnChain
+		eventOnChain: UnstakeRequestEventOnChain
 	): UnstakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -33,7 +33,7 @@ export class StakingApiCasting {
 	};
 
 	public static failedStakeEventFromOnChain = (
-		eventOnChain: StakingFailedStakeEventOnChain
+		eventOnChain: StakeFailedEventOnChain
 	): FailedStakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
