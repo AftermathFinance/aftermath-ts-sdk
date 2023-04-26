@@ -23,7 +23,7 @@ export type UnstakeRequestEventOnChain = EventOnChain<{
 }>;
 
 export type StakeSuccessEventOnChain = EventOnChain<{
-	// sui_wrapper_id: ObjectId;
+	sui_wrapper_id: ObjectId;
 	staker: SuiAddress;
 	validator: SuiAddress;
 	epoch: BigIntAsString;
@@ -31,22 +31,23 @@ export type StakeSuccessEventOnChain = EventOnChain<{
 }>;
 
 export type UnstakeSuccessEventOnChain = EventOnChain<{
-	// afsui_wrapper_id: ObjectId;
+	afsui_wrapper_id: ObjectId;
 	staker: SuiAddress;
 	epoch: BigIntAsString;
 	withdrawn_sui_amount: BigIntAsString;
 }>;
 
 export type StakeFailedEventOnChain = EventOnChain<{
+	sui_wrapper_id: ObjectId;
 	staker: SuiAddress;
 	validator: SuiAddress;
 	epoch: BigIntAsString;
-	amount: BigIntAsString;
+	returned_sui_amount: BigIntAsString;
 }>;
 
 export type AfSuiMintedEventOnChain = EventOnChain<{
+	sui_wrapper_id: ObjectId;
 	staker: SuiAddress;
-	validator: SuiAddress;
 	epoch: BigIntAsString;
 	minted_afsui_amount: BigIntAsString;
 	staked_sui_amount: BigIntAsString;

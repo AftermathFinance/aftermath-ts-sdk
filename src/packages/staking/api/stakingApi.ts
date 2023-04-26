@@ -1,24 +1,26 @@
 import {
 	DelegatedStake,
 	EventId,
-	ObjectId,
 	SuiAddress,
 	SuiValidatorSummary,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
 import {
-	FailedStakeEvent,
-	StakeEvent,
-	UnstakeEvent,
-	StakeEventAccumulation,
+	StakeFailedEvent,
+	StakeRequestEvent,
+	UnstakeRequestEvent,
+	StakeSuccessEvent,
+	UnstakeSuccessEvent,
 } from "../stakingTypes";
 import { Helpers } from "../../../general/utils/helpers";
 import { Balance, SerializedTransaction } from "../../../types";
 import {
 	StakeFailedEventOnChain,
 	StakeRequestEventOnChain,
+	StakeSuccessEventOnChain,
 	UnstakeRequestEventOnChain,
+	UnstakeSuccessEventOnChain,
 } from "./stakingApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
 
@@ -68,44 +70,76 @@ export class StakingApi {
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeRequestEventOnChain,
-			StakeEvent
+			StakeRequestEvent
 		>(
 			{
 				MoveEventType: this.Helpers.eventTypes.stakeRequest,
 			},
-			Casting.staking.stakeEventFromOnChain,
+			Casting.staking.stakeRequestEventFromOnChain,
 			inputs.cursor,
 			inputs.limit
 		);
 
-	public fetchUnstakeEvents = async (inputs: {
+	public fetchUnstakeRequestEvents = async (inputs: {
 		cursor?: EventId;
 		limit?: number;
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeRequestEventOnChain,
-			UnstakeEvent
+			UnstakeRequestEvent
 		>(
 			{
 				MoveEventType: this.Helpers.eventTypes.unstakeRequest,
 			},
-			Casting.staking.unstakeEventFromOnChain,
+			Casting.staking.unstakeRequestEventFromOnChain,
 			inputs.cursor,
 			inputs.limit
 		);
 
-	public fetchFailedStakeEvents = async (inputs: {
+	public fetchStakeSuccessEvents = async (inputs: {
+		cursor?: EventId;
+		limit?: number;
+	}) =>
+		await this.Provider.Events().fetchCastEventsWithCursor<
+			StakeSuccessEventOnChain,
+			StakeSuccessEvent
+		>(
+			{
+				MoveEventType: this.Helpers.eventTypes.stakeSuccess,
+			},
+			Casting.staking.stakeSuccessEventFromOnChain,
+			inputs.cursor,
+			inputs.limit
+		);
+
+	public fetchUnstakeSuccessEvents = async (inputs: {
+		cursor?: EventId;
+		limit?: number;
+	}) =>
+		await this.Provider.Events().fetchCastEventsWithCursor<
+			UnstakeSuccessEventOnChain,
+			UnstakeSuccessEvent
+		>(
+			{
+				MoveEventType: this.Helpers.eventTypes.unstakeSuccess,
+			},
+			Casting.staking.unstakeSuccessEventFromOnChain,
+			inputs.cursor,
+			inputs.limit
+		);
+
+	public fetchStakeFailedEvents = async (inputs: {
 		cursor?: EventId;
 		limit?: number;
 	}) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeFailedEventOnChain,
-			FailedStakeEvent
+			StakeFailedEvent
 		>(
 			{
 				MoveEventType: this.Helpers.eventTypes.stakeFailed,
 			},
-			Casting.staking.failedStakeEventFromOnChain,
+			Casting.staking.stakeFailedEventFromOnChain,
 			inputs.cursor,
 			inputs.limit
 		);
