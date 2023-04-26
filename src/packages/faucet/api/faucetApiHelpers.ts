@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
-import { ObjectId, TransactionBlock } from "@mysten/sui.js";
+import { ObjectId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
 import {
 	AnyObjectType,
@@ -101,9 +101,11 @@ export class FaucetApiHelpers {
 
 	public faucetRequestCoinAmountTransaction = (
 		coinType: CoinType,
-		amount: Balance
+		amount: Balance,
+		walletAddress: SuiAddress
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(

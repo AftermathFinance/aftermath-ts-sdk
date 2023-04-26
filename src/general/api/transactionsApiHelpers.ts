@@ -53,10 +53,12 @@ export class TransactionsApiHelpers {
 	public fetchSetGasBudgetForTransaction = async (
 		tx: TransactionBlock
 	): Promise<TransactionBlock> => {
-		const signer = RpcApiHelpers.constants.devInspectSigner;
+		const sender = tx.blockData.sender;
+		if (!sender) throw new Error("no sender set for transaction");
+
 		const response =
 			await this.Provider.provider.devInspectTransactionBlock({
-				sender: tx.blockData.sender ?? signer,
+				sender,
 				transactionBlock: tx,
 			});
 
