@@ -80,7 +80,7 @@ export interface StakePosition {
 	validatorAddress: SuiAddress;
 	epoch: bigint;
 	suiStakeAmount: Balance;
-	afSuiMintAmount: Balance | undefined;
+	afSuiMintAmount?: Balance;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }

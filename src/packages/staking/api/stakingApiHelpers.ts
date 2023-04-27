@@ -373,8 +373,9 @@ export class StakingApiHelpers {
 			);
 			if (foundIndex >= 0)
 				return {
-					state: "SUCCESS",
 					...successEvents[foundIndex],
+					state: "SUCCESS",
+					epoch: request.epoch,
 				};
 
 			return {
@@ -433,9 +434,10 @@ export class StakingApiHelpers {
 			);
 			if (foundMintIndex >= 0)
 				return {
+					...mintedEvents[foundMintIndex],
 					state: "AFSUI_MINTED",
 					validatorAddress: request.validatorAddress,
-					...mintedEvents[foundMintIndex],
+					epoch: request.epoch,
 				};
 
 			const foundSuccessIndex = successEvents.findIndex(
@@ -443,9 +445,10 @@ export class StakingApiHelpers {
 			);
 			if (foundSuccessIndex >= 0)
 				return {
+					...successEvents[foundSuccessIndex],
 					state: "SUCCESS",
 					afSuiMintAmount: undefined,
-					...successEvents[foundSuccessIndex],
+					epoch: request.epoch,
 				};
 
 			const foundFailedIndex = failedEvents.findIndex(
@@ -453,9 +456,10 @@ export class StakingApiHelpers {
 			);
 			if (foundFailedIndex >= 0)
 				return {
+					...failedEvents[foundFailedIndex],
 					state: "FAILED",
 					afSuiMintAmount: undefined,
-					...failedEvents[foundFailedIndex],
+					epoch: request.epoch,
 				};
 
 			return {
