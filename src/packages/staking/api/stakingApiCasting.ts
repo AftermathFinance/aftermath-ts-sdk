@@ -73,7 +73,7 @@ export class StakingApiCasting {
 			afSuiWrapperId: fields.afsui_wrapper_id,
 			staker: fields.staker,
 			epoch: BigInt(fields.epoch),
-			// afSuiAmountGiven: BigInt(fields.provided_afsui_amount),
+			afSuiAmountGiven: BigInt(fields.provided_afsui_amount),
 			suiUnstakeAmount: BigInt(fields.withdrawn_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,

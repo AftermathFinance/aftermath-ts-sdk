@@ -34,6 +34,7 @@ export type UnstakeSuccessEventOnChain = EventOnChain<{
 	afsui_wrapper_id: ObjectId;
 	staker: SuiAddress;
 	epoch: BigIntAsString;
+	provided_afsui_amount: BigIntAsString;
 	withdrawn_sui_amount: BigIntAsString;
 }>;
 

@@ -42,7 +42,7 @@ export interface UnstakeSuccessEvent extends Event {
 	afSuiWrapperId: ObjectId;
 	staker: SuiAddress;
 	epoch: bigint;
-	// afSuiAmountGiven: Balance;
+	afSuiAmountGiven: Balance;
 	suiUnstakeAmount: Balance;
 }
 

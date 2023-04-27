@@ -12,10 +12,12 @@ import {
 	UnstakeRequestEvent,
 	StakeSuccessEvent,
 	UnstakeSuccessEvent,
+	AfSuiMintedEvent,
 } from "../stakingTypes";
 import { Helpers } from "../../../general/utils/helpers";
 import { Balance, SerializedTransaction } from "../../../types";
 import {
+	AfSuiMintedEventOnChain,
 	StakeFailedEventOnChain,
 	StakeRequestEventOnChain,
 	StakeSuccessEventOnChain,
@@ -65,6 +67,7 @@ export class StakingApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchStakeRequestEvents = async (inputs: {
+		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
 	}) =>
@@ -73,7 +76,14 @@ export class StakingApi {
 			StakeRequestEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.stakeRequest,
+				And: [
+					{
+						MoveEventType: this.Helpers.eventTypes.stakeRequest,
+					},
+					{
+						Sender: inputs.walletAddress,
+					},
+				],
 			},
 			Casting.staking.stakeRequestEventFromOnChain,
 			inputs.cursor,
@@ -81,6 +91,7 @@ export class StakingApi {
 		);
 
 	public fetchUnstakeRequestEvents = async (inputs: {
+		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
 	}) =>
@@ -89,7 +100,14 @@ export class StakingApi {
 			UnstakeRequestEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.unstakeRequest,
+				And: [
+					{
+						MoveEventType: this.Helpers.eventTypes.unstakeRequest,
+					},
+					{
+						Sender: inputs.walletAddress,
+					},
+				],
 			},
 			Casting.staking.unstakeRequestEventFromOnChain,
 			inputs.cursor,
@@ -97,6 +115,7 @@ export class StakingApi {
 		);
 
 	public fetchStakeSuccessEvents = async (inputs: {
+		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
 	}) =>
@@ -105,7 +124,14 @@ export class StakingApi {
 			StakeSuccessEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.stakeSuccess,
+				And: [
+					{
+						MoveEventType: this.Helpers.eventTypes.stakeSuccess,
+					},
+					{
+						Sender: inputs.walletAddress,
+					},
+				],
 			},
 			Casting.staking.stakeSuccessEventFromOnChain,
 			inputs.cursor,
@@ -113,6 +139,7 @@ export class StakingApi {
 		);
 
 	public fetchUnstakeSuccessEvents = async (inputs: {
+		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
 	}) =>
@@ -121,7 +148,14 @@ export class StakingApi {
 			UnstakeSuccessEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.unstakeSuccess,
+				And: [
+					{
+						MoveEventType: this.Helpers.eventTypes.unstakeSuccess,
+					},
+					{
+						Sender: inputs.walletAddress,
+					},
+				],
 			},
 			Casting.staking.unstakeSuccessEventFromOnChain,
 			inputs.cursor,
@@ -129,6 +163,7 @@ export class StakingApi {
 		);
 
 	public fetchStakeFailedEvents = async (inputs: {
+		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
 	}) =>
@@ -137,9 +172,40 @@ export class StakingApi {
 			StakeFailedEvent
 		>(
 			{
-				MoveEventType: this.Helpers.eventTypes.stakeFailed,
+				And: [
+					{
+						MoveEventType: this.Helpers.eventTypes.stakeFailed,
+					},
+					{
+						Sender: inputs.walletAddress,
+					},
+				],
 			},
 			Casting.staking.stakeFailedEventFromOnChain,
+			inputs.cursor,
+			inputs.limit
+		);
+
+	public fetchAfSuiMintedEvents = async (inputs: {
+		walletAddress: SuiAddress;
+		cursor?: EventId;
+		limit?: number;
+	}) =>
+		await this.Provider.Events().fetchCastEventsWithCursor<
+			AfSuiMintedEventOnChain,
+			AfSuiMintedEvent
+		>(
+			{
+				And: [
+					{
+						MoveEventType: this.Helpers.eventTypes.afSuiMinted,
+					},
+					{
+						Sender: inputs.walletAddress,
+					},
+				],
+			},
+			Casting.staking.afSuiMintedEventFromOnChain,
 			inputs.cursor,
 			inputs.limit
 		);
@@ -168,6 +234,120 @@ export class StakingApi {
 			this.Helpers.fetchBuildUnstakeTransaction({
 				...inputs,
 			})
+		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Positions
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchAllUnstakePositions = async (inputs: {
+		walletAddress: SuiAddress;
+	}) => {
+		const { walletAddress } = inputs;
+
+		const [successEvents, requestEvents] = await Promise.all([
+			// unstake success
+			this.Provider.Events().fetchAllEvents((cursor, limit) =>
+				this.fetchUnstakeSuccessEvents({
+					cursor,
+					limit,
+					walletAddress,
+				})
+			),
+			// unstake request
+			this.Provider.Events().fetchAllEvents((cursor, limit) =>
+				this.fetchUnstakeRequestEvents({
+					cursor,
+					limit,
+					walletAddress,
+				})
+			),
+		]);
+
+		const mergedEvents: (UnstakeSuccessEvent | UnstakeRequestEvent)[] =
+			requestEvents.map((request) => {
+				const foundIndex = successEvents.findIndex(
+					(success) =>
+						success.afSuiWrapperId === request.afSuiWrapperId
+				);
+				if (foundIndex >= 0) return successEvents[foundIndex];
+
+				return request;
+			});
+
+		return mergedEvents.sort(
+			(a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0)
+		);
+	};
+
+	public fetchAllStakePositions = async (inputs: {
+		walletAddress: SuiAddress;
+	}) => {
+		const { walletAddress } = inputs;
+
+		const [mintedEvents, successEvents, failedEvents, requestEvents] =
+			await Promise.all([
+				// afSui mint
+				this.Provider.Events().fetchAllEvents((cursor, limit) =>
+					this.fetchAfSuiMintedEvents({
+						cursor,
+						limit,
+						walletAddress,
+					})
+				),
+				// stake success
+				this.Provider.Events().fetchAllEvents((cursor, limit) =>
+					this.fetchStakeSuccessEvents({
+						cursor,
+						limit,
+						walletAddress,
+					})
+				),
+				// stake fail
+				this.Provider.Events().fetchAllEvents((cursor, limit) =>
+					this.fetchStakeFailedEvents({
+						cursor,
+						limit,
+						walletAddress,
+					})
+				),
+				// stake request
+				this.Provider.Events().fetchAllEvents((cursor, limit) =>
+					this.fetchStakeRequestEvents({
+						cursor,
+						limit,
+						walletAddress,
+					})
+				),
+			]);
+
+		const mergedEvents: (
+			| AfSuiMintedEvent
+			| StakeSuccessEvent
+			| StakeFailedEvent
+			| StakeRequestEvent
+		)[] = requestEvents.map((request) => {
+			const foundMintIndex = mintedEvents.findIndex(
+				(mint) => mint.suiWrapperId === request.suiWrapperId
+			);
+			if (foundMintIndex >= 0) return mintedEvents[foundMintIndex];
+
+			const foundSuccessIndex = successEvents.findIndex(
+				(mint) => mint.suiWrapperId === request.suiWrapperId
+			);
+			if (foundSuccessIndex >= 0) return successEvents[foundSuccessIndex];
+
+			const foundFailedIndex = failedEvents.findIndex(
+				(mint) => mint.suiWrapperId === request.suiWrapperId
+			);
+			if (foundFailedIndex >= 0) return failedEvents[foundFailedIndex];
+
+			return request;
+		});
+
+		return mergedEvents.sort(
+			(a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0)
 		);
 	};
 
