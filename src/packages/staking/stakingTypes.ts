@@ -68,7 +68,7 @@ export interface AfSuiMintedEvent extends Event {
 }
 
 /////////////////////////////////////////////////////////////////////
-//// Position
+//// Staking Positions
 /////////////////////////////////////////////////////////////////////
 
 export type StakingPosition = StakePosition | UnstakePosition;
@@ -103,6 +103,12 @@ export type StakePositionState =
 	| "AFSUI_MINTED";
 
 export type UnstakePositionState = "REQUEST" | "SUCCESS";
+
+export const isStakePosition = (
+	position: StakingPosition
+): position is StakePosition => {
+	return "suiWrapperId" in position;
+};
 
 /////////////////////////////////////////////////////////////////////
 //// API
