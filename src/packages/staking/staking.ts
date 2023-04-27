@@ -1,19 +1,14 @@
-import {
-	SuiAddress,
-	DelegatedStake,
-	SuiValidatorSummary,
-} from "@mysten/sui.js";
+import { SuiValidatorSummary } from "@mysten/sui.js";
 import {
 	ApiStakeBody,
 	ApiUnstakeBody,
-	StakeFailedEvent,
-	StakeRequestEvent,
-	UnstakeRequestEvent,
-	StakingStats,
 	SuiNetwork,
-	ApiEventsBody,
 	ApiStakingPositionsBody,
 	StakingPosition,
+	ApiEventsBody,
+	StakeRequestEvent,
+	UnstakeRequestEvent,
+	ApiStakingEventsBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -41,34 +36,32 @@ export class Staking extends Caller {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakePositions(
-		walletAddress: SuiAddress
-	): Promise<DelegatedStake[]> {
-		return this.fetchApi<DelegatedStake[]>(
-			`stake-positions/${walletAddress}`
-		);
-	}
-
 	public async getActiveValidators(): Promise<SuiValidatorSummary[]> {
 		return this.fetchApi("active-validators");
 	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Stats
-	/////////////////////////////////////////////////////////////////////
-
-	public async getStats(): Promise<StakingStats> {
-		return this.fetchApi("stats");
-	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Positions
-	/////////////////////////////////////////////////////////////////////
 
 	public async getStakingPositions(
 		inputs: ApiStakingPositionsBody
 	): Promise<StakingPosition[]> {
 		return this.fetchApi("staking-positions", inputs);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	public async getStakeRequestEvents(inputs: ApiStakingEventsBody) {
+		return this.fetchApiEvents<StakeRequestEvent>(
+			"events/stake-request",
+			inputs
+		);
+	}
+
+	public async getUnstakeRequestEvents(inputs: ApiStakingEventsBody) {
+		return this.fetchApiEvents<UnstakeRequestEvent>(
+			"events/unstake-request",
+			inputs
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////

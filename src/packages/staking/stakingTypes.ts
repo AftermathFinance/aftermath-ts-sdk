@@ -1,5 +1,10 @@
 import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
-import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
+import {
+	ApiEventsBody,
+	Balance,
+	Event,
+	Timestamp,
+} from "../../general/types/generalTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -100,23 +105,6 @@ export type StakePositionState =
 export type UnstakePositionState = "REQUEST" | "SUCCESS";
 
 /////////////////////////////////////////////////////////////////////
-//// Stats
-/////////////////////////////////////////////////////////////////////
-
-export interface StakingStats {
-	topStakers: StakeEventAccumulation[];
-	stakeTvl: Balance;
-}
-
-export interface StakeEventAccumulation {
-	staker: SuiAddress;
-	totalAmountStaked: Balance;
-	latestStakeTimestamp: Timestamp | undefined;
-	firstStakeTimestamp: Timestamp | undefined;
-	largestStake: Balance;
-}
-
-/////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
@@ -134,3 +122,7 @@ export interface ApiUnstakeBody {
 export interface ApiStakingPositionsBody {
 	walletAddress: SuiAddress;
 }
+
+export type ApiStakingEventsBody = ApiEventsBody & {
+	walletAddress: SuiAddress;
+};
