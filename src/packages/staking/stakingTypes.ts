@@ -1,4 +1,4 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
+import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { Balance, Event, Timestamp } from "../../general/types/generalTypes";
 
 /////////////////////////////////////////////////////////////////////
@@ -61,6 +61,41 @@ export interface AfSuiMintedEvent extends Event {
 	afSuiMintAmount: Balance;
 	suiStakeAmount: Balance;
 }
+
+/////////////////////////////////////////////////////////////////////
+//// Position
+/////////////////////////////////////////////////////////////////////
+
+export interface StakePosition {
+	state: StakePositionState;
+	suiWrapperId: ObjectId;
+	staker: SuiAddress;
+	validatorAddress: SuiAddress;
+	epoch: bigint;
+	suiStakeAmount: Balance;
+	afSuiMintAmount: Balance | undefined;
+	timestamp: Timestamp | undefined;
+	txnDigest: TransactionDigest;
+}
+
+export interface UnstakePosition {
+	state: UnstakePositionState;
+	afSuiWrapperId: ObjectId;
+	staker: SuiAddress;
+	epoch: bigint;
+	afSuiAmountGiven: Balance;
+	suiUnstakeAmount: Balance;
+	timestamp: Timestamp | undefined;
+	txnDigest: TransactionDigest;
+}
+
+export type StakePositionState =
+	| "REQUEST"
+	| "SUCCESS"
+	| "FAILED"
+	| "AFSUI_MINTED";
+
+export type UnstakePositionState = "REQUEST" | "SUCCESS";
 
 /////////////////////////////////////////////////////////////////////
 //// Stats
