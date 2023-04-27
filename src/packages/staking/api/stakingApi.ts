@@ -15,6 +15,7 @@ import {
 	AfSuiMintedEvent,
 	StakePosition,
 	UnstakePosition,
+	StakingPosition,
 } from "../stakingTypes";
 import { Helpers } from "../../../general/utils/helpers";
 import { Balance, SerializedTransaction } from "../../../types";
@@ -97,7 +98,7 @@ export class StakingApi {
 
 	public fetchAllPositions = async (inputs: {
 		walletAddress: SuiAddress;
-	}): Promise<(StakePosition | UnstakePosition)[]> => {
+	}): Promise<StakingPosition[]> => {
 		const [stakes, unstakes] = await Promise.all([
 			this.Helpers.fetchAllStakePositions(inputs),
 			this.Helpers.fetchAllUnstakePositions(inputs),

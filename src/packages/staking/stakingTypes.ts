@@ -66,6 +66,8 @@ export interface AfSuiMintedEvent extends Event {
 //// Position
 /////////////////////////////////////////////////////////////////////
 
+export type StakingPosition = StakePosition | UnstakePosition;
+
 export interface StakePosition {
 	state: StakePositionState;
 	suiWrapperId: ObjectId;
@@ -118,13 +120,17 @@ export interface StakeEventAccumulation {
 //// API
 /////////////////////////////////////////////////////////////////////
 
-export interface ApiStakingStakeBody {
+export interface ApiStakeBody {
 	walletAddress: SuiAddress;
 	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
 }
 
-export interface ApiStakingUnstakeBody {
+export interface ApiUnstakeBody {
 	walletAddress: SuiAddress;
 	afSuiUnstakeAmount: Balance;
+}
+
+export interface ApiStakingPositionsBody {
+	walletAddress: SuiAddress;
 }

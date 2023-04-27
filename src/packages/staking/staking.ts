@@ -4,14 +4,16 @@ import {
 	SuiValidatorSummary,
 } from "@mysten/sui.js";
 import {
-	ApiStakingStakeBody,
-	ApiStakingUnstakeBody,
+	ApiStakeBody,
+	ApiUnstakeBody,
 	StakeFailedEvent,
 	StakeRequestEvent,
 	UnstakeRequestEvent,
 	StakingStats,
 	SuiNetwork,
 	ApiEventsBody,
+	ApiStakingPositionsBody,
+	StakingPosition,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -60,40 +62,28 @@ export class Staking extends Caller {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Events
+	//// Positions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakeEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<StakeRequestEvent>("events/stake", inputs);
-	}
-
-	public async getUnstakeEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<UnstakeRequestEvent>(
-			"events/unstake",
-			inputs
-		);
-	}
-
-	public async getFailedStakeEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<StakeFailedEvent>(
-			"events/failed-stake",
-			inputs
-		);
+	public async getStakingPositions(
+		inputs: ApiStakingPositionsBody
+	): Promise<StakingPosition[]> {
+		return this.fetchApi("staking-positions", inputs);
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async getStakeTransaction(inputs: ApiStakingStakeBody) {
-		return this.fetchApiTransaction<ApiStakingStakeBody>(
+	public async getStakeTransaction(inputs: ApiStakeBody) {
+		return this.fetchApiTransaction<ApiStakeBody>(
 			"transactions/stake",
 			inputs
 		);
 	}
 
-	public async getUnstakeTransaction(inputs: ApiStakingUnstakeBody) {
-		return this.fetchApiTransaction<ApiStakingUnstakeBody>(
+	public async getUnstakeTransaction(inputs: ApiUnstakeBody) {
+		return this.fetchApiTransaction<ApiUnstakeBody>(
 			"transactions/unstake",
 			inputs
 		);
