@@ -21,6 +21,12 @@ export interface StakeBalanceDynamicField {
 
 // stake
 
+export type StakeEvent =
+	| StakeRequestEvent
+	| StakeSuccessEvent
+	| StakeFailedEvent
+	| AfSuiMintedEvent;
+
 export interface StakeRequestEvent extends Event {
 	suiWrapperId: ObjectId;
 	staker: SuiAddress;
@@ -55,6 +61,8 @@ export interface AfSuiMintedEvent extends Event {
 
 // unstake
 
+export type UnstakeEvent = UnstakeRequestEvent | UnstakeSuccessEvent;
+
 export interface UnstakeRequestEvent extends Event {
 	afSuiWrapperId: ObjectId;
 	staker: SuiAddress;
@@ -70,6 +78,18 @@ export interface UnstakeSuccessEvent extends Event {
 	afSuiAmountGiven: Balance;
 	suiUnstakeAmount: Balance;
 }
+
+export const isStakeEvent = (
+	event: StakeEvent | UnstakeEvent
+): event is StakeEvent => {
+	return "suiWrapperId" in event;
+};
+
+export const isUnstakeEvent = (
+	event: StakeEvent | UnstakeEvent
+): event is UnstakeEvent => {
+	return "afSuiWrapperId" in event;
+};
 
 /////////////////////////////////////////////////////////////////////
 //// Staking Positions
@@ -112,6 +132,12 @@ export const isStakePosition = (
 	position: StakingPosition
 ): position is StakePosition => {
 	return "suiWrapperId" in position;
+};
+
+export const isUnstakePosition = (
+	position: StakingPosition
+): position is UnstakePosition => {
+	return !isStakePosition(position);
 };
 
 /////////////////////////////////////////////////////////////////////

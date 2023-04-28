@@ -11,15 +11,21 @@ import {
 	AfSuiMintedEvent,
 	AnyObjectType,
 	Balance,
+	StakeEvent,
 	StakeFailedEvent,
 	StakePosition,
 	StakeRequestEvent,
 	StakeSuccessEvent,
 	StakingAddresses,
 	StakingPosition,
+	UnstakeEvent,
 	UnstakePosition,
 	UnstakeRequestEvent,
 	UnstakeSuccessEvent,
+	isStakeEvent,
+	isStakePosition,
+	isUnstakeEvent,
+	isUnstakePosition,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import {
@@ -479,11 +485,7 @@ export class StakingApiHelpers {
 
 	public static updateStakePositionsFromEvent = (inputs: {
 		stakePositions: StakePosition[];
-		event:
-			| StakeRequestEvent
-			| StakeFailedEvent
-			| StakeSuccessEvent
-			| AfSuiMintedEvent;
+		event: StakeEvent;
 	}): StakePosition[] => {
 		const foundPositionIndex = inputs.stakePositions.findIndex(
 			(pos) => pos.suiWrapperId === inputs.event.suiWrapperId
@@ -543,7 +545,7 @@ export class StakingApiHelpers {
 
 	public static updateUnstakePositionsFromEvent = (inputs: {
 		unstakePositions: UnstakePosition[];
-		event: UnstakeRequestEvent | UnstakeSuccessEvent;
+		event: UnstakeEvent;
 	}): UnstakePosition[] => {
 		const foundPositionIndex = inputs.unstakePositions.findIndex(
 			(pos) => pos.afSuiWrapperId === inputs.event.afSuiWrapperId
@@ -583,6 +585,38 @@ export class StakingApiHelpers {
 		newPositions[foundPositionIndex] = position;
 
 		return newPositions;
+	};
+
+	public static updateStakingPositionsFromEvent = (inputs: {
+		stakingPositions: StakingPosition[];
+		event: StakeEvent | UnstakeEvent;
+	}): StakingPosition[] => {
+		const positions = inputs.stakingPositions;
+		const event = inputs.event;
+
+		let newPositions: StakingPosition[] = [];
+
+		const unstakePositions = positions.filter(isUnstakePosition);
+		const newUnstakes = isUnstakeEvent(event)
+			? this.updateUnstakePositionsFromEvent({
+					event,
+					unstakePositions,
+			  })
+			: unstakePositions;
+
+		const stakePositions = positions.filter(isStakePosition);
+		const newStakes = isStakeEvent(event)
+			? this.updateStakePositionsFromEvent({
+					event,
+					stakePositions,
+			  })
+			: stakePositions;
+
+		newPositions = [...newUnstakes, ...newStakes];
+
+		return newPositions.sort(
+			(a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0)
+		);
 	};
 
 	/////////////////////////////////////////////////////////////////////
