@@ -19,6 +19,7 @@ export class FaucetApiCasting {
 			balanceMinted: BigInt(fields.amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -27,10 +28,11 @@ export class FaucetApiCasting {
 	): FaucetAddCoinEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			symbol: fields.symbol,
-			type: fields.type,
+			coinSymbol: fields.symbol,
+			coinType: fields.type,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 }

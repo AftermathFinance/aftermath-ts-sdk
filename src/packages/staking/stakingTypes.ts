@@ -19,6 +19,8 @@ export interface StakeBalanceDynamicField {
 //// Events
 /////////////////////////////////////////////////////////////////////
 
+// stake
+
 export interface StakeRequestEvent extends Event {
 	suiWrapperId: ObjectId;
 	staker: SuiAddress;
@@ -27,28 +29,12 @@ export interface StakeRequestEvent extends Event {
 	suiStakeAmount: Balance;
 }
 
-export interface UnstakeRequestEvent extends Event {
-	afSuiWrapperId: ObjectId;
-	staker: SuiAddress;
-	epoch: bigint;
-	afSuiAmountGiven: Balance;
-	suiUnstakeAmount: Balance;
-}
-
 export interface StakeSuccessEvent extends Event {
 	suiWrapperId: ObjectId;
 	staker: SuiAddress;
 	validatorAddress: SuiAddress;
 	epoch: bigint;
 	suiStakeAmount: Balance;
-}
-
-export interface UnstakeSuccessEvent extends Event {
-	afSuiWrapperId: ObjectId;
-	staker: SuiAddress;
-	epoch: bigint;
-	afSuiAmountGiven: Balance;
-	suiUnstakeAmount: Balance;
 }
 
 export interface StakeFailedEvent extends Event {
@@ -65,6 +51,24 @@ export interface AfSuiMintedEvent extends Event {
 	epoch: bigint;
 	afSuiMintAmount: Balance;
 	suiStakeAmount: Balance;
+}
+
+// unstake
+
+export interface UnstakeRequestEvent extends Event {
+	afSuiWrapperId: ObjectId;
+	staker: SuiAddress;
+	epoch: bigint;
+	afSuiAmountGiven: Balance;
+	suiUnstakeAmount: Balance;
+}
+
+export interface UnstakeSuccessEvent extends Event {
+	afSuiWrapperId: ObjectId;
+	staker: SuiAddress;
+	epoch: bigint;
+	afSuiAmountGiven: Balance;
+	suiUnstakeAmount: Balance;
 }
 
 /////////////////////////////////////////////////////////////////////

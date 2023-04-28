@@ -13,8 +13,8 @@ export interface FaucetMintCoinEvent extends Event {
 }
 
 export interface FaucetAddCoinEvent extends Event {
-	symbol: string;
-	type: CoinType;
+	coinSymbol: string;
+	coinType: CoinType;
 }
 
 /////////////////////////////////////////////////////////////////////

@@ -1,6 +1,7 @@
 import {
 	AfSuiMintedEvent,
 	StakeFailedEvent,
+	StakePosition,
 	StakeRequestEvent,
 	StakeSuccessEvent,
 	UnstakeRequestEvent,
@@ -14,6 +15,7 @@ import {
 	UnstakeRequestEventOnChain,
 	UnstakeSuccessEventOnChain,
 } from "./stakingApiCastingTypes";
+import { StakingApiHelpers } from "./stakingApiHelpers";
 
 export class StakingApiCasting {
 	/////////////////////////////////////////////////////////////////////
@@ -32,6 +34,7 @@ export class StakingApiCasting {
 			suiStakeAmount: BigInt(fields.sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -47,6 +50,7 @@ export class StakingApiCasting {
 			suiUnstakeAmount: BigInt(fields.sui_amount_to_withdraw),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -62,6 +66,7 @@ export class StakingApiCasting {
 			suiStakeAmount: BigInt(fields.sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -77,6 +82,7 @@ export class StakingApiCasting {
 			suiUnstakeAmount: BigInt(fields.withdrawn_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -92,6 +98,7 @@ export class StakingApiCasting {
 			suiStakeAmount: BigInt(fields.returned_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -107,6 +114,7 @@ export class StakingApiCasting {
 			suiStakeAmount: BigInt(fields.staked_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 }

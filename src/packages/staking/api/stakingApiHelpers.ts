@@ -16,6 +16,7 @@ import {
 	StakeRequestEvent,
 	StakeSuccessEvent,
 	StakingAddresses,
+	StakingPosition,
 	UnstakePosition,
 	UnstakeRequestEvent,
 	UnstakeSuccessEvent,
@@ -470,6 +471,118 @@ export class StakingApiHelpers {
 		});
 
 		return positions;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Staking Positions Updating
+	/////////////////////////////////////////////////////////////////////
+
+	public static updateStakePositionsFromEvent = (inputs: {
+		stakePositions: StakePosition[];
+		event:
+			| StakeRequestEvent
+			| StakeFailedEvent
+			| StakeSuccessEvent
+			| AfSuiMintedEvent;
+	}): StakePosition[] => {
+		const foundPositionIndex = inputs.stakePositions.findIndex(
+			(pos) => pos.suiWrapperId === inputs.event.suiWrapperId
+		);
+		if (foundPositionIndex < 0) {
+			if (
+				inputs.event.type.includes(
+					this.constants.eventNames.stakeRequest
+				)
+			)
+				return [
+					{
+						...(inputs.event as StakeRequestEvent),
+						state: "REQUEST",
+						afSuiMintAmount: undefined,
+					},
+					...inputs.stakePositions,
+				];
+
+			return inputs.stakePositions;
+		}
+
+		const foundStakePosition = inputs.stakePositions[foundPositionIndex];
+
+		let position: StakePosition | undefined = undefined;
+		if (inputs.event.type.includes(this.constants.eventNames.afSuiMinted))
+			position = {
+				...(inputs.event as AfSuiMintedEvent),
+				state: "AFSUI_MINTED",
+				validatorAddress: foundStakePosition.validatorAddress,
+				epoch: foundStakePosition.epoch,
+			};
+
+		if (inputs.event.type.includes(this.constants.eventNames.stakeSuccess))
+			position = {
+				...(inputs.event as StakeSuccessEvent),
+				state: "SUCCESS",
+				afSuiMintAmount: undefined,
+				epoch: foundStakePosition.epoch,
+			};
+
+		if (inputs.event.type.includes(this.constants.eventNames.stakeFailed))
+			position = {
+				...(inputs.event as StakeFailedEvent),
+				state: "FAILED",
+				afSuiMintAmount: undefined,
+				epoch: foundStakePosition.epoch,
+			};
+
+		if (!position) return inputs.stakePositions;
+
+		let newStakePositions = [...inputs.stakePositions];
+		newStakePositions[foundPositionIndex] = position;
+
+		return newStakePositions;
+	};
+
+	public static updateUnstakePositionsFromEvent = (inputs: {
+		unstakePositions: UnstakePosition[];
+		event: UnstakeRequestEvent | UnstakeSuccessEvent;
+	}): UnstakePosition[] => {
+		const foundPositionIndex = inputs.unstakePositions.findIndex(
+			(pos) => pos.afSuiWrapperId === inputs.event.afSuiWrapperId
+		);
+		if (foundPositionIndex < 0) {
+			if (
+				inputs.event.type.includes(
+					this.constants.eventNames.unstakeRequest
+				)
+			)
+				return [
+					{
+						...(inputs.event as UnstakeRequestEvent),
+						state: "REQUEST",
+					},
+					...inputs.unstakePositions,
+				];
+
+			return inputs.unstakePositions;
+		}
+
+		const foundPosition = inputs.unstakePositions[foundPositionIndex];
+
+		let position: UnstakePosition | undefined = undefined;
+		if (
+			inputs.event.type.includes(this.constants.eventNames.unstakeSuccess)
+		)
+			position = {
+				...(inputs.event as UnstakeSuccessEvent),
+				state: "SUCCESS",
+				epoch: foundPosition.epoch,
+			};
+
+		if (!position) return inputs.unstakePositions;
+
+		let newPositions = [...inputs.unstakePositions];
+		newPositions[foundPositionIndex] = position;
+
+		return newPositions;
 	};
 
 	/////////////////////////////////////////////////////////////////////
