@@ -172,9 +172,8 @@ export interface ApiCreatePoolBody {
 	coinsInfo: {
 		coinId: ObjectId;
 		coinType: CoinType;
-		weight: PoolWeight;
-		tradeFeeIn: PoolTradeFee;
-		tradeFeeOut: PoolTradeFee;
+		weight: number;
+		tradeFeeIn: number;
 	}[];
 	poolName: PoolName;
 	poolFlatness: 0 | 1;

@@ -368,13 +368,14 @@ export class PoolsApiHelpers {
 					? tx.object(createPoolCapId)
 					: createPoolCapId,
 				tx.pure(lpCoinMetadata.name, "vector<u8>"),
-				tx.pure(lpCoinMetadata.symbol, "vector<u8>"),
+				tx.pure(lpCoinMetadata.symbol.toUpperCase(), "vector<u8>"),
 				tx.pure(lpCoinMetadata.description, "vector<u8>"),
 				tx.pure(lpCoinMetadata.iconUrl, "Option<vector<u8>>"),
 			],
 		});
 	};
 
+	// TODO: handle bounds checks here instead of just on-chain
 	public addCreatePoolCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;

@@ -58,6 +58,9 @@ export class Pools extends Caller {
 		},
 		bounds: {
 			maxSwapPercentageOfPoolBalance: 0.3, // 30%
+			minSwapFee: 0.0001,
+			maxSwapFee: 0.1,
+			minWeight: 0.01,
 		},
 	};
 

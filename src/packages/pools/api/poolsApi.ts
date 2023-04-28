@@ -242,9 +242,8 @@ export class PoolsApi {
 		coinsInfo: {
 			coinId: ObjectId;
 			coinType: CoinType;
-			weight: PoolWeight;
-			tradeFeeIn: PoolTradeFee;
-			tradeFeeOut: PoolTradeFee;
+			weight: number;
+			tradeFeeIn: number;
 		}[];
 		poolName: PoolName;
 		poolFlatness: 0 | 1;
@@ -263,8 +262,13 @@ export class PoolsApi {
 				coinsInfo: inputs.coinsInfo.map((info) => {
 					return {
 						...info,
+						weight: Casting.numberToFixedBigInt(info.weight),
+						tradeFeeIn: Casting.numberToFixedBigInt(
+							info.tradeFeeIn
+						),
 						depositFee: BigInt(0),
 						withdrawFee: BigInt(0),
+						tradeFeeOut: BigInt(0),
 					};
 				}),
 			})
