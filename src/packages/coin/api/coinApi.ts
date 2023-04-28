@@ -29,24 +29,12 @@ export class CoinApi {
 	public fetchCoinMetadata = async (
 		coin: CoinType
 	): Promise<CoinMetadata> => {
-		if (Coin.isSuiCoin(coin)) {
-			const coinClass = new Coin(coin);
-			const symbol = coinClass.coinTypeSymbol;
-			const packageName = coinClass.coinTypePackageName;
-			return {
-				symbol: symbol.toUpperCase(),
-				id: null,
-				description: `${symbol} (${packageName})`,
-				name: symbol,
-				decimals: 9,
-				iconUrl: null,
-			};
-		}
-
 		try {
 			const coinMetadata = await this.Provider.provider.getCoinMetadata({
 				coinType: Helpers.stripLeadingZeroesFromType(coin),
 			});
+			if (coinMetadata === null) throw new Error("coin metadata is null");
+
 			return coinMetadata;
 		} catch (error) {
 			if (this.Provider.Pools().Helpers.isLpCoin(coin)) {
