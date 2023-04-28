@@ -143,7 +143,7 @@ export class CoinApiHelpers {
 	}> => {
 		tx.setSender(walletAddress);
 
-		// TODO: handle cursoring until necessary coin amount is found
+		// PRODUCTION: handle cursoring until necessary coin amount is found
 		const paginatedCoins = await this.Provider.provider.getCoins({
 			owner: walletAddress,
 			coinType,
@@ -151,6 +151,7 @@ export class CoinApiHelpers {
 
 		return CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
 			tx,
+			walletAddress,
 			paginatedCoins,
 			coinAmount
 		);
@@ -185,6 +186,7 @@ export class CoinApiHelpers {
 				const { coinArgument, txWithCoinWithAmount } =
 					CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
 						acc.txWithCoinsWithAmount,
+						walletAddress,
 						paginatedCoins,
 						coinAmounts[index]
 					);
@@ -213,12 +215,24 @@ export class CoinApiHelpers {
 
 	private static addCoinWithAmountCommandsToTransaction = (
 		tx: TransactionBlock,
+		walletAddress: SuiAddress,
 		paginatedCoins: PaginatedCoins,
 		coinAmount: Balance
 	): {
 		coinArgument: TransactionArgument;
 		txWithCoinWithAmount: TransactionBlock;
 	} => {
+		const isSuiCoin = Coin.isSuiCoin(paginatedCoins.data[0].coinType);
+
+		if (isSuiCoin) {
+			const [splitCoin] = tx.splitCoins(tx.gas, [tx.pure(coinAmount)]);
+			return {
+				coinArgument: splitCoin,
+				txWithCoinWithAmount: tx,
+			};
+			// tx.transferObjects([splitCoin], tx.pure(walletAddress));
+		}
+
 		const totalCoinBalance = Helpers.sumBigInt(
 			paginatedCoins.data.map((data) => BigInt(data.balance))
 		);
@@ -231,7 +245,7 @@ export class CoinApiHelpers {
 			.filter((data) => BigInt(data.balance) > BigInt(0))
 			.map((data) => data.coinObjectId);
 
-		const mergedCoinObjectId = coinObjectIds[0];
+		const mergedCoinObjectId: ObjectId = coinObjectIds[0];
 
 		if (coinObjectIds.length > 1) {
 			tx.add({

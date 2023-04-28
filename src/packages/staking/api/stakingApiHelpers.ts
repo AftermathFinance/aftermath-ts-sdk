@@ -46,6 +46,7 @@ export class StakingApiHelpers {
 	private static readonly constants = {
 		modules: {
 			interface: "interface",
+			actions: "actions",
 		},
 		eventNames: {
 			stakeRequest: "StakeWasRequestedEvent",
@@ -512,7 +513,7 @@ export class StakingApiHelpers {
 		newPositions = [...newUnstakes, ...newStakes];
 
 		return newPositions.sort(
-			(a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0)
+			(a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)
 		);
 	};
 
@@ -527,42 +528,42 @@ export class StakingApiHelpers {
 	private stakeRequestEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.modules.actions,
 			StakingApiHelpers.constants.eventNames.stakeRequest
 		);
 
 	private unstakeRequestEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.modules.actions,
 			StakingApiHelpers.constants.eventNames.unstakeRequest
 		);
 
 	private stakeFailedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.modules.actions,
 			StakingApiHelpers.constants.eventNames.stakeFailed
 		);
 
 	private stakeSuccessEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.modules.actions,
 			StakingApiHelpers.constants.eventNames.stakeSuccess
 		);
 
 	private unstakeSuccessEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.modules.actions,
 			StakingApiHelpers.constants.eventNames.unstakeSuccess
 		);
 
 	private afSuiMintedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.liquidStakingDerivative,
-			StakingApiHelpers.constants.modules.interface,
+			StakingApiHelpers.constants.modules.actions,
 			StakingApiHelpers.constants.eventNames.afSuiMinted
 		);
 

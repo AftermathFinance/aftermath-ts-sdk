@@ -86,7 +86,7 @@ export class StakingApi {
 		const positions = [...stakes, ...unstakes];
 
 		return positions.sort(
-			(a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0)
+			(a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)
 		);
 	};
 }
