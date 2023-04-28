@@ -8,6 +8,7 @@ import {
 } from "@mysten/sui.js";
 import dayjs, { QUnitType, OpUnitType } from "dayjs";
 import { AftermathApi } from "../providers/aftermathApi";
+import { EventOnChain } from "../types/castingTypes";
 
 export class EventsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -138,7 +139,6 @@ export class EventsApiHelpers {
 		} while (true);
 	};
 
-	// NOTE: is this the same as cursor and limit set to undefined/null ?
 	public fetchAllEvents = async <T extends Event>(
 		fetchEventsFunc: (
 			cursor?: EventId,

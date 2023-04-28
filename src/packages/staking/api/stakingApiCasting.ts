@@ -4,8 +4,10 @@ import {
 	StakePosition,
 	StakeRequestEvent,
 	StakeSuccessEvent,
+	UnstakePosition,
 	UnstakeRequestEvent,
 	UnstakeSuccessEvent,
+	isStakeEvent,
 } from "../../../types";
 import {
 	AfSuiMintedEventOnChain,
@@ -115,6 +117,30 @@ export class StakingApiCasting {
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
+		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Staking Positions
+	/////////////////////////////////////////////////////////////////////
+
+	// TODO: use this func in staking api helpers
+	public static stakePositionFromStakeRequestEvent = (
+		event: StakeRequestEvent
+	): StakePosition => {
+		return {
+			...event,
+			state: "REQUEST",
+		};
+	};
+
+	// TODO: use this func in staking api helpers
+	public static unstakePositionFromUnstakeRequestEvent = (
+		event: UnstakeRequestEvent
+	): UnstakePosition => {
+		return {
+			...event,
+			state: "REQUEST",
 		};
 	};
 }
