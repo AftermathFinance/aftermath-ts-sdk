@@ -1,7 +1,9 @@
 import { ObjectId } from "@mysten/sui.js";
 import {
+	ApiCreatePoolBody,
 	ApiEventsBody,
 	ApiPoolObjectIdForLpCoinTypeBody,
+	ApiPublishLpCoinBody,
 	Balance,
 	CoinType,
 	PoolDepositEvent,
@@ -110,6 +112,24 @@ export class Pools extends Caller {
 	public async getAllPools() {
 		const pools = await this.fetchApi<PoolObject[]>("");
 		return pools.map((pool) => new Pool(pool, this.network));
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
+		return this.fetchApiTransaction<ApiPublishLpCoinBody>(
+			"transactions/publish-lp-coin",
+			inputs
+		);
+	}
+
+	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
+		return this.fetchApiTransaction<ApiCreatePoolBody>(
+			"transactions/create-pool",
+			inputs
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////

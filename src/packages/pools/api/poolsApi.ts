@@ -11,6 +11,12 @@ import {
 	PoolWithdrawEvent,
 	SerializedTransaction,
 	Slippage,
+	PoolCreationLpCoinMetadata,
+	PoolCreationCoinInfo,
+	PoolName,
+	PoolFlatness,
+	PoolWeight,
+	PoolTradeFee,
 } from "../../../types";
 import {
 	PoolCreateEventOnChain,
@@ -218,6 +224,50 @@ export class PoolsApi {
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			transaction
+		);
+	};
+
+	public publishLpCoinTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.buildPublishLpCoinTransaction(inputs)
+		);
+	};
+
+	public fetchCreatePoolTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		lpCoinType: CoinType;
+		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		coinsInfo: {
+			coinId: ObjectId;
+			coinType: CoinType;
+			weight: PoolWeight;
+			tradeFeeIn: PoolTradeFee;
+			tradeFeeOut: PoolTradeFee;
+		}[];
+		poolName: PoolName;
+		poolFlatness: 0 | 1;
+		createPoolCapId?: ObjectId;
+	}): Promise<SerializedTransaction> => {
+		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.fetchBuildCreatePoolTransaction({
+				...inputs,
+
+				poolFlatness:
+					inputs.poolFlatness === 1
+						? Casting.fixedOneBigInt
+						: BigInt(0),
+
+				coinsInfo: inputs.coinsInfo.map((info) => {
+					return {
+						...info,
+						depositFee: BigInt(0),
+						withdrawFee: BigInt(0),
+					};
+				}),
+			})
 		);
 	};
 

@@ -5,6 +5,7 @@ import {
 	SerializedTransaction,
 	Slippage,
 	Timestamp,
+	Url,
 } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
@@ -20,6 +21,8 @@ import { TransactionArgument } from "@mysten/sui.js";
 export type PoolName = string;
 export type PoolWeight = bigint;
 export type PoolTradeFee = bigint;
+export type PoolDepositFee = bigint;
+export type PoolWithdrawFee = bigint;
 export type PoolFlatness = bigint;
 
 /////////////////////////////////////////////////////////////////////
@@ -33,8 +36,8 @@ export interface PoolCoin {
 	balance: Balance;
 	tradeFeeIn: PoolTradeFee;
 	tradeFeeOut: PoolTradeFee;
-	depositFee: PoolTradeFee;
-	withdrawFee: PoolTradeFee;
+	depositFee: PoolDepositFee;
+	withdrawFee: PoolWithdrawFee;
 }
 
 export interface PoolObject extends Object {
@@ -101,6 +104,27 @@ export interface PoolVolumeDataTimeframe {
 }
 
 /////////////////////////////////////////////////////////////////////
+//// Pool Creation
+/////////////////////////////////////////////////////////////////////
+
+export interface PoolCreationCoinInfo {
+	coinId: ObjectId | TransactionArgument;
+	coinType: CoinType;
+	weight: PoolWeight;
+	tradeFeeIn: PoolTradeFee;
+	tradeFeeOut: PoolTradeFee;
+	depositFee: PoolDepositFee;
+	withdrawFee: PoolWithdrawFee;
+}
+
+export interface PoolCreationLpCoinMetadata {
+	name: string;
+	symbol: string;
+	description: string;
+	iconUrl: Url;
+}
+
+/////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
@@ -135,4 +159,24 @@ export interface ApiPoolSpotPriceBody {
 
 export interface ApiPoolObjectIdForLpCoinTypeBody {
 	lpCoinType: CoinType;
+}
+
+export interface ApiPublishLpCoinBody {
+	walletAddress: SuiAddress;
+}
+
+export interface ApiCreatePoolBody {
+	walletAddress: SuiAddress;
+	lpCoinType: CoinType;
+	lpCoinMetadata: PoolCreationLpCoinMetadata;
+	coinsInfo: {
+		coinId: ObjectId;
+		coinType: CoinType;
+		weight: PoolWeight;
+		tradeFeeIn: PoolTradeFee;
+		tradeFeeOut: PoolTradeFee;
+	}[];
+	poolName: PoolName;
+	poolFlatness: 0 | 1;
+	createPoolCapId?: ObjectId;
 }

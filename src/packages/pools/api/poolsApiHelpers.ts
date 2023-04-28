@@ -3,6 +3,8 @@ import {
 	TransactionBlock,
 	SuiAddress,
 	TransactionArgument,
+	fromB64,
+	normalizeSuiObjectId,
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -22,6 +24,11 @@ import {
 	Slippage,
 	CoinsToBalance,
 	ReferralVaultAddresses,
+	Url,
+	PoolName,
+	PoolCreationCoinInfo,
+	PoolFlatness,
+	PoolCreationLpCoinMetadata,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
@@ -37,11 +44,13 @@ export class PoolsApiHelpers {
 
 	private static readonly constants = {
 		moduleNames: {
-			pools: "interface",
+			interface: "interface",
+			pool: "pool",
 			swap: "swap",
 			math: "math",
 			events: "events",
 			poolRegistry: "pool_registry",
+			poolFactory: "pool_factory",
 		},
 		functions: {
 			swap: {
@@ -192,7 +201,7 @@ export class PoolsApiHelpers {
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.pools,
+				PoolsApiHelpers.constants.moduleNames.interface,
 				"swap_exact_in"
 			),
 			typeArguments: [lpCoinType, coinInType, coinOutType],
@@ -260,16 +269,12 @@ export class PoolsApiHelpers {
 		slippage: Slippage
 	): TransactionBlock => {
 		const poolSize = coinTypes.length;
-		if (poolSize != coinIds.length)
-			throw new Error(
-				`invalid coinIds size: ${coinIds.length} != ${poolSize}`
-			);
 
 		tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.pools,
+				PoolsApiHelpers.constants.moduleNames.interface,
 				`deposit_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
@@ -305,7 +310,7 @@ export class PoolsApiHelpers {
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.pools,
+				PoolsApiHelpers.constants.moduleNames.interface,
 				`withdraw_${poolSize}_coins`
 			),
 
@@ -323,6 +328,115 @@ export class PoolsApiHelpers {
 		});
 
 		return tx;
+	};
+
+	public addPublishLpCoinCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+	}) => {
+		const { tx } = inputs;
+
+		const compiledModulesAndDeps = JSON.parse(
+			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytLCHZgCtYBBQzbAQ0AAgIGAQcAAAIAAgECAAAFAAEAAQMDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA5jcmVhdGVfbHBfY29pbgtkdW1teV9maWVsZARpbml0CWludGVyZmFjZQp0eF9jb250ZXh0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvjIyReIMxZLyJSleycrPI2b2ygqrRzNb1be8/riObVzAAIBBAEAAAAAAQQLAAsBOAACAA=="],"dependencies":["0xf8c8c9178833164bc894a57b272b3c8d9bdb282aad1ccd6f56def3fae239b573","0x4f816b8eed3de02323203269d7be61bf14407a15d256d4615ea920f7d5ad1262","0x0000000000000000000000000000000000000000000000000000000000000001","0xd22a10f22cdde9320cf562b1d163cff282e64b18b015cb50f8bf4d509f96b3f9","0x58d883d3bd0864e1930c986b19efc2455bc56ba278a9b835680b325f268018a4","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0xe6a15afcb898db13643af6a63e60a83ae93055827955535679a85b2842931543","0xc8f39eaeb34139f9afdbb5badecc9bb2ed919838e25071d681268b67f8020006"],"digest":[158,20,131,115,148,27,5,29,97,76,43,64,170,235,132,45,235,154,147,239,203,111,20,233,43,139,233,198,183,113,192,124]}`
+		);
+
+		return tx.publish({
+			modules: compiledModulesAndDeps.modules.map((m: any) =>
+				Array.from(fromB64(m))
+			),
+			dependencies: compiledModulesAndDeps.dependencies.map(
+				(addr: string) => normalizeSuiObjectId(addr)
+			),
+		});
+	};
+
+	public addUpdateLpCoinMetadataCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		lpCoinType: CoinType;
+		createPoolCapId: ObjectId | TransactionArgument;
+		lpCoinMetadata: PoolCreationLpCoinMetadata;
+	}) => {
+		const { tx, lpCoinType, createPoolCapId, lpCoinMetadata } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.pools.packages.cmmm,
+				PoolsApiHelpers.constants.moduleNames.poolFactory,
+				"update_lp_coin_metadata"
+			),
+			typeArguments: [lpCoinType],
+			arguments: [
+				typeof createPoolCapId === "string"
+					? tx.object(createPoolCapId)
+					: createPoolCapId,
+				tx.pure(lpCoinMetadata.name, "vector<u8>"),
+				tx.pure(lpCoinMetadata.symbol, "vector<u8>"),
+				tx.pure(lpCoinMetadata.description, "vector<u8>"),
+				tx.pure(lpCoinMetadata.iconUrl, "Option<vector<u8>>"),
+			],
+		});
+	};
+
+	public addCreatePoolCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		lpCoinType: CoinType;
+		coinsInfo: PoolCreationCoinInfo[];
+		createPoolCapId: ObjectId;
+		poolName: PoolName;
+		poolFlatness: PoolFlatness;
+	}) => {
+		const { tx, lpCoinType, createPoolCapId, coinsInfo } = inputs;
+		const poolSize = coinsInfo.length;
+
+		coinsInfo.sort((a, b) => {
+			const coinA = a.coinType.toUpperCase();
+			const coinB = b.coinType.toUpperCase();
+			return coinA < coinB ? -1 : coinA > coinB ? 1 : 0;
+		});
+
+		return tx.add({
+			kind: "MoveCall",
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.pools.packages.cmmm,
+				PoolsApiHelpers.constants.moduleNames.interface,
+				`create_pool_${poolSize}_coins`
+			),
+			typeArguments: [
+				lpCoinType,
+				...coinsInfo.map((coin) => coin.coinType),
+			],
+			arguments: [
+				typeof createPoolCapId === "string"
+					? tx.object(createPoolCapId)
+					: createPoolCapId,
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.pure(inputs.poolName, "vector<u8>"),
+				tx.pure(
+					coinsInfo.map((coin) => coin.weight),
+					"vector<u64>"
+				),
+				tx.pure(inputs.poolFlatness, "u64"),
+				tx.pure(
+					coinsInfo.map((coin) => coin.tradeFeeIn),
+					"vector<u64>"
+				),
+				tx.pure(
+					coinsInfo.map((coin) => coin.tradeFeeOut),
+					"vector<u64>"
+				),
+				tx.pure(
+					coinsInfo.map((coin) => coin.depositFee),
+					"vector<u64>"
+				),
+				tx.pure(
+					coinsInfo.map((coin) => coin.withdrawFee),
+					"vector<u64>"
+				),
+				...coinsInfo.map((coin) =>
+					typeof coin.coinId === "string"
+						? tx.object(coin.coinId)
+						: coin.coinId
+				),
+			],
+		});
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -479,6 +593,60 @@ export class PoolsApiHelpers {
 		);
 
 		return finalTx;
+	};
+
+	public buildPublishLpCoinTransaction = (inputs: {
+		walletAddress: SuiAddress;
+	}): TransactionBlock => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const upgradeCap = this.addPublishLpCoinCommandToTransaction({ tx });
+		tx.transferObjects([upgradeCap], tx.pure(inputs.walletAddress));
+
+		return tx;
+	};
+
+	public fetchBuildCreatePoolTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		lpCoinType: CoinType;
+		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		coinsInfo: PoolCreationCoinInfo[];
+		poolName: PoolName;
+		poolFlatness: PoolFlatness;
+		createPoolCapId?: ObjectId;
+	}): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const createPoolCapId =
+			inputs.createPoolCapId !== undefined
+				? inputs.createPoolCapId
+				: (
+						await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
+							inputs.walletAddress,
+							`${this.addresses.pools.packages.cmmm}::${PoolsApiHelpers.constants.moduleNames.pool}::CreatePoolCap<${inputs.lpCoinType}>`
+						)
+				  )[0].data?.objectId;
+
+		if (createPoolCapId === undefined)
+			throw new Error(
+				"no CreatePoolCap for LP Coin Type found owned by address"
+			);
+
+		this.addUpdateLpCoinMetadataCommandToTransaction({
+			tx,
+			...inputs,
+			createPoolCapId,
+		});
+
+		this.addCreatePoolCommandToTransaction({
+			tx,
+			...inputs,
+			createPoolCapId,
+		});
+
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
