@@ -53,6 +53,7 @@ export interface EventsWithCursor<EventType> {
 	nextCursor: EventId | null;
 }
 export interface Event {
+	type: AnyObjectType;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }
