@@ -355,13 +355,20 @@ export class PoolsApiHelpers {
 		});
 	};
 
-	public addUpdateLpCoinMetadataCommandToTransaction = (inputs: {
+	public fetchAddUpdateLpCoinMetadataCommandToTransaction = async (inputs: {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
 		createPoolCapId: ObjectId | TransactionArgument;
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		poolName: PoolName;
+		coinTypes: CoinType[];
 	}) => {
 		const { tx, lpCoinType, createPoolCapId, lpCoinMetadata } = inputs;
+
+		const lpCoinDescription = await this.createLpCoinMetadataDescription({
+			...inputs,
+		});
+
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
@@ -379,11 +386,7 @@ export class PoolsApiHelpers {
 						lpCoinMetadata.symbol.toUpperCase()
 					)
 				),
-				tx.pure(
-					Casting.u8VectorFromString(
-						`LP Coin for pool on Aftermath Finance.`
-					)
-				),
+				tx.pure(Casting.u8VectorFromString(lpCoinDescription)),
 				tx.pure(
 					{
 						Some: Casting.u8VectorFromString(
@@ -666,9 +669,10 @@ export class PoolsApiHelpers {
 		// 		"no CreatePoolCap for LP Coin Type found owned by address"
 		// 	);
 
-		this.addUpdateLpCoinMetadataCommandToTransaction({
+		await this.fetchAddUpdateLpCoinMetadataCommandToTransaction({
 			tx,
 			...inputs,
+			coinTypes: inputs.coinsInfo.map((info) => info.coinType),
 			// createPoolCapId,
 		});
 
@@ -864,4 +868,29 @@ export class PoolsApiHelpers {
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);
+
+	/////////////////////////////////////////////////////////////////////
+	//// LP Coin Metadata
+	/////////////////////////////////////////////////////////////////////
+
+	private createLpCoinMetadataDescription = async (inputs: {
+		poolName: PoolName;
+		coinTypes: CoinType[];
+	}) => {
+		// TODO: do all of this a little bit cleaner
+		const coinSymbols = (
+			await Promise.all(
+				inputs.coinTypes.map((coin) =>
+					this.Provider.Coin().fetchCoinMetadata(coin)
+				)
+			)
+		).map((metadata) => metadata.symbol);
+		return `Aftermath LP coin for ${
+			inputs.poolName
+		} Pool (${coinSymbols.reduce(
+			(acc, symbol, index) =>
+				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
+			""
+		)})`;
+	};
 }
