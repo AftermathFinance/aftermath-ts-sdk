@@ -379,7 +379,9 @@ export class PoolsApiHelpers {
 	public addCreatePoolCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
-		coinsInfo: PoolCreationCoinInfo[];
+		coinsInfo: (PoolCreationCoinInfo & {
+			coinId: ObjectId | TransactionArgument;
+		})[];
 		createPoolCapId: ObjectId;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
@@ -641,10 +643,24 @@ export class PoolsApiHelpers {
 			createPoolCapId,
 		});
 
+		const { coinArguments, txWithCoinsWithAmount } =
+			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
+				tx,
+				inputs.walletAddress,
+				inputs.coinsInfo.map((info) => info.coinType),
+				inputs.coinsInfo.map((info) => info.initialDeposit)
+			);
+
 		this.addCreatePoolCommandToTransaction({
-			tx,
+			tx: txWithCoinsWithAmount,
 			...inputs,
 			createPoolCapId,
+			coinsInfo: inputs.coinsInfo.map((info, index) => {
+				return {
+					...info,
+					coinId: coinArguments[index],
+				};
+			}),
 		});
 
 		return tx;

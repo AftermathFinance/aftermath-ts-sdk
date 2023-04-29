@@ -240,10 +240,10 @@ export class PoolsApi {
 		lpCoinType: CoinType;
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
 		coinsInfo: {
-			coinId: ObjectId;
 			coinType: CoinType;
 			weight: number;
 			tradeFeeIn: number;
+			initialDeposit: Balance;
 		}[];
 		poolName: PoolName;
 		poolFlatness: 0 | 1;

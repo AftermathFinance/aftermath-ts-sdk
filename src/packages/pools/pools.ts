@@ -57,10 +57,12 @@ export class Pools extends Caller {
 			rebate: 0.05, // 5%
 		},
 		bounds: {
+			maxCoinsInPool: 12,
 			maxSwapPercentageOfPoolBalance: 0.3, // 30%
 			minSwapFee: 0.0001,
 			maxSwapFee: 0.1,
 			minWeight: 0.01,
+			maxWeight: 0.99,
 		},
 	};
 

@@ -108,13 +108,13 @@ export interface PoolVolumeDataTimeframe {
 /////////////////////////////////////////////////////////////////////
 
 export interface PoolCreationCoinInfo {
-	coinId: ObjectId | TransactionArgument;
 	coinType: CoinType;
 	weight: PoolWeight;
 	tradeFeeIn: PoolTradeFee;
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
 	withdrawFee: PoolWithdrawFee;
+	initialDeposit: Balance;
 }
 
 export interface PoolCreationLpCoinMetadata {
@@ -170,10 +170,10 @@ export interface ApiCreatePoolBody {
 	lpCoinType: CoinType;
 	lpCoinMetadata: PoolCreationLpCoinMetadata;
 	coinsInfo: {
-		coinId: ObjectId;
 		coinType: CoinType;
 		weight: number;
 		tradeFeeIn: number;
+		initialDeposit: Balance;
 	}[];
 	poolName: PoolName;
 	poolFlatness: 0 | 1;
