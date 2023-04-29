@@ -29,10 +29,12 @@ export class CoinApi {
 	public fetchCoinMetadata = async (
 		coin: CoinType
 	): Promise<CoinMetadata> => {
+		console.log("coin", coin);
 		try {
 			const coinMetadata = await this.Provider.provider.getCoinMetadata({
 				coinType: Helpers.stripLeadingZeroesFromType(coin),
 			});
+			console.log("coinMetadata", coinMetadata);
 			if (coinMetadata === null) throw new Error("coin metadata is null");
 
 			return coinMetadata;

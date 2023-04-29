@@ -11,16 +11,16 @@ import {
 	PoolWithdrawEvent,
 	SerializedTransaction,
 	Slippage,
+	PoolCreationLpCoinMetadata,
+	PoolName,
 } from "../../../types";
 import {
-	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
 import { Pool } from "..";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Aftermath } from "../../../general/providers";
 
 export class PoolsApi {
@@ -218,6 +218,54 @@ export class PoolsApi {
 		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			transaction
+		);
+	};
+
+	public publishLpCoinTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.buildPublishLpCoinTransaction(inputs)
+		);
+	};
+
+	public fetchCreatePoolTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		lpCoinType: CoinType;
+		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		coinsInfo: {
+			coinType: CoinType;
+			weight: number;
+			tradeFeeIn: number;
+			initialDeposit: Balance;
+		}[];
+		poolName: PoolName;
+		poolFlatness: 0 | 1;
+		createPoolCapId: ObjectId;
+	}): Promise<SerializedTransaction> => {
+		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.fetchBuildCreatePoolTransaction({
+				...inputs,
+
+				poolFlatness:
+					inputs.poolFlatness === 1
+						? Casting.fixedOneBigInt
+						: BigInt(0),
+
+				coinsInfo: inputs.coinsInfo.map((info) => {
+					return {
+						...info,
+						weight: Casting.numberToFixedBigInt(info.weight),
+						tradeFeeIn: Casting.numberToFixedBigInt(
+							info.tradeFeeIn
+						),
+						depositFee: BigInt(0),
+						withdrawFee: BigInt(0),
+						tradeFeeOut: BigInt(0),
+					};
+				}),
+			})
 		);
 	};
 
