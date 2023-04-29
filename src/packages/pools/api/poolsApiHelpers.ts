@@ -72,6 +72,8 @@ export class PoolsApiHelpers {
 			deposit: "DepositEvent",
 			withdraw: "WithdrawEvent",
 		},
+		defaultLpCoinIconImageUrl:
+			"https://aftermath.finance/coins/lp/af_lp.svg",
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -377,11 +379,15 @@ export class PoolsApiHelpers {
 						lpCoinMetadata.symbol.toUpperCase()
 					)
 				),
-				tx.pure(Casting.u8VectorFromString(lpCoinMetadata.description)),
+				tx.pure(
+					Casting.u8VectorFromString(
+						`LP Coin for pool on Aftermath Finance.`
+					)
+				),
 				tx.pure(
 					{
 						Some: Casting.u8VectorFromString(
-							lpCoinMetadata.iconUrl
+							PoolsApiHelpers.constants.defaultLpCoinIconImageUrl
 						),
 					},
 					"Option<vector<u8>>"
@@ -638,30 +644,32 @@ export class PoolsApiHelpers {
 		coinsInfo: PoolCreationCoinInfo[];
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
-		createPoolCapId?: ObjectId;
+		createPoolCapId: ObjectId;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const createPoolCapId =
-			inputs.createPoolCapId !== undefined
-				? inputs.createPoolCapId
-				: (
-						await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
-							inputs.walletAddress,
-							`${this.addresses.pools.packages.cmmm}::${PoolsApiHelpers.constants.moduleNames.pool}::CreatePoolCap<${inputs.lpCoinType}>`
-						)
-				  )[0].data?.objectId;
+		// TODO: make this fetching work
 
-		if (createPoolCapId === undefined)
-			throw new Error(
-				"no CreatePoolCap for LP Coin Type found owned by address"
-			);
+		// const createPoolCapId =
+		// 	inputs.createPoolCapId !== undefined
+		// 		? inputs.createPoolCapId
+		// 		: (
+		// 				await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
+		// 					inputs.walletAddress,
+		// 					`${this.addresses.pools.packages.cmmm}::${PoolsApiHelpers.constants.moduleNames.pool}::CreatePoolCap<${inputs.lpCoinType}>`
+		// 				)
+		// 		  )[0].data?.objectId;
+
+		// if (createPoolCapId === undefined)
+		// 	throw new Error(
+		// 		"no CreatePoolCap for LP Coin Type found owned by address"
+		// 	);
 
 		this.addUpdateLpCoinMetadataCommandToTransaction({
 			tx,
 			...inputs,
-			createPoolCapId,
+			// createPoolCapId,
 		});
 
 		const { coinArguments, txWithCoinsWithAmount } =
@@ -675,7 +683,7 @@ export class PoolsApiHelpers {
 		this.addCreatePoolCommandToTransaction({
 			tx: txWithCoinsWithAmount,
 			...inputs,
-			createPoolCapId,
+			// createPoolCapId,
 			coinsInfo: inputs.coinsInfo.map((info, index) => {
 				return {
 					...info,
@@ -823,8 +831,8 @@ export class PoolsApiHelpers {
 	public isLpCoin = (coin: CoinType) => {
 		return (
 			coin.split("::").length === 3 &&
-			coin.split("::")[1].includes("af_lp_") &&
-			coin.split("::")[2].includes("AF_LP_")
+			coin.split("::")[1].includes("af_lp") &&
+			coin.split("::")[2].includes("AF_LP")
 		);
 	};
 

@@ -120,8 +120,6 @@ export interface PoolCreationCoinInfo {
 export interface PoolCreationLpCoinMetadata {
 	name: string;
 	symbol: string;
-	description: string;
-	iconUrl: Url;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -177,5 +175,5 @@ export interface ApiCreatePoolBody {
 	}[];
 	poolName: PoolName;
 	poolFlatness: 0 | 1;
-	createPoolCapId?: ObjectId;
+	createPoolCapId: ObjectId;
 }

@@ -241,7 +241,7 @@ export class PoolsApi {
 		}[];
 		poolName: PoolName;
 		poolFlatness: 0 | 1;
-		createPoolCapId?: ObjectId;
+		createPoolCapId: ObjectId;
 	}): Promise<SerializedTransaction> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
