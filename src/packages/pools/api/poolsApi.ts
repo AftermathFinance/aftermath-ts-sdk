@@ -12,21 +12,15 @@ import {
 	SerializedTransaction,
 	Slippage,
 	PoolCreationLpCoinMetadata,
-	PoolCreationCoinInfo,
 	PoolName,
-	PoolFlatness,
-	PoolWeight,
-	PoolTradeFee,
 } from "../../../types";
 import {
-	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
 import { Pool } from "..";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Aftermath } from "../../../general/providers";
 
 export class PoolsApi {

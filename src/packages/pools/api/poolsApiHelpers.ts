@@ -29,6 +29,10 @@ import {
 	PoolCreationCoinInfo,
 	PoolFlatness,
 	PoolCreationLpCoinMetadata,
+	PoolWeight,
+	PoolTradeFee,
+	PoolDepositFee,
+	PoolWithdrawFee,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
@@ -375,7 +379,11 @@ export class PoolsApiHelpers {
 				),
 				tx.pure(Casting.u8VectorFromString(lpCoinMetadata.description)),
 				tx.pure(
-					Casting.u8VectorFromString(lpCoinMetadata.iconUrl),
+					{
+						Some: Casting.u8VectorFromString(
+							lpCoinMetadata.iconUrl
+						),
+					},
 					"Option<vector<u8>>"
 				),
 			],
@@ -386,9 +394,15 @@ export class PoolsApiHelpers {
 	public addCreatePoolCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
-		coinsInfo: (PoolCreationCoinInfo & {
+		coinsInfo: {
 			coinId: ObjectId | TransactionArgument;
-		})[];
+			coinType: CoinType;
+			weight: PoolWeight;
+			tradeFeeIn: PoolTradeFee;
+			tradeFeeOut: PoolTradeFee;
+			depositFee: PoolDepositFee;
+			withdrawFee: PoolWithdrawFee;
+		}[];
 		createPoolCapId: ObjectId;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
