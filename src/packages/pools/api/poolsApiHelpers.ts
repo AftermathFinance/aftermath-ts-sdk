@@ -367,10 +367,17 @@ export class PoolsApiHelpers {
 				typeof createPoolCapId === "string"
 					? tx.object(createPoolCapId)
 					: createPoolCapId,
-				tx.pure(lpCoinMetadata.name, "vector<u8>"),
-				tx.pure(lpCoinMetadata.symbol.toUpperCase(), "vector<u8>"),
-				tx.pure(lpCoinMetadata.description, "vector<u8>"),
-				tx.pure(lpCoinMetadata.iconUrl, "Option<vector<u8>>"),
+				tx.pure(Casting.u8VectorFromString(lpCoinMetadata.name)),
+				tx.pure(
+					Casting.u8VectorFromString(
+						lpCoinMetadata.symbol.toUpperCase()
+					)
+				),
+				tx.pure(Casting.u8VectorFromString(lpCoinMetadata.description)),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinMetadata.iconUrl),
+					"Option<vector<u8>>"
+				),
 			],
 		});
 	};
@@ -411,7 +418,7 @@ export class PoolsApiHelpers {
 					? tx.object(createPoolCapId)
 					: createPoolCapId,
 				tx.object(this.addresses.pools.objects.poolRegistry),
-				tx.pure(inputs.poolName, "vector<u8>"),
+				tx.pure(Casting.u8VectorFromString(inputs.poolName)),
 				tx.pure(
 					coinsInfo.map((coin) => coin.weight),
 					"vector<u64>"
