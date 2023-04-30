@@ -5,7 +5,6 @@ import {
 	SuiNetwork,
 	ApiStakingPositionsBody,
 	StakingPosition,
-	ApiEventsBody,
 	StakeRequestEvent,
 	UnstakeRequestEvent,
 	ApiStakingEventsBody,
@@ -21,6 +20,12 @@ export class Staking extends Caller {
 		objectTypes: {
 			stakedSuiType: "0x2::staking_pool::StakedSui",
 			delegationType: "0x2::staking_pool::Delegation",
+		},
+		fees: {
+			unstakeFee: 0.05, // 5%
+		},
+		bounds: {
+			minStake: BigInt("1000000000"), // 1 SUI
 		},
 	};
 

@@ -151,7 +151,6 @@ export class CoinApiHelpers {
 
 		return CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
 			tx,
-			walletAddress,
 			paginatedCoins,
 			coinAmount
 		);
@@ -186,7 +185,6 @@ export class CoinApiHelpers {
 				const { coinArgument, txWithCoinWithAmount } =
 					CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
 						acc.txWithCoinsWithAmount,
-						walletAddress,
 						paginatedCoins,
 						coinAmounts[index]
 					);
@@ -215,7 +213,6 @@ export class CoinApiHelpers {
 
 	private static addCoinWithAmountCommandsToTransaction = (
 		tx: TransactionBlock,
-		walletAddress: SuiAddress,
 		paginatedCoins: PaginatedCoins,
 		coinAmount: Balance
 	): {
@@ -224,36 +221,49 @@ export class CoinApiHelpers {
 	} => {
 		const isSuiCoin = Coin.isSuiCoin(paginatedCoins.data[0].coinType);
 
+		const coinObjects = paginatedCoins.data.filter(
+			(data) =>
+				BigInt(data.balance) > BigInt(0) &&
+				(data.lockedUntilEpoch === null ||
+					data.lockedUntilEpoch === undefined)
+		);
+
+		const totalCoinBalance = Helpers.sumBigInt(
+			coinObjects.map((data) => BigInt(data.balance))
+		);
+		if (totalCoinBalance < coinAmount)
+			throw new Error("wallet does not have coins of sufficient balance");
+
 		if (isSuiCoin) {
+			tx.setGasPayment(
+				coinObjects.map((obj) => {
+					return {
+						...obj,
+						objectId: obj.coinObjectId,
+					};
+				})
+			);
+
 			const [splitCoin] = tx.splitCoins(tx.gas, [tx.pure(coinAmount)]);
+
 			return {
 				coinArgument: splitCoin,
 				txWithCoinWithAmount: tx,
 			};
-			// tx.transferObjects([splitCoin], tx.pure(walletAddress));
 		}
 
-		const totalCoinBalance = Helpers.sumBigInt(
-			paginatedCoins.data.map((data) => BigInt(data.balance))
-		);
-
-		if (totalCoinBalance < coinAmount)
-			throw new Error("wallet does not have coins of sufficient balance");
-
-		// TODO: handle data.lockedUntilEpoch ?
-		const coinObjectIds = paginatedCoins.data
-			.filter((data) => BigInt(data.balance) > BigInt(0))
-			.map((data) => data.coinObjectId);
-
+		const coinObjectIds = coinObjects.map((data) => data.coinObjectId);
 		const mergedCoinObjectId: ObjectId = coinObjectIds[0];
 
 		if (coinObjectIds.length > 1) {
 			tx.add({
 				kind: "MergeCoins",
 				destination: tx.object(mergedCoinObjectId),
-				sources: coinObjectIds
-					.slice(1)
-					.map((coinId) => tx.object(coinId)),
+				sources: [
+					...coinObjectIds
+						.slice(1)
+						.map((coinId) => tx.object(coinId)),
+				],
 			});
 		}
 

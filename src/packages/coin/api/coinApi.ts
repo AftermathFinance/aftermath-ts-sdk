@@ -29,12 +29,10 @@ export class CoinApi {
 	public fetchCoinMetadata = async (
 		coin: CoinType
 	): Promise<CoinMetadata> => {
-		console.log("coin", coin);
 		try {
 			const coinMetadata = await this.Provider.provider.getCoinMetadata({
 				coinType: Helpers.stripLeadingZeroesFromType(coin),
 			});
-			console.log("coinMetadata", coinMetadata);
 			if (coinMetadata === null) throw new Error("coin metadata is null");
 
 			return coinMetadata;
@@ -42,7 +40,7 @@ export class CoinApi {
 			if (this.Provider.Pools().Helpers.isLpCoin(coin)) {
 				const coinName = Pools.displayLpCoinType(coin);
 				return {
-					symbol: coinName.split(" ")[0].toUpperCase(),
+					symbol: coinName.replaceAll(" ", "_").toUpperCase(),
 					id: null,
 					description: "Aftermath Finance LP",
 					name: coinName,
