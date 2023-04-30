@@ -8,7 +8,7 @@ import { AnyObjectType, BigIntAsString, ModuleName } from "./generalTypes";
 export interface EventOnChain<Fields> {
 	id: {
 		txDigest: TransactionDigest;
-		eventSeq: number;
+		eventSeq: string;
 	};
 	packageId: ObjectId;
 	transactionModule: ModuleName;

@@ -67,7 +67,12 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventOnChainType>> => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
-			cursor,
+			cursor: cursor
+				? {
+						...cursor,
+						eventSeq: cursor?.eventSeq.toString(),
+				  }
+				: undefined,
 			limit, // defaultlimit ?
 		});
 
@@ -85,7 +90,12 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventType>> => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
-			cursor,
+			cursor: cursor
+				? {
+						...cursor,
+						eventSeq: cursor?.eventSeq.toString(),
+				  }
+				: undefined,
 			limit, // defaultlimit ?
 		});
 		const eventsOnChain =
@@ -130,11 +140,13 @@ export class EventsApiHelpers {
 
 			if (
 				events.length === 0 ||
-				events.length < limitStepSize ||
+				// TODO: uncomment below once event filtering is allowed for pools, etc.
+				// events.length < limitStepSize ||
 				eventsWithCursor.nextCursor === null ||
 				endIndex >= 0
 			)
 				return eventsWithinTime;
+
 			cursor = eventsWithCursor.nextCursor;
 		} while (true);
 	};

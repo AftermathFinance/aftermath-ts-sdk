@@ -315,7 +315,8 @@ export class PoolsApi {
 						limit,
 					}),
 				"hour",
-				24
+				24,
+				512
 			);
 
 		const volume = this.Helpers.fetchCalcPoolVolume(
@@ -405,7 +406,8 @@ export class PoolsApi {
 					// TODO: fetch only pool's events
 					this.fetchTradeEvents,
 					timeframeValue.timeUnit,
-					timeframeValue.time
+					timeframeValue.time,
+					512
 				)
 			).filter((trade) => trade.poolId === poolObjectId),
 		]);
