@@ -92,11 +92,18 @@ export interface NftAmmAddresses {
 
 export interface ExternalRouterAddresses {
 	nojo: NojoAddresses;
+	deepBook: DeepBookAddresses;
 }
 
 export interface NojoAddresses {
 	packages: {
 		pool: SuiAddress;
+	};
+}
+
+export interface DeepBookAddresses {
+	packages: {
+		clob: SuiAddress;
 	};
 }
 

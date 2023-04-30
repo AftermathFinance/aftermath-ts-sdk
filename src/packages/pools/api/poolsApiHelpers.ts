@@ -40,6 +40,7 @@ import dayjs, { ManipulateType } from "dayjs";
 import { Pool } from "..";
 import { Casting } from "../../../general/utils";
 import { PoolCreateEventOnChain } from "./poolsApiCastingTypes";
+import { EventOnChain } from "../../../general/types/castingTypes";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -146,25 +147,28 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
-		const paginatedEvents = await this.Provider.provider.queryEvents({
-			query: {
-				MoveEventType: EventsApiHelpers.createEventType(
-					this.addresses.pools.packages.cmmm,
-					"events",
-					"CreatedPoolEvent"
-				),
-			},
-			cursor: null,
-			limit: null,
-			order: "ascending",
-		});
-
-		const poolObjectIds = paginatedEvents.data.map(
-			(event) =>
-				(event as unknown as PoolCreateEventOnChain).parsedJson.pool_id
+		const objectIds = await this.Provider.Events().fetchAllEvents(
+			(cursor, limit) =>
+				this.Provider.Events().fetchCastEventsWithCursor<
+					EventOnChain<{
+						pool_id: ObjectId;
+					}>,
+					ObjectId
+				>(
+					{
+						MoveEventType: EventsApiHelpers.createEventType(
+							this.addresses.pools.packages.cmmm,
+							"events",
+							"CreatedPoolEvent"
+						),
+					},
+					(eventOnChain) => eventOnChain.parsedJson.pool_id,
+					cursor,
+					limit
+				)
 		);
 
-		return poolObjectIds;
+		return objectIds;
 	};
 
 	/////////////////////////////////////////////////////////////////////
