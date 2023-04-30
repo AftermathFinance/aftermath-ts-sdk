@@ -1,12 +1,5 @@
 import { AftermathApi } from "../../../general/providers";
-
-import {
-	ObjectId,
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
-import { Balance } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import { DeepBookApiHelpers } from "./deepBookApiHelper";
 
@@ -40,10 +33,11 @@ export class DeepBookApi {
 
 	public fetchAllPools = async () => this.Helpers.fetchAllPools();
 
-	// public fetchPoolForCoinTypes = async (coinTypeA: CoinType, coinTypeB: CoinType) => {
-	//     const poolRegistry = await this.Helpers.fetchPoolRegistry()
-	//     poolRegistry.table
-	// 	return this.fetchPool(objectId)
+	// public fetchPoolForCoinTypes = async (inputs: {
+	// 	coinType1: CoinType;
+	// 	coinType2: CoinType;
+	// }): Promise<DeepBookPoolObject> => {
+	// 	const pools = await this.fetchAllPools();
 	// };
 
 	/////////////////////////////////////////////////////////////////////

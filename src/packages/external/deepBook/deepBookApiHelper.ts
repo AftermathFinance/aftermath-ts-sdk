@@ -76,8 +76,12 @@ export class DeepBookApiHelpers {
 				this.Provider.Events().fetchCastEventsWithCursor<
 					EventOnChain<{
 						pool_id: ObjectId;
-						base_asset: CoinType;
-						quote_asset: CoinType;
+						base_asset: {
+							name: string;
+						};
+						quote_asset: {
+							name: string;
+						};
 					}>,
 					DeepBookPoolObject
 				>(
@@ -91,8 +95,10 @@ export class DeepBookApiHelpers {
 					(eventOnChain) => {
 						return {
 							objectId: eventOnChain.parsedJson.pool_id,
-							baseCoin: eventOnChain.parsedJson.base_asset,
-							quoteCoin: eventOnChain.parsedJson.quote_asset,
+							baseCoin:
+								"0x" + eventOnChain.parsedJson.base_asset.name,
+							quoteCoin:
+								"0x" + eventOnChain.parsedJson.quote_asset.name,
 						};
 					},
 					cursor,
@@ -106,21 +112,6 @@ export class DeepBookApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Commands
 	/////////////////////////////////////////////////////////////////////
-
-	// public fun swap_exact_base_for_quote<BaseAsset, QuoteAsset>(
-	//     pool: &mut Pool<BaseAsset, QuoteAsset>,
-
-	//     pool_registry: &PoolRegistry,
-	//     protocol_fee_vault: &ProtocolFeeVault,
-	//     treasury: &mut Treasury,
-	//     insurance_fund: &mut InsuranceFund,
-	//     referral_vault: &ReferralVault,
-
-	//     base_coin: Coin<BaseAsset>,
-	//     clock: &Clock,
-	//     ctx: &mut TxContext,
-
-	// ): (Coin<BaseAsset>, Coin<QuoteAsset>, u64 (amountFilled), u64 (amountOut))
 
 	public addTradeBaseToQuoteCommandToTransaction = (inputs: {
 		tx: TransactionBlock;

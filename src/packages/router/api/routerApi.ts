@@ -18,6 +18,7 @@ import {
 	createRouterPool,
 } from "../utils/routerPoolInterface";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
+import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -40,6 +41,7 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public Nojo = () => new NojoAmmApi(this.Provider);
+	public DeepBook = () => new DeepBookApi(this.Provider);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods
