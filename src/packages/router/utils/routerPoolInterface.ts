@@ -11,6 +11,7 @@ import {
 	Slippage,
 	SuiNetwork,
 	UniqueId,
+	Url,
 } from "../../../types";
 import { CoinType } from "../../coin/coinTypes";
 import AftermathRouterPool from "./routerPools/aftermathRouterPool";
@@ -24,7 +25,7 @@ import { AftermathApi } from "../../../general/providers";
 export function createRouterPool(inputs: {
 	pool: RouterSerializablePool;
 	// NOTE: should this be optional and passed in only upon transaction creation or another way ?
-	network: SuiNetwork;
+	network: SuiNetwork | Url;
 }): RouterPoolInterface {
 	const { pool, network } = inputs;
 
@@ -42,7 +43,7 @@ export function createRouterPool(inputs: {
 interface RouterPoolConstructor {
 	new (
 		pool: RouterSerializablePool,
-		network: SuiNetwork
+		network: SuiNetwork | Url
 	): RouterPoolInterface;
 }
 
@@ -61,7 +62,7 @@ export interface RouterPoolInterface {
 
 	readonly protocolName: RouterProtocolName;
 	readonly pool: RouterSerializablePool;
-	readonly network: SuiNetwork;
+	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	// readonly limitToSingleHops: boolean;
 	readonly expectedGasCostPerHop: Balance; // in SUI

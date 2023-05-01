@@ -16,7 +16,7 @@ export class Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		public readonly network?: SuiNetwork | Url,
 		private readonly urlPrefix: Url = ""
 	) {
 		this.network = network;
@@ -31,10 +31,11 @@ export class Caller {
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
-	private static baseUrlForNetwork(network: SuiNetwork): Url {
+	private static baseUrlForNetwork(network: SuiNetwork | Url): Url {
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
 		if (network === "TESTNET") return "https://aftermath.finance";
-		return "http://localhost:3000"; // LOCAL
+		if (network === "LOCAL") return "http://localhost:3000";
+		return network;
 	}
 
 	private static async fetchResponseToType<OutputType>(

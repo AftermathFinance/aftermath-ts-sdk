@@ -8,6 +8,8 @@ import {
 	StakeRequestEvent,
 	UnstakeRequestEvent,
 	ApiStakingEventsBody,
+	Balance,
+	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -33,7 +35,7 @@ export class Staking extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "staking");
 	}
 
@@ -85,5 +87,13 @@ export class Staking extends Caller {
 			"transactions/unstake",
 			inputs
 		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public async getSuiTvl(): Promise<Balance> {
+		return this.fetchApi("sui-tvl");
 	}
 }

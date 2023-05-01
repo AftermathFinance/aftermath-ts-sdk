@@ -9,6 +9,7 @@ import {
 	DynamicFieldObjectsWithCursor,
 	ApiDynamicFieldsBody,
 	ApiNftAmmSellBody,
+	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
@@ -33,7 +34,7 @@ export class NftAmmMarket extends Caller {
 
 	constructor(
 		public readonly market: NftAmmMarketObject,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `nft-amm/markets/${market.objectId}`);
 		this.market = market;

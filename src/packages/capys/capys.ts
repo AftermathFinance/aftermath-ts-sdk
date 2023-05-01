@@ -19,6 +19,7 @@ import {
 	StakedCapyReceiptObject,
 	SuiNetwork,
 	UnstakeCapyEvent,
+	Url,
 } from "../../types";
 import { Capy } from "./capy";
 import { StakedCapyReceipt } from "./stakedCapyReceipt";
@@ -44,7 +45,7 @@ export class Capys extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "capys");
 	}
 

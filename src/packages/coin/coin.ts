@@ -7,6 +7,7 @@ import {
 	CoinWithAmountOrUndefined,
 	KeyType,
 	SuiNetwork,
+	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
@@ -39,7 +40,7 @@ export class Coin extends Caller {
 
 	constructor(
 		public readonly coinType: CoinType,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, "coins");
 		this.coinType = coinType;

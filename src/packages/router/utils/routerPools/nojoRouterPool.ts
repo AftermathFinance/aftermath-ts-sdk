@@ -4,7 +4,13 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
-import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../../types";
+import {
+	Balance,
+	Slippage,
+	SuiNetwork,
+	UniqueId,
+	Url,
+} from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
 import {
@@ -24,7 +30,7 @@ class NojoRouterPool implements RouterPoolInterface {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(pool: NojoPoolObject, network: SuiNetwork) {
+	constructor(pool: NojoPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.fields.id;
@@ -41,7 +47,7 @@ class NojoRouterPool implements RouterPoolInterface {
 	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
 
 	readonly pool: NojoPoolObject;
-	readonly network: SuiNetwork;
+	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

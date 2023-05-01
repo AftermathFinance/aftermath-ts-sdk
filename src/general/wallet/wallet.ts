@@ -4,6 +4,7 @@ import {
 	ApiTransactionsBody,
 	Balance,
 	TransactionsWithCursor,
+	Url,
 } from "../types/generalTypes";
 import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
@@ -11,7 +12,7 @@ import { Caller } from "../utils/caller";
 export class Wallet extends Caller {
 	constructor(
 		public readonly address: SuiAddress,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `wallet/${address}`);
 	}

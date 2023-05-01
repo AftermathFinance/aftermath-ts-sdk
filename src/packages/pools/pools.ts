@@ -14,6 +14,7 @@ import {
 	PoolWithdrawEvent,
 	Slippage,
 	SuiNetwork,
+	Url,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -76,7 +77,7 @@ export class Pools extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Pools` instance
 	 */
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "pools");
 	}
 
