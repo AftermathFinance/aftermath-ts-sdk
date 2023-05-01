@@ -1,7 +1,7 @@
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterCompleteTradeRoute, RouterExternalFee } from "../routerTypes";
-import { Slippage, SuiNetwork } from "../../../types";
+import { Slippage, SuiNetwork, Url } from "../../../types";
 import { createRouterPool } from "../utils/routerPoolInterface";
 import { Router } from "../router";
 
@@ -15,7 +15,7 @@ export class RouterApiHelpers {
 	}
 
 	public async fetchBuildTransactionForCompleteTradeRoute(
-		network: SuiNetwork,
+		network: SuiNetwork | Url,
 		provider: AftermathApi,
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,

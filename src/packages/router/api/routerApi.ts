@@ -10,6 +10,7 @@ import {
 	SerializedTransaction,
 	Slippage,
 	SuiNetwork,
+	Url,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
 import { Helpers } from "../../../general/utils/helpers";
@@ -103,7 +104,7 @@ export class RouterApi {
 
 	public async fetchTransactionForCompleteTradeRoute(
 		// TODO: make it so that api can be called with different rpc nodes ?
-		network: SuiNetwork,
+		network: SuiNetwork | Url,
 		provider: AftermathApi,
 		walletAddress: SuiAddress,
 		completeRoute: RouterCompleteTradeRoute,
