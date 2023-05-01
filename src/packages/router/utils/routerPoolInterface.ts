@@ -17,6 +17,9 @@ import { CoinType } from "../../coin/coinTypes";
 import AftermathRouterPool from "./routerPools/aftermathRouterPool";
 import NojoRouterPool from "./routerPools/nojoRouterPool";
 import { AftermathApi } from "../../../general/providers";
+import { isNojoPoolObject } from "../../external/nojo/nojoAmmTypes";
+import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
+import DeepBookRouterPool from "./routerPools/deepBookRouterPool";
 
 /////////////////////////////////////////////////////////////////////
 //// Creation
@@ -29,10 +32,12 @@ export function createRouterPool(inputs: {
 }): RouterPoolInterface {
 	const { pool, network } = inputs;
 
-	const constructedPool =
-		"typeArgs" in pool
-			? new NojoRouterPool(pool, network)
-			: new AftermathRouterPool(pool, network);
+	const constructedPool = isNojoPoolObject(pool)
+		? new NojoRouterPool(pool, network)
+		: isDeepBookPoolObject(pool)
+		? new DeepBookRouterPool(pool, network)
+		: new AftermathRouterPool(pool, network);
+
 	return constructedPool;
 }
 
@@ -94,10 +99,7 @@ export interface RouterPoolInterface {
 		expectedAmountOut: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}) => {
-		tx: TransactionBlock;
-		coinOut: TransactionArgument;
-	};
+	}) => TransactionArgument;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Functions

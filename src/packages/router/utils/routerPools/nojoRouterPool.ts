@@ -13,17 +13,9 @@ import {
 } from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
-import {
-	Pool,
-	PoolFields,
-	Balance as NojoBalance,
-} from "../../../../external/nojo";
+import { Pool, Balance as NojoBalance } from "../../../../external/nojo";
 import { AftermathApi } from "../../../../general/providers";
-
-export type NojoPoolObject = {
-	fields: PoolFields;
-	typeArgs: [CoinType, CoinType];
-};
+import { NojoPoolObject } from "../../../external/nojo/nojoAmmTypes";
 
 class NojoRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
@@ -113,10 +105,7 @@ class NojoRouterPool implements RouterPoolInterface {
 		expectedAmountOut: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): {
-		tx: TransactionBlock;
-		coinOut: TransactionArgument;
-	} => {
+	}) => {
 		const minAmountOut = BigInt(
 			Math.ceil((1 - inputs.slippage) * Number(inputs.expectedAmountOut))
 		);

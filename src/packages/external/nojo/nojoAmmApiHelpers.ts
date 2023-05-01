@@ -4,7 +4,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { NojoAddresses } from "../../../types";
 import { Pool, PoolFields, PoolRegistry } from "../../../external/nojo";
 import { EventOnChain } from "../../../general/types/castingTypes";
-import { NojoPoolObject } from "../../router/utils/routerPools/nojoRouterPool";
+import { NojoPoolObject } from "./nojoAmmTypes";
 
 export class NojoAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////

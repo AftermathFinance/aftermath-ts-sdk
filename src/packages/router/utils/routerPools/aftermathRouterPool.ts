@@ -69,11 +69,8 @@ class AftermathRouterPool implements RouterPoolInterface {
 		expectedAmountOut: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): {
-		tx: TransactionBlock;
-		coinOut: TransactionArgument;
-	} => {
-		return inputs.provider
+	}) => {
+		const { coinOut } = inputs.provider
 			.Pools()
 			.Helpers.addTradeCommandWithCoinOutToTransaction(
 				inputs.tx,
@@ -85,6 +82,8 @@ class AftermathRouterPool implements RouterPoolInterface {
 				this.pool.lpCoinType,
 				inputs.slippage
 			);
+
+		return coinOut;
 	};
 
 	getTradeAmountIn = (inputs: {

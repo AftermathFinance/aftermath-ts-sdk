@@ -14,7 +14,7 @@ import {
 } from "../../../types";
 import { Sui } from "../../sui";
 import { EventOnChain } from "../../../general/types/castingTypes";
-import { DeepBookPoolObject } from "./deepBookTypes";
+import { PartialDeepBookPoolObject } from "./deepBookTypes";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Casting, Helpers } from "../../../general/utils";
@@ -70,7 +70,9 @@ export class DeepBookApiHelpers {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchAllPools = async (): Promise<DeepBookPoolObject[]> => {
+	public fetchAllPartialPools = async (): Promise<
+		PartialDeepBookPoolObject[]
+	> => {
 		const objectIds = await this.Provider.Events().fetchAllEvents(
 			(cursor, limit) =>
 				this.Provider.Events().fetchCastEventsWithCursor<
@@ -83,7 +85,7 @@ export class DeepBookApiHelpers {
 							name: string;
 						};
 					}>,
-					DeepBookPoolObject
+					PartialDeepBookPoolObject
 				>(
 					{
 						MoveEventType: EventsApiHelpers.createEventType(
@@ -171,7 +173,7 @@ export class DeepBookApiHelpers {
 
 	public addTradeCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -239,7 +241,7 @@ export class DeepBookApiHelpers {
 
 	public addGetBookPricesAndDepthCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}) /* (vector<u64> (prices), vector<u64> (depths)) */ => {
@@ -265,7 +267,7 @@ export class DeepBookApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchBookState = async (inputs: {
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}): Promise<{

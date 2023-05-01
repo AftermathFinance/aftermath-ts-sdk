@@ -89,10 +89,7 @@ export class NojoAmmApi {
 		coinIn: TransactionArgument | ObjectId,
 		coinInType: CoinType,
 		minOut: Balance
-	): {
-		tx: TransactionBlock;
-		coinOut: TransactionArgument;
-	} => {
+	): TransactionArgument => {
 		const swapArgs = {
 			pool: pool.id,
 			input: coinIn,
@@ -106,9 +103,6 @@ export class NojoAmmApi {
 			coinOut = swapBCoin(tx, pool.$typeArgs, swapArgs);
 		}
 
-		return {
-			tx,
-			coinOut,
-		};
+		return coinOut;
 	};
 }

@@ -6,7 +6,8 @@ import {
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
-import { NojoPoolObject } from "./utils/routerPools/nojoRouterPool";
+import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
+import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -38,8 +39,12 @@ export interface RouterExternalFee {
 //// Router Pools
 /////////////////////////////////////////////////////////////////////
 
-export type RouterSerializablePool = PoolObject | NojoPoolObject;
-export type RouterProtocolName = "Aftermath" | "Nojo";
+export type RouterSerializablePool =
+	| PoolObject
+	| NojoPoolObject
+	| DeepBookPoolObject;
+
+export type RouterProtocolName = "Aftermath" | "Nojo" | "DeepBook";
 
 /////////////////////////////////////////////////////////////////////
 //// Paths
