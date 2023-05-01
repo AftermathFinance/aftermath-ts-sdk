@@ -140,7 +140,6 @@ export class EventsApiHelpers {
 
 			if (
 				events.length === 0 ||
-				// TODO: uncomment below once event filtering is allowed for pools, etc.
 				// events.length < limitStepSize ||
 				eventsWithCursor.nextCursor === null ||
 				endIndex >= 0

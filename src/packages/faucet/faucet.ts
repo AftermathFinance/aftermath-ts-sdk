@@ -1,4 +1,4 @@
-import { ApiFaucetRequestBody, CoinType, SuiNetwork } from "../../types";
+import { ApiFaucetRequestBody, CoinType, SuiNetwork, Url } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
 export class Faucet extends Caller {
@@ -14,7 +14,7 @@ export class Faucet extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "faucet");
 	}
 

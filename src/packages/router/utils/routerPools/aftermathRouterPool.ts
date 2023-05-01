@@ -4,7 +4,13 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
-import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../../types";
+import {
+	Balance,
+	Slippage,
+	SuiNetwork,
+	UniqueId,
+	Url,
+} from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
 import { PoolObject } from "../../../pools/poolsTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
@@ -17,7 +23,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(pool: PoolObject, network: SuiNetwork) {
+	constructor(pool: PoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
@@ -34,7 +40,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
 
 	readonly pool: PoolObject;
-	readonly network: SuiNetwork;
+	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

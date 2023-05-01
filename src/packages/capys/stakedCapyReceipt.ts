@@ -6,6 +6,7 @@ import {
 	StakedCapyFeesEarned,
 	StakedCapyReceiptObject,
 	SuiNetwork,
+	Url,
 } from "../../types";
 import { Capy } from "./capy";
 import { Caller } from "../../general/utils/caller";
@@ -19,7 +20,7 @@ export class StakedCapyReceipt extends Caller {
 	constructor(
 		public readonly stakedCapy: Capy,
 		public readonly stakedCapyReceipt: StakedCapyReceiptObject,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, "capys");
 		this.stakedCapyReceipt = stakedCapyReceipt;

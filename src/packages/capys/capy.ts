@@ -3,6 +3,7 @@ import {
 	SuiNetwork,
 	CapyObject,
 	SerializedTransaction,
+	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { TransactionBlock } from "@mysten/sui.js";
@@ -14,7 +15,7 @@ export class Capy extends Caller {
 
 	constructor(
 		public readonly capy: CapyObject,
-		public readonly network?: SuiNetwork,
+		public readonly network?: SuiNetwork | Url,
 		public readonly isStaked: boolean = false
 	) {
 		super(network, "capys");

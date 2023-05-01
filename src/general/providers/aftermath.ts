@@ -1,6 +1,6 @@
 import { SuiAddress } from "@mysten/sui.js";
 import { Pools } from "../../packages/pools/pools";
-import { CoinType, SuiNetwork } from "../../types";
+import { CoinType, SuiNetwork, Url } from "../../types";
 import { Wallet } from "../wallet/wallet";
 import { Capys } from "../../packages/capys/capys";
 import { Coin } from "../../packages/coin/coin";
@@ -39,7 +39,7 @@ export class Aftermath extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Aftermath` instance
 	 */
-	constructor(network?: SuiNetwork) {
+	constructor(network?: SuiNetwork | Url) {
 		super(network);
 	}
 

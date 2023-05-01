@@ -1,6 +1,6 @@
 import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork } from "../../types";
+import { SuiNetwork, Url } from "../../types";
 
 export class ReferralVault extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@ export class ReferralVault extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "referral-vault");
 	}
 

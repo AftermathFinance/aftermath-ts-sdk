@@ -4,6 +4,7 @@ import {
 	CoinType,
 	RouterCompleteTradeRoute,
 	SuiNetwork,
+	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -40,7 +41,7 @@ export class Router extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Router` instance
 	 */
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "router");
 	}
 

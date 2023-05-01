@@ -9,6 +9,7 @@ import {
 	UnstakeRequestEvent,
 	ApiStakingEventsBody,
 	Balance,
+	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -34,7 +35,7 @@ export class Staking extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "staking");
 	}
 
