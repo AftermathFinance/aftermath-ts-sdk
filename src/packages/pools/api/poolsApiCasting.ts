@@ -1,4 +1,5 @@
 import {
+	ObjectId,
 	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
@@ -11,6 +12,7 @@ import {
 	PoolWithdrawEvent,
 } from "../poolsTypes";
 import {
+	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
 	PoolFieldsOnChain,
 	PoolTradeEventOnChain,
@@ -125,5 +127,12 @@ export class PoolsApiCasting {
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
+	};
+
+	public static poolObjectIdfromPoolCreateEventOnChain = (
+		eventOnChain: PoolCreateEventOnChain
+	): ObjectId => {
+		const fields = eventOnChain.parsedJson;
+		return fields.pool_id;
 	};
 }

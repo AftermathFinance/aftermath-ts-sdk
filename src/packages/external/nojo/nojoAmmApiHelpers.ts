@@ -37,24 +37,28 @@ export class NojoAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
-		const paginatedEvents =
-			await this.Provider.Events().fetchCastEventsWithCursor<
-				EventOnChain<{
-					pool_id: ObjectId;
-				}>,
-				ObjectId
-			>(
-				{
-					MoveEventType: EventsApiHelpers.createEventType(
-						this.addresses.packages.pool,
-						"pool",
-						"PoolCreationEvent"
-					),
-				},
-				(eventOnChain) => eventOnChain.parsedJson.pool_id
-			);
+		const objectIds = await this.Provider.Events().fetchAllEvents(
+			(cursor, limit) =>
+				this.Provider.Events().fetchCastEventsWithCursor<
+					EventOnChain<{
+						pool_id: ObjectId;
+					}>,
+					ObjectId
+				>(
+					{
+						MoveEventType: EventsApiHelpers.createEventType(
+							this.addresses.packages.pool,
+							"pool",
+							"PoolCreationEvent"
+						),
+					},
+					(eventOnChain) => eventOnChain.parsedJson.pool_id,
+					cursor,
+					limit
+				)
+		);
 
-		return paginatedEvents.events;
+		return objectIds;
 	};
 
 	/////////////////////////////////////////////////////////////////////

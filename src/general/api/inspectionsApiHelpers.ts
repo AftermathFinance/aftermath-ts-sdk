@@ -21,12 +21,19 @@ export class InspectionsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchBytesFromTransaction = async (tx: TransactionBlock) => {
+		return (await this.fetchOutputsBytesFromTransaction({ tx }))[0];
+	};
+
+	// TODO: replace all bytes types with uint8array type
+	public fetchOutputsBytesFromTransaction = async (inputs: {
+		tx: TransactionBlock;
+	}): Promise<Byte[][]> => {
 		const signer = RpcApiHelpers.constants.devInspectSigner;
 
 		const response =
 			await this.Provider.provider.devInspectTransactionBlock({
 				sender: signer,
-				transactionBlock: tx,
+				transactionBlock: inputs.tx,
 			});
 
 		if (response.effects.status.status === "failure")
@@ -39,7 +46,7 @@ export class InspectionsApiHelpers {
 		if (!returnVals)
 			throw Error("dev inspect move call had no return values");
 
-		const bytes: Byte[] = returnVals[0][0];
-		return bytes;
+		const outputsBytes = returnVals.map((val) => val[0]);
+		return outputsBytes;
 	};
 }

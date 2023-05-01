@@ -150,7 +150,7 @@ export class EventsApiHelpers {
 		} while (true);
 	};
 
-	public fetchAllEvents = async <T extends Event>(
+	public fetchAllEvents = async <T /* extends Event */>(
 		fetchEventsFunc: (
 			cursor?: EventId,
 			limit?: number

@@ -22,6 +22,7 @@ import {
 import { Casting } from "../../../general/utils/casting";
 import { Pool } from "..";
 import { Aftermath } from "../../../general/providers";
+import { Helpers } from "../../../general/utils";
 
 export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
@@ -253,10 +254,24 @@ export class PoolsApi {
 						? Casting.fixedOneBigInt
 						: BigInt(0),
 
-				coinsInfo: inputs.coinsInfo.map((info) => {
+				coinsInfo: inputs.coinsInfo.map((info, index) => {
+					let weight = Casting.numberToFixedBigInt(info.weight);
+
+					if (index === 0) {
+						const otherWeightsSum = Helpers.sumBigInt(
+							inputs.coinsInfo
+								.slice(1)
+								.map((info) =>
+									Casting.numberToFixedBigInt(info.weight)
+								)
+						);
+
+						weight = Casting.fixedOneBigInt - otherWeightsSum;
+					}
+
 					return {
 						...info,
-						weight: Casting.numberToFixedBigInt(info.weight),
+						weight,
 						tradeFeeIn: Casting.numberToFixedBigInt(
 							info.tradeFeeIn
 						),
