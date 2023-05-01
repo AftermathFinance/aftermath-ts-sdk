@@ -8,6 +8,7 @@ import {
 	StakeRequestEvent,
 	UnstakeRequestEvent,
 	ApiStakingEventsBody,
+	Balance,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -85,5 +86,13 @@ export class Staking extends Caller {
 			"transactions/unstake",
 			inputs
 		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public async getSuiTvl(): Promise<Balance> {
+		return this.fetchApi("sui-tvl");
 	}
 }

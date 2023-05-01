@@ -42,7 +42,7 @@ export interface FaucetAddresses {
 
 export interface StakingAddresses {
 	packages: {
-		liquidStakingDerivative: SuiAddress;
+		lsd: SuiAddress;
 	};
 	objects: {
 		staking: ObjectId;

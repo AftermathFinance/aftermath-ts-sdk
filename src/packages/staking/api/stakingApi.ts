@@ -2,11 +2,13 @@ import {
 	DelegatedStake,
 	SuiAddress,
 	SuiValidatorSummary,
+	TransactionBlock,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
 import { StakingPosition } from "../stakingTypes";
 import { Balance, SerializedTransaction } from "../../../types";
+import { Casting } from "../../../general/utils";
 
 export class StakingApi {
 	/////////////////////////////////////////////////////////////////////
@@ -88,5 +90,17 @@ export class StakingApi {
 		return positions.sort(
 			(a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)
 		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchSuiTvl = async (): Promise<Balance> => {
+		const tx = new TransactionBlock();
+		this.Helpers.addGetAfSuiSupplyCommandToTransaction({ tx });
+		const bytes =
+			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+		return Casting.bigIntFromBytes(bytes);
 	};
 }
