@@ -64,7 +64,7 @@ export class RouterApiHelpers {
 			let coinIn = splitCoinArg;
 
 			for (const path of route.paths) {
-				const { tx: newTx, coinOut: newCoinIn } = createRouterPool({
+				const newCoinIn = createRouterPool({
 					pool: path.pool,
 					network,
 				}).addTradeCommandToTransaction({
@@ -78,7 +78,6 @@ export class RouterApiHelpers {
 					referrer,
 				});
 
-				tx = newTx;
 				coinIn = newCoinIn;
 			}
 

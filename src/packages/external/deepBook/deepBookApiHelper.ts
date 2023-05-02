@@ -14,7 +14,11 @@ import {
 } from "../../../types";
 import { Sui } from "../../sui";
 import { EventOnChain } from "../../../general/types/castingTypes";
-import { PartialDeepBookPoolObject } from "./deepBookTypes";
+import {
+	DeepBookPoolObject,
+	DeepBookPriceRange,
+	PartialDeepBookPoolObject,
+} from "./deepBookTypes";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Casting, Helpers } from "../../../general/utils";
@@ -270,10 +274,7 @@ export class DeepBookApiHelpers {
 		pool: PartialDeepBookPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
-	}): Promise<{
-		bookPrices: number[];
-		bookDepths: bigint[];
-	}> => {
+	}): Promise<DeepBookPriceRange[]> => {
 		const tx = new TransactionBlock();
 		this.addGetBookPricesAndDepthCommandToTransaction({
 			...inputs,
@@ -309,9 +310,40 @@ export class DeepBookApiHelpers {
 			return 1 / priceWithDecimals;
 		});
 
+		return bookPrices.map((price, index) => {
+			return {
+				price,
+				depth: bookDepths[index],
+			};
+		});
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchCreateCompletePoolObjectFromPartial = async (inputs: {
+		pool: PartialDeepBookPoolObject;
+	}): Promise<DeepBookPoolObject> => {
+		const { pool } = inputs;
+
+		const [bids, asks] = await Promise.all([
+			this.fetchBookState({
+				pool,
+				coinInType: pool.baseCoin,
+				coinOutType: pool.quoteCoin,
+			}),
+			this.fetchBookState({
+				pool,
+				coinInType: pool.quoteCoin,
+				coinOutType: pool.baseCoin,
+			}),
+		]);
+
 		return {
-			bookPrices,
-			bookDepths,
+			...pool,
+			bids,
+			asks,
 		};
 	};
 }

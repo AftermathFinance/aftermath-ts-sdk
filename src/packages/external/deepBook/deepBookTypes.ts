@@ -13,15 +13,14 @@ export interface PartialDeepBookPoolObject {
 }
 
 export type DeepBookPoolObject = PartialDeepBookPoolObject & {
-	bids: {
-		price: number;
-		depth: Balance;
-	}[];
-	asks: {
-		price: number;
-		depth: Balance;
-	}[];
+	bids: DeepBookPriceRange[];
+	asks: DeepBookPriceRange[];
 };
+
+export interface DeepBookPriceRange {
+	price: number;
+	depth: Balance;
+}
 
 export const isDeepBookPoolObject = (
 	pool: RouterSerializablePool

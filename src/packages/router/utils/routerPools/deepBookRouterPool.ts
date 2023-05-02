@@ -49,7 +49,9 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	getSpotPrice = (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
-	}): number => {};
+	}): number => {
+		return 0;
+	};
 
 	getTradeAmountOut = (inputs: {
 		coinInType: CoinType;
@@ -71,19 +73,17 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): TransactionArgument => {
-		const minAmountOut = BigInt(
-			Math.ceil((1 - inputs.slippage) * Number(inputs.expectedAmountOut))
-		);
+		// const minAmountOut = BigInt(
+		// 	Math.ceil((1 - inputs.slippage) * Number(inputs.expectedAmountOut))
+		// );
 		return inputs.provider
 			.Router()
 			.DeepBook()
-			.addSwapCommandToTransaction(
-				inputs.tx,
-				this.poolClass,
-				inputs.coinIn,
-				inputs.coinInType,
-				minAmountOut
-			);
+			.Helpers.addTradeCommandToTransaction({
+				...inputs,
+				coinInId: inputs.coinIn,
+				pool: this.pool,
+			});
 	};
 
 	getTradeAmountIn = (inputs: {
@@ -91,7 +91,9 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {};
+	}): Balance => {
+		return BigInt(0);
+	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
 		coinIn: CoinType;
@@ -146,29 +148,22 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		let totalAmountOut = BigInt(0);
 		let amountInRemaining = coinInAmount;
 
-		for (const [index, depth] of bookState.depths.entries()) {
-			const price = bookState.prices[index];
+		for (const priceAndDepth of bookState) {
+			const price = priceAndDepth.price;
+			const depth = priceAndDepth.depth;
 
 			const canFillAll = depth >= amountInRemaining;
 			const amountToFill = canFillAll ? amountInRemaining : depth;
 
 			const amountOut = BigInt(Math.floor(Number(amountToFill) * price));
 
-			const newPrices = canFillAll
-				? newBookState.prices.slice(1)
-				: newBookState.prices;
-			const newDepths = canFillAll
-				? newBookState.depths.slice(1)
+			newBookState = canFillAll
+				? newBookState.slice(1)
 				: (() => {
-						newBookState.depths[index] -= amountToFill;
-						return newBookState.depths;
+						newBookState[0].depth -= amountToFill;
+						return newBookState;
 				  })();
 
-			newBookState = {
-				...newBookState,
-				prices: newPrices,
-				depths: newDepths,
-			};
 			totalAmountOut += amountOut;
 			amountInRemaining -= amountToFill;
 

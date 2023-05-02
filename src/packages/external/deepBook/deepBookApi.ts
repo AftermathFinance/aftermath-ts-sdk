@@ -2,6 +2,7 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { Helpers } from "../../../general/utils";
 import { DeepBookApiHelpers } from "./deepBookApiHelper";
+import { DeepBookPoolObject } from "./deepBookTypes";
 
 export class DeepBookApi {
 	/////////////////////////////////////////////////////////////////////
@@ -31,7 +32,17 @@ export class DeepBookApi {
 	// 	return Pool.fetch(this.Provider.provider, objectId);
 	// };
 
-	public fetchAllPools = async () => this.Helpers.fetchAllPartialPools();
+	public fetchAllPools = async (): Promise<DeepBookPoolObject[]> => {
+		const partialPools = await this.Helpers.fetchAllPartialPools();
+
+		const pools = await Promise.all(
+			partialPools.map((pool) =>
+				this.Helpers.fetchCreateCompletePoolObjectFromPartial({ pool })
+			)
+		);
+
+		return pools;
+	};
 
 	// public fetchPoolForCoinTypes = async (inputs: {
 	// 	coinType1: CoinType;
@@ -51,32 +62,5 @@ export class DeepBookApi {
 			[] as CoinType[]
 		);
 		return Helpers.uniqueArray(allCoins);
-	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
-
-	public addSwapCommandToTransaction = (
-		tx: TransactionBlock,
-		pool: Pool,
-		coinIn: TransactionArgument | ObjectId,
-		coinInType: CoinType,
-		minOut: Balance
-	): TransactionArgument => {
-		const swapArgs = {
-			pool: pool.id,
-			input: coinIn,
-			minOut,
-		};
-
-		let coinOut: TransactionArgument;
-		if (coinInType === pool.$typeArgs[0]) {
-			coinOut = swapACoin(tx, pool.$typeArgs, swapArgs);
-		} else {
-			coinOut = swapBCoin(tx, pool.$typeArgs, swapArgs);
-		}
-
-		return coinOut;
 	};
 }
