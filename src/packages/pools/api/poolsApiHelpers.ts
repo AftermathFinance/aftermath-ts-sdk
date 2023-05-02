@@ -39,7 +39,6 @@ import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
 import { Pool } from "..";
 import { Casting } from "../../../general/utils";
-import { PoolCreateEventOnChain } from "./poolsApiCastingTypes";
 import { EventOnChain } from "../../../general/types/castingTypes";
 
 export class PoolsApiHelpers {
@@ -359,52 +358,8 @@ export class PoolsApiHelpers {
 		});
 	};
 
-	public fetchAddUpdateLpCoinMetadataCommandToTransaction = async (inputs: {
-		tx: TransactionBlock;
-		lpCoinType: CoinType;
-		createPoolCapId: ObjectId | TransactionArgument;
-		lpCoinMetadata: PoolCreationLpCoinMetadata;
-		poolName: PoolName;
-		coinTypes: CoinType[];
-	}) => {
-		const { tx, lpCoinType, createPoolCapId, lpCoinMetadata } = inputs;
-
-		const lpCoinDescription = await this.createLpCoinMetadataDescription({
-			...inputs,
-		});
-
-		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.poolFactory,
-				"update_lp_coin_metadata"
-			),
-			typeArguments: [lpCoinType],
-			arguments: [
-				typeof createPoolCapId === "string"
-					? tx.object(createPoolCapId)
-					: createPoolCapId,
-				tx.pure(Casting.u8VectorFromString(lpCoinMetadata.name)),
-				tx.pure(
-					Casting.u8VectorFromString(
-						lpCoinMetadata.symbol.toUpperCase()
-					)
-				),
-				tx.pure(Casting.u8VectorFromString(lpCoinDescription)),
-				tx.pure(
-					{
-						Some: Casting.u8VectorFromString(
-							PoolsApiHelpers.constants.defaultLpCoinIconImageUrl
-						),
-					},
-					"Option<vector<u8>>"
-				),
-			],
-		});
-	};
-
-	// TODO: handle bounds checks here instead of just on-chain
-	public addCreatePoolCommandToTransaction = (inputs: {
+	// TODO: handle bounds checks here instead of just on-chain ?
+	public fetchAddCreatePoolCommandToTransaction = async (inputs: {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
 		coinsInfo: {
@@ -416,12 +371,21 @@ export class PoolsApiHelpers {
 			depositFee: PoolDepositFee;
 			withdrawFee: PoolWithdrawFee;
 		}[];
+		lpCoinMetadata: PoolCreationLpCoinMetadata;
 		createPoolCapId: ObjectId;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 	}) => {
-		const { tx, lpCoinType, createPoolCapId, coinsInfo } = inputs;
+		const { tx, lpCoinType, createPoolCapId, coinsInfo, lpCoinMetadata } =
+			inputs;
 		const poolSize = coinsInfo.length;
+
+		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+
+		const lpCoinDescription = await this.createLpCoinMetadataDescription({
+			...inputs,
+			coinTypes,
+		});
 
 		coinsInfo.sort((a, b) => {
 			const coinA = a.coinType.toUpperCase();
@@ -436,16 +400,20 @@ export class PoolsApiHelpers {
 				PoolsApiHelpers.constants.moduleNames.interface,
 				`create_pool_${poolSize}_coins`
 			),
-			typeArguments: [
-				lpCoinType,
-				...coinsInfo.map((coin) => coin.coinType),
-			],
+			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				typeof createPoolCapId === "string"
 					? tx.object(createPoolCapId)
 					: createPoolCapId,
 				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.pure(Casting.u8VectorFromString(inputs.poolName)),
+				tx.pure(Casting.u8VectorFromString(lpCoinMetadata.name)),
+				tx.pure(
+					Casting.u8VectorFromString(
+						lpCoinMetadata.symbol.toUpperCase()
+					)
+				),
+				tx.pure(Casting.u8VectorFromString(lpCoinDescription)),
 				tx.pure(
 					coinsInfo.map((coin) => coin.weight),
 					"vector<u64>"
@@ -673,13 +641,6 @@ export class PoolsApiHelpers {
 		// 		"no CreatePoolCap for LP Coin Type found owned by address"
 		// 	);
 
-		await this.fetchAddUpdateLpCoinMetadataCommandToTransaction({
-			tx,
-			...inputs,
-			coinTypes: inputs.coinsInfo.map((info) => info.coinType),
-			// createPoolCapId,
-		});
-
 		const { coinArguments, txWithCoinsWithAmount } =
 			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
 				tx,
@@ -688,7 +649,7 @@ export class PoolsApiHelpers {
 				inputs.coinsInfo.map((info) => info.initialDeposit)
 			);
 
-		this.addCreatePoolCommandToTransaction({
+		this.fetchAddCreatePoolCommandToTransaction({
 			tx: txWithCoinsWithAmount,
 			...inputs,
 			// createPoolCapId,

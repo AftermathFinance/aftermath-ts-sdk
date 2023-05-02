@@ -2,12 +2,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { ObjectId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
-import {
-	AnyObjectType,
-	Balance,
-	FaucetAddresses,
-	GasBudget,
-} from "../../../types";
+import { AnyObjectType, Balance, FaucetAddresses } from "../../../types";
 
 export class FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
