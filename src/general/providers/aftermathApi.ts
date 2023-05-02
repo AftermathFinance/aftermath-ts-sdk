@@ -17,6 +17,7 @@ import { CapysApi } from "../../packages/capys/api/capysApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
+import { RouterProtocolName } from "../../types";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
@@ -96,7 +97,8 @@ export class AftermathApi {
 
 	public Pools = () => new PoolsApi(this);
 	public Faucet = () => new FaucetApi(this);
-	public Router = () => new RouterApi(this);
+	public Router = (protocols?: RouterProtocolName[]) =>
+		new RouterApi(this, protocols);
 	public Capys = () => new CapysApi(this);
 	public Staking = () => new StakingApi(this);
 	public NftAmm = () => new NftAmmApi(this);

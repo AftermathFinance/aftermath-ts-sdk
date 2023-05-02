@@ -175,28 +175,6 @@ export class DeepBookApiHelpers {
 		});
 	};
 
-	public addTradeCommandToTransaction = (inputs: {
-		tx: TransactionBlock;
-		pool: PartialDeepBookPoolObject;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-	}) /* (Coin<CoinIn>, Coin<CoinOut>, u64 (amountFilled), u64 (amountOut)) */ => {
-		const commandInputs = {
-			...inputs,
-			poolObjectId: inputs.pool.objectId,
-		};
-
-		if (
-			Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
-		) {
-			return this.addTradeBaseToQuoteCommandToTransaction(commandInputs);
-		}
-
-		return this.addTradeQuoteToBaseCommandToTransaction(commandInputs);
-	};
-
 	public addGetAsksCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
 		poolObjectId: ObjectId;

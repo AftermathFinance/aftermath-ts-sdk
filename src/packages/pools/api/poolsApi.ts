@@ -302,6 +302,16 @@ export class PoolsApi {
 		return Casting.addressFromBytes(bytes);
 	};
 
+	public fetchSupportedCoins = async () => {
+		const pools = await this.Provider.Pools().fetchAllPools();
+		const allCoins: CoinType[] = pools
+			.map((pool) => Object.keys(pool.coins))
+			.reduce((prev, cur) => [...prev, ...cur], []);
+
+		const uniqueCoins = Helpers.uniqueArray(allCoins);
+		return uniqueCoins;
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Stats
 	/////////////////////////////////////////////////////////////////////

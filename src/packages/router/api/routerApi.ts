@@ -1,6 +1,5 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
-import { Pool } from "../../pools";
 import { RouterGraph } from "../utils/routerGraph";
 import {
 	Balance,
@@ -11,15 +10,14 @@ import {
 	Slippage,
 	SuiNetwork,
 	Url,
+	RouterProtocolName,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
 import { Helpers } from "../../../general/utils/helpers";
-import {
-	RouterPoolInterface,
-	createRouterPool,
-} from "../utils/routerPoolInterface";
+import { RouterPoolInterface } from "../utils/routerPoolInterface";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
+import { PoolsApi } from "../../pools/api/poolsApi";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -32,7 +30,10 @@ export class RouterApi {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly Provider: AftermathApi) {
+	constructor(
+		private readonly Provider: AftermathApi,
+		public readonly protocols: RouterProtocolName[] = ["Aftermath"]
+	) {
 		this.Provider = Provider;
 		this.Helpers = new RouterApiHelpers(Provider);
 	}
@@ -41,6 +42,7 @@ export class RouterApi {
 	//// External Packages
 	/////////////////////////////////////////////////////////////////////
 
+	public Aftermath = () => new PoolsApi(this.Provider);
 	public Nojo = () => new NojoAmmApi(this.Provider);
 	public DeepBook = () => new DeepBookApi(this.Provider);
 
@@ -52,14 +54,39 @@ export class RouterApi {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchSupportedCoins = async () => {
-		const pools = await this.Provider.Pools().fetchAllPools();
-		const allCoins: CoinType[] = pools
-			.map((pool) => Object.keys(pool.coins))
-			.reduce((prev, cur) => [...prev, ...cur], []);
+	public fetchAllPools = async (): Promise<CoinType[]> => {
+		const apis = this.Helpers.protocolApisFromNames({
+			protocols: this.protocols,
+		});
 
-		const uniqueCoins = Helpers.uniqueArray(allCoins);
-		return uniqueCoins;
+		const poolsByProtocol = await Promise.all(
+			apis.map((api) => api.fetchSupportedCoins())
+		);
+
+		const pools = poolsByProtocol.reduce(
+			(arr, acc) => [...acc, ...arr],
+			[]
+		);
+
+		return pools;
+	};
+
+	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
+		const apis = this.Helpers.protocolApisFromNames({
+			protocols: this.protocols,
+		});
+
+		const arrayOfArraysOfCoins = await Promise.all(
+			apis.map((api) => api.fetchSupportedCoins())
+		);
+
+		const allCoins = arrayOfArraysOfCoins.reduce(
+			(arr, acc) => [...acc, ...arr],
+			[]
+		);
+		const coins = Helpers.uniqueArray(allCoins);
+
+		return coins;
 	};
 
 	public fetchCompleteTradeRouteGivenAmountIn = async (

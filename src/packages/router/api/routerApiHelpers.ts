@@ -1,11 +1,28 @@
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterCompleteTradeRoute, RouterExternalFee } from "../routerTypes";
+import { RouterCompleteTradeRoute, RouterProtocolName } from "../routerTypes";
 import { Slippage, SuiNetwork, Url } from "../../../types";
 import { createRouterPool } from "../utils/routerPoolInterface";
 import { Router } from "../router";
+import { RouterApiInterface } from "../utils/routerApiInterface";
+import { PoolsApi } from "../../pools/api/poolsApi";
+import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
+import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 
 export class RouterApiHelpers {
+	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private readonly protocolNamesToApi: Record<
+		RouterProtocolName,
+		RouterApiInterface<any>
+	> = {
+		Aftermath: new PoolsApi(this.Provider),
+		Nojo: new NojoAmmApi(this.Provider),
+		DeepBook: new DeepBookApi(this.Provider),
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -13,6 +30,10 @@ export class RouterApiHelpers {
 	constructor(public readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transaction Building
+	/////////////////////////////////////////////////////////////////////
 
 	public async fetchBuildTransactionForCompleteTradeRoute(
 		network: SuiNetwork | Url,
@@ -106,4 +127,15 @@ export class RouterApiHelpers {
 
 		return tx;
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public protocolApisFromNames = (inputs: {
+		protocols: RouterProtocolName[];
+	}): RouterApiInterface<any>[] => {
+		const { protocols } = inputs;
+		return protocols.map((name) => this.protocolNamesToApi[name]);
+	};
 }
