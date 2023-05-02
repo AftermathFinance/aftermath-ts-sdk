@@ -8,6 +8,10 @@ import {
 	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import {
+	RouterSerializableCompleteGraph,
+	RouterSupportedCoinPaths,
+} from "./utils/routerGraph";
 
 /**
  * @class Router Provider
@@ -57,19 +61,19 @@ export class Router extends Caller {
 	/**
 	 * Queries all coins that router can trade between.
 	 *
-	 * @returns Array of supported coin types
+	 * @returns Mapping of coin type in to array of supported coin types out
 	 */
-	public async getSupportedCoins() {
-		return this.fetchApi<CoinType[]>("supported-coins");
+	public async getSupportedCoinPaths() {
+		return this.fetchApi<RouterSupportedCoinPaths>("supported-coin-paths");
 	}
 
 	/**
-	 * Queries all pools that router can trade between.
+	 * Queries current graph of router including all pools and coins.
 	 *
-	 * @returns Array of all pools used in router
+	 * @returns Complete graph of all pools used in router
 	 */
-	public async getAllPools() {
-		return this.fetchApi<RouterSerializablePool[]>("pools");
+	public async getGraph() {
+		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
 	}
 
 	/**

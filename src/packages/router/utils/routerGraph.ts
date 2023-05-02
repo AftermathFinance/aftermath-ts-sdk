@@ -21,6 +21,8 @@ import { Router } from "../router";
 //// Public Types
 /////////////////////////////////////////////////////////////////////
 
+// TODO: move any public types to router types
+
 export interface RouterCompleteGraph {
 	coinNodes: CoinNodes;
 	pools: PoolsById;
@@ -30,6 +32,8 @@ export interface RouterSerializableCompleteGraph {
 	coinNodes: CoinNodes;
 	pools: SerializablePoolsById;
 }
+
+export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
 
 export interface RouterOptions {
 	maxRouteLength: number;
@@ -183,7 +187,7 @@ export class RouterGraph {
 
 	public static supportedCoinPathsFromGraph = async (inputs: {
 		graph: RouterSerializableCompleteGraph;
-	}): Promise<Record<CoinType, CoinType[]>> => {
+	}): Promise<RouterSupportedCoinPaths> => {
 		const nodes = Object.values(inputs.graph.coinNodes);
 
 		const coinPaths = nodes.reduce((acc, node) => {
