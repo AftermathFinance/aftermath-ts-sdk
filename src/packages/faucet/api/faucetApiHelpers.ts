@@ -39,10 +39,11 @@ export class FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly addresses: FaucetAddresses;
+
 	public readonly coinTypes: {
 		af: CoinType;
-		afSui: CoinType;
 	};
+
 	public readonly eventTypes: {
 		mintCoin: AnyObjectType;
 		addCoin: AnyObjectType;
@@ -53,18 +54,17 @@ export class FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(public readonly Provider: AftermathApi) {
-		const faucetAddresses = this.Provider.addresses.faucet;
-		if (!faucetAddresses)
+		const addresses = this.Provider.addresses.faucet;
+		if (!addresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
 		this.Provider = Provider;
-		this.addresses = faucetAddresses;
+		this.addresses = addresses;
 
 		this.coinTypes = {
-			af: `${faucetAddresses.packages.faucet}::af::AF`,
-			afSui: `${faucetAddresses.packages.faucet}::afsui::AFSUI`,
+			af: `${addresses.packages.faucet}::af::AF`,
 		};
 
 		this.eventTypes = {

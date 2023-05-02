@@ -11,6 +11,7 @@ import {
 	AfSuiMintedEvent,
 	AnyObjectType,
 	Balance,
+	CoinType,
 	StakeEvent,
 	StakeFailedEvent,
 	StakePosition,
@@ -64,6 +65,7 @@ export class StakingApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly addresses: StakingAddresses;
+
 	public readonly eventTypes: {
 		stakeRequest: AnyObjectType;
 		unstakeRequest: AnyObjectType;
@@ -71,6 +73,10 @@ export class StakingApiHelpers {
 		unstakeSuccess: AnyObjectType;
 		stakeFailed: AnyObjectType;
 		afSuiMinted: AnyObjectType;
+	};
+
+	public readonly coinTypes: {
+		afSui: CoinType;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -86,6 +92,10 @@ export class StakingApiHelpers {
 
 		this.Provider = Provider;
 		this.addresses = addresses;
+
+		this.coinTypes = {
+			afSui: `${addresses.packages.lsd}::afsui::AFSUI`,
+		};
 
 		this.eventTypes = {
 			stakeRequest: this.stakeRequestEventType(),
