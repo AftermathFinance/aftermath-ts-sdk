@@ -6,7 +6,6 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
-	Balance,
 	Byte,
 	CoinType,
 	DeepBookAddresses,
@@ -32,6 +31,7 @@ export class DeepBookApiHelpers {
 	private static readonly constants = {
 		moduleNames: {
 			clob: "clob",
+			wrapper: "deepbook",
 		},
 	};
 
@@ -130,14 +130,13 @@ export class DeepBookApiHelpers {
 		const { tx, coinInId } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.deepBook.packages.clob,
-				DeepBookApiHelpers.constants.moduleNames.clob,
-				"swap_exact_base_for_quote"
+				this.addresses.deepBook.packages.wrapper,
+				DeepBookApiHelpers.constants.moduleNames.wrapper,
+				"swap_exact_base_for_quote_ktc"
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
@@ -158,14 +157,13 @@ export class DeepBookApiHelpers {
 		const { tx, coinInId } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.deepBook.packages.clob,
-				DeepBookApiHelpers.constants.moduleNames.clob,
+				this.addresses.deepBook.packages.wrapper,
+				DeepBookApiHelpers.constants.moduleNames.wrapper,
 				"swap_exact_quote_for_base"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [inputs.coinOutType, inputs.coinInType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),

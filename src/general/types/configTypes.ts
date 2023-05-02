@@ -104,6 +104,7 @@ export interface NojoAddresses {
 export interface DeepBookAddresses {
 	packages: {
 		clob: SuiAddress;
+		wrapper: SuiAddress;
 	};
 }
 
