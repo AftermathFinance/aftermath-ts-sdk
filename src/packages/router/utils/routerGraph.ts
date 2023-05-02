@@ -4,27 +4,48 @@ import {
 	Balance,
 	RouterCompleteTradeRoute,
 	RouterExternalFee,
+	RouterSerializablePool,
 	RouterTradeCoin,
 	RouterTradeInfo,
 	RouterTradePath,
 	RouterTradeRoute,
+	SuiNetwork,
 	UniqueId,
+	Url,
 } from "../../../types";
-import { RouterPoolInterface } from "./routerPoolInterface";
+import { RouterPoolInterface, createRouterPool } from "./routerPoolInterface";
 import { SuiAddress } from "@mysten/sui.js";
 import { Router } from "../router";
 
 /////////////////////////////////////////////////////////////////////
-//// Internal Types
+//// Public Types
 /////////////////////////////////////////////////////////////////////
 
-interface CoinGraph {
+export interface RouterCompleteGraph {
 	coinNodes: CoinNodes;
 	pools: PoolsById;
 }
 
+export interface RouterSerializableCompleteGraph {
+	coinNodes: CoinNodes;
+	pools: SerializablePoolsById;
+}
+
+export interface RouterOptions {
+	maxRouteLength: number;
+	tradePartitionCount: number;
+	minRoutesToCheck: number;
+	maxGasCost: bigint;
+}
+
+/////////////////////////////////////////////////////////////////////
+//// Private Types
+/////////////////////////////////////////////////////////////////////
+
 type CoinNodes = Record<CoinType, CoinNode>;
 type PoolsById = Record<UniqueId, RouterPoolInterface>;
+
+type SerializablePoolsById = Record<UniqueId, RouterSerializablePool>;
 
 interface CoinNode {
 	coin: CoinType;
@@ -55,31 +76,128 @@ type TradeInfo = RouterTradeInfo & {
 
 export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
-	//// Private Static Contstants
+	//// Public Static Contstants
 	/////////////////////////////////////////////////////////////////////
 
-	private static readonly constants = {
-		// NOTE: should these default values be public ?
-		defaultMaxRouteLength: 3,
+	public static readonly defaultOptions: RouterOptions = {
+		maxRouteLength: 3,
 		tradePartitionCount: 20,
 		minRoutesToCheck: 20,
 		maxGasCost: BigInt(500_000_000), // 0.5 SUI
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Private Class Members
+	//// Public Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	private readonly graph: CoinGraph;
+	public readonly graph: RouterCompleteGraph;
+	public readonly constants: RouterOptions;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly pools: RouterPoolInterface[]) {
-		this.pools = pools;
-		this.graph = RouterGraph.createGraph(pools);
+	constructor(
+		network: SuiNetwork | Url,
+		graph: RouterSerializableCompleteGraph,
+		options?: RouterOptions
+	) {
+		this.graph = RouterGraph.graphFromSerializable({ graph, network });
+		this.constants = {
+			...RouterGraph.defaultOptions,
+			...options,
+		};
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Public Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Graph Creation
+	/////////////////////////////////////////////////////////////////////
+
+	public static createGraph(inputs: {
+		pools: RouterSerializablePool[];
+	}): RouterSerializableCompleteGraph {
+		const poolClasses = inputs.pools.map((pool) =>
+			createRouterPool({
+				pool,
+				network: "",
+			})
+		);
+
+		const graph: RouterSerializableCompleteGraph = poolClasses.reduce(
+			(graph, pool) => {
+				const coinNodes = this.updateCoinNodesFromPool(
+					graph.coinNodes,
+					pool
+				);
+				const pools: SerializablePoolsById = {
+					...graph.pools,
+					[pool.uid]: pool.pool,
+				};
+
+				return {
+					coinNodes,
+					pools,
+				};
+			},
+			{
+				coinNodes: {},
+				pools: {},
+			}
+		);
+		return graph;
+	}
+
+	public static graphFromSerializable(inputs: {
+		graph: RouterSerializableCompleteGraph;
+		network: SuiNetwork | Url;
+	}): RouterCompleteGraph {
+		const pools: PoolsById = Object.entries(inputs.graph.pools).reduce(
+			(acc, [uid, pool]) => {
+				const poolClass = createRouterPool({
+					pool,
+					network: inputs.network,
+				});
+
+				return {
+					...acc,
+					[uid]: poolClass,
+				};
+			},
+			{}
+		);
+
+		const graph: RouterCompleteGraph = {
+			coinNodes: inputs.graph.coinNodes,
+			pools,
+		};
+		return graph;
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Supported Coins
+	/////////////////////////////////////////////////////////////////////
+
+	public static supportedCoinPathsFromGraph = async (inputs: {
+		graph: RouterSerializableCompleteGraph;
+	}): Promise<Record<CoinType, CoinType[]>> => {
+		const nodes = Object.values(inputs.graph.coinNodes);
+
+		const coinPaths = nodes.reduce((acc, node) => {
+			const coinIn = node.coin;
+			const coinsOut = Object.keys(node.coinOutThroughPoolEdges);
+
+			return {
+				...acc,
+				[coinIn]: coinsOut,
+			};
+		}, {});
+
+		return coinPaths;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods
@@ -129,10 +247,9 @@ export class RouterGraph {
 		coinOut: CoinType,
 		isGivenAmountOut: boolean,
 		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee,
-		maxRouteLength: number = RouterGraph.constants.defaultMaxRouteLength
+		externalFee?: RouterExternalFee
 	): RouterCompleteTradeRoute {
-		if (this.pools.length <= 0) throw new Error("pools has length of 0");
+		if (Object.keys(this.graph).length <= 0) throw new Error("empty graph");
 		if (
 			externalFee &&
 			externalFee.feePercentage >=
@@ -146,11 +263,11 @@ export class RouterGraph {
 			Helpers.deepCopy(this.graph),
 			coinIn,
 			coinOut,
-			maxRouteLength,
+			this.constants.maxRouteLength,
 			isGivenAmountOut
 		);
 
-		const routesAfterTrades = RouterGraph.splitTradeBetweenRoutes(
+		const routesAfterTrades = this.splitTradeBetweenRoutes(
 			Helpers.deepCopy(this.graph),
 			routes,
 			coinInAmount,
@@ -187,31 +304,6 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 	//// Graph Creation
 	/////////////////////////////////////////////////////////////////////
-
-	private static createGraph(pools: RouterPoolInterface[]): CoinGraph {
-		const graph: CoinGraph = pools.reduce(
-			(graph, pool) => {
-				const coinNodes = this.updateCoinNodesFromPool(
-					graph.coinNodes,
-					pool
-				);
-				const pools: PoolsById = {
-					...graph.pools,
-					[pool.uid]: pool,
-				};
-
-				return {
-					coinNodes,
-					pools,
-				};
-			},
-			{
-				coinNodes: {},
-				pools: {},
-			}
-		);
-		return graph;
-	}
 
 	private static updateCoinNodesFromPool = (
 		coinNodes: CoinNodes,
@@ -277,7 +369,7 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	private static findRoutes = (
-		graph: CoinGraph,
+		graph: RouterCompleteGraph,
 		coinIn: CoinType,
 		coinOut: CoinType,
 		maxRouteLength: number,
@@ -351,7 +443,7 @@ export class RouterGraph {
 	};
 
 	private static findCompleteRoutes = (
-		graph: CoinGraph,
+		graph: RouterCompleteGraph,
 		routes: TradeRoute[],
 		coinOut: CoinType,
 		maxRouteLength: number,
@@ -430,8 +522,8 @@ export class RouterGraph {
 		return finalRoutes;
 	};
 
-	private static splitTradeBetweenRoutes = (
-		graph: CoinGraph,
+	private splitTradeBetweenRoutes = (
+		graph: RouterCompleteGraph,
 		routes: TradeRoute[],
 		coinInAmount: Balance,
 		isGivenAmountOut: boolean,
@@ -475,7 +567,7 @@ export class RouterGraph {
 		return currentRoutes;
 	};
 
-	private static findNextRouteAndUpdatePoolsAndRoutes = (
+	private findNextRouteAndUpdatePoolsAndRoutes = (
 		pools: PoolsById,
 		routes: TradeRoute[],
 		coinInAmount: Balance,
@@ -486,7 +578,7 @@ export class RouterGraph {
 		updatedPools: PoolsById;
 		updatedRoutes: TradeRoute[];
 	} => {
-		const currentGasCost = this.gasCostForRoutes(routes);
+		const currentGasCost = RouterGraph.gasCostForRoutes(routes);
 
 		const routesAndPools = routes.map((route) =>
 			this.getUpdatedPoolsAndRouteAfterTrade(
@@ -561,7 +653,7 @@ export class RouterGraph {
 		};
 	};
 
-	private static cutUpdatedRouteAndPools = (
+	private cutUpdatedRouteAndPools = (
 		routesAndPools: {
 			updatedPools: PoolsById;
 			updatedRoute: TradeRoute;
@@ -625,7 +717,7 @@ export class RouterGraph {
 		};
 	};
 
-	private static getUpdatedPoolsAndRouteAfterTrade = (
+	private getUpdatedPoolsAndRouteAfterTrade = (
 		pools: PoolsById,
 		route: TradeRoute,
 		coinInAmount: Balance,
@@ -645,7 +737,7 @@ export class RouterGraph {
 
 		const isOverMaxGasCost =
 			originalRoute.coinIn.amount <= BigInt(0) &&
-			this.gasCostForRoute(originalRoute) + currentGasCost >
+			RouterGraph.gasCostForRoute(originalRoute) + currentGasCost >
 				this.constants.maxGasCost;
 
 		let currentPools = Helpers.deepCopy(pools);
@@ -801,7 +893,7 @@ export class RouterGraph {
 					cur.spotPrice,
 			0
 		);
-		const estimatedGasCost = this.gasCostForRoutes(routes);
+		const estimatedGasCost = RouterGraph.gasCostForRoutes(routes);
 
 		return {
 			estimatedGasCost,
@@ -868,7 +960,7 @@ export class RouterGraph {
 		routes
 			.filter((route) => route.coinIn.amount > BigInt(0))
 			.reduce(
-				(acc, route) => acc + this.gasCostForRoute(route),
+				(acc, route) => acc + RouterGraph.gasCostForRoute(route),
 				BigInt(0)
 			);
 

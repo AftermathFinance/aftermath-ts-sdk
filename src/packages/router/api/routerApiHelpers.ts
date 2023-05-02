@@ -1,13 +1,18 @@
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterCompleteTradeRoute, RouterProtocolName } from "../routerTypes";
-import { Slippage, SuiNetwork, Url } from "../../../types";
+import {
+	RouterCompleteTradeRoute,
+	RouterProtocolName,
+	RouterSerializablePool,
+} from "../routerTypes";
+import { CoinType, Slippage, SuiNetwork, Url } from "../../../types";
 import { createRouterPool } from "../utils/routerPoolInterface";
 import { Router } from "../router";
 import { RouterApiInterface } from "../utils/routerApiInterface";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
+import { Helpers } from "../../../general/utils";
 
 export class RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -32,16 +37,64 @@ export class RouterApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchAllPools = async (inputs: {
+		protocols: RouterProtocolName[];
+	}): Promise<RouterSerializablePool[]> => {
+		const apis = this.protocolApisFromNames(inputs);
+
+		const poolsByProtocol = await Promise.all(
+			apis.map((api) => api.fetchAllPools())
+		);
+
+		const pools = poolsByProtocol.reduce(
+			(arr, acc) => [...acc, ...arr],
+			[]
+		);
+
+		return pools;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchSupportedCoins = async (inputs: {
+		protocols: RouterProtocolName[];
+	}): Promise<CoinType[]> => {
+		const apis = this.protocolApisFromNames({
+			protocols: inputs.protocols,
+		});
+
+		const arrayOfArraysOfCoins = await Promise.all(
+			apis.map((api) => api.fetchSupportedCoins())
+		);
+
+		const allCoins = arrayOfArraysOfCoins.reduce(
+			(arr, acc) => [...acc, ...arr],
+			[]
+		);
+		const coins = Helpers.uniqueArray(allCoins);
+
+		return coins;
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Transaction Building
 	/////////////////////////////////////////////////////////////////////
 
-	public async fetchBuildTransactionForCompleteTradeRoute(
-		network: SuiNetwork | Url,
-		provider: AftermathApi,
-		walletAddress: SuiAddress,
-		completeRoute: RouterCompleteTradeRoute,
-		slippage: Slippage
-	): Promise<TransactionBlock> {
+	public async fetchBuildTransactionForCompleteTradeRoute(inputs: {
+		network: SuiNetwork | Url;
+		provider: AftermathApi;
+		walletAddress: SuiAddress;
+		completeRoute: RouterCompleteTradeRoute;
+		slippage: Slippage;
+	}): Promise<TransactionBlock> {
+		const { network, provider, walletAddress, completeRoute, slippage } =
+			inputs;
+
 		const referrer = completeRoute.referrer;
 		const externalFee = completeRoute.externalFee;
 		if (
