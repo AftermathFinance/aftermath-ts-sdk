@@ -3,6 +3,7 @@ import {
 	ApiRouterTransactionForCompleteTradeRouteBody,
 	CoinType,
 	RouterCompleteTradeRoute,
+	RouterSerializablePool,
 	SuiNetwork,
 	Url,
 } from "../../types";
@@ -60,6 +61,15 @@ export class Router extends Caller {
 	 */
 	public async getSupportedCoins() {
 		return this.fetchApi<CoinType[]>("supported-coins");
+	}
+
+	/**
+	 * Queries all pools that router can trade between.
+	 *
+	 * @returns Array of all pools used in router
+	 */
+	public async getAllPools() {
+		return this.fetchApi<RouterSerializablePool[]>("pools");
 	}
 
 	/**

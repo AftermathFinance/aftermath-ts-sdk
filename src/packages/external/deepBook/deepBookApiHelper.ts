@@ -7,6 +7,7 @@ import {
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	Balance,
+	Byte,
 	CoinType,
 	DeepBookAddresses,
 	PoolsAddresses,
@@ -259,10 +260,20 @@ export class DeepBookApiHelpers {
 			tx,
 		});
 
-		const [prices, depths] =
-			await this.Provider.Inspections().fetchOutputsBytesFromTransaction({
-				tx,
-			});
+		let prices: Byte[];
+		let depths: Byte[];
+		try {
+			[prices, depths] =
+				await this.Provider.Inspections().fetchOutputsBytesFromTransaction(
+					{
+						tx,
+					}
+				);
+		} catch (e) {
+			// dev inspect may fail due to empty tree on orderbook (no bids or asks)
+			prices = [];
+			depths = [];
+		}
 
 		// TODO: move these to casting
 		const bookPricesU64 = (

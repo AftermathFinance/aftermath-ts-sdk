@@ -36,7 +36,7 @@ class NojoRouterPool implements RouterPoolInterface {
 
 	readonly protocolName = "Nojo";
 	// readonly limitToSingleHops = false;
-	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
+	readonly expectedGasCostPerHop = BigInt(5_000_000); // 0.005 SUI
 
 	readonly pool: NojoPoolObject;
 	readonly network: SuiNetwork | Url;

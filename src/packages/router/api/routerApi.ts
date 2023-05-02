@@ -60,7 +60,7 @@ export class RouterApi {
 		});
 
 		const poolsByProtocol = await Promise.all(
-			apis.map((api) => api.fetchSupportedCoins())
+			apis.map((api) => api.fetchAllPools())
 		);
 
 		const pools = poolsByProtocol.reduce(
