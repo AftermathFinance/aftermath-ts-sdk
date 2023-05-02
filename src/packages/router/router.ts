@@ -3,15 +3,13 @@ import {
 	ApiRouterTransactionForCompleteTradeRouteBody,
 	CoinType,
 	RouterCompleteTradeRoute,
+	RouterSerializableCompleteGraph,
 	RouterSerializablePool,
+	RouterSupportedCoinPaths,
 	SuiNetwork,
 	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import {
-	RouterSerializableCompleteGraph,
-	RouterSupportedCoinPaths,
-} from "./utils/routerGraph";
 
 /**
  * @class Router Provider

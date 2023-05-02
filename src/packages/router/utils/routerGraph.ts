@@ -2,61 +2,32 @@ import { CoinType } from "../../coin/coinTypes";
 import { Helpers } from "../../../general/utils/helpers";
 import {
 	Balance,
+	RouterCompleteGraph,
 	RouterCompleteTradeRoute,
 	RouterExternalFee,
+	RouterOptions,
+	RouterSerializableCompleteGraph,
 	RouterSerializablePool,
+	RouterSupportedCoinPaths,
 	RouterTradeCoin,
 	RouterTradeInfo,
 	RouterTradePath,
 	RouterTradeRoute,
+	RouterSerializablePoolsById,
 	SuiNetwork,
 	UniqueId,
 	Url,
+	RouterGraphCoinNodes,
+	RouterCoinOutThroughPoolEdges,
+	RouterPoolsById,
 } from "../../../types";
 import { RouterPoolInterface, createRouterPool } from "./routerPoolInterface";
 import { SuiAddress } from "@mysten/sui.js";
 import { Router } from "../router";
 
 /////////////////////////////////////////////////////////////////////
-//// Public Types
+//// Internal Types
 /////////////////////////////////////////////////////////////////////
-
-// TODO: move any public types to router types
-
-export interface RouterCompleteGraph {
-	coinNodes: CoinNodes;
-	pools: PoolsById;
-}
-
-export interface RouterSerializableCompleteGraph {
-	coinNodes: CoinNodes;
-	pools: SerializablePoolsById;
-}
-
-export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
-
-export interface RouterOptions {
-	maxRouteLength: number;
-	tradePartitionCount: number;
-	minRoutesToCheck: number;
-	maxGasCost: bigint;
-}
-
-/////////////////////////////////////////////////////////////////////
-//// Private Types
-/////////////////////////////////////////////////////////////////////
-
-type CoinNodes = Record<CoinType, CoinNode>;
-type PoolsById = Record<UniqueId, RouterPoolInterface>;
-
-type SerializablePoolsById = Record<UniqueId, RouterSerializablePool>;
-
-interface CoinNode {
-	coin: CoinType;
-	coinOutThroughPoolEdges: CoinOutThroughPoolEdges;
-}
-
-type CoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 
 type CompleteTradeRoute = {
 	routes: TradeRoute[];
@@ -137,7 +108,7 @@ export class RouterGraph {
 					graph.coinNodes,
 					pool
 				);
-				const pools: SerializablePoolsById = {
+				const pools: RouterSerializablePoolsById = {
 					...graph.pools,
 					[pool.uid]: pool.pool,
 				};
@@ -159,20 +130,19 @@ export class RouterGraph {
 		graph: RouterSerializableCompleteGraph;
 		network: SuiNetwork | Url;
 	}): RouterCompleteGraph {
-		const pools: PoolsById = Object.entries(inputs.graph.pools).reduce(
-			(acc, [uid, pool]) => {
-				const poolClass = createRouterPool({
-					pool,
-					network: inputs.network,
-				});
+		const pools: RouterPoolsById = Object.entries(
+			inputs.graph.pools
+		).reduce((acc, [uid, pool]) => {
+			const poolClass = createRouterPool({
+				pool,
+				network: inputs.network,
+			});
 
-				return {
-					...acc,
-					[uid]: poolClass,
-				};
-			},
-			{}
-		);
+			return {
+				...acc,
+				[uid]: poolClass,
+			};
+		}, {});
 
 		const graph: RouterCompleteGraph = {
 			coinNodes: inputs.graph.coinNodes,
@@ -310,13 +280,13 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	private static updateCoinNodesFromPool = (
-		coinNodes: CoinNodes,
+		coinNodes: RouterGraphCoinNodes,
 		pool: RouterPoolInterface
-	): CoinNodes => {
+	): RouterGraphCoinNodes => {
 		const coinTypes = pool.coinTypes;
 		const uid = pool.uid;
 
-		let newCoinNodes: CoinNodes = { ...coinNodes };
+		let newCoinNodes: RouterGraphCoinNodes = { ...coinNodes };
 
 		for (const coinA of coinTypes) {
 			for (const coinB of coinTypes) {
@@ -399,8 +369,8 @@ export class RouterGraph {
 	};
 
 	private static createStartingRoutes = (
-		pools: PoolsById,
-		coinInEdges: CoinOutThroughPoolEdges,
+		pools: RouterPoolsById,
+		coinInEdges: RouterCoinOutThroughPoolEdges,
 		coinIn: CoinType,
 		// NOTE: should this really be unused ?
 		coinOut: CoinType
@@ -572,14 +542,14 @@ export class RouterGraph {
 	};
 
 	private findNextRouteAndUpdatePoolsAndRoutes = (
-		pools: PoolsById,
+		pools: RouterPoolsById,
 		routes: TradeRoute[],
 		coinInAmount: Balance,
 		linearCutStepSize: number,
 		isGivenAmountOut: boolean,
 		referrer?: SuiAddress
 	): {
-		updatedPools: PoolsById;
+		updatedPools: RouterPoolsById;
 		updatedRoutes: TradeRoute[];
 	} => {
 		const currentGasCost = RouterGraph.gasCostForRoutes(routes);
@@ -597,7 +567,7 @@ export class RouterGraph {
 		const updatedRoutesAndPools = routesAndPools.filter(
 			(data) => data !== undefined
 		) as {
-			updatedPools: PoolsById;
+			updatedPools: RouterPoolsById;
 			updatedRoute: TradeRoute;
 			coinOutAmount: Balance;
 			startingRoute: TradeRoute;
@@ -607,7 +577,7 @@ export class RouterGraph {
 		let cutRoutesAndPools:
 			| {
 					updatedRoute: TradeRoute;
-					updatedPools: PoolsById;
+					updatedPools: RouterPoolsById;
 					coinOutAmount: Balance;
 			  }
 			| undefined = undefined;
@@ -659,7 +629,7 @@ export class RouterGraph {
 
 	private cutUpdatedRouteAndPools = (
 		routesAndPools: {
-			updatedPools: PoolsById;
+			updatedPools: RouterPoolsById;
 			updatedRoute: TradeRoute;
 			coinOutAmount: Balance;
 			startingRoute: TradeRoute;
@@ -669,7 +639,7 @@ export class RouterGraph {
 		linearCutStepSize?: number
 	): {
 		updatedRoute: TradeRoute;
-		updatedPools: PoolsById;
+		updatedPools: RouterPoolsById;
 		coinOutAmount: Balance;
 	} => {
 		if (routeDecreaseType === "LINEAR" && linearCutStepSize === undefined)
@@ -722,7 +692,7 @@ export class RouterGraph {
 	};
 
 	private getUpdatedPoolsAndRouteAfterTrade = (
-		pools: PoolsById,
+		pools: RouterPoolsById,
 		route: TradeRoute,
 		coinInAmount: Balance,
 		currentGasCost: Balance,
@@ -730,7 +700,7 @@ export class RouterGraph {
 		referrer?: SuiAddress
 	):
 		| {
-				updatedPools: PoolsById;
+				updatedPools: RouterPoolsById;
 				updatedRoute: TradeRoute;
 				coinOutAmount: Balance;
 				startingRoute: TradeRoute;
@@ -976,7 +946,7 @@ export class RouterGraph {
 
 	private static routerCompleteTradeRouteFromCompleteTradeRoute = (
 		completeRoute: CompleteTradeRoute,
-		pools: PoolsById,
+		pools: RouterPoolsById,
 		referrer?: SuiAddress,
 		externalFee?: RouterExternalFee
 	): RouterCompleteTradeRoute => {

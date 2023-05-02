@@ -1,9 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
-import {
-	RouterGraph,
-	RouterSerializableCompleteGraph,
-} from "../utils/routerGraph";
+import { RouterGraph } from "../utils/routerGraph";
 import {
 	Balance,
 	CoinType,
@@ -14,6 +11,7 @@ import {
 	SuiNetwork,
 	Url,
 	RouterProtocolName,
+	RouterSerializableCompleteGraph,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
