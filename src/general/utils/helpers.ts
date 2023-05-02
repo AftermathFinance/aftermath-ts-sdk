@@ -26,6 +26,31 @@ export class Helpers {
 		type: AnyObjectType
 	): AnyObjectType => type.replaceAll(/x0+/g, "x");
 
+	public static addLeadingZeroesToType = (
+		type: AnyObjectType
+	): AnyObjectType => {
+		const expectedTypeLength = 64;
+
+		const splitType = type.replace("0x", "").split("::");
+
+		if (splitType.length !== 3) throw new Error("invalid type");
+
+		const typeSuffix = "::" + splitType[1] + "::" + splitType[2];
+
+		const strippedType = splitType[0];
+		const typeLength = strippedType.length;
+
+		if (typeLength > expectedTypeLength)
+			throw new Error("invalid type length");
+
+		const zeros = Array(expectedTypeLength - typeLength)
+			.fill("0")
+			.reduce((acc, val) => acc + val, "");
+		const newType = "0x" + zeros + strippedType;
+
+		return newType + typeSuffix;
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Numbers
 	/////////////////////////////////////////////////////////////////////

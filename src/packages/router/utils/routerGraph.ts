@@ -51,7 +51,7 @@ type TradeInfo = RouterTradeInfo & {
 
 export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
-	//// Public Static Contstants
+	//// Public Static Constants
 	/////////////////////////////////////////////////////////////////////
 
 	public static readonly defaultOptions: RouterOptions = {
@@ -155,22 +155,45 @@ export class RouterGraph {
 	//// Supported Coins
 	/////////////////////////////////////////////////////////////////////
 
+	// TODO: do this more effeciently
 	public static supportedCoinPathsFromGraph = async (inputs: {
 		graph: RouterSerializableCompleteGraph;
+		maxRouteLength?: number;
 	}): Promise<RouterSupportedCoinPaths> => {
 		const nodes = Object.values(inputs.graph.coinNodes);
 
-		const coinPaths = nodes.reduce((acc, node) => {
-			const coinIn = node.coin;
-			const coinsOut = Object.keys(node.coinOutThroughPoolEdges);
+		const coinPaths: RouterSupportedCoinPaths = nodes.reduce(
+			(acc, node) => {
+				const coinIn = node.coin;
+				const coinsOut = Object.keys(node.coinOutThroughPoolEdges);
 
-			return {
-				...acc,
-				[coinIn]: coinsOut,
-			};
-		}, {});
+				return {
+					...acc,
+					[coinIn]: coinsOut,
+				};
+			},
+			{}
+		);
 
-		return coinPaths;
+		let extendedCoinPaths = Helpers.deepCopy(coinPaths);
+
+		for (const _ of Array(
+			inputs.maxRouteLength ?? RouterGraph.defaultOptions.maxRouteLength
+		).fill(0)) {
+			for (const [coinIn, coinsOut] of Object.entries(coinPaths)) {
+				let newCoinsOut = [...coinsOut];
+
+				for (const coinOut of coinsOut) {
+					newCoinsOut = [...newCoinsOut, ...coinPaths[coinOut]];
+				}
+
+				extendedCoinPaths[coinIn] = Helpers.uniqueArray([
+					...newCoinsOut,
+				]).filter((coin) => coin !== coinIn);
+			}
+		}
+
+		return extendedCoinPaths;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -283,7 +306,7 @@ export class RouterGraph {
 		coinNodes: RouterGraphCoinNodes,
 		pool: RouterPoolInterface
 	): RouterGraphCoinNodes => {
-		const coinTypes = pool.coinTypes;
+		const coinTypes = pool.coinTypes.map(Helpers.addLeadingZeroesToType);
 		const uid = pool.uid;
 
 		let newCoinNodes: RouterGraphCoinNodes = { ...coinNodes };
