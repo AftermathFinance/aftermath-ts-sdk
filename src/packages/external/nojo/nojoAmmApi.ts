@@ -14,8 +14,10 @@ import { NojoAmmApiHelpers } from "./nojoAmmApiHelpers";
 import { CoinType } from "../../coin/coinTypes";
 import { Balance } from "../../../types";
 import { Helpers } from "../../../general/utils";
+import { RouterApiInterface } from "../../router/utils/routerApiInterface";
+import { NojoPoolObject } from "./nojoAmmTypes";
 
-export class NojoAmmApi {
+export class NojoAmmApi implements RouterApiInterface<NojoPoolObject> {
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
@@ -44,7 +46,7 @@ export class NojoAmmApi {
 		return Pool.fetch(this.Provider.provider, objectId);
 	};
 
-	public fetchAllPools = async (): Promise<Pool[]> => {
+	public fetchAllPools = async (): Promise<NojoPoolObject[]> => {
 		const poolObjectIds = await this.Helpers.fetchAllPoolObjectIds();
 		const poolSuiObjects = this.Provider.Objects().fetchObjectBatch(
 			poolObjectIds,
@@ -52,12 +54,14 @@ export class NojoAmmApi {
 				showContent: true,
 			}
 		);
-		return (await poolSuiObjects).map((poolSuiObject) => {
+		const poolClasses = (await poolSuiObjects).map((poolSuiObject) => {
 			const content = poolSuiObject.data?.content;
 			if (content === undefined)
 				throw new Error("no content found on fetched pool object");
 			return Pool.fromSuiParsedData(content);
 		});
+
+		return poolClasses.map(NojoAmmApiHelpers.nojoPoolObjectFromClass);
 	};
 
 	// public fetchPoolForCoinTypes = async (coinTypeA: CoinType, coinTypeB: CoinType) => {
@@ -73,7 +77,7 @@ export class NojoAmmApi {
 	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
 		const pools = await this.fetchAllPools();
 		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, ...pool.$typeArgs],
+			(acc, pool) => [...acc, ...pool.typeArgs],
 			[] as CoinType[]
 		);
 		return Helpers.uniqueArray(allCoins);
@@ -83,13 +87,15 @@ export class NojoAmmApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public addSwapCommandToTransaction = (
-		tx: TransactionBlock,
-		pool: Pool,
-		coinIn: TransactionArgument | ObjectId,
-		coinInType: CoinType,
-		minOut: Balance
-	): TransactionArgument => {
+	public addTradeCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		pool: Pool;
+		coinIn: TransactionArgument | ObjectId;
+		coinInType: CoinType;
+		minOut: Balance;
+	}): TransactionArgument => {
+		const { tx, pool, coinIn, coinInType, minOut } = inputs;
+
 		const swapArgs = {
 			pool: pool.id,
 			input: coinIn,

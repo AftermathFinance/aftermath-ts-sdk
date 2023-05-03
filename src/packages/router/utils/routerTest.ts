@@ -17,7 +17,7 @@ const runMe = async () => {
 	const sdk = new Aftermath("LOCAL");
 	const router = sdk.Router();
 
-	const supportedCoins = await router.getSupportedCoins();
+	const supportedCoins = Object.keys(await router.getSupportedCoinPaths());
 
 	// PRODUCTOIN: add asserts for coins not in pool or same coin trades
 	const coinIn =

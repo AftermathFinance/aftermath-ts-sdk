@@ -8,6 +8,7 @@ import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
 import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
 import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
+import { RouterPoolInterface } from "./utils/routerPoolInterface";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -76,6 +77,44 @@ export interface RouterTradeCoin {
 	amount: Balance;
 	tradeFee: PoolTradeFee;
 }
+
+/////////////////////////////////////////////////////////////////////
+//// Graph
+/////////////////////////////////////////////////////////////////////
+
+export interface RouterCompleteGraph {
+	coinNodes: RouterGraphCoinNodes;
+	pools: RouterPoolsById;
+}
+
+export interface RouterSerializableCompleteGraph {
+	coinNodes: RouterGraphCoinNodes;
+	pools: RouterSerializablePoolsById;
+}
+
+export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
+
+export interface RouterOptions {
+	maxRouteLength: number;
+	tradePartitionCount: number;
+	minRoutesToCheck: number;
+	maxGasCost: bigint;
+}
+
+export type RouterSerializablePoolsById = Record<
+	UniqueId,
+	RouterSerializablePool
+>;
+
+export type RouterGraphCoinNodes = Record<CoinType, RouterCoinNode>;
+export type RouterPoolsById = Record<UniqueId, RouterPoolInterface>;
+
+export interface RouterCoinNode {
+	coin: CoinType;
+	coinOutThroughPoolEdges: RouterCoinOutThroughPoolEdges;
+}
+
+export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 
 /////////////////////////////////////////////////////////////////////
 //// API

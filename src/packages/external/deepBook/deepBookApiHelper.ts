@@ -6,7 +6,7 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
-	Balance,
+	Byte,
 	CoinType,
 	DeepBookAddresses,
 	PoolsAddresses,
@@ -31,6 +31,7 @@ export class DeepBookApiHelpers {
 	private static readonly constants = {
 		moduleNames: {
 			clob: "clob",
+			wrapper: "deepbook",
 		},
 	};
 
@@ -129,14 +130,13 @@ export class DeepBookApiHelpers {
 		const { tx, coinInId } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.deepBook.packages.clob,
-				DeepBookApiHelpers.constants.moduleNames.clob,
-				"swap_exact_base_for_quote"
+				this.addresses.deepBook.packages.wrapper,
+				DeepBookApiHelpers.constants.moduleNames.wrapper,
+				"swap_exact_base_for_quote_ktc"
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
@@ -157,14 +157,13 @@ export class DeepBookApiHelpers {
 		const { tx, coinInId } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.deepBook.packages.clob,
-				DeepBookApiHelpers.constants.moduleNames.clob,
+				this.addresses.deepBook.packages.wrapper,
+				DeepBookApiHelpers.constants.moduleNames.wrapper,
 				"swap_exact_quote_for_base"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [inputs.coinOutType, inputs.coinInType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
@@ -173,28 +172,6 @@ export class DeepBookApiHelpers {
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
-	};
-
-	public addTradeCommandToTransaction = (inputs: {
-		tx: TransactionBlock;
-		pool: PartialDeepBookPoolObject;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-	}) /* (Coin<CoinIn>, Coin<CoinOut>, u64 (amountFilled), u64 (amountOut)) */ => {
-		const commandInputs = {
-			...inputs,
-			poolObjectId: inputs.pool.objectId,
-		};
-
-		if (
-			Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
-		) {
-			return this.addTradeBaseToQuoteCommandToTransaction(commandInputs);
-		}
-
-		return this.addTradeQuoteToBaseCommandToTransaction(commandInputs);
 	};
 
 	public addGetAsksCommandToTransaction = (inputs: {
@@ -281,10 +258,20 @@ export class DeepBookApiHelpers {
 			tx,
 		});
 
-		const [prices, depths] =
-			await this.Provider.Inspections().fetchOutputsBytesFromTransaction({
-				tx,
-			});
+		let prices: Byte[];
+		let depths: Byte[];
+		try {
+			[prices, depths] =
+				await this.Provider.Inspections().fetchOutputsBytesFromTransaction(
+					{
+						tx,
+					}
+				);
+		} catch (e) {
+			// dev inspect may fail due to empty tree on orderbook (no bids or asks)
+			prices = [];
+			depths = [];
+		}
 
 		// TODO: move these to casting
 		const bookPricesU64 = (

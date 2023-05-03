@@ -1,6 +1,5 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
-import { Pool } from "../../pools";
 import { RouterGraph } from "../utils/routerGraph";
 import {
 	Balance,
@@ -11,15 +10,13 @@ import {
 	Slippage,
 	SuiNetwork,
 	Url,
+	RouterProtocolName,
+	RouterSerializableCompleteGraph,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
-import { Helpers } from "../../../general/utils/helpers";
-import {
-	RouterPoolInterface,
-	createRouterPool,
-} from "../utils/routerPoolInterface";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
+import { PoolsApi } from "../../pools/api/poolsApi";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -32,7 +29,10 @@ export class RouterApi {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly Provider: AftermathApi) {
+	constructor(
+		private readonly Provider: AftermathApi,
+		public readonly protocols: RouterProtocolName[] = ["Aftermath"]
+	) {
 		this.Provider = Provider;
 		this.Helpers = new RouterApiHelpers(Provider);
 	}
@@ -41,6 +41,7 @@ export class RouterApi {
 	//// External Packages
 	/////////////////////////////////////////////////////////////////////
 
+	public Aftermath = () => new PoolsApi(this.Provider);
 	public Nojo = () => new NojoAmmApi(this.Provider);
 	public DeepBook = () => new DeepBookApi(this.Provider);
 
@@ -49,21 +50,33 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Inspections
+	//// Graph
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchSupportedCoins = async () => {
-		const pools = await this.Provider.Pools().fetchAllPools();
-		const allCoins: CoinType[] = pools
-			.map((pool) => Object.keys(pool.coins))
-			.reduce((prev, cur) => [...prev, ...cur], []);
-
-		const uniqueCoins = Helpers.uniqueArray(allCoins);
-		return uniqueCoins;
+	public fetchSerializableGraph = async () => {
+		const pools = await this.Helpers.fetchAllPools({
+			protocols: this.protocols,
+		});
+		return RouterGraph.createGraph({ pools });
 	};
 
+	/////////////////////////////////////////////////////////////////////
+	//// Coin Paths
+	/////////////////////////////////////////////////////////////////////
+
+	public supportedCoinPathsFromGraph = async (inputs: {
+		graph: RouterSerializableCompleteGraph;
+	}) => {
+		return RouterGraph.supportedCoinPathsFromGraph(inputs);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Routing
+	/////////////////////////////////////////////////////////////////////
+
 	public fetchCompleteTradeRouteGivenAmountIn = async (
-		pools: RouterPoolInterface[],
+		network: SuiNetwork | Url,
+		graph: RouterSerializableCompleteGraph,
 		coinIn: CoinType,
 		coinInAmount: Balance,
 		coinOut: CoinType,
@@ -72,7 +85,7 @@ export class RouterApi {
 		// TODO: add options to set all these params ?
 		// maxRouteLength?: number,
 	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(pools).getCompleteRouteGivenAmountIn(
+		return new RouterGraph(network, graph).getCompleteRouteGivenAmountIn(
 			coinIn,
 			coinInAmount,
 			coinOut,
@@ -82,14 +95,15 @@ export class RouterApi {
 	};
 
 	public fetchCompleteTradeRouteGivenAmountOut = async (
-		pools: RouterPoolInterface[],
+		network: SuiNetwork | Url,
+		graph: RouterSerializableCompleteGraph,
 		coinIn: CoinType,
 		coinOut: CoinType,
 		coinOutAmount: Balance,
 		referrer?: SuiAddress,
 		externalFee?: RouterExternalFee
 	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(pools).getCompleteRouteGivenAmountOut(
+		return new RouterGraph(network, graph).getCompleteRouteGivenAmountOut(
 			coinIn,
 			coinOut,
 			coinOutAmount,
@@ -102,21 +116,17 @@ export class RouterApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public async fetchTransactionForCompleteTradeRoute(
+	public async fetchTransactionForCompleteTradeRoute(inputs: {
 		// TODO: make it so that api can be called with different rpc nodes ?
-		network: SuiNetwork | Url,
-		provider: AftermathApi,
-		walletAddress: SuiAddress,
-		completeRoute: RouterCompleteTradeRoute,
-		slippage: Slippage
-	): Promise<SerializedTransaction> {
+		network: SuiNetwork | Url;
+		provider: AftermathApi;
+		walletAddress: SuiAddress;
+		completeRoute: RouterCompleteTradeRoute;
+		slippage: Slippage;
+	}): Promise<SerializedTransaction> {
 		const tx =
 			await this.Helpers.fetchBuildTransactionForCompleteTradeRoute(
-				network,
-				provider,
-				walletAddress,
-				completeRoute,
-				slippage
+				inputs
 			);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			tx

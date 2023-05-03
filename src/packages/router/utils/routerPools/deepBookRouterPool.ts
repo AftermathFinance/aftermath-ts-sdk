@@ -14,7 +14,10 @@ import {
 import { CoinType } from "../../../coin/coinTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
 import { AftermathApi } from "../../../../general/providers";
-import { DeepBookPoolObject } from "../../../external/deepBook/deepBookTypes";
+import {
+	DeepBookPoolObject,
+	DeepBookPriceRange,
+} from "../../../external/deepBook/deepBookTypes";
 import { Helpers } from "../../../../general/utils";
 
 class DeepBookRouterPool implements RouterPoolInterface {
@@ -50,7 +53,11 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}): number => {
-		return 0;
+		// NOTE: should this be looking at the spread ?
+		const spotPrice = this.isBaseCoinType(inputs.coinInType)
+			? this.pool.bids[0].price
+			: this.pool.asks[0].price;
+		return spotPrice;
 	};
 
 	getTradeAmountOut = (inputs: {
@@ -73,13 +80,10 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): TransactionArgument => {
-		// const minAmountOut = BigInt(
-		// 	Math.ceil((1 - inputs.slippage) * Number(inputs.expectedAmountOut))
-		// );
 		return inputs.provider
 			.Router()
 			.DeepBook()
-			.Helpers.addTradeCommandToTransaction({
+			.addTradeCommandToTransaction({
 				...inputs,
 				coinInId: inputs.coinIn,
 				pool: this.pool,
@@ -100,12 +104,34 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOut: CoinType;
 		coinOutAmount: Balance;
-	}): RouterPoolInterface =>
-		this.getUpdatedPoolAfterTrade({
-			...inputs,
-			coinInAmount: -inputs.coinInAmount,
-			coinOutAmount: -inputs.coinOutAmount,
-		});
+	}): RouterPoolInterface => {
+		const { coinIn, coinInAmount, coinOutAmount } = inputs;
+		const isCoinInBaseCoin = this.isBaseCoinType(coinIn);
+
+		const price = isCoinInBaseCoin
+			? Number(coinInAmount) / Number(coinOutAmount)
+			: Number(coinOutAmount) / Number(coinInAmount);
+
+		const filledPriceRange: DeepBookPriceRange = {
+			depth: coinInAmount,
+			price,
+		};
+
+		const bids = isCoinInBaseCoin
+			? [filledPriceRange, ...this.pool.bids]
+			: this.pool.bids;
+		const asks = !isCoinInBaseCoin
+			? [filledPriceRange, ...this.pool.asks]
+			: this.pool.asks;
+
+		const newPoolObject: DeepBookPoolObject = {
+			...this.pool,
+			bids,
+			asks,
+		};
+
+		return new DeepBookRouterPool(newPoolObject, this.network);
+	};
 
 	getUpdatedPoolAfterTrade = (inputs: {
 		coinIn: CoinType;

@@ -2,9 +2,15 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { Helpers } from "../../../general/utils";
 import { DeepBookApiHelpers } from "./deepBookApiHelper";
-import { DeepBookPoolObject } from "./deepBookTypes";
+import { DeepBookPoolObject, PartialDeepBookPoolObject } from "./deepBookTypes";
+import { RouterApiInterface } from "../../router/utils/routerApiInterface";
+import {
+	ObjectId,
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js";
 
-export class DeepBookApi {
+export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
@@ -62,5 +68,35 @@ export class DeepBookApi {
 			[] as CoinType[]
 		);
 		return Helpers.uniqueArray(allCoins);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public addTradeCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+		pool: PartialDeepBookPoolObject;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}) /* (Coin<CoinIn>, Coin<CoinOut>, u64 (amountFilled), u64 (amountOut)) */ => {
+		const commandInputs = {
+			...inputs,
+			poolObjectId: inputs.pool.objectId,
+		};
+
+		if (
+			Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
+			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
+		) {
+			return this.Helpers.addTradeBaseToQuoteCommandToTransaction(
+				commandInputs
+			);
+		}
+
+		return this.Helpers.addTradeQuoteToBaseCommandToTransaction(
+			commandInputs
+		);
 	};
 }

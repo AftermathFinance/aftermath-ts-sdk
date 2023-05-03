@@ -212,7 +212,7 @@ export class StakingApiHelpers {
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
 				inputs.walletAddress,
-				Coin.constants.suiCoinType,
+				this.coinTypes.afSui,
 				inputs.afSuiUnstakeAmount
 			);
 

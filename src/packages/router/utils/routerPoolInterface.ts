@@ -45,12 +45,14 @@ export function createRouterPool(inputs: {
 //// Constructor
 /////////////////////////////////////////////////////////////////////
 
-interface RouterPoolConstructor {
-	new (
-		pool: RouterSerializablePool,
-		network: SuiNetwork | Url
-	): RouterPoolInterface;
-}
+// TODO: use this to make above creation function cleaner
+
+// interface RouterPoolConstructor {
+// 	new (
+// 		pool: RouterSerializablePool,
+// 		network: SuiNetwork | Url
+// 	): RouterPoolInterface;
+// }
 
 /////////////////////////////////////////////////////////////////////
 //// Interface
