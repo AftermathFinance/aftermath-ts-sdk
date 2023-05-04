@@ -166,7 +166,7 @@ export class PoolsApi {
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildDepositTransaction(
+		const transaction = await this.Helpers.fetchBuildDepositTx(
 			walletAddress,
 			pool,
 			depositCoinsToBalance,
@@ -186,7 +186,7 @@ export class PoolsApi {
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildWithdrawTransaction(
+		const transaction = await this.Helpers.fetchBuildWithdrawTx(
 			walletAddress,
 			pool,
 			withdrawCoinsToBalance,
@@ -208,7 +208,7 @@ export class PoolsApi {
 		slippage: Slippage,
 		referrer?: SuiAddress
 	): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildTradeTransaction(
+		const transaction = await this.Helpers.fetchBuildTradeTx(
 			walletAddress,
 			pool,
 			coinIn,
@@ -226,7 +226,7 @@ export class PoolsApi {
 		walletAddress: SuiAddress;
 	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.buildPublishLpCoinTransaction(inputs)
+			this.Helpers.buildPublishLpCoinTx(inputs)
 		);
 	};
 
@@ -246,7 +246,7 @@ export class PoolsApi {
 	}): Promise<SerializedTransaction> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.fetchBuildCreatePoolTransaction({
+			this.Helpers.fetchBuildCreatePoolTx({
 				...inputs,
 
 				poolFlatness:

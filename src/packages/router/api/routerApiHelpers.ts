@@ -106,26 +106,25 @@ export class RouterApiHelpers {
 				`external fee percentage exceeds max of ${Router.constants.maxExternalFeePercentage}`
 			);
 
-		const startTx = new TransactionBlock();
-		startTx.setSender(walletAddress);
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		if (referrer)
 			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
 				{
-					tx: startTx,
+					tx,
 					referrer,
 				}
 			);
 
-		const { coinArgument: coinInArg, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
-				startTx,
+		const coinInArg =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
+				tx,
 				walletAddress,
-				completeRoute.coinIn.type,
-				completeRoute.coinIn.amount
-			);
+				coinType: completeRoute.coinIn.type,
+				coinAmount: completeRoute.coinIn.amount,
+			});
 
-		let tx = txWithCoinWithAmount;
 		let coinsOut = [];
 
 		for (const route of completeRoute.routes) {

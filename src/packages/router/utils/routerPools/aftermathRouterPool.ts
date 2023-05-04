@@ -15,7 +15,7 @@ import { CoinType } from "../../../coin/coinTypes";
 import { PoolObject } from "../../../pools/poolsTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
 import { Pool } from "../../../pools";
-import { Helpers } from "../../../../general/utils";
+import { Casting, Helpers } from "../../../../general/utils";
 import { AftermathApi } from "../../../../general/providers";
 
 class AftermathRouterPool implements RouterPoolInterface {
@@ -50,15 +50,51 @@ class AftermathRouterPool implements RouterPoolInterface {
 	//// Functions
 	/////////////////////////////////////////////////////////////////////
 
-	getSpotPrice = (inputs: { coinInType: CoinType; coinOutType: CoinType }) =>
-		this.poolClass.getSpotPrice(inputs);
+	getSpotPrice = (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}) => {
+		return this.poolClass.getSpotPrice(inputs);
+	};
 
 	getTradeAmountOut = (inputs: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => this.poolClass.getTradeAmountOut(inputs);
+	}): Balance => {
+		// withdraw
+		if (inputs.coinInType === this.pool.lpCoinType) {
+			const lpRatio = this.poolClass.getWithdrawLpRatio({
+				lpCoinAmountOut: inputs.coinInAmount,
+			});
+
+			const amountsOuts = this.poolClass.getWithdrawAmountsOut({
+				lpRatio,
+				amountsOutDirection: {
+					[inputs.coinOutType]: inputs.coinInAmount,
+				},
+				referral: inputs.referrer !== undefined,
+			});
+
+			return amountsOuts[inputs.coinOutType];
+		}
+
+		// deposit
+		if (inputs.coinOutType === this.pool.lpCoinType) {
+			const { lpAmountOut } = this.poolClass.getDepositLpAmountOut({
+				amountsIn: {
+					[inputs.coinInType]: inputs.coinInAmount,
+				},
+				referral: inputs.referrer !== undefined,
+			});
+
+			return lpAmountOut;
+		}
+
+		// trade
+		return this.poolClass.getTradeAmountOut(inputs);
+	};
 
 	addTradeCommandToTransaction = (inputs: {
 		provider: AftermathApi;
@@ -70,18 +106,48 @@ class AftermathRouterPool implements RouterPoolInterface {
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}) => {
-		const { coinOut } = inputs.provider
-			.Pools()
-			.Helpers.addTradeCommandWithCoinOutToTransaction(
-				inputs.tx,
-				this.pool.objectId,
-				inputs.coinIn,
-				inputs.coinInType,
-				inputs.expectedAmountOut,
-				inputs.coinOutType,
-				this.pool.lpCoinType,
-				inputs.slippage
-			);
+		// withdraw
+		if (inputs.coinInType === this.pool.lpCoinType) {
+			inputs.provider.Pools().Helpers.multiCoinWithdrawTx({
+				...inputs,
+				poolId: this.pool.objectId,
+				// this is beacuse typescript complains for some reason otherwise
+				lpCoinId: inputs.coinIn,
+				coinsOutType: [inputs.coinInType],
+				expectedAmountsOut: [],
+				lpCoinType: this.pool.lpCoinType,
+			});
+		}
+
+		// TODO: FIX THE ABOVE ASAP (expectedAmountsOut) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+		// deposit
+		if (inputs.coinOutType === this.pool.lpCoinType) {
+			const expectedLpRatio = this.poolClass.getWithdrawLpRatio({
+				lpCoinAmountOut: inputs.expectedAmountOut,
+			});
+
+			inputs.provider.Pools().Helpers.multiCoinDepositTx({
+				...inputs,
+				poolId: this.pool.objectId,
+				// this is beacuse typescript complains for some reason otherwise
+				coinIds:
+					typeof inputs.coinIn === "string"
+						? [inputs.coinIn]
+						: [inputs.coinIn],
+				coinTypes: [inputs.coinInType],
+				expectedLpRatio: Casting.numberToFixedBigInt(expectedLpRatio),
+				lpCoinType: this.pool.lpCoinType,
+			});
+		}
+
+		// trade
+		const coinOut = inputs.provider.Pools().Helpers.tradeTx({
+			...inputs,
+			poolId: this.pool.objectId,
+			lpCoinType: this.pool.lpCoinType,
+			coinInId: inputs.coinIn,
+		});
 
 		return coinOut;
 	};
@@ -91,19 +157,22 @@ class AftermathRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => this.poolClass.getTradeAmountIn(inputs);
+	}): Balance => {
+		return this.poolClass.getTradeAmountIn(inputs);
+	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
 		coinIn: CoinType;
 		coinInAmount: Balance;
 		coinOut: CoinType;
 		coinOutAmount: Balance;
-	}): RouterPoolInterface =>
-		this.getUpdatedPoolAfterTrade({
+	}): RouterPoolInterface => {
+		return this.getUpdatedPoolAfterTrade({
 			...inputs,
 			coinInAmount: -inputs.coinInAmount,
 			coinOutAmount: -inputs.coinOutAmount,
 		});
+	};
 
 	getUpdatedPoolAfterTrade = (inputs: {
 		coinIn: CoinType;

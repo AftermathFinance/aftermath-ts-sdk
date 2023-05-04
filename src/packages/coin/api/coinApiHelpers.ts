@@ -132,15 +132,14 @@ export class CoinApiHelpers {
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchAddCoinWithAmountCommandsToTransaction = async (
-		tx: TransactionBlock,
-		walletAddress: SuiAddress,
-		coinType: CoinType,
-		coinAmount: Balance
-	): Promise<{
-		coinArgument: TransactionArgument;
-		txWithCoinWithAmount: TransactionBlock;
-	}> => {
+	public fetchCoinWithAmountTx = async (inputs: {
+		tx: TransactionBlock;
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		coinAmount: Balance;
+	}): Promise<TransactionArgument> => {
+		const { tx, walletAddress, coinType, coinAmount } = inputs;
+
 		tx.setSender(walletAddress);
 
 		// PRODUCTION: handle cursoring until necessary coin amount is found
@@ -149,22 +148,19 @@ export class CoinApiHelpers {
 			coinType,
 		});
 
-		return CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
+		return CoinApiHelpers.coinWithAmountTx({
 			tx,
 			paginatedCoins,
-			coinAmount
-		);
+			coinAmount,
+		});
 	};
 
-	public fetchAddCoinsWithAmountCommandsToTransaction = async (
+	public fetchCoinsWithAmountTx = async (
 		tx: TransactionBlock,
 		walletAddress: SuiAddress,
 		coinTypes: CoinType[],
 		coinAmounts: Balance[]
-	): Promise<{
-		coinArguments: TransactionArgument[];
-		txWithCoinsWithAmount: TransactionBlock;
-	}> => {
+	): Promise<TransactionArgument[]> => {
 		tx.setSender(walletAddress);
 
 		// TODO: handle cursoring until necessary coin amount is found
@@ -177,30 +173,18 @@ export class CoinApiHelpers {
 			)
 		);
 
-		const coinObjectIdsAndTransaction = allPaginatedCoins.reduce<{
-			coinArguments: TransactionArgument[];
-			txWithCoinsWithAmount: TransactionBlock;
-		}>(
-			(acc, paginatedCoins, index) => {
-				const { coinArgument, txWithCoinWithAmount } =
-					CoinApiHelpers.addCoinWithAmountCommandsToTransaction(
-						acc.txWithCoinsWithAmount,
-						paginatedCoins,
-						coinAmounts[index]
-					);
+		let coinArgs: TransactionArgument[] = [];
+		for (const [index, coinData] of allPaginatedCoins.entries()) {
+			const coinArg = CoinApiHelpers.coinWithAmountTx({
+				tx,
+				paginatedCoins: coinData,
+				coinAmount: coinAmounts[index],
+			});
 
-				return {
-					coinArguments: [...acc.coinArguments, coinArgument],
-					txWithCoinsWithAmount: txWithCoinWithAmount,
-				};
-			},
-			{
-				coinArguments: [],
-				txWithCoinsWithAmount: tx,
-			}
-		);
+			coinArgs = [...coinArgs, coinArg];
+		}
 
-		return coinObjectIdsAndTransaction;
+		return coinArgs;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -211,14 +195,13 @@ export class CoinApiHelpers {
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	private static addCoinWithAmountCommandsToTransaction = (
-		tx: TransactionBlock,
-		paginatedCoins: PaginatedCoins,
-		coinAmount: Balance
-	): {
-		coinArgument: TransactionArgument;
-		txWithCoinWithAmount: TransactionBlock;
-	} => {
+	private static coinWithAmountTx = (inputs: {
+		tx: TransactionBlock;
+		paginatedCoins: PaginatedCoins;
+		coinAmount: Balance;
+	}): TransactionArgument => {
+		const { tx, paginatedCoins, coinAmount } = inputs;
+
 		const isSuiCoin = Coin.isSuiCoin(paginatedCoins.data[0].coinType);
 
 		const coinObjects = paginatedCoins.data.filter(
@@ -244,12 +227,7 @@ export class CoinApiHelpers {
 				})
 			);
 
-			const [splitCoin] = tx.splitCoins(tx.gas, [tx.pure(coinAmount)]);
-
-			return {
-				coinArgument: splitCoin,
-				txWithCoinWithAmount: tx,
-			};
+			return tx.splitCoins(tx.gas, [tx.pure(coinAmount)]);
 		}
 
 		const coinObjectIds = coinObjects.map((data) => data.coinObjectId);
@@ -267,15 +245,10 @@ export class CoinApiHelpers {
 			});
 		}
 
-		const [splitCoin] = tx.add({
+		return tx.add({
 			kind: "SplitCoins",
 			coin: tx.object(mergedCoinObjectId),
 			amounts: [tx.pure(coinAmount)],
 		});
-
-		return {
-			coinArgument: splitCoin,
-			txWithCoinWithAmount: tx,
-		};
 	};
 }

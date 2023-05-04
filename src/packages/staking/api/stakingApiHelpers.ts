@@ -184,16 +184,16 @@ export class StakingApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const { coinArgument: suiCoin, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const suiCoin =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
-				inputs.walletAddress,
-				Coin.constants.suiCoinType,
-				inputs.suiStakeAmount
-			);
+				walletAddress: inputs.walletAddress,
+				coinType: Coin.constants.suiCoinType,
+				coinAmount: inputs.suiStakeAmount,
+			});
 
 		this.addStakeCommandToTransaction({
-			tx: txWithCoinWithAmount,
+			tx,
 			...inputs,
 			suiCoin,
 		});
@@ -208,16 +208,16 @@ export class StakingApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const { coinArgument: afSuiCoin, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const afSuiCoin =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
-				inputs.walletAddress,
-				this.coinTypes.afSui,
-				inputs.afSuiUnstakeAmount
-			);
+				walletAddress: inputs.walletAddress,
+				coinType: this.coinTypes.afSui,
+				coinAmount: inputs.afSuiUnstakeAmount,
+			});
 
 		this.addUnstakeCommandToTransaction({
-			tx: txWithCoinWithAmount,
+			tx,
 			...inputs,
 			afSuiCoin,
 		});

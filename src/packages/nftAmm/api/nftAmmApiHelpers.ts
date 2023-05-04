@@ -78,16 +78,16 @@ export class NftAmmApiHelpers {
 			referral: inputs.referrer !== undefined,
 		});
 
-		const { coinArgument: assetCoin, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const assetCoin =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
-				inputs.walletAddress,
-				marketObject.assetCoinType,
-				expectedAssetCoinAmountIn
-			);
+				walletAddress: inputs.walletAddress,
+				coinType: marketObject.assetCoinType,
+				coinAmount: expectedAssetCoinAmountIn,
+			});
 
 		this.addBuyCommandToTransaction({
-			tx: txWithCoinWithAmount,
+			tx,
 			...inputs,
 			marketObjectId: marketObject.objectId,
 			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),
@@ -152,16 +152,16 @@ export class NftAmmApiHelpers {
 		// // TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
-		const { coinArgument: assetCoin, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const assetCoin =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
-				inputs.walletAddress,
-				marketObject.assetCoinType,
-				inputs.assetCoinAmountIn
-			);
+				walletAddress: inputs.walletAddress,
+				coinType: marketObject.assetCoinType,
+				coinAmount: inputs.assetCoinAmountIn,
+			});
 
 		this.addDepositCommandToTransaction({
-			tx: txWithCoinWithAmount,
+			tx,
 			...inputs,
 			marketObjectId: marketObject.objectId,
 			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),
@@ -198,16 +198,17 @@ export class NftAmmApiHelpers {
 		});
 		const expectedAssetCoinAmountOut = coinAmountsOut[0];
 
-		const { coinArgument: lpCoin, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const lpCoin = await this.Provider.Coin().Helpers.fetchCoinWithAmountTx(
+			{
 				tx,
-				inputs.walletAddress,
-				marketObject.lpCoinType,
-				inputs.lpCoinAmount
-			);
+				walletAddress: inputs.walletAddress,
+				coinType: marketObject.lpCoinType,
+				coinAmount: inputs.lpCoinAmount,
+			}
+		);
 
 		this.addWithdrawCommandToTransaction({
-			tx: txWithCoinWithAmount,
+			tx,
 			...inputs,
 			marketObjectId: marketObject.objectId,
 			genericTypes: NftAmmApiHelpers.genericTypesForMarket({ market }),

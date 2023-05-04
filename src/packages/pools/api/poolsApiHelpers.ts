@@ -51,6 +51,8 @@ export class PoolsApiHelpers {
 			interface: "interface",
 			pool: "pool",
 			swap: "swap",
+			deposit: "deposit",
+			withdraw: "withdraw",
 			math: "math",
 			events: "events",
 			poolRegistry: "pool_registry",
@@ -196,57 +198,36 @@ export class PoolsApiHelpers {
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	public addTradeCommandToTransaction = (
-		tx: TransactionBlock,
-		poolId: ObjectId,
-		coinInId: ObjectId | TransactionArgument,
-		coinInType: CoinType,
-		expectedAmountOut: Balance,
-		coinOutType: CoinType,
-		lpCoinType: CoinType,
-		slippage: Slippage
-	): TransactionBlock => {
-		tx.add({
-			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.interface,
-				"swap_exact_in"
-			),
-			typeArguments: [lpCoinType, coinInType, coinOutType],
-			arguments: [
-				tx.object(poolId),
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedAmountOut.toString()),
-				tx.pure(Pools.normalizeSlippage(slippage)),
-			],
-		});
-
-		return tx;
-	};
-
-	public addTradeCommandWithCoinOutToTransaction = (
-		tx: TransactionBlock,
-		poolId: ObjectId,
-		coinInId: ObjectId | TransactionArgument,
-		coinInType: CoinType,
-		expectedAmountOut: Balance,
-		coinOutType: CoinType,
-		lpCoinType: CoinType,
-		slippage: Slippage
-	): {
+	public tradeTx = (inputs: {
 		tx: TransactionBlock;
-		coinOut: TransactionArgument;
-	} => {
-		const [coinOut] = tx.add({
+		poolId: ObjectId;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		expectedAmountOut: Balance;
+		coinOutType: CoinType;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const {
+			tx,
+			poolId,
+			coinInId,
+			coinInType,
+			expectedAmountOut,
+			coinOutType,
+			lpCoinType,
+			slippage,
+			withTransfer,
+		} = inputs;
+
+		return tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.swap,
+				withTransfer
+					? PoolsApiHelpers.constants.moduleNames.interface
+					: PoolsApiHelpers.constants.moduleNames.swap,
 				"swap_exact_in"
 			),
 			typeArguments: [lpCoinType, coinInType, coinOutType],
@@ -261,29 +242,38 @@ export class PoolsApiHelpers {
 				tx.pure(Pools.normalizeSlippage(slippage)),
 			],
 		});
-
-		return {
-			tx,
-			coinOut,
-		};
 	};
 
-	public addMultiCoinDepositCommandToTransaction = (
-		tx: TransactionBlock,
-		poolId: ObjectId,
-		coinIds: ObjectId[] | TransactionArgument[],
-		coinTypes: CoinType[],
-		expectedLpRatio: bigint,
-		lpCoinType: CoinType,
-		slippage: Slippage
-	): TransactionBlock => {
+	public multiCoinDepositTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		coinIds: ObjectId[] | TransactionArgument[];
+		coinTypes: CoinType[];
+		expectedLpRatio: bigint;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const {
+			tx,
+			poolId,
+			coinIds,
+			coinTypes,
+			expectedLpRatio,
+			lpCoinType,
+			slippage,
+			withTransfer,
+		} = inputs;
+
 		const poolSize = coinTypes.length;
 
-		tx.add({
+		return tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.interface,
+				withTransfer
+					? PoolsApiHelpers.constants.moduleNames.interface
+					: PoolsApiHelpers.constants.moduleNames.deposit,
 				`deposit_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
@@ -300,26 +290,38 @@ export class PoolsApiHelpers {
 				tx.pure(Pools.normalizeSlippage(slippage)),
 			],
 		});
-
-		return tx;
 	};
 
-	public addMultiCoinWithdrawCommandToTransaction = (
-		tx: TransactionBlock,
-		poolId: ObjectId,
-		lpCoinId: ObjectId | TransactionArgument,
-		lpCoinType: CoinType,
-		expectedAmountsOut: Balance[],
-		coinsOutType: CoinType[],
-		slippage: Slippage
-	): TransactionBlock => {
+	public multiCoinWithdrawTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		lpCoinId: ObjectId | TransactionArgument;
+		lpCoinType: CoinType;
+		expectedAmountsOut: Balance[];
+		coinsOutType: CoinType[];
+		slippage: Slippage;
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const {
+			tx,
+			poolId,
+			lpCoinId,
+			expectedAmountsOut,
+			coinsOutType,
+			lpCoinType,
+			slippage,
+			withTransfer,
+		} = inputs;
+
 		const poolSize = coinsOutType.length;
 
-		tx.add({
+		return tx.add({
 			kind: "MoveCall",
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
-				PoolsApiHelpers.constants.moduleNames.interface,
+				withTransfer
+					? PoolsApiHelpers.constants.moduleNames.interface
+					: PoolsApiHelpers.constants.moduleNames.withdraw,
 				`withdraw_${poolSize}_coins`
 			),
 
@@ -335,13 +337,9 @@ export class PoolsApiHelpers {
 				tx.pure(Pools.normalizeSlippage(slippage)),
 			],
 		});
-
-		return tx;
 	};
 
-	public addPublishLpCoinCommandToTransaction = (inputs: {
-		tx: TransactionBlock;
-	}) => {
+	public publishLpCoinTx = (inputs: { tx: TransactionBlock }) => {
 		const { tx } = inputs;
 
 		const compiledModulesAndDeps = JSON.parse(
@@ -359,7 +357,7 @@ export class PoolsApiHelpers {
 	};
 
 	// TODO: handle bounds checks here instead of just on-chain ?
-	public fetchAddCreatePoolCommandToTransaction = async (inputs: {
+	public fetchCreatePoolTx = async (inputs: {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
 		coinsInfo: {
@@ -448,7 +446,7 @@ export class PoolsApiHelpers {
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchBuildTradeTransaction = async (
+	public fetchBuildTradeTx = async (
 		walletAddress: SuiAddress,
 		pool: Pool,
 		coinInType: CoinType,
@@ -475,29 +473,30 @@ export class PoolsApiHelpers {
 			referral: referrer !== undefined,
 		});
 
-		const { coinArgument, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const coinInId =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
 				walletAddress,
-				coinInType,
-				coinInAmount
-			);
+				coinType: coinInType,
+				coinAmount: coinInAmount,
+			});
 
-		const finalTx = this.addTradeCommandToTransaction(
-			txWithCoinWithAmount,
-			pool.pool.objectId,
-			coinArgument,
+		this.tradeTx({
+			tx,
+			coinInId,
+			poolId: pool.pool.objectId,
+			expectedAmountOut: amountOut,
+			lpCoinType: pool.pool.lpCoinType,
 			coinInType,
-			amountOut,
 			coinOutType,
-			pool.pool.lpCoinType,
-			slippage
-		);
+			slippage,
+			withTransfer: true,
+		});
 
-		return finalTx;
+		return tx;
 	};
 
-	public fetchBuildDepositTransaction = async (
+	public fetchBuildDepositTx = async (
 		walletAddress: SuiAddress,
 		pool: Pool,
 		amountsIn: CoinsToBalance,
@@ -526,28 +525,29 @@ export class PoolsApiHelpers {
 		// TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
-		const { coinArguments, txWithCoinsWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
+		const coinIds =
+			await this.Provider.Coin().Helpers.fetchCoinsWithAmountTx(
 				tx,
 				walletAddress,
 				coinTypes,
 				coinAmounts
 			);
 
-		const finalTx = this.addMultiCoinDepositCommandToTransaction(
-			txWithCoinsWithAmount,
-			pool.pool.objectId,
-			coinArguments,
+		this.multiCoinDepositTx({
+			tx,
+			poolId: pool.pool.objectId,
+			lpCoinType: pool.pool.lpCoinType,
+			coinIds,
 			coinTypes,
 			expectedLpRatio,
-			pool.pool.lpCoinType,
-			slippage
-		);
+			slippage,
+			withTransfer: true,
+		});
 
-		return finalTx;
+		return tx;
 	};
 
-	public fetchBuildWithdrawTransaction = async (
+	public fetchBuildWithdrawTx = async (
 		walletAddress: SuiAddress,
 		pool: Pool,
 		amountsOutDirection: CoinsToBalance,
@@ -579,40 +579,41 @@ export class PoolsApiHelpers {
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsOut);
 
-		const { coinArgument: lpCoinArgument, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const lpCoinId =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
 				walletAddress,
-				pool.pool.lpCoinType,
-				lpCoinAmount
-			);
+				coinType: pool.pool.lpCoinType,
+				coinAmount: lpCoinAmount,
+			});
 
-		const finalTx = this.addMultiCoinWithdrawCommandToTransaction(
-			txWithCoinWithAmount,
-			pool.pool.objectId,
-			lpCoinArgument,
-			pool.pool.lpCoinType,
-			coinAmounts,
-			coinTypes,
-			slippage
-		);
+		this.multiCoinWithdrawTx({
+			tx,
+			poolId: pool.pool.objectId,
+			lpCoinType: pool.pool.lpCoinType,
+			expectedAmountsOut: coinAmounts,
+			coinsOutType: coinTypes,
+			lpCoinId,
+			slippage,
+			withTransfer: true,
+		});
 
-		return finalTx;
+		return tx;
 	};
 
-	public buildPublishLpCoinTransaction = (inputs: {
+	public buildPublishLpCoinTx = (inputs: {
 		walletAddress: SuiAddress;
 	}): TransactionBlock => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const upgradeCap = this.addPublishLpCoinCommandToTransaction({ tx });
+		const upgradeCap = this.publishLpCoinTx({ tx });
 		tx.transferObjects([upgradeCap], tx.pure(inputs.walletAddress));
 
 		return tx;
 	};
 
-	public fetchBuildCreatePoolTransaction = async (inputs: {
+	public fetchBuildCreatePoolTx = async (inputs: {
 		walletAddress: SuiAddress;
 		lpCoinType: CoinType;
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
@@ -641,22 +642,22 @@ export class PoolsApiHelpers {
 		// 		"no CreatePoolCap for LP Coin Type found owned by address"
 		// 	);
 
-		const { coinArguments, txWithCoinsWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
+		const coinArgs =
+			await this.Provider.Coin().Helpers.fetchCoinsWithAmountTx(
 				tx,
 				inputs.walletAddress,
 				inputs.coinsInfo.map((info) => info.coinType),
 				inputs.coinsInfo.map((info) => info.initialDeposit)
 			);
 
-		this.fetchAddCreatePoolCommandToTransaction({
-			tx: txWithCoinsWithAmount,
+		this.fetchCreatePoolTx({
+			tx,
 			...inputs,
 			// createPoolCapId,
 			coinsInfo: inputs.coinsInfo.map((info, index) => {
 				return {
 					...info,
-					coinId: coinArguments[index],
+					coinId: coinArgs[index],
 				};
 			}),
 		});
