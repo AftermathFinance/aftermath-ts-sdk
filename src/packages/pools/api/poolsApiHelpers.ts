@@ -446,15 +446,25 @@ export class PoolsApiHelpers {
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchBuildTradeTx = async (
-		walletAddress: SuiAddress,
-		pool: Pool,
-		coinInType: CoinType,
-		coinInAmount: Balance,
-		coinOutType: CoinType,
-		slippage: Slippage,
-		referrer?: SuiAddress
-	): Promise<TransactionBlock> => {
+	public fetchBuildTradeTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const {
+			walletAddress,
+			pool,
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			slippage,
+			referrer,
+		} = inputs;
+
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
@@ -496,13 +506,15 @@ export class PoolsApiHelpers {
 		return tx;
 	};
 
-	public fetchBuildDepositTx = async (
-		walletAddress: SuiAddress,
-		pool: Pool,
-		amountsIn: CoinsToBalance,
-		slippage: Slippage,
-		referrer?: SuiAddress
-	): Promise<TransactionBlock> => {
+	public fetchBuildDepositTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		amountsIn: CoinsToBalance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const { walletAddress, pool, amountsIn, slippage, referrer } = inputs;
+
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
@@ -547,14 +559,23 @@ export class PoolsApiHelpers {
 		return tx;
 	};
 
-	public fetchBuildWithdrawTx = async (
-		walletAddress: SuiAddress,
-		pool: Pool,
-		amountsOutDirection: CoinsToBalance,
-		lpCoinAmount: Balance,
-		slippage: Slippage,
-		referrer?: SuiAddress
-	): Promise<TransactionBlock> => {
+	public fetchBuildWithdrawTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		amountsOutDirection: CoinsToBalance;
+		lpCoinAmount: Balance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const {
+			walletAddress,
+			pool,
+			amountsOutDirection,
+			lpCoinAmount,
+			slippage,
+			referrer,
+		} = inputs;
+
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
