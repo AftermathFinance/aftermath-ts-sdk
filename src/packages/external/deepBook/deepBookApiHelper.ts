@@ -37,7 +37,7 @@ export class DeepBookApiHelpers {
 			custodian: "custodian",
 			wrapper: "deepbook",
 		},
-		poolCreationFeeInSui: BigInt("1_000_000_000_00"), // 100 SUI
+		poolCreationFeeInSui: BigInt("100000000000"), // 100 SUI
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -489,8 +489,6 @@ export class DeepBookApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const accountCapId = await this.fetchOwnedAccountCapObjectId(inputs);
-
 		const { coinArgument, txWithCoinWithAmount: newTx } =
 			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
 				tx,
@@ -502,7 +500,6 @@ export class DeepBookApiHelpers {
 		const commandInputs = {
 			...inputs,
 			tx: newTx,
-			accountCapId,
 			suiFeeCoinId: coinArgument,
 		};
 
