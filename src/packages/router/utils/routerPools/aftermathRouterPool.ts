@@ -72,6 +72,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 			const amountsOuts = this.poolClass.getWithdrawAmountsOut({
 				lpRatio,
 				amountsOutDirection: {
+					// TODO: give a better approximation for direction amount ?
 					[inputs.coinOutType]: inputs.coinInAmount,
 				},
 				referral: inputs.referrer !== undefined,
@@ -114,12 +115,10 @@ class AftermathRouterPool implements RouterPoolInterface {
 				// this is beacuse typescript complains for some reason otherwise
 				lpCoinId: inputs.coinIn,
 				coinsOutType: [inputs.coinInType],
-				expectedAmountsOut: [],
+				expectedAmountsOut: [inputs.expectedAmountOut],
 				lpCoinType: this.pool.lpCoinType,
 			});
 		}
-
-		// TODO: FIX THE ABOVE ASAP (expectedAmountsOut) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		// deposit
 		if (inputs.coinOutType === this.pool.lpCoinType) {
@@ -158,6 +157,37 @@ class AftermathRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
+		// reverse withdraw (deposit)
+		if (inputs.coinInType === this.pool.lpCoinType) {
+			const { lpAmountOut } = this.poolClass.getDepositLpAmountOut({
+				amountsIn: {
+					[inputs.coinOutType]: inputs.coinOutAmount,
+				},
+				referral: inputs.referrer !== undefined,
+			});
+
+			return lpAmountOut;
+		}
+
+		// reverse deposit (withdraw)
+		if (inputs.coinOutType === this.pool.lpCoinType) {
+			const lpRatio = this.poolClass.getWithdrawLpRatio({
+				lpCoinAmountOut: inputs.coinOutAmount,
+			});
+
+			const amountsOuts = this.poolClass.getWithdrawAmountsOut({
+				lpRatio,
+				amountsOutDirection: {
+					// TODO: give a better approximation for direction amount ?
+					[inputs.coinInType]: inputs.coinOutAmount,
+				},
+				referral: inputs.referrer !== undefined,
+			});
+
+			return amountsOuts[inputs.coinInType];
+		}
+
+		// reverse trade
 		return this.poolClass.getTradeAmountIn(inputs);
 	};
 
