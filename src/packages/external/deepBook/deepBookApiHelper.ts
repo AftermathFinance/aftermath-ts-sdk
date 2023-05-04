@@ -322,7 +322,7 @@ export class DeepBookApiHelpers {
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApiHelpers.constants.moduleNames.clob,
-				"deposit_base"
+				"deposit_quote"
 			),
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
 			arguments: [
@@ -361,7 +361,7 @@ export class DeepBookApiHelpers {
 				tx.pure(inputs.quantity, "u64"),
 				tx.pure(inputs.isBidOrder, "bool"),
 				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // expire_timestamp
-				tx.pure(Casting.zeroBigInt, "u64"), // restriction (0 = NO_RESTRICTION)
+				tx.pure(Casting.zeroBigInt, "u8"), // restriction (0 = NO_RESTRICTION)
 				tx.object(Sui.constants.addresses.suiClockId),
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
