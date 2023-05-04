@@ -481,7 +481,8 @@ export class DeepBookApiHelpers {
 
 	public fetchBuildCreatePoolTx = async (inputs: {
 		walletAddress: SuiAddress;
-		pool: PartialDeepBookPoolObject;
+		baseCoinType: CoinType;
+		quoteCoinType: CoinType;
 		tickSize: bigint;
 		lotSize: bigint;
 	}): Promise<TransactionBlock> => {
@@ -501,9 +502,6 @@ export class DeepBookApiHelpers {
 		const commandInputs = {
 			...inputs,
 			tx: newTx,
-			poolObjectId: inputs.pool.objectId,
-			baseCoinType: inputs.pool.baseCoinType,
-			quoteCoinType: inputs.pool.quoteCoinType,
 			accountCapId,
 			suiFeeCoinId: coinArgument,
 		};
