@@ -29,7 +29,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
-		this.coinTypes = [pool.baseCoin, pool.quoteCoin];
+		this.coinTypes = [pool.baseCoinType, pool.quoteCoinType];
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -212,7 +212,8 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		};
 	};
 
-	private isBaseCoinType = (coin: CoinType) => coin === this.pool.baseCoin;
+	private isBaseCoinType = (coin: CoinType) =>
+		coin === this.pool.baseCoinType;
 }
 
 export default DeepBookRouterPool;

@@ -64,7 +64,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
 		const pools = await this.Helpers.fetchAllPartialPools();
 		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, pool.baseCoin, pool.quoteCoin],
+			(acc, pool) => [...acc, pool.baseCoinType, pool.quoteCoinType],
 			[] as CoinType[]
 		);
 		return Helpers.uniqueArray(allCoins);
@@ -88,7 +88,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 
 		if (
 			Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
+			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoinType)
 		) {
 			return this.Helpers.addTradeBaseToQuoteCommandToTransaction(
 				commandInputs

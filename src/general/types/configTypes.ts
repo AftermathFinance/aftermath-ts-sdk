@@ -91,8 +91,8 @@ export interface NftAmmAddresses {
 }
 
 export interface ExternalRouterAddresses {
-	nojo: NojoAddresses;
-	deepBook: DeepBookAddresses;
+	nojo?: NojoAddresses;
+	deepBook?: DeepBookAddresses;
 }
 
 export interface NojoAddresses {

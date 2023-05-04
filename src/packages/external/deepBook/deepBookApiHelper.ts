@@ -1,11 +1,14 @@
 import {
 	ObjectId,
+	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
 	bcs,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
+	AnyObjectType,
+	Balance,
 	Byte,
 	CoinType,
 	DeepBookAddresses,
@@ -31,6 +34,7 @@ export class DeepBookApiHelpers {
 	private static readonly constants = {
 		moduleNames: {
 			clob: "clob",
+			custodian: "custodian",
 			wrapper: "deepbook",
 		},
 	};
@@ -43,6 +47,10 @@ export class DeepBookApiHelpers {
 		deepBook: DeepBookAddresses;
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
+	};
+
+	public readonly objectTypes: {
+		accountCap: AnyObjectType;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -64,6 +72,9 @@ export class DeepBookApiHelpers {
 			deepBook,
 			pools,
 			referralVault,
+		};
+		this.objectTypes = {
+			accountCap: `${deepBook.packages.clob}::${DeepBookApiHelpers.constants.moduleNames.custodian}::AccountCap`,
 		};
 	}
 
@@ -102,9 +113,9 @@ export class DeepBookApiHelpers {
 					(eventOnChain) => {
 						return {
 							objectId: eventOnChain.parsedJson.pool_id,
-							baseCoin:
+							baseCoinType:
 								"0x" + eventOnChain.parsedJson.base_asset.name,
-							quoteCoin:
+							quoteCoinType:
 								"0x" + eventOnChain.parsedJson.quote_asset.name,
 						};
 					},
@@ -118,6 +129,10 @@ export class DeepBookApiHelpers {
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Commands
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Trading Transaction Commands
 	/////////////////////////////////////////////////////////////////////
 
 	public addTradeBaseToQuoteCommandToTransaction = (inputs: {
@@ -220,6 +235,144 @@ export class DeepBookApiHelpers {
 		});
 	};
 
+	/////////////////////////////////////////////////////////////////////
+	//// Pool Setup Transaction Commands
+	/////////////////////////////////////////////////////////////////////
+
+	public createPoolTx = (inputs: {
+		tx: TransactionBlock;
+		tickSize: bigint;
+		lotSize: bigint;
+		suiFeeCoinId: ObjectId | TransactionArgument;
+		baseCoinType: CoinType;
+		quoteCoinType: CoinType;
+	}) => {
+		const { tx, suiFeeCoinId } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.deepBook.packages.clob,
+				DeepBookApiHelpers.constants.moduleNames.clob,
+				"create_pool"
+			),
+			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
+			arguments: [
+				tx.pure(inputs.tickSize, "u64"),
+				tx.pure(inputs.lotSize, "u64"),
+				typeof suiFeeCoinId === "string"
+					? tx.object(suiFeeCoinId)
+					: suiFeeCoinId,
+			],
+		});
+	};
+
+	public createAccountTx = (inputs: {
+		tx: TransactionBlock;
+	}) /* AccountCap */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.deepBook.packages.clob,
+				DeepBookApiHelpers.constants.moduleNames.clob,
+				"create_account"
+			),
+			typeArguments: [],
+			arguments: [],
+		});
+	};
+
+	public depositBaseTx = (inputs: {
+		tx: TransactionBlock;
+		poolObjectId: ObjectId;
+		baseCoinId: ObjectId | TransactionArgument;
+		accountCapId: ObjectId | TransactionArgument;
+		baseCoinType: CoinType;
+		quoteCoinType: CoinType;
+	}) => {
+		const { tx, baseCoinId, accountCapId } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.deepBook.packages.clob,
+				DeepBookApiHelpers.constants.moduleNames.clob,
+				"deposit_base"
+			),
+			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
+			arguments: [
+				tx.object(inputs.poolObjectId),
+				typeof baseCoinId === "string"
+					? tx.object(baseCoinId)
+					: baseCoinId,
+				typeof accountCapId === "string"
+					? tx.object(accountCapId)
+					: accountCapId,
+			],
+		});
+	};
+
+	public depositQuoteTx = (inputs: {
+		tx: TransactionBlock;
+		poolObjectId: ObjectId;
+		quoteCoinId: ObjectId | TransactionArgument;
+		accountCapId: ObjectId | TransactionArgument;
+		baseCoinType: CoinType;
+		quoteCoinType: CoinType;
+	}) => {
+		const { tx, quoteCoinId, accountCapId } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.deepBook.packages.clob,
+				DeepBookApiHelpers.constants.moduleNames.clob,
+				"deposit_base"
+			),
+			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
+			arguments: [
+				tx.object(inputs.poolObjectId),
+				typeof quoteCoinId === "string"
+					? tx.object(quoteCoinId)
+					: quoteCoinId,
+				typeof accountCapId === "string"
+					? tx.object(accountCapId)
+					: accountCapId,
+			],
+		});
+	};
+
+	public placeLimitOrderTx = (inputs: {
+		tx: TransactionBlock;
+		poolObjectId: ObjectId;
+		accountCapId: ObjectId | TransactionArgument;
+		price: bigint;
+		quantity: Balance;
+		isBidOrder: boolean;
+		baseCoinType: CoinType;
+		quoteCoinType: CoinType;
+	}) => {
+		const { tx, accountCapId } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.deepBook.packages.clob,
+				DeepBookApiHelpers.constants.moduleNames.clob,
+				"place_limit_order"
+			),
+			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
+			arguments: [
+				tx.object(inputs.poolObjectId),
+				tx.pure(inputs.price, "u64"),
+				tx.pure(inputs.quantity, "u64"),
+				tx.pure(inputs.isBidOrder, "bool"),
+				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // expire_timestamp
+				tx.pure(Casting.zeroBigInt, "u64"), // restriction (0 = NO_RESTRICTION)
+				tx.object(Sui.constants.addresses.suiClockId),
+				typeof accountCapId === "string"
+					? tx.object(accountCapId)
+					: accountCapId,
+			],
+		});
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transaction Command Wrappers
+	/////////////////////////////////////////////////////////////////////
+
 	public addGetBookPricesAndDepthCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
 		pool: PartialDeepBookPoolObject;
@@ -229,18 +382,85 @@ export class DeepBookApiHelpers {
 		const commandInputs = {
 			...inputs,
 			poolObjectId: inputs.pool.objectId,
-			baseCoinType: inputs.pool.baseCoin,
-			quoteCoinType: inputs.pool.quoteCoin,
+			baseCoinType: inputs.pool.baseCoinType,
+			quoteCoinType: inputs.pool.quoteCoinType,
 		};
 
 		if (
 			Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
+			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoinType)
 		) {
 			return this.addGetAsksCommandToTransaction(commandInputs);
 		}
 
 		return this.addGetBidsCommandToTransaction(commandInputs);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transaction Builders
+	/////////////////////////////////////////////////////////////////////
+
+	public buildCreateAccountTx = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const [accountCap] = this.createAccountTx({ tx });
+
+		tx.transferObjects([accountCap], tx.pure(inputs.walletAddress));
+
+		return tx;
+	};
+
+	public fetchBuildDepositBaseAndQuoteTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: PartialDeepBookPoolObject;
+		baseCoinAmount: Balance;
+		quoteCoinAmount: Balance;
+	}): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const { coinArguments, txWithCoinsWithAmount: newTx } =
+			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
+				tx,
+				inputs.walletAddress,
+				[inputs.pool.baseCoinType, inputs.pool.quoteCoinType],
+				[inputs.baseCoinAmount, inputs.quoteCoinAmount]
+			);
+
+		const baseCoinId = coinArguments[0];
+		const quoteCoinId = coinArguments[1];
+
+		// TODO: handle multiple accounts ?
+		const accountCaps =
+			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
+				inputs.walletAddress,
+				this.objectTypes.accountCap
+			);
+		if (accountCaps.length <= 0)
+			throw new Error("unable to find account cap owned by address");
+
+		const accountCapId = accountCaps[0].data?.objectId;
+		if (!accountCapId)
+			throw new Error("unable to find account cap owned by address");
+
+		const commandInputs = {
+			...inputs,
+			tx: newTx,
+			poolObjectId: inputs.pool.objectId,
+			baseCoinType: inputs.pool.baseCoinType,
+			quoteCoinType: inputs.pool.quoteCoinType,
+			baseCoinId,
+			quoteCoinId,
+			accountCapId,
+		};
+
+		this.depositBaseTx(commandInputs);
+		this.depositQuoteTx(commandInputs);
+
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -289,7 +509,7 @@ export class DeepBookApiHelpers {
 
 			if (
 				Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-				Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
+				Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoinType)
 			) {
 				return priceWithDecimals;
 			}
@@ -317,13 +537,13 @@ export class DeepBookApiHelpers {
 		const [bids, asks] = await Promise.all([
 			this.fetchBookState({
 				pool,
-				coinInType: pool.baseCoin,
-				coinOutType: pool.quoteCoin,
+				coinInType: pool.baseCoinType,
+				coinOutType: pool.quoteCoinType,
 			}),
 			this.fetchBookState({
 				pool,
-				coinInType: pool.quoteCoin,
-				coinOutType: pool.baseCoin,
+				coinInType: pool.quoteCoinType,
+				coinOutType: pool.baseCoinType,
 			}),
 		]);
 

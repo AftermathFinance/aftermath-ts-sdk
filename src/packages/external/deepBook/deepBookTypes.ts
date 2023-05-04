@@ -8,8 +8,8 @@ import { Balance, RouterSerializablePool } from "../../../types";
 
 export interface PartialDeepBookPoolObject {
 	objectId: ObjectId;
-	baseCoin: CoinType;
-	quoteCoin: CoinType;
+	baseCoinType: CoinType;
+	quoteCoinType: CoinType;
 }
 
 export type DeepBookPoolObject = PartialDeepBookPoolObject & {
