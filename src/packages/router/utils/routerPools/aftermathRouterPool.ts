@@ -130,7 +130,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 				poolId: this.pool.objectId,
 				// this is beacuse typescript complains for some reason otherwise
 				lpCoinId: inputs.coinIn,
-				coinsOutType: [inputs.coinInType],
+				coinsOutType: [inputs.coinOutType],
 				expectedAmountsOut: [inputs.expectedAmountOut],
 				lpCoinType: this.pool.lpCoinType,
 			});
