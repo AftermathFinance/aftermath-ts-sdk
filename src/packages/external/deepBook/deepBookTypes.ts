@@ -28,7 +28,7 @@ export const isDeepBookPoolObject = (
 	return (
 		"bids" in pool &&
 		"asks" in pool &&
-		"baseCoin" in pool &&
-		"quoteCoin" in pool
+		"baseCoinType" in pool &&
+		"quoteCoinType" in pool
 	);
 };

@@ -41,11 +41,15 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	public fetchAllPools = async (): Promise<DeepBookPoolObject[]> => {
 		const partialPools = await this.Helpers.fetchAllPartialPools();
 
+		console.log("partialPools", partialPools);
+
 		const pools = await Promise.all(
 			partialPools.map((pool) =>
 				this.Helpers.fetchCreateCompletePoolObjectFromPartial({ pool })
 			)
 		);
+
+		console.log("pools", pools);
 
 		return pools;
 	};

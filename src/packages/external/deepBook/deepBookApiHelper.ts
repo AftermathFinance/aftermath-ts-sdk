@@ -361,7 +361,7 @@ export class DeepBookApiHelpers {
 				tx.pure(inputs.quantity, "u64"),
 				tx.pure(inputs.isBidOrder, "bool"),
 				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // expire_timestamp
-				tx.pure(Casting.zeroBigInt, "u8"), // restriction (0 = NO_RESTRICTION)
+				tx.pure(3, "u8"), // restriction (0 = NO_RESTRICTION, 1 = IMMEDIATE_OR_CANCEL, 2 = FILL_OR_KILL, 3 = POST_OR_ABORT)
 				tx.object(Sui.constants.addresses.suiClockId),
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
