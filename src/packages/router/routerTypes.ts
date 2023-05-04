@@ -127,11 +127,11 @@ export type ApiRouterCompleteTradeRouteBody = {
 	/**
 	 * Coin type of coin being given away
 	 */
-	coinIn: CoinType;
+	coinInType: CoinType;
 	/**
 	 * Coin type of coin being received
 	 */
-	coinOut: CoinType;
+	coinOutType: CoinType;
 	/**
 	 * Optional address for referrer of the route creator
 	 */
