@@ -27,7 +27,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
-		this.coinTypes = Object.keys(pool.coins);
+		this.coinTypes = [...Object.keys(pool.coins), pool.lpCoinType];
 		this.poolClass = new Pool(pool, network);
 	}
 
@@ -54,6 +54,22 @@ class AftermathRouterPool implements RouterPoolInterface {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}) => {
+		// withdraw/deposit
+		if (
+			inputs.coinInType === this.pool.lpCoinType ||
+			inputs.coinOutType === this.pool.lpCoinType
+		) {
+			// TODO: do this calc in a safer and more accurate way
+			const smallAmountIn = BigInt(10000);
+			const smallAmountOut = this.getTradeAmountOut({
+				...inputs,
+				coinInAmount: smallAmountIn,
+			});
+
+			return Number(smallAmountIn) / Number(smallAmountOut);
+		}
+
+		// trade
 		return this.poolClass.getSpotPrice(inputs);
 	};
 
@@ -192,9 +208,9 @@ class AftermathRouterPool implements RouterPoolInterface {
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface => {
 		return this.getUpdatedPoolAfterTrade({
@@ -205,15 +221,35 @@ class AftermathRouterPool implements RouterPoolInterface {
 	};
 
 	getUpdatedPoolAfterTrade = (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface => {
 		let newPoolObject = Helpers.deepCopy(this.pool);
 
-		newPoolObject.coins[inputs.coinIn].balance += inputs.coinInAmount;
-		newPoolObject.coins[inputs.coinOut].balance -= inputs.coinOutAmount;
+		if (inputs.coinInType === this.pool.lpCoinType) {
+			// withdraw
+
+			newPoolObject.lpCoinSupply -= inputs.coinInAmount;
+
+			newPoolObject.coins[inputs.coinOutType].balance -=
+				inputs.coinOutAmount;
+		} else if (inputs.coinOutType === this.pool.lpCoinType) {
+			// deposit
+
+			newPoolObject.lpCoinSupply += inputs.coinInAmount;
+
+			newPoolObject.coins[inputs.coinInType].balance +=
+				inputs.coinInAmount;
+		} else {
+			// trade
+
+			newPoolObject.coins[inputs.coinInType].balance +=
+				inputs.coinInAmount;
+			newPoolObject.coins[inputs.coinOutType].balance -=
+				inputs.coinOutAmount;
+		}
 
 		return new AftermathRouterPool(
 			Helpers.deepCopy(newPoolObject),

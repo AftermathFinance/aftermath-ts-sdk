@@ -754,15 +754,15 @@ export class RouterGraph {
 				const poolBeforePathTrades = pool.getUpdatedPoolBeforeTrade(
 					!isGivenAmountOut
 						? {
-								coinIn: path.coinIn.type,
+								coinInType: path.coinIn.type,
 								coinInAmount: path.coinIn.amount,
-								coinOut: path.coinOut.type,
+								coinOutType: path.coinOut.type,
 								coinOutAmount: path.coinOut.amount,
 						  }
 						: {
-								coinIn: path.coinIn.type,
+								coinInType: path.coinIn.type,
 								coinInAmount: path.coinOut.amount,
-								coinOut: path.coinOut.type,
+								coinOutType: path.coinOut.type,
 								coinOutAmount: path.coinIn.amount,
 						  }
 				);
@@ -802,15 +802,15 @@ export class RouterGraph {
 				const updatedPool = pool.getUpdatedPoolAfterTrade(
 					!isGivenAmountOut
 						? {
-								coinIn: path.coinIn.type,
+								coinInType: path.coinIn.type,
 								coinInAmount: currentCoinInAmount,
-								coinOut: path.coinOut.type,
+								coinOutType: path.coinOut.type,
 								coinOutAmount: coinOutAmountFromTrade,
 						  }
 						: {
-								coinIn: path.coinIn.type,
+								coinInType: path.coinIn.type,
 								coinInAmount: coinOutAmountFromTrade,
-								coinOut: path.coinOut.type,
+								coinOutType: path.coinOut.type,
 								coinOutAmount: currentCoinInAmount,
 						  }
 				);
