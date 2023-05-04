@@ -37,6 +37,7 @@ export class DeepBookApiHelpers {
 			custodian: "custodian",
 			wrapper: "deepbook",
 		},
+		poolCreationFeeInSui: BigInt("1_000_000_000_00"), // 100 SUI
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -422,6 +423,8 @@ export class DeepBookApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
+		const accountCapId = await this.fetchOwnedAccountCapObjectId(inputs);
+
 		const { coinArguments, txWithCoinsWithAmount: newTx } =
 			await this.Provider.Coin().Helpers.fetchAddCoinsWithAmountCommandsToTransaction(
 				tx,
@@ -432,19 +435,6 @@ export class DeepBookApiHelpers {
 
 		const baseCoinId = coinArguments[0];
 		const quoteCoinId = coinArguments[1];
-
-		// TODO: handle multiple accounts ?
-		const accountCaps =
-			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
-				inputs.walletAddress,
-				this.objectTypes.accountCap
-			);
-		if (accountCaps.length <= 0)
-			throw new Error("unable to find account cap owned by address");
-
-		const accountCapId = accountCaps[0].data?.objectId;
-		if (!accountCapId)
-			throw new Error("unable to find account cap owned by address");
 
 		const commandInputs = {
 			...inputs,
@@ -459,6 +449,66 @@ export class DeepBookApiHelpers {
 
 		this.depositBaseTx(commandInputs);
 		this.depositQuoteTx(commandInputs);
+
+		return tx;
+	};
+
+	public fetchBuildPlaceLimitOrderTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: PartialDeepBookPoolObject;
+		price: bigint;
+		quantity: Balance;
+		isBidOrder: boolean;
+	}): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const accountCapId = await this.fetchOwnedAccountCapObjectId(inputs);
+
+		const commandInputs = {
+			...inputs,
+			poolObjectId: inputs.pool.objectId,
+			baseCoinType: inputs.pool.baseCoinType,
+			quoteCoinType: inputs.pool.quoteCoinType,
+			accountCapId,
+			tx,
+		};
+
+		this.placeLimitOrderTx(commandInputs);
+
+		return tx;
+	};
+
+	public fetchBuildCreatePoolTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: PartialDeepBookPoolObject;
+		tickSize: bigint;
+		lotSize: bigint;
+	}): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const accountCapId = await this.fetchOwnedAccountCapObjectId(inputs);
+
+		const { coinArgument, txWithCoinWithAmount: newTx } =
+			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+				tx,
+				inputs.walletAddress,
+				Coin.constants.suiCoinType,
+				DeepBookApiHelpers.constants.poolCreationFeeInSui
+			);
+
+		const commandInputs = {
+			...inputs,
+			tx: newTx,
+			poolObjectId: inputs.pool.objectId,
+			baseCoinType: inputs.pool.baseCoinType,
+			quoteCoinType: inputs.pool.quoteCoinType,
+			accountCapId,
+			suiFeeCoinId: coinArgument,
+		};
+
+		this.createPoolTx(commandInputs);
 
 		return tx;
 	};
@@ -552,5 +602,24 @@ export class DeepBookApiHelpers {
 			bids,
 			asks,
 		};
+	};
+
+	public fetchOwnedAccountCapObjectId = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<ObjectId> => {
+		// TODO: handle multiple accounts ?
+		const accountCaps =
+			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
+				inputs.walletAddress,
+				this.objectTypes.accountCap
+			);
+		if (accountCaps.length <= 0)
+			throw new Error("unable to find account cap owned by address");
+
+		const accountCapId = accountCaps[0].data?.objectId;
+		if (!accountCapId)
+			throw new Error("unable to find account cap owned by address");
+
+		return accountCapId;
 	};
 }
