@@ -93,6 +93,7 @@ export interface NftAmmAddresses {
 export interface ExternalRouterAddresses {
 	nojo: NojoAddresses;
 	deepBook: DeepBookAddresses;
+	cetus: CetusAddresses;
 }
 
 export interface NojoAddresses {
@@ -105,6 +106,17 @@ export interface DeepBookAddresses {
 	packages: {
 		clob: SuiAddress;
 		wrapper: SuiAddress;
+	};
+}
+
+export interface CetusAddresses {
+	packages: {
+		scripts: SuiAddress;
+		clmm: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		globalConfig: ObjectId;
 	};
 }
 
