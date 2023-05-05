@@ -707,7 +707,6 @@ export class PoolsApiHelpers {
 				);
 
 				const coinInPrice = coinsToPrice[typeIn];
-
 				const amountUsd =
 					coinInPrice < 0 ? 0 : tradeAmount * coinInPrice;
 				volume += amountUsd;
@@ -729,7 +728,9 @@ export class PoolsApiHelpers {
 				poolCoin.balance,
 				coinsToDecimals[poolCoinType]
 			);
-			tvl += amountWithDecimals * prices[poolCoinType];
+			const price = prices[poolCoinType];
+
+			tvl += amountWithDecimals * (price < 0 ? 0 : price);
 		}
 
 		return tvl;
@@ -798,11 +799,15 @@ export class PoolsApiHelpers {
 				1;
 
 			const amountUsd = trade.typesIn.reduce((acc, cur, index) => {
-				const amountInUsd = Coin.balanceWithDecimalsUsd(
-					trade.amountsIn[index],
-					coinsToDecimalsAndPrices[cur].decimals,
-					coinsToDecimalsAndPrices[cur].price
-				);
+				const price = coinsToDecimalsAndPrices[cur].price;
+				const amountInUsd =
+					price < 0
+						? 0
+						: Coin.balanceWithDecimalsUsd(
+								trade.amountsIn[index],
+								coinsToDecimalsAndPrices[cur].decimals,
+								price
+						  );
 				return acc + (amountInUsd < 0 ? 0 : amountInUsd);
 			}, 0);
 
