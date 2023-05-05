@@ -1,5 +1,6 @@
 import {
 	ObjectId,
+	SuiObjectResponse,
 	TransactionArgument,
 	TransactionBlock,
 	bcs,
@@ -20,6 +21,7 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Casting, Helpers } from "../../../general/utils";
+import { CetusPoolSimpleInfo } from "./cetusTypes";
 
 export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -80,29 +82,34 @@ export class CetusApiHelpers {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
+	public fetchAllPools = async () => {
+		const poolsSimpleInfo =
+			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
+				this.addresses.cetus.objects.poolsTable,
+				(objectIds) =>
+					this.Provider.Objects().fetchCastObjectBatch(
+						objectIds,
+						CetusApiHelpers.poolFromSuiObjectResponse
+					),
+				() => true
+			);
+
+		return poolsSimpleInfo;
+	};
+
 	public fetchPoolForTypes = async (inputs: {
 		coinType1: CoinType;
 		coinType2: CoinType;
 	}) => {
-		const poolType1 = this.createCompletePoolObjectType(inputs);
-		const poolType2 = this.createCompletePoolObjectType({
-			coinType1: inputs.coinType2,
-			coinType2: inputs.coinType1,
-		});
+		const allPools = await this.fetchAllPools();
 
-		const foundPools =
-			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType(
-				this.addresses.cetus.objects.poolsTable,
-				(type) => true // type === poolType1 || type === poolType2
-			);
+		const foundPools = allPools.find();
 
-		console.log("foundPools", foundPools);
-
-		if (foundPools.length <= 0)
+		if (poolsSimpleInfo.length <= 0)
 			throw new Error("no cetus pools found for given coin types");
 
 		// NOTE: will there ever be more than 1 valid pool ?
-		return foundPools[0];
+		return poolsSimpleInfo[0];
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -310,5 +317,33 @@ export class CetusApiHelpers {
 	//// Casting
 	/////////////////////////////////////////////////////////////////////
 
-	// private static poolObjectFromDynamicField
+	private static poolFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): CetusPoolSimpleInfo => {
+		const content = data.data?.content;
+		if (content?.dataType !== "moveObject")
+			throw new Error("sui object response is not an object");
+
+		const fields = content.fields as {
+			coin_type_a: {
+				fields: {
+					name: CoinType;
+				};
+			};
+			coin_type_b: {
+				fields: {
+					name: CoinType;
+				};
+			};
+			pool_id: ObjectId;
+			pool_key: ObjectId;
+		};
+
+		return {
+			coinTypeA: fields.coin_type_a.fields.name,
+			coinTypeB: fields.coin_type_b.fields.name,
+			poolObjectId: fields.pool_id,
+			poolKeyId: fields.pool_key,
+		};
+	};
 }
