@@ -154,9 +154,9 @@ class NojoRouterPool implements RouterPoolInterface {
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface =>
 		this.getUpdatedPoolAfterTrade({
@@ -166,12 +166,12 @@ class NojoRouterPool implements RouterPoolInterface {
 		});
 
 	getUpdatedPoolAfterTrade = (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface => {
-		const [newBalanceA, newBalanceB] = this.isCoinA(inputs.coinIn)
+		const [newBalanceA, newBalanceB] = this.isCoinA(inputs.coinInType)
 			? [
 					this.pool.fields.balanceA.value + inputs.coinInAmount,
 					this.pool.fields.balanceB.value - inputs.coinOutAmount,

@@ -128,9 +128,9 @@ export interface PoolCreationLpCoinMetadata {
 
 export interface ApiPoolTradeBody {
 	walletAddress: SuiAddress;
-	coinIn: CoinType;
+	coinInType: CoinType;
 	coinInAmount: Balance;
-	coinOut: CoinType;
+	coinOutType: CoinType;
 	slippage: Slippage;
 	referrer?: SuiAddress;
 }

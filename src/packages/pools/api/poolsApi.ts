@@ -159,64 +159,43 @@ export class PoolsApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchDepositTransaction = async (
-		walletAddress: SuiAddress,
-		pool: Pool,
-		depositCoinsToBalance: CoinsToBalance,
-		slippage: Slippage,
-		referrer?: SuiAddress
-	): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildDepositTransaction(
-			walletAddress,
-			pool,
-			depositCoinsToBalance,
-			slippage,
-			referrer
-		);
+	public fetchDepositTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		amountsIn: CoinsToBalance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		const transaction = await this.Helpers.fetchBuildDepositTx(inputs);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			transaction
 		);
 	};
 
-	public fetchWithdrawTransaction = async (
-		walletAddress: SuiAddress,
-		pool: Pool,
-		withdrawCoinsToBalance: CoinsToBalance,
-		lpCoinAmount: Balance,
-		slippage: Slippage,
-		referrer?: SuiAddress
-	): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildWithdrawTransaction(
-			walletAddress,
-			pool,
-			withdrawCoinsToBalance,
-			lpCoinAmount,
-			slippage,
-			referrer
-		);
+	public fetchWithdrawTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		amountsOutDirection: CoinsToBalance;
+		lpCoinAmount: Balance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		const transaction = await this.Helpers.fetchBuildWithdrawTx(inputs);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			transaction
 		);
 	};
 
-	public fetchTradeTransaction = async (
-		walletAddress: SuiAddress,
-		pool: Pool,
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOutType: CoinType,
-		slippage: Slippage,
-		referrer?: SuiAddress
-	): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildTradeTransaction(
-			walletAddress,
-			pool,
-			coinIn,
-			coinInAmount,
-			coinOutType,
-			slippage,
-			referrer
-		);
+	public fetchTradeTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		const transaction = await this.Helpers.fetchBuildTradeTx(inputs);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			transaction
 		);
@@ -226,7 +205,7 @@ export class PoolsApi {
 		walletAddress: SuiAddress;
 	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.buildPublishLpCoinTransaction(inputs)
+			this.Helpers.buildPublishLpCoinTx(inputs)
 		);
 	};
 
@@ -246,7 +225,7 @@ export class PoolsApi {
 	}): Promise<SerializedTransaction> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.fetchBuildCreatePoolTransaction({
+			this.Helpers.fetchBuildCreatePoolTx({
 				...inputs,
 
 				poolFlatness:

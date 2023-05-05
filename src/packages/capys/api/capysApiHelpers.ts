@@ -455,17 +455,17 @@ export class CapysApiHelpers {
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedWithStakedAndKeep;
 
-		const { coinArgument, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const coinArg =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
 				walletAddress,
-				feeCoinType,
-				feeCoinAmount
-			);
+				coinType: feeCoinType,
+				coinAmount: feeCoinAmount,
+			});
 
 		const finalTx = this.addStakeBreedWithStakedAndKeepCommandToTransaction(
-			txWithCoinWithAmount,
-			coinArgument,
+			tx,
+			coinArg,
 			parentOneId,
 			parentTwoId
 		);
@@ -485,17 +485,17 @@ export class CapysApiHelpers {
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedStakedWithStakedAndKeep;
 
-		const { coinArgument, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const coinArg =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
 				walletAddress,
-				feeCoinType,
-				feeCoinAmount
-			);
+				coinType: feeCoinType,
+				coinAmount: feeCoinAmount,
+			});
 
 		const finalTx = this.addStakeBreedWithStakedAndKeepCommandToTransaction(
-			txWithCoinWithAmount,
-			coinArgument,
+			tx,
+			coinArg,
 			parentOneId,
 			parentTwoId
 		);
@@ -514,17 +514,17 @@ export class CapysApiHelpers {
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount = Capys.constants.breedingFees.amounts.breedAndKeep;
 
-		const { coinArgument, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
+		const coinArg =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
 				walletAddress,
-				feeCoinType,
-				feeCoinAmount
-			);
+				coinType: feeCoinType,
+				coinAmount: feeCoinAmount,
+			});
 
 		const finalTx = this.addStakeBreedAndKeepCommandToTransaction(
-			txWithCoinWithAmount,
-			coinArgument,
+			tx,
+			coinArg,
 			parentOneId,
 			parentTwoId
 		);

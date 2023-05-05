@@ -121,16 +121,16 @@ export interface RouterPoolInterface {
 	}) => Balance;
 
 	getUpdatedPoolBeforeTrade: (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}) => RouterPoolInterface;
 
 	getUpdatedPoolAfterTrade: (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}) => RouterPoolInterface;
 }

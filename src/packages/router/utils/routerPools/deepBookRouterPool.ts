@@ -100,13 +100,13 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface => {
-		const { coinIn, coinInAmount, coinOutAmount } = inputs;
-		const isCoinInBaseCoin = this.isBaseCoinType(coinIn);
+		const { coinInType, coinInAmount, coinOutAmount } = inputs;
+		const isCoinInBaseCoin = this.isBaseCoinType(coinInType);
 
 		const price = isCoinInBaseCoin
 			? Number(coinInAmount) / Number(coinOutAmount)
@@ -134,17 +134,13 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	};
 
 	getUpdatedPoolAfterTrade = (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface => {
-		const { poolAfterTrade } = this.getTradeAmountOutAndPoolAfterTrade({
-			...inputs,
-			coinInType: inputs.coinIn,
-			coinOutType: inputs.coinOut,
-		});
-
+		const { poolAfterTrade } =
+			this.getTradeAmountOutAndPoolAfterTrade(inputs);
 		return poolAfterTrade;
 	};
 
