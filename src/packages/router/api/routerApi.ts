@@ -17,6 +17,7 @@ import { SuiAddress } from "@mysten/sui.js";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
+import { CetusApi } from "../../external/cetus/cetusApi";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -44,6 +45,7 @@ export class RouterApi {
 	public Aftermath = () => new PoolsApi(this.Provider);
 	public Nojo = () => new NojoAmmApi(this.Provider);
 	public DeepBook = () => new DeepBookApi(this.Provider);
+	public Cetus = () => new CetusApi(this.Provider);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods

@@ -1,16 +1,13 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import { Helpers } from "../../../general/utils";
-import { DeepBookApiHelpers } from "./cetusApiHelpers";
-import { DeepBookPoolObject, PartialDeepBookPoolObject } from "./cetusTypes";
-import { RouterApiInterface } from "../../router/utils/routerApiInterface";
+import { CetusApiHelpers } from "./cetusApiHelpers";
 import {
 	ObjectId,
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
 
-export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
+export class CetusApi {
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
@@ -23,7 +20,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 
 	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
-		this.Helpers = new DeepBookApiHelpers(Provider);
+		this.Helpers = new CetusApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -34,41 +31,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	// public fetchPool = (objectId: ObjectId) => {
-	// 	return Pool.fetch(this.Provider.provider, objectId);
-	// };
-
-	public fetchAllPools = async (): Promise<DeepBookPoolObject[]> => {
-		const partialPools = await this.Helpers.fetchAllPartialPools();
-
-		const pools = await Promise.all(
-			partialPools.map((pool) =>
-				this.Helpers.fetchCreateCompletePoolObjectFromPartial({ pool })
-			)
-		);
-
-		return pools;
-	};
-
-	// public fetchPoolForCoinTypes = async (inputs: {
-	// 	coinType1: CoinType;
-	// 	coinType2: CoinType;
-	// }): Promise<DeepBookPoolObject> => {
-	// 	const pools = await this.fetchAllPools();
-	// };
-
 	/////////////////////////////////////////////////////////////////////
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
-
-	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const pools = await this.Helpers.fetchAllPartialPools();
-		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, pool.baseCoin, pool.quoteCoin],
-			[] as CoinType[]
-		);
-		return Helpers.uniqueArray(allCoins);
-	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
@@ -76,25 +41,23 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 
 	public addTradeCommandToTransaction = (inputs: {
 		tx: TransactionBlock;
-		pool: PartialDeepBookPoolObject;
+		// pool: PartialDeepBookPoolObject;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}) /* (Coin<CoinIn>, Coin<CoinOut>, u64 (amountFilled), u64 (amountOut)) */ => {
-		const commandInputs = {
-			...inputs,
-			poolObjectId: inputs.pool.objectId,
-		};
-
-		if (
-			Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
-		) {
-			return this.Helpers.tradeCoinAToCoinBTx(commandInputs);
-		}
-
-		return this.Helpers.addTradeQuoteToBaseCommandToTransaction(
-			commandInputs
-		);
+		// const commandInputs = {
+		// 	...inputs,
+		// 	poolObjectId: inputs.pool.objectId,
+		// };
+		// if (
+		// 	Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
+		// 	Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
+		// ) {
+		// 	return this.Helpers.tradeCoinAToCoinBTx(commandInputs);
+		// }
+		// return this.Helpers.addTradeQuoteToBaseCommandToTransaction(
+		// 	commandInputs
+		// );
 	};
 }

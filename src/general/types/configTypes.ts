@@ -117,6 +117,7 @@ export interface CetusAddresses {
 	};
 	objects: {
 		globalConfig: ObjectId;
+		poolsTable: ObjectId;
 	};
 }
 

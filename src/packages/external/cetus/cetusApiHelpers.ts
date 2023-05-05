@@ -21,7 +21,7 @@ import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Casting, Helpers } from "../../../general/utils";
 
-export class DeepBookApiHelpers {
+export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
@@ -90,7 +90,19 @@ export class DeepBookApiHelpers {
 			coinType2: inputs.coinType1,
 		});
 
-		this.Provider;
+		const foundPools =
+			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType(
+				this.addresses.cetus.objects.poolsTable,
+				(type) => true // type === poolType1 || type === poolType2
+			);
+
+		console.log("foundPools", foundPools);
+
+		if (foundPools.length <= 0)
+			throw new Error("no cetus pools found for given coin types");
+
+		// NOTE: will there ever be more than 1 valid pool ?
+		return foundPools[0];
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -118,7 +130,7 @@ export class DeepBookApiHelpers {
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.cetus.packages.scripts,
-				DeepBookApiHelpers.constants.moduleNames.pool,
+				CetusApiHelpers.constants.moduleNames.pool,
 				"swap_a2b"
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
@@ -173,7 +185,7 @@ export class DeepBookApiHelpers {
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
 				this.addresses.cetus.packages.scripts,
-				DeepBookApiHelpers.constants.moduleNames.pool,
+				CetusApiHelpers.constants.moduleNames.pool,
 				"swap_b2a"
 			),
 			typeArguments: [inputs.coinOutType, inputs.coinInType],
@@ -259,7 +271,7 @@ export class DeepBookApiHelpers {
 			return tx.moveCall({
 				target: AftermathApi.helpers.transactions.createTransactionTarget(
 					this.addresses.cetus.packages.scripts,
-					DeepBookApiHelpers.constants.moduleNames.pool,
+					CetusApiHelpers.constants.moduleNames.pool,
 					"calculate_swap_result"
 				),
 				typeArguments: [inputs.coinAType, inputs.coinBType],
@@ -289,4 +301,14 @@ export class DeepBookApiHelpers {
 		coinType1: CoinType;
 		coinType2: CoinType;
 	}) => `${this.objectTypes.pool}<${inputs.coinType1}, ${inputs.coinType2}>`;
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Casting
+	/////////////////////////////////////////////////////////////////////
+
+	// private static poolObjectFromDynamicField
 }
