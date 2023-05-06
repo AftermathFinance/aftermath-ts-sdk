@@ -37,7 +37,7 @@ import {
 	UnstakeRequestEventOnChain,
 	UnstakeSuccessEventOnChain,
 } from "./stakingApiCastingTypes";
-import { Casting } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 
 export class StakingApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ export class StakingApiHelpers {
 	}) => {
 		const { tx, suiCoin } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.lsd,
 				StakingApiHelpers.constants.modules.interface,
 				"request_add_stake"
@@ -142,7 +142,7 @@ export class StakingApiHelpers {
 	}) => {
 		const { tx, afSuiCoin } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.lsd,
 				StakingApiHelpers.constants.modules.interface,
 				"request_unstake"
@@ -162,7 +162,7 @@ export class StakingApiHelpers {
 	}) => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.lsd,
 				StakingApiHelpers.constants.modules.staking,
 				"afsui_supply"

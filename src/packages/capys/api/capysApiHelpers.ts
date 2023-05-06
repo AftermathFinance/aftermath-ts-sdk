@@ -142,7 +142,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.capyVault
 					.moduleName,
@@ -164,7 +164,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.capyVault
 					.moduleName,
@@ -194,7 +194,7 @@ export class CapysApiHelpers {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -222,7 +222,7 @@ export class CapysApiHelpers {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -250,7 +250,7 @@ export class CapysApiHelpers {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -278,7 +278,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -301,7 +301,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 
 				CapysApiHelpers.constants.capyVault.modules.interface
@@ -327,7 +327,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -355,7 +355,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -379,7 +379,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,

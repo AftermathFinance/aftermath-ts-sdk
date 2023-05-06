@@ -3,25 +3,19 @@ import {
 	SuiObjectResponse,
 	TransactionArgument,
 	TransactionBlock,
-	bcs,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	Balance,
-	Byte,
 	CetusAddresses,
 	CoinType,
-	DeepBookAddresses,
 	PoolsAddresses,
 	ReferralVaultAddresses,
 } from "../../../types";
 import { Sui } from "../../sui";
-import { EventOnChain } from "../../../general/types/castingTypes";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
-import { Coin } from "../../coin";
-import { Casting, Helpers } from "../../../general/utils";
 import { CetusPoolSimpleInfo } from "./cetusTypes";
+import { Helpers } from "../../../general/utils";
 
 export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -97,19 +91,24 @@ export class CetusApiHelpers {
 		return poolsSimpleInfo;
 	};
 
-	public fetchPoolForTypes = async (inputs: {
+	public fetchPoolForCoinTypes = async (inputs: {
 		coinType1: CoinType;
 		coinType2: CoinType;
 	}) => {
 		const allPools = await this.fetchAllPools();
 
-		const foundPools = allPools.find();
+		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
+		const foundPool = allPools.find((pool) =>
+			CetusApiHelpers.isPoolForCoinTypes({
+				pool,
+				...inputs,
+			})
+		);
 
-		if (poolsSimpleInfo.length <= 0)
+		if (!foundPool)
 			throw new Error("no cetus pools found for given coin types");
 
-		// NOTE: will there ever be more than 1 valid pool ?
-		return poolsSimpleInfo[0];
+		return foundPool;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -135,7 +134,7 @@ export class CetusApiHelpers {
 		const { tx, coinInId } = inputs;
 
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.cetus.packages.scripts,
 				CetusApiHelpers.constants.moduleNames.pool,
 				"swap_a2b"
@@ -190,7 +189,7 @@ export class CetusApiHelpers {
 		const { tx, coinInId } = inputs;
 
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.cetus.packages.scripts,
 				CetusApiHelpers.constants.moduleNames.pool,
 				"swap_b2a"
@@ -276,7 +275,7 @@ export class CetusApiHelpers {
 			const { tx } = inputs;
 
 			return tx.moveCall({
-				target: AftermathApi.helpers.transactions.createTransactionTarget(
+				target: Helpers.transactions.createTransactionTarget(
 					this.addresses.cetus.packages.scripts,
 					CetusApiHelpers.constants.moduleNames.pool,
 					"calculate_swap_result"
@@ -295,19 +294,6 @@ export class CetusApiHelpers {
 				],
 			});
 		};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
-
-	private createCompletePoolObjectType = (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => `${this.objectTypes.pool}<${inputs.coinType1}, ${inputs.coinType2}>`;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Static Methods
@@ -345,5 +331,22 @@ export class CetusApiHelpers {
 			poolObjectId: fields.pool_id,
 			poolKeyId: fields.pool_key,
 		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	private static isPoolForCoinTypes = (inputs: {
+		pool: CetusPoolSimpleInfo;
+		coinType1: CoinType;
+		coinType2: CoinType;
+	}) => {
+		const { pool, coinType1, coinType2 } = inputs;
+
+		return (
+			(pool.coinTypeA === coinType1 && pool.coinTypeB === coinType2) ||
+			(pool.coinTypeA === coinType2 && pool.coinTypeB === coinType1)
+		);
 	};
 }

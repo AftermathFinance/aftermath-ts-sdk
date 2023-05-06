@@ -3,6 +3,7 @@ import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { ObjectId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
 import { AnyObjectType, Balance, FaucetAddresses } from "../../../types";
+import { Helpers } from "../../../general/utils";
 
 export class FaucetApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -79,7 +80,7 @@ export class FaucetApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
 				FaucetApiHelpers.constants.functions.add.name
@@ -103,7 +104,7 @@ export class FaucetApiHelpers {
 		tx.setSender(walletAddress);
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
 				FaucetApiHelpers.constants.functions.requestAmount.name
@@ -124,7 +125,7 @@ export class FaucetApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
 				FaucetApiHelpers.constants.functions.request.name

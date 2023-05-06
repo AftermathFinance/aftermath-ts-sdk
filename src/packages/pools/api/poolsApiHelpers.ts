@@ -38,7 +38,7 @@ import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
 import { Pool } from "..";
-import { Casting } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import { EventOnChain } from "../../../general/types/castingTypes";
 
 export class PoolsApiHelpers {
@@ -182,7 +182,7 @@ export class PoolsApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
 				PoolsApiHelpers.constants.moduleNames.poolRegistry,
 				"lp_type_to_pool_id"
@@ -223,7 +223,7 @@ export class PoolsApiHelpers {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
@@ -269,7 +269,7 @@ export class PoolsApiHelpers {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
@@ -317,7 +317,7 @@ export class PoolsApiHelpers {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
@@ -393,7 +393,7 @@ export class PoolsApiHelpers {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.pools.packages.cmmm,
 				PoolsApiHelpers.constants.moduleNames.interface,
 				`create_pool_${poolSize}_coins`

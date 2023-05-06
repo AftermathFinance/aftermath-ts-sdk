@@ -1,6 +1,7 @@
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers";
 import { CoinType, ReferralVaultAddresses } from "../../../types";
+import { Helpers } from "../../../general/utils";
 
 export class ReferralVaultApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -48,7 +49,7 @@ export class ReferralVaultApiHelpers {
 	}) => {
 		const { tx, referrer } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApiHelpers.constants.moduleNames.referralVault,
 				"update_referrer_address"
@@ -68,7 +69,7 @@ export class ReferralVaultApiHelpers {
 	}) => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApiHelpers.constants.moduleNames.referralVault,
 				inputs.withTransfer
@@ -87,7 +88,7 @@ export class ReferralVaultApiHelpers {
 	}) /* u64 */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApiHelpers.constants.moduleNames.referralVault,
 				"balance_of"
@@ -106,7 +107,7 @@ export class ReferralVaultApiHelpers {
 	}) /* Option<address> */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApiHelpers.constants.moduleNames.referralVault,
 				"referrer_for"
@@ -125,7 +126,7 @@ export class ReferralVaultApiHelpers {
 	}) /* bool */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApiHelpers.constants.moduleNames.referralVault,
 				"has_referrer"
