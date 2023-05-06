@@ -548,14 +548,14 @@ export class CapysApiHelpers {
 				stakingReceiptId
 			);
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 
 	public fetchStakedCapyFeesEarnedGlobal = async () => {
 		const tx = this.capyFeesEarnedGlobalDevInspectTransaction();
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 

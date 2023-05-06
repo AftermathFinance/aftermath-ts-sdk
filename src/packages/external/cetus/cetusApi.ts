@@ -3,9 +3,12 @@ import { CoinType } from "../../coin/coinTypes";
 import { CetusApiHelpers } from "./cetusApiHelpers";
 import {
 	ObjectId,
+	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
+import { CetusCalcTradeResult, CetusPoolSimpleInfo } from "./cetusTypes";
+import { Balance } from "../../../types";
 
 export class CetusApi {
 	/////////////////////////////////////////////////////////////////////
@@ -28,12 +31,45 @@ export class CetusApi {
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
+
+	public fetchCalcTradeResult = async (
+		inputs: {
+			walletAddress: SuiAddress;
+			pool: CetusPoolSimpleInfo;
+			coinInType: CoinType;
+			coinOutType: CoinType;
+		} & (
+			| {
+					coinInAmount: Balance;
+			  }
+			| {
+					coinOutAmount: Balance;
+			  }
+		)
+	): Promise<CetusCalcTradeResult> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		this.Helpers.calcTradeResultTx({
+			tx,
+			...inputs.pool,
+			...inputs,
+		});
+
+		const resultBytes =
+			this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
+
+		console.log("resultBytes", resultBytes);
+
+		return {
+			amountIn: BigInt(0),
+			amountOut: BigInt(0),
+			feeAmount: BigInt(0),
+			feeRate: BigInt(0),
+		};
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions

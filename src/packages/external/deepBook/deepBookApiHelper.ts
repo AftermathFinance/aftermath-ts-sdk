@@ -262,11 +262,9 @@ export class DeepBookApiHelpers {
 		let depths: Byte[];
 		try {
 			[prices, depths] =
-				await this.Provider.Inspections().fetchOutputsBytesFromTransaction(
-					{
-						tx,
-					}
-				);
+				await this.Provider.Inspections().fetchAllBytesFromTxOutput({
+					tx,
+				});
 		} catch (e) {
 			// dev inspect may fail due to empty tree on orderbook (no bids or asks)
 			prices = [];

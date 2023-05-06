@@ -1,5 +1,5 @@
 import { ObjectId } from "@mysten/sui.js";
-import { AnyObjectType, CoinType } from "../../../types";
+import { Balance, CoinType } from "../../../types";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -10,4 +10,11 @@ export interface CetusPoolSimpleInfo {
 	poolKeyId: ObjectId;
 	coinTypeA: CoinType;
 	coinTypeB: CoinType;
+}
+
+export interface CetusCalcTradeResult {
+	amountIn: Balance;
+	amountOut: Balance;
+	feeAmount: Balance;
+	feeRate: bigint;
 }

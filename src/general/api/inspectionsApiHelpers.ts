@@ -20,12 +20,12 @@ export class InspectionsApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchBytesFromTransaction = async (tx: TransactionBlock) => {
-		return (await this.fetchOutputsBytesFromTransaction({ tx }))[0];
+	public fetchFirstBytesFromTxOutput = async (tx: TransactionBlock) => {
+		return (await this.fetchAllBytesFromTxOutput({ tx }))[0];
 	};
 
 	// TODO: replace all bytes types with uint8array type
-	public fetchOutputsBytesFromTransaction = async (inputs: {
+	public fetchAllBytesFromTxOutput = async (inputs: {
 		tx: TransactionBlock;
 	}): Promise<Byte[][]> => {
 		const signer = RpcApiHelpers.constants.devInspectSigner;

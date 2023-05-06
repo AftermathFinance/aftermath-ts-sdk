@@ -1,5 +1,6 @@
 import {
 	ObjectId,
+	SuiAddress,
 	SuiObjectResponse,
 	TransactionArgument,
 	TransactionBlock,
@@ -14,7 +15,7 @@ import {
 	ReferralVaultAddresses,
 } from "../../../types";
 import { Sui } from "../../sui";
-import { CetusPoolSimpleInfo } from "./cetusTypes";
+import { CetusCalcTradeResult, CetusPoolSimpleInfo } from "./cetusTypes";
 import { Helpers } from "../../../general/utils";
 
 export class CetusApiHelpers {
@@ -235,8 +236,8 @@ export class CetusApiHelpers {
 			poolObjectId: ObjectId;
 			coinInType: CoinType;
 			coinOutType: CoinType;
-			coinAType: CoinType;
-			coinBType: CoinType;
+			coinTypeA: CoinType;
+			coinTypeB: CoinType;
 		} & (
 			| {
 					coinInAmount: Balance;
@@ -280,10 +281,10 @@ export class CetusApiHelpers {
 					CetusApiHelpers.constants.moduleNames.pool,
 					"calculate_swap_result"
 				),
-				typeArguments: [inputs.coinAType, inputs.coinBType],
+				typeArguments: [inputs.coinTypeA, inputs.coinTypeB],
 				arguments: [
 					tx.object(inputs.poolObjectId),
-					tx.pure(inputs.coinInType === inputs.coinAType, "bool"), // a2b
+					tx.pure(inputs.coinInType === inputs.coinTypeA, "bool"), // a2b
 					tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
 					tx.pure(
 						"coinInAmount" in inputs
