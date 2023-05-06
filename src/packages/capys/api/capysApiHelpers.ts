@@ -20,6 +20,7 @@ import {
 import { Capys } from "../capys";
 import { Coin } from "../../coin/coin";
 import { Casting } from "../../../general/utils/casting";
+import { Helpers } from "../../../general/utils";
 
 export class CapysApiHelpers {
 	/////////////////////////////////////////////////////////////////////
