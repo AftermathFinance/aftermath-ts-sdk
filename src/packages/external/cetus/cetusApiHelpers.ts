@@ -4,6 +4,7 @@ import {
 	SuiObjectResponse,
 	TransactionArgument,
 	TransactionBlock,
+	bcs,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -151,7 +152,6 @@ export class CetusApiHelpers {
 							? tx.object(coinInId)
 							: coinInId,
 					],
-					type: `Coin<${inputs.coinInType}>`,
 				}),
 				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
 				tx.pure(
@@ -206,7 +206,6 @@ export class CetusApiHelpers {
 							? tx.object(coinInId)
 							: coinInId,
 					],
-					type: `Coin<${inputs.coinInType}>`,
 				}),
 				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
 				tx.pure(
@@ -253,7 +252,7 @@ export class CetusApiHelpers {
 		if (CetusApiHelpers.isCoinA(coinInType, pool))
 			return this.tradeCoinAToCoinBTx(commandInputs);
 
-		return this.tradeCoinAToCoinBTx(commandInputs);
+		return this.tradeCoinBToCoinATx(commandInputs);
 	};
 
 	/////////////////////////////////////////////////////////////////////
