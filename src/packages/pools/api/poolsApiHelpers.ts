@@ -118,7 +118,7 @@ export class PoolsApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		const addresses = {
 			pools: this.Provider.addresses.pools,
 			referralVault: this.Provider.addresses.referralVault,
