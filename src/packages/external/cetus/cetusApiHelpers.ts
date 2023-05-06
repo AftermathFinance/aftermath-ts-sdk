@@ -15,7 +15,7 @@ import {
 	ReferralVaultAddresses,
 } from "../../../types";
 import { Sui } from "../../sui";
-import { CetusCalcTradeResult, CetusPoolSimpleInfo } from "./cetusTypes";
+import { CetusPoolSimpleInfo } from "./cetusTypes";
 import { Helpers } from "../../../general/utils";
 
 export class CetusApiHelpers {
