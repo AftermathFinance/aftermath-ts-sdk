@@ -25,7 +25,8 @@ export class CetusApiHelpers {
 
 	private static readonly constants = {
 		moduleNames: {
-			pool: "pool_script",
+			poolScript: "pool_script",
+			pool: "pool",
 		},
 	};
 
@@ -137,7 +138,7 @@ export class CetusApiHelpers {
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.cetus.packages.scripts,
-				CetusApiHelpers.constants.moduleNames.pool,
+				CetusApiHelpers.constants.moduleNames.poolScript,
 				"swap_a2b"
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
@@ -192,7 +193,7 @@ export class CetusApiHelpers {
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.cetus.packages.scripts,
-				CetusApiHelpers.constants.moduleNames.pool,
+				CetusApiHelpers.constants.moduleNames.poolScript,
 				"swap_b2a"
 			),
 			typeArguments: [inputs.coinOutType, inputs.coinInType],
@@ -306,7 +307,7 @@ export class CetusApiHelpers {
 
 			return tx.moveCall({
 				target: Helpers.transactions.createTransactionTarget(
-					this.addresses.cetus.packages.scripts,
+					this.addresses.cetus.packages.clmm,
 					CetusApiHelpers.constants.moduleNames.pool,
 					"calculate_swap_result"
 				),
@@ -373,7 +374,7 @@ export class CetusApiHelpers {
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");
 
-		const fields = content.fields as {
+		const fields = content.fields.value.fields.value.fields as {
 			coin_type_a: {
 				fields: {
 					name: CoinType;
@@ -389,8 +390,8 @@ export class CetusApiHelpers {
 		};
 
 		return {
-			coinTypeA: fields.coin_type_a.fields.name,
-			coinTypeB: fields.coin_type_b.fields.name,
+			coinTypeA: "0x" + fields.coin_type_a.fields.name,
+			coinTypeB: "0x" + fields.coin_type_b.fields.name,
 			poolObjectId: fields.pool_id,
 			poolKeyId: fields.pool_key,
 		};

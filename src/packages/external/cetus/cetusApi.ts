@@ -1,9 +1,10 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { CetusApiHelpers } from "./cetusApiHelpers";
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock, bcs } from "@mysten/sui.js";
 import { CetusCalcTradeResult, CetusPoolSimpleInfo } from "./cetusTypes";
 import { Balance, SerializedTransaction } from "../../../types";
+import { BCS } from "@mysten/bcs";
 
 export class CetusApi {
 	/////////////////////////////////////////////////////////////////////
@@ -65,15 +66,38 @@ export class CetusApi {
 		});
 
 		const resultBytes =
-			this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		console.log("resultBytes", resultBytes);
+		bcs.registerStructType("SwapStepResult", {
+			current_sqrt_price: BCS.U128,
+			target_sqrt_price: BCS.U128,
+			current_liquidity: BCS.U128,
+			amount_in: BCS.U64,
+			amount_out: BCS.U64,
+			fee_amount: BCS.U64,
+			remainer_amount: BCS.U64,
+		});
+
+		bcs.registerStructType("CalculatedSwapResult", {
+			amount_in: BCS.U64,
+			amount_out: BCS.U64,
+			fee_amount: BCS.U64,
+			fee_rate: BCS.U64,
+			after_sqrt_price: BCS.U128,
+			is_exceed: BCS.BOOL,
+			step_results: "vector<SwapStepResult>",
+		});
+
+		const data = bcs.de(
+			"CalculatedSwapResult",
+			new Uint8Array(resultBytes)
+		);
 
 		return {
-			amountIn: BigInt(0),
-			amountOut: BigInt(0),
-			feeAmount: BigInt(0),
-			feeRate: BigInt(0),
+			amountIn: BigInt(data.amount_in),
+			amountOut: BigInt(data.amount_out),
+			feeAmount: BigInt(data.fee_amount),
+			feeRate: BigInt(data.fee_rate),
 		};
 	};
 
