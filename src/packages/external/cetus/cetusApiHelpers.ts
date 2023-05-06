@@ -226,6 +226,35 @@ export class CetusApiHelpers {
 		});
 	};
 
+	public tradeTx = (
+		inputs: {
+			tx: TransactionBlock;
+			pool: CetusPoolSimpleInfo;
+			coinInId: ObjectId | TransactionArgument;
+			coinInType: CoinType;
+			coinOutType: CoinType;
+		} & (
+			| {
+					coinInAmount: Balance;
+			  }
+			| {
+					coinOutAmount: Balance;
+			  }
+		)
+	) => {
+		const { coinInType, pool } = inputs;
+
+		const commandInputs = {
+			...inputs,
+			poolObjectId: pool.poolObjectId,
+		};
+
+		if (CetusApiHelpers.isCoinA(coinInType, pool))
+			return this.tradeCoinAToCoinBTx(commandInputs);
+
+		return this.tradeCoinAToCoinBTx(commandInputs);
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Inspection Commands
 	/////////////////////////////////////////////////////////////////////
@@ -297,6 +326,39 @@ export class CetusApiHelpers {
 		};
 
 	/////////////////////////////////////////////////////////////////////
+	//// Transaction Builders
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchBuildTradeTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: CetusPoolSimpleInfo;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmount: Balance;
+	}): Promise<TransactionBlock> => {
+		const { walletAddress, coinInType, coinInAmount } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const coinInId =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
+				tx,
+				walletAddress,
+				coinType: coinInType,
+				coinAmount: coinInAmount,
+			});
+
+		this.tradeTx({
+			tx,
+			...inputs,
+			coinInId,
+		});
+
+		return tx;
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Static Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -350,4 +412,7 @@ export class CetusApiHelpers {
 			(pool.coinTypeA === coinType2 && pool.coinTypeB === coinType1)
 		);
 	};
+
+	private static isCoinA = (coin: CoinType, pool: CetusPoolSimpleInfo) =>
+		coin === pool.coinTypeA;
 }

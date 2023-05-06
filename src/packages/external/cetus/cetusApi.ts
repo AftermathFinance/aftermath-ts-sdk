@@ -1,14 +1,9 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { CetusApiHelpers } from "./cetusApiHelpers";
-import {
-	ObjectId,
-	SuiAddress,
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { CetusCalcTradeResult, CetusPoolSimpleInfo } from "./cetusTypes";
-import { Balance } from "../../../types";
+import { Balance, SerializedTransaction } from "../../../types";
 
 export class CetusApi {
 	/////////////////////////////////////////////////////////////////////
@@ -75,25 +70,15 @@ export class CetusApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public addTradeCommandToTransaction = (inputs: {
-		tx: TransactionBlock;
-		// pool: PartialDeepBookPoolObject;
-		coinInId: ObjectId | TransactionArgument;
+	public fetchTradeTx = (inputs: {
+		walletAddress: SuiAddress;
+		pool: CetusPoolSimpleInfo;
 		coinInType: CoinType;
 		coinOutType: CoinType;
-	}) /* (Coin<CoinIn>, Coin<CoinOut>, u64 (amountFilled), u64 (amountOut)) */ => {
-		// const commandInputs = {
-		// 	...inputs,
-		// 	poolObjectId: inputs.pool.objectId,
-		// };
-		// if (
-		// 	Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-		// 	Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoin)
-		// ) {
-		// 	return this.Helpers.tradeCoinAToCoinBTx(commandInputs);
-		// }
-		// return this.Helpers.addTradeQuoteToBaseCommandToTransaction(
-		// 	commandInputs
-		// );
+		coinInAmount: Balance;
+	}): Promise<SerializedTransaction> => {
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			this.Helpers.fetchBuildTradeTx(inputs)
+		);
 	};
 }
