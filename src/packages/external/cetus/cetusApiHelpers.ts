@@ -161,12 +161,13 @@ export class CetusApiHelpers {
 					"u64"
 				), // amount
 				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
+					// "coinInAmount" in inputs
+					// 	? inputs.coinInAmount
+					// 	: inputs.coinOutAmount,
+					"0",
 					"u64"
 				), // amount_limit
-				tx.pure(BigInt("79226673515401279992447579055"), "u128"), // sqrt_price_limit (set to max_sqrt_price)
+				tx.pure(BigInt("4295048016"), "u128"), // sqrt_price_limit (set to min_sqrt_price)
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
@@ -215,12 +216,13 @@ export class CetusApiHelpers {
 					"u64"
 				), // amount
 				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
+					// "coinInAmount" in inputs
+					// 	? inputs.coinInAmount
+					// 	: inputs.coinOutAmount,
+					"0",
 					"u64"
 				), // amount_limit
-				tx.pure(BigInt("4295048016"), "u128"), // sqrt_price_limit (set to min_sqrt_price)
+				tx.pure(BigInt("79226673515401279992447579055"), "u128"), // sqrt_price_limit (set to max_sqrt_price)
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
