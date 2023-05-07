@@ -83,8 +83,8 @@ export type RouterTradeRoute = RouterTradeInfo & {
 };
 
 export type RouterTradePath = RouterTradeInfo & {
-	protocolName: RouterSynchronousProtocolName;
-	pool: RouterSynchronousSerializablePool;
+	protocolName: RouterProtocolName;
+	pool: RouterSerializablePool;
 };
 
 export interface RouterTradeInfo {

@@ -4,10 +4,15 @@ import {
 	RouterAsyncProtocolName,
 	RouterAsyncTradeResult,
 	RouterAsyncTradeResults,
+	RouterCompleteTradeRoute,
+	RouterTradePath,
+	RouterTradeRoute,
 } from "../routerTypes";
 import { Balance, CoinType } from "../../../types";
 import { RouterAsyncApiInterface } from "../utils/async/routerAsyncApiInterface";
 import { CetusApi } from "../../external/cetus/cetusApi";
+import { Helpers } from "../../../general/utils";
+import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
 
 export class RouterAsyncApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -35,7 +40,6 @@ export class RouterAsyncApiHelpers {
 
 	public fetchTradeResults = async (inputs: {
 		protocols: RouterAsyncProtocolName[];
-		walletAddress: SuiAddress;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
@@ -72,6 +76,8 @@ export class RouterAsyncApiHelpers {
 						api.fetchTradeAmountOut({
 							...inputs,
 							pool,
+							walletAddress:
+								RpcApiHelpers.constants.devInspectSigner,
 							coinInAmount: amountIn,
 						})
 					)
@@ -89,6 +95,97 @@ export class RouterAsyncApiHelpers {
 			...inputs,
 			results,
 			amountsIn,
+		};
+	};
+
+	public static splitTradeBetweenRoutes = (inputs: {
+		tradeResults: RouterAsyncTradeResults;
+	}): RouterCompleteTradeRoute => {
+		const { tradeResults } = inputs;
+
+		let amountsOutIndexes: number[] = Array(
+			tradeResults.results.length
+		).fill(-1);
+
+		for (const [] of tradeResults.amountsIn.entries()) {
+			const incrementalAmountsOut = tradeResults.results.map(
+				(result, index) => {
+					const prevAmountOutIndex = amountsOutIndexes[index];
+					const prevAmountOut =
+						prevAmountOutIndex < 0
+							? BigInt(0)
+							: result.amountsOut[prevAmountOutIndex];
+
+					const currentAmountOut =
+						result.amountsOut[prevAmountOutIndex + 1];
+
+					const incrementalAmountOut =
+						currentAmountOut - prevAmountOut;
+
+					return incrementalAmountOut;
+				}
+			);
+
+			const maxIndex = Helpers.indexOfMax(incrementalAmountsOut);
+
+			amountsOutIndexes[maxIndex] += 1;
+		}
+
+		const routes: RouterTradeRoute[] = tradeResults.results.map(
+			(result, index) => {
+				const amountOutIndex = amountsOutIndexes[index];
+				const path = {
+					pool: result.pool,
+					protocolName: result.protocol,
+					coinIn: {
+						type: tradeResults.coinInType,
+						amount: tradeResults.amountsIn[amountOutIndex],
+						tradeFee: BigInt(0),
+					},
+					coinOut: {
+						type: tradeResults.coinInType,
+						amount: result.amountsOut[amountOutIndex],
+						tradeFee: BigInt(0),
+					},
+					spotPrice:
+						Number(tradeResults.amountsIn[0]) /
+						Number(result.amountsOut[0]),
+				};
+
+				return {
+					...path,
+					paths: [path],
+				};
+			}
+		);
+
+		const totalAmountIn =
+			tradeResults.amountsIn[tradeResults.amountsIn.length - 1];
+		const totalAmountOut = Helpers.sumBigInt(
+			routes.map((route) => route.paths[0].coinOut.amount)
+		);
+
+		const spotPrice = routes.reduce(
+			(acc, cur) =>
+				acc +
+				(Number(cur.coinIn.amount) / Number(totalAmountIn)) *
+					cur.spotPrice,
+			0
+		);
+
+		return {
+			routes,
+			spotPrice,
+			coinIn: {
+				type: tradeResults.coinInType,
+				amount: totalAmountIn,
+				tradeFee: BigInt(0),
+			},
+			coinOut: {
+				type: tradeResults.coinInType,
+				amount: totalAmountOut,
+				tradeFee: BigInt(0),
+			},
 		};
 	};
 
