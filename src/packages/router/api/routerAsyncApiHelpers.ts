@@ -2,12 +2,10 @@ import { SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterAsyncProtocolName,
-	RouterAsyncSerializablePool,
 	RouterAsyncTradeResult,
 	RouterAsyncTradeResults,
 } from "../routerTypes";
 import { Balance, CoinType } from "../../../types";
-import { Helpers } from "../../../general/utils";
 import { RouterAsyncApiInterface } from "../utils/async/routerAsyncApiInterface";
 import { CetusApi } from "../../external/cetus/cetusApi";
 
@@ -27,7 +25,7 @@ export class RouterAsyncApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
 
