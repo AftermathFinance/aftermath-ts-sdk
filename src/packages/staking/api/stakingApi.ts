@@ -98,6 +98,14 @@ export class StakingApi {
 
 	public fetchSuiTvl = async (): Promise<Balance> => {
 		const tx = new TransactionBlock();
+		this.Helpers.addGetStakedSuiTvlCommandToTransaction({ tx });
+		const bytes =
+			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+		return Casting.bigIntFromBytes(bytes);
+	};
+
+	public fetchAfSuiSupply = async (): Promise<Balance> => {
+		const tx = new TransactionBlock();
 		this.Helpers.addGetAfSuiSupplyCommandToTransaction({ tx });
 		const bytes =
 			await this.Provider.Inspections().fetchBytesFromTransaction(tx);

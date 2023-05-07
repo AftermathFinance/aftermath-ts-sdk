@@ -172,6 +172,21 @@ export class StakingApiHelpers {
 		});
 	};
 
+	public addGetStakedSuiTvlCommandToTransaction = (inputs: {
+		tx: TransactionBlock;
+	}) => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTransactionTarget(
+				this.addresses.packages.lsd,
+				StakingApiHelpers.constants.modules.staking,
+				"total_sui_amount"
+			),
+			typeArguments: [],
+			arguments: [tx.object(this.addresses.objects.staking)],
+		});
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
