@@ -100,6 +100,7 @@ export class RouterAsyncApiHelpers {
 
 	public static splitTradeBetweenRoutes = (inputs: {
 		tradeResults: RouterAsyncTradeResults;
+		forTradePartitions: number;
 	}): RouterCompleteTradeRoute => {
 		const { tradeResults } = inputs;
 
@@ -107,7 +108,7 @@ export class RouterAsyncApiHelpers {
 			tradeResults.results.length
 		).fill(-1);
 
-		for (const [] of tradeResults.amountsIn.entries()) {
+		for (const _ of Array(inputs.forTradePartitions).fill(0)) {
 			const incrementalAmountsOut = tradeResults.results.map(
 				(result, index) => {
 					const prevAmountOutIndex = amountsOutIndexes[index];
@@ -160,7 +161,7 @@ export class RouterAsyncApiHelpers {
 		);
 
 		const totalAmountIn =
-			tradeResults.amountsIn[tradeResults.amountsIn.length - 1];
+			tradeResults.amountsIn[inputs.forTradePartitions - 1];
 		const totalAmountOut = Helpers.sumBigInt(
 			routes.map((route) => route.paths[0].coinOut.amount)
 		);
