@@ -6,8 +6,8 @@ import {
 } from "@mysten/sui.js";
 import {
 	Balance,
-	RouterProtocolName,
-	RouterSerializablePool,
+	RouterSynchronousProtocolName,
+	RouterSynchronousSerializablePool,
 	Slippage,
 	SuiNetwork,
 	UniqueId,
@@ -26,7 +26,7 @@ import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
 /////////////////////////////////////////////////////////////////////
 
 export function createRouterPool(inputs: {
-	pool: RouterSerializablePool;
+	pool: RouterSynchronousSerializablePool;
 	// NOTE: should this be optional and passed in only upon transaction creation or another way ?
 	network: SuiNetwork | Url;
 }): RouterPoolInterface {
@@ -67,8 +67,8 @@ export interface RouterPoolInterface {
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
-	readonly protocolName: RouterProtocolName;
-	readonly pool: RouterSerializablePool;
+	readonly protocolName: RouterSynchronousProtocolName;
+	readonly pool: RouterSynchronousSerializablePool;
 	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	// readonly limitToSingleHops: boolean;

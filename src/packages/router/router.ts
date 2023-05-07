@@ -4,7 +4,7 @@ import {
 	CoinType,
 	RouterCompleteTradeRoute,
 	RouterSerializableCompleteGraph,
-	RouterSerializablePool,
+	RouterSynchronousSerializablePool,
 	RouterSupportedCoinPaths,
 	SuiNetwork,
 	Url,

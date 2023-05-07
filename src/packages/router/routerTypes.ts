@@ -38,15 +38,27 @@ export interface RouterExternalFee {
 }
 
 /////////////////////////////////////////////////////////////////////
-//// Router Pools
+//// All Router Pools
 /////////////////////////////////////////////////////////////////////
 
 export type RouterSerializablePool =
+	| RouterSynchronousSerializablePool
+	| RouterAsyncSerializablePool;
+
+export type RouterProtocolName =
+	| RouterSynchronousProtocolName
+	| RouterAsyncProtocolName;
+
+/////////////////////////////////////////////////////////////////////
+//// Synchronous Router Pools
+/////////////////////////////////////////////////////////////////////
+
+export type RouterSynchronousSerializablePool =
 	| PoolObject
 	| NojoPoolObject
 	| DeepBookPoolObject;
 
-export type RouterProtocolName = "Aftermath" | "Nojo" | "DeepBook";
+export type RouterSynchronousProtocolName = "Aftermath" | "Nojo" | "DeepBook";
 
 /////////////////////////////////////////////////////////////////////
 //// Router Async Pools
@@ -71,8 +83,8 @@ export type RouterTradeRoute = RouterTradeInfo & {
 };
 
 export type RouterTradePath = RouterTradeInfo & {
-	protocolName: RouterProtocolName;
-	pool: RouterSerializablePool;
+	protocolName: RouterSynchronousProtocolName;
+	pool: RouterSynchronousSerializablePool;
 };
 
 export interface RouterTradeInfo {
@@ -112,7 +124,7 @@ export interface RouterOptions {
 
 export type RouterSerializablePoolsById = Record<
 	UniqueId,
-	RouterSerializablePool
+	RouterSynchronousSerializablePool
 >;
 
 export type RouterGraphCoinNodes = Record<CoinType, RouterCoinNode>;
@@ -124,6 +136,23 @@ export interface RouterCoinNode {
 }
 
 export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
+
+/////////////////////////////////////////////////////////////////////
+//// Async Graph
+/////////////////////////////////////////////////////////////////////
+
+export interface RouterAsyncTradeResults {
+	coinInType: CoinType;
+	coinOutType: CoinType;
+	amountsIn: Balance[];
+	results: RouterAsyncTradeResult[];
+}
+
+export interface RouterAsyncTradeResult {
+	protocol: RouterAsyncProtocolName;
+	pool: RouterAsyncSerializablePool;
+	amountsOut: Balance[];
+}
 
 /////////////////////////////////////////////////////////////////////
 //// API

@@ -1,12 +1,14 @@
 import { TransactionArgument } from "@mysten/sui.js";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterSerializablePool } from "../../../routerTypes";
+import { RouterSynchronousSerializablePool } from "../../../routerTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Interface
 /////////////////////////////////////////////////////////////////////
 
-export interface RouterApiInterface<PoolType extends RouterSerializablePool> {
+export interface RouterApiInterface<
+	PoolType extends RouterSynchronousSerializablePool
+> {
 	/////////////////////////////////////////////////////////////////////
 	//// Required
 	/////////////////////////////////////////////////////////////////////

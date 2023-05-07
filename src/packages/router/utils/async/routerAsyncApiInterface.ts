@@ -39,6 +39,14 @@ export interface RouterAsyncApiInterface<
 		coinInAmount: Balance;
 	}) => Promise<Balance>;
 
+	// fetchTradeAmountIn: (inputs: {
+	// 	walletAddress: SuiAddress;
+	// 	pool: PoolType;
+	// 	coinInType: CoinType;
+	// 	coinOutType: CoinType;
+	// 	coinInAmount: Balance;
+	// }) => Promise<Balance>;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////

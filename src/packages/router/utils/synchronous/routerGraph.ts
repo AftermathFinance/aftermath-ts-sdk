@@ -7,7 +7,7 @@ import {
 	RouterExternalFee,
 	RouterOptions,
 	RouterSerializableCompleteGraph,
-	RouterSerializablePool,
+	RouterSynchronousSerializablePool,
 	RouterSupportedCoinPaths,
 	RouterTradeCoin,
 	RouterTradeInfo,
@@ -96,7 +96,7 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	public static createGraph(inputs: {
-		pools: RouterSerializablePool[];
+		pools: RouterSynchronousSerializablePool[];
 	}): RouterSerializableCompleteGraph {
 		const poolClasses = inputs.pools.map((pool) =>
 			createRouterPool({

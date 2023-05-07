@@ -4,8 +4,9 @@ import { CetusApiHelpers } from "./cetusApiHelpers";
 import { SuiAddress } from "@mysten/sui.js";
 import { CetusPoolObject } from "./cetusTypes";
 import { Balance, SerializedTransaction } from "../../../types";
+import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 
-export class CetusApi {
+export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////

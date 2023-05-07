@@ -1,5 +1,5 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterApiHelpers } from "./routerApiHelpers";
+import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import {
 	Balance,
@@ -10,7 +10,7 @@ import {
 	Slippage,
 	SuiNetwork,
 	Url,
-	RouterProtocolName,
+	RouterSynchronousProtocolName,
 	RouterSerializableCompleteGraph,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
@@ -32,10 +32,12 @@ export class RouterApi {
 
 	constructor(
 		private readonly Provider: AftermathApi,
-		public readonly protocols: RouterProtocolName[] = ["Aftermath"]
+		public readonly protocols: RouterSynchronousProtocolName[] = [
+			"Aftermath",
+		]
 	) {
 		this.Provider = Provider;
-		this.Helpers = new RouterApiHelpers(Provider);
+		this.Helpers = new RouterSynchronousApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////

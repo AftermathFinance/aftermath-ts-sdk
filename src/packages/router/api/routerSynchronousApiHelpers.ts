@@ -2,8 +2,8 @@ import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
-	RouterProtocolName,
-	RouterSerializablePool,
+	RouterSynchronousProtocolName,
+	RouterSynchronousSerializablePool,
 } from "../routerTypes";
 import { CoinType, Slippage, SuiNetwork, Url } from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
@@ -14,13 +14,13 @@ import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { Helpers } from "../../../general/utils";
 
-export class RouterApiHelpers {
+export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
 	private readonly protocolNamesToApi: Record<
-		RouterProtocolName,
+		RouterSynchronousProtocolName,
 		RouterApiInterface<any>
 	> = {
 		Aftermath: new PoolsApi(this.Provider),
@@ -41,8 +41,8 @@ export class RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchAllPools = async (inputs: {
-		protocols: RouterProtocolName[];
-	}): Promise<RouterSerializablePool[]> => {
+		protocols: RouterSynchronousProtocolName[];
+	}): Promise<RouterSynchronousSerializablePool[]> => {
 		const apis = this.protocolApisFromNames(inputs);
 
 		const poolsByProtocol = await Promise.all(
@@ -62,7 +62,7 @@ export class RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchSupportedCoins = async (inputs: {
-		protocols: RouterProtocolName[];
+		protocols: RouterSynchronousProtocolName[];
 	}): Promise<CoinType[]> => {
 		const apis = this.protocolApisFromNames({
 			protocols: inputs.protocols,
@@ -185,7 +185,7 @@ export class RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public protocolApisFromNames = (inputs: {
-		protocols: RouterProtocolName[];
+		protocols: RouterSynchronousProtocolName[];
 	}): RouterApiInterface<any>[] => {
 		const { protocols } = inputs;
 		return protocols.map((name) => this.protocolNamesToApi[name]);
