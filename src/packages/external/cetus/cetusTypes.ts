@@ -5,7 +5,7 @@ import { Balance, CoinType } from "../../../types";
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
-export interface CetusPoolSimpleInfo {
+export interface CetusPoolObject {
 	poolObjectId: ObjectId;
 	poolKeyId: ObjectId;
 	coinTypeA: CoinType;

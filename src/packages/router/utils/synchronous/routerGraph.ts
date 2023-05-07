@@ -1,5 +1,5 @@
-import { CoinType } from "../../coin/coinTypes";
-import { Helpers } from "../../../general/utils/helpers";
+import { CoinType } from "../../../coin/coinTypes";
+import { Helpers } from "../../../../general/utils/helpers";
 import {
 	Balance,
 	RouterCompleteGraph,
@@ -20,10 +20,13 @@ import {
 	RouterGraphCoinNodes,
 	RouterCoinOutThroughPoolEdges,
 	RouterPoolsById,
-} from "../../../types";
-import { RouterPoolInterface, createRouterPool } from "./routerPoolInterface";
+} from "../../../../types";
+import {
+	RouterPoolInterface,
+	createRouterPool,
+} from "./interfaces/routerPoolInterface";
 import { SuiAddress } from "@mysten/sui.js";
-import { Router } from "../router";
+import { Router } from "../../router";
 
 /////////////////////////////////////////////////////////////////////
 //// Internal Types
@@ -155,7 +158,7 @@ export class RouterGraph {
 	//// Supported Coins
 	/////////////////////////////////////////////////////////////////////
 
-	// TODO: do this more effeciently
+	// TODO: do this more efficiently
 	public static supportedCoinPathsFromGraph = async (inputs: {
 		graph: RouterSerializableCompleteGraph;
 		maxRouteLength?: number;

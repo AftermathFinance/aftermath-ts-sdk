@@ -10,13 +10,12 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
-} from "../../../../types";
-import { CoinType } from "../../../coin/coinTypes";
-import { RouterPoolInterface } from "../routerPoolInterface";
-import { Pool, Balance as NojoBalance } from "../../../../external/nojo";
-import { AftermathApi } from "../../../../general/providers";
-import { NojoPoolObject } from "../../../external/nojo/nojoAmmTypes";
-import { Helpers } from "../../../../general/utils";
+} from "../../../../../types";
+import { CoinType } from "../../../../coin/coinTypes";
+import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import { Pool, Balance as NojoBalance } from "../../../../../external/nojo";
+import { AftermathApi } from "../../../../../general/providers";
+import { NojoPoolObject } from "../../../../external/nojo/nojoAmmTypes";
 
 class NojoRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////

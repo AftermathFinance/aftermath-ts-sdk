@@ -14,7 +14,7 @@ import { NojoAmmApiHelpers } from "./nojoAmmApiHelpers";
 import { CoinType } from "../../coin/coinTypes";
 import { Balance } from "../../../types";
 import { Helpers } from "../../../general/utils";
-import { RouterApiInterface } from "../../router/utils/routerApiInterface";
+import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { NojoPoolObject } from "./nojoAmmTypes";
 
 export class NojoAmmApi implements RouterApiInterface<NojoPoolObject> {

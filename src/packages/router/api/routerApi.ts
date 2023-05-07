@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
-import { RouterGraph } from "../utils/routerGraph";
+import { RouterGraph } from "../utils/synchronous/routerGraph";
 import {
 	Balance,
 	CoinType,

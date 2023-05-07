@@ -8,7 +8,8 @@ import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
 import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
 import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
-import { RouterPoolInterface } from "./utils/routerPoolInterface";
+import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
+import { CetusPoolObject } from "../external/cetus/cetusTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -46,6 +47,14 @@ export type RouterSerializablePool =
 	| DeepBookPoolObject;
 
 export type RouterProtocolName = "Aftermath" | "Nojo" | "DeepBook";
+
+/////////////////////////////////////////////////////////////////////
+//// Router Async Pools
+/////////////////////////////////////////////////////////////////////
+
+export type RouterAsyncSerializablePool = CetusPoolObject;
+
+export type RouterAsyncProtocolName = "Cetus";
 
 /////////////////////////////////////////////////////////////////////
 //// Paths

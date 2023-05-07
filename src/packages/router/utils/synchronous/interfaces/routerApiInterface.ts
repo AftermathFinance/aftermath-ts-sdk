@@ -1,6 +1,6 @@
 import { TransactionArgument } from "@mysten/sui.js";
-import { CoinType } from "../../coin/coinTypes";
-import { RouterSerializablePool } from "../routerTypes";
+import { CoinType } from "../../../../coin/coinTypes";
+import { RouterSerializablePool } from "../../../routerTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Interface

@@ -3,7 +3,7 @@ import { CoinType } from "../../coin/coinTypes";
 import { Helpers } from "../../../general/utils";
 import { DeepBookApiHelpers } from "./deepBookApiHelper";
 import { DeepBookPoolObject, PartialDeepBookPoolObject } from "./deepBookTypes";
-import { RouterApiInterface } from "../../router/utils/routerApiInterface";
+import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import {
 	ObjectId,
 	TransactionArgument,

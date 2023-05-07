@@ -10,13 +10,13 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
-} from "../../../../types";
-import { CoinType } from "../../../coin/coinTypes";
-import { PoolObject } from "../../../pools/poolsTypes";
-import { RouterPoolInterface } from "../routerPoolInterface";
-import { Pool } from "../../../pools";
-import { Casting, Helpers } from "../../../../general/utils";
-import { AftermathApi } from "../../../../general/providers";
+} from "../../../../../types";
+import { CoinType } from "../../../../coin/coinTypes";
+import { PoolObject } from "../../../../pools/poolsTypes";
+import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import { Pool } from "../../../../pools";
+import { Casting, Helpers } from "../../../../../general/utils";
+import { AftermathApi } from "../../../../../general/providers";
 
 class AftermathRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////

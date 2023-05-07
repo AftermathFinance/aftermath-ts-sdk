@@ -12,7 +12,7 @@ import {
 	Url,
 } from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
-import { RouterPoolInterface } from "../routerPoolInterface";
+import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
 import { AftermathApi } from "../../../../general/providers";
 import {
 	DeepBookPoolObject,

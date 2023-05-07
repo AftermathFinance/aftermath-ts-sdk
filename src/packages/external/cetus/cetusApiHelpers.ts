@@ -16,8 +16,9 @@ import {
 	ReferralVaultAddresses,
 } from "../../../types";
 import { Sui } from "../../sui";
-import { CetusPoolSimpleInfo } from "./cetusTypes";
+import { CetusCalcTradeResult, CetusPoolObject } from "./cetusTypes";
 import { Helpers } from "../../../general/utils";
+import { BCS } from "@mysten/bcs";
 
 export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -231,7 +232,7 @@ export class CetusApiHelpers {
 	public tradeTx = (
 		inputs: {
 			tx: TransactionBlock;
-			pool: CetusPoolSimpleInfo;
+			pool: CetusPoolObject;
 			coinInId: ObjectId | TransactionArgument;
 			coinInType: CoinType;
 			coinOutType: CoinType;
@@ -333,7 +334,7 @@ export class CetusApiHelpers {
 
 	public fetchBuildTradeTx = async (inputs: {
 		walletAddress: SuiAddress;
-		pool: CetusPoolSimpleInfo;
+		pool: CetusPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
@@ -361,6 +362,70 @@ export class CetusApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchCalcTradeResult = async (
+		inputs: {
+			walletAddress: SuiAddress;
+			pool: CetusPoolObject;
+			coinInType: CoinType;
+			coinOutType: CoinType;
+		} & (
+			| {
+					coinInAmount: Balance;
+			  }
+			| {
+					coinOutAmount: Balance;
+			  }
+		)
+	): Promise<CetusCalcTradeResult> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		this.calcTradeResultTx({
+			tx,
+			...inputs.pool,
+			...inputs,
+		});
+
+		const resultBytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		bcs.registerStructType("SwapStepResult", {
+			current_sqrt_price: BCS.U128,
+			target_sqrt_price: BCS.U128,
+			current_liquidity: BCS.U128,
+			amount_in: BCS.U64,
+			amount_out: BCS.U64,
+			fee_amount: BCS.U64,
+			remainer_amount: BCS.U64,
+		});
+
+		bcs.registerStructType("CalculatedSwapResult", {
+			amount_in: BCS.U64,
+			amount_out: BCS.U64,
+			fee_amount: BCS.U64,
+			fee_rate: BCS.U64,
+			after_sqrt_price: BCS.U128,
+			is_exceed: BCS.BOOL,
+			step_results: "vector<SwapStepResult>",
+		});
+
+		const data = bcs.de(
+			"CalculatedSwapResult",
+			new Uint8Array(resultBytes)
+		);
+
+		return {
+			amountIn: BigInt(data.amount_in),
+			amountOut: BigInt(data.amount_out),
+			feeAmount: BigInt(data.fee_amount),
+			feeRate: BigInt(data.fee_rate),
+		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Static Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -370,7 +435,7 @@ export class CetusApiHelpers {
 
 	private static poolFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): CetusPoolSimpleInfo => {
+	): CetusPoolObject => {
 		const content = data.data?.content;
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");
@@ -403,7 +468,7 @@ export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	private static isPoolForCoinTypes = (inputs: {
-		pool: CetusPoolSimpleInfo;
+		pool: CetusPoolObject;
 		coinType1: CoinType;
 		coinType2: CoinType;
 	}) => {
@@ -415,6 +480,6 @@ export class CetusApiHelpers {
 		);
 	};
 
-	private static isCoinA = (coin: CoinType, pool: CetusPoolSimpleInfo) =>
+	private static isCoinA = (coin: CoinType, pool: CetusPoolObject) =>
 		coin === pool.coinTypeA;
 }

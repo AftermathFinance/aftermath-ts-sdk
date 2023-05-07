@@ -12,14 +12,14 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
-} from "../../../types";
-import { CoinType } from "../../coin/coinTypes";
-import AftermathRouterPool from "./routerPools/aftermathRouterPool";
-import NojoRouterPool from "./routerPools/nojoRouterPool";
-import { AftermathApi } from "../../../general/providers";
-import { isNojoPoolObject } from "../../external/nojo/nojoAmmTypes";
-import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
-import DeepBookRouterPool from "./routerPools/deepBookRouterPool";
+} from "../../../../../types";
+import { CoinType } from "../../../../coin/coinTypes";
+import AftermathRouterPool from "../routerPools/aftermathRouterPool";
+import NojoRouterPool from "../routerPools/nojoRouterPool";
+import { AftermathApi } from "../../../../../general/providers";
+import { isNojoPoolObject } from "../../../../external/nojo/nojoAmmTypes";
+import { isDeepBookPoolObject } from "../../../../external/deepBook/deepBookTypes";
+import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
 
 /////////////////////////////////////////////////////////////////////
 //// Creation

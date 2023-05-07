@@ -1,9 +1,9 @@
-import { Aftermath } from "../../../general/providers";
-import { Helpers } from "../../../general/utils/helpers";
-import { Balance, PoolObject } from "../../../types";
-import { CoinType } from "../../coin/coinTypes";
-import { Pool } from "../../pools";
-import { Router } from "../router";
+import { Aftermath } from "../../../../general/providers";
+import { Helpers } from "../../../../general/utils/helpers";
+import { Balance, PoolObject } from "../../../../types";
+import { CoinType } from "../../../coin/coinTypes";
+import { Pool } from "../../../pools";
+import { Router } from "../../router";
 
 const tradeAmounts = {
 	max: BigInt(9_223_372_036_854_775_807),

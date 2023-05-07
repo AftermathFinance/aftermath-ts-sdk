@@ -6,9 +6,9 @@ import {
 	RouterSerializablePool,
 } from "../routerTypes";
 import { CoinType, Slippage, SuiNetwork, Url } from "../../../types";
-import { createRouterPool } from "../utils/routerPoolInterface";
+import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
 import { Router } from "../router";
-import { RouterApiInterface } from "../utils/routerApiInterface";
+import { RouterApiInterface } from "../utils/synchronous/interfaces/routerApiInterface";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
