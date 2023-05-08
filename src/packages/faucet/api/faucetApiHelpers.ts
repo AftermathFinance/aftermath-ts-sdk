@@ -48,7 +48,7 @@ export class FaucetApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.faucet;
 		if (!addresses)
 			throw new Error(

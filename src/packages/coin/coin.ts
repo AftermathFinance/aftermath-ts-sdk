@@ -2,6 +2,8 @@ import {
 	Balance,
 	CoinDecimal,
 	CoinsToBalance,
+	CoinSymbol,
+	CoinSymbolToCoinTypes,
 	CoinType,
 	CoinWithAmount,
 	CoinWithAmountOrUndefined,
@@ -171,12 +173,28 @@ export class Coin extends Caller {
 			? undefined
 			: (uncheckedCoinWithAmount as CoinWithAmount);
 
+	public static coinSymbolForCoinType = (
+		coinType: CoinType,
+		coinSymbolToCoinTypes: CoinSymbolToCoinTypes
+	): CoinSymbol | undefined => {
+		const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
+		const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
+			([, coinsTypes]) =>
+				coinsTypes
+					.map(Helpers.addLeadingZeroesToType)
+					.includes(fullCoinType)
+		);
+
+		const foundCoinSymbol = foundCoinData?.[0];
+		return foundCoinSymbol;
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Balance
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Convervsions
+	//// Conversions
 	/////////////////////////////////////////////////////////////////////
 
 	/*

@@ -1,4 +1,4 @@
-import { CoinType } from "../../../types";
+import { CoinSymbolToCoinTypes, CoinType } from "../../../types";
 import { AftermathApi } from "../../providers/aftermathApi";
 import { PricesApiInterface } from "../pricesApiInterface";
 import { PythPricesApiHelpers } from "./pythPricesApiHelpers";
@@ -11,8 +11,11 @@ export class PythPricesApi
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(Provider: AftermathApi) {
-		super(Provider);
+	constructor(
+		Provider: AftermathApi,
+		coinSymbolToCoinTypes: CoinSymbolToCoinTypes
+	) {
+		super(Provider, coinSymbolToCoinTypes);
 	}
 
 	/////////////////////////////////////////////////////////////////////

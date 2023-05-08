@@ -17,7 +17,7 @@ export class NojoAmmApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.externalRouter?.nojo;
 		if (!addresses)
 			throw new Error(

@@ -83,7 +83,7 @@ export class StakingApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.staking;
 		if (!addresses)
 			throw new Error(
