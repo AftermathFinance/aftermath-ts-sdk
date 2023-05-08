@@ -20,6 +20,7 @@ import {
 	RouterGraphCoinNodes,
 	RouterCoinOutThroughPoolEdges,
 	RouterPoolsById,
+	RouterSerializablePool,
 } from "../../../../types";
 import {
 	RouterPoolInterface,
@@ -96,7 +97,7 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	public static createGraph(inputs: {
-		pools: RouterSynchronousSerializablePool[];
+		pools: RouterSerializablePool[];
 	}): RouterSerializableCompleteGraph {
 		const poolClasses = inputs.pools.map((pool) =>
 			createRouterPool({

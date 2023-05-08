@@ -2,6 +2,8 @@ import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
+	RouterProtocolName,
+	RouterSerializablePool,
 	RouterSynchronousProtocolName,
 	RouterSynchronousSerializablePool,
 } from "../routerTypes";
@@ -13,6 +15,7 @@ import { PoolsApi } from "../../pools/api/poolsApi";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { Helpers } from "../../../general/utils";
+import { CetusApi } from "../../external/cetus/cetusApi";
 
 export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -20,12 +23,13 @@ export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	private readonly protocolNamesToApi: Record<
-		RouterSynchronousProtocolName,
+		RouterProtocolName,
 		RouterApiInterface<any>
 	> = {
 		Aftermath: new PoolsApi(this.Provider),
 		Nojo: new NojoAmmApi(this.Provider),
 		DeepBook: new DeepBookApi(this.Provider),
+		Cetus: new CetusApi(this.Provider),
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -41,12 +45,14 @@ export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchAllPools = async (inputs: {
-		protocols: RouterSynchronousProtocolName[];
-	}): Promise<RouterSynchronousSerializablePool[]> => {
+		protocols: RouterProtocolName[];
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<RouterSerializablePool[]> => {
 		const apis = this.protocolApisFromNames(inputs);
 
 		const poolsByProtocol = await Promise.all(
-			apis.map((api) => api.fetchAllPools())
+			apis.map((api) => api.fetchAllPools(inputs))
 		);
 
 		const pools = poolsByProtocol.reduce(
@@ -62,7 +68,7 @@ export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchSupportedCoins = async (inputs: {
-		protocols: RouterSynchronousProtocolName[];
+		protocols: RouterProtocolName[];
 	}): Promise<CoinType[]> => {
 		const apis = this.protocolApisFromNames({
 			protocols: inputs.protocols,
@@ -186,7 +192,7 @@ export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public protocolApisFromNames = (inputs: {
-		protocols: RouterSynchronousProtocolName[];
+		protocols: RouterProtocolName[];
 	}): RouterApiInterface<any>[] => {
 		const { protocols } = inputs;
 		return protocols.map((name) => this.protocolNamesToApi[name]);

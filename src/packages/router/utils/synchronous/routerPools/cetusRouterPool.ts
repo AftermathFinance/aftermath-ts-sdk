@@ -49,7 +49,10 @@ class CetusRouterPool implements RouterPoolInterface {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}) => {
-		const spotPriceAOverB = this.pool.spotPriceAOverB;
+		const smallestTradeResult = this.pool.tradeResults.amounts[0];
+		const spotPriceAOverB =
+			Number(smallestTradeResult.amountIn) /
+			Number(smallestTradeResult.amountOut);
 
 		if (this.isCoinA(inputs.coinInType)) return spotPriceAOverB;
 

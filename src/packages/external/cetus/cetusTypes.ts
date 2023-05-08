@@ -9,10 +9,13 @@ export interface CetusRouterPoolObject {
 	poolObjectId: ObjectId;
 	coinTypeA: CoinType;
 	coinTypeB: CoinType;
-	spotPriceAOverB: number;
-	curve: {
-		slope: number;
-		intercept: bigint;
+	tradeResults: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		amounts: {
+			amountIn: Balance;
+			amountOut: Balance;
+		}[];
 	};
 }
 
@@ -37,7 +40,6 @@ export const isCetusRouterPoolObject = (
 		"poolObjectId" in pool &&
 		"coinTypeA" in pool &&
 		"coinTypeB" in pool &&
-		"spotPriceAOverB" in pool &&
-		"curve" in pool
+		"tradeResults" in pool
 	);
 };

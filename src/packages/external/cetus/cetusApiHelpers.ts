@@ -16,9 +16,14 @@ import {
 	ReferralVaultAddresses,
 } from "../../../types";
 import { Sui } from "../../sui";
-import { CetusCalcTradeResult, CetusPoolObject } from "./cetusTypes";
+import {
+	CetusCalcTradeResult,
+	CetusPoolObject,
+	CetusRouterPoolObject,
+} from "./cetusTypes";
 import { Helpers } from "../../../general/utils";
 import { BCS } from "@mysten/bcs";
+import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
 
 export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -113,6 +118,50 @@ export class CetusApiHelpers {
 			throw new Error("no cetus pools found for given coin types");
 
 		return foundPool;
+	};
+
+	public fetchCreateRouterPoolFromPoolObject = async (inputs: {
+		pool: CetusPoolObject;
+	}): Promise<CetusRouterPoolObject> => {
+		const startAmountIn = BigInt("1000000");
+		const endAmountIn = BigInt("1000000");
+		const amountInMultiplier = BigInt(10);
+
+		let amountsIn: Balance[] = [];
+		let amountIn: Balance = startAmountIn;
+		while (amountIn < endAmountIn) {
+			amountIn *= amountInMultiplier;
+			amountsIn.push(amountIn);
+		}
+
+		const amountsOut = await Promise.all(
+			amountsIn.map(async (amountIn, index) => {
+				const tradeResult = await this.fetchCalcTradeResult({
+					...inputs,
+					walletAddress: RpcApiHelpers.constants.devInspectSigner,
+					coinInType: inputs.pool.coinTypeA,
+					coinOutType: inputs.pool.coinTypeB,
+					coinInAmount: amountIn,
+				});
+				return tradeResult.amountOut;
+			})
+		);
+
+		const amounts = amountsIn.map((amountIn, index) => {
+			return {
+				amountIn,
+				amountOut: amountsOut[index],
+			};
+		});
+
+		return {
+			...inputs.pool,
+			tradeResults: {
+				coinInType: inputs.pool.coinTypeA,
+				coinOutType: inputs.pool.coinTypeB,
+				amounts,
+			},
+		};
 	};
 
 	/////////////////////////////////////////////////////////////////////

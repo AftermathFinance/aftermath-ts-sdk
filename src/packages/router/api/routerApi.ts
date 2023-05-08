@@ -19,9 +19,6 @@ import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
-import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
-import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
-import { Helpers } from "../../../general/utils";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -29,7 +26,6 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly Helpers;
-	public readonly AsyncHelpers;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -44,7 +40,6 @@ export class RouterApi {
 	) {
 		this.Provider = Provider;
 		this.Helpers = new RouterSynchronousApiHelpers(Provider);
-		this.AsyncHelpers = new RouterAsyncApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -64,8 +59,12 @@ export class RouterApi {
 	//// Graph
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchSerializableGraph = async () => {
+	public fetchSerializableGraph = async (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}) => {
 		const pools = await this.Helpers.fetchAllPools({
+			...inputs,
 			protocols: this.protocols,
 		});
 		return RouterGraph.createGraph({ pools });
@@ -96,67 +95,13 @@ export class RouterApi {
 		// TODO: add options to set all these params ?
 		// maxRouteLength?: number,
 	): Promise<RouterCompleteTradeRoute> => {
-		const asyncResults = await this.AsyncHelpers.fetchTradeResults({
-			protocols: this.asyncProtocols,
-			coinInType: coinIn,
-			coinOutType: coinOut,
+		return new RouterGraph(network, graph).getCompleteRouteGivenAmountIn(
+			coinIn,
 			coinInAmount,
-			tradePartitionCount: 5,
-		});
-
-		const routerGraph = new RouterGraph(network, graph);
-		const synchronousResults = asyncResults.amountsIn.map((amountIn) =>
-			routerGraph.getCompleteRouteGivenAmountIn(
-				coinIn,
-				amountIn,
-				coinOut,
-				referrer,
-				externalFee
-			)
+			coinOut,
+			referrer,
+			externalFee
 		);
-
-		const totalAmountsOut = synchronousResults.map((syncResult, index) => {
-			const asyncIndex = synchronousResults.length - index - 1;
-
-			asyncResults.results.sort((a, b) =>
-				Number((b.amountsOut[asyncIndex] = a.amountsOut[asyncIndex]))
-			);
-			const bestAsyncResult = asyncResults.results[0];
-
-			return {
-				amountOut:
-					bestAsyncResult.amountsOut[asyncIndex] +
-					syncResult.coinOut.amount,
-				asyncProtocol: bestAsyncResult.protocol,
-			};
-		});
-
-		const maxAmountOutIndex = Helpers.indexOfMax(
-			totalAmountsOut.map((data) => data.amountOut)
-		);
-
-		console.log("maxIndex", maxAmountOutIndex);
-		console.log("amountOutTotal", totalAmountsOut[maxAmountOutIndex]);
-
-		const chosenSync = synchronousResults[maxAmountOutIndex];
-		const chosenAsync = asyncResults.results.find(
-			(result) =>
-				result.protocol ===
-				totalAmountsOut[maxAmountOutIndex].asyncProtocol
-		);
-
-		if (!chosenAsync) throw new Error("");
-
-		console.log("chosenSync", chosenSync);
-		console.log("chosenAsync", chosenAsync);
-		console.log(
-			"chosenAsync amount out",
-			chosenAsync.amountsOut[
-				synchronousResults.length - maxAmountOutIndex - 1
-			]
-		);
-
-		return chosenSync;
 	};
 
 	public fetchCompleteTradeRouteGivenAmountOut = async (
