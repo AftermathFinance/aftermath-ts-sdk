@@ -430,7 +430,8 @@ export class RouterGraph {
 			graph.pools,
 			coinInEdges,
 			coinIn,
-			coinOut
+			coinOut,
+			false
 		);
 
 		const routes = this.findCompleteRoutes(
@@ -441,7 +442,15 @@ export class RouterGraph {
 			isGivenAmountOut
 		);
 
-		return routes;
+		const noHopRoutes = this.createStartingRoutes(
+			graph.pools,
+			coinInEdges,
+			coinIn,
+			coinOut,
+			true
+		);
+
+		return [...routes, ...noHopRoutes];
 	};
 
 	private static createStartingRoutes = (
@@ -449,12 +458,16 @@ export class RouterGraph {
 		coinInEdges: RouterCoinOutThroughPoolEdges,
 		coinIn: CoinType,
 		// NOTE: should this really be unused ?
-		coinOut: CoinType
+		finalCoinOut: CoinType,
+		onlyNoHopPools: boolean
 	): TradeRoute[] => {
 		let routes: TradeRoute[] = [];
 		for (const [coinOut, throughPools] of Object.entries(coinInEdges)) {
 			for (const poolUid of throughPools) {
 				const pool = pools[poolUid];
+
+				if (onlyNoHopPools && !pool.noHopsAllowed) continue;
+
 				routes.push({
 					estimatedGasCost: pool.expectedGasCostPerHop,
 					coinIn: {
