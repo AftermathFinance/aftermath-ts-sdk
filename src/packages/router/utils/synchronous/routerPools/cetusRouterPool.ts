@@ -75,13 +75,31 @@ class CetusRouterPool implements RouterPoolInterface {
 				coinOutAmount: coinInAmount,
 			});
 
-		const curve = this.pool.curve;
+		const tradeAmounts = this.pool.tradeResults.amounts;
 
-		const coinOutAmount =
-			BigInt(Math.floor(Number(coinInAmount) * curve.slope)) +
-			curve.intercept;
+		const lowerBoundIndex = tradeAmounts.findIndex(
+			(amounts) => coinInAmount > amounts.amountIn
+		);
+		const upperBoundIndex =
+			lowerBoundIndex + 1 >= tradeAmounts.length
+				? lowerBoundIndex
+				: lowerBoundIndex + 1;
+
+		const lowerBound = tradeAmounts[lowerBoundIndex].amountOut;
+		const upperBound = tradeAmounts[upperBoundIndex].amountOut;
+
+		const difference = upperBound - lowerBound;
+		const coinOutAmount = lowerBound + difference / BigInt(2);
 
 		return coinOutAmount;
+
+		// const curve = this.pool.curve;
+
+		// const coinOutAmount =
+		// 	BigInt(Math.floor(Number(coinInAmount) * curve.slope)) +
+		// 	curve.intercept;
+
+		// return coinOutAmount;
 	};
 
 	addTradeCommandToTransaction = (inputs: {
@@ -122,14 +140,32 @@ class CetusRouterPool implements RouterPoolInterface {
 				coinInAmount: coinOutAmount,
 			});
 
-		const curve = this.pool.curve;
+		const tradeAmounts = this.pool.tradeResults.amounts;
 
-		const coinInAmount =
-			Number(coinOutAmount - curve.intercept) / curve.slope;
+		const lowerBoundIndex = tradeAmounts.findIndex(
+			(amounts) => coinOutAmount > amounts.amountOut
+		);
+		const upperBoundIndex =
+			lowerBoundIndex + 1 >= tradeAmounts.length
+				? lowerBoundIndex
+				: lowerBoundIndex + 1;
 
-		if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
+		const lowerBound = tradeAmounts[lowerBoundIndex].amountIn;
+		const upperBound = tradeAmounts[upperBoundIndex].amountIn;
 
-		return BigInt(Math.floor(coinInAmount));
+		const difference = upperBound - lowerBound;
+		const coinInAmount = lowerBound + difference / BigInt(2);
+
+		return coinInAmount;
+
+		// const curve = this.pool.curve;
+
+		// const coinInAmount =
+		// 	Number(coinOutAmount - curve.intercept) / curve.slope;
+
+		// if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
+
+		// return BigInt(Math.floor(coinInAmount));
 	};
 
 	getUpdatedPoolBeforeTrade = (_: {

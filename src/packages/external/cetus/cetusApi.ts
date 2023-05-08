@@ -43,17 +43,26 @@ export class CetusApi implements RouterApiInterface<CetusRouterPoolObject> {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}) => {
-		if (!inputs) return [];
+		// if (!inputs) return [];
 
-		const pool = await this.fetchPoolForCoinTypes({
-			coinType1: inputs.coinInType,
-			coinType2: inputs.coinOutType,
-		});
+		// const pool = await this.fetchPoolForCoinTypes({
+		// 	coinType1: inputs.coinInType,
+		// 	coinType2: inputs.coinOutType,
+		// });
 
-		const routerPool =
-			await this.Helpers.fetchCreateRouterPoolFromPoolObject({ pool });
+		// const routerPool =
+		// 	await this.Helpers.fetchCreateRouterPoolFromPoolObject({ pool });
 
-		return [routerPool];
+		// return [routerPool];
+
+		const pools = await this.Helpers.fetchAllPools();
+		const routerPools = await Promise.all(
+			pools.map((pool) =>
+				this.Helpers.fetchCreateRouterPoolFromPoolObject({ pool })
+			)
+		);
+
+		return routerPools;
 	};
 
 	public fetchSupportedCoins = async () => {

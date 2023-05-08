@@ -124,7 +124,7 @@ export class CetusApiHelpers {
 		pool: CetusPoolObject;
 	}): Promise<CetusRouterPoolObject> => {
 		const startAmountIn = BigInt("1000000");
-		const endAmountIn = BigInt("1000000");
+		const endAmountIn = BigInt("10000000000000000");
 		const amountInMultiplier = BigInt(10);
 
 		let amountsIn: Balance[] = [];
