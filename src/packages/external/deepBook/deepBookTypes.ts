@@ -1,6 +1,10 @@
 import { ObjectId } from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
-import { Balance, RouterSynchronousSerializablePool } from "../../../types";
+import {
+	Balance,
+	RouterSerializablePool,
+	RouterSynchronousSerializablePool,
+} from "../../../types";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -23,7 +27,7 @@ export interface DeepBookPriceRange {
 }
 
 export const isDeepBookPoolObject = (
-	pool: RouterSynchronousSerializablePool
+	pool: RouterSerializablePool
 ): pool is DeepBookPoolObject => {
 	return (
 		"bids" in pool &&

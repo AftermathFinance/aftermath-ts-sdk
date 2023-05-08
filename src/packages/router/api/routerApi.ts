@@ -98,7 +98,6 @@ export class RouterApi {
 	): Promise<RouterCompleteTradeRoute> => {
 		const asyncResults = await this.AsyncHelpers.fetchTradeResults({
 			protocols: this.asyncProtocols,
-			walletAddress: RpcApiHelpers.constants.devInspectSigner,
 			coinInType: coinIn,
 			coinOutType: coinOut,
 			coinInAmount,

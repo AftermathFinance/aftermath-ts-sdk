@@ -144,6 +144,7 @@ export class RouterSynchronousApiHelpers {
 					provider,
 					tx,
 					coinIn,
+					coinInAmount: route.coinIn.amount,
 					coinInType: path.coinIn.type,
 					coinOutType: path.coinOut.type,
 					expectedAmountOut: path.coinOut.amount,

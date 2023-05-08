@@ -35,8 +35,8 @@ class NojoRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
 
 	readonly protocolName = "Nojo";
-	// readonly limitToSingleHops = false;
 	readonly expectedGasCostPerHop = BigInt(5_000_000); // 0.005 SUI
+	readonly noHopsAllowed = false;
 
 	readonly pool: NojoPoolObject;
 	readonly network: SuiNetwork | Url;
@@ -100,6 +100,7 @@ class NojoRouterPool implements RouterPoolInterface {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
+		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		expectedAmountOut: Balance;

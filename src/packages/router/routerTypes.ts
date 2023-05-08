@@ -9,7 +9,10 @@ import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
 import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
 import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
-import { CetusPoolObject } from "../external/cetus/cetusTypes";
+import {
+	CetusPoolObject,
+	CetusRouterPoolObject,
+} from "../external/cetus/cetusTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -64,7 +67,7 @@ export type RouterSynchronousProtocolName = "Aftermath" | "Nojo" | "DeepBook";
 //// Router Async Pools
 /////////////////////////////////////////////////////////////////////
 
-export type RouterAsyncSerializablePool = CetusPoolObject;
+export type RouterAsyncSerializablePool = CetusRouterPoolObject;
 
 export type RouterAsyncProtocolName = "Cetus";
 

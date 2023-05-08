@@ -1,6 +1,9 @@
 import { PoolFields } from "../../../external/nojo";
 import { CoinType } from "../../coin/coinTypes";
-import { RouterSynchronousSerializablePool } from "../../router/routerTypes";
+import {
+	RouterSerializablePool,
+	RouterSynchronousSerializablePool,
+} from "../../router/routerTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -12,7 +15,7 @@ export type NojoPoolObject = {
 };
 
 export const isNojoPoolObject = (
-	pool: RouterSynchronousSerializablePool
+	pool: RouterSerializablePool
 ): pool is NojoPoolObject => {
 	return "typeArgs" in pool;
 };

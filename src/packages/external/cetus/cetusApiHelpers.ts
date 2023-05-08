@@ -459,7 +459,7 @@ export class CetusApiHelpers {
 			coinTypeA: "0x" + fields.coin_type_a.fields.name,
 			coinTypeB: "0x" + fields.coin_type_b.fields.name,
 			poolObjectId: fields.pool_id,
-			poolKeyId: fields.pool_key,
+			// poolKeyId: fields.pool_key,
 		};
 	};
 

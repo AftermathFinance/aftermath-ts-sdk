@@ -6,6 +6,8 @@ import {
 } from "@mysten/sui.js";
 import {
 	Balance,
+	RouterProtocolName,
+	RouterSerializablePool,
 	RouterSynchronousProtocolName,
 	RouterSynchronousSerializablePool,
 	Slippage,
@@ -20,13 +22,15 @@ import { AftermathApi } from "../../../../../general/providers";
 import { isNojoPoolObject } from "../../../../external/nojo/nojoAmmTypes";
 import { isDeepBookPoolObject } from "../../../../external/deepBook/deepBookTypes";
 import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
+import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
+import CetusRouterPool from "../routerPools/cetusRouterPool";
 
 /////////////////////////////////////////////////////////////////////
 //// Creation
 /////////////////////////////////////////////////////////////////////
 
 export function createRouterPool(inputs: {
-	pool: RouterSynchronousSerializablePool;
+	pool: RouterSerializablePool;
 	// NOTE: should this be optional and passed in only upon transaction creation or another way ?
 	network: SuiNetwork | Url;
 }): RouterPoolInterface {
@@ -36,6 +40,8 @@ export function createRouterPool(inputs: {
 		? new NojoRouterPool(pool, network)
 		: isDeepBookPoolObject(pool)
 		? new DeepBookRouterPool(pool, network)
+		: isCetusRouterPoolObject(pool)
+		? new CetusRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;
@@ -67,13 +73,13 @@ export interface RouterPoolInterface {
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
-	readonly protocolName: RouterSynchronousProtocolName;
-	readonly pool: RouterSynchronousSerializablePool;
+	readonly protocolName: RouterProtocolName;
+	readonly pool: RouterSerializablePool;
 	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
-	// readonly limitToSingleHops: boolean;
 	readonly expectedGasCostPerHop: Balance; // in SUI
 	readonly coinTypes: CoinType[];
+	readonly noHopsAllowed: boolean;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Functions
@@ -96,6 +102,7 @@ export interface RouterPoolInterface {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
+		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		expectedAmountOut: Balance;
