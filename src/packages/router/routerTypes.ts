@@ -71,6 +71,12 @@ export type RouterAsyncSerializablePool = CetusRouterPoolObject;
 
 export type RouterAsyncProtocolName = "Cetus";
 
+export const isRouterAsyncSerializablePool = (
+	pool: RouterSerializablePool
+): pool is RouterAsyncSerializablePool => {
+	return "curve" in pool;
+};
+
 /////////////////////////////////////////////////////////////////////
 //// Paths
 /////////////////////////////////////////////////////////////////////
@@ -127,7 +133,7 @@ export interface RouterOptions {
 
 export type RouterSerializablePoolsById = Record<
 	UniqueId,
-	RouterSynchronousSerializablePool
+	RouterSerializablePool
 >;
 
 export type RouterGraphCoinNodes = Record<CoinType, RouterCoinNode>;

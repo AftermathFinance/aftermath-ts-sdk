@@ -2,13 +2,11 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { CetusApiHelpers } from "./cetusApiHelpers";
 import { SuiAddress } from "@mysten/sui.js";
-import { CetusPoolObject, CetusRouterPoolObject } from "./cetusTypes";
+import { CetusPoolObject } from "./cetusTypes";
 import { Balance, SerializedTransaction } from "../../../types";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 
-export class CetusApi
-	implements RouterAsyncApiInterface<CetusRouterPoolObject>
-{
+export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
@@ -35,7 +33,7 @@ export class CetusApi
 	public fetchPoolForCoinTypes = async (inputs: {
 		coinType1: CoinType;
 		coinType2: CoinType;
-	}): Promise<CetusRouterPoolObject> => {
+	}): Promise<CetusPoolObject> => {
 		return this.Helpers.fetchPoolForCoinTypes(inputs);
 	};
 

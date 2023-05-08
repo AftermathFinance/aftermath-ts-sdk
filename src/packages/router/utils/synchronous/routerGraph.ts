@@ -164,11 +164,42 @@ export class RouterGraph {
 		maxRouteLength?: number;
 	}): Promise<RouterSupportedCoinPaths> => {
 		const nodes = Object.values(inputs.graph.coinNodes);
+		const pools = inputs.graph.pools;
+
+		let unHoppableCoinPathsToAdd: {
+			coinIn: CoinType;
+			coinOut: CoinType;
+		}[] = [];
 
 		const coinPaths: RouterSupportedCoinPaths = nodes.reduce(
 			(acc, node) => {
 				const coinIn = node.coin;
-				const coinsOut = Object.keys(node.coinOutThroughPoolEdges);
+				const coinsOut = Object.keys(
+					Object.entries(node.coinOutThroughPoolEdges).filter(
+						([coinOut, poolUids]) => {
+							const unHoppablePoolUids = poolUids.filter(
+								(uid) =>
+									createRouterPool({
+										pool: pools[uid],
+										network: "",
+									}).noHopsAllowed
+							);
+
+							if (unHoppablePoolUids.length > 0)
+								unHoppableCoinPathsToAdd = [
+									...unHoppableCoinPathsToAdd,
+									{
+										coinIn,
+										coinOut,
+									},
+								];
+
+							const allPoolsAreUnHoppable =
+								unHoppablePoolUids.length === poolUids.length;
+							return !allPoolsAreUnHoppable;
+						}
+					)
+				);
 
 				return {
 					...acc,
@@ -178,7 +209,8 @@ export class RouterGraph {
 			{}
 		);
 
-		let extendedCoinPaths = Helpers.deepCopy(coinPaths);
+		let extendedCoinPaths: RouterSupportedCoinPaths =
+			Helpers.deepCopy(coinPaths);
 
 		for (const _ of Array(
 			inputs.maxRouteLength ?? RouterGraph.defaultOptions.maxRouteLength
@@ -194,6 +226,24 @@ export class RouterGraph {
 					...newCoinsOut,
 				]).filter((coin) => coin !== coinIn);
 			}
+		}
+
+		for (const coinPath of unHoppableCoinPathsToAdd) {
+			if (coinPath.coinIn in extendedCoinPaths) {
+				extendedCoinPaths = {
+					...extendedCoinPaths,
+					[coinPath.coinIn]: Helpers.uniqueArray([
+						...extendedCoinPaths[coinPath.coinIn],
+						coinPath.coinOut,
+					]),
+				};
+				continue;
+			}
+
+			extendedCoinPaths = {
+				...extendedCoinPaths,
+				[coinPath.coinIn]: [coinPath.coinOut],
+			};
 		}
 
 		return extendedCoinPaths;
