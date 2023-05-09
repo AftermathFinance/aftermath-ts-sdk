@@ -62,7 +62,14 @@ export class CetusApi implements RouterApiInterface<CetusRouterPoolObject> {
 			)
 		);
 
-		return routerPools;
+		const poolsWithLiquidity = routerPools.filter(
+			(pool) =>
+				!pool.tradeResults.amounts.some(
+					(amount) => amount.amountOut <= BigInt(0)
+				)
+		);
+
+		return poolsWithLiquidity;
 	};
 
 	public fetchSupportedCoins = async () => {

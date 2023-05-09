@@ -123,11 +123,11 @@ export class CetusApiHelpers {
 	public fetchCreateRouterPoolFromPoolObject = async (inputs: {
 		pool: CetusPoolObject;
 	}): Promise<CetusRouterPoolObject> => {
-		const startAmountIn = BigInt("1000000");
+		const startAmountIn = BigInt("10000");
 		const endAmountIn = BigInt("10000000000000000");
 		const amountInMultiplier = BigInt(10);
 
-		let amountsIn: Balance[] = [];
+		let amountsIn: Balance[] = [startAmountIn];
 		let amountIn: Balance = startAmountIn;
 		while (amountIn < endAmountIn) {
 			amountIn *= amountInMultiplier;
@@ -135,7 +135,7 @@ export class CetusApiHelpers {
 		}
 
 		const amountsOut = await Promise.all(
-			amountsIn.map(async (amountIn, index) => {
+			amountsIn.map(async (amountIn) => {
 				const tradeResult = await this.fetchCalcTradeResult({
 					...inputs,
 					walletAddress: RpcApiHelpers.constants.devInspectSigner,

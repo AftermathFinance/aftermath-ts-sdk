@@ -77,9 +77,14 @@ class CetusRouterPool implements RouterPoolInterface {
 
 		const tradeAmounts = this.pool.tradeResults.amounts;
 
-		const lowerBoundIndex = tradeAmounts.findIndex(
+		const possibleLowerBoundIndex = tradeAmounts.findIndex(
 			(amounts) => coinInAmount > amounts.amountIn
 		);
+		const lowerBoundIndex =
+			possibleLowerBoundIndex < 0
+				? tradeAmounts.length - 1
+				: possibleLowerBoundIndex;
+
 		const upperBoundIndex =
 			lowerBoundIndex + 1 >= tradeAmounts.length
 				? lowerBoundIndex
@@ -90,6 +95,8 @@ class CetusRouterPool implements RouterPoolInterface {
 
 		const difference = upperBound - lowerBound;
 		const coinOutAmount = lowerBound + difference / BigInt(2);
+
+		if (coinOutAmount <= 0) throw new Error("coinOutAmount <= 0");
 
 		return coinOutAmount;
 
@@ -142,9 +149,14 @@ class CetusRouterPool implements RouterPoolInterface {
 
 		const tradeAmounts = this.pool.tradeResults.amounts;
 
-		const lowerBoundIndex = tradeAmounts.findIndex(
+		const possibleLowerBoundIndex = tradeAmounts.findIndex(
 			(amounts) => coinOutAmount > amounts.amountOut
 		);
+		const lowerBoundIndex =
+			possibleLowerBoundIndex < 0
+				? tradeAmounts.length - 1
+				: possibleLowerBoundIndex;
+
 		const upperBoundIndex =
 			lowerBoundIndex + 1 >= tradeAmounts.length
 				? lowerBoundIndex
@@ -155,6 +167,8 @@ class CetusRouterPool implements RouterPoolInterface {
 
 		const difference = upperBound - lowerBound;
 		const coinInAmount = lowerBound + difference / BigInt(2);
+
+		if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
 
 		return coinInAmount;
 
