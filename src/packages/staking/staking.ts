@@ -97,7 +97,7 @@ export class Staking extends Caller {
 		return this.fetchApi("sui-tvl");
 	}
 
-	public async getAfSuiSupply(): Promise<Balance> {
-		return this.fetchApi("afsui-supply");
+	public async getAfSuiExchangeRate(): Promise<number> {
+		return this.fetchApi("afsui-exchange-rate");
 	}
 }

@@ -715,4 +715,12 @@ export class StakingApiHelpers {
 
 		return newPositions;
 	};
+
+	public fetchAfSuiSupply = async (): Promise<Balance> => {
+		const tx = new TransactionBlock();
+		this.addGetAfSuiSupplyCommandToTransaction({ tx });
+		const bytes =
+			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+		return Casting.bigIntFromBytes(bytes);
+	};
 }
