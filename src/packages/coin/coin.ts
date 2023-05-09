@@ -177,16 +177,20 @@ export class Coin extends Caller {
 		coinType: CoinType,
 		coinSymbolToCoinTypes: CoinSymbolToCoinTypes
 	): CoinSymbol | undefined => {
-		const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
-		const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
-			([, coinsTypes]) =>
-				coinsTypes
-					.map(Helpers.addLeadingZeroesToType)
-					.includes(fullCoinType)
-		);
+		try {
+			const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
+			const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
+				([, coinsTypes]) =>
+					coinsTypes
+						.map(Helpers.addLeadingZeroesToType)
+						.includes(fullCoinType)
+			);
 
-		const foundCoinSymbol = foundCoinData?.[0];
-		return foundCoinSymbol;
+			const foundCoinSymbol = foundCoinData?.[0];
+			return foundCoinSymbol;
+		} catch (e) {
+			return undefined;
+		}
 	};
 
 	/////////////////////////////////////////////////////////////////////
