@@ -65,46 +65,40 @@ class CetusRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
-		const { coinInAmount, coinInType } = inputs;
+		throw new Error("uncallable");
 
-		if (!this.isCoinA(coinInType))
-			return this.getTradeAmountIn({
-				...inputs,
-				coinInType: inputs.coinOutType,
-				coinOutType: inputs.coinInType,
-				coinOutAmount: coinInAmount,
-			});
+		// const { coinInAmount, coinInType } = inputs;
 
-		const tradeAmounts = this.pool.tradeResults.amounts;
+		// if (!this.isCoinA(coinInType))
+		// 	return this.getTradeAmountIn({
+		// 		...inputs,
+		// 		coinInType: inputs.coinOutType,
+		// 		coinOutType: inputs.coinInType,
+		// 		coinOutAmount: coinInAmount,
+		// 	});
 
-		const possibleLowerBoundIndex = tradeAmounts.findIndex(
-			(amounts) => coinInAmount > amounts.amountIn
-		);
-		const lowerBoundIndex =
-			possibleLowerBoundIndex < 0
-				? tradeAmounts.length - 1
-				: possibleLowerBoundIndex;
+		// const tradeAmounts = this.pool.tradeResults.amounts;
 
-		const upperBoundIndex =
-			lowerBoundIndex + 1 >= tradeAmounts.length
-				? lowerBoundIndex
-				: lowerBoundIndex + 1;
+		// const possibleLowerBoundIndex = tradeAmounts.findIndex(
+		// 	(amounts) => coinInAmount > amounts.amountIn
+		// );
+		// const lowerBoundIndex =
+		// 	possibleLowerBoundIndex < 0
+		// 		? tradeAmounts.length - 1
+		// 		: possibleLowerBoundIndex;
 
-		const lowerBound = tradeAmounts[lowerBoundIndex].amountOut;
-		const upperBound = tradeAmounts[upperBoundIndex].amountOut;
+		// const upperBoundIndex =
+		// 	lowerBoundIndex + 1 >= tradeAmounts.length
+		// 		? lowerBoundIndex
+		// 		: lowerBoundIndex + 1;
 
-		const difference = upperBound - lowerBound;
-		const coinOutAmount = lowerBound + difference / BigInt(2);
+		// const lowerBound = tradeAmounts[lowerBoundIndex].amountOut;
+		// const upperBound = tradeAmounts[upperBoundIndex].amountOut;
 
-		if (coinOutAmount <= 0) throw new Error("coinOutAmount <= 0");
+		// const difference = upperBound - lowerBound;
+		// const coinOutAmount = lowerBound + difference / BigInt(2);
 
-		return coinOutAmount;
-
-		// const curve = this.pool.curve;
-
-		// const coinOutAmount =
-		// 	BigInt(Math.floor(Number(coinInAmount) * curve.slope)) +
-		// 	curve.intercept;
+		// if (coinOutAmount <= 0) throw new Error("coinOutAmount <= 0");
 
 		// return coinOutAmount;
 	};
@@ -137,49 +131,34 @@ class CetusRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
-		const { coinOutAmount, coinInType } = inputs;
+		throw new Error("uncallable");
 
-		if (!this.isCoinA(coinInType))
-			return this.getTradeAmountOut({
-				...inputs,
-				coinInType: inputs.coinOutType,
-				coinOutType: inputs.coinInType,
-				coinInAmount: coinOutAmount,
-			});
-
-		const tradeAmounts = this.pool.tradeResults.amounts;
-
-		const possibleLowerBoundIndex = tradeAmounts.findIndex(
-			(amounts) => coinOutAmount > amounts.amountOut
-		);
-		const lowerBoundIndex =
-			possibleLowerBoundIndex < 0
-				? tradeAmounts.length - 1
-				: possibleLowerBoundIndex;
-
-		const upperBoundIndex =
-			lowerBoundIndex + 1 >= tradeAmounts.length
-				? lowerBoundIndex
-				: lowerBoundIndex + 1;
-
-		const lowerBound = tradeAmounts[lowerBoundIndex].amountIn;
-		const upperBound = tradeAmounts[upperBoundIndex].amountIn;
-
-		const difference = upperBound - lowerBound;
-		const coinInAmount = lowerBound + difference / BigInt(2);
-
-		if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
-
-		return coinInAmount;
-
-		// const curve = this.pool.curve;
-
-		// const coinInAmount =
-		// 	Number(coinOutAmount - curve.intercept) / curve.slope;
-
+		// const { coinOutAmount, coinInType } = inputs;
+		// if (!this.isCoinA(coinInType))
+		// 	return this.getTradeAmountOut({
+		// 		...inputs,
+		// 		coinInType: inputs.coinOutType,
+		// 		coinOutType: inputs.coinInType,
+		// 		coinInAmount: coinOutAmount,
+		// 	});
+		// const tradeAmounts = this.pool.tradeResults.amounts;
+		// const possibleLowerBoundIndex = tradeAmounts.findIndex(
+		// 	(amounts) => coinOutAmount > amounts.amountOut
+		// );
+		// const lowerBoundIndex =
+		// 	possibleLowerBoundIndex < 0
+		// 		? tradeAmounts.length - 1
+		// 		: possibleLowerBoundIndex;
+		// const upperBoundIndex =
+		// 	lowerBoundIndex + 1 >= tradeAmounts.length
+		// 		? lowerBoundIndex
+		// 		: lowerBoundIndex + 1;
+		// const lowerBound = tradeAmounts[lowerBoundIndex].amountIn;
+		// const upperBound = tradeAmounts[upperBoundIndex].amountIn;
+		// const difference = upperBound - lowerBound;
+		// const coinInAmount = lowerBound + difference / BigInt(2);
 		// if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
-
-		// return BigInt(Math.floor(coinInAmount));
+		// return coinInAmount;
 	};
 
 	getUpdatedPoolBeforeTrade = (_: {

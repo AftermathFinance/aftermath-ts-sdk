@@ -147,7 +147,7 @@ export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 export interface RouterAsyncTradeResults {
 	coinInType: CoinType;
 	coinOutType: CoinType;
-	amountsIn: Balance[];
+	coinInAmounts: Balance[];
 	results: RouterAsyncTradeResult[];
 }
 
