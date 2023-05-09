@@ -56,14 +56,12 @@ export class TransactionsApiHelpers {
 		const sender = tx.blockData.sender;
 		if (!sender) throw new Error("no sender set for transaction");
 
-		const response =
-			await this.Provider.provider.devInspectTransactionBlock({
-				sender,
-				transactionBlock: tx,
-			});
+		const response = await this.Provider.provider.dryRunTransactionBlock({
+			transactionBlock: tx.serialize(),
+		});
 
 		const gasUsed = getTotalGasUsedUpperBound(response.effects);
-		if (gasUsed === undefined) throw Error("dev inspect move call failed");
+		if (gasUsed === undefined) throw Error("dry run move call failed");
 
 		tx.setGasBudget(gasUsed);
 		return tx;
