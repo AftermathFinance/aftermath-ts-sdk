@@ -249,145 +249,199 @@ export class StakingApiHelpers {
 		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
-	}) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakeRequestEventOnChain,
-			StakeRequestEvent
-		>(
-			{
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.stakeRequest,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			Casting.staking.stakeRequestEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+	}) => {
+		const eventsWithCursor =
+			await this.Provider.Events().fetchCastEventsWithCursor<
+				StakeRequestEventOnChain,
+				StakeRequestEvent
+			>(
+				{
+					// And: [
+					// 	{
+					MoveEventType: this.eventTypes.stakeRequest,
+					// 	},
+					// 	{
+					// 		Sender: inputs.walletAddress,
+					// 	},
+					// ],
+				},
+				Casting.staking.stakeRequestEventFromOnChain,
+				inputs.cursor,
+				inputs.limit
+			);
+
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.staker === inputs.walletAddress
+			),
+		};
+	};
 
 	public fetchUnstakeRequestEvents = async (inputs: {
 		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
-	}) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			UnstakeRequestEventOnChain,
-			UnstakeRequestEvent
-		>(
-			{
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.unstakeRequest,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			Casting.staking.unstakeRequestEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+	}) => {
+		const eventsWithCursor =
+			await this.Provider.Events().fetchCastEventsWithCursor<
+				UnstakeRequestEventOnChain,
+				UnstakeRequestEvent
+			>(
+				{
+					// And: [
+					// 	{
+					MoveEventType: this.eventTypes.unstakeRequest,
+					// 	},
+					// 	{
+					// 		Sender: inputs.walletAddress,
+					// 	},
+					// ],
+				},
+				Casting.staking.unstakeRequestEventFromOnChain,
+				inputs.cursor,
+				inputs.limit
+			);
+
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.staker === inputs.walletAddress
+			),
+		};
+	};
 
 	public fetchStakeSuccessEvents = async (inputs: {
 		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
-	}) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakeSuccessEventOnChain,
-			StakeSuccessEvent
-		>(
-			{
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.stakeSuccess,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			Casting.staking.stakeSuccessEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+	}) => {
+		const eventsWithCursor =
+			await this.Provider.Events().fetchCastEventsWithCursor<
+				StakeSuccessEventOnChain,
+				StakeSuccessEvent
+			>(
+				{
+					// And: [
+					// 	{
+					MoveEventType: this.eventTypes.stakeSuccess,
+					// 	},
+					// 	{
+					// 		Sender: inputs.walletAddress,
+					// 	},
+					// ],
+				},
+				Casting.staking.stakeSuccessEventFromOnChain,
+				inputs.cursor,
+				inputs.limit
+			);
+
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.staker === inputs.walletAddress
+			),
+		};
+	};
 
 	public fetchUnstakeSuccessEvents = async (inputs: {
 		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
-	}) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			UnstakeSuccessEventOnChain,
-			UnstakeSuccessEvent
-		>(
-			{
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.unstakeSuccess,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			Casting.staking.unstakeSuccessEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+	}) => {
+		const eventsWithCursor =
+			await this.Provider.Events().fetchCastEventsWithCursor<
+				UnstakeSuccessEventOnChain,
+				UnstakeSuccessEvent
+			>(
+				{
+					// And: [
+					// 	{
+					MoveEventType: this.eventTypes.unstakeSuccess,
+					// 	},
+					// 	{
+					// 		Sender: inputs.walletAddress,
+					// 	},
+					// ],
+				},
+				Casting.staking.unstakeSuccessEventFromOnChain,
+				inputs.cursor,
+				inputs.limit
+			);
+
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.staker === inputs.walletAddress
+			),
+		};
+	};
 
 	public fetchStakeFailedEvents = async (inputs: {
 		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
-	}) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakeFailedEventOnChain,
-			StakeFailedEvent
-		>(
-			{
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.stakeFailed,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			Casting.staking.stakeFailedEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+	}) => {
+		const eventsWithCursor =
+			await this.Provider.Events().fetchCastEventsWithCursor<
+				StakeFailedEventOnChain,
+				StakeFailedEvent
+			>(
+				{
+					// And: [
+					// 	{
+					MoveEventType: this.eventTypes.stakeFailed,
+					// 	},
+					// 	{
+					// 		Sender: inputs.walletAddress,
+					// 	},
+					// ],
+				},
+				Casting.staking.stakeFailedEventFromOnChain,
+				inputs.cursor,
+				inputs.limit
+			);
+
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.staker === inputs.walletAddress
+			),
+		};
+	};
 
 	public fetchAfSuiMintedEvents = async (inputs: {
 		walletAddress: SuiAddress;
 		cursor?: EventId;
 		limit?: number;
-	}) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			AfSuiMintedEventOnChain,
-			AfSuiMintedEvent
-		>(
-			{
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.afSuiMinted,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			Casting.staking.afSuiMintedEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+	}) => {
+		const eventsWithCursor =
+			await this.Provider.Events().fetchCastEventsWithCursor<
+				AfSuiMintedEventOnChain,
+				AfSuiMintedEvent
+			>(
+				{
+					// And: [
+					// 	{
+					MoveEventType: this.eventTypes.afSuiMinted,
+					// 	},
+					// 	{
+					// 		Sender: inputs.walletAddress,
+					// 	},
+					// ],
+				},
+				Casting.staking.afSuiMintedEventFromOnChain,
+				inputs.cursor,
+				inputs.limit
+			);
+
+		return {
+			...eventsWithCursor,
+			events: eventsWithCursor.events.filter(
+				(event) => event.staker === inputs.walletAddress
+			),
+		};
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Positions
