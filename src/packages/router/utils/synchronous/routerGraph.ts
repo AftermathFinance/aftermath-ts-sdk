@@ -175,32 +175,30 @@ export class RouterGraph {
 		const coinPaths: RouterSupportedCoinPaths = nodes.reduce(
 			(acc, node) => {
 				const coinIn = node.coin;
-				const coinsOut = Object.keys(
-					Object.entries(node.coinOutThroughPoolEdges).filter(
-						([coinOut, poolUids]) => {
-							const unHoppablePoolUids = poolUids.filter(
-								(uid) =>
-									createRouterPool({
-										pool: pools[uid],
-										network: "",
-									}).noHopsAllowed
-							);
+				const coinsOut = Object.entries(node.coinOutThroughPoolEdges)
+					.filter(([coinOut, poolUids]) => {
+						const unHoppablePoolUids = poolUids.filter(
+							(uid) =>
+								createRouterPool({
+									pool: pools[uid],
+									network: "",
+								}).noHopsAllowed
+						);
 
-							if (unHoppablePoolUids.length > 0)
-								unHoppableCoinPathsToAdd = [
-									...unHoppableCoinPathsToAdd,
-									{
-										coinIn,
-										coinOut,
-									},
-								];
+						if (unHoppablePoolUids.length > 0)
+							unHoppableCoinPathsToAdd = [
+								...unHoppableCoinPathsToAdd,
+								{
+									coinIn,
+									coinOut,
+								},
+							];
 
-							const allPoolsAreUnHoppable =
-								unHoppablePoolUids.length === poolUids.length;
-							return !allPoolsAreUnHoppable;
-						}
-					)
-				);
+						const allPoolsAreUnHoppable =
+							unHoppablePoolUids.length === poolUids.length;
+						return !allPoolsAreUnHoppable;
+					})
+					.map(([key]) => key);
 
 				return {
 					...acc,
