@@ -59,8 +59,9 @@ export class TransactionsApiHelpers {
 		if (!sender) throw new Error("no sender set for transaction");
 
 		const [txResponse, referenceGasPrice] = await Promise.all([
-			this.Provider.provider.dryRunTransactionBlock({
-				transactionBlock: tx.serialize(),
+			this.Provider.provider.devInspectTransactionBlock({
+				sender,
+				transactionBlock: tx,
 			}),
 			this.Provider.provider.getReferenceGasPrice(),
 		]);
