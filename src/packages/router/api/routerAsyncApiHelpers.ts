@@ -43,33 +43,43 @@ export class RouterAsyncApiHelpers {
 
 		const apis = this.protocolApisFromNames(inputs);
 
-		const results: RouterAsyncTradeResult[] = await Promise.all(
-			apis.map(async (api, index) => {
-				const pool = await api.fetchPoolForCoinTypes({
-					...inputs,
-					coinType1: coinInType,
-					coinType2: coinOutType,
-				});
-
-				const amountsOut = await Promise.all(
-					coinInAmounts.map((amountIn) =>
-						api.fetchTradeAmountOut({
+		const resultsOrUndefined: (RouterAsyncTradeResult | undefined)[] =
+			await Promise.all(
+				apis.map(async (api, index) => {
+					try {
+						const pool = await api.fetchPoolForCoinTypes({
 							...inputs,
-							pool,
-							walletAddress:
-								RpcApiHelpers.constants.devInspectSigner,
-							coinInAmount: amountIn,
-						})
-					)
-				);
+							coinType1: coinInType,
+							coinType2: coinOutType,
+						});
 
-				return {
-					pool,
-					amountsOut,
-					protocol: inputs.protocols[index],
-				};
-			})
-		);
+						const amountsOut = await Promise.all(
+							coinInAmounts.map((amountIn) =>
+								api.fetchTradeAmountOut({
+									...inputs,
+									pool,
+									walletAddress:
+										RpcApiHelpers.constants
+											.devInspectSigner,
+									coinInAmount: amountIn,
+								})
+							)
+						);
+
+						return {
+							pool,
+							amountsOut,
+							protocol: inputs.protocols[index],
+						};
+					} catch (e) {
+						return undefined;
+					}
+				})
+			);
+
+		const results = resultsOrUndefined.filter(
+			(result) => result !== undefined
+		) as RouterAsyncTradeResult[];
 
 		return {
 			...inputs,

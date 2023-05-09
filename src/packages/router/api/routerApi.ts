@@ -39,7 +39,7 @@ export class RouterApi {
 		public readonly protocols: RouterSynchronousProtocolName[] = [
 			"Aftermath",
 		],
-		public readonly asyncProtocols: RouterAsyncProtocolName[] = []
+		public readonly asyncProtocols: RouterAsyncProtocolName[] = ["Cetus"]
 	) {
 		this.Provider = Provider;
 		this.Helpers = new RouterSynchronousApiHelpers(Provider);
@@ -112,15 +112,22 @@ export class RouterApi {
 			coinInAmounts,
 		});
 
+		console.log("tradeResults", tradeResults);
+
 		const routerGraph = new RouterGraph(network, graph);
-		const synchronousCompleteRoutes =
-			routerGraph.getCompleteRoutesGivenAmountIns(
-				coinIn,
-				coinInAmounts,
-				coinOut,
-				referrer,
-				externalFee
-			);
+		const synchronousCompleteRoutes = (() => {
+			try {
+				return routerGraph.getCompleteRoutesGivenAmountIns(
+					coinIn,
+					coinInAmounts,
+					coinOut,
+					referrer,
+					externalFee
+				);
+			} catch (e) {
+				return undefined;
+			}
+		})();
 
 		return RouterAsyncGraph.createFinalCompleteRoute({
 			tradeResults,

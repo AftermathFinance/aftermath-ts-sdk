@@ -21,14 +21,13 @@ export class RouterAsyncGraph {
 
 	public static createFinalCompleteRoute(inputs: {
 		tradeResults: RouterAsyncTradeResults;
-		synchronousCompleteRoutes: RouterCompleteTradeRoute[];
 		coinInAmounts: Balance[];
+		synchronousCompleteRoutes?: RouterCompleteTradeRoute[];
 	}): RouterCompleteTradeRoute {
 		const asyncCompleteRoutes = this.completeRoutesFromTradeResults(inputs);
-		const completeRoutes = [
-			...asyncCompleteRoutes,
-			inputs.synchronousCompleteRoutes,
-		];
+		const completeRoutes = inputs.synchronousCompleteRoutes
+			? [...asyncCompleteRoutes, inputs.synchronousCompleteRoutes]
+			: [...asyncCompleteRoutes];
 
 		const chosenCompleteRoutes = this.splitTradeBetweenRoutes({
 			...inputs,
@@ -61,6 +60,10 @@ export class RouterAsyncGraph {
 		for (const _ of coinInAmounts) {
 			const incrementalAmountsOut = completeRoutes.map((route, index) => {
 				const prevChosenIndex = chosenRouteIndexes[index];
+
+				console.log("route", route);
+				console.log("prevChosenIndex", prevChosenIndex);
+
 				const prevAmountOut =
 					prevChosenIndex < 0
 						? BigInt(0)
@@ -96,11 +99,14 @@ export class RouterAsyncGraph {
 		completeRoutes: RouterCompleteTradeRoute[];
 	}): RouterCompleteTradeRoute => {
 		const { completeRoutes } = inputs;
+		console.log("completeRoutes", completeRoutes);
 
 		let routes: RouterTradeRoute[] = [];
 		let coinInAmount = BigInt(0);
 		let coinOutAmount = BigInt(0);
 		for (const completeRoute of completeRoutes) {
+			console.log("completeRoute", completeRoute);
+
 			routes = [...routes, ...completeRoute.routes];
 
 			coinInAmount += completeRoute.coinIn.amount;

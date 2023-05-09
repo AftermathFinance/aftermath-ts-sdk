@@ -134,18 +134,19 @@ export class CetusApiHelpers {
 			amountsIn.push(amountIn);
 		}
 
-		const amountsOut = await Promise.all(
-			amountsIn.map(async (amountIn) => {
-				const tradeResult = await this.fetchCalcTradeResult({
-					...inputs,
-					walletAddress: RpcApiHelpers.constants.devInspectSigner,
-					coinInType: inputs.pool.coinTypeA,
-					coinOutType: inputs.pool.coinTypeB,
-					coinInAmount: amountIn,
-				});
-				return tradeResult.amountOut;
-			})
-		);
+		// const amountsOut = await Promise.all(
+		// 	amountsIn.map(async (amountIn) => {
+		// 		const tradeResult = await this.fetchCalcTradeResult({
+		// 			...inputs,
+		// 			walletAddress: RpcApiHelpers.constants.devInspectSigner,
+		// 			coinInType: inputs.pool.coinTypeA,
+		// 			coinOutType: inputs.pool.coinTypeB,
+		// 			coinInAmount: amountIn,
+		// 		});
+		// 		return tradeResult.amountOut;
+		// 	})
+		// );
+		const amountsOut = amountsIn.map(() => BigInt(1));
 
 		const amounts = amountsIn.map((amountIn, index) => {
 			return {
