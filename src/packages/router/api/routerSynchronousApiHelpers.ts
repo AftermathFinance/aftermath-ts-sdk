@@ -2,12 +2,8 @@ import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
-	RouterExternalFee,
 	RouterProtocolName,
-	RouterSerializableCompleteGraph,
 	RouterSerializablePool,
-	RouterSynchronousProtocolName,
-	RouterSynchronousSerializablePool,
 } from "../routerTypes";
 import { Balance, CoinType, Slippage, SuiNetwork, Url } from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
@@ -18,7 +14,6 @@ import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { Helpers } from "../../../general/utils";
 import { CetusApi } from "../../external/cetus/cetusApi";
-import { RouterGraph } from "../utils/synchronous/routerGraph";
 
 export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -55,7 +50,7 @@ export class RouterSynchronousApiHelpers {
 		const apis = this.protocolApisFromNames(inputs);
 
 		const poolsByProtocol = await Promise.all(
-			apis.map((api) => api.fetchAllPools(inputs))
+			apis.map((api) => api.fetchAllPools())
 		);
 
 		const pools = poolsByProtocol.reduce(

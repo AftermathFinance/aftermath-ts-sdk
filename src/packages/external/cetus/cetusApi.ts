@@ -2,13 +2,12 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { CetusApiHelpers } from "./cetusApiHelpers";
 import { SuiAddress } from "@mysten/sui.js";
-import { CetusPoolObject, CetusRouterPoolObject } from "./cetusTypes";
+import { CetusPoolObject } from "./cetusTypes";
 import { Balance, SerializedTransaction } from "../../../types";
-import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { Helpers } from "../../../general/utils";
 
-export class CetusApi implements RouterApiInterface<CetusRouterPoolObject> {
+export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
@@ -39,37 +38,9 @@ export class CetusApi implements RouterApiInterface<CetusRouterPoolObject> {
 		return this.Helpers.fetchPoolForCoinTypes(inputs);
 	};
 
-	public fetchAllPools = async (inputs?: {
-		coinInType: CoinType;
-		coinOutType: CoinType;
-	}) => {
-		// if (!inputs) return [];
-
-		// const pool = await this.fetchPoolForCoinTypes({
-		// 	coinType1: inputs.coinInType,
-		// 	coinType2: inputs.coinOutType,
-		// });
-
-		// const routerPool =
-		// 	await this.Helpers.fetchCreateRouterPoolFromPoolObject({ pool });
-
-		// return [routerPool];
-
+	public fetchAllPools = async () => {
 		const pools = await this.Helpers.fetchAllPools();
-		const routerPools = await Promise.all(
-			pools.map((pool) =>
-				this.Helpers.fetchCreateRouterPoolFromPoolObject({ pool })
-			)
-		);
-
-		const poolsWithLiquidity = routerPools.filter(
-			(pool) =>
-				!pool.tradeResults.amounts.some(
-					(amount) => amount.amountOut <= BigInt(0)
-				)
-		);
-
-		return poolsWithLiquidity;
+		return pools;
 	};
 
 	public fetchSupportedCoins = async () => {

@@ -112,8 +112,6 @@ export class RouterApi {
 			coinInAmounts,
 		});
 
-		console.log("tradeResults", tradeResults);
-
 		const routerGraph = new RouterGraph(network, graph);
 		const synchronousCompleteRoutes = (() => {
 			try {

@@ -8,8 +8,6 @@ import {
 	Balance,
 	RouterProtocolName,
 	RouterSerializablePool,
-	RouterSynchronousProtocolName,
-	RouterSynchronousSerializablePool,
 	Slippage,
 	SuiNetwork,
 	UniqueId,

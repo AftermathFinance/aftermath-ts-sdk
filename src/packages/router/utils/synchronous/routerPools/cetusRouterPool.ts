@@ -14,14 +14,14 @@ import {
 import { CoinType } from "../../../../coin/coinTypes";
 import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
 import { AftermathApi } from "../../../../../general/providers";
-import { CetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
+import { CetusPoolObject } from "../../../../external/cetus/cetusTypes";
 
 class CetusRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(pool: CetusRouterPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: CetusPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.poolObjectId;
@@ -36,7 +36,7 @@ class CetusRouterPool implements RouterPoolInterface {
 	readonly expectedGasCostPerHop = BigInt(9_000_000); // 0.009 SUI
 	readonly noHopsAllowed = true;
 
-	readonly pool: CetusRouterPoolObject;
+	readonly pool: CetusPoolObject;
 	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
@@ -45,62 +45,17 @@ class CetusRouterPool implements RouterPoolInterface {
 	//// Functions
 	/////////////////////////////////////////////////////////////////////
 
-	getSpotPrice = (inputs: {
-		coinInType: CoinType;
-		coinOutType: CoinType;
-	}) => {
-		const smallestTradeResult = this.pool.tradeResults.amounts[0];
-		const spotPriceAOverB =
-			Number(smallestTradeResult.amountIn) /
-			Number(smallestTradeResult.amountOut);
-
-		if (this.isCoinA(inputs.coinInType)) return spotPriceAOverB;
-
-		return 1 / spotPriceAOverB;
+	getSpotPrice = (_: { coinInType: CoinType; coinOutType: CoinType }) => {
+		throw new Error("uncallable");
 	};
 
-	getTradeAmountOut = (inputs: {
+	getTradeAmountOut = (_: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
 		throw new Error("uncallable");
-
-		// const { coinInAmount, coinInType } = inputs;
-
-		// if (!this.isCoinA(coinInType))
-		// 	return this.getTradeAmountIn({
-		// 		...inputs,
-		// 		coinInType: inputs.coinOutType,
-		// 		coinOutType: inputs.coinInType,
-		// 		coinOutAmount: coinInAmount,
-		// 	});
-
-		// const tradeAmounts = this.pool.tradeResults.amounts;
-
-		// const possibleLowerBoundIndex = tradeAmounts.findIndex(
-		// 	(amounts) => coinInAmount > amounts.amountIn
-		// );
-		// const lowerBoundIndex =
-		// 	possibleLowerBoundIndex < 0
-		// 		? tradeAmounts.length - 1
-		// 		: possibleLowerBoundIndex;
-
-		// const upperBoundIndex =
-		// 	lowerBoundIndex + 1 >= tradeAmounts.length
-		// 		? lowerBoundIndex
-		// 		: lowerBoundIndex + 1;
-
-		// const lowerBound = tradeAmounts[lowerBoundIndex].amountOut;
-		// const upperBound = tradeAmounts[upperBoundIndex].amountOut;
-
-		// const difference = upperBound - lowerBound;
-		// const coinOutAmount = lowerBound + difference / BigInt(2);
-
-		// if (coinOutAmount <= 0) throw new Error("coinOutAmount <= 0");
-
-		// return coinOutAmount;
 	};
 
 	addTradeCommandToTransaction = (inputs: {
@@ -125,40 +80,13 @@ class CetusRouterPool implements RouterPoolInterface {
 			});
 	};
 
-	getTradeAmountIn = (inputs: {
+	getTradeAmountIn = (_: {
 		coinInType: CoinType;
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
 		throw new Error("uncallable");
-
-		// const { coinOutAmount, coinInType } = inputs;
-		// if (!this.isCoinA(coinInType))
-		// 	return this.getTradeAmountOut({
-		// 		...inputs,
-		// 		coinInType: inputs.coinOutType,
-		// 		coinOutType: inputs.coinInType,
-		// 		coinInAmount: coinOutAmount,
-		// 	});
-		// const tradeAmounts = this.pool.tradeResults.amounts;
-		// const possibleLowerBoundIndex = tradeAmounts.findIndex(
-		// 	(amounts) => coinOutAmount > amounts.amountOut
-		// );
-		// const lowerBoundIndex =
-		// 	possibleLowerBoundIndex < 0
-		// 		? tradeAmounts.length - 1
-		// 		: possibleLowerBoundIndex;
-		// const upperBoundIndex =
-		// 	lowerBoundIndex + 1 >= tradeAmounts.length
-		// 		? lowerBoundIndex
-		// 		: lowerBoundIndex + 1;
-		// const lowerBound = tradeAmounts[lowerBoundIndex].amountIn;
-		// const upperBound = tradeAmounts[upperBoundIndex].amountIn;
-		// const difference = upperBound - lowerBound;
-		// const coinInAmount = lowerBound + difference / BigInt(2);
-		// if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
-		// return coinInAmount;
 	};
 
 	getUpdatedPoolBeforeTrade = (_: {

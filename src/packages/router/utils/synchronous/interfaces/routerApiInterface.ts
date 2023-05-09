@@ -14,10 +14,7 @@ export interface RouterApiInterface<PoolType extends RouterSerializablePool> {
 	//// Functions
 	/////////////////////////////////////////////////////////////////////
 
-	fetchAllPools: (inputs?: {
-		coinInType: CoinType;
-		coinOutType: CoinType;
-	}) => Promise<PoolType[]>;
+	fetchAllPools: () => Promise<PoolType[]>;
 
 	fetchSupportedCoins: () => Promise<CoinType[]>;
 

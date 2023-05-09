@@ -61,9 +61,6 @@ export class RouterAsyncGraph {
 			const incrementalAmountsOut = completeRoutes.map((route, index) => {
 				const prevChosenIndex = chosenRouteIndexes[index];
 
-				console.log("route", route);
-				console.log("prevChosenIndex", prevChosenIndex);
-
 				const prevAmountOut =
 					prevChosenIndex < 0
 						? BigInt(0)
@@ -99,14 +96,11 @@ export class RouterAsyncGraph {
 		completeRoutes: RouterCompleteTradeRoute[];
 	}): RouterCompleteTradeRoute => {
 		const { completeRoutes } = inputs;
-		console.log("completeRoutes", completeRoutes);
 
 		let routes: RouterTradeRoute[] = [];
 		let coinInAmount = BigInt(0);
 		let coinOutAmount = BigInt(0);
 		for (const completeRoute of completeRoutes) {
-			console.log("completeRoute", completeRoute);
-
 			routes = [...routes, ...completeRoute.routes];
 
 			coinInAmount += completeRoute.coinIn.amount;

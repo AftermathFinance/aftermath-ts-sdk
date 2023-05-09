@@ -5,23 +5,8 @@ import { Balance, CoinType, RouterSerializablePool } from "../../../types";
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
-export interface CetusRouterPoolObject {
-	poolObjectId: ObjectId;
-	coinTypeA: CoinType;
-	coinTypeB: CoinType;
-	tradeResults: {
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		amounts: {
-			amountIn: Balance;
-			amountOut: Balance;
-		}[];
-	};
-}
-
 export interface CetusPoolObject {
 	poolObjectId: ObjectId;
-	// poolKeyId: ObjectId;
 	coinTypeA: CoinType;
 	coinTypeB: CoinType;
 }
@@ -35,11 +20,6 @@ export interface CetusCalcTradeResult {
 
 export const isCetusRouterPoolObject = (
 	pool: RouterSerializablePool
-): pool is CetusRouterPoolObject => {
-	return (
-		"poolObjectId" in pool &&
-		"coinTypeA" in pool &&
-		"coinTypeB" in pool &&
-		"tradeResults" in pool
-	);
+): pool is CetusPoolObject => {
+	return "poolObjectId" in pool && "coinTypeA" in pool && "coinTypeB" in pool;
 };
