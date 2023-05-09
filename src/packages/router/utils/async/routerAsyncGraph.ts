@@ -151,7 +151,7 @@ export class RouterAsyncGraph {
 								tradeFee: BigInt(0),
 							},
 							coinOut: {
-								type: tradeResults.coinInType,
+								type: tradeResults.coinOutType,
 								amount: amountOut,
 								tradeFee: BigInt(0),
 							},

@@ -1,4 +1,8 @@
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import {
+	SuiAddress,
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
@@ -129,7 +133,7 @@ export class RouterSynchronousApiHelpers {
 				coinAmount: completeRoute.coinIn.amount,
 			});
 
-		let coinsOut = [];
+		let coinsOut: TransactionArgument[] = [];
 
 		for (const route of completeRoute.routes) {
 			const [splitCoinArg] = tx.add({
@@ -137,14 +141,28 @@ export class RouterSynchronousApiHelpers {
 				coin: coinInArg,
 				amounts: [tx.pure(route.coinIn.amount)],
 			});
+			// completeRoute.routes.length > 1
+			// 	? tx.add({
+			// 			kind: "SplitCoins",
+			// 			coin: coinInArg,
+			// 			amounts: [tx.pure(route.coinIn.amount)],
+			// 	  })
+			// 	: [coinInArg];
 
-			let coinIn = splitCoinArg;
+			let coinIn: TransactionArgument | undefined = splitCoinArg;
 
 			for (const path of route.paths) {
-				const newCoinIn = createRouterPool({
+				const poolForPath = createRouterPool({
 					pool: path.pool,
 					network,
-				}).addTradeCommandToTransaction({
+				});
+
+				if (!coinIn)
+					throw new Error(
+						"no coin in argument given for router trade command"
+					);
+
+				const newCoinIn = poolForPath.addTradeCommandToTransaction({
 					provider,
 					tx,
 					coinIn,
@@ -156,31 +174,35 @@ export class RouterSynchronousApiHelpers {
 					referrer,
 				});
 
-				coinIn = newCoinIn;
+				coinIn = poolForPath.noHopsAllowed ? undefined : newCoinIn;
 			}
 
-			coinsOut.push(coinIn);
+			if (coinIn) coinsOut.push(coinIn);
 		}
 
-		const coinOut = coinsOut[0];
+		if (coinsOut.length > 0) {
+			const coinOut = coinsOut[0];
 
-		// merge all coinsOut into a single coin
-		if (coinsOut.length > 1) tx.mergeCoins(coinOut, coinsOut.slice(1));
+			// merge all coinsOut into a single coin
+			if (coinsOut.length > 1) tx.mergeCoins(coinOut, coinsOut.slice(1));
 
-		if (externalFee) {
-			const feeAmount =
-				externalFee.feePercentage *
-				Number(completeRoute.coinOut.amount);
+			if (externalFee) {
+				const feeAmount =
+					externalFee.feePercentage *
+					Number(completeRoute.coinOut.amount);
 
-			const [feeCoin] = tx.add({
-				kind: "SplitCoins",
-				coin: coinOut,
-				amounts: [tx.pure(feeAmount)],
-			});
-			tx.transferObjects([feeCoin], tx.pure(externalFee.recipient));
+				const [feeCoin] = tx.add({
+					kind: "SplitCoins",
+					coin: coinOut,
+					amounts: [tx.pure(feeAmount)],
+				});
+				tx.transferObjects([feeCoin], tx.pure(externalFee.recipient));
+			}
+
+			tx.transferObjects([coinOut, coinInArg], tx.pure(walletAddress));
+		} else {
+			tx.transferObjects([coinInArg], tx.pure(walletAddress));
 		}
-
-		tx.transferObjects([coinOut, coinInArg], tx.pure(walletAddress));
 
 		return tx;
 	}
