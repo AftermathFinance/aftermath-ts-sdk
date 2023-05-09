@@ -109,9 +109,6 @@ export class StakingApi {
 			this.fetchSuiTvl(),
 			this.Helpers.fetchAfSuiSupply(),
 		]);
-		console.log("suiTvl", suiTvl);
-		console.log("afSuiSupply", afSuiSupply);
-
 		return Number(afSuiSupply) / Number(suiTvl);
 	};
 }
