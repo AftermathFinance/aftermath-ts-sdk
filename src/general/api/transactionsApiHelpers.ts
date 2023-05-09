@@ -3,6 +3,8 @@ import {
 	SuiTransactionBlockResponseQuery,
 	TransactionBlock,
 	TransactionDigest,
+	getExecutionStatusGasSummary,
+	getGasData,
 	getTotalGasUsedUpperBound,
 } from "@mysten/sui.js";
 import { SerializedTransaction, TransactionsWithCursor } from "../../types";
@@ -56,14 +58,18 @@ export class TransactionsApiHelpers {
 		const sender = tx.blockData.sender;
 		if (!sender) throw new Error("no sender set for transaction");
 
-		const response = await this.Provider.provider.dryRunTransactionBlock({
-			transactionBlock: tx.serialize(),
-		});
+		const [txResponse, referenceGasPrice] = await Promise.all([
+			this.Provider.provider.dryRunTransactionBlock({
+				transactionBlock: tx.serialize(),
+			}),
+			this.Provider.provider.getReferenceGasPrice(),
+		]);
 
-		const gasUsed = getTotalGasUsedUpperBound(response.effects);
+		const gasUsed = getTotalGasUsedUpperBound(txResponse.effects);
 		if (gasUsed === undefined) throw Error("dry run move call failed");
 
 		tx.setGasBudget(gasUsed);
+		tx.setGasPrice(referenceGasPrice);
 		return tx;
 	};
 
