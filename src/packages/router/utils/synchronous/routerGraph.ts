@@ -286,6 +286,25 @@ export class RouterGraph {
 		);
 	}
 
+	public getCompleteRoutesGivenAmountIns(
+		coinIn: CoinType,
+		coinInAmounts: Balance[],
+		coinOut: CoinType,
+		referrer?: SuiAddress,
+		externalFee?: RouterExternalFee
+	): RouterCompleteTradeRoute[] {
+		return coinInAmounts.map((coinInAmount) =>
+			this.getCompleteRoute(
+				coinIn,
+				coinInAmount,
+				coinOut,
+				false,
+				referrer,
+				externalFee
+			)
+		);
+	}
+
 	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
@@ -935,7 +954,7 @@ export class RouterGraph {
 		}
 	};
 
-	private static completeRouteFromRoutes = (
+	public static completeRouteFromRoutes = (
 		routes: TradeRoute[],
 		coinIn: CoinType,
 		coinInAmount: Balance,

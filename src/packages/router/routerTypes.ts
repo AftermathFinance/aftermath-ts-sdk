@@ -141,7 +141,7 @@ export interface RouterCoinNode {
 export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 
 /////////////////////////////////////////////////////////////////////
-//// Async Graph
+//// Async Router Trade Results
 /////////////////////////////////////////////////////////////////////
 
 export interface RouterAsyncTradeResults {

@@ -2,12 +2,14 @@ import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
+	RouterExternalFee,
 	RouterProtocolName,
+	RouterSerializableCompleteGraph,
 	RouterSerializablePool,
 	RouterSynchronousProtocolName,
 	RouterSynchronousSerializablePool,
 } from "../routerTypes";
-import { CoinType, Slippage, SuiNetwork, Url } from "../../../types";
+import { Balance, CoinType, Slippage, SuiNetwork, Url } from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
 import { Router } from "../router";
 import { RouterApiInterface } from "../utils/synchronous/interfaces/routerApiInterface";
@@ -16,6 +18,7 @@ import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { Helpers } from "../../../general/utils";
 import { CetusApi } from "../../external/cetus/cetusApi";
+import { RouterGraph } from "../utils/synchronous/routerGraph";
 
 export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -24,12 +27,12 @@ export class RouterSynchronousApiHelpers {
 
 	private readonly protocolNamesToApi: Record<
 		RouterProtocolName,
-		RouterApiInterface<any>
+		() => RouterApiInterface<any>
 	> = {
-		Aftermath: new PoolsApi(this.Provider),
-		Nojo: new NojoAmmApi(this.Provider),
-		DeepBook: new DeepBookApi(this.Provider),
-		Cetus: new CetusApi(this.Provider),
+		Aftermath: () => new PoolsApi(this.Provider),
+		Nojo: () => new NojoAmmApi(this.Provider),
+		DeepBook: () => new DeepBookApi(this.Provider),
+		Cetus: () => new CetusApi(this.Provider),
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -188,13 +191,47 @@ export class RouterSynchronousApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
+	//// Public Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	public protocolApisFromNames = (inputs: {
+	public static amountsInForRouterTrade = (inputs: {
+		coinInAmount: Balance;
+		partitions: number;
+	}): Balance[] => {
+		const { coinInAmount, partitions } = inputs;
+
+		const coinInPartitionAmount =
+			coinInAmount / BigInt(Math.floor(partitions));
+		const coinInRemainderAmount =
+			coinInAmount % BigInt(Math.floor(partitions));
+
+		const amountsIn = Array(partitions)
+			.fill(0)
+			.map((_, index) =>
+				index === 0
+					? coinInRemainderAmount + coinInPartitionAmount
+					: BigInt(1 + index) * coinInPartitionAmount
+			);
+
+		return amountsIn;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	private protocolApisFromNames = (inputs: {
 		protocols: RouterProtocolName[];
 	}): RouterApiInterface<any>[] => {
 		const { protocols } = inputs;
-		return protocols.map((name) => this.protocolNamesToApi[name]);
+		return protocols.map((name) => this.protocolNamesToApi[name]());
 	};
 }

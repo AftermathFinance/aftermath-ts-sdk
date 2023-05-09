@@ -19,6 +19,8 @@ import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
+import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
+import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -26,6 +28,7 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly Helpers;
+	public readonly AsyncHelpers;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -40,6 +43,7 @@ export class RouterApi {
 	) {
 		this.Provider = Provider;
 		this.Helpers = new RouterSynchronousApiHelpers(Provider);
+		this.AsyncHelpers = new RouterAsyncApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -95,13 +99,34 @@ export class RouterApi {
 		// TODO: add options to set all these params ?
 		// maxRouteLength?: number,
 	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(network, graph).getCompleteRouteGivenAmountIn(
-			coinIn,
-			coinInAmount,
-			coinOut,
-			referrer,
-			externalFee
-		);
+		const coinInAmounts =
+			RouterSynchronousApiHelpers.amountsInForRouterTrade({
+				coinInAmount,
+				partitions: 10,
+			});
+
+		const tradeResults = await this.AsyncHelpers.fetchTradeResults({
+			protocols: this.asyncProtocols,
+			coinInType: coinIn,
+			coinOutType: coinOut,
+			coinInAmounts,
+		});
+
+		const routerGraph = new RouterGraph(network, graph);
+		const synchronousCompleteRoutes =
+			routerGraph.getCompleteRoutesGivenAmountIns(
+				coinIn,
+				coinInAmounts,
+				coinOut,
+				referrer,
+				externalFee
+			);
+
+		return RouterAsyncGraph.createFinalCompleteRoute({
+			tradeResults,
+			synchronousCompleteRoutes,
+			coinInAmounts,
+		});
 	};
 
 	public fetchCompleteTradeRouteGivenAmountOut = async (
