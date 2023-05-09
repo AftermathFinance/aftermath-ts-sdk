@@ -3,7 +3,11 @@ import {
 	ApiRouterTransactionForCompleteTradeRouteBody,
 	CoinType,
 	RouterCompleteTradeRoute,
+	RouterSerializableCompleteGraph,
+	RouterSerializablePool,
+	RouterSupportedCoinPaths,
 	SuiNetwork,
+	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -40,7 +44,7 @@ export class Router extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Router` instance
 	 */
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "router");
 	}
 
@@ -55,10 +59,19 @@ export class Router extends Caller {
 	/**
 	 * Queries all coins that router can trade between.
 	 *
-	 * @returns Array of supported coin types
+	 * @returns Mapping of coin type in to array of supported coin types out
 	 */
-	public async getSupportedCoins() {
-		return this.fetchApi<CoinType[]>("supported-coins");
+	public async getSupportedCoinPaths() {
+		return this.fetchApi<RouterSupportedCoinPaths>("supported-coin-paths");
+	}
+
+	/**
+	 * Queries current graph of router including all pools and coins.
+	 *
+	 * @returns Complete graph of all pools used in router
+	 */
+	public async getGraph() {
+		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
 	}
 
 	/**

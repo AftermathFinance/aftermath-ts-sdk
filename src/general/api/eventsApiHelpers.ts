@@ -8,6 +8,7 @@ import {
 } from "@mysten/sui.js";
 import dayjs, { QUnitType, OpUnitType } from "dayjs";
 import { AftermathApi } from "../providers/aftermathApi";
+import { EventOnChain } from "../types/castingTypes";
 
 export class EventsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -66,7 +67,12 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventOnChainType>> => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
-			cursor,
+			cursor: cursor
+				? {
+						...cursor,
+						eventSeq: cursor?.eventSeq.toString(),
+				  }
+				: undefined,
 			limit, // defaultlimit ?
 		});
 
@@ -84,7 +90,12 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventType>> => {
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
-			cursor,
+			cursor: cursor
+				? {
+						...cursor,
+						eventSeq: cursor?.eventSeq.toString(),
+				  }
+				: undefined,
 			limit, // defaultlimit ?
 		});
 		const eventsOnChain =
@@ -129,17 +140,17 @@ export class EventsApiHelpers {
 
 			if (
 				events.length === 0 ||
-				events.length < limitStepSize ||
+				// events.length < limitStepSize ||
 				eventsWithCursor.nextCursor === null ||
 				endIndex >= 0
 			)
 				return eventsWithinTime;
+
 			cursor = eventsWithCursor.nextCursor;
 		} while (true);
 	};
 
-	// NOTE: is this the same as cursor and limit set to undefined/null ?
-	public fetchAllEvents = async <T extends Event>(
+	public fetchAllEvents = async <T /* extends Event */>(
 		fetchEventsFunc: (
 			cursor?: EventId,
 			limit?: number
@@ -210,12 +221,6 @@ export class EventsApiHelpers {
 		);
 		if (!foundEvent) return;
 
-		// const eventEnvelope =
-		// 	EventsApiHelpers.eventEnvelopeFromEventAndTransaction(
-		// 		foundEvent,
-		// 		transaction
-		// 	);
-
 		const castedEvent = castFunction(foundEvent as EventTypeOnChain);
 		return castedEvent;
 	};
@@ -248,21 +253,4 @@ export class EventsApiHelpers {
 		packageName: string,
 		eventType: string
 	) => `${packageAddress}::${packageName}::${eventType}`;
-
-	// public static eventEnvelopeFromEventAndTransaction = (
-	// 	event: SuiEvent,
-	// 	transaction: SuiTransactionBlockResponse
-	// ): SuiEvent => {
-	// 	const txDigest = transaction.digest;
-	// 	const eventWithData = {
-	// 		id: {
-	// 			txDigest,
-	// 			eventSeq: -1,
-	// 		},
-	// 		event: { ...event },
-	// 		timestamp: transaction.timestampMs ?? Date.now(),
-	// 		txDigest,
-	// 	};
-	// 	return eventWithData;
-	// };
 }

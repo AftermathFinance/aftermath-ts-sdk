@@ -1,26 +1,100 @@
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterCompleteTradeRoute, RouterExternalFee } from "../routerTypes";
-import { Slippage, SuiNetwork } from "../../../types";
+import {
+	RouterCompleteTradeRoute,
+	RouterProtocolName,
+	RouterSerializablePool,
+} from "../routerTypes";
+import { CoinType, Slippage, SuiNetwork, Url } from "../../../types";
 import { createRouterPool } from "../utils/routerPoolInterface";
 import { Router } from "../router";
+import { RouterApiInterface } from "../utils/routerApiInterface";
+import { PoolsApi } from "../../pools/api/poolsApi";
+import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
+import { DeepBookApi } from "../../external/deepBook/deepBookApi";
+import { Helpers } from "../../../general/utils";
 
 export class RouterApiHelpers {
+	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private readonly protocolNamesToApi: Record<
+		RouterProtocolName,
+		RouterApiInterface<any>
+	> = {
+		Aftermath: new PoolsApi(this.Provider),
+		Nojo: new NojoAmmApi(this.Provider),
+		DeepBook: new DeepBookApi(this.Provider),
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
 
-	public async fetchBuildTransactionForCompleteTradeRoute(
-		network: SuiNetwork,
-		provider: AftermathApi,
-		walletAddress: SuiAddress,
-		completeRoute: RouterCompleteTradeRoute,
-		slippage: Slippage
-	): Promise<TransactionBlock> {
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchAllPools = async (inputs: {
+		protocols: RouterProtocolName[];
+	}): Promise<RouterSerializablePool[]> => {
+		const apis = this.protocolApisFromNames(inputs);
+
+		const poolsByProtocol = await Promise.all(
+			apis.map((api) => api.fetchAllPools())
+		);
+
+		const pools = poolsByProtocol.reduce(
+			(arr, acc) => [...acc, ...arr],
+			[]
+		);
+
+		return pools;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchSupportedCoins = async (inputs: {
+		protocols: RouterProtocolName[];
+	}): Promise<CoinType[]> => {
+		const apis = this.protocolApisFromNames({
+			protocols: inputs.protocols,
+		});
+
+		const arrayOfArraysOfCoins = await Promise.all(
+			apis.map((api) => api.fetchSupportedCoins())
+		);
+
+		const allCoins = arrayOfArraysOfCoins.reduce(
+			(arr, acc) => [...acc, ...arr],
+			[]
+		);
+		const coins = Helpers.uniqueArray(allCoins);
+
+		return coins;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transaction Building
+	/////////////////////////////////////////////////////////////////////
+
+	public async fetchBuildTransactionForCompleteTradeRoute(inputs: {
+		network: SuiNetwork | Url;
+		provider: AftermathApi;
+		walletAddress: SuiAddress;
+		completeRoute: RouterCompleteTradeRoute;
+		slippage: Slippage;
+	}): Promise<TransactionBlock> {
+		const { network, provider, walletAddress, completeRoute, slippage } =
+			inputs;
+
 		const referrer = completeRoute.referrer;
 		const externalFee = completeRoute.externalFee;
 		if (
@@ -32,26 +106,25 @@ export class RouterApiHelpers {
 				`external fee percentage exceeds max of ${Router.constants.maxExternalFeePercentage}`
 			);
 
-		const startTx = new TransactionBlock();
-		startTx.setSender(walletAddress);
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		if (referrer)
 			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
 				{
-					tx: startTx,
+					tx,
 					referrer,
 				}
 			);
 
-		const { coinArgument: coinInArg, txWithCoinWithAmount } =
-			await this.Provider.Coin().Helpers.fetchAddCoinWithAmountCommandsToTransaction(
-				startTx,
+		const coinInArg =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
+				tx,
 				walletAddress,
-				completeRoute.coinIn.type,
-				completeRoute.coinIn.amount
-			);
+				coinType: completeRoute.coinIn.type,
+				coinAmount: completeRoute.coinIn.amount,
+			});
 
-		let tx = txWithCoinWithAmount;
 		let coinsOut = [];
 
 		for (const route of completeRoute.routes) {
@@ -64,7 +137,7 @@ export class RouterApiHelpers {
 			let coinIn = splitCoinArg;
 
 			for (const path of route.paths) {
-				const { tx: newTx, coinOut: newCoinIn } = createRouterPool({
+				const newCoinIn = createRouterPool({
 					pool: path.pool,
 					network,
 				}).addTradeCommandToTransaction({
@@ -78,7 +151,6 @@ export class RouterApiHelpers {
 					referrer,
 				});
 
-				tx = newTx;
 				coinIn = newCoinIn;
 			}
 
@@ -107,4 +179,15 @@ export class RouterApiHelpers {
 
 		return tx;
 	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public protocolApisFromNames = (inputs: {
+		protocols: RouterProtocolName[];
+	}): RouterApiInterface<any>[] => {
+		const { protocols } = inputs;
+		return protocols.map((name) => this.protocolNamesToApi[name]);
+	};
 }

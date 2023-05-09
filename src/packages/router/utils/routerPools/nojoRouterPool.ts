@@ -4,27 +4,25 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
-import { Balance, Slippage, SuiNetwork, UniqueId } from "../../../../types";
+import {
+	Balance,
+	Slippage,
+	SuiNetwork,
+	UniqueId,
+	Url,
+} from "../../../../types";
 import { CoinType } from "../../../coin/coinTypes";
 import { RouterPoolInterface } from "../routerPoolInterface";
-import {
-	Pool,
-	PoolFields,
-	Balance as NojoBalance,
-} from "../../../../external/nojo";
+import { Pool, Balance as NojoBalance } from "../../../../external/nojo";
 import { AftermathApi } from "../../../../general/providers";
-
-export type NojoPoolObject = {
-	fields: PoolFields;
-	typeArgs: [CoinType, CoinType];
-};
+import { NojoPoolObject } from "../../../external/nojo/nojoAmmTypes";
 
 class NojoRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(pool: NojoPoolObject, network: SuiNetwork) {
+	constructor(pool: NojoPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.fields.id;
@@ -38,10 +36,10 @@ class NojoRouterPool implements RouterPoolInterface {
 
 	readonly protocolName = "Nojo";
 	// readonly limitToSingleHops = false;
-	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
+	readonly expectedGasCostPerHop = BigInt(5_000_000); // 0.005 SUI
 
 	readonly pool: NojoPoolObject;
-	readonly network: SuiNetwork;
+	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 
@@ -107,23 +105,19 @@ class NojoRouterPool implements RouterPoolInterface {
 		expectedAmountOut: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): {
-		tx: TransactionBlock;
-		coinOut: TransactionArgument;
-	} => {
-		const minAmountOut = BigInt(
+	}) => {
+		const minOut = BigInt(
 			Math.ceil((1 - inputs.slippage) * Number(inputs.expectedAmountOut))
 		);
+
 		return inputs.provider
 			.Router()
 			.Nojo()
-			.addSwapCommandToTransaction(
-				inputs.tx,
-				this.poolClass,
-				inputs.coinIn,
-				inputs.coinInType,
-				minAmountOut
-			);
+			.addTradeCommandToTransaction({
+				...inputs,
+				pool: this.poolClass,
+				minOut,
+			});
 	};
 
 	getTradeAmountIn = (inputs: {
@@ -160,9 +154,9 @@ class NojoRouterPool implements RouterPoolInterface {
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface =>
 		this.getUpdatedPoolAfterTrade({
@@ -172,12 +166,12 @@ class NojoRouterPool implements RouterPoolInterface {
 		});
 
 	getUpdatedPoolAfterTrade = (inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface => {
-		const [newBalanceA, newBalanceB] = this.isCoinA(inputs.coinIn)
+		const [newBalanceA, newBalanceB] = this.isCoinA(inputs.coinInType)
 			? [
 					this.pool.fields.balanceA.value + inputs.coinInAmount,
 					this.pool.fields.balanceB.value - inputs.coinOutAmount,

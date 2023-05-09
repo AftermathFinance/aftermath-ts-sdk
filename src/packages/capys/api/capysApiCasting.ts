@@ -103,6 +103,7 @@ export class CapysApiCasting {
 			capyChildId: fields.id,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -121,6 +122,7 @@ export class CapysApiCasting {
 			},
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -135,6 +137,7 @@ export class CapysApiCasting {
 			// timestamp and txnDigest (create wrapper)
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
@@ -147,6 +150,7 @@ export class CapysApiCasting {
 			capyId: fields.capy_id,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 }

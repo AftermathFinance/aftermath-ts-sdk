@@ -1,6 +1,6 @@
 import { SuiSystemStateSummary } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork } from "../../types";
+import { SuiNetwork, Url } from "../../types";
 
 export class Sui extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -11,6 +11,7 @@ export class Sui extends Caller {
 		addresses: {
 			suiPackageId: "0x0000000000000000000000000000000000000002",
 			suiSystemStateId: "0x0000000000000000000000000000000000000005",
+			suiClockId: "0x0000000000000000000000000000000000000006",
 		},
 	};
 
@@ -18,7 +19,7 @@ export class Sui extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "sui");
 	}
 

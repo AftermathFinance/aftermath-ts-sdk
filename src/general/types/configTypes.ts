@@ -42,7 +42,7 @@ export interface FaucetAddresses {
 
 export interface StakingAddresses {
 	packages: {
-		liquidStakingDerivative: SuiAddress;
+		lsd: SuiAddress;
 	};
 	objects: {
 		staking: ObjectId;
@@ -92,11 +92,19 @@ export interface NftAmmAddresses {
 
 export interface ExternalRouterAddresses {
 	nojo: NojoAddresses;
+	deepBook: DeepBookAddresses;
 }
 
 export interface NojoAddresses {
 	packages: {
 		pool: SuiAddress;
+	};
+}
+
+export interface DeepBookAddresses {
+	packages: {
+		clob: SuiAddress;
+		wrapper: SuiAddress;
 	};
 }
 

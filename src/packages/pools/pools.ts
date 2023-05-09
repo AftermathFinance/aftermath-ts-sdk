@@ -1,7 +1,9 @@
 import { ObjectId } from "@mysten/sui.js";
 import {
+	ApiCreatePoolBody,
 	ApiEventsBody,
 	ApiPoolObjectIdForLpCoinTypeBody,
+	ApiPublishLpCoinBody,
 	Balance,
 	CoinType,
 	PoolDepositEvent,
@@ -12,6 +14,7 @@ import {
 	PoolWithdrawEvent,
 	Slippage,
 	SuiNetwork,
+	Url,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -55,7 +58,12 @@ export class Pools extends Caller {
 			rebate: 0.05, // 5%
 		},
 		bounds: {
+			maxCoinsInPool: 12,
 			maxSwapPercentageOfPoolBalance: 0.3, // 30%
+			minSwapFee: 0.0001,
+			maxSwapFee: 0.1,
+			minWeight: 0.01,
+			maxWeight: 0.99,
 		},
 	};
 
@@ -69,7 +77,7 @@ export class Pools extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Pools` instance
 	 */
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "pools");
 	}
 
@@ -110,6 +118,24 @@ export class Pools extends Caller {
 	public async getAllPools() {
 		const pools = await this.fetchApi<PoolObject[]>("");
 		return pools.map((pool) => new Pool(pool, this.network));
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
+
+	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
+		return this.fetchApiTransaction<ApiPublishLpCoinBody>(
+			"transactions/publish-lp-coin",
+			inputs
+		);
+	}
+
+	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
+		return this.fetchApiTransaction<ApiCreatePoolBody>(
+			"transactions/create-pool",
+			inputs
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////

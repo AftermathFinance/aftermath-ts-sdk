@@ -14,6 +14,7 @@ import {
 	PoolDepositEvent,
 	PoolWithdrawEvent,
 	PoolTradeEvent,
+	Url,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -41,7 +42,7 @@ export class Pool extends Caller {
 
 	constructor(
 		public readonly pool: PoolObject,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;

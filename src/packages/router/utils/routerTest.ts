@@ -17,7 +17,7 @@ const runMe = async () => {
 	const sdk = new Aftermath("LOCAL");
 	const router = sdk.Router();
 
-	const supportedCoins = await router.getSupportedCoins();
+	const supportedCoins = Object.keys(await router.getSupportedCoinPaths());
 
 	// PRODUCTOIN: add asserts for coins not in pool or same coin trades
 	const coinIn =
@@ -85,11 +85,15 @@ const runRoute = async (
 
 	const completeRoute = isGivenAmountOut
 		? await router.getCompleteTradeRouteGivenAmountOut(
-				{ coinIn, coinOut, coinOutAmount: coinInAmount }
+				{
+					coinInType: coinIn,
+					coinOutType: coinOut,
+					coinOutAmount: coinInAmount,
+				}
 				// maxRouteLength
 		  )
 		: await router.getCompleteTradeRouteGivenAmountIn(
-				{ coinIn, coinInAmount, coinOut }
+				{ coinInType: coinIn, coinInAmount, coinOutType: coinOut }
 				// maxRouteLength
 		  );
 

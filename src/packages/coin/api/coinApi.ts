@@ -40,7 +40,7 @@ export class CoinApi {
 			if (this.Provider.Pools().Helpers.isLpCoin(coin)) {
 				const coinName = Pools.displayLpCoinType(coin);
 				return {
-					symbol: coinName.split(" ")[0].toUpperCase(),
+					symbol: coinName.replaceAll(" ", "_").toUpperCase(),
 					id: null,
 					description: "Aftermath Finance LP",
 					name: coinName,

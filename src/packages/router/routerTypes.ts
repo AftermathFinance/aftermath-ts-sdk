@@ -6,7 +6,9 @@ import {
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
-import { NojoPoolObject } from "./utils/routerPools/nojoRouterPool";
+import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
+import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
+import { RouterPoolInterface } from "./utils/routerPoolInterface";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -38,8 +40,12 @@ export interface RouterExternalFee {
 //// Router Pools
 /////////////////////////////////////////////////////////////////////
 
-export type RouterSerializablePool = PoolObject | NojoPoolObject;
-export type RouterProtocolName = "Aftermath" | "Nojo";
+export type RouterSerializablePool =
+	| PoolObject
+	| NojoPoolObject
+	| DeepBookPoolObject;
+
+export type RouterProtocolName = "Aftermath" | "Nojo" | "DeepBook";
 
 /////////////////////////////////////////////////////////////////////
 //// Paths
@@ -73,6 +79,44 @@ export interface RouterTradeCoin {
 }
 
 /////////////////////////////////////////////////////////////////////
+//// Graph
+/////////////////////////////////////////////////////////////////////
+
+export interface RouterCompleteGraph {
+	coinNodes: RouterGraphCoinNodes;
+	pools: RouterPoolsById;
+}
+
+export interface RouterSerializableCompleteGraph {
+	coinNodes: RouterGraphCoinNodes;
+	pools: RouterSerializablePoolsById;
+}
+
+export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
+
+export interface RouterOptions {
+	maxRouteLength: number;
+	tradePartitionCount: number;
+	minRoutesToCheck: number;
+	maxGasCost: bigint;
+}
+
+export type RouterSerializablePoolsById = Record<
+	UniqueId,
+	RouterSerializablePool
+>;
+
+export type RouterGraphCoinNodes = Record<CoinType, RouterCoinNode>;
+export type RouterPoolsById = Record<UniqueId, RouterPoolInterface>;
+
+export interface RouterCoinNode {
+	coin: CoinType;
+	coinOutThroughPoolEdges: RouterCoinOutThroughPoolEdges;
+}
+
+export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
+
+/////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
@@ -83,11 +127,11 @@ export type ApiRouterCompleteTradeRouteBody = {
 	/**
 	 * Coin type of coin being given away
 	 */
-	coinIn: CoinType;
+	coinInType: CoinType;
 	/**
 	 * Coin type of coin being received
 	 */
-	coinOut: CoinType;
+	coinOutType: CoinType;
 	/**
 	 * Optional address for referrer of the route creator
 	 */

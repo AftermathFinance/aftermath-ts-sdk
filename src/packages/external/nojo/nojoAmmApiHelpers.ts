@@ -4,7 +4,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { NojoAddresses } from "../../../types";
 import { Pool, PoolFields, PoolRegistry } from "../../../external/nojo";
 import { EventOnChain } from "../../../general/types/castingTypes";
-import { NojoPoolObject } from "../../router/utils/routerPools/nojoRouterPool";
+import { NojoPoolObject } from "./nojoAmmTypes";
 
 export class NojoAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@ export class NojoAmmApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.externalRouter?.nojo;
 		if (!addresses)
 			throw new Error(
@@ -37,24 +37,28 @@ export class NojoAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
-		const paginatedEvents =
-			await this.Provider.Events().fetchCastEventsWithCursor<
-				EventOnChain<{
-					pool_id: ObjectId;
-				}>,
-				ObjectId
-			>(
-				{
-					MoveEventType: EventsApiHelpers.createEventType(
-						this.addresses.packages.pool,
-						"pool",
-						"PoolCreationEvent"
-					),
-				},
-				(eventOnChain) => eventOnChain.parsedJson.pool_id
-			);
+		const objectIds = await this.Provider.Events().fetchAllEvents(
+			(cursor, limit) =>
+				this.Provider.Events().fetchCastEventsWithCursor<
+					EventOnChain<{
+						pool_id: ObjectId;
+					}>,
+					ObjectId
+				>(
+					{
+						MoveEventType: EventsApiHelpers.createEventType(
+							this.addresses.packages.pool,
+							"pool",
+							"PoolCreationEvent"
+						),
+					},
+					(eventOnChain) => eventOnChain.parsedJson.pool_id,
+					cursor,
+					limit
+				)
+		);
 
-		return paginatedEvents.events;
+		return objectIds;
 	};
 
 	/////////////////////////////////////////////////////////////////////

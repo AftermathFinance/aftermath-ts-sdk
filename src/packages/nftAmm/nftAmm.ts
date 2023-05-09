@@ -1,6 +1,6 @@
 import { ObjectId } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
-import { NftAmmMarketObject, SuiNetwork } from "../../types";
+import { NftAmmMarketObject, SuiNetwork, Url } from "../../types";
 import { NftAmmMarket } from "./nftAmmMarket";
 
 export class NftAmm extends Caller {
@@ -14,7 +14,7 @@ export class NftAmm extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "nft-amm");
 	}
 

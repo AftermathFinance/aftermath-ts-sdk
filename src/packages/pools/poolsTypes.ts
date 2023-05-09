@@ -5,6 +5,7 @@ import {
 	SerializedTransaction,
 	Slippage,
 	Timestamp,
+	Url,
 } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
@@ -20,6 +21,8 @@ import { TransactionArgument } from "@mysten/sui.js";
 export type PoolName = string;
 export type PoolWeight = bigint;
 export type PoolTradeFee = bigint;
+export type PoolDepositFee = bigint;
+export type PoolWithdrawFee = bigint;
 export type PoolFlatness = bigint;
 
 /////////////////////////////////////////////////////////////////////
@@ -33,8 +36,8 @@ export interface PoolCoin {
 	balance: Balance;
 	tradeFeeIn: PoolTradeFee;
 	tradeFeeOut: PoolTradeFee;
-	depositFee: PoolTradeFee;
-	withdrawFee: PoolTradeFee;
+	depositFee: PoolDepositFee;
+	withdrawFee: PoolWithdrawFee;
 }
 
 export interface PoolObject extends Object {
@@ -101,14 +104,33 @@ export interface PoolVolumeDataTimeframe {
 }
 
 /////////////////////////////////////////////////////////////////////
+//// Pool Creation
+/////////////////////////////////////////////////////////////////////
+
+export interface PoolCreationCoinInfo {
+	coinType: CoinType;
+	weight: PoolWeight;
+	tradeFeeIn: PoolTradeFee;
+	tradeFeeOut: PoolTradeFee;
+	depositFee: PoolDepositFee;
+	withdrawFee: PoolWithdrawFee;
+	initialDeposit: Balance;
+}
+
+export interface PoolCreationLpCoinMetadata {
+	name: string;
+	symbol: string;
+}
+
+/////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
 export interface ApiPoolTradeBody {
 	walletAddress: SuiAddress;
-	coinIn: CoinType;
+	coinInType: CoinType;
 	coinInAmount: Balance;
-	coinOut: CoinType;
+	coinOutType: CoinType;
 	slippage: Slippage;
 	referrer?: SuiAddress;
 }
@@ -135,4 +157,23 @@ export interface ApiPoolSpotPriceBody {
 
 export interface ApiPoolObjectIdForLpCoinTypeBody {
 	lpCoinType: CoinType;
+}
+
+export interface ApiPublishLpCoinBody {
+	walletAddress: SuiAddress;
+}
+
+export interface ApiCreatePoolBody {
+	walletAddress: SuiAddress;
+	lpCoinType: CoinType;
+	lpCoinMetadata: PoolCreationLpCoinMetadata;
+	coinsInfo: {
+		coinType: CoinType;
+		weight: number;
+		tradeFeeIn: number;
+		initialDeposit: Balance;
+	}[];
+	poolName: PoolName;
+	poolFlatness: 0 | 1;
+	createPoolCapId: ObjectId;
 }

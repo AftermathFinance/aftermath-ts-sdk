@@ -14,7 +14,7 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 			whusdc: 1,
 			lzusdc: 1,
 			axlusdc: 1,
-			afsui: 3.12,
+			afsui: 3.171,
 			sui: 3.02,
 			whusdt: 1,
 			lzusdt: 1,

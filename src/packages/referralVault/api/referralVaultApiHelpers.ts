@@ -23,7 +23,7 @@ export class ReferralVaultApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.referralVault;
 		if (!addresses)
 			throw new Error(

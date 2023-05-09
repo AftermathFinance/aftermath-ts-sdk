@@ -2,11 +2,14 @@ import {
 	Balance,
 	CoinDecimal,
 	CoinsToBalance,
+	CoinSymbol,
+	CoinSymbolToCoinTypes,
 	CoinType,
 	CoinWithAmount,
 	CoinWithAmountOrUndefined,
 	KeyType,
 	SuiNetwork,
+	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
@@ -39,7 +42,7 @@ export class Coin extends Caller {
 
 	constructor(
 		public readonly coinType: CoinType,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, "coins");
 		this.coinType = coinType;
@@ -170,12 +173,32 @@ export class Coin extends Caller {
 			? undefined
 			: (uncheckedCoinWithAmount as CoinWithAmount);
 
+	public static coinSymbolForCoinType = (
+		coinType: CoinType,
+		coinSymbolToCoinTypes: CoinSymbolToCoinTypes
+	): CoinSymbol | undefined => {
+		try {
+			const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
+			const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
+				([, coinsTypes]) =>
+					coinsTypes
+						.map(Helpers.addLeadingZeroesToType)
+						.includes(fullCoinType)
+			);
+
+			const foundCoinSymbol = foundCoinData?.[0];
+			return foundCoinSymbol;
+		} catch (e) {
+			return undefined;
+		}
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Balance
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
-	//// Convervsions
+	//// Conversions
 	/////////////////////////////////////////////////////////////////////
 
 	/*

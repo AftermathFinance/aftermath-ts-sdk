@@ -1,4 +1,5 @@
 import {
+	ObjectId,
 	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
@@ -11,6 +12,7 @@ import {
 	PoolWithdrawEvent,
 } from "../poolsTypes";
 import {
+	PoolCreateEventOnChain,
 	PoolDepositEventOnChain,
 	PoolFieldsOnChain,
 	PoolTradeEventOnChain,
@@ -78,9 +80,9 @@ export class PoolsApiCasting {
 	/////////////////////////////////////////////////////////////////////
 
 	public static poolTradeEventFromOnChain = (
-		tradeEventFromFetched: PoolTradeEventOnChain
+		eventOnChain: PoolTradeEventOnChain
 	): PoolTradeEvent => {
-		const fields = tradeEventFromFetched.parsedJson;
+		const fields = eventOnChain.parsedJson;
 		return {
 			poolId: fields.pool_id,
 			trader: fields.issuer,
@@ -88,15 +90,16 @@ export class PoolsApiCasting {
 			amountsIn: fields.amounts_in,
 			typesOut: fields.types_out.map((type) => "0x" + type),
 			amountsOut: fields.amounts_out,
-			timestamp: tradeEventFromFetched.timestampMs,
-			txnDigest: tradeEventFromFetched.id.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
 	public static poolDepositEventFromOnChain = (
-		depositEventFromFetched: PoolDepositEventOnChain
+		eventOnChain: PoolDepositEventOnChain
 	): PoolDepositEvent => {
-		const fields = depositEventFromFetched.parsedJson;
+		const fields = eventOnChain.parsedJson;
 		return {
 			poolId: fields.pool_id,
 			depositor: fields.issuer,
@@ -104,23 +107,32 @@ export class PoolsApiCasting {
 			types: fields.types.map((type) => "0x" + type),
 			deposits: fields.deposits,
 			lpMinted: fields.lp_coins_minted,
-			timestamp: depositEventFromFetched.timestampMs,
-			txnDigest: depositEventFromFetched.id.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 
 	public static poolWithdrawEventFromOnChain = (
-		withdrawEventFromFetched: PoolWithdrawEventOnChain
+		eventOnChain: PoolWithdrawEventOnChain
 	): PoolWithdrawEvent => {
-		const fields = withdrawEventFromFetched.parsedJson;
+		const fields = eventOnChain.parsedJson;
 		return {
 			poolId: fields.pool_id,
 			withdrawer: fields.issuer,
 			types: fields.types.map((type) => "0x" + type),
 			withdrawn: fields.withdrawn,
 			lpBurned: fields.lp_coins_burned,
-			timestamp: withdrawEventFromFetched.timestampMs,
-			txnDigest: withdrawEventFromFetched.id.txDigest,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
+	};
+
+	public static poolObjectIdfromPoolCreateEventOnChain = (
+		eventOnChain: PoolCreateEventOnChain
+	): ObjectId => {
+		const fields = eventOnChain.parsedJson;
+		return fields.pool_id;
 	};
 }

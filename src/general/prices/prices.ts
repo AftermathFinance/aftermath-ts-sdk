@@ -1,13 +1,14 @@
 import { SuiNetwork } from "../types/suiTypes";
 import { CoinType, CoinsToPrice } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
+import { Url } from "../types";
 
 export class Prices extends Caller {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "prices");
 	}
 
