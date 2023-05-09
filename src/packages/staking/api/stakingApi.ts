@@ -104,11 +104,11 @@ export class StakingApi {
 		return Casting.bigIntFromBytes(bytes);
 	};
 
-	public fetchAfSuiSupply = async (): Promise<Balance> => {
-		const tx = new TransactionBlock();
-		this.Helpers.addGetAfSuiSupplyCommandToTransaction({ tx });
-		const bytes =
-			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
-		return Casting.bigIntFromBytes(bytes);
+	public fetchAfSuiExchangeRate = async (): Promise<number> => {
+		const [suiTvl, afSuiSupply] = await Promise.all([
+			this.fetchSuiTvl(),
+			this.Helpers.fetchAfSuiSupply(),
+		]);
+		return Number(afSuiSupply) / Number(suiTvl);
 	};
 }
