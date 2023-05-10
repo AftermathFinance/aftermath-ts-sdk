@@ -208,7 +208,9 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		};
 	};
 
-	private isBaseCoinType = (coin: CoinType) => coin === this.pool.baseCoin;
+	private isBaseCoinType = (coin: CoinType) =>
+		Helpers.addLeadingZeroesToType(coin) ===
+		Helpers.addLeadingZeroesToType(this.pool.baseCoin);
 }
 
 export default DeepBookRouterPool;

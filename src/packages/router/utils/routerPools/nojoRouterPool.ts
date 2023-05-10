@@ -16,6 +16,7 @@ import { RouterPoolInterface } from "../routerPoolInterface";
 import { Pool, Balance as NojoBalance } from "../../../../external/nojo";
 import { AftermathApi } from "../../../../general/providers";
 import { NojoPoolObject } from "../../../external/nojo/nojoAmmTypes";
+import { Helpers } from "../../../../general/utils";
 
 class NojoRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
@@ -203,7 +204,9 @@ class NojoRouterPool implements RouterPoolInterface {
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
-	private isCoinA = (coin: CoinType) => coin === this.pool.typeArgs[0];
+	private isCoinA = (coin: CoinType) =>
+		Helpers.addLeadingZeroesToType(coin) ===
+		Helpers.addLeadingZeroesToType(this.pool.typeArgs[0]);
 }
 
 export default NojoRouterPool;
