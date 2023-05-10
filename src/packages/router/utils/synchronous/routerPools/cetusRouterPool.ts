@@ -24,7 +24,7 @@ class CetusRouterPool implements RouterPoolInterface {
 	constructor(pool: CetusPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
-		this.uid = pool.poolObjectId;
+		this.uid = pool.id;
 		this.coinTypes = [pool.coinTypeA, pool.coinTypeB];
 	}
 

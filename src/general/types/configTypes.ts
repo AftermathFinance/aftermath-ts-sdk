@@ -121,6 +121,17 @@ export interface CetusAddresses {
 	};
 }
 
+export interface TurbosAddresses {
+	packages: {
+		poolFetcher: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		versioned: ObjectId;
+		poolsTable: ObjectId;
+	};
+}
+
 export interface ReferralVaultAddresses {
 	packages: {
 		referralVault: SuiAddress;

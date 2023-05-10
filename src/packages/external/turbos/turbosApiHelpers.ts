@@ -10,27 +10,26 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	Balance,
-	CetusAddresses,
+	TurbosAddresses,
 	CoinType,
 	PoolsAddresses,
 	ReferralVaultAddresses,
+	BigIntAsString,
 } from "../../../types";
 import { Sui } from "../../sui";
-import { CetusCalcTradeResult, CetusPoolObject } from "./cetusTypes";
 import { Helpers } from "../../../general/utils";
 import { BCS } from "@mysten/bcs";
-import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
+import { TurbosCalcTradeResult, TurbosPoolObject } from "./turbosTypes";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 
-export class CetusApiHelpers {
+export class TurbosApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
 	private static readonly constants = {
 		moduleNames: {
-			poolScript: "pool_script",
-			pool: "pool",
+			poolFetcher: "pool_fetcher",
 		},
 	};
 
@@ -39,39 +38,39 @@ export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly addresses: {
-		cetus: CetusAddresses;
+		turbos: TurbosAddresses;
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
 	};
 
-	public readonly objectTypes: {
-		pool: AnyObjectType;
-	};
+	// public readonly objectTypes: {
+	// 	pool: AnyObjectType;
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(public readonly Provider: AftermathApi) {
-		const cetus = this.Provider.addresses.externalRouter?.cetus;
+		const turbos = this.Provider.addresses.externalRouter?.turbos;
 		const pools = this.Provider.addresses.pools;
 		const referralVault = this.Provider.addresses.referralVault;
 
-		if (!cetus || !pools || !referralVault)
+		if (!turbos || !pools || !referralVault)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
 		this.Provider = Provider;
 		this.addresses = {
-			cetus,
+			turbos,
 			pools,
 			referralVault,
 		};
 
-		this.objectTypes = {
-			pool: `${cetus.packages.clmm}::pool::Pool`,
-		};
+		// this.objectTypes = {
+		// 	pool: `${turbos.packages.clmm}::pool::Pool`,
+		// };
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -85,11 +84,11 @@ export class CetusApiHelpers {
 	public fetchAllPools = async () => {
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				this.addresses.cetus.objects.poolsTable,
+				this.addresses.turbos.objects.poolsTable,
 				(objectIds) =>
 					this.Provider.Objects().fetchCastObjectBatch(
 						objectIds,
-						CetusApiHelpers.poolFromSuiObjectResponse
+						TurbosApiHelpers.poolFromSuiObjectResponse
 					),
 				() => true
 			);
@@ -105,7 +104,7 @@ export class CetusApiHelpers {
 
 		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
 		const foundPool = allPools.find((pool) =>
-			CetusApiHelpers.isPoolForCoinTypes({
+			TurbosApiHelpers.isPoolForCoinTypes({
 				pool,
 				...inputs,
 			})
@@ -142,12 +141,12 @@ export class CetusApiHelpers {
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.cetus.packages.scripts,
-				CetusApiHelpers.constants.moduleNames.poolScript,
+				TurbosApiHelpers.constants.moduleNames.poolScript,
 				"swap_a2b"
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
 			arguments: [
-				tx.object(this.addresses.cetus.objects.globalConfig),
+				tx.object(this.addresses.turbos.objects.versioned),
 				tx.object(inputs.poolObjectId),
 				tx.makeMoveVec({
 					objects: [
@@ -197,12 +196,12 @@ export class CetusApiHelpers {
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.cetus.packages.scripts,
-				CetusApiHelpers.constants.moduleNames.poolScript,
+				TurbosApiHelpers.constants.moduleNames.poolScript,
 				"swap_b2a"
 			),
 			typeArguments: [inputs.coinOutType, inputs.coinInType],
 			arguments: [
-				tx.object(this.addresses.cetus.objects.globalConfig),
+				tx.object(this.addresses.turbos.objects.versioned),
 				tx.object(inputs.poolObjectId),
 				tx.makeMoveVec({
 					objects: [
@@ -234,7 +233,7 @@ export class CetusApiHelpers {
 	public tradeTx = (
 		inputs: {
 			tx: TransactionBlock;
-			pool: CetusPoolObject;
+			pool: TurbosPoolObject;
 			coinInId: ObjectId | TransactionArgument;
 			coinInType: CoinType;
 			coinOutType: CoinType;
@@ -251,10 +250,10 @@ export class CetusApiHelpers {
 
 		const commandInputs = {
 			...inputs,
-			poolObjectId: pool.id,
+			poolObjectId: pool.poolObjectId,
 		};
 
-		if (CetusApiHelpers.isCoinA(coinInType, pool))
+		if (TurbosApiHelpers.isCoinA(coinInType, pool))
 			return this.tradeCoinAToCoinBTx(commandInputs);
 
 		return this.tradeCoinBToCoinATx(commandInputs);
@@ -282,29 +281,18 @@ export class CetusApiHelpers {
 		)
 	) =>
 		/*
-		
-			The calculated swap result:
-			
-			struct CalculatedSwapResult has copy, drop, store {
-				amount_in: u64,
-				amount_out: u64,
-				fee_amount: u64,
-				fee_rate: u64,
-				after_sqrt_price: u128,
-				is_exceed: bool,
-				step_results: vector<SwapStepResult>
-			}
 
-			The step swap result:
-
-			struct SwapStepResult has copy, drop, store {
-				current_sqrt_price: u128,
-				target_sqrt_price: u128,
-				current_liquidity: u128,
-				amount_in: u64,
-				amount_out: u64,
-				fee_amount: u64,
-				remainer_amount: u64
+			struct ComputeSwapState has copy, drop {
+				amount_a: u128,
+				amount_b: u128, 
+				amount_specified_remaining: u128,
+				amount_calculated: u128,
+				sqrt_price: u128,
+				tick_current_index: I32,
+				fee_growth_global: u128,
+				protocol_fee: u128,
+				liquidity: u128,
+				fee_amount: u128,
 			}
 
 		*/
@@ -314,7 +302,7 @@ export class CetusApiHelpers {
 			return tx.moveCall({
 				target: Helpers.transactions.createTransactionTarget(
 					this.addresses.cetus.packages.clmm,
-					CetusApiHelpers.constants.moduleNames.pool,
+					TurbosApiHelpers.constants.moduleNames.pool,
 					"calculate_swap_result"
 				),
 				typeArguments: [inputs.coinTypeA, inputs.coinTypeB],
@@ -338,7 +326,7 @@ export class CetusApiHelpers {
 
 	public fetchBuildTradeTx = async (inputs: {
 		walletAddress: SuiAddress;
-		pool: CetusPoolObject;
+		pool: TurbosPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
@@ -372,7 +360,7 @@ export class CetusApiHelpers {
 	public fetchCalcTradeResult = async (
 		inputs: {
 			walletAddress: SuiAddress;
-			pool: CetusPoolObject;
+			pool: TurbosPoolObject;
 			coinInType: CoinType;
 			coinOutType: CoinType;
 		} & (
@@ -383,7 +371,7 @@ export class CetusApiHelpers {
 					coinOutAmount: Balance;
 			  }
 		)
-	): Promise<CetusCalcTradeResult> => {
+	): Promise<TurbosCalcTradeResult> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
@@ -397,7 +385,7 @@ export class CetusApiHelpers {
 		const resultBytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		bcs.registerStructType("SwapStepResult", {
+		bcs.registerStructType("ComputeSwapState", {
 			current_sqrt_price: BCS.U128,
 			target_sqrt_price: BCS.U128,
 			current_liquidity: BCS.U128,
@@ -440,21 +428,25 @@ export class CetusApiHelpers {
 
 	private static poolFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): CetusPoolObject => {
+	): TurbosPoolObject => {
 		const content = data.data?.content;
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");
 
 		const fields = content.fields.value.fields.value.fields as {
+			pool_id: ObjectId;
 			coin_type_a: TypeNameOnChain;
 			coin_type_b: TypeNameOnChain;
-			pool_id: ObjectId;
+			fee_type: TypeNameOnChain;
+			fee: BigIntAsString;
 		};
 
 		return {
+			id: fields.pool_id,
 			coinTypeA: "0x" + fields.coin_type_a.fields.name,
 			coinTypeB: "0x" + fields.coin_type_b.fields.name,
-			id: fields.pool_id,
+			feeCoinType: "0x" + fields.fee_type.fields.name,
+			fee: BigInt(fields.fee),
 		};
 	};
 
@@ -463,7 +455,7 @@ export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	private static isPoolForCoinTypes = (inputs: {
-		pool: CetusPoolObject;
+		pool: TurbosPoolObject;
 		coinType1: CoinType;
 		coinType2: CoinType;
 	}) => {
@@ -475,6 +467,6 @@ export class CetusApiHelpers {
 		);
 	};
 
-	private static isCoinA = (coin: CoinType, pool: CetusPoolObject) =>
+	private static isCoinA = (coin: CoinType, pool: TurbosPoolObject) =>
 		coin === pool.coinTypeA;
 }
