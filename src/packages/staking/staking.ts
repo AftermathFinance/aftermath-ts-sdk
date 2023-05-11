@@ -24,7 +24,7 @@ export class Staking extends Caller {
 			delegationType: "0x2::staking_pool::Delegation",
 		},
 		fees: {
-			unstakeFee: 0.05, // 5%
+			unstakeFee: 0.01, // 1%
 		},
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
