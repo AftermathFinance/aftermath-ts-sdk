@@ -19,10 +19,6 @@ export class Staking extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	public static readonly constants = {
-		objectTypes: {
-			stakedSuiType: "0x2::staking_pool::StakedSui",
-			delegationType: "0x2::staking_pool::Delegation",
-		},
 		fees: {
 			unstakeFee: 0.01, // 1%
 		},
