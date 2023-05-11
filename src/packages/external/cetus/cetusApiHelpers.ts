@@ -369,21 +369,13 @@ export class CetusApiHelpers {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCalcTradeResult = async (
-		inputs: {
-			walletAddress: SuiAddress;
-			pool: CetusPoolObject;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
-	): Promise<CetusCalcTradeResult> => {
+	public fetchCalcTradeResult = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: CetusPoolObject;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmount: Balance;
+	}): Promise<CetusCalcTradeResult> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 

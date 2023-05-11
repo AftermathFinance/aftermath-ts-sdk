@@ -13,6 +13,8 @@ import {
 	RouterSynchronousProtocolName,
 	RouterSerializableCompleteGraph,
 	RouterAsyncProtocolName,
+	RouterProtocolName,
+	isRouterAsyncProtocolName,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
@@ -37,13 +39,7 @@ export class RouterApi {
 
 	constructor(
 		private readonly Provider: AftermathApi,
-		public readonly protocols: RouterSynchronousProtocolName[] = [
-			"Aftermath",
-		],
-		public readonly asyncProtocols: RouterAsyncProtocolName[] = [
-			"Cetus",
-			"Turbos",
-		]
+		public readonly protocols: RouterProtocolName[] = ["Aftermath"]
 	) {
 		this.Provider = Provider;
 		this.Helpers = new RouterSynchronousApiHelpers(Provider);
@@ -93,17 +89,22 @@ export class RouterApi {
 	//// Routing
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCompleteTradeRouteGivenAmountIn = async (
-		network: SuiNetwork | Url,
-		graph: RouterSerializableCompleteGraph,
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
+	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
+		network: SuiNetwork | Url;
+		graph: RouterSerializableCompleteGraph;
+		coinIn: CoinType;
+		coinInAmount: Balance;
+		coinOut: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
 		// TODO: add options to set all these params ?
 		// maxRouteLength?: number,
-	): Promise<RouterCompleteTradeRoute> => {
+	}): Promise<RouterCompleteTradeRoute> => {
+		if (this.protocols.length === 0)
+			throw new Error("no protocols set in constructor");
+
+		const { network, graph, coinIn, coinInAmount, coinOut } = inputs;
+
 		const coinInAmounts =
 			RouterSynchronousApiHelpers.amountsInForRouterTrade({
 				coinInAmount,
@@ -111,33 +112,22 @@ export class RouterApi {
 			});
 
 		const tradeResults = await this.AsyncHelpers.fetchTradeResults({
-			protocols: this.asyncProtocols,
+			protocols: this.protocols.filter(isRouterAsyncProtocolName),
 			coinInType: coinIn,
 			coinOutType: coinOut,
 			coinInAmounts,
 		});
 
-		console.log("tradeResults", tradeResults);
-
 		const routerGraph = new RouterGraph(network, graph);
 
 		if (tradeResults.results.length <= 0)
-			return routerGraph.getCompleteRouteGivenAmountIn(
-				coinIn,
-				coinInAmount,
-				coinOut,
-				referrer,
-				externalFee
-			);
+			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
 
 		const synchronousCompleteRoutes =
-			routerGraph.getCompleteRoutesGivenAmountIns(
-				coinIn,
+			routerGraph.getCompleteRoutesGivenAmountIns({
+				...inputs,
 				coinInAmounts,
-				coinOut,
-				referrer,
-				externalFee
-			);
+			});
 
 		return RouterAsyncGraph.createFinalCompleteRoute({
 			tradeResults,
@@ -146,23 +136,23 @@ export class RouterApi {
 		});
 	};
 
-	public fetchCompleteTradeRouteGivenAmountOut = async (
-		network: SuiNetwork | Url,
-		graph: RouterSerializableCompleteGraph,
-		coinIn: CoinType,
-		coinOut: CoinType,
-		coinOutAmount: Balance,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(network, graph).getCompleteRouteGivenAmountOut(
-			coinIn,
-			coinOut,
-			coinOutAmount,
-			referrer,
-			externalFee
-		);
-	};
+	// public fetchCompleteTradeRouteGivenAmountOut = async (
+	// 	network: SuiNetwork | Url,
+	// 	graph: RouterSerializableCompleteGraph,
+	// 	coinIn: CoinType,
+	// 	coinOut: CoinType,
+	// 	coinOutAmount: Balance,
+	// 	referrer?: SuiAddress,
+	// 	externalFee?: RouterExternalFee
+	// ): Promise<RouterCompleteTradeRoute> => {
+	// 	return new RouterGraph(network, graph).getCompleteRouteGivenAmountOut(
+	// 		coinIn,
+	// 		coinOut,
+	// 		coinOutAmount,
+	// 		referrer,
+	// 		externalFee
+	// 	);
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions

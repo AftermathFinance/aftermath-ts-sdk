@@ -59,7 +59,20 @@ export type RouterSynchronousSerializablePool =
 	| NojoPoolObject
 	| DeepBookPoolObject;
 
-export type RouterSynchronousProtocolName = "Aftermath" | "Nojo" | "DeepBook";
+const RouterSynchronousProtocolNames = [
+	"Aftermath",
+	"Nojo",
+	"DeepBook",
+] as const;
+export type RouterSynchronousProtocolName =
+	(typeof RouterSynchronousProtocolNames)[number];
+
+export const isRouterSynchronousProtocolName = (
+	protocolName: RouterProtocolName
+): protocolName is RouterSynchronousProtocolName => {
+	// @ts-ignore
+	return RouterSynchronousProtocolNames.includes(protocolName);
+};
 
 /////////////////////////////////////////////////////////////////////
 //// Router Async Pools
@@ -67,7 +80,15 @@ export type RouterSynchronousProtocolName = "Aftermath" | "Nojo" | "DeepBook";
 
 export type RouterAsyncSerializablePool = CetusPoolObject | TurbosPoolObject;
 
-export type RouterAsyncProtocolName = "Cetus" | "Turbos";
+const RouterAsyncProtocolNames = ["Cetus", "Turbos"] as const;
+export type RouterAsyncProtocolName = (typeof RouterAsyncProtocolNames)[number];
+
+export const isRouterAsyncProtocolName = (
+	protocolName: RouterProtocolName
+): protocolName is RouterAsyncProtocolName => {
+	// @ts-ignore
+	return RouterAsyncProtocolNames.includes(protocolName);
+};
 
 /////////////////////////////////////////////////////////////////////
 //// Paths

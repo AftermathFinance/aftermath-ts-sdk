@@ -252,67 +252,60 @@ export class RouterGraph {
 	//// Public Methods
 	/////////////////////////////////////////////////////////////////////
 
-	public getCompleteRouteGivenAmountIn(
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): RouterCompleteTradeRoute {
-		return this.getCompleteRoute(
-			coinIn,
-			coinInAmount,
-			coinOut,
-			false,
-			referrer,
-			externalFee
-		);
+	public getCompleteRouteGivenAmountIn(inputs: {
+		coinIn: CoinType;
+		coinInAmount: Balance;
+		coinOut: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute {
+		return this.getCompleteRoute({
+			...inputs,
+			isGivenAmountOut: false,
+		});
 	}
 
-	public getCompleteRouteGivenAmountOut(
-		coinIn: CoinType,
-		coinOut: CoinType,
-		coinOutAmount: Balance,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): RouterCompleteTradeRoute {
-		return this.getCompleteRoute(
-			coinIn,
-			coinOutAmount,
-			coinOut,
-			true,
-			referrer,
-			externalFee
-		);
-	}
+	// public getCompleteRouteGivenAmountOut(
+	// 	coinIn: CoinType,
+	// 	coinOut: CoinType,
+	// 	coinOutAmount: Balance,
+	// 	referrer?: SuiAddress,
+	// 	externalFee?: RouterExternalFee
+	// ): RouterCompleteTradeRoute {
+	// 	return this.getCompleteRoute(
+	// 		coinIn,
+	// 		coinOutAmount,
+	// 		coinOut,
+	// 		true,
+	// 		referrer,
+	// 		externalFee
+	// 	);
+	// }
 
-	public getCompleteRoutesGivenAmountIns(
-		coinIn: CoinType,
-		coinInAmounts: Balance[],
-		coinOut: CoinType,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): RouterCompleteTradeRoute[] {
-		return coinInAmounts.map((coinInAmount) => {
+	public getCompleteRoutesGivenAmountIns(inputs: {
+		coinIn: CoinType;
+		coinInAmounts: Balance[];
+		coinOut: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute[] {
+		return inputs.coinInAmounts.map((coinInAmount) => {
 			try {
-				return this.getCompleteRoute(
-					coinIn,
+				return this.getCompleteRoute({
+					...inputs,
 					coinInAmount,
-					coinOut,
-					false,
-					referrer,
-					externalFee
-				);
+					isGivenAmountOut: false,
+				});
 			} catch (e) {
 				return {
 					routes: [],
 					coinIn: {
-						type: coinIn,
+						type: inputs.coinIn,
 						amount: coinInAmount,
 						tradeFee: BigInt(0),
 					},
 					coinOut: {
-						type: coinOut,
+						type: inputs.coinOut,
 						amount: BigInt(0),
 						tradeFee: BigInt(0),
 					},
@@ -326,15 +319,25 @@ export class RouterGraph {
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
-	private getCompleteRoute(
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType,
-		isGivenAmountOut: boolean,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): RouterCompleteTradeRoute {
+	private getCompleteRoute(inputs: {
+		coinIn: CoinType;
+		coinInAmount: Balance;
+		coinOut: CoinType;
+		isGivenAmountOut: boolean;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute {
 		if (Object.keys(this.graph).length <= 0) throw new Error("empty graph");
+
+		const {
+			coinIn,
+			coinInAmount,
+			coinOut,
+			referrer,
+			externalFee,
+			isGivenAmountOut,
+		} = inputs;
+
 		if (
 			externalFee &&
 			externalFee.feePercentage >=
