@@ -8,7 +8,6 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
-	AnyObjectType,
 	Balance,
 	TurbosAddresses,
 	CoinType,
