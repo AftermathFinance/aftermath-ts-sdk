@@ -470,11 +470,13 @@ export class CetusApiHelpers {
 		const { pool, coinType1, coinType2 } = inputs;
 
 		return (
-			(pool.coinTypeA === coinType1 && pool.coinTypeB === coinType2) ||
-			(pool.coinTypeA === coinType2 && pool.coinTypeB === coinType1)
+			(pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType1) &&
+				pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType2)) ||
+			(pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType2) &&
+				pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType1))
 		);
 	};
 
 	private static isCoinA = (coin: CoinType, pool: CetusPoolObject) =>
-		coin === pool.coinTypeA;
+		Helpers.addLeadingZeroesToType(coin) === pool.coinTypeA;
 }

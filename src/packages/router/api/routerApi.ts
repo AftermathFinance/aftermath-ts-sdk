@@ -21,6 +21,7 @@ import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
 import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
+import { TurbosApi } from "../../external/turbos/turbosApi";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -39,7 +40,10 @@ export class RouterApi {
 		public readonly protocols: RouterSynchronousProtocolName[] = [
 			"Aftermath",
 		],
-		public readonly asyncProtocols: RouterAsyncProtocolName[] = ["Cetus"]
+		public readonly asyncProtocols: RouterAsyncProtocolName[] = [
+			"Cetus",
+			"Turbos",
+		]
 	) {
 		this.Provider = Provider;
 		this.Helpers = new RouterSynchronousApiHelpers(Provider);
@@ -54,6 +58,7 @@ export class RouterApi {
 	public Nojo = () => new NojoAmmApi(this.Provider);
 	public DeepBook = () => new DeepBookApi(this.Provider);
 	public Cetus = () => new CetusApi(this.Provider);
+	public Turbos = () => new TurbosApi(this.Provider);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods
@@ -112,20 +117,27 @@ export class RouterApi {
 			coinInAmounts,
 		});
 
+		console.log("tradeResults", tradeResults);
+
 		const routerGraph = new RouterGraph(network, graph);
-		const synchronousCompleteRoutes = (() => {
-			try {
-				return routerGraph.getCompleteRoutesGivenAmountIns(
-					coinIn,
-					coinInAmounts,
-					coinOut,
-					referrer,
-					externalFee
-				);
-			} catch (e) {
-				return undefined;
-			}
-		})();
+
+		if (tradeResults.results.length <= 0)
+			return routerGraph.getCompleteRouteGivenAmountIn(
+				coinIn,
+				coinInAmount,
+				coinOut,
+				referrer,
+				externalFee
+			);
+
+		const synchronousCompleteRoutes =
+			routerGraph.getCompleteRoutesGivenAmountIns(
+				coinIn,
+				coinInAmounts,
+				coinOut,
+				referrer,
+				externalFee
+			);
 
 		return RouterAsyncGraph.createFinalCompleteRoute({
 			tradeResults,

@@ -22,6 +22,8 @@ import { isDeepBookPoolObject } from "../../../../external/deepBook/deepBookType
 import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
 import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
 import CetusRouterPool from "../routerPools/cetusRouterPool";
+import { isTurbosPoolObject } from "../../../../external/turbos/turbosTypes";
+import TurbosRouterPool from "../routerPools/turbosRouterPool";
 
 /////////////////////////////////////////////////////////////////////
 //// Creation
@@ -40,6 +42,8 @@ export function createRouterPool(inputs: {
 		? new DeepBookRouterPool(pool, network)
 		: isCetusRouterPoolObject(pool)
 		? new CetusRouterPool(pool, network)
+		: isTurbosPoolObject(pool)
+		? new TurbosRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;

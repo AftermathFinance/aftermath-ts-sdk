@@ -102,6 +102,8 @@ export class TurbosApiHelpers {
 	}) => {
 		const allPools = await this.fetchAllPools();
 
+		console.log("allPools", allPools);
+
 		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
 		const foundPool = allPools.find((pool) =>
 			TurbosApiHelpers.isPoolForCoinTypes({
@@ -277,12 +279,17 @@ export class TurbosApiHelpers {
 				],
 				arguments: [
 					tx.object(inputs.poolObjectId),
-					tx.pure(inputs.coinInType === inputs.coinTypeA, "bool"), // a2b
+					tx.pure(
+						Helpers.addLeadingZeroesToType(inputs.coinInType) ===
+							Helpers.addLeadingZeroesToType(inputs.coinTypeA),
+						"bool"
+					), // a2b
 					tx.pure(inputs.coinInAmount, "u128"), // amount_specified
 					// tx.pure("coinInAmount" in inputs, "bool"), // amount_specified_is_input
 					tx.pure(true, "bool"), // amount_specified_is_input
-					tx.pure("0", "u128"), // sqrt_price_limit
+					tx.pure(Casting.u64MaxBigInt, "u128"), // sqrt_price_limit
 					tx.object(Sui.constants.addresses.suiClockId),
+					tx.object(this.addresses.turbos.objects.versioned),
 				],
 			});
 		};
@@ -331,6 +338,8 @@ export class TurbosApiHelpers {
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<TurbosCalcTradeResult> => {
+		console.log("HELOooooooooooooooooooooooooooo");
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
@@ -341,39 +350,51 @@ export class TurbosApiHelpers {
 			...inputs,
 		});
 
-		const resultBytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+		try {
+			const resultBytes =
+				await this.Provider.Inspections().fetchFirstBytesFromTxOutput(
+					tx
+				);
 
-		bcs.registerStructType("I32", {
-			bits: BCS.U32,
-		});
+			bcs.registerStructType("I32", {
+				bits: BCS.U32,
+			});
 
-		bcs.registerStructType("ComputeSwapState", {
-			amount_a: BCS.U128,
-			amount_b: BCS.U128,
-			amount_specified_remaining: BCS.U128,
-			amount_calculated: BCS.U128,
-			sqrt_price: BCS.U128,
-			tick_current_index: "I32",
-			fee_growth_global: BCS.U128,
-			protocol_fee: BCS.U128,
-			liquidity: BCS.U128,
-			fee_amount: BCS.U128,
-		});
+			bcs.registerStructType("ComputeSwapState", {
+				amount_a: BCS.U128,
+				amount_b: BCS.U128,
+				amount_specified_remaining: BCS.U128,
+				amount_calculated: BCS.U128,
+				sqrt_price: BCS.U128,
+				tick_current_index: "I32",
+				fee_growth_global: BCS.U128,
+				protocol_fee: BCS.U128,
+				liquidity: BCS.U128,
+				fee_amount: BCS.U128,
+			});
 
-		const data = bcs.de("ComputeSwapState", new Uint8Array(resultBytes));
+			const data = bcs.de(
+				"ComputeSwapState",
+				new Uint8Array(resultBytes)
+			);
 
-		const amountIn =
-			BigInt(data.amount_a) <= BigInt(0)
-				? BigInt(data.amount_b)
-				: BigInt(data.amount_a);
+			console.log("data", data);
 
-		return {
-			amountIn,
-			amountOut: BigInt(data.amount_calculated),
-			feeAmount: BigInt(data.fee_amount),
-			protocolFee: BigInt(data.protocol_fee),
-		};
+			const amountIn =
+				BigInt(data.amount_a) <= BigInt(0)
+					? BigInt(data.amount_b)
+					: BigInt(data.amount_a);
+
+			return {
+				amountIn,
+				amountOut: BigInt(data.amount_calculated),
+				feeAmount: BigInt(data.fee_amount),
+				protocolFee: BigInt(data.protocol_fee),
+			};
+		} catch (e) {
+			console.log(e);
+			throw new Error("e");
+		}
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -391,7 +412,7 @@ export class TurbosApiHelpers {
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");
 
-		const fields = content.fields.value.fields.value.fields as {
+		const fields = content.fields.value.fields as {
 			pool_id: ObjectId;
 			coin_type_a: TypeNameOnChain;
 			coin_type_b: TypeNameOnChain;
@@ -401,9 +422,15 @@ export class TurbosApiHelpers {
 
 		return {
 			id: fields.pool_id,
-			coinTypeA: "0x" + fields.coin_type_a.fields.name,
-			coinTypeB: "0x" + fields.coin_type_b.fields.name,
-			feeCoinType: "0x" + fields.fee_type.fields.name,
+			coinTypeA: Helpers.addLeadingZeroesToType(
+				"0x" + fields.coin_type_a.fields.name
+			),
+			coinTypeB: Helpers.addLeadingZeroesToType(
+				"0x" + fields.coin_type_b.fields.name
+			),
+			feeCoinType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.fee_type.fields.name
+			),
 			fee: BigInt(fields.fee),
 		};
 	};
@@ -420,11 +447,13 @@ export class TurbosApiHelpers {
 		const { pool, coinType1, coinType2 } = inputs;
 
 		return (
-			(pool.coinTypeA === coinType1 && pool.coinTypeB === coinType2) ||
-			(pool.coinTypeA === coinType2 && pool.coinTypeB === coinType1)
+			(pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType1) &&
+				pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType2)) ||
+			(pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType2) &&
+				pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType1))
 		);
 	};
 
 	private static isCoinA = (coin: CoinType, pool: TurbosPoolObject) =>
-		coin === pool.coinTypeA;
+		Helpers.addLeadingZeroesToType(coin) === pool.coinTypeA;
 }

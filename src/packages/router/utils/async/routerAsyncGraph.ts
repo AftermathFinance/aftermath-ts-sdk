@@ -38,6 +38,9 @@ export class RouterAsyncGraph {
 			completeRoutes: chosenCompleteRoutes,
 		});
 
+		if (finalCompleteRoute.coinOut.amount <= BigInt(0))
+			throw new Error("unable to find route ");
+
 		return finalCompleteRoute;
 	}
 
@@ -125,7 +128,7 @@ export class RouterAsyncGraph {
 			},
 			coinOut: {
 				type: completeRoutes[0].coinOut.type,
-				amount: coinInAmount,
+				amount: coinOutAmount,
 				tradeFee: BigInt(0),
 			},
 		};

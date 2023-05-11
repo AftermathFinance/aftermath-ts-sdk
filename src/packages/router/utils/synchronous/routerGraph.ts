@@ -293,16 +293,33 @@ export class RouterGraph {
 		referrer?: SuiAddress,
 		externalFee?: RouterExternalFee
 	): RouterCompleteTradeRoute[] {
-		return coinInAmounts.map((coinInAmount) =>
-			this.getCompleteRoute(
-				coinIn,
-				coinInAmount,
-				coinOut,
-				false,
-				referrer,
-				externalFee
-			)
-		);
+		return coinInAmounts.map((coinInAmount) => {
+			try {
+				return this.getCompleteRoute(
+					coinIn,
+					coinInAmount,
+					coinOut,
+					false,
+					referrer,
+					externalFee
+				);
+			} catch (e) {
+				return {
+					routes: [],
+					coinIn: {
+						type: coinIn,
+						amount: coinInAmount,
+						tradeFee: BigInt(0),
+					},
+					coinOut: {
+						type: coinOut,
+						amount: BigInt(0),
+						tradeFee: BigInt(0),
+					},
+					spotPrice: 0,
+				};
+			}
+		});
 	}
 
 	/////////////////////////////////////////////////////////////////////
