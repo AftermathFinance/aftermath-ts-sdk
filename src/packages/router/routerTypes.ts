@@ -200,20 +200,18 @@ export type ApiRouterCompleteTradeRouteBody = {
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
 	externalFee?: RouterExternalFee;
-} & (
-	| {
-			/**
-			 * Amount of coin being given away
-			 */
-			coinInAmount: Balance;
-	  }
-	| {
-			/**
-			 * Amount of coin expected to receive
-			 */
-			coinOutAmount: Balance;
-	  }
-);
+} & {
+	/**
+	 * Amount of coin being given away
+	 */
+	coinInAmount: Balance;
+};
+// | {
+// 		/**
+// 		 * Amount of coin expected to receive
+// 		 */
+// 		coinOutAmount: Balance;
+//   }
 
 /**
  * Info to construct router trade transaction from complete route

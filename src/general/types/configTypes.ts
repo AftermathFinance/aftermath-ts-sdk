@@ -22,7 +22,7 @@ interface OptionalConfigAddresses {
 	utilies: UtilitiesAddresses;
 	capys: CapysAddresses;
 	nftAmm: NftAmmAddresses;
-	externalRouter: ExternalRouterAddresses;
+	externalRouter: Partial<ExternalRouterAddresses>;
 	referralVault: ReferralVaultAddresses;
 }
 

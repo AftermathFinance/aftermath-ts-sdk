@@ -253,9 +253,9 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	public getCompleteRouteGivenAmountIn(inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute {
@@ -283,9 +283,9 @@ export class RouterGraph {
 	// }
 
 	public getCompleteRoutesGivenAmountIns(inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmounts: Balance[];
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute[] {
@@ -300,12 +300,12 @@ export class RouterGraph {
 				return {
 					routes: [],
 					coinIn: {
-						type: inputs.coinIn,
+						type: inputs.coinInType,
 						amount: coinInAmount,
 						tradeFee: BigInt(0),
 					},
 					coinOut: {
-						type: inputs.coinOut,
+						type: inputs.coinOutType,
 						amount: BigInt(0),
 						tradeFee: BigInt(0),
 					},
@@ -320,9 +320,9 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	private getCompleteRoute(inputs: {
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		isGivenAmountOut: boolean;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
@@ -330,9 +330,9 @@ export class RouterGraph {
 		if (Object.keys(this.graph).length <= 0) throw new Error("empty graph");
 
 		const {
-			coinIn,
+			coinInType,
 			coinInAmount,
-			coinOut,
+			coinOutType,
 			referrer,
 			externalFee,
 			isGivenAmountOut,
@@ -349,8 +349,8 @@ export class RouterGraph {
 
 		const routes = RouterGraph.findRoutes(
 			Helpers.deepCopy(this.graph),
-			coinIn,
-			coinOut,
+			coinInType,
+			coinOutType,
 			this.constants.maxRouteLength,
 			isGivenAmountOut
 		);
@@ -365,9 +365,9 @@ export class RouterGraph {
 
 		const completeRoute = RouterGraph.completeRouteFromRoutes(
 			routesAfterTrades,
-			coinIn,
+			coinInType,
 			coinInAmount,
-			coinOut
+			coinOutType
 		);
 
 		const transformedRoute = isGivenAmountOut

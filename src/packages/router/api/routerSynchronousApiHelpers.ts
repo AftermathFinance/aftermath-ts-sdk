@@ -36,6 +36,12 @@ export class RouterSynchronousApiHelpers {
 		Turbos: () => new TurbosApi(this.Provider),
 	};
 
+	public static readonly constants = {
+		defaults: {
+			tradePartitionCount: 10,
+		},
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -50,8 +56,6 @@ export class RouterSynchronousApiHelpers {
 
 	public fetchAllPools = async (inputs: {
 		protocols: RouterProtocolName[];
-		coinInType: CoinType;
-		coinOutType: CoinType;
 	}): Promise<RouterSerializablePool[]> => {
 		const apis = this.protocolApisFromNames(inputs);
 
@@ -219,9 +223,13 @@ export class RouterSynchronousApiHelpers {
 
 	public static amountsInForRouterTrade = (inputs: {
 		coinInAmount: Balance;
-		partitions: number;
+		partitions?: number;
 	}): Balance[] => {
-		const { coinInAmount, partitions } = inputs;
+		const { coinInAmount } = inputs;
+
+		const partitions =
+			inputs.partitions ||
+			RouterSynchronousApiHelpers.constants.defaults.tradePartitionCount;
 
 		const coinInPartitionAmount =
 			coinInAmount / BigInt(Math.floor(partitions));

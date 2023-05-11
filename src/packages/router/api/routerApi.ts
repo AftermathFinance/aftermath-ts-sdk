@@ -64,12 +64,8 @@ export class RouterApi {
 	//// Graph
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchSerializableGraph = async (inputs: {
-		coinInType: CoinType;
-		coinOutType: CoinType;
-	}) => {
+	public fetchSerializableGraph = async () => {
 		const pools = await this.Helpers.fetchAllPools({
-			...inputs,
 			protocols: this.protocols,
 		});
 		return RouterGraph.createGraph({ pools });
@@ -92,9 +88,9 @@ export class RouterApi {
 	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
 		network: SuiNetwork | Url;
 		graph: RouterSerializableCompleteGraph;
-		coinIn: CoinType;
+		coinInType: CoinType;
 		coinInAmount: Balance;
-		coinOut: CoinType;
+		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 		// TODO: add options to set all these params ?
@@ -103,18 +99,16 @@ export class RouterApi {
 		if (this.protocols.length === 0)
 			throw new Error("no protocols set in constructor");
 
-		const { network, graph, coinIn, coinInAmount, coinOut } = inputs;
+		const { network, graph, coinInAmount } = inputs;
 
 		const coinInAmounts =
 			RouterSynchronousApiHelpers.amountsInForRouterTrade({
 				coinInAmount,
-				partitions: 10,
 			});
 
 		const tradeResults = await this.AsyncHelpers.fetchTradeResults({
+			...inputs,
 			protocols: this.protocols.filter(isRouterAsyncProtocolName),
-			coinInType: coinIn,
-			coinOutType: coinOut,
 			coinInAmounts,
 		});
 

@@ -338,8 +338,6 @@ export class TurbosApiHelpers {
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<TurbosCalcTradeResult> => {
-		console.log("HELOooooooooooooooooooooooooooo");
-
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
