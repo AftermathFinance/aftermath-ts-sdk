@@ -8,6 +8,7 @@ import { Balance, CoinType } from "../../../types";
 import { RouterAsyncApiInterface } from "../utils/async/routerAsyncApiInterface";
 import { CetusApi } from "../../external/cetus/cetusApi";
 import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
+import { TurbosApi } from "../../external/turbos/turbosApi";
 
 export class RouterAsyncApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -19,6 +20,7 @@ export class RouterAsyncApiHelpers {
 		() => RouterAsyncApiInterface<any>
 	> = {
 		Cetus: () => new CetusApi(this.Provider),
+		Turbos: () => new TurbosApi(this.Provider),
 	};
 
 	/////////////////////////////////////////////////////////////////////

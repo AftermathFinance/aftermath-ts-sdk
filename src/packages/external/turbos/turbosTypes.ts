@@ -17,7 +17,7 @@ export interface TurbosCalcTradeResult {
 	amountIn: Balance;
 	amountOut: Balance;
 	feeAmount: Balance;
-	feeRate: bigint;
+	protocolFee: bigint;
 }
 
 export const isTurbosPoolObject = (

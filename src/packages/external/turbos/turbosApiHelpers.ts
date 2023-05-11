@@ -17,7 +17,7 @@ import {
 	BigIntAsString,
 } from "../../../types";
 import { Sui } from "../../sui";
-import { Helpers } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import { BCS } from "@mysten/bcs";
 import { TurbosCalcTradeResult, TurbosPoolObject } from "./turbosTypes";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
@@ -30,6 +30,7 @@ export class TurbosApiHelpers {
 	private static readonly constants = {
 		moduleNames: {
 			poolFetcher: "pool_fetcher",
+			swapRouter: "swap_router",
 		},
 	};
 
@@ -111,7 +112,7 @@ export class TurbosApiHelpers {
 		);
 
 		if (!foundPool)
-			throw new Error("no cetus pools found for given coin types");
+			throw new Error("no turbos pools found for given coin types");
 
 		return foundPool;
 	};
@@ -120,33 +121,30 @@ export class TurbosApiHelpers {
 	//// Transaction Commands
 	/////////////////////////////////////////////////////////////////////
 
-	public tradeCoinAToCoinBTx = (
-		inputs: {
-			tx: TransactionBlock;
-			poolObjectId: ObjectId;
-			coinInId: ObjectId | TransactionArgument;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
-	) => {
+	public tradeCoinAToCoinBTx = (inputs: {
+		tx: TransactionBlock;
+		poolObjectId: ObjectId;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmount: Balance;
+		feeCoinType: CoinType;
+		walletAddress: SuiAddress;
+	}) => {
 		const { tx, coinInId } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.cetus.packages.scripts,
-				TurbosApiHelpers.constants.moduleNames.poolScript,
-				"swap_a2b"
+				this.addresses.turbos.packages.poolFetcher,
+				TurbosApiHelpers.constants.moduleNames.swapRouter,
+				"swap_a_b"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [
+				inputs.coinInType,
+				inputs.coinOutType,
+				inputs.feeCoinType,
+			],
 			arguments: [
-				tx.object(this.addresses.turbos.objects.versioned),
 				tx.object(inputs.poolObjectId),
 				tx.makeMoveVec({
 					objects: [
@@ -154,54 +152,43 @@ export class TurbosApiHelpers {
 							? tx.object(coinInId)
 							: coinInId,
 					],
-				}),
-				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
-				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
-					"u64"
-				), // amount
-				tx.pure(
-					// "coinInAmount" in inputs
-					// 	? inputs.coinInAmount
-					// 	: inputs.coinOutAmount,
-					"0",
-					"u64"
-				), // amount_limit
-				tx.pure(BigInt("4295048016"), "u128"), // sqrt_price_limit (set to min_sqrt_price)
+				}), // coins_a
+				tx.pure(inputs.coinInAmount, "u64"), // amount
+				tx.pure(inputs.coinInAmount, "u64"), // amount_threshold
+				tx.pure("0", "u128"), // sqrt_price_limit
+				tx.pure(true, "u128"), // is_exact_in
+				tx.pure(inputs.walletAddress, "address"), // recipient
+				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // deadline
 				tx.object(Sui.constants.addresses.suiClockId),
+				tx.object(this.addresses.turbos.objects.versioned),
 			],
 		});
 	};
 
-	public tradeCoinBToCoinATx = (
-		inputs: {
-			tx: TransactionBlock;
-			poolObjectId: ObjectId;
-			coinInId: ObjectId | TransactionArgument;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
-	) => {
+	public tradeCoinBToCoinATx = (inputs: {
+		tx: TransactionBlock;
+		poolObjectId: ObjectId;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmount: Balance;
+		feeCoinType: CoinType;
+		walletAddress: SuiAddress;
+	}) => {
 		const { tx, coinInId } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.cetus.packages.scripts,
-				TurbosApiHelpers.constants.moduleNames.poolScript,
+				this.addresses.turbos.packages.poolFetcher,
+				TurbosApiHelpers.constants.moduleNames.swapRouter,
 				"swap_b2a"
 			),
-			typeArguments: [inputs.coinOutType, inputs.coinInType],
+			typeArguments: [
+				inputs.coinInType,
+				inputs.coinOutType,
+				inputs.feeCoinType,
+			],
 			arguments: [
-				tx.object(this.addresses.turbos.objects.versioned),
 				tx.object(inputs.poolObjectId),
 				tx.makeMoveVec({
 					objects: [
@@ -209,48 +196,34 @@ export class TurbosApiHelpers {
 							? tx.object(coinInId)
 							: coinInId,
 					],
-				}),
-				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
-				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
-					"u64"
-				), // amount
-				tx.pure(
-					// "coinInAmount" in inputs
-					// 	? inputs.coinInAmount
-					// 	: inputs.coinOutAmount,
-					"0",
-					"u64"
-				), // amount_limit
-				tx.pure(BigInt("79226673515401279992447579055"), "u128"), // sqrt_price_limit (set to max_sqrt_price)
+				}), // coins_a
+				tx.pure(inputs.coinInAmount, "u64"), // amount
+				tx.pure(inputs.coinInAmount, "u64"), // amount_threshold
+				tx.pure("0", "u128"), // sqrt_price_limit
+				tx.pure(true, "u128"), // is_exact_in
+				tx.pure(inputs.walletAddress, "address"), // recipient
+				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // deadline
 				tx.object(Sui.constants.addresses.suiClockId),
+				tx.object(this.addresses.turbos.objects.versioned),
 			],
 		});
 	};
 
-	public tradeTx = (
-		inputs: {
-			tx: TransactionBlock;
-			pool: TurbosPoolObject;
-			coinInId: ObjectId | TransactionArgument;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
-	) => {
+	public tradeTx = (inputs: {
+		tx: TransactionBlock;
+		pool: TurbosPoolObject;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmount: Balance;
+		walletAddress: SuiAddress;
+	}) => {
 		const { coinInType, pool } = inputs;
 
 		const commandInputs = {
 			...inputs,
-			poolObjectId: pool.poolObjectId,
+			poolObjectId: pool.id,
+			feeCoinType: pool.feeCoinType,
 		};
 
 		if (TurbosApiHelpers.isCoinA(coinInType, pool))
@@ -263,23 +236,16 @@ export class TurbosApiHelpers {
 	//// Transaction Inspection Commands
 	/////////////////////////////////////////////////////////////////////
 
-	public calcTradeResultTx = (
-		inputs: {
-			tx: TransactionBlock;
-			poolObjectId: ObjectId;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-			coinTypeA: CoinType;
-			coinTypeB: CoinType;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
-	) =>
+	public calcTradeResultTx = (inputs: {
+		tx: TransactionBlock;
+		poolObjectId: ObjectId;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		feeCoinType: CoinType;
+		coinTypeA: CoinType;
+		coinTypeB: CoinType;
+		coinInAmount: Balance;
+	}) =>
 		/*
 
 			struct ComputeSwapState has copy, drop {
@@ -301,21 +267,23 @@ export class TurbosApiHelpers {
 
 			return tx.moveCall({
 				target: Helpers.transactions.createTransactionTarget(
-					this.addresses.cetus.packages.clmm,
-					TurbosApiHelpers.constants.moduleNames.pool,
-					"calculate_swap_result"
+					this.addresses.turbos.packages.poolFetcher,
+					TurbosApiHelpers.constants.moduleNames.poolFetcher,
+					"compute_swap_result"
 				),
-				typeArguments: [inputs.coinTypeA, inputs.coinTypeB],
+				typeArguments: [
+					inputs.coinTypeA,
+					inputs.coinTypeB,
+					inputs.feeCoinType,
+				],
 				arguments: [
 					tx.object(inputs.poolObjectId),
 					tx.pure(inputs.coinInType === inputs.coinTypeA, "bool"), // a2b
-					tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
-					tx.pure(
-						"coinInAmount" in inputs
-							? inputs.coinInAmount
-							: inputs.coinOutAmount,
-						"u64"
-					), // amount
+					tx.pure(inputs.coinInAmount, "u128"), // amount_specified
+					// tx.pure("coinInAmount" in inputs, "bool"), // amount_specified_is_input
+					tx.pure(true, "bool"), // amount_specified_is_input
+					tx.pure("0", "u128"), // sqrt_price_limit
+					tx.object(Sui.constants.addresses.suiClockId),
 				],
 			});
 		};
@@ -357,21 +325,13 @@ export class TurbosApiHelpers {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCalcTradeResult = async (
-		inputs: {
-			walletAddress: SuiAddress;
-			pool: TurbosPoolObject;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
-	): Promise<TurbosCalcTradeResult> => {
+	public fetchCalcTradeResult = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: TurbosPoolObject;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmount: Balance;
+	}): Promise<TurbosCalcTradeResult> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
@@ -385,36 +345,35 @@ export class TurbosApiHelpers {
 		const resultBytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
+		bcs.registerStructType("I32", {
+			bits: BCS.U32,
+		});
+
 		bcs.registerStructType("ComputeSwapState", {
-			current_sqrt_price: BCS.U128,
-			target_sqrt_price: BCS.U128,
-			current_liquidity: BCS.U128,
-			amount_in: BCS.U64,
-			amount_out: BCS.U64,
-			fee_amount: BCS.U64,
-			remainer_amount: BCS.U64,
+			amount_a: BCS.U128,
+			amount_b: BCS.U128,
+			amount_specified_remaining: BCS.U128,
+			amount_calculated: BCS.U128,
+			sqrt_price: BCS.U128,
+			tick_current_index: "I32",
+			fee_growth_global: BCS.U128,
+			protocol_fee: BCS.U128,
+			liquidity: BCS.U128,
+			fee_amount: BCS.U128,
 		});
 
-		bcs.registerStructType("CalculatedSwapResult", {
-			amount_in: BCS.U64,
-			amount_out: BCS.U64,
-			fee_amount: BCS.U64,
-			fee_rate: BCS.U64,
-			after_sqrt_price: BCS.U128,
-			is_exceed: BCS.BOOL,
-			step_results: "vector<SwapStepResult>",
-		});
+		const data = bcs.de("ComputeSwapState", new Uint8Array(resultBytes));
 
-		const data = bcs.de(
-			"CalculatedSwapResult",
-			new Uint8Array(resultBytes)
-		);
+		const amountIn =
+			BigInt(data.amount_a) <= BigInt(0)
+				? BigInt(data.amount_b)
+				: BigInt(data.amount_a);
 
 		return {
-			amountIn: BigInt(data.amount_in),
-			amountOut: BigInt(data.amount_out),
+			amountIn,
+			amountOut: BigInt(data.amount_calculated),
 			feeAmount: BigInt(data.fee_amount),
-			feeRate: BigInt(data.fee_rate),
+			protocolFee: BigInt(data.protocol_fee),
 		};
 	};
 

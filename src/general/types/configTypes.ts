@@ -94,6 +94,7 @@ export interface ExternalRouterAddresses {
 	nojo: NojoAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
+	turbos: TurbosAddresses;
 }
 
 export interface NojoAddresses {

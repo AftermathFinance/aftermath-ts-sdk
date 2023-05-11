@@ -18,6 +18,7 @@ import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { Helpers } from "../../../general/utils";
 import { CetusApi } from "../../external/cetus/cetusApi";
+import { TurbosApi } from "../../external/turbos/turbosApi";
 
 export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -32,6 +33,7 @@ export class RouterSynchronousApiHelpers {
 		Nojo: () => new NojoAmmApi(this.Provider),
 		DeepBook: () => new DeepBookApi(this.Provider),
 		Cetus: () => new CetusApi(this.Provider),
+		Turbos: () => new TurbosApi(this.Provider),
 	};
 
 	/////////////////////////////////////////////////////////////////////
