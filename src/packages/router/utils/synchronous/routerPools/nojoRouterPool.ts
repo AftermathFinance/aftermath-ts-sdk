@@ -16,6 +16,7 @@ import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
 import { Pool, Balance as NojoBalance } from "../../../../../external/nojo";
 import { AftermathApi } from "../../../../../general/providers";
 import { NojoPoolObject } from "../../../../external/nojo/nojoAmmTypes";
+import { Helpers } from "../../../../../general/utils";
 
 class NojoRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////

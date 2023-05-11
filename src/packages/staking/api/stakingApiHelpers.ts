@@ -742,7 +742,7 @@ export class StakingApiHelpers {
 		const tx = new TransactionBlock();
 		this.addGetAfSuiSupplyCommandToTransaction({ tx });
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 }
