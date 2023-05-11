@@ -20,6 +20,7 @@ import {
 import { Capys } from "../capys";
 import { Coin } from "../../coin/coin";
 import { Casting } from "../../../general/utils/casting";
+import { Helpers } from "../../../general/utils";
 
 export class CapysApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -142,7 +143,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.capyVault
 					.moduleName,
@@ -164,7 +165,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.capyVault
 					.moduleName,
@@ -194,7 +195,7 @@ export class CapysApiHelpers {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -222,7 +223,7 @@ export class CapysApiHelpers {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -250,7 +251,7 @@ export class CapysApiHelpers {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -278,7 +279,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -301,7 +302,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 
 				CapysApiHelpers.constants.capyVault.modules.interface
@@ -327,7 +328,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -355,7 +356,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -379,7 +380,7 @@ export class CapysApiHelpers {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.capyVault,
 				CapysApiHelpers.constants.capyVault.modules.interface
 					.moduleName,
@@ -548,14 +549,14 @@ export class CapysApiHelpers {
 				stakingReceiptId
 			);
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 
 	public fetchStakedCapyFeesEarnedGlobal = async () => {
 		const tx = this.capyFeesEarnedGlobalDevInspectTransaction();
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 

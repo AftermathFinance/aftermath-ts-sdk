@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterApiHelpers } from "./routerApiHelpers";
-import { RouterGraph } from "../utils/routerGraph";
+import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
+import { RouterGraph } from "../utils/synchronous/routerGraph";
 import {
 	Balance,
 	CoinType,
@@ -10,13 +10,20 @@ import {
 	Slippage,
 	SuiNetwork,
 	Url,
-	RouterProtocolName,
+	RouterSynchronousProtocolName,
 	RouterSerializableCompleteGraph,
+	RouterAsyncProtocolName,
+	RouterProtocolName,
+	isRouterAsyncProtocolName,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
+import { CetusApi } from "../../external/cetus/cetusApi";
+import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
+import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
+import { TurbosApi } from "../../external/turbos/turbosApi";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -24,6 +31,7 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly Helpers;
+	public readonly AsyncHelpers;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -34,7 +42,8 @@ export class RouterApi {
 		public readonly protocols: RouterProtocolName[] = ["Aftermath"]
 	) {
 		this.Provider = Provider;
-		this.Helpers = new RouterApiHelpers(Provider);
+		this.Helpers = new RouterSynchronousApiHelpers(Provider);
+		this.AsyncHelpers = new RouterAsyncApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -44,6 +53,8 @@ export class RouterApi {
 	public Aftermath = () => new PoolsApi(this.Provider);
 	public Nojo = () => new NojoAmmApi(this.Provider);
 	public DeepBook = () => new DeepBookApi(this.Provider);
+	public Cetus = () => new CetusApi(this.Provider);
+	public Turbos = () => new TurbosApi(this.Provider);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods
@@ -74,43 +85,68 @@ export class RouterApi {
 	//// Routing
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCompleteTradeRouteGivenAmountIn = async (
-		network: SuiNetwork | Url,
-		graph: RouterSerializableCompleteGraph,
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
+	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
+		network: SuiNetwork | Url;
+		graph: RouterSerializableCompleteGraph;
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
 		// TODO: add options to set all these params ?
 		// maxRouteLength?: number,
-	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(network, graph).getCompleteRouteGivenAmountIn(
-			coinIn,
-			coinInAmount,
-			coinOut,
-			referrer,
-			externalFee
-		);
+	}): Promise<RouterCompleteTradeRoute> => {
+		if (this.protocols.length === 0)
+			throw new Error("no protocols set in constructor");
+
+		const { network, graph, coinInAmount } = inputs;
+
+		const coinInAmounts =
+			RouterSynchronousApiHelpers.amountsInForRouterTrade({
+				coinInAmount,
+			});
+
+		const tradeResults = await this.AsyncHelpers.fetchTradeResults({
+			...inputs,
+			protocols: this.protocols.filter(isRouterAsyncProtocolName),
+			coinInAmounts,
+		});
+
+		const routerGraph = new RouterGraph(network, graph);
+
+		if (tradeResults.results.length <= 0)
+			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
+
+		const synchronousCompleteRoutes =
+			routerGraph.getCompleteRoutesGivenAmountIns({
+				...inputs,
+				coinInAmounts,
+			});
+
+		return RouterAsyncGraph.createFinalCompleteRoute({
+			tradeResults,
+			synchronousCompleteRoutes,
+			coinInAmounts,
+		});
 	};
 
-	public fetchCompleteTradeRouteGivenAmountOut = async (
-		network: SuiNetwork | Url,
-		graph: RouterSerializableCompleteGraph,
-		coinIn: CoinType,
-		coinOut: CoinType,
-		coinOutAmount: Balance,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): Promise<RouterCompleteTradeRoute> => {
-		return new RouterGraph(network, graph).getCompleteRouteGivenAmountOut(
-			coinIn,
-			coinOut,
-			coinOutAmount,
-			referrer,
-			externalFee
-		);
-	};
+	// public fetchCompleteTradeRouteGivenAmountOut = async (
+	// 	network: SuiNetwork | Url,
+	// 	graph: RouterSerializableCompleteGraph,
+	// 	coinIn: CoinType,
+	// 	coinOut: CoinType,
+	// 	coinOutAmount: Balance,
+	// 	referrer?: SuiAddress,
+	// 	externalFee?: RouterExternalFee
+	// ): Promise<RouterCompleteTradeRoute> => {
+	// 	return new RouterGraph(network, graph).getCompleteRouteGivenAmountOut(
+	// 		coinIn,
+	// 		coinOut,
+	// 		coinOutAmount,
+	// 		referrer,
+	// 		externalFee
+	// 	);
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions

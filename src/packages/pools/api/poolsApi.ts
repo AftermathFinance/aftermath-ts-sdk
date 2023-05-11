@@ -276,7 +276,7 @@ export class PoolsApi {
 			);
 
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
 		return Casting.addressFromBytes(bytes);
 	};

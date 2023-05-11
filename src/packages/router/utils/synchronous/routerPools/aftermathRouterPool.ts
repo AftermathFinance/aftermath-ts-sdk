@@ -10,13 +10,13 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
-} from "../../../../types";
-import { CoinType } from "../../../coin/coinTypes";
-import { PoolObject } from "../../../pools/poolsTypes";
-import { RouterPoolInterface } from "../routerPoolInterface";
-import { Pool } from "../../../pools";
-import { Casting, Helpers } from "../../../../general/utils";
-import { AftermathApi } from "../../../../general/providers";
+} from "../../../../../types";
+import { CoinType } from "../../../../coin/coinTypes";
+import { PoolObject } from "../../../../pools/poolsTypes";
+import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import { Pool } from "../../../../pools";
+import { Casting, Helpers } from "../../../../../general/utils";
+import { AftermathApi } from "../../../../../general/providers";
 
 class AftermathRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
@@ -36,8 +36,8 @@ class AftermathRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
 
 	readonly protocolName = "Aftermath";
-	// readonly limitToSingleHops = false;
 	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
+	readonly noHopsAllowed = false;
 
 	readonly pool: PoolObject;
 	readonly network: SuiNetwork | Url;
@@ -117,6 +117,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
+		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		expectedAmountOut: Balance;

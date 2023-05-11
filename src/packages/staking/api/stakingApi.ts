@@ -100,7 +100,7 @@ export class StakingApi {
 		const tx = new TransactionBlock();
 		this.Helpers.addGetStakedSuiTvlCommandToTransaction({ tx });
 		const bytes =
-			await this.Provider.Inspections().fetchBytesFromTransaction(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 
@@ -109,6 +109,8 @@ export class StakingApi {
 			this.fetchSuiTvl(),
 			this.Helpers.fetchAfSuiSupply(),
 		]);
-		return Number(afSuiSupply) / Number(suiTvl);
+		return suiTvl <= BigInt(0) || afSuiSupply <= BigInt(0)
+			? 1
+			: Number(afSuiSupply) / Number(suiTvl);
 	};
 }

@@ -35,3 +35,10 @@ export interface SupplyOnChain {
 		value: BigIntAsString;
 	};
 }
+
+export interface TypeNameOnChain {
+	type: AnyObjectType;
+	fields: {
+		name: AnyObjectType;
+	};
+}

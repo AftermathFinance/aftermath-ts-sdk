@@ -10,12 +10,13 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
-} from "../../../../types";
-import { CoinType } from "../../../coin/coinTypes";
-import { RouterPoolInterface } from "../routerPoolInterface";
-import { Pool, Balance as NojoBalance } from "../../../../external/nojo";
-import { AftermathApi } from "../../../../general/providers";
-import { NojoPoolObject } from "../../../external/nojo/nojoAmmTypes";
+} from "../../../../../types";
+import { CoinType } from "../../../../coin/coinTypes";
+import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import { Pool, Balance as NojoBalance } from "../../../../../external/nojo";
+import { AftermathApi } from "../../../../../general/providers";
+import { NojoPoolObject } from "../../../../external/nojo/nojoAmmTypes";
+import { Helpers } from "../../../../../general/utils";
 
 class NojoRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
@@ -35,8 +36,8 @@ class NojoRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
 
 	readonly protocolName = "Nojo";
-	// readonly limitToSingleHops = false;
 	readonly expectedGasCostPerHop = BigInt(5_000_000); // 0.005 SUI
+	readonly noHopsAllowed = false;
 
 	readonly pool: NojoPoolObject;
 	readonly network: SuiNetwork | Url;
@@ -100,6 +101,7 @@ class NojoRouterPool implements RouterPoolInterface {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
+		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		expectedAmountOut: Balance;
@@ -203,7 +205,9 @@ class NojoRouterPool implements RouterPoolInterface {
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
-	private isCoinA = (coin: CoinType) => coin === this.pool.typeArgs[0];
+	private isCoinA = (coin: CoinType) =>
+		Helpers.addLeadingZeroesToType(coin) ===
+		Helpers.addLeadingZeroesToType(this.pool.typeArgs[0]);
 }
 
 export default NojoRouterPool;

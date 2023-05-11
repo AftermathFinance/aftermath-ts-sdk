@@ -1,5 +1,5 @@
-import { CoinType } from "../../coin/coinTypes";
-import { Helpers } from "../../../general/utils/helpers";
+import { CoinType } from "../../../coin/coinTypes";
+import { Helpers } from "../../../../general/utils/helpers";
 import {
 	Balance,
 	RouterCompleteGraph,
@@ -7,7 +7,7 @@ import {
 	RouterExternalFee,
 	RouterOptions,
 	RouterSerializableCompleteGraph,
-	RouterSerializablePool,
+	RouterSynchronousSerializablePool,
 	RouterSupportedCoinPaths,
 	RouterTradeCoin,
 	RouterTradeInfo,
@@ -20,10 +20,14 @@ import {
 	RouterGraphCoinNodes,
 	RouterCoinOutThroughPoolEdges,
 	RouterPoolsById,
-} from "../../../types";
-import { RouterPoolInterface, createRouterPool } from "./routerPoolInterface";
+	RouterSerializablePool,
+} from "../../../../types";
+import {
+	RouterPoolInterface,
+	createRouterPool,
+} from "./interfaces/routerPoolInterface";
 import { SuiAddress } from "@mysten/sui.js";
-import { Router } from "../router";
+import { Router } from "../../router";
 
 /////////////////////////////////////////////////////////////////////
 //// Internal Types
@@ -155,17 +159,46 @@ export class RouterGraph {
 	//// Supported Coins
 	/////////////////////////////////////////////////////////////////////
 
-	// TODO: do this more effeciently
+	// TODO: do this more efficiently
 	public static supportedCoinPathsFromGraph = async (inputs: {
 		graph: RouterSerializableCompleteGraph;
 		maxRouteLength?: number;
 	}): Promise<RouterSupportedCoinPaths> => {
 		const nodes = Object.values(inputs.graph.coinNodes);
+		const pools = inputs.graph.pools;
+
+		let unHoppableCoinPathsToAdd: {
+			coinIn: CoinType;
+			coinOut: CoinType;
+		}[] = [];
 
 		const coinPaths: RouterSupportedCoinPaths = nodes.reduce(
 			(acc, node) => {
 				const coinIn = node.coin;
-				const coinsOut = Object.keys(node.coinOutThroughPoolEdges);
+				const coinsOut = Object.entries(node.coinOutThroughPoolEdges)
+					.filter(([coinOut, poolUids]) => {
+						const unHoppablePoolUids = poolUids.filter(
+							(uid) =>
+								createRouterPool({
+									pool: pools[uid],
+									network: "",
+								}).noHopsAllowed
+						);
+
+						if (unHoppablePoolUids.length > 0)
+							unHoppableCoinPathsToAdd = [
+								...unHoppableCoinPathsToAdd,
+								{
+									coinIn,
+									coinOut,
+								},
+							];
+
+						const allPoolsAreUnHoppable =
+							unHoppablePoolUids.length === poolUids.length;
+						return !allPoolsAreUnHoppable;
+					})
+					.map(([key]) => key);
 
 				return {
 					...acc,
@@ -175,7 +208,8 @@ export class RouterGraph {
 			{}
 		);
 
-		let extendedCoinPaths = Helpers.deepCopy(coinPaths);
+		let extendedCoinPaths: RouterSupportedCoinPaths =
+			Helpers.deepCopy(coinPaths);
 
 		for (const _ of Array(
 			inputs.maxRouteLength ?? RouterGraph.defaultOptions.maxRouteLength
@@ -193,6 +227,24 @@ export class RouterGraph {
 			}
 		}
 
+		for (const coinPath of unHoppableCoinPathsToAdd) {
+			if (coinPath.coinIn in extendedCoinPaths) {
+				extendedCoinPaths = {
+					...extendedCoinPaths,
+					[coinPath.coinIn]: Helpers.uniqueArray([
+						...extendedCoinPaths[coinPath.coinIn],
+						coinPath.coinOut,
+					]),
+				};
+				continue;
+			}
+
+			extendedCoinPaths = {
+				...extendedCoinPaths,
+				[coinPath.coinIn]: [coinPath.coinOut],
+			};
+		}
+
 		return extendedCoinPaths;
 	};
 
@@ -200,53 +252,92 @@ export class RouterGraph {
 	//// Public Methods
 	/////////////////////////////////////////////////////////////////////
 
-	public getCompleteRouteGivenAmountIn(
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): RouterCompleteTradeRoute {
-		return this.getCompleteRoute(
-			coinIn,
-			coinInAmount,
-			coinOut,
-			false,
-			referrer,
-			externalFee
-		);
+	public getCompleteRouteGivenAmountIn(inputs: {
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute {
+		return this.getCompleteRoute({
+			...inputs,
+			isGivenAmountOut: false,
+		});
 	}
 
-	public getCompleteRouteGivenAmountOut(
-		coinIn: CoinType,
-		coinOut: CoinType,
-		coinOutAmount: Balance,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): RouterCompleteTradeRoute {
-		return this.getCompleteRoute(
-			coinIn,
-			coinOutAmount,
-			coinOut,
-			true,
-			referrer,
-			externalFee
-		);
+	// public getCompleteRouteGivenAmountOut(
+	// 	coinIn: CoinType,
+	// 	coinOut: CoinType,
+	// 	coinOutAmount: Balance,
+	// 	referrer?: SuiAddress,
+	// 	externalFee?: RouterExternalFee
+	// ): RouterCompleteTradeRoute {
+	// 	return this.getCompleteRoute(
+	// 		coinIn,
+	// 		coinOutAmount,
+	// 		coinOut,
+	// 		true,
+	// 		referrer,
+	// 		externalFee
+	// 	);
+	// }
+
+	public getCompleteRoutesGivenAmountIns(inputs: {
+		coinInType: CoinType;
+		coinInAmounts: Balance[];
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute[] {
+		return inputs.coinInAmounts.map((coinInAmount) => {
+			try {
+				return this.getCompleteRoute({
+					...inputs,
+					coinInAmount,
+					isGivenAmountOut: false,
+				});
+			} catch (e) {
+				return {
+					routes: [],
+					coinIn: {
+						type: inputs.coinInType,
+						amount: coinInAmount,
+						tradeFee: BigInt(0),
+					},
+					coinOut: {
+						type: inputs.coinOutType,
+						amount: BigInt(0),
+						tradeFee: BigInt(0),
+					},
+					spotPrice: 0,
+				};
+			}
+		});
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
-	private getCompleteRoute(
-		coinIn: CoinType,
-		coinInAmount: Balance,
-		coinOut: CoinType,
-		isGivenAmountOut: boolean,
-		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
-	): RouterCompleteTradeRoute {
+	private getCompleteRoute(inputs: {
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		isGivenAmountOut: boolean;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute {
 		if (Object.keys(this.graph).length <= 0) throw new Error("empty graph");
+
+		const {
+			coinInType,
+			coinInAmount,
+			coinOutType,
+			referrer,
+			externalFee,
+			isGivenAmountOut,
+		} = inputs;
+
 		if (
 			externalFee &&
 			externalFee.feePercentage >=
@@ -258,8 +349,8 @@ export class RouterGraph {
 
 		const routes = RouterGraph.findRoutes(
 			Helpers.deepCopy(this.graph),
-			coinIn,
-			coinOut,
+			coinInType,
+			coinOutType,
 			this.constants.maxRouteLength,
 			isGivenAmountOut
 		);
@@ -274,9 +365,9 @@ export class RouterGraph {
 
 		const completeRoute = RouterGraph.completeRouteFromRoutes(
 			routesAfterTrades,
-			coinIn,
+			coinInType,
 			coinInAmount,
-			coinOut
+			coinOutType
 		);
 
 		const transformedRoute = isGivenAmountOut
@@ -377,7 +468,8 @@ export class RouterGraph {
 			graph.pools,
 			coinInEdges,
 			coinIn,
-			coinOut
+			coinOut,
+			false
 		);
 
 		const routes = this.findCompleteRoutes(
@@ -388,7 +480,15 @@ export class RouterGraph {
 			isGivenAmountOut
 		);
 
-		return routes;
+		const noHopRoutes = this.createStartingRoutes(
+			graph.pools,
+			coinInEdges,
+			coinIn,
+			coinOut,
+			true
+		);
+
+		return [...routes, ...noHopRoutes];
 	};
 
 	private static createStartingRoutes = (
@@ -396,12 +496,16 @@ export class RouterGraph {
 		coinInEdges: RouterCoinOutThroughPoolEdges,
 		coinIn: CoinType,
 		// NOTE: should this really be unused ?
-		coinOut: CoinType
+		finalCoinOut: CoinType,
+		onlyNoHopPools: boolean
 	): TradeRoute[] => {
 		let routes: TradeRoute[] = [];
 		for (const [coinOut, throughPools] of Object.entries(coinInEdges)) {
 			for (const poolUid of throughPools) {
 				const pool = pools[poolUid];
+
+				if (onlyNoHopPools && !pool.noHopsAllowed) continue;
+
 				routes.push({
 					estimatedGasCost: pool.expectedGasCostPerHop,
 					coinIn: {
@@ -870,7 +974,7 @@ export class RouterGraph {
 		}
 	};
 
-	private static completeRouteFromRoutes = (
+	public static completeRouteFromRoutes = (
 		routes: TradeRoute[],
 		coinIn: CoinType,
 		coinInAmount: Balance,

@@ -12,14 +12,18 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
-} from "../../../types";
-import { CoinType } from "../../coin/coinTypes";
-import AftermathRouterPool from "./routerPools/aftermathRouterPool";
-import NojoRouterPool from "./routerPools/nojoRouterPool";
-import { AftermathApi } from "../../../general/providers";
-import { isNojoPoolObject } from "../../external/nojo/nojoAmmTypes";
-import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
-import DeepBookRouterPool from "./routerPools/deepBookRouterPool";
+} from "../../../../../types";
+import { CoinType } from "../../../../coin/coinTypes";
+import AftermathRouterPool from "../routerPools/aftermathRouterPool";
+import NojoRouterPool from "../routerPools/nojoRouterPool";
+import { AftermathApi } from "../../../../../general/providers";
+import { isNojoPoolObject } from "../../../../external/nojo/nojoAmmTypes";
+import { isDeepBookPoolObject } from "../../../../external/deepBook/deepBookTypes";
+import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
+import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
+import CetusRouterPool from "../routerPools/cetusRouterPool";
+import { isTurbosPoolObject } from "../../../../external/turbos/turbosTypes";
+import TurbosRouterPool from "../routerPools/turbosRouterPool";
 
 /////////////////////////////////////////////////////////////////////
 //// Creation
@@ -36,6 +40,10 @@ export function createRouterPool(inputs: {
 		? new NojoRouterPool(pool, network)
 		: isDeepBookPoolObject(pool)
 		? new DeepBookRouterPool(pool, network)
+		: isCetusRouterPoolObject(pool)
+		? new CetusRouterPool(pool, network)
+		: isTurbosPoolObject(pool)
+		? new TurbosRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;
@@ -71,9 +79,9 @@ export interface RouterPoolInterface {
 	readonly pool: RouterSerializablePool;
 	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
-	// readonly limitToSingleHops: boolean;
 	readonly expectedGasCostPerHop: Balance; // in SUI
 	readonly coinTypes: CoinType[];
+	readonly noHopsAllowed: boolean;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Functions
@@ -96,6 +104,7 @@ export interface RouterPoolInterface {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
+		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		expectedAmountOut: Balance;

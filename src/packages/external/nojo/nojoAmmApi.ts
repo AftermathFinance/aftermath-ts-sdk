@@ -14,7 +14,7 @@ import { NojoAmmApiHelpers } from "./nojoAmmApiHelpers";
 import { CoinType } from "../../coin/coinTypes";
 import { Balance } from "../../../types";
 import { Helpers } from "../../../general/utils";
-import { RouterApiInterface } from "../../router/utils/routerApiInterface";
+import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { NojoPoolObject } from "./nojoAmmTypes";
 
 export class NojoAmmApi implements RouterApiInterface<NojoPoolObject> {
@@ -102,11 +102,16 @@ export class NojoAmmApi implements RouterApiInterface<NojoPoolObject> {
 			minOut,
 		};
 
+		const coinTypesWithZeroes: [CoinType, CoinType] = [
+			Helpers.addLeadingZeroesToType(pool.$typeArgs[0]),
+			Helpers.addLeadingZeroesToType(pool.$typeArgs[1]),
+		];
+
 		let coinOut: TransactionArgument;
-		if (coinInType === pool.$typeArgs[0]) {
-			coinOut = swapACoin(tx, pool.$typeArgs, swapArgs);
+		if (coinInType === coinTypesWithZeroes[0]) {
+			coinOut = swapACoin(tx, coinTypesWithZeroes, swapArgs);
 		} else {
-			coinOut = swapBCoin(tx, pool.$typeArgs, swapArgs);
+			coinOut = swapBCoin(tx, coinTypesWithZeroes, swapArgs);
 		}
 
 		return coinOut;

@@ -22,7 +22,7 @@ interface OptionalConfigAddresses {
 	utilies: UtilitiesAddresses;
 	capys: CapysAddresses;
 	nftAmm: NftAmmAddresses;
-	externalRouter: ExternalRouterAddresses;
+	externalRouter: Partial<ExternalRouterAddresses>;
 	referralVault: ReferralVaultAddresses;
 }
 
@@ -93,6 +93,8 @@ export interface NftAmmAddresses {
 export interface ExternalRouterAddresses {
 	nojo: NojoAddresses;
 	deepBook: DeepBookAddresses;
+	cetus: CetusAddresses;
+	turbos: TurbosAddresses;
 }
 
 export interface NojoAddresses {
@@ -105,6 +107,29 @@ export interface DeepBookAddresses {
 	packages: {
 		clob: SuiAddress;
 		wrapper: SuiAddress;
+	};
+}
+
+export interface CetusAddresses {
+	packages: {
+		scripts: SuiAddress;
+		clmm: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		globalConfig: ObjectId;
+		poolsTable: ObjectId;
+	};
+}
+
+export interface TurbosAddresses {
+	packages: {
+		poolFetcher: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		versioned: ObjectId;
+		poolsTable: ObjectId;
 	};
 }
 

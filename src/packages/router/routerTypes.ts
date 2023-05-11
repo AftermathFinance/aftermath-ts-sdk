@@ -8,7 +8,9 @@ import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
 import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
 import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
-import { RouterPoolInterface } from "./utils/routerPoolInterface";
+import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
+import { CetusPoolObject } from "../external/cetus/cetusTypes";
+import { TurbosPoolObject } from "../external/turbos/turbosTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -37,15 +39,56 @@ export interface RouterExternalFee {
 }
 
 /////////////////////////////////////////////////////////////////////
-//// Router Pools
+//// All Router Pools
 /////////////////////////////////////////////////////////////////////
 
 export type RouterSerializablePool =
+	| RouterSynchronousSerializablePool
+	| RouterAsyncSerializablePool;
+
+export type RouterProtocolName =
+	| RouterSynchronousProtocolName
+	| RouterAsyncProtocolName;
+
+/////////////////////////////////////////////////////////////////////
+//// Synchronous Router Pools
+/////////////////////////////////////////////////////////////////////
+
+export type RouterSynchronousSerializablePool =
 	| PoolObject
 	| NojoPoolObject
 	| DeepBookPoolObject;
 
-export type RouterProtocolName = "Aftermath" | "Nojo" | "DeepBook";
+const RouterSynchronousProtocolNames = [
+	"Aftermath",
+	"Nojo",
+	"DeepBook",
+] as const;
+export type RouterSynchronousProtocolName =
+	(typeof RouterSynchronousProtocolNames)[number];
+
+export const isRouterSynchronousProtocolName = (
+	protocolName: RouterProtocolName
+): protocolName is RouterSynchronousProtocolName => {
+	// @ts-ignore
+	return RouterSynchronousProtocolNames.includes(protocolName);
+};
+
+/////////////////////////////////////////////////////////////////////
+//// Router Async Pools
+/////////////////////////////////////////////////////////////////////
+
+export type RouterAsyncSerializablePool = CetusPoolObject | TurbosPoolObject;
+
+const RouterAsyncProtocolNames = ["Cetus", "Turbos"] as const;
+export type RouterAsyncProtocolName = (typeof RouterAsyncProtocolNames)[number];
+
+export const isRouterAsyncProtocolName = (
+	protocolName: RouterProtocolName
+): protocolName is RouterAsyncProtocolName => {
+	// @ts-ignore
+	return RouterAsyncProtocolNames.includes(protocolName);
+};
 
 /////////////////////////////////////////////////////////////////////
 //// Paths
@@ -117,6 +160,23 @@ export interface RouterCoinNode {
 export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 
 /////////////////////////////////////////////////////////////////////
+//// Async Router Trade Results
+/////////////////////////////////////////////////////////////////////
+
+export interface RouterAsyncTradeResults {
+	coinInType: CoinType;
+	coinOutType: CoinType;
+	coinInAmounts: Balance[];
+	results: RouterAsyncTradeResult[];
+}
+
+export interface RouterAsyncTradeResult {
+	protocol: RouterAsyncProtocolName;
+	pool: RouterAsyncSerializablePool;
+	amountsOut: Balance[];
+}
+
+/////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
@@ -140,20 +200,18 @@ export type ApiRouterCompleteTradeRouteBody = {
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
 	externalFee?: RouterExternalFee;
-} & (
-	| {
-			/**
-			 * Amount of coin being given away
-			 */
-			coinInAmount: Balance;
-	  }
-	| {
-			/**
-			 * Amount of coin expected to receive
-			 */
-			coinOutAmount: Balance;
-	  }
-);
+} & {
+	/**
+	 * Amount of coin being given away
+	 */
+	coinInAmount: Balance;
+};
+// | {
+// 		/**
+// 		 * Amount of coin expected to receive
+// 		 */
+// 		coinOutAmount: Balance;
+//   }
 
 /**
  * Info to construct router trade transaction from complete route

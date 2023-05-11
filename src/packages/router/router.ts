@@ -4,7 +4,7 @@ import {
 	CoinType,
 	RouterCompleteTradeRoute,
 	RouterSerializableCompleteGraph,
-	RouterSerializablePool,
+	RouterSynchronousSerializablePool,
 	RouterSupportedCoinPaths,
 	SuiNetwork,
 	Url,
@@ -98,15 +98,15 @@ export class Router extends Caller {
 	 * @param abortSignal - Optional signal to abort passed to fetch call
 	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
 	 */
-	public async getCompleteTradeRouteGivenAmountOut(
-		inputs: ApiRouterCompleteTradeRouteBody,
-		abortSignal?: AbortSignal
-	) {
-		return this.fetchApi<
-			RouterCompleteTradeRoute,
-			ApiRouterCompleteTradeRouteBody
-		>("trade-route", inputs, abortSignal);
-	}
+	// public async getCompleteTradeRouteGivenAmountOut(
+	// 	inputs: ApiRouterCompleteTradeRouteBody,
+	// 	abortSignal?: AbortSignal
+	// ) {
+	// 	return this.fetchApi<
+	// 		RouterCompleteTradeRoute,
+	// 		ApiRouterCompleteTradeRouteBody
+	// 	>("trade-route", inputs, abortSignal);
+	// }
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions

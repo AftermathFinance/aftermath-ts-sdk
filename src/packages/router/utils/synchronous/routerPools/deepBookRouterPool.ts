@@ -10,15 +10,15 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
-} from "../../../../types";
-import { CoinType } from "../../../coin/coinTypes";
-import { RouterPoolInterface } from "../routerPoolInterface";
-import { AftermathApi } from "../../../../general/providers";
+} from "../../../../../types";
+import { CoinType } from "../../../../coin/coinTypes";
+import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import { AftermathApi } from "../../../../../general/providers";
 import {
 	DeepBookPoolObject,
 	DeepBookPriceRange,
-} from "../../../external/deepBook/deepBookTypes";
-import { Helpers } from "../../../../general/utils";
+} from "../../../../external/deepBook/deepBookTypes";
+import { Helpers } from "../../../../../general/utils";
 
 class DeepBookRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
@@ -37,8 +37,8 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	/////////////////////////////////////////////////////////////////////
 
 	readonly protocolName = "DeepBook";
-	// readonly limitToSingleHops = false;
 	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
+	readonly noHopsAllowed = false;
 
 	readonly pool: DeepBookPoolObject;
 	readonly network: SuiNetwork | Url;
@@ -74,6 +74,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
+		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		expectedAmountOut: Balance;
@@ -208,7 +209,9 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		};
 	};
 
-	private isBaseCoinType = (coin: CoinType) => coin === this.pool.baseCoin;
+	private isBaseCoinType = (coin: CoinType) =>
+		Helpers.addLeadingZeroesToType(coin) ===
+		Helpers.addLeadingZeroesToType(this.pool.baseCoin);
 }
 
 export default DeepBookRouterPool;

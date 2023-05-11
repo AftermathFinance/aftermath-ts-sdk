@@ -17,7 +17,7 @@ import { CapysApi } from "../../packages/capys/api/capysApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
-import { RouterProtocolName } from "../../types";
+import { RouterProtocolName, RouterSynchronousProtocolName } from "../../types";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////

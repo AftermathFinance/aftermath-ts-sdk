@@ -236,7 +236,7 @@ export class NftAmmApiHelpers {
 	}) => {
 		const { tx, assetCoin, genericTypes, nftObjectIds } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.nftAmm,
 				inputs.withTransfer
 					? NftAmmApiHelpers.constants.moduleNames.interface
@@ -274,7 +274,7 @@ export class NftAmmApiHelpers {
 	}) => {
 		const { tx, genericTypes, nfts } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.nftAmm,
 				inputs.withTransfer
 					? NftAmmApiHelpers.constants.moduleNames.interface
@@ -312,7 +312,7 @@ export class NftAmmApiHelpers {
 	}) => {
 		const { tx, assetCoin, genericTypes, nfts } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.nftAmm,
 				inputs.withTransfer
 					? NftAmmApiHelpers.constants.moduleNames.interface
@@ -353,7 +353,7 @@ export class NftAmmApiHelpers {
 	}) => {
 		const { tx, lpCoin, genericTypes, nftObjectIds } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.nftAmm,
 				inputs.withTransfer
 					? NftAmmApiHelpers.constants.moduleNames.interface

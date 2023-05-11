@@ -1,6 +1,9 @@
 import { PoolFields } from "../../../external/nojo";
 import { CoinType } from "../../coin/coinTypes";
-import { RouterSerializablePool } from "../../router/routerTypes";
+import {
+	RouterSerializablePool,
+	RouterSynchronousSerializablePool,
+} from "../../router/routerTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects

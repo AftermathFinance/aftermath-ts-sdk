@@ -129,7 +129,7 @@ export class DeepBookApiHelpers {
 	}) /* (Coin<BaseAsset>, Coin<QuoteAsset>, u64 (amountFilled), u64 (amountOut)) */ => {
 		const { tx, coinInId } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.deepBook.packages.wrapper,
 				DeepBookApiHelpers.constants.moduleNames.wrapper,
 				"swap_exact_base_for_quote_ktc"
@@ -156,7 +156,7 @@ export class DeepBookApiHelpers {
 	}) /* (Coin<QuoteAsset>, Coin<BaseAsset>, u64 (amountFilled), u64 (amountOut)) */ => {
 		const { tx, coinInId } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.deepBook.packages.wrapper,
 				DeepBookApiHelpers.constants.moduleNames.wrapper,
 				"swap_exact_quote_for_base"
@@ -182,7 +182,7 @@ export class DeepBookApiHelpers {
 	}) /* (vector<u64> (prices), vector<u64> (depths)) */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApiHelpers.constants.moduleNames.clob,
 				"get_level2_book_status_ask_side"
@@ -205,7 +205,7 @@ export class DeepBookApiHelpers {
 	}) /* (vector<u64> (prices), vector<u64> (depths)) */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApiHelpers.constants.moduleNames.clob,
 				"get_level2_book_status_bid_side"
@@ -262,11 +262,9 @@ export class DeepBookApiHelpers {
 		let depths: Byte[];
 		try {
 			[prices, depths] =
-				await this.Provider.Inspections().fetchOutputsBytesFromTransaction(
-					{
-						tx,
-					}
-				);
+				await this.Provider.Inspections().fetchAllBytesFromTxOutput({
+					tx,
+				});
 		} catch (e) {
 			// dev inspect may fail due to empty tree on orderbook (no bids or asks)
 			prices = [];
