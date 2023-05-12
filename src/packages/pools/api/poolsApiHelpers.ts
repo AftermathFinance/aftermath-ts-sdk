@@ -398,7 +398,7 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.amm,
+				this.addresses.pools.packages.ammInterface,
 				PoolsApiHelpers.constants.moduleNames.interface,
 				`create_pool_${poolSize}_coins`
 			),
