@@ -48,15 +48,13 @@ export class PoolsApiHelpers {
 
 	private static readonly constants = {
 		moduleNames: {
-			interface: "interface",
+			interface: "amm_interface",
 			pool: "pool",
 			swap: "swap",
 			deposit: "deposit",
 			withdraw: "withdraw",
-			math: "math",
 			events: "events",
 			poolRegistry: "pool_registry",
-			poolFactory: "pool_factory",
 		},
 		functions: {
 			swap: {
