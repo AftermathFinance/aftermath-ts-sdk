@@ -32,6 +32,10 @@ export class CetusApiHelpers {
 			poolScript: "pool_script",
 			pool: "pool",
 		},
+		inputs: {
+			minSqrtPriceLimit: BigInt("4295048016"),
+			maxSqrtPriceLimit: BigInt("79226673515401279992447579055"),
+		},
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -170,7 +174,10 @@ export class CetusApiHelpers {
 					"0",
 					"u64"
 				), // amount_limit
-				tx.pure(BigInt("4295048016"), "u128"), // sqrt_price_limit (set to min_sqrt_price)
+				tx.pure(
+					CetusApiHelpers.constants.inputs.minSqrtPriceLimit,
+					"u128"
+				), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
@@ -225,7 +232,10 @@ export class CetusApiHelpers {
 					"0",
 					"u64"
 				), // amount_limit
-				tx.pure(BigInt("79226673515401279992447579055"), "u128"), // sqrt_price_limit (set to max_sqrt_price)
+				tx.pure(
+					CetusApiHelpers.constants.inputs.maxSqrtPriceLimit,
+					"u128"
+				), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
@@ -258,6 +268,52 @@ export class CetusApiHelpers {
 			return this.tradeCoinAToCoinBTx(commandInputs);
 
 		return this.tradeCoinBToCoinATx(commandInputs);
+	};
+
+	public flashTradeTx = (
+		inputs: {
+			tx: TransactionBlock;
+			poolObjectId: ObjectId;
+			coinInType: CoinType;
+			coinOutType: CoinType;
+			coinTypeA: CoinType;
+			coinTypeB: CoinType;
+		} & (
+			| {
+					coinInAmount: Balance;
+			  }
+			| {
+					coinOutAmount: Balance;
+			  }
+		)
+	) /* (Coin<CoinTypeA>, Coin<CoinTypeB>, FlashSwapReceipt<CoinTypeA, CoinTypeB>) */ => {
+		const { tx } = inputs;
+
+		const isCoinAToCoinB = inputs.coinInType === inputs.coinTypeA;
+		const sqrtPriceLimit = isCoinAToCoinB
+			? CetusApiHelpers.constants.inputs.minSqrtPriceLimit
+			: CetusApiHelpers.constants.inputs.maxSqrtPriceLimit;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTransactionTarget(
+				this.addresses.cetus.packages.clmm,
+				CetusApiHelpers.constants.moduleNames.pool,
+				"flash_swap"
+			),
+			typeArguments: [inputs.coinTypeA, inputs.coinTypeB],
+			arguments: [
+				tx.object(inputs.poolObjectId),
+				tx.pure(isCoinAToCoinB, "bool"), // a2b
+				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
+				tx.pure(
+					"coinInAmount" in inputs
+						? inputs.coinInAmount
+						: inputs.coinOutAmount,
+					"u64"
+				), // amount
+				tx.pure(sqrtPriceLimit, "u128"), // sqrt_price_limit
+			],
+		});
 	};
 
 	/////////////////////////////////////////////////////////////////////
