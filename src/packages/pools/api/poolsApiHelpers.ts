@@ -158,7 +158,7 @@ export class PoolsApiHelpers {
 				>(
 					{
 						MoveEventType: EventsApiHelpers.createEventType(
-							this.addresses.pools.packages.cmmm,
+							this.addresses.pools.packages.amm,
 							"events",
 							"CreatedPoolEvent"
 						),
@@ -183,7 +183,7 @@ export class PoolsApiHelpers {
 
 		tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				this.addresses.pools.packages.amm,
 				PoolsApiHelpers.constants.moduleNames.poolRegistry,
 				"lp_type_to_pool_id"
 			),
@@ -224,7 +224,9 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
 					: PoolsApiHelpers.constants.moduleNames.swap,
@@ -270,7 +272,9 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
 					: PoolsApiHelpers.constants.moduleNames.deposit,
@@ -318,7 +322,9 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
 					: PoolsApiHelpers.constants.moduleNames.withdraw,
@@ -343,7 +349,7 @@ export class PoolsApiHelpers {
 		const { tx } = inputs;
 
 		const compiledModulesAndDeps = JSON.parse(
-			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytLCHZgCtYBBQzbAQ0AAgIGAQcAAAIAAgECAAAFAAEAAQMDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA5jcmVhdGVfbHBfY29pbgtkdW1teV9maWVsZARpbml0CWludGVyZmFjZQp0eF9jb250ZXh0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAow71XMzftPi+9pR8EqdL/eYJsADkZRpZks5VH3k3OVaAAIBBAEAAAAAAQQLAAsBOAACAA=="],"dependencies":["0x8c3bd573337ed3e2fbda51f04a9d2ff79826c003919469664b39547de4dce55a","0x321a50c956db8b0b8fe53af2756e33212e18ea1a6ba82b9dd4308114b6944289","0x0000000000000000000000000000000000000000000000000000000000000001","0x5112fbe004d3f5f6e9f763e797ebe1c0ade0ec9e64857b05d7f6cd81047269e0","0x484d68333fe65c4910a5c708c9aa6469bfc59d343bc5ed898a18226ae422959f","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0x373c265b27110d08e500ebb2a2e40aab08e1dd7d7f40eb878094ed260c4e5afa","0x8557c63b231fef86509fdde6855b032d346c50936cd335f53d4619222d7440fd"],"digest":[198,50,34,59,60,154,130,53,149,118,13,47,167,196,218,166,194,198,4,120,56,107,244,42,171,141,55,79,122,88,160,154]}`
+			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytPCHpgCtoBBQzfAQ0AAgIDAQcAAAIAAgECAAAGAAEAAQQDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA1hbW1faW50ZXJmYWNlDmNyZWF0ZV9scF9jb2luC2R1bW15X2ZpZWxkBGluaXQKdHhfY29udGV4dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIgxMs/ouXi+/rSum0yzxiFSLUTc0ih+kzcR/F7A4qCvgACAQUBAAAAAAEECwALATgAAgA="],"dependencies":["0xb23cecaeddffc468d9aa868b6a131e684ace07510369ca9ea85c74e977586c1b","0x20c4cb3fa2e5e2fbfad2ba6d32cf188548b5137348a1fa4cdc47f17b038a82be","0x321a50c956db8b0b8fe53af2756e33212e18ea1a6ba82b9dd4308114b6944289","0x0000000000000000000000000000000000000000000000000000000000000001","0x0cc3f2db459225fbff06f2f71870a6634db0ba434cd65d639f834c277b118f33","0x484d68333fe65c4910a5c708c9aa6469bfc59d343bc5ed898a18226ae422959f","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0x373c265b27110d08e500ebb2a2e40aab08e1dd7d7f40eb878094ed260c4e5afa","0x8557c63b231fef86509fdde6855b032d346c50936cd335f53d4619222d7440fd"],"digest":[29,202,155,21,186,184,248,96,90,139,220,9,34,120,72,201,120,13,25,208,232,174,130,249,2,28,176,5,147,59,11,147]}`
 		);
 
 		return tx.publish({
@@ -394,7 +400,7 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				this.addresses.pools.packages.amm,
 				PoolsApiHelpers.constants.moduleNames.interface,
 				`create_pool_${poolSize}_coins`
 			),
@@ -844,21 +850,21 @@ export class PoolsApiHelpers {
 
 	private tradeEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.cmmm,
+			this.addresses.pools.packages.amm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.swap
 		);
 
 	private depositEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.cmmm,
+			this.addresses.pools.packages.amm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.deposit
 		);
 
 	private withdrawEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.cmmm,
+			this.addresses.pools.packages.amm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);
