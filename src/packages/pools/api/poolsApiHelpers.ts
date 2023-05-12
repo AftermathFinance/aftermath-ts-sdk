@@ -538,12 +538,12 @@ export class PoolsApiHelpers {
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
 		const coinIds =
-			await this.Provider.Coin().Helpers.fetchCoinsWithAmountTx(
+			await this.Provider.Coin().Helpers.fetchCoinsWithAmountTx({
+				...inputs,
 				tx,
-				walletAddress,
 				coinTypes,
-				coinAmounts
-			);
+				coinAmounts,
+			});
 
 		this.multiCoinDepositTx({
 			tx,
@@ -664,12 +664,14 @@ export class PoolsApiHelpers {
 		// 	);
 
 		const coinArgs =
-			await this.Provider.Coin().Helpers.fetchCoinsWithAmountTx(
+			await this.Provider.Coin().Helpers.fetchCoinsWithAmountTx({
 				tx,
-				inputs.walletAddress,
-				inputs.coinsInfo.map((info) => info.coinType),
-				inputs.coinsInfo.map((info) => info.initialDeposit)
-			);
+				...inputs,
+				coinTypes: inputs.coinsInfo.map((info) => info.coinType),
+				coinAmounts: inputs.coinsInfo.map(
+					(info) => info.initialDeposit
+				),
+			});
 
 		this.fetchCreatePoolTx({
 			tx,
