@@ -40,10 +40,10 @@ export function createRouterPool(inputs: {
 		? new NojoRouterPool(pool, network)
 		: isDeepBookPoolObject(pool)
 		? new DeepBookRouterPool(pool, network)
-		: isCetusRouterPoolObject(pool)
-		? new CetusRouterPool(pool, network)
 		: isTurbosPoolObject(pool)
 		? new TurbosRouterPool(pool, network)
+		: isCetusRouterPoolObject(pool)
+		? new CetusRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;

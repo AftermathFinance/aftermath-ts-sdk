@@ -38,7 +38,7 @@ export class RouterSynchronousApiHelpers {
 
 	public static readonly constants = {
 		defaults: {
-			tradePartitionCount: 10,
+			tradePartitionCount: 3,
 		},
 	};
 

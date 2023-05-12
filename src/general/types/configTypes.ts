@@ -124,7 +124,7 @@ export interface CetusAddresses {
 
 export interface TurbosAddresses {
 	packages: {
-		poolFetcher: SuiAddress;
+		clmm: SuiAddress;
 		wrapper: SuiAddress;
 	};
 	objects: {
