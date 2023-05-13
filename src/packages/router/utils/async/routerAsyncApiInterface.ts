@@ -25,14 +25,13 @@ export interface RouterAsyncApiInterface<
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	fetchPoolsForCoinType: (inputs: {
-		coinType: CoinType;
-	}) => Promise<PoolType[]>;
-
-	fetchPoolForCoinTypes: (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => Promise<PoolType>;
+	fetchPoolsForTrade: (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}) => Promise<{
+		partialMatchPools: PoolType[];
+		exactMatchPools: PoolType[];
+	}>;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Inspections

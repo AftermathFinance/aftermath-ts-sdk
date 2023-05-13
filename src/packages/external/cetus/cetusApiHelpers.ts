@@ -19,8 +19,8 @@ import { Sui } from "../../sui";
 import { CetusCalcTradeResult, CetusPoolObject } from "./cetusTypes";
 import { Helpers } from "../../../general/utils";
 import { BCS } from "@mysten/bcs";
-import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
+import { CetusApi } from "./cetusApi";
 
 export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -101,40 +101,31 @@ export class CetusApiHelpers {
 		return poolsSimpleInfo;
 	};
 
-	public fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => {
-		const allPools = await this.fetchAllPools();
+	public fetchPoolsForTrade = async (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		partialMatchPools: CetusPoolObject[];
+		exactMatchPools: CetusPoolObject[];
+	}> => {
+		const possiblePools = await this.fetchPoolsForCoinType({
+			coinType: inputs.coinOutType,
+		});
 
-		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
-		const foundPool = allPools.find((pool) =>
-			CetusApiHelpers.isPoolForCoinTypes({
-				pool,
-				...inputs,
-			})
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
+			possiblePools,
+			(pool) =>
+				CetusApiHelpers.isPoolForCoinTypes({
+					pool,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
+				})
 		);
 
-		if (!foundPool)
-			throw new Error("no cetus pools found for given coin types");
-
-		return foundPool;
-	};
-
-	public fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
-		const allPools = await this.fetchAllPools();
-
-		const foundPools = allPools.filter((pool) =>
-			CetusApiHelpers.isPoolForCoinType({
-				pool,
-				...inputs,
-			})
-		);
-
-		if (foundPools.length <= 0)
-			throw new Error("no cetus pools found for given coin type");
-
-		return foundPools;
+		return {
+			exactMatchPools,
+			partialMatchPools,
+		};
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -492,6 +483,50 @@ export class CetusApiHelpers {
 			feeAmount: BigInt(data.fee_amount),
 			feeRate: BigInt(data.fee_rate),
 		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	private fetchPoolForCoinTypes = async (inputs: {
+		coinType1: CoinType;
+		coinType2: CoinType;
+	}) => {
+		const allPools = await this.fetchAllPools();
+
+		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
+		const foundPool = allPools.find((pool) =>
+			CetusApiHelpers.isPoolForCoinTypes({
+				pool,
+				...inputs,
+			})
+		);
+
+		if (!foundPool)
+			throw new Error("no cetus pools found for given coin types");
+
+		return foundPool;
+	};
+
+	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
+		const allPools = await this.fetchAllPools();
+
+		const foundPools = allPools.filter((pool) =>
+			CetusApiHelpers.isPoolForCoinType({
+				pool,
+				...inputs,
+			})
+		);
+
+		if (foundPools.length <= 0)
+			throw new Error("no cetus pools found for given coin type");
+
+		return foundPools;
 	};
 
 	/////////////////////////////////////////////////////////////////////

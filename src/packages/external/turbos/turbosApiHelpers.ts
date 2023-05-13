@@ -113,40 +113,31 @@ export class TurbosApiHelpers {
 		return pools;
 	};
 
-	public fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => {
-		const allPools = await this.fetchAllPools();
+	public fetchPoolsForTrade = async (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		partialMatchPools: TurbosPoolObject[];
+		exactMatchPools: TurbosPoolObject[];
+	}> => {
+		const possiblePools = await this.fetchPoolsForCoinType({
+			coinType: inputs.coinOutType,
+		});
 
-		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
-		const foundPool = allPools.find((pool) =>
-			TurbosApiHelpers.isPoolForCoinTypes({
-				pool,
-				...inputs,
-			})
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
+			possiblePools,
+			(pool) =>
+				TurbosApiHelpers.isPoolForCoinTypes({
+					pool,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
+				})
 		);
 
-		if (!foundPool)
-			throw new Error("no turbos pools found for given coin types");
-
-		return foundPool;
-	};
-
-	public fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
-		const allPools = await this.fetchAllPools();
-
-		const foundPools = allPools.filter((pool) =>
-			TurbosApiHelpers.isPoolForCoinType({
-				pool,
-				...inputs,
-			})
-		);
-
-		if (foundPools.length <= 0)
-			throw new Error("no turbos pools found for given coin type");
-
-		return foundPools;
+		return {
+			exactMatchPools,
+			partialMatchPools,
+		};
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -442,6 +433,50 @@ export class TurbosApiHelpers {
 			console.error(e);
 			throw new Error("e");
 		}
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	private fetchPoolForCoinTypes = async (inputs: {
+		coinType1: CoinType;
+		coinType2: CoinType;
+	}) => {
+		const allPools = await this.fetchAllPools();
+
+		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
+		const foundPool = allPools.find((pool) =>
+			TurbosApiHelpers.isPoolForCoinTypes({
+				pool,
+				...inputs,
+			})
+		);
+
+		if (!foundPool)
+			throw new Error("no turbos pools found for given coin types");
+
+		return foundPool;
+	};
+
+	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
+		const allPools = await this.fetchAllPools();
+
+		const foundPools = allPools.filter((pool) =>
+			TurbosApiHelpers.isPoolForCoinType({
+				pool,
+				...inputs,
+			})
+		);
+
+		if (foundPools.length <= 0)
+			throw new Error("no turbos pools found for given coin type");
+
+		return foundPools;
 	};
 
 	/////////////////////////////////////////////////////////////////////

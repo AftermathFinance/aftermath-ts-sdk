@@ -3,6 +3,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	Balance,
 	CoinType,
+	RouterAsyncSerializablePool,
 	RouterCompleteTradeRoute,
 	RouterExternalFee,
 	RouterProtocolName,
@@ -86,29 +87,105 @@ export class RouterApiHelpers {
 			coinInAmount,
 		});
 
-		const tradeResults = await this.AsyncHelpers.fetchTradeResults({
+		const asyncProtocols = inputs.protocols.filter(
+			isRouterAsyncProtocolName
+		);
+
+		const { exactMatchPools, partialMatchPools } =
+			await this.AsyncHelpers.fetchPossiblePools({
+				...inputs,
+				protocols: asyncProtocols,
+			});
+
+		const exactTradeResults = await this.AsyncHelpers.fetchTradeResults({
 			...inputs,
-			protocols: inputs.protocols.filter(isRouterAsyncProtocolName),
+			pools: exactMatchPools,
 			coinInAmounts,
 		});
 
 		const routerGraph = new RouterGraph(network, graph);
 
-		if (tradeResults.results.length <= 0)
-			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
+		// if (tradeResults.results.length <= 0)
+		// 	return routerGraph.getCompleteRouteGivenAmountIn(inputs);
+
+		// const synchronousCompleteRoutes =
+		// 	routerGraph.getCompleteRoutesGivenAmountIns({
+		// 		...inputs,
+		// 		coinInAmounts,
+		// 	});
+
+		// return RouterAsyncGraph.createFinalCompleteRoute({
+		// 	tradeResults,
+		// 	synchronousCompleteRoutes,
+		// 	coinInAmounts,
+		// });
+	};
+
+	private fetchCompleteTradeRoutesForLastRouteAsyncPool = async (inputs: {
+		routerGraph: RouterGraph;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmounts: Balance[];
+		lastPool: RouterAsyncSerializablePool;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): Promise<RouterCompleteTradeRoute[]> => {
+		const { routerGraph } = inputs;
+
+        const asyncApi =  this.AsyncHelpers.protocolNamesToApi[this.AsyncHelpers.protocolNameFromPool({pool: inputs.lastPool})]()
+
+        asyncApi.
 
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
-				coinInAmounts,
 			});
-
-		return RouterAsyncGraph.createFinalCompleteRoute({
-			tradeResults,
-			synchronousCompleteRoutes,
-			coinInAmounts,
-		});
 	};
+
+	// public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
+	// 	protocols: RouterProtocolName[];
+	// 	network: SuiNetwork | Url;
+	// 	graph: RouterSerializableCompleteGraph;
+	// 	coinInType: CoinType;
+	// 	coinInAmount: Balance;
+	// 	coinOutType: CoinType;
+	// 	referrer?: SuiAddress;
+	// 	externalFee?: RouterExternalFee;
+	// 	// TODO: add options to set all these params ?
+	// 	// maxRouteLength?: number,
+	// }): Promise<RouterCompleteTradeRoute> => {
+	// 	if (inputs.protocols.length === 0)
+	// 		throw new Error("no protocols set in constructor");
+
+	// 	const { network, graph, coinInAmount } = inputs;
+
+	// 	const coinInAmounts = RouterApiHelpers.amountsInForRouterTrade({
+	// 		coinInAmount,
+	// 	});
+
+	// 	const tradeResults = await this.AsyncHelpers.fetchTradeResults({
+	// 		...inputs,
+	// 		protocols: inputs.protocols.filter(isRouterAsyncProtocolName),
+	// 		coinInAmounts,
+	// 	});
+
+	// 	const routerGraph = new RouterGraph(network, graph);
+
+	// 	if (tradeResults.results.length <= 0)
+	// 		return routerGraph.getCompleteRouteGivenAmountIn(inputs);
+
+	// 	const synchronousCompleteRoutes =
+	// 		routerGraph.getCompleteRoutesGivenAmountIns({
+	// 			...inputs,
+	// 			coinInAmounts,
+	// 		});
+
+	// 	return RouterAsyncGraph.createFinalCompleteRoute({
+	// 		tradeResults,
+	// 		synchronousCompleteRoutes,
+	// 		coinInAmounts,
+	// 	});
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions

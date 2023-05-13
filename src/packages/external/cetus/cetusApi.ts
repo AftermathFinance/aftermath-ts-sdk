@@ -36,18 +36,19 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		return pools;
 	};
 
-	public fetchPoolsForCoinType = async (inputs: {
-		coinType: CoinType;
-	}): Promise<CetusPoolObject[]> => {
-		return this.Helpers.fetchPoolsForCoinType(inputs);
+	public fetchPoolsForTrade = (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		partialMatchPools: CetusPoolObject[];
+		exactMatchPools: CetusPoolObject[];
+	}> => {
+		return this.Helpers.fetchPoolsForTrade(inputs);
 	};
 
-	public fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}): Promise<CetusPoolObject> => {
-		return this.Helpers.fetchPoolForCoinTypes(inputs);
-	};
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
 
 	public fetchSupportedCoins = async () => {
 		const pools = await this.Helpers.fetchAllPools();
@@ -58,10 +59,6 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		);
 		return Helpers.uniqueArray(allCoins);
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
 
 	public fetchTradeAmountOut = async (inputs: {
 		walletAddress: SuiAddress;

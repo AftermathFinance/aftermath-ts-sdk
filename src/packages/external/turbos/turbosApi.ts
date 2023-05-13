@@ -36,18 +36,19 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		return pools;
 	};
 
-	public fetchPoolsForCoinType = async (inputs: {
-		coinType: CoinType;
-	}): Promise<TurbosPoolObject[]> => {
-		return this.Helpers.fetchPoolsForCoinType(inputs);
+	public fetchPoolsForTrade = (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		partialMatchPools: TurbosPoolObject[];
+		exactMatchPools: TurbosPoolObject[];
+	}> => {
+		return this.Helpers.fetchPoolsForTrade(inputs);
 	};
 
-	public fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}): Promise<TurbosPoolObject> => {
-		return this.Helpers.fetchPoolForCoinTypes(inputs);
-	};
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
 
 	public fetchSupportedCoins = async () => {
 		const pools = await this.Helpers.fetchAllPools();
@@ -58,10 +59,6 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		);
 		return Helpers.uniqueArray(allCoins);
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
 
 	public fetchTradeAmountOut = async (inputs: {
 		walletAddress: SuiAddress;
