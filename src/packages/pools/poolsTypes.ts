@@ -89,7 +89,7 @@ export interface PoolStats {
 	supplyPerLps: number[];
 	lpPrice: number;
 	fees: number;
-	aprRange: [number, number];
+	apy: number;
 }
 
 export interface PoolDataPoint {

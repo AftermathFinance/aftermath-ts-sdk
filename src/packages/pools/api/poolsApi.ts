@@ -20,9 +20,10 @@ import {
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
-import { Pool } from "..";
+import { Pool, Pools } from "..";
 import { Aftermath } from "../../../general/providers";
 import { Helpers } from "../../../general/utils";
+import { Coin } from "../../coin";
 
 export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
@@ -343,14 +344,20 @@ export class PoolsApi {
 			tvl
 		);
 
+		// this is okay since all trade fees are currently the same for every coin
+		const fees =
+			volume *
+			Pools.tradeFeeWithDecimals(
+				pool.pool.coins[0].tradeFeeIn + pool.pool.coins[0].tradeFeeOut
+			);
+
 		return {
 			volume,
 			tvl,
 			supplyPerLps,
 			lpPrice,
-			// TODO: perform actual calculations for these values
-			fees: 523.32,
-			aprRange: [13.22, 16.73],
+			fees,
+			apy: 1,
 		};
 	};
 
