@@ -345,10 +345,11 @@ export class PoolsApi {
 		);
 
 		// this is okay since all trade fees are currently the same for every coin
+		const firstCoin = Object.values(pool.pool.coins)[0];
 		const fees =
 			volume *
 			Pools.tradeFeeWithDecimals(
-				pool.pool.coins[0].tradeFeeIn + pool.pool.coins[0].tradeFeeOut
+				firstCoin.tradeFeeIn + firstCoin.tradeFeeOut
 			);
 
 		const apy = this.Helpers.calcApy({
