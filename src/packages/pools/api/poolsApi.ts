@@ -351,13 +351,18 @@ export class PoolsApi {
 				pool.pool.coins[0].tradeFeeIn + pool.pool.coins[0].tradeFeeOut
 			);
 
+		const apy = this.Helpers.calcApy({
+			fees24Hours: fees,
+			tvl,
+		});
+
 		return {
 			volume,
 			tvl,
 			supplyPerLps,
 			lpPrice,
 			fees,
-			apy: 1,
+			apy,
 		};
 	};
 
