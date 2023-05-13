@@ -69,7 +69,9 @@ export class TransactionsApiHelpers {
 		const gasUsed = getTotalGasUsedUpperBound(txResponse.effects);
 		if (gasUsed === undefined) throw Error("dry run move call failed");
 
-		tx.setGasBudget(gasUsed);
+		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
+
+		tx.setGasBudget(safeGasBudget);
 		tx.setGasPrice(referenceGasPrice);
 		return tx;
 	};

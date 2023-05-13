@@ -11,6 +11,7 @@ export interface TurbosPoolObject {
 	coinTypeB: CoinType;
 	fee: bigint;
 	feeCoinType: CoinType;
+	sqrtPrice: bigint;
 }
 
 export interface TurbosCalcTradeResult {
@@ -28,6 +29,7 @@ export const isTurbosPoolObject = (
 		"coinTypeA" in pool &&
 		"coinTypeB" in pool &&
 		"fee" in pool &&
-		"feeCoinType" in pool
+		"feeCoinType" in pool &&
+		"sqrtPrice" in pool
 	);
 };

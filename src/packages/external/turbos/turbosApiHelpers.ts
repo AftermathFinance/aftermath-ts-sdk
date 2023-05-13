@@ -5,6 +5,7 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 	bcs,
+	getObjectFields,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -81,19 +82,35 @@ export class TurbosApiHelpers {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchAllPools = async () => {
+	public fetchAllPools = async (): Promise<TurbosPoolObject[]> => {
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				this.addresses.turbos.objects.poolsTable,
 				(objectIds) =>
 					this.Provider.Objects().fetchCastObjectBatch(
 						objectIds,
-						TurbosApiHelpers.poolFromSuiObjectResponse
+						TurbosApiHelpers.partialPoolFromSuiObjectResponse
 					),
 				() => true
 			);
 
-		return poolsSimpleInfo;
+		const sqrtPrices = await this.Provider.Objects().fetchCastObjectBatch(
+			poolsSimpleInfo.map((poolInfo) => poolInfo.id),
+			(data) => {
+				const sqrtPrice: BigIntAsString =
+					getObjectFields(data)?.sqrt_price;
+				return BigInt(sqrtPrice);
+			}
+		);
+
+		const pools = poolsSimpleInfo.map((info, index) => {
+			return {
+				...info,
+				sqrtPrice: sqrtPrices[index],
+			};
+		});
+
+		return pools;
 	};
 
 	public fetchPoolForCoinTypes = async (inputs: {
@@ -101,8 +118,6 @@ export class TurbosApiHelpers {
 		coinType2: CoinType;
 	}) => {
 		const allPools = await this.fetchAllPools();
-
-		console.log("allPools", allPools);
 
 		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
 		const foundPool = allPools.find((pool) =>
@@ -131,12 +146,13 @@ export class TurbosApiHelpers {
 		coinInAmount: Balance;
 		feeCoinType: CoinType;
 		walletAddress: SuiAddress;
+		sqrtPrice: bigint;
 	}) => {
 		const { tx, coinInId } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.turbos.packages.poolFetcher,
+				this.addresses.turbos.packages.clmm,
 				TurbosApiHelpers.constants.moduleNames.swapRouter,
 				"swap_a_b"
 			),
@@ -155,9 +171,15 @@ export class TurbosApiHelpers {
 					],
 				}), // coins_a
 				tx.pure(inputs.coinInAmount, "u64"), // amount
-				tx.pure(inputs.coinInAmount, "u64"), // amount_threshold
-				tx.pure("0", "u128"), // sqrt_price_limit
-				tx.pure(true, "u128"), // is_exact_in
+				tx.pure(Casting.zeroBigInt.toString(), "u64"), // amount_threshold
+				tx.pure(
+					TurbosApiHelpers.calcSqrtPriceLimit({
+						...inputs,
+						isCoinAToCoinB: true,
+					}).toString(),
+					"u128"
+				), // sqrt_price_limit
+				tx.pure(true, "bool"), // is_exact_in
 				tx.pure(inputs.walletAddress, "address"), // recipient
 				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // deadline
 				tx.object(Sui.constants.addresses.suiClockId),
@@ -175,18 +197,19 @@ export class TurbosApiHelpers {
 		coinInAmount: Balance;
 		feeCoinType: CoinType;
 		walletAddress: SuiAddress;
+		sqrtPrice: bigint;
 	}) => {
 		const { tx, coinInId } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.turbos.packages.poolFetcher,
+				this.addresses.turbos.packages.clmm,
 				TurbosApiHelpers.constants.moduleNames.swapRouter,
-				"swap_b2a"
+				"swap_b_a"
 			),
 			typeArguments: [
-				inputs.coinInType,
 				inputs.coinOutType,
+				inputs.coinInType,
 				inputs.feeCoinType,
 			],
 			arguments: [
@@ -199,9 +222,15 @@ export class TurbosApiHelpers {
 					],
 				}), // coins_a
 				tx.pure(inputs.coinInAmount, "u64"), // amount
-				tx.pure(inputs.coinInAmount, "u64"), // amount_threshold
-				tx.pure("0", "u128"), // sqrt_price_limit
-				tx.pure(true, "u128"), // is_exact_in
+				tx.pure(Casting.zeroBigInt.toString(), "u64"), // amount_threshold
+				tx.pure(
+					TurbosApiHelpers.calcSqrtPriceLimit({
+						...inputs,
+						isCoinAToCoinB: false,
+					}).toString(),
+					"u128"
+				), // sqrt_price_limit
+				tx.pure(true, "bool"), // is_exact_in
 				tx.pure(inputs.walletAddress, "address"), // recipient
 				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // deadline
 				tx.object(Sui.constants.addresses.suiClockId),
@@ -223,8 +252,8 @@ export class TurbosApiHelpers {
 
 		const commandInputs = {
 			...inputs,
+			...pool,
 			poolObjectId: pool.id,
-			feeCoinType: pool.feeCoinType,
 		};
 
 		if (TurbosApiHelpers.isCoinA(coinInType, pool))
@@ -246,6 +275,7 @@ export class TurbosApiHelpers {
 		coinTypeA: CoinType;
 		coinTypeB: CoinType;
 		coinInAmount: Balance;
+		sqrtPrice: bigint;
 	}) =>
 		/*
 
@@ -266,9 +296,13 @@ export class TurbosApiHelpers {
 		{
 			const { tx } = inputs;
 
+			const isCoinAToCoinB =
+				Helpers.addLeadingZeroesToType(inputs.coinInType) ===
+				Helpers.addLeadingZeroesToType(inputs.coinTypeA);
+
 			return tx.moveCall({
 				target: Helpers.transactions.createTransactionTarget(
-					this.addresses.turbos.packages.poolFetcher,
+					this.addresses.turbos.packages.clmm,
 					TurbosApiHelpers.constants.moduleNames.poolFetcher,
 					"compute_swap_result"
 				),
@@ -279,15 +313,16 @@ export class TurbosApiHelpers {
 				],
 				arguments: [
 					tx.object(inputs.poolObjectId),
-					tx.pure(
-						Helpers.addLeadingZeroesToType(inputs.coinInType) ===
-							Helpers.addLeadingZeroesToType(inputs.coinTypeA),
-						"bool"
-					), // a2b
+					tx.pure(isCoinAToCoinB, "bool"), // a2b
 					tx.pure(inputs.coinInAmount, "u128"), // amount_specified
-					// tx.pure("coinInAmount" in inputs, "bool"), // amount_specified_is_input
 					tx.pure(true, "bool"), // amount_specified_is_input
-					tx.pure(Casting.u64MaxBigInt, "u128"), // sqrt_price_limit
+					tx.pure(
+						TurbosApiHelpers.calcSqrtPriceLimit({
+							...inputs,
+							isCoinAToCoinB,
+						}).toString(),
+						"u128"
+					), // sqrt_price_limit
 					tx.object(Sui.constants.addresses.suiClockId),
 					tx.object(this.addresses.turbos.objects.versioned),
 				],
@@ -376,8 +411,6 @@ export class TurbosApiHelpers {
 				new Uint8Array(resultBytes)
 			);
 
-			console.log("data", data);
-
 			const amountIn =
 				BigInt(data.amount_a) <= BigInt(0)
 					? BigInt(data.amount_b)
@@ -390,7 +423,7 @@ export class TurbosApiHelpers {
 				protocolFee: BigInt(data.protocol_fee),
 			};
 		} catch (e) {
-			console.log(e);
+			console.error(e);
 			throw new Error("e");
 		}
 	};
@@ -403,9 +436,9 @@ export class TurbosApiHelpers {
 	//// Casting
 	/////////////////////////////////////////////////////////////////////
 
-	private static poolFromSuiObjectResponse = (
+	private static partialPoolFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): TurbosPoolObject => {
+	): Omit<TurbosPoolObject, "sqrtPrice"> => {
 		const content = data.data?.content;
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");
@@ -416,6 +449,7 @@ export class TurbosApiHelpers {
 			coin_type_b: TypeNameOnChain;
 			fee_type: TypeNameOnChain;
 			fee: BigIntAsString;
+			sqrt_price: BigIntAsString;
 		};
 
 		return {
@@ -454,4 +488,18 @@ export class TurbosApiHelpers {
 
 	private static isCoinA = (coin: CoinType, pool: TurbosPoolObject) =>
 		Helpers.addLeadingZeroesToType(coin) === pool.coinTypeA;
+
+	private static calcSqrtPriceLimit = (inputs: {
+		sqrtPrice: bigint;
+		isCoinAToCoinB: boolean;
+	}) => {
+		const { sqrtPrice, isCoinAToCoinB } = inputs;
+
+		const change = sqrtPrice / BigInt(100);
+		const sqrtPriceLimit = isCoinAToCoinB
+			? sqrtPrice - change
+			: sqrtPrice + change;
+
+		return sqrtPriceLimit;
+	};
 }

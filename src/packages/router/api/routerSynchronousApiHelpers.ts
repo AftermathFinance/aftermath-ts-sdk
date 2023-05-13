@@ -38,7 +38,7 @@ export class RouterSynchronousApiHelpers {
 
 	public static readonly constants = {
 		defaults: {
-			tradePartitionCount: 10,
+			tradePartitionCount: 3,
 		},
 	};
 
@@ -141,19 +141,21 @@ export class RouterSynchronousApiHelpers {
 
 		let coinsOut: TransactionArgument[] = [];
 
-		for (const route of completeRoute.routes) {
-			const [splitCoinArg] = tx.add({
-				kind: "SplitCoins",
-				coin: coinInArg,
-				amounts: [tx.pure(route.coinIn.amount)],
-			});
-			// completeRoute.routes.length > 1
-			// 	? tx.add({
-			// 			kind: "SplitCoins",
-			// 			coin: coinInArg,
-			// 			amounts: [tx.pure(route.coinIn.amount)],
-			// 	  })
-			// 	: [coinInArg];
+		const splitCoins = [
+			...(completeRoute.routes.length > 1
+				? tx.add({
+						kind: "SplitCoins",
+						coin: coinInArg,
+						amounts: completeRoute.routes
+							.slice(0, -1)
+							.map((route) => tx.pure(route.coinIn.amount)),
+				  })
+				: []),
+			coinInArg,
+		];
+
+		for (const [routeIndex, route] of completeRoute.routes.entries()) {
+			const splitCoinArg = splitCoins[routeIndex];
 
 			let coinIn: TransactionArgument | undefined = splitCoinArg;
 
@@ -205,9 +207,7 @@ export class RouterSynchronousApiHelpers {
 				tx.transferObjects([feeCoin], tx.pure(externalFee.recipient));
 			}
 
-			tx.transferObjects([coinOut, coinInArg], tx.pure(walletAddress));
-		} else {
-			tx.transferObjects([coinInArg], tx.pure(walletAddress));
+			tx.transferObjects([coinOut], tx.pure(walletAddress));
 		}
 
 		return tx;

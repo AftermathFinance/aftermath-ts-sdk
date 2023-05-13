@@ -36,8 +36,11 @@ export class InspectionsApiHelpers {
 				transactionBlock: inputs.tx,
 			});
 
-		if (response.effects.status.status === "failure")
+		if (response.effects.status.status === "failure") {
+			console.error(response.error);
+			console.error(response.effects.status.error);
 			throw Error("dev inspect move call failed");
+		}
 
 		if (!response.results)
 			throw Error("dev inspect move call returned no results");
