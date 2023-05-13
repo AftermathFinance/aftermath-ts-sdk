@@ -31,16 +31,22 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
+	public fetchAllPools = async () => {
+		const pools = await this.Helpers.fetchAllPools();
+		return pools;
+	};
+
+	public fetchPoolsForCoinType = async (inputs: {
+		coinType: CoinType;
+	}): Promise<TurbosPoolObject[]> => {
+		return this.Helpers.fetchPoolsForCoinType(inputs);
+	};
+
 	public fetchPoolForCoinTypes = async (inputs: {
 		coinType1: CoinType;
 		coinType2: CoinType;
 	}): Promise<TurbosPoolObject> => {
 		return this.Helpers.fetchPoolForCoinTypes(inputs);
-	};
-
-	public fetchAllPools = async () => {
-		const pools = await this.Helpers.fetchAllPools();
-		return pools;
 	};
 
 	public fetchSupportedCoins = async () => {

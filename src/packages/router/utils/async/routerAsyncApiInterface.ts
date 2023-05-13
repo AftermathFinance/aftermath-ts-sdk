@@ -1,12 +1,18 @@
 import { SuiAddress } from "@mysten/sui.js";
 import { CoinType } from "../../../coin/coinTypes";
-import { Balance, SerializedTransaction } from "../../../../types";
+import {
+	Balance,
+	RouterAsyncSerializablePool,
+	SerializedTransaction,
+} from "../../../../types";
 
 /////////////////////////////////////////////////////////////////////
 //// Interface
 /////////////////////////////////////////////////////////////////////
 
-export interface RouterAsyncApiInterface<PoolType> {
+export interface RouterAsyncApiInterface<
+	PoolType extends RouterAsyncSerializablePool
+> {
 	/////////////////////////////////////////////////////////////////////
 	//// Required
 	/////////////////////////////////////////////////////////////////////
@@ -18,6 +24,10 @@ export interface RouterAsyncApiInterface<PoolType> {
 	/////////////////////////////////////////////////////////////////////
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
+
+	fetchPoolsForCoinType: (inputs: {
+		coinType: CoinType;
+	}) => Promise<PoolType[]>;
 
 	fetchPoolForCoinTypes: (inputs: {
 		coinType1: CoinType;

@@ -121,6 +121,22 @@ export class CetusApiHelpers {
 		return foundPool;
 	};
 
+	public fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
+		const allPools = await this.fetchAllPools();
+
+		const foundPools = allPools.filter((pool) =>
+			CetusApiHelpers.isPoolForCoinType({
+				pool,
+				...inputs,
+			})
+		);
+
+		if (foundPools.length <= 0)
+			throw new Error("no cetus pools found for given coin type");
+
+		return foundPools;
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Commands
 	/////////////////////////////////////////////////////////////////////
@@ -522,6 +538,18 @@ export class CetusApiHelpers {
 				pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType2)) ||
 			(pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType2) &&
 				pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType1))
+		);
+	};
+
+	private static isPoolForCoinType = (inputs: {
+		pool: CetusPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { pool, coinType } = inputs;
+
+		return (
+			pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType) ||
+			pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType)
 		);
 	};
 

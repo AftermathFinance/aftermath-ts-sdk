@@ -133,6 +133,22 @@ export class TurbosApiHelpers {
 		return foundPool;
 	};
 
+	public fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
+		const allPools = await this.fetchAllPools();
+
+		const foundPools = allPools.filter((pool) =>
+			TurbosApiHelpers.isPoolForCoinType({
+				pool,
+				...inputs,
+			})
+		);
+
+		if (foundPools.length <= 0)
+			throw new Error("no turbos pools found for given coin type");
+
+		return foundPools;
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Commands
 	/////////////////////////////////////////////////////////////////////
@@ -483,6 +499,18 @@ export class TurbosApiHelpers {
 				pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType2)) ||
 			(pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType2) &&
 				pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType1))
+		);
+	};
+
+	private static isPoolForCoinType = (inputs: {
+		pool: TurbosPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { pool, coinType } = inputs;
+
+		return (
+			pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType) ||
+			pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType)
 		);
 	};
 
