@@ -98,6 +98,7 @@ export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
 	referrer?: SuiAddress;
 	externalFee?: RouterExternalFee;
+	// mergeLastPath?: boolean;
 };
 
 export type RouterTradeRoute = RouterTradeInfo & {

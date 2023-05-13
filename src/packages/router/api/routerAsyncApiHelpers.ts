@@ -88,7 +88,9 @@ export class RouterAsyncApiHelpers {
 		const protocols = inputs.pools.map((pool) =>
 			this.protocolNameFromPool({ pool })
 		);
-		const apis = this.apisFromProtocolNames({ protocols });
+		const apis = protocols.map((protocol) =>
+			this.protocolNamesToApi[protocol]()
+		);
 
 		const resultsOrUndefined: (RouterAsyncTradeResult | undefined)[] =
 			await Promise.all(

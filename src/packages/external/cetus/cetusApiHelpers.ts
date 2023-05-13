@@ -271,7 +271,7 @@ export class CetusApiHelpers {
 			poolObjectId: pool.id,
 		};
 
-		if (CetusApiHelpers.isCoinA(coinInType, pool))
+		if (CetusApiHelpers.isCoinA({ pool, coinType: coinInType }))
 			return this.tradeCoinAToCoinBTx(commandInputs);
 
 		return this.tradeCoinBToCoinATx(commandInputs);
@@ -486,6 +486,23 @@ export class CetusApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
+	//// Public Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public static otherCoinInPool = (inputs: {
+		coinType: CoinType;
+		pool: CetusPoolObject;
+	}) => {
+		return this.isCoinA(inputs)
+			? inputs.pool.coinTypeB
+			: inputs.pool.coinTypeA;
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -588,6 +605,11 @@ export class CetusApiHelpers {
 		);
 	};
 
-	private static isCoinA = (coin: CoinType, pool: CetusPoolObject) =>
-		Helpers.addLeadingZeroesToType(coin) === pool.coinTypeA;
+	private static isCoinA = (inputs: {
+		pool: CetusPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { coinType, pool } = inputs;
+		return Helpers.addLeadingZeroesToType(coinType) === pool.coinTypeA;
+	};
 }

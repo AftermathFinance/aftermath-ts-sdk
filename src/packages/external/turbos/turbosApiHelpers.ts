@@ -263,7 +263,7 @@ export class TurbosApiHelpers {
 			poolObjectId: pool.id,
 		};
 
-		if (TurbosApiHelpers.isCoinA(coinInType, pool))
+		if (TurbosApiHelpers.isCoinA({ pool, coinType: coinInType }))
 			return this.tradeCoinAToCoinBTx(commandInputs);
 
 		return this.tradeCoinBToCoinATx(commandInputs);
@@ -436,6 +436,23 @@ export class TurbosApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
+	//// Public Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public static otherCoinInPool = (inputs: {
+		coinType: CoinType;
+		pool: TurbosPoolObject;
+	}) => {
+		return this.isCoinA(inputs)
+			? inputs.pool.coinTypeB
+			: inputs.pool.coinTypeA;
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -549,8 +566,13 @@ export class TurbosApiHelpers {
 		);
 	};
 
-	private static isCoinA = (coin: CoinType, pool: TurbosPoolObject) =>
-		Helpers.addLeadingZeroesToType(coin) === pool.coinTypeA;
+	private static isCoinA = (inputs: {
+		pool: TurbosPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { coinType, pool } = inputs;
+		return Helpers.addLeadingZeroesToType(coinType) === pool.coinTypeA;
+	};
 
 	private static calcSqrtPriceLimit = (inputs: {
 		sqrtPrice: bigint;

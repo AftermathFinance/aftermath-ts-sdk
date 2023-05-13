@@ -53,6 +53,11 @@ export interface RouterAsyncApiInterface<
 	// 	coinInAmount: Balance;
 	// }) => Promise<Balance>;
 
+	otherCoinInPool: (inputs: {
+		coinType: CoinType;
+		pool: PoolType;
+	}) => CoinType;
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////

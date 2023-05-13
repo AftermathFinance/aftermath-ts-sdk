@@ -71,6 +71,13 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		return tradeResult.amountOut;
 	};
 
+	public otherCoinInPool = (inputs: {
+		coinType: CoinType;
+		pool: CetusPoolObject;
+	}) => {
+		return CetusApiHelpers.otherCoinInPool(inputs);
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////

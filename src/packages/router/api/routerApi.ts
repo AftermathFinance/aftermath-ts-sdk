@@ -46,11 +46,11 @@ export class RouterApi {
 	//// External Packages
 	/////////////////////////////////////////////////////////////////////
 
-	// public Aftermath = () => new PoolsApi(this.Provider);
-	// public Nojo = () => new NojoAmmApi(this.Provider);
-	// public DeepBook = () => new DeepBookApi(this.Provider);
-	// public Cetus = () => new CetusApi(this.Provider);
-	// public Turbos = () => new TurbosApi(this.Provider);
+	public Aftermath = () => new PoolsApi(this.Provider);
+	public Nojo = () => new NojoAmmApi(this.Provider);
+	public DeepBook = () => new DeepBookApi(this.Provider);
+	public Cetus = () => new CetusApi(this.Provider);
+	public Turbos = () => new TurbosApi(this.Provider);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods

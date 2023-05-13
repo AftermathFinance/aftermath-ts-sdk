@@ -22,12 +22,12 @@ export class RouterAsyncGraph {
 	public static createFinalCompleteRoute(inputs: {
 		tradeResults: RouterAsyncTradeResults;
 		coinInAmounts: Balance[];
-		synchronousCompleteRoutes?: RouterCompleteTradeRoute[];
+		completeRoutes?: RouterCompleteTradeRoute[][];
 	}): RouterCompleteTradeRoute {
 		const asyncCompleteRoutes = this.completeRoutesFromTradeResults(inputs);
-		const completeRoutes = inputs.synchronousCompleteRoutes
-			? [...asyncCompleteRoutes, inputs.synchronousCompleteRoutes]
-			: [...asyncCompleteRoutes];
+		const completeRoutes = inputs.completeRoutes
+			? [...asyncCompleteRoutes, ...inputs.completeRoutes]
+			: asyncCompleteRoutes;
 
 		const chosenCompleteRoutes = this.splitTradeBetweenRoutes({
 			...inputs,
@@ -43,6 +43,57 @@ export class RouterAsyncGraph {
 
 		return finalCompleteRoute;
 	}
+
+	public static completeRoutesFromTradeResults = (inputs: {
+		tradeResults: RouterAsyncTradeResults;
+	}): RouterCompleteTradeRoute[][] => {
+		const { tradeResults } = inputs;
+
+		const completeRoutes: RouterCompleteTradeRoute[][] =
+			tradeResults.results.map((result) => {
+				const routes: RouterTradeRoute[] = result.amountsOut.map(
+					(amountOut, amountOutIndex) => {
+						const path = {
+							pool: result.pool,
+							protocolName: result.protocol,
+							coinIn: {
+								type: tradeResults.coinInType,
+								amount: tradeResults.coinInAmounts[
+									amountOutIndex
+								],
+								tradeFee: BigInt(0),
+							},
+							coinOut: {
+								type: tradeResults.coinOutType,
+								amount: amountOut,
+								tradeFee: BigInt(0),
+							},
+							spotPrice:
+								Number(tradeResults.coinInAmounts[0]) /
+								Number(result.amountsOut[0]),
+						};
+
+						return {
+							...path,
+							paths: [path],
+						};
+					}
+				);
+
+				const completeRoutes: RouterCompleteTradeRoute[] = routes.map(
+					(route) => {
+						return {
+							routes: [route],
+							...route,
+						};
+					}
+				);
+
+				return completeRoutes;
+			});
+
+		return completeRoutes;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Static Methods
@@ -132,56 +183,5 @@ export class RouterAsyncGraph {
 				tradeFee: BigInt(0),
 			},
 		};
-	};
-
-	private static completeRoutesFromTradeResults = (inputs: {
-		tradeResults: RouterAsyncTradeResults;
-	}): RouterCompleteTradeRoute[][] => {
-		const { tradeResults } = inputs;
-
-		const completeRoutes: RouterCompleteTradeRoute[][] =
-			tradeResults.results.map((result) => {
-				const routes: RouterTradeRoute[] = result.amountsOut.map(
-					(amountOut, amountOutIndex) => {
-						const path = {
-							pool: result.pool,
-							protocolName: result.protocol,
-							coinIn: {
-								type: tradeResults.coinInType,
-								amount: tradeResults.coinInAmounts[
-									amountOutIndex
-								],
-								tradeFee: BigInt(0),
-							},
-							coinOut: {
-								type: tradeResults.coinOutType,
-								amount: amountOut,
-								tradeFee: BigInt(0),
-							},
-							spotPrice:
-								Number(tradeResults.coinInAmounts[0]) /
-								Number(result.amountsOut[0]),
-						};
-
-						return {
-							...path,
-							paths: [path],
-						};
-					}
-				);
-
-				const completeRoutes: RouterCompleteTradeRoute[] = routes.map(
-					(route) => {
-						return {
-							routes: [route],
-							...route,
-						};
-					}
-				);
-
-				return completeRoutes;
-			});
-
-		return completeRoutes;
 	};
 }

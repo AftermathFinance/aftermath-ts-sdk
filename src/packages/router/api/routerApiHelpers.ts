@@ -86,7 +86,6 @@ export class RouterApiHelpers {
 		const coinInAmounts = RouterApiHelpers.amountsInForRouterTrade({
 			coinInAmount,
 		});
-
 		const asyncProtocols = inputs.protocols.filter(
 			isRouterAsyncProtocolName
 		);
@@ -97,28 +96,44 @@ export class RouterApiHelpers {
 				protocols: asyncProtocols,
 			});
 
-		const exactTradeResults = await this.AsyncHelpers.fetchTradeResults({
-			...inputs,
-			pools: exactMatchPools,
-			coinInAmounts,
-		});
-
 		const routerGraph = new RouterGraph(network, graph);
 
-		// if (tradeResults.results.length <= 0)
-		// 	return routerGraph.getCompleteRouteGivenAmountIn(inputs);
+		if (exactMatchPools.length <= 0 && partialMatchPools.length <= 0)
+			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
 
-		// const synchronousCompleteRoutes =
-		// 	routerGraph.getCompleteRoutesGivenAmountIns({
-		// 		...inputs,
-		// 		coinInAmounts,
-		// 	});
+		const [exactTradeResults, completeRoutesForLastPoolAsync] =
+			await Promise.all([
+				this.AsyncHelpers.fetchTradeResults({
+					...inputs,
+					pools: exactMatchPools,
+					coinInAmounts,
+				}),
+				Promise.all(
+					partialMatchPools.map((lastPool) =>
+						this.fetchCompleteTradeRoutesForLastRouteAsyncPool({
+							...inputs,
+							routerGraph,
+							coinInAmounts,
+							lastPool,
+						})
+					)
+				),
+			]);
 
-		// return RouterAsyncGraph.createFinalCompleteRoute({
-		// 	tradeResults,
-		// 	synchronousCompleteRoutes,
-		// 	coinInAmounts,
-		// });
+		const synchronousCompleteRoutes =
+			routerGraph.getCompleteRoutesGivenAmountIns({
+				...inputs,
+				coinInAmounts,
+			});
+
+		return RouterAsyncGraph.createFinalCompleteRoute({
+			tradeResults: exactTradeResults,
+			completeRoutes: [
+				...completeRoutesForLastPoolAsync,
+				synchronousCompleteRoutes,
+			],
+			coinInAmounts,
+		});
 	};
 
 	private fetchCompleteTradeRoutesForLastRouteAsyncPool = async (inputs: {
@@ -132,14 +147,47 @@ export class RouterApiHelpers {
 	}): Promise<RouterCompleteTradeRoute[]> => {
 		const { routerGraph } = inputs;
 
-        const asyncApi =  this.AsyncHelpers.protocolNamesToApi[this.AsyncHelpers.protocolNameFromPool({pool: inputs.lastPool})]()
+		const asyncApi =
+			this.AsyncHelpers.protocolNamesToApi[
+				this.AsyncHelpers.protocolNameFromPool({
+					pool: inputs.lastPool,
+				})
+			]();
 
-        asyncApi.
+		const lastPoolCoinInType = asyncApi.otherCoinInPool({
+			coinType: inputs.coinOutType,
+			pool: inputs.lastPool,
+		});
 
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
+				coinOutType: lastPoolCoinInType,
 			});
+
+		const lastPoolCoinInAmounts = synchronousCompleteRoutes.map(
+			(route) => route.coinOut.amount
+		);
+		const tradeResults = await this.AsyncHelpers.fetchTradeResults({
+			...inputs,
+			pools: [inputs.lastPool],
+			coinInAmounts: lastPoolCoinInAmounts,
+		});
+
+		const asyncCompleteRoutes =
+			RouterAsyncGraph.completeRoutesFromTradeResults({
+				tradeResults,
+			})[0];
+
+		const finalCompleteRoutes = synchronousCompleteRoutes.map(
+			(syncRoute, index) =>
+				RouterApiHelpers.addFinalRouterCompleteTradeRouteToRoute({
+					startCompleteRoute: syncRoute,
+					endCompleteRoute: asyncCompleteRoutes[index],
+				})
+		);
+
+		return finalCompleteRoutes;
 	};
 
 	// public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
@@ -245,4 +293,39 @@ export class RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
+
+	private static addFinalRouterCompleteTradeRouteToRoute = (inputs: {
+		startCompleteRoute: RouterCompleteTradeRoute;
+		endCompleteRoute: RouterCompleteTradeRoute;
+	}): RouterCompleteTradeRoute => {
+		const { startCompleteRoute, endCompleteRoute } = inputs;
+
+		const totalEndRouteAmountIn = endCompleteRoute.coinIn.amount;
+
+		return {
+			...startCompleteRoute,
+			routes: startCompleteRoute.routes.map((route) => {
+				const finalRoute = endCompleteRoute.routes[0];
+				const finalPath = finalRoute.paths[0];
+
+				return {
+					...finalRoute,
+					coinIn: {
+						...route.coinIn,
+					},
+					coinOut: {
+						...finalRoute.coinOut,
+						// TODO: handle remainder amount
+						amount: route.coinOut.amount / totalEndRouteAmountIn,
+					},
+					paths: [...route.paths, finalPath],
+				};
+			}),
+			coinOut: {
+				...endCompleteRoute.coinOut,
+			},
+			spotPrice:
+				startCompleteRoute.spotPrice * endCompleteRoute.spotPrice,
+		};
+	};
 }

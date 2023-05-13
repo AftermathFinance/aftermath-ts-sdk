@@ -71,6 +71,13 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		return tradeResult.amountOut;
 	};
 
+	public otherCoinInPool = (inputs: {
+		coinType: CoinType;
+		pool: TurbosPoolObject;
+	}) => {
+		return TurbosApiHelpers.otherCoinInPool(inputs);
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
