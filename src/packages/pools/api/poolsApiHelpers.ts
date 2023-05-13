@@ -233,6 +233,7 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
@@ -281,6 +282,7 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
@@ -332,6 +334,7 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinsOutType],
 			arguments: [
 				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
