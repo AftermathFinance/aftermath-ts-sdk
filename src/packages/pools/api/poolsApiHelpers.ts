@@ -762,6 +762,13 @@ export class PoolsApiHelpers {
 		return lpPrice;
 	};
 
+	public calcApy = (inputs: { fees24Hours: number; tvl: number }): number => {
+		const { fees24Hours, tvl } = inputs;
+		const daysInYear = 365;
+
+		return (fees24Hours * daysInYear) / tvl;
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Graph Data
 	/////////////////////////////////////////////////////////////////////
