@@ -48,15 +48,13 @@ export class PoolsApiHelpers {
 
 	private static readonly constants = {
 		moduleNames: {
-			interface: "interface",
+			interface: "amm_interface",
 			pool: "pool",
 			swap: "swap",
 			deposit: "deposit",
 			withdraw: "withdraw",
-			math: "math",
 			events: "events",
 			poolRegistry: "pool_registry",
-			poolFactory: "pool_factory",
 		},
 		functions: {
 			swap: {
@@ -158,7 +156,7 @@ export class PoolsApiHelpers {
 				>(
 					{
 						MoveEventType: EventsApiHelpers.createEventType(
-							this.addresses.pools.packages.cmmm,
+							this.addresses.pools.packages.amm,
 							"events",
 							"CreatedPoolEvent"
 						),
@@ -183,7 +181,7 @@ export class PoolsApiHelpers {
 
 		tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				this.addresses.pools.packages.amm,
 				PoolsApiHelpers.constants.moduleNames.poolRegistry,
 				"lp_type_to_pool_id"
 			),
@@ -224,7 +222,9 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
 					: PoolsApiHelpers.constants.moduleNames.swap,
@@ -233,6 +233,7 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
 				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
@@ -270,7 +271,9 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
 					: PoolsApiHelpers.constants.moduleNames.deposit,
@@ -279,6 +282,7 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
@@ -318,7 +322,9 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
 				withTransfer
 					? PoolsApiHelpers.constants.moduleNames.interface
 					: PoolsApiHelpers.constants.moduleNames.withdraw,
@@ -328,6 +334,7 @@ export class PoolsApiHelpers {
 			typeArguments: [lpCoinType, ...coinsOutType],
 			arguments: [
 				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
@@ -343,7 +350,7 @@ export class PoolsApiHelpers {
 		const { tx } = inputs;
 
 		const compiledModulesAndDeps = JSON.parse(
-			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytLCHZgCtYBBQzbAQ0AAgIGAQcAAAIAAgECAAAFAAEAAQMDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA5jcmVhdGVfbHBfY29pbgtkdW1teV9maWVsZARpbml0CWludGVyZmFjZQp0eF9jb250ZXh0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvjIyReIMxZLyJSleycrPI2b2ygqrRzNb1be8/riObVzAAIBBAEAAAAAAQQLAAsBOAACAA=="],"dependencies":["0xf8c8c9178833164bc894a57b272b3c8d9bdb282aad1ccd6f56def3fae239b573","0x4f816b8eed3de02323203269d7be61bf14407a15d256d4615ea920f7d5ad1262","0x0000000000000000000000000000000000000000000000000000000000000001","0xd22a10f22cdde9320cf562b1d163cff282e64b18b015cb50f8bf4d509f96b3f9","0x58d883d3bd0864e1930c986b19efc2455bc56ba278a9b835680b325f268018a4","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0xe6a15afcb898db13643af6a63e60a83ae93055827955535679a85b2842931543","0xc8f39eaeb34139f9afdbb5badecc9bb2ed919838e25071d681268b67f8020006"],"digest":[158,20,131,115,148,27,5,29,97,76,43,64,170,235,132,45,235,154,147,239,203,111,20,233,43,139,233,198,183,113,192,124]}`
+			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytPCHpgCtoBBQzfAQ0AAgIDAQcAAAIAAgECAAAGAAEAAQQDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA1hbW1faW50ZXJmYWNlDmNyZWF0ZV9scF9jb2luC2R1bW15X2ZpZWxkBGluaXQKdHhfY29udGV4dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAL3vRhgmnKKwpF2q0Mw22cyKIkcQxgZ3G5u/Bvazl+E6QACAQUBAAAAAAEECwALATgAAgA="],"dependencies":["0x5b9e987e1739eb417dffb7009bc1f792411b3a44abc10b2a24e436b3433050fb","0xf7bd18609a728ac29176ab4330db673228891c431819dc6e6efc1bdace5f84e9","0x321a50c956db8b0b8fe53af2756e33212e18ea1a6ba82b9dd4308114b6944289","0x0000000000000000000000000000000000000000000000000000000000000001","0x0cc3f2db459225fbff06f2f71870a6634db0ba434cd65d639f834c277b118f33","0x484d68333fe65c4910a5c708c9aa6469bfc59d343bc5ed898a18226ae422959f","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0x373c265b27110d08e500ebb2a2e40aab08e1dd7d7f40eb878094ed260c4e5afa","0x8557c63b231fef86509fdde6855b032d346c50936cd335f53d4619222d7440fd"],"digest":[136,80,218,104,72,184,149,112,104,245,109,27,32,44,192,47,40,242,109,126,227,25,35,163,86,129,94,127,175,140,146,13]}`
 		);
 
 		return tx.publish({
@@ -370,7 +377,7 @@ export class PoolsApiHelpers {
 			withdrawFee: PoolWithdrawFee;
 		}[];
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
-		createPoolCapId: ObjectId;
+		createPoolCapId: ObjectId | TransactionArgument;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 	}) => {
@@ -394,7 +401,7 @@ export class PoolsApiHelpers {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.pools.packages.cmmm,
+				this.addresses.pools.packages.ammInterface,
 				PoolsApiHelpers.constants.moduleNames.interface,
 				`create_pool_${poolSize}_coins`
 			),
@@ -673,7 +680,7 @@ export class PoolsApiHelpers {
 				),
 			});
 
-		this.fetchCreatePoolTx({
+		await this.fetchCreatePoolTx({
 			tx,
 			...inputs,
 			// createPoolCapId,
@@ -844,21 +851,21 @@ export class PoolsApiHelpers {
 
 	private tradeEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.cmmm,
+			this.addresses.pools.packages.amm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.swap
 		);
 
 	private depositEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.cmmm,
+			this.addresses.pools.packages.amm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.deposit
 		);
 
 	private withdrawEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.cmmm,
+			this.addresses.pools.packages.amm,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);

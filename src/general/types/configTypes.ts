@@ -51,7 +51,8 @@ export interface StakingAddresses {
 
 export interface PoolsAddresses {
 	packages: {
-		cmmm: SuiAddress;
+		amm: SuiAddress;
+		ammInterface: SuiAddress;
 	};
 	objects: {
 		poolRegistry: ObjectId;
