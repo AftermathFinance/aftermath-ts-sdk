@@ -19,7 +19,6 @@ export type UnstakeRequestEventOnChain = EventOnChain<{
 	staker: SuiAddress;
 	epoch: BigIntAsString;
 	provided_afsui_amount: BigIntAsString;
-	sui_amount_to_withdraw: BigIntAsString;
 }>;
 
 export type StakeSuccessEventOnChain = EventOnChain<{
