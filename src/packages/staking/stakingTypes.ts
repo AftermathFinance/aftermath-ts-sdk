@@ -147,11 +147,13 @@ export interface ApiStakeBody {
 	walletAddress: SuiAddress;
 	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
+	referrer?: SuiAddress;
 }
 
 export interface ApiUnstakeBody {
 	walletAddress: SuiAddress;
 	afSuiUnstakeAmount: Balance;
+	referrer?: SuiAddress;
 }
 
 export interface ApiStakingPositionsBody {

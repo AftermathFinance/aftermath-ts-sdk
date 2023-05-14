@@ -54,6 +54,7 @@ export class StakingApi {
 		walletAddress: SuiAddress;
 		suiStakeAmount: Balance;
 		validatorAddress: SuiAddress;
+		referrer?: SuiAddress;
 	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildStakeTransaction({
@@ -65,6 +66,7 @@ export class StakingApi {
 	public fetchUnstakeTransaction = async (inputs: {
 		walletAddress: SuiAddress;
 		afSuiUnstakeAmount: Balance;
+		referrer?: SuiAddress;
 	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildUnstakeTransaction({
