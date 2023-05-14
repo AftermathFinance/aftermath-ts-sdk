@@ -47,26 +47,27 @@ import {
 // To see these functions/equations in action check out https://www.desmos.com/calculator/eu5mfckuk9
 
 export class CmmmCalculations {
-	private static minWeight: number = 0.01;
+	private static minWeight: LocalNumber = 0.01;
 	// Having a minimum normalized weight imposes a limit on the maximum number of tokens;
 	// i.e., the largest possible pool is one where all tokens have exactly the minimum weight.
-	private static maxWeightedTokens: number = 100;
+	private static maxWeightedTokens: LocalNumber = 100;
 
 	// Pool limits that arise from limitations in the fixed point power function (and the imposed 1:100 maximum weight
 	// ratio).
 
 	// Swap limits: amounts swapped may not be larger than this percentage of total balance.
-	private static maxInRatio: number = 0.3;
-	private static maxOutRatio: number = 0.3;
+	private static maxInRatio: LocalNumber = 0.3;
+	private static maxOutRatio: LocalNumber = 0.3;
 
 	// Invariant shrink limit: non-proportional exits cannot cause the invariant to decrease by less than this ratio.
-	private static minInvariantRatio: number = 0.7;
+	private static minInvariantRatio: LocalNumber = 0.7;
 	// Invariant growth limit: non-proportional joins cannot cause the invariant to increase by more than this ratio.
-	private static maxInvariantRatio: number = 3;
+	private static maxInvariantRatio: LocalNumber = 3;
 
-	private static maxNewtonAttempts: number = 255;
-	private static convergenceBound: number = 0.000_000_001;
-	private static tolerance: number = 0.000_000_000_000_1;
+	private static maxNewtonAttempts: LocalNumber = 255;
+	private static convergenceBound: LocalNumber = 0.000_000_001;
+	private static tolerance: LocalNumber = 0.000_000_000_000_1;
+	private static validityTolerance: LocalNumber = 0.000_001;
 
     // Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
 	// the invariant (ignoring fees) and investments change the invariant without changing the distribution of balances.
@@ -388,34 +389,64 @@ export class CmmmCalculations {
         let part2;
         let part3;
         let part4;
+		let skip;
+		let drainT = Number.POSITIVE_INFINITY;
+		let shifter = 1;
 
         // make sure no disabled coin type is expected
         for (let [coinType, coin] of Object.entries(coins)) {
-			if (coin.tradeFeeOut >= Fixed.fixedOneB && amountsIn[coinType] > BigInt(0))
-				throw Error("this trade is disabled");
+			amountOut = Fixed.convertFromInt(amountsOutDirection[coinType]);
+			feeOut = Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
+			if (amountOut > 0) {
+				if (feeOut == 0) {
+					throw Error("this trade is disabled");
+				} else {
+					// pool is drained when b + Ain * (1 - Sin) - t * Aout / (1 - Sout) = 0, or t = (b + Ain * (1 - Sin)) * (1 - So) / Aout
+					t = (
+							(
+							Fixed.convertFromInt(coin.balance)
+							+ (
+								Fixed.convertFromInt(amountsIn[coinType]) *
+								Fixed.complement(Fixed.directCast(coin.tradeFeeIn))
+							)
+						) / amountOut
+					) * feeOut;
+					drainT = Math.min(drainT, t);
+				}
+			}
 		}
+		// drain_t is the maximum t can possibly be. It will be 0 if expected amounts out is way too high.
+        if (drainT == 0) return BigInt(0);
+        while (shifter >= drainT) shifter /= 2;
+
+		t = 1;
 
         for (let i = 0; i < CmmmCalculations.maxNewtonAttempts; ++i) {
             prod = 0;
             prod1 = 0;
             sum = 0;
 			sum1 = 0;
+			skip = false;
             for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
 				amountIn = Fixed.convertFromInt(amountsIn[coinType]);
 				amountOut = Fixed.convertFromInt(amountsOutDirection[coinType]);
-				feeIn = 1 - Fixed.directCast(coin.tradeFeeIn);
-				feeOut = 1 - Fixed.directCast(coin.tradeFeeOut);
+				feeIn = Fixed.complement(Fixed.directCast(coin.tradeFeeIn));
+				feeOut = Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
 
                 // pseudoin
                 part1 = feeIn * amountIn;
                 // pseudoout
-                part2 = amountOut == 0? 0: t * amountOut / feeOut;
+                part2 = t * amountOut / feeOut;
                 // pseudobalance
+				if (part2 >= balance + part1 + 1) {
+					skip = true;
+					break;
+				}
                 part3 = balance + part1 - part2;
                 // for derivatives: weight * expected_amounts_out / fee_out
-                part4 = weight * part2;
+                part4 = weight * amountOut / feeOut;
 
                 prod += weight * Math.log(part3);
                 prod1 += part4 / part3;
@@ -649,6 +680,7 @@ export class CmmmCalculations {
 		let part1: number;
 		let cf: number;
 		let cfMin = 0;
+		let skip: boolean;
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
@@ -657,6 +689,7 @@ export class CmmmCalculations {
 
 			prod = 0;
 			sum = 0;
+			skip = false;
 			for (let [coinType2, coin2] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin2.balance);
 				weight = Fixed.directCast(coin2.weight);
@@ -670,14 +703,22 @@ export class CmmmCalculations {
 							(part1 - balance);
 				} else {
 					// r * (B0 + Din) < B0 so use fees out
-					part1 =
-						balance -
-						(balance - part1) /
-							(1 - Fixed.directCast(coin2.tradeFeeOut));
+					part1 = (balance - part1)
+						/ Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
+					if (part1 + 1 >= balance) {
+						skip = true;
+						break;
+					} else {
+						part1 = balance - part1;
+					}
 				}
 				prod += weight * Math.log(part1);
 				sum += weight * part1;
 			}
+			if (skip) {
+                // this discontinuity occurs beyond draining the pool
+                continue;
+            }
 			prod = Math.exp(prod);
 
 			cf = (2 * a * prod * sum) / (prod + invariant) + ac * prod;
@@ -732,12 +773,15 @@ export class CmmmCalculations {
 		let part2;
 		let part3;
 		let part4;
+		let skip;
+		let shrinker = 1;
 
-		let r = CmmmCalculations.calcWithdrawFlpAmountsOutInitialEstimate(
+		let [r, rDrain] = CmmmCalculations.calcWithdrawFlpAmountsOutInitialEstimate(
 			pool,
 			amountsOutDirection,
 			lpRatio
 		);
+		while (shrinker >= rDrain) shrinker /= 2;
 
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
@@ -757,6 +801,7 @@ export class CmmmCalculations {
 			prod1 = 0;
 			sum = 0;
 			sum1 = 0;
+			skip = false;
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
@@ -765,13 +810,27 @@ export class CmmmCalculations {
 				);
 				fee = fees[coinType];
 
-				part1 = balance * (lpr + lpc * fee) - fee * r * amountOut;
+				part1 = balance * (lpr + lpc * fee);
+				part2 = fee * r * amountOut;
+				if (part2 + 1 >= part1) {
+					// Overshot and drained pool. Set t to be closer to t_max and try again.
+                    skip = true;
+                    break;
+				} else {
+					part1 -= part2;
+				}
+
 				part2 = weight * fee * amountOut;
 
 				prod += weight * Math.log(part1);
 				prod1 += part2 / part1;
 				sum += weight * part1;
 				sum1 += part2;
+			}
+			if (skip) {
+				r = rDrain - (shrinker / 2 ** i);
+				i += 1;
+				continue;
 			}
 			prod = Math.exp(prod);
 
@@ -815,7 +874,7 @@ export class CmmmCalculations {
 		pool: PoolObject,
 		amountsOutDirection: CoinsToBalance,
 		lpRatio: LocalNumber
-	): LocalNumber => {
+	): [LocalNumber, LocalNumber] => {
 
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
@@ -824,10 +883,9 @@ export class CmmmCalculations {
 		let scaledInvariant = invariant * lpr;
 		let a = Fixed.directCast(pool.flatness);
 		let ac = 1 - a;
-		let i;
 		let keepT: boolean;
+		let tDrain;
 		let t;
-		let prevT = 0;
 		let cf;
 		let tMin;
 		let cfMin;
@@ -838,13 +896,10 @@ export class CmmmCalculations {
 		let amountOut;
 		let fee;
 		let prod;
-		let prod1;
 		let sum;
-		let sum1;
 		let part1;
 		let part2;
 		let part3;
-		let part4;
 
 		// the biggest cfMax can possibly be is f(0) which is this:
 		tMax = 0;
@@ -871,6 +926,7 @@ export class CmmmCalculations {
 				Fixed.convertFromInt(amountsOutDirection[coinType]);
 			if (t < tMin) tMin = t;
 		}
+		tDrain = tMin;
 
 		// remaining test points are the CF discontinuities: where B0 - t*D = R*B0
 		for (let [coinTypeT, coinT] of Object.entries(coins)) {
@@ -936,7 +992,7 @@ export class CmmmCalculations {
 						cfMax -
 				  cfMin;
 
-	    return t;
+	    return [t, tDrain];
 	}
 
     // Dusty direct all-coin deposit, returns the number s >= 0 so that amounts_in = s*B0 + dust.
@@ -1191,15 +1247,10 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				Fixed.fixedOneN
-			) ||
-				Helpers.closeEnough(
-					preinvariant,
-					pseudoinvariant,
-					CmmmCalculations.tolerance
-				))
-		);
-	};
+				CmmmCalculations.validityTolerance
+			)
+        );
+    };
 
     // Compute the invariant before swap and pseudoinvariant (invariant considering fees)
     // after the swap and see if they are the same up to a tolerance.
@@ -1303,15 +1354,10 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				Fixed.fixedOneN
-			) ||
-				Helpers.closeEnough(
-					preinvariant,
-					pseudoinvariant,
-					CmmmCalculations.tolerance
-				))
-		);
-	};
+				CmmmCalculations.validityTolerance
+			)
+        );
+    };
 
     // A fixed amount investment is a swap followed by an all coin investment. This function checks that the
     // intermediate swap is allowed and corresponds to the claimed lp ratio.
@@ -1404,15 +1450,10 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				Fixed.fixedOneN
-			) ||
-				Helpers.closeEnough(
-					preinvariant,
-					pseudoinvariant,
-					CmmmCalculations.tolerance
-				))
-		);
-	};
+				CmmmCalculations.validityTolerance
+			)
+        );
+    };
 
 	// A fixed lp withdraw is an all coin withdraw followed by a swap.
 	// This function checks that the swap is valid.
@@ -1505,7 +1546,7 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				CmmmCalculations.tolerance
+				CmmmCalculations.validityTolerance
 			)
         );
     };
@@ -1686,7 +1727,7 @@ export class CmmmCalculations {
     ): LocalNumber => {
         // Initial estimate comes from testing the discontinuities and doing a linear
         // approximation off the two closest test points. We use it to get the correct fees.
-        let r0 = CmmmCalculations.calcWithdrawFlpAmountsOutInitialEstimate(pool, amountsOutDirection, lpRatio);
+        let [r0, _rDrain] = CmmmCalculations.calcWithdrawFlpAmountsOutInitialEstimate(pool, amountsOutDirection, lpRatio);
 
         // Now r0 is on the correct side of R*B0 as the final B0-t*Deout. This tells us which fees apply.
         // All we have to do is find the value of t for which B0-t*Deout lies on the feed tangent plane at R*B0.
