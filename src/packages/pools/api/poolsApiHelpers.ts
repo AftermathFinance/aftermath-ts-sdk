@@ -385,17 +385,17 @@ export class PoolsApiHelpers {
 			inputs;
 		const poolSize = coinsInfo.length;
 
+		coinsInfo.sort((a, b) => {
+			const coinA = a.coinType.toUpperCase();
+			const coinB = b.coinType.toUpperCase();
+			return coinA < coinB ? -1 : coinA > coinB ? 1 : 0;
+		});
+
 		const coinTypes = coinsInfo.map((coin) => coin.coinType);
 
 		const lpCoinDescription = await this.createLpCoinMetadataDescription({
 			...inputs,
 			coinTypes,
-		});
-
-		coinsInfo.sort((a, b) => {
-			const coinA = a.coinType.toUpperCase();
-			const coinB = b.coinType.toUpperCase();
-			return coinA < coinB ? -1 : coinA > coinB ? 1 : 0;
 		});
 
 		return tx.add({
