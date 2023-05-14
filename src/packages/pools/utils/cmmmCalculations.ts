@@ -860,7 +860,7 @@ export class CmmmCalculations {
 					pool,
 					returner,
 					lpRatio
-				))
+				)) throw Error("invalid withdraw");
 				return returner;
 			}
 
