@@ -490,9 +490,6 @@ export class TurbosApiHelpers {
 			})
 		);
 
-		if (foundPools.length <= 0)
-			throw new Error("no turbos pools found for given coin type");
-
 		return foundPools;
 	};
 

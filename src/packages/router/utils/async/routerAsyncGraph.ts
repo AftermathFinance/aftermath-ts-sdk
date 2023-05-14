@@ -29,6 +29,11 @@ export class RouterAsyncGraph {
 			? [...asyncCompleteRoutes, ...inputs.completeRoutes]
 			: asyncCompleteRoutes;
 
+		console.log(
+			"tradeResults",
+			inputs.tradeResults.results.map((result) => result.pool)
+		);
+
 		const chosenCompleteRoutes = this.splitTradeBetweenRoutes({
 			...inputs,
 			completeRoutes,
@@ -39,7 +44,7 @@ export class RouterAsyncGraph {
 		});
 
 		if (finalCompleteRoute.coinOut.amount <= BigInt(0))
-			throw new Error("unable to find route ");
+			throw new Error("unable to find route");
 
 		return finalCompleteRoute;
 	}
@@ -109,7 +114,9 @@ export class RouterAsyncGraph {
 	}): RouterCompleteTradeRoute[] => {
 		const { completeRoutes, coinInAmounts } = inputs;
 
-		let chosenRouteIndexes: number[] = Array(coinInAmounts.length).fill(-1);
+		let chosenRouteIndexes: number[] = Array(completeRoutes.length).fill(
+			-1
+		);
 
 		for (const _ of coinInAmounts) {
 			const incrementalAmountsOut = completeRoutes.map((route, index) => {

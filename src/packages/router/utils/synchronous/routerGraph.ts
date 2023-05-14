@@ -289,7 +289,7 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute[] {
-		return inputs.coinInAmounts.map((coinInAmount) => {
+		const completeRoutes = inputs.coinInAmounts.map((coinInAmount) => {
 			try {
 				return this.getCompleteRoute({
 					...inputs,
@@ -313,6 +313,10 @@ export class RouterGraph {
 				};
 			}
 		});
+
+		return completeRoutes.every((route) => route.routes.length === 0)
+			? []
+			: completeRoutes;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -734,7 +738,7 @@ export class RouterGraph {
 		}
 
 		if (cutRoutesAndPools === undefined)
-			throw Error("unable to find route");
+			throw Error("unable to find synchronous route");
 
 		const oldRouteIndex = routes.findIndex(
 			(route) =>

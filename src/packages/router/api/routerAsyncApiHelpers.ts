@@ -83,7 +83,7 @@ export class RouterAsyncApiHelpers {
 		coinOutType: CoinType;
 		coinInAmounts: Balance[];
 	}): Promise<RouterAsyncTradeResults> => {
-		const { coinInAmounts, coinInType, coinOutType } = inputs;
+		const { coinInAmounts } = inputs;
 
 		const protocols = inputs.pools.map((pool) =>
 			this.protocolNameFromPool({ pool })

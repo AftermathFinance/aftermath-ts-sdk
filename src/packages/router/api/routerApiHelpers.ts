@@ -126,12 +126,19 @@ export class RouterApiHelpers {
 				coinInAmounts,
 			});
 
+		const allCompleteRoutes = [
+			...completeRoutesForLastPoolAsync,
+			synchronousCompleteRoutes,
+		];
+
+		const completeRoutes = allCompleteRoutes.filter(
+			(routes) => routes.length > 0
+		);
+
 		return RouterAsyncGraph.createFinalCompleteRoute({
 			tradeResults: exactTradeResults,
-			completeRoutes: [
-				...completeRoutesForLastPoolAsync,
-				synchronousCompleteRoutes,
-			],
+			completeRoutes:
+				completeRoutes.length <= 0 ? undefined : completeRoutes,
 			coinInAmounts,
 		});
 	};
@@ -187,7 +194,9 @@ export class RouterApiHelpers {
 				})
 		);
 
-		return finalCompleteRoutes;
+		return finalCompleteRoutes.every((route) => route.routes.length === 0)
+			? []
+			: finalCompleteRoutes;
 	};
 
 	// public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {

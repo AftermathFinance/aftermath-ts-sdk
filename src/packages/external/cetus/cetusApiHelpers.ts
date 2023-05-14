@@ -540,9 +540,6 @@ export class CetusApiHelpers {
 			})
 		);
 
-		if (foundPools.length <= 0)
-			throw new Error("no cetus pools found for given coin type");
-
 		return foundPools;
 	};
 
