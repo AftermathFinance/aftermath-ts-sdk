@@ -317,76 +317,15 @@ const tests = {
 		return true;
 	},
 	testCalcWithdrawFlpAmountsOut: () => {
-		let coins = {
-			coin1: {
-				balance: 700000000n,
-				weight: 280_000_000_000_000_000n,
-				tradeFeeIn: 100_000_000_000_000_000n,
-				tradeFeeOut: 40_000_000_000_000_000n,
-			},
-			coin2: {
-				balance: 400000000n,
-				weight: 448_000_000_000_000_000n,
-				tradeFeeIn: 200_000_000_000_000_000n,
-				tradeFeeOut: 20_000_000_000_000_000n,
-			},
-			coin3: {
-				balance: 500000000n,
-				weight: 272_000_000_000_000_000n,
-				tradeFeeIn: 300_000_000_000_000_000n,
-				tradeFeeOut: 30_000_000_000_000_000n,
-			},
-		};
-
-		let flatness = 712_000_000_000_000_000n;
-
-		let pool = {
-			flatness: flatness,
-			coins: coins,
-		};
-
-		let lpRatio = 0.729_000_000_000_000_000;
-
-		let amountsOutDirection = {
-			coin1: 3000000n,
-			coin2: 50000000n,
-			coin3: 10000000n,
-		};
-
-		let expectedScalar = 4.055_189_826_679_962_800;
-
-		let expectedAmountsOut = {
-			coin1: Helpers.blendedOperations.mulNBB(
-				expectedScalar,
-				amountsOutDirection.coin1
-			),
-			coin2: Helpers.blendedOperations.mulNBB(
-				expectedScalar,
-				amountsOutDirection.coin2
-			),
-			coin3: Helpers.blendedOperations.mulNBB(
-				expectedScalar,
-				amountsOutDirection.coin3
-			),
-		};
-
-		let calculatedAmountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
-			pool,
-			amountsOutDirection,
-			lpRatio
+		return testWithdraw(
+			[700000000, 400000000, 500000000],
+			[0.28, 0.448, 0.272],
+			[0.1, 0.2, 0.3],
+			[0.04, 0.02, 0.03],
+			0.712,
+			[3000000, 50000000, 10000000],
+			0.729
 		);
-
-		for (let coinType of Object.keys(coins)) {
-			if (
-				!Helpers.closeEnoughBigInt(
-					expectedAmountsOut[coinType],
-					calculatedAmountsOut[coinType],
-					Tolerance
-				)
-			)
-				return false;
-		}
-		return true;
 	},
 	testDepositEstimate: () => {
 		let flatness = 650_000_000_000_000_000n;
