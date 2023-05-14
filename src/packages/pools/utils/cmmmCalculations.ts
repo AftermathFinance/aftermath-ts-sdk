@@ -784,7 +784,7 @@ export class CmmmCalculations {
 
         // make sure no disabled coin type is expected
         for (let [coinType, coin] of Object.entries(coins)) {
-			amountOut = Fixed.convertFromInt(amountsOutDirection[coinType]);
+			amountOut = Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
 			feeOut = Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
 			if (amountOut > 0) {
 				if (feeOut == 0) {
@@ -795,7 +795,7 @@ export class CmmmCalculations {
 							(
 							Fixed.convertFromInt(coin.balance)
 							+ (
-								Fixed.convertFromInt(amountsIn[coinType]) *
+								Fixed.convertFromInt(amountsIn[coinType] || BigInt(0)) *
 								Fixed.complement(Fixed.directCast(coin.tradeFeeIn))
 							)
 						) / amountOut
@@ -819,8 +819,8 @@ export class CmmmCalculations {
             for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
-				amountIn = Fixed.convertFromInt(amountsIn[coinType]);
-				amountOut = Fixed.convertFromInt(amountsOutDirection[coinType]);
+				amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
+				amountOut = Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
 				feeIn = Fixed.complement(Fixed.directCast(coin.tradeFeeIn));
 				feeOut = Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
 
@@ -903,7 +903,7 @@ export class CmmmCalculations {
 
         // make sure no disabled coin type is expected
         for (let [coinType, coin] of Object.entries(coins)) {
-			if (coin.tradeFeeOut >= Fixed.fixedOneB && amountsOut[coinType] > BigInt(0))
+			if (coin.tradeFeeOut >= Fixed.fixedOneB && (amountsOut[coinType] || BigInt(0)) > BigInt(0))
 				throw Error("this trade is disabled");
 		}
 
@@ -915,8 +915,8 @@ export class CmmmCalculations {
             for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
-				amountIn = Fixed.convertFromInt(amountsInDirection[coinType]);
-				amountOut = Fixed.convertFromInt(amountsOut[coinType]);
+				amountIn = Fixed.convertFromInt(amountsInDirection[coinType] || BigInt(0));
+				amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0));
 				feeIn = 1 - Fixed.directCast(coin.tradeFeeIn);
 				feeOut = 1 - Fixed.directCast(coin.tradeFeeOut);
 
@@ -979,7 +979,7 @@ export class CmmmCalculations {
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
-			amount = Fixed.convertFromInt(amountsIn[coinType]);
+			amount = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
 			fees[coinType] =
 				r * (balance + amount) >= balance
 					? 1 - Fixed.directCast(coin.tradeFeeIn)
@@ -1002,7 +1002,7 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
-				amount = Fixed.convertFromInt(amountsIn[coinType]);
+				amount = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
 				fee = fees[coinType];
 				part1 = balance + amount;
 				part2 = fee * r * part1 + balance - fee * balance;
@@ -1054,7 +1054,9 @@ export class CmmmCalculations {
 		let prod = 0;
 		let sum = 0;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.convertFromInt(coin.balance + amountsIn[coinType]);
+			balance = Fixed.convertFromInt(
+				coin.balance + (amountsIn[coinType] || BigInt(0))
+			);
 			weight = Fixed.directCast(coin.weight);
 			prod += weight * Math.log(balance);
 			sum += weight * balance;
@@ -1073,7 +1075,7 @@ export class CmmmCalculations {
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.convertFromInt(amountsIn[coinType]);
+			amount = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
 			r = balance / (balance + amount);
 
 			prod = 0;
@@ -1176,7 +1178,7 @@ export class CmmmCalculations {
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			amountOut = Fixed.convertFromInt(
-				amountsOutDirection[coinType]
+				amountsOutDirection[coinType] || BigInt(0)
 			);
 			fees[coinType] =
 				balance * lpc >= r * amountOut
@@ -1195,7 +1197,7 @@ export class CmmmCalculations {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
 				amountOut = Fixed.convertFromInt(
-					amountsOutDirection[coinType]
+					amountsOutDirection[coinType] || BigInt(0)
 				);
 				fee = fees[coinType];
 
@@ -1242,7 +1244,7 @@ export class CmmmCalculations {
 				let returner: CoinsToBalance = {};
 				for (let coinType of Object.keys(coins)) {
 					returner[coinType] = Fixed.convertToInt(
-						r * Fixed.convertFromInt(amountsOutDirection[coinType])
+						r * Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0))
 					);
 				}
 				if (!CmmmCalculations.checkValidWithdraw(
@@ -1311,7 +1313,7 @@ export class CmmmCalculations {
 			t =
 				(Fixed.convertFromInt(coin.balance) *
 					(1 - Fixed.directCast(coin.tradeFeeOut) * lpr)) /
-				Fixed.convertFromInt(amountsOutDirection[coinType]);
+				Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
 			if (t < tMin) tMin = t;
 		}
 		tDrain = tMin;
@@ -1328,7 +1330,9 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
-				amountOut = Fixed.convertFromInt(amountsOutDirection[coinType]);
+				amountOut = Fixed.convertFromInt(
+					amountsOutDirection[coinType] || BigInt(0)
+				);
 				part1 = t * amountOut;
 				if (part1 >= balance) {
 					// this t is too large to be a bound because B0 - t*D overdraws the pool
@@ -1394,7 +1398,7 @@ export class CmmmCalculations {
         let sMin = Number.POSITIVE_INFINITY;
         for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
-			amountIn = Fixed.convertFromInt(amountsIn[coinType]);
+			amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
 
             s = amountIn / balance;
 
@@ -1403,7 +1407,7 @@ export class CmmmCalculations {
 
 		let returner: CoinsToBalance = {};
 		for (let coinType of Object.keys(coins))
-			returner[coinType] = Helpers.blendedOperations.mulNBB(sMin, amountsIn[coinType]);
+			returner[coinType] = Helpers.blendedOperations.mulNBB(sMin, amountsIn[coinType] || BigInt(0));
 		return returner;
     }
 
@@ -1425,7 +1429,7 @@ export class CmmmCalculations {
         let sMax = 0;
         for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
-			amountOut = Fixed.convertFromInt(amountsOut[coinType]);
+			amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0));
 
             s = amountOut / balance;
 
@@ -1434,7 +1438,7 @@ export class CmmmCalculations {
 
 		let returner: CoinsToBalance = {};
 		for (let coinType of Object.keys(coins))
-			returner[coinType] = Helpers.blendedOperations.mulNBB(sMax, amountsOut[coinType]);
+			returner[coinType] = Helpers.blendedOperations.mulNBB(sMax, amountsOut[coinType] || BigInt(0));
 		return returner;
     }
 
@@ -1579,16 +1583,12 @@ export class CmmmCalculations {
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
-			amountIn =
-				Fixed.convertFromInt(amountsIn[coinType]) * amountsInScalar;
-			amountOut =
-				Fixed.convertFromInt(amountsOut[coinType]) * amountsOutScalar;
-			if (amountIn > 0 && amountOut > 0) return false;
-			feedAmountIn = amountIn * (1 - Fixed.directCast(coin.tradeFeeIn));
-			feedAmountOut =
-				amountOut == 0
-					? 0
-					: amountOut / (1 - Fixed.directCast(coin.tradeFeeOut));
+            amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0)) * amountsInScalar;
+            amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0)) * amountsOutScalar;
+            if (amountIn > 0 && amountOut > 0) return false;
+            feedAmountIn = amountIn * (1 - Fixed.directCast(coin.tradeFeeIn));
+            feedAmountOut = amountOut == 0? 0:
+				amountOut / (1 - Fixed.directCast(coin.tradeFeeOut));
 
 			postbalance = balance + amountIn;
 			if (amountOut > postbalance + 1) return false;
@@ -1781,8 +1781,8 @@ export class CmmmCalculations {
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.convertFromInt(amountsIn[coinType]);
-			postbalance = lpRatio * (balance + amount);
+			amount = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
+            postbalance = lpRatio * (balance + amount);
 
 			if (postbalance >= balance) {
 				// use fee in
@@ -1876,9 +1876,9 @@ export class CmmmCalculations {
 			balance = Fixed.convertFromInt(coin.balance);
 			scaledBalance = lpRatio * balance;
 			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.convertFromInt(amountsOutSrc[coinType]);
-			if (amount > scaledBalance + 1) return false;
-			postbalance = balance - amount;
+            amount = Fixed.convertFromInt(amountsOutSrc[coinType] || BigInt(0));
+            if (amount > scaledBalance + 1) return false;
+            postbalance = balance - amount;
 
             if (postbalance >= scaledBalance) {
                 // use fee in
@@ -1990,8 +1990,8 @@ export class CmmmCalculations {
         let outDotGrad = 0;
         for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
-			amountIn = Fixed.convertFromInt(amountsIn[coinType]);
-			amountOut = Fixed.convertFromInt(amountsOutDirection[coinType]);
+			amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
+			amountOut = Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
             grad = amountIn == 0? 
                 Fixed.directCast(coin.weight) * (spotBody + 2 * a * balance)
 				/ (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
@@ -2030,8 +2030,8 @@ export class CmmmCalculations {
         let outDotGrad = 0;
         for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
-			amountIn = Fixed.convertFromInt(amountsInDirection[coinType]);
-			amountOut = Fixed.convertFromInt(amountsOut[coinType]);
+			amountIn = Fixed.convertFromInt(amountsInDirection[coinType] || BigInt(0));
+			amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0));
             grad = amountIn == 0? 
                 Fixed.directCast(coin.weight) * (spotBody + 2 * a * balance)
 				/ (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
@@ -2080,7 +2080,7 @@ export class CmmmCalculations {
         for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
-			amount = balance + Fixed.convertFromInt(amountsIn[coinType]);
+			amount = balance + Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
 			scaledAmount = amount * r0;
 
             grad = scaledAmount < balance? 
@@ -2139,7 +2139,7 @@ export class CmmmCalculations {
         for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
-			amount = balance + Fixed.convertFromInt(amountsOutDirection[coinType]);
+			amount = balance + Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
 			scaledAmount = amount * r0;
 
             grad = scaledAmount < balance? 
