@@ -68,7 +68,6 @@ export interface UnstakeRequestEvent extends Event {
 	staker: SuiAddress;
 	epoch: bigint;
 	afSuiAmountGiven: Balance;
-	suiUnstakeAmount: Balance;
 }
 
 export interface UnstakeSuccessEvent extends Event {
@@ -115,7 +114,7 @@ export interface UnstakePosition {
 	staker: SuiAddress;
 	epoch: bigint;
 	afSuiAmountGiven: Balance;
-	suiUnstakeAmount: Balance;
+	suiUnstakeAmount?: Balance;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }
