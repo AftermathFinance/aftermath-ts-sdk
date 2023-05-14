@@ -14,6 +14,9 @@ export class Fixed {
 		Number(n) / Fixed.fixedOneN;
 	public static directUncast = (n: LocalNumber): OnChainNumber =>
 		BigInt(Math.floor(n * Fixed.fixedOneN));
+
+	public static complement = (n: LocalNumber) =>
+		Math.max(0, 1 - Math.max(0, n));
 }
 
 // These are the various uses for on chain numbers.
