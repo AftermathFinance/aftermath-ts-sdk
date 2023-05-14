@@ -29,11 +29,6 @@ export class RouterAsyncGraph {
 			? [...asyncCompleteRoutes, ...inputs.completeRoutes]
 			: asyncCompleteRoutes;
 
-		console.log(
-			"tradeResults",
-			inputs.tradeResults.results.map((result) => result.pool)
-		);
-
 		const chosenCompleteRoutes = this.splitTradeBetweenRoutes({
 			...inputs,
 			completeRoutes,
