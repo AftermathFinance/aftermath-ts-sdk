@@ -1498,32 +1498,33 @@ export class CmmmCalculations {
 			if (amount > scaledBalance + 1) return false;
 			postbalance = balance - amount;
 
-			if (postbalance >= scaledBalance) {
-				// use fee in
-				diff = postbalance - scaledBalance;
-				pseudodiff = diff * (1 - Fixed.directCast(coin.tradeFeeIn));
-				pseudobalance = scaledBalance + pseudodiff;
-			} else {
-				// use fee out
-				diff = scaledBalance - postbalance;
-				pseudodiff =
-					diff == 0
-						? 0
-						: diff / (1 - Fixed.directCast(coin.tradeFeeOut));
-				if (pseudodiff > scaledBalance + 1) return false;
-				pseudobalance = scaledBalance - pseudodiff;
-			}
+            if (postbalance >= scaledBalance) {
+                // use fee in
+                diff = postbalance - scaledBalance;
+                pseudodiff = diff * Fixed.complement(
+					Fixed.directCast(coin.tradeFeeIn)
+				);
+                pseudobalance = scaledBalance + pseudodiff;
+            } else {
+                // use fee out
+                diff = scaledBalance - postbalance;
+                pseudodiff = diff == 0? 0: diff / Fixed.complement(
+					Fixed.directCast(coin.tradeFeeOut)
+				);
+                if (pseudodiff > scaledBalance + 1) return false;
+                pseudobalance = scaledBalance - pseudodiff;
+            };
 
-			preprod += weight * Math.log(balance);
-			presum += weight * balance;
-			postprod += weight * Math.log(postbalance);
-			postsum += weight * postbalance;
-			pseudoprod += weight * Math.log(pseudobalance);
-			pseudosum += weight * pseudobalance;
-		}
-		preprod = Math.exp(preprod);
-		postprod = Math.exp(postprod);
-		pseudoprod = Math.exp(pseudoprod);
+            preprod += weight * Math.log(scaledBalance);
+			presum += weight * scaledBalance;
+            postprod += weight * Math.log(postbalance);
+            postsum += weight * postbalance;
+            pseudoprod += weight * Math.log(pseudobalance);
+            pseudosum += weight * pseudobalance;
+        };
+        preprod = Math.exp(preprod);
+        postprod = Math.exp(postprod);
+        pseudoprod = Math.exp(pseudoprod);
 
 		let preinvariant = CmmmCalculations.calcInvariantQuadratic(
 			preprod,
