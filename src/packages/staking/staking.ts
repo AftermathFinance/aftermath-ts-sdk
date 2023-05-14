@@ -1,4 +1,4 @@
-import { SuiValidatorSummary } from "@mysten/sui.js";
+import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui.js";
 import {
 	ApiStakeBody,
 	ApiUnstakeBody,
@@ -41,6 +41,10 @@ export class Staking extends Caller {
 
 	public async getActiveValidators(): Promise<SuiValidatorSummary[]> {
 		return this.fetchApi("active-validators");
+	}
+
+	public async getValidatorApys(): Promise<ValidatorsApy> {
+		return this.fetchApi("validator-apys");
 	}
 
 	public async getStakingPositions(
