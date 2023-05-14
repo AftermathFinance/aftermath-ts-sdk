@@ -195,9 +195,20 @@ export class StakingApiHelpers {
 		walletAddress: SuiAddress;
 		suiStakeAmount: Balance;
 		validatorAddress: SuiAddress;
+		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
+		const { referrer } = inputs;
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+				{
+					tx,
+					referrer,
+				}
+			);
 
 		const suiCoin =
 			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
@@ -219,9 +230,20 @@ export class StakingApiHelpers {
 	public fetchBuildUnstakeTransaction = async (inputs: {
 		walletAddress: SuiAddress;
 		afSuiUnstakeAmount: Balance;
+		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
+		const { referrer } = inputs;
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+				{
+					tx,
+					referrer,
+				}
+			);
 
 		const afSuiCoin =
 			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
