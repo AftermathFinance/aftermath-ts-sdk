@@ -3,6 +3,7 @@ import {
 	SuiAddress,
 	SuiValidatorSummary,
 	TransactionBlock,
+	ValidatorsApy,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
@@ -44,6 +45,10 @@ export class StakingApi {
 
 	public fetchActiveValidators = async (): Promise<SuiValidatorSummary[]> => {
 		return (await this.Provider.Sui().fetchSystemState()).activeValidators;
+	};
+
+	public fetchValidatorApys = async (): Promise<ValidatorsApy> => {
+		return await this.Provider.provider.getValidatorsApy();
 	};
 
 	/////////////////////////////////////////////////////////////////////
