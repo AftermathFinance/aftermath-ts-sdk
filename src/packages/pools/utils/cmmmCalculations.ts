@@ -1453,18 +1453,22 @@ export class CmmmCalculations {
             if (postbalance >= scaledBalance) {
                 // use fee in
                 diff = postbalance - scaledBalance;
-                pseudodiff = diff *(1 - (Fixed.directCast(coin.tradeFeeIn)));
+                pseudodiff = diff * Fixed.complement(
+					Fixed.directCast(coin.tradeFeeIn)
+				);
                 pseudobalance = scaledBalance + pseudodiff;
             } else {
                 // use fee out
                 diff = scaledBalance - postbalance;
-                pseudodiff = diff == 0? 0: diff / (1 - Fixed.directCast(coin.tradeFeeOut));
+                pseudodiff = diff == 0? 0: diff / Fixed.complement(
+					Fixed.directCast(coin.tradeFeeOut)
+				);
                 if (pseudodiff > scaledBalance + 1) return false;
                 pseudobalance = scaledBalance - pseudodiff;
             };
 
-            preprod += weight * Math.log(balance);
-			presum += weight * balance;
+            preprod += weight * Math.log(scaledBalance);
+			presum += weight * scaledBalance;
             postprod += weight * Math.log(postbalance);
             postsum += weight * postbalance;
             pseudoprod += weight * Math.log(pseudobalance);
