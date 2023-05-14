@@ -94,23 +94,42 @@ export class TurbosApiHelpers {
 				() => true
 			);
 
-		const sqrtPrices = await this.Provider.Objects().fetchCastObjectBatch(
-			poolsSimpleInfo.map((poolInfo) => poolInfo.id),
-			(data) => {
-				const sqrtPrice: BigIntAsString =
-					getObjectFields(data)?.sqrt_price;
-				return BigInt(sqrtPrice);
-			}
-		);
+		const poolsMoreInfo =
+			await this.Provider.Objects().fetchCastObjectBatch(
+				poolsSimpleInfo.map((poolInfo) => poolInfo.id),
+				(data) => {
+					const fields = getObjectFields(data);
+					if (!fields)
+						throw new Error(
+							"no fields found on turbos pool object"
+						);
 
-		const pools = poolsSimpleInfo.map((info, index) => {
+					const sqrtPrice = BigInt(fields.sqrt_price);
+					const liquidity = BigInt(fields.liquidity);
+					const isUnlocked = fields.unlocked as unknown as boolean;
+
+					return {
+						liquidity,
+						isUnlocked,
+						sqrtPrice,
+					};
+				}
+			);
+
+		const completePools = poolsSimpleInfo.map((info, index) => {
 			return {
 				...info,
-				sqrtPrice: sqrtPrices[index],
+				sqrtPrice: poolsMoreInfo[index].sqrtPrice,
 			};
 		});
 
-		return pools;
+		const usablePools = completePools.filter(
+			(_, index) =>
+				poolsMoreInfo[index].isUnlocked &&
+				poolsMoreInfo[index].liquidity > BigInt(0)
+		);
+
+		return usablePools;
 	};
 
 	public fetchPoolsForTrade = async (inputs: {

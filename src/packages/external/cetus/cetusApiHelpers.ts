@@ -5,11 +5,13 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 	bcs,
+	getObjectFields,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	Balance,
+	BigIntAsString,
 	CetusAddresses,
 	CoinType,
 	PoolsAddresses,
@@ -98,7 +100,31 @@ export class CetusApiHelpers {
 				() => true
 			);
 
-		return poolsSimpleInfo;
+		const poolsMoreInfo =
+			await this.Provider.Objects().fetchCastObjectBatch(
+				poolsSimpleInfo.map((poolInfo) => poolInfo.id),
+				(data) => {
+					const fields = getObjectFields(data);
+					if (!fields)
+						throw new Error("no fields found on cetus pool object");
+
+					const liquidity = BigInt(fields.liquidity);
+					const isPaused = fields.is_pause as unknown as boolean;
+
+					return {
+						liquidity,
+						isPaused,
+					};
+				}
+			);
+
+		const usablePools = poolsSimpleInfo.filter(
+			(_, index) =>
+				!poolsMoreInfo[index].isPaused &&
+				poolsMoreInfo[index].liquidity > BigInt(0)
+		);
+
+		return usablePools;
 	};
 
 	public fetchPoolsForTrade = async (inputs: {
