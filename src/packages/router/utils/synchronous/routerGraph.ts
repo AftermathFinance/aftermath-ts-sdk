@@ -60,7 +60,7 @@ export class RouterGraph {
 
 	public static readonly defaultOptions: RouterOptions = {
 		maxRouteLength: 3,
-		tradePartitionCount: 20,
+		tradePartitionCount: 10,
 		minRoutesToCheck: 20,
 		maxGasCost: BigInt(500_000_000), // 0.5 SUI
 	};
@@ -878,18 +878,6 @@ export class RouterGraph {
 				const coinOutAmountFromTrade =
 					totalCoinOutAmount - path.coinOut.amount;
 
-				// let updatedPool: RouterPoolInterface;
-				// if (
-				// 	(totalCoinOutAmount ||
-				// 		coinOutAmountFromTrade ||
-				// 		currentCoinInAmount) === failedAmount
-				// ) {
-				// 	totalCoinOutAmount = failedAmount;
-				// 	coinOutAmountFromTrade = failedAmount;
-				// 	currentCoinInAmount = failedAmount;
-
-				// 	updatedPool = Helpers.deepCopy(pool);
-				// } else {
 				const updatedPool = pool.getUpdatedPoolAfterTrade(
 					!isGivenAmountOut
 						? {
@@ -905,7 +893,6 @@ export class RouterGraph {
 								coinOutAmount: currentCoinInAmount,
 						  }
 				);
-				// }
 
 				let newPath: TradePath = {
 					...path,
