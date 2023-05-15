@@ -69,7 +69,7 @@ export class CmmmCalculations {
 	private static tolerance: LocalNumber = 0.000_000_000_000_1;
 	private static validityTolerance: LocalNumber = 0.000_001;
 
-    // Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
+	// Invariant is used to govern pool behavior. Swaps are operations which change the pool balances without changing
 	// the invariant (ignoring fees) and investments change the invariant without changing the distribution of balances.
 	// Invariant and pool lp are almost in 1:1 correspondence -- e.g. burning lp in a withdraw proportionally lowers the pool invariant.
 	// The difference is as swap fees are absorbed they increase the invariant without incrasing total lp, increasing lp worth.
@@ -95,7 +95,7 @@ export class CmmmCalculations {
 		return this.calcInvariantQuadratic(prod, sum, flatness);
 	};
 
-    // The invariant for stables comes from a quadratic equation coming from the reference point T = (h,h,...,h).
+	// The invariant for stables comes from a quadratic equation coming from the reference point T = (h,h,...,h).
 	// h = [sqrt[p * (p * (A*A + 4*(1-A)) + 8*A*s)] - A*p] / 2.
 	public static calcInvariantQuadratic = (
 		prod: number,
@@ -110,7 +110,7 @@ export class CmmmCalculations {
 			flatness * prod) /
 		2;
 
-    // This function is used for 1d optimization. It computes the full invariant components and their
+	// This function is used for 1d optimization. It computes the full invariant components and their
 	// portions which omit contribution from the balance in the `index` coordinate.
 	// It returns (prod, sum, p0, s0, h) where:
 	// prod = b1^w1 * ... * bn^wn
@@ -159,8 +159,8 @@ export class CmmmCalculations {
 		];
 	};
 
-    // spot price is given in units of Bin / Bout
-    public static calcSpotPrice = (
+	// spot price is given in units of Bin / Bout
+	public static calcSpotPrice = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType
@@ -172,7 +172,7 @@ export class CmmmCalculations {
 			true
 		);
 
-    // spot price is given in units of Bin / Bout
+	// spot price is given in units of Bin / Bout
 	public static calcSpotPriceWithFees = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -201,7 +201,7 @@ export class CmmmCalculations {
 		);
 	};
 
-    // The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
+	// The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
 	private static calcSpotPriceBody = (pool: PoolObject): number => {
 		// The spot price formula comes from the partial derivatives of Cf, specifically -(dCf / dxOut) / (dCf / dxIn)
 		let a: number = Fixed.directCast(pool.flatness);
@@ -228,7 +228,7 @@ export class CmmmCalculations {
 		return (invarnt * invarnt) / prod + ac * prod;
 	};
 
-    // 1d optimized swap function for finding out given in. Returns the amount out.
+	// 1d optimized swap function for finding out given in. Returns the amount out.
 	public static calcOutGivenIn = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -293,7 +293,7 @@ export class CmmmCalculations {
 		return amountOut;
 	};
 
-    // 1d optimized swap function for finding in given out. Returns the amount in.
+	// 1d optimized swap function for finding in given out. Returns the amount in.
 	public static calcInGivenOut = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -359,218 +359,245 @@ export class CmmmCalculations {
 		return amountIn;
 	};
 
-    // For computing swap amounts. Given the current balances (and any other parameters) and an amounts in vector,
-    // and a expected amounts out vector, determine the value of t > 0 such that t*expected_amounts_out
-    // is a valid swap from balances corresponding to adding amounts_in to the pool. The correct value of t is the one for which
-    // calc_swap_invariant(balances, ...parameters, amounts_in, t*expected_amounts_out) == calc_invariant_full(balances, ...parameters).
-    public static calcSwapFixedIn = (
+	// For computing swap amounts. Given the current balances (and any other parameters) and an amounts in vector,
+	// and a expected amounts out vector, determine the value of t > 0 such that t*expected_amounts_out
+	// is a valid swap from balances corresponding to adding amounts_in to the pool. The correct value of t is the one for which
+	// calc_swap_invariant(balances, ...parameters, amounts_in, t*expected_amounts_out) == calc_invariant_full(balances, ...parameters).
+	public static calcSwapFixedIn = (
 		pool: PoolObject,
-        amountsIn: CoinsToBalance,
+		amountsIn: CoinsToBalance,
 		amountsOutDirection: CoinsToBalance
-    ): OnChainScalar => {
+	): OnChainScalar => {
 		let coins = pool.coins;
-        let invariant = CmmmCalculations.calcInvariant(pool);
-        let a = Fixed.directCast(pool.flatness);
-        let ac = 1 - a;
-        let t = 1; // assume that the expected amounts out are close to the true amounts out
-        // this allows faster convergence if the caller chooses expected_amounts_out well
-        let prevT = t;
-        let balance;
-        let weight;
-        let amountIn;
-        let amountOut;
-        let feeIn;
-        let feeOut;
-        let prod;
-        let prod1;
-        let sum;
-        let sum1;
-        let part1;
-        let part2;
-        let part3;
-        let part4;
+		let invariant = CmmmCalculations.calcInvariant(pool);
+		let a = Fixed.directCast(pool.flatness);
+		let ac = 1 - a;
+		let t = 1; // assume that the expected amounts out are close to the true amounts out
+		// this allows faster convergence if the caller chooses expected_amounts_out well
+		let prevT = t;
+		let balance;
+		let weight;
+		let amountIn;
+		let amountOut;
+		let feeIn;
+		let feeOut;
+		let prod;
+		let prod1;
+		let sum;
+		let sum1;
+		let part1;
+		let part2;
+		let part3;
+		let part4;
 		let skip;
 		let drainT = Number.POSITIVE_INFINITY;
 		let shifter = 1;
 
-        // make sure no disabled coin type is expected
-        for (let [coinType, coin] of Object.entries(coins)) {
-			amountOut = Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
+		// make sure no disabled coin type is expected
+		for (let [coinType, coin] of Object.entries(coins)) {
+			amountOut = Fixed.convertFromInt(
+				amountsOutDirection[coinType] || BigInt(0)
+			);
 			feeOut = Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
 			if (amountOut > 0) {
 				if (feeOut == 0) {
 					throw Error("this trade is disabled");
 				} else {
 					// pool is drained when b + Ain * (1 - Sin) - t * Aout / (1 - Sout) = 0, or t = (b + Ain * (1 - Sin)) * (1 - So) / Aout
-					t = (
-							(
-							Fixed.convertFromInt(coin.balance)
-							+ (
-								Fixed.convertFromInt(amountsIn[coinType] || BigInt(0)) *
-								Fixed.complement(Fixed.directCast(coin.tradeFeeIn))
-							)
-						) / amountOut
-					) * feeOut;
+					t =
+						((Fixed.convertFromInt(coin.balance) +
+							Fixed.convertFromInt(
+								amountsIn[coinType] || BigInt(0)
+							) *
+								Fixed.complement(
+									Fixed.directCast(coin.tradeFeeIn)
+								)) /
+							amountOut) *
+						feeOut;
 					drainT = Math.min(drainT, t);
 				}
 			}
 		}
 		// drain_t is the maximum t can possibly be. It will be 0 if expected amounts out is way too high.
-        if (drainT == 0) return BigInt(0);
-        while (shifter >= drainT) shifter /= 2;
+		if (drainT == 0) return BigInt(0);
+		while (shifter >= drainT) shifter /= 2;
 
 		t = 1;
 
-        for (let i = 0; i < CmmmCalculations.maxNewtonAttempts; ++i) {
-            prod = 0;
-            prod1 = 0;
-            sum = 0;
+		for (let i = 0; i < CmmmCalculations.maxNewtonAttempts; ++i) {
+			prod = 0;
+			prod1 = 0;
+			sum = 0;
 			sum1 = 0;
 			skip = false;
-            for (let [coinType, coin] of Object.entries(coins)) {
+			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
-				amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
-				amountOut = Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
+				amountIn = Fixed.convertFromInt(
+					amountsIn[coinType] || BigInt(0)
+				);
+				amountOut = Fixed.convertFromInt(
+					amountsOutDirection[coinType] || BigInt(0)
+				);
 				feeIn = Fixed.complement(Fixed.directCast(coin.tradeFeeIn));
 				feeOut = Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
 
-                // pseudoin
-                part1 = feeIn * amountIn;
-                // pseudoout
-                part2 = t * amountOut / feeOut;
-                // pseudobalance
+				// pseudoin
+				part1 = feeIn * amountIn;
+				// pseudoout
+				part2 = (t * amountOut) / feeOut;
+				// pseudobalance
 				if (part2 >= balance + part1 + 1) {
 					skip = true;
 					break;
 				}
-                part3 = balance + part1 - part2;
-                // for derivatives: weight * expected_amounts_out / fee_out
-                part4 = weight * amountOut / feeOut;
+				part3 = balance + part1 - part2;
+				// for derivatives: weight * expected_amounts_out / fee_out
+				part4 = (weight * amountOut) / feeOut;
 
-                prod += weight * Math.log(part3);
-                prod1 += part4 / part3;
-                sum += weight * part3;
-                sum1 += part4;
-            };
-            prod = Math.exp(prod);
+				prod += weight * Math.log(part3);
+				prod1 += part4 / part3;
+				sum += weight * part3;
+				sum1 += part4;
+			}
+			prod = Math.exp(prod);
 
-            part1 = a * sum;
-            part2 = ac * prod
-            part3 = part1 + part2;
-            part4 = a * invariant * prod1;
+			part1 = a * sum;
+			part2 = ac * prod;
+			part3 = part1 + part2;
+			part4 = a * invariant * prod1;
 
-            t = (
-					a * (sum + 2 * t * sum1) + part3 + 2 * prod1 * t * part3
-					- (t * part4 + invariant * (a + invariant / prod))
-				) / (
-					2 * (prod1 * part3 + a * sum1) - part4
-				);
+			t =
+				(a * (sum + 2 * t * sum1) +
+					part3 +
+					2 * prod1 * t * part3 -
+					(t * part4 + invariant * (a + invariant / prod))) /
+				(2 * (prod1 * part3 + a * sum1) - part4);
 
-            if (Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBound)) {
-                if (!CmmmCalculations.checkValidSwap(
-					pool,
-					amountsIn,
-					1,
-					amountsOutDirection,
-					t
-				)) throw Error("invalid swap");
-                return Fixed.directUncast(t);
-            };
+			if (
+				Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBound)
+			) {
+				if (
+					!CmmmCalculations.checkValidSwap(
+						pool,
+						amountsIn,
+						1,
+						amountsOutDirection,
+						t
+					)
+				)
+					throw Error("invalid swap");
+				return Fixed.directUncast(t);
+			}
 
-            prevT = t;
-        };
-        throw Error("Newton diverged");
-    }
+			prevT = t;
+		}
+		throw Error("Newton diverged");
+	};
 
-    // Swaps but fixed amounts out. Given the pool's current state and a guaranteed out vector, and a expected in vector,
-    // scale expected_amounts_in by t > 0 so that this swap is valid and return the correct value for t
-    public static calcSwapFixedOut = (
-        pool: PoolObject,
+	// Swaps but fixed amounts out. Given the pool's current state and a guaranteed out vector, and a expected in vector,
+	// scale expected_amounts_in by t > 0 so that this swap is valid and return the correct value for t
+	public static calcSwapFixedOut = (
+		pool: PoolObject,
 		amountsInDirection: CoinsToBalance,
-		amountsOut: CoinsToBalance,
-    ): OnChainScalar => {
+		amountsOut: CoinsToBalance
+	): OnChainScalar => {
 		let coins = pool.coins;
-        let invariant = CmmmCalculations.calcInvariant(pool);
-        let a = Fixed.directCast(pool.flatness);
-        let ac = 1 - a;
-        let t = 1; // assume that the expected amounts out are close to the true amounts out
-        // this allows faster convergence if the caller chooses expected_amounts_out well
-        let prevT = 0;
-        let balance;
-        let weight;
-        let amountIn;
-        let amountOut;
-        let feeIn;
-        let feeOut;
-        let prod;
-        let prod1;
-        let sum;
-        let sum1;
-        let part1;
-        let part2;
-        let part3;
-        let part4;
+		let invariant = CmmmCalculations.calcInvariant(pool);
+		let a = Fixed.directCast(pool.flatness);
+		let ac = 1 - a;
+		let t = 1; // assume that the expected amounts out are close to the true amounts out
+		// this allows faster convergence if the caller chooses expected_amounts_out well
+		let prevT = 0;
+		let balance;
+		let weight;
+		let amountIn;
+		let amountOut;
+		let feeIn;
+		let feeOut;
+		let prod;
+		let prod1;
+		let sum;
+		let sum1;
+		let part1;
+		let part2;
+		let part3;
+		let part4;
 
-        // make sure no disabled coin type is expected
-        for (let [coinType, coin] of Object.entries(coins)) {
-			if (coin.tradeFeeOut >= Fixed.fixedOneB && (amountsOut[coinType] || BigInt(0)) > BigInt(0))
+		// make sure no disabled coin type is expected
+		for (let [coinType, coin] of Object.entries(coins)) {
+			if (
+				coin.tradeFeeOut >= Fixed.fixedOneB &&
+				(amountsOut[coinType] || BigInt(0)) > BigInt(0)
+			)
 				throw Error("this trade is disabled");
 		}
 
-        for (let i = 0; i < CmmmCalculations.maxNewtonAttempts; ++i) {
-            prod = 0;
-            prod1 = 0;
-            sum = 0;
-            sum1 = 0;
-            for (let [coinType, coin] of Object.entries(coins)) {
+		for (let i = 0; i < CmmmCalculations.maxNewtonAttempts; ++i) {
+			prod = 0;
+			prod1 = 0;
+			sum = 0;
+			sum1 = 0;
+			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin.balance);
 				weight = Fixed.directCast(coin.weight);
-				amountIn = Fixed.convertFromInt(amountsInDirection[coinType] || BigInt(0));
-				amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0));
+				amountIn = Fixed.convertFromInt(
+					amountsInDirection[coinType] || BigInt(0)
+				);
+				amountOut = Fixed.convertFromInt(
+					amountsOut[coinType] || BigInt(0)
+				);
 				feeIn = 1 - Fixed.directCast(coin.tradeFeeIn);
 				feeOut = 1 - Fixed.directCast(coin.tradeFeeOut);
 
-                // pseudoin expected
-                part1 = feeIn * amountIn;
-                // pseudoout
-                part2 = amountOut == 0? 0: amountOut / feeOut;
-                // pseudobalance
-                part3 = balance + t * part1 - part2;
-                // for derivatives: weight * fee_in * expected_amounts_in
-                part4 = weight * part1;
+				// pseudoin expected
+				part1 = feeIn * amountIn;
+				// pseudoout
+				part2 = amountOut == 0 ? 0 : amountOut / feeOut;
+				// pseudobalance
+				part3 = balance + t * part1 - part2;
+				// for derivatives: weight * fee_in * expected_amounts_in
+				part4 = weight * part1;
 
-                prod += weight * Math.log(part3);
-                prod1 += part4 / part3;
-                sum += weight * part3;
-                sum1 += part4;
-            };
-            prod = Math.exp(prod);
+				prod += weight * Math.log(part3);
+				prod1 += part4 / part3;
+				sum += weight * part3;
+				sum1 += part4;
+			}
+			prod = Math.exp(prod);
 
-            part1 = 2 * a * sum;
-            part2 = ac * prod;
-            part3 = part1 + part2;
-            part4 = (part3 + part2) * prod1 + 2 * a * sum1 - a * invariant * prod1;
+			part1 = 2 * a * sum;
+			part2 = ac * prod;
+			part3 = part1 + part2;
+			part4 =
+				(part3 + part2) * prod1 + 2 * a * sum1 - a * invariant * prod1;
 
-            t = (t * part4 + invariant * (a + invariant / prod) - part3) / part4;
+			t =
+				(t * part4 + invariant * (a + invariant / prod) - part3) /
+				part4;
 
-            if (Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBound)) {
-                if (!CmmmCalculations.checkValidSwap(
-					pool,
-					amountsInDirection,
-					1,
-					amountsOut,
-					t
-				)) throw Error("invalid swap");
-                return Fixed.directUncast(t)
-            };
+			if (
+				Helpers.closeEnough(t, prevT, CmmmCalculations.convergenceBound)
+			) {
+				if (
+					!CmmmCalculations.checkValidSwap(
+						pool,
+						amountsInDirection,
+						1,
+						amountsOut,
+						t
+					)
+				)
+					throw Error("invalid swap");
+				return Fixed.directUncast(t);
+			}
 
-            prevT = t;
-        };
-        throw Error("Newton diverged");
-    }
+			prevT = t;
+		}
+		throw Error("Newton diverged");
+	};
 
-    // Return the expected lp ratio for this deposit
+	// Return the expected lp ratio for this deposit
 	public static calcDepositFixedAmounts = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance
@@ -584,7 +611,10 @@ export class CmmmCalculations {
 		let amount;
 		let prod = 0;
 		let sum = 0;
-		let r = CmmmCalculations.calcDepositFixedAmountsInitialEstimate(pool, amountsIn);
+		let r = CmmmCalculations.calcDepositFixedAmountsInitialEstimate(
+			pool,
+			amountsIn
+		);
 		let prevR = r;
 
 		let fees: Record<CoinType, number> = {};
@@ -638,11 +668,10 @@ export class CmmmCalculations {
 				Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)
 			) {
 				let scalar = Fixed.directUncast(r);
-				if (!CmmmCalculations.checkValidDeposit(
-					pool,
-					amountsIn,
-					scalar
-				)) throw Error("invalid deposit");
+				if (
+					!CmmmCalculations.checkValidDeposit(pool, amountsIn, scalar)
+				)
+					throw Error("invalid deposit");
 				return scalar;
 			}
 
@@ -654,8 +683,8 @@ export class CmmmCalculations {
 
 	private static calcDepositFixedAmountsInitialEstimate = (
 		pool: PoolObject,
-        amountsIn: CoinsToBalance,
-    ): LocalNumber => {
+		amountsIn: CoinsToBalance
+	): LocalNumber => {
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
 		let a = Fixed.directCast(pool.flatness);
@@ -705,8 +734,9 @@ export class CmmmCalculations {
 							(part1 - balance);
 				} else {
 					// r * (B0 + Din) < B0 so use fees out
-					part1 = (balance - part1)
-						/ Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
+					part1 =
+						(balance - part1) /
+						Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
 					if (part1 + 1 >= balance) {
 						skip = true;
 						break;
@@ -718,9 +748,9 @@ export class CmmmCalculations {
 				sum += weight * part1;
 			}
 			if (skip) {
-                // this discontinuity occurs beyond draining the pool
-                continue;
-            }
+				// this discontinuity occurs beyond draining the pool
+				continue;
+			}
 			prod = Math.exp(prod);
 
 			cf = (2 * a * prod * sum) / (prod + invariant) + ac * prod;
@@ -746,7 +776,7 @@ export class CmmmCalculations {
 				: (rMin * cfMax + (rMax - rMin) * invariant - rMax * cfMin) /
 				  (cfMax - cfMin);
 		return r;
-    }
+	};
 
 	// Return the expected amounts out for this withdrawal
 	public static calcWithdrawFlpAmountsOut = (
@@ -778,11 +808,12 @@ export class CmmmCalculations {
 		let skip;
 		let shrinker = 1;
 
-		let [r, rDrain] = CmmmCalculations.calcWithdrawFlpAmountsOutInitialEstimate(
-			pool,
-			amountsOutDirection,
-			lpRatio
-		);
+		let [r, rDrain] =
+			CmmmCalculations.calcWithdrawFlpAmountsOutInitialEstimate(
+				pool,
+				amountsOutDirection,
+				lpRatio
+			);
 		while (shrinker >= rDrain) shrinker /= 2;
 
 		let fees: Record<CoinType, number> = {};
@@ -816,8 +847,8 @@ export class CmmmCalculations {
 				part2 = fee * r * amountOut;
 				if (part2 + 1 >= part1) {
 					// Overshot and drained pool. Set t to be closer to t_max and try again.
-                    skip = true;
-                    break;
+					skip = true;
+					break;
 				} else {
 					part1 -= part2;
 				}
@@ -830,7 +861,7 @@ export class CmmmCalculations {
 				sum1 += part2;
 			}
 			if (skip) {
-				r = rDrain - (shrinker / 2 ** i);
+				r = rDrain - shrinker / 2 ** i;
 				i += 1;
 				continue;
 			}
@@ -850,19 +881,26 @@ export class CmmmCalculations {
 				part4;
 
 			if (
-				i > 15 && Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)
+				i > 15 &&
+				Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)
 			) {
 				let returner: CoinsToBalance = {};
 				for (let coinType of Object.keys(coins)) {
 					returner[coinType] = Fixed.convertToInt(
-						r * Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0))
+						r *
+							Fixed.convertFromInt(
+								amountsOutDirection[coinType] || BigInt(0)
+							)
 					);
 				}
-				if (!CmmmCalculations.checkValidWithdraw(
-					pool,
-					returner,
-					lpRatio
-				)) throw Error("invalid withdraw");
+				if (
+					!CmmmCalculations.checkValidWithdraw(
+						pool,
+						returner,
+						lpRatio
+					)
+				)
+					throw Error("invalid withdraw");
 				return returner;
 			}
 
@@ -877,7 +915,6 @@ export class CmmmCalculations {
 		amountsOutDirection: CoinsToBalance,
 		lpRatio: LocalNumber
 	): [LocalNumber, LocalNumber] => {
-
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
 		let lpr = lpRatio;
@@ -926,12 +963,12 @@ export class CmmmCalculations {
 				amountsOutDirection[coinType] || BigInt(0)
 			);
 			if (amountOut == 0) continue;
-			t = (
-				Fixed.convertFromInt(coin.balance) *
-				Fixed.complement(
-					Fixed.directCast(coin.tradeFeeOut) * lpRatio
-				)
-			) / amountOut;
+			t =
+				(Fixed.convertFromInt(coin.balance) *
+					Fixed.complement(
+						Fixed.directCast(coin.tradeFeeOut) * lpRatio
+					)) /
+				amountOut;
 			if (t < tMin) tMin = t;
 		}
 		tDrain = tMin;
@@ -962,13 +999,15 @@ export class CmmmCalculations {
 				part1 = balance - part1;
 				part2 = lpr * balance;
 				part3 =
-					part1 >= part2?
-						part2 + Fixed.complement(
-							Fixed.directCast(coin.tradeFeeIn)
-						) * (part1 - part2)
-					: part2 - (part2 - part1) / Fixed.complement(
-						Fixed.directCast(coin.tradeFeeOut)
-					);
+					part1 >= part2
+						? part2 +
+						  Fixed.complement(Fixed.directCast(coin.tradeFeeIn)) *
+								(part1 - part2)
+						: part2 -
+						  (part2 - part1) /
+								Fixed.complement(
+									Fixed.directCast(coin.tradeFeeOut)
+								);
 				prod += weight * Math.log(part3);
 				sum += weight * part3;
 			}
@@ -994,79 +1033,86 @@ export class CmmmCalculations {
 		}
 
 		// initial estimate is the linear interpolation between discontinuity bounds
-		t = cfMax == cfMin?
-			tMin:
-			(tMin * cfMax
-				+ tMax * scaledInvariant
-				- tMax * cfMin
-				- tMin * scaledInvariant
-			) / (cfMax - cfMin);
+		t =
+			cfMax == cfMin
+				? tMin
+				: (tMin * cfMax +
+						tMax * scaledInvariant -
+						tMax * cfMin -
+						tMin * scaledInvariant) /
+				  (cfMax - cfMin);
 
-	    return [t, tDrain];
-	}
+		return [t, tDrain];
+	};
 
-    // Dusty direct all-coin deposit, returns the number s >= 0 so that amounts_in = s*B0 + dust.
-    // When performing an all-coin deposit, call this function to get t then split amounts_in into s*B0 + dust.
-    // At least one coordinate of dust will be 0. Send the s*B0 balances into the pool and mint s*total_lp.
-    // The caller keeps the dust.
-    public static calcAllCoinDeposit = (
-        pool: PoolObject,
-        amountsIn: CoinsToBalance
-    ): CoinsToBalance => {
+	// Dusty direct all-coin deposit, returns the number s >= 0 so that amounts_in = s*B0 + dust.
+	// When performing an all-coin deposit, call this function to get t then split amounts_in into s*B0 + dust.
+	// At least one coordinate of dust will be 0. Send the s*B0 balances into the pool and mint s*total_lp.
+	// The caller keeps the dust.
+	public static calcAllCoinDeposit = (
+		pool: PoolObject,
+		amountsIn: CoinsToBalance
+	): CoinsToBalance => {
 		let coins = pool.coins;
 
-        let balance;
-        let amountIn;
+		let balance;
+		let amountIn;
 
-        let s;
-        let sMin = Number.POSITIVE_INFINITY;
-        for (let [coinType, coin] of Object.entries(coins)) {
+		let s;
+		let sMin = Number.POSITIVE_INFINITY;
+		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
 
-            s = amountIn / balance;
+			s = amountIn / balance;
 
-            if (s < sMin) sMin = s;
-        };
+			if (s < sMin) sMin = s;
+		}
 
 		let returner: CoinsToBalance = {};
 		for (let coinType of Object.keys(coins))
-			returner[coinType] = Helpers.blendedOperations.mulNBB(sMin, amountsIn[coinType] || BigInt(0));
+			returner[coinType] = Helpers.blendedOperations.mulNBB(
+				sMin,
+				amountsIn[coinType] || BigInt(0)
+			);
 		return returner;
-    }
+	};
 
-    // Dusty direct all-coin withdraw, returns the number s >= 0 so that amounts_out + dust = s*B0.
-    // The normal all-coin withdraw (take this exact amount of lp and give however much balances out)
-    // should be done directly without this function -- just burn the lp and give the user
-    // lp/total_lp * balance_i in each coordinate. This function is for finding how much lp it takes to
-    // ensure that at least amounts_out comes out.
-    public static calcAllCoinWithdraw = (
+	// Dusty direct all-coin withdraw, returns the number s >= 0 so that amounts_out + dust = s*B0.
+	// The normal all-coin withdraw (take this exact amount of lp and give however much balances out)
+	// should be done directly without this function -- just burn the lp and give the user
+	// lp/total_lp * balance_i in each coordinate. This function is for finding how much lp it takes to
+	// ensure that at least amounts_out comes out.
+	public static calcAllCoinWithdraw = (
 		pool: PoolObject,
-		amountsOut: CoinsToBalance,
-    ): CoinsToBalance => {
+		amountsOut: CoinsToBalance
+	): CoinsToBalance => {
 		let coins = pool.coins;
 
-        let balance;
-        let amountOut;
+		let balance;
+		let amountOut;
 
-        let s;
-        let sMax = 0;
-        for (let [coinType, coin] of Object.entries(coins)) {
+		let s;
+		let sMax = 0;
+		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0));
 
-            s = amountOut / balance;
+			s = amountOut / balance;
 
-            if (s > sMax) sMax = s;
-        };
+			if (s > sMax) sMax = s;
+		}
 
 		let returner: CoinsToBalance = {};
 		for (let coinType of Object.keys(coins))
-			returner[coinType] = Helpers.blendedOperations.mulNBB(sMax, amountsOut[coinType] || BigInt(0));
+			returner[coinType] = Helpers.blendedOperations.mulNBB(
+				sMax,
+				amountsOut[coinType] || BigInt(0)
+			);
 		return returner;
-    }
+	};
 
-    // This function calculates the balance of a given token (index) given all the other balances (combined in p0, s0)
+	// This function calculates the balance of a given token (index) given all the other balances (combined in p0, s0)
 	// and the invariant along with an initial estimate. It is useful for 1d optimization.
 	private static getTokenBalanceGivenInvariantAndAllOtherBalances = (
 		flatness: number,
@@ -1171,19 +1217,19 @@ export class CmmmCalculations {
 		throw Error("Newton diverged");
 	};
 
-    // Compute the invariant before swap and pseudoinvariant (invariant considering fees)
-    // after the swap and see if they are the same up to a tolerance.
-    // It also checks that this balance does not drain the pool i.e. the final balance is at least 1.
-    // The scalars are here to avoid unnecessary vector creation. In most calls one scalar will be 10^18 (1).
-    public static checkValidSwap = (
+	// Compute the invariant before swap and pseudoinvariant (invariant considering fees)
+	// after the swap and see if they are the same up to a tolerance.
+	// It also checks that this balance does not drain the pool i.e. the final balance is at least 1.
+	// The scalars are here to avoid unnecessary vector creation. In most calls one scalar will be 10^18 (1).
+	public static checkValidSwap = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
 		amountsInScalar: LocalNumber,
 		amountsOut: CoinsToBalance,
-		amountsOutScalar: LocalNumber,
-    ): boolean => {
+		amountsOutScalar: LocalNumber
+	): boolean => {
 		let coins = pool.coins;
-        let flatness = Fixed.directCast(pool.flatness);
+		let flatness = Fixed.directCast(pool.flatness);
 
 		// balance = balances[i]
 		let balance;
@@ -1207,12 +1253,18 @@ export class CmmmCalculations {
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
-            amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0)) * amountsInScalar;
-            amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0)) * amountsOutScalar;
-            if (amountIn > 0 && amountOut > 0) return false;
-            feedAmountIn = amountIn * (1 - Fixed.directCast(coin.tradeFeeIn));
-            feedAmountOut = amountOut == 0? 0:
-				amountOut / (1 - Fixed.directCast(coin.tradeFeeOut));
+			amountIn =
+				Fixed.convertFromInt(amountsIn[coinType] || BigInt(0)) *
+				amountsInScalar;
+			amountOut =
+				Fixed.convertFromInt(amountsOut[coinType] || BigInt(0)) *
+				amountsOutScalar;
+			if (amountIn > 0 && amountOut > 0) return false;
+			feedAmountIn = amountIn * (1 - Fixed.directCast(coin.tradeFeeIn));
+			feedAmountOut =
+				amountOut == 0
+					? 0
+					: amountOut / (1 - Fixed.directCast(coin.tradeFeeOut));
 
 			postbalance = balance + amountIn;
 			if (amountOut > postbalance + 1) return false;
@@ -1253,16 +1305,21 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				CmmmCalculations.validityTolerance
-			)
-        );
-    };
+				Fixed.fixedOneN
+			) ||
+				Helpers.closeEnough(
+					preinvariant,
+					pseudoinvariant,
+					CmmmCalculations.validityTolerance
+				))
+		);
+	};
 
-    // Compute the invariant before swap and pseudoinvariant (invariant considering fees)
-    // after the swap and see if they are the same up to a tolerance.
-    // It also checks that this balance does not drain the pool i.e. the final balance is at least 1.
-    public static checkValid1dSwap = (
-        pool: PoolObject,
+	// Compute the invariant before swap and pseudoinvariant (invariant considering fees)
+	// after the swap and see if they are the same up to a tolerance.
+	// It also checks that this balance does not drain the pool i.e. the final balance is at least 1.
+	public static checkValid1dSwap = (
+		pool: PoolObject,
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
 		amountInB: Balance,
@@ -1360,14 +1417,19 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				CmmmCalculations.validityTolerance
-			)
-        );
-    };
+				Fixed.fixedOneN
+			) ||
+				Helpers.closeEnough(
+					preinvariant,
+					pseudoinvariant,
+					CmmmCalculations.validityTolerance
+				))
+		);
+	};
 
-    // A fixed amount investment is a swap followed by an all coin investment. This function checks that the
-    // intermediate swap is allowed and corresponds to the claimed lp ratio.
-    public static checkValidDeposit = (
+	// A fixed amount investment is a swap followed by an all coin investment. This function checks that the
+	// intermediate swap is allowed and corresponds to the claimed lp ratio.
+	public static checkValidDeposit = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
 		lpRatioRaw: OnChainScalar
@@ -1406,7 +1468,7 @@ export class CmmmCalculations {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
 			amount = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
-            postbalance = lpRatio * (balance + amount);
+			postbalance = lpRatio * (balance + amount);
 
 			if (postbalance >= balance) {
 				// use fee in
@@ -1456,10 +1518,15 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				CmmmCalculations.validityTolerance
-			)
-        );
-    };
+				Fixed.fixedOneN
+			) ||
+				Helpers.closeEnough(
+					preinvariant,
+					pseudoinvariant,
+					CmmmCalculations.validityTolerance
+				))
+		);
+	};
 
 	// A fixed lp withdraw is an all coin withdraw followed by a swap.
 	// This function checks that the swap is valid.
@@ -1500,37 +1567,38 @@ export class CmmmCalculations {
 			balance = Fixed.convertFromInt(coin.balance);
 			scaledBalance = lpRatio * balance;
 			weight = Fixed.directCast(coin.weight);
-            amount = Fixed.convertFromInt(amountsOutSrc[coinType] || BigInt(0));
-            if (amount > scaledBalance + 1) return false;
-            postbalance = balance - amount;
+			amount = Fixed.convertFromInt(amountsOutSrc[coinType] || BigInt(0));
+			if (amount > scaledBalance + 1) return false;
+			postbalance = balance - amount;
 
-            if (postbalance >= scaledBalance) {
-                // use fee in
-                diff = postbalance - scaledBalance;
-                pseudodiff = diff * Fixed.complement(
-					Fixed.directCast(coin.tradeFeeIn)
-				);
-                pseudobalance = scaledBalance + pseudodiff;
-            } else {
-                // use fee out
-                diff = scaledBalance - postbalance;
-                pseudodiff = diff == 0? 0: diff / Fixed.complement(
-					Fixed.directCast(coin.tradeFeeOut)
-				);
-                if (pseudodiff > scaledBalance + 1) return false;
-                pseudobalance = scaledBalance - pseudodiff;
-            };
+			if (postbalance >= scaledBalance) {
+				// use fee in
+				diff = postbalance - scaledBalance;
+				pseudodiff =
+					diff * Fixed.complement(Fixed.directCast(coin.tradeFeeIn));
+				pseudobalance = scaledBalance + pseudodiff;
+			} else {
+				// use fee out
+				diff = scaledBalance - postbalance;
+				pseudodiff =
+					diff == 0
+						? 0
+						: diff /
+						  Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
+				if (pseudodiff > scaledBalance + 1) return false;
+				pseudobalance = scaledBalance - pseudodiff;
+			}
 
-            preprod += weight * Math.log(scaledBalance);
+			preprod += weight * Math.log(scaledBalance);
 			presum += weight * scaledBalance;
-            postprod += weight * Math.log(postbalance);
-            postsum += weight * postbalance;
-            pseudoprod += weight * Math.log(pseudobalance);
-            pseudosum += weight * pseudobalance;
-        };
-        preprod = Math.exp(preprod);
-        postprod = Math.exp(postprod);
-        pseudoprod = Math.exp(pseudoprod);
+			postprod += weight * Math.log(postbalance);
+			postsum += weight * postbalance;
+			pseudoprod += weight * Math.log(pseudobalance);
+			pseudosum += weight * pseudobalance;
+		}
+		preprod = Math.exp(preprod);
+		postprod = Math.exp(postprod);
+		pseudoprod = Math.exp(pseudoprod);
 
 		let preinvariant = CmmmCalculations.calcInvariantQuadratic(
 			preprod,
@@ -1553,233 +1621,269 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				CmmmCalculations.validityTolerance
-			)
-        );
-    };
+				Fixed.fixedOneN
+			) ||
+				Helpers.closeEnough(
+					preinvariant,
+					pseudoinvariant,
+					CmmmCalculations.validityTolerance
+				))
+		);
+	};
 
-    // get an estimate for outGivenIn based on the spot price
-    public static getEstimateOutGivenIn = (
-        pool: PoolObject,
+	// get an estimate for outGivenIn based on the spot price
+	public static getEstimateOutGivenIn = (
+		pool: PoolObject,
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
-		amountIn: Balance,
-    ): Balance => Helpers.blendedOperations.mulNBB(
-        CmmmCalculations.calcSpotPriceWithFees(
-			pool,
-			coinTypeIn,
-			coinTypeOut,
-		),
-		amountIn
-	);
+		amountIn: Balance
+	): Balance =>
+		Helpers.blendedOperations.mulNBB(
+			CmmmCalculations.calcSpotPriceWithFees(
+				pool,
+				coinTypeIn,
+				coinTypeOut
+			),
+			amountIn
+		);
 
-    // get an estimate for inGivenOut based on the spot price
-    public static getEstimateInGivenOut = (
-        pool: PoolObject,
+	// get an estimate for inGivenOut based on the spot price
+	public static getEstimateInGivenOut = (
+		pool: PoolObject,
 		coinTypeIn: CoinType,
 		coinTypeOut: CoinType,
-		amountOut: Balance,
-    ): Balance => Helpers.blendedOperations.mulNBB(
-        1 / CmmmCalculations.calcSpotPriceWithFees(
-			pool,
-			coinTypeIn,
-			coinTypeOut,
-		),
-		amountOut
-	);
+		amountOut: Balance
+	): Balance =>
+		Helpers.blendedOperations.mulNBB(
+			1 /
+				CmmmCalculations.calcSpotPriceWithFees(
+					pool,
+					coinTypeIn,
+					coinTypeOut
+				),
+			amountOut
+		);
 
-    // get an estimate for swapFixedIn using the spot prices
-    // returns t > 0 such that t*amountsOutDirection agrees with amountsIn wrt spot prices
-    public static getEstimateSwapFixedIn = (
-        pool: PoolObject,
-		amountsIn: CoinsToBalance,
-		amountsOutDirection: CoinsToBalance,
-    ): LocalNumber => {
-        // find t such that Ain + t*Aout lies in the tangent plane to the swap surface at balances in the given directions
-
-        // the gradient of the invariant function with fees is (with spot body E)
-        // Win * (1 - Sin) * (E + 2*A * Bin) / Bin or
-        // Wout * (E + 2*A * Bout) / (1-Sout) * Bout
-        // depending on whether the balance is coming in or going out
-
-		let coins = pool.coins;
-        let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
-        let a = Fixed.directCast(pool.flatness);
-
-        let balance;
-        let grad;
-        let amountIn;
-        let amountOut;
-        let inDotGrad = 0;
-        let outDotGrad = 0;
-        for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.convertFromInt(coin.balance);
-			amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
-			amountOut = Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
-            grad = amountIn == 0? 
-                Fixed.directCast(coin.weight) * (spotBody + 2 * a * balance)
-				/ (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
-			    :Fixed.directCast(coin.weight) * (1 - Fixed.directCast(coin.tradeFeeIn))
-                * (spotBody + 2 * a * balance) / balance;
-            inDotGrad += amountIn * grad;
-            outDotGrad += amountOut * grad;
-        }
-
-        return inDotGrad / outDotGrad;
-    };
-
-    // get an estimate for swapFixedOut using the spot prices
-    // returns t > 0 such that t*amountsInDirection agrees with amountsOut wrt spot prices
-    public static getEstimateSwapFixedOut = (
-        pool: PoolObject,
-		amountsInDirection: CoinsToBalance,
-		amountsOut: CoinsToBalance,
-    ): LocalNumber => {
-        // find t such that Ain + t*Aout lies in the tangent plane to the swap surface at balances in the given directions
-
-        // the gradient of the invariant function with fees is (with spot body E)
-        // Win * (1 - Sin) * (E + 2*A * Bin) / Bin or
-        // Wout * (E + 2*A * Bout) / (1-Sout) * Bout
-        // depending on whether the balance is coming in or going out
-
-        let coins = pool.coins;
-        let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
-        let a = Fixed.directCast(pool.flatness);
-
-        let balance;
-        let grad;
-        let amountIn;
-        let amountOut;
-        let inDotGrad = 0;
-        let outDotGrad = 0;
-        for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.convertFromInt(coin.balance);
-			amountIn = Fixed.convertFromInt(amountsInDirection[coinType] || BigInt(0));
-			amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0));
-            grad = amountIn == 0? 
-                Fixed.directCast(coin.weight) * (spotBody + 2 * a * balance)
-				/ (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
-			    :Fixed.directCast(coin.weight) * (1 - Fixed.directCast(coin.tradeFeeIn))
-                * (spotBody + 2 * a * balance) / balance;
-            inDotGrad += amountIn * grad;
-            outDotGrad += amountOut * grad;
-        }
-
-        return outDotGrad / inDotGrad;
-    };
-
-    // Calculate an estimate for lpRatio using the spot price (linear estiamtion)
-    // This estimation will be very good for small values in amountsIn
-    public static getEstimateDepositFixedAmounts = (
+	// get an estimate for swapFixedIn using the spot prices
+	// returns t > 0 such that t*amountsOutDirection agrees with amountsIn wrt spot prices
+	public static getEstimateSwapFixedIn = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
-    ): LocalNumber => {
-        // Initial estimate comes from testing the discontinuities and doing a linear
-        // approximation off the two closest test points. We use it to get the correct fees.
-        let r0 = CmmmCalculations.calcDepositFixedAmountsInitialEstimate(pool, amountsIn);
+		amountsOutDirection: CoinsToBalance
+	): LocalNumber => {
+		// find t such that Ain + t*Aout lies in the tangent plane to the swap surface at balances in the given directions
 
-        // Now r0 is on the correct side of B0 as the final t*(B0+Din). This tells us which fees apply.
-        // All we have to do is find the value of r for which r*(B0+Din) lies on the feed tangent plane at B0.
-
-        // the gradient of the invariant function with fees is (with spot body E)
-        // Win * (1 - Sin) * (E + 2*A * Bin) / Bin or
-        // Wout * (E + 2*A * Bout) / (1-Sout) * Bout
-        // depending on whether the balance is coming in or going out
+		// the gradient of the invariant function with fees is (with spot body E)
+		// Win * (1 - Sin) * (E + 2*A * Bin) / Bin or
+		// Wout * (E + 2*A * Bout) / (1-Sout) * Bout
+		// depending on whether the balance is coming in or going out
 
 		let coins = pool.coins;
-        let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
-        let a = Fixed.directCast(pool.flatness);
+		let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
+		let a = Fixed.directCast(pool.flatness);
 
-        // dot(B0, g)
-        let d1 = 0;
-        // dot(B0 + Din, g)
-        let d2 = 0;
+		let balance;
+		let grad;
+		let amountIn;
+		let amountOut;
+		let inDotGrad = 0;
+		let outDotGrad = 0;
+		for (let [coinType, coin] of Object.entries(coins)) {
+			balance = Fixed.convertFromInt(coin.balance);
+			amountIn = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
+			amountOut = Fixed.convertFromInt(
+				amountsOutDirection[coinType] || BigInt(0)
+			);
+			grad =
+				amountIn == 0
+					? (Fixed.directCast(coin.weight) *
+							(spotBody + 2 * a * balance)) /
+					  (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
+					: (Fixed.directCast(coin.weight) *
+							(1 - Fixed.directCast(coin.tradeFeeIn)) *
+							(spotBody + 2 * a * balance)) /
+					  balance;
+			inDotGrad += amountIn * grad;
+			outDotGrad += amountOut * grad;
+		}
 
-        let balance;
-        let weight;
-        let amount;
-        let grad;
-        let scaledAmount;
+		return inDotGrad / outDotGrad;
+	};
 
-        for (let [coinType, coin] of Object.entries(coins)) {
+	// get an estimate for swapFixedOut using the spot prices
+	// returns t > 0 such that t*amountsInDirection agrees with amountsOut wrt spot prices
+	public static getEstimateSwapFixedOut = (
+		pool: PoolObject,
+		amountsInDirection: CoinsToBalance,
+		amountsOut: CoinsToBalance
+	): LocalNumber => {
+		// find t such that Ain + t*Aout lies in the tangent plane to the swap surface at balances in the given directions
+
+		// the gradient of the invariant function with fees is (with spot body E)
+		// Win * (1 - Sin) * (E + 2*A * Bin) / Bin or
+		// Wout * (E + 2*A * Bout) / (1-Sout) * Bout
+		// depending on whether the balance is coming in or going out
+
+		let coins = pool.coins;
+		let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
+		let a = Fixed.directCast(pool.flatness);
+
+		let balance;
+		let grad;
+		let amountIn;
+		let amountOut;
+		let inDotGrad = 0;
+		let outDotGrad = 0;
+		for (let [coinType, coin] of Object.entries(coins)) {
+			balance = Fixed.convertFromInt(coin.balance);
+			amountIn = Fixed.convertFromInt(
+				amountsInDirection[coinType] || BigInt(0)
+			);
+			amountOut = Fixed.convertFromInt(amountsOut[coinType] || BigInt(0));
+			grad =
+				amountIn == 0
+					? (Fixed.directCast(coin.weight) *
+							(spotBody + 2 * a * balance)) /
+					  (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
+					: (Fixed.directCast(coin.weight) *
+							(1 - Fixed.directCast(coin.tradeFeeIn)) *
+							(spotBody + 2 * a * balance)) /
+					  balance;
+			inDotGrad += amountIn * grad;
+			outDotGrad += amountOut * grad;
+		}
+
+		return outDotGrad / inDotGrad;
+	};
+
+	// Calculate an estimate for lpRatio using the spot price (linear estiamtion)
+	// This estimation will be very good for small values in amountsIn
+	public static getEstimateDepositFixedAmounts = (
+		pool: PoolObject,
+		amountsIn: CoinsToBalance
+	): LocalNumber => {
+		// Initial estimate comes from testing the discontinuities and doing a linear
+		// approximation off the two closest test points. We use it to get the correct fees.
+		let r0 = CmmmCalculations.calcDepositFixedAmountsInitialEstimate(
+			pool,
+			amountsIn
+		);
+
+		// Now r0 is on the correct side of B0 as the final t*(B0+Din). This tells us which fees apply.
+		// All we have to do is find the value of r for which r*(B0+Din) lies on the feed tangent plane at B0.
+
+		// the gradient of the invariant function with fees is (with spot body E)
+		// Win * (1 - Sin) * (E + 2*A * Bin) / Bin or
+		// Wout * (E + 2*A * Bout) / (1-Sout) * Bout
+		// depending on whether the balance is coming in or going out
+
+		let coins = pool.coins;
+		let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
+		let a = Fixed.directCast(pool.flatness);
+
+		// dot(B0, g)
+		let d1 = 0;
+		// dot(B0 + Din, g)
+		let d2 = 0;
+
+		let balance;
+		let weight;
+		let amount;
+		let grad;
+		let scaledAmount;
+
+		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
-			amount = balance + Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
+			amount =
+				balance +
+				Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
 			scaledAmount = amount * r0;
 
-            grad = scaledAmount < balance? 
-                // use amount out
-				(weight * (spotBody + 2 * a * balance))
-				/ (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
-            :
-                // use amount in
-				weight * (1 - Fixed.directCast(coin.tradeFeeIn))
-				* (spotBody + 2 * a * balance) / balance
-            ;
+			grad =
+				scaledAmount < balance
+					? // use amount out
+					  (weight * (spotBody + 2 * a * balance)) /
+					  (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
+					: // use amount in
+					  (weight *
+							(1 - Fixed.directCast(coin.tradeFeeIn)) *
+							(spotBody + 2 * a * balance)) /
+					  balance;
 
-            d1 += balance * grad;
+			d1 += balance * grad;
 			d2 += amount * grad;
-        }
+		}
 
-        return d1 / d2
-    };
+		return d1 / d2;
+	};
 
-    // Calculate an estimate for amountsOut using the spot price (linear estiamtion)
-    // This estimation will be very good for lpRatios close to 1
-    // Since we still need the out vector for its direction we return t s.t. t*amountsOutDirection is the estimate.
-    public static getEstimateWithdrawFlpAmountsOut = (
-        pool: PoolObject,
+	// Calculate an estimate for amountsOut using the spot price (linear estiamtion)
+	// This estimation will be very good for lpRatios close to 1
+	// Since we still need the out vector for its direction we return t s.t. t*amountsOutDirection is the estimate.
+	public static getEstimateWithdrawFlpAmountsOut = (
+		pool: PoolObject,
 		amountsOutDirection: CoinsToBalance,
-		lpRatio: LocalNumber,
-    ): LocalNumber => {
-        // Initial estimate comes from testing the discontinuities and doing a linear
-        // approximation off the two closest test points. We use it to get the correct fees.
-        let [r0, _rDrain] = CmmmCalculations.calcWithdrawFlpAmountsOutInitialEstimate(pool, amountsOutDirection, lpRatio);
+		lpRatio: LocalNumber
+	): LocalNumber => {
+		// Initial estimate comes from testing the discontinuities and doing a linear
+		// approximation off the two closest test points. We use it to get the correct fees.
+		let [r0, _rDrain] =
+			CmmmCalculations.calcWithdrawFlpAmountsOutInitialEstimate(
+				pool,
+				amountsOutDirection,
+				lpRatio
+			);
 
-        // Now r0 is on the correct side of R*B0 as the final B0-t*Deout. This tells us which fees apply.
-        // All we have to do is find the value of t for which B0-t*Deout lies on the feed tangent plane at R*B0.
+		// Now r0 is on the correct side of R*B0 as the final B0-t*Deout. This tells us which fees apply.
+		// All we have to do is find the value of t for which B0-t*Deout lies on the feed tangent plane at R*B0.
 
-        // the gradient of the invariant function with fees is (with spot body E)
-        // Win * (1 - Sin) * (E + 2*A * Bin) / Bin or
-        // Wout * (E + 2*A * Bout) / (1-Sout) * Bout
-        // depending on whether the balance is coming in or going out
+		// the gradient of the invariant function with fees is (with spot body E)
+		// Win * (1 - Sin) * (E + 2*A * Bin) / Bin or
+		// Wout * (E + 2*A * Bout) / (1-Sout) * Bout
+		// depending on whether the balance is coming in or going out
 
 		let coins = pool.coins;
-        // Swap center is R*B0, not B0. Luckily the spot body formula is homogeneous.
-        let spotBody = CmmmCalculations.calcSpotPriceBody(pool) * lpRatio;
-        let a = Fixed.directCast(pool.flatness);
+		// Swap center is R*B0, not B0. Luckily the spot body formula is homogeneous.
+		let spotBody = CmmmCalculations.calcSpotPriceBody(pool) * lpRatio;
+		let a = Fixed.directCast(pool.flatness);
 
-        // dot(B0, g)
-        let d1 = 0;
-        // dot(Deout, g)
-        let d2 = 0;
+		// dot(B0, g)
+		let d1 = 0;
+		// dot(Deout, g)
+		let d2 = 0;
 
-        let balance;
-        let scaledAmount;
-        let weight;
-        let amount;
-        let grad;
+		let balance;
+		let scaledAmount;
+		let weight;
+		let amount;
+		let grad;
 
-        for (let [coinType, coin] of Object.entries(coins)) {
+		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
-			amount = balance + Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
+			amount =
+				balance +
+				Fixed.convertFromInt(
+					amountsOutDirection[coinType] || BigInt(0)
+				);
 			scaledAmount = amount * r0;
 
-            grad = scaledAmount < balance? 
-                // use amount out
-				(weight * (spotBody + 2 * a * balance))
-				/ (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
-            :
-                // use amount in
-				weight * (1 - Fixed.directCast(coin.tradeFeeIn))
-				* (spotBody + 2 * a * balance) / balance
-            ;
+			grad =
+				scaledAmount < balance
+					? // use amount out
+					  (weight * (spotBody + 2 * a * balance)) /
+					  (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
+					: // use amount in
+					  (weight *
+							(1 - Fixed.directCast(coin.tradeFeeIn)) *
+							(spotBody + 2 * a * balance)) /
+					  balance;
 
-            d1 += balance * grad;
+			d1 += balance * grad;
 			d2 += amount * grad;
-        }
+		}
 
-        return (1 - lpRatio) * d1 / d2
-    };
+		return ((1 - lpRatio) * d1) / d2;
+	};
 }
