@@ -850,7 +850,7 @@ export class CmmmCalculations {
 				part4;
 
 			if (
-				Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)
+				i > 15 && Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)
 			) {
 				let returner: CoinsToBalance = {};
 				for (let coinType of Object.keys(coins)) {
@@ -922,17 +922,25 @@ export class CmmmCalculations {
 		cfMin = 0;
 		tMin = Number.POSITIVE_INFINITY;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			t =
-				(Fixed.convertFromInt(coin.balance) *
-					(1 - Fixed.directCast(coin.tradeFeeOut) * lpr)) /
-				Fixed.convertFromInt(amountsOutDirection[coinType] || BigInt(0));
+			amountOut = Fixed.convertFromInt(
+				amountsOutDirection[coinType] || BigInt(0)
+			);
+			if (amountOut == 0) continue;
+			t = (
+				Fixed.convertFromInt(coin.balance) *
+				Fixed.complement(
+					Fixed.directCast(coin.tradeFeeOut) * lpRatio
+				)
+			) / amountOut;
 			if (t < tMin) tMin = t;
 		}
 		tDrain = tMin;
 
 		// remaining test points are the CF discontinuities: where B0 - t*D = R*B0
 		for (let [coinTypeT, coinT] of Object.entries(coins)) {
-			amountOut = Fixed.convertFromInt(amountsOutDirection[coinTypeT]);
+			amountOut = Fixed.convertFromInt(
+				amountsOutDirection[coinTypeT] || BigInt(0)
+			);
 			if (amountOut == 0) continue;
 			balance = Fixed.convertFromInt(coinT.balance);
 			t = (balance * lpc) / amountOut;
@@ -954,13 +962,13 @@ export class CmmmCalculations {
 				part1 = balance - part1;
 				part2 = lpr * balance;
 				part3 =
-					part1 >= part2
-						? part2 +
-						  (1 - Fixed.directCast(coin.tradeFeeIn)) *
-								(part1 - part2)
-						: part2 -
-						  (part1 - part1) /
-								(1 - Fixed.directCast(coin.tradeFeeOut));
+					part1 >= part2?
+						part2 + Fixed.complement(
+							Fixed.directCast(coin.tradeFeeIn)
+						) * (part1 - part2)
+					: part2 - (part2 - part1) / Fixed.complement(
+						Fixed.directCast(coin.tradeFeeOut)
+					);
 				prod += weight * Math.log(part3);
 				sum += weight * part3;
 			}
@@ -986,15 +994,13 @@ export class CmmmCalculations {
 		}
 
 		// initial estimate is the linear interpolation between discontinuity bounds
-		t =
-			cfMax == cfMin
-				? tMin
-				: (tMin * cfMax +
-						tMax * scaledInvariant -
-						tMax * cfMin -
-						tMin * scaledInvariant) /
-						cfMax -
-				  cfMin;
+		t = cfMax == cfMin?
+			tMin:
+			(tMin * cfMax
+				+ tMax * scaledInvariant
+				- tMax * cfMin
+				- tMin * scaledInvariant
+			) / (cfMax - cfMin);
 
 	    return [t, tDrain];
 	}
