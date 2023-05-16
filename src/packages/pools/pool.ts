@@ -84,6 +84,13 @@ export class Pool extends Caller {
 		);
 	}
 
+	public async getAllCoinWithdrawTransaction(inputs: ApiPoolWithdrawBody) {
+		return this.fetchApiTransaction<ApiPoolWithdrawBody>(
+			"transactions/all-coin-withdraw",
+			inputs
+		);
+	}
+
 	public async getTradeTransaction(inputs: ApiPoolTradeBody) {
 		return this.fetchApiTransaction<ApiPoolTradeBody>(
 			"transactions/trade",
@@ -291,6 +298,23 @@ export class Pool extends Caller {
 				throw new Error(`amountsOut[${coin}] <= 0 `);
 		}
 
+		return amountsOut;
+	};
+
+	public getAllCoinWithdrawAmountsOut = (inputs: {
+		lpRatio: number;
+		// PRODUCTION: account for referral in calculation
+		referral?: boolean;
+	}): CoinsToBalance => {
+		const amountsOut = Object.entries(this.pool.coins).reduce(
+			(acc, [coin, info]) => {
+				return {
+					...acc,
+					[coin]: Number(info.balance) * inputs.lpRatio,
+				};
+			},
+			{}
+		);
 		return amountsOut;
 	};
 
