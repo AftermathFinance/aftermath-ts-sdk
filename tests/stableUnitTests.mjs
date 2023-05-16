@@ -748,7 +748,6 @@ const tests = {
         };
 
         let amountIn = 1727838591n;
-//        let expectedAmountOut = 172758182n;
         let indexIn = 2;
         let indexOut = 3;
 
@@ -758,6 +757,40 @@ const tests = {
             "coin" + (indexIn + 1),
             "coin" + (indexOut + 1),
             amountIn,
+        );
+        return true;
+    },
+    testDoublePool: () => {
+        let flatness = 0.712;
+
+        let coins = {
+            coin1: {
+                balance: 10_000_000_000n,
+                weight: 500_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 40_000_000_000_000_000n,
+            },
+            coin2: {
+                balance: 40_000_000_000n,
+                weight: 500_000_000_000_000_000n,
+                tradeFeeIn: 200_000_000_000_000_000n,
+                tradeFeeOut: 20_000_000_000_000_000n,
+            },
+        };
+
+        let pool = {
+            flatness: Fixed.directUncast(flatness),
+            coins: coins,
+        };
+
+        let amountsIn = {
+            coin0: 10_000_000_000n,
+            coin1: 40_000_000_000n,
+        };
+
+        CmmmCalculations.calcDepositFixedAmounts(
+            pool,
+            amountsIn,
         );
         return true;
     }
