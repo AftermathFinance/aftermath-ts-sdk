@@ -1270,7 +1270,6 @@ export class CmmmCalculations {
 				part4;
 
 			if (
-				i > 15 &&
 				Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)
 			) {
 				let returner: CoinsToBalance = {};
@@ -1690,7 +1689,7 @@ export class CmmmCalculations {
 		);
 
 		return (
-			postinvariant >= preinvariant &&
+			postinvariant * (1 + CmmmCalculations.tolerance) >= preinvariant &&
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
@@ -1802,7 +1801,7 @@ export class CmmmCalculations {
 		);
 
 		return (
-			postinvariant >= preinvariant &&
+			postinvariant * (1 + CmmmCalculations.tolerance) >= preinvariant &&
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
@@ -1903,7 +1902,7 @@ export class CmmmCalculations {
 		);
 
 		return (
-			postinvariant >= preinvariant &&
+			postinvariant * (1 + CmmmCalculations.tolerance) >= preinvariant &&
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
@@ -2006,7 +2005,7 @@ export class CmmmCalculations {
 		);
 
 		return (
-			postinvariant >= preinvariant &&
+			postinvariant * (1 + CmmmCalculations.tolerance) >= preinvariant &&
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,

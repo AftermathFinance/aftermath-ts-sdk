@@ -795,7 +795,7 @@ const tests = {
         return true;
     },
     testDoublePool2: () => {
-        let flatness = 0.712;
+        let flatness = 1;
 
         let coins = {
             coin1: {
@@ -828,6 +828,17 @@ const tests = {
         );
         return true;
     },
+    testWithdraw1: () => {
+        return testWithdraw(
+            [35_000_000_000, 35_000_000_000],
+            [.5, .5],
+            [.1, .1],
+            [0, 0],
+            1,
+            [1, 1],
+            18.28 / 35,
+        );
+    }
 }
 
 function testAll() {
