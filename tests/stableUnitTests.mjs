@@ -838,7 +838,15 @@ const tests = {
             [1, 1],
             18.28 / 35,
         );
-    }
+    },
+    testDeposit: () => testDeposit(
+        [35000000000, 35000000000],
+        [.5, .5],
+        [.1, .1],
+        [0, 0],
+        1,
+        [100, 100],
+    ),
 }
 
 function testAll() {
@@ -876,6 +884,38 @@ function testWithdraw(
 		return false;
 	}
 	return true;
+}
+
+function testDeposit(
+    balances,
+    weights,
+    feesIn,
+    feesOut,
+    flatness,
+    amountsIn,
+) {
+    let pool = makePool(
+        balances,
+        weights,
+        feesIn,
+        feesOut,
+        flatness,
+    );
+
+    let bigAmountsIn = {};
+    for (let i = 0; i < balances.length; ++i) {
+        bigAmountsIn["coin"+i] = Fixed.convertToInt(amountsIn[i]);
+    }
+
+    try {
+        CmmmCalculations.calcDepositFixedAmounts(
+            pool,
+            bigAmountsIn,
+        )
+    } catch (e) {
+        return false;
+    }
+    return true;
 }
 
 function fixWeights(weights) {
