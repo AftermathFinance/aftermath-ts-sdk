@@ -265,7 +265,7 @@ export class Pool extends Caller {
 
 		const lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
 		const lpAmountOut = BigInt(
-			Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
+			Math.floor(Number(this.pool.lpCoinSupply) * (1 / lpRatio - 1))
 		);
 
 		return {
