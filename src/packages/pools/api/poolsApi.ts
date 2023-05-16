@@ -191,7 +191,6 @@ export class PoolsApi {
 		walletAddress: SuiAddress;
 		pool: Pool;
 		lpCoinAmount: Balance;
-		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<SerializedTransaction> => {
 		const transaction = await this.Helpers.fetchBuildAllCoinWithdrawTx(
