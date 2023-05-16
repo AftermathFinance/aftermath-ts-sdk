@@ -157,7 +157,6 @@ export interface ApiPoolWithdrawBody {
 export interface ApiPoolAllCoinWithdrawBody {
 	walletAddress: SuiAddress;
 	lpCoinAmount: Balance;
-	slippage: Slippage;
 	referrer?: SuiAddress;
 }
 
