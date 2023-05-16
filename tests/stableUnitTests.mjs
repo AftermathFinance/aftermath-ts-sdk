@@ -839,14 +839,36 @@ const tests = {
             18.28 / 35,
         );
     },
-    testDeposit: () => testDeposit(
-        [35000000000, 35000000000],
-        [.5, .5],
-        [.1, .1],
-        [0, 0],
-        1,
-        [100, 100],
-    ),
+    testDeposit: () => {
+        let balances = [35_000_000_000_000, 35_000_000_000_000];
+        let weights = [.5, .5];
+        let feesIn = [.1, .1];
+        let feesOut = [0, 0];
+        let amountsIn = [100_000_000_000, 100_000_000_000];
+        let flatness = 1;
+        let expected_ratio = 997150997150997150n;
+        let pool = makePool(
+            balances,
+            weights,
+            feesIn,
+            feesOut,
+            flatness
+        );
+        let amountsInO = {
+            coin0: Fixed.convertToInt(amountsIn[0]),
+            coin1: Fixed.convertToInt(amountsIn[1]),
+        };
+        let ratio = CmmmCalculations.calcDepositFixedAmounts(
+            pool,
+            amountsInO
+        );
+        if (!Helpers.closeEnoughBigInt(
+            expected_ratio,
+            ratio,
+            0.0000000001
+        )) return false;
+        return true;
+    }
 }
 
 function testAll() {
