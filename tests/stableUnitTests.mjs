@@ -793,7 +793,41 @@ const tests = {
             amountsIn,
         );
         return true;
-    }
+    },
+    testDoublePool2: () => {
+        let flatness = 0.712;
+
+        let coins = {
+            coin1: {
+                balance: 10_000_000_000n,
+                weight: 500_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 40_000_000_000_000_000n,
+            },
+            coin2: {
+                balance: 10_000_000_000n,
+                weight: 500_000_000_000_000_000n,
+                tradeFeeIn: 200_000_000_000_000_000n,
+                tradeFeeOut: 20_000_000_000_000_000n,
+            },
+        };
+
+        let pool = {
+            flatness: Fixed.directUncast(flatness),
+            coins: coins,
+        };
+
+        let amountsIn = {
+            coin0: 10_000_000_000n,
+            coin1: 10_000_000_000n,
+        };
+
+        CmmmCalculations.calcDepositFixedAmounts(
+            pool,
+            amountsIn,
+        );
+        return true;
+    },
 }
 
 function testAll() {
