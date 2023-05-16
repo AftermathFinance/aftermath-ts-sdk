@@ -187,6 +187,21 @@ export class PoolsApi {
 		);
 	};
 
+	public fetchAllCoinWithdrawTransaction = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		lpCoinAmount: Balance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		const transaction = await this.Helpers.fetchBuildAllCoinWithdrawTx(
+			inputs
+		);
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+			transaction
+		);
+	};
+
 	public fetchTradeTransaction = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
@@ -380,11 +395,29 @@ export class PoolsApi {
 	) => {
 		// PRODUCTION: remove all notions of sdk from api functions !
 
-		const lpCoinPoolObjectIds = await Promise.all(
-			lpCoins.map((lpCoinType) =>
-				provider.Pools().getPoolObjectIdForLpCoinType({ lpCoinType })
-			)
+		const unsafeLpCoinPoolObjectIds = await Promise.all(
+			lpCoins.map(async (lpCoinType) => {
+				try {
+					return await provider
+						.Pools()
+						.getPoolObjectIdForLpCoinType({ lpCoinType });
+				} catch (e) {
+					return "";
+				}
+			})
 		);
+
+		const safeIndexes: number[] = [];
+		const lpCoinPoolObjectIds = unsafeLpCoinPoolObjectIds.filter(
+			(id, index) => {
+				const isValid = id !== "";
+
+				if (isValid) safeIndexes.push(index);
+
+				return isValid;
+			}
+		);
+
 		const lpCoinPools = await provider
 			.Pools()
 			.getPools({ objectIds: lpCoinPoolObjectIds });
@@ -396,10 +429,15 @@ export class PoolsApi {
 		let lpCoinsToPrice: CoinsToPrice = {};
 
 		for (const [index, lpCoin] of lpCoins.entries()) {
-			const stats = poolStats[index];
+			let coinPrice = -1;
+
+			if (safeIndexes.includes(index)) {
+				coinPrice = poolStats[index].lpPrice;
+			}
+
 			lpCoinsToPrice = {
 				...lpCoinsToPrice,
-				[lpCoin]: stats.lpPrice,
+				[lpCoin]: coinPrice,
 			};
 		}
 
