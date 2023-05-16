@@ -986,7 +986,7 @@ export class CmmmCalculations {
 		throw Error("Newton diverged");
 	};
 
-	// Return the expected lp ratio for this deposit
+    // Return the expected lp ratio for this deposit
 	public static calcDepositFixedAmounts = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance
