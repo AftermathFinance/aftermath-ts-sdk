@@ -166,7 +166,7 @@ export class NftAmmMarket extends Caller {
 		lpCoinAmount: Balance;
 		referral?: boolean;
 	}): Balance => {
-		const lpRatio = this.pool.getWithdrawLpRatio({
+		const lpRatio = this.pool.getMultiCoinWithdrawLpRatio({
 			lpCoinAmountOut: inputs.lpCoinAmount,
 		});
 

@@ -636,7 +636,7 @@ export class PoolsApiHelpers {
 				}
 			);
 
-		const lpRatio = pool.getWithdrawLpRatio({
+		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
 			lpCoinAmountOut: lpCoinAmount,
 		});
 

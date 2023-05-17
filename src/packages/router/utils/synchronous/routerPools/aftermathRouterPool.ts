@@ -91,7 +91,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		// withdraw
 
 		if (inputs.coinInType === this.pool.lpCoinType) {
-			const lpRatio = this.poolClass.getWithdrawLpRatio({
+			const lpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
 				lpCoinAmountOut: inputs.coinInAmount,
 			});
 
@@ -165,7 +165,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 
 		// deposit
 		if (inputs.coinOutType === this.pool.lpCoinType) {
-			const expectedLpRatio = this.poolClass.getWithdrawLpRatio({
+			const expectedLpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
 				lpCoinAmountOut: inputs.expectedAmountOut,
 			});
 
@@ -214,7 +214,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 
 		// reverse deposit (withdraw)
 		if (inputs.coinOutType === this.pool.lpCoinType) {
-			const lpRatio = this.poolClass.getWithdrawLpRatio({
+			const lpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
 				lpCoinAmountOut: inputs.coinOutAmount,
 			});
 
