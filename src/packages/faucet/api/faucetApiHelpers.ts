@@ -36,10 +36,6 @@ export class FaucetApiHelpers {
 
 	public readonly addresses: FaucetAddresses;
 
-	public readonly coinTypes: {
-		af: CoinType;
-	};
-
 	public readonly eventTypes: {
 		mintCoin: AnyObjectType;
 		addCoin: AnyObjectType;
@@ -59,10 +55,6 @@ export class FaucetApiHelpers {
 		this.Provider = Provider;
 		this.addresses = addresses;
 
-		this.coinTypes = {
-			af: `${addresses.packages.faucet}::af::AF`,
-		};
-
 		this.eventTypes = {
 			mintCoin: this.mintCoinEventType(),
 			addCoin: this.addCoinEventType(),
@@ -73,13 +65,14 @@ export class FaucetApiHelpers {
 	//// Transcations
 	/////////////////////////////////////////////////////////////////////
 
-	public faucetAddCoinTransaction = (
-		treasuryCapId: ObjectId,
-		treasuryCapType: CoinType
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
+	public addCoinTx = (inputs: {
+		tx: TransactionBlock;
+		treasuryCapId: ObjectId;
+		treasuryCapType: AnyObjectType;
+	}) => {
+		const { tx, treasuryCapId, treasuryCapType } = inputs;
 
-		tx.moveCall({
+		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
@@ -91,19 +84,16 @@ export class FaucetApiHelpers {
 				tx.object(treasuryCapId),
 			],
 		});
-
-		return tx;
 	};
 
-	public faucetRequestCoinAmountTransaction = (
-		coinType: CoinType,
-		amount: Balance,
-		walletAddress: SuiAddress
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
-		tx.setSender(walletAddress);
+	public requestCoinAmountTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		amount: Balance;
+	}) => {
+		const { tx, coinType, amount } = inputs;
 
-		tx.moveCall({
+		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
@@ -115,16 +105,15 @@ export class FaucetApiHelpers {
 				tx.pure(amount.toString()),
 			],
 		});
-
-		return tx;
 	};
 
-	public faucetRequestCoinTransaction = (
-		coinType: CoinType
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
+	public requestCoinTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+	}) => {
+		const { tx, coinType } = inputs;
 
-		tx.moveCall({
+		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.faucet,
 				FaucetApiHelpers.constants.faucetModuleName,
@@ -133,8 +122,6 @@ export class FaucetApiHelpers {
 			typeArguments: [coinType],
 			arguments: [tx.object(this.addresses.objects.faucet)],
 		});
-
-		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////

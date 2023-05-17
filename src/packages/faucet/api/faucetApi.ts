@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Faucet } from "../faucet";
-import { EventId, SuiAddress } from "@mysten/sui.js";
+import { EventId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { FaucetApiCasting } from "./faucetApiCasting";
 import { CoinType } from "../../coin/coinTypes";
 import {
@@ -53,27 +53,32 @@ export class FaucetApi {
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestCoinAmountTransaction = async (
-		coin: CoinType,
-		walletAddress: SuiAddress
-	): Promise<SerializedTransaction> => {
-		const price = await this.Provider.Prices().fetchPrice(coin);
+	public fetchRequestCoinAmountTransaction = async (inputs: {
+		coinType: CoinType;
+		walletAddress: SuiAddress;
+	}): Promise<SerializedTransaction> => {
+		const { coinType, walletAddress } = inputs;
+
+		const price = await this.Provider.Prices().fetchPrice(coinType);
 
 		const requestAmount = Faucet.constants.defaultRequestAmountUsd / price;
 		const requestAmountWithDecimals =
 			await this.Provider.Coin().Helpers.fetchCoinDecimalsNormalizeBalance(
-				coin,
+				coinType,
 				requestAmount
 			);
 
-		const transaction = this.Helpers.faucetRequestCoinAmountTransaction(
-			coin as CoinType,
-			requestAmountWithDecimals,
-			walletAddress
-		);
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		this.Helpers.requestCoinAmountTx({
+			tx,
+			coinType,
+			amount: requestAmountWithDecimals,
+		});
 
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction
+			tx
 		);
 	};
 
