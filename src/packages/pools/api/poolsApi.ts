@@ -427,16 +427,22 @@ export class PoolsApi {
 
 		let lpCoinsToPrice: CoinsToPrice = {};
 
-		for (const [index, lpCoin] of lpCoins.entries()) {
-			let coinPrice = -1;
-
-			if (safeIndexes.includes(index)) {
-				coinPrice = poolStats[index].lpPrice;
-			}
+		for (const [index, safeIndex] of safeIndexes.entries()) {
+			const lpCoin = lpCoins[safeIndex];
+			const coinPrice = poolStats[index].lpPrice;
 
 			lpCoinsToPrice = {
 				...lpCoinsToPrice,
 				[lpCoin]: coinPrice,
+			};
+		}
+
+		for (const [index, lpCoin] of lpCoins.entries()) {
+			if (safeIndexes.includes(index)) continue;
+
+			lpCoinsToPrice = {
+				...lpCoinsToPrice,
+				[lpCoin]: -1,
 			};
 		}
 
