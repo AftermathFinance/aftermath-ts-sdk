@@ -72,6 +72,19 @@ export class Helpers {
 		tolerance: number
 	) => Helpers.closeEnough(Number(a), Number(b), tolerance);
 
+	public static veryCloseInt = (a: number, b: number, fixedOne: number) =>
+		Math.abs(Math.floor(a / fixedOne) - Math.floor(b / fixedOne)) <= 1;
+
+	public static blendedOperations = {
+		mulNNN: (a: number, b: number): number => a * b,
+		mulNNB: (a: number, b: number): bigint => BigInt(Math.floor(a * b)),
+		mulNBN: (a: number, b: bigint): number => a * Number(b),
+		mulNBB: (a: number, b: bigint): bigint =>
+			BigInt(Math.floor(a * Number(b))),
+		mulBBN: (a: bigint, b: bigint): number => Number(a * b),
+		mulBBB: (a: bigint, b: bigint): bigint => a * b,
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Display
 	/////////////////////////////////////////////////////////////////////
@@ -155,6 +168,21 @@ export class Helpers {
 
 	public static createUid = () =>
 		Date.now().toString(36) + Math.random().toString(36).substring(2);
+
+	public static filterObject = <Value>(
+		obj: Record<string, Value>,
+		predicate: (key: string, value: Value) => boolean
+	): Record<string, Value> =>
+		Object.keys(obj).reduce((acc, key) => {
+			const val = obj[key];
+
+			if (!predicate(key, val)) return acc;
+
+			return {
+				...acc,
+				[key]: val,
+			};
+		}, {} as Record<string, Value>);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Type Checking

@@ -74,6 +74,7 @@ export class PoolsApiHelpers {
 		},
 		defaultLpCoinIconImageUrl:
 			"https://aftermath.finance/coins/lp/af_lp.svg",
+		blacklistedPoolIds: [""],
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -167,7 +168,10 @@ export class PoolsApiHelpers {
 				)
 		);
 
-		return objectIds;
+		const filteredIds = objectIds.filter(
+			(id) => !PoolsApiHelpers.constants.blacklistedPoolIds.includes(id)
+		);
+		return filteredIds;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -302,7 +306,7 @@ export class PoolsApiHelpers {
 		lpCoinId: ObjectId | TransactionArgument;
 		lpCoinType: CoinType;
 		expectedAmountsOut: Balance[];
-		coinsOutType: CoinType[];
+		coinTypes: CoinType[];
 		slippage: Slippage;
 		withTransfer?: boolean;
 	}): TransactionArgument => {
@@ -311,13 +315,13 @@ export class PoolsApiHelpers {
 			poolId,
 			lpCoinId,
 			expectedAmountsOut,
-			coinsOutType,
+			coinTypes,
 			lpCoinType,
 			slippage,
 			withTransfer,
 		} = inputs;
 
-		const poolSize = coinsOutType.length;
+		const poolSize = coinTypes.length;
 
 		return tx.add({
 			kind: "MoveCall",
@@ -331,7 +335,7 @@ export class PoolsApiHelpers {
 				`withdraw_${poolSize}_coins`
 			),
 
-			typeArguments: [lpCoinType, ...coinsOutType],
+			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
 				tx.object(this.addresses.pools.objects.poolRegistry),
@@ -346,11 +350,49 @@ export class PoolsApiHelpers {
 		});
 	};
 
+	public allCoinWithdrawTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		lpCoinId: ObjectId | TransactionArgument;
+		lpCoinType: CoinType;
+		coinTypes: CoinType[];
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const { tx, poolId, lpCoinId, coinTypes, lpCoinType, withTransfer } =
+			inputs;
+
+		const poolSize = coinTypes.length;
+
+		return tx.add({
+			kind: "MoveCall",
+			target: Helpers.transactions.createTransactionTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApiHelpers.constants.moduleNames.interface
+					: PoolsApiHelpers.constants.moduleNames.withdraw,
+				`all_coin_withdraw_${poolSize}_coins`
+			),
+
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
+			],
+		});
+	};
+
 	public publishLpCoinTx = (inputs: { tx: TransactionBlock }) => {
 		const { tx } = inputs;
 
 		const compiledModulesAndDeps = JSON.parse(
-			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytPCHpgCtoBBQzfAQ0AAgIDAQcAAAIAAgECAAAGAAEAAQQDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA1hbW1faW50ZXJmYWNlDmNyZWF0ZV9scF9jb2luC2R1bW15X2ZpZWxkBGluaXQKdHhfY29udGV4dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAL3vRhgmnKKwpF2q0Mw22cyKIkcQxgZ3G5u/Bvazl+E6QACAQUBAAAAAAEECwALATgAAgA="],"dependencies":["0x5b9e987e1739eb417dffb7009bc1f792411b3a44abc10b2a24e436b3433050fb","0xf7bd18609a728ac29176ab4330db673228891c431819dc6e6efc1bdace5f84e9","0x321a50c956db8b0b8fe53af2756e33212e18ea1a6ba82b9dd4308114b6944289","0x0000000000000000000000000000000000000000000000000000000000000001","0x0cc3f2db459225fbff06f2f71870a6634db0ba434cd65d639f834c277b118f33","0x484d68333fe65c4910a5c708c9aa6469bfc59d343bc5ed898a18226ae422959f","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0x373c265b27110d08e500ebb2a2e40aab08e1dd7d7f40eb878094ed260c4e5afa","0x8557c63b231fef86509fdde6855b032d346c50936cd335f53d4619222d7440fd"],"digest":[136,80,218,104,72,184,149,112,104,245,109,27,32,44,192,47,40,242,109,126,227,25,35,163,86,129,94,127,175,140,146,13]}`
+			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytPCHpgCtoBBQzfAQ0AAgIDAQcAAAIAAgECAAAGAAEAAQQDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA1hbW1faW50ZXJmYWNlDmNyZWF0ZV9scF9jb2luC2R1bW15X2ZpZWxkBGluaXQKdHhfY29udGV4dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITrjjbvbkwWswAhXLcNgQmxJj+yuKv50mWJoNBcn191gACAQUBAAAAAAEECwALATgAAgA="],"dependencies":["0xadf8553fc429ed873633d18df297b8c1081f7d9080c60e9f70296bc464b6aeec","0x13ae38dbbdb9305acc008572dc360426c498fecae2afe74996268341727d7dd6","0x321a50c956db8b0b8fe53af2756e33212e18ea1a6ba82b9dd4308114b6944289","0x0000000000000000000000000000000000000000000000000000000000000001","0x3f84a34a349dfc02cf3f7b90d13a7b81e4956c9d5b77345ae251d79f1db1e44d","0x484d68333fe65c4910a5c708c9aa6469bfc59d343bc5ed898a18226ae422959f","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0x373c265b27110d08e500ebb2a2e40aab08e1dd7d7f40eb878094ed260c4e5afa","0x543763e9d064c12274dc08a8099824f90cba4334190b805fd360e0d34dad0309"],"digest":[23,92,91,106,221,67,5,140,177,219,29,237,180,148,146,248,27,194,142,243,33,50,220,35,113,82,255,83,103,114,27,201]}`
 		);
 
 		return tx.publish({
@@ -594,7 +636,7 @@ export class PoolsApiHelpers {
 				}
 			);
 
-		const lpRatio = pool.getWithdrawLpRatio({
+		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
 			lpCoinAmountOut: lpCoinAmount,
 		});
 
@@ -620,9 +662,50 @@ export class PoolsApiHelpers {
 			poolId: pool.pool.objectId,
 			lpCoinType: pool.pool.lpCoinType,
 			expectedAmountsOut: coinAmounts,
-			coinsOutType: coinTypes,
+			coinTypes: coinTypes,
 			lpCoinId,
 			slippage,
+			withTransfer: true,
+		});
+
+		return tx;
+	};
+
+	public fetchBuildAllCoinWithdrawTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		lpCoinAmount: Balance;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const { walletAddress, pool, lpCoinAmount, referrer } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
+				{
+					tx,
+					referrer,
+				}
+			);
+
+		const lpCoinId =
+			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
+				tx,
+				walletAddress,
+				coinType: pool.pool.lpCoinType,
+				coinAmount: lpCoinAmount,
+			});
+
+		const coinTypes = Object.keys(pool.pool.coins);
+
+		this.allCoinWithdrawTx({
+			tx,
+			poolId: pool.pool.objectId,
+			lpCoinType: pool.pool.lpCoinType,
+			coinTypes,
+			lpCoinId,
 			withTransfer: true,
 		});
 

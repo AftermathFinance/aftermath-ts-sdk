@@ -126,6 +126,10 @@ export interface PoolCreationLpCoinMetadata {
 //// API
 /////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////
+//// Transactions
+/////////////////////////////////////////////////////////////////////
+
 export interface ApiPoolTradeBody {
 	walletAddress: SuiAddress;
 	coinInType: CoinType;
@@ -150,13 +154,10 @@ export interface ApiPoolWithdrawBody {
 	referrer?: SuiAddress;
 }
 
-export interface ApiPoolSpotPriceBody {
-	coinInType: CoinType;
-	coinOutType: CoinType;
-}
-
-export interface ApiPoolObjectIdForLpCoinTypeBody {
-	lpCoinType: CoinType;
+export interface ApiPoolAllCoinWithdrawBody {
+	walletAddress: SuiAddress;
+	lpCoinAmount: Balance;
+	referrer?: SuiAddress;
 }
 
 export interface ApiPublishLpCoinBody {
@@ -176,4 +177,17 @@ export interface ApiCreatePoolBody {
 	poolName: PoolName;
 	poolFlatness: 0 | 1;
 	createPoolCapId: ObjectId;
+}
+
+/////////////////////////////////////////////////////////////////////
+//// Inspections
+/////////////////////////////////////////////////////////////////////
+
+export interface ApiPoolSpotPriceBody {
+	coinInType: CoinType;
+	coinOutType: CoinType;
+}
+
+export interface ApiPoolObjectIdForLpCoinTypeBody {
+	lpCoinType: CoinType;
 }

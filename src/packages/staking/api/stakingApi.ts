@@ -3,6 +3,7 @@ import {
 	SuiAddress,
 	SuiValidatorSummary,
 	TransactionBlock,
+	ValidatorsApy,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { StakingApiHelpers } from "./stakingApiHelpers";
@@ -46,6 +47,10 @@ export class StakingApi {
 		return (await this.Provider.Sui().fetchSystemState()).activeValidators;
 	};
 
+	public fetchValidatorApys = async (): Promise<ValidatorsApy> => {
+		return await this.Provider.provider.getValidatorsApy();
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions
 	/////////////////////////////////////////////////////////////////////
@@ -54,6 +59,7 @@ export class StakingApi {
 		walletAddress: SuiAddress;
 		suiStakeAmount: Balance;
 		validatorAddress: SuiAddress;
+		referrer?: SuiAddress;
 	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildStakeTransaction({
@@ -65,6 +71,7 @@ export class StakingApi {
 	public fetchUnstakeTransaction = async (inputs: {
 		walletAddress: SuiAddress;
 		afSuiUnstakeAmount: Balance;
+		referrer?: SuiAddress;
 	}): Promise<SerializedTransaction> => {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			this.Helpers.fetchBuildUnstakeTransaction({

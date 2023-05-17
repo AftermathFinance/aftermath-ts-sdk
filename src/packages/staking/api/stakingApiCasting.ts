@@ -49,7 +49,6 @@ export class StakingApiCasting {
 			staker: fields.staker,
 			epoch: BigInt(fields.epoch),
 			afSuiAmountGiven: BigInt(fields.provided_afsui_amount),
-			suiUnstakeAmount: BigInt(fields.sui_amount_to_withdraw),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

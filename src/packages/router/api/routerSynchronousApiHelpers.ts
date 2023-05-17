@@ -100,14 +100,11 @@ export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public async fetchBuildTransactionForCompleteTradeRoute(inputs: {
-		network: SuiNetwork | Url;
-		provider: AftermathApi;
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 	}): Promise<TransactionBlock> {
-		const { network, provider, walletAddress, completeRoute, slippage } =
-			inputs;
+		const { walletAddress, completeRoute, slippage } = inputs;
 
 		const referrer = completeRoute.referrer;
 		const externalFee = completeRoute.externalFee;
@@ -141,28 +138,27 @@ export class RouterSynchronousApiHelpers {
 
 		let coinsOut: TransactionArgument[] = [];
 
-		const splitCoins = [
-			...(completeRoute.routes.length > 1
-				? tx.add({
-						kind: "SplitCoins",
-						coin: coinInArg,
-						amounts: completeRoute.routes
-							.slice(0, -1)
-							.map((route) => tx.pure(route.coinIn.amount)),
-				  })
-				: []),
-			coinInArg,
-		];
+		let splitCoins: TransactionArgument[] = [];
+		if (completeRoute.routes.length > 1) {
+			splitCoins = tx.add({
+				kind: "SplitCoins",
+				coin: coinInArg,
+				amounts: completeRoute.routes
+					.slice(1)
+					.map((route) => tx.pure(route.coinIn.amount)),
+			});
+		}
 
 		for (const [routeIndex, route] of completeRoute.routes.entries()) {
-			const splitCoinArg = splitCoins[routeIndex];
+			const splitCoinArg =
+				routeIndex === 0 ? coinInArg : splitCoins[routeIndex - 1];
 
 			let coinIn: TransactionArgument | undefined = splitCoinArg;
 
 			for (const path of route.paths) {
 				const poolForPath = createRouterPool({
 					pool: path.pool,
-					network,
+					network: "",
 				});
 
 				if (!coinIn)
@@ -171,7 +167,7 @@ export class RouterSynchronousApiHelpers {
 					);
 
 				const newCoinIn = poolForPath.addTradeCommandToTransaction({
-					provider,
+					provider: this.Provider,
 					tx,
 					coinIn,
 					coinInAmount: route.coinIn.amount,

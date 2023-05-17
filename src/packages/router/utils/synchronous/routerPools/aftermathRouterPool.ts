@@ -59,7 +59,22 @@ class AftermathRouterPool implements RouterPoolInterface {
 			inputs.coinInType === this.pool.lpCoinType ||
 			inputs.coinOutType === this.pool.lpCoinType
 		) {
-			// TODO: do this calc for real
+			// TODO: do this calc more efficiently
+			let smallAmountIn = BigInt(10);
+			while (smallAmountIn < Casting.u64MaxBigInt) {
+				try {
+					const smallAmountOut = this.getTradeAmountOut({
+						...inputs,
+						coinInAmount: smallAmountIn,
+					});
+
+					return Number(smallAmountIn) / Number(smallAmountOut);
+				} catch (e) {}
+
+				smallAmountIn *= BigInt(10);
+			}
+
+			// this shouldn't be reached
 			return 1;
 		}
 
@@ -76,7 +91,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		// withdraw
 
 		if (inputs.coinInType === this.pool.lpCoinType) {
-			const lpRatio = this.poolClass.getWithdrawLpRatio({
+			const lpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
 				lpCoinAmountOut: inputs.coinInAmount,
 			});
 
@@ -142,7 +157,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 				poolId: this.pool.objectId,
 				// this is beacuse typescript complains for some reason otherwise
 				lpCoinId: inputs.coinIn,
-				coinsOutType: [inputs.coinOutType],
+				coinTypes: [inputs.coinOutType],
 				expectedAmountsOut: [inputs.expectedAmountOut],
 				lpCoinType: this.pool.lpCoinType,
 			});
@@ -150,7 +165,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 
 		// deposit
 		if (inputs.coinOutType === this.pool.lpCoinType) {
-			const expectedLpRatio = this.poolClass.getWithdrawLpRatio({
+			const expectedLpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
 				lpCoinAmountOut: inputs.expectedAmountOut,
 			});
 
@@ -199,7 +214,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 
 		// reverse deposit (withdraw)
 		if (inputs.coinOutType === this.pool.lpCoinType) {
-			const lpRatio = this.poolClass.getWithdrawLpRatio({
+			const lpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
 				lpCoinAmountOut: inputs.coinOutAmount,
 			});
 

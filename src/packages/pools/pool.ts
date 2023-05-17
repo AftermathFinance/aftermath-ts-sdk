@@ -15,6 +15,7 @@ import {
 	PoolWithdrawEvent,
 	PoolTradeEvent,
 	Url,
+	ApiPoolAllCoinWithdrawBody,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -80,6 +81,15 @@ export class Pool extends Caller {
 	public async getWithdrawTransaction(inputs: ApiPoolWithdrawBody) {
 		return this.fetchApiTransaction<ApiPoolWithdrawBody>(
 			"transactions/withdraw",
+			inputs
+		);
+	}
+
+	public async getAllCoinWithdrawTransaction(
+		inputs: ApiPoolAllCoinWithdrawBody
+	) {
+		return this.fetchApiTransaction<ApiPoolAllCoinWithdrawBody>(
+			"transactions/all-coin-withdraw",
 			inputs
 		);
 	}
@@ -265,7 +275,7 @@ export class Pool extends Caller {
 
 		const lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
 		const lpAmountOut = BigInt(
-			Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
+			Math.floor(Number(this.pool.lpCoinSupply) * (1 / lpRatio - 1))
 		);
 
 		return {
@@ -294,7 +304,35 @@ export class Pool extends Caller {
 		return amountsOut;
 	};
 
-	public getWithdrawLpRatio = (inputs: { lpCoinAmountOut: bigint }): number =>
+	public getAllCoinWithdrawAmountsOut = (inputs: {
+		lpRatio: number;
+		// PRODUCTION: account for referral in calculation
+		referral?: boolean;
+	}): CoinsToBalance => {
+		if (inputs.lpRatio >= 1) throw new Error("lpRatio >= 1");
+
+		const amountsOut: CoinsToBalance = Object.entries(
+			this.pool.coins
+		).reduce((acc, [coin, info]) => {
+			return {
+				...acc,
+				[coin]: BigInt(
+					Math.floor(Number(info.balance) * inputs.lpRatio)
+				),
+			};
+		}, {});
+
+		return amountsOut;
+	};
+
+	public getMultiCoinWithdrawLpRatio = (inputs: {
+		lpCoinAmountOut: bigint;
+	}): number =>
 		Number(this.pool.lpCoinSupply - inputs.lpCoinAmountOut) /
 		Number(this.pool.lpCoinSupply);
+
+	public getAllCoinWithdrawLpRatio = (inputs: {
+		lpCoinAmountOut: bigint;
+	}): number =>
+		Number(inputs.lpCoinAmountOut) / Number(this.pool.lpCoinSupply);
 }
