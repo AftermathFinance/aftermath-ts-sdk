@@ -22,6 +22,6 @@ export interface FaucetAddCoinEvent extends Event {
 /////////////////////////////////////////////////////////////////////
 
 export interface ApiFaucetRequestBody {
-	coin: CoinType;
+	coinType: CoinType;
 	walletAddress: SuiAddress;
 }
