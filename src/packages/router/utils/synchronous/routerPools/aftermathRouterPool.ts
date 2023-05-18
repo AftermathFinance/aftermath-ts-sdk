@@ -27,7 +27,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
-		this.coinTypes = [...Object.keys(pool.coins), pool.lpCoinType];
+		this.coinTypes = [...Object.keys(pool.coins) /* pool.lpCoinType */];
 		this.poolClass = new Pool(pool, network);
 	}
 
