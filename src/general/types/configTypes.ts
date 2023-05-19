@@ -43,9 +43,13 @@ export interface FaucetAddresses {
 export interface StakingAddresses {
 	packages: {
 		lsd: SuiAddress;
+		afsui: SuiAddress;
 	};
 	objects: {
 		staking: ObjectId;
+	};
+	accounts: {
+		bot: SuiAddress;
 	};
 }
 
