@@ -33,6 +33,7 @@ export class CetusApiHelpers {
 		moduleNames: {
 			poolScript: "pool_script",
 			pool: "pool",
+			wrapper: "cetus",
 		},
 		inputs: {
 			minSqrtPriceLimit: BigInt("4295048016"),
@@ -176,42 +177,32 @@ export class CetusApiHelpers {
 	) => {
 		const { tx, coinInId } = inputs;
 
+		const isGivenAmountIn = "coinInAmount" in inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.cetus.packages.scripts,
-				CetusApiHelpers.constants.moduleNames.poolScript,
-				"swap_a2b"
+				this.addresses.cetus.packages.wrapper,
+				CetusApiHelpers.constants.moduleNames.wrapper,
+				isGivenAmountIn ? "swap_a_to_b_by_a" : "swap_a_to_b_by_b"
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
 			arguments: [
 				tx.object(this.addresses.cetus.objects.globalConfig),
-				tx.object(inputs.poolObjectId),
-				tx.makeMoveVec({
-					objects: [
-						typeof coinInId === "string"
-							? tx.object(coinInId)
-							: coinInId,
-					],
-				}),
-				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
-				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
-					"u64"
-				), // amount
-				tx.pure(
-					// "coinInAmount" in inputs
-					// 	? inputs.coinInAmount
-					// 	: inputs.coinOutAmount,
-					"0",
-					"u64"
-				), // amount_limit
+				tx.object(inputs.poolObjectId), // pool
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_a
+				...(isGivenAmountIn
+					? []
+					: [tx.pure(inputs.coinOutAmount, "u64")]), // amount_b
 				tx.pure(
 					CetusApiHelpers.constants.inputs.minSqrtPriceLimit,
 					"u128"
 				), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
+
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 			],
 		});
 	};
@@ -234,42 +225,32 @@ export class CetusApiHelpers {
 	) => {
 		const { tx, coinInId } = inputs;
 
+		const isGivenAmountIn = "coinInAmount" in inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.cetus.packages.scripts,
-				CetusApiHelpers.constants.moduleNames.poolScript,
-				"swap_b2a"
+				this.addresses.cetus.packages.wrapper,
+				CetusApiHelpers.constants.moduleNames.wrapper,
+				isGivenAmountIn ? "swap_b_to_a_by_b" : "swap_b_to_a_by_a"
 			),
 			typeArguments: [inputs.coinOutType, inputs.coinInType],
 			arguments: [
 				tx.object(this.addresses.cetus.objects.globalConfig),
-				tx.object(inputs.poolObjectId),
-				tx.makeMoveVec({
-					objects: [
-						typeof coinInId === "string"
-							? tx.object(coinInId)
-							: coinInId,
-					],
-				}),
-				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
-				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
-					"u64"
-				), // amount
-				tx.pure(
-					// "coinInAmount" in inputs
-					// 	? inputs.coinInAmount
-					// 	: inputs.coinOutAmount,
-					"0",
-					"u64"
-				), // amount_limit
+				tx.object(inputs.poolObjectId), // pool
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_b
+				...(isGivenAmountIn
+					? []
+					: [tx.pure(inputs.coinOutAmount, "u64")]), // amount_a
 				tx.pure(
 					CetusApiHelpers.constants.inputs.maxSqrtPriceLimit,
 					"u128"
 				), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
+
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 			],
 		});
 	};
@@ -371,9 +352,6 @@ export class CetusApiHelpers {
 		)
 	) =>
 		/*
-		
-			The calculated swap result:
-			
 			struct CalculatedSwapResult has copy, drop, store {
 				amount_in: u64,
 				amount_out: u64,
@@ -384,8 +362,6 @@ export class CetusApiHelpers {
 				step_results: vector<SwapStepResult>
 			}
 
-			The step swap result:
-
 			struct SwapStepResult has copy, drop, store {
 				current_sqrt_price: u128,
 				target_sqrt_price: u128,
@@ -395,7 +371,6 @@ export class CetusApiHelpers {
 				fee_amount: u64,
 				remainer_amount: u64
 			}
-
 		*/
 		{
 			const { tx } = inputs;
