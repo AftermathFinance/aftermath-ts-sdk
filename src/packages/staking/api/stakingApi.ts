@@ -35,11 +35,11 @@ export class StakingApi {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchDelegatedStakes = async (
-		address: SuiAddress
-	): Promise<DelegatedStake[]> => {
+	public fetchDelegatedStakes = async (inputs: {
+		address: SuiAddress;
+	}): Promise<DelegatedStake[]> => {
 		return this.Provider.provider.getStakes({
-			owner: address,
+			owner: inputs.address,
 		});
 	};
 
@@ -119,5 +119,12 @@ export class StakingApi {
 		return suiTvl <= BigInt(0) || afSuiSupply <= BigInt(0)
 			? 1
 			: Number(afSuiSupply) / Number(suiTvl);
+	};
+
+	public liquidStakingApy = async (inputs: {
+		delegatedStakes: DelegatedStake[];
+		validatorApys: ValidatorsApy;
+	}): Promise<number> => {
+		return this.Helpers.calcLiquidStakingApy(inputs);
 	};
 }

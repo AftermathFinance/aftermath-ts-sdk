@@ -4,6 +4,8 @@ import {
 	SuiAddress,
 	TransactionArgument,
 	EventId,
+	DelegatedStake,
+	ValidatorsApy,
 } from "@mysten/sui.js";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -600,6 +602,48 @@ export class StakingApiHelpers {
 		return newPositions.sort(
 			(a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)
 		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Calculations
+	/////////////////////////////////////////////////////////////////////
+
+	public calcLiquidStakingApy = (inputs: {
+		delegatedStakes: DelegatedStake[];
+		validatorApys: ValidatorsApy;
+	}): number => {
+		const { delegatedStakes, validatorApys } = inputs;
+
+		const totalStakeAmount = Helpers.sumBigInt(
+			delegatedStakes.map((stake) =>
+				Helpers.sumBigInt(
+					stake.stakes.map((innerStake) =>
+						BigInt(innerStake.principal)
+					)
+				)
+			)
+		);
+
+		const weightedAverageApy = delegatedStakes.reduce((acc, stake) => {
+			const apy = validatorApys.apys.find(
+				(apy) => apy.address === stake.validatorAddress
+			)?.apy;
+			if (apy === undefined) return acc;
+
+			const weight =
+				Number(
+					Helpers.sumBigInt(
+						stake.stakes.map((innerStake) =>
+							BigInt(innerStake.principal)
+						)
+					)
+				) / Number(totalStakeAmount);
+
+			const weightedApy = apy * weight;
+			return acc + weightedApy;
+		}, 0);
+
+		return weightedAverageApy;
 	};
 
 	/////////////////////////////////////////////////////////////////////
