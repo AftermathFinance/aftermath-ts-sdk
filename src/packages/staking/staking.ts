@@ -100,4 +100,8 @@ export class Staking extends Caller {
 	public async getAfSuiExchangeRate(): Promise<number> {
 		return this.fetchApi("afsui-exchange-rate");
 	}
+
+	public async getApy(): Promise<number> {
+		return this.fetchApi("apy");
+	}
 }
