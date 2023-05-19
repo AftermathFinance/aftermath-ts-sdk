@@ -47,6 +47,9 @@ export interface StakingAddresses {
 	objects: {
 		staking: ObjectId;
 	};
+	accounts: {
+		bot: SuiAddress;
+	};
 }
 
 export interface PoolsAddresses {
