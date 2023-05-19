@@ -96,7 +96,7 @@ export class StakingApiHelpers {
 		this.addresses = addresses;
 
 		this.coinTypes = {
-			afSui: `${addresses.packages.lsd}::afsui::AFSUI`,
+			afSui: `${addresses.packages.afsui}::afsui::AFSUI`,
 		};
 
 		this.eventTypes = {
