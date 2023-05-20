@@ -1,6 +1,6 @@
 import { CoinHistoricalData } from "./historicalDataTypes";
 
-export class CoinGeckoApi {
+export class HistoricalDataApi {
 	// extends PythPricesApiHelpers
 
 	/////////////////////////////////////////////////////////////////////
