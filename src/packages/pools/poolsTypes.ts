@@ -97,8 +97,8 @@ export interface PoolDataPoint {
 	value: number;
 }
 
-export type PoolVolumeDataTimeframeKey = "1D" | "1W" | "1M" | "3M";
-export interface PoolVolumeDataTimeframe {
+export type PoolGraphDataTimeframeKey = "1D" | "1W" | "1M" | "3M";
+export interface PoolGraphDataTimeframe {
 	time: Timestamp;
 	timeUnit: ManipulateType;
 }

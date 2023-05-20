@@ -6,7 +6,7 @@ import {
 	CoinType,
 	CoinsToBalance,
 	PoolDataPoint,
-	PoolVolumeDataTimeframeKey,
+	PoolGraphDataTimeframeKey,
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
@@ -61,10 +61,16 @@ export class Pool extends Caller {
 		this.stats = stats;
 	}
 
-	public async getVolume(inputs: {
-		timeframe: PoolVolumeDataTimeframeKey;
+	public async getVolumeData(inputs: {
+		timeframe: PoolGraphDataTimeframeKey;
 	}): Promise<PoolDataPoint[]> {
 		return this.fetchApi(`volume/${inputs.timeframe}`);
+	}
+
+	public async getFeeData(inputs: {
+		timeframe: PoolGraphDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> {
+		return this.fetchApi(`fees/${inputs.timeframe}`);
 	}
 
 	/////////////////////////////////////////////////////////////////////

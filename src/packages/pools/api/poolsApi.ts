@@ -4,7 +4,6 @@ import { PoolsApiHelpers } from "./poolsApiHelpers";
 import { CoinType, CoinsToBalance, CoinsToPrice } from "../../coin/coinTypes";
 import {
 	Balance,
-	PoolVolumeDataTimeframeKey,
 	PoolDepositEvent,
 	PoolStats,
 	PoolTradeEvent,
@@ -13,6 +12,10 @@ import {
 	Slippage,
 	PoolCreationLpCoinMetadata,
 	PoolName,
+	PoolDataPoint,
+	PoolObject,
+	PoolTradeFee,
+	PoolGraphDataTimeframeKey,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -453,31 +456,41 @@ export class PoolsApi {
 	//// Graph Data
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchPoolVolumeData = async (
-		poolObjectId: ObjectId,
-		timeframe: PoolVolumeDataTimeframeKey
-	) => {
-		const timeframeValue = this.Helpers.poolVolumeDataTimeframes[timeframe];
+	public fetchPoolVolumeData = async (inputs: {
+		poolObject: PoolObject;
+		timeframe: PoolGraphDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> => {
+		const timeframeValue =
+			this.Helpers.poolVolumeDataTimeframes[inputs.timeframe];
 
-		const [pool, tradeEvents] = await Promise.all([
-			this.fetchPool(poolObjectId),
-			(
-				await this.Provider.Events().fetchEventsWithinTime(
-					// TODO: fetch only pool's events
-					this.fetchTradeEvents,
-					timeframeValue.timeUnit,
-					timeframeValue.time,
-					512
-				)
-			).filter((trade) => trade.poolId === poolObjectId),
-		]);
+		const tradeEvents = (
+			await this.Provider.Events().fetchEventsWithinTime(
+				// TODO: fetch only pool's events
+				this.fetchTradeEvents,
+				timeframeValue.timeUnit,
+				timeframeValue.time,
+				512
+			)
+		).filter((trade) => trade.poolId === inputs.poolObject.objectId);
 
 		return await this.Helpers.fetchCalcPoolVolumeData(
-			pool,
+			inputs.poolObject,
 			tradeEvents,
 			timeframeValue.timeUnit,
 			timeframeValue.time,
 			timeframeValue.time
 		);
+	};
+
+	public calcPoolFeeDataFromVolume = (inputs: {
+		volumeData: PoolDataPoint[];
+		poolTradeFee: PoolTradeFee;
+	}): PoolDataPoint[] => {
+		const feeData = inputs.volumeData.map((data) => ({
+			time: data.time,
+			value: data.value * Pools.tradeFeeWithDecimals(inputs.poolTradeFee),
+		}));
+
+		return feeData;
 	};
 }

@@ -13,8 +13,8 @@ import {
 	CoinDecimal,
 	CoinType,
 	PoolDataPoint,
-	PoolVolumeDataTimeframe,
-	PoolVolumeDataTimeframeKey,
+	PoolGraphDataTimeframe,
+	PoolGraphDataTimeframeKey,
 	PoolObject,
 	PoolTradeEvent,
 	PoolsAddresses,
@@ -92,8 +92,8 @@ export class PoolsApiHelpers {
 	};
 
 	public readonly poolVolumeDataTimeframes: Record<
-		PoolVolumeDataTimeframeKey,
-		PoolVolumeDataTimeframe
+		PoolGraphDataTimeframeKey,
+		PoolGraphDataTimeframe
 	> = {
 		"1D": {
 			time: 24,
