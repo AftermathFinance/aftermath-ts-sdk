@@ -71,10 +71,15 @@ export class CoinApi {
 			);
 			const pool = await PoolsApi.fetchPool(poolObjectId);
 
-			const coinSymbol =
-				pool.name.length > 5
-					? pool.name.toUpperCase().slice(0, 5)
+			const maxCoinSymbolLength = 5;
+			const notPrettyCoinSymbol =
+				pool.name.length > maxCoinSymbolLength
+					? pool.name.toUpperCase().slice(0, maxCoinSymbolLength)
 					: pool.name.toUpperCase();
+			const coinSymbol =
+				notPrettyCoinSymbol.slice(-1) === "_"
+					? notPrettyCoinSymbol.slice(0, -1)
+					: notPrettyCoinSymbol;
 
 			const coinName = pool.name
 				.split(" ")
