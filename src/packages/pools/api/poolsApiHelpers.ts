@@ -932,6 +932,31 @@ export class PoolsApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
+	//// LP Coin Metadata
+	/////////////////////////////////////////////////////////////////////
+
+	public createLpCoinMetadataDescription = async (inputs: {
+		poolName: PoolName;
+		coinTypes: CoinType[];
+	}) => {
+		// TODO: do all of this a little bit cleaner
+		const coinSymbols = (
+			await Promise.all(
+				inputs.coinTypes.map((coin) =>
+					this.Provider.Coin().fetchCoinMetadata(coin)
+				)
+			)
+		).map((metadata) => metadata.symbol);
+		return `Aftermath LP coin for ${
+			inputs.poolName
+		} Pool (${coinSymbols.reduce(
+			(acc, symbol, index) =>
+				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
+			""
+		)})`;
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -959,29 +984,4 @@ export class PoolsApiHelpers {
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);
-
-	/////////////////////////////////////////////////////////////////////
-	//// LP Coin Metadata
-	/////////////////////////////////////////////////////////////////////
-
-	private createLpCoinMetadataDescription = async (inputs: {
-		poolName: PoolName;
-		coinTypes: CoinType[];
-	}) => {
-		// TODO: do all of this a little bit cleaner
-		const coinSymbols = (
-			await Promise.all(
-				inputs.coinTypes.map((coin) =>
-					this.Provider.Coin().fetchCoinMetadata(coin)
-				)
-			)
-		).map((metadata) => metadata.symbol);
-		return `Aftermath LP coin for ${
-			inputs.poolName
-		} Pool (${coinSymbols.reduce(
-			(acc, symbol, index) =>
-				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
-			""
-		)})`;
-	};
 }
