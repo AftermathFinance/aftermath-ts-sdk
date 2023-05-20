@@ -84,7 +84,8 @@ export class AftermathApi {
 
 	public Wallet = () => new WalletApi(this);
 	public Prices = () => new PlaceholderPricesApi(this);
-	public HistoricalData = (apiKey: string) => new HistoricalDataApi(apiKey);
+	public HistoricalData = (coinGeckoApiKey: string) =>
+		new HistoricalDataApi(coinGeckoApiKey);
 
 	/////////////////////////////////////////////////////////////////////
 	//// General Packages
