@@ -8,7 +8,7 @@ export class HistoricalDataApi {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly apiKey: string) {}
+	constructor(private readonly coinGeckoApiKey: string) {}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public
@@ -98,7 +98,7 @@ export class HistoricalDataApi {
 					(endpoint[0] === "/"
 						? endpoint.replace("/", "")
 						: endpoint) +
-					`&x_cg_pro_api_key=${this.apiKey}`
+					`&x_cg_pro_api_key=${this.coinGeckoApiKey}`
 			)
 		).json();
 
