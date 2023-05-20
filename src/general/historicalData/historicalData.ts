@@ -2,6 +2,7 @@ import { SuiNetwork } from "../types/suiTypes";
 import { CoinType } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 import { Url } from "../types";
+import { CoinGeckoCoinData, CoinHistoricalData } from "./historicalDataTypes";
 
 export class HistoricalData extends Caller {
 	/////////////////////////////////////////////////////////////////////
@@ -20,9 +21,15 @@ export class HistoricalData extends Caller {
 		return this.fetchApi("supported-coins");
 	}
 
+	public async getAllCoinData(): Promise<
+		Record<CoinType, CoinGeckoCoinData>
+	> {
+		return this.fetchApi("coins-data");
+	}
+
 	public async getCoinHistoricalData(inputs: {
 		coin: CoinType;
-	}): Promise<HistoricalData> {
+	}): Promise<CoinHistoricalData> {
 		return this.fetchApi(inputs.coin);
 	}
 }

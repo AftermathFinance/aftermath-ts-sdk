@@ -956,7 +956,6 @@ export class RouterGraph {
 				isOverMaxGasCost,
 			};
 		} catch (e) {
-			// console.error((e as any).toString());
 			return undefined;
 		}
 	};

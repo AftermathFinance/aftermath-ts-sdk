@@ -33,7 +33,7 @@ export class Helpers {
 
 		const splitType = type.replace("0x", "").split("::");
 
-		if (splitType.length !== 3) throw new Error("invalid type");
+		if (splitType.length !== 3) throw new Error("invalid type: " + type);
 
 		const typeSuffix = "::" + splitType[1] + "::" + splitType[2];
 

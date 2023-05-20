@@ -1,19 +1,22 @@
-import { CoinHistoricalData } from "./historicalDataTypes";
+import { Coin } from "../../packages";
+import { CoinType } from "../../types";
+import { Helpers } from "../utils";
+import { CoinGeckoCoinData, CoinHistoricalData } from "./historicalDataTypes";
 
 export class HistoricalDataApi {
-	// extends PythPricesApiHelpers
-
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor() {}
+	constructor(private readonly apiKey: string) {}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchAllCoinData = async () => {
+	public fetchAllCoinData = async (): Promise<
+		Record<CoinType, CoinGeckoCoinData>
+	> => {
 		const coinData = await this.callApi<
 			{
 				id: string;
@@ -26,17 +29,35 @@ export class HistoricalDataApi {
 		>("coins/list?include_platform=true");
 
 		const suiCoinData = coinData
-			.filter((data) => "sui" in data.platforms)
+			.filter((data) => "sui" in data.platforms || data.id === "sui")
 			.map((data) => {
-				return {
-					apiId: data.id,
-					name: data.name,
-					symbol: data.symbol,
-					coinType: data.platforms.sui ?? "",
-				};
-			});
+				const coinType =
+					data.id === "sui"
+						? Coin.constants.suiCoinType
+						: data.platforms.sui;
 
-		return suiCoinData;
+				try {
+					if (!coinType) throw new Error("no coin type found");
+					return {
+						apiId: data.id,
+						name: data.name,
+						symbol: data.symbol,
+						coinType: Helpers.addLeadingZeroesToType(coinType),
+					};
+				} catch (e) {
+					return undefined;
+				}
+			})
+			.filter((data) => data !== undefined) as CoinGeckoCoinData[];
+
+		const coinDataObject = suiCoinData.reduce((acc, data) => {
+			return {
+				[data.coinType]: data,
+				...acc,
+			};
+		}, {});
+
+		return coinDataObject;
 	};
 
 	public fetchHistoricalData = async (inputs: {
@@ -51,10 +72,12 @@ export class HistoricalDataApi {
 			total_volumes: [timestamp: number, volume: number][];
 		}>(`coins/${coinApiId}/market_chart?vs_currency=USD&days=${daysAgo}`);
 
-		const formattedData = {
+		const formattedData: CoinHistoricalData = {
 			prices: allData.prices,
 			marketCaps: allData.market_caps,
 			volumes24Hours: allData.total_volumes,
+			time: inputs.daysAgo,
+			timeUnit: "D",
 		};
 
 		return formattedData;
@@ -69,20 +92,17 @@ export class HistoricalDataApi {
 	/////////////////////////////////////////////////////////////////////
 
 	private callApi = async <OutputType>(endpoint: string) => {
-		return JSON.parse(
-			await (
-				await fetch(
-					"https://api.coingecko.com/api/v3/" +
-						(endpoint[0] === "/"
-							? endpoint.replace("/", "")
-							: endpoint),
-					{
-						headers: {
-							"x-cg-pro-api-key": "apiKey",
-						},
-					}
-				)
-			).json()
-		) as OutputType;
+		const someJson = await (
+			await fetch(
+				"https://pro-api.coingecko.com/api/v3/" +
+					(endpoint[0] === "/"
+						? endpoint.replace("/", "")
+						: endpoint) +
+					`&x_cg_pro_api_key=${this.apiKey}`
+			)
+		).json();
+
+		const castedRes = someJson as OutputType;
+		return castedRes;
 	};
 }

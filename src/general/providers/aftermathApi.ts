@@ -17,8 +17,8 @@ import { CapysApi } from "../../packages/capys/api/capysApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
-import { RouterProtocolName, RouterSynchronousProtocolName } from "../../types";
-import { HistoricalDataApi } from "../historicalData/coinGeckoApi";
+import { RouterProtocolName } from "../../types";
+import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ export class AftermathApi {
 
 	public Wallet = () => new WalletApi(this);
 	public Prices = () => new PlaceholderPricesApi(this);
-	public HistoricalData = () => new HistoricalDataApi();
+	public HistoricalData = (apiKey: string) => new HistoricalDataApi(apiKey);
 
 	/////////////////////////////////////////////////////////////////////
 	//// General Packages
