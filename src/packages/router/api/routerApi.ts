@@ -10,9 +10,7 @@ import {
 	Slippage,
 	SuiNetwork,
 	Url,
-	RouterSynchronousProtocolName,
 	RouterSerializableCompleteGraph,
-	RouterAsyncProtocolName,
 	RouterProtocolName,
 	isRouterAsyncProtocolName,
 } from "../../../types";
