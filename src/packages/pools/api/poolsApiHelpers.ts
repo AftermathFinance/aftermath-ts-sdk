@@ -33,6 +33,7 @@ import {
 	PoolTradeFee,
 	PoolDepositFee,
 	PoolWithdrawFee,
+	CoinsToDecimals,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
@@ -856,20 +857,22 @@ export class PoolsApiHelpers {
 	//// Graph Data
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCalcPoolVolumeData = async (
-		pool: PoolObject,
-		tradeEvents: PoolTradeEvent[],
-		timeUnit: ManipulateType,
-		time: number,
-		buckets: number
-		// PRODUCTION: pass in prices/decimals from elsewhere
-	) => {
-		// TODO: use promise.all for pool fetching and swap fetching
-
-		const coinsToDecimalsAndPrices =
-			await this.Provider.Coin().Helpers.fetchCoinsToDecimalsAndPrices(
-				Object.keys(pool.coins)
-			);
+	public calcPoolVolumeData = (inputs: {
+		tradeEvents: PoolTradeEvent[];
+		timeUnit: ManipulateType;
+		time: number;
+		buckets: number;
+		coinsToDecimals: CoinsToDecimals;
+		coinsToPrice: CoinsToPrice;
+	}) => {
+		const {
+			tradeEvents,
+			timeUnit,
+			time,
+			buckets,
+			coinsToDecimals,
+			coinsToPrice,
+		} = inputs;
 
 		const now = Date.now();
 		const maxTimeAgo = dayjs(now).subtract(time, timeUnit);
@@ -898,13 +901,13 @@ export class PoolsApiHelpers {
 				1;
 
 			const amountUsd = trade.typesIn.reduce((acc, cur, index) => {
-				const price = coinsToDecimalsAndPrices[cur].price;
+				const price = coinsToPrice[cur];
 				const amountInUsd =
 					price < 0
 						? 0
 						: Coin.balanceWithDecimalsUsd(
 								trade.amountsIn[index],
-								coinsToDecimalsAndPrices[cur].decimals,
+								coinsToDecimals[cur],
 								price
 						  );
 				return acc + (amountInUsd < 0 ? 0 : amountInUsd);

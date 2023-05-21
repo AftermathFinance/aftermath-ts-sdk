@@ -38,6 +38,7 @@ export interface AmountInCoinAndUsd {
 
 export type CoinsToBalance = Record<CoinType, Balance>;
 export type CoinsToPrice = Record<CoinType, number>;
+export type CoinsToDecimals = Record<CoinType, CoinDecimal>;
 export type CoinsToPriceInfo = Record<CoinType, CoinPriceInfo>;
 export type CoinSymbolToCoinTypes = Record<CoinSymbol, CoinType[]>;
 
