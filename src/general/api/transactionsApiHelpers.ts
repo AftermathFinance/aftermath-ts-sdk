@@ -55,13 +55,11 @@ export class TransactionsApiHelpers {
 	public fetchSetGasBudgetForTransaction = async (
 		tx: TransactionBlock
 	): Promise<TransactionBlock> => {
-		const sender = tx.blockData.sender;
-		if (!sender) throw new Error("no sender set for transaction");
-
 		const [txResponse, referenceGasPrice] = await Promise.all([
-			this.Provider.provider.devInspectTransactionBlock({
-				sender,
-				transactionBlock: tx,
+			this.Provider.provider.dryRunTransactionBlock({
+				transactionBlock: await tx.build({
+					provider: this.Provider.provider,
+				}),
 			}),
 			this.Provider.provider.getReferenceGasPrice(),
 		]);

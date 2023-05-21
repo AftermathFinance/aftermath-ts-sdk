@@ -11,7 +11,7 @@ import {
 	UniqueId,
 	Url,
 } from "../../../../../types";
-import { CoinType, CoinsToBalance } from "../../../../coin/coinTypes";
+import { CoinType } from "../../../../coin/coinTypes";
 import { PoolObject } from "../../../../pools/poolsTypes";
 import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
 import { Pool, Pools } from "../../../../pools";
@@ -27,7 +27,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
-		this.coinTypes = [...Object.keys(pool.coins) /* pool.lpCoinType */];
+		this.coinTypes = [...Object.keys(pool.coins), pool.lpCoinType];
 		this.poolClass = new Pool(pool, network);
 	}
 
@@ -107,8 +107,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 			const poolCoinAmount =
 				lpTotal < 0
 					? 0
-					: Number(coinOutPoolBalance) *
-					  (lpTotal / (lpCoinSupply * coinOutWeight));
+					: Number(coinOutPoolBalance) * (lpTotal / lpCoinSupply);
 
 			const amountOutEstimate = BigInt(Math.floor(poolCoinAmount));
 

@@ -61,7 +61,8 @@ export class FaucetApi {
 
 		const price = await this.Provider.Prices().fetchPrice(coinType);
 
-		const requestAmount = Faucet.constants.defaultRequestAmountUsd / price;
+		const requestAmount =
+			Faucet.constants.defaultRequestAmountUsd / (price <= 0 ? 1 : price);
 		const requestAmountWithDecimals =
 			await this.Provider.Coin().Helpers.fetchCoinDecimalsNormalizeBalance(
 				coinType,
