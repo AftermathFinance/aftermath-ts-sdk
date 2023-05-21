@@ -101,26 +101,27 @@ export class CoinGeckoApiHelpers {
 		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
 	}): Promise<Record<CoinType, CoinPriceInfo>> => {
 		const { coinsToApiId } = inputs;
+		if (Object.keys(coinsToApiId).length <= 0) return {};
 
 		const rawCoinsInfo = await this.callApi<
 			Record<CoinGeckoCoinApiId, { usd: number; usd_24h_change: number }>
 		>(
-			`simple/price/ids=${Object.values(coinsToApiId).reduce(
+			`simple/price?ids=${Object.values(coinsToApiId).reduce(
 				(acc, apiId) => `${acc},${apiId}`,
 				""
-			)}&vs_currencies=usd&include_24hr_change=true&precision=full`
+			)}&vs_currencies=USD&include_24hr_change=true&precision=full`
 		);
 
 		const coinsInfo: Record<CoinType, CoinPriceInfo> = Object.entries(
-			rawCoinsInfo
-		).reduce((acc, [coinApiId, info]) => {
-			const coinType = Object.entries(coinsToApiId).find(
-				([, id]) => id === coinApiId
-			)?.[0];
+			coinsToApiId
+		).reduce((acc, [coinType, coinApiId]) => {
+			const info = Object.entries(rawCoinsInfo).find(
+				([id]) => id === coinApiId
+			)?.[1];
 
-			if (!coinType)
+			if (!info)
 				throw new Error(
-					"coin type not found for coingecko api coin id"
+					`coin type: '${coinType}' not found for coingecko coin api id: '${coinApiId}'`
 				);
 
 			return {
@@ -150,7 +151,9 @@ export class CoinGeckoApiHelpers {
 					(endpoint[0] === "/"
 						? endpoint.replace("/", "")
 						: endpoint) +
-					`&x_cg_pro_api_key=${this.coinGeckoApiKey}`
+					(this.coinGeckoApiKey === ""
+						? ""
+						: `&x_cg_pro_api_key=${this.coinGeckoApiKey}`)
 			)
 		).json();
 
