@@ -127,8 +127,11 @@ export class CoinGeckoApiHelpers {
 			return {
 				...acc,
 				[coinType]: {
-					price: info.usd,
-					priceChange24HoursPercentage: info.usd_24h_change / 100,
+					price: info.usd ?? -1,
+					priceChange24HoursPercentage:
+						info.usd_24h_change === undefined
+							? 0
+							: info.usd_24h_change / 100,
 				},
 			};
 		}, {});
