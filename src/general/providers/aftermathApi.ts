@@ -63,6 +63,7 @@ export class AftermathApi {
 	) {
 		this.provider = provider;
 		this.addresses = addresses;
+		this.coinGeckoApiKey = coinGeckoApiKey;
 	}
 
 	/////////////////////////////////////////////////////////////////////
