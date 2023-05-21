@@ -27,7 +27,7 @@ import { Helpers } from "../../general/utils/helpers";
  * @example
  * ```
  * // Create provider
- * const pools = (new Aftermath("testnet")).Pools();
+ * const pools = (new Aftermath("TESTNET")).Pools();
  * // Call sdk
  * const pool = await pools.getPool({ objectId: "0xBEEF" });
  * ```

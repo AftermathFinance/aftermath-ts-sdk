@@ -5,9 +5,7 @@ import { Balance } from "./generalTypes";
 //// Network
 /////////////////////////////////////////////////////////////////////
 
-// TODO: change this once mainnet is live
-// also is this deprecated within mysten's sui js ?
-export type SuiNetwork = "DEVNET" | "TESTNET" | "LOCAL";
+export type SuiNetwork = "DEVNET" | "TESTNET" | "LOCAL" | "MAINNET";
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
