@@ -71,7 +71,7 @@ export class Aftermath extends Caller {
 	public Sui = () => new Sui(this.network);
 	public Prices = () => new Prices(this.network);
 	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
-	public Coin = (coinType: CoinType) => new Coin(coinType, this.network);
+	public Coin = (coinType?: CoinType) => new Coin(coinType, this.network);
 	public HistoricalData = () => new HistoricalData(this.network);
 
 	/////////////////////////////////////////////////////////////////////

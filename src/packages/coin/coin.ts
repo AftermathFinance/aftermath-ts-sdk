@@ -3,6 +3,7 @@ import {
 	CoinDecimal,
 	CoinPriceInfo,
 	CoinsToBalance,
+	CoinsToDecimals,
 	CoinSymbol,
 	CoinSymbolToCoinTypes,
 	CoinType,
@@ -41,16 +42,23 @@ export class Coin extends Caller {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
+	// TODO: update this class to not be instantiated with a coin type at all
 	constructor(
-		public readonly coinType: CoinType,
+		public readonly coinType?: CoinType,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, "coins");
 		this.coinType = coinType;
 
-		this.coinTypePackageName = Coin.getCoinTypePackageName(this.coinType);
-		this.coinTypeSymbol = Coin.getCoinTypeSymbol(this.coinType);
-		this.innerCoinType = Coin.getInnerCoinType(this.coinType);
+		this.coinTypePackageName = this.coinType
+			? Coin.getCoinTypePackageName(this.coinType)
+			: "";
+		this.coinTypeSymbol = this.coinType
+			? Coin.getCoinTypeSymbol(this.coinType)
+			: "";
+		this.innerCoinType = this.coinType
+			? Coin.getInnerCoinType(this.coinType)
+			: "";
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -61,10 +69,31 @@ export class Coin extends Caller {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public async getCoinMetadata(): Promise<CoinMetadata> {
+	public async getCoinsToDecimals(inputs: {
+		coins: CoinType[];
+	}): Promise<CoinsToDecimals> {
+		const { coins } = inputs;
+
+		const allDecimals = await Promise.all(
+			coins.map(
+				async (coin) => (await this.getCoinMetadata(coin)).decimals
+			)
+		);
+
+		const coinsToDecimals: Record<CoinType, CoinDecimal> =
+			allDecimals.reduce((acc, decimals, index) => {
+				return { ...acc, [coins[index]]: decimals };
+			}, {});
+		return coinsToDecimals;
+	}
+
+	public async getCoinMetadata(coin?: CoinType): Promise<CoinMetadata> {
 		if (this.metadata) return this.metadata;
 
-		const metadata = await this.fetchApi<CoinMetadata>(this.coinType);
+		const coinType = this.coinType ?? coin;
+		if (!coinType) throw new Error("no valid coin type");
+
+		const metadata = await this.fetchApi<CoinMetadata>(coinType);
 		this.setCoinMetadata(metadata);
 		return metadata;
 	}
@@ -73,11 +102,14 @@ export class Coin extends Caller {
 		this.metadata = metadata;
 	}
 
-	public async getPrice(): Promise<CoinPriceInfo> {
+	public async getPrice(coin?: CoinType): Promise<CoinPriceInfo> {
 		if (this.priceInfo !== undefined) return this.priceInfo;
 
+		const coinType = this.coinType ?? coin;
+		if (!coinType) throw new Error("no valid coin type");
+
 		const priceInfo = await new Prices(this.network).getCoinPriceInfo({
-			coin: this.coinType,
+			coin: coinType,
 		});
 
 		// NOTE: do we want this here ? (unexpected behavior)

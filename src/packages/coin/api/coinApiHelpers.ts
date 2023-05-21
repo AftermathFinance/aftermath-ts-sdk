@@ -6,11 +6,10 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
-import { Balance, CoinDecimal, CoinType } from "../../../types";
+import { Balance, CoinType } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { CoinApi } from "./coinApi";
 import { Casting } from "../../../general/utils/casting";
 
 export class CoinApiHelpers {
@@ -30,96 +29,96 @@ export class CoinApiHelpers {
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCoinDecimals = async (coin: CoinType) => {
-		const coinMetadata = await new CoinApi(this.Provider).fetchCoinMetadata(
-			coin
-		);
-		const decimals = coinMetadata?.decimals;
-		if (decimals === undefined)
-			throw Error("unable to obtain decimals for coin: " + coin);
+	// public fetchCoinDecimals = async (coin: CoinType) => {
+	// 	const coinMetadata = await new CoinApi(this.Provider).fetchCoinMetadata(
+	// 		coin
+	// 	);
+	// 	const decimals = coinMetadata?.decimals;
+	// 	if (decimals === undefined)
+	// 		throw Error("unable to obtain decimals for coin: " + coin);
 
-		return decimals as CoinDecimal;
-	};
+	// 	return decimals as CoinDecimal;
+	// };
 
 	// TODO: use this everywhere in backend calls ?
 	// TODO: handle coins where there is no coin metadata on chain
-	public fetchCoinDecimalsNormalizeBalance = async (
-		coin: CoinType,
-		amount: number
-	) => {
-		const decimals = await this.fetchCoinDecimals(coin);
-		return Coin.normalizeBalance(amount, decimals);
-	};
+	// public fetchCoinDecimalsNormalizeBalance = async (
+	// 	coin: CoinType,
+	// 	amount: number
+	// ) => {
+	// 	const decimals = await this.fetchCoinDecimals(coin);
+	// 	return Coin.normalizeBalance(amount, decimals);
+	// };
 
-	public fetchCoinDecimalsApplyToBalance = async (
-		coin: CoinType,
-		balance: Balance
-	) => {
-		const decimals = await this.fetchCoinDecimals(coin);
-		return Coin.balanceWithDecimals(balance, decimals);
-	};
+	// public fetchCoinDecimalsApplyToBalance = async (
+	// 	coin: CoinType,
+	// 	balance: Balance
+	// ) => {
+	// 	const decimals = await this.fetchCoinDecimals(coin);
+	// 	return Coin.balanceWithDecimals(balance, decimals);
+	// };
 
-	public fetchCoinsToDecimals = async (coins: CoinType[]) => {
-		let allDecimals: number[] = [];
-		for (const coin of coins) {
-			const decimals = await this.fetchCoinDecimals(coin);
-			allDecimals.push(decimals);
-		}
+	// public fetchCoinsToDecimals = async (coins: CoinType[]) => {
+	// 	let allDecimals: number[] = [];
+	// 	for (const coin of coins) {
+	// 		const decimals = await this.fetchCoinDecimals(coin);
+	// 		allDecimals.push(decimals);
+	// 	}
 
-		const coinsToDecimals: Record<CoinType, CoinDecimal> =
-			allDecimals.reduce((acc, decimals, index) => {
-				return { ...acc, [coins[index]]: decimals };
-			}, {});
-		return coinsToDecimals;
-	};
+	// 	const coinsToDecimals: Record<CoinType, CoinDecimal> =
+	// 		allDecimals.reduce((acc, decimals, index) => {
+	// 			return { ...acc, [coins[index]]: decimals };
+	// 		}, {});
+	// 	return coinsToDecimals;
+	// };
 
-	public fetchNormalizeCoinAmounts = async (
-		coins: CoinType[],
-		amounts: number[]
-	) => {
-		const normalizedAmounts = await Promise.all(
-			coins.map(
-				async (coin, index) =>
-					await this.fetchCoinDecimalsNormalizeBalance(
-						coin,
-						amounts[index]
-					)
-			)
-		);
+	// public fetchNormalizeCoinAmounts = async (
+	// 	coins: CoinType[],
+	// 	amounts: number[]
+	// ) => {
+	// 	const normalizedAmounts = await Promise.all(
+	// 		coins.map(
+	// 			async (coin, index) =>
+	// 				await this.fetchCoinDecimalsNormalizeBalance(
+	// 					coin,
+	// 					amounts[index]
+	// 				)
+	// 		)
+	// 	);
 
-		return normalizedAmounts;
-	};
+	// 	return normalizedAmounts;
+	// };
 
-	public async fetchCoinsToDecimalsAndPrices(coins: CoinType[]): Promise<
-		Record<
-			CoinType,
-			{
-				decimals: CoinDecimal;
-				price: number;
-			}
-		>
-	> {
-		const [coinsToPrices, coinsToDecimals] = await Promise.all([
-			this.Provider.Prices().fetchCoinsToPrice(coins),
-			this.fetchCoinsToDecimals(coins),
-		]);
+	// public async fetchCoinsToDecimalsAndPrices(coins: CoinType[]): Promise<
+	// 	Record<
+	// 		CoinType,
+	// 		{
+	// 			decimals: CoinDecimal;
+	// 			price: number;
+	// 		}
+	// 	>
+	// > {
+	// 	const [coinsToPrices, coinsToDecimals] = await Promise.all([
+	// 		this.Provider.Prices().fetchCoinsToPrice(coins),
+	// 		this.fetchCoinsToDecimals(coins),
+	// 	]);
 
-		const coinsToDecimalsAndPrices = Object.keys(coinsToPrices).reduce(
-			(acc, coin) => {
-				return {
-					...acc,
-					[coin]: {
-						decimals: coinsToDecimals[coin],
-						price:
-							coinsToPrices[coin] < 0 ? 0 : coinsToPrices[coin],
-					},
-				};
-			},
-			{}
-		);
+	// 	const coinsToDecimalsAndPrices = Object.keys(coinsToPrices).reduce(
+	// 		(acc, coin) => {
+	// 			return {
+	// 				...acc,
+	// 				[coin]: {
+	// 					decimals: coinsToDecimals[coin],
+	// 					price:
+	// 						coinsToPrices[coin] < 0 ? 0 : coinsToPrices[coin],
+	// 				},
+	// 			};
+	// 		},
+	// 		{}
+	// 	);
 
-		return coinsToDecimalsAndPrices;
-	}
+	// 	return coinsToDecimalsAndPrices;
+	// }
 
 	/////////////////////////////////////////////////////////////////////
 	//// Helpers
