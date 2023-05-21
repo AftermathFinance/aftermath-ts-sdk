@@ -2,7 +2,8 @@ import { SuiNetwork } from "../types/suiTypes";
 import { CoinType } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 import { Url } from "../types";
-import { CoinGeckoCoinData, CoinHistoricalData } from "./historicalDataTypes";
+import { CoinHistoricalData } from "./historicalDataTypes";
+import { CoinGeckoCoinData } from "../prices/coingecko/coinGeckoTypes";
 
 export class HistoricalData extends Caller {
 	/////////////////////////////////////////////////////////////////////

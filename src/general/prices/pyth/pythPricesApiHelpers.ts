@@ -46,11 +46,7 @@ export class PythPricesApiHelpers {
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(
-		private readonly Provider: AftermathApi,
-		private readonly coinSymbolToCoinTypes: CoinSymbolToCoinTypes
-	) {
-		this.Provider = Provider;
+	constructor(private readonly coinSymbolToCoinTypes: CoinSymbolToCoinTypes) {
 		this.coinSymbolToCoinTypes = coinSymbolToCoinTypes;
 
 		this.connection = new EvmPriceServiceConnection(
