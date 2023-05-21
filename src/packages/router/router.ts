@@ -17,7 +17,7 @@ import { Caller } from "../../general/utils/caller";
  * @example
  * ```
  * // Create provider
- * const router = (new Aftermath("testnet")).Router();
+ * const router = (new Aftermath("TESTNET")).Router();
  * // Call sdk
  * const supportedCoins = await router.getSupportedCoins();
  * ```
