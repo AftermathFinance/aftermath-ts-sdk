@@ -90,6 +90,11 @@ export class CoinGeckoApiHelpers {
 			timeUnit: "D",
 		};
 
+		if (allData.prices.some((val) => val[0] <= 0))
+			throw new Error(
+				"invalid historical data for coin api id: " + coinApiId
+			);
+
 		return formattedData;
 	};
 
@@ -159,6 +164,9 @@ export class CoinGeckoApiHelpers {
 						: `&x_cg_pro_api_key=${this.coinGeckoApiKey}`)
 			)
 		).json();
+
+		if (endpoint.includes("market_chart"))
+			console.log("someJson", someJson);
 
 		const castedRes = someJson as OutputType;
 		return castedRes;
