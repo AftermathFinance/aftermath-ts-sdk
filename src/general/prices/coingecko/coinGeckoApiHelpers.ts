@@ -1,12 +1,8 @@
 import { Coin } from "../../../packages";
-import { CoinType } from "../../../types";
+import { CoinPriceInfo, CoinType } from "../../../types";
 import { CoinHistoricalData } from "../../historicalData/historicalDataTypes";
 import { Helpers } from "../../utils";
-import {
-	CoinGeckoCoinApiId,
-	CoinGeckoCoinData,
-	CoinGeckoCoinPriceInfo,
-} from "./coinGeckoTypes";
+import { CoinGeckoCoinApiId, CoinGeckoCoinData } from "./coinGeckoTypes";
 
 export class CoinGeckoApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -103,37 +99,38 @@ export class CoinGeckoApiHelpers {
 
 	public fetchCoinsToPriceInfo = async (inputs: {
 		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
-	}): Promise<Record<CoinType, CoinGeckoCoinPriceInfo>> => {
-		const { coinsToApiId: coinTypeToCoinApiId } = inputs;
+	}): Promise<Record<CoinType, CoinPriceInfo>> => {
+		const { coinsToApiId } = inputs;
 
 		const rawCoinsInfo = await this.callApi<
 			Record<CoinGeckoCoinApiId, { usd: number; usd_24h_change: number }>
 		>(
-			`simple/price/ids=${Object.values(coinTypeToCoinApiId).reduce(
+			`simple/price/ids=${Object.values(coinsToApiId).reduce(
 				(acc, apiId) => `${acc},${apiId}`,
 				""
 			)}&vs_currencies=usd&include_24hr_change=true&precision=full`
 		);
 
-		const coinsInfo: Record<CoinType, CoinGeckoCoinPriceInfo> =
-			Object.entries(rawCoinsInfo).reduce((acc, [coinApiId, info]) => {
-				const coinType = Object.entries(coinTypeToCoinApiId).find(
-					([, id]) => id === coinApiId
-				)?.[0];
+		const coinsInfo: Record<CoinType, CoinPriceInfo> = Object.entries(
+			rawCoinsInfo
+		).reduce((acc, [coinApiId, info]) => {
+			const coinType = Object.entries(coinsToApiId).find(
+				([, id]) => id === coinApiId
+			)?.[0];
 
-				if (!coinType)
-					throw new Error(
-						"coin type not found for coingecko api coin id"
-					);
+			if (!coinType)
+				throw new Error(
+					"coin type not found for coingecko api coin id"
+				);
 
-				return {
-					...acc,
-					[coinType]: {
-						price: info.usd,
-						priceChange24HoursPercentage: info.usd_24h_change / 100,
-					},
-				};
-			}, {});
+			return {
+				...acc,
+				[coinType]: {
+					price: info.usd,
+					priceChange24HoursPercentage: info.usd_24h_change / 100,
+				},
+			};
+		}, {});
 
 		return coinsInfo;
 	};

@@ -20,8 +20,3 @@ export interface CoinGeckoCoinData {
 	symbol: CoinSymbol;
 	coinType: CoinType;
 }
-
-export interface CoinGeckoCoinPriceInfo {
-	price: number;
-	priceChange24HoursPercentage: Percentage;
-}
