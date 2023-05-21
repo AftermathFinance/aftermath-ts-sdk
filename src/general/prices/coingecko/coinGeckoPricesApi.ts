@@ -1,4 +1,4 @@
-import { CoinType } from "../../../types";
+import { CoinType, CoinsToPrice } from "../../../types";
 import { Helpers } from "../../utils";
 import { PricesApiInterface } from "../pricesApiInterface";
 import { CoinGeckoApiHelpers } from "./coinGeckoApiHelpers";
@@ -39,13 +39,14 @@ export class CoinGeckoPricesApi
 				.map(Helpers.addLeadingZeroesToType)
 				.includes(Helpers.addLeadingZeroesToType(coin))
 		);
-		const coinsToApiId = Object.entries(onlyInputCoinsData).reduce(
-			(acc, [coinType, data]) => ({
-				...acc,
-				[coinType]: data.apiId,
-			}),
-			{}
-		);
+		const coinsToApiId: Record<CoinType, CoinGeckoCoinApiId> =
+			Object.entries(onlyInputCoinsData).reduce(
+				(acc, [coinType, data]) => ({
+					...acc,
+					[coinType]: data.apiId,
+				}),
+				{}
+			);
 		return this.fetchCoinsToPriceGivenApiIds({ coinsToApiId });
 	};
 
@@ -67,7 +68,9 @@ export class CoinGeckoPricesApi
 		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
 	}): Promise<Record<CoinType, number>> => {
 		const coinsToPriceInfo = await this.fetchCoinsToPriceInfo(inputs);
-		const coinsToPrice = Object.entries(coinsToPriceInfo).reduce(
+		const coinsToPrice: CoinsToPrice = Object.entries(
+			coinsToPriceInfo
+		).reduce(
 			(acc, [coinType, info]) => ({
 				...acc,
 				[coinType]: info.price,

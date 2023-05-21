@@ -1,6 +1,7 @@
 import {
 	Balance,
 	CoinDecimal,
+	CoinPriceInfo,
 	CoinsToBalance,
 	CoinSymbol,
 	CoinSymbolToCoinTypes,
@@ -34,7 +35,7 @@ export class Coin extends Caller {
 	public readonly innerCoinType: string;
 
 	public metadata: CoinMetadata | undefined;
-	public price: number | undefined;
+	public priceInfo: CoinPriceInfo | undefined;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -72,22 +73,22 @@ export class Coin extends Caller {
 		this.metadata = metadata;
 	}
 
-	public async getPrice(): Promise<number> {
-		if (this.price !== undefined) return this.price;
+	public async getPrice(): Promise<CoinPriceInfo> {
+		if (this.priceInfo !== undefined) return this.priceInfo;
 
-		const price = await new Prices(this.network).getCoinPrice({
+		const priceInfo = await new Prices(this.network).getCoinPriceInfo({
 			coin: this.coinType,
 		});
 
 		// NOTE: do we want this here ? (unexpected behavior)
 		// if (price <= 0) throw new Error("No price found.")
 
-		this.setPrice(price);
-		return price;
+		this.setPriceInfo(priceInfo);
+		return priceInfo;
 	}
 
-	public setPrice(price: number) {
-		this.price = price;
+	public setPriceInfo(priceInfo: CoinPriceInfo) {
+		this.priceInfo = priceInfo;
 	}
 
 	/////////////////////////////////////////////////////////////////////

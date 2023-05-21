@@ -1,4 +1,4 @@
-import { Balance } from "../../general/types/generalTypes";
+import { Balance, Percentage } from "../../general/types/generalTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -38,4 +38,10 @@ export interface AmountInCoinAndUsd {
 
 export type CoinsToBalance = Record<CoinType, Balance>;
 export type CoinsToPrice = Record<CoinType, number>;
+export type CoinsToPriceInfo = Record<CoinType, CoinPriceInfo>;
 export type CoinSymbolToCoinTypes = Record<CoinSymbol, CoinType[]>;
+
+export interface CoinPriceInfo {
+	price: number;
+	priceChange24HoursPercentage: Percentage;
+}
