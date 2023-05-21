@@ -1,4 +1,4 @@
-import { CoinType, CoinsToPrice } from "../../../types";
+import { CoinType, CoinsToPrice, CoinsToPriceInfo } from "../../../types";
 import { Helpers } from "../../utils";
 import { PricesApiInterface } from "../pricesApiInterface";
 import { CoinGeckoApiHelpers } from "./coinGeckoApiHelpers";
@@ -47,7 +47,25 @@ export class CoinGeckoPricesApi
 				}),
 				{}
 			);
-		return this.fetchCoinsToPriceGivenApiIds({ coinsToApiId });
+
+		const coinsToPrice = await this.fetchCoinsToPriceGivenApiIds({
+			coinsToApiId,
+		});
+		const missingCoinsToPrice: CoinsToPrice = coins.reduce(
+			(acc, coin) =>
+				Helpers.addLeadingZeroesToType(coin) in coinsToPrice
+					? acc
+					: {
+							...acc,
+							[Helpers.addLeadingZeroesToType(coin)]: -1,
+					  },
+			{}
+		);
+
+		return {
+			...missingCoinsToPrice,
+			...coinsToPrice,
+		};
 	};
 
 	/////////////////////////////////////////////////////////////////////
