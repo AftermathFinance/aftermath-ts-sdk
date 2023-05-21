@@ -38,15 +38,7 @@ export class CoinApi {
 			return coinMetadata;
 		} catch (error) {
 			if (this.Provider.Pools().Helpers.isLpCoin(coin)) {
-				const coinName = Pools.displayLpCoinType(coin);
-				return {
-					symbol: coinName.replaceAll(" ", "_").toUpperCase(),
-					id: null,
-					description: "Aftermath Finance LP",
-					name: coinName,
-					decimals: Pools.constants.decimals.lpCoinDecimals,
-					iconUrl: null,
-				};
+				return this.createLpCoinMetadata(coin);
 			}
 
 			const coinClass = new Coin(coin);
@@ -56,8 +48,65 @@ export class CoinApi {
 				symbol: symbol.toUpperCase(),
 				id: null,
 				description: `${symbol} (${packageName})`,
-				name: symbol,
+				name: symbol
+					.split("_")
+					.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
+					.join(" "),
 				decimals: 9,
+				iconUrl: null,
+			};
+		}
+	};
+
+	// NOTE: this is temporary until LP coin metadata issue is solved on Sui
+	private createLpCoinMetadata = async (
+		coin: CoinType
+	): Promise<CoinMetadata> => {
+		try {
+			const PoolsApi = this.Provider.Pools();
+
+			// TODO: find the best way to do all of this using cached server data
+			const poolObjectId = await PoolsApi.fetchPoolObjectIdForLpCoinType(
+				coin
+			);
+			const pool = await PoolsApi.fetchPool(poolObjectId);
+
+			const maxCoinSymbolLength = 5;
+			const notPrettyCoinSymbol =
+				pool.name.length > maxCoinSymbolLength
+					? pool.name.toUpperCase().slice(0, maxCoinSymbolLength)
+					: pool.name.toUpperCase();
+			const coinSymbol =
+				notPrettyCoinSymbol.slice(-1) === "_"
+					? notPrettyCoinSymbol.slice(0, -1)
+					: notPrettyCoinSymbol;
+
+			const coinName = pool.name
+				.split(" ")
+				.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
+				.join(" ");
+
+			const coinDescription =
+				await PoolsApi.Helpers.createLpCoinMetadataDescription({
+					poolName: pool.name,
+					coinTypes: Object.keys(pool.coins),
+				});
+
+			return {
+				symbol: `AF_LP_${coinSymbol}`,
+				id: null,
+				description: coinDescription,
+				name: `Af Lp ${coinName}`,
+				decimals: Pools.constants.decimals.lpCoinDecimals,
+				iconUrl: null,
+			};
+		} catch (e) {
+			return {
+				symbol: "AF_LP",
+				id: null,
+				description: "Aftermath Finance LP",
+				name: "Af Lp",
+				decimals: Pools.constants.decimals.lpCoinDecimals,
 				iconUrl: null,
 			};
 		}

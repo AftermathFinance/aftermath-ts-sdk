@@ -39,10 +39,12 @@ export class WalletApi {
 		});
 
 		const coinsToBalance: CoinsToBalance = allBalances.reduce(
-			(acc, balance, index) => {
+			(acc, balance) => {
 				return {
 					...acc,
-					[balance.coinType]: BigInt(balance.totalBalance),
+					[Helpers.addLeadingZeroesToType(balance.coinType)]: BigInt(
+						balance.totalBalance
+					),
 				};
 			},
 			{}

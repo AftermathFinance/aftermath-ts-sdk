@@ -423,7 +423,6 @@ export class TurbosApiHelpers {
 				protocolFee: BigInt(data.protocol_fee),
 			};
 		} catch (e) {
-			console.error(e);
 			throw new Error("e");
 		}
 	};

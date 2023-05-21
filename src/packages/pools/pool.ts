@@ -6,7 +6,7 @@ import {
 	CoinType,
 	CoinsToBalance,
 	PoolDataPoint,
-	PoolVolumeDataTimeframeKey,
+	PoolGraphDataTimeframeKey,
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
@@ -28,7 +28,7 @@ export class Pool extends Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	private static readonly constants = {
-		percentageBoundsMarginOfError: 0.00001,
+		percentageBoundsMarginOfError: 0.001, // 0.1%
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -61,10 +61,16 @@ export class Pool extends Caller {
 		this.stats = stats;
 	}
 
-	public async getVolume(inputs: {
-		timeframe: PoolVolumeDataTimeframeKey;
+	public async getVolumeData(inputs: {
+		timeframe: PoolGraphDataTimeframeKey;
 	}): Promise<PoolDataPoint[]> {
 		return this.fetchApi(`volume/${inputs.timeframe}`);
+	}
+
+	public async getFeeData(inputs: {
+		timeframe: PoolGraphDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> {
+		return this.fetchApi(`fees/${inputs.timeframe}`);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -184,11 +190,11 @@ export class Pool extends Caller {
 
 		if (
 			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
-				"coinInAmountWithFees / coinInPoolBalance >= maxSwapPercentageOfPoolBalance"
+				"coinInAmountWithFees / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
 		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
@@ -202,11 +208,11 @@ export class Pool extends Caller {
 
 		if (
 			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
-				"coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance"
+				"coinOutAmount / coinOutPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
 		return coinOutAmount;
@@ -225,11 +231,11 @@ export class Pool extends Caller {
 
 		if (
 			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
-				"coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance"
+				"coinOutAmount / coinOutPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
 		const coinInAmount = CmmmCalculations.calcInGivenOut(
@@ -243,11 +249,11 @@ export class Pool extends Caller {
 
 		if (
 			Number(coinInAmount) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
-				"coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance"
+				"coinInAmount / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
 		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
@@ -296,9 +302,25 @@ export class Pool extends Caller {
 			inputs.lpRatio
 		);
 
-		for (const coin in Object.keys(amountsOut)) {
-			if (amountsOut[coin] <= Casting.zeroBigInt)
+		for (const coin of Object.keys(amountsOut)) {
+			if (
+				!(coin in inputs.amountsOutDirection) ||
+				inputs.amountsOutDirection[coin] <= BigInt(0)
+			)
+				continue;
+
+			const amountOut = amountsOut[coin];
+
+			if (amountOut <= Casting.zeroBigInt)
 				throw new Error(`amountsOut[${coin}] <= 0 `);
+
+			if (
+				amountOut / this.pool.coins[coin].balance >=
+				Pools.constants.bounds.maxWithdrawPercentageOfPoolBalance
+			)
+				throw new Error(
+					"coinOutAmount / coinOutPoolBalance >= maxWithdrawPercentageOfPoolBalance"
+				);
 		}
 
 		return amountsOut;

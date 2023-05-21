@@ -1,10 +1,14 @@
 import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { PoolsApiHelpers } from "./poolsApiHelpers";
-import { CoinType, CoinsToBalance, CoinsToPrice } from "../../coin/coinTypes";
+import {
+	CoinType,
+	CoinsToBalance,
+	CoinsToDecimals,
+	CoinsToPrice,
+} from "../../coin/coinTypes";
 import {
 	Balance,
-	PoolVolumeDataTimeframeKey,
 	PoolDepositEvent,
 	PoolStats,
 	PoolTradeEvent,
@@ -13,6 +17,10 @@ import {
 	Slippage,
 	PoolCreationLpCoinMetadata,
 	PoolName,
+	PoolDataPoint,
+	PoolObject,
+	PoolTradeFee,
+	PoolGraphDataTimeframeKey,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -311,20 +319,16 @@ export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
 
 	// TODO: use promise.all to execute some of this fetching in parallel
-	public fetchPoolStats = async (
-		pool: Pool,
-		coinsToPrice: CoinsToPrice
-	): Promise<PoolStats> => {
+	public fetchPoolStats = async (inputs: {
+		pool: Pool;
+		coinsToPrice: CoinsToPrice;
+		coinsToDecimals: CoinsToDecimals;
+	}): Promise<PoolStats> => {
+		const { pool, coinsToPrice, coinsToDecimals } = inputs;
+
 		const poolCoins = pool.pool.coins;
-		const poolCoinTypes = Object.keys(poolCoins);
 
-		// TODO: move this outside of func to be called externally via provider in api ?
-		const coinsToDecimals =
-			await this.Provider.Coin().Helpers.fetchCoinsToDecimals(
-				poolCoinTypes
-			);
-
-		// PRODUCTION: remove all notions of sdk from api functions !
+		// TODO: remove all notions of sdk from api functions !
 
 		const tradeEventsWithinTime =
 			await this.Provider.Events().fetchEventsWithinTime(
@@ -453,31 +457,42 @@ export class PoolsApi {
 	//// Graph Data
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchPoolVolumeData = async (
-		poolObjectId: ObjectId,
-		timeframe: PoolVolumeDataTimeframeKey
-	) => {
-		const timeframeValue = this.Helpers.poolVolumeDataTimeframes[timeframe];
+	public fetchPoolVolumeData = async (inputs: {
+		poolObjectId: ObjectId;
+		timeframe: PoolGraphDataTimeframeKey;
+		coinsToDecimals: CoinsToDecimals;
+		coinsToPrice: CoinsToPrice;
+	}): Promise<PoolDataPoint[]> => {
+		const timeframeValue =
+			this.Helpers.poolVolumeDataTimeframes[inputs.timeframe];
 
-		const [pool, tradeEvents] = await Promise.all([
-			this.fetchPool(poolObjectId),
-			(
-				await this.Provider.Events().fetchEventsWithinTime(
-					// TODO: fetch only pool's events
-					this.fetchTradeEvents,
-					timeframeValue.timeUnit,
-					timeframeValue.time,
-					512
-				)
-			).filter((trade) => trade.poolId === poolObjectId),
-		]);
+		const tradeEvents = (
+			await this.Provider.Events().fetchEventsWithinTime(
+				// TODO: fetch only pool's events
+				this.fetchTradeEvents,
+				timeframeValue.timeUnit,
+				timeframeValue.time,
+				512
+			)
+		).filter((trade) => trade.poolId === inputs.poolObjectId);
 
-		return await this.Helpers.fetchCalcPoolVolumeData(
-			pool,
+		return this.Helpers.calcPoolVolumeData({
+			...inputs,
+			...timeframeValue,
 			tradeEvents,
-			timeframeValue.timeUnit,
-			timeframeValue.time,
-			timeframeValue.time
-		);
+			buckets: timeframeValue.time,
+		});
+	};
+
+	public calcPoolFeeDataFromVolume = (inputs: {
+		volumeData: PoolDataPoint[];
+		poolTradeFee: PoolTradeFee;
+	}): PoolDataPoint[] => {
+		const feeData = inputs.volumeData.map((data) => ({
+			time: data.time,
+			value: data.value * Pools.tradeFeeWithDecimals(inputs.poolTradeFee),
+		}));
+
+		return feeData;
 	};
 }

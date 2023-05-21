@@ -1,0 +1,19 @@
+import { CoinGeckoApiHelpers } from "../prices/coingecko/coinGeckoApiHelpers";
+
+export class HistoricalDataApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Constructor
+	/////////////////////////////////////////////////////////////////////
+
+	constructor(private readonly coinGeckoApiKey: string) {}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Public
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchAllCoinData = new CoinGeckoApiHelpers(this.coinGeckoApiKey)
+		.fetchAllCoinData;
+
+	public fetchHistoricalData = new CoinGeckoApiHelpers(this.coinGeckoApiKey)
+		.fetchHistoricalData;
+}

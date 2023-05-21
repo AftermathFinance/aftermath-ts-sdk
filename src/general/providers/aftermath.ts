@@ -11,6 +11,7 @@ import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
 import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
+import { HistoricalData } from "../historicalData/historicalData";
 
 /**
  * @class Aftermath Provider
@@ -70,7 +71,8 @@ export class Aftermath extends Caller {
 	public Sui = () => new Sui(this.network);
 	public Prices = () => new Prices(this.network);
 	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
-	public Coin = (coinType: CoinType) => new Coin(coinType, this.network);
+	public Coin = (coinType?: CoinType) => new Coin(coinType, this.network);
+	public HistoricalData = () => new HistoricalData(this.network);
 
 	/////////////////////////////////////////////////////////////////////
 	//// Utils

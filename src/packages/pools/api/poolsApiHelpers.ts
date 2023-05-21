@@ -13,8 +13,8 @@ import {
 	CoinDecimal,
 	CoinType,
 	PoolDataPoint,
-	PoolVolumeDataTimeframe,
-	PoolVolumeDataTimeframeKey,
+	PoolGraphDataTimeframe,
+	PoolGraphDataTimeframeKey,
 	PoolObject,
 	PoolTradeEvent,
 	PoolsAddresses,
@@ -33,6 +33,7 @@ import {
 	PoolTradeFee,
 	PoolDepositFee,
 	PoolWithdrawFee,
+	CoinsToDecimals,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
@@ -92,8 +93,8 @@ export class PoolsApiHelpers {
 	};
 
 	public readonly poolVolumeDataTimeframes: Record<
-		PoolVolumeDataTimeframeKey,
-		PoolVolumeDataTimeframe
+		PoolGraphDataTimeframeKey,
+		PoolGraphDataTimeframe
 	> = {
 		"1D": {
 			time: 24,
@@ -392,7 +393,7 @@ export class PoolsApiHelpers {
 		const { tx } = inputs;
 
 		const compiledModulesAndDeps = JSON.parse(
-			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytPCHpgCtoBBQzfAQ0AAgIDAQcAAAIAAgECAAAGAAEAAQQDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA1hbW1faW50ZXJmYWNlDmNyZWF0ZV9scF9jb2luC2R1bW15X2ZpZWxkBGluaXQKdHhfY29udGV4dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITrjjbvbkwWswAhXLcNgQmxJj+yuKv50mWJoNBcn191gACAQUBAAAAAAEECwALATgAAgA="],"dependencies":["0xadf8553fc429ed873633d18df297b8c1081f7d9080c60e9f70296bc464b6aeec","0x13ae38dbbdb9305acc008572dc360426c498fecae2afe74996268341727d7dd6","0x321a50c956db8b0b8fe53af2756e33212e18ea1a6ba82b9dd4308114b6944289","0x0000000000000000000000000000000000000000000000000000000000000001","0x3f84a34a349dfc02cf3f7b90d13a7b81e4956c9d5b77345ae251d79f1db1e44d","0x484d68333fe65c4910a5c708c9aa6469bfc59d343bc5ed898a18226ae422959f","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0x373c265b27110d08e500ebb2a2e40aab08e1dd7d7f40eb878094ed260c4e5afa","0x543763e9d064c12274dc08a8099824f90cba4334190b805fd360e0d34dad0309"],"digest":[23,92,91,106,221,67,5,140,177,219,29,237,180,148,146,248,27,194,142,243,33,50,220,35,113,82,255,83,103,114,27,201]}`
+			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytPCHpgCtoBBQzfAQ0AAgIDAQcAAAIAAgECAAAGAAEAAQQDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA1hbW1faW50ZXJmYWNlDmNyZWF0ZV9scF9jb2luC2R1bW15X2ZpZWxkBGluaXQKdHhfY29udGV4dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALmlBNSmrNkQyYGFIdIntxU5RrgYIeMfzpdVSbNt3hPoQACAQUBAAAAAAEECwALATgAAgA="],"dependencies":["0x20a65e88af1067e992c08c3d739df5411f4f34de38a7073102a709ae0aa6057e","0xe69413529ab3644326061487489edc54e51ae060878c7f3a5d5526cdb7784fa1","0x86ab16dfe4228f1a83e2d8f82f1e4e5b11a6e3c8c1bc12297592276b5badb90c","0xdc6c8b85cbefd0db26c59a83f915816b02bc7a08ca0eb3c3f21877cee7e71071","0x0000000000000000000000000000000000000000000000000000000000000001","0x601207d00bf8862cc36dd06041b6e99707aa68baf7db175a74ceb15aa7a2310b","0xdf857ebd99ad63680122f2960f46ae9f2377cbc31791848dff4d9719fee5f3ac","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0x09e96e14585633f5f1f437164cf74a2052a62521a8b310dcb30ee7289b4d8698","0x11b955825d69f808589ef3bd86a653af1c7e3db4bda4455b0b081dfe5eff100c"],"digest":[122,194,151,53,241,242,224,79,241,73,128,176,53,131,0,232,15,200,171,208,199,220,149,132,13,191,172,87,64,58,129,22]}`
 		);
 
 		return tx.publish({
@@ -856,20 +857,22 @@ export class PoolsApiHelpers {
 	//// Graph Data
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchCalcPoolVolumeData = async (
-		pool: PoolObject,
-		tradeEvents: PoolTradeEvent[],
-		timeUnit: ManipulateType,
-		time: number,
-		buckets: number
-		// PRODUCTION: pass in prices/decimals from elsewhere
-	) => {
-		// TODO: use promise.all for pool fetching and swap fetching
-
-		const coinsToDecimalsAndPrices =
-			await this.Provider.Coin().Helpers.fetchCoinsToDecimalsAndPrices(
-				Object.keys(pool.coins)
-			);
+	public calcPoolVolumeData = (inputs: {
+		tradeEvents: PoolTradeEvent[];
+		timeUnit: ManipulateType;
+		time: number;
+		buckets: number;
+		coinsToDecimals: CoinsToDecimals;
+		coinsToPrice: CoinsToPrice;
+	}) => {
+		const {
+			tradeEvents,
+			timeUnit,
+			time,
+			buckets,
+			coinsToDecimals,
+			coinsToPrice,
+		} = inputs;
 
 		const now = Date.now();
 		const maxTimeAgo = dayjs(now).subtract(time, timeUnit);
@@ -898,13 +901,13 @@ export class PoolsApiHelpers {
 				1;
 
 			const amountUsd = trade.typesIn.reduce((acc, cur, index) => {
-				const price = coinsToDecimalsAndPrices[cur].price;
+				const price = coinsToPrice[cur];
 				const amountInUsd =
 					price < 0
 						? 0
 						: Coin.balanceWithDecimalsUsd(
 								trade.amountsIn[index],
-								coinsToDecimalsAndPrices[cur].decimals,
+								coinsToDecimals[cur],
 								price
 						  );
 				return acc + (amountInUsd < 0 ? 0 : amountInUsd);
@@ -929,6 +932,31 @@ export class PoolsApiHelpers {
 			coin.split("::")[1].includes("af_lp") &&
 			coin.split("::")[2].includes("AF_LP")
 		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// LP Coin Metadata
+	/////////////////////////////////////////////////////////////////////
+
+	public createLpCoinMetadataDescription = async (inputs: {
+		poolName: PoolName;
+		coinTypes: CoinType[];
+	}) => {
+		// TODO: do all of this a little bit cleaner
+		const coinSymbols = (
+			await Promise.all(
+				inputs.coinTypes.map((coin) =>
+					this.Provider.Coin().fetchCoinMetadata(coin)
+				)
+			)
+		).map((metadata) => metadata.symbol);
+		return `Aftermath LP coin for ${
+			inputs.poolName
+		} Pool (${coinSymbols.reduce(
+			(acc, symbol, index) =>
+				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
+			""
+		)})`;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -959,29 +987,4 @@ export class PoolsApiHelpers {
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);
-
-	/////////////////////////////////////////////////////////////////////
-	//// LP Coin Metadata
-	/////////////////////////////////////////////////////////////////////
-
-	private createLpCoinMetadataDescription = async (inputs: {
-		poolName: PoolName;
-		coinTypes: CoinType[];
-	}) => {
-		// TODO: do all of this a little bit cleaner
-		const coinSymbols = (
-			await Promise.all(
-				inputs.coinTypes.map((coin) =>
-					this.Provider.Coin().fetchCoinMetadata(coin)
-				)
-			)
-		).map((metadata) => metadata.symbol);
-		return `Aftermath LP coin for ${
-			inputs.poolName
-		} Pool (${coinSymbols.reduce(
-			(acc, symbol, index) =>
-				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
-			""
-		)})`;
-	};
 }

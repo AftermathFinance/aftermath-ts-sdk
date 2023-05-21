@@ -11,7 +11,7 @@ import {
 	UniqueId,
 	Url,
 } from "../../../../../types";
-import { CoinType, CoinsToBalance } from "../../../../coin/coinTypes";
+import { CoinType } from "../../../../coin/coinTypes";
 import { PoolObject } from "../../../../pools/poolsTypes";
 import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
 import { Pool, Pools } from "../../../../pools";
@@ -27,7 +27,10 @@ class AftermathRouterPool implements RouterPoolInterface {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
-		this.coinTypes = [...Object.keys(pool.coins) /* pool.lpCoinType */];
+		this.coinTypes = [
+			...Object.keys(pool.coins),
+			// pool.lpCoinType
+		];
 		this.poolClass = new Pool(pool, network);
 	}
 
@@ -98,17 +101,13 @@ class AftermathRouterPool implements RouterPoolInterface {
 			// TODO: move this estimation to helper function within sdk
 			const poolCoinOut = this.pool.coins[inputs.coinOutType];
 			const coinOutPoolBalance = poolCoinOut.balance;
-			const coinOutWeight = Pools.coinWeightWithDecimals(
-				poolCoinOut.weight
-			);
 
 			const lpCoinSupply = Number(this.pool.lpCoinSupply);
 			const lpTotal = Number(inputs.coinInAmount);
 			const poolCoinAmount =
 				lpTotal < 0
 					? 0
-					: Number(coinOutPoolBalance) *
-					  (lpTotal / (lpCoinSupply * coinOutWeight));
+					: Number(coinOutPoolBalance) * (lpTotal / lpCoinSupply);
 
 			const amountOutEstimate = BigInt(Math.floor(poolCoinAmount));
 

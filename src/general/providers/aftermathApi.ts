@@ -17,7 +17,9 @@ import { CapysApi } from "../../packages/capys/api/capysApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
-import { RouterProtocolName, RouterSynchronousProtocolName } from "../../types";
+import { RouterProtocolName } from "../../types";
+import { HistoricalDataApi } from "../historicalData/historicalDataApi";
+import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
@@ -56,10 +58,12 @@ export class AftermathApi {
 
 	public constructor(
 		public readonly provider: JsonRpcProvider,
-		public readonly addresses: ConfigAddresses
+		public readonly addresses: ConfigAddresses,
+		private readonly coinGeckoApiKey: string
 	) {
 		this.provider = provider;
 		this.addresses = addresses;
+		this.coinGeckoApiKey = coinGeckoApiKey;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -82,7 +86,9 @@ export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public Wallet = () => new WalletApi(this);
-	public Prices = () => new PlaceholderPricesApi(this);
+	// public Prices = () => new PlaceholderPricesApi(this);
+	public Prices = () => new CoinGeckoPricesApi(this.coinGeckoApiKey);
+	public HistoricalData = () => new HistoricalDataApi(this.coinGeckoApiKey);
 
 	/////////////////////////////////////////////////////////////////////
 	//// General Packages

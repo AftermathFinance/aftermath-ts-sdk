@@ -32,8 +32,9 @@ export class Caller {
 	/////////////////////////////////////////////////////////////////////
 
 	private static baseUrlForNetwork(network: SuiNetwork | Url): Url {
+		if (network === "MAINNET") return "https://aftermath.finance";
+		if (network === "TESTNET") return "https://testnet.aftermath.finance";
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
-		if (network === "TESTNET") return "https://aftermath.finance";
 		if (network === "LOCAL") return "http://localhost:3000";
 		return network;
 	}

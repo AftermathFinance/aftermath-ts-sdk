@@ -27,7 +27,7 @@ import { Helpers } from "../../general/utils/helpers";
  * @example
  * ```
  * // Create provider
- * const pools = (new Aftermath("testnet")).Pools();
+ * const pools = (new Aftermath("TESTNET")).Pools();
  * // Call sdk
  * const pool = await pools.getPool({ objectId: "0xBEEF" });
  * ```
@@ -59,7 +59,8 @@ export class Pools extends Caller {
 		},
 		bounds: {
 			maxCoinsInPool: 8,
-			maxSwapPercentageOfPoolBalance: 0.3, // 30%
+			maxTradePercentageOfPoolBalance: 0.3, // 30%
+			maxWithdrawPercentageOfPoolBalance: 0.3, // 10%
 			minSwapFee: 0.0001,
 			maxSwapFee: 0.1,
 			minWeight: 0.01,
