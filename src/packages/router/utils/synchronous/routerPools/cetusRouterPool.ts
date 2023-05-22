@@ -75,13 +75,6 @@ class CetusRouterPool implements RouterPoolInterface {
 			.Cetus()
 			.Helpers.tradeTx({
 				...inputs,
-				coinInAmount:
-					inputs.coinInAmount -
-					BigInt(
-						Math.floor(
-							Number(inputs.coinInAmount) * inputs.slippage
-						)
-					),
 				coinInId: inputs.coinIn,
 				pool: this.pool,
 			});

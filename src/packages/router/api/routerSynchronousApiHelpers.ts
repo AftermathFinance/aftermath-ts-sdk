@@ -172,7 +172,11 @@ export class RouterSynchronousApiHelpers {
 					referrer,
 				});
 
-				coinIn = poolForPath.noHopsAllowed ? undefined : newCoinIn;
+				coinIn =
+					poolForPath.noHopsAllowed &&
+					poolForPath.protocolName !== "Cetus"
+						? undefined
+						: newCoinIn;
 			}
 
 			if (coinIn) coinsOut.push(coinIn);
