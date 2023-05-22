@@ -12,7 +12,6 @@ import {
 	Url,
 	RouterSerializableCompleteGraph,
 	RouterProtocolName,
-	isRouterAsyncProtocolName,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
 import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
@@ -22,6 +21,7 @@ import { CetusApi } from "../../external/cetus/cetusApi";
 import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
 import { TurbosApi } from "../../external/turbos/turbosApi";
+import { RouterApiHelpers } from "./routerApiHelpers";
 
 export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
@@ -29,7 +29,6 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly Helpers;
-	public readonly AsyncHelpers;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -40,8 +39,7 @@ export class RouterApi {
 		public readonly protocols: RouterProtocolName[] = ["Aftermath"]
 	) {
 		this.Provider = Provider;
-		this.Helpers = new RouterSynchronousApiHelpers(Provider);
-		this.AsyncHelpers = new RouterAsyncApiHelpers(Provider);
+		this.Helpers = new RouterApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -63,10 +61,9 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchSerializableGraph = async () => {
-		const pools = await this.Helpers.fetchAllPools({
+		return this.Helpers.fetchSerializableGraph({
 			protocols: this.protocols,
 		});
-		return RouterGraph.createGraph({ pools });
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -94,37 +91,9 @@ export class RouterApi {
 		// TODO: add options to set all these params ?
 		// maxRouteLength?: number,
 	}): Promise<RouterCompleteTradeRoute> => {
-		if (this.protocols.length === 0)
-			throw new Error("no protocols set in constructor");
-
-		const { network, graph, coinInAmount } = inputs;
-
-		const coinInAmounts =
-			RouterSynchronousApiHelpers.amountsInForRouterTrade({
-				coinInAmount,
-			});
-
-		const tradeResults = await this.AsyncHelpers.fetchTradeResults({
+		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
 			...inputs,
-			protocols: this.protocols.filter(isRouterAsyncProtocolName),
-			coinInAmounts,
-		});
-
-		const routerGraph = new RouterGraph(network, graph);
-
-		if (tradeResults.results.length <= 0)
-			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
-
-		const synchronousCompleteRoutes =
-			routerGraph.getCompleteRoutesGivenAmountIns({
-				...inputs,
-				coinInAmounts,
-			});
-
-		return RouterAsyncGraph.createFinalCompleteRoute({
-			tradeResults,
-			synchronousCompleteRoutes,
-			coinInAmounts,
+			protocols: this.protocols,
 		});
 	};
 
@@ -155,10 +124,9 @@ export class RouterApi {
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 	}): Promise<SerializedTransaction> {
-		const tx =
-			await this.Helpers.fetchBuildTransactionForCompleteTradeRoute(
-				inputs
-			);
+		const tx = await this.Helpers.fetchTransactionForCompleteTradeRoute(
+			inputs
+		);
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			tx
 		);

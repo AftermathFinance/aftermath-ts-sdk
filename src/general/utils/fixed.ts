@@ -27,4 +27,3 @@ export type OnChainUnitaryParameter = OnChainNumber;
 
 // A scalar is any fixed 18-point number. They are stored on chain as a u128 and are always directly cast.
 export type OnChainScalar = OnChainNumber;
-

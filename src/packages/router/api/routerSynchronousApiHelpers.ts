@@ -36,12 +36,6 @@ export class RouterSynchronousApiHelpers {
 		Turbos: () => new TurbosApi(this.Provider),
 	};
 
-	public static readonly constants = {
-		defaults: {
-			tradePartitionCount: 3,
-		},
-	};
-
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -178,7 +172,11 @@ export class RouterSynchronousApiHelpers {
 					referrer,
 				});
 
-				coinIn = poolForPath.noHopsAllowed ? undefined : newCoinIn;
+				coinIn =
+					poolForPath.noHopsAllowed &&
+					poolForPath.protocolName !== "Cetus"
+						? undefined
+						: newCoinIn;
 			}
 
 			if (coinIn) coinsOut.push(coinIn);
@@ -208,40 +206,6 @@ export class RouterSynchronousApiHelpers {
 
 		return tx;
 	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Public Static Methods
-	/////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
-
-	public static amountsInForRouterTrade = (inputs: {
-		coinInAmount: Balance;
-		partitions?: number;
-	}): Balance[] => {
-		const { coinInAmount } = inputs;
-
-		const partitions =
-			inputs.partitions ||
-			RouterSynchronousApiHelpers.constants.defaults.tradePartitionCount;
-
-		const coinInPartitionAmount =
-			coinInAmount / BigInt(Math.floor(partitions));
-		const coinInRemainderAmount =
-			coinInAmount % BigInt(Math.floor(partitions));
-
-		const amountsIn = Array(partitions)
-			.fill(0)
-			.map((_, index) =>
-				index === 0
-					? coinInRemainderAmount + coinInPartitionAmount
-					: BigInt(1 + index) * coinInPartitionAmount
-			);
-
-		return amountsIn;
-	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Methods

@@ -31,17 +31,24 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}): Promise<CetusPoolObject> => {
-		return this.Helpers.fetchPoolForCoinTypes(inputs);
-	};
-
 	public fetchAllPools = async () => {
 		const pools = await this.Helpers.fetchAllPools();
 		return pools;
 	};
+
+	public fetchPoolsForTrade = (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		partialMatchPools: CetusPoolObject[];
+		exactMatchPools: CetusPoolObject[];
+	}> => {
+		return this.Helpers.fetchPoolsForTrade(inputs);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Inspections
+	/////////////////////////////////////////////////////////////////////
 
 	public fetchSupportedCoins = async () => {
 		const pools = await this.Helpers.fetchAllPools();
@@ -53,10 +60,6 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		return Helpers.uniqueArray(allCoins);
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
-
 	public fetchTradeAmountOut = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: CetusPoolObject;
@@ -66,6 +69,13 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	}): Promise<Balance> => {
 		const tradeResult = await this.Helpers.fetchCalcTradeResult(inputs);
 		return tradeResult.amountOut;
+	};
+
+	public otherCoinInPool = (inputs: {
+		coinType: CoinType;
+		pool: CetusPoolObject;
+	}) => {
+		return CetusApiHelpers.otherCoinInPool(inputs);
 	};
 
 	/////////////////////////////////////////////////////////////////////

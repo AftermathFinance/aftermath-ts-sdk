@@ -89,6 +89,77 @@ export class RouterGraph {
 	}
 
 	/////////////////////////////////////////////////////////////////////
+	//// Public Methods
+	/////////////////////////////////////////////////////////////////////
+
+	public getCompleteRouteGivenAmountIn(inputs: {
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute {
+		return this.getCompleteRoute({
+			...inputs,
+			isGivenAmountOut: false,
+		});
+	}
+
+	// public getCompleteRouteGivenAmountOut(
+	// 	coinIn: CoinType,
+	// 	coinOut: CoinType,
+	// 	coinOutAmount: Balance,
+	// 	referrer?: SuiAddress,
+	// 	externalFee?: RouterExternalFee
+	// ): RouterCompleteTradeRoute {
+	// 	return this.getCompleteRoute(
+	// 		coinIn,
+	// 		coinOutAmount,
+	// 		coinOut,
+	// 		true,
+	// 		referrer,
+	// 		externalFee
+	// 	);
+	// }
+
+	public getCompleteRoutesGivenAmountIns(inputs: {
+		coinInType: CoinType;
+		coinInAmounts: Balance[];
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute[] {
+		const completeRoutes = inputs.coinInAmounts.map((coinInAmount) => {
+			try {
+				return this.getCompleteRoute({
+					...inputs,
+					coinInAmount,
+					isGivenAmountOut: false,
+				});
+			} catch (e) {
+				return {
+					routes: [],
+					coinIn: {
+						type: inputs.coinInType,
+						amount: coinInAmount,
+						tradeFee: BigInt(0),
+					},
+					coinOut: {
+						type: inputs.coinOutType,
+						amount: BigInt(0),
+						tradeFee: BigInt(0),
+					},
+					spotPrice: 0,
+				};
+			}
+		});
+
+		return completeRoutes.every((route) => route.routes.length === 0)
+			? []
+			: completeRoutes;
+	}
+
+	/////////////////////////////////////////////////////////////////////
 	//// Public Static Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -167,12 +238,9 @@ export class RouterGraph {
 		const nodes = Object.values(inputs.graph.coinNodes);
 		const pools = inputs.graph.pools;
 
-		let unHoppableCoinPathsToAdd: {
-			coinIn: CoinType;
-			coinOut: CoinType;
-		}[] = [];
+		let startingUnhoppableCoinPaths: RouterSupportedCoinPaths = {};
 
-		const coinPaths: RouterSupportedCoinPaths = nodes.reduce(
+		const startingCoinPaths: RouterSupportedCoinPaths = nodes.reduce(
 			(acc, node) => {
 				const coinIn = node.coin;
 				const coinsOut = Object.entries(node.coinOutThroughPoolEdges)
@@ -185,14 +253,22 @@ export class RouterGraph {
 								}).noHopsAllowed
 						);
 
-						if (unHoppablePoolUids.length > 0)
-							unHoppableCoinPathsToAdd = [
-								...unHoppableCoinPathsToAdd,
-								{
-									coinIn,
-									coinOut,
-								},
-							];
+						if (unHoppablePoolUids.length > 0) {
+							if (coinIn in startingUnhoppableCoinPaths) {
+								startingUnhoppableCoinPaths = {
+									...startingUnhoppableCoinPaths,
+									[coinIn]: Helpers.uniqueArray([
+										...startingUnhoppableCoinPaths[coinIn],
+										coinOut,
+									]),
+								};
+							} else {
+								startingUnhoppableCoinPaths = {
+									...startingUnhoppableCoinPaths,
+									[coinIn]: [coinOut],
+								};
+							}
+						}
 
 						const allPoolsAreUnHoppable =
 							unHoppablePoolUids.length === poolUids.length;
@@ -208,112 +284,23 @@ export class RouterGraph {
 			{}
 		);
 
-		let extendedCoinPaths: RouterSupportedCoinPaths =
-			Helpers.deepCopy(coinPaths);
+		const regularCoinPaths = this.extendCoinPathsForHops({
+			startingCoinPaths,
+			maxHops:
+				inputs.maxRouteLength ??
+				RouterGraph.defaultOptions.maxRouteLength,
+		});
+		const unhoppableCoinPaths = this.extendCoinPathsForHops({
+			startingCoinPaths: startingUnhoppableCoinPaths,
+			maxHops: 1,
+		});
 
-		for (const _ of Array(
-			inputs.maxRouteLength ?? RouterGraph.defaultOptions.maxRouteLength
-		).fill(0)) {
-			for (const [coinIn, coinsOut] of Object.entries(coinPaths)) {
-				let newCoinsOut = [...coinsOut];
-
-				for (const coinOut of coinsOut) {
-					newCoinsOut = [...newCoinsOut, ...coinPaths[coinOut]];
-				}
-
-				extendedCoinPaths[coinIn] = Helpers.uniqueArray([
-					...newCoinsOut,
-				]).filter((coin) => coin !== coinIn);
-			}
-		}
-
-		for (const coinPath of unHoppableCoinPathsToAdd) {
-			if (coinPath.coinIn in extendedCoinPaths) {
-				extendedCoinPaths = {
-					...extendedCoinPaths,
-					[coinPath.coinIn]: Helpers.uniqueArray([
-						...extendedCoinPaths[coinPath.coinIn],
-						coinPath.coinOut,
-					]),
-				};
-				continue;
-			}
-
-			extendedCoinPaths = {
-				...extendedCoinPaths,
-				[coinPath.coinIn]: [coinPath.coinOut],
-			};
-		}
-
-		return extendedCoinPaths;
+		const mergedCoinPaths = this.mergeCoinPaths({
+			coinPaths1: regularCoinPaths,
+			coinPaths2: unhoppableCoinPaths,
+		});
+		return mergedCoinPaths;
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
-
-	public getCompleteRouteGivenAmountIn(inputs: {
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
-	}): RouterCompleteTradeRoute {
-		return this.getCompleteRoute({
-			...inputs,
-			isGivenAmountOut: false,
-		});
-	}
-
-	// public getCompleteRouteGivenAmountOut(
-	// 	coinIn: CoinType,
-	// 	coinOut: CoinType,
-	// 	coinOutAmount: Balance,
-	// 	referrer?: SuiAddress,
-	// 	externalFee?: RouterExternalFee
-	// ): RouterCompleteTradeRoute {
-	// 	return this.getCompleteRoute(
-	// 		coinIn,
-	// 		coinOutAmount,
-	// 		coinOut,
-	// 		true,
-	// 		referrer,
-	// 		externalFee
-	// 	);
-	// }
-
-	public getCompleteRoutesGivenAmountIns(inputs: {
-		coinInType: CoinType;
-		coinInAmounts: Balance[];
-		coinOutType: CoinType;
-		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
-	}): RouterCompleteTradeRoute[] {
-		return inputs.coinInAmounts.map((coinInAmount) => {
-			try {
-				return this.getCompleteRoute({
-					...inputs,
-					coinInAmount,
-					isGivenAmountOut: false,
-				});
-			} catch (e) {
-				return {
-					routes: [],
-					coinIn: {
-						type: inputs.coinInType,
-						amount: coinInAmount,
-						tradeFee: BigInt(0),
-					},
-					coinOut: {
-						type: inputs.coinOutType,
-						amount: BigInt(0),
-						tradeFee: BigInt(0),
-					},
-					spotPrice: 0,
-				};
-			}
-		});
-	}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
@@ -734,7 +721,7 @@ export class RouterGraph {
 		}
 
 		if (cutRoutesAndPools === undefined)
-			throw Error("unable to find route");
+			throw Error("unable to find synchronous route");
 
 		const oldRouteIndex = routes.findIndex(
 			(route) =>
@@ -1110,5 +1097,74 @@ export class RouterGraph {
 			externalFee,
 			referrer,
 		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Supported Coins
+	/////////////////////////////////////////////////////////////////////
+
+	private static extendCoinPathsForHops = (inputs: {
+		startingCoinPaths: RouterSupportedCoinPaths;
+		maxHops: number;
+	}): RouterSupportedCoinPaths => {
+		const { startingCoinPaths, maxHops } = inputs;
+
+		let extendedCoinPaths: RouterSupportedCoinPaths =
+			Helpers.deepCopy(startingCoinPaths);
+
+		// account for max possible hops
+		for (const _ of Array(maxHops).fill(0)) {
+			for (const [coinIn, coinsOut] of Object.entries(
+				startingCoinPaths
+			)) {
+				let newCoinsOut = [...coinsOut];
+
+				for (const coinOut of coinsOut) {
+					newCoinsOut = [
+						...newCoinsOut,
+						...startingCoinPaths[coinOut],
+					];
+				}
+
+				extendedCoinPaths[coinIn] = Helpers.uniqueArray([
+					...newCoinsOut,
+				]).filter((coin) => coin !== coinIn);
+			}
+		}
+
+		return extendedCoinPaths;
+	};
+
+	private static mergeCoinPaths = (inputs: {
+		coinPaths1: RouterSupportedCoinPaths;
+		coinPaths2: RouterSupportedCoinPaths;
+	}) => {
+		const { coinPaths1, coinPaths2 } = inputs;
+
+		let mergedCoinPaths: RouterSupportedCoinPaths =
+			Helpers.deepCopy(coinPaths1);
+
+		for (const coinPath of Object.entries(coinPaths2)) {
+			const fromCoin = coinPath[0];
+			const toCoins = coinPath[1];
+
+			if (fromCoin in mergedCoinPaths) {
+				mergedCoinPaths = {
+					...mergedCoinPaths,
+					[fromCoin]: Helpers.uniqueArray([
+						...mergedCoinPaths[fromCoin],
+						...toCoins,
+					]),
+				};
+				continue;
+			}
+
+			mergedCoinPaths = {
+				...mergedCoinPaths,
+				[fromCoin]: toCoins,
+			};
+		}
+
+		return mergedCoinPaths;
 	};
 }

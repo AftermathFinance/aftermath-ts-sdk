@@ -169,6 +169,19 @@ export class Helpers {
 	public static createUid = () =>
 		Date.now().toString(36) + Math.random().toString(36).substring(2);
 
+	public static bifilter = <ArrayType>(
+		array: ArrayType[],
+		func: (item: ArrayType, index: number, arr: ArrayType[]) => boolean
+	): [trues: ArrayType[], falses: ArrayType[]] => {
+		return array.reduce(
+			([T, F], x, i, arr) => {
+				if (func(x, i, arr) === false) return [T, [...F, x]];
+				else return [[...T, x], F];
+			},
+			[[], []] as [ArrayType[], ArrayType[]]
+		);
+	};
+
 	public static filterObject = <Value>(
 		obj: Record<string, Value>,
 		predicate: (key: string, value: Value) => boolean

@@ -94,43 +94,69 @@ export class TurbosApiHelpers {
 				() => true
 			);
 
-		const sqrtPrices = await this.Provider.Objects().fetchCastObjectBatch(
-			poolsSimpleInfo.map((poolInfo) => poolInfo.id),
-			(data) => {
-				const sqrtPrice: BigIntAsString =
-					getObjectFields(data)?.sqrt_price;
-				return BigInt(sqrtPrice);
-			}
-		);
+		const poolsMoreInfo =
+			await this.Provider.Objects().fetchCastObjectBatch(
+				poolsSimpleInfo.map((poolInfo) => poolInfo.id),
+				(data) => {
+					const fields = getObjectFields(data);
+					if (!fields)
+						throw new Error(
+							"no fields found on turbos pool object"
+						);
 
-		const pools = poolsSimpleInfo.map((info, index) => {
+					const sqrtPrice = BigInt(fields.sqrt_price);
+					const liquidity = BigInt(fields.liquidity);
+					const isUnlocked = fields.unlocked as unknown as boolean;
+
+					return {
+						liquidity,
+						isUnlocked,
+						sqrtPrice,
+					};
+				}
+			);
+
+		const completePools = poolsSimpleInfo.map((info, index) => {
 			return {
 				...info,
-				sqrtPrice: sqrtPrices[index],
+				sqrtPrice: poolsMoreInfo[index].sqrtPrice,
 			};
 		});
 
-		return pools;
-	};
-
-	public fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => {
-		const allPools = await this.fetchAllPools();
-
-		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
-		const foundPool = allPools.find((pool) =>
-			TurbosApiHelpers.isPoolForCoinTypes({
-				pool,
-				...inputs,
-			})
+		const usablePools = completePools.filter(
+			(_, index) =>
+				poolsMoreInfo[index].isUnlocked &&
+				poolsMoreInfo[index].liquidity > BigInt(0)
 		);
 
-		if (!foundPool)
-			throw new Error("no turbos pools found for given coin types");
+		return usablePools;
+	};
 
-		return foundPool;
+	public fetchPoolsForTrade = async (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		partialMatchPools: TurbosPoolObject[];
+		exactMatchPools: TurbosPoolObject[];
+	}> => {
+		const possiblePools = await this.fetchPoolsForCoinType({
+			coinType: inputs.coinOutType,
+		});
+
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
+			possiblePools,
+			(pool) =>
+				TurbosApiHelpers.isPoolForCoinTypes({
+					pool,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
+				})
+		);
+
+		return {
+			exactMatchPools,
+			partialMatchPools,
+		};
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -256,7 +282,7 @@ export class TurbosApiHelpers {
 			poolObjectId: pool.id,
 		};
 
-		if (TurbosApiHelpers.isCoinA(coinInType, pool))
+		if (TurbosApiHelpers.isCoinA({ pool, coinType: coinInType }))
 			return this.tradeCoinAToCoinBTx(commandInputs);
 
 		return this.tradeCoinBToCoinATx(commandInputs);
@@ -428,6 +454,64 @@ export class TurbosApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
+	//// Public Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public static otherCoinInPool = (inputs: {
+		coinType: CoinType;
+		pool: TurbosPoolObject;
+	}) => {
+		return this.isCoinA(inputs)
+			? inputs.pool.coinTypeB
+			: inputs.pool.coinTypeA;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	private fetchPoolForCoinTypes = async (inputs: {
+		coinType1: CoinType;
+		coinType2: CoinType;
+	}) => {
+		const allPools = await this.fetchAllPools();
+
+		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
+		const foundPool = allPools.find((pool) =>
+			TurbosApiHelpers.isPoolForCoinTypes({
+				pool,
+				...inputs,
+			})
+		);
+
+		if (!foundPool)
+			throw new Error("no turbos pools found for given coin types");
+
+		return foundPool;
+	};
+
+	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
+		const allPools = await this.fetchAllPools();
+
+		const foundPools = allPools.filter((pool) =>
+			TurbosApiHelpers.isPoolForCoinType({
+				pool,
+				...inputs,
+			})
+		);
+
+		return foundPools;
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Static Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -485,8 +569,25 @@ export class TurbosApiHelpers {
 		);
 	};
 
-	private static isCoinA = (coin: CoinType, pool: TurbosPoolObject) =>
-		Helpers.addLeadingZeroesToType(coin) === pool.coinTypeA;
+	private static isPoolForCoinType = (inputs: {
+		pool: TurbosPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { pool, coinType } = inputs;
+
+		return (
+			pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType) ||
+			pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType)
+		);
+	};
+
+	private static isCoinA = (inputs: {
+		pool: TurbosPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { coinType, pool } = inputs;
+		return Helpers.addLeadingZeroesToType(coinType) === pool.coinTypeA;
+	};
 
 	private static calcSqrtPriceLimit = (inputs: {
 		sqrtPrice: bigint;

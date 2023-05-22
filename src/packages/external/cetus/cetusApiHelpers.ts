@@ -5,11 +5,13 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 	bcs,
+	getObjectFields,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	Balance,
+	BigIntAsString,
 	CetusAddresses,
 	CoinType,
 	PoolsAddresses,
@@ -19,8 +21,8 @@ import { Sui } from "../../sui";
 import { CetusCalcTradeResult, CetusPoolObject } from "./cetusTypes";
 import { Helpers } from "../../../general/utils";
 import { BCS } from "@mysten/bcs";
-import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
+import { CetusApi } from "./cetusApi";
 
 export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -31,6 +33,11 @@ export class CetusApiHelpers {
 		moduleNames: {
 			poolScript: "pool_script",
 			pool: "pool",
+			wrapper: "cetus",
+		},
+		inputs: {
+			minSqrtPriceLimit: BigInt("4295048016"),
+			maxSqrtPriceLimit: BigInt("79226673515401279992447579055"),
 		},
 	};
 
@@ -94,27 +101,58 @@ export class CetusApiHelpers {
 				() => true
 			);
 
-		return poolsSimpleInfo;
-	};
+		const poolsMoreInfo =
+			await this.Provider.Objects().fetchCastObjectBatch(
+				poolsSimpleInfo.map((poolInfo) => poolInfo.id),
+				(data) => {
+					const fields = getObjectFields(data);
+					if (!fields)
+						throw new Error("no fields found on cetus pool object");
 
-	public fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => {
-		const allPools = await this.fetchAllPools();
+					const liquidity = BigInt(fields.liquidity);
+					const isPaused = fields.is_pause as unknown as boolean;
 
-		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
-		const foundPool = allPools.find((pool) =>
-			CetusApiHelpers.isPoolForCoinTypes({
-				pool,
-				...inputs,
-			})
+					return {
+						liquidity,
+						isPaused,
+					};
+				}
+			);
+
+		const usablePools = poolsSimpleInfo.filter(
+			(_, index) =>
+				!poolsMoreInfo[index].isPaused &&
+				poolsMoreInfo[index].liquidity > BigInt(0)
 		);
 
-		if (!foundPool)
-			throw new Error("no cetus pools found for given coin types");
+		return usablePools;
+	};
 
-		return foundPool;
+	public fetchPoolsForTrade = async (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		partialMatchPools: CetusPoolObject[];
+		exactMatchPools: CetusPoolObject[];
+	}> => {
+		const possiblePools = await this.fetchPoolsForCoinType({
+			coinType: inputs.coinOutType,
+		});
+
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
+			possiblePools,
+			(pool) =>
+				CetusApiHelpers.isPoolForCoinTypes({
+					pool,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
+				})
+		);
+
+		return {
+			exactMatchPools,
+			partialMatchPools,
+		};
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -139,39 +177,32 @@ export class CetusApiHelpers {
 	) => {
 		const { tx, coinInId } = inputs;
 
+		const isGivenAmountIn = "coinInAmount" in inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.cetus.packages.scripts,
-				CetusApiHelpers.constants.moduleNames.poolScript,
-				"swap_a2b"
+				this.addresses.cetus.packages.wrapper,
+				CetusApiHelpers.constants.moduleNames.wrapper,
+				isGivenAmountIn ? "swap_a_to_b_by_a" : "swap_a_to_b_by_b"
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
 			arguments: [
 				tx.object(this.addresses.cetus.objects.globalConfig),
-				tx.object(inputs.poolObjectId),
-				tx.makeMoveVec({
-					objects: [
-						typeof coinInId === "string"
-							? tx.object(coinInId)
-							: coinInId,
-					],
-				}),
-				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
+				tx.object(inputs.poolObjectId), // pool
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_a
+				...(isGivenAmountIn
+					? []
+					: [tx.pure(inputs.coinOutAmount, "u64")]), // amount_b
 				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
-					"u64"
-				), // amount
-				tx.pure(
-					// "coinInAmount" in inputs
-					// 	? inputs.coinInAmount
-					// 	: inputs.coinOutAmount,
-					"0",
-					"u64"
-				), // amount_limit
-				tx.pure(BigInt("4295048016"), "u128"), // sqrt_price_limit (set to min_sqrt_price)
+					CetusApiHelpers.constants.inputs.minSqrtPriceLimit,
+					"u128"
+				), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
+
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 			],
 		});
 	};
@@ -194,39 +225,32 @@ export class CetusApiHelpers {
 	) => {
 		const { tx, coinInId } = inputs;
 
+		const isGivenAmountIn = "coinInAmount" in inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.cetus.packages.scripts,
-				CetusApiHelpers.constants.moduleNames.poolScript,
-				"swap_b2a"
+				this.addresses.cetus.packages.wrapper,
+				CetusApiHelpers.constants.moduleNames.wrapper,
+				isGivenAmountIn ? "swap_b_to_a_by_b" : "swap_b_to_a_by_a"
 			),
 			typeArguments: [inputs.coinOutType, inputs.coinInType],
 			arguments: [
 				tx.object(this.addresses.cetus.objects.globalConfig),
-				tx.object(inputs.poolObjectId),
-				tx.makeMoveVec({
-					objects: [
-						typeof coinInId === "string"
-							? tx.object(coinInId)
-							: coinInId,
-					],
-				}),
-				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
+				tx.object(inputs.poolObjectId), // pool
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_b
+				...(isGivenAmountIn
+					? []
+					: [tx.pure(inputs.coinOutAmount, "u64")]), // amount_a
 				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
-					"u64"
-				), // amount
-				tx.pure(
-					// "coinInAmount" in inputs
-					// 	? inputs.coinInAmount
-					// 	: inputs.coinOutAmount,
-					"0",
-					"u64"
-				), // amount_limit
-				tx.pure(BigInt("79226673515401279992447579055"), "u128"), // sqrt_price_limit (set to max_sqrt_price)
+					CetusApiHelpers.constants.inputs.maxSqrtPriceLimit,
+					"u128"
+				), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
+
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 			],
 		});
 	};
@@ -254,10 +278,56 @@ export class CetusApiHelpers {
 			poolObjectId: pool.id,
 		};
 
-		if (CetusApiHelpers.isCoinA(coinInType, pool))
+		if (CetusApiHelpers.isCoinA({ pool, coinType: coinInType }))
 			return this.tradeCoinAToCoinBTx(commandInputs);
 
 		return this.tradeCoinBToCoinATx(commandInputs);
+	};
+
+	public flashTradeTx = (
+		inputs: {
+			tx: TransactionBlock;
+			poolObjectId: ObjectId;
+			coinInType: CoinType;
+			coinOutType: CoinType;
+			coinTypeA: CoinType;
+			coinTypeB: CoinType;
+		} & (
+			| {
+					coinInAmount: Balance;
+			  }
+			| {
+					coinOutAmount: Balance;
+			  }
+		)
+	) /* (Coin<CoinTypeA>, Coin<CoinTypeB>, FlashSwapReceipt<CoinTypeA, CoinTypeB>) */ => {
+		const { tx } = inputs;
+
+		const isCoinAToCoinB = inputs.coinInType === inputs.coinTypeA;
+		const sqrtPriceLimit = isCoinAToCoinB
+			? CetusApiHelpers.constants.inputs.minSqrtPriceLimit
+			: CetusApiHelpers.constants.inputs.maxSqrtPriceLimit;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTransactionTarget(
+				this.addresses.cetus.packages.clmm,
+				CetusApiHelpers.constants.moduleNames.pool,
+				"flash_swap"
+			),
+			typeArguments: [inputs.coinTypeA, inputs.coinTypeB],
+			arguments: [
+				tx.object(inputs.poolObjectId),
+				tx.pure(isCoinAToCoinB, "bool"), // a2b
+				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
+				tx.pure(
+					"coinInAmount" in inputs
+						? inputs.coinInAmount
+						: inputs.coinOutAmount,
+					"u64"
+				), // amount
+				tx.pure(sqrtPriceLimit, "u128"), // sqrt_price_limit
+			],
+		});
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -282,9 +352,6 @@ export class CetusApiHelpers {
 		)
 	) =>
 		/*
-		
-			The calculated swap result:
-			
 			struct CalculatedSwapResult has copy, drop, store {
 				amount_in: u64,
 				amount_out: u64,
@@ -295,8 +362,6 @@ export class CetusApiHelpers {
 				step_results: vector<SwapStepResult>
 			}
 
-			The step swap result:
-
 			struct SwapStepResult has copy, drop, store {
 				current_sqrt_price: u128,
 				target_sqrt_price: u128,
@@ -306,7 +371,6 @@ export class CetusApiHelpers {
 				fee_amount: u64,
 				remainer_amount: u64
 			}
-
 		*/
 		{
 			const { tx } = inputs;
@@ -423,6 +487,64 @@ export class CetusApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
+	//// Public Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public static otherCoinInPool = (inputs: {
+		coinType: CoinType;
+		pool: CetusPoolObject;
+	}) => {
+		return this.isCoinA(inputs)
+			? inputs.pool.coinTypeB
+			: inputs.pool.coinTypeA;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Objects
+	/////////////////////////////////////////////////////////////////////
+
+	private fetchPoolForCoinTypes = async (inputs: {
+		coinType1: CoinType;
+		coinType2: CoinType;
+	}) => {
+		const allPools = await this.fetchAllPools();
+
+		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
+		const foundPool = allPools.find((pool) =>
+			CetusApiHelpers.isPoolForCoinTypes({
+				pool,
+				...inputs,
+			})
+		);
+
+		if (!foundPool)
+			throw new Error("no cetus pools found for given coin types");
+
+		return foundPool;
+	};
+
+	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
+		const allPools = await this.fetchAllPools();
+
+		const foundPools = allPools.filter((pool) =>
+			CetusApiHelpers.isPoolForCoinType({
+				pool,
+				...inputs,
+			})
+		);
+
+		return foundPools;
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Static Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -469,6 +591,23 @@ export class CetusApiHelpers {
 		);
 	};
 
-	private static isCoinA = (coin: CoinType, pool: CetusPoolObject) =>
-		Helpers.addLeadingZeroesToType(coin) === pool.coinTypeA;
+	private static isPoolForCoinType = (inputs: {
+		pool: CetusPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { pool, coinType } = inputs;
+
+		return (
+			pool.coinTypeA === Helpers.addLeadingZeroesToType(coinType) ||
+			pool.coinTypeB === Helpers.addLeadingZeroesToType(coinType)
+		);
+	};
+
+	private static isCoinA = (inputs: {
+		pool: CetusPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { coinType, pool } = inputs;
+		return Helpers.addLeadingZeroesToType(coinType) === pool.coinTypeA;
+	};
 }

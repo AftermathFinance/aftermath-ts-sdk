@@ -1,6 +1,7 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterAsyncProtocolName,
+	RouterAsyncSerializablePool,
 	RouterAsyncTradeResult,
 	RouterAsyncTradeResults,
 } from "../routerTypes";
@@ -9,13 +10,15 @@ import { RouterAsyncApiInterface } from "../utils/async/routerAsyncApiInterface"
 import { CetusApi } from "../../external/cetus/cetusApi";
 import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
 import { TurbosApi } from "../../external/turbos/turbosApi";
+import { isTurbosPoolObject } from "../../external/turbos/turbosTypes";
+import { isCetusRouterPoolObject } from "../../external/cetus/cetusTypes";
 
 export class RouterAsyncApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
 	/////////////////////////////////////////////////////////////////////
 
-	private readonly protocolNamesToApi: Record<
+	public readonly protocolNamesToApi: Record<
 		RouterAsyncProtocolName,
 		() => RouterAsyncApiInterface<any>
 	> = {
@@ -35,43 +38,90 @@ export class RouterAsyncApiHelpers {
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchTradeResults = async (inputs: {
+	public fetchPossiblePools = async (inputs: {
 		protocols: RouterAsyncProtocolName[];
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		exactMatchPools: RouterAsyncSerializablePool[];
+		partialMatchPools: RouterAsyncSerializablePool[];
+	}> => {
+		const apis = inputs.protocols.map((protocol) =>
+			this.protocolNamesToApi[protocol]()
+		);
+
+		const allPools: {
+			partialMatchPools: RouterAsyncSerializablePool[];
+			exactMatchPools: RouterAsyncSerializablePool[];
+		} = (
+			await Promise.all(apis.map((api) => api.fetchPoolsForTrade(inputs)))
+		).reduce(
+			(acc, pools) => {
+				return {
+					exactMatchPools: [
+						...acc.exactMatchPools,
+						...pools.exactMatchPools,
+					],
+					partialMatchPools: [
+						...acc.partialMatchPools,
+						...pools.partialMatchPools,
+					],
+				};
+			},
+			{
+				partialMatchPools: [],
+				exactMatchPools: [],
+			}
+		);
+
+		return allPools;
+	};
+
+	public fetchTradeResults = async (inputs: {
+		pools: RouterAsyncSerializablePool[];
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmounts: Balance[];
 	}): Promise<RouterAsyncTradeResults> => {
-		const { coinInAmounts, coinInType, coinOutType } = inputs;
+		const { coinInAmounts } = inputs;
 
-		const apis = this.protocolApisFromNames(inputs);
+		const protocols = inputs.pools.map((pool) =>
+			this.protocolNameFromPool({ pool })
+		);
+		const apis = protocols.map((protocol) =>
+			this.protocolNamesToApi[protocol]()
+		);
 
 		const resultsOrUndefined: (RouterAsyncTradeResult | undefined)[] =
 			await Promise.all(
 				apis.map(async (api, index) => {
 					try {
-						const pool = await api.fetchPoolForCoinTypes({
-							...inputs,
-							coinType1: coinInType,
-							coinType2: coinOutType,
-						});
+						const pool = inputs.pools[index];
 
 						const amountsOut = await Promise.all(
-							coinInAmounts.map((amountIn) =>
-								api.fetchTradeAmountOut({
-									...inputs,
-									pool,
-									walletAddress:
-										RpcApiHelpers.constants
-											.devInspectSigner,
-									coinInAmount: amountIn,
-								})
-							)
+							coinInAmounts.map(async (amountIn) => {
+								try {
+									return await api.fetchTradeAmountOut({
+										...inputs,
+										pool,
+										walletAddress:
+											RpcApiHelpers.constants
+												.devInspectSigner,
+										coinInAmount: amountIn,
+									});
+								} catch (e) {
+									console.error(e);
+									return BigInt(0);
+								}
+							})
 						);
+
+						const protocol = protocols[index];
 
 						return {
 							pool,
 							amountsOut,
-							protocol: inputs.protocols[index],
+							protocol,
 						};
 					} catch (e) {
 						return undefined;
@@ -132,10 +182,15 @@ export class RouterAsyncApiHelpers {
 	//// Helpers
 	/////////////////////////////////////////////////////////////////////
 
-	private protocolApisFromNames = (inputs: {
-		protocols: RouterAsyncProtocolName[];
-	}): RouterAsyncApiInterface<any>[] => {
-		const { protocols } = inputs;
-		return protocols.map((name) => this.protocolNamesToApi[name]());
+	public protocolNameFromPool = (inputs: {
+		pool: RouterAsyncSerializablePool;
+	}): RouterAsyncProtocolName => {
+		const { pool } = inputs;
+
+		const protocolName: RouterAsyncProtocolName = isTurbosPoolObject(pool)
+			? "Turbos"
+			: "Cetus";
+
+		return protocolName;
 	};
 }
