@@ -6,6 +6,22 @@ import { CoinGeckoCoinApiId, CoinGeckoCoinData } from "./coinGeckoTypes";
 
 export class CoinGeckoApiHelpers {
 	/////////////////////////////////////////////////////////////////////
+	//// Private Static Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		coinApiIdsToCoinTypes: {
+			"usd-coin-wormhole-from-ethereum": [
+				"0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+				"0xe32d3ebafa42e6011b87ef1087bbc6053b499bf6f095807b9013aff5a6ecd7bb::coin::COIN",
+				"0x909cba62ce96d54de25bec9502de5ca7b4f28901747bbf96b76c2e63ec5f1cba::coin::COIN",
+				"0xdb9ed08481f9dd565fd36b834eb3c2cda1ee5f388048154807cffcb0267ed3b2::coin::COIN",
+				"0xb231fcda8bbddb31f2ef02e6161444aec64a514e2c89279584ac9806ce9cf037::coin::COIN",
+			],
+		},
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
@@ -55,13 +71,29 @@ export class CoinGeckoApiHelpers {
 			})
 			.filter((data) => data !== undefined) as CoinGeckoCoinData[];
 
-		const coinDataObject: Record<CoinType, CoinGeckoCoinData> =
+		const partialCoinDataObject: Record<CoinType, CoinGeckoCoinData> =
 			suiCoinData.reduce((acc, data) => {
 				return {
 					[data.coinType]: data,
 					...acc,
 				};
 			}, {});
+
+		const coinDataObject = Object.entries(
+			CoinGeckoApiHelpers.constants.coinApiIdsToCoinTypes
+		).reduce((acc, [coinApiId, coinTypes]) => {
+			const dataToDuplicate = Object.values(partialCoinDataObject).find(
+				(data) => data.apiId === coinApiId
+			);
+			if (!dataToDuplicate) return acc;
+
+			const newData = coinTypes.reduce(
+				(acc, coinType) => ({ [coinType]: dataToDuplicate, ...acc }),
+				acc
+			);
+
+			return newData;
+		}, partialCoinDataObject);
 
 		return coinDataObject;
 	};
@@ -111,7 +143,9 @@ export class CoinGeckoApiHelpers {
 		const rawCoinsInfo = await this.callApi<
 			Record<CoinGeckoCoinApiId, { usd: number; usd_24h_change: number }>
 		>(
-			`simple/price?ids=${Object.values(coinsToApiId).reduce(
+			`simple/price?ids=${Helpers.uniqueArray(
+				Object.values(coinsToApiId)
+			).reduce(
 				(acc, apiId) => `${acc},${apiId}`,
 				""
 			)}&vs_currencies=USD&include_24hr_change=true&precision=full`

@@ -95,7 +95,7 @@ export class CmmmCalculations {
 		return this.calcInvariantQuadratic(prod, sum, flatness);
 	};
 
-	// The invariant for stables comes from a quadratic equation coming from the reference point T = (h,h,...,h).
+    // The invariant for stables comes from a quadratic equation coming from the reference point T = (h,h,...,h).
 	// h = [sqrt[p * (p * (A*A + 4*(1-A)) + 8*A*s)] - A*p] / 2.
 	public static calcInvariantQuadratic = (
 		prod: number,
@@ -110,7 +110,7 @@ export class CmmmCalculations {
 			flatness * prod) /
 		2;
 
-	// This function is used for 1d optimization. It computes the full invariant components and their
+    // This function is used for 1d optimization. It computes the full invariant components and their
 	// portions which omit contribution from the balance in the `index` coordinate.
 	// It returns (prod, sum, p0, s0, h) where:
 	// prod = b1^w1 * ... * bn^wn
@@ -172,7 +172,7 @@ export class CmmmCalculations {
 			true
 		);
 
-	// spot price is given in units of Bin / Bout
+    // spot price is given in units of Bin / Bout
 	public static calcSpotPriceWithFees = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -201,7 +201,7 @@ export class CmmmCalculations {
 		);
 	};
 
-	// The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
+    // The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
 	private static calcSpotPriceBody = (pool: PoolObject): number => {
 		// The spot price formula comes from the partial derivatives of Cf, specifically -(dCf / dxOut) / (dCf / dxIn)
 		let a: number = Fixed.directCast(pool.flatness);
@@ -228,7 +228,7 @@ export class CmmmCalculations {
 		return (invarnt * invarnt) / prod + ac * prod;
 	};
 
-	// 1d optimized swap function for finding out given in. Returns the amount out.
+    // 1d optimized swap function for finding out given in. Returns the amount out.
 	public static calcOutGivenIn = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,
@@ -293,7 +293,7 @@ export class CmmmCalculations {
 		return amountOut;
 	};
 
-	// 1d optimized swap function for finding in given out. Returns the amount in.
+    // 1d optimized swap function for finding in given out. Returns the amount in.
 	public static calcInGivenOut = (
 		pool: PoolObject,
 		coinTypeIn: CoinType,

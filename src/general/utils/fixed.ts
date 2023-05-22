@@ -2,21 +2,19 @@ export type OnChainNumber = bigint;
 export type LocalNumber = number;
 
 export class Fixed {
-	public static fixedOneN: number = 1_000_000_000_000_000_000;
-	public static fixedOneB: bigint = BigInt("1000000000000000000");
+    public static fixedOneN: number = 1_000_000_000_000_000_000;
+    public static fixedOneB: bigint = BigInt("1000000000000000000");
 
-	// These terms come from their on chain counterparts. They are backwards from the point of view of js.
-	// On chain direct cast means e.g. taking ((x: u64) as u256).
-	public static convertFromInt = (n: OnChainNumber): LocalNumber => Number(n);
-	public static convertToInt = (n: LocalNumber): OnChainNumber =>
-		BigInt(Math.floor(n));
-	public static directCast = (n: OnChainNumber): LocalNumber =>
-		Number(n) / Fixed.fixedOneN;
-	public static directUncast = (n: LocalNumber): OnChainNumber =>
-		BigInt(Math.floor(n * Fixed.fixedOneN));
+    // These terms come from their on chain counterparts. They are backwards from the point of view of js.
+    // On chain direct cast means e.g. taking ((x: u64) as u256).
+    public static convertFromInt = (n: OnChainNumber): LocalNumber => Number(n);
+	public static convertToInt = (n: LocalNumber): OnChainNumber => BigInt(Math.floor(n));
+    public static directCast = (n: OnChainNumber): LocalNumber => Number(n) / Fixed.fixedOneN;
+    public static directUncast = (n: LocalNumber): OnChainNumber => BigInt(
+        Math.floor(n * Fixed.fixedOneN)
+    );
 
-	public static complement = (n: LocalNumber) =>
-		Math.max(0, 1 - Math.max(0, n));
+    public static complement = (n: LocalNumber) => Math.max(0, 1 - Math.max(0, n));
 }
 
 // These are the various uses for on chain numbers.
