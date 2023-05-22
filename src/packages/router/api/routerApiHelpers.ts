@@ -177,6 +177,7 @@ export class RouterApiHelpers {
 		);
 		const tradeResults = await this.AsyncHelpers.fetchTradeResults({
 			...inputs,
+			coinInType: lastPoolCoinInType,
 			pools: [inputs.lastPool],
 			coinInAmounts: lastPoolCoinInAmounts,
 		});
@@ -314,15 +315,22 @@ export class RouterApiHelpers {
 				const finalRoute = endCompleteRoute.routes[0];
 				const finalPath = finalRoute.paths[0];
 
+				// TODO: handle remainder amount
+				const finalCoinOutAmountForRoute =
+					route.coinOut.amount / totalEndRouteAmountIn;
+
+				const spotPrice =
+					Number(route.coinIn.amount) /
+					Number(finalCoinOutAmountForRoute);
+
 				return {
-					...finalRoute,
+					spotPrice,
 					coinIn: {
 						...route.coinIn,
 					},
 					coinOut: {
 						...finalRoute.coinOut,
-						// TODO: handle remainder amount
-						amount: route.coinOut.amount / totalEndRouteAmountIn,
+						amount: finalCoinOutAmountForRoute,
 					},
 					paths: [...route.paths, finalPath],
 				};

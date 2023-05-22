@@ -165,9 +165,6 @@ export class CoinGeckoApiHelpers {
 			)
 		).json();
 
-		if (endpoint.includes("market_chart"))
-			console.log("someJson", someJson);
-
 		const castedRes = someJson as OutputType;
 		return castedRes;
 	};

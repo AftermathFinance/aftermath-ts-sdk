@@ -99,16 +99,21 @@ export class RouterAsyncApiHelpers {
 						const pool = inputs.pools[index];
 
 						const amountsOut = await Promise.all(
-							coinInAmounts.map((amountIn) =>
-								api.fetchTradeAmountOut({
-									...inputs,
-									pool,
-									walletAddress:
-										RpcApiHelpers.constants
-											.devInspectSigner,
-									coinInAmount: amountIn,
-								})
-							)
+							coinInAmounts.map(async (amountIn) => {
+								try {
+									return await api.fetchTradeAmountOut({
+										...inputs,
+										pool,
+										walletAddress:
+											RpcApiHelpers.constants
+												.devInspectSigner,
+										coinInAmount: amountIn,
+									});
+								} catch (e) {
+									console.error(e);
+									return BigInt(0);
+								}
+							})
 						);
 
 						const protocol = protocols[index];

@@ -78,6 +78,13 @@ class TurbosRouterPool implements RouterPoolInterface {
 			.Turbos()
 			.Helpers.tradeTx({
 				...inputs,
+				coinInAmount:
+					inputs.coinInAmount -
+					BigInt(
+						Math.floor(
+							Number(inputs.coinInAmount) * inputs.slippage
+						)
+					),
 				coinInId: inputs.coinIn,
 				pool: this.pool,
 				walletAddress: inputs.tx.blockData.sender,
