@@ -1,16 +1,22 @@
 import {
-	DisplayFieldsResponse,
 	ObjectId,
 	SuiAddress,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
-	getObjectDisplay,
 	getObjectOwner,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, NftDisplay, PackageId } from "../../types";
+import { AnyObjectType, PackageId } from "../../types";
 
 export class ObjectsApiHelpers {
+	/////////////////////////////////////////////////////////////////////
+	//// Private Static Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		maxObjectFetchingLimit: 50,
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
@@ -106,17 +112,43 @@ export class ObjectsApiHelpers {
 		objectIds: ObjectId[],
 		options?: SuiObjectDataOptions
 	): Promise<SuiObjectResponse[]> => {
-		const objectBatch = await this.Provider.provider.multiGetObjects({
-			ids: objectIds,
-			options:
-				options === undefined
-					? {
-							showContent: true,
-							showOwner: true,
-							showType: true,
-					  }
-					: options,
-		});
+		let objectIdsBatches: ObjectId[][] = [];
+		let endIndex = 0;
+		while (true) {
+			const newEndIndex =
+				endIndex + ObjectsApiHelpers.constants.maxObjectFetchingLimit;
+			if (newEndIndex >= objectIds.length) {
+				objectIdsBatches.push(
+					objectIds.slice(endIndex, objectIds.length)
+				);
+				break;
+			}
+
+			objectIdsBatches.push(objectIds.slice(endIndex, newEndIndex));
+
+			endIndex = newEndIndex;
+		}
+
+		const objectBatches = await Promise.all(
+			objectIdsBatches.map((objectIds) =>
+				this.Provider.provider.multiGetObjects({
+					ids: objectIds,
+					options:
+						options === undefined
+							? {
+									showContent: true,
+									showOwner: true,
+									showType: true,
+							  }
+							: options,
+				})
+			)
+		);
+		const objectBatch = objectBatches.reduce(
+			(acc, objects) => [...acc, ...objects],
+			[]
+		);
+
 		// const objectDataResponses = objectBatch.filter(
 		// 	(data) => data.error !== undefined
 		// );
