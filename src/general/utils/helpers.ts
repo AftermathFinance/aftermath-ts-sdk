@@ -181,6 +181,7 @@ export class Helpers {
 			[[], []] as [ArrayType[], ArrayType[]]
 		);
 	};
+
 	public static filterObject = <Value>(
 		obj: Record<string, Value>,
 		predicate: (key: string, value: Value) => boolean

@@ -249,9 +249,6 @@ export class RouterApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public async fetchTransactionForCompleteTradeRoute(inputs: {
-		// TODO: make it so that api can be called with different rpc nodes ?
-		network: SuiNetwork | Url;
-		provider: AftermathApi;
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
