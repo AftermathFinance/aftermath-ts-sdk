@@ -455,10 +455,12 @@ export class PoolsApiHelpers {
 					: createPoolCapId,
 				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.pure(Casting.u8VectorFromString(inputs.poolName)),
-				tx.pure(Casting.u8VectorFromString(lpCoinMetadata.name)),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinMetadata.name.toString())
+				),
 				tx.pure(
 					Casting.u8VectorFromString(
-						lpCoinMetadata.symbol.toUpperCase()
+						lpCoinMetadata.symbol.toString().toUpperCase()
 					)
 				),
 				tx.pure(Casting.u8VectorFromString(lpCoinDescription)),
