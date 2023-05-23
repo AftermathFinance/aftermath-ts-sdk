@@ -63,6 +63,7 @@ export interface PoolsAddresses {
 		protocolFeeVault: ObjectId;
 		treasury: ObjectId;
 		insuranceFund: ObjectId;
+		lpCoinsTable: ObjectId;
 	};
 }
 

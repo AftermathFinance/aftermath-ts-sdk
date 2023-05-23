@@ -21,6 +21,7 @@ import {
 import { Pools } from "../pools";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
+import { AnyObjectType } from "../../../types";
 
 export class PoolsApiCasting {
 	/////////////////////////////////////////////////////////////////////
@@ -75,6 +76,21 @@ export class PoolsApiCasting {
 			flatness: BigInt(poolFieldsOnChain.flatness),
 			coins,
 		};
+	};
+
+	public static poolObjectIdFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): ObjectId => {
+		const content = data.data?.content;
+		if (content?.dataType !== "moveObject")
+			throw new Error("sui object response is not an object");
+
+		const fields = content.fields as {
+			name: AnyObjectType; // lp coin type
+			value: ObjectId; // pool object id
+		};
+
+		return fields.value;
 	};
 
 	/////////////////////////////////////////////////////////////////////

@@ -41,6 +41,7 @@ import dayjs, { ManipulateType } from "dayjs";
 import { Pool } from "..";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventOnChain } from "../../../general/types/castingTypes";
+import { PoolsApiCasting } from "./poolsApiCasting";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -148,26 +149,16 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
-		const objectIds = await this.Provider.Events().fetchAllEvents(
-			(cursor, limit) =>
-				this.Provider.Events().fetchCastEventsWithCursor<
-					EventOnChain<{
-						pool_id: ObjectId;
-					}>,
-					ObjectId
-				>(
-					{
-						MoveEventType: EventsApiHelpers.createEventType(
-							this.addresses.pools.packages.amm,
-							"events",
-							"CreatedPoolEvent"
-						),
-					},
-					(eventOnChain) => eventOnChain.parsedJson.pool_id,
-					cursor,
-					limit
-				)
-		);
+		const objectIds =
+			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
+				this.addresses.pools.objects.lpCoinsTable,
+				(objectIds) =>
+					this.Provider.Objects().fetchCastObjectBatch(
+						objectIds,
+						PoolsApiCasting.poolObjectIdFromSuiObjectResponse
+					),
+				() => true
+			);
 
 		const filteredIds = objectIds.filter(
 			(id) => !PoolsApiHelpers.constants.blacklistedPoolIds.includes(id)
