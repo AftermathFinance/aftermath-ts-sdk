@@ -88,13 +88,34 @@ export class CoinGeckoApiHelpers {
 		const coinDataObject = Object.entries(
 			CoinGeckoApiHelpers.constants.coinApiIdsToCoinTypes
 		).reduce((acc, [coinApiId, coinTypes]) => {
-			const dataToDuplicate = Object.values(partialCoinDataObject).find(
+			const foundSuiData = Object.values(partialCoinDataObject).find(
 				(data) => data.apiId === coinApiId
 			);
-			if (!dataToDuplicate) return acc;
 
+			let foundData = foundSuiData;
+
+			if (!foundData) {
+				const foundCoinData = coinData.find(
+					(data) => data.id === coinApiId
+				);
+				if (!foundCoinData) return acc;
+
+				foundData = {
+					apiId: coinApiId,
+					name: foundCoinData.name,
+					symbol: foundCoinData.symbol,
+					coinType: "",
+				};
+			}
+
+			if (!foundData) return acc;
+
+			const dataToDuplicate = foundData;
 			const newData = coinTypes.reduce(
-				(acc, coinType) => ({ [coinType]: dataToDuplicate, ...acc }),
+				(acc, coinType) => ({
+					[coinType]: { ...dataToDuplicate, coinType },
+					...acc,
+				}),
 				acc
 			);
 
