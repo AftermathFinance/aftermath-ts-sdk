@@ -1,4 +1,4 @@
-import { CoinType, CoinsToPrice, CoinsToPriceInfo } from "../../../types";
+import { CoinType, CoinsToPrice } from "../../../types";
 import { Helpers } from "../../utils";
 import { PricesApiInterface } from "../pricesApiInterface";
 import { CoinGeckoApiHelpers } from "./coinGeckoApiHelpers";
@@ -67,10 +67,6 @@ export class CoinGeckoPricesApi
 			...coinsToPrice,
 		};
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Non-Interface Methods
-	/////////////////////////////////////////////////////////////////////
 
 	public fetchPriceGivenApiId = async (inputs: {
 		coinType: CoinType;

@@ -1,6 +1,6 @@
 import { Coin } from "../../../packages/coin/coin";
-import { CoinType } from "../../../types";
-import { AftermathApi } from "../../providers/aftermathApi";
+import { CoinType, CoinsToPrice } from "../../../types";
+import { CoinGeckoCoinApiId } from "../coingecko/coinGeckoTypes";
 import { PricesApiInterface } from "../pricesApiInterface";
 
 export class PlaceholderPricesApi implements PricesApiInterface {
@@ -29,17 +29,15 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
-
-	constructor() {}
-
-	/////////////////////////////////////////////////////////////////////
 	//// Fetching
 	/////////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////////
 	//// Public
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Interface Methods
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchPrice = async (coin: CoinType) => {
@@ -57,6 +55,23 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 				};
 			},
 			{}
+		);
+		return coinsToPrice;
+	};
+
+	public fetchPriceGivenApiId = async (inputs: {
+		coinType: CoinType;
+		coinApiId: CoinGeckoCoinApiId;
+	}): Promise<number> => {
+		const charCode = inputs.coinType.charCodeAt(0);
+		return isNaN(charCode) ? 0 : charCode;
+	};
+
+	public fetchCoinsToPriceGivenApiIds = async (inputs: {
+		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
+	}): Promise<Record<CoinType, number>> => {
+		const coinsToPrice = await this.fetchCoinsToPrice(
+			Object.keys(inputs.coinsToApiId)
 		);
 		return coinsToPrice;
 	};
