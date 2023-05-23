@@ -15,6 +15,7 @@ import {
 	PoolsAddresses,
 	ReferralVaultAddresses,
 	BigIntAsString,
+	RouterExternalFee,
 } from "../../../types";
 import { Sui } from "../../sui";
 import { Casting, Helpers } from "../../../general/utils";
@@ -31,6 +32,7 @@ export class TurbosApiHelpers {
 		moduleNames: {
 			poolFetcher: "pool_fetcher",
 			swapRouter: "swap_router",
+			wrapper: "turbos",
 		},
 	};
 
@@ -173,13 +175,14 @@ export class TurbosApiHelpers {
 		feeCoinType: CoinType;
 		walletAddress: SuiAddress;
 		sqrtPrice: bigint;
+		externalFee?: RouterExternalFee;
 	}) => {
-		const { tx, coinInId } = inputs;
+		const { tx, coinInId, externalFee } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.turbos.packages.clmm,
-				TurbosApiHelpers.constants.moduleNames.swapRouter,
+				TurbosApiHelpers.constants.moduleNames.wrapper,
 				"swap_a_b"
 			),
 			typeArguments: [
@@ -189,14 +192,7 @@ export class TurbosApiHelpers {
 			],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.makeMoveVec({
-					objects: [
-						typeof coinInId === "string"
-							? tx.object(coinInId)
-							: coinInId,
-					],
-				}), // coins_a
-				tx.pure(inputs.coinInAmount, "u64"), // amount
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_a
 				tx.pure(Casting.zeroBigInt.toString(), "u64"), // amount_threshold
 				tx.pure(
 					TurbosApiHelpers.calcSqrtPriceLimit({
@@ -205,11 +201,35 @@ export class TurbosApiHelpers {
 					}).toString(),
 					"u128"
 				), // sqrt_price_limit
-				tx.pure(true, "bool"), // is_exact_in
-				tx.pure(inputs.walletAddress, "address"), // recipient
 				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // deadline
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
+
+				// AF fees
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+
+				// router fees
+				tx.pure(
+					externalFee
+						? {
+								some: Casting.numberToFixedBigInt(
+									externalFee.feePercentage
+								),
+						  }
+						: { none: true },
+					"Option<u64>"
+				), // router_fee
+				tx.pure(
+					externalFee
+						? {
+								some: externalFee.recipient,
+						  }
+						: { none: true },
+					"Option<address>"
+				), // router_fee_recipient
 			],
 		});
 	};
@@ -224,13 +244,14 @@ export class TurbosApiHelpers {
 		feeCoinType: CoinType;
 		walletAddress: SuiAddress;
 		sqrtPrice: bigint;
+		externalFee?: RouterExternalFee;
 	}) => {
-		const { tx, coinInId } = inputs;
+		const { tx, coinInId, externalFee } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.turbos.packages.clmm,
-				TurbosApiHelpers.constants.moduleNames.swapRouter,
+				TurbosApiHelpers.constants.moduleNames.wrapper,
 				"swap_b_a"
 			),
 			typeArguments: [
@@ -240,14 +261,7 @@ export class TurbosApiHelpers {
 			],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.makeMoveVec({
-					objects: [
-						typeof coinInId === "string"
-							? tx.object(coinInId)
-							: coinInId,
-					],
-				}), // coins_a
-				tx.pure(inputs.coinInAmount, "u64"), // amount
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_b
 				tx.pure(Casting.zeroBigInt.toString(), "u64"), // amount_threshold
 				tx.pure(
 					TurbosApiHelpers.calcSqrtPriceLimit({
@@ -256,11 +270,35 @@ export class TurbosApiHelpers {
 					}).toString(),
 					"u128"
 				), // sqrt_price_limit
-				tx.pure(true, "bool"), // is_exact_in
-				tx.pure(inputs.walletAddress, "address"), // recipient
 				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // deadline
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
+
+				// AF fees
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+
+				// router fees
+				tx.pure(
+					externalFee
+						? {
+								some: Casting.numberToFixedBigInt(
+									externalFee.feePercentage
+								),
+						  }
+						: { none: true },
+					"Option<u64>"
+				), // router_fee
+				tx.pure(
+					externalFee
+						? {
+								some: externalFee.recipient,
+						  }
+						: { none: true },
+					"Option<address>"
+				), // router_fee_recipient
 			],
 		});
 	};
@@ -273,6 +311,7 @@ export class TurbosApiHelpers {
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 		walletAddress: SuiAddress;
+		externalFee?: RouterExternalFee;
 	}) => {
 		const { coinInType, pool } = inputs;
 

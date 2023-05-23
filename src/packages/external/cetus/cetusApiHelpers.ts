@@ -199,6 +199,7 @@ export class CetusApiHelpers {
 				), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 
+				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),

@@ -6,6 +6,7 @@ import {
 } from "@mysten/sui.js";
 import {
 	Balance,
+	RouterExternalFee,
 	Slippage,
 	SuiNetwork,
 	UniqueId,
@@ -68,6 +69,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 		expectedAmountOut: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
 	}) => {
 		// PRODUCTION: handle slippage !
 		if (!inputs.tx.blockData.sender)
