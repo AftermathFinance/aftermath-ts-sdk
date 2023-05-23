@@ -1,5 +1,5 @@
 import { Coin } from "../../../packages/coin/coin";
-import { CoinType, CoinsToPrice } from "../../../types";
+import { CoinPriceInfo, CoinType, CoinsToPrice } from "../../../types";
 import { CoinGeckoCoinApiId } from "../coingecko/coinGeckoTypes";
 import { PricesApiInterface } from "../pricesApiInterface";
 
@@ -59,22 +59,47 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 		return coinsToPrice;
 	};
 
-	public fetchPriceGivenApiId = async (inputs: {
-		coinType: CoinType;
-		coinApiId: CoinGeckoCoinApiId;
-	}): Promise<number> => {
-		const charCode = inputs.coinType.charCodeAt(0);
-		return isNaN(charCode) ? 0 : charCode;
-	};
-
-	public fetchCoinsToPriceGivenApiIds = async (inputs: {
+	public fetchCoinsToPriceInfo = async (inputs: {
 		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
-	}): Promise<Record<CoinType, number>> => {
+	}): Promise<Record<CoinType, CoinPriceInfo>> => {
+		const { coinsToApiId } = inputs;
+		if (Object.keys(coinsToApiId).length <= 0) return {};
+
 		const coinsToPrice = await this.fetchCoinsToPrice(
 			Object.keys(inputs.coinsToApiId)
 		);
-		return coinsToPrice;
+
+		const coinsInfo = Object.entries(coinsToPrice).reduce(
+			(acc, [coin, price]) => ({
+				...acc,
+				[coin]: {
+					price,
+					priceChange24HoursPercentage:
+						Math.random() > 0.5 ? 0 : (Math.random() - 0.5) / 10,
+				},
+			}),
+			{}
+		);
+
+		return coinsInfo;
 	};
+
+	// public fetchPriceGivenApiId = async (inputs: {
+	// 	coinType: CoinType;
+	// 	coinApiId: CoinGeckoCoinApiId;
+	// }): Promise<number> => {
+	// 	const charCode = inputs.coinType.charCodeAt(0);
+	// 	return isNaN(charCode) ? 0 : charCode;
+	// };
+
+	// public fetchCoinsToPriceGivenApiIds = async (inputs: {
+	// 	coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
+	// }): Promise<Record<CoinType, number>> => {
+	// 	const coinsToPrice = await this.fetchCoinsToPrice(
+	// 		Object.keys(inputs.coinsToApiId)
+	// 	);
+	// 	return coinsToPrice;
+	// };
 
 	/////////////////////////////////////////////////////////////////////
 	//// Private
