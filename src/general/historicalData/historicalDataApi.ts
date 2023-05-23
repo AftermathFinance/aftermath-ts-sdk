@@ -1,6 +1,7 @@
 import { CoinGeckoApiHelpers } from "../prices/coingecko/coinGeckoApiHelpers";
+import { HistoricalDataApiInterface } from "./historicalDataApiInterface";
 
-export class HistoricalDataApi {
+export class HistoricalDataApi implements HistoricalDataApiInterface {
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////

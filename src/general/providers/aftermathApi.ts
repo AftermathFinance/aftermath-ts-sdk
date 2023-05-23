@@ -20,6 +20,7 @@ import { ReferralVaultApi } from "../../packages/referralVault/api/referralVault
 import { RouterProtocolName } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
+import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
@@ -59,7 +60,7 @@ export class AftermathApi {
 	public constructor(
 		public readonly provider: JsonRpcProvider,
 		public readonly addresses: ConfigAddresses,
-		private readonly coinGeckoApiKey: string
+		private readonly coinGeckoApiKey?: string
 	) {
 		this.provider = provider;
 		this.addresses = addresses;
@@ -86,9 +87,14 @@ export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public Wallet = () => new WalletApi(this);
-	// public Prices = () => new PlaceholderPricesApi(this);
-	public Prices = () => new CoinGeckoPricesApi(this.coinGeckoApiKey);
-	public HistoricalData = () => new HistoricalDataApi(this.coinGeckoApiKey);
+	public Prices = () =>
+		this.coinGeckoApiKey
+			? new CoinGeckoPricesApi(this.coinGeckoApiKey)
+			: new PlaceholderPricesApi();
+	public HistoricalData = () =>
+		this.coinGeckoApiKey
+			? new HistoricalDataApi(this.coinGeckoApiKey)
+			: new PlaceholderHistoricalDataApi();
 
 	/////////////////////////////////////////////////////////////////////
 	//// General Packages
