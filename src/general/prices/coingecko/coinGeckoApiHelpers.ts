@@ -18,6 +18,12 @@ export class CoinGeckoApiHelpers {
 				"0xdb9ed08481f9dd565fd36b834eb3c2cda1ee5f388048154807cffcb0267ed3b2::coin::COIN",
 				"0xb231fcda8bbddb31f2ef02e6161444aec64a514e2c89279584ac9806ce9cf037::coin::COIN",
 			],
+			tbtc: [
+				"0xbc3a676894871284b3ccfb2eec66f428612000e2a6e6d23f592ce8833c27c973::coin::COIN",
+			],
+			"wrapped-solana": [
+				"0xb7844e289a8410e50fb3ca48d69eb9cf29e27d223ef90353fe1bd8e27ff8f3f8::coin::COIN",
+			],
 		},
 	};
 
