@@ -22,6 +22,7 @@ import { Casting, Helpers } from "../../../general/utils";
 import { BCS } from "@mysten/bcs";
 import { TurbosCalcTradeResult, TurbosPoolObject } from "./turbosTypes";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 
 export class TurbosApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -181,7 +182,7 @@ export class TurbosApiHelpers {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.turbos.packages.clmm,
+				this.addresses.turbos.packages.wrapper,
 				TurbosApiHelpers.constants.moduleNames.wrapper,
 				"swap_a_b"
 			),
@@ -213,21 +214,19 @@ export class TurbosApiHelpers {
 
 				// router fees
 				tx.pure(
-					externalFee
-						? {
-								some: Casting.numberToFixedBigInt(
+					TransactionsApiHelpers.createOptionObject(
+						externalFee
+							? Casting.numberToFixedBigInt(
 									externalFee.feePercentage
-								),
-						  }
-						: { none: true },
+							  )
+							: undefined
+					),
 					"Option<u64>"
 				), // router_fee
 				tx.pure(
-					externalFee
-						? {
-								some: externalFee.recipient,
-						  }
-						: { none: true },
+					TransactionsApiHelpers.createOptionObject(
+						externalFee?.recipient
+					),
 					"Option<address>"
 				), // router_fee_recipient
 			],
@@ -250,7 +249,7 @@ export class TurbosApiHelpers {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.turbos.packages.clmm,
+				this.addresses.turbos.packages.wrapper,
 				TurbosApiHelpers.constants.moduleNames.wrapper,
 				"swap_b_a"
 			),
@@ -282,21 +281,19 @@ export class TurbosApiHelpers {
 
 				// router fees
 				tx.pure(
-					externalFee
-						? {
-								some: Casting.numberToFixedBigInt(
+					TransactionsApiHelpers.createOptionObject(
+						externalFee
+							? Casting.numberToFixedBigInt(
 									externalFee.feePercentage
-								),
-						  }
-						: { none: true },
+							  )
+							: undefined
+					),
 					"Option<u64>"
 				), // router_fee
 				tx.pure(
-					externalFee
-						? {
-								some: externalFee.recipient,
-						  }
-						: { none: true },
+					TransactionsApiHelpers.createOptionObject(
+						externalFee?.recipient
+					),
 					"Option<address>"
 				), // router_fee_recipient
 			],
