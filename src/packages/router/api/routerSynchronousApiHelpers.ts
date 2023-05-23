@@ -170,6 +170,7 @@ export class RouterSynchronousApiHelpers {
 					expectedAmountOut: path.coinOut.amount,
 					slippage,
 					referrer,
+					externalFee,
 				});
 
 				coinIn =

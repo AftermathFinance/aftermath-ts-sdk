@@ -6,6 +6,7 @@ import {
 } from "@mysten/sui.js";
 import {
 	Balance,
+	RouterExternalFee,
 	RouterProtocolName,
 	RouterSerializablePool,
 	Slippage,
@@ -110,6 +111,7 @@ export interface RouterPoolInterface {
 		expectedAmountOut: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
 	}) => TransactionArgument;
 
 	/////////////////////////////////////////////////////////////////////

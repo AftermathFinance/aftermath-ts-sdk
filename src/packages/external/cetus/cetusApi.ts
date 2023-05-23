@@ -6,6 +6,7 @@ import { CetusPoolObject } from "./cetusTypes";
 import { Balance, SerializedTransaction } from "../../../types";
 import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { Helpers } from "../../../general/utils";
+import { Pools } from "../..";
 
 export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	/////////////////////////////////////////////////////////////////////
@@ -68,7 +69,11 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		coinInAmount: Balance;
 	}): Promise<Balance> => {
 		const tradeResult = await this.Helpers.fetchCalcTradeResult(inputs);
-		return tradeResult.amountOut;
+		const coinOutAmountWithFees = Pools.getAmountWithProtocolFees({
+			...inputs,
+			amount: tradeResult.amountOut,
+		});
+		return coinOutAmountWithFees;
 	};
 
 	public otherCoinInPool = (inputs: {
