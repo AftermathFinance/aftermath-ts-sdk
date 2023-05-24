@@ -690,37 +690,42 @@ export class CmmmCalculations {
 		let a = Fixed.directCast(pool.flatness);
 		let ac = 1 - a;
 		let balance;
+		let amount;
 		let weight;
+		let r;
+		let rMin = 0;
+		let cfMin = 0;
 		let prod = 0;
 		let sum = 0;
+		let part1;
+		// start cf_max as corresponding to r = 1
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.convertFromInt(
-				coin.balance + (amountsIn[coinType] || BigInt(0))
-			);
+			balance = Fixed.convertFromInt(coin.balance);
+			amount = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0))
 			weight = Fixed.directCast(coin.weight);
-			prod += weight * Math.log(balance);
-			sum += weight * balance;
+
+			// this is all in so use fees in
+			part1 = balance + (1 - Fixed.directCast(coin.tradeFeeIn)) * amount;
+			prod += weight * Math.log(part1);
+			sum += weight * part1;
+			// r_min portion of the loop
+			r = Fixed.directCast(coin.tradeFeeOut) * balance / (balance + amount);
+			rMin = Math.max(r, rMin);
 		}
 		prod = Math.exp(prod);
 		let cfMax = (2 * a * prod * sum) / (prod + invariant) + ac * prod;
 
-		let r: number;
-		let rMin = 0;
 		let rMax = 1;
-		let amount: number;
-		let part1: number;
 		let cf: number;
-		let cfMin = 0;
-		let skip: boolean;
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.convertFromInt(coin.balance);
 			weight = Fixed.directCast(coin.weight);
 			amount = Fixed.convertFromInt(amountsIn[coinType] || BigInt(0));
 			r = balance / (balance + amount);
+			if (r <= rMin) continue;
 
 			prod = 0;
 			sum = 0;
-			skip = false;
 			for (let [coinType2, coin2] of Object.entries(coins)) {
 				balance = Fixed.convertFromInt(coin2.balance);
 				weight = Fixed.directCast(coin2.weight);
@@ -735,21 +740,11 @@ export class CmmmCalculations {
 				} else {
 					// r * (B0 + Din) < B0 so use fees out
 					part1 =
-						(balance - part1) /
+						balance - (balance - part1) /
 						Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
-					if (part1 + 1 >= balance) {
-						skip = true;
-						break;
-					} else {
-						part1 = balance - part1;
-					}
 				}
 				prod += weight * Math.log(part1);
 				sum += weight * part1;
-			}
-			if (skip) {
-				// this discontinuity occurs beyond draining the pool
-				continue;
 			}
 			prod = Math.exp(prod);
 
