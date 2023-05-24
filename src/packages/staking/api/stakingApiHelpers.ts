@@ -58,7 +58,7 @@ export class StakingApiHelpers {
 			stakeSuccess: "StakeSucceededEvent",
 			unstakeSuccess: "WithdrawSucceededEvent",
 			stakeFailed: "StakeWasFailedSUIReturnedEvent",
-			afSuiMinted: "AFSUIWasMintedToStakerAccount",
+			afSuiMinted: "AFSUIWasMintedToStakerAccountEvent",
 		},
 	};
 
