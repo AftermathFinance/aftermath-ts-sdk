@@ -120,6 +120,7 @@ export class RouterApiHelpers {
 				),
 			]);
 
+		routerGraph.updateOptions(RouterGraph.defaultOptions);
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
@@ -168,6 +169,10 @@ export class RouterApiHelpers {
 			pool: inputs.lastPool,
 		});
 
+		routerGraph.updateOptions({
+			// maxRouteLength: 2,
+			maxGasCost: BigInt(333_333_333), // 0.333 SUI
+		});
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,

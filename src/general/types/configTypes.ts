@@ -66,6 +66,9 @@ export interface PoolsAddresses {
 		insuranceFund: ObjectId;
 		lpCoinsTable: ObjectId;
 	};
+	other: {
+		createLpCoinPackageCompilation: string;
+	};
 }
 
 export interface UtilitiesAddresses {

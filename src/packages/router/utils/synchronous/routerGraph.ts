@@ -72,7 +72,7 @@ export class RouterGraph {
 	// public readonly totalGraph: RouterCompleteGraph;
 	public readonly syncGraph: RouterCompleteGraph;
 	// public readonly asyncGraph: RouterCompleteGraph;
-	public readonly constants: RouterOptions;
+	private constants: RouterOptions;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -104,6 +104,13 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 	//// Public Methods
 	/////////////////////////////////////////////////////////////////////
+
+	public updateOptions(partialOptions: Partial<RouterOptions>) {
+		this.constants = {
+			...this.constants,
+			...partialOptions,
+		};
+	}
 
 	public getCompleteRouteGivenAmountIn(inputs: {
 		coinInType: CoinType;
