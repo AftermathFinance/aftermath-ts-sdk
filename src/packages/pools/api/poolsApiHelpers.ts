@@ -962,21 +962,21 @@ export class PoolsApiHelpers {
 
 	private tradeEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.amm,
+			this.addresses.pools.packages.events,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.swap
 		);
 
 	private depositEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.amm,
+			this.addresses.pools.packages.events,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.deposit
 		);
 
 	private withdrawEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.amm,
+			this.addresses.pools.packages.events,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);
