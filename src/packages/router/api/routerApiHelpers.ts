@@ -143,7 +143,13 @@ export class RouterApiHelpers {
 			coinInAmounts,
 		});
 
-		return result;
+		return {
+			...result,
+			coinIn: {
+				...result.coinIn,
+				amount: coinInAmount,
+			},
+		};
 	};
 
 	private fetchCompleteTradeRoutesForLastRouteAsyncPool = async (inputs: {
@@ -319,13 +325,16 @@ export class RouterApiHelpers {
 
 		return {
 			...startCompleteRoute,
-			routes: startCompleteRoute.routes.map((route) => {
+			routes: startCompleteRoute.routes.map((route, index) => {
 				const finalRoute = endCompleteRoute.routes[0];
 				const finalPath = finalRoute.paths[0];
 
-				// TODO: handle remainder amount
+				const routesLength = startCompleteRoute.routes.length;
 				const finalCoinOutAmountForRoute =
-					route.coinOut.amount / totalEndRouteAmountIn;
+					index === routesLength - 1
+						? route.coinOut.amount -
+						  totalEndRouteAmountIn * BigInt(routesLength - 1)
+						: route.coinOut.amount / totalEndRouteAmountIn;
 
 				const spotPrice =
 					Number(route.coinIn.amount) /
