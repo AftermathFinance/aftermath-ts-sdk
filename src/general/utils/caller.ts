@@ -54,7 +54,7 @@ export class Caller {
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.baseUrl}/api/${
 			this.urlPrefix === "" ? "" : this.urlPrefix + "/"
-		}${url}`;
+		}${url}`.replaceAll("//", "/");
 	};
 
 	/////////////////////////////////////////////////////////////////////
