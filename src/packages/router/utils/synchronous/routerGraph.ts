@@ -69,9 +69,7 @@ export class RouterGraph {
 	//// Public Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	// public readonly totalGraph: RouterCompleteGraph;
-	public readonly syncGraph: RouterCompleteGraph;
-	// public readonly asyncGraph: RouterCompleteGraph;
+	public readonly graph: RouterCompleteGraph;
 	private constants: RouterOptions;
 
 	/////////////////////////////////////////////////////////////////////
@@ -83,18 +81,7 @@ export class RouterGraph {
 		graph: RouterSerializableCompleteGraph,
 		options?: RouterOptions
 	) {
-		// this.syncGraph = RouterGraph.graphFromSerializable({
-		// 	graph,
-		// 	network,
-		// 	isTotal: true,
-		// });
-		this.syncGraph = RouterGraph.graphFromSerializable({ graph, network });
-		// this.asyncGraph = RouterGraph.graphFromSerializable({
-		// 	graph,
-		// 	network,
-		// 	isAsync: true,
-		// });
-
+		this.graph = RouterGraph.graphFromSerializable({ graph, network });
 		this.constants = {
 			...RouterGraph.defaultOptions,
 			...options,
@@ -230,11 +217,7 @@ export class RouterGraph {
 	public static graphFromSerializable(inputs: {
 		graph: RouterSerializableCompleteGraph;
 		network: SuiNetwork | Url;
-		isTotal?: boolean;
-		isAsync?: boolean;
 	}): RouterCompleteGraph {
-		const { isTotal, isAsync } = inputs;
-
 		const pools: RouterPoolsById = Object.entries(
 			inputs.graph.pools
 		).reduce((acc, [uid, pool]) => {
@@ -243,12 +226,7 @@ export class RouterGraph {
 				network: inputs.network,
 			});
 
-			if (
-				!isTotal &&
-				((isAsync && !poolClass.noHopsAllowed) ||
-					(!isAsync && poolClass.noHopsAllowed))
-			)
-				return acc;
+			if (poolClass.noHopsAllowed) return acc;
 
 			return {
 				...acc,
@@ -372,7 +350,7 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute {
-		if (Object.keys(this.syncGraph).length <= 0)
+		if (Object.keys(this.graph).length <= 0)
 			throw new Error("empty graphs");
 
 		const {
@@ -394,8 +372,7 @@ export class RouterGraph {
 			);
 
 		const routes = RouterGraph.findRoutes(
-			Helpers.deepCopy(this.syncGraph),
-			Helpers.deepCopy(this.syncGraph),
+			Helpers.deepCopy(this.graph),
 			coinInType,
 			coinOutType,
 			this.constants.maxRouteLength,
@@ -403,7 +380,7 @@ export class RouterGraph {
 		);
 
 		const routesAfterTrades = this.splitTradeBetweenRoutes(
-			Helpers.deepCopy(this.syncGraph),
+			Helpers.deepCopy(this.graph),
 			routes,
 			coinInAmount,
 			isGivenAmountOut,
@@ -424,7 +401,7 @@ export class RouterGraph {
 		const completeTradeRoute =
 			RouterGraph.routerCompleteTradeRouteFromCompleteTradeRoute(
 				transformedRoute,
-				this.syncGraph.pools,
+				this.graph.pools,
 				referrer,
 				externalFee
 			);
@@ -505,7 +482,6 @@ export class RouterGraph {
 
 	private static findRoutes = (
 		syncGraph: RouterCompleteGraph,
-		asyncGraph: RouterCompleteGraph,
 		coinIn: CoinType,
 		coinOut: CoinType,
 		maxRouteLength: number,

@@ -171,6 +171,7 @@ export class RouterApiHelpers {
 
 		routerGraph.updateOptions({
 			// maxRouteLength: 2,
+			tradePartitionCount: 2,
 			maxGasCost: BigInt(333_333_333), // 0.333 SUI
 		});
 		const synchronousCompleteRoutes =
