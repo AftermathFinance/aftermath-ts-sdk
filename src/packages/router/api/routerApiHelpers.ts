@@ -135,12 +135,14 @@ export class RouterApiHelpers {
 			(routes) => routes.length > 0
 		);
 
-		return RouterAsyncGraph.createFinalCompleteRoute({
+		const result = RouterAsyncGraph.createFinalCompleteRoute({
 			tradeResults: exactTradeResults,
 			completeRoutes:
 				completeRoutes.length <= 0 ? undefined : completeRoutes,
 			coinInAmounts,
 		});
+
+		return result;
 	};
 
 	private fetchCompleteTradeRoutesForLastRouteAsyncPool = async (inputs: {

@@ -36,7 +36,11 @@ export class Caller {
 		if (network === "TESTNET") return "https://testnet.aftermath.finance";
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
 		if (network === "LOCAL") return "http://localhost:3000";
-		return network;
+
+		const safeNetwork =
+			network.slice(-1) === "/" ? network.slice(0, -1) : network;
+
+		return safeNetwork;
 	}
 
 	private static async fetchResponseToType<OutputType>(
@@ -54,7 +58,7 @@ export class Caller {
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.baseUrl}/api/${
 			this.urlPrefix === "" ? "" : this.urlPrefix + "/"
-		}${url}`.replaceAll("//", "/");
+		}${url}`;
 	};
 
 	/////////////////////////////////////////////////////////////////////
