@@ -29,6 +29,8 @@ export class RouterAsyncGraph {
 			? [...asyncCompleteRoutes, ...inputs.completeRoutes]
 			: asyncCompleteRoutes;
 
+		if (completeRoutes.length < 0) throw new Error("unable to find route");
+
 		const chosenCompleteRoutes = this.splitTradeBetweenRoutes({
 			...inputs,
 			completeRoutes,

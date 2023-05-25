@@ -120,6 +120,7 @@ export class RouterApiHelpers {
 				),
 			]);
 
+		routerGraph.updateOptions(RouterGraph.defaultOptions);
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
@@ -135,12 +136,20 @@ export class RouterApiHelpers {
 			(routes) => routes.length > 0
 		);
 
-		return RouterAsyncGraph.createFinalCompleteRoute({
+		const result = RouterAsyncGraph.createFinalCompleteRoute({
 			tradeResults: exactTradeResults,
 			completeRoutes:
 				completeRoutes.length <= 0 ? undefined : completeRoutes,
 			coinInAmounts,
 		});
+
+		return {
+			...result,
+			coinIn: {
+				...result.coinIn,
+				amount: coinInAmount,
+			},
+		};
 	};
 
 	private fetchCompleteTradeRoutesForLastRouteAsyncPool = async (inputs: {
@@ -166,6 +175,11 @@ export class RouterApiHelpers {
 			pool: inputs.lastPool,
 		});
 
+		routerGraph.updateOptions({
+			// maxRouteLength: 2,
+			tradePartitionCount: 2,
+			maxGasCost: BigInt(333_333_333), // 0.333 SUI
+		});
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
@@ -311,13 +325,16 @@ export class RouterApiHelpers {
 
 		return {
 			...startCompleteRoute,
-			routes: startCompleteRoute.routes.map((route) => {
+			routes: startCompleteRoute.routes.map((route, index) => {
 				const finalRoute = endCompleteRoute.routes[0];
 				const finalPath = finalRoute.paths[0];
 
-				// TODO: handle remainder amount
+				const routesLength = startCompleteRoute.routes.length;
 				const finalCoinOutAmountForRoute =
-					route.coinOut.amount / totalEndRouteAmountIn;
+					index === routesLength - 1
+						? route.coinOut.amount -
+						  totalEndRouteAmountIn * BigInt(routesLength - 1)
+						: route.coinOut.amount / totalEndRouteAmountIn;
 
 				const spotPrice =
 					Number(route.coinIn.amount) /

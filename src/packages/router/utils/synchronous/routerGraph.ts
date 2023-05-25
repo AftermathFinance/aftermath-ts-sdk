@@ -60,8 +60,8 @@ export class RouterGraph {
 
 	public static readonly defaultOptions: RouterOptions = {
 		maxRouteLength: 3,
-		tradePartitionCount: 10,
-		minRoutesToCheck: 20,
+		tradePartitionCount: 5,
+		minRoutesToCheck: 10,
 		maxGasCost: BigInt(500_000_000), // 0.5 SUI
 	};
 
@@ -70,7 +70,7 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly graph: RouterCompleteGraph;
-	public readonly constants: RouterOptions;
+	private constants: RouterOptions;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -92,6 +92,13 @@ export class RouterGraph {
 	//// Public Methods
 	/////////////////////////////////////////////////////////////////////
 
+	public updateOptions(partialOptions: Partial<RouterOptions>) {
+		this.constants = {
+			...this.constants,
+			...partialOptions,
+		};
+	}
+
 	public getCompleteRouteGivenAmountIn(inputs: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
@@ -99,10 +106,12 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute {
-		return this.getCompleteRoute({
+		const result = this.getCompleteRoute({
 			...inputs,
 			isGivenAmountOut: false,
 		});
+
+		return result;
 	}
 
 	// public getCompleteRouteGivenAmountOut(
@@ -154,9 +163,13 @@ export class RouterGraph {
 			}
 		});
 
-		return completeRoutes.every((route) => route.routes.length === 0)
+		const result = completeRoutes.every(
+			(route) => route.routes.length === 0
+		)
 			? []
 			: completeRoutes;
+
+		return result;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -213,11 +226,34 @@ export class RouterGraph {
 				network: inputs.network,
 			});
 
+			if (poolClass.noHopsAllowed) return acc;
+
 			return {
 				...acc,
 				[uid]: poolClass,
 			};
 		}, {});
+
+		// const coinNodes = Object.entries(inputs.graph.coinNodes).reduce(
+		// 	(acc, [coinIn, coinNode]) => ({
+		// 		acc,
+		// 		[coinIn]: {
+		// 			...coinNode,
+		// 			coinOutThroughPoolEdges: Object.entries(
+		// 				coinNode.coinOutThroughPoolEdges
+		// 			).reduce(
+		// 				(acc, [coin, poolUids]) => ({
+		// 					...acc,
+		// 					[coin]: poolUids.filter((uid) =>
+		// 						Object.keys(pools).includes(uid)
+		// 					),
+		// 				}),
+		// 				{}
+		// 			),
+		// 		},
+		// 	}),
+		// 	{}
+		// );
 
 		const graph: RouterCompleteGraph = {
 			coinNodes: inputs.graph.coinNodes,
@@ -314,7 +350,8 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute {
-		if (Object.keys(this.graph).length <= 0) throw new Error("empty graph");
+		if (Object.keys(this.graph).length <= 0)
+			throw new Error("empty graphs");
 
 		const {
 			coinInType,
@@ -444,38 +481,42 @@ export class RouterGraph {
 	/////////////////////////////////////////////////////////////////////
 
 	private static findRoutes = (
-		graph: RouterCompleteGraph,
+		syncGraph: RouterCompleteGraph,
 		coinIn: CoinType,
 		coinOut: CoinType,
 		maxRouteLength: number,
 		isGivenAmountOut: boolean
 	): TradeRoute[] => {
-		const coinInEdges = graph.coinNodes[coinIn].coinOutThroughPoolEdges;
+		const syncCoinInEdges =
+			syncGraph.coinNodes[coinIn].coinOutThroughPoolEdges;
 		const startingRoutes = this.createStartingRoutes(
-			graph.pools,
-			coinInEdges,
+			syncGraph.pools,
+			syncCoinInEdges,
 			coinIn,
 			coinOut,
 			false
 		);
 
 		const routes = this.findCompleteRoutes(
-			graph,
+			syncGraph,
 			startingRoutes,
 			coinOut,
 			maxRouteLength,
 			isGivenAmountOut
 		);
 
-		const noHopRoutes = this.createStartingRoutes(
-			graph.pools,
-			coinInEdges,
-			coinIn,
-			coinOut,
-			true
-		);
+		// const asyncCoinInEdges =
+		// 	syncGraph.coinNodes[coinIn].coinOutThroughPoolEdges;
+		// const noHopRoutes = this.createStartingRoutes(
+		// 	asyncGraph.pools,
+		// 	asyncCoinInEdges,
+		// 	coinIn,
+		// 	coinOut,
+		// 	true
+		// );
 
-		return [...routes, ...noHopRoutes];
+		// return [...routes, ...noHopRoutes];
+		return [...routes];
 	};
 
 	private static createStartingRoutes = (
@@ -489,6 +530,8 @@ export class RouterGraph {
 		let routes: TradeRoute[] = [];
 		for (const [coinOut, throughPools] of Object.entries(coinInEdges)) {
 			for (const poolUid of throughPools) {
+				if (!(poolUid in pools)) continue;
+
 				const pool = pools[poolUid];
 
 				if (onlyNoHopPools && !pool.noHopsAllowed) continue;
@@ -567,6 +610,8 @@ export class RouterGraph {
 							lastPath.poolUid === poolUid
 						)
 							continue;
+
+						if (!(poolUid in graph.pools)) continue;
 
 						const pool = graph.pools[poolUid];
 						const newRoute: TradeRoute = {
@@ -835,6 +880,8 @@ export class RouterGraph {
 
 		try {
 			for (const path of originalRoute.paths) {
+				if (!(path.poolUid in currentPools)) continue;
+
 				const pool = currentPools[path.poolUid];
 
 				const spotPrice = pool.getSpotPrice({
@@ -1058,6 +1105,7 @@ export class RouterGraph {
 
 				const newPaths: RouterTradePath[] = route.paths.map((path) => {
 					const { coinIn, coinOut, spotPrice, poolUid } = path;
+
 					const pool = pools[poolUid];
 					return {
 						coinIn,

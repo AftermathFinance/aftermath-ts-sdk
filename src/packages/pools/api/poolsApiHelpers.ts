@@ -41,6 +41,7 @@ import dayjs, { ManipulateType } from "dayjs";
 import { Pool } from "..";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventOnChain } from "../../../general/types/castingTypes";
+import { PoolsApiCasting } from "./poolsApiCasting";
 
 export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -148,26 +149,16 @@ export class PoolsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
-		const objectIds = await this.Provider.Events().fetchAllEvents(
-			(cursor, limit) =>
-				this.Provider.Events().fetchCastEventsWithCursor<
-					EventOnChain<{
-						pool_id: ObjectId;
-					}>,
-					ObjectId
-				>(
-					{
-						MoveEventType: EventsApiHelpers.createEventType(
-							this.addresses.pools.packages.amm,
-							"events",
-							"CreatedPoolEvent"
-						),
-					},
-					(eventOnChain) => eventOnChain.parsedJson.pool_id,
-					cursor,
-					limit
-				)
-		);
+		const objectIds =
+			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
+				this.addresses.pools.objects.lpCoinsTable,
+				(objectIds) =>
+					this.Provider.Objects().fetchCastObjectBatch(
+						objectIds,
+						PoolsApiCasting.poolObjectIdFromSuiObjectResponse
+					),
+				() => true
+			);
 
 		const filteredIds = objectIds.filter(
 			(id) => !PoolsApiHelpers.constants.blacklistedPoolIds.includes(id)
@@ -393,7 +384,7 @@ export class PoolsApiHelpers {
 		const { tx } = inputs;
 
 		const compiledModulesAndDeps = JSON.parse(
-			`{"modules":["oRzrCwYAAAAJAQAGAgYIAw4LBBkCBRsQBytPCHpgCtoBBQzfAQ0AAgIDAQcAAAIAAgECAAAGAAEAAQQDAQECAQICCAAHCAEAAQgAAgkABwgBBUFGX0xQCVR4Q29udGV4dAVhZl9scA1hbW1faW50ZXJmYWNlDmNyZWF0ZV9scF9jb2luC2R1bW15X2ZpZWxkBGluaXQKdHhfY29udGV4dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALmlBNSmrNkQyYGFIdIntxU5RrgYIeMfzpdVSbNt3hPoQACAQUBAAAAAAEECwALATgAAgA="],"dependencies":["0x20a65e88af1067e992c08c3d739df5411f4f34de38a7073102a709ae0aa6057e","0xe69413529ab3644326061487489edc54e51ae060878c7f3a5d5526cdb7784fa1","0x86ab16dfe4228f1a83e2d8f82f1e4e5b11a6e3c8c1bc12297592276b5badb90c","0xdc6c8b85cbefd0db26c59a83f915816b02bc7a08ca0eb3c3f21877cee7e71071","0x0000000000000000000000000000000000000000000000000000000000000001","0x601207d00bf8862cc36dd06041b6e99707aa68baf7db175a74ceb15aa7a2310b","0xdf857ebd99ad63680122f2960f46ae9f2377cbc31791848dff4d9719fee5f3ac","0x0000000000000000000000000000000000000000000000000000000000000002","0x0000000000000000000000000000000000000000000000000000000000000003","0x09e96e14585633f5f1f437164cf74a2052a62521a8b310dcb30ee7289b4d8698","0x11b955825d69f808589ef3bd86a653af1c7e3db4bda4455b0b081dfe5eff100c"],"digest":[122,194,151,53,241,242,224,79,241,73,128,176,53,131,0,232,15,200,171,208,199,220,149,132,13,191,172,87,64,58,129,22]}`
+			this.addresses.pools.other.createLpCoinPackageCompilation
 		);
 
 		return tx.publish({
@@ -455,10 +446,12 @@ export class PoolsApiHelpers {
 					: createPoolCapId,
 				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.pure(Casting.u8VectorFromString(inputs.poolName)),
-				tx.pure(Casting.u8VectorFromString(lpCoinMetadata.name)),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinMetadata.name.toString())
+				),
 				tx.pure(
 					Casting.u8VectorFromString(
-						lpCoinMetadata.symbol.toUpperCase()
+						lpCoinMetadata.symbol.toString().toUpperCase()
 					)
 				),
 				tx.pure(Casting.u8VectorFromString(lpCoinDescription)),
@@ -969,21 +962,21 @@ export class PoolsApiHelpers {
 
 	private tradeEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.amm,
+			this.addresses.pools.packages.events,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.swap
 		);
 
 	private depositEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.amm,
+			this.addresses.pools.packages.events,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.deposit
 		);
 
 	private withdrawEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.pools.packages.amm,
+			this.addresses.pools.packages.events,
 			PoolsApiHelpers.constants.moduleNames.events,
 			PoolsApiHelpers.constants.eventNames.withdraw
 		);

@@ -63,8 +63,10 @@ export class Pools extends Caller {
 			maxWithdrawPercentageOfPoolBalance: 0.3, // 10%
 			minSwapFee: 0.0001,
 			maxSwapFee: 0.1,
-			minWeight: 0.01,
-			maxWeight: 0.99,
+			minUncorrelatedWeight: 0.01,
+			maxUncorrelatedWeight: 0.99,
+			minStableWeight: 0.000001,
+			maxStableWeight: 0.000099,
 		},
 	};
 

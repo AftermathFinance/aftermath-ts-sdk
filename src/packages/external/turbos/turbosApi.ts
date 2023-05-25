@@ -6,6 +6,7 @@ import { Balance, SerializedTransaction } from "../../../types";
 import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { Helpers } from "../../../general/utils";
 import { TurbosPoolObject } from "./turbosTypes";
+import { Pools } from "../..";
 
 export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	/////////////////////////////////////////////////////////////////////
@@ -66,8 +67,16 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
+		withReferral?: boolean;
 	}): Promise<Balance> => {
-		const tradeResult = await this.Helpers.fetchCalcTradeResult(inputs);
+		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
+			...inputs,
+			amount: inputs.coinInAmount,
+		});
+		const tradeResult = await this.Helpers.fetchCalcTradeResult({
+			...inputs,
+			coinInAmount: coinInAmountWithFees,
+		});
 		return tradeResult.amountOut;
 	};
 

@@ -57,12 +57,17 @@ export interface PoolsAddresses {
 	packages: {
 		amm: SuiAddress;
 		ammInterface: SuiAddress;
+		events: SuiAddress;
 	};
 	objects: {
 		poolRegistry: ObjectId;
 		protocolFeeVault: ObjectId;
 		treasury: ObjectId;
 		insuranceFund: ObjectId;
+		lpCoinsTable: ObjectId;
+	};
+	other: {
+		createLpCoinPackageCompilation: string;
 	};
 }
 

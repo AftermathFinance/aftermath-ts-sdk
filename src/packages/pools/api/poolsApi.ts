@@ -21,6 +21,7 @@ import {
 	PoolObject,
 	PoolTradeFee,
 	PoolGraphDataTimeframeKey,
+	Percentage,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -238,8 +239,8 @@ export class PoolsApi {
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
 		coinsInfo: {
 			coinType: CoinType;
-			weight: number;
-			tradeFeeIn: number;
+			weight: Percentage;
+			tradeFeeIn: Percentage;
 			initialDeposit: Balance;
 		}[];
 		poolName: PoolName;
