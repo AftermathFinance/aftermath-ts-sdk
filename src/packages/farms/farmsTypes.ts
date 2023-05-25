@@ -22,7 +22,7 @@ export interface FarmsStakingPoolCoin {
 	lastRewardTimestamp: Timestamp;
 }
 
-export interface FarmsStakingPool extends Object {
+export interface FarmsStakingPoolObject extends Object {
 	stakeCoinType: CoinType;
 	stakedAmount: Balance;
 	stakedAmountWithMultiplier: Balance;
