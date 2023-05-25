@@ -11,9 +11,7 @@ export type FarmsMultiplier = bigint;
 //// Objects
 /////////////////////////////////////////////////////////////////////
 
-export type FarmsStakingPoolCoins = Record<CoinType, FarmsStakingPoolCoin>;
-
-export interface FarmsStakingPoolCoin {
+export interface FarmsStakingPoolRewardCoin {
 	coinType: CoinType;
 	rewards: Balance;
 	rewardsAccumulatedPerShare: Balance;
@@ -29,5 +27,5 @@ export interface FarmsStakingPoolObject extends Object {
 	minLockDurationMs: Timestamp;
 	maxLockDurationMs: Timestamp;
 	maxLockMultiplier: FarmsMultiplier;
-	coins: FarmsStakingPoolCoins;
+	rewardCoins: FarmsStakingPoolRewardCoin[];
 }
