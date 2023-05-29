@@ -24,6 +24,7 @@ interface OptionalConfigAddresses {
 	nftAmm: NftAmmAddresses;
 	externalRouter: Partial<ExternalRouterAddresses>;
 	referralVault: ReferralVaultAddresses;
+	perpetuals: PerpetualsAddresses;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -149,5 +150,34 @@ export interface ReferralVaultAddresses {
 	};
 	objects: {
 		referralVault: ObjectId;
+	};
+}
+
+export interface PerpetualsAddresses {
+	packages: {
+		perpetuals: SuiAddress;
+	};
+	objects: {
+		adminCapability: ObjectId;
+		registry: ObjectId;
+		exchanges: ExchangeAddresses[];
+		oracle: OracleAddresses;
+	};
+}
+
+export interface ExchangeAddresses {
+	accountManager: ObjectId,
+	marketManager: ObjectId,
+	vault: ObjectId,
+	insuranceFund: ObjectId
+};
+
+export interface OracleAddresses {
+	packages: {
+		oracle: SuiAddress;
+	};
+	objects: {
+		authorityCapability: ObjectId;
+		priceFeedStorage: ObjectId;
 	};
 }

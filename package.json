@@ -35,11 +35,14 @@
 	"dependencies": {
 		"@mysten/sui.js": "^0.34.1",
 		"@pythnetwork/pyth-evm-js": "^1.16.1",
+		"bn.js": "^5.2.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",
-		"npm": "^9.6.2"
+		"npm": "^9.6.2",
+		"priority-queue-typescript": "^1.0.1"
 	},
 	"devDependencies": {
+		"@types/bn.js": "^5.1.1",
 		"eslint-plugin-tsdoc": "^0.2.17",
 		"prettier": "^2.8.1",
 		"typedoc": "^0.24.4",
