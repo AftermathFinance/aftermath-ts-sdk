@@ -2,6 +2,7 @@ import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { PoolsApiHelpers } from "./poolsApiHelpers";
 import {
+	CoinDecimal,
 	CoinType,
 	CoinsToBalance,
 	CoinsToDecimals,
@@ -240,6 +241,9 @@ export class PoolsApi {
 		coinsInfo: {
 			coinType: CoinType;
 			weight: Percentage;
+			// TODO: make decimals optional and fetch if unset ?
+			// TODO: make decimals only bigint ?
+			decimals: CoinDecimal;
 			tradeFeeIn: Percentage;
 			initialDeposit: Balance;
 		}[];
