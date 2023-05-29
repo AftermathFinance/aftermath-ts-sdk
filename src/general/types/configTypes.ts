@@ -22,7 +22,7 @@ interface OptionalConfigAddresses {
 	utilies: UtilitiesAddresses;
 	capys: CapysAddresses;
 	nftAmm: NftAmmAddresses;
-	externalRouter: Partial<ExternalRouterAddresses>;
+	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
 }
 
@@ -100,7 +100,16 @@ export interface NftAmmAddresses {
 	};
 }
 
-export interface ExternalRouterAddresses {
+export type RouterAddresses = RequiredRouterAddresses &
+	Partial<OptionalRouterAddresses>;
+
+export interface RequiredRouterAddresses {
+	packages: {
+		utils: SuiAddress;
+	};
+}
+
+export interface OptionalRouterAddresses {
 	nojo: NojoAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;

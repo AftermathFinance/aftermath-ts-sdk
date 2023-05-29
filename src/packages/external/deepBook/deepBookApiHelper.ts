@@ -50,7 +50,7 @@ export class DeepBookApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
-		const deepBook = this.Provider.addresses.externalRouter?.deepBook;
+		const deepBook = this.Provider.addresses.router?.deepBook;
 		const pools = this.Provider.addresses.pools;
 		const referralVault = this.Provider.addresses.referralVault;
 

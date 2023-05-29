@@ -60,7 +60,7 @@ export class CetusApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(public readonly Provider: AftermathApi) {
-		const cetus = this.Provider.addresses.externalRouter?.cetus;
+		const cetus = this.Provider.addresses.router?.cetus;
 		const pools = this.Provider.addresses.pools;
 		const referralVault = this.Provider.addresses.referralVault;
 

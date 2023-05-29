@@ -18,7 +18,7 @@ export class NojoAmmApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.externalRouter?.nojo;
+		const addresses = this.Provider.addresses.router?.nojo;
 		if (!addresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
