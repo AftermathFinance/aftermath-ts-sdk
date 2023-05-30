@@ -6,6 +6,7 @@ import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
 import { SuiApiCasting } from "../../packages/sui/api/suiApiCasting";
 import { Byte } from "../types";
+import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
 
 export class Casting {
 	/////////////////////////////////////////////////////////////////////
@@ -18,6 +19,7 @@ export class Casting {
 	public static staking = StakingApiCasting;
 	public static sui = SuiApiCasting;
 	public static nftAmm = NftAmmApiCasting;
+	public static router = RouterApiCasting;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constants
