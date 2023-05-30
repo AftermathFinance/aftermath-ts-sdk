@@ -405,6 +405,7 @@ export class PoolsApiHelpers {
 			coinId: ObjectId | TransactionArgument;
 			coinType: CoinType;
 			weight: PoolWeight;
+			decimals: CoinDecimal;
 			tradeFeeIn: PoolTradeFee;
 			tradeFeeOut: PoolTradeFee;
 			depositFee: PoolDepositFee;
@@ -475,6 +476,10 @@ export class PoolsApiHelpers {
 				tx.pure(
 					coinsInfo.map((coin) => coin.withdrawFee),
 					"vector<u64>"
+				),
+				tx.pure(
+					coinsInfo.map((coin) => coin.decimals),
+					"vector<u8>"
 				),
 				...coinsInfo.map((coin) =>
 					typeof coin.coinId === "string"
