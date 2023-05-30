@@ -160,17 +160,17 @@ export interface PerpetualsAddresses {
 	objects: {
 		adminCapability: ObjectId;
 		registry: ObjectId;
-		exchanges: ExchangeAddresses[];
+		exchanges: ExchangeAddresses[]; // Probably a Map<CoinType, ExchangeAddresses> is better
 		oracle: OracleAddresses;
 	};
 }
 
 export interface ExchangeAddresses {
-	accountManager: ObjectId,
-	marketManager: ObjectId,
-	vault: ObjectId,
-	insuranceFund: ObjectId
-};
+	accountManager: ObjectId;
+	marketManager: ObjectId;
+	vault: ObjectId;
+	insuranceFund: ObjectId;
+}
 
 export interface OracleAddresses {
 	packages: {
