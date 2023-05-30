@@ -1,4 +1,5 @@
 import {
+	EventId,
 	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
@@ -9,8 +10,11 @@ import {
 	RouterExternalFee,
 	RouterProtocolName,
 	RouterSerializablePool,
+	RouterTradeEvent,
+	RouterTradeEventOnChain,
 } from "../routerTypes";
 import {
+	AnyObjectType,
 	Balance,
 	CoinType,
 	RequiredRouterAddresses,
@@ -25,6 +29,7 @@ import { Casting, Helpers } from "../../../general/utils";
 import { CetusApi } from "../../external/cetus/cetusApi";
 import { TurbosApi } from "../../external/turbos/turbosApi";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -45,6 +50,9 @@ export class RouterSynchronousApiHelpers {
 		moduleNames: {
 			events: "router_events",
 		},
+		eventNames: {
+			routerTrade: "SwapCompletedEvent",
+		},
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -52,6 +60,10 @@ export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	public readonly addresses: RequiredRouterAddresses;
+
+	public readonly eventTypes: {
+		routerTrade: AnyObjectType;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
@@ -67,6 +79,10 @@ export class RouterSynchronousApiHelpers {
 		this.Provider = Provider;
 		// @ts-ignore
 		this.addresses = addresses;
+
+		this.eventTypes = {
+			routerTrade: this.routerTradeEventType(),
+		};
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -327,6 +343,51 @@ export class RouterSynchronousApiHelpers {
 	}
 
 	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchTradeEvents = async (inputs: {
+		walletAddress: SuiAddress;
+		cursor?: EventId;
+		limit?: number;
+	}) => {
+		return await this.Provider.Events().fetchCastEventsWithCursor<
+			RouterTradeEventOnChain,
+			RouterTradeEvent
+		>(
+			{
+				// And: [
+				// 	{
+				MoveEventType: this.eventTypes.routerTrade,
+				// 	},
+				// 	{
+				// 		Sender: inputs.walletAddress,
+				// 	},
+				// ],
+			},
+			RouterSynchronousApiHelpers.routerTradeEventFromOnChain,
+			inputs.cursor,
+			inputs.limit
+		);
+	};
+
+	public static routerTradeEventFromOnChain = (
+		eventOnChain: RouterTradeEventOnChain
+	): RouterTradeEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			trader: fields.swapper,
+			coinInType: fields.type_in,
+			coinInAmount: BigInt(fields.amount_in),
+			coinOutType: fields.type_out,
+			coinOutAmount: BigInt(fields.amount_out),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	/////////////////////////////////////////////////////////////////////
 	//// Private Methods
 	/////////////////////////////////////////////////////////////////////
 
@@ -340,4 +401,15 @@ export class RouterSynchronousApiHelpers {
 		const { protocols } = inputs;
 		return protocols.map((name) => this.protocolNamesToApi[name]());
 	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Event Types
+	/////////////////////////////////////////////////////////////////////
+
+	private routerTradeEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.utils,
+			RouterSynchronousApiHelpers.constants.moduleNames.events,
+			RouterSynchronousApiHelpers.constants.eventNames.routerTrade
+		);
 }

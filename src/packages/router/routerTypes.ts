@@ -1,7 +1,10 @@
 import { SuiAddress } from "@mysten/sui.js";
 import {
+	AnyObjectType,
 	Balance,
+	BigIntAsString,
 	Percentage,
+	Event,
 	Slippage,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
@@ -10,6 +13,7 @@ import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
 import { CetusPoolObject } from "../external/cetus/cetusTypes";
 import { TurbosPoolObject } from "../external/turbos/turbosTypes";
+import { EventOnChain } from "../../general/types/castingTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -168,6 +172,31 @@ export interface RouterAsyncTradeResult {
 	pool: RouterAsyncSerializablePool;
 	amountsOut: Balance[];
 }
+
+/////////////////////////////////////////////////////////////////////
+//// Events
+/////////////////////////////////////////////////////////////////////
+
+export interface RouterTradeEvent extends Event {
+	trader: SuiAddress;
+	coinInType: AnyObjectType;
+	coinInAmount: Balance;
+	coinOutType: AnyObjectType;
+	coinOutAmount: Balance;
+	// referrer?: SuiAddress;
+	// externalFee?: RouterExternalFee;
+}
+
+export type RouterTradeEventOnChain = EventOnChain<{
+	swapper: SuiAddress;
+	type_in: AnyObjectType;
+	amount_in: BigIntAsString;
+	type_out: AnyObjectType;
+	amount_out: BigIntAsString;
+	// referrer: Option<SuiAddress>;
+	// router_fee: Option<BigIntAsString>;
+	// router_fee_recipient: Option<SuiAddress>;
+}>;
 
 /////////////////////////////////////////////////////////////////////
 //// API

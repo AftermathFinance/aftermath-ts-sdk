@@ -12,7 +12,7 @@ import {
 	RouterSerializableCompleteGraph,
 	RouterProtocolName,
 } from "../../../types";
-import { SuiAddress } from "@mysten/sui.js";
+import { EventId, SuiAddress } from "@mysten/sui.js";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
@@ -125,5 +125,17 @@ export class RouterApi {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			tx
 		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	public async fetchTradeEvents(inputs: {
+		walletAddress: SuiAddress;
+		cursor?: EventId;
+		limit?: number;
+	}) {
+		return this.Helpers.SynchronousHelpers.fetchTradeEvents(inputs);
 	}
 }
