@@ -6,12 +6,12 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers";
 import {
-    AdminCapability,
+    PerpetualsAdminCapability,
 	AnyObjectType,
 	Balance,
 	CoinType,
 	PerpetualsAddresses,
-    Registry,
+    PerpetualsRegistry,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
 
@@ -52,12 +52,12 @@ export class PerpetualsHelpers {
 	/////////////////////////////////////////////////////////////////////
 	public fetchInitializeForCollateral = async (inputs: {
 		walletAddress: SuiAddress;
-        coinType: AnyObjectType;
+        coinType: CoinType;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.addInitializeForCollateralToTransaction({
+		this.XInitializeForCollateral({
 			tx,
 			...inputs
 		});
@@ -68,9 +68,9 @@ export class PerpetualsHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Commands
 	/////////////////////////////////////////////////////////////////////
-    public addInitializeForCollateralToTransaction = (inputs: {
+    public XInitializeForCollateral = (inputs: {
 		tx: TransactionBlock;
-        coinType: AnyObjectType;
+        coinType: CoinType;
 	}) => {
 		const { tx, coinType, } = inputs;
 		return tx.moveCall({

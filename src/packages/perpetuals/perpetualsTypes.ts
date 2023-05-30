@@ -4,28 +4,27 @@ import {
 	Balance,
     Timestamp
 } from "../../general/types/generalTypes";
-import BN from "bn.js";
 
-export type IFixed = BN;
+export type IFixed = bigint;
 
 // =========================================================================
 //  Clearing House
 // =========================================================================
-export interface AdminCapability {
+export interface PerpetualsAdminCapability {
 	objectId: ObjectId,
 }
 
-export interface Registry {
+export interface PerpetualsRegistry {
 	objectId: ObjectId,
 	activeCollaterals: string[],
 }
 
-export interface InsuranceFund {
+export interface PerpetualsInsuranceFund {
 	objectId: ObjectId,
 	balance: Balance,
 }
 
-export interface Vault {
+export interface PerpetualsVault {
 	objectId: ObjectId,
 	balance: Balance,
 }
@@ -33,26 +32,25 @@ export interface Vault {
 // =========================================================================
 //  Account Manager
 // =========================================================================
-export interface AccountManager {
+export interface PerpetualsAccountManager {
     objectId: ObjectId,
     maxPositionsPerAccount: bigint,
     maxOpenOrdersPerPosition: bigint,
 }
 
-export interface Account {
-    objectId: ObjectId,
+export interface PerpetualsAccount {
     collateral: IFixed,
     marketIds: bigint[],
-    positions: Position[],
+    positions: PerpetualsPosition[],
     isBeingLiquidated: boolean
 }
 
-export interface Position {
+export interface PerpetualsPosition {
     baseAssetAmount: IFixed,
     quoteAssetNotionalAmount: IFixed,
     lastCumFunding: IFixed,
-    asks: CritBitTree<bigint>,
-    bids: CritBitTree<bigint>,
+    asks: PerpetualsCritBitTree<bigint>,
+    bids: PerpetualsCritBitTree<bigint>,
     asksQuantity: IFixed,
     bidsQuantity: IFixed,
 }
@@ -60,7 +58,7 @@ export interface Position {
 // =========================================================================
 //  Market Manager
 // =========================================================================
-export interface MarketManager {
+export interface PerpetualsMarketManager {
     objectId: ObjectId,
     feesAccrued: IFixed,
     netTransferFromIfToVault: IFixed,
@@ -68,7 +66,7 @@ export interface MarketManager {
     marketIds: bigint[]
 }
 
-export interface MarketParams {
+export interface PerpetualsMarketParams {
     marginRatioInitial: IFixed
     marginRatioMaintenance: IFixed,
     baseAssetSymbol: string,
@@ -83,7 +81,7 @@ export interface MarketParams {
     priceImpactFactor: IFixed,
 }
 
-export interface MarketState {
+export interface PerpetualsMarketState {
     cumulativeFundingRate: IFixed,
     fundingRateTimestamp: Timestamp,
     lastIndexPrice: IFixed,
@@ -95,120 +93,118 @@ export interface MarketState {
     openInterest: IFixed
 }
 
-export interface MarginRatioProposal {
+export interface PerpetualsMarginRatioProposal {
     maturity: bigint,
     marginRatioInitial: IFixed
     marginRatioMaintenance: IFixed,
 }
 
-export interface MarketManagerDynamicFields {
-	paramsFields: MarketManagerParamsDynamicField[];
-	stateFields: MarketManagerStateDynamicField[];
-	orderbookFields: MarketManagerOrderbookDynamicField[];
+export interface PerpetualsMarketManagerDynamicFields {
+	paramsFields: PerpetualsMarketParamsDynamicField[];
+	stateFields: PerpetualsMarketStateDynamicField[];
+	orderbookFields: PerpetualsMarketOrderbookDynamicField[];
 }
 
-export interface MarketManagerParamsDynamicField {
+export interface PerpetualsMarketParamsDynamicField {
+	value: PerpetualsMarketParams;
+}
+
+export interface PerpetualsMarketStateDynamicField {
+	value: PerpetualsMarketState;
+}
+
+export interface PerpetualsMarketOrderbookDynamicField {
 	objectId: ObjectId;
-	value: MarketParams;
+	value: PerpetualsOrderbook;
 }
 
-export interface MarketManagerStateDynamicField {
-	objectId: ObjectId;
-	value: MarketState;
-}
-
-export interface MarketManagerOrderbookDynamicField {
-	objectId: ObjectId;
-	value: Orderbook;
-}
-
-export interface MarketManagerDynamicFieldOnChain {
+export interface PerpetualsMarketManagerDynamicFieldOnChain {
 	data: {
 		fields: any;
 		type: AnyObjectType;
 	};
 }
 
-interface MarketManagerParamsDynamicFieldFieldOnChain {
+interface PerpetualsMarketParamsDynamicFieldFieldOnChain {
 	id: {
 		id: ObjectId;
 	};
 	value: {
 		fields: {
-			value: MarketParams;
+			value: PerpetualsMarketParams;
 		};
 	};
 }
 
-export interface MarketManagerParamsDynamicFieldOnChain {
+export interface PerpetualsMarketParamsDynamicFieldOnChain {
 	data: {
-		fields: MarketManagerParamsDynamicFieldFieldOnChain;
+		fields: PerpetualsMarketParamsDynamicFieldFieldOnChain;
 	};
 }
 
-interface MarketManagerStateDynamicFieldFieldOnChain {
+interface PerpetualsMarketStateDynamicFieldFieldOnChain {
 	id: {
 		id: ObjectId;
 	};
 	value: {
 		fields: {
-			value: MarketState;
+			value: PerpetualsMarketState;
 		};
 	};
 }
 
-export interface MarketManagerStateDynamicFieldOnChain {
+export interface PerpetualsMarketManagerStateDynamicFieldOnChain {
 	data: {
-		fields: MarketManagerStateDynamicFieldFieldOnChain;
+		fields: PerpetualsMarketStateDynamicFieldFieldOnChain;
 	};
 }
 
-interface MarketManagerOrderbookDynamicFieldFieldOnChain {
+interface PerpetualsMarketOrderbookDynamicFieldFieldOnChain {
 	id: {
 		id: ObjectId;
 	};
 	value: {
 		fields: {
-			value: Orderbook;
+			value: PerpetualsOrderbook;
 		};
 	};
 }
 
-export interface MarketManagerOrderbookDynamicFieldOnChain {
+export interface PerpetualsMarketOrderbookDynamicFieldOnChain {
 	data: {
-		fields: MarketManagerOrderbookDynamicFieldFieldOnChain;
+		fields: PerpetualsMarketOrderbookDynamicFieldFieldOnChain;
 	};
 }
 
 // =========================================================================
 //  Orderbook
 // =========================================================================
-export interface InnerNode {
+export interface PerpetualsInnerNode {
     criticalBit: bigint,
     parentIndex: bigint,
     leftChildIndex: bigint,
     rightChildIndex: bigint,
 }
 
-export interface OuterNode<T> {
+export interface PerpetualsOuterNode<T> {
     key: IFixed,
     value: T,
     parentIndex: bigint,
 }
 
-export interface CritBitTree<T> {
+export interface PerpetualsCritBitTree<T> {
     root: bigint,
-    innerNode: InnerNode[],
-    outerNode: OuterNode<T>[],
+    innerNode: PerpetualsInnerNode[],
+    outerNode: PerpetualsOuterNode<T>[],
 }
 
-export interface Order {
+export interface PerpetualsOrder {
     user: SuiAddress,
 	accountId: bigint,
 	size: bigint,
 }
 
-export interface OrderCasted {
+export interface PerpetualsOrderCasted {
 	user: SuiAddress;
 	accountId: bigint;
 	size: bigint;
@@ -216,12 +212,12 @@ export interface OrderCasted {
 	counter: bigint;
 }
 
-export interface Orderbook {
+export interface PerpetualsOrderbook {
     objectId: ObjectId,
     lotSize: bigint,
     tickSize: bigint,
-    asks: CritBitTree<Order>,
-    bids: CritBitTree<Order>,
+    asks: PerpetualsCritBitTree<PerpetualsOrder>,
+    bids: PerpetualsCritBitTree<PerpetualsOrder>,
 	minAsk: bigint,
 	minBid: bigint,
     counter: bigint,
@@ -230,7 +226,7 @@ export interface Orderbook {
 // =========================================================================
 //  Oracle
 // =========================================================================
-export interface PriceFeed {
+export interface PerpetualsPriceFeed {
     objectId: ObjectId,
     symbol: string,
     price: IFixed,
@@ -238,10 +234,10 @@ export interface PriceFeed {
     timestamp: Timestamp
 }
 
-export interface PriceFeedStorage {
+export interface PerpetualsPriceFeedStorage {
     objectId: ObjectId,
 }
 
-export interface AuthorityCap {
+export interface PerpetualsAuthorityCap {
     objectId: ObjectId,
 }

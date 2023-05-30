@@ -35,7 +35,6 @@
 	"dependencies": {
 		"@mysten/sui.js": "^0.34.1",
 		"@pythnetwork/pyth-evm-js": "^1.16.1",
-		"bn.js": "^5.2.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",
 		"npm": "^9.6.2",

@@ -2,10 +2,10 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 
 import {
-    AccountManager,
-	MarketManager,
-	Orderbook,
-	PriceFeedStorage,
+    PerpetualsAccountManager,
+	PerpetualsMarketManager,
+	PerpetualsOrderbook,
+	PerpetualsPriceFeedStorage,
 } from "../../../types";
 import { PerpetualsHelpers } from "./perpetualsApiHelpers";
 import { PerpetualsCasting } from "./perpetualsCasting";
@@ -26,10 +26,13 @@ export class PerpetualsApi {
 		this.Helpers = new PerpetualsHelpers(Provider);
 	}
 
+	/////////////////////////////////////////////////////////////////////
+	//// Shared Objects
+	/////////////////////////////////////////////////////////////////////
 	public fetchAccountManager = async (
 		objectId: ObjectId
-	): Promise<AccountManager> => {
-		return this.Provider.Objects().fetchCastObject<AccountManager>(
+	): Promise<PerpetualsAccountManager> => {
+		return this.Provider.Objects().fetchCastObject<PerpetualsAccountManager>(
             objectId,
             PerpetualsCasting.accountManagerFromSuiObjectResponse
 		);
@@ -37,8 +40,8 @@ export class PerpetualsApi {
 
 	public fetchMarketManager = async (
 		objectId: ObjectId
-	): Promise<MarketManager> => {
-		return this.Provider.Objects().fetchCastObject<MarketManager>(
+	): Promise<PerpetualsMarketManager> => {
+		return this.Provider.Objects().fetchCastObject<PerpetualsMarketManager>(
             objectId,
             PerpetualsCasting.marketManagerFromSuiObjectResponse
 		);
@@ -46,10 +49,14 @@ export class PerpetualsApi {
 
 	public fetchPriceFeedStorage = async (
 		objectId: ObjectId
-	): Promise<PriceFeedStorage> => {
-		return this.Provider.Objects().fetchCastObject<PriceFeedStorage>(
+	): Promise<PerpetualsPriceFeedStorage> => {
+		return this.Provider.Objects().fetchCastObject<PerpetualsPriceFeedStorage>(
             objectId,
             PerpetualsCasting.priceFeedStorageFromSuiObjectResponse
 		);
 	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transactions
+	/////////////////////////////////////////////////////////////////////
 }
