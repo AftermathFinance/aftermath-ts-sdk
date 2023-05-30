@@ -9,7 +9,7 @@ import {
 } from "./faucetApiCastingTypes";
 import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
 import { FaucetApiHelpers } from "./faucetApiHelpers";
-import { SerializedTransaction } from "../../../types";
+import { EventsInputs, SerializedTransaction } from "../../../types";
 import { Coin } from "../../coin";
 
 export class FaucetApi {
@@ -33,7 +33,7 @@ export class FaucetApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const addCoinEvents = await this.fetchAddCoinEvents();
+		const addCoinEvents = await this.fetchAddCoinEvents({});
 		const coins = addCoinEvents.events.map(
 			(event) => "0x" + event.coinType
 		);
@@ -88,31 +88,29 @@ export class FaucetApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchMintCoinEvents = async (cursor?: EventId, limit?: number) =>
+	public fetchMintCoinEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
 			FaucetMintCoinEvent
 		>({
+			...inputs,
 			query: {
 				MoveEventType: this.Helpers.eventTypes.mintCoin,
 			},
 			eventFromEventOnChain:
 				FaucetApiCasting.faucetMintCoinEventFromOnChain,
-			cursor,
-			limit,
 		});
 
-	public fetchAddCoinEvents = async (cursor?: EventId, limit?: number) =>
+	public fetchAddCoinEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetAddCoinEventOnChain,
 			FaucetAddCoinEvent
 		>({
+			...inputs,
 			query: {
 				MoveEventType: this.Helpers.eventTypes.addCoin,
 			},
 			eventFromEventOnChain:
 				FaucetApiCasting.faucetAddCoinEventFromOnChain,
-			cursor,
-			limit,
 		});
 }

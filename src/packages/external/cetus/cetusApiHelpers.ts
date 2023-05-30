@@ -92,19 +92,21 @@ export class CetusApiHelpers {
 	public fetchAllPools = async () => {
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				this.addresses.cetus.objects.poolsTable,
-				(objectIds) =>
-					this.Provider.Objects().fetchCastObjectBatch(
-						objectIds,
-						CetusApiHelpers.poolFromSuiObjectResponse
-					),
-				() => true
+				{
+					parentObjectId: this.addresses.cetus.objects.poolsTable,
+					objectsFromObjectIds: (objectIds) =>
+						this.Provider.Objects().fetchCastObjectBatch({
+							objectIds,
+							objectFromSuiObjectResponse:
+								CetusApiHelpers.poolFromSuiObjectResponse,
+						}),
+				}
 			);
 
 		const poolsMoreInfo =
-			await this.Provider.Objects().fetchCastObjectBatch(
-				poolsSimpleInfo.map((poolInfo) => poolInfo.id),
-				(data) => {
+			await this.Provider.Objects().fetchCastObjectBatch({
+				objectIds: poolsSimpleInfo.map((poolInfo) => poolInfo.id),
+				objectFromSuiObjectResponse: (data) => {
 					const fields = getObjectFields(data);
 					if (!fields)
 						throw new Error("no fields found on cetus pool object");
@@ -116,8 +118,8 @@ export class CetusApiHelpers {
 						liquidity,
 						isPaused,
 					};
-				}
-			);
+				},
+			});
 
 		const usablePools = poolsSimpleInfo.filter(
 			(_, index) =>

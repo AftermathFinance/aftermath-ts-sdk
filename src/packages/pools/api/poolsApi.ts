@@ -39,6 +39,7 @@ import {
 	PoolWithdrawFee,
 	PoolDepositFee,
 	PoolCoins,
+	EventsInputs,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -150,11 +151,11 @@ export class PoolsApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchTradeEvents = async (inputs: {
-		cursor?: EventId;
-		limit?: number;
-		// poolObjectId?: ObjectId
-	}) =>
+	public fetchTradeEvents = async (
+		inputs: {
+			// poolObjectId?: ObjectId
+		} & EventsInputs
+	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolTradeEventOnChain,
 			PoolTradeEvent
@@ -177,11 +178,11 @@ export class PoolsApi {
 			eventFromEventOnChain: Casting.pools.poolTradeEventFromOnChain,
 		});
 
-	public fetchDepositEvents = async (inputs: {
-		cursor?: EventId;
-		limit?: number;
-		// poolObjectId?: ObjectId
-	}) =>
+	public fetchDepositEvents = async (
+		inputs: {
+			// poolObjectId?: ObjectId
+		} & EventsInputs
+	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
 			PoolDepositEvent
@@ -204,11 +205,11 @@ export class PoolsApi {
 			eventFromEventOnChain: Casting.pools.poolDepositEventFromOnChain,
 		});
 
-	public fetchWithdrawEvents = async (inputs: {
-		cursor?: EventId;
-		limit?: number;
-		// poolObjectId?: ObjectId
-	}) =>
+	public fetchWithdrawEvents = async (
+		inputs: {
+			// poolObjectId?: ObjectId
+		} & EventsInputs
+	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolWithdrawEventOnChain,
 			PoolWithdrawEvent
@@ -236,17 +237,17 @@ export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchPool = async (inputs: { objectId: ObjectId }) => {
-		return this.Provider.Objects().fetchCastObject(
-			inputs.objectId,
-			Casting.pools.poolObjectFromSuiObject
-		);
+		return this.Provider.Objects().fetchCastObject({
+			...inputs,
+			objectFromSuiObjectResponse: Casting.pools.poolObjectFromSuiObject,
+		});
 	};
 
 	public fetchPools = async (inputs: { objectIds: ObjectId[] }) => {
-		return this.Provider.Objects().fetchCastObjectBatch(
-			inputs.objectIds,
-			Casting.pools.poolObjectFromSuiObject
-		);
+		return this.Provider.Objects().fetchCastObjectBatch({
+			...inputs,
+			objectFromSuiObjectResponse: Casting.pools.poolObjectFromSuiObject,
+		});
 	};
 
 	public fetchAllPools = async () => {
@@ -257,13 +258,15 @@ export class PoolsApi {
 	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
 		const objectIds =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				this.addresses.pools.objects.lpCoinsTable,
-				(objectIds) =>
-					this.Provider.Objects().fetchCastObjectBatch(
-						objectIds,
-						PoolsApiCasting.poolObjectIdFromSuiObjectResponse
-					),
-				() => true
+				{
+					parentObjectId: this.addresses.pools.objects.lpCoinsTable,
+					objectsFromObjectIds: (objectIds) =>
+						this.Provider.Objects().fetchCastObjectBatch({
+							objectIds,
+							objectFromSuiObjectResponse:
+								PoolsApiCasting.poolObjectIdFromSuiObjectResponse,
+						}),
+				}
 			);
 
 		const filteredIds = objectIds.filter(
@@ -994,12 +997,12 @@ export class PoolsApi {
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchPoolObjectIdForLpCoinType = async (
-		lpCoinType: CoinType
-	): Promise<ObjectId> => {
+	public fetchPoolObjectIdForLpCoinType = async (inputs: {
+		lpCoinType: CoinType;
+	}): Promise<ObjectId> => {
 		const tx = new TransactionBlock();
 
-		this.poolObjectIdForLpCoinTypeTx({ tx, lpCoinType });
+		this.poolObjectIdForLpCoinTypeTx({ tx, ...inputs });
 
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
@@ -1034,16 +1037,12 @@ export class PoolsApi {
 		// TODO: remove all notions of sdk from api functions !
 
 		const tradeEventsWithinTime =
-			await this.Provider.Events().fetchEventsWithinTime(
-				(cursor, limit) =>
-					pool.getTradeEvents({
-						cursor,
-						limit,
-					}),
-				"hour",
-				24,
-				512
-			);
+			await this.Provider.Events().fetchEventsWithinTime({
+				fetchEventsFunc: pool.getTradeEvents,
+				timeUnit: "hour",
+				time: 24,
+				limitStepSize: 512,
+			});
 
 		const volume = this.fetchCalcPoolVolume(
 			tradeEventsWithinTime,
@@ -1238,13 +1237,12 @@ export class PoolsApi {
 		const timeframeValue = this.poolVolumeDataTimeframes[inputs.timeframe];
 
 		const tradeEvents = (
-			await this.Provider.Events().fetchEventsWithinTime(
+			await this.Provider.Events().fetchEventsWithinTime({
 				// TODO: fetch only pool's events
-				(cursor, limit) => this.fetchTradeEvents({ cursor, limit }),
-				timeframeValue.timeUnit,
-				timeframeValue.time,
-				512
-			)
+				fetchEventsFunc: this.fetchTradeEvents,
+				...timeframeValue,
+				limitStepSize: 512,
+			})
 		).filter((trade) => trade.poolId === inputs.poolObjectId);
 
 		return this.calcPoolVolumeData({

@@ -25,6 +25,7 @@ import {
 	UnstakePosition,
 	UnstakeRequestEvent,
 	UnstakeSuccessEvent,
+	UserEventsInputs,
 	isStakeEvent,
 	isStakePosition,
 	isUnstakeEvent,
@@ -261,11 +262,7 @@ export class StakingApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	// TODO: add and filtering once available
-	public fetchStakeRequestEvents = async (inputs: {
-		walletAddress: SuiAddress;
-		cursor?: EventId;
-		limit?: number;
-	}) => {
+	public fetchStakeRequestEvents = async (inputs: UserEventsInputs) => {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeRequestEventOnChain,
 			StakeRequestEvent
@@ -285,11 +282,7 @@ export class StakingApiHelpers {
 		});
 	};
 
-	public fetchUnstakeRequestEvents = async (inputs: {
-		walletAddress: SuiAddress;
-		cursor?: EventId;
-		limit?: number;
-	}) => {
+	public fetchUnstakeRequestEvents = async (inputs: UserEventsInputs) => {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeRequestEventOnChain,
 			UnstakeRequestEvent
@@ -310,11 +303,7 @@ export class StakingApiHelpers {
 		});
 	};
 
-	public fetchStakeSuccessEvents = async (inputs: {
-		walletAddress: SuiAddress;
-		cursor?: EventId;
-		limit?: number;
-	}) => {
+	public fetchStakeSuccessEvents = async (inputs: UserEventsInputs) => {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeSuccessEventOnChain,
 			StakeSuccessEvent
@@ -334,11 +323,7 @@ export class StakingApiHelpers {
 		});
 	};
 
-	public fetchUnstakeSuccessEvents = async (inputs: {
-		walletAddress: SuiAddress;
-		cursor?: EventId;
-		limit?: number;
-	}) => {
+	public fetchUnstakeSuccessEvents = async (inputs: UserEventsInputs) => {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeSuccessEventOnChain,
 			UnstakeSuccessEvent
@@ -359,11 +344,7 @@ export class StakingApiHelpers {
 		});
 	};
 
-	public fetchStakeFailedEvents = async (inputs: {
-		walletAddress: SuiAddress;
-		cursor?: EventId;
-		limit?: number;
-	}) => {
+	public fetchStakeFailedEvents = async (inputs: UserEventsInputs) => {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeFailedEventOnChain,
 			StakeFailedEvent
@@ -383,11 +364,7 @@ export class StakingApiHelpers {
 		});
 	};
 
-	public fetchAfSuiMintedEvents = async (inputs: {
-		walletAddress: SuiAddress;
-		cursor?: EventId;
-		limit?: number;
-	}) => {
+	public fetchAfSuiMintedEvents = async (inputs: UserEventsInputs) => {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			AfSuiMintedEventOnChain,
 			AfSuiMintedEvent
@@ -419,23 +396,23 @@ export class StakingApiHelpers {
 		const [successEvents, requestEvents] = await Promise.all([
 			// unstake success
 			(
-				await this.Provider.Events().fetchAllEvents((cursor, limit) =>
-					this.fetchUnstakeSuccessEvents({
-						cursor,
-						limit,
-						walletAddress,
-					})
-				)
+				await this.Provider.Events().fetchAllEvents({
+					fetchEventsFunc: (eventsInputs) =>
+						this.fetchUnstakeSuccessEvents({
+							...eventsInputs,
+							walletAddress,
+						}),
+				})
 			).filter((event) => event.staker === inputs.walletAddress),
 			// unstake request
 			(
-				await this.Provider.Events().fetchAllEvents((cursor, limit) =>
-					this.fetchUnstakeRequestEvents({
-						cursor,
-						limit,
-						walletAddress,
-					})
-				)
+				await this.Provider.Events().fetchAllEvents({
+					fetchEventsFunc: (eventsInputs) =>
+						this.fetchUnstakeRequestEvents({
+							...eventsInputs,
+							walletAddress,
+						}),
+				})
 			).filter((event) => event.staker === inputs.walletAddress),
 		]);
 
@@ -468,47 +445,43 @@ export class StakingApiHelpers {
 			await Promise.all([
 				// afSui mint
 				(
-					await this.Provider.Events().fetchAllEvents(
-						(cursor, limit) =>
+					await this.Provider.Events().fetchAllEvents({
+						fetchEventsFunc: (eventsInputs) =>
 							this.fetchAfSuiMintedEvents({
-								cursor,
-								limit,
+								...eventsInputs,
 								walletAddress,
-							})
-					)
+							}),
+					})
 				).filter((event) => event.staker === inputs.walletAddress),
 				// stake success
 				(
-					await this.Provider.Events().fetchAllEvents(
-						(cursor, limit) =>
+					await this.Provider.Events().fetchAllEvents({
+						fetchEventsFunc: (eventsInputs) =>
 							this.fetchStakeSuccessEvents({
-								cursor,
-								limit,
+								...eventsInputs,
 								walletAddress,
-							})
-					)
+							}),
+					})
 				).filter((event) => event.staker === inputs.walletAddress),
 				// stake fail
 				(
-					await this.Provider.Events().fetchAllEvents(
-						(cursor, limit) =>
+					await this.Provider.Events().fetchAllEvents({
+						fetchEventsFunc: (eventsInputs) =>
 							this.fetchStakeFailedEvents({
-								cursor,
-								limit,
+								...eventsInputs,
 								walletAddress,
-							})
-					)
+							}),
+					})
 				).filter((event) => event.staker === inputs.walletAddress),
 				// stake request
 				(
-					await this.Provider.Events().fetchAllEvents(
-						(cursor, limit) =>
+					await this.Provider.Events().fetchAllEvents({
+						fetchEventsFunc: (eventsInput) =>
 							this.fetchStakeRequestEvents({
-								cursor,
-								limit,
+								...eventsInput,
 								walletAddress,
-							})
-					)
+							}),
+					})
 				).filter((event) => event.staker === inputs.walletAddress),
 			]);
 

@@ -88,19 +88,21 @@ export class TurbosApiHelpers {
 	public fetchAllPools = async (): Promise<TurbosPoolObject[]> => {
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				this.addresses.turbos.objects.poolsTable,
-				(objectIds) =>
-					this.Provider.Objects().fetchCastObjectBatch(
-						objectIds,
-						TurbosApiHelpers.partialPoolFromSuiObjectResponse
-					),
-				() => true
+				{
+					parentObjectId: this.addresses.turbos.objects.poolsTable,
+					objectsFromObjectIds: (objectIds) =>
+						this.Provider.Objects().fetchCastObjectBatch({
+							objectIds,
+							objectFromSuiObjectResponse:
+								TurbosApiHelpers.partialPoolFromSuiObjectResponse,
+						}),
+				}
 			);
 
 		const poolsMoreInfo =
-			await this.Provider.Objects().fetchCastObjectBatch(
-				poolsSimpleInfo.map((poolInfo) => poolInfo.id),
-				(data) => {
+			await this.Provider.Objects().fetchCastObjectBatch({
+				objectIds: poolsSimpleInfo.map((poolInfo) => poolInfo.id),
+				objectFromSuiObjectResponse: (data) => {
 					const fields = getObjectFields(data);
 					if (!fields)
 						throw new Error(
@@ -116,8 +118,8 @@ export class TurbosApiHelpers {
 						isUnlocked,
 						sqrtPrice,
 					};
-				}
-			);
+				},
+			});
 
 		const completePools = poolsSimpleInfo.map((info, index) => {
 			return {

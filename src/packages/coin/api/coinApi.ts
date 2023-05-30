@@ -38,7 +38,7 @@ export class CoinApi {
 			return coinMetadata;
 		} catch (error) {
 			if (this.Provider.Pools().isLpCoin(coin)) {
-				return this.createLpCoinMetadata(coin);
+				return this.createLpCoinMetadata({ lpCoinType: coin });
 			}
 
 			const coinClass = new Coin(coin);
@@ -59,15 +59,15 @@ export class CoinApi {
 	};
 
 	// NOTE: this is temporary until LP coin metadata issue is solved on Sui
-	private createLpCoinMetadata = async (
-		coin: CoinType
-	): Promise<CoinMetadata> => {
+	private createLpCoinMetadata = async (inputs: {
+		lpCoinType: CoinType;
+	}): Promise<CoinMetadata> => {
 		try {
 			const PoolsApi = this.Provider.Pools();
 
 			// TODO: find the best way to do all of this using cached server data
 			const poolObjectId = await PoolsApi.fetchPoolObjectIdForLpCoinType(
-				coin
+				inputs
 			);
 			const pool = await PoolsApi.fetchPool({ objectId: poolObjectId });
 

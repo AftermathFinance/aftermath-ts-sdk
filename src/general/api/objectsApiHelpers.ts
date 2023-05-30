@@ -38,31 +38,38 @@ export class ObjectsApiHelpers {
 		return object.error === undefined;
 	};
 
-	public fetchIsObjectOwnedByAddress = async (
-		objectId: ObjectId,
-		address: SuiAddress
-	) => {
-		const object = await this.fetchObject(objectId);
+	public fetchIsObjectOwnedByAddress = async (inputs: {
+		objectId: ObjectId;
+		walletAddress: SuiAddress;
+	}) => {
+		const { objectId, walletAddress } = inputs;
+
+		const object = await this.fetchObject({ objectId });
 		const objectOwner = getObjectOwner(object);
 
 		if (!objectOwner || typeof objectOwner !== "object") return false;
 
 		if (
 			"AddressOwner" in objectOwner &&
-			objectOwner.AddressOwner === address
+			objectOwner.AddressOwner === walletAddress
 		)
 			return true;
-		if ("ObjectOwner" in objectOwner && objectOwner.ObjectOwner === address)
+		if (
+			"ObjectOwner" in objectOwner &&
+			objectOwner.ObjectOwner === walletAddress
+		)
 			return true;
 
 		return false;
 	};
 
-	public fetchObjectsOfTypeOwnedByAddress = async (
-		walletAddress: SuiAddress,
-		objectType: AnyObjectType,
-		withDisplay?: boolean
-	): Promise<SuiObjectResponse[]> => {
+	public fetchObjectsOfTypeOwnedByAddress = async (inputs: {
+		walletAddress: SuiAddress;
+		objectType: AnyObjectType;
+		withDisplay?: boolean;
+	}): Promise<SuiObjectResponse[]> => {
+		const { walletAddress, objectType, withDisplay } = inputs;
+
 		const objectsOwnedByAddress =
 			await this.Provider.provider.getOwnedObjects({
 				owner: walletAddress,
@@ -80,10 +87,12 @@ export class ObjectsApiHelpers {
 		return objectsOwnedByAddress.data;
 	};
 
-	public fetchObject = async (
-		objectId: ObjectId,
-		withDisplay?: boolean
-	): Promise<SuiObjectResponse> => {
+	public fetchObject = async (inputs: {
+		objectId: ObjectId;
+		withDisplay?: boolean;
+	}): Promise<SuiObjectResponse> => {
+		const { objectId, withDisplay } = inputs;
+
 		const object = await this.Provider.provider.getObject({
 			id: objectId,
 			options: {
@@ -100,18 +109,24 @@ export class ObjectsApiHelpers {
 		return object;
 	};
 
-	public fetchCastObject = async <ObjectType>(
-		objectId: ObjectId,
-		castFunc: (SuiObjectResponse: SuiObjectResponse) => ObjectType,
-		withDisplay?: boolean
-	): Promise<ObjectType> => {
-		return castFunc(await this.fetchObject(objectId, withDisplay));
+	public fetchCastObject = async <ObjectType>(inputs: {
+		objectId: ObjectId;
+		objectFromSuiObjectResponse: (
+			SuiObjectResponse: SuiObjectResponse
+		) => ObjectType;
+		withDisplay?: boolean;
+	}): Promise<ObjectType> => {
+		return inputs.objectFromSuiObjectResponse(
+			await this.fetchObject(inputs)
+		);
 	};
 
-	public fetchObjectBatch = async (
-		objectIds: ObjectId[],
-		options?: SuiObjectDataOptions
-	): Promise<SuiObjectResponse[]> => {
+	public fetchObjectBatch = async (inputs: {
+		objectIds: ObjectId[];
+		options?: SuiObjectDataOptions;
+	}): Promise<SuiObjectResponse[]> => {
+		const { objectIds, options } = inputs;
+
 		let objectIdsBatches: ObjectId[][] = [];
 		let endIndex = 0;
 		while (true) {
@@ -160,35 +175,31 @@ export class ObjectsApiHelpers {
 		return objectBatch;
 	};
 
-	public fetchCastObjectBatch = async <ObjectType>(
-		objectIds: ObjectId[],
-		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType,
-		options?: SuiObjectDataOptions
-	): Promise<ObjectType[]> => {
-		return (await this.fetchObjectBatch(objectIds, options)).map(
+	public fetchCastObjectBatch = async <ObjectType>(inputs: {
+		objectIds: ObjectId[];
+		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType;
+		options?: SuiObjectDataOptions;
+	}): Promise<ObjectType[]> => {
+		return (await this.fetchObjectBatch(inputs)).map(
 			(SuiObjectResponse: SuiObjectResponse) => {
-				return objectFromSuiObjectResponse(SuiObjectResponse);
+				return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
 			}
 		);
 	};
 
-	public fetchCastObjectsOwnedByAddressOfType = async <ObjectType>(
-		walletAddress: SuiAddress,
-		objectType: AnyObjectType,
+	public fetchCastObjectsOwnedByAddressOfType = async <ObjectType>(inputs: {
+		walletAddress: SuiAddress;
+		objectType: AnyObjectType;
 		objectFromSuiObjectResponse: (
 			SuiObjectResponse: SuiObjectResponse
-		) => ObjectType,
-		withDisplay?: boolean
-	): Promise<ObjectType[]> => {
+		) => ObjectType;
+		withDisplay?: boolean;
+	}): Promise<ObjectType[]> => {
 		// i. obtain all owned object IDs
 		const objects = (
-			await this.fetchObjectsOfTypeOwnedByAddress(
-				walletAddress,
-				objectType,
-				withDisplay
-			)
+			await this.fetchObjectsOfTypeOwnedByAddress(inputs)
 		).map((SuiObjectResponse: SuiObjectResponse) => {
-			return objectFromSuiObjectResponse(SuiObjectResponse);
+			return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
 		});
 
 		return objects;

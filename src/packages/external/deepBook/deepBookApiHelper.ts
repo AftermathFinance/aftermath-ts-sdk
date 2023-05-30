@@ -78,8 +78,8 @@ export class DeepBookApiHelpers {
 	public fetchAllPartialPools = async (): Promise<
 		PartialDeepBookPoolObject[]
 	> => {
-		const objectIds = await this.Provider.Events().fetchAllEvents(
-			(cursor, limit) =>
+		const objectIds = await this.Provider.Events().fetchAllEvents({
+			fetchEventsFunc: (eventsInputs) =>
 				this.Provider.Events().fetchCastEventsWithCursor<
 					EventOnChain<{
 						pool_id: ObjectId;
@@ -92,6 +92,7 @@ export class DeepBookApiHelpers {
 					}>,
 					PartialDeepBookPoolObject
 				>({
+					...eventsInputs,
 					query: {
 						MoveEventType: EventsApiHelpers.createEventType(
 							this.addresses.deepBook.packages.clob,
@@ -108,10 +109,8 @@ export class DeepBookApiHelpers {
 								"0x" + eventOnChain.parsedJson.quote_asset.name,
 						};
 					},
-					cursor,
-					limit,
-				})
-		);
+				}),
+		});
 
 		return objectIds;
 	};

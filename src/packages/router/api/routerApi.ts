@@ -11,6 +11,7 @@ import {
 	Url,
 	RouterSerializableCompleteGraph,
 	RouterProtocolName,
+	UserEventsInputs,
 } from "../../../types";
 import { EventId, SuiAddress } from "@mysten/sui.js";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
@@ -131,11 +132,7 @@ export class RouterApi {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async fetchTradeEvents(inputs: {
-		walletAddress: SuiAddress;
-		cursor?: EventId;
-		limit?: number;
-	}) {
+	public async fetchTradeEvents(inputs: UserEventsInputs) {
 		return this.Helpers.SynchronousHelpers.fetchTradeEvents(inputs);
 	}
 }

@@ -1,4 +1,9 @@
-import { Event, EventsWithCursor, AnyObjectType } from "../../types";
+import {
+	Event,
+	EventsWithCursor,
+	AnyObjectType,
+	EventsInputs,
+} from "../../types";
 import {
 	EventId,
 	SuiAddress,
@@ -36,10 +41,12 @@ export class EventsApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	// TODO: make this filter by looking ONLY at all relevant AF packages
-	public fetchSubscribeToUserEvents = async (
-		address: SuiAddress,
-		onEvent: (event: SuiEvent) => void
-	): Promise<number> => {
+	public fetchSubscribeToUserEvents = async (inputs: {
+		address: SuiAddress;
+		onEvent: (event: SuiEvent) => void;
+	}): Promise<number> => {
+		const { address, onEvent } = inputs;
+
 		const userEventSubscriptionId =
 			await this.Provider.provider.subscribeEvent({
 				filter: {
@@ -50,21 +57,23 @@ export class EventsApiHelpers {
 		return userEventSubscriptionId;
 	};
 
-	public fetchUnsubscribeFromEvents = async (
-		subscriptionId: number
-	): Promise<boolean> => {
+	public fetchUnsubscribeFromEvents = async (inputs: {
+		subscriptionId: number;
+	}): Promise<boolean> => {
 		const success = await this.Provider.provider.unsubscribeEvent({
-			id: subscriptionId,
+			id: inputs.subscriptionId,
 		});
 		return success;
 	};
 
 	// TODO: handle extending event type correctly (for access to timestamp, etc)
 	public fetchEventsOnChainWithCursor = async <EventOnChainType>(
-		query: SuiEventFilter,
-		cursor?: EventId,
-		limit?: number
+		inputs: {
+			query: SuiEventFilter;
+		} & EventsInputs
 	): Promise<EventsWithCursor<EventOnChainType>> => {
+		const { query, cursor, limit } = inputs;
+
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
 			cursor: cursor
@@ -82,15 +91,14 @@ export class EventsApiHelpers {
 		return { events, nextCursor };
 	};
 
-	public fetchCastEventsWithCursor = async <
-		EventOnChainType,
-		EventType
-	>(inputs: {
-		query: SuiEventFilter;
-		eventFromEventOnChain: (eventOnChain: EventOnChainType) => EventType;
-		cursor?: EventId;
-		limit?: number;
-	}): Promise<EventsWithCursor<EventType>> => {
+	public fetchCastEventsWithCursor = async <EventOnChainType, EventType>(
+		inputs: {
+			query: SuiEventFilter;
+			eventFromEventOnChain: (
+				eventOnChain: EventOnChainType
+			) => EventType;
+		} & EventsInputs
+	): Promise<EventsWithCursor<EventType>> => {
 		const { query, eventFromEventOnChain, cursor, limit } = inputs;
 
 		const fetchedEvents = await this.Provider.provider.queryEvents({
@@ -113,21 +121,26 @@ export class EventsApiHelpers {
 	};
 
 	// TODO: make this function use timestamp passing as one of event filter args
-	public fetchEventsWithinTime = async <T extends Event>(
+	public fetchEventsWithinTime = async <T extends Event>(inputs: {
 		fetchEventsFunc: (
-			cursor?: EventId,
-			limit?: number
-		) => Promise<EventsWithCursor<T>>,
-		timeUnit: QUnitType | OpUnitType,
-		time: number,
-		limitStepSize: number = EventsApiHelpers.constants.defaultLimitStepSize
-	) => {
+			eventsInputs: EventsInputs
+		) => Promise<EventsWithCursor<T>>;
+		timeUnit: QUnitType | OpUnitType;
+		time: number;
+		limitStepSize?: number;
+	}) => {
+		const { fetchEventsFunc, timeUnit, time, limitStepSize } = inputs;
+
 		let eventsWithinTime: T[] = [];
 		let cursor: EventId | undefined = undefined;
 		do {
 			const eventsWithCursor: EventsWithCursor<T> = await fetchEventsFunc(
-				cursor,
-				limitStepSize
+				{
+					cursor,
+					limit:
+						limitStepSize ??
+						EventsApiHelpers.constants.defaultLimitStepSize,
+				}
 			);
 			const events = eventsWithCursor.events;
 
@@ -155,19 +168,24 @@ export class EventsApiHelpers {
 		} while (true);
 	};
 
-	public fetchAllEvents = async <T /* extends Event */>(
+	public fetchAllEvents = async <T /* extends Event */>(inputs: {
 		fetchEventsFunc: (
-			cursor?: EventId,
-			limit?: number
-		) => Promise<EventsWithCursor<T>>,
-		limitStepSize: number = EventsApiHelpers.constants.defaultLimitStepSize
-	) => {
+			eventsInputs: EventsInputs
+		) => Promise<EventsWithCursor<T>>;
+		limitStepSize?: number;
+	}) => {
+		const { fetchEventsFunc, limitStepSize } = inputs;
+
 		let allEvents: T[] = [];
 		let cursor: EventId | undefined = undefined;
 		do {
 			const eventsWithCursor: EventsWithCursor<T> = await fetchEventsFunc(
-				cursor,
-				limitStepSize
+				{
+					cursor,
+					limit:
+						limitStepSize ??
+						EventsApiHelpers.constants.defaultLimitStepSize,
+				}
 			);
 			const events = eventsWithCursor.events;
 			allEvents = [...allEvents, ...events];

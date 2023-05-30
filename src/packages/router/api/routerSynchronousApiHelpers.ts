@@ -16,6 +16,7 @@ import {
 	AnyObjectType,
 	Balance,
 	CoinType,
+	EventsInputs,
 	RequiredRouterAddresses,
 	Slippage,
 } from "../../../types";
@@ -345,11 +346,11 @@ export class RouterSynchronousApiHelpers {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchTradeEvents = async (inputs: {
-		walletAddress: SuiAddress;
-		cursor?: EventId;
-		limit?: number;
-	}) => {
+	public fetchTradeEvents = async (
+		inputs: {
+			walletAddress: SuiAddress;
+		} & EventsInputs
+	) => {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			RouterTradeEventOnChain,
 			RouterTradeEvent
