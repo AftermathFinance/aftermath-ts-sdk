@@ -227,12 +227,10 @@ export class RouterSynchronousApiHelpers {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx,
-					referrer,
-				}
-			);
+			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+				tx,
+				referrer,
+			});
 
 		const tradePotato = this.bakePotatoTx({
 			tx,
@@ -281,7 +279,7 @@ export class RouterSynchronousApiHelpers {
 				const isFirstSwapForPath = pathIndex === 0;
 				const isLastSwapForPath = pathIndex === route.paths.length - 1;
 
-				const newCoinIn = poolForPath.addTradeCommandToTransaction({
+				const newCoinIn = poolForPath.tradeTx({
 					provider: this.Provider,
 					tx,
 					coinIn,

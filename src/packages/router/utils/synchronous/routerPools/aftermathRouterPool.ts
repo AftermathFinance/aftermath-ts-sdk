@@ -138,7 +138,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		return this.poolClass.getTradeAmountOut(inputs);
 	};
 
-	addTradeCommandToTransaction = (inputs: {
+	tradeTx = (inputs: {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;

@@ -70,7 +70,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		return amountOut;
 	};
 
-	addTradeCommandToTransaction = (inputs: {
+	tradeTx = (inputs: {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;

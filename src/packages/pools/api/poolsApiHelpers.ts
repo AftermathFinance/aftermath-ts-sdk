@@ -578,12 +578,10 @@ export class PoolsApiHelpers {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx,
-					referrer,
-				}
-			);
+			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+				tx,
+				referrer,
+			});
 
 		const amountOut = pool.getTradeAmountOut({
 			coinInAmount,
@@ -628,12 +626,10 @@ export class PoolsApiHelpers {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx,
-					referrer,
-				}
-			);
+			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+				tx,
+				referrer,
+			});
 
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsIn);
@@ -689,12 +685,10 @@ export class PoolsApiHelpers {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx,
-					referrer,
-				}
-			);
+			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+				tx,
+				referrer,
+			});
 
 		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
 			lpCoinAmountOut: lpCoinAmount,
@@ -743,12 +737,10 @@ export class PoolsApiHelpers {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx,
-					referrer,
-				}
-			);
+			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+				tx,
+				referrer,
+			});
 
 		const lpCoinId =
 			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({

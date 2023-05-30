@@ -43,7 +43,7 @@ export class ReferralVaultApiHelpers {
 	//// Transaction Commands
 	/////////////////////////////////////////////////////////////////////
 
-	public addUpdateReferrerCommandToTransaction = (inputs: {
+	public updateReferrerTx = (inputs: {
 		tx: TransactionBlock;
 		referrer: SuiAddress;
 	}) => {
@@ -62,7 +62,7 @@ export class ReferralVaultApiHelpers {
 		});
 	};
 
-	public addWithdrawRebateCommandToTransaction = (inputs: {
+	public withdrawRebateTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		withTransfer?: boolean;
@@ -81,7 +81,7 @@ export class ReferralVaultApiHelpers {
 		});
 	};
 
-	public addBalanceOfRebateCommandToTransaction = (inputs: {
+	public balanceOfRebateTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		referrer: SuiAddress;
@@ -101,7 +101,7 @@ export class ReferralVaultApiHelpers {
 		});
 	};
 
-	public addReferrerForCommandToTransaction = (inputs: {
+	public referrerForTx = (inputs: {
 		tx: TransactionBlock;
 		referee: SuiAddress;
 	}) /* Option<address> */ => {
@@ -120,7 +120,7 @@ export class ReferralVaultApiHelpers {
 		});
 	};
 
-	public addHasReffererCommandToTransaction = (inputs: {
+	public hasReffererTx = (inputs: {
 		tx: TransactionBlock;
 		referee: SuiAddress;
 	}) /* bool */ => {

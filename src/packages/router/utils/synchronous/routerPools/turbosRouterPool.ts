@@ -59,7 +59,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 		throw new Error("uncallable");
 	};
 
-	addTradeCommandToTransaction = (inputs: {
+	tradeTx = (inputs: {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;

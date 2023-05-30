@@ -117,7 +117,7 @@ export class StakingApiHelpers {
 	//// Transaction Creation
 	/////////////////////////////////////////////////////////////////////
 
-	public addStakeCommandToTransaction = (inputs: {
+	public stakeTx = (inputs: {
 		tx: TransactionBlock;
 		suiCoin: ObjectId | TransactionArgument;
 		validatorAddress: SuiAddress;
@@ -138,7 +138,7 @@ export class StakingApiHelpers {
 		});
 	};
 
-	public addUnstakeCommandToTransaction = (inputs: {
+	public unstakeTx = (inputs: {
 		tx: TransactionBlock;
 		afSuiCoin: ObjectId | TransactionArgument;
 	}) => {
@@ -159,9 +159,7 @@ export class StakingApiHelpers {
 		});
 	};
 
-	public addGetAfSuiSupplyCommandToTransaction = (inputs: {
-		tx: TransactionBlock;
-	}) => {
+	public getAfSuiSupplyTx = (inputs: { tx: TransactionBlock }) => {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
@@ -174,9 +172,7 @@ export class StakingApiHelpers {
 		});
 	};
 
-	public addGetStakedSuiTvlCommandToTransaction = (inputs: {
-		tx: TransactionBlock;
-	}) => {
+	public getStakedSuiTvlTx = (inputs: { tx: TransactionBlock }) => {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTransactionTarget(
@@ -205,12 +201,10 @@ export class StakingApiHelpers {
 		tx.setSender(inputs.walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx,
-					referrer,
-				}
-			);
+			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+				tx,
+				referrer,
+			});
 
 		const suiCoin =
 			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
@@ -220,7 +214,7 @@ export class StakingApiHelpers {
 				coinAmount: inputs.suiStakeAmount,
 			});
 
-		this.addStakeCommandToTransaction({
+		this.stakeTx({
 			tx,
 			...inputs,
 			suiCoin,
@@ -240,12 +234,10 @@ export class StakingApiHelpers {
 		tx.setSender(inputs.walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx,
-					referrer,
-				}
-			);
+			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+				tx,
+				referrer,
+			});
 
 		const afSuiCoin =
 			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
@@ -255,7 +247,7 @@ export class StakingApiHelpers {
 				coinAmount: inputs.afSuiUnstakeAmount,
 			});
 
-		this.addUnstakeCommandToTransaction({
+		this.unstakeTx({
 			tx,
 			...inputs,
 			afSuiCoin,
@@ -806,7 +798,7 @@ export class StakingApiHelpers {
 
 	public fetchAfSuiSupply = async (): Promise<Balance> => {
 		const tx = new TransactionBlock();
-		this.addGetAfSuiSupplyCommandToTransaction({ tx });
+		this.getAfSuiSupplyTx({ tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);

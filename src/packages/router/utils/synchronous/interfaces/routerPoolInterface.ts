@@ -97,7 +97,7 @@ export interface RouterPoolInterface {
 		referrer?: SuiAddress;
 	}) => Balance;
 
-	addTradeCommandToTransaction: (inputs: {
+	tradeTx: (inputs: {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;

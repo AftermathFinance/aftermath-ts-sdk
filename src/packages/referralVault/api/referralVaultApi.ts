@@ -33,7 +33,7 @@ export class ReferralVaultApi {
 		referrer: SuiAddress;
 	}): Promise<Balance> => {
 		const tx = new TransactionBlock();
-		this.Helpers.addBalanceOfRebateCommandToTransaction({ ...inputs, tx });
+		this.Helpers.balanceOfRebateTx({ ...inputs, tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
@@ -43,7 +43,7 @@ export class ReferralVaultApi {
 		referee: SuiAddress;
 	}): Promise<SuiAddress | "None"> => {
 		const tx = new TransactionBlock();
-		this.Helpers.addReferrerForCommandToTransaction({ ...inputs, tx });
+		this.Helpers.referrerForTx({ ...inputs, tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 

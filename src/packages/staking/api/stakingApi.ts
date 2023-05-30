@@ -105,7 +105,7 @@ export class StakingApi {
 
 	public fetchSuiTvl = async (): Promise<Balance> => {
 		const tx = new TransactionBlock();
-		this.Helpers.addGetStakedSuiTvlCommandToTransaction({ tx });
+		this.Helpers.getStakedSuiTvlTx({ tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
