@@ -6,6 +6,7 @@ import {
 	Percentage,
 	Event,
 	Slippage,
+	ApiEventsBody,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
@@ -252,3 +253,7 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 */
 	slippage: Slippage;
 }
+
+export type ApiRouterTradeEventsBody = ApiEventsBody & {
+	walletAddress: SuiAddress;
+};

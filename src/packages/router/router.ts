@@ -8,6 +8,8 @@ import {
 	RouterSupportedCoinPaths,
 	SuiNetwork,
 	Url,
+	ApiRouterTradeEventsBody,
+	RouterTradeEvent,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -136,5 +138,13 @@ export class Router extends Caller {
 			"transactions/trade",
 			inputs
 		);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	public async getTradeEvents(inputs: ApiRouterTradeEventsBody) {
+		return this.fetchApiEvents<RouterTradeEvent>("events/trade", inputs);
 	}
 }
