@@ -176,9 +176,19 @@ export class TurbosApiHelpers {
 		feeCoinType: CoinType;
 		walletAddress: SuiAddress;
 		sqrtPrice: bigint;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		expectedCoinOutAmount: Balance;
 		externalFee?: RouterExternalFee;
 	}) => {
-		const { tx, coinInId, externalFee } = inputs;
+		const {
+			tx,
+			coinInId,
+			externalFee,
+			tradePotato,
+			isFirstSwapForPath,
+			expectedCoinOutAmount,
+		} = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
@@ -229,6 +239,11 @@ export class TurbosApiHelpers {
 					),
 					"Option<address>"
 				), // router_fee_recipient
+
+				// potato
+				tradePotato,
+				tx.pure(isFirstSwapForPath, "bool"),
+				tx.pure(expectedCoinOutAmount, "u64"),
 			],
 		});
 	};
@@ -243,9 +258,19 @@ export class TurbosApiHelpers {
 		feeCoinType: CoinType;
 		walletAddress: SuiAddress;
 		sqrtPrice: bigint;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		expectedCoinOutAmount: Balance;
 		externalFee?: RouterExternalFee;
 	}) => {
-		const { tx, coinInId, externalFee } = inputs;
+		const {
+			tx,
+			coinInId,
+			externalFee,
+			tradePotato,
+			isFirstSwapForPath,
+			expectedCoinOutAmount,
+		} = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
@@ -296,6 +321,11 @@ export class TurbosApiHelpers {
 					),
 					"Option<address>"
 				), // router_fee_recipient
+
+				// potato
+				tradePotato,
+				tx.pure(isFirstSwapForPath, "bool"),
+				tx.pure(expectedCoinOutAmount, "u64"),
 			],
 		});
 	};
@@ -308,6 +338,9 @@ export class TurbosApiHelpers {
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 		walletAddress: SuiAddress;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		expectedCoinOutAmount: Balance;
 		externalFee?: RouterExternalFee;
 	}) => {
 		const { coinInType, pool } = inputs;
@@ -401,6 +434,9 @@ export class TurbosApiHelpers {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		expectedCoinOutAmount: Balance;
 	}): Promise<TransactionBlock> => {
 		const { walletAddress, coinInType, coinInAmount } = inputs;
 

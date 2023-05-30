@@ -166,6 +166,9 @@ export class CetusApiHelpers {
 			coinInId: ObjectId | TransactionArgument;
 			coinInType: CoinType;
 			coinOutType: CoinType;
+			tradePotato: TransactionArgument;
+			isFirstSwapForPath: boolean;
+			isLastSwapForPath: boolean;
 		} & (
 			| {
 					coinInAmount: Balance;
@@ -175,7 +178,13 @@ export class CetusApiHelpers {
 			  }
 		)
 	) => {
-		const { tx, coinInId } = inputs;
+		const {
+			tx,
+			coinInId,
+			tradePotato,
+			isFirstSwapForPath,
+			isLastSwapForPath,
+		} = inputs;
 
 		const isGivenAmountIn = "coinInAmount" in inputs;
 
@@ -204,6 +213,11 @@ export class CetusApiHelpers {
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
+
+				// potato
+				tradePotato,
+				tx.pure(isFirstSwapForPath, "bool"),
+				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -215,6 +229,9 @@ export class CetusApiHelpers {
 			coinInId: ObjectId | TransactionArgument;
 			coinInType: CoinType;
 			coinOutType: CoinType;
+			tradePotato: TransactionArgument;
+			isFirstSwapForPath: boolean;
+			isLastSwapForPath: boolean;
 		} & (
 			| {
 					coinInAmount: Balance;
@@ -224,7 +241,13 @@ export class CetusApiHelpers {
 			  }
 		)
 	) => {
-		const { tx, coinInId } = inputs;
+		const {
+			tx,
+			coinInId,
+			tradePotato,
+			isFirstSwapForPath,
+			isLastSwapForPath,
+		} = inputs;
 
 		const isGivenAmountIn = "coinInAmount" in inputs;
 
@@ -248,10 +271,16 @@ export class CetusApiHelpers {
 				), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 
+				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
+
+				// potato
+				tradePotato,
+				tx.pure(isFirstSwapForPath, "bool"),
+				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -263,6 +292,9 @@ export class CetusApiHelpers {
 			coinInId: ObjectId | TransactionArgument;
 			coinInType: CoinType;
 			coinOutType: CoinType;
+			tradePotato: TransactionArgument;
+			isFirstSwapForPath: boolean;
+			isLastSwapForPath: boolean;
 		} & (
 			| {
 					coinInAmount: Balance;
@@ -407,6 +439,9 @@ export class CetusApiHelpers {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
 	}): Promise<TransactionBlock> => {
 		const { walletAddress, coinInType, coinInAmount } = inputs;
 

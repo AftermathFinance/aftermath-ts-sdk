@@ -6,7 +6,6 @@ import {
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
-import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
 import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
 import { CetusPoolObject } from "../external/cetus/cetusTypes";
@@ -54,16 +53,9 @@ export type RouterProtocolName =
 //// Synchronous Router Pools
 /////////////////////////////////////////////////////////////////////
 
-export type RouterSynchronousSerializablePool =
-	| PoolObject
-	| NojoPoolObject
-	| DeepBookPoolObject;
+export type RouterSynchronousSerializablePool = PoolObject | DeepBookPoolObject;
 
-const RouterSynchronousProtocolNames = [
-	"Aftermath",
-	"Nojo",
-	"DeepBook",
-] as const;
+const RouterSynchronousProtocolNames = ["Aftermath", "DeepBook"] as const;
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];
 

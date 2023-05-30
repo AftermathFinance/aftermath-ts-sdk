@@ -16,9 +16,7 @@ import {
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import AftermathRouterPool from "../routerPools/aftermathRouterPool";
-import NojoRouterPool from "../routerPools/nojoRouterPool";
 import { AftermathApi } from "../../../../../general/providers";
-import { isNojoPoolObject } from "../../../../external/nojo/nojoAmmTypes";
 import { isDeepBookPoolObject } from "../../../../external/deepBook/deepBookTypes";
 import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
 import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
@@ -37,9 +35,7 @@ export function createRouterPool(inputs: {
 }): RouterPoolInterface {
 	const { pool, network } = inputs;
 
-	const constructedPool = isNojoPoolObject(pool)
-		? new NojoRouterPool(pool, network)
-		: isDeepBookPoolObject(pool)
+	const constructedPool = isDeepBookPoolObject(pool)
 		? new DeepBookRouterPool(pool, network)
 		: isTurbosPoolObject(pool)
 		? new TurbosRouterPool(pool, network)
@@ -106,10 +102,13 @@ export interface RouterPoolInterface {
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
 		coinInAmount: Balance;
+		expectedCoinOutAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
-		expectedAmountOut: Balance;
 		slippage: Slippage;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}) => TransactionArgument;

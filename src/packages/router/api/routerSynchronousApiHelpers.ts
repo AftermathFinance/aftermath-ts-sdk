@@ -6,19 +6,25 @@ import {
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
+	RouterExternalFee,
 	RouterProtocolName,
 	RouterSerializablePool,
 } from "../routerTypes";
-import { Balance, CoinType, Slippage, SuiNetwork, Url } from "../../../types";
+import {
+	Balance,
+	CoinType,
+	RequiredRouterAddresses,
+	Slippage,
+} from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
 import { Router } from "../router";
 import { RouterApiInterface } from "../utils/synchronous/interfaces/routerApiInterface";
 import { PoolsApi } from "../../pools/api/poolsApi";
-import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
-import { Helpers } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import { CetusApi } from "../../external/cetus/cetusApi";
 import { TurbosApi } from "../../external/turbos/turbosApi";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 
 export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -30,18 +36,37 @@ export class RouterSynchronousApiHelpers {
 		() => RouterApiInterface<any>
 	> = {
 		Aftermath: () => new PoolsApi(this.Provider),
-		Nojo: () => new NojoAmmApi(this.Provider),
 		DeepBook: () => new DeepBookApi(this.Provider),
 		Cetus: () => new CetusApi(this.Provider),
 		Turbos: () => new TurbosApi(this.Provider),
 	};
+
+	public static readonly constants = {
+		moduleNames: {
+			events: "router_events",
+		},
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Class Members
+	/////////////////////////////////////////////////////////////////////
+
+	public readonly addresses: RequiredRouterAddresses;
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
+		const addresses = Provider.addresses.router;
+		if (!addresses)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
 		this.Provider = Provider;
+		// @ts-ignore
+		this.addresses = addresses;
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -90,7 +115,77 @@ export class RouterSynchronousApiHelpers {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Transaction Building
+	//// Transaction Commands
+	/////////////////////////////////////////////////////////////////////
+
+	public bakePotatoTx = (inputs: {
+		tx: TransactionBlock;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}) /* SwapPotato */ => {
+		const { tx, coinInType, coinOutType, referrer, externalFee } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTransactionTarget(
+				this.addresses.packages.utils,
+				RouterSynchronousApiHelpers.constants.moduleNames.events,
+				"bake_potato"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.pure(Casting.u8VectorFromString(coinInType), "vector<u8>"), // type_in
+				tx.pure(Casting.u8VectorFromString(coinOutType), "vector<u8>"), // type_out
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(referrer),
+					"Option<address>"
+				), // referrer
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(
+						externalFee
+							? Casting.numberToFixedBigInt(
+									externalFee.feePercentage
+							  )
+							: undefined
+					),
+					"Option<u64>"
+				), // router_fee
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(
+						externalFee?.recipient
+					),
+					"Option<address>"
+				), // router_fee_recipient
+			],
+		});
+	};
+
+	public consumePotatoTx = (inputs: {
+		tx: TransactionBlock;
+		tradePotato: TransactionArgument;
+		trader: SuiAddress;
+		minAmountOut: Balance;
+	}) => {
+		const { tx, tradePotato, trader, minAmountOut } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTransactionTarget(
+				this.addresses.packages.utils,
+				RouterSynchronousApiHelpers.constants.moduleNames.events,
+				"bake_potato"
+			),
+			typeArguments: [],
+			arguments: [
+				tradePotato, // SwapPotato
+				tx.pure(trader, "address"), // swapper
+				tx.pure(minAmountOut, "u64"), // min_amount_out
+			],
+		});
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
 	public async fetchBuildTransactionForCompleteTradeRoute(inputs: {
@@ -122,6 +217,12 @@ export class RouterSynchronousApiHelpers {
 				}
 			);
 
+		const tradePotato = this.bakePotatoTx({
+			tx,
+			coinInType: completeRoute.coinIn.type,
+			coinOutType: completeRoute.coinOut.type,
+		});
+
 		const coinInArg =
 			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
 				tx,
@@ -149,7 +250,7 @@ export class RouterSynchronousApiHelpers {
 
 			let coinIn: TransactionArgument | undefined = splitCoinArg;
 
-			for (const path of route.paths) {
+			for (const [pathIndex, path] of route.paths.entries()) {
 				const poolForPath = createRouterPool({
 					pool: path.pool,
 					network: "",
@@ -160,6 +261,9 @@ export class RouterSynchronousApiHelpers {
 						"no coin in argument given for router trade command"
 					);
 
+				const isFirstSwapForPath = pathIndex === 0;
+				const isLastSwapForPath = pathIndex === route.paths.length - 1;
+
 				const newCoinIn = poolForPath.addTradeCommandToTransaction({
 					provider: this.Provider,
 					tx,
@@ -167,10 +271,13 @@ export class RouterSynchronousApiHelpers {
 					coinInAmount: route.coinIn.amount,
 					coinInType: path.coinIn.type,
 					coinOutType: path.coinOut.type,
-					expectedAmountOut: path.coinOut.amount,
+					expectedCoinOutAmount: path.coinOut.amount,
 					slippage,
 					referrer,
 					externalFee,
+					tradePotato,
+					isFirstSwapForPath,
+					isLastSwapForPath,
 				});
 
 				coinIn =
@@ -204,6 +311,17 @@ export class RouterSynchronousApiHelpers {
 
 			tx.transferObjects([coinOut], tx.pure(walletAddress));
 		}
+
+		const minAmountOut =
+			completeRoute.coinOut.amount -
+			BigInt(Math.floor(slippage * Number(completeRoute.coinOut.amount)));
+
+		this.consumePotatoTx({
+			tx,
+			tradePotato,
+			trader: walletAddress,
+			minAmountOut,
+		});
 
 		return tx;
 	}

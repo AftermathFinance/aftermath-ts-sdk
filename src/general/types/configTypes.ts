@@ -110,16 +110,10 @@ export interface RequiredRouterAddresses {
 }
 
 export interface OptionalRouterAddresses {
-	nojo: NojoAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
-}
-
-export interface NojoAddresses {
-	packages: {
-		pool: SuiAddress;
-	};
+	aftermath: AftermathRouterAddresses;
 }
 
 export interface DeepBookAddresses {
@@ -149,6 +143,12 @@ export interface TurbosAddresses {
 	objects: {
 		versioned: ObjectId;
 		poolsTable: ObjectId;
+	};
+}
+
+export interface AftermathRouterAddresses {
+	packages: {
+		wrapper: SuiAddress;
 	};
 }
 

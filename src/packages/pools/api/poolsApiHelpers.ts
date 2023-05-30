@@ -15,7 +15,6 @@ import {
 	PoolDataPoint,
 	PoolGraphDataTimeframe,
 	PoolGraphDataTimeframeKey,
-	PoolObject,
 	PoolTradeEvent,
 	PoolsAddresses,
 	AnyObjectType,
@@ -24,7 +23,6 @@ import {
 	Slippage,
 	CoinsToBalance,
 	ReferralVaultAddresses,
-	Url,
 	PoolName,
 	PoolCreationCoinInfo,
 	PoolFlatness,
@@ -34,13 +32,13 @@ import {
 	PoolDepositFee,
 	PoolWithdrawFee,
 	CoinsToDecimals,
+	AftermathRouterAddresses,
 } from "../../../types";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../pools";
 import dayjs, { ManipulateType } from "dayjs";
 import { Pool } from "..";
 import { Casting, Helpers } from "../../../general/utils";
-import { EventOnChain } from "../../../general/types/castingTypes";
 import { PoolsApiCasting } from "./poolsApiCasting";
 
 export class PoolsApiHelpers {
@@ -57,18 +55,19 @@ export class PoolsApiHelpers {
 			withdraw: "withdraw",
 			events: "events",
 			poolRegistry: "pool_registry",
+			routerWrapper: "aftermath",
 		},
-		functions: {
-			swap: {
-				name: "swap",
-			},
-			deposit: {
-				name: "deposit_X_coins",
-			},
-			withdraw: {
-				name: "withdraw_X_coins",
-			},
-		},
+		// functions: {
+		// 	swap: {
+		// 		name: "swap",
+		// 	},
+		// 	deposit: {
+		// 		name: "deposit_X_coins",
+		// 	},
+		// 	withdraw: {
+		// 		name: "withdraw_X_coins",
+		// 	},
+		// },
 		eventNames: {
 			swap: "SwapEvent",
 			deposit: "DepositEvent",
@@ -86,6 +85,7 @@ export class PoolsApiHelpers {
 	public readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
+		routerWrapper: AftermathRouterAddresses | undefined;
 	};
 	public readonly eventTypes: {
 		trade: AnyObjectType;
@@ -123,6 +123,7 @@ export class PoolsApiHelpers {
 		const addresses = {
 			pools: this.Provider.addresses.pools,
 			referralVault: this.Provider.addresses.referralVault,
+			routerWrapper: this.Provider.addresses.router?.aftermath,
 		};
 		if (!addresses.pools || !addresses.referralVault)
 			throw new Error(
@@ -197,7 +198,7 @@ export class PoolsApiHelpers {
 		poolId: ObjectId;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
-		expectedAmountOut: Balance;
+		expectedCoinOutAmount: Balance;
 		coinOutType: CoinType;
 		lpCoinType: CoinType;
 		slippage: Slippage;
@@ -208,7 +209,7 @@ export class PoolsApiHelpers {
 			poolId,
 			coinInId,
 			coinInType,
-			expectedAmountOut,
+			expectedCoinOutAmount,
 			coinOutType,
 			lpCoinType,
 			slippage,
@@ -235,8 +236,68 @@ export class PoolsApiHelpers {
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedAmountOut.toString()),
+				tx.pure(expectedCoinOutAmount.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
+			],
+		});
+	};
+
+	public routerWrapperTradeTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		expectedCoinOutAmount: Balance;
+		coinOutType: CoinType;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
+	}): TransactionArgument => {
+		const wrapperAddress = this.addresses.routerWrapper?.packages.wrapper;
+		if (!wrapperAddress)
+			throw new Error("Aftermath router wrapper address not set");
+
+		const {
+			tx,
+			poolId,
+			coinInId,
+			coinInType,
+			expectedCoinOutAmount,
+			coinOutType,
+			lpCoinType,
+			slippage,
+			tradePotato,
+			isFirstSwapForPath,
+			isLastSwapForPath,
+		} = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTransactionTarget(
+				wrapperAddress,
+				PoolsApiHelpers.constants.moduleNames.routerWrapper,
+				"swap_exact_in"
+			),
+			typeArguments: [lpCoinType, coinInType, coinOutType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.pure(expectedCoinOutAmount.toString()),
+				tx.pure(Pools.normalizeSlippage(slippage)),
+
+				// AF fees
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+
+				// router
+				tradePotato,
+				tx.pure(isFirstSwapForPath, "bool"),
+				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -543,7 +604,7 @@ export class PoolsApiHelpers {
 			tx,
 			coinInId,
 			poolId: pool.pool.objectId,
-			expectedAmountOut: amountOut,
+			expectedCoinOutAmount: amountOut,
 			lpCoinType: pool.pool.lpCoinType,
 			coinInType,
 			coinOutType,

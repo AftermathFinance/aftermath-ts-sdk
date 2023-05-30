@@ -65,8 +65,11 @@ class CetusRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
-		expectedAmountOut: Balance;
+		expectedCoinOutAmount: Balance;
 		slippage: Slippage;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
 		referrer?: SuiAddress;
 	}) => {
 		// PRODUCTION: handle slippage !

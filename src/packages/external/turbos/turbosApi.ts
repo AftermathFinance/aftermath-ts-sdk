@@ -86,20 +86,4 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	}) => {
 		return TurbosApiHelpers.otherCoinInPool(inputs);
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
-
-	public fetchTradeTx = (inputs: {
-		walletAddress: SuiAddress;
-		pool: TurbosPoolObject;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-	}): Promise<SerializedTransaction> => {
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.fetchBuildTradeTx(inputs)
-		);
-	};
 }

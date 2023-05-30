@@ -1,5 +1,4 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import {
 	Balance,
@@ -14,12 +13,9 @@ import {
 	RouterProtocolName,
 } from "../../../types";
 import { SuiAddress } from "@mysten/sui.js";
-import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
-import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
-import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
 import { TurbosApi } from "../../external/turbos/turbosApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
 
@@ -47,7 +43,6 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public Aftermath = () => new PoolsApi(this.Provider);
-	public Nojo = () => new NojoAmmApi(this.Provider);
 	public DeepBook = () => new DeepBookApi(this.Provider);
 	public Cetus = () => new CetusApi(this.Provider);
 	public Turbos = () => new TurbosApi(this.Provider);

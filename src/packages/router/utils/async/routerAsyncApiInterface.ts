@@ -57,16 +57,4 @@ export interface RouterAsyncApiInterface<
 		coinType: CoinType;
 		pool: PoolType;
 	}) => CoinType;
-
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
-
-	fetchTradeTx: (inputs: {
-		walletAddress: SuiAddress;
-		pool: PoolType;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-	}) => Promise<SerializedTransaction>;
 }

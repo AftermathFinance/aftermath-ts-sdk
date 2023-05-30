@@ -82,20 +82,4 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	}) => {
 		return CetusApiHelpers.otherCoinInPool(inputs);
 	};
-
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
-
-	public fetchTradeTx = (inputs: {
-		walletAddress: SuiAddress;
-		pool: CetusPoolObject;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-	}): Promise<SerializedTransaction> => {
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.fetchBuildTradeTx(inputs)
-		);
-	};
 }
