@@ -450,13 +450,12 @@ export class CetusApiHelpers {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const coinInId =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: coinInType,
-				coinAmount: coinInAmount,
-			});
+		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: coinInType,
+			coinAmount: coinInAmount,
+		});
 
 		this.tradeTx({
 			tx,

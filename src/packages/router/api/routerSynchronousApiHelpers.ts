@@ -239,13 +239,12 @@ export class RouterSynchronousApiHelpers {
 			coinOutType: completeRoute.coinOut.type,
 		});
 
-		const coinInArg =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: completeRoute.coinIn.type,
-				coinAmount: completeRoute.coinIn.amount,
-			});
+		const coinInArg = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: completeRoute.coinIn.type,
+			coinAmount: completeRoute.coinIn.amount,
+		});
 
 		let coinsOut: TransactionArgument[] = [];
 

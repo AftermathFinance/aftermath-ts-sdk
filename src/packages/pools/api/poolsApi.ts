@@ -365,13 +365,12 @@ export class PoolsApi {
 			referral: referrer !== undefined,
 		});
 
-		const coinInId =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: coinInType,
-				coinAmount: coinInAmount,
-			});
+		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: coinInType,
+			coinAmount: coinInAmount,
+		});
 
 		this.tradeTx({
 			tx,
@@ -417,13 +416,12 @@ export class PoolsApi {
 		// TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
-		const coinIds =
-			await this.Provider.Coin().Helpers.fetchCoinsWithAmountTx({
-				...inputs,
-				tx,
-				coinTypes,
-				coinAmounts,
-			});
+		const coinIds = await this.Provider.Coin().fetchCoinsWithAmountTx({
+			...inputs,
+			tx,
+			coinTypes,
+			coinAmounts,
+		});
 
 		this.multiCoinDepositTx({
 			tx,
@@ -478,13 +476,12 @@ export class PoolsApi {
 		const { coins: coinTypes, balances: coinAmounts } =
 			Coin.coinsAndBalancesOverZero(amountsOut);
 
-		const lpCoinId =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: pool.pool.lpCoinType,
-				coinAmount: lpCoinAmount,
-			});
+		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: pool.pool.lpCoinType,
+			coinAmount: lpCoinAmount,
+		});
 
 		this.multiCoinWithdrawTx({
 			tx,
@@ -517,13 +514,12 @@ export class PoolsApi {
 				referrer,
 			});
 
-		const lpCoinId =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: pool.pool.lpCoinType,
-				coinAmount: lpCoinAmount,
-			});
+		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: pool.pool.lpCoinType,
+			coinAmount: lpCoinAmount,
+		});
 
 		const coinTypes = Object.keys(pool.pool.coins);
 
@@ -594,13 +590,12 @@ export class PoolsApi {
 			coinTypes,
 		});
 
-		const coinArgs =
-			await this.Provider.Coin().Helpers.fetchCoinsWithAmountTx({
-				tx,
-				...inputs,
-				coinTypes,
-				coinAmounts: coinsInfo.map((info) => info.initialDeposit),
-			});
+		const coinArgs = await this.Provider.Coin().fetchCoinsWithAmountTx({
+			tx,
+			...inputs,
+			coinTypes,
+			coinAmounts: coinsInfo.map((info) => info.initialDeposit),
+		});
 
 		await this.createPoolTx({
 			tx,

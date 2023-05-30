@@ -1,6 +1,11 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Faucet } from "../faucet";
-import { EventId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import {
+	EventId,
+	ObjectId,
+	SuiAddress,
+	TransactionBlock,
+} from "@mysten/sui.js";
 import { FaucetApiCasting } from "./faucetApiCasting";
 import { CoinDecimal, CoinType } from "../../coin/coinTypes";
 import {
@@ -8,24 +13,70 @@ import {
 	FaucetMintCoinEventOnChain,
 } from "./faucetApiCastingTypes";
 import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
-import { FaucetApiHelpers } from "./faucetApiHelpers";
-import { EventsInputs, SerializedTransaction } from "../../../types";
+import {
+	AnyObjectType,
+	Balance,
+	EventsInputs,
+	FaucetAddresses,
+	SerializedTransaction,
+} from "../../../types";
 import { Coin } from "../../coin";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 export class FaucetApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		faucetModuleName: "faucet",
+		faucetRegistryModuleName: "faucet_registry",
+		functions: {
+			add: {
+				name: "add_coin",
+			},
+			request: {
+				name: "request_coin",
+			},
+			requestAmount: {
+				name: "request_coin_amount",
+			},
+		},
+		eventNames: {
+			mintCoin: "MintedCoin",
+			addCoin: "AddedCoinEvent",
+		},
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	public readonly Helpers;
+	public readonly addresses: FaucetAddresses;
+
+	public readonly eventTypes: {
+		mintCoin: AnyObjectType;
+		addCoin: AnyObjectType;
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-		this.Helpers = new FaucetApiHelpers(Provider);
+		const addresses = this.Provider.addresses.faucet;
+		if (!addresses)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		this.addresses = addresses;
+
+		this.eventTypes = {
+			mintCoin: this.mintCoinEventType(),
+			addCoin: this.addCoinEventType(),
+		};
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -51,10 +102,10 @@ export class FaucetApi {
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Transactions
+	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchRequestCoinAmountTransaction = async (inputs: {
+	public fetchRequestCoinAmountTx = async (inputs: {
 		coinType: CoinType;
 		coinPrice: number;
 		coinDecimals: CoinDecimal;
@@ -73,7 +124,7 @@ export class FaucetApi {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		this.Helpers.requestCoinAmountTx({
+		this.requestCoinAmountTx({
 			tx,
 			coinType,
 			amount: requestAmountWithDecimals,
@@ -82,6 +133,69 @@ export class FaucetApi {
 		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
 			tx
 		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transcations
+	/////////////////////////////////////////////////////////////////////
+
+	public addCoinTx = (inputs: {
+		tx: TransactionBlock;
+		treasuryCapId: ObjectId;
+		treasuryCapType: AnyObjectType;
+	}) => {
+		const { tx, treasuryCapId, treasuryCapType } = inputs;
+
+		return tx.moveCall({
+			target: TransactionsApiHelpers.createTransactionTarget(
+				this.addresses.packages.faucet,
+				FaucetApi.constants.faucetModuleName,
+				FaucetApi.constants.functions.add.name
+			),
+			typeArguments: [treasuryCapType],
+			arguments: [
+				tx.object(this.addresses.objects.faucet),
+				tx.object(treasuryCapId),
+			],
+		});
+	};
+
+	public requestCoinAmountTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		amount: Balance;
+	}) => {
+		const { tx, coinType, amount } = inputs;
+
+		return tx.moveCall({
+			target: TransactionsApiHelpers.createTransactionTarget(
+				this.addresses.packages.faucet,
+				FaucetApi.constants.faucetModuleName,
+				FaucetApi.constants.functions.requestAmount.name
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.faucet),
+				tx.pure(amount.toString()),
+			],
+		});
+	};
+
+	public requestCoinTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+	}) => {
+		const { tx, coinType } = inputs;
+
+		return tx.moveCall({
+			target: TransactionsApiHelpers.createTransactionTarget(
+				this.addresses.packages.faucet,
+				FaucetApi.constants.faucetModuleName,
+				FaucetApi.constants.functions.request.name
+			),
+			typeArguments: [coinType],
+			arguments: [tx.object(this.addresses.objects.faucet)],
+		});
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -95,7 +209,7 @@ export class FaucetApi {
 		>({
 			...inputs,
 			query: {
-				MoveEventType: this.Helpers.eventTypes.mintCoin,
+				MoveEventType: this.eventTypes.mintCoin,
 			},
 			eventFromEventOnChain:
 				FaucetApiCasting.faucetMintCoinEventFromOnChain,
@@ -108,9 +222,33 @@ export class FaucetApi {
 		>({
 			...inputs,
 			query: {
-				MoveEventType: this.Helpers.eventTypes.addCoin,
+				MoveEventType: this.eventTypes.addCoin,
 			},
 			eventFromEventOnChain:
 				FaucetApiCasting.faucetAddCoinEventFromOnChain,
 		});
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Event Types
+	/////////////////////////////////////////////////////////////////////
+
+	private mintCoinEventType = () => {
+		return EventsApiHelpers.createEventType(
+			this.addresses.packages.faucet,
+			FaucetApi.constants.faucetModuleName,
+			FaucetApi.constants.eventNames.mintCoin
+		);
+	};
+
+	private addCoinEventType = () => {
+		return EventsApiHelpers.createEventType(
+			this.addresses.packages.faucet,
+			FaucetApi.constants.faucetModuleName,
+			FaucetApi.constants.eventNames.addCoin
+		);
+	};
 }

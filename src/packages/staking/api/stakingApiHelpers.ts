@@ -207,13 +207,12 @@ export class StakingApiHelpers {
 				referrer,
 			});
 
-		const suiCoin =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress: inputs.walletAddress,
-				coinType: Coin.constants.suiCoinType,
-				coinAmount: inputs.suiStakeAmount,
-			});
+		const suiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress: inputs.walletAddress,
+			coinType: Coin.constants.suiCoinType,
+			coinAmount: inputs.suiStakeAmount,
+		});
 
 		this.stakeTx({
 			tx,
@@ -240,13 +239,12 @@ export class StakingApiHelpers {
 				referrer,
 			});
 
-		const afSuiCoin =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress: inputs.walletAddress,
-				coinType: this.coinTypes.afSui,
-				coinAmount: inputs.afSuiUnstakeAmount,
-			});
+		const afSuiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress: inputs.walletAddress,
+			coinType: this.coinTypes.afSui,
+			coinAmount: inputs.afSuiUnstakeAmount,
+		});
 
 		this.unstakeTx({
 			tx,

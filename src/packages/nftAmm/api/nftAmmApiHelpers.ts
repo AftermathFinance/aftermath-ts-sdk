@@ -78,13 +78,12 @@ export class NftAmmApiHelpers {
 			referral: inputs.referrer !== undefined,
 		});
 
-		const assetCoin =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress: inputs.walletAddress,
-				coinType: marketObject.assetCoinType,
-				coinAmount: expectedAssetCoinAmountIn,
-			});
+		const assetCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress: inputs.walletAddress,
+			coinType: marketObject.assetCoinType,
+			coinAmount: expectedAssetCoinAmountIn,
+		});
 
 		this.addBuyCommandToTransaction({
 			tx,
@@ -152,13 +151,12 @@ export class NftAmmApiHelpers {
 		// // TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
-		const assetCoin =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress: inputs.walletAddress,
-				coinType: marketObject.assetCoinType,
-				coinAmount: inputs.assetCoinAmountIn,
-			});
+		const assetCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress: inputs.walletAddress,
+			coinType: marketObject.assetCoinType,
+			coinAmount: inputs.assetCoinAmountIn,
+		});
 
 		this.addDepositCommandToTransaction({
 			tx,
@@ -198,14 +196,12 @@ export class NftAmmApiHelpers {
 		});
 		const expectedAssetCoinAmountOut = coinAmountsOut[0];
 
-		const lpCoin = await this.Provider.Coin().Helpers.fetchCoinWithAmountTx(
-			{
-				tx,
-				walletAddress: inputs.walletAddress,
-				coinType: marketObject.lpCoinType,
-				coinAmount: inputs.lpCoinAmount,
-			}
-		);
+		const lpCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress: inputs.walletAddress,
+			coinType: marketObject.lpCoinType,
+			coinAmount: inputs.lpCoinAmount,
+		});
 
 		this.addWithdrawCommandToTransaction({
 			tx,

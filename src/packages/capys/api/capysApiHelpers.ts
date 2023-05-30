@@ -456,13 +456,12 @@ export class CapysApiHelpers {
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedWithStakedAndKeep;
 
-		const coinArg =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: feeCoinType,
-				coinAmount: feeCoinAmount,
-			});
+		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: feeCoinType,
+			coinAmount: feeCoinAmount,
+		});
 
 		const finalTx = this.addStakeBreedWithStakedAndKeepCommandToTransaction(
 			tx,
@@ -486,13 +485,12 @@ export class CapysApiHelpers {
 		const feeCoinAmount =
 			Capys.constants.breedingFees.amounts.breedStakedWithStakedAndKeep;
 
-		const coinArg =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: feeCoinType,
-				coinAmount: feeCoinAmount,
-			});
+		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: feeCoinType,
+			coinAmount: feeCoinAmount,
+		});
 
 		const finalTx = this.addStakeBreedWithStakedAndKeepCommandToTransaction(
 			tx,
@@ -515,13 +513,12 @@ export class CapysApiHelpers {
 		const feeCoinType = Capys.constants.breedingFees.coinType;
 		const feeCoinAmount = Capys.constants.breedingFees.amounts.breedAndKeep;
 
-		const coinArg =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: feeCoinType,
-				coinAmount: feeCoinAmount,
-			});
+		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: feeCoinType,
+			coinAmount: feeCoinAmount,
+		});
 
 		const finalTx = this.addStakeBreedAndKeepCommandToTransaction(
 			tx,

@@ -1,25 +1,26 @@
-import { CoinMetadata } from "@mysten/sui.js";
+import {
+	CoinMetadata,
+	CoinStruct,
+	ObjectId,
+	PaginatedCoins,
+	SuiAddress,
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { CoinType } from "../../../types";
+import { Balance, CoinType } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
-import { CoinApiHelpers } from "./coinApiHelpers";
+import { Casting } from "../../../general/utils";
 
 export class CoinApi {
-	/////////////////////////////////////////////////////////////////////
-	//// Class Members
-	/////////////////////////////////////////////////////////////////////
-
-	public readonly Helpers;
-
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
-		this.Helpers = new CoinApiHelpers(Provider);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -56,6 +57,115 @@ export class CoinApi {
 				iconUrl: null,
 			};
 		}
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transaction Builders
+	/////////////////////////////////////////////////////////////////////
+
+	public fetchCoinWithAmountTx = async (inputs: {
+		tx: TransactionBlock;
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		coinAmount: Balance;
+	}): Promise<TransactionArgument> => {
+		const { tx, walletAddress, coinType, coinAmount } = inputs;
+
+		tx.setSender(walletAddress);
+
+		const coinData = await this.fetchCoinsUntilAmountReachedOrEnd(inputs);
+		return CoinApi.coinWithAmountTx({
+			tx,
+			coinData,
+			coinAmount,
+		});
+	};
+
+	public fetchCoinsWithAmountTx = async (inputs: {
+		tx: TransactionBlock;
+		walletAddress: SuiAddress;
+		coinTypes: CoinType[];
+		coinAmounts: Balance[];
+	}): Promise<TransactionArgument[]> => {
+		const { tx, walletAddress, coinTypes, coinAmounts } = inputs;
+
+		tx.setSender(walletAddress);
+
+		// TODO: handle cursoring until necessary coin amount is found
+		const allCoinsData = await Promise.all(
+			coinTypes.map(async (coinType, index) =>
+				this.fetchCoinsUntilAmountReachedOrEnd({
+					...inputs,
+					coinAmount: coinAmounts[index],
+					coinType,
+				})
+			)
+		);
+
+		let coinArgs: TransactionArgument[] = [];
+		for (const [index, coinData] of allCoinsData.entries()) {
+			const coinArg = CoinApi.coinWithAmountTx({
+				tx,
+				coinData,
+				coinAmount: coinAmounts[index],
+			});
+
+			coinArgs = [...coinArgs, coinArg];
+		}
+
+		return coinArgs;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	public static formatCoinTypesForMoveCall = (coins: CoinType[]) =>
+		coins.map((coin) => Casting.u8VectorFromString(coin.slice(2))); // slice to remove 0x
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	private fetchCoinsUntilAmountReachedOrEnd = async (inputs: {
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		coinAmount: Balance;
+	}) => {
+		let allCoinData: CoinStruct[] = [];
+		let cursor: string | undefined = undefined;
+		do {
+			const paginatedCoins: PaginatedCoins =
+				await this.Provider.provider.getCoins({
+					...inputs,
+					owner: inputs.walletAddress,
+					cursor,
+				});
+
+			const coinData = paginatedCoins.data.filter(
+				(data) =>
+					!data.lockedUntilEpoch && BigInt(data.balance) > BigInt(0)
+			);
+			allCoinData = [...allCoinData, ...coinData];
+
+			const totalAmount = Helpers.sumBigInt(
+				allCoinData.map((data) => BigInt(data.balance))
+			);
+			if (totalAmount >= inputs.coinAmount) return allCoinData;
+
+			if (
+				paginatedCoins.data.length === 0 ||
+				!paginatedCoins.hasNextPage ||
+				!paginatedCoins.nextCursor
+			)
+				return allCoinData;
+
+			cursor = paginatedCoins.nextCursor;
+		} while (true);
 	};
 
 	// NOTE: this is temporary until LP coin metadata issue is solved on Sui
@@ -110,5 +220,59 @@ export class CoinApi {
 				iconUrl: null,
 			};
 		}
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Static Methods
+	/////////////////////////////////////////////////////////////////////
+
+	private static coinWithAmountTx = (inputs: {
+		tx: TransactionBlock;
+		coinData: CoinStruct[];
+		coinAmount: Balance;
+	}): TransactionArgument => {
+		const { tx, coinData, coinAmount } = inputs;
+
+		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);
+
+		const totalCoinBalance = Helpers.sumBigInt(
+			coinData.map((data) => BigInt(data.balance))
+		);
+		if (totalCoinBalance < coinAmount)
+			throw new Error("wallet does not have coins of sufficient balance");
+
+		if (isSuiCoin) {
+			tx.setGasPayment(
+				coinData.map((obj) => {
+					return {
+						...obj,
+						objectId: obj.coinObjectId,
+					};
+				})
+			);
+
+			return tx.splitCoins(tx.gas, [tx.pure(coinAmount)]);
+		}
+
+		const coinObjectIds = coinData.map((data) => data.coinObjectId);
+		const mergedCoinObjectId: ObjectId = coinObjectIds[0];
+
+		if (coinObjectIds.length > 1) {
+			tx.add({
+				kind: "MergeCoins",
+				destination: tx.object(mergedCoinObjectId),
+				sources: [
+					...coinObjectIds
+						.slice(1)
+						.map((coinId) => tx.object(coinId)),
+				],
+			});
+		}
+
+		return tx.add({
+			kind: "SplitCoins",
+			coin: tx.object(mergedCoinObjectId),
+			amounts: [tx.pure(coinAmount)],
+		});
 	};
 }
