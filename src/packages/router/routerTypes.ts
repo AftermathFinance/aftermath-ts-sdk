@@ -188,17 +188,6 @@ export interface RouterTradeEvent extends Event {
 	// externalFee?: RouterExternalFee;
 }
 
-export type RouterTradeEventOnChain = EventOnChain<{
-	swapper: SuiAddress;
-	type_in: AnyObjectType;
-	amount_in: BigIntAsString;
-	type_out: AnyObjectType;
-	amount_out: BigIntAsString;
-	// referrer: Option<SuiAddress>;
-	// router_fee: Option<BigIntAsString>;
-	// router_fee_recipient: Option<SuiAddress>;
-}>;
-
 /////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////

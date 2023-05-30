@@ -11,7 +11,6 @@ import {
 	RouterProtocolName,
 	RouterSerializablePool,
 	RouterTradeEvent,
-	RouterTradeEventOnChain,
 } from "../routerTypes";
 import {
 	AnyObjectType,
@@ -30,6 +29,8 @@ import { CetusApi } from "../../external/cetus/cetusApi";
 import { TurbosApi } from "../../external/turbos/turbosApi";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { RouterApiCasting } from "./routerApiCasting";
+import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 
 export class RouterSynchronousApiHelpers {
 	/////////////////////////////////////////////////////////////////////
@@ -365,26 +366,10 @@ export class RouterSynchronousApiHelpers {
 				// 	},
 				// ],
 			},
-			RouterSynchronousApiHelpers.routerTradeEventFromOnChain,
+			RouterApiCasting.routerTradeEventFromOnChain,
 			inputs.cursor,
 			inputs.limit
 		);
-	};
-
-	public static routerTradeEventFromOnChain = (
-		eventOnChain: RouterTradeEventOnChain
-	): RouterTradeEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			trader: fields.swapper,
-			coinInType: fields.type_in,
-			coinInAmount: BigInt(fields.amount_in),
-			coinOutType: fields.type_out,
-			coinOutAmount: BigInt(fields.amount_out),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
 	};
 
 	/////////////////////////////////////////////////////////////////////
