@@ -91,15 +91,15 @@ export class DeepBookApiHelpers {
 						};
 					}>,
 					PartialDeepBookPoolObject
-				>(
-					{
+				>({
+					query: {
 						MoveEventType: EventsApiHelpers.createEventType(
 							this.addresses.deepBook.packages.clob,
 							DeepBookApiHelpers.constants.moduleNames.clob,
 							"PoolCreated"
 						),
 					},
-					(eventOnChain) => {
+					eventFromEventOnChain: (eventOnChain) => {
 						return {
 							objectId: eventOnChain.parsedJson.pool_id,
 							baseCoin:
@@ -109,8 +109,8 @@ export class DeepBookApiHelpers {
 						};
 					},
 					cursor,
-					limit
-				)
+					limit,
+				})
 		);
 
 		return objectIds;

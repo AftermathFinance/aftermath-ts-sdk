@@ -353,8 +353,9 @@ export class RouterSynchronousApiHelpers {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			RouterTradeEventOnChain,
 			RouterTradeEvent
-		>(
-			{
+		>({
+			...inputs,
+			query: {
 				// And: [
 				// 	{
 				MoveEventType: this.eventTypes.routerTrade,
@@ -364,10 +365,8 @@ export class RouterSynchronousApiHelpers {
 				// 	},
 				// ],
 			},
-			RouterApiCasting.routerTradeEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+			eventFromEventOnChain: RouterApiCasting.routerTradeEventFromOnChain,
+		});
 	};
 
 	/////////////////////////////////////////////////////////////////////

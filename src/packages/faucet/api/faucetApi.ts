@@ -92,25 +92,27 @@ export class FaucetApi {
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
 			FaucetMintCoinEvent
-		>(
-			{
+		>({
+			query: {
 				MoveEventType: this.Helpers.eventTypes.mintCoin,
 			},
-			FaucetApiCasting.faucetMintCoinEventFromOnChain,
+			eventFromEventOnChain:
+				FaucetApiCasting.faucetMintCoinEventFromOnChain,
 			cursor,
-			limit
-		);
+			limit,
+		});
 
 	public fetchAddCoinEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetAddCoinEventOnChain,
 			FaucetAddCoinEvent
-		>(
-			{
+		>({
+			query: {
 				MoveEventType: this.Helpers.eventTypes.addCoin,
 			},
-			FaucetApiCasting.faucetAddCoinEventFromOnChain,
+			eventFromEventOnChain:
+				FaucetApiCasting.faucetAddCoinEventFromOnChain,
 			cursor,
-			limit
-		);
+			limit,
+		});
 }

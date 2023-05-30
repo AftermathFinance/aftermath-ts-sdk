@@ -37,7 +37,7 @@ export class CoinApi {
 
 			return coinMetadata;
 		} catch (error) {
-			if (this.Provider.Pools().Helpers.isLpCoin(coin)) {
+			if (this.Provider.Pools().isLpCoin(coin)) {
 				return this.createLpCoinMetadata(coin);
 			}
 
@@ -69,7 +69,7 @@ export class CoinApi {
 			const poolObjectId = await PoolsApi.fetchPoolObjectIdForLpCoinType(
 				coin
 			);
-			const pool = await PoolsApi.fetchPool(poolObjectId);
+			const pool = await PoolsApi.fetchPool({ objectId: poolObjectId });
 
 			const maxCoinSymbolLength = 5;
 			const notPrettyCoinSymbol =
@@ -87,7 +87,7 @@ export class CoinApi {
 				.join(" ");
 
 			const coinDescription =
-				await PoolsApi.Helpers.createLpCoinMetadataDescription({
+				await PoolsApi.createLpCoinMetadataDescription({
 					poolName: pool.name,
 					coinTypes: Object.keys(pool.coins),
 				});

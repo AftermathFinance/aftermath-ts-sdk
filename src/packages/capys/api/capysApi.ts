@@ -121,53 +121,53 @@ export class CapysApi {
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			CapyBornEventOnChain,
 			CapyBornEvent
-		>(
-			{
+		>({
+			query: {
 				MoveEventType: this.Helpers.eventTypes.capyBorn,
 			},
-			CapysApiCasting.capyBornEventFromOnChain,
+			eventFromEventOnChain: CapysApiCasting.capyBornEventFromOnChain,
 			cursor,
-			limit
-		);
+			limit,
+		});
 
 	public fetchBreedCapysEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			BreedCapyEventOnChain,
 			BreedCapysEvent
-		>(
-			{
+		>({
+			query: {
 				MoveEventType: this.Helpers.eventTypes.breedCapys,
 			},
-			CapysApiCasting.breedCapysEventFromOnChain,
+			eventFromEventOnChain: CapysApiCasting.breedCapysEventFromOnChain,
 			cursor,
-			limit
-		);
+			limit,
+		});
 
 	public fetchStakeCapyEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeCapyEventOnChain,
 			StakeCapyEvent
-		>(
-			{
+		>({
+			query: {
 				MoveEventType: this.Helpers.eventTypes.stakeCapy,
 			},
-			CapysApiCasting.stakeCapyEventFromOnChain,
+			eventFromEventOnChain: CapysApiCasting.stakeCapyEventFromOnChain,
 			cursor,
-			limit
-		);
+			limit,
+		});
 
 	public fetchUnstakeCapyEvents = async (cursor?: EventId, limit?: number) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeCapyEventOnChain,
 			UnstakeCapyEvent
-		>(
-			{
+		>({
+			query: {
 				MoveEventType: this.Helpers.eventTypes.unstakeCapy,
 			},
-			CapysApiCasting.unstakeCapyEventFromOnChain,
+			eventFromEventOnChain: CapysApiCasting.unstakeCapyEventFromOnChain,
 			cursor,
-			limit
-		);
+			limit,
+		});
 
 	/////////////////////////////////////////////////////////////////////
 	//// Objects

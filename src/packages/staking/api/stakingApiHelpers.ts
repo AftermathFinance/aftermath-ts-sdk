@@ -269,8 +269,9 @@ export class StakingApiHelpers {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeRequestEventOnChain,
 			StakeRequestEvent
-		>(
-			{
+		>({
+			...inputs,
+			query: {
 				// And: [
 				// 	{
 				MoveEventType: this.eventTypes.stakeRequest,
@@ -280,10 +281,8 @@ export class StakingApiHelpers {
 				// 	},
 				// ],
 			},
-			Casting.staking.stakeRequestEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+			eventFromEventOnChain: Casting.staking.stakeRequestEventFromOnChain,
+		});
 	};
 
 	public fetchUnstakeRequestEvents = async (inputs: {
@@ -294,8 +293,9 @@ export class StakingApiHelpers {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeRequestEventOnChain,
 			UnstakeRequestEvent
-		>(
-			{
+		>({
+			...inputs,
+			query: {
 				// And: [
 				// 	{
 				MoveEventType: this.eventTypes.unstakeRequest,
@@ -305,10 +305,9 @@ export class StakingApiHelpers {
 				// 	},
 				// ],
 			},
-			Casting.staking.unstakeRequestEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+			eventFromEventOnChain:
+				Casting.staking.unstakeRequestEventFromOnChain,
+		});
 	};
 
 	public fetchStakeSuccessEvents = async (inputs: {
@@ -319,8 +318,9 @@ export class StakingApiHelpers {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeSuccessEventOnChain,
 			StakeSuccessEvent
-		>(
-			{
+		>({
+			...inputs,
+			query: {
 				// And: [
 				// 	{
 				MoveEventType: this.eventTypes.stakeSuccess,
@@ -330,10 +330,8 @@ export class StakingApiHelpers {
 				// 	},
 				// ],
 			},
-			Casting.staking.stakeSuccessEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+			eventFromEventOnChain: Casting.staking.stakeSuccessEventFromOnChain,
+		});
 	};
 
 	public fetchUnstakeSuccessEvents = async (inputs: {
@@ -344,8 +342,9 @@ export class StakingApiHelpers {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeSuccessEventOnChain,
 			UnstakeSuccessEvent
-		>(
-			{
+		>({
+			...inputs,
+			query: {
 				// And: [
 				// 	{
 				MoveEventType: this.eventTypes.unstakeSuccess,
@@ -355,10 +354,9 @@ export class StakingApiHelpers {
 				// 	},
 				// ],
 			},
-			Casting.staking.unstakeSuccessEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+			eventFromEventOnChain:
+				Casting.staking.unstakeSuccessEventFromOnChain,
+		});
 	};
 
 	public fetchStakeFailedEvents = async (inputs: {
@@ -369,8 +367,9 @@ export class StakingApiHelpers {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			StakeFailedEventOnChain,
 			StakeFailedEvent
-		>(
-			{
+		>({
+			...inputs,
+			query: {
 				// And: [
 				// 	{
 				MoveEventType: this.eventTypes.stakeFailed,
@@ -380,10 +379,8 @@ export class StakingApiHelpers {
 				// 	},
 				// ],
 			},
-			Casting.staking.stakeFailedEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+			eventFromEventOnChain: Casting.staking.stakeFailedEventFromOnChain,
+		});
 	};
 
 	public fetchAfSuiMintedEvents = async (inputs: {
@@ -394,8 +391,9 @@ export class StakingApiHelpers {
 		return await this.Provider.Events().fetchCastEventsWithCursor<
 			AfSuiMintedEventOnChain,
 			AfSuiMintedEvent
-		>(
-			{
+		>({
+			...inputs,
+			query: {
 				// And: [
 				// 	{
 				MoveEventType: this.eventTypes.afSuiMinted,
@@ -405,10 +403,8 @@ export class StakingApiHelpers {
 				// 	},
 				// ],
 			},
-			Casting.staking.afSuiMintedEventFromOnChain,
-			inputs.cursor,
-			inputs.limit
-		);
+			eventFromEventOnChain: Casting.staking.afSuiMintedEventFromOnChain,
+		});
 	};
 
 	/////////////////////////////////////////////////////////////////////

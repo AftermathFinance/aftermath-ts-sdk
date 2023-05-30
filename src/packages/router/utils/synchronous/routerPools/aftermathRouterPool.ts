@@ -154,7 +154,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 	}) => {
 		// withdraw
 		if (inputs.coinInType === this.pool.lpCoinType) {
-			return inputs.provider.Pools().Helpers.multiCoinWithdrawTx({
+			return inputs.provider.Pools().multiCoinWithdrawTx({
 				...inputs,
 				poolId: this.pool.objectId,
 				// this is beacuse typescript complains for some reason otherwise
@@ -171,7 +171,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 				lpCoinAmountOut: inputs.expectedCoinOutAmount,
 			});
 
-			return inputs.provider.Pools().Helpers.multiCoinDepositTx({
+			return inputs.provider.Pools().multiCoinDepositTx({
 				...inputs,
 				poolId: this.pool.objectId,
 				// this is beacuse typescript complains for some reason otherwise
@@ -186,7 +186,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		}
 
 		// trade
-		const coinOut = inputs.provider.Pools().Helpers.routerWrapperTradeTx({
+		const coinOut = inputs.provider.Pools().routerWrapperTradeTx({
 			...inputs,
 			poolId: this.pool.objectId,
 			lpCoinType: this.pool.lpCoinType,

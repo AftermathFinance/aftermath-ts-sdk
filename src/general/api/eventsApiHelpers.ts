@@ -82,12 +82,17 @@ export class EventsApiHelpers {
 		return { events, nextCursor };
 	};
 
-	public fetchCastEventsWithCursor = async <EventOnChainType, EventType>(
-		query: SuiEventFilter,
-		eventFromEventOnChain: (eventOnChain: EventOnChainType) => EventType,
-		cursor?: EventId,
-		limit?: number
-	): Promise<EventsWithCursor<EventType>> => {
+	public fetchCastEventsWithCursor = async <
+		EventOnChainType,
+		EventType
+	>(inputs: {
+		query: SuiEventFilter;
+		eventFromEventOnChain: (eventOnChain: EventOnChainType) => EventType;
+		cursor?: EventId;
+		limit?: number;
+	}): Promise<EventsWithCursor<EventType>> => {
+		const { query, eventFromEventOnChain, cursor, limit } = inputs;
+
 		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
 			cursor: cursor
