@@ -1033,7 +1033,8 @@ export class PoolsApi {
 
 		const tradeEventsWithinTime =
 			await this.Provider.Events().fetchEventsWithinTime({
-				fetchEventsFunc: pool.getTradeEvents,
+				fetchEventsFunc: (eventsInputs) =>
+					pool.getTradeEvents(eventsInputs),
 				timeUnit: "hour",
 				time: 24,
 				limitStepSize: 512,
