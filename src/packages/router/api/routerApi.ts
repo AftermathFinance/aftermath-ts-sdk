@@ -13,7 +13,7 @@ import {
 	RouterProtocolName,
 	UserEventsInputs,
 } from "../../../types";
-import { EventId, SuiAddress } from "@mysten/sui.js";
+import { EventId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
@@ -119,13 +119,8 @@ export class RouterApi {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
-	}): Promise<SerializedTransaction> {
-		const tx = await this.Helpers.fetchTransactionForCompleteTradeRoute(
-			inputs
-		);
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			tx
-		);
+	}): Promise<TransactionBlock> {
+		return this.Helpers.fetchTransactionForCompleteTradeRoute(inputs);
 	}
 
 	/////////////////////////////////////////////////////////////////////

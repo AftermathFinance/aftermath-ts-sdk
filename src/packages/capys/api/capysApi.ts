@@ -187,9 +187,9 @@ export class CapysApi {
 
 	public fetchCapysStakedInCapyVaultWithAttributes = async (inputs: {
 		attributes: CapyAttribute[];
-		limitStepSize: number;
-		cursor?: ObjectId;
 		limit: number;
+		limitStepSize?: number;
+		cursor?: ObjectId;
 	}) => {
 		const { limit, attributes } = inputs;
 

@@ -110,7 +110,7 @@ export class FaucetApi {
 		coinPrice: number;
 		coinDecimals: CoinDecimal;
 		walletAddress: SuiAddress;
-	}): Promise<SerializedTransaction> => {
+	}): Promise<TransactionBlock> => {
 		const { coinType, coinPrice, coinDecimals, walletAddress } = inputs;
 
 		const requestAmount =
@@ -130,9 +130,7 @@ export class FaucetApi {
 			amount: requestAmountWithDecimals,
 		});
 
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			tx
-		);
+		return tx;
 	};
 
 	/////////////////////////////////////////////////////////////////////
