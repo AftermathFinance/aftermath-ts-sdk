@@ -2,7 +2,7 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 
 import {
-    PerpetualsAccountManager,
+	PerpetualsAccountManager,
 	PerpetualsMarketManager,
 	PerpetualsOrderbook,
 	PerpetualsPriceFeedStorage,
@@ -27,34 +27,8 @@ export class PerpetualsApi {
 	}
 
 	/////////////////////////////////////////////////////////////////////
-	//// Shared Objects
+	//// Objects
 	/////////////////////////////////////////////////////////////////////
-	public fetchAccountManager = async (
-		objectId: ObjectId
-	): Promise<PerpetualsAccountManager> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsAccountManager>(
-            objectId,
-            PerpetualsCasting.accountManagerFromSuiObjectResponse
-		);
-	};
-
-	public fetchMarketManager = async (
-		objectId: ObjectId
-	): Promise<PerpetualsMarketManager> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsMarketManager>(
-            objectId,
-            PerpetualsCasting.marketManagerFromSuiObjectResponse
-		);
-	};
-
-	public fetchPriceFeedStorage = async (
-		objectId: ObjectId
-	): Promise<PerpetualsPriceFeedStorage> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsPriceFeedStorage>(
-            objectId,
-            PerpetualsCasting.priceFeedStorageFromSuiObjectResponse
-		);
-	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Transactions

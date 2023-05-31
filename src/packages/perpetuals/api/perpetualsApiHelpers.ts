@@ -39,12 +39,12 @@ export class PerpetualsHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
-	public fetchPerpetualsInitializeForCollateral = async (inputs: {
+	public fetchPerpetualsInitializeForCollateralTx = async (inputs: {
 		coinType: CoinType;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsInitializeForCollateral({
+		this.perpetualsInitializeForCollateralTx({
 			tx,
 			...inputs,
 		});
@@ -52,12 +52,12 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPereptualsTransferAdminCap = async (inputs: {
+	public fetchPereptualsTransferAdminCapTx = async (inputs: {
 		targetAddress: SuiAddress;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPereptualsTransferAdminCap({
+		this.pereptualsTransferAdminCapTx({
 			tx,
 			...inputs,
 		});
@@ -65,7 +65,7 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsCreateMarket = async (inputs: {
+	public fetchPerpetualsCreateMarketTx = async (inputs: {
 		coinType: CoinType;
 		marketId: bigint;
 		marginRatioInitial: bigint;
@@ -85,7 +85,7 @@ export class PerpetualsHelpers {
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsCreateMarket({
+		this.perpetualsCreateMarketTx({
 			tx,
 			...inputs,
 		});
@@ -93,14 +93,14 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsDepositCollateral = async (inputs: {
+	public fetchPerpetualsDepositCollateralTx = async (inputs: {
 		coinType: CoinType;
 		coin: ObjectId;
 		accountId: bigint;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsDepositCollateral({
+		this.perpetualsDepositCollateralTx({
 			tx,
 			...inputs,
 		});
@@ -108,7 +108,7 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsPlaceMarketOrder = async (inputs: {
+	public fetchPerpetualsPlaceMarketOrderTx = async (inputs: {
 		coinType: CoinType;
 		accountId: bigint;
 		marketId: bigint;
@@ -117,7 +117,7 @@ export class PerpetualsHelpers {
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsPlaceMarketOrder({
+		this.perpetualsPlaceMarketOrderTx({
 			tx,
 			...inputs,
 		});
@@ -125,7 +125,7 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsPlaceLimitOrder = async (inputs: {
+	public fetchPerpetualsPlaceLimitOrderTx = async (inputs: {
 		coinType: CoinType;
 		accountId: bigint;
 		marketId: bigint;
@@ -136,7 +136,7 @@ export class PerpetualsHelpers {
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsPlaceMarketOrder({
+		this.perpetualsPlaceMarketOrderTx({
 			tx,
 			...inputs,
 		});
@@ -144,7 +144,7 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsCancelOrder = async (inputs: {
+	public fetchPerpetualsCancelOrderTx = async (inputs: {
 		coinType: CoinType;
 		accountId: bigint;
 		marketId: bigint;
@@ -153,7 +153,7 @@ export class PerpetualsHelpers {
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsCancelOrder({
+		this.perpetualsCancelOrderTx({
 			tx,
 			...inputs,
 		});
@@ -161,14 +161,14 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsClosePosition = async (inputs: {
+	public fetchPerpetualsClosePositionTx = async (inputs: {
 		coinType: CoinType;
 		accountId: bigint;
 		marketId: bigint;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsClosePosition({
+		this.perpetualsClosePositionTx({
 			tx,
 			...inputs,
 		});
@@ -176,14 +176,14 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsWithdrawCollateral = async (inputs: {
+	public fetchPerpetualsWithdrawCollateralTx = async (inputs: {
 		coinType: CoinType;
 		accountId: bigint;
 		amount: bigint;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsWithdrawCollateral({
+		this.perpetualsWithdrawCollateralTx({
 			tx,
 			...inputs,
 		});
@@ -191,7 +191,7 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsLiquidate = async (inputs: {
+	public fetchPerpetualsLiquidateTx = async (inputs: {
 		coinType: CoinType;
 		liqee: SuiAddress;
 		liqeeAccountId: bigint;
@@ -200,7 +200,7 @@ export class PerpetualsHelpers {
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsLiquidate({
+		this.perpetualsLiquidateTx({
 			tx,
 			...inputs,
 		});
@@ -208,7 +208,7 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsLiquidateAcquire = async (inputs: {
+	public fetchPerpetualsLiquidateAcquireTx = async (inputs: {
 		coinType: CoinType;
 		liqee: SuiAddress;
 		liqeeAccountId: bigint;
@@ -217,7 +217,7 @@ export class PerpetualsHelpers {
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsLiquidateAcquire({
+		this.perpetualsLiquidateAcquireTx({
 			tx,
 			...inputs,
 		});
@@ -225,13 +225,13 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsUpdateFunding = async (inputs: {
+	public fetchPerpetualsUpdateFundingTx = async (inputs: {
 		coinType: CoinType;
 		marketId: bigint;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsUpdateFunding({
+		this.perpetualsUpdateFundingTx({
 			tx,
 			...inputs,
 		});
@@ -239,12 +239,12 @@ export class PerpetualsHelpers {
 		return tx;
 	};
 
-	public fetchPerpetualsCreateAccount = async (inputs: {
+	public fetchPerpetualsCreateAccountTx = async (inputs: {
 		coinType: CoinType;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 
-		this.XPerpetualsCreateAccount({
+		this.perpetualsCreateAccountTx({
 			tx,
 			...inputs,
 		});
@@ -255,7 +255,7 @@ export class PerpetualsHelpers {
 	/////////////////////////////////////////////////////////////////////
 	//// Transaction Commands
 	/////////////////////////////////////////////////////////////////////
-	public XPerpetualsInitializeForCollateral = (inputs: {
+	public perpetualsInitializeForCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 	}) => {
@@ -274,7 +274,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPereptualsTransferAdminCap = (inputs: {
+	public pereptualsTransferAdminCapTx = (inputs: {
 		tx: TransactionBlock;
 		targetAddress: SuiAddress;
 	}) => {
@@ -294,7 +294,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsCreateMarket = (inputs: {
+	public perpetualsCreateMarketTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		marketId: bigint;
@@ -363,7 +363,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsDepositCollateral = (inputs: {
+	public perpetualsDepositCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		coin: ObjectId;
@@ -386,7 +386,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsPlaceMarketOrder = (inputs: {
+	public perpetualsPlaceMarketOrderTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -417,7 +417,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsPlaceLimitOrder = (inputs: {
+	public perpetualsPlaceLimitOrderTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -461,7 +461,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsCancelOrder = (inputs: {
+	public perpetualsCancelOrderTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -488,7 +488,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsClosePosition = (inputs: {
+	public perpetualsClosePositionTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -511,7 +511,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsWithdrawCollateral = (inputs: {
+	public perpetualsWithdrawCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -539,7 +539,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsLiquidate = (inputs: {
+	public perpetualsLiquidateTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		liqee: SuiAddress;
@@ -576,7 +576,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsLiquidateAcquire = (inputs: {
+	public perpetualsLiquidateAcquireTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		liqee: SuiAddress;
@@ -613,7 +613,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsUpdateFunding = (inputs: {
+	public perpetualsUpdateFundingTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		marketId: bigint;
@@ -637,7 +637,7 @@ export class PerpetualsHelpers {
 		});
 	};
 
-	public XPerpetualsCreateAccount = (inputs: {
+	public perpetualsCreateAccountTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 	}) => {
