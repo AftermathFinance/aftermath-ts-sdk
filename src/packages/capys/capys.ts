@@ -13,6 +13,7 @@ import {
 	CapyObject,
 	CapyStats,
 	DynamicFieldObjectsWithCursor,
+	EventsInputs,
 	EventsWithCursor,
 	SerializedTransaction,
 	StakeCapyEvent,
@@ -128,25 +129,22 @@ export class Capys extends Caller {
 	//// Events
 	/////////////////////////////////////////////////////////////////////
 
-	public async getBreedCapyEvents(cursor?: EventId, limit?: number) {
-		return this.fetchApiEvents<BreedCapysEvent>("events/breed-capys", {
-			cursor,
-			limit,
-		});
+	public async getBreedCapyEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<BreedCapysEvent>(
+			"events/breed-capys",
+			inputs
+		);
 	}
 
-	public async getStakeCapyEvents(cursor?: EventId, limit?: number) {
-		return this.fetchApiEvents<StakeCapyEvent>("events/stake-capy", {
-			cursor,
-			limit,
-		});
+	public async getStakeCapyEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<StakeCapyEvent>("events/stake-capy", inputs);
 	}
 
-	public async getUnstakeCapyEvents(cursor?: EventId, limit?: number) {
-		return this.fetchApiEvents<UnstakeCapyEvent>("events/unstake-capy", {
-			cursor,
-			limit,
-		});
+	public async getUnstakeCapyEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<UnstakeCapyEvent>(
+			"events/unstake-capy",
+			inputs
+		);
 	}
 
 	/////////////////////////////////////////////////////////////////////

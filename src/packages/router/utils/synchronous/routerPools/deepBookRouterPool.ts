@@ -29,7 +29,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
-		this.coinTypes = [pool.baseCoin, pool.quoteCoin];
+		this.coinTypes = [pool.baseCoinType, pool.quoteCoinType];
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -70,21 +70,24 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		return amountOut;
 	};
 
-	addTradeCommandToTransaction = (inputs: {
+	tradeTx = (inputs: {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
 		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
-		expectedAmountOut: Balance;
+		expectedCoinOutAmount: Balance;
 		slippage: Slippage;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
 		referrer?: SuiAddress;
 	}): TransactionArgument => {
 		return inputs.provider
 			.Router()
 			.DeepBook()
-			.addTradeCommandToTransaction({
+			.tradeTx({
 				...inputs,
 				coinInId: inputs.coinIn,
 				pool: this.pool,
@@ -211,7 +214,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 
 	private isBaseCoinType = (coin: CoinType) =>
 		Helpers.addLeadingZeroesToType(coin) ===
-		Helpers.addLeadingZeroesToType(this.pool.baseCoin);
+		Helpers.addLeadingZeroesToType(this.pool.baseCoinType);
 }
 
 export default DeepBookRouterPool;

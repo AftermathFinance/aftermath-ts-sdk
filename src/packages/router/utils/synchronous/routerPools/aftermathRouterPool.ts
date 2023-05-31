@@ -138,26 +138,29 @@ class AftermathRouterPool implements RouterPoolInterface {
 		return this.poolClass.getTradeAmountOut(inputs);
 	};
 
-	addTradeCommandToTransaction = (inputs: {
+	tradeTx = (inputs: {
 		provider: AftermathApi;
 		tx: TransactionBlock;
 		coinIn: ObjectId | TransactionArgument;
 		coinInAmount: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
-		expectedAmountOut: Balance;
+		expectedCoinOutAmount: Balance;
 		slippage: Slippage;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
 		referrer?: SuiAddress;
 	}) => {
 		// withdraw
 		if (inputs.coinInType === this.pool.lpCoinType) {
-			return inputs.provider.Pools().Helpers.multiCoinWithdrawTx({
+			return inputs.provider.Pools().multiCoinWithdrawTx({
 				...inputs,
 				poolId: this.pool.objectId,
 				// this is beacuse typescript complains for some reason otherwise
 				lpCoinId: inputs.coinIn,
 				coinTypes: [inputs.coinOutType],
-				expectedAmountsOut: [inputs.expectedAmountOut],
+				expectedAmountsOut: [inputs.expectedCoinOutAmount],
 				lpCoinType: this.pool.lpCoinType,
 			});
 		}
@@ -165,10 +168,10 @@ class AftermathRouterPool implements RouterPoolInterface {
 		// deposit
 		if (inputs.coinOutType === this.pool.lpCoinType) {
 			const expectedLpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
-				lpCoinAmountOut: inputs.expectedAmountOut,
+				lpCoinAmountOut: inputs.expectedCoinOutAmount,
 			});
 
-			return inputs.provider.Pools().Helpers.multiCoinDepositTx({
+			return inputs.provider.Pools().multiCoinDepositTx({
 				...inputs,
 				poolId: this.pool.objectId,
 				// this is beacuse typescript complains for some reason otherwise
@@ -183,7 +186,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 		}
 
 		// trade
-		const coinOut = inputs.provider.Pools().Helpers.tradeTx({
+		const coinOut = inputs.provider.Pools().routerWrapperTradeTx({
 			...inputs,
 			poolId: this.pool.objectId,
 			lpCoinType: this.pool.lpCoinType,

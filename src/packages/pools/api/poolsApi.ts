@@ -1,6 +1,13 @@
-import { EventId, ObjectId, SuiAddress } from "@mysten/sui.js";
+import {
+	EventId,
+	ObjectId,
+	SuiAddress,
+	TransactionArgument,
+	TransactionBlock,
+	fromB64,
+	normalizeSuiObjectId,
+} from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { PoolsApiHelpers } from "./poolsApiHelpers";
 import {
 	CoinDecimal,
 	CoinType,
@@ -14,15 +21,25 @@ import {
 	PoolStats,
 	PoolTradeEvent,
 	PoolWithdrawEvent,
-	SerializedTransaction,
 	Slippage,
 	PoolCreationLpCoinMetadata,
 	PoolName,
 	PoolDataPoint,
-	PoolObject,
 	PoolTradeFee,
 	PoolGraphDataTimeframeKey,
 	Percentage,
+	AnyObjectType,
+	ReferralVaultAddresses,
+	PoolsAddresses,
+	AftermathRouterAddresses,
+	PoolGraphDataTimeframe,
+	PoolCreationCoinInfo,
+	PoolFlatness,
+	PoolWeight,
+	PoolWithdrawFee,
+	PoolDepositFee,
+	PoolCoins,
+	EventsInputs,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -34,21 +51,96 @@ import { Pool, Pools } from "..";
 import { Aftermath } from "../../../general/providers";
 import { Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
+import dayjs, { ManipulateType } from "dayjs";
+import { PoolsApiCasting } from "./poolsApiCasting";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 export class PoolsApi {
+	/////////////////////////////////////////////////////////////////////
+	//// Constants
+	/////////////////////////////////////////////////////////////////////
+
+	private static readonly constants = {
+		moduleNames: {
+			interface: "amm_interface",
+			pool: "pool",
+			swap: "swap",
+			deposit: "deposit",
+			withdraw: "withdraw",
+			events: "events",
+			poolRegistry: "pool_registry",
+			routerWrapper: "aftermath",
+		},
+		eventNames: {
+			swap: "SwapEvent",
+			deposit: "DepositEvent",
+			withdraw: "WithdrawEvent",
+		},
+		defaultLpCoinIconImageUrl:
+			"https://aftermath.finance/coins/lp/af_lp.svg",
+		blacklistedPoolIds: [""],
+	};
+
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	public readonly Helpers;
+	public readonly addresses: {
+		pools: PoolsAddresses;
+		referralVault: ReferralVaultAddresses;
+		routerWrapper: AftermathRouterAddresses | undefined;
+	};
+	public readonly eventTypes: {
+		trade: AnyObjectType;
+		deposit: AnyObjectType;
+		withdraw: AnyObjectType;
+	};
+
+	public readonly poolVolumeDataTimeframes: Record<
+		PoolGraphDataTimeframeKey,
+		PoolGraphDataTimeframe
+	> = {
+		"1D": {
+			time: 24,
+			timeUnit: "hour",
+		},
+		"1W": {
+			time: 7,
+			timeUnit: "day",
+		},
+		"1M": {
+			time: 30,
+			timeUnit: "day",
+		},
+		"3M": {
+			time: 90,
+			timeUnit: "day",
+		},
+	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-		this.Helpers = new PoolsApiHelpers(Provider);
+		const addresses = {
+			pools: Provider.addresses.pools,
+			referralVault: Provider.addresses.referralVault,
+			routerWrapper: Provider.addresses.router?.aftermath,
+		};
+		if (!addresses.pools || !addresses.referralVault)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		// @ts-ignore
+		this.addresses = addresses;
+
+		this.eventTypes = {
+			trade: this.tradeEventType(),
+			deposit: this.depositEventType(),
+			withdraw: this.withdrawEventType(),
+		};
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -60,18 +152,19 @@ export class PoolsApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public fetchTradeEvents = async (
-		cursor?: EventId,
-		limit?: number
-		// poolObjectId?: ObjectId
+		inputs: {
+			// poolObjectId?: ObjectId
+		} & EventsInputs
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolTradeEventOnChain,
 			PoolTradeEvent
-		>(
+		>({
+			...inputs,
 			// poolObjectId
 			// 	? {
 			// 			And: [
-			// 				{ MoveEventType: this.Helpers.eventTypes.trade },
+			// 				{ MoveEventType: this.eventTypes.trade },
 			// 				{
 			// 					MoveEventField: {
 			// 						path: "pool_id",
@@ -80,26 +173,25 @@ export class PoolsApi {
 			// 				},
 			// 			],
 			// 	  }
-			// 	: { MoveEventType: this.Helpers.eventTypes.trade },
-			{ MoveEventType: this.Helpers.eventTypes.trade },
-			Casting.pools.poolTradeEventFromOnChain,
-			cursor,
-			limit
-		);
+			// 	: { MoveEventType: this.eventTypes.trade },
+			query: { MoveEventType: this.eventTypes.trade },
+			eventFromEventOnChain: Casting.pools.poolTradeEventFromOnChain,
+		});
 
 	public fetchDepositEvents = async (
-		cursor?: EventId,
-		limit?: number
-		// poolObjectId?: ObjectId
+		inputs: {
+			// poolObjectId?: ObjectId
+		} & EventsInputs
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolDepositEventOnChain,
 			PoolDepositEvent
-		>(
+		>({
+			...inputs,
 			// poolObjectId
 			// 	? {
 			// 			And: [
-			// 				{ MoveEventType: this.Helpers.eventTypes.deposit },
+			// 				{ MoveEventType: this.eventTypes.deposit },
 			// 				{
 			// 					MoveEventField: {
 			// 						path: "pool_id",
@@ -108,26 +200,25 @@ export class PoolsApi {
 			// 				},
 			// 			],
 			// 	  }
-			// 	: { MoveEventType: this.Helpers.eventTypes.deposit },
-			{ MoveEventType: this.Helpers.eventTypes.deposit },
-			Casting.pools.poolDepositEventFromOnChain,
-			cursor,
-			limit
-		);
+			// 	: { MoveEventType: this.eventTypes.deposit },
+			query: { MoveEventType: this.eventTypes.deposit },
+			eventFromEventOnChain: Casting.pools.poolDepositEventFromOnChain,
+		});
 
 	public fetchWithdrawEvents = async (
-		cursor?: EventId,
-		limit?: number
-		// poolObjectId?: ObjectId
+		inputs: {
+			// poolObjectId?: ObjectId
+		} & EventsInputs
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			PoolWithdrawEventOnChain,
 			PoolWithdrawEvent
-		>(
+		>({
+			...inputs,
 			// poolObjectId
 			// 	? {
 			// 			And: [
-			// 				{ MoveEventType: this.Helpers.eventTypes.withdraw },
+			// 				{ MoveEventType: this.eventTypes.withdraw },
 			// 				{
 			// 					MoveEventField: {
 			// 						path: "pool_id",
@@ -136,105 +227,59 @@ export class PoolsApi {
 			// 				},
 			// 			],
 			// 	  }
-			// 	: { MoveEventType: this.Helpers.eventTypes.withdraw },
-			{ MoveEventType: this.Helpers.eventTypes.withdraw },
-			Casting.pools.poolWithdrawEventFromOnChain,
-			cursor,
-			limit
-		);
+			// 	: { MoveEventType: this.eventTypes.withdraw },
+			query: { MoveEventType: this.eventTypes.withdraw },
+			eventFromEventOnChain: Casting.pools.poolWithdrawEventFromOnChain,
+		});
 
 	/////////////////////////////////////////////////////////////////////
 	//// Objects
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchPool = async (objectId: ObjectId) => {
-		return this.Provider.Objects().fetchCastObject(
-			objectId,
-			Casting.pools.poolObjectFromSuiObject
-		);
+	public fetchPool = async (inputs: { objectId: ObjectId }) => {
+		return this.Provider.Objects().fetchCastObject({
+			...inputs,
+			objectFromSuiObjectResponse: Casting.pools.poolObjectFromSuiObject,
+		});
 	};
 
-	public fetchPools = async (objectIds: ObjectId[]) => {
-		return this.Provider.Objects().fetchCastObjectBatch(
-			objectIds,
-			Casting.pools.poolObjectFromSuiObject
-		);
+	public fetchPools = async (inputs: { objectIds: ObjectId[] }) => {
+		return this.Provider.Objects().fetchCastObjectBatch({
+			...inputs,
+			objectFromSuiObjectResponse: Casting.pools.poolObjectFromSuiObject,
+		});
 	};
 
 	public fetchAllPools = async () => {
-		const poolObjectIds = await this.Helpers.fetchAllPoolObjectIds();
-		return this.fetchPools(poolObjectIds);
+		const objectIds = await this.fetchAllPoolObjectIds();
+		return this.fetchPools({ objectIds });
+	};
+
+	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
+		const objectIds =
+			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
+				{
+					parentObjectId: this.addresses.pools.objects.lpCoinsTable,
+					objectsFromObjectIds: (objectIds) =>
+						this.Provider.Objects().fetchCastObjectBatch({
+							objectIds,
+							objectFromSuiObjectResponse:
+								PoolsApiCasting.poolObjectIdFromSuiObjectResponse,
+						}),
+				}
+			);
+
+		const filteredIds = objectIds.filter(
+			(id) => !PoolsApi.constants.blacklistedPoolIds.includes(id)
+		);
+		return filteredIds;
 	};
 
 	/////////////////////////////////////////////////////////////////////
-	//// Transactions
+	//// Transaction Builders
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchDepositTransaction = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		amountsIn: CoinsToBalance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildDepositTx(inputs);
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction
-		);
-	};
-
-	public fetchWithdrawTransaction = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		amountsOutDirection: CoinsToBalance;
-		lpCoinAmount: Balance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildWithdrawTx(inputs);
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction
-		);
-	};
-
-	public fetchAllCoinWithdrawTransaction = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		lpCoinAmount: Balance;
-		referrer?: SuiAddress;
-	}): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildAllCoinWithdrawTx(
-			inputs
-		);
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction
-		);
-	};
-
-	public fetchTradeTransaction = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<SerializedTransaction> => {
-		const transaction = await this.Helpers.fetchBuildTradeTx(inputs);
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			transaction
-		);
-	};
-
-	public publishLpCoinTransaction = async (inputs: {
-		walletAddress: SuiAddress;
-	}): Promise<SerializedTransaction> => {
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.buildPublishLpCoinTx(inputs)
-		);
-	};
-
-	public fetchCreatePoolTransaction = async (inputs: {
+	public fetchCreatePoolTx = async (inputs: {
 		walletAddress: SuiAddress;
 		lpCoinType: CoinType;
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
@@ -250,58 +295,709 @@ export class PoolsApi {
 		poolName: PoolName;
 		poolFlatness: 0 | 1;
 		createPoolCapId: ObjectId;
-	}): Promise<SerializedTransaction> => {
+	}): Promise<TransactionBlock> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			this.Helpers.fetchBuildCreatePoolTx({
-				...inputs,
+		return this.fetchBuildCreatePoolTx({
+			...inputs,
 
-				poolFlatness:
-					inputs.poolFlatness === 1
-						? Casting.fixedOneBigInt
-						: BigInt(0),
+			poolFlatness:
+				inputs.poolFlatness === 1 ? Casting.fixedOneBigInt : BigInt(0),
 
-				coinsInfo: inputs.coinsInfo.map((info, index) => {
-					let weight = Casting.numberToFixedBigInt(info.weight);
+			coinsInfo: inputs.coinsInfo.map((info, index) => {
+				let weight = Casting.numberToFixedBigInt(info.weight);
 
-					if (index === 0) {
-						const otherWeightsSum = Helpers.sumBigInt(
-							inputs.coinsInfo
-								.slice(1)
-								.map((info) =>
-									Casting.numberToFixedBigInt(info.weight)
-								)
-						);
+				if (index === 0) {
+					const otherWeightsSum = Helpers.sumBigInt(
+						inputs.coinsInfo
+							.slice(1)
+							.map((info) =>
+								Casting.numberToFixedBigInt(info.weight)
+							)
+					);
 
-						weight = Casting.fixedOneBigInt - otherWeightsSum;
-					}
+					weight = Casting.fixedOneBigInt - otherWeightsSum;
+				}
 
-					return {
-						...info,
-						weight,
-						tradeFeeIn: Casting.numberToFixedBigInt(
-							info.tradeFeeIn
-						),
-						depositFee: BigInt(0),
-						withdrawFee: BigInt(0),
-						tradeFeeOut: BigInt(0),
-					};
-				}),
-			})
+				return {
+					...info,
+					weight,
+					tradeFeeIn: Casting.numberToFixedBigInt(info.tradeFeeIn),
+					depositFee: BigInt(0),
+					withdrawFee: BigInt(0),
+					tradeFeeOut: BigInt(0),
+				};
+			}),
+		});
+	};
+
+	public fetchBuildTradeTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const {
+			walletAddress,
+			pool,
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			slippage,
+			referrer,
+		} = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const amountOut = pool.getTradeAmountOut({
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			referral: referrer !== undefined,
+		});
+
+		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: coinInType,
+			coinAmount: coinInAmount,
+		});
+
+		this.tradeTx({
+			tx,
+			coinInId,
+			poolId: pool.pool.objectId,
+			expectedCoinOutAmount: amountOut,
+			lpCoinType: pool.pool.lpCoinType,
+			coinInType,
+			coinOutType,
+			slippage,
+			withTransfer: true,
+		});
+
+		return tx;
+	};
+
+	public fetchBuildDepositTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		amountsIn: CoinsToBalance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const { walletAddress, pool, amountsIn, slippage, referrer } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const { coins: coinTypes, balances: coinAmounts } =
+			Coin.coinsAndBalancesOverZero(amountsIn);
+
+		const { lpRatio } = pool.getDepositLpAmountOut({
+			amountsIn,
+			referral: referrer !== undefined,
+		});
+
+		// TODO: move this somewhere else and into its own func
+		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
+
+		const coinIds = await this.Provider.Coin().fetchCoinsWithAmountTx({
+			...inputs,
+			tx,
+			coinTypes,
+			coinAmounts,
+		});
+
+		this.multiCoinDepositTx({
+			tx,
+			poolId: pool.pool.objectId,
+			lpCoinType: pool.pool.lpCoinType,
+			coinIds,
+			coinTypes,
+			expectedLpRatio,
+			slippage,
+			withTransfer: true,
+		});
+
+		return tx;
+	};
+
+	public fetchBuildWithdrawTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		amountsOutDirection: CoinsToBalance;
+		lpCoinAmount: Balance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const {
+			walletAddress,
+			pool,
+			amountsOutDirection,
+			lpCoinAmount,
+			slippage,
+			referrer,
+		} = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
+			lpCoinAmountOut: lpCoinAmount,
+		});
+
+		const amountsOut = pool.getWithdrawAmountsOut({
+			lpRatio,
+			amountsOutDirection,
+			referral: referrer !== undefined,
+		});
+
+		const { coins: coinTypes, balances: coinAmounts } =
+			Coin.coinsAndBalancesOverZero(amountsOut);
+
+		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: pool.pool.lpCoinType,
+			coinAmount: lpCoinAmount,
+		});
+
+		this.multiCoinWithdrawTx({
+			tx,
+			poolId: pool.pool.objectId,
+			lpCoinType: pool.pool.lpCoinType,
+			expectedAmountsOut: coinAmounts,
+			coinTypes: coinTypes,
+			lpCoinId,
+			slippage,
+			withTransfer: true,
+		});
+
+		return tx;
+	};
+
+	public fetchBuildAllCoinWithdrawTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		lpCoinAmount: Balance;
+		referrer?: SuiAddress;
+	}): Promise<TransactionBlock> => {
+		const { walletAddress, pool, lpCoinAmount, referrer } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: pool.pool.lpCoinType,
+			coinAmount: lpCoinAmount,
+		});
+
+		const coinTypes = Object.keys(pool.pool.coins);
+
+		this.allCoinWithdrawTx({
+			tx,
+			poolId: pool.pool.objectId,
+			lpCoinType: pool.pool.lpCoinType,
+			coinTypes,
+			lpCoinId,
+			withTransfer: true,
+		});
+
+		return tx;
+	};
+
+	public buildPublishLpCoinTx = (inputs: {
+		walletAddress: SuiAddress;
+	}): TransactionBlock => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const upgradeCap = this.publishLpCoinTx({ tx });
+		tx.transferObjects([upgradeCap], tx.pure(inputs.walletAddress));
+
+		return tx;
+	};
+
+	public fetchBuildCreatePoolTx = async (inputs: {
+		walletAddress: SuiAddress;
+		lpCoinType: CoinType;
+		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		coinsInfo: PoolCreationCoinInfo[];
+		poolName: PoolName;
+		poolFlatness: PoolFlatness;
+		createPoolCapId: ObjectId;
+	}): Promise<TransactionBlock> => {
+		const { coinsInfo } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		// TODO: make this fetching work
+
+		// const createPoolCapId =
+		// 	inputs.createPoolCapId !== undefined
+		// 		? inputs.createPoolCapId
+		// 		: (
+		// 				await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
+		// 					inputs.walletAddress,
+		// 					`${this.addresses.pools.packages.cmmm}::${PoolsApi.constants.moduleNames.pool}::CreatePoolCap<${inputs.lpCoinType}>`
+		// 				)
+		// 		  )[0].data?.objectId;
+
+		// if (createPoolCapId === undefined)
+		// 	throw new Error(
+		// 		"no CreatePoolCap for LP Coin Type found owned by address"
+		// 	);
+
+		coinsInfo.sort((a, b) => {
+			const coinA = a.coinType.toUpperCase();
+			const coinB = b.coinType.toUpperCase();
+			return coinA < coinB ? -1 : coinA > coinB ? 1 : 0;
+		});
+
+		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+		const lpCoinDescription = await this.createLpCoinMetadataDescription({
+			...inputs,
+			coinTypes,
+		});
+
+		const coinArgs = await this.Provider.Coin().fetchCoinsWithAmountTx({
+			tx,
+			...inputs,
+			coinTypes,
+			coinAmounts: coinsInfo.map((info) => info.initialDeposit),
+		});
+
+		await this.createPoolTx({
+			tx,
+			...inputs,
+			// createPoolCapId,
+			coinsInfo: coinsInfo.map((info, index) => {
+				return {
+					...info,
+					coinId: coinArgs[index],
+				};
+			}),
+			lpCoinDescription,
+		});
+
+		return tx;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Transaction Commands
+	/////////////////////////////////////////////////////////////////////
+
+	public tradeTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		expectedCoinOutAmount: Balance;
+		coinOutType: CoinType;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const {
+			tx,
+			poolId,
+			coinInId,
+			coinInType,
+			expectedCoinOutAmount,
+			coinOutType,
+			lpCoinType,
+			slippage,
+			withTransfer,
+		} = inputs;
+
+		return tx.add({
+			kind: "MoveCall",
+			target: Helpers.transactions.createTransactionTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.swap,
+				"swap_exact_in"
+			),
+			typeArguments: [lpCoinType, coinInType, coinOutType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.pure(expectedCoinOutAmount.toString()),
+				tx.pure(Pools.normalizeSlippage(slippage)),
+			],
+		});
+	};
+
+	public routerWrapperTradeTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		expectedCoinOutAmount: Balance;
+		coinOutType: CoinType;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
+	}): TransactionArgument => {
+		const wrapperAddress = this.addresses.routerWrapper?.packages.wrapper;
+		if (!wrapperAddress)
+			throw new Error("Aftermath router wrapper address not set");
+
+		const {
+			tx,
+			poolId,
+			coinInId,
+			coinInType,
+			expectedCoinOutAmount,
+			coinOutType,
+			lpCoinType,
+			slippage,
+			tradePotato,
+			isFirstSwapForPath,
+			isLastSwapForPath,
+		} = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTransactionTarget(
+				wrapperAddress,
+				PoolsApi.constants.moduleNames.routerWrapper,
+				"swap_exact_in"
+			),
+			typeArguments: [lpCoinType, coinInType, coinOutType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.pure(expectedCoinOutAmount.toString()),
+				tx.pure(Pools.normalizeSlippage(slippage)),
+
+				// AF fees
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+
+				// router
+				tradePotato,
+				tx.pure(isFirstSwapForPath, "bool"),
+				tx.pure(isLastSwapForPath, "bool"),
+			],
+		});
+	};
+
+	public multiCoinDepositTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		coinIds: ObjectId[] | TransactionArgument[];
+		coinTypes: CoinType[];
+		expectedLpRatio: bigint;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const {
+			tx,
+			poolId,
+			coinIds,
+			coinTypes,
+			expectedLpRatio,
+			lpCoinType,
+			slippage,
+			withTransfer,
+		} = inputs;
+
+		const poolSize = coinTypes.length;
+
+		return tx.add({
+			kind: "MoveCall",
+			target: Helpers.transactions.createTransactionTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.deposit,
+				`deposit_${poolSize}_coins`
+			),
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				...coinIds.map((coinId) =>
+					typeof coinId === "string" ? tx.object(coinId) : coinId
+				),
+				tx.pure(expectedLpRatio.toString()),
+				tx.pure(Pools.normalizeSlippage(slippage)),
+			],
+		});
+	};
+
+	public multiCoinWithdrawTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		lpCoinId: ObjectId | TransactionArgument;
+		lpCoinType: CoinType;
+		expectedAmountsOut: Balance[];
+		coinTypes: CoinType[];
+		slippage: Slippage;
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const {
+			tx,
+			poolId,
+			lpCoinId,
+			expectedAmountsOut,
+			coinTypes,
+			lpCoinType,
+			slippage,
+			withTransfer,
+		} = inputs;
+
+		const poolSize = coinTypes.length;
+
+		return tx.add({
+			kind: "MoveCall",
+			target: Helpers.transactions.createTransactionTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.withdraw,
+				`withdraw_${poolSize}_coins`
+			),
+
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
+				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
+				tx.pure(Pools.normalizeSlippage(slippage)),
+			],
+		});
+	};
+
+	public allCoinWithdrawTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		lpCoinId: ObjectId | TransactionArgument;
+		lpCoinType: CoinType;
+		coinTypes: CoinType[];
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const { tx, poolId, lpCoinId, coinTypes, lpCoinType, withTransfer } =
+			inputs;
+
+		const poolSize = coinTypes.length;
+
+		return tx.add({
+			kind: "MoveCall",
+			target: Helpers.transactions.createTransactionTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.withdraw,
+				`all_coin_withdraw_${poolSize}_coins`
+			),
+
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
+			],
+		});
+	};
+
+	public publishLpCoinTx = (inputs: { tx: TransactionBlock }) => {
+		const { tx } = inputs;
+
+		const compiledModulesAndDeps = JSON.parse(
+			this.addresses.pools.other.createLpCoinPackageCompilation
 		);
+
+		return tx.publish({
+			modules: compiledModulesAndDeps.modules.map((m: any) =>
+				Array.from(fromB64(m))
+			),
+			dependencies: compiledModulesAndDeps.dependencies.map(
+				(addr: string) => normalizeSuiObjectId(addr)
+			),
+		});
+	};
+
+	// TODO: handle bounds checks here instead of just on-chain ?
+	public createPoolTx = async (inputs: {
+		tx: TransactionBlock;
+		lpCoinType: CoinType;
+		coinsInfo: {
+			coinId: ObjectId | TransactionArgument;
+			coinType: CoinType;
+			weight: PoolWeight;
+			decimals: CoinDecimal;
+			tradeFeeIn: PoolTradeFee;
+			tradeFeeOut: PoolTradeFee;
+			depositFee: PoolDepositFee;
+			withdrawFee: PoolWithdrawFee;
+		}[];
+		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		createPoolCapId: ObjectId | TransactionArgument;
+		poolName: PoolName;
+		poolFlatness: PoolFlatness;
+		lpCoinDescription: string;
+	}) => {
+		const {
+			tx,
+			lpCoinType,
+			createPoolCapId,
+			coinsInfo,
+			lpCoinMetadata,
+			lpCoinDescription,
+		} = inputs;
+
+		const poolSize = coinsInfo.length;
+		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+
+		return tx.add({
+			kind: "MoveCall",
+			target: Helpers.transactions.createTransactionTarget(
+				this.addresses.pools.packages.ammInterface,
+				PoolsApi.constants.moduleNames.interface,
+				`create_pool_${poolSize}_coins`
+			),
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				typeof createPoolCapId === "string"
+					? tx.object(createPoolCapId)
+					: createPoolCapId,
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.pure(Casting.u8VectorFromString(inputs.poolName)),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinMetadata.name.toString())
+				),
+				tx.pure(
+					Casting.u8VectorFromString(
+						lpCoinMetadata.symbol.toString().toUpperCase()
+					)
+				),
+				tx.pure(Casting.u8VectorFromString(lpCoinDescription)),
+				tx.pure(
+					coinsInfo.map((coin) => coin.weight),
+					"vector<u64>"
+				),
+				tx.pure(inputs.poolFlatness, "u64"),
+				tx.pure(
+					coinsInfo.map((coin) => coin.tradeFeeIn),
+					"vector<u64>"
+				),
+				tx.pure(
+					coinsInfo.map((coin) => coin.tradeFeeOut),
+					"vector<u64>"
+				),
+				tx.pure(
+					coinsInfo.map((coin) => coin.depositFee),
+					"vector<u64>"
+				),
+				tx.pure(
+					coinsInfo.map((coin) => coin.withdrawFee),
+					"vector<u64>"
+				),
+				tx.pure(
+					coinsInfo.map((coin) => coin.decimals),
+					"vector<u8>"
+				),
+				...coinsInfo.map((coin) =>
+					typeof coin.coinId === "string"
+						? tx.object(coin.coinId)
+						: coin.coinId
+				),
+			],
+		});
+	};
+
+	public poolObjectIdForLpCoinTypeTx = (inputs: {
+		tx: TransactionBlock;
+		lpCoinType: CoinType;
+	}) => {
+		const { tx, lpCoinType } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTransactionTarget(
+				this.addresses.pools.packages.amm,
+				PoolsApi.constants.moduleNames.poolRegistry,
+				"lp_type_to_pool_id"
+			),
+			typeArguments: [lpCoinType],
+			arguments: [tx.object(this.addresses.pools.objects.poolRegistry)],
+		});
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Inspections
 	/////////////////////////////////////////////////////////////////////
 
-	public fetchPoolObjectIdForLpCoinType = async (
-		lpCoinType: CoinType
-	): Promise<ObjectId> => {
-		const tx =
-			this.Helpers.poolObjectIdForLpCoinTypeDevInspectTransaction(
-				lpCoinType
-			);
+	public fetchPoolObjectIdForLpCoinType = async (inputs: {
+		lpCoinType: CoinType;
+	}): Promise<ObjectId> => {
+		const tx = new TransactionBlock();
+
+		this.poolObjectIdForLpCoinTypeTx({ tx, ...inputs });
 
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
@@ -336,36 +1032,30 @@ export class PoolsApi {
 		// TODO: remove all notions of sdk from api functions !
 
 		const tradeEventsWithinTime =
-			await this.Provider.Events().fetchEventsWithinTime(
-				(cursor, limit) =>
-					pool.getTradeEvents({
-						cursor,
-						limit,
-					}),
-				"hour",
-				24,
-				512
-			);
+			await this.Provider.Events().fetchEventsWithinTime({
+				fetchEventsFunc: (eventsInputs) =>
+					pool.getTradeEvents(eventsInputs),
+				timeUnit: "hour",
+				time: 24,
+				limitStepSize: 512,
+			});
 
-		const volume = this.Helpers.fetchCalcPoolVolume(
+		const volume = this.fetchCalcPoolVolume(
 			tradeEventsWithinTime,
 			coinsToPrice,
 			coinsToDecimals
 		);
 
-		const tvl = await this.Helpers.fetchCalcPoolTvl(
-			pool.pool.coins,
+		const tvl = await this.fetchCalcPoolTvl({
+			poolCoins: pool.pool.coins,
 			coinsToPrice,
-			coinsToDecimals
-		);
-		const supplyPerLps = this.Helpers.calcPoolSupplyPerLps(
+			coinsToDecimals,
+		});
+		const supplyPerLps = this.calcPoolSupplyPerLps(
 			poolCoins,
 			pool.pool.lpCoinSupply
 		);
-		const lpPrice = this.Helpers.calcPoolLpPrice(
-			pool.pool.lpCoinSupply,
-			tvl
-		);
+		const lpPrice = this.calcPoolLpPrice(pool.pool.lpCoinSupply, tvl);
 
 		// this is okay since all trade fees are currently the same for every coin
 		const firstCoin = Object.values(pool.pool.coins)[0];
@@ -375,7 +1065,7 @@ export class PoolsApi {
 				firstCoin.tradeFeeIn + firstCoin.tradeFeeOut
 			);
 
-		const apy = this.Helpers.calcApy({
+		const apy = this.calcApy({
 			fees24Hours: fees,
 			tvl,
 		});
@@ -388,6 +1078,78 @@ export class PoolsApi {
 			fees,
 			apy,
 		};
+	};
+
+	// NOTE: should this volume calculation also take into account deposits and withdraws
+	// (not just swaps) ?
+	public fetchCalcPoolVolume = (
+		tradeEvents: PoolTradeEvent[],
+		coinsToPrice: CoinsToPrice,
+		coinsToDecimals: Record<CoinType, CoinDecimal>
+	) => {
+		let volume = 0;
+		for (const trade of tradeEvents) {
+			for (const [index, typeIn] of trade.typesIn.entries()) {
+				const decimals = coinsToDecimals[typeIn];
+				const tradeAmount = Coin.balanceWithDecimals(
+					trade.amountsIn[index],
+					decimals
+				);
+
+				const coinInPrice = coinsToPrice[typeIn];
+				const amountUsd =
+					coinInPrice < 0 ? 0 : tradeAmount * coinInPrice;
+				volume += amountUsd;
+			}
+		}
+
+		return volume;
+	};
+
+	public fetchCalcPoolTvl = async (inputs: {
+		poolCoins: PoolCoins;
+		coinsToPrice: CoinsToPrice;
+		coinsToDecimals: Record<CoinType, CoinDecimal>;
+	}) => {
+		const { poolCoins, coinsToPrice, coinsToDecimals } = inputs;
+
+		let tvl = 0;
+
+		for (const [poolCoinType, poolCoin] of Object.entries(poolCoins)) {
+			const amountWithDecimals = Coin.balanceWithDecimals(
+				poolCoin.balance,
+				coinsToDecimals[poolCoinType]
+			);
+			const price = coinsToPrice[poolCoinType];
+
+			tvl += amountWithDecimals * (price < 0 ? 0 : price);
+		}
+
+		return tvl;
+	};
+
+	public calcPoolSupplyPerLps = (poolCoins: PoolCoins, lpSupply: Balance) => {
+		const supplyPerLps = Object.values(poolCoins).map(
+			(poolCoin) => Number(poolCoin.balance) / Number(lpSupply)
+		);
+
+		return supplyPerLps;
+	};
+
+	public calcPoolLpPrice = (lpSupply: Balance, tvl: number) => {
+		const lpCoinDecimals = Pools.constants.decimals.lpCoinDecimals;
+		const lpPrice = Number(
+			Number(tvl) / Coin.balanceWithDecimals(lpSupply, lpCoinDecimals)
+		);
+
+		return lpPrice;
+	};
+
+	public calcApy = (inputs: { fees24Hours: number; tvl: number }): number => {
+		const { fees24Hours, tvl } = inputs;
+		const daysInYear = 365;
+
+		return (fees24Hours * daysInYear) / tvl;
 	};
 
 	/////////////////////////////////////////////////////////////////////
@@ -468,20 +1230,18 @@ export class PoolsApi {
 		coinsToDecimals: CoinsToDecimals;
 		coinsToPrice: CoinsToPrice;
 	}): Promise<PoolDataPoint[]> => {
-		const timeframeValue =
-			this.Helpers.poolVolumeDataTimeframes[inputs.timeframe];
+		const timeframeValue = this.poolVolumeDataTimeframes[inputs.timeframe];
 
 		const tradeEvents = (
-			await this.Provider.Events().fetchEventsWithinTime(
+			await this.Provider.Events().fetchEventsWithinTime({
 				// TODO: fetch only pool's events
-				this.fetchTradeEvents,
-				timeframeValue.timeUnit,
-				timeframeValue.time,
-				512
-			)
+				fetchEventsFunc: this.fetchTradeEvents,
+				...timeframeValue,
+				limitStepSize: 512,
+			})
 		).filter((trade) => trade.poolId === inputs.poolObjectId);
 
-		return this.Helpers.calcPoolVolumeData({
+		return this.calcPoolVolumeData({
 			...inputs,
 			...timeframeValue,
 			tradeEvents,
@@ -500,4 +1260,135 @@ export class PoolsApi {
 
 		return feeData;
 	};
+
+	public calcPoolVolumeData = (inputs: {
+		tradeEvents: PoolTradeEvent[];
+		timeUnit: ManipulateType;
+		time: number;
+		buckets: number;
+		coinsToDecimals: CoinsToDecimals;
+		coinsToPrice: CoinsToPrice;
+	}) => {
+		const {
+			tradeEvents,
+			timeUnit,
+			time,
+			buckets,
+			coinsToDecimals,
+			coinsToPrice,
+		} = inputs;
+
+		const now = Date.now();
+		const maxTimeAgo = dayjs(now).subtract(time, timeUnit);
+		const timeGap = dayjs(now).diff(maxTimeAgo);
+
+		const bucketTimestampSize = timeGap / buckets;
+		const emptyDataPoints: PoolDataPoint[] = Array(buckets)
+			.fill({
+				time: 0,
+				value: 0,
+			})
+			.map((dataPoint, index) => {
+				return {
+					...dataPoint,
+					time: maxTimeAgo.valueOf() + index * bucketTimestampSize,
+				};
+			});
+
+		const dataPoints = tradeEvents.reduce((acc, trade) => {
+			if (trade.timestamp === undefined) return acc;
+
+			const tradeDate = dayjs.unix(trade.timestamp / 1000);
+			const bucketIndex =
+				acc.length -
+				Math.floor(dayjs(now).diff(tradeDate) / bucketTimestampSize) -
+				1;
+
+			const amountUsd = trade.typesIn.reduce((acc, cur, index) => {
+				const price = coinsToPrice[cur];
+				const amountInUsd =
+					price < 0
+						? 0
+						: Coin.balanceWithDecimalsUsd(
+								trade.amountsIn[index],
+								coinsToDecimals[cur],
+								price
+						  );
+				return acc + (amountInUsd < 0 ? 0 : amountInUsd);
+			}, 0);
+
+			acc[bucketIndex].value += amountUsd;
+
+			return acc;
+		}, emptyDataPoints);
+
+		return dataPoints;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// LP Coin Metadata
+	/////////////////////////////////////////////////////////////////////
+
+	public createLpCoinMetadataDescription = async (inputs: {
+		poolName: PoolName;
+		coinTypes: CoinType[];
+	}) => {
+		// TODO: do all of this a little bit cleaner
+		const coinSymbols = (
+			await Promise.all(
+				inputs.coinTypes.map((coin) =>
+					this.Provider.Coin().fetchCoinMetadata(coin)
+				)
+			)
+		).map((metadata) => metadata.symbol);
+		return `Aftermath LP coin for ${
+			inputs.poolName
+		} Pool (${coinSymbols.reduce(
+			(acc, symbol, index) =>
+				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
+			""
+		)})`;
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Helpers
+	/////////////////////////////////////////////////////////////////////
+
+	// PRODUCTION: should this perform a dev inspect to pool registry instead of using string alone ?
+	public isLpCoin = (coin: CoinType) => {
+		return (
+			coin.split("::").length === 3 &&
+			coin.split("::")[1].includes("af_lp") &&
+			coin.split("::")[2].includes("AF_LP")
+		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Private Methods
+	/////////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////////
+	//// Event Types
+	/////////////////////////////////////////////////////////////////////
+
+	private tradeEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.pools.packages.events,
+			PoolsApi.constants.moduleNames.events,
+			PoolsApi.constants.eventNames.swap
+		);
+
+	private depositEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.pools.packages.events,
+			PoolsApi.constants.moduleNames.events,
+			PoolsApi.constants.eventNames.deposit
+		);
+
+	private withdrawEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.pools.packages.events,
+			PoolsApi.constants.moduleNames.events,
+			PoolsApi.constants.eventNames.withdraw
+		);
 }
