@@ -1,6 +1,7 @@
 import {
 	EventId,
 	ObjectId,
+	SuiAddress,
 	SuiTransactionBlockResponse,
 	TransactionDigest,
 } from "@mysten/sui.js";
@@ -53,11 +54,21 @@ export interface EventsWithCursor<EventType> {
 	events: EventType[];
 	nextCursor: EventId | null;
 }
+
 export interface Event {
 	type: AnyObjectType;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }
+
+export interface EventsInputs {
+	cursor?: EventId;
+	limit?: number;
+}
+
+export type UserEventsInputs = EventsInputs & {
+	walletAddress: SuiAddress;
+};
 
 /////////////////////////////////////////////////////////////////////
 //// Objects
@@ -79,6 +90,11 @@ export interface DynamicFieldsWithCursor {
 export interface DynamicFieldObjectsWithCursor<ObjectType> {
 	dynamicFieldObjects: ObjectType[];
 	nextCursor: ObjectId | null;
+}
+
+export interface DynamicFieldsInputs {
+	cursor?: ObjectId;
+	limit?: number;
 }
 
 /////////////////////////////////////////////////////////////////////

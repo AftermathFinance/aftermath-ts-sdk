@@ -50,7 +50,7 @@ export class DeepBookApiHelpers {
 	/////////////////////////////////////////////////////////////////////
 
 	constructor(private readonly Provider: AftermathApi) {
-		const deepBook = this.Provider.addresses.externalRouter?.deepBook;
+		const deepBook = this.Provider.addresses.router?.deepBook;
 		const pools = this.Provider.addresses.pools;
 		const referralVault = this.Provider.addresses.referralVault;
 
@@ -78,8 +78,8 @@ export class DeepBookApiHelpers {
 	public fetchAllPartialPools = async (): Promise<
 		PartialDeepBookPoolObject[]
 	> => {
-		const objectIds = await this.Provider.Events().fetchAllEvents(
-			(cursor, limit) =>
+		const objectIds = await this.Provider.Events().fetchAllEvents({
+			fetchEventsFunc: (eventsInputs) =>
 				this.Provider.Events().fetchCastEventsWithCursor<
 					EventOnChain<{
 						pool_id: ObjectId;
@@ -91,15 +91,16 @@ export class DeepBookApiHelpers {
 						};
 					}>,
 					PartialDeepBookPoolObject
-				>(
-					{
+				>({
+					...eventsInputs,
+					query: {
 						MoveEventType: EventsApiHelpers.createEventType(
 							this.addresses.deepBook.packages.clob,
 							DeepBookApiHelpers.constants.moduleNames.clob,
 							"PoolCreated"
 						),
 					},
-					(eventOnChain) => {
+					eventFromEventOnChain: (eventOnChain) => {
 						return {
 							objectId: eventOnChain.parsedJson.pool_id,
 							baseCoin:
@@ -108,10 +109,8 @@ export class DeepBookApiHelpers {
 								"0x" + eventOnChain.parsedJson.quote_asset.name,
 						};
 					},
-					cursor,
-					limit
-				)
-		);
+				}),
+		});
 
 		return objectIds;
 	};
@@ -126,23 +125,40 @@ export class DeepBookApiHelpers {
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
 	}) /* (Coin<BaseAsset>, Coin<QuoteAsset>, u64 (amountFilled), u64 (amountOut)) */ => {
-		const { tx, coinInId } = inputs;
+		const {
+			tx,
+			coinInId,
+			tradePotato,
+			isFirstSwapForPath,
+			isLastSwapForPath,
+		} = inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.deepBook.packages.wrapper,
 				DeepBookApiHelpers.constants.moduleNames.wrapper,
-				"swap_exact_base_for_quote_ktc"
+				"swap_exact_base_for_quote"
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.object(Sui.constants.addresses.suiClockId),
+
+				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
-				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.object(Sui.constants.addresses.suiClockId),
+
+				// potato
+				tradePotato,
+				tx.pure(isFirstSwapForPath, "bool"),
+				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -153,8 +169,18 @@ export class DeepBookApiHelpers {
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
 	}) /* (Coin<QuoteAsset>, Coin<BaseAsset>, u64 (amountFilled), u64 (amountOut)) */ => {
-		const { tx, coinInId } = inputs;
+		const {
+			tx,
+			coinInId,
+			tradePotato,
+			isFirstSwapForPath,
+			isLastSwapForPath,
+		} = inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.deepBook.packages.wrapper,
@@ -164,12 +190,19 @@ export class DeepBookApiHelpers {
 			typeArguments: [inputs.coinOutType, inputs.coinInType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.object(Sui.constants.addresses.suiClockId),
+
+				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
-				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.object(Sui.constants.addresses.suiClockId),
+
+				// potato
+				tradePotato,
+				tx.pure(isFirstSwapForPath, "bool"),
+				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};

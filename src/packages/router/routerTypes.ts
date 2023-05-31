@@ -1,16 +1,20 @@
 import { SuiAddress } from "@mysten/sui.js";
 import {
+	AnyObjectType,
 	Balance,
+	BigIntAsString,
 	Percentage,
+	Event,
 	Slippage,
+	ApiEventsBody,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
-import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
 import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
 import { CetusPoolObject } from "../external/cetus/cetusTypes";
 import { TurbosPoolObject } from "../external/turbos/turbosTypes";
+import { EventOnChain } from "../../general/types/castingTypes";
 
 /////////////////////////////////////////////////////////////////////
 //// Name Only
@@ -54,16 +58,9 @@ export type RouterProtocolName =
 //// Synchronous Router Pools
 /////////////////////////////////////////////////////////////////////
 
-export type RouterSynchronousSerializablePool =
-	| PoolObject
-	| NojoPoolObject
-	| DeepBookPoolObject;
+export type RouterSynchronousSerializablePool = PoolObject | DeepBookPoolObject;
 
-const RouterSynchronousProtocolNames = [
-	"Aftermath",
-	"Nojo",
-	"DeepBook",
-] as const;
+const RouterSynchronousProtocolNames = ["Aftermath", "DeepBook"] as const;
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];
 
@@ -178,6 +175,20 @@ export interface RouterAsyncTradeResult {
 }
 
 /////////////////////////////////////////////////////////////////////
+//// Events
+/////////////////////////////////////////////////////////////////////
+
+export interface RouterTradeEvent extends Event {
+	trader: SuiAddress;
+	coinInType: AnyObjectType;
+	coinInAmount: Balance;
+	coinOutType: AnyObjectType;
+	coinOutAmount: Balance;
+	// referrer?: SuiAddress;
+	// externalFee?: RouterExternalFee;
+}
+
+/////////////////////////////////////////////////////////////////////
 //// API
 /////////////////////////////////////////////////////////////////////
 
@@ -231,3 +242,7 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 */
 	slippage: Slippage;
 }
+
+export type ApiRouterTradeEventsBody = ApiEventsBody & {
+	walletAddress: SuiAddress;
+};

@@ -9,7 +9,7 @@ import {
 } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
-import { CoinsToBalance, CoinType } from "../coin/coinTypes";
+import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
 import { TransactionArgument } from "@mysten/sui.js";
 
 // TODO: create LpCoinType ?
@@ -110,6 +110,7 @@ export interface PoolGraphDataTimeframe {
 export interface PoolCreationCoinInfo {
 	coinType: CoinType;
 	weight: PoolWeight;
+	decimals: CoinDecimal;
 	tradeFeeIn: PoolTradeFee;
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
@@ -171,6 +172,7 @@ export interface ApiCreatePoolBody {
 	coinsInfo: {
 		coinType: CoinType;
 		weight: number;
+		decimals: CoinDecimal;
 		tradeFeeIn: number;
 		initialDeposit: Balance;
 	}[];

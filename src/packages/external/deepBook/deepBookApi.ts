@@ -80,6 +80,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
+		tradePotato: TransactionArgument;
+		isFirstSwapForPath: boolean;
+		isLastSwapForPath: boolean;
 	}) /* (Coin<CoinIn>, Coin<CoinOut>, u64 (amountFilled), u64 (amountOut)) */ => {
 		const commandInputs = {
 			...inputs,

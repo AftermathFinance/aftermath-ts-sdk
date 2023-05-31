@@ -1,5 +1,4 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import {
 	Balance,
@@ -12,14 +11,12 @@ import {
 	Url,
 	RouterSerializableCompleteGraph,
 	RouterProtocolName,
+	UserEventsInputs,
 } from "../../../types";
-import { SuiAddress } from "@mysten/sui.js";
-import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
+import { EventId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
-import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
-import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
 import { TurbosApi } from "../../external/turbos/turbosApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
 
@@ -47,7 +44,6 @@ export class RouterApi {
 	/////////////////////////////////////////////////////////////////////
 
 	public Aftermath = () => new PoolsApi(this.Provider);
-	public Nojo = () => new NojoAmmApi(this.Provider);
 	public DeepBook = () => new DeepBookApi(this.Provider);
 	public Cetus = () => new CetusApi(this.Provider);
 	public Turbos = () => new TurbosApi(this.Provider);
@@ -123,12 +119,15 @@ export class RouterApi {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
-	}): Promise<SerializedTransaction> {
-		const tx = await this.Helpers.fetchTransactionForCompleteTradeRoute(
-			inputs
-		);
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
-			tx
-		);
+	}): Promise<TransactionBlock> {
+		return this.Helpers.fetchTransactionForCompleteTradeRoute(inputs);
+	}
+
+	/////////////////////////////////////////////////////////////////////
+	//// Events
+	/////////////////////////////////////////////////////////////////////
+
+	public async fetchTradeEvents(inputs: UserEventsInputs) {
+		return this.Helpers.SynchronousHelpers.fetchTradeEvents(inputs);
 	}
 }
