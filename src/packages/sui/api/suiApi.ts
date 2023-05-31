@@ -1,22 +1,16 @@
 import { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { SuiApiHelpers } from "./suiApiHelpers";
 
 export class SuiApi {
 	/////////////////////////////////////////////////////////////////////
 	//// Class Members
 	/////////////////////////////////////////////////////////////////////
 
-	public readonly Helpers;
-
 	/////////////////////////////////////////////////////////////////////
 	//// Constructor
 	/////////////////////////////////////////////////////////////////////
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-		this.Helpers = new SuiApiHelpers(Provider);
-	}
+	constructor(private readonly Provider: AftermathApi) {}
 
 	/////////////////////////////////////////////////////////////////////
 	//// Inspections

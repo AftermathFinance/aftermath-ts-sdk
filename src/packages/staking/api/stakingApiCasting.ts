@@ -7,7 +7,6 @@ import {
 	UnstakePosition,
 	UnstakeRequestEvent,
 	UnstakeSuccessEvent,
-	isStakeEvent,
 } from "../../../types";
 import {
 	AfSuiMintedEventOnChain,
@@ -17,7 +16,6 @@ import {
 	UnstakeRequestEventOnChain,
 	UnstakeSuccessEventOnChain,
 } from "./stakingApiCastingTypes";
-import { StakingApiHelpers } from "./stakingApiHelpers";
 
 export class StakingApiCasting {
 	/////////////////////////////////////////////////////////////////////

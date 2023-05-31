@@ -76,7 +76,7 @@ class CetusRouterPool implements RouterPoolInterface {
 		return inputs.provider
 			.Router()
 			.Cetus()
-			.Helpers.tradeTx({
+			.tradeTx({
 				...inputs,
 				coinInId: inputs.coinIn,
 				pool: this.pool,

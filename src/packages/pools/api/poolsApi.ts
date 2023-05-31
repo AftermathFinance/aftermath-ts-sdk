@@ -353,7 +353,7 @@ export class PoolsApi {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+			this.Provider.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
@@ -400,7 +400,7 @@ export class PoolsApi {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+			this.Provider.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
@@ -458,7 +458,7 @@ export class PoolsApi {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+			this.Provider.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
@@ -509,7 +509,7 @@ export class PoolsApi {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.updateReferrerTx({
+			this.Provider.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});

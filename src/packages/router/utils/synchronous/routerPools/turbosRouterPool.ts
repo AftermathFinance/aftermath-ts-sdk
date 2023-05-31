@@ -81,7 +81,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 		return inputs.provider
 			.Router()
 			.Turbos()
-			.Helpers.tradeTx({
+			.tradeTx({
 				...inputs,
 				coinInId: inputs.coinIn,
 				pool: this.pool,
