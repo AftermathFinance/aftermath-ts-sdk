@@ -9,6 +9,7 @@ import {
 import { fromB64 } from "@mysten/bcs";
 import PriorityQueue from "priority-queue-typescript";
 import { PerpetualsOrderCasted } from "../src/types";
+import { Aftermath, AftermathApi } from "../src/general/providers";
 
 export const user1PrivateKey = "AFN+bYPrQaSnOtC0Jbo6C+EZQ8INYpcOfGvYEBLOv4La";
 export const user2PrivateKey = "AHMEXsGDQDUrGA0Q9pyBbwZn7ZdwRQJ1N66AY8BuWcuA";
@@ -26,14 +27,14 @@ export const MARKET_ID_2 = BigInt(1);
 
 export const getSigner = (
 	private_key: string,
-	provider: JsonRpcProvider
+	providerApi: AftermathApi
 ): RawSigner => {
 	const decoded_array_buffer = fromB64(private_key); // UInt8Array
 	const decoded_array = Array.from(decoded_array_buffer);
 	decoded_array.shift(); // shift the scheme flag byte which should be 0 since it is ed25519
 	const seed = Uint8Array.from(decoded_array);
 	const keypair = Ed25519Keypair.fromSecretKey(seed);
-	return new RawSigner(keypair, provider);
+	return new RawSigner(keypair, providerApi.provider);
 };
 
 export const fromOraclePriceToOrderbookPrice = (
@@ -52,7 +53,9 @@ export const checkPQ = (
 	else return checkPQBid(pq);
 };
 
-export const checkPQAsk = (pq: PriorityQueue<PerpetualsOrderCasted>): boolean => {
+export const checkPQAsk = (
+	pq: PriorityQueue<PerpetualsOrderCasted>
+): boolean => {
 	let currentOrder = pq.poll()!;
 	while (pq.size() !== 0) {
 		let nextOrder = pq.poll()!;
@@ -67,7 +70,9 @@ export const checkPQAsk = (pq: PriorityQueue<PerpetualsOrderCasted>): boolean =>
 	return true;
 };
 
-export const checkPQBid = (pq: PriorityQueue<PerpetualsOrderCasted>): boolean => {
+export const checkPQBid = (
+	pq: PriorityQueue<PerpetualsOrderCasted>
+): boolean => {
 	let currentOrder = pq.poll()!;
 	while (pq.size() !== 0) {
 		let nextOrder = pq.poll()!;

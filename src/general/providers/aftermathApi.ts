@@ -21,6 +21,7 @@ import { RouterProtocolName } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
+import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 
 export class AftermathApi {
 	/////////////////////////////////////////////////////////////////////
@@ -115,4 +116,5 @@ export class AftermathApi {
 	public Staking = () => new StakingApi(this);
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
+	public Perpetuals = () => new PerpetualsApi(this);
 }

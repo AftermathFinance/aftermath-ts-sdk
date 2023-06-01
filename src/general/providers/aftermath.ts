@@ -12,6 +12,7 @@ import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
 import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
 import { HistoricalData } from "../historicalData/historicalData";
+import { Perpetuals } from "../../packages/perpetuals";
 
 /**
  * @class Aftermath Provider
@@ -63,6 +64,7 @@ export class Aftermath extends Caller {
 	public Router = () => new Router(this.network);
 	public NftAmm = () => new NftAmm(this.network);
 	public ReferralVault = () => new ReferralVault(this.network);
+	public Perpetuals = () => new Perpetuals(this.network);
 
 	/////////////////////////////////////////////////////////////////////
 	//// General
