@@ -27,7 +27,9 @@ describe("Perpetuals Tests", () => {
 			fullnode: "http://127.0.0.1:9000",
 		});
 		const provider = new JsonRpcProvider(connection);
-		const aftermathApi = new AftermathApi(provider, perpetualsConfig);
+		const aftermathApi = new AftermathApi(provider, {
+			perpetuals: perpetualsConfig,
+		});
 
 		// Create package provider
 
