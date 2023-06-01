@@ -38,6 +38,7 @@ export interface PoolCoin {
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
 	withdrawFee: PoolWithdrawFee;
+	decimalScalar: bigint;
 }
 
 export interface PoolObject extends Object {
@@ -48,6 +49,7 @@ export interface PoolObject extends Object {
 	illiquidLpCoinSupply: Balance;
 	flatness: PoolFlatness;
 	coins: PoolCoins;
+	normalizedDecimals: bigint;
 }
 
 // =========================================================================

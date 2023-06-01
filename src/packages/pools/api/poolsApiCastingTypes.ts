@@ -21,13 +21,15 @@ export interface PoolFieldsOnChain {
 	lp_supply: SupplyOnChain;
 	illiquid_lp_supply: BigIntAsString;
 	type_names: CoinType[];
-	balances: BigIntAsString[];
+	normalized_balances: BigIntAsString[];
 	weights: BigIntAsString[];
 	flatness: BigIntAsString;
 	fees_swap_in: BigIntAsString[];
 	fees_swap_out: BigIntAsString[];
 	fees_deposit: BigIntAsString[];
 	fees_withdraw: BigIntAsString[];
+	normalized_decimals: BigIntAsString;
+	decimal_scalars: BigIntAsString[];
 }
 
 // =========================================================================
