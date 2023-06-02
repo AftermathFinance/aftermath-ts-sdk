@@ -29,9 +29,29 @@ export class FarmsStakedPosition extends Caller {
 	//  Public
 	// =========================================================================
 
-	// =========================================================================
-	//  Calculations
-	// =========================================================================
+	/////////////////////////////////////////////////////////////////////
+	//// Status
+	/////////////////////////////////////////////////////////////////////
+
+	public isLocked = (): boolean => {
+		const nowTimestamp = Date.now();
+		return this.unlockTimestamp() > nowTimestamp;
+	};
+
+	public isLockDuration = (): boolean => {
+		return this.stakedPosition.lockDurationMs > 0;
+	};
+
+	public unlockTimestamp = (): number => {
+		return (
+			this.stakedPosition.lockStartTimestamp +
+			this.stakedPosition.lockDurationMs
+		);
+	};
+
+	/////////////////////////////////////////////////////////////////////
+	//// Calculations
+	/////////////////////////////////////////////////////////////////////
 
 	public rewardsEarned = (inputs: { coinType: CoinType }) => {
 		const rewardCoin = this.getRewardCoin(inputs.coinType);
