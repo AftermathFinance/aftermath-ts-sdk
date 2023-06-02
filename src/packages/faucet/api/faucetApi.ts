@@ -133,6 +133,23 @@ export class FaucetApi {
 		return tx;
 	};
 
+	public fetchRequestCustomCoinAmountTx = async (inputs: {
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		amount: bigint;
+	}): Promise<TransactionBlock> => {
+		const { walletAddress, coinType, amount } = inputs;
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		this.requestCoinAmountTx({
+			tx,
+			coinType,
+			amount,
+		});
+
+		return tx;
+	};
 	/////////////////////////////////////////////////////////////////////
 	//// Transcations
 	/////////////////////////////////////////////////////////////////////

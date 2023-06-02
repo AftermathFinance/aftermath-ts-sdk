@@ -38,6 +38,7 @@
 		"@pythnetwork/pyth-evm-js": "^1.16.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",
+		"node-fetch": "^3.3.1",
 		"npm": "^9.6.2",
 		"priority-queue-typescript": "^1.0.1"
 	},

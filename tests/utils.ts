@@ -11,19 +11,19 @@ import PriorityQueue from "priority-queue-typescript";
 import { PerpetualsOrderCasted } from "../src/types";
 import { Aftermath, AftermathApi } from "../src/general/providers";
 
-export const user1PrivateKey = "AFN+bYPrQaSnOtC0Jbo6C+EZQ8INYpcOfGvYEBLOv4La";
-export const user2PrivateKey = "AHMEXsGDQDUrGA0Q9pyBbwZn7ZdwRQJ1N66AY8BuWcuA";
-export const user3PrivateKey = "AOaWqbhk0ot+0mvHlmPixkNH1NbX+qc9QNGKHe5QD8hL";
-export const user4PrivateKey = "AGc10rcDgxkE1USHaLoDrwvoObCRhMvl1agEb6a5ShVY";
-export const adminPrivateKey = "AE6Ug8sqXgD7osbbb3SwrE7ELWbA825f47Le7BdeTB07";
+export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";
+export const user1PrivateKey = "AOzplQlAK2Uznvog7xmcMtlFC+DfuJx3axo9lfyI876G";
+export const user2PrivateKey = "AI1I9i3mk2e1kAjPnB7fKiqquxc1OjjAkkpQPIk9Id5Q";
+export const user3PrivateKey = "AIUAgL5jYMzf0JPCmc263Ou6tH5Z/HuAdtWFFUiz8Zc0";
+export const user4PrivateKey = "AAu4ySMvq2wygxl/Ze6AGgkYfxg+rzUElj7UxxI6NHBI";
 export const ASK = true;
 export const BID = false;
 export const LOT_SIZE = BigInt(1000000);
 export const TICK_SIZE = BigInt(1000);
 export const ONE_B9 = BigInt(1_000_000_000); // 9 decimal places
 export const ACCOUNT_ID = BigInt(0);
-export const MARKET_ID_1 = BigInt(0);
-export const MARKET_ID_2 = BigInt(1);
+export const MARKET_ID0 = BigInt(0);
+export const MARKET_ID1 = BigInt(1);
 
 export const getSigner = (
 	private_key: string,
