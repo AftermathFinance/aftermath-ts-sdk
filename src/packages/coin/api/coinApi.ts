@@ -9,7 +9,7 @@ import {
 } from "@mysten/sui.js";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Balance, CoinType } from "../../../types";
+import { Balance, CoinMetadaWithInfo, CoinType } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
@@ -29,14 +29,17 @@ export class CoinApi {
 
 	public fetchCoinMetadata = async (
 		coin: CoinType
-	): Promise<CoinMetadata> => {
+	): Promise<CoinMetadaWithInfo> => {
 		try {
 			const coinMetadata = await this.Provider.provider.getCoinMetadata({
 				coinType: Helpers.stripLeadingZeroesFromType(coin),
 			});
 			if (coinMetadata === null) throw new Error("coin metadata is null");
 
-			return coinMetadata;
+			return {
+				...coinMetadata,
+				isGenerated: false,
+			};
 		} catch (error) {
 			if (this.Provider.Pools().isLpCoin(coin)) {
 				return this.createLpCoinMetadata({ lpCoinType: coin });
@@ -55,6 +58,7 @@ export class CoinApi {
 					.join(" "),
 				decimals: 9,
 				iconUrl: null,
+				isGenerated: true,
 			};
 		}
 	};
@@ -171,7 +175,7 @@ export class CoinApi {
 	// NOTE: this is temporary until LP coin metadata issue is solved on Sui
 	private createLpCoinMetadata = async (inputs: {
 		lpCoinType: CoinType;
-	}): Promise<CoinMetadata> => {
+	}): Promise<CoinMetadaWithInfo> => {
 		try {
 			const PoolsApi = this.Provider.Pools();
 
@@ -209,6 +213,7 @@ export class CoinApi {
 				name: `Af Lp ${coinName}`,
 				decimals: Pools.constants.decimals.lpCoinDecimals,
 				iconUrl: null,
+				isGenerated: true,
 			};
 		} catch (e) {
 			return {
@@ -218,6 +223,7 @@ export class CoinApi {
 				name: "Af Lp",
 				decimals: Pools.constants.decimals.lpCoinDecimals,
 				iconUrl: null,
+				isGenerated: true,
 			};
 		}
 	};

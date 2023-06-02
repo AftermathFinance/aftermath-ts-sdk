@@ -1,6 +1,7 @@
 import {
 	Balance,
 	CoinDecimal,
+	CoinMetadaWithInfo,
 	CoinPriceInfo,
 	CoinsToBalance,
 	CoinsToDecimals,
@@ -35,7 +36,7 @@ export class Coin extends Caller {
 	public readonly coinTypeSymbol: string;
 	public readonly innerCoinType: string;
 
-	public metadata: CoinMetadata | undefined;
+	public metadata: CoinMetadaWithInfo | undefined;
 	public priceInfo: CoinPriceInfo | undefined;
 
 	// =========================================================================
@@ -87,18 +88,18 @@ export class Coin extends Caller {
 		return coinsToDecimals;
 	}
 
-	public async getCoinMetadata(coin?: CoinType): Promise<CoinMetadata> {
+	public async getCoinMetadata(coin?: CoinType): Promise<CoinMetadaWithInfo> {
 		if (this.metadata) return this.metadata;
 
 		const coinType = this.coinType ?? coin;
 		if (!coinType) throw new Error("no valid coin type");
 
-		const metadata = await this.fetchApi<CoinMetadata>(coinType);
+		const metadata = await this.fetchApi<CoinMetadaWithInfo>(coinType);
 		this.setCoinMetadata(metadata);
 		return metadata;
 	}
 
-	public setCoinMetadata(metadata: CoinMetadata) {
+	public setCoinMetadata(metadata: CoinMetadaWithInfo) {
 		this.metadata = metadata;
 	}
 

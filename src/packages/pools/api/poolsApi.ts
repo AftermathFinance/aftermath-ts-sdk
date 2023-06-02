@@ -1334,6 +1334,7 @@ export class PoolsApi {
 		coinTypes: CoinType[];
 	}) => {
 		// TODO: do all of this a little bit cleaner
+		// TODO: should metadata be passed into pool creation func ?
 		const coinSymbols = (
 			await Promise.all(
 				inputs.coinTypes.map((coin) =>

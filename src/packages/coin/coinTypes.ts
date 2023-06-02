@@ -1,3 +1,4 @@
+import { CoinMetadata } from "@mysten/sui.js";
 import { Balance, Percentage } from "../../general/types/generalTypes";
 
 // =========================================================================
@@ -46,3 +47,11 @@ export interface CoinPriceInfo {
 	price: number;
 	priceChange24HoursPercentage: Percentage;
 }
+
+/////////////////////////////////////////////////////////////////////
+//// Coin Metadata Extension
+/////////////////////////////////////////////////////////////////////
+
+export type CoinMetadaWithInfo = CoinMetadata & {
+	isGenerated?: boolean;
+};
