@@ -411,7 +411,7 @@ export class PerpetualsApi {
 				tx.object(this.addresses.objects.adminCapability),
 				// TODO: create a Map<coinType, Exchange> and get the correspondent accountManager
 				// Same for all the other functions
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
 				tx.pure(marketId),
 				tx.pure(marginRatioInitial),
 				tx.pure(marginRatioMaintenance),
