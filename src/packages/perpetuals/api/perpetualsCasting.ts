@@ -43,7 +43,6 @@ import {
 } from "../utils/helpers";
 
 export class PerpetualsCasting {
-
 	/////////////////////////////////////////////////////////////////////
 	//// Account Manager
 	/////////////////////////////////////////////////////////////////////
@@ -54,7 +53,7 @@ export class PerpetualsCasting {
 		return {
 			objectId: getObjectId(data),
 			maxPositionsPerAccount: objectFields.max_positions_per_account,
-			maxOpenOrdersPerPosition: objectFields.max_open_orders_per_position
+			maxOpenOrdersPerPosition: objectFields.max_open_orders_per_position,
 		};
 	};
 
@@ -70,7 +69,7 @@ export class PerpetualsCasting {
 			feesAccrued: objectFields.fees_accrued,
 			netTransferFromIfToVault: objectFields.net_transfer_from_if,
 			minOrderUsdValue: objectFields.min_order_usd_value,
-			marketIds: objectFields.market_ids
+			marketIds: objectFields.market_ids,
 		};
 	};
 
@@ -79,9 +78,12 @@ export class PerpetualsCasting {
 	): PerpetualsMarketParamsDynamicField => {
 		if (!isMarketManagerParamsKeyType(dynamicField.data.type))
 			throw new Error("not params key type");
-		const paramsField = dynamicField as PerpetualsMarketParamsDynamicFieldOnChain;
+		const paramsField =
+			dynamicField as PerpetualsMarketParamsDynamicFieldOnChain;
 		return {
-			value: PerpetualsCasting.marketParamsFromRawData(paramsField.data.fields.value.fields),
+			value: PerpetualsCasting.marketParamsFromRawData(
+				paramsField.data.fields.value.fields
+			),
 		};
 	};
 
@@ -90,10 +92,13 @@ export class PerpetualsCasting {
 	): PerpetualsMarketStateDynamicField => {
 		if (!isMarketManagerStateKeyType(dynamicField.data.type))
 			throw new Error("not state key type");
-		const stateField = dynamicField as PerpetualsMarketManagerStateDynamicFieldOnChain;
+		const stateField =
+			dynamicField as PerpetualsMarketManagerStateDynamicFieldOnChain;
 		return {
-			value: PerpetualsCasting.marketStateFromRawData(stateField.data.fields),
-		}
+			value: PerpetualsCasting.marketStateFromRawData(
+				stateField.data.fields
+			),
+		};
 	};
 
 	public static marketManagerOrderbookDynamicFieldFromOnChain = async (
@@ -106,10 +111,12 @@ export class PerpetualsCasting {
 		return {
 			objectId: orderbookField.data.fields.id.id,
 			value: PerpetualsCasting.orderbookFromRawData(orderbookField.data),
-		}
+		};
 	};
 
-	public static marketParamsFromRawData = (data: any): PerpetualsMarketParams => {
+	public static marketParamsFromRawData = (
+		data: any
+	): PerpetualsMarketParams => {
 		return {
 			marginRatioInitial: data.margin_ratio_initial,
 			marginRatioMaintenance: data.margin_ratio_maintenance,
@@ -122,11 +129,13 @@ export class PerpetualsCasting {
 			liquidationFee: data.liquidation_fee,
 			forceCancelFee: data.force_cancel_fee,
 			insuranceFundFee: data.insurance_fund_fee,
-			priceImpactFactor: data.price_impact_factor
+			priceImpactFactor: data.price_impact_factor,
 		};
 	};
 
-	public static marketStateFromRawData = (data: any): PerpetualsMarketState => {
+	public static marketStateFromRawData = (
+		data: any
+	): PerpetualsMarketState => {
 		return {
 			cumulativeFundingRate: data.cum_funding_rate,
 			fundingRateTimestamp: Number(data.funding_rate_ts),
@@ -136,18 +145,24 @@ export class PerpetualsCasting {
 			lastMarkPrice: data.last_mark_price,
 			lastMarkTwap: data.last_mark_price,
 			lastMarkTimestamp: Number(data.last_mark_ts),
-			openInterest: data.open_interest
+			openInterest: data.open_interest,
 		};
 	};
 
 	/////////////////////////////////////////////////////////////////////
 	//// Orderbook
 	/////////////////////////////////////////////////////////////////////
-	public static critBitTreeFromAny = (data: any): PerpetualsCritBitTree<PerpetualsOrder> => {
+	public static critBitTreeFromAny = (
+		data: any
+	): PerpetualsCritBitTree<PerpetualsOrder> => {
 		return {
 			root: BigInt(data.fields.root),
-			innerNode: PerpetualsCasting.innerNodeFromAny(data.fields.inner_nodes),
-			outerNode: PerpetualsCasting.outerNodeFromAny(data.fields.outer_nodes),
+			innerNode: PerpetualsCasting.innerNodeFromAny(
+				data.fields.inner_nodes
+			),
+			outerNode: PerpetualsCasting.outerNodeFromAny(
+				data.fields.outer_nodes
+			),
 		};
 	};
 
@@ -164,7 +179,9 @@ export class PerpetualsCasting {
 		return innerNodes;
 	};
 
-	public static outerNodeFromAny = (data: any): PerpetualsOuterNode<PerpetualsOrder>[] => {
+	public static outerNodeFromAny = (
+		data: any
+	): PerpetualsOuterNode<PerpetualsOrder>[] => {
 		const outerNodes: PerpetualsOuterNode<PerpetualsOrder>[] = [];
 		for (const node of data) {
 			outerNodes.push({
@@ -212,7 +229,9 @@ export class PerpetualsCasting {
 			const orderId = node.key;
 			const order = node.value;
 			const priceOfOrder = price(orderId);
-			const counter = direction ? counterAsk(orderId) : counterBid(orderId);
+			const counter = direction
+				? counterAsk(orderId)
+				: counterBid(orderId);
 			const insertedOrder = {
 				user: order.user,
 				accountId: order.accountId,
@@ -228,14 +247,16 @@ export class PerpetualsCasting {
 	public static priorityQueuesOfOrdersFromOrderbook = (
 		orderbook: PerpetualsOrderbook
 	): PriorityQueue<PerpetualsOrderCasted>[] => {
-		const priorityQueueOfAskOrders = PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
-			orderbook.asks,
-			ASK
-		);
-		const priorityQueueOfBidOrders = PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
-			orderbook.bids,
-			BID
-		);
+		const priorityQueueOfAskOrders =
+			PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
+				orderbook.asks,
+				ASK
+			);
+		const priorityQueueOfBidOrders =
+			PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
+				orderbook.bids,
+				BID
+			);
 		return [priorityQueueOfAskOrders, priorityQueueOfBidOrders];
 	};
 
@@ -262,5 +283,4 @@ export class PerpetualsCasting {
 			timestamp: objectFields.timestamp,
 		};
 	};
-
 }

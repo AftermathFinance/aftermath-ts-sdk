@@ -1,8 +1,8 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
-    AnyObjectType,
+	AnyObjectType,
 	Balance,
-    Timestamp
+	Timestamp,
 } from "../../general/types/generalTypes";
 
 export type IFixed = bigint;
@@ -11,92 +11,92 @@ export type IFixed = bigint;
 //  Clearing House
 // =========================================================================
 export interface PerpetualsAdminCapability {
-	objectId: ObjectId,
+	objectId: ObjectId;
 }
 
 export interface PerpetualsRegistry {
-	objectId: ObjectId,
-	activeCollaterals: string[],
+	objectId: ObjectId;
+	activeCollaterals: string[];
 }
 
 export interface PerpetualsInsuranceFund {
-	objectId: ObjectId,
-	balance: Balance,
+	objectId: ObjectId;
+	balance: Balance;
 }
 
 export interface PerpetualsVault {
-	objectId: ObjectId,
-	balance: Balance,
+	objectId: ObjectId;
+	balance: Balance;
 }
 
 // =========================================================================
 //  Account Manager
 // =========================================================================
 export interface PerpetualsAccountManager {
-    objectId: ObjectId,
-    maxPositionsPerAccount: bigint,
-    maxOpenOrdersPerPosition: bigint,
+	objectId: ObjectId;
+	maxPositionsPerAccount: bigint;
+	maxOpenOrdersPerPosition: bigint;
 }
 
 export interface PerpetualsAccount {
-    collateral: IFixed,
-    marketIds: bigint[],
-    positions: PerpetualsPosition[],
-    isBeingLiquidated: boolean
+	collateral: IFixed;
+	marketIds: bigint[];
+	positions: PerpetualsPosition[];
+	isBeingLiquidated: boolean;
 }
 
 export interface PerpetualsPosition {
-    baseAssetAmount: IFixed,
-    quoteAssetNotionalAmount: IFixed,
-    lastCumFunding: IFixed,
-    asks: PerpetualsCritBitTree<bigint>,
-    bids: PerpetualsCritBitTree<bigint>,
-    asksQuantity: IFixed,
-    bidsQuantity: IFixed,
+	baseAssetAmount: IFixed;
+	quoteAssetNotionalAmount: IFixed;
+	lastCumFunding: IFixed;
+	asks: PerpetualsCritBitTree<bigint>;
+	bids: PerpetualsCritBitTree<bigint>;
+	asksQuantity: IFixed;
+	bidsQuantity: IFixed;
 }
 
 // =========================================================================
 //  Market Manager
 // =========================================================================
 export interface PerpetualsMarketManager {
-    objectId: ObjectId,
-    feesAccrued: IFixed,
-    netTransferFromIfToVault: IFixed,
-    minOrderUsdValue: IFixed,
-    marketIds: bigint[]
+	objectId: ObjectId;
+	feesAccrued: IFixed;
+	netTransferFromIfToVault: IFixed;
+	minOrderUsdValue: IFixed;
+	marketIds: bigint[];
 }
 
 export interface PerpetualsMarketParams {
-    marginRatioInitial: IFixed
-    marginRatioMaintenance: IFixed,
-    baseAssetSymbol: string,
-    fundingFrequencyMs: bigint,
-    fundingPeriodMs: bigint,
-    twapPeriodMs: bigint,
-    makerFee: IFixed,
-    takerFee: IFixed,
-    liquidationFee: IFixed,
-    forceCancelFee: IFixed,
-    insuranceFundFee: IFixed,
-    priceImpactFactor: IFixed,
+	marginRatioInitial: IFixed;
+	marginRatioMaintenance: IFixed;
+	baseAssetSymbol: string;
+	fundingFrequencyMs: bigint;
+	fundingPeriodMs: bigint;
+	twapPeriodMs: bigint;
+	makerFee: IFixed;
+	takerFee: IFixed;
+	liquidationFee: IFixed;
+	forceCancelFee: IFixed;
+	insuranceFundFee: IFixed;
+	priceImpactFactor: IFixed;
 }
 
 export interface PerpetualsMarketState {
-    cumulativeFundingRate: IFixed,
-    fundingRateTimestamp: Timestamp,
-    lastIndexPrice: IFixed,
-    lastIndexTwap: IFixed,
-    lastIndexTimestamp: Timestamp,
-    lastMarkPrice: IFixed,
-    lastMarkTwap: IFixed,
-    lastMarkTimestamp: Timestamp,
-    openInterest: IFixed
+	cumulativeFundingRate: IFixed;
+	fundingRateTimestamp: Timestamp;
+	lastIndexPrice: IFixed;
+	lastIndexTwap: IFixed;
+	lastIndexTimestamp: Timestamp;
+	lastMarkPrice: IFixed;
+	lastMarkTwap: IFixed;
+	lastMarkTimestamp: Timestamp;
+	openInterest: IFixed;
 }
 
 export interface PerpetualsMarginRatioProposal {
-    maturity: bigint,
-    marginRatioInitial: IFixed
-    marginRatioMaintenance: IFixed,
+	maturity: bigint;
+	marginRatioInitial: IFixed;
+	marginRatioMaintenance: IFixed;
 }
 
 export interface PerpetualsMarketManagerDynamicFields {
@@ -180,28 +180,28 @@ export interface PerpetualsMarketOrderbookDynamicFieldOnChain {
 //  Orderbook
 // =========================================================================
 export interface PerpetualsInnerNode {
-    criticalBit: bigint,
-    parentIndex: bigint,
-    leftChildIndex: bigint,
-    rightChildIndex: bigint,
+	criticalBit: bigint;
+	parentIndex: bigint;
+	leftChildIndex: bigint;
+	rightChildIndex: bigint;
 }
 
 export interface PerpetualsOuterNode<T> {
-    key: IFixed,
-    value: T,
-    parentIndex: bigint,
+	key: IFixed;
+	value: T;
+	parentIndex: bigint;
 }
 
 export interface PerpetualsCritBitTree<T> {
-    root: bigint,
-    innerNode: PerpetualsInnerNode[],
-    outerNode: PerpetualsOuterNode<T>[],
+	root: bigint;
+	innerNode: PerpetualsInnerNode[];
+	outerNode: PerpetualsOuterNode<T>[];
 }
 
 export interface PerpetualsOrder {
-    user: SuiAddress,
-	accountId: bigint,
-	size: bigint,
+	user: SuiAddress;
+	accountId: bigint;
+	size: bigint;
 }
 
 export interface PerpetualsOrderCasted {
@@ -213,31 +213,31 @@ export interface PerpetualsOrderCasted {
 }
 
 export interface PerpetualsOrderbook {
-    objectId: ObjectId,
-    lotSize: bigint,
-    tickSize: bigint,
-    asks: PerpetualsCritBitTree<PerpetualsOrder>,
-    bids: PerpetualsCritBitTree<PerpetualsOrder>,
-	minAsk: bigint,
-	minBid: bigint,
-    counter: bigint,
+	objectId: ObjectId;
+	lotSize: bigint;
+	tickSize: bigint;
+	asks: PerpetualsCritBitTree<PerpetualsOrder>;
+	bids: PerpetualsCritBitTree<PerpetualsOrder>;
+	minAsk: bigint;
+	minBid: bigint;
+	counter: bigint;
 }
 
 // =========================================================================
 //  Oracle
 // =========================================================================
 export interface PerpetualsPriceFeed {
-    objectId: ObjectId,
-    symbol: string,
-    price: IFixed,
-    decimal: bigint,
-    timestamp: Timestamp
+	objectId: ObjectId;
+	symbol: string;
+	price: IFixed;
+	decimal: bigint;
+	timestamp: Timestamp;
 }
 
 export interface PerpetualsPriceFeedStorage {
-    objectId: ObjectId,
+	objectId: ObjectId;
 }
 
 export interface PerpetualsAuthorityCap {
-    objectId: ObjectId,
+	objectId: ObjectId;
 }
