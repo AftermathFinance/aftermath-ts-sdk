@@ -1,6 +1,7 @@
 import { Caller } from "../../general/utils/caller";
 import {
 	CoinType,
+	CoinsToBalance,
 	FarmsStakedPositionObject,
 	SuiNetwork,
 	Url,
@@ -46,6 +47,16 @@ export class FarmsStakedPosition extends Caller {
 		return (
 			this.stakedPosition.lockStartTimestamp +
 			this.stakedPosition.lockDurationMs
+		);
+	};
+
+	public rewardCoinsToClaimableBalance = (): CoinsToBalance => {
+		return this.stakedPosition.rewardCoins.reduce(
+			(acc, coin) => ({
+				...acc,
+				[coin.coinType]: coin.rewardsAccumulated - coin.rewardsDebt,
+			}),
+			{} as CoinsToBalance
 		);
 	};
 
