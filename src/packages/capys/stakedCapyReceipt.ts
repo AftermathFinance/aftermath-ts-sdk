@@ -13,9 +13,9 @@ import { Caller } from "../../general/utils/caller";
 import { TransactionBlock } from "@mysten/sui.js";
 
 export class StakedCapyReceipt extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(
 		public readonly stakedCapy: Capy,
@@ -26,17 +26,17 @@ export class StakedCapyReceipt extends Caller {
 		this.stakedCapyReceipt = stakedCapyReceipt;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	public async getFeesEarned(): Promise<StakedCapyFeesEarned> {
 		return this.fetchApi(`fees-earned/${this.stakedCapyReceipt.objectId}`);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	public async getUnstakeCapyTransaction() {
 		return this.fetchApiTransaction<ApiUnstakeCapyBody>(

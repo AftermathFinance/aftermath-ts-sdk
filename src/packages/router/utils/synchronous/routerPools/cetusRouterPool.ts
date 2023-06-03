@@ -17,9 +17,9 @@ import { AftermathApi } from "../../../../../general/providers";
 import { CetusPoolObject } from "../../../../external/cetus/cetusTypes";
 
 class CetusRouterPool implements RouterPoolInterface {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(pool: CetusPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
@@ -28,9 +28,9 @@ class CetusRouterPool implements RouterPoolInterface {
 		this.coinTypes = [pool.coinTypeA, pool.coinTypeB];
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	readonly protocolName = "Cetus";
 	readonly expectedGasCostPerHop = BigInt(9_000_000); // 0.009 SUI
@@ -41,9 +41,9 @@ class CetusRouterPool implements RouterPoolInterface {
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	getSpotPrice = (_: { coinInType: CoinType; coinOutType: CoinType }) => {
 		throw new Error("uncallable");

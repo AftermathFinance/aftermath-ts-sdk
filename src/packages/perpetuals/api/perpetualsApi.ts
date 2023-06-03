@@ -13,9 +13,9 @@ import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 
 export class PerpetualsApi {
-	/////////////////////////////////////////////////////////////////////
-	//// Class Members
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
 	private static readonly constants = {
 		moduleNames: {
 			interface: "interface",
@@ -24,9 +24,9 @@ export class PerpetualsApi {
 
 	public readonly addresses: PerpetualsAddresses;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
@@ -39,9 +39,9 @@ export class PerpetualsApi {
 		this.addresses = addresses;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Objects
+	// =========================================================================
 	public fetchAccountManager = async (
 		objectId: ObjectId
 	): Promise<PerpetualsAccountManagerObject> => {
@@ -78,9 +78,9 @@ export class PerpetualsApi {
 		);
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transaction Builders
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transaction Builders
+	// =========================================================================
 	public fetchPerpetualsInitializeForCollateralTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
@@ -320,9 +320,9 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transaction Commands
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transaction Commands
+	// =========================================================================
 	public perpetualsInitializeForCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
@@ -723,9 +723,9 @@ export class PerpetualsApi {
 		});
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Oracle Transactions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Oracle Transactions
+	// =========================================================================
 	public fetchOracleCreatePriceFeedTx = async (inputs: {
 		walletAddress: SuiAddress;
 		symbol: string;

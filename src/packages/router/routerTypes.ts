@@ -16,15 +16,15 @@ import { CetusPoolObject } from "../external/cetus/cetusTypes";
 import { TurbosPoolObject } from "../external/turbos/turbosTypes";
 import { EventOnChain } from "../../general/types/castingTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// Name Only
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Name Only
+// =========================================================================
 
 export type UniqueId = string;
 
-/////////////////////////////////////////////////////////////////////
-//// General
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  General
+// =========================================================================
 
 /**
  * Fee info for third party packages wanting to fee route transactions
@@ -42,9 +42,9 @@ export interface RouterExternalFee {
 	feePercentage: Percentage;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// All Router Pools
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  All Router Pools
+// =========================================================================
 
 export type RouterSerializablePool =
 	| RouterSynchronousSerializablePool
@@ -54,9 +54,9 @@ export type RouterProtocolName =
 	| RouterSynchronousProtocolName
 	| RouterAsyncProtocolName;
 
-/////////////////////////////////////////////////////////////////////
-//// Synchronous Router Pools
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Synchronous Router Pools
+// =========================================================================
 
 export type RouterSynchronousSerializablePool = PoolObject | DeepBookPoolObject;
 
@@ -71,9 +71,9 @@ export const isRouterSynchronousProtocolName = (
 	return RouterSynchronousProtocolNames.includes(protocolName);
 };
 
-/////////////////////////////////////////////////////////////////////
-//// Router Async Pools
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Router Async Pools
+// =========================================================================
 
 export type RouterAsyncSerializablePool = CetusPoolObject | TurbosPoolObject;
 
@@ -87,9 +87,9 @@ export const isRouterAsyncProtocolName = (
 	return RouterAsyncProtocolNames.includes(protocolName);
 };
 
-/////////////////////////////////////////////////////////////////////
-//// Paths
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Paths
+// =========================================================================
 
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
@@ -119,9 +119,9 @@ export interface RouterTradeCoin {
 	tradeFee: PoolTradeFee;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Graph
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Graph
+// =========================================================================
 
 export interface RouterCompleteGraph {
 	coinNodes: RouterGraphCoinNodes;
@@ -157,9 +157,9 @@ export interface RouterCoinNode {
 
 export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 
-/////////////////////////////////////////////////////////////////////
-//// Async Router Trade Results
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Async Router Trade Results
+// =========================================================================
 
 export interface RouterAsyncTradeResults {
 	coinInType: CoinType;
@@ -174,9 +174,9 @@ export interface RouterAsyncTradeResult {
 	amountsOut: Balance[];
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Events
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Events
+// =========================================================================
 
 export interface RouterTradeEvent extends Event {
 	trader: SuiAddress;
@@ -188,9 +188,9 @@ export interface RouterTradeEvent extends Event {
 	// externalFee?: RouterExternalFee;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// API
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  API
+// =========================================================================
 
 /**
  * Details for router to construct trade route

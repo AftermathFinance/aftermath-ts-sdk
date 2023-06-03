@@ -5,9 +5,9 @@ import {
 } from "../../../general/types/castingTypes";
 import { SuiObjectResponse } from "@mysten/sui.js";
 
-/////////////////////////////////////////////////////////////////////
-//// Objects
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Objects
+// =========================================================================
 
 export interface NftAmmMarketFieldsOnChain {
 	nfts: TableOnChain; // NOTE: should this be object table on chain ?

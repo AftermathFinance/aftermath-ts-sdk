@@ -19,9 +19,9 @@ import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
 
 class AftermathRouterPool implements RouterPoolInterface {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(pool: PoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
@@ -34,9 +34,9 @@ class AftermathRouterPool implements RouterPoolInterface {
 		this.poolClass = new Pool(pool, network);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	readonly protocolName = "Aftermath";
 	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
@@ -49,9 +49,9 @@ class AftermathRouterPool implements RouterPoolInterface {
 
 	private readonly poolClass: Pool;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	getSpotPrice = (inputs: {
 		coinInType: CoinType;

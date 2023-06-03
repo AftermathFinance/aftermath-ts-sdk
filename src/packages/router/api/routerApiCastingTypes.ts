@@ -2,9 +2,9 @@ import { SuiAddress } from "@mysten/sui.js/dist/types";
 import { AnyObjectType, BigIntAsString } from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// Events
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Events
+// =========================================================================
 
 export type RouterTradeEventOnChain = EventOnChain<{
 	swapper: SuiAddress;

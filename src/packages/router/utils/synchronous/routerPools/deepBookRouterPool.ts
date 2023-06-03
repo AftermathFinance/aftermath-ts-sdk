@@ -21,9 +21,9 @@ import {
 import { Helpers } from "../../../../../general/utils";
 
 class DeepBookRouterPool implements RouterPoolInterface {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(pool: DeepBookPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
@@ -32,9 +32,9 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		this.coinTypes = [pool.baseCoinType, pool.quoteCoinType];
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	readonly protocolName = "DeepBook";
 	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
@@ -45,9 +45,9 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	getSpotPrice = (inputs: {
 		coinInType: CoinType;
@@ -148,9 +148,9 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		return poolAfterTrade;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
 
 	private getTradeAmountOutAndPoolAfterTrade = (inputs: {
 		coinInType: CoinType;

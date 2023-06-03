@@ -18,9 +18,9 @@ import {
 } from "./stakingApiCastingTypes";
 
 export class StakingApiCasting {
-	/////////////////////////////////////////////////////////////////////
-	//// Events
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	public static stakeRequestEventFromOnChain = (
 		eventOnChain: StakeRequestEventOnChain
@@ -117,9 +117,9 @@ export class StakingApiCasting {
 		};
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Staking Positions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Staking Positions
+	// =========================================================================
 
 	// TODO: use this func in staking api helpers
 	public static stakePositionFromStakeRequestEvent = (

@@ -2,9 +2,9 @@ import { RouterTradeEvent } from "../routerTypes";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 
 export class RouterApiCasting {
-	/////////////////////////////////////////////////////////////////////
-	//// Events
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	public static routerTradeEventFromOnChain = (
 		eventOnChain: RouterTradeEventOnChain

@@ -28,9 +28,9 @@ import {
 import { Coin } from "../../coin";
 
 export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	private static readonly constants = {
 		moduleNames: {
@@ -41,9 +41,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		poolCreationFeeInSui: BigInt("100000000000"), // 100 SUI
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Class Members
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
 
 	public readonly addresses: {
 		deepBook: DeepBookAddresses;
@@ -55,9 +55,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		accountCap: AnyObjectType;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
 		const deepBook = this.Provider.addresses.router?.deepBook;
@@ -80,13 +80,13 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		};
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Objects
+	// =========================================================================
 
 	public fetchAllPools = async (): Promise<DeepBookPoolObject[]> => {
 		const partialPools = await this.fetchAllPartialPools();
@@ -184,9 +184,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return accountCapId;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
 		const pools = await this.fetchAllPartialPools();
@@ -197,9 +197,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return Helpers.uniqueArray(allCoins);
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transaction Commands
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transaction Commands
+	// =========================================================================
 
 	public tradeBaseToQuoteTx = (inputs: {
 		tx: TransactionBlock;
@@ -335,9 +335,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		});
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Pool Setup Transaction Commands
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Pool Setup Transaction Commands
+	// =========================================================================
 
 	public createPoolTx = (inputs: {
 		tx: TransactionBlock;
@@ -469,9 +469,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		});
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transaction Command Wrappers
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transaction Command Wrappers
+	// =========================================================================
 
 	public tradeTx = (inputs: {
 		tx: TransactionBlock;
@@ -521,9 +521,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return this.getBidsTx(commandInputs);
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	public fetchBookState = async (inputs: {
 		pool: PartialDeepBookPoolObject;
@@ -581,9 +581,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		});
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transaction Builders
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transaction Builders
+	// =========================================================================
 
 	public buildCreateAccountTx = (inputs: {
 		walletAddress: SuiAddress;

@@ -6,17 +6,17 @@ import { CoinHistoricalData } from "./historicalDataTypes";
 import { CoinGeckoCoinData } from "../prices/coingecko/coinGeckoTypes";
 
 export class HistoricalData extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "historical-data");
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Historical Data
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Historical Data
+	// =========================================================================
 
 	public async getSupportedCoins(): Promise<CoinType[]> {
 		return this.fetchApi("supported-coins");

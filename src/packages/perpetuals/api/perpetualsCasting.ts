@@ -43,9 +43,9 @@ import {
 } from "../utils/helpers";
 
 export class PerpetualsCasting {
-	/////////////////////////////////////////////////////////////////////
-	//// Account Manager
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Account Manager
+	// =========================================================================
 	public static accountManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsAccountManagerObject => {
@@ -57,9 +57,9 @@ export class PerpetualsCasting {
 		};
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Market Manager
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Market Manager
+	// =========================================================================
 	public static marketManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsMarketManagerObject => {
@@ -149,9 +149,9 @@ export class PerpetualsCasting {
 		};
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Orderbook
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Orderbook
+	// =========================================================================
 	public static critBitTreeFromAny = (
 		data: any
 	): PerpetualsCritBitTree<PerpetualsOrder> => {
@@ -262,9 +262,9 @@ export class PerpetualsCasting {
 		return [priorityQueueOfAskOrders, priorityQueueOfBidOrders];
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Oracle
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Oracle
+	// =========================================================================
 	public static priceFeedStorageFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsPriceFeedStorageObject => {

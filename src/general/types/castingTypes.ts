@@ -1,9 +1,9 @@
 import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { AnyObjectType, BigIntAsString, ModuleName } from "./generalTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// On Chain
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  On Chain
+// =========================================================================
 
 export interface EventOnChain<Fields> {
 	id: {

@@ -18,9 +18,9 @@ import { AftermathApi } from "../../../../../general/providers";
 import { TurbosPoolObject } from "../../../../external/turbos/turbosTypes";
 
 class TurbosRouterPool implements RouterPoolInterface {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(pool: TurbosPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
@@ -29,9 +29,9 @@ class TurbosRouterPool implements RouterPoolInterface {
 		this.coinTypes = [pool.coinTypeA, pool.coinTypeB];
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	readonly protocolName = "Turbos";
 	readonly expectedGasCostPerHop = BigInt(9_000_000); // 0.009 SUI
@@ -42,9 +42,9 @@ class TurbosRouterPool implements RouterPoolInterface {
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	getSpotPrice = (_: { coinInType: CoinType; coinOutType: CoinType }) => {
 		throw new Error("uncallable");

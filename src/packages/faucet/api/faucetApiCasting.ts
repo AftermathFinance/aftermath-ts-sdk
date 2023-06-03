@@ -5,9 +5,9 @@ import {
 import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
 
 export class FaucetApiCasting {
-	/////////////////////////////////////////////////////////////////////
-	//// Events
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	public static faucetMintCoinEventFromOnChain = (
 		eventOnChain: FaucetMintCoinEventOnChain

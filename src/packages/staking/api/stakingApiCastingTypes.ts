@@ -2,9 +2,9 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { BigIntAsString } from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// Events
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Events
+// =========================================================================
 
 export type StakeRequestEventOnChain = EventOnChain<{
 	sui_wrapper_id: ObjectId;
