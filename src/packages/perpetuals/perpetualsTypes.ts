@@ -37,7 +37,7 @@ export interface PerpetualsAccountManagerObject extends Object {
 	maxOpenOrdersPerPosition: bigint;
 }
 
-export interface PerpetualsAccount {
+export interface PerpetualsAccountStruct {
 	collateral: IFixed;
 	marketIds: bigint[];
 	positions: PerpetualsPosition[];
