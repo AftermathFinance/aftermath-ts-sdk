@@ -2,6 +2,7 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
+	Object,
 	Timestamp,
 } from "../../general/types/generalTypes";
 
@@ -10,30 +11,28 @@ export type IFixed = bigint;
 // =========================================================================
 //  Clearing House
 // =========================================================================
-export interface PerpetualsAdminCapability {
+
+export interface PerpetualsAdminCapabilityObject extends Object {
 	objectId: ObjectId;
 }
 
-export interface PerpetualsRegistry {
-	objectId: ObjectId;
+export interface PerpetualsRegistryObject extends Object {
 	activeCollaterals: string[];
 }
 
-export interface PerpetualsInsuranceFund {
-	objectId: ObjectId;
+export interface PerpetualsInsuranceFundObject extends Object {
 	balance: Balance;
 }
 
-export interface PerpetualsVault {
-	objectId: ObjectId;
+export interface PerpetualsVaultObject extends Object {
 	balance: Balance;
 }
 
 // =========================================================================
 //  Account Manager
 // =========================================================================
-export interface PerpetualsAccountManager {
-	objectId: ObjectId;
+
+export interface PerpetualsAccountManagerObject extends Object {
 	maxPositionsPerAccount: bigint;
 	maxOpenOrdersPerPosition: bigint;
 }
@@ -58,8 +57,8 @@ export interface PerpetualsPosition {
 // =========================================================================
 //  Market Manager
 // =========================================================================
-export interface PerpetualsMarketManager {
-	objectId: ObjectId;
+
+export interface PerpetualsMarketManagerObject extends Object {
 	feesAccrued: IFixed;
 	netTransferFromIfToVault: IFixed;
 	minOrderUsdValue: IFixed;
@@ -102,7 +101,7 @@ export interface PerpetualsMarginRatioProposal {
 export interface PerpetualsMarketManagerDynamicFields {
 	paramsFields: PerpetualsMarketParamsDynamicField[];
 	stateFields: PerpetualsMarketStateDynamicField[];
-	orderbookFields: PerpetualsMarketOrderbookDynamicField[];
+	orderbookFields: PerpetualsMarketOrderbookDynamicFieldObject[];
 }
 
 export interface PerpetualsMarketParamsDynamicField {
@@ -113,9 +112,8 @@ export interface PerpetualsMarketStateDynamicField {
 	value: PerpetualsMarketState;
 }
 
-export interface PerpetualsMarketOrderbookDynamicField {
-	objectId: ObjectId;
-	value: PerpetualsOrderbook;
+export interface PerpetualsMarketOrderbookDynamicFieldObject extends Object {
+	value: PerpetualsOrderbookObject;
 }
 
 export interface PerpetualsMarketManagerDynamicFieldOnChain {
@@ -165,7 +163,7 @@ interface PerpetualsMarketOrderbookDynamicFieldFieldOnChain {
 	};
 	value: {
 		fields: {
-			value: PerpetualsOrderbook;
+			value: PerpetualsOrderbookObject;
 		};
 	};
 }
@@ -179,6 +177,7 @@ export interface PerpetualsMarketOrderbookDynamicFieldOnChain {
 // =========================================================================
 //  Orderbook
 // =========================================================================
+
 export interface PerpetualsInnerNode {
 	criticalBit: bigint;
 	parentIndex: bigint;
@@ -212,8 +211,7 @@ export interface PerpetualsOrderCasted {
 	counter: bigint;
 }
 
-export interface PerpetualsOrderbook {
-	objectId: ObjectId;
+export interface PerpetualsOrderbookObject extends Object {
 	lotSize: bigint;
 	tickSize: bigint;
 	asks: PerpetualsCritBitTree<PerpetualsOrder>;
@@ -226,18 +224,14 @@ export interface PerpetualsOrderbook {
 // =========================================================================
 //  Oracle
 // =========================================================================
-export interface PerpetualsPriceFeed {
-	objectId: ObjectId;
+
+export interface PerpetualsPriceFeedObject extends Object {
 	symbol: string;
 	price: IFixed;
 	decimal: bigint;
 	timestamp: Timestamp;
 }
 
-export interface PerpetualsPriceFeedStorage {
-	objectId: ObjectId;
-}
+export interface PerpetualsPriceFeedStorageObject extends Object {}
 
-export interface PerpetualsAuthorityCap {
-	objectId: ObjectId;
-}
+export interface PerpetualsAuthorityCapObject extends Object {}

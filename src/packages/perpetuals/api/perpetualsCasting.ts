@@ -5,12 +5,12 @@ import {
 	getObjectId,
 } from "@mysten/sui.js";
 import {
-	PerpetualsAccountManager,
-	PerpetualsMarketManager,
+	PerpetualsAccountManagerObject,
+	PerpetualsMarketManagerObject,
 	PerpetualsMarketState,
-	PerpetualsPriceFeed,
-	PerpetualsPriceFeedStorage,
-	PerpetualsOrderbook,
+	PerpetualsPriceFeedObject,
+	PerpetualsPriceFeedStorageObject,
+	PerpetualsOrderbookObject,
 	PerpetualsOrder,
 	PerpetualsCritBitTree,
 	PerpetualsOrderCasted,
@@ -18,7 +18,7 @@ import {
 	PerpetualsMarketParamsDynamicFieldOnChain,
 	PerpetualsMarketParamsDynamicField,
 	PerpetualsMarketParams,
-	PerpetualsMarketOrderbookDynamicField,
+	PerpetualsMarketOrderbookDynamicFieldObject,
 	PerpetualsMarketStateDynamicField,
 	PerpetualsMarketOrderbookDynamicFieldOnChain,
 	PerpetualsMarketManagerStateDynamicFieldOnChain,
@@ -48,7 +48,7 @@ export class PerpetualsCasting {
 	/////////////////////////////////////////////////////////////////////
 	public static accountManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsAccountManager => {
+	): PerpetualsAccountManagerObject => {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
 			objectId: getObjectId(data),
@@ -62,7 +62,7 @@ export class PerpetualsCasting {
 	/////////////////////////////////////////////////////////////////////
 	public static marketManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsMarketManager => {
+	): PerpetualsMarketManagerObject => {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
 			objectId: getObjectId(data),
@@ -103,7 +103,7 @@ export class PerpetualsCasting {
 
 	public static marketManagerOrderbookDynamicFieldFromOnChain = async (
 		dynamicField: PerpetualsMarketManagerDynamicFieldOnChain
-	): Promise<PerpetualsMarketOrderbookDynamicField> => {
+	): Promise<PerpetualsMarketOrderbookDynamicFieldObject> => {
 		if (!isMarketManagerOrderbookKeyType(dynamicField.data.type))
 			throw new Error("not order book key type");
 		const orderbookField =
@@ -201,7 +201,9 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static orderbookFromRawData = (data: any): PerpetualsOrderbook => {
+	public static orderbookFromRawData = (
+		data: any
+	): PerpetualsOrderbookObject => {
 		return {
 			objectId: data.id.id,
 			lotSize: BigInt(data.lot_size),
@@ -245,7 +247,7 @@ export class PerpetualsCasting {
 	};
 
 	public static priorityQueuesOfOrdersFromOrderbook = (
-		orderbook: PerpetualsOrderbook
+		orderbook: PerpetualsOrderbookObject
 	): PriorityQueue<PerpetualsOrderCasted>[] => {
 		const priorityQueueOfAskOrders =
 			PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
@@ -265,7 +267,7 @@ export class PerpetualsCasting {
 	/////////////////////////////////////////////////////////////////////
 	public static priceFeedStorageFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsPriceFeedStorage => {
+	): PerpetualsPriceFeedStorageObject => {
 		return {
 			objectId: getObjectId(data),
 		};
@@ -273,7 +275,7 @@ export class PerpetualsCasting {
 
 	public static priceFeedFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsPriceFeed => {
+	): PerpetualsPriceFeedObject => {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
 			objectId: getObjectId(data),

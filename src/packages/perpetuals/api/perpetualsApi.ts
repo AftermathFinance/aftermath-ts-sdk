@@ -3,10 +3,10 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinType, PerpetualsAddresses, Timestamp } from "../../../types";
 
 import {
-	PerpetualsAccountManager,
-	PerpetualsMarketManager,
-	PerpetualsOrderbook,
-	PerpetualsPriceFeedStorage,
+	PerpetualsAccountManagerObject,
+	PerpetualsMarketManagerObject,
+	PerpetualsOrderbookObject,
+	PerpetualsPriceFeedStorageObject,
 } from "../../../types";
 import { PerpetualsCasting } from "./perpetualsCasting";
 import { Helpers } from "../../../general/utils";
@@ -44,8 +44,8 @@ export class PerpetualsApi {
 	/////////////////////////////////////////////////////////////////////
 	public fetchAccountManager = async (
 		objectId: ObjectId
-	): Promise<PerpetualsAccountManager> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsAccountManager>(
+	): Promise<PerpetualsAccountManagerObject> => {
+		return this.Provider.Objects().fetchCastObject<PerpetualsAccountManagerObject>(
 			{
 				objectId,
 				objectFromSuiObjectResponse:
@@ -56,8 +56,8 @@ export class PerpetualsApi {
 
 	public fetchMarketManager = async (
 		objectId: ObjectId
-	): Promise<PerpetualsMarketManager> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsMarketManager>(
+	): Promise<PerpetualsMarketManagerObject> => {
+		return this.Provider.Objects().fetchCastObject<PerpetualsMarketManagerObject>(
 			{
 				objectId,
 				objectFromSuiObjectResponse:
@@ -68,8 +68,8 @@ export class PerpetualsApi {
 
 	public fetchPriceFeedStorage = async (
 		objectId: ObjectId
-	): Promise<PerpetualsPriceFeedStorage> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsPriceFeedStorage>(
+	): Promise<PerpetualsPriceFeedStorageObject> => {
+		return this.Provider.Objects().fetchCastObject<PerpetualsPriceFeedStorageObject>(
 			{
 				objectId,
 				objectFromSuiObjectResponse:
@@ -411,7 +411,7 @@ export class PerpetualsApi {
 				tx.object(this.addresses.objects.adminCapability),
 				// TODO: create a Map<coinType, Exchange> and get the correspondent accountManager
 				// Same for all the other functions
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
 				tx.pure(marketId),
 				tx.pure(marginRatioInitial),
 				tx.pure(marginRatioMaintenance),
