@@ -184,7 +184,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		} = inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.turbos.packages.wrapper,
 				TurbosApi.constants.moduleNames.wrapper,
 				"swap_a_b"
@@ -266,7 +266,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		} = inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.turbos.packages.wrapper,
 				TurbosApi.constants.moduleNames.wrapper,
 				"swap_b_a"
@@ -389,7 +389,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 				Helpers.addLeadingZeroesToType(inputs.coinTypeA);
 
 			return tx.moveCall({
-				target: Helpers.transactions.createTransactionTarget(
+				target: Helpers.transactions.createTxTarget(
 					this.addresses.turbos.packages.clmm,
 					TurbosApi.constants.moduleNames.poolFetcher,
 					"compute_swap_result"

@@ -220,7 +220,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		} = inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.wrapper,
 				DeepBookApi.constants.moduleNames.wrapper,
 				"swap_exact_base_for_quote"
@@ -264,7 +264,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		} = inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.wrapper,
 				DeepBookApi.constants.moduleNames.wrapper,
 				"swap_exact_quote_for_base"
@@ -297,7 +297,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	}) /* (vector<u64> (prices), vector<u64> (depths)) */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"get_level2_book_status_ask_side"
@@ -320,7 +320,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	}) /* (vector<u64> (prices), vector<u64> (depths)) */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"get_level2_book_status_bid_side"
@@ -349,7 +349,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	}) => {
 		const { tx, suiFeeCoinId } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"create_pool"
@@ -370,7 +370,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	}) /* AccountCap */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"create_account"
@@ -390,7 +390,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	}) => {
 		const { tx, baseCoinId, accountCapId } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"deposit_base"
@@ -418,7 +418,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	}) => {
 		const { tx, quoteCoinId, accountCapId } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"deposit_quote"
@@ -448,7 +448,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	}) => {
 		const { tx, accountCapId } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.deepBook.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"place_limit_order"

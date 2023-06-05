@@ -215,7 +215,7 @@ export class StakingApi {
 	}) => {
 		const { tx, suiCoin } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.modules.interface,
 				"request_add_stake"
@@ -235,7 +235,7 @@ export class StakingApi {
 	}) => {
 		const { tx, afSuiCoin } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.modules.interface,
 				"request_unstake"
@@ -253,7 +253,7 @@ export class StakingApi {
 	public getAfSuiSupplyTx = (inputs: { tx: TransactionBlock }) => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.modules.staking,
 				"afsui_supply"
@@ -266,7 +266,7 @@ export class StakingApi {
 	public getStakedSuiTvlTx = (inputs: { tx: TransactionBlock }) => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTransactionTarget(
+			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.modules.staking,
 				"total_sui_amount"

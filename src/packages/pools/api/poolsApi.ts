@@ -642,7 +642,7 @@ export class PoolsApi {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
@@ -699,7 +699,7 @@ export class PoolsApi {
 		} = inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				wrapperAddress,
 				PoolsApi.constants.moduleNames.routerWrapper,
 				"swap_exact_in"
@@ -751,7 +751,7 @@ export class PoolsApi {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
@@ -802,7 +802,7 @@ export class PoolsApi {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
@@ -842,7 +842,7 @@ export class PoolsApi {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
@@ -916,7 +916,7 @@ export class PoolsApi {
 
 		return tx.add({
 			kind: "MoveCall",
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.pools.packages.ammInterface,
 				PoolsApi.constants.moduleNames.interface,
 				`create_pool_${poolSize}_coins`
@@ -978,7 +978,7 @@ export class PoolsApi {
 		const { tx, lpCoinType } = inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.pools.packages.amm,
 				PoolsApi.constants.moduleNames.poolRegistry,
 				"lp_type_to_pool_id"

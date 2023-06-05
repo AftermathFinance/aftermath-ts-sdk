@@ -290,7 +290,7 @@ export class NftAmmApi {
 	}) => {
 		const { tx, assetCoin, genericTypes, nftObjectIds } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftAmm,
 				inputs.withTransfer
 					? NftAmmApi.constants.moduleNames.interface
@@ -328,7 +328,7 @@ export class NftAmmApi {
 	}) => {
 		const { tx, genericTypes, nfts } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftAmm,
 				inputs.withTransfer
 					? NftAmmApi.constants.moduleNames.interface
@@ -366,7 +366,7 @@ export class NftAmmApi {
 	}) => {
 		const { tx, assetCoin, genericTypes, nfts } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftAmm,
 				inputs.withTransfer
 					? NftAmmApi.constants.moduleNames.interface
@@ -407,7 +407,7 @@ export class NftAmmApi {
 	}) => {
 		const { tx, lpCoin, genericTypes, nftObjectIds } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftAmm,
 				inputs.withTransfer
 					? NftAmmApi.constants.moduleNames.interface

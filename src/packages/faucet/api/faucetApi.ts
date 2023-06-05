@@ -162,7 +162,7 @@ export class FaucetApi {
 		const { tx, treasuryCapId, treasuryCapType } = inputs;
 
 		return tx.moveCall({
-			target: TransactionsApiHelpers.createTransactionTarget(
+			target: TransactionsApiHelpers.createTxTarget(
 				this.addresses.packages.faucet,
 				FaucetApi.constants.faucetModuleName,
 				FaucetApi.constants.functions.add.name
@@ -183,7 +183,7 @@ export class FaucetApi {
 		const { tx, coinType, amount } = inputs;
 
 		return tx.moveCall({
-			target: TransactionsApiHelpers.createTransactionTarget(
+			target: TransactionsApiHelpers.createTxTarget(
 				this.addresses.packages.faucet,
 				FaucetApi.constants.faucetModuleName,
 				FaucetApi.constants.functions.requestAmount.name
@@ -203,7 +203,7 @@ export class FaucetApi {
 		const { tx, coinType } = inputs;
 
 		return tx.moveCall({
-			target: TransactionsApiHelpers.createTransactionTarget(
+			target: TransactionsApiHelpers.createTxTarget(
 				this.addresses.packages.faucet,
 				FaucetApi.constants.faucetModuleName,
 				FaucetApi.constants.functions.request.name

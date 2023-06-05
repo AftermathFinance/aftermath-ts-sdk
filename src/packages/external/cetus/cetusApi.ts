@@ -275,7 +275,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		const isGivenAmountIn = "coinInAmount" in inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.cetus.packages.wrapper,
 				CetusApi.constants.moduleNames.wrapper,
 				isGivenAmountIn ? "swap_a_to_b_by_a" : "swap_a_to_b_by_b"
@@ -335,7 +335,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		const isGivenAmountIn = "coinInAmount" in inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.cetus.packages.wrapper,
 				CetusApi.constants.moduleNames.wrapper,
 				isGivenAmountIn ? "swap_b_to_a_by_b" : "swap_b_to_a_by_a"
@@ -422,7 +422,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 			: CetusApi.constants.inputs.maxSqrtPriceLimit;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.cetus.packages.clmm,
 				CetusApi.constants.moduleNames.pool,
 				"flash_swap"
@@ -489,7 +489,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 			const { tx } = inputs;
 
 			return tx.moveCall({
-				target: Helpers.transactions.createTransactionTarget(
+				target: Helpers.transactions.createTxTarget(
 					this.addresses.cetus.packages.clmm,
 					CetusApi.constants.moduleNames.pool,
 					"calculate_swap_result"

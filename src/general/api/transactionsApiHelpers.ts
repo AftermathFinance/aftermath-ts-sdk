@@ -1,6 +1,7 @@
 import {
 	SuiAddress,
 	SuiTransactionBlockResponseQuery,
+	TransactionArgument,
 	TransactionBlock,
 	TransactionDigest,
 	getExecutionStatusGasSummary,
@@ -52,7 +53,7 @@ export class TransactionsApiHelpers {
 		};
 	};
 
-	public fetchSetGasBudgetForTransaction = async (
+	public fetchSetGasBudgetForTx = async (
 		tx: TransactionBlock
 	): Promise<TransactionBlock> => {
 		const [txResponse, referenceGasPrice] = await Promise.all([
@@ -74,12 +75,10 @@ export class TransactionsApiHelpers {
 		return tx;
 	};
 
-	public fetchSetGasBudgetAndSerializeTransaction = async (
+	public fetchSetGasBudgetAndSerializeTx = async (
 		tx: TransactionBlock | Promise<TransactionBlock>
 	): Promise<SerializedTransaction> => {
-		return (
-			await this.fetchSetGasBudgetForTransaction(await tx)
-		).serialize();
+		return (await this.fetchSetGasBudgetForTx(await tx)).serialize();
 	};
 
 	// =========================================================================
@@ -90,7 +89,7 @@ export class TransactionsApiHelpers {
 	//  Helpers
 	// =========================================================================
 
-	public static createTransactionTarget = (
+	public static createTxTarget = (
 		packageAddress: string,
 		packageName: string,
 		functionName: string
@@ -101,4 +100,30 @@ export class TransactionsApiHelpers {
 		inner: InnerType | undefined
 	): { None: true } | { Some: InnerType } =>
 		inner === undefined ? { None: true } : { Some: inner };
+
+	public static creatBuildTxFunc = <Inputs>(
+		func: (inputs: Inputs & { tx: TransactionBlock }) => TransactionArgument
+	): ((
+		inputs: {
+			walletAddress: SuiAddress;
+		} & Inputs
+	) => TransactionBlock) => {
+		const builderFunc = (
+			someInputs: {
+				walletAddress: SuiAddress;
+			} & Inputs
+		) => {
+			const tx = new TransactionBlock();
+			tx.setSender(someInputs.walletAddress);
+
+			func({
+				tx,
+				...someInputs,
+			});
+
+			return tx;
+		};
+
+		return builderFunc;
+	};
 }

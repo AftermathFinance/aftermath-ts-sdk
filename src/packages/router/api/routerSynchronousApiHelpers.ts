@@ -146,7 +146,7 @@ export class RouterSynchronousApiHelpers {
 		const { tx, coinInType, coinOutType, referrer, externalFee } = inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.utils,
 				RouterSynchronousApiHelpers.constants.moduleNames.events,
 				"bake_potato"
@@ -188,7 +188,7 @@ export class RouterSynchronousApiHelpers {
 		const { tx, tradePotato, trader, minAmountOut } = inputs;
 
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.utils,
 				RouterSynchronousApiHelpers.constants.moduleNames.events,
 				"bake_potato"

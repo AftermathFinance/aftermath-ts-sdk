@@ -84,8 +84,417 @@ export class PerpetualsApi {
 	};
 
 	// =========================================================================
+	//  Transaction Commands
+	// =========================================================================
+
+	public initializeForCollateralTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+	}) => {
+		const { tx, coinType } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"initialize_for_collateral"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.adminCapability),
+				tx.object(this.addresses.objects.registry),
+			],
+		});
+	};
+
+	public transferAdminCapTx = (inputs: {
+		tx: TransactionBlock;
+		targetAddress: SuiAddress;
+	}) => {
+		const { tx, targetAddress } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"transfer_admin_cap"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.adminCapability),
+				tx.pure(targetAddress),
+			],
+		});
+	};
+
+	public createMarketTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		marketId: bigint;
+		marginRatioInitial: bigint;
+		marginRatioMaintenance: bigint;
+		baseAssetSymbol: string;
+		fundingFrequencyMs: bigint;
+		fundingPeriodMs: bigint;
+		twapPeriodMs: bigint;
+		makerFee: bigint;
+		takerFee: bigint;
+		liquidationFee: bigint;
+		forceCancelFee: bigint;
+		insuranceFundFee: bigint;
+		priceImpactFactor: bigint;
+		lotSize: bigint;
+		tickSize: bigint;
+	}) => {
+		const {
+			tx,
+			coinType,
+			marketId,
+			marginRatioInitial,
+			marginRatioMaintenance,
+			baseAssetSymbol,
+			fundingFrequencyMs,
+			fundingPeriodMs,
+			twapPeriodMs,
+			makerFee,
+			takerFee,
+			liquidationFee,
+			forceCancelFee,
+			insuranceFundFee,
+			priceImpactFactor,
+			lotSize,
+			tickSize,
+		} = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"create_market"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.adminCapability),
+				// TODO: create a Map<coinType, Exchange> and get the correspondent accountManager
+				// Same for all the other functions
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.pure(marketId),
+				tx.pure(marginRatioInitial),
+				tx.pure(marginRatioMaintenance),
+				tx.pure(baseAssetSymbol),
+				tx.pure(fundingFrequencyMs),
+				tx.pure(fundingPeriodMs),
+				tx.pure(twapPeriodMs),
+				tx.pure(makerFee),
+				tx.pure(takerFee),
+				tx.pure(liquidationFee),
+				tx.pure(forceCancelFee),
+				tx.pure(insuranceFundFee),
+				tx.pure(priceImpactFactor),
+				tx.pure(lotSize),
+				tx.pure(tickSize),
+			],
+		});
+	};
+
+	public depositCollateralTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		coin: ObjectId | TransactionArgument;
+		accountId: bigint;
+	}) => {
+		const { tx, coinType, coin, accountId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"deposit_collateral"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				typeof coin === "string" ? tx.object(coin) : coin,
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.pure(accountId),
+				tx.object(this.addresses.objects.exchanges[0].vault),
+			],
+		});
+	};
+
+	public placeMarketOrderTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		accountId: bigint;
+		marketId: bigint;
+		side: boolean;
+		size: bigint;
+	}) => {
+		const { tx, coinType, accountId, marketId, side, size } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"place_market_order"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
+				tx.object(Sui.constants.addresses.suiClockId),
+				tx.pure(accountId),
+				tx.pure(marketId),
+				tx.pure(side),
+				tx.pure(size),
+			],
+		});
+	};
+
+	public placeLimitOrderTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		accountId: bigint;
+		marketId: bigint;
+		side: boolean;
+		size: bigint;
+		price: bigint;
+		orderType: bigint;
+	}) => {
+		const {
+			tx,
+			coinType,
+			accountId,
+			marketId,
+			side,
+			size,
+			price,
+			orderType,
+		} = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"place_limit_order"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
+				tx.object(Sui.constants.addresses.suiClockId),
+				tx.pure(accountId),
+				tx.pure(marketId),
+				tx.pure(side),
+				tx.pure(size),
+				tx.pure(price),
+				tx.pure(orderType),
+			],
+		});
+	};
+
+	public cancelOrderTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		accountId: bigint;
+		marketId: bigint;
+		side: boolean;
+		orderId: bigint;
+	}) => {
+		const { tx, coinType, accountId, marketId, side, orderId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"cancel_order"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.pure(accountId),
+				tx.pure(marketId),
+				tx.pure(side),
+				tx.pure(orderId),
+			],
+		});
+	};
+
+	public closePositionTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		accountId: bigint;
+		marketId: bigint;
+	}) => {
+		const { tx, coinType, accountId, marketId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"close_position"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
+				tx.pure(accountId),
+				tx.pure(marketId),
+			],
+		});
+	};
+
+	public withdrawCollateralTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		accountId: bigint;
+		amount: bigint;
+	}) => {
+		const { tx, coinType, accountId, amount } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"withdraw_collateral"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
+				tx.object(this.addresses.objects.exchanges[0].vault),
+				tx.object(this.addresses.objects.exchanges[0].insuranceFund),
+				tx.pure(accountId),
+				tx.pure(amount),
+			],
+		});
+	};
+
+	public liquidateTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		liqee: SuiAddress;
+		liqeeAccountId: bigint;
+		marketId: bigint;
+		liqorAccountId: bigint;
+	}) => {
+		const {
+			tx,
+			coinType,
+			liqee,
+			liqeeAccountId,
+			marketId,
+			liqorAccountId,
+		} = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"liquidate"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
+				tx.pure(liqee),
+				tx.pure(liqeeAccountId),
+				tx.pure(marketId),
+				tx.pure(liqorAccountId),
+			],
+		});
+	};
+
+	public liquidateAcquireTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		liqee: SuiAddress;
+		liqeeAccountId: bigint;
+		marketId: bigint;
+		liqorAccountId: bigint;
+	}) => {
+		const {
+			tx,
+			coinType,
+			liqee,
+			liqeeAccountId,
+			marketId,
+			liqorAccountId,
+		} = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"liquidate_acquire"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
+				tx.pure(liqee),
+				tx.pure(liqeeAccountId),
+				tx.pure(marketId),
+				tx.pure(liqorAccountId),
+			],
+		});
+	};
+
+	public updateFundingTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		marketId: bigint;
+	}) => {
+		const { tx, coinType, marketId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"update_funding"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
+				tx.object(Sui.constants.addresses.suiClockId),
+				tx.pure(marketId),
+			],
+		});
+	};
+
+	public createAccountTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+	}) => {
+		const { tx, coinType } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"create_account"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.exchanges[0].accountManager),
+			],
+		});
+	};
+
+	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
+
 	public fetchInitializeForCollateralTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
@@ -283,24 +692,9 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchLiquidateAcquireTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		liqee: SuiAddress;
-		liqeeAccountId: bigint;
-		marketId: bigint;
-		liqorAccountId: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.liquidateAcquireTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
+	public buildLiquidateAcquireTx = Helpers.transactions.creatBuildTxFunc(
+		this.liquidateAcquireTx
+	);
 
 	public fetchUpdateFundingTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -331,414 +725,6 @@ export class PerpetualsApi {
 		});
 
 		return tx;
-	};
-
-	// =========================================================================
-	//  Transaction Commands
-	// =========================================================================
-
-	public initializeForCollateralTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-	}) => {
-		const { tx, coinType } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"initialize_for_collateral"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.adminCapability),
-				tx.object(this.addresses.objects.registry),
-			],
-		});
-	};
-
-	public transferAdminCapTx = (inputs: {
-		tx: TransactionBlock;
-		targetAddress: SuiAddress;
-	}) => {
-		const { tx, targetAddress } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"transfer_admin_cap"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(this.addresses.objects.adminCapability),
-				tx.pure(targetAddress),
-			],
-		});
-	};
-
-	public createMarketTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		marketId: bigint;
-		marginRatioInitial: bigint;
-		marginRatioMaintenance: bigint;
-		baseAssetSymbol: string;
-		fundingFrequencyMs: bigint;
-		fundingPeriodMs: bigint;
-		twapPeriodMs: bigint;
-		makerFee: bigint;
-		takerFee: bigint;
-		liquidationFee: bigint;
-		forceCancelFee: bigint;
-		insuranceFundFee: bigint;
-		priceImpactFactor: bigint;
-		lotSize: bigint;
-		tickSize: bigint;
-	}) => {
-		const {
-			tx,
-			coinType,
-			marketId,
-			marginRatioInitial,
-			marginRatioMaintenance,
-			baseAssetSymbol,
-			fundingFrequencyMs,
-			fundingPeriodMs,
-			twapPeriodMs,
-			makerFee,
-			takerFee,
-			liquidationFee,
-			forceCancelFee,
-			insuranceFundFee,
-			priceImpactFactor,
-			lotSize,
-			tickSize,
-		} = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"create_market"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.adminCapability),
-				// TODO: create a Map<coinType, Exchange> and get the correspondent accountManager
-				// Same for all the other functions
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.pure(marketId),
-				tx.pure(marginRatioInitial),
-				tx.pure(marginRatioMaintenance),
-				tx.pure(baseAssetSymbol),
-				tx.pure(fundingFrequencyMs),
-				tx.pure(fundingPeriodMs),
-				tx.pure(twapPeriodMs),
-				tx.pure(makerFee),
-				tx.pure(takerFee),
-				tx.pure(liquidationFee),
-				tx.pure(forceCancelFee),
-				tx.pure(insuranceFundFee),
-				tx.pure(priceImpactFactor),
-				tx.pure(lotSize),
-				tx.pure(tickSize),
-			],
-		});
-	};
-
-	public depositCollateralTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		coin: ObjectId | TransactionArgument;
-		accountId: bigint;
-	}) => {
-		const { tx, coinType, coin, accountId } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"deposit_collateral"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				typeof coin === "string" ? tx.object(coin) : coin,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.pure(accountId),
-				tx.object(this.addresses.objects.exchanges[0].vault),
-			],
-		});
-	};
-
-	public placeMarketOrderTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		accountId: bigint;
-		marketId: bigint;
-		side: boolean;
-		size: bigint;
-	}) => {
-		const { tx, coinType, accountId, marketId, side, size } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"place_market_order"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(accountId),
-				tx.pure(marketId),
-				tx.pure(side),
-				tx.pure(size),
-			],
-		});
-	};
-
-	public placeLimitOrderTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		accountId: bigint;
-		marketId: bigint;
-		side: boolean;
-		size: bigint;
-		price: bigint;
-		orderType: bigint;
-	}) => {
-		const {
-			tx,
-			coinType,
-			accountId,
-			marketId,
-			side,
-			size,
-			price,
-			orderType,
-		} = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"place_limit_order"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(accountId),
-				tx.pure(marketId),
-				tx.pure(side),
-				tx.pure(size),
-				tx.pure(price),
-				tx.pure(orderType),
-			],
-		});
-	};
-
-	public cancelOrderTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		accountId: bigint;
-		marketId: bigint;
-		side: boolean;
-		orderId: bigint;
-	}) => {
-		const { tx, coinType, accountId, marketId, side, orderId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"cancel_order"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.pure(accountId),
-				tx.pure(marketId),
-				tx.pure(side),
-				tx.pure(orderId),
-			],
-		});
-	};
-
-	public closePositionTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		accountId: bigint;
-		marketId: bigint;
-	}) => {
-		const { tx, coinType, accountId, marketId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"close_position"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.pure(accountId),
-				tx.pure(marketId),
-			],
-		});
-	};
-
-	public withdrawCollateralTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		accountId: bigint;
-		amount: bigint;
-	}) => {
-		const { tx, coinType, accountId, amount } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"withdraw_collateral"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.object(this.addresses.objects.exchanges[0].vault),
-				tx.object(this.addresses.objects.exchanges[0].insuranceFund),
-				tx.pure(accountId),
-				tx.pure(amount),
-			],
-		});
-	};
-
-	public liquidateTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		liqee: SuiAddress;
-		liqeeAccountId: bigint;
-		marketId: bigint;
-		liqorAccountId: bigint;
-	}) => {
-		const {
-			tx,
-			coinType,
-			liqee,
-			liqeeAccountId,
-			marketId,
-			liqorAccountId,
-		} = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"liquidate"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.pure(liqee),
-				tx.pure(liqeeAccountId),
-				tx.pure(marketId),
-				tx.pure(liqorAccountId),
-			],
-		});
-	};
-
-	public liquidateAcquireTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		liqee: SuiAddress;
-		liqeeAccountId: bigint;
-		marketId: bigint;
-		liqorAccountId: bigint;
-	}) => {
-		const {
-			tx,
-			coinType,
-			liqee,
-			liqeeAccountId,
-			marketId,
-			liqorAccountId,
-		} = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"liquidate_acquire"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.pure(liqee),
-				tx.pure(liqeeAccountId),
-				tx.pure(marketId),
-				tx.pure(liqorAccountId),
-			],
-		});
-	};
-
-	public updateFundingTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		marketId: bigint;
-	}) => {
-		const { tx, coinType, marketId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"update_funding"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(marketId),
-			],
-		});
-	};
-
-	public createAccountTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-	}) => {
-		const { tx, coinType } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"create_account"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-			],
-		});
 	};
 
 	// =========================================================================
@@ -784,7 +770,7 @@ export class PerpetualsApi {
 	}) => {
 		const { tx, symbol, decimal } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.objects.oracle.packages.oracle,
 				"oracle",
 				"create_price_feed"
@@ -811,7 +797,7 @@ export class PerpetualsApi {
 	}) => {
 		const { tx, symbol, price, timestamp } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.objects.oracle.packages.oracle,
 				"oracle",
 				"update_price_feed"

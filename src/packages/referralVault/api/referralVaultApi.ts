@@ -48,7 +48,7 @@ export class ReferralVaultApi {
 	}) => {
 		const { tx, referrer } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApi.constants.moduleNames.referralVault,
 				"update_referrer_address"
@@ -68,7 +68,7 @@ export class ReferralVaultApi {
 	}) => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApi.constants.moduleNames.referralVault,
 				inputs.withTransfer
@@ -87,7 +87,7 @@ export class ReferralVaultApi {
 	}) /* u64 */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApi.constants.moduleNames.referralVault,
 				"balance_of"
@@ -106,7 +106,7 @@ export class ReferralVaultApi {
 	}) /* Option<address> */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApi.constants.moduleNames.referralVault,
 				"referrer_for"
@@ -125,7 +125,7 @@ export class ReferralVaultApi {
 	}) /* bool */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.referralVault,
 				ReferralVaultApi.constants.moduleNames.referralVault,
 				"has_referrer"

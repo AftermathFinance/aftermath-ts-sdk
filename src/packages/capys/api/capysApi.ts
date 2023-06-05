@@ -247,7 +247,7 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.capyVault.moduleName,
 
@@ -268,7 +268,7 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.capyVault.moduleName,
 				CapysApi.constants.capyVault.modules.capyVault.functions
@@ -499,21 +499,21 @@ export class CapysApi {
 	public fetchStakeCapyTransaction = (
 		capyId: ObjectId
 	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
 			this.capyStakeCapyTransaction(capyId)
 		);
 
 	public fetchUnstakeCapyTransaction = (
 		stakingReceiptId: ObjectId
 	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
 			this.capyUnstakeCapyTransaction(stakingReceiptId)
 		);
 
 	public fetchWithdrawStakedCapyFeesTransaction = (
 		stakingReceiptId: ObjectId
 	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
 			this.capyWithdrawFeesTransaction(stakingReceiptId)
 		);
 
@@ -521,7 +521,7 @@ export class CapysApi {
 		stakingReceiptId: ObjectId,
 		amount: Balance
 	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
 			this.capyWithdrawFeesAmountTransaction(stakingReceiptId, amount)
 		);
 
@@ -529,7 +529,7 @@ export class CapysApi {
 		stakingReceiptId: ObjectId,
 		recipient: SuiAddress
 	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
 			this.capyTransferTransaction(stakingReceiptId, recipient)
 		);
 
@@ -561,7 +561,7 @@ export class CapysApi {
 			parentTwoIsOwned
 		);
 
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTransaction(
+		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
 			transaction
 		);
 	};
@@ -706,7 +706,7 @@ export class CapysApi {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.interface.moduleName,
 				CapysApi.constants.capyVault.modules.interface.functions
@@ -733,7 +733,7 @@ export class CapysApi {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.interface.moduleName,
 				CapysApi.constants.capyVault.modules.interface.functions
@@ -760,7 +760,7 @@ export class CapysApi {
 	): TransactionBlock => {
 		tx.add({
 			kind: "MoveCall",
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.interface.moduleName,
 				CapysApi.constants.capyVault.modules.interface.functions
@@ -787,7 +787,7 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.interface.moduleName,
 				CapysApi.constants.capyVault.modules.interface.functions
@@ -809,7 +809,7 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 
 				CapysApi.constants.capyVault.modules.interface.moduleName,
@@ -834,7 +834,7 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.interface.moduleName,
 				CapysApi.constants.capyVault.modules.interface.functions
@@ -861,7 +861,7 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.interface.moduleName,
 				CapysApi.constants.capyVault.modules.interface.functions
@@ -884,7 +884,7 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
-			target: Helpers.transactions.createTransactionTarget(
+			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.capyVault,
 				CapysApi.constants.capyVault.modules.interface.moduleName,
 				CapysApi.constants.capyVault.modules.interface.functions
