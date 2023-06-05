@@ -191,7 +191,7 @@ export class FaucetApi {
 			typeArguments: [coinType],
 			arguments: [
 				tx.object(this.addresses.objects.faucet),
-				tx.pure(amount.toString()),
+				tx.pure(amount),
 			],
 		});
 	};

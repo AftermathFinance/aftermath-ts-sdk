@@ -1,4 +1,4 @@
-import { Connection, JsonRpcProvider } from "@mysten/sui.js";
+import { Connection, JsonRpcProvider, TransactionBlock } from "@mysten/sui.js";
 import { Aftermath, AftermathApi } from "../src/general/providers";
 import {
 	ASK,
@@ -17,8 +17,7 @@ import {
 } from "./utils";
 
 import { perpetualsConfig, faucetConfig } from "./testConfig";
-
-const usdcType = faucetConfig.packages.faucet + "::usdc::USDC";
+import { orderId } from "../src/packages/perpetuals/utils/critBitTreeUtils";
 
 // =========================================================================
 // TEST CASE FLOW
@@ -31,7 +30,20 @@ describe("Perpetuals Tests", () => {
 		const provider = new JsonRpcProvider(connection);
 		const aftermathApi = new AftermathApi(provider, {
 			perpetuals: perpetualsConfig,
+			faucet: faucetConfig,
 		});
+
+		const usdcType = faucetConfig.packages.faucet + "::usdc::USDC";
+		const initialOrderbookPrice = fromOraclePriceToOrderbookPrice(
+			BigInt(10000_000000000),
+			LOT_SIZE,
+			TICK_SIZE
+		);
+		const finalOrderbookPrice = fromOraclePriceToOrderbookPrice(
+			BigInt(9400_000000000),
+			LOT_SIZE,
+			TICK_SIZE
+		);
 
 		// Create package provider
 		let admin = getSigner(adminPrivateKey, aftermathApi);
@@ -83,7 +95,7 @@ describe("Perpetuals Tests", () => {
 		});
 		await admin.signAndExecuteTransactionBlock({ transactionBlock: tx });
 
-		// Create perpetuals market for BTC/USD with USDC as collateral
+		//Create perpetuals market for BTC/USD with USDC as collateral
 		tx = await aftermathApi.Perpetuals().fetchPerpetualsCreateMarketTx({
 			walletAddress: await admin.getAddress(),
 			coinType: usdcType,
@@ -100,12 +112,12 @@ describe("Perpetuals Tests", () => {
 			forceCancelFee: BigInt(0),
 			insuranceFundFee: BigInt(0),
 			priceImpactFactor: BigInt(0),
-			lotSize: BigInt(1),
-			tickSize: BigInt(1),
+			lotSize: LOT_SIZE,
+			tickSize: TICK_SIZE,
 		});
 		await admin.signAndExecuteTransactionBlock({ transactionBlock: tx });
 
-		// All users gets 10000 USDC
+		//All users gets 10000 USDC
 		tx = await aftermathApi.Faucet().fetchRequestCustomCoinAmountTx({
 			walletAddress: await user1.getAddress(),
 			coinType: usdcType,
@@ -160,21 +172,219 @@ describe("Perpetuals Tests", () => {
 		await user4.signAndExecuteTransactionBlock({ transactionBlock: tx });
 
 		// All users deposit 10000 USDC
-		let coin = await aftermathApi.Coin().fetchCoinWithAmountTx({
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchPerpetualsDepositCollateralTx({
+				walletAddress: await user1.getAddress(),
+				coinType: usdcType,
+				coinAmount: BigInt(10000_000000000),
+				accountId: ACCOUNT_ID,
+			});
+		await user1.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchPerpetualsDepositCollateralTx({
+				walletAddress: await user2.getAddress(),
+				coinType: usdcType,
+				coinAmount: BigInt(10000_000000000),
+				accountId: ACCOUNT_ID,
+			});
+		await user2.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchPerpetualsDepositCollateralTx({
+				walletAddress: await user3.getAddress(),
+				coinType: usdcType,
+				coinAmount: BigInt(10000_000000000),
+				accountId: ACCOUNT_ID,
+			});
+		await user3.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchPerpetualsDepositCollateralTx({
+				walletAddress: await user4.getAddress(),
+				coinType: usdcType,
+				coinAmount: BigInt(10000_000000000),
+				accountId: ACCOUNT_ID,
+			});
+		await user4.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		// User1 place limit ask for 1 BTC at price 10000
+		// User1 cancel limit ask
+		// User1 place limit bid for 10 BTC at price 10000
+		// User2 place market ask for 10 BTC at price 10000
+		// User3 place limit bid for 10 BTC at price 9400
+		// Admin set index price BTC/USDC=9400$
+		// User4 liquidate user1 BTC position
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsPlaceLimitOrderTx({
 			walletAddress: await user1.getAddress(),
-			tx,
 			coinType: usdcType,
-			coinAmount: BigInt(10000_000000000),
+			accountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+			side: ASK,
+			size: BigInt(1_000000000),
+			price: initialOrderbookPrice,
+			orderType: BigInt(0),
 		});
-		console.log(coin);
+		await user1.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsCancelOrderTx({
+			walletAddress: await user1.getAddress(),
+			coinType: usdcType,
+			accountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+			side: ASK,
+			orderId: orderId(initialOrderbookPrice, BigInt(0), ASK),
+		});
+		await user1.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsPlaceLimitOrderTx({
+			walletAddress: await user1.getAddress(),
+			coinType: usdcType,
+			accountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+			side: BID,
+			size: BigInt(10_000000000),
+			price: initialOrderbookPrice,
+			orderType: BigInt(0),
+		});
+		await user1.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsPlaceMarketOrderTx({
+			walletAddress: await user2.getAddress(),
+			coinType: usdcType,
+			accountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+			side: ASK,
+			size: BigInt(10_000000000),
+		});
+		await user2.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsPlaceLimitOrderTx({
+			walletAddress: await user3.getAddress(),
+			coinType: usdcType,
+			accountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+			side: BID,
+			size: BigInt(10_000000000),
+			price: finalOrderbookPrice,
+			orderType: BigInt(0),
+		});
+		await user3.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi.Perpetuals().fetchOracleUpdatePriceFeedTx({
+			walletAddress: await admin.getAddress(),
+			symbol: "BTC",
+			price: BigInt(9400_000000000_000000000),
+			timestamp: 0,
+		});
+		await admin.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsLiquidateTx({
+			walletAddress: await user4.getAddress(),
+			coinType: usdcType,
+			liqee: await user1.getAddress(),
+			liqeeAccountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+			liqorAccountId: ACCOUNT_ID,
+		});
+		await user4.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		// User1 close_position (matched against user3's remainder. He is now 10 BTC long)
+		// User2 place limit bid for 10 BTC at price 9400
+		// User3 close_position (matched against user2, closing the circle)
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsClosePositionTx({
+			walletAddress: await user1.getAddress(),
+			coinType: usdcType,
+			accountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+		});
+		await user1.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsPlaceLimitOrderTx({
+			walletAddress: await user2.getAddress(),
+			coinType: usdcType,
+			accountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+			side: BID,
+			size: BigInt(10_000000000),
+			price: finalOrderbookPrice,
+			orderType: BigInt(0),
+		});
+		await user2.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi.Perpetuals().fetchPerpetualsClosePositionTx({
+			walletAddress: await user3.getAddress(),
+			coinType: usdcType,
+			accountId: ACCOUNT_ID,
+			marketId: MARKET_ID0,
+		});
+		await user3.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		// Admin set timestamp to 90000
+		// Admin call update funding (might fail because of update frequency)
+		// User1 withdraw collateral 2000 USDC
+		// User2 withdraw collateral 2000 USDC
+		// User3 withdraw collateral 2000 USDC
+		// User4 withdraw collateral 2000 USDC
+		tx = await aftermathApi.Perpetuals().fetchOracleUpdatePriceFeedTx({
+			walletAddress: await admin.getAddress(),
+			symbol: "BTC",
+			price: BigInt(9400_000000000_000000000),
+			timestamp: 1687975495000,
+		});
+		await admin.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
 		// tx = await aftermathApi
 		// 	.Perpetuals()
-		// 	.fetchPerpetualsDepositCollateralTx({
-		// 		walletAddress: await user1.getAddress(),
+		// 	.fetchPerpetualsUpdateFundingTx({
+		// 		walletAddress: await admin.getAddress(),
 		// 		coinType: usdcType,
-		// 		coin: "",
-		// 		accountId: ACCOUNT_ID,
+		// 		marketId: MARKET_ID0,
 		// 	});
-		// await user1.signAndExecuteTransactionBlock({ transactionBlock: tx });
+		// await admin.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchPerpetualsWithdrawCollateralTx({
+				walletAddress: await user1.getAddress(),
+				coinType: usdcType,
+				accountId: ACCOUNT_ID,
+				amount: BigInt(2000_000000000),
+			});
+		await user1.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchPerpetualsWithdrawCollateralTx({
+				walletAddress: await user2.getAddress(),
+				coinType: usdcType,
+				accountId: ACCOUNT_ID,
+				amount: BigInt(2000_000000000),
+			});
+		await user2.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchPerpetualsWithdrawCollateralTx({
+				walletAddress: await user3.getAddress(),
+				coinType: usdcType,
+				accountId: ACCOUNT_ID,
+				amount: BigInt(2000_000000000),
+			});
+		await user3.signAndExecuteTransactionBlock({ transactionBlock: tx });
+
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchPerpetualsWithdrawCollateralTx({
+				walletAddress: await user4.getAddress(),
+				coinType: usdcType,
+				accountId: ACCOUNT_ID,
+				amount: BigInt(2000_000000000),
+			});
+		await user4.signAndExecuteTransactionBlock({ transactionBlock: tx });
 	}, 50000000);
 });

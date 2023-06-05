@@ -1,4 +1,9 @@
-import { ObjectId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import {
+	ObjectId,
+	SuiAddress,
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinType, PerpetualsAddresses, Timestamp } from "../../../types";
 
@@ -144,14 +149,22 @@ export class PerpetualsApi {
 	public fetchPerpetualsDepositCollateralTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
-		coin: ObjectId;
+		coinAmount: bigint;
 		accountId: bigint;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
+		const { walletAddress, coinType, coinAmount } = inputs;
+		let coin = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType,
+			coinAmount,
+		});
 		this.perpetualsDepositCollateralTx({
 			tx,
+			coin,
 			...inputs,
 		});
 
@@ -190,7 +203,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsPlaceMarketOrderTx({
+		this.perpetualsPlaceLimitOrderTx({
 			tx,
 			...inputs,
 		});
@@ -411,7 +424,7 @@ export class PerpetualsApi {
 				tx.object(this.addresses.objects.adminCapability),
 				// TODO: create a Map<coinType, Exchange> and get the correspondent accountManager
 				// Same for all the other functions
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges[0].marketManager),
 				tx.pure(marketId),
 				tx.pure(marginRatioInitial),
 				tx.pure(marginRatioMaintenance),
@@ -434,10 +447,11 @@ export class PerpetualsApi {
 	public perpetualsDepositCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
-		coin: ObjectId;
+		coin: ObjectId | TransactionArgument;
 		accountId: bigint;
 	}) => {
 		const { tx, coinType, coin, accountId } = inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTransactionTarget(
 				this.addresses.packages.perpetuals,
@@ -446,7 +460,7 @@ export class PerpetualsApi {
 			),
 			typeArguments: [coinType],
 			arguments: [
-				tx.object(coin),
+				typeof coin === "string" ? tx.object(coin) : coin,
 				tx.object(this.addresses.objects.exchanges[0].accountManager),
 				tx.pure(accountId),
 				tx.object(this.addresses.objects.exchanges[0].vault),
@@ -573,6 +587,9 @@ export class PerpetualsApi {
 			arguments: [
 				tx.object(this.addresses.objects.exchanges[0].accountManager),
 				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
 				tx.pure(accountId),
 				tx.pure(marketId),
 			],
