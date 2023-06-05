@@ -86,14 +86,14 @@ export class PerpetualsApi {
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
-	public fetchPerpetualsInitializeForCollateralTx = async (inputs: {
+	public fetchInitializeForCollateralTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsInitializeForCollateralTx({
+		this.initializeForCollateralTx({
 			tx,
 			...inputs,
 		});
@@ -101,14 +101,14 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPereptualsTransferAdminCapTx = async (inputs: {
+	public fetchTransferAdminCapTx = async (inputs: {
 		walletAddress: SuiAddress;
 		targetAddress: SuiAddress;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.pereptualsTransferAdminCapTx({
+		this.transferAdminCapTx({
 			tx,
 			...inputs,
 		});
@@ -116,7 +116,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsCreateMarketTx = async (inputs: {
+	public fetchCreateMarketTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		marketId: bigint;
@@ -138,7 +138,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsCreateMarketTx({
+		this.createMarketTx({
 			tx,
 			...inputs,
 		});
@@ -146,7 +146,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsDepositCollateralTx = async (inputs: {
+	public fetchDepositCollateralTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		coinAmount: bigint;
@@ -162,7 +162,7 @@ export class PerpetualsApi {
 			coinType,
 			coinAmount,
 		});
-		this.perpetualsDepositCollateralTx({
+		this.depositCollateralTx({
 			tx,
 			coin,
 			...inputs,
@@ -171,7 +171,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsPlaceMarketOrderTx = async (inputs: {
+	public fetchPlaceMarketOrderTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		accountId: bigint;
@@ -182,7 +182,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsPlaceMarketOrderTx({
+		this.placeMarketOrderTx({
 			tx,
 			...inputs,
 		});
@@ -190,7 +190,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsPlaceLimitOrderTx = async (inputs: {
+	public fetchPlaceLimitOrderTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		accountId: bigint;
@@ -203,7 +203,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsPlaceLimitOrderTx({
+		this.placeLimitOrderTx({
 			tx,
 			...inputs,
 		});
@@ -211,7 +211,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsCancelOrderTx = async (inputs: {
+	public fetchCancelOrderTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		accountId: bigint;
@@ -222,7 +222,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsCancelOrderTx({
+		this.cancelOrderTx({
 			tx,
 			...inputs,
 		});
@@ -230,7 +230,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsClosePositionTx = async (inputs: {
+	public fetchClosePositionTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		accountId: bigint;
@@ -239,7 +239,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsClosePositionTx({
+		this.closePositionTx({
 			tx,
 			...inputs,
 		});
@@ -247,7 +247,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsWithdrawCollateralTx = async (inputs: {
+	public fetchWithdrawCollateralTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		accountId: bigint;
@@ -256,7 +256,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsWithdrawCollateralTx({
+		this.withdrawCollateralTx({
 			tx,
 			...inputs,
 		});
@@ -264,7 +264,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsLiquidateTx = async (inputs: {
+	public fetchLiquidateTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		liqee: SuiAddress;
@@ -275,7 +275,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsLiquidateTx({
+		this.liquidateTx({
 			tx,
 			...inputs,
 		});
@@ -283,7 +283,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsLiquidateAcquireTx = async (inputs: {
+	public fetchLiquidateAcquireTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		liqee: SuiAddress;
@@ -294,7 +294,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsLiquidateAcquireTx({
+		this.liquidateAcquireTx({
 			tx,
 			...inputs,
 		});
@@ -302,7 +302,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsUpdateFundingTx = async (inputs: {
+	public fetchUpdateFundingTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		marketId: bigint;
@@ -310,7 +310,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsUpdateFundingTx({
+		this.updateFundingTx({
 			tx,
 			...inputs,
 		});
@@ -318,14 +318,14 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPerpetualsCreateAccountTx = async (inputs: {
+	public fetchCreateAccountTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.perpetualsCreateAccountTx({
+		this.createAccountTx({
 			tx,
 			...inputs,
 		});
@@ -336,7 +336,8 @@ export class PerpetualsApi {
 	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
-	public perpetualsInitializeForCollateralTx = (inputs: {
+
+	public initializeForCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 	}) => {
@@ -355,7 +356,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public pereptualsTransferAdminCapTx = (inputs: {
+	public transferAdminCapTx = (inputs: {
 		tx: TransactionBlock;
 		targetAddress: SuiAddress;
 	}) => {
@@ -375,7 +376,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsCreateMarketTx = (inputs: {
+	public createMarketTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		marketId: bigint;
@@ -444,7 +445,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsDepositCollateralTx = (inputs: {
+	public depositCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		coin: ObjectId | TransactionArgument;
@@ -468,7 +469,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsPlaceMarketOrderTx = (inputs: {
+	public placeMarketOrderTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -499,7 +500,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsPlaceLimitOrderTx = (inputs: {
+	public placeLimitOrderTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -543,7 +544,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsCancelOrderTx = (inputs: {
+	public cancelOrderTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -570,7 +571,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsClosePositionTx = (inputs: {
+	public closePositionTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -596,7 +597,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsWithdrawCollateralTx = (inputs: {
+	public withdrawCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountId: bigint;
@@ -624,7 +625,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsLiquidateTx = (inputs: {
+	public liquidateTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		liqee: SuiAddress;
@@ -661,7 +662,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsLiquidateAcquireTx = (inputs: {
+	public liquidateAcquireTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		liqee: SuiAddress;
@@ -698,7 +699,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsUpdateFundingTx = (inputs: {
+	public updateFundingTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		marketId: bigint;
@@ -722,7 +723,7 @@ export class PerpetualsApi {
 		});
 	};
 
-	public perpetualsCreateAccountTx = (inputs: {
+	public createAccountTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 	}) => {
@@ -743,6 +744,7 @@ export class PerpetualsApi {
 	// =========================================================================
 	//  Oracle Transactions
 	// =========================================================================
+
 	public fetchOracleCreatePriceFeedTx = async (inputs: {
 		walletAddress: SuiAddress;
 		symbol: string;
