@@ -1,4 +1,4 @@
-export * from "./packages/capys/capysTypes";
+export * from "./packages/suiFrens/suiFrensTypes";
 export * from "./packages/faucet/faucetTypes";
 export * from "./packages/pools/poolsTypes";
 export * from "./packages/staking/stakingTypes";

@@ -1,25 +1,25 @@
 import {
-	ApiStakeCapyBody,
+	ApiStakeSuiFrenBody,
 	SuiNetwork,
-	CapyObject,
+	SuiFrenObject,
 	SerializedTransaction,
 	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { TransactionBlock } from "@mysten/sui.js";
 
-export class Capy extends Caller {
+export class SuiFren extends Caller {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(
-		public readonly capy: CapyObject,
+		public readonly suiFren: SuiFrenObject,
 		public readonly network?: SuiNetwork | Url,
 		public readonly isStaked: boolean = false
 	) {
-		super(network, "capys");
-		this.capy = capy;
+		super(network, "suiFrens");
+		this.suiFren = suiFren;
 		this.isStaked = isStaked;
 	}
 
@@ -29,12 +29,12 @@ export class Capy extends Caller {
 
 	public async getStakeTransaction() {
 		if (this.isStaked)
-			throw new Error("unable to stake already staked capy");
+			throw new Error("unable to stake already staked suiFren");
 
-		return this.fetchApiTransaction<ApiStakeCapyBody>(
+		return this.fetchApiTransaction<ApiStakeSuiFrenBody>(
 			"transactions/stake",
 			{
-				capyId: this.capy.objectId,
+				suiFrenId: this.suiFren.objectId,
 			}
 		);
 	}

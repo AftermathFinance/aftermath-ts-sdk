@@ -1,4 +1,4 @@
-export * from "./capys";
+export * from "./suiFrens";
 export * from "./pools";
 export * from "./router";
 export * from "./staking";

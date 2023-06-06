@@ -5,28 +5,28 @@ import {
 	TransactionBlock,
 } from "@mysten/sui.js";
 import {
-	ApiBreedCapyBody,
+	ApiBreedSuiFrenBody,
 	ApiDynamicFieldsBody,
 	ApiEventsBody,
-	BreedCapysEvent,
-	CapyAttribute,
-	CapyObject,
-	CapyStats,
+	BreedSuiFrensEvent,
+	SuiFrenAttribute,
+	SuiFrenObject,
+	SuiFrenStats,
 	DynamicFieldObjectsWithCursor,
 	EventsInputs,
 	EventsWithCursor,
 	SerializedTransaction,
-	StakeCapyEvent,
-	StakedCapyReceiptObject,
+	StakeSuiFrenEvent,
+	StakedSuiFrenReceiptObject,
 	SuiNetwork,
-	UnstakeCapyEvent,
+	UnstakeSuiFrenEvent,
 	Url,
 } from "../../types";
-import { Capy } from "./capy";
-import { StakedCapyReceipt } from "./stakedCapyReceipt";
+import { SuiFren } from "./suiFren";
+import { StakedSuiFrenReceipt } from "./stakedSuiFrenReceipt";
 import { Caller } from "../../general/utils/caller";
 
-export class Capys extends Caller {
+export class SuiFrens extends Caller {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -47,7 +47,7 @@ export class Capys extends Caller {
 	// =========================================================================
 
 	constructor(public readonly network?: SuiNetwork | Url) {
-		super(network, "capys");
+		super(network, "suiFrens");
 	}
 
 	// =========================================================================
@@ -58,40 +58,40 @@ export class Capys extends Caller {
 	//  Class Objects
 	// =========================================================================
 
-	public async getCapy(capyObjectId: ObjectId) {
-		const capys = await this.getCapys([capyObjectId]);
-		return capys[0];
+	public async getSuiFren(suiFrenObjectId: ObjectId) {
+		const suiFrens = await this.getSuiFrens([suiFrenObjectId]);
+		return suiFrens[0];
 	}
 
-	public async getCapys(capyObjectIds: ObjectId[]) {
-		const capys = await this.fetchApi<CapyObject[]>(
-			`${JSON.stringify(capyObjectIds)}`
+	public async getSuiFrens(suiFrenObjectIds: ObjectId[]) {
+		const suiFrens = await this.fetchApi<SuiFrenObject[]>(
+			`${JSON.stringify(suiFrenObjectIds)}`
 		);
 
-		return capys.map((capy) => new Capy(capy, this.network));
+		return suiFrens.map((suiFren) => new SuiFren(suiFren, this.network));
 	}
 
-	public async getOwnedCapys(walletAddress: SuiAddress) {
-		const ownedCapys = await this.fetchApi<CapyObject[]>(
-			`owned-capys/${walletAddress}`
+	public async getOwnedSuiFrens(walletAddress: SuiAddress) {
+		const ownedSuiFrens = await this.fetchApi<SuiFrenObject[]>(
+			`owned-suiFrens/${walletAddress}`
 		);
 
-		return ownedCapys.map((capy) => new Capy(capy, this.network));
+		return ownedSuiFrens.map((suiFren) => new SuiFren(suiFren, this.network));
 	}
 
-	public async getStakedCapyReceipts(walletAddress: SuiAddress) {
-		const stakedCapyReceipts = await this.fetchApi<
-			StakedCapyReceiptObject[]
-		>(`staked-capy-receipts/${walletAddress}`);
+	public async getStakedSuiFrenReceipts(walletAddress: SuiAddress) {
+		const stakedSuiFrenReceipts = await this.fetchApi<
+			StakedSuiFrenReceiptObject[]
+		>(`staked-suiFren-receipts/${walletAddress}`);
 
-		const stakedCapys = await this.getCapys(
-			stakedCapyReceipts.map((receipt) => receipt.capyId)
+		const stakedSuiFrens = await this.getSuiFrens(
+			stakedSuiFrenReceipts.map((receipt) => receipt.suiFrenId)
 		);
 
-		return stakedCapyReceipts.map(
+		return stakedSuiFrenReceipts.map(
 			(receipt, index) =>
-				new StakedCapyReceipt(
-					new Capy(stakedCapys[index].capy, this.network, true),
+				new StakedSuiFrenReceipt(
+					new SuiFren(stakedSuiFrens[index].suiFren, this.network, true),
 					receipt,
 					this.network
 				)
@@ -102,26 +102,26 @@ export class Capys extends Caller {
 	//  Dynamic Fields
 	// =========================================================================
 
-	public async getStakedCapys(
-		attributes?: CapyAttribute[],
+	public async getStakedSuiFrens(
+		attributes?: SuiFrenAttribute[],
 		cursor?: ObjectId,
 		limit?: number
-	): Promise<DynamicFieldObjectsWithCursor<Capy>> {
-		const capysWithCursor = await this.fetchApi<
-			DynamicFieldObjectsWithCursor<CapyObject>,
+	): Promise<DynamicFieldObjectsWithCursor<SuiFren>> {
+		const suiFrensWithCursor = await this.fetchApi<
+			DynamicFieldObjectsWithCursor<SuiFrenObject>,
 			ApiDynamicFieldsBody
-		>(`staked-capys${Capys.createCapyAttributesQueryString(attributes)}`, {
+		>(`staked-suiFrens${SuiFrens.createSuiFrenAttributesQueryString(attributes)}`, {
 			cursor,
 			limit,
 		});
 
-		const capys = capysWithCursor.dynamicFieldObjects.map(
-			(capy) => new Capy(capy, this.network, true)
+		const suiFrens = suiFrensWithCursor.dynamicFieldObjects.map(
+			(suiFren) => new SuiFren(suiFren, this.network, true)
 		);
 
 		return {
-			dynamicFieldObjects: capys,
-			nextCursor: capysWithCursor.nextCursor,
+			dynamicFieldObjects: suiFrens,
+			nextCursor: suiFrensWithCursor.nextCursor,
 		};
 	}
 
@@ -129,20 +129,20 @@ export class Capys extends Caller {
 	//  Events
 	// =========================================================================
 
-	public async getBreedCapyEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<BreedCapysEvent>(
-			"events/breed-capys",
+	public async getBreedSuiFrenEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<BreedSuiFrensEvent>(
+			"events/breed-suiFrens",
 			inputs
 		);
 	}
 
-	public async getStakeCapyEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<StakeCapyEvent>("events/stake-capy", inputs);
+	public async getStakeSuiFrenEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<StakeSuiFrenEvent>("events/stake-suiFren", inputs);
 	}
 
-	public async getUnstakeCapyEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<UnstakeCapyEvent>(
-			"events/unstake-capy",
+	public async getUnstakeSuiFrenEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<UnstakeSuiFrenEvent>(
+			"events/unstake-suiFren",
 			inputs
 		);
 	}
@@ -151,17 +151,17 @@ export class Capys extends Caller {
 	//  Transactions
 	////////////////////////////////////////////////////////////////////
 
-	public async getBreedCapysTransaction(
+	public async getBreedSuiFrensTransaction(
 		walletAddress: SuiAddress,
-		capyParentOneId: ObjectId,
-		capyParentTwoId: ObjectId
+		suiFrenParentOneId: ObjectId,
+		suiFrenParentTwoId: ObjectId
 	) {
-		return this.fetchApiTransaction<ApiBreedCapyBody>(
+		return this.fetchApiTransaction<ApiBreedSuiFrenBody>(
 			"transactions/breed",
 			{
 				walletAddress,
-				capyParentOneId,
-				capyParentTwoId,
+				suiFrenParentOneId,
+				suiFrenParentTwoId,
 			}
 		);
 	}
@@ -174,7 +174,7 @@ export class Capys extends Caller {
 		return this.fetchApi("status");
 	}
 
-	public async getStats(): Promise<CapyStats> {
+	public async getStats(): Promise<SuiFrenStats> {
 		return this.fetchApi("stats");
 	}
 
@@ -186,8 +186,8 @@ export class Capys extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	private static createCapyAttributesQueryString(
-		attributes?: CapyAttribute[]
+	private static createSuiFrenAttributesQueryString(
+		attributes?: SuiFrenAttribute[]
 	) {
 		return attributes === undefined || attributes.length === 0
 			? ""

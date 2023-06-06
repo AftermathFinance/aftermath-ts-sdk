@@ -7,34 +7,34 @@ import {
 	TransactionBlock,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { CapysApiCasting } from "./capysApiCasting";
+import { SuiFrensApiCasting } from "./suiFrensApiCasting";
 import {
-	BreedCapysEvent,
-	CapyAttribute,
-	CapyBornEvent,
-	StakedCapyFeesEarned,
-	CapyObject,
-	CapyStats,
-	CapyVaultObject,
-	StakeCapyEvent,
-	StakedCapyReceiptObject,
-	StakedCapyReceiptWithCapyObject,
-	UnstakeCapyEvent,
-} from "../capysTypes";
+	BreedSuiFrensEvent,
+	SuiFrenAttribute,
+	SuiFrenBornEvent,
+	StakedSuiFrenFeesEarned,
+	SuiFrenObject,
+	SuiFrenStats,
+	SuiFrenVaultObject,
+	StakeSuiFrenEvent,
+	StakedSuiFrenReceiptObject,
+	StakedSuiFrenReceiptWithSuiFrenObject,
+	UnstakeSuiFrenEvent,
+} from "../suiFrensTypes";
 import {
-	BreedCapyEventOnChain,
-	CapyBornEventOnChain,
-	StakeCapyEventOnChain,
-	UnstakeCapyEventOnChain,
-} from "./capysApiCastingTypes";
+	BreedSuiFrenEventOnChain,
+	SuiFrenBornEventOnChain,
+	StakeSuiFrenEventOnChain,
+	UnstakeSuiFrenEventOnChain,
+} from "./suiFrensApiCastingTypes";
 import { AmountInCoinAndUsd, CoinDecimal } from "../../coin/coinTypes";
 import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils/helpers";
-import { Capys } from "../capys";
+import { SuiFrens } from "../suiFrens";
 import {
 	AnyObjectType,
 	Balance,
-	CapysAddresses,
+	SuiFrensAddresses,
 	DynamicFieldObjectsWithCursor,
 	DynamicFieldsInputs,
 	EventsInputs,
@@ -43,30 +43,30 @@ import {
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
-export class CapysApi {
+export class SuiFrensApi {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
 	private static readonly constants = {
-		capy: {
+		suiFren: {
 			modules: {
-				capy: {
-					moduleName: "capy",
+				suiFren: {
+					moduleName: "suiFren",
 				},
 			},
 		},
 
-		capyVault: {
+		suiFrenVault: {
 			modules: {
 				interface: {
 					moduleName: "interface",
 					functions: {
-						stakeCapy: {
-							name: "stake_capy",
+						stakeSuiFren: {
+							name: "stake_suiFren",
 						},
-						unstakeCapy: {
-							name: "unstake_capy",
+						unstakeSuiFren: {
+							name: "unstake_suiFren",
 						},
 						withdrawFees: {
 							name: "withdraw_fees",
@@ -88,8 +88,8 @@ export class CapysApi {
 						},
 					},
 				},
-				capyVault: {
-					moduleName: "capy_vault",
+				suiFrenVault: {
+					moduleName: "suiFren_vault",
 					functions: {
 						feesEarnedIndividual: {
 							name: "fees_earned_individual",
@@ -103,10 +103,10 @@ export class CapysApi {
 		},
 
 		eventNames: {
-			capyBorn: "CapyBorn",
-			breedCapy: "BreedCapyEvent",
-			stakeCapy: "StakeCapyEvent",
-			unstakeCapy: "UnstakeCapyEvent",
+			suiFrenBorn: "SuiFrenBorn",
+			breedSuiFren: "BreedSuiFrenEvent",
+			stakeSuiFren: "StakeSuiFrenEvent",
+			unstakeSuiFren: "UnstakeSuiFrenEvent",
 			withdrawFees: "WithdrawFeesEvent",
 		},
 	};
@@ -115,18 +115,18 @@ export class CapysApi {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: CapysAddresses;
+	public readonly addresses: SuiFrensAddresses;
 
 	public readonly objectTypes: {
-		capyObjectType: AnyObjectType;
-		stakedCapyReceiptObjectType: AnyObjectType;
+		suiFrenObjectType: AnyObjectType;
+		stakedSuiFrenReceiptObjectType: AnyObjectType;
 	};
 
 	public readonly eventTypes: {
-		capyBorn: AnyObjectType;
-		breedCapys: AnyObjectType;
-		stakeCapy: AnyObjectType;
-		unstakeCapy: AnyObjectType;
+		suiFrenBorn: AnyObjectType;
+		breedSuiFrens: AnyObjectType;
+		stakeSuiFren: AnyObjectType;
+		unstakeSuiFren: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -134,7 +134,7 @@ export class CapysApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.capys;
+		const addresses = this.Provider.addresses.suiFrens;
 		if (!addresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
@@ -143,15 +143,15 @@ export class CapysApi {
 		this.addresses = addresses;
 
 		this.objectTypes = {
-			capyObjectType: `${addresses.packages.capy}::capy::Capy`,
-			stakedCapyReceiptObjectType: `${addresses.packages.capyVault}::capy_vault::StakingReceipt`,
+			suiFrenObjectType: `${addresses.packages.suiFren}::suiFren::SuiFren`,
+			stakedSuiFrenReceiptObjectType: `${addresses.packages.suiFrenVault}::suiFren_vault::StakingReceipt`,
 		};
 
 		this.eventTypes = {
-			capyBorn: this.capyBornEventType(),
-			breedCapys: this.breedCapysEventType(),
-			stakeCapy: this.stakeCapyEventType(),
-			unstakeCapy: this.unstakeCapyEventType(),
+			suiFrenBorn: this.suiFrenBornEventType(),
+			breedSuiFrens: this.breedSuiFrensEventType(),
+			stakeSuiFren: this.stakeSuiFrenEventType(),
+			unstakeSuiFren: this.unstakeSuiFrenEventType(),
 		};
 	}
 
@@ -163,70 +163,70 @@ export class CapysApi {
 	//  Inspections
 	// =========================================================================
 
-	public fetchStakedCapyFeesEarned = async (
-		stakedCapyReceiptObjectId: ObjectId
-	): Promise<StakedCapyFeesEarned> => {
-		const [capyFeesEarnedIndividual, capyFeesEarnedGlobal] =
+	public fetchStakedSuiFrenFeesEarned = async (
+		stakedSuiFrenReceiptObjectId: ObjectId
+	): Promise<StakedSuiFrenFeesEarned> => {
+		const [suiFrenFeesEarnedIndividual, suiFrenFeesEarnedGlobal] =
 			await Promise.all([
-				this.fetchStakedCapyFeesEarnedIndividual(
-					stakedCapyReceiptObjectId
+				this.fetchStakedSuiFrenFeesEarnedIndividual(
+					stakedSuiFrenReceiptObjectId
 				),
-				this.fetchStakedCapyFeesEarnedGlobal(),
+				this.fetchStakedSuiFrenFeesEarnedGlobal(),
 			]);
 
 		return {
-			individualFees: capyFeesEarnedIndividual,
-			globalFees: capyFeesEarnedGlobal,
+			individualFees: suiFrenFeesEarnedIndividual,
+			globalFees: suiFrenFeesEarnedGlobal,
 		};
 	};
 
-	public fetchIsCapyPackageOnChain = () =>
+	public fetchIsSuiFrenPackageOnChain = () =>
 		this.Provider.Objects().fetchDoesObjectExist(
-			this.addresses.packages.capy
+			this.addresses.packages.suiFren
 		);
 
-	public fetchCapysStakedInCapyVaultWithAttributes = async (inputs: {
-		attributes: CapyAttribute[];
+	public fetchSuiFrensStakedInSuiFrenVaultWithAttributes = async (inputs: {
+		attributes: SuiFrenAttribute[];
 		limit: number;
 		limitStepSize?: number;
 		cursor?: ObjectId;
 	}) => {
 		const { limit, attributes } = inputs;
 
-		const isComplete = (capys: CapyObject[]) => {
+		const isComplete = (suiFrens: SuiFrenObject[]) => {
 			return (
-				this.filterCapysWithAttributes(capys, attributes).length >=
+				this.filterSuiFrensWithAttributes(suiFrens, attributes).length >=
 				limit
 			);
 		};
 
-		const capysWithCursor =
+		const suiFrensWithCursor =
 			await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
 				...inputs,
-				fetchFunc: this.fetchCapysStakedInCapyVault,
+				fetchFunc: this.fetchSuiFrensStakedInSuiFrenVault,
 				isComplete,
 			});
 
-		const filteredCapys = this.filterCapysWithAttributes(
-			capysWithCursor.dynamicFieldObjects,
+		const filteredSuiFrens = this.filterSuiFrensWithAttributes(
+			suiFrensWithCursor.dynamicFieldObjects,
 			attributes
 		);
-		const resizedCapysWithCursor: DynamicFieldObjectsWithCursor<CapyObject> =
+		const resizedSuiFrensWithCursor: DynamicFieldObjectsWithCursor<SuiFrenObject> =
 			{
 				nextCursor:
-					capysWithCursor.nextCursor ?? limit < filteredCapys.length
-						? filteredCapys[limit].objectId
-						: capysWithCursor.nextCursor,
-				dynamicFieldObjects: filteredCapys.slice(0, limit),
+					suiFrensWithCursor.nextCursor ?? limit < filteredSuiFrens.length
+						? filteredSuiFrens[limit].objectId
+						: suiFrensWithCursor.nextCursor,
+				dynamicFieldObjects: filteredSuiFrens.slice(0, limit),
 			};
-		return resizedCapysWithCursor;
+		return resizedSuiFrensWithCursor;
 	};
 
-	public fetchStakedCapyFeesEarnedIndividual = async (
+	public fetchStakedSuiFrenFeesEarnedIndividual = async (
 		stakingReceiptId: ObjectId
 	) => {
 		const tx =
-			this.capyFeesEarnedIndividualDevInspectTransaction(
+			this.suiFrenFeesEarnedIndividualDevInspectTransaction(
 				stakingReceiptId
 			);
 		const bytes =
@@ -234,29 +234,29 @@ export class CapysApi {
 		return Casting.bigIntFromBytes(bytes);
 	};
 
-	public fetchStakedCapyFeesEarnedGlobal = async () => {
-		const tx = this.capyFeesEarnedGlobalDevInspectTransaction();
+	public fetchStakedSuiFrenFeesEarnedGlobal = async () => {
+		const tx = this.suiFrenFeesEarnedGlobalDevInspectTransaction();
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 
-	public capyFeesEarnedIndividualDevInspectTransaction = (
+	public suiFrenFeesEarnedIndividualDevInspectTransaction = (
 		stakingReceiptId: ObjectId
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.capyVault.moduleName,
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.suiFrenVault.moduleName,
 
-				CapysApi.constants.capyVault.modules.capyVault.functions
+				SuiFrensApi.constants.suiFrenVault.modules.suiFrenVault.functions
 					.feesEarnedIndividual.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
+				tx.object(this.addresses.objects.suiFrenVault),
 				tx.object(stakingReceiptId),
 			],
 		});
@@ -264,18 +264,18 @@ export class CapysApi {
 		return tx;
 	};
 
-	public capyFeesEarnedGlobalDevInspectTransaction = (): TransactionBlock => {
+	public suiFrenFeesEarnedGlobalDevInspectTransaction = (): TransactionBlock => {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.capyVault.moduleName,
-				CapysApi.constants.capyVault.modules.capyVault.functions
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.suiFrenVault.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.suiFrenVault.functions
 					.feesEarnedGlobal.name
 			),
 			typeArguments: [],
-			arguments: [tx.object(this.addresses.objects.capyVault)],
+			arguments: [tx.object(this.addresses.objects.suiFrenVault)],
 		});
 
 		return tx;
@@ -285,52 +285,52 @@ export class CapysApi {
 	//  Events
 	// =========================================================================
 
-	public fetchCapyBornEvents = async (inputs: EventsInputs) =>
+	public fetchSuiFrenBornEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			CapyBornEventOnChain,
-			CapyBornEvent
+			SuiFrenBornEventOnChain,
+			SuiFrenBornEvent
 		>({
 			...inputs,
 			query: {
-				MoveEventType: this.eventTypes.capyBorn,
+				MoveEventType: this.eventTypes.suiFrenBorn,
 			},
-			eventFromEventOnChain: CapysApiCasting.capyBornEventFromOnChain,
+			eventFromEventOnChain: SuiFrensApiCasting.suiFrenBornEventFromOnChain,
 		});
 
-	public fetchBreedCapysEvents = async (inputs: EventsInputs) =>
+	public fetchBreedSuiFrensEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			BreedCapyEventOnChain,
-			BreedCapysEvent
+			BreedSuiFrenEventOnChain,
+			BreedSuiFrensEvent
 		>({
 			...inputs,
 			query: {
-				MoveEventType: this.eventTypes.breedCapys,
+				MoveEventType: this.eventTypes.breedSuiFrens,
 			},
-			eventFromEventOnChain: CapysApiCasting.breedCapysEventFromOnChain,
+			eventFromEventOnChain: SuiFrensApiCasting.breedSuiFrensEventFromOnChain,
 		});
 
-	public fetchStakeCapyEvents = async (inputs: EventsInputs) =>
+	public fetchStakeSuiFrenEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			StakeCapyEventOnChain,
-			StakeCapyEvent
+			StakeSuiFrenEventOnChain,
+			StakeSuiFrenEvent
 		>({
 			...inputs,
 			query: {
-				MoveEventType: this.eventTypes.stakeCapy,
+				MoveEventType: this.eventTypes.stakeSuiFren,
 			},
-			eventFromEventOnChain: CapysApiCasting.stakeCapyEventFromOnChain,
+			eventFromEventOnChain: SuiFrensApiCasting.stakeSuiFrenEventFromOnChain,
 		});
 
-	public fetchUnstakeCapyEvents = async (inputs: EventsInputs) =>
+	public fetchUnstakeSuiFrenEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			UnstakeCapyEventOnChain,
-			UnstakeCapyEvent
+			UnstakeSuiFrenEventOnChain,
+			UnstakeSuiFrenEvent
 		>({
 			...inputs,
 			query: {
-				MoveEventType: this.eventTypes.unstakeCapy,
+				MoveEventType: this.eventTypes.unstakeSuiFren,
 			},
-			eventFromEventOnChain: CapysApiCasting.unstakeCapyEventFromOnChain,
+			eventFromEventOnChain: SuiFrensApiCasting.unstakeSuiFrenEventFromOnChain,
 		});
 
 	// =========================================================================
@@ -338,154 +338,154 @@ export class CapysApi {
 	// =========================================================================
 
 	// =========================================================================
-	//  Capy Objects
+	//  SuiFren Objects
 	// =========================================================================
 
-	public fetchCapys = async (capyIds: ObjectId[]): Promise<CapyObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<CapyObject>({
-			objectIds: capyIds,
+	public fetchSuiFrens = async (suiFrenIds: ObjectId[]): Promise<SuiFrenObject[]> => {
+		return this.Provider.Objects().fetchCastObjectBatch<SuiFrenObject>({
+			objectIds: suiFrenIds,
 			objectFromSuiObjectResponse:
-				CapysApiCasting.capyObjectFromSuiObjectResponse,
+				SuiFrensApiCasting.suiFrenObjectFromSuiObjectResponse,
 		});
 	};
 
-	public fetchCapysOwnedByAddress = async (
+	public fetchSuiFrensOwnedByAddress = async (
 		walletAddress: SuiAddress
-	): Promise<CapyObject[]> => {
+	): Promise<SuiFrenObject[]> => {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			{
 				walletAddress,
-				objectType: this.objectTypes.capyObjectType,
+				objectType: this.objectTypes.suiFrenObjectType,
 				objectFromSuiObjectResponse:
-					CapysApiCasting.capyObjectFromSuiObjectResponse,
+					SuiFrensApiCasting.suiFrenObjectFromSuiObjectResponse,
 			}
 		);
 	};
 
-	public fetchStakedCapys = async (
-		capyIds: ObjectId[]
-	): Promise<CapyObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<CapyObject>({
-			objectIds: capyIds,
+	public fetchStakedSuiFrens = async (
+		suiFrenIds: ObjectId[]
+	): Promise<SuiFrenObject[]> => {
+		return this.Provider.Objects().fetchCastObjectBatch<SuiFrenObject>({
+			objectIds: suiFrenIds,
 			objectFromSuiObjectResponse:
-				CapysApiCasting.capyObjectFromSuiObjectResponse,
+				SuiFrensApiCasting.suiFrenObjectFromSuiObjectResponse,
 		});
 	};
 
-	public fetchStakedCapysOwnedByAddress = async (
+	public fetchStakedSuiFrensOwnedByAddress = async (
 		walletAddress: SuiAddress
-	): Promise<CapyObject[]> => {
+	): Promise<SuiFrenObject[]> => {
 		// i. obtain all owned StakingReceipt
-		const capyIdsStakedByAddress = (
-			await this.fetchStakedCapyReceiptOwnedByAddress(walletAddress)
-		).map((capyStakingReceipt) => capyStakingReceipt.capyId);
+		const suiFrenIdsStakedByAddress = (
+			await this.fetchStakedSuiFrenReceiptOwnedByAddress(walletAddress)
+		).map((suiFrenStakingReceipt) => suiFrenStakingReceipt.suiFrenId);
 
-		// ii. obtain a Capy object from each Capy ObjectId
-		const stakedCapys = await this.fetchStakedCapys(capyIdsStakedByAddress);
+		// ii. obtain a SuiFren object from each SuiFren ObjectId
+		const stakedSuiFrens = await this.fetchStakedSuiFrens(suiFrenIdsStakedByAddress);
 
-		return stakedCapys;
+		return stakedSuiFrens;
 	};
 
-	public fetchCapyVault = async (
-		capyVaultId: ObjectId
-	): Promise<CapyVaultObject> => {
-		return this.Provider.Objects().fetchCastObject<CapyVaultObject>({
-			objectId: capyVaultId,
+	public fetchSuiFrenVault = async (
+		suiFrenVaultId: ObjectId
+	): Promise<SuiFrenVaultObject> => {
+		return this.Provider.Objects().fetchCastObject<SuiFrenVaultObject>({
+			objectId: suiFrenVaultId,
 			objectFromSuiObjectResponse:
-				CapysApiCasting.capyVaultObjectFromSuiObjectResponse,
+				SuiFrensApiCasting.suiFrenVaultObjectFromSuiObjectResponse,
 		});
 	};
 
-	public fetchCapysStakedInCapyVault = async (
+	public fetchSuiFrensStakedInSuiFrenVault = async (
 		inputs: DynamicFieldsInputs
 	) => {
-		const capyVaultId = this.addresses.objects.capyVault;
-		const capyType = this.objectTypes.capyObjectType;
+		const suiFrenVaultId = this.addresses.objects.suiFrenVault;
+		const suiFrenType = this.objectTypes.suiFrenObjectType;
 
 		return await this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
 			{
 				...inputs,
-				parentObjectId: capyVaultId,
-				objectsFromObjectIds: this.fetchCapys,
-				dynamicFieldType: capyType,
+				parentObjectId: suiFrenVaultId,
+				objectsFromObjectIds: this.fetchSuiFrens,
+				dynamicFieldType: suiFrenType,
 			}
 		);
 	};
 
 	// =========================================================================
-	//  Staked Capy Receipt Objects
+	//  Staked SuiFren Receipt Objects
 	// =========================================================================
 
-	public fetchStakedCapyReceipt = async (
-		capyStakingReceipt: ObjectId
-	): Promise<StakedCapyReceiptObject> => {
-		return this.Provider.Objects().fetchCastObject<StakedCapyReceiptObject>(
+	public fetchStakedSuiFrenReceipt = async (
+		suiFrenStakingReceipt: ObjectId
+	): Promise<StakedSuiFrenReceiptObject> => {
+		return this.Provider.Objects().fetchCastObject<StakedSuiFrenReceiptObject>(
 			{
-				objectId: capyStakingReceipt,
+				objectId: suiFrenStakingReceipt,
 				objectFromSuiObjectResponse:
-					CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse,
+					SuiFrensApiCasting.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
 			}
 		);
 	};
 
-	public fetchStakedCapyReceipts = async (
-		capyStakingReceipts: ObjectId[]
-	): Promise<StakedCapyReceiptObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<StakedCapyReceiptObject>(
+	public fetchStakedSuiFrenReceipts = async (
+		suiFrenStakingReceipts: ObjectId[]
+	): Promise<StakedSuiFrenReceiptObject[]> => {
+		return this.Provider.Objects().fetchCastObjectBatch<StakedSuiFrenReceiptObject>(
 			{
-				objectIds: capyStakingReceipts,
+				objectIds: suiFrenStakingReceipts,
 				objectFromSuiObjectResponse:
-					CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse,
+					SuiFrensApiCasting.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
 			}
 		);
 	};
 
-	public fetchStakedCapyReceiptOwnedByAddress = async (
+	public fetchStakedSuiFrenReceiptOwnedByAddress = async (
 		walletAddress: SuiAddress
-	): Promise<StakedCapyReceiptObject[]> => {
+	): Promise<StakedSuiFrenReceiptObject[]> => {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			{
 				walletAddress,
-				objectType: this.objectTypes.stakedCapyReceiptObjectType,
+				objectType: this.objectTypes.stakedSuiFrenReceiptObjectType,
 				objectFromSuiObjectResponse:
-					CapysApiCasting.stakedCapyReceiptObjectFromSuiObjectResponse,
+					SuiFrensApiCasting.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
 			}
 		);
 	};
 
-	public fetchStakedCapyReceiptWithCapysOwnedByAddress = async (
+	public fetchStakedSuiFrenReceiptWithSuiFrensOwnedByAddress = async (
 		walletAddress: SuiAddress
-	): Promise<StakedCapyReceiptWithCapyObject[]> => {
+	): Promise<StakedSuiFrenReceiptWithSuiFrenObject[]> => {
 		// i. obtain all owned StakingReceipt
-		const stakingReceipts = await this.fetchStakedCapyReceiptOwnedByAddress(
+		const stakingReceipts = await this.fetchStakedSuiFrenReceiptOwnedByAddress(
 			walletAddress
 		);
 
-		// ii. obtain all Capy Object Ids
-		const capyIdsStakedByAddress = stakingReceipts.map(
-			(capyStakingReceipt) => capyStakingReceipt.capyId
+		// ii. obtain all SuiFren Object Ids
+		const suiFrenIdsStakedByAddress = stakingReceipts.map(
+			(suiFrenStakingReceipt) => suiFrenStakingReceipt.suiFrenId
 		);
 
-		// iii. obtain a Capy object from each Capy ObjectId
-		let indexStakedCapys: { [key: ObjectId]: CapyObject } = {};
-		(await this.fetchStakedCapys(capyIdsStakedByAddress)).forEach(
-			(stakedCapy) => {
-				indexStakedCapys[stakedCapy.objectId] = stakedCapy;
+		// iii. obtain a SuiFren object from each SuiFren ObjectId
+		let indexStakedSuiFrens: { [key: ObjectId]: SuiFrenObject } = {};
+		(await this.fetchStakedSuiFrens(suiFrenIdsStakedByAddress)).forEach(
+			(stakedSuiFren) => {
+				indexStakedSuiFrens[stakedSuiFren.objectId] = stakedSuiFren;
 			}
 		);
 
-		// iv. construct a StakingReceiptWithCapy object from each StakingReceipt <> Capy pair
-		const capyStakingReceiptsWithCapy = stakingReceipts.map(
+		// iv. construct a StakingReceiptWithSuiFren object from each StakingReceipt <> SuiFren pair
+		const suiFrenStakingReceiptsWithSuiFren = stakingReceipts.map(
 			(stakingReceipt) => {
 				return {
 					objectId: stakingReceipt.objectId,
-					capy: indexStakedCapys[stakingReceipt.capyId],
+					suiFren: indexStakedSuiFrens[stakingReceipt.suiFrenId],
 					unlockEpoch: stakingReceipt.unlockEpoch,
-				} as StakedCapyReceiptWithCapyObject;
+				} as StakedSuiFrenReceiptWithSuiFrenObject;
 			}
 		);
 
-		return capyStakingReceiptsWithCapy;
+		return suiFrenStakingReceiptsWithSuiFren;
 	};
 
 	// =========================================================================
@@ -493,51 +493,51 @@ export class CapysApi {
 	// =========================================================================
 
 	// =========================================================================
-	//  Capy Staking
+	//  SuiFren Staking
 	// =========================================================================
 
-	public fetchStakeCapyTransaction = (
-		capyId: ObjectId
+	public fetchStakeSuiFrenTransaction = (
+		suiFrenId: ObjectId
 	): Promise<SerializedTransaction> =>
 		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.capyStakeCapyTransaction(capyId)
+			this.suiFrenStakeSuiFrenTransaction(suiFrenId)
 		);
 
-	public fetchUnstakeCapyTransaction = (
+	public fetchUnstakeSuiFrenTransaction = (
 		stakingReceiptId: ObjectId
 	): Promise<SerializedTransaction> =>
 		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.capyUnstakeCapyTransaction(stakingReceiptId)
+			this.suiFrenUnstakeSuiFrenTransaction(stakingReceiptId)
 		);
 
-	public fetchWithdrawStakedCapyFeesTransaction = (
+	public fetchWithdrawStakedSuiFrenFeesTransaction = (
 		stakingReceiptId: ObjectId
 	): Promise<SerializedTransaction> =>
 		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.capyWithdrawFeesTransaction(stakingReceiptId)
+			this.suiFrenWithdrawFeesTransaction(stakingReceiptId)
 		);
 
-	public fetchWithdrawStakedCapyFeesAmountTransaction = (
+	public fetchWithdrawStakedSuiFrenFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
 		amount: Balance
 	): Promise<SerializedTransaction> =>
 		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.capyWithdrawFeesAmountTransaction(stakingReceiptId, amount)
+			this.suiFrenWithdrawFeesAmountTransaction(stakingReceiptId, amount)
 		);
 
-	public fetchCapyTransferTransaction = (
+	public fetchSuiFrenTransferTransaction = (
 		stakingReceiptId: ObjectId,
 		recipient: SuiAddress
 	): Promise<SerializedTransaction> =>
 		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.capyTransferTransaction(stakingReceiptId, recipient)
+			this.suiFrenTransferTransaction(stakingReceiptId, recipient)
 		);
 
 	// =========================================================================
 	//  Breeding Transactions
 	// =========================================================================
 
-	public fetchBreedCapysTransaction = async (
+	public fetchBreedSuiFrensTransaction = async (
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentTwoId: ObjectId
@@ -553,7 +553,7 @@ export class CapysApi {
 			}),
 		]);
 
-		const transaction = await this.fetchCapyBuildBreedTransaction(
+		const transaction = await this.fetchSuiFrenBuildBreedTransaction(
 			walletAddress,
 			parentOneId,
 			parentOneIsOwned,
@@ -566,7 +566,7 @@ export class CapysApi {
 		);
 	};
 
-	public fetchCapyBuildBreedTransaction = async (
+	public fetchSuiFrenBuildBreedTransaction = async (
 		walletAddress: SuiAddress,
 		parentOneId: ObjectId,
 		parentOneIsOwned: boolean,
@@ -574,28 +574,28 @@ export class CapysApi {
 		parentTwoIsOwned: boolean
 	): Promise<TransactionBlock> => {
 		if (parentOneIsOwned && parentTwoIsOwned) {
-			// i. both capys are owned
+			// i. both suiFrens are owned
 			return this.fetchBuildBreedAndKeepTransaction(
 				walletAddress,
 				parentOneId,
 				parentTwoId
 			);
 		} else if (parentOneIsOwned && !parentTwoIsOwned) {
-			// iia. one of the Capys is owned and the other is staked
+			// iia. one of the SuiFrens is owned and the other is staked
 			return this.fetchBuildBreedWithStakedAndKeepTransaction(
 				walletAddress,
 				parentOneId,
 				parentTwoId
 			);
 		} else if (!parentOneIsOwned && parentTwoIsOwned) {
-			// iib. one of the Capy's is owned and the other is staked
+			// iib. one of the SuiFren's is owned and the other is staked
 			return this.fetchBuildBreedWithStakedAndKeepTransaction(
 				walletAddress,
 				parentTwoId,
 				parentOneId
 			);
 		} else {
-			// iii. both Capys are staked
+			// iii. both SuiFrens are staked
 			return this.fetchBuildBreedStakedWithStakedAndKeepTransaction(
 				walletAddress,
 				parentTwoId,
@@ -612,9 +612,9 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const feeCoinType = Capys.constants.breedingFees.coinType;
+		const feeCoinType = SuiFrens.constants.breedingFees.coinType;
 		const feeCoinAmount =
-			Capys.constants.breedingFees.amounts.breedWithStakedAndKeep;
+			SuiFrens.constants.breedingFees.amounts.breedWithStakedAndKeep;
 
 		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
@@ -641,9 +641,9 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const feeCoinType = Capys.constants.breedingFees.coinType;
+		const feeCoinType = SuiFrens.constants.breedingFees.coinType;
 		const feeCoinAmount =
-			Capys.constants.breedingFees.amounts.breedStakedWithStakedAndKeep;
+			SuiFrens.constants.breedingFees.amounts.breedStakedWithStakedAndKeep;
 
 		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
@@ -670,8 +670,8 @@ export class CapysApi {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const feeCoinType = Capys.constants.breedingFees.coinType;
-		const feeCoinAmount = Capys.constants.breedingFees.amounts.breedAndKeep;
+		const feeCoinType = SuiFrens.constants.breedingFees.coinType;
+		const feeCoinAmount = SuiFrens.constants.breedingFees.amounts.breedAndKeep;
 
 		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
@@ -707,15 +707,15 @@ export class CapysApi {
 		tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.interface.moduleName,
-				CapysApi.constants.capyVault.modules.interface.functions
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
 					.breedAndKeep.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
-				tx.object(this.addresses.objects.capyRegistry),
+				tx.object(this.addresses.objects.suiFrenVault),
+				tx.object(this.addresses.objects.suiFrenRegistry),
 				typeof coinId === "string" ? tx.object(coinId) : coinId,
 				tx.object(parentOneId),
 				tx.object(parentTwoId),
@@ -734,15 +734,15 @@ export class CapysApi {
 		tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.interface.moduleName,
-				CapysApi.constants.capyVault.modules.interface.functions
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
 					.breedWithStakedAndKeep.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
-				tx.object(this.addresses.objects.capyRegistry),
+				tx.object(this.addresses.objects.suiFrenVault),
+				tx.object(this.addresses.objects.suiFrenRegistry),
 				typeof coinId === "string" ? tx.object(coinId) : coinId,
 				tx.object(parentOneId),
 				tx.object(parentTwoId),
@@ -761,15 +761,15 @@ export class CapysApi {
 		tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.interface.moduleName,
-				CapysApi.constants.capyVault.modules.interface.functions
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
 					.breedStakedWithStakedAndKeep.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
-				tx.object(this.addresses.objects.capyRegistry),
+				tx.object(this.addresses.objects.suiFrenVault),
+				tx.object(this.addresses.objects.suiFrenRegistry),
 				tx.object(coinId),
 				tx.object(parentOneId),
 				tx.object(parentTwoId),
@@ -783,43 +783,43 @@ export class CapysApi {
 	//  Staking Transaction Commands
 	// =========================================================================
 
-	public capyStakeCapyTransaction = (capyId: ObjectId): TransactionBlock => {
+	public suiFrenStakeSuiFrenTransaction = (suiFrenId: ObjectId): TransactionBlock => {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.interface.moduleName,
-				CapysApi.constants.capyVault.modules.interface.functions
-					.stakeCapy.name
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
+					.stakeSuiFren.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
-				tx.object(capyId),
+				tx.object(this.addresses.objects.suiFrenVault),
+				tx.object(suiFrenId),
 			],
 		});
 
 		return tx;
 	};
 
-	public capyUnstakeCapyTransaction = (
+	public suiFrenUnstakeSuiFrenTransaction = (
 		stakingReceiptId: ObjectId
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
+				this.addresses.packages.suiFrenVault,
 
-				CapysApi.constants.capyVault.modules.interface.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
 
-				CapysApi.constants.capyVault.modules.interface.functions
-					.unstakeCapy.name
+				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
+					.unstakeSuiFren.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
+				tx.object(this.addresses.objects.suiFrenVault),
 				tx.object(stakingReceiptId),
 			],
 		});
@@ -827,7 +827,7 @@ export class CapysApi {
 		return tx;
 	};
 
-	public capyTransferTransaction = (
+	public suiFrenTransferTransaction = (
 		stakingReceiptId: ObjectId,
 		recipient: SuiAddress
 	): TransactionBlock => {
@@ -835,14 +835,14 @@ export class CapysApi {
 
 		tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.interface.moduleName,
-				CapysApi.constants.capyVault.modules.interface.functions
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
 					.transfer.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
+				tx.object(this.addresses.objects.suiFrenVault),
 				tx.object(stakingReceiptId),
 				tx.pure(recipient),
 			],
@@ -855,21 +855,21 @@ export class CapysApi {
 	//  Fee Transaction Commands
 	// =========================================================================
 
-	public capyWithdrawFeesTransaction = (
+	public suiFrenWithdrawFeesTransaction = (
 		stakingReceiptId: ObjectId
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 
 		tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.interface.moduleName,
-				CapysApi.constants.capyVault.modules.interface.functions
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
 					.withdrawFees.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
+				tx.object(this.addresses.objects.suiFrenVault),
 				tx.object(stakingReceiptId),
 			],
 		});
@@ -877,7 +877,7 @@ export class CapysApi {
 		return tx;
 	};
 
-	public capyWithdrawFeesAmountTransaction = (
+	public suiFrenWithdrawFeesAmountTransaction = (
 		stakingReceiptId: ObjectId,
 		amount: Balance
 	): TransactionBlock => {
@@ -885,14 +885,14 @@ export class CapysApi {
 
 		tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.capyVault,
-				CapysApi.constants.capyVault.modules.interface.moduleName,
-				CapysApi.constants.capyVault.modules.interface.functions
+				this.addresses.packages.suiFrenVault,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
 					.withdrawFeesAmount.name
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.capyVault),
+				tx.object(this.addresses.objects.suiFrenVault),
 				tx.object(stakingReceiptId),
 				tx.pure(amount.toString()),
 			],
@@ -907,13 +907,13 @@ export class CapysApi {
 
 	// TODO: make this function not exported from sdk (only internal use)
 	// NOTE: this calculation will be  incorrect if feeCoinType is different for each fee
-	public calcCapyBreedingFees = (
-		breedCapyEvents: BreedCapysEvent[],
+	public calcSuiFrenBreedingFees = (
+		breedSuiFrenEvents: BreedSuiFrensEvent[],
 		feeCoinDecimals: CoinDecimal,
 		feeCoinPrice: number
 	): AmountInCoinAndUsd => {
 		const breedingFeesInFeeCoin = Helpers.sum(
-			breedCapyEvents.map((event) =>
+			breedSuiFrenEvents.map((event) =>
 				Coin.balanceWithDecimals(
 					event.feeCoinWithBalance.balance,
 					feeCoinDecimals
@@ -928,57 +928,57 @@ export class CapysApi {
 		};
 	};
 
-	public fetchCapyStats = async (): Promise<CapyStats> => {
-		const breedCapyEventsWithinTime =
+	public fetchSuiFrenStats = async (): Promise<SuiFrenStats> => {
+		const breedSuiFrenEventsWithinTime =
 			await this.Provider.Events().fetchEventsWithinTime({
-				fetchEventsFunc: this.fetchBreedCapysEvents,
+				fetchEventsFunc: this.fetchBreedSuiFrensEvents,
 				timeUnit: "hour",
 				time: 24,
 			});
 
 		const feeCoin =
-			breedCapyEventsWithinTime.length === 0
-				? Capys.constants.breedingFees.coinType
-				: breedCapyEventsWithinTime[0].feeCoinWithBalance.coin;
+			breedSuiFrenEventsWithinTime.length === 0
+				? SuiFrens.constants.breedingFees.coinType
+				: breedSuiFrenEventsWithinTime[0].feeCoinWithBalance.coin;
 		const feeCoinDecimals = (
 			await this.Provider.Coin().fetchCoinMetadata(feeCoin)
 		).decimals;
 		const feeCoinPrice = await this.Provider.Prices().fetchPrice(feeCoin);
 
-		const breedingFeesDaily = this.calcCapyBreedingFees(
-			breedCapyEventsWithinTime,
+		const breedingFeesDaily = this.calcSuiFrenBreedingFees(
+			breedSuiFrenEventsWithinTime,
 			feeCoinDecimals,
 			feeCoinPrice
 		);
 
-		const capyVault = await this.fetchCapyVault(
-			this.addresses.objects.capyVault
+		const suiFrenVault = await this.fetchSuiFrenVault(
+			this.addresses.objects.suiFrenVault
 		);
 
-		const { bredCapys, stakedCapys, breedingFeesGlobal } =
-			await this.fetchCapyVaultStats(
-				capyVault,
+		const { bredSuiFrens, stakedSuiFrens, breedingFeesGlobal } =
+			await this.fetchSuiFrenVaultStats(
+				suiFrenVault,
 				feeCoinDecimals,
 				feeCoinPrice
 			);
 
 		return {
-			bredCapys,
-			stakedCapys,
+			bredSuiFrens,
+			stakedSuiFrens,
 			breedingFeeCoin: feeCoin,
 			breedingFeesGlobal,
 			breedingFeesDaily,
-			breedingVolumeDaily: breedCapyEventsWithinTime.length,
+			breedingVolumeDaily: breedSuiFrenEventsWithinTime.length,
 		};
 	};
 
-	public fetchCapyVaultStats = async (
-		capyVault: CapyVaultObject,
+	public fetchSuiFrenVaultStats = async (
+		suiFrenVault: SuiFrenVaultObject,
 		feeCoinDecimals: CoinDecimal,
 		feeCoinPrice: number
 	) => {
 		const globalFeesWithDecimals = Coin.balanceWithDecimals(
-			capyVault.globalFees,
+			suiFrenVault.globalFees,
 			feeCoinDecimals
 		);
 		const globalFeesUsd = feeCoinPrice * globalFeesWithDecimals;
@@ -988,26 +988,26 @@ export class CapysApi {
 		} as AmountInCoinAndUsd;
 
 		return {
-			bredCapys: capyVault.bredCapys,
-			stakedCapys: capyVault.stakedCapys,
+			bredSuiFrens: suiFrenVault.bredSuiFrens,
+			stakedSuiFrens: suiFrenVault.stakedSuiFrens,
 			breedingFeesGlobal,
 		};
 	};
 
 	// =========================================================================
-	//  Capy Attribute Filtering
+	//  SuiFren Attribute Filtering
 	// =========================================================================
 
-	public filterCapysWithAttributes = (
-		capys: CapyObject[],
-		attributes: CapyAttribute[]
+	public filterSuiFrensWithAttributes = (
+		suiFrens: SuiFrenObject[],
+		attributes: SuiFrenAttribute[]
 	) =>
-		capys.filter((capy) =>
+		suiFrens.filter((suiFren) =>
 			attributes.every((attribute) =>
-				capy.fields.attributes.some(
-					(capyAttribute) =>
-						capyAttribute.name === attribute.name &&
-						capyAttribute.value === attribute.value
+				suiFren.fields.attributes.some(
+					(suiFrenAttribute) =>
+						suiFrenAttribute.name === attribute.name &&
+						suiFrenAttribute.value === attribute.value
 				)
 			)
 		);
@@ -1016,13 +1016,13 @@ export class CapysApi {
 	//  Helpers
 	// =========================================================================
 
-	public isStakedCapyReceiptObjectType = (
+	public isStakedSuiFrenReceiptObjectType = (
 		suiObjectInfo: SuiObjectInfo
 	): boolean =>
-		suiObjectInfo.type === this.objectTypes.stakedCapyReceiptObjectType;
+		suiObjectInfo.type === this.objectTypes.stakedSuiFrenReceiptObjectType;
 
-	public isCapyObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
-		suiObjectInfo.type === this.objectTypes.capyObjectType;
+	public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
+		suiObjectInfo.type === this.objectTypes.suiFrenObjectType;
 
 	// =========================================================================
 	//  Private Methods
@@ -1032,31 +1032,31 @@ export class CapysApi {
 	//  Event Types
 	// =========================================================================
 
-	private capyBornEventType = () =>
+	private suiFrenBornEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.capy,
-			CapysApi.constants.capy.modules.capy.moduleName,
-			CapysApi.constants.eventNames.capyBorn
+			this.addresses.packages.suiFren,
+			SuiFrensApi.constants.suiFren.modules.suiFren.moduleName,
+			SuiFrensApi.constants.eventNames.suiFrenBorn
 		);
 
-	private breedCapysEventType = () =>
+	private breedSuiFrensEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.capyVault,
-			CapysApi.constants.capyVault.modules.interface.moduleName,
-			CapysApi.constants.eventNames.breedCapy
+			this.addresses.packages.suiFrenVault,
+			SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+			SuiFrensApi.constants.eventNames.breedSuiFren
 		);
 
-	private stakeCapyEventType = () =>
+	private stakeSuiFrenEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.capyVault,
-			CapysApi.constants.capyVault.modules.interface.moduleName,
-			CapysApi.constants.eventNames.stakeCapy
+			this.addresses.packages.suiFrenVault,
+			SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+			SuiFrensApi.constants.eventNames.stakeSuiFren
 		);
 
-	private unstakeCapyEventType = () =>
+	private unstakeSuiFrenEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.capyVault,
-			CapysApi.constants.capyVault.modules.interface.moduleName,
-			CapysApi.constants.eventNames.unstakeCapy
+			this.addresses.packages.suiFrenVault,
+			SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+			SuiFrensApi.constants.eventNames.unstakeSuiFren
 		);
 }

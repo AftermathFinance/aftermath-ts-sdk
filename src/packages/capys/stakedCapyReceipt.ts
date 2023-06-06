@@ -1,58 +1,58 @@
 import {
-	ApiUnstakeCapyBody,
-	ApiWithdrawCapyFeesAmountBody,
+	ApiUnstakeSuiFrenBody,
+	ApiWithdrawSuiFrenFeesAmountBody,
 	Balance,
 	SerializedTransaction,
-	StakedCapyFeesEarned,
-	StakedCapyReceiptObject,
+	StakedSuiFrenFeesEarned,
+	StakedSuiFrenReceiptObject,
 	SuiNetwork,
 	Url,
 } from "../../types";
-import { Capy } from "./capy";
+import { SuiFren } from "./suiFren";
 import { Caller } from "../../general/utils/caller";
 import { TransactionBlock } from "@mysten/sui.js";
 
-export class StakedCapyReceipt extends Caller {
+export class StakedSuiFrenReceipt extends Caller {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(
-		public readonly stakedCapy: Capy,
-		public readonly stakedCapyReceipt: StakedCapyReceiptObject,
+		public readonly stakedSuiFren: SuiFren,
+		public readonly stakedSuiFrenReceipt: StakedSuiFrenReceiptObject,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, "capys");
-		this.stakedCapyReceipt = stakedCapyReceipt;
+		super(network, "suiFrens");
+		this.stakedSuiFrenReceipt = stakedSuiFrenReceipt;
 	}
 
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
 
-	public async getFeesEarned(): Promise<StakedCapyFeesEarned> {
-		return this.fetchApi(`fees-earned/${this.stakedCapyReceipt.objectId}`);
+	public async getFeesEarned(): Promise<StakedSuiFrenFeesEarned> {
+		return this.fetchApi(`fees-earned/${this.stakedSuiFrenReceipt.objectId}`);
 	}
 
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
-	public async getUnstakeCapyTransaction() {
-		return this.fetchApiTransaction<ApiUnstakeCapyBody>(
+	public async getUnstakeSuiFrenTransaction() {
+		return this.fetchApiTransaction<ApiUnstakeSuiFrenBody>(
 			"transactions/stake",
 			{
-				stakingReceiptId: this.stakedCapyReceipt.objectId,
+				stakingReceiptId: this.stakedSuiFrenReceipt.objectId,
 			}
 		);
 	}
 
 	public async getWithdrawFeesTransaction(amount: Balance | undefined) {
-		return this.fetchApiTransaction<ApiWithdrawCapyFeesAmountBody>(
+		return this.fetchApiTransaction<ApiWithdrawSuiFrenFeesAmountBody>(
 			"transactions/withdraw-fees",
 			{
 				amount,
-				stakingReceiptObjectId: this.stakedCapyReceipt.objectId,
+				stakingReceiptObjectId: this.stakedSuiFrenReceipt.objectId,
 			}
 		);
 	}

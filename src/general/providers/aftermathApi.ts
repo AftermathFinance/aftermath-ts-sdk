@@ -13,7 +13,7 @@ import { SuiApi } from "../../packages/sui/api/suiApi";
 import { WalletApi } from "../wallet/walletApi";
 import { RouterApi } from "../../packages/router/api/routerApi";
 import { PlaceholderPricesApi } from "../prices/placeholder/placeholderPricesApi";
-import { CapysApi } from "../../packages/capys/api/capysApi";
+import { SuiFrensApi } from "../../packages/suiFrens/api/suiFrensApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
@@ -112,7 +112,7 @@ export class AftermathApi {
 	public Faucet = () => new FaucetApi(this);
 	public Router = (protocols?: RouterProtocolName[]) =>
 		new RouterApi(this, protocols);
-	public Capys = () => new CapysApi(this);
+	public SuiFrens = () => new SuiFrensApi(this);
 	public Staking = () => new StakingApi(this);
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);

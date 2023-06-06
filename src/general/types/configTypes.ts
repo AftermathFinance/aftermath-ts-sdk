@@ -20,7 +20,7 @@ interface OptionalConfigAddresses {
 	staking: StakingAddresses;
 	pools: PoolsAddresses;
 	utilies: UtilitiesAddresses;
-	capys: CapysAddresses;
+	suiFrens: SuiFrensAddresses;
 	nftAmm: NftAmmAddresses;
 	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
@@ -78,14 +78,14 @@ export interface UtilitiesAddresses {
 	};
 }
 
-export interface CapysAddresses {
+export interface SuiFrensAddresses {
 	packages: {
-		capy: SuiAddress;
-		capyVault: SuiAddress;
+		suiFren: SuiAddress;
+		suiFrenVault: SuiAddress;
 	};
 	objects: {
-		capyVault: ObjectId;
-		capyRegistry: ObjectId;
+		suiFrenVault: ObjectId;
+		suiFrenRegistry: ObjectId;
 	};
 }
 

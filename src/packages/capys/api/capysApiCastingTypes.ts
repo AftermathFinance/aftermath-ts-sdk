@@ -2,8 +2,8 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	BigIntAsString,
-	CapyAttribute,
-	CapyGenes,
+	SuiFrenAttribute,
+	SuiFrenGenes,
 	EpochTimeLock,
 	Url,
 } from "../../../types";
@@ -13,29 +13,29 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 //  Objects
 // =========================================================================
 
-export interface StakedCapyReceiptFieldsOnChain {
-	capy_id: ObjectId;
+export interface StakedSuiFrenReceiptFieldsOnChain {
+	suiFren_id: ObjectId;
 	unlock_epoch: {
 		fields: EpochTimeLock;
 	};
 }
 
-export interface CapyVaultFieldsOnChain {
-	bred_capys: BigIntAsString;
-	staked_capys: BigIntAsString;
+export interface SuiFrenVaultFieldsOnChain {
+	bred_suiFrens: BigIntAsString;
+	staked_suiFrens: BigIntAsString;
 	global_fees: BigIntAsString;
 }
 
-export interface CapyFieldsOnChain {
+export interface SuiFrenFieldsOnChain {
 	genes: {
-		fields: CapyGenes;
+		fields: SuiFrenGenes;
 	};
 	dev_genes: {
-		fields: CapyGenes;
+		fields: SuiFrenGenes;
 	};
 	attributes: {
 		type: AnyObjectType;
-		fields: CapyAttribute;
+		fields: SuiFrenAttribute;
 	}[];
 	item_count: number;
 	url: Url;
@@ -47,26 +47,26 @@ export interface CapyFieldsOnChain {
 //  Events
 // =========================================================================
 
-export type CapyBornEventOnChain = EventOnChain<{
+export type SuiFrenBornEventOnChain = EventOnChain<{
 	bred_by: SuiAddress;
 	id: ObjectId;
 	parent_one: ObjectId;
 	parent_two: ObjectId;
 }>;
 
-export type BreedCapyEventOnChain = EventOnChain<{
+export type BreedSuiFrenEventOnChain = EventOnChain<{
 	id: ObjectId;
 	parentOneId: ObjectId;
 	parentTwoId: ObjectId;
 	fee: BigIntAsString;
 }>;
 
-export type StakeCapyEventOnChain = EventOnChain<{
+export type StakeSuiFrenEventOnChain = EventOnChain<{
 	issuer: SuiAddress;
-	capy_id: ObjectId;
+	suiFren_id: ObjectId;
 }>;
 
-export type UnstakeCapyEventOnChain = EventOnChain<{
+export type UnstakeSuiFrenEventOnChain = EventOnChain<{
 	issuer: SuiAddress;
-	capy_id: ObjectId;
+	suiFren_id: ObjectId;
 }>;

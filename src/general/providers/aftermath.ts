@@ -2,7 +2,7 @@ import { SuiAddress } from "@mysten/sui.js";
 import { Pools } from "../../packages/pools/pools";
 import { CoinType, SuiNetwork, Url } from "../../types";
 import { Wallet } from "../wallet/wallet";
-import { Capys } from "../../packages/capys/capys";
+import { SuiFrens } from "../../packages/suiFrens/suiFrens";
 import { Coin } from "../../packages/coin/coin";
 import { Faucet } from "../../packages/faucet/faucet";
 import { Staking } from "../../packages/staking/staking";
@@ -59,7 +59,7 @@ export class Aftermath extends Caller {
 
 	public Pools = () => new Pools(this.network);
 	public Staking = () => new Staking(this.network);
-	public Capys = () => new Capys(this.network);
+	public SuiFrens = () => new SuiFrens(this.network);
 	public Faucet = () => new Faucet(this.network);
 	public Router = () => new Router(this.network);
 	public NftAmm = () => new NftAmm(this.network);

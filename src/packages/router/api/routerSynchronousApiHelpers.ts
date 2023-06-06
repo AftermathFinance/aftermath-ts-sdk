@@ -153,8 +153,14 @@ export class RouterSynchronousApiHelpers {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.pure(Casting.u8VectorFromString(coinInType), "vector<u8>"), // type_in
-				tx.pure(Casting.u8VectorFromString(coinOutType), "vector<u8>"), // type_out
+				tx.pure(
+					Casting.u8VectorFromString(coinInType.replace("0x", "")),
+					"vector<u8>"
+				), // type_in
+				tx.pure(
+					Casting.u8VectorFromString(coinOutType.replace("0x", "")),
+					"vector<u8>"
+				), // type_out
 				tx.pure(
 					TransactionsApiHelpers.createOptionObject(referrer),
 					"Option<address>"
@@ -191,7 +197,7 @@ export class RouterSynchronousApiHelpers {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.utils,
 				RouterSynchronousApiHelpers.constants.moduleNames.events,
-				"bake_potato"
+				"try_consume_potato"
 			),
 			typeArguments: [],
 			arguments: [
@@ -237,6 +243,8 @@ export class RouterSynchronousApiHelpers {
 			tx,
 			coinInType: completeRoute.coinIn.type,
 			coinOutType: completeRoute.coinOut.type,
+			referrer,
+			externalFee,
 		});
 
 		const coinInArg = await this.Provider.Coin().fetchCoinWithAmountTx({

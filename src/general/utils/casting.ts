@@ -1,5 +1,5 @@
 import { SuiAddress, bcs } from "@mysten/sui.js";
-import { CapysApiCasting } from "../../packages/capys/api/capysApiCasting";
+import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
@@ -13,7 +13,7 @@ export class Casting {
 	// =========================================================================
 
 	public static pools = PoolsApiCasting;
-	public static capys = CapysApiCasting;
+	public static suiFrens = SuiFrensApiCasting;
 	public static faucet = FaucetApiCasting;
 	public static staking = StakingApiCasting;
 	public static nftAmm = NftAmmApiCasting;

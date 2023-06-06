@@ -11,48 +11,48 @@ import {
 //  Objects
 // =========================================================================
 
-export interface CapyGenes {
+export interface SuiFrenGenes {
 	sequence: number[];
 }
 
-export interface CapyAttribute {
+export interface SuiFrenAttribute {
 	name: string;
 	value: string;
 }
 
-export interface CapyFields {
+export interface SuiFrenFields {
 	gen: number;
 	url: Url;
 	link: Url;
-	genes: CapyGenes;
-	devGenes: CapyGenes;
+	genes: SuiFrenGenes;
+	devGenes: SuiFrenGenes;
 	itemCount: number;
-	attributes: CapyAttribute[];
+	attributes: SuiFrenAttribute[];
 }
 
-export interface CapyObject extends Object {
+export interface SuiFrenObject extends Object {
 	// TODO: remove fields such that object data is in line with object id itself
-	fields: CapyFields;
+	fields: SuiFrenFields;
 }
 
-export interface StakedCapyObject extends Object {
-	capy: CapyObject;
+export interface StakedSuiFrenObject extends Object {
+	suiFren: SuiFrenObject;
 	collectedFees: Balance;
 }
 
-export interface StakedCapyReceiptObject extends Object {
-	capyId: ObjectId;
+export interface StakedSuiFrenReceiptObject extends Object {
+	suiFrenId: ObjectId;
 	unlockEpoch: EpochTimeLock;
 }
 
-export interface StakedCapyReceiptWithCapyObject extends Object {
-	capy: CapyObject;
+export interface StakedSuiFrenReceiptWithSuiFrenObject extends Object {
+	suiFren: SuiFrenObject;
 	unlockEpoch: EpochTimeLock;
 }
 
-export interface CapyVaultObject extends Object {
-	bredCapys: bigint;
-	stakedCapys: bigint;
+export interface SuiFrenVaultObject extends Object {
+	bredSuiFrens: bigint;
+	stakedSuiFrens: bigint;
 	globalFees: Balance;
 }
 
@@ -60,39 +60,39 @@ export interface CapyVaultObject extends Object {
 //  Events
 // =========================================================================
 
-export interface BreedCapysEvent extends Event {
+export interface BreedSuiFrensEvent extends Event {
 	breeder: SuiAddress;
-	capyParentOneId: ObjectId;
-	capyParentTwoId: ObjectId;
-	capyChildId: ObjectId;
+	suiFrenParentOneId: ObjectId;
+	suiFrenParentTwoId: ObjectId;
+	suiFrenChildId: ObjectId;
 	// TODO: remove all CoinWithBalance types
 	feeCoinWithBalance: CoinWithBalance;
 }
 
-export interface StakeCapyEvent extends Event {
+export interface StakeSuiFrenEvent extends Event {
 	staker: SuiAddress;
-	capyId: ObjectId;
+	suiFrenId: ObjectId;
 }
 
-export interface UnstakeCapyEvent extends Event {
+export interface UnstakeSuiFrenEvent extends Event {
 	unstaker: SuiAddress;
-	capyId: ObjectId;
+	suiFrenId: ObjectId;
 }
 
-export interface CapyBornEvent extends Event {
+export interface SuiFrenBornEvent extends Event {
 	breeder: SuiAddress;
-	capyParentOneId: ObjectId;
-	capyParentTwoId: ObjectId;
-	capyChildId: ObjectId;
+	suiFrenParentOneId: ObjectId;
+	suiFrenParentTwoId: ObjectId;
+	suiFrenChildId: ObjectId;
 }
 
 // =========================================================================
 //  Stats
 // =========================================================================
 
-export interface CapyStats {
-	bredCapys: bigint;
-	stakedCapys: bigint;
+export interface SuiFrenStats {
+	bredSuiFrens: bigint;
+	stakedSuiFrens: bigint;
 	breedingFeeCoin: CoinType;
 	breedingFeesGlobal: AmountInCoinAndUsd;
 	breedingFeesDaily: AmountInCoinAndUsd;
@@ -103,26 +103,26 @@ export interface CapyStats {
 //  API
 // =========================================================================
 
-export interface ApiStakeCapyBody {
-	capyId: ObjectId;
+export interface ApiStakeSuiFrenBody {
+	suiFrenId: ObjectId;
 }
 
-export interface ApiUnstakeCapyBody {
+export interface ApiUnstakeSuiFrenBody {
 	stakingReceiptId: ObjectId;
 }
 
-export interface ApiWithdrawCapyFeesAmountBody {
+export interface ApiWithdrawSuiFrenFeesAmountBody {
 	amount: Balance | undefined;
 	stakingReceiptObjectId: ObjectId;
 }
 
-export interface ApiBreedCapyBody {
+export interface ApiBreedSuiFrenBody {
 	walletAddress: SuiAddress;
-	capyParentOneId: ObjectId;
-	capyParentTwoId: ObjectId;
+	suiFrenParentOneId: ObjectId;
+	suiFrenParentTwoId: ObjectId;
 }
 
-export interface StakedCapyFeesEarned {
+export interface StakedSuiFrenFeesEarned {
 	individualFees: Balance;
 	globalFees: Balance;
 }
