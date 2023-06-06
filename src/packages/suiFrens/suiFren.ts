@@ -2,11 +2,9 @@ import {
 	ApiStakeSuiFrenBody,
 	SuiNetwork,
 	SuiFrenObject,
-	SerializedTransaction,
 	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { TransactionBlock } from "@mysten/sui.js";
 
 export class SuiFren extends Caller {
 	// =========================================================================
@@ -18,7 +16,7 @@ export class SuiFren extends Caller {
 		public readonly network?: SuiNetwork | Url,
 		public readonly isStaked: boolean = false
 	) {
-		super(network, "suiFrens");
+		super(network, "sui-frens");
 		this.suiFren = suiFren;
 		this.isStaked = isStaked;
 	}

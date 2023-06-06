@@ -2,7 +2,6 @@ import {
 	ApiUnstakeSuiFrenBody,
 	ApiWithdrawSuiFrenFeesAmountBody,
 	Balance,
-	SerializedTransaction,
 	StakedSuiFrenFeesEarned,
 	StakedSuiFrenReceiptObject,
 	SuiNetwork,
@@ -10,7 +9,6 @@ import {
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { Caller } from "../../general/utils/caller";
-import { TransactionBlock } from "@mysten/sui.js";
 
 export class StakedSuiFrenReceipt extends Caller {
 	// =========================================================================
@@ -22,7 +20,7 @@ export class StakedSuiFrenReceipt extends Caller {
 		public readonly stakedSuiFrenReceipt: StakedSuiFrenReceiptObject,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, "suiFrens");
+		super(network, "sui-frens");
 		this.stakedSuiFrenReceipt = stakedSuiFrenReceipt;
 	}
 
@@ -31,7 +29,9 @@ export class StakedSuiFrenReceipt extends Caller {
 	// =========================================================================
 
 	public async getFeesEarned(): Promise<StakedSuiFrenFeesEarned> {
-		return this.fetchApi(`fees-earned/${this.stakedSuiFrenReceipt.objectId}`);
+		return this.fetchApi(
+			`fees-earned/${this.stakedSuiFrenReceipt.objectId}`
+		);
 	}
 
 	// =========================================================================

@@ -1,21 +1,13 @@
-import {
-	EventId,
-	ObjectId,
-	SuiAddress,
-	TransactionBlock,
-} from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	ApiBreedSuiFrenBody,
 	ApiDynamicFieldsBody,
-	ApiEventsBody,
 	BreedSuiFrensEvent,
 	SuiFrenAttribute,
 	SuiFrenObject,
 	SuiFrenStats,
 	DynamicFieldObjectsWithCursor,
 	EventsInputs,
-	EventsWithCursor,
-	SerializedTransaction,
 	StakeSuiFrenEvent,
 	StakedSuiFrenReceiptObject,
 	SuiNetwork,
@@ -25,6 +17,7 @@ import {
 import { SuiFren } from "./suiFren";
 import { StakedSuiFrenReceipt } from "./stakedSuiFrenReceipt";
 import { Caller } from "../../general/utils/caller";
+import { Coin } from "../coin";
 
 export class SuiFrens extends Caller {
 	// =========================================================================
@@ -33,7 +26,7 @@ export class SuiFrens extends Caller {
 
 	public static readonly constants = {
 		breedingFees: {
-			coinType: "0x0000000000000000000000000000000000000002::sui::SUI",
+			coinType: Coin.constants.suiCoinType,
 			amounts: {
 				breedAndKeep: BigInt(1_000_000), // MIST -> 0.001 SUI
 				breedWithStakedAndKeep: BigInt(5_000_000), // MIST -> 0.005 SUI
@@ -47,7 +40,7 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	constructor(public readonly network?: SuiNetwork | Url) {
-		super(network, "suiFrens");
+		super(network, "sui-frens");
 	}
 
 	// =========================================================================
@@ -73,16 +66,18 @@ export class SuiFrens extends Caller {
 
 	public async getOwnedSuiFrens(walletAddress: SuiAddress) {
 		const ownedSuiFrens = await this.fetchApi<SuiFrenObject[]>(
-			`owned-suiFrens/${walletAddress}`
+			`owned-sui-frens/${walletAddress}`
 		);
 
-		return ownedSuiFrens.map((suiFren) => new SuiFren(suiFren, this.network));
+		return ownedSuiFrens.map(
+			(suiFren) => new SuiFren(suiFren, this.network)
+		);
 	}
 
 	public async getStakedSuiFrenReceipts(walletAddress: SuiAddress) {
 		const stakedSuiFrenReceipts = await this.fetchApi<
 			StakedSuiFrenReceiptObject[]
-		>(`staked-suiFren-receipts/${walletAddress}`);
+		>(`staked-sui-fren-receipts/${walletAddress}`);
 
 		const stakedSuiFrens = await this.getSuiFrens(
 			stakedSuiFrenReceipts.map((receipt) => receipt.suiFrenId)
@@ -91,7 +86,11 @@ export class SuiFrens extends Caller {
 		return stakedSuiFrenReceipts.map(
 			(receipt, index) =>
 				new StakedSuiFrenReceipt(
-					new SuiFren(stakedSuiFrens[index].suiFren, this.network, true),
+					new SuiFren(
+						stakedSuiFrens[index].suiFren,
+						this.network,
+						true
+					),
 					receipt,
 					this.network
 				)
@@ -110,10 +109,15 @@ export class SuiFrens extends Caller {
 		const suiFrensWithCursor = await this.fetchApi<
 			DynamicFieldObjectsWithCursor<SuiFrenObject>,
 			ApiDynamicFieldsBody
-		>(`staked-suiFrens${SuiFrens.createSuiFrenAttributesQueryString(attributes)}`, {
-			cursor,
-			limit,
-		});
+		>(
+			`staked-sui-frens${SuiFrens.createSuiFrenAttributesQueryString(
+				attributes
+			)}`,
+			{
+				cursor,
+				limit,
+			}
+		);
 
 		const suiFrens = suiFrensWithCursor.dynamicFieldObjects.map(
 			(suiFren) => new SuiFren(suiFren, this.network, true)
@@ -130,19 +134,16 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	public async getBreedSuiFrenEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<BreedSuiFrensEvent>(
-			"events/breed-suiFrens",
-			inputs
-		);
+		return this.fetchApiEvents<BreedSuiFrensEvent>("events/breed", inputs);
 	}
 
 	public async getStakeSuiFrenEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<StakeSuiFrenEvent>("events/stake-suiFren", inputs);
+		return this.fetchApiEvents<StakeSuiFrenEvent>("events/stake", inputs);
 	}
 
 	public async getUnstakeSuiFrenEvents(inputs: EventsInputs) {
 		return this.fetchApiEvents<UnstakeSuiFrenEvent>(
-			"events/unstake-suiFren",
+			"events/unstake",
 			inputs
 		);
 	}
