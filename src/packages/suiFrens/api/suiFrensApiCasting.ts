@@ -6,20 +6,21 @@ import {
 import {
 	BreedSuiFrensEvent,
 	SuiFrenBornEvent,
-	SuiFrenObject,
 	SuiFrenVaultObject,
 	StakeSuiFrenEvent,
 	StakedSuiFrenReceiptObject,
 	UnstakeSuiFrenEvent,
+	SuiFrenObject,
+	SuiFrenAttributes,
 } from "../suiFrensTypes";
 import {
-	BreedSuiFrenEventOnChain as BreedSuiFrensEventOnChain,
+	BreedSuiFrenEventOnChain,
 	SuiFrenBornEventOnChain,
-	SuiFrenFieldsOnChain,
 	SuiFrenVaultFieldsOnChain,
 	StakeSuiFrenEventOnChain,
 	StakedSuiFrenReceiptFieldsOnChain,
 	UnstakeSuiFrenEventOnChain,
+	SuiFrenFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
 import { SuiFrens } from "../suiFrens";
 
@@ -31,20 +32,21 @@ export class SuiFrensApiCasting {
 	public static suiFrenObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): SuiFrenObject => {
-		const suiFrenObjectFields = getObjectFields(data) as SuiFrenFieldsOnChain;
+		const fields = getObjectFields(data) as SuiFrenFieldsOnChain;
 		return {
 			objectId: getObjectId(data),
-			fields: {
-				gen: suiFrenObjectFields.gen,
-				url: suiFrenObjectFields.url,
-				link: suiFrenObjectFields.link,
-				genes: suiFrenObjectFields.genes.fields,
-				devGenes: suiFrenObjectFields.dev_genes.fields,
-				itemCount: suiFrenObjectFields.item_count,
-				attributes: suiFrenObjectFields.attributes.map(
-					(attr) => attr.fields
-				),
-			},
+			generation: BigInt(fields.generation),
+			birthdate: Number(fields.birthdate),
+			cohort: BigInt(fields.cohort),
+			genes: fields.genes.map((gene) => BigInt(gene)),
+			attributes: {
+				skin: fields.attributes[0],
+				mainColor: fields.attributes[1],
+				secondaryColor: fields.attributes[2],
+				expression: fields.attributes[3],
+				ears: fields.attributes[4],
+			} as SuiFrenAttributes,
+			birthLocation: fields.birth_location,
 		};
 	};
 
@@ -108,7 +110,7 @@ export class SuiFrensApiCasting {
 	};
 
 	public static breedSuiFrensEventFromOnChain = (
-		eventOnChain: BreedSuiFrensEventOnChain
+		eventOnChain: BreedSuiFrenEventOnChain
 	): BreedSuiFrensEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {

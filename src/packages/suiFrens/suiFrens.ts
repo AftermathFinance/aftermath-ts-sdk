@@ -3,7 +3,6 @@ import {
 	ApiBreedSuiFrenBody,
 	ApiDynamicFieldsBody,
 	BreedSuiFrensEvent,
-	SuiFrenAttribute,
 	SuiFrenObject,
 	SuiFrenStats,
 	DynamicFieldObjectsWithCursor,
@@ -13,6 +12,7 @@ import {
 	SuiNetwork,
 	UnstakeSuiFrenEvent,
 	Url,
+	SuiFrenAttributes,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFrenReceipt } from "./stakedSuiFrenReceipt";
@@ -102,7 +102,7 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	public async getStakedSuiFrens(
-		attributes?: SuiFrenAttribute[],
+		attributes?: Partial<SuiFrenAttributes>,
 		cursor?: ObjectId,
 		limit?: number
 	): Promise<DynamicFieldObjectsWithCursor<SuiFren>> {
@@ -188,17 +188,15 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	private static createSuiFrenAttributesQueryString(
-		attributes?: SuiFrenAttribute[]
+		attributes?: Partial<SuiFrenAttributes>
 	) {
-		return attributes === undefined || attributes.length === 0
+		return attributes === undefined || Object.keys(attributes).length === 0
 			? ""
 			: "?" +
-					attributes
+					Object.entries(attributes)
 						.map(
-							(attr, i) =>
-								`${i === 0 ? "" : "&"}${attr.name}=${
-									attr.value
-								}`
+							([key, val], i) =>
+								`${i === 0 ? "" : "&"}${key}=${val}`
 						)
 						.reduce((acc, curr) => acc + curr, "");
 	}

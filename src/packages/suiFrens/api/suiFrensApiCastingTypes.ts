@@ -2,12 +2,32 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	BigIntAsString,
-	SuiFrenAttribute,
-	SuiFrenGenes,
 	EpochTimeLock,
 	Url,
 } from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
+
+// =========================================================================
+//  NEW
+// =========================================================================
+
+// =========================================================================
+//  Objects
+// =========================================================================
+
+export interface SuiFrenFieldsOnChain {
+	id: ObjectId;
+	generation: BigIntAsString;
+	birthdate: BigIntAsString;
+	cohort: BigIntAsString;
+	genes: BigIntAsString[];
+	attributes: string[];
+	birth_location: string;
+}
+
+// =========================================================================
+//  OLD
+// =========================================================================
 
 // =========================================================================
 //  Objects
@@ -24,23 +44,6 @@ export interface SuiFrenVaultFieldsOnChain {
 	bred_suiFrens: BigIntAsString;
 	staked_suiFrens: BigIntAsString;
 	global_fees: BigIntAsString;
-}
-
-export interface SuiFrenFieldsOnChain {
-	genes: {
-		fields: SuiFrenGenes;
-	};
-	dev_genes: {
-		fields: SuiFrenGenes;
-	};
-	attributes: {
-		type: AnyObjectType;
-		fields: SuiFrenAttribute;
-	}[];
-	item_count: number;
-	url: Url;
-	link: Url;
-	gen: number;
 }
 
 // =========================================================================

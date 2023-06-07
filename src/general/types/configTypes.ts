@@ -80,12 +80,12 @@ export interface UtilitiesAddresses {
 
 export interface SuiFrensAddresses {
 	packages: {
-		suiFren: SuiAddress;
-		suiFrenVault: SuiAddress;
+		suiFrens: SuiAddress;
+		suiFrensVault: SuiAddress;
 	};
 	objects: {
-		suiFrenVault: ObjectId;
-		suiFrenRegistry: ObjectId;
+		suiFrensVault: ObjectId;
+		suiFrensRegistry: ObjectId;
 	};
 }
 
