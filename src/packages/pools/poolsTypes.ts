@@ -49,7 +49,7 @@ export interface PoolObject extends Object {
 	illiquidLpCoinSupply: Balance;
 	flatness: PoolFlatness;
 	coins: PoolCoins;
-	normalizedDecimals: bigint;
+	// normalizedDecimals: bigint;
 }
 
 // =========================================================================

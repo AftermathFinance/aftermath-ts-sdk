@@ -180,7 +180,7 @@ export class PoolsApi {
 
 	public fetchDepositEvents = async (
 		inputs: {
-			// poolObjectId?: ObjectId
+			poolObjectId?: ObjectId;
 		} & EventsInputs
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
@@ -188,20 +188,20 @@ export class PoolsApi {
 			PoolDepositEvent
 		>({
 			...inputs,
-			// poolObjectId
-			// 	? {
-			// 			And: [
-			// 				{ MoveEventType: this.eventTypes.deposit },
-			// 				{
-			// 					MoveEventField: {
-			// 						path: "pool_id",
-			// 						value: poolObjectId,
-			// 					},
-			// 				},
-			// 			],
-			// 	  }
-			// 	: { MoveEventType: this.eventTypes.deposit },
-			query: { MoveEventType: this.eventTypes.deposit },
+			query: inputs.poolObjectId
+				? {
+						And: [
+							{ MoveEventType: this.eventTypes.deposit },
+							{
+								MoveEventField: {
+									path: "pool_id",
+									value: inputs.poolObjectId,
+								},
+							},
+						],
+				  }
+				: { MoveEventType: this.eventTypes.deposit },
+			// query: { MoveEventType: this.eventTypes.deposit },
 			eventFromEventOnChain: Casting.pools.poolDepositEventFromOnChain,
 		});
 

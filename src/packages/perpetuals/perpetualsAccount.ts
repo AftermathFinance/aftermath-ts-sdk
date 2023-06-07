@@ -41,13 +41,33 @@ export class PerpetualsAccount extends Caller {
 		this.account = inputs.account;
 	}
 
-	public positionForMarket(inputs: {
+	public positionForMarketId(inputs: {
 		marketId: bigint;
 	}): PerpetualsPosition | undefined {
 		const marketIdIndex = Number(inputs.marketId);
 		try {
 			const posIndex = Number(this.account.marketIds[marketIdIndex]);
 			return this.account.positions[posIndex];
+		} catch (e) {
+			return undefined;
+		}
+	}
+
+	public marketIdForPosition(inputs: {
+		position: PerpetualsPosition;
+	}): bigint | undefined {
+		try {
+			const posIndex = this.account.positions.findIndex(
+				(pos) => JSON.stringify(pos) === JSON.stringify(inputs.position)
+			);
+			const marketId = this.account.marketIds.findIndex(
+				(val) => val === BigInt(posIndex)
+			);
+
+			if (posIndex < 0 || marketId < 0)
+				throw new Error("position not found");
+
+			return BigInt(marketId);
 		} catch (e) {
 			return undefined;
 		}
