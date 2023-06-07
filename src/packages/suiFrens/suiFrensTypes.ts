@@ -41,6 +41,8 @@ export interface SuiFrenObject extends Object {
 	attributes: SuiFrenAttributes;
 	birthLocation: string;
 	imageUrl: Url;
+	mixLimit: bigint;
+	lastEpochMixed: bigint;
 }
 
 // =========================================================================

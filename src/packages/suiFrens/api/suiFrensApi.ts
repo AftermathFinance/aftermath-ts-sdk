@@ -108,6 +108,11 @@ export class SuiFrensApi {
 			unstakeSuiFren: "UnstakeSuiFrenEvent",
 			withdrawFees: "WithdrawFeesEvent",
 		},
+
+		dynamicFieldKeys: {
+			mixLimit: "MixLimitKey",
+			lastEpochMixed: "LastEpochMixedKey",
+		},
 	};
 
 	// =========================================================================
@@ -353,35 +358,54 @@ export class SuiFrensApi {
 	public fetchSuiFrens = async (
 		suiFrenIds: ObjectId[]
 	): Promise<SuiFrenObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<SuiFrenObject>({
-			objectIds: suiFrenIds,
-			objectFromSuiObjectResponse:
-				SuiFrensApiCasting.suiFrenObjectFromSuiObjectResponse,
-		});
+		const partialSuiFrens =
+			await this.Provider.Objects().fetchCastObjectBatch({
+				objectIds: suiFrenIds,
+				objectFromSuiObjectResponse:
+					SuiFrensApiCasting.partialSuiFrenObjectFromSuiObjectResponse,
+				options: {
+					showDisplay: true,
+				},
+			});
+
+		return this.fetchAddDynamicFieldsToPartialSuiFrenObjects(
+			partialSuiFrens
+		);
 	};
 
 	public fetchSuiFrensOwnedByAddress = async (
 		walletAddress: SuiAddress
 	): Promise<SuiFrenObject[]> => {
-		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-			{
+		const partialSuiFrens =
+			await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
 				objectType: this.objectTypes.suiFren,
 				objectFromSuiObjectResponse:
-					SuiFrensApiCasting.suiFrenObjectFromSuiObjectResponse,
+					SuiFrensApiCasting.partialSuiFrenObjectFromSuiObjectResponse,
 				withDisplay: true,
-			}
+			});
+
+		return this.fetchAddDynamicFieldsToPartialSuiFrenObjects(
+			partialSuiFrens
 		);
 	};
 
 	public fetchStakedSuiFrens = async (
 		suiFrenIds: ObjectId[]
 	): Promise<SuiFrenObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<SuiFrenObject>({
-			objectIds: suiFrenIds,
-			objectFromSuiObjectResponse:
-				SuiFrensApiCasting.suiFrenObjectFromSuiObjectResponse,
-		});
+		const partialSuiFrens =
+			await this.Provider.Objects().fetchCastObjectBatch({
+				objectIds: suiFrenIds,
+				objectFromSuiObjectResponse:
+					SuiFrensApiCasting.partialSuiFrenObjectFromSuiObjectResponse,
+				options: {
+					showDisplay: true,
+				},
+			});
+
+		return this.fetchAddDynamicFieldsToPartialSuiFrenObjects(
+			partialSuiFrens
+		);
 	};
 
 	public fetchStakedSuiFrensOwnedByAddress = async (
@@ -1041,6 +1065,48 @@ export class SuiFrensApi {
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private fetchAddDynamicFieldsToPartialSuiFrenObjects = async (
+		suiFrens: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">[]
+	): Promise<SuiFrenObject[]> => {
+		return Promise.all(
+			suiFrens.map((suiFren) =>
+				this.fetchAddDynamicFieldToPartialSuiFrenObject(suiFren)
+			)
+		);
+	};
+
+	private fetchAddDynamicFieldToPartialSuiFrenObject = async (
+		suiFren: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">
+	): Promise<SuiFrenObject> => {
+		const dynamicFields =
+			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
+				parentObjectId: suiFren.objectId ?? "",
+				// limitStepSize: 2,
+			});
+
+		const mixLimit = dynamicFields.find((field) =>
+			field.objectType.includes(
+				SuiFrensApi.constants.dynamicFieldKeys.mixLimit
+			)
+		)?.name.value;
+
+		const lastEpochMixed = dynamicFields.find((field) =>
+			field.objectType.includes(
+				SuiFrensApi.constants.dynamicFieldKeys.lastEpochMixed
+			)
+		)?.name.value;
+
+		return {
+			...suiFren,
+			mixLimit,
+			lastEpochMixed,
+		};
+	};
 
 	// =========================================================================
 	//  Event Types

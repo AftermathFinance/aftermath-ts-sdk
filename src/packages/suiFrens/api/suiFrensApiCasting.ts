@@ -31,9 +31,9 @@ export class SuiFrensApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static suiFrenObjectFromSuiObjectResponse = (
+	public static partialSuiFrenObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): SuiFrenObject => {
+	): Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed"> => {
 		const fields = getObjectFields(data) as SuiFrenFieldsOnChain;
 		const display = getObjectDisplay(data)
 			.data as unknown as SuiFrenDisplayOnChain;

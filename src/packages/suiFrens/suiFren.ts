@@ -3,8 +3,10 @@ import {
 	SuiNetwork,
 	SuiFrenObject,
 	Url,
+	Nft,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import dayjs from "dayjs";
 
 export class SuiFren extends Caller {
 	// =========================================================================
@@ -19,6 +21,45 @@ export class SuiFren extends Caller {
 		super(network, "sui-frens");
 		this.suiFren = suiFren;
 		this.isStaked = isStaked;
+	}
+
+	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	public asNft(): Nft {
+		return {
+			info: {
+				objectId: this.suiFren.objectId,
+				version: "",
+				digest: "",
+				// type?: AnyObjectType,
+			},
+			display: {
+				suggested: {
+					name: "SuiFren",
+					// link?: Url,
+					imageUrl: this.suiFren.imageUrl,
+					// description?: string,
+					// projectUrl?: Url,
+					// creator?: string,
+				},
+				other: {
+					Skin: this.suiFren.attributes.skin,
+					Ears: this.suiFren.attributes.ears,
+					Expression: this.suiFren.attributes.expression,
+					"Main Color": this.suiFren.attributes.mainColor,
+					"Secondary Color": this.suiFren.attributes.secondaryColor,
+					"Birth Location": this.suiFren.birthLocation,
+					Birthday: dayjs(this.suiFren.birthdate).format(
+						"MMMM D, YYYY"
+					),
+					Cohort: this.suiFren.cohort.toString(),
+					Generation: this.suiFren.generation.toString(),
+					// Genes: this.suiFren.genes.toString(),
+				},
+			},
+		};
 	}
 
 	// =========================================================================
