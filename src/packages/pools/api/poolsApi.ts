@@ -959,9 +959,16 @@ export class PoolsApi {
 					"vector<u64>"
 				),
 				tx.pure(
-					coinsInfo.map((coin) => coin.decimals),
-					"vector<u8>"
-				),
+					Helpers.transactions.createOptionObject(
+						coinsInfo.map((coin) => coin.decimals)
+					),
+					"Option<vector<u8>>"
+				), // decimals
+				tx.pure(true, "bool"), // respect_decimals
+				tx.pure(
+					Helpers.transactions.createOptionObject(undefined),
+					"Option<u8>"
+				), // force_lp_decimals
 				...coinsInfo.map((coin) =>
 					typeof coin.coinId === "string"
 						? tx.object(coin.coinId)
