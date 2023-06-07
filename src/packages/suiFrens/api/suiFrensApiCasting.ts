@@ -1,5 +1,6 @@
 import {
 	SuiObjectResponse,
+	getObjectDisplay,
 	getObjectFields,
 	getObjectId,
 } from "@mysten/sui.js";
@@ -21,6 +22,7 @@ import {
 	StakedSuiFrenReceiptFieldsOnChain,
 	UnstakeSuiFrenEventOnChain,
 	SuiFrenFieldsOnChain,
+	SuiFrenDisplayOnChain,
 } from "./suiFrensApiCastingTypes";
 import { SuiFrens } from "../suiFrens";
 
@@ -33,6 +35,9 @@ export class SuiFrensApiCasting {
 		data: SuiObjectResponse
 	): SuiFrenObject => {
 		const fields = getObjectFields(data) as SuiFrenFieldsOnChain;
+		const display = getObjectDisplay(data)
+			.data as unknown as SuiFrenDisplayOnChain;
+
 		return {
 			objectId: getObjectId(data),
 			generation: BigInt(fields.generation),
@@ -47,6 +52,7 @@ export class SuiFrensApiCasting {
 				ears: fields.attributes[4],
 			} as SuiFrenAttributes,
 			birthLocation: fields.birth_location,
+			imageUrl: display.image_url,
 		};
 	};
 

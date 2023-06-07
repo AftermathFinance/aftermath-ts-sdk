@@ -40,6 +40,7 @@ export interface SuiFrenObject extends Object {
 	genes: bigint[];
 	attributes: SuiFrenAttributes;
 	birthLocation: string;
+	imageUrl: Url;
 }
 
 // =========================================================================

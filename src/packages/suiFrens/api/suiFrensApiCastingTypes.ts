@@ -25,6 +25,13 @@ export interface SuiFrenFieldsOnChain {
 	birth_location: string;
 }
 
+export interface SuiFrenDisplayOnChain {
+	description: string;
+	image_url: string;
+	link: string;
+	project_url: string;
+}
+
 // =========================================================================
 //  OLD
 // =========================================================================

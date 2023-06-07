@@ -117,8 +117,9 @@ export class SuiFrensApi {
 	public readonly addresses: SuiFrensAddresses;
 
 	public readonly objectTypes: {
-		suiFrenObjectType: AnyObjectType;
-		stakedSuiFrenReceiptObjectType: AnyObjectType;
+		suiFren: AnyObjectType;
+		capy: AnyObjectType;
+		stakedSuiFrenReceipt: AnyObjectType;
 	};
 
 	public readonly eventTypes: {
@@ -142,8 +143,9 @@ export class SuiFrensApi {
 		this.addresses = addresses;
 
 		this.objectTypes = {
-			suiFrenObjectType: `${addresses.packages.suiFrens}::suiFren::SuiFren`,
-			stakedSuiFrenReceiptObjectType: `${addresses.packages.suiFrensVault}::suiFren_vault::StakingReceipt`,
+			suiFren: `${addresses.packages.suiFrens}::suifrens::SuiFren`,
+			capy: `${addresses.packages.suiFrens}::capy::Capy`,
+			stakedSuiFrenReceipt: `${addresses.packages.suiFrensVault}::suiFren_vault::StakingReceipt`,
 		};
 
 		this.eventTypes = {
@@ -364,9 +366,10 @@ export class SuiFrensApi {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			{
 				walletAddress,
-				objectType: this.objectTypes.suiFrenObjectType,
+				objectType: this.objectTypes.suiFren,
 				objectFromSuiObjectResponse:
 					SuiFrensApiCasting.suiFrenObjectFromSuiObjectResponse,
+				withDisplay: true,
 			}
 		);
 	};
@@ -411,7 +414,7 @@ export class SuiFrensApi {
 		inputs: DynamicFieldsInputs
 	) => {
 		const suiFrenVaultId = this.addresses.objects.suiFrensVault;
-		const suiFrenType = this.objectTypes.suiFrenObjectType;
+		const suiFrenType = this.objectTypes.suiFren;
 
 		return await this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
 			{
@@ -457,7 +460,7 @@ export class SuiFrensApi {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			{
 				walletAddress,
-				objectType: this.objectTypes.stakedSuiFrenReceiptObjectType,
+				objectType: this.objectTypes.stakedSuiFrenReceipt,
 				objectFromSuiObjectResponse:
 					SuiFrensApiCasting.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
 			}
@@ -1030,11 +1033,10 @@ export class SuiFrensApi {
 
 	public isStakedSuiFrenReceiptObjectType = (
 		suiObjectInfo: SuiObjectInfo
-	): boolean =>
-		suiObjectInfo.type === this.objectTypes.stakedSuiFrenReceiptObjectType;
+	): boolean => suiObjectInfo.type === this.objectTypes.stakedSuiFrenReceipt;
 
 	public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
-		suiObjectInfo.type === this.objectTypes.suiFrenObjectType;
+		suiObjectInfo.type === this.objectTypes.suiFren;
 
 	// =========================================================================
 	//  Private Methods
