@@ -56,6 +56,8 @@ export class SuiFren extends Caller {
 					),
 					Cohort: this.suiFren.cohort.toString(),
 					Generation: this.suiFren.generation.toString(),
+					"Mixes Remaining": this.suiFren.mixLimit.toString(),
+					"Last Epoch Mixed": this.suiFren.lastEpochMixed.toString(),
 					// Genes: this.suiFren.genes.toString(),
 				},
 			},

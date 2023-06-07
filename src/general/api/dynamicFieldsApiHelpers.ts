@@ -6,7 +6,10 @@ import {
 	DynamicFieldsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
+import {
+	DynamicFieldInfo,
+	DynamicFieldName,
+} from "@mysten/sui.js/dist/types/dynamic_fields";
 
 export class DynamicFieldsApiHelpers {
 	// =========================================================================
@@ -30,7 +33,7 @@ export class DynamicFieldsApiHelpers {
 	// =========================================================================
 
 	// =========================================================================
-	//  Fetching
+	//  Dynamic Fields
 	// =========================================================================
 
 	public fetchCastDynamicFieldsOfTypeWithCursor = async <ObjectType>(inputs: {
@@ -183,5 +186,16 @@ export class DynamicFieldsApiHelpers {
 			dynamicFields,
 			nextCursor,
 		};
+	};
+
+	// =========================================================================
+	//  Dynamic Field Objects
+	// =========================================================================
+
+	public fetchDynamicFieldObject = (inputs: {
+		parentId: ObjectId;
+		name: string | DynamicFieldName;
+	}) => {
+		return this.Provider.provider.getDynamicFieldObject(inputs);
 	};
 }

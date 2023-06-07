@@ -4,6 +4,7 @@ import {
 	SuiObjectInfo,
 	TransactionArgument,
 	TransactionBlock,
+	getObjectFields,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { SuiFrensApiCasting } from "./suiFrensApiCasting";
@@ -48,12 +49,8 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	private static readonly constants = {
-		suiFren: {
-			modules: {
-				suiFren: {
-					moduleName: "suiFren",
-				},
-			},
+		moduleNames: {
+			capyLabs: "capy_labs",
 		},
 
 		suiFrenVault: {
@@ -1083,28 +1080,36 @@ export class SuiFrensApi {
 	private fetchAddDynamicFieldToPartialSuiFrenObject = async (
 		suiFren: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">
 	): Promise<SuiFrenObject> => {
-		const dynamicFields =
-			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
-				parentObjectId: suiFren.objectId ?? "",
-				// limitStepSize: 2,
-			});
+		const [mixLimitObject, lastEpochMixedObject] = await Promise.all([
+			this.Provider.DynamicFields().fetchDynamicFieldObject({
+				parentId: suiFren.objectId,
+				name: {
+					type: `${this.addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.capyLabs}::${SuiFrensApi.constants.dynamicFieldKeys.mixLimit}`,
+					value: {
+						dummy_field: false,
+					},
+				},
+			}),
+			this.Provider.DynamicFields().fetchDynamicFieldObject({
+				parentId: suiFren.objectId,
+				name: {
+					type: `${this.addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.capyLabs}::${SuiFrensApi.constants.dynamicFieldKeys.lastEpochMixed}`,
+					value: {
+						dummy_field: false,
+					},
+				},
+			}),
+		]);
 
-		const mixLimit = dynamicFields.find((field) =>
-			field.objectType.includes(
-				SuiFrensApi.constants.dynamicFieldKeys.mixLimit
-			)
-		)?.name.value;
-
-		const lastEpochMixed = dynamicFields.find((field) =>
-			field.objectType.includes(
-				SuiFrensApi.constants.dynamicFieldKeys.lastEpochMixed
-			)
-		)?.name.value;
+		const mixLimitVal = getObjectFields(mixLimitObject)?.value;
+		const lastEpochMixedVal = getObjectFields(lastEpochMixedObject)?.value;
+		if (!mixLimitVal || !lastEpochMixedVal)
+			throw new Error("dynamic fields not found for suifren");
 
 		return {
 			...suiFren,
-			mixLimit,
-			lastEpochMixed,
+			mixLimit: BigInt(mixLimitVal),
+			lastEpochMixed: BigInt(lastEpochMixedVal),
 		};
 	};
 
@@ -1115,7 +1120,8 @@ export class SuiFrensApi {
 	private suiFrenBornEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.suiFrens,
-			SuiFrensApi.constants.suiFren.modules.suiFren.moduleName,
+			SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
+			// SuiFrensApi.constants.suiFren.modules.suiFren.moduleName,
 			SuiFrensApi.constants.eventNames.suiFrenBorn
 		);
 
