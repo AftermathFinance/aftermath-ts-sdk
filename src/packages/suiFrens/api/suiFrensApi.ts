@@ -731,6 +731,50 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	// =========================================================================
+	//  Inspections
+	// =========================================================================
+
+	public mixingLimitTx = (inputs: {
+		tx: TransactionBlock;
+		suiFrenId: ObjectId;
+		suiFrenType: AnyObjectType;
+	}) /* Option<u8> */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrens,
+				SuiFrensApi.constants.moduleNames.capyLabs,
+				"mixing_limit"
+			),
+			typeArguments: [inputs.suiFrenType],
+			arguments: [
+				tx.object(inputs.suiFrenId), // SuiFren
+			],
+		});
+	};
+
+	public lastEpochMixedTx = (inputs: {
+		tx: TransactionBlock;
+		suiFrenId: ObjectId;
+		suiFrenType: AnyObjectType;
+	}) /* Option<u64> */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrens,
+				SuiFrensApi.constants.moduleNames.capyLabs,
+				"last_epoch_mixed"
+			),
+			typeArguments: [inputs.suiFrenType],
+			arguments: [
+				tx.object(inputs.suiFrenId), // SuiFren
+			],
+		});
+	};
+
+	// =========================================================================
 	//  Breeding Transaction
 	// =========================================================================
 
