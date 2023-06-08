@@ -180,7 +180,7 @@ export class PoolsApi {
 
 	public fetchDepositEvents = async (
 		inputs: {
-			poolObjectId?: ObjectId;
+			// poolObjectId?: ObjectId;
 		} & EventsInputs
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
