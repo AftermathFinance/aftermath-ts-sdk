@@ -76,6 +76,7 @@ export type UserEventsInputs = EventsInputs & {
 
 export interface Object {
 	objectId: ObjectId;
+	objectType: AnyObjectType;
 }
 
 // =========================================================================

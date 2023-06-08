@@ -42,7 +42,7 @@ export interface SuiFrenObject extends Object {
 	birthLocation: string;
 	imageUrl: Url;
 	mixLimit: bigint;
-	lastEpochMixed: bigint;
+	lastEpochMixed?: bigint;
 }
 
 // =========================================================================

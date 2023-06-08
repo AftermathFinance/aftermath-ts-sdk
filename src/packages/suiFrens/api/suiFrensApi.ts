@@ -4,6 +4,7 @@ import {
 	SuiObjectInfo,
 	TransactionArgument,
 	TransactionBlock,
+	bcs,
 	getObjectFields,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -165,6 +166,42 @@ export class SuiFrensApi {
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
+
+	public fetchMixingLimit = async (inputs: {
+		suiFrenId: ObjectId;
+		suiFrenType: AnyObjectType;
+	}): Promise<bigint> => {
+		const tx = new TransactionBlock();
+
+		this.mixingLimitTx({ tx, ...inputs });
+
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		const unwrapped = Casting.unwrapDeserializedOption(
+			bcs.de("Option<u8>", new Uint8Array(bytes))
+		);
+		return unwrapped === undefined
+			? SuiFrens.constants.startMixingLimit
+			: BigInt(unwrapped);
+	};
+
+	public fetchLastEpochMixed = async (inputs: {
+		suiFrenId: ObjectId;
+		suiFrenType: AnyObjectType;
+	}): Promise<bigint | undefined> => {
+		const tx = new TransactionBlock();
+
+		this.lastEpochMixedTx({ tx, ...inputs });
+
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		const unwrapped = Casting.unwrapDeserializedOption(
+			bcs.de("Option<u64>", new Uint8Array(bytes))
+		);
+		return unwrapped === undefined ? undefined : BigInt(unwrapped);
+	};
 
 	public fetchStakedSuiFrenFeesEarned = async (
 		stakedSuiFrenReceiptObjectId: ObjectId
@@ -362,12 +399,11 @@ export class SuiFrensApi {
 					SuiFrensApiCasting.partialSuiFrenObjectFromSuiObjectResponse,
 				options: {
 					showDisplay: true,
+					showType: true,
 				},
 			});
 
-		return this.fetchAddDynamicFieldsToPartialSuiFrenObjects(
-			partialSuiFrens
-		);
+		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
 	};
 
 	public fetchSuiFrensOwnedByAddress = async (
@@ -382,9 +418,7 @@ export class SuiFrensApi {
 				withDisplay: true,
 			});
 
-		return this.fetchAddDynamicFieldsToPartialSuiFrenObjects(
-			partialSuiFrens
-		);
+		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
 	};
 
 	public fetchStakedSuiFrens = async (
@@ -397,12 +431,11 @@ export class SuiFrensApi {
 					SuiFrensApiCasting.partialSuiFrenObjectFromSuiObjectResponse,
 				options: {
 					showDisplay: true,
+					showType: true,
 				},
 			});
 
-		return this.fetchAddDynamicFieldsToPartialSuiFrenObjects(
-			partialSuiFrens
-		);
+		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
 	};
 
 	public fetchStakedSuiFrensOwnedByAddress = async (
@@ -512,6 +545,7 @@ export class SuiFrensApi {
 		const suiFrenStakingReceiptsWithSuiFren = stakingReceipts.map(
 			(stakingReceipt) => {
 				return {
+					objectType: stakingReceipt.objectType,
 					objectId: stakingReceipt.objectId,
 					suiFren: indexStakedSuiFrens[stakingReceipt.suiFrenId],
 					unlockEpoch: stakingReceipt.unlockEpoch,
@@ -1111,49 +1145,57 @@ export class SuiFrensApi {
 	//  Helpers
 	// =========================================================================
 
-	private fetchAddDynamicFieldsToPartialSuiFrenObjects = async (
-		suiFrens: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">[]
+	private fetchCompletePartialSuiFrenObjects = async (
+		partialSuiFrens: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">[]
 	): Promise<SuiFrenObject[]> => {
 		return Promise.all(
-			suiFrens.map((suiFren) =>
-				this.fetchAddDynamicFieldToPartialSuiFrenObject(suiFren)
+			partialSuiFrens.map((suiFren) =>
+				this.fetchCompletePartialSuiFrenObject(suiFren)
 			)
 		);
 	};
 
-	private fetchAddDynamicFieldToPartialSuiFrenObject = async (
-		suiFren: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">
+	private fetchCompletePartialSuiFrenObject = async (
+		partialSuiFren: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">
 	): Promise<SuiFrenObject> => {
-		const [mixLimitObject, lastEpochMixedObject] = await Promise.all([
-			this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: suiFren.objectId,
-				name: {
-					type: `${this.addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.capyLabs}::${SuiFrensApi.constants.dynamicFieldKeys.mixLimit}`,
-					value: {
-						dummy_field: false,
-					},
-				},
-			}),
-			this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: suiFren.objectId,
-				name: {
-					type: `${this.addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.capyLabs}::${SuiFrensApi.constants.dynamicFieldKeys.lastEpochMixed}`,
-					value: {
-						dummy_field: false,
-					},
-				},
-			}),
+		// const [mixLimitObject, lastEpochMixedObject] = await Promise.all([
+		// 	this.Provider.DynamicFields().fetchDynamicFieldObject({
+		// 		parentId: suiFren.objectId,
+		// 		name: {
+		// 			type: `${this.addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.capyLabs}::${SuiFrensApi.constants.dynamicFieldKeys.mixLimit}`,
+		// 			value: {
+		// 				dummy_field: false,
+		// 			},
+		// 		},
+		// 	}),
+		// 	this.Provider.DynamicFields().fetchDynamicFieldObject({
+		// 		parentId: suiFren.objectId,
+		// 		name: {
+		// 			type: `${this.addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.capyLabs}::${SuiFrensApi.constants.dynamicFieldKeys.lastEpochMixed}`,
+		// 			value: {
+		// 				dummy_field: false,
+		// 			},
+		// 		},
+		// 	}),
+		// ]);
+
+		// const mixLimitVal = getObjectFields(mixLimitObject)?.value;
+		// const lastEpochMixedVal = getObjectFields(lastEpochMixedObject)?.value;
+		// if (!mixLimitVal || !lastEpochMixedVal)
+		// 	throw new Error("dynamic fields not found for suifren");
+
+		const suiFrenId = partialSuiFren.objectId;
+		// TODO: move inner coin type func to general func in helpers
+		const suiFrenType = Coin.getInnerCoinType(partialSuiFren.objectType);
+		const [mixLimit, lastEpochMixed] = await Promise.all([
+			this.fetchMixingLimit({ suiFrenId, suiFrenType }),
+			this.fetchLastEpochMixed({ suiFrenId, suiFrenType }),
 		]);
 
-		const mixLimitVal = getObjectFields(mixLimitObject)?.value;
-		const lastEpochMixedVal = getObjectFields(lastEpochMixedObject)?.value;
-		if (!mixLimitVal || !lastEpochMixedVal)
-			throw new Error("dynamic fields not found for suifren");
-
 		return {
-			...suiFren,
-			mixLimit: BigInt(mixLimitVal),
-			lastEpochMixed: BigInt(lastEpochMixedVal),
+			...partialSuiFren,
+			mixLimit,
+			lastEpochMixed,
 		};
 	};
 

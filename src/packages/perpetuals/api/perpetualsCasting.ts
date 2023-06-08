@@ -3,6 +3,7 @@ import {
 	ObjectContentFields,
 	getObjectFields,
 	getObjectId,
+	getObjectType,
 } from "@mysten/sui.js";
 import {
 	PerpetualsAccountManagerObject,
@@ -49,8 +50,12 @@ export class PerpetualsCasting {
 	public static accountManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsAccountManagerObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
+			objectType,
 			objectId: getObjectId(data),
 			maxPositionsPerAccount: objectFields.max_positions_per_account,
 			maxOpenOrdersPerPosition: objectFields.max_open_orders_per_position,
@@ -63,8 +68,12 @@ export class PerpetualsCasting {
 	public static marketManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsMarketManagerObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
+			objectType,
 			objectId: getObjectId(data),
 			feesAccrued: objectFields.fees_accrued,
 			netTransferFromIfToVault: objectFields.net_transfer_from_if,
@@ -108,7 +117,11 @@ export class PerpetualsCasting {
 			throw new Error("not order book key type");
 		const orderbookField =
 			dynamicField as PerpetualsMarketOrderbookDynamicFieldOnChain;
+
+		const objectType = dynamicField.data.type;
+
 		return {
+			objectType,
 			objectId: orderbookField.data.fields.id.id,
 			value: PerpetualsCasting.orderbookFromRawData(orderbookField.data),
 		};
@@ -204,7 +217,11 @@ export class PerpetualsCasting {
 	public static orderbookFromRawData = (
 		data: any
 	): PerpetualsOrderbookObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		return {
+			objectType,
 			objectId: data.id.id,
 			lotSize: BigInt(data.lot_size),
 			tickSize: BigInt(data.tick_size),
@@ -268,7 +285,11 @@ export class PerpetualsCasting {
 	public static priceFeedStorageFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsPriceFeedStorageObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		return {
+			objectType,
 			objectId: getObjectId(data),
 		};
 	};
@@ -276,8 +297,12 @@ export class PerpetualsCasting {
 	public static priceFeedFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsPriceFeedObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
+			objectType,
 			objectId: getObjectId(data),
 			symbol: objectFields.symbol,
 			price: objectFields.price,

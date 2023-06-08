@@ -3,6 +3,7 @@ import {
 	getObjectDisplay,
 	getObjectFields,
 	getObjectId,
+	getObjectType,
 } from "@mysten/sui.js";
 import {
 	BreedSuiFrensEvent,
@@ -34,11 +35,15 @@ export class SuiFrensApiCasting {
 	public static partialSuiFrenObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed"> => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		const fields = getObjectFields(data) as SuiFrenFieldsOnChain;
 		const display = getObjectDisplay(data)
 			.data as unknown as SuiFrenDisplayOnChain;
 
 		return {
+			objectType,
 			objectId: getObjectId(data),
 			generation: BigInt(fields.generation),
 			birthdate: Number(fields.birthdate),
@@ -59,10 +64,15 @@ export class SuiFrensApiCasting {
 	public static stakedSuiFrenReceiptObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): StakedSuiFrenReceiptObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		const objectFields = getObjectFields(
 			data
 		) as StakedSuiFrenReceiptFieldsOnChain;
+
 		return {
+			objectType,
 			objectId: getObjectId(data),
 			suiFrenId: objectFields.suiFren_id,
 			unlockEpoch: objectFields.unlock_epoch.fields,
@@ -86,9 +96,13 @@ export class SuiFrensApiCasting {
 	public static suiFrenVaultObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): SuiFrenVaultObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		const objectFields = getObjectFields(data) as SuiFrenVaultFieldsOnChain;
 
 		return {
+			objectType,
 			objectId: getObjectId(data),
 			bredSuiFrens: BigInt(objectFields.bred_suiFrens),
 			stakedSuiFrens: BigInt(objectFields.staked_suiFrens),

@@ -25,6 +25,7 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	public static readonly constants = {
+		startMixingLimit: BigInt(5),
 		breedingFees: {
 			coinType: Coin.constants.suiCoinType,
 			amounts: {
