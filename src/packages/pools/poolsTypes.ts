@@ -112,7 +112,7 @@ export interface PoolGraphDataTimeframe {
 export interface PoolCreationCoinInfo {
 	coinType: CoinType;
 	weight: PoolWeight;
-	decimals: CoinDecimal;
+	decimals?: CoinDecimal;
 	tradeFeeIn: PoolTradeFee;
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
@@ -174,13 +174,15 @@ export interface ApiCreatePoolBody {
 	coinsInfo: {
 		coinType: CoinType;
 		weight: number;
-		decimals: CoinDecimal;
+		decimals?: CoinDecimal;
 		tradeFeeIn: number;
 		initialDeposit: Balance;
 	}[];
 	poolName: PoolName;
 	poolFlatness: 0 | 1;
 	createPoolCapId: ObjectId;
+	respectDecimals: boolean;
+	forceLpDecimals?: CoinDecimal;
 }
 
 // =========================================================================

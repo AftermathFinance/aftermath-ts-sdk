@@ -188,20 +188,20 @@ export class PoolsApi {
 			PoolDepositEvent
 		>({
 			...inputs,
-			query: inputs.poolObjectId
-				? {
-						And: [
-							{ MoveEventType: this.eventTypes.deposit },
-							{
-								MoveEventField: {
-									path: "pool_id",
-									value: inputs.poolObjectId,
-								},
-							},
-						],
-				  }
-				: { MoveEventType: this.eventTypes.deposit },
-			// query: { MoveEventType: this.eventTypes.deposit },
+			// query: inputs.poolObjectId
+			// 	? {
+			// 			And: [
+			// 				{ MoveEventType: this.eventTypes.deposit },
+			// 				{
+			// 					MoveEventField: {
+			// 						path: "pool_id",
+			// 						value: inputs.poolObjectId,
+			// 					},
+			// 				},
+			// 			],
+			// 	  }
+			// 	: { MoveEventType: this.eventTypes.deposit },
+			query: { MoveEventType: this.eventTypes.deposit },
 			eventFromEventOnChain: Casting.pools.poolDepositEventFromOnChain,
 		});
 
@@ -288,13 +288,15 @@ export class PoolsApi {
 			weight: Percentage;
 			// TODO: make decimals optional and fetch if unset ?
 			// TODO: make decimals only bigint ?
-			decimals: CoinDecimal;
+			decimals?: CoinDecimal;
 			tradeFeeIn: Percentage;
 			initialDeposit: Balance;
 		}[];
 		poolName: PoolName;
 		poolFlatness: 0 | 1;
 		createPoolCapId: ObjectId;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
 	}): Promise<TransactionBlock> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
@@ -555,6 +557,8 @@ export class PoolsApi {
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 		createPoolCapId: ObjectId;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
 	}): Promise<TransactionBlock> => {
 		const { coinsInfo } = inputs;
 
@@ -890,7 +894,7 @@ export class PoolsApi {
 			coinId: ObjectId | TransactionArgument;
 			coinType: CoinType;
 			weight: PoolWeight;
-			decimals: CoinDecimal;
+			decimals?: CoinDecimal;
 			tradeFeeIn: PoolTradeFee;
 			tradeFeeOut: PoolTradeFee;
 			depositFee: PoolDepositFee;
@@ -901,6 +905,8 @@ export class PoolsApi {
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 		lpCoinDescription: string;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
 	}) => {
 		const {
 			tx,
@@ -913,6 +919,7 @@ export class PoolsApi {
 
 		const poolSize = coinsInfo.length;
 		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+		const decimals = coinsInfo.map((coin) => coin.decimals);
 
 		return tx.add({
 			kind: "MoveCall",
@@ -960,13 +967,15 @@ export class PoolsApi {
 				),
 				tx.pure(
 					Helpers.transactions.createOptionObject(
-						coinsInfo.map((coin) => coin.decimals)
+						decimals.includes(undefined) ? undefined : decimals
 					),
 					"Option<vector<u8>>"
 				), // decimals
-				tx.pure(true, "bool"), // respect_decimals
+				tx.pure(inputs.respectDecimals, "bool"), // respect_decimals
 				tx.pure(
-					Helpers.transactions.createOptionObject(undefined),
+					Helpers.transactions.createOptionObject(
+						inputs.forceLpDecimals
+					),
 					"Option<u8>"
 				), // force_lp_decimals
 				...coinsInfo.map((coin) =>
