@@ -14,6 +14,7 @@ import {
 	UnstakeSuiFrenEvent,
 	SuiFrenObject,
 	SuiFrenAttributes,
+	CapyLabsAppObject,
 } from "../suiFrensTypes";
 import {
 	BreedSuiFrenEventOnChain,
@@ -24,6 +25,7 @@ import {
 	UnstakeSuiFrenEventOnChain,
 	SuiFrenFieldsOnChain,
 	SuiFrenDisplayOnChain,
+	CapyLabsAppFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
 import { SuiFrens } from "../suiFrens";
 
@@ -31,6 +33,24 @@ export class SuiFrensApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
+
+	public static capyLabsAppObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): CapyLabsAppObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const fields = getObjectFields(data) as CapyLabsAppFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			mixingLimit: BigInt(fields.mixing_limit),
+			coolDownPeriodEpochs: BigInt(fields.cool_down_period),
+			mixingPrice: BigInt(fields.mixing_price),
+			suiProfits: BigInt(fields.profits),
+		};
+	};
 
 	public static partialSuiFrenObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse

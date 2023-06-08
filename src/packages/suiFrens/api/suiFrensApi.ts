@@ -170,7 +170,7 @@ export class SuiFrensApi {
 	public fetchMixingLimit = async (inputs: {
 		suiFrenId: ObjectId;
 		suiFrenType: AnyObjectType;
-	}): Promise<bigint> => {
+	}): Promise<bigint | undefined> => {
 		const tx = new TransactionBlock();
 
 		this.mixingLimitTx({ tx, ...inputs });
@@ -181,9 +181,7 @@ export class SuiFrensApi {
 		const unwrapped = Casting.unwrapDeserializedOption(
 			bcs.de("Option<u8>", new Uint8Array(bytes))
 		);
-		return unwrapped === undefined
-			? SuiFrens.constants.startMixingLimit
-			: BigInt(unwrapped);
+		return unwrapped === undefined ? undefined : BigInt(unwrapped);
 	};
 
 	public fetchLastEpochMixed = async (inputs: {
@@ -338,8 +336,7 @@ export class SuiFrensApi {
 			query: {
 				MoveEventType: this.eventTypes.suiFrenBorn,
 			},
-			eventFromEventOnChain:
-				SuiFrensApiCasting.suiFrenBornEventFromOnChain,
+			eventFromEventOnChain: Casting.suiFrens.suiFrenBornEventFromOnChain,
 		});
 
 	public fetchBreedSuiFrensEvents = async (inputs: EventsInputs) =>
@@ -352,7 +349,7 @@ export class SuiFrensApi {
 				MoveEventType: this.eventTypes.breedSuiFrens,
 			},
 			eventFromEventOnChain:
-				SuiFrensApiCasting.breedSuiFrensEventFromOnChain,
+				Casting.suiFrens.breedSuiFrensEventFromOnChain,
 		});
 
 	public fetchStakeSuiFrenEvents = async (inputs: EventsInputs) =>
@@ -365,7 +362,7 @@ export class SuiFrensApi {
 				MoveEventType: this.eventTypes.stakeSuiFren,
 			},
 			eventFromEventOnChain:
-				SuiFrensApiCasting.stakeSuiFrenEventFromOnChain,
+				Casting.suiFrens.stakeSuiFrenEventFromOnChain,
 		});
 
 	public fetchUnstakeSuiFrenEvents = async (inputs: EventsInputs) =>
@@ -378,12 +375,24 @@ export class SuiFrensApi {
 				MoveEventType: this.eventTypes.unstakeSuiFren,
 			},
 			eventFromEventOnChain:
-				SuiFrensApiCasting.unstakeSuiFrenEventFromOnChain,
+				Casting.suiFrens.unstakeSuiFrenEventFromOnChain,
 		});
 
 	// =========================================================================
 	//  Objects
 	// =========================================================================
+
+	// =========================================================================
+	//  CapyLabsApp Object
+	// =========================================================================
+
+	public fetchCapyLabsApp = async () => {
+		return this.Provider.Objects().fetchCastObject({
+			objectId: this.addresses.objects.capyLabsApp,
+			objectFromSuiObjectResponse:
+				Casting.suiFrens.capyLabsAppObjectFromSuiObjectResponse,
+		});
+	};
 
 	// =========================================================================
 	//  SuiFren Objects
@@ -396,7 +405,7 @@ export class SuiFrensApi {
 			await this.Provider.Objects().fetchCastObjectBatch({
 				objectIds: suiFrenIds,
 				objectFromSuiObjectResponse:
-					SuiFrensApiCasting.partialSuiFrenObjectFromSuiObjectResponse,
+					Casting.suiFrens.partialSuiFrenObjectFromSuiObjectResponse,
 				options: {
 					showDisplay: true,
 					showType: true,
@@ -414,7 +423,7 @@ export class SuiFrensApi {
 				walletAddress,
 				objectType: this.objectTypes.suiFren,
 				objectFromSuiObjectResponse:
-					SuiFrensApiCasting.partialSuiFrenObjectFromSuiObjectResponse,
+					Casting.suiFrens.partialSuiFrenObjectFromSuiObjectResponse,
 				withDisplay: true,
 			});
 
@@ -428,7 +437,7 @@ export class SuiFrensApi {
 			await this.Provider.Objects().fetchCastObjectBatch({
 				objectIds: suiFrenIds,
 				objectFromSuiObjectResponse:
-					SuiFrensApiCasting.partialSuiFrenObjectFromSuiObjectResponse,
+					Casting.suiFrens.partialSuiFrenObjectFromSuiObjectResponse,
 				options: {
 					showDisplay: true,
 					showType: true,
@@ -460,7 +469,7 @@ export class SuiFrensApi {
 		return this.Provider.Objects().fetchCastObject<SuiFrenVaultObject>({
 			objectId: suiFrenVaultId,
 			objectFromSuiObjectResponse:
-				SuiFrensApiCasting.suiFrenVaultObjectFromSuiObjectResponse,
+				Casting.suiFrens.suiFrenVaultObjectFromSuiObjectResponse,
 		});
 	};
 
@@ -491,7 +500,8 @@ export class SuiFrensApi {
 			{
 				objectId: suiFrenStakingReceipt,
 				objectFromSuiObjectResponse:
-					SuiFrensApiCasting.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
+					Casting.suiFrens
+						.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
 			}
 		);
 	};
@@ -503,7 +513,8 @@ export class SuiFrensApi {
 			{
 				objectIds: suiFrenStakingReceipts,
 				objectFromSuiObjectResponse:
-					SuiFrensApiCasting.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
+					Casting.suiFrens
+						.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
 			}
 		);
 	};
@@ -516,7 +527,8 @@ export class SuiFrensApi {
 				walletAddress,
 				objectType: this.objectTypes.stakedSuiFrenReceipt,
 				objectFromSuiObjectResponse:
-					SuiFrensApiCasting.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
+					Casting.suiFrens
+						.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
 			}
 		);
 	};
@@ -1158,32 +1170,6 @@ export class SuiFrensApi {
 	private fetchCompletePartialSuiFrenObject = async (
 		partialSuiFren: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">
 	): Promise<SuiFrenObject> => {
-		// const [mixLimitObject, lastEpochMixedObject] = await Promise.all([
-		// 	this.Provider.DynamicFields().fetchDynamicFieldObject({
-		// 		parentId: suiFren.objectId,
-		// 		name: {
-		// 			type: `${this.addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.capyLabs}::${SuiFrensApi.constants.dynamicFieldKeys.mixLimit}`,
-		// 			value: {
-		// 				dummy_field: false,
-		// 			},
-		// 		},
-		// 	}),
-		// 	this.Provider.DynamicFields().fetchDynamicFieldObject({
-		// 		parentId: suiFren.objectId,
-		// 		name: {
-		// 			type: `${this.addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.capyLabs}::${SuiFrensApi.constants.dynamicFieldKeys.lastEpochMixed}`,
-		// 			value: {
-		// 				dummy_field: false,
-		// 			},
-		// 		},
-		// 	}),
-		// ]);
-
-		// const mixLimitVal = getObjectFields(mixLimitObject)?.value;
-		// const lastEpochMixedVal = getObjectFields(lastEpochMixedObject)?.value;
-		// if (!mixLimitVal || !lastEpochMixedVal)
-		// 	throw new Error("dynamic fields not found for suifren");
-
 		const suiFrenId = partialSuiFren.objectId;
 		// TODO: move inner coin type func to general func in helpers
 		const suiFrenType = Coin.getInnerCoinType(partialSuiFren.objectType);

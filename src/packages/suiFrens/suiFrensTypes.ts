@@ -18,20 +18,15 @@ import {
 // =========================================================================
 
 // =========================================================================
-//  Name Only
-// =========================================================================
-
-export type SuiFrenAttributes = {
-	skin: "stripes" | "cheetah";
-	mainColor: "6FBBEE";
-	secondaryColor: "CF9696";
-	expression: "bigSmile";
-	ears: "ear1";
-};
-
-// =========================================================================
 //  Objects
 // =========================================================================
+
+export interface CapyLabsAppObject extends Object {
+	mixingLimit: bigint;
+	coolDownPeriodEpochs: bigint;
+	mixingPrice: Balance;
+	suiProfits: Balance;
+}
 
 export interface SuiFrenObject extends Object {
 	generation: bigint;
@@ -41,9 +36,17 @@ export interface SuiFrenObject extends Object {
 	attributes: SuiFrenAttributes;
 	birthLocation: string;
 	imageUrl: Url;
-	mixLimit: bigint;
+	mixLimit?: bigint;
 	lastEpochMixed?: bigint;
 }
+
+export type SuiFrenAttributes = {
+	skin: "stripes" | "cheetah";
+	mainColor: "6FBBEE";
+	secondaryColor: "CF9696";
+	expression: "bigSmile";
+	ears: "ear1";
+};
 
 // =========================================================================
 //  OLD

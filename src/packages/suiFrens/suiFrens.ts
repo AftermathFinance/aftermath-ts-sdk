@@ -13,6 +13,7 @@ import {
 	UnstakeSuiFrenEvent,
 	Url,
 	SuiFrenAttributes,
+	CapyLabsAppObject,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFrenReceipt } from "./stakedSuiFrenReceipt";
@@ -25,7 +26,6 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	public static readonly constants = {
-		startMixingLimit: BigInt(5),
 		breedingFees: {
 			coinType: Coin.constants.suiCoinType,
 			amounts: {
@@ -61,7 +61,6 @@ export class SuiFrens extends Caller {
 		const suiFrens = await this.fetchApi<SuiFrenObject[]>(
 			`${JSON.stringify(suiFrenObjectIds)}`
 		);
-
 		return suiFrens.map((suiFren) => new SuiFren(suiFren, this.network));
 	}
 
@@ -96,6 +95,14 @@ export class SuiFrens extends Caller {
 					this.network
 				)
 		);
+	}
+
+	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	public async getCapyLabsApp() {
+		return this.fetchApi<CapyLabsAppObject>(`capy-labs-app`);
 	}
 
 	// =========================================================================

@@ -56,7 +56,12 @@ export class SuiFren extends Caller {
 					),
 					Cohort: this.suiFren.cohort.toString(),
 					Generation: this.suiFren.generation.toString(),
-					"Mixes Remaining": this.suiFren.mixLimit.toString(),
+					...(this.suiFren.mixLimit
+						? {
+								"Mixes Remaining":
+									this.suiFren.mixLimit.toString(),
+						  }
+						: {}),
 					...(this.suiFren.lastEpochMixed
 						? {
 								"Last Epoch Mixed":

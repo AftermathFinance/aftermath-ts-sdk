@@ -84,6 +84,7 @@ export interface SuiFrensAddresses {
 		suiFrensVault: SuiAddress;
 	};
 	objects: {
+		capyLabsApp: ObjectId;
 		suiFrensVault: ObjectId;
 		suiFrensRegistry: ObjectId;
 	};

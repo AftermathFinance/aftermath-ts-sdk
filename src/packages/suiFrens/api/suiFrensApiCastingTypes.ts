@@ -15,6 +15,15 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 //  Objects
 // =========================================================================
 
+export interface CapyLabsAppFieldsOnChain {
+	id: ObjectId;
+	inner_hash: BigIntAsString[];
+	mixing_limit: BigIntAsString;
+	cool_down_period: BigIntAsString;
+	mixing_price: BigIntAsString;
+	profits: BigIntAsString;
+}
+
 export interface SuiFrenFieldsOnChain {
 	id: ObjectId;
 	generation: BigIntAsString;
