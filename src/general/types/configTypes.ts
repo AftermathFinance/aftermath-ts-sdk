@@ -115,6 +115,7 @@ export interface OptionalRouterAddresses {
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
 	interest: InterestAddresses;
+	kriya: KriyaAddresses;
 	aftermath: AftermathRouterAddresses;
 }
 
@@ -157,6 +158,16 @@ export interface InterestAddresses {
 		poolsBag: ObjectId;
 		dexStorage: ObjectId;
 	};
+}
+
+export interface KriyaAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	// objects: {
+	// 	poolsTable: ObjectId;
+	// };
 }
 
 export interface AftermathRouterAddresses {

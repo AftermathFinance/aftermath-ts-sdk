@@ -2,7 +2,6 @@ import { SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
-	BigIntAsString,
 	Percentage,
 	Event,
 	Slippage,
@@ -14,8 +13,8 @@ import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
 import { CetusPoolObject } from "../external/cetus/cetusTypes";
 import { TurbosPoolObject } from "../external/turbos/turbosTypes";
-import { EventOnChain } from "../../general/types/castingTypes";
 import { InterestPoolObject } from "../external/interest/interestTypes";
+import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
 
 // =========================================================================
 //  Name Only
@@ -62,12 +61,14 @@ export type RouterProtocolName =
 export type RouterSynchronousSerializablePool =
 	| PoolObject
 	| DeepBookPoolObject
-	| InterestPoolObject;
+	| InterestPoolObject
+	| KriyaPoolObject;
 
 const RouterSynchronousProtocolNames = [
 	"Aftermath",
 	"DeepBook",
 	"Interest",
+	"Kriya",
 ] as const;
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];

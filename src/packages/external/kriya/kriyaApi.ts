@@ -13,24 +13,29 @@ import {
 import {
 	AnyObjectType,
 	Balance,
-	InterestAddresses,
+	KriyaAddresses,
 	PoolsAddresses,
 	ReferralVaultAddresses,
 } from "../../../types";
-import { InterestPoolFieldsOnChain, InterestPoolObject } from "./interestTypes";
+import {
+	KriyaPoolCreatedEvent,
+	KriyaPoolCreatedEventOnChain,
+	KriyaPoolFieldsOnChain,
+	KriyaPoolObject,
+} from "./kriyaTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 
-export class InterestApi implements RouterApiInterface<InterestPoolObject> {
+export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
 	private static readonly constants = {
 		moduleNames: {
-			interface: "interface",
-			wrapper: "interest",
+			spotDex: "spot_dex",
+			wrapper: "kriya",
 		},
 	};
 
@@ -39,9 +44,13 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	// =========================================================================
 
 	public readonly addresses: {
-		interest: InterestAddresses;
+		kriya: KriyaAddresses;
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
+	};
+
+	public readonly eventTypes: {
+		poolCreated: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -49,19 +58,23 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const interest = this.Provider.addresses.router?.interest;
+		const kriya = this.Provider.addresses.router?.kriya;
 		const pools = this.Provider.addresses.pools;
 		const referralVault = this.Provider.addresses.referralVault;
 
-		if (!interest || !pools || !referralVault)
+		if (!kriya || !pools || !referralVault)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
 		this.addresses = {
-			interest,
+			kriya,
 			pools,
 			referralVault,
+		};
+
+		this.eventTypes = {
+			poolCreated: `${kriya.packages.dex}::${KriyaApi.constants.moduleNames.spotDex}::PoolCreatedEvent`,
 		};
 	}
 
@@ -73,21 +86,28 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async (): Promise<InterestPoolObject[]> => {
-		const pools =
-			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				{
-					parentObjectId: this.addresses.interest.objects.poolsBag,
-					objectsFromObjectIds: (objectIds) =>
-						this.Provider.Objects().fetchCastObjectBatch({
-							objectIds,
-							objectFromSuiObjectResponse:
-								InterestApi.poolObjectFromSuiObjectResponse,
-						}),
-				}
-			);
+	public fetchAllPools = async (): Promise<KriyaPoolObject[]> => {
+		const poolObjectIds = await this.Provider.Events().fetchAllEvents({
+			fetchEventsFunc: (eventsInputs) =>
+				this.Provider.Events().fetchCastEventsWithCursor({
+					...eventsInputs,
+					query: {
+						MoveEventType: this.eventTypes.poolCreated,
+					},
+					eventFromEventOnChain: (eventOnChain) =>
+						KriyaApi.kriyaPoolCreatedEventFromOnChain(
+							eventOnChain as KriyaPoolCreatedEventOnChain
+						).poolId,
+				}),
+		});
 
-		const unlockedPools = pools.filter((pool) => !pool.locked);
+		const pools = await this.Provider.Objects().fetchCastObjectBatch({
+			objectIds: poolObjectIds,
+			objectFromSuiObjectResponse:
+				KriyaApi.kriyaPoolObjectFromSuiObjectResponse,
+		});
+
+		const unlockedPools = pools.filter((pool) => pool.isSwapEnabled);
 		return unlockedPools;
 	};
 
@@ -110,6 +130,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 
 	public swapTokenXTx = (inputs: {
 		tx: TransactionBlock;
+		poolId: ObjectId;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -117,7 +138,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 		isFirstSwapForPath: boolean;
 		isLastSwapForPath: boolean;
 		minAmountOut: Balance;
-		curveType: AnyObjectType;
+		coinInAmount: Balance;
 	}) => {
 		const {
 			tx,
@@ -129,20 +150,16 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.interest.packages.wrapper,
-				InterestApi.constants.moduleNames.wrapper,
+				this.addresses.kriya.packages.wrapper,
+				KriyaApi.constants.moduleNames.wrapper,
 				"swap_token_x"
 			),
-			typeArguments: [
-				inputs.curveType,
-				inputs.coinInType,
-				inputs.coinOutType,
-			],
+			typeArguments: [inputs.coinInType, inputs.coinOutType],
 			arguments: [
-				tx.object(this.addresses.interest.objects.dexStorage), // DEXStorage
-				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				tx.object(inputs.poolId), // Pool
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.minAmountOut, "U64"), // coin_y_min_value
+				tx.pure(inputs.coinInAmount, "U64"),
+				tx.pure(inputs.minAmountOut, "U64"),
 
 				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
@@ -179,8 +196,8 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.interest.packages.wrapper,
-				InterestApi.constants.moduleNames.wrapper,
+				this.addresses.kriya.packages.wrapper,
+				KriyaApi.constants.moduleNames.wrapper,
 				"swap_token_y"
 			),
 			typeArguments: [
@@ -189,7 +206,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 				inputs.coinInType,
 			],
 			arguments: [
-				tx.object(this.addresses.interest.objects.dexStorage), // DEXStorage
+				tx.object(this.addresses.kriya.objects.dexStorage), // DEXStorage
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
 				tx.pure(inputs.minAmountOut, "U64"), // coin_y_min_value
@@ -214,7 +231,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 
 	public tradeTx = (inputs: {
 		tx: TransactionBlock;
-		pool: InterestPoolObject;
+		pool: KriyaPoolObject;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -228,7 +245,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 			curveType: inputs.pool.curveType,
 		};
 
-		if (InterestApi.isCoinX({ ...inputs, coinType: inputs.coinInType })) {
+		if (KriyaApi.isCoinX({ ...inputs, coinType: inputs.coinInType })) {
 			return this.swapTokenXTx(commandInputs);
 		}
 
@@ -240,7 +257,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	// =========================================================================
 
 	public static isCoinX = (inputs: {
-		pool: InterestPoolObject;
+		pool: KriyaPoolObject;
 		coinType: CoinType;
 	}) => {
 		const { coinType, pool } = inputs;
@@ -255,9 +272,9 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	//  Casting
 	// =========================================================================
 
-	private static poolObjectFromSuiObjectResponse = (
+	private static kriyaPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): InterestPoolObject => {
+	): KriyaPoolObject => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -266,25 +283,45 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = getObjectFields(data) as InterestPoolFieldsOnChain;
+		const fields = getObjectFields(data) as KriyaPoolFieldsOnChain;
 
 		return {
 			objectType,
 			objectId: getObjectId(data),
-			kLast: BigInt(fields.k_last),
-			lpCoinSupplyValue: BigInt(fields.lp_coin_supply.fields.value),
-			balanceXValue: BigInt(fields.balance_x),
-			balanceYValue: BigInt(fields.balance_y),
-			decimalsX: BigInt(fields.decimals_x),
-			decimalsY: BigInt(fields.decimals_y),
+			tokenYValue: BigInt(fields.token_y.value),
+			tokenXValue: BigInt(fields.token_x.value),
+			lspSupplyValue: BigInt(fields.lsp_supply.fields.value),
+			lspLockedValue: BigInt(fields.lsp_locked.value),
+			lpFeePercent: BigInt(fields.lp_fee_percent),
+			protocolFeePercent: BigInt(fields.protocol_fee_percent),
+			protocolFeeXValue: BigInt(fields.protocol_fee_x.value),
+			protocolFeeYValue: BigInt(fields.protocol_fee_y.value),
 			isStable: fields.is_stable,
-			timestampLast: BigInt(fields.timestamp_last),
-			balanceXCumulativeLast: BigInt(fields.balance_x_cumulative_last),
-			balanceYCumulativeLast: BigInt(fields.balance_y_cumulative_last),
-			locked: fields.locked,
-			coinTypeX: coinTypes[1],
-			coinTypeY: coinTypes[2],
-			curveType: coinTypes[0],
+			scalex: BigInt(fields.scaleX),
+			scaley: BigInt(fields.scaleY),
+			isSwapEnabled: fields.is_swap_enabled,
+			isDepositEnabled: fields.is_deposit_enabled,
+			isWithdrawEnabled: fields.is_withdraw_enabled,
+			coinTypeX: coinTypes[0],
+			coinTypeY: coinTypes[1],
+		};
+	};
+
+	private static kriyaPoolCreatedEventFromOnChain = (
+		eventOnChain: KriyaPoolCreatedEventOnChain
+	): KriyaPoolCreatedEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			poolId: fields.pool_id,
+			creator: fields.creator,
+			lpFeePercent: BigInt(fields.lp_fee_percent),
+			protocolFeePercent: BigInt(fields.protocol_fee_percent),
+			isStable: fields.is_stable,
+			scaleX: BigInt(fields.scaleX),
+			scaleY: BigInt(fields.scaleY),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
 		};
 	};
 }
