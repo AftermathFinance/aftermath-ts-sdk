@@ -1,5 +1,4 @@
 import {
-	EventId,
 	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
@@ -32,6 +31,7 @@ import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelp
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
+import { InterestApi } from "../../external/interest/interestApi";
 
 export class RouterSynchronousApiHelpers {
 	// =========================================================================
@@ -46,6 +46,7 @@ export class RouterSynchronousApiHelpers {
 		DeepBook: () => new DeepBookApi(this.Provider),
 		Cetus: () => new CetusApi(this.Provider),
 		Turbos: () => new TurbosApi(this.Provider),
+		Interest: () => new InterestApi(this.Provider),
 	};
 
 	public static readonly constants = {

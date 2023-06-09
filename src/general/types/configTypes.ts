@@ -114,6 +114,7 @@ export interface OptionalRouterAddresses {
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
+	interest: InterestAddresses;
 	aftermath: AftermathRouterAddresses;
 }
 
@@ -144,6 +145,17 @@ export interface TurbosAddresses {
 	objects: {
 		versioned: ObjectId;
 		poolsTable: ObjectId;
+	};
+}
+
+export interface InterestAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		poolsBag: ObjectId;
+		dexStorage: ObjectId;
 	};
 }
 

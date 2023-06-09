@@ -15,6 +15,7 @@ import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolIn
 import { CetusPoolObject } from "../external/cetus/cetusTypes";
 import { TurbosPoolObject } from "../external/turbos/turbosTypes";
 import { EventOnChain } from "../../general/types/castingTypes";
+import { InterestPoolObject } from "../external/interest/interestTypes";
 
 // =========================================================================
 //  Name Only
@@ -58,9 +59,16 @@ export type RouterProtocolName =
 //  Synchronous Router Pools
 // =========================================================================
 
-export type RouterSynchronousSerializablePool = PoolObject | DeepBookPoolObject;
+export type RouterSynchronousSerializablePool =
+	| PoolObject
+	| DeepBookPoolObject
+	| InterestPoolObject;
 
-const RouterSynchronousProtocolNames = ["Aftermath", "DeepBook"] as const;
+const RouterSynchronousProtocolNames = [
+	"Aftermath",
+	"DeepBook",
+	"Interest",
+] as const;
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];
 

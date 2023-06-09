@@ -23,6 +23,8 @@ import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
 import CetusRouterPool from "../routerPools/cetusRouterPool";
 import { isTurbosPoolObject } from "../../../../external/turbos/turbosTypes";
 import TurbosRouterPool from "../routerPools/turbosRouterPool";
+import InterestRouterPool from "../routerPools/interestRouterPool";
+import { isInterestPoolObject } from "../../../../external/interest/interestTypes";
 
 // =========================================================================
 //  Creation
@@ -41,6 +43,8 @@ export function createRouterPool(inputs: {
 		? new TurbosRouterPool(pool, network)
 		: isCetusRouterPoolObject(pool)
 		? new CetusRouterPool(pool, network)
+		: isInterestPoolObject(pool)
+		? new InterestRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;

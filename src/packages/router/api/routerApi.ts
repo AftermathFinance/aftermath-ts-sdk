@@ -19,6 +19,7 @@ import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
 import { TurbosApi } from "../../external/turbos/turbosApi";
 import { RouterApiHelpers } from "./routerApiHelpers";
+import { InterestApi } from "../../external/interest/interestApi";
 
 export class RouterApi {
 	// =========================================================================
@@ -47,6 +48,7 @@ export class RouterApi {
 	public DeepBook = () => new DeepBookApi(this.Provider);
 	public Cetus = () => new CetusApi(this.Provider);
 	public Turbos = () => new TurbosApi(this.Provider);
+	public Interest = () => new InterestApi(this.Provider);
 
 	// =========================================================================
 	//  Public Methods
