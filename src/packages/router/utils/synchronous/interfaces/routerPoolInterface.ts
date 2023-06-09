@@ -25,6 +25,8 @@ import { isTurbosPoolObject } from "../../../../external/turbos/turbosTypes";
 import TurbosRouterPool from "../routerPools/turbosRouterPool";
 import InterestRouterPool from "../routerPools/interestRouterPool";
 import { isInterestPoolObject } from "../../../../external/interest/interestTypes";
+import { isKriyaPoolObject } from "../../../../external/kriya/kriyaTypes";
+import KriyaRouterPool from "../routerPools/kriyaRouterPool";
 
 // =========================================================================
 //  Creation
@@ -45,6 +47,8 @@ export function createRouterPool(inputs: {
 		? new CetusRouterPool(pool, network)
 		: isInterestPoolObject(pool)
 		? new InterestRouterPool(pool, network)
+		: isKriyaPoolObject(pool)
+		? new KriyaRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;

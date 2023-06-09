@@ -69,24 +69,14 @@ export interface KriyaPoolCreatedEvent extends Event {
 // =========================================================================
 
 export interface KriyaPoolFieldsOnChain {
-	token_y: {
-		value: BigIntAsString;
-	};
-	token_x: {
-		value: BigIntAsString;
-	};
+	token_y: BigIntAsString;
+	token_x: BigIntAsString;
 	lsp_supply: SupplyOnChain;
-	lsp_locked: {
-		value: BigIntAsString;
-	};
+	lsp_locked: BigIntAsString;
 	lp_fee_percent: BigIntAsString;
 	protocol_fee_percent: BigIntAsString;
-	protocol_fee_x: {
-		value: BigIntAsString;
-	};
-	protocol_fee_y: {
-		value: BigIntAsString;
-	};
+	protocol_fee_x: BigIntAsString;
+	protocol_fee_y: BigIntAsString;
 	is_stable: boolean;
 	scaleX: BigIntAsString;
 	scaleY: BigIntAsString;

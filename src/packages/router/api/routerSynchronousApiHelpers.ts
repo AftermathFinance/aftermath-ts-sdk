@@ -32,6 +32,7 @@ import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { InterestApi } from "../../external/interest/interestApi";
+import { KriyaApi } from "../../external/kriya/kriyaApi";
 
 export class RouterSynchronousApiHelpers {
 	// =========================================================================
@@ -47,6 +48,7 @@ export class RouterSynchronousApiHelpers {
 		Cetus: () => new CetusApi(this.Provider),
 		Turbos: () => new TurbosApi(this.Provider),
 		Interest: () => new InterestApi(this.Provider),
+		Kriya: () => new KriyaApi(this.Provider),
 	};
 
 	public static readonly constants = {

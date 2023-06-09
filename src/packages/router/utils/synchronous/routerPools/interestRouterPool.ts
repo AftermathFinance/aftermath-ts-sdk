@@ -14,7 +14,7 @@ import {
 import { CoinType } from "../../../../coin/coinTypes";
 import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
 import { Pool } from "../../../../pools";
-import { Helpers } from "../../../../../general/utils";
+import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
 import { InterestPoolObject } from "../../../../external/interest/interestTypes";
 import { InterestApi } from "../../../../external/interest/interestApi";
@@ -36,7 +36,8 @@ class InterestRouterPool implements RouterPoolInterface {
 	// =========================================================================
 
 	readonly protocolName = "Interest";
-	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
+	// TODO: update gas price
+	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = false;
 
 	readonly pool: InterestPoolObject;
@@ -49,14 +50,29 @@ class InterestRouterPool implements RouterPoolInterface {
 	private static readonly STABLE_FEE_PERCENT = BigInt(500000000000000); //0.05%
 
 	// =========================================================================
-	//  Functions
+	//  Public Interface
 	// =========================================================================
 
 	getSpotPrice = (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}) => {
-		// TODO: implement
+		// TODO: do this calc correctly
+		let smallAmountIn = BigInt(10);
+		while (smallAmountIn < Casting.u64MaxBigInt) {
+			try {
+				const smallAmountOut = this.getTradeAmountOut({
+					...inputs,
+					coinInAmount: smallAmountIn,
+				});
+
+				return Number(smallAmountIn) / Number(smallAmountOut);
+			} catch (e) {}
+
+			smallAmountIn *= BigInt(10);
+		}
+
+		// this shouldn't be reached
 		return 1;
 	};
 
@@ -195,11 +211,19 @@ class InterestRouterPool implements RouterPoolInterface {
 		);
 	};
 
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
 	private getPoolBalance = (coinType: CoinType): Balance => {
 		return InterestApi.isCoinX({ coinType, pool: this.pool })
 			? this.pool.balanceXValue
 			: this.pool.balanceYValue;
 	};
+
+	// =========================================================================
+	//  Private Calculations
+	// =========================================================================
 
 	private calcY = (x0: bigint, xy: bigint, y: bigint) => {
 		let i = 0;

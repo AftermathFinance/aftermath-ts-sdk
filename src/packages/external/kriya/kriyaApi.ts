@@ -130,7 +130,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 
 	public swapTokenXTx = (inputs: {
 		tx: TransactionBlock;
-		poolId: ObjectId;
+		poolObjectId: ObjectId;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -156,7 +156,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 			),
 			typeArguments: [inputs.coinInType, inputs.coinOutType],
 			arguments: [
-				tx.object(inputs.poolId), // Pool
+				tx.object(inputs.poolObjectId), // Pool
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
 				tx.pure(inputs.coinInAmount, "U64"),
 				tx.pure(inputs.minAmountOut, "U64"),
@@ -177,6 +177,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 
 	public swapTokenYTx = (inputs: {
 		tx: TransactionBlock;
+		poolObjectId: ObjectId;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -184,7 +185,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 		isFirstSwapForPath: boolean;
 		isLastSwapForPath: boolean;
 		minAmountOut: Balance;
-		curveType: AnyObjectType;
+		coinInAmount: Balance;
 	}) => {
 		const {
 			tx,
@@ -200,16 +201,12 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 				KriyaApi.constants.moduleNames.wrapper,
 				"swap_token_y"
 			),
-			typeArguments: [
-				inputs.curveType,
-				inputs.coinOutType,
-				inputs.coinInType,
-			],
+			typeArguments: [inputs.coinOutType, inputs.coinInType],
 			arguments: [
-				tx.object(this.addresses.kriya.objects.dexStorage), // DEXStorage
-				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				tx.object(inputs.poolObjectId), // Pool
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.minAmountOut, "U64"), // coin_y_min_value
+				tx.pure(inputs.coinInAmount, "U64"),
+				tx.pure(inputs.minAmountOut, "U64"),
 
 				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
@@ -239,10 +236,11 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 		isFirstSwapForPath: boolean;
 		isLastSwapForPath: boolean;
 		minAmountOut: Balance;
+		coinInAmount: Balance;
 	}) => {
 		const commandInputs = {
 			...inputs,
-			curveType: inputs.pool.curveType,
+			poolObjectId: inputs.pool.objectId,
 		};
 
 		if (KriyaApi.isCoinX({ ...inputs, coinType: inputs.coinInType })) {
@@ -288,14 +286,14 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 		return {
 			objectType,
 			objectId: getObjectId(data),
-			tokenYValue: BigInt(fields.token_y.value),
-			tokenXValue: BigInt(fields.token_x.value),
+			tokenYValue: BigInt(fields.token_y),
+			tokenXValue: BigInt(fields.token_x),
 			lspSupplyValue: BigInt(fields.lsp_supply.fields.value),
-			lspLockedValue: BigInt(fields.lsp_locked.value),
+			lspLockedValue: BigInt(fields.lsp_locked),
 			lpFeePercent: BigInt(fields.lp_fee_percent),
 			protocolFeePercent: BigInt(fields.protocol_fee_percent),
-			protocolFeeXValue: BigInt(fields.protocol_fee_x.value),
-			protocolFeeYValue: BigInt(fields.protocol_fee_y.value),
+			protocolFeeXValue: BigInt(fields.protocol_fee_x),
+			protocolFeeYValue: BigInt(fields.protocol_fee_y),
 			isStable: fields.is_stable,
 			scalex: BigInt(fields.scaleX),
 			scaley: BigInt(fields.scaleY),
