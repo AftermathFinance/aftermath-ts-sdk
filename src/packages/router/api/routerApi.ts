@@ -22,6 +22,7 @@ import { RouterApiHelpers } from "./routerApiHelpers";
 import { InterestApi } from "../../external/interest/interestApi";
 import { KriyaApi } from "../../external/kriya/kriyaApi";
 import { BaySwapApi } from "../../external/baySwap/baySwapApi";
+import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 
 export class RouterApi {
 	// =========================================================================
@@ -53,6 +54,7 @@ export class RouterApi {
 	public Interest = () => new InterestApi(this.Provider);
 	public Kriya = () => new KriyaApi(this.Provider);
 	public BaySwap = () => new BaySwapApi(this.Provider);
+	public Suiswap = () => new SuiswapApi(this.Provider);
 
 	// =========================================================================
 	//  Public Methods

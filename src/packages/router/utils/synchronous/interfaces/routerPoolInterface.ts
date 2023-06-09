@@ -29,6 +29,8 @@ import { isKriyaPoolObject } from "../../../../external/kriya/kriyaTypes";
 import KriyaRouterPool from "../routerPools/kriyaRouterPool";
 import { isBaySwapPoolObject } from "../../../../external/baySwap/baySwapTypes";
 import BaySwapRouterPool from "../routerPools/baySwapRouterPool";
+import { isSuiswapPoolObject } from "../../../../external/suiswap/suiswapTypes";
+import SuiswapRouterPool from "../routerPools/suiswapRouterPool";
 
 // =========================================================================
 //  Creation
@@ -53,6 +55,8 @@ export function createRouterPool(inputs: {
 		? new KriyaRouterPool(pool, network)
 		: isBaySwapPoolObject(pool)
 		? new BaySwapRouterPool(pool, network)
+		: isSuiswapPoolObject(pool)
+		? new SuiswapRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;

@@ -34,6 +34,7 @@ import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { InterestApi } from "../../external/interest/interestApi";
 import { KriyaApi } from "../../external/kriya/kriyaApi";
 import { BaySwapApi } from "../../external/baySwap/baySwapApi";
+import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 
 export class RouterSynchronousApiHelpers {
 	// =========================================================================
@@ -51,6 +52,7 @@ export class RouterSynchronousApiHelpers {
 		Interest: () => new InterestApi(this.Provider),
 		Kriya: () => new KriyaApi(this.Provider),
 		BaySwap: () => new BaySwapApi(this.Provider),
+		Suiswap: () => new SuiswapApi(this.Provider),
 	};
 
 	public static readonly constants = {
