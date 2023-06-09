@@ -57,13 +57,16 @@ class KriyaRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 	}) => {
 		// TODO: do this calc correctly
-		let smallAmountIn = BigInt(10);
+		let smallAmountIn = BigInt(100000);
 		while (smallAmountIn < Casting.u64MaxBigInt) {
 			try {
 				const smallAmountOut = this.getTradeAmountOut({
 					...inputs,
 					coinInAmount: smallAmountIn,
 				});
+
+				if (smallAmountOut <= BigInt(0))
+					throw new Error("0 amount out");
 
 				return Number(smallAmountIn) / Number(smallAmountOut);
 			} catch (e) {}
