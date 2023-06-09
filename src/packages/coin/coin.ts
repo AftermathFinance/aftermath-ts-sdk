@@ -16,7 +16,6 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
-import { CoinMetadata } from "@mysten/sui.js";
 import { Prices } from "../../general/prices/prices";
 
 export class Coin extends Caller {

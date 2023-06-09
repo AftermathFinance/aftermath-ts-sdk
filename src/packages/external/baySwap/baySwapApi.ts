@@ -13,29 +13,23 @@ import {
 import {
 	AnyObjectType,
 	Balance,
-	KriyaAddresses,
+	BaySwapAddresses,
 	PoolsAddresses,
 	ReferralVaultAddresses,
 } from "../../../types";
-import {
-	KriyaPoolCreatedEvent,
-	KriyaPoolCreatedEventOnChain,
-	KriyaPoolFieldsOnChain,
-	KriyaPoolObject,
-} from "./kriyaTypes";
+import { BaySwapPoolFieldsOnChain, BaySwapPoolObject } from "./baySwapTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
-import { Sui } from "../../sui";
 
-export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
+export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
 	private static readonly constants = {
 		moduleNames: {
-			spotDex: "spot_dex",
-			wrapper: "kriya",
+			router: "router",
+			wrapper: "bayswap",
 		},
 	};
 
@@ -44,13 +38,9 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	// =========================================================================
 
 	public readonly addresses: {
-		kriya: KriyaAddresses;
+		baySwap: BaySwapAddresses;
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
-	};
-
-	public readonly eventTypes: {
-		poolCreated: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -58,23 +48,19 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const kriya = this.Provider.addresses.router?.kriya;
+		const baySwap = this.Provider.addresses.router?.baySwap;
 		const pools = this.Provider.addresses.pools;
 		const referralVault = this.Provider.addresses.referralVault;
 
-		if (!kriya || !pools || !referralVault)
+		if (!baySwap || !pools || !referralVault)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
 		this.addresses = {
-			kriya,
+			baySwap,
 			pools,
 			referralVault,
-		};
-
-		this.eventTypes = {
-			poolCreated: `${kriya.packages.dex}::${KriyaApi.constants.moduleNames.spotDex}::PoolCreatedEvent`,
 		};
 	}
 
@@ -86,32 +72,25 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async (): Promise<KriyaPoolObject[]> => {
-		const poolObjectIds = await this.Provider.Events().fetchAllEvents({
-			fetchEventsFunc: (eventsInputs) =>
-				this.Provider.Events().fetchCastEventsWithCursor({
-					...eventsInputs,
-					query: {
-						MoveEventType: this.eventTypes.poolCreated,
-					},
-					eventFromEventOnChain: (eventOnChain) =>
-						KriyaApi.kriyaPoolCreatedEventFromOnChain(
-							eventOnChain as KriyaPoolCreatedEventOnChain
-						).poolId,
-				}),
-		});
-
-		const pools = await this.Provider.Objects().fetchCastObjectBatch({
-			objectIds: poolObjectIds,
-			objectFromSuiObjectResponse:
-				KriyaApi.kriyaPoolObjectFromSuiObjectResponse,
-		});
+	public fetchAllPools = async (): Promise<BaySwapPoolObject[]> => {
+		const pools =
+			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
+				{
+					parentObjectId: this.addresses.baySwap.objects.poolsBag,
+					objectsFromObjectIds: (objectIds) =>
+						this.Provider.Objects().fetchCastObjectBatch({
+							objectIds,
+							objectFromSuiObjectResponse:
+								BaySwapApi.baySwapPoolObjectFromSuiObjectResponse,
+						}),
+				}
+			);
 
 		const unlockedPools = pools.filter(
 			(pool) =>
-				pool.isSwapEnabled &&
-				pool.tokenXValue > BigInt(0) &&
-				pool.tokenYValue > BigInt(0)
+				!pool.isLocked &&
+				pool.coinXReserveValue > BigInt(0) &&
+				pool.coinYReserveValue > BigInt(0)
 		);
 		return unlockedPools;
 	};
@@ -133,9 +112,8 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	//  Transaction Commands
 	// =========================================================================
 
-	public swapTokenXTx = (inputs: {
+	public swapExactCoinXForCoinYTx = (inputs: {
 		tx: TransactionBlock;
-		poolObjectId: ObjectId;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -144,6 +122,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 		isLastSwapForPath: boolean;
 		minAmountOut: Balance;
 		coinInAmount: Balance;
+		curveType: AnyObjectType;
 	}) => {
 		const {
 			tx,
@@ -155,13 +134,17 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.kriya.packages.wrapper,
-				KriyaApi.constants.moduleNames.wrapper,
-				"swap_token_x"
+				this.addresses.baySwap.packages.wrapper,
+				BaySwapApi.constants.moduleNames.wrapper,
+				"swap_exact_coin_x_for_coin_y"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [
+				inputs.coinInType,
+				inputs.coinOutType,
+				inputs.curveType,
+			],
 			arguments: [
-				tx.object(inputs.poolObjectId), // Pool
+				tx.object(this.addresses.baySwap.objects.globalStorage), // GlobalStorage
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
 				tx.pure(inputs.coinInAmount, "U64"),
 				tx.pure(inputs.minAmountOut, "U64"),
@@ -180,9 +163,8 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 		});
 	};
 
-	public swapTokenYTx = (inputs: {
+	public swapExactCoinYForCoinXTx = (inputs: {
 		tx: TransactionBlock;
-		poolObjectId: ObjectId;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -191,6 +173,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 		isLastSwapForPath: boolean;
 		minAmountOut: Balance;
 		coinInAmount: Balance;
+		curveType: AnyObjectType;
 	}) => {
 		const {
 			tx,
@@ -202,13 +185,17 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.kriya.packages.wrapper,
-				KriyaApi.constants.moduleNames.wrapper,
-				"swap_token_y"
+				this.addresses.baySwap.packages.wrapper,
+				BaySwapApi.constants.moduleNames.wrapper,
+				"swap_exact_coin_y_for_coin_x"
 			),
-			typeArguments: [inputs.coinOutType, inputs.coinInType],
+			typeArguments: [
+				inputs.coinOutType,
+				inputs.coinInType,
+				inputs.curveType,
+			],
 			arguments: [
-				tx.object(inputs.poolObjectId), // Pool
+				tx.object(this.addresses.baySwap.objects.globalStorage), // GlobalStorage
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
 				tx.pure(inputs.coinInAmount, "U64"),
 				tx.pure(inputs.minAmountOut, "U64"),
@@ -233,7 +220,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 
 	public tradeTx = (inputs: {
 		tx: TransactionBlock;
-		pool: KriyaPoolObject;
+		pool: BaySwapPoolObject;
 		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -245,14 +232,14 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	}) => {
 		const commandInputs = {
 			...inputs,
-			poolObjectId: inputs.pool.objectId,
+			curveType: inputs.pool.curveType,
 		};
 
-		if (KriyaApi.isCoinX({ ...inputs, coinType: inputs.coinInType })) {
-			return this.swapTokenXTx(commandInputs);
+		if (BaySwapApi.isCoinX({ ...inputs, coinType: inputs.coinInType })) {
+			return this.swapExactCoinXForCoinYTx(commandInputs);
 		}
 
-		return this.swapTokenYTx(commandInputs);
+		return this.swapExactCoinYForCoinXTx(commandInputs);
 	};
 
 	// =========================================================================
@@ -260,7 +247,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	// =========================================================================
 
 	public static isCoinX = (inputs: {
-		pool: KriyaPoolObject;
+		pool: BaySwapPoolObject;
 		coinType: CoinType;
 	}) => {
 		const { coinType, pool } = inputs;
@@ -275,56 +262,38 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	//  Casting
 	// =========================================================================
 
-	private static kriyaPoolObjectFromSuiObjectResponse = (
+	private static baySwapPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): KriyaPoolObject => {
+	): BaySwapPoolObject => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
+
+		console.log("objectType", objectType);
+		console.log("getObjectFields(data)", getObjectFields(data));
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = getObjectFields(data) as KriyaPoolFieldsOnChain;
+		const fields = getObjectFields(data) as BaySwapPoolFieldsOnChain;
 
+		const curveType = coinTypes[2];
 		return {
-			objectType,
+			// objectType,
 			objectId: getObjectId(data),
-			tokenYValue: BigInt(fields.token_y),
-			tokenXValue: BigInt(fields.token_x),
-			lspSupplyValue: BigInt(fields.lsp_supply.fields.value),
-			lspLockedValue: BigInt(fields.lsp_locked),
-			lpFeePercent: BigInt(fields.lp_fee_percent),
-			protocolFeePercent: BigInt(fields.protocol_fee_percent),
-			protocolFeeXValue: BigInt(fields.protocol_fee_x),
-			protocolFeeYValue: BigInt(fields.protocol_fee_y),
-			isStable: fields.is_stable,
-			scaleX: BigInt(fields.scaleX),
-			scaleY: BigInt(fields.scaleY),
-			isSwapEnabled: fields.is_swap_enabled,
-			isDepositEnabled: fields.is_deposit_enabled,
-			isWithdrawEnabled: fields.is_withdraw_enabled,
+			coinXReserveValue: BigInt(fields.coin_x_reserve),
+			coinYReserveValue: BigInt(fields.coin_y_reserve),
+			lpTokenSupplyValue: BigInt(fields.lp_token_supply.fields.value),
+			feePercent: BigInt(fields.fee_percent),
+			daoFeePercent: BigInt(fields.dao_fee_percent),
+			isLocked: fields.is_locked,
+			xScale: BigInt(fields.x_scale),
+			yScale: BigInt(fields.y_scale),
 			coinTypeX: coinTypes[0],
 			coinTypeY: coinTypes[1],
-		};
-	};
-
-	private static kriyaPoolCreatedEventFromOnChain = (
-		eventOnChain: KriyaPoolCreatedEventOnChain
-	): KriyaPoolCreatedEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			poolId: fields.pool_id,
-			creator: fields.creator,
-			lpFeePercent: BigInt(fields.lp_fee_percent),
-			protocolFeePercent: BigInt(fields.protocol_fee_percent),
-			isStable: fields.is_stable,
-			scaleX: BigInt(fields.scaleX),
-			scaleY: BigInt(fields.scaleY),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
+			isStable: curveType.toLowerCase().includes("stable"),
+			curveType,
 		};
 	};
 }

@@ -82,12 +82,17 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 						this.Provider.Objects().fetchCastObjectBatch({
 							objectIds,
 							objectFromSuiObjectResponse:
-								InterestApi.poolObjectFromSuiObjectResponse,
+								InterestApi.interestPoolObjectFromSuiObjectResponse,
 						}),
 				}
 			);
 
-		const unlockedPools = pools.filter((pool) => !pool.locked);
+		const unlockedPools = pools.filter(
+			(pool) =>
+				!pool.locked &&
+				pool.balanceXValue > BigInt(0) &&
+				pool.balanceYValue > BigInt(0)
+		);
 		return unlockedPools;
 	};
 
@@ -255,7 +260,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	//  Casting
 	// =========================================================================
 
-	private static poolObjectFromSuiObjectResponse = (
+	private static interestPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): InterestPoolObject => {
 		const objectType = getObjectType(data);

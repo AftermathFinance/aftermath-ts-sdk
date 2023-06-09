@@ -15,6 +15,7 @@ import { CetusPoolObject } from "../external/cetus/cetusTypes";
 import { TurbosPoolObject } from "../external/turbos/turbosTypes";
 import { InterestPoolObject } from "../external/interest/interestTypes";
 import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
+import { BaySwapPoolObject } from "../external/baySwap/baySwapTypes";
 
 // =========================================================================
 //  Name Only
@@ -62,13 +63,15 @@ export type RouterSynchronousSerializablePool =
 	| PoolObject
 	| DeepBookPoolObject
 	| InterestPoolObject
-	| KriyaPoolObject;
+	| KriyaPoolObject
+	| BaySwapPoolObject;
 
 const RouterSynchronousProtocolNames = [
 	"Aftermath",
 	"DeepBook",
 	"Interest",
 	"Kriya",
+	"BaySwap",
 ] as const;
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];

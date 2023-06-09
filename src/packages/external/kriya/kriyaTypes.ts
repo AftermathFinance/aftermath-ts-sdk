@@ -28,8 +28,8 @@ export interface KriyaPoolObject extends Object {
 	protocolFeeXValue: bigint;
 	protocolFeeYValue: bigint;
 	isStable: boolean;
-	scalex: bigint;
-	scaley: bigint;
+	scaleX: bigint;
+	scaleY: bigint;
 	isSwapEnabled: boolean;
 	isDepositEnabled: boolean;
 	isWithdrawEnabled: boolean;
@@ -48,7 +48,7 @@ export const isKriyaPoolObject = (
 		"protocolFeePercent" in pool &&
 		"protocolFeeXValue" in pool &&
 		"isStable" in pool &&
-		"scalex" in pool &&
+		"scaleX" in pool &&
 		"isSwapEnabled" in pool &&
 		"isDepositEnabled" in pool
 	);

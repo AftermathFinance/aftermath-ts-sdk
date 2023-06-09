@@ -116,6 +116,7 @@ export interface OptionalRouterAddresses {
 	turbos: TurbosAddresses;
 	interest: InterestAddresses;
 	kriya: KriyaAddresses;
+	baySwap: BaySwapAddresses;
 	aftermath: AftermathRouterAddresses;
 }
 
@@ -165,9 +166,17 @@ export interface KriyaAddresses {
 		dex: SuiAddress;
 		wrapper: SuiAddress;
 	};
-	// objects: {
-	// 	poolsTable: ObjectId;
-	// };
+}
+
+export interface BaySwapAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		poolsBag: ObjectId;
+		globalStorage: ObjectId;
+	};
 }
 
 export interface AftermathRouterAddresses {
