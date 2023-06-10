@@ -31,6 +31,8 @@ import { isBaySwapPoolObject } from "../../../../external/baySwap/baySwapTypes";
 import BaySwapRouterPool from "../routerPools/baySwapRouterPool";
 import { isSuiswapPoolObject } from "../../../../external/suiswap/suiswapTypes";
 import SuiswapRouterPool from "../routerPools/suiswapRouterPool";
+import { isBlueMovePoolObject } from "../../../../external/blueMove/blueMoveTypes";
+import BlueMoveRouterPool from "../routerPools/blueMoveRouterPool";
 
 // =========================================================================
 //  Creation
@@ -57,6 +59,8 @@ export function createRouterPool(inputs: {
 		? new BaySwapRouterPool(pool, network)
 		: isSuiswapPoolObject(pool)
 		? new SuiswapRouterPool(pool, network)
+		: isBlueMovePoolObject(pool)
+		? new BlueMoveRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;

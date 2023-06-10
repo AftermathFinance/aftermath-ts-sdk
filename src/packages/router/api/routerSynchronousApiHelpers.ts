@@ -35,6 +35,7 @@ import { InterestApi } from "../../external/interest/interestApi";
 import { KriyaApi } from "../../external/kriya/kriyaApi";
 import { BaySwapApi } from "../../external/baySwap/baySwapApi";
 import { SuiswapApi } from "../../external/suiswap/suiswapApi";
+import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 
 export class RouterSynchronousApiHelpers {
 	// =========================================================================
@@ -53,6 +54,7 @@ export class RouterSynchronousApiHelpers {
 		Kriya: () => new KriyaApi(this.Provider),
 		BaySwap: () => new BaySwapApi(this.Provider),
 		Suiswap: () => new SuiswapApi(this.Provider),
+		BlueMove: () => new BlueMoveApi(this.Provider),
 	};
 
 	public static readonly constants = {

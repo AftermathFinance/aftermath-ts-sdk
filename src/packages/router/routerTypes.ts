@@ -17,6 +17,7 @@ import { InterestPoolObject } from "../external/interest/interestTypes";
 import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
 import { BaySwapPoolObject } from "../external/baySwap/baySwapTypes";
 import { SuiswapPoolObject } from "../external/suiswap/suiswapTypes";
+import { BlueMovePoolObject } from "../external/blueMove/blueMoveTypes";
 
 // =========================================================================
 //  Name Only
@@ -66,7 +67,8 @@ export type RouterSynchronousSerializablePool =
 	| InterestPoolObject
 	| KriyaPoolObject
 	| BaySwapPoolObject
-	| SuiswapPoolObject;
+	| SuiswapPoolObject
+	| BlueMovePoolObject;
 
 const RouterSynchronousProtocolNames = [
 	"Aftermath",
@@ -75,6 +77,7 @@ const RouterSynchronousProtocolNames = [
 	"Kriya",
 	"BaySwap",
 	"Suiswap",
+	"BlueMove",
 ] as const;
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];

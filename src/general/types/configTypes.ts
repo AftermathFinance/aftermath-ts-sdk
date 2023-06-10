@@ -118,6 +118,7 @@ export interface OptionalRouterAddresses {
 	kriya: KriyaAddresses;
 	baySwap: BaySwapAddresses;
 	suiswap: SuiswapAddresses;
+	blueMove: BlueMoveAddresses;
 	aftermath: AftermathRouterAddresses;
 }
 
@@ -184,6 +185,17 @@ export interface SuiswapAddresses {
 	packages: {
 		dex: SuiAddress;
 		wrapper: SuiAddress;
+	};
+}
+
+export interface BlueMoveAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		dexInfo: ObjectId;
+		dexStableInfo: ObjectId;
 	};
 }
 

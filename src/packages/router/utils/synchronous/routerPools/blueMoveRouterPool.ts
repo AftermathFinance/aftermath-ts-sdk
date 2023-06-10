@@ -15,15 +15,15 @@ import { CoinType } from "../../../../coin/coinTypes";
 import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
-import { KriyaPoolObject } from "../../../../external/kriya/kriyaTypes";
-import { KriyaApi } from "../../../../external/kriya/kriyaApi";
+import { BlueMovePoolObject } from "../../../../external/blueMove/blueMoveTypes";
+import { BlueMoveApi } from "../../../../external/blueMove/blueMoveApi";
 
-class KriyaRouterPool implements RouterPoolInterface {
+class BlueMoveRouterPool implements RouterPoolInterface {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: KriyaPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: BlueMovePoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
@@ -34,12 +34,12 @@ class KriyaRouterPool implements RouterPoolInterface {
 	//  Constants
 	// =========================================================================
 
-	readonly protocolName = "Kriya";
+	readonly protocolName = "BlueMove";
 	// TODO: update gas price
 	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = false;
 
-	readonly pool: KriyaPoolObject;
+	readonly pool: BlueMovePoolObject;
 	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
@@ -87,8 +87,8 @@ class KriyaRouterPool implements RouterPoolInterface {
 		const coinInReserve = this.getPoolBalance(inputs.coinInType);
 		const coinOutReserve = this.getPoolBalance(inputs.coinOutType);
 
-		if (this.pool.isStable) {
-			const isCoinInX = KriyaApi.isCoinX({
+		if ("stable" in this.pool) {
+			const isCoinInX = BlueMoveApi.isCoinX({
 				pool: this.pool,
 				coinType: inputs.coinInType,
 			});
@@ -96,8 +96,16 @@ class KriyaRouterPool implements RouterPoolInterface {
 			const { recievedAmount } = this.getSwapAmountStable(
 				coinInReserve,
 				coinOutReserve,
-				Number(isCoinInX ? this.pool.scaleX : this.pool.scaleY),
-				Number(isCoinInX ? this.pool.scaleY : this.pool.scaleX),
+				Number(
+					isCoinInX
+						? this.pool.stable.xScale
+						: this.pool.stable.yScale
+				),
+				Number(
+					isCoinInX
+						? this.pool.stable.yScale
+						: this.pool.stable.xScale
+				),
 				Number(inputs.coinInAmount)
 			);
 			return BigInt(Math.floor(recievedAmount));
@@ -127,7 +135,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 	}) => {
 		return inputs.provider
 			.Router()
-			.Kriya()
+			.BlueMove()
 			.tradeTx({
 				...inputs,
 				pool: this.pool,
@@ -164,7 +172,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 		coinOutAmount: Balance;
 	}): RouterPoolInterface => {
-		const isCoinInX = KriyaApi.isCoinX({
+		const isCoinInX = BlueMoveApi.isCoinX({
 			coinType: inputs.coinInType,
 			pool: this.pool,
 		});
@@ -178,7 +186,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 			? -inputs.coinOutAmount
 			: inputs.coinInAmount;
 
-		return new KriyaRouterPool(
+		return new BlueMoveRouterPool(
 			Helpers.deepCopy(newPoolObject),
 			this.network
 		);
@@ -190,7 +198,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 
 	private getPoolBalance = (coinType: CoinType): number => {
 		return Number(
-			KriyaApi.isCoinX({ coinType, pool: this.pool })
+			BlueMoveApi.isCoinX({ coinType, pool: this.pool })
 				? this.pool.tokenXValue
 				: this.pool.tokenYValue
 		);
@@ -291,10 +299,11 @@ class KriyaRouterPool implements RouterPoolInterface {
 		fee_percent: number
 	) => {
 		let input_amount_with_fee =
-			input_amount * (KriyaRouterPool.FEE_SCALING - fee_percent);
+			input_amount * (BlueMoveRouterPool.FEE_SCALING - fee_percent);
 		let numerator = input_amount_with_fee * output_reserve;
 		let denominator =
-			input_reserve * KriyaRouterPool.FEE_SCALING + input_amount_with_fee;
+			input_reserve * BlueMoveRouterPool.FEE_SCALING +
+			input_amount_with_fee;
 
 		return numerator / denominator;
 	};
@@ -307,7 +316,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 		input_scale: number,
 		output_scale: number
 	) => {
-		let u2561e8 = KriyaRouterPool.ONE_E_8;
+		let u2561e8 = BlueMoveRouterPool.ONE_E_8;
 
 		let xy = this.lp_value(
 			input_reserve,
@@ -320,8 +329,8 @@ class KriyaRouterPool implements RouterPoolInterface {
 		let reserve_out_u256 = (output_reserve * u2561e8) / output_scale;
 		let amount_in = (input_amount * u2561e8) / input_scale;
 		let amount_in_with_fees_scaling =
-			(amount_in * (KriyaRouterPool.FEE_SCALING - fee_percent)) /
-			KriyaRouterPool.FEE_SCALING;
+			(amount_in * (BlueMoveRouterPool.FEE_SCALING - fee_percent)) /
+			BlueMoveRouterPool.FEE_SCALING;
 		let total_reserve = amount_in_with_fees_scaling + reserve_in_u256;
 		let y =
 			reserve_out_u256 - this.get_y(total_reserve, xy, reserve_out_u256);
@@ -337,8 +346,8 @@ class KriyaRouterPool implements RouterPoolInterface {
 		y_coin: number,
 		y_scale: number
 	) => {
-		let _x = (x_coin * KriyaRouterPool.ONE_E_8) / x_scale;
-		let _y = (y_coin * KriyaRouterPool.ONE_E_8) / y_scale;
+		let _x = (x_coin * BlueMoveRouterPool.ONE_E_8) / x_scale;
+		let _y = (y_coin * BlueMoveRouterPool.ONE_E_8) / y_scale;
 
 		let xy = _x * _y;
 		let x2_y2 = _x * _x + _y * _y;
@@ -404,4 +413,4 @@ class KriyaRouterPool implements RouterPoolInterface {
 	};
 }
 
-export default KriyaRouterPool;
+export default BlueMoveRouterPool;
