@@ -40,6 +40,7 @@ import {
 	PoolDepositFee,
 	PoolCoins,
 	EventsInputs,
+	Url,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -301,6 +302,7 @@ export class PoolsApi {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
 			...inputs,
+			lpCoinIconUrl: "",
 
 			poolFlatness:
 				inputs.poolFlatness === 1 ? Casting.fixedOneBigInt : BigInt(0),
@@ -559,6 +561,7 @@ export class PoolsApi {
 		createPoolCapId: ObjectId;
 		respectDecimals: boolean;
 		forceLpDecimals?: CoinDecimal;
+		lpCoinIconUrl: Url;
 	}): Promise<TransactionBlock> => {
 		const { coinsInfo } = inputs;
 
@@ -901,6 +904,7 @@ export class PoolsApi {
 			withdrawFee: PoolWithdrawFee;
 		}[];
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		lpCoinIconUrl: Url;
 		createPoolCapId: ObjectId | TransactionArgument;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
@@ -915,6 +919,7 @@ export class PoolsApi {
 			coinsInfo,
 			lpCoinMetadata,
 			lpCoinDescription,
+			lpCoinIconUrl,
 		} = inputs;
 
 		const poolSize = coinsInfo.length;
@@ -934,16 +939,28 @@ export class PoolsApi {
 					? tx.object(createPoolCapId)
 					: createPoolCapId,
 				tx.object(this.addresses.pools.objects.poolRegistry),
-				tx.pure(Casting.u8VectorFromString(inputs.poolName)),
 				tx.pure(
-					Casting.u8VectorFromString(lpCoinMetadata.name.toString())
+					Casting.u8VectorFromString(inputs.poolName),
+					"vector<u8>"
+				),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinMetadata.name.toString()),
+					"vector<u8>"
 				),
 				tx.pure(
 					Casting.u8VectorFromString(
 						lpCoinMetadata.symbol.toString().toUpperCase()
-					)
+					),
+					"vector<u8>"
 				),
-				tx.pure(Casting.u8VectorFromString(lpCoinDescription)),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinDescription),
+					"vector<u8>"
+				),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinIconUrl),
+					"vector<u8>"
+				), // lp_icon_url
 				tx.pure(
 					coinsInfo.map((coin) => coin.weight),
 					"vector<u64>"
@@ -965,6 +982,11 @@ export class PoolsApi {
 					coinsInfo.map((coin) => coin.withdrawFee),
 					"vector<u64>"
 				),
+				...coinsInfo.map((coin) =>
+					typeof coin.coinId === "string"
+						? tx.object(coin.coinId)
+						: coin.coinId
+				),
 				tx.pure(
 					Helpers.transactions.createOptionObject(
 						decimals.includes(undefined) ? undefined : decimals
@@ -978,11 +1000,6 @@ export class PoolsApi {
 					),
 					"Option<u8>"
 				), // force_lp_decimals
-				...coinsInfo.map((coin) =>
-					typeof coin.coinId === "string"
-						? tx.object(coin.coinId)
-						: coin.coinId
-				),
 			],
 		});
 	};
