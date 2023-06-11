@@ -5,6 +5,7 @@ import {
 	Balance,
 	CoinType,
 	CoinsToBalance,
+	DecimalsScalar,
 	PoolDataPoint,
 	PoolGraphDataTimeframeKey,
 	PoolObject,
@@ -16,6 +17,7 @@ import {
 	PoolTradeEvent,
 	Url,
 	ApiPoolAllCoinWithdrawBody,
+	NormalizedBalance,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";

@@ -24,6 +24,8 @@ export type PoolTradeFee = bigint;
 export type PoolDepositFee = bigint;
 export type PoolWithdrawFee = bigint;
 export type PoolFlatness = bigint;
+export type NormalizedBalance = bigint;
+export type DecimalsScalar = bigint;
 
 // =========================================================================
 //  Objects
@@ -38,7 +40,8 @@ export interface PoolCoin {
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
 	withdrawFee: PoolWithdrawFee;
-	normalizedBalance: bigint;
+	decimalsScalar: DecimalsScalar;
+	normalizedBalance: NormalizedBalance;
 }
 
 export interface PoolObject extends Object {
