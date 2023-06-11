@@ -46,6 +46,8 @@ export class Caller {
 	private static async fetchResponseToType<OutputType>(
 		response: Response
 	): Promise<OutputType> {
+		if (!response.ok) throw new Error(await response.text());
+
 		const json = JSON.stringify(await response.json());
 		const output = Helpers.parseJsonWithBigint(json);
 		return output as OutputType;
