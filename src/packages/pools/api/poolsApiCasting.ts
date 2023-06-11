@@ -64,8 +64,8 @@ export class PoolsApiCasting {
 						withdrawFee: BigInt(
 							poolFieldsOnChain.fees_withdraw[index]
 						),
-						decimalScalar: BigInt(
-							poolFieldsOnChain.decimal_scalars[index]
+						normalizedBalance: BigInt(
+							poolFieldsOnChain.normalized_balances[index]
 						),
 					},
 				};
