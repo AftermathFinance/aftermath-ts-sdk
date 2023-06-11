@@ -67,6 +67,9 @@ export class PoolsApiCasting {
 						normalizedBalance: BigInt(
 							poolFieldsOnChain.normalized_balances[index]
 						),
+						decimalsScalar: BigInt(
+							poolFieldsOnChain.decimal_scalars[index]
+						),
 					},
 				};
 			},
