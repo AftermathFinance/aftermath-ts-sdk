@@ -167,11 +167,17 @@ export class Pool extends Caller {
 		coinOutType: CoinType;
 		withFees?: boolean;
 	}) => {
-		return CmmmCalculations.calcSpotPriceWithFees(
+		const spotPriceWithDecimals = CmmmCalculations.calcSpotPriceWithFees(
 			Helpers.deepCopy(this.pool),
 			inputs.coinInType,
 			inputs.coinOutType,
 			!inputs.withFees
+		);
+
+		return (
+			(spotPriceWithDecimals *
+				Number(this.pool.coins[inputs.coinOutType].decimalsScalar)) /
+			Number(this.pool.coins[inputs.coinInType].decimalsScalar)
 		);
 	};
 
