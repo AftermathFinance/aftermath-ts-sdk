@@ -1,58 +1,62 @@
 import {
 	ApiUnstakeSuiFrenBody,
-	ApiWithdrawSuiFrenFeesAmountBody,
-	Balance,
-	StakedSuiFrenFeesEarned,
-	StakedSuiFrenReceiptObject,
+	ApiWithdrawSuiFrenFeesBody,
+	StakedSuiFrenInfo,
 	SuiNetwork,
 	Url,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { Caller } from "../../general/utils/caller";
 
-export class StakedSuiFrenReceipt extends Caller {
+export class StakedSuiFren extends Caller {
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	public readonly suiFren: SuiFren;
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(
-		public readonly stakedSuiFren: SuiFren,
-		public readonly stakedSuiFrenReceipt: StakedSuiFrenReceiptObject,
+		public readonly info: StakedSuiFrenInfo,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, "sui-frens");
-		this.stakedSuiFrenReceipt = stakedSuiFrenReceipt;
+		this.suiFren = new SuiFren(info.suiFren, this.network, true);
 	}
 
 	// =========================================================================
-	//  Inspections
+	//  Calculations
 	// =========================================================================
 
-	public async getFeesEarned(): Promise<StakedSuiFrenFeesEarned> {
-		return this.fetchApi(
-			`fees-earned/${this.stakedSuiFrenReceipt.objectId}`
-		);
-	}
+	// public feesEarned(): Balance {
+	// 	return this.metadata.collectedFees;
+	// }
+
+	// public currentFee(): Balance {
+	// 	return this.metadata.mixFee;
+	// }
 
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
-	public async getUnstakeSuiFrenTransaction() {
+	public async getUnstakeTransaction() {
 		return this.fetchApiTransaction<ApiUnstakeSuiFrenBody>(
 			"transactions/stake",
 			{
-				stakingReceiptId: this.stakedSuiFrenReceipt.objectId,
+				stakedPositionId: this.info.position.objectId,
 			}
 		);
 	}
 
-	public async getWithdrawFeesTransaction(amount: Balance | undefined) {
-		return this.fetchApiTransaction<ApiWithdrawSuiFrenFeesAmountBody>(
+	public async getWithdrawFeesTransaction() {
+		return this.fetchApiTransaction<ApiWithdrawSuiFrenFeesBody>(
 			"transactions/withdraw-fees",
 			{
-				amount,
-				stakingReceiptObjectId: this.stakedSuiFrenReceipt.objectId,
+				stakedPositionId: this.info.position.objectId,
 			}
 		);
 	}

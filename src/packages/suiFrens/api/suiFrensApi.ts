@@ -17,7 +17,7 @@ import {
 	SuiFrenStats,
 	SuiFrenVaultObject,
 	StakeSuiFrenEvent,
-	StakedSuiFrenReceiptObject,
+	StakedSuiFrenMetadataObject,
 	StakedSuiFrenReceiptWithSuiFrenObject,
 	UnstakeSuiFrenEvent,
 	SuiFrenAttributes,
@@ -495,8 +495,8 @@ export class SuiFrensApi {
 
 	public fetchStakedSuiFrenReceipt = async (
 		suiFrenStakingReceipt: ObjectId
-	): Promise<StakedSuiFrenReceiptObject> => {
-		return this.Provider.Objects().fetchCastObject<StakedSuiFrenReceiptObject>(
+	): Promise<StakedSuiFrenMetadataObject> => {
+		return this.Provider.Objects().fetchCastObject<StakedSuiFrenMetadataObject>(
 			{
 				objectId: suiFrenStakingReceipt,
 				objectFromSuiObjectResponse:
@@ -508,8 +508,8 @@ export class SuiFrensApi {
 
 	public fetchStakedSuiFrenReceipts = async (
 		suiFrenStakingReceipts: ObjectId[]
-	): Promise<StakedSuiFrenReceiptObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<StakedSuiFrenReceiptObject>(
+	): Promise<StakedSuiFrenMetadataObject[]> => {
+		return this.Provider.Objects().fetchCastObjectBatch<StakedSuiFrenMetadataObject>(
 			{
 				objectIds: suiFrenStakingReceipts,
 				objectFromSuiObjectResponse:
@@ -521,7 +521,7 @@ export class SuiFrensApi {
 
 	public fetchStakedSuiFrenReceiptOwnedByAddress = async (
 		walletAddress: SuiAddress
-	): Promise<StakedSuiFrenReceiptObject[]> => {
+	): Promise<StakedSuiFrenMetadataObject[]> => {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			{
 				walletAddress,
@@ -1091,12 +1091,12 @@ export class SuiFrensApi {
 			);
 
 		return {
-			bredSuiFrens,
-			stakedSuiFrens,
+			totalMixes: bredSuiFrens,
+			totalStaked: stakedSuiFrens,
 			breedingFeeCoin: feeCoin,
 			breedingFeesGlobal,
-			breedingFeesDaily,
-			breedingVolumeDaily: breedSuiFrenEventsWithinTime.length,
+			mixingFees24hr: breedingFeesDaily,
+			mixingVolume24hr: breedSuiFrenEventsWithinTime.length,
 		};
 	};
 

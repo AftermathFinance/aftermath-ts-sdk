@@ -4,6 +4,7 @@ import {
 	SuiFrenObject,
 	Url,
 	Nft,
+	Balance,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
@@ -78,13 +79,18 @@ export class SuiFren extends Caller {
 	//  Transactions
 	// =========================================================================
 
-	public async getStakeTransaction() {
+	public async getStakeTransaction(inputs: {
+		mixFee: Balance;
+		feeIncrementPerMix: Balance;
+		minRemainingMixesToKeep: bigint;
+	}) {
 		if (this.isStaked)
 			throw new Error("unable to stake already staked suiFren");
 
 		return this.fetchApiTransaction<ApiStakeSuiFrenBody>(
 			"transactions/stake",
 			{
+				...inputs,
 				suiFrenId: this.suiFren.objectId,
 			}
 		);

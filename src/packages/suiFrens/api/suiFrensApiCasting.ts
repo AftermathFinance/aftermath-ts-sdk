@@ -10,7 +10,7 @@ import {
 	SuiFrenBornEvent,
 	SuiFrenVaultObject,
 	StakeSuiFrenEvent,
-	StakedSuiFrenReceiptObject,
+	StakedSuiFrenMetadataObject,
 	UnstakeSuiFrenEvent,
 	SuiFrenObject,
 	SuiFrenAttributes,
@@ -83,7 +83,7 @@ export class SuiFrensApiCasting {
 
 	public static stakedSuiFrenReceiptObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): StakedSuiFrenReceiptObject => {
+	): StakedSuiFrenMetadataObject => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
