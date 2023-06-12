@@ -6,11 +6,9 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinType, PerpetualsAddresses, Timestamp } from "../../../types";
-
 import {
 	PerpetualsAccountManagerObject,
 	PerpetualsMarketManagerObject,
-	PerpetualsOrderbookObject,
 	PerpetualsPriceFeedStorageObject,
 } from "../../../types";
 import { PerpetualsCasting } from "./perpetualsCasting";

@@ -121,13 +121,13 @@ export class PerpetualsAccount extends Caller {
 			const posIndex = Number(this.account.marketIds[marketIdIndex]);
 			return this.account.positions[posIndex];
 		} catch (e) {
-			return "None";
+			throw new Error("no position found for market");
 		}
 	}
 
 	public marketIdForPosition(inputs: {
 		position: PerpetualsPosition;
-	}): bigint | "None" {
+	}): bigint {
 		try {
 			const posIndex = this.account.positions.findIndex(
 				(pos) => JSON.stringify(pos) === JSON.stringify(inputs.position)
@@ -141,7 +141,7 @@ export class PerpetualsAccount extends Caller {
 
 			return BigInt(marketId);
 		} catch (e) {
-			return "None";
+			throw new Error("no market found for position");
 		}
 	}
 }
