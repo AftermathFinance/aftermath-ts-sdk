@@ -62,20 +62,18 @@ export class Perpetuals extends Caller {
 		);
 	}
 
-	public async getUserAccounts(inputs: {
-		walletAddress: SuiAddress;
-	}): Promise<PerpetualsAccount[]> {
+	public async getUserAccounts(): Promise<PerpetualsAccount[]> {
+		// TODO: Get all AccountCap from address to query perpetualsAccount
 		const accounts = await this.fetchApi<
 			{
 				accountId: bigint;
 				account: PerpetualsAccountStruct;
 			}[]
-		>(`accounts/${inputs.walletAddress}`);
+		>(`accounts/`);
 
 		return accounts.map(
 			(account) =>
 				new PerpetualsAccount(
-					inputs.walletAddress,
 					account.accountId,
 					account.account,
 					this.network

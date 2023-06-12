@@ -101,7 +101,7 @@ export class TransactionsApiHelpers {
 	): { None: true } | { Some: InnerType } =>
 		inner === undefined ? { None: true } : { Some: inner };
 
-	public static creatBuildTxFunc = <Inputs>(
+	public static createBuildTxFunc = <Inputs>(
 		func: (inputs: Inputs & { tx: TransactionBlock }) => TransactionArgument
 	): ((
 		inputs: {

@@ -35,7 +35,13 @@ export interface PerpetualsVaultObject extends Object {
 
 export interface PerpetualsAccountManagerObject extends Object {
 	maxPositionsPerAccount: bigint;
-	maxOpenOrdersPerPosition: bigint;
+	maxPendingOrdersPerPosition: bigint;
+	nextAccountId: bigint;
+}
+
+export interface PerpetualsAccountCapabilityObject extends Object {
+	objectId: ObjectId;
+	accountId: bigint;
 }
 
 export interface PerpetualsAccountStruct {
@@ -199,13 +205,11 @@ export interface PerpetualsCritBitTree<T> {
 }
 
 export interface PerpetualsOrder {
-	user: SuiAddress;
 	accountId: bigint;
 	size: bigint;
 }
 
 export interface PerpetualsOrderCasted {
-	user: SuiAddress;
 	accountId: bigint;
 	size: bigint;
 	price: bigint;
@@ -246,7 +250,6 @@ export interface PerpetualsAuthorityCapObject extends Object {}
 // =========================================================================
 
 export interface ApiPerpetualsCreateAccountBody {
-	walletAddress: SuiAddress;
 	coinType: CoinType;
 }
 

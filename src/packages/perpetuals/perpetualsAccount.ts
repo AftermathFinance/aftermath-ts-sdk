@@ -25,12 +25,11 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly walletAddress: SuiAddress,
 		public readonly accountId: bigint,
 		public account: PerpetualsAccountStruct,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, `perpetuals/accounts/${walletAddress}/${accountId}`);
+		super(network, `perpetuals/accounts/${accountId}`);
 	}
 
 	// =========================================================================

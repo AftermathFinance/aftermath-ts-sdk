@@ -53,7 +53,9 @@ export class PerpetualsCasting {
 		return {
 			objectId: getObjectId(data),
 			maxPositionsPerAccount: objectFields.max_positions_per_account,
-			maxOpenOrdersPerPosition: objectFields.max_open_orders_per_position,
+			maxPendingOrdersPerPosition:
+				objectFields.max_pending_orders_per_position,
+			nextAccountId: objectFields.next_account_id,
 		};
 	};
 
@@ -195,7 +197,6 @@ export class PerpetualsCasting {
 
 	public static orderFromAny = (data: any): PerpetualsOrder => {
 		return {
-			user: data.fields.user,
 			accountId: BigInt(data.fields.account_id),
 			size: BigInt(data.fields.size),
 		};
@@ -235,7 +236,6 @@ export class PerpetualsCasting {
 				? counterAsk(orderId)
 				: counterBid(orderId);
 			const insertedOrder = {
-				user: order.user,
 				accountId: order.accountId,
 				size: order.size,
 				price: priceOfOrder,
