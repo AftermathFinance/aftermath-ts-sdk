@@ -264,7 +264,7 @@ export class CmmmCalculations {
 
 		let feedAmountIn =
 			(1 - swapFeeIn) *
-			Fixed.directCastNormalize(coinIn.decimalsScalar, amountIn);
+			Fixed.castAndNormalize(coinIn.decimalsScalar, amountIn);
 		let newIn = oldIn + feedAmountIn;
 		let prodRatio = Math.pow(newIn / oldIn, wIn);
 
@@ -285,7 +285,7 @@ export class CmmmCalculations {
 				newS0 // S(B) - xi / n (everything but the missing part)
 			);
 
-		let amountOut = Fixed.directUncastUnnormalize(
+		let amountOut = Fixed.uncastAndUnnormalize(
 			coinOut.decimalsScalar,
 			(oldOut - tokenAmountOut) * (1 - swapFeeOut)
 		);
@@ -332,7 +332,7 @@ export class CmmmCalculations {
 		);
 
 		let feedAmountOut =
-			Fixed.directCastNormalize(coinIn.decimalsScalar, amountOut) /
+			Fixed.castAndNormalize(coinIn.decimalsScalar, amountOut) /
 			(1 - swapFeeOut);
 		let newOut = oldOut - feedAmountOut;
 		let prodRatio = Math.pow(newOut / oldOut, wOut);
@@ -354,7 +354,7 @@ export class CmmmCalculations {
 				newS0 // S(B) - xi / n (everything but the missing part)
 			);
 
-		let amountIn = Fixed.directUncastUnnormalize(
+		let amountIn = Fixed.uncastAndUnnormalize(
 			coinOut.decimalsScalar,
 			(tokenAmountIn - oldIn) / (1 - swapFeeIn)
 		);
@@ -407,7 +407,7 @@ export class CmmmCalculations {
 
 		// make sure no disabled coin type is expected
 		for (let [coinType, coin] of Object.entries(coins)) {
-			amountOut = Fixed.directCastNormalize(
+			amountOut = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
@@ -419,7 +419,7 @@ export class CmmmCalculations {
 					// pool is drained when b + Ain * (1 - Sin) - t * Aout / (1 - Sout) = 0, or t = (b + Ain * (1 - Sin)) * (1 - So) / Aout
 					t =
 						((Fixed.directCast(coin.normalizedBalance) +
-							Fixed.directCastNormalize(
+							Fixed.castAndNormalize(
 								coin.decimalsScalar,
 								amountsIn[coinType] || BigInt(0)
 							) *
@@ -447,11 +447,11 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.directCast(coin.normalizedBalance);
 				weight = Fixed.directCast(coin.weight);
-				amountIn = Fixed.directCastNormalize(
+				amountIn = Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsIn[coinType] || BigInt(0)
 				);
-				amountOut = Fixed.directCastNormalize(
+				amountOut = Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOutDirection[coinType] || BigInt(0)
 				);
@@ -557,11 +557,11 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.directCast(coin.normalizedBalance);
 				weight = Fixed.directCast(coin.weight);
-				amountIn = Fixed.directCastNormalize(
+				amountIn = Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsInDirection[coinType] || BigInt(0)
 				);
-				amountOut = Fixed.directCastNormalize(
+				amountOut = Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOut[coinType] || BigInt(0)
 				);
@@ -638,7 +638,7 @@ export class CmmmCalculations {
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
-			amount = Fixed.directCastNormalize(
+			amount = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
@@ -664,7 +664,7 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.directCast(coin.normalizedBalance);
 				weight = Fixed.directCast(coin.weight);
-				amount = Fixed.directCastNormalize(
+				amount = Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsIn[coinType] || BigInt(0)
 				);
@@ -725,7 +725,7 @@ export class CmmmCalculations {
 		// start cf_max as corresponding to r = 1
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
-			amount = Fixed.directCastNormalize(
+			amount = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
@@ -749,7 +749,7 @@ export class CmmmCalculations {
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
 			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.directCastNormalize(
+			amount = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
@@ -759,9 +759,9 @@ export class CmmmCalculations {
 			prod = 0;
 			sum = 0;
 			for (let [coinType2, coin2] of Object.entries(coins)) {
-				balance = Fixed.directCast(coin2.balance);
+				balance = Fixed.directCast(coin2.normalizedBalance);
 				weight = Fixed.directCast(coin2.weight);
-				amount = Fixed.directCastNormalize(
+				amount = Fixed.castAndNormalize(
 					coin2.decimalsScalar,
 					amountsIn[coinType2] || BigInt(0)
 				);
@@ -852,7 +852,7 @@ export class CmmmCalculations {
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
-			amountOut = Fixed.directCastNormalize(
+			amountOut = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
@@ -872,7 +872,7 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.directCast(coin.normalizedBalance);
 				weight = Fixed.directCast(coin.weight);
-				amountOut = Fixed.directCastNormalize(
+				amountOut = Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOutDirection[coinType] || BigInt(0)
 				);
@@ -993,7 +993,7 @@ export class CmmmCalculations {
 		cfMin = 0;
 		tMin = Number.POSITIVE_INFINITY;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			amountOut = Fixed.directCastNormalize(
+			amountOut = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
@@ -1010,7 +1010,7 @@ export class CmmmCalculations {
 
 		// remaining test points are the CF discontinuities: where B0 - t*D = R*B0
 		for (let [coinTypeT, coinT] of Object.entries(coins)) {
-			amountOut = Fixed.directCastNormalize(
+			amountOut = Fixed.castAndNormalize(
 				coinT.decimalsScalar,
 				amountsOutDirection[coinTypeT] || BigInt(0)
 			);
@@ -1023,7 +1023,7 @@ export class CmmmCalculations {
 			for (let [coinType, coin] of Object.entries(coins)) {
 				balance = Fixed.directCast(coin.normalizedBalance);
 				weight = Fixed.directCast(coin.weight);
-				amountOut = Fixed.directCastNormalize(
+				amountOut = Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOutDirection[coinType] || BigInt(0)
 				);
@@ -1099,7 +1099,7 @@ export class CmmmCalculations {
 		let sMin = Number.POSITIVE_INFINITY;
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
-			amountIn = Fixed.directCastNormalize(
+			amountIn = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
@@ -1136,7 +1136,7 @@ export class CmmmCalculations {
 		let sMax = 0;
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
-			amountOut = Fixed.directCastNormalize(
+			amountOut = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOut[coinType] || BigInt(0)
 			);
@@ -1297,12 +1297,12 @@ export class CmmmCalculations {
 			balance = Fixed.directCast(coin.normalizedBalance);
 			weight = Fixed.directCast(coin.weight);
 			amountIn =
-				Fixed.directCastNormalize(
+				Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsIn[coinType] || BigInt(0)
 				) * amountsInScalar;
 			amountOut =
-				Fixed.directCastNormalize(
+				Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOut[coinType] || BigInt(0)
 				) * amountsOutScalar;
@@ -1385,11 +1385,11 @@ export class CmmmCalculations {
 		// postbalance = balance + amount in - amount out
 		let postbalance;
 		let weight;
-		let amountIn = Fixed.directCastNormalize(
+		let amountIn = Fixed.castAndNormalize(
 			coinIn.decimalsScalar,
 			amountInB
 		);
-		let amountOut = Fixed.directCastNormalize(
+		let amountOut = Fixed.castAndNormalize(
 			coinOut.decimalsScalar,
 			amountOutB
 		);
@@ -1520,7 +1520,7 @@ export class CmmmCalculations {
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
 			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.directCastNormalize(
+			amount = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
@@ -1623,7 +1623,7 @@ export class CmmmCalculations {
 			balance = Fixed.directCast(coin.normalizedBalance);
 			scaledBalance = lpRatio * balance;
 			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.directCastNormalize(
+			amount = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutSrc[coinType] || BigInt(0)
 			);
@@ -1749,11 +1749,11 @@ export class CmmmCalculations {
 		let outDotGrad = 0;
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
-			amountIn = Fixed.directCastNormalize(
+			amountIn = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
-			amountOut = Fixed.directCastNormalize(
+			amountOut = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
@@ -1799,11 +1799,11 @@ export class CmmmCalculations {
 		let outDotGrad = 0;
 		for (let [coinType, coin] of Object.entries(coins)) {
 			balance = Fixed.directCast(coin.normalizedBalance);
-			amountIn = Fixed.directCastNormalize(
+			amountIn = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsInDirection[coinType] || BigInt(0)
 			);
-			amountOut = Fixed.directCastNormalize(
+			amountOut = Fixed.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOut[coinType] || BigInt(0)
 			);
@@ -1864,7 +1864,7 @@ export class CmmmCalculations {
 			weight = Fixed.directCast(coin.weight);
 			amount =
 				balance +
-				Fixed.directCastNormalize(
+				Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsIn[coinType] || BigInt(0)
 				);
@@ -1934,7 +1934,7 @@ export class CmmmCalculations {
 			weight = Fixed.directCast(coin.weight);
 			amount =
 				balance +
-				Fixed.directCastNormalize(
+				Fixed.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOutDirection[coinType] || BigInt(0)
 				);

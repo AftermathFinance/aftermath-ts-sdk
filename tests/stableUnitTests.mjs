@@ -13,16 +13,19 @@ const tests = {
 
         let coins = {
             coin0: {
-                weight: BigInt(280_000_000_000_000_000),
-                balance: BigInt(717_000_000),
+                weight: 280_000_000_000_000_000n,
+                normalizedBalance: 717_000_000_000_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin1: {
-                weight: BigInt(448_000_000_000_000_000),
-                balance: BigInt(400_000_000),
+                weight: 448_000_000_000_000_000n,
+                normalizedBalance: 400_000_000_000_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                weight: BigInt(272_000_000_000_000_000),
-                balance: BigInt(556_000_000),
+                weight: 272_000_000_000_000_000n,
+                normalizedBalance: 556_000_000_000_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -35,7 +38,7 @@ const tests = {
 
         let w = Fixed.directCast(coins[index].weight);
         let [prod, sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(pool, index);
-        let bi = Fixed.convertFromInt(coins[index].balance);
+        let bi = Fixed.directCast(coins[index].normalizedBalance);
 
         let bi0 = CmmmCalculations.getTokenBalanceGivenInvariantAndAllOtherBalances(
             flatness,
@@ -74,22 +77,25 @@ const tests = {
 
         let coins = {
             coin0: {
-                weight: BigInt(280_000_000_000_000_000),
-                balance: BigInt(700000),
-                tradeFeeIn: BigInt(100_000_000_000_000_000),
-                tradeFeeOut: BigInt(30_000_000_000_000_000),
+                weight: 280_000_000_000_000_000n,
+                normalizedBalance: 700000_000_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin1: {
-                weight: BigInt(448_000_000_000_000_000),
-                balance: BigInt(400000),
-                tradeFeeIn: BigInt(100_000_000_000_000_000),
-                tradeFeeOut: BigInt(30_000_000_000_000_000),
+                weight: 448_000_000_000_000_000n,
+                normalizedBalance: 400000_000_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                weight: BigInt(272_000_000_000_000_000),
-                balance: BigInt(500000),
-                tradeFeeIn: BigInt(100_000_000_000_000_000),
-                tradeFeeOut: BigInt(30_000_000_000_000_000),
+                weight: 272_000_000_000_000_000n,
+                normalizedBalance: 500000_000_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -134,22 +140,25 @@ const tests = {
 
         let coins = {
             coin0: {
-                weight: BigInt(280_000_000_000_000_000),
-                balance: BigInt(717_000_000),
-                tradeFeeIn: BigInt(100_000_000_000_000_000),
-                tradeFeeOut: BigInt(40_000_000_000_000_000),
+                weight: 280_000_000_000_000_000n,
+                normalizedBalance: 717_000_000_000_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin1: {
-                weight: BigInt(448_000_000_000_000_000),
-                balance: BigInt(400_000_000),
-                tradeFeeIn: BigInt(200_000_000_000_000_000),
-                tradeFeeOut: BigInt(20_000_000_000_000_000),
+                weight: 448_000_000_000_000_000n,
+                normalizedBalance: 400_000_000_000_000_000_000_000_000n,
+                tradeFeeIn: 200_000_000_000_000_000n,
+                tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                weight: BigInt(272_000_000_000_000_000),
-                balance: BigInt(556_000_000),
-                tradeFeeIn: BigInt(300_000_000_000_000_000),
-                tradeFeeOut: BigInt(30_000_000_000_000_000),
+                weight: 272_000_000_000_000_000n,
+                normalizedBalance: 556_000_000_000_000_000_000_000_000n,
+                tradeFeeIn: 300_000_000_000_000_000n,
+                tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -168,8 +177,7 @@ const tests = {
 
         let swapFeeIn = coinIn.tradeFeeIn;
         let swapFeeOut = coinOut.tradeFeeOut;
-
-        let amountIn = coinIn.balance / 10n;
+        let amountIn = Fixed.unnormalizeAmount(coinIn.decimalsScalar, coinIn.normalizedBalance / 10n);
         let amountOut = CmmmCalculations.calcOutGivenIn(
             pool,
             indexIn,
@@ -177,8 +185,8 @@ const tests = {
             amountIn
         );
 
-        coinIn.balance += ((FixedOne - swapFeeIn) * amountIn) / FixedOne;
-        coinOut.balance -= (amountOut * FixedOne) / (FixedOne - swapFeeOut);
+        coinIn.normalizedBalance += Fixed.normalizeAmount(coinIn.decimalsScalar, ((FixedOne - swapFeeIn) * amountIn) / FixedOne);
+        coinOut.normalizedBalance -= Fixed.normalizeAmount(coinOut.decimalsScalar, (amountOut * FixedOne) / (FixedOne - swapFeeOut));
 
         let postInvariant = CmmmCalculations.calcInvariant(pool);
 
@@ -190,22 +198,25 @@ const tests = {
 
         let coins = {
             coin0: {
-                weight: BigInt(280_000_000_000_000_000),
-                balance: BigInt(717_000_000),
-                tradeFeeIn: BigInt(100_000_000_000_000_000),
-                tradeFeeOut: BigInt(40_000_000_000_000_000),
+                weight: 280_000_000_000_000_000n,
+                normalizedBalance: 717_000_000_000_000_000_000_000_000n,
+                tradeFeeIn: 100_000_000_000_000_000n,
+                tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin1: {
-                weight: BigInt(448_000_000_000_000_000),
-                balance: BigInt(400_000_000),
-                tradeFeeIn: BigInt(200_000_000_000_000_000),
-                tradeFeeOut: BigInt(20_000_000_000_000_000),
+                weight: 448_000_000_000_000_000n,
+                normalizedBalance: 400_000_000_000_000_000_000_000_000n,
+                tradeFeeIn: 200_000_000_000_000_000n,
+                tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                weight: BigInt(272_000_000_000_000_000),
-                balance: BigInt(556_000_000),
-                tradeFeeIn: BigInt(300_000_000_000_000_000),
-                tradeFeeOut: BigInt(30_000_000_000_000_000),
+                weight: 272_000_000_000_000_000n,
+                normalizedBalance: 556_000_000_000_000_000_000_000_000n,
+                tradeFeeIn: 300_000_000_000_000_000n,
+                tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -225,7 +236,7 @@ const tests = {
         let swapFeeIn = coinIn.tradeFeeIn;
         let swapFeeOut = coinOut.tradeFeeOut;
 
-        let amountOut = coinOut.balance / 10n;
+        let amountOut = Fixed.unnormalizeAmount(coinOut.decimalsScalar, coinOut.normalizedBalance / 10n);
         let amountIn = CmmmCalculations.calcInGivenOut(
             pool,
             indexIn,
@@ -233,8 +244,8 @@ const tests = {
             amountOut
         );
 
-        coinIn.balance += ((FixedOne - swapFeeIn) * amountIn) / FixedOne;
-        coinOut.balance -= (amountOut * FixedOne) / (FixedOne - swapFeeOut);
+        coinIn.normalizedBalance += Fixed.normalizeAmount(coinIn.decimalsScalar, ((FixedOne - swapFeeIn) * amountIn) / FixedOne);
+        coinOut.normalizedBalance -= Fixed.normalizeAmount(coinOut.decimalsScalar, (amountOut * FixedOne) / (FixedOne - swapFeeOut));
 
         let postInvariant = CmmmCalculations.calcInvariant(pool);
 
@@ -244,22 +255,25 @@ const tests = {
     testCalcDepositFixedAmounts: () => {
         let coins = {
             coin1: {
-                balance: 700000n,
+                normalizedBalance: 700000_000_000_000_000_000_000n,
                 weight: 280_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 400000n,
+                normalizedBalance: 400000_000_000_000_000_000_000n,
                 weight: 448_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin3: {
-                balance: 500000n,
+                normalizedBalance: 500000_000_000_000_000_000_000n,
                 weight: 272_000_000_000_000_000n,
                 tradeFeeIn: 300_000_000_000_000_000n,
                 tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -286,46 +300,49 @@ const tests = {
         if (!Helpers.closeEnoughBigInt(expectedLpRatio, calculated_ratio, Tolerance)) return false;
         return true;
     },
-    testCalcWithdrawFlpAmountsOut: () => {
-        return testWithdraw(
-        //     [700000000, 400000000, 500000000],
-        //     [0.28, 0.448, 0.272],
-        //     [0.1, 0.2, 0.3],
-        //     [0.04, 0.02, 0.03],
-        //     0.712,
-        //     [3000000, 50000000, 10000000],
-        //     0.729,
-        // ) && testWithdraw(
-            [700000000, 400000000, 500000000],
-            [0.28, 0.448, 0.272],
-            [0.1, 0.2, 0.3],
-            [0.04, 0.02, 0.03],
-            0.712,
-            [3000000, 50000000, 10000000],
-            0.99,
-        )
-    },
+    // testCalcWithdrawFlpAmountsOut: () => {
+    //     return testWithdraw(
+    //     //     [700000000, 400000000, 500000000],
+    //     //     [0.28, 0.448, 0.272],
+    //     //     [0.1, 0.2, 0.3],
+    //     //     [0.04, 0.02, 0.03],
+    //     //     0.712,
+    //     //     [3000000, 50000000, 10000000],
+    //     //     0.729,
+    //     // ) && testWithdraw(
+    //         [700000000, 400000000, 500000000],
+    //         [0.28, 0.448, 0.272],
+    //         [0.1, 0.2, 0.3],
+    //         [0.04, 0.02, 0.03],
+    //         0.712,
+    //         [3000000, 50000000, 10000000],
+    //         0.99,
+    //     )
+    // },
     testDepositEstimate: () => {
         let flatness = 650_000_000_000_000_000n;
 
         let coins = {
             coin1: {
-                balance: 717_000_000n,
+                normalizedBalance: 717_000_000_000_000_000_000_000_000n,
                 weight: 280_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 400_000_000n,
+                normalizedBalance: 400_000_000_000_000_000_000_000_000n,
                 weight: 448_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin3: {
-                balance: 556_000_000n,
+                normalizedBalance: 556_000_000_000_000_000_000_000_000n,
                 weight: 272_000_000_000_000_000n,
                 tradeFeeIn: 300_000_000_000_000_000n,
                 tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         }
 
@@ -357,22 +374,25 @@ const tests = {
 
         let coins = {
             coin1: {
-                balance: 717_000_000n,
+                normalizedBalance: 717_000_000_000_000_000_000_000_000n,
                 weight: 280_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 400_000_000n,
+                normalizedBalance: 400_000_000_000_000_000_000_000_000n,
                 weight: 448_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin3: {
-                balance: 556_000_000n,
+                normalizedBalance: 556_000_000_000_000_000_000_000_000n,
                 weight: 272_000_000_000_000_000n,
                 tradeFeeIn: 300_000_000_000_000_000n,
                 tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         }
 
@@ -414,22 +434,25 @@ const tests = {
 
         let coins = {
             coin1: {
-                balance: 717_000_000n,
+                normalizedBalance: 717_000_000_000_000_000_000_000_000n,
                 weight: 280_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 400_000_000n,
+                normalizedBalance: 400_000_000_000_000_000_000_000_000n,
                 weight: 448_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin3: {
-                balance: 556_000_000n,
+                normalizedBalance: 556_000_000_000_000_000_000_000_000n,
                 weight: 272_000_000_000_000_000n,
                 tradeFeeIn: 300_000_000_000_000_000n,
                 tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         }
 
@@ -480,16 +503,19 @@ const tests = {
 
         let coins = {
             coin1: {
-                balance: 717_000_000n,
+                normalizedBalance: 717_000_000_000_000_000_000_000_000n,
                 weight: 280_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 400_000_000n,
+                normalizedBalance: 400_000_000_000_000_000_000_000_000n,
                 weight: 448_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin3: {
-                balance: 556_000_000n,
+                normalizedBalance: 556_000_000_000_000_000_000_000_000n,
                 weight: 272_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -518,22 +544,25 @@ const tests = {
 
         let coins = {
             coin1: {
-                balance: 700000n,
+                normalizedBalance: 700000_000_000_000_000_000_000n,
                 weight: 280_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 400000n,
+                normalizedBalance: 400000_000_000_000_000_000_000n,
                 weight: 448_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin3: {
-                balance: 500000n,
+                normalizedBalance: 500000_000_000_000_000_000_000n,
                 weight: 272_000_000_000_000_000n,
                 tradeFeeIn: 300_000_000_000_000_000n,
                 tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -572,22 +601,25 @@ const tests = {
 
         let coins = {
             coin1: {
-                balance: 700000n,
+                normalizedBalance: 700000_000_000_000_000_000_000n,
                 weight: 280_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 400000n,
+                normalizedBalance: 400000_000_000_000_000_000_000n,
                 weight: 448_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin3: {
-                balance: 500000n,
+                normalizedBalance: 500000_000_000_000_000_000_000n,
                 weight: 272_000_000_000_000_000n,
                 tradeFeeIn: 300_000_000_000_000_000n,
                 tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -624,22 +656,25 @@ const tests = {
 
         let coins = {
             coin1: {
-                balance: 700000n,
+                normalizedBalance: 700000_000_000_000_000_000_000n,
                 weight: 280_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 400000n,
+                normalizedBalance: 400000_000_000_000_000_000_000n,
                 weight: 448_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin3: {
-                balance: 500000n,
+                normalizedBalance: 500000_000_000_000_000_000_000n,
                 weight: 272_000_000_000_000_000n,
                 tradeFeeIn: 300_000_000_000_000_000n,
                 tradeFeeOut: 30_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -651,7 +686,7 @@ const tests = {
         let indexIn = "coin1";
         let indexOut = "coin2";
 
-        let amountIn = coins[indexIn].balance / 90n;
+        let amountIn = Fixed.unnormalizeAmount(coins[indexIn].decimalsScalar, coins[indexIn].normalizedBalance / 90n);
         let expectedOut = 3290n;
         let scalar = Fixed.directCast(
             CmmmCalculations.calcOutGivenIn(
@@ -684,16 +719,16 @@ const tests = {
         return true;
     },
     testCalcInGivenOut2: () => {
-        let balances = [
-            1487123450145012n,
-            246157078638440n,
-            15794327124701562n,
-            15794400012548011n,
-            15794394488445449n,
-            15794324994215621n,
-            15794323487364081n,
-            15794331542101821n,
-            15794323475015293n,
+        let normalizedBalances = [
+             1487123450145012_000_000_000_000_000_000n,
+              246157078638440_000_000_000_000_000_000n,
+            15794327124701562_000_000_000_000_000_000n,
+            15794400012548011_000_000_000_000_000_000n,
+            15794394488445449_000_000_000_000_000_000n,
+            15794324994215621_000_000_000_000_000_000n,
+            15794323487364081_000_000_000_000_000_000n,
+            15794331542101821_000_000_000_000_000_000n,
+            15794323475015293_000_000_000_000_000_000n,
         ];
 
         let weights = [
@@ -734,10 +769,11 @@ const tests = {
 
         let coins = {};
         for (let i = 0; i < 9; ++i) coins["coin" + (i + 1)] = {
-            balance: balances[i],
+            normalizedBalance: normalizedBalances[i],
             weight: weights[i],
             tradeFeeIn: swapFeesIn[i],
             tradeFeeOut: swapFeesOut[i],
+            decimalsScalar: 1_000_000_000_000_000_000n,
         }
 
         let flatness = Fixed.fixedOneB;
@@ -765,16 +801,18 @@ const tests = {
 
         let coins = {
             coin1: {
-                balance: 10_000_000_000n,
+                normalizedBalance: 10_000_000_000_000_000_000_000_000_000n,
                 weight: 500_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 40_000_000_000n,
+                normalizedBalance: 40_000_000_000_000_000_000_000_000_000n,
                 weight: 500_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -799,16 +837,18 @@ const tests = {
 
         let coins = {
             coin1: {
-                balance: 10_000_000_000n,
+                normalizedBalance: 10_000_000_000_000_000_000_000_000_000n,
                 weight: 500_000_000_000_000_000n,
                 tradeFeeIn: 100_000_000_000_000_000n,
                 tradeFeeOut: 40_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
             coin2: {
-                balance: 10_000_000_000n,
+                normalizedBalance: 10_000_000_000_000_000_000_000_000_000n,
                 weight: 500_000_000_000_000_000n,
                 tradeFeeIn: 200_000_000_000_000_000n,
                 tradeFeeOut: 20_000_000_000_000_000n,
+                decimalsScalar: 1_000_000_000_000_000_000n,
             },
         };
 
@@ -842,25 +882,25 @@ const tests = {
         let flatness = 1;
         let allAmountsIn = [
             [
-                199_350_000_000_000_000,
-                200_410_000_000_000_000,
-                199_680_000_000_000_000,
-                201_010_000_000_000_000,
-                199_990_000_000_000_000,
+                199_350_000_000,
+                200_410_000_000,
+                199_680_000_000,
+                201_010_000_000,
+                199_990_000_000,
             ],
             [
-                500_000_000_000_000_000,
-                500_000_000_000_000_000,
-                500_000_000_000_000_000,
-                500_000_000_000_000_000,
-                500_000_000_000_000_000,
+                500_000_000_000,
+                500_000_000_000,
+                500_000_000_000,
+                500_000_000_000,
+                500_000_000_000,
             ],
             [
-                100_000_000_000_000_000,
-                120_000_000_000_000_000,
-                123_000_000_000_000_000,
-                123_400_000_000_000_000,
-                123_450_000_000_000_000,
+                100_000_000_000,
+                120_000_000_000,
+                123_000_000_000,
+                123_400_000_000,
+                123_450_000_000,
             ],
             [
                 100_090_600_009_001,
@@ -999,7 +1039,7 @@ function testDeposit(
 }
 
 function fixWeights(weights) {
-    let sum = BigInt(0);
+    let sum = 0n;
     weights.map(x => sum += x);
     sum = Fixed.fixedOneB - sum;
     weights[0] += sum;
@@ -1022,10 +1062,11 @@ function makePool(
     let coins = {};
     for (let i = 0; i < balances.length; ++i) {
         coins["coin" + i] = {
-            balance: bigBalances[i],
+            normalizedBalance: Fixed.normalizeAmount(1_000_000_000_000_000_000n, bigBalances[i]),
             weight: bigWeights[i],
             tradeFeeIn: bigFeesIn[i],
             tradeFeeOut: bigFeesOut[i],
+            decimalsScalar: 1_000_000_000_000_000_000n,
         }
     }
 

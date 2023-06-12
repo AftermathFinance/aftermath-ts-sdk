@@ -29,8 +29,8 @@ export class Fixed {
 		normalizedAmount: NormalizedBalance
 	 ): Balance =>
 			normalizedAmount / decimalsScalar;
-    
-    public static directCastNormalize = (
+
+    public static castAndNormalize = (
         decimalsScalar: DecimalsScalar,
         amount: Balance
     ): LocalNumber => Fixed.directCast(
@@ -38,14 +38,14 @@ export class Fixed {
             decimalsScalar,
             amount
         )
-    );
+    )
 
-    public static directUncastUnnormalize = (
+    public static uncastAndUnnormalize = (
         decimalsScalar: DecimalsScalar,
-        noramlizedAmount: LocalNumber
+        normalizedAmount: LocalNumber
     ): Balance => Fixed.unnormalizeAmount(
         decimalsScalar,
-        Fixed.directUncast(noramlizedAmount)
+        Fixed.directUncast(normalizedAmount)
     )
 }
 
