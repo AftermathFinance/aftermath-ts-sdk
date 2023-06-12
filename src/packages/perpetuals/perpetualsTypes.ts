@@ -5,6 +5,7 @@ import {
 	Object,
 	Timestamp,
 } from "../../general/types/generalTypes";
+import { CoinType } from "../coin/coinTypes";
 
 export type IFixed = bigint;
 
@@ -235,3 +236,70 @@ export interface PerpetualsPriceFeedObject extends Object {
 export interface PerpetualsPriceFeedStorageObject extends Object {}
 
 export interface PerpetualsAuthorityCapObject extends Object {}
+
+// =========================================================================
+//  API
+// =========================================================================
+
+// =========================================================================
+//  Transactions
+// =========================================================================
+
+export interface ApiPerpetualsCreateAccountBody {
+	walletAddress: SuiAddress;
+	coinType: CoinType;
+}
+
+// =========================================================================
+//  Account Txs
+// =========================================================================
+
+// =========================================================================
+//  Collateral Txs
+// =========================================================================
+
+export interface ApiPerpetualsDepositCollateralBody {
+	coinType: CoinType;
+	coinAmount: bigint;
+}
+
+export interface ApiPerpetualsWithdrawCollateralBody {
+	coinType: CoinType;
+	amount: bigint;
+}
+
+// =========================================================================
+//  Order Txs
+// =========================================================================
+
+export interface ApiPerpetualsMarketOrderBody {
+	coinType: CoinType;
+	marketId: bigint;
+	side: boolean;
+	size: bigint;
+}
+
+export interface ApiPerpetualsLimitOrderBody {
+	coinType: CoinType;
+	marketId: bigint;
+	side: boolean;
+	size: bigint;
+	price: bigint;
+	orderType: bigint;
+}
+
+export interface ApiPerpetualsCancelOrderBody {
+	coinType: CoinType;
+	marketId: bigint;
+	side: boolean;
+	orderId: bigint;
+}
+
+// =========================================================================
+//  Position Txs
+// =========================================================================
+
+export interface ApiPerpetualsClosePositionBody {
+	coinType: CoinType;
+	marketId: bigint;
+}

@@ -47,6 +47,7 @@ export class PerpetualsApi {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
+
 	public fetchAccountManager = async (
 		objectId: ObjectId
 	): Promise<PerpetualsAccountManagerObject> => {
@@ -763,6 +764,7 @@ export class PerpetualsApi {
 
 		return tx;
 	};
+
 	public oracleCreatePriceFeedTx = (inputs: {
 		tx: TransactionBlock;
 		symbol: string;

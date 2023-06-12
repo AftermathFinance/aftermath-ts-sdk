@@ -1,6 +1,12 @@
 import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
+	ApiPerpetualsCancelOrderBody,
+	ApiPerpetualsClosePositionBody,
+	ApiPerpetualsDepositCollateralBody,
+	ApiPerpetualsLimitOrderBody,
+	ApiPerpetualsMarketOrderBody,
+	ApiPerpetualsWithdrawCollateralBody,
 	PerpetualsAccountStruct,
 	PerpetualsPosition,
 	SuiNetwork,
@@ -41,21 +47,87 @@ export class PerpetualsAccount extends Caller {
 		this.account = inputs.account;
 	}
 
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
+
+	// =========================================================================
+	//  Collateral Txs
+	// =========================================================================
+
+	public async getDepositCollateralTx(
+		inputs: ApiPerpetualsDepositCollateralBody
+	) {
+		return this.fetchApiTransaction<ApiPerpetualsDepositCollateralBody>(
+			"transactions/deposit-collateral",
+			inputs
+		);
+	}
+
+	public async getWithdrawCollateralTx(
+		inputs: ApiPerpetualsWithdrawCollateralBody
+	) {
+		return this.fetchApiTransaction<ApiPerpetualsWithdrawCollateralBody>(
+			"transactions/withdraw-collateral",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Order Txs
+	// =========================================================================
+
+	public async getPlaceMarketOrderTx(inputs: ApiPerpetualsMarketOrderBody) {
+		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
+			"transactions/market-order",
+			inputs
+		);
+	}
+
+	public async getPlaceLimitOrderTx(inputs: ApiPerpetualsLimitOrderBody) {
+		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
+			"transactions/limit-order",
+			inputs
+		);
+	}
+
+	public async getCancelOrderTx(inputs: ApiPerpetualsCancelOrderBody) {
+		return this.fetchApiTransaction<ApiPerpetualsCancelOrderBody>(
+			"transactions/cancel-order",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Position Txs
+	// =========================================================================
+
+	public async getClosePositionTx(inputs: ApiPerpetualsClosePositionBody) {
+		return this.fetchApiTransaction<ApiPerpetualsClosePositionBody>(
+			"transactions/close-position",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
 	public positionForMarketId(inputs: {
 		marketId: bigint;
-	}): PerpetualsPosition | undefined {
+	}): PerpetualsPosition | "None" {
 		const marketIdIndex = Number(inputs.marketId);
 		try {
 			const posIndex = Number(this.account.marketIds[marketIdIndex]);
 			return this.account.positions[posIndex];
 		} catch (e) {
-			return undefined;
+			return "None";
 		}
 	}
 
 	public marketIdForPosition(inputs: {
 		position: PerpetualsPosition;
-	}): bigint | undefined {
+	}): bigint | "None" {
 		try {
 			const posIndex = this.account.positions.findIndex(
 				(pos) => JSON.stringify(pos) === JSON.stringify(inputs.position)
@@ -69,7 +141,7 @@ export class PerpetualsAccount extends Caller {
 
 			return BigInt(marketId);
 		} catch (e) {
-			return undefined;
+			return "None";
 		}
 	}
 }

@@ -1,6 +1,7 @@
 import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
+	ApiPerpetualsCreateAccountBody,
 	PerpetualsAccountStruct,
 	PerpetualsMarketParams,
 	SuiNetwork,
@@ -79,6 +80,17 @@ export class Perpetuals extends Caller {
 					account.account,
 					this.network
 				)
+		);
+	}
+
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
+
+	public async getCreateAccountTx(inputs: ApiPerpetualsCreateAccountBody) {
+		return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
+			"transactions/create-account",
+			inputs
 		);
 	}
 }
