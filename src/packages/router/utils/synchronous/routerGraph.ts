@@ -602,12 +602,12 @@ export class RouterGraph {
 				)) {
 					for (const poolUid of throughPools) {
 						if (
-							// route.paths.some(
-							// 	// NOTE: would it ever make sense to go back into a pool ?
-							// 	// (could relax this restriction)
-							// 	(path) => path.poolUid === poolUid
-							// )
-							lastPath.poolUid === poolUid
+							route.paths.some(
+								// NOTE: would it ever make sense to go back into a pool ?
+								// (could relax this restriction)
+								(path) => path.poolUid === poolUid
+							)
+							// lastPath.poolUid === poolUid
 						)
 							continue;
 
