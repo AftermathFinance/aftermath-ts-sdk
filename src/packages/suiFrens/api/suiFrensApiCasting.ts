@@ -1,25 +1,31 @@
 import {
 	SuiObjectResponse,
+	getObjectDisplay,
 	getObjectFields,
 	getObjectId,
+	getObjectType,
 } from "@mysten/sui.js";
 import {
-	BreedSuiFrensEvent,
+	MixSuiFrensEvent,
 	SuiFrenBornEvent,
-	SuiFrenObject,
 	SuiFrenVaultObject,
 	StakeSuiFrenEvent,
-	StakedSuiFrenReceiptObject,
+	StakedSuiFrenMetadataObject,
 	UnstakeSuiFrenEvent,
+	SuiFrenObject,
+	SuiFrenAttributes,
+	CapyLabsAppObject,
 } from "../suiFrensTypes";
 import {
-	BreedSuiFrenEventOnChain as BreedSuiFrensEventOnChain,
+	MixSuiFrenEventOnChain,
 	SuiFrenBornEventOnChain,
-	SuiFrenFieldsOnChain,
 	SuiFrenVaultFieldsOnChain,
 	StakeSuiFrenEventOnChain,
 	StakedSuiFrenReceiptFieldsOnChain,
 	UnstakeSuiFrenEventOnChain,
+	SuiFrenFieldsOnChain,
+	SuiFrenDisplayOnChain,
+	CapyLabsAppFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
 import { SuiFrens } from "../suiFrens";
 
@@ -28,33 +34,65 @@ export class SuiFrensApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static suiFrenObjectFromSuiObjectResponse = (
+	public static capyLabsAppObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): SuiFrenObject => {
-		const suiFrenObjectFields = getObjectFields(data) as SuiFrenFieldsOnChain;
+	): CapyLabsAppObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const fields = getObjectFields(data) as CapyLabsAppFieldsOnChain;
+
 		return {
+			objectType,
 			objectId: getObjectId(data),
-			fields: {
-				gen: suiFrenObjectFields.gen,
-				url: suiFrenObjectFields.url,
-				link: suiFrenObjectFields.link,
-				genes: suiFrenObjectFields.genes.fields,
-				devGenes: suiFrenObjectFields.dev_genes.fields,
-				itemCount: suiFrenObjectFields.item_count,
-				attributes: suiFrenObjectFields.attributes.map(
-					(attr) => attr.fields
-				),
-			},
+			mixingLimit: BigInt(fields.mixing_limit),
+			coolDownPeriodEpochs: BigInt(fields.cool_down_period),
+			mixingPrice: BigInt(fields.mixing_price),
+			suiProfits: BigInt(fields.profits),
+		};
+	};
+
+	public static partialSuiFrenObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed"> => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const fields = getObjectFields(data) as SuiFrenFieldsOnChain;
+		const display = getObjectDisplay(data)
+			.data as unknown as SuiFrenDisplayOnChain;
+
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			generation: BigInt(fields.generation),
+			birthdate: Number(fields.birthdate),
+			cohort: BigInt(fields.cohort),
+			genes: fields.genes.map((gene) => BigInt(gene)),
+			attributes: {
+				skin: fields.attributes[0],
+				mainColor: fields.attributes[1],
+				secondaryColor: fields.attributes[2],
+				expression: fields.attributes[3],
+				ears: fields.attributes[4],
+			} as SuiFrenAttributes,
+			birthLocation: fields.birth_location,
+			imageUrl: display.image_url,
 		};
 	};
 
 	public static stakedSuiFrenReceiptObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): StakedSuiFrenReceiptObject => {
+	): StakedSuiFrenMetadataObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		const objectFields = getObjectFields(
 			data
 		) as StakedSuiFrenReceiptFieldsOnChain;
+
 		return {
+			objectType,
 			objectId: getObjectId(data),
 			suiFrenId: objectFields.suiFren_id,
 			unlockEpoch: objectFields.unlock_epoch.fields,
@@ -78,9 +116,13 @@ export class SuiFrensApiCasting {
 	public static suiFrenVaultObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): SuiFrenVaultObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
 		const objectFields = getObjectFields(data) as SuiFrenVaultFieldsOnChain;
 
 		return {
+			objectType,
 			objectId: getObjectId(data),
 			bredSuiFrens: BigInt(objectFields.bred_suiFrens),
 			stakedSuiFrens: BigInt(objectFields.staked_suiFrens),
@@ -97,7 +139,7 @@ export class SuiFrensApiCasting {
 	): SuiFrenBornEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			breeder: fields.bred_by,
+			mixer: fields.bred_by,
 			suiFrenParentOneId: fields.parent_one,
 			suiFrenParentTwoId: fields.parent_two,
 			suiFrenChildId: fields.id,
@@ -107,17 +149,17 @@ export class SuiFrensApiCasting {
 		};
 	};
 
-	public static breedSuiFrensEventFromOnChain = (
-		eventOnChain: BreedSuiFrensEventOnChain
-	): BreedSuiFrensEvent => {
+	public static mixSuiFrensEventFromOnChain = (
+		eventOnChain: MixSuiFrenEventOnChain
+	): MixSuiFrensEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			breeder: eventOnChain.sender,
+			mixer: eventOnChain.sender,
 			suiFrenParentOneId: fields.parentOneId,
 			suiFrenParentTwoId: fields.parentTwoId,
 			suiFrenChildId: fields.id,
 			feeCoinWithBalance: {
-				coin: SuiFrens.constants.breedingFees.coinType,
+				coin: SuiFrens.constants.mixingFees.coinType,
 				balance: BigInt(fields.fee),
 			},
 			timestamp: eventOnChain.timestampMs,

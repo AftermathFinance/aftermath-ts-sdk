@@ -48,9 +48,9 @@ export interface CoinPriceInfo {
 	priceChange24HoursPercentage: Percentage;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Coin Metadata Extension
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Coin Metadata Extension
+// =========================================================================
 
 export type CoinMetadaWithInfo = CoinMetadata & {
 	isGenerated?: boolean;

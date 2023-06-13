@@ -1,67 +1,80 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Balance, Event, Object, Url } from "../../general/types/generalTypes";
-import { EpochTimeLock } from "../../general/types/suiTypes";
 import {
-	AmountInCoinAndUsd,
-	CoinType,
-	CoinWithBalance,
-} from "../coin/coinTypes";
+	Balance,
+	Event,
+	Object,
+	Timestamp,
+	Url,
+} from "../../general/types/generalTypes";
+import { CoinWithBalance } from "../coin/coinTypes";
+
+// =========================================================================
+//  NEW
+// =========================================================================
 
 // =========================================================================
 //  Objects
 // =========================================================================
 
-export interface SuiFrenGenes {
-	sequence: number[];
-}
-
-export interface SuiFrenAttribute {
-	name: string;
-	value: string;
-}
-
-export interface SuiFrenFields {
-	gen: number;
-	url: Url;
-	link: Url;
-	genes: SuiFrenGenes;
-	devGenes: SuiFrenGenes;
-	itemCount: number;
-	attributes: SuiFrenAttribute[];
+export interface CapyLabsAppObject extends Object {
+	mixingLimit: bigint;
+	coolDownPeriodEpochs: bigint;
+	mixingPrice: Balance;
+	suiProfits: Balance;
 }
 
 export interface SuiFrenObject extends Object {
-	// TODO: remove fields such that object data is in line with object id itself
-	fields: SuiFrenFields;
+	generation: bigint;
+	birthdate: Timestamp;
+	cohort: bigint;
+	genes: bigint[];
+	attributes: SuiFrenAttributes;
+	birthLocation: string;
+	imageUrl: Url;
+	mixLimit?: bigint;
+	lastEpochMixed?: bigint;
 }
 
-export interface StakedSuiFrenObject extends Object {
+export type SuiFrenAttributes = {
+	skin: "stripes" | "cheetah";
+	mainColor: "6FBBEE";
+	secondaryColor: "CF9696";
+	expression: "bigSmile";
+	ears: "ear1";
+};
+
+export interface StakedSuiFrenInfo {
 	suiFren: SuiFrenObject;
-	collectedFees: Balance;
+	position: StakedSuiFrenPositionObject;
+	metadata: StakedSuiFrenMetadataObject;
 }
 
-export interface StakedSuiFrenReceiptObject extends Object {
+export interface StakedSuiFrenPositionObject extends Object {
 	suiFrenId: ObjectId;
-	unlockEpoch: EpochTimeLock;
 }
 
-export interface StakedSuiFrenReceiptWithSuiFrenObject extends Object {
-	suiFren: SuiFrenObject;
-	unlockEpoch: EpochTimeLock;
+export interface StakedSuiFrenMetadataObject extends Object {
+	suiFrenId: ObjectId;
+	collectedFees: Balance;
+	mixFee: Balance;
+	feeIncrementPerMix: Balance;
+	minRemainingMixesToKeep: bigint;
 }
 
-export interface SuiFrenVaultObject extends Object {
-	bredSuiFrens: bigint;
-	stakedSuiFrens: bigint;
-	globalFees: Balance;
+export interface SuiFrenVaultStateObject extends Object {
+	totalMixes: bigint;
 }
+
+// =========================================================================
+//  OLD
+// =========================================================================
 
 // =========================================================================
 //  Events
 // =========================================================================
 
-export interface BreedSuiFrensEvent extends Event {
-	breeder: SuiAddress;
+export interface MixSuiFrensEvent extends Event {
+	mixer: SuiAddress;
 	suiFrenParentOneId: ObjectId;
 	suiFrenParentTwoId: ObjectId;
 	suiFrenChildId: ObjectId;
@@ -80,7 +93,7 @@ export interface UnstakeSuiFrenEvent extends Event {
 }
 
 export interface SuiFrenBornEvent extends Event {
-	breeder: SuiAddress;
+	mixer: SuiAddress;
 	suiFrenParentOneId: ObjectId;
 	suiFrenParentTwoId: ObjectId;
 	suiFrenChildId: ObjectId;
@@ -91,12 +104,10 @@ export interface SuiFrenBornEvent extends Event {
 // =========================================================================
 
 export interface SuiFrenStats {
-	bredSuiFrens: bigint;
-	stakedSuiFrens: bigint;
-	breedingFeeCoin: CoinType;
-	breedingFeesGlobal: AmountInCoinAndUsd;
-	breedingFeesDaily: AmountInCoinAndUsd;
-	breedingVolumeDaily: number;
+	totalMixes: bigint;
+	totalStaked: bigint;
+	mixingFees24hr: Balance;
+	mixingVolume24hr: number;
 }
 
 // =========================================================================
@@ -105,24 +116,21 @@ export interface SuiFrenStats {
 
 export interface ApiStakeSuiFrenBody {
 	suiFrenId: ObjectId;
+	mixFee: Balance;
+	feeIncrementPerMix: Balance;
+	minRemainingMixesToKeep: bigint;
 }
 
 export interface ApiUnstakeSuiFrenBody {
-	stakingReceiptId: ObjectId;
+	stakedPositionId: ObjectId;
 }
 
-export interface ApiWithdrawSuiFrenFeesAmountBody {
-	amount: Balance | undefined;
-	stakingReceiptObjectId: ObjectId;
-}
-
-export interface ApiBreedSuiFrenBody {
+export interface ApiMixSuiFrensBody {
 	walletAddress: SuiAddress;
 	suiFrenParentOneId: ObjectId;
 	suiFrenParentTwoId: ObjectId;
 }
 
-export interface StakedSuiFrenFeesEarned {
-	individualFees: Balance;
-	globalFees: Balance;
+export interface ApiWithdrawSuiFrenFeesBody {
+	stakedPositionId: ObjectId;
 }

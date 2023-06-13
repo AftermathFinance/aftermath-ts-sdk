@@ -33,7 +33,7 @@ export class NftAmmApiCasting {
 	): NftAmmMarketObject => {
 		const objectId = getObjectId(suiObject);
 		const marketType = getObjectType(suiObject);
-		if (!marketType) throw new Error("no type found on object");
+		if (!marketType) throw new Error("no object type found");
 
 		const fields = getObjectFields(suiObject) as NftAmmMarketFieldsOnChain;
 
@@ -51,6 +51,7 @@ export class NftAmmApiCasting {
 		return {
 			objectId,
 			pool,
+			objectType: marketType,
 			nftsTable: {
 				objectId: fields.nfts.fields.id.id,
 				size: BigInt(fields.nfts.fields.size),

@@ -1,4 +1,4 @@
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock, bcs } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Balance, CoinType, ReferralVaultAddresses } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
@@ -155,12 +155,15 @@ export class ReferralVaultApi {
 
 	public fetchReferrer = async (inputs: {
 		referee: SuiAddress;
-	}): Promise<SuiAddress | "None"> => {
+	}): Promise<SuiAddress | undefined> => {
 		const tx = new TransactionBlock();
 		this.referrerForTx({ ...inputs, tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		return Casting.optionAddressFromBytes(bytes);
+		const unwrapped = Casting.unwrapDeserializedOption(
+			bcs.de("Option<address>", new Uint8Array(bytes))
+		);
+		return unwrapped ? `0x${unwrapped}` : undefined;
 	};
 }

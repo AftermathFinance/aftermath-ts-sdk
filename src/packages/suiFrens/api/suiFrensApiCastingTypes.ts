@@ -2,12 +2,48 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	BigIntAsString,
-	SuiFrenAttribute,
-	SuiFrenGenes,
 	EpochTimeLock,
 	Url,
 } from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
+
+// =========================================================================
+//  NEW
+// =========================================================================
+
+// =========================================================================
+//  Objects
+// =========================================================================
+
+export interface CapyLabsAppFieldsOnChain {
+	id: ObjectId;
+	inner_hash: BigIntAsString[];
+	mixing_limit: BigIntAsString;
+	cool_down_period: BigIntAsString;
+	mixing_price: BigIntAsString;
+	profits: BigIntAsString;
+}
+
+export interface SuiFrenFieldsOnChain {
+	id: ObjectId;
+	generation: BigIntAsString;
+	birthdate: BigIntAsString;
+	cohort: BigIntAsString;
+	genes: BigIntAsString[];
+	attributes: string[];
+	birth_location: string;
+}
+
+export interface SuiFrenDisplayOnChain {
+	description: string;
+	image_url: string;
+	link: string;
+	project_url: string;
+}
+
+// =========================================================================
+//  OLD
+// =========================================================================
 
 // =========================================================================
 //  Objects
@@ -26,23 +62,6 @@ export interface SuiFrenVaultFieldsOnChain {
 	global_fees: BigIntAsString;
 }
 
-export interface SuiFrenFieldsOnChain {
-	genes: {
-		fields: SuiFrenGenes;
-	};
-	dev_genes: {
-		fields: SuiFrenGenes;
-	};
-	attributes: {
-		type: AnyObjectType;
-		fields: SuiFrenAttribute;
-	}[];
-	item_count: number;
-	url: Url;
-	link: Url;
-	gen: number;
-}
-
 // =========================================================================
 //  Events
 // =========================================================================
@@ -54,7 +73,7 @@ export type SuiFrenBornEventOnChain = EventOnChain<{
 	parent_two: ObjectId;
 }>;
 
-export type BreedSuiFrenEventOnChain = EventOnChain<{
+export type MixSuiFrenEventOnChain = EventOnChain<{
 	id: ObjectId;
 	parentOneId: ObjectId;
 	parentTwoId: ObjectId;
