@@ -1,12 +1,14 @@
 import {
 	ApiUnstakeSuiFrenBody,
 	ApiWithdrawSuiFrenFeesBody,
+	Balance,
 	StakedSuiFrenInfo,
 	SuiNetwork,
 	Url,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { Caller } from "../../general/utils/caller";
+import { ObjectId } from "@mysten/sui.js";
 
 export class StakedSuiFren extends Caller {
 	// =========================================================================
@@ -21,23 +23,24 @@ export class StakedSuiFren extends Caller {
 
 	constructor(
 		public readonly info: StakedSuiFrenInfo,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork | Url,
+		public readonly isOwned: boolean = false
 	) {
 		super(network, "sui-frens");
-		this.suiFren = new SuiFren(info.suiFren, this.network, true);
+		this.suiFren = new SuiFren(info.suiFren, this.network, true, isOwned);
 	}
 
 	// =========================================================================
-	//  Calculations
+	//  Getters
 	// =========================================================================
 
-	// public feesEarned(): Balance {
-	// 	return this.metadata.collectedFees;
-	// }
+	public mixFee(): Balance {
+		return this.info.metadata.mixFee;
+	}
 
-	// public currentFee(): Balance {
-	// 	return this.metadata.mixFee;
-	// }
+	public suiFrenId(): ObjectId {
+		return this.suiFren.suiFren.objectId;
+	}
 
 	// =========================================================================
 	//  Transactions

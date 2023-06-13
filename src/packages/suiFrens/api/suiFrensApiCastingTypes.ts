@@ -73,7 +73,7 @@ export type SuiFrenBornEventOnChain = EventOnChain<{
 	parent_two: ObjectId;
 }>;
 
-export type BreedSuiFrenEventOnChain = EventOnChain<{
+export type MixSuiFrenEventOnChain = EventOnChain<{
 	id: ObjectId;
 	parentOneId: ObjectId;
 	parentTwoId: ObjectId;

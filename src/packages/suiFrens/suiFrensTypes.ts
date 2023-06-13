@@ -73,8 +73,8 @@ export interface SuiFrenVaultStateObject extends Object {
 //  Events
 // =========================================================================
 
-export interface BreedSuiFrensEvent extends Event {
-	breeder: SuiAddress;
+export interface MixSuiFrensEvent extends Event {
+	mixer: SuiAddress;
 	suiFrenParentOneId: ObjectId;
 	suiFrenParentTwoId: ObjectId;
 	suiFrenChildId: ObjectId;
@@ -93,7 +93,7 @@ export interface UnstakeSuiFrenEvent extends Event {
 }
 
 export interface SuiFrenBornEvent extends Event {
-	breeder: SuiAddress;
+	mixer: SuiAddress;
 	suiFrenParentOneId: ObjectId;
 	suiFrenParentTwoId: ObjectId;
 	suiFrenChildId: ObjectId;

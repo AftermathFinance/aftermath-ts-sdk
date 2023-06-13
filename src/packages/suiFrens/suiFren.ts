@@ -8,6 +8,7 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
+import { SuiAddress } from "@mysten/sui.js";
 
 export class SuiFren extends Caller {
 	// =========================================================================
@@ -17,11 +18,10 @@ export class SuiFren extends Caller {
 	constructor(
 		public readonly suiFren: SuiFrenObject,
 		public readonly network?: SuiNetwork | Url,
-		public readonly isStaked: boolean = false
+		public readonly isStaked: boolean = false,
+		public readonly isOwned: boolean = false
 	) {
 		super(network, "sui-frens");
-		this.suiFren = suiFren;
-		this.isStaked = isStaked;
 	}
 
 	// =========================================================================

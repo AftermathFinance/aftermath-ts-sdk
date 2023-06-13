@@ -6,7 +6,7 @@ import {
 	getObjectType,
 } from "@mysten/sui.js";
 import {
-	BreedSuiFrensEvent,
+	MixSuiFrensEvent,
 	SuiFrenBornEvent,
 	SuiFrenVaultObject,
 	StakeSuiFrenEvent,
@@ -17,7 +17,7 @@ import {
 	CapyLabsAppObject,
 } from "../suiFrensTypes";
 import {
-	BreedSuiFrenEventOnChain,
+	MixSuiFrenEventOnChain,
 	SuiFrenBornEventOnChain,
 	SuiFrenVaultFieldsOnChain,
 	StakeSuiFrenEventOnChain,
@@ -139,7 +139,7 @@ export class SuiFrensApiCasting {
 	): SuiFrenBornEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			breeder: fields.bred_by,
+			mixer: fields.bred_by,
 			suiFrenParentOneId: fields.parent_one,
 			suiFrenParentTwoId: fields.parent_two,
 			suiFrenChildId: fields.id,
@@ -149,17 +149,17 @@ export class SuiFrensApiCasting {
 		};
 	};
 
-	public static breedSuiFrensEventFromOnChain = (
-		eventOnChain: BreedSuiFrenEventOnChain
-	): BreedSuiFrensEvent => {
+	public static mixSuiFrensEventFromOnChain = (
+		eventOnChain: MixSuiFrenEventOnChain
+	): MixSuiFrensEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			breeder: eventOnChain.sender,
+			mixer: eventOnChain.sender,
 			suiFrenParentOneId: fields.parentOneId,
 			suiFrenParentTwoId: fields.parentTwoId,
 			suiFrenChildId: fields.id,
 			feeCoinWithBalance: {
-				coin: SuiFrens.constants.breedingFees.coinType,
+				coin: SuiFrens.constants.mixingFees.coinType,
 				balance: BigInt(fields.fee),
 			},
 			timestamp: eventOnChain.timestampMs,

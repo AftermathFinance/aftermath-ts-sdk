@@ -2,7 +2,7 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	ApiMixSuiFrensBody,
 	ApiDynamicFieldsBody,
-	BreedSuiFrensEvent,
+	MixSuiFrensEvent,
 	SuiFrenObject,
 	SuiFrenStats,
 	DynamicFieldObjectsWithCursor,
@@ -17,6 +17,7 @@ import {
 	StakedSuiFrenPositionObject,
 	StakedSuiFrenInfo,
 	DynamicFieldsInputs,
+	Balance,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFren } from "./stakedSuiFren";
@@ -48,14 +49,16 @@ export class SuiFrens extends Caller {
 	//  Class Objects
 	// =========================================================================
 
-	public async getSuiFren(suiFrenObjectId: ObjectId) {
-		const suiFrens = await this.getSuiFrens([suiFrenObjectId]);
+	public async getSuiFren(inputs: { suiFrenObjectId: ObjectId }) {
+		const suiFrens = await this.getSuiFrens({
+			suiFrenObjectIds: [inputs.suiFrenObjectId],
+		});
 		return suiFrens[0];
 	}
 
-	public async getSuiFrens(suiFrenObjectIds: ObjectId[]) {
+	public async getSuiFrens(inputs: { suiFrenObjectIds: ObjectId[] }) {
 		const suiFrens = await this.fetchApi<SuiFrenObject[]>(
-			`${JSON.stringify(suiFrenObjectIds)}`
+			`${JSON.stringify(inputs.suiFrenObjectIds)}`
 		);
 		return suiFrens.map((suiFren) => new SuiFren(suiFren, this.network));
 	}
@@ -66,7 +69,7 @@ export class SuiFrens extends Caller {
 		);
 
 		return ownedSuiFrens.map(
-			(suiFren) => new SuiFren(suiFren, this.network)
+			(suiFren) => new SuiFren(suiFren, this.network, false, true)
 		);
 	}
 
@@ -75,10 +78,12 @@ export class SuiFrens extends Caller {
 			`staked-sui-frens/${inputs.walletAddress}`
 		);
 
-		return stakesInfo.map((info) => new StakedSuiFren(info, this.network));
+		return stakesInfo.map(
+			(info) => new StakedSuiFren(info, this.network, true)
+		);
 	}
 
-	public async getStakedSuiFrens(
+	public async getAllStakedSuiFrens(
 		inputs: {
 			attributes?: Partial<SuiFrenAttributes>;
 		} & DynamicFieldsInputs
@@ -102,6 +107,17 @@ export class SuiFrens extends Caller {
 		};
 	}
 
+	public async getStakedSuiFrens(inputs: {
+		stakedSuiFrenObjectIds: ObjectId[];
+	}) {
+		const suiFrenInfos = await this.fetchApi<StakedSuiFrenInfo[]>(
+			`${JSON.stringify(inputs.stakedSuiFrenObjectIds)}`
+		);
+		return suiFrenInfos.map(
+			(info) => new StakedSuiFren(info, this.network)
+		);
+	}
+
 	// =========================================================================
 	//  Objects
 	// =========================================================================
@@ -115,7 +131,7 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	public async getMixEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<BreedSuiFrensEvent>("events/breed", inputs);
+		return this.fetchApiEvents<MixSuiFrensEvent>("events/mix", inputs);
 	}
 
 	public async getStakeEvents(inputs: EventsInputs) {
@@ -131,11 +147,11 @@ export class SuiFrens extends Caller {
 
 	// =========================================================================
 	//  Transactions
-	////////////////////////////////////////////////////////////////////
+	// =========================================================================
 
-	public async getMixTx(inputs: ApiMixSuiFrensBody) {
+	public async getMixTransaction(inputs: ApiMixSuiFrensBody) {
 		return this.fetchApiTransaction<ApiMixSuiFrensBody>(
-			"transactions/breed",
+			"transactions/mix",
 			inputs
 		);
 	}
@@ -146,6 +162,34 @@ export class SuiFrens extends Caller {
 
 	public async getStats(): Promise<SuiFrenStats> {
 		return this.fetchApi("stats");
+	}
+
+	// =========================================================================
+	//  Public Static Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	public static suiFren(
+		suiFren: SuiFren | StakedSuiFren | undefined
+	): SuiFren | undefined {
+		return suiFren instanceof SuiFren ? suiFren : suiFren?.suiFren;
+	}
+
+	public static suiFrenId(
+		suiFren: SuiFren | StakedSuiFren | undefined
+	): ObjectId | undefined {
+		return suiFren?.suiFren instanceof SuiFren
+			? suiFren?.suiFren.suiFren.objectId
+			: suiFren?.suiFren.objectId;
+	}
+
+	public static mixFee(
+		suiFren: SuiFren | StakedSuiFren | undefined
+	): Balance | undefined {
+		return suiFren instanceof StakedSuiFren ? suiFren.mixFee() : BigInt(0);
 	}
 
 	// =========================================================================
