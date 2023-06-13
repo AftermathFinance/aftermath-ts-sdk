@@ -23,6 +23,16 @@ import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
 import CetusRouterPool from "../routerPools/cetusRouterPool";
 import { isTurbosPoolObject } from "../../../../external/turbos/turbosTypes";
 import TurbosRouterPool from "../routerPools/turbosRouterPool";
+import InterestRouterPool from "../routerPools/interestRouterPool";
+import { isInterestPoolObject } from "../../../../external/interest/interestTypes";
+import { isKriyaPoolObject } from "../../../../external/kriya/kriyaTypes";
+import KriyaRouterPool from "../routerPools/kriyaRouterPool";
+import { isBaySwapPoolObject } from "../../../../external/baySwap/baySwapTypes";
+import BaySwapRouterPool from "../routerPools/baySwapRouterPool";
+import { isSuiswapPoolObject } from "../../../../external/suiswap/suiswapTypes";
+import SuiswapRouterPool from "../routerPools/suiswapRouterPool";
+import { isBlueMovePoolObject } from "../../../../external/blueMove/blueMoveTypes";
+import BlueMoveRouterPool from "../routerPools/blueMoveRouterPool";
 
 // =========================================================================
 //  Creation
@@ -41,6 +51,16 @@ export function createRouterPool(inputs: {
 		? new TurbosRouterPool(pool, network)
 		: isCetusRouterPoolObject(pool)
 		? new CetusRouterPool(pool, network)
+		: isInterestPoolObject(pool)
+		? new InterestRouterPool(pool, network)
+		: isKriyaPoolObject(pool)
+		? new KriyaRouterPool(pool, network)
+		: isBaySwapPoolObject(pool)
+		? new BaySwapRouterPool(pool, network)
+		: isSuiswapPoolObject(pool)
+		? new SuiswapRouterPool(pool, network)
+		: isBlueMovePoolObject(pool)
+		? new BlueMoveRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
 
 	return constructedPool;

@@ -16,7 +16,6 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
-import { CoinMetadata } from "@mysten/sui.js";
 import { Prices } from "../../general/prices/prices";
 
 export class Coin extends Caller {
@@ -25,7 +24,8 @@ export class Coin extends Caller {
 	// =========================================================================
 
 	public static readonly constants = {
-		suiCoinType: "0x0000000000000000000000000000000000000002::sui::SUI",
+		suiCoinType:
+			"0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 	};
 
 	// =========================================================================

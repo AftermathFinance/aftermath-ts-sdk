@@ -115,6 +115,11 @@ export interface OptionalRouterAddresses {
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
+	interest: InterestAddresses;
+	kriya: KriyaAddresses;
+	baySwap: BaySwapAddresses;
+	suiswap: SuiswapAddresses;
+	blueMove: BlueMoveAddresses;
 	aftermath: AftermathRouterAddresses;
 }
 
@@ -145,6 +150,53 @@ export interface TurbosAddresses {
 	objects: {
 		versioned: ObjectId;
 		poolsTable: ObjectId;
+	};
+}
+
+export interface InterestAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		poolsBag: ObjectId;
+		dexStorage: ObjectId;
+	};
+}
+
+export interface KriyaAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+}
+
+export interface BaySwapAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		poolsBag: ObjectId;
+		globalStorage: ObjectId;
+	};
+}
+
+export interface SuiswapAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+}
+
+export interface BlueMoveAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		dexInfo: ObjectId;
+		dexStableInfo: ObjectId;
 	};
 }
 

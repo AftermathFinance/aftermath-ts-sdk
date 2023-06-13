@@ -24,6 +24,8 @@ export type PoolTradeFee = bigint;
 export type PoolDepositFee = bigint;
 export type PoolWithdrawFee = bigint;
 export type PoolFlatness = bigint;
+export type NormalizedBalance = bigint;
+export type DecimalsScalar = bigint;
 
 // =========================================================================
 //  Objects
@@ -38,7 +40,8 @@ export interface PoolCoin {
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
 	withdrawFee: PoolWithdrawFee;
-	decimalScalar: bigint;
+	decimalsScalar: DecimalsScalar;
+	normalizedBalance: NormalizedBalance;
 }
 
 export interface PoolObject extends Object {
@@ -49,7 +52,6 @@ export interface PoolObject extends Object {
 	illiquidLpCoinSupply: Balance;
 	flatness: PoolFlatness;
 	coins: PoolCoins;
-	normalizedDecimals: bigint;
 }
 
 // =========================================================================
@@ -112,7 +114,7 @@ export interface PoolGraphDataTimeframe {
 export interface PoolCreationCoinInfo {
 	coinType: CoinType;
 	weight: PoolWeight;
-	decimals: CoinDecimal;
+	decimals?: CoinDecimal;
 	tradeFeeIn: PoolTradeFee;
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
@@ -174,13 +176,15 @@ export interface ApiCreatePoolBody {
 	coinsInfo: {
 		coinType: CoinType;
 		weight: number;
-		decimals: CoinDecimal;
+		decimals?: CoinDecimal;
 		tradeFeeIn: number;
 		initialDeposit: Balance;
 	}[];
 	poolName: PoolName;
 	poolFlatness: 0 | 1;
 	createPoolCapId: ObjectId;
+	respectDecimals: boolean;
+	forceLpDecimals?: CoinDecimal;
 }
 
 // =========================================================================

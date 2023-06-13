@@ -40,6 +40,7 @@ import {
 	PoolDepositFee,
 	PoolCoins,
 	EventsInputs,
+	Url,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -180,7 +181,7 @@ export class PoolsApi {
 
 	public fetchDepositEvents = async (
 		inputs: {
-			// poolObjectId?: ObjectId
+			// poolObjectId?: ObjectId;
 		} & EventsInputs
 	) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
@@ -188,14 +189,14 @@ export class PoolsApi {
 			PoolDepositEvent
 		>({
 			...inputs,
-			// poolObjectId
+			// query: inputs.poolObjectId
 			// 	? {
 			// 			And: [
 			// 				{ MoveEventType: this.eventTypes.deposit },
 			// 				{
 			// 					MoveEventField: {
 			// 						path: "pool_id",
-			// 						value: poolObjectId,
+			// 						value: inputs.poolObjectId,
 			// 					},
 			// 				},
 			// 			],
@@ -288,17 +289,20 @@ export class PoolsApi {
 			weight: Percentage;
 			// TODO: make decimals optional and fetch if unset ?
 			// TODO: make decimals only bigint ?
-			decimals: CoinDecimal;
+			decimals?: CoinDecimal;
 			tradeFeeIn: Percentage;
 			initialDeposit: Balance;
 		}[];
 		poolName: PoolName;
 		poolFlatness: 0 | 1;
 		createPoolCapId: ObjectId;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
 	}): Promise<TransactionBlock> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
 			...inputs,
+			lpCoinIconUrl: "",
 
 			poolFlatness:
 				inputs.poolFlatness === 1 ? Casting.fixedOneBigInt : BigInt(0),
@@ -555,6 +559,9 @@ export class PoolsApi {
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 		createPoolCapId: ObjectId;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
+		lpCoinIconUrl: Url;
 	}): Promise<TransactionBlock> => {
 		const { coinsInfo } = inputs;
 
@@ -890,17 +897,20 @@ export class PoolsApi {
 			coinId: ObjectId | TransactionArgument;
 			coinType: CoinType;
 			weight: PoolWeight;
-			decimals: CoinDecimal;
+			decimals?: CoinDecimal;
 			tradeFeeIn: PoolTradeFee;
 			tradeFeeOut: PoolTradeFee;
 			depositFee: PoolDepositFee;
 			withdrawFee: PoolWithdrawFee;
 		}[];
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		lpCoinIconUrl: Url;
 		createPoolCapId: ObjectId | TransactionArgument;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 		lpCoinDescription: string;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
 	}) => {
 		const {
 			tx,
@@ -909,10 +919,12 @@ export class PoolsApi {
 			coinsInfo,
 			lpCoinMetadata,
 			lpCoinDescription,
+			lpCoinIconUrl,
 		} = inputs;
 
 		const poolSize = coinsInfo.length;
 		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+		const decimals = coinsInfo.map((coin) => coin.decimals);
 
 		return tx.add({
 			kind: "MoveCall",
@@ -927,16 +939,28 @@ export class PoolsApi {
 					? tx.object(createPoolCapId)
 					: createPoolCapId,
 				tx.object(this.addresses.pools.objects.poolRegistry),
-				tx.pure(Casting.u8VectorFromString(inputs.poolName)),
 				tx.pure(
-					Casting.u8VectorFromString(lpCoinMetadata.name.toString())
+					Casting.u8VectorFromString(inputs.poolName),
+					"vector<u8>"
+				),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinMetadata.name.toString()),
+					"vector<u8>"
 				),
 				tx.pure(
 					Casting.u8VectorFromString(
 						lpCoinMetadata.symbol.toString().toUpperCase()
-					)
+					),
+					"vector<u8>"
 				),
-				tx.pure(Casting.u8VectorFromString(lpCoinDescription)),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinDescription),
+					"vector<u8>"
+				),
+				tx.pure(
+					Casting.u8VectorFromString(lpCoinIconUrl),
+					"vector<u8>"
+				), // lp_icon_url
 				tx.pure(
 					coinsInfo.map((coin) => coin.weight),
 					"vector<u64>"
@@ -958,15 +982,24 @@ export class PoolsApi {
 					coinsInfo.map((coin) => coin.withdrawFee),
 					"vector<u64>"
 				),
-				tx.pure(
-					coinsInfo.map((coin) => coin.decimals),
-					"vector<u8>"
-				),
 				...coinsInfo.map((coin) =>
 					typeof coin.coinId === "string"
 						? tx.object(coin.coinId)
 						: coin.coinId
 				),
+				tx.pure(
+					Helpers.transactions.createOptionObject(
+						decimals.includes(undefined) ? undefined : decimals
+					),
+					"Option<vector<u8>>"
+				), // decimals
+				tx.pure(inputs.respectDecimals, "bool"), // respect_decimals
+				tx.pure(
+					Helpers.transactions.createOptionObject(
+						inputs.forceLpDecimals
+					),
+					"Option<u8>"
+				), // force_lp_decimals
 			],
 		});
 	};

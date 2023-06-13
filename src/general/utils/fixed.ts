@@ -1,3 +1,5 @@
+import { Balance, DecimalsScalar, NormalizedBalance } from "../../types";
+
 export type OnChainNumber = bigint;
 export type LocalNumber = number;
 
@@ -15,6 +17,36 @@ export class Fixed {
     );
 
     public static complement = (n: LocalNumber) => Math.max(0, 1 - Math.max(0, n));
+
+	public static normalizeAmount = (
+		decimalsScalar: DecimalsScalar,
+		amount: Balance,
+	): NormalizedBalance =>
+		amount * decimalsScalar;
+	
+	public static unnormalizeAmount = (
+		decimalsScalar: DecimalsScalar,
+		normalizedAmount: NormalizedBalance
+	 ): Balance =>
+			normalizedAmount / decimalsScalar;
+
+    public static castAndNormalize = (
+        decimalsScalar: DecimalsScalar,
+        amount: Balance
+    ): LocalNumber => Fixed.directCast(
+        Fixed.normalizeAmount(
+            decimalsScalar,
+            amount
+        )
+    )
+
+    public static uncastAndUnnormalize = (
+        decimalsScalar: DecimalsScalar,
+        normalizedAmount: LocalNumber
+    ): Balance => Fixed.unnormalizeAmount(
+        decimalsScalar,
+        Fixed.directUncast(normalizedAmount)
+    )
 }
 
 // These are the various uses for on chain numbers.

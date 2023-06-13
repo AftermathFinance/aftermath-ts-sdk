@@ -1,13 +1,12 @@
 import { ObjectId } from "@mysten/sui.js";
 import { CoinType } from "../../coin/coinTypes";
-import { Balance, RouterSerializablePool } from "../../../types";
+import { Balance, Object, RouterSerializablePool } from "../../../types";
 
 // =========================================================================
 //  Objects
 // =========================================================================
 
-export interface PartialDeepBookPoolObject {
-	objectId: ObjectId;
+export interface PartialDeepBookPoolObject extends Object {
 	baseCoinType: CoinType;
 	quoteCoinType: CoinType;
 }

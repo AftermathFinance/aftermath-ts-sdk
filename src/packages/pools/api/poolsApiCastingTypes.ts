@@ -28,8 +28,10 @@ export interface PoolFieldsOnChain {
 	fees_swap_out: BigIntAsString[];
 	fees_deposit: BigIntAsString[];
 	fees_withdraw: BigIntAsString[];
-	normalized_decimals: BigIntAsString;
 	decimal_scalars: BigIntAsString[];
+	// coin_decimals: Option<vector<u8>>
+	lp_decimals: BigIntAsString;
+	lp_decimal_scalar: BigIntAsString;
 }
 
 // =========================================================================

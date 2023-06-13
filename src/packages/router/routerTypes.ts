@@ -2,7 +2,6 @@ import { SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
-	BigIntAsString,
 	Percentage,
 	Event,
 	Slippage,
@@ -14,7 +13,11 @@ import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
 import { CetusPoolObject } from "../external/cetus/cetusTypes";
 import { TurbosPoolObject } from "../external/turbos/turbosTypes";
-import { EventOnChain } from "../../general/types/castingTypes";
+import { InterestPoolObject } from "../external/interest/interestTypes";
+import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
+import { BaySwapPoolObject } from "../external/baySwap/baySwapTypes";
+import { SuiswapPoolObject } from "../external/suiswap/suiswapTypes";
+import { BlueMovePoolObject } from "../external/blueMove/blueMoveTypes";
 
 // =========================================================================
 //  Name Only
@@ -58,9 +61,24 @@ export type RouterProtocolName =
 //  Synchronous Router Pools
 // =========================================================================
 
-export type RouterSynchronousSerializablePool = PoolObject | DeepBookPoolObject;
+export type RouterSynchronousSerializablePool =
+	| PoolObject
+	| DeepBookPoolObject
+	| InterestPoolObject
+	| KriyaPoolObject
+	| BaySwapPoolObject
+	| SuiswapPoolObject
+	| BlueMovePoolObject;
 
-const RouterSynchronousProtocolNames = ["Aftermath", "DeepBook"] as const;
+const RouterSynchronousProtocolNames = [
+	"Aftermath",
+	"DeepBook",
+	"Interest",
+	"Kriya",
+	"BaySwap",
+	"Suiswap",
+	"BlueMove",
+] as const;
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];
 

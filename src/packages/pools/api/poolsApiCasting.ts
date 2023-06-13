@@ -67,7 +67,10 @@ export class PoolsApiCasting {
 						withdrawFee: BigInt(
 							poolFieldsOnChain.fees_withdraw[index]
 						),
-						decimalScalar: BigInt(
+						normalizedBalance: BigInt(
+							poolFieldsOnChain.normalized_balances[index]
+						),
+						decimalsScalar: BigInt(
 							poolFieldsOnChain.decimal_scalars[index]
 						),
 					},
@@ -85,7 +88,6 @@ export class PoolsApiCasting {
 			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
 			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
 			flatness: BigInt(poolFieldsOnChain.flatness),
-			normalizedDecimals: BigInt(poolFieldsOnChain.normalized_decimals),
 			coins,
 		};
 	};

@@ -10,6 +10,7 @@ import {
 	SuiEvent,
 	SuiEventFilter,
 	SuiTransactionBlockResponse,
+	Unsubscribe,
 } from "@mysten/sui.js";
 import dayjs, { QUnitType, OpUnitType } from "dayjs";
 import { AftermathApi } from "../providers/aftermathApi";
@@ -44,26 +45,16 @@ export class EventsApiHelpers {
 	public fetchSubscribeToUserEvents = async (inputs: {
 		address: SuiAddress;
 		onEvent: (event: SuiEvent) => void;
-	}): Promise<number> => {
+	}): Promise<Unsubscribe> => {
 		const { address, onEvent } = inputs;
 
-		const userEventSubscriptionId =
-			await this.Provider.provider.subscribeEvent({
-				filter: {
-					Sender: address,
-				},
-				onMessage: onEvent,
-			});
-		return userEventSubscriptionId;
-	};
-
-	public fetchUnsubscribeFromEvents = async (inputs: {
-		subscriptionId: number;
-	}): Promise<boolean> => {
-		const success = await this.Provider.provider.unsubscribeEvent({
-			id: inputs.subscriptionId,
+		const unsubscribe = await this.Provider.provider.subscribeEvent({
+			filter: {
+				Sender: address,
+			},
+			onMessage: onEvent,
 		});
-		return success;
+		return unsubscribe;
 	};
 
 	// TODO: handle extending event type correctly (for access to timestamp, etc)
