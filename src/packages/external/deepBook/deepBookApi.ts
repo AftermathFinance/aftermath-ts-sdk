@@ -127,6 +127,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 					},
 					eventFromEventOnChain: (eventOnChain) => {
 						return {
+							objectType: eventOnChain.type,
 							objectId: eventOnChain.parsedJson.pool_id,
 							baseCoinType:
 								"0x" + eventOnChain.parsedJson.base_asset.name,

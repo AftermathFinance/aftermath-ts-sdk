@@ -12,13 +12,11 @@ import { SuiFrensApiCasting } from "./suiFrensApiCasting";
 import {
 	MixSuiFrensEvent,
 	SuiFrenBornEvent,
-	StakedSuiFrenFeesEarned,
 	SuiFrenObject,
 	SuiFrenStats,
 	SuiFrenVaultObject,
 	StakeSuiFrenEvent,
 	StakedSuiFrenMetadataObject,
-	StakedSuiFrenReceiptWithSuiFrenObject,
 	UnstakeSuiFrenEvent,
 	SuiFrenAttributes,
 } from "../suiFrensTypes";
@@ -203,7 +201,8 @@ export class SuiFrensApi {
 
 	public fetchStakedSuiFrenFeesEarned = async (
 		stakedSuiFrenReceiptObjectId: ObjectId
-	): Promise<StakedSuiFrenFeesEarned> => {
+	): Promise<{}> => {
+		// StakedSuiFrenFeesEarned
 		const [suiFrenFeesEarnedIndividual, suiFrenFeesEarnedGlobal] =
 			await Promise.all([
 				this.fetchStakedSuiFrenFeesEarnedIndividual(
@@ -348,8 +347,7 @@ export class SuiFrensApi {
 			query: {
 				MoveEventType: this.eventTypes.mixSuiFrens,
 			},
-			eventFromEventOnChain:
-				Casting.suiFrens.mixSuiFrensEventFromOnChain,
+			eventFromEventOnChain: Casting.suiFrens.mixSuiFrensEventFromOnChain,
 		});
 
 	public fetchStakeSuiFrenEvents = async (inputs: EventsInputs) =>
@@ -535,37 +533,40 @@ export class SuiFrensApi {
 
 	public fetchStakedSuiFrenReceiptWithSuiFrensOwnedByAddress = async (
 		walletAddress: SuiAddress
-	): Promise<StakedSuiFrenReceiptWithSuiFrenObject[]> => {
+	): Promise<{}[]> => {
+		// StakedSuiFrenReceiptWithSuiFrenObject
+		throw new Error("TODO");
+
 		// i. obtain all owned StakingReceipt
-		const stakingReceipts =
-			await this.fetchStakedSuiFrenReceiptOwnedByAddress(walletAddress);
+		// const stakingReceipts =
+		// 	await this.fetchStakedSuiFrenReceiptOwnedByAddress(walletAddress);
 
-		// ii. obtain all SuiFren Object Ids
-		const suiFrenIdsStakedByAddress = stakingReceipts.map(
-			(suiFrenStakingReceipt) => suiFrenStakingReceipt.suiFrenId
-		);
+		// // ii. obtain all SuiFren Object Ids
+		// const suiFrenIdsStakedByAddress = stakingReceipts.map(
+		// 	(suiFrenStakingReceipt) => suiFrenStakingReceipt.suiFrenId
+		// );
 
-		// iii. obtain a SuiFren object from each SuiFren ObjectId
-		let indexStakedSuiFrens: { [key: ObjectId]: SuiFrenObject } = {};
-		(await this.fetchStakedSuiFrens(suiFrenIdsStakedByAddress)).forEach(
-			(stakedSuiFren) => {
-				indexStakedSuiFrens[stakedSuiFren.objectId] = stakedSuiFren;
-			}
-		);
+		// // iii. obtain a SuiFren object from each SuiFren ObjectId
+		// let indexStakedSuiFrens: { [key: ObjectId]: SuiFrenObject } = {};
+		// (await this.fetchStakedSuiFrens(suiFrenIdsStakedByAddress)).forEach(
+		// 	(stakedSuiFren) => {
+		// 		indexStakedSuiFrens[stakedSuiFren.objectId] = stakedSuiFren;
+		// 	}
+		// );
 
-		// iv. construct a StakingReceiptWithSuiFren object from each StakingReceipt <> SuiFren pair
-		const suiFrenStakingReceiptsWithSuiFren = stakingReceipts.map(
-			(stakingReceipt) => {
-				return {
-					objectType: stakingReceipt.objectType,
-					objectId: stakingReceipt.objectId,
-					suiFren: indexStakedSuiFrens[stakingReceipt.suiFrenId],
-					unlockEpoch: stakingReceipt.unlockEpoch,
-				};
-			}
-		);
+		// // iv. construct a StakingReceiptWithSuiFren object from each StakingReceipt <> SuiFren pair
+		// const suiFrenStakingReceiptsWithSuiFren = stakingReceipts.map(
+		// 	(stakingReceipt) => {
+		// 		return {
+		// 			objectType: stakingReceipt.objectType,
+		// 			objectId: stakingReceipt.objectId,
+		// 			suiFren: indexStakedSuiFrens[stakingReceipt.suiFrenId],
+		// 			unlockEpoch: stakingReceipt.unlockEpoch,
+		// 		};
+		// 	}
+		// );
 
-		return suiFrenStakingReceiptsWithSuiFren;
+		// return suiFrenStakingReceiptsWithSuiFren;
 	};
 
 	// =========================================================================
@@ -692,9 +693,8 @@ export class SuiFrensApi {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const feeCoinType = SuiFrens.constants.mixingFees.coinType;
-		const feeCoinAmount =
-			SuiFrens.constants.mixingFees.amounts.mixWithStakedAndKeep;
+		const feeCoinType = SuiFrens.constants.mixingFeeCoinType;
+		const feeCoinAmount = BigInt(0);
 
 		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
@@ -721,10 +721,8 @@ export class SuiFrensApi {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const feeCoinType = SuiFrens.constants.mixingFees.coinType;
-		const feeCoinAmount =
-			SuiFrens.constants.mixingFees.amounts
-				.mixStakedWithStakedAndKeep;
+		const feeCoinType = SuiFrens.constants.mixingFeeCoinType;
+		const feeCoinAmount = BigInt(0);
 
 		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
@@ -751,9 +749,8 @@ export class SuiFrensApi {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const feeCoinType = SuiFrens.constants.mixingFees.coinType;
-		const feeCoinAmount =
-			SuiFrens.constants.mixingFees.amounts.mixAndKeep;
+		const feeCoinType = SuiFrens.constants.mixingFeeCoinType;
+		const feeCoinAmount = BigInt(0);
 
 		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
@@ -1057,47 +1054,49 @@ export class SuiFrensApi {
 	};
 
 	public fetchSuiFrenStats = async (): Promise<SuiFrenStats> => {
-		const mixSuiFrenEventsWithinTime =
-			await this.Provider.Events().fetchEventsWithinTime({
-				fetchEventsFunc: this.fetchMixSuiFrensEvents,
-				timeUnit: "hour",
-				time: 24,
-			});
+		throw new Error("TODO");
 
-		const feeCoin =
-			mixSuiFrenEventsWithinTime.length === 0
-				? SuiFrens.constants.mixingFees.coinType
-				: mixSuiFrenEventsWithinTime[0].feeCoinWithBalance.coin;
-		const feeCoinDecimals = (
-			await this.Provider.Coin().fetchCoinMetadata(feeCoin)
-		).decimals;
-		const feeCoinPrice = await this.Provider.Prices().fetchPrice(feeCoin);
+		// const mixSuiFrenEventsWithinTime =
+		// 	await this.Provider.Events().fetchEventsWithinTime({
+		// 		fetchEventsFunc: this.fetchMixSuiFrensEvents,
+		// 		timeUnit: "hour",
+		// 		time: 24,
+		// 	});
 
-		const mixingFeesDaily = this.calcSuiFrenMixingFees(
-			mixSuiFrenEventsWithinTime,
-			feeCoinDecimals,
-			feeCoinPrice
-		);
+		// const feeCoin =
+		// 	mixSuiFrenEventsWithinTime.length === 0
+		// 		? SuiFrens.constants.mixingFeeCoinType
+		// 		: mixSuiFrenEventsWithinTime[0].feeCoinWithBalance.coin;
+		// const feeCoinDecimals = (
+		// 	await this.Provider.Coin().fetchCoinMetadata(feeCoin)
+		// ).decimals;
+		// const feeCoinPrice = await this.Provider.Prices().fetchPrice(feeCoin);
 
-		const suiFrenVault = await this.fetchSuiFrenVault(
-			this.addresses.objects.suiFrensVault
-		);
+		// const mixingFeesDaily = this.calcSuiFrenMixingFees(
+		// 	mixSuiFrenEventsWithinTime,
+		// 	feeCoinDecimals,
+		// 	feeCoinPrice
+		// );
 
-		const { bredSuiFrens, stakedSuiFrens, mixingFeesGlobal } =
-			await this.fetchSuiFrenVaultStats(
-				suiFrenVault,
-				feeCoinDecimals,
-				feeCoinPrice
-			);
+		// const suiFrenVault = await this.fetchSuiFrenVault(
+		// 	this.addresses.objects.suiFrensVault
+		// );
 
-		return {
-			totalMixes: bredSuiFrens,
-			totalStaked: stakedSuiFrens,
-			mixingFeeCoin: feeCoin,
-			mixingFeesGlobal,
-			mixingFees24hr: mixingFeesDaily,
-			mixingVolume24hr: mixSuiFrenEventsWithinTime.length,
-		};
+		// const { bredSuiFrens, stakedSuiFrens, mixingFeesGlobal } =
+		// 	await this.fetchSuiFrenVaultStats(
+		// 		suiFrenVault,
+		// 		feeCoinDecimals,
+		// 		feeCoinPrice
+		// 	);
+
+		// return {
+		// 	totalMixes: bredSuiFrens,
+		// 	totalStaked: stakedSuiFrens,
+		// 	mixingFeeCoin: feeCoin,
+		// 	mixingFeesGlobal,
+		// 	mixingFees24hr: mixingFeesDaily.amount,
+		// 	mixingVolume24hr: mixSuiFrenEventsWithinTime.length,
+		// };
 	};
 
 	public fetchSuiFrenVaultStats = async (
@@ -1105,21 +1104,23 @@ export class SuiFrensApi {
 		feeCoinDecimals: CoinDecimal,
 		feeCoinPrice: number
 	) => {
-		const globalFeesWithDecimals = Coin.balanceWithDecimals(
-			suiFrenVault.globalFees,
-			feeCoinDecimals
-		);
-		const globalFeesUsd = feeCoinPrice * globalFeesWithDecimals;
-		const mixingFeesGlobal = {
-			amount: globalFeesWithDecimals,
-			amountUsd: globalFeesUsd,
-		} as AmountInCoinAndUsd;
+		throw new Error("TODO");
 
-		return {
-			bredSuiFrens: suiFrenVault.bredSuiFrens,
-			stakedSuiFrens: suiFrenVault.stakedSuiFrens,
-			mixingFeesGlobal,
-		};
+		// const globalFeesWithDecimals = Coin.balanceWithDecimals(
+		// 	suiFrenVault.globalFees,
+		// 	feeCoinDecimals
+		// );
+		// const globalFeesUsd = feeCoinPrice * globalFeesWithDecimals;
+		// const mixingFeesGlobal = {
+		// 	amount: globalFeesWithDecimals,
+		// 	amountUsd: globalFeesUsd,
+		// } as AmountInCoinAndUsd;
+
+		// return {
+		// 	bredSuiFrens: suiFrenVault.bredSuiFrens,
+		// 	stakedSuiFrens: suiFrenVault.stakedSuiFrens,
+		// 	mixingFeesGlobal,
+		// };
 	};
 
 	// =========================================================================

@@ -277,7 +277,7 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 
 		const curveType = coinTypes[2];
 		return {
-			// objectType,
+			objectType,
 			objectId: getObjectId(data),
 			coinXReserveValue: BigInt(fields.coin_x_reserve),
 			coinYReserveValue: BigInt(fields.coin_y_reserve),

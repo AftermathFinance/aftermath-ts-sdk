@@ -312,7 +312,7 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 		const fields = getObjectFields(data) as BlueMovePoolFieldsOnChain;
 
 		return {
-			// objectType,
+			objectType,
 			objectId: getObjectId(data),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
@@ -347,7 +347,7 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 		const fields = getObjectFields(data) as BlueMoveStablePoolFieldsOnChain;
 
 		return {
-			// objectType,
+			objectType,
 			objectId: getObjectId(data),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),

@@ -8,20 +8,19 @@ import {
 import {
 	MixSuiFrensEvent,
 	SuiFrenBornEvent,
-	SuiFrenVaultObject,
 	StakeSuiFrenEvent,
 	StakedSuiFrenMetadataObject,
 	UnstakeSuiFrenEvent,
 	SuiFrenObject,
 	SuiFrenAttributes,
 	CapyLabsAppObject,
+	SuiFrenVaultObject,
 } from "../suiFrensTypes";
 import {
 	MixSuiFrenEventOnChain,
 	SuiFrenBornEventOnChain,
 	SuiFrenVaultFieldsOnChain,
 	StakeSuiFrenEventOnChain,
-	StakedSuiFrenReceiptFieldsOnChain,
 	UnstakeSuiFrenEventOnChain,
 	SuiFrenFieldsOnChain,
 	SuiFrenDisplayOnChain,
@@ -84,19 +83,21 @@ export class SuiFrensApiCasting {
 	public static stakedSuiFrenReceiptObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): StakedSuiFrenMetadataObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		throw new Error("TODO");
 
-		const objectFields = getObjectFields(
-			data
-		) as StakedSuiFrenReceiptFieldsOnChain;
+		// const objectType = getObjectType(data);
+		// if (!objectType) throw new Error("no object type found");
 
-		return {
-			objectType,
-			objectId: getObjectId(data),
-			suiFrenId: objectFields.suiFren_id,
-			unlockEpoch: objectFields.unlock_epoch.fields,
-		};
+		// const objectFields = getObjectFields(
+		// 	data
+		// ) as StakedSuiFrenReceiptFieldsOnChain;
+
+		// return {
+		// 	objectType,
+		// 	objectId: getObjectId(data),
+		// 	suiFrenId: objectFields.suiFren_id,
+		// 	unlockEpoch: objectFields.unlock_epoch.fields,
+		// };
 	};
 
 	// public static stakedSuiFrenReceiptWithSuiFrenObjectFromSuiObjectResponse = async (
@@ -159,7 +160,7 @@ export class SuiFrensApiCasting {
 			suiFrenParentTwoId: fields.parentTwoId,
 			suiFrenChildId: fields.id,
 			feeCoinWithBalance: {
-				coin: SuiFrens.constants.mixingFees.coinType,
+				coin: SuiFrens.constants.mixingFeeCoinType,
 				balance: BigInt(fields.fee),
 			},
 			timestamp: eventOnChain.timestampMs,

@@ -287,7 +287,7 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 		const fields = getObjectFields(data) as SuiswapPoolFieldsOnChain;
 
 		return {
-			// objectType,
+			objectType,
 			objectId: getObjectId(data),
 			version: BigInt(fields.version),
 			owner: fields.owner,
