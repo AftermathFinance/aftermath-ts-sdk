@@ -182,8 +182,8 @@ export class SuiFrens extends Caller {
 		suiFren: SuiFren | StakedSuiFren | undefined
 	): ObjectId | undefined {
 		return suiFren?.suiFren instanceof SuiFren
-			? suiFren?.suiFren.suiFren.objectId
-			: suiFren?.suiFren.objectId;
+			? suiFren?.suiFren?.suiFren.objectId
+			: suiFren?.suiFren?.objectId;
 	}
 
 	public static mixFee(

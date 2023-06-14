@@ -8,7 +8,6 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
-import { SuiAddress } from "@mysten/sui.js";
 
 export class SuiFren extends Caller {
 	// =========================================================================

@@ -9,9 +9,12 @@ export class Sui extends Caller {
 
 	public static readonly constants = {
 		addresses: {
-			suiPackageId: "0x0000000000000000000000000000000000000002",
-			suiSystemStateId: "0x0000000000000000000000000000000000000005",
-			suiClockId: "0x0000000000000000000000000000000000000006",
+			suiPackageId:
+				"0x0000000000000000000000000000000000000000000000000000000000000002",
+			suiSystemStateId:
+				"0x0000000000000000000000000000000000000000000000000000000000000005",
+			suiClockId:
+				"0x0000000000000000000000000000000000000000000000000000000000000006",
 		},
 	};
 
@@ -27,6 +30,7 @@ export class Sui extends Caller {
 	//  Chain Info
 	// =========================================================================
 
+	// TODO: remove this (duplicate of system state info)
 	public async getCurrentEpoch(): Promise<EpochTimeStamp> {
 		return this.fetchApi("epoch");
 	}
