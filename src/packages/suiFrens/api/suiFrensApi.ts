@@ -41,6 +41,7 @@ import {
 } from "../../../types";
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { SupportOption } from "prettier";
 
 export class SuiFrensApi {
 	// =========================================================================
@@ -222,8 +223,9 @@ export class SuiFrensApi {
 			this.addresses.packages.suiFrens
 		);
 
-	public fetchSuiFrensStakedInSuiFrenVaultWithAttributes = async (inputs: {
+	public fetchStakedSuiFrensDynamicFieldsWithFilters = async (inputs: {
 		attributes: Partial<SuiFrenAttributes>;
+		sortBy?: SupportOption;
 		limit: number;
 		limitStepSize?: number;
 		cursor?: ObjectId;
@@ -240,7 +242,7 @@ export class SuiFrensApi {
 		const suiFrensWithCursor =
 			await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
 				...inputs,
-				fetchFunc: this.fetchSuiFrensStakedInSuiFrenVault,
+				fetchFunc: this.fetchStakedSuiFrensDynamicFields,
 				isComplete,
 			});
 
@@ -471,7 +473,7 @@ export class SuiFrensApi {
 		});
 	};
 
-	public fetchSuiFrensStakedInSuiFrenVault = async (
+	public fetchStakedSuiFrensDynamicFields = async (
 		inputs: DynamicFieldsInputs
 	) => {
 		const suiFrenVaultId = this.addresses.objects.suiFrensVault;

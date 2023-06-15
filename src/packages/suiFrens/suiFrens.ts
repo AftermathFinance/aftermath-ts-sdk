@@ -18,6 +18,7 @@ import {
 	StakedSuiFrenInfo,
 	DynamicFieldsInputs,
 	Balance,
+	SuiFrensSortOption,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFren } from "./stakedSuiFren";
@@ -85,15 +86,16 @@ export class SuiFrens extends Caller {
 
 	public async getAllStakedSuiFrens(
 		inputs: {
-			attributes?: Partial<SuiFrenAttributes>;
+			attributes: Partial<SuiFrenAttributes>;
+			sortBy?: SuiFrensSortOption;
 		} & DynamicFieldsInputs
 	): Promise<DynamicFieldObjectsWithCursor<StakedSuiFren>> {
 		const stakesInfoWithCursor = await this.fetchApi<
 			DynamicFieldObjectsWithCursor<StakedSuiFrenInfo>,
 			ApiDynamicFieldsBody
 		>(
-			`staked-sui-frens${SuiFrens.createSuiFrenAttributesQueryString(
-				inputs.attributes
+			`staked-sui-frens/${SuiFrens.createStakedSuiFrensQueryString(
+				inputs
 			)}`,
 			inputs
 		);
@@ -200,16 +202,23 @@ export class SuiFrens extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	private static createSuiFrenAttributesQueryString(
-		attributes?: Partial<SuiFrenAttributes>
-	) {
-		return attributes === undefined || Object.keys(attributes).length === 0
-			? ""
-			: "?" +
+	private static createStakedSuiFrensQueryString(inputs: {
+		attributes: Partial<SuiFrenAttributes>;
+		sortBy?: SuiFrensSortOption;
+	}) {
+		const { attributes, sortBy } = inputs;
+
+		const startStr = sortBy ? `?sort=${sortBy}` : "";
+
+		return Object.keys(attributes).length === 0
+			? startStr
+			: (startStr === "" ? "?" : startStr) +
 					Object.entries(attributes)
 						.map(
 							([key, val], i) =>
-								`${i === 0 ? "" : "&"}${key}=${val}`
+								`${
+									i === 0 && startStr === "" ? "" : "&"
+								}${key}=${val}`
 						)
 						.reduce((acc, curr) => acc + curr, "");
 	}

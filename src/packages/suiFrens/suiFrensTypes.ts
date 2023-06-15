@@ -43,6 +43,11 @@ export type SuiFrenAttributes = {
 	ears: "ear1";
 };
 
+export enum SuiFrensSortOption {
+	PriceLowToHigh = "Price (low to high)",
+	PriceHighToLow = "Price (high to low)",
+}
+
 export interface StakedSuiFrenInfo {
 	suiFren: SuiFrenObject;
 	position: StakedSuiFrenPositionObject;
