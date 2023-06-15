@@ -19,6 +19,7 @@ import {
 	StakedSuiFrenMetadataObject,
 	UnstakeSuiFrenEvent,
 	SuiFrenAttributes,
+	SuiFrensSortOption,
 } from "../suiFrensTypes";
 import {
 	MixSuiFrenEventOnChain,
@@ -41,7 +42,6 @@ import {
 } from "../../../types";
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
-import { SupportOption } from "prettier";
 
 export class SuiFrensApi {
 	// =========================================================================
@@ -225,7 +225,7 @@ export class SuiFrensApi {
 
 	public fetchStakedSuiFrensDynamicFieldsWithFilters = async (inputs: {
 		attributes: Partial<SuiFrenAttributes>;
-		sortBy?: SupportOption;
+		sortBy?: SuiFrensSortOption;
 		limit: number;
 		limitStepSize?: number;
 		cursor?: ObjectId;
