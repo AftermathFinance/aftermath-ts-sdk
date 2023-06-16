@@ -12,7 +12,10 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { AftermathApi } from "../../../../../general/providers";
 import {
 	DeepBookPoolObject,
@@ -70,26 +73,15 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		return amountOut;
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}): TransactionArgument => {
+	getAppId = (inputs: { provider: AftermathApi }) =>
+		inputs.provider.Router().DeepBook().addresses.objects.wrapperApp;
+
+	tradeTx = (inputs: RouterPoolTradeTxInputs): TransactionArgument => {
 		return inputs.provider
 			.Router()
 			.DeepBook()
 			.tradeTx({
 				...inputs,
-				coinInId: inputs.coinIn,
 				pool: this.pool,
 			});
 	};

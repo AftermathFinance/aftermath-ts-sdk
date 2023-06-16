@@ -21,6 +21,7 @@ import { InterestPoolFieldsOnChain, InterestPoolObject } from "./interestTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
+import { RouterPoolTradeTxInputs } from "../../router";
 
 export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	// =========================================================================
@@ -38,31 +39,21 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: {
-		interest: InterestAddresses;
-		pools: PoolsAddresses;
-		referralVault: ReferralVaultAddresses;
-	};
+	public readonly addresses: InterestAddresses;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const interest = this.Provider.addresses.router?.interest;
-		const pools = this.Provider.addresses.pools;
-		const referralVault = this.Provider.addresses.referralVault;
+		const interestAddresses = this.Provider.addresses.router?.interest;
 
-		if (!interest || !pools || !referralVault)
+		if (!interestAddresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = {
-			interest,
-			pools,
-			referralVault,
-		};
+		this.addresses = interestAddresses;
 	}
 
 	// =========================================================================
@@ -77,7 +68,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 		const pools =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				{
-					parentObjectId: this.addresses.interest.objects.poolsBag,
+					parentObjectId: this.addresses.objects.poolsBag,
 					objectsFromObjectIds: (objectIds) =>
 						this.Provider.Objects().fetchCastObjectBatch({
 							objectIds,
@@ -113,102 +104,62 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	//  Transaction Commands
 	// =========================================================================
 
-	public swapTokenXTx = (inputs: {
-		tx: TransactionBlock;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-		curveType: AnyObjectType;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public swapTokenXTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			curveType: AnyObjectType;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.interest.packages.wrapper,
+				this.addresses.packages.wrapper,
 				InterestApi.constants.moduleNames.wrapper,
 				"swap_token_x"
 			),
 			typeArguments: [
+				inputs.routerSwapCapCoinType,
 				inputs.curveType,
 				inputs.coinInType,
 				inputs.coinOutType,
 			],
 			arguments: [
-				tx.object(this.addresses.interest.objects.dexStorage), // DEXStorage
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
+				tx.object(this.addresses.objects.dexStorage), // DEXStorage
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.minAmountOut, "U64"), // coin_y_min_value
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
 
-	public swapTokenYTx = (inputs: {
-		tx: TransactionBlock;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-		curveType: AnyObjectType;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public swapTokenYTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			curveType: AnyObjectType;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.interest.packages.wrapper,
+				this.addresses.packages.wrapper,
 				InterestApi.constants.moduleNames.wrapper,
 				"swap_token_y"
 			),
 			typeArguments: [
+				inputs.routerSwapCapCoinType,
 				inputs.curveType,
 				inputs.coinOutType,
 				inputs.coinInType,
 			],
 			arguments: [
-				tx.object(this.addresses.interest.objects.dexStorage), // DEXStorage
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
+				tx.object(this.addresses.objects.dexStorage), // DEXStorage
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.minAmountOut, "U64"), // coin_y_min_value
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -217,17 +168,11 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	//  Transaction Command Wrappers
 	// =========================================================================
 
-	public tradeTx = (inputs: {
-		tx: TransactionBlock;
-		pool: InterestPoolObject;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-	}) => {
+	public tradeTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			pool: InterestPoolObject;
+		}
+	) => {
 		const commandInputs = {
 			...inputs,
 			curveType: inputs.pool.curveType,

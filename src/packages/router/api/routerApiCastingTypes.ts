@@ -13,6 +13,6 @@ export type RouterTradeEventOnChain = EventOnChain<{
 	type_out: AnyObjectType;
 	amount_out: BigIntAsString;
 	// referrer: Option<SuiAddress>;
-	// router_fee: Option<BigIntAsString>;
-	// router_fee_recipient: Option<SuiAddress>;
+	router_fee: BigIntAsString;
+	router_fee_recipient: SuiAddress;
 }>;

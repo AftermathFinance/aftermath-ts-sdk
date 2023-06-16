@@ -28,6 +28,7 @@ import {
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
+import { RouterPoolTradeTxInputs } from "../../router";
 
 export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 	// =========================================================================
@@ -46,11 +47,7 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: {
-		blueMove: BlueMoveAddresses;
-		pools: PoolsAddresses;
-		referralVault: ReferralVaultAddresses;
-	};
+	public readonly addresses: BlueMoveAddresses;
 
 	public readonly eventTypes: {
 		poolCreated: AnyObjectType;
@@ -62,24 +59,18 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const blueMove = this.Provider.addresses.router?.blueMove;
-		const pools = this.Provider.addresses.pools;
-		const referralVault = this.Provider.addresses.referralVault;
+		const blueMoveAddresses = this.Provider.addresses.router?.blueMove;
 
-		if (!blueMove || !pools || !referralVault)
+		if (!blueMoveAddresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = {
-			blueMove,
-			pools,
-			referralVault,
-		};
+		this.addresses = blueMoveAddresses;
 
 		this.eventTypes = {
-			poolCreated: `${blueMove.packages.dex}::${BlueMoveApi.constants.moduleNames.swap}::Created_Pool_Event`,
-			stablePoolCreated: `${blueMove.packages.dex}::${BlueMoveApi.constants.moduleNames.stableSwap}::Created_Stable_Pool_Event`,
+			poolCreated: `${blueMoveAddresses.packages.dex}::${BlueMoveApi.constants.moduleNames.swap}::Created_Pool_Event`,
+			stablePoolCreated: `${blueMoveAddresses.packages.dex}::${BlueMoveApi.constants.moduleNames.stableSwap}::Created_Stable_Pool_Event`,
 		};
 	}
 
@@ -160,98 +151,60 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 	//  Transaction Commands
 	// =========================================================================
 
-	public swapExactInputTx = (inputs: {
-		tx: TransactionBlock;
-		poolObjectId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-		coinInAmount: Balance;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public swapExactInputTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolObjectId: ObjectId;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.blueMove.packages.wrapper,
+				this.addresses.packages.wrapper,
 				BlueMoveApi.constants.moduleNames.wrapper,
 				"swap_exact_input"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinInType,
+				inputs.coinOutType,
+			],
 			arguments: [
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.coinInAmount, "U64"),
-				tx.pure(inputs.minAmountOut, "U64"),
-				tx.object(this.addresses.blueMove.objects.dexInfo), // Dex_Info
+				tx.object(this.addresses.objects.dexInfo), // Dex_Info
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
 
-	public swapExactInputStableTx = (inputs: {
-		tx: TransactionBlock;
-		poolObjectId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-		coinInAmount: Balance;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public swapExactInputStableTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolObjectId: ObjectId;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.blueMove.packages.wrapper,
+				this.addresses.packages.wrapper,
 				BlueMoveApi.constants.moduleNames.wrapper,
 				"swap_exact_input_stable"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinInType,
+				inputs.coinOutType,
+			],
 			arguments: [
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.coinInAmount, "U64"),
-				tx.pure(inputs.minAmountOut, "U64"),
-				tx.object(this.addresses.blueMove.objects.dexStableInfo), // Dex_Stable_Info
+				tx.object(this.addresses.objects.dexStableInfo), // Dex_Stable_Info
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -260,18 +213,11 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 	//  Transaction Command Wrappers
 	// =========================================================================
 
-	public tradeTx = (inputs: {
-		tx: TransactionBlock;
-		pool: BlueMovePoolObject;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-		coinInAmount: Balance;
-	}) => {
+	public tradeTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			pool: BlueMovePoolObject;
+		}
+	) => {
 		return this.swapExactInputTx({
 			...inputs,
 			poolObjectId: inputs.pool.objectId,

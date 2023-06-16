@@ -13,7 +13,10 @@ import {
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import { PoolObject } from "../../../../pools/poolsTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { Pool, Pools } from "../../../../pools";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
@@ -141,30 +144,24 @@ class AftermathRouterPool implements RouterPoolInterface {
 		return this.poolClass.getTradeAmountOut(inputs);
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}) => {
+	getAppId = (inputs: { provider: AftermathApi }) =>
+		inputs.provider.Router().Aftermath().addresses.pools.objects
+			.poolRegistry;
+
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
+		const slippage = 100;
+
 		// withdraw
 		if (inputs.coinInType === this.pool.lpCoinType) {
 			return inputs.provider.Pools().multiCoinWithdrawTx({
 				...inputs,
 				poolId: this.pool.objectId,
 				// this is beacuse typescript complains for some reason otherwise
-				lpCoinId: inputs.coinIn,
+				lpCoinId: inputs.coinInId,
 				coinTypes: [inputs.coinOutType],
 				expectedAmountsOut: [inputs.expectedCoinOutAmount],
 				lpCoinType: this.pool.lpCoinType,
+				slippage,
 			});
 		}
 
@@ -177,14 +174,15 @@ class AftermathRouterPool implements RouterPoolInterface {
 			return inputs.provider.Pools().multiCoinDepositTx({
 				...inputs,
 				poolId: this.pool.objectId,
-				// this is beacuse typescript complains for some reason otherwise
+				// this is because typescript complains for some reason otherwise
 				coinIds:
-					typeof inputs.coinIn === "string"
-						? [inputs.coinIn]
-						: [inputs.coinIn],
+					typeof inputs.coinInId === "string"
+						? [inputs.coinInId]
+						: [inputs.coinInId],
 				coinTypes: [inputs.coinInType],
 				expectedLpRatio: Casting.numberToFixedBigInt(expectedLpRatio),
 				lpCoinType: this.pool.lpCoinType,
+				slippage,
 			});
 		}
 
@@ -193,7 +191,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 			...inputs,
 			poolId: this.pool.objectId,
 			lpCoinType: this.pool.lpCoinType,
-			coinInId: inputs.coinIn,
+			coinInId: inputs.coinInId,
 		});
 
 		return coinOut;

@@ -26,6 +26,7 @@ import {
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
+import { RouterPoolTradeTxInputs } from "../../router";
 
 export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 	// =========================================================================
@@ -43,11 +44,7 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: {
-		suiswap: SuiswapAddresses;
-		pools: PoolsAddresses;
-		referralVault: ReferralVaultAddresses;
-	};
+	public readonly addresses: SuiswapAddresses;
 
 	public readonly eventTypes: {
 		poolCreated: AnyObjectType;
@@ -58,23 +55,16 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const suiswap = this.Provider.addresses.router?.suiswap;
-		const pools = this.Provider.addresses.pools;
-		const referralVault = this.Provider.addresses.referralVault;
+		const suiswapAddresses = this.Provider.addresses.router?.suiswap;
 
-		if (!suiswap || !pools || !referralVault)
+		if (!suiswapAddresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = {
-			suiswap,
-			pools,
-			referralVault,
-		};
-
+		this.addresses = suiswapAddresses;
 		this.eventTypes = {
-			poolCreated: `${suiswap.packages.dex}::${SuiswapApi.constants.moduleNames.pool}::PoolCreateEvent`,
+			poolCreated: `${suiswapAddresses.packages.dex}::${SuiswapApi.constants.moduleNames.pool}::PoolCreateEvent`,
 		};
 	}
 
@@ -134,94 +124,60 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 	//  Transaction Commands
 	// =========================================================================
 
-	public doSwapXToYDirectTx = (inputs: {
-		tx: TransactionBlock;
-		poolObjectId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public doSwapXToYDirectTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolObjectId: ObjectId;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.suiswap.packages.wrapper,
+				this.addresses.packages.wrapper,
 				SuiswapApi.constants.moduleNames.wrapper,
 				"do_swap_x_to_y_direct"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinInType,
+				inputs.coinOutType,
+			],
 			arguments: [
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
 				tx.object(inputs.poolObjectId), // Pool
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.minAmountOut, "U64"),
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
 
-	public doSwapYToXDirectTx = (inputs: {
-		tx: TransactionBlock;
-		poolObjectId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public doSwapYToXDirectTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolObjectId: ObjectId;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.suiswap.packages.wrapper,
+				this.addresses.packages.wrapper,
 				SuiswapApi.constants.moduleNames.wrapper,
 				"do_swap_y_to_x_direct"
 			),
-			typeArguments: [inputs.coinOutType, inputs.coinInType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinOutType,
+				inputs.coinInType,
+			],
 			arguments: [
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
 				tx.object(inputs.poolObjectId), // Pool
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.minAmountOut, "U64"),
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -230,17 +186,11 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 	//  Transaction Command Wrappers
 	// =========================================================================
 
-	public tradeTx = (inputs: {
-		tx: TransactionBlock;
-		pool: SuiswapPoolObject;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-	}) => {
+	public tradeTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			pool: SuiswapPoolObject;
+		}
+	) => {
 		const commandInputs = {
 			...inputs,
 			poolObjectId: inputs.pool.objectId,

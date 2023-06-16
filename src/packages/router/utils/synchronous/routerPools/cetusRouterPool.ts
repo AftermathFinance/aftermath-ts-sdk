@@ -12,7 +12,10 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { AftermathApi } from "../../../../../general/providers";
 import { CetusPoolObject } from "../../../../external/cetus/cetusTypes";
 
@@ -58,27 +61,16 @@ class CetusRouterPool implements RouterPoolInterface {
 		throw new Error("uncallable");
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}) => {
+	getAppId = (inputs: { provider: AftermathApi }) =>
+		inputs.provider.Router().Cetus().addresses.objects.wrapperApp;
+
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		// PRODUCTION: handle slippage !
 		return inputs.provider
 			.Router()
 			.Cetus()
 			.tradeTx({
 				...inputs,
-				coinInId: inputs.coinIn,
 				pool: this.pool,
 			});
 	};

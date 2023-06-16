@@ -35,6 +35,21 @@ import { isBlueMovePoolObject } from "../../../../external/blueMove/blueMoveType
 import BlueMoveRouterPool from "../routerPools/blueMoveRouterPool";
 
 // =========================================================================
+//  Types
+// =========================================================================
+
+export interface RouterPoolTradeTxInputs {
+	provider: AftermathApi;
+	tx: TransactionBlock;
+	coinInId: ObjectId | TransactionArgument;
+	expectedCoinOutAmount: Balance;
+	coinInType: CoinType;
+	coinOutType: CoinType;
+	routerSwapCap: TransactionArgument;
+	routerSwapCapCoinType: CoinType;
+}
+
+// =========================================================================
 //  Creation
 // =========================================================================
 
@@ -117,21 +132,9 @@ export interface RouterPoolInterface {
 		referrer?: SuiAddress;
 	}) => Balance;
 
-	tradeTx: (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		expectedCoinOutAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
-	}) => TransactionArgument;
+	getAppId: (inputs: { provider: AftermathApi }) => ObjectId;
+
+	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionArgument;
 
 	// =========================================================================
 	//  Functions

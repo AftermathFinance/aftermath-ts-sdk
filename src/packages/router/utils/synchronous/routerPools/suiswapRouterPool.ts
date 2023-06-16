@@ -12,7 +12,10 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { Pool } from "../../../../pools";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
@@ -96,28 +99,16 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		return this.getYToXAmount(inputs.coinInAmount);
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}) => {
+	getAppId = (inputs: { provider: AftermathApi }) =>
+		inputs.provider.Router().Suiswap().addresses.objects.wrapperApp;
+
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()
 			.Suiswap()
 			.tradeTx({
 				...inputs,
 				pool: this.pool,
-				coinInId: inputs.coinIn,
-				minAmountOut: BigInt(0),
 			});
 	};
 

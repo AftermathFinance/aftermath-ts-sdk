@@ -31,7 +31,6 @@ import {
 	AnyObjectType,
 	ReferralVaultAddresses,
 	PoolsAddresses,
-	AftermathRouterAddresses,
 	PoolGraphDataTimeframe,
 	PoolCreationCoinInfo,
 	PoolFlatness,
@@ -55,6 +54,7 @@ import { Coin } from "../../coin";
 import dayjs, { ManipulateType } from "dayjs";
 import { PoolsApiCasting } from "./poolsApiCasting";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { RouterPoolTradeTxInputs } from "../../router";
 
 export class PoolsApi {
 	// =========================================================================
@@ -70,7 +70,6 @@ export class PoolsApi {
 			withdraw: "withdraw",
 			events: "events",
 			poolRegistry: "pool_registry",
-			routerWrapper: "aftermath",
 		},
 		eventNames: {
 			swap: "SwapEvent",
@@ -89,7 +88,6 @@ export class PoolsApi {
 	public readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
-		routerWrapper: AftermathRouterAddresses | undefined;
 	};
 	public readonly eventTypes: {
 		trade: AnyObjectType;
@@ -124,19 +122,18 @@ export class PoolsApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = {
-			pools: Provider.addresses.pools,
-			referralVault: Provider.addresses.referralVault,
-			routerWrapper: Provider.addresses.router?.aftermath,
-		};
-		if (!addresses.pools || !addresses.referralVault)
+		const pools = Provider.addresses.pools;
+		const referralVault = Provider.addresses.referralVault;
+
+		if (!pools || !referralVault)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		// @ts-ignore
-		this.addresses = addresses;
-
+		this.addresses = {
+			pools,
+			referralVault,
+		};
 		this.eventTypes = {
 			trade: this.tradeEventType(),
 			deposit: this.depositEventType(),
@@ -673,24 +670,12 @@ export class PoolsApi {
 		});
 	};
 
-	public routerWrapperTradeTx = (inputs: {
-		tx: TransactionBlock;
-		poolId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		expectedCoinOutAmount: Balance;
-		coinOutType: CoinType;
-		lpCoinType: CoinType;
-		slippage: Slippage;
-
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-	}): TransactionArgument => {
-		const wrapperAddress = this.addresses.routerWrapper?.packages.wrapper;
-		if (!wrapperAddress)
-			throw new Error("Aftermath router wrapper address not set");
-
+	public routerWrapperTradeTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolId: ObjectId;
+			lpCoinType: CoinType;
+		}
+	): TransactionArgument => {
 		const {
 			tx,
 			poolId,
@@ -699,36 +684,23 @@ export class PoolsApi {
 			expectedCoinOutAmount,
 			coinOutType,
 			lpCoinType,
-			slippage,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
+			routerSwapCap,
 		} = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				wrapperAddress,
-				PoolsApi.constants.moduleNames.routerWrapper,
-				"swap_exact_in"
+				this.addresses.pools.packages.amm,
+				PoolsApi.constants.moduleNames.swap,
+				"add_swap_exact_in_to_route"
 			),
 			typeArguments: [lpCoinType, coinInType, coinOutType],
 			arguments: [
-				tx.object(poolId),
 				tx.object(this.addresses.pools.objects.poolRegistry),
+				routerSwapCap,
+
+				tx.object(poolId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedCoinOutAmount.toString()),
-				tx.pure(Pools.normalizeSlippage(slippage)),
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// router
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
+				tx.pure(expectedCoinOutAmount.toString(), "u64"),
 			],
 		});
 	};

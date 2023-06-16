@@ -22,10 +22,9 @@ import {
 	Balance,
 	Byte,
 	DeepBookAddresses,
-	PoolsAddresses,
-	ReferralVaultAddresses,
 } from "../../../types";
 import { Coin } from "../../coin";
+import { RouterPoolTradeTxInputs } from "../../router";
 
 export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	// =========================================================================
@@ -45,11 +44,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: {
-		deepBook: DeepBookAddresses;
-		pools: PoolsAddresses;
-		referralVault: ReferralVaultAddresses;
-	};
+	public readonly addresses: DeepBookAddresses;
 
 	public readonly objectTypes: {
 		accountCap: AnyObjectType;
@@ -60,23 +55,16 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const deepBook = this.Provider.addresses.router?.deepBook;
-		const pools = this.Provider.addresses.pools;
-		const referralVault = this.Provider.addresses.referralVault;
+		const deepBookAddresses = this.Provider.addresses.router?.deepBook;
 
-		if (!deepBook || !pools || !referralVault)
+		if (!deepBookAddresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = {
-			deepBook,
-			pools,
-			referralVault,
-		};
-
+		this.addresses = deepBookAddresses;
 		this.objectTypes = {
-			accountCap: `${deepBook.packages.clob}::${DeepBookApi.constants.moduleNames.custodian}::AccountCap`,
+			accountCap: `${deepBookAddresses.packages.clob}::${DeepBookApi.constants.moduleNames.custodian}::AccountCap`,
 		};
 	}
 
@@ -120,7 +108,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 					...eventsInputs,
 					query: {
 						MoveEventType: EventsApiHelpers.createEventType(
-							this.addresses.deepBook.packages.clob,
+							this.addresses.packages.clob,
 							DeepBookApi.constants.moduleNames.clob,
 							"PoolCreated"
 						),
@@ -201,90 +189,60 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	//  Transaction Commands
 	// =========================================================================
 
-	public tradeBaseToQuoteTx = (inputs: {
-		tx: TransactionBlock;
-		poolObjectId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-	}) /* (Coin<BaseAsset>, Coin<QuoteAsset>, u64 (amountFilled), u64 (amountOut)) */ => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public tradeBaseToQuoteTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolObjectId: ObjectId;
+		}
+	) /* (Coin) */ => {
+		const { tx, coinInId } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.wrapper,
+				this.addresses.packages.wrapper,
 				DeepBookApi.constants.moduleNames.wrapper,
 				"swap_exact_base_for_quote"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinInType,
+				inputs.coinOutType,
+			],
 			arguments: [
+				tx.object(this.addresses.objects.wrapperApp),
+				inputs.routerSwapCap,
+
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.object(Sui.constants.addresses.suiClockId),
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
 
-	public tradeQuoteToBaseTx = (inputs: {
-		tx: TransactionBlock;
-		poolObjectId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-	}) /* (Coin<QuoteAsset>, Coin<BaseAsset>, u64 (amountFilled), u64 (amountOut)) */ => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public tradeQuoteToBaseTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolObjectId: ObjectId;
+		}
+	) /* (Coin) */ => {
+		const { tx, coinInId } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.wrapper,
+				this.addresses.packages.wrapper,
 				DeepBookApi.constants.moduleNames.wrapper,
 				"swap_exact_quote_for_base"
 			),
-			typeArguments: [inputs.coinOutType, inputs.coinInType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinOutType,
+				inputs.coinInType,
+			],
 			arguments: [
+				tx.object(this.addresses.objects.wrapperApp),
+				inputs.routerSwapCap,
+
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.object(Sui.constants.addresses.suiClockId),
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -298,7 +256,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.clob,
+				this.addresses.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"get_level2_book_status_ask_side"
 			),
@@ -321,7 +279,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.clob,
+				this.addresses.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"get_level2_book_status_bid_side"
 			),
@@ -350,7 +308,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const { tx, suiFeeCoinId } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.clob,
+				this.addresses.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"create_pool"
 			),
@@ -371,7 +329,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.clob,
+				this.addresses.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"create_account"
 			),
@@ -391,7 +349,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const { tx, baseCoinId, accountCapId } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.clob,
+				this.addresses.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"deposit_base"
 			),
@@ -419,7 +377,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const { tx, quoteCoinId, accountCapId } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.clob,
+				this.addresses.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"deposit_quote"
 			),
@@ -449,7 +407,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const { tx, accountCapId } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
-				this.addresses.deepBook.packages.clob,
+				this.addresses.packages.clob,
 				DeepBookApi.constants.moduleNames.clob,
 				"place_limit_order"
 			),
@@ -473,16 +431,11 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	//  Transaction Command Wrappers
 	// =========================================================================
 
-	public tradeTx = (inputs: {
-		tx: TransactionBlock;
-		pool: PartialDeepBookPoolObject;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-	}) /* (Coin<CoinIn>, Coin<CoinOut>, u64 (amountFilled), u64 (amountOut)) */ => {
+	public tradeTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			pool: PartialDeepBookPoolObject;
+		}
+	) /* (Coin) */ => {
 		const commandInputs = {
 			...inputs,
 			poolObjectId: inputs.pool.objectId,
