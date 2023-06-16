@@ -63,7 +63,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 	};
 
 	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().Turbos().addresses.objects.wrapperApp;
+		inputs.provider.Router().Turbos().addresses.turbos.objects.wrapperApp;
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		// PRODUCTION: handle slippage !

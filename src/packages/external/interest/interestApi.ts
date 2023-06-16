@@ -2,21 +2,12 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import {
-	ObjectId,
 	SuiObjectResponse,
-	TransactionArgument,
-	TransactionBlock,
 	getObjectFields,
 	getObjectId,
 	getObjectType,
 } from "@mysten/sui.js";
-import {
-	AnyObjectType,
-	Balance,
-	InterestAddresses,
-	PoolsAddresses,
-	ReferralVaultAddresses,
-} from "../../../types";
+import { InterestAddresses } from "../../../types";
 import { InterestPoolFieldsOnChain, InterestPoolObject } from "./interestTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
@@ -104,11 +95,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	//  Transaction Commands
 	// =========================================================================
 
-	public swapTokenXTx = (
-		inputs: RouterPoolTradeTxInputs & {
-			curveType: AnyObjectType;
-		}
-	) => {
+	public swapTokenXTx = (inputs: RouterPoolTradeTxInputs) => {
 		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
@@ -119,7 +106,6 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 			),
 			typeArguments: [
 				inputs.routerSwapCapCoinType,
-				inputs.curveType,
 				inputs.coinInType,
 				inputs.coinOutType,
 			],
@@ -134,11 +120,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 		});
 	};
 
-	public swapTokenYTx = (
-		inputs: RouterPoolTradeTxInputs & {
-			curveType: AnyObjectType;
-		}
-	) => {
+	public swapTokenYTx = (inputs: RouterPoolTradeTxInputs) => {
 		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
@@ -149,7 +131,6 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 			),
 			typeArguments: [
 				inputs.routerSwapCapCoinType,
-				inputs.curveType,
 				inputs.coinOutType,
 				inputs.coinInType,
 			],

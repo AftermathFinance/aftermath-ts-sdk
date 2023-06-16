@@ -166,8 +166,8 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 			),
 			typeArguments: [
 				inputs.routerSwapCapCoinType,
-				inputs.coinOutType,
 				inputs.coinInType,
+				inputs.coinOutType,
 			],
 			arguments: [
 				tx.object(this.addresses.objects.wrapperApp),

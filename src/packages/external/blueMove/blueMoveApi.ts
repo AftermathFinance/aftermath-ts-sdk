@@ -175,7 +175,6 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
 				tx.object(this.addresses.objects.dexInfo), // Dex_Info
-				tx.object(Sui.constants.addresses.suiClockId), // Clock
 			],
 		});
 	};

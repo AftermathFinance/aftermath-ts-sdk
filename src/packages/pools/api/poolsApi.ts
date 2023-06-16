@@ -693,7 +693,12 @@ export class PoolsApi {
 				PoolsApi.constants.moduleNames.swap,
 				"add_swap_exact_in_to_route"
 			),
-			typeArguments: [lpCoinType, coinInType, coinOutType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				lpCoinType,
+				coinInType,
+				coinOutType,
+			],
 			arguments: [
 				tx.object(this.addresses.pools.objects.poolRegistry),
 				routerSwapCap,

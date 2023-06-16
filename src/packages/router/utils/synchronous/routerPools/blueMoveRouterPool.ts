@@ -123,7 +123,7 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 	};
 
 	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().Turbos().addresses.objects.wrapperApp;
+		inputs.provider.Router().BlueMove().addresses.objects.wrapperApp;
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider

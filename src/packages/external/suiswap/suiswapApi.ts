@@ -135,7 +135,7 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.wrapper,
 				SuiswapApi.constants.moduleNames.wrapper,
-				"do_swap_x_to_y_direct"
+				"swap_x_to_y"
 			),
 			typeArguments: [
 				inputs.routerSwapCapCoinType,
@@ -164,7 +164,7 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.wrapper,
 				SuiswapApi.constants.moduleNames.wrapper,
-				"do_swap_y_to_x_direct"
+				"swap_y_to_x"
 			),
 			typeArguments: [
 				inputs.routerSwapCapCoinType,

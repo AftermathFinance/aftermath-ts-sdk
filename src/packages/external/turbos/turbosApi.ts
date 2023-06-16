@@ -9,7 +9,13 @@ import {
 	bcs,
 	getObjectFields,
 } from "@mysten/sui.js";
-import { Balance, BigIntAsString, TurbosAddresses } from "../../../types";
+import {
+	Balance,
+	BigIntAsString,
+	PoolsAddresses,
+	ReferralVaultAddresses,
+	TurbosAddresses,
+} from "../../../types";
 import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { Casting, Helpers } from "../../../general/utils";
 import { TurbosCalcTradeResult, TurbosPoolObject } from "./turbosTypes";
@@ -34,7 +40,11 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: TurbosAddresses;
+	public readonly addresses: {
+		turbos: TurbosAddresses;
+		referralVault: ReferralVaultAddresses;
+		pools: PoolsAddresses;
+	};
 
 	private static MIN_TICK_INDEX = -443636;
 	private static MAX_TICK_INDEX = 443636;
@@ -44,14 +54,20 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	// =========================================================================
 
 	constructor(public readonly Provider: AftermathApi) {
-		const turbosAddresses = this.Provider.addresses.router?.turbos;
+		const turbos = this.Provider.addresses.router?.turbos;
+		const referralVault = this.Provider.addresses.referralVault;
+		const pools = this.Provider.addresses.pools;
 
-		if (!turbosAddresses)
+		if (!turbos || !referralVault || !pools)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = turbosAddresses;
+		this.addresses = {
+			turbos,
+			referralVault,
+			pools,
+		};
 	}
 	// =========================================================================
 	//  Public Methods
@@ -65,7 +81,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				{
-					parentObjectId: this.addresses.objects.poolsTable,
+					parentObjectId: this.addresses.turbos.objects.poolsTable,
 					objectsFromObjectIds: (objectIds) =>
 						this.Provider.Objects().fetchCastObjectBatch({
 							objectIds,
@@ -154,7 +170,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.wrapper,
+				this.addresses.turbos.packages.wrapper,
 				TurbosApi.constants.moduleNames.wrapper,
 				"swap_a_b"
 			),
@@ -165,15 +181,20 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 				inputs.feeCoinType,
 			],
 			arguments: [
-				tx.object(this.addresses.objects.wrapperApp),
+				tx.object(this.addresses.turbos.objects.wrapperApp),
 				routerSwapCap,
 
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_a
 				tx.pure(TurbosApi.calcSqrtPriceLimit(true).toString(), "u128"), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
-				tx.object(this.addresses.objects.versioned),
+				tx.object(this.addresses.turbos.objects.versioned),
 				tx.pure(expectedCoinOutAmount, "u64"),
+
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 			],
 		});
 	};
@@ -188,7 +209,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.wrapper,
+				this.addresses.turbos.packages.wrapper,
 				TurbosApi.constants.moduleNames.wrapper,
 				"swap_b_a"
 			),
@@ -199,15 +220,20 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 				inputs.feeCoinType,
 			],
 			arguments: [
-				tx.object(this.addresses.objects.wrapperApp),
+				tx.object(this.addresses.turbos.objects.wrapperApp),
 				routerSwapCap,
 
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_b
 				tx.pure(TurbosApi.calcSqrtPriceLimit(false).toString(), "u128"), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
-				tx.object(this.addresses.objects.versioned),
+				tx.object(this.addresses.turbos.objects.versioned),
 				tx.pure(expectedCoinOutAmount, "u64"),
+
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
 			],
 		});
 	};
@@ -271,7 +297,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 
 			return tx.moveCall({
 				target: Helpers.transactions.createTxTarget(
-					this.addresses.packages.clmm,
+					this.addresses.turbos.packages.clmm,
 					TurbosApi.constants.moduleNames.poolFetcher,
 					"compute_swap_result"
 				),
@@ -290,7 +316,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 						"u128"
 					), // sqrt_price_limit
 					tx.object(Sui.constants.addresses.suiClockId),
-					tx.object(this.addresses.objects.versioned),
+					tx.object(this.addresses.turbos.objects.versioned),
 				],
 			});
 		};
