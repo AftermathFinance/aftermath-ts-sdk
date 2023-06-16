@@ -33,11 +33,12 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 
 	private static readonly constants = {
 		moduleNames: {
-			clob: "clob",
-			custodian: "custodian",
+			clobV2: "clob_v2",
+			custodianV2: "custodian_v2",
 			wrapper: "deepbook",
 		},
 		poolCreationFeeInSui: BigInt("100000000000"), // 100 SUI
+		floatDecimals: 9,
 	};
 
 	// =========================================================================
@@ -64,7 +65,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 
 		this.addresses = deepBookAddresses;
 		this.objectTypes = {
-			accountCap: `${deepBookAddresses.packages.clob}::${DeepBookApi.constants.moduleNames.custodian}::AccountCap`,
+			accountCap: `${deepBookAddresses.packages.clob}::${DeepBookApi.constants.moduleNames.custodianV2}::AccountCap`,
 		};
 	}
 
@@ -91,7 +92,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	public fetchAllPartialPools = async (): Promise<
 		PartialDeepBookPoolObject[]
 	> => {
-		const objectIds = await this.Provider.Events().fetchAllEvents({
+		const partialPools = await this.Provider.Events().fetchAllEvents({
 			fetchEventsFunc: (eventsInputs) =>
 				this.Provider.Events().fetchCastEventsWithCursor<
 					EventOnChain<{
@@ -109,7 +110,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 					query: {
 						MoveEventType: EventsApiHelpers.createEventType(
 							this.addresses.packages.clob,
-							DeepBookApi.constants.moduleNames.clob,
+							DeepBookApi.constants.moduleNames.clobV2,
 							"PoolCreated"
 						),
 					},
@@ -125,7 +126,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 				}),
 		});
 
-		return objectIds;
+		return partialPools;
 	};
 
 	public fetchCreateCompletePoolObjectFromPartial = async (inputs: {
@@ -212,6 +213,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 				inputs.routerSwapCap,
 
 				tx.object(inputs.poolObjectId),
+				tx.object(this.addresses.objects.wrapperAccountCap),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
@@ -241,6 +243,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 				inputs.routerSwapCap,
 
 				tx.object(inputs.poolObjectId),
+				tx.object(this.addresses.objects.wrapperAccountCap),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
@@ -257,7 +260,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.clob,
-				DeepBookApi.constants.moduleNames.clob,
+				DeepBookApi.constants.moduleNames.clobV2,
 				"get_level2_book_status_ask_side"
 			),
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
@@ -280,7 +283,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.clob,
-				DeepBookApi.constants.moduleNames.clob,
+				DeepBookApi.constants.moduleNames.clobV2,
 				"get_level2_book_status_bid_side"
 			),
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
@@ -309,7 +312,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.packages.clob,
-				DeepBookApi.constants.moduleNames.clob,
+				DeepBookApi.constants.moduleNames.clobV2,
 				"create_pool"
 			),
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
@@ -330,7 +333,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.packages.clob,
-				DeepBookApi.constants.moduleNames.clob,
+				DeepBookApi.constants.moduleNames.clobV2,
 				"create_account"
 			),
 			typeArguments: [],
@@ -350,7 +353,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.packages.clob,
-				DeepBookApi.constants.moduleNames.clob,
+				DeepBookApi.constants.moduleNames.clobV2,
 				"deposit_base"
 			),
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
@@ -378,7 +381,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.packages.clob,
-				DeepBookApi.constants.moduleNames.clob,
+				DeepBookApi.constants.moduleNames.clobV2,
 				"deposit_quote"
 			),
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
@@ -408,7 +411,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
 				this.addresses.packages.clob,
-				DeepBookApi.constants.moduleNames.clob,
+				DeepBookApi.constants.moduleNames.clobV2,
 				"place_limit_order"
 			),
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
@@ -502,7 +505,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 			depths = [];
 		}
 
-		// TODO: move these to casting
 		const bookPricesU64 = (
 			bcs.de("vector<u64>", new Uint8Array(prices)) as string[]
 		).map((val) => BigInt(val));
@@ -514,7 +516,10 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		// TOOD: move decimal to constants
 		// TODO: move balance with decimals to generic function in casting file
 		const bookPrices = bookPricesU64.map((price) => {
-			const priceWithDecimals = Coin.balanceWithDecimals(price, 9);
+			const priceWithDecimals = Coin.balanceWithDecimals(
+				price,
+				DeepBookApi.constants.floatDecimals
+			);
 
 			if (
 				Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===

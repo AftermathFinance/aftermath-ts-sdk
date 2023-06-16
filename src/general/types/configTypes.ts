@@ -127,6 +127,7 @@ export interface DeepBookAddresses {
 		wrapper: SuiAddress;
 	};
 	objects: {
+		wrapperAccountCap: ObjectId;
 		wrapperApp: ObjectId;
 	};
 }

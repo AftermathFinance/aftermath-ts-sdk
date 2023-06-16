@@ -4,19 +4,12 @@ import {
 	ObjectId,
 	SuiAddress,
 	SuiObjectResponse,
-	TransactionArgument,
 	TransactionBlock,
 	bcs,
 	getObjectFields,
 } from "@mysten/sui.js";
 import { CetusCalcTradeResult, CetusPoolObject } from "./cetusTypes";
-import {
-	AnyObjectType,
-	Balance,
-	CetusAddresses,
-	PoolsAddresses,
-	ReferralVaultAddresses,
-} from "../../../types";
+import { AnyObjectType, Balance, CetusAddresses } from "../../../types";
 import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { Helpers } from "../../../general/utils";
 import { Pools, RouterPoolTradeTxInputs, Sui } from "../..";

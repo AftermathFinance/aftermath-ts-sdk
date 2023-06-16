@@ -79,6 +79,7 @@ const RouterSynchronousProtocolNames = [
 	"Suiswap",
 	"BlueMove",
 ] as const;
+
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];
 
