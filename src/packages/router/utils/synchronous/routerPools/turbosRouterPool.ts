@@ -62,9 +62,6 @@ class TurbosRouterPool implements RouterPoolInterface {
 		throw new Error("uncallable");
 	};
 
-	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().Turbos().addresses.turbos.objects.wrapperApp;
-
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		// PRODUCTION: handle slippage !
 		if (!inputs.tx.blockData.sender)

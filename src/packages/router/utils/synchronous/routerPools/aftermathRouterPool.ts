@@ -144,10 +144,6 @@ class AftermathRouterPool implements RouterPoolInterface {
 		return this.poolClass.getTradeAmountOut(inputs);
 	};
 
-	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().Aftermath().addresses.pools.objects
-			.poolRegistry;
-
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		const slippage = 100;
 

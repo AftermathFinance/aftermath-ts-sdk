@@ -213,7 +213,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 				inputs.routerSwapCap,
 
 				tx.object(inputs.poolObjectId),
-				tx.object(this.addresses.objects.wrapperAccountCap),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
@@ -243,7 +242,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 				inputs.routerSwapCap,
 
 				tx.object(inputs.poolObjectId),
-				tx.object(this.addresses.objects.wrapperAccountCap),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.object(Sui.constants.addresses.suiClockId),
 			],

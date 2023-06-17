@@ -144,9 +144,6 @@ class InterestRouterPool implements RouterPoolInterface {
 		return numerator / denominator;
 	};
 
-	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().Interest().addresses.objects.wrapperApp;
-
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()

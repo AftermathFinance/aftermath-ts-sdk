@@ -73,9 +73,6 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		return amountOut;
 	};
 
-	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().DeepBook().addresses.objects.wrapperApp;
-
 	tradeTx = (inputs: RouterPoolTradeTxInputs): TransactionArgument => {
 		return inputs.provider
 			.Router()

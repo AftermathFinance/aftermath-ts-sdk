@@ -61,9 +61,6 @@ class CetusRouterPool implements RouterPoolInterface {
 		throw new Error("uncallable");
 	};
 
-	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().Cetus().addresses.objects.wrapperApp;
-
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		// PRODUCTION: handle slippage !
 		return inputs.provider

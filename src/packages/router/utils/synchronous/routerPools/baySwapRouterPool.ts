@@ -115,9 +115,6 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		return BigInt(Math.floor(recievedAmount));
 	};
 
-	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().BaySwap().addresses.objects.wrapperApp;
-
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()

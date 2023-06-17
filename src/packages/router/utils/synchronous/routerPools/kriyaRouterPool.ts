@@ -114,9 +114,6 @@ class KriyaRouterPool implements RouterPoolInterface {
 		return BigInt(Math.floor(recievedAmount));
 	};
 
-	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().Kriya().addresses.objects.wrapperApp;
-
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()

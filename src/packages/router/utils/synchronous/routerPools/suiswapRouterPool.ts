@@ -99,9 +99,6 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		return this.getYToXAmount(inputs.coinInAmount);
 	};
 
-	getAppId = (inputs: { provider: AftermathApi }) =>
-		inputs.provider.Router().Suiswap().addresses.objects.wrapperApp;
-
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()

@@ -212,7 +212,6 @@ export class RouterSynchronousApiHelpers {
 
 	public initiatePathTx = (inputs: {
 		tx: TransactionBlock;
-		appId: ObjectId;
 		routerSwapCap: TransactionArgument;
 		coinInAmount: Balance;
 		coinInType: CoinType;
@@ -227,9 +226,8 @@ export class RouterSynchronousApiHelpers {
 			),
 			typeArguments: [inputs.coinInType],
 			arguments: [
-				tx.object(inputs.appId), // app_id
 				inputs.routerSwapCap, // RouterSwapCap
-				tx.pure(inputs.coinInAmount, "U64"),
+				tx.pure(inputs.coinInAmount, "u64"),
 			],
 		});
 	};
@@ -237,12 +235,17 @@ export class RouterSynchronousApiHelpers {
 	public returnRouterCapTx = (inputs: {
 		tx: TransactionBlock;
 		routerSwapCap: TransactionArgument;
-		coinOutId?: ObjectId | TransactionArgument;
-		coinInType: CoinType;
+		coinOutId: ObjectId | TransactionArgument;
+		routerSwapCapCoinType: CoinType;
 		coinOutType: CoinType;
 	}) => {
-		const { tx, routerSwapCap, coinOutId, coinInType, coinOutType } =
-			inputs;
+		const {
+			tx,
+			routerSwapCap,
+			coinOutId,
+			routerSwapCapCoinType,
+			coinOutType,
+		} = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -250,25 +253,40 @@ export class RouterSynchronousApiHelpers {
 				RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
 				"return_router_cap"
 			),
-			typeArguments: [coinInType, coinOutType],
+			typeArguments: [routerSwapCapCoinType, coinOutType],
 			arguments: [
 				routerSwapCap, // RouterSwapCap
-				tx.pure(
-					Helpers.transactions.createOptionObject(
-						coinOutId === undefined
-							? undefined
-							: typeof coinOutId === "string"
-							? tx.object(coinOutId)
-							: coinOutId
-					)
-					// "Option<Coin>"
-				), // coin_out
+				typeof coinOutId === "string"
+					? tx.object(coinOutId)
+					: coinOutId, // coin_out
 
 				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
+			],
+		});
+	};
+
+	public returnRouterCapAlreadyPayedFeeTx = (inputs: {
+		tx: TransactionBlock;
+		routerSwapCap: TransactionArgument;
+		routerSwapCapCoinType: CoinType;
+		coinOutType: CoinType;
+	}) => {
+		const { tx, routerSwapCap, routerSwapCapCoinType, coinOutType } =
+			inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.router.packages.utils,
+				RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
+				"return_router_cap_already_payed_fee"
+			),
+			typeArguments: [routerSwapCapCoinType, coinOutType],
+			arguments: [
+				routerSwapCap, // RouterSwapCap
 			],
 		});
 	};
@@ -304,7 +322,7 @@ export class RouterSynchronousApiHelpers {
 				referrer,
 			});
 
-		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const startCoinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: completeRoute.coinIn.type,
@@ -315,9 +333,10 @@ export class RouterSynchronousApiHelpers {
 			completeRoute.coinOut.amount -
 			BigInt(Math.floor(slippage * Number(completeRoute.coinOut.amount)));
 
+		const routerSwapCapCoinType = completeRoute.coinIn.type;
 		const routerSwapCap = this.obtainRouterCapTx({
 			tx,
-			coinInId,
+			coinInId: startCoinInId,
 			coinInType: completeRoute.coinIn.type,
 			coinOutType: completeRoute.coinOut.type,
 			referrer,
@@ -327,53 +346,46 @@ export class RouterSynchronousApiHelpers {
 
 		let coinsOut: TransactionArgument[] = [];
 
-		for (const [routeIndex, route] of completeRoute.routes.entries()) {
-			let coinIn: TransactionArgument | undefined = undefined;
+		for (const [, route] of completeRoute.routes.entries()) {
+			let coinInId: TransactionArgument | undefined = this.initiatePathTx(
+				{
+					tx,
+					routerSwapCap,
+					coinInAmount: route.coinIn.amount,
+					coinInType: route.coinIn.type,
+				}
+			);
 
-			for (const [pathIndex, path] of route.paths.entries()) {
+			for (const [, path] of route.paths.entries()) {
 				const poolForPath = createRouterPool({
 					pool: path.pool,
 					network: "",
 				});
 
-				if (pathIndex === 0) {
-					const appId = poolForPath.getAppId({
-						provider: this.Provider,
-					});
-
-					coinIn = this.initiatePathTx({
-						tx,
-						appId,
-						routerSwapCap,
-						coinInAmount: route.coinIn.amount,
-						coinInType: path.coinIn.type,
-					});
-				}
-
-				if (!coinIn)
+				if (!coinInId)
 					throw new Error(
 						"no coin in argument given for router trade command"
 					);
 
-				const newCoinIn = poolForPath.tradeTx({
+				const newCoinInId = poolForPath.tradeTx({
 					provider: this.Provider,
 					tx,
-					coinInId: coinIn,
+					coinInId,
 					coinInType: path.coinIn.type,
 					coinOutType: path.coinOut.type,
 					expectedCoinOutAmount: path.coinOut.amount,
-					routerSwapCapCoinType: route.coinIn.type,
+					routerSwapCapCoinType,
 					routerSwapCap,
 				});
 
-				coinIn =
+				coinInId =
 					poolForPath.noHopsAllowed &&
 					poolForPath.protocolName !== "Cetus"
 						? undefined
-						: newCoinIn;
+						: newCoinInId;
 			}
 
-			if (coinIn) coinsOut.push(coinIn);
+			if (coinInId) coinsOut.push(coinInId);
 		}
 
 		let coinOutId: undefined | TransactionArgument = undefined;
@@ -386,13 +398,23 @@ export class RouterSynchronousApiHelpers {
 				tx.mergeCoins(coinOutId, coinsOut.slice(1));
 		}
 
-		this.returnRouterCapTx({
-			tx,
-			routerSwapCap: routerSwapCap,
-			coinInType: completeRoute.coinIn.type,
-			coinOutType: completeRoute.coinOut.type,
-			coinOutId,
-		});
+		if (coinOutId) {
+			this.returnRouterCapTx({
+				tx,
+				routerSwapCap,
+				routerSwapCapCoinType,
+				coinOutType: completeRoute.coinOut.type,
+				coinOutId,
+			});
+			tx.transferObjects([coinOutId], tx.pure(walletAddress, "address"));
+		} else {
+			this.returnRouterCapAlreadyPayedFeeTx({
+				tx,
+				routerSwapCap,
+				routerSwapCapCoinType,
+				coinOutType: completeRoute.coinOut.type,
+			});
+		}
 
 		return tx;
 	}

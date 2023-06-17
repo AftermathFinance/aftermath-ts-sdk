@@ -40,9 +40,7 @@ export class RouterApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-
+	constructor(Provider: AftermathApi) {
 		this.SynchronousHelpers = new RouterSynchronousApiHelpers(Provider);
 		this.AsyncHelpers = new RouterAsyncApiHelpers(Provider);
 	}

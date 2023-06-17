@@ -132,8 +132,6 @@ export interface RouterPoolInterface {
 		referrer?: SuiAddress;
 	}) => Balance;
 
-	getAppId: (inputs: { provider: AftermathApi }) => ObjectId;
-
 	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionArgument;
 
 	// =========================================================================
