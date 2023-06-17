@@ -22,7 +22,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	private static readonly constants = {
 		moduleNames: {
 			interface: "interface",
-			wrapper: "interest",
+			wrapper: "router",
 		},
 	};
 

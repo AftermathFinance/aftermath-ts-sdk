@@ -1,22 +1,10 @@
-import {
-	ObjectId,
-	SuiAddress,
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js";
-import {
-	Balance,
-	Slippage,
-	SuiNetwork,
-	UniqueId,
-	Url,
-} from "../../../../../types";
+import { SuiAddress, TransactionArgument } from "@mysten/sui.js";
+import { Balance, SuiNetwork, UniqueId, Url } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import {
 	RouterPoolInterface,
 	RouterPoolTradeTxInputs,
 } from "../interfaces/routerPoolInterface";
-import { AftermathApi } from "../../../../../general/providers";
 import {
 	DeepBookPoolObject,
 	DeepBookPriceRange,
@@ -57,9 +45,15 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 	}): number => {
 		// NOTE: should this be looking at the spread ?
+		const askPrice =
+			this.pool.asks.length > 0 ? this.pool.asks[0].price : 0;
+		const bidPrice =
+			this.pool.bids.length > 0 ? this.pool.bids[0].price : 0;
+
 		const spotPrice = this.isBaseCoinType(inputs.coinInType)
-			? this.pool.bids[0].price
-			: this.pool.asks[0].price;
+			? askPrice
+			: bidPrice;
+
 		return spotPrice;
 	};
 
@@ -154,10 +148,9 @@ class DeepBookRouterPool implements RouterPoolInterface {
 
 		const isCoinInBaseCoin = this.isBaseCoinType(coinInType);
 
-		const bookState = isCoinInBaseCoin ? this.pool.asks : this.pool.bids;
-		const otherSideBookState = isCoinInBaseCoin
-			? this.pool.bids
-			: this.pool.asks;
+		const [bookState, otherSideBookState] = isCoinInBaseCoin
+			? [this.pool.asks, this.pool.bids]
+			: [this.pool.bids, this.pool.asks];
 
 		let newBookState = Helpers.deepCopy(bookState);
 		let totalAmountOut = BigInt(0);
@@ -170,14 +163,14 @@ class DeepBookRouterPool implements RouterPoolInterface {
 			const canFillAll = depth >= amountInRemaining;
 			const amountToFill = canFillAll ? amountInRemaining : depth;
 
-			const amountOut = BigInt(Math.floor(Number(amountToFill) * price));
+			const amountOut = BigInt(Math.floor(Number(amountToFill) / price));
 
 			newBookState = canFillAll
-				? newBookState.slice(1)
-				: (() => {
+				? (() => {
 						newBookState[0].depth -= amountToFill;
 						return newBookState;
-				  })();
+				  })()
+				: newBookState.slice(1);
 
 			totalAmountOut += amountOut;
 			amountInRemaining -= amountToFill;
@@ -185,16 +178,19 @@ class DeepBookRouterPool implements RouterPoolInterface {
 			if (amountInRemaining <= 0) break;
 		}
 
+		const [bids, asks] = isCoinInBaseCoin
+			? [otherSideBookState, newBookState]
+			: [newBookState, otherSideBookState];
 		const poolObjectAfterTrade: DeepBookPoolObject = {
 			...this.pool,
-			bids: isCoinInBaseCoin ? otherSideBookState : newBookState,
-			asks: isCoinInBaseCoin ? newBookState : otherSideBookState,
+			bids,
+			asks,
 		};
+
 		const poolAfterTrade = new DeepBookRouterPool(
 			poolObjectAfterTrade,
 			this.network
 		);
-
 		return {
 			amountOut: totalAmountOut,
 			poolAfterTrade,

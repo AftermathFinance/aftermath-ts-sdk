@@ -25,7 +25,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		moduleNames: {
 			poolScript: "pool_script",
 			pool: "pool",
-			wrapper: "cetus",
+			wrapper: "router",
 		},
 	};
 

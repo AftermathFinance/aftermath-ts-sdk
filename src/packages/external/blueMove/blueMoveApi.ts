@@ -39,7 +39,7 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 		moduleNames: {
 			swap: "swap",
 			stableSwap: "stable_swap",
-			wrapper: "bluemove",
+			wrapper: "router",
 		},
 	};
 

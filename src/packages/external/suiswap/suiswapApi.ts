@@ -36,7 +36,7 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 	private static readonly constants = {
 		moduleNames: {
 			pool: "pool",
-			wrapper: "suiswap",
+			wrapper: "router",
 		},
 	};
 

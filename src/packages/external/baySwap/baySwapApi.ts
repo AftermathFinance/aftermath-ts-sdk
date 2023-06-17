@@ -30,7 +30,7 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 	private static readonly constants = {
 		moduleNames: {
 			router: "router",
-			wrapper: "bayswap",
+			wrapper: "router",
 		},
 	};
 

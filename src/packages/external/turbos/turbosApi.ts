@@ -32,7 +32,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		moduleNames: {
 			poolFetcher: "pool_fetcher",
 			swapRouter: "swap_router",
-			wrapper: "turbos",
+			wrapper: "router",
 		},
 	};
 

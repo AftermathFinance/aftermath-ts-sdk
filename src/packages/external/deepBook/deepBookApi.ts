@@ -35,7 +35,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		moduleNames: {
 			clobV2: "clob_v2",
 			custodianV2: "custodian_v2",
-			wrapper: "deepbook",
+			wrapper: "router",
 		},
 		poolCreationFeeInSui: BigInt("100000000000"), // 100 SUI
 		floatDecimals: 9,

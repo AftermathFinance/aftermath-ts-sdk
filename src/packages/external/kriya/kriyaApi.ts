@@ -36,7 +36,7 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	private static readonly constants = {
 		moduleNames: {
 			spotDex: "spot_dex",
-			wrapper: "kriya",
+			wrapper: "router",
 		},
 	};
 

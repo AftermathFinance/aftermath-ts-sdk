@@ -56,7 +56,6 @@ export class TransactionsApiHelpers {
 	public fetchSetGasBudgetForTx = async (
 		tx: TransactionBlock
 	): Promise<TransactionBlock> => {
-		console.log(JSON.stringify(tx.blockData.transactions, null, 2));
 		const [txResponse, referenceGasPrice] = await Promise.all([
 			this.Provider.provider.dryRunTransactionBlock({
 				transactionBlock: await tx.build({
