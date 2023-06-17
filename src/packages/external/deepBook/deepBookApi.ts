@@ -20,6 +20,7 @@ import { Sui } from "../../sui";
 import {
 	AnyObjectType,
 	Balance,
+	BigIntAsString,
 	Byte,
 	DeepBookAddresses,
 } from "../../../types";
@@ -103,6 +104,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 						quote_asset: {
 							name: string;
 						};
+						taker_fee_rate: BigIntAsString;
 					}>,
 					PartialDeepBookPoolObject
 				>({
@@ -121,6 +123,10 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 								"0x" + eventOnChain.parsedJson.base_asset.name,
 							quoteCoinType:
 								"0x" + eventOnChain.parsedJson.quote_asset.name,
+							takerFeeRate: Coin.balanceWithDecimals(
+								BigInt(eventOnChain.parsedJson.taker_fee_rate),
+								DeepBookApi.constants.floatDecimals
+							),
 						};
 					},
 				}),

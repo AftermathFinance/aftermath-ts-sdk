@@ -10,6 +10,8 @@ import {
 	DeepBookPriceRange,
 } from "../../../../external/deepBook/deepBookTypes";
 import { Helpers } from "../../../../../general/utils";
+import { Coin } from "../../../../coin";
+import { DeepBookApi } from "../../../../external/deepBook/deepBookApi";
 
 class DeepBookRouterPool implements RouterPoolInterface {
 	// =========================================================================
@@ -146,6 +148,8 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	} => {
 		const { coinInAmount, coinInType } = inputs;
 
+		// TODO: properly handle tick sizes
+
 		const isCoinInBaseCoin = this.isBaseCoinType(coinInType);
 
 		const [bookState, otherSideBookState] = isCoinInBaseCoin
@@ -154,7 +158,12 @@ class DeepBookRouterPool implements RouterPoolInterface {
 
 		let newBookState = Helpers.deepCopy(bookState);
 		let totalAmountOut = BigInt(0);
-		let amountInRemaining = coinInAmount;
+
+		const coinInAmountMinusFee =
+			coinInAmount -
+			BigInt(Math.floor(Number(coinInAmount) * this.pool.takerFeeRate));
+
+		let amountInRemaining = coinInAmountMinusFee;
 
 		for (const priceAndDepth of bookState) {
 			const price = priceAndDepth.price;
