@@ -282,43 +282,56 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		*/
 
 		const coinInBytes = bcs
-			// .ser(["Coin", coinInStructName], {
 			.ser(`Coin<${coinInStructName}>`, {
+				id: {
+					id: {
+						bytes: "0x0000000000000000000000000000000000000000000000000000000000000123",
+					},
+				},
 				balance: {
 					value: inputs.coinInAmount,
 				},
 			})
 			.toBytes();
 
-		const coinInTypeU8 = Casting.u8VectorFromString(inputs.coinInType);
 		const routerSwapCapBytes = bcs
-			// .ser(["RouterSwapCap", coinInStructName], {
 			.ser(`RouterSwapCap<${coinInStructName}>`, {
 				coin_in: {
+					id: {
+						id: {
+							bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
+						},
+					},
 					balance: {
 						value: inputs.coinInAmount,
 					},
 				},
 				min_amount_out: 0,
 				first_swap: {
-					type: coinInTypeU8,
+					type: Casting.u8VectorFromString(
+						inputs.coinInType.replace("0x", "")
+					),
 					amount: inputs.coinInAmount,
 				},
 				previous_swap: {
-					type: coinInTypeU8,
+					type: Casting.u8VectorFromString(
+						inputs.coinInType.replace("0x", "")
+					),
 					amount: inputs.coinInAmount,
 				},
 				final_swap: {
-					type: coinInTypeU8,
-					amount: inputs.coinInAmount,
+					type: Casting.u8VectorFromString(
+						inputs.coinOutType.replace("0x", "")
+					),
+					amount: 0,
 				},
 				router_fee_metadata: {
 					recipient:
-						"0x0000000000000000000000000000000000000000000000000000000000000002",
+						"0x0000000000000000000000000000000000000000000000000000000000000000",
 					fee: 0,
 				},
 				referrer: {
-					Some: "0x0000000000000000000000000000000000000000000000000000000000000002",
+					None: true,
 				},
 			})
 			.toBytes();
@@ -330,7 +343,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 			routerSwapCapCoinType: inputs.coinInType,
 			coinInBytes,
 			routerSwapCapBytes,
-			coinInStructName,
 		};
 
 		if (
@@ -347,8 +359,10 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const resultBytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		console.log("resultBytes", resultBytes);
-		const data = bcs.de("Coin", new Uint8Array(resultBytes));
+		const data = bcs.de(
+			`Coin<${coinOutStructName}>`,
+			new Uint8Array(resultBytes)
+		);
 
 		return BigInt(data.balance.value);
 	};
@@ -828,7 +842,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		coinOutType: CoinType;
 		routerSwapCapCoinType: CoinType;
 		poolObjectId: ObjectId;
-
 		routerSwapCapBytes: Uint8Array;
 		coinInBytes: Uint8Array;
 	}) /* (Coin) */ => {
@@ -862,8 +875,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		coinOutType: CoinType;
 		routerSwapCapCoinType: CoinType;
 		poolObjectId: ObjectId;
-		coinInStructName: string;
-
 		routerSwapCapBytes: Uint8Array;
 		coinInBytes: Uint8Array;
 	}) /* (Coin) */ => {
@@ -882,13 +893,10 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 			],
 			arguments: [
 				tx.object(this.addresses.objects.wrapperApp),
-				tx.pure(
-					inputs.routerSwapCapBytes,
-					`RouterSwapCap<${inputs.coinInStructName}>`
-				),
+				tx.pure(inputs.routerSwapCapBytes),
 
 				tx.object(inputs.poolObjectId),
-				tx.pure(inputs.coinInBytes, `Coin<${inputs.coinInStructName}>`),
+				tx.pure(inputs.coinInBytes),
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
@@ -901,11 +909,20 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 			bcs.registerStructType(coinStructName, {});
 		}
 
+		bcs.registerStructType("ID", {
+			bytes: BCS.ADDRESS,
+		});
+
+		bcs.registerStructType("UID", {
+			id: "ID",
+		});
+
 		bcs.registerStructType(`Balance<${inputs.coinStructNames[0]}>`, {
 			value: BCS.U64,
 		});
 
 		bcs.registerStructType(`Coin<${inputs.coinStructNames[0]}>`, {
+			id: "UID",
 			balance: `Balance<${inputs.coinStructNames[0]}>`,
 		});
 

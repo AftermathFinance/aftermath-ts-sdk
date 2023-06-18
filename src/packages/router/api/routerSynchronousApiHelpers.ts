@@ -346,15 +346,22 @@ export class RouterSynchronousApiHelpers {
 
 		let coinsOut: TransactionArgument[] = [];
 
-		for (const [, route] of completeRoute.routes.entries()) {
+		let coinInAmountRemaining = completeRoute.coinIn.amount;
+		for (const [routeIndex, route] of completeRoute.routes.entries()) {
 			let coinInId: TransactionArgument | undefined = this.initiatePathTx(
 				{
 					tx,
 					routerSwapCap,
-					coinInAmount: route.coinIn.amount,
+					// this is for possible route amount rounding protection
+					coinInAmount:
+						routeIndex === completeRoute.routes.length - 1
+							? coinInAmountRemaining
+							: route.coinIn.amount,
 					coinInType: route.coinIn.type,
 				}
 			);
+
+			coinInAmountRemaining -= route.coinIn.amount;
 
 			for (const [, path] of route.paths.entries()) {
 				const poolForPath = createRouterPool({
