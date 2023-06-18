@@ -40,6 +40,7 @@ import {
 	PoolCoins,
 	EventsInputs,
 	Url,
+	AftermathRouterWrapperAddresses,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -70,6 +71,7 @@ export class PoolsApi {
 			withdraw: "withdraw",
 			events: "events",
 			poolRegistry: "pool_registry",
+			routerWrapper: "router",
 		},
 		eventNames: {
 			swap: "SwapEvent",
@@ -88,6 +90,7 @@ export class PoolsApi {
 	public readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
+		routerWrapper?: AftermathRouterWrapperAddresses;
 	};
 	public readonly eventTypes: {
 		trade: AnyObjectType;
@@ -124,6 +127,7 @@ export class PoolsApi {
 	constructor(private readonly Provider: AftermathApi) {
 		const pools = Provider.addresses.pools;
 		const referralVault = Provider.addresses.referralVault;
+		const routerWrapper = Provider.addresses.router?.aftermath;
 
 		if (!pools || !referralVault)
 			throw new Error(
@@ -133,6 +137,7 @@ export class PoolsApi {
 		this.addresses = {
 			pools,
 			referralVault,
+			routerWrapper,
 		};
 		this.eventTypes = {
 			trade: this.tradeEventType(),
@@ -676,6 +681,11 @@ export class PoolsApi {
 			lpCoinType: CoinType;
 		}
 	): TransactionArgument => {
+		if (!this.addresses.routerWrapper)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
 		const {
 			tx,
 			poolId,
@@ -689,8 +699,8 @@ export class PoolsApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.pools.packages.amm,
-				PoolsApi.constants.moduleNames.swap,
+				this.addresses.routerWrapper.packages.wrapper,
+				PoolsApi.constants.moduleNames.routerWrapper,
 				"add_swap_exact_in_to_route"
 			),
 			typeArguments: [
@@ -700,9 +710,10 @@ export class PoolsApi {
 				coinOutType,
 			],
 			arguments: [
-				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.routerWrapper.objects.wrapperApp),
 				routerSwapCap,
 
+				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(poolId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedCoinOutAmount.toString(), "u64"),

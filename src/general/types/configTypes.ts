@@ -111,6 +111,7 @@ export interface RequiredRouterAddresses {
 }
 
 export interface OptionalRouterAddresses {
+	aftermath: AftermathRouterWrapperAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
@@ -119,6 +120,15 @@ export interface OptionalRouterAddresses {
 	baySwap: BaySwapAddresses;
 	suiswap: SuiswapAddresses;
 	blueMove: BlueMoveAddresses;
+}
+
+export interface AftermathRouterWrapperAddresses {
+	packages: {
+		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
+	};
 }
 
 export interface DeepBookAddresses {
