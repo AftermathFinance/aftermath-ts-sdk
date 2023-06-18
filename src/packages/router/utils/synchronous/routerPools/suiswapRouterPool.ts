@@ -270,7 +270,7 @@ class StableSwapHelper {
 	private static readonly FOUR = BigInt(4);
 	private static readonly _1E1 = BigInt(10 ** 1);
 
-	static compuateDNext = (
+	static computeDNext = (
 		dInit: bigint,
 		dProd: bigint,
 		sumX: bigint,
@@ -296,7 +296,7 @@ class StableSwapHelper {
 			dProd = (dProd * d) / (StableSwapHelper.TWO * b);
 			dProd = (dProd * d) / (StableSwapHelper.TWO * q);
 			const dPrev = d;
-			d = StableSwapHelper.compuateDNext(d, dProd, b + q, A);
+			d = StableSwapHelper.computeDNext(d, dProd, b + q, A);
 			const diff = d - dPrev;
 			if (
 				diff === StableSwapHelper.ONE ||

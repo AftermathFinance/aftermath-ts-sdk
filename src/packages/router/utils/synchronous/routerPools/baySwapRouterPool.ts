@@ -51,6 +51,8 @@ class BaySwapRouterPool implements RouterPoolInterface {
 	private static readonly FEE_SCALING = 1000000;
 	private static readonly ONE_E_8 = 100000000;
 
+	private static readonly BAY_SWAP_FEE_SCALING = 10000;
+
 	// =========================================================================
 	//  Public Interface
 	// =========================================================================
@@ -91,6 +93,16 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		const coinInReserve = this.getPoolBalance(inputs.coinInType);
 		const coinOutReserve = this.getPoolBalance(inputs.coinOutType);
 
+		const totalFeePercentage =
+			Number(this.pool.feePercent + this.pool.daoFeePercent) /
+			BaySwapRouterPool.BAY_SWAP_FEE_SCALING;
+
+		const coinInAmountMinusFee =
+			inputs.coinInAmount -
+			BigInt(
+				Math.floor(Number(inputs.coinInAmount) * totalFeePercentage)
+			);
+
 		if (this.pool.isStable) {
 			const isCoinInX = BaySwapApi.isCoinX({
 				pool: this.pool,
@@ -102,7 +114,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 				coinOutReserve,
 				Number(isCoinInX ? this.pool.xScale : this.pool.yScale),
 				Number(isCoinInX ? this.pool.yScale : this.pool.xScale),
-				Number(inputs.coinInAmount)
+				Number(coinInAmountMinusFee)
 			);
 			return BigInt(Math.floor(recievedAmount));
 		}
@@ -110,7 +122,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		const { recievedAmount } = this.getSwapAmountUncorrelated(
 			coinInReserve,
 			coinOutReserve,
-			Number(inputs.coinInAmount)
+			Number(coinInAmountMinusFee)
 		);
 		return BigInt(Math.floor(recievedAmount));
 	};
