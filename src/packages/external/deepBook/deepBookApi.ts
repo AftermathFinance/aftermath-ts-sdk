@@ -121,10 +121,12 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 					eventFromEventOnChain: (eventOnChain) => {
 						return {
 							objectId: eventOnChain.parsedJson.pool_id,
-							baseCoinType:
-								"0x" + eventOnChain.parsedJson.base_asset.name,
-							quoteCoinType:
-								"0x" + eventOnChain.parsedJson.quote_asset.name,
+							baseCoinType: Helpers.addLeadingZeroesToType(
+								"0x" + eventOnChain.parsedJson.base_asset.name
+							),
+							quoteCoinType: Helpers.addLeadingZeroesToType(
+								"0x" + eventOnChain.parsedJson.quote_asset.name
+							),
 							takerFeeRate: Coin.balanceWithDecimals(
 								BigInt(eventOnChain.parsedJson.taker_fee_rate),
 								DeepBookApi.constants.floatDecimals
@@ -1042,9 +1044,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		coinType: CoinType;
 	}) => {
 		const { coinType, pool } = inputs;
-		return (
-			Helpers.addLeadingZeroesToType(coinType) ===
-			Helpers.addLeadingZeroesToType(pool.baseCoinType)
-		);
+		return Helpers.addLeadingZeroesToType(coinType) === pool.baseCoinType;
 	};
 }
