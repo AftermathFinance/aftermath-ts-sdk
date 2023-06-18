@@ -90,6 +90,11 @@ class KriyaRouterPool implements RouterPoolInterface {
 		const coinInReserve = this.getPoolBalance(inputs.coinInType);
 		const coinOutReserve = this.getPoolBalance(inputs.coinOutType);
 
+		const coinInAmount = Number(inputs.coinInAmount);
+		const totalFee = Number(
+			this.pool.protocolFeePercent + this.pool.lpFeePercent
+		);
+
 		if (this.pool.isStable) {
 			const isCoinInX = KriyaApi.isCoinX({
 				pool: this.pool,
@@ -101,7 +106,8 @@ class KriyaRouterPool implements RouterPoolInterface {
 				coinOutReserve,
 				Number(isCoinInX ? this.pool.scaleX : this.pool.scaleY),
 				Number(isCoinInX ? this.pool.scaleY : this.pool.scaleX),
-				Number(inputs.coinInAmount)
+				coinInAmount,
+				totalFee
 			);
 			return BigInt(Math.floor(recievedAmount));
 		}
@@ -109,7 +115,8 @@ class KriyaRouterPool implements RouterPoolInterface {
 		const { recievedAmount } = this.getSwapAmountUncorrelated(
 			coinInReserve,
 			coinOutReserve,
-			Number(inputs.coinInAmount)
+			coinInAmount,
+			totalFee
 		);
 		return BigInt(Math.floor(recievedAmount));
 	};
