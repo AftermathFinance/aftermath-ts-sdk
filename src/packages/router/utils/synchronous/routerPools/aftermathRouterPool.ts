@@ -42,7 +42,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 	// =========================================================================
 
 	readonly protocolName = "Aftermath";
-	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
+	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = false;
 
 	readonly pool: PoolObject;

@@ -148,18 +148,13 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	};
 
 	public fetchTradeAmountOut = async (inputs: {
-		walletAddress: SuiAddress;
 		pool: CetusPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<Balance> => {
 		const tradeResult = await this.fetchCalcTradeResult(inputs);
-		const coinOutAmountWithFees = Pools.getAmountWithProtocolFees({
-			...inputs,
-			amount: tradeResult.amountOut,
-		});
-		return coinOutAmountWithFees;
+		return tradeResult.amountOut;
 	};
 
 	// =========================================================================
@@ -167,14 +162,13 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	// =========================================================================
 
 	public fetchCalcTradeResult = async (inputs: {
-		walletAddress: SuiAddress;
 		pool: CetusPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<CetusCalcTradeResult> => {
 		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+		tx.setSender(Helpers.rpc.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
 			tx,

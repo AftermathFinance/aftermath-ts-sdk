@@ -11,7 +11,9 @@ import { CetusApi } from "../../external/cetus/cetusApi";
 import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
 import { TurbosApi } from "../../external/turbos/turbosApi";
 import { isTurbosPoolObject } from "../../external/turbos/turbosTypes";
-import { isCetusRouterPoolObject } from "../../external/cetus/cetusTypes";
+import { isCetusPoolObject } from "../../external/cetus/cetusTypes";
+import { DeepBookApi } from "../../external/deepBook/deepBookApi";
+import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
 
 export class RouterAsyncApiHelpers {
 	// =========================================================================
@@ -24,6 +26,7 @@ export class RouterAsyncApiHelpers {
 	> = {
 		Cetus: () => new CetusApi(this.Provider),
 		Turbos: () => new TurbosApi(this.Provider),
+		DeepBook: () => new DeepBookApi(this.Provider),
 	};
 
 	// =========================================================================
@@ -104,9 +107,6 @@ export class RouterAsyncApiHelpers {
 									return await api.fetchTradeAmountOut({
 										...inputs,
 										pool,
-										walletAddress:
-											RpcApiHelpers.constants
-												.devInspectSigner,
 										coinInAmount: amountIn,
 									});
 								} catch (e) {
@@ -187,9 +187,17 @@ export class RouterAsyncApiHelpers {
 	}): RouterAsyncProtocolName => {
 		const { pool } = inputs;
 
-		const protocolName: RouterAsyncProtocolName = isTurbosPoolObject(pool)
-			? "Turbos"
-			: "Cetus";
+		const protocolName: RouterAsyncProtocolName | undefined =
+			isTurbosPoolObject(pool)
+				? "Turbos"
+				: isCetusPoolObject(pool)
+				? "Cetus"
+				: isDeepBookPoolObject(pool)
+				? "DeepBook"
+				: undefined;
+
+		if (!protocolName)
+			throw new Error("unknown RouterAsyncSerializablePool");
 
 		return protocolName;
 	};

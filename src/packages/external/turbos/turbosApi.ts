@@ -336,21 +336,12 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	};
 
 	public fetchTradeAmountOut = async (inputs: {
-		walletAddress: SuiAddress;
 		pool: TurbosPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
-		withReferral?: boolean;
 	}): Promise<Balance> => {
-		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
-			...inputs,
-			amount: inputs.coinInAmount,
-		});
-		const tradeResult = await this.fetchCalcTradeResult({
-			...inputs,
-			coinInAmount: coinInAmountWithFees,
-		});
+		const tradeResult = await this.fetchCalcTradeResult(inputs);
 		return tradeResult.amountOut;
 	};
 
@@ -362,14 +353,13 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	};
 
 	public fetchCalcTradeResult = async (inputs: {
-		walletAddress: SuiAddress;
 		pool: TurbosPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<TurbosCalcTradeResult> => {
 		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+		tx.setSender(Helpers.rpc.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
 			tx,

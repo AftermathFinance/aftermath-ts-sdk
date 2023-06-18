@@ -30,8 +30,8 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	// =========================================================================
 
 	readonly protocolName = "DeepBook";
-	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
-	readonly noHopsAllowed = false;
+	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
+	readonly noHopsAllowed = true;
 
 	readonly pool: DeepBookPoolObject;
 	readonly network: SuiNetwork | Url;
@@ -42,34 +42,24 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	//  Functions
 	// =========================================================================
 
-	getSpotPrice = (inputs: {
-		coinInType: CoinType;
-		coinOutType: CoinType;
-	}): number => {
-		// NOTE: should this be looking at the spread ?
-		const askPrice =
-			this.pool.asks.length > 0 ? this.pool.asks[0].price : 0;
-		const bidPrice =
-			this.pool.bids.length > 0 ? this.pool.bids[0].price : 0;
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
-		const spotPrice = this.isBaseCoinType(inputs.coinInType)
-			? askPrice
-			: bidPrice;
-
-		return spotPrice;
+	getSpotPrice = (_: { coinInType: CoinType; coinOutType: CoinType }) => {
+		throw new Error("uncallable");
 	};
 
-	getTradeAmountOut = (inputs: {
+	getTradeAmountOut = (_: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
-		const { amountOut } = this.getTradeAmountOutAndPoolAfterTrade(inputs);
-		return amountOut;
+		throw new Error("uncallable");
 	};
 
-	tradeTx = (inputs: RouterPoolTradeTxInputs): TransactionArgument => {
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()
 			.DeepBook()
@@ -79,136 +69,28 @@ class DeepBookRouterPool implements RouterPoolInterface {
 			});
 	};
 
-	getTradeAmountIn = (inputs: {
+	getTradeAmountIn = (_: {
 		coinInType: CoinType;
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
-		return BigInt(0);
+		throw new Error("uncallable");
 	};
 
-	getUpdatedPoolBeforeTrade = (inputs: {
+	getUpdatedPoolBeforeTrade = (_: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		coinOutAmount: Balance;
-	}): RouterPoolInterface => {
-		const { coinInType, coinInAmount, coinOutAmount } = inputs;
-		const isCoinInBaseCoin = this.isBaseCoinType(coinInType);
+	}): RouterPoolInterface => new DeepBookRouterPool(this.pool, this.network);
 
-		const price = isCoinInBaseCoin
-			? Number(coinInAmount) / Number(coinOutAmount)
-			: Number(coinOutAmount) / Number(coinInAmount);
-
-		const filledPriceRange: DeepBookPriceRange = {
-			depth: coinInAmount,
-			price,
-		};
-
-		const bids = isCoinInBaseCoin
-			? [filledPriceRange, ...this.pool.bids]
-			: this.pool.bids;
-		const asks = !isCoinInBaseCoin
-			? [filledPriceRange, ...this.pool.asks]
-			: this.pool.asks;
-
-		const newPoolObject: DeepBookPoolObject = {
-			...this.pool,
-			bids,
-			asks,
-		};
-
-		return new DeepBookRouterPool(newPoolObject, this.network);
-	};
-
-	getUpdatedPoolAfterTrade = (inputs: {
+	getUpdatedPoolAfterTrade = (_: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		coinOutAmount: Balance;
-	}): RouterPoolInterface => {
-		const { poolAfterTrade } =
-			this.getTradeAmountOutAndPoolAfterTrade(inputs);
-		return poolAfterTrade;
-	};
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	private getTradeAmountOutAndPoolAfterTrade = (inputs: {
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		referrer?: SuiAddress;
-	}): {
-		amountOut: Balance;
-		poolAfterTrade: DeepBookRouterPool;
-	} => {
-		const { coinInAmount, coinInType } = inputs;
-
-		// TODO: properly handle tick sizes
-
-		const isCoinInBaseCoin = this.isBaseCoinType(coinInType);
-
-		const [bookState, otherSideBookState] = isCoinInBaseCoin
-			? [this.pool.asks, this.pool.bids]
-			: [this.pool.bids, this.pool.asks];
-
-		let newBookState = Helpers.deepCopy(bookState);
-		let totalAmountOut = BigInt(0);
-
-		const coinInAmountMinusFee =
-			coinInAmount -
-			BigInt(Math.floor(Number(coinInAmount) * this.pool.takerFeeRate));
-
-		let amountInRemaining = coinInAmountMinusFee;
-
-		for (const priceAndDepth of bookState) {
-			const price = priceAndDepth.price;
-			const depth = priceAndDepth.depth;
-
-			const canFillAll = depth >= amountInRemaining;
-			const amountToFill = canFillAll ? amountInRemaining : depth;
-
-			const amountOut = BigInt(Math.floor(Number(amountToFill) / price));
-
-			newBookState = canFillAll
-				? (() => {
-						newBookState[0].depth -= amountToFill;
-						return newBookState;
-				  })()
-				: newBookState.slice(1);
-
-			totalAmountOut += amountOut;
-			amountInRemaining -= amountToFill;
-
-			if (amountInRemaining <= 0) break;
-		}
-
-		const [bids, asks] = isCoinInBaseCoin
-			? [otherSideBookState, newBookState]
-			: [newBookState, otherSideBookState];
-		const poolObjectAfterTrade: DeepBookPoolObject = {
-			...this.pool,
-			bids,
-			asks,
-		};
-
-		const poolAfterTrade = new DeepBookRouterPool(
-			poolObjectAfterTrade,
-			this.network
-		);
-		return {
-			amountOut: totalAmountOut,
-			poolAfterTrade,
-		};
-	};
-
-	private isBaseCoinType = (coin: CoinType) =>
-		Helpers.addLeadingZeroesToType(coin) ===
-		Helpers.addLeadingZeroesToType(this.pool.baseCoinType);
+	}): RouterPoolInterface => new DeepBookRouterPool(this.pool, this.network);
 }
 
 export default DeepBookRouterPool;

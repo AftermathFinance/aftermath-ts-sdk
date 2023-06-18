@@ -38,7 +38,6 @@ export interface RouterAsyncApiInterface<
 	// =========================================================================
 
 	fetchTradeAmountOut: (inputs: {
-		walletAddress: SuiAddress;
 		pool: PoolType;
 		coinInType: CoinType;
 		coinOutType: CoinType;

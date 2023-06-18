@@ -380,7 +380,7 @@ export class RouterSynchronousApiHelpers {
 
 				coinInId =
 					poolForPath.noHopsAllowed &&
-					poolForPath.protocolName !== "Cetus"
+					poolForPath.protocolName === "Turbos"
 						? undefined
 						: newCoinInId;
 			}

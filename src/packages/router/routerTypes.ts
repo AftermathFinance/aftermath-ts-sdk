@@ -63,7 +63,7 @@ export type RouterProtocolName =
 
 export type RouterSynchronousSerializablePool =
 	| PoolObject
-	| DeepBookPoolObject
+	// | DeepBookPoolObject
 	| InterestPoolObject
 	| KriyaPoolObject
 	| BaySwapPoolObject
@@ -72,7 +72,7 @@ export type RouterSynchronousSerializablePool =
 
 const RouterSynchronousProtocolNames = [
 	"Aftermath",
-	"DeepBook",
+	// "DeepBook",
 	"Interest",
 	"Kriya",
 	"BaySwap",
@@ -94,9 +94,12 @@ export const isRouterSynchronousProtocolName = (
 //  Router Async Pools
 // =========================================================================
 
-export type RouterAsyncSerializablePool = CetusPoolObject | TurbosPoolObject;
+export type RouterAsyncSerializablePool =
+	| CetusPoolObject
+	| TurbosPoolObject
+	| DeepBookPoolObject;
 
-const RouterAsyncProtocolNames = ["Cetus", "Turbos"] as const;
+const RouterAsyncProtocolNames = ["Cetus", "Turbos", "DeepBook"] as const;
 export type RouterAsyncProtocolName = (typeof RouterAsyncProtocolNames)[number];
 
 export const isRouterAsyncProtocolName = (

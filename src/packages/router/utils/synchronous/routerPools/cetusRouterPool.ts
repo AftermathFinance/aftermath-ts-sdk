@@ -36,7 +36,7 @@ class CetusRouterPool implements RouterPoolInterface {
 	// =========================================================================
 
 	readonly protocolName = "Cetus";
-	readonly expectedGasCostPerHop = BigInt(9_000_000); // 0.009 SUI
+	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = true;
 
 	readonly pool: CetusPoolObject;
@@ -62,7 +62,6 @@ class CetusRouterPool implements RouterPoolInterface {
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
-		// PRODUCTION: handle slippage !
 		return inputs.provider
 			.Router()
 			.Cetus()

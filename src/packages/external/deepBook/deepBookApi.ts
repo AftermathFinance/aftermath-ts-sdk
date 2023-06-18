@@ -26,6 +26,7 @@ import {
 } from "../../../types";
 import { Coin } from "../../coin";
 import { RouterPoolTradeTxInputs } from "../../router";
+import { BCS } from "@mysten/bcs";
 
 export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	// =========================================================================
@@ -180,6 +181,55 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	};
 
 	// =========================================================================
+	//  Async Router Pool Api Interface Methods
+	// =========================================================================
+
+	public fetchPoolsForTrade = async (inputs: {
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}): Promise<{
+		partialMatchPools: DeepBookPoolObject[];
+		exactMatchPools: DeepBookPoolObject[];
+	}> => {
+		const possiblePools = await this.fetchPoolsForCoinType({
+			coinType: inputs.coinOutType,
+		});
+
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
+			possiblePools,
+			(pool) =>
+				DeepBookApi.isPoolForCoinTypes({
+					pool,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
+				})
+		);
+
+		return {
+			exactMatchPools,
+			partialMatchPools,
+		};
+	};
+
+	public fetchTradeAmountOut = async (inputs: {
+		pool: DeepBookPoolObject;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmount: Balance;
+	}): Promise<Balance> => {
+		return this.fetchCalcTradeAmountOut(inputs);
+	};
+
+	public otherCoinInPool = (inputs: {
+		coinType: CoinType;
+		pool: DeepBookPoolObject;
+	}) => {
+		return DeepBookApi.isBaseCoinType(inputs)
+			? inputs.pool.quoteCoinType
+			: inputs.pool.baseCoinType;
+	};
+
+	// =========================================================================
 	//  Inspections
 	// =========================================================================
 
@@ -190,6 +240,117 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 			[] as CoinType[]
 		);
 		return Helpers.uniqueArray(allCoins);
+	};
+
+	public fetchCalcTradeAmountOut = async (inputs: {
+		pool: DeepBookPoolObject;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		coinInAmount: Balance;
+	}): Promise<Balance> => {
+		const tx = new TransactionBlock();
+		tx.setSender(Helpers.rpc.constants.devInspectSigner);
+
+		const coinInStructName = new Coin(inputs.coinInType).coinTypeSymbol;
+		const coinOutStructName = new Coin(inputs.coinOutType).coinTypeSymbol;
+		this.registerTradeBcsStructs({
+			coinStructNames: [coinInStructName, coinOutStructName],
+		});
+
+		/*
+
+		struct RouterFeeMetadata has copy, drop {
+			recipient: address,
+			fee: u64,
+		}
+
+		struct SwapMetadata has copy, drop {
+			type: vector<u8>,
+			amount: u64,
+		}
+		
+		struct RouterSwapCap<phantom CS> {
+			coin_in: Coin<CS>,
+			min_amount_out: u64,
+			first_swap: SwapMetadata,
+			previous_swap: SwapMetadata,
+			final_swap: SwapMetadata,
+			router_fee_metadata: RouterFeeMetadata,
+			referrer: Option<address>,
+		}
+
+		*/
+
+		const coinInBytes = bcs
+			// .ser(["Coin", coinInStructName], {
+			.ser(`Coin<${coinInStructName}>`, {
+				balance: {
+					value: inputs.coinInAmount,
+				},
+			})
+			.toBytes();
+
+		const coinInTypeU8 = Casting.u8VectorFromString(inputs.coinInType);
+		const routerSwapCapBytes = bcs
+			// .ser(["RouterSwapCap", coinInStructName], {
+			.ser(`RouterSwapCap<${coinInStructName}>`, {
+				coin_in: {
+					balance: {
+						value: inputs.coinInAmount,
+					},
+				},
+				min_amount_out: 0,
+				first_swap: {
+					type: coinInTypeU8,
+					amount: inputs.coinInAmount,
+				},
+				previous_swap: {
+					type: coinInTypeU8,
+					amount: inputs.coinInAmount,
+				},
+				final_swap: {
+					type: coinInTypeU8,
+					amount: inputs.coinInAmount,
+				},
+				router_fee_metadata: {
+					recipient:
+						"0x0000000000000000000000000000000000000000000000000000000000000002",
+					fee: 0,
+				},
+				referrer: {
+					Some: "0x0000000000000000000000000000000000000000000000000000000000000002",
+				},
+			})
+			.toBytes();
+
+		const commandInputs = {
+			tx,
+			...inputs,
+			poolObjectId: inputs.pool.objectId,
+			routerSwapCapCoinType: inputs.coinInType,
+			coinInBytes,
+			routerSwapCapBytes,
+			coinInStructName,
+		};
+
+		if (
+			DeepBookApi.isBaseCoinType({
+				...inputs,
+				coinType: inputs.coinInType,
+			})
+		) {
+			await this.tradeBaseToQuoteDevInspectTx(commandInputs);
+		} else {
+			await this.tradeQuoteToBaseDevInspectTx(commandInputs);
+		}
+
+		const resultBytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		console.log("resultBytes", resultBytes);
+		const data = bcs.de("Coin", new Uint8Array(resultBytes));
+
+		return BigInt(data.balance.value);
 	};
 
 	// =========================================================================
@@ -651,5 +812,210 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		this.createPoolTx(commandInputs);
 
 		return tx;
+	};
+
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Dev Inspect Transaction Commands
+	// =========================================================================
+
+	private tradeBaseToQuoteDevInspectTx = (inputs: {
+		tx: TransactionBlock;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		routerSwapCapCoinType: CoinType;
+		poolObjectId: ObjectId;
+
+		routerSwapCapBytes: Uint8Array;
+		coinInBytes: Uint8Array;
+	}) /* (Coin) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.wrapper,
+				DeepBookApi.constants.moduleNames.wrapper,
+				"swap_exact_base_for_quote"
+			),
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinInType,
+				inputs.coinOutType,
+			],
+			arguments: [
+				tx.object(this.addresses.objects.wrapperApp),
+				tx.pure(inputs.routerSwapCapBytes),
+
+				tx.object(inputs.poolObjectId),
+				tx.pure(inputs.coinInBytes),
+				tx.object(Sui.constants.addresses.suiClockId),
+			],
+		});
+	};
+
+	private tradeQuoteToBaseDevInspectTx = (inputs: {
+		tx: TransactionBlock;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		routerSwapCapCoinType: CoinType;
+		poolObjectId: ObjectId;
+		coinInStructName: string;
+
+		routerSwapCapBytes: Uint8Array;
+		coinInBytes: Uint8Array;
+	}) /* (Coin) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.wrapper,
+				DeepBookApi.constants.moduleNames.wrapper,
+				"swap_exact_quote_for_base"
+			),
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinOutType,
+				inputs.coinInType,
+			],
+			arguments: [
+				tx.object(this.addresses.objects.wrapperApp),
+				tx.pure(
+					inputs.routerSwapCapBytes,
+					`RouterSwapCap<${inputs.coinInStructName}>`
+				),
+
+				tx.object(inputs.poolObjectId),
+				tx.pure(inputs.coinInBytes, `Coin<${inputs.coinInStructName}>`),
+				tx.object(Sui.constants.addresses.suiClockId),
+			],
+		});
+	};
+
+	private registerTradeBcsStructs = (inputs: {
+		coinStructNames: CoinType[];
+	}) => {
+		for (const coinStructName of inputs.coinStructNames) {
+			bcs.registerStructType(coinStructName, {});
+		}
+
+		bcs.registerStructType(`Balance<${inputs.coinStructNames[0]}>`, {
+			value: BCS.U64,
+		});
+
+		bcs.registerStructType(`Coin<${inputs.coinStructNames[0]}>`, {
+			balance: `Balance<${inputs.coinStructNames[0]}>`,
+		});
+
+		/*
+
+		struct RouterFeeMetadata has copy, drop {
+			recipient: address,
+			fee: u64,
+		}
+
+		struct SwapMetadata has copy, drop {
+			type: vector<u8>,
+			amount: u64,
+		}
+		
+		struct RouterSwapCap<phantom CS> {
+			coin_in: Coin<CS>,
+			min_amount_out: u64,
+			first_swap: SwapMetadata,
+			previous_swap: SwapMetadata,
+			final_swap: SwapMetadata,
+			router_fee_metadata: RouterFeeMetadata,
+			referrer: Option<address>,
+		}
+
+		*/
+
+		bcs.registerStructType("RouterFeeMetadata", {
+			recipient: BCS.ADDRESS,
+			fee: BCS.U64,
+		});
+
+		bcs.registerStructType("SwapMetadata", {
+			type: "vector<u8>",
+			amount: BCS.U64,
+		});
+
+		bcs.registerStructType(`RouterSwapCap<${inputs.coinStructNames[0]}>`, {
+			coin_in: `Coin<${inputs.coinStructNames[0]}>`,
+			min_amount_out: BCS.U64,
+			first_swap: "SwapMetadata",
+			previous_swap: "SwapMetadata",
+			final_swap: "SwapMetadata",
+			router_fee_metadata: "RouterFeeMetadata",
+			referrer: "Option<address>",
+		});
+	};
+
+	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
+		const allPools = await this.fetchAllPools();
+
+		const foundPools = allPools.filter((pool) =>
+			DeepBookApi.isPoolForCoinType({
+				pool,
+				...inputs,
+			})
+		);
+
+		return foundPools;
+	};
+
+	// =========================================================================
+	//  Private Static Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private static isPoolForCoinTypes = (inputs: {
+		pool: DeepBookPoolObject;
+		coinType1: CoinType;
+		coinType2: CoinType;
+	}) => {
+		const { pool, coinType1, coinType2 } = inputs;
+
+		return (
+			(pool.baseCoinType === Helpers.addLeadingZeroesToType(coinType1) &&
+				pool.quoteCoinType ===
+					Helpers.addLeadingZeroesToType(coinType2)) ||
+			(pool.baseCoinType === Helpers.addLeadingZeroesToType(coinType2) &&
+				pool.quoteCoinType ===
+					Helpers.addLeadingZeroesToType(coinType1))
+		);
+	};
+
+	private static isPoolForCoinType = (inputs: {
+		pool: DeepBookPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { pool, coinType } = inputs;
+
+		return (
+			pool.baseCoinType === Helpers.addLeadingZeroesToType(coinType) ||
+			pool.quoteCoinType === Helpers.addLeadingZeroesToType(coinType)
+		);
+	};
+
+	private static isBaseCoinType = (inputs: {
+		pool: DeepBookPoolObject;
+		coinType: CoinType;
+	}) => {
+		const { coinType, pool } = inputs;
+		return (
+			Helpers.addLeadingZeroesToType(coinType) ===
+			Helpers.addLeadingZeroesToType(pool.baseCoinType)
+		);
 	};
 }

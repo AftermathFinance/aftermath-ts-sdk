@@ -19,7 +19,7 @@ import AftermathRouterPool from "../routerPools/aftermathRouterPool";
 import { AftermathApi } from "../../../../../general/providers";
 import { isDeepBookPoolObject } from "../../../../external/deepBook/deepBookTypes";
 import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
-import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
+import { isCetusPoolObject } from "../../../../external/cetus/cetusTypes";
 import CetusRouterPool from "../routerPools/cetusRouterPool";
 import { isTurbosPoolObject } from "../../../../external/turbos/turbosTypes";
 import TurbosRouterPool from "../routerPools/turbosRouterPool";
@@ -64,7 +64,7 @@ export function createRouterPool(inputs: {
 		? new DeepBookRouterPool(pool, network)
 		: isTurbosPoolObject(pool)
 		? new TurbosRouterPool(pool, network)
-		: isCetusRouterPoolObject(pool)
+		: isCetusPoolObject(pool)
 		? new CetusRouterPool(pool, network)
 		: isInterestPoolObject(pool)
 		? new InterestRouterPool(pool, network)
@@ -77,6 +77,7 @@ export function createRouterPool(inputs: {
 		: isBlueMovePoolObject(pool)
 		? new BlueMoveRouterPool(pool, network)
 		: new AftermathRouterPool(pool, network);
+	// TODO: throw error if pool not recognized (fallback is err)
 
 	return constructedPool;
 }

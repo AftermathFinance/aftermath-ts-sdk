@@ -37,7 +37,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 	// =========================================================================
 
 	readonly protocolName = "Turbos";
-	readonly expectedGasCostPerHop = BigInt(9_000_000); // 0.009 SUI
+	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = true;
 
 	readonly pool: TurbosPoolObject;
@@ -63,7 +63,6 @@ class TurbosRouterPool implements RouterPoolInterface {
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
-		// PRODUCTION: handle slippage !
 		if (!inputs.tx.blockData.sender)
 			throw new Error("no sender for tx set (required for turbos txs)");
 
