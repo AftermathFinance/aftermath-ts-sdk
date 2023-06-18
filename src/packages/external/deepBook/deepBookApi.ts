@@ -106,6 +106,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 							name: string;
 						};
 						taker_fee_rate: BigIntAsString;
+						lot_size: BigIntAsString;
 					}>,
 					PartialDeepBookPoolObject
 				>({
@@ -128,6 +129,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 								BigInt(eventOnChain.parsedJson.taker_fee_rate),
 								DeepBookApi.constants.floatDecimals
 							),
+							lotSize: BigInt(eventOnChain.parsedJson.lot_size),
 						};
 					},
 				}),
@@ -188,8 +190,8 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}): Promise<{
-		partialMatchPools: DeepBookPoolObject[];
-		exactMatchPools: DeepBookPoolObject[];
+		partialMatchPools: PartialDeepBookPoolObject[];
+		exactMatchPools: PartialDeepBookPoolObject[];
 	}> => {
 		const possiblePools = await this.fetchPoolsForCoinType({
 			coinType: inputs.coinOutType,
@@ -212,7 +214,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	};
 
 	public fetchTradeAmountOut = async (inputs: {
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
@@ -222,7 +224,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 
 	public otherCoinInPool = (inputs: {
 		coinType: CoinType;
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 	}) => {
 		return DeepBookApi.isBaseCoinType(inputs)
 			? inputs.pool.quoteCoinType
@@ -243,7 +245,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	};
 
 	public fetchCalcTradeAmountOut = async (inputs: {
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
@@ -339,8 +341,9 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const commandInputs = {
 			tx,
 			...inputs,
-			poolObjectId: inputs.pool.objectId,
 			routerSwapCapCoinType: inputs.coinInType,
+			poolObjectId: inputs.pool.objectId,
+			lotSize: inputs.pool.lotSize,
 			coinInBytes,
 			routerSwapCapBytes,
 		};
@@ -374,6 +377,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	public tradeBaseToQuoteTx = (
 		inputs: RouterPoolTradeTxInputs & {
 			poolObjectId: ObjectId;
+			lotSize: bigint;
 		}
 	) /* (Coin) */ => {
 		const { tx, coinInId } = inputs;
@@ -396,6 +400,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.object(Sui.constants.addresses.suiClockId),
+				tx.pure(inputs.lotSize, "u64"), // lot_size
 			],
 		});
 	};
@@ -621,11 +626,14 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		const commandInputs = {
 			...inputs,
 			poolObjectId: inputs.pool.objectId,
+			lotSize: inputs.pool.lotSize,
 		};
 
 		if (
-			Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoinType)
+			DeepBookApi.isBaseCoinType({
+				...inputs,
+				coinType: inputs.coinInType,
+			})
 		) {
 			return this.tradeBaseToQuoteTx(commandInputs);
 		}
@@ -647,8 +655,10 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		};
 
 		if (
-			Helpers.stripLeadingZeroesFromType(inputs.coinInType) ===
-			Helpers.stripLeadingZeroesFromType(inputs.pool.baseCoinType)
+			DeepBookApi.isBaseCoinType({
+				...inputs,
+				coinType: inputs.coinInType,
+			})
 		) {
 			return this.getAsksTx(commandInputs);
 		}
@@ -842,6 +852,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 		coinOutType: CoinType;
 		routerSwapCapCoinType: CoinType;
 		poolObjectId: ObjectId;
+		lotSize: bigint;
 		routerSwapCapBytes: Uint8Array;
 		coinInBytes: Uint8Array;
 	}) /* (Coin) */ => {
@@ -865,6 +876,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 				tx.object(inputs.poolObjectId),
 				tx.pure(inputs.coinInBytes),
 				tx.object(Sui.constants.addresses.suiClockId),
+				tx.pure(inputs.lotSize, "u64"), // lot_size
 			],
 		});
 	};
@@ -997,7 +1009,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	// =========================================================================
 
 	private static isPoolForCoinTypes = (inputs: {
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 		coinType1: CoinType;
 		coinType2: CoinType;
 	}) => {
@@ -1014,7 +1026,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	};
 
 	private static isPoolForCoinType = (inputs: {
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 		coinType: CoinType;
 	}) => {
 		const { pool, coinType } = inputs;
@@ -1026,7 +1038,7 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	};
 
 	private static isBaseCoinType = (inputs: {
-		pool: DeepBookPoolObject;
+		pool: PartialDeepBookPoolObject;
 		coinType: CoinType;
 	}) => {
 		const { coinType, pool } = inputs;

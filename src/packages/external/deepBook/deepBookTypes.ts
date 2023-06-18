@@ -10,6 +10,7 @@ export interface PartialDeepBookPoolObject extends Object {
 	baseCoinType: CoinType;
 	quoteCoinType: CoinType;
 	takerFeeRate: number;
+	lotSize: bigint;
 }
 
 export type DeepBookPoolObject = PartialDeepBookPoolObject & {
