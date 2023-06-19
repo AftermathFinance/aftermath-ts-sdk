@@ -60,8 +60,8 @@ export class RouterGraph {
 
 	public static readonly defaultOptions: RouterOptions = {
 		maxRouteLength: 3,
-		tradePartitionCount: 3,
-		minRoutesToCheck: 10,
+		tradePartitionCount: 2,
+		minRoutesToCheck: 5,
 		maxGasCost: BigInt(350_000_000), // 0.35 SUI
 	};
 

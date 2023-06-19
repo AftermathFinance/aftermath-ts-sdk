@@ -25,7 +25,7 @@ export class RouterApiHelpers {
 
 	public static readonly constants = {
 		defaults: {
-			tradePartitionCount: 3,
+			tradePartitionCount: 2,
 		},
 	};
 
@@ -174,9 +174,9 @@ export class RouterApiHelpers {
 		});
 
 		routerGraph.updateOptions({
-			// maxRouteLength: 2,
-			tradePartitionCount: 2,
-			maxGasCost: BigInt(333_333_333), // 0.333 SUI
+			maxRouteLength: 2,
+			tradePartitionCount: 1,
+			// maxGasCost: BigInt(333_333_333), // 0.333 SUI
 		});
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
