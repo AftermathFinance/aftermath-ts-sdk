@@ -209,7 +209,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		amount: number,
 		totalFeeRate: number = 0
 	) => {
-		let amountToSwapA = amount / 2;
+		let amountToSwapA = amount;
 		let counter = 0;
 		let left = 0,
 			right = amount;
@@ -236,7 +236,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 				left = amountToSwapA;
 			}
 
-			amountToSwapA = (left + right) / 2;
+			// amountToSwapA = (left + right) / 2;
 			counter += 1;
 		}
 
@@ -252,7 +252,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		amount: number,
 		totalFeeRate: number = 0
 	) => {
-		let amountToSwapA = amount / 2;
+		let amountToSwapA = amount;
 		let counter = 0;
 		let left = 0,
 			right = amount;
@@ -275,7 +275,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 				left = amountToSwapA;
 			}
 
-			amountToSwapA = (left + right) / 2;
+			// amountToSwapA = (left + right) / 2;
 			counter += 1;
 		}
 
