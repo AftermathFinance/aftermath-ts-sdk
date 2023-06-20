@@ -5,7 +5,13 @@ import { Balance, CoinType, RouterSerializablePool } from "../../../types";
 //  Objects
 // =========================================================================
 
-export interface CetusPoolObject {
+export type CetusPoolObject = CetusPoolSimpleInfo & {
+	coinABalance: Balance;
+	coinBBalance: Balance;
+	isPaused: boolean;
+};
+
+export interface CetusPoolSimpleInfo {
 	id: ObjectId;
 	coinTypeA: CoinType;
 	coinTypeB: CoinType;

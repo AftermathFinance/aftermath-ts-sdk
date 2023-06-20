@@ -2,17 +2,20 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import {
 	ObjectId,
-	SuiAddress,
 	SuiObjectResponse,
 	TransactionBlock,
 	bcs,
 	getObjectFields,
 } from "@mysten/sui.js";
-import { CetusCalcTradeResult, CetusPoolObject } from "./cetusTypes";
+import {
+	CetusCalcTradeResult,
+	CetusPoolObject,
+	CetusPoolSimpleInfo,
+} from "./cetusTypes";
 import { AnyObjectType, Balance, CetusAddresses } from "../../../types";
 import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { Helpers } from "../../../general/utils";
-import { Pools, RouterPoolTradeTxInputs, Sui } from "../..";
+import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
 
@@ -65,7 +68,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async () => {
+	public fetchAllPools = async (): Promise<CetusPoolObject[]> => {
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				{
@@ -74,7 +77,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 						this.Provider.Objects().fetchCastObjectBatch({
 							objectIds,
 							objectFromSuiObjectResponse:
-								CetusApi.poolFromSuiObjectResponse,
+								CetusApi.poolSimpleInfoFromSuiObjectResponse,
 						}),
 				}
 			);
@@ -87,20 +90,28 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 					if (!fields)
 						throw new Error("no fields found on cetus pool object");
 
-					const liquidity = BigInt(fields.liquidity);
+					const coinABalance = BigInt(fields.coin_a);
+					const coinBBalance = BigInt(fields.coin_b);
 					const isPaused = fields.is_pause as unknown as boolean;
 
 					return {
-						liquidity,
+						coinABalance,
+						coinBBalance,
 						isPaused,
 					};
 				},
 			});
 
-		const usablePools = poolsSimpleInfo.filter(
-			(_, index) =>
-				!poolsMoreInfo[index].isPaused &&
-				poolsMoreInfo[index].liquidity > BigInt(0)
+		const pools = poolsSimpleInfo.map((info, index) => ({
+			...info,
+			...poolsMoreInfo[index],
+		}));
+
+		const usablePools = pools.filter(
+			(pool) =>
+				!pool.isPaused &&
+				pool.coinABalance > BigInt(0) &&
+				pool.coinBBalance > BigInt(0)
 		);
 
 		return usablePools;
@@ -109,16 +120,30 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	public fetchPoolsForTrade = async (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
+		maxPools: number;
 	}): Promise<{
 		partialMatchPools: CetusPoolObject[];
 		exactMatchPools: CetusPoolObject[];
 	}> => {
+		const coinType = inputs.coinOutType;
+
 		const possiblePools = await this.fetchPoolsForCoinType({
-			coinType: inputs.coinOutType,
+			coinType,
 		});
+		const bestPossiblePools = possiblePools
+			.sort((a, b) => {
+				const aPoolLiquidity = CetusApi.isCoinA({ pool: a, coinType })
+					? a.coinABalance
+					: a.coinBBalance;
+				const bPoolLiquidity = CetusApi.isCoinA({ pool: b, coinType })
+					? b.coinABalance
+					: b.coinBBalance;
+				return Number(bPoolLiquidity - aPoolLiquidity);
+			})
+			.slice(0, inputs.maxPools);
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			possiblePools,
+			bestPossiblePools,
 			(pool) =>
 				CetusApi.isPoolForCoinTypes({
 					pool,
@@ -423,9 +448,9 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	//  Casting
 	// =========================================================================
 
-	private static poolFromSuiObjectResponse = (
+	private static poolSimpleInfoFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): CetusPoolObject => {
+	): CetusPoolSimpleInfo => {
 		const content = data.data?.content;
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");

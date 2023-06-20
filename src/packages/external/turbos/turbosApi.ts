@@ -2,9 +2,7 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import {
 	ObjectId,
-	SuiAddress,
 	SuiObjectResponse,
-	TransactionArgument,
 	TransactionBlock,
 	bcs,
 	getObjectFields,
@@ -17,9 +15,13 @@ import {
 	TurbosAddresses,
 } from "../../../types";
 import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
-import { Casting, Helpers } from "../../../general/utils";
-import { TurbosCalcTradeResult, TurbosPoolObject } from "./turbosTypes";
-import { Pools, RouterPoolTradeTxInputs, Sui } from "../..";
+import { Helpers } from "../../../general/utils";
+import {
+	TurbosCalcTradeResult,
+	TurbosPartialPoolObject,
+	TurbosPoolObject,
+} from "./turbosTypes";
+import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
 
@@ -102,28 +104,28 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 						);
 
 					const sqrtPrice = BigInt(fields.sqrt_price);
-					const liquidity = BigInt(fields.liquidity);
+					const coinABalance = BigInt(fields.coin_a);
+					const coinBBalance = BigInt(fields.coin_b);
 					const isUnlocked = fields.unlocked as unknown as boolean;
 
 					return {
-						liquidity,
+						coinABalance,
+						coinBBalance,
 						isUnlocked,
 						sqrtPrice,
 					};
 				},
 			});
 
-		const completePools = poolsSimpleInfo.map((info, index) => {
-			return {
-				...info,
-				sqrtPrice: poolsMoreInfo[index].sqrtPrice,
-			};
-		});
-
+		const completePools = poolsSimpleInfo.map((info, index) => ({
+			...info,
+			...poolsMoreInfo[index],
+		}));
 		const usablePools = completePools.filter(
-			(_, index) =>
-				poolsMoreInfo[index].isUnlocked &&
-				poolsMoreInfo[index].liquidity > BigInt(0)
+			(pool) =>
+				pool.isUnlocked &&
+				pool.coinABalance > BigInt(0) &&
+				pool.coinBBalance > BigInt(0)
 		);
 
 		return usablePools;
@@ -132,16 +134,30 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	public fetchPoolsForTrade = async (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
+		maxPools: number;
 	}): Promise<{
 		partialMatchPools: TurbosPoolObject[];
 		exactMatchPools: TurbosPoolObject[];
 	}> => {
+		const coinType = inputs.coinOutType;
+
 		const possiblePools = await this.fetchPoolsForCoinType({
-			coinType: inputs.coinOutType,
+			coinType,
 		});
+		const bestPossiblePools = possiblePools
+			.sort((a, b) => {
+				const aPoolLiquidity = TurbosApi.isCoinA({ pool: a, coinType })
+					? a.coinABalance
+					: a.coinBBalance;
+				const bPoolLiquidity = TurbosApi.isCoinA({ pool: b, coinType })
+					? b.coinABalance
+					: b.coinBBalance;
+				return Number(bPoolLiquidity - aPoolLiquidity);
+			})
+			.slice(0, inputs.maxPools);
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			possiblePools,
+			bestPossiblePools,
 			(pool) =>
 				TurbosApi.isPoolForCoinTypes({
 					pool,
@@ -480,7 +496,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 
 	private static partialPoolFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): Omit<TurbosPoolObject, "sqrtPrice"> => {
+	): TurbosPartialPoolObject => {
 		const content = data.data?.content;
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");

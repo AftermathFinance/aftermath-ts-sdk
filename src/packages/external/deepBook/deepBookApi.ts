@@ -191,16 +191,36 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	public fetchPoolsForTrade = async (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
+		maxPools: number;
 	}): Promise<{
 		partialMatchPools: PartialDeepBookPoolObject[];
 		exactMatchPools: PartialDeepBookPoolObject[];
 	}> => {
+		const coinType = inputs.coinOutType;
+
 		const possiblePools = await this.fetchPoolsForCoinType({
 			coinType: inputs.coinOutType,
 		});
+		const bestPossiblePools = possiblePools
+			.sort((a, b) => {
+				const aPoolLiquidity = DeepBookApi.isBaseCoinType({
+					pool: a,
+					coinType,
+				})
+					? a.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
+					: a.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
+				const bPoolLiquidity = DeepBookApi.isBaseCoinType({
+					pool: b,
+					coinType,
+				})
+					? b.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
+					: b.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
+				return Number(bPoolLiquidity - aPoolLiquidity);
+			})
+			.slice(0, inputs.maxPools);
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			possiblePools,
+			bestPossiblePools,
 			(pool) =>
 				DeepBookApi.isPoolForCoinTypes({
 					pool,

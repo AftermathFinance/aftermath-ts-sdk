@@ -106,10 +106,16 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute {
+		const start = performance.now();
+
 		const result = this.getCompleteRoute({
 			...inputs,
 			isGivenAmountOut: false,
 		});
+
+		const end = performance.now();
+		console.log("(GRAPH):", end - start, "ms");
+		console.log("\n");
 
 		return result;
 	}
@@ -138,6 +144,8 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute[] {
+		const start = performance.now();
+
 		const completeRoutes = inputs.coinInAmounts.map((coinInAmount) => {
 			try {
 				return this.getCompleteRoute({
@@ -168,6 +176,10 @@ export class RouterGraph {
 		)
 			? []
 			: completeRoutes;
+
+		const end = performance.now();
+		console.log("(GRAPH):", end - start, "ms");
+		console.log("\n");
 
 		return result;
 	}

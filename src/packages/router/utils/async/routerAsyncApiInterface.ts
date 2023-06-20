@@ -28,6 +28,7 @@ export interface RouterAsyncApiInterface<
 	fetchPoolsForTrade: (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
+		maxPools: number;
 	}) => Promise<{
 		partialMatchPools: PoolType[];
 		exactMatchPools: PoolType[];

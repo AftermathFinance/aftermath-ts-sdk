@@ -8,12 +8,12 @@ import {
 import { Balance, CoinType } from "../../../types";
 import { RouterAsyncApiInterface } from "../utils/async/routerAsyncApiInterface";
 import { CetusApi } from "../../external/cetus/cetusApi";
-import { RpcApiHelpers } from "../../../general/api/rpcApiHelpers";
 import { TurbosApi } from "../../external/turbos/turbosApi";
 import { isTurbosPoolObject } from "../../external/turbos/turbosTypes";
 import { isCetusPoolObject } from "../../external/cetus/cetusTypes";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
+import { RouterApiHelpers } from "./routerApiHelpers";
 
 export class RouterAsyncApiHelpers {
 	// =========================================================================
@@ -57,7 +57,16 @@ export class RouterAsyncApiHelpers {
 			partialMatchPools: RouterAsyncSerializablePool[];
 			exactMatchPools: RouterAsyncSerializablePool[];
 		} = (
-			await Promise.all(apis.map((api) => api.fetchPoolsForTrade(inputs)))
+			await Promise.all(
+				apis.map((api) =>
+					api.fetchPoolsForTrade({
+						...inputs,
+						maxPools:
+							RouterApiHelpers.constants.defaults
+								.maxAsyncPoolsPerProtocol,
+					})
+				)
+			)
 		).reduce(
 			(acc, pools) => {
 				return {
@@ -87,6 +96,8 @@ export class RouterAsyncApiHelpers {
 		coinInAmounts: Balance[];
 	}): Promise<RouterAsyncTradeResults> => {
 		const { coinInAmounts } = inputs;
+
+		const start = performance.now();
 
 		const protocols = inputs.pools.map((pool) =>
 			this.protocolNameFromPool({ pool })
@@ -132,6 +143,11 @@ export class RouterAsyncApiHelpers {
 		const results = resultsOrUndefined.filter(
 			(result) => result !== undefined
 		) as RouterAsyncTradeResult[];
+
+		const end = performance.now();
+		console.log("(RESULTS 1):", end - start, "ms");
+		console.log("size: ", resultsOrUndefined.length);
+		console.log("\n");
 
 		return {
 			...inputs,

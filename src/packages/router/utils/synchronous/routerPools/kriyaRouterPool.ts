@@ -80,7 +80,6 @@ class KriyaRouterPool implements RouterPoolInterface {
 		return 1;
 	};
 
-	// TODO: calc by taking into account fee amount
 	getTradeAmountOut = (inputs: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
