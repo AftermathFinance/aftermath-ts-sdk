@@ -9,7 +9,6 @@ import {
 	AnyObjectType,
 	CoinType,
 	PerpetualsAddresses,
-	Timestamp,
 } from "../../../types";
 import {
 	PerpetualsAccountManagerObject,
@@ -751,96 +750,5 @@ export class PerpetualsApi {
 		});
 
 		return tx;
-	};
-
-	// =========================================================================
-	//  Oracle Transactions
-	// =========================================================================
-
-	public fetchOracleCreatePriceFeedTx = async (inputs: {
-		walletAddress: SuiAddress;
-		symbol: string;
-		decimal: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.oracleCreatePriceFeedTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
-
-	public fetchOracleUpdatePriceFeedTx = async (inputs: {
-		walletAddress: SuiAddress;
-		symbol: string;
-		price: bigint;
-		timestamp: Timestamp;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.oracleUpdatePriceFeedTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
-
-	public oracleCreatePriceFeedTx = (inputs: {
-		tx: TransactionBlock;
-		symbol: string;
-		decimal: bigint;
-	}) => {
-		const { tx, symbol, decimal } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.objects.oracle.packages.oracle,
-				"oracle",
-				"create_price_feed"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(
-					this.addresses.objects.oracle.objects.authorityCapability
-				),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.pure(symbol),
-				tx.pure(decimal),
-			],
-		});
-	};
-
-	public oracleUpdatePriceFeedTx = (inputs: {
-		tx: TransactionBlock;
-		symbol: string;
-		price: bigint;
-		timestamp: Timestamp;
-	}) => {
-		const { tx, symbol, price, timestamp } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.objects.oracle.packages.oracle,
-				"oracle",
-				"update_price_feed"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(
-					this.addresses.objects.oracle.objects.authorityCapability
-				),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.pure(symbol),
-				tx.pure(price),
-				tx.pure(timestamp),
-			],
-		});
 	};
 }

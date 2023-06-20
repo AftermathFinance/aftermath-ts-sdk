@@ -25,6 +25,7 @@ interface OptionalConfigAddresses {
 	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
 	perpetuals: PerpetualsAddresses;
+	oracle: OracleAddresses;
 }
 
 // =========================================================================
@@ -241,4 +242,41 @@ export interface OracleAddresses {
 		authorityCapability: ObjectId;
 		priceFeedStorage: ObjectId;
 	};
+}
+
+// =========================================================================
+//  Config used in the Rust SDK
+// =========================================================================
+
+export interface RustAddresses {
+	faucet?: {
+		package_id: ObjectId;
+		faucet: ObjectId;
+		faucet_registry: ObjectId;
+		treasury_caps: Map<string, ObjectId>;
+	};
+	perpetuals?: {
+		package: ObjectId;
+		admin_capability: ObjectId;
+		registry: ObjectId;
+		exchanges: Map<string, RustExchangeAddresses>;
+		oracle?: RustOracleAddresses;
+		curr_collateral?: string;
+	};
+	oracle?: RustOracleAddresses;
+	spot_orderbook?: any;
+};
+
+export interface RustExchangeAddresses {
+	account_manager: ObjectId;
+	account_capabilities: Map<number, ObjectId>;
+	market_manager: ObjectId;
+	vault: ObjectId;
+	insurance_fund: ObjectId;
+}
+
+export interface RustOracleAddresses {
+	package: ObjectId;
+	authority_capability: ObjectId;
+	price_feed_storage: ObjectId;
 }

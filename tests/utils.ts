@@ -1,15 +1,11 @@
 import {
 	Ed25519Keypair,
-	getObjectId,
-	JsonRpcProvider,
-	ObjectId,
 	RawSigner,
-	Signer,
 } from "@mysten/sui.js";
 import { fromB64 } from "@mysten/bcs";
 import PriorityQueue from "priority-queue-typescript";
 import { PerpetualsOrderCasted } from "../src/types";
-import { Aftermath, AftermathApi } from "../src/general/providers";
+import { AftermathApi } from "../src/general/providers";
 
 export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";
 export const user1PrivateKey = "AOzplQlAK2Uznvog7xmcMtlFC+DfuJx3axo9lfyI876G";
@@ -18,10 +14,10 @@ export const user3PrivateKey = "AIUAgL5jYMzf0JPCmc263Ou6tH5Z/HuAdtWFFUiz8Zc0";
 export const user4PrivateKey = "AAu4ySMvq2wygxl/Ze6AGgkYfxg+rzUElj7UxxI6NHBI";
 export const ASK = true;
 export const BID = false;
-export const LOT_SIZE = BigInt(1);
-export const TICK_SIZE = BigInt(1);
+export const LOT_SIZE = BigInt(1000000);
+export const TICK_SIZE = BigInt(1000);
 export const ONE_B9 = BigInt(1_000_000_000); // 9 decimal places
-export const ACCOUNT_ID = BigInt(0);
+export const ONE_F18 = BigInt(1_000_000_000_000_000_000); // 18 decimal places
 export const MARKET_ID0 = BigInt(0);
 export const MARKET_ID1 = BigInt(1);
 
@@ -42,6 +38,7 @@ export const fromOraclePriceToOrderbookPrice = (
 	lot_size: bigint,
 	tick_size: bigint
 ): bigint => {
+	oracle_price = oracle_price / ONE_B9; // convert f18 to b9 (assuming the former is positive)
 	return oracle_price / tick_size / (ONE_B9 / lot_size);
 };
 

@@ -22,6 +22,7 @@ import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
+import { OracleApi } from "../../packages/oracle/api/oracleApi";
 
 export class AftermathApi {
 	// =========================================================================
@@ -117,4 +118,5 @@ export class AftermathApi {
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);
+	public Oracle = () => new OracleApi(this);
 }
