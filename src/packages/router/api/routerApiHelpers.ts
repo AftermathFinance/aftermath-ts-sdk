@@ -25,7 +25,7 @@ export class RouterApiHelpers {
 
 	public static readonly constants = {
 		defaults: {
-			tradePartitionCount: 2,
+			tradePartitionCount: 1,
 		},
 	};
 
