@@ -13,13 +13,13 @@ import {
 	CetusPoolSimpleInfo,
 } from "./cetusTypes";
 import { AnyObjectType, Balance, CetusAddresses } from "../../../types";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { Helpers } from "../../../general/utils";
 import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
+import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 
-export class CetusApi implements RouterApiInterface<CetusPoolObject> {
+export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -69,6 +69,8 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	// =========================================================================
 
 	public fetchAllPools = async (): Promise<CetusPoolObject[]> => {
+		const start1 = performance.now();
+
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				{
@@ -81,6 +83,12 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 						}),
 				}
 			);
+
+		const end1 = performance.now();
+		console.log("(DYN):", end1 - start1, "ms");
+		console.log("\n");
+
+		const start2 = performance.now();
 
 		const poolsMoreInfo =
 			await this.Provider.Objects().fetchCastObjectBatch({
@@ -102,6 +110,10 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 				},
 			});
 
+		const end2 = performance.now();
+		console.log("(OBJ):", end2 - start2, "ms");
+		console.log("\n");
+
 		const pools = poolsSimpleInfo.map((info, index) => ({
 			...info,
 			...poolsMoreInfo[index],
@@ -117,33 +129,29 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		return usablePools;
 	};
 
-	public fetchPoolsForTrade = async (inputs: {
+	public filterPoolsForTrade = (inputs: {
+		pools: CetusPoolObject[];
 		coinInType: CoinType;
 		coinOutType: CoinType;
-		maxPools: number;
-	}): Promise<{
+	}): {
 		partialMatchPools: CetusPoolObject[];
 		exactMatchPools: CetusPoolObject[];
-	}> => {
-		const coinType = inputs.coinOutType;
+	} => {
+		const possiblePools = inputs.pools.sort((a, b) => {
+			const coinType = inputs.coinOutType;
 
-		const possiblePools = await this.fetchPoolsForCoinType({
-			coinType,
+			const aPoolLiquidity = CetusApi.isCoinA({ pool: a, coinType })
+				? a.coinABalance
+				: a.coinBBalance;
+			const bPoolLiquidity = CetusApi.isCoinA({ pool: b, coinType })
+				? b.coinABalance
+				: b.coinBBalance;
+
+			return Number(bPoolLiquidity - aPoolLiquidity);
 		});
-		const bestPossiblePools = possiblePools
-			.sort((a, b) => {
-				const aPoolLiquidity = CetusApi.isCoinA({ pool: a, coinType })
-					? a.coinABalance
-					: a.coinBBalance;
-				const bPoolLiquidity = CetusApi.isCoinA({ pool: b, coinType })
-					? b.coinABalance
-					: b.coinBBalance;
-				return Number(bPoolLiquidity - aPoolLiquidity);
-			})
-			.slice(0, inputs.maxPools);
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			bestPossiblePools,
+			possiblePools,
 			(pool) =>
 				CetusApi.isPoolForCoinTypes({
 					pool,
@@ -397,47 +405,6 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		return CetusApi.isCoinA(inputs)
 			? inputs.pool.coinTypeB
 			: inputs.pool.coinTypeA;
-	};
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Objects
-	// =========================================================================
-
-	private fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => {
-		const allPools = await this.fetchAllPools();
-
-		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
-		const foundPool = allPools.find((pool) =>
-			CetusApi.isPoolForCoinTypes({
-				pool,
-				...inputs,
-			})
-		);
-
-		if (!foundPool)
-			throw new Error("no cetus pools found for given coin types");
-
-		return foundPool;
-	};
-
-	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
-		const allPools = await this.fetchAllPools();
-
-		const foundPools = allPools.filter((pool) =>
-			CetusApi.isPoolForCoinType({
-				pool,
-				...inputs,
-			})
-		);
-
-		return foundPools;
 	};
 
 	// =========================================================================

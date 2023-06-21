@@ -6,7 +6,6 @@ import {
 	DeepBookPriceRange,
 	PartialDeepBookPoolObject,
 } from "./deepBookTypes";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import {
 	ObjectId,
 	SuiAddress,
@@ -27,8 +26,11 @@ import {
 import { Coin } from "../../coin";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { BCS } from "@mysten/bcs";
+import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 
-export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
+export class DeepBookApi
+	implements RouterAsyncApiInterface<DeepBookPoolObject>
+{
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -188,39 +190,35 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	//  Async Router Pool Api Interface Methods
 	// =========================================================================
 
-	public fetchPoolsForTrade = async (inputs: {
+	public filterPoolsForTrade = (inputs: {
+		pools: DeepBookPoolObject[];
 		coinInType: CoinType;
 		coinOutType: CoinType;
-		maxPools: number;
-	}): Promise<{
-		partialMatchPools: PartialDeepBookPoolObject[];
-		exactMatchPools: PartialDeepBookPoolObject[];
-	}> => {
-		const coinType = inputs.coinOutType;
+	}): {
+		partialMatchPools: DeepBookPoolObject[];
+		exactMatchPools: DeepBookPoolObject[];
+	} => {
+		const possiblePools = inputs.pools.sort((a, b) => {
+			const coinType = inputs.coinOutType;
 
-		const possiblePools = await this.fetchPoolsForCoinType({
-			coinType: inputs.coinOutType,
-		});
-		const bestPossiblePools = possiblePools
-			.sort((a, b) => {
-				const aPoolLiquidity = DeepBookApi.isBaseCoinType({
-					pool: a,
-					coinType,
-				})
-					? a.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
-					: a.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
-				const bPoolLiquidity = DeepBookApi.isBaseCoinType({
-					pool: b,
-					coinType,
-				})
-					? b.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
-					: b.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
-				return Number(bPoolLiquidity - aPoolLiquidity);
+			const aPoolLiquidity = DeepBookApi.isBaseCoinType({
+				pool: a,
+				coinType,
 			})
-			.slice(0, inputs.maxPools);
+				? a.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
+				: a.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
+			const bPoolLiquidity = DeepBookApi.isBaseCoinType({
+				pool: b,
+				coinType,
+			})
+				? b.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
+				: b.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
+
+			return Number(bPoolLiquidity - aPoolLiquidity);
+		});
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			bestPossiblePools,
+			possiblePools,
 			(pool) =>
 				DeepBookApi.isPoolForCoinTypes({
 					pool,
@@ -256,15 +254,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
-
-	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const pools = await this.fetchAllPartialPools();
-		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, pool.baseCoinType, pool.quoteCoinType],
-			[] as CoinType[]
-		);
-		return Helpers.uniqueArray(allCoins);
-	};
 
 	public fetchCalcTradeAmountOut = async (inputs: {
 		pool: PartialDeepBookPoolObject;
@@ -1003,23 +992,6 @@ export class DeepBookApi implements RouterApiInterface<DeepBookPoolObject> {
 			router_fee_metadata: "RouterFeeMetadata",
 			referrer: "Option<address>",
 		});
-	};
-
-	// =========================================================================
-	//  Objects
-	// =========================================================================
-
-	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
-		const allPools = await this.fetchAllPools();
-
-		const foundPools = allPools.filter((pool) =>
-			DeepBookApi.isPoolForCoinType({
-				pool,
-				...inputs,
-			})
-		);
-
-		return foundPools;
 	};
 
 	// =========================================================================

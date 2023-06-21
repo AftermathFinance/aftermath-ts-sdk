@@ -8,9 +8,10 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
 	RouterExternalFee,
-	RouterProtocolName,
-	RouterSerializablePool,
+	RouterSynchronousProtocolName,
+	RouterSynchronousSerializablePool,
 	RouterTradeEvent,
+	SynchronousProtocolsToPoolObjectIds,
 } from "../routerTypes";
 import {
 	AnyObjectType,
@@ -24,12 +25,9 @@ import {
 } from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
 import { Router } from "../router";
-import { RouterApiInterface } from "../utils/synchronous/interfaces/routerApiInterface";
+import { RouterSynchronousApiInterface } from "../utils/synchronous/interfaces/routerSynchronousApiInterface";
 import { PoolsApi } from "../../pools/api/poolsApi";
-import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { Casting, Helpers } from "../../../general/utils";
-import { CetusApi } from "../../external/cetus/cetusApi";
-import { TurbosApi } from "../../external/turbos/turbosApi";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
@@ -46,13 +44,10 @@ export class RouterSynchronousApiHelpers {
 	// =========================================================================
 
 	private readonly protocolNamesToApi: Record<
-		RouterProtocolName,
-		() => RouterApiInterface<any>
+		RouterSynchronousProtocolName,
+		() => RouterSynchronousApiInterface<any>
 	> = {
 		Aftermath: () => new PoolsApi(this.Provider),
-		DeepBook: () => new DeepBookApi(this.Provider),
-		Cetus: () => new CetusApi(this.Provider),
-		Turbos: () => new TurbosApi(this.Provider),
 		Interest: () => new InterestApi(this.Provider),
 		Kriya: () => new KriyaApi(this.Provider),
 		BaySwap: () => new BaySwapApi(this.Provider),
@@ -78,7 +73,6 @@ export class RouterSynchronousApiHelpers {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
 	};
-
 	public readonly eventTypes: {
 		routerTrade: AnyObjectType;
 	};
@@ -102,7 +96,6 @@ export class RouterSynchronousApiHelpers {
 			pools,
 			referralVault,
 		};
-
 		this.eventTypes = {
 			routerTrade: this.routerTradeEventType(),
 		};
@@ -112,45 +105,50 @@ export class RouterSynchronousApiHelpers {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async (inputs: {
-		protocols: RouterProtocolName[];
-	}): Promise<RouterSerializablePool[]> => {
-		const apis = this.protocolApisFromNames(inputs);
+	public fetchPoolsFromIds = async (inputs: {
+		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
+	}): Promise<RouterSynchronousSerializablePool[]> => {
+		const protocols = Object.keys(
+			inputs.synchronousProtocolsToPoolObjectIds
+		) as RouterSynchronousProtocolName[];
+
+		const apis = this.protocolApisFromNames({ protocols });
 
 		const poolsByProtocol = await Promise.all(
-			apis.map((api) => api.fetchAllPools())
+			apis.map((api, index) =>
+				api.fetchPoolsFromIds({
+					objectIds:
+						inputs.synchronousProtocolsToPoolObjectIds[
+							protocols[index]
+						],
+				})
+			)
 		);
 
 		const pools = poolsByProtocol.reduce(
 			(arr, acc) => [...acc, ...arr],
 			[]
 		);
-
 		return pools;
 	};
 
-	// =========================================================================
-	//  Inspections
-	// =========================================================================
+	public fetchAllPoolIds = async (inputs: {
+		protocols: RouterSynchronousProtocolName[];
+	}): Promise<SynchronousProtocolsToPoolObjectIds> => {
+		const apis = this.protocolApisFromNames(inputs);
 
-	public fetchSupportedCoins = async (inputs: {
-		protocols: RouterProtocolName[];
-	}): Promise<CoinType[]> => {
-		const apis = this.protocolApisFromNames({
-			protocols: inputs.protocols,
-		});
-
-		const arrayOfArraysOfCoins = await Promise.all(
-			apis.map((api) => api.fetchSupportedCoins())
+		const poolIdsByProtocol = await Promise.all(
+			apis.map((api) => api.fetchAllPoolIds())
 		);
 
-		const allCoins = arrayOfArraysOfCoins.reduce(
-			(arr, acc) => [...acc, ...arr],
-			[]
+		const poolIds = poolIdsByProtocol.reduce(
+			(acc, ids, index) => ({
+				...acc,
+				[inputs.protocols[index]]: ids,
+			}),
+			{} as SynchronousProtocolsToPoolObjectIds
 		);
-		const coins = Helpers.uniqueArray(allCoins);
-
-		return coins;
+		return poolIds;
 	};
 
 	// =========================================================================
@@ -463,8 +461,8 @@ export class RouterSynchronousApiHelpers {
 	// =========================================================================
 
 	private protocolApisFromNames = (inputs: {
-		protocols: RouterProtocolName[];
-	}): RouterApiInterface<any>[] => {
+		protocols: RouterSynchronousProtocolName[];
+	}): RouterSynchronousApiInterface<any>[] => {
 		const { protocols } = inputs;
 		return protocols.map((name) => this.protocolNamesToApi[name]());
 	};

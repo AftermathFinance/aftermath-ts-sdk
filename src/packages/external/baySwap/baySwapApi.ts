@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
+import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import {
 	ObjectId,
 	SuiObjectResponse,
@@ -22,7 +22,9 @@ import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { RouterPoolTradeTxInputs } from "../../router";
 
-export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
+export class BaySwapApi
+	implements RouterSynchronousApiInterface<BaySwapPoolObject>
+{
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -63,19 +65,23 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async (): Promise<BaySwapPoolObject[]> => {
-		const pools =
-			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				{
-					parentObjectId: this.addresses.objects.poolsBag,
-					objectsFromObjectIds: (objectIds) =>
-						this.Provider.Objects().fetchCastObjectBatch({
-							objectIds,
-							objectFromSuiObjectResponse:
-								BaySwapApi.baySwapPoolObjectFromSuiObjectResponse,
-						}),
-				}
-			);
+	public fetchAllPoolIds = async () => {
+		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
+			parentObjectId: this.addresses.objects.poolsBag,
+			objectsFromObjectIds: (objectIds) => objectIds,
+		});
+	};
+
+	public fetchPoolsFromIds = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<BaySwapPoolObject[]> => {
+		const { objectIds } = inputs;
+
+		const pools = await this.Provider.Objects().fetchCastObjectBatch({
+			objectIds,
+			objectFromSuiObjectResponse:
+				BaySwapApi.baySwapPoolObjectFromSuiObjectResponse,
+		});
 
 		const unlockedPools = pools.filter(
 			(pool) =>
@@ -84,19 +90,6 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 				pool.coinYReserveValue > BigInt(0)
 		);
 		return unlockedPools;
-	};
-
-	// =========================================================================
-	//  Inspections
-	// =========================================================================
-
-	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const pools = await this.fetchAllPools();
-		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, pool.coinTypeX, pool.coinTypeY],
-			[] as CoinType[]
-		);
-		return Helpers.uniqueArray(allCoins);
 	};
 
 	// =========================================================================

@@ -70,6 +70,7 @@ export class ObjectsApiHelpers {
 	}): Promise<SuiObjectResponse[]> => {
 		const { walletAddress, objectType, withDisplay } = inputs;
 
+		// TODO: handle pagination to make sure that ALL owned objects are found !
 		const objectsOwnedByAddress =
 			await this.Provider.provider.getOwnedObjects({
 				owner: walletAddress,

@@ -1,4 +1,4 @@
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { ObjectId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	Balance,
@@ -8,10 +8,13 @@ import {
 	RouterExternalFee,
 	RouterProtocolName,
 	RouterSerializableCompleteGraph,
+	RouterSynchronousProtocolName,
 	Slippage,
 	SuiNetwork,
+	SynchronousProtocolsToPoolObjectIds,
 	Url,
 	isRouterAsyncProtocolName,
+	isRouterAsyncSerializablePool,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
@@ -54,18 +57,22 @@ export class RouterApiHelpers {
 	//  Graph
 	// =========================================================================
 
-	public fetchSerializableGraph = async (inputs: {
-		protocols: RouterProtocolName[];
+	public fetchCreateSerializableGraph = async (inputs: {
+		asyncPools: RouterAsyncSerializablePool[];
+		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
 	}) => {
 		const start = performance.now();
 
-		const pools = await this.SynchronousHelpers.fetchAllPools(inputs);
+		const synchronousPools =
+			await this.SynchronousHelpers.fetchPoolsFromIds(inputs);
 
 		const end = performance.now();
 		console.log("(FETCH):", end - start, "ms");
 		console.log("\n");
 
-		return RouterGraph.createGraph({ pools });
+		return RouterGraph.createGraph({
+			pools: [...synchronousPools, ...inputs.asyncPools],
+		});
 	};
 
 	// =========================================================================
@@ -97,8 +104,11 @@ export class RouterApiHelpers {
 		);
 
 		const { exactMatchPools, partialMatchPools } =
-			await this.AsyncHelpers.fetchPossiblePools({
+			this.AsyncHelpers.filterPossiblePools({
 				...inputs,
+				pools: Object.values(graph.pools).filter(
+					isRouterAsyncSerializablePool
+				),
 				protocols: asyncProtocols,
 			});
 

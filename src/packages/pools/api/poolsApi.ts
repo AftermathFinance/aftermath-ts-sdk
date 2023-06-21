@@ -41,6 +41,7 @@ import {
 	EventsInputs,
 	Url,
 	AftermathRouterWrapperAddresses,
+	PoolObject,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -56,8 +57,9 @@ import dayjs, { ManipulateType } from "dayjs";
 import { PoolsApiCasting } from "./poolsApiCasting";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterPoolTradeTxInputs } from "../../router";
+import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 
-export class PoolsApi {
+export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -246,7 +248,7 @@ export class PoolsApi {
 		});
 	};
 
-	public fetchPools = async (inputs: { objectIds: ObjectId[] }) => {
+	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
 		return this.Provider.Objects().fetchCastObjectBatch({
 			...inputs,
 			objectFromSuiObjectResponse: Casting.pools.poolObjectFromSuiObject,
@@ -254,11 +256,11 @@ export class PoolsApi {
 	};
 
 	public fetchAllPools = async () => {
-		const objectIds = await this.fetchAllPoolObjectIds();
-		return this.fetchPools({ objectIds });
+		const objectIds = await this.fetchAllPoolIds();
+		return this.fetchPoolsFromIds({ objectIds });
 	};
 
-	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
+	public fetchAllPoolIds = async (): Promise<ObjectId[]> => {
 		const objectIds =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				{

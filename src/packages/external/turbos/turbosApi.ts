@@ -14,7 +14,6 @@ import {
 	ReferralVaultAddresses,
 	TurbosAddresses,
 } from "../../../types";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
 import { Helpers } from "../../../general/utils";
 import {
 	TurbosCalcTradeResult,
@@ -24,8 +23,9 @@ import {
 import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
+import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 
-export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
+export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -131,33 +131,29 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		return usablePools;
 	};
 
-	public fetchPoolsForTrade = async (inputs: {
+	public filterPoolsForTrade = (inputs: {
+		pools: TurbosPoolObject[];
 		coinInType: CoinType;
 		coinOutType: CoinType;
-		maxPools: number;
-	}): Promise<{
+	}): {
 		partialMatchPools: TurbosPoolObject[];
 		exactMatchPools: TurbosPoolObject[];
-	}> => {
-		const coinType = inputs.coinOutType;
+	} => {
+		const possiblePools = inputs.pools.sort((a, b) => {
+			const coinType = inputs.coinOutType;
 
-		const possiblePools = await this.fetchPoolsForCoinType({
-			coinType,
+			const aPoolLiquidity = TurbosApi.isCoinA({ pool: a, coinType })
+				? a.coinABalance
+				: a.coinBBalance;
+			const bPoolLiquidity = TurbosApi.isCoinA({ pool: b, coinType })
+				? b.coinABalance
+				: b.coinBBalance;
+
+			return Number(bPoolLiquidity - aPoolLiquidity);
 		});
-		const bestPossiblePools = possiblePools
-			.sort((a, b) => {
-				const aPoolLiquidity = TurbosApi.isCoinA({ pool: a, coinType })
-					? a.coinABalance
-					: a.coinBBalance;
-				const bPoolLiquidity = TurbosApi.isCoinA({ pool: b, coinType })
-					? b.coinABalance
-					: b.coinBBalance;
-				return Number(bPoolLiquidity - aPoolLiquidity);
-			})
-			.slice(0, inputs.maxPools);
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			bestPossiblePools,
+			possiblePools,
 			(pool) =>
 				TurbosApi.isPoolForCoinTypes({
 					pool,
@@ -443,47 +439,6 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		return this.isCoinA(inputs)
 			? inputs.pool.coinTypeB
 			: inputs.pool.coinTypeA;
-	};
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Objects
-	// =========================================================================
-
-	private fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => {
-		const allPools = await this.fetchAllPools();
-
-		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
-		const foundPool = allPools.find((pool) =>
-			TurbosApi.isPoolForCoinTypes({
-				pool,
-				...inputs,
-			})
-		);
-
-		if (!foundPool)
-			throw new Error("no turbos pools found for given coin types");
-
-		return foundPool;
-	};
-
-	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
-		const allPools = await this.fetchAllPools();
-
-		const foundPools = allPools.filter((pool) =>
-			TurbosApi.isPoolForCoinType({
-				pool,
-				...inputs,
-			})
-		);
-
-		return foundPools;
 	};
 
 	// =========================================================================

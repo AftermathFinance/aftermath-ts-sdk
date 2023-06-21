@@ -1,4 +1,4 @@
-import { SuiAddress } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
@@ -9,10 +9,19 @@ import {
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
-import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
+import {
+	DeepBookPoolObject,
+	isDeepBookPoolObject,
+} from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
-import { CetusPoolObject } from "../external/cetus/cetusTypes";
-import { TurbosPoolObject } from "../external/turbos/turbosTypes";
+import {
+	CetusPoolObject,
+	isCetusPoolObject,
+} from "../external/cetus/cetusTypes";
+import {
+	TurbosPoolObject,
+	isTurbosPoolObject,
+} from "../external/turbos/turbosTypes";
 import { InterestPoolObject } from "../external/interest/interestTypes";
 import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
 import { BaySwapPoolObject } from "../external/baySwap/baySwapTypes";
@@ -70,6 +79,12 @@ export type RouterSynchronousSerializablePool =
 	| SuiswapPoolObject
 	| BlueMovePoolObject;
 
+export const isRouterSynchronousSerializablePool = (
+	pool: RouterSerializablePool
+): pool is RouterSynchronousSerializablePool => {
+	return !isRouterAsyncSerializablePool(pool);
+};
+
 const RouterSynchronousProtocolNames = [
 	"Aftermath",
 	// "DeepBook",
@@ -90,6 +105,11 @@ export const isRouterSynchronousProtocolName = (
 	return RouterSynchronousProtocolNames.includes(protocolName);
 };
 
+export type SynchronousProtocolsToPoolObjectIds = Record<
+	Partial<RouterSynchronousProtocolName>,
+	ObjectId[]
+>;
+
 // =========================================================================
 //  Router Async Pools
 // =========================================================================
@@ -98,6 +118,16 @@ export type RouterAsyncSerializablePool =
 	| CetusPoolObject
 	| TurbosPoolObject
 	| DeepBookPoolObject;
+
+export const isRouterAsyncSerializablePool = (
+	pool: RouterSerializablePool
+): pool is RouterAsyncSerializablePool => {
+	return (
+		isDeepBookPoolObject(pool) ||
+		isTurbosPoolObject(pool) ||
+		isCetusPoolObject(pool)
+	);
+};
 
 const RouterAsyncProtocolNames = ["Cetus", "Turbos", "DeepBook"] as const;
 export type RouterAsyncProtocolName = (typeof RouterAsyncProtocolNames)[number];

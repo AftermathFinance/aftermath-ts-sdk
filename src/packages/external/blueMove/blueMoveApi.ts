@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
+import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import {
 	ObjectId,
 	SuiObjectResponse,
@@ -30,7 +30,9 @@ import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { RouterPoolTradeTxInputs } from "../../router";
 
-export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
+export class BlueMoveApi
+	implements RouterSynchronousApiInterface<BlueMovePoolObject>
+{
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -82,7 +84,7 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async (): Promise<BlueMovePoolObject[]> => {
+	public fetchAllPoolIds = async () => {
 		const [poolObjectIds, stablePoolObjectIds] = await Promise.all([
 			this.Provider.Events().fetchAllEvents({
 				fetchEventsFunc: (eventsInputs) =>
@@ -112,39 +114,29 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 			}),
 		]);
 
-		const [pools, stablePools] = await Promise.all([
-			this.Provider.Objects().fetchCastObjectBatch({
-				objectIds: poolObjectIds,
-				objectFromSuiObjectResponse:
-					BlueMoveApi.blueMovePoolObjectFromSuiObjectResponse,
-			}),
-			this.Provider.Objects().fetchCastObjectBatch({
-				objectIds: stablePoolObjectIds,
-				objectFromSuiObjectResponse:
-					BlueMoveApi.blueMoveStablePoolObjectFromSuiObjectResponse,
-			}),
-		]);
+		return [...poolObjectIds, ...stablePoolObjectIds];
+	};
 
-		const unlockedPools = [...pools, ...stablePools].filter(
+	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
+		const { objectIds } = inputs;
+
+		const pools = await this.Provider.Objects().fetchCastObjectBatch({
+			objectIds,
+			objectFromSuiObjectResponse: (data) =>
+				getObjectType(data)?.toLowerCase().includes("stable")
+					? BlueMoveApi.blueMoveStablePoolObjectFromSuiObjectResponse(
+							data
+					  )
+					: BlueMoveApi.blueMovePoolObjectFromSuiObjectResponse(data),
+		});
+
+		const unlockedPools = pools.filter(
 			(pool) =>
 				!pool.isFreeze &&
 				pool.tokenXValue > BigInt(0) &&
 				pool.tokenYValue > BigInt(0)
 		);
 		return unlockedPools;
-	};
-
-	// =========================================================================
-	//  Inspections
-	// =========================================================================
-
-	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const pools = await this.fetchAllPools();
-		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, pool.coinTypeX, pool.coinTypeY],
-			[] as CoinType[]
-		);
-		return Helpers.uniqueArray(allCoins);
 	};
 
 	// =========================================================================

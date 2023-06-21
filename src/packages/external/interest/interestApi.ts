@@ -1,7 +1,8 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
+import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import {
+	ObjectId,
 	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
@@ -14,7 +15,9 @@ import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { RouterPoolTradeTxInputs } from "../../router";
 
-export class InterestApi implements RouterApiInterface<InterestPoolObject> {
+export class InterestApi
+	implements RouterSynchronousApiInterface<InterestPoolObject>
+{
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -55,19 +58,21 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async (): Promise<InterestPoolObject[]> => {
-		const pools =
-			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				{
-					parentObjectId: this.addresses.objects.poolsBag,
-					objectsFromObjectIds: (objectIds) =>
-						this.Provider.Objects().fetchCastObjectBatch({
-							objectIds,
-							objectFromSuiObjectResponse:
-								InterestApi.interestPoolObjectFromSuiObjectResponse,
-						}),
-				}
-			);
+	public fetchAllPoolIds = async () => {
+		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
+			parentObjectId: this.addresses.objects.poolsBag,
+			objectsFromObjectIds: (objectIds) => objectIds,
+		});
+	};
+
+	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
+		const { objectIds } = inputs;
+
+		const pools = await this.Provider.Objects().fetchCastObjectBatch({
+			objectIds,
+			objectFromSuiObjectResponse:
+				InterestApi.interestPoolObjectFromSuiObjectResponse,
+		});
 
 		const unlockedPools = pools.filter(
 			(pool) =>
@@ -76,19 +81,6 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 				pool.balanceYValue > BigInt(0)
 		);
 		return unlockedPools;
-	};
-
-	// =========================================================================
-	//  Inspections
-	// =========================================================================
-
-	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const pools = await this.fetchAllPools();
-		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, pool.coinTypeX, pool.coinTypeY],
-			[] as CoinType[]
-		);
-		return Helpers.uniqueArray(allCoins);
 	};
 
 	// =========================================================================

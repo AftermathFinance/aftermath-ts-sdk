@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
+import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import {
 	ObjectId,
 	SuiObjectResponse,
@@ -28,7 +28,9 @@ import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { RouterPoolTradeTxInputs } from "../../router";
 
-export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
+export class KriyaApi
+	implements RouterSynchronousApiInterface<KriyaPoolObject>
+{
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -76,8 +78,8 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async (): Promise<KriyaPoolObject[]> => {
-		const poolObjectIds = await this.Provider.Events().fetchAllEvents({
+	public fetchAllPoolIds = async () => {
+		return this.Provider.Events().fetchAllEvents({
 			fetchEventsFunc: (eventsInputs) =>
 				this.Provider.Events().fetchCastEventsWithCursor({
 					...eventsInputs,
@@ -90,9 +92,13 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 						).poolId,
 				}),
 		});
+	};
+
+	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
+		const { objectIds } = inputs;
 
 		const pools = await this.Provider.Objects().fetchCastObjectBatch({
-			objectIds: poolObjectIds,
+			objectIds,
 			objectFromSuiObjectResponse:
 				KriyaApi.kriyaPoolObjectFromSuiObjectResponse,
 		});
@@ -104,19 +110,6 @@ export class KriyaApi implements RouterApiInterface<KriyaPoolObject> {
 				pool.tokenYValue > BigInt(0)
 		);
 		return unlockedPools;
-	};
-
-	// =========================================================================
-	//  Inspections
-	// =========================================================================
-
-	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const pools = await this.fetchAllPools();
-		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, pool.coinTypeX, pool.coinTypeY],
-			[] as CoinType[]
-		);
-		return Helpers.uniqueArray(allCoins);
 	};
 
 	// =========================================================================

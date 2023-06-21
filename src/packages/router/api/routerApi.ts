@@ -12,8 +12,18 @@ import {
 	RouterSerializableCompleteGraph,
 	RouterProtocolName,
 	UserEventsInputs,
+	RouterAsyncSerializablePool,
+	isRouterSynchronousProtocolName,
+	isRouterAsyncProtocolName,
+	RouterSynchronousProtocolName,
+	SynchronousProtocolsToPoolObjectIds,
 } from "../../../types";
-import { EventId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import {
+	EventId,
+	ObjectId,
+	SuiAddress,
+	TransactionBlock,
+} from "@mysten/sui.js";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
@@ -66,11 +76,29 @@ export class RouterApi {
 	//  Graph
 	// =========================================================================
 
-	public fetchSerializableGraph = async () => {
-		return this.Helpers.fetchSerializableGraph({
-			protocols: this.protocols,
+	public fetchCreateSerializableGraph = async (inputs: {
+		asyncPools: RouterAsyncSerializablePool[];
+		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
+	}): Promise<RouterSerializableCompleteGraph> => {
+		return this.Helpers.fetchCreateSerializableGraph(inputs);
+	};
+
+	public fetchAsyncPools = async (): Promise<
+		RouterAsyncSerializablePool[]
+	> => {
+		return this.Helpers.AsyncHelpers.fetchAllPools({
+			protocols: this.protocols.filter(isRouterAsyncProtocolName),
 		});
 	};
+
+	public fetchSynchronousPoolIds =
+		async (): Promise<SynchronousProtocolsToPoolObjectIds> => {
+			return this.Helpers.SynchronousHelpers.fetchAllPoolIds({
+				protocols: this.protocols.filter(
+					isRouterSynchronousProtocolName
+				),
+			});
+		};
 
 	// =========================================================================
 	//  Coin Paths

@@ -11,6 +11,7 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
 import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
 import { TransactionArgument } from "@mysten/sui.js";
+import { RouterSerializablePool } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
 
@@ -53,6 +54,20 @@ export interface PoolObject extends Object {
 	flatness: PoolFlatness;
 	coins: PoolCoins;
 }
+
+export const isPoolObject = (
+	pool: RouterSerializablePool
+): pool is PoolObject => {
+	return (
+		"name" in pool &&
+		"creator" in pool &&
+		"lpCoinType" in pool &&
+		"lpCoinSupply" in pool &&
+		"illiquidLpCoinSupply" in pool &&
+		"flatness" in pool &&
+		"coins" in pool
+	);
+};
 
 // =========================================================================
 //  Events

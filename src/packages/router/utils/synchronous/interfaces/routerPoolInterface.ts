@@ -13,6 +13,7 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
+	isPoolObject,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import AftermathRouterPool from "../routerPools/aftermathRouterPool";
@@ -76,8 +77,14 @@ export function createRouterPool(inputs: {
 		? new SuiswapRouterPool(pool, network)
 		: isBlueMovePoolObject(pool)
 		? new BlueMoveRouterPool(pool, network)
-		: new AftermathRouterPool(pool, network);
-	// TODO: throw error if pool not recognized (fallback is err)
+		: isPoolObject(pool)
+		? new AftermathRouterPool(pool, network)
+		: undefined;
+
+	if (!constructedPool)
+		throw new Error(
+			`Could not create router pool: ${JSON.stringify(pool)}`
+		);
 
 	return constructedPool;
 }

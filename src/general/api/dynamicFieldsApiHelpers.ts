@@ -90,7 +90,9 @@ export class DynamicFieldsApiHelpers {
 
 	public fetchCastAllDynamicFieldsOfType = async <ObjectType>(inputs: {
 		parentObjectId: ObjectId;
-		objectsFromObjectIds: (objectIds: ObjectId[]) => Promise<ObjectType[]>;
+		objectsFromObjectIds: (
+			objectIds: ObjectId[]
+		) => ObjectType[] | Promise<ObjectType[]>;
 		dynamicFieldType?:
 			| AnyObjectType
 			| ((objectType: AnyObjectType) => boolean);
