@@ -1,5 +1,6 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
+	AnyObjectType,
 	Balance,
 	Event,
 	Object,
@@ -9,8 +10,11 @@ import {
 import { CoinWithBalance } from "../coin/coinTypes";
 
 // =========================================================================
-//  NEW
+//  Name Only
 // =========================================================================
+
+export type SuiFrenAccessoryType = string;
+export type SuiFrenAccessoryName = string;
 
 // =========================================================================
 //  Objects
@@ -24,15 +28,27 @@ export interface CapyLabsAppObject extends Object {
 }
 
 export interface SuiFrenObject extends Object {
+	// object fields
 	generation: bigint;
 	birthdate: Timestamp;
 	cohort: bigint;
 	genes: bigint[];
 	attributes: SuiFrenAttributes;
 	birthLocation: string;
-	imageUrl: Url;
+
+	// dynamic fields
 	mixLimit?: bigint;
 	lastEpochMixed?: bigint;
+
+	// display fields
+	display: {
+		name: string;
+		link: Url;
+		imageUrl: Url;
+		description: string;
+		projectUrl: Url;
+		// creator: string;
+	};
 }
 
 export type SuiFrenAttributes = {
@@ -51,16 +67,17 @@ export enum SuiFrensSortOption {
 export interface StakedSuiFrenInfo {
 	suiFren: SuiFrenObject;
 	position: StakedSuiFrenPositionObject;
-	metadata: StakedSuiFrenMetadataObject;
+	metadata: StakedSuiFrenMetadataV1Object;
 }
 
 export interface StakedSuiFrenPositionObject extends Object {
 	suiFrenId: ObjectId;
 }
 
-export interface StakedSuiFrenMetadataObject extends Object {
+export interface StakedSuiFrenMetadataV1Object extends Object {
 	suiFrenId: ObjectId;
 	collectedFees: Balance;
+	autoStakeFees: boolean;
 	mixFee: Balance;
 	feeIncrementPerMix: Balance;
 	minRemainingMixesToKeep: bigint;
@@ -68,6 +85,11 @@ export interface StakedSuiFrenMetadataObject extends Object {
 
 export interface SuiFrenVaultStateObject extends Object {
 	totalMixes: bigint;
+}
+
+export interface SuiFrenAccessoryObject extends Object {
+	name: SuiFrenAccessoryName;
+	type: SuiFrenAccessoryType;
 }
 
 // =========================================================================
@@ -138,6 +160,26 @@ export interface ApiMixSuiFrensBody {
 	suiFrenParentTwoId: ObjectId;
 }
 
-export interface ApiWithdrawSuiFrenFeesBody {
+export interface ApiWithdrawStakedSuiFrenFeesBody {
 	stakedPositionId: ObjectId;
+}
+
+export interface ApiAddSuiFrenAccessoryBody {
+	suiFrenId: ObjectId;
+	accessoryId: ObjectId;
+}
+
+export type ApiRemoveSuiFrenAccessoryBody = {
+	accessoryType: SuiFrenAccessoryType;
+} & (
+	| {
+			suiFrenId: ObjectId;
+	  }
+	| {
+			stakedPositionId: ObjectId;
+	  }
+);
+
+export interface ApiSuiFrenAccessoriesBody {
+	suiFrenId: ObjectId;
 }

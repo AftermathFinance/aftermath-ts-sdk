@@ -5,9 +5,15 @@ import {
 	Url,
 	Nft,
 	Balance,
+	SuiFrenAccessoryType,
+	ApiAddSuiFrenAccessoryBody,
+	ApiRemoveSuiFrenAccessoryBody,
+	SuiFrenAccessoryObject,
+	ApiSuiFrenAccessoriesBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
+import { ObjectId } from "@mysten/sui.js";
 
 export class SuiFren extends Caller {
 	// =========================================================================
@@ -27,22 +33,24 @@ export class SuiFren extends Caller {
 	//  Objects
 	// =========================================================================
 
+	public async getAccessories() {
+		return this.fetchApi<
+			SuiFrenAccessoryObject[],
+			ApiSuiFrenAccessoriesBody
+		>("accessories", {
+			suiFrenId: this.suiFren.objectId,
+		});
+	}
+
 	public asNft(): Nft {
 		return {
 			info: {
 				objectId: this.suiFren.objectId,
-				version: "",
-				digest: "",
-				// type?: AnyObjectType,
+				objectType: this.suiFren.objectType,
 			},
 			display: {
 				suggested: {
-					name: "SuiFren",
-					// link?: Url,
-					imageUrl: this.suiFren.imageUrl,
-					// description?: string,
-					// projectUrl?: Url,
-					// creator?: string,
+					...this.suiFren.display,
 				},
 				other: {
 					Skin: this.suiFren.attributes.skin,
@@ -88,6 +96,33 @@ export class SuiFren extends Caller {
 
 		return this.fetchApiTransaction<ApiStakeSuiFrenBody>(
 			"transactions/stake",
+			{
+				...inputs,
+				suiFrenId: this.suiFren.objectId,
+			}
+		);
+	}
+
+	public async getAddAccessoryTransaction(inputs: { accessoryId: ObjectId }) {
+		return this.fetchApiTransaction<ApiAddSuiFrenAccessoryBody>(
+			"transactions/add-accessory",
+			{
+				...inputs,
+				suiFrenId: this.suiFren.objectId,
+			}
+		);
+	}
+
+	public async getRemoveAccessoryTransaction(inputs: {
+		accessoryType: SuiFrenAccessoryType;
+	}) {
+		if (!this.isOwned)
+			throw new Error(
+				"unable to remove accessory from suiFren that is not owned by caller"
+			);
+
+		return this.fetchApiTransaction<ApiRemoveSuiFrenAccessoryBody>(
+			"transactions/remove-accessory",
 			{
 				...inputs,
 				suiFrenId: this.suiFren.objectId,

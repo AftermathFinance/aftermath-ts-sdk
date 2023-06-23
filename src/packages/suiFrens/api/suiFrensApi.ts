@@ -16,10 +16,11 @@ import {
 	SuiFrenStats,
 	SuiFrenVaultObject,
 	StakeSuiFrenEvent,
-	StakedSuiFrenMetadataObject,
+	StakedSuiFrenMetadataV1Object,
 	UnstakeSuiFrenEvent,
 	SuiFrenAttributes,
 	SuiFrensSortOption,
+	SuiFrenAccessoryObject,
 } from "../suiFrensTypes";
 import {
 	MixSuiFrenEventOnChain,
@@ -109,6 +110,7 @@ export class SuiFrensApi {
 		dynamicFieldKeys: {
 			mixLimit: "MixLimitKey",
 			lastEpochMixed: "LastEpochMixedKey",
+			accessory: "AccessoryKey",
 		},
 	};
 
@@ -490,13 +492,43 @@ export class SuiFrensApi {
 	};
 
 	// =========================================================================
+	//  Accessories
+	// =========================================================================
+
+	public fetchAccessoriesForSuiFren = async (inputs: {
+		suiFrenId: ObjectId;
+	}) => {
+		return await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
+			{
+				parentObjectId: inputs.suiFrenId,
+				objectsFromObjectIds: (objectIds) =>
+					this.fetchAccessories({ objectIds }),
+				dynamicFieldType:
+					SuiFrensApi.constants.dynamicFieldKeys.accessory,
+			}
+		);
+	};
+
+	public fetchAccessories = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<SuiFrenAccessoryObject[]> => {
+		throw new Error("TODO");
+		// const { objectIds } = inputs;
+		// return this.Provider.Objects().fetchCastObjectBatch({
+		// 	objectIds,
+		// 	objectFromSuiObjectResponse:
+		// 		Casting.suiFrens.accessoryObjectFromSuiObjectResponse,
+		// });
+	};
+
+	// =========================================================================
 	//  Staked SuiFren Receipt Objects
 	// =========================================================================
 
 	public fetchStakedSuiFrenReceipt = async (
 		suiFrenStakingReceipt: ObjectId
-	): Promise<StakedSuiFrenMetadataObject> => {
-		return this.Provider.Objects().fetchCastObject<StakedSuiFrenMetadataObject>(
+	): Promise<StakedSuiFrenMetadataV1Object> => {
+		return this.Provider.Objects().fetchCastObject<StakedSuiFrenMetadataV1Object>(
 			{
 				objectId: suiFrenStakingReceipt,
 				objectFromSuiObjectResponse:
@@ -508,8 +540,8 @@ export class SuiFrensApi {
 
 	public fetchStakedSuiFrenReceipts = async (
 		suiFrenStakingReceipts: ObjectId[]
-	): Promise<StakedSuiFrenMetadataObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<StakedSuiFrenMetadataObject>(
+	): Promise<StakedSuiFrenMetadataV1Object[]> => {
+		return this.Provider.Objects().fetchCastObjectBatch<StakedSuiFrenMetadataV1Object>(
 			{
 				objectIds: suiFrenStakingReceipts,
 				objectFromSuiObjectResponse:
@@ -521,7 +553,7 @@ export class SuiFrensApi {
 
 	public fetchStakedSuiFrenReceiptOwnedByAddress = async (
 		walletAddress: SuiAddress
-	): Promise<StakedSuiFrenMetadataObject[]> => {
+	): Promise<StakedSuiFrenMetadataV1Object[]> => {
 		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
 			{
 				walletAddress,

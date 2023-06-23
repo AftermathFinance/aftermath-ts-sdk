@@ -9,7 +9,7 @@ import {
 	MixSuiFrensEvent,
 	SuiFrenBornEvent,
 	StakeSuiFrenEvent,
-	StakedSuiFrenMetadataObject,
+	StakedSuiFrenMetadataV1Object,
 	UnstakeSuiFrenEvent,
 	SuiFrenObject,
 	SuiFrenAttributes,
@@ -76,13 +76,20 @@ export class SuiFrensApiCasting {
 				ears: fields.attributes[4],
 			} as SuiFrenAttributes,
 			birthLocation: fields.birth_location,
-			imageUrl: display.image_url,
+			display: {
+				name: display.name,
+				link: display.link,
+				imageUrl: display.image_url,
+				description: display.description,
+				projectUrl: display.project_url,
+			},
 		};
 	};
 
 	public static stakedSuiFrenReceiptObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): StakedSuiFrenMetadataObject => {
+		// ): { metadata: StakedSuiFrenMetadataV1Object; suiFren: SuiFren } => {
+	): StakedSuiFrenMetadataV1Object => {
 		throw new Error("TODO");
 
 		// const objectType = getObjectType(data);

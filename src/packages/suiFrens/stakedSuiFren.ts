@@ -1,8 +1,11 @@
 import {
+	ApiAddSuiFrenAccessoryBody,
+	ApiRemoveSuiFrenAccessoryBody,
 	ApiUnstakeSuiFrenBody,
-	ApiWithdrawSuiFrenFeesBody,
+	ApiWithdrawStakedSuiFrenFeesBody,
 	Balance,
 	StakedSuiFrenInfo,
+	SuiFrenAccessoryType,
 	SuiNetwork,
 	Url,
 } from "../../types";
@@ -43,12 +46,20 @@ export class StakedSuiFren extends Caller {
 	}
 
 	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	public async getAccessories() {
+		return this.suiFren.getAccessories();
+	}
+
+	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
 	public async getUnstakeTransaction() {
 		return this.fetchApiTransaction<ApiUnstakeSuiFrenBody>(
-			"transactions/stake",
+			"transactions/unstake",
 			{
 				stakedPositionId: this.info.position.objectId,
 			}
@@ -56,9 +67,30 @@ export class StakedSuiFren extends Caller {
 	}
 
 	public async getWithdrawFeesTransaction() {
-		return this.fetchApiTransaction<ApiWithdrawSuiFrenFeesBody>(
+		return this.fetchApiTransaction<ApiWithdrawStakedSuiFrenFeesBody>(
 			"transactions/withdraw-fees",
 			{
+				stakedPositionId: this.info.position.objectId,
+			}
+		);
+	}
+
+	public async getAddAccessoryTransaction(inputs: { accessoryId: ObjectId }) {
+		return this.suiFren.getAddAccessoryTransaction(inputs);
+	}
+
+	public async getRemoveAccessoryTransaction(inputs: {
+		accessoryType: SuiFrenAccessoryType;
+	}) {
+		if (!this.isOwned)
+			throw new Error(
+				"unable to remove accessory from suiFren that is not owned by caller"
+			);
+
+		return this.fetchApiTransaction<ApiRemoveSuiFrenAccessoryBody>(
+			"transactions/remove-accessory",
+			{
+				...inputs,
 				stakedPositionId: this.info.position.objectId,
 			}
 		);

@@ -8,7 +8,7 @@ import {
 	DynamicFieldObjectsWithCursor,
 	EventsInputs,
 	StakeSuiFrenEvent,
-	StakedSuiFrenMetadataObject,
+	StakedSuiFrenMetadataV1Object,
 	SuiNetwork,
 	UnstakeSuiFrenEvent,
 	Url,

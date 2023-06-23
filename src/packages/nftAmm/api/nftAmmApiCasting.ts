@@ -88,16 +88,17 @@ export class NftAmmApiCasting {
 	private static nftInfoFromSuiObject = (
 		object: SuiObjectResponse
 	): NftInfo => {
-		if (object.error !== undefined || object.data === undefined)
+		const objectType = getObjectType(object);
+		const objectId = getObjectId(object);
+
+		if (!objectId || !objectType)
 			throw new Error(
 				"unable to obtain object info from sui object response"
 			);
 
 		return {
-			objectId: object.data.objectId,
-			version: object.data.version,
-			digest: object.data.digest,
-			type: object.data.type,
+			objectId,
+			objectType,
 		};
 	};
 
