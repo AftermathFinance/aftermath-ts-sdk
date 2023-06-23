@@ -29,7 +29,7 @@ export class RouterApiHelpers {
 	public static readonly constants = {
 		defaults: {
 			tradePartitionCount: 1,
-			maxAsyncPoolsPerProtocol: 1,
+			maxAsyncPoolsPerProtocol: 2,
 		},
 	};
 
@@ -187,7 +187,7 @@ export class RouterApiHelpers {
 
 		routerGraph.updateOptions({
 			maxRouteLength: 2,
-			tradePartitionCount: 1,
+			tradePartitionCount: 2,
 			// maxGasCost: BigInt(333_333_333), // 0.333 SUI
 		});
 		const synchronousCompleteRoutes =

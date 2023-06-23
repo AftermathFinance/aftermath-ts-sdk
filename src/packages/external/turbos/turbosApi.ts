@@ -205,10 +205,10 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_a
+				tx.pure(minAmountOut.toString(), "u64"), // amount_threshold
 				tx.pure(TurbosApi.calcSqrtPriceLimit(true).toString(), "u128"), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
-				tx.pure(minAmountOut, "u128"),
 
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
@@ -244,10 +244,10 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_b
+				tx.pure(minAmountOut.toString(), "u64"), // amount_threshold
 				tx.pure(TurbosApi.calcSqrtPriceLimit(false).toString(), "u128"), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
-				tx.pure(minAmountOut, "u128"),
 
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),

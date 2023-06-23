@@ -272,10 +272,8 @@ export class RouterSynchronousApiHelpers {
 		tx: TransactionBlock;
 		routerSwapCap: TransactionArgument;
 		routerSwapCapCoinType: CoinType;
-		coinOutType: CoinType;
 	}) => {
-		const { tx, routerSwapCap, routerSwapCapCoinType, coinOutType } =
-			inputs;
+		const { tx, routerSwapCap, routerSwapCapCoinType } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -283,7 +281,7 @@ export class RouterSynchronousApiHelpers {
 				RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
 				"return_router_cap_already_payed_fee"
 			),
-			typeArguments: [routerSwapCapCoinType, coinOutType],
+			typeArguments: [routerSwapCapCoinType],
 			arguments: [
 				routerSwapCap, // RouterSwapCap
 			],
@@ -375,7 +373,7 @@ export class RouterSynchronousApiHelpers {
 						"no coin in argument given for router trade command"
 					);
 
-				const minAmountOut = Helpers.applySlippageBigInt(
+				const pathMinAmountOut = Helpers.applySlippageBigInt(
 					path.coinOut.amount,
 					slippage
 				);
@@ -386,7 +384,7 @@ export class RouterSynchronousApiHelpers {
 					coinInType: path.coinIn.type,
 					coinOutType: path.coinOut.type,
 					expectedCoinOutAmount: path.coinOut.amount,
-					minAmountOut,
+					minAmountOut: pathMinAmountOut,
 					routerSwapCapCoinType,
 					routerSwapCap,
 				});
@@ -425,7 +423,6 @@ export class RouterSynchronousApiHelpers {
 				tx,
 				routerSwapCap,
 				routerSwapCapCoinType,
-				coinOutType: completeRoute.coinOut.type,
 			});
 		}
 

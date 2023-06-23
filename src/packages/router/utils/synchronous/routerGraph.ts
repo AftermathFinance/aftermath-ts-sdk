@@ -59,10 +59,10 @@ export class RouterGraph {
 	// =========================================================================
 
 	public static readonly defaultOptions: RouterOptions = {
-		maxRouteLength: 4,
-		tradePartitionCount: 4,
-		minRoutesToCheck: 15,
-		maxGasCost: BigInt(500000_000_000), // 0.5 SUI
+		maxRouteLength: 3,
+		tradePartitionCount: 3,
+		minRoutesToCheck: 5,
+		maxGasCost: BigInt(500_000_000), // 0.5 SUI
 	};
 
 	// =========================================================================
