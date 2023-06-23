@@ -139,26 +139,33 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 		partialMatchPools: TurbosPoolObject[];
 		exactMatchPools: TurbosPoolObject[];
 	} => {
-		const possiblePools = inputs.pools.sort((a, b) => {
-			const coinType = inputs.coinOutType;
-
-			const aPoolLiquidity = TurbosApi.isCoinA({ pool: a, coinType })
-				? a.coinABalance
-				: a.coinBBalance;
-			const bPoolLiquidity = TurbosApi.isCoinA({ pool: b, coinType })
-				? b.coinABalance
-				: b.coinBBalance;
-
-			return Number(bPoolLiquidity - aPoolLiquidity);
-		});
-
-		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			possiblePools,
-			(pool) =>
+		const possiblePools = inputs.pools
+			.filter((pool) =>
 				TurbosApi.isPoolForCoinTypes({
 					pool,
 					coinType1: inputs.coinInType,
 					coinType2: inputs.coinOutType,
+				})
+			)
+			.sort((a, b) => {
+				const coinType = inputs.coinOutType;
+
+				const aPoolLiquidity = TurbosApi.isCoinA({ pool: a, coinType })
+					? a.coinABalance
+					: a.coinBBalance;
+				const bPoolLiquidity = TurbosApi.isCoinA({ pool: b, coinType })
+					? b.coinABalance
+					: b.coinBBalance;
+
+				return Number(bPoolLiquidity - aPoolLiquidity);
+			});
+
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
+			possiblePools,
+			(pool) =>
+				TurbosApi.isPoolForCoinType({
+					pool,
+					coinType: inputs.coinOutType,
 				})
 		);
 
@@ -178,7 +185,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 			feeCoinType: CoinType;
 		}
 	) => {
-		const { tx, coinInId, routerSwapCap, expectedCoinOutAmount } = inputs;
+		const { tx, coinInId, routerSwapCap, minAmountOut } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -201,7 +208,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 				tx.pure(TurbosApi.calcSqrtPriceLimit(true).toString(), "u128"), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
-				tx.pure(expectedCoinOutAmount, "u64"),
+				tx.pure(minAmountOut, "u128"),
 
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
@@ -217,7 +224,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 			feeCoinType: CoinType;
 		}
 	) => {
-		const { tx, coinInId, routerSwapCap, expectedCoinOutAmount } = inputs;
+		const { tx, coinInId, routerSwapCap, minAmountOut } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -240,7 +247,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 				tx.pure(TurbosApi.calcSqrtPriceLimit(false).toString(), "u128"), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
-				tx.pure(expectedCoinOutAmount, "u64"),
+				tx.pure(minAmountOut, "u128"),
 
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),

@@ -107,8 +107,6 @@ export class RouterAsyncApiHelpers {
 	}): Promise<RouterAsyncTradeResults> => {
 		const { coinInAmounts } = inputs;
 
-		const start = performance.now();
-
 		const protocols = inputs.pools.map((pool) =>
 			this.protocolNameFromPool({ pool })
 		);
@@ -153,10 +151,6 @@ export class RouterAsyncApiHelpers {
 		const results = resultsOrUndefined.filter(
 			(result) => result !== undefined
 		) as RouterAsyncTradeResult[];
-
-		const end = performance.now();
-		console.log("(RESULTS 1):", end - start, "ms");
-		console.log("\n");
 
 		return {
 			...inputs,

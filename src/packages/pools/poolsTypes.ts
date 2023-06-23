@@ -53,6 +53,7 @@ export interface PoolObject extends Object {
 	illiquidLpCoinSupply: Balance;
 	flatness: PoolFlatness;
 	coins: PoolCoins;
+	lpCoinDecimals: CoinDecimal;
 }
 
 export const isPoolObject = (

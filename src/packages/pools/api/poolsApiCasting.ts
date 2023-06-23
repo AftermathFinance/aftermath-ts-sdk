@@ -18,7 +18,6 @@ import {
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
-import { Pools } from "../pools";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { AnyObjectType } from "../../../types";
@@ -84,6 +83,7 @@ export class PoolsApiCasting {
 			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
 			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
 			flatness: BigInt(poolFieldsOnChain.flatness),
+			lpCoinDecimals: Number(poolFieldsOnChain.lp_decimals),
 			coins,
 		};
 	};

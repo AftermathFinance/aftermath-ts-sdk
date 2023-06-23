@@ -198,32 +198,39 @@ export class DeepBookApi
 		partialMatchPools: DeepBookPoolObject[];
 		exactMatchPools: DeepBookPoolObject[];
 	} => {
-		const possiblePools = inputs.pools.sort((a, b) => {
-			const coinType = inputs.coinOutType;
-
-			const aPoolLiquidity = DeepBookApi.isBaseCoinType({
-				pool: a,
-				coinType,
-			})
-				? a.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
-				: a.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
-			const bPoolLiquidity = DeepBookApi.isBaseCoinType({
-				pool: b,
-				coinType,
-			})
-				? b.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
-				: b.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
-
-			return Number(bPoolLiquidity - aPoolLiquidity);
-		});
-
-		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			possiblePools,
-			(pool) =>
+		const possiblePools = inputs.pools
+			.filter((pool) =>
 				DeepBookApi.isPoolForCoinTypes({
 					pool,
 					coinType1: inputs.coinInType,
 					coinType2: inputs.coinOutType,
+				})
+			)
+			.sort((a, b) => {
+				const coinType = inputs.coinOutType;
+
+				const aPoolLiquidity = DeepBookApi.isBaseCoinType({
+					pool: a,
+					coinType,
+				})
+					? a.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
+					: a.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
+				const bPoolLiquidity = DeepBookApi.isBaseCoinType({
+					pool: b,
+					coinType,
+				})
+					? b.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
+					: b.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
+
+				return Number(bPoolLiquidity - aPoolLiquidity);
+			});
+
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
+			possiblePools,
+			(pool) =>
+				DeepBookApi.isPoolForCoinType({
+					pool,
+					coinType: inputs.coinOutType,
 				})
 		);
 

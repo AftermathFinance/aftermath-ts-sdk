@@ -59,10 +59,10 @@ export class RouterGraph {
 	// =========================================================================
 
 	public static readonly defaultOptions: RouterOptions = {
-		maxRouteLength: 3,
-		tradePartitionCount: 1,
-		minRoutesToCheck: 5,
-		maxGasCost: BigInt(500_000_000), // 0.5 SUI
+		maxRouteLength: 4,
+		tradePartitionCount: 4,
+		minRoutesToCheck: 15,
+		maxGasCost: BigInt(500000_000_000), // 0.5 SUI
 	};
 
 	// =========================================================================
@@ -106,17 +106,10 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute {
-		const start = performance.now();
-
 		const result = this.getCompleteRoute({
 			...inputs,
 			isGivenAmountOut: false,
 		});
-
-		const end = performance.now();
-		console.log("(GRAPH):", end - start, "ms");
-		console.log("\n");
-
 		return result;
 	}
 
@@ -144,8 +137,6 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute[] {
-		const start = performance.now();
-
 		const completeRoutes = inputs.coinInAmounts.map((coinInAmount) => {
 			try {
 				return this.getCompleteRoute({
@@ -176,10 +167,6 @@ export class RouterGraph {
 		)
 			? []
 			: completeRoutes;
-
-		const end = performance.now();
-		console.log("(GRAPH):", end - start, "ms");
-		console.log("\n");
 
 		return result;
 	}

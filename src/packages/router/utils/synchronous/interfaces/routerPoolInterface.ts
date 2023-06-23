@@ -44,6 +44,7 @@ export interface RouterPoolTradeTxInputs {
 	tx: TransactionBlock;
 	coinInId: ObjectId | TransactionArgument;
 	expectedCoinOutAmount: Balance;
+	minAmountOut: Balance;
 	coinInType: CoinType;
 	coinOutType: CoinType;
 	routerSwapCap: TransactionArgument;

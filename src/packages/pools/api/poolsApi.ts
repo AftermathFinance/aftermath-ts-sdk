@@ -831,7 +831,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		lpCoinType: CoinType;
 		coinTypes: CoinType[];
 		withTransfer?: boolean;
-	}): TransactionArgument => {
+	}): TransactionArgument[] => {
 		const { tx, poolId, lpCoinId, coinTypes, lpCoinType, withTransfer } =
 			inputs;
 
@@ -1078,7 +1078,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			poolCoins,
 			pool.pool.lpCoinSupply
 		);
-		const lpPrice = this.calcPoolLpPrice(pool.pool.lpCoinSupply, tvl);
+		const lpPrice = this.calcPoolLpPrice({
+			lpCoinDecimals: pool.pool.lpCoinDecimals,
+			lpCoinSupply: pool.pool.lpCoinSupply,
+			tvl,
+		});
 
 		// this is okay since all trade fees are currently the same for every coin
 		const firstCoin = Object.values(pool.pool.coins)[0];
@@ -1159,17 +1163,21 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return supplyPerLps;
 	};
 
-	public calcPoolLpPrice = (lpSupply: Balance, tvl: number) => {
-		const lpCoinDecimals = Pools.constants.decimals.lpCoinDecimals;
+	public calcPoolLpPrice = (inputs: {
+		lpCoinSupply: Balance;
+		tvl: number;
+		lpCoinDecimals: CoinDecimal;
+	}) => {
+		const { lpCoinSupply, tvl, lpCoinDecimals } = inputs;
 		const lpPrice = Number(
-			Number(tvl) / Coin.balanceWithDecimals(lpSupply, lpCoinDecimals)
+			Number(tvl) / Coin.balanceWithDecimals(lpCoinSupply, lpCoinDecimals)
 		);
-
 		return lpPrice;
 	};
 
 	public calcApy = (inputs: { fees24Hours: number; tvl: number }): number => {
 		const { fees24Hours, tvl } = inputs;
+		// TODO: use daysjs instead
 		const daysInYear = 365;
 
 		return (fees24Hours * daysInYear) / tvl;
@@ -1372,19 +1380,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
 			""
 		)})`;
-	};
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	// PRODUCTION: should this perform a dev inspect to pool registry instead of using string alone ?
-	public isLpCoin = (coin: CoinType) => {
-		return (
-			coin.split("::").length === 3 &&
-			coin.split("::")[1].includes("af_lp") &&
-			coin.split("::")[2].includes("AF_LP")
-		);
 	};
 
 	// =========================================================================

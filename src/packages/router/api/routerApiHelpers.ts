@@ -61,14 +61,8 @@ export class RouterApiHelpers {
 		asyncPools: RouterAsyncSerializablePool[];
 		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
 	}) => {
-		const start = performance.now();
-
 		const synchronousPools =
 			await this.SynchronousHelpers.fetchPoolsFromIds(inputs);
-
-		const end = performance.now();
-		console.log("(FETCH):", end - start, "ms");
-		console.log("\n");
 
 		return RouterGraph.createGraph({
 			pools: [...synchronousPools, ...inputs.asyncPools],
@@ -117,8 +111,6 @@ export class RouterApiHelpers {
 		if (exactMatchPools.length <= 0 && partialMatchPools.length <= 0)
 			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
 
-		const start = performance.now();
-
 		const [exactTradeResults, completeRoutesForLastPoolAsync] =
 			await Promise.all([
 				this.AsyncHelpers.fetchTradeResults({
@@ -137,10 +129,6 @@ export class RouterApiHelpers {
 					)
 				),
 			]);
-
-		const end = performance.now();
-		console.log("(EVERY):", end - start, "ms");
-		console.log("\n");
 
 		routerGraph.updateOptions(RouterGraph.defaultOptions);
 		const synchronousCompleteRoutes =
@@ -184,8 +172,6 @@ export class RouterApiHelpers {
 		externalFee?: RouterExternalFee;
 	}): Promise<RouterCompleteTradeRoute[]> => {
 		const { routerGraph } = inputs;
-
-		const start = performance.now();
 
 		const asyncApi =
 			this.AsyncHelpers.protocolNamesToApi[
@@ -232,10 +218,6 @@ export class RouterApiHelpers {
 					endCompleteRoute: asyncCompleteRoutes[index],
 				})
 		);
-
-		const end = performance.now();
-		console.log("(RESULTS 2):", end - start, "ms");
-		console.log("\n");
 
 		return finalCompleteRoutes.every((route) => route.routes.length === 0)
 			? []

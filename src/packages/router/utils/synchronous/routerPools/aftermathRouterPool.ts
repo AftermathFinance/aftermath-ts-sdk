@@ -152,7 +152,6 @@ class AftermathRouterPool implements RouterPoolInterface {
 			return inputs.provider.Pools().multiCoinWithdrawTx({
 				...inputs,
 				poolId: this.pool.objectId,
-				// this is beacuse typescript complains for some reason otherwise
 				lpCoinId: inputs.coinInId,
 				coinTypes: [inputs.coinOutType],
 				expectedAmountsOut: [inputs.expectedCoinOutAmount],
@@ -187,7 +186,6 @@ class AftermathRouterPool implements RouterPoolInterface {
 			...inputs,
 			poolId: this.pool.objectId,
 			lpCoinType: this.pool.lpCoinType,
-			coinInId: inputs.coinInId,
 		});
 
 		return coinOut;

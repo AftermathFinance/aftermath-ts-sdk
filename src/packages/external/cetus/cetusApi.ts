@@ -69,8 +69,6 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	// =========================================================================
 
 	public fetchAllPools = async (): Promise<CetusPoolObject[]> => {
-		const start1 = performance.now();
-
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				{
@@ -83,12 +81,6 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 						}),
 				}
 			);
-
-		const end1 = performance.now();
-		console.log("(DYN):", end1 - start1, "ms");
-		console.log("\n");
-
-		const start2 = performance.now();
 
 		const poolsMoreInfo =
 			await this.Provider.Objects().fetchCastObjectBatch({
@@ -109,10 +101,6 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 					};
 				},
 			});
-
-		const end2 = performance.now();
-		console.log("(OBJ):", end2 - start2, "ms");
-		console.log("\n");
 
 		const pools = poolsSimpleInfo.map((info, index) => ({
 			...info,
@@ -137,26 +125,33 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 		partialMatchPools: CetusPoolObject[];
 		exactMatchPools: CetusPoolObject[];
 	} => {
-		const possiblePools = inputs.pools.sort((a, b) => {
-			const coinType = inputs.coinOutType;
-
-			const aPoolLiquidity = CetusApi.isCoinA({ pool: a, coinType })
-				? a.coinABalance
-				: a.coinBBalance;
-			const bPoolLiquidity = CetusApi.isCoinA({ pool: b, coinType })
-				? b.coinABalance
-				: b.coinBBalance;
-
-			return Number(bPoolLiquidity - aPoolLiquidity);
-		});
-
-		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
-			possiblePools,
-			(pool) =>
+		const possiblePools = inputs.pools
+			.filter((pool) =>
 				CetusApi.isPoolForCoinTypes({
 					pool,
 					coinType1: inputs.coinInType,
 					coinType2: inputs.coinOutType,
+				})
+			)
+			.sort((a, b) => {
+				const coinType = inputs.coinOutType;
+
+				const aPoolLiquidity = CetusApi.isCoinA({ pool: a, coinType })
+					? a.coinABalance
+					: a.coinBBalance;
+				const bPoolLiquidity = CetusApi.isCoinA({ pool: b, coinType })
+					? b.coinABalance
+					: b.coinBBalance;
+
+				return Number(bPoolLiquidity - aPoolLiquidity);
+			});
+
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
+			possiblePools,
+			(pool) =>
+				CetusApi.isPoolForCoinType({
+					pool,
+					coinType: inputs.coinOutType,
 				})
 		);
 

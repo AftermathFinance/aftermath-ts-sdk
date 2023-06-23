@@ -11,6 +11,7 @@ import {
 	RouterSynchronousProtocolName,
 	RouterSynchronousSerializablePool,
 	RouterTradeEvent,
+	RouterTradePath,
 	SynchronousProtocolsToPoolObjectIds,
 } from "../routerTypes";
 import {
@@ -328,8 +329,10 @@ export class RouterSynchronousApiHelpers {
 		});
 
 		const minAmountOut =
-			completeRoute.coinOut.amount -
-			BigInt(Math.floor(slippage * Number(completeRoute.coinOut.amount)));
+			RouterSynchronousApiHelpers.calcCompleteRouteMinAmountOut({
+				completeRoute,
+				slippage,
+			});
 
 		const routerSwapCapCoinType = completeRoute.coinIn.type;
 		const routerSwapCap = this.obtainRouterCapTx({
@@ -372,6 +375,10 @@ export class RouterSynchronousApiHelpers {
 						"no coin in argument given for router trade command"
 					);
 
+				const minAmountOut = Helpers.applySlippageBigInt(
+					path.coinOut.amount,
+					slippage
+				);
 				const newCoinInId = poolForPath.tradeTx({
 					provider: this.Provider,
 					tx,
@@ -379,6 +386,7 @@ export class RouterSynchronousApiHelpers {
 					coinInType: path.coinIn.type,
 					coinOutType: path.coinOut.type,
 					expectedCoinOutAmount: path.coinOut.amount,
+					minAmountOut,
 					routerSwapCapCoinType,
 					routerSwapCap,
 				});
@@ -477,4 +485,41 @@ export class RouterSynchronousApiHelpers {
 			RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
 			RouterSynchronousApiHelpers.constants.eventNames.routerTrade
 		);
+
+	// =========================================================================
+	//  Private Static Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private static calcCompleteRouteMinAmountOut = (inputs: {
+		completeRoute: RouterCompleteTradeRoute;
+		slippage: Slippage;
+	}) => {
+		const { completeRoute, slippage } = inputs;
+
+		const turbosCoinOutAmount = Helpers.sumBigInt(
+			completeRoute.routes
+				.reduce(
+					(acc, route) => [...acc, ...route.paths],
+					[] as RouterTradePath[]
+				)
+				.filter((path) => path.protocolName === "Turbos")
+				.map((path) => path.coinOut.amount)
+		);
+		const coinOutAmountMinusTurbos =
+			completeRoute.coinOut.amount - turbosCoinOutAmount;
+
+		return (
+			coinOutAmountMinusTurbos -
+			BigInt(
+				Math.floor(
+					Casting.normalizeSlippageTolerance(slippage) *
+						Number(coinOutAmountMinusTurbos)
+				)
+			)
+		);
+	};
 }
