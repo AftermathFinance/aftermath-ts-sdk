@@ -42,12 +42,10 @@ export interface SuiFrenObject extends Object {
 
 	// display fields
 	display: {
-		name: string;
 		link: Url;
 		imageUrl: Url;
 		description: string;
 		projectUrl: Url;
-		// creator: string;
 	};
 }
 

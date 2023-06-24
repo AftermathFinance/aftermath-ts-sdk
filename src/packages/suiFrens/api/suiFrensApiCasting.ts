@@ -77,7 +77,6 @@ export class SuiFrensApiCasting {
 			} as SuiFrenAttributes,
 			birthLocation: fields.birth_location,
 			display: {
-				name: display.name,
 				link: display.link,
 				imageUrl: display.image_url,
 				description: display.description,

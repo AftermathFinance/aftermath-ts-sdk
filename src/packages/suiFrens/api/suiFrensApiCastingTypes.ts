@@ -35,12 +35,10 @@ export interface SuiFrenFieldsOnChain {
 }
 
 export interface SuiFrenDisplayOnChain {
-	name: string;
 	description: string;
 	image_url: string;
 	link: string;
 	project_url: string;
-	// creator: string;
 }
 
 // =========================================================================

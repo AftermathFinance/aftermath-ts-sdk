@@ -30,6 +30,86 @@ export class SuiFren extends Caller {
 	}
 
 	// =========================================================================
+	//  Getters
+	// =========================================================================
+
+	public properties(): Record<string, string> {
+		return {
+			Skin: this.suiFren.attributes.skin,
+			Ears: this.suiFren.attributes.ears,
+			Expression: this.suiFren.attributes.expression,
+			"Main Color": this.suiFren.attributes.mainColor,
+			"Secondary Color": this.suiFren.attributes.secondaryColor,
+			"Birth Location": this.suiFren.birthLocation,
+			Birthday: dayjs(this.suiFren.birthdate).format("MMMM D, YYYY"),
+			Cohort: this.suiFren.cohort.toString(),
+			Generation: this.suiFren.generation.toString(),
+			// Genes: this.suiFren.genes.toString(),
+		};
+	}
+
+	public dynamicFields(): Record<string, string> {
+		return {
+			...(this.suiFren.mixLimit
+				? {
+						"Mixes Remaining": this.suiFren.mixLimit.toString(),
+				  }
+				: {}),
+			...(this.suiFren.lastEpochMixed
+				? {
+						"Last Epoch Mixed":
+							this.suiFren.lastEpochMixed.toString(),
+				  }
+				: {}),
+		};
+	}
+
+	public displayNumber(): string {
+		return this.suiFren.objectId.slice(-5, -1);
+	}
+
+	// public asNft(): Nft {
+	// 	return {
+	// 		info: {
+	// 			objectId: this.suiFren.objectId,
+	// 			objectType: this.suiFren.objectType,
+	// 		},
+	// 		display: {
+	// 			suggested: {
+	// 				name: "SuiFren",
+	// 				...this.suiFren.display,
+	// 			},
+	// 			other: {
+	// 				Skin: this.suiFren.attributes.skin,
+	// 				Ears: this.suiFren.attributes.ears,
+	// 				Expression: this.suiFren.attributes.expression,
+	// 				"Main Color": this.suiFren.attributes.mainColor,
+	// 				"Secondary Color": this.suiFren.attributes.secondaryColor,
+	// 				"Birth Location": this.suiFren.birthLocation,
+	// 				Birthday: dayjs(this.suiFren.birthdate).format(
+	// 					"MMMM D, YYYY"
+	// 				),
+	// 				Cohort: this.suiFren.cohort.toString(),
+	// 				Generation: this.suiFren.generation.toString(),
+	// 				...(this.suiFren.mixLimit
+	// 					? {
+	// 							"Mixes Remaining":
+	// 								this.suiFren.mixLimit.toString(),
+	// 					  }
+	// 					: {}),
+	// 				...(this.suiFren.lastEpochMixed
+	// 					? {
+	// 							"Last Epoch Mixed":
+	// 								this.suiFren.lastEpochMixed.toString(),
+	// 					  }
+	// 					: {}),
+	// 				// Genes: this.suiFren.genes.toString(),
+	// 			},
+	// 		},
+	// 	};
+	// }
+
+	// =========================================================================
 	//  Objects
 	// =========================================================================
 
@@ -40,46 +120,6 @@ export class SuiFren extends Caller {
 		>("accessories", {
 			suiFrenId: this.suiFren.objectId,
 		});
-	}
-
-	public asNft(): Nft {
-		return {
-			info: {
-				objectId: this.suiFren.objectId,
-				objectType: this.suiFren.objectType,
-			},
-			display: {
-				suggested: {
-					...this.suiFren.display,
-				},
-				other: {
-					Skin: this.suiFren.attributes.skin,
-					Ears: this.suiFren.attributes.ears,
-					Expression: this.suiFren.attributes.expression,
-					"Main Color": this.suiFren.attributes.mainColor,
-					"Secondary Color": this.suiFren.attributes.secondaryColor,
-					"Birth Location": this.suiFren.birthLocation,
-					Birthday: dayjs(this.suiFren.birthdate).format(
-						"MMMM D, YYYY"
-					),
-					Cohort: this.suiFren.cohort.toString(),
-					Generation: this.suiFren.generation.toString(),
-					...(this.suiFren.mixLimit
-						? {
-								"Mixes Remaining":
-									this.suiFren.mixLimit.toString(),
-						  }
-						: {}),
-					...(this.suiFren.lastEpochMixed
-						? {
-								"Last Epoch Mixed":
-									this.suiFren.lastEpochMixed.toString(),
-						  }
-						: {}),
-					// Genes: this.suiFren.genes.toString(),
-				},
-			},
-		};
 	}
 
 	// =========================================================================

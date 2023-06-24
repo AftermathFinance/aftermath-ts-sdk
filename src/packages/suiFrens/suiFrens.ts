@@ -19,6 +19,7 @@ import {
 	DynamicFieldsInputs,
 	Balance,
 	SuiFrensSortOption,
+	SuiFrenAccessoryObject,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFren } from "./stakedSuiFren";
@@ -64,7 +65,7 @@ export class SuiFrens extends Caller {
 		return suiFrens.map((suiFren) => new SuiFren(suiFren, this.network));
 	}
 
-	public async getUserSuiFrens(inputs: { walletAddress: SuiAddress }) {
+	public async getOwnedSuiFrens(inputs: { walletAddress: SuiAddress }) {
 		const ownedSuiFrens = await this.fetchApi<SuiFrenObject[]>(
 			`owned-sui-frens/${inputs.walletAddress}`
 		);
@@ -74,7 +75,7 @@ export class SuiFrens extends Caller {
 		);
 	}
 
-	public async getUserStakedSuiFrens(inputs: { walletAddress: SuiAddress }) {
+	public async getOwnedStakedSuiFrens(inputs: { walletAddress: SuiAddress }) {
 		const stakesInfo = await this.fetchApi<StakedSuiFrenInfo[]>(
 			`staked-sui-frens/${inputs.walletAddress}`
 		);
@@ -126,6 +127,14 @@ export class SuiFrens extends Caller {
 
 	public async getCapyLabsApp() {
 		return this.fetchApi<CapyLabsAppObject>(`capy-labs-app`);
+	}
+
+	public async getOwnedSuiFrenAccessories(inputs: {
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApi<SuiFrenAccessoryObject[]>(
+			`accessories/${inputs.walletAddress}`
+		);
 	}
 
 	// =========================================================================
