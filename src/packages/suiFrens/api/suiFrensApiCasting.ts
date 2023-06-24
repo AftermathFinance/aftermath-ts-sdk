@@ -19,7 +19,6 @@ import {
 import {
 	MixSuiFrenEventOnChain,
 	SuiFrenBornEventOnChain,
-	SuiFrenVaultFieldsOnChain,
 	StakeSuiFrenEventOnChain,
 	UnstakeSuiFrenEventOnChain,
 	SuiFrenFieldsOnChain,
@@ -85,7 +84,7 @@ export class SuiFrensApiCasting {
 		};
 	};
 
-	public static stakedSuiFrenReceiptObjectFromSuiObjectResponse = (
+	public static stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 		// ): { metadata: StakedSuiFrenMetadataV1Object; suiFren: SuiFren } => {
 	): StakedSuiFrenMetadataV1Object => {
@@ -104,37 +103,6 @@ export class SuiFrensApiCasting {
 		// 	suiFrenId: objectFields.suiFren_id,
 		// 	unlockEpoch: objectFields.unlock_epoch.fields,
 		// };
-	};
-
-	// public static stakedSuiFrenReceiptWithSuiFrenObjectFromSuiObjectResponse = async (
-	// 	data: SuiObjectResponse
-	// ): Promise<StakedSuiFrenReceiptWithSuiFrenObject> => {
-	// 	const objectFields = getObjectFields(data) as StakedSuiFrenReceiptFieldsOnChain;
-
-	// 	return {
-	// 		objectId: getObjectId(data),
-	// 		suiFren: this.suiFrenObjectFromSuiObjectResponse(
-	// 			await provider.getObject(objectFields.suiFren_id)
-	// 		),
-	// 		unlockEpoch: objectFields.unlock_epoch.fields,
-	// 	};
-	// };
-
-	public static suiFrenVaultObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): SuiFrenVaultObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
-		const objectFields = getObjectFields(data) as SuiFrenVaultFieldsOnChain;
-
-		return {
-			objectType,
-			objectId: getObjectId(data),
-			bredSuiFrens: BigInt(objectFields.bred_suiFrens),
-			stakedSuiFrens: BigInt(objectFields.staked_suiFrens),
-			globalFees: BigInt(objectFields.global_fees),
-		};
 	};
 
 	// =========================================================================

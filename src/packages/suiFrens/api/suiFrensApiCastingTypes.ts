@@ -1,15 +1,6 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import {
-	AnyObjectType,
-	BigIntAsString,
-	EpochTimeLock,
-	Url,
-} from "../../../types";
+import { BigIntAsString } from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
-
-// =========================================================================
-//  NEW
-// =========================================================================
 
 // =========================================================================
 //  Objects
@@ -44,23 +35,6 @@ export interface SuiFrenDisplayOnChain {
 // =========================================================================
 //  OLD
 // =========================================================================
-
-// =========================================================================
-//  Objects
-// =========================================================================
-
-export interface StakedSuiFrenReceiptFieldsOnChain {
-	suiFren_id: ObjectId;
-	unlock_epoch: {
-		fields: EpochTimeLock;
-	};
-}
-
-export interface SuiFrenVaultFieldsOnChain {
-	bred_suiFrens: BigIntAsString;
-	staked_suiFrens: BigIntAsString;
-	global_fees: BigIntAsString;
-}
 
 // =========================================================================
 //  Events

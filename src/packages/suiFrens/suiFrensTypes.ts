@@ -178,6 +178,18 @@ export type ApiRemoveSuiFrenAccessoryBody = {
 	  }
 );
 
-export interface ApiSuiFrenAccessoriesBody {
+export interface ApiAccessoriesForSuiFrenBody {
 	suiFrenId: ObjectId;
+}
+
+export interface ApiOwnedSuiFrenAccessoriesBody {
+	walletAddress: SuiAddress;
+}
+
+export interface ApiOwnedSuiFrensBody {
+	walletAddress: SuiAddress;
+}
+
+export interface ApiOwnedStakedSuiFrensBody {
+	walletAddress: SuiAddress;
 }

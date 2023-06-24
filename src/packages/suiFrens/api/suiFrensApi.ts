@@ -21,6 +21,7 @@ import {
 	SuiFrenAttributes,
 	SuiFrensSortOption,
 	SuiFrenAccessoryObject,
+	StakedSuiFrenInfo,
 } from "../suiFrensTypes";
 import {
 	MixSuiFrenEventOnChain,
@@ -67,9 +68,6 @@ export class SuiFrensApi {
 						},
 						withdrawFees: {
 							name: "withdraw_fees",
-						},
-						withdrawFeesAmount: {
-							name: "withdraw_fees_amount",
 						},
 						mixAndKeep: {
 							name: "mix_and_keep",
@@ -123,7 +121,8 @@ export class SuiFrensApi {
 	public readonly objectTypes: {
 		suiFren: AnyObjectType;
 		capy: AnyObjectType;
-		stakedSuiFrenReceipt: AnyObjectType;
+		suiFrenAccessory: AnyObjectType;
+		stakedSuiFrenMetadataV1: AnyObjectType;
 	};
 
 	public readonly eventTypes: {
@@ -149,7 +148,8 @@ export class SuiFrensApi {
 		this.objectTypes = {
 			suiFren: `${addresses.packages.suiFrens}::suifrens::SuiFren`,
 			capy: `${addresses.packages.suiFrens}::capy::Capy`,
-			stakedSuiFrenReceipt: `${addresses.packages.suiFrensVault}::suiFren_vault::StakingReceipt`,
+			suiFrenAccessory: `${addresses.packages.accessories}::accessories::Accessory`,
+			stakedSuiFrenMetadataV1: `${addresses.packages.suiFrens}::vault_state::StakedSuiFrenMetadataV1`,
 		};
 
 		this.eventTypes = {
@@ -202,24 +202,6 @@ export class SuiFrensApi {
 		return unwrapped === undefined ? undefined : BigInt(unwrapped);
 	};
 
-	public fetchStakedSuiFrenFeesEarned = async (
-		stakedSuiFrenReceiptObjectId: ObjectId
-	): Promise<{}> => {
-		// StakedSuiFrenFeesEarned
-		const [suiFrenFeesEarnedIndividual, suiFrenFeesEarnedGlobal] =
-			await Promise.all([
-				this.fetchStakedSuiFrenFeesEarnedIndividual(
-					stakedSuiFrenReceiptObjectId
-				),
-				this.fetchStakedSuiFrenFeesEarnedGlobal(),
-			]);
-
-		return {
-			individualFees: suiFrenFeesEarnedIndividual,
-			globalFees: suiFrenFeesEarnedGlobal,
-		};
-	};
-
 	public fetchIsSuiFrenPackageOnChain = () =>
 		this.Provider.Objects().fetchDoesObjectExist(
 			this.addresses.packages.suiFrens
@@ -228,103 +210,44 @@ export class SuiFrensApi {
 	public fetchStakedSuiFrensDynamicFieldsWithFilters = async (inputs: {
 		attributes: Partial<SuiFrenAttributes>;
 		sortBy?: SuiFrensSortOption;
-		limit: number;
+		limit?: number;
 		limitStepSize?: number;
 		cursor?: ObjectId;
-	}) => {
-		const { limit, attributes } = inputs;
+	}): Promise<DynamicFieldObjectsWithCursor<StakedSuiFrenInfo>> => {
+		throw new Error("TODO");
+		// const { attributes } = inputs;
+		// const defaultLimit = 25;
+		// const limit = inputs.limit ?? defaultLimit;
 
-		const isComplete = (suiFrens: SuiFrenObject[]) => {
-			return (
-				this.filterSuiFrensWithAttributes(suiFrens, attributes)
-					.length >= limit
-			);
-		};
+		// const isComplete = (suiFrens: SuiFrenObject[]) => {
+		// 	return (
+		// 		this.filterSuiFrensWithAttributes(suiFrens, attributes)
+		// 			.length >= limit
+		// 	);
+		// };
 
-		const suiFrensWithCursor =
-			await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
-				...inputs,
-				fetchFunc: this.fetchStakedSuiFrensDynamicFields,
-				isComplete,
-			});
+		// const suiFrensWithCursor =
+		// 	await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
+		// 		...inputs,
+		// 		fetchFunc: this.fetchStakedSuiFrensDynamicFields,
+		// 		isComplete,
+		// 	});
 
-		const filteredSuiFrens = this.filterSuiFrensWithAttributes(
-			suiFrensWithCursor.dynamicFieldObjects,
-			attributes
-		);
-		const resizedSuiFrensWithCursor: DynamicFieldObjectsWithCursor<SuiFrenObject> =
-			{
-				nextCursor:
-					suiFrensWithCursor.nextCursor ??
-					limit < filteredSuiFrens.length
-						? filteredSuiFrens[limit].objectId
-						: suiFrensWithCursor.nextCursor,
-				dynamicFieldObjects: filteredSuiFrens.slice(0, limit),
-			};
-		return resizedSuiFrensWithCursor;
+		// const filteredSuiFrens = this.filterSuiFrensWithAttributes(
+		// 	suiFrensWithCursor.dynamicFieldObjects,
+		// 	attributes
+		// );
+		// const resizedSuiFrensWithCursor: DynamicFieldObjectsWithCursor<SuiFrenObject> =
+		// 	{
+		// 		nextCursor:
+		// 			suiFrensWithCursor.nextCursor ??
+		// 			limit < filteredSuiFrens.length
+		// 				? filteredSuiFrens[limit].objectId
+		// 				: suiFrensWithCursor.nextCursor,
+		// 		dynamicFieldObjects: filteredSuiFrens.slice(0, limit),
+		// 	};
+		// return resizedSuiFrensWithCursor;
 	};
-
-	public fetchStakedSuiFrenFeesEarnedIndividual = async (
-		stakingReceiptId: ObjectId
-	) => {
-		const tx =
-			this.suiFrenFeesEarnedIndividualDevInspectTransaction(
-				stakingReceiptId
-			);
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
-		return Casting.bigIntFromBytes(bytes);
-	};
-
-	public fetchStakedSuiFrenFeesEarnedGlobal = async () => {
-		const tx = this.suiFrenFeesEarnedGlobalDevInspectTransaction();
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
-		return Casting.bigIntFromBytes(bytes);
-	};
-
-	public suiFrenFeesEarnedIndividualDevInspectTransaction = (
-		stakingReceiptId: ObjectId
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
-
-		tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.suiFrensVault,
-				SuiFrensApi.constants.suiFrenVault.modules.suiFrenVault
-					.moduleName,
-
-				SuiFrensApi.constants.suiFrenVault.modules.suiFrenVault
-					.functions.feesEarnedIndividual.name
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(stakingReceiptId),
-			],
-		});
-
-		return tx;
-	};
-
-	public suiFrenFeesEarnedGlobalDevInspectTransaction =
-		(): TransactionBlock => {
-			const tx = new TransactionBlock();
-
-			tx.moveCall({
-				target: Helpers.transactions.createTxTarget(
-					this.addresses.packages.suiFrensVault,
-					SuiFrensApi.constants.suiFrenVault.modules.suiFrenVault
-						.moduleName,
-					SuiFrensApi.constants.suiFrenVault.modules.suiFrenVault
-						.functions.feesEarnedGlobal.name
-				),
-				typeArguments: [],
-				arguments: [tx.object(this.addresses.objects.suiFrensVault)],
-			});
-
-			return tx;
-		};
 
 	// =========================================================================
 	//  Events
@@ -400,9 +323,11 @@ export class SuiFrensApi {
 	//  SuiFren Objects
 	// =========================================================================
 
-	public fetchSuiFrens = async (
-		suiFrenIds: ObjectId[]
-	): Promise<SuiFrenObject[]> => {
+	public fetchSuiFrens = async (inputs: {
+		suiFrenIds: ObjectId[];
+	}): Promise<SuiFrenObject[]> => {
+		const { suiFrenIds } = inputs;
+
 		const partialSuiFrens =
 			await this.Provider.Objects().fetchCastObjectBatch({
 				objectIds: suiFrenIds,
@@ -417,9 +342,11 @@ export class SuiFrensApi {
 		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
 	};
 
-	public fetchSuiFrensOwnedByAddress = async (
-		walletAddress: SuiAddress
-	): Promise<SuiFrenObject[]> => {
+	public fetchOwnedSuiFrens = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<SuiFrenObject[]> => {
+		const { walletAddress } = inputs;
+
 		const partialSuiFrens =
 			await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
@@ -432,9 +359,11 @@ export class SuiFrensApi {
 		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
 	};
 
-	public fetchStakedSuiFrens = async (
-		suiFrenIds: ObjectId[]
-	): Promise<SuiFrenObject[]> => {
+	public fetchStakedSuiFrens = async (inputs: {
+		suiFrenIds: ObjectId[];
+	}): Promise<SuiFrenObject[]> => {
+		const { suiFrenIds } = inputs;
+
 		const partialSuiFrens =
 			await this.Provider.Objects().fetchCastObjectBatch({
 				objectIds: suiFrenIds,
@@ -449,32 +378,6 @@ export class SuiFrensApi {
 		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
 	};
 
-	public fetchStakedSuiFrensOwnedByAddress = async (
-		walletAddress: SuiAddress
-	): Promise<SuiFrenObject[]> => {
-		// i. obtain all owned StakingReceipt
-		const suiFrenIdsStakedByAddress = (
-			await this.fetchStakedSuiFrenReceiptOwnedByAddress(walletAddress)
-		).map((suiFrenStakingReceipt) => suiFrenStakingReceipt.suiFrenId);
-
-		// ii. obtain a SuiFren object from each SuiFren ObjectId
-		const stakedSuiFrens = await this.fetchStakedSuiFrens(
-			suiFrenIdsStakedByAddress
-		);
-
-		return stakedSuiFrens;
-	};
-
-	public fetchSuiFrenVault = async (
-		suiFrenVaultId: ObjectId
-	): Promise<SuiFrenVaultObject> => {
-		return this.Provider.Objects().fetchCastObject<SuiFrenVaultObject>({
-			objectId: suiFrenVaultId,
-			objectFromSuiObjectResponse:
-				Casting.suiFrens.suiFrenVaultObjectFromSuiObjectResponse,
-		});
-	};
-
 	public fetchStakedSuiFrensDynamicFields = async (
 		inputs: DynamicFieldsInputs
 	) => {
@@ -485,7 +388,8 @@ export class SuiFrensApi {
 			{
 				...inputs,
 				parentObjectId: suiFrenVaultId,
-				objectsFromObjectIds: this.fetchSuiFrens,
+				objectsFromObjectIds: (suiFrenIds) =>
+					this.fetchStakedSuiFrens({ suiFrenIds }),
 				dynamicFieldType: suiFrenType,
 			}
 		);
@@ -509,6 +413,22 @@ export class SuiFrensApi {
 		);
 	};
 
+	public fetchOwnedAccessories = async (inputs: {
+		walletAddress: SuiAddress;
+	}) => {
+		throw new Error("TODO");
+		// const { walletAddress } = inputs;
+		// return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
+		// 	{
+		// 		walletAddress,
+		// 		objectType: this.objectTypes.suiFrenAccessory,
+		// 		objectFromSuiObjectResponse:
+		// 			Casting.suiFrens
+		// 				.accessoryObjectFromSuiObjectResponse,
+		// 	}
+		// );
+	};
+
 	public fetchAccessories = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<SuiFrenAccessoryObject[]> => {
@@ -522,85 +442,25 @@ export class SuiFrensApi {
 	};
 
 	// =========================================================================
-	//  Staked SuiFren Receipt Objects
+	//  Staked SuiFren Objects
 	// =========================================================================
 
-	public fetchStakedSuiFrenReceipt = async (
-		suiFrenStakingReceipt: ObjectId
-	): Promise<StakedSuiFrenMetadataV1Object> => {
-		return this.Provider.Objects().fetchCastObject<StakedSuiFrenMetadataV1Object>(
-			{
-				objectId: suiFrenStakingReceipt,
-				objectFromSuiObjectResponse:
-					Casting.suiFrens
-						.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
-			}
-		);
-	};
-
-	public fetchStakedSuiFrenReceipts = async (
-		suiFrenStakingReceipts: ObjectId[]
-	): Promise<StakedSuiFrenMetadataV1Object[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch<StakedSuiFrenMetadataV1Object>(
-			{
-				objectIds: suiFrenStakingReceipts,
-				objectFromSuiObjectResponse:
-					Casting.suiFrens
-						.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
-			}
-		);
-	};
-
-	public fetchStakedSuiFrenReceiptOwnedByAddress = async (
-		walletAddress: SuiAddress
-	): Promise<StakedSuiFrenMetadataV1Object[]> => {
-		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-			{
-				walletAddress,
-				objectType: this.objectTypes.stakedSuiFrenReceipt,
-				objectFromSuiObjectResponse:
-					Casting.suiFrens
-						.stakedSuiFrenReceiptObjectFromSuiObjectResponse,
-			}
-		);
-	};
-
-	public fetchStakedSuiFrenReceiptWithSuiFrensOwnedByAddress = async (
-		walletAddress: SuiAddress
-	): Promise<{}[]> => {
-		// StakedSuiFrenReceiptWithSuiFrenObject
+	public fetchOwnedStakedSuiFrens = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<StakedSuiFrenInfo[]> => {
 		throw new Error("TODO");
 
-		// i. obtain all owned StakingReceipt
-		// const stakingReceipts =
-		// 	await this.fetchStakedSuiFrenReceiptOwnedByAddress(walletAddress);
+		// const { walletAddress } = inputs;
 
-		// // ii. obtain all SuiFren Object Ids
-		// const suiFrenIdsStakedByAddress = stakingReceipts.map(
-		// 	(suiFrenStakingReceipt) => suiFrenStakingReceipt.suiFrenId
-		// );
-
-		// // iii. obtain a SuiFren object from each SuiFren ObjectId
-		// let indexStakedSuiFrens: { [key: ObjectId]: SuiFrenObject } = {};
-		// (await this.fetchStakedSuiFrens(suiFrenIdsStakedByAddress)).forEach(
-		// 	(stakedSuiFren) => {
-		// 		indexStakedSuiFrens[stakedSuiFren.objectId] = stakedSuiFren;
+		// return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
+		// 	{
+		// 		walletAddress,
+		// 		objectType: this.objectTypes.stakedSuiFrenMetadataV1,
+		// 		objectFromSuiObjectResponse:
+		// 			Casting.suiFrens
+		// 				.stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse,
 		// 	}
 		// );
-
-		// // iv. construct a StakingReceiptWithSuiFren object from each StakingReceipt <> SuiFren pair
-		// const suiFrenStakingReceiptsWithSuiFren = stakingReceipts.map(
-		// 	(stakingReceipt) => {
-		// 		return {
-		// 			objectType: stakingReceipt.objectType,
-		// 			objectId: stakingReceipt.objectId,
-		// 			suiFren: indexStakedSuiFrens[stakingReceipt.suiFrenId],
-		// 			unlockEpoch: stakingReceipt.unlockEpoch,
-		// 		};
-		// 	}
-		// );
-
-		// return suiFrenStakingReceiptsWithSuiFren;
 	};
 
 	// =========================================================================
@@ -608,7 +468,7 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	// =========================================================================
-	//  SuiFren Staking
+	//  Staking Transactions
 	// =========================================================================
 
 	public fetchStakeSuiFrenTransaction = (
@@ -630,22 +490,6 @@ export class SuiFrensApi {
 	): Promise<SerializedTransaction> =>
 		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
 			this.suiFrenWithdrawFeesTransaction(stakingReceiptId)
-		);
-
-	public fetchWithdrawStakedSuiFrenFeesAmountTransaction = (
-		stakingReceiptId: ObjectId,
-		amount: Balance
-	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.suiFrenWithdrawFeesAmountTransaction(stakingReceiptId, amount)
-		);
-
-	public fetchSuiFrenTransferTransaction = (
-		stakingReceiptId: ObjectId,
-		recipient: SuiAddress
-	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.suiFrenTransferTransaction(stakingReceiptId, recipient)
 		);
 
 	// =========================================================================
@@ -852,7 +696,7 @@ export class SuiFrensApi {
 	};
 
 	// =========================================================================
-	//  Mixing Transaction
+	//  Mixing Transaction Commands
 	// =========================================================================
 
 	public addStakeMixAndKeepCommandToTransaction = (
@@ -1036,30 +880,6 @@ export class SuiFrensApi {
 		return tx;
 	};
 
-	public suiFrenWithdrawFeesAmountTransaction = (
-		stakingReceiptId: ObjectId,
-		amount: Balance
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
-
-		tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.suiFrensVault,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
-					.withdrawFeesAmount.name
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(stakingReceiptId),
-				tx.pure(amount.toString()),
-			],
-		});
-
-		return tx;
-	};
-
 	// =========================================================================
 	//  Stats
 	// =========================================================================
@@ -1176,10 +996,6 @@ export class SuiFrensApi {
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
-
-	public isStakedSuiFrenReceiptObjectType = (
-		suiObjectInfo: SuiObjectInfo
-	): boolean => suiObjectInfo.type === this.objectTypes.stakedSuiFrenReceipt;
 
 	public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
 		suiObjectInfo.type === this.objectTypes.suiFren;

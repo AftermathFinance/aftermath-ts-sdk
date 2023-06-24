@@ -9,7 +9,7 @@ import {
 	ApiAddSuiFrenAccessoryBody,
 	ApiRemoveSuiFrenAccessoryBody,
 	SuiFrenAccessoryObject,
-	ApiSuiFrenAccessoriesBody,
+	ApiAccessoriesForSuiFrenBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
@@ -116,7 +116,7 @@ export class SuiFren extends Caller {
 	public async getAccessories() {
 		return this.fetchApi<
 			SuiFrenAccessoryObject[],
-			ApiSuiFrenAccessoriesBody
+			ApiAccessoriesForSuiFrenBody
 		>("accessories", {
 			suiFrenId: this.suiFren.objectId,
 		});
