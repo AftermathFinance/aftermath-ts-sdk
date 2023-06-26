@@ -24,12 +24,19 @@ export interface SuiFrenFieldsOnChain {
 	attributes: string[];
 	birth_location: string;
 }
-
 export interface SuiFrenDisplayOnChain {
 	description: string;
 	image_url: string;
 	link: string;
 	project_url: string;
+}
+
+export interface SuiFrenAccessoryFieldsOnChain {
+	name: string;
+	type: string;
+}
+export interface SuiFrenAccessoryDisplayOnChain {
+	image_url: string;
 }
 
 // =========================================================================

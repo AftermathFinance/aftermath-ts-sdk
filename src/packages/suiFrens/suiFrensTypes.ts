@@ -88,6 +88,7 @@ export interface SuiFrenVaultStateObject extends Object {
 export interface SuiFrenAccessoryObject extends Object {
 	name: SuiFrenAccessoryName;
 	type: SuiFrenAccessoryType;
+	imageUrl: Url;
 }
 
 // =========================================================================

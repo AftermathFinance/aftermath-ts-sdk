@@ -15,6 +15,7 @@ import {
 	SuiFrenAttributes,
 	CapyLabsAppObject,
 	SuiFrenVaultObject,
+	SuiFrenAccessoryObject,
 } from "../suiFrensTypes";
 import {
 	MixSuiFrenEventOnChain,
@@ -24,6 +25,8 @@ import {
 	SuiFrenFieldsOnChain,
 	SuiFrenDisplayOnChain,
 	CapyLabsAppFieldsOnChain,
+	SuiFrenAccessoryDisplayOnChain,
+	SuiFrenAccessoryFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
 import { SuiFrens } from "../suiFrens";
 
@@ -103,6 +106,25 @@ export class SuiFrensApiCasting {
 		// 	suiFrenId: objectFields.suiFren_id,
 		// 	unlockEpoch: objectFields.unlock_epoch.fields,
 		// };
+	};
+
+	public static accessoryObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): SuiFrenAccessoryObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const fields = getObjectFields(data) as SuiFrenAccessoryFieldsOnChain;
+		const display = getObjectDisplay(data)
+			.data as unknown as SuiFrenAccessoryDisplayOnChain;
+
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			name: fields.name,
+			type: fields.type,
+			imageUrl: display.image_url,
+		};
 	};
 
 	// =========================================================================

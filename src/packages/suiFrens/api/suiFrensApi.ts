@@ -416,29 +416,31 @@ export class SuiFrensApi {
 	public fetchOwnedAccessories = async (inputs: {
 		walletAddress: SuiAddress;
 	}) => {
-		throw new Error("TODO");
-		// const { walletAddress } = inputs;
-		// return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-		// 	{
-		// 		walletAddress,
-		// 		objectType: this.objectTypes.suiFrenAccessory,
-		// 		objectFromSuiObjectResponse:
-		// 			Casting.suiFrens
-		// 				.accessoryObjectFromSuiObjectResponse,
-		// 	}
-		// );
+		const { walletAddress } = inputs;
+		return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
+			{
+				walletAddress,
+				objectType: this.objectTypes.suiFrenAccessory,
+				objectFromSuiObjectResponse:
+					Casting.suiFrens.accessoryObjectFromSuiObjectResponse,
+				withDisplay: true,
+			}
+		);
 	};
 
 	public fetchAccessories = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<SuiFrenAccessoryObject[]> => {
-		throw new Error("TODO");
-		// const { objectIds } = inputs;
-		// return this.Provider.Objects().fetchCastObjectBatch({
-		// 	objectIds,
-		// 	objectFromSuiObjectResponse:
-		// 		Casting.suiFrens.accessoryObjectFromSuiObjectResponse,
-		// });
+		const { objectIds } = inputs;
+		return this.Provider.Objects().fetchCastObjectBatch({
+			objectIds,
+			objectFromSuiObjectResponse:
+				Casting.suiFrens.accessoryObjectFromSuiObjectResponse,
+			options: {
+				showDisplay: true,
+				showType: true,
+			},
+		});
 	};
 
 	// =========================================================================
