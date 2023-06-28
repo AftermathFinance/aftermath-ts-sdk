@@ -86,6 +86,32 @@ export class SuiFrensApiCasting {
 		};
 	};
 
+	// public static partialSuiFrenObjectFromStakedSuiFrenMetadataV1ObjectSuiObjectResponse =
+	// 	(
+	// 		data: SuiObjectResponse
+	// 	): Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed"> => {
+	// 		const objectType = getObjectType(data);
+	// 		if (!objectType) throw new Error("no object type found");
+
+	// 		const fields = getObjectFields(
+	// 			data
+	// 		) as StakedSuiFrenMetadataV1FieldsOnChain;
+	// 		// const display = getObjectDisplay(data)
+	// 		// .data as unknown as SuiFrenDisplayOnChain;
+
+	// 		return {
+	// 			objectId: fields.suifren_id,
+
+	// 			lastEpochMixed: BigInt(fields.last_epoch_mixed),
+	// 			generation: BigInt(fields.generation),
+	// 			birthdate: BigInt(fields.birthdate),
+	// 			cohort: BigInt(fields.cohort),
+	// 			genes: BigInt(fields.genes),
+	// 			birthLocation: fields.birth_location,
+	// 			attributes: fields.attributes,
+	// 		};
+	// 	};
+
 	public static stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): StakedSuiFrenMetadataV1Object => {

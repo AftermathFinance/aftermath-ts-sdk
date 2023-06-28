@@ -10,10 +10,12 @@ import {
 	ApiRemoveSuiFrenAccessoryBody,
 	SuiFrenAccessoryObject,
 	ApiAccessoriesForSuiFrenBody,
+	AnyObjectType,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
 import { ObjectId } from "@mysten/sui.js";
+import { Coin } from "..";
 
 export class SuiFren extends Caller {
 	// =========================================================================
@@ -32,6 +34,10 @@ export class SuiFren extends Caller {
 	// =========================================================================
 	//  Getters
 	// =========================================================================
+
+	public suiFrenType(): AnyObjectType {
+		return new Coin(this.suiFren.objectType).innerCoinType;
+	}
 
 	public properties(): Record<string, string> {
 		return {
@@ -138,6 +144,7 @@ export class SuiFren extends Caller {
 			"transactions/stake",
 			{
 				...inputs,
+				suiFrenType: this.suiFrenType(),
 				suiFrenId: this.suiFren.objectId,
 			}
 		);
@@ -148,6 +155,7 @@ export class SuiFren extends Caller {
 			"transactions/add-accessory",
 			{
 				...inputs,
+				suiFrenType: this.suiFrenType(),
 				suiFrenId: this.suiFren.objectId,
 			}
 		);
@@ -165,6 +173,7 @@ export class SuiFren extends Caller {
 			"transactions/remove-accessory",
 			{
 				...inputs,
+				suiFrenType: this.suiFrenType(),
 				suiFrenId: this.suiFren.objectId,
 			}
 		);

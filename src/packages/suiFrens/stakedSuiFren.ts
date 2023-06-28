@@ -61,6 +61,7 @@ export class StakedSuiFren extends Caller {
 		return this.fetchApiTransaction<ApiUnstakeSuiFrenBody>(
 			"transactions/unstake",
 			{
+				suiFrenType: this.suiFren.suiFrenType(),
 				stakedPositionId: this.info.position.objectId,
 			}
 		);
@@ -70,6 +71,7 @@ export class StakedSuiFren extends Caller {
 		return this.fetchApiTransaction<ApiWithdrawStakedSuiFrenFeesBody>(
 			"transactions/withdraw-fees",
 			{
+				suiFrenType: this.suiFren.suiFrenType(),
 				stakedPositionId: this.info.position.objectId,
 			}
 		);
@@ -91,6 +93,7 @@ export class StakedSuiFren extends Caller {
 			"transactions/remove-accessory",
 			{
 				...inputs,
+				suiFrenType: this.suiFren.suiFrenType(),
 				stakedPositionId: this.info.position.objectId,
 			}
 		);
