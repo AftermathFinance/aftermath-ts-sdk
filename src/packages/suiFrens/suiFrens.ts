@@ -23,6 +23,7 @@ import {
 	ApiOwnedSuiFrenAccessoriesBody,
 	ApiOwnedSuiFrensBody,
 	ApiOwnedStakedSuiFrensBody,
+	ApiHarvestFeesBody,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFren } from "./stakedSuiFren";
@@ -167,6 +168,13 @@ export class SuiFrens extends Caller {
 	public async getMixTransaction(inputs: ApiMixSuiFrensBody) {
 		return this.fetchApiTransaction<ApiMixSuiFrensBody>(
 			"transactions/mix",
+			inputs
+		);
+	}
+
+	public async getHarvestFeesTransaction(inputs: ApiHarvestFeesBody) {
+		return this.fetchApiTransaction<ApiHarvestFeesBody>(
+			"transactions/harvest-fees",
 			inputs
 		);
 	}

@@ -14,7 +14,7 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
-import { ObjectId } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Coin } from "..";
 
 export class SuiFren extends Caller {
@@ -133,9 +133,10 @@ export class SuiFren extends Caller {
 	// =========================================================================
 
 	public async getStakeTransaction(inputs: {
-		mixFee: Balance;
+		baseFee: Balance;
 		feeIncrementPerMix: Balance;
 		minRemainingMixesToKeep: bigint;
+		walletAddress: SuiAddress;
 	}) {
 		if (this.isStaked)
 			throw new Error("unable to stake already staked suiFren");
@@ -150,11 +151,15 @@ export class SuiFren extends Caller {
 		);
 	}
 
-	public async getAddAccessoryTransaction(inputs: { accessoryId: ObjectId }) {
+	public async getAddAccessoryTransaction(inputs: {
+		accessoryId: ObjectId;
+		walletAddress: SuiAddress;
+	}) {
 		return this.fetchApiTransaction<ApiAddSuiFrenAccessoryBody>(
 			"transactions/add-accessory",
 			{
 				...inputs,
+				isOwned: this.isOwned,
 				suiFrenType: this.suiFrenType(),
 				suiFrenId: this.suiFren.objectId,
 			}
@@ -163,6 +168,7 @@ export class SuiFren extends Caller {
 
 	public async getRemoveAccessoryTransaction(inputs: {
 		accessoryType: SuiFrenAccessoryType;
+		walletAddress: SuiAddress;
 	}) {
 		if (!this.isOwned)
 			throw new Error(

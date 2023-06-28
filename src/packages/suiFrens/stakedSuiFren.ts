@@ -2,7 +2,7 @@ import {
 	ApiAddSuiFrenAccessoryBody,
 	ApiRemoveSuiFrenAccessoryBody,
 	ApiUnstakeSuiFrenBody,
-	ApiWithdrawStakedSuiFrenFeesBody,
+	ApiHarvestFeesBody,
 	Balance,
 	StakedSuiFrenInfo,
 	SuiFrenAccessoryType,
@@ -11,7 +11,7 @@ import {
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { Caller } from "../../general/utils/caller";
-import { ObjectId } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 
 export class StakedSuiFren extends Caller {
 	// =========================================================================
@@ -57,32 +57,40 @@ export class StakedSuiFren extends Caller {
 	//  Transactions
 	// =========================================================================
 
-	public async getUnstakeTransaction() {
+	public async getUnstakeTransaction(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApiTransaction<ApiUnstakeSuiFrenBody>(
 			"transactions/unstake",
 			{
+				...inputs,
 				suiFrenType: this.suiFren.suiFrenType(),
-				stakedPositionId: this.info.position.objectId,
+				suiFrenId: this.suiFrenId(),
 			}
 		);
 	}
 
-	public async getWithdrawFeesTransaction() {
-		return this.fetchApiTransaction<ApiWithdrawStakedSuiFrenFeesBody>(
-			"transactions/withdraw-fees",
+	public async getHarvestFeesTransaction(inputs: {
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApiTransaction<ApiHarvestFeesBody>(
+			"transactions/harvest-fees",
 			{
+				...inputs,
+				stakedPositionIds: [this.info.position.objectId],
 				suiFrenType: this.suiFren.suiFrenType(),
-				stakedPositionId: this.info.position.objectId,
 			}
 		);
 	}
 
-	public async getAddAccessoryTransaction(inputs: { accessoryId: ObjectId }) {
+	public async getAddAccessoryTransaction(inputs: {
+		accessoryId: ObjectId;
+		walletAddress: SuiAddress;
+	}) {
 		return this.suiFren.getAddAccessoryTransaction(inputs);
 	}
 
 	public async getRemoveAccessoryTransaction(inputs: {
 		accessoryType: SuiFrenAccessoryType;
+		walletAddress: SuiAddress;
 	}) {
 		if (!this.isOwned)
 			throw new Error(

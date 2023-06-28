@@ -20,8 +20,12 @@ import {
 	StakedSuiFrenInfo,
 	SuiFrenAccessoryType,
 	ApiMixSuiFrensBody,
+	ApiRemoveSuiFrenAccessoryBody,
+	ApiAddSuiFrenAccessoryBody,
+	HarvestFeesEvent,
 } from "../suiFrensTypes";
 import {
+	HarvestFeesEventOnChain,
 	MixSuiFrensEventOnChain,
 	StakeSuiFrenEventOnChain,
 	UnstakeSuiFrenEventOnChain,
@@ -66,10 +70,10 @@ export class SuiFrensApi {
 
 		eventNames: {
 			suiFrensVault: {
-				mixSuiFrens: "MixSuiFrenEvent",
-				stakeSuiFren: "StakeSuiFrenEvent",
-				unstakeSuiFren: "UnstakeSuiFrenEvent",
-				withdrawFees: "WithdrawFeesEvent",
+				mixSuiFrens: "MixedSuiFrenEvent",
+				stakeSuiFren: "StakedSuiFrenEvent",
+				unstakeSuiFren: "UnstakedSuiFrenEvent",
+				harvestFees: "HarvestedFeesEvent",
 			},
 		},
 
@@ -98,6 +102,7 @@ export class SuiFrensApi {
 	};
 
 	public readonly eventTypes: {
+		harvestFees: AnyObjectType;
 		mixSuiFrens: AnyObjectType;
 		stakeSuiFren: AnyObjectType;
 		unstakeSuiFren: AnyObjectType;
@@ -124,6 +129,7 @@ export class SuiFrensApi {
 		};
 
 		this.eventTypes = {
+			harvestFees: this.harvestFeesEventType(),
 			mixSuiFrens: this.mixSuiFrensEventType(),
 			stakeSuiFren: this.stakeSuiFrenEventType(),
 			unstakeSuiFren: this.unstakeSuiFrenEventType(),
@@ -223,8 +229,20 @@ export class SuiFrensApi {
 	//  Events
 	// =========================================================================
 
-	public fetchMixSuiFrensEvents = async (inputs: EventsInputs) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
+	public fetchHarvestFeesEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			HarvestFeesEventOnChain,
+			HarvestFeesEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.harvestFees,
+			},
+			eventFromEventOnChain: Casting.suiFrens.harvestFeesEventFromOnChain,
+		});
+
+	public fetchMixSuiFrensEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
 			MixSuiFrensEventOnChain,
 			MixSuiFrensEvent
 		>({
@@ -235,8 +253,8 @@ export class SuiFrensApi {
 			eventFromEventOnChain: Casting.suiFrens.mixSuiFrensEventFromOnChain,
 		});
 
-	public fetchStakeSuiFrenEvents = async (inputs: EventsInputs) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
+	public fetchStakeSuiFrenEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
 			StakeSuiFrenEventOnChain,
 			StakeSuiFrenEvent
 		>({
@@ -248,8 +266,8 @@ export class SuiFrensApi {
 				Casting.suiFrens.stakeSuiFrenEventFromOnChain,
 		});
 
-	public fetchUnstakeSuiFrenEvents = async (inputs: EventsInputs) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
+	public fetchUnstakeSuiFrenEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
 			UnstakeSuiFrenEventOnChain,
 			UnstakeSuiFrenEvent
 		>({
@@ -422,141 +440,6 @@ export class SuiFrensApi {
 		// 				.stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse,
 		// 	}
 		// );
-	};
-
-	// =========================================================================
-	//  Transactions
-	// =========================================================================
-
-	// =========================================================================
-	//  Staking Transactions
-	// =========================================================================
-
-	// public fetchStakeSuiFrenTransaction = (
-	// 	suiFrenId: ObjectId
-	// ): Promise<SerializedTransaction> =>
-	// 	this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-	// 		this.suiFrenStakeSuiFrenTransaction(suiFrenId)
-	// 	);
-
-	// public fetchUnstakeSuiFrenTransaction = (
-	// 	stakingReceiptId: ObjectId
-	// ): Promise<SerializedTransaction> =>
-	// 	this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-	// 		this.suiFrenUnstakeSuiFrenTransaction(stakingReceiptId)
-	// 	);
-
-	// public fetchWithdrawStakedSuiFrenFeesTransaction = (
-	// 	stakingReceiptId: ObjectId
-	// ): Promise<SerializedTransaction> =>
-	// 	this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-	// 		this.suiFrenWithdrawFeesTransaction(stakingReceiptId)
-	// 	);
-
-	// =========================================================================
-	//  Mixing Transactions
-	// =========================================================================
-
-	public fetchBuildMixTx = async (
-		inputs: ApiMixSuiFrensBody
-	): Promise<TransactionBlock> => {
-		const {
-			walletAddress,
-			suiFrenParentOne,
-			suiFrenParentTwo,
-			totalFee,
-			suiFrenType,
-		} = inputs;
-
-		const tx = new TransactionBlock();
-		tx.setSender(walletAddress);
-
-		const suiPaymentCoinId =
-			await this.Provider.Coin().fetchCoinWithAmountTx({
-				tx,
-				walletAddress,
-				coinType: Coin.constants.suiCoinType,
-				coinAmount: totalFee,
-			});
-
-		const isParentOneStaked = suiFrenParentOne.isStaked;
-		const isParentTwoStaked = suiFrenParentTwo.isStaked;
-
-		const parentOneId = suiFrenParentOne.objectId;
-		const parentTwoId = suiFrenParentTwo.objectId;
-
-		if (isParentOneStaked && isParentTwoStaked) {
-			// both staked
-			this.mixStakedWithStakedTx({
-				tx,
-				parentOneId,
-				parentTwoId,
-				suiPaymentCoinId,
-				suiFrenType,
-			});
-		} else if (!isParentOneStaked && !isParentTwoStaked) {
-			// neither staked
-			this.mixTx({
-				tx,
-				parentOneId,
-				parentTwoId,
-				suiPaymentCoinId,
-				suiFrenType,
-			});
-		} else {
-			// only one staked
-			const [nonStakedParentId, stakedParentId] = isParentOneStaked
-				? [parentTwoId, parentOneId]
-				: [parentOneId, parentTwoId];
-
-			this.mixWithStakedTx({
-				tx,
-				nonStakedParentId,
-				stakedParentId,
-				suiPaymentCoinId,
-				suiFrenType,
-			});
-		}
-
-		return tx;
-	};
-
-	// =========================================================================
-	//  Fee Harvesting Transactions
-	// =========================================================================
-
-	public fetchBuildHarvestFeesTx = async (inputs: {
-		walletAddress: SuiAddress;
-		stakedSuiFrenIds: ObjectId[];
-	}): Promise<TransactionBlock> => {
-		const { stakedSuiFrenIds } = inputs;
-
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		const harvestFeesEventMetadataId = this.beginHarvestTx({ tx });
-
-		let harvestedCoins = [];
-		for (const stakedSuiFrenId of stakedSuiFrenIds) {
-			const harvestedCoin = this.harvestTx({
-				tx,
-				stakedSuiFrenId,
-				harvestFeesEventMetadataId,
-			});
-			harvestedCoins.push(harvestedCoin);
-		}
-
-		// TODO: move this merging & transferring behaviour to coins api helpers ?
-		const coinToTransfer = harvestedCoins[0];
-
-		if (harvestedCoins.length > 1)
-			tx.mergeCoins(coinToTransfer, harvestedCoins.slice(1));
-
-		tx.transferObjects([coinToTransfer], tx.pure(inputs.walletAddress));
-
-		this.endHarvestTx({ tx, harvestFeesEventMetadataId });
-
-		return tx;
 	};
 
 	// =========================================================================
@@ -753,7 +636,7 @@ export class SuiFrensApi {
 
 	public unstakeAndKeepTx = (inputs: {
 		tx: TransactionBlock;
-		stakedSuiFrenId: ObjectId;
+		suiFrenId: ObjectId;
 		suiFrenType: AnyObjectType;
 	}) => {
 		const { tx } = inputs;
@@ -771,7 +654,7 @@ export class SuiFrensApi {
 					this.addresses.objects.suiFrensVaultCapyLabsExtension
 				), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
-				tx.object(inputs.stakedSuiFrenId), // SuiFren
+				tx.object(inputs.suiFrenId), // SuiFren
 			],
 		});
 	};
@@ -798,7 +681,7 @@ export class SuiFrensApi {
 
 	public harvestTx = (inputs: {
 		tx: TransactionBlock;
-		stakedSuiFrenId: ObjectId;
+		stakedPositionId: ObjectId;
 		harvestFeesEventMetadataId: ObjectId | TransactionArgument;
 	}) /* (Coin) */ => {
 		const { tx, harvestFeesEventMetadataId } = inputs;
@@ -812,7 +695,7 @@ export class SuiFrensApi {
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
-				tx.object(inputs.stakedSuiFrenId), // StakedPosition
+				tx.object(inputs.stakedPositionId), // StakedPosition
 				typeof harvestFeesEventMetadataId === "string"
 					? tx.object(harvestFeesEventMetadataId)
 					: harvestFeesEventMetadataId, // HarvestedFeesEventMetadata
@@ -892,7 +775,7 @@ export class SuiFrensApi {
 
 	public removeAccessoryAndKeepTx = (inputs: {
 		tx: TransactionBlock;
-		stakedSuiFrenId: ObjectId;
+		stakedPositionId: ObjectId;
 		accessoryType: SuiFrenAccessoryType;
 		suiFrenType: AnyObjectType;
 	}) => {
@@ -907,7 +790,7 @@ export class SuiFrensApi {
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
-				tx.object(inputs.stakedSuiFrenId), // StakedPosition
+				tx.object(inputs.stakedPositionId), // StakedPosition
 				tx.object(inputs.accessoryType), // String
 			],
 		});
@@ -933,6 +816,163 @@ export class SuiFrensApi {
 				tx.object(inputs.accessoryType), // String
 			],
 		});
+	};
+
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
+
+	// =========================================================================
+	//  Staking Transactions
+	// =========================================================================
+
+	public fetchStakeTx = Helpers.transactions.creatBuildTxFunc(
+		(inputs: {
+			tx: TransactionBlock;
+			suiFrenId: ObjectId;
+			baseFee: Balance;
+			feeIncrementPerMix: Balance;
+			minRemainingMixesToKeep: bigint;
+			suiFrenType: AnyObjectType;
+		}) => this.stakeAndKeepTx({ ...inputs, autoStakeFees: true })
+	);
+
+	public fetchUnstakeTx = Helpers.transactions.creatBuildTxFunc(
+		this.unstakeAndKeepTx
+	);
+
+	// =========================================================================
+	//  Mixing Transactions
+	// =========================================================================
+
+	public fetchBuildMixTx = async (
+		inputs: ApiMixSuiFrensBody
+	): Promise<TransactionBlock> => {
+		const {
+			walletAddress,
+			suiFrenParentOne,
+			suiFrenParentTwo,
+			totalFee,
+			suiFrenType,
+		} = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const suiPaymentCoinId =
+			await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
+				walletAddress,
+				coinType: Coin.constants.suiCoinType,
+				coinAmount: totalFee,
+			});
+
+		const isParentOneStaked = suiFrenParentOne.isStaked;
+		const isParentTwoStaked = suiFrenParentTwo.isStaked;
+
+		const parentOneId = suiFrenParentOne.objectId;
+		const parentTwoId = suiFrenParentTwo.objectId;
+
+		if (isParentOneStaked && isParentTwoStaked) {
+			// both staked
+			this.mixStakedWithStakedTx({
+				tx,
+				parentOneId,
+				parentTwoId,
+				suiPaymentCoinId,
+				suiFrenType,
+			});
+		} else if (!isParentOneStaked && !isParentTwoStaked) {
+			// neither staked
+			this.mixTx({
+				tx,
+				parentOneId,
+				parentTwoId,
+				suiPaymentCoinId,
+				suiFrenType,
+			});
+		} else {
+			// only one staked
+			const [nonStakedParentId, stakedParentId] = isParentOneStaked
+				? [parentTwoId, parentOneId]
+				: [parentOneId, parentTwoId];
+
+			this.mixWithStakedTx({
+				tx,
+				nonStakedParentId,
+				stakedParentId,
+				suiPaymentCoinId,
+				suiFrenType,
+			});
+		}
+
+		return tx;
+	};
+
+	// =========================================================================
+	//  Fee Harvesting Transactions
+	// =========================================================================
+
+	public fetchBuildHarvestFeesTx = async (inputs: {
+		walletAddress: SuiAddress;
+		stakedPositionIds: ObjectId[];
+	}): Promise<TransactionBlock> => {
+		const { stakedPositionIds } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		const harvestFeesEventMetadataId = this.beginHarvestTx({ tx });
+
+		let harvestedCoins = [];
+		for (const stakedPositionId of stakedPositionIds) {
+			const harvestedCoin = this.harvestTx({
+				tx,
+				stakedPositionId,
+				harvestFeesEventMetadataId,
+			});
+			harvestedCoins.push(harvestedCoin);
+		}
+
+		// TODO: move this merging & transferring behaviour to coins api helpers ?
+		const coinToTransfer = harvestedCoins[0];
+
+		if (harvestedCoins.length > 1)
+			tx.mergeCoins(coinToTransfer, harvestedCoins.slice(1));
+
+		tx.transferObjects([coinToTransfer], tx.pure(inputs.walletAddress));
+
+		this.endHarvestTx({ tx, harvestFeesEventMetadataId });
+
+		return tx;
+	};
+
+	// =========================================================================
+	//  Accessory Transactions
+	// =========================================================================
+
+	public fetchBuildAddAccessoryTx = (inputs: ApiAddSuiFrenAccessoryBody) => {
+		if (inputs.isOwned) {
+			return Helpers.transactions.creatBuildTxFunc(
+				this.addAccessoryToOwnedSuiFrenTx
+			)(inputs);
+		}
+		return Helpers.transactions.creatBuildTxFunc(this.addAccessoryTx)(
+			inputs
+		);
+	};
+
+	public fetchBuildRemoveAccessoryTx = (
+		inputs: ApiRemoveSuiFrenAccessoryBody
+	) => {
+		if ("suiFrenId" in inputs) {
+			return Helpers.transactions.creatBuildTxFunc(
+				this.removeAccessoryFromOwnedSuiFrenAndKeepTx
+			)(inputs);
+		}
+		return Helpers.transactions.creatBuildTxFunc(
+			this.removeAccessoryAndKeepTx
+		)(inputs);
 	};
 
 	// =========================================================================
@@ -1096,6 +1136,13 @@ export class SuiFrensApi {
 	// =========================================================================
 	//  Event Types
 	// =========================================================================
+
+	private harvestFeesEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.suiFrensVault,
+			SuiFrensApi.constants.moduleNames.suiFrensVault.events,
+			SuiFrensApi.constants.eventNames.suiFrensVault.harvestFees
+		);
 
 	private mixSuiFrensEventType = () =>
 		EventsApiHelpers.createEventType(

@@ -15,6 +15,7 @@ import {
 	CapyLabsAppObject,
 	SuiFrenVaultStateV1Object,
 	SuiFrenAccessoryObject,
+	HarvestFeesEvent,
 } from "../suiFrensTypes";
 import {
 	MixSuiFrensEventOnChain,
@@ -27,6 +28,7 @@ import {
 	SuiFrenAccessoryFieldsOnChain,
 	StakedSuiFrenMetadataV1FieldsOnChain,
 	SuiFrenVaultStateV1FieldsOnChain,
+	HarvestFeesEventOnChain,
 } from "./suiFrensApiCastingTypes";
 
 export class SuiFrensApiCasting {
@@ -184,20 +186,34 @@ export class SuiFrensApiCasting {
 	//  Events
 	// =========================================================================
 
-	public static mixSuiFrensEventFromOnChain = (
-		eventOnChain: MixSuiFrensEventOnChain
-	): MixSuiFrensEvent => {
+	public static harvestFeesEventFromOnChain = (
+		eventOnChain: HarvestFeesEventOnChain
+	): HarvestFeesEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			mixer: eventOnChain.mixer,
-			parentOneId: fields.parent_one_id,
-			parentTwoId: fields.parent_two_id,
-			childId: fields.child_id,
-			fee: BigInt(fields.fee),
+			harvester: fields.issuer,
+			fees: BigInt(fields.fees),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
+	};
+
+	public static mixSuiFrensEventFromOnChain = (
+		eventOnChain: MixSuiFrensEventOnChain
+	): MixSuiFrensEvent => {
+		throw new Error("TODO");
+		// const fields = eventOnChain.parsedJson;
+		// return {
+		// 	mixer: eventOnChain.mixer,
+		// 	parentOneId: fields.parent_one_id,
+		// 	parentTwoId: fields.parent_two_id,
+		// 	childId: fields.child_id,
+		// 	fee: BigInt(fields.fee),
+		// 	timestamp: eventOnChain.timestampMs,
+		// 	txnDigest: eventOnChain.id.txDigest,
+		// 	type: eventOnChain.type,
+		// };
 	};
 
 	public static stakeSuiFrenEventFromOnChain = (
