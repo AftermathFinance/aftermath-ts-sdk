@@ -1,4 +1,10 @@
-import { ApiFaucetRequestBody, CoinType, SuiNetwork, Url } from "../../types";
+import {
+	ApiFaucetMintSuiFrenBody,
+	ApiFaucetRequestBody,
+	CoinType,
+	SuiNetwork,
+	Url,
+} from "../../types";
 import { Caller } from "../../general/utils/caller";
 
 export class Faucet extends Caller {
@@ -22,10 +28,6 @@ export class Faucet extends Caller {
 	//  Inspections
 	// =========================================================================
 
-	public async getIsPackageOnChain(): Promise<boolean> {
-		return this.fetchApi("status");
-	}
-
 	public async getSupportedCoins(): Promise<CoinType[]> {
 		return this.fetchApi("supported-coins");
 	}
@@ -43,6 +45,13 @@ export class Faucet extends Caller {
 	public async getRequestCoinTransaction(inputs: ApiFaucetRequestBody) {
 		return this.fetchApiTransaction<ApiFaucetRequestBody>(
 			"transactions/request",
+			inputs
+		);
+	}
+
+	public async getMintSuiFrenTransaction(inputs: ApiFaucetMintSuiFrenBody) {
+		return this.fetchApiTransaction<ApiFaucetMintSuiFrenBody>(
+			"transactions/mint-sui-fren",
 			inputs
 		);
 	}

@@ -4,6 +4,7 @@ import {
 	EventId,
 	ObjectId,
 	SuiAddress,
+	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
 import { FaucetApiCasting } from "./faucetApiCasting";
@@ -12,7 +13,11 @@ import {
 	FaucetAddCoinEventOnChain,
 	FaucetMintCoinEventOnChain,
 } from "./faucetApiCastingTypes";
-import { FaucetAddCoinEvent, FaucetMintCoinEvent } from "../faucetTypes";
+import {
+	ApiFaucetMintSuiFrenBody,
+	FaucetAddCoinEvent,
+	FaucetMintCoinEvent,
+} from "../faucetTypes";
 import {
 	AnyObjectType,
 	Balance,
@@ -23,6 +28,7 @@ import {
 import { Coin } from "../../coin";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { Sui } from "../../sui";
 
 export class FaucetApi {
 	// =========================================================================
@@ -30,18 +36,10 @@ export class FaucetApi {
 	// =========================================================================
 
 	private static readonly constants = {
-		faucetModuleName: "faucet",
-		faucetRegistryModuleName: "faucet_registry",
-		functions: {
-			add: {
-				name: "add_coin",
-			},
-			request: {
-				name: "request_coin",
-			},
-			requestAmount: {
-				name: "request_coin_amount",
-			},
+		moduleNames: {
+			faucet: "faucet",
+			faucetRegistry: "faucet_registry",
+			suiFrensGenesisWrapper: "genesis_wrapper",
 		},
 		eventNames: {
 			mintCoin: "MintedCoin",
@@ -94,13 +92,6 @@ export class FaucetApi {
 		return coinsWithoutAfSui;
 	};
 
-	public fetchIsPackageOnChain = () => {
-		const faucetPackageId = this.Provider.addresses.faucet?.packages.faucet;
-		if (!faucetPackageId) throw new Error("faucet package id is unset");
-
-		return this.Provider.Objects().fetchDoesObjectExist(faucetPackageId);
-	};
-
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
@@ -150,8 +141,30 @@ export class FaucetApi {
 
 		return tx;
 	};
+
+	public fetchBuildMintSuiFrenTx = async (
+		inputs: ApiFaucetMintSuiFrenBody
+	) => {
+		const { walletAddress, mintFee, suiFrenType } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const suiPaymentCoinId =
+			await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
+				walletAddress,
+				coinType: Coin.constants.suiCoinType,
+				coinAmount: mintFee,
+			});
+
+		this.mintSuiFrenTx({ tx, suiPaymentCoinId, suiFrenType });
+
+		return tx;
+	};
+
 	// =========================================================================
-	//  Transcations
+	//  Transcation Commands
 	// =========================================================================
 
 	public addCoinTx = (inputs: {
@@ -164,8 +177,8 @@ export class FaucetApi {
 		return tx.moveCall({
 			target: TransactionsApiHelpers.createTxTarget(
 				this.addresses.packages.faucet,
-				FaucetApi.constants.faucetModuleName,
-				FaucetApi.constants.functions.add.name
+				FaucetApi.constants.moduleNames.faucet,
+				"add_coin"
 			),
 			typeArguments: [treasuryCapType],
 			arguments: [
@@ -185,8 +198,8 @@ export class FaucetApi {
 		return tx.moveCall({
 			target: TransactionsApiHelpers.createTxTarget(
 				this.addresses.packages.faucet,
-				FaucetApi.constants.faucetModuleName,
-				FaucetApi.constants.functions.requestAmount.name
+				FaucetApi.constants.moduleNames.faucet,
+				"request_coin_amount"
 			),
 			typeArguments: [coinType],
 			arguments: [
@@ -205,11 +218,35 @@ export class FaucetApi {
 		return tx.moveCall({
 			target: TransactionsApiHelpers.createTxTarget(
 				this.addresses.packages.faucet,
-				FaucetApi.constants.faucetModuleName,
-				FaucetApi.constants.functions.request.name
+				FaucetApi.constants.moduleNames.faucet,
+				"request_coin"
 			),
 			typeArguments: [coinType],
 			arguments: [tx.object(this.addresses.objects.faucet)],
+		});
+	};
+
+	public mintSuiFrenTx = (inputs: {
+		tx: TransactionBlock;
+		suiPaymentCoinId: ObjectId | TransactionArgument;
+		suiFrenType: AnyObjectType;
+	}) => {
+		const { tx, suiPaymentCoinId, suiFrenType } = inputs;
+
+		return tx.moveCall({
+			target: TransactionsApiHelpers.createTxTarget(
+				this.addresses.packages.suiFrensGenesisWrapper,
+				FaucetApi.constants.moduleNames.suiFrensGenesisWrapper,
+				"mint_and_keep"
+			),
+			typeArguments: [suiFrenType],
+			arguments: [
+				tx.object(this.addresses.objects.suiFrensMint), // Mint
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				typeof suiPaymentCoinId === "string"
+					? tx.object(suiPaymentCoinId)
+					: suiPaymentCoinId, // Coin
+			],
 		});
 	};
 
@@ -254,7 +291,7 @@ export class FaucetApi {
 	private mintCoinEventType = () => {
 		return EventsApiHelpers.createEventType(
 			this.addresses.packages.faucet,
-			FaucetApi.constants.faucetModuleName,
+			FaucetApi.constants.moduleNames.faucet,
 			FaucetApi.constants.eventNames.mintCoin
 		);
 	};
@@ -262,7 +299,7 @@ export class FaucetApi {
 	private addCoinEventType = () => {
 		return EventsApiHelpers.createEventType(
 			this.addresses.packages.faucet,
-			FaucetApi.constants.faucetModuleName,
+			FaucetApi.constants.moduleNames.faucet,
 			FaucetApi.constants.eventNames.addCoin
 		);
 	};

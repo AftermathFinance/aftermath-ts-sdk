@@ -34,10 +34,12 @@ interface OptionalConfigAddresses {
 export interface FaucetAddresses {
 	packages: {
 		faucet: SuiAddress;
+		suiFrensGenesisWrapper: SuiAddress;
 	};
 	objects: {
 		faucet: ObjectId;
 		faucetRegistry: ObjectId;
+		suiFrensMint: ObjectId;
 	};
 }
 
