@@ -81,13 +81,15 @@ export interface UtilitiesAddresses {
 export interface SuiFrensAddresses {
 	packages: {
 		suiFrens: SuiAddress;
-		suiFrensVault: SuiAddress;
 		accessories: SuiAddress;
+		suiFrensVault: SuiAddress;
+		suiFrensVaultCapyLabsExtension: SuiAddress;
 	};
 	objects: {
 		capyLabsApp: ObjectId;
 		suiFrensVault: ObjectId;
-		suiFrensRegistry: ObjectId;
+		suiFrensVaultState: ObjectId;
+		suiFrensVaultCapyLabsExtension: ObjectId;
 	};
 }
 

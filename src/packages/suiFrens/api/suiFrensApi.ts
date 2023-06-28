@@ -5,27 +5,24 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 	bcs,
-	getObjectFields,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { SuiFrensApiCasting } from "./suiFrensApiCasting";
 import {
 	MixSuiFrensEvent,
-	SuiFrenBornEvent,
 	SuiFrenObject,
 	SuiFrenStats,
-	SuiFrenVaultObject,
+	SuiFrenVaultStateV1Object,
 	StakeSuiFrenEvent,
-	StakedSuiFrenMetadataV1Object,
 	UnstakeSuiFrenEvent,
 	SuiFrenAttributes,
 	SuiFrensSortOption,
 	SuiFrenAccessoryObject,
 	StakedSuiFrenInfo,
+	SuiFrenAccessoryType,
+	ApiMixSuiFrensBody,
 } from "../suiFrensTypes";
 import {
-	MixSuiFrenEventOnChain,
-	SuiFrenBornEventOnChain,
+	MixSuiFrensEventOnChain,
 	StakeSuiFrenEventOnChain,
 	UnstakeSuiFrenEventOnChain,
 } from "./suiFrensApiCastingTypes";
@@ -44,6 +41,7 @@ import {
 } from "../../../types";
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { Sui } from "../../sui/sui";
 
 export class SuiFrensApi {
 	// =========================================================================
@@ -52,63 +50,37 @@ export class SuiFrensApi {
 
 	private static readonly constants = {
 		moduleNames: {
-			capyLabs: "capy_labs",
-		},
-
-		suiFrenVault: {
-			modules: {
-				interface: {
-					moduleName: "interface",
-					functions: {
-						stakeSuiFren: {
-							name: "stake_suiFren",
-						},
-						unstakeSuiFren: {
-							name: "unstake_suiFren",
-						},
-						withdrawFees: {
-							name: "withdraw_fees",
-						},
-						mixAndKeep: {
-							name: "mix_and_keep",
-						},
-						mixWithStakedAndKeep: {
-							name: "mix_with_staked_and_keep",
-						},
-						mixStakedWithStakedAndKeep: {
-							name: "mix_staked_with_staked_and_keep",
-						},
-						transfer: {
-							name: "transfer",
-						},
-					},
-				},
-				suiFrenVault: {
-					moduleName: "suiFren_vault",
-					functions: {
-						feesEarnedIndividual: {
-							name: "fees_earned_individual",
-						},
-						feesEarnedGlobal: {
-							name: "fees_earned_global",
-						},
-					},
-				},
+			suiFrens: {},
+			accessories: {},
+			capyLabs: {
+				capyLabs: "capy_labs",
+			},
+			suiFrensVault: {
+				vault: "vault",
+				events: "events",
+			},
+			suiFrensVaultCapyLabsExtension: {
+				capyLabs: "capy_labs",
 			},
 		},
 
 		eventNames: {
-			suiFrenBorn: "SuiFrenBorn",
-			mixSuiFren: "MixSuiFrenEvent",
-			stakeSuiFren: "StakeSuiFrenEvent",
-			unstakeSuiFren: "UnstakeSuiFrenEvent",
-			withdrawFees: "WithdrawFeesEvent",
+			suiFrensVault: {
+				mixSuiFrens: "MixSuiFrenEvent",
+				stakeSuiFren: "StakeSuiFrenEvent",
+				unstakeSuiFren: "UnstakeSuiFrenEvent",
+				withdrawFees: "WithdrawFeesEvent",
+			},
 		},
 
 		dynamicFieldKeys: {
-			mixLimit: "MixLimitKey",
-			lastEpochMixed: "LastEpochMixedKey",
-			accessory: "AccessoryKey",
+			suiFrens: {
+				mixLimit: "MixLimitKey",
+				lastEpochMixed: "LastEpochMixedKey",
+			},
+			accessories: {
+				accessory: "AccessoryKey",
+			},
 		},
 	};
 
@@ -126,7 +98,6 @@ export class SuiFrensApi {
 	};
 
 	public readonly eventTypes: {
-		suiFrenBorn: AnyObjectType;
 		mixSuiFrens: AnyObjectType;
 		stakeSuiFren: AnyObjectType;
 		unstakeSuiFren: AnyObjectType;
@@ -153,7 +124,6 @@ export class SuiFrensApi {
 		};
 
 		this.eventTypes = {
-			suiFrenBorn: this.suiFrenBornEventType(),
 			mixSuiFrens: this.mixSuiFrensEventType(),
 			stakeSuiFren: this.stakeSuiFrenEventType(),
 			unstakeSuiFren: this.unstakeSuiFrenEventType(),
@@ -253,21 +223,9 @@ export class SuiFrensApi {
 	//  Events
 	// =========================================================================
 
-	public fetchSuiFrenBornEvents = async (inputs: EventsInputs) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			SuiFrenBornEventOnChain,
-			SuiFrenBornEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.suiFrenBorn,
-			},
-			eventFromEventOnChain: Casting.suiFrens.suiFrenBornEventFromOnChain,
-		});
-
 	public fetchMixSuiFrensEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
-			MixSuiFrenEventOnChain,
+			MixSuiFrensEventOnChain,
 			MixSuiFrensEvent
 		>({
 			...inputs,
@@ -408,7 +366,8 @@ export class SuiFrensApi {
 				objectsFromObjectIds: (objectIds) =>
 					this.fetchAccessories({ objectIds }),
 				dynamicFieldType:
-					SuiFrensApi.constants.dynamicFieldKeys.accessory,
+					SuiFrensApi.constants.dynamicFieldKeys.accessories
+						.accessory,
 			}
 		);
 	};
@@ -473,180 +432,131 @@ export class SuiFrensApi {
 	//  Staking Transactions
 	// =========================================================================
 
-	public fetchStakeSuiFrenTransaction = (
-		suiFrenId: ObjectId
-	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.suiFrenStakeSuiFrenTransaction(suiFrenId)
-		);
+	// public fetchStakeSuiFrenTransaction = (
+	// 	suiFrenId: ObjectId
+	// ): Promise<SerializedTransaction> =>
+	// 	this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
+	// 		this.suiFrenStakeSuiFrenTransaction(suiFrenId)
+	// 	);
 
-	public fetchUnstakeSuiFrenTransaction = (
-		stakingReceiptId: ObjectId
-	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.suiFrenUnstakeSuiFrenTransaction(stakingReceiptId)
-		);
+	// public fetchUnstakeSuiFrenTransaction = (
+	// 	stakingReceiptId: ObjectId
+	// ): Promise<SerializedTransaction> =>
+	// 	this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
+	// 		this.suiFrenUnstakeSuiFrenTransaction(stakingReceiptId)
+	// 	);
 
-	public fetchWithdrawStakedSuiFrenFeesTransaction = (
-		stakingReceiptId: ObjectId
-	): Promise<SerializedTransaction> =>
-		this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			this.suiFrenWithdrawFeesTransaction(stakingReceiptId)
-		);
+	// public fetchWithdrawStakedSuiFrenFeesTransaction = (
+	// 	stakingReceiptId: ObjectId
+	// ): Promise<SerializedTransaction> =>
+	// 	this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
+	// 		this.suiFrenWithdrawFeesTransaction(stakingReceiptId)
+	// 	);
 
 	// =========================================================================
 	//  Mixing Transactions
 	// =========================================================================
 
-	public fetchMixSuiFrensTransaction = async (
-		walletAddress: SuiAddress,
-		parentOneId: ObjectId,
-		parentTwoId: ObjectId
-	): Promise<SerializedTransaction> => {
-		const [parentOneIsOwned, parentTwoIsOwned] = await Promise.all([
-			this.Provider.Objects().fetchIsObjectOwnedByAddress({
-				objectId: parentOneId,
-				walletAddress,
-			}),
-			this.Provider.Objects().fetchIsObjectOwnedByAddress({
-				objectId: parentTwoId,
-				walletAddress,
-			}),
-		]);
-
-		const transaction = await this.fetchSuiFrenBuildMixTransaction(
-			walletAddress,
-			parentOneId,
-			parentOneIsOwned,
-			parentTwoId,
-			parentTwoIsOwned
-		);
-
-		return this.Provider.Transactions().fetchSetGasBudgetAndSerializeTx(
-			transaction
-		);
-	};
-
-	public fetchSuiFrenBuildMixTransaction = async (
-		walletAddress: SuiAddress,
-		parentOneId: ObjectId,
-		parentOneIsOwned: boolean,
-		parentTwoId: ObjectId,
-		parentTwoIsOwned: boolean
+	public fetchBuildMixTx = async (
+		inputs: ApiMixSuiFrensBody
 	): Promise<TransactionBlock> => {
-		if (parentOneIsOwned && parentTwoIsOwned) {
-			// i. both suiFrens are owned
-			return this.fetchBuildMixAndKeepTransaction(
+		const {
+			walletAddress,
+			suiFrenParentOne,
+			suiFrenParentTwo,
+			totalFee,
+			suiFrenType,
+		} = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const suiPaymentCoinId =
+			await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
 				walletAddress,
+				coinType: Coin.constants.suiCoinType,
+				coinAmount: totalFee,
+			});
+
+		const isParentOneStaked = suiFrenParentOne.isStaked;
+		const isParentTwoStaked = suiFrenParentTwo.isStaked;
+
+		const parentOneId = suiFrenParentOne.objectId;
+		const parentTwoId = suiFrenParentTwo.objectId;
+
+		if (isParentOneStaked && isParentTwoStaked) {
+			// both staked
+			this.mixStakedWithStakedTx({
+				tx,
 				parentOneId,
-				parentTwoId
-			);
-		} else if (parentOneIsOwned && !parentTwoIsOwned) {
-			// iia. one of the SuiFrens is owned and the other is staked
-			return this.fetchBuildMixWithStakedAndKeepTransaction(
-				walletAddress,
-				parentOneId,
-				parentTwoId
-			);
-		} else if (!parentOneIsOwned && parentTwoIsOwned) {
-			// iib. one of the SuiFren's is owned and the other is staked
-			return this.fetchBuildMixWithStakedAndKeepTransaction(
-				walletAddress,
 				parentTwoId,
-				parentOneId
-			);
+				suiPaymentCoinId,
+				suiFrenType,
+			});
+		} else if (!isParentOneStaked && !isParentTwoStaked) {
+			// neither staked
+			this.mixTx({
+				tx,
+				parentOneId,
+				parentTwoId,
+				suiPaymentCoinId,
+				suiFrenType,
+			});
 		} else {
-			// iii. both SuiFrens are staked
-			return this.fetchBuildMixStakedWithStakedAndKeepTransaction(
-				walletAddress,
-				parentTwoId,
-				parentOneId
-			);
+			// only one staked
+			const [nonStakedParentId, stakedParentId] = isParentOneStaked
+				? [parentTwoId, parentOneId]
+				: [parentOneId, parentTwoId];
+
+			this.mixWithStakedTx({
+				tx,
+				nonStakedParentId,
+				stakedParentId,
+				suiPaymentCoinId,
+				suiFrenType,
+			});
 		}
+
+		return tx;
 	};
 
-	public fetchBuildMixWithStakedAndKeepTransaction = async (
-		walletAddress: SuiAddress,
-		parentOneId: ObjectId,
-		parentTwoId: ObjectId
-	): Promise<TransactionBlock> => {
+	// =========================================================================
+	//  Fee Harvesting Transactions
+	// =========================================================================
+
+	public fetchBuildHarvestFeesTx = async (inputs: {
+		walletAddress: SuiAddress;
+		stakedSuiFrenIds: ObjectId[];
+	}): Promise<TransactionBlock> => {
+		const { stakedSuiFrenIds } = inputs;
+
 		const tx = new TransactionBlock();
-		tx.setSender(walletAddress);
+		tx.setSender(inputs.walletAddress);
 
-		const feeCoinType = SuiFrens.constants.mixingFeeCoinType;
-		const feeCoinAmount = BigInt(0);
+		const harvestFeesEventMetadataId = this.beginHarvestTx({ tx });
 
-		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: feeCoinType,
-			coinAmount: feeCoinAmount,
-		});
+		let harvestedCoins = [];
+		for (const stakedSuiFrenId of stakedSuiFrenIds) {
+			const harvestedCoin = this.harvestTx({
+				tx,
+				stakedSuiFrenId,
+				harvestFeesEventMetadataId,
+			});
+			harvestedCoins.push(harvestedCoin);
+		}
 
-		const finalTx = this.addStakeMixWithStakedAndKeepCommandToTransaction(
-			tx,
-			coinArg,
-			parentOneId,
-			parentTwoId
-		);
+		// TODO: move this merging & transferring behaviour to coins api helpers ?
+		const coinToTransfer = harvestedCoins[0];
 
-		return finalTx;
-	};
+		if (harvestedCoins.length > 1)
+			tx.mergeCoins(coinToTransfer, harvestedCoins.slice(1));
 
-	public fetchBuildMixStakedWithStakedAndKeepTransaction = async (
-		walletAddress: SuiAddress,
-		parentOneId: ObjectId,
-		parentTwoId: ObjectId
-	): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(walletAddress);
+		tx.transferObjects([coinToTransfer], tx.pure(inputs.walletAddress));
 
-		const feeCoinType = SuiFrens.constants.mixingFeeCoinType;
-		const feeCoinAmount = BigInt(0);
+		this.endHarvestTx({ tx, harvestFeesEventMetadataId });
 
-		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: feeCoinType,
-			coinAmount: feeCoinAmount,
-		});
-
-		const finalTx = this.addStakeMixWithStakedAndKeepCommandToTransaction(
-			tx,
-			coinArg,
-			parentOneId,
-			parentTwoId
-		);
-
-		return finalTx;
-	};
-
-	public fetchBuildMixAndKeepTransaction = async (
-		walletAddress: SuiAddress,
-		parentOneId: ObjectId,
-		parentTwoId: ObjectId
-	): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(walletAddress);
-
-		const feeCoinType = SuiFrens.constants.mixingFeeCoinType;
-		const feeCoinAmount = BigInt(0);
-
-		const coinArg = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: feeCoinType,
-			coinAmount: feeCoinAmount,
-		});
-
-		const finalTx = this.addStakeMixAndKeepCommandToTransaction(
-			tx,
-			coinArg,
-			parentOneId,
-			parentTwoId
-		);
-
-		return finalTx;
+		return tx;
 	};
 
 	// =========================================================================
@@ -667,7 +577,7 @@ export class SuiFrensApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.suiFrens,
-				SuiFrensApi.constants.moduleNames.capyLabs,
+				SuiFrensApi.constants.moduleNames.capyLabs.capyLabs,
 				"mixing_limit"
 			),
 			typeArguments: [inputs.suiFrenType],
@@ -687,7 +597,7 @@ export class SuiFrensApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.suiFrens,
-				SuiFrensApi.constants.moduleNames.capyLabs,
+				SuiFrensApi.constants.moduleNames.capyLabs.capyLabs,
 				"last_epoch_mixed"
 			),
 			typeArguments: [inputs.suiFrenType],
@@ -701,185 +611,328 @@ export class SuiFrensApi {
 	//  Mixing Transaction Commands
 	// =========================================================================
 
-	public addStakeMixAndKeepCommandToTransaction = (
-		tx: TransactionBlock,
-		coinId: ObjectId | TransactionArgument,
-		parentOneId: ObjectId,
-		parentTwoId: ObjectId
-	): TransactionBlock => {
-		tx.add({
-			kind: "MoveCall",
+	public mixTx = (inputs: {
+		tx: TransactionBlock;
+		parentOneId: ObjectId;
+		parentTwoId: ObjectId;
+		suiPaymentCoinId: ObjectId | TransactionArgument;
+		suiFrenType: AnyObjectType;
+	}) /* (SuiFren) */ => {
+		const { tx, suiPaymentCoinId } = inputs;
+
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.suiFrensVault,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
-					.mixAndKeep.name
+				this.addresses.packages.suiFrensVaultCapyLabsExtension,
+				SuiFrensApi.constants.moduleNames.suiFrensVaultCapyLabsExtension
+					.capyLabs,
+				"mix"
 			),
-			typeArguments: [],
+			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(this.addresses.objects.suiFrensRegistry),
-				typeof coinId === "string" ? tx.object(coinId) : coinId,
-				tx.object(parentOneId),
-				tx.object(parentTwoId),
+				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
+
+				tx.object(inputs.parentOneId), // SuiFren
+				tx.object(inputs.parentTwoId), // SuiFren
+				typeof suiPaymentCoinId === "string"
+					? tx.object(suiPaymentCoinId)
+					: suiPaymentCoinId, // Coin
+
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
 			],
 		});
-
-		return tx;
 	};
 
-	public addStakeMixWithStakedAndKeepCommandToTransaction = (
-		tx: TransactionBlock,
-		coinId: ObjectId | TransactionArgument,
-		parentOneId: ObjectId,
-		parentTwoId: ObjectId
-	): TransactionBlock => {
-		tx.add({
-			kind: "MoveCall",
+	public mixWithStakedTx = (inputs: {
+		tx: TransactionBlock;
+		nonStakedParentId: ObjectId;
+		stakedParentId: ObjectId;
+		suiPaymentCoinId: ObjectId | TransactionArgument;
+		suiFrenType: AnyObjectType;
+	}) /* (SuiFren) */ => {
+		const { tx, suiPaymentCoinId } = inputs;
+
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.suiFrensVault,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
-					.mixWithStakedAndKeep.name
+				this.addresses.packages.suiFrensVaultCapyLabsExtension,
+				SuiFrensApi.constants.moduleNames.suiFrensVaultCapyLabsExtension
+					.capyLabs,
+				"mix_with_staked"
 			),
-			typeArguments: [],
+			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(this.addresses.objects.suiFrensRegistry),
-				typeof coinId === "string" ? tx.object(coinId) : coinId,
-				tx.object(parentOneId),
-				tx.object(parentTwoId),
+				tx.object(
+					this.addresses.objects.suiFrensVaultCapyLabsExtension
+				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
+
+				tx.object(inputs.nonStakedParentId), // SuiFren
+				tx.object(inputs.stakedParentId), // SuiFren
+				typeof suiPaymentCoinId === "string"
+					? tx.object(suiPaymentCoinId)
+					: suiPaymentCoinId, // Coin
+
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
 			],
 		});
-
-		return tx;
 	};
 
-	public addStakeMixStakedWithStakedAndKeepCommandToTransaction = (
-		tx: TransactionBlock,
-		coinId: ObjectId,
-		parentOneId: ObjectId,
-		parentTwoId: ObjectId
-	): TransactionBlock => {
-		tx.add({
-			kind: "MoveCall",
+	public mixStakedWithStakedTx = (inputs: {
+		tx: TransactionBlock;
+		parentOneId: ObjectId;
+		parentTwoId: ObjectId;
+		suiPaymentCoinId: ObjectId | TransactionArgument;
+		suiFrenType: AnyObjectType;
+	}) /* (SuiFren) */ => {
+		const { tx, suiPaymentCoinId } = inputs;
+
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.suiFrensVault,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
-					.mixStakedWithStakedAndKeep.name
+				this.addresses.packages.suiFrensVaultCapyLabsExtension,
+				SuiFrensApi.constants.moduleNames.suiFrensVaultCapyLabsExtension
+					.capyLabs,
+				"mix_staked_with_staked"
 			),
-			typeArguments: [],
+			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(this.addresses.objects.suiFrensRegistry),
-				tx.object(coinId),
-				tx.object(parentOneId),
-				tx.object(parentTwoId),
+				tx.object(
+					this.addresses.objects.suiFrensVaultCapyLabsExtension
+				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
+
+				tx.object(inputs.parentOneId), // SuiFren
+				tx.object(inputs.parentTwoId), // SuiFren
+				typeof suiPaymentCoinId === "string"
+					? tx.object(suiPaymentCoinId)
+					: suiPaymentCoinId, // Coin
+
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
 			],
 		});
-
-		return tx;
 	};
 
 	// =========================================================================
 	//  Staking Transaction Commands
 	// =========================================================================
 
-	public suiFrenStakeSuiFrenTransaction = (
-		suiFrenId: ObjectId
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
+	public stakeAndKeepTx = (inputs: {
+		tx: TransactionBlock;
+		suiFrenId: ObjectId;
+		autoStakeFees: boolean;
+		baseFee: Balance;
+		feeIncrementPerMix: Balance;
+		minRemainingMixesToKeep: bigint;
+		suiFrenType: AnyObjectType;
+	}) /* (StakedPosition) */ => {
+		const { tx } = inputs;
 
-		tx.moveCall({
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.suiFrensVault,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
-					.stakeSuiFren.name
+				this.addresses.packages.suiFrensVaultCapyLabsExtension,
+				SuiFrensApi.constants.moduleNames.suiFrensVaultCapyLabsExtension
+					.capyLabs,
+				"stake_and_keep"
 			),
-			typeArguments: [],
+			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(suiFrenId),
+				tx.object(
+					this.addresses.objects.suiFrensVaultCapyLabsExtension
+				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
+				tx.object(inputs.suiFrenId), // SuiFren
+
+				tx.pure(inputs.autoStakeFees, "bool"),
+				tx.pure(inputs.baseFee, "u64"),
+				tx.pure(inputs.feeIncrementPerMix, "u64"),
+				tx.pure(inputs.minRemainingMixesToKeep, "u8"),
 			],
 		});
-
-		return tx;
 	};
 
-	public suiFrenUnstakeSuiFrenTransaction = (
-		stakingReceiptId: ObjectId
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
+	public unstakeAndKeepTx = (inputs: {
+		tx: TransactionBlock;
+		stakedSuiFrenId: ObjectId;
+		suiFrenType: AnyObjectType;
+	}) => {
+		const { tx } = inputs;
 
-		tx.moveCall({
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.suiFrensVault,
-
-				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-
-				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
-					.unstakeSuiFren.name
+				this.addresses.packages.suiFrensVaultCapyLabsExtension,
+				SuiFrensApi.constants.moduleNames.suiFrensVaultCapyLabsExtension
+					.capyLabs,
+				"unstake_and_keep"
 			),
-			typeArguments: [],
+			typeArguments: [inputs.suiFrenType],
 			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(stakingReceiptId),
+				tx.object(
+					this.addresses.objects.suiFrensVaultCapyLabsExtension
+				), // SuiFrensVaultCapyLabsExt
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
+				tx.object(inputs.stakedSuiFrenId), // SuiFren
 			],
 		});
-
-		return tx;
-	};
-
-	public suiFrenTransferTransaction = (
-		stakingReceiptId: ObjectId,
-		recipient: SuiAddress
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
-
-		tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.suiFrensVault,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
-					.transfer.name
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(stakingReceiptId),
-				tx.pure(recipient),
-			],
-		});
-
-		return tx;
 	};
 
 	// =========================================================================
-	//  Fee Transaction Commands
+	//  Fee Harvest Transaction Commands
 	// =========================================================================
 
-	public suiFrenWithdrawFeesTransaction = (
-		stakingReceiptId: ObjectId
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
+	public beginHarvestTx = (inputs: {
+		tx: TransactionBlock;
+	}) /* (HarvestedFeesEventMetadata) */ => {
+		const { tx } = inputs;
 
-		tx.moveCall({
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.suiFrensVault,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-				SuiFrensApi.constants.suiFrenVault.modules.interface.functions
-					.withdrawFees.name
+				SuiFrensApi.constants.moduleNames.suiFrensVault.vault,
+				"begin_harvest"
+			),
+			typeArguments: [],
+			arguments: [],
+		});
+	};
+
+	public harvestTx = (inputs: {
+		tx: TransactionBlock;
+		stakedSuiFrenId: ObjectId;
+		harvestFeesEventMetadataId: ObjectId | TransactionArgument;
+	}) /* (Coin) */ => {
+		const { tx, harvestFeesEventMetadataId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrensVault,
+				SuiFrensApi.constants.moduleNames.suiFrensVault.vault,
+				"harvest"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.suiFrensVault),
-				tx.object(stakingReceiptId),
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
+				tx.object(inputs.stakedSuiFrenId), // StakedPosition
+				typeof harvestFeesEventMetadataId === "string"
+					? tx.object(harvestFeesEventMetadataId)
+					: harvestFeesEventMetadataId, // HarvestedFeesEventMetadata
 			],
 		});
+	};
 
-		return tx;
+	public endHarvestTx = (inputs: {
+		tx: TransactionBlock;
+		harvestFeesEventMetadataId: ObjectId | TransactionArgument;
+	}) => {
+		const { tx, harvestFeesEventMetadataId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrensVault,
+				SuiFrensApi.constants.moduleNames.suiFrensVault.vault,
+				"end_harvest"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof harvestFeesEventMetadataId === "string"
+					? tx.object(harvestFeesEventMetadataId)
+					: harvestFeesEventMetadataId, // HarvestedFeesEventMetadata
+			],
+		});
+	};
+
+	// =========================================================================
+	//  Accessory Transaction Commands
+	// =========================================================================
+
+	public addAccessoryTx = (inputs: {
+		tx: TransactionBlock;
+		suiFrenId: ObjectId;
+		accessoryId: ObjectId;
+		suiFrenType: AnyObjectType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrensVault,
+				SuiFrensApi.constants.moduleNames.suiFrensVault.vault,
+				"add_accessory"
+			),
+			typeArguments: [inputs.suiFrenType],
+			arguments: [
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
+				tx.object(inputs.suiFrenId), // suifren_id
+				tx.object(inputs.accessoryId), // Accessory
+			],
+		});
+	};
+
+	public addAccessoryToOwnedSuiFrenTx = (inputs: {
+		tx: TransactionBlock;
+		suiFrenId: ObjectId;
+		accessoryId: ObjectId;
+		suiFrenType: AnyObjectType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrensVault,
+				SuiFrensApi.constants.moduleNames.suiFrensVault.vault,
+				"add_accessory_to_owned_suifren"
+			),
+			typeArguments: [inputs.suiFrenType],
+			arguments: [
+				tx.object(inputs.suiFrenId), // suifren_id
+				tx.object(inputs.accessoryId), // Accessory
+			],
+		});
+	};
+
+	public removeAccessoryAndKeepTx = (inputs: {
+		tx: TransactionBlock;
+		stakedSuiFrenId: ObjectId;
+		accessoryType: SuiFrenAccessoryType;
+		suiFrenType: AnyObjectType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrensVault,
+				SuiFrensApi.constants.moduleNames.suiFrensVault.vault,
+				"remove_accessory_and_keep"
+			),
+			typeArguments: [inputs.suiFrenType],
+			arguments: [
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
+				tx.object(inputs.stakedSuiFrenId), // StakedPosition
+				tx.object(inputs.accessoryType), // String
+			],
+		});
+	};
+
+	public removeAccessoryFromOwnedSuiFrenAndKeepTx = (inputs: {
+		tx: TransactionBlock;
+		suiFrenId: ObjectId;
+		accessoryType: SuiFrenAccessoryType;
+		suiFrenType: AnyObjectType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrensVault,
+				SuiFrensApi.constants.moduleNames.suiFrensVault.vault,
+				"remove_accessory_from_owned_suifren_and_keep"
+			),
+			typeArguments: [inputs.suiFrenType],
+			arguments: [
+				tx.object(inputs.suiFrenId), // SuiFren
+				tx.object(inputs.accessoryType), // String
+			],
+		});
 	};
 
 	// =========================================================================
@@ -893,20 +946,22 @@ export class SuiFrensApi {
 		feeCoinDecimals: CoinDecimal,
 		feeCoinPrice: number
 	): AmountInCoinAndUsd => {
-		const mixingFeesInFeeCoin = Helpers.sum(
-			mixSuiFrenEvents.map((event) =>
-				Coin.balanceWithDecimals(
-					event.feeCoinWithBalance.balance,
-					feeCoinDecimals
-				)
-			)
-		);
+		throw new Error("TODO");
 
-		const mixingFeesUsd = feeCoinPrice * mixingFeesInFeeCoin;
-		return {
-			amount: mixingFeesInFeeCoin,
-			amountUsd: mixingFeesUsd,
-		};
+		// const mixingFeesInFeeCoin = Helpers.sum(
+		// 	mixSuiFrenEvents.map((event) =>
+		// 		Coin.balanceWithDecimals(
+		// 			event.feeCoinWithBalance.balance,
+		// 			feeCoinDecimals
+		// 		)
+		// 	)
+		// );
+
+		// const mixingFeesUsd = feeCoinPrice * mixingFeesInFeeCoin;
+		// return {
+		// 	amount: mixingFeesInFeeCoin,
+		// 	amountUsd: mixingFeesUsd,
+		// };
 	};
 
 	public fetchSuiFrenStats = async (): Promise<SuiFrenStats> => {
@@ -956,7 +1011,7 @@ export class SuiFrensApi {
 	};
 
 	public fetchSuiFrenVaultStats = async (
-		suiFrenVault: SuiFrenVaultObject,
+		suiFrenVault: SuiFrenVaultStateV1Object,
 		feeCoinDecimals: CoinDecimal,
 		feeCoinPrice: number
 	) => {
@@ -1042,32 +1097,24 @@ export class SuiFrensApi {
 	//  Event Types
 	// =========================================================================
 
-	private suiFrenBornEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.suiFrens,
-			SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-			// SuiFrensApi.constants.suiFren.modules.suiFren.moduleName,
-			SuiFrensApi.constants.eventNames.suiFrenBorn
-		);
-
 	private mixSuiFrensEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.suiFrensVault,
-			SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-			SuiFrensApi.constants.eventNames.mixSuiFren
+			SuiFrensApi.constants.moduleNames.suiFrensVault.events,
+			SuiFrensApi.constants.eventNames.suiFrensVault.mixSuiFrens
 		);
 
 	private stakeSuiFrenEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.suiFrensVault,
-			SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-			SuiFrensApi.constants.eventNames.stakeSuiFren
+			SuiFrensApi.constants.moduleNames.suiFrensVault.events,
+			SuiFrensApi.constants.eventNames.suiFrensVault.stakeSuiFren
 		);
 
 	private unstakeSuiFrenEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.suiFrensVault,
-			SuiFrensApi.constants.suiFrenVault.modules.interface.moduleName,
-			SuiFrensApi.constants.eventNames.unstakeSuiFren
+			SuiFrensApi.constants.moduleNames.suiFrensVault.events,
+			SuiFrensApi.constants.eventNames.suiFrensVault.stakeSuiFren
 		);
 }

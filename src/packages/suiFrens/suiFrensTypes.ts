@@ -81,7 +81,7 @@ export interface StakedSuiFrenMetadataV1Object extends Object {
 	minRemainingMixesToKeep: bigint;
 }
 
-export interface SuiFrenVaultStateObject extends Object {
+export interface SuiFrenVaultStateV1Object extends Object {
 	totalMixes: bigint;
 }
 
@@ -92,22 +92,12 @@ export interface SuiFrenAccessoryObject extends Object {
 }
 
 // =========================================================================
-//  OLD
-// =========================================================================
-
-export interface SuiFrenVaultObject {}
-
-// =========================================================================
 //  Events
 // =========================================================================
 
-export interface MixSuiFrensEvent extends Event {
-	mixer: SuiAddress;
-	suiFrenParentOneId: ObjectId;
-	suiFrenParentTwoId: ObjectId;
-	suiFrenChildId: ObjectId;
-	// TODO: remove all CoinWithBalance types
-	feeCoinWithBalance: CoinWithBalance;
+export interface HarvestFeesEvent extends Event {
+	harvester: SuiAddress;
+	fees: bigint;
 }
 
 export interface StakeSuiFrenEvent extends Event {
@@ -118,13 +108,15 @@ export interface StakeSuiFrenEvent extends Event {
 export interface UnstakeSuiFrenEvent extends Event {
 	unstaker: SuiAddress;
 	suiFrenId: ObjectId;
+	fees: Balance;
 }
 
-export interface SuiFrenBornEvent extends Event {
+export interface MixSuiFrensEvent extends Event {
 	mixer: SuiAddress;
-	suiFrenParentOneId: ObjectId;
-	suiFrenParentTwoId: ObjectId;
-	suiFrenChildId: ObjectId;
+	parentOneId: ObjectId;
+	parentTwoId: ObjectId;
+	childId: ObjectId;
+	fee: Balance;
 }
 
 // =========================================================================
@@ -147,29 +139,42 @@ export interface ApiStakeSuiFrenBody {
 	mixFee: Balance;
 	feeIncrementPerMix: Balance;
 	minRemainingMixesToKeep: bigint;
+	suiFrenType: AnyObjectType;
 }
 
 export interface ApiUnstakeSuiFrenBody {
 	stakedPositionId: ObjectId;
+	suiFrenType: AnyObjectType;
 }
 
 export interface ApiMixSuiFrensBody {
 	walletAddress: SuiAddress;
-	suiFrenParentOneId: ObjectId;
-	suiFrenParentTwoId: ObjectId;
+	suiFrenParentOne: {
+		objectId: ObjectId;
+		isStaked: boolean;
+	};
+	suiFrenParentTwo: {
+		objectId: ObjectId;
+		isStaked: boolean;
+	};
+	totalFee: Balance;
+	suiFrenType: AnyObjectType;
 }
 
 export interface ApiWithdrawStakedSuiFrenFeesBody {
 	stakedPositionId: ObjectId;
+	suiFrenType: AnyObjectType;
 }
 
 export interface ApiAddSuiFrenAccessoryBody {
 	suiFrenId: ObjectId;
 	accessoryId: ObjectId;
+	suiFrenType: AnyObjectType;
 }
 
 export type ApiRemoveSuiFrenAccessoryBody = {
 	accessoryType: SuiFrenAccessoryType;
+	suiFrenType: AnyObjectType;
 } & (
 	| {
 			suiFrenId: ObjectId;
