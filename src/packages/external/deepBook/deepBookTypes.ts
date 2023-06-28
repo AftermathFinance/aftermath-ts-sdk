@@ -30,6 +30,8 @@ export const isDeepBookPoolObject = (
 		"bids" in pool &&
 		"asks" in pool &&
 		"baseCoinType" in pool &&
-		"quoteCoinType" in pool
+		"quoteCoinType" in pool &&
+		"takerFeeRate" in pool &&
+		"lotSize" in pool
 	);
 };

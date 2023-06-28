@@ -84,11 +84,16 @@ export class DeepBookApi
 	public fetchAllPools = async (): Promise<DeepBookPoolObject[]> => {
 		const partialPools = await this.fetchAllPartialPools();
 
-		const pools = await Promise.all(
-			partialPools.map((pool) =>
-				this.fetchCreateCompletePoolObjectFromPartial({ pool })
-			)
-		);
+		// const pools = await Promise.all(
+		// 	partialPools.map((pool) =>
+		// 		this.fetchCreateCompletePoolObjectFromPartial({ pool })
+		// 	)
+		// );
+		const pools = partialPools.map((pool) => ({
+			...pool,
+			asks: [],
+			bids: [],
+		}));
 
 		return pools;
 	};
@@ -198,32 +203,31 @@ export class DeepBookApi
 		partialMatchPools: DeepBookPoolObject[];
 		exactMatchPools: DeepBookPoolObject[];
 	} => {
-		const possiblePools = inputs.pools
-			.filter((pool) =>
-				DeepBookApi.isPoolForCoinTypes({
-					pool,
-					coinType1: inputs.coinInType,
-					coinType2: inputs.coinOutType,
-				})
-			)
-			.sort((a, b) => {
-				const coinType = inputs.coinOutType;
+		const possiblePools = inputs.pools.filter((pool) =>
+			DeepBookApi.isPoolForCoinTypes({
+				pool,
+				coinType1: inputs.coinInType,
+				coinType2: inputs.coinOutType,
+			})
+		);
+		// .sort((a, b) => {
+		// 	const coinType = inputs.coinOutType;
 
-				const aPoolLiquidity = DeepBookApi.isBaseCoinType({
-					pool: a,
-					coinType,
-				})
-					? a.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
-					: a.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
-				const bPoolLiquidity = DeepBookApi.isBaseCoinType({
-					pool: b,
-					coinType,
-				})
-					? b.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
-					: b.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
+		// 	const aPoolLiquidity = DeepBookApi.isBaseCoinType({
+		// 		pool: a,
+		// 		coinType,
+		// 	})
+		// 		? a.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
+		// 		: a.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
+		// 	const bPoolLiquidity = DeepBookApi.isBaseCoinType({
+		// 		pool: b,
+		// 		coinType,
+		// 	})
+		// 		? b.asks.reduce((acc, ask) => acc + ask.depth, BigInt(0))
+		// 		: b.bids.reduce((acc, ask) => acc + ask.depth, BigInt(0));
 
-				return Number(bPoolLiquidity - aPoolLiquidity);
-			});
+		// 	return Number(bPoolLiquidity - aPoolLiquidity);
+		// });
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
 			possiblePools,
