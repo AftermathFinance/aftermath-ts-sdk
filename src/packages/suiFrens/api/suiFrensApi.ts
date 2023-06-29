@@ -22,12 +22,12 @@ import {
 	ApiMixSuiFrensBody,
 	ApiRemoveSuiFrenAccessoryBody,
 	ApiAddSuiFrenAccessoryBody,
-	HarvestFeesEvent,
+	HarvestSuiFrenFeesEvent,
 	StakedSuiFrenMetadataV1Object,
 	PartialSuiFrenObject,
 } from "../suiFrensTypes";
 import {
-	HarvestFeesEventOnChain,
+	HarvestSuiFrenFeesEventOnChain,
 	MixSuiFrensEventOnChain,
 	StakeSuiFrenEventOnChain,
 	UnstakeSuiFrenEventOnChain,
@@ -80,7 +80,7 @@ export class SuiFrensApi {
 				mixSuiFrens: "MixedSuiFrenEvent",
 				stakeSuiFren: "StakedSuiFrenEvent",
 				unstakeSuiFren: "UnstakedSuiFrenEvent",
-				harvestFees: "HarvestedFeesEvent",
+				harvestSuiFrenFees: "HarvestedFeesEvent",
 			},
 		},
 
@@ -109,7 +109,7 @@ export class SuiFrensApi {
 	};
 
 	public readonly eventTypes: {
-		harvestFees: AnyObjectType;
+		harvestSuiFrenFees: AnyObjectType;
 		mixSuiFrens: AnyObjectType;
 		stakeSuiFren: AnyObjectType;
 		unstakeSuiFren: AnyObjectType;
@@ -136,7 +136,7 @@ export class SuiFrensApi {
 		};
 
 		this.eventTypes = {
-			harvestFees: this.harvestFeesEventType(),
+			harvestSuiFrenFees: this.harvestSuiFrenFeesEventType(),
 			mixSuiFrens: this.mixSuiFrensEventType(),
 			stakeSuiFren: this.stakeSuiFrenEventType(),
 			unstakeSuiFren: this.unstakeSuiFrenEventType(),
@@ -246,16 +246,17 @@ export class SuiFrensApi {
 	//  Events
 	// =========================================================================
 
-	public fetchHarvestFeesEvents = (inputs: EventsInputs) =>
+	public fetchHarvestSuiFrenFeesEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			HarvestFeesEventOnChain,
-			HarvestFeesEvent
+			HarvestSuiFrenFeesEventOnChain,
+			HarvestSuiFrenFeesEvent
 		>({
 			...inputs,
 			query: {
-				MoveEventType: this.eventTypes.harvestFees,
+				MoveEventType: this.eventTypes.harvestSuiFrenFees,
 			},
-			eventFromEventOnChain: Casting.suiFrens.harvestFeesEventFromOnChain,
+			eventFromEventOnChain:
+				Casting.suiFrens.harvestSuiFrenFeesEventFromOnChain,
 		});
 
 	public fetchMixSuiFrensEvents = (inputs: EventsInputs) =>
@@ -309,6 +310,14 @@ export class SuiFrensApi {
 			objectId: this.addresses.objects.capyLabsApp,
 			objectFromSuiObjectResponse:
 				Casting.suiFrens.capyLabsAppObjectFromSuiObjectResponse,
+		});
+	};
+
+	public fetchSuiFrenVaultStateV1Object = async () => {
+		return this.Provider.Objects().fetchCastObject({
+			objectId: this.addresses.objects.suiFrensVaultState,
+			objectFromSuiObjectResponse:
+				Casting.suiFrens.suiFrenVaultStateV1ObjectFromSuiObjectResponse,
 		});
 	};
 
@@ -1013,99 +1022,26 @@ export class SuiFrensApi {
 	//  Stats
 	// =========================================================================
 
-	// TODO: make this function not exported from sdk (only internal use)
-	// NOTE: this calculation will be  incorrect if feeCoinType is different for each fee
-	public calcSuiFrenMixingFees = (
-		mixSuiFrenEvents: MixSuiFrensEvent[],
-		feeCoinDecimals: CoinDecimal,
-		feeCoinPrice: number
-	): AmountInCoinAndUsd => {
-		throw new Error("TODO");
-
-		// const mixingFeesInFeeCoin = Helpers.sum(
-		// 	mixSuiFrenEvents.map((event) =>
-		// 		Coin.balanceWithDecimals(
-		// 			event.feeCoinWithBalance.balance,
-		// 			feeCoinDecimals
-		// 		)
-		// 	)
-		// );
-
-		// const mixingFeesUsd = feeCoinPrice * mixingFeesInFeeCoin;
-		// return {
-		// 	amount: mixingFeesInFeeCoin,
-		// 	amountUsd: mixingFeesUsd,
-		// };
-	};
-
 	public fetchSuiFrenStats = async (): Promise<SuiFrenStats> => {
-		throw new Error("TODO");
+		const [suiFrenVault, mixSuiFrenEventsWithinTime] = await Promise.all([
+			this.fetchSuiFrenVaultStateV1Object(),
+			this.Provider.Events().fetchEventsWithinTime({
+				fetchEventsFunc: this.fetchMixSuiFrensEvents,
+				timeUnit: "hour",
+				time: 24,
+			}),
+		]);
 
-		// const mixSuiFrenEventsWithinTime =
-		// 	await this.Provider.Events().fetchEventsWithinTime({
-		// 		fetchEventsFunc: this.fetchMixSuiFrensEvents,
-		// 		timeUnit: "hour",
-		// 		time: 24,
-		// 	});
+		const mixingFees24hr = Helpers.sumBigInt(
+			mixSuiFrenEventsWithinTime.map((event) => event.fee)
+		);
 
-		// const feeCoin =
-		// 	mixSuiFrenEventsWithinTime.length === 0
-		// 		? SuiFrens.constants.mixingFeeCoinType
-		// 		: mixSuiFrenEventsWithinTime[0].feeCoinWithBalance.coin;
-		// const feeCoinDecimals = (
-		// 	await this.Provider.Coin().fetchCoinMetadata(feeCoin)
-		// ).decimals;
-		// const feeCoinPrice = await this.Provider.Prices().fetchPrice(feeCoin);
-
-		// const mixingFeesDaily = this.calcSuiFrenMixingFees(
-		// 	mixSuiFrenEventsWithinTime,
-		// 	feeCoinDecimals,
-		// 	feeCoinPrice
-		// );
-
-		// const suiFrenVault = await this.fetchSuiFrenVault(
-		// 	this.addresses.objects.suiFrensVault
-		// );
-
-		// const { bredSuiFrens, stakedSuiFrens, mixingFeesGlobal } =
-		// 	await this.fetchSuiFrenVaultStats(
-		// 		suiFrenVault,
-		// 		feeCoinDecimals,
-		// 		feeCoinPrice
-		// 	);
-
-		// return {
-		// 	totalMixes: bredSuiFrens,
-		// 	totalStaked: stakedSuiFrens,
-		// 	mixingFeeCoin: feeCoin,
-		// 	mixingFeesGlobal,
-		// 	mixingFees24hr: mixingFeesDaily.amount,
-		// 	mixingVolume24hr: mixSuiFrenEventsWithinTime.length,
-		// };
-	};
-
-	public fetchSuiFrenVaultStats = async (
-		suiFrenVault: SuiFrenVaultStateV1Object,
-		feeCoinDecimals: CoinDecimal,
-		feeCoinPrice: number
-	) => {
-		throw new Error("TODO");
-
-		// const globalFeesWithDecimals = Coin.balanceWithDecimals(
-		// 	suiFrenVault.globalFees,
-		// 	feeCoinDecimals
-		// );
-		// const globalFeesUsd = feeCoinPrice * globalFeesWithDecimals;
-		// const mixingFeesGlobal = {
-		// 	amount: globalFeesWithDecimals,
-		// 	amountUsd: globalFeesUsd,
-		// } as AmountInCoinAndUsd;
-
-		// return {
-		// 	bredSuiFrens: suiFrenVault.bredSuiFrens,
-		// 	stakedSuiFrens: suiFrenVault.stakedSuiFrens,
-		// 	mixingFeesGlobal,
-		// };
+		return {
+			totalMixes: suiFrenVault.totalMixes,
+			currentTotalStaked: suiFrenVault.stakedSuiFrens,
+			mixingVolume24hr: mixSuiFrenEventsWithinTime.length,
+			mixingFees24hr,
+		};
 	};
 
 	// =========================================================================
@@ -1176,11 +1112,11 @@ export class SuiFrensApi {
 	//  Event Types
 	// =========================================================================
 
-	private harvestFeesEventType = () =>
+	private harvestSuiFrenFeesEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.suiFrensVault,
 			SuiFrensApi.constants.moduleNames.suiFrensVault.events,
-			SuiFrensApi.constants.eventNames.suiFrensVault.harvestFees
+			SuiFrensApi.constants.eventNames.suiFrensVault.harvestSuiFrenFees
 		);
 
 	private mixSuiFrensEventType = () =>

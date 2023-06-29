@@ -10,12 +10,11 @@ import {
 	StakeSuiFrenEvent,
 	StakedSuiFrenMetadataV1Object,
 	UnstakeSuiFrenEvent,
-	SuiFrenObject,
 	SuiFrenAttributes,
 	CapyLabsAppObject,
 	SuiFrenVaultStateV1Object,
 	SuiFrenAccessoryObject,
-	HarvestFeesEvent,
+	HarvestSuiFrenFeesEvent,
 	PartialSuiFrenObject,
 	StakedSuiFrenPositionObject,
 } from "../suiFrensTypes";
@@ -30,7 +29,7 @@ import {
 	SuiFrenAccessoryFieldsOnChain,
 	StakedSuiFrenMetadataV1FieldsOnChain,
 	SuiFrenVaultStateV1FieldsOnChain,
-	HarvestFeesEventOnChain,
+	HarvestSuiFrenFeesEventOnChain,
 	StakedSuiFrenPositionFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
 import { Helpers } from "../../../general/utils";
@@ -102,7 +101,7 @@ export class SuiFrensApiCasting {
 				.data as unknown as SuiFrenDisplayOnChain;
 
 			return {
-				objectType,
+				objectType: "TODO",
 				objectId: fields.suifren_id,
 				generation: BigInt(fields.generation),
 				birthdate: Number(fields.birthdate),
@@ -180,7 +179,8 @@ export class SuiFrensApiCasting {
 			objectType,
 			objectId: getObjectId(data),
 			suiFrenId: fields.suifren_id,
-			suiFrenMetadataId: fields.metadata_id,
+			// suiFrenMetadataId: fields.metadata_id,
+			suiFrenMetadataId: "TODO",
 		};
 	};
 
@@ -198,6 +198,7 @@ export class SuiFrensApiCasting {
 			objectType,
 			objectId: getObjectId(data),
 			totalMixes: BigInt(fields.mixed),
+			stakedSuiFrens: BigInt(fields.suifrens_metadata.fields.size),
 		};
 	};
 
@@ -224,9 +225,9 @@ export class SuiFrensApiCasting {
 	//  Events
 	// =========================================================================
 
-	public static harvestFeesEventFromOnChain = (
-		eventOnChain: HarvestFeesEventOnChain
-	): HarvestFeesEvent => {
+	public static harvestSuiFrenFeesEventFromOnChain = (
+		eventOnChain: HarvestSuiFrenFeesEventOnChain
+	): HarvestSuiFrenFeesEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			harvester: fields.issuer,

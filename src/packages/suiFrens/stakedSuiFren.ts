@@ -2,7 +2,7 @@ import {
 	ApiAddSuiFrenAccessoryBody,
 	ApiRemoveSuiFrenAccessoryBody,
 	ApiUnstakeSuiFrenBody,
-	ApiHarvestFeesBody,
+	ApiHarvestSuiFrenFeesBody,
 	Balance,
 	StakedSuiFrenInfo,
 	SuiFrenAccessoryType,
@@ -78,7 +78,7 @@ export class StakedSuiFren extends Caller {
 				"unable to remove accessory from suiFren that is not owned by caller"
 			);
 
-		return this.fetchApiTransaction<ApiHarvestFeesBody>(
+		return this.fetchApiTransaction<ApiHarvestSuiFrenFeesBody>(
 			"transactions/harvest-fees",
 			{
 				...inputs,

@@ -88,6 +88,7 @@ export interface StakedSuiFrenMetadataV1Object extends Object {
 }
 
 export interface SuiFrenVaultStateV1Object extends Object {
+	stakedSuiFrens: bigint;
 	totalMixes: bigint;
 }
 
@@ -101,7 +102,7 @@ export interface SuiFrenAccessoryObject extends Object {
 //  Events
 // =========================================================================
 
-export interface HarvestFeesEvent extends Event {
+export interface HarvestSuiFrenFeesEvent extends Event {
 	harvester: SuiAddress;
 	fees: bigint;
 }
@@ -131,7 +132,7 @@ export interface MixSuiFrensEvent extends Event {
 
 export interface SuiFrenStats {
 	totalMixes: bigint;
-	totalStaked: bigint;
+	currentTotalStaked: bigint;
 	mixingFees24hr: Balance;
 	mixingVolume24hr: number;
 }
@@ -169,7 +170,7 @@ export interface ApiMixSuiFrensBody {
 	walletAddress: SuiAddress;
 }
 
-export interface ApiHarvestFeesBody {
+export interface ApiHarvestSuiFrenFeesBody {
 	stakedPositionIds: ObjectId[];
 	suiFrenType: AnyObjectType;
 	walletAddress: SuiAddress;

@@ -1,6 +1,9 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { BigIntAsString } from "../../../types";
-import { EventOnChain } from "../../../general/types/castingTypes";
+import {
+	EventOnChain,
+	TableOnChain,
+} from "../../../general/types/castingTypes";
 
 // =========================================================================
 //  Objects
@@ -56,6 +59,7 @@ export interface StakedSuiFrenMetadataV1FieldsOnChain {
 }
 
 export interface SuiFrenVaultStateV1FieldsOnChain {
+	suifrens_metadata: TableOnChain;
 	version: BigIntAsString;
 	mixed: BigIntAsString;
 }
@@ -68,7 +72,7 @@ export interface StakedSuiFrenPositionFieldsOnChain {
 //  Events
 // =========================================================================
 
-export type HarvestFeesEventOnChain = EventOnChain<{
+export type HarvestSuiFrenFeesEventOnChain = EventOnChain<{
 	issuer: BigIntAsString;
 	fees: BigIntAsString;
 }>;

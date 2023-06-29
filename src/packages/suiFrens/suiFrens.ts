@@ -23,7 +23,8 @@ import {
 	ApiOwnedSuiFrenAccessoriesBody,
 	ApiOwnedSuiFrensBody,
 	ApiOwnedStakedSuiFrensBody,
-	ApiHarvestFeesBody,
+	ApiHarvestSuiFrenFeesBody,
+	HarvestSuiFrenFeesEvent,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFren } from "./stakedSuiFren";
@@ -146,6 +147,13 @@ export class SuiFrens extends Caller {
 	//  Events
 	// =========================================================================
 
+	public async getHarvestFeesEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<HarvestSuiFrenFeesEvent>(
+			"events/harvest-fees",
+			inputs
+		);
+	}
+
 	public async getMixEvents(inputs: EventsInputs) {
 		return this.fetchApiEvents<MixSuiFrensEvent>("events/mix", inputs);
 	}
@@ -172,8 +180,8 @@ export class SuiFrens extends Caller {
 		);
 	}
 
-	public async getHarvestFeesTransaction(inputs: ApiHarvestFeesBody) {
-		return this.fetchApiTransaction<ApiHarvestFeesBody>(
+	public async getHarvestFeesTransaction(inputs: ApiHarvestSuiFrenFeesBody) {
+		return this.fetchApiTransaction<ApiHarvestSuiFrenFeesBody>(
 			"transactions/harvest-fees",
 			inputs
 		);
