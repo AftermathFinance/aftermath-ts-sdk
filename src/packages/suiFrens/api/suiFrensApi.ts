@@ -185,61 +185,23 @@ export class SuiFrensApi {
 		return unwrapped === undefined ? undefined : BigInt(unwrapped);
 	};
 
-	public fetchIsSuiFrenPackageOnChain = () =>
-		this.Provider.Objects().fetchDoesObjectExist(
-			this.addresses.packages.suiFrens
+	public fetchStakedSuiFrenMetadataIds = async (inputs: {
+		suiFrenIds: ObjectId[];
+	}): Promise<ObjectId[]> => {
+		const { suiFrenIds } = inputs;
+
+		const tx = new TransactionBlock();
+		this.devInspectMetadataObjectIdMulTx({ tx, suiFrenIds });
+
+		const idBytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		const stakedSuiFrenMetadataIds = bcs.de(
+			"vector<vector<u8>>",
+			new Uint8Array(idBytes)
 		);
-
-	public fetchStakedSuiFrensDynamicFieldsWithFilters = async (inputs: {
-		attributes: Partial<SuiFrenAttributes>;
-		sortBy?: SuiFrensSortOption;
-		limit?: number;
-		limitStepSize?: number;
-		cursor?: ObjectId;
-	}): Promise<DynamicFieldObjectsWithCursor<StakedSuiFrenInfo>> => {
-		const { attributes } = inputs;
-		const defaultLimit = 25;
-		const limit = inputs.limit ?? defaultLimit;
-
-		const isComplete = (data: StakedSuiFrenInfo[]) => {
-			return (
-				this.filterSuiFrensWithAttributes({
-					suiFrens: data.map((info) => info.suiFren),
-					attributes,
-				}).length >= limit
-			);
-		};
-
-		const suiFrensWithCursor =
-			await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
-				...inputs,
-				fetchFunc: this.fetchPartialStakedSuiFrensDynamicFields,
-				isComplete,
-			});
-
-		const filteredSuiFrens = this.filterSuiFrensWithAttributes({
-			suiFrens: suiFrensWithCursor.dynamicFieldObjects.map(
-				(data) => data.suiFren
-			),
-			attributes,
-		});
-		const dynamicFieldObjects =
-			suiFrensWithCursor.dynamicFieldObjects.filter((data) =>
-				filteredSuiFrens
-					.slice(0, limit)
-					.some(
-						(suiFren) => suiFren.objectId === data.suiFren.objectId
-					)
-			);
-
-		const resizedSuiFrensWithCursor = {
-			nextCursor:
-				suiFrensWithCursor.nextCursor ?? limit < filteredSuiFrens.length
-					? filteredSuiFrens[limit].objectId
-					: suiFrensWithCursor.nextCursor,
-			dynamicFieldObjects,
-		};
-		return resizedSuiFrensWithCursor;
+		console.log("stakedSuiFrenMetadataIds", stakedSuiFrenMetadataIds);
+		return stakedSuiFrenMetadataIds;
 	};
 
 	// =========================================================================
@@ -459,6 +421,58 @@ export class SuiFrensApi {
 	//  Staked SuiFren Objects
 	// =========================================================================
 
+	public fetchStakedSuiFrensDynamicFieldsWithFilters = async (inputs: {
+		attributes: Partial<SuiFrenAttributes>;
+		sortBy?: SuiFrensSortOption;
+		limit?: number;
+		limitStepSize?: number;
+		cursor?: ObjectId;
+	}): Promise<DynamicFieldObjectsWithCursor<StakedSuiFrenInfo>> => {
+		const { attributes } = inputs;
+		const defaultLimit = 25;
+		const limit = inputs.limit ?? defaultLimit;
+
+		const isComplete = (data: StakedSuiFrenInfo[]) => {
+			return (
+				this.filterSuiFrensWithAttributes({
+					suiFrens: data.map((info) => info.suiFren),
+					attributes,
+				}).length >= limit
+			);
+		};
+
+		const suiFrensWithCursor =
+			await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
+				...inputs,
+				fetchFunc: this.fetchPartialStakedSuiFrensDynamicFields,
+				isComplete,
+			});
+
+		const filteredSuiFrens = this.filterSuiFrensWithAttributes({
+			suiFrens: suiFrensWithCursor.dynamicFieldObjects.map(
+				(data) => data.suiFren
+			),
+			attributes,
+		});
+		const dynamicFieldObjects =
+			suiFrensWithCursor.dynamicFieldObjects.filter((data) =>
+				filteredSuiFrens
+					.slice(0, limit)
+					.some(
+						(suiFren) => suiFren.objectId === data.suiFren.objectId
+					)
+			);
+
+		const resizedSuiFrensWithCursor = {
+			nextCursor:
+				suiFrensWithCursor.nextCursor ?? limit < filteredSuiFrens.length
+					? filteredSuiFrens[limit].objectId
+					: suiFrensWithCursor.nextCursor,
+			dynamicFieldObjects,
+		};
+		return resizedSuiFrensWithCursor;
+	};
+
 	public fetchOwnedStakedSuiFrens = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<StakedSuiFrenInfo[]> => {
@@ -471,11 +485,14 @@ export class SuiFrensApi {
 				objectFromSuiObjectResponse:
 					Casting.suiFrens.stakedSuiFrenPositionFromSuiObjectResponse,
 			});
-		const stakedSuiFrens = await this.fetchStakedSuiFrens({
-			stakedSuiFrenIds: stakedPositions.map(
-				(position) => position.suiFrenMetadataId
-			),
+
+		const stakedSuiFrenIds = await this.fetchStakedSuiFrenMetadataIds({
+			suiFrenIds: stakedPositions.map((position) => position.suiFrenId),
 		});
+		const stakedSuiFrens = await this.fetchStakedSuiFrens({
+			stakedSuiFrenIds,
+		});
+
 		return stakedSuiFrens.map((data, index) => ({
 			...data,
 			position: stakedPositions[index],
@@ -489,6 +506,26 @@ export class SuiFrensApi {
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
+
+	public devInspectMetadataObjectIdMulTx = (inputs: {
+		tx: TransactionBlock;
+		suiFrenIds: ObjectId[];
+	}) /* vector<vector<u8>> */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.suiFrensVault,
+				SuiFrensApi.constants.moduleNames.suiFrensVault.vault,
+				"dev_inspect_metadata_object_id_mul"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
+				tx.pure(inputs.suiFrenIds, "vector<vector<u8>>"), // suifren_ids
+			],
+		});
+	};
 
 	public mixingLimitTx = (inputs: {
 		tx: TransactionBlock;

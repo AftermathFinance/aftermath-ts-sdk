@@ -179,8 +179,6 @@ export class SuiFrensApiCasting {
 			objectType,
 			objectId: getObjectId(data),
 			suiFrenId: fields.suifren_id,
-			// suiFrenMetadataId: fields.metadata_id,
-			suiFrenMetadataId: "TODO",
 		};
 	};
 

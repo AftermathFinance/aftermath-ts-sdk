@@ -75,7 +75,6 @@ export interface StakedSuiFrenInfo {
 
 export interface StakedSuiFrenPositionObject extends Object {
 	suiFrenId: ObjectId;
-	suiFrenMetadataId: ObjectId;
 }
 
 export interface StakedSuiFrenMetadataV1Object extends Object {

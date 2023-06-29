@@ -1,4 +1,4 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
+import { ObjectId } from "@mysten/sui.js";
 import {
 	ApiMixSuiFrensBody,
 	ApiDynamicFieldsBody,
@@ -8,13 +8,11 @@ import {
 	DynamicFieldObjectsWithCursor,
 	EventsInputs,
 	StakeSuiFrenEvent,
-	StakedSuiFrenMetadataV1Object,
 	SuiNetwork,
 	UnstakeSuiFrenEvent,
 	Url,
 	SuiFrenAttributes,
 	CapyLabsAppObject,
-	StakedSuiFrenPositionObject,
 	StakedSuiFrenInfo,
 	DynamicFieldsInputs,
 	Balance,
