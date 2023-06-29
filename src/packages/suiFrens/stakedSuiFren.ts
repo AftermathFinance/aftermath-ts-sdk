@@ -71,6 +71,13 @@ export class StakedSuiFren extends Caller {
 	public async getHarvestFeesTransaction(inputs: {
 		walletAddress: SuiAddress;
 	}) {
+		if (!this.info.position)
+			throw new Error("no position found on suiFren");
+		if (!this.isOwned)
+			throw new Error(
+				"unable to remove accessory from suiFren that is not owned by caller"
+			);
+
 		return this.fetchApiTransaction<ApiHarvestFeesBody>(
 			"transactions/harvest-fees",
 			{
@@ -92,6 +99,8 @@ export class StakedSuiFren extends Caller {
 		accessoryType: SuiFrenAccessoryType;
 		walletAddress: SuiAddress;
 	}) {
+		if (!this.info.position)
+			throw new Error("no position found on suiFren");
 		if (!this.isOwned)
 			throw new Error(
 				"unable to remove accessory from suiFren that is not owned by caller"

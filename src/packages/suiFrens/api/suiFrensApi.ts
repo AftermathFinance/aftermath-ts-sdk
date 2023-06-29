@@ -23,6 +23,8 @@ import {
 	ApiRemoveSuiFrenAccessoryBody,
 	ApiAddSuiFrenAccessoryBody,
 	HarvestFeesEvent,
+	StakedSuiFrenMetadataV1Object,
+	PartialSuiFrenObject,
 } from "../suiFrensTypes";
 import {
 	HarvestFeesEventOnChain,
@@ -33,7 +35,6 @@ import {
 import { AmountInCoinAndUsd, CoinDecimal } from "../../coin/coinTypes";
 import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils/helpers";
-import { SuiFrens } from "../suiFrens";
 import {
 	AnyObjectType,
 	Balance,
@@ -41,11 +42,11 @@ import {
 	DynamicFieldObjectsWithCursor,
 	DynamicFieldsInputs,
 	EventsInputs,
-	SerializedTransaction,
 } from "../../../types";
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Sui } from "../../sui/sui";
+import { BCS } from "@mysten/bcs";
 
 export class SuiFrensApi {
 	// =========================================================================
@@ -54,14 +55,20 @@ export class SuiFrensApi {
 
 	private static readonly constants = {
 		moduleNames: {
-			suiFrens: {},
-			accessories: {},
+			suiFrens: {
+				suiFrens: "suifrens",
+			},
+			accessories: {
+				accessories: "accessories",
+			},
 			capyLabs: {
 				capyLabs: "capy_labs",
 			},
 			suiFrensVault: {
 				vault: "vault",
+				vaultState: "vault_state",
 				events: "events",
+				stakedPosition: "staked_position",
 			},
 			suiFrensVaultCapyLabsExtension: {
 				capyLabs: "capy_labs",
@@ -98,7 +105,7 @@ export class SuiFrensApi {
 		suiFren: AnyObjectType;
 		capy: AnyObjectType;
 		suiFrenAccessory: AnyObjectType;
-		stakedSuiFrenMetadataV1: AnyObjectType;
+		stakedSuiFrenPosition: AnyObjectType;
 	};
 
 	public readonly eventTypes: {
@@ -122,10 +129,10 @@ export class SuiFrensApi {
 		this.addresses = addresses;
 
 		this.objectTypes = {
-			suiFren: `${addresses.packages.suiFrens}::suifrens::SuiFren`,
+			suiFren: `${addresses.packages.suiFrens}::${SuiFrensApi.constants.moduleNames.suiFrens.suiFrens}::SuiFren`,
 			capy: `${addresses.packages.suiFrens}::capy::Capy`,
-			suiFrenAccessory: `${addresses.packages.accessories}::accessories::Accessory`,
-			stakedSuiFrenMetadataV1: `${addresses.packages.suiFrens}::vault_state::StakedSuiFrenMetadataV1`,
+			suiFrenAccessory: `${addresses.packages.accessories}::${SuiFrensApi.constants.moduleNames.accessories.accessories}::Accessory`,
+			stakedSuiFrenPosition: `${addresses.packages.suiFrensVault}::${SuiFrensApi.constants.moduleNames.suiFrensVault.stakedPosition}::StakedPosition`,
 		};
 
 		this.eventTypes = {
@@ -190,39 +197,49 @@ export class SuiFrensApi {
 		limitStepSize?: number;
 		cursor?: ObjectId;
 	}): Promise<DynamicFieldObjectsWithCursor<StakedSuiFrenInfo>> => {
-		throw new Error("TODO");
-		// const { attributes } = inputs;
-		// const defaultLimit = 25;
-		// const limit = inputs.limit ?? defaultLimit;
+		const { attributes } = inputs;
+		const defaultLimit = 25;
+		const limit = inputs.limit ?? defaultLimit;
 
-		// const isComplete = (suiFrens: SuiFrenObject[]) => {
-		// 	return (
-		// 		this.filterSuiFrensWithAttributes(suiFrens, attributes)
-		// 			.length >= limit
-		// 	);
-		// };
+		const isComplete = (data: StakedSuiFrenInfo[]) => {
+			return (
+				this.filterSuiFrensWithAttributes({
+					suiFrens: data.map((info) => info.suiFren),
+					attributes,
+				}).length >= limit
+			);
+		};
 
-		// const suiFrensWithCursor =
-		// 	await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
-		// 		...inputs,
-		// 		fetchFunc: this.fetchStakedSuiFrensDynamicFields,
-		// 		isComplete,
-		// 	});
+		const suiFrensWithCursor =
+			await this.Provider.DynamicFields().fetchDynamicFieldsUntil({
+				...inputs,
+				fetchFunc: this.fetchPartialStakedSuiFrensDynamicFields,
+				isComplete,
+			});
 
-		// const filteredSuiFrens = this.filterSuiFrensWithAttributes(
-		// 	suiFrensWithCursor.dynamicFieldObjects,
-		// 	attributes
-		// );
-		// const resizedSuiFrensWithCursor: DynamicFieldObjectsWithCursor<SuiFrenObject> =
-		// 	{
-		// 		nextCursor:
-		// 			suiFrensWithCursor.nextCursor ??
-		// 			limit < filteredSuiFrens.length
-		// 				? filteredSuiFrens[limit].objectId
-		// 				: suiFrensWithCursor.nextCursor,
-		// 		dynamicFieldObjects: filteredSuiFrens.slice(0, limit),
-		// 	};
-		// return resizedSuiFrensWithCursor;
+		const filteredSuiFrens = this.filterSuiFrensWithAttributes({
+			suiFrens: suiFrensWithCursor.dynamicFieldObjects.map(
+				(data) => data.suiFren
+			),
+			attributes,
+		});
+		const dynamicFieldObjects =
+			suiFrensWithCursor.dynamicFieldObjects.filter((data) =>
+				filteredSuiFrens
+					.slice(0, limit)
+					.some(
+						(suiFren) => suiFren.objectId === data.suiFren.objectId
+					)
+			);
+
+		const resizedSuiFrensWithCursor = {
+			nextCursor:
+				suiFrensWithCursor.nextCursor ?? limit < filteredSuiFrens.length
+					? filteredSuiFrens[limit].objectId
+					: suiFrensWithCursor.nextCursor,
+			dynamicFieldObjects,
+		};
+		return resizedSuiFrensWithCursor;
 	};
 
 	// =========================================================================
@@ -315,7 +332,7 @@ export class SuiFrensApi {
 				},
 			});
 
-		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
+		return this.fetchCompletePartialSuiFrenObjects({ partialSuiFrens });
 	};
 
 	public fetchOwnedSuiFrens = async (inputs: {
@@ -332,40 +349,49 @@ export class SuiFrensApi {
 				withDisplay: true,
 			});
 
-		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
+		return this.fetchCompletePartialSuiFrenObjects({ partialSuiFrens });
 	};
 
 	public fetchStakedSuiFrens = async (inputs: {
-		suiFrenIds: ObjectId[];
-	}): Promise<SuiFrenObject[]> => {
-		const { suiFrenIds } = inputs;
+		stakedSuiFrenIds: ObjectId[];
+	}): Promise<StakedSuiFrenInfo[]> => {
+		const { stakedSuiFrenIds } = inputs;
 
-		const partialSuiFrens =
+		const stakedSuiFrenData =
 			await this.Provider.Objects().fetchCastObjectBatch({
-				objectIds: suiFrenIds,
+				objectIds: stakedSuiFrenIds,
 				objectFromSuiObjectResponse:
-					Casting.suiFrens.partialSuiFrenObjectFromSuiObjectResponse,
+					Casting.suiFrens
+						.partialSuiFrenAndStakedSuiFrenMetadataV1ObjectFromSuiObjectResponse,
 				options: {
 					showDisplay: true,
 					showType: true,
 				},
 			});
+		const suiFrens = await this.fetchCompletePartialSuiFrenObjects({
+			partialSuiFrens: stakedSuiFrenData.map(
+				(data) => data.partialSuiFren
+			),
+		});
 
-		return this.fetchCompletePartialSuiFrenObjects(partialSuiFrens);
+		return suiFrens.map((suiFren, index) => ({
+			suiFren,
+			metadata: stakedSuiFrenData[index].stakedSuiFrenMetadata,
+		}));
 	};
 
-	public fetchStakedSuiFrensDynamicFields = async (
+	public fetchPartialStakedSuiFrensDynamicFields = async (
 		inputs: DynamicFieldsInputs
 	) => {
-		const suiFrenVaultId = this.addresses.objects.suiFrensVault;
+		const suiFrenVaultStateId = this.addresses.objects.suiFrensVaultState;
 		const suiFrenType = this.objectTypes.suiFren;
 
 		return await this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
 			{
 				...inputs,
-				parentObjectId: suiFrenVaultId,
-				objectsFromObjectIds: (suiFrenIds) =>
-					this.fetchStakedSuiFrens({ suiFrenIds }),
+				parentObjectId: suiFrenVaultStateId,
+				objectsFromObjectIds: (stakedSuiFrenIds) =>
+					this.fetchStakedSuiFrens({ stakedSuiFrenIds }),
 				dynamicFieldType: suiFrenType,
 			}
 		);
@@ -427,19 +453,24 @@ export class SuiFrensApi {
 	public fetchOwnedStakedSuiFrens = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<StakedSuiFrenInfo[]> => {
-		throw new Error("TODO");
+		const { walletAddress } = inputs;
 
-		// const { walletAddress } = inputs;
-
-		// return await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-		// 	{
-		// 		walletAddress,
-		// 		objectType: this.objectTypes.stakedSuiFrenMetadataV1,
-		// 		objectFromSuiObjectResponse:
-		// 			Casting.suiFrens
-		// 				.stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse,
-		// 	}
-		// );
+		const stakedPositions =
+			await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType: this.objectTypes.stakedSuiFrenPosition,
+				objectFromSuiObjectResponse:
+					Casting.suiFrens.stakedSuiFrenPositionFromSuiObjectResponse,
+			});
+		const stakedSuiFrens = await this.fetchStakedSuiFrens({
+			stakedSuiFrenIds: stakedPositions.map(
+				(position) => position.suiFrenMetadataId
+			),
+		});
+		return stakedSuiFrens.map((data, index) => ({
+			...data,
+			position: stakedPositions[index],
+		}));
 	};
 
 	// =========================================================================
@@ -494,13 +525,13 @@ export class SuiFrensApi {
 	//  Mixing Transaction Commands
 	// =========================================================================
 
-	public mixTx = (inputs: {
+	public mixAndKeepTx = (inputs: {
 		tx: TransactionBlock;
 		parentOneId: ObjectId;
 		parentTwoId: ObjectId;
 		suiPaymentCoinId: ObjectId | TransactionArgument;
 		suiFrenType: AnyObjectType;
-	}) /* (SuiFren) */ => {
+	}) => {
 		const { tx, suiPaymentCoinId } = inputs;
 
 		return tx.moveCall({
@@ -508,10 +539,13 @@ export class SuiFrensApi {
 				this.addresses.packages.suiFrensVaultCapyLabsExtension,
 				SuiFrensApi.constants.moduleNames.suiFrensVaultCapyLabsExtension
 					.capyLabs,
-				"mix"
+				"mix_and_keep"
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
+				tx.object(
+					this.addresses.objects.suiFrensVaultCapyLabsExtension
+				), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
 
 				tx.object(inputs.parentOneId), // SuiFren
@@ -525,13 +559,13 @@ export class SuiFrensApi {
 		});
 	};
 
-	public mixWithStakedTx = (inputs: {
+	public mixWithStakedAndKeepTx = (inputs: {
 		tx: TransactionBlock;
 		nonStakedParentId: ObjectId;
 		stakedParentId: ObjectId;
 		suiPaymentCoinId: ObjectId | TransactionArgument;
 		suiFrenType: AnyObjectType;
-	}) /* (SuiFren) */ => {
+	}) => {
 		const { tx, suiPaymentCoinId } = inputs;
 
 		return tx.moveCall({
@@ -539,7 +573,7 @@ export class SuiFrensApi {
 				this.addresses.packages.suiFrensVaultCapyLabsExtension,
 				SuiFrensApi.constants.moduleNames.suiFrensVaultCapyLabsExtension
 					.capyLabs,
-				"mix_with_staked"
+				"mix_with_staked_and_keep"
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
@@ -560,13 +594,13 @@ export class SuiFrensApi {
 		});
 	};
 
-	public mixStakedWithStakedTx = (inputs: {
+	public mixStakedWithStakedAndKeepTx = (inputs: {
 		tx: TransactionBlock;
 		parentOneId: ObjectId;
 		parentTwoId: ObjectId;
 		suiPaymentCoinId: ObjectId | TransactionArgument;
 		suiFrenType: AnyObjectType;
-	}) /* (SuiFren) */ => {
+	}) => {
 		const { tx, suiPaymentCoinId } = inputs;
 
 		return tx.moveCall({
@@ -574,7 +608,7 @@ export class SuiFrensApi {
 				this.addresses.packages.suiFrensVaultCapyLabsExtension,
 				SuiFrensApi.constants.moduleNames.suiFrensVaultCapyLabsExtension
 					.capyLabs,
-				"mix_staked_with_staked"
+				"mix_staked_with_staked_and_keep"
 			),
 			typeArguments: [inputs.suiFrenType],
 			arguments: [
@@ -875,7 +909,7 @@ export class SuiFrensApi {
 
 		if (isParentOneStaked && isParentTwoStaked) {
 			// both staked
-			this.mixStakedWithStakedTx({
+			this.mixStakedWithStakedAndKeepTx({
 				tx,
 				parentOneId,
 				parentTwoId,
@@ -884,7 +918,7 @@ export class SuiFrensApi {
 			});
 		} else if (!isParentOneStaked && !isParentTwoStaked) {
 			// neither staked
-			this.mixTx({
+			this.mixAndKeepTx({
 				tx,
 				parentOneId,
 				parentTwoId,
@@ -897,7 +931,7 @@ export class SuiFrensApi {
 				? [parentTwoId, parentOneId]
 				: [parentOneId, parentTwoId];
 
-			this.mixWithStakedTx({
+			this.mixWithStakedAndKeepTx({
 				tx,
 				nonStakedParentId,
 				stakedParentId,
@@ -1078,17 +1112,20 @@ export class SuiFrensApi {
 	//  SuiFren Attribute Filtering
 	// =========================================================================
 
-	public filterSuiFrensWithAttributes = (
-		suiFrens: SuiFrenObject[],
-		attributes: Partial<SuiFrenAttributes>
-	) =>
-		suiFrens.filter((suiFren) =>
+	public filterSuiFrensWithAttributes = (inputs: {
+		suiFrens: SuiFrenObject[];
+		attributes: Partial<SuiFrenAttributes>;
+	}) => {
+		const { suiFrens, attributes } = inputs;
+
+		return suiFrens.filter((suiFren) =>
 			Object.entries(attributes).every(([key1, val1]) =>
 				Object.entries(suiFren.attributes).some(
 					([key2, val2]) => key1 === key2 && val1 === val2
 				)
 			)
 		);
+	};
 
 	// =========================================================================
 	//  Helpers
@@ -1105,19 +1142,21 @@ export class SuiFrensApi {
 	//  Helpers
 	// =========================================================================
 
-	private fetchCompletePartialSuiFrenObjects = async (
-		partialSuiFrens: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">[]
-	): Promise<SuiFrenObject[]> => {
+	private fetchCompletePartialSuiFrenObjects = async (inputs: {
+		partialSuiFrens: PartialSuiFrenObject[];
+	}): Promise<SuiFrenObject[]> => {
+		const { partialSuiFrens } = inputs;
 		return Promise.all(
-			partialSuiFrens.map((suiFren) =>
-				this.fetchCompletePartialSuiFrenObject(suiFren)
+			partialSuiFrens.map((partialSuiFren) =>
+				this.fetchCompletePartialSuiFrenObject({ partialSuiFren })
 			)
 		);
 	};
 
-	private fetchCompletePartialSuiFrenObject = async (
-		partialSuiFren: Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed">
-	): Promise<SuiFrenObject> => {
+	private fetchCompletePartialSuiFrenObject = async (inputs: {
+		partialSuiFren: PartialSuiFrenObject;
+	}): Promise<SuiFrenObject> => {
+		const { partialSuiFren } = inputs;
 		const suiFrenId = partialSuiFren.objectId;
 		// TODO: move inner coin type func to general func in helpers
 		const suiFrenType = Coin.getInnerCoinType(partialSuiFren.objectType);

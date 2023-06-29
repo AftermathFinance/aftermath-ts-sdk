@@ -16,6 +16,8 @@ import {
 	SuiFrenVaultStateV1Object,
 	SuiFrenAccessoryObject,
 	HarvestFeesEvent,
+	PartialSuiFrenObject,
+	StakedSuiFrenPositionObject,
 } from "../suiFrensTypes";
 import {
 	MixSuiFrensEventOnChain,
@@ -29,7 +31,10 @@ import {
 	StakedSuiFrenMetadataV1FieldsOnChain,
 	SuiFrenVaultStateV1FieldsOnChain,
 	HarvestFeesEventOnChain,
+	StakedSuiFrenPositionFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
+import { Helpers } from "../../../general/utils";
+import { Coin } from "../..";
 
 export class SuiFrensApiCasting {
 	// =========================================================================
@@ -56,7 +61,7 @@ export class SuiFrensApiCasting {
 
 	public static partialSuiFrenObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed"> => {
+	): PartialSuiFrenObject => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -88,31 +93,37 @@ export class SuiFrensApiCasting {
 		};
 	};
 
-	// public static partialSuiFrenObjectFromStakedSuiFrenMetadataV1ObjectSuiObjectResponse =
-	// 	(
-	// 		data: SuiObjectResponse
-	// 	): Omit<SuiFrenObject, "mixLimit" | "lastEpochMixed"> => {
-	// 		const objectType = getObjectType(data);
-	// 		if (!objectType) throw new Error("no object type found");
+	public static partialSuiFrenObjectFromStakedSuiFrenMetadataV1ObjectSuiObjectResponse =
+		(data: SuiObjectResponse): PartialSuiFrenObject => {
+			const fields = getObjectFields(
+				data
+			) as StakedSuiFrenMetadataV1FieldsOnChain;
+			const display = getObjectDisplay(data)
+				.data as unknown as SuiFrenDisplayOnChain;
 
-	// 		const fields = getObjectFields(
-	// 			data
-	// 		) as StakedSuiFrenMetadataV1FieldsOnChain;
-	// 		// const display = getObjectDisplay(data)
-	// 		// .data as unknown as SuiFrenDisplayOnChain;
-
-	// 		return {
-	// 			objectId: fields.suifren_id,
-
-	// 			lastEpochMixed: BigInt(fields.last_epoch_mixed),
-	// 			generation: BigInt(fields.generation),
-	// 			birthdate: BigInt(fields.birthdate),
-	// 			cohort: BigInt(fields.cohort),
-	// 			genes: BigInt(fields.genes),
-	// 			birthLocation: fields.birth_location,
-	// 			attributes: fields.attributes,
-	// 		};
-	// 	};
+			return {
+				objectType,
+				objectId: fields.suifren_id,
+				generation: BigInt(fields.generation),
+				birthdate: Number(fields.birthdate),
+				cohort: BigInt(fields.cohort),
+				genes: fields.genes.map((gene) => BigInt(gene)),
+				attributes: {
+					skin: fields.attributes[0],
+					mainColor: fields.attributes[1],
+					secondaryColor: fields.attributes[2],
+					expression: fields.attributes[3],
+					ears: fields.attributes[4],
+				} as SuiFrenAttributes,
+				birthLocation: fields.birth_location,
+				display: {
+					link: display.link,
+					imageUrl: display.image_url,
+					description: display.description,
+					projectUrl: display.project_url,
+				},
+			};
+		};
 
 	public static stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
@@ -133,16 +144,43 @@ export class SuiFrensApiCasting {
 			mixFee: BigInt(fields.mix_fee),
 			feeIncrementPerMix: BigInt(fields.fee_increment_per_mix),
 			minRemainingMixesToKeep: BigInt(fields.min_remaining_mixes_to_keep),
+		};
+	};
 
-			// TOOD: create suifren from info below
+	public static partialSuiFrenAndStakedSuiFrenMetadataV1ObjectFromSuiObjectResponse =
+		(
+			data: SuiObjectResponse
+		): {
+			stakedSuiFrenMetadata: StakedSuiFrenMetadataV1Object;
+			partialSuiFren: PartialSuiFrenObject;
+		} => {
+			return {
+				stakedSuiFrenMetadata:
+					this.stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse(
+						data
+					),
+				partialSuiFren:
+					this.partialSuiFrenObjectFromStakedSuiFrenMetadataV1ObjectSuiObjectResponse(
+						data
+					),
+			};
+		};
 
-			// lastEpochMixed: BigInt(fields.last_epoch_mixed),
-			// generation: BigInt(fields.generation),
-			// birthdate: BigInt(fields.birthdate),
-			// cohort: BigInt(fields.cohort),
-			// genes: BigInt(fields.genes),
-			// birthLocation: fields.birth_location,
-			// attributes: fields.attributes,
+	public static stakedSuiFrenPositionFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): StakedSuiFrenPositionObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const fields = getObjectFields(
+			data
+		) as StakedSuiFrenPositionFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			suiFrenId: fields.suifren_id,
+			suiFrenMetadataId: fields.metadata_id,
 		};
 	};
 
@@ -202,18 +240,20 @@ export class SuiFrensApiCasting {
 	public static mixSuiFrensEventFromOnChain = (
 		eventOnChain: MixSuiFrensEventOnChain
 	): MixSuiFrensEvent => {
-		throw new Error("TODO");
-		// const fields = eventOnChain.parsedJson;
-		// return {
-		// 	mixer: eventOnChain.mixer,
-		// 	parentOneId: fields.parent_one_id,
-		// 	parentTwoId: fields.parent_two_id,
-		// 	childId: fields.child_id,
-		// 	fee: BigInt(fields.fee),
-		// 	timestamp: eventOnChain.timestampMs,
-		// 	txnDigest: eventOnChain.id.txDigest,
-		// 	type: eventOnChain.type,
-		// };
+		const fields = eventOnChain.parsedJson;
+		return {
+			mixer: fields.issuer,
+			// parentOneId: fields.parent_one_id,
+			// parentTwoId: fields.parent_two_id,
+			parentOneId: "0x123",
+			parentTwoId: "0x321",
+			childId: fields.suifren_id,
+			// fee: BigInt(fields.fee),
+			fee: BigInt(0),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
 	};
 
 	public static stakeSuiFrenEventFromOnChain = (

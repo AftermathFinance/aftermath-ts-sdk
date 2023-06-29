@@ -71,7 +71,7 @@ export class SuiFren extends Caller {
 	}
 
 	public displayNumber(): string {
-		return this.suiFren.objectId.slice(-5, -1);
+		return this.suiFren.objectId.slice(-5, -1).toUpperCase();
 	}
 
 	// public asNft(): Nft {

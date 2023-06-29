@@ -60,6 +60,10 @@ export interface SuiFrenVaultStateV1FieldsOnChain {
 	mixed: BigIntAsString;
 }
 
+export interface StakedSuiFrenPositionFieldsOnChain {
+	suifren_id: ObjectId;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -81,8 +85,6 @@ export type UnstakeSuiFrenEventOnChain = EventOnChain<{
 }>;
 
 export type MixSuiFrensEventOnChain = EventOnChain<{
-	id: ObjectId;
-	parent_one_id: ObjectId;
-	parent_two_id: ObjectId;
-	fee: BigIntAsString;
+	issuer: ObjectId;
+	suifren_id: ObjectId;
 }>;

@@ -49,6 +49,11 @@ export interface SuiFrenObject extends Object {
 	};
 }
 
+export type PartialSuiFrenObject = Omit<
+	SuiFrenObject,
+	"mixLimit" | "lastEpochMixed"
+>;
+
 export type SuiFrenAttributes = {
 	skin: "stripes" | "cheetah";
 	mainColor: "6FBBEE";
@@ -64,12 +69,13 @@ export enum SuiFrensSortOption {
 
 export interface StakedSuiFrenInfo {
 	suiFren: SuiFrenObject;
-	position: StakedSuiFrenPositionObject;
 	metadata: StakedSuiFrenMetadataV1Object;
+	position?: StakedSuiFrenPositionObject;
 }
 
 export interface StakedSuiFrenPositionObject extends Object {
 	suiFrenId: ObjectId;
+	suiFrenMetadataId: ObjectId;
 }
 
 export interface StakedSuiFrenMetadataV1Object extends Object {
