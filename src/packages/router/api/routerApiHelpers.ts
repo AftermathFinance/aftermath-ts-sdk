@@ -28,7 +28,7 @@ export class RouterApiHelpers {
 
 	public static readonly constants = {
 		defaults: {
-			tradePartitionCount: 1,
+			tradePartitionCount: 2,
 			maxAsyncPoolsPerProtocol: 2,
 		},
 	};
