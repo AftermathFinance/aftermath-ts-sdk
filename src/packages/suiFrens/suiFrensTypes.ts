@@ -150,7 +150,7 @@ export interface ApiStakeSuiFrenBody {
 }
 
 export interface ApiUnstakeSuiFrenBody {
-	suiFrenId: ObjectId;
+	stakedPositionId: ObjectId;
 	suiFrenType: AnyObjectType;
 	walletAddress: SuiAddress;
 }

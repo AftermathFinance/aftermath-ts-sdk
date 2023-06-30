@@ -168,8 +168,6 @@ export class ObjectsApiHelpers {
 		// 	(data) => data.error !== undefined
 		// );
 
-		if (objectBatch.length <= 0)
-			throw new Error("no existing objects found with fetchObjectBatch");
 		// REVIEW: throw error on any objects that don't exist ?
 		// or don't throw any errors and return empty array ?
 		return objectBatch;

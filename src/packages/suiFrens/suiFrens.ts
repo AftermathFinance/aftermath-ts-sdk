@@ -36,6 +36,15 @@ export class SuiFrens extends Caller {
 
 	public static readonly constants = {
 		mixingFeeCoinType: Coin.constants.suiCoinType,
+		protocolFees: {
+			mint: BigInt(250_000_000), // 0.25 SUI
+			mixOwned: BigInt(250_000_000), // 0.25 SUI
+			minMixStaked: BigInt(250_000_000), // 0.25 SUI
+			mixStakedPercentage: 0.1, // 10%
+		},
+		suifrenFees: {
+			mint: BigInt(8_000_000_000), // 8 SUI
+		},
 	};
 
 	// =========================================================================
@@ -49,6 +58,21 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 	//  Public Methods
 	// =========================================================================
+
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
+
+	// public static calcMixFee(inputs: {
+	// 	mixFee1: Balance | undefined;
+	// 	mixFee2: Balance | undefined;
+	// }): Balance {
+
+	// 	const {mixFee1, mixFee2} = inputs
+
+	// 	if (mixFee1 === undefined && mixFee2 === undefined ) return this.constants.protocolFees.
+
+	// }
 
 	// =========================================================================
 	//  Class Objects
@@ -100,7 +124,7 @@ export class SuiFrens extends Caller {
 			DynamicFieldObjectsWithCursor<StakedSuiFrenInfo>,
 			ApiDynamicFieldsBody
 		>(
-			`staked-sui-frens/${SuiFrens.createStakedSuiFrensQueryString(
+			`filtered-staked-sui-frens/${SuiFrens.createStakedSuiFrensQueryString(
 				inputs
 			)}`,
 			inputs
@@ -115,11 +139,9 @@ export class SuiFrens extends Caller {
 		};
 	}
 
-	public async getStakedSuiFrens(inputs: {
-		stakedSuiFrenObjectIds: ObjectId[];
-	}) {
+	public async getStakedSuiFrens(inputs: { stakedSuiFrenIds: ObjectId[] }) {
 		const suiFrenInfos = await this.fetchApi<StakedSuiFrenInfo[]>(
-			`${JSON.stringify(inputs.stakedSuiFrenObjectIds)}`
+			`staked-sui-frens/${JSON.stringify(inputs.stakedSuiFrenIds)}`
 		);
 		return suiFrenInfos.map(
 			(info) => new StakedSuiFren(info, this.network)

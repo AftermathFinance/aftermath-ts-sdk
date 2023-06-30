@@ -32,8 +32,6 @@ import {
 	HarvestSuiFrenFeesEventOnChain,
 	StakedSuiFrenPositionFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
-import { Helpers } from "../../../general/utils";
-import { Coin } from "../..";
 
 export class SuiFrensApiCasting {
 	// =========================================================================
@@ -101,7 +99,7 @@ export class SuiFrensApiCasting {
 				.data as unknown as SuiFrenDisplayOnChain;
 
 			return {
-				objectType: "TODO",
+				objectType: fields.suifren_type,
 				objectId: fields.suifren_id,
 				generation: BigInt(fields.generation),
 				birthdate: Number(fields.birthdate),
@@ -242,13 +240,10 @@ export class SuiFrensApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			mixer: fields.issuer,
-			// parentOneId: fields.parent_one_id,
-			// parentTwoId: fields.parent_two_id,
-			parentOneId: "0x123",
-			parentTwoId: "0x321",
+			parentOneId: fields.parent_one_id,
+			parentTwoId: fields.parent_two_id,
 			childId: fields.suifren_id,
-			// fee: BigInt(fields.fee),
-			fee: BigInt(0),
+			fee: BigInt(fields.fee),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

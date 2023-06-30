@@ -44,6 +44,7 @@ export interface SuiFrenAccessoryDisplayOnChain {
 
 export interface StakedSuiFrenMetadataV1FieldsOnChain {
 	suifren_id: ObjectId;
+	suifren_type: string;
 	collected_fees: BigIntAsString;
 	auto_stake_fees: boolean;
 	mix_fee: BigIntAsString;
@@ -73,22 +74,25 @@ export interface StakedSuiFrenPositionFieldsOnChain {
 // =========================================================================
 
 export type HarvestSuiFrenFeesEventOnChain = EventOnChain<{
-	issuer: BigIntAsString;
+	issuer: SuiAddress;
 	fees: BigIntAsString;
 }>;
 
 export type StakeSuiFrenEventOnChain = EventOnChain<{
-	issuer: BigIntAsString;
+	issuer: SuiAddress;
 	suifren_id: ObjectId;
 }>;
 
 export type UnstakeSuiFrenEventOnChain = EventOnChain<{
-	issuer: BigIntAsString;
+	issuer: SuiAddress;
 	suifren_id: ObjectId;
 	fees: BigIntAsString;
 }>;
 
 export type MixSuiFrensEventOnChain = EventOnChain<{
-	issuer: ObjectId;
+	issuer: SuiAddress;
 	suifren_id: ObjectId;
+	parent_one_id: ObjectId;
+	parent_two_id: ObjectId;
+	fee: BigIntAsString;
 }>;

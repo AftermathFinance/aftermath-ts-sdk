@@ -90,7 +90,8 @@ export interface SuiFrensAddresses {
 	objects: {
 		capyLabsApp: ObjectId;
 		suiFrensVault: ObjectId;
-		suiFrensVaultState: ObjectId;
+		suiFrensVaultStateV1: ObjectId;
+		suiFrensVaultStateV1MetadataTable: ObjectId;
 		suiFrensVaultCapyLabsExtension: ObjectId;
 	};
 }

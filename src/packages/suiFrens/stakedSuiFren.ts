@@ -58,12 +58,15 @@ export class StakedSuiFren extends Caller {
 	// =========================================================================
 
 	public async getUnstakeTransaction(inputs: { walletAddress: SuiAddress }) {
+		if (!this.info.position)
+			throw new Error("no position found on suiFren");
+
 		return this.fetchApiTransaction<ApiUnstakeSuiFrenBody>(
 			"transactions/unstake",
 			{
 				...inputs,
 				suiFrenType: this.suiFren.suiFrenType(),
-				suiFrenId: this.suiFrenId(),
+				stakedPositionId: this.info.position.objectId,
 			}
 		);
 	}
