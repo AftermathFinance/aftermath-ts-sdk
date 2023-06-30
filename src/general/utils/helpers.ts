@@ -85,6 +85,9 @@ export class Helpers {
 		mulBBB: (a: bigint, b: bigint): bigint => a * b,
 	};
 
+	public static maxBigInt = (...args: bigint[]) =>
+		args.reduce((m, e) => (e > m ? e : m));
+
 	// =========================================================================
 	//  Display
 	// =========================================================================

@@ -28,6 +28,7 @@ import { SuiFren } from "./suiFren";
 import { StakedSuiFren } from "./stakedSuiFren";
 import { Caller } from "../../general/utils/caller";
 import { Coin } from "../coin";
+import { Helpers } from "../../general/utils";
 
 export class SuiFrens extends Caller {
 	// =========================================================================
@@ -63,16 +64,45 @@ export class SuiFrens extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	// public static calcMixFee(inputs: {
-	// 	mixFee1: Balance | undefined;
-	// 	mixFee2: Balance | undefined;
-	// }): Balance {
+	public static calcTotalInternalMixFee(inputs: {
+		mixFee1: Balance | undefined;
+		mixFee2: Balance | undefined;
+	}): Balance {
+		const { mixFee1, mixFee2 } = inputs;
 
-	// 	const {mixFee1, mixFee2} = inputs
+		if (mixFee1 === undefined && mixFee2 === undefined)
+			return this.constants.protocolFees.mixOwned;
 
-	// 	if (mixFee1 === undefined && mixFee2 === undefined ) return this.constants.protocolFees.
+		if (mixFee1 !== undefined && mixFee2 !== undefined) {
+			return (
+				this.calcMixFeeForStakedSuiFren({ mixFee: mixFee1 }) +
+				this.calcMixFeeForStakedSuiFren({ mixFee: mixFee2 })
+			);
+		}
 
-	// }
+		return mixFee1 !== undefined
+			? this.calcMixFeeForStakedSuiFren({ mixFee: mixFee1 })
+			: mixFee2 !== undefined
+			? this.calcMixFeeForStakedSuiFren({ mixFee: mixFee2 })
+			: (() => {
+					// to make TS happy :)
+					throw new Error("unreachable");
+			  })();
+	}
+
+	private static calcMixFeeForStakedSuiFren(inputs: {
+		mixFee: Balance;
+	}): Balance {
+		return Helpers.maxBigInt(
+			this.constants.protocolFees.minMixStaked,
+			inputs.mixFee /
+				BigInt(
+					Math.floor(
+						this.constants.protocolFees.mixStakedPercentage * 100
+					)
+				)
+		);
+	}
 
 	// =========================================================================
 	//  Class Objects
@@ -240,7 +270,7 @@ export class SuiFrens extends Caller {
 	public static mixFee(
 		suiFren: SuiFren | StakedSuiFren | undefined
 	): Balance | undefined {
-		return suiFren instanceof StakedSuiFren ? suiFren.mixFee() : BigInt(0);
+		return suiFren instanceof StakedSuiFren ? suiFren?.mixFee() : undefined;
 	}
 
 	// =========================================================================

@@ -56,8 +56,8 @@ export type PartialSuiFrenObject = Omit<
 
 export type SuiFrenAttributes = {
 	skin: "stripes" | "cheetah";
-	mainColor: "6FBBEE";
-	secondaryColor: "CF9696";
+	main: "6FBBEE";
+	secondary: "CF9696";
 	expression: "bigSmile";
 	ears: "ear1";
 };
@@ -158,13 +158,13 @@ export interface ApiUnstakeSuiFrenBody {
 export interface ApiMixSuiFrensBody {
 	suiFrenParentOne: {
 		objectId: ObjectId;
-		isStaked: boolean;
+		mixFee: Balance | undefined;
 	};
 	suiFrenParentTwo: {
 		objectId: ObjectId;
-		isStaked: boolean;
+		mixFee: Balance | undefined;
 	};
-	totalFee: Balance;
+	baseFee: Balance;
 	suiFrenType: AnyObjectType;
 	walletAddress: SuiAddress;
 }

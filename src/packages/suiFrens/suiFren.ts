@@ -44,8 +44,8 @@ export class SuiFren extends Caller {
 			Skin: this.suiFren.attributes.skin,
 			Ears: this.suiFren.attributes.ears,
 			Expression: this.suiFren.attributes.expression,
-			"Main Color": this.suiFren.attributes.mainColor,
-			"Secondary Color": this.suiFren.attributes.secondaryColor,
+			"Main Color": this.suiFren.attributes.main,
+			"Secondary Color": this.suiFren.attributes.secondary,
 			"Birth Location": this.suiFren.birthLocation,
 			Birthday: dayjs(this.suiFren.birthdate).format("MMMM D, YYYY"),
 			Cohort: this.suiFren.cohort.toString(),
@@ -89,8 +89,8 @@ export class SuiFren extends Caller {
 	// 				Skin: this.suiFren.attributes.skin,
 	// 				Ears: this.suiFren.attributes.ears,
 	// 				Expression: this.suiFren.attributes.expression,
-	// 				"Main Color": this.suiFren.attributes.mainColor,
-	// 				"Secondary Color": this.suiFren.attributes.secondaryColor,
+	// 				"Main Color": this.suiFren.attributes.main,
+	// 				"Secondary Color": this.suiFren.attributes.secondary,
 	// 				"Birth Location": this.suiFren.birthLocation,
 	// 				Birthday: dayjs(this.suiFren.birthdate).format(
 	// 					"MMMM D, YYYY"

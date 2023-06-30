@@ -47,6 +47,7 @@ import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Sui } from "../../sui/sui";
 import { BCS } from "@mysten/bcs";
+import { SuiFrens } from "../suiFrens";
 
 export class SuiFrensApi {
 	// =========================================================================
@@ -649,6 +650,7 @@ export class SuiFrensApi {
 					this.addresses.objects.suiFrensVaultCapyLabsExtension
 				), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.capyLabsApp), // CapyLabsApp
+				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
 
 				tx.object(inputs.parentOneId), // SuiFren
 				tx.object(inputs.parentTwoId), // SuiFren
@@ -988,13 +990,19 @@ export class SuiFrensApi {
 			walletAddress,
 			suiFrenParentOne,
 			suiFrenParentTwo,
-			totalFee,
 			suiFrenType,
+			baseFee,
 		} = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
+		const totalFee =
+			baseFee +
+			SuiFrens.calcTotalInternalMixFee({
+				mixFee1: suiFrenParentOne.mixFee,
+				mixFee2: suiFrenParentTwo.mixFee,
+			});
 		const suiPaymentCoinId =
 			await this.Provider.Coin().fetchCoinWithAmountTx({
 				tx,
@@ -1003,8 +1011,8 @@ export class SuiFrensApi {
 				coinAmount: totalFee,
 			});
 
-		const isParentOneStaked = suiFrenParentOne.isStaked;
-		const isParentTwoStaked = suiFrenParentTwo.isStaked;
+		const isParentOneStaked = suiFrenParentOne.mixFee === undefined;
+		const isParentTwoStaked = suiFrenParentTwo.mixFee === undefined;
 
 		const parentOneId = suiFrenParentOne.objectId;
 		const parentTwoId = suiFrenParentTwo.objectId;
@@ -1152,7 +1160,9 @@ export class SuiFrensApi {
 		return suiFrens.filter((suiFren) =>
 			Object.entries(attributes).every(([key1, val1]) =>
 				Object.entries(suiFren.attributes).some(
-					([key2, val2]) => key1 === key2 && val1 === val2
+					([key2, val2]) =>
+						key1.toLowerCase() === key2.toLowerCase() &&
+						val1.toLowerCase() === val2.toLowerCase()
 				)
 			)
 		);
