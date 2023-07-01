@@ -313,7 +313,7 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
 			tokenYValue: BigInt(fields.token_y),
@@ -348,7 +348,7 @@ export class BlueMoveApi implements RouterApiInterface<BlueMovePoolObject> {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
 			tokenYValue: BigInt(fields.token_y),

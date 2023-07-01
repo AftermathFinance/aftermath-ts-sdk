@@ -32,11 +32,14 @@ import {
 	HarvestSuiFrenFeesEventOnChain,
 	StakedSuiFrenPositionFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
+import { Helpers } from "../../../general/utils";
 
 export class SuiFrensApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
+
+	// TODO: handle leading 0s for ALL castings
 
 	public static capyLabsAppObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
@@ -48,7 +51,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			mixingLimit: BigInt(fields.mixing_limit),
 			coolDownPeriodEpochs: BigInt(fields.cool_down_period),
 			mixingPrice: BigInt(fields.mixing_price),
@@ -68,7 +71,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			generation: BigInt(fields.generation),
 			birthdate: Number(fields.birthdate),
 			cohort: BigInt(fields.cohort),
@@ -100,7 +103,7 @@ export class SuiFrensApiCasting {
 
 			return {
 				objectType: fields.suifren_type,
-				objectId: fields.suifren_id,
+				objectId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 				generation: BigInt(fields.generation),
 				birthdate: Number(fields.birthdate),
 				cohort: BigInt(fields.cohort),
@@ -134,8 +137,8 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
-			suiFrenId: fields.suifren_id,
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			collectedFees: BigInt(fields.collected_fees),
 			autoStakeFees: fields.auto_stake_fees,
 			mixFee: BigInt(fields.mix_fee),
@@ -175,8 +178,8 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
-			suiFrenId: fields.suifren_id,
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 		};
 	};
 
@@ -192,7 +195,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			totalMixes: BigInt(fields.mixed),
 			stakedSuiFrens: BigInt(fields.suifrens_metadata.fields.size),
 		};
@@ -210,7 +213,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			name: fields.name,
 			type: fields.type,
 			imageUrl: display.image_url,
@@ -226,7 +229,7 @@ export class SuiFrensApiCasting {
 	): HarvestSuiFrenFeesEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			harvester: fields.issuer,
+			harvester: Helpers.addLeadingZeroesToType(fields.issuer),
 			fees: BigInt(fields.fees),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -239,10 +242,10 @@ export class SuiFrensApiCasting {
 	): MixSuiFrensEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			mixer: fields.issuer,
-			parentOneId: fields.parent_one_id,
-			parentTwoId: fields.parent_two_id,
-			childId: fields.suifren_id,
+			mixer: Helpers.addLeadingZeroesToType(fields.issuer),
+			parentOneId: Helpers.addLeadingZeroesToType(fields.parent_one_id),
+			parentTwoId: Helpers.addLeadingZeroesToType(fields.parent_two_id),
+			childId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			fee: BigInt(fields.fee),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -255,8 +258,8 @@ export class SuiFrensApiCasting {
 	): StakeSuiFrenEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			staker: fields.issuer,
-			suiFrenId: fields.suifren_id,
+			staker: Helpers.addLeadingZeroesToType(fields.issuer),
+			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			// TODO: generalize casting of event types with passing of
 			// timestamp and txnDigest (create wrapper)
 			timestamp: eventOnChain.timestampMs,
@@ -270,8 +273,8 @@ export class SuiFrensApiCasting {
 	): UnstakeSuiFrenEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			unstaker: fields.issuer,
-			suiFrenId: fields.suifren_id,
+			unstaker: Helpers.addLeadingZeroesToType(fields.issuer),
+			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			fees: BigInt(fields.fees),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,

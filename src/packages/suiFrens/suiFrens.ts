@@ -93,14 +93,20 @@ export class SuiFrens extends Caller {
 	private static calcMixFeeForStakedSuiFren(inputs: {
 		mixFee: Balance;
 	}): Balance {
-		return Helpers.maxBigInt(
-			this.constants.protocolFees.minMixStaked,
-			inputs.mixFee /
-				BigInt(
-					Math.floor(
-						this.constants.protocolFees.mixStakedPercentage * 100
+		const { mixFee } = inputs;
+
+		return (
+			mixFee +
+			Helpers.maxBigInt(
+				this.constants.protocolFees.minMixStaked,
+				mixFee /
+					BigInt(
+						Math.floor(
+							this.constants.protocolFees.mixStakedPercentage *
+								100
+						)
 					)
-				)
+			)
 		);
 	}
 

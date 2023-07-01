@@ -42,6 +42,7 @@ import {
 	isMarketManagerParamsKeyType,
 	isMarketManagerStateKeyType,
 } from "../utils/helpers";
+import { Helpers } from "../../../general/utils";
 
 export class PerpetualsCasting {
 	// =========================================================================
@@ -56,7 +57,7 @@ export class PerpetualsCasting {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			maxPositionsPerAccount: objectFields.max_positions_per_account,
 			maxOpenOrdersPerPosition: objectFields.max_open_orders_per_position,
 		};
@@ -74,7 +75,7 @@ export class PerpetualsCasting {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			feesAccrued: objectFields.fees_accrued,
 			netTransferFromIfToVault: objectFields.net_transfer_from_if,
 			minOrderUsdValue: objectFields.min_order_usd_value,
@@ -290,7 +291,7 @@ export class PerpetualsCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 		};
 	};
 
@@ -303,7 +304,7 @@ export class PerpetualsCasting {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			symbol: objectFields.symbol,
 			price: objectFields.price,
 			decimal: objectFields.decimal,

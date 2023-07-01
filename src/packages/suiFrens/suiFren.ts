@@ -74,6 +74,15 @@ export class SuiFren extends Caller {
 		return this.suiFren.objectId.slice(-5, -1).toUpperCase();
 	}
 
+	public clone(): SuiFren {
+		return new SuiFren(
+			this.suiFren,
+			this.network,
+			this.isStaked,
+			this.isOwned
+		);
+	}
+
 	// public asNft(): Nft {
 	// 	return {
 	// 		info: {

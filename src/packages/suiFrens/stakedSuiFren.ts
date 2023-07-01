@@ -45,6 +45,10 @@ export class StakedSuiFren extends Caller {
 		return this.suiFren.suiFren.objectId;
 	}
 
+	public clone(): StakedSuiFren {
+		return new StakedSuiFren(this.info, this.network, this.isOwned);
+	}
+
 	// =========================================================================
 	//  Objects
 	// =========================================================================

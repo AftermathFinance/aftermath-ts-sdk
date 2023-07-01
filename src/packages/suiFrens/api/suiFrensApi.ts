@@ -1003,6 +1003,7 @@ export class SuiFrensApi {
 				mixFee1: suiFrenParentOne.mixFee,
 				mixFee2: suiFrenParentTwo.mixFee,
 			});
+
 		const suiPaymentCoinId =
 			await this.Provider.Coin().fetchCoinWithAmountTx({
 				tx,
@@ -1011,8 +1012,8 @@ export class SuiFrensApi {
 				coinAmount: totalFee,
 			});
 
-		const isParentOneStaked = suiFrenParentOne.mixFee === undefined;
-		const isParentTwoStaked = suiFrenParentTwo.mixFee === undefined;
+		const isParentOneStaked = suiFrenParentOne.mixFee !== undefined;
+		const isParentTwoStaked = suiFrenParentTwo.mixFee !== undefined;
 
 		const parentOneId = suiFrenParentOne.objectId;
 		const parentTwoId = suiFrenParentTwo.objectId;

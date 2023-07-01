@@ -275,7 +275,7 @@ export class InterestApi implements RouterApiInterface<InterestPoolObject> {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			kLast: BigInt(fields.k_last),
 			lpCoinSupplyValue: BigInt(fields.lp_coin_supply.fields.value),
 			balanceXValue: BigInt(fields.balance_x),

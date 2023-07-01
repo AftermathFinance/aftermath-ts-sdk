@@ -31,13 +31,18 @@ export class Helpers {
 	): AnyObjectType => {
 		const expectedTypeLength = 64;
 
-		const splitType = type.replace("0x", "").split("::");
+		let strippedType = type.replace("0x", "");
+		let typeSuffix = "";
 
-		if (splitType.length !== 3) throw new Error("invalid type: " + type);
+		if (strippedType.includes("::")) {
+			const splitType = strippedType.replace("0x", "").split("::");
 
-		const typeSuffix = "::" + splitType[1] + "::" + splitType[2];
+			typeSuffix = splitType
+				.slice(1)
+				.reduce((acc, str) => acc + "::" + str, "");
+			strippedType = splitType[0];
+		}
 
-		const strippedType = splitType[0];
 		const typeLength = strippedType.length;
 
 		if (typeLength > expectedTypeLength)

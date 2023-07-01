@@ -288,7 +288,7 @@ export class SuiswapApi implements RouterApiInterface<SuiswapPoolObject> {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			version: BigInt(fields.version),
 			owner: fields.owner,
 			index: BigInt(fields.index),
