@@ -168,6 +168,9 @@ export class Pools extends Caller {
 	public getPoolObjectIdForLpCoinType = (
 		inputs: ApiPoolObjectIdForLpCoinTypeBody
 	) => {
+		if (!Pools.isPossibleLpCoinType(inputs))
+			throw new Error("invalid lp coin type");
+
 		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
 			"pool-object-id",
 			inputs
@@ -175,8 +178,6 @@ export class Pools extends Caller {
 	};
 
 	public isLpCoinType = async (inputs: { lpCoinType: CoinType }) => {
-		if (!Pools.isPossibleLpCoinType(inputs)) return false;
-
 		try {
 			await this.getPoolObjectIdForLpCoinType(inputs);
 			return true;
