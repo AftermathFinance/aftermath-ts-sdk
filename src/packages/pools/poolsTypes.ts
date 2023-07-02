@@ -4,6 +4,7 @@ import {
 	Object,
 	Slippage,
 	Timestamp,
+	Url,
 } from "../../general/types/generalTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { ManipulateType } from "dayjs";
@@ -139,6 +140,7 @@ export interface PoolCreationCoinInfo {
 export interface PoolCreationLpCoinMetadata {
 	name: string;
 	symbol: string;
+	iconUrl?: Url;
 }
 
 // =========================================================================

@@ -306,7 +306,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
 			...inputs,
-			lpCoinIconUrl: "",
+			lpCoinIconUrl: inputs.lpCoinMetadata.iconUrl ?? "",
 
 			poolFlatness:
 				inputs.poolFlatness === 1 ? Casting.fixedOneBigInt : BigInt(0),
