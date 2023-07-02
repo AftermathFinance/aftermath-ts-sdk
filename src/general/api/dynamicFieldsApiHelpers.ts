@@ -1,4 +1,4 @@
-import { ObjectId } from "@mysten/sui.js";
+import { DynamicFieldInfo, ObjectId } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	DynamicFieldObjectsWithCursor,
@@ -6,7 +6,6 @@ import {
 	DynamicFieldsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
 export class DynamicFieldsApiHelpers {
 	// =========================================================================

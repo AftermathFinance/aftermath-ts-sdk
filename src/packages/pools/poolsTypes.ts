@@ -2,12 +2,10 @@ import {
 	Balance,
 	Event,
 	Object,
-	SerializedTransaction,
 	Slippage,
 	Timestamp,
-	Url,
 } from "../../general/types/generalTypes";
-import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
 import { TransactionArgument } from "@mysten/sui.js";

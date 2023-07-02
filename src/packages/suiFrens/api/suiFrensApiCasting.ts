@@ -31,7 +31,9 @@ export class SuiFrensApiCasting {
 	public static suiFrenObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): SuiFrenObject => {
-		const suiFrenObjectFields = getObjectFields(data) as SuiFrenFieldsOnChain;
+		const suiFrenObjectFields = getObjectFields(
+			data
+		) as SuiFrenFieldsOnChain;
 		return {
 			objectId: getObjectId(data),
 			fields: {
