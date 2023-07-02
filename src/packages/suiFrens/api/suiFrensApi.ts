@@ -149,27 +149,26 @@ export class SuiFrensApi {
 		suiFrenType: AnyObjectType;
 	}): Promise<
 		{
-			mixingLimit: bigint | undefined;
+			mixLimit: bigint | undefined;
 			lastEpochMixed: bigint | undefined;
 		}[]
 	> => {
 		const tx = new TransactionBlock();
-		this.devInspectMixingLimitAndLastEpochMixedMulTx({ ...inputs, tx });
+		this.devInspectMixLimitAndLastEpochMixedMulTx({ ...inputs, tx });
 
-		const [mixingLimitBytes, lastEpochMixedBytes] =
+		const [mixLimitBytes, lastEpochMixedBytes] =
 			await this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
 
-		const mixingLimits: any[] = bcs
-			.de("vector<Option<u8>>", new Uint8Array(mixingLimitBytes))
+		const mixLimits: any[] = bcs
+			.de("vector<Option<u8>>", new Uint8Array(mixLimitBytes))
 			.map((data: any) => Casting.unwrapDeserializedOption(data));
 
 		const lastEpochMixeds: any[] = bcs
 			.de("vector<Option<u64>>", new Uint8Array(lastEpochMixedBytes))
 			.map((data: any) => Casting.unwrapDeserializedOption(data));
 
-		return mixingLimits.map((mixingLimit, index) => ({
-			mixingLimit:
-				mixingLimit === undefined ? undefined : BigInt(mixingLimit),
+		return mixLimits.map((mixLimit, index) => ({
+			mixLimit: mixLimit === undefined ? undefined : BigInt(mixLimit),
 			lastEpochMixed:
 				lastEpochMixeds[index] === undefined
 					? undefined
@@ -559,7 +558,7 @@ export class SuiFrensApi {
 		});
 	};
 
-	public devInspectMixingLimitAndLastEpochMixedMulTx = (inputs: {
+	public devInspectMixLimitAndLastEpochMixedMulTx = (inputs: {
 		tx: TransactionBlock;
 		suiFrenIds: ObjectId[];
 		suiFrenType: AnyObjectType;
