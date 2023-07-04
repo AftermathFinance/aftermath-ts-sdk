@@ -1,4 +1,4 @@
-import { ObjectId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	Balance,
@@ -6,15 +6,18 @@ import {
 	RouterAsyncSerializablePool,
 	RouterCompleteTradeRoute,
 	RouterExternalFee,
+	RouterSynchronousOptions,
 	RouterProtocolName,
 	RouterSerializableCompleteGraph,
-	RouterSynchronousProtocolName,
 	Slippage,
 	SuiNetwork,
 	SynchronousProtocolsToPoolObjectIds,
 	Url,
 	isRouterAsyncProtocolName,
 	isRouterAsyncSerializablePool,
+	RouterAsyncOptions,
+	RouterOptions,
+	AllRouterOptions,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
@@ -22,17 +25,6 @@ import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
 import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
 
 export class RouterApiHelpers {
-	// =========================================================================
-	//  Constants
-	// =========================================================================
-
-	public static readonly constants = {
-		defaults: {
-			tradePartitionCount: 2,
-			maxAsyncPoolsPerProtocol: 2,
-		},
-	};
-
 	// =========================================================================
 	//  Class Members
 	// =========================================================================
@@ -44,9 +36,15 @@ export class RouterApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(Provider: AftermathApi) {
+	constructor(
+		Provider: AftermathApi,
+		private readonly options: AllRouterOptions
+	) {
 		this.SynchronousHelpers = new RouterSynchronousApiHelpers(Provider);
-		this.AsyncHelpers = new RouterAsyncApiHelpers(Provider);
+		this.AsyncHelpers = new RouterAsyncApiHelpers(
+			Provider,
+			options.regular.async
+		);
 	}
 
 	// =========================================================================
@@ -90,7 +88,7 @@ export class RouterApiHelpers {
 
 		const { network, graph, coinInAmount } = inputs;
 
-		const coinInAmounts = RouterApiHelpers.amountsInForRouterTrade({
+		const coinInAmounts = this.amountsInForRouterTrade({
 			coinInAmount,
 		});
 		const asyncProtocols = inputs.protocols.filter(
@@ -106,7 +104,11 @@ export class RouterApiHelpers {
 				protocols: asyncProtocols,
 			});
 
-		const routerGraph = new RouterGraph(network, graph);
+		const routerGraph = new RouterGraph(
+			network,
+			graph,
+			this.options.regular.synchronous
+		);
 
 		if (exactMatchPools.length <= 0 && partialMatchPools.length <= 0)
 			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
@@ -130,7 +132,8 @@ export class RouterApiHelpers {
 				),
 			]);
 
-		routerGraph.updateOptions(RouterGraph.defaultOptions);
+		// NOTE: is this actually needed ?
+		routerGraph.updateOptions(this.options.regular.synchronous);
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
@@ -185,11 +188,7 @@ export class RouterApiHelpers {
 			pool: inputs.lastPool,
 		});
 
-		routerGraph.updateOptions({
-			maxRouteLength: 2,
-			tradePartitionCount: 1,
-			// maxGasCost: BigInt(333_333_333), // 0.333 SUI
-		});
+		routerGraph.updateOptions(this.options.preAsync);
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
@@ -291,15 +290,12 @@ export class RouterApiHelpers {
 	//  Helpers
 	// =========================================================================
 
-	public static amountsInForRouterTrade = (inputs: {
+	public amountsInForRouterTrade = (inputs: {
 		coinInAmount: Balance;
-		partitions?: number;
 	}): Balance[] => {
 		const { coinInAmount } = inputs;
 
-		const partitions =
-			inputs.partitions ||
-			RouterApiHelpers.constants.defaults.tradePartitionCount;
+		const partitions = this.options.regular.async.tradePartitionCount;
 
 		const coinInPartitionAmount =
 			coinInAmount / BigInt(Math.floor(partitions));

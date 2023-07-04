@@ -5,9 +5,8 @@ import {
 	RouterCompleteGraph,
 	RouterCompleteTradeRoute,
 	RouterExternalFee,
-	RouterOptions,
+	RouterSynchronousOptions,
 	RouterSerializableCompleteGraph,
-	RouterSynchronousSerializablePool,
 	RouterSupportedCoinPaths,
 	RouterTradeCoin,
 	RouterTradeInfo,
@@ -58,19 +57,11 @@ export class RouterGraph {
 	//  Public Static Constants
 	// =========================================================================
 
-	public static readonly defaultOptions: RouterOptions = {
-		maxRouteLength: 3,
-		tradePartitionCount: 3,
-		minRoutesToCheck: 5,
-		maxGasCost: BigInt(500_000_000), // 0.5 SUI
-	};
-
 	// =========================================================================
-	//  Public Class Members
+	//  Class Members
 	// =========================================================================
 
 	public readonly graph: RouterCompleteGraph;
-	private constants: RouterOptions;
 
 	// =========================================================================
 	//  Constructor
@@ -79,22 +70,18 @@ export class RouterGraph {
 	constructor(
 		network: SuiNetwork | Url,
 		graph: RouterSerializableCompleteGraph,
-		options?: RouterOptions
+		private options: RouterSynchronousOptions
 	) {
 		this.graph = RouterGraph.graphFromSerializable({ graph, network });
-		this.constants = {
-			...RouterGraph.defaultOptions,
-			...options,
-		};
 	}
 
 	// =========================================================================
 	//  Public Methods
 	// =========================================================================
 
-	public updateOptions(partialOptions: Partial<RouterOptions>) {
-		this.constants = {
-			...this.constants,
+	public updateOptions(partialOptions: Partial<RouterSynchronousOptions>) {
+		this.options = {
+			...this.options,
 			...partialOptions,
 		};
 	}
@@ -268,7 +255,7 @@ export class RouterGraph {
 	// TODO: do this more efficiently
 	public static supportedCoinPathsFromGraph = async (inputs: {
 		graph: RouterSerializableCompleteGraph;
-		maxRouteLength?: number;
+		maxRouteLength: number;
 	}): Promise<RouterSupportedCoinPaths> => {
 		const nodes = Object.values(inputs.graph.coinNodes);
 		const pools = inputs.graph.pools;
@@ -321,9 +308,7 @@ export class RouterGraph {
 
 		const regularCoinPaths = this.extendCoinPathsForHops({
 			startingCoinPaths,
-			maxHops:
-				inputs.maxRouteLength ??
-				RouterGraph.defaultOptions.maxRouteLength,
+			maxHops: inputs.maxRouteLength,
 		});
 		const unhoppableCoinPaths = this.extendCoinPathsForHops({
 			startingCoinPaths: startingUnhoppableCoinPaths,
@@ -374,7 +359,7 @@ export class RouterGraph {
 			Helpers.deepCopy(this.graph),
 			coinInType,
 			coinOutType,
-			this.constants.maxRouteLength,
+			this.options.maxRouteLength,
 			isGivenAmountOut
 		);
 
@@ -662,22 +647,20 @@ export class RouterGraph {
 		referrer?: SuiAddress
 	): TradeRoute[] => {
 		const coinInPartitionAmount =
-			coinInAmount /
-			BigInt(Math.floor(this.constants.tradePartitionCount));
+			coinInAmount / BigInt(Math.floor(this.options.tradePartitionCount));
 		const coinInRemainderAmount =
-			coinInAmount %
-			BigInt(Math.floor(this.constants.tradePartitionCount));
+			coinInAmount % BigInt(Math.floor(this.options.tradePartitionCount));
 
 		let currentPools = graph.pools;
 		let currentRoutes = routes;
 
-		const emptyArray = Array(this.constants.tradePartitionCount).fill(
+		const emptyArray = Array(this.options.tradePartitionCount).fill(
 			undefined
 		);
 
 		const linearCutStepSize =
-			(routes.length - this.constants.minRoutesToCheck) /
-			this.constants.tradePartitionCount;
+			(routes.length - this.options.minRoutesToCheck) /
+			this.options.tradePartitionCount;
 
 		for (const [i] of emptyArray.entries()) {
 			const { updatedPools, updatedRoutes } =
@@ -818,9 +801,9 @@ export class RouterGraph {
 		let newEndIndex;
 		if (routeDecreaseType === "QUADRATIC") {
 			const minRouteIndexToCheck =
-				firstUnusedRouteIndex > this.constants.minRoutesToCheck
+				firstUnusedRouteIndex > this.options.minRoutesToCheck
 					? firstUnusedRouteIndex
-					: this.constants.minRoutesToCheck;
+					: this.options.minRoutesToCheck;
 
 			newEndIndex = Math.floor(
 				(minRouteIndexToCheck +
@@ -837,8 +820,8 @@ export class RouterGraph {
 			0,
 			newEndIndex > sortedRoutesAndPoolsByAmountOut.length
 				? sortedRoutesAndPoolsByAmountOut.length
-				: newEndIndex < this.constants.minRoutesToCheck
-				? this.constants.minRoutesToCheck
+				: newEndIndex < this.options.minRoutesToCheck
+				? this.options.minRoutesToCheck
 				: newEndIndex
 		);
 
@@ -870,7 +853,7 @@ export class RouterGraph {
 		const isOverMaxGasCost =
 			originalRoute.coinIn.amount <= BigInt(0) &&
 			RouterGraph.gasCostForRoute(originalRoute) + currentGasCost >
-				this.constants.maxGasCost;
+				this.options.maxGasCost;
 
 		let currentPools = Helpers.deepCopy(pools);
 		let currentCoinInAmount = coinInAmount;

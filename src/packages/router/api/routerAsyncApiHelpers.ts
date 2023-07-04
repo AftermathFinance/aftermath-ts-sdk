@@ -1,5 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
+	RouterAsyncOptions,
 	RouterAsyncProtocolName,
 	RouterAsyncSerializablePool,
 	RouterAsyncTradeResult,
@@ -13,7 +14,6 @@ import { isTurbosPoolObject } from "../../external/turbos/turbosTypes";
 import { isCetusPoolObject } from "../../external/cetus/cetusTypes";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
-import { RouterApiHelpers } from "./routerApiHelpers";
 
 export class RouterAsyncApiHelpers {
 	// =========================================================================
@@ -33,9 +33,10 @@ export class RouterAsyncApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-	}
+	constructor(
+		private readonly Provider: AftermathApi,
+		private readonly options: RouterAsyncOptions
+	) {}
 
 	// =========================================================================
 	//  Objects
@@ -70,8 +71,7 @@ export class RouterAsyncApiHelpers {
 			this.protocolNamesToApi[protocol]()
 		);
 
-		const maxPools =
-			RouterApiHelpers.constants.defaults.maxAsyncPoolsPerProtocol;
+		const maxPools = this.options.maxAsyncPoolsPerProtocol;
 		const allPools: {
 			partialMatchPools: RouterAsyncSerializablePool[];
 			exactMatchPools: RouterAsyncSerializablePool[];

@@ -187,11 +187,26 @@ export interface RouterSerializableCompleteGraph {
 
 export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
 
-export interface RouterOptions {
+export interface RouterSynchronousOptions {
 	maxRouteLength: number;
 	tradePartitionCount: number;
 	minRoutesToCheck: number;
 	maxGasCost: bigint;
+}
+
+export interface RouterAsyncOptions {
+	tradePartitionCount: number;
+	maxAsyncPoolsPerProtocol: number;
+}
+
+export interface RouterOptions {
+	synchronous: RouterSynchronousOptions;
+	async: RouterAsyncOptions;
+}
+
+export interface AllRouterOptions {
+	regular: RouterOptions;
+	preAsync: RouterSynchronousOptions;
 }
 
 export type RouterSerializablePoolsById = Record<

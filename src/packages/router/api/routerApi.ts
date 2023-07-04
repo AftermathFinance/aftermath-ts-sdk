@@ -5,7 +5,6 @@ import {
 	CoinType,
 	RouterExternalFee,
 	RouterCompleteTradeRoute,
-	SerializedTransaction,
 	Slippage,
 	SuiNetwork,
 	Url,
@@ -15,15 +14,12 @@ import {
 	RouterAsyncSerializablePool,
 	isRouterSynchronousProtocolName,
 	isRouterAsyncProtocolName,
-	RouterSynchronousProtocolName,
 	SynchronousProtocolsToPoolObjectIds,
+	RouterOptions,
+	RouterSynchronousOptions,
+	AllRouterOptions,
 } from "../../../types";
-import {
-	EventId,
-	ObjectId,
-	SuiAddress,
-	TransactionBlock,
-} from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
@@ -37,10 +33,38 @@ import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 
 export class RouterApi {
 	// =========================================================================
+	//  Constants
+	// =========================================================================
+
+	private static readonly defaultRouterOptions: AllRouterOptions = {
+		regular: {
+			synchronous: {
+				maxRouteLength: 3,
+				tradePartitionCount: 2,
+				minRoutesToCheck: 5,
+				maxGasCost: BigInt(500_000_000), // 0.5 SUI
+			},
+			async: {
+				tradePartitionCount: 1,
+				maxAsyncPoolsPerProtocol: 2,
+			},
+		},
+		preAsync: {
+			maxRouteLength: 2,
+			tradePartitionCount: 1,
+			minRoutesToCheck: 5,
+			maxGasCost: BigInt(500_000_000), // 0.5 SUI
+			// maxGasCost: BigInt(333_333_333), // 0.333 SUI
+		},
+	};
+
+	// =========================================================================
 	//  Class Members
 	// =========================================================================
 
 	public readonly Helpers;
+
+	private readonly options;
 
 	// =========================================================================
 	//  Constructor
@@ -48,10 +72,25 @@ export class RouterApi {
 
 	constructor(
 		private readonly Provider: AftermathApi,
-		public readonly protocols: RouterProtocolName[] = ["Aftermath"]
+		public readonly protocols: RouterProtocolName[] = ["Aftermath"],
+		regularOptions?: Partial<RouterOptions>,
+		preAsyncOptions?: Partial<RouterSynchronousOptions>
 	) {
+		const optionsToSet = {
+			regular: {
+				...RouterApi.defaultRouterOptions.regular,
+				...regularOptions,
+			},
+			preAsync: {
+				...RouterApi.defaultRouterOptions.preAsync,
+				...preAsyncOptions,
+			},
+		};
+
+		this.options = optionsToSet;
+
 		this.Provider = Provider;
-		this.Helpers = new RouterApiHelpers(Provider);
+		this.Helpers = new RouterApiHelpers(Provider, optionsToSet);
 	}
 
 	// =========================================================================
@@ -107,7 +146,11 @@ export class RouterApi {
 	public supportedCoinPathsFromGraph = async (inputs: {
 		graph: RouterSerializableCompleteGraph;
 	}) => {
-		return RouterGraph.supportedCoinPathsFromGraph(inputs);
+		const maxRouteLength = this.options.regular.synchronous.maxRouteLength;
+		return RouterGraph.supportedCoinPathsFromGraph({
+			...inputs,
+			maxRouteLength,
+		});
 	};
 
 	// =========================================================================
