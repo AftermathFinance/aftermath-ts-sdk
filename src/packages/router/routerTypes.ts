@@ -199,9 +199,13 @@ export interface RouterAsyncOptions {
 	maxAsyncPoolsPerProtocol: number;
 }
 
-export interface RouterOptions {
+interface RouterOptions {
 	synchronous: RouterSynchronousOptions;
 	async: RouterAsyncOptions;
+}
+export interface PartialRouterOptions {
+	synchronous?: Partial<RouterSynchronousOptions>;
+	async?: Partial<RouterAsyncOptions>;
 }
 
 export interface AllRouterOptions {

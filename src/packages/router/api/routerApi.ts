@@ -15,9 +15,9 @@ import {
 	isRouterSynchronousProtocolName,
 	isRouterAsyncProtocolName,
 	SynchronousProtocolsToPoolObjectIds,
-	RouterOptions,
 	RouterSynchronousOptions,
 	AllRouterOptions,
+	PartialRouterOptions,
 } from "../../../types";
 import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
@@ -73,13 +73,19 @@ export class RouterApi {
 	constructor(
 		private readonly Provider: AftermathApi,
 		public readonly protocols: RouterProtocolName[] = ["Aftermath"],
-		regularOptions?: Partial<RouterOptions>,
+		regularOptions?: PartialRouterOptions,
 		preAsyncOptions?: Partial<RouterSynchronousOptions>
 	) {
-		const optionsToSet = {
+		const optionsToSet: AllRouterOptions = {
 			regular: {
-				...RouterApi.defaultRouterOptions.regular,
-				...regularOptions,
+				synchronous: {
+					...RouterApi.defaultRouterOptions.regular.synchronous,
+					...regularOptions?.synchronous,
+				},
+				async: {
+					...RouterApi.defaultRouterOptions.regular.async,
+					...regularOptions?.async,
+				},
 			},
 			preAsync: {
 				...RouterApi.defaultRouterOptions.preAsync,

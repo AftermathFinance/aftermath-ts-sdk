@@ -6,7 +6,6 @@ import {
 	RouterAsyncSerializablePool,
 	RouterCompleteTradeRoute,
 	RouterExternalFee,
-	RouterSynchronousOptions,
 	RouterProtocolName,
 	RouterSerializableCompleteGraph,
 	Slippage,
@@ -15,8 +14,6 @@ import {
 	Url,
 	isRouterAsyncProtocolName,
 	isRouterAsyncSerializablePool,
-	RouterAsyncOptions,
-	RouterOptions,
 	AllRouterOptions,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
