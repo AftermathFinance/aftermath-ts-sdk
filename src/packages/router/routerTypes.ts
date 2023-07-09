@@ -27,7 +27,10 @@ import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
 import { BaySwapPoolObject } from "../external/baySwap/baySwapTypes";
 import { SuiswapPoolObject } from "../external/suiswap/suiswapTypes";
 import { BlueMovePoolObject } from "../external/blueMove/blueMoveTypes";
-import { FlowXPoolObject } from "../external/flowX/flowXTypes";
+import {
+	FlowXPoolObject,
+	isFlowXPoolObject,
+} from "../external/flowX/flowXTypes";
 
 // =========================================================================
 //  Name Only
@@ -125,7 +128,8 @@ export const isRouterAsyncSerializablePool = (
 	return (
 		isDeepBookPoolObject(pool) ||
 		isTurbosPoolObject(pool) ||
-		isCetusPoolObject(pool)
+		isCetusPoolObject(pool) ||
+		isFlowXPoolObject(pool)
 	);
 };
 
