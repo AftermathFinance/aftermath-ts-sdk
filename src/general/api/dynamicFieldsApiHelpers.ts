@@ -1,4 +1,4 @@
-import { DynamicFieldInfo, ObjectId } from "@mysten/sui.js";
+import { DynamicFieldInfo, DynamicFieldName, ObjectId } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	DynamicFieldObjectsWithCursor,
