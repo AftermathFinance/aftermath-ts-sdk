@@ -1,5 +1,5 @@
-import { SuiAddress } from "@mysten/sui.js/dist/types";
-import { AnyObjectType, BigIntAsString } from "../../../types";
+import { SuiAddress } from "@mysten/sui.js";
+import { AnyObjectType, BigIntAsString, CoinType } from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
 
 // =========================================================================
@@ -8,11 +8,11 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 
 export type RouterTradeEventOnChain = EventOnChain<{
 	swapper: SuiAddress;
-	type_in: AnyObjectType;
+	type_in: CoinType;
 	amount_in: BigIntAsString;
-	type_out: AnyObjectType;
+	type_out: CoinType;
 	amount_out: BigIntAsString;
 	// referrer: Option<SuiAddress>;
-	// router_fee: Option<BigIntAsString>;
-	// router_fee_recipient: Option<SuiAddress>;
+	router_fee: BigIntAsString;
+	router_fee_recipient: SuiAddress;
 }>;

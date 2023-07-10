@@ -1,10 +1,11 @@
-import { AnyObjectType } from "../../types";
+import { AnyObjectType, Balance, Slippage } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
 import { RpcApiHelpers } from "../api/rpcApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { Casting } from "./casting";
 
 export class Helpers {
 	// =========================================================================
@@ -190,6 +191,18 @@ export class Helpers {
 		);
 	};
 
+	public static bifilterAsync = async <ArrayType>(
+		array: ArrayType[],
+		func: (
+			item: ArrayType,
+			index: number,
+			arr: ArrayType[]
+		) => Promise<boolean>
+	): Promise<[trues: ArrayType[], falses: ArrayType[]]> => {
+		const predicates = await Promise.all(array.map(func));
+		return this.bifilter(array, (_, index) => predicates[index]);
+	};
+
 	public static filterObject = <Value>(
 		obj: Record<string, Value>,
 		predicate: (key: string, value: Value) => boolean
@@ -204,6 +217,25 @@ export class Helpers {
 				[key]: val,
 			};
 		}, {} as Record<string, Value>);
+
+	public static applySlippageBigInt = (
+		amount: Balance,
+		slippage: Slippage
+	) => {
+		return (
+			amount -
+			BigInt(
+				Math.floor(
+					Casting.normalizeSlippageTolerance(slippage) *
+						Number(amount)
+				)
+			)
+		);
+	};
+
+	public static applySlippage = (amount: number, slippage: Slippage) => {
+		return amount - Casting.normalizeSlippageTolerance(slippage) * amount;
+	};
 
 	// =========================================================================
 	//  Type Checking

@@ -41,15 +41,28 @@ export class CoinApi {
 				isGenerated: false,
 			};
 		} catch (error) {
-			if (this.Provider.Pools().isLpCoin(coin)) {
-				return this.createLpCoinMetadata({ lpCoinType: coin });
-			}
+			try {
+				const lpCoinType = coin;
+
+				await this.Provider.Pools().fetchPoolObjectIdForLpCoinType({
+					lpCoinType,
+				});
+				return this.createLpCoinMetadata({ lpCoinType });
+			} catch (e) {}
+
+			const maxSymbolLength = 10;
+			const maxPackageNameLength = 24;
 
 			const coinClass = new Coin(coin);
-			const symbol = coinClass.coinTypeSymbol;
-			const packageName = coinClass.coinTypePackageName;
+			const symbol = coinClass.coinTypeSymbol
+				.toUpperCase()
+				.slice(0, maxSymbolLength);
+			const packageName = coinClass.coinTypePackageName.slice(
+				0,
+				maxPackageNameLength
+			);
 			return {
-				symbol: symbol.toUpperCase(),
+				symbol,
 				id: null,
 				description: `${symbol} (${packageName})`,
 				name: symbol
@@ -211,7 +224,8 @@ export class CoinApi {
 				id: null,
 				description: coinDescription,
 				name: `Af Lp ${coinName}`,
-				decimals: Pools.constants.decimals.lpCoinDecimals,
+				// TODO: fetch this
+				decimals: Pools.constants.defaults.lpCoinDecimals,
 				iconUrl: null,
 				isGenerated: true,
 			};
@@ -221,7 +235,7 @@ export class CoinApi {
 				id: null,
 				description: "Aftermath Finance LP",
 				name: "Af Lp",
-				decimals: Pools.constants.decimals.lpCoinDecimals,
+				decimals: Pools.constants.defaults.lpCoinDecimals,
 				iconUrl: null,
 				isGenerated: true,
 			};

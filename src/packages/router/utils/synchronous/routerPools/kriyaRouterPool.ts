@@ -12,7 +12,10 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
 import { KriyaPoolObject } from "../../../../external/kriya/kriyaTypes";
@@ -77,7 +80,6 @@ class KriyaRouterPool implements RouterPoolInterface {
 		return 1;
 	};
 
-	// TODO: calc by taking into account fee amount
 	getTradeAmountOut = (inputs: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
@@ -86,6 +88,11 @@ class KriyaRouterPool implements RouterPoolInterface {
 	}): Balance => {
 		const coinInReserve = this.getPoolBalance(inputs.coinInType);
 		const coinOutReserve = this.getPoolBalance(inputs.coinOutType);
+
+		const coinInAmount = Number(inputs.coinInAmount);
+		const totalFee = Number(
+			this.pool.protocolFeePercent + this.pool.lpFeePercent
+		);
 
 		if (this.pool.isStable) {
 			const isCoinInX = KriyaApi.isCoinX({
@@ -98,7 +105,8 @@ class KriyaRouterPool implements RouterPoolInterface {
 				coinOutReserve,
 				Number(isCoinInX ? this.pool.scaleX : this.pool.scaleY),
 				Number(isCoinInX ? this.pool.scaleY : this.pool.scaleX),
-				Number(inputs.coinInAmount)
+				coinInAmount,
+				totalFee
 			);
 			return BigInt(Math.floor(recievedAmount));
 		}
@@ -106,33 +114,19 @@ class KriyaRouterPool implements RouterPoolInterface {
 		const { recievedAmount } = this.getSwapAmountUncorrelated(
 			coinInReserve,
 			coinOutReserve,
-			Number(inputs.coinInAmount)
+			coinInAmount,
+			totalFee
 		);
 		return BigInt(Math.floor(recievedAmount));
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}) => {
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()
 			.Kriya()
 			.tradeTx({
 				...inputs,
 				pool: this.pool,
-				coinInId: inputs.coinIn,
-				minAmountOut: BigInt(0),
 			});
 	};
 
@@ -208,7 +202,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 		amount: number,
 		totalFeeRate: number = 0
 	) => {
-		let amountToSwapA = amount / 2;
+		let amountToSwapA = amount;
 		let counter = 0;
 		let left = 0,
 			right = amount;
@@ -235,7 +229,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 				left = amountToSwapA;
 			}
 
-			amountToSwapA = (left + right) / 2;
+			// amountToSwapA = (left + right) / 2;
 			counter += 1;
 		}
 
@@ -251,7 +245,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 		amount: number,
 		totalFeeRate: number = 0
 	) => {
-		let amountToSwapA = amount / 2;
+		let amountToSwapA = amount;
 		let counter = 0;
 		let left = 0,
 			right = amount;
@@ -274,7 +268,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 				left = amountToSwapA;
 			}
 
-			amountToSwapA = (left + right) / 2;
+			// amountToSwapA = (left + right) / 2;
 			counter += 1;
 		}
 

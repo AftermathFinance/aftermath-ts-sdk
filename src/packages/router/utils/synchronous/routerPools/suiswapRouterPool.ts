@@ -12,7 +12,10 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { Pool } from "../../../../pools";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
@@ -96,28 +99,13 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		return this.getYToXAmount(inputs.coinInAmount);
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}) => {
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()
 			.Suiswap()
 			.tradeTx({
 				...inputs,
 				pool: this.pool,
-				coinInId: inputs.coinIn,
-				minAmountOut: BigInt(0),
 			});
 	};
 
@@ -282,7 +270,7 @@ class StableSwapHelper {
 	private static readonly FOUR = BigInt(4);
 	private static readonly _1E1 = BigInt(10 ** 1);
 
-	static compuateDNext = (
+	static computeDNext = (
 		dInit: bigint,
 		dProd: bigint,
 		sumX: bigint,
@@ -308,7 +296,7 @@ class StableSwapHelper {
 			dProd = (dProd * d) / (StableSwapHelper.TWO * b);
 			dProd = (dProd * d) / (StableSwapHelper.TWO * q);
 			const dPrev = d;
-			d = StableSwapHelper.compuateDNext(d, dProd, b + q, A);
+			d = StableSwapHelper.computeDNext(d, dProd, b + q, A);
 			const diff = d - dPrev;
 			if (
 				diff === StableSwapHelper.ONE ||

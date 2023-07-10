@@ -17,7 +17,11 @@ import { SuiFrensApi } from "../../packages/suiFrens/api/suiFrensApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
-import { RouterProtocolName } from "../../types";
+import {
+	PartialRouterOptions,
+	RouterProtocolName,
+	RouterSynchronousOptions,
+} from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
@@ -110,11 +114,15 @@ export class AftermathApi {
 
 	public Pools = () => new PoolsApi(this);
 	public Faucet = () => new FaucetApi(this);
-	public Router = (protocols?: RouterProtocolName[]) =>
-		new RouterApi(this, protocols);
 	public SuiFrens = () => new SuiFrensApi(this);
 	public Staking = () => new StakingApi(this);
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);
+
+	public Router = (
+		protocols?: RouterProtocolName[],
+		regularOptions?: PartialRouterOptions,
+		preAsyncOptions?: Partial<RouterSynchronousOptions>
+	) => new RouterApi(this, protocols, regularOptions, preAsyncOptions);
 }

@@ -10,8 +10,11 @@ import {
 	Url,
 	ApiRouterTradeEventsBody,
 	RouterTradeEvent,
+	RouterAsyncSerializablePool,
+	RouterSynchronousProtocolName,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { ObjectId } from "@mysten/sui.js";
 
 /**
  * @class Router Provider
@@ -67,6 +70,10 @@ export class Router extends Caller {
 		return this.fetchApi<RouterSupportedCoinPaths>("supported-coin-paths");
 	}
 
+	public async getSupportedCoins() {
+		return this.fetchApi<CoinType[]>("supported-coins");
+	}
+
 	/**
 	 * Queries current graph of router including all pools and coins.
 	 *
@@ -74,6 +81,16 @@ export class Router extends Caller {
 	 */
 	public async getGraph() {
 		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
+	}
+
+	public async getAsyncPools() {
+		return this.fetchApi<RouterAsyncSerializablePool[]>("async-pools");
+	}
+
+	public async getSynchronousPoolIds() {
+		return this.fetchApi<Record<RouterSynchronousProtocolName, ObjectId[]>>(
+			"synchronous-pool-ids"
+		);
 	}
 
 	/**

@@ -24,6 +24,21 @@ export class CoinGeckoApiHelpers {
 			"wrapped-solana": [
 				"0xb7844e289a8410e50fb3ca48d69eb9cf29e27d223ef90353fe1bd8e27ff8f3f8::coin::COIN",
 			],
+			"usd-coin-celer": [
+				"0x94e7a8e71830d2b34b3edaa195dc24c45d142584f06fa257b73af753d766e690::celer_usdc_coin::CELER_USDC_COIN",
+			],
+			"tether-usd-celer": [
+				"0x94e7a8e71830d2b34b3edaa195dc24c45d142584f06fa257b73af753d766e690::celer_usdt_coin::CELER_USDT_COIN",
+			],
+			"wrapped-moonbeam": [
+				"0x66f87084e49c38f76502d17f87d17f943f183bb94117561eb573e075fdc5ff75::coin::COIN",
+			],
+			"wrapped-fantom": [
+				"0x6081300950a4f1e2081580e919c210436a1bed49080502834950d31ee55a2396::coin::COIN",
+			],
+			celo: [
+				"0xa198f3be41cda8c07b3bf3fee02263526e535d682499806979a111e88a5a8d0f::coin::COIN",
+			],
 		},
 	};
 

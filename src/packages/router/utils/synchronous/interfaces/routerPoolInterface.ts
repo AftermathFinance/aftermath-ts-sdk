@@ -13,13 +13,14 @@ import {
 	SuiNetwork,
 	UniqueId,
 	Url,
+	isPoolObject,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import AftermathRouterPool from "../routerPools/aftermathRouterPool";
 import { AftermathApi } from "../../../../../general/providers";
 import { isDeepBookPoolObject } from "../../../../external/deepBook/deepBookTypes";
 import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
-import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
+import { isCetusPoolObject } from "../../../../external/cetus/cetusTypes";
 import CetusRouterPool from "../routerPools/cetusRouterPool";
 import { isTurbosPoolObject } from "../../../../external/turbos/turbosTypes";
 import TurbosRouterPool from "../routerPools/turbosRouterPool";
@@ -33,6 +34,24 @@ import { isSuiswapPoolObject } from "../../../../external/suiswap/suiswapTypes";
 import SuiswapRouterPool from "../routerPools/suiswapRouterPool";
 import { isBlueMovePoolObject } from "../../../../external/blueMove/blueMoveTypes";
 import BlueMoveRouterPool from "../routerPools/blueMoveRouterPool";
+import { isFlowXPoolObject } from "../../../../external/flowX/flowXTypes";
+import FlowXRouterPool from "../routerPools/flowXRouterPool";
+
+// =========================================================================
+//  Types
+// =========================================================================
+
+export interface RouterPoolTradeTxInputs {
+	provider: AftermathApi;
+	tx: TransactionBlock;
+	coinInId: ObjectId | TransactionArgument;
+	expectedCoinOutAmount: Balance;
+	minAmountOut: Balance;
+	coinInType: CoinType;
+	coinOutType: CoinType;
+	routerSwapCap: TransactionArgument;
+	routerSwapCapCoinType: CoinType;
+}
 
 // =========================================================================
 //  Creation
@@ -49,8 +68,10 @@ export function createRouterPool(inputs: {
 		? new DeepBookRouterPool(pool, network)
 		: isTurbosPoolObject(pool)
 		? new TurbosRouterPool(pool, network)
-		: isCetusRouterPoolObject(pool)
+		: isCetusPoolObject(pool)
 		? new CetusRouterPool(pool, network)
+		: isFlowXPoolObject(pool)
+		? new FlowXRouterPool(pool, network)
 		: isInterestPoolObject(pool)
 		? new InterestRouterPool(pool, network)
 		: isKriyaPoolObject(pool)
@@ -61,7 +82,14 @@ export function createRouterPool(inputs: {
 		? new SuiswapRouterPool(pool, network)
 		: isBlueMovePoolObject(pool)
 		? new BlueMoveRouterPool(pool, network)
-		: new AftermathRouterPool(pool, network);
+		: isPoolObject(pool)
+		? new AftermathRouterPool(pool, network)
+		: undefined;
+
+	if (!constructedPool)
+		throw new Error(
+			`Could not create router pool: ${JSON.stringify(pool)}`
+		);
 
 	return constructedPool;
 }
@@ -117,21 +145,7 @@ export interface RouterPoolInterface {
 		referrer?: SuiAddress;
 	}) => Balance;
 
-	tradeTx: (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		expectedCoinOutAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
-	}) => TransactionArgument;
+	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionArgument;
 
 	// =========================================================================
 	//  Functions

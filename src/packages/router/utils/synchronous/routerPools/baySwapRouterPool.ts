@@ -12,7 +12,10 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { Pool } from "../../../../pools";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
@@ -47,6 +50,8 @@ class BaySwapRouterPool implements RouterPoolInterface {
 
 	private static readonly FEE_SCALING = 1000000;
 	private static readonly ONE_E_8 = 100000000;
+
+	private static readonly BAY_SWAP_FEE_SCALING = 10000;
 
 	// =========================================================================
 	//  Public Interface
@@ -88,6 +93,16 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		const coinInReserve = this.getPoolBalance(inputs.coinInType);
 		const coinOutReserve = this.getPoolBalance(inputs.coinOutType);
 
+		const totalFeePercentage =
+			Number(this.pool.feePercent + this.pool.daoFeePercent) /
+			BaySwapRouterPool.BAY_SWAP_FEE_SCALING;
+
+		const coinInAmountMinusFee =
+			inputs.coinInAmount -
+			BigInt(
+				Math.floor(Number(inputs.coinInAmount) * totalFeePercentage)
+			);
+
 		if (this.pool.isStable) {
 			const isCoinInX = BaySwapApi.isCoinX({
 				pool: this.pool,
@@ -99,7 +114,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 				coinOutReserve,
 				Number(isCoinInX ? this.pool.xScale : this.pool.yScale),
 				Number(isCoinInX ? this.pool.yScale : this.pool.xScale),
-				Number(inputs.coinInAmount)
+				Number(coinInAmountMinusFee)
 			);
 			return BigInt(Math.floor(recievedAmount));
 		}
@@ -107,33 +122,18 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		const { recievedAmount } = this.getSwapAmountUncorrelated(
 			coinInReserve,
 			coinOutReserve,
-			Number(inputs.coinInAmount)
+			Number(coinInAmountMinusFee)
 		);
 		return BigInt(Math.floor(recievedAmount));
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}) => {
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()
 			.BaySwap()
 			.tradeTx({
 				...inputs,
 				pool: this.pool,
-				coinInId: inputs.coinIn,
-				minAmountOut: BigInt(0),
 			});
 	};
 
@@ -209,7 +209,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		amount: number,
 		totalFeeRate: number = 0
 	) => {
-		let amountToSwapA = amount / 2;
+		let amountToSwapA = amount;
 		let counter = 0;
 		let left = 0,
 			right = amount;
@@ -236,7 +236,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 				left = amountToSwapA;
 			}
 
-			amountToSwapA = (left + right) / 2;
+			// amountToSwapA = (left + right) / 2;
 			counter += 1;
 		}
 
@@ -252,7 +252,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		amount: number,
 		totalFeeRate: number = 0
 	) => {
-		let amountToSwapA = amount / 2;
+		let amountToSwapA = amount;
 		let counter = 0;
 		let left = 0,
 			right = amount;
@@ -275,7 +275,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 				left = amountToSwapA;
 			}
 
-			amountToSwapA = (left + right) / 2;
+			// amountToSwapA = (left + right) / 2;
 			counter += 1;
 		}
 

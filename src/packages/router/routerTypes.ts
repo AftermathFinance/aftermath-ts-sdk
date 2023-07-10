@@ -1,4 +1,4 @@
-import { SuiAddress } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
@@ -9,15 +9,28 @@ import {
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
-import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
+import {
+	DeepBookPoolObject,
+	isDeepBookPoolObject,
+} from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
-import { CetusPoolObject } from "../external/cetus/cetusTypes";
-import { TurbosPoolObject } from "../external/turbos/turbosTypes";
+import {
+	CetusPoolObject,
+	isCetusPoolObject,
+} from "../external/cetus/cetusTypes";
+import {
+	TurbosPoolObject,
+	isTurbosPoolObject,
+} from "../external/turbos/turbosTypes";
 import { InterestPoolObject } from "../external/interest/interestTypes";
 import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
 import { BaySwapPoolObject } from "../external/baySwap/baySwapTypes";
 import { SuiswapPoolObject } from "../external/suiswap/suiswapTypes";
 import { BlueMovePoolObject } from "../external/blueMove/blueMoveTypes";
+import {
+	FlowXPoolObject,
+	isFlowXPoolObject,
+} from "../external/flowX/flowXTypes";
 
 // =========================================================================
 //  Name Only
@@ -63,22 +76,27 @@ export type RouterProtocolName =
 
 export type RouterSynchronousSerializablePool =
 	| PoolObject
-	| DeepBookPoolObject
 	| InterestPoolObject
 	| KriyaPoolObject
 	| BaySwapPoolObject
 	| SuiswapPoolObject
 	| BlueMovePoolObject;
 
+export const isRouterSynchronousSerializablePool = (
+	pool: RouterSerializablePool
+): pool is RouterSynchronousSerializablePool => {
+	return !isRouterAsyncSerializablePool(pool);
+};
+
 const RouterSynchronousProtocolNames = [
 	"Aftermath",
-	"DeepBook",
 	"Interest",
 	"Kriya",
 	"BaySwap",
 	"Suiswap",
 	"BlueMove",
 ] as const;
+
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];
 
@@ -89,13 +107,38 @@ export const isRouterSynchronousProtocolName = (
 	return RouterSynchronousProtocolNames.includes(protocolName);
 };
 
+export type SynchronousProtocolsToPoolObjectIds = Record<
+	Partial<RouterSynchronousProtocolName>,
+	ObjectId[]
+>;
+
 // =========================================================================
 //  Router Async Pools
 // =========================================================================
 
-export type RouterAsyncSerializablePool = CetusPoolObject | TurbosPoolObject;
+export type RouterAsyncSerializablePool =
+	| CetusPoolObject
+	| TurbosPoolObject
+	| DeepBookPoolObject
+	| FlowXPoolObject;
 
-const RouterAsyncProtocolNames = ["Cetus", "Turbos"] as const;
+export const isRouterAsyncSerializablePool = (
+	pool: RouterSerializablePool
+): pool is RouterAsyncSerializablePool => {
+	return (
+		isDeepBookPoolObject(pool) ||
+		isTurbosPoolObject(pool) ||
+		isCetusPoolObject(pool) ||
+		isFlowXPoolObject(pool)
+	);
+};
+
+const RouterAsyncProtocolNames = [
+	"Cetus",
+	"Turbos",
+	"DeepBook",
+	"FlowX",
+] as const;
 export type RouterAsyncProtocolName = (typeof RouterAsyncProtocolNames)[number];
 
 export const isRouterAsyncProtocolName = (
@@ -153,11 +196,30 @@ export interface RouterSerializableCompleteGraph {
 
 export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
 
-export interface RouterOptions {
+export interface RouterSynchronousOptions {
 	maxRouteLength: number;
 	tradePartitionCount: number;
 	minRoutesToCheck: number;
 	maxGasCost: bigint;
+}
+
+export interface RouterAsyncOptions {
+	tradePartitionCount: number;
+	maxAsyncPoolsPerProtocol: number;
+}
+
+interface RouterOptions {
+	synchronous: RouterSynchronousOptions;
+	async: RouterAsyncOptions;
+}
+export interface PartialRouterOptions {
+	synchronous?: Partial<RouterSynchronousOptions>;
+	async?: Partial<RouterAsyncOptions>;
+}
+
+export interface AllRouterOptions {
+	regular: RouterOptions;
+	preAsync: RouterSynchronousOptions;
 }
 
 export type RouterSerializablePoolsById = Record<
