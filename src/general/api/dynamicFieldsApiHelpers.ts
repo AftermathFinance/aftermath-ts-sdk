@@ -29,7 +29,7 @@ export class DynamicFieldsApiHelpers {
 	// =========================================================================
 
 	// =========================================================================
-	//  Fetching
+	//  Dynamic Fields
 	// =========================================================================
 
 	public fetchCastDynamicFieldsOfTypeWithCursor = async <ObjectType>(inputs: {
@@ -184,5 +184,16 @@ export class DynamicFieldsApiHelpers {
 			dynamicFields,
 			nextCursor,
 		};
+	};
+
+	// =========================================================================
+	//  Dynamic Field Objects
+	// =========================================================================
+
+	public fetchDynamicFieldObject = (inputs: {
+		parentId: ObjectId;
+		name: string | DynamicFieldName;
+	}) => {
+		return this.Provider.provider.getDynamicFieldObject(inputs);
 	};
 }

@@ -128,6 +128,7 @@ export class DeepBookApi
 					},
 					eventFromEventOnChain: (eventOnChain) => {
 						return {
+							objectType: eventOnChain.type,
 							objectId: eventOnChain.parsedJson.pool_id,
 							baseCoinType: Helpers.addLeadingZeroesToType(
 								"0x" + eventOnChain.parsedJson.base_asset.name

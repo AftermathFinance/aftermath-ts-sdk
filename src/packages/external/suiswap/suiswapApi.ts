@@ -229,8 +229,8 @@ export class SuiswapApi
 		const fields = getObjectFields(data) as SuiswapPoolFieldsOnChain;
 
 		return {
-			// objectType,
-			objectId: getObjectId(data),
+			objectType,
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			version: BigInt(fields.version),
 			owner: fields.owner,
 			index: BigInt(fields.index),

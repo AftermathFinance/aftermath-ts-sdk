@@ -30,6 +30,7 @@ export class Sui extends Caller {
 	//  Chain Info
 	// =========================================================================
 
+	// TODO: remove this (duplicate of system state info)
 	public async getCurrentEpoch(): Promise<EpochTimeStamp> {
 		return this.fetchApi("epoch");
 	}

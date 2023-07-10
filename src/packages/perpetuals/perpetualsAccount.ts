@@ -72,4 +72,5 @@ export class PerpetualsAccount extends Caller {
 			return undefined;
 		}
 	}
+
 }

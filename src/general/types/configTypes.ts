@@ -34,10 +34,12 @@ interface OptionalConfigAddresses {
 export interface FaucetAddresses {
 	packages: {
 		faucet: SuiAddress;
+		suiFrensGenesisWrapper: SuiAddress;
 	};
 	objects: {
 		faucet: ObjectId;
 		faucetRegistry: ObjectId;
+		suiFrensMint: ObjectId;
 	};
 }
 
@@ -80,12 +82,17 @@ export interface UtilitiesAddresses {
 
 export interface SuiFrensAddresses {
 	packages: {
-		suiFren: SuiAddress;
-		suiFrenVault: SuiAddress;
+		suiFrens: SuiAddress;
+		accessories: SuiAddress;
+		suiFrensVault: SuiAddress;
+		suiFrensVaultCapyLabsExtension: SuiAddress;
 	};
 	objects: {
-		suiFrenVault: ObjectId;
-		suiFrenRegistry: ObjectId;
+		capyLabsApp: ObjectId;
+		suiFrensVault: ObjectId;
+		suiFrensVaultStateV1: ObjectId;
+		suiFrensVaultStateV1MetadataTable: ObjectId;
+		suiFrensVaultCapyLabsExtension: ObjectId;
 	};
 }
 

@@ -32,11 +32,18 @@ export class Helpers {
 	): AnyObjectType => {
 		const expectedTypeLength = 64;
 
-		const splitType = type.replace("0x", "").split("::");
+		let strippedType = type.replace("0x", "");
+		let typeSuffix = "";
 
-		const typeSuffix = "::" + splitType[1] + "::" + splitType[2];
+		if (strippedType.includes("::")) {
+			const splitType = strippedType.replace("0x", "").split("::");
 
-		const strippedType = splitType[0];
+			typeSuffix = splitType
+				.slice(1)
+				.reduce((acc, str) => acc + "::" + str, "");
+			strippedType = splitType[0];
+		}
+
 		const typeLength = strippedType.length;
 
 		if (typeLength > expectedTypeLength)
@@ -83,6 +90,9 @@ export class Helpers {
 		mulBBN: (a: bigint, b: bigint): number => Number(a * b),
 		mulBBB: (a: bigint, b: bigint): bigint => a * b,
 	};
+
+	public static maxBigInt = (...args: bigint[]) =>
+		args.reduce((m, e) => (e > m ? e : m));
 
 	// =========================================================================
 	//  Display

@@ -249,8 +249,8 @@ export class BlueMoveApi
 		const fields = getObjectFields(data) as BlueMovePoolFieldsOnChain;
 
 		return {
-			// objectType,
-			objectId: getObjectId(data),
+			objectType,
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
 			tokenYValue: BigInt(fields.token_y),
@@ -284,8 +284,8 @@ export class BlueMoveApi
 		const fields = getObjectFields(data) as BlueMoveStablePoolFieldsOnChain;
 
 		return {
-			// objectType,
-			objectId: getObjectId(data),
+			objectType,
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
 			tokenYValue: BigInt(fields.token_y),

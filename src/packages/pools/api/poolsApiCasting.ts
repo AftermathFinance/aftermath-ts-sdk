@@ -3,6 +3,7 @@ import {
 	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
+	getObjectType,
 } from "@mysten/sui.js";
 import {
 	PoolCoins,
@@ -31,6 +32,8 @@ export class PoolsApiCasting {
 		suiObject: SuiObjectResponse
 	): PoolObject => {
 		const objectId = getObjectId(suiObject);
+		const objectType = getObjectType(suiObject);
+		if (!objectType) throw new Error("no object type found");
 
 		const poolFieldsOnChain = getObjectFields(
 			suiObject
@@ -76,6 +79,7 @@ export class PoolsApiCasting {
 		);
 
 		return {
+			objectType,
 			objectId,
 			lpCoinType,
 			name: poolFieldsOnChain.name,

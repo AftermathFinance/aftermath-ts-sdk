@@ -228,7 +228,7 @@ export class KriyaApi
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			tokenYValue: BigInt(fields.token_y),
 			tokenXValue: BigInt(fields.token_x),
 			lspSupplyValue: BigInt(fields.lsp_supply.fields.value),
