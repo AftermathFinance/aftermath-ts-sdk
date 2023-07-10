@@ -5,29 +5,29 @@ import {
 	RouterPoolInterface,
 	RouterPoolTradeTxInputs,
 } from "../interfaces/routerPoolInterface";
-import { DeepBookPoolObject } from "../../../../external/deepBook/deepBookTypes";
+import { FlowXPoolObject } from "../../../../external/flowX/flowXTypes";
 
-class DeepBookRouterPool implements RouterPoolInterface {
+class FlowXRouterPool implements RouterPoolInterface {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: DeepBookPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: FlowXPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
-		this.coinTypes = [pool.baseCoinType, pool.quoteCoinType];
+		this.coinTypes = [pool.coinTypeX, pool.coinTypeY];
 	}
 
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
-	readonly protocolName = "DeepBook";
+	readonly protocolName = "FlowX";
 	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = true;
 
-	readonly pool: DeepBookPoolObject;
+	readonly pool: FlowXPoolObject;
 	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
@@ -54,13 +54,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
-		return inputs.provider
-			.Router()
-			.DeepBook()
-			.tradeTx({
-				...inputs,
-				pool: this.pool,
-			});
+		return inputs.provider.Router().FlowX().tradeTx(inputs);
 	};
 
 	getTradeAmountIn = (_: {
@@ -77,14 +71,14 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		coinOutAmount: Balance;
-	}): RouterPoolInterface => new DeepBookRouterPool(this.pool, this.network);
+	}): RouterPoolInterface => new FlowXRouterPool(this.pool, this.network);
 
 	getUpdatedPoolAfterTrade = (_: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		coinOutAmount: Balance;
-	}): RouterPoolInterface => new DeepBookRouterPool(this.pool, this.network);
+	}): RouterPoolInterface => new FlowXRouterPool(this.pool, this.network);
 }
 
-export default DeepBookRouterPool;
+export default FlowXRouterPool;

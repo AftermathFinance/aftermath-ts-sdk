@@ -115,6 +115,7 @@ export interface OptionalRouterAddresses {
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
+	flowX: FlowXAddresses;
 	interest: InterestAddresses;
 	kriya: KriyaAddresses;
 	baySwap: BaySwapAddresses;
@@ -162,6 +163,17 @@ export interface TurbosAddresses {
 	objects: {
 		versioned: ObjectId;
 		poolsTable: ObjectId;
+		wrapperApp: ObjectId;
+	};
+}
+
+export interface FlowXAddresses {
+	packages: {
+		wrapper: SuiAddress;
+	};
+	objects: {
+		container: ObjectId;
+		pairsBag: ObjectId;
 		wrapperApp: ObjectId;
 	};
 }
