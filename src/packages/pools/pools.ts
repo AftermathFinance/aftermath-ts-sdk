@@ -275,9 +275,7 @@ export class Pools extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	public static isPossibleLpCoinType = async (inputs: {
-		lpCoinType: CoinType;
-	}) => {
+	public static isPossibleLpCoinType = (inputs: { lpCoinType: CoinType }) => {
 		const { lpCoinType } = inputs;
 		return (
 			lpCoinType.split("::").length === 3 &&

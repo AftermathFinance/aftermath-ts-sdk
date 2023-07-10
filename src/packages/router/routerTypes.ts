@@ -27,6 +27,10 @@ import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
 import { BaySwapPoolObject } from "../external/baySwap/baySwapTypes";
 import { SuiswapPoolObject } from "../external/suiswap/suiswapTypes";
 import { BlueMovePoolObject } from "../external/blueMove/blueMoveTypes";
+import {
+	FlowXPoolObject,
+	isFlowXPoolObject,
+} from "../external/flowX/flowXTypes";
 
 // =========================================================================
 //  Name Only
@@ -72,7 +76,6 @@ export type RouterProtocolName =
 
 export type RouterSynchronousSerializablePool =
 	| PoolObject
-	// | DeepBookPoolObject
 	| InterestPoolObject
 	| KriyaPoolObject
 	| BaySwapPoolObject
@@ -87,7 +90,6 @@ export const isRouterSynchronousSerializablePool = (
 
 const RouterSynchronousProtocolNames = [
 	"Aftermath",
-	// "DeepBook",
 	"Interest",
 	"Kriya",
 	"BaySwap",
@@ -117,7 +119,8 @@ export type SynchronousProtocolsToPoolObjectIds = Record<
 export type RouterAsyncSerializablePool =
 	| CetusPoolObject
 	| TurbosPoolObject
-	| DeepBookPoolObject;
+	| DeepBookPoolObject
+	| FlowXPoolObject;
 
 export const isRouterAsyncSerializablePool = (
 	pool: RouterSerializablePool
@@ -125,11 +128,17 @@ export const isRouterAsyncSerializablePool = (
 	return (
 		isDeepBookPoolObject(pool) ||
 		isTurbosPoolObject(pool) ||
-		isCetusPoolObject(pool)
+		isCetusPoolObject(pool) ||
+		isFlowXPoolObject(pool)
 	);
 };
 
-const RouterAsyncProtocolNames = ["Cetus", "Turbos", "DeepBook"] as const;
+const RouterAsyncProtocolNames = [
+	"Cetus",
+	"Turbos",
+	"DeepBook",
+	"FlowX",
+] as const;
 export type RouterAsyncProtocolName = (typeof RouterAsyncProtocolNames)[number];
 
 export const isRouterAsyncProtocolName = (

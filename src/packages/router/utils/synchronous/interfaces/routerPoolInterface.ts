@@ -34,6 +34,8 @@ import { isSuiswapPoolObject } from "../../../../external/suiswap/suiswapTypes";
 import SuiswapRouterPool from "../routerPools/suiswapRouterPool";
 import { isBlueMovePoolObject } from "../../../../external/blueMove/blueMoveTypes";
 import BlueMoveRouterPool from "../routerPools/blueMoveRouterPool";
+import { isFlowXPoolObject } from "../../../../external/flowX/flowXTypes";
+import FlowXRouterPool from "../routerPools/flowXRouterPool";
 
 // =========================================================================
 //  Types
@@ -68,6 +70,8 @@ export function createRouterPool(inputs: {
 		? new TurbosRouterPool(pool, network)
 		: isCetusPoolObject(pool)
 		? new CetusRouterPool(pool, network)
+		: isFlowXPoolObject(pool)
+		? new FlowXRouterPool(pool, network)
 		: isInterestPoolObject(pool)
 		? new InterestRouterPool(pool, network)
 		: isKriyaPoolObject(pool)

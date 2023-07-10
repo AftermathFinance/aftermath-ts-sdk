@@ -70,6 +70,10 @@ export class Router extends Caller {
 		return this.fetchApi<RouterSupportedCoinPaths>("supported-coin-paths");
 	}
 
+	public async getSupportedCoins() {
+		return this.fetchApi<CoinType[]>("supported-coins");
+	}
+
 	/**
 	 * Queries current graph of router including all pools and coins.
 	 *

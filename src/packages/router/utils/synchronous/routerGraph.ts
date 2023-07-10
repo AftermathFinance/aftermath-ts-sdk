@@ -253,10 +253,10 @@ export class RouterGraph {
 	// =========================================================================
 
 	// TODO: do this more efficiently
-	public static supportedCoinPathsFromGraph = async (inputs: {
+	public static supportedCoinPathsFromGraph = (inputs: {
 		graph: RouterSerializableCompleteGraph;
 		maxRouteLength: number;
-	}): Promise<RouterSupportedCoinPaths> => {
+	}): RouterSupportedCoinPaths => {
 		const nodes = Object.values(inputs.graph.coinNodes);
 		const pools = inputs.graph.pools;
 
@@ -320,6 +320,12 @@ export class RouterGraph {
 			coinPaths2: unhoppableCoinPaths,
 		});
 		return mergedCoinPaths;
+	};
+
+	public static supportedCoinsFromGraph = (inputs: {
+		graph: RouterSerializableCompleteGraph;
+	}): CoinType[] => {
+		return Object.keys(inputs.graph.coinNodes);
 	};
 
 	// =========================================================================

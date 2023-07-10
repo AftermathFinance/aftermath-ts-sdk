@@ -27,6 +27,7 @@ import { Coin } from "../../coin";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
+import { RouterAsyncApiHelpers } from "../../router/api/routerAsyncApiHelpers";
 
 export class DeepBookApi
 	implements RouterAsyncApiInterface<DeepBookPoolObject>
@@ -266,130 +267,40 @@ export class DeepBookApi
 	//  Inspections
 	// =========================================================================
 
-	public fetchCalcTradeAmountOut = async (inputs: {
+	public fetchCalcTradeAmountOut = (inputs: {
 		pool: PartialDeepBookPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<Balance> => {
-		const tx = new TransactionBlock();
-		tx.setSender(Helpers.rpc.constants.devInspectSigner);
-
-		const coinInStructName = new Coin(inputs.coinInType).coinTypeSymbol;
-		const coinOutStructName = new Coin(inputs.coinOutType).coinTypeSymbol;
-		this.registerTradeBcsStructs({
-			coinStructNames: [coinInStructName, coinOutStructName],
-		});
-
-		/*
-
-		struct RouterFeeMetadata has copy, drop {
-			recipient: address,
-			fee: u64,
-		}
-
-		struct SwapMetadata has copy, drop {
-			type: vector<u8>,
-			amount: u64,
-		}
-		
-		struct RouterSwapCap<phantom CS> {
-			coin_in: Coin<CS>,
-			min_amount_out: u64,
-			first_swap: SwapMetadata,
-			previous_swap: SwapMetadata,
-			final_swap: SwapMetadata,
-			router_fee_metadata: RouterFeeMetadata,
-			referrer: Option<address>,
-		}
-
-		*/
-
-		const coinInBytes = bcs
-			.ser(`Coin<${coinInStructName}>`, {
-				id: {
-					id: {
-						bytes: "0x0000000000000000000000000000000000000000000000000000000000000123",
-					},
-				},
-				balance: {
-					value: inputs.coinInAmount,
-				},
-			})
-			.toBytes();
-
-		const routerSwapCapBytes = bcs
-			.ser(`RouterSwapCap<${coinInStructName}>`, {
-				coin_in: {
-					id: {
-						id: {
-							bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
-						},
-					},
-					balance: {
-						value: inputs.coinInAmount,
-					},
-				},
-				min_amount_out: 0,
-				first_swap: {
-					type: Casting.u8VectorFromString(
-						inputs.coinInType.replace("0x", "")
-					),
-					amount: inputs.coinInAmount,
-				},
-				previous_swap: {
-					type: Casting.u8VectorFromString(
-						inputs.coinInType.replace("0x", "")
-					),
-					amount: inputs.coinInAmount,
-				},
-				final_swap: {
-					type: Casting.u8VectorFromString(
-						inputs.coinOutType.replace("0x", "")
-					),
-					amount: 0,
-				},
-				router_fee_metadata: {
-					recipient:
-						"0x0000000000000000000000000000000000000000000000000000000000000000",
-					fee: 0,
-				},
-				referrer: {
-					None: true,
-				},
-			})
-			.toBytes();
-
-		const commandInputs = {
-			tx,
+		return RouterAsyncApiHelpers.devInspectTradeAmountOut({
 			...inputs,
-			routerSwapCapCoinType: inputs.coinInType,
-			poolObjectId: inputs.pool.objectId,
-			lotSize: inputs.pool.lotSize,
-			coinInBytes,
-			routerSwapCapBytes,
-		};
+			Provider: this.Provider,
+			devInspectTx: (txInputs: {
+				tx: TransactionBlock;
+				coinInBytes: Uint8Array;
+				routerSwapCapBytes: Uint8Array;
+			}) => {
+				const commandInputs = {
+					...inputs,
+					...txInputs,
+					routerSwapCapCoinType: inputs.coinInType,
+					poolObjectId: inputs.pool.objectId,
+					lotSize: inputs.pool.lotSize,
+				};
 
-		if (
-			DeepBookApi.isBaseCoinType({
-				...inputs,
-				coinType: inputs.coinInType,
-			})
-		) {
-			await this.tradeBaseToQuoteDevInspectTx(commandInputs);
-		} else {
-			await this.tradeQuoteToBaseDevInspectTx(commandInputs);
-		}
-
-		const resultBytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
-
-		const data = bcs.de(
-			`Coin<${coinOutStructName}>`,
-			new Uint8Array(resultBytes)
-		);
-
-		return BigInt(data.balance.value);
+				if (
+					DeepBookApi.isBaseCoinType({
+						...inputs,
+						coinType: inputs.coinInType,
+					})
+				) {
+					return this.tradeBaseToQuoteDevInspectTx(commandInputs);
+				} else {
+					return this.tradeQuoteToBaseDevInspectTx(commandInputs);
+				}
+			},
+		});
 	};
 
 	// =========================================================================
@@ -933,75 +844,6 @@ export class DeepBookApi
 				tx.pure(inputs.coinInBytes),
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
-		});
-	};
-
-	private registerTradeBcsStructs = (inputs: {
-		coinStructNames: CoinType[];
-	}) => {
-		for (const coinStructName of inputs.coinStructNames) {
-			bcs.registerStructType(coinStructName, {});
-		}
-
-		bcs.registerStructType("ID", {
-			bytes: BCS.ADDRESS,
-		});
-
-		bcs.registerStructType("UID", {
-			id: "ID",
-		});
-
-		bcs.registerStructType(`Balance<${inputs.coinStructNames[0]}>`, {
-			value: BCS.U64,
-		});
-
-		bcs.registerStructType(`Coin<${inputs.coinStructNames[0]}>`, {
-			id: "UID",
-			balance: `Balance<${inputs.coinStructNames[0]}>`,
-		});
-
-		/*
-
-		struct RouterFeeMetadata has copy, drop {
-			recipient: address,
-			fee: u64,
-		}
-
-		struct SwapMetadata has copy, drop {
-			type: vector<u8>,
-			amount: u64,
-		}
-		
-		struct RouterSwapCap<phantom CS> {
-			coin_in: Coin<CS>,
-			min_amount_out: u64,
-			first_swap: SwapMetadata,
-			previous_swap: SwapMetadata,
-			final_swap: SwapMetadata,
-			router_fee_metadata: RouterFeeMetadata,
-			referrer: Option<address>,
-		}
-
-		*/
-
-		bcs.registerStructType("RouterFeeMetadata", {
-			recipient: BCS.ADDRESS,
-			fee: BCS.U64,
-		});
-
-		bcs.registerStructType("SwapMetadata", {
-			type: "vector<u8>",
-			amount: BCS.U64,
-		});
-
-		bcs.registerStructType(`RouterSwapCap<${inputs.coinStructNames[0]}>`, {
-			coin_in: `Coin<${inputs.coinStructNames[0]}>`,
-			min_amount_out: BCS.U64,
-			first_swap: "SwapMetadata",
-			previous_swap: "SwapMetadata",
-			final_swap: "SwapMetadata",
-			router_fee_metadata: "RouterFeeMetadata",
-			referrer: "Option<address>",
 		});
 	};
 

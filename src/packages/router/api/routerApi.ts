@@ -30,6 +30,7 @@ import { KriyaApi } from "../../external/kriya/kriyaApi";
 import { BaySwapApi } from "../../external/baySwap/baySwapApi";
 import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
+import { FlowXApi } from "../../external/flowX/flowXApi";
 
 export class RouterApi {
 	// =========================================================================
@@ -107,6 +108,7 @@ export class RouterApi {
 	public DeepBook = () => new DeepBookApi(this.Provider);
 	public Cetus = () => new CetusApi(this.Provider);
 	public Turbos = () => new TurbosApi(this.Provider);
+	public FlowX = () => new FlowXApi(this.Provider);
 	public Interest = () => new InterestApi(this.Provider);
 	public Kriya = () => new KriyaApi(this.Provider);
 	public BaySwap = () => new BaySwapApi(this.Provider);
@@ -149,7 +151,7 @@ export class RouterApi {
 	//  Coin Paths
 	// =========================================================================
 
-	public supportedCoinPathsFromGraph = async (inputs: {
+	public supportedCoinPathsFromGraph = (inputs: {
 		graph: RouterSerializableCompleteGraph;
 	}) => {
 		const maxRouteLength = this.options.regular.synchronous.maxRouteLength;
@@ -157,6 +159,12 @@ export class RouterApi {
 			...inputs,
 			maxRouteLength,
 		});
+	};
+
+	public supportedCoinsFromGraph = (inputs: {
+		graph: RouterSerializableCompleteGraph;
+	}) => {
+		return RouterGraph.supportedCoinsFromGraph(inputs);
 	};
 
 	// =========================================================================
