@@ -7,6 +7,7 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, PackageId } from "../../types";
+import { Helpers } from "../utils";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -75,7 +76,7 @@ export class ObjectsApiHelpers {
 			await this.Provider.provider.getOwnedObjects({
 				owner: walletAddress,
 				filter: {
-					StructType: objectType,
+					StructType: Helpers.stripLeadingZeroesFromType(objectType),
 				},
 				options: {
 					showContent: true,

@@ -83,6 +83,7 @@ export interface UtilitiesAddresses {
 export interface SuiFrensAddresses {
 	packages: {
 		suiFrens: SuiAddress;
+		suiFrensBullshark: SuiAddress;
 		accessories: SuiAddress;
 		suiFrensVault: SuiAddress;
 		suiFrensVaultCapyLabsExtension: SuiAddress;
