@@ -25,6 +25,9 @@ import {
 	PerpetualsInnerNode,
 	PerpetualsOuterNode,
 	IFixed,
+    PerpetualsAccountStruct,
+    PerpetualsPosition,
+    TableV,
 } from "../perpetualsTypes";
 import PriorityQueue from "priority-queue-typescript";
 import {
@@ -41,6 +44,7 @@ import {
 	isMarketManagerParamsKeyType,
 	isMarketManagerStateKeyType,
 } from "../utils/helpers";
+import { Table } from "../../../general/types";
 
 export class PerpetualsCasting {
 	// =========================================================================
@@ -58,6 +62,36 @@ export class PerpetualsCasting {
 			nextAccountId: objectFields.next_account_id,
 		};
 	};
+
+	public static accountFromSuiDynamicFieldObjectResponse = (
+		data: SuiObjectResponse
+	): PerpetualsAccountStruct => {
+		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const value = objectFields.value.fields;
+		return {
+			collateral: value.collateral,
+			marketIds: value.market_ids.map((id: any) => BigInt(id)),
+			positions: value.positions.map(
+				(p: any) => PerpetualsCasting.positionFromRawData(p)
+			),
+		};
+	};
+
+	public static positionFromRawData = (
+		data: any
+	): PerpetualsPosition => {
+		data = data.fields;
+		return {
+			baseAssetAmount: data.base_asset_amount,
+			quoteAssetNotionalAmount: data.quote_asset_notional_amount,
+			cumFundingRateLong: data.cum_funding_rate_long,
+			cumFundingRateShort: data.cum_funding_rate_short,
+			asks: PerpetualsCasting.critBitTreeFromAny<bigint>(data.asks),
+			bids: PerpetualsCasting.critBitTreeFromAny<bigint>(data.bids),
+			asksQuantity: data.asks_quantity,
+			bidsQuantity: data.bids_quantity,
+		}
+	}
 
 	// =========================================================================
 	//  Market Manager
@@ -154,19 +188,47 @@ export class PerpetualsCasting {
 	// =========================================================================
 	//  Orderbook
 	// =========================================================================
-	public static critBitTreeFromAny = (
-		data: any
-	): PerpetualsCritBitTree<PerpetualsOrder> => {
+
+	public static outerNodeFromSuiDynamicFieldObjectResponse = (
+		data: SuiObjectResponse
+	): PerpetualsOuterNode<bigint> => {
+		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const value = objectFields.value.fields;
 		return {
-			root: BigInt(data.fields.root),
-			innerNode: PerpetualsCasting.innerNodeFromAny(
-				data.fields.inner_nodes
-			),
-			outerNode: PerpetualsCasting.outerNodeFromAny(
-				data.fields.outer_nodes
-			),
+			key: BigInt(value.key),
+			value: BigInt(value.value),
+			parentIndex: BigInt(value.parent_index),
 		};
 	};
+
+	public static critBitTreeFromAny<T>(
+		data: any
+	): PerpetualsCritBitTree<T> {
+		data = data.fields;
+		return {
+			root: BigInt(data.root),
+			innerNodes: PerpetualsCasting.tableVFromAny<PerpetualsInnerNode>(
+				data.inner_nodes
+			),
+			outerNodes: PerpetualsCasting
+				.tableVFromAny<PerpetualsOuterNode<T>>(
+					data.outer_nodes
+				),
+		};
+	};
+
+	public static tableVFromAny<T>(data: any): TableV<T> {
+		return {
+			contents: PerpetualsCasting.tableFromAny<number, T>(data.fields.contents),
+		};
+	}
+
+	public static tableFromAny<K, V>(data: any): Table<K, V> {
+		return {
+			objectId: data.fields.id.id,
+			size: data.fields.size,
+		}
+	}
 
 	public static innerNodeFromAny = (data: any): PerpetualsInnerNode[] => {
 		const innerNodes: PerpetualsInnerNode[] = [];
@@ -209,53 +271,54 @@ export class PerpetualsCasting {
 			objectId: data.id.id,
 			lotSize: BigInt(data.lot_size),
 			tickSize: BigInt(data.tick_size),
-			asks: PerpetualsCasting.critBitTreeFromAny(data.asks),
-			bids: PerpetualsCasting.critBitTreeFromAny(data.bids),
+			asks: PerpetualsCasting.critBitTreeFromAny<PerpetualsOrder>(data.asks),
+			bids: PerpetualsCasting.critBitTreeFromAny<PerpetualsOrder>(data.bids),
 			minAsk: BigInt(data.min_ask),
 			minBid: BigInt(data.max_bid),
 			counter: BigInt(data.counter),
 		};
 	};
 
-	public static priorityQueueOfOrdersFromCritBitTree = (
+	public static priorityQueueOfOrdersFromCritBitTree = async (
 		tree: PerpetualsCritBitTree<PerpetualsOrder>,
 		direction: boolean
-	): PriorityQueue<PerpetualsOrderCasted> => {
+	): Promise<PriorityQueue<PerpetualsOrderCasted>> => {
 		const comparator: Function = direction
 			? compareAskOrders
 			: compareBidOrders;
 		const priorityQueue = new PriorityQueue<PerpetualsOrderCasted>(
-			tree.outerNode.length,
+			tree.outerNodes.contents.size,
 			comparator
 		);
-		for (const node of tree.outerNode) {
-			const orderId = node.key;
-			const order = node.value;
-			const priceOfOrder = price(orderId);
-			const counter = direction
-				? counterAsk(orderId)
-				: counterBid(orderId);
-			const insertedOrder = {
-				accountId: order.accountId,
-				size: order.size,
-				price: priceOfOrder,
-				counter: counter,
-			} as PerpetualsOrderCasted;
-			priorityQueue.add(insertedOrder);
-		}
+		// TODO: implement fetching the table vec from the network
+		// for (const node of tree.outerNodes) {
+		// 	const orderId = node.key;
+		// 	const order = node.value;
+		// 	const priceOfOrder = price(orderId);
+		// 	const counter = direction
+		// 		? counterAsk(orderId)
+		// 		: counterBid(orderId);
+		// 	const insertedOrder = {
+		// 		accountId: order.accountId,
+		// 		size: order.size,
+		// 		price: priceOfOrder,
+		// 		counter: counter,
+		// 	} as PerpetualsOrderCasted;
+		// 	priorityQueue.add(insertedOrder);
+		// }
 		return priorityQueue;
 	};
 
-	public static priorityQueuesOfOrdersFromOrderbook = (
+	public static priorityQueuesOfOrdersFromOrderbook = async (
 		orderbook: PerpetualsOrderbookObject
-	): PriorityQueue<PerpetualsOrderCasted>[] => {
+	): Promise<PriorityQueue<PerpetualsOrderCasted>[]> => {
 		const priorityQueueOfAskOrders =
-			PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
+			await PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
 				orderbook.asks,
 				ASK
 			);
 		const priorityQueueOfBidOrders =
-			PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
+			await PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
 				orderbook.bids,
 				BID
 			);

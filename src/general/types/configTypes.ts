@@ -1,4 +1,5 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
+import { CoinType } from "../../types";
 
 // =========================================================================
 //  Name Only
@@ -222,7 +223,7 @@ export interface PerpetualsAddresses {
 	objects: {
 		adminCapability: ObjectId;
 		registry: ObjectId;
-		exchanges: ExchangeAddresses[]; // Probably a Map<CoinType, ExchangeAddresses> is better
+		exchanges: Map<CoinType, ExchangeAddresses>;
 		oracle: OracleAddresses;
 	};
 }

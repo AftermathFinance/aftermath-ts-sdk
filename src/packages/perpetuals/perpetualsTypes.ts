@@ -5,6 +5,7 @@ import {
 	Object,
 	Timestamp,
 } from "../../general/types/generalTypes";
+import { Table } from "../../general/types/suiTypes";
 import { CoinType } from "../coin/coinTypes";
 
 export type IFixed = bigint;
@@ -48,13 +49,13 @@ export interface PerpetualsAccountStruct {
 	collateral: IFixed;
 	marketIds: bigint[];
 	positions: PerpetualsPosition[];
-	isBeingLiquidated: boolean;
 }
 
 export interface PerpetualsPosition {
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;
-	lastCumFunding: IFixed;
+	cumFundingRateLong: IFixed;
+	cumFundingRateShort: IFixed;
 	asks: PerpetualsCritBitTree<bigint>;
 	bids: PerpetualsCritBitTree<bigint>;
 	asksQuantity: IFixed;
@@ -185,6 +186,16 @@ export interface PerpetualsMarketOrderbookDynamicFieldOnChain {
 //  Orderbook
 // =========================================================================
 
+export interface PerpetualsCritBitTree<T> {
+	root: bigint;
+	innerNodes: TableV<PerpetualsInnerNode>;
+	outerNodes: TableV<PerpetualsOuterNode<T>>;
+}
+
+export interface TableV<T> {
+	contents: Table<number, T>;
+}
+
 export interface PerpetualsInnerNode {
 	criticalBit: bigint;
 	parentIndex: bigint;
@@ -196,12 +207,6 @@ export interface PerpetualsOuterNode<T> {
 	key: IFixed;
 	value: T;
 	parentIndex: bigint;
-}
-
-export interface PerpetualsCritBitTree<T> {
-	root: bigint;
-	innerNode: PerpetualsInnerNode[];
-	outerNode: PerpetualsOuterNode<T>[];
 }
 
 export interface PerpetualsOrder {

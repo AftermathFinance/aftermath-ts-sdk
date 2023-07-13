@@ -1,6 +1,7 @@
 import {
 	ObjectId,
 	SuiAddress,
+	SuiObjectResponse,
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
@@ -8,16 +9,21 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	CoinType,
+	PerpetualsAccountStruct,
 	PerpetualsAddresses,
+    PerpetualsOuterNode,
 } from "../../../types";
 import {
 	PerpetualsAccountManagerObject,
 	PerpetualsMarketManagerObject,
 	PerpetualsPriceFeedStorageObject,
 } from "../../../types";
-import { PerpetualsCasting } from "./perpetualsCasting";
+import { PerpetualsCasting } from "./perpetualsCasting"
+;
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
+import { ASK } from "../utils";
+import { PerpetualsAccount } from "../perpetualsAccount";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -94,22 +100,95 @@ export class PerpetualsApi {
 
 	public fetchOwnedAccountCapObjectId = async (inputs: {
 		walletAddress: SuiAddress;
+		coinType: CoinType;
 	}): Promise<ObjectId> => {
-		// TODO: handle multiple accounts ?
+		const accountCapType = `{this.accountCapType}<{coinType}>`;
 		const accountCaps =
 			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
-				...inputs,
-				objectType: this.accountCapType,
+				walletAddress: inputs.walletAddress,
+				objectType: accountCapType,
 			});
 		if (accountCaps.length <= 0)
 			throw new Error("unable to find account cap owned by address");
 
+		// TODO: handle multiple accounts
 		const accountCapId = accountCaps[0].data?.objectId;
 		if (!accountCapId)
 			throw new Error("unable to find account cap owned by address");
 
 		return accountCapId;
 	};
+
+	public fetchPositionOrderIds = async (
+		coinType: CoinType,
+		accountId: bigint,
+		marketId: bigint,
+	): Promise<bigint[][]> => {
+		let account_struct = await this.fetchAccount(coinType, accountId);
+		let account = new PerpetualsAccount(accountId, account_struct);
+		let position = account.positionForMarketId({ marketId });
+		let table_vec_asks = await this
+			.fetchTableVec<PerpetualsOuterNode<bigint>>(
+				position.asks.outerNodes.contents.objectId,
+				PerpetualsCasting.outerNodeFromSuiDynamicFieldObjectResponse,
+			);
+		let table_vec_bids = await this
+			.fetchTableVec<PerpetualsOuterNode<bigint>>(
+				position.bids.outerNodes.contents.objectId,
+				PerpetualsCasting.outerNodeFromSuiDynamicFieldObjectResponse,
+			);
+		let askOrderIds: bigint[] = table_vec_asks.map((node) => node.key);
+		let bidOrderIds: bigint[] = table_vec_bids.map((node) => node.key);
+		return [askOrderIds, bidOrderIds];
+	}
+
+    public fetchAccount = async (
+		coinType: CoinType,
+		accountId: bigint,
+	): Promise<PerpetualsAccountStruct> => {
+		let accountDfInfos = await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
+			parentObjectId: this.addresses.objects.exchanges.get(coinType)?.accountManager!,
+		});
+
+		let accountDfInfo = accountDfInfos.find((info) => {
+			return (BigInt(info.name.value.account_id) === accountId)
+		})!;
+
+		return this.Provider.Objects().fetchCastObject({
+			objectId: accountDfInfo.objectId,
+			objectFromSuiObjectResponse: PerpetualsCasting
+				.accountFromSuiDynamicFieldObjectResponse
+		});
+    }
+
+	public async fetchTableVec<T>(
+		objectId: ObjectId,
+		castFn: (value: SuiObjectResponse) => T,
+	): Promise<T[]> {
+		let dfs = await this
+			.Provider
+			.DynamicFields()
+			.fetchAllDynamicFieldsOfType({
+				parentObjectId: objectId,
+			});
+		let idxs_and_ids = dfs
+			.map((value) => {
+				return {idx: value.name.value, id: value.objectId}
+			})
+			.sort((a, b) => a.idx - b.idx);
+		let values: T[] = [];
+		for (const { id } of idxs_and_ids) {
+			let value = await this
+				.Provider
+				.Objects()
+				.fetchCastObject({
+					objectId: id,
+					objectFromSuiObjectResponse: castFn,
+				});
+			values.push(value);
+		}
+		return values
+	}
 
 	// =========================================================================
 	//  Transaction Commands
@@ -169,7 +248,6 @@ export class PerpetualsApi {
 		liquidationFee: bigint;
 		forceCancelFee: bigint;
 		insuranceFundFee: bigint;
-		priceImpactFactor: bigint;
 		lotSize: bigint;
 		tickSize: bigint;
 	}) => {
@@ -188,10 +266,10 @@ export class PerpetualsApi {
 			liquidationFee,
 			forceCancelFee,
 			insuranceFundFee,
-			priceImpactFactor,
 			lotSize,
 			tickSize,
 		} = inputs;
+		let exchangeCfg = this.addresses.objects.exchanges.get(coinType);
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -203,7 +281,7 @@ export class PerpetualsApi {
 				tx.object(this.addresses.objects.adminCapability),
 				// TODO: create a Map<coinType, Exchange> and get the correspondent accountManager
 				// Same for all the other functions
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(exchangeCfg?.marketManager!),
 				tx.pure(marketId),
 				tx.pure(marginRatioInitial),
 				tx.pure(marginRatioMaintenance),
@@ -216,7 +294,6 @@ export class PerpetualsApi {
 				tx.pure(liquidationFee),
 				tx.pure(forceCancelFee),
 				tx.pure(insuranceFundFee),
-				tx.pure(priceImpactFactor),
 				tx.pure(lotSize),
 				tx.pure(tickSize),
 			],
@@ -242,8 +319,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].vault),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.vault!),
 				typeof coin === "string" ? tx.object(coin) : coin,
 			],
 		});
@@ -269,8 +346,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
@@ -313,8 +390,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
@@ -348,8 +425,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
 				tx.pure(marketId),
 				tx.pure(side),
 				tx.pure(orderId),
@@ -375,8 +452,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
@@ -403,13 +480,13 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
-				tx.object(this.addresses.objects.exchanges[0].vault),
-				tx.object(this.addresses.objects.exchanges[0].insuranceFund),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.vault!),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.insuranceFund!),
 				tx.pure(amount),
 			],
 		});
@@ -420,9 +497,9 @@ export class PerpetualsApi {
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		liqeeAccountId: bigint;
-		marketId: bigint;
+		sizes: bigint[];
 	}) => {
-		const { tx, coinType, accountCapId, liqeeAccountId, marketId } = inputs;
+		const { tx, coinType, accountCapId, liqeeAccountId, sizes } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -434,43 +511,13 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
 				tx.pure(liqeeAccountId),
-				tx.pure(marketId),
-			],
-		});
-	};
-
-	public liquidateAcquireTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		liqeeAccountId: bigint;
-		marketId: bigint;
-	}) => {
-		const { tx, coinType, accountCapId, liqeeAccountId, marketId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"liquidate_acquire"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.pure(liqeeAccountId),
-				tx.pure(marketId),
+				tx.pure(sizes),
 			],
 		});
 	};
@@ -489,7 +536,7 @@ export class PerpetualsApi {
 			),
 			typeArguments: [coinType],
 			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].marketManager),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
@@ -512,7 +559,7 @@ export class PerpetualsApi {
 			),
 			typeArguments: [coinType],
 			arguments: [
-				tx.object(this.addresses.objects.exchanges[0].accountManager),
+				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
 			],
 		});
 	};
@@ -566,7 +613,6 @@ export class PerpetualsApi {
 		liquidationFee: bigint;
 		forceCancelFee: bigint;
 		insuranceFundFee: bigint;
-		priceImpactFactor: bigint;
 		lotSize: bigint;
 		tickSize: bigint;
 	}): Promise<TransactionBlock> => {
@@ -704,7 +750,7 @@ export class PerpetualsApi {
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		liqeeAccountId: bigint;
-		marketId: bigint;
+		sizes: bigint[];
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -716,10 +762,6 @@ export class PerpetualsApi {
 
 		return tx;
 	};
-
-	public buildLiquidateAcquireTx = Helpers.transactions.createBuildTxFunc(
-		this.liquidateAcquireTx
-	);
 
 	public fetchUpdateFundingTx = async (inputs: {
 		walletAddress: SuiAddress;

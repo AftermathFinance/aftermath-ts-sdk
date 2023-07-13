@@ -1,4 +1,3 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCancelOrderBody,
@@ -114,10 +113,11 @@ export class PerpetualsAccount extends Caller {
 
 	public positionForMarketId(inputs: {
 		marketId: bigint;
-	}): PerpetualsPosition | "None" {
-		const marketIdIndex = Number(inputs.marketId);
+	}): PerpetualsPosition {
 		try {
-			const posIndex = Number(this.account.marketIds[marketIdIndex]);
+			const posIndex = Number(this.account.marketIds.findIndex((id) => {
+				return id === inputs.marketId;
+			}));
 			return this.account.positions[posIndex];
 		} catch (e) {
 			throw new Error("no position found for market");
