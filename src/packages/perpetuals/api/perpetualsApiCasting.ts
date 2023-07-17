@@ -44,7 +44,7 @@ import {
 } from "../utils/helpers";
 import { Helpers } from "../../../general/utils";
 
-export class PerpetualsCasting {
+export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Account Manager
 	// =========================================================================
@@ -91,7 +91,7 @@ export class PerpetualsCasting {
 		const paramsField =
 			dynamicField as PerpetualsMarketParamsDynamicFieldOnChain;
 		return {
-			value: PerpetualsCasting.marketParamsFromRawData(
+			value: PerpetualsApiCasting.marketParamsFromRawData(
 				paramsField.data.fields.value.fields
 			),
 		};
@@ -105,7 +105,7 @@ export class PerpetualsCasting {
 		const stateField =
 			dynamicField as PerpetualsMarketManagerStateDynamicFieldOnChain;
 		return {
-			value: PerpetualsCasting.marketStateFromRawData(
+			value: PerpetualsApiCasting.marketStateFromRawData(
 				stateField.data.fields
 			),
 		};
@@ -124,7 +124,9 @@ export class PerpetualsCasting {
 		return {
 			objectType,
 			objectId: orderbookField.data.fields.id.id,
-			value: PerpetualsCasting.orderbookFromRawData(orderbookField.data),
+			value: PerpetualsApiCasting.orderbookFromRawData(
+				orderbookField.data
+			),
 		};
 	};
 
@@ -171,10 +173,10 @@ export class PerpetualsCasting {
 	): PerpetualsCritBitTree<PerpetualsOrder> => {
 		return {
 			root: BigInt(data.fields.root),
-			innerNode: PerpetualsCasting.innerNodeFromAny(
+			innerNode: PerpetualsApiCasting.innerNodeFromAny(
 				data.fields.inner_nodes
 			),
-			outerNode: PerpetualsCasting.outerNodeFromAny(
+			outerNode: PerpetualsApiCasting.outerNodeFromAny(
 				data.fields.outer_nodes
 			),
 		};
@@ -200,7 +202,7 @@ export class PerpetualsCasting {
 		for (const node of data) {
 			outerNodes.push({
 				key: node.fields.key,
-				value: PerpetualsCasting.orderFromAny(node.fields.value),
+				value: PerpetualsApiCasting.orderFromAny(node.fields.value),
 				parentIndex: BigInt(node.fields.parent_index),
 			} as PerpetualsOuterNode<PerpetualsOrder>);
 		}
@@ -226,8 +228,8 @@ export class PerpetualsCasting {
 			objectId: data.id.id,
 			lotSize: BigInt(data.lot_size),
 			tickSize: BigInt(data.tick_size),
-			asks: PerpetualsCasting.critBitTreeFromAny(data.asks),
-			bids: PerpetualsCasting.critBitTreeFromAny(data.bids),
+			asks: PerpetualsApiCasting.critBitTreeFromAny(data.asks),
+			bids: PerpetualsApiCasting.critBitTreeFromAny(data.bids),
 			minAsk: BigInt(data.min_ask),
 			minBid: BigInt(data.max_bid),
 			counter: BigInt(data.counter),
@@ -268,12 +270,12 @@ export class PerpetualsCasting {
 		orderbook: PerpetualsOrderbookObject
 	): PriorityQueue<PerpetualsOrderCasted>[] => {
 		const priorityQueueOfAskOrders =
-			PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
+			PerpetualsApiCasting.priorityQueueOfOrdersFromCritBitTree(
 				orderbook.asks,
 				ASK
 			);
 		const priorityQueueOfBidOrders =
-			PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
+			PerpetualsApiCasting.priorityQueueOfOrdersFromCritBitTree(
 				orderbook.bids,
 				BID
 			);

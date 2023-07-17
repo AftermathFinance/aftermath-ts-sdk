@@ -9,12 +9,6 @@ import {
 
 export class FarmsStakedPosition extends Caller {
 	// =========================================================================
-	//  Private Constants
-	// =========================================================================
-
-	private static readonly constants = {};
-
-	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
@@ -31,7 +25,7 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 
 	// =========================================================================
-	//  Status
+	//  Getters
 	// =========================================================================
 
 	public isLocked = (): boolean => {
@@ -54,7 +48,8 @@ export class FarmsStakedPosition extends Caller {
 		return this.stakedPosition.rewardCoins.reduce(
 			(acc, coin) => ({
 				...acc,
-				[coin.coinType]: coin.rewardsAccumulated - coin.rewardsDebt,
+				[coin.coinType]:
+					coin.baseRewardsAccumulated - coin.baseRewardsDebt,
 			}),
 			{} as CoinsToBalance
 		);
@@ -66,11 +61,13 @@ export class FarmsStakedPosition extends Caller {
 
 	public rewardsEarned = (inputs: { coinType: CoinType }) => {
 		const rewardCoin = this.getRewardCoin(inputs.coinType);
-		return rewardCoin.rewardsAccumulated - rewardCoin.rewardsDebt;
+		return rewardCoin.baseRewardsAccumulated - rewardCoin.baseRewardsDebt;
 	};
 
 	public rewardsApy = (inputs: { coinType: CoinType }) => {
 		const rewardCoin = this.getRewardCoin(inputs.coinType);
+
+		// TODO: make this calculation
 
 		return Math.random();
 	};

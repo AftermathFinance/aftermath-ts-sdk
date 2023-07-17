@@ -25,6 +25,7 @@ interface OptionalConfigAddresses {
 	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
 	perpetuals: PerpetualsAddresses;
+	farms: FarmsAddresses;
 }
 
 // =========================================================================
@@ -260,6 +261,15 @@ export interface PerpetualsAddresses {
 		registry: ObjectId;
 		exchanges: ExchangeAddresses[]; // Probably a Map<CoinType, ExchangeAddresses> is better
 		oracle: OracleAddresses;
+	};
+}
+
+export interface FarmsAddresses {
+	packages: {
+		vaults: SuiAddress;
+	};
+	objects: {
+		vaultsRegistry: ObjectId;
 	};
 }
 
