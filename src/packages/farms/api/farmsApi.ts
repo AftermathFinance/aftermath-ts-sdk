@@ -6,13 +6,17 @@ import {
 	AddedRewardEvent,
 	Timestamp,
 	CoinType,
+	ApiFarmsStakeBody,
+	ApiHarvestFarmsRewardsBody,
+	ApiFarmsDepositPrincipalBody,
+	Balance,
+	ApiFarmsWithdrawPrincipalBody,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AddedRewardEventOnChain } from "./farmsApiCastingTypes";
 import {
 	ObjectId,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
@@ -97,7 +101,7 @@ export class FarmsApi {
 	// =========================================================================
 
 	// =========================================================================
-	//  Staked Position Transaction Commands
+	//  Staking Transaction Commands
 	// =========================================================================
 
 	public stakeTx = (inputs: {
@@ -158,7 +162,7 @@ export class FarmsApi {
 		tx: TransactionBlock;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
-		withdrawAmount: bigint;
+		withdrawAmount: Balance;
 		stakeCoinType: CoinType;
 	}) /* (Coin) */ => {
 		const { tx } = inputs;
@@ -178,6 +182,10 @@ export class FarmsApi {
 			],
 		});
 	};
+
+	// =========================================================================
+	//  Locking Transaction Commands
+	// =========================================================================
 
 	public lockTx = (inputs: {
 		tx: TransactionBlock;
@@ -251,7 +259,7 @@ export class FarmsApi {
 	};
 
 	// =========================================================================
-	//  Staked Position Fee Harvest Transaction Commands
+	//  Reward Harvesting Transaction Commands
 	// =========================================================================
 
 	public beginHarvestTx = (inputs: {
@@ -328,16 +336,88 @@ export class FarmsApi {
 	// =========================================================================
 
 	// =========================================================================
+	//  Staking Transactions
+	// =========================================================================
+
+	public fetchBuildStakeTx = async (inputs: ApiFarmsStakeBody) => {
+		const { walletAddress } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const stakeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: inputs.stakeCoinType,
+			coinAmount: inputs.stakeAmount,
+		});
+
+		const stakedPosition = this.stakeTx({ ...inputs, tx, stakeCoinId });
+		tx.transferObjects([stakedPosition], tx.pure(inputs.walletAddress));
+
+		return tx;
+	};
+
+	public fetchBuildDepositPrincipalTx = async (
+		inputs: ApiFarmsDepositPrincipalBody
+	) => {
+		const { walletAddress } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const stakeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: inputs.stakeCoinType,
+			coinAmount: inputs.depositAmount,
+		});
+
+		this.depositPrincipalTx({
+			...inputs,
+			tx,
+			stakeCoinId,
+		});
+
+		return tx;
+	};
+
+	public fetchBuildWithdrawPrincipalTx = async (
+		inputs: ApiFarmsWithdrawPrincipalBody
+	) => {
+		const { walletAddress } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const withdrawnCoin = this.withdrawPrincipalTx({
+			...inputs,
+			tx,
+		});
+		tx.transferObjects([withdrawnCoin], tx.pure(inputs.walletAddress));
+
+		return tx;
+	};
+
+	// =========================================================================
+	//  Locking Transactions
+	// =========================================================================
+
+	public fetchLockTx = Helpers.transactions.creatBuildTxFunc(this.lockTx);
+
+	public fetchRenewLockTx = Helpers.transactions.creatBuildTxFunc(
+		this.renewLockTx
+	);
+
+	public fetchUnlockTx = Helpers.transactions.creatBuildTxFunc(this.unlockTx);
+
+	// =========================================================================
 	//  Reward Harvesting Transactions
 	// =========================================================================
 
-	public fetchBuildHarvestRewardsTx = async (inputs: {
-		walletAddress: SuiAddress;
-		stakingPoolId: ObjectId;
-		stakeCoinType: CoinType;
-		stakedPositionIds: ObjectId[];
-		rewardCoinTypes: CoinType[];
-	}): Promise<TransactionBlock> => {
+	public fetchBuildHarvestRewardsTx = async (
+		inputs: ApiHarvestFarmsRewardsBody
+	): Promise<TransactionBlock> => {
 		const { stakedPositionIds } = inputs;
 
 		const tx = new TransactionBlock();
@@ -374,19 +454,7 @@ export class FarmsApi {
 	};
 
 	// =========================================================================
-	//  Stats
-	// =========================================================================
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	// =========================================================================
 	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Helpers
 	// =========================================================================
 
 	// =========================================================================

@@ -1,4 +1,4 @@
-import { ObjectId } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	Balance,
 	Event,
@@ -169,4 +169,62 @@ export interface UnlockedEvent extends Event {
 export interface WithdrewPrincipalEvent extends Event {
 	stakedPositionId: ObjectId;
 	amount: bigint;
+}
+
+// =========================================================================
+//  API
+// =========================================================================
+
+export interface ApiFarmsStakeBody {
+	stakingPoolId: ObjectId;
+	lockDurationMs: Timestamp;
+	stakeCoinType: CoinType;
+	stakeAmount: Balance;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsDepositPrincipalBody {
+	stakedPositionId: ObjectId;
+	stakingPoolId: ObjectId;
+	stakeCoinType: CoinType;
+	depositAmount: Balance;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsWithdrawPrincipalBody {
+	stakedPositionId: ObjectId;
+	stakingPoolId: ObjectId;
+	withdrawAmount: Balance;
+	stakeCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsLockBody {
+	stakedPositionId: ObjectId;
+	stakingPoolId: ObjectId;
+	lockDurationMs: Timestamp;
+	stakeCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsRenewLockBody {
+	stakedPositionId: ObjectId;
+	stakingPoolId: ObjectId;
+	stakeCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsUnlockBody {
+	stakedPositionId: ObjectId;
+	stakingPoolId: ObjectId;
+	stakeCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiHarvestFarmsRewardsBody {
+	stakingPoolId: ObjectId;
+	stakeCoinType: CoinType;
+	stakedPositionIds: ObjectId[];
+	rewardCoinTypes: CoinType[];
+	walletAddress: SuiAddress;
 }
