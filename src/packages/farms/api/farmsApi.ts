@@ -10,13 +10,14 @@ import {
 	ApiHarvestFarmsRewardsBody,
 	ApiFarmsDepositPrincipalBody,
 	Balance,
-	ApiFarmsWithdrawPrincipalBody,
+	ApiFarmsUnstakeBody,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { AddedRewardEventOnChain } from "./farmsApiCastingTypes";
 import {
 	ObjectId,
+	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
@@ -353,7 +354,7 @@ export class FarmsApi {
 		});
 
 		const stakedPosition = this.stakeTx({ ...inputs, tx, stakeCoinId });
-		tx.transferObjects([stakedPosition], tx.pure(inputs.walletAddress));
+		tx.transferObjects([stakedPosition], tx.pure(walletAddress));
 
 		return tx;
 	};
@@ -382,9 +383,13 @@ export class FarmsApi {
 		return tx;
 	};
 
-	public fetchBuildWithdrawPrincipalTx = async (
-		inputs: ApiFarmsWithdrawPrincipalBody
-	) => {
+	public fetchBuildWithdrawPrincipalTx = async (inputs: {
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		withdrawAmount: Balance;
+		stakeCoinType: CoinType;
+		walletAddress: SuiAddress;
+	}) => {
 		const { walletAddress } = inputs;
 
 		const tx = new TransactionBlock();
@@ -394,9 +399,32 @@ export class FarmsApi {
 			...inputs,
 			tx,
 		});
-		tx.transferObjects([withdrawnCoin], tx.pure(inputs.walletAddress));
+		tx.transferObjects([withdrawnCoin], tx.pure(walletAddress));
 
 		return tx;
+	};
+
+	public fetchBuildUnstakeTx = async (inputs: ApiFarmsUnstakeBody) => {
+		throw new Error("TODO");
+
+		// const { walletAddress } = inputs;
+
+		// // harvest rewards
+		// const tx = await this.fetchBuildHarvestRewardsTx({
+		// 	...inputs,
+		// 	stakedPositionIds: [inputs.stakedPositionId],
+		// });
+
+		// // withdraw principal
+		// const withdrawnCoin = this.withdrawPrincipalTx({
+		// 	...inputs,
+		// 	tx,
+		// });
+		// tx.transferObjects([withdrawnCoin], tx.pure(walletAddress));
+
+		// // destroy position
+
+		// return tx;
 	};
 
 	// =========================================================================
@@ -418,10 +446,10 @@ export class FarmsApi {
 	public fetchBuildHarvestRewardsTx = async (
 		inputs: ApiHarvestFarmsRewardsBody
 	): Promise<TransactionBlock> => {
-		const { stakedPositionIds } = inputs;
+		const { walletAddress, stakedPositionIds } = inputs;
 
 		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+		tx.setSender(walletAddress);
 
 		const harvestedRewardsEventMetadataId = this.beginHarvestTx({
 			...inputs,
@@ -430,14 +458,16 @@ export class FarmsApi {
 
 		let harvestedCoins = [];
 		for (const [index, stakedPositionId] of stakedPositionIds.entries()) {
-			const harvestedCoin = this.harvestRewardsTx({
-				...inputs,
-				tx,
-				stakedPositionId,
-				harvestedRewardsEventMetadataId,
-				rewardCoinType: inputs.rewardCoinTypes[index],
-			});
-			harvestedCoins.push(harvestedCoin);
+			for (const rewardCoinType of inputs.rewardCoinTypes[index]) {
+				const harvestedCoin = this.harvestRewardsTx({
+					...inputs,
+					tx,
+					stakedPositionId,
+					harvestedRewardsEventMetadataId,
+					rewardCoinType,
+				});
+				harvestedCoins.push(harvestedCoin);
+			}
 		}
 
 		// TODO: move this merging & transferring behaviour to coins api helpers ?
@@ -446,7 +476,7 @@ export class FarmsApi {
 		if (harvestedCoins.length > 1)
 			tx.mergeCoins(coinToTransfer, harvestedCoins.slice(1));
 
-		tx.transferObjects([coinToTransfer], tx.pure(inputs.walletAddress));
+		tx.transferObjects([coinToTransfer], tx.pure(walletAddress));
 
 		this.endHarvestTx({ tx, harvestedRewardsEventMetadataId });
 

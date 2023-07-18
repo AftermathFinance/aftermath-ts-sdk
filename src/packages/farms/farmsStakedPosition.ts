@@ -1,9 +1,19 @@
+import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
+	ApiFarmsDepositPrincipalBody,
+	ApiFarmsLockBody,
+	ApiFarmsRenewLockBody,
+	ApiFarmsStakeBody,
+	ApiFarmsUnlockBody,
+	ApiFarmsUnstakeBody,
+	ApiHarvestFarmsRewardsBody,
+	Balance,
 	CoinType,
 	CoinsToBalance,
 	FarmsStakedPositionObject,
 	SuiNetwork,
+	Timestamp,
 	Url,
 } from "../../types";
 
@@ -22,10 +32,6 @@ export class FarmsStakedPosition extends Caller {
 
 	// =========================================================================
 	//  Public
-	// =========================================================================
-
-	// =========================================================================
-	//  Transactions
 	// =========================================================================
 
 	// =========================================================================
@@ -59,6 +65,10 @@ export class FarmsStakedPosition extends Caller {
 		);
 	};
 
+	public rewardCoinTypes = (): CoinType[] => {
+		return this.stakedPosition.rewardCoins.map((coin) => coin.coinType);
+	};
+
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
@@ -75,6 +85,103 @@ export class FarmsStakedPosition extends Caller {
 
 		return Math.random();
 	};
+
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
+
+	// =========================================================================
+	//  Staking Transactions
+	// =========================================================================
+
+	public async getDepositPrincipalTransaction(inputs: {
+		depositAmount: Balance;
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApiTransaction<ApiFarmsDepositPrincipalBody>(
+			"transactions/deposit-principal",
+			{
+				...inputs,
+				stakedPositionId: this.stakedPosition.objectId,
+				stakeCoinType: this.stakedPosition.stakeCoinType,
+				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+			}
+		);
+	}
+
+	public async getUnstakeTransaction(inputs: { walletAddress: SuiAddress }) {
+		return this.fetchApiTransaction<ApiFarmsUnstakeBody>(
+			"transactions/unstake",
+			{
+				...inputs,
+				stakedPositionId: this.stakedPosition.objectId,
+				stakeCoinType: this.stakedPosition.stakeCoinType,
+				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+				rewardCoinTypes: this.rewardCoinTypes(),
+			}
+		);
+	}
+
+	// =========================================================================
+	//  Locking Transactions
+	// =========================================================================
+
+	public async getLockTransaction(inputs: {
+		lockDurationMs: Timestamp;
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApiTransaction<ApiFarmsLockBody>("transactions/lock", {
+			...inputs,
+			stakedPositionId: this.stakedPosition.objectId,
+			stakeCoinType: this.stakedPosition.stakeCoinType,
+			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+		});
+	}
+
+	public async getRenewLockTransaction(inputs: {
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApiTransaction<ApiFarmsRenewLockBody>(
+			"transactions/renew-lock",
+			{
+				...inputs,
+				stakedPositionId: this.stakedPosition.objectId,
+				stakeCoinType: this.stakedPosition.stakeCoinType,
+				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+			}
+		);
+	}
+
+	public async getUnlockTransaction(inputs: { walletAddress: SuiAddress }) {
+		return this.fetchApiTransaction<ApiFarmsUnlockBody>(
+			"transactions/unlock",
+			{
+				...inputs,
+				stakedPositionId: this.stakedPosition.objectId,
+				stakeCoinType: this.stakedPosition.stakeCoinType,
+				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+			}
+		);
+	}
+
+	// =========================================================================
+	//  Reward Harvesting Transactions
+	// =========================================================================
+
+	public async getHarvestRewardsTransaction(inputs: {
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApiTransaction<ApiHarvestFarmsRewardsBody>(
+			"transactions/harvest-rewards",
+			{
+				...inputs,
+				stakedPositionIds: [this.stakedPosition.objectId],
+				stakeCoinType: this.stakedPosition.stakeCoinType,
+				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+				rewardCoinTypes: this.rewardCoinTypes(),
+			}
+		);
+	}
 
 	// =========================================================================
 	//  Private

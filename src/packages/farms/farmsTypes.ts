@@ -191,11 +191,11 @@ export interface ApiFarmsDepositPrincipalBody {
 	walletAddress: SuiAddress;
 }
 
-export interface ApiFarmsWithdrawPrincipalBody {
+export interface ApiFarmsUnstakeBody {
 	stakedPositionId: ObjectId;
 	stakingPoolId: ObjectId;
-	withdrawAmount: Balance;
 	stakeCoinType: CoinType;
+	rewardCoinTypes: CoinType[];
 	walletAddress: SuiAddress;
 }
 
