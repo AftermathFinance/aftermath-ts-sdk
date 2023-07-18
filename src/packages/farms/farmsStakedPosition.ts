@@ -4,7 +4,6 @@ import {
 	ApiFarmsDepositPrincipalBody,
 	ApiFarmsLockBody,
 	ApiFarmsRenewLockBody,
-	ApiFarmsStakeBody,
 	ApiFarmsUnlockBody,
 	ApiFarmsUnstakeBody,
 	ApiHarvestFarmsRewardsBody,
