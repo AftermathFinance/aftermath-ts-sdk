@@ -175,6 +175,10 @@ export interface WithdrewPrincipalEvent extends Event {
 //  API
 // =========================================================================
 
+// =========================================================================
+//  Staking API
+// =========================================================================
+
 export interface ApiFarmsStakeBody {
 	stakingPoolId: ObjectId;
 	lockDurationMs: Timestamp;
@@ -196,8 +200,13 @@ export interface ApiFarmsUnstakeBody {
 	stakingPoolId: ObjectId;
 	stakeCoinType: CoinType;
 	rewardCoinTypes: CoinType[];
+	withdrawAmount: Balance;
 	walletAddress: SuiAddress;
 }
+
+// =========================================================================
+//  Locking API
+// =========================================================================
 
 export interface ApiFarmsLockBody {
 	stakedPositionId: ObjectId;
@@ -221,10 +230,67 @@ export interface ApiFarmsUnlockBody {
 	walletAddress: SuiAddress;
 }
 
+// =========================================================================
+//  Harvest Rewards API
+// =========================================================================
+
 export interface ApiHarvestFarmsRewardsBody {
 	stakingPoolId: ObjectId;
 	stakeCoinType: CoinType;
 	stakedPositionIds: ObjectId[];
 	rewardCoinTypes: CoinType[];
+	walletAddress: SuiAddress;
+}
+
+// =========================================================================
+//  Staking Pool API
+// =========================================================================
+
+// =========================================================================
+//  Staking Pool Creation API
+// =========================================================================
+
+export interface ApiFarmsCreateStakingPoolBody {
+	lockEnforcement: FarmsLockEnforcement;
+	minLockDurationMs: Timestamp;
+	maxLockDurationMs: Timestamp;
+	minLockMultiplier: FarmsMultiplier;
+	minStakeAmount: Balance;
+	stakeCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+// =========================================================================
+//  Staking Pool Mutation API
+// =========================================================================
+
+export interface ApiFarmsInitializeStakingPoolRewardBody {
+	ownerCapId: ObjectId;
+	stakingPoolId: ObjectId;
+	rewardAmount: Balance;
+	emissionScheduleMs: Timestamp;
+	emissionRate: bigint;
+	emissionDelayTimestampMs: Timestamp;
+	stakeCoinType: CoinType;
+	rewardCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsTopUpStakingPoolRewardBody {
+	ownerCapId: ObjectId;
+	stakingPoolId: ObjectId;
+	rewardAmount: Balance;
+	stakeCoinType: CoinType;
+	rewardCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsIncreaseStakingPoolEmissionsBody {
+	ownerCapId: ObjectId;
+	stakingPoolId: ObjectId;
+	emissionScheduleMs: Timestamp;
+	emissionRate: bigint;
+	stakeCoinType: CoinType;
+	rewardCoinType: CoinType;
 	walletAddress: SuiAddress;
 }

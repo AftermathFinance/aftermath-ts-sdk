@@ -117,6 +117,7 @@ export class FarmsStakedPosition extends Caller {
 				stakedPositionId: this.stakedPosition.objectId,
 				stakeCoinType: this.stakedPosition.stakeCoinType,
 				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+				withdrawAmount: this.stakedPosition.stakedAmount,
 				rewardCoinTypes: this.rewardCoinTypes(),
 			}
 		);

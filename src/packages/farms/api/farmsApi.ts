@@ -11,6 +11,9 @@ import {
 	ApiFarmsDepositPrincipalBody,
 	Balance,
 	ApiFarmsUnstakeBody,
+	FarmsLockEnforcement,
+	FarmsMultiplier,
+	ApiFarmsCreateStakingPoolBody,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -184,6 +187,29 @@ export class FarmsApi {
 		});
 	};
 
+	public destroyStakedPositionTx = (inputs: {
+		tx: TransactionBlock;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"destroy"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Locking Transaction Commands
 	// =========================================================================
@@ -288,8 +314,8 @@ export class FarmsApi {
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
 		harvestedRewardsEventMetadataId: ObjectId | TransactionArgument;
-		stakeCoinType: AnyObjectType;
-		rewardCoinType: AnyObjectType;
+		stakeCoinType: CoinType;
+		rewardCoinType: CoinType;
 	}) /* (Coin) */ => {
 		const { tx, harvestedRewardsEventMetadataId } = inputs;
 
@@ -328,6 +354,177 @@ export class FarmsApi {
 				typeof harvestedRewardsEventMetadataId === "string"
 					? tx.object(harvestedRewardsEventMetadataId)
 					: harvestedRewardsEventMetadataId, // HarvestedRewardsEventMetadata
+			],
+		});
+	};
+
+	// =========================================================================
+	//  Staking Pool Creation Transaction Commands
+	// =========================================================================
+
+	public newStakingPoolTx = (inputs: {
+		tx: TransactionBlock;
+		lockEnforcement: FarmsLockEnforcement;
+		minLockDurationMs: Timestamp;
+		maxLockDurationMs: Timestamp;
+		minLockMultiplier: FarmsMultiplier;
+		minStakeAmount: Balance;
+		stakeCoinType: CoinType;
+	}) /* (AfterburnerVault, OwnerCap) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"new"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(this.addresses.objects.vaultsRegistry), // VaultRegistry
+				tx.pure(inputs.lockEnforcement === "Strict" ? 0 : 1, "u64"),
+				tx.pure(inputs.minLockDurationMs, "u64"),
+				tx.pure(inputs.maxLockDurationMs, "u64"),
+				tx.pure(inputs.minLockMultiplier, "u64"),
+				tx.pure(inputs.minStakeAmount, "u64"),
+			],
+		});
+	};
+
+	public shareStakingPoolTx = (inputs: {
+		tx: TransactionBlock;
+		stakingPoolId: ObjectId | TransactionArgument;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx, stakingPoolId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"share_vault"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				typeof stakingPoolId === "string"
+					? tx.object(stakingPoolId)
+					: stakingPoolId, // AfterburnerVault
+			],
+		});
+	};
+
+	public transferOwnerCapTx = (inputs: {
+		tx: TransactionBlock;
+		ownerCapId: ObjectId | TransactionArgument;
+		recipient: SuiAddress;
+	}) => {
+		const { tx, ownerCapId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"transfer_owner_cap"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof ownerCapId === "string"
+					? tx.object(ownerCapId)
+					: ownerCapId, // OwnerCap
+				tx.pure(inputs.recipient, "address"),
+			],
+		});
+	};
+
+	// =========================================================================
+	//  Staking Pool Mutation Transaction Commands
+	// =========================================================================
+
+	public initializeStakingPoolRewardTx = (inputs: {
+		tx: TransactionBlock;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		rewardCoinId: ObjectId | TransactionArgument;
+		emissionScheduleMs: Timestamp;
+		emissionRate: bigint;
+		emissionDelayTimestampMs: Timestamp;
+		stakeCoinType: CoinType;
+		rewardCoinType: CoinType;
+	}) => {
+		const { tx, rewardCoinId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"initialize_reward"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				typeof rewardCoinId === "string"
+					? tx.object(rewardCoinId)
+					: rewardCoinId, // Coin
+				tx.pure(inputs.emissionScheduleMs, "u64"),
+				tx.pure(inputs.emissionRate, "u64"),
+				tx.pure(inputs.emissionDelayTimestampMs, "u64"),
+			],
+		});
+	};
+
+	public topUpStakingPoolRewardTx = (inputs: {
+		tx: TransactionBlock;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		rewardCoinId: ObjectId | TransactionArgument;
+		stakeCoinType: CoinType;
+		rewardCoinType: CoinType;
+	}) => {
+		const { tx, rewardCoinId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"add_reward"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				typeof rewardCoinId === "string"
+					? tx.object(rewardCoinId)
+					: rewardCoinId, // Coin
+			],
+		});
+	};
+
+	public increaseStakingPoolEmissionsTx = (inputs: {
+		tx: TransactionBlock;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		emissionScheduleMs: Timestamp;
+		emissionRate: bigint;
+		stakeCoinType: CoinType;
+		rewardCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"increase_emissions_for"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				tx.pure(inputs.emissionScheduleMs, "u64"),
+				tx.pure(inputs.emissionRate, "u64"),
 			],
 		});
 	};
@@ -405,26 +602,25 @@ export class FarmsApi {
 	};
 
 	public fetchBuildUnstakeTx = async (inputs: ApiFarmsUnstakeBody) => {
-		throw new Error("TODO");
+		const { walletAddress } = inputs;
 
-		// const { walletAddress } = inputs;
+		// harvest rewards
+		const tx = await this.fetchBuildHarvestRewardsTx({
+			...inputs,
+			stakedPositionIds: [inputs.stakedPositionId],
+		});
 
-		// // harvest rewards
-		// const tx = await this.fetchBuildHarvestRewardsTx({
-		// 	...inputs,
-		// 	stakedPositionIds: [inputs.stakedPositionId],
-		// });
+		// withdraw principal
+		const withdrawnCoin = this.withdrawPrincipalTx({
+			...inputs,
+			tx,
+		});
+		tx.transferObjects([withdrawnCoin], tx.pure(walletAddress));
 
-		// // withdraw principal
-		// const withdrawnCoin = this.withdrawPrincipalTx({
-		// 	...inputs,
-		// 	tx,
-		// });
-		// tx.transferObjects([withdrawnCoin], tx.pure(walletAddress));
+		// destroy position
+		this.destroyStakedPositionTx({ ...inputs, tx });
 
-		// // destroy position
-
-		// return tx;
+		return tx;
 	};
 
 	// =========================================================================
@@ -482,6 +678,57 @@ export class FarmsApi {
 
 		return tx;
 	};
+
+	// =========================================================================
+	//  Staking Pool Transactions
+	// =========================================================================
+
+	// =========================================================================
+	//  Staking Pool Creation Transactions
+	// =========================================================================
+
+	public fetchBuildCreateStakingPoolTx = async (
+		inputs: ApiFarmsCreateStakingPoolBody
+	): Promise<TransactionBlock> => {
+		const { walletAddress } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const [stakingPoolId, ownerCapId] = this.newStakingPoolTx({
+			...inputs,
+			tx,
+		});
+		this.shareStakingPoolTx({
+			tx,
+			stakingPoolId,
+			stakeCoinType: inputs.stakeCoinType,
+		});
+		this.transferOwnerCapTx({
+			tx,
+			ownerCapId,
+			recipient: walletAddress,
+		});
+
+		return tx;
+	};
+
+	// =========================================================================
+	//  Staking Pool Mutation Transactions
+	// =========================================================================
+
+	public fetchInitializeStakingPoolRewardTx =
+		Helpers.transactions.creatBuildTxFunc(
+			this.initializeStakingPoolRewardTx
+		);
+
+	public fetchTopUpStakingPoolRewardTx =
+		Helpers.transactions.creatBuildTxFunc(this.topUpStakingPoolRewardTx);
+
+	public fetchIncreaseStakingPoolEmissionsTx =
+		Helpers.transactions.creatBuildTxFunc(
+			this.increaseStakingPoolEmissionsTx
+		);
 
 	// =========================================================================
 	//  Private Methods
