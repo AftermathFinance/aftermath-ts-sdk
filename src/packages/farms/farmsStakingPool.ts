@@ -1,7 +1,7 @@
 import { Balance, CoinType, SuiNetwork, Timestamp, Url } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
-	ApiFarmsIncreaseStakingPoolEmissionsBody,
+	ApiFarmsIncreaseStakingPoolRewardEmissionsBody,
 	ApiFarmsInitializeStakingPoolRewardBody,
 	ApiFarmsStakeBody,
 	ApiFarmsTopUpStakingPoolRewardBody,
@@ -19,7 +19,7 @@ export class FarmsStakingPool extends Caller {
 		public readonly stakingPool: FarmsStakingPoolObject,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, `farms/${stakingPool.objectId}`);
+		super(network, "farms");
 		this.stakingPool = stakingPool;
 	}
 
@@ -116,15 +116,15 @@ export class FarmsStakingPool extends Caller {
 		);
 	}
 
-	public async getIncreaseEmissionsTransaction(inputs: {
+	public async getIncreaseRewardEmissionsTransaction(inputs: {
 		ownerCapId: ObjectId;
 		emissionScheduleMs: Timestamp;
 		emissionRate: bigint;
 		rewardCoinType: CoinType;
 		walletAddress: SuiAddress;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsIncreaseStakingPoolEmissionsBody>(
-			"transactions/top-up-reward",
+		return this.fetchApiTransaction<ApiFarmsIncreaseStakingPoolRewardEmissionsBody>(
+			"transactions/increase-reward-emissions",
 			{
 				...inputs,
 				stakeCoinType: this.stakingPool.stakeCoinType,

@@ -6,7 +6,7 @@ import {
 	FarmsStakedPositionObject,
 	FarmsStakingPoolObject,
 } from "./farmsTypes";
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
+import { ObjectId } from "@mysten/sui.js";
 import { FarmsStakingPool } from "./farmsStakingPool";
 import { FarmsStakedPosition } from "./farmsStakedPosition";
 
@@ -28,10 +28,10 @@ export class Farms extends Caller {
 	// =========================================================================
 
 	public async getStakingPool(inputs: { objectId: ObjectId }) {
-		const stkaingPool = await this.fetchApi<FarmsStakingPoolObject>(
+		const stakingPool = await this.fetchApi<FarmsStakingPoolObject>(
 			inputs.objectId
 		);
-		return new FarmsStakingPool(stkaingPool, this.network);
+		return new FarmsStakingPool(stakingPool, this.network);
 	}
 
 	public async getAllStakingPools() {
@@ -47,15 +47,11 @@ export class Farms extends Caller {
 		const positions = await this.fetchApi<
 			FarmsStakedPositionObject[],
 			ApiFarmsOwnedStakedPositionsBody
-		>("farms/staked-positions/owned", inputs);
+		>("farms/owned-staked-positions", inputs);
 		return positions.map(
 			(pool) => new FarmsStakedPosition(pool, this.network)
 		);
 	}
-
-	// =========================================================================
-	//  Events
-	// =========================================================================
 
 	// =========================================================================
 	//  Transactions

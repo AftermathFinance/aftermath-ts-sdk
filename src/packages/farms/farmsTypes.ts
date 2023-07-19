@@ -74,101 +74,95 @@ export interface FarmsStakedPositionObject extends Object {
 //  Events
 // =========================================================================
 
-export interface AddedRewardEvent extends Event {
+export interface FarmsAddedRewardEvent extends Event {
 	vaultId: ObjectId;
 	rewardType: CoinType;
-	rewardAmount: bigint;
+	rewardAmount: Balance;
 }
 
-export interface CreatedVaultEvent extends Event {
+export interface FarmsCreatedVaultEvent extends Event {
 	vaultId: ObjectId;
 	stakeType: CoinType;
-	minLockDurationMs: bigint;
-	maxLockDurationMs: bigint;
-	maxLockMultiplier: bigint;
-	minStakeAmount: bigint;
+	minLockDurationMs: Timestamp;
+	maxLockDurationMs: Timestamp;
+	maxLockMultiplier: FarmsMultiplier;
+	minStakeAmount: Balance;
 }
 
-export interface DepositedPrincipalEvent extends Event {
+export interface FarmsDepositedPrincipalEvent extends Event {
 	stakedPositionId: ObjectId;
-	amount: bigint;
+	amount: Balance;
 }
 
-export interface DestroyedStakedPositionEvent extends Event {
+export interface FarmsDestroyedStakedPositionEvent extends Event {
 	stakedPositionId: ObjectId;
 }
 
-export interface HarvestedRewardsEvent extends Event {
+export interface FarmsHarvestedRewardsEvent extends Event {
 	afterburnerVaultId: ObjectId;
 	rewardTypes: CoinType[];
-	rewardAmounts: bigint[];
+	rewardAmounts: Balance[];
 }
 
-export interface HarvestedRewardsEventMetadata extends Event {
-	afterburnerVaultId: ObjectId;
-	rewardTypes: CoinType[];
-	rewardAmounts: bigint[];
-}
-
-export interface IncreasedEmissionsEvent extends Event {
+export interface FarmsIncreasedEmissionsEvent extends Event {
 	vaultId: ObjectId;
 	rewardType: CoinType;
-	emissionScheduleMs: bigint;
-	emissionRate: bigint;
+	emissionScheduleMs: Timestamp;
+	emissionRate: bigint; // Balance ?
 }
 
-export interface InitializedRewardEvent extends Event {
+export interface FarmsInitializedRewardEvent extends Event {
 	vaultId: ObjectId;
 	rewardType: CoinType;
-	rewardAmount: bigint;
-	emissionRateMs: bigint;
-	emissionStartMs: bigint;
+	rewardAmount: Balance;
+	emissionRateMs: Timestamp;
+	emissionStartMs: Timestamp;
 }
 
-export interface JoinedEvent extends Event {
+export interface FarmsJoinedEvent extends Event {
 	stakedPositionId: ObjectId;
 	otherStakedPositionId: ObjectId;
 }
 
-export interface LockedEvent extends Event {
+export interface FarmsLockedEvent extends Event {
 	stakedPositionId: ObjectId;
-	lockStartTimestampMs: bigint;
-	lockDurationMs: bigint;
-	lockMultiplier: bigint;
+	lockStartTimestampMs: Timestamp;
+	lockDurationMs: Timestamp;
+	lockMultiplier: FarmsMultiplier;
 }
 
-export interface SplitEvent extends Event {
+export interface FarmsSplitEvent extends Event {
 	stakedPositionId: ObjectId;
 	splitStakedPositionId: ObjectId;
 }
 
-export interface StakedEvent extends Event {
+export interface FarmsStakedEvent extends Event {
 	stakedPositionId: ObjectId;
 	vaultId: ObjectId;
 	stakedType: CoinType;
-	stakedAmount: bigint;
-	multipliedStakedAmount: bigint;
-	lockStartTimestampMs: bigint;
-	lockDurationMs: bigint;
-	lockMultiplier: bigint;
+	stakedAmount: Balance;
+	multipliedStakedAmount: Balance;
+	lockStartTimestampMs: Timestamp;
+	lockDurationMs: Timestamp;
+	lockMultiplier: FarmsMultiplier;
 }
 
-export interface StakedEventRelaxed extends Event {
+export interface FarmsStakedEventRelaxed extends Event {
 	stakedPositionId: ObjectId;
 	vaultId: ObjectId;
 	stakedType: CoinType;
-	stakedAmount: bigint;
-	lockStartTimestampMs: bigint;
-	lockEndTimestampMs: bigint;
+	stakedAmount: Balance;
+	lockStartTimestampMs: Timestamp;
+	lockEndTimestampMs: Timestamp;
 }
 
-export interface UnlockedEvent extends Event {
+export interface FarmsUnlockedEvent extends Event {
 	stakedPositionId: ObjectId;
 }
 
-export interface WithdrewPrincipalEvent extends Event {
+export interface FarmsWithdrewPrincipalEvent extends Event {
 	stakedPositionId: ObjectId;
-	amount: bigint;
+	amount: Balance;
 }
 
 // =========================================================================
@@ -293,7 +287,7 @@ export interface ApiFarmsTopUpStakingPoolRewardBody {
 	walletAddress: SuiAddress;
 }
 
-export interface ApiFarmsIncreaseStakingPoolEmissionsBody {
+export interface ApiFarmsIncreaseStakingPoolRewardEmissionsBody {
 	ownerCapId: ObjectId;
 	stakingPoolId: ObjectId;
 	emissionScheduleMs: Timestamp;

@@ -25,7 +25,7 @@ export class FarmsStakedPosition extends Caller {
 		public readonly stakedPosition: FarmsStakedPositionObject,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, `farms/staked-positions/${stakedPosition.objectId}`);
+		super(network, "farms");
 		this.stakedPosition = stakedPosition;
 	}
 

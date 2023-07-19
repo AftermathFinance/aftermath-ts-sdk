@@ -82,12 +82,6 @@ export type HarvestedRewardsEventOnChain = EventOnChain<{
 	reward_amounts: BigIntAsString[];
 }>;
 
-export type HarvestedRewardsEventMetadataOnChain = EventOnChain<{
-	afterburner_vault_id: ObjectId;
-	reward_types: CoinType[];
-	reward_amounts: BigIntAsString[];
-}>;
-
 export type IncreasedEmissionsEventOnChain = EventOnChain<{
 	vault_id: ObjectId;
 	reward_type: CoinType;

@@ -2,8 +2,6 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	FarmsAddresses,
-	EventsInputs,
-	AddedRewardEvent,
 	Timestamp,
 	CoinType,
 	ApiFarmsStakeBody,
@@ -16,10 +14,11 @@ import {
 	ApiFarmsCreateStakingPoolBody,
 	FarmsStakedPositionObject,
 	FarmsStakingPoolObject,
+	ApiFarmsTopUpStakingPoolRewardBody,
+	ApiFarmsInitializeStakingPoolRewardBody,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
-import { AddedRewardEventOnChain } from "./farmsApiCastingTypes";
 import {
 	ObjectId,
 	SuiAddress,
@@ -138,22 +137,6 @@ export class FarmsApi {
 				Casting.farms.stakedPositionObjectFromSuiObjectResponse,
 		});
 	};
-
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public fetchAddedRewardEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			AddedRewardEventOnChain,
-			AddedRewardEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.addedReward,
-			},
-			eventFromEventOnChain: Casting.farms.addedRewardEventFromOnChain,
-		});
 
 	// =========================================================================
 	//  Transaction Commands
@@ -556,7 +539,7 @@ export class FarmsApi {
 		});
 	};
 
-	public increaseStakingPoolEmissionsTx = (inputs: {
+	public increaseStakingPoolRewardEmissionsTx = (inputs: {
 		tx: TransactionBlock;
 		ownerCapId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -772,17 +755,49 @@ export class FarmsApi {
 	//  Staking Pool Mutation Transactions
 	// =========================================================================
 
-	public fetchInitializeStakingPoolRewardTx =
-		Helpers.transactions.creatBuildTxFunc(
-			this.initializeStakingPoolRewardTx
-		);
+	public fetchBuildInitializeStakingPoolRewardTx = async (
+		inputs: ApiFarmsInitializeStakingPoolRewardBody
+	): Promise<TransactionBlock> => {
+		const { walletAddress } = inputs;
 
-	public fetchTopUpStakingPoolRewardTx =
-		Helpers.transactions.creatBuildTxFunc(this.topUpStakingPoolRewardTx);
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
-	public fetchIncreaseStakingPoolEmissionsTx =
+		const rewardCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: inputs.stakeCoinType,
+			coinAmount: inputs.rewardAmount,
+		});
+
+		this.initializeStakingPoolRewardTx({ ...inputs, tx, rewardCoinId });
+
+		return tx;
+	};
+
+	public fetchBuildTopUpStakingPoolRewardTx = async (
+		inputs: ApiFarmsTopUpStakingPoolRewardBody
+	): Promise<TransactionBlock> => {
+		const { walletAddress } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const rewardCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: inputs.stakeCoinType,
+			coinAmount: inputs.rewardAmount,
+		});
+
+		this.topUpStakingPoolRewardTx({ ...inputs, tx, rewardCoinId });
+
+		return tx;
+	};
+
+	public fetchIncreaseStakingPoolRewardEmissionsTx =
 		Helpers.transactions.creatBuildTxFunc(
-			this.increaseStakingPoolEmissionsTx
+			this.increaseStakingPoolRewardEmissionsTx
 		);
 
 	// =========================================================================
