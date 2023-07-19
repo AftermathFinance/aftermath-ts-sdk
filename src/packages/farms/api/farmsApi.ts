@@ -14,6 +14,8 @@ import {
 	FarmsLockEnforcement,
 	FarmsMultiplier,
 	ApiFarmsCreateStakingPoolBody,
+	FarmsStakedPositionObject,
+	FarmsStakingPoolObject,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -50,6 +52,10 @@ export class FarmsApi {
 
 	public readonly addresses: FarmsAddresses;
 
+	public readonly objectTypes: {
+		stakedPosition: AnyObjectType;
+	};
+
 	public readonly eventTypes: {
 		addedReward: AnyObjectType;
 	};
@@ -67,6 +73,10 @@ export class FarmsApi {
 
 		this.addresses = addresses;
 
+		this.objectTypes = {
+			stakedPosition: `${addresses.packages.vaults}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
+		};
+
 		this.eventTypes = {
 			addedReward: this.addedRewardEventType(),
 		};
@@ -77,8 +87,57 @@ export class FarmsApi {
 	// =========================================================================
 
 	// =========================================================================
-	//  Inspections
+	//  Objects
 	// =========================================================================
+
+	// =========================================================================
+	//  Staking Pool Objects
+	// =========================================================================
+
+	public fetchStakingPool = async (inputs: {
+		objectId: ObjectId;
+	}): Promise<FarmsStakingPoolObject> => {
+		return this.Provider.Objects().fetchCastObject({
+			...inputs,
+			objectFromSuiObjectResponse:
+				Casting.farms.stakingPoolObjectFromSuiObjectResponse,
+		});
+	};
+
+	public fetchAllStakingPools = async (): Promise<
+		FarmsStakingPoolObject[]
+	> => {
+		const dynamicFields =
+			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
+				parentObjectId: this.addresses.objects.registeredVaultsTable,
+			});
+		const objectIds: ObjectId[] = dynamicFields.map(
+			(field) => field.name.value
+		);
+
+		return this.Provider.Objects().fetchCastObjectBatch({
+			objectIds,
+			objectFromSuiObjectResponse:
+				Casting.farms.stakingPoolObjectFromSuiObjectResponse,
+		});
+	};
+
+	// =========================================================================
+	//  Staked Position Objects
+	// =========================================================================
+
+	public fetchOwnedStakedPositions = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<FarmsStakedPositionObject[]> => {
+		const { walletAddress } = inputs;
+
+		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			walletAddress,
+			objectType: this.objectTypes.stakedPosition,
+			objectFromSuiObjectResponse:
+				Casting.farms.stakedPositionObjectFromSuiObjectResponse,
+		});
+	};
 
 	// =========================================================================
 	//  Events
@@ -95,10 +154,6 @@ export class FarmsApi {
 			},
 			eventFromEventOnChain: Casting.farms.addedRewardEventFromOnChain,
 		});
-
-	// =========================================================================
-	//  Objects
-	// =========================================================================
 
 	// =========================================================================
 	//  Transaction Commands

@@ -270,6 +270,7 @@ export interface FarmsAddresses {
 	};
 	objects: {
 		vaultsRegistry: ObjectId;
+		registeredVaultsTable: ObjectId;
 	};
 }
 

@@ -50,7 +50,7 @@ export class FarmsApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static StakingPoolObjectFromSuiObjectResponse = (
+	public static stakingPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): FarmsStakingPoolObject => {
 		const objectType = getObjectType(data);
