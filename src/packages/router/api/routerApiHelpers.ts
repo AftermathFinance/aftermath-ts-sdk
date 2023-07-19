@@ -159,6 +159,7 @@ export class RouterApiHelpers {
 				...result.coinIn,
 				amount: coinInAmount,
 			},
+			referrer: inputs.referrer,
 		};
 	};
 
