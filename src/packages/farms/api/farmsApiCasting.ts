@@ -42,6 +42,7 @@ import {
 	FarmsWithdrewPrincipalEvent,
 } from "../farmsTypes";
 import { Coin } from "../..";
+import { Helpers } from "../../../general/utils";
 
 export class FarmsApiCasting {
 	// =========================================================================
@@ -55,14 +56,16 @@ export class FarmsApiCasting {
 		if (!objectType) throw new Error("no object type found");
 
 		const fields = getObjectFields(data) as AfterburnerVaultFieldsOnChain;
-		const stakeCoinType = new Coin(objectType).innerCoinType;
+		const stakeCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(objectType).innerCoinType
+		);
 
 		return {
 			objectType,
 			objectId: getObjectId(data),
 			stakeCoinType,
 			rewardCoins: fields.type_names.map((coinType, index) => ({
-				coinType,
+				coinType: Helpers.addLeadingZeroesToType("0x" + coinType),
 				rewards: BigInt(fields.rewards[index]),
 				rewardsAccumulatedPerShare: BigInt(
 					fields.rewards_accumulated_per_share[index]
