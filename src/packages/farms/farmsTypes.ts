@@ -46,6 +46,10 @@ export interface FarmsStakingPoolObject extends Object {
 	lockEnforcement: FarmsLockEnforcement;
 }
 
+export interface StakingPoolOwnerCapObject extends Object {
+	stakingPoolId: ObjectId;
+}
+
 // =========================================================================
 //  Staked Position
 // =========================================================================
@@ -294,5 +298,9 @@ export interface ApiFarmsIncreaseStakingPoolRewardEmissionsBody {
 	emissionRate: bigint;
 	stakeCoinType: CoinType;
 	rewardCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsOwnedStakingPoolOwnerCapsBody {
 	walletAddress: SuiAddress;
 }

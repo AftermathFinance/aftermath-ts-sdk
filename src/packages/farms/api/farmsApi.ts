@@ -16,6 +16,8 @@ import {
 	FarmsStakingPoolObject,
 	ApiFarmsTopUpStakingPoolRewardBody,
 	ApiFarmsInitializeStakingPoolRewardBody,
+	StakingPoolOwnerCapObject,
+	ApiFarmsOwnedStakingPoolOwnerCapsBody,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -34,7 +36,7 @@ export class FarmsApi {
 
 	private static readonly constants = {
 		moduleNames: {
-			vault: "vault",
+			vault: "afterburner_vault",
 			stakedPosition: "staked_position",
 			vaultRegistry: "vault_registry",
 			events: "events",
@@ -53,6 +55,7 @@ export class FarmsApi {
 
 	public readonly objectTypes: {
 		stakedPosition: AnyObjectType;
+		stakingPoolOwnerCap: AnyObjectType;
 	};
 
 	public readonly eventTypes: {
@@ -74,6 +77,7 @@ export class FarmsApi {
 
 		this.objectTypes = {
 			stakedPosition: `${addresses.packages.vaults}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
+			stakingPoolOwnerCap: `${addresses.packages.vaults}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
 		};
 
 		this.eventTypes = {
@@ -118,6 +122,19 @@ export class FarmsApi {
 			objectIds,
 			objectFromSuiObjectResponse:
 				Casting.farms.stakingPoolObjectFromSuiObjectResponse,
+		});
+	};
+
+	public fetchOwnedStakingPoolOwnerCaps = async (
+		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody
+	): Promise<StakingPoolOwnerCapObject[]> => {
+		const { walletAddress } = inputs;
+
+		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			walletAddress,
+			objectType: this.objectTypes.stakingPoolOwnerCap,
+			objectFromSuiObjectResponse:
+				Casting.farms.stakingPoolOwnerCapObjectFromSuiObjectResponse,
 		});
 	};
 

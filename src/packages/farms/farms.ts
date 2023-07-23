@@ -3,8 +3,10 @@ import { Caller } from "../../general/utils/caller";
 import {
 	ApiFarmsCreateStakingPoolBody,
 	ApiFarmsOwnedStakedPositionsBody,
+	ApiFarmsOwnedStakingPoolOwnerCapsBody,
 	FarmsStakedPositionObject,
 	FarmsStakingPoolObject,
+	StakingPoolOwnerCapObject,
 } from "./farmsTypes";
 import { ObjectId } from "@mysten/sui.js";
 import { FarmsStakingPool } from "./farmsStakingPool";
@@ -47,10 +49,19 @@ export class Farms extends Caller {
 		const positions = await this.fetchApi<
 			FarmsStakedPositionObject[],
 			ApiFarmsOwnedStakedPositionsBody
-		>("farms/owned-staked-positions", inputs);
+		>("owned-staked-positions", inputs);
 		return positions.map(
 			(pool) => new FarmsStakedPosition(pool, this.network)
 		);
+	}
+
+	public async getOwnedStakingPoolOwnerCaps(
+		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody
+	) {
+		return this.fetchApi<
+			StakingPoolOwnerCapObject[],
+			ApiFarmsOwnedStakingPoolOwnerCapsBody
+		>("owned-staking-pool-owner-caps", inputs);
 	}
 
 	// =========================================================================

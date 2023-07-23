@@ -48,6 +48,11 @@ export interface VaultRegistryFieldsOnChain {
 	registered_vaults: TableOnChain;
 }
 
+export interface StakingPoolOwnerCapFieldsOnChain {
+	id: ObjectId;
+	afterburner_vault_id: ObjectId;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================

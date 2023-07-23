@@ -19,6 +19,7 @@ import {
 	StakedEventOnChain,
 	StakedEventRelaxedOnChain,
 	StakedPositionFieldsOnChain,
+	StakingPoolOwnerCapFieldsOnChain,
 	UnlockedEventOnChain,
 	VaultRegistryFieldsOnChain,
 	WithdrewPrincipalEventOnChain,
@@ -40,6 +41,7 @@ import {
 	FarmsStakedEventRelaxed,
 	FarmsUnlockedEvent,
 	FarmsWithdrewPrincipalEvent,
+	StakingPoolOwnerCapObject,
 } from "../farmsTypes";
 import { Coin } from "../..";
 import { Helpers } from "../../../general/utils";
@@ -134,6 +136,23 @@ export class FarmsApiCasting {
 					),
 				})
 			),
+		};
+	};
+
+	public static stakingPoolOwnerCapObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): StakingPoolOwnerCapObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const fields = getObjectFields(
+			data
+		) as StakingPoolOwnerCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			stakingPoolId: fields.afterburner_vault_id,
 		};
 	};
 
