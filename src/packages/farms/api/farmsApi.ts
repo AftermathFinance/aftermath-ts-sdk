@@ -19,6 +19,7 @@ import {
 	StakingPoolOwnerCapObject,
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
 	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
+	PartialFarmsStakedPositionObject,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -143,16 +144,16 @@ export class FarmsApi {
 	//  Staked Position Objects
 	// =========================================================================
 
-	public fetchOwnedStakedPositions = async (inputs: {
+	public fetchOwnedPartialStakedPositions = async (inputs: {
 		walletAddress: SuiAddress;
-	}): Promise<FarmsStakedPositionObject[]> => {
+	}): Promise<PartialFarmsStakedPositionObject[]> => {
 		const { walletAddress } = inputs;
 
 		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
 			walletAddress,
 			objectType: this.objectTypes.stakedPosition,
 			objectFromSuiObjectResponse:
-				Casting.farms.stakedPositionObjectFromSuiObjectResponse,
+				Casting.farms.partialStakedPositionObjectFromSuiObjectResponse,
 		});
 	};
 
@@ -709,8 +710,8 @@ export class FarmsApi {
 		});
 
 		let harvestedCoins = [];
-		for (const [index, stakedPositionId] of stakedPositionIds.entries()) {
-			for (const rewardCoinType of inputs.rewardCoinTypes[index]) {
+		for (const stakedPositionId of stakedPositionIds) {
+			for (const rewardCoinType of inputs.rewardCoinTypes) {
 				const harvestedCoin = this.harvestRewardsTx({
 					...inputs,
 					tx,
@@ -784,7 +785,7 @@ export class FarmsApi {
 		const rewardCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
-			coinType: inputs.stakeCoinType,
+			coinType: inputs.rewardCoinType,
 			coinAmount: inputs.rewardAmount,
 		});
 

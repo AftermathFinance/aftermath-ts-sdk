@@ -36,6 +36,14 @@ export class Farms extends Caller {
 		return new FarmsStakingPool(stakingPool, this.network);
 	}
 
+	public async getStakingPools(inputs: { objectIds: ObjectId[] }) {
+		return Promise.all(
+			inputs.objectIds.map((objectId) =>
+				this.getStakingPool({ objectId })
+			)
+		);
+	}
+
 	public async getAllStakingPools() {
 		const stakingPools = await this.fetchApi<FarmsStakingPoolObject[]>("");
 		return stakingPools.map(

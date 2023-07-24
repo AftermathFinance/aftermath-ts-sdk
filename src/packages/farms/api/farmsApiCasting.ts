@@ -42,6 +42,7 @@ import {
 	FarmsUnlockedEvent,
 	FarmsWithdrewPrincipalEvent,
 	StakingPoolOwnerCapObject,
+	PartialFarmsStakedPositionObject,
 } from "../farmsTypes";
 import { Coin } from "../..";
 import { Helpers } from "../../../general/utils";
@@ -101,9 +102,9 @@ export class FarmsApiCasting {
 		};
 	};
 
-	public static stakedPositionObjectFromSuiObjectResponse = (
+	public static partialStakedPositionObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): FarmsStakedPositionObject => {
+	): PartialFarmsStakedPositionObject => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -125,7 +126,6 @@ export class FarmsApiCasting {
 			),
 			rewardCoins: fields.base_rewards_accumulated.map(
 				(baseRewardsAccumulated, index) => ({
-					coinType: "TODO",
 					baseRewardsAccumulated: BigInt(baseRewardsAccumulated),
 					baseRewardsDebt: BigInt(fields.base_rewards_debt[index]),
 					multiplierRewardsAccumulated: BigInt(

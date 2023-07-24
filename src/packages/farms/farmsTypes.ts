@@ -74,6 +74,13 @@ export interface FarmsStakedPositionObject extends Object {
 	lastHarvestRewardsTimestamp: Timestamp;
 }
 
+export type PartialFarmsStakedPositionObject = Omit<
+	FarmsStakedPositionObject,
+	"rewardCoins"
+> & {
+	rewardCoins: Omit<FarmsStakedPositionRewardCoin, "coinType">[];
+};
+
 // =========================================================================
 //  Events
 // =========================================================================
