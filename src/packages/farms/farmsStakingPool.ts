@@ -1,10 +1,10 @@
 import { Balance, CoinType, SuiNetwork, Timestamp, Url } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
-	ApiFarmsIncreaseStakingPoolRewardEmissionsBody,
+	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
 	ApiFarmsInitializeStakingPoolRewardBody,
 	ApiFarmsStakeBody,
-	ApiFarmsTopUpStakingPoolRewardBody,
+	ApiFarmsTopUpStakingPoolRewardsBody,
 	ApiHarvestFarmsRewardsBody,
 	FarmsStakingPoolObject,
 } from "./farmsTypes";
@@ -100,13 +100,15 @@ export class FarmsStakingPool extends Caller {
 		);
 	}
 
-	public async getTopUpRewardTransaction(inputs: {
+	public async getTopUpRewardsTransaction(inputs: {
 		ownerCapId: ObjectId;
-		rewardAmount: Balance;
-		rewardCoinType: CoinType;
+		rewards: {
+			rewardAmount: Balance;
+			rewardCoinType: CoinType;
+		}[];
 		walletAddress: SuiAddress;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsTopUpStakingPoolRewardBody>(
+		return this.fetchApiTransaction<ApiFarmsTopUpStakingPoolRewardsBody>(
 			"transactions/top-up-reward",
 			{
 				...inputs,
@@ -116,14 +118,16 @@ export class FarmsStakingPool extends Caller {
 		);
 	}
 
-	public async getIncreaseRewardEmissionsTransaction(inputs: {
+	public async getIncreaseRewardsEmissionsTransaction(inputs: {
 		ownerCapId: ObjectId;
-		emissionScheduleMs: Timestamp;
-		emissionRate: bigint;
-		rewardCoinType: CoinType;
+		rewards: {
+			rewardCoinType: CoinType;
+			emissionScheduleMs: Timestamp;
+			emissionRate: bigint;
+		}[];
 		walletAddress: SuiAddress;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsIncreaseStakingPoolRewardEmissionsBody>(
+		return this.fetchApiTransaction<ApiFarmsIncreaseStakingPoolRewardsEmissionsBody>(
 			"transactions/increase-reward-emissions",
 			{
 				...inputs,

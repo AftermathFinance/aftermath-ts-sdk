@@ -98,7 +98,7 @@ export type InitializedRewardEventOnChain = EventOnChain<{
 	vault_id: ObjectId;
 	reward_type: CoinType;
 	reward_amount: BigIntAsString;
-	emission_rate_ms: BigIntAsString;
+	emission_rate: BigIntAsString;
 	emission_start_ms: BigIntAsString;
 }>;
 

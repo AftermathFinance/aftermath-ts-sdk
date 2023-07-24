@@ -72,7 +72,7 @@ export class FarmsApiCasting {
 				rewardsAccumulatedPerShare: BigInt(
 					fields.rewards_accumulated_per_share[index]
 				),
-				emissionRateMs: Number(fields.emission_rates[index]),
+				emissionRate: BigInt(fields.emission_rates[index]),
 				emissionSchedulesMs: Number(
 					fields.emission_schedules_ms[index]
 				),
@@ -255,7 +255,7 @@ export class FarmsApiCasting {
 			vaultId: fields.vault_id,
 			rewardType: fields.reward_type,
 			rewardAmount: BigInt(fields.reward_amount),
-			emissionRateMs: Number(fields.emission_rate_ms),
+			emissionRate: BigInt(fields.emission_rate),
 			emissionStartMs: Number(fields.emission_start_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,

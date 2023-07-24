@@ -27,7 +27,7 @@ export interface FarmsStakingPoolRewardCoin {
 	coinType: CoinType;
 	rewards: Balance;
 	rewardsAccumulatedPerShare: Balance;
-	emissionRateMs: Timestamp;
+	emissionRate: Balance;
 	emissionSchedulesMs: Timestamp;
 	emissionStartTimestamp: Timestamp;
 	emissionEndTimestamp: Timestamp;
@@ -119,7 +119,7 @@ export interface FarmsInitializedRewardEvent extends Event {
 	vaultId: ObjectId;
 	rewardType: CoinType;
 	rewardAmount: Balance;
-	emissionRateMs: Timestamp;
+	emissionRate: Balance;
 	emissionStartMs: Timestamp;
 }
 
@@ -282,22 +282,26 @@ export interface ApiFarmsInitializeStakingPoolRewardBody {
 	walletAddress: SuiAddress;
 }
 
-export interface ApiFarmsTopUpStakingPoolRewardBody {
+export interface ApiFarmsTopUpStakingPoolRewardsBody {
 	ownerCapId: ObjectId;
 	stakingPoolId: ObjectId;
-	rewardAmount: Balance;
 	stakeCoinType: CoinType;
-	rewardCoinType: CoinType;
+	rewards: {
+		rewardCoinType: CoinType;
+		rewardAmount: Balance;
+	}[];
 	walletAddress: SuiAddress;
 }
 
-export interface ApiFarmsIncreaseStakingPoolRewardEmissionsBody {
+export interface ApiFarmsIncreaseStakingPoolRewardsEmissionsBody {
 	ownerCapId: ObjectId;
 	stakingPoolId: ObjectId;
-	emissionScheduleMs: Timestamp;
-	emissionRate: bigint;
 	stakeCoinType: CoinType;
-	rewardCoinType: CoinType;
+	rewards: {
+		rewardCoinType: CoinType;
+		emissionScheduleMs: Timestamp;
+		emissionRate: bigint;
+	}[];
 	walletAddress: SuiAddress;
 }
 

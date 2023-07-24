@@ -14,10 +14,11 @@ import {
 	ApiFarmsCreateStakingPoolBody,
 	FarmsStakedPositionObject,
 	FarmsStakingPoolObject,
-	ApiFarmsTopUpStakingPoolRewardBody,
+	ApiFarmsTopUpStakingPoolRewardsBody,
 	ApiFarmsInitializeStakingPoolRewardBody,
 	StakingPoolOwnerCapObject,
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
+	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -792,30 +793,52 @@ export class FarmsApi {
 		return tx;
 	};
 
-	public fetchBuildTopUpStakingPoolRewardTx = async (
-		inputs: ApiFarmsTopUpStakingPoolRewardBody
+	public fetchBuildTopUpStakingPoolRewardsTx = async (
+		inputs: ApiFarmsTopUpStakingPoolRewardsBody
 	): Promise<TransactionBlock> => {
 		const { walletAddress } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const rewardCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: inputs.stakeCoinType,
-			coinAmount: inputs.rewardAmount,
-		});
+		for (const reward of inputs.rewards) {
+			const rewardCoinId =
+				await this.Provider.Coin().fetchCoinWithAmountTx({
+					tx,
+					walletAddress,
+					coinType: reward.rewardCoinType,
+					coinAmount: reward.rewardAmount,
+				});
 
-		this.topUpStakingPoolRewardTx({ ...inputs, tx, rewardCoinId });
+			this.topUpStakingPoolRewardTx({
+				...inputs,
+				...reward,
+				tx,
+				rewardCoinId,
+			});
+		}
 
 		return tx;
 	};
 
-	public fetchIncreaseStakingPoolRewardEmissionsTx =
-		Helpers.transactions.creatBuildTxFunc(
-			this.increaseStakingPoolRewardEmissionsTx
-		);
+	public fetchIncreaseStakingPoolRewardsEmissionsTx = (
+		inputs: ApiFarmsIncreaseStakingPoolRewardsEmissionsBody
+	) => {
+		const { walletAddress } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		for (const reward of inputs.rewards) {
+			this.increaseStakingPoolRewardEmissionsTx({
+				...inputs,
+				...reward,
+				tx,
+			});
+		}
+
+		return tx;
+	};
 
 	// =========================================================================
 	//  Private Methods
