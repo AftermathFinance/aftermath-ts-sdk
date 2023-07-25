@@ -12,7 +12,6 @@ import {
 	FarmsLockEnforcement,
 	FarmsMultiplier,
 	ApiFarmsCreateStakingPoolBody,
-	FarmsStakedPositionObject,
 	FarmsStakingPoolObject,
 	ApiFarmsTopUpStakingPoolRewardsBody,
 	ApiFarmsInitializeStakingPoolRewardBody,
@@ -20,6 +19,14 @@ import {
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
 	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
 	PartialFarmsStakedPositionObject,
+	EventsInputs,
+	FarmsStakedEvent,
+	FarmsStakedRelaxedEvent,
+	FarmsLockedEvent,
+	FarmsUnlockedEvent,
+	FarmsWithdrewPrincipalEvent,
+	FarmsDepositedPrincipalEvent,
+	FarmsHarvestedRewardsEvent,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -30,6 +37,15 @@ import {
 	TransactionBlock,
 } from "@mysten/sui.js";
 import { Sui } from "../../sui";
+import {
+	DepositedPrincipalEventOnChain,
+	HarvestedRewardsEventOnChain,
+	LockedEventOnChain,
+	StakedEventOnChain,
+	StakedRelaxedEventOnChain,
+	UnlockedEventOnChain,
+	WithdrewPrincipalEventOnChain,
+} from "./farmsApiCastingTypes";
 
 export class FarmsApi {
 	// =========================================================================
@@ -45,7 +61,31 @@ export class FarmsApi {
 		},
 
 		eventNames: {
+			// staking pools
+			// creation
+			createdVault: "CreatedVaultEvent",
+			// mutation
+			initializedReward: "InitializedRewardEvent",
 			addedReward: "AddedRewardEvent",
+			increasedEmissions: "IncreasedEmissionsEvent",
+
+			// staking positions
+			// creation
+			staked: "StakedEvent",
+			stakedRelaxed: "StakedEventRelaxed",
+			// locking
+			locked: "LockedEvent",
+			unlocked: "UnlockedEvent",
+			// mutation
+			joined: "JoinedEvent",
+			split: "SplitEvent",
+			// staking
+			depositedPrincipal: "DepositedPrincipalEvent",
+			withdrewPrincipal: "WithdrewPrincipalEvent",
+			// reward harvesting
+			harvestedRewards: "HarvestedRewardsEvent",
+			// destruction
+			destroyedStakedPosition: "DestroyedStakedPositionEvent",
 		},
 	};
 
@@ -61,7 +101,18 @@ export class FarmsApi {
 	};
 
 	public readonly eventTypes: {
-		addedReward: AnyObjectType;
+		// staking positions
+		// creation
+		staked: AnyObjectType;
+		stakedRelaxed: AnyObjectType;
+		// locking
+		locked: AnyObjectType;
+		unlocked: AnyObjectType;
+		// staking
+		depositedPrincipal: AnyObjectType;
+		withdrewPrincipal: AnyObjectType;
+		// reward harvesting
+		harvestedRewards: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -83,7 +134,18 @@ export class FarmsApi {
 		};
 
 		this.eventTypes = {
-			addedReward: this.addedRewardEventType(),
+			// staking positions
+			// creation
+			staked: this.stakedEventType(),
+			stakedRelaxed: this.stakedRelaxedEventType(),
+			// locking
+			locked: this.lockedEventType(),
+			unlocked: this.unlockedEventType(),
+			// staking
+			depositedPrincipal: this.depositedPrincipalEventType(),
+			withdrewPrincipal: this.withdrewPrincipalEventType(),
+			// reward harvesting
+			harvestedRewards: this.harvestedRewardsEventType(),
 		};
 	}
 
@@ -156,6 +218,113 @@ export class FarmsApi {
 				Casting.farms.partialStakedPositionObjectFromSuiObjectResponse,
 		});
 	};
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	// =========================================================================
+	//  Staking Position Creation
+	// =========================================================================
+
+	public fetchStakedEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			StakedEventOnChain,
+			FarmsStakedEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.staked,
+			},
+			eventFromEventOnChain: Casting.farms.stakedEventFromOnChain,
+		});
+
+	public fetchStakedRelaxedEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			StakedRelaxedEventOnChain,
+			FarmsStakedRelaxedEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.stakedRelaxed,
+			},
+			eventFromEventOnChain: Casting.farms.stakedRelaxedEventFromOnChain,
+		});
+
+	// =========================================================================
+	//  Staking Position Locking
+	// =========================================================================
+
+	public fetchLockedEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			LockedEventOnChain,
+			FarmsLockedEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.locked,
+			},
+			eventFromEventOnChain: Casting.farms.lockedEventFromOnChain,
+		});
+
+	public fetchUnlockedEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			UnlockedEventOnChain,
+			FarmsUnlockedEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.unlocked,
+			},
+			eventFromEventOnChain: Casting.farms.unlockedEventFromOnChain,
+		});
+
+	// =========================================================================
+	//  Staking Position Staking
+	// =========================================================================
+
+	public fetchDepositedPrincipalEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			DepositedPrincipalEventOnChain,
+			FarmsDepositedPrincipalEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.depositedPrincipal,
+			},
+			eventFromEventOnChain:
+				Casting.farms.depositedPrincipalEventFromOnChain,
+		});
+
+	public fetchWithdrewPrincipalEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			WithdrewPrincipalEventOnChain,
+			FarmsWithdrewPrincipalEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.withdrewPrincipal,
+			},
+			eventFromEventOnChain:
+				Casting.farms.withdrewPrincipalEventFromOnChain,
+		});
+
+	// =========================================================================
+	//  Staking Position Reward Harvesting
+	// =========================================================================
+
+	public fetchHarvestedRewardsEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			HarvestedRewardsEventOnChain,
+			FarmsHarvestedRewardsEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.harvestedRewards,
+			},
+			eventFromEventOnChain:
+				Casting.farms.harvestedRewardsEventFromOnChain,
+		});
 
 	// =========================================================================
 	//  Transaction Commands
@@ -661,11 +830,18 @@ export class FarmsApi {
 	public fetchBuildUnstakeTx = async (inputs: ApiFarmsUnstakeBody) => {
 		const { walletAddress } = inputs;
 
-		// harvest rewards
-		const tx = await this.fetchBuildHarvestRewardsTx({
-			...inputs,
-			stakedPositionIds: [inputs.stakedPositionId],
-		});
+		let tx;
+		if (inputs.rewardCoinTypes.length <= 0) {
+			// harvest rewards
+			tx = await this.fetchBuildHarvestRewardsTx({
+				...inputs,
+				stakedPositionIds: [inputs.stakedPositionId],
+			});
+		} else {
+			// no rewards to harvest
+			tx = new TransactionBlock();
+			tx.setSender(walletAddress);
+		}
 
 		// withdraw principal
 		const withdrawnCoin = this.withdrawPrincipalTx({
@@ -849,10 +1025,68 @@ export class FarmsApi {
 	//  Event Types
 	// =========================================================================
 
-	private addedRewardEventType = () =>
+	// =========================================================================
+	//  Staking Position Creation
+	// =========================================================================
+
+	private stakedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.vaults,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.addedReward
+			FarmsApi.constants.eventNames.staked
+		);
+
+	private stakedRelaxedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaults,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.stakedRelaxed
+		);
+
+	// =========================================================================
+	//  Staking Position Locking
+	// =========================================================================
+
+	private lockedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaults,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.locked
+		);
+
+	private unlockedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaults,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.unlocked
+		);
+
+	// =========================================================================
+	//  Staking Position Staking
+	// =========================================================================
+
+	private depositedPrincipalEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaults,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.depositedPrincipal
+		);
+
+	private withdrewPrincipalEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaults,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.withdrewPrincipal
+		);
+
+	// =========================================================================
+	//  Staking Position Reward Harvesting
+	// =========================================================================
+
+	private harvestedRewardsEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaults,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.harvestedRewards
 		);
 }

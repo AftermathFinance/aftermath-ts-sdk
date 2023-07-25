@@ -158,7 +158,7 @@ export interface FarmsStakedEvent extends Event {
 	lockMultiplier: FarmsMultiplier;
 }
 
-export interface FarmsStakedEventRelaxed extends Event {
+export interface FarmsStakedRelaxedEvent extends Event {
 	stakedPositionId: ObjectId;
 	vaultId: ObjectId;
 	stakedType: CoinType;

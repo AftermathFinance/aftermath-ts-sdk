@@ -130,7 +130,7 @@ export type StakedEventOnChain = EventOnChain<{
 	lock_multiplier: BigIntAsString;
 }>;
 
-export type StakedEventRelaxedOnChain = EventOnChain<{
+export type StakedRelaxedEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	staked_type: CoinType;

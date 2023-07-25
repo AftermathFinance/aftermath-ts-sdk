@@ -1,11 +1,18 @@
-import { SuiNetwork, Url } from "../../types";
+import { EventsInputs, SuiNetwork, Url } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiFarmsCreateStakingPoolBody,
 	ApiFarmsOwnedStakedPositionsBody,
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
+	FarmsDepositedPrincipalEvent,
+	FarmsHarvestedRewardsEvent,
+	FarmsLockedEvent,
+	FarmsStakedEvent,
 	FarmsStakedPositionObject,
+	FarmsStakedRelaxedEvent,
 	FarmsStakingPoolObject,
+	FarmsUnlockedEvent,
+	FarmsWithdrewPrincipalEvent,
 	StakingPoolOwnerCapObject,
 } from "./farmsTypes";
 import { ObjectId } from "@mysten/sui.js";
@@ -81,6 +88,69 @@ export class Farms extends Caller {
 	) {
 		return this.fetchApiTransaction<ApiFarmsCreateStakingPoolBody>(
 			"transactions/create-staking-pool",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	// =========================================================================
+	//  Staking Position Creation
+	// =========================================================================
+
+	public async getStakedEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<FarmsStakedEvent>("events/staked", inputs);
+	}
+
+	public async getStakedRelaxedEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<FarmsStakedRelaxedEvent>(
+			"events/staked-relaxed",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Staking Position Locking
+	// =========================================================================
+
+	public async getLockedEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<FarmsLockedEvent>("events/locked", inputs);
+	}
+
+	public async getUnlockedEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<FarmsUnlockedEvent>(
+			"events/unlocked",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Staking Position Staking
+	// =========================================================================
+
+	public async getDepositedPrincipalEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<FarmsDepositedPrincipalEvent>(
+			"events/deposited-principal",
+			inputs
+		);
+	}
+
+	public async getWithdrewPrincipalEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<FarmsWithdrewPrincipalEvent>(
+			"events/withdrew-principal",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Staking Position Reward Harvesting
+	// =========================================================================
+
+	public async getHarvestedRewardsEvents(inputs: EventsInputs) {
+		return this.fetchApiEvents<FarmsHarvestedRewardsEvent>(
+			"events/harvested-rewards",
 			inputs
 		);
 	}

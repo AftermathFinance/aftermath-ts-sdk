@@ -17,7 +17,7 @@ import {
 	LockedEventOnChain,
 	SplitEventOnChain,
 	StakedEventOnChain,
-	StakedEventRelaxedOnChain,
+	StakedRelaxedEventOnChain,
 	StakedPositionFieldsOnChain,
 	StakingPoolOwnerCapFieldsOnChain,
 	UnlockedEventOnChain,
@@ -38,7 +38,7 @@ import {
 	FarmsLockedEvent,
 	FarmsSplitEvent,
 	FarmsStakedEvent,
-	FarmsStakedEventRelaxed,
+	FarmsStakedRelaxedEvent,
 	FarmsUnlockedEvent,
 	FarmsWithdrewPrincipalEvent,
 	StakingPoolOwnerCapObject,
@@ -323,9 +323,9 @@ export class FarmsApiCasting {
 		};
 	};
 
-	public static stakedEventRelaxedFromOnChain = (
-		eventOnChain: StakedEventRelaxedOnChain
-	): FarmsStakedEventRelaxed => {
+	public static stakedRelaxedEventFromOnChain = (
+		eventOnChain: StakedRelaxedEventOnChain
+	): FarmsStakedRelaxedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			stakedPositionId: fields.staked_position_id,

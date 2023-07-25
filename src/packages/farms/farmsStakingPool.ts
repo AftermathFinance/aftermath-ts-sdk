@@ -22,6 +22,7 @@ export class FarmsStakingPool extends Caller {
 	) {
 		super(network, "farms");
 		this.stakingPool = stakingPool;
+		this.emitRewards();
 	}
 
 	// =========================================================================
@@ -57,10 +58,8 @@ export class FarmsStakingPool extends Caller {
 		// ia. Check that the vault has deposits.
 		if (this.stakingPool.stakedAmount === BigInt(0)) return;
 
-		const rewardCoins = Helpers.deepCopy(
-			this.stakingPool.rewardCoins.entries()
-		);
-		for (const [rewardCoinIndex, rewardCoin] of rewardCoins) {
+		const rewardCoins = Helpers.deepCopy(this.stakingPool.rewardCoins);
+		for (const [rewardCoinIndex, rewardCoin] of rewardCoins.entries()) {
 			// ib. Check that enough time has passed since the last emission.
 			if (
 				currentTimestamp <
