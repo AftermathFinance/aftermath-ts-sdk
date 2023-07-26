@@ -11,14 +11,13 @@ import {
 	CoinType,
 	CoinsToBalance,
 	FarmsStakedPositionObject,
-	FarmsStakedPositionRewardCoin,
-	FarmsStakingPoolObject,
 	SuiNetwork,
 	Timestamp,
 	Url,
 } from "../../types";
 import { FarmsStakingPool } from "./farmsStakingPool";
 import { Fixed } from "../../general/utils/fixed";
+import { Helpers } from "../../general/utils";
 
 export class FarmsStakedPosition extends Caller {
 	// =========================================================================
@@ -76,6 +75,14 @@ export class FarmsStakedPosition extends Caller {
 		return this.stakedPosition.rewardCoins.map((coin) => coin.coinType);
 	};
 
+	public nonZeroRewardCoinTypes = (inputs: {
+		stakingPool: FarmsStakingPool;
+	}): CoinType[] => {
+		return Object.entries(this.rewardCoinsToClaimableBalance(inputs))
+			.filter(([, val]) => val >= BigInt(0))
+			.map(([key]) => key);
+	};
+
 	public rewardCoin = (inputs: { coinType: CoinType }) => {
 		const foundCoin = this.stakedPosition.rewardCoins.find(
 			(coin) => coin.coinType === inputs.coinType
@@ -83,6 +90,23 @@ export class FarmsStakedPosition extends Caller {
 		if (!foundCoin) throw new Error("Invalid coin type");
 
 		return foundCoin;
+	};
+
+	public hasClaimableRewards = (inputs: {
+		stakingPool: FarmsStakingPool;
+	}): boolean => {
+		const { stakingPool } = inputs;
+
+		return (
+			Helpers.sumBigInt(
+				this.rewardCoinTypes().map((coinType) =>
+					this.rewardsEarned({
+						coinType,
+						stakingPool,
+					})
+				)
+			) > BigInt(0)
+		);
 	};
 
 	// =========================================================================
@@ -222,7 +246,10 @@ export class FarmsStakedPosition extends Caller {
 		);
 	}
 
-	public async getUnstakeTransaction(inputs: { walletAddress: SuiAddress }) {
+	public async getUnstakeTransaction(inputs: {
+		walletAddress: SuiAddress;
+		stakingPool: FarmsStakingPool;
+	}) {
 		return this.fetchApiTransaction<ApiFarmsUnstakeBody>(
 			"transactions/unstake",
 			{
@@ -231,7 +258,7 @@ export class FarmsStakedPosition extends Caller {
 				stakeCoinType: this.stakedPosition.stakeCoinType,
 				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
 				withdrawAmount: this.stakedPosition.stakedAmount,
-				rewardCoinTypes: this.rewardCoinTypes(),
+				rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
 			}
 		);
 	}
@@ -284,6 +311,7 @@ export class FarmsStakedPosition extends Caller {
 
 	public async getHarvestRewardsTransaction(inputs: {
 		walletAddress: SuiAddress;
+		stakingPool: FarmsStakingPool;
 	}) {
 		return this.fetchApiTransaction<ApiHarvestFarmsRewardsBody>(
 			"transactions/harvest-rewards",
@@ -292,7 +320,7 @@ export class FarmsStakedPosition extends Caller {
 				stakedPositionIds: [this.stakedPosition.objectId],
 				stakeCoinType: this.stakedPosition.stakeCoinType,
 				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-				rewardCoinTypes: this.rewardCoinTypes(),
+				rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
 			}
 		);
 	}
