@@ -267,7 +267,7 @@ export interface ApiFarmsCreateStakingPoolBody {
 	lockEnforcement: FarmsLockEnforcement;
 	minLockDurationMs: Timestamp;
 	maxLockDurationMs: Timestamp;
-	minLockMultiplier: FarmsMultiplier;
+	maxLockMultiplier: FarmsMultiplier;
 	minStakeAmount: Balance;
 	stakeCoinType: CoinType;
 	walletAddress: SuiAddress;

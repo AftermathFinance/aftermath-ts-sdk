@@ -593,7 +593,7 @@ export class FarmsApi {
 		lockEnforcement: FarmsLockEnforcement;
 		minLockDurationMs: Timestamp;
 		maxLockDurationMs: Timestamp;
-		minLockMultiplier: FarmsMultiplier;
+		maxLockMultiplier: FarmsMultiplier;
 		minStakeAmount: Balance;
 		stakeCoinType: CoinType;
 	}) /* (AfterburnerVault, OwnerCap) */ => {
@@ -611,7 +611,7 @@ export class FarmsApi {
 				tx.pure(inputs.lockEnforcement === "Strict" ? 0 : 1, "u64"),
 				tx.pure(inputs.minLockDurationMs, "u64"),
 				tx.pure(inputs.maxLockDurationMs, "u64"),
-				tx.pure(inputs.minLockMultiplier, "u64"),
+				tx.pure(inputs.maxLockMultiplier, "u64"),
 				tx.pure(inputs.minStakeAmount, "u64"),
 			],
 		});
