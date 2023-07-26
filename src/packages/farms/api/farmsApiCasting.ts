@@ -21,7 +21,6 @@ import {
 	StakedPositionFieldsOnChain,
 	StakingPoolOwnerCapFieldsOnChain,
 	UnlockedEventOnChain,
-	VaultRegistryFieldsOnChain,
 	WithdrewPrincipalEventOnChain,
 } from "./farmsApiCastingTypes";
 import {
@@ -29,7 +28,6 @@ import {
 	FarmsCreatedVaultEvent,
 	FarmsDepositedPrincipalEvent,
 	FarmsDestroyedStakedPositionEvent,
-	FarmsStakedPositionObject,
 	FarmsStakingPoolObject,
 	FarmsHarvestedRewardsEvent,
 	FarmsIncreasedEmissionsEvent,
@@ -109,7 +107,9 @@ export class FarmsApiCasting {
 		if (!objectType) throw new Error("no object type found");
 
 		const fields = getObjectFields(data) as StakedPositionFieldsOnChain;
-		const stakeCoinType = new Coin(objectType).innerCoinType;
+		const stakeCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(objectType).innerCoinType
+		);
 
 		return {
 			objectType,
@@ -166,7 +166,9 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: fields.reward_type,
+			rewardType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.reward_type
+			),
 			rewardAmount: BigInt(fields.reward_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -180,7 +182,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			vaultId: fields.vault_id,
-			stakeType: fields.stake_type,
+			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
 			minLockDurationMs: Number(fields.min_lock_duration_ms),
 			maxLockDurationMs: Number(fields.max_lock_duration_ms),
 			maxLockMultiplier: BigInt(fields.max_lock_multiplier),
@@ -222,7 +224,9 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			afterburnerVaultId: fields.afterburner_vault_id,
-			rewardTypes: fields.reward_types,
+			rewardTypes: fields.reward_types.map((rewardType) =>
+				Helpers.addLeadingZeroesToType("0x" + rewardType)
+			),
 			rewardAmounts: fields.reward_amounts.map((amount) =>
 				BigInt(amount)
 			),
@@ -238,7 +242,9 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: fields.reward_type,
+			rewardType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.reward_type
+			),
 			emissionScheduleMs: Number(fields.emission_schedule_ms),
 			emissionRate: BigInt(fields.emission_rate),
 			timestamp: eventOnChain.timestampMs,
@@ -253,7 +259,9 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			vaultId: fields.vault_id,
-			rewardType: fields.reward_type,
+			rewardType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.reward_type
+			),
 			rewardAmount: BigInt(fields.reward_amount),
 			emissionRate: BigInt(fields.emission_rate),
 			emissionStartMs: Number(fields.emission_start_ms),
@@ -311,7 +319,9 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: fields.staked_type,
+			stakedType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.staked_type
+			),
 			stakedAmount: BigInt(fields.staked_amount),
 			multipliedStakedAmount: BigInt(fields.multiplied_staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
@@ -330,7 +340,9 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			vaultId: fields.vault_id,
-			stakedType: fields.staked_type,
+			stakedType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.staked_type
+			),
 			stakedAmount: BigInt(fields.staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockEndTimestampMs: Number(fields.lock_end_timestamp_ms),
