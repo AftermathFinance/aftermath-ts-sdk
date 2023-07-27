@@ -1,4 +1,4 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
@@ -11,9 +11,9 @@ import {
 	SupplyOnChain,
 } from "../../../general/types/castingTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// Objects
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Objects
+// =========================================================================
 
 export interface PoolFieldsOnChain {
 	name: PoolName;
@@ -21,18 +21,22 @@ export interface PoolFieldsOnChain {
 	lp_supply: SupplyOnChain;
 	illiquid_lp_supply: BigIntAsString;
 	type_names: CoinType[];
-	balances: BigIntAsString[];
+	normalized_balances: BigIntAsString[];
 	weights: BigIntAsString[];
 	flatness: BigIntAsString;
 	fees_swap_in: BigIntAsString[];
 	fees_swap_out: BigIntAsString[];
 	fees_deposit: BigIntAsString[];
 	fees_withdraw: BigIntAsString[];
+	decimal_scalars: BigIntAsString[];
+	// coin_decimals: Option<vector<u8>>
+	lp_decimals: BigIntAsString;
+	lp_decimal_scalar: BigIntAsString;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Events
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Events
+// =========================================================================
 
 export type PoolCreateEventOnChain = EventOnChain<
 	{

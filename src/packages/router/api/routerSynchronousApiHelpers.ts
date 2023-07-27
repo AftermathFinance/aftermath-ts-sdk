@@ -1,4 +1,5 @@
 import {
+	ObjectId,
 	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
@@ -6,98 +7,290 @@ import {
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
-	RouterProtocolName,
-	RouterSerializablePool,
+	RouterExternalFee,
+	RouterSynchronousProtocolName,
+	RouterSynchronousSerializablePool,
+	RouterTradeEvent,
+	RouterTradePath,
+	SynchronousProtocolsToPoolObjectIds,
 } from "../routerTypes";
-import { Balance, CoinType, Slippage, SuiNetwork, Url } from "../../../types";
+import {
+	AnyObjectType,
+	Balance,
+	CoinType,
+	EventsInputs,
+	PoolsAddresses,
+	ReferralVaultAddresses,
+	RequiredRouterAddresses,
+	Slippage,
+} from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
 import { Router } from "../router";
-import { RouterApiInterface } from "../utils/synchronous/interfaces/routerApiInterface";
+import { RouterSynchronousApiInterface } from "../utils/synchronous/interfaces/routerSynchronousApiInterface";
 import { PoolsApi } from "../../pools/api/poolsApi";
-import { NojoAmmApi } from "../../external/nojo/nojoAmmApi";
-import { DeepBookApi } from "../../external/deepBook/deepBookApi";
-import { Helpers } from "../../../general/utils";
-import { CetusApi } from "../../external/cetus/cetusApi";
-import { TurbosApi } from "../../external/turbos/turbosApi";
+import { Casting, Helpers } from "../../../general/utils";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { RouterApiCasting } from "./routerApiCasting";
+import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
+import { InterestApi } from "../../external/interest/interestApi";
+import { KriyaApi } from "../../external/kriya/kriyaApi";
+import { BaySwapApi } from "../../external/baySwap/baySwapApi";
+import { SuiswapApi } from "../../external/suiswap/suiswapApi";
+import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 
 export class RouterSynchronousApiHelpers {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	private readonly protocolNamesToApi: Record<
-		RouterProtocolName,
-		() => RouterApiInterface<any>
+		RouterSynchronousProtocolName,
+		() => RouterSynchronousApiInterface<any>
 	> = {
 		Aftermath: () => new PoolsApi(this.Provider),
-		Nojo: () => new NojoAmmApi(this.Provider),
-		DeepBook: () => new DeepBookApi(this.Provider),
-		Cetus: () => new CetusApi(this.Provider),
-		Turbos: () => new TurbosApi(this.Provider),
+		Interest: () => new InterestApi(this.Provider),
+		Kriya: () => new KriyaApi(this.Provider),
+		BaySwap: () => new BaySwapApi(this.Provider),
+		Suiswap: () => new SuiswapApi(this.Provider),
+		BlueMove: () => new BlueMoveApi(this.Provider),
 	};
 
 	public static readonly constants = {
-		defaults: {
-			tradePartitionCount: 3,
+		moduleNames: {
+			swapCap: "swap_cap",
+		},
+		eventNames: {
+			routerTrade: "SwapCompletedEvent",
 		},
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	public readonly addresses: {
+		router: RequiredRouterAddresses;
+		pools: PoolsAddresses;
+		referralVault: ReferralVaultAddresses;
+	};
+	public readonly eventTypes: {
+		routerTrade: AnyObjectType;
+	};
+
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
+		const router = this.Provider.addresses.router;
+		const pools = this.Provider.addresses.pools;
+		const referralVault = this.Provider.addresses.referralVault;
+
+		if (!router || !pools || !referralVault)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		this.addresses = {
+			router,
+			pools,
+			referralVault,
+		};
+		this.eventTypes = {
+			routerTrade: this.routerTradeEventType(),
+		};
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Objects
+	// =========================================================================
 
-	public fetchAllPools = async (inputs: {
-		protocols: RouterProtocolName[];
-	}): Promise<RouterSerializablePool[]> => {
-		const apis = this.protocolApisFromNames(inputs);
+	public fetchPoolsFromIds = async (inputs: {
+		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
+	}): Promise<RouterSynchronousSerializablePool[]> => {
+		const protocols = Object.keys(
+			inputs.synchronousProtocolsToPoolObjectIds
+		) as RouterSynchronousProtocolName[];
+
+		const apis = this.protocolApisFromNames({ protocols });
 
 		const poolsByProtocol = await Promise.all(
-			apis.map((api) => api.fetchAllPools())
+			apis.map((api, index) =>
+				api.fetchPoolsFromIds({
+					objectIds:
+						inputs.synchronousProtocolsToPoolObjectIds[
+							protocols[index]
+						],
+				})
+			)
 		);
 
 		const pools = poolsByProtocol.reduce(
 			(arr, acc) => [...acc, ...arr],
 			[]
 		);
-
 		return pools;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	public fetchAllPoolIds = async (inputs: {
+		protocols: RouterSynchronousProtocolName[];
+	}): Promise<SynchronousProtocolsToPoolObjectIds> => {
+		const apis = this.protocolApisFromNames(inputs);
 
-	public fetchSupportedCoins = async (inputs: {
-		protocols: RouterProtocolName[];
-	}): Promise<CoinType[]> => {
-		const apis = this.protocolApisFromNames({
-			protocols: inputs.protocols,
-		});
-
-		const arrayOfArraysOfCoins = await Promise.all(
-			apis.map((api) => api.fetchSupportedCoins())
+		const poolIdsByProtocol = await Promise.all(
+			apis.map((api) => api.fetchAllPoolIds())
 		);
 
-		const allCoins = arrayOfArraysOfCoins.reduce(
-			(arr, acc) => [...acc, ...arr],
-			[]
+		const poolIds = poolIdsByProtocol.reduce(
+			(acc, ids, index) => ({
+				...acc,
+				[inputs.protocols[index]]: ids,
+			}),
+			{} as SynchronousProtocolsToPoolObjectIds
 		);
-		const coins = Helpers.uniqueArray(allCoins);
-
-		return coins;
+		return poolIds;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transaction Building
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transaction Commands
+	// =========================================================================
+
+	public obtainRouterCapTx = (inputs: {
+		tx: TransactionBlock;
+		coinInId: ObjectId | TransactionArgument;
+		minAmountOut: Balance;
+		coinInType: CoinType;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}) /* (RouterSwapCap) */ => {
+		const {
+			tx,
+			coinInId,
+			minAmountOut,
+			coinInType,
+			coinOutType,
+			referrer,
+			externalFee,
+		} = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.router.packages.utils,
+				RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
+				"obtain_router_cap"
+			),
+			typeArguments: [coinInType, coinOutType],
+			arguments: [
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_in
+				tx.pure(minAmountOut, "u64"), // min_amount_out
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(referrer),
+					"Option<address>"
+				), // referrer
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(
+						externalFee?.recipient
+					),
+					"Option<address>"
+				), // router_fee_recipient
+				tx.pure(
+					TransactionsApiHelpers.createOptionObject(
+						externalFee
+							? Casting.numberToFixedBigInt(
+									externalFee.feePercentage
+							  )
+							: undefined
+					),
+					"Option<u64>"
+				), // router_fee
+			],
+		});
+	};
+
+	public initiatePathTx = (inputs: {
+		tx: TransactionBlock;
+		routerSwapCap: TransactionArgument;
+		coinInAmount: Balance;
+		coinInType: CoinType;
+	}) /* (Coin) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.router.packages.utils,
+				RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
+				"initiate_path"
+			),
+			typeArguments: [inputs.coinInType],
+			arguments: [
+				inputs.routerSwapCap, // RouterSwapCap
+				tx.pure(inputs.coinInAmount, "u64"),
+			],
+		});
+	};
+
+	public returnRouterCapTx = (inputs: {
+		tx: TransactionBlock;
+		routerSwapCap: TransactionArgument;
+		coinOutId: ObjectId | TransactionArgument;
+		routerSwapCapCoinType: CoinType;
+		coinOutType: CoinType;
+	}) => {
+		const {
+			tx,
+			routerSwapCap,
+			coinOutId,
+			routerSwapCapCoinType,
+			coinOutType,
+		} = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.router.packages.utils,
+				RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
+				"return_router_cap"
+			),
+			typeArguments: [routerSwapCapCoinType, coinOutType],
+			arguments: [
+				routerSwapCap, // RouterSwapCap
+				typeof coinOutId === "string"
+					? tx.object(coinOutId)
+					: coinOutId, // coin_out
+
+				// AF fees
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+			],
+		});
+	};
+
+	public returnRouterCapAlreadyPayedFeeTx = (inputs: {
+		tx: TransactionBlock;
+		routerSwapCap: TransactionArgument;
+		routerSwapCapCoinType: CoinType;
+	}) => {
+		const { tx, routerSwapCap, routerSwapCapCoinType } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.router.packages.utils,
+				RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
+				"return_router_cap_already_payed_fee"
+			),
+			typeArguments: [routerSwapCapCoinType],
+			arguments: [
+				routerSwapCap, // RouterSwapCap
+			],
+		});
+	};
+
+	// =========================================================================
+	//  Transaction Builders
+	// =========================================================================
 
 	public async fetchBuildTransactionForCompleteTradeRoute(inputs: {
 		walletAddress: SuiAddress;
@@ -121,140 +314,209 @@ export class RouterSynchronousApiHelpers {
 		tx.setSender(walletAddress);
 
 		if (referrer)
-			this.Provider.ReferralVault().Helpers.addUpdateReferrerCommandToTransaction(
-				{
-					tx,
-					referrer,
-				}
-			);
-
-		const coinInArg =
-			await this.Provider.Coin().Helpers.fetchCoinWithAmountTx({
+			this.Provider.ReferralVault().updateReferrerTx({
 				tx,
-				walletAddress,
-				coinType: completeRoute.coinIn.type,
-				coinAmount: completeRoute.coinIn.amount,
+				referrer,
 			});
+
+		const startCoinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: completeRoute.coinIn.type,
+			coinAmount: completeRoute.coinIn.amount,
+		});
+
+		const minAmountOut =
+			RouterSynchronousApiHelpers.calcCompleteRouteMinAmountOut({
+				completeRoute,
+				slippage,
+			});
+
+		const routerSwapCapCoinType = completeRoute.coinIn.type;
+		const routerSwapCap = this.obtainRouterCapTx({
+			tx,
+			coinInId: startCoinInId,
+			coinInType: completeRoute.coinIn.type,
+			coinOutType: completeRoute.coinOut.type,
+			referrer,
+			externalFee,
+			minAmountOut,
+		});
 
 		let coinsOut: TransactionArgument[] = [];
 
-		let splitCoins: TransactionArgument[] = [];
-		if (completeRoute.routes.length > 1) {
-			splitCoins = tx.add({
-				kind: "SplitCoins",
-				coin: coinInArg,
-				amounts: completeRoute.routes
-					.slice(1)
-					.map((route) => tx.pure(route.coinIn.amount)),
-			});
-		}
-
+		let coinInAmountRemaining = completeRoute.coinIn.amount;
 		for (const [routeIndex, route] of completeRoute.routes.entries()) {
-			const splitCoinArg =
-				routeIndex === 0 ? coinInArg : splitCoins[routeIndex - 1];
+			let coinInId: TransactionArgument | undefined = this.initiatePathTx(
+				{
+					tx,
+					routerSwapCap,
+					// this is for possible route amount rounding protection
+					coinInAmount:
+						routeIndex === completeRoute.routes.length - 1
+							? coinInAmountRemaining
+							: route.coinIn.amount,
+					coinInType: route.coinIn.type,
+				}
+			);
 
-			let coinIn: TransactionArgument | undefined = splitCoinArg;
+			coinInAmountRemaining -= route.coinIn.amount;
 
-			for (const path of route.paths) {
+			for (const [, path] of route.paths.entries()) {
 				const poolForPath = createRouterPool({
 					pool: path.pool,
 					network: "",
 				});
 
-				if (!coinIn)
+				if (!coinInId)
 					throw new Error(
 						"no coin in argument given for router trade command"
 					);
 
-				const newCoinIn = poolForPath.addTradeCommandToTransaction({
+				const pathMinAmountOut = Helpers.applySlippageBigInt(
+					path.coinOut.amount,
+					slippage
+				);
+				const newCoinInId = poolForPath.tradeTx({
 					provider: this.Provider,
 					tx,
-					coinIn,
-					coinInAmount: route.coinIn.amount,
+					coinInId,
 					coinInType: path.coinIn.type,
 					coinOutType: path.coinOut.type,
-					expectedAmountOut: path.coinOut.amount,
-					slippage,
-					referrer,
+					expectedCoinOutAmount: path.coinOut.amount,
+					minAmountOut: pathMinAmountOut,
+					routerSwapCapCoinType,
+					routerSwapCap,
 				});
 
-				coinIn = poolForPath.noHopsAllowed ? undefined : newCoinIn;
+				coinInId =
+					poolForPath.noHopsAllowed &&
+					poolForPath.protocolName === "Turbos"
+						? undefined
+						: newCoinInId;
 			}
 
-			if (coinIn) coinsOut.push(coinIn);
+			if (coinInId) coinsOut.push(coinInId);
 		}
 
+		let coinOutId: undefined | TransactionArgument = undefined;
+
 		if (coinsOut.length > 0) {
-			const coinOut = coinsOut[0];
+			coinOutId = coinsOut[0];
 
 			// merge all coinsOut into a single coin
-			if (coinsOut.length > 1) tx.mergeCoins(coinOut, coinsOut.slice(1));
+			if (coinsOut.length > 1)
+				tx.mergeCoins(coinOutId, coinsOut.slice(1));
+		}
 
-			if (externalFee) {
-				const feeAmount =
-					externalFee.feePercentage *
-					Number(completeRoute.coinOut.amount);
-
-				const [feeCoin] = tx.add({
-					kind: "SplitCoins",
-					coin: coinOut,
-					amounts: [tx.pure(feeAmount)],
-				});
-				tx.transferObjects([feeCoin], tx.pure(externalFee.recipient));
-			}
-
-			tx.transferObjects([coinOut], tx.pure(walletAddress));
+		if (coinOutId) {
+			this.returnRouterCapTx({
+				tx,
+				routerSwapCap,
+				routerSwapCapCoinType,
+				coinOutType: completeRoute.coinOut.type,
+				coinOutId,
+			});
+			tx.transferObjects([coinOutId], tx.pure(walletAddress, "address"));
+		} else {
+			this.returnRouterCapAlreadyPayedFeeTx({
+				tx,
+				routerSwapCap,
+				routerSwapCapCoinType,
+			});
 		}
 
 		return tx;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Static Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
-
-	public static amountsInForRouterTrade = (inputs: {
-		coinInAmount: Balance;
-		partitions?: number;
-	}): Balance[] => {
-		const { coinInAmount } = inputs;
-
-		const partitions =
-			inputs.partitions ||
-			RouterSynchronousApiHelpers.constants.defaults.tradePartitionCount;
-
-		const coinInPartitionAmount =
-			coinInAmount / BigInt(Math.floor(partitions));
-		const coinInRemainderAmount =
-			coinInAmount % BigInt(Math.floor(partitions));
-
-		const amountsIn = Array(partitions)
-			.fill(0)
-			.map((_, index) =>
-				index === 0
-					? coinInRemainderAmount + coinInPartitionAmount
-					: BigInt(1 + index) * coinInPartitionAmount
-			);
-
-		return amountsIn;
+	public fetchTradeEvents = async (
+		inputs: {
+			walletAddress: SuiAddress;
+		} & EventsInputs
+	) => {
+		return await this.Provider.Events().fetchCastEventsWithCursor<
+			RouterTradeEventOnChain,
+			RouterTradeEvent
+		>({
+			...inputs,
+			query: {
+				// And: [
+				// 	{
+				MoveEventType: this.eventTypes.routerTrade,
+				// 	},
+				// 	{
+				// 		Sender: inputs.walletAddress,
+				// 	},
+				// ],
+			},
+			eventFromEventOnChain: RouterApiCasting.routerTradeEventFromOnChain,
+		});
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
 
 	private protocolApisFromNames = (inputs: {
-		protocols: RouterProtocolName[];
-	}): RouterApiInterface<any>[] => {
+		protocols: RouterSynchronousProtocolName[];
+	}): RouterSynchronousApiInterface<any>[] => {
 		const { protocols } = inputs;
 		return protocols.map((name) => this.protocolNamesToApi[name]());
+	};
+
+	// =========================================================================
+	//  Event Types
+	// =========================================================================
+
+	private routerTradeEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.router.packages.utils,
+			RouterSynchronousApiHelpers.constants.moduleNames.swapCap,
+			RouterSynchronousApiHelpers.constants.eventNames.routerTrade
+		);
+
+	// =========================================================================
+	//  Private Static Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private static calcCompleteRouteMinAmountOut = (inputs: {
+		completeRoute: RouterCompleteTradeRoute;
+		slippage: Slippage;
+	}) => {
+		const { completeRoute, slippage } = inputs;
+
+		const turbosCoinOutAmount = Helpers.sumBigInt(
+			completeRoute.routes
+				.reduce(
+					(acc, route) => [...acc, ...route.paths],
+					[] as RouterTradePath[]
+				)
+				.filter((path) => path.protocolName === "Turbos")
+				.map((path) => path.coinOut.amount)
+		);
+		const coinOutAmountMinusTurbos =
+			completeRoute.coinOut.amount - turbosCoinOutAmount;
+
+		return (
+			coinOutAmountMinusTurbos -
+			BigInt(
+				Math.floor(
+					Casting.normalizeSlippageTolerance(slippage) *
+						Number(coinOutAmountMinusTurbos)
+				)
+			)
+		);
 	};
 }

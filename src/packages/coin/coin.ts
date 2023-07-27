@@ -1,7 +1,10 @@
 import {
 	Balance,
 	CoinDecimal,
+	CoinMetadaWithInfo,
+	CoinPriceInfo,
 	CoinsToBalance,
+	CoinsToDecimals,
 	CoinSymbol,
 	CoinSymbolToCoinTypes,
 	CoinType,
@@ -13,90 +16,121 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
-import { CoinMetadata } from "@mysten/sui.js";
 import { Prices } from "../../general/prices/prices";
 
 export class Coin extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	public static readonly constants = {
-		suiCoinType: "0x0000000000000000000000000000000000000002::sui::SUI",
+		suiCoinType:
+			"0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Members
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Members
+	// =========================================================================
 
 	public readonly coinTypePackageName: string;
 	public readonly coinTypeSymbol: string;
 	public readonly innerCoinType: string;
 
-	public metadata: CoinMetadata | undefined;
-	public price: number | undefined;
+	public metadata: CoinMetadaWithInfo | undefined;
+	public priceInfo: CoinPriceInfo | undefined;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
+	// TODO: update this class to not be instantiated with a coin type at all
 	constructor(
-		public readonly coinType: CoinType,
+		public readonly coinType?: CoinType,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, "coins");
 		this.coinType = coinType;
 
-		this.coinTypePackageName = Coin.getCoinTypePackageName(this.coinType);
-		this.coinTypeSymbol = Coin.getCoinTypeSymbol(this.coinType);
-		this.innerCoinType = Coin.getInnerCoinType(this.coinType);
+		this.coinTypePackageName = this.coinType
+			? Coin.getCoinTypePackageName(this.coinType)
+			: "";
+		this.coinTypeSymbol = this.coinType
+			? Coin.getCoinTypeSymbol(this.coinType)
+			: "";
+		this.innerCoinType = this.coinType
+			? Coin.getInnerCoinType(this.coinType)
+			: "";
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
-	public async getCoinMetadata(): Promise<CoinMetadata> {
+	public async getCoinsToDecimals(inputs: {
+		coins: CoinType[];
+	}): Promise<CoinsToDecimals> {
+		const { coins } = inputs;
+
+		const allDecimals = await Promise.all(
+			coins.map(
+				async (coin) => (await this.getCoinMetadata(coin)).decimals
+			)
+		);
+
+		const coinsToDecimals: Record<CoinType, CoinDecimal> =
+			allDecimals.reduce((acc, decimals, index) => {
+				return { ...acc, [coins[index]]: decimals };
+			}, {});
+		return coinsToDecimals;
+	}
+
+	public async getCoinMetadata(coin?: CoinType): Promise<CoinMetadaWithInfo> {
 		if (this.metadata) return this.metadata;
 
-		const metadata = await this.fetchApi<CoinMetadata>(this.coinType);
+		const coinType = this.coinType ?? coin;
+		if (!coinType) throw new Error("no valid coin type");
+
+		const metadata = await this.fetchApi<CoinMetadaWithInfo>(coinType);
 		this.setCoinMetadata(metadata);
 		return metadata;
 	}
 
-	public setCoinMetadata(metadata: CoinMetadata) {
+	public setCoinMetadata(metadata: CoinMetadaWithInfo) {
 		this.metadata = metadata;
 	}
 
-	public async getPrice(): Promise<number> {
-		if (this.price !== undefined) return this.price;
+	public async getPrice(coin?: CoinType): Promise<CoinPriceInfo> {
+		if (this.priceInfo !== undefined) return this.priceInfo;
 
-		const price = await new Prices(this.network).getCoinPrice({
-			coin: this.coinType,
+		const coinType = this.coinType ?? coin;
+		if (!coinType) throw new Error("no valid coin type");
+
+		const priceInfo = await new Prices(this.network).getCoinPriceInfo({
+			coin: coinType,
 		});
 
 		// NOTE: do we want this here ? (unexpected behavior)
 		// if (price <= 0) throw new Error("No price found.")
 
-		this.setPrice(price);
-		return price;
+		this.setPriceInfo(priceInfo);
+		return priceInfo;
 	}
 
-	public setPrice(price: number) {
-		this.price = price;
+	public setPriceInfo(priceInfo: CoinPriceInfo) {
+		this.priceInfo = priceInfo;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Static Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Static Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Coin Type
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Coin Type
+	// =========================================================================
 
 	// TODO: remove in favor of sui js implementation Coin.getCoinStructTag() if it is the same
 	public static getCoinTypePackageName = (coin: CoinType): string => {
@@ -110,6 +144,7 @@ export class Coin extends Caller {
 	// TODO: remove in favor of sui js implementation ?
 	public static getCoinTypeSymbol = (coin: CoinType): string => {
 		const startIndex = coin.lastIndexOf("::") + 2;
+		// NOTE: should error if coin is not a valid coin type instead of empty string ?
 		if (startIndex <= 1) return "";
 
 		const foundEndIndex = coin.indexOf(">");
@@ -132,9 +167,9 @@ export class Coin extends Caller {
 		Helpers.stripLeadingZeroesFromType(coin) ===
 		Helpers.stripLeadingZeroesFromType(Coin.constants.suiCoinType);
 
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
 
 	public static coinsAndAmountsOverZero = (
 		coinAmounts: Record<CoinType, number>
@@ -193,13 +228,13 @@ export class Coin extends Caller {
 		}
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Balance
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Balance
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Conversions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Conversions
+	// =========================================================================
 
 	/*
         Convert user-inputted values into their onchain counterparts (e.g. u64)

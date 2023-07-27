@@ -6,20 +6,24 @@ import {
 } from "@mysten/sui.js";
 import {
 	Balance,
+	RouterExternalFee,
 	Slippage,
 	SuiNetwork,
 	UniqueId,
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { AftermathApi } from "../../../../../general/providers";
 import { TurbosPoolObject } from "../../../../external/turbos/turbosTypes";
 
 class TurbosRouterPool implements RouterPoolInterface {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(pool: TurbosPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
@@ -28,12 +32,12 @@ class TurbosRouterPool implements RouterPoolInterface {
 		this.coinTypes = [pool.coinTypeA, pool.coinTypeB];
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	readonly protocolName = "Turbos";
-	readonly expectedGasCostPerHop = BigInt(9_000_000); // 0.009 SUI
+	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = true;
 
 	readonly pool: TurbosPoolObject;
@@ -41,9 +45,9 @@ class TurbosRouterPool implements RouterPoolInterface {
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	getSpotPrice = (_: { coinInType: CoinType; coinOutType: CoinType }) => {
 		throw new Error("uncallable");
@@ -58,29 +62,16 @@ class TurbosRouterPool implements RouterPoolInterface {
 		throw new Error("uncallable");
 	};
 
-	addTradeCommandToTransaction = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedAmountOut: Balance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}) => {
-		// PRODUCTION: handle slippage !
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		if (!inputs.tx.blockData.sender)
 			throw new Error("no sender for tx set (required for turbos txs)");
 
 		return inputs.provider
 			.Router()
 			.Turbos()
-			.Helpers.tradeTx({
+			.tradeTx({
 				...inputs,
-				coinInId: inputs.coinIn,
 				pool: this.pool,
-				walletAddress: inputs.tx.blockData.sender,
 			});
 	};
 

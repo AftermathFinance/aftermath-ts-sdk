@@ -1,31 +1,31 @@
 import { SuiAddress, bcs } from "@mysten/sui.js";
-import { CapysApiCasting } from "../../packages/capys/api/capysApiCasting";
+import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
-import { SuiApiCasting } from "../../packages/sui/api/suiApiCasting";
 import { Byte } from "../types";
+import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
 
 export class Casting {
-	/////////////////////////////////////////////////////////////////////
-	//// Api Casting
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Api Casting
+	// =========================================================================
 
 	public static pools = PoolsApiCasting;
-	public static capys = CapysApiCasting;
+	public static suiFrens = SuiFrensApiCasting;
 	public static faucet = FaucetApiCasting;
 	public static staking = StakingApiCasting;
-	public static sui = SuiApiCasting;
 	public static nftAmm = NftAmmApiCasting;
+	public static router = RouterApiCasting;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Fixed
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Fixed
+	// =========================================================================
 
 	public static fixedOneBigInt: bigint = BigInt("1000000000000000000");
 	public static fixedOneNumber: number = Number(this.fixedOneBigInt);
@@ -35,13 +35,13 @@ export class Casting {
 	);
 	public static zeroBigInt: bigint = BigInt(0);
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Fixed
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Fixed
+	// =========================================================================
 
 	public static numberToFixedBigInt = (a: number): bigint =>
 		BigInt(Math.floor(a * this.fixedOneNumber));
@@ -51,9 +51,9 @@ export class Casting {
 	public static scaleNumberByBigInt = (scalar: number, int: bigint): bigint =>
 		BigInt(Math.floor(scalar * Number(int)));
 
-	/////////////////////////////////////////////////////////////////////
-	//// Bytes
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Bytes
+	// =========================================================================
 
 	public static stringFromBytes = (bytes: Byte[]) =>
 		String.fromCharCode.apply(null, bytes);
@@ -70,8 +70,11 @@ export class Casting {
 	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
 		"0x" + bcs.de("address", new Uint8Array(bytes));
 
-	public static optionAddressFromBytes = (bytes: Byte[]): any =>
-		bcs.de("Option<address>", new Uint8Array(bytes));
+	public static unwrapDeserializedOption = (
+		deserializedData: any
+	): any | undefined => {
+		return "Some" in deserializedData ? deserializedData.Some : undefined;
+	};
 
 	public static u8VectorFromString = (str: string) => {
 		const textEncode = new TextEncoder();

@@ -9,9 +9,9 @@ import {
 	Url,
 } from "../../types";
 
-/////////////////////////////////////////////////////////////////////
-//// Objects
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Objects
+// =========================================================================
 
 export interface NftAmmMarketObject extends Object {
 	nftsTable: {
@@ -27,9 +27,9 @@ export interface NftAmmMarketObject extends Object {
 	nftType: AnyObjectType;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Object Display
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Object Display
+// =========================================================================
 
 export interface Nft {
 	info: NftInfo;
@@ -38,9 +38,9 @@ export interface Nft {
 
 export interface NftInfo {
 	objectId: ObjectId;
-	version: string;
-	digest: TransactionDigest;
-	type?: AnyObjectType;
+	// version: string;
+	// digest: TransactionDigest;
+	objectType: AnyObjectType;
 }
 
 export interface NftDisplay {
@@ -59,9 +59,9 @@ export interface NftDisplaySuggested {
 
 export type NftDisplayOther = Record<string, string>;
 
-/////////////////////////////////////////////////////////////////////
-//// Generic Types
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Generic Types
+// =========================================================================
 
 export type NftAmmInterfaceGenericTypes = [
 	lpCoinType: CoinType,
@@ -70,9 +70,9 @@ export type NftAmmInterfaceGenericTypes = [
 	nftType: AnyObjectType
 ];
 
-/////////////////////////////////////////////////////////////////////
-//// API
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  API
+// =========================================================================
 
 export interface ApiNftAmmBuyBody {
 	marketObjectId: ObjectId;

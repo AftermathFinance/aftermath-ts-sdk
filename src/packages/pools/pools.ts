@@ -27,19 +27,19 @@ import { Helpers } from "../../general/utils/helpers";
  * @example
  * ```
  * // Create provider
- * const pools = (new Aftermath("testnet")).Pools();
+ * const pools = (new Aftermath("TESTNET")).Pools();
  * // Call sdk
  * const pool = await pools.getPool({ objectId: "0xBEEF" });
  * ```
  */
 export class Pools extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	public static readonly constants = {
+		// TODO: remove this and use fixed class
 		decimals: {
-			lpCoinDecimals: 9,
 			coinWeightDecimals: 18,
 			spotPriceDecimals: 18,
 			tradeFeeDecimals: 18,
@@ -59,17 +59,21 @@ export class Pools extends Caller {
 		},
 		bounds: {
 			maxCoinsInPool: 8,
-			maxSwapPercentageOfPoolBalance: 0.3, // 30%
-			minSwapFee: 0.0001,
-			maxSwapFee: 0.1,
-			minWeight: 0.01,
-			maxWeight: 0.99,
+			maxTradePercentageOfPoolBalance: 0.3, // 30%
+			maxWithdrawPercentageOfPoolBalance: 0.3, // 10%
+			minSwapFee: 0.0001, // 0.01%
+			maxSwapFee: 0.1, // 10%
+			minWeight: 0.01, // 1%
+			maxWeight: 0.99, // 99%
+		},
+		defaults: {
+			lpCoinDecimals: 9,
 		},
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	/**
 	 * Creates `Pools` provider to call api.
@@ -81,13 +85,13 @@ export class Pools extends Caller {
 		super(network, "pools");
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Class Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Class Objects
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Pool Class
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Pool Class
+	// =========================================================================
 
 	/**
 	 * Creates new `Pool` class from queried pool object
@@ -120,9 +124,9 @@ export class Pools extends Caller {
 		return pools.map((pool) => new Pool(pool, this.network));
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
 		return this.fetchApiTransaction<ApiPublishLpCoinBody>(
@@ -138,9 +142,9 @@ export class Pools extends Caller {
 		);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Events
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	public async getDepositEvents(inputs: ApiEventsBody) {
 		return this.fetchApiEvents<PoolDepositEvent>("events/deposit", inputs);
@@ -157,22 +161,34 @@ export class Pools extends Caller {
 		return this.fetchApiEvents<PoolTradeEvent>("events/trade", inputs);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	public getPoolObjectIdForLpCoinType = (
 		inputs: ApiPoolObjectIdForLpCoinTypeBody
 	) => {
+		if (!Pools.isPossibleLpCoinType(inputs))
+			throw new Error("invalid lp coin type");
+
 		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
 			"pool-object-id",
 			inputs
 		);
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Fees
-	/////////////////////////////////////////////////////////////////////
+	public isLpCoinType = async (inputs: { lpCoinType: CoinType }) => {
+		try {
+			await this.getPoolObjectIdForLpCoinType(inputs);
+			return true;
+		} catch (e) {
+			return false;
+		}
+	};
+
+	// =========================================================================
+	//  Fees
+	// =========================================================================
 
 	public static getAmountWithProtocolFees = (inputs: {
 		amount: Balance;
@@ -213,9 +229,9 @@ export class Pools extends Caller {
 		);
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// With Decimals Conversions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  With Decimals Conversions
+	// =========================================================================
 
 	public static coinWeightWithDecimals = (weight: PoolWeight) =>
 		Number(weight) / 10 ** Pools.constants.decimals.coinWeightDecimals;
@@ -226,12 +242,9 @@ export class Pools extends Caller {
 	public static tradeFeeWithDecimals = (tradeFee: PoolTradeFee) =>
 		Number(tradeFee) / 10 ** Pools.constants.decimals.tradeFeeDecimals;
 
-	public static lpCoinBalanceWithDecimals = (balance: Balance) =>
-		Number(balance) / 10 ** Pools.constants.decimals.lpCoinDecimals;
-
-	/////////////////////////////////////////////////////////////////////
-	//// Normalize Conversions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Normalize Conversions
+	// =========================================================================
 
 	public static normalizePoolTradeFee = (tradeFee: PoolTradeFee) => {
 		return Coin.balanceWithDecimals(
@@ -240,18 +253,15 @@ export class Pools extends Caller {
 		);
 	};
 
-	public static normalizeLpCoinBalance = (balance: number) =>
-		Coin.normalizeBalance(balance, Pools.constants.decimals.lpCoinDecimals);
-
 	public static normalizeSlippage = (slippage: Slippage) =>
 		Coin.normalizeBalance(
 			1 - slippage,
 			Pools.constants.decimals.slippageDecimals
 		);
 
-	/////////////////////////////////////////////////////////////////////
-	//// Display
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Display
+	// =========================================================================
 
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
 		new Coin(lpCoinType).coinTypeSymbol
@@ -260,4 +270,17 @@ export class Pools extends Caller {
 			.split("_")
 			.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
 			.join(" ") + " LP";
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	public static isPossibleLpCoinType = (inputs: { lpCoinType: CoinType }) => {
+		const { lpCoinType } = inputs;
+		return (
+			lpCoinType.split("::").length === 3 &&
+			lpCoinType.split("::")[1].includes("af_lp") &&
+			lpCoinType.split("::")[2].includes("AF_LP")
+		);
+	};
 }

@@ -1,14 +1,14 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 
-/////////////////////////////////////////////////////////////////////
-//// Name Only
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Name Only
+// =========================================================================
 
 export type RpcEndpoint = string;
 
-/////////////////////////////////////////////////////////////////////
-//// All Addresses
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  All Addresses
+// =========================================================================
 
 export type ConfigAddresses = RequiredConfigAddresses &
 	Partial<OptionalConfigAddresses>;
@@ -20,32 +20,39 @@ interface OptionalConfigAddresses {
 	staking: StakingAddresses;
 	pools: PoolsAddresses;
 	utilies: UtilitiesAddresses;
-	capys: CapysAddresses;
+	suiFrens: SuiFrensAddresses;
 	nftAmm: NftAmmAddresses;
-	externalRouter: Partial<ExternalRouterAddresses>;
+	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
+	perpetuals: PerpetualsAddresses;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Addresses By Package
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Addresses By Package
+// =========================================================================
 
 export interface FaucetAddresses {
 	packages: {
 		faucet: SuiAddress;
+		suiFrensGenesisWrapper: SuiAddress;
 	};
 	objects: {
 		faucet: ObjectId;
 		faucetRegistry: ObjectId;
+		suiFrensMint: ObjectId;
 	};
 }
 
 export interface StakingAddresses {
 	packages: {
 		lsd: SuiAddress;
+		afsui: SuiAddress;
 	};
 	objects: {
 		staking: ObjectId;
+	};
+	accounts: {
+		bot: SuiAddress;
 	};
 }
 
@@ -53,12 +60,17 @@ export interface PoolsAddresses {
 	packages: {
 		amm: SuiAddress;
 		ammInterface: SuiAddress;
+		events: SuiAddress;
 	};
 	objects: {
 		poolRegistry: ObjectId;
 		protocolFeeVault: ObjectId;
 		treasury: ObjectId;
 		insuranceFund: ObjectId;
+		lpCoinsTable: ObjectId;
+	};
+	other: {
+		createLpCoinPackageCompilation: string;
 	};
 }
 
@@ -68,14 +80,20 @@ export interface UtilitiesAddresses {
 	};
 }
 
-export interface CapysAddresses {
+export interface SuiFrensAddresses {
 	packages: {
-		capy: SuiAddress;
-		capyVault: SuiAddress;
+		suiFrens: SuiAddress;
+		suiFrensBullshark: SuiAddress;
+		accessories: SuiAddress;
+		suiFrensVault: SuiAddress;
+		suiFrensVaultCapyLabsExtension: SuiAddress;
 	};
 	objects: {
-		capyVault: ObjectId;
-		capyRegistry: ObjectId;
+		capyLabsApp: ObjectId;
+		suiFrensVault: ObjectId;
+		suiFrensVaultStateV1: ObjectId;
+		suiFrensVaultStateV1MetadataTable: ObjectId;
+		suiFrensVaultCapyLabsExtension: ObjectId;
 	};
 }
 
@@ -91,16 +109,34 @@ export interface NftAmmAddresses {
 	};
 }
 
-export interface ExternalRouterAddresses {
-	nojo: NojoAddresses;
+export type RouterAddresses = RequiredRouterAddresses &
+	Partial<OptionalRouterAddresses>;
+
+export interface RequiredRouterAddresses {
+	packages: {
+		utils: SuiAddress;
+	};
+}
+
+export interface OptionalRouterAddresses {
+	aftermath: AftermathRouterWrapperAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
+	flowX: FlowXAddresses;
+	interest: InterestAddresses;
+	kriya: KriyaAddresses;
+	baySwap: BaySwapAddresses;
+	suiswap: SuiswapAddresses;
+	blueMove: BlueMoveAddresses;
 }
 
-export interface NojoAddresses {
+export interface AftermathRouterWrapperAddresses {
 	packages: {
-		pool: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -108,6 +144,9 @@ export interface DeepBookAddresses {
 	packages: {
 		clob: SuiAddress;
 		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -120,6 +159,7 @@ export interface CetusAddresses {
 	objects: {
 		globalConfig: ObjectId;
 		poolsTable: ObjectId;
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -131,6 +171,74 @@ export interface TurbosAddresses {
 	objects: {
 		versioned: ObjectId;
 		poolsTable: ObjectId;
+		wrapperApp: ObjectId;
+	};
+}
+
+export interface FlowXAddresses {
+	packages: {
+		wrapper: SuiAddress;
+	};
+	objects: {
+		container: ObjectId;
+		pairsBag: ObjectId;
+		wrapperApp: ObjectId;
+	};
+}
+
+export interface InterestAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		poolsBag: ObjectId;
+		dexStorage: ObjectId;
+		wrapperApp: ObjectId;
+	};
+}
+
+export interface KriyaAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
+	};
+}
+
+export interface BaySwapAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		poolsBag: ObjectId;
+		globalStorage: ObjectId;
+		wrapperApp: ObjectId;
+	};
+}
+
+export interface SuiswapAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
+	};
+}
+
+export interface BlueMoveAddresses {
+	packages: {
+		dex: SuiAddress;
+		wrapper: SuiAddress;
+	};
+	objects: {
+		dexInfo: ObjectId;
+		dexStableInfo: ObjectId;
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -140,5 +248,34 @@ export interface ReferralVaultAddresses {
 	};
 	objects: {
 		referralVault: ObjectId;
+	};
+}
+
+export interface PerpetualsAddresses {
+	packages: {
+		perpetuals: SuiAddress;
+	};
+	objects: {
+		adminCapability: ObjectId;
+		registry: ObjectId;
+		exchanges: ExchangeAddresses[]; // Probably a Map<CoinType, ExchangeAddresses> is better
+		oracle: OracleAddresses;
+	};
+}
+
+export interface ExchangeAddresses {
+	accountManager: ObjectId;
+	marketManager: ObjectId;
+	vault: ObjectId;
+	insuranceFund: ObjectId;
+}
+
+export interface OracleAddresses {
+	packages: {
+		oracle: SuiAddress;
+	};
+	objects: {
+		authorityCapability: ObjectId;
+		priceFeedStorage: ObjectId;
 	};
 }

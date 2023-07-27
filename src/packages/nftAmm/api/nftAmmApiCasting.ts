@@ -20,20 +20,20 @@ import { Coin } from "../../coin";
 import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
 
 export class NftAmmApiCasting {
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Objects
+	// =========================================================================
 
 	public static marketObjectFromSuiObject = (
 		suiObject: SuiObjectResponse
 	): NftAmmMarketObject => {
 		const objectId = getObjectId(suiObject);
 		const marketType = getObjectType(suiObject);
-		if (!marketType) throw new Error("no type found on object");
+		if (!marketType) throw new Error("no object type found");
 
 		const fields = getObjectFields(suiObject) as NftAmmMarketFieldsOnChain;
 
@@ -51,6 +51,7 @@ export class NftAmmApiCasting {
 		return {
 			objectId,
 			pool,
+			objectType: marketType,
 			nftsTable: {
 				objectId: fields.nfts.fields.id.id,
 				size: BigInt(fields.nfts.fields.size),
@@ -76,27 +77,28 @@ export class NftAmmApiCasting {
 		};
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Objects
+	// =========================================================================
 
 	private static nftInfoFromSuiObject = (
 		object: SuiObjectResponse
 	): NftInfo => {
-		if (object.error !== undefined || object.data === undefined)
+		const objectType = getObjectType(object);
+		const objectId = getObjectId(object);
+
+		if (!objectId || !objectType)
 			throw new Error(
 				"unable to obtain object info from sui object response"
 			);
 
 		return {
-			objectId: object.data.objectId,
-			version: object.data.version,
-			digest: object.data.digest,
-			type: object.data.type,
+			objectId,
+			objectType,
 		};
 	};
 

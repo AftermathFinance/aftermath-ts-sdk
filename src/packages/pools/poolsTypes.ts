@@ -2,21 +2,21 @@ import {
 	Balance,
 	Event,
 	Object,
-	SerializedTransaction,
 	Slippage,
 	Timestamp,
 	Url,
 } from "../../general/types/generalTypes";
-import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { ManipulateType } from "dayjs";
-import { CoinsToBalance, CoinType } from "../coin/coinTypes";
+import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
 import { TransactionArgument } from "@mysten/sui.js";
+import { RouterSerializablePool } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
 
-/////////////////////////////////////////////////////////////////////
-//// Name Only
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Name Only
+// =========================================================================
 
 export type PoolName = string;
 export type PoolWeight = bigint;
@@ -24,10 +24,12 @@ export type PoolTradeFee = bigint;
 export type PoolDepositFee = bigint;
 export type PoolWithdrawFee = bigint;
 export type PoolFlatness = bigint;
+export type NormalizedBalance = bigint;
+export type DecimalsScalar = bigint;
 
-/////////////////////////////////////////////////////////////////////
-//// Objects
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Objects
+// =========================================================================
 
 export type PoolCoins = Record<CoinType, PoolCoin>;
 
@@ -38,6 +40,8 @@ export interface PoolCoin {
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
 	withdrawFee: PoolWithdrawFee;
+	decimalsScalar: DecimalsScalar;
+	normalizedBalance: NormalizedBalance;
 }
 
 export interface PoolObject extends Object {
@@ -48,11 +52,26 @@ export interface PoolObject extends Object {
 	illiquidLpCoinSupply: Balance;
 	flatness: PoolFlatness;
 	coins: PoolCoins;
+	lpCoinDecimals: CoinDecimal;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Events
-/////////////////////////////////////////////////////////////////////
+export const isPoolObject = (
+	pool: RouterSerializablePool
+): pool is PoolObject => {
+	return (
+		"name" in pool &&
+		"creator" in pool &&
+		"lpCoinType" in pool &&
+		"lpCoinSupply" in pool &&
+		"illiquidLpCoinSupply" in pool &&
+		"flatness" in pool &&
+		"coins" in pool
+	);
+};
+
+// =========================================================================
+//  Events
+// =========================================================================
 
 export interface PoolTradeEvent extends Event {
 	poolId: ObjectId;
@@ -79,9 +98,9 @@ export interface PoolWithdrawEvent extends Event {
 	lpBurned: Balance;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Stats
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Stats
+// =========================================================================
 
 export interface PoolStats {
 	volume: number;
@@ -97,19 +116,20 @@ export interface PoolDataPoint {
 	value: number;
 }
 
-export type PoolVolumeDataTimeframeKey = "1D" | "1W" | "1M" | "3M";
-export interface PoolVolumeDataTimeframe {
+export type PoolGraphDataTimeframeKey = "1D" | "1W" | "1M" | "3M";
+export interface PoolGraphDataTimeframe {
 	time: Timestamp;
 	timeUnit: ManipulateType;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Pool Creation
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Pool Creation
+// =========================================================================
 
 export interface PoolCreationCoinInfo {
 	coinType: CoinType;
 	weight: PoolWeight;
+	decimals?: CoinDecimal;
 	tradeFeeIn: PoolTradeFee;
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
@@ -120,15 +140,16 @@ export interface PoolCreationCoinInfo {
 export interface PoolCreationLpCoinMetadata {
 	name: string;
 	symbol: string;
+	iconUrl?: Url;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// API
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  API
+// =========================================================================
 
-/////////////////////////////////////////////////////////////////////
-//// Transactions
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Transactions
+// =========================================================================
 
 export interface ApiPoolTradeBody {
 	walletAddress: SuiAddress;
@@ -171,17 +192,20 @@ export interface ApiCreatePoolBody {
 	coinsInfo: {
 		coinType: CoinType;
 		weight: number;
+		decimals?: CoinDecimal;
 		tradeFeeIn: number;
 		initialDeposit: Balance;
 	}[];
 	poolName: PoolName;
 	poolFlatness: 0 | 1;
 	createPoolCapId: ObjectId;
+	respectDecimals: boolean;
+	forceLpDecimals?: CoinDecimal;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Inspections
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Inspections
+// =========================================================================
 
 export interface ApiPoolSpotPriceBody {
 	coinInType: CoinType;

@@ -1,11 +1,17 @@
 import { ObjectId } from "@mysten/sui.js";
 import { Balance, CoinType, RouterSerializablePool } from "../../../types";
 
-/////////////////////////////////////////////////////////////////////
-//// Objects
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Objects
+// =========================================================================
 
-export interface CetusPoolObject {
+export type CetusPoolObject = CetusPoolSimpleInfo & {
+	coinABalance: Balance;
+	coinBBalance: Balance;
+	isPaused: boolean;
+};
+
+export interface CetusPoolSimpleInfo {
 	id: ObjectId;
 	coinTypeA: CoinType;
 	coinTypeB: CoinType;
@@ -18,7 +24,7 @@ export interface CetusCalcTradeResult {
 	feeRate: bigint;
 }
 
-export const isCetusRouterPoolObject = (
+export const isCetusPoolObject = (
 	pool: RouterSerializablePool
 ): pool is CetusPoolObject => {
 	return "id" in pool && "coinTypeA" in pool && "coinTypeB" in pool;

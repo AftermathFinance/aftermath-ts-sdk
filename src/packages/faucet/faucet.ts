@@ -1,48 +1,57 @@
-import { ApiFaucetRequestBody, CoinType, SuiNetwork, Url } from "../../types";
+import {
+	ApiFaucetMintSuiFrenBody,
+	ApiFaucetRequestBody,
+	CoinType,
+	SuiNetwork,
+	Url,
+} from "../../types";
 import { Caller } from "../../general/utils/caller";
 
 export class Faucet extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	public static readonly constants = {
 		defaultRequestAmountUsd: 10,
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "faucet");
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
-
-	public async getIsPackageOnChain(): Promise<boolean> {
-		return this.fetchApi("status");
-	}
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	public async getSupportedCoins(): Promise<CoinType[]> {
 		return this.fetchApi("supported-coins");
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Events
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	// TODO: add mint coin event getter
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	public async getRequestCoinTransaction(inputs: ApiFaucetRequestBody) {
 		return this.fetchApiTransaction<ApiFaucetRequestBody>(
 			"transactions/request",
+			inputs
+		);
+	}
+
+	public async getMintSuiFrenTransaction(inputs: ApiFaucetMintSuiFrenBody) {
+		return this.fetchApiTransaction<ApiFaucetMintSuiFrenBody>(
+			"transactions/mint-sui-fren",
 			inputs
 		);
 	}

@@ -17,9 +17,9 @@ export class Wallet extends Caller {
 		super(network, `wallet/${address}`);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Balances
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Balances
+	// =========================================================================
 
 	public async getBalance(inputs: { coin: CoinType }): Promise<Balance> {
 		return this.fetchApi(`balances/${inputs.coin}`);
@@ -37,9 +37,9 @@ export class Wallet extends Caller {
 		return this.fetchApi("balances");
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	public async getPastAftermathTransactions(inputs: ApiTransactionsBody) {
 		return this.fetchApi<TransactionsWithCursor, ApiTransactionsBody>(

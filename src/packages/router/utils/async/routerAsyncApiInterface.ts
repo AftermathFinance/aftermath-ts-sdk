@@ -1,35 +1,41 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { CoinType } from "../../../coin/coinTypes";
-import { Balance, SerializedTransaction } from "../../../../types";
+import { Balance, RouterAsyncSerializablePool } from "../../../../types";
 
-/////////////////////////////////////////////////////////////////////
-//// Interface
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Interface
+// =========================================================================
 
-export interface RouterAsyncApiInterface<PoolType> {
-	/////////////////////////////////////////////////////////////////////
-	//// Required
-	/////////////////////////////////////////////////////////////////////
+export interface RouterAsyncApiInterface<
+	PoolType extends RouterAsyncSerializablePool
+> {
+	// =========================================================================
+	//  Required
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Objects
+	// =========================================================================
 
-	fetchPoolForCoinTypes: (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => Promise<PoolType>;
+	fetchAllPools: () => Promise<PoolType[]>;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	filterPoolsForTrade: (inputs: {
+		pools: PoolType[];
+		coinInType: CoinType;
+		coinOutType: CoinType;
+	}) => {
+		partialMatchPools: PoolType[];
+		exactMatchPools: PoolType[];
+	};
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	fetchTradeAmountOut: (inputs: {
-		walletAddress: SuiAddress;
 		pool: PoolType;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -44,15 +50,8 @@ export interface RouterAsyncApiInterface<PoolType> {
 	// 	coinInAmount: Balance;
 	// }) => Promise<Balance>;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
-
-	fetchTradeTx: (inputs: {
-		walletAddress: SuiAddress;
+	otherCoinInPool: (inputs: {
+		coinType: CoinType;
 		pool: PoolType;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-	}) => Promise<SerializedTransaction>;
+	}) => CoinType;
 }

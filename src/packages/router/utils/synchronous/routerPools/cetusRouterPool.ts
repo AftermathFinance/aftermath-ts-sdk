@@ -12,14 +12,17 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { AftermathApi } from "../../../../../general/providers";
 import { CetusPoolObject } from "../../../../external/cetus/cetusTypes";
 
 class CetusRouterPool implements RouterPoolInterface {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(pool: CetusPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
@@ -28,12 +31,12 @@ class CetusRouterPool implements RouterPoolInterface {
 		this.coinTypes = [pool.coinTypeA, pool.coinTypeB];
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	readonly protocolName = "Cetus";
-	readonly expectedGasCostPerHop = BigInt(9_000_000); // 0.009 SUI
+	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = true;
 
 	readonly pool: CetusPoolObject;
@@ -41,9 +44,9 @@ class CetusRouterPool implements RouterPoolInterface {
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	getSpotPrice = (_: { coinInType: CoinType; coinOutType: CoinType }) => {
 		throw new Error("uncallable");
@@ -58,24 +61,12 @@ class CetusRouterPool implements RouterPoolInterface {
 		throw new Error("uncallable");
 	};
 
-	addTradeCommandToTransaction = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedAmountOut: Balance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}) => {
-		// PRODUCTION: handle slippage !
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()
 			.Cetus()
-			.Helpers.tradeTx({
+			.tradeTx({
 				...inputs,
-				coinInId: inputs.coinIn,
 				pool: this.pool,
 			});
 	};

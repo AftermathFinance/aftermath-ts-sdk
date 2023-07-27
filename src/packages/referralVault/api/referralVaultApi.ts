@@ -1,39 +1,153 @@
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock, bcs } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Balance, CoinType } from "../../../types";
-import { ReferralVaultApiHelpers } from "./referralVaultApiHelpers";
-import { Casting } from "../../../general/utils";
+import { Balance, CoinType, ReferralVaultAddresses } from "../../../types";
+import { Casting, Helpers } from "../../../general/utils";
 
 export class ReferralVaultApi {
-	/////////////////////////////////////////////////////////////////////
-	//// Class Members
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
-	public readonly Helpers;
+	private static readonly constants = {
+		moduleNames: {
+			referralVault: "referral_vault",
+		},
+	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	public readonly addresses: ReferralVaultAddresses;
+
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-		this.Helpers = new ReferralVaultApiHelpers(Provider);
+		const addresses = this.Provider.addresses.referralVault;
+		if (!addresses)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		this.addresses = addresses;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transaction Commands
+	// =========================================================================
+
+	public updateReferrerTx = (inputs: {
+		tx: TransactionBlock;
+		referrer: SuiAddress;
+	}) => {
+		const { tx, referrer } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.referralVault,
+				ReferralVaultApi.constants.moduleNames.referralVault,
+				"update_referrer_address"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.referralVault),
+				tx.pure(referrer, "address"),
+			],
+		});
+	};
+
+	public withdrawRebateTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		withTransfer?: boolean;
+	}) => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.referralVault,
+				ReferralVaultApi.constants.moduleNames.referralVault,
+				inputs.withTransfer
+					? "withdraw_and_transfer"
+					: "withdraw_rebate"
+			),
+			typeArguments: [inputs.coinType],
+			arguments: [tx.object(this.addresses.objects.referralVault)],
+		});
+	};
+
+	public balanceOfRebateTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		referrer: SuiAddress;
+	}) /* u64 */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.referralVault,
+				ReferralVaultApi.constants.moduleNames.referralVault,
+				"balance_of"
+			),
+			typeArguments: [inputs.coinType],
+			arguments: [
+				tx.object(this.addresses.objects.referralVault),
+				tx.pure(inputs.referrer, "address"),
+			],
+		});
+	};
+
+	public referrerForTx = (inputs: {
+		tx: TransactionBlock;
+		referee: SuiAddress;
+	}) /* Option<address> */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.referralVault,
+				ReferralVaultApi.constants.moduleNames.referralVault,
+				"referrer_for"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.referralVault),
+				tx.pure(inputs.referee, "address"),
+			],
+		});
+	};
+
+	public hasReffererTx = (inputs: {
+		tx: TransactionBlock;
+		referee: SuiAddress;
+	}) /* bool */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.referralVault,
+				ReferralVaultApi.constants.moduleNames.referralVault,
+				"has_referrer"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.referralVault),
+				tx.pure(inputs.referee, "address"),
+			],
+		});
+	};
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	public fetchBalanceOfRebate = async (inputs: {
 		coinType: CoinType;
 		referrer: SuiAddress;
 	}): Promise<Balance> => {
 		const tx = new TransactionBlock();
-		this.Helpers.addBalanceOfRebateCommandToTransaction({ ...inputs, tx });
+		this.balanceOfRebateTx({ ...inputs, tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
@@ -41,12 +155,15 @@ export class ReferralVaultApi {
 
 	public fetchReferrer = async (inputs: {
 		referee: SuiAddress;
-	}): Promise<SuiAddress | "None"> => {
+	}): Promise<SuiAddress | undefined> => {
 		const tx = new TransactionBlock();
-		this.Helpers.addReferrerForCommandToTransaction({ ...inputs, tx });
+		this.referrerForTx({ ...inputs, tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		return Casting.optionAddressFromBytes(bytes);
+		const unwrapped = Casting.unwrapDeserializedOption(
+			bcs.de("Option<address>", new Uint8Array(bytes))
+		);
+		return unwrapped ? `0x${unwrapped}` : undefined;
 	};
 }

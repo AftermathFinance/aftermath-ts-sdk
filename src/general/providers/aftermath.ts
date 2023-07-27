@@ -2,7 +2,7 @@ import { SuiAddress } from "@mysten/sui.js";
 import { Pools } from "../../packages/pools/pools";
 import { CoinType, SuiNetwork, Url } from "../../types";
 import { Wallet } from "../wallet/wallet";
-import { Capys } from "../../packages/capys/capys";
+import { SuiFrens } from "../../packages/suiFrens/suiFrens";
 import { Coin } from "../../packages/coin/coin";
 import { Faucet } from "../../packages/faucet/faucet";
 import { Staking } from "../../packages/staking/staking";
@@ -11,6 +11,8 @@ import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
 import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
+import { HistoricalData } from "../historicalData/historicalData";
+import { Perpetuals } from "../../packages/perpetuals";
 
 /**
  * @class Aftermath Provider
@@ -29,9 +31,9 @@ import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
  * ```
  */
 export class Aftermath extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	/**
 	 * Creates `Aftermath` provider to call api.
@@ -43,38 +45,40 @@ export class Aftermath extends Caller {
 		super(network);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Class Object Creation
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Class Object Creation
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Packages
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Packages
+	// =========================================================================
 
 	public Pools = () => new Pools(this.network);
 	public Staking = () => new Staking(this.network);
-	public Capys = () => new Capys(this.network);
+	public SuiFrens = () => new SuiFrens(this.network);
 	public Faucet = () => new Faucet(this.network);
 	public Router = () => new Router(this.network);
 	public NftAmm = () => new NftAmm(this.network);
 	public ReferralVault = () => new ReferralVault(this.network);
+	public Perpetuals = () => new Perpetuals(this.network);
 
-	/////////////////////////////////////////////////////////////////////
-	//// General
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  General
+	// =========================================================================
 
 	public Sui = () => new Sui(this.network);
 	public Prices = () => new Prices(this.network);
 	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
-	public Coin = (coinType: CoinType) => new Coin(coinType, this.network);
+	public Coin = (coinType?: CoinType) => new Coin(coinType, this.network);
+	public HistoricalData = () => new HistoricalData(this.network);
 
-	/////////////////////////////////////////////////////////////////////
-	//// Utils
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Utils
+	// =========================================================================
 
 	public static helpers = Helpers;
 	public static casting = Casting;

@@ -14,9 +14,9 @@ import {
 import { Caller } from "../../general/utils/caller";
 
 export class Staking extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	public static readonly constants = {
 		fees: {
@@ -27,17 +27,17 @@ export class Staking extends Caller {
 		},
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "staking");
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Objects
+	// =========================================================================
 
 	public async getActiveValidators(): Promise<SuiValidatorSummary[]> {
 		return this.fetchApi("active-validators");
@@ -53,9 +53,9 @@ export class Staking extends Caller {
 		return this.fetchApi("staking-positions", inputs);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Events
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	public async getStakeRequestEvents(inputs: ApiStakingEventsBody) {
 		return this.fetchApiEvents<StakeRequestEvent>(
@@ -71,9 +71,9 @@ export class Staking extends Caller {
 		);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	public async getStakeTransaction(inputs: ApiStakeBody) {
 		return this.fetchApiTransaction<ApiStakeBody>(
@@ -89,9 +89,9 @@ export class Staking extends Caller {
 		);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	public async getSuiTvl(): Promise<Balance> {
 		return this.fetchApi("sui-tvl");
@@ -99,5 +99,9 @@ export class Staking extends Caller {
 
 	public async getAfSuiExchangeRate(): Promise<number> {
 		return this.fetchApi("afsui-exchange-rate");
+	}
+
+	public async getApy(): Promise<number> {
+		return this.fetchApi("apy");
 	}
 }

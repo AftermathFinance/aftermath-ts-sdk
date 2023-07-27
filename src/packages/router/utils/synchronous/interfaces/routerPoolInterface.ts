@@ -6,28 +6,56 @@ import {
 } from "@mysten/sui.js";
 import {
 	Balance,
+	RouterExternalFee,
 	RouterProtocolName,
 	RouterSerializablePool,
 	Slippage,
 	SuiNetwork,
 	UniqueId,
 	Url,
+	isPoolObject,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import AftermathRouterPool from "../routerPools/aftermathRouterPool";
-import NojoRouterPool from "../routerPools/nojoRouterPool";
 import { AftermathApi } from "../../../../../general/providers";
-import { isNojoPoolObject } from "../../../../external/nojo/nojoAmmTypes";
 import { isDeepBookPoolObject } from "../../../../external/deepBook/deepBookTypes";
 import DeepBookRouterPool from "../routerPools/deepBookRouterPool";
-import { isCetusRouterPoolObject } from "../../../../external/cetus/cetusTypes";
+import { isCetusPoolObject } from "../../../../external/cetus/cetusTypes";
 import CetusRouterPool from "../routerPools/cetusRouterPool";
 import { isTurbosPoolObject } from "../../../../external/turbos/turbosTypes";
 import TurbosRouterPool from "../routerPools/turbosRouterPool";
+import InterestRouterPool from "../routerPools/interestRouterPool";
+import { isInterestPoolObject } from "../../../../external/interest/interestTypes";
+import { isKriyaPoolObject } from "../../../../external/kriya/kriyaTypes";
+import KriyaRouterPool from "../routerPools/kriyaRouterPool";
+import { isBaySwapPoolObject } from "../../../../external/baySwap/baySwapTypes";
+import BaySwapRouterPool from "../routerPools/baySwapRouterPool";
+import { isSuiswapPoolObject } from "../../../../external/suiswap/suiswapTypes";
+import SuiswapRouterPool from "../routerPools/suiswapRouterPool";
+import { isBlueMovePoolObject } from "../../../../external/blueMove/blueMoveTypes";
+import BlueMoveRouterPool from "../routerPools/blueMoveRouterPool";
+import { isFlowXPoolObject } from "../../../../external/flowX/flowXTypes";
+import FlowXRouterPool from "../routerPools/flowXRouterPool";
 
-/////////////////////////////////////////////////////////////////////
-//// Creation
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Types
+// =========================================================================
+
+export interface RouterPoolTradeTxInputs {
+	provider: AftermathApi;
+	tx: TransactionBlock;
+	coinInId: ObjectId | TransactionArgument;
+	expectedCoinOutAmount: Balance;
+	minAmountOut: Balance;
+	coinInType: CoinType;
+	coinOutType: CoinType;
+	routerSwapCap: TransactionArgument;
+	routerSwapCapCoinType: CoinType;
+}
+
+// =========================================================================
+//  Creation
+// =========================================================================
 
 export function createRouterPool(inputs: {
 	pool: RouterSerializablePool;
@@ -36,22 +64,39 @@ export function createRouterPool(inputs: {
 }): RouterPoolInterface {
 	const { pool, network } = inputs;
 
-	const constructedPool = isNojoPoolObject(pool)
-		? new NojoRouterPool(pool, network)
-		: isDeepBookPoolObject(pool)
+	const constructedPool = isDeepBookPoolObject(pool)
 		? new DeepBookRouterPool(pool, network)
 		: isTurbosPoolObject(pool)
 		? new TurbosRouterPool(pool, network)
-		: isCetusRouterPoolObject(pool)
+		: isCetusPoolObject(pool)
 		? new CetusRouterPool(pool, network)
-		: new AftermathRouterPool(pool, network);
+		: isFlowXPoolObject(pool)
+		? new FlowXRouterPool(pool, network)
+		: isInterestPoolObject(pool)
+		? new InterestRouterPool(pool, network)
+		: isKriyaPoolObject(pool)
+		? new KriyaRouterPool(pool, network)
+		: isBaySwapPoolObject(pool)
+		? new BaySwapRouterPool(pool, network)
+		: isSuiswapPoolObject(pool)
+		? new SuiswapRouterPool(pool, network)
+		: isBlueMovePoolObject(pool)
+		? new BlueMoveRouterPool(pool, network)
+		: isPoolObject(pool)
+		? new AftermathRouterPool(pool, network)
+		: undefined;
+
+	if (!constructedPool)
+		throw new Error(
+			`Could not create router pool: ${JSON.stringify(pool)}`
+		);
 
 	return constructedPool;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Constructor
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Constructor
+// =========================================================================
 
 // TODO: use this to make above creation function cleaner
 
@@ -62,18 +107,18 @@ export function createRouterPool(inputs: {
 // 	): RouterPoolInterface;
 // }
 
-/////////////////////////////////////////////////////////////////////
-//// Interface
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Interface
+// =========================================================================
 
 export interface RouterPoolInterface {
-	/////////////////////////////////////////////////////////////////////
-	//// Required
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Required
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	readonly protocolName: RouterProtocolName;
 	readonly pool: RouterSerializablePool;
@@ -83,9 +128,9 @@ export interface RouterPoolInterface {
 	readonly coinTypes: CoinType[];
 	readonly noHopsAllowed: boolean;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	// NOTE: should this be optional ?
 	getSpotPrice: (inputs: {
@@ -100,25 +145,15 @@ export interface RouterPoolInterface {
 		referrer?: SuiAddress;
 	}) => Balance;
 
-	addTradeCommandToTransaction: (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedAmountOut: Balance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}) => TransactionArgument;
+	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionArgument;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Optional
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Optional
+	// =========================================================================
 
 	// PRODUCTION: make these optional and handle cases
 

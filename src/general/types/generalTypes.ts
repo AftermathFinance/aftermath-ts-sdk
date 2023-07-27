@@ -1,20 +1,21 @@
 import {
+	DynamicFieldInfo,
 	EventId,
 	ObjectId,
+	SuiAddress,
 	SuiTransactionBlockResponse,
 	TransactionDigest,
 } from "@mysten/sui.js";
-import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
-/////////////////////////////////////////////////////////////////////
-//// bigint
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  bigint
+// =========================================================================
 
 export type Balance = bigint;
 
-/////////////////////////////////////////////////////////////////////
-//// number
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  number
+// =========================================================================
 
 export type GasBudget = number;
 export type Timestamp = number;
@@ -26,10 +27,11 @@ export type Slippage = number;
  * @remarks 0.54 = 54%
  */
 export type Percentage = number;
+export type Apy = number;
 
-/////////////////////////////////////////////////////////////////////
-//// string
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  string
+// =========================================================================
 
 export type SerializedTransaction = string;
 export type TxBytes = string;
@@ -44,31 +46,42 @@ export type Url = string;
 export type LocalUrl = string;
 export type FilePath = string;
 
-/////////////////////////////////////////////////////////////////////
-//// Events
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Events
+// =========================================================================
 
 export interface EventsWithCursor<EventType> {
 	events: EventType[];
 	nextCursor: EventId | null;
 }
+
 export interface Event {
 	type: AnyObjectType;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Objects
-/////////////////////////////////////////////////////////////////////
+export interface EventsInputs {
+	cursor?: EventId;
+	limit?: number;
+}
+
+export type UserEventsInputs = EventsInputs & {
+	walletAddress: SuiAddress;
+};
+
+// =========================================================================
+//  Objects
+// =========================================================================
 
 export interface Object {
 	objectId: ObjectId;
+	objectType: AnyObjectType;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Dynamic Fields
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Dynamic Fields
+// =========================================================================
 
 export interface DynamicFieldsWithCursor {
 	dynamicFields: DynamicFieldInfo[];
@@ -80,18 +93,23 @@ export interface DynamicFieldObjectsWithCursor<ObjectType> {
 	nextCursor: ObjectId | null;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Transactions
-/////////////////////////////////////////////////////////////////////
+export interface DynamicFieldsInputs {
+	cursor?: ObjectId;
+	limit?: number;
+}
+
+// =========================================================================
+//  Transactions
+// =========================================================================
 
 export interface TransactionsWithCursor {
 	transactions: SuiTransactionBlockResponse[];
 	nextCursor: TransactionDigest | null;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// API
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  API
+// =========================================================================
 
 export interface ApiDataWithCursorBody<CursorType> {
 	cursor?: CursorType;

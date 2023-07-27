@@ -3,6 +3,7 @@ import {
 	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
+	getObjectType,
 } from "@mysten/sui.js";
 import {
 	PoolCoins,
@@ -18,19 +19,21 @@ import {
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
-import { Pools } from "../pools";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
+import { AnyObjectType } from "../../../types";
 
 export class PoolsApiCasting {
-	/////////////////////////////////////////////////////////////////////
-	//// Objects
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Objects
+	// =========================================================================
 
 	public static poolObjectFromSuiObject = (
 		suiObject: SuiObjectResponse
 	): PoolObject => {
 		const objectId = getObjectId(suiObject);
+		const objectType = getObjectType(suiObject);
+		if (!objectType) throw new Error("no object type found");
 
 		const poolFieldsOnChain = getObjectFields(
 			suiObject
@@ -46,7 +49,11 @@ export class PoolsApiCasting {
 					...acc,
 					["0x" + cur]: {
 						weight: BigInt(poolFieldsOnChain.weights[index]),
-						balance: BigInt(poolFieldsOnChain.balances[index]),
+						balance:
+							BigInt(
+								poolFieldsOnChain.normalized_balances[index]
+							) /
+							BigInt(poolFieldsOnChain.decimal_scalars[index]),
 						tradeFeeIn: BigInt(
 							poolFieldsOnChain.fees_swap_in[index]
 						),
@@ -59,6 +66,12 @@ export class PoolsApiCasting {
 						withdrawFee: BigInt(
 							poolFieldsOnChain.fees_withdraw[index]
 						),
+						normalizedBalance: BigInt(
+							poolFieldsOnChain.normalized_balances[index]
+						),
+						decimalsScalar: BigInt(
+							poolFieldsOnChain.decimal_scalars[index]
+						),
 					},
 				};
 			},
@@ -66,6 +79,7 @@ export class PoolsApiCasting {
 		);
 
 		return {
+			objectType,
 			objectId,
 			lpCoinType,
 			name: poolFieldsOnChain.name,
@@ -73,13 +87,29 @@ export class PoolsApiCasting {
 			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
 			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
 			flatness: BigInt(poolFieldsOnChain.flatness),
+			lpCoinDecimals: Number(poolFieldsOnChain.lp_decimals),
 			coins,
 		};
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Events
-	/////////////////////////////////////////////////////////////////////
+	public static poolObjectIdFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): ObjectId => {
+		const content = data.data?.content;
+		if (content?.dataType !== "moveObject")
+			throw new Error("sui object response is not an object");
+
+		const fields = content.fields as {
+			name: AnyObjectType; // lp coin type
+			value: ObjectId; // pool object id
+		};
+
+		return fields.value;
+	};
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	public static poolTradeEventFromOnChain = (
 		eventOnChain: PoolTradeEventOnChain

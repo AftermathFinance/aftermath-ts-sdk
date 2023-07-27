@@ -8,8 +8,13 @@ import {
 	RouterSupportedCoinPaths,
 	SuiNetwork,
 	Url,
+	ApiRouterTradeEventsBody,
+	RouterTradeEvent,
+	RouterAsyncSerializablePool,
+	RouterSynchronousProtocolName,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { ObjectId } from "@mysten/sui.js";
 
 /**
  * @class Router Provider
@@ -17,15 +22,15 @@ import { Caller } from "../../general/utils/caller";
  * @example
  * ```
  * // Create provider
- * const router = (new Aftermath("testnet")).Router();
+ * const router = (new Aftermath("TESTNET")).Router();
  * // Call sdk
  * const supportedCoins = await router.getSupportedCoins();
  * ```
  */
 export class Router extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	public static readonly constants = {
 		/**
@@ -34,9 +39,9 @@ export class Router extends Caller {
 		maxExternalFeePercentage: 0.5, // 50%
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	/**
 	 * Creates `Router` provider to call api.
@@ -48,13 +53,13 @@ export class Router extends Caller {
 		super(network, "router");
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	/**
 	 * Queries all coins that router can trade between.
@@ -65,6 +70,10 @@ export class Router extends Caller {
 		return this.fetchApi<RouterSupportedCoinPaths>("supported-coin-paths");
 	}
 
+	public async getSupportedCoins() {
+		return this.fetchApi<CoinType[]>("supported-coins");
+	}
+
 	/**
 	 * Queries current graph of router including all pools and coins.
 	 *
@@ -72,6 +81,16 @@ export class Router extends Caller {
 	 */
 	public async getGraph() {
 		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
+	}
+
+	public async getAsyncPools() {
+		return this.fetchApi<RouterAsyncSerializablePool[]>("async-pools");
+	}
+
+	public async getSynchronousPoolIds() {
+		return this.fetchApi<Record<RouterSynchronousProtocolName, ObjectId[]>>(
+			"synchronous-pool-ids"
+		);
 	}
 
 	/**
@@ -108,9 +127,9 @@ export class Router extends Caller {
 	// 	>("trade-route", inputs, abortSignal);
 	// }
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	/**
 	 * Creates `TranscationBlock` from previously created complete trade route
@@ -136,5 +155,13 @@ export class Router extends Caller {
 			"transactions/trade",
 			inputs
 		);
+	}
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async getTradeEvents(inputs: ApiRouterTradeEventsBody) {
+		return this.fetchApiEvents<RouterTradeEvent>("events/trade", inputs);
 	}
 }

@@ -1,67 +1,82 @@
 import {
-	DisplayFieldsResponse,
 	ObjectId,
 	SuiAddress,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
-	getObjectDisplay,
 	getObjectOwner,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, NftDisplay, PackageId } from "../../types";
+import { AnyObjectType, PackageId } from "../../types";
+import { Helpers } from "../utils";
 
 export class ObjectsApiHelpers {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Private Static Constants
+	// =========================================================================
+
+	private static readonly constants = {
+		maxObjectFetchingLimit: 50,
+	};
+
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Fetching
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Fetching
+	// =========================================================================
 
 	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
 		const object = await this.Provider.provider.getObject({ id: objectId });
 		return object.error === undefined;
 	};
 
-	public fetchIsObjectOwnedByAddress = async (
-		objectId: ObjectId,
-		address: SuiAddress
-	) => {
-		const object = await this.fetchObject(objectId);
+	public fetchIsObjectOwnedByAddress = async (inputs: {
+		objectId: ObjectId;
+		walletAddress: SuiAddress;
+	}) => {
+		const { objectId, walletAddress } = inputs;
+
+		const object = await this.fetchObject({ objectId });
 		const objectOwner = getObjectOwner(object);
 
 		if (!objectOwner || typeof objectOwner !== "object") return false;
 
 		if (
 			"AddressOwner" in objectOwner &&
-			objectOwner.AddressOwner === address
+			objectOwner.AddressOwner === walletAddress
 		)
 			return true;
-		if ("ObjectOwner" in objectOwner && objectOwner.ObjectOwner === address)
+		if (
+			"ObjectOwner" in objectOwner &&
+			objectOwner.ObjectOwner === walletAddress
+		)
 			return true;
 
 		return false;
 	};
 
-	public fetchObjectsOfTypeOwnedByAddress = async (
-		walletAddress: SuiAddress,
-		objectType: AnyObjectType,
-		withDisplay?: boolean
-	): Promise<SuiObjectResponse[]> => {
+	public fetchObjectsOfTypeOwnedByAddress = async (inputs: {
+		walletAddress: SuiAddress;
+		objectType: AnyObjectType;
+		withDisplay?: boolean;
+	}): Promise<SuiObjectResponse[]> => {
+		const { walletAddress, objectType, withDisplay } = inputs;
+
+		// TODO: handle pagination to make sure that ALL owned objects are found !
 		const objectsOwnedByAddress =
 			await this.Provider.provider.getOwnedObjects({
 				owner: walletAddress,
 				filter: {
-					StructType: objectType,
+					StructType: Helpers.stripLeadingZeroesFromType(objectType),
 				},
 				options: {
 					showContent: true,
@@ -74,10 +89,12 @@ export class ObjectsApiHelpers {
 		return objectsOwnedByAddress.data;
 	};
 
-	public fetchObject = async (
-		objectId: ObjectId,
-		withDisplay?: boolean
-	): Promise<SuiObjectResponse> => {
+	public fetchObject = async (inputs: {
+		objectId: ObjectId;
+		withDisplay?: boolean;
+	}): Promise<SuiObjectResponse> => {
+		const { objectId, withDisplay } = inputs;
+
 		const object = await this.Provider.provider.getObject({
 			id: objectId,
 			options: {
@@ -94,69 +111,95 @@ export class ObjectsApiHelpers {
 		return object;
 	};
 
-	public fetchCastObject = async <ObjectType>(
-		objectId: ObjectId,
-		castFunc: (SuiObjectResponse: SuiObjectResponse) => ObjectType,
-		withDisplay?: boolean
-	): Promise<ObjectType> => {
-		return castFunc(await this.fetchObject(objectId, withDisplay));
+	public fetchCastObject = async <ObjectType>(inputs: {
+		objectId: ObjectId;
+		objectFromSuiObjectResponse: (
+			SuiObjectResponse: SuiObjectResponse
+		) => ObjectType;
+		withDisplay?: boolean;
+	}): Promise<ObjectType> => {
+		return inputs.objectFromSuiObjectResponse(
+			await this.fetchObject(inputs)
+		);
 	};
 
-	public fetchObjectBatch = async (
-		objectIds: ObjectId[],
-		options?: SuiObjectDataOptions
-	): Promise<SuiObjectResponse[]> => {
-		const objectBatch = await this.Provider.provider.multiGetObjects({
-			ids: objectIds,
-			options:
-				options === undefined
-					? {
-							showContent: true,
-							showOwner: true,
-							showType: true,
-					  }
-					: options,
-		});
+	public fetchObjectBatch = async (inputs: {
+		objectIds: ObjectId[];
+		options?: SuiObjectDataOptions;
+	}): Promise<SuiObjectResponse[]> => {
+		const { objectIds, options } = inputs;
+
+		let objectIdsBatches: ObjectId[][] = [];
+		let endIndex = 0;
+		while (true) {
+			const newEndIndex =
+				endIndex + ObjectsApiHelpers.constants.maxObjectFetchingLimit;
+			if (newEndIndex >= objectIds.length) {
+				objectIdsBatches.push(
+					objectIds.slice(endIndex, objectIds.length)
+				);
+				break;
+			}
+
+			objectIdsBatches.push(objectIds.slice(endIndex, newEndIndex));
+
+			endIndex = newEndIndex;
+		}
+
+		const objectBatches = await Promise.all(
+			objectIdsBatches.map((objectIds) =>
+				this.Provider.provider.multiGetObjects({
+					ids: objectIds,
+					options:
+						options === undefined
+							? {
+									showContent: true,
+									showOwner: true,
+									showType: true,
+							  }
+							: options,
+				})
+			)
+		);
+		const objectBatch = objectBatches.reduce(
+			(acc, objects) => [...acc, ...objects],
+			[]
+		);
+
 		// const objectDataResponses = objectBatch.filter(
 		// 	(data) => data.error !== undefined
 		// );
 
-		if (objectBatch.length <= 0)
-			throw new Error("no existing objects found with fetchObjectBatch");
 		// REVIEW: throw error on any objects that don't exist ?
 		// or don't throw any errors and return empty array ?
 		return objectBatch;
 	};
 
-	public fetchCastObjectBatch = async <ObjectType>(
-		objectIds: ObjectId[],
-		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType,
-		options?: SuiObjectDataOptions
-	): Promise<ObjectType[]> => {
-		return (await this.fetchObjectBatch(objectIds, options)).map(
+	public fetchCastObjectBatch = async <ObjectType>(inputs: {
+		objectIds: ObjectId[];
+		objectFromSuiObjectResponse: (data: SuiObjectResponse) => ObjectType;
+		options?: SuiObjectDataOptions;
+	}): Promise<ObjectType[]> => {
+		return (await this.fetchObjectBatch(inputs)).map(
 			(SuiObjectResponse: SuiObjectResponse) => {
-				return objectFromSuiObjectResponse(SuiObjectResponse);
+				return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
 			}
 		);
 	};
 
-	public fetchCastObjectsOwnedByAddressOfType = async <ObjectType>(
-		walletAddress: SuiAddress,
-		objectType: AnyObjectType,
+	public fetchCastObjectsOwnedByAddressOfType = async <ObjectType>(inputs: {
+		walletAddress: SuiAddress;
+		objectType: AnyObjectType;
 		objectFromSuiObjectResponse: (
 			SuiObjectResponse: SuiObjectResponse
-		) => ObjectType,
-		withDisplay?: boolean
-	): Promise<ObjectType[]> => {
+		) => ObjectType;
+		withDisplay?: boolean;
+	}): Promise<ObjectType[]> => {
 		// i. obtain all owned object IDs
 		const objects = (
-			await this.fetchObjectsOfTypeOwnedByAddress(
-				walletAddress,
-				objectType,
-				withDisplay
-			)
+			await this.fetchObjectsOfTypeOwnedByAddress(inputs)
 		).map((SuiObjectResponse: SuiObjectResponse) => {
-			return objectFromSuiObjectResponse(SuiObjectResponse);
+			return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
 		});
 
 		return objects;

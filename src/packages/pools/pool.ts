@@ -5,8 +5,9 @@ import {
 	Balance,
 	CoinType,
 	CoinsToBalance,
+	DecimalsScalar,
 	PoolDataPoint,
-	PoolVolumeDataTimeframeKey,
+	PoolGraphDataTimeframeKey,
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
@@ -16,6 +17,7 @@ import {
 	PoolTradeEvent,
 	Url,
 	ApiPoolAllCoinWithdrawBody,
+	NormalizedBalance,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -23,23 +25,23 @@ import { Pools } from ".";
 import { Casting, Helpers } from "../../general/utils";
 
 export class Pool extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Private Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Private Constants
+	// =========================================================================
 
 	private static readonly constants = {
-		percentageBoundsMarginOfError: 0.00001,
+		percentageBoundsMarginOfError: 0.001, // 0.1%
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Class Members
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Class Members
+	// =========================================================================
 
 	public stats: PoolStats | undefined;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(
 		public readonly pool: PoolObject,
@@ -49,27 +51,35 @@ export class Pool extends Caller {
 		this.pool = pool;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Stats
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Stats
+	// =========================================================================
 
 	public async getStats() {
-		return this.fetchApi<PoolStats>("stats");
+		const stats = await this.fetchApi<PoolStats>("stats");
+		this.setStats(stats);
+		return stats;
 	}
 
 	public setStats(stats: PoolStats) {
 		this.stats = stats;
 	}
 
-	public async getVolume(inputs: {
-		timeframe: PoolVolumeDataTimeframeKey;
+	public async getVolumeData(inputs: {
+		timeframe: PoolGraphDataTimeframeKey;
 	}): Promise<PoolDataPoint[]> {
 		return this.fetchApi(`volume/${inputs.timeframe}`);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	public async getFeeData(inputs: {
+		timeframe: PoolGraphDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> {
+		return this.fetchApi(`fees/${inputs.timeframe}`);
+	}
+
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	public async getDepositTransaction(inputs: ApiPoolDepositBody) {
 		return this.fetchApiTransaction<ApiPoolDepositBody>(
@@ -101,9 +111,9 @@ export class Pool extends Caller {
 		);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Events
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	public async getDepositEvents(inputs: ApiEventsBody) {
 		const eventsWithCursor = await this.fetchApiEvents<PoolDepositEvent>(
@@ -150,20 +160,26 @@ export class Pool extends Caller {
 		};
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Calculations
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
 
 	public getSpotPrice = (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		withFees?: boolean;
 	}) => {
-		return CmmmCalculations.calcSpotPriceWithFees(
+		const spotPriceWithDecimals = CmmmCalculations.calcSpotPriceWithFees(
 			Helpers.deepCopy(this.pool),
 			inputs.coinInType,
 			inputs.coinOutType,
 			!inputs.withFees
+		);
+
+		return (
+			(spotPriceWithDecimals *
+				Number(this.pool.coins[inputs.coinOutType].decimalsScalar)) /
+			Number(this.pool.coins[inputs.coinInType].decimalsScalar)
 		);
 	};
 
@@ -184,11 +200,11 @@ export class Pool extends Caller {
 
 		if (
 			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
-				"coinInAmountWithFees / coinInPoolBalance >= maxSwapPercentageOfPoolBalance"
+				"coinInAmountWithFees / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
 		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
@@ -202,11 +218,11 @@ export class Pool extends Caller {
 
 		if (
 			Number(coinOutAmount) / Number(coinOutPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
-				"coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance"
+				"coinOutAmount / coinOutPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
 		return coinOutAmount;
@@ -225,11 +241,11 @@ export class Pool extends Caller {
 
 		if (
 			Number(inputs.coinOutAmount) / Number(coinOutPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
-				"coinOutAmount / coinOutPoolBalance >= maxSwapPercentageOfPoolBalance"
+				"coinOutAmount / coinOutPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
 		const coinInAmount = CmmmCalculations.calcInGivenOut(
@@ -243,11 +259,11 @@ export class Pool extends Caller {
 
 		if (
 			Number(coinInAmount) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxSwapPercentageOfPoolBalance -
+			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
 				Pool.constants.percentageBoundsMarginOfError
 		)
 			throw new Error(
-				"coinInAmount / coinInPoolBalance >= maxSwapPercentageOfPoolBalance"
+				"coinInAmount / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
 		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
@@ -296,9 +312,25 @@ export class Pool extends Caller {
 			inputs.lpRatio
 		);
 
-		for (const coin in Object.keys(amountsOut)) {
-			if (amountsOut[coin] <= Casting.zeroBigInt)
+		for (const coin of Object.keys(amountsOut)) {
+			if (
+				!(coin in inputs.amountsOutDirection) ||
+				inputs.amountsOutDirection[coin] <= BigInt(0)
+			)
+				continue;
+
+			const amountOut = amountsOut[coin];
+
+			if (amountOut <= Casting.zeroBigInt)
 				throw new Error(`amountsOut[${coin}] <= 0 `);
+
+			if (
+				amountOut / this.pool.coins[coin].balance >=
+				Pools.constants.bounds.maxWithdrawPercentageOfPoolBalance
+			)
+				throw new Error(
+					"coinOutAmount / coinOutPoolBalance >= maxWithdrawPercentageOfPoolBalance"
+				);
 		}
 
 		return amountsOut;

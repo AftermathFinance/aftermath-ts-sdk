@@ -3,9 +3,9 @@ import { BigIntAsString } from "../../../general/types/generalTypes";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import { CoinType } from "../../coin/coinTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// Events
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Events
+// =========================================================================
 
 export type FaucetMintCoinEventOnChain = EventOnChain<{
 	amount: BigIntAsString;

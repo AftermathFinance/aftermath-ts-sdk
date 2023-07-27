@@ -11,32 +11,38 @@ import {
 	UniqueId,
 	Url,
 } from "../../../../../types";
-import { CoinType, CoinsToBalance } from "../../../../coin/coinTypes";
+import { CoinType } from "../../../../coin/coinTypes";
 import { PoolObject } from "../../../../pools/poolsTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { Pool, Pools } from "../../../../pools";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
 
 class AftermathRouterPool implements RouterPoolInterface {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(pool: PoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
-		this.coinTypes = [...Object.keys(pool.coins), pool.lpCoinType];
+		this.coinTypes = [
+			...Object.keys(pool.coins),
+			// pool.lpCoinType
+		];
 		this.poolClass = new Pool(pool, network);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constants
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constants
+	// =========================================================================
 
 	readonly protocolName = "Aftermath";
-	readonly expectedGasCostPerHop = BigInt(100_000_000); // 0.1 SUI
+	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = false;
 
 	readonly pool: PoolObject;
@@ -46,9 +52,9 @@ class AftermathRouterPool implements RouterPoolInterface {
 
 	private readonly poolClass: Pool;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Functions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	getSpotPrice = (inputs: {
 		coinInType: CoinType;
@@ -60,13 +66,16 @@ class AftermathRouterPool implements RouterPoolInterface {
 			inputs.coinOutType === this.pool.lpCoinType
 		) {
 			// TODO: do this calc more efficiently
-			let smallAmountIn = BigInt(10);
+			let smallAmountIn = BigInt(100000);
 			while (smallAmountIn < Casting.u64MaxBigInt) {
 				try {
 					const smallAmountOut = this.getTradeAmountOut({
 						...inputs,
 						coinInAmount: smallAmountIn,
 					});
+
+					if (smallAmountOut <= BigInt(0))
+						throw new Error("0 amount out");
 
 					return Number(smallAmountIn) / Number(smallAmountOut);
 				} catch (e) {}
@@ -98,17 +107,13 @@ class AftermathRouterPool implements RouterPoolInterface {
 			// TODO: move this estimation to helper function within sdk
 			const poolCoinOut = this.pool.coins[inputs.coinOutType];
 			const coinOutPoolBalance = poolCoinOut.balance;
-			const coinOutWeight = Pools.coinWeightWithDecimals(
-				poolCoinOut.weight
-			);
 
 			const lpCoinSupply = Number(this.pool.lpCoinSupply);
 			const lpTotal = Number(inputs.coinInAmount);
 			const poolCoinAmount =
 				lpTotal < 0
 					? 0
-					: Number(coinOutPoolBalance) *
-					  (lpTotal / (lpCoinSupply * coinOutWeight));
+					: Number(coinOutPoolBalance) * (lpTotal / lpCoinSupply);
 
 			const amountOutEstimate = BigInt(Math.floor(poolCoinAmount));
 
@@ -139,56 +144,48 @@ class AftermathRouterPool implements RouterPoolInterface {
 		return this.poolClass.getTradeAmountOut(inputs);
 	};
 
-	addTradeCommandToTransaction = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedAmountOut: Balance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}) => {
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
+		const slippage = 100;
+
 		// withdraw
 		if (inputs.coinInType === this.pool.lpCoinType) {
-			return inputs.provider.Pools().Helpers.multiCoinWithdrawTx({
+			return inputs.provider.Pools().multiCoinWithdrawTx({
 				...inputs,
 				poolId: this.pool.objectId,
-				// this is beacuse typescript complains for some reason otherwise
-				lpCoinId: inputs.coinIn,
+				lpCoinId: inputs.coinInId,
 				coinTypes: [inputs.coinOutType],
-				expectedAmountsOut: [inputs.expectedAmountOut],
+				expectedAmountsOut: [inputs.expectedCoinOutAmount],
 				lpCoinType: this.pool.lpCoinType,
+				slippage,
 			});
 		}
 
 		// deposit
 		if (inputs.coinOutType === this.pool.lpCoinType) {
 			const expectedLpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
-				lpCoinAmountOut: inputs.expectedAmountOut,
+				lpCoinAmountOut: inputs.expectedCoinOutAmount,
 			});
 
-			return inputs.provider.Pools().Helpers.multiCoinDepositTx({
+			return inputs.provider.Pools().multiCoinDepositTx({
 				...inputs,
 				poolId: this.pool.objectId,
-				// this is beacuse typescript complains for some reason otherwise
+				// this is because typescript complains for some reason otherwise
 				coinIds:
-					typeof inputs.coinIn === "string"
-						? [inputs.coinIn]
-						: [inputs.coinIn],
+					typeof inputs.coinInId === "string"
+						? [inputs.coinInId]
+						: [inputs.coinInId],
 				coinTypes: [inputs.coinInType],
 				expectedLpRatio: Casting.numberToFixedBigInt(expectedLpRatio),
 				lpCoinType: this.pool.lpCoinType,
+				slippage,
 			});
 		}
 
 		// trade
-		const coinOut = inputs.provider.Pools().Helpers.tradeTx({
+		const coinOut = inputs.provider.Pools().routerWrapperTradeTx({
 			...inputs,
 			poolId: this.pool.objectId,
 			lpCoinType: this.pool.lpCoinType,
-			coinInId: inputs.coinIn,
 		});
 
 		return coinOut;

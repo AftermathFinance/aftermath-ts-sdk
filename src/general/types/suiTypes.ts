@@ -1,17 +1,15 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Balance } from "./generalTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// Network
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Network
+// =========================================================================
 
-// TODO: change this once mainnet is live
-// also is this deprecated within mysten's sui js ?
-export type SuiNetwork = "DEVNET" | "TESTNET" | "LOCAL";
+export type SuiNetwork = "DEVNET" | "TESTNET" | "LOCAL" | "MAINNET";
 
-/////////////////////////////////////////////////////////////////////
-//// Objects
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Objects
+// =========================================================================
 
 export interface ObjectTable<K, V> {
 	objectId: ObjectId;

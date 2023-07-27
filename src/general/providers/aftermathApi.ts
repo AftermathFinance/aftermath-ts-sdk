@@ -13,21 +13,29 @@ import { SuiApi } from "../../packages/sui/api/suiApi";
 import { WalletApi } from "../wallet/walletApi";
 import { RouterApi } from "../../packages/router/api/routerApi";
 import { PlaceholderPricesApi } from "../prices/placeholder/placeholderPricesApi";
-import { CapysApi } from "../../packages/capys/api/capysApi";
+import { SuiFrensApi } from "../../packages/suiFrens/api/suiFrensApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
-import { RouterProtocolName, RouterSynchronousProtocolName } from "../../types";
+import {
+	PartialRouterOptions,
+	RouterProtocolName,
+	RouterSynchronousOptions,
+} from "../../types";
+import { HistoricalDataApi } from "../historicalData/historicalDataApi";
+import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
+import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
+import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 
 export class AftermathApi {
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
 
 	public static helpers = {
-		/////////////////////////////////////////////////////////////////////
-		//// General
-		/////////////////////////////////////////////////////////////////////
+		// =========================================================================
+		//  General
+		// =========================================================================
 
 		dynamicFields: DynamicFieldsApiHelpers,
 		events: EventsApiHelpers,
@@ -36,39 +44,41 @@ export class AftermathApi {
 		transactions: TransactionsApiHelpers,
 		rpc: RpcApiHelpers,
 
-		/////////////////////////////////////////////////////////////////////
-		//// Utils
-		/////////////////////////////////////////////////////////////////////
+		// =========================================================================
+		//  Utils
+		// =========================================================================
 
 		wallet: WalletApi,
 
-		/////////////////////////////////////////////////////////////////////
-		//// General Packages
-		/////////////////////////////////////////////////////////////////////
+		// =========================================================================
+		//  General Packages
+		// =========================================================================
 
 		coin: CoinApi,
 		sui: SuiApi,
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	public constructor(
 		public readonly provider: JsonRpcProvider,
-		public readonly addresses: ConfigAddresses
+		public readonly addresses: ConfigAddresses,
+		private readonly coinGeckoApiKey?: string
 	) {
 		this.provider = provider;
 		this.addresses = addresses;
+		this.coinGeckoApiKey = coinGeckoApiKey;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Class Object Creation
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Class Object Creation
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// General
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  General
+	// =========================================================================
 
 	public DynamicFields = () => new DynamicFieldsApiHelpers(this);
 	public Events = () => new EventsApiHelpers(this);
@@ -77,30 +87,42 @@ export class AftermathApi {
 	public Transactions = () => new TransactionsApiHelpers(this);
 	public Rpc = () => new RpcApiHelpers(this);
 
-	/////////////////////////////////////////////////////////////////////
-	//// Utils
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Utils
+	// =========================================================================
 
 	public Wallet = () => new WalletApi(this);
-	public Prices = () => new PlaceholderPricesApi(this);
+	public Prices = () =>
+		this.coinGeckoApiKey
+			? new CoinGeckoPricesApi(this.coinGeckoApiKey)
+			: new PlaceholderPricesApi();
+	public HistoricalData = () =>
+		this.coinGeckoApiKey
+			? new HistoricalDataApi(this.coinGeckoApiKey)
+			: new PlaceholderHistoricalDataApi();
 
-	/////////////////////////////////////////////////////////////////////
-	//// General Packages
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  General Packages
+	// =========================================================================
 
 	public Coin = () => new CoinApi(this);
 	public Sui = () => new SuiApi(this);
 
-	/////////////////////////////////////////////////////////////////////
-	//// Aftermath Packages
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Aftermath Packages
+	// =========================================================================
 
 	public Pools = () => new PoolsApi(this);
 	public Faucet = () => new FaucetApi(this);
-	public Router = (protocols?: RouterProtocolName[]) =>
-		new RouterApi(this, protocols);
-	public Capys = () => new CapysApi(this);
+	public SuiFrens = () => new SuiFrensApi(this);
 	public Staking = () => new StakingApi(this);
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
+	public Perpetuals = () => new PerpetualsApi(this);
+
+	public Router = (
+		protocols?: RouterProtocolName[],
+		regularOptions?: PartialRouterOptions,
+		preAsyncOptions?: Partial<RouterSynchronousOptions>
+	) => new RouterApi(this, protocols, regularOptions, preAsyncOptions);
 }

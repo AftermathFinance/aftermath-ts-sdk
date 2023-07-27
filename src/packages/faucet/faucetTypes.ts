@@ -1,10 +1,14 @@
 import { SuiAddress } from "@mysten/sui.js";
-import { Event } from "../../general/types/generalTypes";
+import {
+	AnyObjectType,
+	Balance,
+	Event,
+} from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// Events
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Events
+// =========================================================================
 
 export interface FaucetMintCoinEvent extends Event {
 	minter: SuiAddress;
@@ -17,11 +21,17 @@ export interface FaucetAddCoinEvent extends Event {
 	coinType: CoinType;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// API
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  API
+// =========================================================================
 
 export interface ApiFaucetRequestBody {
-	coin: CoinType;
+	coinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFaucetMintSuiFrenBody {
+	mintFee: Balance;
+	suiFrenType: AnyObjectType;
 	walletAddress: SuiAddress;
 }

@@ -1,26 +1,46 @@
-import { SuiAddress } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
+	AnyObjectType,
 	Balance,
 	Percentage,
+	Event,
 	Slippage,
+	ApiEventsBody,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
-import { NojoPoolObject } from "../external/nojo/nojoAmmTypes";
-import { DeepBookPoolObject } from "../external/deepBook/deepBookTypes";
+import {
+	DeepBookPoolObject,
+	isDeepBookPoolObject,
+} from "../external/deepBook/deepBookTypes";
 import { RouterPoolInterface } from "./utils/synchronous/interfaces/routerPoolInterface";
-import { CetusPoolObject } from "../external/cetus/cetusTypes";
-import { TurbosPoolObject } from "../external/turbos/turbosTypes";
+import {
+	CetusPoolObject,
+	isCetusPoolObject,
+} from "../external/cetus/cetusTypes";
+import {
+	TurbosPoolObject,
+	isTurbosPoolObject,
+} from "../external/turbos/turbosTypes";
+import { InterestPoolObject } from "../external/interest/interestTypes";
+import { KriyaPoolObject } from "../external/kriya/kriyaTypes";
+import { BaySwapPoolObject } from "../external/baySwap/baySwapTypes";
+import { SuiswapPoolObject } from "../external/suiswap/suiswapTypes";
+import { BlueMovePoolObject } from "../external/blueMove/blueMoveTypes";
+import {
+	FlowXPoolObject,
+	isFlowXPoolObject,
+} from "../external/flowX/flowXTypes";
 
-/////////////////////////////////////////////////////////////////////
-//// Name Only
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Name Only
+// =========================================================================
 
 export type UniqueId = string;
 
-/////////////////////////////////////////////////////////////////////
-//// General
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  General
+// =========================================================================
 
 /**
  * Fee info for third party packages wanting to fee route transactions
@@ -38,9 +58,9 @@ export interface RouterExternalFee {
 	feePercentage: Percentage;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// All Router Pools
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  All Router Pools
+// =========================================================================
 
 export type RouterSerializablePool =
 	| RouterSynchronousSerializablePool
@@ -50,20 +70,33 @@ export type RouterProtocolName =
 	| RouterSynchronousProtocolName
 	| RouterAsyncProtocolName;
 
-/////////////////////////////////////////////////////////////////////
-//// Synchronous Router Pools
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Synchronous Router Pools
+// =========================================================================
 
 export type RouterSynchronousSerializablePool =
 	| PoolObject
-	| NojoPoolObject
-	| DeepBookPoolObject;
+	| InterestPoolObject
+	| KriyaPoolObject
+	| BaySwapPoolObject
+	| SuiswapPoolObject
+	| BlueMovePoolObject;
+
+export const isRouterSynchronousSerializablePool = (
+	pool: RouterSerializablePool
+): pool is RouterSynchronousSerializablePool => {
+	return !isRouterAsyncSerializablePool(pool);
+};
 
 const RouterSynchronousProtocolNames = [
 	"Aftermath",
-	"Nojo",
-	"DeepBook",
+	"Interest",
+	"Kriya",
+	"BaySwap",
+	"Suiswap",
+	"BlueMove",
 ] as const;
+
 export type RouterSynchronousProtocolName =
 	(typeof RouterSynchronousProtocolNames)[number];
 
@@ -74,13 +107,38 @@ export const isRouterSynchronousProtocolName = (
 	return RouterSynchronousProtocolNames.includes(protocolName);
 };
 
-/////////////////////////////////////////////////////////////////////
-//// Router Async Pools
-/////////////////////////////////////////////////////////////////////
+export type SynchronousProtocolsToPoolObjectIds = Record<
+	Partial<RouterSynchronousProtocolName>,
+	ObjectId[]
+>;
 
-export type RouterAsyncSerializablePool = CetusPoolObject | TurbosPoolObject;
+// =========================================================================
+//  Router Async Pools
+// =========================================================================
 
-const RouterAsyncProtocolNames = ["Cetus", "Turbos"] as const;
+export type RouterAsyncSerializablePool =
+	| CetusPoolObject
+	| TurbosPoolObject
+	| DeepBookPoolObject
+	| FlowXPoolObject;
+
+export const isRouterAsyncSerializablePool = (
+	pool: RouterSerializablePool
+): pool is RouterAsyncSerializablePool => {
+	return (
+		isDeepBookPoolObject(pool) ||
+		isTurbosPoolObject(pool) ||
+		isCetusPoolObject(pool) ||
+		isFlowXPoolObject(pool)
+	);
+};
+
+const RouterAsyncProtocolNames = [
+	"Cetus",
+	"Turbos",
+	"DeepBook",
+	"FlowX",
+] as const;
 export type RouterAsyncProtocolName = (typeof RouterAsyncProtocolNames)[number];
 
 export const isRouterAsyncProtocolName = (
@@ -90,14 +148,15 @@ export const isRouterAsyncProtocolName = (
 	return RouterAsyncProtocolNames.includes(protocolName);
 };
 
-/////////////////////////////////////////////////////////////////////
-//// Paths
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Paths
+// =========================================================================
 
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
 	referrer?: SuiAddress;
 	externalFee?: RouterExternalFee;
+	// mergeLastPath?: boolean;
 };
 
 export type RouterTradeRoute = RouterTradeInfo & {
@@ -121,9 +180,9 @@ export interface RouterTradeCoin {
 	tradeFee: PoolTradeFee;
 }
 
-/////////////////////////////////////////////////////////////////////
-//// Graph
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Graph
+// =========================================================================
 
 export interface RouterCompleteGraph {
 	coinNodes: RouterGraphCoinNodes;
@@ -137,11 +196,30 @@ export interface RouterSerializableCompleteGraph {
 
 export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
 
-export interface RouterOptions {
+export interface RouterSynchronousOptions {
 	maxRouteLength: number;
 	tradePartitionCount: number;
 	minRoutesToCheck: number;
 	maxGasCost: bigint;
+}
+
+export interface RouterAsyncOptions {
+	tradePartitionCount: number;
+	maxAsyncPoolsPerProtocol: number;
+}
+
+interface RouterOptions {
+	synchronous: RouterSynchronousOptions;
+	async: RouterAsyncOptions;
+}
+export interface PartialRouterOptions {
+	synchronous?: Partial<RouterSynchronousOptions>;
+	async?: Partial<RouterAsyncOptions>;
+}
+
+export interface AllRouterOptions {
+	regular: RouterOptions;
+	preAsync: RouterSynchronousOptions;
 }
 
 export type RouterSerializablePoolsById = Record<
@@ -159,9 +237,9 @@ export interface RouterCoinNode {
 
 export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 
-/////////////////////////////////////////////////////////////////////
-//// Async Router Trade Results
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Async Router Trade Results
+// =========================================================================
 
 export interface RouterAsyncTradeResults {
 	coinInType: CoinType;
@@ -176,9 +254,23 @@ export interface RouterAsyncTradeResult {
 	amountsOut: Balance[];
 }
 
-/////////////////////////////////////////////////////////////////////
-//// API
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Events
+// =========================================================================
+
+export interface RouterTradeEvent extends Event {
+	trader: SuiAddress;
+	coinInType: AnyObjectType;
+	coinInAmount: Balance;
+	coinOutType: AnyObjectType;
+	coinOutAmount: Balance;
+	// referrer?: SuiAddress;
+	// externalFee?: RouterExternalFee;
+}
+
+// =========================================================================
+//  API
+// =========================================================================
 
 /**
  * Details for router to construct trade route
@@ -230,3 +322,7 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 */
 	slippage: Slippage;
 }
+
+export type ApiRouterTradeEventsBody = ApiEventsBody & {
+	walletAddress: SuiAddress;
+};

@@ -5,21 +5,21 @@ import { AftermathApi } from "../providers/aftermathApi";
 import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
 
 export class WalletApi {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Fetching
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Fetching
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Coins
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Coins
+	// =========================================================================
 
 	public fetchCoinBalance = async (account: SuiAddress, coin: CoinType) => {
 		const coinBalance = await this.Provider.provider.getBalance({
@@ -39,10 +39,12 @@ export class WalletApi {
 		});
 
 		const coinsToBalance: CoinsToBalance = allBalances.reduce(
-			(acc, balance, index) => {
+			(acc, balance) => {
 				return {
 					...acc,
-					[balance.coinType]: BigInt(balance.totalBalance),
+					[Helpers.addLeadingZeroesToType(balance.coinType)]: BigInt(
+						balance.totalBalance
+					),
 				};
 			},
 			{}
@@ -51,9 +53,9 @@ export class WalletApi {
 		return coinsToBalance;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Transactions
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	// TODO: make this only look at aftermath relevant addresses in to address
 	// TODO: restrict all filtering for events, etc. similarly using updated sdk filters

@@ -1,26 +1,20 @@
 import { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { SuiApiHelpers } from "./suiApiHelpers";
 
 export class SuiApi {
-	/////////////////////////////////////////////////////////////////////
-	//// Class Members
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
 
-	public readonly Helpers;
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	constructor(private readonly Provider: AftermathApi) {}
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-		this.Helpers = new SuiApiHelpers(Provider);
-	}
-
-	/////////////////////////////////////////////////////////////////////
-	//// Inspections
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
 
 	public fetchCommitteeInfo = async (): Promise<CommitteeInfo> => {
 		return this.Provider.provider.getCommitteeInfo();

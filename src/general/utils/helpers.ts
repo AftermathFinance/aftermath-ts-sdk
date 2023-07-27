@@ -1,15 +1,16 @@
-import { AnyObjectType } from "../../types";
+import { AnyObjectType, Balance, Slippage } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
 import { RpcApiHelpers } from "../api/rpcApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { Casting } from "./casting";
 
 export class Helpers {
-	/////////////////////////////////////////////////////////////////////
-	//// Api Helpers
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Api Helpers
+	// =========================================================================
 
 	public static readonly dynamicFields = DynamicFieldsApiHelpers;
 	public static readonly events = EventsApiHelpers;
@@ -18,9 +19,9 @@ export class Helpers {
 	public static readonly rpc = RpcApiHelpers;
 	public static readonly transactions = TransactionsApiHelpers;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Type Manipulation
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Type Manipulation
+	// =========================================================================
 
 	public static stripLeadingZeroesFromType = (
 		type: AnyObjectType
@@ -31,13 +32,18 @@ export class Helpers {
 	): AnyObjectType => {
 		const expectedTypeLength = 64;
 
-		const splitType = type.replace("0x", "").split("::");
+		let strippedType = type.replace("0x", "");
+		let typeSuffix = "";
 
-		if (splitType.length !== 3) throw new Error("invalid type");
+		if (strippedType.includes("::")) {
+			const splitType = strippedType.replace("0x", "").split("::");
 
-		const typeSuffix = "::" + splitType[1] + "::" + splitType[2];
+			typeSuffix = splitType
+				.slice(1)
+				.reduce((acc, str) => acc + "::" + str, "");
+			strippedType = splitType[0];
+		}
 
-		const strippedType = splitType[0];
 		const typeLength = strippedType.length;
 
 		if (typeLength > expectedTypeLength)
@@ -51,9 +57,9 @@ export class Helpers {
 		return newType + typeSuffix;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Numbers
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Numbers
+	// =========================================================================
 
 	public static isNumber = (str: string): boolean => /^\d*\.?\d*$/g.test(str);
 
@@ -85,16 +91,19 @@ export class Helpers {
 		mulBBB: (a: bigint, b: bigint): bigint => a * b,
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Display
-	/////////////////////////////////////////////////////////////////////
+	public static maxBigInt = (...args: bigint[]) =>
+		args.reduce((m, e) => (e > m ? e : m));
+
+	// =========================================================================
+	//  Display
+	// =========================================================================
 
 	public static capitalizeOnlyFirstLetter = (str: string) =>
 		str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 
-	/////////////////////////////////////////////////////////////////////
-	//// JSON
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  JSON
+	// =========================================================================
 
 	public static parseJsonWithBigint = (
 		json: string,
@@ -116,9 +125,9 @@ export class Helpers {
 			return value;
 		});
 
-	/////////////////////////////////////////////////////////////////////
-	//// General
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  General
+	// =========================================================================
 
 	public static deepCopy = <T>(target: T): T => {
 		if (target === null) {
@@ -169,6 +178,31 @@ export class Helpers {
 	public static createUid = () =>
 		Date.now().toString(36) + Math.random().toString(36).substring(2);
 
+	public static bifilter = <ArrayType>(
+		array: ArrayType[],
+		func: (item: ArrayType, index: number, arr: ArrayType[]) => boolean
+	): [trues: ArrayType[], falses: ArrayType[]] => {
+		return array.reduce(
+			([T, F], x, i, arr) => {
+				if (func(x, i, arr) === false) return [T, [...F, x]];
+				else return [[...T, x], F];
+			},
+			[[], []] as [ArrayType[], ArrayType[]]
+		);
+	};
+
+	public static bifilterAsync = async <ArrayType>(
+		array: ArrayType[],
+		func: (
+			item: ArrayType,
+			index: number,
+			arr: ArrayType[]
+		) => Promise<boolean>
+	): Promise<[trues: ArrayType[], falses: ArrayType[]]> => {
+		const predicates = await Promise.all(array.map(func));
+		return this.bifilter(array, (_, index) => predicates[index]);
+	};
+
 	public static filterObject = <Value>(
 		obj: Record<string, Value>,
 		predicate: (key: string, value: Value) => boolean
@@ -184,9 +218,28 @@ export class Helpers {
 			};
 		}, {} as Record<string, Value>);
 
-	/////////////////////////////////////////////////////////////////////
-	//// Type Checking
-	/////////////////////////////////////////////////////////////////////
+	public static applySlippageBigInt = (
+		amount: Balance,
+		slippage: Slippage
+	) => {
+		return (
+			amount -
+			BigInt(
+				Math.floor(
+					Casting.normalizeSlippageTolerance(slippage) *
+						Number(amount)
+				)
+			)
+		);
+	};
+
+	public static applySlippage = (amount: number, slippage: Slippage) => {
+		return amount - Casting.normalizeSlippageTolerance(slippage) * amount;
+	};
+
+	// =========================================================================
+	//  Type Checking
+	// =========================================================================
 
 	public static isArrayOfStrings(value: unknown): value is string[] {
 		return (

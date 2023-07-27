@@ -1,17 +1,28 @@
 import { ObjectId } from "@mysten/sui.js";
-import { Balance, CoinType, RouterSerializablePool } from "../../../types";
+import {
+	Balance,
+	CoinType,
+	Object,
+	RouterSerializablePool,
+} from "../../../types";
 
-/////////////////////////////////////////////////////////////////////
-//// Objects
-/////////////////////////////////////////////////////////////////////
+// =========================================================================
+//  Objects
+// =========================================================================
 
-export interface TurbosPoolObject {
+export type TurbosPoolObject = TurbosPartialPoolObject & {
+	sqrtPrice: bigint;
+	coinABalance: Balance;
+	coinBBalance: Balance;
+	isUnlocked: boolean;
+};
+
+export interface TurbosPartialPoolObject {
 	id: ObjectId;
 	coinTypeA: CoinType;
 	coinTypeB: CoinType;
 	fee: bigint;
 	feeCoinType: CoinType;
-	sqrtPrice: bigint;
 }
 
 export interface TurbosCalcTradeResult {

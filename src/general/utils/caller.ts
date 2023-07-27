@@ -11,9 +11,9 @@ import { Helpers } from "./helpers";
 export class Caller {
 	private readonly baseUrl?: Url;
 
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(
 		public readonly network?: SuiNetwork | Url,
@@ -27,20 +27,27 @@ export class Caller {
 				: Caller.baseUrlForNetwork(network);
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Private Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
 
 	private static baseUrlForNetwork(network: SuiNetwork | Url): Url {
+		if (network === "MAINNET") return "https://aftermath.finance";
+		if (network === "TESTNET") return "https://testnet.aftermath.finance";
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
-		if (network === "TESTNET") return "https://aftermath.finance";
 		if (network === "LOCAL") return "http://localhost:3000";
-		return network;
+
+		const safeNetwork =
+			network.slice(-1) === "/" ? network.slice(0, -1) : network;
+
+		return safeNetwork;
 	}
 
 	private static async fetchResponseToType<OutputType>(
 		response: Response
 	): Promise<OutputType> {
+		if (!response.ok) throw new Error(await response.text());
+
 		const json = JSON.stringify(await response.json());
 		const output = Helpers.parseJsonWithBigint(json);
 		return output as OutputType;
@@ -56,9 +63,9 @@ export class Caller {
 		}${url}`;
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Protected Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Protected Methods
+	// =========================================================================
 
 	protected async fetchApi<Output, BodyType = undefined>(
 		url: Url,

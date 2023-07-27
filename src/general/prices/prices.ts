@@ -1,31 +1,59 @@
 import { SuiNetwork } from "../types/suiTypes";
-import { CoinType, CoinsToPrice } from "../../packages/coin/coinTypes";
+import {
+	CoinPriceInfo,
+	CoinType,
+	CoinsToPrice,
+	CoinsToPriceInfo,
+} from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 import { Url } from "../types";
 
 export class Prices extends Caller {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(public readonly network?: SuiNetwork | Url) {
-		super(network, "prices");
+		super(network, "price-info");
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Prices
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Prices
+	// =========================================================================
 
-	public async getCoinPrice(inputs: { coin: CoinType }): Promise<number> {
-		const coinsToPrice = await this.getCoinsToPrice({
+	public async getCoinPriceInfo(inputs: {
+		coin: CoinType;
+	}): Promise<CoinPriceInfo> {
+		const coinsToPriceInfo = await this.getCoinsToPriceInfo({
 			coins: [inputs.coin],
 		});
-		return Object.values(coinsToPrice)[0];
+		return Object.values(coinsToPriceInfo)[0];
+	}
+
+	public async getCoinsToPriceInfo(inputs: {
+		coins: CoinType[];
+	}): Promise<CoinsToPriceInfo> {
+		return this.fetchApi(JSON.stringify(inputs.coins));
+	}
+
+	public async getCoinPrice(inputs: { coin: CoinType }): Promise<number> {
+		const priceInfo = await this.getCoinPriceInfo(inputs);
+		return priceInfo.price;
 	}
 
 	public async getCoinsToPrice(inputs: {
 		coins: CoinType[];
 	}): Promise<CoinsToPrice> {
-		return this.fetchApi(JSON.stringify(inputs.coins));
+		const coinsToPriceInfo = await this.getCoinsToPriceInfo(inputs);
+		const coinsToPrice: CoinsToPrice = Object.entries(
+			coinsToPriceInfo
+		).reduce(
+			(acc, [coinType, info]) => ({
+				...acc,
+				[coinType]: info.price,
+			}),
+			{}
+		);
+		return coinsToPrice;
 	}
 }

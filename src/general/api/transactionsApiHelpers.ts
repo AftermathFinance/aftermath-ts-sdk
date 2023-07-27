@@ -1,6 +1,7 @@
 import {
 	SuiAddress,
 	SuiTransactionBlockResponseQuery,
+	TransactionArgument,
 	TransactionBlock,
 	TransactionDigest,
 	getExecutionStatusGasSummary,
@@ -12,21 +13,21 @@ import { AftermathApi } from "../providers/aftermathApi";
 import { RpcApiHelpers } from "./rpcApiHelpers";
 
 export class TransactionsApiHelpers {
-	/////////////////////////////////////////////////////////////////////
-	//// Constructor
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
 		this.Provider = Provider;
 	}
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Fetching
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Fetching
+	// =========================================================================
 
 	public fetchTransactionsWithCursor = async (
 		query: SuiTransactionBlockResponseQuery,
@@ -52,16 +53,14 @@ export class TransactionsApiHelpers {
 		};
 	};
 
-	public fetchSetGasBudgetForTransaction = async (
+	public fetchSetGasBudgetForTx = async (
 		tx: TransactionBlock
 	): Promise<TransactionBlock> => {
-		const sender = tx.blockData.sender;
-		if (!sender) throw new Error("no sender set for transaction");
-
 		const [txResponse, referenceGasPrice] = await Promise.all([
-			this.Provider.provider.devInspectTransactionBlock({
-				sender,
-				transactionBlock: tx,
+			this.Provider.provider.dryRunTransactionBlock({
+				transactionBlock: await tx.build({
+					provider: this.Provider.provider,
+				}),
 			}),
 			this.Provider.provider.getReferenceGasPrice(),
 		]);
@@ -76,23 +75,21 @@ export class TransactionsApiHelpers {
 		return tx;
 	};
 
-	public fetchSetGasBudgetAndSerializeTransaction = async (
+	public fetchSetGasBudgetAndSerializeTx = async (
 		tx: TransactionBlock | Promise<TransactionBlock>
 	): Promise<SerializedTransaction> => {
-		return (
-			await this.fetchSetGasBudgetForTransaction(await tx)
-		).serialize();
+		return (await this.fetchSetGasBudgetForTx(await tx)).serialize();
 	};
 
-	/////////////////////////////////////////////////////////////////////
-	//// Public Static Methods
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Public Static Methods
+	// =========================================================================
 
-	/////////////////////////////////////////////////////////////////////
-	//// Helpers
-	/////////////////////////////////////////////////////////////////////
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
 
-	public static createTransactionTarget = (
+	public static createTxTarget = (
 		packageAddress: string,
 		packageName: string,
 		functionName: string
@@ -103,4 +100,30 @@ export class TransactionsApiHelpers {
 		inner: InnerType | undefined
 	): { None: true } | { Some: InnerType } =>
 		inner === undefined ? { None: true } : { Some: inner };
+
+	public static creatBuildTxFunc = <Inputs>(
+		func: (inputs: Inputs) => TransactionArgument
+	): ((
+		inputs: {
+			walletAddress: SuiAddress;
+		} & Omit<Inputs, "tx">
+	) => TransactionBlock) => {
+		const builderFunc = (
+			someInputs: {
+				walletAddress: SuiAddress;
+			} & Omit<Inputs, "tx">
+		) => {
+			const tx = new TransactionBlock();
+			tx.setSender(someInputs.walletAddress);
+
+			func({
+				tx,
+				...someInputs,
+			} as Inputs);
+
+			return tx;
+		};
+
+		return builderFunc;
+	};
 }
