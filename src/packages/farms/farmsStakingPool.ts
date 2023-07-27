@@ -95,6 +95,8 @@ export class FarmsStakingPool extends Caller {
 		price: number;
 		decimals: number;
 	}) => {
+		throw new Error("TODO");
+
 		const { coinType, price, decimals } = inputs;
 
 		if (price <= 0) return 0;
@@ -113,9 +115,9 @@ export class FarmsStakingPool extends Caller {
 		const emissionRateUsd =
 			Coin.balanceWithDecimals(rewardCoin.emissionRate, decimals) * price;
 
-		dayjs.extend(duration);
-		const somethjing = dayjs().duration();
-		emissionRateUsd / rewardCoin.emissionSchedulesMs;
+		// dayjs.extend(duration);
+		// const somethjing = dayjs().duration();
+		// emissionRateUsd / rewardCoin.emissionSchedulesMs;
 	};
 
 	// =========================================================================
