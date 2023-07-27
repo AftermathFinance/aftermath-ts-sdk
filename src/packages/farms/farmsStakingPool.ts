@@ -10,6 +10,7 @@ import {
 } from "./farmsTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Helpers } from "../../general/utils";
+import { Coin } from "..";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -87,6 +88,34 @@ export class FarmsStakingPool extends Caller {
 				rewardCoin.lastRewardTimestamp +
 				number_of_emissions * rewardCoin.emissionSchedulesMs;
 		}
+	};
+
+	public calcApy = (inputs: {
+		coinType: CoinType;
+		price: number;
+		decimals: number;
+	}) => {
+		const { coinType, price, decimals } = inputs;
+
+		if (price <= 0) return 0;
+
+		this.emitRewards();
+
+		const rewardCoin = this.rewardCoin({ coinType });
+		const currentTimestamp = Date.now();
+
+		if (
+			rewardCoin.emissionStartTimestamp > currentTimestamp ||
+			rewardCoin.emissionEndTimestamp < currentTimestamp
+		)
+			return 0;
+
+		const emissionRateUsd =
+			Coin.balanceWithDecimals(rewardCoin.emissionRate, decimals) * price;
+
+		dayjs.extend(duration);
+		const somethjing = dayjs().duration();
+		emissionRateUsd / rewardCoin.emissionSchedulesMs;
 	};
 
 	// =========================================================================
