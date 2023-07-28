@@ -1,20 +1,14 @@
 import {
 	AfSuiMintedEvent,
-	StakeFailedEvent,
 	StakePosition,
-	StakeRequestEvent,
-	StakeSuccessEvent,
 	UnstakePosition,
-	UnstakeRequestEvent,
-	UnstakeSuccessEvent,
+	UnstakeEvent,
+	StakeRequestEvent,
 } from "../../../types";
 import {
 	AfSuiMintedEventOnChain,
-	StakeFailedEventOnChain,
 	StakeRequestEventOnChain,
-	StakeSuccessEventOnChain,
-	UnstakeRequestEventOnChain,
-	UnstakeSuccessEventOnChain,
+	UnstakeEventOnChain,
 } from "./stakingApiCastingTypes";
 
 export class StakingApiCasting {
@@ -27,7 +21,8 @@ export class StakingApiCasting {
 	): StakeRequestEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			suiWrapperId: fields.sui_wrapper_id,
+			suiId: fields.sui_id,
+			stakedSuiId: fields.staked_sui_id,
 			staker: fields.staker,
 			validatorAddress: fields.validator,
 			epoch: BigInt(fields.epoch),
@@ -38,63 +33,17 @@ export class StakingApiCasting {
 		};
 	};
 
-	public static unstakeRequestEventFromOnChain = (
-		eventOnChain: UnstakeRequestEventOnChain
-	): UnstakeRequestEvent => {
+	public static unstakeEventFromOnChain = (
+		eventOnChain: UnstakeEventOnChain
+	): UnstakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			afSuiWrapperId: fields.afsui_wrapper_id,
-			staker: fields.staker,
-			epoch: BigInt(fields.epoch),
-			afSuiAmountGiven: BigInt(fields.provided_afsui_amount),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static stakeSuccessEventFromOnChain = (
-		eventOnChain: StakeSuccessEventOnChain
-	): StakeSuccessEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			suiWrapperId: fields.sui_wrapper_id,
-			staker: fields.staker,
-			validatorAddress: fields.validator,
-			epoch: BigInt(fields.epoch),
-			suiStakeAmount: BigInt(fields.sui_amount),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static unstakeSuccessEventFromOnChain = (
-		eventOnChain: UnstakeSuccessEventOnChain
-	): UnstakeSuccessEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			afSuiWrapperId: fields.afsui_wrapper_id,
+			afSuiId: fields.afsui_id,
+			paybackCoinId: fields.payback_coin_id,
 			staker: fields.staker,
 			epoch: BigInt(fields.epoch),
 			afSuiAmountGiven: BigInt(fields.provided_afsui_amount),
 			suiUnstakeAmount: BigInt(fields.withdrawn_sui_amount),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static stakeFailedEventFromOnChain = (
-		eventOnChain: StakeFailedEventOnChain
-	): StakeFailedEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			suiWrapperId: fields.sui_wrapper_id,
-			staker: fields.staker,
-			validatorAddress: fields.validator,
-			epoch: BigInt(fields.epoch),
-			suiStakeAmount: BigInt(fields.returned_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -106,7 +55,7 @@ export class StakingApiCasting {
 	): AfSuiMintedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			suiWrapperId: fields.sui_wrapper_id,
+			suiId: fields.sui_id,
 			staker: fields.staker,
 			epoch: BigInt(fields.epoch),
 			afSuiMintAmount: BigInt(fields.minted_afsui_amount),
@@ -125,6 +74,8 @@ export class StakingApiCasting {
 	public static stakePositionFromStakeRequestEvent = (
 		event: StakeRequestEvent
 	): StakePosition => {
+		throw new Error("TODO");
+
 		return {
 			...event,
 			state: "REQUEST",
@@ -132,12 +83,13 @@ export class StakingApiCasting {
 	};
 
 	// TODO: use this func in staking api helpers
-	public static unstakePositionFromUnstakeRequestEvent = (
-		event: UnstakeRequestEvent
+	public static unstakePositionFromUnstakeEvent = (
+		event: UnstakeEvent
 	): UnstakePosition => {
+		throw new Error("TODO");
+
 		return {
 			...event,
-			state: "REQUEST",
 		};
 	};
 }

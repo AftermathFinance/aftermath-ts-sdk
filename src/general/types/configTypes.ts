@@ -49,10 +49,10 @@ export interface StakingAddresses {
 		afsui: SuiAddress;
 	};
 	objects: {
-		staking: ObjectId;
-	};
-	accounts: {
-		bot: SuiAddress;
+		stakedSuiVault: ObjectId;
+		safe: ObjectId;
+		treasury: ObjectId;
+		referralVault: ObjectId;
 	};
 }
 

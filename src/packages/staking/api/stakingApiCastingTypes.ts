@@ -7,48 +7,28 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 // =========================================================================
 
 export type StakeRequestEventOnChain = EventOnChain<{
-	sui_wrapper_id: ObjectId;
-	staker: SuiAddress;
-	validator: SuiAddress;
-	epoch: BigIntAsString;
+	sui_id: ObjectId;
+	staked_sui_id: ObjectId;
 	sui_amount: BigIntAsString;
+	staker: BigIntAsString;
+	validator: BigIntAsString;
+	epoch: BigIntAsString;
+	referrer: "asdfkajshdF option";
 }>;
 
-export type UnstakeRequestEventOnChain = EventOnChain<{
-	afsui_wrapper_id: ObjectId;
-	staker: SuiAddress;
-	epoch: BigIntAsString;
-	provided_afsui_amount: BigIntAsString;
-}>;
-
-export type StakeSuccessEventOnChain = EventOnChain<{
-	sui_wrapper_id: ObjectId;
-	staker: SuiAddress;
-	validator: SuiAddress;
-	epoch: BigIntAsString;
-	sui_amount: BigIntAsString;
-}>;
-
-export type UnstakeSuccessEventOnChain = EventOnChain<{
-	afsui_wrapper_id: ObjectId;
-	staker: SuiAddress;
-	epoch: BigIntAsString;
+export type UnstakeEventOnChain = EventOnChain<{
+	afsui_id: ObjectId;
+	payback_coin_id: ObjectId;
 	provided_afsui_amount: BigIntAsString;
 	withdrawn_sui_amount: BigIntAsString;
-}>;
-
-export type StakeFailedEventOnChain = EventOnChain<{
-	sui_wrapper_id: ObjectId;
-	staker: SuiAddress;
-	validator: SuiAddress;
+	staker: BigIntAsString;
 	epoch: BigIntAsString;
-	returned_sui_amount: BigIntAsString;
 }>;
 
 export type AfSuiMintedEventOnChain = EventOnChain<{
-	sui_wrapper_id: ObjectId;
-	staker: SuiAddress;
-	epoch: BigIntAsString;
-	minted_afsui_amount: BigIntAsString;
+	sui_id: ObjectId;
 	staked_sui_amount: BigIntAsString;
+	minted_afsui_amount: BigIntAsString;
+	staker: BigIntAsString;
+	epoch: BigIntAsString;
 }>;

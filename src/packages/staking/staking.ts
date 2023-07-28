@@ -6,10 +6,10 @@ import {
 	ApiStakingPositionsBody,
 	StakingPosition,
 	StakeRequestEvent,
-	UnstakeRequestEvent,
 	ApiStakingEventsBody,
 	Balance,
 	Url,
+	UnstakeEvent,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -64,11 +64,8 @@ export class Staking extends Caller {
 		);
 	}
 
-	public async getUnstakeRequestEvents(inputs: ApiStakingEventsBody) {
-		return this.fetchApiEvents<UnstakeRequestEvent>(
-			"events/unstake-request",
-			inputs
-		);
+	public async getUnstakeEvents(inputs: ApiStakingEventsBody) {
+		return this.fetchApiEvents<UnstakeEvent>("events/unstake", inputs);
 	}
 
 	// =========================================================================
@@ -97,7 +94,7 @@ export class Staking extends Caller {
 		return this.fetchApi("sui-tvl");
 	}
 
-	public async getAfSuiExchangeRate(): Promise<number> {
+	public async getAfSuiToSuiExchangeRate(): Promise<number> {
 		return this.fetchApi("afsui-exchange-rate");
 	}
 
