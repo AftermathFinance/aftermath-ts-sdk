@@ -18,6 +18,7 @@ import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
 import {
+	CoinType,
 	PartialRouterOptions,
 	RouterProtocolName,
 	RouterSynchronousOptions,
@@ -26,6 +27,7 @@ import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
+import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 
 export class AftermathApi {
 	// =========================================================================
@@ -92,14 +94,22 @@ export class AftermathApi {
 	// =========================================================================
 
 	public Wallet = () => new WalletApi(this);
-	public Prices = () =>
-		this.coinGeckoApiKey
-			? new CoinGeckoPricesApi(this.coinGeckoApiKey)
-			: new PlaceholderPricesApi();
-	public HistoricalData = () =>
-		this.coinGeckoApiKey
-			? new HistoricalDataApi(this.coinGeckoApiKey)
-			: new PlaceholderHistoricalDataApi();
+
+	public Prices = this.coinGeckoApiKey
+		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+				new CoinGeckoPricesApi(
+					this.coinGeckoApiKey ?? "",
+					coinApiIdsToCoinTypes
+				)
+		: () => new PlaceholderPricesApi();
+
+	public HistoricalData = this.coinGeckoApiKey
+		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+				new HistoricalDataApi(
+					this.coinGeckoApiKey ?? "",
+					coinApiIdsToCoinTypes
+				)
+		: () => new PlaceholderHistoricalDataApi();
 
 	// =========================================================================
 	//  General Packages
