@@ -27,8 +27,6 @@ export interface StakeBalanceDynamicField {
 //  Events
 // =========================================================================
 
-// stake
-
 export type StakeEvent = StakeRequestEvent | AfSuiMintedEvent;
 
 export interface StakeRequestEvent extends Event {
@@ -48,8 +46,6 @@ export interface AfSuiMintedEvent extends Event {
 	afSuiMintAmount: Balance;
 	suiStakeAmount: Balance;
 }
-
-// unstake
 
 export interface UnstakeEvent extends Event {
 	afSuiId: ObjectId;
