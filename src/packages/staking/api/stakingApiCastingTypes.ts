@@ -6,6 +6,16 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 //  Events
 // =========================================================================
 
+export interface ValidatorConfigFieldsOnChain {
+	sui_address: SuiAddress;
+	operation_cap_id: ObjectId;
+	fee: BigIntAsString;
+}
+
+// =========================================================================
+//  Events
+// =========================================================================
+
 export type StakeRequestEventOnChain = EventOnChain<{
 	sui_id: ObjectId;
 	staked_sui_id: ObjectId;

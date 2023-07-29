@@ -1,17 +1,59 @@
 import {
+	SuiObjectResponse,
+	getObjectFields,
+	getObjectId,
+	getObjectType,
+} from "@mysten/sui.js";
+import {
 	AfSuiMintedEvent,
 	StakePosition,
 	UnstakePosition,
 	UnstakeEvent,
 	StakeRequestEvent,
+	ValidatorConfigObject,
 } from "../../../types";
 import {
 	AfSuiMintedEventOnChain,
 	StakeRequestEventOnChain,
 	UnstakeEventOnChain,
+	ValidatorConfigFieldsOnChain,
 } from "./stakingApiCastingTypes";
+import { Fixed } from "../../../general/utils/fixed";
+import { Helpers } from "../../../general/utils";
 
 export class StakingApiCasting {
+	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	public static validatorConfigObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): ValidatorConfigObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const allFields = getObjectFields(data) as {
+			value: {
+				fields: {
+					value: {
+						fields: ValidatorConfigFieldsOnChain;
+					};
+				};
+			};
+		};
+		const fields = allFields.value.fields.value.fields;
+
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			suiAddress: Helpers.addLeadingZeroesToType(fields.sui_address),
+			operationCapId: Helpers.addLeadingZeroesToType(
+				fields.operation_cap_id
+			),
+			fee: Fixed.directCast(BigInt(fields.fee)),
+		};
+	};
+
 	// =========================================================================
 	//  Events
 	// =========================================================================
@@ -21,10 +63,10 @@ export class StakingApiCasting {
 	): StakeRequestEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			suiId: fields.sui_id,
-			stakedSuiId: fields.staked_sui_id,
-			staker: fields.staker,
-			validatorAddress: fields.validator,
+			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
+			stakedSuiId: Helpers.addLeadingZeroesToType(fields.staked_sui_id),
+			staker: Helpers.addLeadingZeroesToType(fields.staker),
+			validatorAddress: Helpers.addLeadingZeroesToType(fields.validator),
 			epoch: BigInt(fields.epoch),
 			suiStakeAmount: BigInt(fields.sui_amount),
 			timestamp: eventOnChain.timestampMs,
@@ -38,9 +80,11 @@ export class StakingApiCasting {
 	): UnstakeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			afSuiId: fields.afsui_id,
-			paybackCoinId: fields.payback_coin_id,
-			staker: fields.staker,
+			afSuiId: Helpers.addLeadingZeroesToType(fields.afsui_id),
+			paybackCoinId: Helpers.addLeadingZeroesToType(
+				fields.payback_coin_id
+			),
+			staker: Helpers.addLeadingZeroesToType(fields.staker),
 			epoch: BigInt(fields.epoch),
 			afSuiAmountGiven: BigInt(fields.provided_afsui_amount),
 			suiUnstakeAmount: BigInt(fields.withdrawn_sui_amount),
@@ -55,41 +99,14 @@ export class StakingApiCasting {
 	): AfSuiMintedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			suiId: fields.sui_id,
-			staker: fields.staker,
+			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
+			staker: Helpers.addLeadingZeroesToType(fields.staker),
 			epoch: BigInt(fields.epoch),
 			afSuiMintAmount: BigInt(fields.minted_afsui_amount),
 			suiStakeAmount: BigInt(fields.staked_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
-		};
-	};
-
-	// =========================================================================
-	//  Staking Positions
-	// =========================================================================
-
-	// TODO: use this func in staking api helpers
-	public static stakePositionFromStakeRequestEvent = (
-		event: StakeRequestEvent
-	): StakePosition => {
-		throw new Error("TODO");
-
-		return {
-			...event,
-			state: "REQUEST",
-		};
-	};
-
-	// TODO: use this func in staking api helpers
-	public static unstakePositionFromUnstakeEvent = (
-		event: UnstakeEvent
-	): UnstakePosition => {
-		throw new Error("TODO");
-
-		return {
-			...event,
 		};
 	};
 }

@@ -20,6 +20,7 @@ import {
 	isUnstakePosition,
 	isStakeEvent,
 	isUnstakeEvent,
+	ValidatorConfigObject,
 } from "../stakingTypes";
 import {
 	AnyObjectType,
@@ -38,6 +39,7 @@ import {
 } from "./stakingApiCastingTypes";
 import { Sui } from "../../sui";
 import { Fixed } from "../../../general/utils/fixed";
+import { StakingApiCasting } from "./stakingApiCasting";
 
 export class StakingApi {
 	// =========================================================================
@@ -114,12 +116,29 @@ export class StakingApi {
 		});
 	};
 
-	public fetchActiveValidators = async (): Promise<SuiValidatorSummary[]> => {
-		return (await this.Provider.Sui().fetchSystemState()).activeValidators;
+	public fetchValidatorApys = async (): Promise<ValidatorsApy> => {
+		const apyData = await this.Provider.provider.getValidatorsApy();
+
+		const apys = apyData.apys.map((apy) => ({
+			...apy,
+			address: Helpers.addLeadingZeroesToType(apy.address),
+		}));
+
+		return { ...apyData, apys };
 	};
 
-	public fetchValidatorApys = async (): Promise<ValidatorsApy> => {
-		return await this.Provider.provider.getValidatorsApy();
+	public fetchValidatorConfigs = async (): Promise<
+		ValidatorConfigObject[]
+	> => {
+		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
+			parentObjectId: this.addresses.objects.validatorConfigsTable,
+			objectsFromObjectIds: (objectIds) =>
+				this.Provider.Objects().fetchCastObjectBatch({
+					objectIds,
+					objectFromSuiObjectResponse:
+						StakingApiCasting.validatorConfigObjectFromSuiObjectResponse,
+				}),
+		});
 	};
 
 	// =========================================================================

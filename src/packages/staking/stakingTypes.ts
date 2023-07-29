@@ -3,12 +3,20 @@ import {
 	ApiEventsBody,
 	Balance,
 	Event,
+	Object,
+	Percentage,
 	Timestamp,
 } from "../../general/types/generalTypes";
 
 // =========================================================================
 //  Objects
 // =========================================================================
+
+export interface ValidatorConfigObject extends Object {
+	suiAddress: SuiAddress;
+	operationCapId: ObjectId;
+	fee: Percentage;
+}
 
 export interface StakeBalanceDynamicField {
 	objectId: ObjectId;

@@ -53,6 +53,7 @@ export interface StakingAddresses {
 		safe: ObjectId;
 		treasury: ObjectId;
 		referralVault: ObjectId;
+		validatorConfigsTable: ObjectId;
 	};
 }
 

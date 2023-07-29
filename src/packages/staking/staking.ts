@@ -10,6 +10,7 @@ import {
 	Balance,
 	Url,
 	UnstakeEvent,
+	ValidatorConfigObject,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -20,11 +21,12 @@ export class Staking extends Caller {
 
 	public static readonly constants = {
 		fees: {
-			unstakeFee: 0.01, // 1%
+			protocolUnstake: 0.05, // 5%
 		},
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
 		},
+		defaultValidatorFee: 0, // 0%
 	};
 
 	// =========================================================================
@@ -45,6 +47,10 @@ export class Staking extends Caller {
 
 	public async getValidatorApys(): Promise<ValidatorsApy> {
 		return this.fetchApi("validator-apys");
+	}
+
+	public async getValidatorConfigs(): Promise<ValidatorConfigObject[]> {
+		return this.fetchApi("validator-configs");
 	}
 
 	public async getStakingPositions(
