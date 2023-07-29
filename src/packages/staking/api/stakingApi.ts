@@ -399,8 +399,8 @@ export class StakingApi {
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		const exchangeRate = Casting.bigIntFromBytes(bytes);
-		return Fixed.directCast(exchangeRate);
+		const exchangeRate = Fixed.directCast(Casting.bigIntFromBytes(bytes));
+		return exchangeRate <= 0 ? 1 : exchangeRate;
 	};
 
 	// =========================================================================
