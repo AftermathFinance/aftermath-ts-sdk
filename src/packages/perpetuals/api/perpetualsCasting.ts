@@ -25,17 +25,12 @@ import {
 	PerpetualsMarketManagerStateDynamicFieldOnChain,
 	PerpetualsInnerNode,
 	PerpetualsOuterNode,
-	IFixed,
-    PerpetualsAccountStruct,
+	PerpetualsAccountStruct,
     PerpetualsPosition,
     TableV,
 } from "../perpetualsTypes";
 import PriorityQueue from "priority-queue-typescript";
 import {
-	price,
-	counterAsk,
-	counterBid,
-	orderId,
 	ASK,
 	BID,
 } from "../utils/critBitTreeUtils";
