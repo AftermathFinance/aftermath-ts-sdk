@@ -124,6 +124,9 @@ export class StakingApi {
 			const stakesToAdd: SuiDelegatedStake[] = stakeData.stakes.map(
 				(stake) => ({
 					...stake,
+					stakedSuiId: Helpers.addLeadingZeroesToType(
+						stake.stakedSuiId
+					),
 					stakeRequestEpoch: BigInt(stake.stakeRequestEpoch),
 					stakeActiveEpoch: BigInt(stake.stakeActiveEpoch),
 					principal: BigInt(stake.principal),
@@ -131,8 +134,12 @@ export class StakingApi {
 						stake.estimatedReward !== undefined
 							? BigInt(stake.estimatedReward)
 							: stake.estimatedReward,
-					stakingPool: stakeData.stakingPool,
-					validatorAddress: stakeData.validatorAddress,
+					stakingPool: Helpers.addLeadingZeroesToType(
+						stakeData.stakingPool
+					),
+					validatorAddress: Helpers.addLeadingZeroesToType(
+						stakeData.validatorAddress
+					),
 				})
 			);
 			return [...acc, ...stakesToAdd];

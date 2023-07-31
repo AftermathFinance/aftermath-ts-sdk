@@ -28,8 +28,10 @@ export interface StakeBalanceDynamicField {
 	value: Balance;
 }
 
+export type SuiDelegatedStakeState = "Active" | "Pending" | "Unstaked";
+
 export interface SuiDelegatedStake {
-	status: "Active" | "Pending" | "Unstaked";
+	status: SuiDelegatedStakeState;
 	stakedSuiId: ObjectId;
 	stakeRequestEpoch: bigint;
 	stakeActiveEpoch: bigint;
@@ -38,6 +40,17 @@ export interface SuiDelegatedStake {
 	validatorAddress: SuiAddress;
 	stakingPool: SuiAddress;
 }
+
+export const isSuiDelegatedStake = (
+	stake: StakingPosition | SuiDelegatedStake
+): stake is SuiDelegatedStake => {
+	return (
+		"stakeRequestEpoch" in stake &&
+		"stakeActiveEpoch" in stake &&
+		"principal" in stake &&
+		"stakingPool" in stake
+	);
+};
 
 // =========================================================================
 //  Events
