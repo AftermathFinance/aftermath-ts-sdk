@@ -2,28 +2,24 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import {
 	ObjectId,
-	SuiAddress,
 	SuiObjectResponse,
-	TransactionArgument,
 	TransactionBlock,
 	bcs,
 	getObjectFields,
 } from "@mysten/sui.js";
-import { CetusCalcTradeResult, CetusPoolObject } from "./cetusTypes";
 import {
-	AnyObjectType,
-	Balance,
-	CetusAddresses,
-	PoolsAddresses,
-	ReferralVaultAddresses,
-} from "../../../types";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
+	CetusCalcTradeResult,
+	CetusPoolObject,
+	CetusPoolSimpleInfo,
+} from "./cetusTypes";
+import { AnyObjectType, Balance, CetusAddresses } from "../../../types";
 import { Helpers } from "../../../general/utils";
-import { Pools, Sui } from "../..";
+import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
+import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 
-export class CetusApi implements RouterApiInterface<CetusPoolObject> {
+export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -32,11 +28,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		moduleNames: {
 			poolScript: "pool_script",
 			pool: "pool",
-			wrapper: "cetus",
-		},
-		inputs: {
-			minSqrtPriceLimit: BigInt("4295048016"),
-			maxSqrtPriceLimit: BigInt("79226673515401279992447579055"),
+			wrapper: "router",
 		},
 	};
 
@@ -44,11 +36,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: {
-		cetus: CetusAddresses;
-		pools: PoolsAddresses;
-		referralVault: ReferralVaultAddresses;
-	};
+	public readonly addresses: CetusAddresses;
 
 	public readonly objectTypes: {
 		pool: AnyObjectType;
@@ -59,23 +47,16 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	// =========================================================================
 
 	constructor(public readonly Provider: AftermathApi) {
-		const cetus = this.Provider.addresses.router?.cetus;
-		const pools = this.Provider.addresses.pools;
-		const referralVault = this.Provider.addresses.referralVault;
+		const cetusAddresses = this.Provider.addresses.router?.cetus;
 
-		if (!cetus || !pools || !referralVault)
+		if (!cetusAddresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = {
-			cetus,
-			pools,
-			referralVault,
-		};
-
+		this.addresses = cetusAddresses;
 		this.objectTypes = {
-			pool: `${cetus.packages.clmm}::pool::Pool`,
+			pool: `${cetusAddresses.packages.clmm}::pool::Pool`,
 		};
 	}
 
@@ -87,16 +68,16 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async () => {
+	public fetchAllPools = async (): Promise<CetusPoolObject[]> => {
 		const poolsSimpleInfo =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				{
-					parentObjectId: this.addresses.cetus.objects.poolsTable,
+					parentObjectId: this.addresses.objects.poolsTable,
 					objectsFromObjectIds: (objectIds) =>
 						this.Provider.Objects().fetchCastObjectBatch({
 							objectIds,
 							objectFromSuiObjectResponse:
-								CetusApi.poolFromSuiObjectResponse,
+								CetusApi.poolSimpleInfoFromSuiObjectResponse,
 						}),
 				}
 			);
@@ -109,35 +90,60 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 					if (!fields)
 						throw new Error("no fields found on cetus pool object");
 
-					const liquidity = BigInt(fields.liquidity);
+					const coinABalance = BigInt(fields.coin_a);
+					const coinBBalance = BigInt(fields.coin_b);
 					const isPaused = fields.is_pause as unknown as boolean;
 
 					return {
-						liquidity,
+						coinABalance,
+						coinBBalance,
 						isPaused,
 					};
 				},
 			});
 
-		const usablePools = poolsSimpleInfo.filter(
-			(_, index) =>
-				!poolsMoreInfo[index].isPaused &&
-				poolsMoreInfo[index].liquidity > BigInt(0)
+		const pools = poolsSimpleInfo.map((info, index) => ({
+			...info,
+			...poolsMoreInfo[index],
+		}));
+
+		const usablePools = pools.filter(
+			(pool) =>
+				!pool.isPaused &&
+				pool.coinABalance > BigInt(0) &&
+				pool.coinBBalance > BigInt(0)
 		);
 
 		return usablePools;
 	};
 
-	public fetchPoolsForTrade = async (inputs: {
+	public filterPoolsForTrade = (inputs: {
+		pools: CetusPoolObject[];
 		coinInType: CoinType;
 		coinOutType: CoinType;
-	}): Promise<{
+	}): {
 		partialMatchPools: CetusPoolObject[];
 		exactMatchPools: CetusPoolObject[];
-	}> => {
-		const possiblePools = await this.fetchPoolsForCoinType({
-			coinType: inputs.coinOutType,
-		});
+	} => {
+		const possiblePools = inputs.pools
+			.filter((pool) =>
+				CetusApi.isPoolForCoinType({
+					pool,
+					coinType: inputs.coinOutType,
+				})
+			)
+			.sort((a, b) => {
+				const coinType = inputs.coinOutType;
+
+				const aPoolLiquidity = CetusApi.isCoinA({ pool: a, coinType })
+					? a.coinABalance
+					: a.coinBBalance;
+				const bPoolLiquidity = CetusApi.isCoinA({ pool: b, coinType })
+					? b.coinABalance
+					: b.coinBBalance;
+
+				return Number(bPoolLiquidity - aPoolLiquidity);
+			});
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
 			possiblePools,
@@ -170,18 +176,13 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	};
 
 	public fetchTradeAmountOut = async (inputs: {
-		walletAddress: SuiAddress;
 		pool: CetusPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<Balance> => {
 		const tradeResult = await this.fetchCalcTradeResult(inputs);
-		const coinOutAmountWithFees = Pools.getAmountWithProtocolFees({
-			...inputs,
-			amount: tradeResult.amountOut,
-		});
-		return coinOutAmountWithFees;
+		return tradeResult.amountOut;
 	};
 
 	// =========================================================================
@@ -189,14 +190,13 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	// =========================================================================
 
 	public fetchCalcTradeResult = async (inputs: {
-		walletAddress: SuiAddress;
 		pool: CetusPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<CetusCalcTradeResult> => {
 		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+		tx.setSender(Helpers.rpc.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
 			tx,
@@ -246,143 +246,69 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	// =========================================================================
 
 	public tradeCoinAToCoinBTx = (
-		inputs: {
-			tx: TransactionBlock;
+		inputs: RouterPoolTradeTxInputs & {
 			poolObjectId: ObjectId;
-			coinInId: ObjectId | TransactionArgument;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-			tradePotato: TransactionArgument;
-			isFirstSwapForPath: boolean;
-			isLastSwapForPath: boolean;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
+		}
 	) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
-
-		const isGivenAmountIn = "coinInAmount" in inputs;
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.cetus.packages.wrapper,
+				this.addresses.packages.wrapper,
 				CetusApi.constants.moduleNames.wrapper,
-				isGivenAmountIn ? "swap_a_to_b_by_a" : "swap_a_to_b_by_b"
+				"swap_a_to_b_by_a"
 			),
-			typeArguments: [inputs.coinInType, inputs.coinOutType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinInType,
+				inputs.coinOutType,
+			],
 			arguments: [
-				tx.object(this.addresses.cetus.objects.globalConfig),
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
+				tx.object(this.addresses.objects.globalConfig),
 				tx.object(inputs.poolObjectId), // pool
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_a
-				...(isGivenAmountIn
-					? []
-					: [tx.pure(inputs.coinOutAmount, "u64")]), // amount_b
-				tx.pure(CetusApi.constants.inputs.minSqrtPriceLimit, "u128"), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
 
 	public tradeCoinBToCoinATx = (
-		inputs: {
-			tx: TransactionBlock;
+		inputs: RouterPoolTradeTxInputs & {
 			poolObjectId: ObjectId;
-			coinInId: ObjectId | TransactionArgument;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-			tradePotato: TransactionArgument;
-			isFirstSwapForPath: boolean;
-			isLastSwapForPath: boolean;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
+		}
 	) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
-
-		const isGivenAmountIn = "coinInAmount" in inputs;
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.cetus.packages.wrapper,
+				this.addresses.packages.wrapper,
 				CetusApi.constants.moduleNames.wrapper,
-				isGivenAmountIn ? "swap_b_to_a_by_b" : "swap_b_to_a_by_a"
+				"swap_b_to_a_by_b"
 			),
-			typeArguments: [inputs.coinOutType, inputs.coinInType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				inputs.coinOutType,
+				inputs.coinInType,
+			],
 			arguments: [
-				tx.object(this.addresses.cetus.objects.globalConfig),
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
+				tx.object(this.addresses.objects.globalConfig),
 				tx.object(inputs.poolObjectId), // pool
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_b
-				...(isGivenAmountIn
-					? []
-					: [tx.pure(inputs.coinOutAmount, "u64")]), // amount_a
-				tx.pure(CetusApi.constants.inputs.maxSqrtPriceLimit, "u128"), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
 
 	public tradeTx = (
-		inputs: {
-			tx: TransactionBlock;
+		inputs: RouterPoolTradeTxInputs & {
 			pool: CetusPoolObject;
-			coinInId: ObjectId | TransactionArgument;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-			tradePotato: TransactionArgument;
-			isFirstSwapForPath: boolean;
-			isLastSwapForPath: boolean;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
+		}
 	) => {
 		const { coinInType, pool } = inputs;
 
@@ -395,52 +321,6 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 			return this.tradeCoinAToCoinBTx(commandInputs);
 
 		return this.tradeCoinBToCoinATx(commandInputs);
-	};
-
-	public flashTradeTx = (
-		inputs: {
-			tx: TransactionBlock;
-			poolObjectId: ObjectId;
-			coinInType: CoinType;
-			coinOutType: CoinType;
-			coinTypeA: CoinType;
-			coinTypeB: CoinType;
-		} & (
-			| {
-					coinInAmount: Balance;
-			  }
-			| {
-					coinOutAmount: Balance;
-			  }
-		)
-	) /* (Coin<CoinTypeA>, Coin<CoinTypeB>, FlashSwapReceipt<CoinTypeA, CoinTypeB>) */ => {
-		const { tx } = inputs;
-
-		const isCoinAToCoinB = inputs.coinInType === inputs.coinTypeA;
-		const sqrtPriceLimit = isCoinAToCoinB
-			? CetusApi.constants.inputs.minSqrtPriceLimit
-			: CetusApi.constants.inputs.maxSqrtPriceLimit;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.cetus.packages.clmm,
-				CetusApi.constants.moduleNames.pool,
-				"flash_swap"
-			),
-			typeArguments: [inputs.coinTypeA, inputs.coinTypeB],
-			arguments: [
-				tx.object(inputs.poolObjectId),
-				tx.pure(isCoinAToCoinB, "bool"), // a2b
-				tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
-				tx.pure(
-					"coinInAmount" in inputs
-						? inputs.coinInAmount
-						: inputs.coinOutAmount,
-					"u64"
-				), // amount
-				tx.pure(sqrtPriceLimit, "u128"), // sqrt_price_limit
-			],
-		});
 	};
 
 	// =========================================================================
@@ -490,7 +370,7 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 
 			return tx.moveCall({
 				target: Helpers.transactions.createTxTarget(
-					this.addresses.cetus.packages.clmm,
+					this.addresses.packages.clmm,
 					CetusApi.constants.moduleNames.pool,
 					"calculate_swap_result"
 				),
@@ -510,41 +390,6 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 		};
 
 	// =========================================================================
-	//  Transaction Builders
-	// =========================================================================
-
-	public fetchBuildTradeTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: CetusPoolObject;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-	}): Promise<TransactionBlock> => {
-		const { walletAddress, coinInType, coinInAmount } = inputs;
-
-		const tx = new TransactionBlock();
-		tx.setSender(walletAddress);
-
-		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: coinInType,
-			coinAmount: coinInAmount,
-		});
-
-		this.tradeTx({
-			tx,
-			...inputs,
-			coinInId,
-		});
-
-		return tx;
-	};
-
-	// =========================================================================
 	//  Helpers
 	// =========================================================================
 
@@ -558,47 +403,6 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	};
 
 	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Objects
-	// =========================================================================
-
-	private fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => {
-		const allPools = await this.fetchAllPools();
-
-		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
-		const foundPool = allPools.find((pool) =>
-			CetusApi.isPoolForCoinTypes({
-				pool,
-				...inputs,
-			})
-		);
-
-		if (!foundPool)
-			throw new Error("no cetus pools found for given coin types");
-
-		return foundPool;
-	};
-
-	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
-		const allPools = await this.fetchAllPools();
-
-		const foundPools = allPools.filter((pool) =>
-			CetusApi.isPoolForCoinType({
-				pool,
-				...inputs,
-			})
-		);
-
-		return foundPools;
-	};
-
-	// =========================================================================
 	//  Private Static Methods
 	// =========================================================================
 
@@ -606,9 +410,9 @@ export class CetusApi implements RouterApiInterface<CetusPoolObject> {
 	//  Casting
 	// =========================================================================
 
-	private static poolFromSuiObjectResponse = (
+	private static poolSimpleInfoFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): CetusPoolObject => {
+	): CetusPoolSimpleInfo => {
 		const content = data.data?.content;
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");

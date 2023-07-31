@@ -38,8 +38,8 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	public static readonly constants = {
+		// TODO: remove this and use fixed class
 		decimals: {
-			lpCoinDecimals: 9,
 			coinWeightDecimals: 18,
 			spotPriceDecimals: 18,
 			tradeFeeDecimals: 18,
@@ -65,6 +65,9 @@ export class Pools extends Caller {
 			maxSwapFee: 0.1, // 10%
 			minWeight: 0.01, // 1%
 			maxWeight: 0.99, // 99%
+		},
+		defaults: {
+			lpCoinDecimals: 9,
 		},
 	};
 
@@ -165,10 +168,22 @@ export class Pools extends Caller {
 	public getPoolObjectIdForLpCoinType = (
 		inputs: ApiPoolObjectIdForLpCoinTypeBody
 	) => {
+		if (!Pools.isPossibleLpCoinType(inputs))
+			throw new Error("invalid lp coin type");
+
 		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
 			"pool-object-id",
 			inputs
 		);
+	};
+
+	public isLpCoinType = async (inputs: { lpCoinType: CoinType }) => {
+		try {
+			await this.getPoolObjectIdForLpCoinType(inputs);
+			return true;
+		} catch (e) {
+			return false;
+		}
 	};
 
 	// =========================================================================
@@ -227,9 +242,6 @@ export class Pools extends Caller {
 	public static tradeFeeWithDecimals = (tradeFee: PoolTradeFee) =>
 		Number(tradeFee) / 10 ** Pools.constants.decimals.tradeFeeDecimals;
 
-	public static lpCoinBalanceWithDecimals = (balance: Balance) =>
-		Number(balance) / 10 ** Pools.constants.decimals.lpCoinDecimals;
-
 	// =========================================================================
 	//  Normalize Conversions
 	// =========================================================================
@@ -240,9 +252,6 @@ export class Pools extends Caller {
 			Pools.constants.decimals.tradeFeeDecimals
 		);
 	};
-
-	public static normalizeLpCoinBalance = (balance: number) =>
-		Coin.normalizeBalance(balance, Pools.constants.decimals.lpCoinDecimals);
 
 	public static normalizeSlippage = (slippage: Slippage) =>
 		Coin.normalizeBalance(
@@ -261,4 +270,17 @@ export class Pools extends Caller {
 			.split("_")
 			.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
 			.join(" ") + " LP";
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	public static isPossibleLpCoinType = (inputs: { lpCoinType: CoinType }) => {
+		const { lpCoinType } = inputs;
+		return (
+			lpCoinType.split("::").length === 3 &&
+			lpCoinType.split("::")[1].includes("af_lp") &&
+			lpCoinType.split("::")[2].includes("AF_LP")
+		);
+	};
 }

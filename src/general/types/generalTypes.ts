@@ -1,11 +1,11 @@
 import {
+	DynamicFieldInfo,
 	EventId,
 	ObjectId,
 	SuiAddress,
 	SuiTransactionBlockResponse,
 	TransactionDigest,
 } from "@mysten/sui.js";
-import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
 // =========================================================================
 //  bigint
@@ -76,6 +76,7 @@ export type UserEventsInputs = EventsInputs & {
 
 export interface Object {
 	objectId: ObjectId;
+	objectType: AnyObjectType;
 }
 
 // =========================================================================

@@ -1,5 +1,9 @@
 import { SuiAddress } from "@mysten/sui.js";
-import { Event } from "../../general/types/generalTypes";
+import {
+	AnyObjectType,
+	Balance,
+	Event,
+} from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 
 // =========================================================================
@@ -23,5 +27,11 @@ export interface FaucetAddCoinEvent extends Event {
 
 export interface ApiFaucetRequestBody {
 	coinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFaucetMintSuiFrenBody {
+	mintFee: Balance;
+	suiFrenType: AnyObjectType;
 	walletAddress: SuiAddress;
 }

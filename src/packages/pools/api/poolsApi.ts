@@ -31,7 +31,6 @@ import {
 	AnyObjectType,
 	ReferralVaultAddresses,
 	PoolsAddresses,
-	AftermathRouterAddresses,
 	PoolGraphDataTimeframe,
 	PoolCreationCoinInfo,
 	PoolFlatness,
@@ -41,6 +40,8 @@ import {
 	PoolCoins,
 	EventsInputs,
 	Url,
+	AftermathRouterWrapperAddresses,
+	PoolObject,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -55,8 +56,10 @@ import { Coin } from "../../coin";
 import dayjs, { ManipulateType } from "dayjs";
 import { PoolsApiCasting } from "./poolsApiCasting";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { RouterPoolTradeTxInputs } from "../../router";
+import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 
-export class PoolsApi {
+export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -70,7 +73,7 @@ export class PoolsApi {
 			withdraw: "withdraw",
 			events: "events",
 			poolRegistry: "pool_registry",
-			routerWrapper: "aftermath",
+			routerWrapper: "router",
 		},
 		eventNames: {
 			swap: "SwapEvent",
@@ -89,7 +92,7 @@ export class PoolsApi {
 	public readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
-		routerWrapper: AftermathRouterAddresses | undefined;
+		routerWrapper?: AftermathRouterWrapperAddresses;
 	};
 	public readonly eventTypes: {
 		trade: AnyObjectType;
@@ -124,19 +127,20 @@ export class PoolsApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = {
-			pools: Provider.addresses.pools,
-			referralVault: Provider.addresses.referralVault,
-			routerWrapper: Provider.addresses.router?.aftermath,
-		};
-		if (!addresses.pools || !addresses.referralVault)
+		const pools = Provider.addresses.pools;
+		const referralVault = Provider.addresses.referralVault;
+		const routerWrapper = Provider.addresses.router?.aftermath;
+
+		if (!pools || !referralVault)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		// @ts-ignore
-		this.addresses = addresses;
-
+		this.addresses = {
+			pools,
+			referralVault,
+			routerWrapper,
+		};
 		this.eventTypes = {
 			trade: this.tradeEventType(),
 			deposit: this.depositEventType(),
@@ -244,7 +248,7 @@ export class PoolsApi {
 		});
 	};
 
-	public fetchPools = async (inputs: { objectIds: ObjectId[] }) => {
+	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
 		return this.Provider.Objects().fetchCastObjectBatch({
 			...inputs,
 			objectFromSuiObjectResponse: Casting.pools.poolObjectFromSuiObject,
@@ -252,11 +256,11 @@ export class PoolsApi {
 	};
 
 	public fetchAllPools = async () => {
-		const objectIds = await this.fetchAllPoolObjectIds();
-		return this.fetchPools({ objectIds });
+		const objectIds = await this.fetchAllPoolIds();
+		return this.fetchPoolsFromIds({ objectIds });
 	};
 
-	public fetchAllPoolObjectIds = async (): Promise<ObjectId[]> => {
+	public fetchAllPoolIds = async (): Promise<ObjectId[]> => {
 		const objectIds =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
 				{
@@ -302,7 +306,7 @@ export class PoolsApi {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
 			...inputs,
-			lpCoinIconUrl: "",
+			lpCoinIconUrl: inputs.lpCoinMetadata.iconUrl ?? "",
 
 			poolFlatness:
 				inputs.poolFlatness === 1 ? Casting.fixedOneBigInt : BigInt(0),
@@ -673,23 +677,16 @@ export class PoolsApi {
 		});
 	};
 
-	public routerWrapperTradeTx = (inputs: {
-		tx: TransactionBlock;
-		poolId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		expectedCoinOutAmount: Balance;
-		coinOutType: CoinType;
-		lpCoinType: CoinType;
-		slippage: Slippage;
-
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-	}): TransactionArgument => {
-		const wrapperAddress = this.addresses.routerWrapper?.packages.wrapper;
-		if (!wrapperAddress)
-			throw new Error("Aftermath router wrapper address not set");
+	public routerWrapperTradeTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolId: ObjectId;
+			lpCoinType: CoinType;
+		}
+	): TransactionArgument => {
+		if (!this.addresses.routerWrapper)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
 
 		const {
 			tx,
@@ -699,36 +696,29 @@ export class PoolsApi {
 			expectedCoinOutAmount,
 			coinOutType,
 			lpCoinType,
-			slippage,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
+			routerSwapCap,
 		} = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				wrapperAddress,
+				this.addresses.routerWrapper.packages.wrapper,
 				PoolsApi.constants.moduleNames.routerWrapper,
-				"swap_exact_in"
+				"add_swap_exact_in_to_route"
 			),
-			typeArguments: [lpCoinType, coinInType, coinOutType],
+			typeArguments: [
+				inputs.routerSwapCapCoinType,
+				lpCoinType,
+				coinInType,
+				coinOutType,
+			],
 			arguments: [
-				tx.object(poolId),
+				tx.object(this.addresses.routerWrapper.objects.wrapperApp),
+				routerSwapCap,
+
 				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(poolId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedCoinOutAmount.toString()),
-				tx.pure(Pools.normalizeSlippage(slippage)),
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// router
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
+				tx.pure(expectedCoinOutAmount.toString(), "u64"),
 			],
 		});
 	};
@@ -841,7 +831,7 @@ export class PoolsApi {
 		lpCoinType: CoinType;
 		coinTypes: CoinType[];
 		withTransfer?: boolean;
-	}): TransactionArgument => {
+	}): TransactionArgument[] => {
 		const { tx, poolId, lpCoinId, coinTypes, lpCoinType, withTransfer } =
 			inputs;
 
@@ -1088,7 +1078,11 @@ export class PoolsApi {
 			poolCoins,
 			pool.pool.lpCoinSupply
 		);
-		const lpPrice = this.calcPoolLpPrice(pool.pool.lpCoinSupply, tvl);
+		const lpPrice = this.calcPoolLpPrice({
+			lpCoinDecimals: pool.pool.lpCoinDecimals,
+			lpCoinSupply: pool.pool.lpCoinSupply,
+			tvl,
+		});
 
 		// this is okay since all trade fees are currently the same for every coin
 		const firstCoin = Object.values(pool.pool.coins)[0];
@@ -1169,17 +1163,21 @@ export class PoolsApi {
 		return supplyPerLps;
 	};
 
-	public calcPoolLpPrice = (lpSupply: Balance, tvl: number) => {
-		const lpCoinDecimals = Pools.constants.decimals.lpCoinDecimals;
+	public calcPoolLpPrice = (inputs: {
+		lpCoinSupply: Balance;
+		tvl: number;
+		lpCoinDecimals: CoinDecimal;
+	}) => {
+		const { lpCoinSupply, tvl, lpCoinDecimals } = inputs;
 		const lpPrice = Number(
-			Number(tvl) / Coin.balanceWithDecimals(lpSupply, lpCoinDecimals)
+			Number(tvl) / Coin.balanceWithDecimals(lpCoinSupply, lpCoinDecimals)
 		);
-
 		return lpPrice;
 	};
 
 	public calcApy = (inputs: { fees24Hours: number; tvl: number }): number => {
 		const { fees24Hours, tvl } = inputs;
+		// TODO: use daysjs instead
 		const daysInYear = 365;
 
 		return (fees24Hours * daysInYear) / tvl;
@@ -1382,19 +1380,6 @@ export class PoolsApi {
 				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
 			""
 		)})`;
-	};
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	// PRODUCTION: should this perform a dev inspect to pool registry instead of using string alone ?
-	public isLpCoin = (coin: CoinType) => {
-		return (
-			coin.split("::").length === 3 &&
-			coin.split("::")[1].includes("af_lp") &&
-			coin.split("::")[2].includes("AF_LP")
-		);
 	};
 
 	// =========================================================================

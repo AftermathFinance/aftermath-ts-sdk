@@ -101,17 +101,17 @@ export class TransactionsApiHelpers {
 	): { None: true } | { Some: InnerType } =>
 		inner === undefined ? { None: true } : { Some: inner };
 
-	public static createBuildTxFunc = <Inputs>(
-		func: (inputs: Inputs & { tx: TransactionBlock }) => TransactionArgument
+	public static creatBuildTxFunc = <Inputs>(
+		func: (inputs: Inputs) => TransactionArgument
 	): ((
 		inputs: {
 			walletAddress: SuiAddress;
-		} & Inputs
+		} & Omit<Inputs, "tx">
 	) => TransactionBlock) => {
 		const builderFunc = (
 			someInputs: {
 				walletAddress: SuiAddress;
-			} & Inputs
+			} & Omit<Inputs, "tx">
 		) => {
 			const tx = new TransactionBlock();
 			tx.setSender(someInputs.walletAddress);
@@ -119,7 +119,7 @@ export class TransactionsApiHelpers {
 			func({
 				tx,
 				...someInputs,
-			});
+			} as Inputs);
 
 			return tx;
 		};

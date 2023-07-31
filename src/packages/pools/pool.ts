@@ -5,6 +5,7 @@ import {
 	Balance,
 	CoinType,
 	CoinsToBalance,
+	DecimalsScalar,
 	PoolDataPoint,
 	PoolGraphDataTimeframeKey,
 	PoolObject,
@@ -16,6 +17,7 @@ import {
 	PoolTradeEvent,
 	Url,
 	ApiPoolAllCoinWithdrawBody,
+	NormalizedBalance,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -54,7 +56,9 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	public async getStats() {
-		return this.fetchApi<PoolStats>("stats");
+		const stats = await this.fetchApi<PoolStats>("stats");
+		this.setStats(stats);
+		return stats;
 	}
 
 	public setStats(stats: PoolStats) {
@@ -165,11 +169,17 @@ export class Pool extends Caller {
 		coinOutType: CoinType;
 		withFees?: boolean;
 	}) => {
-		return CmmmCalculations.calcSpotPriceWithFees(
+		const spotPriceWithDecimals = CmmmCalculations.calcSpotPriceWithFees(
 			Helpers.deepCopy(this.pool),
 			inputs.coinInType,
 			inputs.coinOutType,
 			!inputs.withFees
+		);
+
+		return (
+			(spotPriceWithDecimals *
+				Number(this.pool.coins[inputs.coinOutType].decimalsScalar)) /
+			Number(this.pool.coins[inputs.coinInType].decimalsScalar)
 		);
 	};
 

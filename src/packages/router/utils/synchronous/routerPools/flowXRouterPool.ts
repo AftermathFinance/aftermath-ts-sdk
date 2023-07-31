@@ -1,49 +1,40 @@
-import {
-	ObjectId,
-	SuiAddress,
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js";
-import {
-	Balance,
-	RouterExternalFee,
-	Slippage,
-	SuiNetwork,
-	UniqueId,
-	Url,
-} from "../../../../../types";
+import { SuiAddress } from "@mysten/sui.js";
+import { Balance, SuiNetwork, UniqueId, Url } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import {
 	RouterPoolInterface,
 	RouterPoolTradeTxInputs,
 } from "../interfaces/routerPoolInterface";
-import { AftermathApi } from "../../../../../general/providers";
-import { TurbosPoolObject } from "../../../../external/turbos/turbosTypes";
+import { FlowXPoolObject } from "../../../../external/flowX/flowXTypes";
 
-class TurbosRouterPool implements RouterPoolInterface {
+class FlowXRouterPool implements RouterPoolInterface {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: TurbosPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: FlowXPoolObject, network: SuiNetwork | Url) {
 		this.pool = pool;
 		this.network = network;
-		this.uid = pool.id;
-		this.coinTypes = [pool.coinTypeA, pool.coinTypeB];
+		this.uid = pool.objectId;
+		this.coinTypes = [pool.coinTypeX, pool.coinTypeY];
 	}
 
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
-	readonly protocolName = "Turbos";
+	readonly protocolName = "FlowX";
 	readonly expectedGasCostPerHop = BigInt(50_000_000); // 0.05 SUI
 	readonly noHopsAllowed = true;
 
-	readonly pool: TurbosPoolObject;
+	readonly pool: FlowXPoolObject;
 	readonly network: SuiNetwork | Url;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
+
+	// =========================================================================
+	//  Functions
+	// =========================================================================
 
 	// =========================================================================
 	//  Functions
@@ -63,16 +54,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
-		if (!inputs.tx.blockData.sender)
-			throw new Error("no sender for tx set (required for turbos txs)");
-
-		return inputs.provider
-			.Router()
-			.Turbos()
-			.tradeTx({
-				...inputs,
-				pool: this.pool,
-			});
+		return inputs.provider.Router().FlowX().tradeTx(inputs);
 	};
 
 	getTradeAmountIn = (_: {
@@ -89,14 +71,14 @@ class TurbosRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		coinOutAmount: Balance;
-	}): RouterPoolInterface => new TurbosRouterPool(this.pool, this.network);
+	}): RouterPoolInterface => new FlowXRouterPool(this.pool, this.network);
 
 	getUpdatedPoolAfterTrade = (_: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		coinOutAmount: Balance;
-	}): RouterPoolInterface => new TurbosRouterPool(this.pool, this.network);
+	}): RouterPoolInterface => new FlowXRouterPool(this.pool, this.network);
 }
 
-export default TurbosRouterPool;
+export default FlowXRouterPool;

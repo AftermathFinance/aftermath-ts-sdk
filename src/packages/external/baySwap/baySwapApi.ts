@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
+import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import {
 	ObjectId,
 	SuiObjectResponse,
@@ -20,8 +20,11 @@ import {
 import { BaySwapPoolFieldsOnChain, BaySwapPoolObject } from "./baySwapTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
+import { RouterPoolTradeTxInputs } from "../../router";
 
-export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
+export class BaySwapApi
+	implements RouterSynchronousApiInterface<BaySwapPoolObject>
+{
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -29,7 +32,7 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 	private static readonly constants = {
 		moduleNames: {
 			router: "router",
-			wrapper: "bayswap",
+			wrapper: "router",
 		},
 	};
 
@@ -37,31 +40,21 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: {
-		baySwap: BaySwapAddresses;
-		pools: PoolsAddresses;
-		referralVault: ReferralVaultAddresses;
-	};
+	public readonly addresses: BaySwapAddresses;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const baySwap = this.Provider.addresses.router?.baySwap;
-		const pools = this.Provider.addresses.pools;
-		const referralVault = this.Provider.addresses.referralVault;
+		const baySwapAddresses = this.Provider.addresses.router?.baySwap;
 
-		if (!baySwap || !pools || !referralVault)
+		if (!baySwapAddresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = {
-			baySwap,
-			pools,
-			referralVault,
-		};
+		this.addresses = baySwapAddresses;
 	}
 
 	// =========================================================================
@@ -72,19 +65,23 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPools = async (): Promise<BaySwapPoolObject[]> => {
-		const pools =
-			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				{
-					parentObjectId: this.addresses.baySwap.objects.poolsBag,
-					objectsFromObjectIds: (objectIds) =>
-						this.Provider.Objects().fetchCastObjectBatch({
-							objectIds,
-							objectFromSuiObjectResponse:
-								BaySwapApi.baySwapPoolObjectFromSuiObjectResponse,
-						}),
-				}
-			);
+	public fetchAllPoolIds = async () => {
+		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
+			parentObjectId: this.addresses.objects.poolsBag,
+			objectsFromObjectIds: (objectIds) => objectIds,
+		});
+	};
+
+	public fetchPoolsFromIds = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<BaySwapPoolObject[]> => {
+		const { objectIds } = inputs;
+
+		const pools = await this.Provider.Objects().fetchCastObjectBatch({
+			objectIds,
+			objectFromSuiObjectResponse:
+				BaySwapApi.baySwapPoolObjectFromSuiObjectResponse,
+		});
 
 		const unlockedPools = pools.filter(
 			(pool) =>
@@ -96,120 +93,63 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 	};
 
 	// =========================================================================
-	//  Inspections
-	// =========================================================================
-
-	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const pools = await this.fetchAllPools();
-		const allCoins = pools.reduce(
-			(acc, pool) => [...acc, pool.coinTypeX, pool.coinTypeY],
-			[] as CoinType[]
-		);
-		return Helpers.uniqueArray(allCoins);
-	};
-
-	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
 
-	public swapExactCoinXForCoinYTx = (inputs: {
-		tx: TransactionBlock;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-		coinInAmount: Balance;
-		curveType: AnyObjectType;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public swapExactCoinXForCoinYTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			curveType: AnyObjectType;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.baySwap.packages.wrapper,
+				this.addresses.packages.wrapper,
 				BaySwapApi.constants.moduleNames.wrapper,
 				"swap_exact_coin_x_for_coin_y"
 			),
 			typeArguments: [
+				inputs.routerSwapCapCoinType,
 				inputs.coinInType,
 				inputs.coinOutType,
 				inputs.curveType,
 			],
 			arguments: [
-				tx.object(this.addresses.baySwap.objects.globalStorage), // GlobalStorage
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
+				tx.object(this.addresses.objects.globalStorage), // GlobalStorage
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.coinInAmount, "U64"),
-				tx.pure(inputs.minAmountOut, "U64"),
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
 
-	public swapExactCoinYForCoinXTx = (inputs: {
-		tx: TransactionBlock;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-		coinInAmount: Balance;
-		curveType: AnyObjectType;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			tradePotato,
-			isFirstSwapForPath,
-			isLastSwapForPath,
-		} = inputs;
+	public swapExactCoinYForCoinXTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			curveType: AnyObjectType;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.baySwap.packages.wrapper,
+				this.addresses.packages.wrapper,
 				BaySwapApi.constants.moduleNames.wrapper,
 				"swap_exact_coin_y_for_coin_x"
 			),
 			typeArguments: [
+				inputs.routerSwapCapCoinType,
 				inputs.coinOutType,
 				inputs.coinInType,
 				inputs.curveType,
 			],
 			arguments: [
-				tx.object(this.addresses.baySwap.objects.globalStorage), // GlobalStorage
+				tx.object(this.addresses.objects.wrapperApp),
+				routerSwapCap,
+
+				tx.object(this.addresses.objects.globalStorage), // GlobalStorage
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // Coin
-				tx.pure(inputs.coinInAmount, "U64"),
-				tx.pure(inputs.minAmountOut, "U64"),
-
-				// AF fees
-				tx.object(this.addresses.pools.objects.protocolFeeVault),
-				tx.object(this.addresses.pools.objects.treasury),
-				tx.object(this.addresses.pools.objects.insuranceFund),
-				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(isLastSwapForPath, "bool"),
 			],
 		});
 	};
@@ -218,18 +158,12 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 	//  Transaction Command Wrappers
 	// =========================================================================
 
-	public tradeTx = (inputs: {
-		tx: TransactionBlock;
-		pool: BaySwapPoolObject;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		minAmountOut: Balance;
-		coinInAmount: Balance;
-	}) => {
+	public tradeTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			tx: TransactionBlock;
+			pool: BaySwapPoolObject;
+		}
+	) => {
 		const commandInputs = {
 			...inputs,
 			curveType: inputs.pool.curveType,
@@ -277,8 +211,8 @@ export class BaySwapApi implements RouterApiInterface<BaySwapPoolObject> {
 
 		const curveType = coinTypes[2];
 		return {
-			// objectType,
-			objectId: getObjectId(data),
+			objectType,
+			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
 			coinXReserveValue: BigInt(fields.coin_x_reserve),
 			coinYReserveValue: BigInt(fields.coin_y_reserve),
 			lpTokenSupplyValue: BigInt(fields.lp_token_supply.fields.value),

@@ -1,4 +1,4 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,

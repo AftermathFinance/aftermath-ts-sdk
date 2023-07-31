@@ -7,6 +7,7 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, PackageId } from "../../types";
+import { Helpers } from "../utils";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -70,11 +71,12 @@ export class ObjectsApiHelpers {
 	}): Promise<SuiObjectResponse[]> => {
 		const { walletAddress, objectType, withDisplay } = inputs;
 
+		// TODO: handle pagination to make sure that ALL owned objects are found !
 		const objectsOwnedByAddress =
 			await this.Provider.provider.getOwnedObjects({
 				owner: walletAddress,
 				filter: {
-					StructType: objectType,
+					StructType: Helpers.stripLeadingZeroesFromType(objectType),
 				},
 				options: {
 					showContent: true,
@@ -168,8 +170,6 @@ export class ObjectsApiHelpers {
 		// 	(data) => data.error !== undefined
 		// );
 
-		if (objectBatch.length <= 0)
-			throw new Error("no existing objects found with fetchObjectBatch");
 		// REVIEW: throw error on any objects that don't exist ?
 		// or don't throw any errors and return empty array ?
 		return objectBatch;

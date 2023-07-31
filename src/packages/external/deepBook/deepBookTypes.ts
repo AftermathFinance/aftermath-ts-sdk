@@ -9,6 +9,8 @@ import { Balance, Object, RouterSerializablePool } from "../../../types";
 export interface PartialDeepBookPoolObject extends Object {
 	baseCoinType: CoinType;
 	quoteCoinType: CoinType;
+	takerFeeRate: number;
+	lotSize: bigint;
 }
 
 export type DeepBookPoolObject = PartialDeepBookPoolObject & {
@@ -28,6 +30,8 @@ export const isDeepBookPoolObject = (
 		"bids" in pool &&
 		"asks" in pool &&
 		"baseCoinType" in pool &&
-		"quoteCoinType" in pool
+		"quoteCoinType" in pool &&
+		"takerFeeRate" in pool &&
+		"lotSize" in pool
 	);
 };

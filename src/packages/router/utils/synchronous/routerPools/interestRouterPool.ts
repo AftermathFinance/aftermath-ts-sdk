@@ -12,7 +12,10 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { Pool } from "../../../../pools";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
@@ -141,28 +144,13 @@ class InterestRouterPool implements RouterPoolInterface {
 		return numerator / denominator;
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}) => {
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()
 			.Interest()
 			.tradeTx({
 				...inputs,
 				pool: this.pool,
-				coinInId: inputs.coinIn,
-				minAmountOut: BigInt(0),
 			});
 	};
 

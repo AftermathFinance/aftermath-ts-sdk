@@ -2,9 +2,7 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import {
 	ObjectId,
-	SuiAddress,
 	SuiObjectResponse,
-	TransactionArgument,
 	TransactionBlock,
 	bcs,
 	getObjectFields,
@@ -14,18 +12,20 @@ import {
 	BigIntAsString,
 	PoolsAddresses,
 	ReferralVaultAddresses,
-	RouterExternalFee,
 	TurbosAddresses,
 } from "../../../types";
-import { RouterApiInterface } from "../../router/utils/synchronous/interfaces/routerApiInterface";
-import { Casting, Helpers } from "../../../general/utils";
-import { TurbosCalcTradeResult, TurbosPoolObject } from "./turbosTypes";
-import { Pools, Sui } from "../..";
-import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
+import { Helpers } from "../../../general/utils";
+import {
+	TurbosCalcTradeResult,
+	TurbosPartialPoolObject,
+	TurbosPoolObject,
+} from "./turbosTypes";
+import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
+import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 
-export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
+export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -34,7 +34,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		moduleNames: {
 			poolFetcher: "pool_fetcher",
 			swapRouter: "swap_router",
-			wrapper: "turbos",
+			wrapper: "router",
 		},
 	};
 
@@ -44,8 +44,8 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 
 	public readonly addresses: {
 		turbos: TurbosAddresses;
-		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
+		pools: PoolsAddresses;
 	};
 
 	private static MIN_TICK_INDEX = -443636;
@@ -57,18 +57,18 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 
 	constructor(public readonly Provider: AftermathApi) {
 		const turbos = this.Provider.addresses.router?.turbos;
-		const pools = this.Provider.addresses.pools;
 		const referralVault = this.Provider.addresses.referralVault;
+		const pools = this.Provider.addresses.pools;
 
-		if (!turbos || !pools || !referralVault)
+		if (!turbos || !referralVault || !pools)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
 		this.addresses = {
 			turbos,
-			pools,
 			referralVault,
+			pools,
 		};
 	}
 	// =========================================================================
@@ -104,43 +104,60 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 						);
 
 					const sqrtPrice = BigInt(fields.sqrt_price);
-					const liquidity = BigInt(fields.liquidity);
+					const coinABalance = BigInt(fields.coin_a);
+					const coinBBalance = BigInt(fields.coin_b);
 					const isUnlocked = fields.unlocked as unknown as boolean;
 
 					return {
-						liquidity,
+						coinABalance,
+						coinBBalance,
 						isUnlocked,
 						sqrtPrice,
 					};
 				},
 			});
 
-		const completePools = poolsSimpleInfo.map((info, index) => {
-			return {
-				...info,
-				sqrtPrice: poolsMoreInfo[index].sqrtPrice,
-			};
-		});
-
+		const completePools = poolsSimpleInfo.map((info, index) => ({
+			...info,
+			...poolsMoreInfo[index],
+		}));
 		const usablePools = completePools.filter(
-			(_, index) =>
-				poolsMoreInfo[index].isUnlocked &&
-				poolsMoreInfo[index].liquidity > BigInt(0)
+			(pool) =>
+				pool.isUnlocked &&
+				pool.coinABalance > BigInt(0) &&
+				pool.coinBBalance > BigInt(0)
 		);
 
 		return usablePools;
 	};
 
-	public fetchPoolsForTrade = async (inputs: {
+	public filterPoolsForTrade = (inputs: {
+		pools: TurbosPoolObject[];
 		coinInType: CoinType;
 		coinOutType: CoinType;
-	}): Promise<{
+	}): {
 		partialMatchPools: TurbosPoolObject[];
 		exactMatchPools: TurbosPoolObject[];
-	}> => {
-		const possiblePools = await this.fetchPoolsForCoinType({
-			coinType: inputs.coinOutType,
-		});
+	} => {
+		const possiblePools = inputs.pools
+			.filter((pool) =>
+				TurbosApi.isPoolForCoinType({
+					pool,
+					coinType: inputs.coinOutType,
+				})
+			)
+			.sort((a, b) => {
+				const coinType = inputs.coinOutType;
+
+				const aPoolLiquidity = TurbosApi.isCoinA({ pool: a, coinType })
+					? a.coinABalance
+					: a.coinBBalance;
+				const bPoolLiquidity = TurbosApi.isCoinA({ pool: b, coinType })
+					? b.coinABalance
+					: b.coinBBalance;
+
+				return Number(bPoolLiquidity - aPoolLiquidity);
+			});
 
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
 			possiblePools,
@@ -162,29 +179,13 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	//  Transaction Commands
 	// =========================================================================
 
-	public tradeCoinAToCoinBTx = (inputs: {
-		tx: TransactionBlock;
-		poolObjectId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-		feeCoinType: CoinType;
-		walletAddress: SuiAddress;
-		sqrtPrice: bigint;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		expectedCoinOutAmount: Balance;
-		externalFee?: RouterExternalFee;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			externalFee,
-			tradePotato,
-			isFirstSwapForPath,
-			expectedCoinOutAmount,
-		} = inputs;
+	public tradeCoinAToCoinBTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolObjectId: ObjectId;
+			feeCoinType: CoinType;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap, minAmountOut } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -193,74 +194,37 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 				"swap_a_b"
 			),
 			typeArguments: [
+				inputs.routerSwapCapCoinType,
 				inputs.coinInType,
 				inputs.coinOutType,
 				inputs.feeCoinType,
 			],
 			arguments: [
+				tx.object(this.addresses.turbos.objects.wrapperApp),
+				routerSwapCap,
+
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_a
-				tx.pure(Casting.zeroBigInt.toString(), "u64"), // amount_threshold
+				tx.pure(minAmountOut.toString(), "u64"), // amount_threshold
 				tx.pure(TurbosApi.calcSqrtPriceLimit(true).toString(), "u128"), // sqrt_price_limit
-				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // deadline
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
 
-				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// router fees
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(
-						externalFee
-							? Casting.numberToFixedBigInt(
-									externalFee.feePercentage
-							  )
-							: undefined
-					),
-					"Option<u64>"
-				), // router_fee
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(
-						externalFee?.recipient
-					),
-					"Option<address>"
-				), // router_fee_recipient
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(expectedCoinOutAmount, "u64"),
 			],
 		});
 	};
 
-	public tradeCoinBToCoinATx = (inputs: {
-		tx: TransactionBlock;
-		poolObjectId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-		feeCoinType: CoinType;
-		walletAddress: SuiAddress;
-		sqrtPrice: bigint;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		expectedCoinOutAmount: Balance;
-		externalFee?: RouterExternalFee;
-	}) => {
-		const {
-			tx,
-			coinInId,
-			externalFee,
-			tradePotato,
-			isFirstSwapForPath,
-			expectedCoinOutAmount,
-		} = inputs;
+	public tradeCoinBToCoinATx = (
+		inputs: RouterPoolTradeTxInputs & {
+			poolObjectId: ObjectId;
+			feeCoinType: CoinType;
+		}
+	) => {
+		const { tx, coinInId, routerSwapCap, minAmountOut } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -269,64 +233,35 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 				"swap_b_a"
 			),
 			typeArguments: [
+				inputs.routerSwapCapCoinType,
 				inputs.coinOutType,
 				inputs.coinInType,
 				inputs.feeCoinType,
 			],
 			arguments: [
+				tx.object(this.addresses.turbos.objects.wrapperApp),
+				routerSwapCap,
+
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_b
-				tx.pure(Casting.zeroBigInt.toString(), "u64"), // amount_threshold
+				tx.pure(minAmountOut.toString(), "u64"), // amount_threshold
 				tx.pure(TurbosApi.calcSqrtPriceLimit(false).toString(), "u128"), // sqrt_price_limit
-				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // deadline
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
 
-				// AF fees
 				tx.object(this.addresses.pools.objects.protocolFeeVault),
 				tx.object(this.addresses.pools.objects.treasury),
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
-
-				// router fees
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(
-						externalFee
-							? Casting.numberToFixedBigInt(
-									externalFee.feePercentage
-							  )
-							: undefined
-					),
-					"Option<u64>"
-				), // router_fee
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(
-						externalFee?.recipient
-					),
-					"Option<address>"
-				), // router_fee_recipient
-
-				// potato
-				tradePotato,
-				tx.pure(isFirstSwapForPath, "bool"),
-				tx.pure(expectedCoinOutAmount, "u64"),
 			],
 		});
 	};
 
-	public tradeTx = (inputs: {
-		tx: TransactionBlock;
-		pool: TurbosPoolObject;
-		coinInId: ObjectId | TransactionArgument;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-		walletAddress: SuiAddress;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		expectedCoinOutAmount: Balance;
-		externalFee?: RouterExternalFee;
-	}) => {
+	public tradeTx = (
+		inputs: RouterPoolTradeTxInputs & {
+			pool: TurbosPoolObject;
+		}
+	) => {
 		const { coinInType, pool } = inputs;
 
 		const commandInputs = {
@@ -406,41 +341,6 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 		};
 
 	// =========================================================================
-	//  Transaction Builders
-	// =========================================================================
-
-	public fetchBuildTradeTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: TurbosPoolObject;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		coinInAmount: Balance;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		expectedCoinOutAmount: Balance;
-	}): Promise<TransactionBlock> => {
-		const { walletAddress, coinInType, coinInAmount } = inputs;
-
-		const tx = new TransactionBlock();
-		tx.setSender(walletAddress);
-
-		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: coinInType,
-			coinAmount: coinInAmount,
-		});
-
-		this.tradeTx({
-			tx,
-			...inputs,
-			coinInId,
-		});
-
-		return tx;
-	};
-
-	// =========================================================================
 	//  Inspections
 	// =========================================================================
 
@@ -455,21 +355,12 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	};
 
 	public fetchTradeAmountOut = async (inputs: {
-		walletAddress: SuiAddress;
 		pool: TurbosPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
-		withReferral?: boolean;
 	}): Promise<Balance> => {
-		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
-			...inputs,
-			amount: inputs.coinInAmount,
-		});
-		const tradeResult = await this.fetchCalcTradeResult({
-			...inputs,
-			coinInAmount: coinInAmountWithFees,
-		});
+		const tradeResult = await this.fetchCalcTradeResult(inputs);
 		return tradeResult.amountOut;
 	};
 
@@ -481,14 +372,13 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	};
 
 	public fetchCalcTradeResult = async (inputs: {
-		walletAddress: SuiAddress;
 		pool: TurbosPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<TurbosCalcTradeResult> => {
 		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+		tx.setSender(Helpers.rpc.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
 			tx,
@@ -559,47 +449,6 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 	};
 
 	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Objects
-	// =========================================================================
-
-	private fetchPoolForCoinTypes = async (inputs: {
-		coinType1: CoinType;
-		coinType2: CoinType;
-	}) => {
-		const allPools = await this.fetchAllPools();
-
-		// NOTE: will there ever be more than 1 valid pool (is this unsafe ?)
-		const foundPool = allPools.find((pool) =>
-			TurbosApi.isPoolForCoinTypes({
-				pool,
-				...inputs,
-			})
-		);
-
-		if (!foundPool)
-			throw new Error("no turbos pools found for given coin types");
-
-		return foundPool;
-	};
-
-	private fetchPoolsForCoinType = async (inputs: { coinType: CoinType }) => {
-		const allPools = await this.fetchAllPools();
-
-		const foundPools = allPools.filter((pool) =>
-			TurbosApi.isPoolForCoinType({
-				pool,
-				...inputs,
-			})
-		);
-
-		return foundPools;
-	};
-
-	// =========================================================================
 	//  Private Static Methods
 	// =========================================================================
 
@@ -609,7 +458,7 @@ export class TurbosApi implements RouterApiInterface<TurbosPoolObject> {
 
 	private static partialPoolFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): Omit<TurbosPoolObject, "sqrtPrice"> => {
+	): TurbosPartialPoolObject => {
 		const content = data.data?.content;
 		if (content?.dataType !== "moveObject")
 			throw new Error("sui object response is not an object");

@@ -1,10 +1,11 @@
-import { AnyObjectType } from "../../types";
+import { AnyObjectType, Balance, Slippage } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
 import { RpcApiHelpers } from "../api/rpcApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { Casting } from "./casting";
 
 export class Helpers {
 	// =========================================================================
@@ -31,13 +32,18 @@ export class Helpers {
 	): AnyObjectType => {
 		const expectedTypeLength = 64;
 
-		const splitType = type.replace("0x", "").split("::");
+		let strippedType = type.replace("0x", "");
+		let typeSuffix = "";
 
-		if (splitType.length !== 3) throw new Error("invalid type: " + type);
+		if (strippedType.includes("::")) {
+			const splitType = strippedType.replace("0x", "").split("::");
 
-		const typeSuffix = "::" + splitType[1] + "::" + splitType[2];
+			typeSuffix = splitType
+				.slice(1)
+				.reduce((acc, str) => acc + "::" + str, "");
+			strippedType = splitType[0];
+		}
 
-		const strippedType = splitType[0];
 		const typeLength = strippedType.length;
 
 		if (typeLength > expectedTypeLength)
@@ -84,6 +90,9 @@ export class Helpers {
 		mulBBN: (a: bigint, b: bigint): number => Number(a * b),
 		mulBBB: (a: bigint, b: bigint): bigint => a * b,
 	};
+
+	public static maxBigInt = (...args: bigint[]) =>
+		args.reduce((m, e) => (e > m ? e : m));
 
 	// =========================================================================
 	//  Display
@@ -182,6 +191,18 @@ export class Helpers {
 		);
 	};
 
+	public static bifilterAsync = async <ArrayType>(
+		array: ArrayType[],
+		func: (
+			item: ArrayType,
+			index: number,
+			arr: ArrayType[]
+		) => Promise<boolean>
+	): Promise<[trues: ArrayType[], falses: ArrayType[]]> => {
+		const predicates = await Promise.all(array.map(func));
+		return this.bifilter(array, (_, index) => predicates[index]);
+	};
+
 	public static filterObject = <Value>(
 		obj: Record<string, Value>,
 		predicate: (key: string, value: Value) => boolean
@@ -196,6 +217,25 @@ export class Helpers {
 				[key]: val,
 			};
 		}, {} as Record<string, Value>);
+
+	public static applySlippageBigInt = (
+		amount: Balance,
+		slippage: Slippage
+	) => {
+		return (
+			amount -
+			BigInt(
+				Math.floor(
+					Casting.normalizeSlippageTolerance(slippage) *
+						Number(amount)
+				)
+			)
+		);
+	};
+
+	public static applySlippage = (amount: number, slippage: Slippage) => {
+		return amount - Casting.normalizeSlippageTolerance(slippage) * amount;
+	};
 
 	// =========================================================================
 	//  Type Checking

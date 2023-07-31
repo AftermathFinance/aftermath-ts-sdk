@@ -2,15 +2,15 @@ import {
 	Balance,
 	Event,
 	Object,
-	SerializedTransaction,
 	Slippage,
 	Timestamp,
 	Url,
 } from "../../general/types/generalTypes";
-import { ObjectId, SuiAddress } from "@mysten/sui.js/dist/types";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
 import { TransactionArgument } from "@mysten/sui.js";
+import { RouterSerializablePool } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
 
@@ -24,6 +24,8 @@ export type PoolTradeFee = bigint;
 export type PoolDepositFee = bigint;
 export type PoolWithdrawFee = bigint;
 export type PoolFlatness = bigint;
+export type NormalizedBalance = bigint;
+export type DecimalsScalar = bigint;
 
 // =========================================================================
 //  Objects
@@ -38,7 +40,8 @@ export interface PoolCoin {
 	tradeFeeOut: PoolTradeFee;
 	depositFee: PoolDepositFee;
 	withdrawFee: PoolWithdrawFee;
-	normalizedBalance: bigint;
+	decimalsScalar: DecimalsScalar;
+	normalizedBalance: NormalizedBalance;
 }
 
 export interface PoolObject extends Object {
@@ -49,7 +52,22 @@ export interface PoolObject extends Object {
 	illiquidLpCoinSupply: Balance;
 	flatness: PoolFlatness;
 	coins: PoolCoins;
+	lpCoinDecimals: CoinDecimal;
 }
+
+export const isPoolObject = (
+	pool: RouterSerializablePool
+): pool is PoolObject => {
+	return (
+		"name" in pool &&
+		"creator" in pool &&
+		"lpCoinType" in pool &&
+		"lpCoinSupply" in pool &&
+		"illiquidLpCoinSupply" in pool &&
+		"flatness" in pool &&
+		"coins" in pool
+	);
+};
 
 // =========================================================================
 //  Events
@@ -122,6 +140,7 @@ export interface PoolCreationCoinInfo {
 export interface PoolCreationLpCoinMetadata {
 	name: string;
 	symbol: string;
+	iconUrl?: Url;
 }
 
 // =========================================================================

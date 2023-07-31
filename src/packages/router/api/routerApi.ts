@@ -5,15 +5,21 @@ import {
 	CoinType,
 	RouterExternalFee,
 	RouterCompleteTradeRoute,
-	SerializedTransaction,
 	Slippage,
 	SuiNetwork,
 	Url,
 	RouterSerializableCompleteGraph,
 	RouterProtocolName,
 	UserEventsInputs,
+	RouterAsyncSerializablePool,
+	isRouterSynchronousProtocolName,
+	isRouterAsyncProtocolName,
+	SynchronousProtocolsToPoolObjectIds,
+	RouterSynchronousOptions,
+	AllRouterOptions,
+	PartialRouterOptions,
 } from "../../../types";
-import { EventId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
@@ -24,13 +30,42 @@ import { KriyaApi } from "../../external/kriya/kriyaApi";
 import { BaySwapApi } from "../../external/baySwap/baySwapApi";
 import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
+import { FlowXApi } from "../../external/flowX/flowXApi";
 
 export class RouterApi {
+	// =========================================================================
+	//  Constants
+	// =========================================================================
+
+	private static readonly defaultRouterOptions: AllRouterOptions = {
+		regular: {
+			synchronous: {
+				maxRouteLength: 3,
+				tradePartitionCount: 2,
+				minRoutesToCheck: 5,
+				maxGasCost: BigInt(500_000_000), // 0.5 SUI
+			},
+			async: {
+				tradePartitionCount: 1,
+				maxAsyncPoolsPerProtocol: 2,
+			},
+		},
+		preAsync: {
+			maxRouteLength: 2,
+			tradePartitionCount: 1,
+			minRoutesToCheck: 5,
+			maxGasCost: BigInt(500_000_000), // 0.5 SUI
+			// maxGasCost: BigInt(333_333_333), // 0.333 SUI
+		},
+	};
+
 	// =========================================================================
 	//  Class Members
 	// =========================================================================
 
 	public readonly Helpers;
+
+	private readonly options;
 
 	// =========================================================================
 	//  Constructor
@@ -38,10 +73,31 @@ export class RouterApi {
 
 	constructor(
 		private readonly Provider: AftermathApi,
-		public readonly protocols: RouterProtocolName[] = ["Aftermath"]
+		public readonly protocols: RouterProtocolName[] = ["Aftermath"],
+		regularOptions?: PartialRouterOptions,
+		preAsyncOptions?: Partial<RouterSynchronousOptions>
 	) {
+		const optionsToSet: AllRouterOptions = {
+			regular: {
+				synchronous: {
+					...RouterApi.defaultRouterOptions.regular.synchronous,
+					...regularOptions?.synchronous,
+				},
+				async: {
+					...RouterApi.defaultRouterOptions.regular.async,
+					...regularOptions?.async,
+				},
+			},
+			preAsync: {
+				...RouterApi.defaultRouterOptions.preAsync,
+				...preAsyncOptions,
+			},
+		};
+
+		this.options = optionsToSet;
+
 		this.Provider = Provider;
-		this.Helpers = new RouterApiHelpers(Provider);
+		this.Helpers = new RouterApiHelpers(Provider, optionsToSet);
 	}
 
 	// =========================================================================
@@ -52,6 +108,7 @@ export class RouterApi {
 	public DeepBook = () => new DeepBookApi(this.Provider);
 	public Cetus = () => new CetusApi(this.Provider);
 	public Turbos = () => new TurbosApi(this.Provider);
+	public FlowX = () => new FlowXApi(this.Provider);
 	public Interest = () => new InterestApi(this.Provider);
 	public Kriya = () => new KriyaApi(this.Provider);
 	public BaySwap = () => new BaySwapApi(this.Provider);
@@ -66,20 +123,48 @@ export class RouterApi {
 	//  Graph
 	// =========================================================================
 
-	public fetchSerializableGraph = async () => {
-		return this.Helpers.fetchSerializableGraph({
-			protocols: this.protocols,
+	public fetchCreateSerializableGraph = async (inputs: {
+		asyncPools: RouterAsyncSerializablePool[];
+		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
+	}): Promise<RouterSerializableCompleteGraph> => {
+		return this.Helpers.fetchCreateSerializableGraph(inputs);
+	};
+
+	public fetchAsyncPools = async (): Promise<
+		RouterAsyncSerializablePool[]
+	> => {
+		return this.Helpers.AsyncHelpers.fetchAllPools({
+			protocols: this.protocols.filter(isRouterAsyncProtocolName),
 		});
 	};
+
+	public fetchSynchronousPoolIds =
+		async (): Promise<SynchronousProtocolsToPoolObjectIds> => {
+			return this.Helpers.SynchronousHelpers.fetchAllPoolIds({
+				protocols: this.protocols.filter(
+					isRouterSynchronousProtocolName
+				),
+			});
+		};
 
 	// =========================================================================
 	//  Coin Paths
 	// =========================================================================
 
-	public supportedCoinPathsFromGraph = async (inputs: {
+	public supportedCoinPathsFromGraph = (inputs: {
 		graph: RouterSerializableCompleteGraph;
 	}) => {
-		return RouterGraph.supportedCoinPathsFromGraph(inputs);
+		const maxRouteLength = this.options.regular.synchronous.maxRouteLength;
+		return RouterGraph.supportedCoinPathsFromGraph({
+			...inputs,
+			maxRouteLength,
+		});
+	};
+
+	public supportedCoinsFromGraph = (inputs: {
+		graph: RouterSerializableCompleteGraph;
+	}) => {
+		return RouterGraph.supportedCoinsFromGraph(inputs);
 	};
 
 	// =========================================================================

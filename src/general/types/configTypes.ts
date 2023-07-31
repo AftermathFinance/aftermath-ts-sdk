@@ -36,10 +36,12 @@ interface OptionalConfigAddresses {
 export interface FaucetAddresses {
 	packages: {
 		faucet: SuiAddress;
+		suiFrensGenesisWrapper: SuiAddress;
 	};
 	objects: {
 		faucet: ObjectId;
 		faucetRegistry: ObjectId;
+		suiFrensMint: ObjectId;
 	};
 }
 
@@ -82,12 +84,18 @@ export interface UtilitiesAddresses {
 
 export interface SuiFrensAddresses {
 	packages: {
-		suiFren: SuiAddress;
-		suiFrenVault: SuiAddress;
+		suiFrens: SuiAddress;
+		suiFrensBullshark: SuiAddress;
+		accessories: SuiAddress;
+		suiFrensVault: SuiAddress;
+		suiFrensVaultCapyLabsExtension: SuiAddress;
 	};
 	objects: {
-		suiFrenVault: ObjectId;
-		suiFrenRegistry: ObjectId;
+		capyLabsApp: ObjectId;
+		suiFrensVault: ObjectId;
+		suiFrensVaultStateV1: ObjectId;
+		suiFrensVaultStateV1MetadataTable: ObjectId;
+		suiFrensVaultCapyLabsExtension: ObjectId;
 	};
 }
 
@@ -113,21 +121,34 @@ export interface RequiredRouterAddresses {
 }
 
 export interface OptionalRouterAddresses {
+	aftermath: AftermathRouterWrapperAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
+	flowX: FlowXAddresses;
 	interest: InterestAddresses;
 	kriya: KriyaAddresses;
 	baySwap: BaySwapAddresses;
 	suiswap: SuiswapAddresses;
 	blueMove: BlueMoveAddresses;
-	aftermath: AftermathRouterAddresses;
+}
+
+export interface AftermathRouterWrapperAddresses {
+	packages: {
+		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
+	};
 }
 
 export interface DeepBookAddresses {
 	packages: {
 		clob: SuiAddress;
 		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -140,6 +161,7 @@ export interface CetusAddresses {
 	objects: {
 		globalConfig: ObjectId;
 		poolsTable: ObjectId;
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -151,6 +173,18 @@ export interface TurbosAddresses {
 	objects: {
 		versioned: ObjectId;
 		poolsTable: ObjectId;
+		wrapperApp: ObjectId;
+	};
+}
+
+export interface FlowXAddresses {
+	packages: {
+		wrapper: SuiAddress;
+	};
+	objects: {
+		container: ObjectId;
+		pairsBag: ObjectId;
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -162,6 +196,7 @@ export interface InterestAddresses {
 	objects: {
 		poolsBag: ObjectId;
 		dexStorage: ObjectId;
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -169,6 +204,9 @@ export interface KriyaAddresses {
 	packages: {
 		dex: SuiAddress;
 		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -180,6 +218,7 @@ export interface BaySwapAddresses {
 	objects: {
 		poolsBag: ObjectId;
 		globalStorage: ObjectId;
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -187,6 +226,9 @@ export interface SuiswapAddresses {
 	packages: {
 		dex: SuiAddress;
 		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
 	};
 }
 
@@ -198,12 +240,7 @@ export interface BlueMoveAddresses {
 	objects: {
 		dexInfo: ObjectId;
 		dexStableInfo: ObjectId;
-	};
-}
-
-export interface AftermathRouterAddresses {
-	packages: {
-		wrapper: SuiAddress;
+		wrapperApp: ObjectId;
 	};
 }
 

@@ -144,6 +144,7 @@ export class Coin extends Caller {
 	// TODO: remove in favor of sui js implementation ?
 	public static getCoinTypeSymbol = (coin: CoinType): string => {
 		const startIndex = coin.lastIndexOf("::") + 2;
+		// NOTE: should error if coin is not a valid coin type instead of empty string ?
 		if (startIndex <= 1) return "";
 
 		const foundEndIndex = coin.indexOf(">");

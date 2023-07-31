@@ -10,27 +10,13 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 
 	private static readonly constants = {
 		prices: {
-			// usdc: 1,
-			// whusdc: 1,
-			// lzusdc: 1,
-			// axlusdc: 1,
-			// afsui: 3.171,
-			// sui: 3.02,
-			// whusdt: 1,
-			// lzusdt: 1,
-			// axldai: 1,
-			// usdt: 1,
-			// wheth: 1687.234,
-			// lzeth: 1687.234,
-			// whbtc: 24_681.2,
-			// btcb: 24_681.2,
-			// af: 5.19,
 			usd: 1,
 			dai: 1,
 			sui: 0.6179,
 			eth: 1754.5,
 			btc: 25957,
 			af: 5.19,
+			buck: 1,
 		},
 	};
 

@@ -12,11 +12,15 @@ import {
 	Url,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
-import { RouterPoolInterface } from "../interfaces/routerPoolInterface";
+import {
+	RouterPoolInterface,
+	RouterPoolTradeTxInputs,
+} from "../interfaces/routerPoolInterface";
 import { Casting, Helpers } from "../../../../../general/utils";
 import { AftermathApi } from "../../../../../general/providers";
 import { BlueMovePoolObject } from "../../../../external/blueMove/blueMoveTypes";
 import { BlueMoveApi } from "../../../../external/blueMove/blueMoveApi";
+import { Coin } from "../../../../coin";
 
 class BlueMoveRouterPool implements RouterPoolInterface {
 	// =========================================================================
@@ -46,6 +50,10 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 
 	private static readonly FEE_SCALING = 1000000;
 	private static readonly ONE_E_8 = 100000000;
+
+	private static readonly BLUE_MOVE_FEE_SCALING = 10000;
+	// this fee is assumed because unable to find any reference to in from blue move
+	private static readonly BLUE_MOVE_ASSUMED_UNCORRELATED_FEE = 0.003; // 0.3%
 
 	// =========================================================================
 	//  Public Interface
@@ -93,54 +101,54 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 				coinType: inputs.coinInType,
 			});
 
+			const totalFeePercentage =
+				Number(this.pool.stable.daoFee + this.pool.stable.fee) /
+				BlueMoveRouterPool.BLUE_MOVE_FEE_SCALING;
+
+			const coinInAmountMinusFee =
+				inputs.coinInAmount -
+				BigInt(
+					Math.floor(Number(inputs.coinInAmount) * totalFeePercentage)
+				);
+
+			const [scaleIn, scaleOut] = isCoinInX
+				? [this.pool.stable.xScale, this.pool.stable.yScale]
+				: [this.pool.stable.yScale, this.pool.stable.xScale];
+
 			const { recievedAmount } = this.getSwapAmountStable(
 				coinInReserve,
 				coinOutReserve,
-				Number(
-					isCoinInX
-						? this.pool.stable.xScale
-						: this.pool.stable.yScale
-				),
-				Number(
-					isCoinInX
-						? this.pool.stable.yScale
-						: this.pool.stable.xScale
-				),
-				Number(inputs.coinInAmount)
+				Number(scaleIn),
+				Number(scaleOut),
+				Number(coinInAmountMinusFee)
 			);
 			return BigInt(Math.floor(recievedAmount));
 		}
 
+		const coinInAmountMinusFee =
+			inputs.coinInAmount -
+			BigInt(
+				Math.floor(
+					Number(inputs.coinInAmount) *
+						BlueMoveRouterPool.BLUE_MOVE_ASSUMED_UNCORRELATED_FEE
+				)
+			);
+
 		const { recievedAmount } = this.getSwapAmountUncorrelated(
 			coinInReserve,
 			coinOutReserve,
-			Number(inputs.coinInAmount)
+			Number(coinInAmountMinusFee)
 		);
 		return BigInt(Math.floor(recievedAmount));
 	};
 
-	tradeTx = (inputs: {
-		provider: AftermathApi;
-		tx: TransactionBlock;
-		coinIn: ObjectId | TransactionArgument;
-		coinInAmount: Balance;
-		coinInType: CoinType;
-		coinOutType: CoinType;
-		expectedCoinOutAmount: Balance;
-		slippage: Slippage;
-		tradePotato: TransactionArgument;
-		isFirstSwapForPath: boolean;
-		isLastSwapForPath: boolean;
-		referrer?: SuiAddress;
-	}) => {
+	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		return inputs.provider
 			.Router()
 			.BlueMove()
 			.tradeTx({
 				...inputs,
 				pool: this.pool,
-				coinInId: inputs.coinIn,
-				minAmountOut: BigInt(0),
 			});
 	};
 
@@ -216,7 +224,7 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 		amount: number,
 		totalFeeRate: number = 0
 	) => {
-		let amountToSwapA = amount / 2;
+		let amountToSwapA = amount;
 		let counter = 0;
 		let left = 0,
 			right = amount;
@@ -243,7 +251,7 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 				left = amountToSwapA;
 			}
 
-			amountToSwapA = (left + right) / 2;
+			// amountToSwapA = (left + right) / 2;
 			counter += 1;
 		}
 
@@ -259,7 +267,7 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 		amount: number,
 		totalFeeRate: number = 0
 	) => {
-		let amountToSwapA = amount / 2;
+		let amountToSwapA = amount;
 		let counter = 0;
 		let left = 0,
 			right = amount;
@@ -282,7 +290,7 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 				left = amountToSwapA;
 			}
 
-			amountToSwapA = (left + right) / 2;
+			// amountToSwapA = (left + right) / 2;
 			counter += 1;
 		}
 

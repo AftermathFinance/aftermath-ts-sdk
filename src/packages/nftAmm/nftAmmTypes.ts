@@ -38,9 +38,9 @@ export interface Nft {
 
 export interface NftInfo {
 	objectId: ObjectId;
-	version: string;
-	digest: TransactionDigest;
-	type?: AnyObjectType;
+	// version: string;
+	// digest: TransactionDigest;
+	objectType: AnyObjectType;
 }
 
 export interface NftDisplay {

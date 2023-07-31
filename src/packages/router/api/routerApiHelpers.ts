@@ -10,8 +10,11 @@ import {
 	RouterSerializableCompleteGraph,
 	Slippage,
 	SuiNetwork,
+	SynchronousProtocolsToPoolObjectIds,
 	Url,
 	isRouterAsyncProtocolName,
+	isRouterAsyncSerializablePool,
+	AllRouterOptions,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
@@ -19,16 +22,6 @@ import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
 import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
 
 export class RouterApiHelpers {
-	// =========================================================================
-	//  Constants
-	// =========================================================================
-
-	public static readonly constants = {
-		defaults: {
-			tradePartitionCount: 3,
-		},
-	};
-
 	// =========================================================================
 	//  Class Members
 	// =========================================================================
@@ -40,11 +33,15 @@ export class RouterApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-
+	constructor(
+		Provider: AftermathApi,
+		private readonly options: AllRouterOptions
+	) {
 		this.SynchronousHelpers = new RouterSynchronousApiHelpers(Provider);
-		this.AsyncHelpers = new RouterAsyncApiHelpers(Provider);
+		this.AsyncHelpers = new RouterAsyncApiHelpers(
+			Provider,
+			options.regular.async
+		);
 	}
 
 	// =========================================================================
@@ -55,11 +52,16 @@ export class RouterApiHelpers {
 	//  Graph
 	// =========================================================================
 
-	public fetchSerializableGraph = async (inputs: {
-		protocols: RouterProtocolName[];
+	public fetchCreateSerializableGraph = async (inputs: {
+		asyncPools: RouterAsyncSerializablePool[];
+		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
 	}) => {
-		const pools = await this.SynchronousHelpers.fetchAllPools(inputs);
-		return RouterGraph.createGraph({ pools });
+		const synchronousPools =
+			await this.SynchronousHelpers.fetchPoolsFromIds(inputs);
+
+		return RouterGraph.createGraph({
+			pools: [...synchronousPools, ...inputs.asyncPools],
+		});
 	};
 
 	// =========================================================================
@@ -83,7 +85,7 @@ export class RouterApiHelpers {
 
 		const { network, graph, coinInAmount } = inputs;
 
-		const coinInAmounts = RouterApiHelpers.amountsInForRouterTrade({
+		const coinInAmounts = this.amountsInForRouterTrade({
 			coinInAmount,
 		});
 		const asyncProtocols = inputs.protocols.filter(
@@ -91,12 +93,19 @@ export class RouterApiHelpers {
 		);
 
 		const { exactMatchPools, partialMatchPools } =
-			await this.AsyncHelpers.fetchPossiblePools({
+			this.AsyncHelpers.filterPossiblePools({
 				...inputs,
+				pools: Object.values(graph.pools).filter(
+					isRouterAsyncSerializablePool
+				),
 				protocols: asyncProtocols,
 			});
 
-		const routerGraph = new RouterGraph(network, graph);
+		const routerGraph = new RouterGraph(
+			network,
+			graph,
+			this.options.regular.synchronous
+		);
 
 		if (exactMatchPools.length <= 0 && partialMatchPools.length <= 0)
 			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
@@ -120,7 +129,8 @@ export class RouterApiHelpers {
 				),
 			]);
 
-		routerGraph.updateOptions(RouterGraph.defaultOptions);
+		// NOTE: is this actually needed ?
+		routerGraph.updateOptions(this.options.regular.synchronous);
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
@@ -149,6 +159,7 @@ export class RouterApiHelpers {
 				...result.coinIn,
 				amount: coinInAmount,
 			},
+			referrer: inputs.referrer,
 		};
 	};
 
@@ -175,11 +186,7 @@ export class RouterApiHelpers {
 			pool: inputs.lastPool,
 		});
 
-		routerGraph.updateOptions({
-			// maxRouteLength: 2,
-			tradePartitionCount: 2,
-			maxGasCost: BigInt(333_333_333), // 0.333 SUI
-		});
+		routerGraph.updateOptions(this.options.preAsync);
 		const synchronousCompleteRoutes =
 			routerGraph.getCompleteRoutesGivenAmountIns({
 				...inputs,
@@ -281,15 +288,12 @@ export class RouterApiHelpers {
 	//  Helpers
 	// =========================================================================
 
-	public static amountsInForRouterTrade = (inputs: {
+	public amountsInForRouterTrade = (inputs: {
 		coinInAmount: Balance;
-		partitions?: number;
 	}): Balance[] => {
 		const { coinInAmount } = inputs;
 
-		const partitions =
-			inputs.partitions ||
-			RouterApiHelpers.constants.defaults.tradePartitionCount;
+		const partitions = this.options.regular.async.tradePartitionCount;
 
 		const coinInPartitionAmount =
 			coinInAmount / BigInt(Math.floor(partitions));

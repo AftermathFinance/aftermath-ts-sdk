@@ -3,6 +3,7 @@ import {
 	SuiObjectResponse,
 	getObjectFields,
 	getObjectId,
+	getObjectType,
 } from "@mysten/sui.js";
 import {
 	PoolCoins,
@@ -18,7 +19,6 @@ import {
 	PoolTradeEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
-import { Pools } from "../pools";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { AnyObjectType } from "../../../types";
@@ -32,6 +32,8 @@ export class PoolsApiCasting {
 		suiObject: SuiObjectResponse
 	): PoolObject => {
 		const objectId = getObjectId(suiObject);
+		const objectType = getObjectType(suiObject);
+		if (!objectType) throw new Error("no object type found");
 
 		const poolFieldsOnChain = getObjectFields(
 			suiObject
@@ -67,6 +69,9 @@ export class PoolsApiCasting {
 						normalizedBalance: BigInt(
 							poolFieldsOnChain.normalized_balances[index]
 						),
+						decimalsScalar: BigInt(
+							poolFieldsOnChain.decimal_scalars[index]
+						),
 					},
 				};
 			},
@@ -74,6 +79,7 @@ export class PoolsApiCasting {
 		);
 
 		return {
+			objectType,
 			objectId,
 			lpCoinType,
 			name: poolFieldsOnChain.name,
@@ -81,6 +87,7 @@ export class PoolsApiCasting {
 			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
 			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
 			flatness: BigInt(poolFieldsOnChain.flatness),
+			lpCoinDecimals: Number(poolFieldsOnChain.lp_decimals),
 			coins,
 		};
 	};

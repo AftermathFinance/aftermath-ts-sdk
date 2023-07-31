@@ -17,12 +17,18 @@ import { SuiFrensApi } from "../../packages/suiFrens/api/suiFrensApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
-import { RouterProtocolName } from "../../types";
+import {
+	CoinType,
+	PartialRouterOptions,
+	RouterProtocolName,
+	RouterSynchronousOptions,
+} from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { OracleApi } from "../../packages/oracle/api/oracleApi";
+import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 
 export class AftermathApi {
 	// =========================================================================
@@ -89,14 +95,22 @@ export class AftermathApi {
 	// =========================================================================
 
 	public Wallet = () => new WalletApi(this);
-	public Prices = () =>
-		this.coinGeckoApiKey
-			? new CoinGeckoPricesApi(this.coinGeckoApiKey)
-			: new PlaceholderPricesApi();
-	public HistoricalData = () =>
-		this.coinGeckoApiKey
-			? new HistoricalDataApi(this.coinGeckoApiKey)
-			: new PlaceholderHistoricalDataApi();
+
+	public Prices = this.coinGeckoApiKey
+		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+				new CoinGeckoPricesApi(
+					this.coinGeckoApiKey ?? "",
+					coinApiIdsToCoinTypes
+				)
+		: () => new PlaceholderPricesApi();
+
+	public HistoricalData = this.coinGeckoApiKey
+		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+				new HistoricalDataApi(
+					this.coinGeckoApiKey ?? "",
+					coinApiIdsToCoinTypes
+				)
+		: () => new PlaceholderHistoricalDataApi();
 
 	// =========================================================================
 	//  General Packages
@@ -111,12 +125,16 @@ export class AftermathApi {
 
 	public Pools = () => new PoolsApi(this);
 	public Faucet = () => new FaucetApi(this);
-	public Router = (protocols?: RouterProtocolName[]) =>
-		new RouterApi(this, protocols);
 	public SuiFrens = () => new SuiFrensApi(this);
 	public Staking = () => new StakingApi(this);
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);
 	public Oracle = () => new OracleApi(this);
+
+	public Router = (
+		protocols?: RouterProtocolName[],
+		regularOptions?: PartialRouterOptions,
+		preAsyncOptions?: Partial<RouterSynchronousOptions>
+	) => new RouterApi(this, protocols, regularOptions, preAsyncOptions);
 }

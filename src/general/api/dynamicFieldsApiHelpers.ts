@@ -1,4 +1,4 @@
-import { ObjectId } from "@mysten/sui.js";
+import { DynamicFieldInfo, DynamicFieldName, ObjectId } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	DynamicFieldObjectsWithCursor,
@@ -6,7 +6,6 @@ import {
 	DynamicFieldsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { DynamicFieldInfo } from "@mysten/sui.js/dist/types/dynamic_fields";
 
 export class DynamicFieldsApiHelpers {
 	// =========================================================================
@@ -30,7 +29,7 @@ export class DynamicFieldsApiHelpers {
 	// =========================================================================
 
 	// =========================================================================
-	//  Fetching
+	//  Dynamic Fields
 	// =========================================================================
 
 	public fetchCastDynamicFieldsOfTypeWithCursor = async <ObjectType>(inputs: {
@@ -90,7 +89,9 @@ export class DynamicFieldsApiHelpers {
 
 	public fetchCastAllDynamicFieldsOfType = async <ObjectType>(inputs: {
 		parentObjectId: ObjectId;
-		objectsFromObjectIds: (objectIds: ObjectId[]) => Promise<ObjectType[]>;
+		objectsFromObjectIds: (
+			objectIds: ObjectId[]
+		) => ObjectType[] | Promise<ObjectType[]>;
 		dynamicFieldType?:
 			| AnyObjectType
 			| ((objectType: AnyObjectType) => boolean);
@@ -183,5 +184,16 @@ export class DynamicFieldsApiHelpers {
 			dynamicFields,
 			nextCursor,
 		};
+	};
+
+	// =========================================================================
+	//  Dynamic Field Objects
+	// =========================================================================
+
+	public fetchDynamicFieldObject = (inputs: {
+		parentId: ObjectId;
+		name: string | DynamicFieldName;
+	}) => {
+		return this.Provider.provider.getDynamicFieldObject(inputs);
 	};
 }
