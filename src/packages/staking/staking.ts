@@ -11,6 +11,9 @@ import {
 	Url,
 	UnstakeEvent,
 	ValidatorConfigObject,
+	ApiStakeStakedSuiBody,
+	ApiDelegatedStakesBody,
+	SuiDelegatedStake,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -59,6 +62,12 @@ export class Staking extends Caller {
 		return this.fetchApi("staking-positions", inputs);
 	}
 
+	public async getDelegatedStakes(
+		inputs: ApiDelegatedStakesBody
+	): Promise<SuiDelegatedStake[]> {
+		return this.fetchApi("delegated-stakes", inputs);
+	}
+
 	// =========================================================================
 	//  Events
 	// =========================================================================
@@ -88,6 +97,13 @@ export class Staking extends Caller {
 	public async getUnstakeTransaction(inputs: ApiUnstakeBody) {
 		return this.fetchApiTransaction<ApiUnstakeBody>(
 			"transactions/unstake",
+			inputs
+		);
+	}
+
+	public async getStakeStakedSuiTransaction(inputs: ApiStakeStakedSuiBody) {
+		return this.fetchApiTransaction<ApiStakeStakedSuiBody>(
+			"transactions/stake-staked-sui",
 			inputs
 		);
 	}

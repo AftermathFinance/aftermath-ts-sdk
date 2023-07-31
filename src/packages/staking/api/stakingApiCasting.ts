@@ -62,6 +62,7 @@ export class StakingApiCasting {
 		eventOnChain: StakeRequestEventOnChain
 	): StakeRequestEvent => {
 		const fields = eventOnChain.parsedJson;
+		console.log("fields", fields);
 		return {
 			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
 			stakedSuiId: Helpers.addLeadingZeroesToType(fields.staked_sui_id),
@@ -69,6 +70,7 @@ export class StakingApiCasting {
 			validatorAddress: Helpers.addLeadingZeroesToType(fields.validator),
 			epoch: BigInt(fields.epoch),
 			suiStakeAmount: BigInt(fields.sui_amount),
+			validatorFee: Fixed.directCast(BigInt(fields.validator_fee)),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

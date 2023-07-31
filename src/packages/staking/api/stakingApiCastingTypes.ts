@@ -21,8 +21,9 @@ export type StakeRequestEventOnChain = EventOnChain<{
 	staked_sui_id: ObjectId;
 	sui_amount: BigIntAsString;
 	staker: BigIntAsString;
-	validator: BigIntAsString;
+	validator: SuiAddress;
 	epoch: BigIntAsString;
+	validator_fee: BigIntAsString;
 	referrer: "asdfkajshdF option";
 }>;
 

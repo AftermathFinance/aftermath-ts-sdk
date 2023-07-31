@@ -1,4 +1,9 @@
-import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
+import {
+	DelegatedStake,
+	ObjectId,
+	SuiAddress,
+	TransactionDigest,
+} from "@mysten/sui.js";
 import {
 	ApiEventsBody,
 	Balance,
@@ -23,6 +28,17 @@ export interface StakeBalanceDynamicField {
 	value: Balance;
 }
 
+export interface SuiDelegatedStake {
+	status: "Active" | "Pending" | "Unstaked";
+	stakedSuiId: ObjectId;
+	stakeRequestEpoch: bigint;
+	stakeActiveEpoch: bigint;
+	principal: Balance;
+	estimatedReward?: Balance | undefined;
+	validatorAddress: SuiAddress;
+	stakingPool: SuiAddress;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -36,6 +52,8 @@ export interface StakeRequestEvent extends Event {
 	validatorAddress: SuiAddress;
 	epoch: bigint;
 	suiStakeAmount: Balance;
+	validatorFee: number;
+	// TODO: handle referral situation
 	referrer?: SuiAddress;
 }
 
@@ -127,7 +145,18 @@ export interface ApiUnstakeBody {
 	referrer?: SuiAddress;
 }
 
+export interface ApiStakeStakedSuiBody {
+	walletAddress: SuiAddress;
+	stakedSuiIds: ObjectId[];
+	validatorAddress: SuiAddress;
+	referrer?: SuiAddress;
+}
+
 export interface ApiStakingPositionsBody {
+	walletAddress: SuiAddress;
+}
+
+export interface ApiDelegatedStakesBody {
 	walletAddress: SuiAddress;
 }
 
