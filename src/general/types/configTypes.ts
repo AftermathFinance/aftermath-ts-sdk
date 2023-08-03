@@ -269,7 +269,7 @@ export interface ExchangeAddresses {
 	accountManager: ObjectId;
 	marketManager: ObjectId;
 	vault: ObjectId;
-	insuranceFund: ObjectId;
+	insuranceFunds: ObjectId;
 }
 
 export interface OracleAddresses {

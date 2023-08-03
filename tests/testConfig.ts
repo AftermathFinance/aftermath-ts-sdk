@@ -19,7 +19,7 @@ export function getConfigs(): [PerpetualsAddresses, FaucetAddresses, OracleAddre
 				accountManager: cfg.account_manager,
 				marketManager: cfg.market_manager,
 				vault: cfg.vault,
-				insuranceFund: cfg.insurance_fund,
+				insuranceFunds: cfg.insurance_funds,
 			}
 		);
 	}
@@ -49,10 +49,12 @@ export function getConfigs(): [PerpetualsAddresses, FaucetAddresses, OracleAddre
 	let faucetCfg = {
 		packages: {
 			faucet: rustCfg.faucet?.package_id!,
+			suiFrensGenesisWrapper: "",
 		},
 		objects: {
 			faucet: rustCfg.faucet?.faucet!,
 			faucetRegistry: rustCfg.faucet?.faucet_registry!,
+			suiFrensMint: "",
 		},
 	};
 

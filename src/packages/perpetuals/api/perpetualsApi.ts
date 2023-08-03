@@ -2,6 +2,8 @@ import {
 	ObjectId,
 	SuiAddress,
 	SuiObjectResponse,
+	SuiRawData,
+	SuiRawMoveObject,
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
@@ -233,6 +235,26 @@ export class PerpetualsApi {
 		});
 	};
 
+	public addInsuranceFundTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+	}) => {
+		const { tx, coinType } = inputs;
+		let exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"add_insurance_fund",
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(this.addresses.objects.adminCapability),
+				tx.object(exchangeCfg.insuranceFunds),
+			],
+		});
+	};
+
 	public createMarketTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
@@ -248,6 +270,7 @@ export class PerpetualsApi {
 		liquidationFee: bigint;
 		forceCancelFee: bigint;
 		insuranceFundFee: bigint;
+		insuranceFundId: bigint;
 		lotSize: bigint;
 		tickSize: bigint;
 	}) => {
@@ -266,10 +289,11 @@ export class PerpetualsApi {
 			liquidationFee,
 			forceCancelFee,
 			insuranceFundFee,
+			insuranceFundId,
 			lotSize,
 			tickSize,
 		} = inputs;
-		let exchangeCfg = this.addresses.objects.exchanges.get(coinType);
+		let exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -279,9 +303,8 @@ export class PerpetualsApi {
 			typeArguments: [coinType],
 			arguments: [
 				tx.object(this.addresses.objects.adminCapability),
-				// TODO: create a Map<coinType, Exchange> and get the correspondent accountManager
-				// Same for all the other functions
-				tx.object(exchangeCfg?.marketManager!),
+				tx.object(exchangeCfg.marketManager),
+				tx.object(exchangeCfg.insuranceFunds),
 				tx.pure(marketId),
 				tx.pure(marginRatioInitial),
 				tx.pure(marginRatioMaintenance),
@@ -294,6 +317,7 @@ export class PerpetualsApi {
 				tx.pure(liquidationFee),
 				tx.pure(forceCancelFee),
 				tx.pure(insuranceFundFee),
+				tx.pure(insuranceFundId),
 				tx.pure(lotSize),
 				tx.pure(tickSize),
 			],
@@ -307,7 +331,7 @@ export class PerpetualsApi {
 		coin: ObjectId | TransactionArgument;
 	}) => {
 		const { tx, coinType, accountCapId, coin } = inputs;
-
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -319,8 +343,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.vault!),
+				tx.object(exchangeCfg.accountManager),
+				tx.object(exchangeCfg.vault),
 				typeof coin === "string" ? tx.object(coin) : coin,
 			],
 		});
@@ -335,6 +359,7 @@ export class PerpetualsApi {
 		size: bigint;
 	}) => {
 		const { tx, coinType, accountCapId, marketId, side, size } = inputs;
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -346,8 +371,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
+				tx.object(exchangeCfg.accountManager),
+				tx.object(exchangeCfg.marketManager),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
@@ -379,6 +404,7 @@ export class PerpetualsApi {
 			price,
 			orderType,
 		} = inputs;
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -390,8 +416,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
+				tx.object(exchangeCfg.accountManager),
+				tx.object(exchangeCfg.marketManager),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
@@ -414,6 +440,7 @@ export class PerpetualsApi {
 		orderId: bigint;
 	}) => {
 		const { tx, coinType, accountCapId, marketId, side, orderId } = inputs;
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -425,39 +452,11 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
+				tx.object(exchangeCfg.accountManager),
+				tx.object(exchangeCfg.marketManager),
 				tx.pure(marketId),
 				tx.pure(side),
 				tx.pure(orderId),
-			],
-		});
-	};
-
-	public closePositionTx = (inputs: {
-		tx: TransactionBlock;
-		coinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		marketId: bigint;
-	}) => {
-		const { tx, coinType, accountCapId, marketId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"close_position"
-			),
-			typeArguments: [coinType],
-			arguments: [
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
-				tx.object(
-					this.addresses.objects.oracle.objects.priceFeedStorage
-				),
-				tx.pure(marketId),
 			],
 		});
 	};
@@ -469,6 +468,7 @@ export class PerpetualsApi {
 		amount: bigint;
 	}) => {
 		const { tx, coinType, accountCapId, amount } = inputs;
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -480,13 +480,12 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
+				tx.object(exchangeCfg.accountManager),
+				tx.object(exchangeCfg.marketManager),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.vault!),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.insuranceFund!),
+				tx.object(exchangeCfg.vault),
 				tx.pure(amount),
 			],
 		});
@@ -500,6 +499,7 @@ export class PerpetualsApi {
 		sizes: bigint[];
 	}) => {
 		const { tx, coinType, accountCapId, liqeeAccountId, sizes } = inputs;
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -511,8 +511,10 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
+				tx.object(exchangeCfg.accountManager),
+				tx.object(exchangeCfg.marketManager),
+				tx.object(exchangeCfg.vault),
+				tx.object(exchangeCfg.insuranceFunds),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
@@ -528,6 +530,7 @@ export class PerpetualsApi {
 		marketId: bigint;
 	}) => {
 		const { tx, coinType, marketId } = inputs;
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -536,7 +539,7 @@ export class PerpetualsApi {
 			),
 			typeArguments: [coinType],
 			arguments: [
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.marketManager!),
+				tx.object(exchangeCfg.marketManager),
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
@@ -551,6 +554,7 @@ export class PerpetualsApi {
 		coinType: CoinType;
 	}) => {
 		const { tx, coinType } = inputs;
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
@@ -559,7 +563,7 @@ export class PerpetualsApi {
 			),
 			typeArguments: [coinType],
 			arguments: [
-				tx.object(this.addresses.objects.exchanges.get(coinType)?.accountManager!),
+				tx.object(exchangeCfg.accountManager),
 			],
 		});
 	};
@@ -598,6 +602,18 @@ export class PerpetualsApi {
 		return tx;
 	};
 
+	public fetchAddInsuranceFundTx = async (inputs: {
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+	}): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		this.addInsuranceFundTx({ tx, ...inputs });
+
+		return tx;
+	};
+
 	public fetchCreateMarketTx = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
@@ -613,6 +629,7 @@ export class PerpetualsApi {
 		liquidationFee: bigint;
 		forceCancelFee: bigint;
 		insuranceFundFee: bigint;
+		insuranceFundId: bigint;
 		lotSize: bigint;
 		tickSize: bigint;
 	}): Promise<TransactionBlock> => {
@@ -704,23 +721,6 @@ export class PerpetualsApi {
 		tx.setSender(inputs.walletAddress);
 
 		this.cancelOrderTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
-
-	public fetchClosePositionTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		marketId: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.closePositionTx({
 			tx,
 			...inputs,
 		});
