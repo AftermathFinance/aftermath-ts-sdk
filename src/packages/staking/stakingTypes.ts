@@ -66,7 +66,7 @@ export interface StakeRequestEvent extends Event {
 	epoch: bigint;
 	suiStakeAmount: Balance;
 	validatorFee: number;
-	// TODO: handle referral situation
+	isRestaked: boolean;
 	referrer?: SuiAddress;
 }
 

@@ -24,6 +24,8 @@ export type StakeRequestEventOnChain = EventOnChain<{
 	validator: SuiAddress;
 	epoch: BigIntAsString;
 	validator_fee: BigIntAsString;
+	is_restaked: boolean;
+	// TODO: handle referral parsing situation
 	referrer: "asdfkajshdF option";
 }>;
 

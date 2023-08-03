@@ -26,6 +26,7 @@ export class Coin extends Caller {
 	public static readonly constants = {
 		suiCoinType:
 			"0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+		suiCoinDecimals: 9,
 	};
 
 	// =========================================================================

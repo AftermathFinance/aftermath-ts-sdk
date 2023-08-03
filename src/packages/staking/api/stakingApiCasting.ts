@@ -6,8 +6,6 @@ import {
 } from "@mysten/sui.js";
 import {
 	AfSuiMintedEvent,
-	StakePosition,
-	UnstakePosition,
 	UnstakeEvent,
 	StakeRequestEvent,
 	ValidatorConfigObject,
@@ -71,6 +69,7 @@ export class StakingApiCasting {
 			epoch: BigInt(fields.epoch),
 			suiStakeAmount: BigInt(fields.sui_amount),
 			validatorFee: Fixed.directCast(BigInt(fields.validator_fee)),
+			isRestaked: fields.is_restaked,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
