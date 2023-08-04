@@ -129,7 +129,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	constructor(private readonly Provider: AftermathApi) {
 		const pools = Provider.addresses.pools;
 		const referralVault = Provider.addresses.referralVault;
-		const routerWrapper = Provider.addresses.router?.aftermath;
+		const routerWrapper = Provider.addresses.external?.aftermath;
 
 		if (!pools || !referralVault)
 			throw new Error(

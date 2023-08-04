@@ -61,7 +61,7 @@ export class DeepBookApi
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const deepBookAddresses = this.Provider.addresses.router?.deepBook;
+		const deepBookAddresses = this.Provider.addresses.external?.deepBook;
 
 		if (!deepBookAddresses)
 			throw new Error(

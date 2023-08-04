@@ -25,6 +25,7 @@ interface OptionalConfigAddresses {
 	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
 	perpetuals: PerpetualsAddresses;
+	external: Partial<ExternalAddresses>;
 }
 
 // =========================================================================
@@ -109,16 +110,13 @@ export interface NftAmmAddresses {
 	};
 }
 
-export type RouterAddresses = RequiredRouterAddresses &
-	Partial<OptionalRouterAddresses>;
-
-export interface RequiredRouterAddresses {
+export interface RouterAddresses {
 	packages: {
 		utils: SuiAddress;
 	};
 }
 
-export interface OptionalRouterAddresses {
+export interface ExternalAddresses {
 	aftermath: AftermathRouterWrapperAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;

@@ -57,7 +57,7 @@ export class SuiswapApi
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const suiswapAddresses = this.Provider.addresses.router?.suiswap;
+		const suiswapAddresses = this.Provider.addresses.external?.suiswap;
 
 		if (!suiswapAddresses)
 			throw new Error(

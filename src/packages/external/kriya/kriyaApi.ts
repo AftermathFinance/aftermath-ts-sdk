@@ -23,9 +23,15 @@ import {
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { RouterPoolTradeTxInputs } from "../../router";
+import {
+	ManagementApiWithdrawInterface,
+	ManagementWithdrawTxInputs,
+} from "../../management/api/utils/interfaces/managementApiWithdrawInterface";
 
 export class KriyaApi
-	implements RouterSynchronousApiInterface<KriyaPoolObject>
+	implements
+		RouterSynchronousApiInterface<KriyaPoolObject>,
+		ManagementApiWithdrawInterface<KriyaLPTokenObject>
 {
 	// =========================================================================
 	//  Constants
@@ -57,7 +63,7 @@ export class KriyaApi
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const kriyaAddresses = this.Provider.addresses.router?.kriya;
+		const kriyaAddresses = this.Provider.addresses.external?.kriya;
 
 		if (!kriyaAddresses)
 			throw new Error(
@@ -185,7 +191,7 @@ export class KriyaApi
 		});
 	};
 
-	public removeLiquidityTxInner = (inputs: {
+	public removeLiquidityTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
 		lpTokenId: ObjectId | TransactionArgument;
@@ -233,17 +239,16 @@ export class KriyaApi
 		return this.swapTokenYTx(commandInputs);
 	};
 
-	public removeLiquidityTx = (inputs: {
-		tx: TransactionBlock;
-		lpToken: KriyaLPTokenObject;
-	}) /* (Coin, Coin) */ => {
-		const { lpToken } = inputs;
+	public withdrawTx = (
+		inputs: ManagementWithdrawTxInputs<KriyaLPTokenObject>
+	) /* (Coin, Coin) */ => {
+		const { lpInfo } = inputs;
 
-		return this.removeLiquidityTxInner({
+		return this.removeLiquidityTx({
 			...inputs,
-			...lpToken,
-			lpTokenId: lpToken.objectId,
-			amountToRemove: lpToken.lspBalance,
+			...lpInfo,
+			lpTokenId: lpInfo.objectId,
+			amountToRemove: lpInfo.lspBalance,
 		});
 	};
 
@@ -330,15 +335,20 @@ export class KriyaApi
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
+		const coinTypeX = coinTypes[0];
+		const coinTypeY = coinTypes[1];
 
 		const fields = getObjectFields(data) as KriyaLPTokenFieldsOnChain;
 		return {
+			// TODO: set this is a better way - associate direectly with class ?
+			protocol: "Kriya",
+			withdrawCoinTypes: [coinTypeX, coinTypeY],
 			objectType,
 			objectId: getObjectId(data),
 			poolId: fields.pool_id,
 			lspBalance: BigInt(fields.lsp),
-			coinTypeX: coinTypes[0],
-			coinTypeY: coinTypes[1],
+			coinTypeX,
+			coinTypeY,
 		};
 	};
 }

@@ -65,7 +65,7 @@ export class RouterApi {
 
 	public readonly Helpers;
 
-	private readonly options;
+	private readonly options: AllRouterOptions;
 
 	// =========================================================================
 	//  Constructor
@@ -77,7 +77,7 @@ export class RouterApi {
 		regularOptions?: PartialRouterOptions,
 		preAsyncOptions?: Partial<RouterSynchronousOptions>
 	) {
-		const optionsToSet: AllRouterOptions = {
+		this.options = {
 			regular: {
 				synchronous: {
 					...RouterApi.defaultRouterOptions.regular.synchronous,
@@ -93,11 +93,7 @@ export class RouterApi {
 				...preAsyncOptions,
 			},
 		};
-
-		this.options = optionsToSet;
-
-		this.Provider = Provider;
-		this.Helpers = new RouterApiHelpers(Provider, optionsToSet);
+		this.Helpers = new RouterApiHelpers(Provider, this.options);
 	}
 
 	// =========================================================================

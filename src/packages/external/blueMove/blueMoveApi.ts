@@ -61,7 +61,7 @@ export class BlueMoveApi
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const blueMoveAddresses = this.Provider.addresses.router?.blueMove;
+		const blueMoveAddresses = this.Provider.addresses.external?.blueMove;
 
 		if (!blueMoveAddresses)
 			throw new Error(

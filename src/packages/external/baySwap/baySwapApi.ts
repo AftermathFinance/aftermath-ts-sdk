@@ -47,7 +47,7 @@ export class BaySwapApi
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const baySwapAddresses = this.Provider.addresses.router?.baySwap;
+		const baySwapAddresses = this.Provider.addresses.external?.baySwap;
 
 		if (!baySwapAddresses)
 			throw new Error(

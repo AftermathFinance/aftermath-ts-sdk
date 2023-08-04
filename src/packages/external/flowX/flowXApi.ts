@@ -31,7 +31,7 @@ export class FlowXApi implements RouterAsyncApiInterface<FlowXPoolObject> {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const flowXAddresses = this.Provider.addresses.router?.flowX;
+		const flowXAddresses = this.Provider.addresses.external?.flowX;
 
 		if (!flowXAddresses)
 			throw new Error(

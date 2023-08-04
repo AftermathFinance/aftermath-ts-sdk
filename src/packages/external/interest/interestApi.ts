@@ -40,7 +40,7 @@ export class InterestApi
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const interestAddresses = this.Provider.addresses.router?.interest;
+		const interestAddresses = this.Provider.addresses.external?.interest;
 
 		if (!interestAddresses)
 			throw new Error(

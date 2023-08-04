@@ -56,7 +56,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================
 
 	constructor(public readonly Provider: AftermathApi) {
-		const turbos = this.Provider.addresses.router?.turbos;
+		const turbos = this.Provider.addresses.external?.turbos;
 		const referralVault = this.Provider.addresses.referralVault;
 		const pools = this.Provider.addresses.pools;
 
