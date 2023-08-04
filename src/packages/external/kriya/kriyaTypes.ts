@@ -54,6 +54,17 @@ export const isKriyaPoolObject = (
 	);
 };
 
+export interface KriyaLPTokenObject extends Object {
+	poolId: ObjectId;
+	lspBalance: Balance;
+	coinTypeX: CoinType;
+	coinTypeY: CoinType;
+}
+
+// =========================================================================
+//  Events
+// =========================================================================
+
 export interface KriyaPoolCreatedEvent extends Event {
 	poolId: ObjectId;
 	creator: SuiAddress;
@@ -94,3 +105,17 @@ export type KriyaPoolCreatedEventOnChain = EventOnChain<{
 	scaleX: BigIntAsString;
 	scaleY: BigIntAsString;
 }>;
+
+export interface KriyaLPTokenFieldsOnChain {
+	id: ObjectId;
+	pool_id: ObjectId;
+	lsp: BigIntAsString;
+}
+
+// =========================================================================
+//  Api
+// =========================================================================
+
+export interface ApiKriyaOwnedLpTokensBody {
+	walletAddress: SuiAddress;
+}

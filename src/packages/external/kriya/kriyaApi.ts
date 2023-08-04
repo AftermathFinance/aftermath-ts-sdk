@@ -10,14 +10,11 @@ import {
 	getObjectId,
 	getObjectType,
 } from "@mysten/sui.js";
+import { AnyObjectType, Balance, KriyaAddresses } from "../../../types";
 import {
-	AnyObjectType,
-	Balance,
-	KriyaAddresses,
-	PoolsAddresses,
-	ReferralVaultAddresses,
-} from "../../../types";
-import {
+	ApiKriyaOwnedLpTokensBody,
+	KriyaLPTokenFieldsOnChain,
+	KriyaLPTokenObject,
 	KriyaPoolCreatedEvent,
 	KriyaPoolCreatedEventOnChain,
 	KriyaPoolFieldsOnChain,
@@ -25,7 +22,6 @@ import {
 } from "./kriyaTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
-import { Sui } from "../../sui";
 import { RouterPoolTradeTxInputs } from "../../router";
 
 export class KriyaApi
@@ -52,6 +48,10 @@ export class KriyaApi
 		poolCreated: AnyObjectType;
 	};
 
+	public readonly objectTypes: {
+		lpToken: AnyObjectType;
+	};
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -67,6 +67,9 @@ export class KriyaApi
 		this.addresses = kriyaAddresses;
 		this.eventTypes = {
 			poolCreated: `${kriyaAddresses.packages.dex}::${KriyaApi.constants.moduleNames.spotDex}::PoolCreatedEvent`,
+		};
+		this.objectTypes = {
+			lpToken: `${kriyaAddresses.packages.dex}::${KriyaApi.constants.moduleNames.spotDex}::KriyaLPToken`,
 		};
 	}
 
@@ -110,6 +113,16 @@ export class KriyaApi
 				pool.tokenYValue > BigInt(0)
 		);
 		return unlockedPools;
+	};
+
+	public fetchOwnedLpTokens = async (inputs: ApiKriyaOwnedLpTokensBody) => {
+		const { walletAddress } = inputs;
+		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			walletAddress,
+			objectType: this.objectTypes.lpToken,
+			objectFromSuiObjectResponse:
+				KriyaApi.kriyaLPTokenObjectFromSuiObjectResponse,
+		});
 	};
 
 	// =========================================================================
@@ -172,6 +185,33 @@ export class KriyaApi
 		});
 	};
 
+	public removeLiquidityTxInner = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		lpTokenId: ObjectId | TransactionArgument;
+		amountToRemove: Balance;
+		coinTypeX: AnyObjectType;
+		coinTypeY: AnyObjectType;
+	}) /* (Coin, Coin) */ => {
+		const { tx, lpTokenId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.dex,
+				KriyaApi.constants.moduleNames.spotDex,
+				"remove_liquidity"
+			),
+			typeArguments: [inputs.coinTypeX, inputs.coinTypeY],
+			arguments: [
+				tx.object(inputs.poolId), // Pool
+				typeof lpTokenId === "string"
+					? tx.object(lpTokenId)
+					: lpTokenId, // KriyaLPToken
+				tx.pure(inputs.amountToRemove, "u64"),
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Transaction Command Wrappers
 	// =========================================================================
@@ -191,6 +231,20 @@ export class KriyaApi
 		}
 
 		return this.swapTokenYTx(commandInputs);
+	};
+
+	public removeLiquidityTx = (inputs: {
+		tx: TransactionBlock;
+		lpToken: KriyaLPTokenObject;
+	}) /* (Coin, Coin) */ => {
+		const { lpToken } = inputs;
+
+		return this.removeLiquidityTxInner({
+			...inputs,
+			...lpToken,
+			lpTokenId: lpToken.objectId,
+			amountToRemove: lpToken.lspBalance,
+		});
 	};
 
 	// =========================================================================
@@ -263,6 +317,28 @@ export class KriyaApi
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
+		};
+	};
+
+	private static kriyaLPTokenObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): KriyaLPTokenObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const coinTypes = Coin.getInnerCoinType(objectType)
+			.replaceAll(" ", "")
+			.split(",")
+			.map((coin) => Helpers.addLeadingZeroesToType(coin));
+
+		const fields = getObjectFields(data) as KriyaLPTokenFieldsOnChain;
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			poolId: fields.pool_id,
+			lspBalance: BigInt(fields.lsp),
+			coinTypeX: coinTypes[0],
+			coinTypeY: coinTypes[1],
 		};
 	};
 }
