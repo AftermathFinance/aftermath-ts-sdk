@@ -13,6 +13,7 @@ import {
 import { AnyObjectType, Balance, KriyaAddresses } from "../../../types";
 import {
 	ApiKriyaOwnedLpTokensBody,
+	KriyaLPInfo,
 	KriyaLPTokenFieldsOnChain,
 	KriyaLPTokenObject,
 	KriyaPoolCreatedEvent,
@@ -25,13 +26,15 @@ import { Helpers } from "../../../general/utils";
 import { RouterPoolTradeTxInputs } from "../../router";
 import {
 	ManagementApiWithdrawInterface,
+	ManagementCalcWithdrawAmountsOutInputs,
+	ManagementOwnedLpInfosInputs,
 	ManagementWithdrawTxInputs,
 } from "../../management/api/utils/interfaces/managementApiWithdrawInterface";
 
 export class KriyaApi
 	implements
 		RouterSynchronousApiInterface<KriyaPoolObject>,
-		ManagementApiWithdrawInterface<KriyaLPTokenObject>
+		ManagementApiWithdrawInterface<KriyaLPInfo>
 {
 	// =========================================================================
 	//  Constants
@@ -121,13 +124,24 @@ export class KriyaApi
 		return unlockedPools;
 	};
 
-	public fetchOwnedLpTokens = async (inputs: ApiKriyaOwnedLpTokensBody) => {
-		const { walletAddress } = inputs;
-		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
-			walletAddress,
-			objectType: this.objectTypes.lpToken,
-			objectFromSuiObjectResponse:
-				KriyaApi.kriyaLPTokenObjectFromSuiObjectResponse,
+	public fetchOwnedLpInfos = async (
+		inputs: ManagementOwnedLpInfosInputs
+	): Promise<KriyaLPInfo[]> => {
+		const lpTokens = await this.fetchOwnedLpTokens(inputs);
+
+		const poolIds = Helpers.uniqueArray(lpTokens.map((lp) => lp.poolId));
+		const pools = await this.fetchPoolsFromIds({ objectIds: poolIds });
+
+		return lpTokens.map((lpToken) => {
+			const pool = pools.find((pool) => pool.objectId === lpToken.poolId);
+			if (!pool) throw new Error("kriya pool not found for lp token");
+			return {
+				// TODO: set this is a better way - associate direectly with class ?
+				protocol: "Kriya",
+				withdrawCoinTypes: [lpToken.coinTypeX, lpToken.coinTypeY],
+				lpToken,
+				pool,
+			};
 		});
 	};
 
@@ -240,16 +254,72 @@ export class KriyaApi
 	};
 
 	public withdrawTx = (
-		inputs: ManagementWithdrawTxInputs<KriyaLPTokenObject>
+		inputs: ManagementWithdrawTxInputs<KriyaLPInfo>
 	) /* (Coin, Coin) */ => {
 		const { lpInfo } = inputs;
 
 		return this.removeLiquidityTx({
 			...inputs,
-			...lpInfo,
-			lpTokenId: lpInfo.objectId,
-			amountToRemove: lpInfo.lspBalance,
+			...lpInfo.lpToken,
+			lpTokenId: lpInfo.lpToken.objectId,
+			amountToRemove: lpInfo.lpToken.lspBalance,
 		});
+	};
+
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
+
+	public calcWithdrawAmountsOut = (
+		inputs: ManagementCalcWithdrawAmountsOutInputs<KriyaLPInfo>
+	) => {
+		const { lpInfo } = inputs;
+
+		const { lspBalance } = lpInfo.lpToken;
+		const { tokenXValue, tokenYValue, lspSupplyValue } = lpInfo.pool;
+
+		const { tokenX, tokenY } = this.getLpAmountOut(
+			Number(lspBalance),
+			Number(lspSupplyValue),
+			Number(tokenXValue),
+			Number(tokenYValue)
+		);
+
+		return [BigInt(Math.floor(tokenX)), BigInt(Math.floor(tokenY))];
+	};
+
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	private fetchOwnedLpTokens = async (inputs: ApiKriyaOwnedLpTokensBody) => {
+		const { walletAddress } = inputs;
+		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			walletAddress,
+			objectType: this.objectTypes.lpToken,
+			objectFromSuiObjectResponse:
+				KriyaApi.kriyaLPTokenObjectFromSuiObjectResponse,
+		});
+	};
+
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
+
+	private getLpAmountOut = (
+		lspAmount: number,
+		lspSupply: number,
+		reserveX: number,
+		reserveY: number
+	) => {
+		return {
+			tokenX: reserveX * (lspAmount / lspSupply),
+			tokenY: reserveY * (lspAmount / lspSupply),
+		};
 	};
 
 	// =========================================================================
@@ -340,12 +410,9 @@ export class KriyaApi
 
 		const fields = getObjectFields(data) as KriyaLPTokenFieldsOnChain;
 		return {
-			// TODO: set this is a better way - associate direectly with class ?
-			protocol: "Kriya",
-			withdrawCoinTypes: [coinTypeX, coinTypeY],
 			objectType,
 			objectId: getObjectId(data),
-			poolId: fields.pool_id,
+			poolId: Helpers.addLeadingZeroesToType(fields.pool_id),
 			lspBalance: BigInt(fields.lsp),
 			coinTypeX,
 			coinTypeY,

@@ -1,5 +1,10 @@
-import { ApiPublishLpCoinBody, SuiNetwork, Url } from "../../types";
+import { SuiNetwork, Url } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import {
+	ApiManagementOwnedLpsBody,
+	ApiManagementTransferLpsBody,
+	ManagementLpInfo,
+} from "./managementTypes";
 
 export class Management extends Caller {
 	// =========================================================================
@@ -20,13 +25,22 @@ export class Management extends Caller {
 	//  Objects
 	// =========================================================================
 
+	public async getOwnedLps(inputs: ApiManagementOwnedLpsBody) {
+		return this.fetchApi<ManagementLpInfo[], ApiManagementOwnedLpsBody>(
+			"transactions/owned-lps",
+			inputs
+		);
+	}
+
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
-	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
-		return this.fetchApiTransaction<ApiPublishLpCoinBody>(
-			"transactions/publish-lp-coin",
+	public async getTransferLpsTransaction(
+		inputs: ApiManagementTransferLpsBody
+	) {
+		return this.fetchApiTransaction<ApiManagementTransferLpsBody>(
+			"transactions/transfer-lps",
 			inputs
 		);
 	}

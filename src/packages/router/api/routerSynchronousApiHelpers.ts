@@ -21,7 +21,7 @@ import {
 	EventsInputs,
 	PoolsAddresses,
 	ReferralVaultAddresses,
-	RequiredRouterAddresses,
+	RouterAddresses,
 	Slippage,
 } from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
@@ -70,7 +70,7 @@ export class RouterSynchronousApiHelpers {
 	// =========================================================================
 
 	public readonly addresses: {
-		router: RequiredRouterAddresses;
+		router: RouterAddresses;
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
 	};

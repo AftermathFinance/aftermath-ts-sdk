@@ -14,8 +14,9 @@ import {
 } from "@mysten/sui.js";
 import { KriyaApi } from "../../external/kriya/kriyaApi";
 import {
+	ApiManagementTransferLpsBody,
 	ManagementProtocolName,
-	ManagementWithdrawLpInfo,
+	ManagementLpInfo,
 } from "../managementTypes";
 import { ManagementApiWithdrawInterface } from "./utils/interfaces/managementApiWithdrawInterface";
 import { Pool } from "../..";
@@ -71,13 +72,9 @@ export class ManagementApi {
 	//  Transactions
 	// =========================================================================
 
-	public async fetchTransferLpsTx(inputs: {
-		lpInfos: ManagementWithdrawLpInfo[];
-		pools: Pool[];
-		walletAddress: SuiAddress;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> {
+	public async fetchTransferLpsTx(
+		inputs: ApiManagementTransferLpsBody
+	): Promise<TransactionBlock> {
 		const { lpInfos, pools, slippage, referrer } = inputs;
 
 		// initialize tx
@@ -103,10 +100,14 @@ export class ManagementApi {
 				tx,
 				lpInfo,
 			});
+			const withdrawnAmounts = protocolApi.calcWithdrawAmountsOut({
+				lpInfo,
+			});
 
 			// set deposit tx inputs
 			let coinTypes: CoinType[] = [];
 			let coinIds: TransactionArgument[] = [];
+			let amountsIn: CoinsToBalance = {};
 			for (const [coinIndex, coinArg] of withdrawnCoins.entries()) {
 				const coinType = lpInfo.withdrawCoinTypes[coinIndex];
 
@@ -120,6 +121,7 @@ export class ManagementApi {
 
 				coinTypes.push(coinType);
 				coinIds.push(coinArg);
+				amountsIn[coinType] = withdrawnAmounts[index];
 			}
 
 			// calc deposit estimations

@@ -12,7 +12,7 @@ import {
 	EventOnChain,
 	SupplyOnChain,
 } from "../../../general/types/castingTypes";
-import { ManagementWithdrawLpInfo } from "../../management/managementTypes";
+import { ManagementLpInfo } from "../../management/managementTypes";
 
 // =========================================================================
 //  Objects
@@ -55,11 +55,16 @@ export const isKriyaPoolObject = (
 	);
 };
 
-export interface KriyaLPTokenObject extends Object, ManagementWithdrawLpInfo {
+export interface KriyaLPTokenObject extends Object {
 	poolId: ObjectId;
 	lspBalance: Balance;
 	coinTypeX: CoinType;
 	coinTypeY: CoinType;
+}
+
+export interface KriyaLPInfo extends ManagementLpInfo {
+	lpToken: KriyaLPTokenObject;
+	pool: KriyaPoolObject;
 }
 
 // =========================================================================
