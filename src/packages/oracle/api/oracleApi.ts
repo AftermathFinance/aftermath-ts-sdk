@@ -1,7 +1,9 @@
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { ObjectId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers";
 import { Helpers } from "../../../general/utils";
 import { OracleAddresses, Timestamp } from "../../../types";
+import { PriceFeedStorage } from "../oracleTypes";
+import { OracleCasting } from "./oracleCasting";
 
 export class OracleApi {
     public readonly addresses: OracleAddresses;
@@ -18,6 +20,22 @@ export class OracleApi {
 
         this.addresses = addresses;
     }
+
+	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	public fetchPriceFeedStorage = async (
+		objectId: ObjectId
+	): Promise<PriceFeedStorage> => {
+		return this.Provider.Objects().fetchCastObject<PriceFeedStorage>(
+			{
+				objectId,
+				objectFromSuiObjectResponse:
+					OracleCasting.priceFeedStorageFromSuiObjectResponse,
+			}
+		);
+	};
 
 	// =========================================================================
 	//  Oracle Transactions

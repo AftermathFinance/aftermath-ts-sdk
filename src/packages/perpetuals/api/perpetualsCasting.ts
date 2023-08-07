@@ -10,8 +10,6 @@ import {
 	AccountManager,
 	MarketManager,
 	MarketState,
-	PriceFeed,
-	PriceFeedStorage,
 	Orderbook,
 	Order,
 	CritBitTree,
@@ -346,37 +344,5 @@ export class PerpetualsCasting {
 				BID
 			);
 		return [priorityQueueOfAskOrders, priorityQueueOfBidOrders];
-	};
-
-	// =========================================================================
-	//  Oracle
-	// =========================================================================
-	public static priceFeedStorageFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): PriceFeedStorage => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
-		return {
-			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
-		};
-	};
-
-	public static priceFeedFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): PriceFeed => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
-		const objectFields = getObjectFields(data) as ObjectContentFields;
-		return {
-			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
-			symbol: objectFields.symbol,
-			price: objectFields.price,
-			decimal: objectFields.decimal,
-			timestamp: objectFields.timestamp,
-		};
 	};
 }

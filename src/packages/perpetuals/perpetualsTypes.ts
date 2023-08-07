@@ -8,8 +8,7 @@ import {
 } from "../../general/types/generalTypes";
 import { Table } from "../../general/types/suiTypes";
 import { CoinType } from "../coin/coinTypes";
-
-export type IFixed = bigint;
+import { IFixed } from "../utilities/types";
 
 // =========================================================================
 //  BCS - Binary Canonical Serialization
@@ -292,21 +291,6 @@ export interface Orderbook extends Object {
 	minBid: bigint;
 	counter: bigint;
 }
-
-// =========================================================================
-//  Oracle
-// =========================================================================
-
-export interface PriceFeed extends Object {
-	symbol: string;
-	price: IFixed;
-	decimal: bigint;
-	timestamp: Timestamp;
-}
-
-export interface PriceFeedStorage extends Object {}
-
-export interface AuthorityCap extends Object {}
 
 // =========================================================================
 //  API

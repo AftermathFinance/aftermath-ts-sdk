@@ -2,7 +2,6 @@ import {
 	ObjectId,
 	SuiAddress,
 	SuiObjectResponse,
-	SuiRawData,
 	SuiRawMoveObject,
 	TransactionArgument,
 	TransactionBlock,
@@ -13,12 +12,10 @@ import {
 	CoinType,
 	AccountStruct,
 	PerpetualsAddresses,
-    OuterNode,
 } from "../../../types";
 import {
 	AccountManager,
 	MarketManager,
-	PriceFeedStorage,
 } from "../../../types";
 import { PerpetualsCasting } from "./perpetualsCasting"
 ;
@@ -26,7 +23,7 @@ import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { PerpetualsAccount } from "../perpetualsAccount";
 import { accountFromRaw, bcs, outerNodeFromRawPartial } from "../perpetualsTypes";
-import { BCS, StructTypeDefinition, TypeName } from "@mysten/bcs";
+import { StructTypeDefinition, TypeName } from "@mysten/bcs";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -85,18 +82,6 @@ export class PerpetualsApi {
 				objectId,
 				objectFromSuiObjectResponse:
 					PerpetualsCasting.marketManagerFromSuiObjectResponse,
-			}
-		);
-	};
-
-	public fetchPriceFeedStorage = async (
-		objectId: ObjectId
-	): Promise<PriceFeedStorage> => {
-		return this.Provider.Objects().fetchCastObject<PriceFeedStorage>(
-			{
-				objectId,
-				objectFromSuiObjectResponse:
-					PerpetualsCasting.priceFeedStorageFromSuiObjectResponse,
 			}
 		);
 	};
