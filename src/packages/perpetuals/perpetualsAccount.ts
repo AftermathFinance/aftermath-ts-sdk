@@ -7,7 +7,7 @@ import {
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsWithdrawCollateralBody,
 	AccountStruct,
-	PerpetualsPosition,
+	Position,
 	SuiNetwork,
 	Url,
 } from "../../types";
@@ -113,7 +113,7 @@ export class PerpetualsAccount extends Caller {
 
 	public positionForMarketId(inputs: {
 		marketId: bigint;
-	}): PerpetualsPosition {
+	}): Position {
 		try {
 			const posIndex = Number(this.account.marketIds.findIndex((id) => {
 				return id === inputs.marketId;
@@ -125,7 +125,7 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public marketIdForPosition(inputs: {
-		position: PerpetualsPosition;
+		position: Position;
 	}): bigint {
 		try {
 			const posIndex = this.account.positions.findIndex(

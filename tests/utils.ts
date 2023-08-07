@@ -4,7 +4,7 @@ import {
 } from "@mysten/sui.js";
 import { fromB64 } from "@mysten/bcs";
 import PriorityQueue from "priority-queue-typescript";
-import { PerpetualsOrderCasted } from "../src/types";
+import { OrderCasted } from "../src/types";
 import { AftermathApi } from "../src/general/providers";
 
 export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";
@@ -43,7 +43,7 @@ export const fromOraclePriceToOrderbookPrice = (
 };
 
 export const checkPQ = (
-	pq: PriorityQueue<PerpetualsOrderCasted>,
+	pq: PriorityQueue<OrderCasted>,
 	side: boolean
 ): boolean => {
 	if (side == ASK) return checkPQAsk(pq);
@@ -51,7 +51,7 @@ export const checkPQ = (
 };
 
 export const checkPQAsk = (
-	pq: PriorityQueue<PerpetualsOrderCasted>
+	pq: PriorityQueue<OrderCasted>
 ): boolean => {
 	let currentOrder = pq.poll()!;
 	while (pq.size() !== 0) {
@@ -68,7 +68,7 @@ export const checkPQAsk = (
 };
 
 export const checkPQBid = (
-	pq: PriorityQueue<PerpetualsOrderCasted>
+	pq: PriorityQueue<OrderCasted>
 ): boolean => {
 	let currentOrder = pq.poll()!;
 	while (pq.size() !== 0) {

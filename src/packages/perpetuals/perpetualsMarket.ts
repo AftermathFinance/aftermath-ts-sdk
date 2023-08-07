@@ -1,8 +1,8 @@
 import { Caller } from "../../general/utils/caller";
 import {
-	PerpetualsMarketParams,
-	PerpetualsMarketState,
-	PerpetualsOrderbookObject,
+	MarketParams,
+	MarketState,
+	Orderbook,
 	SuiNetwork,
 	Url,
 } from "../../types";
@@ -18,8 +18,8 @@ export class PerpetualsMarket extends Caller {
 	//  Class Members
 	// =========================================================================
 
-	public marketState: PerpetualsMarketState | undefined;
-	public orderbook: PerpetualsOrderbookObject | undefined;
+	public marketState: MarketState | undefined;
+	public orderbook: Orderbook | undefined;
 
 	// =========================================================================
 	//  Constructor
@@ -27,7 +27,7 @@ export class PerpetualsMarket extends Caller {
 
 	constructor(
 		public readonly marketId: bigint,
-		public readonly marketParams: PerpetualsMarketParams,
+		public readonly marketParams: MarketParams,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `perpetuals/markets/${marketId}`);
@@ -37,27 +37,27 @@ export class PerpetualsMarket extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async refreshMarketState(): Promise<PerpetualsMarketState> {
-		const marketState = await this.fetchApi<PerpetualsMarketState>(
+	public async refreshMarketState(): Promise<MarketState> {
+		const marketState = await this.fetchApi<MarketState>(
 			"market-state"
 		);
 		this.updateMarketState({ marketState });
 		return marketState;
 	}
 
-	public updateMarketState(inputs: { marketState: PerpetualsMarketState }) {
+	public updateMarketState(inputs: { marketState: MarketState }) {
 		this.marketState = inputs.marketState;
 	}
 
-	public async refreshOrderbook(): Promise<PerpetualsOrderbookObject> {
-		const orderbook = await this.fetchApi<PerpetualsOrderbookObject>(
+	public async refreshOrderbook(): Promise<Orderbook> {
+		const orderbook = await this.fetchApi<Orderbook>(
 			"orderbook"
 		);
 		this.updateOrderbook({ orderbook });
 		return orderbook;
 	}
 
-	public updateOrderbook(inputs: { orderbook: PerpetualsOrderbookObject }) {
+	public updateOrderbook(inputs: { orderbook: Orderbook }) {
 		this.orderbook = inputs.orderbook;
 	}
 }

@@ -76,19 +76,19 @@ bcs.registerAlias('UID', BCS.ADDRESS);
 //  Clearing House
 // =========================================================================
 
-export interface PerpetualsAdminCapabilityObject extends Object {
+export interface AdminCapability extends Object {
 	objectId: ObjectId;
 }
 
-export interface PerpetualsRegistryObject extends Object {
+export interface Registry extends Object {
 	activeCollaterals: string[];
 }
 
-export interface PerpetualsInsuranceFundObject extends Object {
+export interface InsuranceFunds extends Object {
 	balance: Balance;
 }
 
-export interface PerpetualsVaultObject extends Object {
+export interface Vault extends Object {
 	balance: Balance;
 }
 
@@ -96,13 +96,13 @@ export interface PerpetualsVaultObject extends Object {
 //  Account Manager
 // =========================================================================
 
-export interface PerpetualsAccountManagerObject extends Object {
+export interface AccountManager extends Object {
 	maxPositionsPerAccount: bigint;
 	maxPendingOrdersPerPosition: bigint;
 	nextAccountId: bigint;
 }
 
-export interface PerpetualsAccountCapabilityObject extends Object {
+export interface AccountCapability extends Object {
 	objectId: ObjectId;
 	accountId: bigint;
 }
@@ -110,16 +110,16 @@ export interface PerpetualsAccountCapabilityObject extends Object {
 export interface AccountStruct {
 	collateral: IFixed;
 	marketIds: bigint[];
-	positions: PerpetualsPosition[];
+	positions: Position[];
 }
 
-export interface PerpetualsPosition {
+export interface Position {
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;
 	cumFundingRateLong: IFixed;
 	cumFundingRateShort: IFixed;
-	asks: PerpetualsCritBitTree<bigint>;
-	bids: PerpetualsCritBitTree<bigint>;
+	asks: CritBitTree<bigint>;
+	bids: CritBitTree<bigint>;
 	asksQuantity: IFixed;
 	bidsQuantity: IFixed;
 }
@@ -128,14 +128,14 @@ export interface PerpetualsPosition {
 //  Market Manager
 // =========================================================================
 
-export interface PerpetualsMarketManagerObject extends Object {
+export interface MarketManager extends Object {
 	feesAccrued: IFixed;
 	netTransferFromIfToVault: IFixed;
 	minOrderUsdValue: IFixed;
 	marketIds: bigint[];
 }
 
-export interface PerpetualsMarketParams {
+export interface MarketParams {
 	marginRatioInitial: IFixed;
 	marginRatioMaintenance: IFixed;
 	baseAssetSymbol: string;
@@ -150,7 +150,7 @@ export interface PerpetualsMarketParams {
 	priceImpactFactor: IFixed;
 }
 
-export interface PerpetualsMarketState {
+export interface MarketState {
 	cumulativeFundingRate: IFixed;
 	fundingRateTimestamp: Timestamp;
 	lastIndexPrice: IFixed;
@@ -162,85 +162,85 @@ export interface PerpetualsMarketState {
 	openInterest: IFixed;
 }
 
-export interface PerpetualsMarginRatioProposal {
+export interface MarginRatioProposal {
 	maturity: bigint;
 	marginRatioInitial: IFixed;
 	marginRatioMaintenance: IFixed;
 }
 
-export interface PerpetualsMarketManagerDynamicFields {
-	paramsFields: PerpetualsMarketParamsDynamicField[];
-	stateFields: PerpetualsMarketStateDynamicField[];
-	orderbookFields: PerpetualsMarketOrderbookDynamicFieldObject[];
+export interface MarketManagerDynamicFields {
+	paramsFields: MarketParamsDynamicField[];
+	stateFields: MarketStateDynamicField[];
+	orderbookFields: MarketOrderbookDynamicFieldObject[];
 }
 
-export interface PerpetualsMarketParamsDynamicField {
-	value: PerpetualsMarketParams;
+export interface MarketParamsDynamicField {
+	value: MarketParams;
 }
 
-export interface PerpetualsMarketStateDynamicField {
-	value: PerpetualsMarketState;
+export interface MarketStateDynamicField {
+	value: MarketState;
 }
 
-export interface PerpetualsMarketOrderbookDynamicFieldObject extends Object {
-	value: PerpetualsOrderbookObject;
+export interface MarketOrderbookDynamicFieldObject extends Object {
+	value: Orderbook;
 }
 
-export interface PerpetualsMarketManagerDynamicFieldOnChain {
+export interface MarketManagerDynamicFieldOnChain {
 	data: {
 		fields: any;
 		type: AnyObjectType;
 	};
 }
 
-interface PerpetualsMarketParamsDynamicFieldFieldOnChain {
+interface MarketParamsDynamicFieldFieldOnChain {
 	id: {
 		id: ObjectId;
 	};
 	value: {
 		fields: {
-			value: PerpetualsMarketParams;
+			value: MarketParams;
 		};
 	};
 }
 
-export interface PerpetualsMarketParamsDynamicFieldOnChain {
+export interface MarketParamsDynamicFieldOnChain {
 	data: {
-		fields: PerpetualsMarketParamsDynamicFieldFieldOnChain;
+		fields: MarketParamsDynamicFieldFieldOnChain;
 	};
 }
 
-interface PerpetualsMarketStateDynamicFieldFieldOnChain {
+interface MarketStateDynamicFieldFieldOnChain {
 	id: {
 		id: ObjectId;
 	};
 	value: {
 		fields: {
-			value: PerpetualsMarketState;
+			value: MarketState;
 		};
 	};
 }
 
-export interface PerpetualsMarketManagerStateDynamicFieldOnChain {
+export interface MarketManagerStateDynamicFieldOnChain {
 	data: {
-		fields: PerpetualsMarketStateDynamicFieldFieldOnChain;
+		fields: MarketStateDynamicFieldFieldOnChain;
 	};
 }
 
-interface PerpetualsMarketOrderbookDynamicFieldFieldOnChain {
+interface MarketOrderbookDynamicFieldFieldOnChain {
 	id: {
 		id: ObjectId;
 	};
 	value: {
 		fields: {
-			value: PerpetualsOrderbookObject;
+			value: Orderbook;
 		};
 	};
 }
 
-export interface PerpetualsMarketOrderbookDynamicFieldOnChain {
+export interface MarketOrderbookDynamicFieldOnChain {
 	data: {
-		fields: PerpetualsMarketOrderbookDynamicFieldFieldOnChain;
+		fields: MarketOrderbookDynamicFieldFieldOnChain;
 	};
 }
 
@@ -248,46 +248,46 @@ export interface PerpetualsMarketOrderbookDynamicFieldOnChain {
 //  Orderbook
 // =========================================================================
 
-export interface PerpetualsCritBitTree<T> {
+export interface CritBitTree<T> {
 	root: bigint;
-	innerNodes: TableV<PerpetualsInnerNode>;
-	outerNodes: TableV<PerpetualsOuterNode<T>>;
+	innerNodes: TableV<InnerNode>;
+	outerNodes: TableV<OuterNode<T>>;
 }
 
 export interface TableV<T> {
 	contents: Table<number, T>;
 }
 
-export interface PerpetualsInnerNode {
+export interface InnerNode {
 	criticalBit: bigint;
 	parentIndex: bigint;
 	leftChildIndex: bigint;
 	rightChildIndex: bigint;
 }
 
-export interface PerpetualsOuterNode<T> {
+export interface OuterNode<T> {
 	key: IFixed;
 	value: T;
 	parentIndex: bigint;
 }
 
-export interface PerpetualsOrder {
+export interface Order {
 	accountId: bigint;
 	size: bigint;
 }
 
-export interface PerpetualsOrderCasted {
+export interface OrderCasted {
 	accountId: bigint;
 	size: bigint;
 	price: bigint;
 	counter: bigint;
 }
 
-export interface PerpetualsOrderbookObject extends Object {
+export interface Orderbook extends Object {
 	lotSize: bigint;
 	tickSize: bigint;
-	asks: PerpetualsCritBitTree<PerpetualsOrder>;
-	bids: PerpetualsCritBitTree<PerpetualsOrder>;
+	asks: CritBitTree<Order>;
+	bids: CritBitTree<Order>;
 	minAsk: bigint;
 	minBid: bigint;
 	counter: bigint;
@@ -297,16 +297,16 @@ export interface PerpetualsOrderbookObject extends Object {
 //  Oracle
 // =========================================================================
 
-export interface PerpetualsPriceFeedObject extends Object {
+export interface PriceFeed extends Object {
 	symbol: string;
 	price: IFixed;
 	decimal: bigint;
 	timestamp: Timestamp;
 }
 
-export interface PerpetualsPriceFeedStorageObject extends Object {}
+export interface PriceFeedStorage extends Object {}
 
-export interface PerpetualsAuthorityCapObject extends Object {}
+export interface AuthorityCap extends Object {}
 
 // =========================================================================
 //  API
@@ -325,7 +325,7 @@ export function accountFromRaw(data: any): AccountStruct {
 	};
 }
 
-export function positionFromRaw(data: any): PerpetualsPosition {
+export function positionFromRaw(data: any): Position {
 	return {
 		baseAssetAmount: BigInt(data.baseAssetAmount),
 		quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
@@ -340,17 +340,17 @@ export function positionFromRaw(data: any): PerpetualsPosition {
 
 export function critBitTreeFromRaw<T>(
 	data: any,
-): PerpetualsCritBitTree<T> {
+): CritBitTree<T> {
 	return {
 		root: BigInt(data.root),
-		innerNodes: tableVFromRaw<PerpetualsInnerNode>(data.innerNodes),
-		outerNodes: tableVFromRaw<PerpetualsOuterNode<T>>(
+		innerNodes: tableVFromRaw<InnerNode>(data.innerNodes),
+		outerNodes: tableVFromRaw<OuterNode<T>>(
 			data.outerNodes,
 		),
 	};
 }
 
-export function innerNodeFromRaw(data: any): PerpetualsInnerNode {
+export function innerNodeFromRaw(data: any): InnerNode {
 	return {
 		criticalBit: BigInt(data.criticalBit),
 		parentIndex: BigInt(data.parentIndex),
@@ -361,14 +361,14 @@ export function innerNodeFromRaw(data: any): PerpetualsInnerNode {
 
 export function outerNodeFromRawPartial<T>(
 	valueFromRaw: (v: any) => T
-): (v: any) => PerpetualsOuterNode<T> {
+): (v: any) => OuterNode<T> {
 	return (v: any) => outerNodeFromRaw(v, valueFromRaw);
 }
 
 export function outerNodeFromRaw<T>(
 	data: any,
 	valueFromRaw: (v: any) => T
-): PerpetualsOuterNode<T> {
+): OuterNode<T> {
 	return {
 		key: BigInt(data.key),
 		value: valueFromRaw(data.value),

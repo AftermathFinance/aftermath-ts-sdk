@@ -7,27 +7,27 @@ import {
     SuiRawMoveObject,
 } from "@mysten/sui.js";
 import {
-	PerpetualsAccountManagerObject,
-	PerpetualsMarketManagerObject,
-	PerpetualsMarketState,
-	PerpetualsPriceFeedObject,
-	PerpetualsPriceFeedStorageObject,
-	PerpetualsOrderbookObject,
-	PerpetualsOrder,
-	PerpetualsCritBitTree,
-	PerpetualsOrderCasted,
-	PerpetualsMarketManagerDynamicFieldOnChain,
-	PerpetualsMarketParamsDynamicFieldOnChain,
-	PerpetualsMarketParamsDynamicField,
-	PerpetualsMarketParams,
-	PerpetualsMarketOrderbookDynamicFieldObject,
-	PerpetualsMarketStateDynamicField,
-	PerpetualsMarketOrderbookDynamicFieldOnChain,
-	PerpetualsMarketManagerStateDynamicFieldOnChain,
-	PerpetualsInnerNode,
-	PerpetualsOuterNode,
+	AccountManager,
+	MarketManager,
+	MarketState,
+	PriceFeed,
+	PriceFeedStorage,
+	Orderbook,
+	Order,
+	CritBitTree,
+	OrderCasted,
+	MarketManagerDynamicFieldOnChain,
+	MarketParamsDynamicFieldOnChain,
+	MarketParamsDynamicField,
+	MarketParams,
+	MarketOrderbookDynamicFieldObject,
+	MarketStateDynamicField,
+	MarketOrderbookDynamicFieldOnChain,
+	MarketManagerStateDynamicFieldOnChain,
+	InnerNode,
+	OuterNode,
 	AccountStruct,
-    PerpetualsPosition,
+    Position,
     TableV,
     bcs,
 } from "../perpetualsTypes";
@@ -51,7 +51,7 @@ export class PerpetualsCasting {
 	// =========================================================================
 	public static accountManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsAccountManagerObject => {
+	): AccountManager => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -92,7 +92,7 @@ export class PerpetualsCasting {
 
 	public static positionFromRawData = (
 		data: any
-	): PerpetualsPosition => {
+	): Position => {
 		return {
 			baseAssetAmount: BigInt(data.baseAssetAmount),
 			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
@@ -110,7 +110,7 @@ export class PerpetualsCasting {
 	// =========================================================================
 	public static marketManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsMarketManagerObject => {
+	): MarketManager => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -126,12 +126,12 @@ export class PerpetualsCasting {
 	};
 
 	public static marketParamsDynamicFieldFromOnChain = (
-		dynamicField: PerpetualsMarketManagerDynamicFieldOnChain
-	): PerpetualsMarketParamsDynamicField => {
+		dynamicField: MarketManagerDynamicFieldOnChain
+	): MarketParamsDynamicField => {
 		if (!isMarketManagerParamsKeyType(dynamicField.data.type))
 			throw new Error("not params key type");
 		const paramsField =
-			dynamicField as PerpetualsMarketParamsDynamicFieldOnChain;
+			dynamicField as MarketParamsDynamicFieldOnChain;
 		return {
 			value: PerpetualsCasting.marketParamsFromRawData(
 				paramsField.data.fields.value.fields
@@ -140,12 +140,12 @@ export class PerpetualsCasting {
 	};
 
 	public static marketManagerStateDynamicFieldFromOnChain = (
-		dynamicField: PerpetualsMarketManagerDynamicFieldOnChain
-	): PerpetualsMarketStateDynamicField => {
+		dynamicField: MarketManagerDynamicFieldOnChain
+	): MarketStateDynamicField => {
 		if (!isMarketManagerStateKeyType(dynamicField.data.type))
 			throw new Error("not state key type");
 		const stateField =
-			dynamicField as PerpetualsMarketManagerStateDynamicFieldOnChain;
+			dynamicField as MarketManagerStateDynamicFieldOnChain;
 		return {
 			value: PerpetualsCasting.marketStateFromRawData(
 				stateField.data.fields
@@ -154,12 +154,12 @@ export class PerpetualsCasting {
 	};
 
 	public static marketManagerOrderbookDynamicFieldFromOnChain = async (
-		dynamicField: PerpetualsMarketManagerDynamicFieldOnChain
-	): Promise<PerpetualsMarketOrderbookDynamicFieldObject> => {
+		dynamicField: MarketManagerDynamicFieldOnChain
+	): Promise<MarketOrderbookDynamicFieldObject> => {
 		if (!isMarketManagerOrderbookKeyType(dynamicField.data.type))
 			throw new Error("not order book key type");
 		const orderbookField =
-			dynamicField as PerpetualsMarketOrderbookDynamicFieldOnChain;
+			dynamicField as MarketOrderbookDynamicFieldOnChain;
 
 		const objectType = dynamicField.data.type;
 
@@ -172,7 +172,7 @@ export class PerpetualsCasting {
 
 	public static marketParamsFromRawData = (
 		data: any
-	): PerpetualsMarketParams => {
+	): MarketParams => {
 		return {
 			marginRatioInitial: data.margin_ratio_initial,
 			marginRatioMaintenance: data.margin_ratio_maintenance,
@@ -191,7 +191,7 @@ export class PerpetualsCasting {
 
 	public static marketStateFromRawData = (
 		data: any
-	): PerpetualsMarketState => {
+	): MarketState => {
 		return {
 			cumulativeFundingRate: data.cum_funding_rate,
 			fundingRateTimestamp: Number(data.funding_rate_ts),
@@ -211,7 +211,7 @@ export class PerpetualsCasting {
 
 	public static outerNodeFromSuiDynamicFieldObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsOuterNode<bigint> => {
+	): OuterNode<bigint> => {
 		const rawObj = data.data?.bcs! as SuiRawMoveObject;
 		const outerNode = bcs.de("OuterNode<u64>", rawObj.bcsBytes, "base64");
 		return {
@@ -223,14 +223,14 @@ export class PerpetualsCasting {
 
 	public static critBitTreeFromAny<T>(
 		data: any
-	): PerpetualsCritBitTree<T> {
+	): CritBitTree<T> {
 		return {
 			root: BigInt(data.root),
-			innerNodes: PerpetualsCasting.tableVFromAny<PerpetualsInnerNode>(
+			innerNodes: PerpetualsCasting.tableVFromAny<InnerNode>(
 				data.innerNodes
 			),
 			outerNodes: PerpetualsCasting
-				.tableVFromAny<PerpetualsOuterNode<T>>(
+				.tableVFromAny<OuterNode<T>>(
 					data.outerNodes
 				),
 		};
@@ -249,34 +249,34 @@ export class PerpetualsCasting {
 		}
 	}
 
-	public static innerNodeFromAny = (data: any): PerpetualsInnerNode[] => {
-		const innerNodes: PerpetualsInnerNode[] = [];
+	public static innerNodeFromAny = (data: any): InnerNode[] => {
+		const innerNodes: InnerNode[] = [];
 		for (const node of data) {
 			innerNodes.push({
 				criticalBit: BigInt(node.criticalBit),
 				parentIndex: BigInt(node.parentIndex),
 				leftChildIndex: BigInt(node.leftChildIndex),
 				rightChildIndex: BigInt(node.rightChildIndex),
-			} as PerpetualsInnerNode);
+			} as InnerNode);
 		}
 		return innerNodes;
 	};
 
 	public static outerNodeFromAny = (
 		data: any
-	): PerpetualsOuterNode<PerpetualsOrder>[] => {
-		const outerNodes: PerpetualsOuterNode<PerpetualsOrder>[] = [];
+	): OuterNode<Order>[] => {
+		const outerNodes: OuterNode<Order>[] = [];
 		for (const node of data) {
 			outerNodes.push({
 				key: BigInt(node.key),
 				value: PerpetualsCasting.orderFromAny(node.value),
 				parentIndex: BigInt(node.parentIndex),
-			} as PerpetualsOuterNode<PerpetualsOrder>);
+			} as OuterNode<Order>);
 		}
 		return outerNodes;
 	};
 
-	public static orderFromAny = (data: any): PerpetualsOrder => {
+	public static orderFromAny = (data: any): Order => {
 		return {
 			accountId: BigInt(data.accountId),
 			size: BigInt(data.size),
@@ -285,7 +285,7 @@ export class PerpetualsCasting {
 
 	public static orderbookFromRawData = (
 		data: any
-	): PerpetualsOrderbookObject => {
+	): Orderbook => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -294,8 +294,8 @@ export class PerpetualsCasting {
 			objectId: data.id.id,
 			lotSize: BigInt(data.lot_size),
 			tickSize: BigInt(data.tick_size),
-			asks: PerpetualsCasting.critBitTreeFromAny<PerpetualsOrder>(data.asks),
-			bids: PerpetualsCasting.critBitTreeFromAny<PerpetualsOrder>(data.bids),
+			asks: PerpetualsCasting.critBitTreeFromAny<Order>(data.asks),
+			bids: PerpetualsCasting.critBitTreeFromAny<Order>(data.bids),
 			minAsk: BigInt(data.min_ask),
 			minBid: BigInt(data.max_bid),
 			counter: BigInt(data.counter),
@@ -303,13 +303,13 @@ export class PerpetualsCasting {
 	};
 
 	public static priorityQueueOfOrdersFromCritBitTree = async (
-		tree: PerpetualsCritBitTree<PerpetualsOrder>,
+		tree: CritBitTree<Order>,
 		direction: boolean
-	): Promise<PriorityQueue<PerpetualsOrderCasted>> => {
+	): Promise<PriorityQueue<OrderCasted>> => {
 		const comparator: Function = direction
 			? compareAskOrders
 			: compareBidOrders;
-		const priorityQueue = new PriorityQueue<PerpetualsOrderCasted>(
+		const priorityQueue = new PriorityQueue<OrderCasted>(
 			tree.outerNodes.contents.size,
 			comparator
 		);
@@ -333,8 +333,8 @@ export class PerpetualsCasting {
 	};
 
 	public static priorityQueuesOfOrdersFromOrderbook = async (
-		orderbook: PerpetualsOrderbookObject
-	): Promise<PriorityQueue<PerpetualsOrderCasted>[]> => {
+		orderbook: Orderbook
+	): Promise<PriorityQueue<OrderCasted>[]> => {
 		const priorityQueueOfAskOrders =
 			await PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
 				orderbook.asks,
@@ -353,7 +353,7 @@ export class PerpetualsCasting {
 	// =========================================================================
 	public static priceFeedStorageFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsPriceFeedStorageObject => {
+	): PriceFeedStorage => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -365,7 +365,7 @@ export class PerpetualsCasting {
 
 	public static priceFeedFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsPriceFeedObject => {
+	): PriceFeed => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 

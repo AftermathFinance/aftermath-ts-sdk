@@ -3,7 +3,7 @@ import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCreateAccountBody,
 	AccountStruct,
-	PerpetualsMarketParams,
+	MarketParams,
 	SuiNetwork,
 	Url,
 } from "../../types";
@@ -33,7 +33,7 @@ export class Perpetuals extends Caller {
 		const markets = await this.fetchApi<
 			{
 				marketId: bigint;
-				marketParams: PerpetualsMarketParams;
+				marketParams: MarketParams;
 			}[]
 		>("markets");
 
@@ -52,7 +52,7 @@ export class Perpetuals extends Caller {
 	}): Promise<PerpetualsMarket> {
 		const market = await this.fetchApi<{
 			marketId: bigint;
-			marketParams: PerpetualsMarketParams;
+			marketParams: MarketParams;
 		}>(`markets/${inputs.marketId}`);
 
 		return new PerpetualsMarket(

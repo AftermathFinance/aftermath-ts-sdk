@@ -1,8 +1,8 @@
-import { PerpetualsOrderCasted } from "../../../types";
+import { OrderCasted } from "../../../types";
 
 export const compareBidOrders = (
-	insertedOrder: PerpetualsOrderCasted,
-	comparableOrder: PerpetualsOrderCasted
+	insertedOrder: OrderCasted,
+	comparableOrder: OrderCasted
 ): number => {
 	if (insertedOrder.price < comparableOrder.price) return 1;
 	else if (insertedOrder.price > comparableOrder.price) return -1;
@@ -11,8 +11,8 @@ export const compareBidOrders = (
 };
 
 export const compareAskOrders = (
-	insertedOrder: PerpetualsOrderCasted,
-	comparableOrder: PerpetualsOrderCasted
+	insertedOrder: OrderCasted,
+	comparableOrder: OrderCasted
 ): number => {
 	if (insertedOrder.price > comparableOrder.price) return 1;
 	else if (insertedOrder.price < comparableOrder.price) return -1;

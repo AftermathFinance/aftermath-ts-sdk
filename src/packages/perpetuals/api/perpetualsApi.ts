@@ -13,12 +13,12 @@ import {
 	CoinType,
 	AccountStruct,
 	PerpetualsAddresses,
-    PerpetualsOuterNode,
+    OuterNode,
 } from "../../../types";
 import {
-	PerpetualsAccountManagerObject,
-	PerpetualsMarketManagerObject,
-	PerpetualsPriceFeedStorageObject,
+	AccountManager,
+	MarketManager,
+	PriceFeedStorage,
 } from "../../../types";
 import { PerpetualsCasting } from "./perpetualsCasting"
 ;
@@ -67,8 +67,8 @@ export class PerpetualsApi {
 
 	public fetchAccountManager = async (
 		objectId: ObjectId
-	): Promise<PerpetualsAccountManagerObject> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsAccountManagerObject>(
+	): Promise<AccountManager> => {
+		return this.Provider.Objects().fetchCastObject<AccountManager>(
 			{
 				objectId,
 				objectFromSuiObjectResponse:
@@ -79,8 +79,8 @@ export class PerpetualsApi {
 
 	public fetchMarketManager = async (
 		objectId: ObjectId
-	): Promise<PerpetualsMarketManagerObject> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsMarketManagerObject>(
+	): Promise<MarketManager> => {
+		return this.Provider.Objects().fetchCastObject<MarketManager>(
 			{
 				objectId,
 				objectFromSuiObjectResponse:
@@ -91,8 +91,8 @@ export class PerpetualsApi {
 
 	public fetchPriceFeedStorage = async (
 		objectId: ObjectId
-	): Promise<PerpetualsPriceFeedStorageObject> => {
-		return this.Provider.Objects().fetchCastObject<PerpetualsPriceFeedStorageObject>(
+	): Promise<PriceFeedStorage> => {
+		return this.Provider.Objects().fetchCastObject<PriceFeedStorage>(
 			{
 				objectId,
 				objectFromSuiObjectResponse:
