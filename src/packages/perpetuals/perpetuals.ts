@@ -2,7 +2,7 @@ import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCreateAccountBody,
-	PerpetualsAccountStruct,
+	AccountStruct,
 	PerpetualsMarketParams,
 	SuiNetwork,
 	Url,
@@ -67,7 +67,7 @@ export class Perpetuals extends Caller {
 		const accounts = await this.fetchApi<
 			{
 				accountId: bigint;
-				account: PerpetualsAccountStruct;
+				account: AccountStruct;
 			}[]
 		>(`accounts/`);
 

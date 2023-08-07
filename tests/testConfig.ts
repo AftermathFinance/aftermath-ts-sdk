@@ -3,10 +3,13 @@ import YAML from "yaml";
 import { Helpers } from "../src/general/utils";
 import { ExchangeAddresses, FaucetAddresses, OracleAddresses, PerpetualsAddresses, RustAddresses } from "../src/types";
 
-const RUST_CFG_PATH = "";
 // Point this to the path returned by the `config path` command of the Rust api
+const RUST_CFG_PATH = "/home/doom/.config/perp-keepers/default-config.yml";
 
 export function getConfigs(): [PerpetualsAddresses, FaucetAddresses, OracleAddresses] {
+	if (!RUST_CFG_PATH) {
+		throw "RUST_CFG_PATH not set, change it in testConfig.ts"
+	}
 	const file = fs.readFileSync(RUST_CFG_PATH, "utf8");
 	const rustCfg = YAML.parse(file) as RustAddresses;
 

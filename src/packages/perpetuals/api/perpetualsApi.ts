@@ -11,7 +11,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	CoinType,
-	PerpetualsAccountStruct,
+	AccountStruct,
 	PerpetualsAddresses,
     PerpetualsOuterNode,
 } from "../../../types";
@@ -24,8 +24,9 @@ import { PerpetualsCasting } from "./perpetualsCasting"
 ;
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
-import { ASK } from "../utils";
 import { PerpetualsAccount } from "../perpetualsAccount";
+import { accountFromRaw, bcs, outerNodeFromRawPartial } from "../perpetualsTypes";
+import { BCS, StructTypeDefinition, TypeName } from "@mysten/bcs";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -129,16 +130,18 @@ export class PerpetualsApi {
 		let account_struct = await this.fetchAccount(coinType, accountId);
 		let account = new PerpetualsAccount(accountId, account_struct);
 		let position = account.positionForMarketId({ marketId });
-		let table_vec_asks = await this
-			.fetchTableVec<PerpetualsOuterNode<bigint>>(
-				position.asks.outerNodes.contents.objectId,
-				PerpetualsCasting.outerNodeFromSuiDynamicFieldObjectResponse,
-			);
-		let table_vec_bids = await this
-			.fetchTableVec<PerpetualsOuterNode<bigint>>(
-				position.bids.outerNodes.contents.objectId,
-				PerpetualsCasting.outerNodeFromSuiDynamicFieldObjectResponse,
-			);
+
+		let table_vec_asks = await this.fetchTableVec(
+			position.asks.outerNodes.contents.objectId,
+			"OuterNode<u64>",
+			outerNodeFromRawPartial(BigInt),
+		);
+		let table_vec_bids = await this.fetchTableVec(
+			position.bids.outerNodes.contents.objectId,
+			"OuterNode<u64>",
+			outerNodeFromRawPartial(BigInt),
+		);
+
 		let askOrderIds: bigint[] = table_vec_asks.map((node) => node.key);
 		let bidOrderIds: bigint[] = table_vec_bids.map((node) => node.key);
 		return [askOrderIds, bidOrderIds];
@@ -147,7 +150,7 @@ export class PerpetualsApi {
     public fetchAccount = async (
 		coinType: CoinType,
 		accountId: bigint,
-	): Promise<PerpetualsAccountStruct> => {
+	): Promise<AccountStruct> => {
 		let accountDfInfos = await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
 			parentObjectId: this.addresses.objects.exchanges.get(coinType)?.accountManager!,
 		});
@@ -156,23 +159,27 @@ export class PerpetualsApi {
 			return (BigInt(info.name.value.account_id) === accountId)
 		})!;
 
-		return this.Provider.Objects().fetchCastObject({
-			objectId: accountDfInfo.objectId,
-			objectFromSuiObjectResponse: PerpetualsCasting
-				.accountFromSuiDynamicFieldObjectResponse
-		});
+		let objectResponse = await this
+			.Provider
+			.provider
+			.getObject({
+				id: accountDfInfo.objectId, options: { showBcs: true }
+			}) as SuiObjectResponse;
+		let bcsData = objectResponse.data?.bcs as SuiRawMoveObject;
+		let accountField = bcs.de("Field<u64, Account>", bcsData.bcsBytes, "base64");
+
+		return accountFromRaw(accountField.value);
     }
 
 	public async fetchTableVec<T>(
 		objectId: ObjectId,
-		castFn: (value: SuiObjectResponse) => T,
+		valueType: TypeName | StructTypeDefinition,
+		fromRaw: (value: any) => T,
 	): Promise<T[]> {
 		let dfs = await this
 			.Provider
 			.DynamicFields()
-			.fetchAllDynamicFieldsOfType({
-				parentObjectId: objectId,
-			});
+			.fetchAllDynamicFieldsOfType({ parentObjectId: objectId });
 		let idxs_and_ids = dfs
 			.map((value) => {
 				return {idx: value.name.value, id: value.objectId}
@@ -180,14 +187,14 @@ export class PerpetualsApi {
 			.sort((a, b) => a.idx - b.idx);
 		let values: T[] = [];
 		for (const { id } of idxs_and_ids) {
-			let value = await this
+			let resp = await this
 				.Provider
-				.Objects()
-				.fetchCastObject({
-					objectId: id,
-					objectFromSuiObjectResponse: castFn,
-				});
-			values.push(value);
+				.provider
+				.getObject({ id, options: { showBcs: true }}) as SuiObjectResponse;
+			const bcsData = resp.data?.bcs as SuiRawMoveObject;
+			const deserialized = bcs.de(`Field<u64, ${valueType}>`, bcsData.bcsBytes, "base64");
+			console.log("deserialized", deserialized);
+			values.push(fromRaw(deserialized.value));
 		}
 		return values
 	}

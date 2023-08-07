@@ -24,7 +24,34 @@ import { orderId } from "../src/packages/perpetuals/utils/critBitTreeUtils";
 // TEST CASE FLOW
 // =========================================================================
 describe("Perpetuals Tests", () => {
-	test("Test Case 1", async () => {
+	// test("Deserialize Account", async () => {
+	// 	const connection = new Connection({
+	// 		fullnode: "http://127.0.0.1:9000",
+	// 	});
+	// 	const provider = new JsonRpcProvider(connection);
+	// 	const [perpetualsConfig, faucetConfig, oracleConfig] = getConfigs();
+	// 	const aftermathApi = new AftermathApi(provider, {
+	// 		perpetuals: perpetualsConfig,
+	// 		faucet: faucetConfig,
+	// 		oracle: oracleConfig,
+	// 	});
+
+	// 	const usdcType = faucetConfig.packages.faucet + "::usdc::USDC";
+	// 	let account = await aftermathApi.Perpetuals().fetchAccount(
+	// 		usdcType,
+	// 		BigInt(2),
+	// 	);
+	// 	console.log(account);
+
+	// 	const [asks, bids] = await aftermathApi.Perpetuals().fetchPositionOrderIds(
+	// 		usdcType,
+	// 		BigInt(2),
+	// 		MARKET_ID0,
+	// 	);
+	// 	console.log(asks, bids);
+	// }, 5000000);
+
+	test("All entry functions", async () => {
 		const connection = new Connection({
 			fullnode: "http://127.0.0.1:9000",
 		});

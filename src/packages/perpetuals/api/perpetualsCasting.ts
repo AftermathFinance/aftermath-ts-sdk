@@ -4,6 +4,7 @@ import {
 	getObjectFields,
 	getObjectId,
 	getObjectType,
+    SuiRawMoveObject,
 } from "@mysten/sui.js";
 import {
 	PerpetualsAccountManagerObject,
@@ -25,9 +26,10 @@ import {
 	PerpetualsMarketManagerStateDynamicFieldOnChain,
 	PerpetualsInnerNode,
 	PerpetualsOuterNode,
-	PerpetualsAccountStruct,
+	AccountStruct,
     PerpetualsPosition,
     TableV,
+    bcs,
 } from "../perpetualsTypes";
 import PriorityQueue from "priority-queue-typescript";
 import {
@@ -66,7 +68,7 @@ export class PerpetualsCasting {
 
 	public static accountFromSuiDynamicFieldObjectResponse = (
 		data: SuiObjectResponse
-	): PerpetualsAccountStruct => {
+	): AccountStruct => {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		const value = objectFields.value.fields;
 		return {
@@ -78,19 +80,28 @@ export class PerpetualsCasting {
 		};
 	};
 
+	public static accountFromRawData = (
+		data: any
+	): AccountStruct => {
+		return {
+			collateral: BigInt(data.collateral),
+			marketIds: data.marketIds.map((id: number) => BigInt(id)),
+			positions: data.positions.map((pos: any) => PerpetualsCasting.positionFromRawData(pos)),
+		}
+	}
+
 	public static positionFromRawData = (
 		data: any
 	): PerpetualsPosition => {
-		data = data.fields;
 		return {
-			baseAssetAmount: data.base_asset_amount,
-			quoteAssetNotionalAmount: data.quote_asset_notional_amount,
-			cumFundingRateLong: data.cum_funding_rate_long,
-			cumFundingRateShort: data.cum_funding_rate_short,
+			baseAssetAmount: BigInt(data.baseAssetAmount),
+			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
+			cumFundingRateLong: BigInt(data.cumFundingRateLong),
+			cumFundingRateShort: BigInt(data.cumFundingRateShort),
 			asks: PerpetualsCasting.critBitTreeFromAny<bigint>(data.asks),
 			bids: PerpetualsCasting.critBitTreeFromAny<bigint>(data.bids),
-			asksQuantity: data.asks_quantity,
-			bidsQuantity: data.bids_quantity,
+			asksQuantity: BigInt(data.asksQuantity),
+			bidsQuantity: BigInt(data.bidsQuantity),
 		}
 	}
 
@@ -201,41 +212,40 @@ export class PerpetualsCasting {
 	public static outerNodeFromSuiDynamicFieldObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsOuterNode<bigint> => {
-		const objectFields = getObjectFields(data) as ObjectContentFields;
-		const value = objectFields.value.fields;
+		const rawObj = data.data?.bcs! as SuiRawMoveObject;
+		const outerNode = bcs.de("OuterNode<u64>", rawObj.bcsBytes, "base64");
 		return {
-			key: BigInt(value.key),
-			value: BigInt(value.value),
-			parentIndex: BigInt(value.parent_index),
+			key: BigInt(outerNode.key),
+			value: BigInt(outerNode.value),
+			parentIndex: BigInt(outerNode.parent_index),
 		};
 	};
 
 	public static critBitTreeFromAny<T>(
 		data: any
 	): PerpetualsCritBitTree<T> {
-		data = data.fields;
 		return {
 			root: BigInt(data.root),
 			innerNodes: PerpetualsCasting.tableVFromAny<PerpetualsInnerNode>(
-				data.inner_nodes
+				data.innerNodes
 			),
 			outerNodes: PerpetualsCasting
 				.tableVFromAny<PerpetualsOuterNode<T>>(
-					data.outer_nodes
+					data.outerNodes
 				),
 		};
 	};
 
 	public static tableVFromAny<T>(data: any): TableV<T> {
 		return {
-			contents: PerpetualsCasting.tableFromAny<number, T>(data.fields.contents),
+			contents: PerpetualsCasting.tableFromAny<number, T>(data.contents),
 		};
 	}
 
 	public static tableFromAny<K, V>(data: any): Table<K, V> {
 		return {
-			objectId: data.fields.id.id,
-			size: data.fields.size,
+			objectId: data.id.id,
+			size: data.size,
 		}
 	}
 
@@ -243,10 +253,10 @@ export class PerpetualsCasting {
 		const innerNodes: PerpetualsInnerNode[] = [];
 		for (const node of data) {
 			innerNodes.push({
-				criticalBit: BigInt(node.fields.critical_bit),
-				parentIndex: BigInt(node.fields.parent_index),
-				leftChildIndex: BigInt(node.fields.left_child_index),
-				rightChildIndex: BigInt(node.fields.right_child_index),
+				criticalBit: BigInt(node.criticalBit),
+				parentIndex: BigInt(node.parentIndex),
+				leftChildIndex: BigInt(node.leftChildIndex),
+				rightChildIndex: BigInt(node.rightChildIndex),
 			} as PerpetualsInnerNode);
 		}
 		return innerNodes;
@@ -258,9 +268,9 @@ export class PerpetualsCasting {
 		const outerNodes: PerpetualsOuterNode<PerpetualsOrder>[] = [];
 		for (const node of data) {
 			outerNodes.push({
-				key: node.fields.key,
-				value: PerpetualsCasting.orderFromAny(node.fields.value),
-				parentIndex: BigInt(node.fields.parent_index),
+				key: BigInt(node.key),
+				value: PerpetualsCasting.orderFromAny(node.value),
+				parentIndex: BigInt(node.parentIndex),
 			} as PerpetualsOuterNode<PerpetualsOrder>);
 		}
 		return outerNodes;
@@ -268,8 +278,8 @@ export class PerpetualsCasting {
 
 	public static orderFromAny = (data: any): PerpetualsOrder => {
 		return {
-			accountId: BigInt(data.fields.account_id),
-			size: BigInt(data.fields.size),
+			accountId: BigInt(data.accountId),
+			size: BigInt(data.size),
 		};
 	};
 

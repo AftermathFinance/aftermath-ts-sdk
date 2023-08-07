@@ -1,4 +1,5 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
+import { BCS, getSuiMoveConfig } from "@mysten/bcs";
+import { ObjectId } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
@@ -9,6 +10,67 @@ import { Table } from "../../general/types/suiTypes";
 import { CoinType } from "../coin/coinTypes";
 
 export type IFixed = bigint;
+
+// =========================================================================
+//  BCS - Binary Canonical Serialization
+// =========================================================================
+
+export const bcs = new BCS(getSuiMoveConfig());
+
+bcs.registerStructType("Account", {
+	collateral: BCS.U256,
+	marketIds: ['vector', BCS.U64],
+	positions: ['vector', "Position"],
+});
+
+
+bcs.registerStructType("Position", {
+	baseAssetAmount: BCS.U256,
+	quoteAssetNotionalAmount: BCS.U256,
+	cumFundingRateLong: BCS.U256,
+	cumFundingRateShort: BCS.U256,
+	asks: ["CritBitTree", BCS.U64],
+	bids: ["CritBitTree", BCS.U64],
+	asksQuantity: BCS.U256,
+	bidsQuantity: BCS.U256,
+
+});
+
+bcs.registerStructType(["CritBitTree", "T"], {
+	root: BCS.U64,
+	innerNodes: ["TableV", "InnerNode"],
+	outerNodes: ["TableV", ["OuterNode", "T"]],
+});
+
+bcs.registerStructType(["TableV", "T"], {
+	contents: ["Table", BCS.U64, "T"],
+});
+
+bcs.registerStructType(["Table", "K", "V"], {
+	id: "UID",
+	size: BCS.U64,
+});
+
+bcs.registerStructType("InnerNode", {
+	criticalBit: BCS.U8,
+	parentIndex: BCS.U64,
+	leftChildIndex: BCS.U64,
+	rightChildIndex: BCS.U64,
+});
+
+bcs.registerStructType(["OuterNode", "T"], {
+	key: BCS.U128,
+	value: "T",
+	parentIndex: BCS.U64,
+});
+
+bcs.registerStructType(["Field", "N", "V"], {
+	id: "UID",
+	name: "N",
+	value: "V",
+});
+
+bcs.registerAlias('UID', BCS.ADDRESS);
 
 // =========================================================================
 //  Clearing House
@@ -45,7 +107,7 @@ export interface PerpetualsAccountCapabilityObject extends Object {
 	accountId: bigint;
 }
 
-export interface PerpetualsAccountStruct {
+export interface AccountStruct {
 	collateral: IFixed;
 	marketIds: bigint[];
 	positions: PerpetualsPosition[];
@@ -249,6 +311,85 @@ export interface PerpetualsAuthorityCapObject extends Object {}
 // =========================================================================
 //  API
 // =========================================================================
+
+export function accountFromBcs(bcsBytes: string): AccountStruct {
+	const rawAcc = bcs.de("Account", bcsBytes, "base64");
+	return accountFromRaw(rawAcc);
+}
+
+export function accountFromRaw(data: any): AccountStruct {
+	return {
+		collateral: BigInt(data.collateral),
+		marketIds: data.marketIds.map((id: number) => BigInt(id)),
+		positions: data.positions.map((pos: any) => positionFromRaw(pos)),
+	};
+}
+
+export function positionFromRaw(data: any): PerpetualsPosition {
+	return {
+		baseAssetAmount: BigInt(data.baseAssetAmount),
+		quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
+		cumFundingRateLong: BigInt(data.cumFundingRateLong),
+		cumFundingRateShort: BigInt(data.cumFundingRateShort),
+		asks: critBitTreeFromRaw<bigint>(data.asks),
+		bids: critBitTreeFromRaw<bigint>(data.bids),
+		asksQuantity: BigInt(data.asksQuantity),
+		bidsQuantity: BigInt(data.bidsQuantity),
+	}
+}
+
+export function critBitTreeFromRaw<T>(
+	data: any,
+): PerpetualsCritBitTree<T> {
+	return {
+		root: BigInt(data.root),
+		innerNodes: tableVFromRaw<PerpetualsInnerNode>(data.innerNodes),
+		outerNodes: tableVFromRaw<PerpetualsOuterNode<T>>(
+			data.outerNodes,
+		),
+	};
+}
+
+export function innerNodeFromRaw(data: any): PerpetualsInnerNode {
+	return {
+		criticalBit: BigInt(data.criticalBit),
+		parentIndex: BigInt(data.parentIndex),
+		leftChildIndex: BigInt(data.leftChildren),
+		rightChildIndex: BigInt(data.rightChildren),
+	}
+}
+
+export function outerNodeFromRawPartial<T>(
+	valueFromRaw: (v: any) => T
+): (v: any) => PerpetualsOuterNode<T> {
+	return (v: any) => outerNodeFromRaw(v, valueFromRaw);
+}
+
+export function outerNodeFromRaw<T>(
+	data: any,
+	valueFromRaw: (v: any) => T
+): PerpetualsOuterNode<T> {
+	return {
+		key: BigInt(data.key),
+		value: valueFromRaw(data.value),
+		parentIndex: BigInt(data.parentIndex),
+	}
+}
+
+export function tableVFromRaw<T>(
+	data: any,
+): TableV<T> {
+	return {
+		contents: tableFromRaw<number, T>(data.contents),
+	};
+}
+
+export function tableFromRaw<K, V>(data: any): Table<K, V> {
+	return {
+		objectId: data.id,
+		size: data.size,
+	};
+}
 
 // =========================================================================
 //  Transactions

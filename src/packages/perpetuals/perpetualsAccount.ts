@@ -6,7 +6,7 @@ import {
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsWithdrawCollateralBody,
-	PerpetualsAccountStruct,
+	AccountStruct,
 	PerpetualsPosition,
 	SuiNetwork,
 	Url,
@@ -25,7 +25,7 @@ export class PerpetualsAccount extends Caller {
 
 	constructor(
 		public readonly accountId: bigint,
-		public account: PerpetualsAccountStruct,
+		public account: AccountStruct,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `perpetuals/accounts/${accountId}`);
@@ -35,13 +35,13 @@ export class PerpetualsAccount extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async refreshAccount(): Promise<PerpetualsAccountStruct> {
-		const account = await this.fetchApi<PerpetualsAccountStruct>("");
+	public async refreshAccount(): Promise<AccountStruct> {
+		const account = await this.fetchApi<AccountStruct>("");
 		this.updateAccount({ account });
 		return account;
 	}
 
-	public updateAccount(inputs: { account: PerpetualsAccountStruct }) {
+	public updateAccount(inputs: { account: AccountStruct }) {
 		this.account = inputs.account;
 	}
 
