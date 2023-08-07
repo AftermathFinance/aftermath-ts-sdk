@@ -193,7 +193,6 @@ export class PerpetualsApi {
 				.getObject({ id, options: { showBcs: true }}) as SuiObjectResponse;
 			const bcsData = resp.data?.bcs as SuiRawMoveObject;
 			const deserialized = bcs.de(`Field<u64, ${valueType}>`, bcsData.bcsBytes, "base64");
-			console.log("deserialized", deserialized);
 			values.push(fromRaw(deserialized.value));
 		}
 		return values
