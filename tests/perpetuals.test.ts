@@ -97,6 +97,12 @@ describe("Perpetuals Tests", () => {
 		// 	});
 		// await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
 
+		console.log("AccountManager");
+		console.log(await aftermathApi.Perpetuals().fetchAccountManager(usdcType));
+
+		console.log("MarketManager");
+		console.log(await aftermathApi.Perpetuals().fetchMarketManager(usdcType));
+
 		// Transfer and transfer back admin_capability
 		console.log("Transfer admin cap");
 		tx = await aftermathApi

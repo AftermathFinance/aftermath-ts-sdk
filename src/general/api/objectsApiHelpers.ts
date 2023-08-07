@@ -1,9 +1,11 @@
+import { BCS, TypeName } from "@mysten/bcs";
 import {
 	ObjectId,
 	SuiAddress,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
 	getObjectOwner,
+    SuiRawMoveObject,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, PackageId } from "../../types";
@@ -121,6 +123,20 @@ export class ObjectsApiHelpers {
 		return inputs.objectFromSuiObjectResponse(
 			await this.fetchObject(inputs)
 		);
+	};
+
+	public fetchObjectBcs = async (
+		objectId: ObjectId
+	): Promise<SuiObjectResponse> => {
+		const objectResponse = await this.Provider.provider.getObject({
+			id: objectId,
+			options: { showBcs: true },
+		});
+		if (objectResponse.error !== undefined)
+			throw new Error(
+				`an error occured fetching object: ${objectResponse.error.error}`
+			);
+		return objectResponse;
 	};
 
 	public fetchObjectBatch = async (inputs: {

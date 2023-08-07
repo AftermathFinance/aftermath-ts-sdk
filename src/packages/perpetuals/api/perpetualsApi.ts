@@ -12,17 +12,16 @@ import {
 	CoinType,
 	AccountStruct,
 	PerpetualsAddresses,
+    ExchangeAddresses,
 } from "../../../types";
 import {
 	AccountManager,
 	MarketManager,
 } from "../../../types";
-import { PerpetualsCasting } from "./perpetualsCasting"
-;
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { PerpetualsAccount } from "../perpetualsAccount";
-import { accountFromRaw, bcs, outerNodeFromRawPartial } from "../perpetualsTypes";
+import { accountFromRaw, accountManagerFromRaw, bcs, marketManagerFromRaw, outerNodeFromRawPartial } from "../perpetualsTypes";
 import { StructTypeDefinition, TypeName } from "@mysten/bcs";
 
 export class PerpetualsApi {
@@ -63,48 +62,38 @@ export class PerpetualsApi {
 	// =========================================================================
 
 	public fetchAccountManager = async (
-		objectId: ObjectId
+		coinType: CoinType,
 	): Promise<AccountManager> => {
-		return this.Provider.Objects().fetchCastObject<AccountManager>(
-			{
-				objectId,
-				objectFromSuiObjectResponse:
-					PerpetualsCasting.accountManagerFromSuiObjectResponse,
-			}
-		);
+		const exchangeCfg = this.getExchangeConfig(coinType);
+		return await this.fetchCastObjectBcs({
+			objectId: exchangeCfg.accountManager,
+			typeName: "AccountManager",
+			fromDeserialized: accountManagerFromRaw,
+		});
 	};
 
 	public fetchMarketManager = async (
-		objectId: ObjectId
+		coinType: CoinType,
 	): Promise<MarketManager> => {
-		return this.Provider.Objects().fetchCastObject<MarketManager>(
-			{
-				objectId,
-				objectFromSuiObjectResponse:
-					PerpetualsCasting.marketManagerFromSuiObjectResponse,
-			}
-		);
+		const exchangeCfg = this.getExchangeConfig(coinType);
+		return await this.fetchCastObjectBcs({
+			objectId: exchangeCfg.marketManager,
+			typeName: "MarketManager",
+			fromDeserialized: marketManagerFromRaw,
+		});
 	};
 
-	public fetchOwnedAccountCapObjectId = async (inputs: {
+	public fetchOwnedAccountCapObjectIds = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
-	}): Promise<ObjectId> => {
+	}): Promise<ObjectId[]> => {
 		const accountCapType = `{this.accountCapType}<{coinType}>`;
 		const accountCaps =
 			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
 				walletAddress: inputs.walletAddress,
 				objectType: accountCapType,
 			});
-		if (accountCaps.length <= 0)
-			throw new Error("unable to find account cap owned by address");
-
-		// TODO: handle multiple accounts
-		const accountCapId = accountCaps[0].data?.objectId;
-		if (!accountCapId)
-			throw new Error("unable to find account cap owned by address");
-
-		return accountCapId;
+		return accountCaps.map((x: SuiObjectResponse) => {return x.data!.objectId});
 	};
 
 	public fetchPositionOrderIds = async (
@@ -181,6 +170,20 @@ export class PerpetualsApi {
 			values.push(fromRaw(deserialized.value));
 		}
 		return values
+	}
+
+	public fetchCastObjectBcs = async <T>(inputs: {
+		objectId: ObjectId;
+		typeName: TypeName,
+		fromDeserialized: (
+			deserialized: any
+		) => T;
+	}): Promise<T> => {
+		const { objectId, typeName, fromDeserialized } = inputs;
+		const resp = await this.Provider.Objects().fetchObjectBcs(objectId);
+		const rawObj = resp.data?.bcs as SuiRawMoveObject;
+		const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
+		return fromDeserialized(deserialized);
 	}
 
 	// =========================================================================
@@ -784,4 +787,12 @@ export class PerpetualsApi {
 
 		return tx;
 	};
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	public getExchangeConfig = (coinType: CoinType): ExchangeAddresses => {
+		return this.addresses.objects.exchanges.get(coinType)!;
+	}
 }

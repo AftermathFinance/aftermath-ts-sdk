@@ -16,6 +16,25 @@ import { IFixed } from "../utilities/types";
 
 export const bcs = new BCS(getSuiMoveConfig());
 
+bcs.registerStructType("AccountManager", {
+	id: "UID",
+	maxPositionsPerAccount: BCS.U64,
+	maxPendingOrdersPerPosition: BCS.U64,
+	nextAccountId: BCS.U64,
+});
+
+bcs.registerStructType("MarketManager", {
+	id: "UID",
+	feesAccrued: BCS.U256,
+	minOrderUsdValue: BCS.U256,
+	liquidationTolerance: BCS.U256,
+})
+
+bcs.registerStructType("AccountCap", {
+	id: "UID",
+	accountId: BCS.U64,
+});
+
 bcs.registerStructType("Account", {
 	collateral: BCS.U256,
 	marketIds: ['vector', BCS.U64],
@@ -95,7 +114,14 @@ export interface Vault extends Object {
 //  Account Manager
 // =========================================================================
 
-export interface AccountManager extends Object {
+export interface AccountManagerObj extends Object {
+	maxPositionsPerAccount: bigint;
+	maxPendingOrdersPerPosition: bigint;
+	nextAccountId: bigint;
+}
+
+export interface AccountManager {
+	id: ObjectId;
 	maxPositionsPerAccount: bigint;
 	maxPendingOrdersPerPosition: bigint;
 	nextAccountId: bigint;
@@ -127,11 +153,18 @@ export interface Position {
 //  Market Manager
 // =========================================================================
 
-export interface MarketManager extends Object {
+export interface MarketManagerObj extends Object {
 	feesAccrued: IFixed;
 	netTransferFromIfToVault: IFixed;
 	minOrderUsdValue: IFixed;
 	marketIds: bigint[];
+}
+
+export interface MarketManager {
+	id: ObjectId;
+	feesAccrued: IFixed;
+	minOrderUsdValue: IFixed;
+	liquidationTolerance: IFixed;
 }
 
 export interface MarketParams {
@@ -293,12 +326,25 @@ export interface Orderbook extends Object {
 }
 
 // =========================================================================
-//  API
+//  Types from raw deserialized BCS
 // =========================================================================
 
-export function accountFromBcs(bcsBytes: string): AccountStruct {
-	const rawAcc = bcs.de("Account", bcsBytes, "base64");
-	return accountFromRaw(rawAcc);
+export function accountManagerFromRaw(data: any): AccountManager {
+	return {
+		id: data.id,
+		maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
+		maxPendingOrdersPerPosition: BigInt(data.maxPendingOrdersPerPosition),
+		nextAccountId: BigInt(data.nextAccountId),
+	};
+}
+
+export function marketManagerFromRaw(data: any): MarketManager {
+	return {
+		id: data.id,
+		feesAccrued: BigInt(data.feesAccrued),
+		minOrderUsdValue: BigInt(data.minOrderUsdValue),
+		liquidationTolerance: BigInt(data.liquidationTolerance),
+	}
 }
 
 export function accountFromRaw(data: any): AccountStruct {

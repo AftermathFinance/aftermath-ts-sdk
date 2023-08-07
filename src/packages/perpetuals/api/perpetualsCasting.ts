@@ -7,8 +7,7 @@ import {
     SuiRawMoveObject,
 } from "@mysten/sui.js";
 import {
-	AccountManager,
-	MarketManager,
+	AccountManagerObj,
 	MarketState,
 	Orderbook,
 	Order,
@@ -28,6 +27,7 @@ import {
     Position,
     TableV,
     bcs,
+    MarketManagerObj,
 } from "../perpetualsTypes";
 import PriorityQueue from "priority-queue-typescript";
 import {
@@ -49,7 +49,7 @@ export class PerpetualsCasting {
 	// =========================================================================
 	public static accountManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): AccountManager => {
+	): AccountManagerObj => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -108,7 +108,7 @@ export class PerpetualsCasting {
 	// =========================================================================
 	public static marketManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): MarketManager => {
+	): MarketManagerObj => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
