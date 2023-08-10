@@ -93,6 +93,8 @@ bcs.registerAlias('UID', BCS.ADDRESS);
 // =========================================================================
 //  Clearing House
 // =========================================================================
+// TODO: remove the 'extends Object' if these are the types deserialized via
+// BCS
 
 export interface AdminCapability extends Object {
 	objectId: ObjectId;
@@ -103,22 +105,18 @@ export interface Registry extends Object {
 }
 
 export interface InsuranceFunds extends Object {
-	balance: Balance;
+	balances: Balance[];
+	scaling_factor: bigint;
 }
 
 export interface Vault extends Object {
 	balance: Balance;
+	scaling_factor: bigint;
 }
 
 // =========================================================================
 //  Account Manager
 // =========================================================================
-
-export interface AccountManagerObj extends Object {
-	maxPositionsPerAccount: bigint;
-	maxPendingOrdersPerPosition: bigint;
-	nextAccountId: bigint;
-}
 
 export interface AccountManager {
 	id: ObjectId;
@@ -152,13 +150,6 @@ export interface Position {
 // =========================================================================
 //  Market Manager
 // =========================================================================
-
-export interface MarketManagerObj extends Object {
-	feesAccrued: IFixed;
-	netTransferFromIfToVault: IFixed;
-	minOrderUsdValue: IFixed;
-	marketIds: bigint[];
-}
 
 export interface MarketManager {
 	id: ObjectId;
