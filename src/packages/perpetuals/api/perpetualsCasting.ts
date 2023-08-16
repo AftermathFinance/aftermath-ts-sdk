@@ -4,7 +4,7 @@ import {
 	getObjectFields,
 	getObjectId,
 	getObjectType,
-    SuiRawMoveObject,
+	SuiRawMoveObject,
 } from "@mysten/sui.js";
 import {
 	AccountManagerObj,
@@ -24,16 +24,13 @@ import {
 	InnerNode,
 	OuterNode,
 	AccountStruct,
-    Position,
-    TableV,
-    bcs,
-    MarketManagerObj,
+	Position,
+	TableV,
+	bcs,
+	MarketManagerObj,
 } from "../perpetualsTypes";
 import PriorityQueue from "priority-queue-typescript";
-import {
-	ASK,
-	BID,
-} from "../utils/critBitTreeUtils";
+import { ASK, BID } from "../utils/critBitTreeUtils";
 import { compareAskOrders, compareBidOrders } from "../utils/comparators";
 import {
 	isMarketManagerOrderbookKeyType,
@@ -72,25 +69,23 @@ export class PerpetualsCasting {
 		return {
 			collateral: value.collateral,
 			marketIds: value.market_ids.map((id: any) => BigInt(id)),
-			positions: value.positions.map(
-				(p: any) => PerpetualsCasting.positionFromRawData(p)
+			positions: value.positions.map((p: any) =>
+				PerpetualsCasting.positionFromRawData(p)
 			),
 		};
 	};
 
-	public static accountFromRawData = (
-		data: any
-	): AccountStruct => {
+	public static accountFromRawData = (data: any): AccountStruct => {
 		return {
 			collateral: BigInt(data.collateral),
 			marketIds: data.marketIds.map((id: number) => BigInt(id)),
-			positions: data.positions.map((pos: any) => PerpetualsCasting.positionFromRawData(pos)),
-		}
-	}
+			positions: data.positions.map((pos: any) =>
+				PerpetualsCasting.positionFromRawData(pos)
+			),
+		};
+	};
 
-	public static positionFromRawData = (
-		data: any
-	): Position => {
+	public static positionFromRawData = (data: any): Position => {
 		return {
 			baseAssetAmount: BigInt(data.baseAssetAmount),
 			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
@@ -100,8 +95,8 @@ export class PerpetualsCasting {
 			bids: PerpetualsCasting.critBitTreeFromAny<bigint>(data.bids),
 			asksQuantity: BigInt(data.asksQuantity),
 			bidsQuantity: BigInt(data.bidsQuantity),
-		}
-	}
+		};
+	};
 
 	// =========================================================================
 	//  Market Manager
@@ -128,8 +123,7 @@ export class PerpetualsCasting {
 	): MarketParamsDynamicField => {
 		if (!isMarketManagerParamsKeyType(dynamicField.data.type))
 			throw new Error("not params key type");
-		const paramsField =
-			dynamicField as MarketParamsDynamicFieldOnChain;
+		const paramsField = dynamicField as MarketParamsDynamicFieldOnChain;
 		return {
 			value: PerpetualsCasting.marketParamsFromRawData(
 				paramsField.data.fields.value.fields
@@ -168,9 +162,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketParamsFromRawData = (
-		data: any
-	): MarketParams => {
+	public static marketParamsFromRawData = (data: any): MarketParams => {
 		return {
 			marginRatioInitial: data.margin_ratio_initial,
 			marginRatioMaintenance: data.margin_ratio_maintenance,
@@ -187,9 +179,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketStateFromRawData = (
-		data: any
-	): MarketState => {
+	public static marketStateFromRawData = (data: any): MarketState => {
 		return {
 			cumulativeFundingRate: data.cum_funding_rate,
 			fundingRateTimestamp: Number(data.funding_rate_ts),
@@ -219,20 +209,17 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static critBitTreeFromAny<T>(
-		data: any
-	): CritBitTree<T> {
+	public static critBitTreeFromAny<T>(data: any): CritBitTree<T> {
 		return {
 			root: BigInt(data.root),
 			innerNodes: PerpetualsCasting.tableVFromAny<InnerNode>(
 				data.innerNodes
 			),
-			outerNodes: PerpetualsCasting
-				.tableVFromAny<OuterNode<T>>(
-					data.outerNodes
-				),
+			outerNodes: PerpetualsCasting.tableVFromAny<OuterNode<T>>(
+				data.outerNodes
+			),
 		};
-	};
+	}
 
 	public static tableVFromAny<T>(data: any): TableV<T> {
 		return {
@@ -244,7 +231,7 @@ export class PerpetualsCasting {
 		return {
 			objectId: data.id.id,
 			size: data.size,
-		}
+		};
 	}
 
 	public static innerNodeFromAny = (data: any): InnerNode[] => {
@@ -260,9 +247,7 @@ export class PerpetualsCasting {
 		return innerNodes;
 	};
 
-	public static outerNodeFromAny = (
-		data: any
-	): OuterNode<Order>[] => {
+	public static outerNodeFromAny = (data: any): OuterNode<Order>[] => {
 		const outerNodes: OuterNode<Order>[] = [];
 		for (const node of data) {
 			outerNodes.push({
@@ -281,9 +266,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static orderbookFromRawData = (
-		data: any
-	): Orderbook => {
+	public static orderbookFromRawData = (data: any): Orderbook => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 

@@ -65,11 +65,12 @@ export class Perpetuals extends Caller {
 	public async getUserAccounts(): Promise<PerpetualsAccount[]> {
 		// TODO: Get all AccountCap from address to query perpetualsAccount
 		const accounts = await this.fetchApi<
+			// TODO: move to new type/interface
 			{
 				accountId: bigint;
 				account: AccountStruct;
 			}[]
-		>(`accounts/`);
+		>("accounts");
 
 		return accounts.map(
 			(account) =>

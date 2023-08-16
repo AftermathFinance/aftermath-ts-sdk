@@ -1,5 +1,5 @@
 import { BCS, getSuiMoveConfig } from "@mysten/bcs";
-import { ObjectId } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
@@ -9,6 +9,11 @@ import {
 import { Table } from "../../general/types/suiTypes";
 import { CoinType } from "../coin/coinTypes";
 import { IFixed } from "../utilities/types";
+
+// TEMPORARY TO BUILD
+export interface AccountManagerObj {}
+export interface MarketManagerObj {}
+// TEMPORARY TO BUILD
 
 // =========================================================================
 //  BCS - Binary Canonical Serialization
@@ -28,7 +33,7 @@ bcs.registerStructType("MarketManager", {
 	feesAccrued: BCS.U256,
 	minOrderUsdValue: BCS.U256,
 	liquidationTolerance: BCS.U256,
-})
+});
 
 bcs.registerStructType("AccountCap", {
 	id: "UID",
@@ -37,10 +42,9 @@ bcs.registerStructType("AccountCap", {
 
 bcs.registerStructType("Account", {
 	collateral: BCS.U256,
-	marketIds: ['vector', BCS.U64],
-	positions: ['vector', "Position"],
+	marketIds: ["vector", BCS.U64],
+	positions: ["vector", "Position"],
 });
-
 
 bcs.registerStructType("Position", {
 	baseAssetAmount: BCS.U256,
@@ -51,7 +55,6 @@ bcs.registerStructType("Position", {
 	bids: ["CritBitTree", BCS.U64],
 	asksQuantity: BCS.U256,
 	bidsQuantity: BCS.U256,
-
 });
 
 bcs.registerStructType(["CritBitTree", "T"], {
@@ -88,7 +91,7 @@ bcs.registerStructType(["Field", "N", "V"], {
 	value: "V",
 });
 
-bcs.registerAlias('UID', BCS.ADDRESS);
+bcs.registerAlias("UID", BCS.ADDRESS);
 
 // =========================================================================
 //  Clearing House
@@ -335,7 +338,7 @@ export function marketManagerFromRaw(data: any): MarketManager {
 		feesAccrued: BigInt(data.feesAccrued),
 		minOrderUsdValue: BigInt(data.minOrderUsdValue),
 		liquidationTolerance: BigInt(data.liquidationTolerance),
-	}
+	};
 }
 
 export function accountFromRaw(data: any): AccountStruct {
@@ -356,18 +359,14 @@ export function positionFromRaw(data: any): Position {
 		bids: critBitTreeFromRaw<bigint>(data.bids),
 		asksQuantity: BigInt(data.asksQuantity),
 		bidsQuantity: BigInt(data.bidsQuantity),
-	}
+	};
 }
 
-export function critBitTreeFromRaw<T>(
-	data: any,
-): CritBitTree<T> {
+export function critBitTreeFromRaw<T>(data: any): CritBitTree<T> {
 	return {
 		root: BigInt(data.root),
 		innerNodes: tableVFromRaw<InnerNode>(data.innerNodes),
-		outerNodes: tableVFromRaw<OuterNode<T>>(
-			data.outerNodes,
-		),
+		outerNodes: tableVFromRaw<OuterNode<T>>(data.outerNodes),
 	};
 }
 
@@ -377,7 +376,7 @@ export function innerNodeFromRaw(data: any): InnerNode {
 		parentIndex: BigInt(data.parentIndex),
 		leftChildIndex: BigInt(data.leftChildren),
 		rightChildIndex: BigInt(data.rightChildren),
-	}
+	};
 }
 
 export function outerNodeFromRawPartial<T>(
@@ -394,12 +393,10 @@ export function outerNodeFromRaw<T>(
 		key: BigInt(data.key),
 		value: valueFromRaw(data.value),
 		parentIndex: BigInt(data.parentIndex),
-	}
+	};
 }
 
-export function tableVFromRaw<T>(
-	data: any,
-): TableV<T> {
+export function tableVFromRaw<T>(data: any): TableV<T> {
 	return {
 		contents: tableFromRaw<number, T>(data.contents),
 	};
@@ -417,6 +414,7 @@ export function tableFromRaw<K, V>(data: any): Table<K, V> {
 // =========================================================================
 
 export interface ApiPerpetualsCreateAccountBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 }
 
@@ -429,11 +427,13 @@ export interface ApiPerpetualsCreateAccountBody {
 // =========================================================================
 
 export interface ApiPerpetualsDepositCollateralBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	coinAmount: bigint;
 }
 
 export interface ApiPerpetualsWithdrawCollateralBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	amount: bigint;
 }
@@ -443,6 +443,7 @@ export interface ApiPerpetualsWithdrawCollateralBody {
 // =========================================================================
 
 export interface ApiPerpetualsMarketOrderBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	marketId: bigint;
 	side: boolean;
@@ -450,6 +451,7 @@ export interface ApiPerpetualsMarketOrderBody {
 }
 
 export interface ApiPerpetualsLimitOrderBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	marketId: bigint;
 	side: boolean;
@@ -459,6 +461,7 @@ export interface ApiPerpetualsLimitOrderBody {
 }
 
 export interface ApiPerpetualsCancelOrderBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	marketId: bigint;
 	side: boolean;
@@ -470,6 +473,7 @@ export interface ApiPerpetualsCancelOrderBody {
 // =========================================================================
 
 export interface ApiPerpetualsClosePositionBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	marketId: bigint;
 }
