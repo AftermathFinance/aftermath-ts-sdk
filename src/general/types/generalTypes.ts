@@ -128,7 +128,7 @@ export interface IndexerResponse<DataType> {
 	data: DataType;
 }
 
-export interface IndexerDataWithCursorBody {
+export interface IndexerDataWithCursorQueryParams {
 	skip: number;
 	limit: number;
 }

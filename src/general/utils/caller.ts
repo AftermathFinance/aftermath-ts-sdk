@@ -2,7 +2,7 @@ import { TransactionBlock } from "@mysten/sui.js";
 import {
 	ApiEventsBody,
 	EventsWithCursor,
-	IndexerDataWithCursorBody,
+	IndexerDataWithCursorQueryParams,
 	IndexerResponse,
 	SerializedTransaction,
 	SuiNetwork,
@@ -197,11 +197,24 @@ export class Caller {
 
 	protected async fetchIndexerEvents<
 		EventType,
-		BodyType = IndexerDataWithCursorBody
-	>(url: Url, body: BodyType, signal?: AbortSignal) {
-		return this.fetchIndexer<EventType[], BodyType>(
-			`events/${url}`,
-			body,
+		QueryParamsType extends Object = IndexerDataWithCursorQueryParams
+	>(url: Url, queryParams: QueryParamsType, signal?: AbortSignal) {
+		const queryParamsUrl = new URLSearchParams(
+			Object.entries(queryParams).reduce(
+				(acc, [key, val]) => ({
+					...acc,
+					...(val === undefined ? {} : { [key]: val.toString() }),
+				}),
+				{} as Record<string, string>
+			)
+		);
+		return this.fetchIndexer<EventType[], QueryParamsType>(
+			`url${
+				queryParamsUrl.toString() !== ""
+					? "?" + queryParamsUrl.toString()
+					: ""
+			}`,
+			undefined,
 			signal
 		);
 	}
