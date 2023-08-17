@@ -141,10 +141,9 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	} => {
 		const possiblePools = inputs.pools
 			.filter((pool) =>
-				TurbosApi.isPoolForCoinTypes({
+				TurbosApi.isPoolForCoinType({
 					pool,
-					coinType1: inputs.coinInType,
-					coinType2: inputs.coinOutType,
+					coinType: inputs.coinOutType,
 				})
 			)
 			.sort((a, b) => {
@@ -163,9 +162,10 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
 			possiblePools,
 			(pool) =>
-				TurbosApi.isPoolForCoinType({
+				TurbosApi.isPoolForCoinTypes({
 					pool,
-					coinType: inputs.coinOutType,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
 				})
 		);
 

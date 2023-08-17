@@ -1,9 +1,4 @@
-import {
-	BigIntAsString,
-	CoinType,
-	Object,
-	RouterSerializablePool,
-} from "../../../types";
+import { CoinType, Object, RouterSerializablePool } from "../../../types";
 
 // =========================================================================
 //  Objects

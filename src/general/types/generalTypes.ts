@@ -119,3 +119,16 @@ export interface ApiDataWithCursorBody<CursorType> {
 export type ApiEventsBody = ApiDataWithCursorBody<EventId>;
 export type ApiDynamicFieldsBody = ApiDataWithCursorBody<ObjectId>;
 export type ApiTransactionsBody = ApiDataWithCursorBody<TransactionDigest>;
+
+// =========================================================================
+//  Indexer
+// =========================================================================
+
+export interface IndexerResponse<DataType> {
+	data: DataType;
+}
+
+export interface IndexerDataWithCursorQueryParams {
+	skip: number;
+	limit: number;
+}

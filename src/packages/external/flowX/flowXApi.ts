@@ -84,42 +84,43 @@ export class FlowXApi implements RouterAsyncApiInterface<FlowXPoolObject> {
 		exactMatchPools: FlowXPoolObject[];
 	} => {
 		const possiblePools = inputs.pools.filter((pool) =>
-			FlowXApi.isPoolForCoinTypes({
+			FlowXApi.isPoolForCoinType({
 				pool,
-				coinType1: inputs.coinInType,
-				coinType2: inputs.coinOutType,
+				coinType: inputs.coinOutType,
 			})
 		);
 
-		const [allExactMatchPools, allPartialMatchPools] = Helpers.bifilter(
+		// const [allExactMatchPools, allPartialMatchPools] = Helpers.bifilter(
+		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
 			possiblePools,
 			(pool) =>
-				FlowXApi.isPoolForCoinType({
+				FlowXApi.isPoolForCoinTypes({
 					pool,
-					coinType: inputs.coinOutType,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
 				})
 		);
 
-		const exactMatchPools =
-			allExactMatchPools.length > 0
-				? [allExactMatchPools[0]]
-				: allExactMatchPools;
+		// const exactMatchPools =
+		// 	allExactMatchPools.length > 0
+		// 		? [allExactMatchPools[0]]
+		// 		: allExactMatchPools;
 
-		let partialMatchPools: FlowXPoolObject[] = [];
-		for (const partialPool of allPartialMatchPools) {
-			if (
-				partialMatchPools.some((pool) =>
-					FlowXApi.isPoolForCoinTypes({
-						pool,
-						coinType1: partialPool.coinTypeX,
-						coinType2: partialPool.coinTypeY,
-					})
-				)
-			)
-				continue;
+		// let partialMatchPools: FlowXPoolObject[] = [];
+		// for (const partialPool of allPartialMatchPools) {
+		// 	if (
+		// 		partialMatchPools.some((pool) =>
+		// 			FlowXApi.isPoolForCoinTypes({
+		// 				pool,
+		// 				coinType1: partialPool.coinTypeX,
+		// 				coinType2: partialPool.coinTypeY,
+		// 			})
+		// 		)
+		// 	)
+		// 		continue;
 
-			partialMatchPools.push(partialPool);
-		}
+		// 	partialMatchPools.push(partialPool);
+		// }
 
 		return {
 			exactMatchPools,

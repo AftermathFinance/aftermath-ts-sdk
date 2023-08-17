@@ -206,10 +206,9 @@ export class DeepBookApi
 		exactMatchPools: DeepBookPoolObject[];
 	} => {
 		const possiblePools = inputs.pools.filter((pool) =>
-			DeepBookApi.isPoolForCoinTypes({
+			DeepBookApi.isPoolForCoinType({
 				pool,
-				coinType1: inputs.coinInType,
-				coinType2: inputs.coinOutType,
+				coinType: inputs.coinOutType,
 			})
 		);
 		// .sort((a, b) => {
@@ -234,9 +233,10 @@ export class DeepBookApi
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
 			possiblePools,
 			(pool) =>
-				DeepBookApi.isPoolForCoinType({
+				DeepBookApi.isPoolForCoinTypes({
 					pool,
-					coinType: inputs.coinOutType,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
 				})
 		);
 
