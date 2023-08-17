@@ -15,7 +15,9 @@ export class Perpetuals extends Caller {
 	//  Constants
 	// =========================================================================
 
-	public static readonly constants = {};
+	public static readonly constants = {
+		fundingFrequencyMs: 1000000, // TODO: set this value correctly
+	};
 
 	// =========================================================================
 	//  Constructor

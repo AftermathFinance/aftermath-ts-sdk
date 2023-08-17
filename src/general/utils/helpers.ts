@@ -1,3 +1,4 @@
+import { isValidSuiAddress } from "@mysten/sui.js";
 import { AnyObjectType, Balance, Slippage } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
