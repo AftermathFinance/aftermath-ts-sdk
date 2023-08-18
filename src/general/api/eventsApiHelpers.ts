@@ -23,6 +23,7 @@ export class EventsApiHelpers {
 
 	private static readonly constants = {
 		defaultLimitStepSize: 256,
+		maxLoops: 20,
 	};
 
 	// =========================================================================
@@ -122,6 +123,7 @@ export class EventsApiHelpers {
 	}) => {
 		const { fetchEventsFunc, timeUnit, time, limitStepSize } = inputs;
 
+		let loopCount = 0;
 		let eventsWithinTime: T[] = [];
 		let cursor: EventId | undefined = undefined;
 		do {
@@ -156,6 +158,11 @@ export class EventsApiHelpers {
 				return eventsWithinTime;
 
 			cursor = eventsWithCursor.nextCursor;
+
+			loopCount += 1;
+			if (loopCount >= EventsApiHelpers.constants.maxLoops) {
+				return eventsWithinTime;
+			}
 		} while (true);
 	};
 
