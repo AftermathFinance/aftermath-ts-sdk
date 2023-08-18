@@ -53,7 +53,6 @@ export class StakingApi {
 
 	private static readonly constants = {
 		moduleNames: {
-			interface: "interface",
 			actions: "actions",
 			events: "events",
 			stakedSuiVault: "staked_sui_vault",
@@ -194,7 +193,7 @@ export class StakingApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
-				StakingApi.constants.moduleNames.interface,
+				StakingApi.constants.moduleNames.stakedSuiVault,
 				"request_stake"
 			),
 			typeArguments: [],
@@ -216,7 +215,7 @@ export class StakingApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
-				StakingApi.constants.moduleNames.interface,
+				StakingApi.constants.moduleNames.stakedSuiVault,
 				"request_unstake_and_keep"
 			),
 			typeArguments: [],
@@ -247,7 +246,7 @@ export class StakingApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
-				StakingApi.constants.moduleNames.interface,
+				StakingApi.constants.moduleNames.stakedSuiVault,
 				"request_stake_staked_sui_vec"
 			),
 			typeArguments: [],
