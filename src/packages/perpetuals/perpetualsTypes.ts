@@ -27,7 +27,7 @@ bcs.registerStructType("MarketManager", {
 	id: "UID",
 	feesAccrued: BCS.U256,
 	minOrderUsdValue: BCS.U256,
-	liquidationTolerance: BCS.U256,
+	liquidationTolerance: BCS.U64,
 })
 
 bcs.registerStructType("AccountCap", {
@@ -118,6 +118,8 @@ export interface Vault extends Object {
 //  Account Manager
 // =========================================================================
 
+export interface AccountManagerObj extends AccountManager, Object {}
+
 export interface AccountManager {
 	id: ObjectId;
 	maxPositionsPerAccount: bigint;
@@ -151,11 +153,13 @@ export interface Position {
 //  Market Manager
 // =========================================================================
 
+export interface MarketManagerObj extends MarketManager, Object {}
+
 export interface MarketManager {
 	id: ObjectId;
 	feesAccrued: IFixed;
 	minOrderUsdValue: IFixed;
-	liquidationTolerance: IFixed;
+	liquidationTolerance: bigint;
 }
 
 export interface MarketParams {
@@ -315,103 +319,6 @@ export interface Orderbook extends Object {
 	minBid: bigint;
 	counter: bigint;
 }
-
-// =========================================================================
-//  Types from raw deserialized BCS
-// =========================================================================
-
-export function accountManagerFromRaw(data: any): AccountManager {
-	return {
-		id: data.id,
-		maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
-		maxPendingOrdersPerPosition: BigInt(data.maxPendingOrdersPerPosition),
-		nextAccountId: BigInt(data.nextAccountId),
-	};
-}
-
-export function marketManagerFromRaw(data: any): MarketManager {
-	return {
-		id: data.id,
-		feesAccrued: BigInt(data.feesAccrued),
-		minOrderUsdValue: BigInt(data.minOrderUsdValue),
-		liquidationTolerance: BigInt(data.liquidationTolerance),
-	}
-}
-
-export function accountFromRaw(data: any): AccountStruct {
-	return {
-		collateral: BigInt(data.collateral),
-		marketIds: data.marketIds.map((id: number) => BigInt(id)),
-		positions: data.positions.map((pos: any) => positionFromRaw(pos)),
-	};
-}
-
-export function positionFromRaw(data: any): Position {
-	return {
-		baseAssetAmount: BigInt(data.baseAssetAmount),
-		quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
-		cumFundingRateLong: BigInt(data.cumFundingRateLong),
-		cumFundingRateShort: BigInt(data.cumFundingRateShort),
-		asks: critBitTreeFromRaw<bigint>(data.asks),
-		bids: critBitTreeFromRaw<bigint>(data.bids),
-		asksQuantity: BigInt(data.asksQuantity),
-		bidsQuantity: BigInt(data.bidsQuantity),
-	}
-}
-
-export function critBitTreeFromRaw<T>(
-	data: any,
-): CritBitTree<T> {
-	return {
-		root: BigInt(data.root),
-		innerNodes: tableVFromRaw<InnerNode>(data.innerNodes),
-		outerNodes: tableVFromRaw<OuterNode<T>>(
-			data.outerNodes,
-		),
-	};
-}
-
-export function innerNodeFromRaw(data: any): InnerNode {
-	return {
-		criticalBit: BigInt(data.criticalBit),
-		parentIndex: BigInt(data.parentIndex),
-		leftChildIndex: BigInt(data.leftChildren),
-		rightChildIndex: BigInt(data.rightChildren),
-	}
-}
-
-export function outerNodeFromRawPartial<T>(
-	valueFromRaw: (v: any) => T
-): (v: any) => OuterNode<T> {
-	return (v: any) => outerNodeFromRaw(v, valueFromRaw);
-}
-
-export function outerNodeFromRaw<T>(
-	data: any,
-	valueFromRaw: (v: any) => T
-): OuterNode<T> {
-	return {
-		key: BigInt(data.key),
-		value: valueFromRaw(data.value),
-		parentIndex: BigInt(data.parentIndex),
-	}
-}
-
-export function tableVFromRaw<T>(
-	data: any,
-): TableV<T> {
-	return {
-		contents: tableFromRaw<number, T>(data.contents),
-	};
-}
-
-export function tableFromRaw<K, V>(data: any): Table<K, V> {
-	return {
-		objectId: data.id,
-		size: data.size,
-	};
-}
-
 // =========================================================================
 //  Transactions
 // =========================================================================

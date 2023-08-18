@@ -6,6 +6,7 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
+import { StructTypeDefinition, TypeName } from "@mysten/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
@@ -14,15 +15,11 @@ import {
 	PerpetualsAddresses,
     ExchangeAddresses,
 } from "../../../types";
-import {
-	AccountManager,
-	MarketManager,
-} from "../../../types";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { PerpetualsAccount } from "../perpetualsAccount";
-import { accountFromRaw, accountManagerFromRaw, bcs, marketManagerFromRaw, outerNodeFromRawPartial } from "../perpetualsTypes";
-import { StructTypeDefinition, TypeName } from "@mysten/bcs";
+import { AccountManagerObj, bcs, MarketManagerObj } from "../perpetualsTypes";
+import { PerpetualsCasting } from "./perpetualsCasting";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -61,25 +58,31 @@ export class PerpetualsApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchAccountManager = async (
+	public fetchAccountManagerObj = async (
 		coinType: CoinType,
-	): Promise<AccountManager> => {
+	): Promise<AccountManagerObj> => {
 		const exchangeCfg = this.getExchangeConfig(coinType);
-		return await this.fetchCastObjectBcs({
+		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.accountManager,
-			typeName: "AccountManager",
-			fromDeserialized: accountManagerFromRaw,
+			objectFromSuiObjectResponse: PerpetualsCasting.accountManagerObjFromSuiObjectResponse,
+			options: {
+				showBcs: true,
+				showType: true,
+			},
 		});
 	};
 
-	public fetchMarketManager = async (
+	public fetchMarketManagerObj = async (
 		coinType: CoinType,
-	): Promise<MarketManager> => {
+	): Promise<MarketManagerObj> => {
 		const exchangeCfg = this.getExchangeConfig(coinType);
-		return await this.fetchCastObjectBcs({
+		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.marketManager,
-			typeName: "MarketManager",
-			fromDeserialized: marketManagerFromRaw,
+			objectFromSuiObjectResponse: PerpetualsCasting.marketManagerObjFromSuiObjectResponse,
+			options: {
+				showBcs: true,
+				showType: true,
+			},
 		});
 	};
 
@@ -108,12 +111,12 @@ export class PerpetualsApi {
 		let table_vec_asks = await this.fetchTableVec(
 			position.asks.outerNodes.contents.objectId,
 			"OuterNode<u64>",
-			outerNodeFromRawPartial(BigInt),
+			PerpetualsCasting.outerNodeFromRawPartial(BigInt),
 		);
 		let table_vec_bids = await this.fetchTableVec(
 			position.bids.outerNodes.contents.objectId,
 			"OuterNode<u64>",
-			outerNodeFromRawPartial(BigInt),
+			PerpetualsCasting.outerNodeFromRawPartial(BigInt),
 		);
 
 		let askOrderIds: bigint[] = table_vec_asks.map((node) => node.key);
@@ -142,7 +145,7 @@ export class PerpetualsApi {
 		let bcsData = objectResponse.data?.bcs as SuiRawMoveObject;
 		let accountField = bcs.de("Field<u64, Account>", bcsData.bcsBytes, "base64");
 
-		return accountFromRaw(accountField.value);
+		return PerpetualsCasting.accountFromRaw(accountField.value);
     }
 
 	public async fetchTableVec<T>(
@@ -258,7 +261,10 @@ export class PerpetualsApi {
 		baseAssetSymbol: string;
 		fundingFrequencyMs: bigint;
 		fundingPeriodMs: bigint;
-		twapPeriodMs: bigint;
+		premiumTwapFrequencyMs: bigint;
+		premiumTwapPeriodMs: bigint;
+		spreadTwapFrequencyMs: bigint;
+		spreadTwapPeriodMs: bigint;
 		makerFee: bigint;
 		takerFee: bigint;
 		liquidationFee: bigint;
@@ -277,7 +283,10 @@ export class PerpetualsApi {
 			baseAssetSymbol,
 			fundingFrequencyMs,
 			fundingPeriodMs,
-			twapPeriodMs,
+			premiumTwapFrequencyMs,
+			premiumTwapPeriodMs,
+			spreadTwapFrequencyMs,
+			spreadTwapPeriodMs,
 			makerFee,
 			takerFee,
 			liquidationFee,
@@ -299,13 +308,18 @@ export class PerpetualsApi {
 				tx.object(this.addresses.objects.adminCapability),
 				tx.object(exchangeCfg.marketManager),
 				tx.object(exchangeCfg.insuranceFunds),
+				tx.object(Sui.constants.addresses.suiClockId),
+				tx.object(this.addresses.objects.oracle.objects.priceFeedStorage),
 				tx.pure(marketId),
 				tx.pure(marginRatioInitial),
 				tx.pure(marginRatioMaintenance),
 				tx.pure(baseAssetSymbol),
 				tx.pure(fundingFrequencyMs),
 				tx.pure(fundingPeriodMs),
-				tx.pure(twapPeriodMs),
+				tx.pure(premiumTwapFrequencyMs),
+				tx.pure(premiumTwapPeriodMs),
+				tx.pure(spreadTwapFrequencyMs),
+				tx.pure(spreadTwapPeriodMs),
 				tx.pure(makerFee),
 				tx.pure(takerFee),
 				tx.pure(liquidationFee),
@@ -512,6 +526,7 @@ export class PerpetualsApi {
 				tx.object(
 					this.addresses.objects.oracle.objects.priceFeedStorage
 				),
+				tx.object(Sui.constants.addresses.suiClockId),
 				tx.pure(liqeeAccountId),
 				tx.pure(sizes),
 			],
@@ -617,7 +632,10 @@ export class PerpetualsApi {
 		baseAssetSymbol: string;
 		fundingFrequencyMs: bigint;
 		fundingPeriodMs: bigint;
-		twapPeriodMs: bigint;
+		premiumTwapFrequencyMs: bigint;
+		premiumTwapPeriodMs: bigint;
+		spreadTwapFrequencyMs: bigint;
+		spreadTwapPeriodMs: bigint;
 		makerFee: bigint;
 		takerFee: bigint;
 		liquidationFee: bigint;

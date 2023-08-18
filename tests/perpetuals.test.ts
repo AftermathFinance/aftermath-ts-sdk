@@ -98,10 +98,10 @@ describe("Perpetuals Tests", () => {
 		// await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
 
 		console.log("AccountManager");
-		console.log(await aftermathApi.Perpetuals().fetchAccountManager(usdcType));
+		console.log(await aftermathApi.Perpetuals().fetchAccountManagerObj(usdcType));
 
 		console.log("MarketManager");
-		console.log(await aftermathApi.Perpetuals().fetchMarketManager(usdcType));
+		console.log(await aftermathApi.Perpetuals().fetchMarketManagerObj(usdcType));
 
 		// Transfer and transfer back admin_capability
 		console.log("Transfer admin cap");
@@ -156,7 +156,10 @@ describe("Perpetuals Tests", () => {
 			baseAssetSymbol: "BTC",
 			fundingFrequencyMs: BigInt(3600000),
 			fundingPeriodMs: BigInt(86400000),
-			twapPeriodMs: BigInt(60000),
+			premiumTwapFrequencyMs: BigInt(5000),
+			premiumTwapPeriodMs: BigInt(60000),
+			spreadTwapFrequencyMs: BigInt(5000),
+			spreadTwapPeriodMs: BigInt(60000),
 			makerFee: BigInt(0),
 			takerFee: BigInt(0),
 			liquidationFee: BigInt(0),
@@ -166,16 +169,6 @@ describe("Perpetuals Tests", () => {
 			lotSize: LOT_SIZE,
 			tickSize: TICK_SIZE,
 		});
-		await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
-
-		console.log("Update funding");
-		tx = await aftermathApi
-			.Perpetuals()
-			.fetchUpdateFundingTx({
-				walletAddress: await admin.getAddress(),
-				coinType: usdcType,
-				marketId: MARKET_ID0,
-			});
 		await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
 
 		// All users gets 10000 USDC
@@ -427,6 +420,17 @@ describe("Perpetuals Tests", () => {
 			size: orderSize,
 		});
 		await user4.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
+
+		// Skip this for now until we have a 'time until next funding' functionality
+		// console.log("Update funding");
+		// tx = await aftermathApi
+		// 	.Perpetuals()
+		// 	.fetchUpdateFundingTx({
+		// 		walletAddress: await admin.getAddress(),
+		// 		coinType: usdcType,
+		// 		marketId: MARKET_ID0,
+		// 	});
+		// await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
 
 		// User1 withdraw collateral 2000 USDC
 		// User2 withdraw collateral 2000 USDC

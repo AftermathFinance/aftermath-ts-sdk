@@ -1,11 +1,9 @@
-import { BCS, TypeName } from "@mysten/bcs";
 import {
 	ObjectId,
 	SuiAddress,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
 	getObjectOwner,
-    SuiRawMoveObject,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, PackageId } from "../../types";
@@ -96,15 +94,26 @@ export class ObjectsApiHelpers {
 		withDisplay?: boolean;
 	}): Promise<SuiObjectResponse> => {
 		const { objectId, withDisplay } = inputs;
-
-		const object = await this.Provider.provider.getObject({
-			id: objectId,
+		return await this.fetchObjectGeneral({
+			objectId,
 			options: {
 				showContent: true,
 				showDisplay: withDisplay,
 				showOwner: true,
 				showType: true,
 			},
+		})
+	};
+
+	public fetchObjectGeneral = async (inputs: {
+		objectId: ObjectId;
+		options?: SuiObjectDataOptions;
+	}): Promise<SuiObjectResponse> => {
+		const { objectId, options } = inputs;
+
+		const object = await this.Provider.provider.getObject({
+			id: objectId,
+			options,
 		});
 		if (object.error !== undefined)
 			throw new Error(
@@ -122,6 +131,20 @@ export class ObjectsApiHelpers {
 	}): Promise<ObjectType> => {
 		return inputs.objectFromSuiObjectResponse(
 			await this.fetchObject(inputs)
+		);
+	};
+
+	public fetchCastObjectGeneral = async <ObjectType>(inputs: {
+		objectId: ObjectId;
+		objectFromSuiObjectResponse: (
+			SuiObjectResponse: SuiObjectResponse
+		) => ObjectType;
+		options?: SuiObjectDataOptions,
+
+	}): Promise<ObjectType> => {
+		const { objectId, objectFromSuiObjectResponse, options } = inputs;
+		return objectFromSuiObjectResponse(
+			await this.fetchObjectGeneral({ objectId, options })
 		);
 	};
 
