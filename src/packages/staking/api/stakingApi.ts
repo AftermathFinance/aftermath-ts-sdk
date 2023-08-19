@@ -504,7 +504,7 @@ export class StakingApi {
 				cursor,
 				limit,
 			},
-			Casting.staking.stakeRequestEventFromOnChain
+			Casting.staking.stakeRequestEventFromIndexerOnChain
 		);
 	}
 
@@ -516,7 +516,7 @@ export class StakingApi {
 				cursor,
 				limit,
 			},
-			Casting.staking.unstakeEventFromOnChain
+			Casting.staking.unstakeEventFromIndexerOnChain
 		);
 	}
 
@@ -528,7 +528,7 @@ export class StakingApi {
 				cursor,
 				limit,
 			},
-			Casting.staking.afSuiMintedEventFromOnChain
+			Casting.staking.afSuiMintedEventFromIndexerOnChain
 		);
 	}
 

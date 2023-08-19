@@ -48,6 +48,7 @@ import {
 import {
 	PoolDepositEventOnChain,
 	PoolTradeEventOnChain,
+	PoolTradeEventOnChainFields,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
@@ -61,6 +62,7 @@ import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
+import { IndexerEventOnChain } from "../../../general/types/castingTypes";
 
 export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
@@ -214,7 +216,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				cursor,
 				limit,
 			},
-			Casting.pools.poolTradeEventFromOnChain
+			Casting.pools.poolTradeEventFromIndexerOnChain
 		);
 	}
 
@@ -230,7 +232,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				cursor,
 				limit,
 			},
-			Casting.pools.poolWithdrawEventFromOnChain
+			Casting.pools.poolWithdrawEventFromIndexerOnChain
 		);
 	}
 
@@ -246,7 +248,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				cursor,
 				limit,
 			},
-			Casting.pools.poolDepositEventFromOnChain
+			Casting.pools.poolDepositEventFromIndexerOnChain
 		);
 	}
 
@@ -262,7 +264,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 		const tradeEventsOnChain =
 			await this.Provider.indexerCaller.fetchIndexer<
-				PoolTradeEventOnChain[],
+				IndexerEventOnChain<PoolTradeEventOnChainFields>[],
 				undefined,
 				IndexerDataWithCursorQueryParams
 			>(
@@ -274,7 +276,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				}
 			);
 
-		return tradeEventsOnChain.map(Casting.pools.poolTradeEventFromOnChain);
+		return tradeEventsOnChain.map(
+			Casting.pools.poolTradeEventFromIndexerOnChain
+		);
 	}
 
 	// =========================================================================
