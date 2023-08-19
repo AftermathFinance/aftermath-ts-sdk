@@ -18,11 +18,16 @@ import {
 	Url,
 	ApiPoolAllCoinWithdrawBody,
 	NormalizedBalance,
+	IndexerDataWithCursorQueryParams,
+	ApiIndexerEventsBody,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
 import { Pools } from ".";
-import { Casting, Helpers } from "../../general/utils";
+import { Casting, Helpers, IndexerCaller } from "../../general/utils";
+import dayjs from "dayjs";
+import duration, { DurationUnitType } from "dayjs/plugin/duration";
+import { PoolTradeEventOnChain } from "./api/poolsApiCastingTypes";
 
 export class Pool extends Caller {
 	// =========================================================================
@@ -115,49 +120,48 @@ export class Pool extends Caller {
 	//  Events
 	// =========================================================================
 
-	public async getDepositEvents(inputs: ApiEventsBody) {
-		const eventsWithCursor = await this.fetchApiEvents<PoolDepositEvent>(
+	public async getDepositEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<PoolDepositEvent>(
 			"events/deposit",
 			inputs
 		);
-
-		// PRODUCTION: temporary until "And" filter can be used for event filtering
-		return {
-			...eventsWithCursor,
-			events: eventsWithCursor.events.filter(
-				(event) => event.poolId === this.pool.objectId
-			),
-		};
 	}
 
-	public async getWithdrawEvents(inputs: ApiEventsBody) {
-		const eventsWithCursor = await this.fetchApiEvents<PoolWithdrawEvent>(
+	public async getWithdrawEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<PoolWithdrawEvent>(
 			"events/withdraw",
 			inputs
 		);
-
-		// PRODUCTION: temporary until "And" filter can be used for event filtering
-		return {
-			...eventsWithCursor,
-			events: eventsWithCursor.events.filter(
-				(event) => event.poolId === this.pool.objectId
-			),
-		};
 	}
 
-	public async getTradeEvents(inputs: ApiEventsBody) {
-		const eventsWithCursor = await this.fetchApiEvents<PoolTradeEvent>(
+	public async getTradeEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<PoolTradeEvent>(
 			"events/trade",
 			inputs
 		);
+	}
 
-		// PRODUCTION: temporary until "And" filter can be used for event filtering
-		return {
-			...eventsWithCursor,
-			events: eventsWithCursor.events.filter(
-				(event) => event.poolId === this.pool.objectId
-			),
-		};
+	public async getTradeEventsWithinTime(inputs: {
+		indexerCaller: IndexerCaller;
+		timeUnit: DurationUnitType;
+		time: number;
+	}): Promise<PoolTradeEvent[]> {
+		const { indexerCaller, timeUnit, time } = inputs;
+
+		dayjs.extend(duration);
+		const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
+
+		const poolId = Helpers.addLeadingZeroesToType(this.pool.objectId);
+		const tradeEventsOnChain = await indexerCaller.fetchIndexer<
+			PoolTradeEventOnChain[],
+			undefined,
+			IndexerDataWithCursorQueryParams
+		>(`pools/${poolId}/swap-events-within-time/${durationMs}`, undefined, {
+			skip: 0,
+			limit: 10000, // max from mongo ?
+		});
+
+		return tradeEventsOnChain.map(Casting.pools.poolTradeEventFromOnChain);
 	}
 
 	// =========================================================================

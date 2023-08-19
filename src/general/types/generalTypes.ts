@@ -50,6 +50,11 @@ export type FilePath = string;
 //  Events
 // =========================================================================
 
+export interface IndexerEventsWithCursor<EventType> {
+	events: EventType[];
+	nextCursor: number | undefined;
+}
+
 export interface EventsWithCursor<EventType> {
 	events: EventType[];
 	nextCursor: EventId | null;
@@ -123,6 +128,8 @@ export type ApiTransactionsBody = ApiDataWithCursorBody<TransactionDigest>;
 // =========================================================================
 //  Indexer
 // =========================================================================
+
+export type ApiIndexerEventsBody = ApiDataWithCursorBody<number>;
 
 export interface IndexerResponse<DataType> {
 	data: DataType;

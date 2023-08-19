@@ -114,20 +114,21 @@ export class PoolsApiCasting {
 	public static poolTradeEventFromOnChain = (
 		eventOnChain: PoolTradeEventOnChain
 	): PoolTradeEvent => {
-		const fields = eventOnChain.parsedJson;
 		return {
-			poolId: fields.pool_id,
-			trader: fields.issuer,
-			typesIn: fields.types_in.map((type) =>
+			poolId: eventOnChain.pool_id,
+			trader: eventOnChain.issuer,
+			typesIn: eventOnChain.types_in.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
-			amountsIn: fields.amounts_in,
-			typesOut: fields.types_out.map((type) =>
+			amountsIn: eventOnChain.amounts_in.map((amount) => BigInt(amount)),
+			typesOut: eventOnChain.types_out.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
-			amountsOut: fields.amounts_out,
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
+			amountsOut: eventOnChain.amounts_out.map((amount) =>
+				BigInt(amount)
+			),
+			timestamp: eventOnChain.timestamp ?? undefined,
+			txnDigest: eventOnChain.txnDigest,
 			type: eventOnChain.type,
 		};
 	};
@@ -135,18 +136,17 @@ export class PoolsApiCasting {
 	public static poolDepositEventFromOnChain = (
 		eventOnChain: PoolDepositEventOnChain
 	): PoolDepositEvent => {
-		const fields = eventOnChain.parsedJson;
 		return {
-			poolId: fields.pool_id,
-			depositor: fields.issuer,
+			poolId: eventOnChain.pool_id,
+			depositor: eventOnChain.issuer,
 			// TODO: create a function for all this 0x nonsense
-			types: fields.types.map((type) =>
+			types: eventOnChain.types.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
-			deposits: fields.deposits,
-			lpMinted: fields.lp_coins_minted,
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
+			deposits: eventOnChain.deposits.map((deposit) => BigInt(deposit)),
+			lpMinted: BigInt(eventOnChain.lp_coins_minted),
+			timestamp: eventOnChain.timestamp ?? undefined,
+			txnDigest: eventOnChain.txnDigest,
 			type: eventOnChain.type,
 		};
 	};
@@ -154,17 +154,18 @@ export class PoolsApiCasting {
 	public static poolWithdrawEventFromOnChain = (
 		eventOnChain: PoolWithdrawEventOnChain
 	): PoolWithdrawEvent => {
-		const fields = eventOnChain.parsedJson;
 		return {
-			poolId: fields.pool_id,
-			withdrawer: fields.issuer,
-			types: fields.types.map((type) =>
+			poolId: eventOnChain.pool_id,
+			withdrawer: eventOnChain.issuer,
+			types: eventOnChain.types.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
-			withdrawn: fields.withdrawn,
-			lpBurned: fields.lp_coins_burned,
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
+			withdrawn: eventOnChain.withdrawn.map((withdraw) =>
+				BigInt(withdraw)
+			),
+			lpBurned: BigInt(eventOnChain.lp_coins_burned),
+			timestamp: eventOnChain.timestamp ?? undefined,
+			txnDigest: eventOnChain.txnDigest,
 			type: eventOnChain.type,
 		};
 	};
