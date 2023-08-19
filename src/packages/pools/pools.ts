@@ -143,25 +143,6 @@ export class Pools extends Caller {
 	}
 
 	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public async getDepositEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<PoolDepositEvent>("events/deposit", inputs);
-	}
-
-	public async getWithdrawEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<PoolWithdrawEvent>(
-			"events/withdraw",
-			inputs
-		);
-	}
-
-	public async getTradeEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<PoolTradeEvent>("events/trade", inputs);
-	}
-
-	// =========================================================================
 	//  Inspections
 	// =========================================================================
 

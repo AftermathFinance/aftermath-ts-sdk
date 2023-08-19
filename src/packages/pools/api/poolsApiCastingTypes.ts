@@ -8,6 +8,7 @@ import {
 } from "../../../types";
 import {
 	EventOnChain,
+	IndexerEventOnChain,
 	SupplyOnChain,
 } from "../../../general/types/castingTypes";
 
@@ -45,29 +46,29 @@ export type PoolCreateEventOnChain = EventOnChain<
 	} & PoolFieldsOnChain
 >;
 
-export type PoolTradeEventOnChain = EventOnChain<{
+export type PoolTradeEventOnChain = IndexerEventOnChain<{
 	pool_id: ObjectId;
 	issuer: SuiAddress;
 	types_in: CoinType[];
-	amounts_in: Balance[];
+	amounts_in: BigIntAsString[];
 	types_out: CoinType[];
-	amounts_out: Balance[];
+	amounts_out: BigIntAsString[];
 }>;
 
-export type PoolDepositEventOnChain = EventOnChain<{
+export type PoolDepositEventOnChain = IndexerEventOnChain<{
 	pool_id: ObjectId;
 	issuer: SuiAddress;
 	types: CoinType[];
-	deposits: Balance[];
-	lp_coins_minted: Balance;
+	deposits: BigIntAsString[];
+	lp_coins_minted: BigIntAsString;
 }>;
 
-export type PoolWithdrawEventOnChain = EventOnChain<{
+export type PoolWithdrawEventOnChain = IndexerEventOnChain<{
 	pool_id: ObjectId;
 	issuer: SuiAddress;
 	types: CoinType[];
-	withdrawn: Balance[];
-	lp_coins_burned: Balance;
+	withdrawn: BigIntAsString[];
+	lp_coins_burned: BigIntAsString;
 }>;
 
 export type PoolSpotPriceEventOnChain = EventOnChain<{
