@@ -69,21 +69,6 @@ export class Staking extends Caller {
 	}
 
 	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public async getStakeRequestEvents(inputs: ApiStakingEventsBody) {
-		return this.fetchApiEvents<StakeRequestEvent>(
-			"events/stake-request",
-			inputs
-		);
-	}
-
-	public async getUnstakeEvents(inputs: ApiStakingEventsBody) {
-		return this.fetchApiEvents<UnstakeEvent>("events/unstake", inputs);
-	}
-
-	// =========================================================================
 	//  Transactions
 	// =========================================================================
 

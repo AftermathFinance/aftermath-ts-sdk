@@ -42,6 +42,8 @@ import {
 	Url,
 	AftermathRouterWrapperAddresses,
 	PoolObject,
+	IndexerDataWithCursorQueryParams,
+	ApiIndexerEventsBody,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -58,6 +60,7 @@ import { PoolsApiCasting } from "./poolsApiCasting";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
+import duration, { DurationUnitType } from "dayjs/plugin/duration";
 
 export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
@@ -194,6 +197,85 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		);
 		return filteredIds;
 	};
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async fetchTradeEvents(
+		inputs: ApiIndexerEventsBody & {
+			poolId: ObjectId;
+		}
+	) {
+		const { poolId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`pools/${poolId}/events/swap`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.pools.poolTradeEventFromOnChain
+		);
+	}
+
+	public async fetchWithdrawEvents(
+		inputs: ApiIndexerEventsBody & {
+			poolId: ObjectId;
+		}
+	) {
+		const { poolId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`pools/${poolId}/events/withdraw`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.pools.poolWithdrawEventFromOnChain
+		);
+	}
+
+	public async fetchDepositEvents(
+		inputs: ApiIndexerEventsBody & {
+			poolId: ObjectId;
+		}
+	) {
+		const { poolId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`pools/${poolId}/events/deposit`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.pools.poolDepositEventFromOnChain
+		);
+	}
+
+	public async fetchTradeEventsWithinTime(inputs: {
+		poolId: ObjectId;
+		timeUnit: DurationUnitType;
+		time: number;
+	}): Promise<PoolTradeEvent[]> {
+		const { poolId, timeUnit, time } = inputs;
+
+		dayjs.extend(duration);
+		const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
+
+		const tradeEventsOnChain =
+			await this.Provider.indexerCaller.fetchIndexer<
+				PoolTradeEventOnChain[],
+				undefined,
+				IndexerDataWithCursorQueryParams
+			>(
+				`pools/${poolId}/swap-events-within-time/${durationMs}`,
+				undefined,
+				{
+					skip: 0,
+					limit: 10000, // max from mongo ?
+				}
+			);
+
+		return tradeEventsOnChain.map(Casting.pools.poolTradeEventFromOnChain);
+	}
 
 	// =========================================================================
 	//  Transaction Builders

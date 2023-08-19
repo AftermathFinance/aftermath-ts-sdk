@@ -1,6 +1,9 @@
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { BigIntAsString } from "../../../types";
-import { EventOnChain } from "../../../general/types/castingTypes";
+import {
+	EventOnChain,
+	IndexerEventOnChain,
+} from "../../../general/types/castingTypes";
 
 // =========================================================================
 //  Events
@@ -16,7 +19,7 @@ export interface ValidatorConfigFieldsOnChain {
 //  Events
 // =========================================================================
 
-export type StakeRequestEventOnChain = EventOnChain<{
+export type StakeRequestEventOnChain = IndexerEventOnChain<{
 	sui_id: ObjectId;
 	staked_sui_id: ObjectId;
 	sui_amount: BigIntAsString;
@@ -28,7 +31,7 @@ export type StakeRequestEventOnChain = EventOnChain<{
 	referrer: SuiAddress | null;
 }>;
 
-export type UnstakeEventOnChain = EventOnChain<{
+export type UnstakeEventOnChain = IndexerEventOnChain<{
 	afsui_id: ObjectId;
 	payback_coin_id: ObjectId;
 	provided_afsui_amount: BigIntAsString;
@@ -37,7 +40,7 @@ export type UnstakeEventOnChain = EventOnChain<{
 	epoch: BigIntAsString;
 }>;
 
-export type AfSuiMintedEventOnChain = EventOnChain<{
+export type AfSuiMintedEventOnChain = IndexerEventOnChain<{
 	sui_id: ObjectId;
 	staked_sui_amount: BigIntAsString;
 	minted_afsui_amount: BigIntAsString;

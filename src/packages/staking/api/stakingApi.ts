@@ -29,6 +29,8 @@ import {
 } from "../stakingTypes";
 import {
 	AnyObjectType,
+	ApiIndexerEventsBody,
+	ApiIndexerUserEventsBody,
 	Balance,
 	CoinType,
 	StakingAddresses,
@@ -406,15 +408,16 @@ export class StakingApi {
 	}): Promise<UnstakePosition[]> => {
 		const { walletAddress } = inputs;
 
-		const unstakeEvents = await (
-			await this.Provider.Events().fetchAllEvents({
-				fetchEventsFunc: (eventsInputs) =>
-					this.fetchUnstakeEvents({
-						...eventsInputs,
-						walletAddress,
-					}),
+		const eventsInputs = {
+			cursor: 0,
+			limits: 100,
+		};
+		const unstakeEvents = (
+			await this.fetchUnstakeEvents({
+				...eventsInputs,
+				walletAddress,
 			})
-		).filter((event) => event.staker === inputs.walletAddress);
+		).events;
 
 		return unstakeEvents;
 	};
@@ -424,27 +427,25 @@ export class StakingApi {
 	}): Promise<StakePosition[]> => {
 		const { walletAddress } = inputs;
 
+		const eventsInputs = {
+			cursor: 0,
+			limits: 100,
+		};
 		const [mintedEvents, requestEvents] = await Promise.all([
 			// afSui mint
 			(
-				await this.Provider.Events().fetchAllEvents({
-					fetchEventsFunc: (eventsInputs) =>
-						this.fetchAfSuiMintedEvents({
-							...eventsInputs,
-							walletAddress,
-						}),
+				await this.fetchAfSuiMintedEvents({
+					...eventsInputs,
+					walletAddress,
 				})
-			).filter((event) => event.staker === inputs.walletAddress),
+			).events,
 			// stake request
 			(
-				await this.Provider.Events().fetchAllEvents({
-					fetchEventsFunc: (eventsInput) =>
-						this.fetchStakeRequestEvents({
-							...eventsInput,
-							walletAddress,
-						}),
+				await this.fetchStakeRequestEvents({
+					...eventsInputs,
+					walletAddress,
 				})
-			).filter((event) => event.staker === inputs.walletAddress),
+			).events,
 		]);
 
 		const positions: StakePosition[] = requestEvents.map((request) => {
@@ -495,66 +496,41 @@ export class StakingApi {
 	//  Events
 	// =========================================================================
 
-	// TODO: add and filtering once available
-	public fetchStakeRequestEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			StakeRequestEventOnChain,
-			StakeRequestEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.stakeRequest,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
+	public async fetchStakeRequestEvents(inputs: ApiIndexerUserEventsBody) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/events/staked/${walletAddress}`,
+			{
+				cursor,
+				limit,
 			},
-			eventFromEventOnChain: Casting.staking.stakeRequestEventFromOnChain,
-		});
-	};
+			Casting.staking.stakeRequestEventFromOnChain
+		);
+	}
 
-	public fetchUnstakeEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			UnstakeEventOnChain,
-			UnstakeEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.unstake,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
+	public async fetchUnstakeEvents(inputs: ApiIndexerUserEventsBody) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/events/unstaked/${walletAddress}`,
+			{
+				cursor,
+				limit,
 			},
-			eventFromEventOnChain: Casting.staking.unstakeEventFromOnChain,
-		});
-	};
+			Casting.staking.unstakeEventFromOnChain
+		);
+	}
 
-	public fetchAfSuiMintedEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			AfSuiMintedEventOnChain,
-			AfSuiMintedEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.afSuiMinted,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
+	public async fetchAfSuiMintedEvents(inputs: ApiIndexerUserEventsBody) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/events/afsui_minted/${walletAddress}`,
+			{
+				cursor,
+				limit,
 			},
-			eventFromEventOnChain: Casting.staking.afSuiMintedEventFromOnChain,
-		});
-	};
+			Casting.staking.afSuiMintedEventFromOnChain
+		);
+	}
 
 	// =========================================================================
 	//  Calculations

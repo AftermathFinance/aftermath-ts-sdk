@@ -28,6 +28,7 @@ import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
+import { IndexerCaller } from "../utils";
 
 export class AftermathApi {
 	// =========================================================================
@@ -67,12 +68,9 @@ export class AftermathApi {
 	public constructor(
 		public readonly provider: JsonRpcProvider,
 		public readonly addresses: ConfigAddresses,
+		public readonly indexerCaller: IndexerCaller,
 		private readonly coinGeckoApiKey?: string
-	) {
-		this.provider = provider;
-		this.addresses = addresses;
-		this.coinGeckoApiKey = coinGeckoApiKey;
-	}
+	) {}
 
 	// =========================================================================
 	//  Class Object Creation
