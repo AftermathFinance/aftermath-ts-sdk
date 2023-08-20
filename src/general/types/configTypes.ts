@@ -268,10 +268,6 @@ export interface FarmsAddresses {
 	packages: {
 		vaults: SuiAddress;
 	};
-	objects: {
-		vaultsRegistry: ObjectId;
-		registeredVaultsTable: ObjectId;
-	};
 }
 
 export interface ExchangeAddresses {

@@ -27,6 +27,7 @@ import {
 	FarmsWithdrewPrincipalEvent,
 	FarmsDepositedPrincipalEvent,
 	FarmsHarvestedRewardsEvent,
+	FarmsCreatedVaultEvent,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -38,13 +39,14 @@ import {
 } from "@mysten/sui.js";
 import { Sui } from "../../sui";
 import {
-	DepositedPrincipalEventOnChain,
-	HarvestedRewardsEventOnChain,
-	LockedEventOnChain,
-	StakedEventOnChain,
-	StakedRelaxedEventOnChain,
-	UnlockedEventOnChain,
-	WithdrewPrincipalEventOnChain,
+	FarmsCreatedVaultEventOnChain,
+	FarmsDepositedPrincipalEventOnChain,
+	FarmsHarvestedRewardsEventOnChain,
+	FarmsLockedEventOnChain,
+	FarmsStakedEventOnChain,
+	FarmsStakedRelaxedEventOnChain,
+	FarmsUnlockedEventOnChain,
+	FarmsWithdrewPrincipalEventOnChain,
 } from "./farmsApiCastingTypes";
 
 export class FarmsApi {
@@ -101,6 +103,8 @@ export class FarmsApi {
 	};
 
 	public readonly eventTypes: {
+		createdVault: AnyObjectType;
+
 		// staking positions
 		// creation
 		staked: AnyObjectType;
@@ -134,6 +138,8 @@ export class FarmsApi {
 		};
 
 		this.eventTypes = {
+			createdVault: this.createdVaultEventType(),
+
 			// staking positions
 			// creation
 			staked: this.stakedEventType(),
@@ -174,13 +180,12 @@ export class FarmsApi {
 	public fetchAllStakingPools = async (): Promise<
 		FarmsStakingPoolObject[]
 	> => {
-		const dynamicFields =
-			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
-				parentObjectId: this.addresses.objects.registeredVaultsTable,
-			});
-		const objectIds: ObjectId[] = dynamicFields.map(
-			(field) => field.name.value
-		);
+		const objectIds = (
+			await this.Provider.Events().fetchAllEvents({
+				fetchEventsFunc: (eventInputs) =>
+					this.fetchCreatedVaultEvents(eventInputs),
+			})
+		).map((event) => event.vaultId);
 
 		return this.Provider.Objects().fetchCastObjectBatch({
 			objectIds,
@@ -224,12 +229,28 @@ export class FarmsApi {
 	// =========================================================================
 
 	// =========================================================================
+	//  Created Vault
+	// =========================================================================
+
+	public fetchCreatedVaultEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			FarmsCreatedVaultEventOnChain,
+			FarmsCreatedVaultEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.createdVault,
+			},
+			eventFromEventOnChain: Casting.farms.createdVaultEventFromOnChain,
+		});
+
+	// =========================================================================
 	//  Staking Position Creation
 	// =========================================================================
 
 	public fetchStakedEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			StakedEventOnChain,
+			FarmsStakedEventOnChain,
 			FarmsStakedEvent
 		>({
 			...inputs,
@@ -241,7 +262,7 @@ export class FarmsApi {
 
 	public fetchStakedRelaxedEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			StakedRelaxedEventOnChain,
+			FarmsStakedRelaxedEventOnChain,
 			FarmsStakedRelaxedEvent
 		>({
 			...inputs,
@@ -257,7 +278,7 @@ export class FarmsApi {
 
 	public fetchLockedEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			LockedEventOnChain,
+			FarmsLockedEventOnChain,
 			FarmsLockedEvent
 		>({
 			...inputs,
@@ -269,7 +290,7 @@ export class FarmsApi {
 
 	public fetchUnlockedEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			UnlockedEventOnChain,
+			FarmsUnlockedEventOnChain,
 			FarmsUnlockedEvent
 		>({
 			...inputs,
@@ -285,7 +306,7 @@ export class FarmsApi {
 
 	public fetchDepositedPrincipalEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			DepositedPrincipalEventOnChain,
+			FarmsDepositedPrincipalEventOnChain,
 			FarmsDepositedPrincipalEvent
 		>({
 			...inputs,
@@ -298,7 +319,7 @@ export class FarmsApi {
 
 	public fetchWithdrewPrincipalEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			WithdrewPrincipalEventOnChain,
+			FarmsWithdrewPrincipalEventOnChain,
 			FarmsWithdrewPrincipalEvent
 		>({
 			...inputs,
@@ -315,7 +336,7 @@ export class FarmsApi {
 
 	public fetchHarvestedRewardsEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			HarvestedRewardsEventOnChain,
+			FarmsHarvestedRewardsEventOnChain,
 			FarmsHarvestedRewardsEvent
 		>({
 			...inputs,
@@ -607,7 +628,6 @@ export class FarmsApi {
 			),
 			typeArguments: [inputs.stakeCoinType],
 			arguments: [
-				tx.object(this.addresses.objects.vaultsRegistry), // VaultRegistry
 				tx.pure(inputs.lockEnforcement === "Strict" ? 0 : 1, "u64"),
 				tx.pure(inputs.minLockDurationMs, "u64"),
 				tx.pure(inputs.maxLockDurationMs, "u64"),
@@ -1024,6 +1044,17 @@ export class FarmsApi {
 	// =========================================================================
 	//  Event Types
 	// =========================================================================
+
+	// =========================================================================
+	//  Created Vault
+	// =========================================================================
+
+	private createdVaultEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaults,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.createdVault
+		);
 
 	// =========================================================================
 	//  Staking Position Creation

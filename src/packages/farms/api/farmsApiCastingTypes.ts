@@ -9,7 +9,7 @@ import {
 //  Objects
 // =========================================================================
 
-export interface AfterburnerVaultFieldsOnChain {
+export interface FarmsAfterburnerVaultFieldsOnChain {
 	id: ObjectId;
 	type_names: CoinType[];
 	rewards: BigIntAsString[];
@@ -28,7 +28,7 @@ export interface AfterburnerVaultFieldsOnChain {
 	min_stake_amount: BigIntAsString;
 }
 
-export interface StakedPositionFieldsOnChain {
+export interface FarmsStakedPositionFieldsOnChain {
 	id: ObjectId;
 	afterburner_vault_id: ObjectId;
 	balance: BigIntAsString;
@@ -43,12 +43,12 @@ export interface StakedPositionFieldsOnChain {
 	multiplier_rewards_debt: BigIntAsString[];
 }
 
-export interface VaultRegistryFieldsOnChain {
+export interface FarmsVaultRegistryFieldsOnChain {
 	id: ObjectId;
 	registered_vaults: TableOnChain;
 }
 
-export interface StakingPoolOwnerCapFieldsOnChain {
+export interface FarmsStakingPoolOwnerCapFieldsOnChain {
 	id: ObjectId;
 	afterburner_vault_id: ObjectId;
 }
@@ -57,13 +57,13 @@ export interface StakingPoolOwnerCapFieldsOnChain {
 //  Events
 // =========================================================================
 
-export type AddedRewardEventOnChain = EventOnChain<{
+export type FarmsAddedRewardEventOnChain = EventOnChain<{
 	vault_id: ObjectId;
 	reward_type: CoinType;
 	reward_amount: BigIntAsString;
 }>;
 
-export type CreatedVaultEventOnChain = EventOnChain<{
+export type FarmsCreatedVaultEventOnChain = EventOnChain<{
 	vault_id: ObjectId;
 	stake_type: CoinType;
 	min_lock_duration_ms: BigIntAsString;
@@ -72,29 +72,29 @@ export type CreatedVaultEventOnChain = EventOnChain<{
 	min_stake_amount: BigIntAsString;
 }>;
 
-export type DepositedPrincipalEventOnChain = EventOnChain<{
+export type FarmsDepositedPrincipalEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	amount: BigIntAsString;
 }>;
 
-export type DestroyedStakedPositionEventOnChain = EventOnChain<{
+export type FarmsDestroyedStakedPositionEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 }>;
 
-export type HarvestedRewardsEventOnChain = EventOnChain<{
+export type FarmsHarvestedRewardsEventOnChain = EventOnChain<{
 	afterburner_vault_id: ObjectId;
 	reward_types: CoinType[];
 	reward_amounts: BigIntAsString[];
 }>;
 
-export type IncreasedEmissionsEventOnChain = EventOnChain<{
+export type FarmsIncreasedEmissionsEventOnChain = EventOnChain<{
 	vault_id: ObjectId;
 	reward_type: CoinType;
 	emission_schedule_ms: BigIntAsString;
 	emission_rate: BigIntAsString;
 }>;
 
-export type InitializedRewardEventOnChain = EventOnChain<{
+export type FarmsInitializedRewardEventOnChain = EventOnChain<{
 	vault_id: ObjectId;
 	reward_type: CoinType;
 	reward_amount: BigIntAsString;
@@ -102,24 +102,24 @@ export type InitializedRewardEventOnChain = EventOnChain<{
 	emission_start_ms: BigIntAsString;
 }>;
 
-export type JoinedEventOnChain = EventOnChain<{
+export type FarmsJoinedEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	other_staked_position_id: ObjectId;
 }>;
 
-export type LockedEventOnChain = EventOnChain<{
+export type FarmsLockedEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	lock_start_timestamp_ms: BigIntAsString;
 	lock_duration_ms: BigIntAsString;
 	lock_multiplier: BigIntAsString;
 }>;
 
-export type SplitEventOnChain = EventOnChain<{
+export type FarmsSplitEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	split_staked_position_id: ObjectId;
 }>;
 
-export type StakedEventOnChain = EventOnChain<{
+export type FarmsStakedEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	staked_type: CoinType;
@@ -130,7 +130,7 @@ export type StakedEventOnChain = EventOnChain<{
 	lock_multiplier: BigIntAsString;
 }>;
 
-export type StakedRelaxedEventOnChain = EventOnChain<{
+export type FarmsStakedRelaxedEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	staked_type: CoinType;
@@ -139,11 +139,11 @@ export type StakedRelaxedEventOnChain = EventOnChain<{
 	lock_end_timestamp_ms: BigIntAsString;
 }>;
 
-export type UnlockedEventOnChain = EventOnChain<{
+export type FarmsUnlockedEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 }>;
 
-export type WithdrewPrincipalEventOnChain = EventOnChain<{
+export type FarmsWithdrewPrincipalEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	amount: BigIntAsString;
 }>;

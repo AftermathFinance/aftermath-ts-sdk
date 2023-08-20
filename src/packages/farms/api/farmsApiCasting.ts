@@ -5,23 +5,23 @@ import {
 	getObjectType,
 } from "@mysten/sui.js";
 import {
-	AddedRewardEventOnChain,
-	AfterburnerVaultFieldsOnChain,
-	CreatedVaultEventOnChain,
-	DepositedPrincipalEventOnChain,
-	DestroyedStakedPositionEventOnChain,
-	HarvestedRewardsEventOnChain,
-	IncreasedEmissionsEventOnChain,
-	InitializedRewardEventOnChain,
-	JoinedEventOnChain,
-	LockedEventOnChain,
-	SplitEventOnChain,
-	StakedEventOnChain,
-	StakedRelaxedEventOnChain,
-	StakedPositionFieldsOnChain,
-	StakingPoolOwnerCapFieldsOnChain,
-	UnlockedEventOnChain,
-	WithdrewPrincipalEventOnChain,
+	FarmsAddedRewardEventOnChain,
+	FarmsAfterburnerVaultFieldsOnChain,
+	FarmsCreatedVaultEventOnChain,
+	FarmsDepositedPrincipalEventOnChain,
+	FarmsDestroyedStakedPositionEventOnChain,
+	FarmsHarvestedRewardsEventOnChain,
+	FarmsIncreasedEmissionsEventOnChain,
+	FarmsInitializedRewardEventOnChain,
+	FarmsJoinedEventOnChain,
+	FarmsLockedEventOnChain,
+	FarmsSplitEventOnChain,
+	FarmsStakedEventOnChain,
+	FarmsStakedRelaxedEventOnChain,
+	FarmsStakedPositionFieldsOnChain,
+	FarmsStakingPoolOwnerCapFieldsOnChain,
+	FarmsUnlockedEventOnChain,
+	FarmsWithdrewPrincipalEventOnChain,
 } from "./farmsApiCastingTypes";
 import {
 	FarmsAddedRewardEvent,
@@ -56,7 +56,9 @@ export class FarmsApiCasting {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		const fields = getObjectFields(data) as AfterburnerVaultFieldsOnChain;
+		const fields = getObjectFields(
+			data
+		) as FarmsAfterburnerVaultFieldsOnChain;
 		const stakeCoinType = Helpers.addLeadingZeroesToType(
 			new Coin(objectType).innerCoinType
 		);
@@ -106,7 +108,9 @@ export class FarmsApiCasting {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		const fields = getObjectFields(data) as StakedPositionFieldsOnChain;
+		const fields = getObjectFields(
+			data
+		) as FarmsStakedPositionFieldsOnChain;
 		const stakeCoinType = Helpers.addLeadingZeroesToType(
 			new Coin(objectType).innerCoinType
 		);
@@ -147,7 +151,7 @@ export class FarmsApiCasting {
 
 		const fields = getObjectFields(
 			data
-		) as StakingPoolOwnerCapFieldsOnChain;
+		) as FarmsStakingPoolOwnerCapFieldsOnChain;
 
 		return {
 			objectType,
@@ -161,7 +165,7 @@ export class FarmsApiCasting {
 	// =========================================================================
 
 	public static addedRewardEventFromOnChain = (
-		eventOnChain: AddedRewardEventOnChain
+		eventOnChain: FarmsAddedRewardEventOnChain
 	): FarmsAddedRewardEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -177,7 +181,7 @@ export class FarmsApiCasting {
 	};
 
 	public static createdVaultEventFromOnChain = (
-		eventOnChain: CreatedVaultEventOnChain
+		eventOnChain: FarmsCreatedVaultEventOnChain
 	): FarmsCreatedVaultEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -194,7 +198,7 @@ export class FarmsApiCasting {
 	};
 
 	public static depositedPrincipalEventFromOnChain = (
-		eventOnChain: DepositedPrincipalEventOnChain
+		eventOnChain: FarmsDepositedPrincipalEventOnChain
 	): FarmsDepositedPrincipalEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -207,7 +211,7 @@ export class FarmsApiCasting {
 	};
 
 	public static destroyedStakedPositionEventFromOnChain = (
-		eventOnChain: DestroyedStakedPositionEventOnChain
+		eventOnChain: FarmsDestroyedStakedPositionEventOnChain
 	): FarmsDestroyedStakedPositionEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -219,7 +223,7 @@ export class FarmsApiCasting {
 	};
 
 	public static harvestedRewardsEventFromOnChain = (
-		eventOnChain: HarvestedRewardsEventOnChain
+		eventOnChain: FarmsHarvestedRewardsEventOnChain
 	): FarmsHarvestedRewardsEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -237,7 +241,7 @@ export class FarmsApiCasting {
 	};
 
 	public static increasedEmissionsEventFromOnChain = (
-		eventOnChain: IncreasedEmissionsEventOnChain
+		eventOnChain: FarmsIncreasedEmissionsEventOnChain
 	): FarmsIncreasedEmissionsEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -254,7 +258,7 @@ export class FarmsApiCasting {
 	};
 
 	public static initializedRewardEventFromOnChain = (
-		eventOnChain: InitializedRewardEventOnChain
+		eventOnChain: FarmsInitializedRewardEventOnChain
 	): FarmsInitializedRewardEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -272,7 +276,7 @@ export class FarmsApiCasting {
 	};
 
 	public static joinedEventFromOnChain = (
-		eventOnChain: JoinedEventOnChain
+		eventOnChain: FarmsJoinedEventOnChain
 	): FarmsJoinedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -285,7 +289,7 @@ export class FarmsApiCasting {
 	};
 
 	public static lockedEventFromOnChain = (
-		eventOnChain: LockedEventOnChain
+		eventOnChain: FarmsLockedEventOnChain
 	): FarmsLockedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -300,7 +304,7 @@ export class FarmsApiCasting {
 	};
 
 	public static splitEventFromOnChain = (
-		eventOnChain: SplitEventOnChain
+		eventOnChain: FarmsSplitEventOnChain
 	): FarmsSplitEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -313,7 +317,7 @@ export class FarmsApiCasting {
 	};
 
 	public static stakedEventFromOnChain = (
-		eventOnChain: StakedEventOnChain
+		eventOnChain: FarmsStakedEventOnChain
 	): FarmsStakedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -334,7 +338,7 @@ export class FarmsApiCasting {
 	};
 
 	public static stakedRelaxedEventFromOnChain = (
-		eventOnChain: StakedRelaxedEventOnChain
+		eventOnChain: FarmsStakedRelaxedEventOnChain
 	): FarmsStakedRelaxedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -353,7 +357,7 @@ export class FarmsApiCasting {
 	};
 
 	public static unlockedEventFromOnChain = (
-		eventOnChain: UnlockedEventOnChain
+		eventOnChain: FarmsUnlockedEventOnChain
 	): FarmsUnlockedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -365,7 +369,7 @@ export class FarmsApiCasting {
 	};
 
 	public static withdrewPrincipalEventFromOnChain = (
-		eventOnChain: WithdrewPrincipalEventOnChain
+		eventOnChain: FarmsWithdrewPrincipalEventOnChain
 	): FarmsWithdrewPrincipalEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
