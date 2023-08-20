@@ -427,9 +427,9 @@ export class StakingApi {
 	}): Promise<StakePosition[]> => {
 		const { walletAddress } = inputs;
 
-		const eventsInputs = {
+		const eventsInputs: ApiIndexerEventsBody = {
 			cursor: 0,
-			limits: 100,
+			limit: 100,
 		};
 		const [mintedEvents, requestEvents] = await Promise.all([
 			// afSui mint

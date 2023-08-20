@@ -136,16 +136,18 @@ export class IndexerCaller {
 		castingFunc: (eventOnChain: EventTypeOnChain) => EventType,
 		signal?: AbortSignal
 	): Promise<IndexerEventsWithCursor<EventType>> {
-		const limit = queryParams.limit ?? 100;
+		const limit = queryParams.limit ?? 10;
 		const eventsOnChain = await this.fetchIndexer<
 			EventTypeOnChain[],
+			undefined,
 			IndexerDataWithCursorQueryParams
 		>(
-			IndexerCaller.addParamsToUrl(url, {
+			url,
+			undefined,
+			{
 				skip: queryParams.cursor ?? 0,
 				limit,
-			}),
-			undefined,
+			},
 			signal
 		);
 
