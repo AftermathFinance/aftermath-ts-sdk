@@ -14,14 +14,18 @@ import {
 } from "../poolsTypes";
 import {
 	PoolCreateEventOnChain,
-	PoolDepositEventOnChain,
 	PoolFieldsOnChain,
+	PoolTradeEventOnChainFields,
+	PoolDepositEventFieldsOnChain,
+	PoolWithdrawEventFieldsOnChain,
 	PoolTradeEventOnChain,
+	PoolDepositEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { AnyObjectType } from "../../../types";
+import { IndexerEventOnChain } from "../../../general/types/castingTypes";
 
 export class PoolsApiCasting {
 	// =========================================================================
@@ -111,8 +115,77 @@ export class PoolsApiCasting {
 	//  Events
 	// =========================================================================
 
+	public static poolObjectIdfromPoolCreateEventOnChain = (
+		eventOnChain: PoolCreateEventOnChain
+	): ObjectId => {
+		const fields = eventOnChain.parsedJson;
+		return fields.pool_id;
+	};
+
 	public static poolTradeEventFromOnChain = (
 		eventOnChain: PoolTradeEventOnChain
+	): PoolTradeEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			poolId: fields.pool_id,
+			trader: fields.issuer,
+			typesIn: fields.types_in.map((type) =>
+				Helpers.addLeadingZeroesToType("0x" + type)
+			),
+			amountsIn: fields.amounts_in.map((amount) => BigInt(amount)),
+			typesOut: fields.types_out.map((type) =>
+				Helpers.addLeadingZeroesToType("0x" + type)
+			),
+			amountsOut: fields.amounts_out.map((amount) => BigInt(amount)),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static poolDepositEventFromOnChain = (
+		eventOnChain: PoolDepositEventOnChain
+	): PoolDepositEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			poolId: fields.pool_id,
+			depositor: fields.issuer,
+			// TODO: create a function for all this 0x nonsense
+			types: fields.types.map((type) =>
+				Helpers.addLeadingZeroesToType("0x" + type)
+			),
+			deposits: fields.deposits.map((deposit) => BigInt(deposit)),
+			lpMinted: BigInt(fields.lp_coins_minted),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static poolWithdrawEventFromOnChain = (
+		eventOnChain: PoolWithdrawEventOnChain
+	): PoolWithdrawEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			poolId: fields.pool_id,
+			withdrawer: fields.issuer,
+			types: fields.types.map((type) =>
+				Helpers.addLeadingZeroesToType("0x" + type)
+			),
+			withdrawn: fields.withdrawn.map((withdraw) => BigInt(withdraw)),
+			lpBurned: BigInt(fields.lp_coins_burned),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Indexer Events
+	// =========================================================================
+
+	public static poolTradeEventFromIndexerOnChain = (
+		eventOnChain: IndexerEventOnChain<PoolTradeEventOnChainFields>
 	): PoolTradeEvent => {
 		return {
 			poolId: eventOnChain.pool_id,
@@ -133,8 +206,8 @@ export class PoolsApiCasting {
 		};
 	};
 
-	public static poolDepositEventFromOnChain = (
-		eventOnChain: PoolDepositEventOnChain
+	public static poolDepositEventFromIndexerOnChain = (
+		eventOnChain: IndexerEventOnChain<PoolDepositEventFieldsOnChain>
 	): PoolDepositEvent => {
 		return {
 			poolId: eventOnChain.pool_id,
@@ -151,8 +224,8 @@ export class PoolsApiCasting {
 		};
 	};
 
-	public static poolWithdrawEventFromOnChain = (
-		eventOnChain: PoolWithdrawEventOnChain
+	public static poolWithdrawEventFromIndexerOnChain = (
+		eventOnChain: IndexerEventOnChain<PoolWithdrawEventFieldsOnChain>
 	): PoolWithdrawEvent => {
 		return {
 			poolId: eventOnChain.pool_id,
@@ -168,12 +241,5 @@ export class PoolsApiCasting {
 			txnDigest: eventOnChain.txnDigest,
 			type: eventOnChain.type,
 		};
-	};
-
-	public static poolObjectIdfromPoolCreateEventOnChain = (
-		eventOnChain: PoolCreateEventOnChain
-	): ObjectId => {
-		const fields = eventOnChain.parsedJson;
-		return fields.pool_id;
 	};
 }

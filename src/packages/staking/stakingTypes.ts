@@ -1,8 +1,15 @@
-import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
+import {
+	DelegatedStake,
+	ObjectId,
+	SuiAddress,
+	TransactionDigest,
+} from "@mysten/sui.js";
 import {
 	ApiEventsBody,
 	Balance,
 	Event,
+	Object,
+	Percentage,
 	Timestamp,
 } from "../../general/types/generalTypes";
 
@@ -10,68 +17,70 @@ import {
 //  Objects
 // =========================================================================
 
+export interface ValidatorConfigObject extends Object {
+	suiAddress: SuiAddress;
+	operationCapId: ObjectId;
+	fee: Percentage;
+}
+
 export interface StakeBalanceDynamicField {
 	objectId: ObjectId;
 	value: Balance;
 }
 
+export type SuiDelegatedStakeState = "Active" | "Pending" | "Unstaked";
+
+export interface SuiDelegatedStake {
+	status: SuiDelegatedStakeState;
+	stakedSuiId: ObjectId;
+	stakeRequestEpoch: bigint;
+	stakeActiveEpoch: bigint;
+	principal: Balance;
+	estimatedReward?: Balance | undefined;
+	validatorAddress: SuiAddress;
+	stakingPool: SuiAddress;
+}
+
+export const isSuiDelegatedStake = (
+	stake: StakingPosition | SuiDelegatedStake
+): stake is SuiDelegatedStake => {
+	return (
+		"stakeRequestEpoch" in stake &&
+		"stakeActiveEpoch" in stake &&
+		"principal" in stake &&
+		"stakingPool" in stake
+	);
+};
+
 // =========================================================================
 //  Events
 // =========================================================================
 
-// stake
-
-export type StakeEvent =
-	| StakeRequestEvent
-	| StakeSuccessEvent
-	| StakeFailedEvent
-	| AfSuiMintedEvent;
+export type StakeEvent = StakeRequestEvent | AfSuiMintedEvent;
 
 export interface StakeRequestEvent extends Event {
-	suiWrapperId: ObjectId;
+	stakedSuiId: ObjectId;
+	suiId: ObjectId;
 	staker: SuiAddress;
 	validatorAddress: SuiAddress;
 	epoch: bigint;
 	suiStakeAmount: Balance;
-}
-
-export interface StakeSuccessEvent extends Event {
-	suiWrapperId: ObjectId;
-	staker: SuiAddress;
-	validatorAddress: SuiAddress;
-	epoch: bigint;
-	suiStakeAmount: Balance;
-}
-
-export interface StakeFailedEvent extends Event {
-	suiWrapperId: ObjectId;
-	staker: SuiAddress;
-	validatorAddress: SuiAddress;
-	epoch: bigint;
-	suiStakeAmount: Balance;
+	validatorFee: number;
+	isRestaked: boolean;
+	referrer?: SuiAddress;
 }
 
 export interface AfSuiMintedEvent extends Event {
-	suiWrapperId: ObjectId;
+	suiId: ObjectId;
 	staker: SuiAddress;
 	epoch: bigint;
 	afSuiMintAmount: Balance;
 	suiStakeAmount: Balance;
 }
 
-// unstake
-
-export type UnstakeEvent = UnstakeRequestEvent | UnstakeSuccessEvent;
-
-export interface UnstakeRequestEvent extends Event {
-	afSuiWrapperId: ObjectId;
-	staker: SuiAddress;
-	epoch: bigint;
-	afSuiAmountGiven: Balance;
-}
-
-export interface UnstakeSuccessEvent extends Event {
-	afSuiWrapperId: ObjectId;
+export interface UnstakeEvent extends Event {
+	afSuiId: ObjectId;
+	paybackCoinId: ObjectId;
 	staker: SuiAddress;
 	epoch: bigint;
 	afSuiAmountGiven: Balance;
@@ -81,13 +90,13 @@ export interface UnstakeSuccessEvent extends Event {
 export const isStakeEvent = (
 	event: StakeEvent | UnstakeEvent
 ): event is StakeEvent => {
-	return "suiWrapperId" in event;
+	return "suiId" in event;
 };
 
 export const isUnstakeEvent = (
 	event: StakeEvent | UnstakeEvent
 ): event is UnstakeEvent => {
-	return "afSuiWrapperId" in event;
+	return "afSuiId" in event;
 };
 
 // =========================================================================
@@ -98,7 +107,7 @@ export type StakingPosition = StakePosition | UnstakePosition;
 
 export interface StakePosition {
 	state: StakePositionState;
-	suiWrapperId: ObjectId;
+	suiId: ObjectId;
 	staker: SuiAddress;
 	validatorAddress: SuiAddress;
 	epoch: bigint;
@@ -109,8 +118,7 @@ export interface StakePosition {
 }
 
 export interface UnstakePosition {
-	state: UnstakePositionState;
-	afSuiWrapperId: ObjectId;
+	afSuiId: ObjectId;
 	staker: SuiAddress;
 	epoch: bigint;
 	afSuiAmountGiven: Balance;
@@ -119,18 +127,12 @@ export interface UnstakePosition {
 	txnDigest: TransactionDigest;
 }
 
-export type StakePositionState =
-	| "REQUEST"
-	| "SUCCESS"
-	| "FAILED"
-	| "AFSUI_MINTED";
-
-export type UnstakePositionState = "REQUEST" | "SUCCESS";
+export type StakePositionState = "REQUEST" | "AFSUI_MINTED";
 
 export const isStakePosition = (
 	position: StakingPosition
 ): position is StakePosition => {
-	return "suiWrapperId" in position;
+	return "suiId" in position;
 };
 
 export const isUnstakePosition = (
@@ -156,7 +158,18 @@ export interface ApiUnstakeBody {
 	referrer?: SuiAddress;
 }
 
+export interface ApiStakeStakedSuiBody {
+	walletAddress: SuiAddress;
+	stakedSuiIds: ObjectId[];
+	validatorAddress: SuiAddress;
+	referrer?: SuiAddress;
+}
+
 export interface ApiStakingPositionsBody {
+	walletAddress: SuiAddress;
+}
+
+export interface ApiDelegatedStakesBody {
 	walletAddress: SuiAddress;
 }
 

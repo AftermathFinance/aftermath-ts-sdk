@@ -131,6 +131,10 @@ export type ApiTransactionsBody = ApiDataWithCursorBody<TransactionDigest>;
 
 export type ApiIndexerEventsBody = ApiDataWithCursorBody<number>;
 
+export type ApiIndexerUserEventsBody = ApiIndexerEventsBody & {
+	walletAddress: SuiAddress;
+};
+
 export interface IndexerResponse<DataType> {
 	data: DataType;
 }
