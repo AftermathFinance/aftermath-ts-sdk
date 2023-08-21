@@ -481,7 +481,7 @@ export class FarmsApi {
 				tx.object(inputs.stakedPositionId), // StakedPosition
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-				tx.pure(inputs.lockDurationMs, "U64"),
+				tx.pure(inputs.lockDurationMs, "u64"),
 			],
 		});
 	};
