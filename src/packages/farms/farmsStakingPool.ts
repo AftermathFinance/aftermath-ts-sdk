@@ -1,4 +1,13 @@
-import { Balance, CoinType, SuiNetwork, Timestamp, Url } from "../../types";
+import {
+	Apy,
+	Balance,
+	CoinType,
+	CoinsToDecimals,
+	CoinsToPrice,
+	SuiNetwork,
+	Timestamp,
+	Url,
+} from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
@@ -11,6 +20,8 @@ import {
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Helpers } from "../../general/utils";
 import { Coin } from "..";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -94,10 +105,9 @@ export class FarmsStakingPool extends Caller {
 		coinType: CoinType;
 		price: number;
 		decimals: number;
-	}) => {
-		throw new Error("TODO");
-
-		const { coinType, price, decimals } = inputs;
+		tvlUsd: number;
+	}): Apy => {
+		const { coinType, price, decimals, tvlUsd } = inputs;
 
 		if (price <= 0) return 0;
 
@@ -115,9 +125,30 @@ export class FarmsStakingPool extends Caller {
 		const emissionRateUsd =
 			Coin.balanceWithDecimals(rewardCoin.emissionRate, decimals) * price;
 
-		// dayjs.extend(duration);
-		// const somethjing = dayjs().duration();
-		// emissionRateUsd / rewardCoin.emissionSchedulesMs;
+		dayjs.extend(duration);
+		const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
+		const rewardsUsdOneYear =
+			emissionRateUsd * (oneYearMs / rewardCoin.emissionSchedulesMs);
+
+		return rewardsUsdOneYear / tvlUsd;
+	};
+
+	public calcTotalApy = (inputs: {
+		coinsToPrice: CoinsToPrice;
+		coinsToDecimals: CoinsToDecimals;
+		tvlUsd: number;
+	}): Apy => {
+		const { coinsToPrice, coinsToDecimals, tvlUsd } = inputs;
+
+		const apys = this.rewardCoinTypes().map((coinType) =>
+			this.calcApy({
+				coinType,
+				price: coinsToPrice[coinType],
+				decimals: coinsToDecimals[coinType],
+				tvlUsd,
+			})
+		);
+		return Helpers.sum(apys);
 	};
 
 	// =========================================================================
