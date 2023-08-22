@@ -1,5 +1,6 @@
-import { Connection, JsonRpcProvider, ObjectId, RawSigner, SuiObjectChange, SuiObjectChangeCreated, TransactionBlock } from "@mysten/sui.js";
+import { Connection, getObjectFields, JsonRpcProvider, ObjectId, RawSigner, SuiObjectChange, SuiObjectChangeCreated, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../src/general/providers";
+import { estimatedFundingRate, timeUntilNextFundingMs } from "../src/packages/perpetuals/utils";
 import {
 	ASK,
 	BID,
@@ -19,6 +20,8 @@ import {
 
 import { getConfigs } from "./testConfig";
 import { orderId } from "../src/packages/perpetuals/utils/critBitTreeUtils";
+import { Sui } from "../src/packages";
+import { numberFromIFixed } from "../src/packages/utilities/ifixed";
 
 // =========================================================================
 // TEST CASE FLOW
@@ -103,6 +106,13 @@ describe("Perpetuals Tests", () => {
 		console.log("MarketManager");
 		console.log(await aftermathApi.Perpetuals().fetchMarketManagerObj(usdcType));
 
+		let onchainTime = getObjectFields(
+			await aftermathApi
+				.Objects()
+				.fetchObject({ objectId: Sui.constants.addresses.suiClockId })
+		)?.timestamp_ms;
+		console.log(`Time onchain vs TS:\n${onchainTime}, ${Date.now()}`);
+
 		// Transfer and transfer back admin_capability
 		console.log("Transfer admin cap");
 		tx = await aftermathApi
@@ -154,7 +164,7 @@ describe("Perpetuals Tests", () => {
 			marginRatioInitial: BigInt(100000000000000000),
 			marginRatioMaintenance: BigInt(50000000000000000),
 			baseAssetSymbol: "BTC",
-			fundingFrequencyMs: BigInt(3600000),
+			fundingFrequencyMs: BigInt(60000), // 1 min
 			fundingPeriodMs: BigInt(86400000),
 			premiumTwapFrequencyMs: BigInt(5000),
 			premiumTwapPeriodMs: BigInt(60000),
@@ -170,6 +180,14 @@ describe("Perpetuals Tests", () => {
 			tickSize: TICK_SIZE,
 		});
 		await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
+
+		console.log(await aftermathApi
+			.Perpetuals()
+			.fetchMarketState(usdcType, MARKET_ID0));
+
+		console.log(await aftermathApi
+			.Perpetuals()
+			.fetchMarketParams(usdcType, MARKET_ID0));
 
 		// All users gets 10000 USDC
 		let tenThousandB9 = BigInt(10000) * ONE_B9;
@@ -421,16 +439,35 @@ describe("Perpetuals Tests", () => {
 		});
 		await user4.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
 
-		// Skip this for now until we have a 'time until next funding' functionality
-		// console.log("Update funding");
-		// tx = await aftermathApi
-		// 	.Perpetuals()
-		// 	.fetchUpdateFundingTx({
-		// 		walletAddress: await admin.getAddress(),
-		// 		coinType: usdcType,
-		// 		marketId: MARKET_ID0,
-		// 	});
-		// await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
+		const mktParams = await aftermathApi.Perpetuals().fetchMarketParams(usdcType, MARKET_ID0);
+		let mktState = await aftermathApi.Perpetuals().fetchMarketState(usdcType, MARKET_ID0);
+		console.log(`Curr state:`, mktState);
+		const sleepTime = timeUntilNextFundingMs(mktState, mktParams) + 2000;
+		console.log(`Sleep ${sleepTime}ms until next funding`);
+		await new Promise(f => setTimeout(f, sleepTime));
+
+		mktState = await aftermathApi.Perpetuals().fetchMarketState(usdcType, MARKET_ID0);
+		const estRate = estimatedFundingRate({
+			mktState,
+			mktParams,
+			indexPrice: numberFromIFixed(finalOraclePrice)
+		});
+		console.log(`Estimated funding rate: ${estRate * 100}%`);
+		onchainTime = getObjectFields(
+			await aftermathApi
+				.Objects()
+				.fetchObject({ objectId: Sui.constants.addresses.suiClockId })
+		)?.timestamp_ms;
+		console.log("Last upd ms", mktState.fundingLastUpdMs, "onchain time", onchainTime);
+		console.log("Update funding");
+		tx = await aftermathApi
+			.Perpetuals()
+			.fetchUpdateFundingTx({
+				walletAddress: await admin.getAddress(),
+				coinType: usdcType,
+				marketId: MARKET_ID0,
+			});
+		await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
 
 		// User1 withdraw collateral 2000 USDC
 		// User2 withdraw collateral 2000 USDC

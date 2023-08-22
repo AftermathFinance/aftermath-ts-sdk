@@ -14,11 +14,12 @@ import {
 	AccountStruct,
 	PerpetualsAddresses,
     ExchangeAddresses,
+    Timestamp,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { PerpetualsAccount } from "../perpetualsAccount";
-import { AccountManagerObj, bcs, MarketManagerObj } from "../perpetualsTypes";
+import { AccountManagerObj, bcs, MarketManagerObj, MarketParams, MarketState } from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsCasting";
 
 export class PerpetualsApi {
@@ -147,6 +148,44 @@ export class PerpetualsApi {
 
 		return PerpetualsCasting.accountFromRaw(accountField.value);
     }
+
+	public fetchMarketState = async (coinType: CoinType, marketId: bigint): Promise<MarketState> => {
+		const pkg = this.addresses.packages.perpetuals;
+		const mktMngId = this.getExchangeConfig(coinType).marketManager;
+		const resp = await this.Provider.DynamicFields().fetchDynamicFieldObject({
+			parentId: mktMngId,
+			name: {
+				type: `${pkg}::keys::Market<${pkg}::keys::State>`,
+				value: { market_id: String(marketId) },
+			}
+		})
+		const objectResp =
+			await this.Provider.provider.getObject({
+				id: resp.data?.objectId!, options: { showBcs: true }
+			}) as SuiObjectResponse;
+		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
+		const mktStateField = bcs.de("Field<MarketKey, MarketState>", bcsData.bcsBytes, "base64");
+		return PerpetualsCasting.marketStateFromRawBcs(mktStateField.value);
+	}
+
+	public fetchMarketParams = async (coinType: CoinType, marketId: bigint): Promise<MarketParams> => {
+		const pkg = this.addresses.packages.perpetuals;
+		const mktMngId = this.getExchangeConfig(coinType).marketManager;
+		const resp = await this.Provider.DynamicFields().fetchDynamicFieldObject({
+			parentId: mktMngId,
+			name: {
+				type: `${pkg}::keys::Market<${pkg}::keys::Params>`,
+				value: { market_id: String(marketId) },
+			}
+		})
+		const objectResp =
+			await this.Provider.provider.getObject({
+				id: resp.data?.objectId!, options: { showBcs: true }
+			}) as SuiObjectResponse;
+		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
+		const mktParamsField = bcs.de("Field<MarketKey, MarketParams>", bcsData.bcsBytes, "base64");
+		return PerpetualsCasting.marketParamsFromRawBcs(mktParamsField.value);
+	}
 
 	public async fetchTableVec<T>(
 		objectId: ObjectId,

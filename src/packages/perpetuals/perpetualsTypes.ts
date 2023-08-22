@@ -23,13 +23,6 @@ bcs.registerStructType("AccountManager", {
 	nextAccountId: BCS.U64,
 });
 
-bcs.registerStructType("MarketManager", {
-	id: "UID",
-	feesAccrued: BCS.U256,
-	minOrderUsdValue: BCS.U256,
-	liquidationTolerance: BCS.U64,
-})
-
 bcs.registerStructType("AccountCap", {
 	id: "UID",
 	accountId: BCS.U64,
@@ -52,6 +45,46 @@ bcs.registerStructType("Position", {
 	asksQuantity: BCS.U256,
 	bidsQuantity: BCS.U256,
 
+});
+
+bcs.registerStructType("MarketManager", {
+	id: "UID",
+	feesAccrued: BCS.U256,
+	minOrderUsdValue: BCS.U256,
+	liquidationTolerance: BCS.U64,
+});
+
+bcs.registerStructType("MarketState", {
+	cumFundingRateLong: BCS.U256,
+	cumFundingRateShort: BCS.U256,
+	fundingLastUpdMs: BCS.U64,
+	premiumTwap: BCS.U256,
+	premiumTwapLastUpdMs: BCS.U64,
+	spreadTwap: BCS.U256,
+	spreadTwapLastUpdMs: BCS.U64,
+	openInterest: BCS.U256,
+});
+
+bcs.registerStructType("MarketParams", {
+	marginRatioInitial: BCS.U256,
+	marginRatioMaintenance: BCS.U256,
+	baseAssetSymbol: BCS.STRING,
+	fundingFrequencyMs: BCS.U64,
+	fundingPeriodMs: BCS.U64,
+	premiumTwapFrequencyMs: BCS.U64,
+	premiumTwapPeriodMs: BCS.U64,
+	spreadTwapFrequencyMs: BCS.U64,
+	spreadTwapPeriodMs: BCS.U64,
+	makerFee: BCS.U256,
+	takerFee: BCS.U256,
+	liquidationFee: BCS.U256,
+	forceCancelFee: BCS.U256,
+	insuranceFundFee: BCS.U256,
+	insuranceFundId: BCS.U64,
+});
+
+bcs.registerStructType("MarketKey", {
+	marketId: BCS.U64,
 });
 
 bcs.registerStructType(["CritBitTree", "T"], {
@@ -168,24 +201,26 @@ export interface MarketParams {
 	baseAssetSymbol: string;
 	fundingFrequencyMs: bigint;
 	fundingPeriodMs: bigint;
-	twapPeriodMs: bigint;
+	premiumTwapFrequencyMs: bigint;
+	premiumTwapPeriodMs: bigint;
+	spreadTwapFrequencyMs: bigint;
+	spreadTwapPeriodMs: bigint;
 	makerFee: IFixed;
 	takerFee: IFixed;
 	liquidationFee: IFixed;
 	forceCancelFee: IFixed;
 	insuranceFundFee: IFixed;
-	priceImpactFactor: IFixed;
+	insuranceFundId: bigint;
 }
 
 export interface MarketState {
-	cumulativeFundingRate: IFixed;
-	fundingRateTimestamp: Timestamp;
-	lastIndexPrice: IFixed;
-	lastIndexTwap: IFixed;
-	lastIndexTimestamp: Timestamp;
-	lastMarkPrice: IFixed;
-	lastMarkTwap: IFixed;
-	lastMarkTimestamp: Timestamp;
+	cumFundingRateLong: IFixed;
+	cumFundingRateShort: IFixed;
+	fundingLastUpdMs: Timestamp;
+	premiumTwap: IFixed;
+	premiumTwapLastUpdMs: Timestamp;
+	spreadTwap: IFixed;
+	spreadTwapLastUpdMs: Timestamp;
 	openInterest: IFixed;
 }
 

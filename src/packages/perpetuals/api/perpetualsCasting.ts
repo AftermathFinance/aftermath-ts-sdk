@@ -136,7 +136,7 @@ export class PerpetualsCasting {
 		const paramsField =
 			dynamicField as MarketParamsDynamicFieldOnChain;
 		return {
-			value: PerpetualsCasting.marketParamsFromRawData(
+			value: PerpetualsCasting.marketParamsFromRawBcs(
 				paramsField.data.fields.value.fields
 			),
 		};
@@ -150,7 +150,7 @@ export class PerpetualsCasting {
 		const stateField =
 			dynamicField as MarketManagerStateDynamicFieldOnChain;
 		return {
-			value: PerpetualsCasting.marketStateFromRawData(
+			value: PerpetualsCasting.marketStateFromRawBcs(
 				stateField.data.fields
 			),
 		};
@@ -173,38 +173,40 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketParamsFromRawData = (
+	public static marketParamsFromRawBcs = (
 		data: any
 	): MarketParams => {
 		return {
-			marginRatioInitial: data.margin_ratio_initial,
-			marginRatioMaintenance: data.margin_ratio_maintenance,
-			baseAssetSymbol: data.base_asset_symbol,
-			fundingFrequencyMs: BigInt(data.funding_frequency_ms),
-			fundingPeriodMs: BigInt(data.funding_period_ms),
-			twapPeriodMs: BigInt(data.twap_period_ms),
-			makerFee: data.maker_fee,
-			takerFee: data.taker_fee,
-			liquidationFee: data.liquidation_fee,
-			forceCancelFee: data.force_cancel_fee,
-			insuranceFundFee: data.insurance_fund_fee,
-			priceImpactFactor: data.price_impact_factor,
+			baseAssetSymbol: data.baseAssetSymbol,
+			marginRatioInitial: BigInt(data.marginRatioInitial),
+			marginRatioMaintenance: BigInt(data.marginRatioMaintenance),
+			fundingFrequencyMs: BigInt(data.fundingFrequencyMs),
+			fundingPeriodMs: BigInt(data.fundingPeriodMs),
+			premiumTwapFrequencyMs: BigInt(data.premiumTwapFrequencyMs),
+			premiumTwapPeriodMs: BigInt(data.premiumTwapPeriodMs),
+			spreadTwapFrequencyMs: BigInt(data.spreadTwapFrequencyMs),
+			spreadTwapPeriodMs: BigInt(data.spreadTwapPeriodMs),
+			makerFee: BigInt(data.makerFee),
+			takerFee: BigInt(data.takerFee),
+			liquidationFee: BigInt(data.liquidationFee),
+			forceCancelFee: BigInt(data.forceCancelFee),
+			insuranceFundFee: BigInt(data.insuranceFundFee),
+			insuranceFundId: BigInt(data.insuranceFundId),
 		};
 	};
 
-	public static marketStateFromRawData = (
+	public static marketStateFromRawBcs = (
 		data: any
 	): MarketState => {
 		return {
-			cumulativeFundingRate: data.cum_funding_rate,
-			fundingRateTimestamp: Number(data.funding_rate_ts),
-			lastIndexPrice: data.last_index_price,
-			lastIndexTwap: data.last_index_ts,
-			lastIndexTimestamp: Number(data.last_index_ts),
-			lastMarkPrice: data.last_mark_price,
-			lastMarkTwap: data.last_mark_price,
-			lastMarkTimestamp: Number(data.last_mark_ts),
-			openInterest: data.open_interest,
+			cumFundingRateLong: BigInt(data.cumFundingRateLong),
+			cumFundingRateShort: BigInt(data.cumFundingRateShort),
+			fundingLastUpdMs: Number(data.fundingLastUpdMs),
+			premiumTwap: BigInt(data.premiumTwap),
+			premiumTwapLastUpdMs: Number(data.premiumTwapLastUpdMs),
+			spreadTwap: BigInt(data.spreadTwap),
+			spreadTwapLastUpdMs: Number(data.spreadTwapLastUpdMs),
+			openInterest: BigInt(data.openInterest),
 		};
 	};
 
