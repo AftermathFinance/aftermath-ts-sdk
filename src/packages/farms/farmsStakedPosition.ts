@@ -7,6 +7,7 @@ import {
 	ApiFarmsUnlockBody,
 	ApiFarmsUnstakeBody,
 	ApiHarvestFarmsRewardsBody,
+	Apy,
 	Balance,
 	CoinType,
 	CoinsToBalance,
@@ -17,7 +18,9 @@ import {
 } from "../../types";
 import { FarmsStakingPool } from "./farmsStakingPool";
 import { Fixed } from "../../general/utils/fixed";
-import { Helpers } from "../../general/utils";
+import { Casting, Helpers } from "../../general/utils";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 
 export class FarmsStakedPosition extends Caller {
 	// =========================================================================
@@ -215,12 +218,27 @@ export class FarmsStakedPosition extends Caller {
 		this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
 	};
 
-	public rewardsApy = (inputs: { coinType: CoinType }) => {
-		const rewardCoin = this.rewardCoin(inputs);
+	public calcTotalApy = (inputs: {
+		rewardsUsd: number;
+		stakeUsd: number;
+	}): Apy => {
+		const { rewardsUsd, stakeUsd } = inputs;
 
-		// TODO: make this calculation
+		dayjs.extend(duration);
+		const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
+		const timeSinceLastHarvestMs =
+			dayjs().valueOf() - this.stakedPosition.lastHarvestRewardsTimestamp;
 
-		return Math.random();
+		const rewardsUsdOneYear =
+			timeSinceLastHarvestMs > 0
+				? rewardsUsd * (oneYearMs / timeSinceLastHarvestMs)
+				: 0;
+
+		const apy = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
+		const lockMultiplier = Casting.bigIntToFixedNumber(
+			this.stakedPosition.lockMultiplier
+		);
+		return apy * lockMultiplier;
 	};
 
 	// =========================================================================
