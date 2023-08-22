@@ -62,7 +62,7 @@ export class StakingApi {
 		eventNames: {
 			stakeRequest: "StakedEvent",
 			unstake: "UnstakedEvent",
-			afSuiMinted: "AFSUIWasMintedToStakerAccountEvent",
+			afSuiMinted: "MintedAfSuiEvent",
 		},
 	};
 
