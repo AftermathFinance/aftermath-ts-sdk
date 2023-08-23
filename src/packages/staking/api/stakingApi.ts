@@ -223,8 +223,8 @@ export class StakingApi {
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
-				tx.object(this.addresses.objects.safe), // Safe
 				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
+				tx.object(this.addresses.objects.safe), // Safe
 				tx.object(this.addresses.objects.referralVault), // ReferralVault
 				tx.object(this.addresses.objects.treasury), // Treasury
 				typeof afSuiCoin === "string"
