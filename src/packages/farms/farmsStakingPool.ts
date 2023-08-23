@@ -65,7 +65,7 @@ export class FarmsStakingPool extends Caller {
 	// Calculates the amount of rewards that have emitted since the last time this function has been
 	// called. Updates `rewards_accumulated_per_share`.
 	public emitRewards = () => {
-		const currentTimestamp = Date.now();
+		const currentTimestamp = dayjs().valueOf();
 
 		// ia. Check that the vault has deposits.
 		if (this.stakingPool.stakedAmount === BigInt(0)) return;
@@ -109,18 +109,14 @@ export class FarmsStakingPool extends Caller {
 	}): Apy => {
 		const { coinType, price, decimals, tvlUsd } = inputs;
 
-		if (price <= 0) return 0;
+		if (price <= 0 || tvlUsd <= 0) return 0;
 
 		this.emitRewards();
 
 		const rewardCoin = this.rewardCoin({ coinType });
-		const currentTimestamp = Date.now();
+		const currentTimestamp = dayjs().valueOf();
 
-		if (
-			rewardCoin.emissionStartTimestamp > currentTimestamp ||
-			rewardCoin.emissionEndTimestamp < currentTimestamp
-		)
-			return 0;
+		if (rewardCoin.emissionStartTimestamp > currentTimestamp) return 0;
 
 		const emissionRateUsd =
 			Coin.balanceWithDecimals(rewardCoin.emissionRate, decimals) * price;

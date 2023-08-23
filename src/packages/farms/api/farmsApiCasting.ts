@@ -80,13 +80,12 @@ export class FarmsApiCasting {
 				emissionStartTimestamp: Number(
 					fields.emission_start_timestamps_ms[index]
 				),
-				emissionEndTimestamp: Number(
-					fields.emission_end_timestamp_ms[index]
-				),
+
 				lastRewardTimestamp: Number(
 					fields.last_reward_timestamps_ms[index]
 				),
 			})),
+			emissionEndTimestamp: Number(fields.emission_end_timestamp_ms),
 			stakedAmount: BigInt(fields.total_staked_amount),
 			stakedAmountWithMultiplier: BigInt(
 				fields.total_staked_amount_with_multiplier
@@ -96,7 +95,7 @@ export class FarmsApiCasting {
 			maxLockMultiplier: BigInt(fields.max_lock_multiplier),
 			minStakeAmount: BigInt(fields.min_stake_amount),
 			lockEnforcement:
-				BigInt(fields.lock_enforcement) == BigInt(0)
+				BigInt(fields.lock_enforcement) === BigInt(0)
 					? "Strict"
 					: "Relaxed",
 		};
@@ -114,6 +113,8 @@ export class FarmsApiCasting {
 		const stakeCoinType = Helpers.addLeadingZeroesToType(
 			new Coin(objectType).innerCoinType
 		);
+
+		console.log("fields", fields);
 
 		return {
 			objectType,

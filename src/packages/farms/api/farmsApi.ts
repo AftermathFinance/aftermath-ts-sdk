@@ -851,7 +851,7 @@ export class FarmsApi {
 		const { walletAddress } = inputs;
 
 		let tx;
-		if (inputs.rewardCoinTypes.length <= 0) {
+		if (inputs.rewardCoinTypes.length > 0) {
 			// harvest rewards
 			tx = await this.fetchBuildHarvestRewardsTx({
 				...inputs,
@@ -905,7 +905,8 @@ export class FarmsApi {
 			tx,
 		});
 
-		let harvestedCoins = [];
+		let harvestedCoins: Record<CoinType, TransactionArgument[]> = {};
+
 		for (const stakedPositionId of stakedPositionIds) {
 			for (const rewardCoinType of inputs.rewardCoinTypes) {
 				const harvestedCoin = this.harvestRewardsTx({
@@ -915,17 +916,23 @@ export class FarmsApi {
 					harvestedRewardsEventMetadataId,
 					rewardCoinType,
 				});
-				harvestedCoins.push(harvestedCoin);
+
+				if (rewardCoinType in harvestedCoins) {
+					harvestedCoins[rewardCoinType].push(harvestedCoin);
+				} else {
+					harvestedCoins[rewardCoinType] = [harvestedCoin];
+				}
 			}
 		}
 
-		// TODO: move this merging & transferring behaviour to coins api helpers ?
-		const coinToTransfer = harvestedCoins[0];
+		for (const harvestedCoinIds of Object.values(harvestedCoins)) {
+			const coinToTransfer = harvestedCoinIds[0];
 
-		if (harvestedCoins.length > 1)
-			tx.mergeCoins(coinToTransfer, harvestedCoins.slice(1));
+			if (harvestedCoinIds.length > 1)
+				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
 
-		tx.transferObjects([coinToTransfer], tx.pure(walletAddress));
+			tx.transferObjects([coinToTransfer], tx.pure(walletAddress));
+		}
 
 		this.endHarvestTx({ tx, harvestedRewardsEventMetadataId });
 

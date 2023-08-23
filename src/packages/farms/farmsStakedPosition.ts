@@ -44,7 +44,7 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 
 	public isLocked = (): boolean => {
-		const nowTimestamp = Date.now();
+		const nowTimestamp = dayjs().valueOf();
 		return this.unlockTimestamp() > nowTimestamp;
 	};
 
@@ -120,11 +120,10 @@ export class FarmsStakedPosition extends Caller {
 		coinType: CoinType;
 		stakingPool: FarmsStakingPool;
 	}) => {
-		const rewardCoin = this.rewardCoin(inputs);
-
 		this.updatePosition(inputs);
 
-		return rewardCoin.baseRewardsAccumulated - rewardCoin.baseRewardsDebt;
+		const rewardCoin = this.rewardCoin(inputs);
+		return rewardCoin.multiplierRewardsAccumulated;
 	};
 
 	// Updates the amount of rewards that can be harvested from `self` + the position's
@@ -206,7 +205,7 @@ export class FarmsStakedPosition extends Caller {
 			].multiplierRewardsDebt = totalMultiplierRewardsFromTimeT0;
 		}
 
-		const currentTimestamp = Date.now();
+		const currentTimestamp = dayjs().valueOf();
 
 		// iii. Remove the position's lock multiplier + bonus staked amount if the position is no
 		//  longer locked.
@@ -359,7 +358,7 @@ export class FarmsStakedPosition extends Caller {
 	}): [Balance, Balance] {
 		const { rewardsAccumulatedPerShare } = inputs;
 
-		const currentTimestamp = Date.now();
+		const currentTimestamp = dayjs().valueOf();
 		const lockEndTimestamp = this.unlockTimestamp();
 		const lastRewardTimestamp =
 			this.stakedPosition.lastHarvestRewardsTimestamp;

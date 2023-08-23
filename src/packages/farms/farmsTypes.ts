@@ -30,7 +30,6 @@ export interface FarmsStakingPoolRewardCoin {
 	emissionRate: Balance;
 	emissionSchedulesMs: Timestamp;
 	emissionStartTimestamp: Timestamp;
-	emissionEndTimestamp: Timestamp;
 	lastRewardTimestamp: Timestamp;
 }
 
@@ -42,6 +41,7 @@ export interface FarmsStakingPoolObject extends Object {
 	maxLockDurationMs: Timestamp;
 	maxLockMultiplier: FarmsMultiplier;
 	rewardCoins: FarmsStakingPoolRewardCoin[];
+	emissionEndTimestamp: Timestamp;
 	minStakeAmount: Balance;
 	lockEnforcement: FarmsLockEnforcement;
 }
