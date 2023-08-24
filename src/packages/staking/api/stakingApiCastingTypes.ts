@@ -15,6 +15,10 @@ export interface ValidatorConfigFieldsOnChain {
 	fee: BigIntAsString;
 }
 
+export interface ValidatorOperationCapFieldsOnChain {
+	authorizer_validator_address: SuiAddress;
+}
+
 // =========================================================================
 //  Events Fields
 // =========================================================================

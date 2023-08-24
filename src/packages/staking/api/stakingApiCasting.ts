@@ -9,6 +9,7 @@ import {
 	UnstakeEvent,
 	StakeRequestEvent,
 	ValidatorConfigObject,
+	ValidatorOperationCapObject,
 } from "../../../types";
 import {
 	AfSuiMintedEventOnChain,
@@ -17,6 +18,7 @@ import {
 	StakeRequestIndexerEventOnChain,
 	UnstakeEventOnChain,
 	UnstakeIndexerEventOnChain,
+	ValidatorOperationCapFieldsOnChain,
 	ValidatorConfigFieldsOnChain,
 } from "./stakingApiCastingTypes";
 import { Fixed } from "../../../general/utils/fixed";
@@ -52,6 +54,25 @@ export class StakingApiCasting {
 				fields.operation_cap_id
 			),
 			fee: Fixed.directCast(BigInt(fields.fee)),
+		};
+	};
+
+	public static validatorOperationCapObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): ValidatorOperationCapObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const fields = getObjectFields(
+			data
+		) as ValidatorOperationCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			authorizerValidatorAddress: Helpers.addLeadingZeroesToType(
+				fields.authorizer_validator_address
+			),
 		};
 	};
 

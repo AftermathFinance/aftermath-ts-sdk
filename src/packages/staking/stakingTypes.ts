@@ -23,6 +23,10 @@ export interface ValidatorConfigObject extends Object {
 	fee: Percentage;
 }
 
+export interface ValidatorOperationCapObject extends Object {
+	authorizerValidatorAddress: SuiAddress;
+}
+
 export interface StakeBalanceDynamicField {
 	objectId: ObjectId;
 	value: Balance;
@@ -145,6 +149,10 @@ export const isUnstakePosition = (
 //  API
 // =========================================================================
 
+// =========================================================================
+//  Transactions API
+// =========================================================================
+
 export interface ApiStakeBody {
 	walletAddress: SuiAddress;
 	suiStakeAmount: Balance;
@@ -165,6 +173,16 @@ export interface ApiStakeStakedSuiBody {
 	referrer?: SuiAddress;
 }
 
+export interface ApiUpdateValidatorFeeBody {
+	walletAddress: SuiAddress;
+	validatorOperationCapId: ObjectId;
+	newFeePercentage: Percentage;
+}
+
+// =========================================================================
+//  Objects API
+// =========================================================================
+
 export interface ApiStakingPositionsBody {
 	walletAddress: SuiAddress;
 }
@@ -172,6 +190,14 @@ export interface ApiStakingPositionsBody {
 export interface ApiDelegatedStakesBody {
 	walletAddress: SuiAddress;
 }
+
+export interface ApiValidatorOperationCapsBody {
+	walletAddress: SuiAddress;
+}
+
+// =========================================================================
+//  Events API
+// =========================================================================
 
 export type ApiStakingEventsBody = ApiEventsBody & {
 	walletAddress: SuiAddress;

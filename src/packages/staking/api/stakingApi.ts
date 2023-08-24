@@ -26,6 +26,8 @@ import {
 	ApiStakeBody,
 	ApiDelegatedStakesBody,
 	SuiDelegatedStake,
+	ValidatorOperationCapObject,
+	ApiUpdateValidatorFeeBody,
 } from "../stakingTypes";
 import {
 	AnyObjectType,
@@ -82,6 +84,10 @@ export class StakingApi {
 		afSui: CoinType;
 	};
 
+	public readonly objectTypes: {
+		unverifiedValidatorOperationCap: AnyObjectType;
+	};
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -95,14 +101,18 @@ export class StakingApi {
 
 		this.addresses = addresses;
 
-		this.coinTypes = {
-			afSui: `${addresses.packages.afsui}::afsui::AFSUI`,
-		};
-
 		this.eventTypes = {
 			stakeRequest: this.stakeRequestEventType(),
 			unstake: this.unstakeEventType(),
 			afSuiMinted: this.afSuiMintedEventType(),
+		};
+
+		this.coinTypes = {
+			afSui: `${addresses.packages.afsui}::afsui::AFSUI`,
+		};
+
+		this.objectTypes = {
+			unverifiedValidatorOperationCap: `${addresses.packages.lsd}::validator::UnverifiedValidatorOperationCap`,
 		};
 	}
 
@@ -175,6 +185,20 @@ export class StakingApi {
 					objectFromSuiObjectResponse:
 						StakingApiCasting.validatorConfigObjectFromSuiObjectResponse,
 				}),
+		});
+	};
+
+	public fetchOwnedValidatorOperationCaps = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<ValidatorOperationCapObject[]> => {
+		const { walletAddress } = inputs;
+
+		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			walletAddress,
+			objectType: this.objectTypes.unverifiedValidatorOperationCap,
+			objectFromSuiObjectResponse:
+				Casting.staking
+					.validatorOperationCapObjectFromSuiObjectResponse,
 		});
 	};
 
@@ -299,6 +323,34 @@ export class StakingApi {
 	};
 
 	// =========================================================================
+	//  Validator Transaction Commands
+	// =========================================================================
+
+	public updateValidatorFeeTx = (inputs: {
+		tx: TransactionBlock;
+		validatorOperationCapId: ObjectId;
+		newFee: bigint;
+	}) => {
+		const { tx, validatorOperationCapId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"update_validator_fee"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof validatorOperationCapId === "string"
+					? tx.object(validatorOperationCapId)
+					: validatorOperationCapId, // UnverifiedValidatorOperationCap
+				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.pure(inputs.newFee, "u64"),
+			],
+		});
+	};
+
+	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
 
@@ -379,6 +431,21 @@ export class StakingApi {
 		this.requestStakeStakedSuiVecTx({
 			tx,
 			...inputs,
+		});
+
+		return tx;
+	};
+
+	public buildUpdateValidatorFeeTx = async (
+		inputs: ApiUpdateValidatorFeeBody
+	): Promise<TransactionBlock> => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		this.updateValidatorFeeTx({
+			...inputs,
+			tx,
+			newFee: Casting.numberToFixedBigInt(inputs.newFeePercentage),
 		});
 
 		return tx;
