@@ -133,8 +133,8 @@ export class FarmsApi {
 		this.addresses = addresses;
 
 		this.objectTypes = {
-			stakedPosition: `${addresses.packages.vaults}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
-			stakingPoolOwnerCap: `${addresses.packages.vaults}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
+			stakedPosition: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
+			stakingPoolOwnerCap: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
 		};
 
 		this.eventTypes = {
@@ -1058,7 +1058,7 @@ export class FarmsApi {
 
 	private createdVaultEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaults,
+			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.createdVault
 		);
@@ -1069,14 +1069,14 @@ export class FarmsApi {
 
 	private stakedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaults,
+			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.staked
 		);
 
 	private stakedRelaxedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaults,
+			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.stakedRelaxed
 		);
@@ -1087,14 +1087,14 @@ export class FarmsApi {
 
 	private lockedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaults,
+			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.locked
 		);
 
 	private unlockedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaults,
+			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.unlocked
 		);
@@ -1105,14 +1105,14 @@ export class FarmsApi {
 
 	private depositedPrincipalEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaults,
+			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.depositedPrincipal
 		);
 
 	private withdrewPrincipalEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaults,
+			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.withdrewPrincipal
 		);
@@ -1123,7 +1123,7 @@ export class FarmsApi {
 
 	private harvestedRewardsEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaults,
+			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.harvestedRewards
 		);

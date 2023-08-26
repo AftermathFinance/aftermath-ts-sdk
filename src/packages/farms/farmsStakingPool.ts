@@ -80,13 +80,12 @@ export class FarmsStakingPool extends Caller {
 				continue;
 
 			// ii. Calculate how many rewards have to be emitted.
-			const number_of_emissions =
+			const numberOfEmissions =
 				(currentTimestamp - rewardCoin.lastRewardTimestamp) /
 				rewardCoin.emissionSchedulesMs;
 
 			const rewardsToEmit =
-				rewardCoin.emissionRate *
-				BigInt(Math.floor(number_of_emissions));
+				rewardCoin.emissionRate * BigInt(Math.floor(numberOfEmissions));
 
 			// iii. Increase the amount of rewards emitted per share.
 			this.increaseRewardsAccumulatedPerShare({
@@ -97,7 +96,7 @@ export class FarmsStakingPool extends Caller {
 			// iv. Update reward's `last_reward_timestamp`.
 			this.stakingPool.rewardCoins[rewardCoinIndex].lastRewardTimestamp =
 				rewardCoin.lastRewardTimestamp +
-				number_of_emissions * rewardCoin.emissionSchedulesMs;
+				numberOfEmissions * rewardCoin.emissionSchedulesMs;
 		}
 	};
 
@@ -271,13 +270,13 @@ export class FarmsStakingPool extends Caller {
 		if (newRewardsAccumulatedPerShare === BigInt(0)) return;
 
 		// ii. Increase the amount of rewards emitted per share.
-		const rewards_accumulated_per_share =
+		const rewardsAccumulatedPerShare =
 			this.stakingPool.rewardCoins[rewardCoinIndex]
 				.rewardsAccumulatedPerShare;
 
 		this.stakingPool.rewardCoins[
 			rewardCoinIndex
 		].rewardsAccumulatedPerShare =
-			rewards_accumulated_per_share + newRewardsAccumulatedPerShare;
+			rewardsAccumulatedPerShare + newRewardsAccumulatedPerShare;
 	}
 }

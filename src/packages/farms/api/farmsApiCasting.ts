@@ -114,8 +114,6 @@ export class FarmsApiCasting {
 			new Coin(objectType).innerCoinType
 		);
 
-		console.log("fields", fields);
-
 		return {
 			objectType,
 			objectId: getObjectId(data),

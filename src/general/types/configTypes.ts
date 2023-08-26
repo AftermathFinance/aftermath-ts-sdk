@@ -267,6 +267,7 @@ export interface PerpetualsAddresses {
 export interface FarmsAddresses {
 	packages: {
 		vaults: SuiAddress;
+		vaultsInitial: SuiAddress;
 	};
 }
 

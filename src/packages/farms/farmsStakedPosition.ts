@@ -23,6 +23,8 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 
 export class FarmsStakedPosition extends Caller {
+	private readonly trueLastHarvestRewardsTimestamp;
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -33,6 +35,8 @@ export class FarmsStakedPosition extends Caller {
 	) {
 		super(network, "farms");
 		this.stakedPosition = stakedPosition;
+		this.trueLastHarvestRewardsTimestamp =
+			stakedPosition.lastHarvestRewardsTimestamp;
 	}
 
 	// =========================================================================
@@ -123,7 +127,10 @@ export class FarmsStakedPosition extends Caller {
 		this.updatePosition(inputs);
 
 		const rewardCoin = this.rewardCoin(inputs);
-		return rewardCoin.multiplierRewardsAccumulated;
+		return (
+			rewardCoin.multiplierRewardsAccumulated +
+			rewardCoin.baseRewardsAccumulated
+		);
 	};
 
 	// Updates the amount of rewards that can be harvested from `self` + the position's
@@ -144,16 +151,6 @@ export class FarmsStakedPosition extends Caller {
 			// '----------------------------- total_rewards_from_time_t0 -----------------------------' //
 			//******************************************************************************************//
 
-			// NOTE: `total_rewards_from_time_t0` contains the amount of rewards a position would receive
-			//  -- from time t0 to the current time -- given the vault's current state when, in reality,
-			//  we need to calculate just the rewards that have accumulated since the last time the
-			//  position's `rewards_accumulated` was updated [labeled time th-1].
-			//
-			const [
-				totalBaseRewardsFromTimeT0,
-				totalMultiplierRewardsFromTimeT0,
-			] = this.calcTotalRewardsFromTimeT0(rewardCoin);
-
 			// NOTE: new reward types might have been added to the vault since this position last called
 			//  `update_ pending_rewards`, so we need to be cautious when borrowing from `rewards_debt`
 			//  and `rewards_accumulated`.
@@ -167,8 +164,25 @@ export class FarmsStakedPosition extends Caller {
 					multiplierRewardsDebt: BigInt(0),
 				});
 			}
+
 			const stakedPositionRewardCoin =
 				this.stakedPosition.rewardCoins[rewardCoinIndex];
+
+			// NOTE: `total_rewards_from_time_t0` contains the amount of rewards a position would receive
+			//  -- from time t0 to the current time -- given the vault's current state when, in reality,
+			//  we need to calculate just the rewards that have accumulated since the last time the
+			//  position's `rewards_accumulated` was updated [labeled time th-1].
+			//
+			let [totalBaseRewardsFromTimeT0, totalMultiplierRewardsFromTimeT0] =
+				this.calcTotalRewardsFromTimeT0(rewardCoin);
+
+			// calc_total_rewards_from_time_t0 returns 0 for multiplier rewards only if and only if the position was
+			// not locked since the last harvest. in such a case 0 does not mean 0 rewards but the initial state before
+			// the position was opened. thus, assigning debt here.
+			if (totalMultiplierRewardsFromTimeT0 === BigInt(0)) {
+				totalMultiplierRewardsFromTimeT0 =
+					stakedPositionRewardCoin.multiplierRewardsDebt;
+			}
 
 			// NOTE: Every time a position's `rewards_accumulated` is updated, a snapshot of the total
 			//  rewards received from time t0 is taken and stored as the position's `debt` field. Here,
@@ -211,7 +225,7 @@ export class FarmsStakedPosition extends Caller {
 		//  longer locked.
 		if (this.unlockTimestamp() < currentTimestamp) {
 			// TODO: handle unlock
-			// unlock(self, vault, clock);
+			this.unlock();
 		}
 
 		this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
@@ -226,7 +240,7 @@ export class FarmsStakedPosition extends Caller {
 		dayjs.extend(duration);
 		const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
 		const timeSinceLastHarvestMs =
-			dayjs().valueOf() - this.stakedPosition.lastHarvestRewardsTimestamp;
+			dayjs().valueOf() - this.trueLastHarvestRewardsTimestamp;
 
 		const rewardsUsdOneYear =
 			timeSinceLastHarvestMs > 0
@@ -234,10 +248,7 @@ export class FarmsStakedPosition extends Caller {
 				: 0;
 
 		const apy = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
-		const lockMultiplier = Casting.bigIntToFixedNumber(
-			this.stakedPosition.lockMultiplier
-		);
-		return apy * lockMultiplier;
+		return apy;
 	};
 
 	// =========================================================================
@@ -372,7 +383,7 @@ export class FarmsStakedPosition extends Caller {
 		// The position should only receive multiplied rewards for the time that was spent locked since
 		//  the last harvest. This case occurs when the user calls `pending_rewards` after the position's
 		//  lock duration has expired.
-		const rewardsAttributedToLockMultiplier = () => {
+		const rewardsAttributedToLockMultiplier = (() => {
 			return currentTimestamp <= lockEndTimestamp
 				? (this.stakedPosition.stakedAmountWithMultiplier *
 						rewardsAccumulatedPerShare) /
@@ -411,11 +422,18 @@ export class FarmsStakedPosition extends Caller {
 							BigInt(Math.floor(timeSinceLastHarvest))
 						);
 				  })();
-		};
+		})();
 
 		return [
 			rewardsAttributedToPrincipal,
-			rewardsAttributedToLockMultiplier(),
+			rewardsAttributedToLockMultiplier,
 		];
 	}
+
+	// Removes a positions `lock_duration_ms` and `lock_multiplier`. Updates the vault's
+	//  `staked_amount_with_multiplier` to account for the lost `lock_multiplier`.
+	private unlock = () => {
+		this.stakedPosition.lockDurationMs = 0;
+		this.stakedPosition.lockMultiplier = BigInt(0);
+	};
 }
