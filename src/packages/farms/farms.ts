@@ -70,7 +70,7 @@ export class Farms extends Caller {
 			ApiFarmsOwnedStakedPositionsBody
 		>("owned-staked-positions", inputs);
 		return positions.map(
-			(pool) => new FarmsStakedPosition(pool, this.network)
+			(pool) => new FarmsStakedPosition(pool, undefined, this.network)
 		);
 	}
 

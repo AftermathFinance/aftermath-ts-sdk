@@ -18,12 +18,16 @@ import {
 } from "../../types";
 import { FarmsStakingPool } from "./farmsStakingPool";
 import { Fixed } from "../../general/utils/fixed";
-import { Casting, Helpers } from "../../general/utils";
+import { Helpers } from "../../general/utils";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 
 export class FarmsStakedPosition extends Caller {
-	private readonly trueLastHarvestRewardsTimestamp;
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	public readonly trueLastHarvestRewardsTimestamp: Timestamp;
 
 	// =========================================================================
 	//  Constructor
@@ -31,11 +35,13 @@ export class FarmsStakedPosition extends Caller {
 
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
+		trueLastHarvestRewardsTimestamp?: Timestamp,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, "farms");
 		this.stakedPosition = stakedPosition;
 		this.trueLastHarvestRewardsTimestamp =
+			trueLastHarvestRewardsTimestamp ??
 			stakedPosition.lastHarvestRewardsTimestamp;
 	}
 
