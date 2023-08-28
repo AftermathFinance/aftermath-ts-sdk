@@ -15,10 +15,11 @@ import {
 	ApiFarmsStakeBody,
 	ApiFarmsTopUpStakingPoolRewardsBody,
 	ApiHarvestFarmsRewardsBody,
+	FarmsMultiplier,
 	FarmsStakingPoolObject,
 } from "./farmsTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Helpers } from "../../general/utils";
+import { Casting, Helpers } from "../../general/utils";
 import { Coin } from "..";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
@@ -144,6 +145,25 @@ export class FarmsStakingPool extends Caller {
 			})
 		);
 		return Helpers.sum(apys);
+	};
+
+	public calcMultiplier = (inputs: {
+		lockDurationMs: number;
+	}): FarmsMultiplier => {
+		const { lockDurationMs } = inputs;
+
+		const totalPossibleLockDurationMs =
+			this.stakingPool.maxLockDurationMs -
+			this.stakingPool.minLockDurationMs;
+
+		const newMultiplier =
+			((lockDurationMs - this.stakingPool.minLockDurationMs) /
+				(totalPossibleLockDurationMs <= 0
+					? 1
+					: totalPossibleLockDurationMs)) *
+			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
+
+		return Casting.numberToFixedBigInt(newMultiplier);
 	};
 
 	// =========================================================================
