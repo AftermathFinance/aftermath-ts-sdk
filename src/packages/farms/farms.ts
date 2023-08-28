@@ -3,6 +3,7 @@ import { Caller } from "../../general/utils/caller";
 import {
 	ApiFarmsCreateStakingPoolBody,
 	ApiFarmsOwnedStakedPositionsBody,
+	ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody,
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
 	FarmsDepositedPrincipalEvent,
 	FarmsHarvestedRewardsEvent,
@@ -13,6 +14,7 @@ import {
 	FarmsStakingPoolObject,
 	FarmsUnlockedEvent,
 	FarmsWithdrewPrincipalEvent,
+	StakingPoolOneTimeAdminCapObject,
 	StakingPoolOwnerCapObject,
 } from "./farmsTypes";
 import { ObjectId } from "@mysten/sui.js";
@@ -81,6 +83,15 @@ export class Farms extends Caller {
 			StakingPoolOwnerCapObject[],
 			ApiFarmsOwnedStakingPoolOwnerCapsBody
 		>("owned-staking-pool-owner-caps", inputs);
+	}
+
+	public async getOwnedStakingPoolOneTimeAdminCaps(
+		inputs: ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody
+	) {
+		return this.fetchApi<
+			StakingPoolOneTimeAdminCapObject[],
+			ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody
+		>("owned-staking-pool-one-time-admin-caps", inputs);
 	}
 
 	// =========================================================================

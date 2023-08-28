@@ -53,6 +53,11 @@ export interface FarmsStakingPoolOwnerCapFieldsOnChain {
 	afterburner_vault_id: ObjectId;
 }
 
+export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChain {
+	id: ObjectId;
+	afterburner_vault_id: ObjectId;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================

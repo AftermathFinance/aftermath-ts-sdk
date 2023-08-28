@@ -22,6 +22,7 @@ import {
 	FarmsStakingPoolOwnerCapFieldsOnChain,
 	FarmsUnlockedEventOnChain,
 	FarmsWithdrewPrincipalEventOnChain,
+	FarmsStakingPoolOneTimeAdminCapFieldsOnChain,
 } from "./farmsApiCastingTypes";
 import {
 	FarmsAddedRewardEvent,
@@ -41,6 +42,7 @@ import {
 	FarmsWithdrewPrincipalEvent,
 	StakingPoolOwnerCapObject,
 	PartialFarmsStakedPositionObject,
+	StakingPoolOneTimeAdminCapObject,
 } from "../farmsTypes";
 import { Coin } from "../..";
 import { Helpers } from "../../../general/utils";
@@ -151,6 +153,23 @@ export class FarmsApiCasting {
 		const fields = getObjectFields(
 			data
 		) as FarmsStakingPoolOwnerCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: getObjectId(data),
+			stakingPoolId: fields.afterburner_vault_id,
+		};
+	};
+
+	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): StakingPoolOneTimeAdminCapObject => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		const fields = getObjectFields(
+			data
+		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChain;
 
 		return {
 			objectType,

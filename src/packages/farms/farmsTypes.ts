@@ -50,6 +50,10 @@ export interface StakingPoolOwnerCapObject extends Object {
 	stakingPoolId: ObjectId;
 }
 
+export interface StakingPoolOneTimeAdminCapObject extends Object {
+	stakingPoolId: ObjectId;
+}
+
 // =========================================================================
 //  Staked Position
 // =========================================================================
@@ -313,5 +317,9 @@ export interface ApiFarmsIncreaseStakingPoolRewardsEmissionsBody {
 }
 
 export interface ApiFarmsOwnedStakingPoolOwnerCapsBody {
+	walletAddress: SuiAddress;
+}
+
+export interface ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody {
 	walletAddress: SuiAddress;
 }
