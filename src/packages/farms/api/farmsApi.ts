@@ -769,9 +769,10 @@ export class FarmsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vault,
-				"initialize_reward" + FarmsApi.isFarmOneTimeAdminCapId(inputs)
-					? "_and_consume_admin_cap"
-					: ""
+				"initialize_reward" +
+					(FarmsApi.isFarmOneTimeAdminCapId(inputs)
+						? "_and_consume_admin_cap"
+						: "")
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
@@ -803,9 +804,10 @@ export class FarmsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vault,
-				"add_reward" + FarmsApi.isFarmOneTimeAdminCapId(inputs)
-					? "_and_consume_admin_cap"
-					: ""
+				"add_reward" +
+					(FarmsApi.isFarmOneTimeAdminCapId(inputs)
+						? "_and_consume_admin_cap"
+						: "")
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
