@@ -14,6 +14,14 @@ import { CoinType } from "../coin/coinTypes";
 export type FarmsMultiplier = bigint;
 
 // =========================================================================
+//  Helpers
+// =========================================================================
+
+export type FarmOwnerOrOneTimeAdminCap =
+	| { ownerCapId: ObjectId }
+	| { oneTimeAdminCapId: ObjectId };
+
+// =========================================================================
 //  Objects
 // =========================================================================
 
@@ -283,8 +291,7 @@ export interface ApiFarmsCreateStakingPoolBody {
 //  Staking Pool Mutation API
 // =========================================================================
 
-export interface ApiFarmsInitializeStakingPoolRewardBody {
-	ownerCapId: ObjectId;
+export type ApiFarmsInitializeStakingPoolRewardBody = {
 	stakingPoolId: ObjectId;
 	rewardAmount: Balance;
 	emissionScheduleMs: Timestamp;
@@ -293,10 +300,9 @@ export interface ApiFarmsInitializeStakingPoolRewardBody {
 	stakeCoinType: CoinType;
 	rewardCoinType: CoinType;
 	walletAddress: SuiAddress;
-}
+} & FarmOwnerOrOneTimeAdminCap;
 
-export interface ApiFarmsTopUpStakingPoolRewardsBody {
-	ownerCapId: ObjectId;
+export type ApiFarmsTopUpStakingPoolRewardsBody = {
 	stakingPoolId: ObjectId;
 	stakeCoinType: CoinType;
 	rewards: {
@@ -304,9 +310,9 @@ export interface ApiFarmsTopUpStakingPoolRewardsBody {
 		rewardAmount: Balance;
 	}[];
 	walletAddress: SuiAddress;
-}
+} & FarmOwnerOrOneTimeAdminCap;
 
-export interface ApiFarmsIncreaseStakingPoolRewardsEmissionsBody {
+export type ApiFarmsIncreaseStakingPoolRewardsEmissionsBody = {
 	ownerCapId: ObjectId;
 	stakingPoolId: ObjectId;
 	stakeCoinType: CoinType;
@@ -316,7 +322,7 @@ export interface ApiFarmsIncreaseStakingPoolRewardsEmissionsBody {
 		emissionRate: bigint;
 	}[];
 	walletAddress: SuiAddress;
-}
+};
 
 export interface ApiFarmsOwnedStakingPoolOwnerCapsBody {
 	walletAddress: SuiAddress;
@@ -325,3 +331,10 @@ export interface ApiFarmsOwnedStakingPoolOwnerCapsBody {
 export interface ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody {
 	walletAddress: SuiAddress;
 }
+
+export type ApiFarmsGrantOneTimeAdminCapBody = {
+	ownerCapId: ObjectId;
+	recipient: SuiAddress;
+	rewardCoinType: CoinType;
+	walletAddress: SuiAddress;
+};

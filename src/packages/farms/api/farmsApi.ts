@@ -29,6 +29,7 @@ import {
 	FarmsHarvestedRewardsEvent,
 	FarmsCreatedVaultEvent,
 	StakingPoolOneTimeAdminCapObject,
+	FarmOwnerOrOneTimeAdminCap,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -722,32 +723,59 @@ export class FarmsApi {
 		});
 	};
 
+	public grantOneTimeAdminCapTx = (inputs: {
+		tx: TransactionBlock;
+		ownerCapId: ObjectId | TransactionArgument;
+		recipient: SuiAddress;
+		rewardCoinType: CoinType;
+	}) => {
+		const { tx, ownerCapId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"grant_one_time_admin_cap"
+			),
+			typeArguments: [inputs.rewardCoinType],
+			arguments: [
+				typeof ownerCapId === "string"
+					? tx.object(ownerCapId)
+					: ownerCapId, // OwnerCap
+				tx.pure(inputs.recipient, "address"),
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Staking Pool Mutation Transaction Commands
 	// =========================================================================
 
-	public initializeStakingPoolRewardTx = (inputs: {
-		tx: TransactionBlock;
-		ownerCapId: ObjectId;
-		stakingPoolId: ObjectId;
-		rewardCoinId: ObjectId | TransactionArgument;
-		emissionScheduleMs: Timestamp;
-		emissionRate: bigint;
-		emissionDelayTimestampMs: Timestamp;
-		stakeCoinType: CoinType;
-		rewardCoinType: CoinType;
-	}) => {
+	public initializeStakingPoolRewardTx = (
+		inputs: {
+			tx: TransactionBlock;
+			stakingPoolId: ObjectId;
+			rewardCoinId: ObjectId | TransactionArgument;
+			emissionScheduleMs: Timestamp;
+			emissionRate: bigint;
+			emissionDelayTimestampMs: Timestamp;
+			stakeCoinType: CoinType;
+			rewardCoinType: CoinType;
+		} & FarmOwnerOrOneTimeAdminCap
+	) => {
 		const { tx, rewardCoinId } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vault,
-				"initialize_reward"
+				"initialize_reward" + FarmsApi.isFarmOneTimeAdminCapId(inputs)
+					? "_and_consume_admin_cap"
+					: ""
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
-				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(FarmsApi.farmCapId(inputs)), // OwnerCap / OneTimeAdminCap
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				typeof rewardCoinId === "string"
@@ -760,25 +788,28 @@ export class FarmsApi {
 		});
 	};
 
-	public topUpStakingPoolRewardTx = (inputs: {
-		tx: TransactionBlock;
-		ownerCapId: ObjectId;
-		stakingPoolId: ObjectId;
-		rewardCoinId: ObjectId | TransactionArgument;
-		stakeCoinType: CoinType;
-		rewardCoinType: CoinType;
-	}) => {
+	public topUpStakingPoolRewardTx = (
+		inputs: {
+			tx: TransactionBlock;
+			stakingPoolId: ObjectId;
+			rewardCoinId: ObjectId | TransactionArgument;
+			stakeCoinType: CoinType;
+			rewardCoinType: CoinType;
+		} & FarmOwnerOrOneTimeAdminCap
+	) => {
 		const { tx, rewardCoinId } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vault,
-				"add_reward"
+				"add_reward" + FarmsApi.isFarmOneTimeAdminCapId(inputs)
+					? "_and_consume_admin_cap"
+					: ""
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
-				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(FarmsApi.farmCapId(inputs)), // OwnerCap / OneTimeAdminCap
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				typeof rewardCoinId === "string"
 					? tx.object(rewardCoinId)
@@ -806,7 +837,7 @@ export class FarmsApi {
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
-				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.ownerCapId), // OwnerCap / OneTimeAdminCap
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				tx.pure(inputs.emissionScheduleMs, "u64"),
@@ -916,7 +947,7 @@ export class FarmsApi {
 		return tx;
 	};
 
-	public buildUpdatePositionTx = Helpers.transactions.creatBuildTxFunc(
+	public buildUpdatePositionTx = Helpers.transactions.createBuildTxFunc(
 		this.updatePositionTx
 	);
 
@@ -924,13 +955,15 @@ export class FarmsApi {
 	//  Locking Transactions
 	// =========================================================================
 
-	public buildLockTx = Helpers.transactions.creatBuildTxFunc(this.lockTx);
+	public buildLockTx = Helpers.transactions.createBuildTxFunc(this.lockTx);
 
-	public buildRenewLockTx = Helpers.transactions.creatBuildTxFunc(
+	public buildRenewLockTx = Helpers.transactions.createBuildTxFunc(
 		this.renewLockTx
 	);
 
-	public buildUnlockTx = Helpers.transactions.creatBuildTxFunc(this.unlockTx);
+	public buildUnlockTx = Helpers.transactions.createBuildTxFunc(
+		this.unlockTx
+	);
 
 	// =========================================================================
 	//  Reward Harvesting Transactions
@@ -1088,6 +1121,10 @@ export class FarmsApi {
 		return tx;
 	};
 
+	public buildGrantOneTimeAdminCapTx = Helpers.transactions.createBuildTxFunc(
+		this.grantOneTimeAdminCapTx
+	);
+
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================
@@ -1171,4 +1208,22 @@ export class FarmsApi {
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.harvestedRewards
 		);
+
+	// =========================================================================
+	//  Private Static Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private static isFarmOwnerCapId = (inputs: FarmOwnerOrOneTimeAdminCap) =>
+		"ownerCapId" in inputs;
+
+	private static isFarmOneTimeAdminCapId = (
+		inputs: FarmOwnerOrOneTimeAdminCap
+	) => "oneTimeAdminCapId" in inputs;
+
+	private static farmCapId = (inputs: FarmOwnerOrOneTimeAdminCap) =>
+		"ownerCapId" in inputs ? inputs.ownerCapId : inputs.oneTimeAdminCapId;
 }

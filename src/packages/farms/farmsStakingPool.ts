@@ -10,11 +10,13 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
+	ApiFarmsGrantOneTimeAdminCapBody,
 	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
 	ApiFarmsInitializeStakingPoolRewardBody,
 	ApiFarmsStakeBody,
 	ApiFarmsTopUpStakingPoolRewardsBody,
 	ApiHarvestFarmsRewardsBody,
+	FarmOwnerOrOneTimeAdminCap,
 	FarmsMultiplier,
 	FarmsStakingPoolObject,
 } from "./farmsTypes";
@@ -209,45 +211,8 @@ export class FarmsStakingPool extends Caller {
 	}
 
 	// =========================================================================
-	//  Mutation Transactions (Owner Only)
+	//  Mutation/Creation Transactions (Owner Only)
 	// =========================================================================
-
-	public async getInitializeRewardTransaction(inputs: {
-		ownerCapId: ObjectId;
-		rewardAmount: Balance;
-		emissionScheduleMs: Timestamp;
-		emissionRate: bigint;
-		emissionDelayTimestampMs: Timestamp;
-		rewardCoinType: CoinType;
-		walletAddress: SuiAddress;
-	}) {
-		return this.fetchApiTransaction<ApiFarmsInitializeStakingPoolRewardBody>(
-			"transactions/initialize-reward",
-			{
-				...inputs,
-				stakeCoinType: this.stakingPool.stakeCoinType,
-				stakingPoolId: this.stakingPool.objectId,
-			}
-		);
-	}
-
-	public async getTopUpRewardsTransaction(inputs: {
-		ownerCapId: ObjectId;
-		rewards: {
-			rewardAmount: Balance;
-			rewardCoinType: CoinType;
-		}[];
-		walletAddress: SuiAddress;
-	}) {
-		return this.fetchApiTransaction<ApiFarmsTopUpStakingPoolRewardsBody>(
-			"transactions/top-up-reward",
-			{
-				...inputs,
-				stakeCoinType: this.stakingPool.stakeCoinType,
-				stakingPoolId: this.stakingPool.objectId,
-			}
-		);
-	}
 
 	public async getIncreaseRewardsEmissionsTransaction(inputs: {
 		ownerCapId: ObjectId;
@@ -260,6 +225,58 @@ export class FarmsStakingPool extends Caller {
 	}) {
 		return this.fetchApiTransaction<ApiFarmsIncreaseStakingPoolRewardsEmissionsBody>(
 			"transactions/increase-reward-emissions",
+			{
+				...inputs,
+				stakeCoinType: this.stakingPool.stakeCoinType,
+				stakingPoolId: this.stakingPool.objectId,
+			}
+		);
+	}
+
+	public async getGrantOneTimeAdminCapTransaction(
+		inputs: ApiFarmsGrantOneTimeAdminCapBody
+	) {
+		return this.fetchApiTransaction<ApiFarmsGrantOneTimeAdminCapBody>(
+			"transactions/grant-one-time-admin-cap",
+			inputs
+		);
+	}
+
+	// =========================================================================
+	//  Mutation Transactions (Owner/Admin Only)
+	// =========================================================================
+
+	public async getInitializeRewardTransaction(
+		inputs: {
+			rewardAmount: Balance;
+			emissionScheduleMs: Timestamp;
+			emissionRate: bigint;
+			emissionDelayTimestampMs: Timestamp;
+			rewardCoinType: CoinType;
+			walletAddress: SuiAddress;
+		} & FarmOwnerOrOneTimeAdminCap
+	) {
+		return this.fetchApiTransaction<ApiFarmsInitializeStakingPoolRewardBody>(
+			"transactions/initialize-reward",
+			{
+				...inputs,
+				stakeCoinType: this.stakingPool.stakeCoinType,
+				stakingPoolId: this.stakingPool.objectId,
+			}
+		);
+	}
+
+	public async getTopUpRewardsTransaction(
+		inputs: {
+			rewards: {
+				rewardAmount: Balance;
+				rewardCoinType: CoinType;
+			}[];
+			walletAddress: SuiAddress;
+		} & FarmOwnerOrOneTimeAdminCap
+	) {
+		return this.fetchApiTransaction<ApiFarmsTopUpStakingPoolRewardsBody>(
+			"transactions/top-up-reward",
 			{
 				...inputs,
 				stakeCoinType: this.stakingPool.stakeCoinType,

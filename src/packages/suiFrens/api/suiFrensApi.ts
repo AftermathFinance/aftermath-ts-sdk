@@ -991,7 +991,7 @@ export class SuiFrensApi {
 	//  Staking Transactions
 	// =========================================================================
 
-	public fetchStakeTx = Helpers.transactions.creatBuildTxFunc(
+	public fetchStakeTx = Helpers.transactions.createBuildTxFunc(
 		(inputs: {
 			tx: TransactionBlock;
 			suiFrenId: ObjectId;
@@ -1002,7 +1002,7 @@ export class SuiFrensApi {
 		}) => this.stakeAndKeepTx({ ...inputs, autoStakeFees: true })
 	);
 
-	public fetchUnstakeTx = Helpers.transactions.creatBuildTxFunc(
+	public fetchUnstakeTx = Helpers.transactions.createBuildTxFunc(
 		this.unstakeAndKeepTx
 	);
 
@@ -1125,11 +1125,11 @@ export class SuiFrensApi {
 
 	public fetchBuildAddAccessoryTx = (inputs: ApiAddSuiFrenAccessoryBody) => {
 		if (inputs.isOwned) {
-			return Helpers.transactions.creatBuildTxFunc(
+			return Helpers.transactions.createBuildTxFunc(
 				this.addAccessoryToOwnedSuiFrenTx
 			)(inputs);
 		}
-		return Helpers.transactions.creatBuildTxFunc(this.addAccessoryTx)(
+		return Helpers.transactions.createBuildTxFunc(this.addAccessoryTx)(
 			inputs
 		);
 	};
@@ -1138,11 +1138,11 @@ export class SuiFrensApi {
 		inputs: ApiRemoveSuiFrenAccessoryBody
 	) => {
 		if ("suiFrenId" in inputs) {
-			return Helpers.transactions.creatBuildTxFunc(
+			return Helpers.transactions.createBuildTxFunc(
 				this.removeAccessoryFromOwnedSuiFrenAndKeepTx
 			)(inputs);
 		}
-		return Helpers.transactions.creatBuildTxFunc(
+		return Helpers.transactions.createBuildTxFunc(
 			this.removeAccessoryAndKeepTx
 		)(inputs);
 	};

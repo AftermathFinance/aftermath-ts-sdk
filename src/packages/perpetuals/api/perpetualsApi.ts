@@ -692,7 +692,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildLiquidateAcquireTx = Helpers.transactions.creatBuildTxFunc(
+	public buildLiquidateAcquireTx = Helpers.transactions.createBuildTxFunc(
 		this.liquidateAcquireTx
 	);
 
