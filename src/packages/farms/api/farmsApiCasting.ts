@@ -222,6 +222,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			amount: BigInt(fields.amount),
+			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -393,6 +394,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			amount: BigInt(fields.amount),
+			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

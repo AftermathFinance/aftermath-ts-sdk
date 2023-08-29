@@ -180,15 +180,23 @@ export class FarmsStakedPosition extends Caller {
 			//  position's `rewards_accumulated` was updated [labeled time th-1].
 			//
 			let [totalBaseRewardsFromTimeT0, totalMultiplierRewardsFromTimeT0] =
-				this.calcTotalRewardsFromTimeT0(rewardCoin);
+				this.calcTotalRewardsFromTimeT0({
+					rewardsAccumulatedPerShare:
+						rewardCoin.rewardsAccumulatedPerShare,
+					multiplierRewardsDebt:
+						stakedPositionRewardCoin.multiplierRewardsDebt,
+				});
+
+			totalMultiplierRewardsFromTimeT0 +=
+				stakedPositionRewardCoin.multiplierRewardsDebt;
 
 			// calc_total_rewards_from_time_t0 returns 0 for multiplier rewards only if and only if the position was
 			// not locked since the last harvest. in such a case 0 does not mean 0 rewards but the initial state before
 			// the position was opened. thus, assigning debt here.
-			if (totalMultiplierRewardsFromTimeT0 === BigInt(0)) {
-				totalMultiplierRewardsFromTimeT0 =
-					stakedPositionRewardCoin.multiplierRewardsDebt;
-			}
+			// if (totalMultiplierRewardsFromTimeT0 === BigInt(0)) {
+			// 	totalMultiplierRewardsFromTimeT0 =
+			// 		stakedPositionRewardCoin.multiplierRewardsDebt;
+			// }
 
 			// NOTE: Every time a position's `rewards_accumulated` is updated, a snapshot of the total
 			//  rewards received from time t0 is taken and stored as the position's `debt` field. Here,
@@ -372,8 +380,9 @@ export class FarmsStakedPosition extends Caller {
 	//  apply the lock multiplier rewards to the time spent locked.
 	public calcTotalRewardsFromTimeT0(inputs: {
 		rewardsAccumulatedPerShare: Balance;
+		multiplierRewardsDebt: Balance;
 	}): [Balance, Balance] {
-		const { rewardsAccumulatedPerShare } = inputs;
+		const { rewardsAccumulatedPerShare, multiplierRewardsDebt } = inputs;
 
 		const currentTimestamp = dayjs().valueOf();
 		const lockEndTimestamp = this.unlockTimestamp();
@@ -393,7 +402,8 @@ export class FarmsStakedPosition extends Caller {
 			return currentTimestamp <= lockEndTimestamp
 				? (this.stakedPosition.stakedAmountWithMultiplier *
 						rewardsAccumulatedPerShare) /
-						Fixed.fixedOneB
+						Fixed.fixedOneB -
+						multiplierRewardsDebt
 				: lockEndTimestamp <= lastRewardTimestamp
 				? // Short circuit in the case the position hasn't been locked since the last harvest. Also
 				  //  required to not error on `lockEndTimestamp - lastRewardTimestamp`.

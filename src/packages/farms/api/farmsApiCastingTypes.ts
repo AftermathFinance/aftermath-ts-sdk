@@ -80,6 +80,7 @@ export type FarmsCreatedVaultEventOnChain = EventOnChain<{
 export type FarmsDepositedPrincipalEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	amount: BigIntAsString;
+	stake_type: CoinType;
 }>;
 
 export type FarmsDestroyedStakedPositionEventOnChain = EventOnChain<{
@@ -151,4 +152,5 @@ export type FarmsUnlockedEventOnChain = EventOnChain<{
 export type FarmsWithdrewPrincipalEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
 	amount: BigIntAsString;
+	stake_type: CoinType;
 }>;

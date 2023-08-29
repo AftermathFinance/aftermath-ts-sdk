@@ -474,6 +474,29 @@ export class FarmsApi {
 		});
 	};
 
+	public updatePositionTx = (inputs: {
+		tx: TransactionBlock;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) /* (Coin) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"update_position"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Locking Transaction Commands
 	// =========================================================================
@@ -893,17 +916,21 @@ export class FarmsApi {
 		return tx;
 	};
 
+	public buildUpdatePositionTx = Helpers.transactions.creatBuildTxFunc(
+		this.updatePositionTx
+	);
+
 	// =========================================================================
 	//  Locking Transactions
 	// =========================================================================
 
-	public fetchLockTx = Helpers.transactions.creatBuildTxFunc(this.lockTx);
+	public buildLockTx = Helpers.transactions.creatBuildTxFunc(this.lockTx);
 
-	public fetchRenewLockTx = Helpers.transactions.creatBuildTxFunc(
+	public buildRenewLockTx = Helpers.transactions.creatBuildTxFunc(
 		this.renewLockTx
 	);
 
-	public fetchUnlockTx = Helpers.transactions.creatBuildTxFunc(this.unlockTx);
+	public buildUnlockTx = Helpers.transactions.creatBuildTxFunc(this.unlockTx);
 
 	// =========================================================================
 	//  Reward Harvesting Transactions

@@ -107,6 +107,7 @@ export interface FarmsCreatedVaultEvent extends Event {
 export interface FarmsDepositedPrincipalEvent extends Event {
 	stakedPositionId: ObjectId;
 	amount: Balance;
+	stakeType: CoinType;
 }
 
 export interface FarmsDestroyedStakedPositionEvent extends Event {
@@ -178,6 +179,7 @@ export interface FarmsUnlockedEvent extends Event {
 export interface FarmsWithdrewPrincipalEvent extends Event {
 	stakedPositionId: ObjectId;
 	amount: Balance;
+	stakeType: CoinType;
 }
 
 // =========================================================================
