@@ -703,7 +703,7 @@ export class FarmsApi {
 	public transferOwnerCapTx = (inputs: {
 		tx: TransactionBlock;
 		ownerCapId: ObjectId | TransactionArgument;
-		recipient: SuiAddress;
+		recipientAddress: SuiAddress;
 	}) => {
 		const { tx, ownerCapId } = inputs;
 
@@ -718,7 +718,7 @@ export class FarmsApi {
 				typeof ownerCapId === "string"
 					? tx.object(ownerCapId)
 					: ownerCapId, // OwnerCap
-				tx.pure(inputs.recipient, "address"),
+				tx.pure(inputs.recipientAddress, "address"),
 			],
 		});
 	};
@@ -726,7 +726,7 @@ export class FarmsApi {
 	public grantOneTimeAdminCapTx = (inputs: {
 		tx: TransactionBlock;
 		ownerCapId: ObjectId | TransactionArgument;
-		recipient: SuiAddress;
+		recipientAddress: SuiAddress;
 		rewardCoinType: CoinType;
 	}) => {
 		const { tx, ownerCapId } = inputs;
@@ -742,7 +742,7 @@ export class FarmsApi {
 				typeof ownerCapId === "string"
 					? tx.object(ownerCapId)
 					: ownerCapId, // OwnerCap
-				tx.pure(inputs.recipient, "address"),
+				tx.pure(inputs.recipientAddress, "address"),
 			],
 		});
 	};
@@ -1044,7 +1044,7 @@ export class FarmsApi {
 		this.transferOwnerCapTx({
 			tx,
 			ownerCapId,
-			recipient: walletAddress,
+			recipientAddress: walletAddress,
 		});
 
 		return tx;

@@ -334,7 +334,7 @@ export interface ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody {
 
 export type ApiFarmsGrantOneTimeAdminCapBody = {
 	ownerCapId: ObjectId;
-	recipient: SuiAddress;
+	recipientAddress: SuiAddress;
 	rewardCoinType: CoinType;
 	walletAddress: SuiAddress;
 };
