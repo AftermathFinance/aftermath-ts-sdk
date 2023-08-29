@@ -35,7 +35,7 @@ export class FarmsStakingPool extends Caller {
 	) {
 		super(network, "farms");
 		this.stakingPool = stakingPool;
-		this.emitRewards();
+		// this.emitRewards();
 	}
 
 	// =========================================================================

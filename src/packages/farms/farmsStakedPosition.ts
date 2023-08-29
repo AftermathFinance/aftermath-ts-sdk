@@ -142,13 +142,20 @@ export class FarmsStakedPosition extends Caller {
 	// Updates the amount of rewards that can be harvested from `self` + the position's
 	// debt. If the position's lock duration has elapsed, it will be unlocked.
 	public updatePosition = (inputs: { stakingPool: FarmsStakingPool }) => {
+		const currentTimestamp = dayjs().valueOf();
+		if (this.stakedPosition.lastHarvestRewardsTimestamp >= currentTimestamp)
+			return;
+
 		// i. Increase the vault's `rewardsAccumulatedPerShare` values.
-		inputs.stakingPool.emitRewards();
+		const stakingPool = new FarmsStakingPool(
+			Helpers.deepCopy(inputs.stakingPool.stakingPool)
+		);
+		stakingPool.emitRewards();
 
 		for (const [
 			rewardCoinIndex,
 			rewardCoin,
-		] of inputs.stakingPool.stakingPool.rewardCoins.entries()) {
+		] of stakingPool.stakingPool.rewardCoins.entries()) {
 			//******************************************************************************************//
 			//                      debt (i.e. total_rewards_from_time_t0_to_th-1)                      //
 			// .--- pending_rewards_at_time_th_minus_1 ---|                                             //
@@ -232,8 +239,6 @@ export class FarmsStakedPosition extends Caller {
 				rewardCoinIndex
 			].multiplierRewardsDebt = totalMultiplierRewardsFromTimeT0;
 		}
-
-		const currentTimestamp = dayjs().valueOf();
 
 		// iii. Remove the position's lock multiplier + bonus staked amount if the position is no
 		//  longer locked.
@@ -392,17 +397,16 @@ export class FarmsStakedPosition extends Caller {
 		const principalStakedAmount = this.stakedPosition.stakedAmount;
 		// Base [e.g. principal] staked amount receives full (unaltered) rewards.
 		const rewardsAttributedToPrincipal =
-			(principalStakedAmount * rewardsAccumulatedPerShare) /
-			Fixed.fixedOneB;
+			principalStakedAmount *
+			(rewardsAccumulatedPerShare / Fixed.fixedOneB);
 
 		// The position should only receive multiplied rewards for the time that was spent locked since
 		//  the last harvest. This case occurs when the user calls `pending_rewards` after the position's
 		//  lock duration has expired.
 		const rewardsAttributedToLockMultiplier = (() => {
 			return currentTimestamp <= lockEndTimestamp
-				? (this.stakedPosition.stakedAmountWithMultiplier *
-						rewardsAccumulatedPerShare) /
-						Fixed.fixedOneB -
+				? this.stakedPosition.stakedAmountWithMultiplier *
+						(rewardsAccumulatedPerShare / Fixed.fixedOneB) -
 						multiplierRewardsDebt
 				: lockEndTimestamp <= lastRewardTimestamp
 				? // Short circuit in the case the position hasn't been locked since the last harvest. Also
@@ -412,9 +416,8 @@ export class FarmsStakedPosition extends Caller {
 						// Multiplier staked amount receives (altered) rewards dependent on the total time the
 						//  position was locked since the last harvest.
 						const totalRewardsAttributedToLockMultiplier =
-							(this.stakedPosition.stakedAmountWithMultiplier *
-								rewardsAccumulatedPerShare) /
-							Fixed.fixedOneB;
+							this.stakedPosition.stakedAmountWithMultiplier *
+							(rewardsAccumulatedPerShare / Fixed.fixedOneB);
 
 						const timeSinceLastHarvest =
 							currentTimestamp - lastRewardTimestamp;
@@ -429,13 +432,11 @@ export class FarmsStakedPosition extends Caller {
 
 						// Only disperse the multiplied rewards that were received while this position was locked.
 						return (
-							(totalRewardsAttributedToLockMultiplier *
-								BigInt(
-									Math.floor(
-										timeSpentLockedSinceLastHarvestMs
-									)
-								)) /
-							BigInt(Math.floor(timeSinceLastHarvest))
+							totalRewardsAttributedToLockMultiplier *
+							(BigInt(
+								Math.floor(timeSpentLockedSinceLastHarvestMs)
+							) /
+								BigInt(Math.floor(timeSinceLastHarvest)))
 						);
 				  })();
 		})();
