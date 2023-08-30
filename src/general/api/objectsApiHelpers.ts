@@ -22,9 +22,7 @@ export class ObjectsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-	}
+	constructor(private readonly Provider: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods
@@ -102,7 +100,7 @@ export class ObjectsApiHelpers {
 				showOwner: true,
 				showType: true,
 			},
-		})
+		});
 	};
 
 	public fetchObjectGeneral = async (inputs: {
@@ -139,8 +137,7 @@ export class ObjectsApiHelpers {
 		objectFromSuiObjectResponse: (
 			SuiObjectResponse: SuiObjectResponse
 		) => ObjectType;
-		options?: SuiObjectDataOptions,
-
+		options?: SuiObjectDataOptions;
 	}): Promise<ObjectType> => {
 		const { objectId, objectFromSuiObjectResponse, options } = inputs;
 		return objectFromSuiObjectResponse(

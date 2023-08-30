@@ -69,11 +69,7 @@ export class AftermathApi {
 		public readonly provider: JsonRpcProvider,
 		public readonly addresses: ConfigAddresses,
 		private readonly coinGeckoApiKey?: string
-	) {
-		this.provider = provider;
-		this.addresses = addresses;
-		this.coinGeckoApiKey = coinGeckoApiKey;
-	}
+	) {}
 
 	// =========================================================================
 	//  Class Object Creation

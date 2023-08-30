@@ -6,20 +6,21 @@ import { PriceFeedStorage } from "../oracleTypes";
 import { OracleCasting } from "./oracleCasting";
 
 export class OracleApi {
-    public readonly addresses: OracleAddresses;
+	public readonly addresses: OracleAddresses;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-    constructor(private readonly Provider: AftermathApi) {
-        this.Provider = Provider;
-        const addresses = this.Provider.addresses.oracle;
-        if (!addresses)
-            throw new Error("not all required addresses have been set in provider");
+	constructor(private readonly Provider: AftermathApi) {
+		const addresses = this.Provider.addresses.oracle;
+		if (!addresses)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
 
-        this.addresses = addresses;
-    }
+		this.addresses = addresses;
+	}
 
 	// =========================================================================
 	//  Objects
@@ -28,13 +29,11 @@ export class OracleApi {
 	public fetchPriceFeedStorage = async (
 		objectId: ObjectId
 	): Promise<PriceFeedStorage> => {
-		return this.Provider.Objects().fetchCastObject<PriceFeedStorage>(
-			{
-				objectId,
-				objectFromSuiObjectResponse:
-					OracleCasting.priceFeedStorageFromSuiObjectResponse,
-			}
-		);
+		return this.Provider.Objects().fetchCastObject<PriceFeedStorage>({
+			objectId,
+			objectFromSuiObjectResponse:
+				OracleCasting.priceFeedStorageFromSuiObjectResponse,
+		});
 	};
 
 	// =========================================================================
@@ -86,12 +85,8 @@ export class OracleApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(
-					this.addresses.objects.authorityCapability
-				),
-				tx.object(
-					this.addresses.objects.priceFeedStorage
-				),
+				tx.object(this.addresses.objects.authorityCapability),
+				tx.object(this.addresses.objects.priceFeedStorage),
 				tx.pure(symbol),
 			],
 		});
@@ -112,12 +107,8 @@ export class OracleApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(
-					this.addresses.objects.authorityCapability
-				),
-				tx.object(
-					this.addresses.objects.priceFeedStorage
-				),
+				tx.object(this.addresses.objects.authorityCapability),
+				tx.object(this.addresses.objects.priceFeedStorage),
 				tx.pure(symbol),
 				tx.pure(price),
 				tx.pure(timestamp),

@@ -96,7 +96,6 @@ export class RouterApi {
 
 		this.options = optionsToSet;
 
-		this.Provider = Provider;
 		this.Helpers = new RouterApiHelpers(Provider, optionsToSet);
 	}
 

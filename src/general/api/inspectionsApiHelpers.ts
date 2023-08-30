@@ -8,9 +8,7 @@ export class InspectionsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-	}
+	constructor(private readonly Provider: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods

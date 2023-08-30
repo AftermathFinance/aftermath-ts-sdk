@@ -1,4 +1,3 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCreateAccountBody,
@@ -44,6 +43,7 @@ export class Perpetuals extends Caller {
 				new PerpetualsMarket(
 					market.marketId,
 					market.marketParams,
+					undefined,
 					this.network
 				)
 		);
@@ -60,6 +60,7 @@ export class Perpetuals extends Caller {
 		return new PerpetualsMarket(
 			market.marketId,
 			market.marketParams,
+			undefined,
 			this.network
 		);
 	}

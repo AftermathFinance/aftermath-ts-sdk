@@ -13,13 +13,20 @@ import {
 	CoinType,
 	AccountStruct,
 	PerpetualsAddresses,
-    ExchangeAddresses,
-    Timestamp,
+	ExchangeAddresses,
+	Timestamp,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { PerpetualsAccount } from "../perpetualsAccount";
-import { AccountManagerObj, bcs, MarketManagerObj, MarketParams, MarketState } from "../perpetualsTypes";
+import {
+	AccountManagerObj,
+	bcs,
+	MarketManagerObj,
+	MarketParams,
+	MarketState,
+	OrderCasted,
+} from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsCasting";
 
 export class PerpetualsApi {
@@ -42,7 +49,6 @@ export class PerpetualsApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
 		const addresses = this.Provider.addresses.perpetuals;
 		if (!addresses)
 			throw new Error(
@@ -60,12 +66,13 @@ export class PerpetualsApi {
 	// =========================================================================
 
 	public fetchAccountManagerObj = async (
-		coinType: CoinType,
+		coinType: CoinType
 	): Promise<AccountManagerObj> => {
 		const exchangeCfg = this.getExchangeConfig(coinType);
 		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.accountManager,
-			objectFromSuiObjectResponse: PerpetualsCasting.accountManagerObjFromSuiObjectResponse,
+			objectFromSuiObjectResponse:
+				PerpetualsCasting.accountManagerObjFromSuiObjectResponse,
 			options: {
 				showBcs: true,
 				showType: true,
@@ -74,12 +81,13 @@ export class PerpetualsApi {
 	};
 
 	public fetchMarketManagerObj = async (
-		coinType: CoinType,
+		coinType: CoinType
 	): Promise<MarketManagerObj> => {
 		const exchangeCfg = this.getExchangeConfig(coinType);
 		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.marketManager,
-			objectFromSuiObjectResponse: PerpetualsCasting.marketManagerObjFromSuiObjectResponse,
+			objectFromSuiObjectResponse:
+				PerpetualsCasting.marketManagerObjFromSuiObjectResponse,
 			options: {
 				showBcs: true,
 				showType: true,
@@ -97,13 +105,15 @@ export class PerpetualsApi {
 				walletAddress: inputs.walletAddress,
 				objectType: accountCapType,
 			});
-		return accountCaps.map((x: SuiObjectResponse) => {return x.data!.objectId});
+		return accountCaps.map((x: SuiObjectResponse) => {
+			return x.data!.objectId;
+		});
 	};
 
 	public fetchPositionOrderIds = async (
 		coinType: CoinType,
 		accountId: bigint,
-		marketId: bigint,
+		marketId: bigint
 	): Promise<bigint[][]> => {
 		let account_struct = await this.fetchAccount(coinType, accountId);
 		let account = new PerpetualsAccount(accountId, account_struct);
@@ -112,121 +122,144 @@ export class PerpetualsApi {
 		let table_vec_asks = await this.fetchTableVec(
 			position.asks.outerNodes.contents.objectId,
 			"OuterNode<u64>",
-			PerpetualsCasting.outerNodeFromRawPartial(BigInt),
+			PerpetualsCasting.outerNodeFromRawPartial(BigInt)
 		);
 		let table_vec_bids = await this.fetchTableVec(
 			position.bids.outerNodes.contents.objectId,
 			"OuterNode<u64>",
-			PerpetualsCasting.outerNodeFromRawPartial(BigInt),
+			PerpetualsCasting.outerNodeFromRawPartial(BigInt)
 		);
 
 		let askOrderIds: bigint[] = table_vec_asks.map((node) => node.key);
 		let bidOrderIds: bigint[] = table_vec_bids.map((node) => node.key);
 		return [askOrderIds, bidOrderIds];
-	}
+	};
 
-    public fetchAccount = async (
+	public fetchAccount = async (
 		coinType: CoinType,
-		accountId: bigint,
+		accountId: bigint
 	): Promise<AccountStruct> => {
-		let accountDfInfos = await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
-			parentObjectId: this.addresses.objects.exchanges.get(coinType)?.accountManager!,
-		});
+		let accountDfInfos =
+			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
+				parentObjectId:
+					this.addresses.objects.exchanges.get(coinType)
+						?.accountManager!,
+			});
 
 		let accountDfInfo = accountDfInfos.find((info) => {
-			return (BigInt(info.name.value.account_id) === accountId)
+			return BigInt(info.name.value.account_id) === accountId;
 		})!;
 
-		let objectResponse = await this
-			.Provider
-			.provider
-			.getObject({
-				id: accountDfInfo.objectId, options: { showBcs: true }
-			}) as SuiObjectResponse;
+		let objectResponse = (await this.Provider.provider.getObject({
+			id: accountDfInfo.objectId,
+			options: { showBcs: true },
+		})) as SuiObjectResponse;
 		let bcsData = objectResponse.data?.bcs as SuiRawMoveObject;
-		let accountField = bcs.de("Field<u64, Account>", bcsData.bcsBytes, "base64");
+		let accountField = bcs.de(
+			"Field<u64, Account>",
+			bcsData.bcsBytes,
+			"base64"
+		);
 
 		return PerpetualsCasting.accountFromRaw(accountField.value);
-    }
+	};
 
-	public fetchMarketState = async (coinType: CoinType, marketId: bigint): Promise<MarketState> => {
+	public fetchMarketState = async (
+		coinType: CoinType,
+		marketId: bigint
+	): Promise<MarketState> => {
 		const pkg = this.addresses.packages.perpetuals;
 		const mktMngId = this.getExchangeConfig(coinType).marketManager;
-		const resp = await this.Provider.DynamicFields().fetchDynamicFieldObject({
-			parentId: mktMngId,
-			name: {
-				type: `${pkg}::keys::Market<${pkg}::keys::State>`,
-				value: { market_id: String(marketId) },
-			}
-		})
-		const objectResp =
-			await this.Provider.provider.getObject({
-				id: resp.data?.objectId!, options: { showBcs: true }
-			}) as SuiObjectResponse;
+		const resp =
+			await this.Provider.DynamicFields().fetchDynamicFieldObject({
+				parentId: mktMngId,
+				name: {
+					type: `${pkg}::keys::Market<${pkg}::keys::State>`,
+					value: { market_id: String(marketId) },
+				},
+			});
+		const objectResp = (await this.Provider.provider.getObject({
+			id: resp.data?.objectId!,
+			options: { showBcs: true },
+		})) as SuiObjectResponse;
 		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
-		const mktStateField = bcs.de("Field<MarketKey, MarketState>", bcsData.bcsBytes, "base64");
+		const mktStateField = bcs.de(
+			"Field<MarketKey, MarketState>",
+			bcsData.bcsBytes,
+			"base64"
+		);
 		return PerpetualsCasting.marketStateFromRawBcs(mktStateField.value);
-	}
+	};
 
-	public fetchMarketParams = async (coinType: CoinType, marketId: bigint): Promise<MarketParams> => {
+	public fetchMarketParams = async (
+		coinType: CoinType,
+		marketId: bigint
+	): Promise<MarketParams> => {
 		const pkg = this.addresses.packages.perpetuals;
 		const mktMngId = this.getExchangeConfig(coinType).marketManager;
-		const resp = await this.Provider.DynamicFields().fetchDynamicFieldObject({
-			parentId: mktMngId,
-			name: {
-				type: `${pkg}::keys::Market<${pkg}::keys::Params>`,
-				value: { market_id: String(marketId) },
-			}
-		})
-		const objectResp =
-			await this.Provider.provider.getObject({
-				id: resp.data?.objectId!, options: { showBcs: true }
-			}) as SuiObjectResponse;
+		const resp =
+			await this.Provider.DynamicFields().fetchDynamicFieldObject({
+				parentId: mktMngId,
+				name: {
+					type: `${pkg}::keys::Market<${pkg}::keys::Params>`,
+					value: { market_id: String(marketId) },
+				},
+			});
+		const objectResp = (await this.Provider.provider.getObject({
+			id: resp.data?.objectId!,
+			options: { showBcs: true },
+		})) as SuiObjectResponse;
 		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
-		const mktParamsField = bcs.de("Field<MarketKey, MarketParams>", bcsData.bcsBytes, "base64");
+		const mktParamsField = bcs.de(
+			"Field<MarketKey, MarketParams>",
+			bcsData.bcsBytes,
+			"base64"
+		);
 		return PerpetualsCasting.marketParamsFromRawBcs(mktParamsField.value);
-	}
+	};
 
 	public async fetchTableVec<T>(
 		objectId: ObjectId,
 		valueType: TypeName | StructTypeDefinition,
-		fromRaw: (value: any) => T,
+		fromRaw: (value: any) => T
 	): Promise<T[]> {
-		let dfs = await this
-			.Provider
-			.DynamicFields()
-			.fetchAllDynamicFieldsOfType({ parentObjectId: objectId });
+		let dfs =
+			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
+				parentObjectId: objectId,
+			});
 		let idxs_and_ids = dfs
 			.map((value) => {
-				return {idx: value.name.value, id: value.objectId}
+				return { idx: value.name.value, id: value.objectId };
 			})
 			.sort((a, b) => a.idx - b.idx);
 		let values: T[] = [];
 		for (const { id } of idxs_and_ids) {
-			let resp = await this
-				.Provider
-				.provider
-				.getObject({ id, options: { showBcs: true }}) as SuiObjectResponse;
+			let resp = (await this.Provider.provider.getObject({
+				id,
+				options: { showBcs: true },
+			})) as SuiObjectResponse;
 			const bcsData = resp.data?.bcs as SuiRawMoveObject;
-			const deserialized = bcs.de(`Field<u64, ${valueType}>`, bcsData.bcsBytes, "base64");
+			const deserialized = bcs.de(
+				`Field<u64, ${valueType}>`,
+				bcsData.bcsBytes,
+				"base64"
+			);
 			values.push(fromRaw(deserialized.value));
 		}
-		return values
+		return values;
 	}
 
 	public fetchCastObjectBcs = async <T>(inputs: {
 		objectId: ObjectId;
-		typeName: TypeName,
-		fromDeserialized: (
-			deserialized: any
-		) => T;
+		typeName: TypeName;
+		fromDeserialized: (deserialized: any) => T;
 	}): Promise<T> => {
 		const { objectId, typeName, fromDeserialized } = inputs;
 		const resp = await this.Provider.Objects().fetchObjectBcs(objectId);
 		const rawObj = resp.data?.bcs as SuiRawMoveObject;
 		const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
 		return fromDeserialized(deserialized);
-	}
+	};
 
 	// =========================================================================
 	//  Transaction Commands
@@ -281,7 +314,7 @@ export class PerpetualsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.perpetuals,
 				PerpetualsApi.constants.moduleNames.interface,
-				"add_insurance_fund",
+				"add_insurance_fund"
 			),
 			typeArguments: [coinType],
 			arguments: [
@@ -348,7 +381,9 @@ export class PerpetualsApi {
 				tx.object(exchangeCfg.marketManager),
 				tx.object(exchangeCfg.insuranceFunds),
 				tx.object(Sui.constants.addresses.suiClockId),
-				tx.object(this.addresses.objects.oracle.objects.priceFeedStorage),
+				tx.object(
+					this.addresses.objects.oracle.objects.priceFeedStorage
+				),
 				tx.pure(marketId),
 				tx.pure(marginRatioInitial),
 				tx.pure(marginRatioMaintenance),
@@ -610,9 +645,7 @@ export class PerpetualsApi {
 				"create_account"
 			),
 			typeArguments: [coinType],
-			arguments: [
-				tx.object(exchangeCfg.accountManager),
-			],
+			arguments: [tx.object(exchangeCfg.accountManager)],
 		});
 	};
 
@@ -851,5 +884,5 @@ export class PerpetualsApi {
 
 	public getExchangeConfig = (coinType: CoinType): ExchangeAddresses => {
 		return this.addresses.objects.exchanges.get(coinType)!;
-	}
+	};
 }

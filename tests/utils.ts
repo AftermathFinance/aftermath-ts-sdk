@@ -1,7 +1,4 @@
-import {
-	Ed25519Keypair,
-	RawSigner,
-} from "@mysten/sui.js";
+import { Ed25519Keypair, RawSigner } from "@mysten/sui.js";
 import { fromB64 } from "@mysten/bcs";
 import PriorityQueue from "priority-queue-typescript";
 import { OrderCasted } from "../src/types";
@@ -50,9 +47,7 @@ export const checkPQ = (
 	else return checkPQBid(pq);
 };
 
-export const checkPQAsk = (
-	pq: PriorityQueue<OrderCasted>
-): boolean => {
+export const checkPQAsk = (pq: PriorityQueue<OrderCasted>): boolean => {
 	let currentOrder = pq.poll()!;
 	while (pq.size() !== 0) {
 		let nextOrder = pq.poll()!;
@@ -67,9 +62,7 @@ export const checkPQAsk = (
 	return true;
 };
 
-export const checkPQBid = (
-	pq: PriorityQueue<OrderCasted>
-): boolean => {
+export const checkPQBid = (pq: PriorityQueue<OrderCasted>): boolean => {
 	let currentOrder = pq.poll()!;
 	while (pq.size() !== 0) {
 		let nextOrder = pq.poll()!;

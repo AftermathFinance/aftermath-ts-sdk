@@ -46,7 +46,7 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly Provider: AftermathApi) {
+	constructor(private readonly Provider: AftermathApi) {
 		const cetusAddresses = this.Provider.addresses.router?.cetus;
 
 		if (!cetusAddresses)

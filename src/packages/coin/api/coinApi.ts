@@ -19,9 +19,7 @@ export class CoinApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-	}
+	constructor(private readonly Provider: AftermathApi) {}
 
 	// =========================================================================
 	//  Inspections

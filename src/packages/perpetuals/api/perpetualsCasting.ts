@@ -25,21 +25,15 @@ import {
 	InnerNode,
 	OuterNode,
 	AccountStruct,
-  Position,
-  TableV,
-  bcs,
-  MarketManagerObj,
-  MarketManager,
+	Position,
+	TableV,
+	bcs,
+	MarketManagerObj,
+	MarketManager,
 } from "../perpetualsTypes";
 import PriorityQueue from "priority-queue-typescript";
-import { ASK, BID } from "../utils/critBitTreeUtils";
-import { compareAskOrders, compareBidOrders } from "../utils/comparators";
-import {
-	isMarketManagerOrderbookKeyType,
-	isMarketManagerParamsKeyType,
-	isMarketManagerStateKeyType,
-} from "../utils/helpers";
-import { Table } from "../../../general/types";
+import { AnyObjectType, Table } from "../../../general/types";
+import { CritBitTreeUtils } from "../utils/critBitTreeUtils";
 
 export class PerpetualsCasting {
 	// =========================================================================
@@ -55,12 +49,12 @@ export class PerpetualsCasting {
 			resp: data,
 			typeName: "AccountManager",
 			fromDeserialized: PerpetualsCasting.accountManagerFromRaw,
-		})
+		});
 
 		return {
 			objectType,
 			objectId: contents.id,
-			...contents
+			...contents,
 		};
 	};
 
@@ -114,19 +108,19 @@ export class PerpetualsCasting {
 			resp: data,
 			typeName: "MarketManager",
 			fromDeserialized: PerpetualsCasting.marketManagerFromRaw,
-		})
+		});
 
 		return {
 			objectType,
 			objectId: contents.id,
-			...contents
+			...contents,
 		};
 	};
 
 	public static marketParamsDynamicFieldFromOnChain = (
 		dynamicField: MarketManagerDynamicFieldOnChain
 	): MarketParamsDynamicField => {
-		if (!isMarketManagerParamsKeyType(dynamicField.data.type))
+		if (!this.isMarketManagerParamsKeyType(dynamicField.data.type))
 			throw new Error("not params key type");
 		const paramsField = dynamicField as MarketParamsDynamicFieldOnChain;
 		return {
@@ -139,7 +133,7 @@ export class PerpetualsCasting {
 	public static marketManagerStateDynamicFieldFromOnChain = (
 		dynamicField: MarketManagerDynamicFieldOnChain
 	): MarketStateDynamicField => {
-		if (!isMarketManagerStateKeyType(dynamicField.data.type))
+		if (!this.isMarketManagerStateKeyType(dynamicField.data.type))
 			throw new Error("not state key type");
 		const stateField =
 			dynamicField as MarketManagerStateDynamicFieldOnChain;
@@ -153,7 +147,7 @@ export class PerpetualsCasting {
 	public static marketManagerOrderbookDynamicFieldFromOnChain = async (
 		dynamicField: MarketManagerDynamicFieldOnChain
 	): Promise<MarketOrderbookDynamicFieldObject> => {
-		if (!isMarketManagerOrderbookKeyType(dynamicField.data.type))
+		if (!this.isMarketManagerOrderbookKeyType(dynamicField.data.type))
 			throw new Error("not order book key type");
 		const orderbookField =
 			dynamicField as MarketOrderbookDynamicFieldOnChain;
@@ -167,9 +161,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketParamsFromRawBcs = (
-		data: any
-	): MarketParams => {
+	public static marketParamsFromRawBcs = (data: any): MarketParams => {
 		return {
 			baseAssetSymbol: data.baseAssetSymbol,
 			marginRatioInitial: BigInt(data.marginRatioInitial),
@@ -189,9 +181,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketStateFromRawBcs = (
-		data: any
-	): MarketState => {
+	public static marketStateFromRawBcs = (data: any): MarketState => {
 		return {
 			cumFundingRateLong: BigInt(data.cumFundingRateLong),
 			cumFundingRateShort: BigInt(data.cumFundingRateShort),
@@ -299,8 +289,8 @@ export class PerpetualsCasting {
 		direction: boolean
 	): Promise<PriorityQueue<OrderCasted>> => {
 		const comparator: Function = direction
-			? compareAskOrders
-			: compareBidOrders;
+			? this.compareAskOrders
+			: this.compareBidOrders;
 		const priorityQueue = new PriorityQueue<OrderCasted>(
 			tree.outerNodes.contents.size,
 			comparator
@@ -330,12 +320,12 @@ export class PerpetualsCasting {
 		const priorityQueueOfAskOrders =
 			await PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
 				orderbook.asks,
-				ASK
+				CritBitTreeUtils.ASK
 			);
 		const priorityQueueOfBidOrders =
 			await PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
 				orderbook.bids,
-				BID
+				CritBitTreeUtils.BID
 			);
 		return [priorityQueueOfAskOrders, priorityQueueOfBidOrders];
 	};
@@ -348,7 +338,9 @@ export class PerpetualsCasting {
 		return {
 			id: data.id,
 			maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
-			maxPendingOrdersPerPosition: BigInt(data.maxPendingOrdersPerPosition),
+			maxPendingOrdersPerPosition: BigInt(
+				data.maxPendingOrdersPerPosition
+			),
 			nextAccountId: BigInt(data.nextAccountId),
 		};
 	}
@@ -359,14 +351,16 @@ export class PerpetualsCasting {
 			feesAccrued: BigInt(data.feesAccrued),
 			minOrderUsdValue: BigInt(data.minOrderUsdValue),
 			liquidationTolerance: BigInt(data.liquidationTolerance),
-		}
+		};
 	}
 
 	public static accountFromRaw(data: any): AccountStruct {
 		return {
 			collateral: BigInt(data.collateral),
 			marketIds: data.marketIds.map((id: number) => BigInt(id)),
-			positions: data.positions.map((pos: any) => PerpetualsCasting.positionFromRaw(pos)),
+			positions: data.positions.map((pos: any) =>
+				PerpetualsCasting.positionFromRaw(pos)
+			),
 		};
 	}
 
@@ -380,17 +374,17 @@ export class PerpetualsCasting {
 			bids: PerpetualsCasting.critBitTreeFromRaw<bigint>(data.bids),
 			asksQuantity: BigInt(data.asksQuantity),
 			bidsQuantity: BigInt(data.bidsQuantity),
-		}
+		};
 	}
 
-	public static critBitTreeFromRaw<T>(
-		data: any,
-	): CritBitTree<T> {
+	public static critBitTreeFromRaw<T>(data: any): CritBitTree<T> {
 		return {
 			root: BigInt(data.root),
-			innerNodes: PerpetualsCasting.tableVFromRaw<InnerNode>(data.innerNodes),
+			innerNodes: PerpetualsCasting.tableVFromRaw<InnerNode>(
+				data.innerNodes
+			),
 			outerNodes: PerpetualsCasting.tableVFromRaw<OuterNode<T>>(
-				data.outerNodes,
+				data.outerNodes
 			),
 		};
 	}
@@ -401,7 +395,7 @@ export class PerpetualsCasting {
 			parentIndex: BigInt(data.parentIndex),
 			leftChildIndex: BigInt(data.leftChildren),
 			rightChildIndex: BigInt(data.rightChildren),
-		}
+		};
 	}
 
 	public static outerNodeFromRawPartial<T>(
@@ -418,12 +412,10 @@ export class PerpetualsCasting {
 			key: BigInt(data.key),
 			value: valueFromRaw(data.value),
 			parentIndex: BigInt(data.parentIndex),
-		}
+		};
 	}
 
-	public static tableVFromRaw<T>(
-		data: any,
-	): TableV<T> {
+	public static tableVFromRaw<T>(data: any): TableV<T> {
 		return {
 			contents: PerpetualsCasting.tableFromRaw<number, T>(data.contents),
 		};
@@ -441,13 +433,46 @@ export class PerpetualsCasting {
 	// =========================================================================
 
 	public static castObjectBcs = <T>(inputs: {
-        resp: SuiObjectResponse;
-        typeName: TypeName;
-        fromDeserialized: (deserialized: any) => T;
-    }): T => {
-        const { resp, typeName, fromDeserialized } = inputs;
-        const rawObj = resp.data?.bcs as SuiRawMoveObject;
-        const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
-        return fromDeserialized(deserialized);
-    }
+		resp: SuiObjectResponse;
+		typeName: TypeName;
+		fromDeserialized: (deserialized: any) => T;
+	}): T => {
+		const { resp, typeName, fromDeserialized } = inputs;
+		const rawObj = resp.data?.bcs as SuiRawMoveObject;
+		const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
+		return fromDeserialized(deserialized);
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private static compareBidOrders = (
+		insertedOrder: OrderCasted,
+		comparableOrder: OrderCasted
+	): number => {
+		if (insertedOrder.price < comparableOrder.price) return 1;
+		else if (insertedOrder.price > comparableOrder.price) return -1;
+		else if (insertedOrder.counter > comparableOrder.counter) return 1;
+		else return -1;
+	};
+
+	private static compareAskOrders = (
+		insertedOrder: OrderCasted,
+		comparableOrder: OrderCasted
+	): number => {
+		if (insertedOrder.price > comparableOrder.price) return 1;
+		else if (insertedOrder.price < comparableOrder.price) return -1;
+		else if (insertedOrder.counter > comparableOrder.counter) return 1;
+		else return -1;
+	};
+
+	private static isMarketManagerParamsKeyType = (type: AnyObjectType) =>
+		type.includes("Params");
+
+	private static isMarketManagerStateKeyType = (type: AnyObjectType) =>
+		type.includes("State");
+
+	private static isMarketManagerOrderbookKeyType = (type: AnyObjectType) =>
+		type.includes("Orderbook");
 }

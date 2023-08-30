@@ -3,12 +3,12 @@ import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
+	IFixed,
 	Object,
 	Timestamp,
 } from "../../general/types/generalTypes";
 import { Table } from "../../general/types/suiTypes";
 import { CoinType } from "../coin/coinTypes";
-import { IFixed } from "../utilities/types";
 
 // TEMPORARY TO BUILD
 export interface AccountManagerObj {}

@@ -1,6 +1,5 @@
 import { BCS, getSuiMoveConfig } from "@mysten/bcs";
-import { Object, Timestamp } from "../../general/types/generalTypes";
-import { IFixed } from "../utilities/types";
+import { IFixed, Object, Timestamp } from "../../general/types/generalTypes";
 
 // =========================================================================
 //  BCS - Binary Canonical Serialization
@@ -9,11 +8,11 @@ import { IFixed } from "../utilities/types";
 export const bcs = new BCS(getSuiMoveConfig());
 
 bcs.registerStructType("PriceFeed", {
-    id: "UID",
-    pyth_price_info_id: "ID",
-    symbol: BCS.STRING,
-    price: BCS.U256,
-    timestamp: BCS.U64,
+	id: "UID",
+	pyth_price_info_id: "ID",
+	symbol: BCS.STRING,
+	price: BCS.U256,
+	timestamp: BCS.U64,
 });
 
 bcs.registerStructType("PriceFeedStorage", { id: "UID" });
