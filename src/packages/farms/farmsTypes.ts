@@ -132,7 +132,7 @@ export interface FarmsIncreasedEmissionsEvent extends Event {
 	vaultId: ObjectId;
 	rewardType: CoinType;
 	emissionScheduleMs: Timestamp;
-	emissionRate: bigint; // Balance ?
+	emissionRate: Balance;
 }
 
 export interface FarmsInitializedRewardEvent extends Event {

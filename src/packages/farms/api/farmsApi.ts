@@ -106,7 +106,13 @@ export class FarmsApi {
 	};
 
 	public readonly eventTypes: {
+		// staking pools
+		// creation
 		createdVault: AnyObjectType;
+		// mutation
+		initializedReward: AnyObjectType;
+		addedReward: AnyObjectType;
+		increasedEmissions: AnyObjectType;
 
 		// staking positions
 		// creation
@@ -142,7 +148,13 @@ export class FarmsApi {
 		};
 
 		this.eventTypes = {
+			// staking pools
+			// creation
 			createdVault: this.createdVaultEventType(),
+			// mutation
+			initializedReward: this.initializedRewardEventType(),
+			addedReward: this.addedRewardEventType(),
+			increasedEmissions: this.increasedEmissionsEventType(),
 
 			// staking positions
 			// creation
@@ -1136,7 +1148,7 @@ export class FarmsApi {
 	// =========================================================================
 
 	// =========================================================================
-	//  Created Vault
+	//  Vault Creation
 	// =========================================================================
 
 	private createdVaultEventType = () =>
@@ -1144,6 +1156,31 @@ export class FarmsApi {
 			this.addresses.packages.vaultsInitial,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.createdVault
+		);
+
+	// =========================================================================
+	//  Vault Mutation
+	// =========================================================================
+
+	private initializedRewardEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaultsInitial,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.initializedReward
+		);
+
+	private addedRewardEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaultsInitial,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.addedReward
+		);
+
+	private increasedEmissionsEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.vaultsInitial,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.increasedEmissions
 		);
 
 	// =========================================================================
