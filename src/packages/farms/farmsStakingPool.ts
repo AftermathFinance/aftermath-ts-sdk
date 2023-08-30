@@ -113,7 +113,7 @@ export class FarmsStakingPool extends Caller {
 
 		if (price <= 0 || tvlUsd <= 0) return 0;
 
-		this.emitRewards();
+		// this.emitRewards();
 
 		const rewardCoin = this.rewardCoin({ coinType });
 		const currentTimestamp = dayjs().valueOf();
@@ -299,21 +299,40 @@ export class FarmsStakingPool extends Caller {
 	}) {
 		const { rewardsToEmit, rewardCoinIndex } = inputs;
 
+		const rewardsRemaining = this.rewardsRemaining(inputs);
+		if (rewardsRemaining === BigInt(0)) return;
+
+		const maxNewRewardsAccumulatedPerShare =
+			(rewardsRemaining * BigInt(1_000_000_000_000_000_000)) /
+			this.stakingPool.stakedAmountWithMultiplier;
+
 		// i. Calculate the pro-rata amount of rewards allocated to each staked amount.
-		const newRewardsAccumulatedPerShare =
+		let newRewardsAccumulatedPerShare =
 			(rewardsToEmit * BigInt(1_000_000_000_000_000_000)) /
 			this.stakingPool.stakedAmountWithMultiplier;
+
+		// Cap on the amount of rewards left in the pool.
+		if (newRewardsAccumulatedPerShare > maxNewRewardsAccumulatedPerShare) {
+			newRewardsAccumulatedPerShare = maxNewRewardsAccumulatedPerShare;
+		}
 
 		if (newRewardsAccumulatedPerShare === BigInt(0)) return;
 
 		// ii. Increase the amount of rewards emitted per share.
-		const rewardsAccumulatedPerShare =
-			this.stakingPool.rewardCoins[rewardCoinIndex]
-				.rewardsAccumulatedPerShare;
-
 		this.stakingPool.rewardCoins[
 			rewardCoinIndex
-		].rewardsAccumulatedPerShare =
-			rewardsAccumulatedPerShare + newRewardsAccumulatedPerShare;
+		].rewardsAccumulatedPerShare += newRewardsAccumulatedPerShare;
+	}
+
+	private rewardsRemaining(inputs: { rewardCoinIndex: number }): Balance {
+		const rewardCoin = this.stakingPool.rewardCoins[inputs.rewardCoinIndex];
+
+		const rewardsRemaining =
+			rewardCoin.rewards -
+			(rewardCoin.rewardsAccumulatedPerShare *
+				this.stakingPool.stakedAmountWithMultiplier) /
+				BigInt(1_000_000_000_000_000_000);
+
+		return rewardsRemaining;
 	}
 }
