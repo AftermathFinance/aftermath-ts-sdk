@@ -42,10 +42,13 @@ import {
 	Url,
 	AftermathRouterWrapperAddresses,
 	PoolObject,
+	IndexerDataWithCursorQueryParams,
+	ApiIndexerEventsBody,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
 	PoolTradeEventOnChain,
+	PoolTradeEventOnChainFields,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
@@ -58,6 +61,8 @@ import { PoolsApiCasting } from "./poolsApiCasting";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
+import duration, { DurationUnitType } from "dayjs/plugin/duration";
+import { IndexerEventOnChain } from "../../../general/types/castingTypes";
 
 export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
@@ -100,7 +105,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		withdraw: AnyObjectType;
 	};
 
-	public readonly poolVolumeDataTimeframes: Record<
+	public static readonly poolVolumeDataTimeframes: Record<
 		PoolGraphDataTimeframeKey,
 		PoolGraphDataTimeframe
 	> = {
@@ -108,18 +113,18 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			time: 24,
 			timeUnit: "hour",
 		},
-		"1W": {
-			time: 7,
-			timeUnit: "day",
-		},
-		"1M": {
-			time: 30,
-			timeUnit: "day",
-		},
-		"3M": {
-			time: 90,
-			timeUnit: "day",
-		},
+		// "1W": {
+		// 	time: 7,
+		// 	timeUnit: "day",
+		// },
+		// "1M": {
+		// 	time: 30,
+		// 	timeUnit: "day",
+		// },
+		// "3M": {
+		// 	time: 90,
+		// 	timeUnit: "day",
+		// },
 	};
 
 	// =========================================================================
@@ -151,91 +156,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
 	//  Public Methods
 	// =========================================================================
-
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public fetchTradeEvents = async (
-		inputs: {
-			// poolObjectId?: ObjectId
-		} & EventsInputs
-	) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			PoolTradeEventOnChain,
-			PoolTradeEvent
-		>({
-			...inputs,
-			// poolObjectId
-			// 	? {
-			// 			And: [
-			// 				{ MoveEventType: this.eventTypes.trade },
-			// 				{
-			// 					MoveEventField: {
-			// 						path: "pool_id",
-			// 						value: poolObjectId,
-			// 					},
-			// 				},
-			// 			],
-			// 	  }
-			// 	: { MoveEventType: this.eventTypes.trade },
-			query: { MoveEventType: this.eventTypes.trade },
-			eventFromEventOnChain: Casting.pools.poolTradeEventFromOnChain,
-		});
-
-	public fetchDepositEvents = async (
-		inputs: {
-			// poolObjectId?: ObjectId;
-		} & EventsInputs
-	) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			PoolDepositEventOnChain,
-			PoolDepositEvent
-		>({
-			...inputs,
-			// query: inputs.poolObjectId
-			// 	? {
-			// 			And: [
-			// 				{ MoveEventType: this.eventTypes.deposit },
-			// 				{
-			// 					MoveEventField: {
-			// 						path: "pool_id",
-			// 						value: inputs.poolObjectId,
-			// 					},
-			// 				},
-			// 			],
-			// 	  }
-			// 	: { MoveEventType: this.eventTypes.deposit },
-			query: { MoveEventType: this.eventTypes.deposit },
-			eventFromEventOnChain: Casting.pools.poolDepositEventFromOnChain,
-		});
-
-	public fetchWithdrawEvents = async (
-		inputs: {
-			// poolObjectId?: ObjectId
-		} & EventsInputs
-	) =>
-		await this.Provider.Events().fetchCastEventsWithCursor<
-			PoolWithdrawEventOnChain,
-			PoolWithdrawEvent
-		>({
-			...inputs,
-			// poolObjectId
-			// 	? {
-			// 			And: [
-			// 				{ MoveEventType: this.eventTypes.withdraw },
-			// 				{
-			// 					MoveEventField: {
-			// 						path: "pool_id",
-			// 						value: poolObjectId,
-			// 					},
-			// 				},
-			// 			],
-			// 	  }
-			// 	: { MoveEventType: this.eventTypes.withdraw },
-			query: { MoveEventType: this.eventTypes.withdraw },
-			eventFromEventOnChain: Casting.pools.poolWithdrawEventFromOnChain,
-		});
 
 	// =========================================================================
 	//  Objects
@@ -279,6 +199,87 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		);
 		return filteredIds;
 	};
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async fetchTradeEvents(
+		inputs: ApiIndexerEventsBody & {
+			poolId: ObjectId;
+		}
+	) {
+		const { poolId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`pools/${poolId}/events/swap`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.pools.poolTradeEventFromIndexerOnChain
+		);
+	}
+
+	public async fetchWithdrawEvents(
+		inputs: ApiIndexerEventsBody & {
+			poolId: ObjectId;
+		}
+	) {
+		const { poolId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`pools/${poolId}/events/withdraw`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.pools.poolWithdrawEventFromIndexerOnChain
+		);
+	}
+
+	public async fetchDepositEvents(
+		inputs: ApiIndexerEventsBody & {
+			poolId: ObjectId;
+		}
+	) {
+		const { poolId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`pools/${poolId}/events/deposit`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.pools.poolDepositEventFromIndexerOnChain
+		);
+	}
+
+	public async fetchTradeEventsWithinTime(inputs: {
+		poolId: ObjectId;
+		timeUnit: DurationUnitType;
+		time: number;
+	}): Promise<PoolTradeEvent[]> {
+		const { poolId, timeUnit, time } = inputs;
+
+		dayjs.extend(duration);
+		const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
+
+		const tradeEventsOnChain =
+			await this.Provider.indexerCaller.fetchIndexer<
+				IndexerEventOnChain<PoolTradeEventOnChainFields>[],
+				undefined,
+				IndexerDataWithCursorQueryParams
+			>(
+				`pools/${poolId}/swap-events-within-time/${durationMs}`,
+				undefined,
+				{
+					skip: 0,
+					limit: 10000, // max from mongo ?
+				}
+			);
+
+		return tradeEventsOnChain.map(
+			Casting.pools.poolTradeEventFromIndexerOnChain
+		);
+	}
 
 	// =========================================================================
 	//  Transaction Builders
@@ -1045,23 +1046,14 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// TODO: use promise.all to execute some of this fetching in parallel
 	public fetchPoolStats = async (inputs: {
 		pool: Pool;
+		tradeEventsWithinTime: PoolTradeEvent[];
 		coinsToPrice: CoinsToPrice;
 		coinsToDecimals: CoinsToDecimals;
 	}): Promise<PoolStats> => {
-		const { pool, coinsToPrice, coinsToDecimals } = inputs;
+		const { pool, tradeEventsWithinTime, coinsToPrice, coinsToDecimals } =
+			inputs;
 
 		const poolCoins = pool.pool.coins;
-
-		// TODO: remove all notions of sdk from api functions !
-
-		const tradeEventsWithinTime =
-			await this.Provider.Events().fetchEventsWithinTime({
-				fetchEventsFunc: (eventsInputs) =>
-					pool.getTradeEvents(eventsInputs),
-				timeUnit: "hour",
-				time: 24,
-				limitStepSize: 512,
-			});
 
 		const volume = this.fetchCalcPoolVolume(
 			tradeEventsWithinTime,
@@ -1255,31 +1247,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Graph Data
 	// =========================================================================
 
-	public fetchPoolVolumeData = async (inputs: {
-		poolObjectId: ObjectId;
-		timeframe: PoolGraphDataTimeframeKey;
-		coinsToDecimals: CoinsToDecimals;
-		coinsToPrice: CoinsToPrice;
-	}): Promise<PoolDataPoint[]> => {
-		const timeframeValue = this.poolVolumeDataTimeframes[inputs.timeframe];
-
-		const tradeEvents = (
-			await this.Provider.Events().fetchEventsWithinTime({
-				// TODO: fetch only pool's events
-				fetchEventsFunc: this.fetchTradeEvents,
-				...timeframeValue,
-				limitStepSize: 512,
-			})
-		).filter((trade) => trade.poolId === inputs.poolObjectId);
-
-		return this.calcPoolVolumeData({
-			...inputs,
-			...timeframeValue,
-			tradeEvents,
-			buckets: timeframeValue.time,
-		});
-	};
-
 	public calcPoolFeeDataFromVolume = (inputs: {
 		volumeData: PoolDataPoint[];
 		poolTradeFee: PoolTradeFee;
@@ -1296,18 +1263,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		tradeEvents: PoolTradeEvent[];
 		timeUnit: ManipulateType;
 		time: number;
-		buckets: number;
 		coinsToDecimals: CoinsToDecimals;
 		coinsToPrice: CoinsToPrice;
 	}) => {
-		const {
-			tradeEvents,
-			timeUnit,
-			time,
-			buckets,
-			coinsToDecimals,
-			coinsToPrice,
-		} = inputs;
+		const { tradeEvents, timeUnit, time, coinsToDecimals, coinsToPrice } =
+			inputs;
+		const buckets = time;
 
 		const now = Date.now();
 		const maxTimeAgo = dayjs(now).subtract(time, timeUnit);

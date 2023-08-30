@@ -14,14 +14,18 @@ import {
 } from "../poolsTypes";
 import {
 	PoolCreateEventOnChain,
-	PoolDepositEventOnChain,
 	PoolFieldsOnChain,
+	PoolTradeEventOnChainFields,
+	PoolDepositEventFieldsOnChain,
+	PoolWithdrawEventFieldsOnChain,
 	PoolTradeEventOnChain,
+	PoolDepositEventOnChain,
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { AnyObjectType } from "../../../types";
+import { IndexerEventOnChain } from "../../../general/types/castingTypes";
 
 export class PoolsApiCasting {
 	// =========================================================================
@@ -111,6 +115,13 @@ export class PoolsApiCasting {
 	//  Events
 	// =========================================================================
 
+	public static poolObjectIdfromPoolCreateEventOnChain = (
+		eventOnChain: PoolCreateEventOnChain
+	): ObjectId => {
+		const fields = eventOnChain.parsedJson;
+		return fields.pool_id;
+	};
+
 	public static poolTradeEventFromOnChain = (
 		eventOnChain: PoolTradeEventOnChain
 	): PoolTradeEvent => {
@@ -121,11 +132,11 @@ export class PoolsApiCasting {
 			typesIn: fields.types_in.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
-			amountsIn: fields.amounts_in,
+			amountsIn: fields.amounts_in.map((amount) => BigInt(amount)),
 			typesOut: fields.types_out.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
-			amountsOut: fields.amounts_out,
+			amountsOut: fields.amounts_out.map((amount) => BigInt(amount)),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -143,8 +154,8 @@ export class PoolsApiCasting {
 			types: fields.types.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
-			deposits: fields.deposits,
-			lpMinted: fields.lp_coins_minted,
+			deposits: fields.deposits.map((deposit) => BigInt(deposit)),
+			lpMinted: BigInt(fields.lp_coins_minted),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -161,18 +172,74 @@ export class PoolsApiCasting {
 			types: fields.types.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
-			withdrawn: fields.withdrawn,
-			lpBurned: fields.lp_coins_burned,
+			withdrawn: fields.withdrawn.map((withdraw) => BigInt(withdraw)),
+			lpBurned: BigInt(fields.lp_coins_burned),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static poolObjectIdfromPoolCreateEventOnChain = (
-		eventOnChain: PoolCreateEventOnChain
-	): ObjectId => {
-		const fields = eventOnChain.parsedJson;
-		return fields.pool_id;
+	// =========================================================================
+	//  Indexer Events
+	// =========================================================================
+
+	public static poolTradeEventFromIndexerOnChain = (
+		eventOnChain: IndexerEventOnChain<PoolTradeEventOnChainFields>
+	): PoolTradeEvent => {
+		return {
+			poolId: eventOnChain.pool_id,
+			trader: eventOnChain.issuer,
+			typesIn: eventOnChain.types_in.map((type) =>
+				Helpers.addLeadingZeroesToType("0x" + type)
+			),
+			amountsIn: eventOnChain.amounts_in.map((amount) => BigInt(amount)),
+			typesOut: eventOnChain.types_out.map((type) =>
+				Helpers.addLeadingZeroesToType("0x" + type)
+			),
+			amountsOut: eventOnChain.amounts_out.map((amount) =>
+				BigInt(amount)
+			),
+			timestamp: eventOnChain.timestamp ?? undefined,
+			txnDigest: eventOnChain.txnDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static poolDepositEventFromIndexerOnChain = (
+		eventOnChain: IndexerEventOnChain<PoolDepositEventFieldsOnChain>
+	): PoolDepositEvent => {
+		return {
+			poolId: eventOnChain.pool_id,
+			depositor: eventOnChain.issuer,
+			// TODO: create a function for all this 0x nonsense
+			types: eventOnChain.types.map((type) =>
+				Helpers.addLeadingZeroesToType("0x" + type)
+			),
+			deposits: eventOnChain.deposits.map((deposit) => BigInt(deposit)),
+			lpMinted: BigInt(eventOnChain.lp_coins_minted),
+			timestamp: eventOnChain.timestamp ?? undefined,
+			txnDigest: eventOnChain.txnDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static poolWithdrawEventFromIndexerOnChain = (
+		eventOnChain: IndexerEventOnChain<PoolWithdrawEventFieldsOnChain>
+	): PoolWithdrawEvent => {
+		return {
+			poolId: eventOnChain.pool_id,
+			withdrawer: eventOnChain.issuer,
+			types: eventOnChain.types.map((type) =>
+				Helpers.addLeadingZeroesToType("0x" + type)
+			),
+			withdrawn: eventOnChain.withdrawn.map((withdraw) =>
+				BigInt(withdraw)
+			),
+			lpBurned: BigInt(eventOnChain.lp_coins_burned),
+			timestamp: eventOnChain.timestamp ?? undefined,
+			txnDigest: eventOnChain.txnDigest,
+			type: eventOnChain.type,
+		};
 	};
 }

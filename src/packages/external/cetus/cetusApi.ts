@@ -127,10 +127,9 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	} => {
 		const possiblePools = inputs.pools
 			.filter((pool) =>
-				CetusApi.isPoolForCoinTypes({
+				CetusApi.isPoolForCoinType({
 					pool,
-					coinType1: inputs.coinInType,
-					coinType2: inputs.coinOutType,
+					coinType: inputs.coinOutType,
 				})
 			)
 			.sort((a, b) => {
@@ -149,9 +148,10 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 		const [exactMatchPools, partialMatchPools] = Helpers.bifilter(
 			possiblePools,
 			(pool) =>
-				CetusApi.isPoolForCoinType({
+				CetusApi.isPoolForCoinTypes({
 					pool,
-					coinType: inputs.coinOutType,
+					coinType1: inputs.coinInType,
+					coinType2: inputs.coinOutType,
 				})
 		);
 

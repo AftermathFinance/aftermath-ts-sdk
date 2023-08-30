@@ -12,8 +12,11 @@ export class CoinGeckoPricesApi
 	//  Constructor
 	// =========================================================================
 
-	constructor(coinGeckoApiKey: string) {
-		super(coinGeckoApiKey);
+	constructor(
+		coinGeckoApiKey: string,
+		coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>
+	) {
+		super(coinGeckoApiKey, coinApiIdsToCoinTypes);
 	}
 
 	// =========================================================================

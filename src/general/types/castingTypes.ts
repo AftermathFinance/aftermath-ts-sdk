@@ -19,6 +19,12 @@ export interface EventOnChain<Fields> {
 	timestampMs: number | undefined;
 }
 
+export type IndexerEventOnChain<Fields> = {
+	type: AnyObjectType;
+	timestamp: number | null;
+	txnDigest: TransactionDigest;
+} & Fields;
+
 export interface TableOnChain {
 	type: AnyObjectType;
 	fields: {

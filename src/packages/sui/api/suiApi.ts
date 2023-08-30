@@ -1,5 +1,6 @@
 import { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
+import { Helpers } from "../../../general/utils";
 
 export class SuiApi {
 	// =========================================================================
@@ -21,6 +22,21 @@ export class SuiApi {
 	};
 
 	public fetchSystemState = async (): Promise<SuiSystemStateSummary> => {
-		return await this.Provider.provider.getLatestSuiSystemState();
+		const systemState =
+			await this.Provider.provider.getLatestSuiSystemState();
+
+		const activeValidators = systemState.activeValidators.map(
+			(validator) => ({
+				...validator,
+				suiAddress: Helpers.addLeadingZeroesToType(
+					validator.suiAddress
+				),
+			})
+		);
+
+		return {
+			...systemState,
+			activeValidators,
+		};
 	};
 }

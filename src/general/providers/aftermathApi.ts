@@ -18,6 +18,7 @@ import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
 import {
+	CoinType,
 	PartialRouterOptions,
 	RouterProtocolName,
 	RouterSynchronousOptions,
@@ -27,6 +28,8 @@ import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
+import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
+import { IndexerCaller } from "../utils";
 
 export class AftermathApi {
 	// =========================================================================
@@ -66,12 +69,9 @@ export class AftermathApi {
 	public constructor(
 		public readonly provider: JsonRpcProvider,
 		public readonly addresses: ConfigAddresses,
+		public readonly indexerCaller: IndexerCaller,
 		private readonly coinGeckoApiKey?: string
-	) {
-		this.provider = provider;
-		this.addresses = addresses;
-		this.coinGeckoApiKey = coinGeckoApiKey;
-	}
+	) {}
 
 	// =========================================================================
 	//  Class Object Creation
@@ -93,14 +93,22 @@ export class AftermathApi {
 	// =========================================================================
 
 	public Wallet = () => new WalletApi(this);
-	public Prices = () =>
-		this.coinGeckoApiKey
-			? new CoinGeckoPricesApi(this.coinGeckoApiKey)
-			: new PlaceholderPricesApi();
-	public HistoricalData = () =>
-		this.coinGeckoApiKey
-			? new HistoricalDataApi(this.coinGeckoApiKey)
-			: new PlaceholderHistoricalDataApi();
+
+	public Prices = this.coinGeckoApiKey
+		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+				new CoinGeckoPricesApi(
+					this.coinGeckoApiKey ?? "",
+					coinApiIdsToCoinTypes
+				)
+		: () => new PlaceholderPricesApi();
+
+	public HistoricalData = this.coinGeckoApiKey
+		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+				new HistoricalDataApi(
+					this.coinGeckoApiKey ?? "",
+					coinApiIdsToCoinTypes
+				)
+		: () => new PlaceholderHistoricalDataApi();
 
 	// =========================================================================
 	//  General Packages
