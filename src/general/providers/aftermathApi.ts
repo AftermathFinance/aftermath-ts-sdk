@@ -27,6 +27,7 @@ import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
+import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 import { IndexerCaller } from "../utils";
 
@@ -127,6 +128,7 @@ export class AftermathApi {
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);
+	public Farms = () => new FarmsApi(this);
 
 	public Router = (
 		protocols?: RouterProtocolName[],
