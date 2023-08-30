@@ -192,6 +192,8 @@ export class FarmsStakedPosition extends Caller {
 						rewardCoin.rewardsAccumulatedPerShare,
 					multiplierRewardsDebt:
 						stakedPositionRewardCoin.multiplierRewardsDebt,
+					emissionEndTimestamp:
+						stakingPool.stakingPool.emissionEndTimestamp,
 				});
 
 			totalMultiplierRewardsFromTimeT0 +=
@@ -385,8 +387,13 @@ export class FarmsStakedPosition extends Caller {
 	public calcTotalRewardsFromTimeT0(inputs: {
 		rewardsAccumulatedPerShare: Balance;
 		multiplierRewardsDebt: Balance;
+		emissionEndTimestamp: Timestamp;
 	}): [Balance, Balance] {
-		const { rewardsAccumulatedPerShare, multiplierRewardsDebt } = inputs;
+		const {
+			rewardsAccumulatedPerShare,
+			multiplierRewardsDebt,
+			emissionEndTimestamp,
+		} = inputs;
 
 		const currentTimestamp = dayjs().valueOf();
 		const lockEndTimestamp = this.unlockTimestamp();
@@ -406,12 +413,11 @@ export class FarmsStakedPosition extends Caller {
 			return currentTimestamp <= lockEndTimestamp
 				? (this.stakedPosition.stakedAmountWithMultiplier *
 						rewardsAccumulatedPerShare) /
-						Fixed.fixedOneB -
-						multiplierRewardsDebt
+						Fixed.fixedOneB
 				: lockEndTimestamp <= lastRewardTimestamp
 				? // Short circuit in the case the position hasn't been locked since the last harvest. Also
 				  //  required to not error on `lockEndTimestamp - lastRewardTimestamp`.
-				  BigInt(0)
+				  multiplierRewardsDebt
 				: (() => {
 						// Multiplier staked amount receives (altered) rewards dependent on the total time the
 						//  position was locked since the last harvest.
@@ -420,10 +426,21 @@ export class FarmsStakedPosition extends Caller {
 								rewardsAccumulatedPerShare) /
 							Fixed.fixedOneB;
 
-						const timeSinceLastHarvest =
-							currentTimestamp - lastRewardTimestamp;
+						const minTimestamp = Math.min(
+							currentTimestamp,
+							emissionEndTimestamp,
+							lockEndTimestamp
+						);
+
+						const timeSinceLastHarvestMs =
+							minTimestamp - lastRewardTimestamp;
+
+						const endTimestamp = Math.min(
+							lockEndTimestamp,
+							emissionEndTimestamp
+						);
 						const timeSpentLockedSinceLastHarvestMs =
-							lockEndTimestamp - lastRewardTimestamp;
+							endTimestamp - lastRewardTimestamp;
 
 						// ********************************************************************************************//
 						//  / timeSpentLockedSinceLastHarvestMs \                                                //
@@ -433,15 +450,13 @@ export class FarmsStakedPosition extends Caller {
 
 						// Only disperse the multiplied rewards that were received while this position was locked.
 						return (
-							(((totalRewardsAttributedToLockMultiplier *
+							(totalRewardsAttributedToLockMultiplier *
 								BigInt(
 									Math.floor(
 										timeSpentLockedSinceLastHarvestMs
 									)
 								)) /
-								Fixed.fixedOneB) *
-								Fixed.fixedOneB) /
-							BigInt(Math.floor(timeSinceLastHarvest))
+							BigInt(Math.floor(timeSinceLastHarvestMs))
 						);
 				  })();
 		})();
