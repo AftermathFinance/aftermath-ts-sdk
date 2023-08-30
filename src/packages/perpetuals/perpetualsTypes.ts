@@ -28,13 +28,6 @@ bcs.registerStructType("AccountManager", {
 	nextAccountId: BCS.U64,
 });
 
-bcs.registerStructType("MarketManager", {
-	id: "UID",
-	feesAccrued: BCS.U256,
-	minOrderUsdValue: BCS.U256,
-	liquidationTolerance: BCS.U256,
-});
-
 bcs.registerStructType("AccountCap", {
 	id: "UID",
 	accountId: BCS.U64,
@@ -55,6 +48,46 @@ bcs.registerStructType("Position", {
 	bids: ["CritBitTree", BCS.U64],
 	asksQuantity: BCS.U256,
 	bidsQuantity: BCS.U256,
+});
+
+bcs.registerStructType("MarketManager", {
+	id: "UID",
+	feesAccrued: BCS.U256,
+	minOrderUsdValue: BCS.U256,
+	liquidationTolerance: BCS.U64,
+});
+
+bcs.registerStructType("MarketState", {
+	cumFundingRateLong: BCS.U256,
+	cumFundingRateShort: BCS.U256,
+	fundingLastUpdMs: BCS.U64,
+	premiumTwap: BCS.U256,
+	premiumTwapLastUpdMs: BCS.U64,
+	spreadTwap: BCS.U256,
+	spreadTwapLastUpdMs: BCS.U64,
+	openInterest: BCS.U256,
+});
+
+bcs.registerStructType("MarketParams", {
+	marginRatioInitial: BCS.U256,
+	marginRatioMaintenance: BCS.U256,
+	baseAssetSymbol: BCS.STRING,
+	fundingFrequencyMs: BCS.U64,
+	fundingPeriodMs: BCS.U64,
+	premiumTwapFrequencyMs: BCS.U64,
+	premiumTwapPeriodMs: BCS.U64,
+	spreadTwapFrequencyMs: BCS.U64,
+	spreadTwapPeriodMs: BCS.U64,
+	makerFee: BCS.U256,
+	takerFee: BCS.U256,
+	liquidationFee: BCS.U256,
+	forceCancelFee: BCS.U256,
+	insuranceFundFee: BCS.U256,
+	insuranceFundId: BCS.U64,
+});
+
+bcs.registerStructType("MarketKey", {
+	marketId: BCS.U64,
 });
 
 bcs.registerStructType(["CritBitTree", "T"], {
@@ -121,6 +154,8 @@ export interface Vault extends Object {
 //  Account Manager
 // =========================================================================
 
+export interface AccountManagerObj extends AccountManager, Object {}
+
 export interface AccountManager {
 	id: ObjectId;
 	maxPositionsPerAccount: bigint;
@@ -154,11 +189,13 @@ export interface Position {
 //  Market Manager
 // =========================================================================
 
+export interface MarketManagerObj extends MarketManager, Object {}
+
 export interface MarketManager {
 	id: ObjectId;
 	feesAccrued: IFixed;
 	minOrderUsdValue: IFixed;
-	liquidationTolerance: IFixed;
+	liquidationTolerance: bigint;
 }
 
 export interface MarketParams {
@@ -167,24 +204,26 @@ export interface MarketParams {
 	baseAssetSymbol: string;
 	fundingFrequencyMs: bigint;
 	fundingPeriodMs: bigint;
-	twapPeriodMs: bigint;
+	premiumTwapFrequencyMs: bigint;
+	premiumTwapPeriodMs: bigint;
+	spreadTwapFrequencyMs: bigint;
+	spreadTwapPeriodMs: bigint;
 	makerFee: IFixed;
 	takerFee: IFixed;
 	liquidationFee: IFixed;
 	forceCancelFee: IFixed;
 	insuranceFundFee: IFixed;
-	priceImpactFactor: IFixed;
+	insuranceFundId: bigint;
 }
 
 export interface MarketState {
-	cumulativeFundingRate: IFixed;
-	fundingRateTimestamp: Timestamp;
-	lastIndexPrice: IFixed;
-	lastIndexTwap: IFixed;
-	lastIndexTimestamp: Timestamp;
-	lastMarkPrice: IFixed;
-	lastMarkTwap: IFixed;
-	lastMarkTimestamp: Timestamp;
+	cumFundingRateLong: IFixed;
+	cumFundingRateShort: IFixed;
+	fundingLastUpdMs: Timestamp;
+	premiumTwap: IFixed;
+	premiumTwapLastUpdMs: Timestamp;
+	spreadTwap: IFixed;
+	spreadTwapLastUpdMs: Timestamp;
 	openInterest: IFixed;
 }
 
@@ -317,96 +356,6 @@ export interface Orderbook extends Object {
 	minAsk: bigint;
 	minBid: bigint;
 	counter: bigint;
-}
-
-// =========================================================================
-//  Types from raw deserialized BCS
-// =========================================================================
-
-export function accountManagerFromRaw(data: any): AccountManager {
-	return {
-		id: data.id,
-		maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
-		maxPendingOrdersPerPosition: BigInt(data.maxPendingOrdersPerPosition),
-		nextAccountId: BigInt(data.nextAccountId),
-	};
-}
-
-export function marketManagerFromRaw(data: any): MarketManager {
-	return {
-		id: data.id,
-		feesAccrued: BigInt(data.feesAccrued),
-		minOrderUsdValue: BigInt(data.minOrderUsdValue),
-		liquidationTolerance: BigInt(data.liquidationTolerance),
-	};
-}
-
-export function accountFromRaw(data: any): AccountStruct {
-	return {
-		collateral: BigInt(data.collateral),
-		marketIds: data.marketIds.map((id: number) => BigInt(id)),
-		positions: data.positions.map((pos: any) => positionFromRaw(pos)),
-	};
-}
-
-export function positionFromRaw(data: any): Position {
-	return {
-		baseAssetAmount: BigInt(data.baseAssetAmount),
-		quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
-		cumFundingRateLong: BigInt(data.cumFundingRateLong),
-		cumFundingRateShort: BigInt(data.cumFundingRateShort),
-		asks: critBitTreeFromRaw<bigint>(data.asks),
-		bids: critBitTreeFromRaw<bigint>(data.bids),
-		asksQuantity: BigInt(data.asksQuantity),
-		bidsQuantity: BigInt(data.bidsQuantity),
-	};
-}
-
-export function critBitTreeFromRaw<T>(data: any): CritBitTree<T> {
-	return {
-		root: BigInt(data.root),
-		innerNodes: tableVFromRaw<InnerNode>(data.innerNodes),
-		outerNodes: tableVFromRaw<OuterNode<T>>(data.outerNodes),
-	};
-}
-
-export function innerNodeFromRaw(data: any): InnerNode {
-	return {
-		criticalBit: BigInt(data.criticalBit),
-		parentIndex: BigInt(data.parentIndex),
-		leftChildIndex: BigInt(data.leftChildren),
-		rightChildIndex: BigInt(data.rightChildren),
-	};
-}
-
-export function outerNodeFromRawPartial<T>(
-	valueFromRaw: (v: any) => T
-): (v: any) => OuterNode<T> {
-	return (v: any) => outerNodeFromRaw(v, valueFromRaw);
-}
-
-export function outerNodeFromRaw<T>(
-	data: any,
-	valueFromRaw: (v: any) => T
-): OuterNode<T> {
-	return {
-		key: BigInt(data.key),
-		value: valueFromRaw(data.value),
-		parentIndex: BigInt(data.parentIndex),
-	};
-}
-
-export function tableVFromRaw<T>(data: any): TableV<T> {
-	return {
-		contents: tableFromRaw<number, T>(data.contents),
-	};
-}
-
-export function tableFromRaw<K, V>(data: any): Table<K, V> {
-	return {
-		objectId: data.id,
-		size: data.size,
-	};
 }
 
 // =========================================================================

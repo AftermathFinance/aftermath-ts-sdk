@@ -1,12 +1,13 @@
+import { TypeName } from "@mysten/bcs";
 import {
 	SuiObjectResponse,
 	ObjectContentFields,
 	getObjectFields,
-	getObjectId,
 	getObjectType,
 	SuiRawMoveObject,
 } from "@mysten/sui.js";
 import {
+	AccountManager,
 	AccountManagerObj,
 	MarketState,
 	Orderbook,
@@ -24,10 +25,11 @@ import {
 	InnerNode,
 	OuterNode,
 	AccountStruct,
-	Position,
-	TableV,
-	bcs,
-	MarketManagerObj,
+  Position,
+  TableV,
+  bcs,
+  MarketManagerObj,
+  MarketManager,
 } from "../perpetualsTypes";
 import PriorityQueue from "priority-queue-typescript";
 import { ASK, BID } from "../utils/critBitTreeUtils";
@@ -38,26 +40,27 @@ import {
 	isMarketManagerStateKeyType,
 } from "../utils/helpers";
 import { Table } from "../../../general/types";
-import { Helpers } from "../../../general/utils";
 
 export class PerpetualsCasting {
 	// =========================================================================
 	//  Account Manager
 	// =========================================================================
-	public static accountManagerFromSuiObjectResponse = (
+	public static accountManagerObjFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): AccountManagerObj => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const contents = PerpetualsCasting.castObjectBcs({
+			resp: data,
+			typeName: "AccountManager",
+			fromDeserialized: PerpetualsCasting.accountManagerFromRaw,
+		})
+
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
-			maxPositionsPerAccount: objectFields.max_positions_per_account,
-			maxPendingOrdersPerPosition:
-				objectFields.max_pending_orders_per_position,
-			nextAccountId: objectFields.next_account_id,
+			objectId: contents.id,
+			...contents
 		};
 	};
 
@@ -101,20 +104,22 @@ export class PerpetualsCasting {
 	// =========================================================================
 	//  Market Manager
 	// =========================================================================
-	public static marketManagerFromSuiObjectResponse = (
+	public static marketManagerObjFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): MarketManagerObj => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const contents = PerpetualsCasting.castObjectBcs({
+			resp: data,
+			typeName: "MarketManager",
+			fromDeserialized: PerpetualsCasting.marketManagerFromRaw,
+		})
+
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
-			feesAccrued: objectFields.fees_accrued,
-			netTransferFromIfToVault: objectFields.net_transfer_from_if,
-			minOrderUsdValue: objectFields.min_order_usd_value,
-			marketIds: objectFields.market_ids,
+			objectId: contents.id,
+			...contents
 		};
 	};
 
@@ -125,7 +130,7 @@ export class PerpetualsCasting {
 			throw new Error("not params key type");
 		const paramsField = dynamicField as MarketParamsDynamicFieldOnChain;
 		return {
-			value: PerpetualsCasting.marketParamsFromRawData(
+			value: PerpetualsCasting.marketParamsFromRawBcs(
 				paramsField.data.fields.value.fields
 			),
 		};
@@ -139,7 +144,7 @@ export class PerpetualsCasting {
 		const stateField =
 			dynamicField as MarketManagerStateDynamicFieldOnChain;
 		return {
-			value: PerpetualsCasting.marketStateFromRawData(
+			value: PerpetualsCasting.marketStateFromRawBcs(
 				stateField.data.fields
 			),
 		};
@@ -162,34 +167,40 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketParamsFromRawData = (data: any): MarketParams => {
+	public static marketParamsFromRawBcs = (
+		data: any
+	): MarketParams => {
 		return {
-			marginRatioInitial: data.margin_ratio_initial,
-			marginRatioMaintenance: data.margin_ratio_maintenance,
-			baseAssetSymbol: data.base_asset_symbol,
-			fundingFrequencyMs: BigInt(data.funding_frequency_ms),
-			fundingPeriodMs: BigInt(data.funding_period_ms),
-			twapPeriodMs: BigInt(data.twap_period_ms),
-			makerFee: data.maker_fee,
-			takerFee: data.taker_fee,
-			liquidationFee: data.liquidation_fee,
-			forceCancelFee: data.force_cancel_fee,
-			insuranceFundFee: data.insurance_fund_fee,
-			priceImpactFactor: data.price_impact_factor,
+			baseAssetSymbol: data.baseAssetSymbol,
+			marginRatioInitial: BigInt(data.marginRatioInitial),
+			marginRatioMaintenance: BigInt(data.marginRatioMaintenance),
+			fundingFrequencyMs: BigInt(data.fundingFrequencyMs),
+			fundingPeriodMs: BigInt(data.fundingPeriodMs),
+			premiumTwapFrequencyMs: BigInt(data.premiumTwapFrequencyMs),
+			premiumTwapPeriodMs: BigInt(data.premiumTwapPeriodMs),
+			spreadTwapFrequencyMs: BigInt(data.spreadTwapFrequencyMs),
+			spreadTwapPeriodMs: BigInt(data.spreadTwapPeriodMs),
+			makerFee: BigInt(data.makerFee),
+			takerFee: BigInt(data.takerFee),
+			liquidationFee: BigInt(data.liquidationFee),
+			forceCancelFee: BigInt(data.forceCancelFee),
+			insuranceFundFee: BigInt(data.insuranceFundFee),
+			insuranceFundId: BigInt(data.insuranceFundId),
 		};
 	};
 
-	public static marketStateFromRawData = (data: any): MarketState => {
+	public static marketStateFromRawBcs = (
+		data: any
+	): MarketState => {
 		return {
-			cumulativeFundingRate: data.cum_funding_rate,
-			fundingRateTimestamp: Number(data.funding_rate_ts),
-			lastIndexPrice: data.last_index_price,
-			lastIndexTwap: data.last_index_ts,
-			lastIndexTimestamp: Number(data.last_index_ts),
-			lastMarkPrice: data.last_mark_price,
-			lastMarkTwap: data.last_mark_price,
-			lastMarkTimestamp: Number(data.last_mark_ts),
-			openInterest: data.open_interest,
+			cumFundingRateLong: BigInt(data.cumFundingRateLong),
+			cumFundingRateShort: BigInt(data.cumFundingRateShort),
+			fundingLastUpdMs: Number(data.fundingLastUpdMs),
+			premiumTwap: BigInt(data.premiumTwap),
+			premiumTwapLastUpdMs: Number(data.premiumTwapLastUpdMs),
+			spreadTwap: BigInt(data.spreadTwap),
+			spreadTwapLastUpdMs: Number(data.spreadTwapLastUpdMs),
+			openInterest: BigInt(data.openInterest),
 		};
 	};
 
@@ -328,4 +339,115 @@ export class PerpetualsCasting {
 			);
 		return [priorityQueueOfAskOrders, priorityQueueOfBidOrders];
 	};
+
+	// =========================================================================
+	//  Types from raw deserialized BCS
+	// =========================================================================
+
+	public static accountManagerFromRaw(data: any): AccountManager {
+		return {
+			id: data.id,
+			maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
+			maxPendingOrdersPerPosition: BigInt(data.maxPendingOrdersPerPosition),
+			nextAccountId: BigInt(data.nextAccountId),
+		};
+	}
+
+	public static marketManagerFromRaw(data: any): MarketManager {
+		return {
+			id: data.id,
+			feesAccrued: BigInt(data.feesAccrued),
+			minOrderUsdValue: BigInt(data.minOrderUsdValue),
+			liquidationTolerance: BigInt(data.liquidationTolerance),
+		}
+	}
+
+	public static accountFromRaw(data: any): AccountStruct {
+		return {
+			collateral: BigInt(data.collateral),
+			marketIds: data.marketIds.map((id: number) => BigInt(id)),
+			positions: data.positions.map((pos: any) => PerpetualsCasting.positionFromRaw(pos)),
+		};
+	}
+
+	public static positionFromRaw(data: any): Position {
+		return {
+			baseAssetAmount: BigInt(data.baseAssetAmount),
+			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
+			cumFundingRateLong: BigInt(data.cumFundingRateLong),
+			cumFundingRateShort: BigInt(data.cumFundingRateShort),
+			asks: PerpetualsCasting.critBitTreeFromRaw<bigint>(data.asks),
+			bids: PerpetualsCasting.critBitTreeFromRaw<bigint>(data.bids),
+			asksQuantity: BigInt(data.asksQuantity),
+			bidsQuantity: BigInt(data.bidsQuantity),
+		}
+	}
+
+	public static critBitTreeFromRaw<T>(
+		data: any,
+	): CritBitTree<T> {
+		return {
+			root: BigInt(data.root),
+			innerNodes: PerpetualsCasting.tableVFromRaw<InnerNode>(data.innerNodes),
+			outerNodes: PerpetualsCasting.tableVFromRaw<OuterNode<T>>(
+				data.outerNodes,
+			),
+		};
+	}
+
+	public static innerNodeFromRaw(data: any): InnerNode {
+		return {
+			criticalBit: BigInt(data.criticalBit),
+			parentIndex: BigInt(data.parentIndex),
+			leftChildIndex: BigInt(data.leftChildren),
+			rightChildIndex: BigInt(data.rightChildren),
+		}
+	}
+
+	public static outerNodeFromRawPartial<T>(
+		valueFromRaw: (v: any) => T
+	): (v: any) => OuterNode<T> {
+		return (v: any) => PerpetualsCasting.outerNodeFromRaw(v, valueFromRaw);
+	}
+
+	public static outerNodeFromRaw<T>(
+		data: any,
+		valueFromRaw: (v: any) => T
+	): OuterNode<T> {
+		return {
+			key: BigInt(data.key),
+			value: valueFromRaw(data.value),
+			parentIndex: BigInt(data.parentIndex),
+		}
+	}
+
+	public static tableVFromRaw<T>(
+		data: any,
+	): TableV<T> {
+		return {
+			contents: PerpetualsCasting.tableFromRaw<number, T>(data.contents),
+		};
+	}
+
+	public static tableFromRaw<K, V>(data: any): Table<K, V> {
+		return {
+			objectId: data.id,
+			size: data.size,
+		};
+	}
+
+	// =========================================================================
+	//  General
+	// =========================================================================
+
+	public static castObjectBcs = <T>(inputs: {
+        resp: SuiObjectResponse;
+        typeName: TypeName;
+        fromDeserialized: (deserialized: any) => T;
+    }): T => {
+        const { resp, typeName, fromDeserialized } = inputs;
+        const rawObj = resp.data?.bcs as SuiRawMoveObject;
+        const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
+        return fromDeserialized(deserialized);
+    }
 }
