@@ -196,9 +196,6 @@ export class FarmsStakedPosition extends Caller {
 						stakingPool.stakingPool.emissionEndTimestamp,
 				});
 
-			totalMultiplierRewardsFromTimeT0 +=
-				stakedPositionRewardCoin.multiplierRewardsDebt;
-
 			// calc_total_rewards_from_time_t0 returns 0 for multiplier rewards only if and only if the position was
 			// not locked since the last harvest. in such a case 0 does not mean 0 rewards but the initial state before
 			// the position was opened. thus, assigning debt here.
@@ -396,9 +393,9 @@ export class FarmsStakedPosition extends Caller {
 		} = inputs;
 
 		const currentTimestamp = dayjs().valueOf();
-		const lockEndTimestamp = this.unlockTimestamp();
 		const lastRewardTimestamp =
 			this.stakedPosition.lastHarvestRewardsTimestamp;
+		const lockEndTimestamp = this.unlockTimestamp();
 
 		const principalStakedAmount = this.stakedPosition.stakedAmount;
 		// Base [e.g. principal] staked amount receives full (unaltered) rewards.
@@ -426,21 +423,19 @@ export class FarmsStakedPosition extends Caller {
 								rewardsAccumulatedPerShare) /
 							Fixed.fixedOneB;
 
-						const minTimestamp = Math.min(
+						const timeSpentLockedSinceLastHarvestMs =
+							lockEndTimestamp - lastRewardTimestamp;
+
+						// IMPORTANT: only decrease rewards by a ratio of when the reward was active and the lock was
+						//  inactive.
+						//
+						const minRelativeTimestamp = Math.min(
 							currentTimestamp,
-							emissionEndTimestamp,
-							lockEndTimestamp
+							emissionEndTimestamp
 						);
 
 						const timeSinceLastHarvestMs =
-							minTimestamp - lastRewardTimestamp;
-
-						const endTimestamp = Math.min(
-							lockEndTimestamp,
-							emissionEndTimestamp
-						);
-						const timeSpentLockedSinceLastHarvestMs =
-							endTimestamp - lastRewardTimestamp;
+							minRelativeTimestamp - lastRewardTimestamp;
 
 						// ********************************************************************************************//
 						//  / timeSpentLockedSinceLastHarvestMs \                                                //
