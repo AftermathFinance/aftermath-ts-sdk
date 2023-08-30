@@ -433,12 +433,14 @@ export class FarmsStakedPosition extends Caller {
 
 						// Only disperse the multiplied rewards that were received while this position was locked.
 						return (
-							(totalRewardsAttributedToLockMultiplier *
+							(((totalRewardsAttributedToLockMultiplier *
 								BigInt(
 									Math.floor(
 										timeSpentLockedSinceLastHarvestMs
 									)
 								)) /
+								Fixed.fixedOneB) *
+								Fixed.fixedOneB) /
 							BigInt(Math.floor(timeSinceLastHarvest))
 						);
 				  })();
