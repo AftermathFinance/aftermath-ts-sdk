@@ -150,6 +150,8 @@ export interface FarmsJoinedEvent extends Event {
 
 export interface FarmsLockedEvent extends Event {
 	stakedPositionId: ObjectId;
+	stakedType: CoinType;
+	stakedAmount: Balance;
 	lockStartTimestampMs: Timestamp;
 	lockDurationMs: Timestamp;
 	lockMultiplier: FarmsMultiplier;
@@ -182,6 +184,8 @@ export interface FarmsStakedRelaxedEvent extends Event {
 
 export interface FarmsUnlockedEvent extends Event {
 	stakedPositionId: ObjectId;
+	stakedType: CoinType;
+	stakedAmount: Balance;
 }
 
 export interface FarmsWithdrewPrincipalEvent extends Event {

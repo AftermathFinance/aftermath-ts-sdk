@@ -313,6 +313,10 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			stakedPositionId: fields.staked_position_id,
+			stakedType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.staked_type
+			),
+			stakedAmount: BigInt(fields.staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
 			lockMultiplier: BigInt(fields.lock_multiplier),
@@ -381,6 +385,10 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			stakedPositionId: fields.staked_position_id,
+			stakedType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.staked_type
+			),
+			stakedAmount: BigInt(fields.staked_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
