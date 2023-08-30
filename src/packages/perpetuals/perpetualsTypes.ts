@@ -1,5 +1,5 @@
 import { BCS, getSuiMoveConfig } from "@mysten/bcs";
-import { ObjectId } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
@@ -9,6 +9,11 @@ import {
 import { Table } from "../../general/types/suiTypes";
 import { CoinType } from "../coin/coinTypes";
 import { IFixed } from "../utilities/types";
+
+// TEMPORARY TO BUILD
+export interface AccountManagerObj {}
+export interface MarketManagerObj {}
+// TEMPORARY TO BUILD
 
 // =========================================================================
 //  BCS - Binary Canonical Serialization
@@ -30,10 +35,9 @@ bcs.registerStructType("AccountCap", {
 
 bcs.registerStructType("Account", {
 	collateral: BCS.U256,
-	marketIds: ['vector', BCS.U64],
-	positions: ['vector', "Position"],
+	marketIds: ["vector", BCS.U64],
+	positions: ["vector", "Position"],
 });
-
 
 bcs.registerStructType("Position", {
 	baseAssetAmount: BCS.U256,
@@ -44,7 +48,6 @@ bcs.registerStructType("Position", {
 	bids: ["CritBitTree", BCS.U64],
 	asksQuantity: BCS.U256,
 	bidsQuantity: BCS.U256,
-
 });
 
 bcs.registerStructType("MarketManager", {
@@ -121,7 +124,7 @@ bcs.registerStructType(["Field", "N", "V"], {
 	value: "V",
 });
 
-bcs.registerAlias('UID', BCS.ADDRESS);
+bcs.registerAlias("UID", BCS.ADDRESS);
 
 // =========================================================================
 //  Clearing House
@@ -354,11 +357,13 @@ export interface Orderbook extends Object {
 	minBid: bigint;
 	counter: bigint;
 }
+
 // =========================================================================
 //  Transactions
 // =========================================================================
 
 export interface ApiPerpetualsCreateAccountBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 }
 
@@ -371,11 +376,13 @@ export interface ApiPerpetualsCreateAccountBody {
 // =========================================================================
 
 export interface ApiPerpetualsDepositCollateralBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	coinAmount: bigint;
 }
 
 export interface ApiPerpetualsWithdrawCollateralBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	amount: bigint;
 }
@@ -385,6 +392,7 @@ export interface ApiPerpetualsWithdrawCollateralBody {
 // =========================================================================
 
 export interface ApiPerpetualsMarketOrderBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	marketId: bigint;
 	side: boolean;
@@ -392,6 +400,7 @@ export interface ApiPerpetualsMarketOrderBody {
 }
 
 export interface ApiPerpetualsLimitOrderBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	marketId: bigint;
 	side: boolean;
@@ -401,6 +410,7 @@ export interface ApiPerpetualsLimitOrderBody {
 }
 
 export interface ApiPerpetualsCancelOrderBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	marketId: bigint;
 	side: boolean;
@@ -412,6 +422,7 @@ export interface ApiPerpetualsCancelOrderBody {
 // =========================================================================
 
 export interface ApiPerpetualsClosePositionBody {
+	walletAddress: SuiAddress;
 	coinType: CoinType;
 	marketId: bigint;
 }

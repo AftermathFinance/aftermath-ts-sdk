@@ -111,22 +111,20 @@ export class PerpetualsAccount extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	public positionForMarketId(inputs: {
-		marketId: bigint;
-	}): Position {
+	public positionForMarketId(inputs: { marketId: bigint }): Position {
 		try {
-			const posIndex = Number(this.account.marketIds.findIndex((id) => {
-				return id === inputs.marketId;
-			}));
+			const posIndex = Number(
+				this.account.marketIds.findIndex((id) => {
+					return id === inputs.marketId;
+				})
+			);
 			return this.account.positions[posIndex];
 		} catch (e) {
 			throw new Error("no position found for market");
 		}
 	}
 
-	public marketIdForPosition(inputs: {
-		position: Position;
-	}): bigint {
+	public marketIdForPosition(inputs: { position: Position }): bigint {
 		try {
 			const posIndex = this.account.positions.findIndex(
 				(pos) => JSON.stringify(pos) === JSON.stringify(inputs.position)
@@ -143,5 +141,4 @@ export class PerpetualsAccount extends Caller {
 			throw new Error("no market found for position");
 		}
 	}
-
 }

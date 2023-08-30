@@ -15,7 +15,9 @@ export class Perpetuals extends Caller {
 	//  Constants
 	// =========================================================================
 
-	public static readonly constants = {};
+	public static readonly constants = {
+		fundingFrequencyMs: 1000000, // TODO: set this value correctly
+	};
 
 	// =========================================================================
 	//  Constructor
@@ -65,11 +67,12 @@ export class Perpetuals extends Caller {
 	public async getUserAccounts(): Promise<PerpetualsAccount[]> {
 		// TODO: Get all AccountCap from address to query perpetualsAccount
 		const accounts = await this.fetchApi<
+			// TODO: move to new type/interface
 			{
 				accountId: bigint;
 				account: AccountStruct;
 			}[]
-		>(`accounts/`);
+		>("accounts");
 
 		return accounts.map(
 			(account) =>
