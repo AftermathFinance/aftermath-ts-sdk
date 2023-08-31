@@ -196,14 +196,6 @@ export class FarmsStakedPosition extends Caller {
 						stakingPool.stakingPool.emissionEndTimestamp,
 				});
 
-			// calc_total_rewards_from_time_t0 returns 0 for multiplier rewards only if and only if the position was
-			// not locked since the last harvest. in such a case 0 does not mean 0 rewards but the initial state before
-			// the position was opened. thus, assigning debt here.
-			// if (totalMultiplierRewardsFromTimeT0 === BigInt(0)) {
-			// 	totalMultiplierRewardsFromTimeT0 =
-			// 		stakedPositionRewardCoin.multiplierRewardsDebt;
-			// }
-
 			// NOTE: Every time a position's `rewards_accumulated` is updated, a snapshot of the total
 			//  rewards received from time t0 is taken and stored as the position's `debt` field. Here,
 			//  the debt is subtracted from `total_rewards_from_time_t0` in order to calculate the amount
@@ -444,15 +436,22 @@ export class FarmsStakedPosition extends Caller {
 						// ********************************************************************************************//
 
 						// Only disperse the multiplied rewards that were received while this position was locked.
-						return (
+						//
+						// We are assigning this value to the total_multiplier_rewards later and this number should
+						// never decrease, so we use max() here.
+						const possibleMultiplierRewardsDebt =
 							(totalRewardsAttributedToLockMultiplier *
 								BigInt(
 									Math.floor(
 										timeSpentLockedSinceLastHarvestMs
 									)
 								)) /
-							BigInt(Math.floor(timeSinceLastHarvestMs))
-						);
+							BigInt(Math.floor(timeSinceLastHarvestMs));
+
+						return possibleMultiplierRewardsDebt >
+							multiplierRewardsDebt
+							? possibleMultiplierRewardsDebt
+							: multiplierRewardsDebt;
 				  })();
 		})();
 
