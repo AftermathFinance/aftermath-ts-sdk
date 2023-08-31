@@ -17,12 +17,6 @@ export class PerpetualsMarket extends Caller {
 	public static readonly constants = {};
 
 	// =========================================================================
-	//  Class Members
-	// =========================================================================
-
-	// public orderbook: Orderbook | undefined;
-
-	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
@@ -39,15 +33,9 @@ export class PerpetualsMarket extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async refreshOrderbook(): Promise<PerpetualsOrderbook> {
-		const orderbook = await this.fetchApi<PerpetualsOrderbook>("orderbook");
-		// this.updateOrderbook({ orderbook });
-		return orderbook;
+	public async getOrderbook(): Promise<PerpetualsOrderbook> {
+		return this.fetchApi<PerpetualsOrderbook>("orderbook");
 	}
-
-	// public updateOrderbook(inputs: { orderbook: Orderbook }) {
-	// 	this.orderbook = inputs.orderbook;
-	// }
 
 	// =========================================================================
 	//  Calculations

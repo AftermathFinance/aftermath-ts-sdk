@@ -356,18 +356,21 @@ export interface ApiPerpetualsCreateAccountBody {
 export interface ApiPerpetualsDepositCollateralBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
+	accountCapId: ObjectId;
 	coinAmount: bigint;
 }
 
 export interface ApiPerpetualsWithdrawCollateralBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
+	accountCapId: ObjectId;
 	amount: bigint;
 }
 
 export interface ApiPerpetualsMarketOrderBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
+	accountCapId: ObjectId;
 	marketId: bigint;
 	side: boolean;
 	size: bigint;
@@ -376,6 +379,7 @@ export interface ApiPerpetualsMarketOrderBody {
 export interface ApiPerpetualsLimitOrderBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
+	accountCapId: ObjectId;
 	marketId: bigint;
 	side: boolean;
 	size: bigint;
@@ -386,6 +390,7 @@ export interface ApiPerpetualsLimitOrderBody {
 export interface ApiPerpetualsCancelOrderBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
+	accountCapId: ObjectId;
 	marketId: bigint;
 	side: boolean;
 	orderId: bigint;

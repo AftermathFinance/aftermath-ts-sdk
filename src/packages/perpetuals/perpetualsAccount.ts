@@ -32,20 +32,6 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	// =========================================================================
-	//  Objects
-	// =========================================================================
-
-	public async refreshAccount(): Promise<PerpetualsAccountObject> {
-		const account = await this.fetchApi<PerpetualsAccountObject>("");
-		this.updateAccount({ account });
-		return account;
-	}
-
-	public updateAccount(inputs: { account: PerpetualsAccountObject }) {
-		this.account = inputs.account;
-	}
-
-	// =========================================================================
 	//  Transactions
 	// =========================================================================
 

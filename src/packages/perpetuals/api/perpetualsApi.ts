@@ -21,6 +21,8 @@ import {
 	PerpetualsMarketManager,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
+	ApiPerpetualsDepositCollateralBody,
+	ApiPerpetualsCreateAccountBody,
 } from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -664,12 +666,9 @@ export class PerpetualsApi {
 		this.createMarketTx
 	);
 
-	public fetchDepositCollateralTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		coinAmount: bigint;
-	}): Promise<TransactionBlock> => {
+	public fetchDepositCollateralTx = async (
+		inputs: ApiPerpetualsDepositCollateralBody
+	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
@@ -728,10 +727,9 @@ export class PerpetualsApi {
 		this.updateFundingTx
 	);
 
-	public fetchCreateAccountTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-	}): Promise<TransactionBlock> => {
+	public fetchCreateAccountTx = async (
+		inputs: ApiPerpetualsCreateAccountBody
+	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
