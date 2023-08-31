@@ -6,8 +6,8 @@ import {
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsWithdrawCollateralBody,
-	Account,
-	Position,
+	PerpetualsAccountObject,
+	PerpetualsPosition,
 	SuiNetwork,
 	Url,
 } from "../../types";
@@ -25,7 +25,7 @@ export class PerpetualsAccount extends Caller {
 
 	constructor(
 		public readonly accountId: bigint,
-		public account: Account,
+		public account: PerpetualsAccountObject,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `perpetuals/accounts/${accountId}`);
@@ -35,13 +35,13 @@ export class PerpetualsAccount extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async refreshAccount(): Promise<Account> {
-		const account = await this.fetchApi<Account>("");
+	public async refreshAccount(): Promise<PerpetualsAccountObject> {
+		const account = await this.fetchApi<PerpetualsAccountObject>("");
 		this.updateAccount({ account });
 		return account;
 	}
 
-	public updateAccount(inputs: { account: Account }) {
+	public updateAccount(inputs: { account: PerpetualsAccountObject }) {
 		this.account = inputs.account;
 	}
 
@@ -111,7 +111,9 @@ export class PerpetualsAccount extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	public positionForMarketId(inputs: { marketId: bigint }): Position {
+	public positionForMarketId(inputs: {
+		marketId: bigint;
+	}): PerpetualsPosition {
 		try {
 			const posIndex = Number(
 				this.account.marketIds.findIndex((id) => {
@@ -124,7 +126,9 @@ export class PerpetualsAccount extends Caller {
 		}
 	}
 
-	public marketIdForPosition(inputs: { position: Position }): bigint {
+	public marketIdForPosition(inputs: {
+		position: PerpetualsPosition;
+	}): bigint {
 		try {
 			const posIndex = this.account.positions.findIndex(
 				(pos) => JSON.stringify(pos) === JSON.stringify(inputs.position)

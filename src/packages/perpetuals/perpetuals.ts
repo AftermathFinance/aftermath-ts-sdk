@@ -3,9 +3,9 @@ import {
 	ApiPerpetualsCreateAccountBody,
 	SuiNetwork,
 	Url,
-	MarketState,
-	MarketData,
-	AccountData,
+	PerpetualsMarketState,
+	PerpetualsMarketData,
+	PerpetualsAccountData,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -32,10 +32,12 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public async getAllMarkets(): Promise<PerpetualsMarket[]> {
-		const marketDatas = await this.fetchApi<MarketData[]>("markets");
+		const marketDatas = await this.fetchApi<PerpetualsMarketData[]>(
+			"markets"
+		);
 		const marketStates = await Promise.all(
 			marketDatas.map((marketData) =>
-				this.fetchApi<MarketState>(
+				this.fetchApi<PerpetualsMarketState>(
 					`markets/${marketData.marketId}/market-state`
 				)
 			)
@@ -56,8 +58,8 @@ export class Perpetuals extends Caller {
 		marketId: bigint;
 	}): Promise<PerpetualsMarket> {
 		const [marketData, marketState] = await Promise.all([
-			this.fetchApi<MarketData>(`markets/${inputs.marketId}`),
-			this.fetchApi<MarketState>(
+			this.fetchApi<PerpetualsMarketData>(`markets/${inputs.marketId}`),
+			this.fetchApi<PerpetualsMarketState>(
 				`markets/${inputs.marketId}/market-state`
 			),
 		]);
@@ -72,7 +74,9 @@ export class Perpetuals extends Caller {
 
 	public async getUserAccounts(): Promise<PerpetualsAccount[]> {
 		// TODO: Get all AccountCaps from address to query perpetualsAccount
-		const accounts = await this.fetchApi<AccountData[]>("accounts");
+		const accounts = await this.fetchApi<PerpetualsAccountData[]>(
+			"accounts"
+		);
 
 		return accounts.map(
 			(account) =>

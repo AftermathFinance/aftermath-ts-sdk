@@ -7,18 +7,18 @@ import {
 	SuiRawMoveObject,
 } from "@mysten/sui.js";
 import {
-	AccountManager,
-	MarketManager,
-	MarketState,
-	Orderbook,
+	PerpetualsAccountManager,
+	PerpetualsMarketManager,
+	PerpetualsMarketState,
+	PerpetualsOrderbook,
 	Order,
-	OrderedMap,
-	Branch,
+	PerpetualsOrderedMap,
+	PerpetualsBranch,
 	Leaf,
-	OrderedVecSet,
-	MarketParams,
-	Account,
-	Position,
+	PerpetualsOrderedVecSet,
+	PerpetualsMarketParams,
+	PerpetualsAccountObject,
+	PerpetualsPosition,
 	bcs,
 } from "../perpetualsTypes";
 
@@ -29,7 +29,7 @@ export class PerpetualsCasting {
 
 	public static accountManagerFromSuiResponse = (
 		data: SuiObjectResponse
-	): AccountManager => {
+	): PerpetualsAccountManager => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -40,7 +40,7 @@ export class PerpetualsCasting {
 		});
 	};
 
-	public static accountManagerFromRaw(data: any): AccountManager {
+	public static accountManagerFromRaw(data: any): PerpetualsAccountManager {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,
@@ -54,7 +54,7 @@ export class PerpetualsCasting {
 
 	public static accountFromSuiResponse = (
 		data: SuiObjectResponse
-	): Account => {
+	): PerpetualsAccountObject => {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		const value = objectFields.value.fields;
 		return {
@@ -66,7 +66,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static accountFromRaw = (data: any): Account => {
+	public static accountFromRaw = (data: any): PerpetualsAccountObject => {
 		return {
 			collateral: BigInt(data.collateral),
 			marketIds: data.marketIds.map((id: number) => BigInt(id)),
@@ -76,7 +76,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static positionFromRaw = (data: any): Position => {
+	public static positionFromRaw = (data: any): PerpetualsPosition => {
 		return {
 			baseAssetAmount: BigInt(data.baseAssetAmount),
 			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
@@ -89,7 +89,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static orderedVecSetFromRaw(data: any): OrderedVecSet {
+	public static orderedVecSetFromRaw(data: any): PerpetualsOrderedVecSet {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,
@@ -106,7 +106,7 @@ export class PerpetualsCasting {
 
 	public static marketManagerFromSuiResponse = (
 		data: SuiObjectResponse
-	): MarketManager => {
+	): PerpetualsMarketManager => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -117,7 +117,7 @@ export class PerpetualsCasting {
 		});
 	};
 
-	public static marketManagerFromRaw(data: any): MarketManager {
+	public static marketManagerFromRaw(data: any): PerpetualsMarketManager {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,
@@ -127,7 +127,7 @@ export class PerpetualsCasting {
 		};
 	}
 
-	public static marketParamsFromRaw = (data: any): MarketParams => {
+	public static marketParamsFromRaw = (data: any): PerpetualsMarketParams => {
 		return {
 			baseAssetSymbol: data.baseAssetSymbol,
 			marginRatioInitial: BigInt(data.marginRatioInitial),
@@ -147,7 +147,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketStateFromRaw = (data: any): MarketState => {
+	public static marketStateFromRaw = (data: any): PerpetualsMarketState => {
 		return {
 			cumFundingRateLong: BigInt(data.cumFundingRateLong),
 			cumFundingRateShort: BigInt(data.cumFundingRateShort),
@@ -160,7 +160,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static orderbookFromRaw = (data: any): Orderbook => {
+	public static orderbookFromRaw = (data: any): PerpetualsOrderbook => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -175,7 +175,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static orderedMapFromRaw<T>(data: any): OrderedMap<T> {
+	public static orderedMapFromRaw<T>(data: any): PerpetualsOrderedMap<T> {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,

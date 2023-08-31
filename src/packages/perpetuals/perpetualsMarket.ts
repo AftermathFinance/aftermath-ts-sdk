@@ -1,9 +1,9 @@
 import { Caller } from "../../general/utils/caller";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
-	MarketParams,
-	MarketState,
-	Orderbook,
+	PerpetualsMarketParams,
+	PerpetualsMarketState,
+	PerpetualsOrderbook,
 	SuiNetwork,
 	Timestamp,
 	Url,
@@ -28,8 +28,8 @@ export class PerpetualsMarket extends Caller {
 
 	constructor(
 		public readonly marketId: bigint,
-		public readonly marketParams: MarketParams,
-		public readonly marketState: MarketState,
+		public readonly marketParams: PerpetualsMarketParams,
+		public readonly marketState: PerpetualsMarketState,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `perpetuals/markets/${marketId}`);
@@ -39,8 +39,8 @@ export class PerpetualsMarket extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async refreshOrderbook(): Promise<Orderbook> {
-		const orderbook = await this.fetchApi<Orderbook>("orderbook");
+	public async refreshOrderbook(): Promise<PerpetualsOrderbook> {
+		const orderbook = await this.fetchApi<PerpetualsOrderbook>("orderbook");
 		// this.updateOrderbook({ orderbook });
 		return orderbook;
 	}

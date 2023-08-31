@@ -9,21 +9,21 @@ import {
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinType,
-	Account,
+	PerpetualsAccountObject,
 	PerpetualsAddresses,
 	ExchangeAddresses,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
-import { PerpetualsAccount } from "../perpetualsAccount";
 import {
-	AccountManager,
+	PerpetualsAccountManager,
 	bcs,
-	MarketManager,
-	MarketParams,
-	MarketState,
+	PerpetualsMarketManager,
+	PerpetualsMarketParams,
+	PerpetualsMarketState,
 } from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsCasting";
+import { PerpetualsAccount } from "../perpetualsAccount";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -60,7 +60,7 @@ export class PerpetualsApi {
 
 	public fetchAccountManager = async (inputs: {
 		coinType: CoinType;
-	}): Promise<AccountManager> => {
+	}): Promise<PerpetualsAccountManager> => {
 		const exchangeCfg = this.getExchangeConfig(inputs);
 		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.accountManager,
@@ -75,7 +75,7 @@ export class PerpetualsApi {
 
 	public fetchMarketManager = async (inputs: {
 		coinType: CoinType;
-	}): Promise<MarketManager> => {
+	}): Promise<PerpetualsMarketManager> => {
 		const exchangeCfg = this.getExchangeConfig(inputs);
 		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.marketManager,
@@ -106,7 +106,7 @@ export class PerpetualsApi {
 	public fetchAccount = async (inputs: {
 		coinType: CoinType;
 		accountId: bigint;
-	}): Promise<Account> => {
+	}): Promise<PerpetualsAccountObject> => {
 		const accountDfInfos =
 			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
 				parentObjectId: this.addresses.objects.exchanges.get(
@@ -156,7 +156,7 @@ export class PerpetualsApi {
 	public fetchMarketState = async (inputs: {
 		coinType: CoinType;
 		marketId: bigint;
-	}): Promise<MarketState> => {
+	}): Promise<PerpetualsMarketState> => {
 		const pkg = this.addresses.packages.perpetuals;
 		const mktMngId = this.getExchangeConfig(inputs).marketManager;
 		const resp =
@@ -183,7 +183,7 @@ export class PerpetualsApi {
 	public fetchMarketParams = async (inputs: {
 		coinType: CoinType;
 		marketId: bigint;
-	}): Promise<MarketParams> => {
+	}): Promise<PerpetualsMarketParams> => {
 		const pkg = this.addresses.packages.perpetuals;
 		const mktMngId = this.getExchangeConfig(inputs).marketManager;
 		const resp =
