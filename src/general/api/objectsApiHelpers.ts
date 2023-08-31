@@ -69,6 +69,7 @@ export class ObjectsApiHelpers {
 		walletAddress: SuiAddress;
 		objectType: AnyObjectType;
 		withDisplay?: boolean;
+		options?: SuiObjectDataOptions;
 	}): Promise<SuiObjectResponse[]> => {
 		const { walletAddress, objectType, withDisplay } = inputs;
 
@@ -79,7 +80,7 @@ export class ObjectsApiHelpers {
 				filter: {
 					StructType: Helpers.stripLeadingZeroesFromType(objectType),
 				},
-				options: {
+				options: inputs.options ?? {
 					showContent: true,
 					showDisplay: withDisplay,
 					showOwner: true,
@@ -219,6 +220,7 @@ export class ObjectsApiHelpers {
 			SuiObjectResponse: SuiObjectResponse
 		) => ObjectType;
 		withDisplay?: boolean;
+		options?: SuiObjectDataOptions;
 	}): Promise<ObjectType[]> => {
 		// i. obtain all owned object IDs
 		const objects = (

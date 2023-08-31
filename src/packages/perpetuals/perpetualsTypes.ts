@@ -35,16 +35,14 @@ bcs.registerAlias("UID", BCS.ADDRESS);
 //  Clearing House
 // =========================================================================
 
-export interface PerpetualsAdminCapability extends Object {
-	objectId: ObjectId;
-}
+export interface PerpetualsAdminCapability extends Object {}
 
 bcs.registerStructType("AdminCapability", {
 	id: "UID",
 });
 
 export interface PerpetualsRegistry extends Object {
-	activeCollaterals: string[];
+	activeCollaterals: CoinType[];
 }
 
 bcs.registerStructType("Registry", {
@@ -80,13 +78,11 @@ bcs.registerStructType(["Vault", "T"], {
 // =========================================================================
 
 export interface PerpetualsAccountData {
-	accountId: PerpetualsAccountId;
+	accountCap: PerpetualsAccountCap;
 	account: PerpetualsAccountObject;
 }
 
 export interface PerpetualsAccountManager extends Object {
-	objectId: ObjectId;
-	objectType: AnyObjectType;
 	maxPositionsPerAccount: bigint;
 	maxPendingOrdersPerPosition: bigint;
 	nextAccountId: PerpetualsAccountId;
@@ -99,10 +95,9 @@ bcs.registerStructType("AccountManager", {
 	nextAccountId: BCS.U64,
 });
 
-export interface PerpetualsAccountCapability extends Object {
-	objectId: ObjectId;
-	objectType: AnyObjectType;
+export interface PerpetualsAccountCap extends Object {
 	accountId: PerpetualsAccountId;
+	coinType: CoinType;
 }
 
 bcs.registerStructType("AccountCap", {
@@ -112,7 +107,6 @@ bcs.registerStructType("AccountCap", {
 
 export interface PerpetualsAccountObject {
 	collateral: IFixed;
-	marketIds: bigint[];
 	positions: PerpetualsPosition[];
 }
 
@@ -123,6 +117,7 @@ bcs.registerStructType("Account", {
 });
 
 export interface PerpetualsPosition {
+	marketId: PerpetualsMarketId;
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;
 	cumFundingRateLong: IFixed;
@@ -144,10 +139,7 @@ bcs.registerStructType("Position", {
 	bidsQuantity: BCS.U256,
 });
 
-export interface PerpetualsOrderedVecSet extends Object {
-	objectId: ObjectId;
-	objectType: AnyObjectType;
-}
+export interface PerpetualsOrderedVecSet extends Object {}
 
 bcs.registerStructType("OrderedVecSet", {
 	id: "UID",
@@ -171,8 +163,6 @@ export interface PerpetualsMarketData {
 }
 
 export interface PerpetualsMarketManager extends Object {
-	objectId: ObjectId;
-	objectType: AnyObjectType;
 	feesAccrued: IFixed;
 	minOrderUsdValue: IFixed;
 	liquidationTolerance: bigint;
@@ -264,8 +254,6 @@ bcs.registerStructType("MarketKey", {
 // =========================================================================
 
 export interface PerpetualsOrderbook extends Object {
-	objectId: ObjectId;
-	objectType: AnyObjectType;
 	lotSize: bigint;
 	tickSize: bigint;
 	asks: PerpetualsOrderedMap<Order>;
@@ -293,8 +281,6 @@ bcs.registerStructType("Order", {
 });
 
 export interface PerpetualsOrderedMap<T> extends Object {
-	objectId: ObjectId;
-	objectType: AnyObjectType;
 	size: bigint;
 	counter: bigint;
 	root: bigint;
@@ -346,6 +332,18 @@ bcs.registerStructType(["Leaf", "V"], {
 bcs.registerStructType("OrderbookKey", {
 	marketId: BCS.U64,
 });
+
+// =========================================================================
+//  API
+// =========================================================================
+
+// =========================================================================
+//  Objects
+// =========================================================================
+
+export interface ApiPerpetualsAccountsBody {
+	walletAddress: SuiAddress;
+}
 
 // =========================================================================
 //  Transactions
@@ -402,5 +400,6 @@ export interface ApiPerpetualsCancelOrderBody {
 export interface ApiPerpetualsClosePositionBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
+	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
 }

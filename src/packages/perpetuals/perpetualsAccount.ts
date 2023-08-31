@@ -1,3 +1,4 @@
+import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCancelOrderBody,
@@ -6,9 +7,11 @@ import {
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsWithdrawCollateralBody,
-	PerpetualsAccountId,
+	Balance,
+	PerpetualsAccountCap,
 	PerpetualsAccountObject,
 	PerpetualsMarketId,
+	PerpetualsOrderId,
 	PerpetualsPosition,
 	SuiNetwork,
 	Url,
@@ -26,11 +29,11 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly accountId: PerpetualsAccountId,
-		public account: PerpetualsAccountObject,
+		public readonly account: PerpetualsAccountObject,
+		public readonly accountCap: PerpetualsAccountCap,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, `perpetuals/accounts/${accountId}`);
+		super(network);
 	}
 
 	// =========================================================================
@@ -41,21 +44,31 @@ export class PerpetualsAccount extends Caller {
 	//  Collateral Txs
 	// =========================================================================
 
-	public async getDepositCollateralTx(
-		inputs: ApiPerpetualsDepositCollateralBody
-	) {
+	public async getDepositCollateralTx(inputs: {
+		walletAddress: SuiAddress;
+		amount: Balance;
+	}) {
 		return this.fetchApiTransaction<ApiPerpetualsDepositCollateralBody>(
 			"transactions/deposit-collateral",
-			inputs
+			{
+				...inputs,
+				coinType: this.accountCap.coinType,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
-	public async getWithdrawCollateralTx(
-		inputs: ApiPerpetualsWithdrawCollateralBody
-	) {
+	public async getWithdrawCollateralTx(inputs: {
+		walletAddress: SuiAddress;
+		amount: Balance;
+	}) {
 		return this.fetchApiTransaction<ApiPerpetualsWithdrawCollateralBody>(
 			"transactions/withdraw-collateral",
-			inputs
+			{
+				...inputs,
+				coinType: this.accountCap.coinType,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
@@ -63,24 +76,53 @@ export class PerpetualsAccount extends Caller {
 	//  Order Txs
 	// =========================================================================
 
-	public async getPlaceMarketOrderTx(inputs: ApiPerpetualsMarketOrderBody) {
+	public async getPlaceMarketOrderTx(inputs: {
+		walletAddress: SuiAddress;
+		marketId: PerpetualsMarketId;
+		side: boolean;
+		size: bigint;
+	}) {
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
 			"transactions/market-order",
-			inputs
+			{
+				...inputs,
+				coinType: this.accountCap.coinType,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
-	public async getPlaceLimitOrderTx(inputs: ApiPerpetualsLimitOrderBody) {
+	public async getPlaceLimitOrderTx(inputs: {
+		walletAddress: SuiAddress;
+		marketId: PerpetualsMarketId;
+		side: boolean;
+		size: bigint;
+		price: bigint;
+		orderType: bigint;
+	}) {
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
 			"transactions/limit-order",
-			inputs
+			{
+				...inputs,
+				coinType: this.accountCap.coinType,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
-	public async getCancelOrderTx(inputs: ApiPerpetualsCancelOrderBody) {
+	public async getCancelOrderTx(inputs: {
+		walletAddress: SuiAddress;
+		marketId: PerpetualsMarketId;
+		side: boolean;
+		orderId: PerpetualsOrderId;
+	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrderBody>(
 			"transactions/cancel-order",
-			inputs
+			{
+				...inputs,
+				coinType: this.accountCap.coinType,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
@@ -88,10 +130,17 @@ export class PerpetualsAccount extends Caller {
 	//  Position Txs
 	// =========================================================================
 
-	public async getClosePositionTx(inputs: ApiPerpetualsClosePositionBody) {
+	public async getClosePositionTx(inputs: {
+		walletAddress: SuiAddress;
+		marketId: PerpetualsMarketId;
+	}) {
 		return this.fetchApiTransaction<ApiPerpetualsClosePositionBody>(
 			"transactions/close-position",
-			inputs
+			{
+				...inputs,
+				coinType: this.accountCap.coinType,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
@@ -103,34 +152,11 @@ export class PerpetualsAccount extends Caller {
 		marketId: PerpetualsMarketId;
 	}): PerpetualsPosition {
 		try {
-			const posIndex = Number(
-				this.account.marketIds.findIndex((id) => {
-					return id === inputs.marketId;
-				})
-			);
-			return this.account.positions[posIndex];
+			return this.account.positions.find(
+				(pos) => pos.marketId === inputs.marketId
+			)!;
 		} catch (e) {
 			throw new Error("no position found for market");
-		}
-	}
-
-	public marketIdForPosition(inputs: {
-		position: PerpetualsPosition;
-	}): bigint {
-		try {
-			const posIndex = this.account.positions.findIndex(
-				(pos) => JSON.stringify(pos) === JSON.stringify(inputs.position)
-			);
-			const marketId = this.account.marketIds.findIndex(
-				(val) => val === BigInt(posIndex)
-			);
-
-			if (posIndex < 0 || marketId < 0)
-				throw new Error("position not found");
-
-			return BigInt(marketId);
-		} catch (e) {
-			throw new Error("no market found for position");
 		}
 	}
 }

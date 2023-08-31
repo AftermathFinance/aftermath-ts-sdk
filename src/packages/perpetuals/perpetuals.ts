@@ -7,6 +7,7 @@ import {
 	PerpetualsMarketData,
 	PerpetualsAccountData,
 	PerpetualsMarketId,
+	ApiPerpetualsAccountsBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -18,6 +19,7 @@ export class Perpetuals extends Caller {
 
 	public static readonly constants = {
 		fundingFrequencyMs: 1000000, // TODO: set this value correctly
+		collateralCoinTypes: ["0x2::sui::SUI"],
 	};
 
 	// =========================================================================
@@ -73,17 +75,19 @@ export class Perpetuals extends Caller {
 		);
 	}
 
-	public async getUserAccounts(): Promise<PerpetualsAccount[]> {
-		// TODO: Get all AccountCaps from address to query perpetualsAccount
-		const accounts = await this.fetchApi<PerpetualsAccountData[]>(
-			"accounts"
-		);
+	public async getUserAccounts(
+		inputs: ApiPerpetualsAccountsBody
+	): Promise<PerpetualsAccount[]> {
+		const accountDatas = await this.fetchApi<
+			PerpetualsAccountData[],
+			ApiPerpetualsAccountsBody
+		>("accounts", inputs);
 
-		return accounts.map(
+		return accountDatas.map(
 			(account) =>
 				new PerpetualsAccount(
-					account.accountId,
 					account.account,
+					account.accountCap,
 					this.network
 				)
 		);

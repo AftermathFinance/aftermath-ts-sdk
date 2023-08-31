@@ -26,9 +26,12 @@ import {
 	PerpetualsMarketId,
 	PerpetualsAccountId,
 	PerpetualsOrderId,
+	PerpetualsAccountCap,
+	PerpetualsAccountData,
 } from "../perpetualsTypes";
-import { PerpetualsCasting } from "./perpetualsCasting";
+import { PerpetualsCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
+import { Perpetuals } from "../perpetuals";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -93,19 +96,29 @@ export class PerpetualsApi {
 		});
 	};
 
-	public fetchOwnedAccountCapObjectIds = async (inputs: {
+	public fetchOwnedAccountCaps = async (inputs: {
 		walletAddress: SuiAddress;
-		coinType: CoinType;
-	}): Promise<ObjectId[]> => {
-		const accountCapType = this.getAccountCapType(inputs);
-		const accountCaps =
-			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
-				walletAddress: inputs.walletAddress,
-				objectType: accountCapType,
-			});
-		return accountCaps.map((x: SuiObjectResponse) => {
-			return x.data!.objectId;
-		});
+	}): Promise<PerpetualsAccountCap[]> => {
+		const { walletAddress } = inputs;
+
+		const allAccountCaps = await Promise.all(
+			Perpetuals.constants.collateralCoinTypes.map((coinType) => {
+				const objectType = this.getAccountCapType({ coinType });
+				return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
+					{
+						objectType,
+						walletAddress,
+						objectFromSuiObjectResponse:
+							PerpetualsCasting.accountCapFromSuiResponse,
+						options: {
+							showBcs: true,
+							showType: true,
+						},
+					}
+				);
+			})
+		);
+		return allAccountCaps.reduce((acc, caps) => [...acc, ...caps], []);
 	};
 
 	public fetchAccount = async (inputs: {
@@ -137,6 +150,19 @@ export class PerpetualsApi {
 		return PerpetualsCasting.accountFromRaw(accountField.value);
 	};
 
+	public fetchAllAccountDatas = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<PerpetualsAccountData[]> => {
+		const accountCaps = await this.fetchOwnedAccountCaps(inputs);
+		const accounts = await Promise.all(
+			accountCaps.map((cap) => this.fetchAccount(cap))
+		);
+		return accounts.map((account, index) => ({
+			account,
+			accountCap: accountCaps[index],
+		}));
+	};
+
 	public fetchPositionOrderIds = async (inputs: {
 		coinType: CoinType;
 		accountId: PerpetualsAccountId;
@@ -144,8 +170,13 @@ export class PerpetualsApi {
 	}): Promise<bigint[][]> => {
 		const { coinType, accountId, marketId } = inputs;
 
-		const account_struct = await this.fetchAccount({ coinType, accountId });
-		const account = new PerpetualsAccount(accountId, account_struct);
+		const accountStruct = await this.fetchAccount({ coinType, accountId });
+		const account = new PerpetualsAccount(accountStruct, {
+			accountId,
+			coinType,
+			objectId: "0x123",
+			objectType: "0x123::account_cap::AccountCap",
+		});
 		const position = account.positionForMarketId({ marketId });
 
 		const askOrderIds = await this.fetchOrderedVecSet({
