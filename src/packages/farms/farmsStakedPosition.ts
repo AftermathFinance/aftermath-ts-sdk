@@ -129,14 +129,14 @@ export class FarmsStakedPosition extends Caller {
 	public rewardsEarned = (inputs: {
 		coinType: CoinType;
 		stakingPool: FarmsStakingPool;
-	}) => {
+	}): Balance => {
 		this.updatePosition(inputs);
 
 		const rewardCoin = this.rewardCoin(inputs);
-		return (
+		const totalRewards =
 			rewardCoin.multiplierRewardsAccumulated +
-			rewardCoin.baseRewardsAccumulated
-		);
+			rewardCoin.baseRewardsAccumulated;
+		return totalRewards <= BigInt(0) ? BigInt(0) : totalRewards;
 	};
 
 	// Updates the amount of rewards that can be harvested from `self` + the position's
@@ -373,7 +373,7 @@ export class FarmsStakedPosition extends Caller {
 	// Calculates a position's accrued rewards [from time t0] given a vault's
 	//  `rewardsAccumulatedPerShare`. If the position is beyond its lock duration, we need to only
 	//  apply the lock multiplier rewards to the time spent locked.
-	public calcTotalRewardsFromTimeT0(inputs: {
+	private calcTotalRewardsFromTimeT0(inputs: {
 		rewardsAccumulatedPerShare: Balance;
 		multiplierRewardsDebt: Balance;
 		emissionEndTimestamp: Timestamp;
