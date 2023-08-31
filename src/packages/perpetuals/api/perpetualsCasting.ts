@@ -1,10 +1,8 @@
-import { TypeName } from "@mysten/bcs";
 import {
 	SuiObjectResponse,
 	ObjectContentFields,
 	getObjectFields,
 	getObjectType,
-	SuiRawMoveObject,
 } from "@mysten/sui.js";
 import {
 	PerpetualsAccountManager,
@@ -13,14 +11,13 @@ import {
 	PerpetualsOrderbook,
 	Order,
 	PerpetualsOrderedMap,
-	PerpetualsBranch,
-	Leaf,
 	PerpetualsOrderedVecSet,
 	PerpetualsMarketParams,
 	PerpetualsAccountObject,
 	PerpetualsPosition,
 	bcs,
 } from "../perpetualsTypes";
+import { Casting } from "../../../general/utils";
 
 export class PerpetualsCasting {
 	// =========================================================================
@@ -33,10 +30,11 @@ export class PerpetualsCasting {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		return PerpetualsCasting.castObjectBcs({
-			resp: data,
+		return Casting.castObjectBcs({
+			suiObjectResponse: data,
 			typeName: "AccountManager",
 			fromDeserialized: PerpetualsCasting.accountManagerFromRaw,
+			bcs,
 		});
 	};
 
@@ -110,10 +108,11 @@ export class PerpetualsCasting {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		return PerpetualsCasting.castObjectBcs({
-			resp: data,
+		return Casting.castObjectBcs({
+			suiObjectResponse: data,
 			typeName: "MarketManager",
 			fromDeserialized: PerpetualsCasting.marketManagerFromRaw,
+			bcs,
 		});
 	};
 
@@ -197,20 +196,5 @@ export class PerpetualsCasting {
 			accountId: BigInt(data.accountId),
 			size: BigInt(data.size),
 		};
-	};
-
-	// =========================================================================
-	//  General
-	// =========================================================================
-
-	public static castObjectBcs = <T>(inputs: {
-		resp: SuiObjectResponse;
-		typeName: TypeName;
-		fromDeserialized: (deserialized: any) => T;
-	}): T => {
-		const { resp, typeName, fromDeserialized } = inputs;
-		const rawObj = resp.data?.bcs as SuiRawMoveObject;
-		const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
-		return fromDeserialized(deserialized);
 	};
 }

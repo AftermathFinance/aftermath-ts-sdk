@@ -8,7 +8,7 @@ import {
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, PackageId } from "../../types";
-import { Helpers } from "../utils";
+import { Casting, Helpers } from "../utils";
 import { TypeName } from "@mysten/bcs";
 import { BCS } from "@mysten/bcs";
 
@@ -148,33 +148,6 @@ export class ObjectsApiHelpers {
 		);
 	};
 
-	public fetchObjectBcs = async (
-		objectId: ObjectId
-	): Promise<SuiObjectResponse> => {
-		const objectResponse = await this.Provider.provider.getObject({
-			id: objectId,
-			options: { showBcs: true },
-		});
-		if (objectResponse.error !== undefined)
-			throw new Error(
-				`an error occured fetching object: ${objectResponse.error.error}`
-			);
-		return objectResponse;
-	};
-
-	public fetchCastObjectBcs = async <T>(inputs: {
-		objectId: ObjectId;
-		typeName: TypeName;
-		fromDeserialized: (deserialized: any) => T;
-		bcs: BCS;
-	}): Promise<T> => {
-		const { objectId, typeName, fromDeserialized } = inputs;
-		const resp = await this.Provider.Objects().fetchObjectBcs(objectId);
-		const rawObj = resp.data?.bcs as SuiRawMoveObject;
-		const deserialized = inputs.bcs.de(typeName, rawObj.bcsBytes, "base64");
-		return fromDeserialized(deserialized);
-	};
-
 	public fetchObjectBatch = async (inputs: {
 		objectIds: ObjectId[];
 		options?: SuiObjectDataOptions;
@@ -255,5 +228,39 @@ export class ObjectsApiHelpers {
 		});
 
 		return objects;
+	};
+
+	// =========================================================================
+	//  BCS
+	// =========================================================================
+
+	public fetchObjectBcs = async (
+		objectId: ObjectId
+	): Promise<SuiObjectResponse> => {
+		const objectResponse = await this.Provider.provider.getObject({
+			id: objectId,
+			options: { showBcs: true },
+		});
+		if (objectResponse.error !== undefined)
+			throw new Error(
+				`an error occured fetching object: ${objectResponse.error.error}`
+			);
+		return objectResponse;
+	};
+
+	public fetchCastObjectBcs = async <T>(inputs: {
+		objectId: ObjectId;
+		typeName: TypeName;
+		fromDeserialized: (deserialized: any) => T;
+		bcs: BCS;
+	}): Promise<T> => {
+		const { objectId } = inputs;
+		const suiObjectResponse = await this.Provider.Objects().fetchObjectBcs(
+			objectId
+		);
+		return Casting.castObjectBcs({
+			...inputs,
+			suiObjectResponse: suiObjectResponse,
+		});
 	};
 }

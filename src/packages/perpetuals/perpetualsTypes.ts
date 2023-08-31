@@ -331,7 +331,7 @@ bcs.registerStructType("Branch", {
 	kids: ["vector", BCS.U64],
 });
 
-export interface Leaf<V> {
+export interface PerpetualsLeaf<V> {
 	keys: bigint[];
 	vals: V[];
 	next: bigint;
