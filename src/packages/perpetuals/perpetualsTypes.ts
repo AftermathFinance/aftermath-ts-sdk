@@ -89,7 +89,7 @@ export interface PerpetualsAccountManager extends Object {
 	objectType: AnyObjectType;
 	maxPositionsPerAccount: bigint;
 	maxPendingOrdersPerPosition: bigint;
-	nextaccountId: PerpetualsAccountId;
+	nextAccountId: PerpetualsAccountId;
 }
 
 bcs.registerStructType("AccountManager", {
