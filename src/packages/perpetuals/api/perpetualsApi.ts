@@ -25,6 +25,7 @@ import {
 	ApiPerpetualsCreateAccountBody,
 	PerpetualsMarketId,
 	PerpetualsAccountId,
+	PerpetualsOrderId,
 } from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -519,7 +520,7 @@ export class PerpetualsApi {
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
 		side: boolean;
-		orderId: bigint;
+		orderId: PerpetualsOrderId;
 	}) => {
 		const { tx, coinType, accountCapId, marketId, side, orderId } = inputs;
 		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;

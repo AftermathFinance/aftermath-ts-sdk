@@ -15,6 +15,7 @@ import { CoinType } from "../coin/coinTypes";
 
 export type PerpetualsMarketId = bigint;
 export type PerpetualsAccountId = bigint;
+export type PerpetualsOrderId = bigint;
 
 // =========================================================================
 //  BCS - Binary Canonical Serialization
@@ -395,7 +396,7 @@ export interface ApiPerpetualsCancelOrderBody {
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
 	side: boolean;
-	orderId: bigint;
+	orderId: PerpetualsOrderId;
 }
 
 export interface ApiPerpetualsClosePositionBody {
