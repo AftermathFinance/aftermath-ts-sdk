@@ -8,160 +8,126 @@ import {
 } from "@mysten/sui.js";
 import {
 	AccountManager,
-	AccountManagerObj,
+	MarketManager,
 	MarketState,
 	Orderbook,
 	Order,
-	CritBitTree,
-	OrderCasted,
-	MarketManagerDynamicFieldOnChain,
-	MarketParamsDynamicFieldOnChain,
-	MarketParamsDynamicField,
+	OrderedMap,
+	Branch,
+	Leaf,
+	OrderedVecSet,
 	MarketParams,
-	MarketOrderbookDynamicFieldObject,
-	MarketStateDynamicField,
-	MarketOrderbookDynamicFieldOnChain,
-	MarketManagerStateDynamicFieldOnChain,
-	InnerNode,
-	OuterNode,
-	AccountStruct,
+	Account,
 	Position,
-	TableV,
 	bcs,
-	MarketManagerObj,
-	MarketManager,
 } from "../perpetualsTypes";
-import PriorityQueue from "priority-queue-typescript";
-import { AnyObjectType, Table } from "../../../general/types";
-import { CritBitTreeUtils } from "../utils/critBitTreeUtils";
 
 export class PerpetualsCasting {
 	// =========================================================================
 	//  Account Manager
 	// =========================================================================
-	public static accountManagerObjFromSuiObjectResponse = (
+
+	public static accountManagerFromSuiResponse = (
 		data: SuiObjectResponse
-	): AccountManagerObj => {
+	): AccountManager => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		const contents = PerpetualsCasting.castObjectBcs({
+		return PerpetualsCasting.castObjectBcs({
 			resp: data,
 			typeName: "AccountManager",
 			fromDeserialized: PerpetualsCasting.accountManagerFromRaw,
 		});
-
-		return {
-			objectType,
-			objectId: contents.id,
-			...contents,
-		};
 	};
 
-	public static accountFromSuiDynamicFieldObjectResponse = (
+	public static accountManagerFromRaw(data: any): AccountManager {
+		return {
+			objectId: data.id,
+			objectType: data.objectType,
+			maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
+			maxPendingOrdersPerPosition: BigInt(
+				data.maxPendingOrdersPerPosition
+			),
+			nextAccountId: BigInt(data.nextAccountId),
+		};
+	}
+
+	public static accountFromSuiResponse = (
 		data: SuiObjectResponse
-	): AccountStruct => {
+	): Account => {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		const value = objectFields.value.fields;
 		return {
 			collateral: value.collateral,
 			marketIds: value.market_ids.map((id: any) => BigInt(id)),
-			positions: value.positions.map((p: any) =>
-				PerpetualsCasting.positionFromRawData(p)
+			positions: value.positions.map((pos: any) =>
+				PerpetualsCasting.positionFromRaw(pos)
 			),
 		};
 	};
 
-	public static accountFromRawData = (data: any): AccountStruct => {
+	public static accountFromRaw = (data: any): Account => {
 		return {
 			collateral: BigInt(data.collateral),
 			marketIds: data.marketIds.map((id: number) => BigInt(id)),
 			positions: data.positions.map((pos: any) =>
-				PerpetualsCasting.positionFromRawData(pos)
+				PerpetualsCasting.positionFromRaw(pos)
 			),
 		};
 	};
 
-	public static positionFromRawData = (data: any): Position => {
+	public static positionFromRaw = (data: any): Position => {
 		return {
 			baseAssetAmount: BigInt(data.baseAssetAmount),
 			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
 			cumFundingRateLong: BigInt(data.cumFundingRateLong),
 			cumFundingRateShort: BigInt(data.cumFundingRateShort),
-			asks: PerpetualsCasting.critBitTreeFromAny<bigint>(data.asks),
-			bids: PerpetualsCasting.critBitTreeFromAny<bigint>(data.bids),
+			asks: PerpetualsCasting.orderedVecSetFromRaw(data.asks),
+			bids: PerpetualsCasting.orderedVecSetFromRaw(data.bids),
 			asksQuantity: BigInt(data.asksQuantity),
 			bidsQuantity: BigInt(data.bidsQuantity),
 		};
 	};
 
+	public static orderedVecSetFromRaw(data: any): OrderedVecSet {
+		return {
+			objectId: data.id,
+			objectType: data.objectType,
+		};
+	}
+
+	public static contentsFromRaw<T>(): (v: any) => T {
+		return (v: any) => v;
+	}
+
 	// =========================================================================
 	//  Market Manager
 	// =========================================================================
-	public static marketManagerObjFromSuiObjectResponse = (
+
+	public static marketManagerFromSuiResponse = (
 		data: SuiObjectResponse
-	): MarketManagerObj => {
+	): MarketManager => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		const contents = PerpetualsCasting.castObjectBcs({
+		return PerpetualsCasting.castObjectBcs({
 			resp: data,
 			typeName: "MarketManager",
 			fromDeserialized: PerpetualsCasting.marketManagerFromRaw,
 		});
-
-		return {
-			objectType,
-			objectId: contents.id,
-			...contents,
-		};
 	};
 
-	public static marketParamsDynamicFieldFromOnChain = (
-		dynamicField: MarketManagerDynamicFieldOnChain
-	): MarketParamsDynamicField => {
-		if (!this.isMarketManagerParamsKeyType(dynamicField.data.type))
-			throw new Error("not params key type");
-		const paramsField = dynamicField as MarketParamsDynamicFieldOnChain;
+	public static marketManagerFromRaw(data: any): MarketManager {
 		return {
-			value: PerpetualsCasting.marketParamsFromRawBcs(
-				paramsField.data.fields.value.fields
-			),
+			objectId: data.id,
+			objectType: data.objectType,
+			feesAccrued: BigInt(data.feesAccrued),
+			minOrderUsdValue: BigInt(data.minOrderUsdValue),
+			liquidationTolerance: BigInt(data.liquidationTolerance),
 		};
-	};
+	}
 
-	public static marketManagerStateDynamicFieldFromOnChain = (
-		dynamicField: MarketManagerDynamicFieldOnChain
-	): MarketStateDynamicField => {
-		if (!this.isMarketManagerStateKeyType(dynamicField.data.type))
-			throw new Error("not state key type");
-		const stateField =
-			dynamicField as MarketManagerStateDynamicFieldOnChain;
-		return {
-			value: PerpetualsCasting.marketStateFromRawBcs(
-				stateField.data.fields
-			),
-		};
-	};
-
-	public static marketManagerOrderbookDynamicFieldFromOnChain = async (
-		dynamicField: MarketManagerDynamicFieldOnChain
-	): Promise<MarketOrderbookDynamicFieldObject> => {
-		if (!this.isMarketManagerOrderbookKeyType(dynamicField.data.type))
-			throw new Error("not order book key type");
-		const orderbookField =
-			dynamicField as MarketOrderbookDynamicFieldOnChain;
-
-		const objectType = dynamicField.data.type;
-
-		return {
-			objectType,
-			objectId: orderbookField.data.fields.id.id,
-			value: PerpetualsCasting.orderbookFromRawData(orderbookField.data),
-		};
-	};
-
-	public static marketParamsFromRawBcs = (data: any): MarketParams => {
+	public static marketParamsFromRaw = (data: any): MarketParams => {
 		return {
 			baseAssetSymbol: data.baseAssetSymbol,
 			marginRatioInitial: BigInt(data.marginRatioInitial),
@@ -181,7 +147,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketStateFromRawBcs = (data: any): MarketState => {
+	public static marketStateFromRaw = (data: any): MarketState => {
 		return {
 			cumFundingRateLong: BigInt(data.cumFundingRateLong),
 			cumFundingRateShort: BigInt(data.cumFundingRateShort),
@@ -194,80 +160,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	// =========================================================================
-	//  Orderbook
-	// =========================================================================
-
-	public static outerNodeFromSuiDynamicFieldObjectResponse = (
-		data: SuiObjectResponse
-	): OuterNode<bigint> => {
-		const rawObj = data.data?.bcs! as SuiRawMoveObject;
-		const outerNode = bcs.de("OuterNode<u64>", rawObj.bcsBytes, "base64");
-		return {
-			key: BigInt(outerNode.key),
-			value: BigInt(outerNode.value),
-			parentIndex: BigInt(outerNode.parent_index),
-		};
-	};
-
-	public static critBitTreeFromAny<T>(data: any): CritBitTree<T> {
-		return {
-			root: BigInt(data.root),
-			innerNodes: PerpetualsCasting.tableVFromAny<InnerNode>(
-				data.innerNodes
-			),
-			outerNodes: PerpetualsCasting.tableVFromAny<OuterNode<T>>(
-				data.outerNodes
-			),
-		};
-	}
-
-	public static tableVFromAny<T>(data: any): TableV<T> {
-		return {
-			contents: PerpetualsCasting.tableFromAny<number, T>(data.contents),
-		};
-	}
-
-	public static tableFromAny<K, V>(data: any): Table<K, V> {
-		return {
-			objectId: data.id.id,
-			size: data.size,
-		};
-	}
-
-	public static innerNodeFromAny = (data: any): InnerNode[] => {
-		const innerNodes: InnerNode[] = [];
-		for (const node of data) {
-			innerNodes.push({
-				criticalBit: BigInt(node.criticalBit),
-				parentIndex: BigInt(node.parentIndex),
-				leftChildIndex: BigInt(node.leftChildIndex),
-				rightChildIndex: BigInt(node.rightChildIndex),
-			} as InnerNode);
-		}
-		return innerNodes;
-	};
-
-	public static outerNodeFromAny = (data: any): OuterNode<Order>[] => {
-		const outerNodes: OuterNode<Order>[] = [];
-		for (const node of data) {
-			outerNodes.push({
-				key: BigInt(node.key),
-				value: PerpetualsCasting.orderFromAny(node.value),
-				parentIndex: BigInt(node.parentIndex),
-			} as OuterNode<Order>);
-		}
-		return outerNodes;
-	};
-
-	public static orderFromAny = (data: any): Order => {
-		return {
-			accountId: BigInt(data.accountId),
-			size: BigInt(data.size),
-		};
-	};
-
-	public static orderbookFromRawData = (data: any): Orderbook => {
+	public static orderbookFromRaw = (data: any): Orderbook => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -276,157 +169,35 @@ export class PerpetualsCasting {
 			objectId: data.id.id,
 			lotSize: BigInt(data.lot_size),
 			tickSize: BigInt(data.tick_size),
-			asks: PerpetualsCasting.critBitTreeFromAny<Order>(data.asks),
-			bids: PerpetualsCasting.critBitTreeFromAny<Order>(data.bids),
-			minAsk: BigInt(data.min_ask),
-			minBid: BigInt(data.max_bid),
+			asks: PerpetualsCasting.orderedMapFromRaw<Order>(data.asks),
+			bids: PerpetualsCasting.orderedMapFromRaw<Order>(data.bids),
 			counter: BigInt(data.counter),
 		};
 	};
 
-	public static priorityQueueOfOrdersFromCritBitTree = async (
-		tree: CritBitTree<Order>,
-		direction: boolean
-	): Promise<PriorityQueue<OrderCasted>> => {
-		const comparator: Function = direction
-			? this.compareAskOrders
-			: this.compareBidOrders;
-		const priorityQueue = new PriorityQueue<OrderCasted>(
-			tree.outerNodes.contents.size,
-			comparator
-		);
-		// TODO: implement fetching the table vec from the network
-		// for (const node of tree.outerNodes) {
-		// 	const orderId = node.key;
-		// 	const order = node.value;
-		// 	const priceOfOrder = price(orderId);
-		// 	const counter = direction
-		// 		? counterAsk(orderId)
-		// 		: counterBid(orderId);
-		// 	const insertedOrder = {
-		// 		accountId: order.accountId,
-		// 		size: order.size,
-		// 		price: priceOfOrder,
-		// 		counter: counter,
-		// 	} as PerpetualsOrderCasted;
-		// 	priorityQueue.add(insertedOrder);
-		// }
-		return priorityQueue;
-	};
-
-	public static priorityQueuesOfOrdersFromOrderbook = async (
-		orderbook: Orderbook
-	): Promise<PriorityQueue<OrderCasted>[]> => {
-		const priorityQueueOfAskOrders =
-			await PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
-				orderbook.asks,
-				CritBitTreeUtils.ASK
-			);
-		const priorityQueueOfBidOrders =
-			await PerpetualsCasting.priorityQueueOfOrdersFromCritBitTree(
-				orderbook.bids,
-				CritBitTreeUtils.BID
-			);
-		return [priorityQueueOfAskOrders, priorityQueueOfBidOrders];
-	};
-
-	// =========================================================================
-	//  Types from raw deserialized BCS
-	// =========================================================================
-
-	public static accountManagerFromRaw(data: any): AccountManager {
-		return {
-			id: data.id,
-			maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
-			maxPendingOrdersPerPosition: BigInt(
-				data.maxPendingOrdersPerPosition
-			),
-			nextAccountId: BigInt(data.nextAccountId),
-		};
-	}
-
-	public static marketManagerFromRaw(data: any): MarketManager {
-		return {
-			id: data.id,
-			feesAccrued: BigInt(data.feesAccrued),
-			minOrderUsdValue: BigInt(data.minOrderUsdValue),
-			liquidationTolerance: BigInt(data.liquidationTolerance),
-		};
-	}
-
-	public static accountFromRaw(data: any): AccountStruct {
-		return {
-			collateral: BigInt(data.collateral),
-			marketIds: data.marketIds.map((id: number) => BigInt(id)),
-			positions: data.positions.map((pos: any) =>
-				PerpetualsCasting.positionFromRaw(pos)
-			),
-		};
-	}
-
-	public static positionFromRaw(data: any): Position {
-		return {
-			baseAssetAmount: BigInt(data.baseAssetAmount),
-			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
-			cumFundingRateLong: BigInt(data.cumFundingRateLong),
-			cumFundingRateShort: BigInt(data.cumFundingRateShort),
-			asks: PerpetualsCasting.critBitTreeFromRaw<bigint>(data.asks),
-			bids: PerpetualsCasting.critBitTreeFromRaw<bigint>(data.bids),
-			asksQuantity: BigInt(data.asksQuantity),
-			bidsQuantity: BigInt(data.bidsQuantity),
-		};
-	}
-
-	public static critBitTreeFromRaw<T>(data: any): CritBitTree<T> {
-		return {
-			root: BigInt(data.root),
-			innerNodes: PerpetualsCasting.tableVFromRaw<InnerNode>(
-				data.innerNodes
-			),
-			outerNodes: PerpetualsCasting.tableVFromRaw<OuterNode<T>>(
-				data.outerNodes
-			),
-		};
-	}
-
-	public static innerNodeFromRaw(data: any): InnerNode {
-		return {
-			criticalBit: BigInt(data.criticalBit),
-			parentIndex: BigInt(data.parentIndex),
-			leftChildIndex: BigInt(data.leftChildren),
-			rightChildIndex: BigInt(data.rightChildren),
-		};
-	}
-
-	public static outerNodeFromRawPartial<T>(
-		valueFromRaw: (v: any) => T
-	): (v: any) => OuterNode<T> {
-		return (v: any) => PerpetualsCasting.outerNodeFromRaw(v, valueFromRaw);
-	}
-
-	public static outerNodeFromRaw<T>(
-		data: any,
-		valueFromRaw: (v: any) => T
-	): OuterNode<T> {
-		return {
-			key: BigInt(data.key),
-			value: valueFromRaw(data.value),
-			parentIndex: BigInt(data.parentIndex),
-		};
-	}
-
-	public static tableVFromRaw<T>(data: any): TableV<T> {
-		return {
-			contents: PerpetualsCasting.tableFromRaw<number, T>(data.contents),
-		};
-	}
-
-	public static tableFromRaw<K, V>(data: any): Table<K, V> {
+	public static orderedMapFromRaw<T>(data: any): OrderedMap<T> {
 		return {
 			objectId: data.id,
-			size: data.size,
+			objectType: data.objectType,
+			size: BigInt(data.size),
+			counter: BigInt(data.counter),
+			root: BigInt(data.root),
+			first: BigInt(data.first),
+			branchMin: BigInt(data.branchMin),
+			branchMax: BigInt(data.branchMax),
+			leafMin: BigInt(data.leafMin),
+			leafMax: BigInt(data.leafMax),
+			branchesMergeMax: BigInt(data.branchesMergeMax),
+			leavesMergeMax: BigInt(data.leavesMergeMax),
 		};
 	}
+
+	public static orderFromRaw = (data: any): Order => {
+		return {
+			accountId: BigInt(data.accountId),
+			size: BigInt(data.size),
+		};
+	};
 
 	// =========================================================================
 	//  General
@@ -442,37 +213,4 @@ export class PerpetualsCasting {
 		const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
 		return fromDeserialized(deserialized);
 	};
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	private static compareBidOrders = (
-		insertedOrder: OrderCasted,
-		comparableOrder: OrderCasted
-	): number => {
-		if (insertedOrder.price < comparableOrder.price) return 1;
-		else if (insertedOrder.price > comparableOrder.price) return -1;
-		else if (insertedOrder.counter > comparableOrder.counter) return 1;
-		else return -1;
-	};
-
-	private static compareAskOrders = (
-		insertedOrder: OrderCasted,
-		comparableOrder: OrderCasted
-	): number => {
-		if (insertedOrder.price > comparableOrder.price) return 1;
-		else if (insertedOrder.price < comparableOrder.price) return -1;
-		else if (insertedOrder.counter > comparableOrder.counter) return 1;
-		else return -1;
-	};
-
-	private static isMarketManagerParamsKeyType = (type: AnyObjectType) =>
-		type.includes("Params");
-
-	private static isMarketManagerStateKeyType = (type: AnyObjectType) =>
-		type.includes("State");
-
-	private static isMarketManagerOrderbookKeyType = (type: AnyObjectType) =>
-		type.includes("Orderbook");
 }

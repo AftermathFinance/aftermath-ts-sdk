@@ -1,7 +1,7 @@
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCreateAccountBody,
-	AccountStruct,
+	Account,
 	MarketParams,
 	SuiNetwork,
 	Url,
@@ -71,7 +71,7 @@ export class Perpetuals extends Caller {
 			// TODO: move to new type/interface
 			{
 				accountId: bigint;
-				account: AccountStruct;
+				account: Account;
 			}[]
 		>("accounts");
 

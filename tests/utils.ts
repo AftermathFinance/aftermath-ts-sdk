@@ -1,7 +1,5 @@
 import { Ed25519Keypair, RawSigner } from "@mysten/sui.js";
 import { fromB64 } from "@mysten/bcs";
-import PriorityQueue from "priority-queue-typescript";
-import { OrderCasted } from "../src/types";
 import { AftermathApi } from "../src/general/providers";
 
 export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";
@@ -13,6 +11,12 @@ export const ASK = true;
 export const BID = false;
 export const LOT_SIZE = BigInt(1000000);
 export const TICK_SIZE = BigInt(1000);
+export const BRANCH_MIN = BigInt(25);
+export const BRANCH_MAX = BigInt(75);
+export const LEAF_MIN = BigInt(2);
+export const LEAF_MAX = BigInt(4);
+export const BRANCHES_MERGE_MAX = BigInt(55);
+export const LEAVES_MERGE_MAX = BigInt(4);
 export const ONE_B9 = BigInt(1_000_000_000); // 9 decimal places
 export const ONE_F18 = BigInt(1_000_000_000_000_000_000); // 18 decimal places
 export const MARKET_ID0 = BigInt(0);
@@ -37,42 +41,4 @@ export const fromOraclePriceToOrderbookPrice = (
 ): bigint => {
 	oracle_price = oracle_price / ONE_B9; // convert f18 to b9 (assuming the former is positive)
 	return oracle_price / tick_size / (ONE_B9 / lot_size);
-};
-
-export const checkPQ = (
-	pq: PriorityQueue<OrderCasted>,
-	side: boolean
-): boolean => {
-	if (side == ASK) return checkPQAsk(pq);
-	else return checkPQBid(pq);
-};
-
-export const checkPQAsk = (pq: PriorityQueue<OrderCasted>): boolean => {
-	let currentOrder = pq.poll()!;
-	while (pq.size() !== 0) {
-		let nextOrder = pq.poll()!;
-		if (currentOrder.price > nextOrder.price) return false;
-		else if (
-			currentOrder.counter > nextOrder.counter &&
-			currentOrder.price === nextOrder.price
-		)
-			return false;
-		currentOrder = nextOrder;
-	}
-	return true;
-};
-
-export const checkPQBid = (pq: PriorityQueue<OrderCasted>): boolean => {
-	let currentOrder = pq.poll()!;
-	while (pq.size() !== 0) {
-		let nextOrder = pq.poll()!;
-		if (currentOrder.price < nextOrder.price) return false;
-		else if (
-			currentOrder.counter > nextOrder.counter &&
-			currentOrder.price === nextOrder.price
-		)
-			return false;
-		currentOrder = nextOrder;
-	}
-	return true;
 };

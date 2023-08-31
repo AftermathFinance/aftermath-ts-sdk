@@ -2,3 +2,4 @@ node_modules/
 tsconfigtsbuildinfo
 dist/
 lib/
+.env

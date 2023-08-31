@@ -11,7 +11,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	CoinType,
-	AccountStruct,
+	Account,
 	PerpetualsAddresses,
 	ExchangeAddresses,
 	Timestamp,
@@ -20,12 +20,11 @@ import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { PerpetualsAccount } from "../perpetualsAccount";
 import {
-	AccountManagerObj,
+	AccountManager,
 	bcs,
-	MarketManagerObj,
+	MarketManager,
 	MarketParams,
 	MarketState,
-	OrderCasted,
 } from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsCasting";
 
@@ -37,12 +36,12 @@ export class PerpetualsApi {
 		moduleNames: {
 			interface: "interface",
 			accountManager: "account_manager",
+			marketManager: "market_manager",
+			orderedVecSet: "ordered_vec_set",
 		},
 	};
 
 	public readonly addresses: PerpetualsAddresses;
-
-	public readonly accountCapType: AnyObjectType;
 
 	// =========================================================================
 	//  Constructor
@@ -56,23 +55,20 @@ export class PerpetualsApi {
 			);
 
 		this.addresses = addresses;
-
-		this.accountCapType = `${this.addresses.packages.perpetuals}::
-			${PerpetualsApi.constants.moduleNames.accountManager}::AccountCap`;
 	}
 
 	// =========================================================================
 	//  Objects
 	// =========================================================================
 
-	public fetchAccountManagerObj = async (
+	public fetchAccountManager = async (
 		coinType: CoinType
-	): Promise<AccountManagerObj> => {
+	): Promise<AccountManager> => {
 		const exchangeCfg = this.getExchangeConfig(coinType);
 		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.accountManager,
 			objectFromSuiObjectResponse:
-				PerpetualsCasting.accountManagerObjFromSuiObjectResponse,
+				PerpetualsCasting.accountManagerFromSuiResponse,
 			options: {
 				showBcs: true,
 				showType: true,
@@ -80,14 +76,14 @@ export class PerpetualsApi {
 		});
 	};
 
-	public fetchMarketManagerObj = async (
+	public fetchMarketManager = async (
 		coinType: CoinType
-	): Promise<MarketManagerObj> => {
+	): Promise<MarketManager> => {
 		const exchangeCfg = this.getExchangeConfig(coinType);
 		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.marketManager,
 			objectFromSuiObjectResponse:
-				PerpetualsCasting.marketManagerObjFromSuiObjectResponse,
+				PerpetualsCasting.marketManagerFromSuiResponse,
 			options: {
 				showBcs: true,
 				showType: true,
@@ -99,7 +95,7 @@ export class PerpetualsApi {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 	}): Promise<ObjectId[]> => {
-		const accountCapType = `{this.accountCapType}<{coinType}>`;
+		const accountCapType = this.getAccountCapType(inputs.coinType);
 		const accountCaps =
 			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
 				walletAddress: inputs.walletAddress,
@@ -110,35 +106,10 @@ export class PerpetualsApi {
 		});
 	};
 
-	public fetchPositionOrderIds = async (
-		coinType: CoinType,
-		accountId: bigint,
-		marketId: bigint
-	): Promise<bigint[][]> => {
-		let account_struct = await this.fetchAccount(coinType, accountId);
-		let account = new PerpetualsAccount(accountId, account_struct);
-		let position = account.positionForMarketId({ marketId });
-
-		let table_vec_asks = await this.fetchTableVec(
-			position.asks.outerNodes.contents.objectId,
-			"OuterNode<u64>",
-			PerpetualsCasting.outerNodeFromRawPartial(BigInt)
-		);
-		let table_vec_bids = await this.fetchTableVec(
-			position.bids.outerNodes.contents.objectId,
-			"OuterNode<u64>",
-			PerpetualsCasting.outerNodeFromRawPartial(BigInt)
-		);
-
-		let askOrderIds: bigint[] = table_vec_asks.map((node) => node.key);
-		let bidOrderIds: bigint[] = table_vec_bids.map((node) => node.key);
-		return [askOrderIds, bidOrderIds];
-	};
-
 	public fetchAccount = async (
 		coinType: CoinType,
 		accountId: bigint
-	): Promise<AccountStruct> => {
+	): Promise<Account> => {
 		let accountDfInfos =
 			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
 				parentObjectId:
@@ -162,6 +133,21 @@ export class PerpetualsApi {
 		);
 
 		return PerpetualsCasting.accountFromRaw(accountField.value);
+	};
+
+	public fetchPositionOrderIds = async (
+		coinType: CoinType,
+		accountId: bigint,
+		marketId: bigint
+	): Promise<bigint[][]> => {
+		let account_struct = await this.fetchAccount(coinType, accountId);
+		let account = new PerpetualsAccount(accountId, account_struct);
+		let position = account.positionForMarketId({ marketId });
+
+		let askOrderIds = await this.fetchOrderedVecSet(position.asks.objectId);
+		let bidOrderIds = await this.fetchOrderedVecSet(position.bids.objectId);
+
+		return [askOrderIds as bigint[], bidOrderIds as bigint[]];
 	};
 
 	public fetchMarketState = async (
@@ -188,7 +174,7 @@ export class PerpetualsApi {
 			bcsData.bcsBytes,
 			"base64"
 		);
-		return PerpetualsCasting.marketStateFromRawBcs(mktStateField.value);
+		return PerpetualsCasting.marketStateFromRaw(mktStateField.value);
 	};
 
 	public fetchMarketParams = async (
@@ -215,39 +201,40 @@ export class PerpetualsApi {
 			bcsData.bcsBytes,
 			"base64"
 		);
-		return PerpetualsCasting.marketParamsFromRawBcs(mktParamsField.value);
+		return PerpetualsCasting.marketParamsFromRaw(mktParamsField.value);
 	};
 
-	public async fetchTableVec<T>(
-		objectId: ObjectId,
-		valueType: TypeName | StructTypeDefinition,
-		fromRaw: (value: any) => T
-	): Promise<T[]> {
-		let dfs =
-			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
-				parentObjectId: objectId,
+	public fetchOrderedVecSet = async (
+		objectId: ObjectId
+	): Promise<bigint[]> => {
+		const pkg = this.addresses.packages.perpetuals;
+		const keyType = `${pkg}::ordered_vec_set::Contents`;
+		const resp =
+			await this.Provider.DynamicFields().fetchDynamicFieldObject({
+				parentId: objectId,
+				name: {
+					type: keyType,
+					value: { dummy_field: Boolean() },
+				},
 			});
-		let idxs_and_ids = dfs
-			.map((value) => {
-				return { idx: value.name.value, id: value.objectId };
-			})
-			.sort((a, b) => a.idx - b.idx);
-		let values: T[] = [];
-		for (const { id } of idxs_and_ids) {
-			let resp = (await this.Provider.provider.getObject({
-				id,
-				options: { showBcs: true },
-			})) as SuiObjectResponse;
-			const bcsData = resp.data?.bcs as SuiRawMoveObject;
-			const deserialized = bcs.de(
-				`Field<u64, ${valueType}>`,
-				bcsData.bcsBytes,
-				"base64"
-			);
-			values.push(fromRaw(deserialized.value));
-		}
-		return values;
-	}
+
+		const objectResp = (await this.Provider.provider.getObject({
+			id: resp.data?.objectId!,
+			options: { showBcs: true },
+		})) as SuiObjectResponse;
+		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
+
+		const orderKeys = bcs.de(
+			`Field<Contents, vector<u128>>`,
+			bcsData.bcsBytes,
+			"base64"
+		);
+
+		let res = orderKeys.value.map((value: string) => {
+			return BigInt(value);
+		});
+		return res;
+	};
 
 	public fetchCastObjectBcs = async <T>(inputs: {
 		objectId: ObjectId;
@@ -345,6 +332,12 @@ export class PerpetualsApi {
 		insuranceFundId: bigint;
 		lotSize: bigint;
 		tickSize: bigint;
+		branchMin: bigint;
+		branchMax: bigint;
+		leafMin: bigint;
+		leafMax: bigint;
+		branchesMergeMax: bigint;
+		leavesMergeMax: bigint;
 	}) => {
 		const {
 			tx,
@@ -367,6 +360,12 @@ export class PerpetualsApi {
 			insuranceFundId,
 			lotSize,
 			tickSize,
+			branchMin,
+			branchMax,
+			leafMin,
+			leafMax,
+			branchesMergeMax,
+			leavesMergeMax,
 		} = inputs;
 		let exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
 		return tx.moveCall({
@@ -402,6 +401,12 @@ export class PerpetualsApi {
 				tx.pure(insuranceFundId),
 				tx.pure(lotSize),
 				tx.pure(tickSize),
+				tx.pure(branchMin),
+				tx.pure(branchMax),
+				tx.pure(leafMin),
+				tx.pure(leafMax),
+				tx.pure(branchesMergeMax),
+				tx.pure(leavesMergeMax),
 			],
 		});
 	};
@@ -716,6 +721,12 @@ export class PerpetualsApi {
 		insuranceFundId: bigint;
 		lotSize: bigint;
 		tickSize: bigint;
+		branchMin: bigint;
+		branchMax: bigint;
+		leafMin: bigint;
+		leafMax: bigint;
+		branchesMergeMax: bigint;
+		leavesMergeMax: bigint;
 	}): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -821,10 +832,12 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.withdrawCollateralTx({
+		const coin = this.withdrawCollateralTx({
 			tx,
 			...inputs,
 		});
+
+		tx.transferObjects([coin], tx.pure(inputs.walletAddress));
 
 		return tx;
 	};
@@ -870,10 +883,12 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		this.createAccountTx({
+		const accCap = this.createAccountTx({
 			tx,
 			...inputs,
 		});
+
+		tx.transferObjects([accCap], tx.pure(inputs.walletAddress));
 
 		return tx;
 	};
@@ -884,5 +899,10 @@ export class PerpetualsApi {
 
 	public getExchangeConfig = (coinType: CoinType): ExchangeAddresses => {
 		return this.addresses.objects.exchanges.get(coinType)!;
+	};
+
+	public getAccountCapType = (coinType: CoinType): string => {
+		return `${this.addresses.packages.perpetuals}::
+		${PerpetualsApi.constants.moduleNames.accountManager}::AccountCap<${coinType}>`;
 	};
 }

@@ -9,6 +9,7 @@ import {
 	TransactionBlock,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../src/general/providers";
+
 import {
 	ASK,
 	BID,
@@ -19,6 +20,12 @@ import {
 	user4PrivateKey,
 	LOT_SIZE,
 	TICK_SIZE,
+	BRANCH_MIN,
+	BRANCH_MAX,
+	LEAF_MIN,
+	LEAF_MAX,
+	BRANCHES_MERGE_MAX,
+	LEAVES_MERGE_MAX,
 	MARKET_ID0,
 	ONE_F18,
 	fromOraclePriceToOrderbookPrice,
@@ -27,9 +34,9 @@ import {
 } from "./utils";
 
 import { getConfigs } from "./testConfig";
+import { orderId } from "../src/packages/perpetuals/utils/orderId";
 import { PerpetualsMarket, Sui } from "../src/packages";
 import { IFixedUtils } from "../src/general/utils/iFixedUtils";
-import { CritBitTreeUtils } from "../src/packages/perpetuals/utils/critBitTreeUtils";
 
 // =========================================================================
 // TEST CASE FLOW
@@ -100,22 +107,23 @@ describe("Perpetuals Tests", () => {
 
 		// Publish + initialization for USDC has been done with rust-sdk
 		// Create perpetuals main objects
-		// let tx = await aftermathApi
-		// 	.Perpetuals()
-		// 	.fetchInitializeForCollateralTx({
-		// 		walletAddress: await admin.getAddress(),
-		// 		coinType: usdcType,
-		// 	});
-		// await admin.signAndExecuteTransactionBlock({ transactionBlock: tx, requestType });
+		// tx = await aftermathApi.Perpetuals().fetchInitializeForCollateralTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinType: usdcType,
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
 		console.log("AccountManager");
 		console.log(
-			await aftermathApi.Perpetuals().fetchAccountManagerObj(usdcType)
+			await aftermathApi.Perpetuals().fetchAccountManager(usdcType)
 		);
 
 		console.log("MarketManager");
 		console.log(
-			await aftermathApi.Perpetuals().fetchMarketManagerObj(usdcType)
+			await aftermathApi.Perpetuals().fetchMarketManager(usdcType)
 		);
 
 		let onchainTime = getObjectFields(
@@ -203,6 +211,12 @@ describe("Perpetuals Tests", () => {
 			insuranceFundId: BigInt(0),
 			lotSize: LOT_SIZE,
 			tickSize: TICK_SIZE,
+			branchMin: BRANCH_MIN,
+			branchMax: BRANCH_MAX,
+			leafMin: LEAF_MIN,
+			leafMax: LEAF_MAX,
+			branchesMergeMax: BRANCHES_MERGE_MAX,
+			leavesMergeMax: LEAVES_MERGE_MAX,
 		});
 		await admin.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -222,6 +236,7 @@ describe("Perpetuals Tests", () => {
 		);
 
 		// All users gets 10000 USDC
+		console.log("Mint USDC for User1");
 		let tenThousandB9 = BigInt(10000) * ONE_B9;
 		tx = await aftermathApi.Faucet().fetchRequestCustomCoinAmountTx({
 			walletAddress: await user1.getAddress(),
@@ -233,6 +248,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Mint USDC for User2");
 		tx = await aftermathApi.Faucet().fetchRequestCustomCoinAmountTx({
 			walletAddress: await user2.getAddress(),
 			coinType: usdcType,
@@ -243,6 +259,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Mint USDC for User3");
 		tx = await aftermathApi.Faucet().fetchRequestCustomCoinAmountTx({
 			walletAddress: await user3.getAddress(),
 			coinType: usdcType,
@@ -253,6 +270,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Mint USDC for User4");
 		tx = await aftermathApi.Faucet().fetchRequestCustomCoinAmountTx({
 			walletAddress: await user4.getAddress(),
 			coinType: usdcType,
@@ -264,21 +282,28 @@ describe("Perpetuals Tests", () => {
 		});
 
 		// All users create an account
+		console.log("Create Account for User1");
 		let user1AccountCap = await createAndFetchAccountCap(
 			user1,
 			aftermathApi,
 			usdcType
 		);
+
+		console.log("Create Account for User2");
 		let user2AccountCap = await createAndFetchAccountCap(
 			user2,
 			aftermathApi,
 			usdcType
 		);
+
+		console.log("Create Account for User3");
 		let user3AccountCap = await createAndFetchAccountCap(
 			user3,
 			aftermathApi,
 			usdcType
 		);
+
+		console.log("Create Account for User4");
 		let user4AccountCap = await createAndFetchAccountCap(
 			user4,
 			aftermathApi,
@@ -286,6 +311,7 @@ describe("Perpetuals Tests", () => {
 		);
 
 		// All users deposit 10000 USDC
+		console.log("Deposit USDC for User1");
 		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
 			walletAddress: await user1.getAddress(),
 			coinType: usdcType,
@@ -297,6 +323,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Deposit USDC for User2");
 		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
 			walletAddress: await user2.getAddress(),
 			coinType: usdcType,
@@ -308,6 +335,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Deposit USDC for User3");
 		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
 			walletAddress: await user3.getAddress(),
 			coinType: usdcType,
@@ -319,6 +347,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Deposit USDC for User4");
 		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
 			walletAddress: await user4.getAddress(),
 			coinType: usdcType,
@@ -361,11 +390,7 @@ describe("Perpetuals Tests", () => {
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
 			side: ASK,
-			orderId: CritBitTreeUtils.orderId(
-				initialOrderbookPrice,
-				BigInt(0),
-				ASK
-			),
+			orderId: orderId(initialOrderbookPrice, BigInt(1), ASK),
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -564,7 +589,7 @@ describe("Perpetuals Tests", () => {
 			.Perpetuals()
 			.fetchMarketState(usdcType, MARKET_ID0);
 		console.log(`Curr state:`, mktState);
-
+		console.log(`Curr params:`, mktParams);
 		const market = new PerpetualsMarket(BigInt(0), mktParams, mktState);
 
 		const sleepTime = market.timeUntilNextFundingMs() + 2000;
@@ -605,7 +630,7 @@ describe("Perpetuals Tests", () => {
 		// User3 withdraw collateral 10000 USDC
 		// User4 withdraw collateral 2000 USDC
 
-		console.log("Withdraw collaterals");
+		console.log("Withdraw collateral for User1");
 		tx = await aftermathApi.Perpetuals().fetchWithdrawCollateralTx({
 			walletAddress: await user1.getAddress(),
 			coinType: usdcType,
@@ -617,6 +642,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Withdraw collateral for User2");
 		tx = await aftermathApi.Perpetuals().fetchWithdrawCollateralTx({
 			walletAddress: await user2.getAddress(),
 			coinType: usdcType,
@@ -628,6 +654,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Withdraw collateral for User3");
 		tx = await aftermathApi.Perpetuals().fetchWithdrawCollateralTx({
 			walletAddress: await user3.getAddress(),
 			coinType: usdcType,
@@ -639,6 +666,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Withdraw collateral for User4");
 		tx = await aftermathApi.Perpetuals().fetchWithdrawCollateralTx({
 			walletAddress: await user4.getAddress(),
 			coinType: usdcType,
@@ -669,6 +697,7 @@ async function createAndFetchAccountCap(
 	let change = response.objectChanges?.find(
 		isAccountCapCreated
 	) as SuiObjectChangeCreated;
+
 	return change.objectId;
 }
 
