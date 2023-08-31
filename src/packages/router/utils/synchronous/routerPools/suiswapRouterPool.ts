@@ -177,7 +177,7 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		}
 
 		let dy =
-			this.pool.poolType == "v2"
+			this.pool.poolType === "v2"
 				? this._computeAmount(dx, x_reserve_amt, y_reserve_amt)
 				: this._computeAmountStable(
 						dx,
@@ -211,7 +211,7 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		}
 
 		let dx =
-			this.pool.poolType == "v2"
+			this.pool.poolType === "v2"
 				? this._computeAmount(dy, y_reserve_amt, x_reserve_amt)
 				: this._computeAmountStable(
 						dy,
@@ -285,7 +285,7 @@ class StableSwapHelper {
 	};
 
 	static computeD = (b: bigint, q: bigint, A: bigint) => {
-		if (b + q == StableSwapHelper.ZERO) {
+		if (b + q === StableSwapHelper.ZERO) {
 			return StableSwapHelper.ZERO;
 		}
 

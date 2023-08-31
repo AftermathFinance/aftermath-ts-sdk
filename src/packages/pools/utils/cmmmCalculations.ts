@@ -239,7 +239,7 @@ export class CmmmCalculations {
 		coinTypeOut: CoinType,
 		amountIn: Balance
 	): Balance => {
-		if (coinTypeIn == coinTypeOut)
+		if (coinTypeIn === coinTypeOut)
 			throw Error("in and out must be different coins");
 		let coinIn = pool.coins[coinTypeIn];
 		let coinOut = pool.coins[coinTypeOut];
@@ -307,7 +307,7 @@ export class CmmmCalculations {
 		coinTypeOut: CoinType,
 		amountOut: Balance
 	): Balance => {
-		if (coinTypeIn == coinTypeOut)
+		if (coinTypeIn === coinTypeOut)
 			throw Error("in and out must be different coins");
 		let coinIn = pool.coins[coinTypeIn];
 		let coinOut = pool.coins[coinTypeOut];
@@ -315,7 +315,7 @@ export class CmmmCalculations {
 		let swapFeeOut = FixedUtils.directCast(coinOut.tradeFeeOut);
 		if (swapFeeIn >= 1 || swapFeeOut >= 1) {
 			// this swap is disabled
-			if (amountOut == BigInt(0)) return BigInt(0);
+			if (amountOut === BigInt(0)) return BigInt(0);
 			throw Error("this swap is disabled");
 		}
 
@@ -372,7 +372,7 @@ export class CmmmCalculations {
 	// For computing swap amounts. Given the current balances (and any other parameters) and an amounts in vector,
 	// and a expected amounts out vector, determine the value of t > 0 such that t*expected_amounts_out
 	// is a valid swap from balances corresponding to adding amounts_in to the pool. The correct value of t is the one for which
-	// calc_swap_invariant(balances, ...parameters, amounts_in, t*expected_amounts_out) == calc_invariant_full(balances, ...parameters).
+	// calc_swap_invariant(balances, ...parameters, amounts_in, t*expected_amounts_out) === calc_invariant_full(balances, ...parameters).
 	public static calcSwapFixedIn = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
@@ -413,7 +413,7 @@ export class CmmmCalculations {
 				FixedUtils.directCast(coin.tradeFeeOut)
 			);
 			if (amountOut > 0) {
-				if (feeOut == 0) {
+				if (feeOut === 0) {
 					throw Error("this trade is disabled");
 				} else {
 					// pool is drained when b + Ain * (1 - Sin) - t * Aout / (1 - Sout) = 0, or t = (b + Ain * (1 - Sin)) * (1 - So) / Aout
@@ -433,7 +433,7 @@ export class CmmmCalculations {
 			}
 		}
 		// drain_t is the maximum t can possibly be. It will be 0 if expected amounts out is way too high.
-		if (drainT == 0) return BigInt(0);
+		if (drainT === 0) return BigInt(0);
 		while (shifter >= drainT) shifter /= 2;
 
 		t = 1;
@@ -575,7 +575,7 @@ export class CmmmCalculations {
 				// pseudoin expected
 				part1 = feeIn * amountIn;
 				// pseudoout
-				part2 = amountOut == 0 ? 0 : amountOut / feeOut;
+				part2 = amountOut === 0 ? 0 : amountOut / feeOut;
 				// pseudobalance
 				part3 = balance + t * part1 - part2;
 				// for derivatives: weight * fee_in * expected_amounts_in
@@ -809,7 +809,7 @@ export class CmmmCalculations {
 		}
 
 		r =
-			cfMin == cfMax
+			cfMin === cfMax
 				? rMin
 				: (rMin * cfMax + (rMax - rMin) * invariant - rMax * cfMin) /
 				  (cfMax - cfMin);
@@ -1002,7 +1002,7 @@ export class CmmmCalculations {
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
-			if (amountOut == 0) continue;
+			if (amountOut === 0) continue;
 			t =
 				(FixedUtils.directCast(coin.normalizedBalance) *
 					FixedUtils.complement(
@@ -1019,7 +1019,7 @@ export class CmmmCalculations {
 				coinT.decimalsScalar,
 				amountsOutDirection[coinTypeT] || BigInt(0)
 			);
-			if (amountOut == 0) continue;
+			if (amountOut === 0) continue;
 			balance = FixedUtils.directCast(coinT.normalizedBalance);
 			t = (balance * lpc) / amountOut;
 			prod = 0;
@@ -1078,7 +1078,7 @@ export class CmmmCalculations {
 
 		// initial estimate is the linear interpolation between discontinuity bounds
 		t =
-			cfMax == cfMin
+			cfMax === cfMin
 				? tMin
 				: (tMin * cfMax +
 						tMax * scaledInvariant -
@@ -1317,7 +1317,7 @@ export class CmmmCalculations {
 			feedAmountIn =
 				amountIn * (1 - FixedUtils.directCast(coin.tradeFeeIn));
 			feedAmountOut =
-				amountOut == 0
+				amountOut === 0
 					? 0
 					: amountOut / (1 - FixedUtils.directCast(coin.tradeFeeOut));
 
@@ -1380,7 +1380,7 @@ export class CmmmCalculations {
 		amountInB: Balance,
 		amountOutB: Balance
 	): boolean => {
-		if (coinTypeIn == coinTypeOut) return false;
+		if (coinTypeIn === coinTypeOut) return false;
 		let coins = pool.coins;
 		let coinIn = coins[coinTypeIn];
 		let coinOut = coins[coinTypeOut];
@@ -1404,7 +1404,7 @@ export class CmmmCalculations {
 		let feedAmountIn =
 			amountIn * (1 - FixedUtils.directCast(coinIn.tradeFeeIn));
 		let feedAmountOut =
-			amountOut == 0
+			amountOut === 0
 				? 0
 				: amountOut / (1 - FixedUtils.directCast(coinOut.tradeFeeOut));
 
@@ -1427,7 +1427,7 @@ export class CmmmCalculations {
 			preprod += p;
 			presum += s;
 
-			if (coinType == coinTypeIn) {
+			if (coinType === coinTypeIn) {
 				pseudobalance = balance + feedAmountIn;
 				postbalance = balance + amountIn;
 
@@ -1436,7 +1436,7 @@ export class CmmmCalculations {
 				postprod += weight * Math.log(postbalance);
 				postsum += weight * postbalance;
 			} else {
-				if (coinType == coinTypeOut) {
+				if (coinType === coinTypeOut) {
 					if (feedAmountOut > balance + 1 || amountOut > balance + 1)
 						return false;
 					pseudobalance = balance - feedAmountOut;
@@ -1545,7 +1545,7 @@ export class CmmmCalculations {
 				// use fee out
 				diff = balance - postbalance;
 				pseudodiff =
-					diff == 0
+					diff === 0
 						? 0
 						: diff / (1 - FixedUtils.directCast(coin.tradeFeeOut));
 				if (pseudodiff >= balance + 1) return false;
@@ -1653,7 +1653,7 @@ export class CmmmCalculations {
 				// use fee out
 				diff = scaledBalance - postbalance;
 				pseudodiff =
-					diff == 0
+					diff === 0
 						? 0
 						: diff /
 						  FixedUtils.complement(
@@ -1773,7 +1773,7 @@ export class CmmmCalculations {
 				amountsOutDirection[coinType] || BigInt(0)
 			);
 			grad =
-				amountIn == 0
+				amountIn === 0
 					? (FixedUtils.directCast(coin.weight) *
 							(spotBody + 2 * a * balance)) /
 					  (balance * (1 - FixedUtils.directCast(coin.tradeFeeOut)))
@@ -1823,7 +1823,7 @@ export class CmmmCalculations {
 				amountsOut[coinType] || BigInt(0)
 			);
 			grad =
-				amountIn == 0
+				amountIn === 0
 					? (FixedUtils.directCast(coin.weight) *
 							(spotBody + 2 * a * balance)) /
 					  (balance * (1 - FixedUtils.directCast(coin.tradeFeeOut)))
