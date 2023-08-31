@@ -20,7 +20,7 @@ export class PerpetualsMarket extends Caller {
 	//  Class Members
 	// =========================================================================
 
-	public orderbook: Orderbook | undefined;
+	// public orderbook: Orderbook | undefined;
 
 	// =========================================================================
 	//  Constructor
@@ -29,7 +29,7 @@ export class PerpetualsMarket extends Caller {
 	constructor(
 		public readonly marketId: bigint,
 		public readonly marketParams: MarketParams,
-		public marketState?: MarketState,
+		public readonly marketState: MarketState,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `perpetuals/markets/${marketId}`);
@@ -39,25 +39,15 @@ export class PerpetualsMarket extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async refreshMarketState(): Promise<MarketState> {
-		const marketState = await this.fetchApi<MarketState>("market-state");
-		this.updateMarketState({ marketState });
-		return marketState;
-	}
-
-	public updateMarketState(inputs: { marketState: MarketState }) {
-		this.marketState = inputs.marketState;
-	}
-
 	public async refreshOrderbook(): Promise<Orderbook> {
 		const orderbook = await this.fetchApi<Orderbook>("orderbook");
-		this.updateOrderbook({ orderbook });
+		// this.updateOrderbook({ orderbook });
 		return orderbook;
 	}
 
-	public updateOrderbook(inputs: { orderbook: Orderbook }) {
-		this.orderbook = inputs.orderbook;
-	}
+	// public updateOrderbook(inputs: { orderbook: Orderbook }) {
+	// 	this.orderbook = inputs.orderbook;
+	// }
 
 	// =========================================================================
 	//  Calculations

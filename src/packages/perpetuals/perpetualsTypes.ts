@@ -76,6 +76,11 @@ bcs.registerStructType(["Vault", "T"], {
 //  Account Manager
 // =========================================================================
 
+export interface AccountData {
+	accountId: bigint;
+	account: Account;
+}
+
 export interface AccountManager extends Object {
 	objectId: ObjectId;
 	objectType: AnyObjectType;
@@ -156,6 +161,11 @@ bcs.registerStructType("AccountKey", {
 // =========================================================================
 //  Market Manager
 // =========================================================================
+
+export interface MarketData {
+	marketId: bigint;
+	marketParams: MarketParams;
+}
 
 export interface MarketManager extends Object {
 	objectId: ObjectId;

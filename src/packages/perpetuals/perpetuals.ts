@@ -1,10 +1,11 @@
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCreateAccountBody,
-	Account,
-	MarketParams,
 	SuiNetwork,
 	Url,
+	MarketState,
+	MarketData,
+	AccountData,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -31,19 +32,21 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public async getAllMarkets(): Promise<PerpetualsMarket[]> {
-		const markets = await this.fetchApi<
-			{
-				marketId: bigint;
-				marketParams: MarketParams;
-			}[]
-		>("markets");
+		const marketDatas = await this.fetchApi<MarketData[]>("markets");
+		const marketStates = await Promise.all(
+			marketDatas.map((marketData) =>
+				this.fetchApi<MarketState>(
+					`markets/${marketData.marketId}/market-state`
+				)
+			)
+		);
 
-		return markets.map(
-			(market) =>
+		return marketDatas.map(
+			(market, index) =>
 				new PerpetualsMarket(
 					market.marketId,
 					market.marketParams,
-					undefined,
+					marketStates[index],
 					this.network
 				)
 		);
@@ -52,28 +55,24 @@ export class Perpetuals extends Caller {
 	public async getMarket(inputs: {
 		marketId: bigint;
 	}): Promise<PerpetualsMarket> {
-		const market = await this.fetchApi<{
-			marketId: bigint;
-			marketParams: MarketParams;
-		}>(`markets/${inputs.marketId}`);
+		const [marketData, marketState] = await Promise.all([
+			this.fetchApi<MarketData>(`markets/${inputs.marketId}`),
+			this.fetchApi<MarketState>(
+				`markets/${inputs.marketId}/market-state`
+			),
+		]);
 
 		return new PerpetualsMarket(
-			market.marketId,
-			market.marketParams,
-			undefined,
+			marketData.marketId,
+			marketData.marketParams,
+			marketState,
 			this.network
 		);
 	}
 
 	public async getUserAccounts(): Promise<PerpetualsAccount[]> {
 		// TODO: Get all AccountCaps from address to query perpetualsAccount
-		const accounts = await this.fetchApi<
-			// TODO: move to new type/interface
-			{
-				accountId: bigint;
-				account: Account;
-			}[]
-		>("accounts");
+		const accounts = await this.fetchApi<AccountData[]>("accounts");
 
 		return accounts.map(
 			(account) =>
