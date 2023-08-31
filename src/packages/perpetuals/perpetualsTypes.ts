@@ -9,10 +9,12 @@ import {
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 
-// TEMPORARY TO BUILD
-export interface AccountManagerObj {}
-export interface MarketManagerObj {}
-// TEMPORARY TO BUILD
+// =========================================================================
+//  Name Only
+// =========================================================================
+
+export type PerpetualsMarketId = bigint;
+export type PerpetualsAccountId = bigint;
 
 // =========================================================================
 //  BCS - Binary Canonical Serialization
@@ -77,7 +79,7 @@ bcs.registerStructType(["Vault", "T"], {
 // =========================================================================
 
 export interface PerpetualsAccountData {
-	accountId: bigint;
+	accountId: PerpetualsAccountId;
 	account: PerpetualsAccountObject;
 }
 
@@ -86,7 +88,7 @@ export interface PerpetualsAccountManager extends Object {
 	objectType: AnyObjectType;
 	maxPositionsPerAccount: bigint;
 	maxPendingOrdersPerPosition: bigint;
-	nextAccountId: bigint;
+	nextaccountId: PerpetualsAccountId;
 }
 
 bcs.registerStructType("AccountManager", {
@@ -99,7 +101,7 @@ bcs.registerStructType("AccountManager", {
 export interface PerpetualsAccountCapability extends Object {
 	objectId: ObjectId;
 	objectType: AnyObjectType;
-	accountId: bigint;
+	accountId: PerpetualsAccountId;
 }
 
 bcs.registerStructType("AccountCap", {
@@ -163,7 +165,7 @@ bcs.registerStructType("AccountKey", {
 // =========================================================================
 
 export interface PerpetualsMarketData {
-	marketId: bigint;
+	marketId: PerpetualsMarketId;
 	marketParams: PerpetualsMarketParams;
 }
 
@@ -280,7 +282,7 @@ bcs.registerStructType("Orderbook", {
 });
 
 export interface Order {
-	accountId: bigint;
+	accountId: PerpetualsAccountId;
 	size: bigint;
 }
 
@@ -357,21 +359,21 @@ export interface ApiPerpetualsDepositCollateralBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
 	accountCapId: ObjectId;
-	coinAmount: bigint;
+	amount: Balance;
 }
 
 export interface ApiPerpetualsWithdrawCollateralBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
 	accountCapId: ObjectId;
-	amount: bigint;
+	amount: Balance;
 }
 
 export interface ApiPerpetualsMarketOrderBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
 	accountCapId: ObjectId;
-	marketId: bigint;
+	marketId: PerpetualsMarketId;
 	side: boolean;
 	size: bigint;
 }
@@ -380,7 +382,7 @@ export interface ApiPerpetualsLimitOrderBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
 	accountCapId: ObjectId;
-	marketId: bigint;
+	marketId: PerpetualsMarketId;
 	side: boolean;
 	size: bigint;
 	price: bigint;
@@ -391,7 +393,7 @@ export interface ApiPerpetualsCancelOrderBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
 	accountCapId: ObjectId;
-	marketId: bigint;
+	marketId: PerpetualsMarketId;
 	side: boolean;
 	orderId: bigint;
 }
@@ -399,5 +401,5 @@ export interface ApiPerpetualsCancelOrderBody {
 export interface ApiPerpetualsClosePositionBody {
 	walletAddress: SuiAddress;
 	coinType: CoinType;
-	marketId: bigint;
+	marketId: PerpetualsMarketId;
 }

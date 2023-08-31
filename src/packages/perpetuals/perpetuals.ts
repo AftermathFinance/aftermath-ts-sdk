@@ -6,6 +6,7 @@ import {
 	PerpetualsMarketState,
 	PerpetualsMarketData,
 	PerpetualsAccountData,
+	PerpetualsMarketId,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -55,7 +56,7 @@ export class Perpetuals extends Caller {
 	}
 
 	public async getMarket(inputs: {
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 	}): Promise<PerpetualsMarket> {
 		const [marketData, marketState] = await Promise.all([
 			this.fetchApi<PerpetualsMarketData>(`markets/${inputs.marketId}`),

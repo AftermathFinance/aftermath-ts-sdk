@@ -6,7 +6,9 @@ import {
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsWithdrawCollateralBody,
+	PerpetualsAccountId,
 	PerpetualsAccountObject,
+	PerpetualsMarketId,
 	PerpetualsPosition,
 	SuiNetwork,
 	Url,
@@ -24,7 +26,7 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly accountId: bigint,
+		public readonly accountId: PerpetualsAccountId,
 		public account: PerpetualsAccountObject,
 		public readonly network?: SuiNetwork | Url
 	) {
@@ -98,7 +100,7 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	public positionForMarketId(inputs: {
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 	}): PerpetualsPosition {
 		try {
 			const posIndex = Number(

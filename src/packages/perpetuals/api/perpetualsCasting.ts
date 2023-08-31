@@ -48,7 +48,7 @@ export class PerpetualsCasting {
 			maxPendingOrdersPerPosition: BigInt(
 				data.maxPendingOrdersPerPosition
 			),
-			nextAccountId: BigInt(data.nextAccountId),
+			nextaccountId: PerpetualsAccountId(data.nextAccountId),
 		};
 	}
 
@@ -194,7 +194,7 @@ export class PerpetualsCasting {
 
 	public static orderFromRaw = (data: any): Order => {
 		return {
-			accountId: BigInt(data.accountId),
+			accountId: PerpetualsAccountId(data.accountId),
 			size: BigInt(data.size),
 		};
 	};

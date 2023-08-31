@@ -23,6 +23,8 @@ import {
 	PerpetualsMarketState,
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsCreateAccountBody,
+	PerpetualsMarketId,
+	PerpetualsAccountId,
 } from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -107,7 +109,7 @@ export class PerpetualsApi {
 
 	public fetchAccount = async (inputs: {
 		coinType: CoinType;
-		accountId: bigint;
+		accountId: PerpetualsAccountId;
 	}): Promise<PerpetualsAccountObject> => {
 		const accountDfInfos =
 			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
@@ -136,8 +138,8 @@ export class PerpetualsApi {
 
 	public fetchPositionOrderIds = async (inputs: {
 		coinType: CoinType;
-		accountId: bigint;
-		marketId: bigint;
+		accountId: PerpetualsAccountId;
+		marketId: PerpetualsMarketId;
 	}): Promise<bigint[][]> => {
 		const { coinType, accountId, marketId } = inputs;
 
@@ -157,7 +159,7 @@ export class PerpetualsApi {
 
 	public fetchMarketState = async (inputs: {
 		coinType: CoinType;
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 	}): Promise<PerpetualsMarketState> => {
 		const pkg = this.addresses.packages.perpetuals;
 		const mktMngId = this.getExchangeConfig(inputs).marketManager;
@@ -184,7 +186,7 @@ export class PerpetualsApi {
 
 	public fetchMarketParams = async (inputs: {
 		coinType: CoinType;
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 	}): Promise<PerpetualsMarketParams> => {
 		const pkg = this.addresses.packages.perpetuals;
 		const mktMngId = this.getExchangeConfig(inputs).marketManager;
@@ -307,7 +309,7 @@ export class PerpetualsApi {
 	public createMarketTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 		marginRatioInitial: bigint;
 		marginRatioMaintenance: bigint;
 		baseAssetSymbol: string;
@@ -434,7 +436,7 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 		side: boolean;
 		size: bigint;
 	}) => {
@@ -468,7 +470,7 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 		side: boolean;
 		size: bigint;
 		price: bigint;
@@ -515,7 +517,7 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 		side: boolean;
 		orderId: bigint;
 	}) => {
@@ -575,7 +577,7 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
-		liqeeAccountId: bigint;
+		liqeeAccountId: PerpetualsAccountId;
 		sizes: bigint[];
 	}) => {
 		const { tx, coinType, accountCapId, liqeeAccountId, sizes } = inputs;
@@ -608,7 +610,7 @@ export class PerpetualsApi {
 	public updateFundingTx = (inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 	}) => {
 		const { tx, coinType, marketId } = inputs;
 		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
@@ -672,12 +674,12 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const { walletAddress, coinType, coinAmount } = inputs;
+		const { walletAddress, coinType, amount } = inputs;
 		const coin = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType,
-			coinAmount,
+			coinAmount: amount,
 		});
 		this.depositCollateralTx({
 			tx,

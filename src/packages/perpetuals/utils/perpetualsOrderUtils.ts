@@ -1,6 +1,6 @@
 import { Balance } from "../../../types";
 
-export class OrderUtils {
+export class PerpetualsOrderUtils {
 	/// Positions to bitshift for operating on first 64 bits
 	private static readonly FIRST_64 = BigInt(64);
 	public static readonly ASK = true;

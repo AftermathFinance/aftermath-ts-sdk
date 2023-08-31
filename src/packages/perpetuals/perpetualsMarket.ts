@@ -1,6 +1,7 @@
 import { Caller } from "../../general/utils/caller";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
+	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
 	PerpetualsOrderbook,
@@ -21,7 +22,7 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly marketId: bigint,
+		public readonly marketId: PerpetualsMarketId,
 		public readonly marketParams: PerpetualsMarketParams,
 		public readonly marketState: PerpetualsMarketState,
 		public readonly network?: SuiNetwork | Url
