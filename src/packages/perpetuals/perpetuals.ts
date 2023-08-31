@@ -66,7 +66,7 @@ export class Perpetuals extends Caller {
 	}
 
 	public async getUserAccounts(): Promise<PerpetualsAccount[]> {
-		// TODO: Get all AccountCap from address to query perpetualsAccount
+		// TODO: Get all AccountCaps from address to query perpetualsAccount
 		const accounts = await this.fetchApi<
 			// TODO: move to new type/interface
 			{

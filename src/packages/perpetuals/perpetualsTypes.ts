@@ -7,7 +7,6 @@ import {
 	Object,
 	Timestamp,
 } from "../../general/types/generalTypes";
-import { Table } from "../../general/types/suiTypes";
 import { CoinType } from "../coin/coinTypes";
 
 // TEMPORARY TO BUILD
@@ -32,6 +31,7 @@ bcs.registerAlias("UID", BCS.ADDRESS);
 // =========================================================================
 //  Clearing House
 // =========================================================================
+
 export interface AdminCapability extends Object {
 	objectId: ObjectId;
 }

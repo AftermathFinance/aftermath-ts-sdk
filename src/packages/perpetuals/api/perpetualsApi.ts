@@ -6,7 +6,6 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js";
-import { TypeName } from "@mysten/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinType,
@@ -119,10 +118,10 @@ export class PerpetualsApi {
 			return BigInt(info.name.value.account_id) === inputs.accountId;
 		})!;
 
-		const objectResponse = (await this.Provider.provider.getObject({
+		const objectResponse = await this.Provider.provider.getObject({
 			id: accountDfInfo.objectId,
 			options: { showBcs: true },
-		})) as SuiObjectResponse;
+		});
 		const bcsData = objectResponse.data?.bcs as SuiRawMoveObject;
 		const accountField = bcs.de(
 			"Field<u64, Account>",
@@ -151,7 +150,7 @@ export class PerpetualsApi {
 			objectId: position.bids.objectId,
 		});
 
-		return [askOrderIds as bigint[], bidOrderIds as bigint[]];
+		return [askOrderIds, bidOrderIds];
 	};
 
 	public fetchMarketState = async (inputs: {
@@ -168,10 +167,10 @@ export class PerpetualsApi {
 					value: { market_id: String(inputs.marketId) },
 				},
 			});
-		const objectResp = (await this.Provider.provider.getObject({
+		const objectResp = await this.Provider.provider.getObject({
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
-		})) as SuiObjectResponse;
+		});
 		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
 		const mktStateField = bcs.de(
 			"Field<MarketKey, MarketState>",
@@ -195,10 +194,10 @@ export class PerpetualsApi {
 					value: { market_id: String(inputs.marketId) },
 				},
 			});
-		const objectResp = (await this.Provider.provider.getObject({
+		const objectResp = await this.Provider.provider.getObject({
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
-		})) as SuiObjectResponse;
+		});
 		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
 		const mktParamsField = bcs.de(
 			"Field<MarketKey, MarketParams>",
@@ -222,10 +221,10 @@ export class PerpetualsApi {
 				},
 			});
 
-		const objectResp = (await this.Provider.provider.getObject({
+		const objectResp = await this.Provider.provider.getObject({
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
-		})) as SuiObjectResponse;
+		});
 		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
 
 		const orderKeys = bcs.de(
@@ -238,18 +237,6 @@ export class PerpetualsApi {
 			return BigInt(value);
 		});
 		return res;
-	};
-
-	public fetchCastObjectBcs = async <T>(inputs: {
-		objectId: ObjectId;
-		typeName: TypeName;
-		fromDeserialized: (deserialized: any) => T;
-	}): Promise<T> => {
-		const { objectId, typeName, fromDeserialized } = inputs;
-		const resp = await this.Provider.Objects().fetchObjectBcs(objectId);
-		const rawObj = resp.data?.bcs as SuiRawMoveObject;
-		const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
-		return fromDeserialized(deserialized);
 	};
 
 	// =========================================================================
@@ -662,86 +649,20 @@ export class PerpetualsApi {
 	//  Transaction Builders
 	// =========================================================================
 
-	public fetchInitializeForCollateralTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+	public buildInitializeForCollateralTx =
+		Helpers.transactions.creatBuildTxFunc(this.initializeForCollateralTx);
 
-		this.initializeForCollateralTx({
-			tx,
-			...inputs,
-		});
+	public buildTransferAdminCapTx = Helpers.transactions.creatBuildTxFunc(
+		this.transferAdminCapTx
+	);
 
-		return tx;
-	};
+	public buildAddInsuranceFundTx = Helpers.transactions.creatBuildTxFunc(
+		this.addInsuranceFundTx
+	);
 
-	public fetchTransferAdminCapTx = async (inputs: {
-		walletAddress: SuiAddress;
-		targetAddress: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.transferAdminCapTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
-
-	public fetchAddInsuranceFundTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.addInsuranceFundTx({ tx, ...inputs });
-
-		return tx;
-	};
-
-	public fetchCreateMarketTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		marketId: bigint;
-		marginRatioInitial: bigint;
-		marginRatioMaintenance: bigint;
-		baseAssetSymbol: string;
-		fundingFrequencyMs: bigint;
-		fundingPeriodMs: bigint;
-		premiumTwapFrequencyMs: bigint;
-		premiumTwapPeriodMs: bigint;
-		spreadTwapFrequencyMs: bigint;
-		spreadTwapPeriodMs: bigint;
-		makerFee: bigint;
-		takerFee: bigint;
-		liquidationFee: bigint;
-		forceCancelFee: bigint;
-		insuranceFundFee: bigint;
-		insuranceFundId: bigint;
-		lotSize: bigint;
-		tickSize: bigint;
-		branchMin: bigint;
-		branchMax: bigint;
-		leafMin: bigint;
-		leafMax: bigint;
-		branchesMergeMax: bigint;
-		leavesMergeMax: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.createMarketTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
+	public buildCreateMarketTx = Helpers.transactions.creatBuildTxFunc(
+		this.createMarketTx
+	);
 
 	public fetchDepositCollateralTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -768,64 +689,17 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchPlaceMarketOrderTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		marketId: bigint;
-		side: boolean;
-		size: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+	public buildPlaceMarketOrderTx = Helpers.transactions.creatBuildTxFunc(
+		this.placeMarketOrderTx
+	);
 
-		this.placeMarketOrderTx({
-			tx,
-			...inputs,
-		});
+	public buildPlaceLimitOrderTx = Helpers.transactions.creatBuildTxFunc(
+		this.placeLimitOrderTx
+	);
 
-		return tx;
-	};
-
-	public fetchPlaceLimitOrderTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		marketId: bigint;
-		side: boolean;
-		size: bigint;
-		price: bigint;
-		orderType: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.placeLimitOrderTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
-
-	public fetchCancelOrderTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		marketId: bigint;
-		side: boolean;
-		orderId: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.cancelOrderTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
+	public buildCancelOrderTx = Helpers.transactions.creatBuildTxFunc(
+		this.cancelOrderTx
+	);
 
 	public fetchWithdrawCollateralTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -846,39 +720,13 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public fetchLiquidateTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		liqeeAccountId: bigint;
-		sizes: bigint[];
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+	public buildLiquidateTx = Helpers.transactions.creatBuildTxFunc(
+		this.liquidateTx
+	);
 
-		this.liquidateTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
-
-	public fetchUpdateFundingTx = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		marketId: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.updateFundingTx({
-			tx,
-			...inputs,
-		});
-
-		return tx;
-	};
+	public buildUpdateFundingTx = Helpers.transactions.creatBuildTxFunc(
+		this.updateFundingTx
+	);
 
 	public fetchCreateAccountTx = async (inputs: {
 		walletAddress: SuiAddress;
