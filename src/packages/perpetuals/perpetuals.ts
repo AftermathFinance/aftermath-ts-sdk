@@ -1,10 +1,13 @@
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCreateAccountBody,
-	Account,
-	MarketParams,
 	SuiNetwork,
 	Url,
+	PerpetualsMarketState,
+	PerpetualsMarketData,
+	PerpetualsAccountData,
+	PerpetualsMarketId,
+	ApiPerpetualsAccountsBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -16,6 +19,7 @@ export class Perpetuals extends Caller {
 
 	public static readonly constants = {
 		fundingFrequencyMs: 1000000, // TODO: set this value correctly
+		collateralCoinTypes: ["0x2::sui::SUI"],
 	};
 
 	// =========================================================================
@@ -31,55 +35,59 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public async getAllMarkets(): Promise<PerpetualsMarket[]> {
-		const markets = await this.fetchApi<
-			{
-				marketId: bigint;
-				marketParams: MarketParams;
-			}[]
-		>("markets");
+		const marketDatas = await this.fetchApi<PerpetualsMarketData[]>(
+			"markets"
+		);
+		const marketStates = await Promise.all(
+			marketDatas.map((marketData) =>
+				this.fetchApi<PerpetualsMarketState>(
+					`markets/${marketData.marketId}/market-state`
+				)
+			)
+		);
 
-		return markets.map(
-			(market) =>
+		return marketDatas.map(
+			(market, index) =>
 				new PerpetualsMarket(
 					market.marketId,
 					market.marketParams,
-					undefined,
+					marketStates[index],
 					this.network
 				)
 		);
 	}
 
 	public async getMarket(inputs: {
-		marketId: bigint;
+		marketId: PerpetualsMarketId;
 	}): Promise<PerpetualsMarket> {
-		const market = await this.fetchApi<{
-			marketId: bigint;
-			marketParams: MarketParams;
-		}>(`markets/${inputs.marketId}`);
+		const [marketData, marketState] = await Promise.all([
+			this.fetchApi<PerpetualsMarketData>(`markets/${inputs.marketId}`),
+			this.fetchApi<PerpetualsMarketState>(
+				`markets/${inputs.marketId}/market-state`
+			),
+		]);
 
 		return new PerpetualsMarket(
-			market.marketId,
-			market.marketParams,
-			undefined,
+			marketData.marketId,
+			marketData.marketParams,
+			marketState,
 			this.network
 		);
 	}
 
-	public async getUserAccounts(): Promise<PerpetualsAccount[]> {
-		// TODO: Get all AccountCap from address to query perpetualsAccount
-		const accounts = await this.fetchApi<
-			// TODO: move to new type/interface
-			{
-				accountId: bigint;
-				account: Account;
-			}[]
-		>("accounts");
+	public async getUserAccounts(
+		inputs: ApiPerpetualsAccountsBody
+	): Promise<PerpetualsAccount[]> {
+		const accountDatas = await this.fetchApi<
+			PerpetualsAccountData[],
+			ApiPerpetualsAccountsBody
+		>("accounts", inputs);
 
-		return accounts.map(
+		return accountDatas.map(
 			(account) =>
 				new PerpetualsAccount(
-					account.accountId,
 					account.account,
+					account.accountCap,
 					this.network
 				)
 		);

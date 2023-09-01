@@ -1,26 +1,25 @@
-import { TypeName } from "@mysten/bcs";
 import {
 	SuiObjectResponse,
 	ObjectContentFields,
 	getObjectFields,
 	getObjectType,
-	SuiRawMoveObject,
 } from "@mysten/sui.js";
 import {
-	AccountManager,
-	MarketManager,
-	MarketState,
-	Orderbook,
+	PerpetualsAccountManager,
+	PerpetualsMarketManager,
+	PerpetualsMarketState,
+	PerpetualsOrderbook,
 	Order,
-	OrderedMap,
-	Branch,
-	Leaf,
-	OrderedVecSet,
-	MarketParams,
-	Account,
-	Position,
+	PerpetualsOrderedMap,
+	PerpetualsOrderedVecSet,
+	PerpetualsMarketParams,
+	PerpetualsAccountObject,
+	PerpetualsPosition,
 	bcs,
+	PerpetualsAccountCap,
 } from "../perpetualsTypes";
+import { Casting, Helpers } from "../../../general/utils";
+import { Coin } from "../..";
 
 export class PerpetualsCasting {
 	// =========================================================================
@@ -29,18 +28,19 @@ export class PerpetualsCasting {
 
 	public static accountManagerFromSuiResponse = (
 		data: SuiObjectResponse
-	): AccountManager => {
+	): PerpetualsAccountManager => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		return PerpetualsCasting.castObjectBcs({
-			resp: data,
+		return Casting.castObjectBcs({
+			suiObjectResponse: data,
 			typeName: "AccountManager",
-			fromDeserialized: PerpetualsCasting.accountManagerFromRaw,
+			fromDeserialized: this.accountManagerFromRaw,
+			bcs,
 		});
 	};
 
-	public static accountManagerFromRaw(data: any): AccountManager {
+	public static accountManagerFromRaw(data: any): PerpetualsAccountManager {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,
@@ -54,42 +54,44 @@ export class PerpetualsCasting {
 
 	public static accountFromSuiResponse = (
 		data: SuiObjectResponse
-	): Account => {
+	): PerpetualsAccountObject => {
 		const objectFields = getObjectFields(data) as ObjectContentFields;
 		const value = objectFields.value.fields;
 		return {
-			collateral: value.collateral,
-			marketIds: value.market_ids.map((id: any) => BigInt(id)),
-			positions: value.positions.map((pos: any) =>
-				PerpetualsCasting.positionFromRaw(pos)
-			),
+			collateral: BigInt(value.collateral),
+			positions: (value.positions as any[]).map((pos: any, index) => ({
+				...this.partialPositionFromRaw(pos),
+				marketId: BigInt(value.marketIds[index]),
+			})),
 		};
 	};
 
-	public static accountFromRaw = (data: any): Account => {
+	public static accountFromRaw = (data: any): PerpetualsAccountObject => {
 		return {
 			collateral: BigInt(data.collateral),
-			marketIds: data.marketIds.map((id: number) => BigInt(id)),
-			positions: data.positions.map((pos: any) =>
-				PerpetualsCasting.positionFromRaw(pos)
-			),
+			positions: (data.positions as any[]).map((pos: any, index) => ({
+				...this.partialPositionFromRaw(pos),
+				marketId: BigInt(data.marketIds[index]),
+			})),
 		};
 	};
 
-	public static positionFromRaw = (data: any): Position => {
+	public static partialPositionFromRaw = (
+		data: any
+	): Omit<PerpetualsPosition, "marketId"> => {
 		return {
 			baseAssetAmount: BigInt(data.baseAssetAmount),
 			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
 			cumFundingRateLong: BigInt(data.cumFundingRateLong),
 			cumFundingRateShort: BigInt(data.cumFundingRateShort),
-			asks: PerpetualsCasting.orderedVecSetFromRaw(data.asks),
-			bids: PerpetualsCasting.orderedVecSetFromRaw(data.bids),
+			asks: this.orderedVecSetFromRaw(data.asks),
+			bids: this.orderedVecSetFromRaw(data.bids),
 			asksQuantity: BigInt(data.asksQuantity),
 			bidsQuantity: BigInt(data.bidsQuantity),
 		};
 	};
 
-	public static orderedVecSetFromRaw(data: any): OrderedVecSet {
+	public static orderedVecSetFromRaw(data: any): PerpetualsOrderedVecSet {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,
@@ -100,24 +102,51 @@ export class PerpetualsCasting {
 		return (v: any) => v;
 	}
 
+	public static accountCapFromSuiResponse = (
+		data: SuiObjectResponse
+	): PerpetualsAccountCap => {
+		const objectType = getObjectType(data);
+		if (!objectType) throw new Error("no object type found");
+
+		return Casting.castObjectBcs({
+			suiObjectResponse: data,
+			typeName: "AccountCap",
+			fromDeserialized: this.accountCapFromRaw,
+			bcs,
+		});
+	};
+
+	public static accountCapFromRaw(data: any): PerpetualsAccountCap {
+		const coinType = Helpers.addLeadingZeroesToType(
+			Coin.getInnerCoinType(data.objectType)
+		);
+		return {
+			objectId: data.id,
+			objectType: data.objectType,
+			accountId: BigInt(data.accountId),
+			coinType,
+		};
+	}
+
 	// =========================================================================
 	//  Market Manager
 	// =========================================================================
 
 	public static marketManagerFromSuiResponse = (
 		data: SuiObjectResponse
-	): MarketManager => {
+	): PerpetualsMarketManager => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
-		return PerpetualsCasting.castObjectBcs({
-			resp: data,
+		return Casting.castObjectBcs({
+			suiObjectResponse: data,
 			typeName: "MarketManager",
-			fromDeserialized: PerpetualsCasting.marketManagerFromRaw,
+			fromDeserialized: this.marketManagerFromRaw,
+			bcs,
 		});
 	};
 
-	public static marketManagerFromRaw(data: any): MarketManager {
+	public static marketManagerFromRaw(data: any): PerpetualsMarketManager {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,
@@ -127,7 +156,7 @@ export class PerpetualsCasting {
 		};
 	}
 
-	public static marketParamsFromRaw = (data: any): MarketParams => {
+	public static marketParamsFromRaw = (data: any): PerpetualsMarketParams => {
 		return {
 			baseAssetSymbol: data.baseAssetSymbol,
 			marginRatioInitial: BigInt(data.marginRatioInitial),
@@ -147,7 +176,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static marketStateFromRaw = (data: any): MarketState => {
+	public static marketStateFromRaw = (data: any): PerpetualsMarketState => {
 		return {
 			cumFundingRateLong: BigInt(data.cumFundingRateLong),
 			cumFundingRateShort: BigInt(data.cumFundingRateShort),
@@ -160,7 +189,7 @@ export class PerpetualsCasting {
 		};
 	};
 
-	public static orderbookFromRaw = (data: any): Orderbook => {
+	public static orderbookFromRaw = (data: any): PerpetualsOrderbook => {
 		const objectType = getObjectType(data);
 		if (!objectType) throw new Error("no object type found");
 
@@ -169,13 +198,13 @@ export class PerpetualsCasting {
 			objectId: data.id.id,
 			lotSize: BigInt(data.lot_size),
 			tickSize: BigInt(data.tick_size),
-			asks: PerpetualsCasting.orderedMapFromRaw<Order>(data.asks),
-			bids: PerpetualsCasting.orderedMapFromRaw<Order>(data.bids),
+			asks: this.orderedMapFromRaw<Order>(data.asks),
+			bids: this.orderedMapFromRaw<Order>(data.bids),
 			counter: BigInt(data.counter),
 		};
 	};
 
-	public static orderedMapFromRaw<T>(data: any): OrderedMap<T> {
+	public static orderedMapFromRaw<T>(data: any): PerpetualsOrderedMap<T> {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,
@@ -197,20 +226,5 @@ export class PerpetualsCasting {
 			accountId: BigInt(data.accountId),
 			size: BigInt(data.size),
 		};
-	};
-
-	// =========================================================================
-	//  General
-	// =========================================================================
-
-	public static castObjectBcs = <T>(inputs: {
-		resp: SuiObjectResponse;
-		typeName: TypeName;
-		fromDeserialized: (deserialized: any) => T;
-	}): T => {
-		const { resp, typeName, fromDeserialized } = inputs;
-		const rawObj = resp.data?.bcs as SuiRawMoveObject;
-		const deserialized = bcs.de(typeName, rawObj.bcsBytes, "base64");
-		return fromDeserialized(deserialized);
 	};
 }

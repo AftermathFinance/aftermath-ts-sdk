@@ -3,11 +3,14 @@ import {
 	SuiAddress,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
+	SuiRawMoveObject,
 	getObjectOwner,
 } from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, PackageId } from "../../types";
-import { Helpers } from "../utils";
+import { Casting, Helpers } from "../utils";
+import { TypeName } from "@mysten/bcs";
+import { BCS } from "@mysten/bcs";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -66,6 +69,7 @@ export class ObjectsApiHelpers {
 		walletAddress: SuiAddress;
 		objectType: AnyObjectType;
 		withDisplay?: boolean;
+		options?: SuiObjectDataOptions;
 	}): Promise<SuiObjectResponse[]> => {
 		const { walletAddress, objectType, withDisplay } = inputs;
 
@@ -76,7 +80,7 @@ export class ObjectsApiHelpers {
 				filter: {
 					StructType: Helpers.stripLeadingZeroesFromType(objectType),
 				},
-				options: {
+				options: inputs.options ?? {
 					showContent: true,
 					showDisplay: withDisplay,
 					showOwner: true,
@@ -143,20 +147,6 @@ export class ObjectsApiHelpers {
 		return objectFromSuiObjectResponse(
 			await this.fetchObjectGeneral({ objectId, options })
 		);
-	};
-
-	public fetchObjectBcs = async (
-		objectId: ObjectId
-	): Promise<SuiObjectResponse> => {
-		const objectResponse = await this.Provider.provider.getObject({
-			id: objectId,
-			options: { showBcs: true },
-		});
-		if (objectResponse.error !== undefined)
-			throw new Error(
-				`an error occured fetching object: ${objectResponse.error.error}`
-			);
-		return objectResponse;
 	};
 
 	public fetchObjectBatch = async (inputs: {
@@ -230,6 +220,7 @@ export class ObjectsApiHelpers {
 			SuiObjectResponse: SuiObjectResponse
 		) => ObjectType;
 		withDisplay?: boolean;
+		options?: SuiObjectDataOptions;
 	}): Promise<ObjectType[]> => {
 		// i. obtain all owned object IDs
 		const objects = (
@@ -239,5 +230,39 @@ export class ObjectsApiHelpers {
 		});
 
 		return objects;
+	};
+
+	// =========================================================================
+	//  BCS
+	// =========================================================================
+
+	public fetchObjectBcs = async (
+		objectId: ObjectId
+	): Promise<SuiObjectResponse> => {
+		const objectResponse = await this.Provider.provider.getObject({
+			id: objectId,
+			options: { showBcs: true },
+		});
+		if (objectResponse.error !== undefined)
+			throw new Error(
+				`an error occured fetching object: ${objectResponse.error.error}`
+			);
+		return objectResponse;
+	};
+
+	public fetchCastObjectBcs = async <T>(inputs: {
+		objectId: ObjectId;
+		typeName: TypeName;
+		fromDeserialized: (deserialized: any) => T;
+		bcs: BCS;
+	}): Promise<T> => {
+		const { objectId } = inputs;
+		const suiObjectResponse = await this.Provider.Objects().fetchObjectBcs(
+			objectId
+		);
+		return Casting.castObjectBcs({
+			...inputs,
+			suiObjectResponse: suiObjectResponse,
+		});
 	};
 }

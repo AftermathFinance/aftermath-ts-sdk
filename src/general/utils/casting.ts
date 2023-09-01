@@ -1,4 +1,9 @@
-import { SuiAddress, bcs } from "@mysten/sui.js";
+import {
+	SuiAddress,
+	SuiObjectResponse,
+	SuiRawMoveObject,
+	bcs,
+} from "@mysten/sui.js";
 import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
@@ -6,6 +11,8 @@ import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
 import { Byte } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
+import { TypeName } from "@mysten/bcs";
+import { BCS } from "@mysten/bcs";
 
 export class Casting {
 	// =========================================================================
@@ -52,7 +59,7 @@ export class Casting {
 		BigInt(Math.floor(scalar * Number(int)));
 
 	// =========================================================================
-	//  Bytes
+	//  Bytes / BCS
 	// =========================================================================
 
 	public static stringFromBytes = (bytes: Byte[]) =>
@@ -89,5 +96,18 @@ export class Casting {
 
 	public static normalizeSlippageTolerance = (slippageTolerance: number) => {
 		return slippageTolerance / 100;
+	};
+
+	public static castObjectBcs = <T>(inputs: {
+		suiObjectResponse: SuiObjectResponse;
+		typeName: TypeName;
+		fromDeserialized: (deserialized: any) => T;
+		bcs: BCS;
+	}): T => {
+		const { suiObjectResponse, typeName, fromDeserialized } = inputs;
+
+		const rawObj = suiObjectResponse.data?.bcs as SuiRawMoveObject;
+		const deserialized = inputs.bcs.de(typeName, rawObj.bcsBytes, "base64");
+		return fromDeserialized(deserialized);
 	};
 }

@@ -1,9 +1,10 @@
 import { Caller } from "../../general/utils/caller";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
-	MarketParams,
-	MarketState,
-	Orderbook,
+	PerpetualsMarketId,
+	PerpetualsMarketParams,
+	PerpetualsMarketState,
+	PerpetualsOrderbook,
 	SuiNetwork,
 	Timestamp,
 	Url,
@@ -17,19 +18,13 @@ export class PerpetualsMarket extends Caller {
 	public static readonly constants = {};
 
 	// =========================================================================
-	//  Class Members
-	// =========================================================================
-
-	public orderbook: Orderbook | undefined;
-
-	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(
-		public readonly marketId: bigint,
-		public readonly marketParams: MarketParams,
-		public marketState?: MarketState,
+		public readonly marketId: PerpetualsMarketId,
+		public readonly marketParams: PerpetualsMarketParams,
+		public readonly marketState: PerpetualsMarketState,
 		public readonly network?: SuiNetwork | Url
 	) {
 		super(network, `perpetuals/markets/${marketId}`);
@@ -39,24 +34,8 @@ export class PerpetualsMarket extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async refreshMarketState(): Promise<MarketState> {
-		const marketState = await this.fetchApi<MarketState>("market-state");
-		this.updateMarketState({ marketState });
-		return marketState;
-	}
-
-	public updateMarketState(inputs: { marketState: MarketState }) {
-		this.marketState = inputs.marketState;
-	}
-
-	public async refreshOrderbook(): Promise<Orderbook> {
-		const orderbook = await this.fetchApi<Orderbook>("orderbook");
-		this.updateOrderbook({ orderbook });
-		return orderbook;
-	}
-
-	public updateOrderbook(inputs: { orderbook: Orderbook }) {
-		this.orderbook = inputs.orderbook;
+	public async getOrderbook(): Promise<PerpetualsOrderbook> {
+		return this.fetchApi<PerpetualsOrderbook>("orderbook");
 	}
 
 	// =========================================================================
