@@ -79,6 +79,7 @@ export type FarmsCreatedVaultEventOnChain = EventOnChain<{
 
 export type FarmsDepositedPrincipalEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
+	vault_id: ObjectId;
 	amount: BigIntAsString;
 	stake_type: CoinType;
 }>;
@@ -115,6 +116,7 @@ export type FarmsJoinedEventOnChain = EventOnChain<{
 
 export type FarmsLockedEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
+	vault_id: ObjectId;
 	staked_type: CoinType;
 	staked_amount: BigIntAsString;
 	lock_start_timestamp_ms: BigIntAsString;
@@ -149,12 +151,14 @@ export type FarmsStakedRelaxedEventOnChain = EventOnChain<{
 
 export type FarmsUnlockedEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
+	vault_id: ObjectId;
 	staked_type: CoinType;
 	staked_amount: BigIntAsString;
 }>;
 
 export type FarmsWithdrewPrincipalEventOnChain = EventOnChain<{
 	staked_position_id: ObjectId;
+	vault_id: ObjectId;
 	amount: BigIntAsString;
 	stake_type: CoinType;
 }>;

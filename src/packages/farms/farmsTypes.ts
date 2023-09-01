@@ -114,6 +114,7 @@ export interface FarmsCreatedVaultEvent extends Event {
 
 export interface FarmsDepositedPrincipalEvent extends Event {
 	stakedPositionId: ObjectId;
+	vaultId: ObjectId;
 	amount: Balance;
 	stakeType: CoinType;
 }
@@ -123,7 +124,7 @@ export interface FarmsDestroyedStakedPositionEvent extends Event {
 }
 
 export interface FarmsHarvestedRewardsEvent extends Event {
-	afterburnerVaultId: ObjectId;
+	vaultId: ObjectId;
 	rewardTypes: CoinType[];
 	rewardAmounts: Balance[];
 }
@@ -150,6 +151,7 @@ export interface FarmsJoinedEvent extends Event {
 
 export interface FarmsLockedEvent extends Event {
 	stakedPositionId: ObjectId;
+	vaultId: ObjectId;
 	stakedType: CoinType;
 	stakedAmount: Balance;
 	lockStartTimestampMs: Timestamp;
@@ -184,12 +186,14 @@ export interface FarmsStakedRelaxedEvent extends Event {
 
 export interface FarmsUnlockedEvent extends Event {
 	stakedPositionId: ObjectId;
+	vaultId: ObjectId;
 	stakedType: CoinType;
 	stakedAmount: Balance;
 }
 
 export interface FarmsWithdrewPrincipalEvent extends Event {
 	stakedPositionId: ObjectId;
+	vaultId: ObjectId;
 	amount: Balance;
 	stakeType: CoinType;
 }
