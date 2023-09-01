@@ -37,7 +37,6 @@ export class PerpetualsApi {
 			interface: "interface",
 			accountManager: "account_manager",
 			marketManager: "market_manager",
-			orderedVecSet: "ordered_vec_set",
 		},
 	};
 
@@ -207,8 +206,7 @@ export class PerpetualsApi {
 	public fetchOrderedVecSet = async (
 		objectId: ObjectId
 	): Promise<bigint[]> => {
-		const pkg = this.addresses.packages.perpetuals;
-		const keyType = `${pkg}::ordered_vec_set::Contents`;
+		const keyType = `${this.addresses.packages.perpetuals}::ordered_vec_set::Contents`;
 		const resp =
 			await this.Provider.DynamicFields().fetchDynamicFieldObject({
 				parentId: objectId,
