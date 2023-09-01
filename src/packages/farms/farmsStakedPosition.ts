@@ -92,7 +92,7 @@ export class FarmsStakedPosition extends Caller {
 		stakingPool: FarmsStakingPool;
 	}): CoinType[] => {
 		return Object.entries(this.rewardCoinsToClaimableBalance(inputs))
-			.filter(([, val]) => val >= BigInt(0))
+			.filter(([, val]) => val > BigInt(0))
 			.map(([key]) => key);
 	};
 
@@ -129,14 +129,14 @@ export class FarmsStakedPosition extends Caller {
 	public rewardsEarned = (inputs: {
 		coinType: CoinType;
 		stakingPool: FarmsStakingPool;
-	}): Balance => {
+	}) => {
 		this.updatePosition(inputs);
 
 		const rewardCoin = this.rewardCoin(inputs);
 		const totalRewards =
 			rewardCoin.multiplierRewardsAccumulated +
 			rewardCoin.baseRewardsAccumulated;
-		return totalRewards <= BigInt(0) ? BigInt(0) : totalRewards;
+		return totalRewards < BigInt(0) ? BigInt(0) : totalRewards;
 	};
 
 	// Updates the amount of rewards that can be harvested from `self` + the position's
@@ -373,7 +373,7 @@ export class FarmsStakedPosition extends Caller {
 	// Calculates a position's accrued rewards [from time t0] given a vault's
 	//  `rewardsAccumulatedPerShare`. If the position is beyond its lock duration, we need to only
 	//  apply the lock multiplier rewards to the time spent locked.
-	private calcTotalRewardsFromTimeT0(inputs: {
+	public calcTotalRewardsFromTimeT0(inputs: {
 		rewardsAccumulatedPerShare: Balance;
 		multiplierRewardsDebt: Balance;
 		emissionEndTimestamp: Timestamp;
@@ -464,6 +464,11 @@ export class FarmsStakedPosition extends Caller {
 	// Removes a positions `lock_duration_ms` and `lock_multiplier`. Updates the vault's
 	//  `staked_amount_with_multiplier` to account for the lost `lock_multiplier`.
 	private unlock = () => {
+		// ia. Remove position's `multiplier_staked_amount` from the pool.
+		// afterburner_vault::decrease_stake_with_multiplier(vault, self.multiplier_staked_amount);
+		this.stakedPosition.stakedAmountWithMultiplier = BigInt(0);
+
+		// ib. Reset position's lock parameters.
 		this.stakedPosition.lockDurationMs = 0;
 		this.stakedPosition.lockMultiplier = BigInt(0);
 	};

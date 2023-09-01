@@ -297,14 +297,18 @@ export class FarmsStakingPool extends Caller {
 		rewardsToEmit: Balance;
 		rewardCoinIndex: number;
 	}) {
-		const { rewardsToEmit, rewardCoinIndex } = inputs;
+		const { rewardCoinIndex } = inputs;
+		let { rewardsToEmit } = inputs;
 
 		const rewardsRemaining = this.rewardsRemaining(inputs);
 		if (rewardsRemaining === BigInt(0)) return;
 
-		const maxNewRewardsAccumulatedPerShare =
-			(rewardsRemaining * BigInt(1_000_000_000_000_000_000)) /
-			this.stakingPool.stakedAmountWithMultiplier;
+		// const maxNewRewardsAccumulatedPerShare =
+		// 	(rewardsRemaining * BigInt(1_000_000_000_000_000_000)) /
+		// 	this.stakingPool.stakedAmountWithMultiplier;
+
+		rewardsToEmit =
+			rewardsToEmit < rewardsRemaining ? rewardsToEmit : rewardsRemaining;
 
 		// i. Calculate the pro-rata amount of rewards allocated to each staked amount.
 		let newRewardsAccumulatedPerShare =
@@ -312,9 +316,9 @@ export class FarmsStakingPool extends Caller {
 			this.stakingPool.stakedAmountWithMultiplier;
 
 		// Cap on the amount of rewards left in the pool.
-		if (newRewardsAccumulatedPerShare > maxNewRewardsAccumulatedPerShare) {
-			newRewardsAccumulatedPerShare = maxNewRewardsAccumulatedPerShare;
-		}
+		// if (newRewardsAccumulatedPerShare > maxNewRewardsAccumulatedPerShare) {
+		// 	newRewardsAccumulatedPerShare = maxNewRewardsAccumulatedPerShare;
+		// }
 
 		if (newRewardsAccumulatedPerShare === BigInt(0)) return;
 
@@ -327,12 +331,19 @@ export class FarmsStakingPool extends Caller {
 	private rewardsRemaining(inputs: { rewardCoinIndex: number }): Balance {
 		const rewardCoin = this.stakingPool.rewardCoins[inputs.rewardCoinIndex];
 
-		const rewardsRemaining =
-			rewardCoin.rewards -
-			(rewardCoin.rewardsAccumulatedPerShare *
-				this.stakingPool.stakedAmountWithMultiplier) /
-				BigInt(1_000_000_000_000_000_000);
+		const currentTimestamp = dayjs().valueOf();
 
-		return rewardsRemaining;
+		const numberOfEmissions = BigInt(
+			Math.floor(
+				(currentTimestamp - rewardCoin.emissionStartTimestamp) /
+					rewardCoin.emissionSchedulesMs
+			)
+		);
+		const emittedRewards = rewardCoin.emissionRate * numberOfEmissions;
+
+		const totalRewards = rewardCoin.rewards;
+		if (totalRewards <= emittedRewards) return BigInt(0);
+
+		return totalRewards - emittedRewards;
 	}
 }
