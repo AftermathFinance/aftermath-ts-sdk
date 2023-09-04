@@ -2,4 +2,6 @@
 //  Name Only
 // =========================================================================
 
-export type PythPriceFeedId = string;
+// export type PythPriceFeedId = string;
+
+export default {};

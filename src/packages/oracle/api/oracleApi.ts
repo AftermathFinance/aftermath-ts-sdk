@@ -1,9 +1,10 @@
-import { ObjectId, SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers";
-import { Helpers } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import { OracleAddresses, Timestamp } from "../../../types";
-import { PriceFeedStorage } from "../oracleTypes";
-import { OracleCasting } from "./oracleCasting";
+import { OracleCoinSymbol, PriceFeedStorage } from "../oracleTypes";
+import { OracleApiCasting } from "./oracleApiCasting";
+import { Coin } from "../..";
 
 export class OracleApi {
 	public readonly addresses: OracleAddresses;
@@ -26,57 +27,65 @@ export class OracleApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchPriceFeedStorage = async (
-		objectId: ObjectId
-	): Promise<PriceFeedStorage> => {
+	public fetchPriceFeedStorage = async (): Promise<PriceFeedStorage> => {
 		return this.Provider.Objects().fetchCastObject<PriceFeedStorage>({
-			objectId,
+			objectId: this.addresses.objects.priceFeedStorage,
 			objectFromSuiObjectResponse:
-				OracleCasting.priceFeedStorageFromSuiObjectResponse,
+				OracleApiCasting.priceFeedStorageFromSuiObjectResponse,
 		});
 	};
 
 	// =========================================================================
-	//  Oracle Transactions
+	//  Inspections
 	// =========================================================================
 
-	public fetchDevCreatePriceFeedTx = async (inputs: {
-		walletAddress: SuiAddress;
-		symbol: string;
-	}): Promise<TransactionBlock> => {
+	public fetchPrice = async (inputs: {
+		coinSymbol: OracleCoinSymbol;
+	}): Promise<number> => {
 		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
 
-		this.devCreatePriceFeedTx({
-			tx,
-			...inputs,
-		});
+		this.getPriceTx({ ...inputs, tx });
 
-		return tx;
+		const [priceBytes, exponentBytes] =
+			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
+				tx,
+			});
+
+		const [price, exponent] = [
+			Casting.bigIntFromBytes(priceBytes),
+			Casting.bigIntFromBytes(exponentBytes),
+		];
+		return Coin.balanceWithDecimals(price, Number(exponent));
 	};
 
-	public fetchDevUpdatePriceFeedTx = async (inputs: {
-		walletAddress: SuiAddress;
-		symbol: string;
-		price: bigint;
-		timestamp: Timestamp;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
+	// =========================================================================
+	//  Transaction Commands
+	// =========================================================================
 
-		this.devUpdatePriceFeedTx({
-			tx,
-			...inputs,
+	public getPriceTx = (inputs: {
+		tx: TransactionBlock;
+		coinSymbol: OracleCoinSymbol;
+	}) /* u256 */ => {
+		const { tx, coinSymbol } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.oracle,
+				"oracle",
+				"get_price"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.priceFeedStorage), // PriceFeedStorage
+				tx.pure(coinSymbol), // symbol
+			],
 		});
-
-		return tx;
 	};
 
 	public devCreatePriceFeedTx = (inputs: {
 		tx: TransactionBlock;
-		symbol: string;
+		coinSymbol: OracleCoinSymbol;
 	}) => {
-		const { tx, symbol } = inputs;
+		const { tx, coinSymbol } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.oracle,
@@ -87,18 +96,18 @@ export class OracleApi {
 			arguments: [
 				tx.object(this.addresses.objects.authorityCapability),
 				tx.object(this.addresses.objects.priceFeedStorage),
-				tx.pure(symbol),
+				tx.pure(coinSymbol),
 			],
 		});
 	};
 
 	public devUpdatePriceFeedTx = (inputs: {
 		tx: TransactionBlock;
-		symbol: string;
+		coinSymbol: OracleCoinSymbol;
 		price: bigint;
 		timestamp: Timestamp;
 	}) => {
-		const { tx, symbol, price, timestamp } = inputs;
+		const { tx, coinSymbol, price, timestamp } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.oracle,
@@ -109,10 +118,22 @@ export class OracleApi {
 			arguments: [
 				tx.object(this.addresses.objects.authorityCapability),
 				tx.object(this.addresses.objects.priceFeedStorage),
-				tx.pure(symbol),
+				tx.pure(coinSymbol),
 				tx.pure(price),
 				tx.pure(timestamp),
 			],
 		});
 	};
+
+	// =========================================================================
+	//  Transaction Builders
+	// =========================================================================
+
+	public buildDevCreatePriceFeedTx = Helpers.transactions.creatBuildTxFunc(
+		this.devCreatePriceFeedTx
+	);
+
+	public buildDevUpdatePriceFeedTx = Helpers.transactions.creatBuildTxFunc(
+		this.devUpdatePriceFeedTx
+	);
 }

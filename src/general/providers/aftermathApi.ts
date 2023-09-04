@@ -22,6 +22,7 @@ import {
 	PartialRouterOptions,
 	RouterProtocolName,
 	RouterSynchronousOptions,
+	Url,
 } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
@@ -29,6 +30,7 @@ import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHisto
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { OracleApi } from "../../packages/oracle/api/oracleApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
+// import { PriceFeedsApi } from "../priceFeeds/priceFeedsApi";
 
 export class AftermathApi {
 	// =========================================================================
@@ -68,7 +70,7 @@ export class AftermathApi {
 	public constructor(
 		public readonly provider: JsonRpcProvider,
 		public readonly addresses: ConfigAddresses,
-		private readonly coinGeckoApiKey?: string
+		private readonly coinGeckoApiKey?: string // private readonly pythPriceServiceEndpoint: Url = "https://hermes-beta.pyth.network"
 	) {}
 
 	// =========================================================================
@@ -107,6 +109,8 @@ export class AftermathApi {
 					coinApiIdsToCoinTypes
 				)
 		: () => new PlaceholderHistoricalDataApi();
+
+	// public PriceFeeds = new PriceFeedsApi(this.pythPriceServiceEndpoint);
 
 	// =========================================================================
 	//  General Packages
