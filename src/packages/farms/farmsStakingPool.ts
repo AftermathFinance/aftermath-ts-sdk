@@ -26,6 +26,7 @@ import { Casting, Helpers } from "../../general/utils";
 import { Coin } from "..";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import { Fixed } from "../../general/utils/fixed";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -169,7 +170,8 @@ export class FarmsStakingPool extends Caller {
 					: totalPossibleLockDurationMs)) *
 			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
 
-		return Casting.numberToFixedBigInt(newMultiplier);
+		const multiplier = Casting.numberToFixedBigInt(newMultiplier);
+		return multiplier < Fixed.fixedOneB ? Fixed.fixedOneB : multiplier;
 	};
 
 	// =========================================================================
