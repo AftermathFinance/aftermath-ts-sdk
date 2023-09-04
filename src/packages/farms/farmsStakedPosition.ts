@@ -258,7 +258,7 @@ export class FarmsStakedPosition extends Caller {
 				: 0;
 
 		const apy = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
-		return apy;
+		return apy < 0 ? 0 : apy;
 	};
 
 	// =========================================================================

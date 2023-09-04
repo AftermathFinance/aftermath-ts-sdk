@@ -131,7 +131,8 @@ export class FarmsStakingPool extends Caller {
 		const rewardsUsdOneYear =
 			emissionRateUsd * (oneYearMs / rewardCoin.emissionSchedulesMs);
 
-		return rewardsUsdOneYear / tvlUsd;
+		const apy = rewardsUsdOneYear / tvlUsd;
+		return apy < 0 ? 0 : apy;
 	};
 
 	public calcTotalApy = (inputs: {
