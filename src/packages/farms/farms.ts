@@ -23,6 +23,14 @@ import { FarmsStakedPosition } from "./farmsStakedPosition";
 
 export class Farms extends Caller {
 	// =========================================================================
+	//  Constants
+	// =========================================================================
+
+	public static readonly constants = {
+		minimalRewardsToClaim: BigInt(10),
+	};
+
+	// =========================================================================
 	//  Constructor
 	// =========================================================================
 

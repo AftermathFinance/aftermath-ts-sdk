@@ -19,13 +19,13 @@ import {
 	FarmOwnerOrOneTimeAdminCap,
 	FarmsMultiplier,
 	FarmsStakingPoolObject,
+	FarmsStakingPoolRewardCoin,
 } from "./farmsTypes";
 import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Casting, Helpers } from "../../general/utils";
 import { Coin } from "..";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
-import { Fixed } from "../../general/utils/fixed";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -83,13 +83,9 @@ export class FarmsStakingPool extends Caller {
 			)
 				continue;
 
-			// ii. Calculate how many rewards have to be emitted.
-			const numberOfEmissions =
-				(currentTimestamp - rewardCoin.lastRewardTimestamp) /
-				rewardCoin.emissionSchedulesMs;
-
-			const rewardsToEmit =
-				rewardCoin.emissionRate * BigInt(Math.floor(numberOfEmissions));
+			// iia. Calculate how many rewards have to be emitted.
+			const rewardsToEmit = this.calcRewardsToEmit({ rewardCoin });
+			if (rewardsToEmit === BigInt(0)) continue;
 
 			// iii. Increase the amount of rewards emitted per share.
 			this.increaseRewardsAccumulatedPerShare({
@@ -97,6 +93,12 @@ export class FarmsStakingPool extends Caller {
 				rewardCoinIndex,
 			});
 
+			const numberOfEmissions =
+				(currentTimestamp - rewardCoin.lastRewardTimestamp) /
+				rewardCoin.emissionSchedulesMs;
+
+			// IMPORTANT: only increase by multiples of `emission_schedule_ms`.
+			//
 			// iv. Update reward's `last_reward_timestamp`.
 			this.stakingPool.rewardCoins[rewardCoinIndex].lastRewardTimestamp =
 				rewardCoin.lastRewardTimestamp +
@@ -154,17 +156,16 @@ export class FarmsStakingPool extends Caller {
 		lockDurationMs: number;
 	}): FarmsMultiplier => {
 		const { lockDurationMs } = inputs;
-		if (lockDurationMs <= this.stakingPool.minLockDurationMs)
-			return Fixed.fixedOneB;
 
 		const totalPossibleLockDurationMs =
 			this.stakingPool.maxLockDurationMs -
 			this.stakingPool.minLockDurationMs;
-		if (totalPossibleLockDurationMs <= 0) return Fixed.fixedOneB;
 
 		const newMultiplier =
 			((lockDurationMs - this.stakingPool.minLockDurationMs) /
-				totalPossibleLockDurationMs) *
+				(totalPossibleLockDurationMs <= 0
+					? 1
+					: totalPossibleLockDurationMs)) *
 			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
 
 		return Casting.numberToFixedBigInt(newMultiplier);
@@ -299,28 +300,12 @@ export class FarmsStakingPool extends Caller {
 		rewardsToEmit: Balance;
 		rewardCoinIndex: number;
 	}) {
-		const { rewardCoinIndex } = inputs;
-		let { rewardsToEmit } = inputs;
-
-		const rewardsRemaining = this.rewardsRemaining(inputs);
-		if (rewardsRemaining === BigInt(0)) return;
-
-		// const maxNewRewardsAccumulatedPerShare =
-		// 	(rewardsRemaining * BigInt(1_000_000_000_000_000_000)) /
-		// 	this.stakingPool.stakedAmountWithMultiplier;
-
-		rewardsToEmit =
-			rewardsToEmit < rewardsRemaining ? rewardsToEmit : rewardsRemaining;
+		const { rewardsToEmit, rewardCoinIndex } = inputs;
 
 		// i. Calculate the pro-rata amount of rewards allocated to each staked amount.
-		let newRewardsAccumulatedPerShare =
+		const newRewardsAccumulatedPerShare =
 			(rewardsToEmit * BigInt(1_000_000_000_000_000_000)) /
 			this.stakingPool.stakedAmountWithMultiplier;
-
-		// Cap on the amount of rewards left in the pool.
-		// if (newRewardsAccumulatedPerShare > maxNewRewardsAccumulatedPerShare) {
-		// 	newRewardsAccumulatedPerShare = maxNewRewardsAccumulatedPerShare;
-		// }
 
 		if (newRewardsAccumulatedPerShare === BigInt(0)) return;
 
@@ -347,5 +332,58 @@ export class FarmsStakingPool extends Caller {
 		if (totalRewards <= emittedRewards) return BigInt(0);
 
 		return totalRewards - emittedRewards;
+	}
+
+	private calcRewardsToEmit(inputs: {
+		rewardCoin: FarmsStakingPoolRewardCoin;
+	}): Balance {
+		const { rewardCoin } = inputs;
+
+		const currentTimestamp = dayjs().valueOf();
+
+		// ia. Calculate the number of rewards that have been emitted since the beginning of the reward's emissions schedule.
+		const totalRewardsEmitted = this.calcRewardsEmittedFromTimeTmToTn({
+			timestampTm: rewardCoin.emissionStartTimestamp,
+			timestampTn: rewardCoin.lastRewardTimestamp,
+			rewardCoin,
+		});
+
+		// ib. Calculate the number of rewards that have yet to be emitted.
+		const totalRewards = rewardCoin.rewards;
+		const rewardsRemaining =
+			totalRewardsEmitted < totalRewards
+				? totalRewards - totalRewardsEmitted
+				: BigInt(0);
+
+		// ii. Calculate the number of rewards that have been emitted since the last time this reward was emitted.
+		const rewardsToEmit = this.calcRewardsEmittedFromTimeTmToTn({
+			timestampTm: rewardCoin.lastRewardTimestamp,
+			timestampTn: currentTimestamp,
+			rewardCoin,
+		});
+
+		// IMPORTANT: Cap the amount of rewards to emit by the amount of remaining rewards.
+		//
+		return rewardsRemaining < rewardsToEmit
+			? rewardsRemaining
+			: rewardsToEmit;
+	}
+
+	private calcRewardsEmittedFromTimeTmToTn(inputs: {
+		timestampTm: Timestamp;
+		timestampTn: Timestamp;
+		rewardCoin: FarmsStakingPoolRewardCoin;
+	}): Balance {
+		const { timestampTm, timestampTn, rewardCoin } = inputs;
+
+		const numberOfEmissionsFromTimeTmToTn =
+			(timestampTn - timestampTm) /
+			// -----------------------------------------------
+			rewardCoin.emissionSchedulesMs;
+
+		return (
+			BigInt(Math.floor(numberOfEmissionsFromTimeTmToTn)) *
+			rewardCoin.emissionRate
+		);
 	}
 }

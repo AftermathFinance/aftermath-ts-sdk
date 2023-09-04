@@ -21,6 +21,7 @@ import { Fixed } from "../../general/utils/fixed";
 import { Helpers } from "../../general/utils";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import { Farms } from "./farms";
 
 export class FarmsStakedPosition extends Caller {
 	// =========================================================================
@@ -136,15 +137,15 @@ export class FarmsStakedPosition extends Caller {
 		const totalRewards =
 			rewardCoin.multiplierRewardsAccumulated +
 			rewardCoin.baseRewardsAccumulated;
-		return totalRewards < BigInt(0) ? BigInt(0) : totalRewards;
+		return totalRewards < Farms.constants.minimalRewardsToClaim
+			? BigInt(0)
+			: totalRewards;
 	};
 
 	// Updates the amount of rewards that can be harvested from `self` + the position's
 	// debt. If the position's lock duration has elapsed, it will be unlocked.
 	public updatePosition = (inputs: { stakingPool: FarmsStakingPool }) => {
 		const currentTimestamp = dayjs().valueOf();
-		// if (this.stakedPosition.lastHarvestRewardsTimestamp >= currentTimestamp)
-		// 	return;
 
 		// i. Increase the vault's `rewardsAccumulatedPerShare` values.
 		const stakingPool = new FarmsStakingPool(
@@ -395,25 +396,50 @@ export class FarmsStakedPosition extends Caller {
 			(principalStakedAmount * rewardsAccumulatedPerShare) /
 			Fixed.fixedOneB;
 
+		const totalRewardsAttributedToLockMultiplier =
+			(this.stakedPosition.stakedAmountWithMultiplier *
+				rewardsAccumulatedPerShare) /
+			Fixed.fixedOneB;
+
 		// The position should only receive multiplied rewards for the time that was spent locked since
 		//  the last harvest. This case occurs when the user calls `pending_rewards` after the position's
 		//  lock duration has expired.
 		const rewardsAttributedToLockMultiplier = (() => {
 			return currentTimestamp <= lockEndTimestamp
-				? (this.stakedPosition.stakedAmountWithMultiplier *
-						rewardsAccumulatedPerShare) /
-						Fixed.fixedOneB
+				? //*********************************************************************************************//
+				  //                                              v                                              //
+				  //  |-------------------------------------------+-------------------------------------------|  //
+				  //  last_reward_timestamp_ms           current_timestamp_ms             lock_end_timestamp_ms  //
+				  //*********************************************************************************************//
+
+				  totalRewardsAttributedToLockMultiplier
 				: lockEndTimestamp <= lastRewardTimestamp
-				? // Short circuit in the case the position hasn't been locked since the last harvest. Also
-				  //  required to not error on `lockEndTimestamp - lastRewardTimestamp`.
+				? //*********************************************************************************************//
+				  //                                                                                          v  //
+				  //  |-------------------------------------------+-------------------------------------------|  //
+				  //  lock_end_timestamp_ms            last_reward_timestamp_ms            current_timestamp_ms  //
+				  //*********************************************************************************************//
+
+				  // Short circuit in the case the position hasn't been locked since the last harvest. Also
+				  //  required to not error on `lock_end_timestamp_ms - last_reward_timestamp_ms`. Sets the
+				  //  accrued multiplier rewards to the current multiplier debt; i.e. no more rewards have
+				  //  been accrued.
+
 				  multiplierRewardsDebt
+				: emissionEndTimestamp <= lockEndTimestamp
+				? totalRewardsAttributedToLockMultiplier
 				: (() => {
+						//*********************************************************************************************//
+						//               lock_end_timestamp_ms          v                                           v  //
+						//  |---------------------+---------------------+---------------------+---------------------|  //
+						//  last_reward_timestamp_ms                    ?         emission_end_timestamp_ms         ?  //
+						//*********************************************************************************************//
+						//
+						// NOTE: there is no enforced ordering of `emission_end_timestamp_ms` and `current_timestamp_ms`
+						//  by the time we get to this branch.
+
 						// Multiplier staked amount receives (altered) rewards dependent on the total time the
 						//  position was locked since the last harvest.
-						const totalRewardsAttributedToLockMultiplier =
-							(this.stakedPosition.stakedAmountWithMultiplier *
-								rewardsAccumulatedPerShare) /
-							Fixed.fixedOneB;
 
 						const timeSpentLockedSinceLastHarvestMs =
 							lockEndTimestamp - lastRewardTimestamp;
@@ -470,6 +496,6 @@ export class FarmsStakedPosition extends Caller {
 
 		// ib. Reset position's lock parameters.
 		this.stakedPosition.lockDurationMs = 0;
-		this.stakedPosition.lockMultiplier = BigInt(0);
+		this.stakedPosition.lockMultiplier = Fixed.fixedOneB;
 	};
 }
