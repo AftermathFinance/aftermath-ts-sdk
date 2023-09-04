@@ -18,7 +18,7 @@ export class Oracle extends Caller {
 	public async getPrice(inputs: {
 		coinSymbol: OracleCoinSymbol;
 	}): Promise<number> {
-		return this.fetchApi(inputs.coinSymbol);
+		return this.fetchApi(`price/${inputs.coinSymbol}`);
 	}
 
 	public async getPrices(inputs: {
