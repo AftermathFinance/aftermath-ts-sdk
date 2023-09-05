@@ -47,8 +47,6 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	public nextFundingTimeMs = (): Timestamp => {
-		if (!this.marketState) throw new Error("No market state");
-
 		const fundingFrequencyMs = Number(this.marketParams.fundingFrequencyMs);
 		const lastFundingIntervalNumber = Math.floor(
 			this.marketState.fundingLastUpdMs / fundingFrequencyMs
@@ -61,8 +59,7 @@ export class PerpetualsMarket extends Caller {
 	// (bookTwap - indexTwap) / indexPrice * (fundingFrequency / fundingPeriod)
 	//
 	// To get the rate as a percentage, multiply the output by 100.
-	estimatedFundingRate = (inputs: { indexPrice: number }): number => {
-		if (!this.marketState) throw new Error("No market state");
+	public estimatedFundingRate = (inputs: { indexPrice: number }): number => {
 		const { indexPrice } = inputs;
 
 		const premiumTwap = IFixedUtils.numberFromIFixed(
