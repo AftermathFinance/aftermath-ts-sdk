@@ -58,6 +58,7 @@ import { PoolsApiCasting } from "./poolsApiCasting";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
+import { FixedUtils } from "../../../general/utils/fixedUtils";
 
 export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
@@ -309,7 +310,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			lpCoinIconUrl: inputs.lpCoinMetadata.iconUrl ?? "",
 
 			poolFlatness:
-				inputs.poolFlatness === 1 ? Casting.fixedOneBigInt : BigInt(0),
+				inputs.poolFlatness === 1 ? Casting.Fixed.fixedOneB : BigInt(0),
 
 			coinsInfo: inputs.coinsInfo.map((info, index) => {
 				let weight = Casting.numberToFixedBigInt(info.weight);
@@ -323,7 +324,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 							)
 					);
 
-					weight = Casting.fixedOneBigInt - otherWeightsSum;
+					weight = Casting.Fixed.fixedOneB - otherWeightsSum;
 				}
 
 				return {
