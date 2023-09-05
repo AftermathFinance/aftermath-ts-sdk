@@ -120,6 +120,35 @@ export class PerpetualsApi {
 		return allAccountCaps.reduce((acc, caps) => [...acc, ...caps], []);
 	};
 
+	public fetchOwnedAccountCapsOfType = async (inputs: {
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+	}): Promise<PerpetualsAccountCap[]> => {
+		const { walletAddress, coinType } = inputs;
+		const objectType = this.getAccountCapType({ coinType });
+
+		let objectResponse =
+			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
+				objectType,
+				walletAddress,
+				options: {
+					showBcs: true,
+					showType: true,
+				},
+			});
+
+		let accCaps: PerpetualsAccountCap[] = objectResponse.map((accCap) => {
+			const bcsData = accCap.data?.bcs as SuiRawMoveObject;
+			const accCapObj = bcs.de("AccountCap", bcsData.bcsBytes, "base64");
+			return PerpetualsCasting.accountCapWithTypeFromRaw(
+				accCapObj,
+				coinType
+			);
+		});
+
+		return accCaps;
+	};
+
 	public fetchAccount = async (inputs: {
 		coinType: CoinType;
 		accountId: PerpetualsAccountId;
@@ -786,7 +815,6 @@ export class PerpetualsApi {
 	};
 
 	public getAccountCapType = (inputs: { coinType: CoinType }): string => {
-		return `${this.addresses.packages.perpetuals}::
-		${PerpetualsApi.constants.moduleNames.accountManager}::AccountCap<${inputs.coinType}>`;
+		return `${this.addresses.packages.perpetuals}::${PerpetualsApi.constants.moduleNames.accountManager}::AccountCap<${inputs.coinType}>`;
 	};
 }

@@ -20,6 +20,7 @@ import {
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
+import { CoinType } from "../../coin/coinTypes";
 
 export class PerpetualsCasting {
 	// =========================================================================
@@ -128,6 +129,17 @@ export class PerpetualsCasting {
 		};
 	}
 
+	public static accountCapWithTypeFromRaw(
+		data: any,
+		coinType: CoinType
+	): PerpetualsAccountCap {
+		return {
+			objectId: data.id,
+			objectType: data.objectType,
+			accountId: BigInt(data.accountId),
+			coinType,
+		};
+	}
 	// =========================================================================
 	//  Market Manager
 	// =========================================================================

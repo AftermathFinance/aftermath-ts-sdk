@@ -396,10 +396,3 @@ export interface ApiPerpetualsCancelOrderBody {
 	side: boolean;
 	orderId: PerpetualsOrderId;
 }
-
-export interface ApiPerpetualsClosePositionBody {
-	walletAddress: SuiAddress;
-	coinType: CoinType;
-	accountCapId: ObjectId;
-	marketId: PerpetualsMarketId;
-}
