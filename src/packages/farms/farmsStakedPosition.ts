@@ -415,24 +415,23 @@ export class FarmsStakedPosition extends Caller {
 				  totalRewardsAttributedToLockMultiplier
 				: lockEndTimestamp <= lastRewardTimestamp
 				? //*********************************************************************************************//
-				  //                                                                                          v  //
-				  //  |-------------------------------------------+-------------------------------------------|  //
-				  //  lock_end_timestamp_ms            last_reward_timestamp_ms            current_timestamp_ms  //
+				  //                   emission_end_timestamp_ms       lock_end_timestamp_ms                  v  //
+				  //  |----------------------------+-----------------------------+----------------------------|  //
+				  //  last_reward_timestamp_ms                                             current_timestamp_ms  //
 				  //*********************************************************************************************//
 
-				  // Short circuit in the case the position hasn't been locked since the last harvest. Also
-				  //  required to not error on `lock_end_timestamp_ms - last_reward_timestamp_ms`. Sets the
-				  //  accrued multiplier rewards to the current multiplier debt; i.e. no more rewards have
-				  //  been accrued.
+				  //
+				  // NOTE: if the lock period was longer than the rewards emission, the position receives the full
+				  //  multiplier rewards
 
 				  multiplierRewardsDebt
 				: emissionEndTimestamp <= lockEndTimestamp
 				? totalRewardsAttributedToLockMultiplier
 				: (() => {
 						//*********************************************************************************************//
-						//               lock_end_timestamp_ms          v                                           v  //
-						//  |---------------------+---------------------+---------------------+---------------------|  //
-						//  last_reward_timestamp_ms                    ?         emission_end_timestamp_ms         ?  //
+						//                    lock_end_timestamp_ms        emission_end_timestamp_ms                v  //
+						//  |----------------------------+-----------------------------+----------------------------|  //
+						//  last_reward_timestamp_ms                                             current_timestamp_ms  //
 						//*********************************************************************************************//
 						//
 						// NOTE: there is no enforced ordering of `emission_end_timestamp_ms` and `current_timestamp_ms`
@@ -444,16 +443,8 @@ export class FarmsStakedPosition extends Caller {
 						const timeSpentLockedSinceLastHarvestMs =
 							lockEndTimestamp - lastRewardTimestamp;
 
-						// IMPORTANT: only decrease rewards by a ratio of when the reward was active and the lock was
-						//  inactive.
-						//
-						const minRelativeTimestamp = Math.min(
-							currentTimestamp,
-							emissionEndTimestamp
-						);
-
 						const timeSinceLastHarvestMs =
-							minRelativeTimestamp - lastRewardTimestamp;
+							currentTimestamp - lastRewardTimestamp;
 
 						// ********************************************************************************************//
 						//  / timeSpentLockedSinceLastHarvestMs \                                                //
