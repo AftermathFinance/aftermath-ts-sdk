@@ -122,7 +122,11 @@ export class FarmsStakingPool extends Caller {
 		const rewardCoin = this.rewardCoin({ coinType });
 		const currentTimestamp = dayjs().valueOf();
 
-		if (rewardCoin.emissionStartTimestamp > currentTimestamp) return 0;
+		if (
+			rewardCoin.emissionStartTimestamp > currentTimestamp ||
+			currentTimestamp > this.stakingPool.emissionEndTimestamp
+		)
+			return 0;
 
 		const emissionRateUsd =
 			Coin.balanceWithDecimals(rewardCoin.emissionRate, decimals) * price;
