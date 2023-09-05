@@ -13,6 +13,8 @@ import { Prices } from "../prices/prices";
 import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
 import { HistoricalData } from "../historicalData/historicalData";
 import { Perpetuals } from "../../packages/perpetuals";
+import { Oracle } from "../../packages/oracle/oracle";
+// import { PriceFeeds } from "../priceFeeds/priceFeeds";
 
 /**
  * @class Aftermath Provider
@@ -65,6 +67,7 @@ export class Aftermath extends Caller {
 	public NftAmm = () => new NftAmm(this.network);
 	public ReferralVault = () => new ReferralVault(this.network);
 	public Perpetuals = () => new Perpetuals(this.network);
+	public Oracle = () => new Oracle(this.network);
 
 	// =========================================================================
 	//  General
@@ -75,6 +78,7 @@ export class Aftermath extends Caller {
 	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
 	public Coin = (coinType?: CoinType) => new Coin(coinType, this.network);
 	public HistoricalData = () => new HistoricalData(this.network);
+	// public PriceFeeds = () => new PriceFeeds(this.network);
 
 	// =========================================================================
 	//  Utils
