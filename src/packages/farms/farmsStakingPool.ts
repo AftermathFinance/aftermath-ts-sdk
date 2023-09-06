@@ -168,11 +168,15 @@ export class FarmsStakingPool extends Caller {
 			this.stakingPool.minLockDurationMs;
 
 		const newMultiplier =
+			1 +
 			((lockDurationMs - this.stakingPool.minLockDurationMs) /
 				(totalPossibleLockDurationMs <= 0
 					? 1
 					: totalPossibleLockDurationMs)) *
-			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
+				(Casting.bigIntToFixedNumber(
+					this.stakingPool.maxLockMultiplier
+				) -
+					1);
 
 		const multiplier = Casting.numberToFixedBigInt(newMultiplier);
 		return multiplier < Fixed.fixedOneB ? Fixed.fixedOneB : multiplier;
