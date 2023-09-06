@@ -322,7 +322,7 @@ describe("Perpetuals Tests", () => {
 		printAccountMetrics(
 			accountUser1,
 			[market],
-			[IFixedUtils.numberFromIFixed(finalOraclePrice)],
+			[IFixedUtils.numberFromIFixed(initialOraclePrice)],
 			IFixedUtils.numberFromIFixed(ONE_F18)
 		);
 
@@ -336,9 +336,28 @@ describe("Perpetuals Tests", () => {
 		printAccountMetrics(
 			accountUser2,
 			[market],
-			[IFixedUtils.numberFromIFixed(finalOraclePrice)],
+			[IFixedUtils.numberFromIFixed(initialOraclePrice)],
 			IFixedUtils.numberFromIFixed(ONE_F18)
 		);
+
+		let liqPriceUser1 = accountUser1.calcLiquidationPriceForPosition({
+			market: market,
+			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice),
+			markets: [market],
+			indexPrices: [IFixedUtils.numberFromIFixed(initialOraclePrice)],
+			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
+		});
+
+		console.log(liqPriceUser1);
+
+		let liqPriceUser2 = accountUser2.calcLiquidationPriceForPosition({
+			market: market,
+			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice),
+			markets: [market],
+			indexPrices: [IFixedUtils.numberFromIFixed(initialOraclePrice)],
+			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
+		});
+		console.log(liqPriceUser2);
 
 		console.log("Place order to take profits");
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({

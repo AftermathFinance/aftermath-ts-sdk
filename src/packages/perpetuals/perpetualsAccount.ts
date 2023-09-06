@@ -132,21 +132,71 @@ export class PerpetualsAccount extends Caller {
 	//  Position Txs
 	// =========================================================================
 
-	// TODO
-	// public async getClosePositionTx(inputs: {
-	// 	walletAddress: SuiAddress;
-	// 	marketId: PerpetualsMarketId;
-	// }) {
-	// 	const position = this.positionForMarketId({ ...inputs });
+	public async getClosePositionTx(inputs: {
+		walletAddress: SuiAddress;
+		marketId: PerpetualsMarketId;
+	}) {
+		const marketId = inputs.marketId;
+		const position = this.positionForMarketId({ marketId });
+		const baseAmount = IFixedUtils.numberFromIFixed(
+			position.baseAssetAmount
+		);
+		const isLong = Math.sign(baseAmount);
 
-	// 	return this.getPlaceMarketOrderTx({
-	// 		...inputs,
-	// 		side: if (position.baseAssetAmount,
-	// 		size: position.baseAssetAmount,
-	// 	});
-	// }
+		if (isLong > 0) {
+			return this.getPlaceMarketOrderTx({
+				...inputs,
+				side: true, // TODO: read some global constant for ASK=true and BID=false?
+				size: position.baseAssetAmount,
+			});
+		} else {
+			return this.getPlaceMarketOrderTx({
+				...inputs,
+				side: false, // TODO: read some global constant for ASK=true and BID=false?
+				size: position.baseAssetAmount,
+			});
+		}
+	}
 
-	// TODO: place order + stop loss / take profits
+	public async getPlaceOrderWithSLTP(inputs: {
+		walletAddress: SuiAddress;
+		marketId: PerpetualsMarketId;
+		side: boolean;
+		size: bigint;
+		price: bigint;
+		orderType: bigint;
+		slPrice: bigint;
+		tpPrice: bigint;
+	}) {
+		let tx;
+		tx = await this.getPlaceLimitOrderTx({
+			...inputs,
+		});
+
+		// TODO: we can improve these checks to trigger SL and TP
+		// If ASK and SL price is above target price, then place SL order too
+		if (inputs.side && inputs.slPrice > inputs.price) {
+			tx = await this.getPlaceLimitOrderTx({
+				...inputs,
+				side: !inputs.side,
+				price: inputs.slPrice,
+				orderType: BigInt(2), // TODO: constant for POST_ONLY order?
+			});
+		}
+
+		// If BID and SL price is above target price, then place SL order too
+		if (!inputs.side && inputs.tpPrice > inputs.price) {
+			tx = await this.getPlaceLimitOrderTx({
+				...inputs,
+				side: !inputs.side,
+				price: inputs.tpPrice,
+				orderType: BigInt(2), // TODO: constant for POST_ONLY order?
+			});
+		}
+
+		return tx;
+	}
+
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
@@ -355,6 +405,63 @@ export class PerpetualsAccount extends Caller {
 		const minMaintenanceMargin = netAbsBaseValue * marginRatioMaintenance;
 
 		return { pnl, minInitialMargin, minMaintenanceMargin, netAbsBaseValue };
+	};
+
+	public calcLiquidationPriceForPosition = (inputs: {
+		market: PerpetualsMarket;
+		indexPrice: number;
+		markets: PerpetualsMarket[];
+		indexPrices: number[];
+		collateralPrice: number;
+	}): number => {
+		const marketId = inputs.market.marketId;
+		const position = this.positionForMarketId({ marketId });
+
+		if (!position) return 0;
+
+		const totalFunding = this.calcUnrealizedFundingsForAccount({
+			...inputs,
+		});
+
+		const collateral =
+			IFixedUtils.numberFromIFixed(this.account.collateral) -
+			totalFunding;
+
+		const {
+			totalPnL,
+			totalMinInitialMargin,
+			totalMinMaintenanceMargin,
+			totalNetAbsBaseValue,
+		} = this.calcPnLAndMarginForAccount({
+			...inputs,
+		});
+
+		const { pnl, minInitialMargin, minMaintenanceMargin, netAbsBaseValue } =
+			this.calcPnLAndMarginForPosition({
+				market: inputs.market,
+				indexPrice: inputs.indexPrice,
+			});
+
+		const baseAssetAmount = IFixedUtils.numberFromIFixed(
+			position.baseAssetAmount
+		);
+		const MMR = IFixedUtils.numberFromIFixed(
+			inputs.market.marketParams.marginRatioMaintenance
+		);
+		const accountValue = collateral * inputs.collateralPrice + totalPnL;
+		if (baseAssetAmount > 0) {
+			return (
+				inputs.indexPrice -
+				(accountValue - minMaintenanceMargin) /
+					((1 - MMR) * (netAbsBaseValue / inputs.indexPrice))
+			);
+		} else {
+			return (
+				inputs.indexPrice +
+				(accountValue - minMaintenanceMargin) /
+					((1 - MMR) * (netAbsBaseValue / inputs.indexPrice))
+			);
+		}
 	};
 
 	// =========================================================================
