@@ -19,12 +19,13 @@ interface OptionalConfigAddresses {
 	faucet: FaucetAddresses;
 	staking: StakingAddresses;
 	pools: PoolsAddresses;
-	utilies: UtilitiesAddresses;
+	utilities: UtilitiesAddresses;
 	suiFrens: SuiFrensAddresses;
 	nftAmm: NftAmmAddresses;
 	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
 	perpetuals: PerpetualsAddresses;
+	farms: FarmsAddresses;
 }
 
 // =========================================================================
@@ -49,10 +50,11 @@ export interface StakingAddresses {
 		afsui: SuiAddress;
 	};
 	objects: {
-		staking: ObjectId;
-	};
-	accounts: {
-		bot: SuiAddress;
+		stakedSuiVault: ObjectId;
+		safe: ObjectId;
+		treasury: ObjectId;
+		referralVault: ObjectId;
+		validatorConfigsTable: ObjectId;
 	};
 }
 
@@ -260,6 +262,13 @@ export interface PerpetualsAddresses {
 		registry: ObjectId;
 		exchanges: ExchangeAddresses[]; // Probably a Map<CoinType, ExchangeAddresses> is better
 		oracle: OracleAddresses;
+	};
+}
+
+export interface FarmsAddresses {
+	packages: {
+		vaults: SuiAddress;
+		vaultsInitial: SuiAddress;
 	};
 }
 

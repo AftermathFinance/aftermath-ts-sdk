@@ -8,6 +8,7 @@ import {
 } from "../../../types";
 import {
 	EventOnChain,
+	IndexerEventOnChain,
 	SupplyOnChain,
 } from "../../../general/types/castingTypes";
 
@@ -45,34 +46,50 @@ export type PoolCreateEventOnChain = EventOnChain<
 	} & PoolFieldsOnChain
 >;
 
-export type PoolTradeEventOnChain = EventOnChain<{
-	pool_id: ObjectId;
-	issuer: SuiAddress;
-	types_in: CoinType[];
-	amounts_in: Balance[];
-	types_out: CoinType[];
-	amounts_out: Balance[];
-}>;
-
-export type PoolDepositEventOnChain = EventOnChain<{
-	pool_id: ObjectId;
-	issuer: SuiAddress;
-	types: CoinType[];
-	deposits: Balance[];
-	lp_coins_minted: Balance;
-}>;
-
-export type PoolWithdrawEventOnChain = EventOnChain<{
-	pool_id: ObjectId;
-	issuer: SuiAddress;
-	types: CoinType[];
-	withdrawn: Balance[];
-	lp_coins_burned: Balance;
-}>;
-
 export type PoolSpotPriceEventOnChain = EventOnChain<{
 	pool_id: ObjectId;
 	base_type: CoinType;
 	quote_type: CoinType;
 	spot_price: BigIntAsString;
 }>;
+
+// =========================================================================
+//  Event Fields
+// =========================================================================
+
+export interface PoolTradeEventOnChainFields {
+	pool_id: ObjectId;
+	issuer: SuiAddress;
+	types_in: CoinType[];
+	amounts_in: BigIntAsString[];
+	types_out: CoinType[];
+	amounts_out: BigIntAsString[];
+}
+
+export interface PoolDepositEventFieldsOnChain {
+	pool_id: ObjectId;
+	issuer: SuiAddress;
+	types: CoinType[];
+	deposits: BigIntAsString[];
+	lp_coins_minted: BigIntAsString;
+}
+
+export interface PoolWithdrawEventFieldsOnChain {
+	pool_id: ObjectId;
+	issuer: SuiAddress;
+	types: CoinType[];
+	withdrawn: BigIntAsString[];
+	lp_coins_burned: BigIntAsString;
+}
+
+// =========================================================================
+//  Events
+// =========================================================================
+
+export type PoolTradeEventOnChain = EventOnChain<PoolTradeEventOnChainFields>;
+
+export type PoolDepositEventOnChain =
+	EventOnChain<PoolDepositEventFieldsOnChain>;
+
+export type PoolWithdrawEventOnChain =
+	EventOnChain<PoolWithdrawEventFieldsOnChain>;
