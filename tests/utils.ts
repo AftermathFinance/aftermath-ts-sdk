@@ -100,14 +100,14 @@ export function printAccountMetrics(
 
 	console.log(
 		"Unrealized Fundings: ",
-		account.computeUnrealizedFundingsForAccount({
+		account.calcUnrealizedFundingsForAccount({
 			markets,
 		})
 	);
 
 	console.log(
 		"[PnL, MinInitMargin, MinMaintMargin, AbsNetValue]: ",
-		account.computePnLAndMarginForAccount({
+		account.calcPnLAndMarginForAccount({
 			markets,
 			indexPrices,
 			collateralPrice,
@@ -116,7 +116,7 @@ export function printAccountMetrics(
 
 	console.log(
 		"Margin Ratio: ",
-		account.computeMarginRatio({
+		account.calcMarginRatio({
 			markets,
 			indexPrices,
 			collateralPrice,
@@ -125,7 +125,7 @@ export function printAccountMetrics(
 
 	console.log(
 		"Free Collateral: ",
-		account.computeFreeCollateral({
+		account.calcFreeCollateral({
 			markets,
 			indexPrices,
 			collateralPrice,

@@ -6,8 +6,7 @@ import {
 	UniqueId,
 	Url,
 } from "../../../types";
-import { EvmPriceServiceConnection } from "@pythnetwork/pyth-evm-js";
-import { Helpers } from "../../utils";
+import { SuiPriceServiceConnection } from "@pythnetwork/pyth-sui-js";
 import { Coin } from "../../../packages";
 
 export class PythPricesApiHelpers {
@@ -40,7 +39,7 @@ export class PythPricesApiHelpers {
 	//  Class Members
 	// =========================================================================
 
-	protected readonly connection: EvmPriceServiceConnection;
+	protected readonly connection: SuiPriceServiceConnection;
 
 	// =========================================================================
 	//  Constructor
@@ -49,7 +48,7 @@ export class PythPricesApiHelpers {
 	constructor(private readonly coinSymbolToCoinTypes: CoinSymbolToCoinTypes) {
 		this.coinSymbolToCoinTypes = coinSymbolToCoinTypes;
 
-		this.connection = new EvmPriceServiceConnection(
+		this.connection = new SuiPriceServiceConnection(
 			PythPricesApiHelpers.constants.priceFeedsEndpoint
 		);
 	}

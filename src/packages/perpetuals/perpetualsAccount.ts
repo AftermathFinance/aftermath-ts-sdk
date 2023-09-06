@@ -17,20 +17,7 @@ import {
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
-
-function zip<S1, S2>(
-	firstCollection: Array<S1>,
-	lastCollection: Array<S2>
-): Array<[S1, S2]> {
-	const length = Math.min(firstCollection.length, lastCollection.length);
-	const zipped: Array<[S1, S2]> = [];
-
-	for (let index = 0; index < length; index++) {
-		zipped.push([firstCollection[index], lastCollection[index]]);
-	}
-
-	return zipped;
-}
+import { Helpers } from "../../general/utils";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
@@ -164,21 +151,21 @@ export class PerpetualsAccount extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	computeFreeCollateral = (inputs: {
+	public calcFreeCollateral = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
 	}): number => {
-		const totalFunding = this.computeUnrealizedFundingsForAccount({
+		const totalFunding = this.calcUnrealizedFundingsForAccount({
 			...inputs,
 		});
 
-		const [
+		const {
 			totalPnL,
-			totalMinMargin,
-			_totalMinMaintenanceMargin,
-			_totalNetAbsBaseValue,
-		] = this.computePnLAndMarginForAccount({
+			totalMinInitialMargin,
+			totalMinMaintenanceMargin,
+			totalNetAbsBaseValue,
+		} = this.calcPnLAndMarginForAccount({
 			...inputs,
 		});
 
@@ -193,29 +180,31 @@ export class PerpetualsAccount extends Caller {
 			cappedMargin = collateral * inputs.collateralPrice;
 		}
 
-		if (cappedMargin >= totalMinMargin) {
-			return (cappedMargin - totalMinMargin) / inputs.collateralPrice;
+		if (cappedMargin >= totalMinInitialMargin) {
+			return (
+				(cappedMargin - totalMinInitialMargin) / inputs.collateralPrice
+			);
 		} else return 0;
 	};
 
-	computeMarginRatio = (inputs: {
+	calcMarginRatio = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
 	}): number => {
-		const totalFunding = this.computeUnrealizedFundingsForAccount({
+		const totalFunding = this.calcUnrealizedFundingsForAccount({
 			...inputs,
 		});
 
 		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
 
 		collateral -= totalFunding;
-		const [
+		const {
 			totalPnL,
-			_totalMinMargin,
-			_totalMinMaintenanceMargin,
+			totalMinInitialMargin,
+			totalMinMaintenanceMargin,
 			totalNetAbsBaseValue,
-		] = this.computePnLAndMarginForAccount({
+		} = this.calcPnLAndMarginForAccount({
 			...inputs,
 		});
 
@@ -229,13 +218,13 @@ export class PerpetualsAccount extends Caller {
 		);
 	};
 
-	computeUnrealizedFundingsForAccount = (inputs: {
+	public calcUnrealizedFundingsForAccount = (inputs: {
 		markets: PerpetualsMarket[];
 	}): number => {
 		let totalFunding = 0;
 
 		inputs.markets.forEach((market) => {
-			totalFunding += this.computeUnrealizedFundingsForPosition({
+			totalFunding += this.calcUnrealizedFundingsForPosition({
 				market,
 			});
 		});
@@ -243,7 +232,7 @@ export class PerpetualsAccount extends Caller {
 		return totalFunding;
 	};
 
-	computeUnrealizedFundingsForPosition = (inputs: {
+	public calcUnrealizedFundingsForPosition = (inputs: {
 		market: PerpetualsMarket;
 	}): number => {
 		const marketId = inputs.market.marketId;
@@ -276,24 +265,29 @@ export class PerpetualsAccount extends Caller {
 		}
 	};
 
-	computePnLAndMarginForAccount = (inputs: {
+	public calcPnLAndMarginForAccount = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
-	}): [number, number, number, number] => {
-		const zipped = zip(inputs.markets, inputs.indexPrices);
+	}): {
+		totalPnL: number;
+		totalMinInitialMargin: number;
+		totalMinMaintenanceMargin: number;
+		totalNetAbsBaseValue: number;
+	} => {
+		const zipped = Helpers.zip(inputs.markets, inputs.indexPrices);
 		let totalPnL = 0;
 		let totalMinInitialMargin = 0;
 		let totalMinMaintenanceMargin = 0;
 		let totalNetAbsBaseValue = 0;
 
 		zipped.forEach(([market, indexPrice]) => {
-			const [
+			const {
 				pnl,
 				minInitialMargin,
 				minMaintenanceMargin,
 				netAbsBaseValue,
-			] = this.computePnLAndMarginForPosition({
+			} = this.calcPnLAndMarginForPosition({
 				market,
 				indexPrice,
 			});
@@ -303,22 +297,33 @@ export class PerpetualsAccount extends Caller {
 			totalMinMaintenanceMargin += minMaintenanceMargin;
 			totalNetAbsBaseValue += netAbsBaseValue;
 		});
-		return [
+		return {
 			totalPnL,
 			totalMinInitialMargin,
 			totalMinMaintenanceMargin,
 			totalNetAbsBaseValue,
-		];
+		};
 	};
 
-	computePnLAndMarginForPosition = (inputs: {
+	public calcPnLAndMarginForPosition = (inputs: {
 		market: PerpetualsMarket;
 		indexPrice: number;
-	}): [number, number, number, number] => {
+	}): {
+		pnl: number;
+		minInitialMargin: number;
+		minMaintenanceMargin: number;
+		netAbsBaseValue: number;
+	} => {
 		const marketId = inputs.market.marketId;
 		const position = this.positionForMarketId({ marketId });
 
-		if (!position) return [0, 0, 0, 0];
+		if (!position)
+			return {
+				pnl: 0,
+				minInitialMargin: 0,
+				minMaintenanceMargin: 0,
+				netAbsBaseValue: 0,
+			};
 
 		const marginRatioInitial = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioInitial
@@ -349,7 +354,7 @@ export class PerpetualsAccount extends Caller {
 		const minInitialMargin = netAbsBaseValue * marginRatioInitial;
 		const minMaintenanceMargin = netAbsBaseValue * marginRatioMaintenance;
 
-		return [pnl, minInitialMargin, minMaintenanceMargin, netAbsBaseValue];
+		return { pnl, minInitialMargin, minMaintenanceMargin, netAbsBaseValue };
 	};
 
 	// =========================================================================

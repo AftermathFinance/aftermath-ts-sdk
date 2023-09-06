@@ -135,7 +135,7 @@ describe("Perpetuals Tests", () => {
 
 		// Create price feed for "BTC" perpetual (BTC/USD oracle price feed)
 		console.log("Create BTC price feed");
-		tx = await aftermathApi.Oracle().fetchDevCreatePriceFeedTx({
+		tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
 			symbol: "BTC",
 		});
@@ -146,7 +146,7 @@ describe("Perpetuals Tests", () => {
 
 		// Update price for "BTC" to 10000$ in fixed representation
 		console.log("Update BTC price feed");
-		tx = await aftermathApi.Oracle().fetchDevUpdatePriceFeedTx({
+		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
 			symbol: "BTC",
 			price: initialOraclePrice,
@@ -443,7 +443,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Update oracle price");
-		tx = await aftermathApi.Oracle().fetchDevUpdatePriceFeedTx({
+		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
 			symbol: "BTC",
 			price: finalOraclePrice,

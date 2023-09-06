@@ -1,17 +1,18 @@
 import {
-    ObjectContentFields,
-    getObjectFields,
-    getObjectId,
-    getObjectType,
-    SuiObjectResponse
+	ObjectContentFields,
+	getObjectFields,
+	getObjectId,
+	getObjectType,
+	SuiObjectResponse,
 } from "@mysten/sui.js";
 import { Helpers } from "../../../general/utils";
 import { PriceFeed, PriceFeedStorage } from "../oracleTypes";
 
-export class OracleCasting {
+export class OracleApiCasting {
 	// =========================================================================
-	//  Oracle
+	//  Objects
 	// =========================================================================
+
 	public static priceFeedStorageFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PriceFeedStorage => {
@@ -40,5 +41,4 @@ export class OracleCasting {
 			timestamp: objectFields.timestamp,
 		};
 	};
-
 }

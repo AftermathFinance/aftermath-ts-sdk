@@ -2,6 +2,12 @@ import { BCS, getSuiMoveConfig } from "@mysten/bcs";
 import { IFixed, Object, Timestamp } from "../../general/types/generalTypes";
 
 // =========================================================================
+//  Name Only
+// =========================================================================
+
+export type OracleCoinSymbol = string;
+
+// =========================================================================
 //  BCS - Binary Canonical Serialization
 // =========================================================================
 
@@ -20,11 +26,11 @@ bcs.registerStructType("PriceFeedStorage", { id: "UID" });
 bcs.registerStructType("AuthorityCap", { id: "UID" });
 
 // =========================================================================
-//  Oracle
+//  Objects
 // =========================================================================
 
 export interface PriceFeed extends Object {
-	symbol: string;
+	symbol: OracleCoinSymbol;
 	price: IFixed;
 	decimal: bigint;
 	timestamp: Timestamp;

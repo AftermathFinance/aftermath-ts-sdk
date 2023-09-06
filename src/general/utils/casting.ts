@@ -13,6 +13,8 @@ import { Byte } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
 import { TypeName } from "@mysten/bcs";
 import { BCS } from "@mysten/bcs";
+import { FixedUtils } from "./fixedUtils";
+import { IFixedUtils } from "./iFixedUtils";
 
 export class Casting {
 	// =========================================================================
@@ -31,16 +33,13 @@ export class Casting {
 	// =========================================================================
 
 	// =========================================================================
-	//  Fixed
+	//  Fixed / IFixed
 	// =========================================================================
 
-	public static fixedOneBigInt: bigint = BigInt("1000000000000000000");
-	public static fixedOneNumber: number = Number(this.fixedOneBigInt);
+	public static Fixed = FixedUtils;
+	public static IFixed = IFixedUtils;
+
 	public static u64MaxBigInt: bigint = BigInt("0xFFFFFFFFFFFFFFFF");
-	public static u128MaxBigInt: bigint = BigInt(
-		"0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-	);
-	public static zeroBigInt: bigint = BigInt(0);
 
 	// =========================================================================
 	//  Functions
@@ -50,10 +49,12 @@ export class Casting {
 	//  Fixed
 	// =========================================================================
 
+	// TODO: only use fixed class for these functions, remove from here
+
 	public static numberToFixedBigInt = (a: number): bigint =>
-		BigInt(Math.floor(a * this.fixedOneNumber));
+		BigInt(Math.floor(a * this.Fixed.fixedOneN));
 	public static bigIntToFixedNumber = (a: bigint): number =>
-		Number(a) / this.fixedOneNumber;
+		Number(a) / this.Fixed.fixedOneN;
 
 	public static scaleNumberByBigInt = (scalar: number, int: bigint): bigint =>
 		BigInt(Math.floor(scalar * Number(int)));
