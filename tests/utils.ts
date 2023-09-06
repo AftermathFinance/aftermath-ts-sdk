@@ -1,6 +1,14 @@
-import { Ed25519Keypair, RawSigner } from "@mysten/sui.js";
+import {
+	Ed25519Keypair,
+	ObjectId,
+	RawSigner,
+	SuiAddress,
+	SuiObjectChange,
+	SuiObjectChangeCreated,
+} from "@mysten/sui.js";
 import { fromB64 } from "@mysten/bcs";
 import { AftermathApi } from "../src/general/providers";
+import { PerpetualsAccount, PerpetualsMarket } from "../src/packages";
 
 export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";
 export const user1PrivateKey = "AOzplQlAK2Uznvog7xmcMtlFC+DfuJx3axo9lfyI876G";
@@ -42,3 +50,112 @@ export const fromOraclePriceToOrderbookPrice = (
 	oracle_price = oracle_price / ONE_B9; // convert f18 to b9 (assuming the former is positive)
 	return oracle_price / tick_size / (ONE_B9 / lot_size);
 };
+
+export async function getPerpetualsAccount(
+	aftermathApi: AftermathApi,
+	walletAddress: SuiAddress,
+	accountId: bigint,
+	coinType: string
+): Promise<PerpetualsAccount> {
+	let accountObj = await aftermathApi
+		.Perpetuals()
+		.fetchAccount({ coinType, accountId });
+	let accCap = await aftermathApi.Perpetuals().fetchOwnedAccountCapsOfType({
+		walletAddress,
+		coinType,
+	});
+	return new PerpetualsAccount(
+		accountObj,
+		accCap[0],
+		aftermathApi.provider.connection.fullnode
+	);
+}
+
+export async function getPerpetualsMarket(
+	aftermathApi: AftermathApi,
+	marketId: bigint,
+	coinType: string
+): Promise<PerpetualsMarket> {
+	let marketParams = await aftermathApi
+		.Perpetuals()
+		.fetchMarketParams({ coinType, marketId });
+	let marketState = await aftermathApi
+		.Perpetuals()
+		.fetchMarketState({ coinType, marketId });
+	return new PerpetualsMarket(
+		marketId,
+		marketParams,
+		marketState,
+		aftermathApi.provider.connection.fullnode
+	);
+}
+
+export function printAccountMetrics(
+	account: PerpetualsAccount,
+	markets: PerpetualsMarket[],
+	indexPrices: number[],
+	collateralPrice: number
+) {
+	console.log(account);
+
+	console.log(
+		"Unrealized Fundings: ",
+		account.computeUnrealizedFundingsForAccount({
+			markets,
+		})
+	);
+
+	console.log(
+		"[PnL, MinInitMargin, MinMaintMargin, AbsNetValue]: ",
+		account.computePnLAndMarginForAccount({
+			markets,
+			indexPrices,
+			collateralPrice,
+		})
+	);
+
+	console.log(
+		"Margin Ratio: ",
+		account.computeMarginRatio({
+			markets,
+			indexPrices,
+			collateralPrice,
+		})
+	);
+
+	console.log(
+		"Free Collateral: ",
+		account.computeFreeCollateral({
+			markets,
+			indexPrices,
+			collateralPrice,
+		})
+	);
+}
+
+export async function createAndFetchAccountCap(
+	signer: RawSigner,
+	aftermathApi: AftermathApi,
+	coinType: string
+): Promise<ObjectId> {
+	let tx = await aftermathApi.Perpetuals().fetchCreateAccountTx({
+		walletAddress: await signer.getAddress(),
+		coinType,
+	});
+	let response = await signer.signAndExecuteTransactionBlock({
+		transactionBlock: tx,
+		requestType: "WaitForLocalExecution",
+		options: { showObjectChanges: true },
+	});
+	let change = response.objectChanges?.find(
+		isAccountCapCreated
+	) as SuiObjectChangeCreated;
+
+	return change.objectId;
+}
+
+function isAccountCapCreated(change: SuiObjectChange): boolean {
+	return (
+		change.type === "created" && change.objectType.includes("AccountCap")
+	);
+}
