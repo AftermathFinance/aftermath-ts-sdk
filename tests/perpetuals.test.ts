@@ -126,7 +126,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Create BTC price feed");
 		tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
-			symbol: "BTC",
+			coinSymbol: "BTC",
 		});
 		await admin.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -137,7 +137,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Update BTC price feed");
 		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
-			symbol: "BTC",
+			coinSymbol: "BTC",
 			price: initialOraclePrice,
 			timestamp: 0,
 		});
@@ -268,7 +268,7 @@ describe("Perpetuals Tests", () => {
 			usdcType
 		);
 
-		console.log("Place actual order");
+		console.log("Place limit order");
 		let orderSize = BigInt(10000);
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user1.getAddress(),
@@ -303,7 +303,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Update BTC price feed");
 		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
-			symbol: "BTC",
+			coinSymbol: "BTC",
 			price: finalOraclePrice,
 			timestamp: 0,
 		});

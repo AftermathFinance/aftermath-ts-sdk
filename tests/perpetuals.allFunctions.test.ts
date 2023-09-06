@@ -137,7 +137,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Create BTC price feed");
 		tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
-			symbol: "BTC",
+			coinSymbol: "BTC",
 		});
 		await admin.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -148,7 +148,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Update BTC price feed");
 		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
-			symbol: "BTC",
+			coinSymbol: "BTC",
 			price: initialOraclePrice,
 			timestamp: 0,
 		});
@@ -445,7 +445,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Update oracle price");
 		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
-			symbol: "BTC",
+			coinSymbol: "BTC",
 			price: finalOraclePrice,
 			timestamp: 0,
 		});
