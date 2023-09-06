@@ -210,14 +210,10 @@ export class PerpetualsAccount extends Caller {
 			...inputs,
 		});
 
-		const {
-			totalPnL,
-			totalMinInitialMargin,
-			totalMinMaintenanceMargin,
-			totalNetAbsBaseValue,
-		} = this.calcPnLAndMarginForAccount({
-			...inputs,
-		});
+		const { totalPnL, totalMinInitialMargin } =
+			this.calcPnLAndMarginForAccount({
+				...inputs,
+			});
 
 		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
 
@@ -249,14 +245,10 @@ export class PerpetualsAccount extends Caller {
 		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
 
 		collateral -= totalFunding;
-		const {
-			totalPnL,
-			totalMinInitialMargin,
-			totalMinMaintenanceMargin,
-			totalNetAbsBaseValue,
-		} = this.calcPnLAndMarginForAccount({
-			...inputs,
-		});
+		const { totalPnL, totalNetAbsBaseValue } =
+			this.calcPnLAndMarginForAccount({
+				...inputs,
+			});
 
 		// If totalNetAbsBaseValue is 0 (no positions opened), MR would be +inf,
 		// which can be displayed as N/A.
