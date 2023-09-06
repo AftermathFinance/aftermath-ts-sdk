@@ -184,7 +184,7 @@ export class PerpetualsAccount extends Caller {
 			});
 		}
 
-		// If BID and SL price is above target price, then place SL order too
+		// If BID and TP price is above target price, then place TP order too
 		if (!inputs.side && inputs.tpPrice > inputs.price) {
 			tx = await this.getPlaceLimitOrderTx({
 				...inputs,
