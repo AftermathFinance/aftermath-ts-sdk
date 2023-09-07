@@ -16,6 +16,7 @@ import { CoinType } from "../coin/coinTypes";
 export type PerpetualsMarketId = bigint;
 export type PerpetualsAccountId = bigint;
 export type PerpetualsOrderId = bigint;
+export type PerpetualsOrderPrice = bigint;
 
 // =========================================================================
 //  Enums

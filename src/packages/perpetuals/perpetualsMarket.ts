@@ -6,6 +6,7 @@ import {
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
+	PerpetualsOrderPrice,
 	PerpetualsOrderbook,
 	SuiNetwork,
 	Timestamp,
@@ -68,20 +69,34 @@ export class PerpetualsMarket extends Caller {
 		return relativePremium * periodAdjustment;
 	};
 
-	public fromOraclePriceToOrderbookPrice = (inputs: {
-		oraclePrice: number;
-		// lot_size: bigint, // 10^9
-		// tick_size: bigint // 10^9
-	}): bigint => {
-		const { oraclePrice } = inputs;
+	public priceToOrderPrice = (inputs: {
+		price: number;
+	}): PerpetualsOrderPrice => {
+		const { price } = inputs;
 
-		const oraclePriceFixed = FixedUtils.directUncast(oraclePrice);
+		const priceFixed = FixedUtils.directUncast(price);
 		// convert f18 to b9 (assuming the former is positive)
-		const oraclePrice9 = oraclePriceFixed / FixedUtils.fixedOneB9;
+		const price9 = priceFixed / FixedUtils.fixedOneB9;
 		return (
-			oraclePrice9 /
+			price9 /
 			this.orderbook.tickSize /
 			(FixedUtils.fixedOneB9 / this.orderbook.lotSize)
 		);
 	};
+
+	public lotSize = () => {
+		return PerpetualsMarket.lotOrTickSizeToNumber(this.orderbook.lotSize);
+	};
+
+	public tickSize = () => {
+		return PerpetualsMarket.lotOrTickSizeToNumber(this.orderbook.tickSize);
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private static lotOrTickSizeToNumber(lotOrTickSize: bigint): number {
+		return Number(lotOrTickSize) / FixedUtils.fixedOneN9;
+	}
 }

@@ -1,9 +1,12 @@
 import { Balance, DecimalsScalar, NormalizedBalance } from "../../types";
 
 export class FixedUtils {
+	// 18 decimal places
 	public static readonly fixedOneN: number = 1_000_000_000_000_000_000;
 	public static readonly fixedOneB: bigint = BigInt("1000000000000000000");
-	public static readonly fixedOneB9 = BigInt(1_000_000_000); // 9 decimal places
+	// 9 decimal places
+	public static readonly fixedOneN9 = 1_000_000_000;
+	public static readonly fixedOneB9 = BigInt(1_000_000_000);
 
 	// These terms come from their on chain counterparts. They are backwards from the point of view of js.
 	// On chain direct cast means e.g. taking ((x: u64) as u256).
