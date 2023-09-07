@@ -28,6 +28,9 @@ import {
 	PerpetualsOrderId,
 	PerpetualsAccountCap,
 	PerpetualsAccountData,
+	ApiPerpetualsSLTPOrderBody,
+	PerpetualsOrderSide,
+	PerpetualsOrderType,
 } from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -496,7 +499,7 @@ export class PerpetualsApi {
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
-		side: boolean;
+		side: PerpetualsOrderSide;
 		size: bigint;
 	}) => {
 		const { tx, coinType, accountCapId, marketId, side, size } = inputs;
@@ -519,7 +522,7 @@ export class PerpetualsApi {
 				),
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.pure(marketId),
-				tx.pure(side),
+				tx.pure(Boolean(side)),
 				tx.pure(size),
 			],
 		});
@@ -530,10 +533,10 @@ export class PerpetualsApi {
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
-		side: boolean;
+		side: PerpetualsOrderSide;
 		size: bigint;
 		price: bigint;
-		orderType: bigint;
+		orderType: PerpetualsOrderType;
 	}) => {
 		const {
 			tx,
@@ -564,10 +567,10 @@ export class PerpetualsApi {
 				),
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.pure(marketId),
-				tx.pure(side),
+				tx.pure(Boolean(side)),
 				tx.pure(size),
 				tx.pure(price),
-				tx.pure(orderType),
+				tx.pure(BigInt(orderType)),
 			],
 		});
 	};
@@ -577,7 +580,7 @@ export class PerpetualsApi {
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
-		side: boolean;
+		side: PerpetualsOrderSide;
 		orderId: PerpetualsOrderId;
 	}) => {
 		const { tx, coinType, accountCapId, marketId, side, orderId } = inputs;
@@ -596,7 +599,7 @@ export class PerpetualsApi {
 				tx.object(exchangeCfg.accountManager),
 				tx.object(exchangeCfg.marketManager),
 				tx.pure(marketId),
-				tx.pure(side),
+				tx.pure(Boolean(side)),
 				tx.pure(orderId),
 			],
 		});
@@ -727,7 +730,7 @@ export class PerpetualsApi {
 		this.createMarketTx
 	);
 
-	public fetchDepositCollateralTx = async (
+	public fetchBuildDepositCollateralTx = async (
 		inputs: ApiPerpetualsDepositCollateralBody
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
@@ -761,12 +764,12 @@ export class PerpetualsApi {
 		this.cancelOrderTx
 	);
 
-	public fetchWithdrawCollateralTx = async (inputs: {
+	public buildWithdrawCollateralTx = (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		amount: bigint;
-	}): Promise<TransactionBlock> => {
+	}): TransactionBlock => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
@@ -788,9 +791,9 @@ export class PerpetualsApi {
 		this.updateFundingTx
 	);
 
-	public fetchCreateAccountTx = async (
+	public buildCreateAccountTx = (
 		inputs: ApiPerpetualsCreateAccountBody
-	): Promise<TransactionBlock> => {
+	): TransactionBlock => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
@@ -800,6 +803,53 @@ export class PerpetualsApi {
 		});
 
 		tx.transferObjects([accCap], tx.pure(inputs.walletAddress));
+
+		return tx;
+	};
+
+	public buildPlaceSLTPOrderTx = (
+		inputs: ApiPerpetualsSLTPOrderBody
+	): TransactionBlock => {
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		this.placeLimitOrderTx({ ...inputs, tx });
+
+		const orderType = PerpetualsOrderType.PostOnly;
+		const side =
+			inputs.side === PerpetualsOrderSide.Ask
+				? PerpetualsOrderSide.Bid
+				: PerpetualsOrderSide.Ask;
+
+		// TODO: we can improve these checks to trigger SL and TP
+
+		// If ASK and SL price is above target price, then place SL order too
+		if (
+			inputs.side === PerpetualsOrderSide.Ask &&
+			inputs.slPrice > inputs.price
+		) {
+			this.placeLimitOrderTx({
+				...inputs,
+				tx,
+				orderType,
+				side,
+				price: inputs.slPrice,
+			});
+		}
+
+		// If BID and TP price is above target price, then place TP order too
+		if (
+			inputs.side === PerpetualsOrderSide.Bid &&
+			inputs.tpPrice > inputs.price
+		) {
+			this.placeLimitOrderTx({
+				...inputs,
+				tx,
+				orderType,
+				side,
+				price: inputs.tpPrice,
+			});
+		}
 
 		return tx;
 	};

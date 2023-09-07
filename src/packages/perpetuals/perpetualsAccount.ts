@@ -5,12 +5,15 @@ import {
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
+	ApiPerpetualsSLTPOrderBody,
 	ApiPerpetualsWithdrawCollateralBody,
 	Balance,
 	PerpetualsAccountCap,
 	PerpetualsAccountObject,
 	PerpetualsMarketId,
 	PerpetualsOrderId,
+	PerpetualsOrderSide,
+	PerpetualsOrderType,
 	PerpetualsPosition,
 	SuiNetwork,
 	Url,
@@ -18,6 +21,7 @@ import {
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { Helpers } from "../../general/utils";
+import { Perpetuals } from "./perpetuals";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
@@ -81,7 +85,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceMarketOrderTx(inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
-		side: boolean;
+		side: PerpetualsOrderSide;
 		size: bigint;
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
@@ -97,10 +101,10 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceLimitOrderTx(inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
-		side: boolean;
+		side: PerpetualsOrderSide;
 		size: bigint;
 		price: bigint;
-		orderType: bigint;
+		orderType: PerpetualsOrderType;
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
 			"transactions/limit-order",
@@ -112,10 +116,21 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
+	public async getPlaceSLTPOrder(inputs: ApiPerpetualsSLTPOrderBody) {
+		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
+			"transactions/sltp-order",
+			{
+				...inputs,
+				coinType: this.accountCap.coinType,
+				accountCapId: this.accountCap.objectId,
+			}
+		);
+	}
+
 	public async getCancelOrderTx(inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
-		side: boolean;
+		side: PerpetualsOrderSide;
 		orderId: PerpetualsOrderId;
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrderBody>(
@@ -138,63 +153,12 @@ export class PerpetualsAccount extends Caller {
 	}) {
 		const marketId = inputs.marketId;
 		const position = this.positionForMarketId({ marketId });
-		const baseAmount = IFixedUtils.numberFromIFixed(
-			position.baseAssetAmount
-		);
-		const isLong = Math.sign(baseAmount);
-
-		if (isLong > 0) {
-			return this.getPlaceMarketOrderTx({
-				...inputs,
-				side: true, // TODO: read some global constant for ASK=true and BID=false?
-				size: position.baseAssetAmount,
-			});
-		} else {
-			return this.getPlaceMarketOrderTx({
-				...inputs,
-				side: false, // TODO: read some global constant for ASK=true and BID=false?
-				size: position.baseAssetAmount,
-			});
-		}
-	}
-
-	public async getPlaceOrderWithSLTP(inputs: {
-		walletAddress: SuiAddress;
-		marketId: PerpetualsMarketId;
-		side: boolean;
-		size: bigint;
-		price: bigint;
-		orderType: bigint;
-		slPrice: bigint;
-		tpPrice: bigint;
-	}) {
-		let tx;
-		tx = await this.getPlaceLimitOrderTx({
+		const side = Perpetuals.positionSide({ position });
+		return this.getPlaceMarketOrderTx({
 			...inputs,
+			side,
+			size: position.baseAssetAmount,
 		});
-
-		// TODO: we can improve these checks to trigger SL and TP
-		// If ASK and SL price is above target price, then place SL order too
-		if (inputs.side && inputs.slPrice > inputs.price) {
-			tx = await this.getPlaceLimitOrderTx({
-				...inputs,
-				side: !inputs.side,
-				price: inputs.slPrice,
-				orderType: BigInt(2), // TODO: constant for POST_ONLY order?
-			});
-		}
-
-		// If BID and TP price is above target price, then place TP order too
-		if (!inputs.side && inputs.tpPrice > inputs.price) {
-			tx = await this.getPlaceLimitOrderTx({
-				...inputs,
-				side: !inputs.side,
-				price: inputs.tpPrice,
-				orderType: BigInt(2), // TODO: constant for POST_ONLY order?
-			});
-		}
-
-		return tx;
 	}
 
 	// =========================================================================

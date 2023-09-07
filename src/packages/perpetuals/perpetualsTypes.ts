@@ -18,6 +18,18 @@ export type PerpetualsAccountId = bigint;
 export type PerpetualsOrderId = bigint;
 
 // =========================================================================
+//  Enums
+// =========================================================================
+
+export enum PerpetualsOrderSide {
+	Ask = 1, // true
+	Bid = 0, // false
+}
+export enum PerpetualsOrderType {
+	PostOnly = 2,
+}
+
+// =========================================================================
 //  BCS - Binary Canonical Serialization
 // =========================================================================
 
@@ -373,7 +385,7 @@ export interface ApiPerpetualsMarketOrderBody {
 	coinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
-	side: boolean;
+	side: PerpetualsOrderSide;
 	size: bigint;
 }
 
@@ -382,10 +394,10 @@ export interface ApiPerpetualsLimitOrderBody {
 	coinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
-	side: boolean;
+	side: PerpetualsOrderSide;
 	size: bigint;
 	price: bigint;
-	orderType: bigint;
+	orderType: PerpetualsOrderType;
 }
 
 export interface ApiPerpetualsCancelOrderBody {
@@ -393,6 +405,19 @@ export interface ApiPerpetualsCancelOrderBody {
 	coinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
-	side: boolean;
+	side: PerpetualsOrderSide;
 	orderId: PerpetualsOrderId;
+}
+
+export interface ApiPerpetualsSLTPOrderBody {
+	walletAddress: SuiAddress;
+	coinType: CoinType;
+	accountCapId: ObjectId;
+	marketId: PerpetualsMarketId;
+	side: PerpetualsOrderSide;
+	size: bigint;
+	price: bigint;
+	orderType: PerpetualsOrderType;
+	slPrice: bigint;
+	tpPrice: bigint;
 }

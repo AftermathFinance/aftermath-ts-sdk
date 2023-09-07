@@ -8,9 +8,12 @@ import {
 	PerpetualsAccountData,
 	PerpetualsMarketId,
 	ApiPerpetualsAccountsBody,
+	PerpetualsPosition,
+	PerpetualsOrderSide,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
+import { IFixedUtils } from "../../general/utils/iFixedUtils";
 
 export class Perpetuals extends Caller {
 	// =========================================================================
@@ -106,5 +109,22 @@ export class Perpetuals extends Caller {
 			"transactions/create-account",
 			inputs
 		);
+	}
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	public static positionSide(inputs: { position: PerpetualsPosition }) {
+		const { position } = inputs;
+
+		const baseAmount = IFixedUtils.numberFromIFixed(
+			position.baseAssetAmount
+		);
+		const isLong = Math.sign(baseAmount);
+
+		const side =
+			isLong > 0 ? PerpetualsOrderSide.Ask : PerpetualsOrderSide.Bid;
+		return side;
 	}
 }
