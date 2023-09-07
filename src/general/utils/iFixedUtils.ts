@@ -13,6 +13,11 @@ export class IFixedUtils {
 		return this.sign(value) * (integerPart + decimalPart);
 	};
 
+	// TODO
+	public static readonly iFixedFromNumber = (value: number): IFixed => {
+		throw new Error("TODO");
+	};
+
 	public static readonly abs = (value: IFixed): IFixed => {
 		if (value >= this.GREATEST_BIT)
 			return (

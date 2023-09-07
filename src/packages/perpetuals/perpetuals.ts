@@ -115,7 +115,9 @@ export class Perpetuals extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	public static positionSide(inputs: { position: PerpetualsPosition }) {
+	public static positionSide(inputs: {
+		position: PerpetualsPosition;
+	}): PerpetualsOrderSide {
 		const { position } = inputs;
 
 		const baseAmount = IFixedUtils.numberFromIFixed(
