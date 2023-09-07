@@ -10,10 +10,13 @@ import {
 	ApiPerpetualsAccountsBody,
 	PerpetualsPosition,
 	PerpetualsOrderSide,
+	PerpetualsOrderbook,
+	CoinType,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 
 export class Perpetuals extends Caller {
 	// =========================================================================
@@ -41,44 +44,50 @@ export class Perpetuals extends Caller {
 	//  Class Objects
 	// =========================================================================
 
-	public async getAllMarkets(): Promise<PerpetualsMarket[]> {
-		const marketDatas = await this.fetchApi<PerpetualsMarketData[]>(
-			"markets"
-		);
-		const marketStates = await Promise.all(
-			marketDatas.map((marketData) =>
-				this.fetchApi<PerpetualsMarketState>(
-					`markets/${marketData.marketId}/market-state`
-				)
-			)
-		);
-
-		return marketDatas.map(
-			(market, index) =>
-				new PerpetualsMarket(
-					market.marketId,
-					market.marketParams,
-					marketStates[index],
-					this.network
-				)
-		);
+	public async getAllMarketDatas(): Promise<PerpetualsMarketData[]> {
+		return this.fetchApi<PerpetualsMarketData[]>("markets");
 	}
 
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket> {
-		const [marketData, marketState] = await Promise.all([
-			this.fetchApi<PerpetualsMarketData>(`markets/${inputs.marketId}`),
+		const { marketId, collateralCoinType } = inputs;
+
+		const [marketData, marketState, orderbook] = await Promise.all([
+			this.fetchApi<PerpetualsMarketData>(
+				`markets/${marketId}/${collateralCoinType}`
+			),
 			this.fetchApi<PerpetualsMarketState>(
-				`markets/${inputs.marketId}/market-state`
+				`markets/${marketId}/${collateralCoinType}/market-state`
+			),
+			this.fetchApi<PerpetualsOrderbook>(
+				`markets/${marketId}/${collateralCoinType}/orderbook`
 			),
 		]);
 
 		return new PerpetualsMarket(
 			marketData.marketId,
+			collateralCoinType,
 			marketData.marketParams,
 			marketState,
+			orderbook,
 			this.network
+		);
+	}
+
+	public async getMarkets(inputs: {
+		marketIds: PerpetualsMarketId[];
+		collateralCoinType: CoinType;
+	}): Promise<PerpetualsMarket[]> {
+		const { collateralCoinType } = inputs;
+		return Promise.all(
+			inputs.marketIds.map((marketId) =>
+				this.getMarket({
+					marketId,
+					collateralCoinType,
+				})
+			)
 		);
 	}
 

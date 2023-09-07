@@ -1,6 +1,8 @@
 import { Caller } from "../../general/utils/caller";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
+	CoinType,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
@@ -23,19 +25,13 @@ export class PerpetualsMarket extends Caller {
 
 	constructor(
 		public readonly marketId: PerpetualsMarketId,
+		public readonly collateralCoinType: CoinType,
 		public readonly marketParams: PerpetualsMarketParams,
 		public readonly marketState: PerpetualsMarketState,
+		public readonly orderbook: PerpetualsOrderbook,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, `perpetuals/markets/${marketId}`);
-	}
-
-	// =========================================================================
-	//  Objects
-	// =========================================================================
-
-	public async getOrderbook(): Promise<PerpetualsOrderbook> {
-		return this.fetchApi<PerpetualsOrderbook>("orderbook");
+		super(network, `perpetuals/markets/${marketId}/${collateralCoinType}`);
 	}
 
 	// =========================================================================
@@ -70,5 +66,22 @@ export class PerpetualsMarket extends Caller {
 			Number(this.marketParams.fundingFrequencyMs) /
 			Number(this.marketParams.fundingPeriodMs);
 		return relativePremium * periodAdjustment;
+	};
+
+	public fromOraclePriceToOrderbookPrice = (inputs: {
+		oraclePrice: number;
+		// lot_size: bigint, // 10^9
+		// tick_size: bigint // 10^9
+	}): bigint => {
+		const { oraclePrice } = inputs;
+
+		const oraclePriceFixed = FixedUtils.directUncast(oraclePrice);
+		// convert f18 to b9 (assuming the former is positive)
+		const oraclePrice9 = oraclePriceFixed / FixedUtils.fixedOneB9;
+		return (
+			oraclePrice9 /
+			this.orderbook.tickSize /
+			(FixedUtils.fixedOneB9 / this.orderbook.lotSize)
+		);
 	};
 }

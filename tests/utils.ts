@@ -82,10 +82,15 @@ export async function getPerpetualsMarket(
 	let marketState = await aftermathApi
 		.Perpetuals()
 		.fetchMarketState({ coinType, marketId });
+	let orderbook = await aftermathApi
+		.Perpetuals()
+		.fetchOrderbook({ coinType, marketId });
 	return new PerpetualsMarket(
 		marketId,
+		coinType,
 		marketParams,
 		marketState,
+		orderbook,
 		aftermathApi.provider.connection.fullnode
 	);
 }
@@ -138,7 +143,7 @@ export async function createAndFetchAccountCap(
 	aftermathApi: AftermathApi,
 	coinType: string
 ): Promise<ObjectId> {
-	let tx = await aftermathApi.Perpetuals().fetchCreateAccountTx({
+	let tx = await aftermathApi.Perpetuals().buildCreateAccountTx({
 		walletAddress: await signer.getAddress(),
 		coinType,
 	});

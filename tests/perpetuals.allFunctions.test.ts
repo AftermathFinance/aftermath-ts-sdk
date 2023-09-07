@@ -43,6 +43,7 @@ import {
 } from "../src/packages";
 import { IFixedUtils } from "../src/general/utils/iFixedUtils";
 import { PerpetualsOrderUtils } from "../src/packages/perpetuals/utils";
+import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
 
 describe("Perpetuals Tests", () => {
 	test("All entry functions", async () => {
@@ -292,7 +293,7 @@ describe("Perpetuals Tests", () => {
 
 		// All users deposit 10000 USDC
 		console.log("Deposit USDC for User1");
-		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
+		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user1.getAddress(),
 			coinType: usdcType,
 			accountCapId: user1AccountCap,
@@ -304,7 +305,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Deposit USDC for User2");
-		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
+		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user2.getAddress(),
 			coinType: usdcType,
 			accountCapId: user2AccountCap,
@@ -316,7 +317,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Deposit USDC for User3");
-		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
+		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user3.getAddress(),
 			coinType: usdcType,
 			accountCapId: user3AccountCap,
@@ -328,7 +329,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Deposit USDC for User4");
-		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
+		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user4.getAddress(),
 			coinType: usdcType,
 			accountCapId: user4AccountCap,
@@ -353,10 +354,10 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
-			side: ASK,
+			side: PerpetualsOrderSide.Ask,
 			size: BigInt(1),
 			price: initialOrderbookPrice,
-			orderType: BigInt(0),
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -369,7 +370,7 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
-			side: ASK,
+			side: PerpetualsOrderSide.Ask,
 			orderId: PerpetualsOrderUtils.orderId(
 				initialOrderbookPrice,
 				BigInt(1),
@@ -388,10 +389,10 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
-			side: BID,
+			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
 			price: initialOrderbookPrice,
-			orderType: BigInt(0),
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -404,7 +405,7 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user2AccountCap,
 			marketId: MARKET_ID0,
-			side: ASK,
+			side: PerpetualsOrderSide.Ask,
 			size: orderSize,
 		});
 		await user2.signAndExecuteTransactionBlock({
@@ -418,10 +419,10 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user3AccountCap,
 			marketId: MARKET_ID0,
-			side: BID,
+			side: PerpetualsOrderSide.Bid,
 			size: BigInt(1),
 			price: finalOrderbookPrice - BigInt(1),
-			orderType: BigInt(0),
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user3.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -432,10 +433,10 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user3AccountCap,
 			marketId: MARKET_ID0,
-			side: ASK,
+			side: PerpetualsOrderSide.Ask,
 			size: BigInt(1),
 			price: finalOrderbookPrice + BigInt(1),
-			orderType: BigInt(0),
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user3.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -483,7 +484,7 @@ describe("Perpetuals Tests", () => {
 				coinType: usdcType,
 				accountCapId: user3AccountCap,
 				marketId: MARKET_ID0,
-				side: ASK,
+				side: PerpetualsOrderSide.Ask,
 				orderId,
 			});
 			await user3.signAndExecuteTransactionBlock({
@@ -497,7 +498,7 @@ describe("Perpetuals Tests", () => {
 				coinType: usdcType,
 				accountCapId: user3AccountCap,
 				marketId: MARKET_ID0,
-				side: BID,
+				side: PerpetualsOrderSide.Bid,
 				orderId,
 			});
 			await user3.signAndExecuteTransactionBlock({
@@ -516,10 +517,10 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user4AccountCap,
 			marketId: MARKET_ID0,
-			side: BID,
+			side: PerpetualsOrderSide.Bid,
 			size: BigInt(4255),
 			price: finalOrderbookPrice,
-			orderType: BigInt(0),
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user4.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -532,7 +533,7 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
-			side: ASK,
+			side: PerpetualsOrderSide.Ask,
 			size: BigInt(4255),
 		});
 		await user1.signAndExecuteTransactionBlock({
@@ -546,10 +547,10 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user2AccountCap,
 			marketId: MARKET_ID0,
-			side: BID,
+			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
 			price: finalOrderbookPrice,
-			orderType: BigInt(0),
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user2.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -562,7 +563,7 @@ describe("Perpetuals Tests", () => {
 			coinType: usdcType,
 			accountCapId: user4AccountCap,
 			marketId: MARKET_ID0,
-			side: ASK,
+			side: PerpetualsOrderSide.Ask,
 			size: orderSize,
 		});
 		await user4.signAndExecuteTransactionBlock({
@@ -576,9 +577,18 @@ describe("Perpetuals Tests", () => {
 		let mktState = await aftermathApi
 			.Perpetuals()
 			.fetchMarketState({ coinType: usdcType, marketId: MARKET_ID0 });
+		let orderbook = await aftermathApi
+			.Perpetuals()
+			.fetchOrderbook({ coinType: usdcType, marketId: MARKET_ID0 });
 		console.log(`Curr state:`, mktState);
 		console.log(`Curr params:`, mktParams);
-		const market = new PerpetualsMarket(BigInt(0), mktParams, mktState);
+		const market = new PerpetualsMarket(
+			BigInt(0),
+			usdcType,
+			mktParams,
+			mktState,
+			orderbook
+		);
 
 		const sleepTime = market.timeUntilNextFundingMs() + 2000;
 		console.log(`Sleep ${sleepTime}ms until next funding`);
@@ -619,7 +629,7 @@ describe("Perpetuals Tests", () => {
 		// User4 withdraw collateral 2000 USDC
 
 		console.log("Withdraw collateral for User1");
-		tx = await aftermathApi.Perpetuals().fetchWithdrawCollateralTx({
+		tx = await aftermathApi.Perpetuals().buildWithdrawCollateralTx({
 			walletAddress: await user1.getAddress(),
 			coinType: usdcType,
 			accountCapId: user1AccountCap,
@@ -631,7 +641,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Withdraw collateral for User2");
-		tx = await aftermathApi.Perpetuals().fetchWithdrawCollateralTx({
+		tx = await aftermathApi.Perpetuals().buildWithdrawCollateralTx({
 			walletAddress: await user2.getAddress(),
 			coinType: usdcType,
 			accountCapId: user2AccountCap,
@@ -643,7 +653,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Withdraw collateral for User3");
-		tx = await aftermathApi.Perpetuals().fetchWithdrawCollateralTx({
+		tx = await aftermathApi.Perpetuals().buildWithdrawCollateralTx({
 			walletAddress: await user3.getAddress(),
 			coinType: usdcType,
 			accountCapId: user3AccountCap,
@@ -655,7 +665,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Withdraw collateral for User4");
-		tx = await aftermathApi.Perpetuals().fetchWithdrawCollateralTx({
+		tx = await aftermathApi.Perpetuals().buildWithdrawCollateralTx({
 			walletAddress: await user4.getAddress(),
 			coinType: usdcType,
 			accountCapId: user4AccountCap,

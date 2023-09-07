@@ -26,7 +26,10 @@ export enum PerpetualsOrderSide {
 	Bid = 0, // false
 }
 export enum PerpetualsOrderType {
+	Standard = 0,
+	FillOrKill = 1,
 	PostOnly = 2,
+	ImmediateOrCancel = 3,
 }
 
 // =========================================================================
