@@ -401,21 +401,27 @@ export class PerpetualsAccount extends Caller {
 		const baseAssetAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
 		);
+		const quoteAssetAmount = IFixedUtils.numberFromIFixed(
+			position.quoteAssetNotionalAmount
+		);
+
+		const entryPrice = quoteAssetAmount / baseAssetAmount;
+
 		const MMR = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioMaintenance
 		);
 		const accountValue = collateral * inputs.collateralPrice + totalPnL;
 		if (baseAssetAmount > 0) {
 			return (
-				inputs.indexPrice -
+				entryPrice -
 				(accountValue - minMaintenanceMargin) /
-					((1 - MMR) * (netAbsBaseValue / inputs.indexPrice))
+					((1 - MMR) * (netAbsBaseValue / entryPrice))
 			);
 		} else {
 			return (
-				inputs.indexPrice +
+				entryPrice +
 				(accountValue - minMaintenanceMargin) /
-					((1 - MMR) * (netAbsBaseValue / inputs.indexPrice))
+					((1 - MMR) * (netAbsBaseValue / entryPrice))
 			);
 		}
 	};

@@ -35,6 +35,7 @@ import {
 	getPerpetualsAccount,
 	printAccountMetrics,
 	getPerpetualsMarket,
+	MARKET_ID1,
 } from "./utils";
 
 import { getConfigs } from "./testConfig";
@@ -46,6 +47,7 @@ import {
 } from "../src/packages";
 import { IFixedUtils } from "../src/general/utils/iFixedUtils";
 import { PerpetualsOrderUtils } from "../src/packages/perpetuals/utils";
+import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
 
 // =========================================================================
 // TEST CASE FLOW
@@ -92,19 +94,31 @@ describe("Perpetuals Tests", () => {
 		const perpetuals = new Perpetuals(connection.fullnode);
 
 		const usdcType = faucetConfig.packages.faucet + "::usdc::USDC";
-		const initialOraclePrice = BigInt(10000) * ONE_F18;
-		const initialOrderbookPrice = fromOraclePriceToOrderbookPrice(
-			initialOraclePrice,
+		const initialOraclePrice0 = BigInt(10000) * ONE_F18;
+		const initialOrderbookPrice0 = fromOraclePriceToOrderbookPrice(
+			initialOraclePrice0,
 			LOT_SIZE,
 			TICK_SIZE
 		);
-		const finalOraclePrice = BigInt(9600) * ONE_F18;
-		const finalOrderbookPrice = fromOraclePriceToOrderbookPrice(
-			finalOraclePrice,
+		const finalOraclePrice0 = BigInt(9600) * ONE_F18;
+		const finalOrderbookPrice0 = fromOraclePriceToOrderbookPrice(
+			finalOraclePrice0,
 			LOT_SIZE,
 			TICK_SIZE
 		);
 
+		const initialOraclePrice1 = BigInt(2000) * ONE_F18;
+		const initialOrderbookPrice1 = fromOraclePriceToOrderbookPrice(
+			initialOraclePrice1,
+			LOT_SIZE,
+			TICK_SIZE
+		);
+		const finalOraclePrice1 = BigInt(1700) * ONE_F18;
+		const finalOrderbookPrice1 = fromOraclePriceToOrderbookPrice(
+			finalOraclePrice1,
+			LOT_SIZE,
+			TICK_SIZE
+		);
 		let onchainTime = getObjectFields(
 			await aftermathApi
 				.Objects()
@@ -138,7 +152,31 @@ describe("Perpetuals Tests", () => {
 		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
 			walletAddress: await admin.getAddress(),
 			coinSymbol: "BTC",
-			price: initialOraclePrice,
+			price: initialOraclePrice0,
+			timestamp: 0,
+		});
+		await admin.signAndExecuteTransactionBlock({
+			transactionBlock: tx,
+			requestType,
+		});
+
+		// Create price feed for "ETH" perpetual (ETH/USD oracle price feed)
+		console.log("Create ETH price feed");
+		tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
+			walletAddress: await admin.getAddress(),
+			coinSymbol: "ETH",
+		});
+		await admin.signAndExecuteTransactionBlock({
+			transactionBlock: tx,
+			requestType,
+		});
+
+		// Update price for "ETH" to 2000$ in fixed representation
+		console.log("Update ETH price feed");
+		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
+			walletAddress: await admin.getAddress(),
+			coinSymbol: "ETH",
+			price: initialOraclePrice1,
 			timestamp: 0,
 		});
 		await admin.signAndExecuteTransactionBlock({
@@ -147,7 +185,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		//Create perpetuals market for BTC/USD with USDC as collateral
-		console.log("Create market");
+		console.log("Create market 0");
 		tx = await aftermathApi.Perpetuals().buildCreateMarketTx({
 			walletAddress: await admin.getAddress(),
 			coinType: usdcType,
@@ -181,12 +219,54 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
-		let market = await getPerpetualsMarket(
+		let market0 = await getPerpetualsMarket(
 			aftermathApi,
 			MARKET_ID0,
 			usdcType
 		);
-		console.log(market);
+		console.log(market0);
+
+		//Create perpetuals market for ETH/USD with USDC as collateral
+		console.log("Create market 1");
+		tx = await aftermathApi.Perpetuals().buildCreateMarketTx({
+			walletAddress: await admin.getAddress(),
+			coinType: usdcType,
+			marketId: MARKET_ID1,
+			marginRatioInitial: BigInt(100000000000000000),
+			marginRatioMaintenance: BigInt(50000000000000000),
+			baseAssetSymbol: "ETH",
+			fundingFrequencyMs: BigInt(60000), // 1 min
+			fundingPeriodMs: BigInt(86400000),
+			premiumTwapFrequencyMs: BigInt(5000),
+			premiumTwapPeriodMs: BigInt(60000),
+			spreadTwapFrequencyMs: BigInt(5000),
+			spreadTwapPeriodMs: BigInt(60000),
+			makerFee: BigInt(0),
+			takerFee: BigInt(0),
+			liquidationFee: BigInt(0),
+			forceCancelFee: BigInt(0),
+			insuranceFundFee: BigInt(0),
+			insuranceFundId: BigInt(0),
+			lotSize: LOT_SIZE,
+			tickSize: TICK_SIZE,
+			branchMin: BRANCH_MIN,
+			branchMax: BRANCH_MAX,
+			leafMin: LEAF_MIN,
+			leafMax: LEAF_MAX,
+			branchesMergeMax: BRANCHES_MERGE_MAX,
+			leavesMergeMax: LEAVES_MERGE_MAX,
+		});
+		await admin.signAndExecuteTransactionBlock({
+			transactionBlock: tx,
+			requestType,
+		});
+
+		let market1 = await getPerpetualsMarket(
+			aftermathApi,
+			MARKET_ID1,
+			usdcType
+		);
+		console.log(market1);
 
 		// All users gets 10000 USDC
 		console.log("Mint USDC for User1");
@@ -229,7 +309,7 @@ describe("Perpetuals Tests", () => {
 
 		// All users deposit 10000 USDC
 		console.log("Deposit USDC for User1");
-		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
+		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user1.getAddress(),
 			coinType: usdcType,
 			accountCapId: user1AccountCap,
@@ -241,7 +321,7 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Deposit USDC for User2");
-		tx = await aftermathApi.Perpetuals().fetchDepositCollateralTx({
+		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user2.getAddress(),
 			coinType: usdcType,
 			accountCapId: user2AccountCap,
@@ -268,30 +348,30 @@ describe("Perpetuals Tests", () => {
 			usdcType
 		);
 
-		console.log("Place limit order");
-		let orderSize = BigInt(10000);
+		console.log("Place limit order market0");
+		let orderSize = BigInt(5000);
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user1.getAddress(),
 			coinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
-			side: BID,
+			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
-			price: initialOrderbookPrice,
-			orderType: BigInt(0),
+			price: initialOrderbookPrice0,
+			orderType: PerpetualsOrderType.standardOrder,
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
 			requestType,
 		});
 
-		console.log("Place market order");
+		console.log("Place market order market0");
 		tx = await aftermathApi.Perpetuals().buildPlaceMarketOrderTx({
 			walletAddress: await user2.getAddress(),
 			coinType: usdcType,
 			accountCapId: user2AccountCap,
 			marketId: MARKET_ID0,
-			side: ASK,
+			side: PerpetualsOrderSide.Ask,
 			size: orderSize,
 		});
 		await user2.signAndExecuteTransactionBlock({
@@ -299,15 +379,32 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
-		// Update price for "BTC" to finalOraclePrice in fixed representation
-		console.log("Update BTC price feed");
-		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "BTC",
-			price: finalOraclePrice,
-			timestamp: 0,
+		console.log("Place limit order market1");
+		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
+			walletAddress: await user1.getAddress(),
+			coinType: usdcType,
+			accountCapId: user1AccountCap,
+			marketId: MARKET_ID1,
+			side: PerpetualsOrderSide.Ask,
+			size: orderSize,
+			price: initialOrderbookPrice1,
+			orderType: PerpetualsOrderType.standardOrder,
 		});
-		await admin.signAndExecuteTransactionBlock({
+		await user1.signAndExecuteTransactionBlock({
+			transactionBlock: tx,
+			requestType,
+		});
+
+		console.log("Place market order market1");
+		tx = await aftermathApi.Perpetuals().buildPlaceMarketOrderTx({
+			walletAddress: await user2.getAddress(),
+			coinType: usdcType,
+			accountCapId: user2AccountCap,
+			marketId: MARKET_ID1,
+			side: PerpetualsOrderSide.Bid,
+			size: orderSize,
+		});
+		await user2.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
 			requestType,
 		});
@@ -321,8 +418,11 @@ describe("Perpetuals Tests", () => {
 
 		printAccountMetrics(
 			accountUser1,
-			[market],
-			[IFixedUtils.numberFromIFixed(initialOraclePrice)],
+			[market0, market1],
+			[
+				IFixedUtils.numberFromIFixed(initialOraclePrice0),
+				IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			],
 			IFixedUtils.numberFromIFixed(ONE_F18)
 		);
 
@@ -335,56 +435,121 @@ describe("Perpetuals Tests", () => {
 
 		printAccountMetrics(
 			accountUser2,
-			[market],
-			[IFixedUtils.numberFromIFixed(initialOraclePrice)],
+			[market0, market1],
+			[
+				IFixedUtils.numberFromIFixed(initialOraclePrice0),
+				IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			],
 			IFixedUtils.numberFromIFixed(ONE_F18)
 		);
 
 		let liqPriceUser1 = accountUser1.calcLiquidationPriceForPosition({
-			market: market,
-			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice),
-			markets: [market],
-			indexPrices: [IFixedUtils.numberFromIFixed(initialOraclePrice)],
+			market: market0,
+			indexPrice: IFixedUtils.numberFromIFixed(finalOraclePrice0),
+			markets: [market0, market1],
+			indexPrices: [
+				IFixedUtils.numberFromIFixed(initialOraclePrice0),
+				IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			],
 			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
 		});
 
-		console.log(liqPriceUser1);
+		console.log("Liquidation price BTC user1 : ", liqPriceUser1);
 
 		let liqPriceUser2 = accountUser2.calcLiquidationPriceForPosition({
-			market: market,
-			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice),
-			markets: [market],
-			indexPrices: [IFixedUtils.numberFromIFixed(initialOraclePrice)],
+			market: market0,
+			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice0),
+			markets: [market0, market1],
+			indexPrices: [
+				IFixedUtils.numberFromIFixed(initialOraclePrice0),
+				IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			],
 			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
 		});
-		console.log(liqPriceUser2);
+		console.log("Liquidation price BTC user2 : ", liqPriceUser2);
 
-		console.log("Place order to take profits");
+		// Update price for "BTC" to finalOraclePrice0 in fixed representation
+		console.log("Update BTC price feed");
+		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
+			walletAddress: await admin.getAddress(),
+			coinSymbol: "BTC",
+			price: finalOraclePrice0,
+			timestamp: 0,
+		});
+		await admin.signAndExecuteTransactionBlock({
+			transactionBlock: tx,
+			requestType,
+		});
+
+		// Update price for "ETH" to finalOraclePrice1 in fixed representation
+		console.log("Update ETH price feed");
+		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
+			walletAddress: await admin.getAddress(),
+			coinSymbol: "ETH",
+			price: finalOraclePrice1,
+			timestamp: 0,
+		});
+		await admin.signAndExecuteTransactionBlock({
+			transactionBlock: tx,
+			requestType,
+		});
+
+		console.log("Place order to close BTC position");
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user2.getAddress(),
 			coinType: usdcType,
 			accountCapId: accountUser2.accountCap.objectId,
 			marketId: MARKET_ID0,
-			side: BID,
+			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
-			price: finalOrderbookPrice,
-			orderType: BigInt(0),
+			price: finalOrderbookPrice0,
+			orderType: PerpetualsOrderType.standardOrder,
 		});
 		await user2.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
 			requestType,
 		});
 
-		console.log("Place market order to close position");
+		console.log("Place market order to close BTC position");
 		tx = await aftermathApi.Perpetuals().buildPlaceMarketOrderTx({
 			walletAddress: await user1.getAddress(),
 			coinType: usdcType,
 			accountCapId: accountUser1.accountCap.objectId,
 			marketId: MARKET_ID0,
-			side: ASK,
+			side: PerpetualsOrderSide.Ask,
 			size: orderSize,
 		});
 		await user1.signAndExecuteTransactionBlock({
+			transactionBlock: tx,
+			requestType,
+		});
+
+		console.log("Place order to close ETH position");
+		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
+			walletAddress: await user1.getAddress(),
+			coinType: usdcType,
+			accountCapId: accountUser1.accountCap.objectId,
+			marketId: MARKET_ID1,
+			side: PerpetualsOrderSide.Bid,
+			size: orderSize,
+			price: finalOrderbookPrice1,
+			orderType: PerpetualsOrderType.standardOrder,
+		});
+		await user1.signAndExecuteTransactionBlock({
+			transactionBlock: tx,
+			requestType,
+		});
+
+		console.log("Place market order to close ETH position");
+		tx = await aftermathApi.Perpetuals().buildPlaceMarketOrderTx({
+			walletAddress: await user2.getAddress(),
+			coinType: usdcType,
+			accountCapId: accountUser2.accountCap.objectId,
+			marketId: MARKET_ID1,
+			side: PerpetualsOrderSide.Ask,
+			size: orderSize,
+		});
+		await user2.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
 			requestType,
 		});
@@ -399,8 +564,11 @@ describe("Perpetuals Tests", () => {
 
 		printAccountMetrics(
 			accountUser1,
-			[market],
-			[IFixedUtils.numberFromIFixed(finalOraclePrice)],
+			[market0, market1],
+			[
+				IFixedUtils.numberFromIFixed(finalOraclePrice0),
+				IFixedUtils.numberFromIFixed(finalOraclePrice1),
+			],
 			IFixedUtils.numberFromIFixed(ONE_F18)
 		);
 
@@ -414,8 +582,11 @@ describe("Perpetuals Tests", () => {
 
 		printAccountMetrics(
 			accountUser2,
-			[market],
-			[IFixedUtils.numberFromIFixed(finalOraclePrice)],
+			[market0, market1],
+			[
+				IFixedUtils.numberFromIFixed(finalOraclePrice0),
+				IFixedUtils.numberFromIFixed(finalOraclePrice1),
+			],
 			IFixedUtils.numberFromIFixed(ONE_F18)
 		);
 	}, 5000000);

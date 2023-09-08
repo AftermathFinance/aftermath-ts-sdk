@@ -1,4 +1,4 @@
-import { PerpetualsOrderId } from "../../../types";
+import { PerpetualsOrderId, PerpetualsOrderSide } from "../../../types";
 
 export class PerpetualsOrderUtils {
 	// Positions to bitshift for operating on first 64 bits
@@ -10,9 +10,9 @@ export class PerpetualsOrderUtils {
 	public static readonly orderId = (
 		price: bigint,
 		counter: bigint,
-		side: boolean
+		side: PerpetualsOrderSide
 	): PerpetualsOrderId => {
-		if (side === this.ASK) return this.orderIdAsk(price, counter);
+		if (Boolean(side)) return this.orderIdAsk(price, counter);
 		else return this.orderIdBid(price, counter);
 	};
 

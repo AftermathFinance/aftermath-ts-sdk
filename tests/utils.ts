@@ -138,7 +138,7 @@ export async function createAndFetchAccountCap(
 	aftermathApi: AftermathApi,
 	coinType: string
 ): Promise<ObjectId> {
-	let tx = await aftermathApi.Perpetuals().fetchCreateAccountTx({
+	let tx = await aftermathApi.Perpetuals().buildCreateAccountTx({
 		walletAddress: await signer.getAddress(),
 		coinType,
 	});
