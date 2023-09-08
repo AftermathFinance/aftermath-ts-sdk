@@ -257,7 +257,7 @@ export class Helpers {
 	// =========================================================================
 
 	public static getObjectType(data: SuiObjectResponse): ObjectId {
-		const objectType = Helpers.getObjectType(data);
+		const objectType = data.data?.type;
 		if (objectType) return objectType;
 
 		throw new Error("no object type found on " + data.data?.objectId);
