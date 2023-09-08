@@ -1,6 +1,5 @@
-import { ObjectId } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
-import { NftAmmMarketObject, SuiNetwork, Url } from "../../types";
+import { NftAmmMarketObject, ObjectId, SuiNetwork, Url } from "../../types";
 import { NftAmmMarket } from "./nftAmmMarket";
 
 export class NftAmm extends Caller {

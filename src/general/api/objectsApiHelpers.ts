@@ -1,13 +1,10 @@
+import { AftermathApi } from "../providers/aftermathApi";
+import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
+import { Helpers } from "../utils";
 import {
-	ObjectId,
-	SuiAddress,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
-	getObjectOwner,
-} from "@mysten/sui.js";
-import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, PackageId } from "../../types";
-import { Helpers } from "../utils";
+} from "@mysten/sui.js/dist/cjs/client";
 
 export class ObjectsApiHelpers {
 	// =========================================================================

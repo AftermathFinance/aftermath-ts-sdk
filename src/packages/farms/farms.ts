@@ -1,4 +1,4 @@
-import { EventsInputs, SuiNetwork, Url } from "../../types";
+import { EventsInputs, SuiNetwork, Url, ObjectId } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiFarmsCreateStakingPoolBody,
@@ -17,7 +17,6 @@ import {
 	StakingPoolOneTimeAdminCapObject,
 	StakingPoolOwnerCapObject,
 } from "./farmsTypes";
-import { ObjectId } from "@mysten/sui.js";
 import { FarmsStakingPool } from "./farmsStakingPool";
 import { FarmsStakedPosition } from "./farmsStakedPosition";
 

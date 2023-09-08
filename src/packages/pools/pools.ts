@@ -1,4 +1,3 @@
-import { ObjectId } from "@mysten/sui.js";
 import {
 	ApiCreatePoolBody,
 	ApiEventsBody,
@@ -15,6 +14,7 @@ import {
 	Slippage,
 	SuiNetwork,
 	Url,
+	ObjectId,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";

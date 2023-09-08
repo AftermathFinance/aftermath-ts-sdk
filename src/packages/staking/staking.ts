@@ -1,4 +1,3 @@
-import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui.js";
 import {
 	ApiStakeBody,
 	ApiUnstakeBody,
@@ -16,6 +15,10 @@ import {
 	SuiDelegatedStake,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import {
+	SuiValidatorSummary,
+	ValidatorsApy,
+} from "@mysten/sui.js/dist/cjs/client";
 
 export class Staking extends Caller {
 	// =========================================================================

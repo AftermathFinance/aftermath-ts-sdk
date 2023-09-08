@@ -1,18 +1,14 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import {
-	ObjectId,
-	SuiObjectResponse,
-	TransactionBlock,
-	bcs,
-	getObjectFields,
-} from "@mysten/sui.js";
+import { bcs } from "@mysten/sui.js/bcs";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
 	Balance,
 	BigIntAsString,
 	PoolsAddresses,
 	ReferralVaultAddresses,
 	TurbosAddresses,
+	ObjectId,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import {
@@ -24,6 +20,7 @@ import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================
@@ -378,7 +375,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 		coinInAmount: Balance;
 	}): Promise<TurbosCalcTradeResult> => {
 		const tx = new TransactionBlock();
-		tx.setSender(Helpers.rpc.constants.devInspectSigner);
+		tx.setSender(Helpers.inspections.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
 			tx,

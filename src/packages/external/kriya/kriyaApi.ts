@@ -1,21 +1,14 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
-import {
-	ObjectId,
-	SuiObjectResponse,
-	TransactionArgument,
-	TransactionBlock,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
 	AnyObjectType,
 	Balance,
 	KriyaAddresses,
 	PoolsAddresses,
 	ReferralVaultAddresses,
+	ObjectId,
 } from "../../../types";
 import {
 	KriyaPoolCreatedEvent,

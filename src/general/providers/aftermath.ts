@@ -1,6 +1,5 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Pools } from "../../packages/pools/pools";
-import { CoinType, SuiNetwork, Url } from "../../types";
+import { CoinType, SuiAddress, SuiNetwork, Url } from "../../types";
 import { Wallet } from "../wallet/wallet";
 import { SuiFrens } from "../../packages/suiFrens/suiFrens";
 import { Coin } from "../../packages/coin/coin";

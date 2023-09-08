@@ -18,8 +18,9 @@ import {
 	RouterSynchronousOptions,
 	AllRouterOptions,
 	PartialRouterOptions,
+	SuiAddress,
 } from "../../../types";
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";

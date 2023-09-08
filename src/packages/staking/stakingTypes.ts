@@ -1,16 +1,13 @@
 import {
-	DelegatedStake,
-	ObjectId,
-	SuiAddress,
-	TransactionDigest,
-} from "@mysten/sui.js";
-import {
 	ApiEventsBody,
 	Balance,
 	Event,
 	Object,
 	Percentage,
 	Timestamp,
+	ObjectId,
+	SuiAddress,
+	TransactionDigest,
 } from "../../general/types/generalTypes";
 
 // =========================================================================

@@ -1,6 +1,12 @@
-import { SuiAddress, TransactionBlock, bcs } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Balance, CoinType, ReferralVaultAddresses } from "../../../types";
+import {
+	Balance,
+	CoinType,
+	ReferralVaultAddresses,
+	SuiAddress,
+} from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 
 export class ReferralVaultApi {

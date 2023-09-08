@@ -1,12 +1,9 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Faucet } from "../faucet";
 import {
-	EventId,
-	ObjectId,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import { FaucetApiCasting } from "./faucetApiCasting";
 import { CoinDecimal, CoinType } from "../../coin/coinTypes";
 import {
@@ -24,6 +21,8 @@ import {
 	EventsInputs,
 	FaucetAddresses,
 	SerializedTransaction,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { Coin } from "../../coin";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";

@@ -1,5 +1,11 @@
-import { SuiAddress, TransactionArgument } from "@mysten/sui.js";
-import { Balance, SuiNetwork, UniqueId, Url } from "../../../../../types";
+import { TransactionArgument } from "@mysten/sui.js/transactions";
+import {
+	SuiAddress,
+	Balance,
+	SuiNetwork,
+	UniqueId,
+	Url,
+} from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import {
 	RouterPoolInterface,

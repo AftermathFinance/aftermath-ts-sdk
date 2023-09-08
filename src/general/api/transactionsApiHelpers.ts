@@ -1,16 +1,15 @@
 import {
-	SuiAddress,
-	SuiTransactionBlockResponseQuery,
 	TransactionArgument,
 	TransactionBlock,
+} from "@mysten/sui.js/transactions";
+import {
+	SerializedTransaction,
+	SuiAddress,
 	TransactionDigest,
-	getExecutionStatusGasSummary,
-	getGasData,
-	getTotalGasUsedUpperBound,
-} from "@mysten/sui.js";
-import { SerializedTransaction, TransactionsWithCursor } from "../../types";
+	TransactionsWithCursor,
+} from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { RpcApiHelpers } from "./rpcApiHelpers";
+import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/dist/cjs/client";
 
 export class TransactionsApiHelpers {
 	// =========================================================================

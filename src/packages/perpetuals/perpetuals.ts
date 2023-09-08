@@ -1,8 +1,8 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
 	PerpetualsAccountStruct,
 	PerpetualsMarketParams,
+	SuiAddress,
 	SuiNetwork,
 	Url,
 } from "../../types";

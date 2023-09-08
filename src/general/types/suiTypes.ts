@@ -1,5 +1,4 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Balance } from "./generalTypes";
+import { Balance, ObjectId } from "./generalTypes";
 
 // =========================================================================
 //  Network

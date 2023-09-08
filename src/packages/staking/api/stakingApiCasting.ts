@@ -1,9 +1,4 @@
-import {
-	SuiObjectResponse,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
 	AfSuiMintedEvent,
 	UnstakeEvent,

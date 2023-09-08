@@ -1,9 +1,7 @@
 import {
-	ObjectId,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
@@ -23,6 +21,8 @@ import {
 	ReferralVaultAddresses,
 	RequiredRouterAddresses,
 	Slippage,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
 import { Router } from "../router";

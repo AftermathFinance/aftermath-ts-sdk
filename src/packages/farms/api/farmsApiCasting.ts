@@ -1,10 +1,4 @@
 import {
-	SuiObjectResponse,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
-import {
 	FarmsAddedRewardEventOnChain,
 	FarmsAfterburnerVaultFieldsOnChain,
 	FarmsCreatedVaultEventOnChain,
@@ -46,6 +40,7 @@ import {
 } from "../farmsTypes";
 import { Coin } from "../..";
 import { Helpers } from "../../../general/utils";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class FarmsApiCasting {
 	// =========================================================================

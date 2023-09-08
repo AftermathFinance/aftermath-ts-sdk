@@ -1,11 +1,4 @@
 import {
-	ObjectId,
-	SuiObjectResponse,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
-import {
 	PoolCoins,
 	PoolDepositEvent,
 	PoolObject,
@@ -24,8 +17,9 @@ import {
 } from "./poolsApiCastingTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
-import { AnyObjectType } from "../../../types";
+import { AnyObjectType, ObjectId } from "../../../types";
 import { IndexerEventOnChain } from "../../../general/types/castingTypes";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class PoolsApiCasting {
 	// =========================================================================

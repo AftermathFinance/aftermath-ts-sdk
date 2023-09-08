@@ -1,13 +1,8 @@
 import {
-	ObjectId,
-	SuiAddress,
-	SuiObjectInfo,
 	TransactionArgument,
 	TransactionBlock,
-	bcs,
-	getObjectFields,
-	getObjectType,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	MixSuiFrensEvent,
@@ -44,6 +39,8 @@ import {
 	DynamicFieldObjectsWithCursor,
 	DynamicFieldsInputs,
 	EventsInputs,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";

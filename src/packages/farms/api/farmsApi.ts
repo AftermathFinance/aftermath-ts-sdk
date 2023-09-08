@@ -30,15 +30,11 @@ import {
 	FarmsCreatedVaultEvent,
 	StakingPoolOneTimeAdminCapObject,
 	FarmOwnerOrOneTimeAdminCap,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
-import {
-	ObjectId,
-	SuiAddress,
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js";
 import { Sui } from "../../sui";
 import {
 	FarmsCreatedVaultEventOnChain,
@@ -50,6 +46,10 @@ import {
 	FarmsUnlockedEventOnChain,
 	FarmsWithdrewPrincipalEventOnChain,
 } from "./farmsApiCastingTypes";
+import {
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js/transactions";
 
 export class FarmsApi {
 	// =========================================================================

@@ -1,4 +1,4 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "../../types";
 import {
 	Balance,
 	Event,

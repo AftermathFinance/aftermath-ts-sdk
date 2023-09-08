@@ -3,7 +3,6 @@ import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { RpcApiHelpers } from "../api/rpcApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { Casting } from "./casting";
 
@@ -16,7 +15,6 @@ export class Helpers {
 	public static readonly events = EventsApiHelpers;
 	public static readonly inspections = InspectionsApiHelpers;
 	public static readonly objects = ObjectsApiHelpers;
-	public static readonly rpc = RpcApiHelpers;
 	public static readonly transactions = TransactionsApiHelpers;
 
 	// =========================================================================

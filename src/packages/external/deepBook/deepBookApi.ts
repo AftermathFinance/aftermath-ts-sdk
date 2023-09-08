@@ -7,12 +7,10 @@ import {
 	PartialDeepBookPoolObject,
 } from "./deepBookTypes";
 import {
-	ObjectId,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
-	bcs,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import { Sui } from "../../sui";
@@ -22,6 +20,8 @@ import {
 	BigIntAsString,
 	Byte,
 	DeepBookAddresses,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { Coin } from "../../coin";
 import { RouterPoolTradeTxInputs } from "../../router";

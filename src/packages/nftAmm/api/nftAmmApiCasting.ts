@@ -1,12 +1,4 @@
 import {
-	DisplayFieldsResponse,
-	SuiObjectResponse,
-	getObjectDisplay,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
-import {
 	NftDisplay,
 	NftInfo,
 	Nft,
@@ -18,6 +10,10 @@ import { Helpers } from "../../../general/utils";
 import { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
 import { Coin } from "../../coin";
 import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
+import {
+	DisplayFieldsResponse,
+	SuiObjectResponse,
+} from "@mysten/sui.js/dist/cjs/client";
 
 export class NftAmmApiCasting {
 	// =========================================================================

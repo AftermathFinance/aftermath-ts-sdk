@@ -1,23 +1,24 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import {
-	ObjectId,
-	SuiObjectResponse,
-	TransactionBlock,
-	bcs,
-	getObjectFields,
-} from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
 	CetusCalcTradeResult,
 	CetusPoolObject,
 	CetusPoolSimpleInfo,
 } from "./cetusTypes";
-import { AnyObjectType, Balance, CetusAddresses } from "../../../types";
+import {
+	AnyObjectType,
+	Balance,
+	CetusAddresses,
+	ObjectId,
+} from "../../../types";
 import { Helpers } from "../../../general/utils";
 import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
+import { bcs } from "@mysten/sui.js/bcs";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	// =========================================================================
@@ -196,7 +197,7 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 		coinInAmount: Balance;
 	}): Promise<CetusCalcTradeResult> => {
 		const tx = new TransactionBlock();
-		tx.setSender(Helpers.rpc.constants.devInspectSigner);
+		tx.setSender(Helpers.inspections.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
 			tx,
