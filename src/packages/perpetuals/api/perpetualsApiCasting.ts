@@ -202,14 +202,11 @@ export class PerpetualsCasting {
 	};
 
 	public static orderbookFromRaw = (data: any): PerpetualsOrderbook => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
 		return {
-			objectType,
-			objectId: data.id.id,
-			lotSize: BigInt(data.lot_size),
-			tickSize: BigInt(data.tick_size),
+			objectType: data.objectType,
+			objectId: data.id,
+			lotSize: BigInt(data.lotSize),
+			tickSize: BigInt(data.tickSize),
 			asks: this.orderedMapFromRaw<Order>(data.asks),
 			bids: this.orderedMapFromRaw<Order>(data.bids),
 			counter: BigInt(data.counter),

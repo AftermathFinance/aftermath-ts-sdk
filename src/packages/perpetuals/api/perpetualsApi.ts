@@ -294,12 +294,9 @@ export class PerpetualsApi {
 			options: { showBcs: true },
 		});
 		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
-		const mktStateField = bcs.de(
-			"Field<MarketKey, Orderbook>",
-			bcsData.bcsBytes,
-			"base64"
-		);
-		return PerpetualsCasting.orderbookFromRaw(mktStateField.value);
+		const orderbook = bcs.de("Orderbook", bcsData.bcsBytes, "base64");
+
+		return PerpetualsCasting.orderbookFromRaw(orderbook);
 	};
 
 	public fetchOrderedVecSet = async (inputs: {
