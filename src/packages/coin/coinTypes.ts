@@ -18,6 +18,11 @@ export interface CoinWithAmount {
 	amount: number;
 }
 
+export interface CoinWithAmountOrUndefined {
+	coin: CoinType;
+	amount: number | undefined;
+}
+
 // =========================================================================
 //  Amounts
 // =========================================================================
