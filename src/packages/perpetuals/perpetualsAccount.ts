@@ -5,6 +5,8 @@ import {
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
+	ApiPerpetualsPreviewOrderBody,
+	ApiPerpetualsPreviewOrderResponse,
 	ApiPerpetualsSLTPOrderBody,
 	ApiPerpetualsWithdrawCollateralBody,
 	Balance,
@@ -167,6 +169,27 @@ export class PerpetualsAccount extends Caller {
 			...inputs,
 			side,
 			size: position.baseAssetAmount,
+		});
+	}
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
+
+	public async getOrderPreview(
+		inputs: Omit<
+			ApiPerpetualsPreviewOrderBody,
+			"accountId" | "coinType" | "accountCapId"
+		>
+	) {
+		return this.fetchApi<
+			ApiPerpetualsPreviewOrderResponse,
+			ApiPerpetualsPreviewOrderBody
+		>("inspections/preview-order", {
+			...inputs,
+			accountId: this.accountCap.accountId,
+			coinType: this.accountCap.coinType,
+			accountCapId: this.accountCap.objectId,
 		});
 	}
 

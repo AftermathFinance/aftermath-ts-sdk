@@ -22,7 +22,7 @@ import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
 import { CoinType } from "../../coin/coinTypes";
 
-export class PerpetualsCasting {
+export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Account Manager
 	// =========================================================================

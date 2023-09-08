@@ -1,4 +1,8 @@
-import { TransactionBlock } from "@mysten/sui.js";
+import {
+	DevInspectResults,
+	SuiTransactionBlockResponse,
+	TransactionBlock,
+} from "@mysten/sui.js";
 import { AftermathApi } from "../providers/aftermathApi";
 import { RpcApiHelpers } from "./rpcApiHelpers";
 import { Byte } from "../../types";

@@ -13,7 +13,7 @@ import {
 	PerpetualsAddresses,
 	ExchangeAddresses,
 } from "../../../types";
-import { Helpers } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import {
 	PerpetualsAccountManager,
@@ -32,20 +32,28 @@ import {
 	PerpetualsOrderSide,
 	PerpetualsOrderType,
 	PerpetualsOrderbook,
+	ApiPerpetualsLimitOrderBody,
+	ApiPerpetualsMarketOrderBody,
+	ApiPerpetualsPreviewOrderBody,
+	ApiPerpetualsPreviewOrderResponse,
 } from "../perpetualsTypes";
-import { PerpetualsCasting } from "./perpetualsApiCasting";
+import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
 import { Perpetuals } from "../perpetuals";
+import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
+import { FixedUtils } from "../../../general/utils/fixedUtils";
 
 export class PerpetualsApi {
 	// =========================================================================
 	//  Class Members
 	// =========================================================================
+
 	private static readonly constants = {
 		moduleNames: {
 			interface: "interface",
 			accountManager: "account_manager",
 			marketManager: "market_manager",
+			orderbook: "orderbook",
 		},
 	};
 
@@ -76,7 +84,7 @@ export class PerpetualsApi {
 		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.accountManager,
 			objectFromSuiObjectResponse:
-				PerpetualsCasting.accountManagerFromSuiResponse,
+				PerpetualsApiCasting.accountManagerFromSuiResponse,
 			options: {
 				showBcs: true,
 				showType: true,
@@ -91,7 +99,7 @@ export class PerpetualsApi {
 		return await this.Provider.Objects().fetchCastObjectGeneral({
 			objectId: exchangeCfg.marketManager,
 			objectFromSuiObjectResponse:
-				PerpetualsCasting.marketManagerFromSuiResponse,
+				PerpetualsApiCasting.marketManagerFromSuiResponse,
 			options: {
 				showBcs: true,
 				showType: true,
@@ -112,7 +120,7 @@ export class PerpetualsApi {
 						objectType,
 						walletAddress,
 						objectFromSuiObjectResponse:
-							PerpetualsCasting.accountCapFromSuiResponse,
+							PerpetualsApiCasting.accountCapFromSuiResponse,
 						options: {
 							showBcs: true,
 							showType: true,
@@ -144,7 +152,7 @@ export class PerpetualsApi {
 		let accCaps: PerpetualsAccountCap[] = objectResponse.map((accCap) => {
 			const bcsData = accCap.data?.bcs as SuiRawMoveObject;
 			const accCapObj = bcs.de("AccountCap", bcsData.bcsBytes, "base64");
-			return PerpetualsCasting.accountCapWithTypeFromRaw(
+			return PerpetualsApiCasting.accountCapWithTypeFromRaw(
 				accCapObj,
 				coinType
 			);
@@ -179,7 +187,7 @@ export class PerpetualsApi {
 			"base64"
 		);
 
-		return PerpetualsCasting.accountFromRaw(accountField.value);
+		return PerpetualsApiCasting.accountFromRaw(accountField.value);
 	};
 
 	public fetchAllAccountDatas = async (inputs: {
@@ -245,7 +253,7 @@ export class PerpetualsApi {
 			bcsData.bcsBytes,
 			"base64"
 		);
-		return PerpetualsCasting.marketStateFromRaw(mktStateField.value);
+		return PerpetualsApiCasting.marketStateFromRaw(mktStateField.value);
 	};
 
 	public fetchMarketParams = async (inputs: {
@@ -272,7 +280,7 @@ export class PerpetualsApi {
 			bcsData.bcsBytes,
 			"base64"
 		);
-		return PerpetualsCasting.marketParamsFromRaw(mktParamsField.value);
+		return PerpetualsApiCasting.marketParamsFromRaw(mktParamsField.value);
 	};
 
 	public fetchOrderbook = async (inputs: {
@@ -296,7 +304,7 @@ export class PerpetualsApi {
 		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
 		const orderbook = bcs.de("Orderbook", bcsData.bcsBytes, "base64");
 
-		return PerpetualsCasting.orderbookFromRaw(orderbook);
+		return PerpetualsApiCasting.orderbookFromRaw(orderbook);
 	};
 
 	public fetchOrderedVecSet = async (inputs: {
@@ -328,6 +336,54 @@ export class PerpetualsApi {
 			return BigInt(value);
 		});
 		return res;
+	};
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
+
+	public fetchPreviewOrder = async (
+		inputs: ApiPerpetualsPreviewOrderBody
+	): Promise<ApiPerpetualsPreviewOrderResponse> => {
+		const tx = new TransactionBlock();
+
+		// place order
+		if ("slPrice" in inputs) {
+			this.placeSLTPOrderTx({ ...inputs, tx });
+		} else if ("price" in inputs) {
+			this.placeLimitOrderTx({ ...inputs, tx });
+		} else {
+			this.placeMarketOrderTx({ ...inputs, tx });
+		}
+
+		// get new account state
+		this.getAccountTx({ ...inputs, tx });
+
+		// get orderbook price
+		const orderbookId = this.getOrderbookTx({ ...inputs, tx });
+		this.bookPriceTx({ tx, orderbookId });
+
+		// deserialize data
+		const bytes =
+			await this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
+
+		// deserialize account
+		const account = PerpetualsApiCasting.accountFromRaw(
+			bcs.de("Account", new Uint8Array(bytes[0]))
+		);
+		// deserialize orderbook price
+		const unwrappedOrderbookPrice: bigint | undefined =
+			Casting.unwrapDeserializedOption(
+				bcs.de("Option<u256>", new Uint8Array(bytes[1]))
+			);
+		const orderbookPrice = FixedUtils.directCast(
+			unwrappedOrderbookPrice ?? BigInt(0)
+		);
+
+		return {
+			account,
+			orderbookPrice,
+		};
 	};
 
 	// =========================================================================
@@ -736,6 +792,113 @@ export class PerpetualsApi {
 		});
 	};
 
+	public placeSLTPOrderTx = (
+		inputs: ApiPerpetualsSLTPOrderBody & {
+			tx: TransactionBlock;
+		}
+	) => {
+		const { tx } = inputs;
+
+		const output = this.placeLimitOrderTx({ ...inputs, tx });
+
+		const orderType = PerpetualsOrderType.PostOnly;
+		const side =
+			inputs.side === PerpetualsOrderSide.Ask
+				? PerpetualsOrderSide.Bid
+				: PerpetualsOrderSide.Ask;
+
+		// TODO: we can improve these checks to trigger SL and TP
+
+		// If ASK and SL price is above target price, then place SL order too
+		if (
+			inputs.side === PerpetualsOrderSide.Ask &&
+			inputs.slPrice > inputs.price
+		) {
+			return this.placeLimitOrderTx({
+				...inputs,
+				tx,
+				orderType,
+				side,
+				price: inputs.slPrice,
+			});
+		}
+
+		// If BID and TP price is above target price, then place TP order too
+		if (
+			inputs.side === PerpetualsOrderSide.Bid &&
+			inputs.tpPrice > inputs.price
+		) {
+			return this.placeLimitOrderTx({
+				...inputs,
+				tx,
+				orderType,
+				side,
+				price: inputs.tpPrice,
+			});
+		}
+
+		return output;
+	};
+
+	public getAccountTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		accountId: PerpetualsAccountId;
+	}) => /* Account */ {
+		const { tx, coinType } = inputs;
+		const exchangeCfg = this.addresses.objects.exchanges.get(coinType)!;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.accountManager,
+				"get_account"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				tx.object(exchangeCfg.accountManager),
+				tx.pure(inputs.accountId, "u64"),
+			],
+		});
+	};
+
+	public getOrderbookTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		marketId: PerpetualsMarketId;
+	}) /* Orderbook */ => {
+		const { tx, coinType } = inputs;
+		const mktMngId = this.getExchangeConfig(inputs).marketManager;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.marketManager,
+				"get_orderbook"
+			),
+			typeArguments: [coinType],
+			arguments: [tx.object(mktMngId), tx.pure(inputs.marketId, "u64")],
+		});
+	};
+
+	public bookPriceTx = (inputs: {
+		tx: TransactionBlock;
+		orderbookId: ObjectId | TransactionArgument;
+	}) /* Option<u256> */ => {
+		const { tx, orderbookId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.orderbook,
+				"book_price"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof orderbookId === "string"
+					? tx.object(orderbookId)
+					: orderbookId,
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
@@ -832,52 +995,9 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildPlaceSLTPOrderTx = (
-		inputs: ApiPerpetualsSLTPOrderBody
-	): TransactionBlock => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		this.placeLimitOrderTx({ ...inputs, tx });
-
-		const orderType = PerpetualsOrderType.PostOnly;
-		const side =
-			inputs.side === PerpetualsOrderSide.Ask
-				? PerpetualsOrderSide.Bid
-				: PerpetualsOrderSide.Ask;
-
-		// TODO: we can improve these checks to trigger SL and TP
-
-		// If ASK and SL price is above target price, then place SL order too
-		if (
-			inputs.side === PerpetualsOrderSide.Ask &&
-			inputs.slPrice > inputs.price
-		) {
-			this.placeLimitOrderTx({
-				...inputs,
-				tx,
-				orderType,
-				side,
-				price: inputs.slPrice,
-			});
-		}
-
-		// If BID and TP price is above target price, then place TP order too
-		if (
-			inputs.side === PerpetualsOrderSide.Bid &&
-			inputs.tpPrice > inputs.price
-		) {
-			this.placeLimitOrderTx({
-				...inputs,
-				tx,
-				orderType,
-				side,
-				price: inputs.tpPrice,
-			});
-		}
-
-		return tx;
-	};
+	public buildPlaceSLTPOrderTx = Helpers.transactions.creatBuildTxFunc(
+		this.placeSLTPOrderTx
+	);
 
 	// =========================================================================
 	//  Helpers

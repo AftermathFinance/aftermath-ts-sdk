@@ -359,6 +359,23 @@ export interface ApiPerpetualsAccountsBody {
 }
 
 // =========================================================================
+//  Inspections
+// =========================================================================
+
+export type ApiPerpetualsPreviewOrderBody = (
+	| ApiPerpetualsLimitOrderBody
+	| ApiPerpetualsMarketOrderBody
+	| ApiPerpetualsSLTPOrderBody
+) & {
+	accountId: PerpetualsAccountId;
+};
+
+export interface ApiPerpetualsPreviewOrderResponse {
+	account: PerpetualsAccountObject;
+	orderbookPrice: number;
+}
+
+// =========================================================================
 //  Transactions
 // =========================================================================
 
