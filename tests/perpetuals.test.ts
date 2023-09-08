@@ -358,7 +358,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
 			price: initialOrderbookPrice0,
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -388,7 +388,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Ask,
 			size: orderSize,
 			price: initialOrderbookPrice1,
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -503,7 +503,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
 			price: finalOrderbookPrice0,
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user2.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -533,7 +533,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
 			price: finalOrderbookPrice1,
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,

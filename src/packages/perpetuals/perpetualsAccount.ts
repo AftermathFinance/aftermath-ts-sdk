@@ -116,8 +116,17 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getPlaceSLTPOrder(inputs: ApiPerpetualsSLTPOrderBody) {
-		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
+	public async getPlaceSLTPOrder(inputs: {
+		walletAddress: SuiAddress;
+		marketId: PerpetualsMarketId;
+		side: PerpetualsOrderSide;
+		size: bigint;
+		price: bigint;
+		orderType: PerpetualsOrderType;
+		slPrice: bigint;
+		tpPrice: bigint;
+	}) {
+		return this.fetchApiTransaction<ApiPerpetualsSLTPOrderBody>(
 			"transactions/sltp-order",
 			{
 				...inputs,
@@ -170,14 +179,10 @@ export class PerpetualsAccount extends Caller {
 		indexPrices: number[];
 		collateralPrice: number;
 	}): number => {
-		const totalFunding = this.calcUnrealizedFundingsForAccount({
-			...inputs,
-		});
+		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
 		const { totalPnL, totalMinInitialMargin } =
-			this.calcPnLAndMarginForAccount({
-				...inputs,
-			});
+			this.calcPnLAndMarginForAccount(inputs);
 
 		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
 
@@ -202,17 +207,13 @@ export class PerpetualsAccount extends Caller {
 		indexPrices: number[];
 		collateralPrice: number;
 	}): number => {
-		const totalFunding = this.calcUnrealizedFundingsForAccount({
-			...inputs,
-		});
+		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
 		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
 
 		collateral -= totalFunding;
 		const { totalPnL, totalNetAbsBaseValue } =
-			this.calcPnLAndMarginForAccount({
-				...inputs,
-			});
+			this.calcPnLAndMarginForAccount(inputs);
 
 		// If totalNetAbsBaseValue is 0 (no positions opened), MR would be +inf,
 		// which can be displayed as N/A.
@@ -240,12 +241,12 @@ export class PerpetualsAccount extends Caller {
 
 	public calcUnrealizedFundingsForPosition = (inputs: {
 		market: PerpetualsMarket;
+		position?: PerpetualsPosition;
 	}): number => {
 		const marketId = inputs.market.marketId;
 
-		const position = this.positionForMarketId({ marketId });
-
-		if (!position) return 0;
+		const position =
+			inputs.position ?? this.positionForMarketId({ marketId });
 
 		const baseAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
@@ -314,6 +315,7 @@ export class PerpetualsAccount extends Caller {
 	public calcPnLAndMarginForPosition = (inputs: {
 		market: PerpetualsMarket;
 		indexPrice: number;
+		position?: PerpetualsPosition;
 	}): {
 		pnl: number;
 		minInitialMargin: number;
@@ -321,15 +323,8 @@ export class PerpetualsAccount extends Caller {
 		netAbsBaseValue: number;
 	} => {
 		const marketId = inputs.market.marketId;
-		const position = this.positionForMarketId({ marketId });
-
-		if (!position)
-			return {
-				pnl: 0,
-				minInitialMargin: 0,
-				minMaintenanceMargin: 0,
-				netAbsBaseValue: 0,
-			};
+		const position =
+			inputs.position ?? this.positionForMarketId({ marketId });
 
 		const marginRatioInitial = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioInitial
@@ -365,37 +360,29 @@ export class PerpetualsAccount extends Caller {
 
 	public calcLiquidationPriceForPosition = (inputs: {
 		market: PerpetualsMarket;
+		position?: PerpetualsPosition;
 		indexPrice: number;
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
 	}): number => {
 		const marketId = inputs.market.marketId;
-		const position = this.positionForMarketId({ marketId });
+		const position =
+			inputs.position ?? this.positionForMarketId({ marketId });
 
-		if (!position) return 0;
-
-		const totalFunding = this.calcUnrealizedFundingsForAccount({
-			...inputs,
-		});
+		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
 		const collateral =
 			IFixedUtils.numberFromIFixed(this.account.collateral) -
 			totalFunding;
 
-		const {
-			totalPnL,
-			totalMinInitialMargin,
-			totalMinMaintenanceMargin,
-			totalNetAbsBaseValue,
-		} = this.calcPnLAndMarginForAccount({
-			...inputs,
-		});
+		const { totalPnL } = this.calcPnLAndMarginForAccount(inputs);
 
-		const { pnl, minInitialMargin, minMaintenanceMargin, netAbsBaseValue } =
+		const { minMaintenanceMargin, netAbsBaseValue } =
 			this.calcPnLAndMarginForPosition({
 				market: inputs.market,
 				indexPrice: inputs.indexPrice,
+				position,
 			});
 
 		const baseAssetAmount = IFixedUtils.numberFromIFixed(

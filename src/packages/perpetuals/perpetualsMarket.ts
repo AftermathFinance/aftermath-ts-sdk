@@ -1,9 +1,12 @@
 import { Caller } from "../../general/utils/caller";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
+	CoinType,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
+	PerpetualsOrderPrice,
 	PerpetualsOrderbook,
 	SuiNetwork,
 	Timestamp,
@@ -23,19 +26,13 @@ export class PerpetualsMarket extends Caller {
 
 	constructor(
 		public readonly marketId: PerpetualsMarketId,
+		public readonly collateralCoinType: CoinType,
 		public readonly marketParams: PerpetualsMarketParams,
 		public readonly marketState: PerpetualsMarketState,
+		public readonly orderbook: PerpetualsOrderbook,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, `perpetuals/markets/${marketId}`);
-	}
-
-	// =========================================================================
-	//  Objects
-	// =========================================================================
-
-	public async getOrderbook(): Promise<PerpetualsOrderbook> {
-		return this.fetchApi<PerpetualsOrderbook>("orderbook");
+		super(network, `perpetuals/markets/${marketId}/${collateralCoinType}`);
 	}
 
 	// =========================================================================
@@ -71,4 +68,35 @@ export class PerpetualsMarket extends Caller {
 			Number(this.marketParams.fundingPeriodMs);
 		return relativePremium * periodAdjustment;
 	};
+
+	public priceToOrderPrice = (inputs: {
+		price: number;
+	}): PerpetualsOrderPrice => {
+		const { price } = inputs;
+
+		const priceFixed = FixedUtils.directUncast(price);
+		// convert f18 to b9 (assuming the former is positive)
+		const price9 = priceFixed / FixedUtils.fixedOneB9;
+		return (
+			price9 /
+			this.orderbook.tickSize /
+			(FixedUtils.fixedOneB9 / this.orderbook.lotSize)
+		);
+	};
+
+	public lotSize = () => {
+		return PerpetualsMarket.lotOrTickSizeToNumber(this.orderbook.lotSize);
+	};
+
+	public tickSize = () => {
+		return PerpetualsMarket.lotOrTickSizeToNumber(this.orderbook.tickSize);
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private static lotOrTickSizeToNumber(lotOrTickSize: bigint): number {
+		return Number(lotOrTickSize) / FixedUtils.fixedOneN9;
+	}
 }

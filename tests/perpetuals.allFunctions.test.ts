@@ -355,7 +355,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Ask,
 			size: BigInt(1),
 			price: initialOrderbookPrice,
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -390,7 +390,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
 			price: initialOrderbookPrice,
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user1.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -420,7 +420,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Bid,
 			size: BigInt(1),
 			price: finalOrderbookPrice - BigInt(1),
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user3.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -434,7 +434,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Ask,
 			size: BigInt(1),
 			price: finalOrderbookPrice + BigInt(1),
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user3.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -518,7 +518,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Bid,
 			size: BigInt(4255),
 			price: finalOrderbookPrice,
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user4.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -548,7 +548,7 @@ describe("Perpetuals Tests", () => {
 			side: PerpetualsOrderSide.Bid,
 			size: orderSize,
 			price: finalOrderbookPrice,
-			orderType: PerpetualsOrderType.standardOrder,
+			orderType: PerpetualsOrderType.Standard,
 		});
 		await user2.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -575,9 +575,18 @@ describe("Perpetuals Tests", () => {
 		let mktState = await aftermathApi
 			.Perpetuals()
 			.fetchMarketState({ coinType: usdcType, marketId: MARKET_ID0 });
+		let orderbook = await aftermathApi
+			.Perpetuals()
+			.fetchOrderbook({ coinType: usdcType, marketId: MARKET_ID0 });
 		console.log(`Curr state:`, mktState);
 		console.log(`Curr params:`, mktParams);
-		const market = new PerpetualsMarket(BigInt(0), mktParams, mktState);
+		const market = new PerpetualsMarket(
+			BigInt(0),
+			usdcType,
+			mktParams,
+			mktState,
+			orderbook
+		);
 
 		const sleepTime = market.timeUntilNextFundingMs() + 2000;
 		console.log(`Sleep ${sleepTime}ms until next funding`);

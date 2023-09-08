@@ -31,6 +31,7 @@ import {
 	ApiPerpetualsSLTPOrderBody,
 	PerpetualsOrderSide,
 	PerpetualsOrderType,
+	PerpetualsOrderbook,
 } from "../perpetualsTypes";
 import { PerpetualsCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -272,6 +273,33 @@ export class PerpetualsApi {
 			"base64"
 		);
 		return PerpetualsCasting.marketParamsFromRaw(mktParamsField.value);
+	};
+
+	public fetchOrderbook = async (inputs: {
+		coinType: CoinType;
+		marketId: PerpetualsMarketId;
+	}): Promise<PerpetualsOrderbook> => {
+		const pkg = this.addresses.packages.perpetuals;
+		const mktMngId = this.getExchangeConfig(inputs).marketManager;
+		const resp =
+			await this.Provider.DynamicFields().fetchDynamicFieldObject({
+				parentId: mktMngId,
+				name: {
+					type: `${pkg}::keys::Market<${pkg}::keys::Orderbook>`,
+					value: { market_id: String(inputs.marketId) },
+				},
+			});
+		const objectResp = await this.Provider.provider.getObject({
+			id: resp.data?.objectId!,
+			options: { showBcs: true },
+		});
+		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
+		const mktStateField = bcs.de(
+			"Field<MarketKey, Orderbook>",
+			bcsData.bcsBytes,
+			"base64"
+		);
+		return PerpetualsCasting.orderbookFromRaw(mktStateField.value);
 	};
 
 	public fetchOrderedVecSet = async (inputs: {

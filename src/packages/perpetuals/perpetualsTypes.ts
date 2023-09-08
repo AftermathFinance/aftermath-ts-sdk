@@ -16,6 +16,7 @@ import { CoinType } from "../coin/coinTypes";
 export type PerpetualsMarketId = bigint;
 export type PerpetualsAccountId = bigint;
 export type PerpetualsOrderId = bigint;
+export type PerpetualsOrderPrice = bigint;
 
 // =========================================================================
 //  Enums
@@ -27,10 +28,10 @@ export enum PerpetualsOrderSide {
 }
 
 export enum PerpetualsOrderType {
-	standardOrder = 0,
-	fillOrKill = 1,
+	Standard = 0,
+	FillOrKill = 1,
 	PostOnly = 2,
-	immediateOrCancel = 3,
+	ImmediateOrCancel = 3,
 }
 
 // =========================================================================

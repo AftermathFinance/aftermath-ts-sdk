@@ -82,10 +82,15 @@ export async function getPerpetualsMarket(
 	let marketState = await aftermathApi
 		.Perpetuals()
 		.fetchMarketState({ coinType, marketId });
+	let orderbook = await aftermathApi
+		.Perpetuals()
+		.fetchOrderbook({ coinType, marketId });
 	return new PerpetualsMarket(
 		marketId,
+		coinType,
 		marketParams,
 		marketState,
+		orderbook,
 		aftermathApi.provider.connection.fullnode
 	);
 }
