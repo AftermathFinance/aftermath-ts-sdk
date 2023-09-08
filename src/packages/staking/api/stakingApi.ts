@@ -122,7 +122,7 @@ export class StakingApi {
 		const stakes = rawStakes.reduce((acc, stakeData) => {
 			const stakesToAdd: SuiDelegatedStake[] = stakeData.stakes.map(
 				(stake) => ({
-					...stake,
+					status: stake.status,
 					stakedSuiId: Helpers.addLeadingZeroesToType(
 						stake.stakedSuiId
 					),
@@ -130,9 +130,9 @@ export class StakingApi {
 					stakeActiveEpoch: BigInt(stake.stakeActiveEpoch),
 					principal: BigInt(stake.principal),
 					estimatedReward:
-						stake.estimatedReward !== undefined
+						"estimatedReward" in stake
 							? BigInt(stake.estimatedReward)
-							: stake.estimatedReward,
+							: undefined,
 					stakingPool: Helpers.addLeadingZeroesToType(
 						stakeData.stakingPool
 					),

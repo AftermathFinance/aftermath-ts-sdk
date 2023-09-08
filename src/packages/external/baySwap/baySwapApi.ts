@@ -196,20 +196,21 @@ export class BaySwapApi
 	private static baySwapPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): BaySwapPoolObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = getObjectFields(data) as BaySwapPoolFieldsOnChain;
+		const fields = Helpers.getObjectFields(
+			data
+		) as BaySwapPoolFieldsOnChain;
 
 		const curveType = coinTypes[2];
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			coinXReserveValue: BigInt(fields.coin_x_reserve),
 			coinYReserveValue: BigInt(fields.coin_y_reserve),
 			lpTokenSupplyValue: BigInt(fields.lp_token_supply.fields.value),

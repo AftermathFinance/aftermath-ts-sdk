@@ -211,19 +211,20 @@ export class SuiswapApi
 	private static suiswapPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): SuiswapPoolObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = getObjectFields(data) as SuiswapPoolFieldsOnChain;
+		const fields = Helpers.getObjectFields(
+			data
+		) as SuiswapPoolFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			version: BigInt(fields.version),
 			owner: fields.owner,
 			index: BigInt(fields.index),

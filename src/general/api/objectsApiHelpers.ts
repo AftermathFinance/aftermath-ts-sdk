@@ -43,8 +43,8 @@ export class ObjectsApiHelpers {
 		const { objectId, walletAddress } = inputs;
 
 		const object = await this.fetchObject({ objectId });
-		const objectOwner = getObjectOwner(object);
 
+		const objectOwner = object.data?.owner;
 		if (!objectOwner || typeof objectOwner !== "object") return false;
 
 		if (
@@ -103,7 +103,7 @@ export class ObjectsApiHelpers {
 		});
 		if (object.error !== undefined)
 			throw new Error(
-				`an error occured fetching object: ${object.error.error}`
+				`an error occured fetching object: ${object.error?.code}`
 			);
 		return object;
 	};

@@ -87,7 +87,7 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 			await this.Provider.Objects().fetchCastObjectBatch({
 				objectIds: poolsSimpleInfo.map((poolInfo) => poolInfo.id),
 				objectFromSuiObjectResponse: (data) => {
-					const fields = getObjectFields(data);
+					const fields = Helpers.getObjectFields(data);
 					if (!fields)
 						throw new Error("no fields found on cetus pool object");
 
@@ -414,11 +414,8 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	private static poolSimpleInfoFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): CetusPoolSimpleInfo => {
-		const content = data.data?.content;
-		if (content?.dataType !== "moveObject")
-			throw new Error("sui object response is not an object");
-
-		const fields = content.fields.value.fields.value.fields as {
+		const fields = Helpers.getObjectFields(data).value.fields.value
+			.fields as {
 			coin_type_a: TypeNameOnChain;
 			coin_type_b: TypeNameOnChain;
 			pool_id: ObjectId;

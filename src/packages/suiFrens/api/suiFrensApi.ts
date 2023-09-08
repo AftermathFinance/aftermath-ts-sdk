@@ -1197,8 +1197,10 @@ export class SuiFrensApi {
 	//  Helpers
 	// =========================================================================
 
-	public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
-		suiObjectInfo.type === this.objectTypes.suiFren;
+	// TODO: remove or update
+
+	// public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
+	// 	suiObjectInfo.type === this.objectTypes.suiFren;
 
 	// =========================================================================
 	//  Private Methods
@@ -1290,7 +1292,7 @@ export class SuiFrensApi {
 				walletAddress,
 				objectType: Sui.constants.objectTypes.kioskOwnerCap,
 				objectFromSuiObjectResponse: (data) => {
-					const fields = getObjectFields(data);
+					const fields = Helpers.getObjectFields(data);
 					return fields?.for as ObjectId;
 				},
 			});

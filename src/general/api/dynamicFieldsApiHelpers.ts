@@ -196,7 +196,7 @@ export class DynamicFieldsApiHelpers {
 
 	public fetchDynamicFieldObject = (inputs: {
 		parentId: ObjectId;
-		name: string | DynamicFieldName;
+		name: DynamicFieldName;
 	}) => {
 		return this.Provider.provider.getDynamicFieldObject(inputs);
 	};

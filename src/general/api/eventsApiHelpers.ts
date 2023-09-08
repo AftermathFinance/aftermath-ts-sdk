@@ -77,7 +77,7 @@ export class EventsApiHelpers {
 		});
 
 		const events = fetchedEvents.data as EventOnChainType[];
-		const nextCursor = fetchedEvents.nextCursor;
+		const nextCursor = fetchedEvents.nextCursor ?? null;
 
 		return { events, nextCursor };
 	};
@@ -107,7 +107,8 @@ export class EventsApiHelpers {
 		const events = eventsOnChain.map((event) =>
 			eventFromEventOnChain(event)
 		);
-		const nextCursor = fetchedEvents.nextCursor;
+		const nextCursor = fetchedEvents.nextCursor ?? null;
+
 		return { events, nextCursor };
 	};
 

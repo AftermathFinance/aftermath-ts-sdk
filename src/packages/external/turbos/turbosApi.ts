@@ -94,7 +94,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 			await this.Provider.Objects().fetchCastObjectBatch({
 				objectIds: poolsSimpleInfo.map((poolInfo) => poolInfo.id),
 				objectFromSuiObjectResponse: (data) => {
-					const fields = getObjectFields(data);
+					const fields = Helpers.getObjectFields(data);
 					if (!fields)
 						throw new Error(
 							"no fields found on turbos pool object"
@@ -456,11 +456,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	private static partialPoolFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): TurbosPartialPoolObject => {
-		const content = data.data?.content;
-		if (content?.dataType !== "moveObject")
-			throw new Error("sui object response is not an object");
-
-		const fields = content.fields.value.fields as {
+		const fields = Helpers.getObjectFields(data).fields.value.fields as {
 			pool_id: ObjectId;
 			coin_type_a: TypeNameOnChain;
 			coin_type_b: TypeNameOnChain;

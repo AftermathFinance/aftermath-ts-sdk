@@ -29,11 +29,10 @@ export class PoolsApiCasting {
 	public static poolObjectFromSuiObject = (
 		suiObject: SuiObjectResponse
 	): PoolObject => {
-		const objectId = getObjectId(suiObject);
-		const objectType = getObjectType(suiObject);
-		if (!objectType) throw new Error("no object type found");
+		const objectId = Helpers.getObjectId(suiObject);
+		const objectType = Helpers.getObjectType(suiObject);
 
-		const poolFieldsOnChain = getObjectFields(
+		const poolFieldsOnChain = Helpers.getObjectFields(
 			suiObject
 		) as PoolFieldsOnChain;
 

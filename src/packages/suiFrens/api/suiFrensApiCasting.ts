@@ -27,7 +27,6 @@ import {
 	StakedSuiFrenPositionFieldsOnChain,
 } from "./suiFrensApiCastingTypes";
 import { Helpers } from "../../../general/utils";
-
 export class SuiFrensApiCasting {
 	// =========================================================================
 	//  Objects
@@ -38,14 +37,15 @@ export class SuiFrensApiCasting {
 	public static capyLabsAppObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): CapyLabsAppObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(data) as CapyLabsAppFieldsOnChain;
+		const fields = Helpers.getObjectFields(
+			data
+		) as CapyLabsAppFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			mixingLimit: BigInt(fields.mixing_limit),
 			coolDownPeriodEpochs: BigInt(fields.cool_down_period),
 			mixingPrice: BigInt(fields.mixing_price),
@@ -56,16 +56,15 @@ export class SuiFrensApiCasting {
 	public static partialSuiFrenObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PartialSuiFrenObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(data) as SuiFrenFieldsOnChain;
-		const display = getObjectDisplay(data)
+		const fields = Helpers.getObjectFields(data) as SuiFrenFieldsOnChain;
+		const display = Helpers.getObjectDisplay(data)
 			.data as unknown as SuiFrenDisplayOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			generation: BigInt(fields.generation),
 			birthdate: Number(fields.birthdate),
 			cohort: BigInt(fields.cohort),
@@ -89,10 +88,10 @@ export class SuiFrensApiCasting {
 
 	public static partialSuiFrenObjectFromStakedSuiFrenMetadataV1ObjectSuiObjectResponse =
 		(data: SuiObjectResponse): PartialSuiFrenObject => {
-			const fields = getObjectFields(
+			const fields = Helpers.getObjectFields(
 				data
 			) as StakedSuiFrenMetadataV1FieldsOnChain;
-			const display = getObjectDisplay(data)
+			const display = Helpers.getObjectDisplay(data)
 				.data as unknown as SuiFrenDisplayOnChain;
 
 			return {
@@ -122,16 +121,15 @@ export class SuiFrensApiCasting {
 	public static stakedSuiFrenMetadataV1ObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): StakedSuiFrenMetadataV1Object => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(
+		const fields = Helpers.getObjectFields(
 			data
 		) as StakedSuiFrenMetadataV1FieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			collectedFees: BigInt(fields.collected_fees),
 			autoStakeFees: fields.auto_stake_fees,
@@ -163,16 +161,15 @@ export class SuiFrensApiCasting {
 	public static stakedSuiFrenPositionFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): StakedSuiFrenPositionObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(
+		const fields = Helpers.getObjectFields(
 			data
 		) as StakedSuiFrenPositionFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 		};
 	};
@@ -180,16 +177,15 @@ export class SuiFrensApiCasting {
 	public static suiFrenVaultStateV1ObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): SuiFrenVaultStateV1Object => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(
+		const fields = Helpers.getObjectFields(
 			data
 		) as SuiFrenVaultStateV1FieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			totalMixes: BigInt(fields.mixed),
 			stakedSuiFrens: BigInt(fields.suifrens_metadata.fields.size),
 		};
@@ -198,16 +194,17 @@ export class SuiFrensApiCasting {
 	public static accessoryObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): SuiFrenAccessoryObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(data) as SuiFrenAccessoryFieldsOnChain;
-		const display = getObjectDisplay(data)
+		const fields = Helpers.getObjectFields(
+			data
+		) as SuiFrenAccessoryFieldsOnChain;
+		const display = Helpers.getObjectDisplay(data)
 			.data as unknown as SuiFrenAccessoryDisplayOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			name: fields.name,
 			type: fields.type,
 			imageUrl: display.image_url,

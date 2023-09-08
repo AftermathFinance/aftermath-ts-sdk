@@ -48,7 +48,7 @@ export class TransactionsApiHelpers {
 
 		return {
 			transactions: transactionsWithCursor.data,
-			nextCursor: transactionsWithCursor.nextCursor,
+			nextCursor: transactionsWithCursor.nextCursor ?? null,
 		};
 	};
 
@@ -64,8 +64,12 @@ export class TransactionsApiHelpers {
 			this.Provider.provider.getReferenceGasPrice(),
 		]);
 
-		const gasUsed = getTotalGasUsedUpperBound(txResponse.effects);
-		if (gasUsed === undefined) throw Error("dry run move call failed");
+		const gasData = txResponse.effects.gasUsed;
+		const gasUsed =
+			BigInt(gasData.computationCost) +
+			BigInt(gasData.nonRefundableStorageFee) +
+			BigInt(gasData.storageCost) -
+			BigInt(gasData.storageRebate);
 
 		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
