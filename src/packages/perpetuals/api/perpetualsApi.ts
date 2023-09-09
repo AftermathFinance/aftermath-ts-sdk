@@ -36,6 +36,7 @@ import {
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsPreviewOrderBody,
 	ApiPerpetualsPreviewOrderResponse,
+	ApiPerpetualsOrderbookPriceBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -345,7 +346,12 @@ export class PerpetualsApi {
 	public fetchPreviewOrder = async (
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
+		const { orderbookId } = inputs;
+
 		const tx = new TransactionBlock();
+
+		// get orderbook price before order
+		this.bookPriceTx({ tx, orderbookId });
 
 		// place order
 		if ("slPrice" in inputs) {
@@ -356,34 +362,45 @@ export class PerpetualsApi {
 			this.placeMarketOrderTx({ ...inputs, tx });
 		}
 
-		// get new account state
+		// get account state after order
 		this.getAccountTx({ ...inputs, tx });
-
-		// get orderbook price
-		const orderbookId = this.getOrderbookTx({ ...inputs, tx });
+		// get orderbook price after order
 		this.bookPriceTx({ tx, orderbookId });
 
-		// deserialize data
+		// inspect tx
 		const bytes =
 			await this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
 
 		// deserialize account
-		const account = PerpetualsApiCasting.accountFromRaw(
-			bcs.de("Account", new Uint8Array(bytes[0]))
+		const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
+			bcs.de("Account", new Uint8Array(bytes[1]))
 		);
-		// deserialize orderbook price
-		const unwrappedOrderbookPrice: bigint | undefined =
-			Casting.unwrapDeserializedOption(
-				bcs.de("Option<u256>", new Uint8Array(bytes[1]))
-			);
-		const orderbookPrice = FixedUtils.directCast(
-			unwrappedOrderbookPrice ?? BigInt(0)
-		);
+		// deserialize orderbook prices
+		const orderbookPriceBeforeOrder =
+			PerpetualsApiCasting.orderbookPriceFromBytes(bytes[0]);
+		const orderbookPriceAfterOrder =
+			PerpetualsApiCasting.orderbookPriceFromBytes(bytes[2]);
 
 		return {
-			account,
-			orderbookPrice,
+			accountAfterOrder,
+			orderbookPriceBeforeOrder,
+			orderbookPriceAfterOrder,
 		};
+	};
+
+	public fetchOrderbookPrice = async (
+		inputs: ApiPerpetualsOrderbookPriceBody
+	): Promise<number> => {
+		const { orderbookId } = inputs;
+
+		const tx = new TransactionBlock();
+
+		this.bookPriceTx({ tx, orderbookId });
+
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		return PerpetualsApiCasting.orderbookPriceFromBytes(bytes);
 	};
 
 	// =========================================================================

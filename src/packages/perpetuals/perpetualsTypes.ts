@@ -368,11 +368,17 @@ export type ApiPerpetualsPreviewOrderBody = (
 	| ApiPerpetualsSLTPOrderBody
 ) & {
 	accountId: PerpetualsAccountId;
+	orderbookId: ObjectId;
 };
 
 export interface ApiPerpetualsPreviewOrderResponse {
-	account: PerpetualsAccountObject;
-	orderbookPrice: number;
+	accountAfterOrder: PerpetualsAccountObject;
+	orderbookPriceBeforeOrder: number;
+	orderbookPriceAfterOrder: number;
+}
+
+export interface ApiPerpetualsOrderbookPriceBody {
+	orderbookId: ObjectId;
 }
 
 // =========================================================================

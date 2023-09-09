@@ -17,6 +17,7 @@ import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { FixedUtils } from "../../general/utils/fixedUtils";
+import { Casting } from "../../general/utils";
 
 export class Perpetuals extends Caller {
 	// =========================================================================
@@ -116,7 +117,7 @@ export class Perpetuals extends Caller {
 	}
 
 	// =========================================================================
-	//  Helpers
+	//  Public Static Helpers
 	// =========================================================================
 
 	public static positionSide(inputs: {
@@ -132,5 +133,25 @@ export class Perpetuals extends Caller {
 		const side =
 			isLong > 0 ? PerpetualsOrderSide.Ask : PerpetualsOrderSide.Bid;
 		return side;
+	}
+
+	// =========================================================================
+	//  Public Static Calculations
+	// =========================================================================
+
+	public static calcEntryPrice(inputs: {
+		position: PerpetualsPosition;
+	}): number {
+		const { position } = inputs;
+
+		const denominator = Casting.IFixed.numberFromIFixed(
+			position.baseAssetAmount
+		);
+		if (!denominator) return 0;
+
+		return (
+			Casting.IFixed.numberFromIFixed(position.quoteAssetNotionalAmount) /
+			denominator
+		);
 	}
 }

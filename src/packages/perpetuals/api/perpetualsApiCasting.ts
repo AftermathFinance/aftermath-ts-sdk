@@ -21,6 +21,7 @@ import {
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
 import { CoinType } from "../../coin/coinTypes";
+import { FixedUtils } from "../../../general/utils/fixedUtils";
 
 export class PerpetualsApiCasting {
 	// =========================================================================
@@ -235,5 +236,12 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(data.accountId),
 			size: BigInt(data.size),
 		};
+	};
+
+	public static orderbookPriceFromBytes = (bytes: number[]): number => {
+		const unwrapped: bigint | undefined = Casting.unwrapDeserializedOption(
+			bcs.de("Option<u256>", new Uint8Array(bytes))
+		);
+		return FixedUtils.directCast(unwrapped ?? BigInt(0));
 	};
 }
