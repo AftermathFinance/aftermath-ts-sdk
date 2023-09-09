@@ -77,11 +77,11 @@ export class PerpetualsMarket extends Caller {
 		const priceFixed = FixedUtils.directUncast(price);
 		// convert f18 to b9 (assuming the former is positive)
 		const price9 = priceFixed / FixedUtils.fixedOneB9;
-		return (
-			price9 /
-			this.orderbook.tickSize /
-			(FixedUtils.fixedOneB9 / this.orderbook.lotSize)
-		);
+
+		const denominator = FixedUtils.fixedOneB9 / this.orderbook.lotSize;
+		if (denominator <= BigInt(0)) return BigInt(0);
+
+		return price9 / this.orderbook.tickSize / denominator;
 	};
 
 	public lotSize = () => {
