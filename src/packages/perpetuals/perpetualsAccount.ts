@@ -17,12 +17,15 @@ import {
 	PerpetualsOrderSide,
 	PerpetualsOrderType,
 	PerpetualsPosition,
+	SdkPerpetualsLimitOrderInputs,
+	SdkPerpetualsMarketOrderInputs,
+	SdkPerpetualsSLTPOrderInputs,
 	SuiNetwork,
 	Url,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
-import { Helpers } from "../../general/utils";
+import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
 
 export class PerpetualsAccount extends Caller {
@@ -78,12 +81,7 @@ export class PerpetualsAccount extends Caller {
 	//  Order Txs
 	// =========================================================================
 
-	public async getPlaceMarketOrderTx(inputs: {
-		walletAddress: SuiAddress;
-		marketId: PerpetualsMarketId;
-		side: PerpetualsOrderSide;
-		size: bigint;
-	}) {
+	public async getPlaceMarketOrderTx(inputs: SdkPerpetualsMarketOrderInputs) {
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
 			"transactions/market-order",
 			{
@@ -94,14 +92,7 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getPlaceLimitOrderTx(inputs: {
-		walletAddress: SuiAddress;
-		marketId: PerpetualsMarketId;
-		side: PerpetualsOrderSide;
-		size: bigint;
-		price: bigint;
-		orderType: PerpetualsOrderType;
-	}) {
+	public async getPlaceLimitOrderTx(inputs: SdkPerpetualsLimitOrderInputs) {
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
 			"transactions/limit-order",
 			{
@@ -112,16 +103,7 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getPlaceSLTPOrder(inputs: {
-		walletAddress: SuiAddress;
-		marketId: PerpetualsMarketId;
-		side: PerpetualsOrderSide;
-		size: bigint;
-		price: bigint;
-		orderType: PerpetualsOrderType;
-		slPrice: bigint;
-		tpPrice: bigint;
-	}) {
+	public async getPlaceSLTPOrder(inputs: SdkPerpetualsSLTPOrderInputs) {
 		return this.fetchApiTransaction<ApiPerpetualsSLTPOrderBody>(
 			"transactions/sltp-order",
 			{
@@ -453,5 +435,9 @@ export class PerpetualsAccount extends Caller {
 		} catch (e) {
 			throw new Error("no position found for market");
 		}
+	}
+
+	public collateral(): number {
+		return Casting.IFixed.numberFromIFixed(this.account.collateral);
 	}
 }

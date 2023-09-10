@@ -451,3 +451,36 @@ export type ApiPerpetualsSLTPOrderBody = (
 				tpPrice: bigint;
 		  }
 	);
+
+// =========================================================================
+//  SDK
+// =========================================================================
+
+export type SdkPerpetualsMarketOrderInputs = Omit<
+	ApiPerpetualsMarketOrderBody,
+	"accountCapId" | "coinType"
+>;
+
+export type SdkPerpetualsLimitOrderInputs = Omit<
+	ApiPerpetualsLimitOrderBody,
+	"accountCapId" | "coinType"
+>;
+
+export type SdkPerpetualsSLTPOrderInputs = (
+	| (SdkPerpetualsMarketOrderInputs & {
+			marketPrice: bigint;
+	  })
+	| SdkPerpetualsLimitOrderInputs
+) &
+	(
+		| {
+				slPrice: bigint;
+		  }
+		| {
+				tpPrice: bigint;
+		  }
+		| {
+				slPrice: bigint;
+				tpPrice: bigint;
+		  }
+	);
