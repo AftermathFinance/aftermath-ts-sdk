@@ -33,22 +33,21 @@ export class PerpetualsMarket extends Caller {
 		public readonly orderbook: PerpetualsOrderbook,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, `perpetuals/markets/${marketId}/${collateralCoinType}`);
+		super(network);
 	}
 
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
 
-	// TODO: use this or lose it
-	// public async getOrderbookPrice() {
-	// 	return this.fetchApi<number, ApiPerpetualsOrderbookPriceBody>(
-	// 		"inspections/orderbook-price",
-	// 		{
-	// 			orderbookId: this.orderbook.objectId,
-	// 		}
-	// 	);
-	// }
+	public async getOrderbookPrice() {
+		return this.fetchApi<number, ApiPerpetualsOrderbookPriceBody>(
+			"inspections/orderbook-price",
+			{
+				orderbookId: this.orderbook.objectId,
+			}
+		);
+	}
 
 	// =========================================================================
 	//  Calculations

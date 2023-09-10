@@ -201,16 +201,17 @@ export class PerpetualsAccount extends Caller {
 		} else return 0;
 	};
 
-	calcMarginRatio = (inputs: {
+	public calcMarginRatioAndLeverageForAccount = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
-	}): number => {
+	}): {
+		totalMarginRatio: number;
+		totalLeverage: number;
+	} => {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
+		const collateral = this.collateral() - totalFunding;
 
-		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
-
-		collateral -= totalFunding;
 		const { totalPnL, totalNetAbsBaseValue } =
 			this.calcPnLAndMarginForAccount(inputs);
 
@@ -218,10 +219,17 @@ export class PerpetualsAccount extends Caller {
 		// which can be displayed as N/A.
 		// If also the collateral is 0 (no positions and nothing deposited yet),
 		// then MR would be NaN, which can be displayed as N/A as well.
-		return (
-			(collateral * inputs.collateralPrice + totalPnL) /
-			totalNetAbsBaseValue
-		);
+		const totalMarginRatio =
+			totalNetAbsBaseValue <= 0
+				? 0
+				: (collateral * inputs.collateralPrice + totalPnL) /
+				  totalNetAbsBaseValue;
+		const totalLeverage = totalMarginRatio <= 0 ? 0 : 1 / totalMarginRatio;
+
+		return {
+			totalMarginRatio,
+			totalLeverage,
+		};
 	};
 
 	public calcUnrealizedFundingsForAccount = (inputs: {
@@ -371,9 +379,7 @@ export class PerpetualsAccount extends Caller {
 
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
-		const collateral =
-			IFixedUtils.numberFromIFixed(this.account.collateral) -
-			totalFunding;
+		const collateral = this.collateral() - totalFunding;
 
 		const { totalPnL } = this.calcPnLAndMarginForAccount(inputs);
 
