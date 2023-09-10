@@ -433,15 +433,21 @@ export interface ApiPerpetualsCancelOrderBody {
 	orderId: PerpetualsOrderId;
 }
 
-export interface ApiPerpetualsSLTPOrderBody {
-	walletAddress: SuiAddress;
-	coinType: CoinType;
-	accountCapId: ObjectId;
-	marketId: PerpetualsMarketId;
-	side: PerpetualsOrderSide;
-	size: bigint;
-	price: bigint;
-	orderType: PerpetualsOrderType;
-	slPrice: bigint;
-	tpPrice: bigint;
-}
+export type ApiPerpetualsSLTPOrderBody = (
+	| (ApiPerpetualsMarketOrderBody & {
+			marketPrice: bigint;
+	  })
+	| ApiPerpetualsLimitOrderBody
+) &
+	(
+		| {
+				slPrice: bigint;
+		  }
+		| {
+				tpPrice: bigint;
+		  }
+		| {
+				slPrice: bigint;
+				tpPrice: bigint;
+		  }
+	);

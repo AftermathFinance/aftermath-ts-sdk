@@ -816,7 +816,10 @@ export class PerpetualsApi {
 	) => {
 		const { tx } = inputs;
 
-		const output = this.placeLimitOrderTx({ ...inputs, tx });
+		const txResult =
+			"price" in inputs
+				? this.placeLimitOrderTx({ ...inputs, tx })
+				: this.placeMarketOrderTx({ ...inputs, tx });
 
 		const orderType = PerpetualsOrderType.PostOnly;
 		const side =
@@ -826,10 +829,13 @@ export class PerpetualsApi {
 
 		// TODO: we can improve these checks to trigger SL and TP
 
+		const orderPrice =
+			"price" in inputs ? inputs.price : inputs.marketPrice;
 		// If ASK and SL price is above target price, then place SL order too
 		if (
+			"slPrice" in inputs &&
 			inputs.side === PerpetualsOrderSide.Ask &&
-			inputs.slPrice > inputs.price
+			inputs.slPrice > orderPrice
 		) {
 			return this.placeLimitOrderTx({
 				...inputs,
@@ -842,8 +848,9 @@ export class PerpetualsApi {
 
 		// If BID and TP price is above target price, then place TP order too
 		if (
+			"tpPrice" in inputs &&
 			inputs.side === PerpetualsOrderSide.Bid &&
-			inputs.tpPrice > inputs.price
+			inputs.tpPrice > orderPrice
 		) {
 			return this.placeLimitOrderTx({
 				...inputs,
@@ -854,7 +861,7 @@ export class PerpetualsApi {
 			});
 		}
 
-		return output;
+		return txResult;
 	};
 
 	public getAccountTx = (inputs: {
