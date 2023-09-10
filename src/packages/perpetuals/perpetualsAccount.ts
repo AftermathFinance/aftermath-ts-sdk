@@ -220,15 +220,54 @@ export class PerpetualsAccount extends Caller {
 		// If also the collateral is 0 (no positions and nothing deposited yet),
 		// then MR would be NaN, which can be displayed as N/A as well.
 		const totalMarginRatio =
-			totalNetAbsBaseValue <= 0
+			totalNetAbsBaseValue === 0
 				? 0
 				: (collateral * inputs.collateralPrice + totalPnL) /
 				  totalNetAbsBaseValue;
-		const totalLeverage = totalMarginRatio <= 0 ? 0 : 1 / totalMarginRatio;
+		const totalLeverage = totalMarginRatio === 0 ? 0 : 1 / totalMarginRatio;
 
 		return {
 			totalMarginRatio,
 			totalLeverage,
+		};
+	};
+
+	public calcMarginRatioAndLeverageForPosition = (inputs: {
+		market: PerpetualsMarket;
+		indexPrice: number;
+		collateralPrice: number;
+		position?: PerpetualsPosition;
+	}): {
+		marginRatio: number;
+		leverage: number;
+	} => {
+		const { market, indexPrice } = inputs;
+
+		const marketId = market.marketId;
+		const position =
+			inputs.position ?? this.positionForMarketId({ marketId });
+
+		const funding = this.calcUnrealizedFundingsForPosition({
+			market,
+			position,
+		});
+		const collateral = this.collateral() - funding;
+
+		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
+			market,
+			indexPrice,
+			position,
+		});
+
+		const marginRatio =
+			netAbsBaseValue === 0
+				? 0
+				: (collateral * inputs.collateralPrice + pnl) / netAbsBaseValue;
+		const leverage = marginRatio === 0 ? 0 : 1 / marginRatio;
+
+		return {
+			marginRatio,
+			leverage,
 		};
 	};
 
