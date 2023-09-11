@@ -418,16 +418,17 @@ export class PerpetualsAccount extends Caller {
 
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
-		const collateral = this.collateral() - totalFunding;
+		const collateral_usd =
+			(this.collateral() - totalFunding) * inputs.collateralPrice;
 
-		const { totalPnL } = this.calcPnLAndMarginForAccount(inputs);
+		const { totalPnL, totalMinMaintenanceMargin } =
+			this.calcPnLAndMarginForAccount(inputs);
 
-		const { minMaintenanceMargin, netAbsBaseValue } =
-			this.calcPnLAndMarginForPosition({
-				market: inputs.market,
-				indexPrice: inputs.indexPrice,
-				position,
-			});
+		const { pnl, minMaintenanceMargin } = this.calcPnLAndMarginForPosition({
+			market: inputs.market,
+			indexPrice: inputs.indexPrice,
+			position,
+		});
 
 		const baseAssetAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
@@ -435,25 +436,19 @@ export class PerpetualsAccount extends Caller {
 		const quoteAssetAmount = IFixedUtils.numberFromIFixed(
 			position.quoteAssetNotionalAmount
 		);
-
-		const entryPrice = quoteAssetAmount / baseAssetAmount;
-
 		const MMR = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioMaintenance
 		);
-		const accountValue = collateral * inputs.collateralPrice + totalPnL;
+		const numerator =
+			collateral_usd -
+			(totalMinMaintenanceMargin - minMaintenanceMargin) +
+			(totalPnL - pnl) -
+			quoteAssetAmount;
+
 		if (baseAssetAmount > 0) {
-			return (
-				entryPrice -
-				(accountValue - minMaintenanceMargin) /
-					((1 - MMR) * (netAbsBaseValue / entryPrice))
-			);
+			return numerator / (MMR * baseAssetAmount - baseAssetAmount);
 		} else {
-			return (
-				entryPrice +
-				(accountValue - minMaintenanceMargin) /
-					((1 - MMR) * (netAbsBaseValue / entryPrice))
-			);
+			return numerator / -(MMR * baseAssetAmount + baseAssetAmount);
 		}
 	};
 

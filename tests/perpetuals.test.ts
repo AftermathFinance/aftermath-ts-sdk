@@ -53,33 +53,6 @@ import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
 // TEST CASE FLOW
 // =========================================================================
 describe("Perpetuals Tests", () => {
-	// test("Deserialize Account", async () => {
-	// 	const connection = new Connection({
-	// 		fullnode: "http://127.0.0.1:9000",
-	// 	});
-	// 	const provider = new JsonRpcProvider(connection);
-	// 	const [perpetualsConfig, faucetConfig, oracleConfig] = getConfigs();
-	// 	const aftermathApi = new AftermathApi(provider, {
-	// 		perpetuals: perpetualsConfig,
-	// 		faucet: faucetConfig,
-	// 		oracle: oracleConfig,
-	// 	});
-
-	// 	const usdcType = faucetConfig.packages.faucet + "::usdc::USDC";
-	// 	let account = await aftermathApi.Perpetuals().fetchAccount(
-	// 		usdcType,
-	// 		BigInt(2),
-	// 	);
-	// 	console.log(account);
-
-	// 	const [asks, bids] = await aftermathApi.Perpetuals().fetchPositionOrderIds(
-	// 		usdcType,
-	// 		BigInt(2),
-	// 		MARKET_ID0,
-	// 	);
-	// 	console.log(asks, bids);
-	// }, 5000000);
-
 	test("Account Margin", async () => {
 		const connection = new Connection({
 			fullnode: "http://127.0.0.1:9000",
@@ -219,6 +192,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Fetch market 0");
 		let market0 = await getPerpetualsMarket(
 			aftermathApi,
 			MARKET_ID0,
@@ -226,7 +200,7 @@ describe("Perpetuals Tests", () => {
 		);
 		console.log(market0);
 
-		//Create perpetuals market for ETH/USD with USDC as collateral
+		// Create perpetuals market for ETH/USD with USDC as collateral
 		console.log("Create market 1");
 		tx = await aftermathApi.Perpetuals().buildCreateMarketTx({
 			walletAddress: await admin.getAddress(),
@@ -261,6 +235,7 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
+		console.log("Fetch market 1");
 		let market1 = await getPerpetualsMarket(
 			aftermathApi,
 			MARKET_ID1,
@@ -426,6 +401,31 @@ describe("Perpetuals Tests", () => {
 			IFixedUtils.numberFromIFixed(ONE_F18)
 		);
 
+		let liqPriceUser1 = accountUser1.calcLiquidationPriceForPosition({
+			market: market0,
+			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice0),
+			markets: [market0, market1],
+			indexPrices: [
+				IFixedUtils.numberFromIFixed(initialOraclePrice0),
+				IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			],
+			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
+		});
+
+		console.log("Liquidation price BTC user1 : ", liqPriceUser1);
+
+		liqPriceUser1 = accountUser1.calcLiquidationPriceForPosition({
+			market: market1,
+			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			markets: [market0, market1],
+			indexPrices: [
+				IFixedUtils.numberFromIFixed(initialOraclePrice0),
+				IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			],
+			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
+		});
+		console.log("Liquidation price ETH user1 : ", liqPriceUser1);
+
 		accountUser2 = await getPerpetualsAccount(
 			aftermathApi,
 			await user2.getAddress(),
@@ -443,19 +443,6 @@ describe("Perpetuals Tests", () => {
 			IFixedUtils.numberFromIFixed(ONE_F18)
 		);
 
-		let liqPriceUser1 = accountUser1.calcLiquidationPriceForPosition({
-			market: market0,
-			indexPrice: IFixedUtils.numberFromIFixed(finalOraclePrice0),
-			markets: [market0, market1],
-			indexPrices: [
-				IFixedUtils.numberFromIFixed(initialOraclePrice0),
-				IFixedUtils.numberFromIFixed(initialOraclePrice1),
-			],
-			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
-		});
-
-		console.log("Liquidation price BTC user1 : ", liqPriceUser1);
-
 		let liqPriceUser2 = accountUser2.calcLiquidationPriceForPosition({
 			market: market0,
 			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice0),
@@ -467,6 +454,18 @@ describe("Perpetuals Tests", () => {
 			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
 		});
 		console.log("Liquidation price BTC user2 : ", liqPriceUser2);
+
+		liqPriceUser2 = accountUser2.calcLiquidationPriceForPosition({
+			market: market1,
+			indexPrice: IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			markets: [market0, market1],
+			indexPrices: [
+				IFixedUtils.numberFromIFixed(initialOraclePrice0),
+				IFixedUtils.numberFromIFixed(initialOraclePrice1),
+			],
+			collateralPrice: IFixedUtils.numberFromIFixed(ONE_F18),
+		});
+		console.log("Liquidation price ETH user2 : ", liqPriceUser2);
 
 		// Update price for "BTC" to finalOraclePrice0 in fixed representation
 		console.log("Update BTC price feed");

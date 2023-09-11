@@ -120,8 +120,8 @@ export function printAccountMetrics(
 	);
 
 	console.log(
-		"Margin Ratio: ",
-		account.calcMarginRatio({
+		"Margin Ratio and Leverage: ",
+		account.calcMarginRatioAndLeverageForAccount({
 			markets,
 			indexPrices,
 			collateralPrice,
