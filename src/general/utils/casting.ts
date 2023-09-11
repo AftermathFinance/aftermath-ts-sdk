@@ -12,6 +12,7 @@ import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
 import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
 import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class Casting {
 	// =========================================================================
@@ -106,8 +107,21 @@ export class Casting {
 	}): T => {
 		const { suiObjectResponse, typeName, fromDeserialized } = inputs;
 
-		const rawObj = suiObjectResponse.data?.bcs as SuiRawMoveObject;
-		const deserialized = inputs.bcs.de(typeName, rawObj.bcsBytes, "base64");
+		const deserialized = inputs.bcs.de(
+			typeName,
+			this.bcsBytesFromSuiObjectResponse(suiObjectResponse),
+			"base64"
+		);
 		return fromDeserialized(deserialized);
 	};
+
+	public static bcsBytesFromSuiObjectResponse(
+		suiObjectResponse: SuiObjectResponse
+	): string {
+		const rawData = suiObjectResponse.data?.bcs;
+		if (rawData && "bcsBytes" in rawData) return rawData.bcsBytes;
+		throw new Error(
+			`no bcs bytes found on object: ${suiObjectResponse.data?.objectId}`
+		);
+	}
 }

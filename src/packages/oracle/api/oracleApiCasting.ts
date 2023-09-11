@@ -1,10 +1,4 @@
-import {
-	ObjectContentFields,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-	SuiObjectResponse,
-} from "@mysten/sui.js";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { Helpers } from "../../../general/utils";
 import { PriceFeed, PriceFeedStorage } from "../oracleTypes";
 
@@ -16,25 +10,21 @@ export class OracleApiCasting {
 	public static priceFeedStorageFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PriceFeedStorage => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
+		const objectType = Helpers.getObjectType(data);
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 		};
 	};
 
 	public static priceFeedFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PriceFeed => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
-		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const objectType = Helpers.getObjectType(data);
+		const objectFields = Helpers.getObjectFields(data);
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			symbol: objectFields.symbol,
 			price: objectFields.price,
 			decimal: objectFields.decimal,

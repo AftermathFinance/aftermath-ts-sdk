@@ -188,7 +188,7 @@ export class InterestApi
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			kLast: BigInt(fields.k_last),
 			lpCoinSupplyValue: BigInt(fields.lp_coin_supply.fields.value),
 			balanceXValue: BigInt(fields.balance_x),

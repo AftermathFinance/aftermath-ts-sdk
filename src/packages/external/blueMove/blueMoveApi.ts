@@ -248,7 +248,7 @@ export class BlueMoveApi
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
 			tokenYValue: BigInt(fields.token_y),
@@ -284,7 +284,7 @@ export class BlueMoveApi
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
 			tokenYValue: BigInt(fields.token_y),

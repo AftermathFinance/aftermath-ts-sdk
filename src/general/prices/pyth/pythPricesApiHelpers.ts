@@ -1,4 +1,4 @@
-import { AftermathApi } from "../../providers/aftermathApi";
+import { SuiPriceServiceConnection } from "@pythnetwork/pyth-sui-js";
 import {
 	CoinSymbol,
 	CoinSymbolToCoinTypes,
@@ -6,7 +6,6 @@ import {
 	UniqueId,
 	Url,
 } from "../../../types";
-import { SuiPriceServiceConnection } from "@pythnetwork/pyth-sui-js";
 import { Coin } from "../../../packages";
 
 export class PythPricesApiHelpers {

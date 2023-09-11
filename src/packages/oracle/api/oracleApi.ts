@@ -1,4 +1,4 @@
-import { TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
 import { OracleAddresses, Timestamp } from "../../../types";
@@ -129,11 +129,11 @@ export class OracleApi {
 	//  Transaction Builders
 	// =========================================================================
 
-	public buildDevCreatePriceFeedTx = Helpers.transactions.creatBuildTxFunc(
+	public buildDevCreatePriceFeedTx = Helpers.transactions.createBuildTxFunc(
 		this.devCreatePriceFeedTx
 	);
 
-	public buildDevUpdatePriceFeedTx = Helpers.transactions.creatBuildTxFunc(
+	public buildDevUpdatePriceFeedTx = Helpers.transactions.createBuildTxFunc(
 		this.devUpdatePriceFeedTx
 	);
 }

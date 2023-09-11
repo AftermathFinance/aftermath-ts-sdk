@@ -10,7 +10,6 @@ import {
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/dist/cjs/client";
-import { getTotalGasUsedUpperBound } from "@mysten/sui.js";
 
 export class TransactionsApiHelpers {
 	// =========================================================================

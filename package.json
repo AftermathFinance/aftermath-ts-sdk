@@ -35,7 +35,7 @@
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
 		"@mysten/sui.js": "^0.41.2",
-		"@pythnetwork/pyth-evm-js": "^1.16.1",
+		"@pythnetwork/pyth-sui-js": "^1.0.2",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",
 		"node-fetch": "^3.3.1",

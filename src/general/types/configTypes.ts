@@ -2,6 +2,7 @@
 //  Name Only
 // =========================================================================
 
+import { CoinType } from "../../types";
 import { ObjectId, SuiAddress } from "./generalTypes";
 
 export type RpcEndpoint = string;

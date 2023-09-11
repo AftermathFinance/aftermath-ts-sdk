@@ -272,6 +272,7 @@ export class Helpers {
 
 	public static getObjectType(data: SuiObjectResponse): ObjectId {
 		const objectType = data.data?.type;
+		// NOTE: should `Helpers.addLeadingZeroesToType` be used here ?
 		if (objectType) return objectType;
 
 		throw new Error("no object type found on " + data.data?.objectId);
@@ -279,7 +280,7 @@ export class Helpers {
 
 	public static getObjectId(data: SuiObjectResponse): ObjectId {
 		const objectId = data.data?.objectId;
-		if (objectId) return objectId;
+		if (objectId) return Helpers.addLeadingZeroesToType(objectId);
 
 		throw new Error("no object id found on " + data.data?.type);
 	}

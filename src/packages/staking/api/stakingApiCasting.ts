@@ -14,8 +14,8 @@ import {
 	UnstakeIndexerEventOnChain,
 	ValidatorConfigFieldsOnChain,
 } from "./stakingApiCastingTypes";
-import { Fixed } from "../../../general/utils/fixed";
 import { Helpers } from "../../../general/utils";
+import { FixedUtils } from "../../../general/utils/fixedUtils";
 
 export class StakingApiCasting {
 	// =========================================================================
@@ -45,7 +45,7 @@ export class StakingApiCasting {
 			operationCapId: Helpers.addLeadingZeroesToType(
 				fields.operation_cap_id
 			),
-			fee: Fixed.directCast(BigInt(fields.fee)),
+			fee: FixedUtils.directCast(BigInt(fields.fee)),
 		};
 	};
 
@@ -64,7 +64,7 @@ export class StakingApiCasting {
 			validatorAddress: Helpers.addLeadingZeroesToType(fields.validator),
 			epoch: BigInt(fields.epoch),
 			suiStakeAmount: BigInt(fields.sui_amount),
-			validatorFee: Fixed.directCast(BigInt(fields.validator_fee)),
+			validatorFee: FixedUtils.directCast(BigInt(fields.validator_fee)),
 			isRestaked: fields.is_restaked,
 			referrer: fields.referrer ? fields.referrer : undefined,
 			timestamp: eventOnChain.timestampMs,
@@ -126,7 +126,9 @@ export class StakingApiCasting {
 			),
 			epoch: BigInt(eventOnChain.epoch),
 			suiStakeAmount: BigInt(eventOnChain.sui_amount),
-			validatorFee: Fixed.directCast(BigInt(eventOnChain.validator_fee)),
+			validatorFee: FixedUtils.directCast(
+				BigInt(eventOnChain.validator_fee)
+			),
 			isRestaked: eventOnChain.is_restaked,
 			referrer: eventOnChain.referrer ? eventOnChain.referrer : undefined,
 			timestamp: eventOnChain.timestamp ?? undefined,

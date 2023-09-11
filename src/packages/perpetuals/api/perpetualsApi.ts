@@ -2,12 +2,15 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
+import {} from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinType,
 	PerpetualsAccountObject,
 	PerpetualsAddresses,
 	ExchangeAddresses,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -147,8 +150,11 @@ export class PerpetualsApi {
 			});
 
 		let accCaps: PerpetualsAccountCap[] = objectResponse.map((accCap) => {
-			const bcsData = accCap.data?.bcs as SuiRawMoveObject;
-			const accCapObj = bcs.de("AccountCap", bcsData.bcsBytes, "base64");
+			const accCapObj = bcs.de(
+				"AccountCap",
+				Casting.bcsBytesFromSuiObjectResponse(accCap),
+				"base64"
+			);
 			return PerpetualsApiCasting.accountCapWithTypeFromRaw(
 				accCapObj,
 				coinType
@@ -170,17 +176,18 @@ export class PerpetualsApi {
 			});
 
 		const accountDfInfo = accountDfInfos.find((info) => {
-			return BigInt(info.name.value.account_id) === inputs.accountId;
+			return (
+				BigInt((info.name.value as any).account_id) === inputs.accountId
+			);
 		})!;
 
 		const objectResponse = await this.Provider.provider.getObject({
 			id: accountDfInfo.objectId,
 			options: { showBcs: true },
 		});
-		const bcsData = objectResponse.data?.bcs as SuiRawMoveObject;
 		const accountField = bcs.de(
 			"Field<u64, Account>",
-			bcsData.bcsBytes,
+			Casting.bcsBytesFromSuiObjectResponse(objectResponse),
 			"base64"
 		);
 
@@ -244,10 +251,9 @@ export class PerpetualsApi {
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
 		});
-		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
 		const mktStateField = bcs.de(
 			"Field<MarketKey, MarketState>",
-			bcsData.bcsBytes,
+			Casting.bcsBytesFromSuiObjectResponse(objectResp),
 			"base64"
 		);
 		return PerpetualsApiCasting.marketStateFromRaw(mktStateField.value);
@@ -271,10 +277,9 @@ export class PerpetualsApi {
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
 		});
-		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
 		const mktParamsField = bcs.de(
 			"Field<MarketKey, MarketParams>",
-			bcsData.bcsBytes,
+			Casting.bcsBytesFromSuiObjectResponse(objectResp),
 			"base64"
 		);
 		return PerpetualsApiCasting.marketParamsFromRaw(mktParamsField.value);
@@ -298,8 +303,11 @@ export class PerpetualsApi {
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
 		});
-		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
-		const orderbook = bcs.de("Orderbook", bcsData.bcsBytes, "base64");
+		const orderbook = bcs.de(
+			"Orderbook",
+			Casting.bcsBytesFromSuiObjectResponse(objectResp),
+			"base64"
+		);
 
 		return PerpetualsApiCasting.orderbookFromRaw(orderbook);
 	};
@@ -321,11 +329,9 @@ export class PerpetualsApi {
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
 		});
-		const bcsData = objectResp.data?.bcs as SuiRawMoveObject;
-
 		const orderKeys = bcs.de(
 			`Field<Contents, vector<u128>>`,
-			bcsData.bcsBytes,
+			Casting.bcsBytesFromSuiObjectResponse(objectResp),
 			"base64"
 		);
 
@@ -924,17 +930,17 @@ export class PerpetualsApi {
 	// =========================================================================
 
 	public buildInitializeForCollateralTx =
-		Helpers.transactions.creatBuildTxFunc(this.initializeForCollateralTx);
+		Helpers.transactions.createBuildTxFunc(this.initializeForCollateralTx);
 
-	public buildTransferAdminCapTx = Helpers.transactions.creatBuildTxFunc(
+	public buildTransferAdminCapTx = Helpers.transactions.createBuildTxFunc(
 		this.transferAdminCapTx
 	);
 
-	public buildAddInsuranceFundTx = Helpers.transactions.creatBuildTxFunc(
+	public buildAddInsuranceFundTx = Helpers.transactions.createBuildTxFunc(
 		this.addInsuranceFundTx
 	);
 
-	public buildCreateMarketTx = Helpers.transactions.creatBuildTxFunc(
+	public buildCreateMarketTx = Helpers.transactions.createBuildTxFunc(
 		this.createMarketTx
 	);
 
@@ -960,15 +966,15 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildPlaceMarketOrderTx = Helpers.transactions.creatBuildTxFunc(
+	public buildPlaceMarketOrderTx = Helpers.transactions.createBuildTxFunc(
 		this.placeMarketOrderTx
 	);
 
-	public buildPlaceLimitOrderTx = Helpers.transactions.creatBuildTxFunc(
+	public buildPlaceLimitOrderTx = Helpers.transactions.createBuildTxFunc(
 		this.placeLimitOrderTx
 	);
 
-	public buildCancelOrderTx = Helpers.transactions.creatBuildTxFunc(
+	public buildCancelOrderTx = Helpers.transactions.createBuildTxFunc(
 		this.cancelOrderTx
 	);
 
@@ -991,11 +997,11 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildLiquidateTx = Helpers.transactions.creatBuildTxFunc(
+	public buildLiquidateTx = Helpers.transactions.createBuildTxFunc(
 		this.liquidateTx
 	);
 
-	public buildUpdateFundingTx = Helpers.transactions.creatBuildTxFunc(
+	public buildUpdateFundingTx = Helpers.transactions.createBuildTxFunc(
 		this.updateFundingTx
 	);
 
@@ -1015,7 +1021,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildPlaceSLTPOrderTx = Helpers.transactions.creatBuildTxFunc(
+	public buildPlaceSLTPOrderTx = Helpers.transactions.createBuildTxFunc(
 		this.placeSLTPOrderTx
 	);
 

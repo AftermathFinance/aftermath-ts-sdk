@@ -1,15 +1,6 @@
-import {
-	Connection,
-	getObjectFields,
-	JsonRpcProvider,
-	ObjectId,
-	RawSigner,
-	SuiObjectChange,
-	SuiObjectChangeCreated,
-	TransactionBlock,
-} from "@mysten/sui.js";
+import { SuiClient } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../src/general/providers";
-
 import {
 	ASK,
 	BID,
@@ -48,23 +39,26 @@ import {
 import { IFixedUtils } from "../src/general/utils/iFixedUtils";
 import { PerpetualsOrderUtils } from "../src/packages/perpetuals/utils";
 import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
+import { Helpers, IndexerCaller } from "../src/general/utils";
 
 // =========================================================================
 // TEST CASE FLOW
 // =========================================================================
 describe("Perpetuals Tests", () => {
 	test("Account Margin", async () => {
-		const connection = new Connection({
-			fullnode: "http://127.0.0.1:9000",
+		const provider = new SuiClient({
+			url: "http://127.0.0.1:9000",
 		});
-		const provider = new JsonRpcProvider(connection);
 		const [perpetualsConfig, faucetConfig, oracleConfig] = getConfigs();
-		const aftermathApi = new AftermathApi(provider, {
-			perpetuals: perpetualsConfig,
-			faucet: faucetConfig,
-			oracle: oracleConfig,
-		});
-		const perpetuals = new Perpetuals(connection.fullnode);
+		const aftermathApi = new AftermathApi(
+			provider,
+			{
+				perpetuals: perpetualsConfig,
+				faucet: faucetConfig,
+				oracle: oracleConfig,
+			},
+			new IndexerCaller()
+		);
 
 		const usdcType = faucetConfig.packages.faucet + "::usdc::USDC";
 		const initialOraclePrice0 = BigInt(10000) * ONE_F18;
@@ -92,7 +86,7 @@ describe("Perpetuals Tests", () => {
 			LOT_SIZE,
 			TICK_SIZE
 		);
-		let onchainTime = getObjectFields(
+		let onchainTime = Helpers.getObjectFields(
 			await aftermathApi
 				.Objects()
 				.fetchObject({ objectId: Sui.constants.addresses.suiClockId })

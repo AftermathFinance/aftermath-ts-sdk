@@ -1,9 +1,4 @@
-import {
-	SuiObjectResponse,
-	ObjectContentFields,
-	getObjectFields,
-	getObjectType,
-} from "@mysten/sui.js";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
 	PerpetualsAccountManager,
 	PerpetualsMarketManager,
@@ -31,9 +26,6 @@ export class PerpetualsApiCasting {
 	public static accountManagerFromSuiResponse = (
 		data: SuiObjectResponse
 	): PerpetualsAccountManager => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
 		return Casting.castObjectBcs({
 			suiObjectResponse: data,
 			typeName: "AccountManager",
@@ -57,7 +49,7 @@ export class PerpetualsApiCasting {
 	public static accountFromSuiResponse = (
 		data: SuiObjectResponse
 	): PerpetualsAccountObject => {
-		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const objectFields = Helpers.getObjectFields(data);
 		const value = objectFields.value.fields;
 		return {
 			collateral: BigInt(value.collateral),
@@ -107,9 +99,6 @@ export class PerpetualsApiCasting {
 	public static accountCapFromSuiResponse = (
 		data: SuiObjectResponse
 	): PerpetualsAccountCap => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
 		return Casting.castObjectBcs({
 			suiObjectResponse: data,
 			typeName: "AccountCap",
@@ -148,9 +137,6 @@ export class PerpetualsApiCasting {
 	public static marketManagerFromSuiResponse = (
 		data: SuiObjectResponse
 	): PerpetualsMarketManager => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
 		return Casting.castObjectBcs({
 			suiObjectResponse: data,
 			typeName: "MarketManager",

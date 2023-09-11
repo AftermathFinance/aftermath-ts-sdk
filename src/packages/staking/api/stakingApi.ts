@@ -42,7 +42,7 @@ import {
 	UnstakeEventOnChain,
 } from "./stakingApiCastingTypes";
 import { Sui } from "../../sui";
-import { Fixed } from "../../../general/utils/fixed";
+import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { StakingApiCasting } from "./stakingApiCasting";
 import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/dist/cjs/client";
 
@@ -486,7 +486,9 @@ export class StakingApi {
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		const exchangeRate = Fixed.directCast(Casting.bigIntFromBytes(bytes));
+		const exchangeRate = FixedUtils.directCast(
+			Casting.bigIntFromBytes(bytes)
+		);
 		return exchangeRate <= 0 ? 1 : exchangeRate;
 	};
 

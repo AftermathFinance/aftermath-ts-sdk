@@ -210,7 +210,7 @@ export class BaySwapApi
 		const curveType = coinTypes[2];
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			coinXReserveValue: BigInt(fields.coin_x_reserve),
 			coinYReserveValue: BigInt(fields.coin_y_reserve),
 			lpTokenSupplyValue: BigInt(fields.lp_token_supply.fields.value),

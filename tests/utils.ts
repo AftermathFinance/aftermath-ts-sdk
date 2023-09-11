@@ -1,11 +1,11 @@
 import {
-	Ed25519Keypair,
-	ObjectId,
-	RawSigner,
-	SuiAddress,
 	SuiObjectChange,
 	SuiObjectChangeCreated,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/client";
+Ed25519Keypair,
+ObjectId,
+RawSigner,
+SuiAddress,
 import { fromB64 } from "@mysten/bcs";
 import { AftermathApi } from "../src/general/providers";
 import { PerpetualsAccount, PerpetualsMarket } from "../src/packages";

@@ -1,10 +1,11 @@
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
-import { Helpers } from "../utils";
+import { Casting, Helpers } from "../utils";
 import {
 	SuiObjectDataOptions,
 	SuiObjectResponse,
 } from "@mysten/sui.js/dist/cjs/client";
+import { TypeName, BCS } from "@mysten/bcs";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -239,7 +240,7 @@ export class ObjectsApiHelpers {
 		});
 		if (objectResponse.error !== undefined)
 			throw new Error(
-				`an error occured fetching object: ${objectResponse.error.error}`
+				`an error occured fetching object: ${objectResponse.error?.code}`
 			);
 		return objectResponse;
 	};

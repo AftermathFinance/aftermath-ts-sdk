@@ -1,15 +1,5 @@
-import {
-	Connection,
-	getObjectFields,
-	JsonRpcProvider,
-	ObjectId,
-	RawSigner,
-	SuiObjectChange,
-	SuiObjectChangeCreated,
-	TransactionBlock,
-} from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../src/general/providers";
-
 import {
 	adminPrivateKey,
 	user1PrivateKey,
@@ -42,19 +32,24 @@ import {
 import { IFixedUtils } from "../src/general/utils/iFixedUtils";
 import { PerpetualsOrderUtils } from "../src/packages/perpetuals/utils";
 import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
+import { SuiClient } from "@mysten/sui.js/dist/cjs/client";
+import { Helpers, IndexerCaller } from "../src/general/utils";
 
 describe("Perpetuals Tests", () => {
 	test("All entry functions", async () => {
-		const connection = new Connection({
-			fullnode: "http://127.0.0.1:9000",
+		const provider = new SuiClient({
+			url: "http://127.0.0.1:9000",
 		});
-		const provider = new JsonRpcProvider(connection);
 		const [perpetualsConfig, faucetConfig, oracleConfig] = getConfigs();
-		const aftermathApi = new AftermathApi(provider, {
-			perpetuals: perpetualsConfig,
-			faucet: faucetConfig,
-			oracle: oracleConfig,
-		});
+		const aftermathApi = new AftermathApi(
+			provider,
+			{
+				perpetuals: perpetualsConfig,
+				faucet: faucetConfig,
+				oracle: oracleConfig,
+			},
+			new IndexerCaller()
+		);
 
 		const usdcType = faucetConfig.packages.faucet + "::usdc::USDC";
 		const initialOraclePrice = BigInt(10000) * ONE_F18;
@@ -105,7 +100,7 @@ describe("Perpetuals Tests", () => {
 				.fetchMarketManager({ coinType: usdcType })
 		);
 
-		let onchainTime = getObjectFields(
+		let onchainTime = Helpers.getObjectFields(
 			await aftermathApi
 				.Objects()
 				.fetchObject({ objectId: Sui.constants.addresses.suiClockId })
@@ -599,7 +594,7 @@ describe("Perpetuals Tests", () => {
 			indexPrice: IFixedUtils.numberFromIFixed(finalOraclePrice),
 		});
 		console.log(`Estimated funding rate: ${estRate * 100}%`);
-		onchainTime = getObjectFields(
+		onchainTime = Helpers.getObjectFields(
 			await aftermathApi
 				.Objects()
 				.fetchObject({ objectId: Sui.constants.addresses.suiClockId })
