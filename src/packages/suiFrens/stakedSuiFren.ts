@@ -8,10 +8,11 @@ import {
 	SuiFrenAccessoryType,
 	SuiNetwork,
 	Url,
+	ObjectId,
+	SuiAddress,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { Caller } from "../../general/utils/caller";
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 
 export class StakedSuiFren extends Caller {
 	// =========================================================================

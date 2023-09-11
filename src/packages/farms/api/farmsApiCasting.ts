@@ -1,10 +1,4 @@
 import {
-	SuiObjectResponse,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
-import {
 	FarmsAddedRewardEventOnChain,
 	FarmsAfterburnerVaultFieldsOnChain,
 	FarmsCreatedVaultEventOnChain,
@@ -46,6 +40,7 @@ import {
 } from "../farmsTypes";
 import { Coin } from "../..";
 import { Helpers } from "../../../general/utils";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class FarmsApiCasting {
 	// =========================================================================
@@ -55,10 +50,9 @@ export class FarmsApiCasting {
 	public static stakingPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): FarmsStakingPoolObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(
+		const fields = Helpers.getObjectFields(
 			data
 		) as FarmsAfterburnerVaultFieldsOnChain;
 		const stakeCoinType = Helpers.addLeadingZeroesToType(
@@ -67,7 +61,7 @@ export class FarmsApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.getObjectId(data),
 			stakeCoinType,
 			rewardCoins: fields.type_names.map((coinType, index) => ({
 				coinType: Helpers.addLeadingZeroesToType("0x" + coinType),
@@ -106,10 +100,9 @@ export class FarmsApiCasting {
 	public static partialStakedPositionObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PartialFarmsStakedPositionObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(
+		const fields = Helpers.getObjectFields(
 			data
 		) as FarmsStakedPositionFieldsOnChain;
 		const stakeCoinType = Helpers.addLeadingZeroesToType(
@@ -118,7 +111,7 @@ export class FarmsApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.getObjectId(data),
 			stakeCoinType,
 			stakingPoolObjectId: fields.afterburner_vault_id,
 			stakedAmount: BigInt(fields.balance),
@@ -147,16 +140,15 @@ export class FarmsApiCasting {
 	public static stakingPoolOwnerCapObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): StakingPoolOwnerCapObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(
+		const fields = Helpers.getObjectFields(
 			data
 		) as FarmsStakingPoolOwnerCapFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.getObjectId(data),
 			stakingPoolId: fields.afterburner_vault_id,
 		};
 	};
@@ -164,16 +156,15 @@ export class FarmsApiCasting {
 	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): StakingPoolOneTimeAdminCapObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = getObjectFields(
+		const fields = Helpers.getObjectFields(
 			data
 		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.getObjectId(data),
 			stakingPoolId: fields.afterburner_vault_id,
 		};
 	};

@@ -1,10 +1,10 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
 	PerpetualsAccountStruct,
 	PerpetualsPosition,
 	SuiNetwork,
 	Url,
+	SuiAddress,
 } from "../../types";
 
 export class PerpetualsAccount extends Caller {
@@ -72,5 +72,4 @@ export class PerpetualsAccount extends Caller {
 			return undefined;
 		}
 	}
-
 }

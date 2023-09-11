@@ -1,4 +1,3 @@
-import { ObjectId } from "@mysten/sui.js";
 import {
 	ApiMixSuiFrensBody,
 	ApiDynamicFieldsBody,
@@ -23,6 +22,7 @@ import {
 	ApiOwnedStakedSuiFrensBody,
 	ApiHarvestSuiFrenFeesBody,
 	HarvestSuiFrenFeesEvent,
+	ObjectId,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFren } from "./stakedSuiFren";

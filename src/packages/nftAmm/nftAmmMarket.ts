@@ -10,10 +10,10 @@ import {
 	ApiDynamicFieldsBody,
 	ApiNftAmmSellBody,
 	Url,
+	ObjectId,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
-import { ObjectId } from "@mysten/sui.js";
 
 export class NftAmmMarket extends Caller {
 	// =========================================================================

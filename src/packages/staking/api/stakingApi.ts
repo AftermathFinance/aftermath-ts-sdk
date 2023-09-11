@@ -1,12 +1,7 @@
 import {
-	DelegatedStake,
-	ObjectId,
-	SuiAddress,
-	SuiValidatorSummary,
 	TransactionArgument,
 	TransactionBlock,
-	ValidatorsApy,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AfSuiMintedEvent,
@@ -33,7 +28,9 @@ import {
 	ApiIndexerUserEventsBody,
 	Balance,
 	CoinType,
+	ObjectId,
 	StakingAddresses,
+	SuiAddress,
 	UserEventsInputs,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
@@ -47,6 +44,7 @@ import {
 import { Sui } from "../../sui";
 import { Fixed } from "../../../general/utils/fixed";
 import { StakingApiCasting } from "./stakingApiCasting";
+import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/dist/cjs/client";
 
 export class StakingApi {
 	// =========================================================================
@@ -124,7 +122,7 @@ export class StakingApi {
 		const stakes = rawStakes.reduce((acc, stakeData) => {
 			const stakesToAdd: SuiDelegatedStake[] = stakeData.stakes.map(
 				(stake) => ({
-					...stake,
+					status: stake.status,
 					stakedSuiId: Helpers.addLeadingZeroesToType(
 						stake.stakedSuiId
 					),
@@ -132,9 +130,9 @@ export class StakingApi {
 					stakeActiveEpoch: BigInt(stake.stakeActiveEpoch),
 					principal: BigInt(stake.principal),
 					estimatedReward:
-						stake.estimatedReward !== undefined
+						"estimatedReward" in stake
 							? BigInt(stake.estimatedReward)
-							: stake.estimatedReward,
+							: undefined,
 					stakingPool: Helpers.addLeadingZeroesToType(
 						stakeData.stakingPool
 					),

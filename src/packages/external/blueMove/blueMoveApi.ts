@@ -2,20 +2,16 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import {
-	ObjectId,
-	SuiObjectResponse,
 	TransactionArgument,
 	TransactionBlock,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import {
 	AnyObjectType,
 	Balance,
 	BlueMoveAddresses,
 	PoolsAddresses,
 	ReferralVaultAddresses,
+	ObjectId,
 } from "../../../types";
 import {
 	BlueMoveCreatedPoolEventOnChain,
@@ -29,6 +25,7 @@ import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { RouterPoolTradeTxInputs } from "../../router";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class BlueMoveApi
 	implements RouterSynchronousApiInterface<BlueMovePoolObject>
@@ -123,7 +120,7 @@ export class BlueMoveApi
 		const pools = await this.Provider.Objects().fetchCastObjectBatch({
 			objectIds,
 			objectFromSuiObjectResponse: (data) =>
-				getObjectType(data)?.toLowerCase().includes("stable")
+				data.data?.type?.toLowerCase().includes("stable")
 					? BlueMoveApi.blueMoveStablePoolObjectFromSuiObjectResponse(
 							data
 					  )
@@ -238,19 +235,20 @@ export class BlueMoveApi
 	private static blueMovePoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): BlueMovePoolObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = getObjectFields(data) as BlueMovePoolFieldsOnChain;
+		const fields = Helpers.getObjectFields(
+			data
+		) as BlueMovePoolFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
 			tokenYValue: BigInt(fields.token_y),
@@ -273,19 +271,20 @@ export class BlueMoveApi
 	private static blueMoveStablePoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): BlueMovePoolObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = getObjectFields(data) as BlueMoveStablePoolFieldsOnChain;
+		const fields = Helpers.getObjectFields(
+			data
+		) as BlueMoveStablePoolFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			creator: fields.creator,
 			tokenXValue: BigInt(fields.token_x),
 			tokenYValue: BigInt(fields.token_y),

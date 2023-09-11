@@ -1,11 +1,16 @@
-import { AnyObjectType, Balance, Slippage } from "../../types";
+import {
+	DisplayFieldsResponse,
+	SuiMoveObject,
+	SuiObjectResponse,
+} from "@mysten/sui.js/dist/cjs/client";
+import { AnyObjectType, Balance, ObjectId, Slippage } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { RpcApiHelpers } from "../api/rpcApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { Casting } from "./casting";
+import { is } from "@mysten/sui.js/utils";
 
 export class Helpers {
 	// =========================================================================
@@ -16,7 +21,6 @@ export class Helpers {
 	public static readonly events = EventsApiHelpers;
 	public static readonly inspections = InspectionsApiHelpers;
 	public static readonly objects = ObjectsApiHelpers;
-	public static readonly rpc = RpcApiHelpers;
 	public static readonly transactions = TransactionsApiHelpers;
 
 	// =========================================================================
@@ -246,5 +250,43 @@ export class Helpers {
 			Array.isArray(value) &&
 			value.every((item) => typeof item === "string")
 		);
+	}
+
+	// =========================================================================
+	//  Sui Object Parsing
+	// =========================================================================
+
+	public static getObjectType(data: SuiObjectResponse): ObjectId {
+		const objectType = data.data?.type;
+		if (objectType) return objectType;
+
+		throw new Error("no object type found on " + data.data?.objectId);
+	}
+
+	public static getObjectId(data: SuiObjectResponse): ObjectId {
+		const objectId = data.data?.objectId;
+		if (objectId) return objectId;
+
+		throw new Error("no object id found on " + data.data?.type);
+	}
+
+	public static getObjectFields(
+		data: SuiObjectResponse
+	): Record<string, any> {
+		try {
+			const content = data.data?.content as SuiMoveObject;
+			return content.fields;
+		} catch (e) {
+			throw new Error("no object fields found on " + data.data?.objectId);
+		}
+	}
+
+	public static getObjectDisplay(
+		data: SuiObjectResponse
+	): DisplayFieldsResponse {
+		const display = Helpers.getObjectDisplay(data);
+		if (display) return display;
+
+		throw new Error("no object display found on " + data.data?.objectId);
 	}
 }

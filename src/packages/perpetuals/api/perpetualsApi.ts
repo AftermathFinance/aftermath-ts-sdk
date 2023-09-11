@@ -1,9 +1,7 @@
 import {
-	ObjectId,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinType, PerpetualsAddresses, Timestamp } from "../../../types";
 
@@ -12,6 +10,8 @@ import {
 	PerpetualsMarketManagerObject,
 	PerpetualsOrderbookObject,
 	PerpetualsPriceFeedStorageObject,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Helpers } from "../../../general/utils";

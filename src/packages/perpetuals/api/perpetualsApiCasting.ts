@@ -1,10 +1,4 @@
-import {
-	SuiObjectResponse,
-	ObjectContentFields,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
 	PerpetualsAccountManagerObject,
 	PerpetualsMarketManagerObject,
@@ -51,13 +45,12 @@ export class PerpetualsApiCasting {
 	public static accountManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsAccountManagerObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const objectFields = Helpers.getObjectFields(data);
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			maxPositionsPerAccount: objectFields.max_positions_per_account,
 			maxOpenOrdersPerPosition: objectFields.max_open_orders_per_position,
 		};
@@ -69,13 +62,12 @@ export class PerpetualsApiCasting {
 	public static marketManagerFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsMarketManagerObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const objectFields = Helpers.getObjectFields(data);
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			feesAccrued: objectFields.fees_accrued,
 			netTransferFromIfToVault: objectFields.net_transfer_from_if,
 			minOrderUsdValue: objectFields.min_order_usd_value,
@@ -220,8 +212,7 @@ export class PerpetualsApiCasting {
 	public static orderbookFromRawData = (
 		data: any
 	): PerpetualsOrderbookObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
 		return {
 			objectType,
@@ -288,25 +279,23 @@ export class PerpetualsApiCasting {
 	public static priceFeedStorageFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsPriceFeedStorageObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 		};
 	};
 
 	public static priceFeedFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): PerpetualsPriceFeedObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const objectFields = getObjectFields(data) as ObjectContentFields;
+		const objectFields = Helpers.getObjectFields(data);
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			symbol: objectFields.symbol,
 			price: objectFields.price,
 			decimal: objectFields.decimal,

@@ -1,9 +1,3 @@
-import {
-	ObjectId,
-	SuiAddress,
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	Nft,
@@ -17,10 +11,16 @@ import {
 	CoinType,
 	DynamicFieldObjectsWithCursor,
 	NftAmmAddresses,
+	ObjectId,
 	Slippage,
+	SuiAddress,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Pools } from "../..";
+import {
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js/transactions";
 
 export class NftAmmApi {
 	// =========================================================================

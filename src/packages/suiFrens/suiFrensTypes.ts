@@ -1,4 +1,3 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
@@ -6,8 +5,9 @@ import {
 	Object,
 	Timestamp,
 	Url,
+	ObjectId,
+	SuiAddress,
 } from "../../general/types/generalTypes";
-import { CoinWithBalance } from "../coin/coinTypes";
 
 // =========================================================================
 //  Name Only

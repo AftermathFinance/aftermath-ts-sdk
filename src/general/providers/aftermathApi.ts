@@ -1,4 +1,3 @@
-import { JsonRpcProvider } from "@mysten/sui.js";
 import { ConfigAddresses } from "../types/configTypes";
 import { PoolsApi } from "../../packages/pools/api/poolsApi";
 import { FaucetApi } from "../../packages/faucet/api/faucetApi";
@@ -7,7 +6,6 @@ import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { RpcApiHelpers } from "../api/rpcApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { SuiApi } from "../../packages/sui/api/suiApi";
 import { WalletApi } from "../wallet/walletApi";
@@ -30,6 +28,7 @@ import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 import { IndexerCaller } from "../utils";
+import { SuiClient } from "@mysten/sui.js/dist/cjs/client";
 
 export class AftermathApi {
 	// =========================================================================
@@ -46,7 +45,6 @@ export class AftermathApi {
 		inspections: InspectionsApiHelpers,
 		objects: ObjectsApiHelpers,
 		transactions: TransactionsApiHelpers,
-		rpc: RpcApiHelpers,
 
 		// =========================================================================
 		//  Utils
@@ -67,7 +65,7 @@ export class AftermathApi {
 	// =========================================================================
 
 	public constructor(
-		public readonly provider: JsonRpcProvider,
+		public readonly provider: SuiClient,
 		public readonly addresses: ConfigAddresses,
 		public readonly indexerCaller: IndexerCaller,
 		private readonly coinGeckoApiKey?: string
@@ -86,7 +84,6 @@ export class AftermathApi {
 	public Inspections = () => new InspectionsApiHelpers(this);
 	public Objects = () => new ObjectsApiHelpers(this);
 	public Transactions = () => new TransactionsApiHelpers(this);
-	public Rpc = () => new RpcApiHelpers(this);
 
 	// =========================================================================
 	//  Utils

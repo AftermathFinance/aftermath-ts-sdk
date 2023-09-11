@@ -1,4 +1,3 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
@@ -6,6 +5,8 @@ import {
 	Event,
 	Slippage,
 	ApiEventsBody,
+	ObjectId,
+	SuiAddress,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";

@@ -1,5 +1,4 @@
-import { ObjectId } from "@mysten/sui.js";
-import { BigIntAsString, CoinType } from "../../../types";
+import { BigIntAsString, CoinType, ObjectId } from "../../../types";
 import {
 	EventOnChain,
 	TableOnChain,

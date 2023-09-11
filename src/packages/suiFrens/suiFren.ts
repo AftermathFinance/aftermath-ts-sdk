@@ -11,10 +11,11 @@ import {
 	SuiFrenAccessoryObject,
 	ApiAccessoriesForSuiFrenBody,
 	AnyObjectType,
+	ObjectId,
+	SuiAddress,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Coin } from "..";
 
 export class SuiFren extends Caller {

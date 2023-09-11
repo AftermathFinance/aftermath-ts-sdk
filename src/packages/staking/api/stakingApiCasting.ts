@@ -1,9 +1,4 @@
-import {
-	SuiObjectResponse,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
 	AfSuiMintedEvent,
 	UnstakeEvent,
@@ -30,10 +25,9 @@ export class StakingApiCasting {
 	public static validatorConfigObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): ValidatorConfigObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
-		const allFields = getObjectFields(data) as {
+		const allFields = Helpers.getObjectFields(data) as {
 			value: {
 				fields: {
 					value: {
@@ -46,7 +40,7 @@ export class StakingApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.getObjectId(data),
 			suiAddress: Helpers.addLeadingZeroesToType(fields.sui_address),
 			operationCapId: Helpers.addLeadingZeroesToType(
 				fields.operation_cap_id

@@ -1,13 +1,8 @@
 import {
-	ObjectId,
-	SuiAddress,
-	SuiObjectInfo,
 	TransactionArgument,
 	TransactionBlock,
-	bcs,
-	getObjectFields,
-	getObjectType,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	MixSuiFrensEvent,
@@ -44,6 +39,8 @@ import {
 	DynamicFieldObjectsWithCursor,
 	DynamicFieldsInputs,
 	EventsInputs,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -1200,8 +1197,10 @@ export class SuiFrensApi {
 	//  Helpers
 	// =========================================================================
 
-	public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
-		suiObjectInfo.type === this.objectTypes.suiFren;
+	// TODO: remove or update
+
+	// public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
+	// 	suiObjectInfo.type === this.objectTypes.suiFren;
 
 	// =========================================================================
 	//  Private Methods
@@ -1293,7 +1292,7 @@ export class SuiFrensApi {
 				walletAddress,
 				objectType: Sui.constants.objectTypes.kioskOwnerCap,
 				objectFromSuiObjectResponse: (data) => {
-					const fields = getObjectFields(data);
+					const fields = Helpers.getObjectFields(data);
 					return fields?.for as ObjectId;
 				},
 			});

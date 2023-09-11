@@ -1,12 +1,8 @@
 import {
-	EventId,
-	ObjectId,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
-	fromB64,
-	normalizeSuiObjectId,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
+import { fromB64, normalizeSuiObjectId } from "@mysten/sui.js/utils";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinDecimal,
@@ -44,6 +40,8 @@ import {
 	PoolObject,
 	IndexerDataWithCursorQueryParams,
 	ApiIndexerEventsBody,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,

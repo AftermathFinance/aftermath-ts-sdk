@@ -1,4 +1,3 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiFarmsDepositPrincipalBody,
@@ -12,6 +11,7 @@ import {
 	CoinType,
 	CoinsToBalance,
 	FarmsStakedPositionObject,
+	SuiAddress,
 	SuiNetwork,
 	Timestamp,
 	Url,

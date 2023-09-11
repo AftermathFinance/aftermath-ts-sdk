@@ -1,18 +1,20 @@
 import {
-	CoinMetadata,
-	CoinStruct,
-	ObjectId,
-	PaginatedCoins,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { Balance, CoinMetadaWithInfo, CoinType } from "../../../types";
+import {
+	Balance,
+	CoinMetadaWithInfo,
+	CoinType,
+	ObjectId,
+	SuiAddress,
+} from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
+import { CoinStruct, PaginatedCoins } from "@mysten/sui.js/dist/cjs/client";
 
 export class CoinApi {
 	// =========================================================================
@@ -164,8 +166,7 @@ export class CoinApi {
 				});
 
 			const coinData = paginatedCoins.data.filter(
-				(data) =>
-					!data.lockedUntilEpoch && BigInt(data.balance) > BigInt(0)
+				(data) => BigInt(data.balance) > BigInt(0)
 			);
 			allCoinData = [...allCoinData, ...coinData];
 

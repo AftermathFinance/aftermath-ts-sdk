@@ -1,9 +1,7 @@
 import {
-	ObjectId,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import {
 	Balance,
 	RouterExternalFee,
@@ -14,6 +12,8 @@ import {
 	UniqueId,
 	Url,
 	isPoolObject,
+	ObjectId,
+	SuiAddress,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import AftermathRouterPool from "../routerPools/aftermathRouterPool";

@@ -12,9 +12,9 @@ import {
 	RouterTradeEvent,
 	RouterAsyncSerializablePool,
 	RouterSynchronousProtocolName,
+	ObjectId,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { ObjectId } from "@mysten/sui.js";
 
 /**
  * @class Router Provider

@@ -1,5 +1,9 @@
-import { SuiAddress } from "@mysten/sui.js";
-import { AnyObjectType, BigIntAsString, CoinType } from "../../../types";
+import {
+	AnyObjectType,
+	BigIntAsString,
+	CoinType,
+	SuiAddress,
+} from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
 
 // =========================================================================

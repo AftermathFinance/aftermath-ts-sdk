@@ -1,4 +1,4 @@
-import { ObjectId } from "@mysten/sui.js";
+import { ObjectId } from "../../../../../types";
 import { RouterSynchronousSerializablePool } from "../../../routerTypes";
 
 // =========================================================================

@@ -4,6 +4,8 @@ import {
 	CoinType,
 	CoinsToDecimals,
 	CoinsToPrice,
+	ObjectId,
+	SuiAddress,
 	SuiNetwork,
 	Timestamp,
 	Url,
@@ -21,7 +23,6 @@ import {
 	FarmsStakingPoolObject,
 	FarmsStakingPoolRewardCoin,
 } from "./farmsTypes";
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { Casting, Helpers } from "../../general/utils";
 import { Coin } from "..";
 import dayjs from "dayjs";

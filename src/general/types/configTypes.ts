@@ -1,8 +1,8 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
-
 // =========================================================================
 //  Name Only
 // =========================================================================
+
+import { ObjectId, SuiAddress } from "./generalTypes";
 
 export type RpcEndpoint = string;
 

@@ -1,8 +1,9 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
 	Object,
+	ObjectId,
+	SuiAddress,
 	Timestamp,
 } from "../../general/types/generalTypes";
 

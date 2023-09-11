@@ -1,8 +1,8 @@
-import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { Helpers } from "../utils/helpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { AftermathApi } from "../providers/aftermathApi";
 import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
+import { SuiAddress, TransactionDigest } from "../types";
 
 export class WalletApi {
 	// =========================================================================

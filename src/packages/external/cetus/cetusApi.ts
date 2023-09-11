@@ -1,23 +1,24 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import {
-	ObjectId,
-	SuiObjectResponse,
-	TransactionBlock,
-	bcs,
-	getObjectFields,
-} from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
 	CetusCalcTradeResult,
 	CetusPoolObject,
 	CetusPoolSimpleInfo,
 } from "./cetusTypes";
-import { AnyObjectType, Balance, CetusAddresses } from "../../../types";
+import {
+	AnyObjectType,
+	Balance,
+	CetusAddresses,
+	ObjectId,
+} from "../../../types";
 import { Helpers } from "../../../general/utils";
 import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
+import { bcs } from "@mysten/sui.js/bcs";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	// =========================================================================
@@ -86,7 +87,7 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 			await this.Provider.Objects().fetchCastObjectBatch({
 				objectIds: poolsSimpleInfo.map((poolInfo) => poolInfo.id),
 				objectFromSuiObjectResponse: (data) => {
-					const fields = getObjectFields(data);
+					const fields = Helpers.getObjectFields(data);
 					if (!fields)
 						throw new Error("no fields found on cetus pool object");
 
@@ -196,7 +197,7 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 		coinInAmount: Balance;
 	}): Promise<CetusCalcTradeResult> => {
 		const tx = new TransactionBlock();
-		tx.setSender(Helpers.rpc.constants.devInspectSigner);
+		tx.setSender(Helpers.inspections.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
 			tx,
@@ -413,11 +414,8 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	private static poolSimpleInfoFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): CetusPoolSimpleInfo => {
-		const content = data.data?.content;
-		if (content?.dataType !== "moveObject")
-			throw new Error("sui object response is not an object");
-
-		const fields = content.fields.value.fields.value.fields as {
+		const fields = Helpers.getObjectFields(data).value.fields.value
+			.fields as {
 			coin_type_a: TypeNameOnChain;
 			coin_type_b: TypeNameOnChain;
 			pool_id: ObjectId;
