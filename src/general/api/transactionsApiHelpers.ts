@@ -73,7 +73,7 @@ export class TransactionsApiHelpers {
 
 		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
-		tx.setGasBudget(safeGasBudget);
+		tx.setGasBudget(safeGasBudget < 0 ? 0 : safeGasBudget);
 		tx.setGasPrice(referenceGasPrice);
 		return tx;
 	};
