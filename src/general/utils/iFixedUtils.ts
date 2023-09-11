@@ -6,14 +6,19 @@ export class IFixedUtils {
 	public static readonly NOT_GREATEST_BIT: IFixed =
 		(BigInt(1) << BigInt(255)) - BigInt(1);
 
-	public static readonly numberFromIFixed = (value: IFixed): number => {
+	public static numberFromIFixed = (value: IFixed): number => {
 		const absVal = this.abs(value);
 		const integerPart = Number(absVal / this.ONE);
 		const decimalPart = Number(absVal % this.ONE) / Number(this.ONE);
 		return this.sign(value) * (integerPart + decimalPart);
 	};
 
-	public static readonly abs = (value: IFixed): IFixed => {
+	// TODO: make this handle signage ?
+	public static iFixedFromNumber = (value: number): IFixed => {
+		return BigInt(Math.floor(value * Number(this.ONE)));
+	};
+
+	public static abs = (value: IFixed): IFixed => {
 		if (value >= this.GREATEST_BIT)
 			return (
 				((value ^ this.NOT_GREATEST_BIT) + BigInt(1)) ^
@@ -22,7 +27,7 @@ export class IFixedUtils {
 		return value;
 	};
 
-	public static readonly sign = (value: IFixed): number => {
+	public static sign = (value: IFixed): number => {
 		if (value >= this.GREATEST_BIT) return -1;
 		if (value === BigInt(0)) return 0;
 		return 1;
