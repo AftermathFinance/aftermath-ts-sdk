@@ -1,13 +1,8 @@
 import {
-	ObjectId,
-	SuiAddress,
-	SuiObjectInfo,
 	TransactionArgument,
 	TransactionBlock,
-	bcs,
-	getObjectFields,
-	getObjectType,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	MixSuiFrensEvent,
@@ -44,6 +39,8 @@ import {
 	DynamicFieldObjectsWithCursor,
 	DynamicFieldsInputs,
 	EventsInputs,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -991,7 +988,7 @@ export class SuiFrensApi {
 	//  Staking Transactions
 	// =========================================================================
 
-	public fetchStakeTx = Helpers.transactions.creatBuildTxFunc(
+	public fetchStakeTx = Helpers.transactions.createBuildTxFunc(
 		(inputs: {
 			tx: TransactionBlock;
 			suiFrenId: ObjectId;
@@ -1002,7 +999,7 @@ export class SuiFrensApi {
 		}) => this.stakeAndKeepTx({ ...inputs, autoStakeFees: true })
 	);
 
-	public fetchUnstakeTx = Helpers.transactions.creatBuildTxFunc(
+	public fetchUnstakeTx = Helpers.transactions.createBuildTxFunc(
 		this.unstakeAndKeepTx
 	);
 
@@ -1125,11 +1122,11 @@ export class SuiFrensApi {
 
 	public fetchBuildAddAccessoryTx = (inputs: ApiAddSuiFrenAccessoryBody) => {
 		if (inputs.isOwned) {
-			return Helpers.transactions.creatBuildTxFunc(
+			return Helpers.transactions.createBuildTxFunc(
 				this.addAccessoryToOwnedSuiFrenTx
 			)(inputs);
 		}
-		return Helpers.transactions.creatBuildTxFunc(this.addAccessoryTx)(
+		return Helpers.transactions.createBuildTxFunc(this.addAccessoryTx)(
 			inputs
 		);
 	};
@@ -1138,11 +1135,11 @@ export class SuiFrensApi {
 		inputs: ApiRemoveSuiFrenAccessoryBody
 	) => {
 		if ("suiFrenId" in inputs) {
-			return Helpers.transactions.creatBuildTxFunc(
+			return Helpers.transactions.createBuildTxFunc(
 				this.removeAccessoryFromOwnedSuiFrenAndKeepTx
 			)(inputs);
 		}
-		return Helpers.transactions.creatBuildTxFunc(
+		return Helpers.transactions.createBuildTxFunc(
 			this.removeAccessoryAndKeepTx
 		)(inputs);
 	};
@@ -1200,8 +1197,10 @@ export class SuiFrensApi {
 	//  Helpers
 	// =========================================================================
 
-	public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
-		suiObjectInfo.type === this.objectTypes.suiFren;
+	// TODO: remove or update
+
+	// public isSuiFrenObjectType = (suiObjectInfo: SuiObjectInfo): boolean =>
+	// 	suiObjectInfo.type === this.objectTypes.suiFren;
 
 	// =========================================================================
 	//  Private Methods
@@ -1293,7 +1292,7 @@ export class SuiFrensApi {
 				walletAddress,
 				objectType: Sui.constants.objectTypes.kioskOwnerCap,
 				objectFromSuiObjectResponse: (data) => {
-					const fields = getObjectFields(data);
+					const fields = Helpers.getObjectFields(data);
 					return fields?.for as ObjectId;
 				},
 			});

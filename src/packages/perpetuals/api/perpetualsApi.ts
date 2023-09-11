@@ -1,11 +1,7 @@
 import {
-	ObjectId,
-	SuiAddress,
-	SuiObjectResponse,
-	SuiRawMoveObject,
 	TransactionArgument,
 	TransactionBlock,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinType,

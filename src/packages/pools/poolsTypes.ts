@@ -2,14 +2,14 @@ import {
 	Balance,
 	Event,
 	Object,
+	ObjectId,
 	Slippage,
+	SuiAddress,
 	Timestamp,
 	Url,
 } from "../../general/types/generalTypes";
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { TransactionArgument } from "@mysten/sui.js";
 import { RouterSerializablePool } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
@@ -116,7 +116,8 @@ export interface PoolDataPoint {
 	value: number;
 }
 
-export type PoolGraphDataTimeframeKey = "1D" | "1W" | "1M" | "3M";
+// export type PoolGraphDataTimeframeKey = "1D" | "1W" | "1M" | "3M";
+export type PoolGraphDataTimeframeKey = "1D";
 export interface PoolGraphDataTimeframe {
 	time: Timestamp;
 	timeUnit: ManipulateType;

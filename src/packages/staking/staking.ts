@@ -1,4 +1,3 @@
-import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui.js";
 import {
 	ApiStakeBody,
 	ApiUnstakeBody,
@@ -6,12 +5,20 @@ import {
 	ApiStakingPositionsBody,
 	StakingPosition,
 	StakeRequestEvent,
-	UnstakeRequestEvent,
 	ApiStakingEventsBody,
 	Balance,
 	Url,
+	UnstakeEvent,
+	ValidatorConfigObject,
+	ApiStakeStakedSuiBody,
+	ApiDelegatedStakesBody,
+	SuiDelegatedStake,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import {
+	SuiValidatorSummary,
+	ValidatorsApy,
+} from "@mysten/sui.js/dist/cjs/client";
 
 export class Staking extends Caller {
 	// =========================================================================
@@ -20,11 +27,12 @@ export class Staking extends Caller {
 
 	public static readonly constants = {
 		fees: {
-			unstakeFee: 0.01, // 1%
+			protocolUnstake: 0.05, // 5%
 		},
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
 		},
+		defaultValidatorFee: 0, // 0%
 	};
 
 	// =========================================================================
@@ -47,28 +55,20 @@ export class Staking extends Caller {
 		return this.fetchApi("validator-apys");
 	}
 
+	public async getValidatorConfigs(): Promise<ValidatorConfigObject[]> {
+		return this.fetchApi("validator-configs");
+	}
+
 	public async getStakingPositions(
 		inputs: ApiStakingPositionsBody
 	): Promise<StakingPosition[]> {
 		return this.fetchApi("staking-positions", inputs);
 	}
 
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public async getStakeRequestEvents(inputs: ApiStakingEventsBody) {
-		return this.fetchApiEvents<StakeRequestEvent>(
-			"events/stake-request",
-			inputs
-		);
-	}
-
-	public async getUnstakeRequestEvents(inputs: ApiStakingEventsBody) {
-		return this.fetchApiEvents<UnstakeRequestEvent>(
-			"events/unstake-request",
-			inputs
-		);
+	public async getDelegatedStakes(
+		inputs: ApiDelegatedStakesBody
+	): Promise<SuiDelegatedStake[]> {
+		return this.fetchApi("delegated-stakes", inputs);
 	}
 
 	// =========================================================================
@@ -89,6 +89,13 @@ export class Staking extends Caller {
 		);
 	}
 
+	public async getStakeStakedSuiTransaction(inputs: ApiStakeStakedSuiBody) {
+		return this.fetchApiTransaction<ApiStakeStakedSuiBody>(
+			"transactions/stake-staked-sui",
+			inputs
+		);
+	}
+
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
@@ -97,7 +104,7 @@ export class Staking extends Caller {
 		return this.fetchApi("sui-tvl");
 	}
 
-	public async getAfSuiExchangeRate(): Promise<number> {
+	public async getAfSuiToSuiExchangeRate(): Promise<number> {
 		return this.fetchApi("afsui-exchange-rate");
 	}
 

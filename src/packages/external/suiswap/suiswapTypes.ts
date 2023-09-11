@@ -1,10 +1,11 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	BigIntAsString,
 	CoinType,
 	Event,
 	Object,
 	RouterSerializablePool,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
 

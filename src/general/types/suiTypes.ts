@@ -1,5 +1,4 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { Balance } from "./generalTypes";
+import { Balance, ObjectId } from "./generalTypes";
 
 // =========================================================================
 //  Network
@@ -29,32 +28,32 @@ export interface EpochTimeLock {
 	epoch: EpochTimeStamp;
 }
 
-export interface StakedSui {
-	objectId: ObjectId;
-	validatorAddress: SuiAddress;
-	poolStartingEpoch: number;
-	delegationRequestEpoch: number;
-	principal: Balance;
-}
+// export interface StakedSui {
+// 	objectId: ObjectId;
+// 	validatorAddress: SuiAddress;
+// 	poolStartingEpoch: number;
+// 	delegationRequestEpoch: number;
+// 	principal: Balance;
+// }
 
-export interface Delegation {
-	objectId: ObjectId;
-	stakedSuiId: ObjectId;
-	poolTokens: Balance;
-	principalSuiAmount: Balance;
-}
+// export interface Delegation {
+// 	objectId: ObjectId;
+// 	stakedSuiId: ObjectId;
+// 	poolTokens: Balance;
+// 	principalSuiAmount: Balance;
+// }
 
-export interface StakedSuiWithDelegation {
-	stakedSui: StakedSui;
-	delegation?: Delegation;
-}
+// export interface StakedSuiWithDelegation {
+// 	stakedSui: StakedSui;
+// 	delegation?: Delegation;
+// }
 
-export interface AuthorityPublicKeyBytes {
-	pubKey: string;
-	bytes: bigint;
-}
+// export interface AuthorityPublicKeyBytes {
+// 	pubKey: string;
+// 	bytes: bigint;
+// }
 
-export interface CommitteeInfo {
-	committeeInfo: AuthorityPublicKeyBytes[];
-	epoch: EpochTimeStamp;
-}
+// export interface CommitteeInfo {
+// 	committeeInfo: AuthorityPublicKeyBytes[];
+// 	epoch: EpochTimeStamp;
+// }

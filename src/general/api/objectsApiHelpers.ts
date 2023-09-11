@@ -1,16 +1,10 @@
+import { AftermathApi } from "../providers/aftermathApi";
+import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
+import { Helpers } from "../utils";
 import {
-	ObjectId,
-	SuiAddress,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
-	SuiRawMoveObject,
-	getObjectOwner,
-} from "@mysten/sui.js";
-import { AftermathApi } from "../providers/aftermathApi";
-import { AnyObjectType, PackageId } from "../../types";
-import { Casting, Helpers } from "../utils";
-import { TypeName } from "@mysten/bcs";
-import { BCS } from "@mysten/bcs";
+} from "@mysten/sui.js/dist/cjs/client";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -47,8 +41,8 @@ export class ObjectsApiHelpers {
 		const { objectId, walletAddress } = inputs;
 
 		const object = await this.fetchObject({ objectId });
-		const objectOwner = getObjectOwner(object);
 
+		const objectOwner = object.data?.owner;
 		if (!objectOwner || typeof objectOwner !== "object") return false;
 
 		if (
@@ -119,7 +113,7 @@ export class ObjectsApiHelpers {
 		});
 		if (object.error !== undefined)
 			throw new Error(
-				`an error occured fetching object: ${object.error.error}`
+				`an error occured fetching object: ${object.error?.code}`
 			);
 		return object;
 	};

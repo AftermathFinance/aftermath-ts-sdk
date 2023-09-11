@@ -1,11 +1,8 @@
 import {
 	DynamicFieldInfo,
 	EventId,
-	ObjectId,
-	SuiAddress,
 	SuiTransactionBlockResponse,
-	TransactionDigest,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/dist/cjs/client";
 
 // =========================================================================
 //  bigint
@@ -46,10 +43,18 @@ export type Color = string;
 export type Url = string;
 export type LocalUrl = string;
 export type FilePath = string;
+export type ObjectId = string;
+export type SuiAddress = string;
+export type TransactionDigest = string;
 
 // =========================================================================
 //  Events
 // =========================================================================
+
+export interface IndexerEventsWithCursor<EventType> {
+	events: EventType[];
+	nextCursor: number | undefined;
+}
 
 export interface EventsWithCursor<EventType> {
 	events: EventType[];
@@ -120,3 +125,22 @@ export interface ApiDataWithCursorBody<CursorType> {
 export type ApiEventsBody = ApiDataWithCursorBody<EventId>;
 export type ApiDynamicFieldsBody = ApiDataWithCursorBody<ObjectId>;
 export type ApiTransactionsBody = ApiDataWithCursorBody<TransactionDigest>;
+
+// =========================================================================
+//  Indexer
+// =========================================================================
+
+export type ApiIndexerEventsBody = ApiDataWithCursorBody<number>;
+
+export type ApiIndexerUserEventsBody = ApiIndexerEventsBody & {
+	walletAddress: SuiAddress;
+};
+
+export interface IndexerResponse<DataType> {
+	data: DataType;
+}
+
+export interface IndexerDataWithCursorQueryParams {
+	skip: number;
+	limit: number;
+}

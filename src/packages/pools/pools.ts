@@ -1,4 +1,3 @@
-import { ObjectId } from "@mysten/sui.js";
 import {
 	ApiCreatePoolBody,
 	ApiEventsBody,
@@ -15,6 +14,7 @@ import {
 	Slippage,
 	SuiNetwork,
 	Url,
+	ObjectId,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -140,25 +140,6 @@ export class Pools extends Caller {
 			"transactions/create-pool",
 			inputs
 		);
-	}
-
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public async getDepositEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<PoolDepositEvent>("events/deposit", inputs);
-	}
-
-	public async getWithdrawEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<PoolWithdrawEvent>(
-			"events/withdraw",
-			inputs
-		);
-	}
-
-	public async getTradeEvents(inputs: ApiEventsBody) {
-		return this.fetchApiEvents<PoolTradeEvent>("events/trade", inputs);
 	}
 
 	// =========================================================================

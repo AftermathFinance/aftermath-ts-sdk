@@ -3,18 +3,17 @@ import {
 	EventsWithCursor,
 	AnyObjectType,
 	EventsInputs,
+	SuiAddress,
 } from "../../types";
+import dayjs, { QUnitType, OpUnitType } from "dayjs";
+import { AftermathApi } from "../providers/aftermathApi";
 import {
 	EventId,
-	SuiAddress,
 	SuiEvent,
 	SuiEventFilter,
 	SuiTransactionBlockResponse,
 	Unsubscribe,
-} from "@mysten/sui.js";
-import dayjs, { QUnitType, OpUnitType } from "dayjs";
-import { AftermathApi } from "../providers/aftermathApi";
-import { EventOnChain } from "../types/castingTypes";
+} from "@mysten/sui.js/dist/cjs/client";
 
 export class EventsApiHelpers {
 	// =========================================================================
@@ -76,7 +75,7 @@ export class EventsApiHelpers {
 		});
 
 		const events = fetchedEvents.data as EventOnChainType[];
-		const nextCursor = fetchedEvents.nextCursor;
+		const nextCursor = fetchedEvents.nextCursor ?? null;
 
 		return { events, nextCursor };
 	};
@@ -106,7 +105,8 @@ export class EventsApiHelpers {
 		const events = eventsOnChain.map((event) =>
 			eventFromEventOnChain(event)
 		);
-		const nextCursor = fetchedEvents.nextCursor;
+		const nextCursor = fetchedEvents.nextCursor ?? null;
+
 		return { events, nextCursor };
 	};
 

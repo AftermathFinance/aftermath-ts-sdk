@@ -1,21 +1,14 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
-import {
-	ObjectId,
-	SuiObjectResponse,
-	TransactionArgument,
-	TransactionBlock,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
 	AnyObjectType,
 	Balance,
 	KriyaAddresses,
 	PoolsAddresses,
 	ReferralVaultAddresses,
+	ObjectId,
 } from "../../../types";
 import {
 	KriyaPoolCreatedEvent,
@@ -216,19 +209,18 @@ export class KriyaApi
 	private static kriyaPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): KriyaPoolObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = getObjectFields(data) as KriyaPoolFieldsOnChain;
+		const fields = Helpers.getObjectFields(data) as KriyaPoolFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			tokenYValue: BigInt(fields.token_y),
 			tokenXValue: BigInt(fields.token_x),
 			lspSupplyValue: BigInt(fields.lsp_supply.fields.value),

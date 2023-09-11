@@ -1,16 +1,16 @@
 import {
-	SuiAddress,
-	SuiTransactionBlockResponseQuery,
 	TransactionArgument,
 	TransactionBlock,
+} from "@mysten/sui.js/transactions";
+import {
+	SerializedTransaction,
+	SuiAddress,
 	TransactionDigest,
-	getExecutionStatusGasSummary,
-	getGasData,
-	getTotalGasUsedUpperBound,
-} from "@mysten/sui.js";
-import { SerializedTransaction, TransactionsWithCursor } from "../../types";
+	TransactionsWithCursor,
+} from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { RpcApiHelpers } from "./rpcApiHelpers";
+import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/dist/cjs/client";
+import { getTotalGasUsedUpperBound } from "@mysten/sui.js";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -47,7 +47,7 @@ export class TransactionsApiHelpers {
 
 		return {
 			transactions: transactionsWithCursor.data,
-			nextCursor: transactionsWithCursor.nextCursor,
+			nextCursor: transactionsWithCursor.nextCursor ?? null,
 		};
 	};
 
@@ -63,9 +63,10 @@ export class TransactionsApiHelpers {
 			this.Provider.provider.getReferenceGasPrice(),
 		]);
 
-		const gasUsed = getTotalGasUsedUpperBound(txResponse.effects);
-		if (gasUsed === undefined) throw Error("dry run move call failed");
-
+		const gasData = txResponse.effects.gasUsed;
+		const gasUsed =
+			BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
+		// scale up by 10% for safety margin
 		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
 		tx.setGasBudget(safeGasBudget);
@@ -99,7 +100,7 @@ export class TransactionsApiHelpers {
 	): { None: true } | { Some: InnerType } =>
 		inner === undefined ? { None: true } : { Some: inner };
 
-	public static creatBuildTxFunc = <Inputs>(
+	public static createBuildTxFunc = <Inputs>(
 		func: (inputs: Inputs) => TransactionArgument
 	): ((
 		inputs: {

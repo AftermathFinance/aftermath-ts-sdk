@@ -1,5 +1,11 @@
-import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
-import { AnyObjectType, BigIntAsString, ModuleName } from "./generalTypes";
+import {
+	AnyObjectType,
+	BigIntAsString,
+	ModuleName,
+	ObjectId,
+	SuiAddress,
+	TransactionDigest,
+} from "./generalTypes";
 
 // =========================================================================
 //  On Chain
@@ -18,6 +24,12 @@ export interface EventOnChain<Fields> {
 	bcs: string; // | undefined;
 	timestampMs: number | undefined;
 }
+
+export type IndexerEventOnChain<Fields> = {
+	type: AnyObjectType;
+	timestamp: number | null;
+	txnDigest: TransactionDigest;
+} & Fields;
 
 export interface TableOnChain {
 	type: AnyObjectType;

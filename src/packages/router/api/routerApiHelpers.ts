@@ -1,4 +1,3 @@
-import { SuiAddress, TransactionBlock } from "@mysten/sui.js";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	Balance,
@@ -15,11 +14,13 @@ import {
 	isRouterAsyncProtocolName,
 	isRouterAsyncSerializablePool,
 	AllRouterOptions,
+	SuiAddress,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
 import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
 import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class RouterApiHelpers {
 	// =========================================================================

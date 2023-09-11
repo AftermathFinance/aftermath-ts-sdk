@@ -1,10 +1,11 @@
 import { BCS, getSuiMoveConfig } from "@mysten/bcs";
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
 	IFixed,
 	Object,
+	ObjectId,
+	SuiAddress,
 	Timestamp,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";

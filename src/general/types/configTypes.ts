@@ -1,9 +1,8 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
-import { CoinType } from "../../types";
-
 // =========================================================================
 //  Name Only
 // =========================================================================
+
+import { ObjectId, SuiAddress } from "./generalTypes";
 
 export type RpcEndpoint = string;
 
@@ -20,13 +19,14 @@ interface OptionalConfigAddresses {
 	faucet: FaucetAddresses;
 	staking: StakingAddresses;
 	pools: PoolsAddresses;
-	utilies: UtilitiesAddresses;
+	utilities: UtilitiesAddresses;
 	suiFrens: SuiFrensAddresses;
 	nftAmm: NftAmmAddresses;
 	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
 	perpetuals: PerpetualsAddresses;
 	oracle: OracleAddresses;
+	farms: FarmsAddresses;
 }
 
 // =========================================================================
@@ -51,10 +51,11 @@ export interface StakingAddresses {
 		afsui: SuiAddress;
 	};
 	objects: {
-		staking: ObjectId;
-	};
-	accounts: {
-		bot: SuiAddress;
+		stakedSuiVault: ObjectId;
+		safe: ObjectId;
+		treasury: ObjectId;
+		referralVault: ObjectId;
+		validatorConfigsTable: ObjectId;
 	};
 }
 
@@ -265,6 +266,13 @@ export interface PerpetualsAddresses {
 	};
 }
 
+export interface FarmsAddresses {
+	packages: {
+		vaults: SuiAddress;
+		vaultsInitial: SuiAddress;
+	};
+}
+
 export interface ExchangeAddresses {
 	accountManager: ObjectId;
 	marketManager: ObjectId;
@@ -303,7 +311,7 @@ export interface RustAddresses {
 	};
 	oracle?: RustOracleAddresses;
 	spot_orderbook?: any;
-};
+}
 
 export interface RustExchangeAddresses {
 	account_manager: ObjectId;

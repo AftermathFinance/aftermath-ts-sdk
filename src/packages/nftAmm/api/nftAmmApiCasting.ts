@@ -1,12 +1,4 @@
 import {
-	DisplayFieldsResponse,
-	SuiObjectResponse,
-	getObjectDisplay,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
-import {
 	NftDisplay,
 	NftInfo,
 	Nft,
@@ -18,6 +10,10 @@ import { Helpers } from "../../../general/utils";
 import { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
 import { Coin } from "../../coin";
 import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
+import {
+	DisplayFieldsResponse,
+	SuiObjectResponse,
+} from "@mysten/sui.js/dist/cjs/client";
 
 export class NftAmmApiCasting {
 	// =========================================================================
@@ -31,11 +27,13 @@ export class NftAmmApiCasting {
 	public static marketObjectFromSuiObject = (
 		suiObject: SuiObjectResponse
 	): NftAmmMarketObject => {
-		const objectId = getObjectId(suiObject);
-		const marketType = getObjectType(suiObject);
+		const objectId = Helpers.getObjectId(suiObject);
+		const marketType = Helpers.getObjectType(suiObject);
 		if (!marketType) throw new Error("no object type found");
 
-		const fields = getObjectFields(suiObject) as NftAmmMarketFieldsOnChain;
+		const fields = Helpers.getObjectFields(
+			suiObject
+		) as NftAmmMarketFieldsOnChain;
 
 		const pool = PoolsApiCasting.poolObjectFromSuiObject(fields.pool);
 
@@ -68,7 +66,7 @@ export class NftAmmApiCasting {
 	public static nftFromSuiObject = (object: SuiObjectResponse): Nft => {
 		const info = this.nftInfoFromSuiObject(object);
 
-		const displayFields = getObjectDisplay(object);
+		const displayFields = Helpers.getObjectDisplay(object);
 		const display = this.nftDisplayFromDisplayFields(displayFields);
 
 		return {
@@ -88,8 +86,8 @@ export class NftAmmApiCasting {
 	private static nftInfoFromSuiObject = (
 		object: SuiObjectResponse
 	): NftInfo => {
-		const objectType = getObjectType(object);
-		const objectId = getObjectId(object);
+		const objectType = Helpers.getObjectType(object);
+		const objectId = Helpers.getObjectId(object);
 
 		if (!objectId || !objectType)
 			throw new Error(
@@ -106,7 +104,11 @@ export class NftAmmApiCasting {
 		displayFields: DisplayFieldsResponse
 	): NftDisplay => {
 		const fields = displayFields.data;
-		if (fields === null || displayFields.error !== null)
+		if (
+			fields === null ||
+			fields === undefined ||
+			displayFields.error !== null
+		)
 			return {
 				suggested: {},
 				other: {},

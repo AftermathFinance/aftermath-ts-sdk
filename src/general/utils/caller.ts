@@ -1,7 +1,9 @@
-import { TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
 	ApiEventsBody,
+	ApiIndexerEventsBody,
 	EventsWithCursor,
+	IndexerEventsWithCursor,
 	SerializedTransaction,
 	SuiNetwork,
 	Url,
@@ -9,7 +11,7 @@ import {
 import { Helpers } from "./helpers";
 
 export class Caller {
-	private readonly baseUrl?: Url;
+	private readonly apiBaseUrl?: Url;
 
 	// =========================================================================
 	//  Constructor
@@ -17,31 +19,17 @@ export class Caller {
 
 	constructor(
 		public readonly network?: SuiNetwork | Url,
-		private readonly urlPrefix: Url = ""
+		private readonly apiUrlPrefix: Url = ""
 	) {
-		this.network = network;
-		this.urlPrefix = urlPrefix;
-		this.baseUrl =
+		this.apiBaseUrl =
 			network === undefined
 				? undefined
-				: Caller.baseUrlForNetwork(network);
+				: Caller.apiBaseUrlForNetwork(network);
 	}
 
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================
-
-	private static baseUrlForNetwork(network: SuiNetwork | Url): Url {
-		if (network === "MAINNET") return "https://aftermath.finance";
-		if (network === "TESTNET") return "https://testnet.aftermath.finance";
-		if (network === "DEVNET") return "https://devnet.aftermath.finance";
-		if (network === "LOCAL") return "http://localhost:3000";
-
-		const safeNetwork =
-			network.slice(-1) === "/" ? network.slice(0, -1) : network;
-
-		return safeNetwork;
-	}
 
 	private static async fetchResponseToType<OutputType>(
 		response: Response
@@ -53,18 +41,37 @@ export class Caller {
 		return output as OutputType;
 	}
 
+	// =========================================================================
+	//  Api Calling
+	// =========================================================================
+
+	private static apiBaseUrlForNetwork(network: SuiNetwork | Url): Url {
+		if (network === "MAINNET") return "https://aftermath.finance";
+		if (network === "TESTNET") return "https://testnet.aftermath.finance";
+		if (network === "DEVNET") return "https://devnet.aftermath.finance";
+		if (network === "LOCAL") return "http://localhost:3000";
+
+		const safeUrl =
+			network.slice(-1) === "/" ? network.slice(0, -1) : network;
+		return safeUrl;
+	}
+
 	private urlForApiCall = (url: string): Url => {
-		if (this.baseUrl === undefined)
-			throw new Error("no baseUrl: unable to fetch data");
+		if (this.apiBaseUrl === undefined)
+			throw new Error("no apiBaseUrl: unable to fetch data");
 
 		// TODO: handle url prefixing and api calls based on network differently
-		return `${this.baseUrl}/api/${
-			this.urlPrefix === "" ? "" : this.urlPrefix + "/"
+		return `${this.apiBaseUrl}/api/${
+			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix + "/"
 		}${url}`;
 	};
 
 	// =========================================================================
 	//  Protected Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Api Calling
 	// =========================================================================
 
 	protected async fetchApi<Output, BodyType = undefined>(
@@ -113,6 +120,17 @@ export class Caller {
 		signal?: AbortSignal
 	) {
 		return this.fetchApi<EventsWithCursor<EventType>, BodyType>(
+			url,
+			body,
+			signal
+		);
+	}
+
+	protected async fetchApiIndexerEvents<
+		EventType,
+		BodyType = ApiIndexerEventsBody
+	>(url: Url, body: BodyType, signal?: AbortSignal) {
+		return this.fetchApi<IndexerEventsWithCursor<EventType>, BodyType>(
 			url,
 			body,
 			signal

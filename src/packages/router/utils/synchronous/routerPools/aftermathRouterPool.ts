@@ -1,15 +1,10 @@
 import {
-	ObjectId,
-	SuiAddress,
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js";
-import {
 	Balance,
 	Slippage,
 	SuiNetwork,
 	UniqueId,
 	Url,
+	SuiAddress,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import { PoolObject } from "../../../../pools/poolsTypes";

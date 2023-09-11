@@ -1,9 +1,13 @@
-import { DynamicFieldInfo, DynamicFieldName, ObjectId } from "@mysten/sui.js";
+import {
+	DynamicFieldInfo,
+	DynamicFieldName,
+} from "@mysten/sui.js/dist/cjs/client";
 import {
 	AnyObjectType,
 	DynamicFieldObjectsWithCursor,
 	DynamicFieldsInputs,
 	DynamicFieldsWithCursor,
+	ObjectId,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 
@@ -190,7 +194,7 @@ export class DynamicFieldsApiHelpers {
 
 	public fetchDynamicFieldObject = (inputs: {
 		parentId: ObjectId;
-		name: string | DynamicFieldName;
+		name: DynamicFieldName;
 	}) => {
 		return this.Provider.provider.getDynamicFieldObject(inputs);
 	};

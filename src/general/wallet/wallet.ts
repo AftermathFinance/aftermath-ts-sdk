@@ -1,8 +1,8 @@
-import { SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import { SuiNetwork } from "../types/suiTypes";
 import {
 	ApiTransactionsBody,
 	Balance,
+	SuiAddress,
 	TransactionsWithCursor,
 	Url,
 } from "../types/generalTypes";

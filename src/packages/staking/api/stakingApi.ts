@@ -1,35 +1,36 @@
 import {
-	DelegatedStake,
-	ObjectId,
-	SuiAddress,
-	SuiValidatorSummary,
 	TransactionArgument,
 	TransactionBlock,
-	ValidatorsApy,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AfSuiMintedEvent,
 	StakeEvent,
-	StakeFailedEvent,
 	StakePosition,
 	StakeRequestEvent,
-	StakeSuccessEvent,
 	StakingPosition,
-	UnstakeEvent,
 	UnstakePosition,
-	UnstakeRequestEvent,
-	UnstakeSuccessEvent,
-	isStakeEvent,
+	UnstakeEvent,
 	isStakePosition,
-	isUnstakeEvent,
 	isUnstakePosition,
+	isStakeEvent,
+	isUnstakeEvent,
+	ValidatorConfigObject,
+	ApiStakeStakedSuiBody,
+	ApiUnstakeBody,
+	ApiStakeBody,
+	ApiDelegatedStakesBody,
+	SuiDelegatedStake,
 } from "../stakingTypes";
 import {
 	AnyObjectType,
+	ApiIndexerEventsBody,
+	ApiIndexerUserEventsBody,
 	Balance,
 	CoinType,
+	ObjectId,
 	StakingAddresses,
+	SuiAddress,
 	UserEventsInputs,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
@@ -37,12 +38,13 @@ import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import {
 	AfSuiMintedEventOnChain,
-	StakeFailedEventOnChain,
 	StakeRequestEventOnChain,
-	StakeSuccessEventOnChain,
-	UnstakeRequestEventOnChain,
-	UnstakeSuccessEventOnChain,
+	UnstakeEventOnChain,
 } from "./stakingApiCastingTypes";
+import { Sui } from "../../sui";
+import { Fixed } from "../../../general/utils/fixed";
+import { StakingApiCasting } from "./stakingApiCasting";
+import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/dist/cjs/client";
 
 export class StakingApi {
 	// =========================================================================
@@ -50,17 +52,14 @@ export class StakingApi {
 	// =========================================================================
 
 	private static readonly constants = {
-		modules: {
-			interface: "interface",
+		moduleNames: {
 			actions: "actions",
-			staking: "staking",
+			events: "events",
+			stakedSuiVault: "staked_sui_vault",
 		},
 		eventNames: {
-			stakeRequest: "StakeWasRequestedEvent",
-			unstakeRequest: "WithdrawWasRequestedEvent",
-			stakeSuccess: "StakeSucceededEvent",
-			unstakeSuccess: "WithdrawSucceededEvent",
-			stakeFailed: "StakeWasFailedSUIReturnedEvent",
+			stakeRequest: "StakedEvent",
+			unstake: "UnstakedEvent",
 			afSuiMinted: "AFSUIWasMintedToStakerAccountEvent",
 		},
 	};
@@ -73,10 +72,7 @@ export class StakingApi {
 
 	public readonly eventTypes: {
 		stakeRequest: AnyObjectType;
-		unstakeRequest: AnyObjectType;
-		stakeSuccess: AnyObjectType;
-		unstakeSuccess: AnyObjectType;
-		stakeFailed: AnyObjectType;
+		unstake: AnyObjectType;
 		afSuiMinted: AnyObjectType;
 	};
 
@@ -103,10 +99,7 @@ export class StakingApi {
 
 		this.eventTypes = {
 			stakeRequest: this.stakeRequestEventType(),
-			unstakeRequest: this.unstakeRequestEventType(),
-			stakeSuccess: this.stakeSuccessEventType(),
-			unstakeSuccess: this.unstakeSuccessEventType(),
-			stakeFailed: this.stakeFailedEventType(),
+			unstake: this.unstakeEventType(),
 			afSuiMinted: this.afSuiMintedEventType(),
 		};
 	}
@@ -119,32 +112,197 @@ export class StakingApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchDelegatedStakes = async (inputs: {
-		address: SuiAddress;
-	}): Promise<DelegatedStake[]> => {
-		return this.Provider.provider.getStakes({
-			owner: inputs.address,
+	public fetchDelegatedStakes = async (
+		inputs: ApiDelegatedStakesBody
+	): Promise<SuiDelegatedStake[]> => {
+		const rawStakes = await this.Provider.provider.getStakes({
+			owner: inputs.walletAddress,
 		});
-	};
 
-	public fetchActiveValidators = async (): Promise<SuiValidatorSummary[]> => {
-		return (await this.Provider.Sui().fetchSystemState()).activeValidators;
+		const stakes = rawStakes.reduce((acc, stakeData) => {
+			const stakesToAdd: SuiDelegatedStake[] = stakeData.stakes.map(
+				(stake) => ({
+					status: stake.status,
+					stakedSuiId: Helpers.addLeadingZeroesToType(
+						stake.stakedSuiId
+					),
+					stakeRequestEpoch: BigInt(stake.stakeRequestEpoch),
+					stakeActiveEpoch: BigInt(stake.stakeActiveEpoch),
+					principal: BigInt(stake.principal),
+					estimatedReward:
+						"estimatedReward" in stake
+							? BigInt(stake.estimatedReward)
+							: undefined,
+					stakingPool: Helpers.addLeadingZeroesToType(
+						stakeData.stakingPool
+					),
+					validatorAddress: Helpers.addLeadingZeroesToType(
+						stakeData.validatorAddress
+					),
+				})
+			);
+			return [...acc, ...stakesToAdd];
+		}, [] as SuiDelegatedStake[]);
+
+		stakes.sort((a, b) =>
+			Number(b.stakeRequestEpoch - a.stakeRequestEpoch)
+		);
+
+		return stakes;
 	};
 
 	public fetchValidatorApys = async (): Promise<ValidatorsApy> => {
-		return await this.Provider.provider.getValidatorsApy();
+		const apyData = await this.Provider.provider.getValidatorsApy();
+
+		const apys = apyData.apys.map((apy) => ({
+			...apy,
+			address: Helpers.addLeadingZeroesToType(apy.address),
+		}));
+
+		return { ...apyData, apys };
+	};
+
+	public fetchValidatorConfigs = async (): Promise<
+		ValidatorConfigObject[]
+	> => {
+		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
+			parentObjectId: this.addresses.objects.validatorConfigsTable,
+			objectsFromObjectIds: (objectIds) =>
+				this.Provider.Objects().fetchCastObjectBatch({
+					objectIds,
+					objectFromSuiObjectResponse:
+						StakingApiCasting.validatorConfigObjectFromSuiObjectResponse,
+				}),
+		});
+	};
+
+	// =========================================================================
+	//  Transaction Commands
+	// =========================================================================
+
+	// =========================================================================
+	//  Staking Transaction Commands
+	// =========================================================================
+
+	public stakeTx = (inputs: {
+		tx: TransactionBlock;
+		suiCoin: ObjectId | TransactionArgument;
+		validatorAddress: SuiAddress;
+	}) => {
+		const { tx, suiCoin } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"request_stake"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
+				tx.object(this.addresses.objects.referralVault), // ReferralVault
+				typeof suiCoin === "string" ? tx.object(suiCoin) : suiCoin,
+				tx.pure(inputs.validatorAddress, "address"),
+			],
+		});
+	};
+
+	public unstakeTx = (inputs: {
+		tx: TransactionBlock;
+		afSuiCoin: ObjectId | TransactionArgument;
+	}) => {
+		const { tx, afSuiCoin } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"request_unstake_and_keep"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.objects.safe), // Safe
+				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
+				tx.object(this.addresses.objects.referralVault), // ReferralVault
+				tx.object(this.addresses.objects.treasury), // Treasury
+				typeof afSuiCoin === "string"
+					? tx.object(afSuiCoin)
+					: afSuiCoin,
+			],
+		});
+	};
+
+	public requestStakeStakedSuiVecTx = (inputs: {
+		tx: TransactionBlock;
+		stakedSuiIds: ObjectId[];
+		validatorAddress: SuiAddress;
+	}) => {
+		const { tx, stakedSuiIds } = inputs;
+
+		const stakedSuiIdsVec = tx.makeMoveVec({
+			objects: stakedSuiIds.map((id) => tx.object(id)),
+		});
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"request_stake_staked_sui_vec"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
+				tx.object(this.addresses.objects.referralVault), // ReferralVault
+				stakedSuiIdsVec,
+				tx.pure(inputs.validatorAddress, "address"),
+			],
+		});
+	};
+
+	// =========================================================================
+	//  Inspection Transaction Commands
+	// =========================================================================
+
+	public afsuiToSuiExchangeRateTx = (inputs: {
+		tx: TransactionBlock;
+	}) /* (U128) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"afsui_to_sui_exchange_rate"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.objects.safe), // Safe
+			],
+		});
+	};
+
+	public totalSuiAmountTx = (inputs: { tx: TransactionBlock }) => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: AftermathApi.helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"total_sui_amount"
+			),
+			typeArguments: [],
+			arguments: [tx.object(this.addresses.objects.stakedSuiVault)],
+		});
 	};
 
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
 
-	public fetchBuildStakeTx = async (inputs: {
-		walletAddress: SuiAddress;
-		suiStakeAmount: Balance;
-		validatorAddress: SuiAddress;
-		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
+	public fetchBuildStakeTx = async (
+		inputs: ApiStakeBody
+	): Promise<TransactionBlock> => {
 		const { referrer } = inputs;
 
 		const tx = new TransactionBlock();
@@ -172,11 +330,9 @@ export class StakingApi {
 		return tx;
 	};
 
-	public fetchBuildUnstakeTx = async (inputs: {
-		walletAddress: SuiAddress;
-		afSuiUnstakeAmount: Balance;
-		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
+	public fetchBuildUnstakeTx = async (
+		inputs: ApiUnstakeBody
+	): Promise<TransactionBlock> => {
 		const { referrer } = inputs;
 
 		const tx = new TransactionBlock();
@@ -204,76 +360,26 @@ export class StakingApi {
 		return tx;
 	};
 
-	// =========================================================================
-	//  Transaction Commands
-	// =========================================================================
+	public fetchBuildStakeStakedSuiTx = async (
+		inputs: ApiStakeStakedSuiBody
+	): Promise<TransactionBlock> => {
+		const { referrer } = inputs;
 
-	public stakeTx = (inputs: {
-		tx: TransactionBlock;
-		suiCoin: ObjectId | TransactionArgument;
-		validatorAddress: SuiAddress;
-	}) => {
-		const { tx, suiCoin } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
-				StakingApi.constants.modules.interface,
-				"request_add_stake"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(this.addresses.objects.staking),
-				typeof suiCoin === "string" ? tx.object(suiCoin) : suiCoin,
-				tx.pure(inputs.validatorAddress, "address"),
-			],
-		});
-	};
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
 
-	public unstakeTx = (inputs: {
-		tx: TransactionBlock;
-		afSuiCoin: ObjectId | TransactionArgument;
-	}) => {
-		const { tx, afSuiCoin } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
-				StakingApi.constants.modules.interface,
-				"request_unstake"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(this.addresses.objects.staking),
-				typeof afSuiCoin === "string"
-					? tx.object(afSuiCoin)
-					: afSuiCoin,
-			],
-		});
-	};
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
 
-	public getAfSuiSupplyTx = (inputs: { tx: TransactionBlock }) => {
-		const { tx } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
-				StakingApi.constants.modules.staking,
-				"afsui_supply"
-			),
-			typeArguments: [],
-			arguments: [tx.object(this.addresses.objects.staking)],
+		this.requestStakeStakedSuiVecTx({
+			tx,
+			...inputs,
 		});
-	};
 
-	public getStakedSuiTvlTx = (inputs: { tx: TransactionBlock }) => {
-		const { tx } = inputs;
-		return tx.moveCall({
-			target: AftermathApi.helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
-				StakingApi.constants.modules.staking,
-				"total_sui_amount"
-			),
-			typeArguments: [],
-			arguments: [tx.object(this.addresses.objects.staking)],
-		});
+		return tx;
 	};
 
 	// =========================================================================
@@ -300,47 +406,18 @@ export class StakingApi {
 	}): Promise<UnstakePosition[]> => {
 		const { walletAddress } = inputs;
 
-		const [successEvents, requestEvents] = await Promise.all([
-			// unstake success
-			(
-				await this.Provider.Events().fetchAllEvents({
-					fetchEventsFunc: (eventsInputs) =>
-						this.fetchUnstakeSuccessEvents({
-							...eventsInputs,
-							walletAddress,
-						}),
-				})
-			).filter((event) => event.staker === inputs.walletAddress),
-			// unstake request
-			(
-				await this.Provider.Events().fetchAllEvents({
-					fetchEventsFunc: (eventsInputs) =>
-						this.fetchUnstakeRequestEvents({
-							...eventsInputs,
-							walletAddress,
-						}),
-				})
-			).filter((event) => event.staker === inputs.walletAddress),
-		]);
+		const eventsInputs = {
+			cursor: 0,
+			limits: 100,
+		};
+		const unstakeEvents = (
+			await this.fetchUnstakeEvents({
+				...eventsInputs,
+				walletAddress,
+			})
+		).events;
 
-		const positions: UnstakePosition[] = requestEvents.map((request) => {
-			const foundIndex = successEvents.findIndex(
-				(success) => success.afSuiWrapperId === request.afSuiWrapperId
-			);
-			if (foundIndex >= 0)
-				return {
-					...successEvents[foundIndex],
-					state: "SUCCESS",
-					epoch: request.epoch,
-				};
-
-			return {
-				state: "REQUEST",
-				...request,
-			};
-		});
-
-		return positions;
+		return unstakeEvents;
 	};
 
 	public fetchAllStakePositions = async (inputs: {
@@ -348,81 +425,36 @@ export class StakingApi {
 	}): Promise<StakePosition[]> => {
 		const { walletAddress } = inputs;
 
-		const [mintedEvents, successEvents, failedEvents, requestEvents] =
-			await Promise.all([
-				// afSui mint
-				(
-					await this.Provider.Events().fetchAllEvents({
-						fetchEventsFunc: (eventsInputs) =>
-							this.fetchAfSuiMintedEvents({
-								...eventsInputs,
-								walletAddress,
-							}),
-					})
-				).filter((event) => event.staker === inputs.walletAddress),
-				// stake success
-				(
-					await this.Provider.Events().fetchAllEvents({
-						fetchEventsFunc: (eventsInputs) =>
-							this.fetchStakeSuccessEvents({
-								...eventsInputs,
-								walletAddress,
-							}),
-					})
-				).filter((event) => event.staker === inputs.walletAddress),
-				// stake fail
-				(
-					await this.Provider.Events().fetchAllEvents({
-						fetchEventsFunc: (eventsInputs) =>
-							this.fetchStakeFailedEvents({
-								...eventsInputs,
-								walletAddress,
-							}),
-					})
-				).filter((event) => event.staker === inputs.walletAddress),
-				// stake request
-				(
-					await this.Provider.Events().fetchAllEvents({
-						fetchEventsFunc: (eventsInput) =>
-							this.fetchStakeRequestEvents({
-								...eventsInput,
-								walletAddress,
-							}),
-					})
-				).filter((event) => event.staker === inputs.walletAddress),
-			]);
+		const eventsInputs: ApiIndexerEventsBody = {
+			cursor: 0,
+			limit: 100,
+		};
+		const [mintedEvents, requestEvents] = await Promise.all([
+			// afSui mint
+			(
+				await this.fetchAfSuiMintedEvents({
+					...eventsInputs,
+					walletAddress,
+				})
+			).events,
+			// stake request
+			(
+				await this.fetchStakeRequestEvents({
+					...eventsInputs,
+					walletAddress,
+				})
+			).events,
+		]);
 
 		const positions: StakePosition[] = requestEvents.map((request) => {
 			const foundMintIndex = mintedEvents.findIndex(
-				(mint) => mint.suiWrapperId === request.suiWrapperId
+				(mint) => mint.suiId === request.suiId
 			);
 			if (foundMintIndex >= 0)
 				return {
 					...mintedEvents[foundMintIndex],
 					state: "AFSUI_MINTED",
 					validatorAddress: request.validatorAddress,
-					epoch: request.epoch,
-				};
-
-			const foundSuccessIndex = successEvents.findIndex(
-				(mint) => mint.suiWrapperId === request.suiWrapperId
-			);
-			if (foundSuccessIndex >= 0)
-				return {
-					...successEvents[foundSuccessIndex],
-					state: "SUCCESS",
-					afSuiMintAmount: undefined,
-					epoch: request.epoch,
-				};
-
-			const foundFailedIndex = failedEvents.findIndex(
-				(mint) => mint.suiWrapperId === request.suiWrapperId
-			);
-			if (foundFailedIndex >= 0)
-				return {
-					...failedEvents[foundFailedIndex],
-					state: "FAILED",
-					afSuiMintAmount: undefined,
 					epoch: request.epoch,
 				};
 
@@ -442,157 +474,73 @@ export class StakingApi {
 
 	public fetchSuiTvl = async (): Promise<Balance> => {
 		const tx = new TransactionBlock();
-		this.getStakedSuiTvlTx({ tx });
+		this.totalSuiAmountTx({ tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 		return Casting.bigIntFromBytes(bytes);
 	};
 
-	public fetchAfSuiExchangeRate = async (): Promise<number> => {
-		const [suiTvl, afSuiSupply] = await Promise.all([
-			this.fetchSuiTvl(),
-			this.fetchAfSuiSupply(),
-		]);
-		return suiTvl <= BigInt(0) || afSuiSupply <= BigInt(0)
-			? 1
-			: Number(afSuiSupply) / Number(suiTvl);
+	public fetchAfSuiToSuiExchangeRate = async (): Promise<number> => {
+		const tx = new TransactionBlock();
+		this.afsuiToSuiExchangeRateTx({ tx });
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		const exchangeRate = Fixed.directCast(Casting.bigIntFromBytes(bytes));
+		return exchangeRate <= 0 ? 1 : exchangeRate;
 	};
 
 	// =========================================================================
 	//  Events
 	// =========================================================================
 
-	// TODO: add and filtering once available
-	public fetchStakeRequestEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			StakeRequestEventOnChain,
-			StakeRequestEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.stakeRequest,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
+	public async fetchStakeRequestEvents(inputs: ApiIndexerUserEventsBody) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/events/staked/${walletAddress}`,
+			{
+				cursor,
+				limit,
 			},
-			eventFromEventOnChain: Casting.staking.stakeRequestEventFromOnChain,
-		});
-	};
+			Casting.staking.stakeRequestEventFromIndexerOnChain
+		);
+	}
 
-	public fetchUnstakeRequestEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			UnstakeRequestEventOnChain,
-			UnstakeRequestEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.unstakeRequest,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
+	public async fetchUnstakeEvents(inputs: ApiIndexerUserEventsBody) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/events/unstaked/${walletAddress}`,
+			{
+				cursor,
+				limit,
 			},
-			eventFromEventOnChain:
-				Casting.staking.unstakeRequestEventFromOnChain,
-		});
-	};
+			Casting.staking.unstakeEventFromIndexerOnChain
+		);
+	}
 
-	public fetchStakeSuccessEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			StakeSuccessEventOnChain,
-			StakeSuccessEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.stakeSuccess,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
+	public async fetchAfSuiMintedEvents(inputs: ApiIndexerUserEventsBody) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/events/afsui_minted/${walletAddress}`,
+			{
+				cursor,
+				limit,
 			},
-			eventFromEventOnChain: Casting.staking.stakeSuccessEventFromOnChain,
-		});
-	};
-
-	public fetchUnstakeSuccessEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			UnstakeSuccessEventOnChain,
-			UnstakeSuccessEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.unstakeSuccess,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			eventFromEventOnChain:
-				Casting.staking.unstakeSuccessEventFromOnChain,
-		});
-	};
-
-	public fetchStakeFailedEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			StakeFailedEventOnChain,
-			StakeFailedEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.stakeFailed,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			eventFromEventOnChain: Casting.staking.stakeFailedEventFromOnChain,
-		});
-	};
-
-	public fetchAfSuiMintedEvents = async (inputs: UserEventsInputs) => {
-		return await this.Provider.Events().fetchCastEventsWithCursor<
-			AfSuiMintedEventOnChain,
-			AfSuiMintedEvent
-		>({
-			...inputs,
-			query: {
-				// And: [
-				// 	{
-				MoveEventType: this.eventTypes.afSuiMinted,
-				// 	},
-				// 	{
-				// 		Sender: inputs.walletAddress,
-				// 	},
-				// ],
-			},
-			eventFromEventOnChain: Casting.staking.afSuiMintedEventFromOnChain,
-		});
-	};
+			Casting.staking.afSuiMintedEventFromIndexerOnChain
+		);
+	}
 
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
 
+	// TODO: use this function
 	public liquidStakingApy = (inputs: {
 		delegatedStakes: DelegatedStake[];
 		validatorApys: ValidatorsApy;
 	}): number => {
+		throw new Error("TODO");
+
 		const { delegatedStakes, validatorApys } = inputs;
 
 		const totalStakeAmount = Helpers.sumBigInt(
@@ -628,56 +576,6 @@ export class StakingApi {
 	};
 
 	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Event Types
-	// =========================================================================
-
-	private stakeRequestEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
-			StakingApi.constants.modules.actions,
-			StakingApi.constants.eventNames.stakeRequest
-		);
-
-	private unstakeRequestEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
-			StakingApi.constants.modules.actions,
-			StakingApi.constants.eventNames.unstakeRequest
-		);
-
-	private stakeFailedEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
-			StakingApi.constants.modules.actions,
-			StakingApi.constants.eventNames.stakeFailed
-		);
-
-	private stakeSuccessEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
-			StakingApi.constants.modules.actions,
-			StakingApi.constants.eventNames.stakeSuccess
-		);
-
-	private unstakeSuccessEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
-			StakingApi.constants.modules.actions,
-			StakingApi.constants.eventNames.unstakeSuccess
-		);
-
-	private afSuiMintedEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
-			StakingApi.constants.modules.actions,
-			StakingApi.constants.eventNames.afSuiMinted
-		);
-
-	// =========================================================================
 	//  Staking Positions Updating
 	// =========================================================================
 
@@ -692,12 +590,10 @@ export class StakingApi {
 
 		let newPositions: StakingPosition[] = [];
 
+		// TODO: use bifilter
 		const unstakePositions = positions.filter(isUnstakePosition);
 		const newUnstakes = isUnstakeEvent(event)
-			? this.updateUnstakePositionsFromEvent({
-					event,
-					unstakePositions,
-			  })
+			? [...unstakePositions, event]
 			: unstakePositions;
 
 		const stakePositions = positions.filter(isStakePosition);
@@ -715,12 +611,49 @@ export class StakingApi {
 		);
 	};
 
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Event Types
+	// =========================================================================
+
+	private stakeRequestEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.lsd,
+			StakingApi.constants.moduleNames.events,
+			StakingApi.constants.eventNames.stakeRequest
+		);
+
+	private unstakeEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.lsd,
+			StakingApi.constants.moduleNames.events,
+			StakingApi.constants.eventNames.unstake
+		);
+
+	private afSuiMintedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.lsd,
+			StakingApi.constants.moduleNames.events,
+			StakingApi.constants.eventNames.afSuiMinted
+		);
+
+	// =========================================================================
+	//  Private Static Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Stake Event Processing
+	// =========================================================================
+
 	private static updateStakePositionsFromEvent = (inputs: {
 		stakePositions: StakePosition[];
 		event: StakeEvent;
 	}): StakePosition[] => {
 		const foundPositionIndex = inputs.stakePositions.findIndex(
-			(pos) => pos.suiWrapperId === inputs.event.suiWrapperId
+			(pos) => pos.suiId === inputs.event.suiId
 		);
 		if (foundPositionIndex < 0) {
 			if (
@@ -751,18 +684,10 @@ export class StakingApi {
 				epoch: foundStakePosition.epoch,
 			};
 
-		if (inputs.event.type.includes(this.constants.eventNames.stakeSuccess))
+		if (inputs.event.type.includes(this.constants.eventNames.stakeRequest))
 			position = {
-				...(inputs.event as StakeSuccessEvent),
-				state: "SUCCESS",
-				afSuiMintAmount: undefined,
-				epoch: foundStakePosition.epoch,
-			};
-
-		if (inputs.event.type.includes(this.constants.eventNames.stakeFailed))
-			position = {
-				...(inputs.event as StakeFailedEvent),
-				state: "FAILED",
+				...(inputs.event as StakeRequestEvent),
+				state: "REQUEST",
 				afSuiMintAmount: undefined,
 				epoch: foundStakePosition.epoch,
 			};
@@ -773,57 +698,5 @@ export class StakingApi {
 		newStakePositions[foundPositionIndex] = position;
 
 		return newStakePositions;
-	};
-
-	private static updateUnstakePositionsFromEvent = (inputs: {
-		unstakePositions: UnstakePosition[];
-		event: UnstakeEvent;
-	}): UnstakePosition[] => {
-		const foundPositionIndex = inputs.unstakePositions.findIndex(
-			(pos) => pos.afSuiWrapperId === inputs.event.afSuiWrapperId
-		);
-		if (foundPositionIndex < 0) {
-			if (
-				inputs.event.type.includes(
-					this.constants.eventNames.unstakeRequest
-				)
-			)
-				return [
-					{
-						...(inputs.event as UnstakeRequestEvent),
-						state: "REQUEST",
-					},
-					...inputs.unstakePositions,
-				];
-
-			return inputs.unstakePositions;
-		}
-
-		const foundPosition = inputs.unstakePositions[foundPositionIndex];
-
-		let position: UnstakePosition | undefined = undefined;
-		if (
-			inputs.event.type.includes(this.constants.eventNames.unstakeSuccess)
-		)
-			position = {
-				...(inputs.event as UnstakeSuccessEvent),
-				state: "SUCCESS",
-				epoch: foundPosition.epoch,
-			};
-
-		if (!position) return inputs.unstakePositions;
-
-		let newPositions = [...inputs.unstakePositions];
-		newPositions[foundPositionIndex] = position;
-
-		return newPositions;
-	};
-
-	public fetchAfSuiSupply = async (): Promise<Balance> => {
-		const tx = new TransactionBlock();
-		this.getAfSuiSupplyTx({ tx });
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
-		return Casting.bigIntFromBytes(bytes);
 	};
 }

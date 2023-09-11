@@ -15,7 +15,11 @@ import { isCetusPoolObject } from "../../external/cetus/cetusTypes";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
 import { BCS } from "@mysten/bcs";
-import { TransactionArgument, TransactionBlock, bcs } from "@mysten/sui.js";
+import {
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 import { Coin } from "../../coin";
 import { Casting, Helpers } from "../../../general/utils";
 import { isFlowXPoolObject } from "../../external/flowX/flowXTypes";
@@ -212,7 +216,7 @@ export class RouterAsyncApiHelpers {
 		}) => TransactionArgument;
 	}): Promise<Balance> => {
 		const tx = new TransactionBlock();
-		tx.setSender(Helpers.rpc.constants.devInspectSigner);
+		tx.setSender(Helpers.inspections.constants.devInspectSigner);
 
 		const coinInStructName = new Coin(inputs.coinInType).coinTypeSymbol;
 		const coinOutStructName = new Coin(inputs.coinOutType).coinTypeSymbol;

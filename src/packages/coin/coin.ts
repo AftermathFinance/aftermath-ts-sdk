@@ -8,8 +8,6 @@ import {
 	CoinSymbol,
 	CoinSymbolToCoinTypes,
 	CoinType,
-	CoinWithAmount,
-	CoinWithAmountOrUndefined,
 	KeyType,
 	SuiNetwork,
 	Url,
@@ -26,6 +24,7 @@ export class Coin extends Caller {
 	public static readonly constants = {
 		suiCoinType:
 			"0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+		suiCoinDecimals: 9,
 	};
 
 	// =========================================================================
@@ -198,15 +197,6 @@ export class Coin extends Caller {
 
 		return { coins, balances };
 	};
-
-	public static trycoinOutWithAmount = (
-		uncheckedCoinWithAmount: CoinWithAmountOrUndefined | undefined
-	): CoinWithAmount | undefined =>
-		uncheckedCoinWithAmount === undefined
-			? undefined
-			: uncheckedCoinWithAmount.coin === undefined
-			? undefined
-			: (uncheckedCoinWithAmount as CoinWithAmount);
 
 	public static coinSymbolForCoinType = (
 		coinType: CoinType,

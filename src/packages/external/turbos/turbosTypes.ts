@@ -1,8 +1,7 @@
-import { ObjectId } from "@mysten/sui.js";
 import {
 	Balance,
 	CoinType,
-	Object,
+	ObjectId,
 	RouterSerializablePool,
 } from "../../../types";
 

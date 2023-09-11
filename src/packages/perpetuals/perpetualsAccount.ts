@@ -1,4 +1,3 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsCancelOrderBody,
@@ -22,6 +21,7 @@ import {
 	SdkPerpetualsSLTPOrderInputs,
 	SuiNetwork,
 	Url,
+	SuiAddress,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";

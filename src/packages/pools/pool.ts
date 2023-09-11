@@ -5,19 +5,17 @@ import {
 	Balance,
 	CoinType,
 	CoinsToBalance,
-	DecimalsScalar,
 	PoolDataPoint,
 	PoolGraphDataTimeframeKey,
 	PoolObject,
 	PoolStats,
 	SuiNetwork,
-	ApiEventsBody,
 	PoolDepositEvent,
 	PoolWithdrawEvent,
 	PoolTradeEvent,
 	Url,
 	ApiPoolAllCoinWithdrawBody,
-	NormalizedBalance,
+	ApiIndexerEventsBody,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -115,49 +113,25 @@ export class Pool extends Caller {
 	//  Events
 	// =========================================================================
 
-	public async getDepositEvents(inputs: ApiEventsBody) {
-		const eventsWithCursor = await this.fetchApiEvents<PoolDepositEvent>(
+	public async getDepositEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<PoolDepositEvent>(
 			"events/deposit",
 			inputs
 		);
-
-		// PRODUCTION: temporary until "And" filter can be used for event filtering
-		return {
-			...eventsWithCursor,
-			events: eventsWithCursor.events.filter(
-				(event) => event.poolId === this.pool.objectId
-			),
-		};
 	}
 
-	public async getWithdrawEvents(inputs: ApiEventsBody) {
-		const eventsWithCursor = await this.fetchApiEvents<PoolWithdrawEvent>(
+	public async getWithdrawEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<PoolWithdrawEvent>(
 			"events/withdraw",
 			inputs
 		);
-
-		// PRODUCTION: temporary until "And" filter can be used for event filtering
-		return {
-			...eventsWithCursor,
-			events: eventsWithCursor.events.filter(
-				(event) => event.poolId === this.pool.objectId
-			),
-		};
 	}
 
-	public async getTradeEvents(inputs: ApiEventsBody) {
-		const eventsWithCursor = await this.fetchApiEvents<PoolTradeEvent>(
+	public async getTradeEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<PoolTradeEvent>(
 			"events/trade",
 			inputs
 		);
-
-		// PRODUCTION: temporary until "And" filter can be used for event filtering
-		return {
-			...eventsWithCursor,
-			events: eventsWithCursor.events.filter(
-				(event) => event.poolId === this.pool.objectId
-			),
-		};
 	}
 
 	// =========================================================================
