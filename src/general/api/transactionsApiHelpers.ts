@@ -10,6 +10,7 @@ import {
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/dist/cjs/client";
+import { getTotalGasUsedUpperBound } from "@mysten/sui.js";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -66,14 +67,11 @@ export class TransactionsApiHelpers {
 
 		const gasData = txResponse.effects.gasUsed;
 		const gasUsed =
-			BigInt(gasData.computationCost) +
-			BigInt(gasData.nonRefundableStorageFee) +
-			BigInt(gasData.storageCost) -
-			BigInt(gasData.storageRebate);
-
+			BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
+		// scale up by 10% for safety margin
 		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
-		tx.setGasBudget(safeGasBudget < 0 ? 0 : safeGasBudget);
+		tx.setGasBudget(safeGasBudget);
 		tx.setGasPrice(referenceGasPrice);
 		return tx;
 	};
