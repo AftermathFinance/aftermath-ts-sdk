@@ -46,16 +46,18 @@ export class OracleApi {
 
 		this.getPriceTx({ ...inputs, tx });
 
-		const [priceBytes, exponentBytes] =
-			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
-				tx,
-			});
+		const priceBytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		const [price, exponent] = [
-			Casting.bigIntFromBytes(priceBytes),
-			Casting.bigIntFromBytes(exponentBytes),
-		];
+		const price = Casting.bigIntFromBytes(priceBytes);
+		const exponent = 18;
 		return Coin.balanceWithDecimals(price, Number(exponent));
+
+		// const [price, exponent] = [
+		// 	Casting.bigIntFromBytes(priceBytes),
+		// 	Casting.bigIntFromBytes(exponentBytes),
+		// ];
+		// return Coin.balanceWithDecimals(price, Number(exponent));
 	};
 
 	// =========================================================================

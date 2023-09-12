@@ -262,8 +262,7 @@ export interface PerpetualsAddresses {
 	objects: {
 		adminCapability: ObjectId;
 		registry: ObjectId;
-		exchanges: Map<CoinType, ExchangeAddresses>;
-		oracle: OracleAddresses;
+		exchanges: Record<CoinType, ExchangeAddresses>;
 	};
 }
 

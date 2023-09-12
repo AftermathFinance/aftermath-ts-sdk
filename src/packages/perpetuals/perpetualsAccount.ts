@@ -38,7 +38,7 @@ export class PerpetualsAccount extends Caller {
 		public readonly accountCap: PerpetualsAccountCap,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network);
+		super(network, "perpetuals");
 	}
 
 	// =========================================================================

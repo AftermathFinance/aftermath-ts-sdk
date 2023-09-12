@@ -357,6 +357,7 @@ bcs.registerStructType(["Leaf", "V"], {
 
 export interface ApiPerpetualsAccountsBody {
 	walletAddress: SuiAddress;
+	coinType: CoinType;
 }
 
 // =========================================================================
@@ -368,6 +369,7 @@ export type ApiPerpetualsPreviewOrderBody = (
 	| ApiPerpetualsMarketOrderBody
 	| ApiPerpetualsSLTPOrderBody
 ) & {
+	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
 	orderbookId: ObjectId;
 };
