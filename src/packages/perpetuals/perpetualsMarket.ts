@@ -7,12 +7,15 @@ import {
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
+	PerpetualsOrderId,
 	PerpetualsOrderPrice,
+	PerpetualsOrderSide,
 	PerpetualsOrderbook,
 	SuiNetwork,
 	Timestamp,
 	Url,
 } from "../../types";
+import { PerpetualsOrderUtils } from "./utils";
 
 export class PerpetualsMarket extends Caller {
 	// =========================================================================
@@ -98,6 +101,17 @@ export class PerpetualsMarket extends Caller {
 		return price9 / this.orderbook.tickSize / denominator;
 	};
 
+	public orderPriceToPrice = (inputs: {
+		orderPrice: PerpetualsOrderPrice;
+	}): number => {
+		const { orderPrice } = inputs;
+
+		const temp = FixedUtils.fixedOneB9 / this.orderbook.lotSize;
+		return FixedUtils.directCast(
+			orderPrice * this.orderbook.tickSize * temp * FixedUtils.fixedOneB9
+		);
+	};
+
 	public lotSize = () => {
 		return PerpetualsMarket.lotOrTickSizeToNumber(this.orderbook.lotSize);
 	};
@@ -105,6 +119,21 @@ export class PerpetualsMarket extends Caller {
 	public tickSize = () => {
 		return PerpetualsMarket.lotOrTickSizeToNumber(this.orderbook.tickSize);
 	};
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	public orderPrice(inputs: {
+		orderId: PerpetualsOrderId;
+		side: PerpetualsOrderSide;
+	}): number {
+		const orderPrice = PerpetualsOrderUtils.price(
+			inputs.orderId,
+			inputs.side
+		);
+		return this.orderPriceToPrice({ orderPrice });
+	}
 
 	// =========================================================================
 	//  Private Helpers

@@ -140,8 +140,8 @@ export interface PerpetualsPosition {
 	quoteAssetNotionalAmount: IFixed;
 	cumFundingRateLong: IFixed;
 	cumFundingRateShort: IFixed;
-	asks: PerpetualsOrderedVecSet;
-	bids: PerpetualsOrderedVecSet;
+	asks: OrderedVecSet;
+	bids: OrderedVecSet;
 	asksQuantity: IFixed;
 	bidsQuantity: IFixed;
 }
@@ -157,7 +157,7 @@ bcs.registerStructType("Position", {
 	bidsQuantity: BCS.U256,
 });
 
-export interface PerpetualsOrderedVecSet extends Object {}
+export interface OrderedVecSet extends Object {}
 
 bcs.registerStructType("OrderedVecSet", {
 	id: "UID",
@@ -274,8 +274,8 @@ bcs.registerStructType("MarketKey", {
 export interface PerpetualsOrderbook extends Object {
 	lotSize: bigint;
 	tickSize: bigint;
-	asks: PerpetualsOrderedMap<Order>;
-	bids: PerpetualsOrderedMap<Order>;
+	asks: PerpetualsOrderedMap<PerpetualsOrder>;
+	bids: PerpetualsOrderedMap<PerpetualsOrder>;
 	counter: bigint;
 }
 
@@ -288,7 +288,7 @@ bcs.registerStructType("Orderbook", {
 	counter: BCS.U64,
 });
 
-export interface Order {
+export interface PerpetualsOrder {
 	accountId: PerpetualsAccountId;
 	size: bigint;
 }

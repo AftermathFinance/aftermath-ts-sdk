@@ -4,9 +4,9 @@ import {
 	PerpetualsMarketManager,
 	PerpetualsMarketState,
 	PerpetualsOrderbook,
-	Order,
+	PerpetualsOrder,
 	PerpetualsOrderedMap,
-	PerpetualsOrderedVecSet,
+	OrderedVecSet,
 	PerpetualsMarketParams,
 	PerpetualsAccountObject,
 	PerpetualsPosition,
@@ -18,6 +18,7 @@ import { Coin } from "../..";
 import { CoinType } from "../../coin/coinTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 
+// TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Account Manager
@@ -85,7 +86,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
-	public static orderedVecSetFromRaw(data: any): PerpetualsOrderedVecSet {
+	public static orderedVecSetFromRaw(data: any): OrderedVecSet {
 		return {
 			objectId: data.id,
 			objectType: data.objectType,
@@ -194,8 +195,8 @@ export class PerpetualsApiCasting {
 			objectId: data.id,
 			lotSize: BigInt(data.lotSize),
 			tickSize: BigInt(data.tickSize),
-			asks: this.orderedMapFromRaw<Order>(data.asks),
-			bids: this.orderedMapFromRaw<Order>(data.bids),
+			asks: this.orderedMapFromRaw<PerpetualsOrder>(data.asks),
+			bids: this.orderedMapFromRaw<PerpetualsOrder>(data.bids),
 			counter: BigInt(data.counter),
 		};
 	};
@@ -217,7 +218,9 @@ export class PerpetualsApiCasting {
 		};
 	}
 
-	public static orderFromRaw = (data: any): Order => {
+	public static partialOrderFromRaw = (
+		data: any
+	): Omit<PerpetualsOrder, "side"> => {
 		return {
 			accountId: BigInt(data.accountId),
 			size: BigInt(data.size),

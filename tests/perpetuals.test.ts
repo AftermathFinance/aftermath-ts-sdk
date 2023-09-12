@@ -37,7 +37,6 @@ import {
 	Sui,
 } from "../src/packages";
 import { IFixedUtils } from "../src/general/utils/iFixedUtils";
-import { PerpetualsOrderUtils } from "../src/packages/perpetuals/utils";
 import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
 import { Helpers, IndexerCaller } from "../src/general/utils";
 

@@ -206,7 +206,6 @@ export class PerpetualsApi {
 	public fetchAllAccountDatas = async (
 		inputs: ApiPerpetualsAccountsBody
 	): Promise<PerpetualsAccountData[]> => {
-		// const accountCaps = await this.fetchOwnedAccountCaps(inputs);
 		const accountCaps = await this.fetchOwnedAccountCapsOfType(inputs);
 		const accounts = await Promise.all(
 			accountCaps.map((cap) => this.fetchAccount(cap))
@@ -217,30 +216,38 @@ export class PerpetualsApi {
 		}));
 	};
 
+	// TODO: make this solution better
 	public fetchPositionOrderIds = async (inputs: {
 		coinType: CoinType;
 		accountId: PerpetualsAccountId;
 		marketId: PerpetualsMarketId;
-	}): Promise<bigint[][]> => {
+	}): Promise<{
+		askOrderIds: PerpetualsOrderId[];
+		bidOrderIds: PerpetualsOrderId[];
+	}> => {
 		const { coinType, accountId, marketId } = inputs;
 
 		const accountStruct = await this.fetchAccount({ coinType, accountId });
 		const account = new PerpetualsAccount(accountStruct, {
 			accountId,
 			coinType,
-			objectId: "0x123",
-			objectType: "0x123::account_cap::AccountCap",
+			objectId: "",
+			objectType: "",
 		});
 		const position = account.positionForMarketId({ marketId });
 
-		const askOrderIds = await this.fetchOrderedVecSet({
-			objectId: position.asks.objectId,
-		});
-		const bidOrderIds = await this.fetchOrderedVecSet({
-			objectId: position.bids.objectId,
-		});
-
-		return [askOrderIds, bidOrderIds];
+		const [askOrderIds, bidOrderIds] = await Promise.all([
+			this.fetchOrderedVecSet({
+				objectId: position.asks.objectId,
+			}),
+			this.fetchOrderedVecSet({
+				objectId: position.bids.objectId,
+			}),
+		]);
+		return {
+			askOrderIds,
+			bidOrderIds,
+		};
 	};
 
 	public fetchMarketState = async (inputs: {
@@ -359,8 +366,10 @@ export class PerpetualsApi {
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
 		const { orderbookId } = inputs;
+		const sender = inputs.walletAddress;
 
 		const tx = new TransactionBlock();
+		tx.setSender(sender);
 
 		// get orderbook price before order
 		this.bookPriceTx({ tx, orderbookId });
@@ -381,7 +390,10 @@ export class PerpetualsApi {
 
 		// inspect tx
 		const bytes =
-			await this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
+			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
+				tx,
+				sender,
+			});
 
 		// deserialize account
 		const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
@@ -825,6 +837,7 @@ export class PerpetualsApi {
 		}
 	) => {
 		const { tx } = inputs;
+		// TODO: make suggested changes
 
 		const txResult =
 			"price" in inputs

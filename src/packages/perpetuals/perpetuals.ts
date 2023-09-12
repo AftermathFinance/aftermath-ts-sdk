@@ -12,12 +12,14 @@ import {
 	PerpetualsOrderSide,
 	PerpetualsOrderbook,
 	CoinType,
+	PerpetualsOrderId,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Casting } from "../../general/utils";
+import { PerpetualsOrderUtils } from "./utils";
 
 export class Perpetuals extends Caller {
 	// =========================================================================
@@ -117,7 +119,11 @@ export class Perpetuals extends Caller {
 	}
 
 	// =========================================================================
-	//  Public Static Helpers
+	//  Public Static Functions
+	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
 	// =========================================================================
 
 	public static positionSide(inputs: {
@@ -136,7 +142,7 @@ export class Perpetuals extends Caller {
 	}
 
 	// =========================================================================
-	//  Public Static Calculations
+	//  Calculations
 	// =========================================================================
 
 	public static calcEntryPrice(inputs: {

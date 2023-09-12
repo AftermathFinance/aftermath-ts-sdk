@@ -5,6 +5,7 @@ import { OracleAddresses, Timestamp } from "../../../types";
 import { OracleCoinSymbol, PriceFeedStorage } from "../oracleTypes";
 import { OracleApiCasting } from "./oracleApiCasting";
 import { Coin } from "../..";
+import { IFixedUtils } from "../../../general/utils/iFixedUtils";
 
 export class OracleApi {
 	public readonly addresses: OracleAddresses;
@@ -50,14 +51,7 @@ export class OracleApi {
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
 		const price = Casting.bigIntFromBytes(priceBytes);
-		const exponent = 18;
-		return Coin.balanceWithDecimals(price, Number(exponent));
-
-		// const [price, exponent] = [
-		// 	Casting.bigIntFromBytes(priceBytes),
-		// 	Casting.bigIntFromBytes(exponentBytes),
-		// ];
-		// return Coin.balanceWithDecimals(price, Number(exponent));
+		return IFixedUtils.numberFromIFixed(price);
 	};
 
 	// =========================================================================
