@@ -3,14 +3,17 @@ import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
 	ApiPerpetualsOrderbookPriceBody,
+	ApiPerpetualsPositionOrderDatasBody,
 	CoinType,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
+	PerpetualsOrderData,
 	PerpetualsOrderId,
 	PerpetualsOrderPrice,
 	PerpetualsOrderSide,
 	PerpetualsOrderbook,
+	PerpetualsPosition,
 	SuiNetwork,
 	Timestamp,
 	Url,
@@ -43,13 +46,25 @@ export class PerpetualsMarket extends Caller {
 	//  Inspections
 	// =========================================================================
 
-	public async getOrderbookPrice() {
+	public getOrderbookPrice() {
 		return this.fetchApi<number, ApiPerpetualsOrderbookPriceBody>(
 			"inspections/orderbook-price",
 			{
 				orderbookId: this.orderbook.objectId,
 			}
 		);
+	}
+
+	public getPositionOrderDatas(inputs: { position: PerpetualsPosition }) {
+		const { position } = inputs;
+		return this.fetchApi<
+			PerpetualsOrderData[],
+			ApiPerpetualsPositionOrderDatasBody
+		>("inspections/position-order-datas", {
+			orderbookId: this.orderbook.objectId,
+			positionAsksId: position.asks.objectId,
+			positionBidsId: position.bids.objectId,
+		});
 	}
 
 	// =========================================================================
@@ -124,13 +139,11 @@ export class PerpetualsMarket extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	public orderPrice(inputs: {
-		orderId: PerpetualsOrderId;
-		side: PerpetualsOrderSide;
-	}): number {
+	public orderPrice(inputs: { orderData: PerpetualsOrderData }): number {
+		const { orderData } = inputs;
 		const orderPrice = PerpetualsOrderUtils.price(
-			inputs.orderId,
-			inputs.side
+			orderData.orderId,
+			orderData.side
 		);
 		return this.orderPriceToPrice({ orderPrice });
 	}

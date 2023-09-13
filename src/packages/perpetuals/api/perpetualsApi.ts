@@ -38,6 +38,8 @@ import {
 	ApiPerpetualsPreviewOrderResponse,
 	ApiPerpetualsOrderbookPriceBody,
 	ApiPerpetualsAccountsBody,
+	PerpetualsOrderData,
+	ApiPerpetualsPositionOrderDatasBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -216,38 +218,40 @@ export class PerpetualsApi {
 		}));
 	};
 
-	// TODO: make this solution better
-	public fetchPositionOrderIds = async (inputs: {
-		coinType: CoinType;
-		accountId: PerpetualsAccountId;
-		marketId: PerpetualsMarketId;
-	}): Promise<{
-		askOrderIds: PerpetualsOrderId[];
-		bidOrderIds: PerpetualsOrderId[];
-	}> => {
-		const { coinType, accountId, marketId } = inputs;
+	public fetchPositionOrderDatas = async (
+		inputs: ApiPerpetualsPositionOrderDatasBody
+	): Promise<PerpetualsOrderData[]> => {
+		const { orderbookId } = inputs;
 
-		const accountStruct = await this.fetchAccount({ coinType, accountId });
-		const account = new PerpetualsAccount(accountStruct, {
-			accountId,
-			coinType,
-			objectId: "",
-			objectType: "",
-		});
-		const position = account.positionForMarketId({ marketId });
+		const { askOrderIds, bidOrderIds } = await this.fetchPositionOrderIds(
+			inputs
+		);
 
-		const [askOrderIds, bidOrderIds] = await Promise.all([
-			this.fetchOrderedVecSet({
-				objectId: position.asks.objectId,
+		const [askOrderSizes, bidOrderSizes] = await Promise.all([
+			this.fetchOrdersSizes({
+				orderIds: askOrderIds,
+				side: PerpetualsOrderSide.Ask,
+				orderbookId,
 			}),
-			this.fetchOrderedVecSet({
-				objectId: position.bids.objectId,
+			this.fetchOrdersSizes({
+				orderIds: bidOrderIds,
+				side: PerpetualsOrderSide.Bid,
+				orderbookId,
 			}),
 		]);
-		return {
-			askOrderIds,
-			bidOrderIds,
-		};
+
+		const askOrders = askOrderIds.map((orderId, index) => ({
+			orderId,
+			size: askOrderSizes[index],
+			side: PerpetualsOrderSide.Ask,
+		}));
+		const bidOrders = bidOrderIds.map((orderId, index) => ({
+			orderId,
+			size: bidOrderSizes[index],
+			side: PerpetualsOrderSide.Bid,
+		}));
+
+		return [...askOrders, ...bidOrders];
 	};
 
 	public fetchMarketState = async (inputs: {
@@ -327,35 +331,6 @@ export class PerpetualsApi {
 		);
 
 		return PerpetualsApiCasting.orderbookFromRaw(orderbook);
-	};
-
-	public fetchOrderedVecSet = async (inputs: {
-		objectId: ObjectId;
-	}): Promise<bigint[]> => {
-		const keyType = `${this.addresses.perpetuals.packages.perpetuals}::ordered_vec_set::Contents`;
-		const resp =
-			await this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: inputs.objectId,
-				name: {
-					type: keyType,
-					value: { dummy_field: Boolean() },
-				},
-			});
-
-		const objectResp = await this.Provider.provider.getObject({
-			id: resp.data?.objectId!,
-			options: { showBcs: true },
-		});
-		const orderKeys = bcs.de(
-			`Field<Contents, vector<u128>>`,
-			Casting.bcsBytesFromSuiObjectResponse(objectResp),
-			"base64"
-		);
-
-		const res = orderKeys.value.map((value: string) => {
-			return BigInt(value);
-		});
-		return res;
 	};
 
 	// =========================================================================
@@ -942,7 +917,31 @@ export class PerpetualsApi {
 			arguments: [
 				typeof orderbookId === "string"
 					? tx.object(orderbookId)
-					: orderbookId,
+					: orderbookId, // Orderbook
+			],
+		});
+	};
+
+	public getOrderSizeTx = (inputs: {
+		tx: TransactionBlock;
+		orderbookId: ObjectId | TransactionArgument;
+		orderId: PerpetualsOrderId;
+		side: PerpetualsOrderSide;
+	}) /* u64 */ => {
+		const { tx, orderbookId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.orderbook,
+				"get_order_size"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof orderbookId === "string"
+					? tx.object(orderbookId)
+					: orderbookId, // Orderbook
+				tx.pure(inputs.orderId, "u128"), // order_id
+				tx.pure(Boolean(inputs.side), "bool"), // side
 			],
 		});
 	};
@@ -1059,5 +1058,82 @@ export class PerpetualsApi {
 
 	public getAccountCapType = (inputs: { coinType: CoinType }): string => {
 		return `${this.addresses.perpetuals.packages.perpetuals}::${PerpetualsApi.constants.moduleNames.accountManager}::AccountCap<${inputs.coinType}>`;
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private fetchPositionOrderIds = async (inputs: {
+		positionAsksId: ObjectId;
+		positionBidsId: ObjectId;
+	}): Promise<{
+		askOrderIds: PerpetualsOrderId[];
+		bidOrderIds: PerpetualsOrderId[];
+	}> => {
+		const { positionAsksId, positionBidsId } = inputs;
+
+		const [askOrderIds, bidOrderIds] = await Promise.all([
+			this.fetchOrderedVecSet({
+				objectId: positionAsksId,
+			}),
+			this.fetchOrderedVecSet({
+				objectId: positionBidsId,
+			}),
+		]);
+
+		return {
+			askOrderIds,
+			bidOrderIds,
+		};
+	};
+
+	private fetchOrderedVecSet = async (inputs: {
+		objectId: ObjectId;
+	}): Promise<bigint[]> => {
+		const keyType = `${this.addresses.perpetuals.packages.perpetuals}::ordered_vec_set::Contents`;
+		const resp =
+			await this.Provider.DynamicFields().fetchDynamicFieldObject({
+				parentId: inputs.objectId,
+				name: {
+					type: keyType,
+					value: { dummy_field: Boolean() },
+				},
+			});
+
+		const objectResp = await this.Provider.provider.getObject({
+			id: resp.data?.objectId!,
+			options: { showBcs: true },
+		});
+		const orderKeys = bcs.de(
+			`Field<Contents, vector<u128>>`,
+			Casting.bcsBytesFromSuiObjectResponse(objectResp),
+			"base64"
+		);
+
+		const res = orderKeys.value.map((value: string) => {
+			return BigInt(value);
+		});
+		return res;
+	};
+
+	private fetchOrdersSizes = async (inputs: {
+		orderIds: PerpetualsOrderId[];
+		side: PerpetualsOrderSide;
+		orderbookId: ObjectId;
+	}): Promise<bigint[]> => {
+		const { orderIds, side, orderbookId } = inputs;
+
+		const tx = new TransactionBlock();
+
+		for (const orderId of orderIds) {
+			this.getOrderSizeTx({ tx, orderId, orderbookId, side });
+		}
+
+		const allBytes =
+			await this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
+
+		const sizes = allBytes.map((bytes) => Casting.bigIntFromBytes(bytes));
+		return sizes;
 	};
 }

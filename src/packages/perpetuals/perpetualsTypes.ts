@@ -271,6 +271,12 @@ bcs.registerStructType("MarketKey", {
 //  Orderbook
 // =========================================================================
 
+export interface PerpetualsOrderData {
+	orderId: PerpetualsOrderId;
+	size: bigint;
+	side: PerpetualsOrderSide;
+}
+
 export interface PerpetualsOrderbook extends Object {
 	lotSize: bigint;
 	tickSize: bigint;
@@ -382,6 +388,12 @@ export interface ApiPerpetualsPreviewOrderResponse {
 
 export interface ApiPerpetualsOrderbookPriceBody {
 	orderbookId: ObjectId;
+}
+
+export interface ApiPerpetualsPositionOrderDatasBody {
+	orderbookId: ObjectId;
+	positionAsksId: ObjectId;
+	positionBidsId: ObjectId;
 }
 
 // =========================================================================
