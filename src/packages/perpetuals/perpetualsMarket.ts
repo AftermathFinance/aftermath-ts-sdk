@@ -2,7 +2,6 @@ import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
-	ApiPerpetualsOrderbookPriceBody,
 	ApiPerpetualsPositionOrderDatasBody,
 	CoinType,
 	PerpetualsMarketId,
@@ -39,7 +38,7 @@ export class PerpetualsMarket extends Caller {
 		public readonly orderbook: PerpetualsOrderbook,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network, "perpetuals");
+		super(network, `perpetuals/${collateralCoinType}/markets/${marketId}`);
 	}
 
 	// =========================================================================
@@ -47,13 +46,7 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	public getOrderbookPrice() {
-		return this.fetchApi<number, ApiPerpetualsOrderbookPriceBody>(
-			"inspections/orderbook-price",
-			{
-				coinType: this.collateralCoinType,
-				marketId: this.marketId,
-			}
-		);
+		return this.fetchApi<number>("orderbook-price");
 	}
 
 	public getPositionOrderDatas(inputs: { position: PerpetualsPosition }) {
@@ -61,9 +54,7 @@ export class PerpetualsMarket extends Caller {
 		return this.fetchApi<
 			PerpetualsOrderData[],
 			ApiPerpetualsPositionOrderDatasBody
-		>("inspections/position-order-datas", {
-			coinType: this.collateralCoinType,
-			marketId: this.marketId,
+		>("position-order-datas", {
 			positionAsksId: position.asks.objectId,
 			positionBidsId: position.bids.objectId,
 		});

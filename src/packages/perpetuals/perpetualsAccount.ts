@@ -57,7 +57,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/deposit-collateral",
 			{
 				...inputs,
-				coinType: this.accountCap.coinType,
+				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
 		);
@@ -71,7 +71,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/withdraw-collateral",
 			{
 				...inputs,
-				coinType: this.accountCap.coinType,
+				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
 		);
@@ -86,7 +86,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/market-order",
 			{
 				...inputs,
-				coinType: this.accountCap.coinType,
+				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
 		);
@@ -97,7 +97,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/limit-order",
 			{
 				...inputs,
-				coinType: this.accountCap.coinType,
+				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
 		);
@@ -108,7 +108,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/sltp-order",
 			{
 				...inputs,
-				coinType: this.accountCap.coinType,
+				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
 		);
@@ -124,7 +124,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/cancel-order",
 			{
 				...inputs,
-				coinType: this.accountCap.coinType,
+				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
 		);
@@ -155,16 +155,16 @@ export class PerpetualsAccount extends Caller {
 	public async getOrderPreview(
 		inputs: Omit<
 			ApiPerpetualsPreviewOrderBody,
-			"accountId" | "coinType" | "accountCapId"
+			"accountId" | "collateralCoinType" | "accountCapId"
 		>
 	) {
 		return this.fetchApi<
 			ApiPerpetualsPreviewOrderResponse,
 			ApiPerpetualsPreviewOrderBody
-		>("inspections/preview-order", {
+		>("preview-order", {
 			...inputs,
 			accountId: this.accountCap.accountId,
-			coinType: this.accountCap.coinType,
+			collateralCoinType: this.accountCap.collateralCoinType,
 			accountCapId: this.accountCap.objectId,
 		});
 	}
@@ -445,11 +445,14 @@ export class PerpetualsAccount extends Caller {
 			(totalPnL - pnl) -
 			quoteAssetAmount;
 
-		if (baseAssetAmount > 0) {
-			return numerator / (MMR * baseAssetAmount - baseAssetAmount);
-		} else {
-			return numerator / -(MMR * baseAssetAmount + baseAssetAmount);
-		}
+		const price = (() => {
+			if (baseAssetAmount > 0) {
+				return numerator / (MMR * baseAssetAmount - baseAssetAmount);
+			} else {
+				return numerator / -(MMR * baseAssetAmount + baseAssetAmount);
+			}
+		})();
+		return price < 0 ? 0 : price;
 	};
 
 	// =========================================================================

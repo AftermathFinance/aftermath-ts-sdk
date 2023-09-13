@@ -47,8 +47,13 @@ export class Perpetuals extends Caller {
 	//  Class Objects
 	// =========================================================================
 
-	public async getAllMarketDatas(): Promise<PerpetualsMarketData[]> {
-		return this.fetchApi<PerpetualsMarketData[]>("markets");
+	public async getAllMarketDatas(inputs: {
+		collateralCoinType: CoinType;
+	}): Promise<PerpetualsMarketData[]> {
+		const { collateralCoinType } = inputs;
+		return this.fetchApi<PerpetualsMarketData[]>(
+			`${collateralCoinType}/markets`
+		);
 	}
 
 	public async getMarket(inputs: {
@@ -57,7 +62,7 @@ export class Perpetuals extends Caller {
 	}): Promise<PerpetualsMarket> {
 		const { marketId, collateralCoinType } = inputs;
 
-		const urlPrefix = `markets/${collateralCoinType}/${marketId}`;
+		const urlPrefix = `${collateralCoinType}/markets/${marketId}`;
 		const [marketData, marketState, orderbook] = await Promise.all([
 			this.fetchApi<PerpetualsMarketData>(urlPrefix),
 			this.fetchApi<PerpetualsMarketState>(`${urlPrefix}/market-state`),
@@ -89,13 +94,42 @@ export class Perpetuals extends Caller {
 		);
 	}
 
+	public async getMarketData(inputs: {
+		marketId: PerpetualsMarketId;
+		collateralCoinType: CoinType;
+	}): Promise<PerpetualsMarketData> {
+		const { marketId, collateralCoinType } = inputs;
+		return this.fetchApi(`${collateralCoinType}/markets/${marketId}`);
+	}
+
+	public async getMarketDatas(inputs: {
+		marketIds: PerpetualsMarketId[];
+		collateralCoinType: CoinType;
+	}): Promise<PerpetualsMarketData[]> {
+		const { collateralCoinType } = inputs;
+		return Promise.all(
+			inputs.marketIds.map((marketId) =>
+				this.getMarketData({
+					marketId,
+					collateralCoinType,
+				})
+			)
+		);
+	}
+
 	public async getUserAccounts(
-		inputs: ApiPerpetualsAccountsBody
+		inputs: ApiPerpetualsAccountsBody & {
+			collateralCoinType: CoinType;
+		}
 	): Promise<PerpetualsAccount[]> {
+		const { collateralCoinType, walletAddress } = inputs;
+
 		const accountDatas = await this.fetchApi<
 			PerpetualsAccountData[],
 			ApiPerpetualsAccountsBody
-		>("accounts", inputs);
+		>(`${collateralCoinType}/accounts`, {
+			walletAddress,
+		});
 
 		return accountDatas.map(
 			(account) =>

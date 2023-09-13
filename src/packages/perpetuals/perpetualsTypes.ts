@@ -120,7 +120,7 @@ bcs.registerStructType("AccountManager", {
 
 export interface PerpetualsAccountCap extends Object {
 	accountId: PerpetualsAccountId;
-	coinType: CoinType;
+	collateralCoinType: CoinType;
 }
 
 bcs.registerStructType("AccountCap", {
@@ -368,7 +368,6 @@ bcs.registerStructType(["Leaf", "V"], {
 
 export interface ApiPerpetualsAccountsBody {
 	walletAddress: SuiAddress;
-	coinType: CoinType;
 }
 
 // =========================================================================
@@ -390,14 +389,7 @@ export interface ApiPerpetualsPreviewOrderResponse {
 	orderbookPriceAfterOrder: number;
 }
 
-export interface ApiPerpetualsOrderbookPriceBody {
-	coinType: ObjectId;
-	marketId: PerpetualsMarketId;
-}
-
 export interface ApiPerpetualsPositionOrderDatasBody {
-	coinType: ObjectId;
-	marketId: PerpetualsMarketId;
 	positionAsksId: ObjectId;
 	positionBidsId: ObjectId;
 }
@@ -408,26 +400,26 @@ export interface ApiPerpetualsPositionOrderDatasBody {
 
 export interface ApiPerpetualsCreateAccountBody {
 	walletAddress: SuiAddress;
-	coinType: CoinType;
+	collateralCoinType: CoinType;
 }
 
 export interface ApiPerpetualsDepositCollateralBody {
 	walletAddress: SuiAddress;
-	coinType: CoinType;
+	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	amount: Balance;
 }
 
 export interface ApiPerpetualsWithdrawCollateralBody {
 	walletAddress: SuiAddress;
-	coinType: CoinType;
+	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	amount: Balance;
 }
 
 export interface ApiPerpetualsMarketOrderBody {
 	walletAddress: SuiAddress;
-	coinType: CoinType;
+	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
@@ -436,7 +428,7 @@ export interface ApiPerpetualsMarketOrderBody {
 
 export interface ApiPerpetualsLimitOrderBody {
 	walletAddress: SuiAddress;
-	coinType: CoinType;
+	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
@@ -447,7 +439,7 @@ export interface ApiPerpetualsLimitOrderBody {
 
 export interface ApiPerpetualsCancelOrderBody {
 	walletAddress: SuiAddress;
-	coinType: CoinType;
+	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
@@ -479,12 +471,12 @@ export type ApiPerpetualsSLTPOrderBody = (
 
 export type SdkPerpetualsMarketOrderInputs = Omit<
 	ApiPerpetualsMarketOrderBody,
-	"accountCapId" | "coinType"
+	"accountCapId" | "collateralCoinType"
 >;
 
 export type SdkPerpetualsLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
-	"accountCapId" | "coinType"
+	"accountCapId" | "collateralCoinType"
 >;
 
 export type SdkPerpetualsSLTPOrderInputs = (

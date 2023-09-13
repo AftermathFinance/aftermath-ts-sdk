@@ -37,7 +37,7 @@ export class PerpetualsApiCasting {
 
 	public static accountManagerFromRaw(data: any): PerpetualsAccountManager {
 		return {
-			objectId: data.id,
+			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
 			maxPendingOrdersPerPosition: BigInt(
@@ -88,7 +88,7 @@ export class PerpetualsApiCasting {
 
 	public static orderedVecSetFromRaw(data: any): OrderedVecSet {
 		return {
-			objectId: data.id,
+			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 		};
 	}
@@ -113,10 +113,10 @@ export class PerpetualsApiCasting {
 			Coin.getInnerCoinType(data.objectType)
 		);
 		return {
-			objectId: data.id,
+			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			accountId: BigInt(data.accountId),
-			coinType,
+			collateralCoinType: coinType,
 		};
 	}
 
@@ -125,10 +125,10 @@ export class PerpetualsApiCasting {
 		coinType: CoinType
 	): PerpetualsAccountCap {
 		return {
-			objectId: data.id,
+			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			accountId: BigInt(data.accountId),
-			coinType,
+			collateralCoinType: coinType,
 		};
 	}
 	// =========================================================================
@@ -148,7 +148,7 @@ export class PerpetualsApiCasting {
 
 	public static marketManagerFromRaw(data: any): PerpetualsMarketManager {
 		return {
-			objectId: data.id,
+			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			feesAccrued: BigInt(data.feesAccrued),
 			minOrderUsdValue: BigInt(data.minOrderUsdValue),
@@ -192,7 +192,7 @@ export class PerpetualsApiCasting {
 	public static orderbookFromRaw = (data: any): PerpetualsOrderbook => {
 		return {
 			objectType: data.objectType,
-			objectId: data.id,
+			objectId: Helpers.addLeadingZeroesToType(data.id),
 			lotSize: BigInt(data.lotSize),
 			tickSize: BigInt(data.tickSize),
 			asks: this.orderedMapFromRaw<PerpetualsOrder>(data.asks),
@@ -203,7 +203,7 @@ export class PerpetualsApiCasting {
 
 	public static orderedMapFromRaw<T>(data: any): PerpetualsOrderedMap<T> {
 		return {
-			objectId: data.id,
+			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			size: BigInt(data.size),
 			counter: BigInt(data.counter),
