@@ -221,7 +221,7 @@ export class PerpetualsApi {
 	public fetchPositionOrderDatas = async (
 		inputs: ApiPerpetualsPositionOrderDatasBody
 	): Promise<PerpetualsOrderData[]> => {
-		const { orderbookId } = inputs;
+		const { coinType, marketId } = inputs;
 
 		const { askOrderIds, bidOrderIds } = await this.fetchPositionOrderIds(
 			inputs
@@ -231,12 +231,14 @@ export class PerpetualsApi {
 			this.fetchOrdersSizes({
 				orderIds: askOrderIds,
 				side: PerpetualsOrderSide.Ask,
-				orderbookId,
+				coinType,
+				marketId,
 			}),
 			this.fetchOrdersSizes({
 				orderIds: bidOrderIds,
 				side: PerpetualsOrderSide.Bid,
-				orderbookId,
+				coinType,
+				marketId,
 			}),
 		]);
 
@@ -340,11 +342,13 @@ export class PerpetualsApi {
 	public fetchPreviewOrder = async (
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
-		const { orderbookId } = inputs;
+		const { coinType, marketId } = inputs;
 		const sender = inputs.walletAddress;
 
 		const tx = new TransactionBlock();
 		tx.setSender(sender);
+
+		const orderbookId = this.getOrderbookTx({ tx, coinType, marketId });
 
 		// get orderbook price before order
 		this.bookPriceTx({ tx, orderbookId });
@@ -364,21 +368,21 @@ export class PerpetualsApi {
 		this.bookPriceTx({ tx, orderbookId });
 
 		// inspect tx
-		const bytes =
-			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
-				tx,
-				sender,
-			});
+		const allBytes = await this.Provider.Inspections().fetchAllBytesFromTx({
+			tx,
+			sender,
+		});
 
 		// deserialize account
 		const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
-			bcs.de("Account", new Uint8Array(bytes[1]))
+			bcs.de("Account", new Uint8Array(allBytes[3][0]))
 		);
+
 		// deserialize orderbook prices
 		const orderbookPriceBeforeOrder =
-			PerpetualsApiCasting.orderbookPriceFromBytes(bytes[0]);
+			PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
 		const orderbookPriceAfterOrder =
-			PerpetualsApiCasting.orderbookPriceFromBytes(bytes[2]);
+			PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
 
 		return {
 			accountAfterOrder,
@@ -390,14 +394,17 @@ export class PerpetualsApi {
 	public fetchOrderbookPrice = async (
 		inputs: ApiPerpetualsOrderbookPriceBody
 	): Promise<number> => {
-		const { orderbookId } = inputs;
+		const { coinType, marketId } = inputs;
 
 		const tx = new TransactionBlock();
 
+		const orderbookId = this.getOrderbookTx({ tx, coinType, marketId });
 		this.bookPriceTx({ tx, orderbookId });
 
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		return PerpetualsApiCasting.orderbookPriceFromBytes(bytes);
 	};
@@ -1120,20 +1127,32 @@ export class PerpetualsApi {
 	private fetchOrdersSizes = async (inputs: {
 		orderIds: PerpetualsOrderId[];
 		side: PerpetualsOrderSide;
-		orderbookId: ObjectId;
+		coinType: ObjectId;
+		marketId: PerpetualsMarketId;
 	}): Promise<bigint[]> => {
-		const { orderIds, side, orderbookId } = inputs;
+		const { orderIds, marketId, side, coinType } = inputs;
 
 		const tx = new TransactionBlock();
 
+		const orderbookId = this.getOrderbookTx({ tx, coinType, marketId });
+
 		for (const orderId of orderIds) {
-			this.getOrderSizeTx({ tx, orderId, orderbookId, side });
+			this.getOrderSizeTx({
+				tx,
+				orderId,
+				orderbookId,
+				side,
+			});
 		}
 
 		const allBytes =
-			await this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
+			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
+				tx,
+			});
 
-		const sizes = allBytes.map((bytes) => Casting.bigIntFromBytes(bytes));
+		const sizes = allBytes
+			.slice(1)
+			.map((bytes) => Casting.bigIntFromBytes(bytes));
 		return sizes;
 	};
 }

@@ -207,7 +207,9 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 		});
 
 		const resultBytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		bcs.registerStructType("SwapStepResult", {
 			current_sqrt_price: BCS.U128,

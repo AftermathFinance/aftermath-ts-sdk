@@ -1022,7 +1022,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		this.poolObjectIdForLpCoinTypeTx({ tx, ...inputs });
 
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		return Casting.addressFromBytes(bytes);
 	};

@@ -476,7 +476,9 @@ export class StakingApi {
 		const tx = new TransactionBlock();
 		this.totalSuiAmountTx({ tx });
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 		return Casting.bigIntFromBytes(bytes);
 	};
 
@@ -484,7 +486,9 @@ export class StakingApi {
 		const tx = new TransactionBlock();
 		this.afsuiToSuiExchangeRateTx({ tx });
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		const exchangeRate = FixedUtils.directCast(
 			Casting.bigIntFromBytes(bytes)

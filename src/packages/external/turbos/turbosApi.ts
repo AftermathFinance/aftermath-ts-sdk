@@ -386,9 +386,9 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 
 		try {
 			const resultBytes =
-				await this.Provider.Inspections().fetchFirstBytesFromTxOutput(
-					tx
-				);
+				await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+					tx,
+				});
 
 			bcs.registerStructType("I32", {
 				bits: BCS.U32,

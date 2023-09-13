@@ -168,7 +168,9 @@ export class SuiFrensApi {
 		this.devInspectMixLimitAndLastEpochMixedMulTx({ ...inputs, tx });
 
 		const [mixLimitBytes, lastEpochMixedBytes] =
-			await this.Provider.Inspections().fetchAllBytesFromTxOutput({ tx });
+			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
+				tx,
+			});
 
 		const mixLimits: any[] = bcs
 			.de("vector<Option<u8>>", new Uint8Array(mixLimitBytes))
@@ -199,7 +201,9 @@ export class SuiFrensApi {
 		this.mixingLimitTx({ tx, ...inputs });
 
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		const unwrapped = Casting.unwrapDeserializedOption(
 			bcs.de("Option<u8>", new Uint8Array(bytes))
@@ -219,7 +223,9 @@ export class SuiFrensApi {
 		this.lastEpochMixedTx({ tx, ...inputs });
 
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		const unwrapped = Casting.unwrapDeserializedOption(
 			bcs.de("Option<u64>", new Uint8Array(bytes))
@@ -236,7 +242,9 @@ export class SuiFrensApi {
 		this.devInspectMetadataObjectIdMulTx({ tx, suiFrenIds });
 
 		const idBytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		const stakedSuiFrenMetadataIds = (
 			bcs.de("vector<address>", new Uint8Array(idBytes)) as string[]

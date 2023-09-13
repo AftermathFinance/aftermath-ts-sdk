@@ -39,7 +39,7 @@ export class PerpetualsMarket extends Caller {
 		public readonly orderbook: PerpetualsOrderbook,
 		public readonly network?: SuiNetwork | Url
 	) {
-		super(network);
+		super(network, "perpetuals");
 	}
 
 	// =========================================================================
@@ -50,7 +50,8 @@ export class PerpetualsMarket extends Caller {
 		return this.fetchApi<number, ApiPerpetualsOrderbookPriceBody>(
 			"inspections/orderbook-price",
 			{
-				orderbookId: this.orderbook.objectId,
+				coinType: this.collateralCoinType,
+				marketId: this.marketId,
 			}
 		);
 	}
@@ -61,7 +62,8 @@ export class PerpetualsMarket extends Caller {
 			PerpetualsOrderData[],
 			ApiPerpetualsPositionOrderDatasBody
 		>("inspections/position-order-datas", {
-			orderbookId: this.orderbook.objectId,
+			coinType: this.collateralCoinType,
+			marketId: this.marketId,
 			positionAsksId: position.asks.objectId,
 			positionBidsId: position.bids.objectId,
 		});

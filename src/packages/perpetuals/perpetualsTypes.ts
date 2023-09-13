@@ -41,6 +41,11 @@ export enum PerpetualsOrderType {
 
 export const bcs = new BCS(getSuiMoveConfig());
 
+// NOTE: should this be moved elsewhere ?
+bcs.registerStructType(["Option", "E"], {
+	vec: ["vector", "E"],
+});
+
 bcs.registerStructType(["Field", "N", "V"], {
 	id: "UID",
 	name: "N",
@@ -377,7 +382,6 @@ export type ApiPerpetualsPreviewOrderBody = (
 ) & {
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
-	orderbookId: ObjectId;
 };
 
 export interface ApiPerpetualsPreviewOrderResponse {
@@ -387,11 +391,13 @@ export interface ApiPerpetualsPreviewOrderResponse {
 }
 
 export interface ApiPerpetualsOrderbookPriceBody {
-	orderbookId: ObjectId;
+	coinType: ObjectId;
+	marketId: PerpetualsMarketId;
 }
 
 export interface ApiPerpetualsPositionOrderDatasBody {
-	orderbookId: ObjectId;
+	coinType: ObjectId;
+	marketId: PerpetualsMarketId;
 	positionAsksId: ObjectId;
 	positionBidsId: ObjectId;
 }

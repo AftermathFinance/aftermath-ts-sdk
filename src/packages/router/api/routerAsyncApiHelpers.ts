@@ -344,7 +344,9 @@ export class RouterAsyncApiHelpers {
 		inputs.devInspectTx({ tx, coinInBytes, routerSwapCapBytes });
 
 		const resultBytes =
-			await inputs.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await inputs.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		const data = bcs.de(
 			`Coin<${coinOutStructName}>`,

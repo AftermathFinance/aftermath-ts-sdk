@@ -48,7 +48,9 @@ export class OracleApi {
 		this.getPriceTx({ ...inputs, tx });
 
 		const priceBytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		const price = Casting.bigIntFromBytes(priceBytes);
 		return IFixedUtils.numberFromIFixed(price);
