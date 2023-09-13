@@ -42,6 +42,7 @@ import {
 	ApiIndexerEventsBody,
 	ObjectId,
 	SuiAddress,
+	ApiPublishLpCoinBody,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -61,6 +62,7 @@ import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
 import { IndexerEventOnChain } from "../../../general/types/castingTypes";
+import { Fixed } from "../../../general/utils/fixed";
 
 export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
@@ -542,13 +544,15 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
-	public buildPublishLpCoinTx = (inputs: {
-		walletAddress: SuiAddress;
-	}): TransactionBlock => {
+	public buildPublishLpCoinTx = (
+		inputs: ApiPublishLpCoinBody
+	): TransactionBlock => {
+		const { lpCoinDecimals } = inputs;
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const upgradeCap = this.publishLpCoinTx({ tx });
+		const upgradeCap = this.publishLpCoinTx({ tx, lpCoinDecimals });
 		tx.transferObjects([upgradeCap], tx.pure(inputs.walletAddress));
 
 		return tx;
@@ -861,11 +865,16 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
-	public publishLpCoinTx = (inputs: { tx: TransactionBlock }) => {
-		const { tx } = inputs;
+	public publishLpCoinTx = (inputs: {
+		tx: TransactionBlock;
+		lpCoinDecimals: CoinDecimal;
+	}) => {
+		const { tx, lpCoinDecimals } = inputs;
 
 		const compiledModulesAndDeps = JSON.parse(
-			this.addresses.pools.other.createLpCoinPackageCompilation
+			this.addresses.pools.other.createLpCoinPackageCompilations[
+				lpCoinDecimals
+			]
 		);
 
 		return tx.publish({
@@ -1078,9 +1087,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		const firstCoin = Object.values(pool.pool.coins)[0];
 		const fees =
 			volume *
-			Pools.tradeFeeWithDecimals(
-				firstCoin.tradeFeeIn + firstCoin.tradeFeeOut
-			);
+			Fixed.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
 
 		const apy = this.calcApy({
 			fees24Hours: fees,
@@ -1251,7 +1258,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	}): PoolDataPoint[] => {
 		const feeData = inputs.volumeData.map((data) => ({
 			time: data.time,
-			value: data.value * Pools.tradeFeeWithDecimals(inputs.poolTradeFee),
+			value: data.value * Fixed.directCast(inputs.poolTradeFee),
 		}));
 
 		return feeData;

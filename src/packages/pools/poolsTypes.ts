@@ -184,6 +184,7 @@ export interface ApiPoolAllCoinWithdrawBody {
 
 export interface ApiPublishLpCoinBody {
 	walletAddress: SuiAddress;
+	lpCoinDecimals: CoinDecimal;
 }
 
 export interface ApiCreatePoolBody {

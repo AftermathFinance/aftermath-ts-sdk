@@ -2,6 +2,7 @@
 //  Name Only
 // =========================================================================
 
+import { CoinDecimal } from "../../types";
 import { ObjectId, SuiAddress } from "./generalTypes";
 
 export type RpcEndpoint = string;
@@ -72,7 +73,7 @@ export interface PoolsAddresses {
 		lpCoinsTable: ObjectId;
 	};
 	other: {
-		createLpCoinPackageCompilation: string;
+		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
 	};
 }
 
