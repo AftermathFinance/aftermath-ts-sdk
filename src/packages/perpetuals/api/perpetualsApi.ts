@@ -1210,14 +1210,13 @@ export class PerpetualsApi {
 			});
 		}
 
-		const allBytes =
-			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
-				tx,
-			});
+		const allBytes = await this.Provider.Inspections().fetchAllBytesFromTx({
+			tx,
+		});
 
 		const sizes = allBytes
 			.slice(1)
-			.map((bytes) => Casting.bigIntFromBytes(bytes));
+			.map((bytes) => Casting.bigIntFromBytes(bytes[0]));
 		return sizes;
 	};
 }
