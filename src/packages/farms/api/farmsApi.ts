@@ -63,7 +63,6 @@ export class FarmsApi {
 			vaultRegistry: "vault_registry",
 			events: "events",
 		},
-
 		eventNames: {
 			// staking pools
 			// creation

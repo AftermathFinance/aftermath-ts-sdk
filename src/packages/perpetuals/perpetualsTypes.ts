@@ -2,6 +2,7 @@ import { BCS, getSuiMoveConfig } from "@mysten/bcs";
 import {
 	AnyObjectType,
 	Balance,
+	Event,
 	IFixed,
 	Object,
 	ObjectId,
@@ -359,6 +360,57 @@ bcs.registerStructType(["Leaf", "V"], {
 });
 
 // =========================================================================
+//  Events
+// =========================================================================
+
+// =========================================================================
+//  Collateral
+// =========================================================================
+
+export interface WithdrewCollateralEvent extends Event {
+	accountId: PerpetualsAccountId;
+	collateral: bigint;
+}
+
+export interface DepositedCollateralEvent extends Event {
+	accountId: PerpetualsAccountId;
+	collateral: bigint;
+	vault: SuiAddress;
+}
+
+// =========================================================================
+//  Account
+// =========================================================================
+
+export interface CreatedAccountEvent extends Event {
+	user: SuiAddress;
+	accountId: PerpetualsAccountId;
+}
+
+// =========================================================================
+//  Order
+// =========================================================================
+
+export interface CanceledOrderEvent extends Event {
+	accountId: PerpetualsAccountId;
+	marketId: PerpetualsMarketId;
+	side: PerpetualsOrderSide;
+	orderId: PerpetualsOrderId;
+	asksQuantity: bigint;
+	bidsQuantity: bigint;
+}
+
+export interface PostedOrderEvent extends Event {
+	accountId: PerpetualsAccountId;
+	marketId: PerpetualsMarketId;
+	orderId: PerpetualsOrderId;
+	side: PerpetualsOrderSide;
+	size: bigint;
+	asksQuantity: bigint;
+	bidsQuantity: bigint;
+}
+
+// =========================================================================
 //  API
 // =========================================================================
 
@@ -383,11 +435,15 @@ export type ApiPerpetualsPreviewOrderBody = (
 	accountId: PerpetualsAccountId;
 };
 
-export interface ApiPerpetualsPreviewOrderResponse {
-	accountAfterOrder: PerpetualsAccountObject;
-	orderbookPriceBeforeOrder: number;
-	orderbookPriceAfterOrder: number;
-}
+export type ApiPerpetualsPreviewOrderResponse =
+	| {
+			error: string;
+	  }
+	| {
+			accountAfterOrder: PerpetualsAccountObject;
+			orderbookPriceBeforeOrder: number;
+			orderbookPriceAfterOrder: number;
+	  };
 
 export interface ApiPerpetualsPositionOrderDatasBody {
 	positionAsksId: ObjectId;

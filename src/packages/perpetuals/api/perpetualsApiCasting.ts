@@ -12,11 +12,26 @@ import {
 	PerpetualsPosition,
 	bcs,
 	PerpetualsAccountCap,
+	DepositedCollateralEvent,
+	WithdrewCollateralEvent,
+	CreatedAccountEvent,
+	CanceledOrderEvent,
+	PostedOrderEvent,
+	PerpetualsOrderSide,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
 import { CoinType } from "../../coin/coinTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
+import {
+	CanceledOrderEventOnChain,
+	CreatedAccountEventOnChain,
+	DepositedCollateralEventOnChain,
+	PostedOrderEventOnChain,
+	WithdrewCollateralEventOnChain,
+	BidOnChain,
+	AskOnChain,
+} from "../perpetualsCastingTypes";
 
 // TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {
@@ -232,5 +247,102 @@ export class PerpetualsApiCasting {
 			bcs.de("Option<u256>", new Uint8Array(bytes))
 		);
 		return FixedUtils.directCast(unwrapped ?? BigInt(0));
+	};
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	// =========================================================================
+	//  Collateral
+	// =========================================================================
+
+	public static withdrewCollateralEventFromOnChain = (
+		eventOnChain: WithdrewCollateralEventOnChain
+	): WithdrewCollateralEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			accountId: BigInt(fields.account_id),
+			collateral: BigInt(fields.collateral),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static depositedCollateralEventFromOnChain = (
+		eventOnChain: DepositedCollateralEventOnChain
+	): DepositedCollateralEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			accountId: BigInt(fields.account_id),
+			collateral: BigInt(fields.collateral),
+			vault: Helpers.addLeadingZeroesToType(fields.vault),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Account
+	// =========================================================================
+
+	public static createdAccountEventFromOnChain = (
+		eventOnChain: CreatedAccountEventOnChain
+	): CreatedAccountEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			user: Helpers.addLeadingZeroesToType(fields.user),
+			accountId: BigInt(fields.account_id),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Order
+	// =========================================================================
+
+	public static canceledOrderEventFromOnChain = (
+		eventOnChain: CanceledOrderEventOnChain
+	): CanceledOrderEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			accountId: BigInt(fields.account_id),
+			marketId: BigInt(fields.market_id),
+			side:
+				fields.side === AskOnChain
+					? PerpetualsOrderSide.Ask
+					: PerpetualsOrderSide.Bid,
+			orderId: BigInt(fields.order_id),
+			asksQuantity: BigInt(fields.asks_quantity),
+			bidsQuantity: BigInt(fields.bids_quantity),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static postedOrderEventFromOnChain = (
+		eventOnChain: PostedOrderEventOnChain
+	): PostedOrderEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			accountId: BigInt(fields.account_id),
+			marketId: BigInt(fields.market_id),
+			orderId: BigInt(fields.order_id),
+			side:
+				fields.side === AskOnChain
+					? PerpetualsOrderSide.Ask
+					: PerpetualsOrderSide.Bid,
+			size: BigInt(fields.size),
+			asksQuantity: BigInt(fields.asks_quantity),
+			bidsQuantity: BigInt(fields.bids_quantity),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
 	};
 }

@@ -12,6 +12,7 @@ import {
 	ObjectId,
 	SuiAddress,
 	OracleAddresses,
+	AnyObjectType,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -45,6 +46,7 @@ import { PerpetualsAccount } from "../perpetualsAccount";
 import { Perpetuals } from "../perpetuals";
 import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -57,12 +59,21 @@ export class PerpetualsApi {
 			accountManager: "account_manager",
 			marketManager: "market_manager",
 			orderbook: "orderbook",
+			events: "events",
 		},
 	};
 
 	public readonly addresses: {
 		perpetuals: PerpetualsAddresses;
 		oracle: OracleAddresses;
+	};
+
+	public readonly eventTypes: {
+		withdrewCollateral: AnyObjectType;
+		depositedCollateral: AnyObjectType;
+		createdAccount: AnyObjectType;
+		canceledOrder: AnyObjectType;
+		postedOrder: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -80,6 +91,16 @@ export class PerpetualsApi {
 		this.addresses = {
 			perpetuals,
 			oracle,
+		};
+		this.eventTypes = {
+			// Collateral
+			withdrewCollateral: this.eventType("WithdrewCollateral"),
+			depositedCollateral: this.eventType("DepositedCollateral"),
+			// Account
+			createdAccount: this.eventType("CreatedAccount"),
+			// Order
+			canceledOrder: this.eventType("CanceledOrder"),
+			postedOrder: this.eventType("PostedOrder"),
 		};
 	}
 
@@ -376,28 +397,36 @@ export class PerpetualsApi {
 		// get orderbook price after order
 		this.bookPriceTx({ tx, orderbookId });
 
-		// inspect tx
-		const allBytes = await this.Provider.Inspections().fetchAllBytesFromTx({
-			tx,
-			sender,
-		});
+		try {
+			// inspect tx
+			const allBytes =
+				await this.Provider.Inspections().fetchAllBytesFromTx({
+					tx,
+					sender,
+				});
 
-		// deserialize account
-		const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
-			bcs.de("Account", new Uint8Array(allBytes[3][0]))
-		);
+			// deserialize account
+			const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
+				bcs.de("Account", new Uint8Array(allBytes[3][0]))
+			);
 
-		// deserialize orderbook prices
-		const orderbookPriceBeforeOrder =
-			PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
-		const orderbookPriceAfterOrder =
-			PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
+			// deserialize orderbook prices
+			const orderbookPriceBeforeOrder =
+				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
+			const orderbookPriceAfterOrder =
+				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
 
-		return {
-			accountAfterOrder,
-			orderbookPriceBeforeOrder,
-			orderbookPriceAfterOrder,
-		};
+			return {
+				accountAfterOrder,
+				orderbookPriceBeforeOrder,
+				orderbookPriceAfterOrder,
+			};
+		} catch (error) {
+			if (!(error instanceof Error))
+				throw new Error("Invalid error thrown on preview order");
+
+			return { error: error.message };
+		}
 	};
 
 	public fetchOrderbookPrice = async (inputs: {
@@ -1219,4 +1248,19 @@ export class PerpetualsApi {
 			.map((bytes) => Casting.bigIntFromBytes(bytes[0]));
 		return sizes;
 	};
+
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Event Types
+	// =========================================================================
+
+	private eventType = (eventName: string) =>
+		EventsApiHelpers.createEventType(
+			this.addresses.perpetuals.packages.perpetuals,
+			PerpetualsApi.constants.moduleNames.events,
+			eventName
+		);
 }

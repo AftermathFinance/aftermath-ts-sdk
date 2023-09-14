@@ -214,9 +214,10 @@ export class EventsApiHelpers {
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
 	): EventType | undefined => {
 		if (
-			!(
-				event.type ===
-				(typeof eventType === "string" ? eventType : eventType())
+			// event.type !==
+			// (typeof eventType === "string" ? eventType : eventType())
+			!event.type.includes(
+				typeof eventType === "string" ? eventType : eventType()
 			)
 		)
 			return;

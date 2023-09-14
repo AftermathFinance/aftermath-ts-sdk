@@ -53,8 +53,7 @@ export class InspectionsApiHelpers {
 
 		if (response.effects.status.status === "failure") {
 			console.error(response.error);
-			console.error(response.effects.status.error);
-			throw Error("dev inspect move call failed");
+			throw Error(response.effects.status.error);
 		}
 
 		if (!response.results)
