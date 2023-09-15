@@ -261,9 +261,13 @@ export class PerpetualsApiCasting {
 		eventOnChain: WithdrewCollateralEventOnChain
 	): WithdrewCollateralEvent => {
 		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
 		return {
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
+			collateralCoinType,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -274,9 +278,13 @@ export class PerpetualsApiCasting {
 		eventOnChain: DepositedCollateralEventOnChain
 	): DepositedCollateralEvent => {
 		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
 		return {
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
+			collateralCoinType,
 			vault: Helpers.addLeadingZeroesToType(fields.vault),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -292,9 +300,13 @@ export class PerpetualsApiCasting {
 		eventOnChain: CreatedAccountEventOnChain
 	): CreatedAccountEvent => {
 		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
 		return {
 			user: Helpers.addLeadingZeroesToType(fields.user),
 			accountId: BigInt(fields.account_id),
+			collateralCoinType,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -309,6 +321,9 @@ export class PerpetualsApiCasting {
 		eventOnChain: CanceledOrderEventOnChain
 	): CanceledOrderEvent => {
 		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
 		return {
 			accountId: BigInt(fields.account_id),
 			marketId: BigInt(fields.market_id),
@@ -316,9 +331,11 @@ export class PerpetualsApiCasting {
 				fields.side === AskOnChain
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
+			size: BigInt(fields.size),
 			orderId: BigInt(fields.order_id),
 			asksQuantity: BigInt(fields.asks_quantity),
 			bidsQuantity: BigInt(fields.bids_quantity),
+			collateralCoinType,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -329,6 +346,9 @@ export class PerpetualsApiCasting {
 		eventOnChain: PostedOrderEventOnChain
 	): PostedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
 		return {
 			accountId: BigInt(fields.account_id),
 			marketId: BigInt(fields.market_id),
@@ -340,6 +360,7 @@ export class PerpetualsApiCasting {
 			size: BigInt(fields.size),
 			asksQuantity: BigInt(fields.asks_quantity),
 			bidsQuantity: BigInt(fields.bids_quantity),
+			collateralCoinType,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

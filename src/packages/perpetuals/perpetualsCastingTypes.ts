@@ -44,6 +44,7 @@ export type CanceledOrderEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
 	market_id: BigIntAsString;
 	side: boolean;
+	size: BigIntAsString;
 	order_id: BigIntAsString;
 	asks_quantity: BigIntAsString;
 	bids_quantity: BigIntAsString;

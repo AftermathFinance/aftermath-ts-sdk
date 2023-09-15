@@ -368,21 +368,40 @@ bcs.registerStructType(["Leaf", "V"], {
 // =========================================================================
 
 export interface WithdrewCollateralEvent extends Event {
+	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: bigint;
 }
 
 export interface DepositedCollateralEvent extends Event {
+	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: bigint;
 	vault: SuiAddress;
 }
+
+export type CollateralChangeEvent =
+	| WithdrewCollateralEvent
+	| DepositedCollateralEvent;
+
+export const isWithdrewCollateralEvent = (
+	event: CollateralChangeEvent
+): event is WithdrewCollateralEvent => {
+	return !isDepositedCollateralEvent(event);
+};
+
+export const isDepositedCollateralEvent = (
+	event: CollateralChangeEvent
+): event is DepositedCollateralEvent => {
+	return "vault" in event;
+};
 
 // =========================================================================
 //  Account
 // =========================================================================
 
 export interface CreatedAccountEvent extends Event {
+	collateralCoinType: CoinType;
 	user: SuiAddress;
 	accountId: PerpetualsAccountId;
 }
@@ -392,15 +411,18 @@ export interface CreatedAccountEvent extends Event {
 // =========================================================================
 
 export interface CanceledOrderEvent extends Event {
+	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
+	size: bigint;
 	orderId: PerpetualsOrderId;
 	asksQuantity: bigint;
 	bidsQuantity: bigint;
 }
 
 export interface PostedOrderEvent extends Event {
+	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	orderId: PerpetualsOrderId;
@@ -409,6 +431,20 @@ export interface PostedOrderEvent extends Event {
 	asksQuantity: bigint;
 	bidsQuantity: bigint;
 }
+
+export type PerpetualsOrderEvent = CanceledOrderEvent | PostedOrderEvent;
+
+export const isCanceledOrderEvent = (
+	event: PerpetualsOrderEvent
+): event is CanceledOrderEvent => {
+	return event.type.toLowerCase().includes("canceledorder");
+};
+
+export const isPostedOrderEvent = (
+	event: PerpetualsOrderEvent
+): event is PostedOrderEvent => {
+	return event.type.toLowerCase().includes("postedorder");
+};
 
 // =========================================================================
 //  API
