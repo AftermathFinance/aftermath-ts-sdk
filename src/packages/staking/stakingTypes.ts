@@ -139,7 +139,7 @@ export type UnstakePositionState = "REQUEST" | "SUI_MINTED";
 export const isStakePosition = (
 	position: StakingPosition
 ): position is StakePosition => {
-	return "stake" in position;
+	return "stakedSuiId" in position;
 };
 
 export const isUnstakePosition = (

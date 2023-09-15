@@ -213,11 +213,12 @@ export class StakingApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
-				"request_stake"
+				"request_stake_and_keep"
 			),
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.objects.safe), // Safe
 				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
 				tx.object(this.addresses.objects.referralVault), // ReferralVault
 				typeof suiCoin === "string" ? tx.object(suiCoin) : suiCoin,
@@ -235,15 +236,11 @@ export class StakingApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
-				"request_unstake_and_keep"
+				"request_unstake"
 			),
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
-				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
-				tx.object(this.addresses.objects.safe), // Safe
-				tx.object(this.addresses.objects.referralVault), // ReferralVault
-				tx.object(this.addresses.objects.treasury), // Treasury
 				typeof afSuiCoin === "string"
 					? tx.object(afSuiCoin)
 					: afSuiCoin,
@@ -266,11 +263,12 @@ export class StakingApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
-				"request_stake_staked_sui_vec"
+				"request_stake_staked_sui_vec_and_keep"
 			),
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.objects.safe), // Safe
 				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
 				tx.object(this.addresses.objects.referralVault), // ReferralVault
 				stakedSuiIdsVec,
@@ -554,36 +552,36 @@ export class StakingApi {
 	public async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/events/staked/${walletAddress}`,
+			`staking/${walletAddress}/events/staked`,
 			{
 				cursor,
 				limit,
 			},
-			Casting.staking.stakedEventFromIndexerOnChain
+			Casting.staking.stakedEventFromOnChain
 		);
 	}
 
 	public async fetchUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/events/unstaked/${walletAddress}`,
+			`staking/${walletAddress}/events/unstaked`,
 			{
 				cursor,
 				limit,
 			},
-			Casting.staking.unstakedEventFromIndexerOnChain
+			Casting.staking.unstakedEventFromOnChain
 		);
 	}
 
 	public async fetchUnstakeRequestedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/events/unstake-requested/${walletAddress}`,
+			`staking/${walletAddress}/events/unstake-requested`,
 			{
 				cursor,
 				limit,
 			},
-			Casting.staking.unstakeRequestedEventFromIndexerOnChain
+			Casting.staking.unstakeRequestedEventFromOnChain
 		);
 	}
 
