@@ -304,4 +304,13 @@ export class Helpers {
 
 		throw new Error("no object display found on " + data.data?.objectId);
 	}
+
+	// =========================================================================
+	//  Error Parsing
+	// =========================================================================
+
+	public static moveErrorCodeFromErrorMessage(errorMessage: string): number {
+		// TODO
+		return 0;
+	}
 }

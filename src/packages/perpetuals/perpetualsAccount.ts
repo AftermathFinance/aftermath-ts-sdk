@@ -138,14 +138,7 @@ export class PerpetualsAccount extends Caller {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
 	}) {
-		const marketId = inputs.marketId;
-		const position = this.positionForMarketId({ marketId });
-		const side = Perpetuals.positionSide({ position });
-		return this.getPlaceMarketOrderTx({
-			...inputs,
-			side,
-			size: position.baseAssetAmount,
-		});
+		return this.getPlaceMarketOrderTx(this.closePositionTxInputs(inputs));
 	}
 
 	// =========================================================================
@@ -483,4 +476,18 @@ export class PerpetualsAccount extends Caller {
 	public collateral(): number {
 		return Casting.IFixed.numberFromIFixed(this.account.collateral);
 	}
+
+	public closePositionTxInputs = (inputs: {
+		walletAddress: SuiAddress;
+		marketId: PerpetualsMarketId;
+	}): SdkPerpetualsMarketOrderInputs => {
+		const marketId = inputs.marketId;
+		const position = this.positionForMarketId({ marketId });
+		const side = Perpetuals.positionSide({ position });
+		return {
+			...inputs,
+			side,
+			size: position.baseAssetAmount,
+		};
+	};
 }
