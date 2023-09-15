@@ -1,18 +1,20 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
-	AfSuiMintedEvent,
-	UnstakeEvent,
-	StakeRequestEvent,
 	ValidatorConfigObject,
+	ValidatorOperationCapObject,
+	UnstakedEvent,
+	UnstakeRequestedEvent,
+	StakedEvent,
 } from "../../../types";
 import {
-	AfSuiMintedEventOnChain,
-	AfSuiMintedIndexerEventOnChain,
-	StakeRequestEventOnChain,
-	StakeRequestIndexerEventOnChain,
-	UnstakeEventOnChain,
-	UnstakeIndexerEventOnChain,
+	StakedEventOnChain,
+	StakedIndexerEventOnChain,
+	UnstakeRequestedEventOnChain,
+	UnstakeRequestedIndexerEventOnChain,
+	UnstakedEventOnChain,
+	UnstakedIndexerEventOnChain,
 	ValidatorConfigFieldsOnChain,
+	ValidatorOperationCapFieldsOnChain,
 } from "./stakingApiCastingTypes";
 import { Fixed } from "../../../general/utils/fixed";
 import { Helpers } from "../../../general/utils";
@@ -25,10 +27,8 @@ export class StakingApiCasting {
 	public static validatorConfigObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): ValidatorConfigObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
-		const allFields = getObjectFields(data) as {
+		const objectType = Helpers.getObjectType(data);
+		const allFields = Helpers.getObjectFields(data) as {
 			value: {
 				fields: {
 					value: {
@@ -41,7 +41,7 @@ export class StakingApiCasting {
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.getObjectId(data),
 			suiAddress: Helpers.addLeadingZeroesToType(fields.sui_address),
 			operationCapId: Helpers.addLeadingZeroesToType(
 				fields.operation_cap_id
@@ -53,16 +53,14 @@ export class StakingApiCasting {
 	public static validatorOperationCapObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): ValidatorOperationCapObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
-
-		const fields = getObjectFields(
+		const objectType = Helpers.getObjectType(data);
+		const fields = Helpers.getObjectFields(
 			data
 		) as ValidatorOperationCapFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: getObjectId(data),
+			objectId: Helpers.getObjectId(data),
 			authorizerValidatorAddress: Helpers.addLeadingZeroesToType(
 				fields.authorizer_validator_address
 			),

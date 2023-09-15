@@ -4,7 +4,6 @@ import {
 	SuiNetwork,
 	ApiStakingPositionsBody,
 	StakingPosition,
-	StakeRequestEvent,
 	ApiStakingEventsBody,
 	Balance,
 	Url,
@@ -13,6 +12,9 @@ import {
 	ApiStakeStakedSuiBody,
 	ApiDelegatedStakesBody,
 	SuiDelegatedStake,
+	ApiValidatorOperationCapsBody,
+	ValidatorOperationCapObject,
+	ApiUpdateValidatorFeeBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
