@@ -1,14 +1,8 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
-import {
-	ObjectId,
-	SuiObjectResponse,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
-import { InterestAddresses } from "../../../types";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { InterestAddresses, ObjectId } from "../../../types";
 import { InterestPoolFieldsOnChain, InterestPoolObject } from "./interestTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
@@ -181,19 +175,20 @@ export class InterestApi
 	private static interestPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): InterestPoolObject => {
-		const objectType = getObjectType(data);
-		if (!objectType) throw new Error("no object type found");
+		const objectType = Helpers.getObjectType(data);
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = getObjectFields(data) as InterestPoolFieldsOnChain;
+		const fields = Helpers.getObjectFields(
+			data
+		) as InterestPoolFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(getObjectId(data)),
+			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
 			kLast: BigInt(fields.k_last),
 			lpCoinSupplyValue: BigInt(fields.lp_coin_supply.fields.value),
 			balanceXValue: BigInt(fields.balance_x),

@@ -1,9 +1,13 @@
-import { TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../providers/aftermathApi";
-import { RpcApiHelpers } from "./rpcApiHelpers";
 import { Byte } from "../../types";
 
 export class InspectionsApiHelpers {
+	public static constants = {
+		devInspectSigner:
+			"0xacb7cb045c3afac61381cdf272cd24ebe115f86361c9f06490482c238765aeb5",
+	};
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -28,11 +32,11 @@ export class InspectionsApiHelpers {
 	public fetchAllBytesFromTxOutput = async (inputs: {
 		tx: TransactionBlock;
 	}): Promise<Byte[][]> => {
-		const signer = RpcApiHelpers.constants.devInspectSigner;
+		const signer = InspectionsApiHelpers.constants.devInspectSigner;
 
 		const response =
 			await this.Provider.provider.devInspectTransactionBlock({
-				sender: signer,
+				sender: signer, // TODO: get tx signer first
 				transactionBlock: inputs.tx,
 			});
 

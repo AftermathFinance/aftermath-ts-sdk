@@ -1,5 +1,11 @@
-import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
-import { AnyObjectType, BigIntAsString, ModuleName } from "./generalTypes";
+import {
+	AnyObjectType,
+	BigIntAsString,
+	ModuleName,
+	ObjectId,
+	SuiAddress,
+	TransactionDigest,
+} from "./generalTypes";
 
 // =========================================================================
 //  On Chain

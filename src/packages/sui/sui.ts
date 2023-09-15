@@ -1,4 +1,4 @@
-import { SuiSystemStateSummary } from "@mysten/sui.js";
+import { SuiSystemStateSummary } from "@mysten/sui.js/client";
 import { Caller } from "../../general/utils/caller";
 import { SuiNetwork, Url } from "../../types";
 

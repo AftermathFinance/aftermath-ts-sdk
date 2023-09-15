@@ -1,4 +1,4 @@
-import { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui.js";
+import { CommitteeInfo, SuiSystemStateSummary } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Helpers } from "../../../general/utils";
 

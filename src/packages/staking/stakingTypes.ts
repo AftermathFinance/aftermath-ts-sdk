@@ -1,4 +1,3 @@
-import { ObjectId, SuiAddress, TransactionDigest } from "@mysten/sui.js";
 import {
 	ApiEventsBody,
 	Balance,
@@ -6,6 +5,9 @@ import {
 	Object,
 	Percentage,
 	Timestamp,
+	ObjectId,
+	SuiAddress,
+	TransactionDigest,
 } from "../../general/types/generalTypes";
 
 // =========================================================================

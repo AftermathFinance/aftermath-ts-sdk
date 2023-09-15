@@ -1,4 +1,4 @@
-import { CoinMetadata } from "@mysten/sui.js";
+import { CoinMetadata } from "@mysten/sui.js/dist/cjs/client";
 import { Balance, Percentage } from "../../general/types/generalTypes";
 
 // =========================================================================
@@ -13,12 +13,11 @@ export type CoinSymbol = string;
 //  Coin with Amount
 // =========================================================================
 
-export type CoinWithBalance = { coin: CoinType; balance: Balance };
-
 export interface CoinWithAmount {
 	coin: CoinType;
 	amount: number;
 }
+
 export interface CoinWithAmountOrUndefined {
 	coin: CoinType;
 	amount: number | undefined;

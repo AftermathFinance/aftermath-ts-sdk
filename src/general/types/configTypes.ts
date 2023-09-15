@@ -1,8 +1,9 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
-
 // =========================================================================
 //  Name Only
 // =========================================================================
+
+import { CoinDecimal } from "../../types";
+import { ObjectId, SuiAddress } from "./generalTypes";
 
 export type RpcEndpoint = string;
 
@@ -19,12 +20,13 @@ interface OptionalConfigAddresses {
 	faucet: FaucetAddresses;
 	staking: StakingAddresses;
 	pools: PoolsAddresses;
-	utilies: UtilitiesAddresses;
+	utilities: UtilitiesAddresses;
 	suiFrens: SuiFrensAddresses;
 	nftAmm: NftAmmAddresses;
 	router: RouterAddresses;
 	referralVault: ReferralVaultAddresses;
 	perpetuals: PerpetualsAddresses;
+	farms: FarmsAddresses;
 }
 
 // =========================================================================
@@ -71,7 +73,7 @@ export interface PoolsAddresses {
 		lpCoinsTable: ObjectId;
 	};
 	other: {
-		createLpCoinPackageCompilation: string;
+		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
 	};
 }
 
@@ -261,6 +263,13 @@ export interface PerpetualsAddresses {
 		registry: ObjectId;
 		exchanges: ExchangeAddresses[]; // Probably a Map<CoinType, ExchangeAddresses> is better
 		oracle: OracleAddresses;
+	};
+}
+
+export interface FarmsAddresses {
+	packages: {
+		vaults: SuiAddress;
+		vaultsInitial: SuiAddress;
 	};
 }
 

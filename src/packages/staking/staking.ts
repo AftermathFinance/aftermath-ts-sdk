@@ -1,24 +1,24 @@
-import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui.js";
 import {
 	ApiStakeBody,
 	ApiUnstakeBody,
 	SuiNetwork,
 	ApiStakingPositionsBody,
 	StakingPosition,
-	StakedEvent,
+	StakeRequestEvent,
 	ApiStakingEventsBody,
 	Balance,
 	Url,
-	UnstakedEvent,
+	UnstakeEvent,
 	ValidatorConfigObject,
 	ApiStakeStakedSuiBody,
 	ApiDelegatedStakesBody,
 	SuiDelegatedStake,
-	ApiValidatorOperationCapsBody,
-	ValidatorOperationCapObject,
-	ApiUpdateValidatorFeeBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import {
+	SuiValidatorSummary,
+	ValidatorsApy,
+} from "@mysten/sui.js/dist/cjs/client";
 
 export class Staking extends Caller {
 	// =========================================================================
@@ -34,6 +34,7 @@ export class Staking extends Caller {
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
 		},
+		defaultValidatorFee: 0, // 0%
 	};
 
 	// =========================================================================

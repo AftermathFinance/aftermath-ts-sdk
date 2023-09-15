@@ -1,6 +1,5 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Pools } from "../../packages/pools/pools";
-import { CoinType, SuiNetwork, Url } from "../../types";
+import { CoinType, SuiAddress, SuiNetwork, Url } from "../../types";
 import { Wallet } from "../wallet/wallet";
 import { SuiFrens } from "../../packages/suiFrens/suiFrens";
 import { Coin } from "../../packages/coin/coin";
@@ -13,6 +12,7 @@ import { Prices } from "../prices/prices";
 import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
 import { HistoricalData } from "../historicalData/historicalData";
 import { Perpetuals } from "../../packages/perpetuals";
+import { Farms } from "../../packages/farms/farms";
 
 /**
  * @class Aftermath Provider
@@ -65,6 +65,7 @@ export class Aftermath extends Caller {
 	public NftAmm = () => new NftAmm(this.network);
 	public ReferralVault = () => new ReferralVault(this.network);
 	public Perpetuals = () => new Perpetuals(this.network);
+	public Farms = () => new Farms(this.network);
 
 	// =========================================================================
 	//  General

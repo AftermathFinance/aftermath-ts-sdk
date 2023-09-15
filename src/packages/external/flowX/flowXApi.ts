@@ -1,7 +1,7 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { Helpers } from "../../../general/utils";
-import { TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { Balance, FlowXAddresses } from "../../../types";
 import { Coin } from "../../coin";
 import { RouterPoolTradeTxInputs } from "../../router";

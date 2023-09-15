@@ -1,4 +1,3 @@
-import { ObjectId } from "@mysten/sui.js";
 import {
 	ApiCreatePoolBody,
 	ApiEventsBody,
@@ -15,11 +14,13 @@ import {
 	Slippage,
 	SuiNetwork,
 	Url,
+	ObjectId,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
+import { Fixed } from "../../general/utils/fixed";
 
 /**
  * @class Pools Provider
@@ -39,12 +40,6 @@ export class Pools extends Caller {
 
 	public static readonly constants = {
 		// TODO: remove this and use fixed class
-		decimals: {
-			coinWeightDecimals: 18,
-			spotPriceDecimals: 18,
-			tradeFeeDecimals: 18,
-			slippageDecimals: 18,
-		},
 		feePercentages: {
 			totalProtocol: 0.00005, // 0.005%
 			// following fees are taked as portions of total protocol fees above
@@ -210,35 +205,8 @@ export class Pools extends Caller {
 		);
 	};
 
-	// =========================================================================
-	//  With Decimals Conversions
-	// =========================================================================
-
-	public static coinWeightWithDecimals = (weight: PoolWeight) =>
-		Number(weight) / 10 ** Pools.constants.decimals.coinWeightDecimals;
-
-	public static spotPriceWithDecimals = (spotPrice: Balance) =>
-		Number(spotPrice) / 10 ** Pools.constants.decimals.spotPriceDecimals;
-
-	public static tradeFeeWithDecimals = (tradeFee: PoolTradeFee) =>
-		Number(tradeFee) / 10 ** Pools.constants.decimals.tradeFeeDecimals;
-
-	// =========================================================================
-	//  Normalize Conversions
-	// =========================================================================
-
-	public static normalizePoolTradeFee = (tradeFee: PoolTradeFee) => {
-		return Coin.balanceWithDecimals(
-			tradeFee,
-			Pools.constants.decimals.tradeFeeDecimals
-		);
-	};
-
 	public static normalizeSlippage = (slippage: Slippage) =>
-		Coin.normalizeBalance(
-			1 - slippage,
-			Pools.constants.decimals.slippageDecimals
-		);
+		Fixed.directUncast(1 - slippage);
 
 	// =========================================================================
 	//  Display

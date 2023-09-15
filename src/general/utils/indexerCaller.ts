@@ -67,8 +67,8 @@ export class IndexerCaller {
 
 	private static indexerBaseUrlForNetwork(network: SuiNetwork | Url): Url {
 		if (network === "MAINNET") return "http://15.204.90.115:8083";
-		if (network === "TESTNET") return "http://15.204.90.115:8086";
-		if (network === "DEVNET") return "http://15.204.90.115:8086";
+		if (network === "TESTNET") return "http://15.204.90.115:8083";
+		if (network === "DEVNET") return "http://15.204.90.115:8083";
 		if (network === "LOCAL") return "http://localhost:8080";
 
 		const safeUrl =
@@ -136,16 +136,18 @@ export class IndexerCaller {
 		castingFunc: (eventOnChain: EventTypeOnChain) => EventType,
 		signal?: AbortSignal
 	): Promise<IndexerEventsWithCursor<EventType>> {
-		const limit = queryParams.limit ?? 100;
+		const limit = queryParams.limit ?? 10;
 		const eventsOnChain = await this.fetchIndexer<
 			EventTypeOnChain[],
+			undefined,
 			IndexerDataWithCursorQueryParams
 		>(
-			IndexerCaller.addParamsToUrl(url, {
+			url,
+			undefined,
+			{
 				skip: queryParams.cursor ?? 0,
 				limit,
-			}),
-			undefined,
+			},
 			signal
 		);
 

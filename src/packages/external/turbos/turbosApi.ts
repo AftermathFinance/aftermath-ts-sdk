@@ -1,18 +1,14 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import {
-	ObjectId,
-	SuiObjectResponse,
-	TransactionBlock,
-	bcs,
-	getObjectFields,
-} from "@mysten/sui.js";
+import { bcs } from "@mysten/sui.js/bcs";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
 	Balance,
 	BigIntAsString,
 	PoolsAddresses,
 	ReferralVaultAddresses,
 	TurbosAddresses,
+	ObjectId,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import {
@@ -24,6 +20,7 @@ import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
+import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
 
 export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================
@@ -97,7 +94,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 			await this.Provider.Objects().fetchCastObjectBatch({
 				objectIds: poolsSimpleInfo.map((poolInfo) => poolInfo.id),
 				objectFromSuiObjectResponse: (data) => {
-					const fields = getObjectFields(data);
+					const fields = Helpers.getObjectFields(data);
 					if (!fields)
 						throw new Error(
 							"no fields found on turbos pool object"
@@ -378,7 +375,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 		coinInAmount: Balance;
 	}): Promise<TurbosCalcTradeResult> => {
 		const tx = new TransactionBlock();
-		tx.setSender(Helpers.rpc.constants.devInspectSigner);
+		tx.setSender(Helpers.inspections.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
 			tx,
@@ -459,11 +456,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	private static partialPoolFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): TurbosPartialPoolObject => {
-		const content = data.data?.content;
-		if (content?.dataType !== "moveObject")
-			throw new Error("sui object response is not an object");
-
-		const fields = content.fields.value.fields as {
+		const fields = Helpers.getObjectFields(data).fields.value.fields as {
 			pool_id: ObjectId;
 			coin_type_a: TypeNameOnChain;
 			coin_type_b: TypeNameOnChain;

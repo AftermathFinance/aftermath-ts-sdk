@@ -1,8 +1,8 @@
-import { SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
 	Event,
+	SuiAddress,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 

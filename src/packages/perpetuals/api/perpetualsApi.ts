@@ -1,9 +1,7 @@
 import {
-	ObjectId,
-	SuiAddress,
 	TransactionArgument,
 	TransactionBlock,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { CoinType, PerpetualsAddresses, Timestamp } from "../../../types";
 
@@ -12,8 +10,10 @@ import {
 	PerpetualsMarketManagerObject,
 	PerpetualsOrderbookObject,
 	PerpetualsPriceFeedStorageObject,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
-import { PerpetualsCasting } from "./perpetualsCasting";
+import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 
@@ -54,7 +54,7 @@ export class PerpetualsApi {
 			{
 				objectId,
 				objectFromSuiObjectResponse:
-					PerpetualsCasting.accountManagerFromSuiObjectResponse,
+					PerpetualsApiCasting.accountManagerFromSuiObjectResponse,
 			}
 		);
 	};
@@ -66,7 +66,7 @@ export class PerpetualsApi {
 			{
 				objectId,
 				objectFromSuiObjectResponse:
-					PerpetualsCasting.marketManagerFromSuiObjectResponse,
+					PerpetualsApiCasting.marketManagerFromSuiObjectResponse,
 			}
 		);
 	};
@@ -78,7 +78,7 @@ export class PerpetualsApi {
 			{
 				objectId,
 				objectFromSuiObjectResponse:
-					PerpetualsCasting.priceFeedStorageFromSuiObjectResponse,
+					PerpetualsApiCasting.priceFeedStorageFromSuiObjectResponse,
 			}
 		);
 	};
@@ -692,7 +692,7 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildLiquidateAcquireTx = Helpers.transactions.creatBuildTxFunc(
+	public buildLiquidateAcquireTx = Helpers.transactions.createBuildTxFunc(
 		this.liquidateAcquireTx
 	);
 

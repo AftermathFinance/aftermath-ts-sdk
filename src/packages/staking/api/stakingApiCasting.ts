@@ -1,25 +1,18 @@
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
-	SuiObjectResponse,
-	getObjectFields,
-	getObjectId,
-	getObjectType,
-} from "@mysten/sui.js";
-import {
-	UnstakedEvent,
-	StakedEvent,
+	AfSuiMintedEvent,
+	UnstakeEvent,
+	StakeRequestEvent,
 	ValidatorConfigObject,
-	ValidatorOperationCapObject,
-	UnstakeRequestedEvent,
 } from "../../../types";
 import {
-	UnstakeRequestedIndexerEventOnChain,
-	StakedEventOnChain,
-	StakedIndexerEventOnChain,
-	UnstakedEventOnChain,
-	UnstakedIndexerEventOnChain,
-	ValidatorOperationCapFieldsOnChain,
+	AfSuiMintedEventOnChain,
+	AfSuiMintedIndexerEventOnChain,
+	StakeRequestEventOnChain,
+	StakeRequestIndexerEventOnChain,
+	UnstakeEventOnChain,
+	UnstakeIndexerEventOnChain,
 	ValidatorConfigFieldsOnChain,
-	UnstakeRequestedEventOnChain,
 } from "./stakingApiCastingTypes";
 import { Fixed } from "../../../general/utils/fixed";
 import { Helpers } from "../../../general/utils";

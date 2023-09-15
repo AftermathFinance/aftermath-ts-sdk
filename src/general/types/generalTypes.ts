@@ -1,11 +1,8 @@
 import {
 	DynamicFieldInfo,
 	EventId,
-	ObjectId,
-	SuiAddress,
 	SuiTransactionBlockResponse,
-	TransactionDigest,
-} from "@mysten/sui.js";
+} from "@mysten/sui.js/dist/cjs/client";
 
 // =========================================================================
 //  bigint
@@ -45,6 +42,9 @@ export type Color = string;
 export type Url = string;
 export type LocalUrl = string;
 export type FilePath = string;
+export type ObjectId = string;
+export type SuiAddress = string;
+export type TransactionDigest = string;
 
 // =========================================================================
 //  Events

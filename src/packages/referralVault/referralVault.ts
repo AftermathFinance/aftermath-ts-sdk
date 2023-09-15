@@ -1,6 +1,5 @@
-import { SuiAddress } from "@mysten/sui.js";
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork, Url } from "../../types";
+import { SuiAddress, SuiNetwork, Url } from "../../types";
 
 export class ReferralVault extends Caller {
 	// =========================================================================

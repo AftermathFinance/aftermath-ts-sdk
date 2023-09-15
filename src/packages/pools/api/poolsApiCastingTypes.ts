@@ -1,10 +1,11 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import {
 	AnyObjectType,
 	Balance,
 	BigIntAsString,
 	CoinType,
 	PoolName,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import {
 	EventOnChain,

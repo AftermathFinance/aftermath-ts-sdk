@@ -2,14 +2,14 @@ import {
 	Balance,
 	Event,
 	Object,
+	ObjectId,
 	Slippage,
+	SuiAddress,
 	Timestamp,
 	Url,
 } from "../../general/types/generalTypes";
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { TransactionArgument } from "@mysten/sui.js";
 import { RouterSerializablePool } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
@@ -184,6 +184,7 @@ export interface ApiPoolAllCoinWithdrawBody {
 
 export interface ApiPublishLpCoinBody {
 	walletAddress: SuiAddress;
+	lpCoinDecimals: CoinDecimal;
 }
 
 export interface ApiCreatePoolBody {

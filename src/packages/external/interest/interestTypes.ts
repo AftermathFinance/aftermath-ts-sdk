@@ -1,4 +1,3 @@
-import { ObjectId } from "@mysten/sui.js";
 import { CoinDecimal, CoinType } from "../../coin/coinTypes";
 import {
 	AnyObjectType,
@@ -6,6 +5,7 @@ import {
 	BigIntAsString,
 	Object,
 	RouterSerializablePool,
+	ObjectId,
 } from "../../../types";
 import { SupplyOnChain } from "../../../general/types/castingTypes";
 

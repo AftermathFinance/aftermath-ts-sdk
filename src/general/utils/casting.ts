@@ -1,11 +1,13 @@
-import { SuiAddress, bcs } from "@mysten/sui.js";
+import { bcs } from "@mysten/sui.js/bcs";
 import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
-import { Byte } from "../types";
+import { Byte, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
+import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
+import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
 
 export class Casting {
 	// =========================================================================
@@ -18,6 +20,8 @@ export class Casting {
 	public static staking = StakingApiCasting;
 	public static nftAmm = NftAmmApiCasting;
 	public static router = RouterApiCasting;
+	public static perpetuals = PerpetualsApiCasting;
+	public static farms = FarmsApiCasting;
 
 	// =========================================================================
 	//  Constants

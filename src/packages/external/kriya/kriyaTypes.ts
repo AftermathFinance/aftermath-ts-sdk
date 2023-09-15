@@ -1,4 +1,3 @@
-import { ObjectId, SuiAddress } from "@mysten/sui.js";
 import { CoinDecimal, CoinType } from "../../coin/coinTypes";
 import {
 	AnyObjectType,
@@ -7,6 +6,8 @@ import {
 	Event,
 	Object,
 	RouterSerializablePool,
+	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import {
 	EventOnChain,

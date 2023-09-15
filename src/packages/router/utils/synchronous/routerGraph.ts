@@ -20,12 +20,12 @@ import {
 	RouterCoinOutThroughPoolEdges,
 	RouterPoolsById,
 	RouterSerializablePool,
+	SuiAddress,
 } from "../../../../types";
 import {
 	RouterPoolInterface,
 	createRouterPool,
 } from "./interfaces/routerPoolInterface";
-import { SuiAddress } from "@mysten/sui.js";
 import { Router } from "../../router";
 
 // =========================================================================
