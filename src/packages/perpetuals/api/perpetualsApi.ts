@@ -59,6 +59,8 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 import {
 	CanceledOrderEventOnChain,
 	DepositedCollateralEventOnChain,
+	FilledMakerOrderEventOnChain,
+	FilledTakerOrderEventOnChain,
 	PostedOrderEventOnChain,
 	WithdrewCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
@@ -89,6 +91,8 @@ export class PerpetualsApi {
 		createdAccount: AnyObjectType;
 		canceledOrder: AnyObjectType;
 		postedOrder: AnyObjectType;
+		filledMakerOrder: AnyObjectType;
+		filledTakerOrder: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -116,6 +120,8 @@ export class PerpetualsApi {
 			// Order
 			canceledOrder: this.eventType("CanceledOrder"),
 			postedOrder: this.eventType("PostedOrder"),
+			filledMakerOrder: this.eventType("FilledMakerOrder"),
+			filledTakerOrder: this.eventType("FilledTakerOrder"),
 		};
 	}
 
@@ -413,16 +419,24 @@ export class PerpetualsApi {
 				cursor,
 				limit,
 			},
-			(event) =>
-				(event as EventOnChain<any>).type.includes(
-					this.eventTypes.canceledOrder
-				)
+			(event) => {
+				const eventType = (event as EventOnChain<any>).type;
+				return eventType.includes(this.eventTypes.canceledOrder)
 					? Casting.perpetuals.canceledOrderEventFromOnChain(
 							event as CanceledOrderEventOnChain
 					  )
-					: Casting.perpetuals.postedOrderEventFromOnChain(
+					: eventType.includes(this.eventTypes.postedOrder)
+					? Casting.perpetuals.postedOrderEventFromOnChain(
 							event as PostedOrderEventOnChain
 					  )
+					: eventType.includes(this.eventTypes.filledMakerOrder)
+					? Casting.perpetuals.filledMakerOrderFromOnChain(
+							event as FilledMakerOrderEventOnChain
+					  )
+					: Casting.perpetuals.filledTakerOrderFromOnChain(
+							event as FilledTakerOrderEventOnChain
+					  );
+			}
 		);
 	}
 

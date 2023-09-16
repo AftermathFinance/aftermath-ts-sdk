@@ -18,6 +18,8 @@ import {
 	CanceledOrderEvent,
 	PostedOrderEvent,
 	PerpetualsOrderSide,
+	FilledTakerOrderEvent,
+	FilledMakerOrderEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
@@ -31,6 +33,8 @@ import {
 	WithdrewCollateralEventOnChain,
 	BidOnChain,
 	AskOnChain,
+	FilledMakerOrderEventOnChain,
+	FilledTakerOrderEventOnChain,
 } from "../perpetualsCastingTypes";
 
 // TODO: handle 0xs and leading 0s everywhere
@@ -361,6 +365,66 @@ export class PerpetualsApiCasting {
 			asksQuantity: BigInt(fields.asks_quantity),
 			bidsQuantity: BigInt(fields.bids_quantity),
 			collateralCoinType,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static filledMakerOrderFromOnChain = (
+		eventOnChain: FilledMakerOrderEventOnChain
+	): FilledMakerOrderEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			accountId: BigInt(fields.account_id),
+			collateral: BigInt(fields.collateral),
+			marketId: BigInt(fields.market_id),
+			orderId: BigInt(fields.order_id),
+			// TODO: move to helper func ?
+			side:
+				fields.side === AskOnChain
+					? PerpetualsOrderSide.Ask
+					: PerpetualsOrderSide.Bid,
+			size: BigInt(fields.size),
+			dropped: fields.dropped,
+			baseAssetAmount: BigInt(fields.base_asset_amount),
+			quoteAssetNotionalAmount: BigInt(
+				fields.quote_asset_notional_amount
+			),
+			asksQuantity: BigInt(fields.asks_quantity),
+			bidsQuantity: BigInt(fields.bids_quantity),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static filledTakerOrderFromOnChain = (
+		eventOnChain: FilledTakerOrderEventOnChain
+	): FilledTakerOrderEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			accountId: BigInt(fields.account_id),
+			collateral: BigInt(fields.collateral),
+			marketId: BigInt(fields.market_id),
+			baseAssetAmount: BigInt(fields.base_asset_amount),
+			quoteAssetNotionalAmount: BigInt(
+				fields.quote_asset_notional_amount
+			),
+			side:
+				fields.side === AskOnChain
+					? PerpetualsOrderSide.Ask
+					: PerpetualsOrderSide.Bid,
+			size: BigInt(fields.size),
+			price: BigInt(fields.price),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

@@ -418,8 +418,8 @@ export interface CanceledOrderEvent extends Event {
 	side: PerpetualsOrderSide;
 	size: bigint;
 	orderId: PerpetualsOrderId;
-	asksQuantity: bigint;
-	bidsQuantity: bigint;
+	asksQuantity: IFixed;
+	bidsQuantity: IFixed;
 }
 
 export interface PostedOrderEvent extends Event {
@@ -429,11 +429,44 @@ export interface PostedOrderEvent extends Event {
 	orderId: PerpetualsOrderId;
 	side: PerpetualsOrderSide;
 	size: bigint;
-	asksQuantity: bigint;
-	bidsQuantity: bigint;
+	asksQuantity: IFixed;
+	bidsQuantity: IFixed;
 }
 
-export type PerpetualsOrderEvent = CanceledOrderEvent | PostedOrderEvent;
+export interface FilledMakerOrderEvent extends Event {
+	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
+	collateral: IFixed;
+	marketId: PerpetualsMarketId;
+	orderId: PerpetualsOrderId;
+	side: PerpetualsOrderSide;
+	size: bigint;
+	dropped: boolean;
+	baseAssetAmount: IFixed;
+	quoteAssetNotionalAmount: IFixed;
+	asksQuantity: IFixed;
+	bidsQuantity: IFixed;
+}
+
+export interface FilledTakerOrderEvent extends Event {
+	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
+	collateral: IFixed;
+	marketId: PerpetualsMarketId;
+	baseAssetAmount: IFixed;
+	quoteAssetNotionalAmount: IFixed;
+	side: PerpetualsOrderSide;
+	size: bigint;
+	price: bigint;
+}
+
+export type PerpetualsOrderEvent =
+	| CanceledOrderEvent
+	| PostedOrderEvent
+	| FilledMakerOrderEvent
+	| FilledTakerOrderEvent;
+
+// TODO: make all these checks use string value from perps api
 
 export const isCanceledOrderEvent = (
 	event: PerpetualsOrderEvent
@@ -445,6 +478,18 @@ export const isPostedOrderEvent = (
 	event: PerpetualsOrderEvent
 ): event is PostedOrderEvent => {
 	return event.type.toLowerCase().includes("postedorder");
+};
+
+export const isFilledMakerOrderEvent = (
+	event: PerpetualsOrderEvent
+): event is FilledMakerOrderEvent => {
+	return event.type.toLowerCase().includes("filledmakerorder");
+};
+
+export const isFilledTakerOrderEvent = (
+	event: PerpetualsOrderEvent
+): event is FilledTakerOrderEvent => {
+	return event.type.toLowerCase().includes("filledtakerorder");
 };
 
 // =========================================================================

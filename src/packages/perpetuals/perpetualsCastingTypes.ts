@@ -59,3 +59,28 @@ export type PostedOrderEventOnChain = EventOnChain<{
 	asks_quantity: BigIntAsString;
 	bids_quantity: BigIntAsString;
 }>;
+
+export type FilledMakerOrderEventOnChain = EventOnChain<{
+	account_id: BigIntAsString;
+	collateral: BigIntAsString;
+	market_id: BigIntAsString;
+	order_id: BigIntAsString;
+	side: boolean;
+	size: BigIntAsString;
+	dropped: boolean;
+	base_asset_amount: BigIntAsString;
+	quote_asset_notional_amount: BigIntAsString;
+	asks_quantity: BigIntAsString;
+	bids_quantity: BigIntAsString;
+}>;
+
+export type FilledTakerOrderEventOnChain = EventOnChain<{
+	account_id: BigIntAsString;
+	collateral: BigIntAsString;
+	market_id: BigIntAsString;
+	base_asset_amount: BigIntAsString;
+	quote_asset_notional_amount: BigIntAsString;
+	side: boolean;
+	size: BigIntAsString;
+	price: BigIntAsString;
+}>;
