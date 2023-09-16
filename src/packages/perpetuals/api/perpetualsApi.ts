@@ -13,6 +13,8 @@ import {
 	SuiAddress,
 	OracleAddresses,
 	AnyObjectType,
+	ApiIndexerUserEventsBody,
+	IndexerEventsWithCursor,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -40,6 +42,12 @@ import {
 	ApiPerpetualsAccountsBody,
 	PerpetualsOrderData,
 	ApiPerpetualsPositionOrderDatasBody,
+	ApiPerpetualsEventsBody,
+	CollateralChangeEvent,
+	isWithdrewCollateralEvent,
+	DepositedCollateralEvent,
+	WithdrewCollateralEvent,
+	PerpetualsOrderEvent,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -47,6 +55,13 @@ import { Perpetuals } from "../perpetuals";
 import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventOnChain } from "../../../general/types/castingTypes";
+import {
+	CanceledOrderEventOnChain,
+	DepositedCollateralEventOnChain,
+	PostedOrderEventOnChain,
+	WithdrewCollateralEventOnChain,
+} from "../perpetualsCastingTypes";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -360,6 +375,56 @@ export class PerpetualsApi {
 
 		return PerpetualsApiCasting.orderbookFromRaw(orderbook);
 	};
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async fetchCollateralEvents(
+		inputs: ApiPerpetualsEventsBody
+	): Promise<IndexerEventsWithCursor<CollateralChangeEvent>> {
+		const { accountId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`perpetuals/${accountId}/events/collateral`,
+			{
+				cursor,
+				limit,
+			},
+			(event) =>
+				(event as EventOnChain<any>).type.includes(
+					this.eventTypes.withdrewCollateral
+				)
+					? Casting.perpetuals.withdrewCollateralEventFromOnChain(
+							event as WithdrewCollateralEventOnChain
+					  )
+					: Casting.perpetuals.depositedCollateralEventFromOnChain(
+							event as DepositedCollateralEventOnChain
+					  )
+		);
+	}
+
+	public async fetchOrderEvents(
+		inputs: ApiPerpetualsEventsBody
+	): Promise<IndexerEventsWithCursor<PerpetualsOrderEvent>> {
+		const { accountId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`perpetuals/${accountId}/events/order`,
+			{
+				cursor,
+				limit,
+			},
+			(event) =>
+				(event as EventOnChain<any>).type.includes(
+					this.eventTypes.canceledOrder
+				)
+					? Casting.perpetuals.canceledOrderEventFromOnChain(
+							event as CanceledOrderEventOnChain
+					  )
+					: Casting.perpetuals.postedOrderEventFromOnChain(
+							event as PostedOrderEventOnChain
+					  )
+		);
+	}
 
 	// =========================================================================
 	//  Inspections

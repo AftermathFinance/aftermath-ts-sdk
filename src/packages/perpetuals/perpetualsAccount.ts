@@ -22,6 +22,13 @@ import {
 	SuiNetwork,
 	Url,
 	SuiAddress,
+	ApiIndexerEventsBody,
+	DepositedCollateralEvent,
+	PostedOrderEvent,
+	CanceledOrderEvent,
+	WithdrewCollateralEvent,
+	CollateralChangeEvent,
+	PerpetualsOrderEvent,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -160,6 +167,24 @@ export class PerpetualsAccount extends Caller {
 			collateralCoinType: this.accountCap.collateralCoinType,
 			accountCapId: this.accountCap.objectId,
 		});
+	}
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async getCollateralEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<CollateralChangeEvent>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/events/collateral`,
+			inputs
+		);
+	}
+
+	public async getOrderEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<PerpetualsOrderEvent>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/events/order`,
+			inputs
+		);
 	}
 
 	// =========================================================================

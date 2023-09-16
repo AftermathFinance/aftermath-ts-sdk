@@ -1,6 +1,7 @@
 import { BCS, getSuiMoveConfig } from "@mysten/bcs";
 import {
 	AnyObjectType,
+	ApiIndexerEventsBody,
 	Balance,
 	Event,
 	IFixed,
@@ -370,13 +371,13 @@ bcs.registerStructType(["Leaf", "V"], {
 export interface WithdrewCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: bigint;
+	collateral: IFixed;
 }
 
 export interface DepositedCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: bigint;
+	collateral: IFixed;
 	vault: SuiAddress;
 }
 
@@ -556,6 +557,10 @@ export type ApiPerpetualsSLTPOrderBody = (
 				tpPrice: bigint;
 		  }
 	);
+
+export type ApiPerpetualsEventsBody = ApiIndexerEventsBody & {
+	accountId: PerpetualsAccountId;
+};
 
 // =========================================================================
 //  SDK
