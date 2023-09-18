@@ -423,8 +423,8 @@ export class PerpetualsApiCasting {
 				fields.side === AskOnChain
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
-			size: BigInt(fields.size),
-			price: BigInt(fields.price),
+			baseAssetDelta: BigInt(fields.base_asset_delta),
+			quoteAssetDelta: BigInt(fields.quote_asset_delta),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

@@ -81,6 +81,6 @@ export type FilledTakerOrderEventOnChain = EventOnChain<{
 	base_asset_amount: BigIntAsString;
 	quote_asset_notional_amount: BigIntAsString;
 	side: boolean;
-	size: BigIntAsString;
-	price: BigIntAsString;
+	base_asset_delta: BigIntAsString;
+	quote_asset_delta: BigIntAsString;
 }>;

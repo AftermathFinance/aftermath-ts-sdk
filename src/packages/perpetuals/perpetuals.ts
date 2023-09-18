@@ -13,6 +13,7 @@ import {
 	PerpetualsOrderbook,
 	CoinType,
 	PerpetualsOrderId,
+	FilledTakerOrderEvent,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -262,6 +263,16 @@ export class Perpetuals extends Caller {
 		const side =
 			isLong > 0 ? PerpetualsOrderSide.Ask : PerpetualsOrderSide.Bid;
 		return side;
+	}
+
+	public static orderPrice(inputs: {
+		orderEvent: FilledTakerOrderEvent;
+	}): number {
+		const { orderEvent } = inputs;
+		return (
+			IFixedUtils.numberFromIFixed(orderEvent.quoteAssetDelta) /
+			IFixedUtils.numberFromIFixed(orderEvent.baseAssetDelta)
+		);
 	}
 
 	// =========================================================================

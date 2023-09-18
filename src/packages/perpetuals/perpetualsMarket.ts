@@ -4,6 +4,7 @@ import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
 	ApiPerpetualsPositionOrderDatasBody,
 	CoinType,
+	FilledTakerOrderEvent,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
