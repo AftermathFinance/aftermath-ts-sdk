@@ -21,7 +21,6 @@ import {
 	ONE_B9,
 	createAndFetchAccountCap,
 } from "./utils";
-
 import { getConfigs } from "./testConfig";
 import {
 	Perpetuals,
@@ -79,7 +78,7 @@ describe("Perpetuals Tests", () => {
 		// Create perpetuals main objects
 		// tx = await aftermathApi.Perpetuals().fetchInitializeForCollateralTx({
 		// 	walletAddress: await admin.getAddress(),
-		// 	coinType: usdcType,
+		// 	collateralCoinType: usdcType,
 		// });
 		// await admin.signAndExecuteTransactionBlock({
 		// 	transactionBlock: tx,
@@ -90,14 +89,14 @@ describe("Perpetuals Tests", () => {
 		console.log(
 			await aftermathApi
 				.Perpetuals()
-				.fetchAccountManager({ coinType: usdcType })
+				.fetchAccountManager({ collateralCoinType: usdcType })
 		);
 
 		console.log("MarketManager");
 		console.log(
 			await aftermathApi
 				.Perpetuals()
-				.fetchMarketManager({ coinType: usdcType })
+				.fetchMarketManager({ collateralCoinType: usdcType })
 		);
 
 		let onchainTime = Helpers.getObjectFields(
@@ -155,7 +154,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Add insurance fund");
 		tx = await aftermathApi.Perpetuals().buildAddInsuranceFundTx({
 			walletAddress: await admin.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 		});
 		await admin.signAndExecuteTransactionBlock({
 			transactionBlock: tx,
@@ -166,7 +165,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Create market");
 		tx = await aftermathApi.Perpetuals().buildCreateMarketTx({
 			walletAddress: await admin.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			marketId: MARKET_ID0,
 			marginRatioInitial: BigInt(100000000000000000),
 			marginRatioMaintenance: BigInt(50000000000000000),
@@ -198,15 +197,17 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log(
-			await aftermathApi
-				.Perpetuals()
-				.fetchMarketState({ coinType: usdcType, marketId: MARKET_ID0 })
+			await aftermathApi.Perpetuals().fetchMarketState({
+				collateralCoinType: usdcType,
+				marketId: MARKET_ID0,
+			})
 		);
 
 		console.log(
-			await aftermathApi
-				.Perpetuals()
-				.fetchMarketParams({ coinType: usdcType, marketId: MARKET_ID0 })
+			await aftermathApi.Perpetuals().fetchMarketParams({
+				collateralCoinType: usdcType,
+				marketId: MARKET_ID0,
+			})
 		);
 
 		// All users gets 10000 USDC
@@ -288,7 +289,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Deposit USDC for User1");
 		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user1.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user1AccountCap,
 			amount: tenThousandB9,
 		});
@@ -300,7 +301,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Deposit USDC for User2");
 		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user2.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user2AccountCap,
 			amount: tenThousandB9,
 		});
@@ -312,7 +313,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Deposit USDC for User3");
 		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user3.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user3AccountCap,
 			amount: tenThousandB9,
 		});
@@ -324,7 +325,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Deposit USDC for User4");
 		tx = await aftermathApi.Perpetuals().fetchBuildDepositCollateralTx({
 			walletAddress: await user4.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user4AccountCap,
 			amount: tenThousandB9,
 		});
@@ -344,7 +345,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Place order to cancel");
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user1.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Ask,
@@ -360,7 +361,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Cancel single order");
 		tx = await aftermathApi.Perpetuals().buildCancelOrderTx({
 			walletAddress: await user1.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Ask,
@@ -379,7 +380,7 @@ describe("Perpetuals Tests", () => {
 		let orderSize = BigInt(10000);
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user1.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Bid,
@@ -395,7 +396,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Place market order");
 		tx = await aftermathApi.Perpetuals().buildPlaceMarketOrderTx({
 			walletAddress: await user2.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user2AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Ask,
@@ -409,7 +410,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Place limit orders for book price");
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user3.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user3AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Bid,
@@ -423,7 +424,7 @@ describe("Perpetuals Tests", () => {
 		});
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user3.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user3AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Ask,
@@ -453,7 +454,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Liquidate");
 		tx = await aftermathApi.Perpetuals().buildLiquidateTx({
 			walletAddress: await user4.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user4AccountCap,
 			liqeeAccountId: BigInt(0), // user1 account id
 			sizes: [BigInt(5745)],
@@ -464,17 +465,29 @@ describe("Perpetuals Tests", () => {
 		});
 
 		console.log("Cancel book price orders");
-		let [user3Asks, user3Bids] = await aftermathApi
-			.Perpetuals()
-			.fetchPositionOrderIds({
-				coinType: usdcType,
-				accountId: BigInt(2),
-				marketId: MARKET_ID0,
+		const user3AccountCapObject = (
+			await aftermathApi.Perpetuals().fetchOwnedAccountCapsOfType({
+				walletAddress: await user3.getAddress(),
+				collateralCoinType: usdcType,
+			})
+		)[0];
+		const user3Account = await aftermathApi.Perpetuals().fetchAccount({
+			collateralCoinType: usdcType,
+			accountId: user3AccountCapObject.accountId,
+		});
+		const position = new PerpetualsAccount(
+			user3Account,
+			user3AccountCapObject
+		).positionForMarketId({ marketId: MARKET_ID0 });
+		let { bidOrderIds: user3Bids, askOrderIds: user3Asks } =
+			await aftermathApi.Perpetuals().fetchPositionOrderIds({
+				positionAsksId: position.asks.objectId,
+				positionBidsId: position.bids.objectId,
 			});
 		for (const orderId of user3Asks) {
 			tx = await aftermathApi.Perpetuals().buildCancelOrderTx({
 				walletAddress: await user3.getAddress(),
-				coinType: usdcType,
+				collateralCoinType: usdcType,
 				accountCapId: user3AccountCap,
 				marketId: MARKET_ID0,
 				side: PerpetualsOrderSide.Ask,
@@ -488,7 +501,7 @@ describe("Perpetuals Tests", () => {
 		for (const orderId of user3Bids) {
 			tx = await aftermathApi.Perpetuals().buildCancelOrderTx({
 				walletAddress: await user3.getAddress(),
-				coinType: usdcType,
+				collateralCoinType: usdcType,
 				accountCapId: user3AccountCap,
 				marketId: MARKET_ID0,
 				side: PerpetualsOrderSide.Bid,
@@ -507,7 +520,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Place limit order");
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user4.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user4AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Bid,
@@ -523,7 +536,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Place market order");
 		tx = await aftermathApi.Perpetuals().buildPlaceMarketOrderTx({
 			walletAddress: await user1.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user1AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Ask,
@@ -537,7 +550,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Place limit order");
 		tx = await aftermathApi.Perpetuals().buildPlaceLimitOrderTx({
 			walletAddress: await user2.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user2AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Bid,
@@ -553,7 +566,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Place market order");
 		tx = await aftermathApi.Perpetuals().buildPlaceMarketOrderTx({
 			walletAddress: await user4.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user4AccountCap,
 			marketId: MARKET_ID0,
 			side: PerpetualsOrderSide.Ask,
@@ -564,15 +577,18 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
-		const mktParams = await aftermathApi
-			.Perpetuals()
-			.fetchMarketParams({ coinType: usdcType, marketId: MARKET_ID0 });
-		let mktState = await aftermathApi
-			.Perpetuals()
-			.fetchMarketState({ coinType: usdcType, marketId: MARKET_ID0 });
-		let orderbook = await aftermathApi
-			.Perpetuals()
-			.fetchOrderbook({ coinType: usdcType, marketId: MARKET_ID0 });
+		const mktParams = await aftermathApi.Perpetuals().fetchMarketParams({
+			collateralCoinType: usdcType,
+			marketId: MARKET_ID0,
+		});
+		let mktState = await aftermathApi.Perpetuals().fetchMarketState({
+			collateralCoinType: usdcType,
+			marketId: MARKET_ID0,
+		});
+		let orderbook = await aftermathApi.Perpetuals().fetchOrderbook({
+			collateralCoinType: usdcType,
+			marketId: MARKET_ID0,
+		});
 		console.log(`Curr state:`, mktState);
 		console.log(`Curr params:`, mktParams);
 		const market = new PerpetualsMarket(
@@ -587,9 +603,10 @@ describe("Perpetuals Tests", () => {
 		console.log(`Sleep ${sleepTime}ms until next funding`);
 		await new Promise((f) => setTimeout(f, sleepTime));
 
-		mktState = await aftermathApi
-			.Perpetuals()
-			.fetchMarketState({ coinType: usdcType, marketId: MARKET_ID0 });
+		mktState = await aftermathApi.Perpetuals().fetchMarketState({
+			collateralCoinType: usdcType,
+			marketId: MARKET_ID0,
+		});
 		const estRate = market.estimatedFundingRate({
 			indexPrice: IFixedUtils.numberFromIFixed(finalOraclePrice),
 		});
@@ -608,7 +625,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Update funding");
 		tx = await aftermathApi.Perpetuals().buildUpdateFundingTx({
 			walletAddress: await admin.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			marketId: MARKET_ID0,
 		});
 		await admin.signAndExecuteTransactionBlock({
@@ -624,7 +641,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Withdraw collateral for User1");
 		tx = await aftermathApi.Perpetuals().buildWithdrawCollateralTx({
 			walletAddress: await user1.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user1AccountCap,
 			amount: BigInt(2000_000000000),
 		});
@@ -636,7 +653,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Withdraw collateral for User2");
 		tx = await aftermathApi.Perpetuals().buildWithdrawCollateralTx({
 			walletAddress: await user2.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user2AccountCap,
 			amount: BigInt(2000_000000000),
 		});
@@ -648,7 +665,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Withdraw collateral for User3");
 		tx = await aftermathApi.Perpetuals().buildWithdrawCollateralTx({
 			walletAddress: await user3.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user3AccountCap,
 			amount: tenThousandB9,
 		});
@@ -660,7 +677,7 @@ describe("Perpetuals Tests", () => {
 		console.log("Withdraw collateral for User4");
 		tx = await aftermathApi.Perpetuals().buildWithdrawCollateralTx({
 			walletAddress: await user4.getAddress(),
-			coinType: usdcType,
+			collateralCoinType: usdcType,
 			accountCapId: user4AccountCap,
 			amount: BigInt(2000_000000000),
 		});

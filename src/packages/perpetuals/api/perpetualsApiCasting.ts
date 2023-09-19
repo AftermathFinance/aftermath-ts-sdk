@@ -371,7 +371,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
-	public static filledMakerOrderFromOnChain = (
+	public static filledMakerOrderEventFromOnChain = (
 		eventOnChain: FilledMakerOrderEventOnChain
 	): FilledMakerOrderEvent => {
 		const fields = eventOnChain.parsedJson;
@@ -403,7 +403,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
-	public static filledTakerOrderFromOnChain = (
+	public static filledTakerOrderEventFromOnChain = (
 		eventOnChain: FilledTakerOrderEventOnChain
 	): FilledTakerOrderEvent => {
 		const fields = eventOnChain.parsedJson;

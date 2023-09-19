@@ -1,13 +1,11 @@
 import process from "node:process";
 import fs from "fs";
 import YAML from "yaml";
-import { Helpers } from "../src/general/utils";
 import {
-	ExchangeAddresses,
 	FaucetAddresses,
+	ObjectId,
 	OracleAddresses,
 	PerpetualsAddresses,
-	RustAddresses,
 } from "../src/types";
 
 export function getConfigs(): [
@@ -21,18 +19,18 @@ export function getConfigs(): [
 	const file = fs.readFileSync(process.env.RUST_CFG_PATH, "utf8");
 	const rustCfg = YAML.parse(file) as RustAddresses;
 
-	let exchanges = new Map<string, ExchangeAddresses>();
+	let exchanges = {};
 	for (const value of Object.entries(rustCfg.perpetuals?.exchanges!)) {
 		let [name, cfg] = value;
-		exchanges.set(name, {
+		exchanges[name] = {
 			accountManager: cfg.account_manager,
 			marketManager: cfg.market_manager,
 			vault: cfg.vault,
 			insuranceFunds: cfg.insurance_funds,
-		});
+		};
 	}
 
-	let oracleCfg = {
+	let oracleCfg: OracleAddresses = {
 		packages: {
 			oracle: rustCfg.perpetuals?.oracle?.package!,
 		},
@@ -43,7 +41,7 @@ export function getConfigs(): [
 		},
 	};
 
-	let perpetualsCfg = {
+	let perpetualsCfg: PerpetualsAddresses = {
 		packages: {
 			perpetuals: rustCfg.perpetuals?.package!,
 		},
@@ -51,7 +49,6 @@ export function getConfigs(): [
 			adminCapability: rustCfg.perpetuals?.admin_capability!,
 			registry: rustCfg.perpetuals?.registry!,
 			exchanges,
-			oracle: Helpers.deepCopy(oracleCfg),
 		},
 	};
 
@@ -68,4 +65,41 @@ export function getConfigs(): [
 	};
 
 	return [perpetualsCfg, faucetCfg, oracleCfg];
+}
+
+// =========================================================================
+//  Config used in the Rust SDK
+// =========================================================================
+
+export interface RustAddresses {
+	faucet?: {
+		package_id: ObjectId;
+		faucet: ObjectId;
+		faucet_registry: ObjectId;
+		treasury_caps: Map<string, ObjectId>;
+	};
+	perpetuals?: {
+		package: ObjectId;
+		admin_capability: ObjectId;
+		registry: ObjectId;
+		exchanges: Map<string, RustExchangeAddresses>;
+		oracle?: RustOracleAddresses;
+		curr_collateral?: string;
+	};
+	oracle?: RustOracleAddresses;
+	spot_orderbook?: any;
+}
+
+export interface RustExchangeAddresses {
+	account_manager: ObjectId;
+	account_capabilities: Map<number, ObjectId>;
+	market_manager: ObjectId;
+	vault: ObjectId;
+	insurance_fund: ObjectId;
+}
+
+export interface RustOracleAddresses {
+	package: ObjectId;
+	authority_capability: ObjectId;
+	price_feed_storage: ObjectId;
 }

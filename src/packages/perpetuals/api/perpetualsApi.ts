@@ -303,6 +303,30 @@ export class PerpetualsApi {
 		return [...askOrders, ...bidOrders];
 	};
 
+	public fetchPositionOrderIds = async (inputs: {
+		positionAsksId: ObjectId;
+		positionBidsId: ObjectId;
+	}): Promise<{
+		askOrderIds: PerpetualsOrderId[];
+		bidOrderIds: PerpetualsOrderId[];
+	}> => {
+		const { positionAsksId, positionBidsId } = inputs;
+
+		const [askOrderIds, bidOrderIds] = await Promise.all([
+			this.fetchOrderedVecSet({
+				objectId: positionAsksId,
+			}),
+			this.fetchOrderedVecSet({
+				objectId: positionBidsId,
+			}),
+		]);
+
+		return {
+			askOrderIds,
+			bidOrderIds,
+		};
+	};
+
 	public fetchMarketState = async (inputs: {
 		collateralCoinType: CoinType;
 		marketId: PerpetualsMarketId;
@@ -430,10 +454,10 @@ export class PerpetualsApi {
 							event as PostedOrderEventOnChain
 					  )
 					: eventType.includes(this.eventTypes.filledMakerOrder)
-					? Casting.perpetuals.filledMakerOrderFromOnChain(
+					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
 							event as FilledMakerOrderEventOnChain
 					  )
-					: Casting.perpetuals.filledTakerOrderFromOnChain(
+					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
 							event as FilledTakerOrderEventOnChain
 					  );
 			}
@@ -1239,30 +1263,6 @@ export class PerpetualsApi {
 	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
-
-	private fetchPositionOrderIds = async (inputs: {
-		positionAsksId: ObjectId;
-		positionBidsId: ObjectId;
-	}): Promise<{
-		askOrderIds: PerpetualsOrderId[];
-		bidOrderIds: PerpetualsOrderId[];
-	}> => {
-		const { positionAsksId, positionBidsId } = inputs;
-
-		const [askOrderIds, bidOrderIds] = await Promise.all([
-			this.fetchOrderedVecSet({
-				objectId: positionAsksId,
-			}),
-			this.fetchOrderedVecSet({
-				objectId: positionBidsId,
-			}),
-		]);
-
-		return {
-			askOrderIds,
-			bidOrderIds,
-		};
-	};
 
 	private fetchOrderedVecSet = async (inputs: {
 		objectId: ObjectId;

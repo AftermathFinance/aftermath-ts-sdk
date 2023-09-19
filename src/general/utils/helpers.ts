@@ -3,7 +3,13 @@ import {
 	SuiMoveObject,
 	SuiObjectResponse,
 } from "@mysten/sui.js/dist/cjs/client";
-import { AnyObjectType, Balance, ObjectId, Slippage } from "../../types";
+import {
+	AnyObjectType,
+	Balance,
+	ObjectId,
+	Slippage,
+	SuiAddress,
+} from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
@@ -309,8 +315,37 @@ export class Helpers {
 	//  Error Parsing
 	// =========================================================================
 
-	public static moveErrorCodeFromErrorMessage(errorMessage: string): number {
-		// TODO
-		return 0;
+	public static moveErrorCode(inputs: {
+		errorMessage: string;
+		packageId: ObjectId;
+	}): number {
+		const { errorMessage, packageId } = inputs;
+
+		/*
+			MoveAbort(MoveLocation { module: ModuleId { address: 8d8946c2a433e2bf795414498d9f7b32e04aca8dbf35a20257542dc51406242b, name: Identifier("orderbook") }, function: 11, instruction: 117, function_name: Some("fill_market_order") }, 3005) in command 2
+		*/
+
+		if (
+			!errorMessage.includes(
+				Helpers.addLeadingZeroesToType(packageId).replace("0x", "")
+			)
+		)
+			return -1;
+
+		const startIndex = errorMessage.lastIndexOf(",");
+		const endIndex = errorMessage.lastIndexOf(")");
+		if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+			return -1;
+
+		try {
+			const errorCode = parseInt(
+				errorMessage.slice(startIndex + 1, endIndex)
+			);
+			if (Number.isNaN(errorCode)) return -1;
+
+			return errorCode;
+		} catch (e) {
+			return -1;
+		}
 	}
 }

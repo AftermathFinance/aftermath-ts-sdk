@@ -1,14 +1,9 @@
-import {
-	SuiObjectChange,
-	SuiObjectChangeCreated,
-} from "@mysten/sui.js/client";
-Ed25519Keypair,
-ObjectId,
-RawSigner,
-SuiAddress,
+import { SuiObjectChange, SuiObjectChangeCreated } from "@mysten/sui.js/client";
 import { fromB64 } from "@mysten/bcs";
 import { AftermathApi } from "../src/general/providers";
 import { PerpetualsAccount, PerpetualsMarket } from "../src/packages";
+import { Ed25519Keypair, RawSigner } from "@mysten/sui.js";
+import { ObjectId, SuiAddress } from "../src/types";
 
 export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";
 export const user1PrivateKey = "AOzplQlAK2Uznvog7xmcMtlFC+DfuJx3axo9lfyI876G";
@@ -59,16 +54,12 @@ export async function getPerpetualsAccount(
 ): Promise<PerpetualsAccount> {
 	let accountObj = await aftermathApi
 		.Perpetuals()
-		.fetchAccount({ coinType, accountId });
+		.fetchAccount({ collateralCoinType: coinType, accountId });
 	let accCap = await aftermathApi.Perpetuals().fetchOwnedAccountCapsOfType({
 		walletAddress,
-		coinType,
+		collateralCoinType: coinType,
 	});
-	return new PerpetualsAccount(
-		accountObj,
-		accCap[0],
-		aftermathApi.provider.connection.fullnode
-	);
+	return new PerpetualsAccount(accountObj, accCap[0], "LOCAL");
 }
 
 export async function getPerpetualsMarket(
@@ -78,20 +69,20 @@ export async function getPerpetualsMarket(
 ): Promise<PerpetualsMarket> {
 	let marketParams = await aftermathApi
 		.Perpetuals()
-		.fetchMarketParams({ coinType, marketId });
+		.fetchMarketParams({ collateralCoinType: coinType, marketId });
 	let marketState = await aftermathApi
 		.Perpetuals()
-		.fetchMarketState({ coinType, marketId });
+		.fetchMarketState({ collateralCoinType: coinType, marketId });
 	let orderbook = await aftermathApi
 		.Perpetuals()
-		.fetchOrderbook({ coinType, marketId });
+		.fetchOrderbook({ collateralCoinType: coinType, marketId });
 	return new PerpetualsMarket(
 		marketId,
 		coinType,
 		marketParams,
 		marketState,
 		orderbook,
-		aftermathApi.provider.connection.fullnode
+		"LOCAL"
 	);
 }
 
@@ -145,7 +136,7 @@ export async function createAndFetchAccountCap(
 ): Promise<ObjectId> {
 	let tx = await aftermathApi.Perpetuals().buildCreateAccountTx({
 		walletAddress: await signer.getAddress(),
-		coinType,
+		collateralCoinType: coinType,
 	});
 	let response = await signer.signAndExecuteTransactionBlock({
 		transactionBlock: tx,
