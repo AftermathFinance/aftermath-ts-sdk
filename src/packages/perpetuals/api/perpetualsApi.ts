@@ -15,6 +15,7 @@ import {
 	AnyObjectType,
 	ApiIndexerUserEventsBody,
 	IndexerEventsWithCursor,
+	IFixed,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -64,6 +65,7 @@ import {
 	PostedOrderEventOnChain,
 	WithdrewCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
+import { IFixedUtils } from "../../../general/utils/iFixedUtils";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -415,7 +417,7 @@ export class PerpetualsApi {
 	): Promise<IndexerEventsWithCursor<CollateralChangeEvent>> {
 		const { accountId, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/${accountId}/events/collateral`,
+			`perpetuals/accounts/${accountId}/events/collateral`,
 			{
 				cursor,
 				limit,
@@ -438,7 +440,7 @@ export class PerpetualsApi {
 	): Promise<IndexerEventsWithCursor<PerpetualsOrderEvent>> {
 		const { accountId, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/${accountId}/events/order`,
+			`perpetuals/accounts/${accountId}/events/order`,
 			{
 				cursor,
 				limit,
@@ -462,6 +464,20 @@ export class PerpetualsApi {
 					  );
 			}
 		);
+	}
+
+	// =========================================================================
+	//  Indexer Data
+	// =========================================================================
+
+	public async fetchMarket24hrVolume(inputs: {
+		marketId: PerpetualsMarketId;
+	}): Promise<number> {
+		const { marketId } = inputs;
+		const volume: IFixed = await this.Provider.indexerCaller.fetchIndexer(
+			`perpetuals/markets/${marketId}/24hr-volume`
+		);
+		return IFixedUtils.numberFromIFixed(volume);
 	}
 
 	// =========================================================================

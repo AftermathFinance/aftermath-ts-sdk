@@ -50,6 +50,10 @@ export class PerpetualsMarket extends Caller {
 		return this.fetchApi<number>("orderbook-price");
 	}
 
+	public get24hrVolume() {
+		return this.fetchApi<number>("24hr-volume");
+	}
+
 	public getPositionOrderDatas(inputs: { position: PerpetualsPosition }) {
 		const { position } = inputs;
 		return this.fetchApi<
