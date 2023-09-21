@@ -206,13 +206,14 @@ export class StakingApi {
 		tx: TransactionBlock;
 		suiCoin: ObjectId | TransactionArgument;
 		validatorAddress: SuiAddress;
+		withTransfer?: boolean;
 	}) => {
-		const { tx, suiCoin } = inputs;
+		const { tx, suiCoin, withTransfer } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
-				"request_stake_and_keep"
+				"request_stake" + (withTransfer ? "_and_keep" : "")
 			),
 			typeArguments: [],
 			arguments: [
@@ -247,12 +248,38 @@ export class StakingApi {
 		});
 	};
 
+	public atomicUnstakeTx = (inputs: {
+		tx: TransactionBlock;
+		afSuiCoin: ObjectId | TransactionArgument;
+		withTransfer?: boolean;
+	}) => {
+		const { tx, afSuiCoin, withTransfer } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"request_unstake_atomic" + (withTransfer ? "_and_keep" : "")
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.objects.safe), // Safe
+				tx.object(this.addresses.objects.referralVault), // ReferralVault
+				tx.object(this.addresses.objects.treasury), // Treasury
+				typeof afSuiCoin === "string"
+					? tx.object(afSuiCoin)
+					: afSuiCoin,
+			],
+		});
+	};
+
 	public requestStakeStakedSuiVecTx = (inputs: {
 		tx: TransactionBlock;
 		stakedSuiIds: ObjectId[];
 		validatorAddress: SuiAddress;
+		withTransfer?: boolean;
 	}) => {
-		const { tx, stakedSuiIds } = inputs;
+		const { tx, stakedSuiIds, withTransfer } = inputs;
 
 		const stakedSuiIdsVec = tx.makeMoveVec({
 			objects: stakedSuiIds.map((id) => tx.object(id)),
@@ -262,7 +289,8 @@ export class StakingApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
-				"request_stake_staked_sui_vec_and_keep"
+				"request_stake_staked_sui_vec" +
+					(withTransfer ? "_and_keep" : "")
 			),
 			typeArguments: [],
 			arguments: [
@@ -369,6 +397,7 @@ export class StakingApi {
 			tx,
 			...inputs,
 			suiCoin,
+			withTransfer: true,
 		});
 
 		return tx;
@@ -395,11 +424,20 @@ export class StakingApi {
 			coinAmount: inputs.afSuiUnstakeAmount,
 		});
 
-		this.unstakeTx({
-			tx,
-			...inputs,
-			afSuiCoin,
-		});
+		if (inputs.isAtomic) {
+			this.atomicUnstakeTx({
+				tx,
+				...inputs,
+				afSuiCoin,
+				withTransfer: true,
+			});
+		} else {
+			this.unstakeTx({
+				tx,
+				...inputs,
+				afSuiCoin,
+			});
+		}
 
 		return tx;
 	};
@@ -421,6 +459,7 @@ export class StakingApi {
 		this.requestStakeStakedSuiVecTx({
 			tx,
 			...inputs,
+			withTransfer: true,
 		});
 
 		return tx;

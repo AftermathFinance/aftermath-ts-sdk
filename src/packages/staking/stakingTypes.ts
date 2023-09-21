@@ -168,6 +168,7 @@ export interface ApiStakeBody {
 export interface ApiUnstakeBody {
 	walletAddress: SuiAddress;
 	afSuiUnstakeAmount: Balance;
+	isAtomic: boolean;
 	referrer?: SuiAddress;
 }
 
