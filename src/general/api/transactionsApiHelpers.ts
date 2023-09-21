@@ -3,6 +3,7 @@ import {
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import {
+	CoinType,
 	SerializedTransaction,
 	SuiAddress,
 	TransactionDigest,
@@ -10,7 +11,8 @@ import {
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/dist/cjs/client";
-import { getTotalGasUsedUpperBound } from "@mysten/sui.js";
+import { Helpers } from "../utils";
+import { Coin } from "../../packages";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -29,11 +31,13 @@ export class TransactionsApiHelpers {
 	//  Fetching
 	// =========================================================================
 
-	public fetchTransactionsWithCursor = async (
-		query: SuiTransactionBlockResponseQuery,
-		cursor?: TransactionDigest,
-		limit?: number
-	): Promise<TransactionsWithCursor> => {
+	public fetchTransactionsWithCursor = async (inputs: {
+		query: SuiTransactionBlockResponseQuery;
+		cursor?: TransactionDigest;
+		limit?: number;
+	}): Promise<TransactionsWithCursor> => {
+		const { query, cursor, limit } = inputs;
+
 		const transactionsWithCursor =
 			await this.Provider.provider.queryTransactionBlocks({
 				...query,
@@ -53,33 +57,59 @@ export class TransactionsApiHelpers {
 		};
 	};
 
-	public fetchSetGasBudgetForTx = async (
-		tx: TransactionBlock
-	): Promise<TransactionBlock> => {
-		const [txResponse, referenceGasPrice] = await Promise.all([
-			this.Provider.provider.dryRunTransactionBlock({
-				transactionBlock: await tx.build({
-					provider: this.Provider.provider,
+	public fetchSetGasBudgetForTx = async (inputs: {
+		tx: TransactionBlock;
+		gasCoinType?: CoinType;
+	}): Promise<TransactionBlock> => {
+		const { tx, gasCoinType } = inputs;
+
+		if (
+			!gasCoinType ||
+			Helpers.addLeadingZeroesToType(gasCoinType) ===
+				Coin.constants.suiCoinType
+		) {
+			// using sui as gas
+
+			const [txResponse, referenceGasPrice] = await Promise.all([
+				this.Provider.provider.dryRunTransactionBlock({
+					transactionBlock: await tx.build({
+						provider: this.Provider.provider,
+					}),
 				}),
-			}),
-			this.Provider.provider.getReferenceGasPrice(),
-		]);
+				this.Provider.provider.getReferenceGasPrice(),
+			]);
 
-		const gasData = txResponse.effects.gasUsed;
-		const gasUsed =
-			BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
-		// scale up by 10% for safety margin
-		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
+			const gasData = txResponse.effects.gasUsed;
+			const gasUsed =
+				BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
+			// scale up by 10% for safety margin
+			const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
-		tx.setGasBudget(safeGasBudget);
-		tx.setGasPrice(referenceGasPrice);
-		return tx;
+			tx.setGasBudget(safeGasBudget);
+			tx.setGasPrice(referenceGasPrice);
+			return tx;
+		} else {
+			// using non-sui as gas (dynamic gas)
+
+			if (!tx.blockData.sender)
+				throw new Error(
+					"unable to set dynamic gas budget with no sender set on tx"
+				);
+
+			const allGasCoins = await this.Provider.Coin().fetchAllCoins({
+				walletAddress: tx.blockData.sender,
+				coinType: gasCoinType,
+			});
+			const gasCoinIds = allGasCoins.map((coin) => coin.coinObjectId);
+		}
 	};
 
-	public fetchSetGasBudgetAndSerializeTx = async (
-		tx: TransactionBlock | Promise<TransactionBlock>
-	): Promise<SerializedTransaction> => {
-		return (await this.fetchSetGasBudgetForTx(await tx)).serialize();
+	public fetchSetGasBudgetAndSerializeTx = async (inputs: {
+		tx: TransactionBlock | Promise<TransactionBlock>;
+	}): Promise<SerializedTransaction> => {
+		return (
+			await this.fetchSetGasBudgetForTx({ tx: await inputs.tx })
+		).serialize();
 	};
 
 	// =========================================================================

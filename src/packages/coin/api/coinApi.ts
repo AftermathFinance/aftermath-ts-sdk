@@ -92,7 +92,7 @@ export class CoinApi {
 
 		tx.setSender(walletAddress);
 
-		const coinData = await this.fetchCoinsUntilAmountReachedOrEnd(inputs);
+		const coinData = await this.fetchAllCoins(inputs);
 		return CoinApi.coinWithAmountTx({
 			tx,
 			coinData,
@@ -110,12 +110,11 @@ export class CoinApi {
 
 		tx.setSender(walletAddress);
 
-		// TODO: handle cursoring until necessary coin amount is found
 		const allCoinsData = await Promise.all(
 			coinTypes.map(async (coinType, index) =>
-				this.fetchCoinsUntilAmountReachedOrEnd({
+				this.fetchAllCoins({
 					...inputs,
-					coinAmount: coinAmounts[index],
+					// coinAmount: coinAmounts[index],
 					coinType,
 				})
 			)
@@ -135,26 +134,12 @@ export class CoinApi {
 		return coinArgs;
 	};
 
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	public static formatCoinTypesForMoveCall = (coins: CoinType[]) =>
-		coins.map((coin) => Casting.u8VectorFromString(coin.slice(2))); // slice to remove 0x
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	private fetchCoinsUntilAmountReachedOrEnd = async (inputs: {
+	// fetchCoinsUntilAmountReachedOrEnd
+	public fetchAllCoins = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
-		coinAmount: Balance;
-	}) => {
+		// coinAmount: Balance;
+	}): Promise<CoinStruct[]> => {
 		let allCoinData: CoinStruct[] = [];
 		let cursor: string | undefined = undefined;
 		do {
@@ -170,21 +155,38 @@ export class CoinApi {
 			);
 			allCoinData = [...allCoinData, ...coinData];
 
-			const totalAmount = Helpers.sumBigInt(
-				allCoinData.map((data) => BigInt(data.balance))
-			);
-			if (totalAmount >= inputs.coinAmount) return allCoinData;
+			// const totalAmount = Helpers.sumBigInt(
+			// 	allCoinData.map((data) => BigInt(data.balance))
+			// );
+			// if (totalAmount >= inputs.coinAmount) return allCoinData;
 
 			if (
 				paginatedCoins.data.length === 0 ||
 				!paginatedCoins.hasNextPage ||
 				!paginatedCoins.nextCursor
 			)
-				return allCoinData;
+				return allCoinData.sort((b, a) =>
+					Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
+				);
 
 			cursor = paginatedCoins.nextCursor;
 		} while (true);
 	};
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	public static formatCoinTypesForMoveCall = (coins: CoinType[]) =>
+		coins.map((coin) => Casting.u8VectorFromString(coin.slice(2))); // slice to remove 0x
+
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
 
 	// NOTE: this is temporary until LP coin metadata issue is solved on Sui
 	private createLpCoinMetadata = async (inputs: {
