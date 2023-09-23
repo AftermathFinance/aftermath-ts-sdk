@@ -541,24 +541,43 @@ export class StakingApi {
 			).events,
 		]);
 
-		const positions: UnstakePosition[] = requestedEvents.map((request) => {
-			const foundMintIndex = unstakedEvents.findIndex(
-				(mint) => mint.afSuiId === request.afSuiId
-			);
-			if (foundMintIndex >= 0)
+		const partiallyMergedPositions: UnstakePosition[] = requestedEvents.map(
+			(request) => {
+				const foundMintIndex = unstakedEvents.findIndex(
+					(mint) => mint.afSuiId === request.afSuiId
+				);
+				if (foundMintIndex >= 0)
+					return {
+						...unstakedEvents[foundMintIndex],
+						state: "SUI_MINTED",
+						epoch: request.epoch,
+					};
+
 				return {
-					...unstakedEvents[foundMintIndex],
-					state: "SUI_MINTED",
-					epoch: request.epoch,
+					state: "REQUEST",
+					...request,
 				};
+			}
+		);
+		const completeMergedPositions: UnstakePosition[] =
+			unstakedEvents.reduce((acc, unstakedEvent) => {
+				if (
+					acc.some(
+						(position) => position.afSuiId === unstakedEvent.afSuiId
+					)
+				)
+					return acc;
 
-			return {
-				state: "REQUEST",
-				...request,
-			};
-		});
+				return [
+					{
+						...unstakedEvent,
+						state: "SUI_MINTED",
+					},
+					...acc,
+				];
+			}, partiallyMergedPositions);
 
-		return positions;
+		return completeMergedPositions;
 	};
 
 	// =========================================================================
@@ -723,14 +742,14 @@ export class StakingApi {
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
-			StakingApi.constants.eventNames.unstaked
+			StakingApi.constants.eventNames.unstakeRequested
 		);
 
 	private unstakedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
-			StakingApi.constants.eventNames.unstakeRequested
+			StakingApi.constants.eventNames.unstaked
 		);
 
 	// =========================================================================
@@ -762,7 +781,14 @@ export class StakingApi {
 					...inputs.unstakePositions,
 				];
 
-			return inputs.unstakePositions;
+			// unstaked event
+			return [
+				{
+					...(inputs.event as UnstakedEvent),
+					state: "SUI_MINTED",
+				},
+				...inputs.unstakePositions,
+			];
 		}
 
 		const foundStakePosition = inputs.unstakePositions[foundPositionIndex];
