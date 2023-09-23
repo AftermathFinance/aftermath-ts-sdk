@@ -52,6 +52,13 @@ export interface UnstakeRequestedEventOnChainFields {
 	epoch: BigIntAsString;
 }
 
+export interface EpochWasChangedEventOnChainFields {
+	active_epoch: BigIntAsString;
+	total_afsui_supply: BigIntAsString;
+	total_rewards_amount: BigIntAsString;
+	total_sui_amount: BigIntAsString;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -63,15 +70,5 @@ export type UnstakedEventOnChain = EventOnChain<UnstakedEventOnChainFields>;
 export type UnstakeRequestedEventOnChain =
 	EventOnChain<UnstakeRequestedEventOnChainFields>;
 
-// =========================================================================
-//  Indexer Events
-// =========================================================================
-
-export type StakedIndexerEventOnChain =
-	IndexerEventOnChain<StakedEventOnChainFields>;
-
-export type UnstakedIndexerEventOnChain =
-	IndexerEventOnChain<UnstakedEventOnChainFields>;
-
-export type UnstakeRequestedIndexerEventOnChain =
-	IndexerEventOnChain<UnstakeRequestedEventOnChainFields>;
+export type EpochWasChangedEventOnChain =
+	EventOnChain<EpochWasChangedEventOnChainFields>;

@@ -57,6 +57,7 @@ export class StakingApi {
 			staked: "StakedEvent",
 			unstaked: "UnstakedEvent",
 			unstakeRequested: "UnstakeRequestedEvent",
+			epochWasChanged: "EpochWasChangedEvent",
 		},
 	};
 
@@ -70,6 +71,7 @@ export class StakingApi {
 		staked: AnyObjectType;
 		unstakeRequested: AnyObjectType;
 		unstaked: AnyObjectType;
+		epochWasChanged: AnyObjectType;
 	};
 
 	public readonly coinTypes: {
@@ -97,6 +99,7 @@ export class StakingApi {
 			staked: this.stakedEventType(),
 			unstakeRequested: this.unstakeRequestedEventType(),
 			unstaked: this.unstakedEventType(),
+			epochWasChanged: this.epochWasChangedEventType(),
 		};
 
 		this.coinTypes = {
@@ -669,44 +672,30 @@ export class StakingApi {
 	// =========================================================================
 
 	// TODO: write and use this function
-	public liquidStakingApy = (inputs: {
-		delegatedStakes: DelegatedStake[];
-		validatorApys: ValidatorsApy;
-	}): number => {
-		throw new Error("TODO");
+	public liquidStakingApy = async (): Promise<number> => {
+		const limit = 7;
+		const recentEpochChanges =
+			await this.Provider.indexerCaller.fetchIndexerEvents(
+				`staking/events/epoch-was-changed`,
+				{
+					limit,
+				},
+				Casting.staking.epochWasChangedEventFromOnChain
+			);
+		if (recentEpochChanges.events.length <= 0) return 0;
 
-		const { delegatedStakes, validatorApys } = inputs;
-
-		const totalStakeAmount = Helpers.sumBigInt(
-			delegatedStakes.map((stake) =>
-				Helpers.sumBigInt(
-					stake.stakes.map((innerStake) =>
-						BigInt(innerStake.principal)
+		const avgApy =
+			Helpers.sum(
+				recentEpochChanges.events.map((event) =>
+					Coin.balanceWithDecimals(
+						Number(event.totalSuiRewardsAmount) /
+							Number(event.totalSuiAmount),
+						Coin.constants.suiCoinDecimals
 					)
 				)
-			)
-		);
+			) / recentEpochChanges.events.length;
 
-		const weightedAverageApy = delegatedStakes.reduce((acc, stake) => {
-			const apy = validatorApys.apys.find(
-				(apy) => apy.address === stake.validatorAddress
-			)?.apy;
-			if (apy === undefined) return acc;
-
-			const weight =
-				Number(
-					Helpers.sumBigInt(
-						stake.stakes.map((innerStake) =>
-							BigInt(innerStake.principal)
-						)
-					)
-				) / Number(totalStakeAmount);
-
-			const weightedApy = apy * weight;
-			return acc + weightedApy;
-		}, 0);
-
-		return weightedAverageApy;
+		return avgApy;
 	};
 
 	// =========================================================================
@@ -778,6 +767,13 @@ export class StakingApi {
 			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.unstaked
+		);
+
+	private epochWasChangedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.events,
+			StakingApi.constants.moduleNames.events,
+			StakingApi.constants.eventNames.epochWasChanged
 		);
 
 	// =========================================================================

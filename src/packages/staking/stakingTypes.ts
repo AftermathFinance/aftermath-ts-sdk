@@ -102,6 +102,13 @@ export const isUnstakeEvent = (
 	return !isStakeEvent(event);
 };
 
+export interface EpochWasChangedEvent extends Event {
+	activeEpoch: bigint;
+	totalAfSuiSupply: Balance;
+	totalSuiRewardsAmount: Balance;
+	totalSuiAmount: Balance;
+}
+
 // =========================================================================
 //  Staking Positions
 // =========================================================================
