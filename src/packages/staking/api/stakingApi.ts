@@ -714,21 +714,21 @@ export class StakingApi {
 
 	private stakedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
+			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.staked
 		);
 
 	private unstakeRequestedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
+			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.unstaked
 		);
 
 	private unstakedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.lsd,
+			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.unstakeRequested
 		);
