@@ -202,6 +202,11 @@ export class StakingApi {
 	//  Staking Transaction Commands
 	// =========================================================================
 
+	/**
+	 * Adds move call to tx for liquid staking of SUI for afSUI.
+	 *
+	 * @returns `Coin<AFSUI>` if `withTransfer` is `undefined` or `false`
+	 */
 	public stakeTx = (inputs: {
 		tx: TransactionBlock;
 		suiCoin: ObjectId | TransactionArgument;
@@ -227,6 +232,12 @@ export class StakingApi {
 		});
 	};
 
+	/**
+	 * Adds move call to tx for liquid unstaking of afSUI for SUI that will be
+	 * processed at start of next epoch (end of current epoch).
+	 *
+	 * @returns ()
+	 */
 	public unstakeTx = (inputs: {
 		tx: TransactionBlock;
 		afSuiCoin: ObjectId | TransactionArgument;
@@ -248,6 +259,12 @@ export class StakingApi {
 		});
 	};
 
+	/**
+	 * Adds move call to tx for liquid unstaking of afSUI for SUI that will be
+	 * processed immedietly.
+	 *
+	 * @returns `Coin<SUI>` if `withTransfer` is `undefined` or `false`
+	 */
 	public atomicUnstakeTx = (inputs: {
 		tx: TransactionBlock;
 		afSuiCoin: ObjectId | TransactionArgument;
@@ -273,6 +290,12 @@ export class StakingApi {
 		});
 	};
 
+	/**
+	 * Adds move call to tx for liquid staking of currently staked (non-liquid)
+	 * SUI objects for afSUI.
+	 *
+	 * @returns `Coin<AFSUI>` if `withTransfer` is `undefined` or `false`
+	 */
 	public requestStakeStakedSuiVecTx = (inputs: {
 		tx: TransactionBlock;
 		stakedSuiIds: ObjectId[];
@@ -372,6 +395,11 @@ export class StakingApi {
 	//  Transaction Builders
 	// =========================================================================
 
+	/**
+	 * Builds complete PTB for liquid staking of SUI for afSUI.
+	 *
+	 * @returns Transaction Block ready for execution
+	 */
 	public fetchBuildStakeTx = async (
 		inputs: ApiStakeBody
 	): Promise<TransactionBlock> => {
@@ -403,6 +431,11 @@ export class StakingApi {
 		return tx;
 	};
 
+	/**
+	 * Builds complete PTB for liquid unstaking of afSUI for SUI.
+	 *
+	 * @returns Transaction Block ready for execution
+	 */
 	public fetchBuildUnstakeTx = async (
 		inputs: ApiUnstakeBody
 	): Promise<TransactionBlock> => {
@@ -442,6 +475,12 @@ export class StakingApi {
 		return tx;
 	};
 
+	/**
+	 * Builds complete PTB for liquid staking of currently staked (non-liquid)
+	 * SUI objects for afSUI.
+	 *
+	 * @returns Transaction Block ready for execution
+	 */
 	public fetchBuildStakeStakedSuiTx = async (
 		inputs: ApiStakeStakedSuiBody
 	): Promise<TransactionBlock> => {
@@ -484,6 +523,12 @@ export class StakingApi {
 	//  Positions
 	// =========================================================================
 
+	/**
+	 * Queries events for history of stakes and unstakes made by user to
+	 * assemble current status of each.
+	 *
+	 * @returns All recent stakes and unstakes for user
+	 */
 	public fetchAllPositions = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<StakingPosition[]> => {
@@ -499,6 +544,12 @@ export class StakingApi {
 		);
 	};
 
+	/**
+	 * Queries events for history of stakes made by user to
+	 * assemble current status of each.
+	 *
+	 * @returns All recent stakes for user
+	 */
 	public fetchAllStakePositions = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<StakePosition[]> => {
@@ -515,6 +566,12 @@ export class StakingApi {
 		return stakedEvents;
 	};
 
+	/**
+	 * Queries events for history of unstakes made by user to
+	 * assemble current status of each.
+	 *
+	 * @returns All recent unstakes for user
+	 */
 	public fetchAllUnstakePositions = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<UnstakePosition[]> => {
@@ -584,6 +641,11 @@ export class StakingApi {
 	//  Inspections
 	// =========================================================================
 
+	/**
+	 * Total SUI staked for afSUI in protocol.
+	 *
+	 * @returns SUI staked for afSUI as `bigint`
+	 */
 	public fetchSuiTvl = async (): Promise<Balance> => {
 		const tx = new TransactionBlock();
 		this.totalSuiAmountTx({ tx });
@@ -603,50 +665,10 @@ export class StakingApi {
 	};
 
 	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
-		const { walletAddress, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/${walletAddress}/events/staked`,
-			{
-				cursor,
-				limit,
-			},
-			Casting.staking.stakedEventFromOnChain
-		);
-	}
-
-	public async fetchUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
-		const { walletAddress, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/${walletAddress}/events/unstaked`,
-			{
-				cursor,
-				limit,
-			},
-			Casting.staking.unstakedEventFromOnChain
-		);
-	}
-
-	public async fetchUnstakeRequestedEvents(inputs: ApiIndexerUserEventsBody) {
-		const { walletAddress, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/${walletAddress}/events/unstake-requested`,
-			{
-				cursor,
-				limit,
-			},
-			Casting.staking.unstakeRequestedEventFromOnChain
-		);
-	}
-
-	// =========================================================================
 	//  Calculations
 	// =========================================================================
 
-	// TODO: use this function
+	// TODO: write and use this function
 	public liquidStakingApy = (inputs: {
 		delegatedStakes: DelegatedStake[];
 		validatorApys: ValidatorsApy;
@@ -688,6 +710,81 @@ export class StakingApi {
 	};
 
 	// =========================================================================
+	//  Private Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	private async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/${walletAddress}/events/staked`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.staking.stakedEventFromOnChain
+		);
+	}
+
+	private async fetchUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/${walletAddress}/events/unstaked`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.staking.unstakedEventFromOnChain
+		);
+	}
+
+	private async fetchUnstakeRequestedEvents(
+		inputs: ApiIndexerUserEventsBody
+	) {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/${walletAddress}/events/unstake-requested`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.staking.unstakeRequestedEventFromOnChain
+		);
+	}
+
+	// =========================================================================
+	//  Event Types
+	// =========================================================================
+
+	private stakedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.events,
+			StakingApi.constants.moduleNames.events,
+			StakingApi.constants.eventNames.staked
+		);
+
+	private unstakeRequestedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.events,
+			StakingApi.constants.moduleNames.events,
+			StakingApi.constants.eventNames.unstakeRequested
+		);
+
+	private unstakedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.events,
+			StakingApi.constants.moduleNames.events,
+			StakingApi.constants.eventNames.unstaked
+		);
+
+	// =========================================================================
+	//  Public Static Methods
+	// =========================================================================
+
+	// =========================================================================
 	//  Staking Positions Updating
 	// =========================================================================
 
@@ -722,35 +819,6 @@ export class StakingApi {
 			(a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)
 		);
 	};
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Event Types
-	// =========================================================================
-
-	private stakedEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.events,
-			StakingApi.constants.moduleNames.events,
-			StakingApi.constants.eventNames.staked
-		);
-
-	private unstakeRequestedEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.events,
-			StakingApi.constants.moduleNames.events,
-			StakingApi.constants.eventNames.unstakeRequested
-		);
-
-	private unstakedEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.events,
-			StakingApi.constants.moduleNames.events,
-			StakingApi.constants.eventNames.unstaked
-		);
 
 	// =========================================================================
 	//  Private Static Methods
