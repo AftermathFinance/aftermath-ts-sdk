@@ -14,36 +14,41 @@ export interface ValidatorConfigFieldsOnChain {
 	fee: BigIntAsString;
 }
 
+export interface ValidatorOperationCapFieldsOnChain {
+	authorizer_validator_address: SuiAddress;
+}
+
 // =========================================================================
 //  Events Fields
 // =========================================================================
 
-export interface StakeRequestEventOnChainFields {
-	sui_id: ObjectId;
-	staked_sui_id: ObjectId;
-	sui_amount: BigIntAsString;
-	staker: BigIntAsString;
+export interface StakedEventOnChainFields {
+	staker: SuiAddress;
 	validator: SuiAddress;
-	epoch: BigIntAsString;
-	validator_fee: BigIntAsString;
-	is_restaked: boolean;
-	referrer: SuiAddress | null;
-}
-
-export interface UnstakeEventOnChainFields {
-	afsui_id: ObjectId;
-	payback_coin_id: ObjectId;
-	provided_afsui_amount: BigIntAsString;
-	withdrawn_sui_amount: BigIntAsString;
-	staker: BigIntAsString;
-	epoch: BigIntAsString;
-}
-
-export interface AfSuiMintedEventOnChainFields {
+	staked_sui_id: ObjectId;
 	sui_id: ObjectId;
-	staked_sui_amount: BigIntAsString;
-	minted_afsui_amount: BigIntAsString;
-	staker: BigIntAsString;
+	sui_amount: BigIntAsString;
+	afsui_id: ObjectId;
+	afsui_amount: BigIntAsString;
+	validator_fee: BigIntAsString;
+	referrer: SuiAddress | null;
+	epoch: BigIntAsString;
+	is_restaked: boolean;
+}
+
+export interface UnstakedEventOnChainFields {
+	afsui_id: ObjectId;
+	provided_afsui_amount: BigIntAsString;
+	sui_id: ObjectId;
+	returned_sui_amount: BigIntAsString;
+	requester: SuiAddress;
+	epoch: BigIntAsString;
+}
+
+export interface UnstakeRequestedEventOnChainFields {
+	afsui_id: ObjectId;
+	provided_afsui_amount: BigIntAsString;
+	requester: SuiAddress;
 	epoch: BigIntAsString;
 }
 
@@ -51,23 +56,22 @@ export interface AfSuiMintedEventOnChainFields {
 //  Events
 // =========================================================================
 
-export type StakeRequestEventOnChain =
-	EventOnChain<StakeRequestEventOnChainFields>;
+export type StakedEventOnChain = EventOnChain<StakedEventOnChainFields>;
 
-export type UnstakeEventOnChain = EventOnChain<UnstakeEventOnChainFields>;
+export type UnstakedEventOnChain = EventOnChain<UnstakedEventOnChainFields>;
 
-export type AfSuiMintedEventOnChain =
-	EventOnChain<AfSuiMintedEventOnChainFields>;
+export type UnstakeRequestedEventOnChain =
+	EventOnChain<UnstakeRequestedEventOnChainFields>;
 
 // =========================================================================
 //  Indexer Events
 // =========================================================================
 
-export type StakeRequestIndexerEventOnChain =
-	IndexerEventOnChain<StakeRequestEventOnChainFields>;
+export type StakedIndexerEventOnChain =
+	IndexerEventOnChain<StakedEventOnChainFields>;
 
-export type UnstakeIndexerEventOnChain =
-	IndexerEventOnChain<UnstakeEventOnChainFields>;
+export type UnstakedIndexerEventOnChain =
+	IndexerEventOnChain<UnstakedEventOnChainFields>;
 
-export type AfSuiMintedIndexerEventOnChain =
-	IndexerEventOnChain<AfSuiMintedEventOnChainFields>;
+export type UnstakeRequestedIndexerEventOnChain =
+	IndexerEventOnChain<UnstakeRequestedEventOnChainFields>;
