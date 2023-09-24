@@ -127,6 +127,10 @@ export class Staking extends Caller {
 		return this.fetchApi("afsui-exchange-rate");
 	}
 
+	public async getAtomicUnstakeSuiReserves(): Promise<Balance> {
+		return this.fetchApi("atomic-unstake-sui-reserves");
+	}
+
 	public async getApy(): Promise<number> {
 		return this.fetchApi("apy");
 	}

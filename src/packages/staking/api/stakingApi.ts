@@ -52,6 +52,7 @@ export class StakingApi {
 			actions: "actions",
 			events: "events",
 			stakedSuiVault: "staked_sui_vault",
+			stakedSuiVaultState: "staked_sui_vault_state",
 		},
 		eventNames: {
 			staked: "StakedEvent",
@@ -336,9 +337,8 @@ export class StakingApi {
 
 	public afsuiToSuiExchangeRateTx = (inputs: {
 		tx: TransactionBlock;
-	}) /* (U128) */ => {
+	}) /* (u128) */ => {
 		const { tx } = inputs;
-
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
@@ -667,35 +667,48 @@ export class StakingApi {
 		return exchangeRate <= 0 ? 1 : exchangeRate;
 	};
 
+	public fetchAtomicUnstakeSuiReserves = async (): Promise<Balance> => {
+		return this.Provider.Objects().fetchCastObject({
+			objectId: this.addresses.objects.stakedSuiVaultState,
+			objectFromSuiObjectResponse: (objectRes) =>
+				BigInt(
+					Helpers.getObjectFields(objectRes)
+						.atomic_unstake_sui_reserves
+				),
+		});
+	};
+
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
 
 	// TODO: write and use this function
 	public liquidStakingApy = async (): Promise<number> => {
-		const limit = 7;
-		const recentEpochChanges =
-			await this.Provider.indexerCaller.fetchIndexerEvents(
-				`staking/events/epoch-was-changed`,
-				{
-					limit,
-				},
-				Casting.staking.epochWasChangedEventFromOnChain
-			);
-		if (recentEpochChanges.events.length <= 0) return 0;
+		throw new Error("TODO");
 
-		const avgApy =
-			Helpers.sum(
-				recentEpochChanges.events.map((event) =>
-					Coin.balanceWithDecimals(
-						Number(event.totalSuiRewardsAmount) /
-							Number(event.totalSuiAmount),
-						Coin.constants.suiCoinDecimals
-					)
-				)
-			) / recentEpochChanges.events.length;
+		// const limit = 7;
+		// const recentEpochChanges =
+		// 	await this.Provider.indexerCaller.fetchIndexerEvents(
+		// 		`staking/events/epoch-was-changed`,
+		// 		{
+		// 			limit,
+		// 		},
+		// 		Casting.staking.epochWasChangedEventFromOnChain
+		// 	);
+		// if (recentEpochChanges.events.length <= 0) return 0;
 
-		return avgApy;
+		// const avgApy =
+		// 	Helpers.sum(
+		// 		recentEpochChanges.events.map((event) =>
+		// 			Coin.balanceWithDecimals(
+		// 				Number(event.totalSuiRewardsAmount) /
+		// 					Number(event.totalSuiAmount),
+		// 				Coin.constants.suiCoinDecimals
+		// 			)
+		// 		)
+		// 	) / recentEpochChanges.events.length;
+
+		// return avgApy;
 	};
 
 	// =========================================================================

@@ -53,6 +53,7 @@ export interface StakingAddresses {
 	};
 	objects: {
 		stakedSuiVault: ObjectId;
+		stakedSuiVaultState: ObjectId;
 		safe: ObjectId;
 		treasury: ObjectId;
 		referralVault: ObjectId;
