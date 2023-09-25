@@ -54,9 +54,8 @@ export class FarmsStakedPosition extends Caller {
 	//  Getters
 	// =========================================================================
 
-	public isLocked = (): boolean => {
-		const nowTimestamp = dayjs().valueOf();
-		return this.unlockTimestamp() > nowTimestamp;
+	public isLocked = (inputs: { stakingPool: FarmsStakingPool }): boolean => {
+		return !this.isUnlocked(inputs);
 	};
 
 	public isLockDuration = (): boolean => {
@@ -488,5 +487,35 @@ export class FarmsStakedPosition extends Caller {
 		// ib. Reset position's lock parameters.
 		this.stakedPosition.lockDurationMs = 0;
 		this.stakedPosition.lockMultiplier = Fixed.fixedOneB;
+	};
+
+	private isUnlocked = (inputs: {
+		stakingPool: FarmsStakingPool;
+	}): boolean => {
+		const { stakingPool } = inputs;
+		// let emitted_rewards = stakingPool.calc_emitted_rewards();
+		// let total_rewards = stakingPool.stakingPool.rewardCoins.map(
+		// 	(coin) => coin.rewards
+		// );
+
+		// let length = emitted_rewards.length;
+		// let index = 0;
+
+		// let no_rewards_are_remaining = true;
+		// while (index < length && no_rewards_are_remaining) {
+		// 	let emitted = emitted_rewards[index];
+		// 	let total = total_rewards[index];
+
+		// 	if (emitted < total) no_rewards_are_remaining = false;
+
+		// 	index = index + 1;
+		// }
+
+		return (
+			this.unlockTimestamp() <= dayjs().valueOf() ||
+			stakingPool.stakingPool.emissionEndTimestamp <= dayjs().valueOf() ||
+			// no_rewards_are_remaining
+			stakingPool.stakingPool.isUnlocked
+		);
 	};
 }

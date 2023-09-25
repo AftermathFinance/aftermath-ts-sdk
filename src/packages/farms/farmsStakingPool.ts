@@ -183,6 +183,49 @@ export class FarmsStakingPool extends Caller {
 		return multiplier < Fixed.fixedOneB ? Fixed.fixedOneB : multiplier;
 	};
 
+	// public calc_emitted_rewards(): bigint[] {
+	// 	let emitted_rewards: bigint[] = [];
+
+	// 	let length = this.stakingPool.rewardCoins.length;
+	// 	let index = 0;
+
+	// 	while (index < length) {
+	// 		let emission_start_timestamp_ms =
+	// 			this.stakingPool.rewardCoins[index].emissionStartTimestamp;
+	// 		let last_reward_timestamp_ms =
+	// 			this.stakingPool.rewardCoins[index].lastRewardTimestamp;
+
+	// 		emitted_rewards.push(
+	// 			this.calcRewardsEmittedFromTimeTmToTn({
+	// 				timestampTm: emission_start_timestamp_ms,
+	// 				timestampTn: last_reward_timestamp_ms,
+	// 				rewardCoin: this.stakingPool.rewardCoins[index],
+	// 			})
+	// 		);
+
+	// 		index = index + 1;
+	// 	}
+
+	// 	return emitted_rewards;
+	// }
+
+	// public calc_emitted_rewards_for(inputs: {
+	// 	rewardCoinIndex: number;
+	// }): bigint {
+	// 	let reward_index = inputs.rewardCoinIndex;
+
+	// 	let emission_start_timestamp_ms =
+	// 		this.stakingPool.rewardCoins[reward_index].emissionStartTimestamp;
+	// 	let last_reward_timestamp_ms =
+	// 		this.stakingPool.rewardCoins[reward_index].lastRewardTimestamp;
+
+	// 	return this.calcRewardsEmittedFromTimeTmToTn({
+	// 		timestampTm: emission_start_timestamp_ms,
+	// 		timestampTn: last_reward_timestamp_ms,
+	// 		rewardCoin: this.stakingPool.rewardCoins[reward_index],
+	// 	});
+	// }
+
 	// =========================================================================
 	//  Transactions
 	// =========================================================================

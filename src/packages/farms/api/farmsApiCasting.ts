@@ -47,9 +47,9 @@ export class FarmsApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static stakingPoolObjectFromSuiObjectResponse = (
+	public static partialStakingPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): FarmsStakingPoolObject => {
+	): Omit<FarmsStakingPoolObject, "isUnlocked"> => {
 		const objectType = Helpers.getObjectType(data);
 
 		const fields = Helpers.getObjectFields(
