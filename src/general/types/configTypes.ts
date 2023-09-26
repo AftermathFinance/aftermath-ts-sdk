@@ -49,6 +49,7 @@ export interface StakingAddresses {
 	packages: {
 		lsd: SuiAddress;
 		afsui: SuiAddress;
+		events: SuiAddress;
 	};
 	objects: {
 		stakedSuiVault: ObjectId;

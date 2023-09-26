@@ -50,6 +50,7 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 
 export class FarmsApi {
 	// =========================================================================
@@ -186,11 +187,22 @@ export class FarmsApi {
 	public fetchStakingPool = async (inputs: {
 		objectId: ObjectId;
 	}): Promise<FarmsStakingPoolObject> => {
-		return this.Provider.Objects().fetchCastObject({
-			...inputs,
-			objectFromSuiObjectResponse:
-				Casting.farms.stakingPoolObjectFromSuiObjectResponse,
+		const partialStakingPool =
+			await this.Provider.Objects().fetchCastObject({
+				...inputs,
+				objectFromSuiObjectResponse:
+					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
+			});
+
+		const isUnlocked = await this.isStakingPoolUnlocked({
+			stakingPoolId: inputs.objectId,
+			stakeCoinType: partialStakingPool.stakeCoinType,
 		});
+
+		return {
+			...partialStakingPool,
+			isUnlocked,
+		};
 	};
 
 	public fetchAllStakingPools = async (): Promise<
@@ -203,11 +215,26 @@ export class FarmsApi {
 			})
 		).map((event) => event.vaultId);
 
-		return this.Provider.Objects().fetchCastObjectBatch({
-			objectIds,
-			objectFromSuiObjectResponse:
-				Casting.farms.stakingPoolObjectFromSuiObjectResponse,
-		});
+		const partialStakingPools =
+			await this.Provider.Objects().fetchCastObjectBatch({
+				objectIds,
+				objectFromSuiObjectResponse:
+					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
+			});
+
+		return Promise.all(
+			partialStakingPools.map(async (stakingPool) => {
+				const isUnlocked = await this.isStakingPoolUnlocked({
+					stakingPoolId: stakingPool.objectId,
+					stakeCoinType: stakingPool.stakeCoinType,
+				});
+
+				return {
+					...stakingPool,
+					isUnlocked,
+				};
+			})
+		);
 	};
 
 	public fetchOwnedStakingPoolOwnerCaps = async (
@@ -851,11 +878,33 @@ export class FarmsApi {
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
-				tx.object(inputs.ownerCapId), // OwnerCap / OneTimeAdminCap
+				tx.object(inputs.ownerCapId), // OwnerCap
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
-				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				tx.pure(inputs.emissionScheduleMs, "u64"),
 				tx.pure(inputs.emissionRate, "u64"),
+			],
+		});
+	};
+
+	// =========================================================================
+	//  Staking Pool Inspection Transaction Commands
+	// =========================================================================
+
+	public isVaultUnlockedTx = (inputs: {
+		tx: TransactionBlock;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) /* (bool) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"is_vault_unlocked"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
 			],
 		});
 	};
@@ -1138,6 +1187,22 @@ export class FarmsApi {
 	public buildGrantOneTimeAdminCapTx = Helpers.transactions.createBuildTxFunc(
 		this.grantOneTimeAdminCapTx
 	);
+
+	public async isStakingPoolUnlocked(inputs: {
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}): Promise<boolean> {
+		const tx = new TransactionBlock();
+		this.isVaultUnlockedTx({
+			...inputs,
+			tx,
+		});
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		const isUnlocked: boolean = bcs.de("bool", new Uint8Array(bytes));
+		return isUnlocked;
+	}
 
 	// =========================================================================
 	//  Private Methods

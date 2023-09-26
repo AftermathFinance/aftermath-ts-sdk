@@ -52,6 +52,7 @@ export interface FarmsStakingPoolObject extends Object {
 	emissionEndTimestamp: Timestamp;
 	minStakeAmount: Balance;
 	lockEnforcement: FarmsLockEnforcement;
+	isUnlocked: boolean;
 }
 
 export interface StakingPoolOwnerCapObject extends Object {

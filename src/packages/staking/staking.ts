@@ -4,7 +4,6 @@ import {
 	SuiNetwork,
 	ApiStakingPositionsBody,
 	StakingPosition,
-	StakeRequestEvent,
 	ApiStakingEventsBody,
 	Balance,
 	Url,
@@ -13,6 +12,9 @@ import {
 	ApiStakeStakedSuiBody,
 	ApiDelegatedStakesBody,
 	SuiDelegatedStake,
+	ApiValidatorOperationCapsBody,
+	ValidatorOperationCapObject,
+	ApiUpdateValidatorFeeBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui.js/client";
@@ -25,6 +27,8 @@ export class Staking extends Caller {
 	public static readonly constants = {
 		fees: {
 			protocolUnstake: 0.05, // 5%
+			defaultValidator: 0, // 0%
+			maxValidator: 0.05, // 5%
 		},
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
@@ -68,6 +72,12 @@ export class Staking extends Caller {
 		return this.fetchApi("delegated-stakes", inputs);
 	}
 
+	public async getValidatorOperationCaps(
+		inputs: ApiValidatorOperationCapsBody
+	): Promise<ValidatorOperationCapObject[]> {
+		return this.fetchApi("validator-operation-caps", inputs);
+	}
+
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
@@ -89,6 +99,15 @@ export class Staking extends Caller {
 	public async getStakeStakedSuiTransaction(inputs: ApiStakeStakedSuiBody) {
 		return this.fetchApiTransaction<ApiStakeStakedSuiBody>(
 			"transactions/stake-staked-sui",
+			inputs
+		);
+	}
+
+	public async getUpdateValidatorFeeTransaction(
+		inputs: ApiUpdateValidatorFeeBody
+	) {
+		return this.fetchApiTransaction<ApiUpdateValidatorFeeBody>(
+			"transactions/update-validator-fee",
 			inputs
 		);
 	}

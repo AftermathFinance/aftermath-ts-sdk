@@ -1,18 +1,20 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
-	AfSuiMintedEvent,
-	UnstakeEvent,
-	StakeRequestEvent,
 	ValidatorConfigObject,
+	ValidatorOperationCapObject,
+	UnstakedEvent,
+	UnstakeRequestedEvent,
+	StakedEvent,
 } from "../../../types";
 import {
-	AfSuiMintedEventOnChain,
-	AfSuiMintedIndexerEventOnChain,
-	StakeRequestEventOnChain,
-	StakeRequestIndexerEventOnChain,
-	UnstakeEventOnChain,
-	UnstakeIndexerEventOnChain,
+	StakedEventOnChain,
+	StakedIndexerEventOnChain,
+	UnstakeRequestedEventOnChain,
+	UnstakeRequestedIndexerEventOnChain,
+	UnstakedEventOnChain,
+	UnstakedIndexerEventOnChain,
 	ValidatorConfigFieldsOnChain,
+	ValidatorOperationCapFieldsOnChain,
 } from "./stakingApiCastingTypes";
 import { Fixed } from "../../../general/utils/fixed";
 import { Helpers } from "../../../general/utils";
@@ -26,7 +28,6 @@ export class StakingApiCasting {
 		data: SuiObjectResponse
 	): ValidatorConfigObject => {
 		const objectType = Helpers.getObjectType(data);
-
 		const allFields = Helpers.getObjectFields(data) as {
 			value: {
 				fields: {
@@ -49,13 +50,30 @@ export class StakingApiCasting {
 		};
 	};
 
+	public static validatorOperationCapObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): ValidatorOperationCapObject => {
+		const objectType = Helpers.getObjectType(data);
+		const fields = Helpers.getObjectFields(
+			data
+		) as ValidatorOperationCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: Helpers.getObjectId(data),
+			authorizerValidatorAddress: Helpers.addLeadingZeroesToType(
+				fields.authorizer_validator_address
+			),
+		};
+	};
+
 	// =========================================================================
 	//  Events
 	// =========================================================================
 
-	public static stakeRequestEventFromOnChain = (
-		eventOnChain: StakeRequestEventOnChain
-	): StakeRequestEvent => {
+	public static stakedEventFromOnChain = (
+		eventOnChain: StakedEventOnChain
+	): StakedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
@@ -67,41 +85,40 @@ export class StakingApiCasting {
 			validatorFee: Fixed.directCast(BigInt(fields.validator_fee)),
 			isRestaked: fields.is_restaked,
 			referrer: fields.referrer ? fields.referrer : undefined,
+			afSuiId: Helpers.addLeadingZeroesToType(fields.afsui_id),
+			afSuiAmount: BigInt(fields.afsui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static unstakeEventFromOnChain = (
-		eventOnChain: UnstakeEventOnChain
-	): UnstakeEvent => {
+	public static unstakedEventFromOnChain = (
+		eventOnChain: UnstakedEventOnChain
+	): UnstakedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			afSuiId: Helpers.addLeadingZeroesToType(fields.afsui_id),
-			paybackCoinId: Helpers.addLeadingZeroesToType(
-				fields.payback_coin_id
-			),
-			staker: Helpers.addLeadingZeroesToType(fields.staker),
+			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
+			requester: Helpers.addLeadingZeroesToType(fields.requester),
 			epoch: BigInt(fields.epoch),
-			afSuiAmountGiven: BigInt(fields.provided_afsui_amount),
-			suiUnstakeAmount: BigInt(fields.withdrawn_sui_amount),
+			providedAfSuiAmount: BigInt(fields.provided_afsui_amount),
+			returnedSuiAmount: BigInt(fields.returned_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static afSuiMintedEventFromOnChain = (
-		eventOnChain: AfSuiMintedEventOnChain
-	): AfSuiMintedEvent => {
+	public static unstakeRequestedEventFromOnChain = (
+		eventOnChain: UnstakeRequestedEventOnChain
+	): UnstakeRequestedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
-			staker: Helpers.addLeadingZeroesToType(fields.staker),
+			afSuiId: Helpers.addLeadingZeroesToType(fields.afsui_id),
+			providedAfSuiAmount: BigInt(fields.provided_afsui_amount),
+			requester: Helpers.addLeadingZeroesToType(fields.requester),
 			epoch: BigInt(fields.epoch),
-			afSuiMintAmount: BigInt(fields.minted_afsui_amount),
-			suiStakeAmount: BigInt(fields.staked_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -112,9 +129,9 @@ export class StakingApiCasting {
 	//  Indexer Events
 	// =========================================================================
 
-	public static stakeRequestEventFromIndexerOnChain = (
-		eventOnChain: StakeRequestIndexerEventOnChain
-	): StakeRequestEvent => {
+	public static stakedEventFromIndexerOnChain = (
+		eventOnChain: StakedIndexerEventOnChain
+	): StakedEvent => {
 		return {
 			suiId: Helpers.addLeadingZeroesToType(eventOnChain.sui_id),
 			stakedSuiId: Helpers.addLeadingZeroesToType(
@@ -129,39 +146,38 @@ export class StakingApiCasting {
 			validatorFee: Fixed.directCast(BigInt(eventOnChain.validator_fee)),
 			isRestaked: eventOnChain.is_restaked,
 			referrer: eventOnChain.referrer ? eventOnChain.referrer : undefined,
+			afSuiId: Helpers.addLeadingZeroesToType(eventOnChain.afsui_id),
+			afSuiAmount: BigInt(eventOnChain.afsui_amount),
 			timestamp: eventOnChain.timestamp ?? undefined,
 			txnDigest: eventOnChain.txnDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static unstakeEventFromIndexerOnChain = (
-		eventOnChain: UnstakeIndexerEventOnChain
-	): UnstakeEvent => {
+	public static unstakedEventFromIndexerOnChain = (
+		eventOnChain: UnstakedIndexerEventOnChain
+	): UnstakedEvent => {
 		return {
 			afSuiId: Helpers.addLeadingZeroesToType(eventOnChain.afsui_id),
-			paybackCoinId: Helpers.addLeadingZeroesToType(
-				eventOnChain.payback_coin_id
-			),
-			staker: Helpers.addLeadingZeroesToType(eventOnChain.staker),
+			suiId: Helpers.addLeadingZeroesToType(eventOnChain.sui_id),
+			requester: Helpers.addLeadingZeroesToType(eventOnChain.requester),
 			epoch: BigInt(eventOnChain.epoch),
-			afSuiAmountGiven: BigInt(eventOnChain.provided_afsui_amount),
-			suiUnstakeAmount: BigInt(eventOnChain.withdrawn_sui_amount),
+			providedAfSuiAmount: BigInt(eventOnChain.provided_afsui_amount),
+			returnedSuiAmount: BigInt(eventOnChain.returned_sui_amount),
 			timestamp: eventOnChain.timestamp ?? undefined,
 			txnDigest: eventOnChain.txnDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static afSuiMintedEventFromIndexerOnChain = (
-		eventOnChain: AfSuiMintedIndexerEventOnChain
-	): AfSuiMintedEvent => {
+	public static unstakeRequestedEventFromIndexerOnChain = (
+		eventOnChain: UnstakeRequestedIndexerEventOnChain
+	): UnstakeRequestedEvent => {
 		return {
-			suiId: Helpers.addLeadingZeroesToType(eventOnChain.sui_id),
-			staker: Helpers.addLeadingZeroesToType(eventOnChain.staker),
+			afSuiId: Helpers.addLeadingZeroesToType(eventOnChain.afsui_id),
+			providedAfSuiAmount: BigInt(eventOnChain.provided_afsui_amount),
+			requester: Helpers.addLeadingZeroesToType(eventOnChain.requester),
 			epoch: BigInt(eventOnChain.epoch),
-			afSuiMintAmount: BigInt(eventOnChain.minted_afsui_amount),
-			suiStakeAmount: BigInt(eventOnChain.staked_sui_amount),
 			timestamp: eventOnChain.timestamp ?? undefined,
 			txnDigest: eventOnChain.txnDigest,
 			type: eventOnChain.type,

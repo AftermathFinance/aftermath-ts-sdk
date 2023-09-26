@@ -20,6 +20,10 @@ export interface ValidatorConfigObject extends Object {
 	fee: Percentage;
 }
 
+export interface ValidatorOperationCapObject extends Object {
+	authorizerValidatorAddress: SuiAddress;
+}
+
 export interface StakeBalanceDynamicField {
 	objectId: ObjectId;
 	value: Balance;
@@ -53,9 +57,10 @@ export const isSuiDelegatedStake = (
 //  Events
 // =========================================================================
 
-export type StakeEvent = StakeRequestEvent | AfSuiMintedEvent;
+export type StakeEvent = StakedEvent;
+export type UnstakeEvent = UnstakeRequestedEvent | UnstakedEvent;
 
-export interface StakeRequestEvent extends Event {
+export interface StakedEvent extends Event {
 	stakedSuiId: ObjectId;
 	suiId: ObjectId;
 	staker: SuiAddress;
@@ -64,36 +69,37 @@ export interface StakeRequestEvent extends Event {
 	suiStakeAmount: Balance;
 	validatorFee: number;
 	isRestaked: boolean;
+	afSuiId: ObjectId;
+	afSuiAmount: Balance;
 	referrer?: SuiAddress;
 }
 
-export interface AfSuiMintedEvent extends Event {
-	suiId: ObjectId;
-	staker: SuiAddress;
+export interface UnstakeRequestedEvent extends Event {
+	afSuiId: ObjectId;
+	providedAfSuiAmount: Balance;
+	requester: SuiAddress;
 	epoch: bigint;
-	afSuiMintAmount: Balance;
-	suiStakeAmount: Balance;
 }
 
-export interface UnstakeEvent extends Event {
+export interface UnstakedEvent extends Event {
 	afSuiId: ObjectId;
-	paybackCoinId: ObjectId;
-	staker: SuiAddress;
+	providedAfSuiAmount: Balance;
+	suiId: ObjectId;
+	returnedSuiAmount: Balance;
+	requester: SuiAddress;
 	epoch: bigint;
-	afSuiAmountGiven: Balance;
-	suiUnstakeAmount: Balance;
 }
 
 export const isStakeEvent = (
 	event: StakeEvent | UnstakeEvent
 ): event is StakeEvent => {
-	return "suiId" in event;
+	return "staker" in event;
 };
 
 export const isUnstakeEvent = (
 	event: StakeEvent | UnstakeEvent
 ): event is UnstakeEvent => {
-	return "afSuiId" in event;
+	return !isStakeEvent(event);
 };
 
 // =========================================================================
@@ -103,33 +109,39 @@ export const isUnstakeEvent = (
 export type StakingPosition = StakePosition | UnstakePosition;
 
 export interface StakePosition {
-	state: StakePositionState;
+	stakedSuiId: ObjectId;
 	suiId: ObjectId;
 	staker: SuiAddress;
 	validatorAddress: SuiAddress;
 	epoch: bigint;
 	suiStakeAmount: Balance;
-	afSuiMintAmount?: Balance;
+	validatorFee: number;
+	isRestaked: boolean;
+	afSuiId: ObjectId;
+	afSuiAmount: Balance;
+	// referrer?: SuiAddress;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }
 
 export interface UnstakePosition {
+	state: UnstakePositionState;
 	afSuiId: ObjectId;
-	staker: SuiAddress;
+	providedAfSuiAmount: Balance;
+	requester: SuiAddress;
 	epoch: bigint;
-	afSuiAmountGiven: Balance;
-	suiUnstakeAmount?: Balance;
+	suiId?: ObjectId;
+	returnedSuiAmount?: Balance;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }
 
-export type StakePositionState = "REQUEST" | "AFSUI_MINTED";
+export type UnstakePositionState = "REQUEST" | "SUI_MINTED";
 
 export const isStakePosition = (
 	position: StakingPosition
 ): position is StakePosition => {
-	return "suiId" in position;
+	return "stakedSuiId" in position;
 };
 
 export const isUnstakePosition = (
@@ -142,6 +154,10 @@ export const isUnstakePosition = (
 //  API
 // =========================================================================
 
+// =========================================================================
+//  Transactions API
+// =========================================================================
+
 export interface ApiStakeBody {
 	walletAddress: SuiAddress;
 	suiStakeAmount: Balance;
@@ -152,6 +168,7 @@ export interface ApiStakeBody {
 export interface ApiUnstakeBody {
 	walletAddress: SuiAddress;
 	afSuiUnstakeAmount: Balance;
+	isAtomic: boolean;
 	referrer?: SuiAddress;
 }
 
@@ -162,6 +179,16 @@ export interface ApiStakeStakedSuiBody {
 	referrer?: SuiAddress;
 }
 
+export interface ApiUpdateValidatorFeeBody {
+	walletAddress: SuiAddress;
+	validatorOperationCapId: ObjectId;
+	newFeePercentage: Percentage;
+}
+
+// =========================================================================
+//  Objects API
+// =========================================================================
+
 export interface ApiStakingPositionsBody {
 	walletAddress: SuiAddress;
 }
@@ -169,6 +196,14 @@ export interface ApiStakingPositionsBody {
 export interface ApiDelegatedStakesBody {
 	walletAddress: SuiAddress;
 }
+
+export interface ApiValidatorOperationCapsBody {
+	walletAddress: SuiAddress;
+}
+
+// =========================================================================
+//  Events API
+// =========================================================================
 
 export type ApiStakingEventsBody = ApiEventsBody & {
 	walletAddress: SuiAddress;

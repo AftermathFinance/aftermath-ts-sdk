@@ -12,9 +12,7 @@ import {
 	TransactionsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/client";
-import { Helpers } from "../utils";
-import { Coin, Sui } from "../../packages";
+import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/dist/cjs/client";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
