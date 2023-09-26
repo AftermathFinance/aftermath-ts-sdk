@@ -44,7 +44,7 @@ import {
 import { Sui } from "../../sui";
 import { Fixed } from "../../../general/utils/fixed";
 import { StakingApiCasting } from "./stakingApiCasting";
-import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/dist/cjs/client";
+import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/client";
 
 export class StakingApi {
 	// =========================================================================

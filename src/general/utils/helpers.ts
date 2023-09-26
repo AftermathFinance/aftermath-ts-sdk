@@ -2,7 +2,7 @@ import {
 	DisplayFieldsResponse,
 	SuiMoveObject,
 	SuiObjectResponse,
-} from "@mysten/sui.js/dist/cjs/client";
+} from "@mysten/sui.js/client";
 import { AnyObjectType, Balance, ObjectId, Slippage } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";

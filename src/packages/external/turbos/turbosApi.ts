@@ -16,11 +16,12 @@ import {
 	TurbosPartialPoolObject,
 	TurbosPoolObject,
 } from "./turbosTypes";
-import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
-import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { RouterPoolTradeTxInputs } from "../../router";
+import { Sui } from "../../sui";
 
 export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================

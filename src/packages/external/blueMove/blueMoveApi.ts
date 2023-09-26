@@ -25,7 +25,7 @@ import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { RouterPoolTradeTxInputs } from "../../router";
-import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 
 export class BlueMoveApi
 	implements RouterSynchronousApiInterface<BlueMovePoolObject>

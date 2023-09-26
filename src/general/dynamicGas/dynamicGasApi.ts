@@ -3,9 +3,8 @@ import { AftermathApi } from "../providers/aftermathApi";
 import { CoinType } from "../../packages/coin/coinTypes";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { Sui } from "../../packages";
-import { ObjectId, SerializedTransaction, SuiAddress } from "../types";
+import { ApiDynamicGasResponse, ObjectId, SuiAddress } from "../types";
 import { SerializedSignature } from "@mysten/sui.js/cryptography";
-import { ApiDynamicGasResponse } from "./dynamicGasTypes";
 
 export class DynamicGasApi {
 	// =========================================================================

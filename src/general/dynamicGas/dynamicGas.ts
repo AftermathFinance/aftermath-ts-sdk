@@ -1,15 +1,8 @@
 import { SuiNetwork } from "../types/suiTypes";
-import {
-	ApiTransactionsBody,
-	Balance,
-	SerializedTransaction,
-	SuiAddress,
-	TransactionsWithCursor,
-	Url,
-} from "../types/generalTypes";
-import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
+import { SuiAddress, Url } from "../types/generalTypes";
+import { CoinType } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
-import { TransactionBlock } from "@mysten/sui.js/dist/cjs/builder";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { ApiDynamicGasBody, ApiDynamicGasResponse } from "./dynamicGasTypes";
 
 export class DynamicGas extends Caller {

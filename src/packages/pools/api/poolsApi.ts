@@ -51,7 +51,8 @@ import {
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
-import { Pool, Pools } from "..";
+import { Pool } from "../pool";
+import { Pools } from "../pools";
 import { Aftermath } from "../../../general/providers";
 import { Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";

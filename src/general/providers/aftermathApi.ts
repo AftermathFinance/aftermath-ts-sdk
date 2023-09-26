@@ -28,7 +28,7 @@ import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 import { IndexerCaller } from "../utils";
-import { SuiClient } from "@mysten/sui.js/dist/cjs/client";
+import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 
 export class AftermathApi {

@@ -14,7 +14,7 @@ import {
 import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
-import { CoinStruct, PaginatedCoins } from "@mysten/sui.js/dist/cjs/client";
+import { CoinStruct, PaginatedCoins } from "@mysten/sui.js/client";
 
 export class CoinApi {
 	// =========================================================================

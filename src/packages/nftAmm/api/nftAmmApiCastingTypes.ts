@@ -3,7 +3,7 @@ import {
 	SupplyOnChain,
 	TableOnChain,
 } from "../../../general/types/castingTypes";
-import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 
 // =========================================================================
 //  Objects
