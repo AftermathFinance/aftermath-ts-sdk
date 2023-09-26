@@ -682,11 +682,8 @@ export class StakingApi {
 	//  Calculations
 	// =========================================================================
 
-	// TODO: write and use this function
 	public liquidStakingApy = async (): Promise<number> => {
-		throw new Error("TODO");
-
-		// const limit = 7;
+		const limit = 30; // ~30 epochs of data
 		// const recentEpochChanges =
 		// 	await this.Provider.indexerCaller.fetchIndexerEvents(
 		// 		`staking/events/epoch-was-changed`,
@@ -695,20 +692,37 @@ export class StakingApi {
 		// 		},
 		// 		Casting.staking.epochWasChangedEventFromOnChain
 		// 	);
-		// if (recentEpochChanges.events.length <= 0) return 0;
+		const recentEpochChanges =
+			await this.Provider.Events().fetchCastEventsWithCursor({
+				query: {
+					MoveEventType: this.eventTypes.epochWasChanged,
+				},
+				eventFromEventOnChain:
+					Casting.staking.epochWasChangedEventFromOnChain,
+				limit,
+			});
+		if (recentEpochChanges.events.length <= 1) return 4.9;
 
-		// const avgApy =
-		// 	Helpers.sum(
-		// 		recentEpochChanges.events.map((event) =>
-		// 			Coin.balanceWithDecimals(
-		// 				Number(event.totalSuiRewardsAmount) /
-		// 					Number(event.totalSuiAmount),
-		// 				Coin.constants.suiCoinDecimals
-		// 			)
-		// 		)
-		// 	) / recentEpochChanges.events.length;
+		const avgApy =
+			Helpers.sum(
+				recentEpochChanges.events.splice(1).map((event, index) => {
+					const currentRate = Number(event.totalAfSuiSupply)
+						? Number(event.totalSuiAmount) /
+						  Number(event.totalAfSuiSupply)
+						: 0;
 
-		// return avgApy;
+					const pastEvent = recentEpochChanges.events[index - 1];
+					const pastRate = Number(pastEvent.totalAfSuiSupply)
+						? Number(pastEvent.totalSuiAmount) /
+						  Number(pastEvent.totalAfSuiSupply)
+						: 0;
+
+					return (currentRate - pastRate) / pastRate;
+				})
+			) /
+			(recentEpochChanges.events.length - 1);
+
+		return avgApy;
 	};
 
 	// =========================================================================
