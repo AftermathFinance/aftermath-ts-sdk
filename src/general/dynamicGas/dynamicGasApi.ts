@@ -1,12 +1,11 @@
 import { Helpers } from "../utils/helpers";
 import { AftermathApi } from "../providers/aftermathApi";
 import { CoinType } from "../../packages/coin/coinTypes";
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { Sui } from "../../packages";
-import { ObjectId, SuiAddress } from "../types";
+import { ObjectId, SerializedTransaction, SuiAddress } from "../types";
+import { SerializedSignature } from "@mysten/sui.js/cryptography";
+import { ApiDynamicGasResponse } from "./dynamicGasTypes";
 
 export class DynamicGasApi {
 	// =========================================================================
@@ -17,16 +16,12 @@ export class DynamicGasApi {
 		this.Provider = Provider;
 	}
 
-	// =========================================================================
-	//  Coins
-	// =========================================================================
-
 	public fetchUseDynamicGasForTx = async (inputs: {
 		tx: TransactionBlock;
-		// walletAddress: SuiAddress,
+		walletAddress: SuiAddress;
 		gasCoinType: CoinType;
-	}) => {
-		const { tx, gasCoinType } = inputs;
+	}): Promise<ApiDynamicGasResponse> => {
+		const { tx, gasCoinType, walletAddress } = inputs;
 
 		const mergeCoinTxs = tx.blockData.transactions.filter(
 			(tx) => tx.kind === "MergeCoins"
@@ -38,9 +33,6 @@ export class DynamicGasApi {
 			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
-
-		// TOOD: handle unset case
-		const walletAddress = tx.blockData.sender ?? "";
 
 		const gasSplitMoveCall = tx.blockData.transactions.find(
 			(command) =>
@@ -66,6 +58,18 @@ export class DynamicGasApi {
 					})
 			  ).map((coin) => coin.coinObjectId));
 
-		this.Provider.indexerCaller.fetchIndexer();
+		const res: {
+			tx_data: string;
+			signature: SerializedSignature;
+		} = await this.Provider.indexerCaller.fetchIndexer("sponsor.json", {
+			sender: walletAddress,
+			gas_coins: coinIds,
+			transaction: b64TxBytes,
+		});
+
+		return {
+			txBytes: res.tx_data,
+			sponsoredSignature: res.signature,
+		};
 	};
 }

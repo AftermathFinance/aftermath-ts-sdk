@@ -29,6 +29,7 @@ import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/dist/cjs/client";
+import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 
 export class AftermathApi {
 	// =========================================================================
@@ -90,6 +91,7 @@ export class AftermathApi {
 	// =========================================================================
 
 	public Wallet = () => new WalletApi(this);
+	public DynamicGas = () => new DynamicGasApi(this);
 
 	public Prices = this.coinGeckoApiKey
 		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>

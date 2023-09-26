@@ -13,6 +13,7 @@ import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
 import { HistoricalData } from "../historicalData/historicalData";
 import { Perpetuals } from "../../packages/perpetuals";
 import { Farms } from "../../packages/farms/farms";
+import { DynamicGas } from "../dynamicGas/dynamicGas";
 
 /**
  * @class Aftermath Provider
@@ -76,6 +77,7 @@ export class Aftermath extends Caller {
 	public Wallet = (address: SuiAddress) => new Wallet(address, this.network);
 	public Coin = (coinType?: CoinType) => new Coin(coinType, this.network);
 	public HistoricalData = () => new HistoricalData(this.network);
+	public DynamicGas = () => new DynamicGas(this.network);
 
 	// =========================================================================
 	//  Utils

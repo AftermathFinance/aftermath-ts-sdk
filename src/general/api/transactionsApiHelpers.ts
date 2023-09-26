@@ -92,17 +92,16 @@ export class TransactionsApiHelpers {
 			return tx;
 		} else {
 			// using non-sui as gas (dynamic gas)
-
-			if (!tx.blockData.sender)
-				throw new Error(
-					"unable to set dynamic gas budget with no sender set on tx"
-				);
-
-			const allGasCoins = await this.Provider.Coin().fetchAllCoins({
-				walletAddress: tx.blockData.sender,
-				coinType: gasCoinType,
-			});
-			const gasCoinIds = allGasCoins.map((coin) => coin.coinObjectId);
+			// if (!tx.blockData.sender)
+			// 	throw new Error(
+			// 		"unable to set dynamic gas budget with no sender set on tx"
+			// 	);
+			// const allGasCoins = await this.Provider.Coin().fetchAllCoins({
+			// 	walletAddress: tx.blockData.sender,
+			// 	coinType: gasCoinType,
+			// });
+			// const gasCoinIds = allGasCoins.map((coin) => coin.coinObjectId);
+			return tx;
 		}
 	};
 
