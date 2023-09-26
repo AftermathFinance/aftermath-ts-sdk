@@ -6,10 +6,12 @@ import {
 	UnstakeRequestedEvent,
 	StakedEvent,
 	EpochWasChangedEvent,
+	StakedSuiVaultStateObject,
 } from "../../../types";
 import {
 	EpochWasChangedEventOnChain,
 	StakedEventOnChain,
+	StakedSuiVaultStateV1FieldsOnChain,
 	UnstakeRequestedEventOnChain,
 	UnstakedEventOnChain,
 	ValidatorConfigFieldsOnChain,
@@ -62,6 +64,36 @@ export class StakingApiCasting {
 			objectId: Helpers.getObjectId(data),
 			authorizerValidatorAddress: Helpers.addLeadingZeroesToType(
 				fields.authorizer_validator_address
+			),
+		};
+	};
+
+	public static stakedSuiVaultStateObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): StakedSuiVaultStateObject => {
+		const objectId = Helpers.getObjectId(data);
+		const objectType = Helpers.getObjectType(data);
+		const fields = Helpers.getObjectFields(
+			data
+		) as StakedSuiVaultStateV1FieldsOnChain;
+
+		return {
+			objectId,
+			objectType,
+			atomicUnstakeSuiReservesTargetValue: BigInt(
+				fields.protocol_config.fields
+					.atomic_unstake_sui_reserves_target_value
+			),
+			atomicUnstakeSuiReserves: BigInt(
+				fields.atomic_unstake_sui_reserves
+			),
+			minAtomicUnstakeFee: BigInt(
+				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
+					.min_fee
+			),
+			maxAtomicUnstakeFee: BigInt(
+				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
+					.max_fee
 			),
 		};
 	};

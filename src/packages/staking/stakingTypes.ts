@@ -24,6 +24,13 @@ export interface ValidatorOperationCapObject extends Object {
 	authorizerValidatorAddress: SuiAddress;
 }
 
+export interface StakedSuiVaultStateObject extends Object {
+	atomicUnstakeSuiReservesTargetValue: Balance;
+	atomicUnstakeSuiReserves: Balance;
+	minAtomicUnstakeFee: bigint;
+	maxAtomicUnstakeFee: bigint;
+}
+
 export interface StakeBalanceDynamicField {
 	objectId: ObjectId;
 	value: Balance;

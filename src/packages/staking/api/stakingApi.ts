@@ -25,6 +25,7 @@ import {
 	ApiUpdateValidatorFeeBody,
 	UnstakeEvent,
 	UnstakeRequestedEvent,
+	StakedSuiVaultStateObject,
 } from "../stakingTypes";
 import {
 	AnyObjectType,
@@ -197,6 +198,15 @@ export class StakingApi {
 					.validatorOperationCapObjectFromSuiObjectResponse,
 		});
 	};
+
+	public fetchStakedSuiVaultState =
+		async (): Promise<StakedSuiVaultStateObject> => {
+			return this.Provider.Objects().fetchCastObject({
+				objectId: this.addresses.objects.stakedSuiVaultState,
+				objectFromSuiObjectResponse:
+					StakingApiCasting.stakedSuiVaultStateObjectFromSuiObjectResponse,
+			});
+		};
 
 	// =========================================================================
 	//  Transaction Commands
@@ -665,17 +675,6 @@ export class StakingApi {
 
 		const exchangeRate = Fixed.directCast(Casting.bigIntFromBytes(bytes));
 		return exchangeRate <= 0 ? 1 : exchangeRate;
-	};
-
-	public fetchAtomicUnstakeSuiReserves = async (): Promise<Balance> => {
-		return this.Provider.Objects().fetchCastObject({
-			objectId: this.addresses.objects.stakedSuiVaultState,
-			objectFromSuiObjectResponse: (objectRes) =>
-				BigInt(
-					Helpers.getObjectFields(objectRes)
-						.atomic_unstake_sui_reserves
-				),
-		});
 	};
 
 	// =========================================================================
