@@ -97,6 +97,7 @@ export class CoinApi {
 			tx,
 			coinData,
 			coinAmount,
+			coinType,
 		});
 	};
 
@@ -126,6 +127,7 @@ export class CoinApi {
 				tx,
 				coinData,
 				coinAmount: coinAmounts[index],
+				coinType: coinTypes[index],
 			});
 
 			coinArgs = [...coinArgs, coinArg];
@@ -253,8 +255,9 @@ export class CoinApi {
 		tx: TransactionBlock;
 		coinData: CoinStruct[];
 		coinAmount: Balance;
+		coinType: CoinType;
 	}): TransactionArgument => {
-		const { tx, coinData, coinAmount } = inputs;
+		const { tx, coinData, coinAmount, coinType } = inputs;
 
 		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);
 
@@ -275,6 +278,12 @@ export class CoinApi {
 			);
 
 			return tx.splitCoins(tx.gas, [tx.pure(coinAmount)]);
+			// return Helpers.transactions.splitCoinsTx({
+			// 	tx,
+			// 	coinId: tx.gas,
+			// 	amounts: [coinAmount],
+			// 	coinType,
+			// });
 		}
 
 		const coinObjectIds = coinData.map((data) => data.coinObjectId);
@@ -292,10 +301,16 @@ export class CoinApi {
 			});
 		}
 
-		return tx.add({
-			kind: "SplitCoins",
-			coin: tx.object(mergedCoinObjectId),
-			amounts: [tx.pure(coinAmount)],
+		// return tx.add({
+		// 	kind: "SplitCoins",
+		// 	coin: tx.object(mergedCoinObjectId),
+		// 	amounts: [tx.pure(coinAmount)],
+		// });
+		return Helpers.transactions.splitCoinsTx({
+			tx,
+			coinId: mergedCoinObjectId,
+			amounts: [coinAmount],
+			coinType,
 		});
 	};
 }

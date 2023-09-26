@@ -3,7 +3,9 @@ import {
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import {
+	Balance,
 	CoinType,
+	ObjectId,
 	SerializedTransaction,
 	SuiAddress,
 	TransactionDigest,
@@ -12,7 +14,7 @@ import {
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/dist/cjs/client";
 import { Helpers } from "../utils";
-import { Coin } from "../../packages";
+import { Coin, Sui } from "../../packages";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -157,4 +159,63 @@ export class TransactionsApiHelpers {
 
 		return builderFunc;
 	};
+
+	public static splitCoinsTx(inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+		// coinId: TransactionArgument | ObjectId;
+		coinId: ObjectId;
+		amounts: TransactionArgument[] | Balance[];
+	}) {
+		const { tx, coinType, coinId, amounts } = inputs;
+		return tx.moveCall({
+			target: this.createTxTarget(
+				Sui.constants.addresses.suiPackageId,
+				"pay",
+				"split_vec"
+			),
+			typeArguments: [coinType],
+			arguments: [
+				typeof coinId === "string" ? tx.object(coinId) : coinId, // Coin,
+				tx.pure(amounts, "vector<u64>"), // split_amounts
+			],
+		});
+	}
+
+	// public static mergeCoinsTx(inputs: {
+	// 	tx: TransactionBlock;
+	// 	coinType: CoinType;
+	// 	destinationCoinId: TransactionArgument | string;
+	// 	sources: TransactionArgument[] | ObjectId[];
+	// }) {
+	// 	const { tx, coinType, destinationCoinId, sources } = inputs;
+
+	// 	// TODO: clean this up
+	// 	const coinVec =
+	// 		typeof sources[0] === "string"
+	// 			? tx.makeMoveVec({
+	// 					objects: sources.map((source) =>
+	// 						tx.object(source as ObjectId)
+	// 					),
+	// 					type: `Coin<${coinType}>`,
+	// 			  })
+	// 			: sources;
+	// 	return tx.moveCall({
+	// 		target: this.createTxTarget(
+	// 			Sui.constants.addresses.suiPackageId,
+	// 			"pay",
+	// 			"join_vec"
+	// 		),
+	// 		typeArguments: [coinType],
+	// 		arguments: [
+	// 			typeof destinationCoinId === "string"
+	// 				? tx.object(destinationCoinId)
+	// 				: destinationCoinId, // Coin,
+
+	// 			// TODO: clean this up
+	// 			// @ts-ignore
+	// 			coinVec, // coins
+	// 		],
+	// 	});
+	// }
 }
