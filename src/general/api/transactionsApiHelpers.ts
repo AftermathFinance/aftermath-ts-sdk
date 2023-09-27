@@ -13,8 +13,8 @@ import {
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/client";
-import { Helpers } from "../utils";
 import { Coin, Sui } from "../../packages";
+import { Helpers } from "../utils";
 
 export class TransactionsApiHelpers {
 	// =========================================================================

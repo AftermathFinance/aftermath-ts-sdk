@@ -15,6 +15,7 @@ import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
 import { CoinStruct, PaginatedCoins } from "@mysten/sui.js/client";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 
 export class CoinApi {
 	// =========================================================================
@@ -306,7 +307,7 @@ export class CoinApi {
 		// 	coin: tx.object(mergedCoinObjectId),
 		// 	amounts: [tx.pure(coinAmount)],
 		// });
-		return Helpers.transactions.splitCoinsTx({
+		return TransactionsApiHelpers.splitCoinsTx({
 			tx,
 			coinId: mergedCoinObjectId,
 			amounts: [coinAmount],
