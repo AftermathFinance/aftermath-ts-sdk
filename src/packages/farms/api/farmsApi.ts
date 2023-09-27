@@ -918,7 +918,7 @@ export class FarmsApi {
 	// =========================================================================
 
 	public fetchBuildStakeTx = async (inputs: ApiFarmsStakeBody) => {
-		const { walletAddress } = inputs;
+		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -928,6 +928,7 @@ export class FarmsApi {
 			walletAddress,
 			coinType: inputs.stakeCoinType,
 			coinAmount: inputs.stakeAmount,
+			isSponsoredTx,
 		});
 
 		const stakedPosition = this.stakeTx({ ...inputs, tx, stakeCoinId });
@@ -939,7 +940,7 @@ export class FarmsApi {
 	public fetchBuildDepositPrincipalTx = async (
 		inputs: ApiFarmsDepositPrincipalBody
 	) => {
-		const { walletAddress } = inputs;
+		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -949,6 +950,7 @@ export class FarmsApi {
 			walletAddress,
 			coinType: inputs.stakeCoinType,
 			coinAmount: inputs.depositAmount,
+			isSponsoredTx,
 		});
 
 		this.depositPrincipalTx({
@@ -1120,7 +1122,7 @@ export class FarmsApi {
 	public fetchBuildInitializeStakingPoolRewardTx = async (
 		inputs: ApiFarmsInitializeStakingPoolRewardBody
 	): Promise<TransactionBlock> => {
-		const { walletAddress } = inputs;
+		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -1130,6 +1132,7 @@ export class FarmsApi {
 			walletAddress,
 			coinType: inputs.rewardCoinType,
 			coinAmount: inputs.rewardAmount,
+			isSponsoredTx,
 		});
 
 		this.initializeStakingPoolRewardTx({ ...inputs, tx, rewardCoinId });
@@ -1140,7 +1143,7 @@ export class FarmsApi {
 	public fetchBuildTopUpStakingPoolRewardsTx = async (
 		inputs: ApiFarmsTopUpStakingPoolRewardsBody
 	): Promise<TransactionBlock> => {
-		const { walletAddress } = inputs;
+		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -1152,6 +1155,7 @@ export class FarmsApi {
 					walletAddress,
 					coinType: reward.rewardCoinType,
 					coinAmount: reward.rewardAmount,
+					isSponsoredTx,
 				});
 
 			this.topUpStakingPoolRewardTx({

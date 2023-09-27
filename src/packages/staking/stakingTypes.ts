@@ -163,6 +163,7 @@ export interface ApiStakeBody {
 	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiUnstakeBody {

@@ -159,6 +159,7 @@ export interface ApiPoolTradeBody {
 	coinOutType: CoinType;
 	slippage: Slippage;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiPoolDepositBody {
@@ -166,6 +167,7 @@ export interface ApiPoolDepositBody {
 	amountsIn: CoinsToBalance;
 	slippage: Slippage;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiPoolWithdrawBody {
@@ -203,6 +205,7 @@ export interface ApiCreatePoolBody {
 	createPoolCapId: ObjectId;
 	respectDecimals: boolean;
 	forceLpDecimals?: CoinDecimal;
+	isSponsoredTx?: boolean;
 }
 
 // =========================================================================

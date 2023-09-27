@@ -167,6 +167,7 @@ export interface ApiMixSuiFrensBody {
 	baseFee: Balance;
 	suiFrenType: AnyObjectType;
 	walletAddress: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiHarvestSuiFrenFeesBody {

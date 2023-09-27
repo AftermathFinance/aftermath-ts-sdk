@@ -88,8 +88,10 @@ export class CoinApi {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		coinAmount: Balance;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionArgument> => {
-		const { tx, walletAddress, coinType, coinAmount } = inputs;
+		const { tx, walletAddress, coinType, coinAmount, isSponsoredTx } =
+			inputs;
 
 		tx.setSender(walletAddress);
 
@@ -99,6 +101,7 @@ export class CoinApi {
 			coinData,
 			coinAmount,
 			coinType,
+			isSponsoredTx,
 		});
 	};
 
@@ -107,8 +110,10 @@ export class CoinApi {
 		walletAddress: SuiAddress;
 		coinTypes: CoinType[];
 		coinAmounts: Balance[];
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionArgument[]> => {
-		const { tx, walletAddress, coinTypes, coinAmounts } = inputs;
+		const { tx, walletAddress, coinTypes, coinAmounts, isSponsoredTx } =
+			inputs;
 
 		tx.setSender(walletAddress);
 
@@ -129,6 +134,7 @@ export class CoinApi {
 				coinData,
 				coinAmount: coinAmounts[index],
 				coinType: coinTypes[index],
+				isSponsoredTx,
 			});
 
 			coinArgs = [...coinArgs, coinArg];
@@ -257,8 +263,9 @@ export class CoinApi {
 		coinData: CoinStruct[];
 		coinAmount: Balance;
 		coinType: CoinType;
+		isSponsoredTx?: boolean;
 	}): TransactionArgument => {
-		const { tx, coinData, coinAmount, coinType } = inputs;
+		const { tx, coinData, coinAmount, coinType, isSponsoredTx } = inputs;
 
 		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);
 
@@ -268,7 +275,7 @@ export class CoinApi {
 		if (totalCoinBalance < coinAmount)
 			throw new Error("wallet does not have coins of sufficient balance");
 
-		if (isSuiCoin) {
+		if (isSponsoredTx && isSuiCoin) {
 			tx.setGasPayment(
 				coinData.map((obj) => {
 					return {

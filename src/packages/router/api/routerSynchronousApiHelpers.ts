@@ -296,8 +296,10 @@ export class RouterSynchronousApiHelpers {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> {
-		const { walletAddress, completeRoute, slippage } = inputs;
+		const { walletAddress, completeRoute, slippage, isSponsoredTx } =
+			inputs;
 
 		const referrer = completeRoute.referrer;
 		const externalFee = completeRoute.externalFee;
@@ -324,6 +326,7 @@ export class RouterSynchronousApiHelpers {
 			walletAddress,
 			coinType: completeRoute.coinIn.type,
 			coinAmount: completeRoute.coinIn.amount,
+			isSponsoredTx,
 		});
 
 		const minAmountOut =

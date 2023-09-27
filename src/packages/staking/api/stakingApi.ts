@@ -419,6 +419,7 @@ export class StakingApi {
 			walletAddress: inputs.walletAddress,
 			coinType: Coin.constants.suiCoinType,
 			coinAmount: inputs.suiStakeAmount,
+			isSponsoredTx: inputs.isSponsoredTx,
 		});
 
 		this.stakeTx({

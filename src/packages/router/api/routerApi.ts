@@ -215,6 +215,7 @@ export class RouterApi {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> {
 		return this.Helpers.fetchTransactionForCompleteTradeRoute(inputs);
 	}

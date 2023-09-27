@@ -1016,6 +1016,7 @@ export class SuiFrensApi {
 			suiFrenParentTwo,
 			suiFrenType,
 			baseFee,
+			isSponsoredTx,
 		} = inputs;
 
 		const tx = new TransactionBlock();
@@ -1034,6 +1035,7 @@ export class SuiFrensApi {
 				walletAddress,
 				coinType: Coin.constants.suiCoinType,
 				coinAmount: totalFee,
+				isSponsoredTx,
 			});
 
 		const isParentOneStaked = suiFrenParentOne.mixFee !== undefined;

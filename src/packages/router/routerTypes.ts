@@ -322,6 +322,7 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 * Allowable percent loss for trade
 	 */
 	slippage: Slippage;
+	isSponsoredTx?: boolean;
 }
 
 export type ApiRouterTradeEventsBody = ApiEventsBody & {

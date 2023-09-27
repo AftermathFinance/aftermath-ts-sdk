@@ -275,6 +275,7 @@ export class RouterApiHelpers {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> {
 		return this.SynchronousHelpers.fetchBuildTransactionForCompleteTradeRoute(
 			inputs
