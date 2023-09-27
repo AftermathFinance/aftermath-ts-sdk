@@ -314,11 +314,13 @@ export class CoinApi {
 		// 	coin: tx.object(mergedCoinObjectId),
 		// 	amounts: [tx.pure(coinAmount)],
 		// });
-		return TransactionsApiHelpers.splitCoinsTx({
+		TransactionsApiHelpers.splitCoinsTx({
 			tx,
 			coinId: mergedCoinObjectId,
 			amounts: [coinAmount],
 			coinType,
 		});
+
+		return tx.object(mergedCoinObjectId);
 	};
 }

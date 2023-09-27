@@ -42,7 +42,7 @@ export class DynamicGasApi {
 				command.kind === "MoveCall" &&
 				command.target ===
 					Helpers.transactions.createTxTarget(
-						Sui.constants.addresses.suiPackageId,
+						"0x2",
 						"pay",
 						"split_vec"
 					) &&

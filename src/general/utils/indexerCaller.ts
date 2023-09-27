@@ -148,6 +148,8 @@ export class IndexerCaller {
 					},
 			  }));
 
+		console.log(JSON.stringify(body));
+
 		if (noNestedData) {
 			return IndexerCaller.fetchResponseToType<Output>(uncastResponse);
 		}

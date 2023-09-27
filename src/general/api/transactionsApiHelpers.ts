@@ -59,11 +59,8 @@ export class TransactionsApiHelpers {
 
 	public fetchSetGasBudgetForTx = async (inputs: {
 		tx: TransactionBlock;
-		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
-		const { tx, isSponsoredTx } = inputs;
-
-		if (isSponsoredTx) return tx;
+		const { tx } = inputs;
 
 		const [txResponse, referenceGasPrice] = await Promise.all([
 			this.Provider.provider.dryRunTransactionBlock({
@@ -90,8 +87,11 @@ export class TransactionsApiHelpers {
 		isSponsoredTx?: boolean;
 	}): Promise<SerializedTransaction> => {
 		const { tx, isSponsoredTx } = inputs;
+
+		if (isSponsoredTx) return (await tx).serialize();
+
 		return (
-			await this.fetchSetGasBudgetForTx({ tx: await tx, isSponsoredTx })
+			await this.fetchSetGasBudgetForTx({ tx: await tx })
 		).serialize();
 	};
 
