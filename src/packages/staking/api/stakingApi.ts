@@ -25,6 +25,7 @@ import {
 	ApiUpdateValidatorFeeBody,
 	UnstakeEvent,
 	UnstakeRequestedEvent,
+	StakedSuiVaultStateObject,
 } from "../stakingTypes";
 import {
 	AnyObjectType,
@@ -52,11 +53,13 @@ export class StakingApi {
 			actions: "actions",
 			events: "events",
 			stakedSuiVault: "staked_sui_vault",
+			stakedSuiVaultState: "staked_sui_vault_state",
 		},
 		eventNames: {
 			staked: "StakedEvent",
 			unstaked: "UnstakedEvent",
 			unstakeRequested: "UnstakeRequestedEvent",
+			epochWasChanged: "EpochWasChangedEvent",
 		},
 	};
 
@@ -70,6 +73,7 @@ export class StakingApi {
 		staked: AnyObjectType;
 		unstakeRequested: AnyObjectType;
 		unstaked: AnyObjectType;
+		epochWasChanged: AnyObjectType;
 	};
 
 	public readonly coinTypes: {
@@ -97,6 +101,7 @@ export class StakingApi {
 			staked: this.stakedEventType(),
 			unstakeRequested: this.unstakeRequestedEventType(),
 			unstaked: this.unstakedEventType(),
+			epochWasChanged: this.epochWasChangedEventType(),
 		};
 
 		this.coinTypes = {
@@ -193,6 +198,15 @@ export class StakingApi {
 					.validatorOperationCapObjectFromSuiObjectResponse,
 		});
 	};
+
+	public fetchStakedSuiVaultState =
+		async (): Promise<StakedSuiVaultStateObject> => {
+			return this.Provider.Objects().fetchCastObject({
+				objectId: this.addresses.objects.stakedSuiVaultState,
+				objectFromSuiObjectResponse:
+					StakingApiCasting.stakedSuiVaultStateObjectFromSuiObjectResponse,
+			});
+		};
 
 	// =========================================================================
 	//  Transaction Commands
@@ -333,9 +347,8 @@ export class StakingApi {
 
 	public afsuiToSuiExchangeRateTx = (inputs: {
 		tx: TransactionBlock;
-	}) /* (U128) */ => {
+	}) /* (u128) */ => {
 		const { tx } = inputs;
-
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.lsd,
@@ -669,45 +682,47 @@ export class StakingApi {
 	//  Calculations
 	// =========================================================================
 
-	// TODO: write and use this function
-	public liquidStakingApy = (inputs: {
-		delegatedStakes: DelegatedStake[];
-		validatorApys: ValidatorsApy;
-	}): number => {
-		throw new Error("TODO");
+	public liquidStakingApy = async (): Promise<number> => {
+		const limit = 30; // ~30 epochs of data
+		// const recentEpochChanges =
+		// 	await this.Provider.indexerCaller.fetchIndexerEvents(
+		// 		`staking/events/epoch-was-changed`,
+		// 		{
+		// 			limit,
+		// 		},
+		// 		Casting.staking.epochWasChangedEventFromOnChain
+		// 	);
+		const recentEpochChanges =
+			await this.Provider.Events().fetchCastEventsWithCursor({
+				query: {
+					MoveEventType: this.eventTypes.epochWasChanged,
+				},
+				eventFromEventOnChain:
+					Casting.staking.epochWasChangedEventFromOnChain,
+				limit,
+			});
+		if (recentEpochChanges.events.length <= 1) return 4.9;
 
-		// const { delegatedStakes, validatorApys } = inputs;
+		const avgApy =
+			Helpers.sum(
+				recentEpochChanges.events.splice(1).map((event, index) => {
+					const currentRate = Number(event.totalAfSuiSupply)
+						? Number(event.totalSuiAmount) /
+						  Number(event.totalAfSuiSupply)
+						: 0;
 
-		// const totalStakeAmount = Helpers.sumBigInt(
-		// 	delegatedStakes.map((stake) =>
-		// 		Helpers.sumBigInt(
-		// 			stake.stakes.map((innerStake) =>
-		// 				BigInt(innerStake.principal)
-		// 			)
-		// 		)
-		// 	)
-		// );
+					const pastEvent = recentEpochChanges.events[index - 1];
+					const pastRate = Number(pastEvent.totalAfSuiSupply)
+						? Number(pastEvent.totalSuiAmount) /
+						  Number(pastEvent.totalAfSuiSupply)
+						: 0;
 
-		// const weightedAverageApy = delegatedStakes.reduce((acc, stake) => {
-		// 	const apy = validatorApys.apys.find(
-		// 		(apy) => apy.address === stake.validatorAddress
-		// 	)?.apy;
-		// 	if (apy === undefined) return acc;
+					return (currentRate - pastRate) / pastRate;
+				})
+			) /
+			(recentEpochChanges.events.length - 1);
 
-		// 	const weight =
-		// 		Number(
-		// 			Helpers.sumBigInt(
-		// 				stake.stakes.map((innerStake) =>
-		// 					BigInt(innerStake.principal)
-		// 				)
-		// 			)
-		// 		) / Number(totalStakeAmount);
-
-		// 	const weightedApy = apy * weight;
-		// 	return acc + weightedApy;
-		// }, 0);
-
-		// return weightedAverageApy;
+		return avgApy;
 	};
 
 	// =========================================================================
@@ -779,6 +794,13 @@ export class StakingApi {
 			this.addresses.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.unstaked
+		);
+
+	private epochWasChangedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.events,
+			StakingApi.constants.moduleNames.events,
+			StakingApi.constants.eventNames.epochWasChanged
 		);
 
 	// =========================================================================

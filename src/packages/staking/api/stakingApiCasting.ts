@@ -5,14 +5,15 @@ import {
 	UnstakedEvent,
 	UnstakeRequestedEvent,
 	StakedEvent,
+	EpochWasChangedEvent,
+	StakedSuiVaultStateObject,
 } from "../../../types";
 import {
+	EpochWasChangedEventOnChain,
 	StakedEventOnChain,
-	StakedIndexerEventOnChain,
+	StakedSuiVaultStateV1FieldsOnChain,
 	UnstakeRequestedEventOnChain,
-	UnstakeRequestedIndexerEventOnChain,
 	UnstakedEventOnChain,
-	UnstakedIndexerEventOnChain,
 	ValidatorConfigFieldsOnChain,
 	ValidatorOperationCapFieldsOnChain,
 } from "./stakingApiCastingTypes";
@@ -63,6 +64,36 @@ export class StakingApiCasting {
 			objectId: Helpers.getObjectId(data),
 			authorizerValidatorAddress: Helpers.addLeadingZeroesToType(
 				fields.authorizer_validator_address
+			),
+		};
+	};
+
+	public static stakedSuiVaultStateObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): StakedSuiVaultStateObject => {
+		const objectId = Helpers.getObjectId(data);
+		const objectType = Helpers.getObjectType(data);
+		const fields = Helpers.getObjectFields(
+			data
+		) as StakedSuiVaultStateV1FieldsOnChain;
+
+		return {
+			objectId,
+			objectType,
+			atomicUnstakeSuiReservesTargetValue: BigInt(
+				fields.protocol_config.fields
+					.atomic_unstake_sui_reserves_target_value
+			),
+			atomicUnstakeSuiReserves: BigInt(
+				fields.atomic_unstake_sui_reserves
+			),
+			minAtomicUnstakeFee: BigInt(
+				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
+					.min_fee
+			),
+			maxAtomicUnstakeFee: BigInt(
+				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
+					.max_fee
 			),
 		};
 	};
@@ -125,61 +156,17 @@ export class StakingApiCasting {
 		};
 	};
 
-	// =========================================================================
-	//  Indexer Events
-	// =========================================================================
-
-	public static stakedEventFromIndexerOnChain = (
-		eventOnChain: StakedIndexerEventOnChain
-	): StakedEvent => {
+	public static epochWasChangedEventFromOnChain = (
+		eventOnChain: EpochWasChangedEventOnChain
+	): EpochWasChangedEvent => {
+		const fields = eventOnChain.parsedJson;
 		return {
-			suiId: Helpers.addLeadingZeroesToType(eventOnChain.sui_id),
-			stakedSuiId: Helpers.addLeadingZeroesToType(
-				eventOnChain.staked_sui_id
-			),
-			staker: Helpers.addLeadingZeroesToType(eventOnChain.staker),
-			validatorAddress: Helpers.addLeadingZeroesToType(
-				eventOnChain.validator
-			),
-			epoch: BigInt(eventOnChain.epoch),
-			suiStakeAmount: BigInt(eventOnChain.sui_amount),
-			validatorFee: Fixed.directCast(BigInt(eventOnChain.validator_fee)),
-			isRestaked: eventOnChain.is_restaked,
-			referrer: eventOnChain.referrer ? eventOnChain.referrer : undefined,
-			afSuiId: Helpers.addLeadingZeroesToType(eventOnChain.afsui_id),
-			afSuiAmount: BigInt(eventOnChain.afsui_amount),
-			timestamp: eventOnChain.timestamp ?? undefined,
-			txnDigest: eventOnChain.txnDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static unstakedEventFromIndexerOnChain = (
-		eventOnChain: UnstakedIndexerEventOnChain
-	): UnstakedEvent => {
-		return {
-			afSuiId: Helpers.addLeadingZeroesToType(eventOnChain.afsui_id),
-			suiId: Helpers.addLeadingZeroesToType(eventOnChain.sui_id),
-			requester: Helpers.addLeadingZeroesToType(eventOnChain.requester),
-			epoch: BigInt(eventOnChain.epoch),
-			providedAfSuiAmount: BigInt(eventOnChain.provided_afsui_amount),
-			returnedSuiAmount: BigInt(eventOnChain.returned_sui_amount),
-			timestamp: eventOnChain.timestamp ?? undefined,
-			txnDigest: eventOnChain.txnDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static unstakeRequestedEventFromIndexerOnChain = (
-		eventOnChain: UnstakeRequestedIndexerEventOnChain
-	): UnstakeRequestedEvent => {
-		return {
-			afSuiId: Helpers.addLeadingZeroesToType(eventOnChain.afsui_id),
-			providedAfSuiAmount: BigInt(eventOnChain.provided_afsui_amount),
-			requester: Helpers.addLeadingZeroesToType(eventOnChain.requester),
-			epoch: BigInt(eventOnChain.epoch),
-			timestamp: eventOnChain.timestamp ?? undefined,
-			txnDigest: eventOnChain.txnDigest,
+			activeEpoch: BigInt(fields.active_epoch),
+			totalAfSuiSupply: BigInt(fields.total_afsui_supply),
+			totalSuiRewardsAmount: BigInt(fields.total_rewards_amount),
+			totalSuiAmount: BigInt(fields.total_sui_amount),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
