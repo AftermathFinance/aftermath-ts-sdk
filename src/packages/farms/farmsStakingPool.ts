@@ -313,6 +313,7 @@ export class FarmsStakingPool extends Caller {
 			emissionDelayTimestampMs: Timestamp;
 			rewardCoinType: CoinType;
 			walletAddress: SuiAddress;
+			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
 		return this.fetchApiTransaction<ApiFarmsInitializeStakingPoolRewardBody>(

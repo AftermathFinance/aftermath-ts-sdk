@@ -59,55 +59,39 @@ export class TransactionsApiHelpers {
 
 	public fetchSetGasBudgetForTx = async (inputs: {
 		tx: TransactionBlock;
-		gasCoinType?: CoinType;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
-		const { tx, gasCoinType } = inputs;
+		const { tx, isSponsoredTx } = inputs;
 
-		if (
-			!gasCoinType
-			// || Helpers.addLeadingZeroesToType(gasCoinType) ===
-			// 	Coin.constants.suiCoinType
-		) {
-			// using sui as gas
+		if (isSponsoredTx) return tx;
 
-			const [txResponse, referenceGasPrice] = await Promise.all([
-				this.Provider.provider.dryRunTransactionBlock({
-					transactionBlock: await tx.build({
-						provider: this.Provider.provider,
-					}),
+		const [txResponse, referenceGasPrice] = await Promise.all([
+			this.Provider.provider.dryRunTransactionBlock({
+				transactionBlock: await tx.build({
+					provider: this.Provider.provider,
 				}),
-				this.Provider.provider.getReferenceGasPrice(),
-			]);
+			}),
+			this.Provider.provider.getReferenceGasPrice(),
+		]);
 
-			const gasData = txResponse.effects.gasUsed;
-			const gasUsed =
-				BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
-			// scale up by 10% for safety margin
-			const safeGasBudget = gasUsed + gasUsed / BigInt(10);
+		const gasData = txResponse.effects.gasUsed;
+		const gasUsed =
+			BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
+		// scale up by 10% for safety margin
+		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
-			tx.setGasBudget(safeGasBudget);
-			tx.setGasPrice(referenceGasPrice);
-			return tx;
-		} else {
-			// using non-sui as gas (dynamic gas)
-			// if (!tx.blockData.sender)
-			// 	throw new Error(
-			// 		"unable to set dynamic gas budget with no sender set on tx"
-			// 	);
-			// const allGasCoins = await this.Provider.Coin().fetchAllCoins({
-			// 	walletAddress: tx.blockData.sender,
-			// 	coinType: gasCoinType,
-			// });
-			// const gasCoinIds = allGasCoins.map((coin) => coin.coinObjectId);
-			return tx;
-		}
+		tx.setGasBudget(safeGasBudget);
+		tx.setGasPrice(referenceGasPrice);
+		return tx;
 	};
 
 	public fetchSetGasBudgetAndSerializeTx = async (inputs: {
 		tx: TransactionBlock | Promise<TransactionBlock>;
+		isSponsoredTx?: boolean;
 	}): Promise<SerializedTransaction> => {
+		const { tx, isSponsoredTx } = inputs;
 		return (
-			await this.fetchSetGasBudgetForTx({ tx: await inputs.tx })
+			await this.fetchSetGasBudgetForTx({ tx: await tx, isSponsoredTx })
 		).serialize();
 	};
 

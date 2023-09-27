@@ -64,11 +64,18 @@ export class DynamicGasApi {
 		const res: {
 			tx_data: string;
 			signature: SerializedSignature;
-		} = await this.Provider.indexerCaller.fetchIndexer("sponsor.json", {
-			sender: walletAddress,
-			gas_coins: coinIds,
-			transaction: b64TxBytes,
-		});
+		} = await this.Provider.indexerCaller.fetchIndexer(
+			"0x62188d0fcd558b68d89dec3e0502fc9d13da7ce36d9e930801f3e323615323cf/apply.json",
+			{
+				sender: walletAddress,
+				gas_coins: coinIds,
+				transaction: b64TxBytes,
+			},
+			undefined,
+			"sui-dynamic-gas",
+			undefined,
+			true
+		);
 
 		return {
 			txBytes: res.tx_data,

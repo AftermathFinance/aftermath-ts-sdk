@@ -275,7 +275,7 @@ export class CoinApi {
 		if (totalCoinBalance < coinAmount)
 			throw new Error("wallet does not have coins of sufficient balance");
 
-		if (isSponsoredTx && isSuiCoin) {
+		if (!isSponsoredTx && isSuiCoin) {
 			tx.setGasPayment(
 				coinData.map((obj) => {
 					return {
