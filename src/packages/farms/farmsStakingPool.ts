@@ -238,6 +238,7 @@ export class FarmsStakingPool extends Caller {
 		stakeAmount: Balance;
 		lockDurationMs: Timestamp;
 		walletAddress: SuiAddress;
+		isSponsoredTx?: boolean;
 	}) {
 		return this.fetchApiTransaction<ApiFarmsStakeBody>(
 			"transactions/stake",
@@ -331,6 +332,7 @@ export class FarmsStakingPool extends Caller {
 				rewardCoinType: CoinType;
 			}[];
 			walletAddress: SuiAddress;
+			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
 		return this.fetchApiTransaction<ApiFarmsTopUpStakingPoolRewardsBody>(
