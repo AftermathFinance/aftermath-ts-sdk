@@ -15,6 +15,10 @@ export class DynamicGasApi {
 		this.Provider = Provider;
 	}
 
+	// =========================================================================
+	//  Tx Setup
+	// =========================================================================
+
 	public fetchUseDynamicGasForTx = async (inputs: {
 		tx: TransactionBlock;
 		walletAddress: SuiAddress;

@@ -13,8 +13,6 @@ import {
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/client";
-import { Coin, Sui } from "../../packages";
-import { Helpers } from "../utils";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -66,9 +64,9 @@ export class TransactionsApiHelpers {
 		const { tx, gasCoinType } = inputs;
 
 		if (
-			!gasCoinType ||
-			Helpers.addLeadingZeroesToType(gasCoinType) ===
-				Coin.constants.suiCoinType
+			!gasCoinType
+			// || Helpers.addLeadingZeroesToType(gasCoinType) ===
+			// 	Coin.constants.suiCoinType
 		) {
 			// using sui as gas
 
@@ -169,7 +167,8 @@ export class TransactionsApiHelpers {
 		const { tx, coinType, coinId, amounts } = inputs;
 		return tx.moveCall({
 			target: this.createTxTarget(
-				Sui.constants.addresses.suiPackageId,
+				// Sui.constants.addresses.suiPackageId,
+				"0x2",
 				"pay",
 				"split_vec"
 			),
