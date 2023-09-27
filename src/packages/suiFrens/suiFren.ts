@@ -16,7 +16,7 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
-import { Coin } from "../coin/coin";
+import { Coin } from "..";
 
 export class SuiFren extends Caller {
 	// =========================================================================

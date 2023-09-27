@@ -2,7 +2,7 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
-import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/dist/cjs/client";
+import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	StakeEvent,
@@ -675,38 +675,38 @@ export class StakingApi {
 	}): number => {
 		throw new Error("TODO");
 
-		const { delegatedStakes, validatorApys } = inputs;
+		// const { delegatedStakes, validatorApys } = inputs;
 
-		const totalStakeAmount = Helpers.sumBigInt(
-			delegatedStakes.map((stake) =>
-				Helpers.sumBigInt(
-					stake.stakes.map((innerStake) =>
-						BigInt(innerStake.principal)
-					)
-				)
-			)
-		);
+		// const totalStakeAmount = Helpers.sumBigInt(
+		// 	delegatedStakes.map((stake) =>
+		// 		Helpers.sumBigInt(
+		// 			stake.stakes.map((innerStake) =>
+		// 				BigInt(innerStake.principal)
+		// 			)
+		// 		)
+		// 	)
+		// );
 
-		const weightedAverageApy = delegatedStakes.reduce((acc, stake) => {
-			const apy = validatorApys.apys.find(
-				(apy) => apy.address === stake.validatorAddress
-			)?.apy;
-			if (apy === undefined) return acc;
+		// const weightedAverageApy = delegatedStakes.reduce((acc, stake) => {
+		// 	const apy = validatorApys.apys.find(
+		// 		(apy) => apy.address === stake.validatorAddress
+		// 	)?.apy;
+		// 	if (apy === undefined) return acc;
 
-			const weight =
-				Number(
-					Helpers.sumBigInt(
-						stake.stakes.map((innerStake) =>
-							BigInt(innerStake.principal)
-						)
-					)
-				) / Number(totalStakeAmount);
+		// 	const weight =
+		// 		Number(
+		// 			Helpers.sumBigInt(
+		// 				stake.stakes.map((innerStake) =>
+		// 					BigInt(innerStake.principal)
+		// 				)
+		// 			)
+		// 		) / Number(totalStakeAmount);
 
-			const weightedApy = apy * weight;
-			return acc + weightedApy;
-		}, 0);
+		// 	const weightedApy = apy * weight;
+		// 	return acc + weightedApy;
+		// }, 0);
 
-		return weightedAverageApy;
+		// return weightedAverageApy;
 	};
 
 	// =========================================================================
