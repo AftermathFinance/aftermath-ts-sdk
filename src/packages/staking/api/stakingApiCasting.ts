@@ -95,6 +95,8 @@ export class StakingApiCasting {
 				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
 					.max_fee
 			),
+			totalSuiAmount: BigInt(fields.total_sui_amount),
+			totalRewardsAmount: BigInt(fields.total_rewards_amount),
 		};
 	};
 

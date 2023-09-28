@@ -159,9 +159,10 @@ export class CoinApi {
 					cursor,
 				});
 
-			const coinData = paginatedCoins.data.filter(
-				(data) => BigInt(data.balance) > BigInt(0)
-			);
+			// const coinData = paginatedCoins.data.filter(
+			// 	(data) => BigInt(data.balance) > BigInt(0)
+			// );
+			const coinData = paginatedCoins.data;
 			allCoinData = [...allCoinData, ...coinData];
 
 			// const totalAmount = Helpers.sumBigInt(
@@ -314,13 +315,11 @@ export class CoinApi {
 		// 	coin: tx.object(mergedCoinObjectId),
 		// 	amounts: [tx.pure(coinAmount)],
 		// });
-		TransactionsApiHelpers.splitCoinsTx({
+		return TransactionsApiHelpers.splitCoinTx({
 			tx,
 			coinId: mergedCoinObjectId,
-			amounts: [totalCoinBalance - coinAmount],
+			amount: coinAmount,
 			coinType,
 		});
-
-		return tx.object(mergedCoinObjectId);
 	};
 }

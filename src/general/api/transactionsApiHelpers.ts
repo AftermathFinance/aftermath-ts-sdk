@@ -141,25 +141,25 @@ export class TransactionsApiHelpers {
 		return builderFunc;
 	};
 
-	public static splitCoinsTx(inputs: {
+	public static splitCoinTx(inputs: {
 		tx: TransactionBlock;
 		coinType: CoinType;
 		// coinId: TransactionArgument | ObjectId;
 		coinId: ObjectId;
-		amounts: TransactionArgument[] | Balance[];
+		amount: TransactionArgument | Balance;
 	}) {
-		const { tx, coinType, coinId, amounts } = inputs;
+		const { tx, coinType, coinId, amount } = inputs;
 		return tx.moveCall({
 			target: this.createTxTarget(
 				// Sui.constants.addresses.suiPackageId,
 				"0x2",
-				"pay",
-				"split_vec"
+				"coin",
+				"split"
 			),
 			typeArguments: [coinType],
 			arguments: [
 				typeof coinId === "string" ? tx.object(coinId) : coinId, // Coin,
-				tx.pure(amounts, "vector<u64>"), // split_amounts
+				tx.pure(amount, "u64"), // split_amount
 			],
 		});
 	}

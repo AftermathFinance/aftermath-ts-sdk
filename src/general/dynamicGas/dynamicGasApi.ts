@@ -31,50 +31,83 @@ export class DynamicGasApi {
 		);
 		mergeCoinTxs.find((tx) => tx.kind === "MergeCoins" && tx.destination);
 
-		const txBytes = await tx.build({
-			client: this.Provider.provider,
-			onlyTransactionKind: true,
-		});
-		const b64TxBytes = Buffer.from(txBytes).toString("base64");
-
+		// TODO: handle all split cases
 		const gasSplitMoveCall = tx.blockData.transactions.find(
 			(command) =>
 				command.kind === "MoveCall" &&
 				command.target ===
 					Helpers.transactions.createTxTarget(
 						"0x2",
-						"pay",
-						"split_vec"
+						"coin",
+						"split"
 					) &&
 				command.typeArguments.length > 0 &&
 				Helpers.addLeadingZeroesToType(command.typeArguments[0]) ===
 					Helpers.addLeadingZeroesToType(gasCoinType)
 		);
-		const coinIds = await (gasSplitMoveCall &&
-		"arguments" in gasSplitMoveCall &&
-		"value" in gasSplitMoveCall.arguments[0]
-			? [gasSplitMoveCall.arguments[0].value as ObjectId]
-			: (
-					await this.Provider.Coin().fetchAllCoins({
-						walletAddress,
-						coinType: gasCoinType,
-					})
-			  ).map((coin) => coin.coinObjectId));
 
+		const gasCoin = await (async () => {
+			if (
+				!gasSplitMoveCall ||
+				!("arguments" in gasSplitMoveCall) ||
+				gasSplitMoveCall.arguments[0].kind === "GasCoin"
+			) {
+				const allCoins = await this.Provider.Coin().fetchAllCoins({
+					walletAddress,
+					coinType: gasCoinType,
+				});
+				const coinIds = allCoins.map((coin) => coin.coinObjectId);
+
+				if (coinIds.length <= 1) {
+					return { Coin: coinIds[0] };
+				}
+
+				const mergedCoinArg = tx.object(coinIds[0]);
+				tx.mergeCoins(
+					mergedCoinArg,
+					coinIds.slice(1).map((coinId) => tx.object(coinId))
+				);
+
+				return { [mergedCoinArg.kind]: mergedCoinArg.index };
+			}
+
+			const gasCoinArg = gasSplitMoveCall.arguments[0];
+			const gasCoinVal =
+				gasCoinArg.kind === "NestedResult"
+					? [gasCoinArg.index, gasCoinArg.resultIndex]
+					: gasCoinArg.index;
+
+			return { [gasCoinArg.kind]: gasCoinVal };
+		})();
+
+		// TODO: use this type
+
+		// type GasCoin =
+		// 	| { Coin: ObjectId }
+		// 	| { Input: number }
+		// 	| { Result: number }
+		// 	| { NestedResult: [number, number] };
+
+		const txBytes = await tx.build({
+			client: this.Provider.provider,
+			onlyTransactionKind: true,
+		});
+		const b64TxBytes = Buffer.from(txBytes).toString("base64");
+
+		const body = {
+			gas_coin: gasCoin,
+			gas_asset: gasCoinType,
+			transaction_kind: b64TxBytes,
+			sender: walletAddress,
+		};
 		const res: {
 			tx_data: string;
 			signature: SerializedSignature;
 		} = await this.Provider.indexerCaller.fetchIndexer(
 			"0x62188d0fcd558b68d89dec3e0502fc9d13da7ce36d9e930801f3e323615323cf/apply.json",
-			{
-				sender: walletAddress,
-				gas_coins: coinIds,
-				transaction: b64TxBytes,
-			},
+			body,
 			undefined,
-			"sui-dynamic-gas",
-			undefined,
-			true
+			"sui-dynamic-gas"
 		);
 
 		return {
