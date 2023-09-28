@@ -187,6 +187,7 @@ export interface ApiUnstakeBody {
 	afSuiUnstakeAmount: Balance;
 	isAtomic: boolean;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiStakeStakedSuiBody {
@@ -194,12 +195,14 @@ export interface ApiStakeStakedSuiBody {
 	stakedSuiIds: ObjectId[];
 	validatorAddress: SuiAddress;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiUpdateValidatorFeeBody {
 	walletAddress: SuiAddress;
 	validatorOperationCapId: ObjectId;
 	newFeePercentage: Percentage;
+	isSponsoredTx?: boolean;
 }
 
 // =========================================================================
