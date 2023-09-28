@@ -317,7 +317,7 @@ export class CoinApi {
 		TransactionsApiHelpers.splitCoinsTx({
 			tx,
 			coinId: mergedCoinObjectId,
-			amounts: [coinAmount],
+			amounts: [totalCoinBalance - coinAmount],
 			coinType,
 		});
 
