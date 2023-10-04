@@ -39,6 +39,7 @@ export interface FarmsStakingPoolRewardCoin {
 	emissionSchedulesMs: Timestamp;
 	emissionStartTimestamp: Timestamp;
 	lastRewardTimestamp: Timestamp;
+	rewardsRemaining: Balance;
 }
 
 export interface FarmsStakingPoolObject extends Object {
