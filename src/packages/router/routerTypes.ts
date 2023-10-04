@@ -32,6 +32,7 @@ import {
 	FlowXPoolObject,
 	isFlowXPoolObject,
 } from "../external/flowX/flowXTypes";
+import { AfSuiRouterPoolObject } from "../..";
 
 // =========================================================================
 //  Name Only
@@ -81,7 +82,8 @@ export type RouterSynchronousSerializablePool =
 	| KriyaPoolObject
 	| BaySwapPoolObject
 	| SuiswapPoolObject
-	| BlueMovePoolObject;
+	| BlueMovePoolObject
+	| AfSuiRouterPoolObject;
 
 export const isRouterSynchronousSerializablePool = (
 	pool: RouterSerializablePool
@@ -96,6 +98,7 @@ const RouterSynchronousProtocolNames = [
 	"BaySwap",
 	"Suiswap",
 	"BlueMove",
+	"afSUI",
 ] as const;
 
 export type RouterSynchronousProtocolName =

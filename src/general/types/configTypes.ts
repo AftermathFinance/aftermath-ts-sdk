@@ -125,6 +125,7 @@ export interface RequiredRouterAddresses {
 
 export interface OptionalRouterAddresses {
 	aftermath: AftermathRouterWrapperAddresses;
+	afSui: AfSuiRouterWrapperAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
@@ -142,6 +143,16 @@ export interface AftermathRouterWrapperAddresses {
 	};
 	objects: {
 		wrapperApp: ObjectId;
+	};
+}
+
+export interface AfSuiRouterWrapperAddresses {
+	packages: {
+		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
+		aftermathValidator: ObjectId;
 	};
 }
 

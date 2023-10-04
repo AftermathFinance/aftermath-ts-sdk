@@ -26,8 +26,10 @@ import {
 	UnstakeEvent,
 	UnstakeRequestedEvent,
 	StakedSuiVaultStateObject,
+	AfSuiRouterPoolObject,
 } from "../stakingTypes";
 import {
+	AfSuiRouterWrapperAddresses,
 	AnyObjectType,
 	ApiIndexerUserEventsBody,
 	Balance,
@@ -42,8 +44,11 @@ import { Coin } from "../../coin";
 import { Sui } from "../../sui";
 import { Fixed } from "../../../general/utils/fixed";
 import { StakingApiCasting } from "./stakingApiCasting";
+import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 
-export class StakingApi {
+export class StakingApi
+	implements RouterSynchronousApiInterface<AfSuiRouterPoolObject>
+{
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -67,7 +72,10 @@ export class StakingApi {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: StakingAddresses;
+	public readonly addresses: {
+		staking: StakingAddresses;
+		routerWrapper?: AfSuiRouterWrapperAddresses;
+	};
 
 	public readonly eventTypes: {
 		staked: AnyObjectType;
@@ -89,13 +97,18 @@ export class StakingApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.staking;
-		if (!addresses)
+		const staking = this.Provider.addresses.staking;
+		const routerWrapper = Provider.addresses.router?.afSui;
+
+		if (!staking)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = addresses;
+		this.addresses = {
+			staking,
+			routerWrapper,
+		};
 
 		this.eventTypes = {
 			staked: this.stakedEventType(),
@@ -105,17 +118,52 @@ export class StakingApi {
 		};
 
 		this.coinTypes = {
-			afSui: `${addresses.packages.afsui}::afsui::AFSUI`,
+			afSui: `${staking.packages.afsui}::afsui::AFSUI`,
 		};
 
 		this.objectTypes = {
-			unverifiedValidatorOperationCap: `${addresses.packages.lsd}::validator::UnverifiedValidatorOperationCap`,
+			unverifiedValidatorOperationCap: `${staking.packages.lsd}::validator::UnverifiedValidatorOperationCap`,
 		};
 	}
 
 	// =========================================================================
 	//  Public Methods
 	// =========================================================================
+
+	// =========================================================================
+	//  Router Interface
+	// =========================================================================
+
+	public fetchAllPoolIds = async (): Promise<ObjectId[]> => {
+		//placeholder
+		return ["afSUI"];
+	};
+
+	public fetchPoolsFromIds = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<AfSuiRouterPoolObject[]> => {
+		const wrapperAddresses = this.addresses.routerWrapper;
+		if (!wrapperAddresses)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		const [afSuiToSuiExchangeRate, stakedSuiVaultState] = await Promise.all(
+			[
+				this.fetchAfSuiToSuiExchangeRate(),
+				this.fetchStakedSuiVaultState(),
+			]
+		);
+		return [
+			{
+				...stakedSuiVaultState,
+				afSuiCoinType: this.coinTypes.afSui,
+				aftermathValidatorAddress:
+					wrapperAddresses.objects.aftermathValidator,
+				afSuiToSuiExchangeRate,
+			},
+		];
+	};
 
 	// =========================================================================
 	//  Objects
@@ -175,7 +223,8 @@ export class StakingApi {
 		ValidatorConfigObject[]
 	> => {
 		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
-			parentObjectId: this.addresses.objects.validatorConfigsTable,
+			parentObjectId:
+				this.addresses.staking.objects.validatorConfigsTable,
 			objectsFromObjectIds: (objectIds) =>
 				this.Provider.Objects().fetchCastObjectBatch({
 					objectIds,
@@ -202,7 +251,7 @@ export class StakingApi {
 	public fetchStakedSuiVaultState =
 		async (): Promise<StakedSuiVaultStateObject> => {
 			return this.Provider.Objects().fetchCastObject({
-				objectId: this.addresses.objects.stakedSuiVaultState,
+				objectId: this.addresses.staking.objects.stakedSuiVaultState,
 				objectFromSuiObjectResponse:
 					StakingApiCasting.stakedSuiVaultStateObjectFromSuiObjectResponse,
 			});
@@ -230,16 +279,16 @@ export class StakingApi {
 		const { tx, suiCoin, withTransfer } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
+				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"request_stake" + (withTransfer ? "_and_keep" : "")
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
-				tx.object(this.addresses.objects.safe), // Safe
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
 				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
-				tx.object(this.addresses.objects.referralVault), // ReferralVault
+				tx.object(this.addresses.staking.objects.referralVault), // ReferralVault
 				typeof suiCoin === "string" ? tx.object(suiCoin) : suiCoin,
 				tx.pure(inputs.validatorAddress, "address"),
 			],
@@ -259,13 +308,13 @@ export class StakingApi {
 		const { tx, afSuiCoin } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
+				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"request_unstake"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
 				typeof afSuiCoin === "string"
 					? tx.object(afSuiCoin)
 					: afSuiCoin,
@@ -287,16 +336,16 @@ export class StakingApi {
 		const { tx, afSuiCoin, withTransfer } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
+				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"request_unstake_atomic" + (withTransfer ? "_and_keep" : "")
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
-				tx.object(this.addresses.objects.safe), // Safe
-				tx.object(this.addresses.objects.referralVault), // ReferralVault
-				tx.object(this.addresses.objects.treasury), // Treasury
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+				tx.object(this.addresses.staking.objects.referralVault), // ReferralVault
+				tx.object(this.addresses.staking.objects.treasury), // Treasury
 				typeof afSuiCoin === "string"
 					? tx.object(afSuiCoin)
 					: afSuiCoin,
@@ -324,17 +373,17 @@ export class StakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
+				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"request_stake_staked_sui_vec" +
 					(withTransfer ? "_and_keep" : "")
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
-				tx.object(this.addresses.objects.safe), // Safe
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
 				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
-				tx.object(this.addresses.objects.referralVault), // ReferralVault
+				tx.object(this.addresses.staking.objects.referralVault), // ReferralVault
 				stakedSuiIdsVec,
 				tx.pure(inputs.validatorAddress, "address"),
 			],
@@ -351,14 +400,14 @@ export class StakingApi {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
+				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"afsui_to_sui_exchange_rate"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
-				tx.object(this.addresses.objects.safe), // Safe
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
 			],
 		});
 	};
@@ -367,12 +416,14 @@ export class StakingApi {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
+				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"total_sui_amount"
 			),
 			typeArguments: [],
-			arguments: [tx.object(this.addresses.objects.stakedSuiVault)],
+			arguments: [
+				tx.object(this.addresses.staking.objects.stakedSuiVault),
+			],
 		});
 	};
 
@@ -389,7 +440,7 @@ export class StakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.lsd,
+				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"update_validator_fee"
 			),
@@ -398,7 +449,7 @@ export class StakingApi {
 				typeof validatorOperationCapId === "string"
 					? tx.object(validatorOperationCapId)
 					: validatorOperationCapId, // UnverifiedValidatorOperationCap
-				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
 				tx.pure(inputs.newFee, "u64"),
 			],
 		});
@@ -777,28 +828,28 @@ export class StakingApi {
 
 	private stakedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.events,
+			this.addresses.staking.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.staked
 		);
 
 	private unstakeRequestedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.events,
+			this.addresses.staking.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.unstakeRequested
 		);
 
 	private unstakedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.events,
+			this.addresses.staking.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.unstaked
 		);
 
 	private epochWasChangedEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.events,
+			this.addresses.staking.packages.events,
 			StakingApi.constants.moduleNames.events,
 			StakingApi.constants.eventNames.epochWasChanged
 		);

@@ -38,6 +38,7 @@ import { KriyaApi } from "../../external/kriya/kriyaApi";
 import { BaySwapApi } from "../../external/baySwap/baySwapApi";
 import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
+import { StakingApi } from "../../staking/api/stakingApi";
 
 export class RouterSynchronousApiHelpers {
 	// =========================================================================
@@ -54,6 +55,7 @@ export class RouterSynchronousApiHelpers {
 		BaySwap: () => new BaySwapApi(this.Provider),
 		Suiswap: () => new SuiswapApi(this.Provider),
 		BlueMove: () => new BlueMoveApi(this.Provider),
+		afSUI: () => new StakingApi(this.Provider),
 	};
 
 	public static readonly constants = {

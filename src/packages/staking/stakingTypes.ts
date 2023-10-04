@@ -1,3 +1,4 @@
+import { CoinType, RouterSerializablePool } from "../..";
 import {
 	ApiEventsBody,
 	Balance,
@@ -227,4 +228,25 @@ export interface ApiValidatorOperationCapsBody {
 
 export type ApiStakingEventsBody = ApiEventsBody & {
 	walletAddress: SuiAddress;
+};
+
+// =========================================================================
+//  Router Pool
+// =========================================================================
+
+export type AfSuiRouterPoolObject = StakedSuiVaultStateObject & {
+	afSuiCoinType: CoinType;
+	aftermathValidatorAddress: SuiAddress;
+	afSuiToSuiExchangeRate: number;
+};
+
+export const isAfSuiRouterPoolObject = (
+	pool: RouterSerializablePool
+): pool is AfSuiRouterPoolObject => {
+	return (
+		"afSuiCoinType" in pool &&
+		"aftermathValidatorAddress" in pool &&
+		"afSuiToSuiExchangeRate" in pool &&
+		"totalSuiAmount" in pool
+	);
 };
