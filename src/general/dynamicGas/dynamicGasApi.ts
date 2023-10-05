@@ -3,7 +3,13 @@ import { AftermathApi } from "../providers/aftermathApi";
 import { CoinType } from "../../packages/coin/coinTypes";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { Sui } from "../../packages";
-import { ApiDynamicGasResponse, ObjectId, SuiAddress } from "../types";
+import {
+	ApiDynamicGasResponse,
+	DynamicGasCoinData,
+	ObjectId,
+	SuiAddress,
+	TxBytes,
+} from "../types";
 import { SerializedSignature } from "@mysten/sui.js/cryptography";
 
 export class DynamicGasApi {
@@ -80,22 +86,20 @@ export class DynamicGasApi {
 			return { [gasCoinArg.kind]: gasCoinVal };
 		})();
 
-		// TODO: use this type
-
-		// type GasCoin =
-		// 	| { Coin: ObjectId }
-		// 	| { Input: number }
-		// 	| { Result: number }
-		// 	| { NestedResult: [number, number] };
-
 		const txBytes = await tx.build({
 			client: this.Provider.provider,
 			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
 
-		const body = {
-			gas_coin: gasCoin,
+		const body: {
+			gas_coin: DynamicGasCoinData;
+			gas_asset: CoinType;
+			transaction_kind: TxBytes;
+			sender: SuiAddress;
+		} = {
+			// TODO: make it so `as` doesn't have to be used here!
+			gas_coin: gasCoin as DynamicGasCoinData,
 			gas_asset: gasCoinType,
 			transaction_kind: b64TxBytes,
 			sender: walletAddress,

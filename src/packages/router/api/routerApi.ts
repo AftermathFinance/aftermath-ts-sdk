@@ -19,8 +19,14 @@ import {
 	AllRouterOptions,
 	PartialRouterOptions,
 	SuiAddress,
+	SerializedTransaction,
+	TxBytes,
+	DynamicGasCoinData,
 } from "../../../types";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import {
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js/transactions";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
@@ -32,6 +38,8 @@ import { BaySwapApi } from "../../external/baySwap/baySwapApi";
 import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 import { FlowXApi } from "../../external/flowX/flowXApi";
+import { Coin } from "../..";
+import { MoveCallSuiTransaction, SuiTransaction } from "@mysten/sui.js/client";
 
 export class RouterApi {
 	// =========================================================================
@@ -74,7 +82,10 @@ export class RouterApi {
 
 	constructor(
 		private readonly Provider: AftermathApi,
-		public readonly protocols: RouterProtocolName[] = ["Aftermath"],
+		public readonly protocols: RouterProtocolName[] = [
+			"Aftermath",
+			"afSUI",
+		],
 		regularOptions?: PartialRouterOptions,
 		preAsyncOptions?: Partial<RouterSynchronousOptions>
 	) {
@@ -180,8 +191,6 @@ export class RouterApi {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
-		// TODO: add options to set all these params ?
-		// maxRouteLength?: number,
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
 			...inputs,
@@ -189,23 +198,20 @@ export class RouterApi {
 		});
 	};
 
-	// public fetchCompleteTradeRouteGivenAmountOut = async (
-	// 	network: SuiNetwork | Url,
-	// 	graph: RouterSerializableCompleteGraph,
-	// 	coinIn: CoinType,
-	// 	coinOut: CoinType,
-	// 	coinOutAmount: Balance,
-	// 	referrer?: SuiAddress,
-	// 	externalFee?: RouterExternalFee
-	// ): Promise<RouterCompleteTradeRoute> => {
-	// 	return new RouterGraph(network, graph).getCompleteRouteGivenAmountOut(
-	// 		coinIn,
-	// 		coinOut,
-	// 		coinOutAmount,
-	// 		referrer,
-	// 		externalFee
-	// 	);
-	// };
+	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
+		network: SuiNetwork | Url;
+		graph: RouterSerializableCompleteGraph;
+		coinInType: CoinType;
+		coinOutAmount: Balance;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): Promise<RouterCompleteTradeRoute> => {
+		return this.Helpers.fetchCompleteTradeRouteGivenAmountOut({
+			...inputs,
+			protocols: this.protocols,
+		});
+	};
 
 	// =========================================================================
 	//  Transactions
@@ -217,7 +223,113 @@ export class RouterApi {
 		slippage: Slippage;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> {
+		const tx = new TransactionBlock();
+		await this.Helpers.fetchTransactionForCompleteTradeRoute({
+			...inputs,
+			tx,
+			withTransfer: true,
+		});
+		return tx;
+	}
+
+	public async fetchAddTransactionForCompleteTradeRoute(inputs: {
+		tx: TransactionBlock;
+		walletAddress: SuiAddress;
+		completeRoute: RouterCompleteTradeRoute;
+		slippage: Slippage;
+		coinInId?: TransactionArgument;
+		isSponsoredTx?: boolean;
+	}): Promise<TransactionArgument | undefined> {
 		return this.Helpers.fetchTransactionForCompleteTradeRoute(inputs);
+	}
+
+	// =========================================================================
+	//  Dynamic Gas Helper
+	// =========================================================================
+
+	public async fetchAddDynamicGasRouteToTxKind(inputs: {
+		txKindBytes: TxBytes;
+		network: SuiNetwork | Url;
+		graph: RouterSerializableCompleteGraph;
+		gasCoinType: CoinType;
+		gasCoinData: DynamicGasCoinData;
+		coinOutAmount: Balance;
+		walletAddress: SuiAddress;
+		completeRoute: RouterCompleteTradeRoute;
+		sponsorAddress: SuiAddress;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): Promise<TxBytes> {
+		const { gasCoinData } = inputs;
+
+		const tx = TransactionBlock.fromKind(inputs.txKindBytes);
+
+		const completeRoute = await this.fetchCompleteTradeRouteGivenAmountOut({
+			...inputs,
+			coinInType: inputs.gasCoinType,
+			coinOutType: Coin.constants.suiCoinType,
+		});
+
+		let coinInId: TransactionArgument;
+		if ("Coin" in gasCoinData) {
+			// coin object has NOT been used previously in tx
+			coinInId = tx.object(gasCoinData.Coin);
+		} else {
+			// coin object has been used previously in tx
+			const txArgs = tx.blockData.transactions.reduce(
+				(acc, aTx) => [
+					...acc,
+					...("objects" in aTx
+						? [aTx.objects]
+						: "arguments" in aTx
+						? [aTx.arguments]
+						: []),
+				],
+				[] as TransactionArgument[]
+			);
+
+			coinInId = txArgs.find((arg) => {
+				if (!arg) return false;
+
+				// this is here because TS having troubles inferring type for some reason
+				// (still being weird)
+				const txArg = arg as TransactionArgument;
+				return (
+					("Input" in gasCoinData &&
+						txArg.kind === "Input" &&
+						txArg.index === gasCoinData.Input) ||
+					("Result" in gasCoinData &&
+						txArg.kind === "Result" &&
+						txArg.index === gasCoinData.Result) ||
+					("NestedResult" in gasCoinData &&
+						txArg.kind === "NestedResult" &&
+						txArg.index === gasCoinData.NestedResult[0] &&
+						txArg.resultIndex === gasCoinData.NestedResult[1])
+				);
+			});
+		}
+
+		const coinOutId = await this.fetchAddTransactionForCompleteTradeRoute({
+			tx,
+			completeRoute,
+			coinInId,
+			// TODO: set this elsewhere
+			slippage: 0.01,
+			walletAddress: inputs.walletAddress,
+		});
+
+		tx.transferObjects(
+			[coinOutId],
+			tx.pure(inputs.sponsorAddress, "address")
+		);
+
+		const txBytes = await tx.build({
+			client: this.Provider.provider,
+			onlyTransactionKind: true,
+		});
+		const b64TxBytes = Buffer.from(txBytes).toString("base64");
+
+		return b64TxBytes;
 	}
 
 	// =========================================================================

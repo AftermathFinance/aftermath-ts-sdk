@@ -1,6 +1,16 @@
 import { SerializedSignature } from "@mysten/sui.js/cryptography";
 import { CoinType } from "../../types";
-import { SerializedTransaction, SuiAddress } from "../types";
+import { ObjectId, SerializedTransaction, SuiAddress } from "../types";
+
+// =========================================================================
+//  Shared With Service
+// =========================================================================
+
+export type DynamicGasCoinData =
+	| { Coin: ObjectId }
+	| { Input: number }
+	| { Result: number }
+	| { NestedResult: [number, number] };
 
 // =========================================================================
 //  API

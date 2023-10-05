@@ -100,22 +100,20 @@ export class RouterGraph {
 		return result;
 	}
 
-	// public getCompleteRouteGivenAmountOut(
-	// 	coinIn: CoinType,
-	// 	coinOut: CoinType,
-	// 	coinOutAmount: Balance,
-	// 	referrer?: SuiAddress,
-	// 	externalFee?: RouterExternalFee
-	// ): RouterCompleteTradeRoute {
-	// 	return this.getCompleteRoute(
-	// 		coinIn,
-	// 		coinOutAmount,
-	// 		coinOut,
-	// 		true,
-	// 		referrer,
-	// 		externalFee
-	// 	);
-	// }
+	public getCompleteRouteGivenAmountOut(inputs: {
+		coinInType: CoinType;
+		coinOutAmount: Balance;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): RouterCompleteTradeRoute {
+		const result = this.getCompleteRoute({
+			...inputs,
+			coinInAmount: inputs.coinOutAmount,
+			isGivenAmountOut: true,
+		});
+		return result;
+	}
 
 	public getCompleteRoutesGivenAmountIns(inputs: {
 		coinInType: CoinType;

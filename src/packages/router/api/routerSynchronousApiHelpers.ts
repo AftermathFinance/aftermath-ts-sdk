@@ -295,13 +295,22 @@ export class RouterSynchronousApiHelpers {
 	// =========================================================================
 
 	public async fetchBuildTransactionForCompleteTradeRoute(inputs: {
+		tx: TransactionBlock;
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
+		coinInId?: TransactionArgument;
 		isSponsoredTx?: boolean;
-	}): Promise<TransactionBlock> {
-		const { walletAddress, completeRoute, slippage, isSponsoredTx } =
-			inputs;
+		withTransfer?: boolean;
+	}): Promise<TransactionArgument | undefined> {
+		const {
+			walletAddress,
+			completeRoute,
+			slippage,
+			isSponsoredTx,
+			tx,
+			withTransfer,
+		} = inputs;
 
 		const referrer = completeRoute.referrer;
 		const externalFee = completeRoute.externalFee;
@@ -314,7 +323,6 @@ export class RouterSynchronousApiHelpers {
 				`external fee percentage exceeds max of ${Router.constants.maxExternalFeePercentage}`
 			);
 
-		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
 		if (referrer)
@@ -323,13 +331,18 @@ export class RouterSynchronousApiHelpers {
 				referrer,
 			});
 
-		const startCoinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: completeRoute.coinIn.type,
-			coinAmount: completeRoute.coinIn.amount,
-			isSponsoredTx,
-		});
+		let startCoinInId: TransactionArgument;
+		if (inputs.coinInId) {
+			startCoinInId = inputs.coinInId;
+		} else {
+			startCoinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
+				walletAddress,
+				coinType: completeRoute.coinIn.type,
+				coinAmount: completeRoute.coinIn.amount,
+				isSponsoredTx,
+			});
+		}
 
 		const minAmountOut =
 			RouterSynchronousApiHelpers.calcCompleteRouteMinAmountOut({
@@ -422,16 +435,24 @@ export class RouterSynchronousApiHelpers {
 				coinOutType: completeRoute.coinOut.type,
 				coinOutId,
 			});
-			tx.transferObjects([coinOutId], tx.pure(walletAddress, "address"));
+
+			if (withTransfer) {
+				tx.transferObjects(
+					[coinOutId],
+					tx.pure(walletAddress, "address")
+				);
+			}
+
+			return coinOutId;
 		} else {
 			this.returnRouterCapAlreadyPayedFeeTx({
 				tx,
 				routerSwapCap,
 				routerSwapCapCoinType,
 			});
-		}
 
-		return tx;
+			return undefined;
+		}
 	}
 
 	// =========================================================================

@@ -20,7 +20,10 @@ import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
 import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
 import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import {
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js/transactions";
 
 export class RouterApiHelpers {
 	// =========================================================================
@@ -78,8 +81,6 @@ export class RouterApiHelpers {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
-		// TODO: add options to set all these params ?
-		// maxRouteLength?: number,
 	}): Promise<RouterCompleteTradeRoute> => {
 		if (inputs.protocols.length === 0)
 			throw new Error("no protocols set in constructor");
@@ -162,6 +163,29 @@ export class RouterApiHelpers {
 			},
 			referrer: inputs.referrer,
 		};
+	};
+
+	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
+		protocols: RouterProtocolName[];
+		network: SuiNetwork | Url;
+		graph: RouterSerializableCompleteGraph;
+		coinInType: CoinType;
+		coinOutAmount: Balance;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
+	}): Promise<RouterCompleteTradeRoute> => {
+		if (inputs.protocols.length === 0)
+			throw new Error("no protocols set in constructor");
+
+		const { network, graph } = inputs;
+
+		const routerGraph = new RouterGraph(
+			network,
+			graph,
+			this.options.regular.synchronous
+		);
+		return routerGraph.getCompleteRouteGivenAmountOut(inputs);
 	};
 
 	private fetchCompleteTradeRoutesForLastRouteAsyncPool = async (inputs: {
@@ -272,11 +296,14 @@ export class RouterApiHelpers {
 	// =========================================================================
 
 	public async fetchTransactionForCompleteTradeRoute(inputs: {
+		tx: TransactionBlock;
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
+		coinInId?: TransactionArgument;
 		isSponsoredTx?: boolean;
-	}): Promise<TransactionBlock> {
+		withTransfer?: boolean;
+	}): Promise<TransactionArgument | undefined> {
 		return this.SynchronousHelpers.fetchBuildTransactionForCompleteTradeRoute(
 			inputs
 		);
