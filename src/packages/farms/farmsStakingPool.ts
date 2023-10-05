@@ -393,29 +393,15 @@ export class FarmsStakingPool extends Caller {
 		rewardCoin: FarmsStakingPoolRewardCoin;
 	}): Balance {
 		const { rewardCoin } = inputs;
-
 		const currentTimestamp = dayjs().valueOf();
 
-		// ia. Calculate the number of rewards that have been emitted since the beginning of the reward's emissions schedule.
-		const totalRewardsEmitted = this.calcRewardsEmittedFromTimeTmToTn({
-			timestampTm: rewardCoin.emissionStartTimestamp,
-			timestampTn: rewardCoin.lastRewardTimestamp,
-			rewardCoin,
-		});
-
-		// ib. Calculate the number of rewards that have yet to be emitted.
-		const totalRewards = rewardCoin.rewards;
-		const rewardsRemaining =
-			totalRewardsEmitted < totalRewards
-				? totalRewards - totalRewardsEmitted
-				: BigInt(0);
-
-		// ii. Calculate the number of rewards that have been emitted since the last time this reward was emitted.
+		// Calculate the number of rewards that have been emitted since the last time this reward was emitted.
 		const rewardsToEmit = this.calcRewardsEmittedFromTimeTmToTn({
 			timestampTm: rewardCoin.lastRewardTimestamp,
 			timestampTn: currentTimestamp,
 			rewardCoin,
 		});
+		const rewardsRemaining = rewardCoin.rewardsRemaining;
 
 		// IMPORTANT: Cap the amount of rewards to emit by the amount of remaining rewards.
 		//
