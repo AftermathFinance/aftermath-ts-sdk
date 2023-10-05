@@ -32,6 +32,7 @@ import {
 	FarmOwnerOrOneTimeAdminCap,
 	ObjectId,
 	SuiAddress,
+	BigIntAsString,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -1245,7 +1246,9 @@ export class FarmsApi {
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 
-		return bcs.de("vector<u64>", new Uint8Array(bytes));
+		return (
+			bcs.de("vector<u64>", new Uint8Array(bytes)) as BigIntAsString[]
+		).map((num) => BigInt(num));
 	}
 
 	// =========================================================================
