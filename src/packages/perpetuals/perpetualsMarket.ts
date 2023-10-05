@@ -121,8 +121,13 @@ export class PerpetualsMarket extends Caller {
 
 		const temp = FixedUtils.fixedOneB9 / this.orderbook.lotSize;
 		return FixedUtils.directCast(
-			orderPrice * this.orderbook.tickSize * temp * FixedUtils.fixedOneB9
+			(orderPrice * temp) / this.orderbook.tickSize
 		);
+
+		// const temp = FixedUtils.fixedOneB9 / this.orderbook.lotSize;
+		// return FixedUtils.directCast(
+		// 	orderPrice * this.orderbook.tickSize * temp * FixedUtils.fixedOneB9
+		// );
 	};
 
 	public lotSize = () => {
