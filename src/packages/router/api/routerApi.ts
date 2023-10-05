@@ -22,6 +22,7 @@ import {
 	SerializedTransaction,
 	TxBytes,
 	DynamicGasCoinData,
+	ApiRouterDynamicGasBody,
 } from "../../../types";
 import {
 	TransactionArgument,
@@ -247,19 +248,12 @@ export class RouterApi {
 	//  Dynamic Gas Helper
 	// =========================================================================
 
-	public async fetchAddDynamicGasRouteToTxKind(inputs: {
-		txKindBytes: TxBytes;
-		network: SuiNetwork | Url;
-		graph: RouterSerializableCompleteGraph;
-		gasCoinType: CoinType;
-		gasCoinData: DynamicGasCoinData;
-		coinOutAmount: Balance;
-		walletAddress: SuiAddress;
-		completeRoute: RouterCompleteTradeRoute;
-		sponsorAddress: SuiAddress;
-		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
-	}): Promise<TxBytes> {
+	public async fetchAddDynamicGasRouteToTxKind(
+		inputs: ApiRouterDynamicGasBody & {
+			network: SuiNetwork | Url;
+			graph: RouterSerializableCompleteGraph;
+		}
+	): Promise<TxBytes> {
 		const { gasCoinData } = inputs;
 
 		const tx = TransactionBlock.fromKind(inputs.txKindBytes);
@@ -315,7 +309,7 @@ export class RouterApi {
 			coinInId,
 			// TODO: set this elsewhere
 			slippage: 0.01,
-			walletAddress: inputs.walletAddress,
+			walletAddress: inputs.senderAddress,
 		});
 
 		tx.transferObjects(
