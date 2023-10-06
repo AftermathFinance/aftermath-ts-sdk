@@ -2,7 +2,7 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
-import {} from "@mysten/sui.js/client";
+import { SuiEvent, Unsubscribe } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinType,
@@ -466,6 +466,23 @@ export class PerpetualsApi {
 		);
 	}
 
+	public fetchSubscribeToAllEvents = async (inputs: {
+		onEvent: (event: SuiEvent) => void;
+	}): Promise<Unsubscribe> => {
+		const { onEvent } = inputs;
+
+		const unsubscribe = await this.Provider.provider.subscribeEvent({
+			filter: {
+				MoveModule: {
+					module: PerpetualsApi.constants.moduleNames.events,
+					package: this.addresses.perpetuals.packages.perpetuals,
+				},
+			},
+			onMessage: onEvent,
+		});
+		return unsubscribe;
+	};
+
 	// =========================================================================
 	//  Indexer Data
 	// =========================================================================
@@ -474,10 +491,11 @@ export class PerpetualsApi {
 		marketId: PerpetualsMarketId;
 	}): Promise<number> {
 		const { marketId } = inputs;
-		const volume: IFixed = await this.Provider.indexerCaller.fetchIndexer(
-			`perpetuals/markets/${marketId}/24hr-volume`
-		);
-		return IFixedUtils.numberFromIFixed(volume);
+		const response: { volume: number } =
+			await this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/markets/${marketId}/24hr-volume`
+			);
+		return response.volume;
 	}
 
 	// =========================================================================

@@ -40,6 +40,7 @@ export class EventsApiHelpers {
 	// =========================================================================
 
 	// TODO: make this filter by looking ONLY at all relevant AF packages
+	// TODO: move to wallet package ?
 	public fetchSubscribeToUserEvents = async (inputs: {
 		address: SuiAddress;
 		onEvent: (event: SuiEvent) => void;
