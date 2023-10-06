@@ -311,6 +311,7 @@ export class PerpetualsAccount extends Caller {
 
 		const position =
 			inputs.position ?? this.positionForMarketId({ marketId });
+		if (!position) throw new Error("no position found for market");
 
 		const baseAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
@@ -389,6 +390,7 @@ export class PerpetualsAccount extends Caller {
 		const marketId = inputs.market.marketId;
 		const position =
 			inputs.position ?? this.positionForMarketId({ marketId });
+		if (!position) throw new Error("no position found for market");
 
 		const marginRatioInitial = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioInitial
@@ -433,6 +435,7 @@ export class PerpetualsAccount extends Caller {
 		const marketId = inputs.market.marketId;
 		const position =
 			inputs.position ?? this.positionForMarketId({ marketId });
+		if (!position) throw new Error("no position found for market");
 
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
@@ -488,13 +491,13 @@ export class PerpetualsAccount extends Caller {
 
 	public positionForMarketId(inputs: {
 		marketId: PerpetualsMarketId;
-	}): PerpetualsPosition {
+	}): PerpetualsPosition | undefined {
 		try {
 			return this.account.positions.find(
 				(pos) => pos.marketId === inputs.marketId
 			)!;
 		} catch (e) {
-			throw new Error("no position found for market");
+			return undefined;
 		}
 	}
 
@@ -508,6 +511,8 @@ export class PerpetualsAccount extends Caller {
 	}): SdkPerpetualsMarketOrderInputs => {
 		const marketId = inputs.marketId;
 		const position = this.positionForMarketId({ marketId });
+		if (!position) throw new Error("no position found for market");
+
 		const side = Perpetuals.positionSide({ position });
 		return {
 			...inputs,
