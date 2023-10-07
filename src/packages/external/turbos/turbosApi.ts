@@ -456,7 +456,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	private static partialPoolFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): TurbosPartialPoolObject => {
-		const fields = Helpers.getObjectFields(data).fields.value.fields as {
+		const fields = Helpers.getObjectFields(data).value.fields as {
 			pool_id: ObjectId;
 			coin_type_a: TypeNameOnChain;
 			coin_type_b: TypeNameOnChain;
