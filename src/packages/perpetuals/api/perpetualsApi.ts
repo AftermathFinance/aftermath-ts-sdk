@@ -491,11 +491,14 @@ export class PerpetualsApi {
 		marketId: PerpetualsMarketId;
 	}): Promise<number> {
 		const { marketId } = inputs;
-		const response: { volume: number } =
+
+		const response: [{ volume: number }] | [] =
 			await this.Provider.indexerCaller.fetchIndexer(
 				`perpetuals/markets/${marketId}/24hr-volume`
 			);
-		return response.volume;
+		if (response.length === 0) return 0;
+
+		return response[0].volume;
 	}
 
 	// =========================================================================
