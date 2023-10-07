@@ -45,6 +45,7 @@ import { Sui } from "../../sui";
 import { Fixed } from "../../../general/utils/fixed";
 import { StakingApiCasting } from "./stakingApiCasting";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
+import { RouterPoolTradeTxInputs } from "../..";
 
 export class StakingApi
 	implements RouterSynchronousApiInterface<AfSuiRouterPoolObject>
@@ -59,6 +60,7 @@ export class StakingApi
 			events: "events",
 			stakedSuiVault: "staked_sui_vault",
 			stakedSuiVaultState: "staked_sui_vault_state",
+			routerWrapper: "router",
 		},
 		eventNames: {
 			staked: "StakedEvent",
@@ -700,6 +702,74 @@ export class StakingApi
 			}, partiallyMergedPositions);
 
 		return completeMergedPositions;
+	};
+
+	// =========================================================================
+	//  Router Transaction Commands
+	// =========================================================================
+
+	public routerWrapperStakeTx = (
+		inputs: RouterPoolTradeTxInputs
+	): TransactionArgument => {
+		if (!this.addresses.routerWrapper)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		const { tx, coinInId, routerSwapCap } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.routerWrapper.packages.wrapper,
+				StakingApi.constants.moduleNames.routerWrapper,
+				"request_stake"
+			),
+			typeArguments: [inputs.routerSwapCapCoinType],
+			arguments: [
+				tx.object(this.addresses.routerWrapper.objects.wrapperApp),
+				routerSwapCap,
+
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
+				tx.object(this.addresses.staking.objects.referralVault), // ReferralVault
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.pure(
+					this.addresses.routerWrapper.objects.aftermathValidator,
+					"address"
+				),
+			],
+		});
+	};
+
+	public routerWrapperAtomicUnstakeTx = (
+		inputs: RouterPoolTradeTxInputs
+	): TransactionArgument => {
+		if (!this.addresses.routerWrapper)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		const { tx, coinInId, routerSwapCap } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.routerWrapper.packages.wrapper,
+				StakingApi.constants.moduleNames.routerWrapper,
+				"request_unstake_atomic"
+			),
+			typeArguments: [inputs.routerSwapCapCoinType],
+			arguments: [
+				tx.object(this.addresses.routerWrapper.objects.wrapperApp),
+				routerSwapCap,
+
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+				tx.object(this.addresses.staking.objects.referralVault), // ReferralVault
+				tx.object(this.addresses.staking.objects.treasury), // Treasury
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+			],
+		});
 	};
 
 	// =========================================================================

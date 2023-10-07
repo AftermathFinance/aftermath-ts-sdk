@@ -11,7 +11,7 @@ import {
 	RouterPoolInterface,
 	RouterPoolTradeTxInputs,
 } from "../interfaces/routerPoolInterface";
-import { Helpers } from "../../../../../general/utils";
+import { Casting, Helpers } from "../../../../../general/utils";
 import { Coin, Staking } from "../../../..";
 
 class AfSuiRouterPool implements RouterPoolInterface {
@@ -75,6 +75,10 @@ class AfSuiRouterPool implements RouterPoolInterface {
 
 		// unstake
 
+		// check sui reserves
+		if (inputs.coinInAmount > this.pool.atomicUnstakeSuiReserves)
+			return BigInt(0);
+
 		// NOTE: is this safe or possible overflow ?
 		return BigInt(
 			Math.floor(
@@ -90,26 +94,15 @@ class AfSuiRouterPool implements RouterPoolInterface {
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		// TODO: try set referrer in tx as well ?
-
-		const { tx, coinInId } = inputs;
 		const stakingProvider = inputs.provider.Staking();
 
 		if (this.isStake(inputs)) {
 			// stake
-
-			return stakingProvider.stakeTx({
-				tx,
-				suiCoin: coinInId,
-				validatorAddress: this.pool.aftermathValidatorAddress,
-			});
+			return stakingProvider.routerWrapperStakeTx(inputs);
 		}
 
 		// unstake
-
-		return stakingProvider.atomicUnstakeTx({
-			tx,
-			afSuiCoin: coinInId,
-		});
+		return stakingProvider.routerWrapperAtomicUnstakeTx(inputs);
 	};
 
 	getTradeAmountIn = (inputs: {
@@ -118,13 +111,46 @@ class AfSuiRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
-		// NOTE: is this correct ?
-		return this.getTradeAmountOut({
-			...inputs,
-			coinInType: inputs.coinOutType,
-			coinOutType: inputs.coinInType,
-			coinInAmount: inputs.coinOutAmount,
-		});
+		// TODO: handle referrer discount
+
+		if (this.isStake(inputs)) {
+			// stake
+
+			// check divide by 0
+			if (this.exchangeRate(inputs) <= 0) return Casting.u64MaxBigInt;
+
+			const coinInAmount = BigInt(
+				Math.ceil(
+					Number(inputs.coinOutAmount) / this.exchangeRate(inputs)
+				)
+			);
+
+			// check min stake bound
+			if (coinInAmount < Staking.constants.bounds.minStake)
+				return Casting.u64MaxBigInt;
+		}
+
+		// unstake
+
+		const denominator =
+			this.exchangeRate(inputs) *
+			(1 -
+				Staking.calcAtomicUnstakeFee({
+					stakedSuiVaultState: this.pool,
+				}));
+
+		// check divide by 0
+		if (denominator <= 0) return Casting.u64MaxBigInt;
+
+		const coinInAmount = BigInt(
+			Math.ceil(Number(inputs.coinOutAmount) / denominator)
+		);
+
+		// check sui reserves
+		if (coinInAmount > this.pool.atomicUnstakeSuiReserves)
+			return Casting.u64MaxBigInt;
+
+		return coinInAmount;
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
