@@ -885,12 +885,13 @@ export class FarmsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vault,
-				"increase_emissions_for"
+				"update_emissions_for"
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
 				tx.object(inputs.ownerCapId), // OwnerCap
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				tx.pure(inputs.emissionScheduleMs, "u64"),
 				tx.pure(inputs.emissionRate, "u64"),
 			],
