@@ -250,6 +250,7 @@ export class RouterApi {
 
 	public async fetchAddDynamicGasRouteToTxKind(
 		inputs: ApiRouterDynamicGasBody & {
+			coinOutAmount: Balance;
 			network: SuiNetwork | Url;
 			graph: RouterSerializableCompleteGraph;
 		}

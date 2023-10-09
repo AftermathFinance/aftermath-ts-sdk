@@ -8,6 +8,7 @@ import {
 	ObjectId,
 	SuiAddress,
 	TxBytes,
+	BigIntAsString,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
@@ -337,7 +338,7 @@ export interface ApiRouterDynamicGasBody {
 	txKindBytes: TxBytes;
 	gasCoinType: CoinType;
 	gasCoinData: DynamicGasCoinData;
-	coinOutAmount: Balance;
+	coinOutAmount: BigIntAsString;
 	senderAddress: SuiAddress;
 	sponsorAddress: SuiAddress;
 	referrer?: SuiAddress;
