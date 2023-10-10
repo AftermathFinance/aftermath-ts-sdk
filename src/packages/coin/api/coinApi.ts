@@ -1,6 +1,7 @@
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -87,7 +88,7 @@ export class CoinApi {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		coinAmount: Balance;
-	}): Promise<TransactionArgument> => {
+	}): Promise<TransactionObjectArgument> => {
 		const { tx, walletAddress, coinType, coinAmount } = inputs;
 
 		tx.setSender(walletAddress);
@@ -105,7 +106,7 @@ export class CoinApi {
 		walletAddress: SuiAddress;
 		coinTypes: CoinType[];
 		coinAmounts: Balance[];
-	}): Promise<TransactionArgument[]> => {
+	}): Promise<TransactionObjectArgument[]> => {
 		const { tx, walletAddress, coinTypes, coinAmounts } = inputs;
 
 		tx.setSender(walletAddress);
@@ -121,7 +122,7 @@ export class CoinApi {
 			)
 		);
 
-		let coinArgs: TransactionArgument[] = [];
+		let coinArgs: TransactionObjectArgument[] = [];
 		for (const [index, coinData] of allCoinsData.entries()) {
 			const coinArg = CoinApi.coinWithAmountTx({
 				tx,
@@ -251,7 +252,7 @@ export class CoinApi {
 		tx: TransactionBlock;
 		coinData: CoinStruct[];
 		coinAmount: Balance;
-	}): TransactionArgument => {
+	}): TransactionObjectArgument => {
 		const { tx, coinData, coinAmount } = inputs;
 
 		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);

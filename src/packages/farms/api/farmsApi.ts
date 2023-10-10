@@ -50,6 +50,7 @@ import {
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 import { bcs } from "@mysten/sui.js/bcs";
 
@@ -1076,7 +1077,7 @@ export class FarmsApi {
 			tx,
 		});
 
-		let harvestedCoins: Record<CoinType, TransactionArgument[]> = {};
+		let harvestedCoins: Record<CoinType, TransactionObjectArgument[]> = {};
 
 		for (const stakedPositionId of stakedPositionIds) {
 			for (const rewardCoinType of inputs.rewardCoinTypes) {
