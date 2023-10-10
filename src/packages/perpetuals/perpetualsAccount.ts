@@ -156,17 +156,22 @@ export class PerpetualsAccount extends Caller {
 		inputs: Omit<
 			ApiPerpetualsPreviewOrderBody,
 			"accountId" | "collateralCoinType" | "accountCapId"
-		>
+		>,
+		abortSignal?: AbortSignal
 	) {
 		return this.fetchApi<
 			ApiPerpetualsPreviewOrderResponse,
 			ApiPerpetualsPreviewOrderBody
-		>("preview-order", {
-			...inputs,
-			accountId: this.accountCap.accountId,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			accountCapId: this.accountCap.objectId,
-		});
+		>(
+			"preview-order",
+			{
+				...inputs,
+				accountId: this.accountCap.accountId,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				accountCapId: this.accountCap.objectId,
+			},
+			abortSignal
+		);
 	}
 
 	// =========================================================================
