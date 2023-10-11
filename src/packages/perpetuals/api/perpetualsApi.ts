@@ -49,6 +49,7 @@ import {
 	DepositedCollateralEvent,
 	WithdrewCollateralEvent,
 	PerpetualsOrderEvent,
+	PerpetualsOrderInfo,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -604,7 +605,41 @@ export class PerpetualsApi {
 				tx,
 			});
 
-		return bcs.de("vector<u64>", new Uint8Array(bytes));
+		const marketIds: any[] = bcs.de("vector<u64>", new Uint8Array(bytes));
+		return marketIds.map((marketId) => BigInt(marketId));
+	};
+
+	public fetchOrderbookOrders = async (inputs: {
+		collateralCoinType: ObjectId;
+		marketId: PerpetualsMarketId;
+		side: PerpetualsOrderSide;
+		fromPrice: IFixed;
+		toPrice: IFixed;
+	}): Promise<PerpetualsOrderInfo[]> => {
+		const { collateralCoinType, marketId, side, fromPrice, toPrice } =
+			inputs;
+
+		const tx = new TransactionBlock();
+
+		const orderbookId = this.getOrderbookTx({
+			tx,
+			collateralCoinType,
+			marketId,
+		});
+		this.inspectOrdersTx({ tx, orderbookId, side, fromPrice, toPrice });
+
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
+
+		const orderInfos: any[] = bcs.de(
+			"vector<OrderInfo>",
+			new Uint8Array(bytes)
+		);
+		return orderInfos.map((orderInfo) =>
+			Casting.perpetuals.orderInfoFromRaw(orderInfo)
+		);
 	};
 
 	// =========================================================================
@@ -1176,6 +1211,33 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [tx.object(mktMngId)],
+		});
+	};
+
+	public inspectOrdersTx = (inputs: {
+		tx: TransactionBlock;
+		orderbookId: ObjectId | TransactionArgument;
+		side: PerpetualsOrderSide;
+		fromPrice: IFixed;
+		toPrice: IFixed;
+	}) /* vector<OrderInfo> */ => {
+		const { tx, orderbookId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.orderbook,
+				"inspect_orders"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof orderbookId === "string"
+					? tx.object(orderbookId)
+					: orderbookId, // Orderbook
+
+				tx.pure(Boolean(inputs.side), "bool"), // side
+				tx.pure(inputs.fromPrice, "u64"), // price_from
+				tx.pure(inputs.toPrice, "u64"), // price_to
+			],
 		});
 	};
 

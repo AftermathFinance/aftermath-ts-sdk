@@ -311,6 +311,16 @@ bcs.registerStructType("Order", {
 	size: BCS.U64,
 });
 
+export interface PerpetualsOrderInfo {
+	price: bigint;
+	size: bigint;
+}
+
+bcs.registerStructType("OrderInfo", {
+	price: BCS.U64,
+	size: BCS.U64,
+});
+
 export interface PerpetualsOrderedMap<T> extends Object {
 	size: bigint;
 	counter: bigint;

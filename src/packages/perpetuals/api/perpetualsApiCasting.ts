@@ -20,6 +20,7 @@ import {
 	PerpetualsOrderSide,
 	FilledTakerOrderEvent,
 	FilledMakerOrderEvent,
+	PerpetualsOrderInfo,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
@@ -251,6 +252,13 @@ export class PerpetualsApiCasting {
 			bcs.de("Option<u256>", new Uint8Array(bytes))
 		);
 		return FixedUtils.directCast(unwrapped ?? BigInt(0));
+	};
+
+	public static orderInfoFromRaw = (data: any): PerpetualsOrderInfo => {
+		return {
+			price: BigInt(data.price),
+			size: BigInt(data.size),
+		};
 	};
 
 	// =========================================================================
