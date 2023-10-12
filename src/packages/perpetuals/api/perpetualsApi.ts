@@ -50,6 +50,8 @@ import {
 	WithdrewCollateralEvent,
 	PerpetualsOrderEvent,
 	PerpetualsOrderInfo,
+	PerpetualsOrderbookState,
+	OrderbookDataPoint,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -80,6 +82,11 @@ export class PerpetualsApi {
 			marketManager: "market_manager",
 			orderbook: "orderbook",
 			events: "events",
+		},
+		orderBookData: {
+			pricePercentChange: 0.05, // 5%
+			ticksPerBucket: 1,
+			buckets: 10,
 		},
 	};
 
@@ -161,31 +168,6 @@ export class PerpetualsApi {
 			},
 		});
 	};
-
-	// public fetchOwnedAccountCaps = async (inputs: {
-	// 	walletAddress: SuiAddress;
-	// }): Promise<PerpetualsAccountCap[]> => {
-	// 	const { walletAddress } = inputs;
-
-	// 	const allAccountCaps = await Promise.all(
-	// 		Perpetuals.constants.collateralCoinTypes.map((collateralCoinType) => {
-	// 			const objectType = this.getAccountCapType({ collateralCoinType });
-	// 			return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType(
-	// 				{
-	// 					objectType,
-	// 					walletAddress,
-	// 					objectFromSuiObjectResponse:
-	// 						PerpetualsApiCasting.accountCapFromSuiResponse,
-	// 					options: {
-	// 						showBcs: true,
-	// 						showType: true,
-	// 					},
-	// 				}
-	// 			);
-	// 		})
-	// 	);
-	// 	return allAccountCaps.reduce((acc, caps) => [...acc, ...caps], []);
-	// };
 
 	public fetchOwnedAccountCapsOfType = async (inputs: {
 		walletAddress: SuiAddress;
@@ -609,37 +591,49 @@ export class PerpetualsApi {
 		return marketIds.map((marketId) => BigInt(marketId));
 	};
 
-	public fetchOrderbookOrders = async (inputs: {
+	public fetchOrderbookState = async (inputs: {
 		collateralCoinType: ObjectId;
 		marketId: PerpetualsMarketId;
-		side: PerpetualsOrderSide;
-		fromPrice: IFixed;
-		toPrice: IFixed;
-	}): Promise<PerpetualsOrderInfo[]> => {
-		const { collateralCoinType, marketId, side, fromPrice, toPrice } =
-			inputs;
+		indexPrice: number;
+		tickSize: number;
+	}): Promise<PerpetualsOrderbookState> => {
+		const { indexPrice } = inputs;
+		const constants = PerpetualsApi.constants.orderBookData;
 
-		const tx = new TransactionBlock();
-
-		const orderbookId = this.getOrderbookTx({
-			tx,
-			collateralCoinType,
-			marketId,
-		});
-		this.inspectOrdersTx({ tx, orderbookId, side, fromPrice, toPrice });
-
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
-
-		const orderInfos: any[] = bcs.de(
-			"vector<OrderInfo>",
-			new Uint8Array(bytes)
+		const lowPrice = Casting.IFixed.iFixedFromNumber(
+			indexPrice * (1 - constants.pricePercentChange)
 		);
-		return orderInfos.map((orderInfo) =>
-			Casting.perpetuals.orderInfoFromRaw(orderInfo)
+		const highPrice = Casting.IFixed.iFixedFromNumber(
+			indexPrice * constants.pricePercentChange
 		);
+		const [bids, asks] = await Promise.all([
+			this.fetchOrderbookOrders({
+				...inputs,
+				side: PerpetualsOrderSide.Bid,
+				fromPrice: highPrice,
+				toPrice: lowPrice,
+			}),
+
+			this.fetchOrderbookOrders({
+				...inputs,
+				side: PerpetualsOrderSide.Ask,
+				fromPrice: lowPrice,
+				toPrice: highPrice,
+			}),
+		]);
+
+		return {
+			bids: this.bucketOrders({
+				...inputs,
+				side: PerpetualsOrderSide.Bid,
+				orders: bids,
+			}),
+			asks: this.bucketOrders({
+				...inputs,
+				side: PerpetualsOrderSide.Ask,
+				orders: asks,
+			}),
+		};
 	};
 
 	// =========================================================================
@@ -1427,9 +1421,80 @@ export class PerpetualsApi {
 		return sizes;
 	};
 
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
+	private fetchOrderbookOrders = async (inputs: {
+		collateralCoinType: ObjectId;
+		marketId: PerpetualsMarketId;
+		side: PerpetualsOrderSide;
+		fromPrice: IFixed;
+		toPrice: IFixed;
+	}): Promise<PerpetualsOrderInfo[]> => {
+		const { collateralCoinType, marketId, side, fromPrice, toPrice } =
+			inputs;
+
+		const tx = new TransactionBlock();
+
+		const orderbookId = this.getOrderbookTx({
+			tx,
+			collateralCoinType,
+			marketId,
+		});
+		this.inspectOrdersTx({ tx, orderbookId, side, fromPrice, toPrice });
+
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
+
+		const orderInfos: any[] = bcs.de(
+			"vector<OrderInfo>",
+			new Uint8Array(bytes)
+		);
+		return orderInfos.map((orderInfo) =>
+			Casting.perpetuals.orderInfoFromRaw(orderInfo)
+		);
+	};
+
+	private bucketOrders = (inputs: {
+		orders: PerpetualsOrderInfo[];
+		side: PerpetualsOrderSide;
+		tickSize: number;
+		indexPrice: number;
+	}): OrderbookDataPoint[] => {
+		const { orders, side, tickSize, indexPrice } = inputs;
+		const constants = PerpetualsApi.constants.orderBookData;
+
+		const bucketSize = constants.ticksPerBucket * tickSize;
+
+		const emptyDataPoints: OrderbookDataPoint[] = Array(constants.buckets)
+			.fill({
+				size: BigInt(0),
+				price: 0,
+			})
+			.map((dataPoint, index) => {
+				return {
+					...dataPoint,
+					price:
+						indexPrice +
+						index *
+							bucketSize *
+							(side === PerpetualsOrderSide.Bid ? -1 : 1),
+				};
+			});
+
+		const dataPoints = orders.reduce((acc, order) => {
+			const price = Casting.IFixed.numberFromIFixed(order.price);
+			const bucketIndex =
+				acc.length -
+				Math.floor(Math.abs(indexPrice - price) / bucketSize) -
+				1;
+
+			acc[bucketIndex].size += order.size;
+
+			return acc;
+		}, emptyDataPoints);
+
+		return dataPoints;
+	};
 
 	// =========================================================================
 	//  Event Types

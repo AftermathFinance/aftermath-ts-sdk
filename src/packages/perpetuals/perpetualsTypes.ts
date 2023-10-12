@@ -278,6 +278,16 @@ bcs.registerStructType("MarketKey", {
 //  Orderbook
 // =========================================================================
 
+export interface OrderbookDataPoint {
+	size: bigint;
+	price: number;
+}
+
+export interface PerpetualsOrderbookState {
+	bids: OrderbookDataPoint[];
+	asks: OrderbookDataPoint[];
+}
+
 export interface PerpetualsOrderData {
 	orderId: PerpetualsOrderId;
 	size: bigint;

@@ -27,9 +27,7 @@ export class Perpetuals extends Caller {
 	//  Constants
 	// =========================================================================
 
-	// TODO: set all of these values correctly
 	public static readonly constants = {
-		collateralCoinTypes: ["0x2::sui::SUI"],
 		bounds: {
 			minLeverage: 1,
 			maxLeverage: 10,
