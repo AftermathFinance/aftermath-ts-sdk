@@ -313,10 +313,7 @@ export class RouterApi {
 			walletAddress: inputs.senderAddress,
 		});
 
-		tx.transferObjects(
-			[coinOutId],
-			tx.pure(inputs.sponsorAddress, "address")
-		);
+		tx.transferObjects([coinOutId], tx.pure(inputs.sponsorAddress));
 
 		const txBytes = await tx.build({
 			client: this.Provider.provider,
