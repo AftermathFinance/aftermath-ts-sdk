@@ -1467,8 +1467,9 @@ export class PerpetualsApi {
 
 		const emptyDataPoints: OrderbookDataPoint[] = Array(constants.buckets)
 			.fill({
-				size: BigInt(0),
 				price: 0,
+				size: BigInt(0),
+				totalSize: BigInt(0),
 			})
 			.map((dataPoint, index) => {
 				return {
@@ -1481,7 +1482,7 @@ export class PerpetualsApi {
 				};
 			});
 
-		const dataPoints = orders.reduce((acc, order) => {
+		let dataPoints = orders.reduce((acc, order) => {
 			const price = Casting.IFixed.numberFromIFixed(order.price);
 			const bucketIndex =
 				acc.length -
@@ -1493,6 +1494,15 @@ export class PerpetualsApi {
 			return acc;
 		}, emptyDataPoints);
 
+		for (const [index, data] of dataPoints.entries()) {
+			dataPoints[index] = {
+				...data,
+				totalSize:
+					index > 0
+						? dataPoints[index - 1].totalSize + data.size
+						: data.size,
+			};
+		}
 		return dataPoints;
 	};
 
