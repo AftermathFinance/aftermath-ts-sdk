@@ -37,6 +37,7 @@ import {
 	FilledMakerOrderEventOnChain,
 	FilledTakerOrderEventOnChain,
 } from "../perpetualsCastingTypes";
+import { BigIntAsString } from "../../../types";
 
 // TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {
@@ -248,10 +249,13 @@ export class PerpetualsApiCasting {
 	};
 
 	public static orderbookPriceFromBytes = (bytes: number[]): number => {
-		const unwrapped: bigint | undefined = Casting.unwrapDeserializedOption(
-			bcs.de("Option<u256>", new Uint8Array(bytes))
+		const unwrapped: BigIntAsString | undefined =
+			Casting.unwrapDeserializedOption(
+				bcs.de("Option<u256>", new Uint8Array(bytes))
+			);
+		return FixedUtils.directCast(
+			unwrapped !== undefined ? BigInt(unwrapped) : BigInt(0)
 		);
-		return FixedUtils.directCast(unwrapped ?? BigInt(0));
 	};
 
 	public static orderInfoFromRaw = (data: any): PerpetualsOrderInfo => {
