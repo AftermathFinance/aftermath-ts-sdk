@@ -14,6 +14,7 @@ import {
 	CoinType,
 	PerpetualsOrderId,
 	FilledTakerOrderEvent,
+	PerpetualsOrderPrice,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -271,6 +272,63 @@ export class Perpetuals extends Caller {
 			IFixedUtils.numberFromIFixed(orderEvent.quoteAssetDelta) /
 			IFixedUtils.numberFromIFixed(orderEvent.baseAssetDelta)
 		);
+	}
+
+	public static priceToOrderPrice = (inputs: {
+		price: number;
+		lotSize: number | bigint;
+		tickSize: number | bigint;
+	}): PerpetualsOrderPrice => {
+		const { price, lotSize, tickSize } = inputs;
+
+		const priceFixed = FixedUtils.directUncast(price);
+		// convert f18 to b9 (assuming the former is positive)
+		const price9 = priceFixed / FixedUtils.fixedOneB9;
+
+		const denominator =
+			FixedUtils.fixedOneB9 /
+			(typeof lotSize === "number"
+				? this.lotOrTickSizeToBigInt(lotSize)
+				: lotSize);
+		if (denominator <= BigInt(0)) return BigInt(0);
+
+		return (
+			price9 /
+			(typeof tickSize === "number"
+				? this.lotOrTickSizeToBigInt(tickSize)
+				: tickSize) /
+			denominator
+		);
+	};
+
+	public static orderPriceToPrice = (inputs: {
+		orderPrice: PerpetualsOrderPrice;
+		lotSize: number | bigint;
+		tickSize: number | bigint;
+	}): number => {
+		const { orderPrice, lotSize, tickSize } = inputs;
+
+		const temp =
+			FixedUtils.fixedOneB9 /
+			(typeof lotSize === "number"
+				? this.lotOrTickSizeToBigInt(lotSize)
+				: lotSize);
+		return FixedUtils.directCast(
+			orderPrice *
+				(typeof tickSize === "number"
+					? this.lotOrTickSizeToBigInt(tickSize)
+					: tickSize) *
+				temp *
+				FixedUtils.fixedOneB9
+		);
+	};
+
+	public static lotOrTickSizeToNumber(lotOrTickSize: bigint): number {
+		return Number(lotOrTickSize) / FixedUtils.fixedOneN9;
+	}
+
+	public static lotOrTickSizeToBigInt(lotOrTickSize: number): bigint {
+		return BigInt(Math.floor(lotOrTickSize * FixedUtils.fixedOneN9));
 	}
 
 	// =========================================================================

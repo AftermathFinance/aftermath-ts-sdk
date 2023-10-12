@@ -323,7 +323,7 @@ bcs.registerStructType("Order", {
 });
 
 export interface PerpetualsOrderInfo {
-	price: bigint;
+	price: PerpetualsOrderPrice;
 	size: bigint;
 }
 
@@ -555,6 +555,7 @@ export interface ApiPerpetualsPositionOrderDatasBody {
 
 export interface ApiPerpetualsOrderbookStateBody {
 	indexPrice: number;
+	lotSize: number;
 	tickSize: number;
 }
 
@@ -597,7 +598,7 @@ export interface ApiPerpetualsLimitOrderBody {
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
-	price: bigint;
+	price: PerpetualsOrderPrice;
 	orderType: PerpetualsOrderType;
 }
 
@@ -612,20 +613,20 @@ export interface ApiPerpetualsCancelOrderBody {
 
 export type ApiPerpetualsSLTPOrderBody = (
 	| (ApiPerpetualsMarketOrderBody & {
-			marketPrice: bigint;
+			marketPrice: PerpetualsOrderPrice;
 	  })
 	| ApiPerpetualsLimitOrderBody
 ) &
 	(
 		| {
-				slPrice: bigint;
+				slPrice: PerpetualsOrderPrice;
 		  }
 		| {
-				tpPrice: bigint;
+				tpPrice: PerpetualsOrderPrice;
 		  }
 		| {
-				slPrice: bigint;
-				tpPrice: bigint;
+				slPrice: PerpetualsOrderPrice;
+				tpPrice: PerpetualsOrderPrice;
 		  }
 	);
 
@@ -649,19 +650,19 @@ export type SdkPerpetualsLimitOrderInputs = Omit<
 
 export type SdkPerpetualsSLTPOrderInputs = (
 	| (SdkPerpetualsMarketOrderInputs & {
-			marketPrice: bigint;
+			marketPrice: PerpetualsOrderPrice;
 	  })
 	| SdkPerpetualsLimitOrderInputs
 ) &
 	(
 		| {
-				slPrice: bigint;
+				slPrice: PerpetualsOrderPrice;
 		  }
 		| {
-				tpPrice: bigint;
+				tpPrice: PerpetualsOrderPrice;
 		  }
 		| {
-				slPrice: bigint;
-				tpPrice: bigint;
+				slPrice: PerpetualsOrderPrice;
+				tpPrice: PerpetualsOrderPrice;
 		  }
 	);

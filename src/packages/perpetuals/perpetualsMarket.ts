@@ -20,6 +20,7 @@ import {
 	Timestamp,
 	Url,
 } from "../../types";
+import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
 
 export class PerpetualsMarket extends Caller {
@@ -73,6 +74,7 @@ export class PerpetualsMarket extends Caller {
 			PerpetualsOrderbookState,
 			ApiPerpetualsOrderbookStateBody
 		>("orderbook-state", {
+			lotSize: this.lotSize(),
 			tickSize: this.tickSize(),
 			indexPrice,
 		});
@@ -116,34 +118,34 @@ export class PerpetualsMarket extends Caller {
 		price: number;
 	}): PerpetualsOrderPrice => {
 		const { price } = inputs;
-
-		const priceFixed = FixedUtils.directUncast(price);
-		// convert f18 to b9 (assuming the former is positive)
-		const price9 = priceFixed / FixedUtils.fixedOneB9;
-
-		const denominator = FixedUtils.fixedOneB9 / this.orderbook.lotSize;
-		if (denominator <= BigInt(0)) return BigInt(0);
-
-		return price9 / this.orderbook.tickSize / denominator;
+		const lotSize = this.orderbook.lotSize;
+		const tickSize = this.orderbook.tickSize;
+		return Perpetuals.priceToOrderPrice({
+			price,
+			lotSize,
+			tickSize,
+		});
 	};
 
 	public orderPriceToPrice = (inputs: {
 		orderPrice: PerpetualsOrderPrice;
 	}): number => {
 		const { orderPrice } = inputs;
-
-		const temp = FixedUtils.fixedOneB9 / this.orderbook.lotSize;
-		return FixedUtils.directCast(
-			orderPrice * this.orderbook.tickSize * temp * FixedUtils.fixedOneB9
-		);
+		const lotSize = this.orderbook.lotSize;
+		const tickSize = this.orderbook.tickSize;
+		return Perpetuals.orderPriceToPrice({
+			orderPrice,
+			lotSize,
+			tickSize,
+		});
 	};
 
 	public lotSize = () => {
-		return PerpetualsMarket.lotOrTickSizeToNumber(this.orderbook.lotSize);
+		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.lotSize);
 	};
 
 	public tickSize = () => {
-		return PerpetualsMarket.lotOrTickSizeToNumber(this.orderbook.tickSize);
+		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.tickSize);
 	};
 
 	// =========================================================================
@@ -157,13 +159,5 @@ export class PerpetualsMarket extends Caller {
 			orderData.side
 		);
 		return this.orderPriceToPrice({ orderPrice });
-	}
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	private static lotOrTickSizeToNumber(lotOrTickSize: bigint): number {
-		return Number(lotOrTickSize) / FixedUtils.fixedOneN9;
 	}
 }

@@ -258,6 +258,7 @@ export interface ReferralVaultAddresses {
 export interface PerpetualsAddresses {
 	packages: {
 		perpetuals: SuiAddress;
+		events: SuiAddress;
 	};
 	objects: {
 		adminCapability: ObjectId;
