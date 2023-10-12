@@ -52,6 +52,7 @@ import {
 	PerpetualsOrderInfo,
 	PerpetualsOrderbookState,
 	OrderbookDataPoint,
+	ApiPerpetualsOrderbookStateBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -83,7 +84,7 @@ export class PerpetualsApi {
 			orderbook: "orderbook",
 			events: "events",
 		},
-		orderBookData: {
+		orderbookData: {
 			pricePercentChange: 0.05, // 5%
 			ticksPerBucket: 1,
 			buckets: 10,
@@ -591,14 +592,14 @@ export class PerpetualsApi {
 		return marketIds.map((marketId) => BigInt(marketId));
 	};
 
-	public fetchOrderbookState = async (inputs: {
-		collateralCoinType: ObjectId;
-		marketId: PerpetualsMarketId;
-		indexPrice: number;
-		tickSize: number;
-	}): Promise<PerpetualsOrderbookState> => {
+	public fetchOrderbookState = async (
+		inputs: ApiPerpetualsOrderbookStateBody & {
+			collateralCoinType: ObjectId;
+			marketId: PerpetualsMarketId;
+		}
+	): Promise<PerpetualsOrderbookState> => {
 		const { indexPrice } = inputs;
-		const constants = PerpetualsApi.constants.orderBookData;
+		const constants = PerpetualsApi.constants.orderbookData;
 
 		const lowPrice = Casting.IFixed.iFixedFromNumber(
 			indexPrice * (1 - constants.pricePercentChange)
@@ -1461,7 +1462,7 @@ export class PerpetualsApi {
 		indexPrice: number;
 	}): OrderbookDataPoint[] => {
 		const { orders, side, tickSize, indexPrice } = inputs;
-		const constants = PerpetualsApi.constants.orderBookData;
+		const constants = PerpetualsApi.constants.orderbookData;
 
 		const bucketSize = constants.ticksPerBucket * tickSize;
 
@@ -1483,7 +1484,9 @@ export class PerpetualsApi {
 			});
 
 		let dataPoints = orders.reduce((acc, order) => {
-			const price = Casting.IFixed.numberFromIFixed(order.price);
+			const price = Math.abs(
+				Casting.IFixed.numberFromIFixed(order.price)
+			);
 			const bucketIndex =
 				acc.length -
 				Math.floor(Math.abs(indexPrice - price) / bucketSize) -

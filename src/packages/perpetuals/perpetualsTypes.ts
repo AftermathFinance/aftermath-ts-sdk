@@ -553,6 +553,11 @@ export interface ApiPerpetualsPositionOrderDatasBody {
 	positionBidsId: ObjectId;
 }
 
+export interface ApiPerpetualsOrderbookStateBody {
+	indexPrice: number;
+	tickSize: number;
+}
+
 // =========================================================================
 //  Transactions
 // =========================================================================

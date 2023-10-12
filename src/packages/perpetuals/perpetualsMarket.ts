@@ -2,6 +2,7 @@ import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
+	ApiPerpetualsOrderbookStateBody,
 	ApiPerpetualsPositionOrderDatasBody,
 	CoinType,
 	FilledTakerOrderEvent,
@@ -13,6 +14,7 @@ import {
 	PerpetualsOrderPrice,
 	PerpetualsOrderSide,
 	PerpetualsOrderbook,
+	PerpetualsOrderbookState,
 	PerpetualsPosition,
 	SuiNetwork,
 	Timestamp,
@@ -62,6 +64,17 @@ export class PerpetualsMarket extends Caller {
 		>("position-order-datas", {
 			positionAsksId: position.asks.objectId,
 			positionBidsId: position.bids.objectId,
+		});
+	}
+
+	public getOrderbookState(inputs: { indexPrice: number }) {
+		const { indexPrice } = inputs;
+		return this.fetchApi<
+			PerpetualsOrderbookState,
+			ApiPerpetualsOrderbookStateBody
+		>("orderbook-state", {
+			tickSize: this.tickSize(),
+			indexPrice,
 		});
 	}
 
