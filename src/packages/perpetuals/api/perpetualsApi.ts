@@ -89,8 +89,7 @@ export class PerpetualsApi {
 			events: "events",
 		},
 		orderbookData: {
-			pricePercentChange: 0.5, // 5%
-			// ticksPerBucket: 1,
+			pricePercentChange: 0.05, // 5%
 			buckets: 10,
 		},
 	};
@@ -638,11 +637,6 @@ export class PerpetualsApi {
 			...inputs,
 			price: indexPrice * (1 + constants.pricePercentChange),
 		});
-		console.log({
-			low: indexPrice * (1 - constants.pricePercentChange),
-			high: indexPrice * (1 + constants.pricePercentChange),
-		});
-		console.log({ lowPrice, highPrice });
 		const [bids, asks] = await Promise.all([
 			this.fetchOrderbookOrders({
 				...inputs,
@@ -659,31 +653,24 @@ export class PerpetualsApi {
 			}),
 		]);
 
-		await this.fetchOrderbookOrders({
-			...inputs,
-			side: PerpetualsOrderSide.Bid,
-			fromPrice: lowPrice,
-			toPrice: highPrice,
-		});
-
-		await this.fetchOrderbookOrders({
+		const bucketedAsks = this.bucketOrders({
 			...inputs,
 			side: PerpetualsOrderSide.Ask,
-			fromPrice: lowPrice,
-			toPrice: highPrice,
+			orders: asks,
 		});
+		bucketedAsks.reverse();
 
+		const minAsKPrice = Helpers.minBigInt(...asks.map((ask) => ask.price));
+		const maxBidPrice = Helpers.maxBigInt(...bids.map((bid) => bid.price));
 		return {
 			bids: this.bucketOrders({
 				...inputs,
 				side: PerpetualsOrderSide.Bid,
 				orders: bids,
 			}),
-			asks: this.bucketOrders({
-				...inputs,
-				side: PerpetualsOrderSide.Ask,
-				orders: asks,
-			}),
+			asks: bucketedAsks,
+			minAsKPrice,
+			maxBidPrice,
 		};
 	};
 
@@ -1496,13 +1483,10 @@ export class PerpetualsApi {
 				tx,
 			});
 
-		console.log("bytes", bytes);
 		const orderInfos: any[] = bcs.de(
 			"vector<OrderInfo>",
 			new Uint8Array(bytes)
 		);
-
-		console.log("orderInfos", orderInfos);
 
 		return orderInfos.map((orderInfo) =>
 			Casting.perpetuals.orderInfoFromRaw(orderInfo)
@@ -1539,24 +1523,15 @@ export class PerpetualsApi {
 				};
 			});
 
-		console.log("orders", orders);
-		console.log("emptyDataPoints", emptyDataPoints);
-
 		let dataPoints = orders.reduce((acc, order) => {
 			const price = Perpetuals.orderPriceToPrice({
 				orderPrice: order.price,
 				lotSize,
 				tickSize,
 			});
-			const bucketIndex =
-				acc.length -
-				Math.floor(Math.abs(indexPrice - price) / bucketSize) -
-				1;
-
-			console.log("indexPrice", indexPrice);
-			console.log("price", price);
-			console.log("bucketSize", bucketSize);
-			console.log("bucketIndex", bucketIndex);
+			const bucketIndex = Math.floor(
+				Math.abs(indexPrice - price) / bucketSize
+			);
 
 			acc[bucketIndex].size += order.size;
 
@@ -1572,7 +1547,6 @@ export class PerpetualsApi {
 						: data.size,
 			};
 		}
-		console.log("dataPoints", dataPoints);
 		return dataPoints;
 	};
 

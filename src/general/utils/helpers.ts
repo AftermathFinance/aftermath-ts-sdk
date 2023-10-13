@@ -104,6 +104,9 @@ export class Helpers {
 	public static maxBigInt = (...args: bigint[]) =>
 		args.reduce((m, e) => (e > m ? e : m));
 
+	public static minBigInt = (...args: bigint[]) =>
+		args.reduce((m, e) => (e < m ? e : m));
+
 	// =========================================================================
 	//  Display
 	// =========================================================================

@@ -287,6 +287,8 @@ export interface OrderbookDataPoint {
 export interface PerpetualsOrderbookState {
 	bids: OrderbookDataPoint[];
 	asks: OrderbookDataPoint[];
+	minAsKPrice: bigint;
+	maxBidPrice: bigint;
 }
 
 export interface PerpetualsOrderData {
