@@ -43,7 +43,7 @@ import {
 	ApiPerpetualsAccountsBody,
 	PerpetualsOrderData,
 	ApiPerpetualsPositionOrderDatasBody,
-	ApiPerpetualsEventsBody,
+	ApiPerpetualsAccountEventsBody,
 	CollateralChangeEvent,
 	isWithdrewCollateralEvent,
 	DepositedCollateralEvent,
@@ -54,6 +54,9 @@ import {
 	OrderbookDataPoint,
 	ApiPerpetualsOrderbookStateBody,
 	PerpetualsOrderPrice,
+	ApiPerpetualsMarketEventsBody,
+	FilledMakerOrderEvent,
+	FilledTakerOrderEvent,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { PerpetualsAccount } from "../perpetualsAccount";
@@ -397,8 +400,8 @@ export class PerpetualsApi {
 	//  Events
 	// =========================================================================
 
-	public async fetchCollateralEvents(
-		inputs: ApiPerpetualsEventsBody
+	public async fetchAccountCollateralEvents(
+		inputs: ApiPerpetualsAccountEventsBody
 	): Promise<IndexerEventsWithCursor<CollateralChangeEvent>> {
 		const { accountId, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
@@ -420,8 +423,8 @@ export class PerpetualsApi {
 		);
 	}
 
-	public async fetchOrderEvents(
-		inputs: ApiPerpetualsEventsBody
+	public async fetchAccountOrderEvents(
+		inputs: ApiPerpetualsAccountEventsBody
 	): Promise<IndexerEventsWithCursor<PerpetualsOrderEvent>> {
 		const { accountId, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
@@ -444,17 +447,34 @@ export class PerpetualsApi {
 					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
 							event as FilledMakerOrderEventOnChain
 					  )
-					: (() => {
-							console.log(eventType);
-							console.log(this.eventTypes.postedOrder);
-							console.log(
-								eventType.includes(this.eventTypes.postedOrder)
-							);
+					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
+							event as FilledTakerOrderEventOnChain
+					  );
+			}
+		);
+	}
 
-							return Casting.perpetuals.filledTakerOrderEventFromOnChain(
-								event as FilledTakerOrderEventOnChain
-							);
-					  })();
+	public async fetchMarketFilledOrderEvents(
+		inputs: ApiPerpetualsMarketEventsBody
+	): Promise<
+		IndexerEventsWithCursor<FilledMakerOrderEvent | FilledTakerOrderEvent>
+	> {
+		const { marketId, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`perpetuals/marketss/${marketId}/events/filled-order`,
+			{
+				cursor,
+				limit,
+			},
+			(event) => {
+				const eventType = (event as EventOnChain<any>).type;
+				return eventType.includes(this.eventTypes.filledMakerOrder)
+					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
+							event as FilledMakerOrderEventOnChain
+					  )
+					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
+							event as FilledTakerOrderEventOnChain
+					  );
 			}
 		);
 	}

@@ -2,9 +2,11 @@ import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
+	ApiIndexerEventsBody,
 	ApiPerpetualsOrderbookStateBody,
 	ApiPerpetualsPositionOrderDatasBody,
 	CoinType,
+	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
@@ -78,6 +80,16 @@ export class PerpetualsMarket extends Caller {
 			tickSize: this.tickSize(),
 			indexPrice,
 		});
+	}
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async getFilledOrderEvents(inputs: ApiIndexerEventsBody) {
+		return this.fetchApiIndexerEvents<
+			FilledMakerOrderEvent | FilledTakerOrderEvent
+		>(`events/filled-order`, inputs);
 	}
 
 	// =========================================================================

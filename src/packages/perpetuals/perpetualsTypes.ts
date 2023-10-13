@@ -630,8 +630,12 @@ export type ApiPerpetualsSLTPOrderBody = (
 		  }
 	);
 
-export type ApiPerpetualsEventsBody = ApiIndexerEventsBody & {
+export type ApiPerpetualsAccountEventsBody = ApiIndexerEventsBody & {
 	accountId: PerpetualsAccountId;
+};
+
+export type ApiPerpetualsMarketEventsBody = ApiIndexerEventsBody & {
+	marketId: PerpetualsMarketId;
 };
 
 // =========================================================================
