@@ -265,10 +265,10 @@ export class RouterApi {
 			coinOutType: Coin.constants.suiCoinType,
 		});
 
-		let coinInId: TransactionArgument;
+		let fullCoinInId: TransactionArgument;
 		if ("Coin" in gasCoinData) {
 			// coin object has NOT been used previously in tx
-			coinInId = tx.object(gasCoinData.Coin);
+			fullCoinInId = tx.object(gasCoinData.Coin);
 		} else {
 			// coin object has been used previously in tx
 			const txArgs = tx.blockData.transactions.reduce(
@@ -287,7 +287,7 @@ export class RouterApi {
 				[] as TransactionArgument[]
 			);
 
-			coinInId = txArgs.find((arg) => {
+			fullCoinInId = txArgs.find((arg) => {
 				if (!arg) return false;
 
 				// this is here because TS having troubles inferring type for some reason
@@ -308,12 +308,17 @@ export class RouterApi {
 			});
 		}
 
+		const coinInId = tx.splitCoins(fullCoinInId, [
+			tx.pure(completeRoute.coinIn.amount),
+		]);
+
 		const coinOutId = await this.fetchAddTransactionForCompleteTradeRoute({
 			tx,
 			completeRoute,
 			coinInId,
 			// TODO: set this elsewhere
 			slippage: 0.01,
+			// slippage: 1,
 			walletAddress: inputs.senderAddress,
 		});
 
