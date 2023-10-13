@@ -488,12 +488,13 @@ export class StakingApi
 			isSponsoredTx: inputs.isSponsoredTx,
 		});
 
-		this.stakeTx({
+		const afSuiCoinId = this.stakeTx({
 			tx,
 			...inputs,
 			suiCoin,
-			withTransfer: true,
+			// withTransfer: true,
 		});
+		tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
 
 		return tx;
 	};
@@ -525,12 +526,13 @@ export class StakingApi
 		});
 
 		if (inputs.isAtomic) {
-			this.atomicUnstakeTx({
+			const suiCoinId = this.atomicUnstakeTx({
 				tx,
 				...inputs,
 				afSuiCoin,
-				withTransfer: true,
+				// withTransfer: true,
 			});
+			tx.transferObjects([suiCoinId], tx.pure(inputs.walletAddress));
 		} else {
 			this.unstakeTx({
 				tx,
@@ -562,11 +564,12 @@ export class StakingApi
 				referrer,
 			});
 
-		this.requestStakeStakedSuiVecTx({
+		const afSuiCoinId = this.requestStakeStakedSuiVecTx({
 			tx,
 			...inputs,
-			withTransfer: true,
+			// withTransfer: true,
 		});
+		tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
 
 		return tx;
 	};
