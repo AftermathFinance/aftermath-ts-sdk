@@ -105,7 +105,6 @@ export class DynamicGasApi {
 			transaction_kind: b64TxBytes,
 			sender: walletAddress,
 		};
-		console.log(JSON.stringify(body));
 
 		const res: {
 			tx_data: string;

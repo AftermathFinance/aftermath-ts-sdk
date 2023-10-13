@@ -275,9 +275,13 @@ export class RouterApi {
 				(acc, aTx) => [
 					...acc,
 					...("objects" in aTx
-						? [aTx.objects]
+						? aTx.objects
 						: "arguments" in aTx
-						? [aTx.arguments]
+						? aTx.arguments
+						: "destination" in aTx
+						? [aTx.destination]
+						: "coin" in aTx
+						? [aTx.coin]
 						: []),
 				],
 				[] as TransactionArgument[]
