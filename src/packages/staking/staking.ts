@@ -35,6 +35,7 @@ export class Staking extends Caller {
 		},
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
+			minUnstake: BigInt("1000000000"), // 1 afSUI
 		},
 		defaultValidatorFee: 0, // 0%
 	};

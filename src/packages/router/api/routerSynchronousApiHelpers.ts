@@ -299,10 +299,10 @@ export class RouterSynchronousApiHelpers {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
-		coinInId?: TransactionArgument;
+		coinInId?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
 		withTransfer?: boolean;
-	}): Promise<TransactionArgument | undefined> {
+	}): Promise<TransactionObjectArgument | undefined> {
 		const {
 			walletAddress,
 			completeRoute,
@@ -331,7 +331,7 @@ export class RouterSynchronousApiHelpers {
 				referrer,
 			});
 
-		let startCoinInId: TransactionArgument;
+		let startCoinInId: TransactionObjectArgument;
 		if (inputs.coinInId) {
 			startCoinInId = inputs.coinInId;
 		} else {
