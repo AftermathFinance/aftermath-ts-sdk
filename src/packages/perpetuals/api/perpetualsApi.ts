@@ -484,10 +484,22 @@ export class PerpetualsApi {
 		const { onEvent } = inputs;
 
 		const unsubscribe = await this.Provider.provider.subscribeEvent({
+			// filter: {
+			// 	MoveModule: {
+			// 		module: PerpetualsApi.constants.moduleNames.events,
+			// 		package: this.addresses.perpetuals.packages.perpetuals,
+			// 	},
+			// },
+			// filter: {
+			// 	MoveEventModule: {
+			// 		module: PerpetualsApi.constants.moduleNames.events,
+			// 		package: this.addresses.perpetuals.packages.events,
+			// 	},
+			// },
 			filter: {
-				MoveModule: {
-					module: PerpetualsApi.constants.moduleNames.events,
-					package: this.addresses.perpetuals.packages.perpetuals,
+				MoveEventModule: {
+					module: "interface",
+					package: this.addresses.perpetuals.packages.events,
 				},
 			},
 			onMessage: onEvent,
@@ -660,8 +672,12 @@ export class PerpetualsApi {
 		});
 		bucketedAsks.reverse();
 
-		const minAsKPrice = Helpers.minBigInt(...asks.map((ask) => ask.price));
-		const maxBidPrice = Helpers.maxBigInt(...bids.map((bid) => bid.price));
+		const askPrices = asks.map((ask) => ask.price);
+		const bidPrices = bids.map((bid) => bid.price);
+		const minAskPrice =
+			askPrices.length > 0 ? Helpers.minBigInt(...askPrices) : BigInt(0);
+		const maxBidPrice =
+			bidPrices.length > 0 ? Helpers.maxBigInt(...bidPrices) : BigInt(0);
 		return {
 			bids: this.bucketOrders({
 				...inputs,
@@ -669,7 +685,7 @@ export class PerpetualsApi {
 				orders: bids,
 			}),
 			asks: bucketedAsks,
-			minAsKPrice,
+			minAskPrice,
 			maxBidPrice,
 		};
 	};
