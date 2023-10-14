@@ -1,5 +1,5 @@
 import {
-	TransactionArgument,
+	TransactionObjectArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import {
@@ -46,12 +46,12 @@ import AfSuiRouterPool from "../routerPools/afSuiRouterPool";
 export interface RouterPoolTradeTxInputs {
 	provider: AftermathApi;
 	tx: TransactionBlock;
-	coinInId: ObjectId | TransactionArgument;
+	coinInId: ObjectId | TransactionObjectArgument;
 	expectedCoinOutAmount: Balance;
 	minAmountOut: Balance;
 	coinInType: CoinType;
 	coinOutType: CoinType;
-	routerSwapCap: TransactionArgument;
+	routerSwapCap: TransactionObjectArgument;
 	routerSwapCapCoinType: CoinType;
 }
 
@@ -149,7 +149,7 @@ export interface RouterPoolInterface {
 		referrer?: SuiAddress;
 	}) => Balance;
 
-	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionArgument;
+	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionObjectArgument;
 
 	// =========================================================================
 	//  Functions

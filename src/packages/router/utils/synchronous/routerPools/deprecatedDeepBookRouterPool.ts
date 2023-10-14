@@ -1,4 +1,7 @@
-import { TransactionArgument } from "@mysten/sui.js/transactions";
+import {
+	TransactionArgument,
+	TransactionObjectArgument,
+} from "@mysten/sui.js/transactions";
 import {
 	SuiAddress,
 	Balance,
@@ -75,7 +78,7 @@ class DeprecatedDeepBookRouterPool implements RouterPoolInterface {
 		return amountOut;
 	};
 
-	tradeTx = (inputs: RouterPoolTradeTxInputs): TransactionArgument => {
+	tradeTx = (inputs: RouterPoolTradeTxInputs): TransactionObjectArgument => {
 		return inputs.provider
 			.Router()
 			.DeepBook()

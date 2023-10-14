@@ -21,6 +21,7 @@ import { Pools } from "../../pools/pools";
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 
 export class NftAmmApi {
@@ -346,7 +347,7 @@ export class NftAmmApi {
 				tx.makeMoveVec({
 					objects: Helpers.isArrayOfStrings(nfts)
 						? nfts.map((nft) => tx.object(nft))
-						: (nfts as TransactionArgument[]),
+						: (nfts as TransactionObjectArgument[]),
 					type: genericTypes[3],
 				}),
 				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
@@ -387,7 +388,7 @@ export class NftAmmApi {
 				tx.makeMoveVec({
 					objects: Helpers.isArrayOfStrings(nfts)
 						? nfts.map((nft) => tx.object(nft))
-						: (nfts as TransactionArgument[]),
+						: (nfts as TransactionObjectArgument[]),
 					type: genericTypes[3],
 				}),
 				tx.pure(inputs.expectedLpRatio.toString()),

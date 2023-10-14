@@ -34,7 +34,7 @@
 	},
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
-		"@mysten/sui.js": "^0.42.0",
+		"@mysten/sui.js": "^0.43.3",
 		"@pythnetwork/pyth-evm-js": "^1.16.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",
@@ -50,7 +50,7 @@
 		"ts-jest": "^29.1.0",
 		"ts-node": "^10.9.1",
 		"typedoc": "^0.24.4",
-		"typescript": "^4.9.5"
+		"typescript": "^5.1.6"
 	},
 	"prettier": {
 		"tabWidth": 4,

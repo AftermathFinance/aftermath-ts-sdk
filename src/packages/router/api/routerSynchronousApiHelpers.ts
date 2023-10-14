@@ -1,5 +1,5 @@
 import {
-	TransactionArgument,
+	TransactionObjectArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -160,7 +160,7 @@ export class RouterSynchronousApiHelpers {
 
 	public obtainRouterCapTx = (inputs: {
 		tx: TransactionBlock;
-		coinInId: ObjectId | TransactionArgument;
+		coinInId: ObjectId | TransactionObjectArgument;
 		minAmountOut: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -213,7 +213,7 @@ export class RouterSynchronousApiHelpers {
 
 	public initiatePathTx = (inputs: {
 		tx: TransactionBlock;
-		routerSwapCap: TransactionArgument;
+		routerSwapCap: TransactionObjectArgument;
 		coinInAmount: Balance;
 		coinInType: CoinType;
 	}) /* (Coin) */ => {
@@ -235,8 +235,8 @@ export class RouterSynchronousApiHelpers {
 
 	public returnRouterCapTx = (inputs: {
 		tx: TransactionBlock;
-		routerSwapCap: TransactionArgument;
-		coinOutId: ObjectId | TransactionArgument;
+		routerSwapCap: TransactionObjectArgument;
+		coinOutId: ObjectId | TransactionObjectArgument;
 		routerSwapCapCoinType: CoinType;
 		coinOutType: CoinType;
 	}) => {
@@ -272,7 +272,7 @@ export class RouterSynchronousApiHelpers {
 
 	public returnRouterCapAlreadyPayedFeeTx = (inputs: {
 		tx: TransactionBlock;
-		routerSwapCap: TransactionArgument;
+		routerSwapCap: TransactionObjectArgument;
 		routerSwapCapCoinType: CoinType;
 	}) => {
 		const { tx, routerSwapCap, routerSwapCapCoinType } = inputs;
@@ -361,12 +361,12 @@ export class RouterSynchronousApiHelpers {
 			minAmountOut,
 		});
 
-		let coinsOut: TransactionArgument[] = [];
+		let coinsOut: TransactionObjectArgument[] = [];
 
 		let coinInAmountRemaining = completeRoute.coinIn.amount;
 		for (const [routeIndex, route] of completeRoute.routes.entries()) {
-			let coinInId: TransactionArgument | undefined = this.initiatePathTx(
-				{
+			let coinInId: TransactionObjectArgument | undefined =
+				this.initiatePathTx({
 					tx,
 					routerSwapCap,
 					// this is for possible route amount rounding protection
@@ -375,8 +375,7 @@ export class RouterSynchronousApiHelpers {
 							? coinInAmountRemaining
 							: route.coinIn.amount,
 					coinInType: route.coinIn.type,
-				}
-			);
+				});
 
 			coinInAmountRemaining -= route.coinIn.amount;
 
@@ -417,7 +416,7 @@ export class RouterSynchronousApiHelpers {
 			if (coinInId) coinsOut.push(coinInId);
 		}
 
-		let coinOutId: undefined | TransactionArgument = undefined;
+		let coinOutId: undefined | TransactionObjectArgument = undefined;
 
 		if (coinsOut.length > 0) {
 			coinOutId = coinsOut[0];
