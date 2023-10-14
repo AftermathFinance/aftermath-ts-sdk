@@ -460,7 +460,7 @@ export class PerpetualsApi {
 	> {
 		const { marketId, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/marketss/${marketId}/events/filled-order`,
+			`perpetuals/markets/${marketId}/events/filled-order`,
 			{
 				cursor,
 				limit,
