@@ -317,6 +317,7 @@ export class StakingApi
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
 				typeof afSuiCoin === "string"
 					? tx.object(afSuiCoin)
 					: afSuiCoin,
