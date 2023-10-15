@@ -317,8 +317,7 @@ export class RouterApi {
 			completeRoute,
 			coinInId,
 			// TODO: set this elsewhere
-			// slippage: 0.01,
-			slippage: 1,
+			slippage: 0.1, // 10%
 			walletAddress: inputs.senderAddress,
 		});
 
