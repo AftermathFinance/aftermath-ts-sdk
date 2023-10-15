@@ -69,6 +69,13 @@ export class RouterApi {
 		},
 	};
 
+	private static readonly constants = {
+		dynamicGas: {
+			expectedRouterGasCostUpperBound: BigInt(7_000_000), // 0.007 SUI (mainnet)
+			slippage: 0.1, // 10%
+		},
+	};
+
 	// =========================================================================
 	//  Class Members
 	// =========================================================================
@@ -263,6 +270,9 @@ export class RouterApi {
 			...inputs,
 			coinInType: inputs.gasCoinType,
 			coinOutType: Coin.constants.suiCoinType,
+			coinOutAmount:
+				inputs.coinOutAmount +
+				RouterApi.constants.dynamicGas.expectedRouterGasCostUpperBound,
 		});
 
 		let fullCoinInId: TransactionArgument;
@@ -317,7 +327,7 @@ export class RouterApi {
 			completeRoute,
 			coinInId,
 			// TODO: set this elsewhere
-			slippage: 0.1, // 10%
+			slippage: RouterApi.constants.dynamicGas.slippage,
 			walletAddress: inputs.senderAddress,
 		});
 
