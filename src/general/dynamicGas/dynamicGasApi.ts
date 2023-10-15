@@ -2,24 +2,33 @@ import { Helpers } from "../utils/helpers";
 import { AftermathApi } from "../providers/aftermathApi";
 import { CoinType } from "../../packages/coin/coinTypes";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { Sui } from "../../packages";
 import {
 	ApiDynamicGasResponse,
+	DynamicGasAddresses,
 	DynamicGasCoinData,
-	ObjectId,
 	SuiAddress,
 	TxBytes,
 } from "../types";
 import { SerializedSignature } from "@mysten/sui.js/cryptography";
-import { Caller } from "../utils/caller";
 
 export class DynamicGasApi {
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	public readonly addresses: DynamicGasAddresses;
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
+		const addresses = this.Provider.addresses.dynamicGas;
+		if (!addresses)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+		this.addresses = addresses;
 	}
 
 	// =========================================================================
@@ -110,7 +119,7 @@ export class DynamicGasApi {
 			tx_data: string;
 			signature: SerializedSignature;
 		} = await this.Provider.indexerCaller.fetchIndexer(
-			"0x62188d0fcd558b68d89dec3e0502fc9d13da7ce36d9e930801f3e323615323cf/apply.json",
+			`${this.addresses.sponsorAddress}/apply.json`,
 			body,
 			undefined,
 			"sui-dynamic-gas"

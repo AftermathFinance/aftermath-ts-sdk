@@ -27,6 +27,7 @@ interface OptionalConfigAddresses {
 	referralVault: ReferralVaultAddresses;
 	perpetuals: PerpetualsAddresses;
 	farms: FarmsAddresses;
+	dynamicGas: DynamicGasAddresses;
 }
 
 // =========================================================================
@@ -284,6 +285,10 @@ export interface FarmsAddresses {
 		vaults: SuiAddress;
 		vaultsInitial: SuiAddress;
 	};
+}
+
+export interface DynamicGasAddresses {
+	sponsorAddress: SuiAddress;
 }
 
 export interface ExchangeAddresses {
