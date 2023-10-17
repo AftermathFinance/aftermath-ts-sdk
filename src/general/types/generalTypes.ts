@@ -2,7 +2,7 @@ import {
 	DynamicFieldInfo,
 	EventId,
 	SuiTransactionBlockResponse,
-} from "@mysten/sui.js/dist/cjs/client";
+} from "@mysten/sui.js/client";
 
 // =========================================================================
 //  bigint

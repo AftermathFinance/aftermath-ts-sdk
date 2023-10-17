@@ -1,4 +1,4 @@
-import { CoinMetadata } from "@mysten/sui.js/dist/cjs/client";
+import { CoinMetadata } from "@mysten/sui.js/client";
 import { Balance, Percentage } from "../../general/types/generalTypes";
 
 // =========================================================================

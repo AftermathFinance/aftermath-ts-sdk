@@ -6,7 +6,7 @@
 		"declaration": true,
 		"outDir": "dist",
 		"declarationMap": true,
-		"moduleResolution": "Node",
+		"moduleResolution": "Node16",
 		"lib": ["es2021", "dom"],
 		"skipLibCheck": true,
 		"strict": true,

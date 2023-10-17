@@ -1,5 +1,5 @@
 import {
-	TransactionArgument,
+	TransactionObjectArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import { fromB64, normalizeSuiObjectId } from "@mysten/sui.js/utils";
@@ -42,6 +42,8 @@ import {
 	ApiIndexerEventsBody,
 	ObjectId,
 	SuiAddress,
+	ApiPublishLpCoinBody,
+	PoolLpInfo,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -50,7 +52,8 @@ import {
 	PoolWithdrawEventOnChain,
 } from "./poolsApiCastingTypes";
 import { Casting } from "../../../general/utils/casting";
-import { Pool, Pools } from "..";
+import { Pool } from "../pool";
+import { Pools } from "../pools";
 import { Aftermath } from "../../../general/providers";
 import { Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
@@ -61,6 +64,7 @@ import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
 import { IndexerEventOnChain } from "../../../general/types/castingTypes";
+import { Fixed } from "../../../general/utils/fixed";
 
 export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
@@ -301,6 +305,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		createPoolCapId: ObjectId;
 		respectDecimals: boolean;
 		forceLpDecimals?: CoinDecimal;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
@@ -345,6 +350,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		coinOutType: CoinType;
 		slippage: Slippage;
 		referrer?: SuiAddress;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
 		const {
 			walletAddress,
@@ -354,6 +360,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			coinOutType,
 			slippage,
 			referrer,
+			isSponsoredTx,
 		} = inputs;
 
 		const tx = new TransactionBlock();
@@ -377,6 +384,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			walletAddress,
 			coinType: coinInType,
 			coinAmount: coinInAmount,
+			isSponsoredTx,
 		});
 
 		this.tradeTx({
@@ -400,8 +408,16 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		amountsIn: CoinsToBalance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
-		const { walletAddress, pool, amountsIn, slippage, referrer } = inputs;
+		const {
+			walletAddress,
+			pool,
+			amountsIn,
+			slippage,
+			referrer,
+			isSponsoredTx,
+		} = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -428,6 +444,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			tx,
 			coinTypes,
 			coinAmounts,
+			isSponsoredTx,
 		});
 
 		this.multiCoinDepositTx({
@@ -542,13 +559,15 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
-	public buildPublishLpCoinTx = (inputs: {
-		walletAddress: SuiAddress;
-	}): TransactionBlock => {
+	public buildPublishLpCoinTx = (
+		inputs: ApiPublishLpCoinBody
+	): TransactionBlock => {
+		const { lpCoinDecimals } = inputs;
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const upgradeCap = this.publishLpCoinTx({ tx });
+		const upgradeCap = this.publishLpCoinTx({ tx, lpCoinDecimals });
 		tx.transferObjects([upgradeCap], tx.pure(inputs.walletAddress));
 
 		return tx;
@@ -565,8 +584,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		respectDecimals: boolean;
 		forceLpDecimals?: CoinDecimal;
 		lpCoinIconUrl: Url;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
-		const { coinsInfo } = inputs;
+		const { coinsInfo, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -605,6 +625,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			...inputs,
 			coinTypes,
 			coinAmounts: coinsInfo.map((info) => info.initialDeposit),
+			isSponsoredTx,
 		});
 
 		await this.createPoolTx({
@@ -630,14 +651,14 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public tradeTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
-		coinInId: ObjectId | TransactionArgument;
+		coinInId: ObjectId | TransactionObjectArgument;
 		coinInType: CoinType;
 		expectedCoinOutAmount: Balance;
 		coinOutType: CoinType;
 		lpCoinType: CoinType;
 		slippage: Slippage;
 		withTransfer?: boolean;
-	}): TransactionArgument => {
+	}): TransactionObjectArgument => {
 		const {
 			tx,
 			poolId,
@@ -681,7 +702,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			poolId: ObjectId;
 			lpCoinType: CoinType;
 		}
-	): TransactionArgument => {
+	): TransactionObjectArgument => {
 		if (!this.addresses.routerWrapper)
 			throw new Error(
 				"not all required addresses have been set in provider"
@@ -725,13 +746,13 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public multiCoinDepositTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
-		coinIds: ObjectId[] | TransactionArgument[];
+		coinIds: ObjectId[] | TransactionObjectArgument[];
 		coinTypes: CoinType[];
 		expectedLpRatio: bigint;
 		lpCoinType: CoinType;
 		slippage: Slippage;
 		withTransfer?: boolean;
-	}): TransactionArgument => {
+	}): TransactionObjectArgument => {
 		const {
 			tx,
 			poolId,
@@ -776,13 +797,13 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public multiCoinWithdrawTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
-		lpCoinId: ObjectId | TransactionArgument;
+		lpCoinId: ObjectId | TransactionObjectArgument;
 		lpCoinType: CoinType;
 		expectedAmountsOut: Balance[];
 		coinTypes: CoinType[];
 		slippage: Slippage;
 		withTransfer?: boolean;
-	}): TransactionArgument => {
+	}): TransactionObjectArgument => {
 		const {
 			tx,
 			poolId,
@@ -826,11 +847,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public allCoinWithdrawTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
-		lpCoinId: ObjectId | TransactionArgument;
+		lpCoinId: ObjectId | TransactionObjectArgument;
 		lpCoinType: CoinType;
 		coinTypes: CoinType[];
 		withTransfer?: boolean;
-	}): TransactionArgument[] => {
+	}): TransactionObjectArgument[] => {
 		const { tx, poolId, lpCoinId, coinTypes, lpCoinType, withTransfer } =
 			inputs;
 
@@ -861,12 +882,19 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
-	public publishLpCoinTx = (inputs: { tx: TransactionBlock }) => {
-		const { tx } = inputs;
+	public publishLpCoinTx = (inputs: {
+		tx: TransactionBlock;
+		lpCoinDecimals: CoinDecimal;
+	}) => {
+		const compilations =
+			this.addresses.pools.other?.createLpCoinPackageCompilations;
+		if (!compilations)
+			throw new Error(
+				"not all required addresses have been set in provider for lp coin publishing (requires pacakge compilations)"
+			);
 
-		const compiledModulesAndDeps = JSON.parse(
-			this.addresses.pools.other.createLpCoinPackageCompilation
-		);
+		const { tx, lpCoinDecimals } = inputs;
+		const compiledModulesAndDeps = JSON.parse(compilations[lpCoinDecimals]);
 
 		return tx.publish({
 			modules: compiledModulesAndDeps.modules.map((m: any) =>
@@ -883,7 +911,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
 		coinsInfo: {
-			coinId: ObjectId | TransactionArgument;
+			coinId: ObjectId | TransactionObjectArgument;
 			coinType: CoinType;
 			weight: PoolWeight;
 			decimals?: CoinDecimal;
@@ -894,7 +922,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		}[];
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
 		lpCoinIconUrl: Url;
-		createPoolCapId: ObjectId | TransactionArgument;
+		createPoolCapId: ObjectId | TransactionObjectArgument;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 		lpCoinDescription: string;
@@ -1039,6 +1067,32 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return uniqueCoins;
 	};
 
+	public fetchOwnedLpCoinPositions = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<PoolLpInfo[]> => {
+		const { walletAddress } = inputs;
+
+		const [coinsToBalance, pools] = await Promise.all([
+			this.Provider.Wallet().fetchAllCoinBalances({
+				walletAddress,
+			}),
+			this.fetchAllPools(),
+		]);
+
+		let lpInfo: PoolLpInfo[] = [];
+		for (const pool of pools) {
+			const lpCoinType = Helpers.addLeadingZeroesToType(pool.lpCoinType);
+			if (!(lpCoinType in coinsToBalance)) continue;
+
+			lpInfo.push({
+				lpCoinType,
+				poolId: pool.objectId,
+				balance: coinsToBalance[lpCoinType],
+			});
+		}
+		return lpInfo;
+	};
+
 	// =========================================================================
 	//  Stats
 	// =========================================================================
@@ -1080,9 +1134,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		const firstCoin = Object.values(pool.pool.coins)[0];
 		const fees =
 			volume *
-			Pools.tradeFeeWithDecimals(
-				firstCoin.tradeFeeIn + firstCoin.tradeFeeOut
-			);
+			Fixed.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
 
 		const apy = this.calcApy({
 			fees24Hours: fees,
@@ -1253,7 +1305,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	}): PoolDataPoint[] => {
 		const feeData = inputs.volumeData.map((data) => ({
 			time: data.time,
-			value: data.value * Pools.tradeFeeWithDecimals(inputs.poolTradeFee),
+			value: data.value * Fixed.directCast(inputs.poolTradeFee),
 		}));
 
 		return feeData;

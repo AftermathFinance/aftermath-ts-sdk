@@ -7,6 +7,8 @@ import {
 	ApiEventsBody,
 	ObjectId,
 	SuiAddress,
+	TxBytes,
+	BigIntAsString,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
@@ -32,6 +34,7 @@ import {
 	FlowXPoolObject,
 	isFlowXPoolObject,
 } from "../external/flowX/flowXTypes";
+import { AfSuiRouterPoolObject, DynamicGasCoinData } from "../..";
 
 // =========================================================================
 //  Name Only
@@ -81,7 +84,8 @@ export type RouterSynchronousSerializablePool =
 	| KriyaPoolObject
 	| BaySwapPoolObject
 	| SuiswapPoolObject
-	| BlueMovePoolObject;
+	| BlueMovePoolObject
+	| AfSuiRouterPoolObject;
 
 export const isRouterSynchronousSerializablePool = (
 	pool: RouterSerializablePool
@@ -96,6 +100,7 @@ const RouterSynchronousProtocolNames = [
 	"BaySwap",
 	"Suiswap",
 	"BlueMove",
+	"afSUI",
 ] as const;
 
 export type RouterSynchronousProtocolName =
@@ -322,8 +327,19 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 * Allowable percent loss for trade
 	 */
 	slippage: Slippage;
+	isSponsoredTx?: boolean;
 }
 
 export type ApiRouterTradeEventsBody = ApiEventsBody & {
 	walletAddress: SuiAddress;
 };
+
+export interface ApiRouterDynamicGasBody {
+	txKindBytes: TxBytes;
+	gasCoinType: CoinType;
+	gasCoinData: DynamicGasCoinData;
+	coinOutAmount: BigIntAsString;
+	senderAddress: SuiAddress;
+	sponsorAddress: SuiAddress;
+	referrer?: SuiAddress;
+}

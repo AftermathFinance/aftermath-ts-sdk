@@ -38,18 +38,18 @@ import {
 	PartialFarmsStakedPositionObject,
 	StakingPoolOneTimeAdminCapObject,
 } from "../farmsTypes";
-import { Coin } from "../..";
+import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils";
-import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 
 export class FarmsApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
 
-	public static stakingPoolObjectFromSuiObjectResponse = (
+	public static partialStakingPoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): FarmsStakingPoolObject => {
+	): Omit<FarmsStakingPoolObject, "isUnlocked"> => {
 		const objectType = Helpers.getObjectType(data);
 
 		const fields = Helpers.getObjectFields(
@@ -80,6 +80,9 @@ export class FarmsApiCasting {
 				lastRewardTimestamp: Number(
 					fields.last_reward_timestamps_ms[index]
 				),
+
+				// TODO: make this type prettier
+				rewardsRemaining: BigInt(0),
 			})),
 			emissionEndTimestamp: Number(fields.emission_end_timestamp_ms),
 			stakedAmount: BigInt(fields.total_staked_amount),

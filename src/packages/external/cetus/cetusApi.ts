@@ -13,12 +13,13 @@ import {
 	ObjectId,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
-import { RouterPoolTradeTxInputs, Sui } from "../..";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 import { bcs } from "@mysten/sui.js/bcs";
-import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { RouterPoolTradeTxInputs } from "../../router";
+import { Sui } from "../../sui";
 
 export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	// =========================================================================

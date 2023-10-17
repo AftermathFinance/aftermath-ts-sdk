@@ -19,9 +19,13 @@ export class WalletApi {
 	//  Coins
 	// =========================================================================
 
-	public fetchCoinBalance = async (account: SuiAddress, coin: CoinType) => {
+	public fetchCoinBalance = async (inputs: {
+		walletAddress: SuiAddress;
+		coin: CoinType;
+	}) => {
+		const { walletAddress, coin } = inputs;
 		const coinBalance = await this.Provider.provider.getBalance({
-			owner: account,
+			owner: walletAddress,
 			coinType: Helpers.stripLeadingZeroesFromType(coin),
 		});
 		return BigInt(coinBalance.totalBalance);
@@ -29,11 +33,13 @@ export class WalletApi {
 
 	// TODO: make toBigIntSafe function ?
 	// TODO: return prices here as well and sort ?
-	public fetchAllCoinBalances = async (
-		address: SuiAddress
-	): Promise<CoinsToBalance> => {
+	public fetchAllCoinBalances = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<CoinsToBalance> => {
+		const { walletAddress } = inputs;
+
 		const allBalances = await this.Provider.provider.getAllBalances({
-			owner: address,
+			owner: walletAddress,
 		});
 
 		const coinsToBalance: CoinsToBalance = allBalances.reduce(
@@ -57,22 +63,23 @@ export class WalletApi {
 
 	// TODO: make this only look at aftermath relevant addresses in to address
 	// TODO: restrict all filtering for events, etc. similarly using updated sdk filters
-	public fetchPastAftermathTransactions = async (
-		address: SuiAddress,
-		cursor?: TransactionDigest,
-		limit?: number
-	) => {
-		const transactionsWithCursor = await new TransactionsApiHelpers(
-			this.Provider
-		).fetchTransactionsWithCursor(
-			{
-				filter: {
-					FromAddress: address,
+	public fetchPastAftermathTransactions = async (inputs: {
+		walletAddress: SuiAddress;
+		cursor?: TransactionDigest;
+		limit?: number;
+	}) => {
+		const { walletAddress, cursor, limit } = inputs;
+
+		const transactionsWithCursor =
+			await this.Provider.Transactions().fetchTransactionsWithCursor({
+				query: {
+					filter: {
+						FromAddress: walletAddress,
+					},
 				},
-			},
-			cursor,
-			limit
-		);
+				cursor,
+				limit,
+			});
 
 		return transactionsWithCursor;
 	};

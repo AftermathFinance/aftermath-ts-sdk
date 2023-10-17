@@ -1,6 +1,6 @@
 {
 	"name": "aftermath-ts-sdk",
-	"version": "1.0.0-futures.2",
+	"version": "1.1.01",
 	"description": "Aftermath TypeScript SDK",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -34,8 +34,8 @@
 	},
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
-		"@mysten/sui.js": "^0.41.2",
-		"@pythnetwork/pyth-sui-js": "^1.0.2",
+		"@mysten/sui.js": "^0.43.3",
+		"@pythnetwork/pyth-evm-js": "^1.16.1",
 		"bn.js": "^5.2.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",
@@ -51,7 +51,7 @@
 		"ts-jest": "^29.1.0",
 		"ts-node": "^10.9.1",
 		"typedoc": "^0.24.4",
-		"typescript": "^4.9.5",
+		"typescript": "^5.1.6",
 		"yaml": "^2.3.1"
 	},
 	"prettier": {

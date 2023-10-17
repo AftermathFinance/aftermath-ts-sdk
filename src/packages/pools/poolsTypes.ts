@@ -69,6 +69,12 @@ export const isPoolObject = (
 	);
 };
 
+export interface PoolLpInfo {
+	lpCoinType: CoinType;
+	poolId: ObjectId;
+	balance: Balance;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -159,6 +165,7 @@ export interface ApiPoolTradeBody {
 	coinOutType: CoinType;
 	slippage: Slippage;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiPoolDepositBody {
@@ -166,6 +173,7 @@ export interface ApiPoolDepositBody {
 	amountsIn: CoinsToBalance;
 	slippage: Slippage;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiPoolWithdrawBody {
@@ -184,6 +192,7 @@ export interface ApiPoolAllCoinWithdrawBody {
 
 export interface ApiPublishLpCoinBody {
 	walletAddress: SuiAddress;
+	lpCoinDecimals: CoinDecimal;
 }
 
 export interface ApiCreatePoolBody {
@@ -202,6 +211,7 @@ export interface ApiCreatePoolBody {
 	createPoolCapId: ObjectId;
 	respectDecimals: boolean;
 	forceLpDecimals?: CoinDecimal;
+	isSponsoredTx?: boolean;
 }
 
 // =========================================================================

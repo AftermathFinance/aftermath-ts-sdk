@@ -35,6 +35,11 @@ export class IndexerCaller {
 		if (!response.ok) throw new Error(await response.text());
 
 		const json = JSON.stringify(await response.json());
+
+		// const json = JSON.parse(
+		// 	new TextDecoder().decode(await response.arrayBuffer())
+		// );
+
 		const output = Helpers.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
@@ -61,12 +66,25 @@ export class IndexerCaller {
 		}`;
 	}
 
+	// 	if (!tx.blockData.sender)
+	// 	throw new Error(
+	// 		"unable to set dynamic gas budget with no sender set on tx"
+	// 	);
+
+	// const gasCoins =
+	// 	await this.Provider.Coin().fetchCoinsUntilAmountReachedOrEnd({
+	// 		walletAddress: tx.blockData.sender,
+	// 		coinType: gasCoinType,
+	// 		coinAmount: "TODO",
+	// 	});
+	// const gasCoinIds = gasCoins.map((coin) => coin.coinObjectId);
+
 	// =========================================================================
 	//  Indexer Calling
 	// =========================================================================
 
 	private static indexerBaseUrlForNetwork(network: SuiNetwork | Url): Url {
-		if (network === "MAINNET") return "http://15.204.90.115:8083";
+		if (network === "MAINNET") return "http://135.148.26.42:80";
 		if (network === "TESTNET") return "http://15.204.90.115:8086";
 		if (network === "DEVNET") return "http://15.204.90.115:9986";
 		if (network === "LOCAL") return "http://localhost:8080";
@@ -76,12 +94,12 @@ export class IndexerCaller {
 		return safeUrl;
 	}
 
-	private urlForIndexerCall = (url: string): Url => {
+	private urlForIndexerCall = (url: string, urlPrefix?: string): Url => {
 		if (this.indexerBaseUrl === undefined)
 			throw new Error("no indexerBaseUrl: unable to fetch data");
 
 		// TODO: handle url prefixing and api calls based on network differently
-		return `${this.indexerBaseUrl}/af-fe/${
+		return `${this.indexerBaseUrl}/${urlPrefix ?? "af-fe"}/${
 			this.indexerUrlPrefix === "" ? "" : this.indexerUrlPrefix + "/"
 		}${url}`;
 	};
@@ -102,7 +120,9 @@ export class IndexerCaller {
 		url: Url,
 		body?: BodyType,
 		queryParams?: QueryParamsType,
-		signal?: AbortSignal
+		urlPrefix?: string,
+		signal?: AbortSignal,
+		noNestedData?: boolean
 	): Promise<Output> {
 		// TODO: handle bigint sending via indexer pattern ?
 
@@ -112,7 +132,7 @@ export class IndexerCaller {
 		// };
 
 		const indexerCallUrl = IndexerCaller.addParamsToUrl(
-			this.urlForIndexerCall(url),
+			this.urlForIndexerCall(url, urlPrefix),
 			queryParams
 		);
 
@@ -122,7 +142,15 @@ export class IndexerCaller {
 					method: "POST",
 					body: JSON.stringify(body),
 					signal,
+					headers: {
+						"Content-Type": "application/json",
+						Accept: "*/*",
+					},
 			  }));
+
+		if (noNestedData) {
+			return IndexerCaller.fetchResponseToType<Output>(uncastResponse);
+		}
 
 		const response = await IndexerCaller.fetchResponseToType<
 			IndexerResponse<Output>
@@ -148,6 +176,7 @@ export class IndexerCaller {
 				skip: queryParams.cursor ?? 0,
 				limit,
 			},
+			undefined,
 			signal
 		);
 

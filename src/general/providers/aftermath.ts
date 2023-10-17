@@ -15,6 +15,7 @@ import { Perpetuals } from "../../packages/perpetuals";
 import { Oracle } from "../../packages/oracle/oracle";
 // import { PriceFeeds } from "../priceFeeds/priceFeeds";
 import { Farms } from "../../packages/farms/farms";
+import { DynamicGas } from "../dynamicGas/dynamicGas";
 
 /**
  * @class Aftermath Provider
@@ -80,6 +81,7 @@ export class Aftermath extends Caller {
 	public Coin = (coinType?: CoinType) => new Coin(coinType, this.network);
 	public HistoricalData = () => new HistoricalData(this.network);
 	// public PriceFeeds = () => new PriceFeeds(this.network);
+	public DynamicGas = () => new DynamicGas(this.network);
 
 	// =========================================================================
 	//  Utils

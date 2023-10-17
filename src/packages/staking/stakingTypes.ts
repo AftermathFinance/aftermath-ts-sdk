@@ -1,3 +1,4 @@
+import { CoinType, RouterSerializablePool } from "../..";
 import {
 	ApiEventsBody,
 	Balance,
@@ -18,6 +19,19 @@ export interface ValidatorConfigObject extends Object {
 	suiAddress: SuiAddress;
 	operationCapId: ObjectId;
 	fee: Percentage;
+}
+
+export interface ValidatorOperationCapObject extends Object {
+	authorizerValidatorAddress: SuiAddress;
+}
+
+export interface StakedSuiVaultStateObject extends Object {
+	atomicUnstakeSuiReservesTargetValue: Balance;
+	atomicUnstakeSuiReserves: Balance;
+	minAtomicUnstakeFee: bigint;
+	maxAtomicUnstakeFee: bigint;
+	totalRewardsAmount: Balance;
+	totalSuiAmount: Balance;
 }
 
 export interface StakeBalanceDynamicField {
@@ -53,9 +67,10 @@ export const isSuiDelegatedStake = (
 //  Events
 // =========================================================================
 
-export type StakeEvent = StakeRequestEvent | AfSuiMintedEvent;
+export type StakeEvent = StakedEvent;
+export type UnstakeEvent = UnstakeRequestedEvent | UnstakedEvent;
 
-export interface StakeRequestEvent extends Event {
+export interface StakedEvent extends Event {
 	stakedSuiId: ObjectId;
 	suiId: ObjectId;
 	staker: SuiAddress;
@@ -64,37 +79,45 @@ export interface StakeRequestEvent extends Event {
 	suiStakeAmount: Balance;
 	validatorFee: number;
 	isRestaked: boolean;
+	afSuiId: ObjectId;
+	afSuiAmount: Balance;
 	referrer?: SuiAddress;
 }
 
-export interface AfSuiMintedEvent extends Event {
-	suiId: ObjectId;
-	staker: SuiAddress;
+export interface UnstakeRequestedEvent extends Event {
+	afSuiId: ObjectId;
+	providedAfSuiAmount: Balance;
+	requester: SuiAddress;
 	epoch: bigint;
-	afSuiMintAmount: Balance;
-	suiStakeAmount: Balance;
 }
 
-export interface UnstakeEvent extends Event {
+export interface UnstakedEvent extends Event {
 	afSuiId: ObjectId;
-	paybackCoinId: ObjectId;
-	staker: SuiAddress;
+	providedAfSuiAmount: Balance;
+	suiId: ObjectId;
+	returnedSuiAmount: Balance;
+	requester: SuiAddress;
 	epoch: bigint;
-	afSuiAmountGiven: Balance;
-	suiUnstakeAmount: Balance;
 }
 
 export const isStakeEvent = (
 	event: StakeEvent | UnstakeEvent
 ): event is StakeEvent => {
-	return "suiId" in event;
+	return "staker" in event;
 };
 
 export const isUnstakeEvent = (
 	event: StakeEvent | UnstakeEvent
 ): event is UnstakeEvent => {
-	return "afSuiId" in event;
+	return !isStakeEvent(event);
 };
+
+export interface EpochWasChangedEvent extends Event {
+	activeEpoch: bigint;
+	totalAfSuiSupply: Balance;
+	totalSuiRewardsAmount: Balance;
+	totalSuiAmount: Balance;
+}
 
 // =========================================================================
 //  Staking Positions
@@ -103,33 +126,39 @@ export const isUnstakeEvent = (
 export type StakingPosition = StakePosition | UnstakePosition;
 
 export interface StakePosition {
-	state: StakePositionState;
+	stakedSuiId: ObjectId;
 	suiId: ObjectId;
 	staker: SuiAddress;
 	validatorAddress: SuiAddress;
 	epoch: bigint;
 	suiStakeAmount: Balance;
-	afSuiMintAmount?: Balance;
+	validatorFee: number;
+	isRestaked: boolean;
+	afSuiId: ObjectId;
+	afSuiAmount: Balance;
+	// referrer?: SuiAddress;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }
 
 export interface UnstakePosition {
+	state: UnstakePositionState;
 	afSuiId: ObjectId;
-	staker: SuiAddress;
+	providedAfSuiAmount: Balance;
+	requester: SuiAddress;
 	epoch: bigint;
-	afSuiAmountGiven: Balance;
-	suiUnstakeAmount?: Balance;
+	suiId?: ObjectId;
+	returnedSuiAmount?: Balance;
 	timestamp: Timestamp | undefined;
 	txnDigest: TransactionDigest;
 }
 
-export type StakePositionState = "REQUEST" | "AFSUI_MINTED";
+export type UnstakePositionState = "REQUEST" | "SUI_MINTED";
 
 export const isStakePosition = (
 	position: StakingPosition
 ): position is StakePosition => {
-	return "suiId" in position;
+	return "stakedSuiId" in position;
 };
 
 export const isUnstakePosition = (
@@ -142,17 +171,24 @@ export const isUnstakePosition = (
 //  API
 // =========================================================================
 
+// =========================================================================
+//  Transactions API
+// =========================================================================
+
 export interface ApiStakeBody {
 	walletAddress: SuiAddress;
 	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiUnstakeBody {
 	walletAddress: SuiAddress;
 	afSuiUnstakeAmount: Balance;
+	isAtomic: boolean;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiStakeStakedSuiBody {
@@ -160,7 +196,19 @@ export interface ApiStakeStakedSuiBody {
 	stakedSuiIds: ObjectId[];
 	validatorAddress: SuiAddress;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
+
+export interface ApiUpdateValidatorFeeBody {
+	walletAddress: SuiAddress;
+	validatorOperationCapId: ObjectId;
+	newFeePercentage: Percentage;
+	isSponsoredTx?: boolean;
+}
+
+// =========================================================================
+//  Objects API
+// =========================================================================
 
 export interface ApiStakingPositionsBody {
 	walletAddress: SuiAddress;
@@ -170,6 +218,35 @@ export interface ApiDelegatedStakesBody {
 	walletAddress: SuiAddress;
 }
 
+export interface ApiValidatorOperationCapsBody {
+	walletAddress: SuiAddress;
+}
+
+// =========================================================================
+//  Events API
+// =========================================================================
+
 export type ApiStakingEventsBody = ApiEventsBody & {
 	walletAddress: SuiAddress;
+};
+
+// =========================================================================
+//  Router Pool
+// =========================================================================
+
+export type AfSuiRouterPoolObject = StakedSuiVaultStateObject & {
+	afSuiCoinType: CoinType;
+	aftermathValidatorAddress: SuiAddress;
+	afSuiToSuiExchangeRate: number;
+};
+
+export const isAfSuiRouterPoolObject = (
+	pool: RouterSerializablePool
+): pool is AfSuiRouterPoolObject => {
+	return (
+		"afSuiCoinType" in pool &&
+		"aftermathValidatorAddress" in pool &&
+		"afSuiToSuiExchangeRate" in pool &&
+		"totalSuiAmount" in pool
+	);
 };

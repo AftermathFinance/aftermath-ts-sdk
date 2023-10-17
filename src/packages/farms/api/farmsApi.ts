@@ -32,6 +32,7 @@ import {
 	FarmOwnerOrOneTimeAdminCap,
 	ObjectId,
 	SuiAddress,
+	BigIntAsString,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -49,7 +50,9 @@ import {
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 
 export class FarmsApi {
 	// =========================================================================
@@ -185,11 +188,32 @@ export class FarmsApi {
 	public fetchStakingPool = async (inputs: {
 		objectId: ObjectId;
 	}): Promise<FarmsStakingPoolObject> => {
-		return this.Provider.Objects().fetchCastObject({
-			...inputs,
-			objectFromSuiObjectResponse:
-				Casting.farms.stakingPoolObjectFromSuiObjectResponse,
-		});
+		const partialStakingPool =
+			await this.Provider.Objects().fetchCastObject({
+				...inputs,
+				objectFromSuiObjectResponse:
+					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
+			});
+
+		const [isUnlocked, remainingRewards] = await Promise.all([
+			this.fetchIsStakingPoolUnlocked({
+				stakingPoolId: inputs.objectId,
+				stakeCoinType: partialStakingPool.stakeCoinType,
+			}),
+			this.fetchStakingPoolRemainingRewards({
+				stakingPoolId: inputs.objectId,
+				stakeCoinType: partialStakingPool.stakeCoinType,
+			}),
+		]);
+
+		return {
+			...partialStakingPool,
+			isUnlocked,
+			rewardCoins: partialStakingPool.rewardCoins.map((coin, index) => ({
+				...coin,
+				rewardsRemaining: remainingRewards[index],
+			})),
+		};
 	};
 
 	public fetchAllStakingPools = async (): Promise<
@@ -202,11 +226,26 @@ export class FarmsApi {
 			})
 		).map((event) => event.vaultId);
 
-		return this.Provider.Objects().fetchCastObjectBatch({
-			objectIds,
-			objectFromSuiObjectResponse:
-				Casting.farms.stakingPoolObjectFromSuiObjectResponse,
-		});
+		const partialStakingPools =
+			await this.Provider.Objects().fetchCastObjectBatch({
+				objectIds,
+				objectFromSuiObjectResponse:
+					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
+			});
+
+		return Promise.all(
+			partialStakingPools.map(async (stakingPool) => {
+				const isUnlocked = await this.fetchIsStakingPoolUnlocked({
+					stakingPoolId: stakingPool.objectId,
+					stakeCoinType: stakingPool.stakeCoinType,
+				});
+
+				return {
+					...stakingPool,
+					isUnlocked,
+				};
+			})
+		);
 	};
 
 	public fetchOwnedStakingPoolOwnerCaps = async (
@@ -846,15 +885,57 @@ export class FarmsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vault,
-				"increase_emissions_for"
+				"update_emissions_for"
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
-				tx.object(inputs.ownerCapId), // OwnerCap / OneTimeAdminCap
+				tx.object(inputs.ownerCapId), // OwnerCap
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				tx.pure(inputs.emissionScheduleMs, "u64"),
 				tx.pure(inputs.emissionRate, "u64"),
+			],
+		});
+	};
+
+	// =========================================================================
+	//  Staking Pool Inspection Transaction Commands
+	// =========================================================================
+
+	public isVaultUnlockedTx = (inputs: {
+		tx: TransactionBlock;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) /* (bool) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"is_vault_unlocked"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+			],
+		});
+	};
+
+	public remainingRewardsTx = (inputs: {
+		tx: TransactionBlock;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) /* (vector<u64>) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"remaining_rewards"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
 			],
 		});
 	};
@@ -868,7 +949,7 @@ export class FarmsApi {
 	// =========================================================================
 
 	public fetchBuildStakeTx = async (inputs: ApiFarmsStakeBody) => {
-		const { walletAddress } = inputs;
+		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -878,6 +959,7 @@ export class FarmsApi {
 			walletAddress,
 			coinType: inputs.stakeCoinType,
 			coinAmount: inputs.stakeAmount,
+			isSponsoredTx,
 		});
 
 		const stakedPosition = this.stakeTx({ ...inputs, tx, stakeCoinId });
@@ -889,7 +971,7 @@ export class FarmsApi {
 	public fetchBuildDepositPrincipalTx = async (
 		inputs: ApiFarmsDepositPrincipalBody
 	) => {
-		const { walletAddress } = inputs;
+		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -899,6 +981,7 @@ export class FarmsApi {
 			walletAddress,
 			coinType: inputs.stakeCoinType,
 			coinAmount: inputs.depositAmount,
+			isSponsoredTx,
 		});
 
 		this.depositPrincipalTx({
@@ -995,7 +1078,7 @@ export class FarmsApi {
 			tx,
 		});
 
-		let harvestedCoins: Record<CoinType, TransactionArgument[]> = {};
+		let harvestedCoins: Record<CoinType, TransactionObjectArgument[]> = {};
 
 		for (const stakedPositionId of stakedPositionIds) {
 			for (const rewardCoinType of inputs.rewardCoinTypes) {
@@ -1070,7 +1153,7 @@ export class FarmsApi {
 	public fetchBuildInitializeStakingPoolRewardTx = async (
 		inputs: ApiFarmsInitializeStakingPoolRewardBody
 	): Promise<TransactionBlock> => {
-		const { walletAddress } = inputs;
+		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -1080,6 +1163,7 @@ export class FarmsApi {
 			walletAddress,
 			coinType: inputs.rewardCoinType,
 			coinAmount: inputs.rewardAmount,
+			isSponsoredTx,
 		});
 
 		this.initializeStakingPoolRewardTx({ ...inputs, tx, rewardCoinId });
@@ -1090,7 +1174,7 @@ export class FarmsApi {
 	public fetchBuildTopUpStakingPoolRewardsTx = async (
 		inputs: ApiFarmsTopUpStakingPoolRewardsBody
 	): Promise<TransactionBlock> => {
-		const { walletAddress } = inputs;
+		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
@@ -1102,6 +1186,7 @@ export class FarmsApi {
 					walletAddress,
 					coinType: reward.rewardCoinType,
 					coinAmount: reward.rewardAmount,
+					isSponsoredTx,
 				});
 
 			this.topUpStakingPoolRewardTx({
@@ -1137,6 +1222,39 @@ export class FarmsApi {
 	public buildGrantOneTimeAdminCapTx = Helpers.transactions.createBuildTxFunc(
 		this.grantOneTimeAdminCapTx
 	);
+
+	public async fetchIsStakingPoolUnlocked(inputs: {
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}): Promise<boolean> {
+		const tx = new TransactionBlock();
+		this.isVaultUnlockedTx({
+			...inputs,
+			tx,
+		});
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		const isUnlocked: boolean = bcs.de("bool", new Uint8Array(bytes));
+		return isUnlocked;
+	}
+
+	public async fetchStakingPoolRemainingRewards(inputs: {
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}): Promise<Balance[]> {
+		const tx = new TransactionBlock();
+		this.remainingRewardsTx({
+			...inputs,
+			tx,
+		});
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+
+		return (
+			bcs.de("vector<u64>", new Uint8Array(bytes)) as BigIntAsString[]
+		).map((num) => BigInt(num));
+	}
 
 	// =========================================================================
 	//  Private Methods

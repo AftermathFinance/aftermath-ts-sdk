@@ -1,5 +1,5 @@
 import {
-	TransactionArgument,
+	TransactionObjectArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import {
@@ -14,6 +14,7 @@ import {
 	isPoolObject,
 	ObjectId,
 	SuiAddress,
+	isAfSuiRouterPoolObject,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import AftermathRouterPool from "../routerPools/aftermathRouterPool";
@@ -36,6 +37,7 @@ import { isBlueMovePoolObject } from "../../../../external/blueMove/blueMoveType
 import BlueMoveRouterPool from "../routerPools/blueMoveRouterPool";
 import { isFlowXPoolObject } from "../../../../external/flowX/flowXTypes";
 import FlowXRouterPool from "../routerPools/flowXRouterPool";
+import AfSuiRouterPool from "../routerPools/afSuiRouterPool";
 
 // =========================================================================
 //  Types
@@ -44,12 +46,12 @@ import FlowXRouterPool from "../routerPools/flowXRouterPool";
 export interface RouterPoolTradeTxInputs {
 	provider: AftermathApi;
 	tx: TransactionBlock;
-	coinInId: ObjectId | TransactionArgument;
+	coinInId: ObjectId | TransactionObjectArgument;
 	expectedCoinOutAmount: Balance;
 	minAmountOut: Balance;
 	coinInType: CoinType;
 	coinOutType: CoinType;
-	routerSwapCap: TransactionArgument;
+	routerSwapCap: TransactionObjectArgument;
 	routerSwapCapCoinType: CoinType;
 }
 
@@ -82,6 +84,8 @@ export function createRouterPool(inputs: {
 		? new SuiswapRouterPool(pool, network)
 		: isBlueMovePoolObject(pool)
 		? new BlueMoveRouterPool(pool, network)
+		: isAfSuiRouterPoolObject(pool)
+		? new AfSuiRouterPool(pool, network)
 		: isPoolObject(pool)
 		? new AftermathRouterPool(pool, network)
 		: undefined;
@@ -145,7 +149,7 @@ export interface RouterPoolInterface {
 		referrer?: SuiAddress;
 	}) => Balance;
 
-	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionArgument;
+	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionObjectArgument;
 
 	// =========================================================================
 	//  Functions

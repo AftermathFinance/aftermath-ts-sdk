@@ -24,10 +24,10 @@ import {
 	FarmsStakingPoolRewardCoin,
 } from "./farmsTypes";
 import { Casting, Helpers } from "../../general/utils";
-import { Coin } from "..";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { FixedUtils } from "../../general/utils/fixedUtils";
+import { Coin } from "../coin/coin";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -185,6 +185,49 @@ export class FarmsStakingPool extends Caller {
 			: multiplier;
 	};
 
+	// public calc_emitted_rewards(): bigint[] {
+	// 	let emitted_rewards: bigint[] = [];
+
+	// 	let length = this.stakingPool.rewardCoins.length;
+	// 	let index = 0;
+
+	// 	while (index < length) {
+	// 		let emission_start_timestamp_ms =
+	// 			this.stakingPool.rewardCoins[index].emissionStartTimestamp;
+	// 		let last_reward_timestamp_ms =
+	// 			this.stakingPool.rewardCoins[index].lastRewardTimestamp;
+
+	// 		emitted_rewards.push(
+	// 			this.calcRewardsEmittedFromTimeTmToTn({
+	// 				timestampTm: emission_start_timestamp_ms,
+	// 				timestampTn: last_reward_timestamp_ms,
+	// 				rewardCoin: this.stakingPool.rewardCoins[index],
+	// 			})
+	// 		);
+
+	// 		index = index + 1;
+	// 	}
+
+	// 	return emitted_rewards;
+	// }
+
+	// public calc_emitted_rewards_for(inputs: {
+	// 	rewardCoinIndex: number;
+	// }): bigint {
+	// 	let reward_index = inputs.rewardCoinIndex;
+
+	// 	let emission_start_timestamp_ms =
+	// 		this.stakingPool.rewardCoins[reward_index].emissionStartTimestamp;
+	// 	let last_reward_timestamp_ms =
+	// 		this.stakingPool.rewardCoins[reward_index].lastRewardTimestamp;
+
+	// 	return this.calcRewardsEmittedFromTimeTmToTn({
+	// 		timestampTm: emission_start_timestamp_ms,
+	// 		timestampTn: last_reward_timestamp_ms,
+	// 		rewardCoin: this.stakingPool.rewardCoins[reward_index],
+	// 	});
+	// }
+
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
@@ -197,6 +240,7 @@ export class FarmsStakingPool extends Caller {
 		stakeAmount: Balance;
 		lockDurationMs: Timestamp;
 		walletAddress: SuiAddress;
+		isSponsoredTx?: boolean;
 	}) {
 		return this.fetchApiTransaction<ApiFarmsStakeBody>(
 			"transactions/stake",
@@ -271,6 +315,7 @@ export class FarmsStakingPool extends Caller {
 			emissionDelayTimestampMs: Timestamp;
 			rewardCoinType: CoinType;
 			walletAddress: SuiAddress;
+			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
 		return this.fetchApiTransaction<ApiFarmsInitializeStakingPoolRewardBody>(
@@ -290,6 +335,7 @@ export class FarmsStakingPool extends Caller {
 				rewardCoinType: CoinType;
 			}[];
 			walletAddress: SuiAddress;
+			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
 		return this.fetchApiTransaction<ApiFarmsTopUpStakingPoolRewardsBody>(
@@ -352,29 +398,15 @@ export class FarmsStakingPool extends Caller {
 		rewardCoin: FarmsStakingPoolRewardCoin;
 	}): Balance {
 		const { rewardCoin } = inputs;
-
 		const currentTimestamp = dayjs().valueOf();
 
-		// ia. Calculate the number of rewards that have been emitted since the beginning of the reward's emissions schedule.
-		const totalRewardsEmitted = this.calcRewardsEmittedFromTimeTmToTn({
-			timestampTm: rewardCoin.emissionStartTimestamp,
-			timestampTn: rewardCoin.lastRewardTimestamp,
-			rewardCoin,
-		});
-
-		// ib. Calculate the number of rewards that have yet to be emitted.
-		const totalRewards = rewardCoin.rewards;
-		const rewardsRemaining =
-			totalRewardsEmitted < totalRewards
-				? totalRewards - totalRewardsEmitted
-				: BigInt(0);
-
-		// ii. Calculate the number of rewards that have been emitted since the last time this reward was emitted.
+		// Calculate the number of rewards that have been emitted since the last time this reward was emitted.
 		const rewardsToEmit = this.calcRewardsEmittedFromTimeTmToTn({
 			timestampTm: rewardCoin.lastRewardTimestamp,
 			timestampTn: currentTimestamp,
 			rewardCoin,
 		});
+		const rewardsRemaining = rewardCoin.rewardsRemaining;
 
 		// IMPORTANT: Cap the amount of rewards to emit by the amount of remaining rewards.
 		//

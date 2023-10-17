@@ -39,6 +39,7 @@ export interface FarmsStakingPoolRewardCoin {
 	emissionSchedulesMs: Timestamp;
 	emissionStartTimestamp: Timestamp;
 	lastRewardTimestamp: Timestamp;
+	rewardsRemaining: Balance;
 }
 
 export interface FarmsStakingPoolObject extends Object {
@@ -52,6 +53,7 @@ export interface FarmsStakingPoolObject extends Object {
 	emissionEndTimestamp: Timestamp;
 	minStakeAmount: Balance;
 	lockEnforcement: FarmsLockEnforcement;
+	isUnlocked: boolean;
 }
 
 export interface StakingPoolOwnerCapObject extends Object {
@@ -220,6 +222,7 @@ export interface ApiFarmsStakeBody {
 	stakeCoinType: CoinType;
 	stakeAmount: Balance;
 	walletAddress: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiFarmsDepositPrincipalBody {
@@ -228,6 +231,7 @@ export interface ApiFarmsDepositPrincipalBody {
 	stakeCoinType: CoinType;
 	depositAmount: Balance;
 	walletAddress: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiFarmsUnstakeBody {
@@ -308,6 +312,7 @@ export type ApiFarmsInitializeStakingPoolRewardBody = {
 	stakeCoinType: CoinType;
 	rewardCoinType: CoinType;
 	walletAddress: SuiAddress;
+	isSponsoredTx?: boolean;
 } & FarmOwnerOrOneTimeAdminCap;
 
 export type ApiFarmsTopUpStakingPoolRewardsBody = {
@@ -318,6 +323,7 @@ export type ApiFarmsTopUpStakingPoolRewardsBody = {
 		rewardAmount: Balance;
 	}[];
 	walletAddress: SuiAddress;
+	isSponsoredTx?: boolean;
 } & FarmOwnerOrOneTimeAdminCap;
 
 export type ApiFarmsIncreaseStakingPoolRewardsEmissionsBody = {

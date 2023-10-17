@@ -1,18 +1,21 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
-	AfSuiMintedEvent,
-	UnstakeEvent,
-	StakeRequestEvent,
 	ValidatorConfigObject,
+	ValidatorOperationCapObject,
+	UnstakedEvent,
+	UnstakeRequestedEvent,
+	StakedEvent,
+	EpochWasChangedEvent,
+	StakedSuiVaultStateObject,
 } from "../../../types";
 import {
-	AfSuiMintedEventOnChain,
-	AfSuiMintedIndexerEventOnChain,
-	StakeRequestEventOnChain,
-	StakeRequestIndexerEventOnChain,
-	UnstakeEventOnChain,
-	UnstakeIndexerEventOnChain,
+	EpochWasChangedEventOnChain,
+	StakedEventOnChain,
+	StakedSuiVaultStateV1FieldsOnChain,
+	UnstakeRequestedEventOnChain,
+	UnstakedEventOnChain,
 	ValidatorConfigFieldsOnChain,
+	ValidatorOperationCapFieldsOnChain,
 } from "./stakingApiCastingTypes";
 import { Helpers } from "../../../general/utils";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
@@ -26,7 +29,6 @@ export class StakingApiCasting {
 		data: SuiObjectResponse
 	): ValidatorConfigObject => {
 		const objectType = Helpers.getObjectType(data);
-
 		const allFields = Helpers.getObjectFields(data) as {
 			value: {
 				fields: {
@@ -49,13 +51,62 @@ export class StakingApiCasting {
 		};
 	};
 
+	public static validatorOperationCapObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): ValidatorOperationCapObject => {
+		const objectType = Helpers.getObjectType(data);
+		const fields = Helpers.getObjectFields(
+			data
+		) as ValidatorOperationCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: Helpers.getObjectId(data),
+			authorizerValidatorAddress: Helpers.addLeadingZeroesToType(
+				fields.authorizer_validator_address
+			),
+		};
+	};
+
+	public static stakedSuiVaultStateObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): StakedSuiVaultStateObject => {
+		const objectId = Helpers.getObjectId(data);
+		const objectType = Helpers.getObjectType(data);
+		const fields = Helpers.getObjectFields(
+			data
+		) as StakedSuiVaultStateV1FieldsOnChain;
+
+		return {
+			objectId,
+			objectType,
+			atomicUnstakeSuiReservesTargetValue: BigInt(
+				fields.protocol_config.fields
+					.atomic_unstake_sui_reserves_target_value
+			),
+			atomicUnstakeSuiReserves: BigInt(
+				fields.atomic_unstake_sui_reserves
+			),
+			minAtomicUnstakeFee: BigInt(
+				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
+					.min_fee
+			),
+			maxAtomicUnstakeFee: BigInt(
+				fields.protocol_config.fields.atomic_unstake_protocol_fee.fields
+					.max_fee
+			),
+			totalSuiAmount: BigInt(fields.total_sui_amount),
+			totalRewardsAmount: BigInt(fields.total_rewards_amount),
+		};
+	};
+
 	// =========================================================================
 	//  Events
 	// =========================================================================
 
-	public static stakeRequestEventFromOnChain = (
-		eventOnChain: StakeRequestEventOnChain
-	): StakeRequestEvent => {
+	public static stakedEventFromOnChain = (
+		eventOnChain: StakedEventOnChain
+	): StakedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
@@ -67,105 +118,57 @@ export class StakingApiCasting {
 			validatorFee: FixedUtils.directCast(BigInt(fields.validator_fee)),
 			isRestaked: fields.is_restaked,
 			referrer: fields.referrer ? fields.referrer : undefined,
+			afSuiId: Helpers.addLeadingZeroesToType(fields.afsui_id),
+			afSuiAmount: BigInt(fields.afsui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static unstakeEventFromOnChain = (
-		eventOnChain: UnstakeEventOnChain
-	): UnstakeEvent => {
+	public static unstakedEventFromOnChain = (
+		eventOnChain: UnstakedEventOnChain
+	): UnstakedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			afSuiId: Helpers.addLeadingZeroesToType(fields.afsui_id),
-			paybackCoinId: Helpers.addLeadingZeroesToType(
-				fields.payback_coin_id
-			),
-			staker: Helpers.addLeadingZeroesToType(fields.staker),
+			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
+			requester: Helpers.addLeadingZeroesToType(fields.requester),
 			epoch: BigInt(fields.epoch),
-			afSuiAmountGiven: BigInt(fields.provided_afsui_amount),
-			suiUnstakeAmount: BigInt(fields.withdrawn_sui_amount),
+			providedAfSuiAmount: BigInt(fields.provided_afsui_amount),
+			returnedSuiAmount: BigInt(fields.returned_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static afSuiMintedEventFromOnChain = (
-		eventOnChain: AfSuiMintedEventOnChain
-	): AfSuiMintedEvent => {
+	public static unstakeRequestedEventFromOnChain = (
+		eventOnChain: UnstakeRequestedEventOnChain
+	): UnstakeRequestedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			suiId: Helpers.addLeadingZeroesToType(fields.sui_id),
-			staker: Helpers.addLeadingZeroesToType(fields.staker),
+			afSuiId: Helpers.addLeadingZeroesToType(fields.afsui_id),
+			providedAfSuiAmount: BigInt(fields.provided_afsui_amount),
+			requester: Helpers.addLeadingZeroesToType(fields.requester),
 			epoch: BigInt(fields.epoch),
-			afSuiMintAmount: BigInt(fields.minted_afsui_amount),
-			suiStakeAmount: BigInt(fields.staked_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	// =========================================================================
-	//  Indexer Events
-	// =========================================================================
-
-	public static stakeRequestEventFromIndexerOnChain = (
-		eventOnChain: StakeRequestIndexerEventOnChain
-	): StakeRequestEvent => {
+	public static epochWasChangedEventFromOnChain = (
+		eventOnChain: EpochWasChangedEventOnChain
+	): EpochWasChangedEvent => {
+		const fields = eventOnChain.parsedJson;
 		return {
-			suiId: Helpers.addLeadingZeroesToType(eventOnChain.sui_id),
-			stakedSuiId: Helpers.addLeadingZeroesToType(
-				eventOnChain.staked_sui_id
-			),
-			staker: Helpers.addLeadingZeroesToType(eventOnChain.staker),
-			validatorAddress: Helpers.addLeadingZeroesToType(
-				eventOnChain.validator
-			),
-			epoch: BigInt(eventOnChain.epoch),
-			suiStakeAmount: BigInt(eventOnChain.sui_amount),
-			validatorFee: FixedUtils.directCast(
-				BigInt(eventOnChain.validator_fee)
-			),
-			isRestaked: eventOnChain.is_restaked,
-			referrer: eventOnChain.referrer ? eventOnChain.referrer : undefined,
-			timestamp: eventOnChain.timestamp ?? undefined,
-			txnDigest: eventOnChain.txnDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static unstakeEventFromIndexerOnChain = (
-		eventOnChain: UnstakeIndexerEventOnChain
-	): UnstakeEvent => {
-		return {
-			afSuiId: Helpers.addLeadingZeroesToType(eventOnChain.afsui_id),
-			paybackCoinId: Helpers.addLeadingZeroesToType(
-				eventOnChain.payback_coin_id
-			),
-			staker: Helpers.addLeadingZeroesToType(eventOnChain.staker),
-			epoch: BigInt(eventOnChain.epoch),
-			afSuiAmountGiven: BigInt(eventOnChain.provided_afsui_amount),
-			suiUnstakeAmount: BigInt(eventOnChain.withdrawn_sui_amount),
-			timestamp: eventOnChain.timestamp ?? undefined,
-			txnDigest: eventOnChain.txnDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static afSuiMintedEventFromIndexerOnChain = (
-		eventOnChain: AfSuiMintedIndexerEventOnChain
-	): AfSuiMintedEvent => {
-		return {
-			suiId: Helpers.addLeadingZeroesToType(eventOnChain.sui_id),
-			staker: Helpers.addLeadingZeroesToType(eventOnChain.staker),
-			epoch: BigInt(eventOnChain.epoch),
-			afSuiMintAmount: BigInt(eventOnChain.minted_afsui_amount),
-			suiStakeAmount: BigInt(eventOnChain.staked_sui_amount),
-			timestamp: eventOnChain.timestamp ?? undefined,
-			txnDigest: eventOnChain.txnDigest,
+			activeEpoch: BigInt(fields.active_epoch),
+			totalAfSuiSupply: BigInt(fields.total_afsui_supply),
+			totalSuiRewardsAmount: BigInt(fields.total_rewards_amount),
+			totalSuiAmount: BigInt(fields.total_sui_amount),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};

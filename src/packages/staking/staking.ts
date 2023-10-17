@@ -4,7 +4,6 @@ import {
 	SuiNetwork,
 	ApiStakingPositionsBody,
 	StakingPosition,
-	StakeRequestEvent,
 	ApiStakingEventsBody,
 	Balance,
 	Url,
@@ -13,12 +12,15 @@ import {
 	ApiStakeStakedSuiBody,
 	ApiDelegatedStakesBody,
 	SuiDelegatedStake,
+	ApiValidatorOperationCapsBody,
+	ValidatorOperationCapObject,
+	ApiUpdateValidatorFeeBody,
+	Percentage,
+	StakedSuiVaultStateObject,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import {
-	SuiValidatorSummary,
-	ValidatorsApy,
-} from "@mysten/sui.js/dist/cjs/client";
+import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui.js/client";
+import { Casting } from "../../general/utils";
 
 export class Staking extends Caller {
 	// =========================================================================
@@ -28,9 +30,12 @@ export class Staking extends Caller {
 	public static readonly constants = {
 		fees: {
 			protocolUnstake: 0.05, // 5%
+			defaultValidator: 0, // 0%
+			maxValidator: 0.05, // 5%
 		},
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
+			minUnstake: BigInt("1000000000"), // 1 afSUI
 		},
 		defaultValidatorFee: 0, // 0%
 	};
@@ -71,6 +76,12 @@ export class Staking extends Caller {
 		return this.fetchApi("delegated-stakes", inputs);
 	}
 
+	public async getValidatorOperationCaps(
+		inputs: ApiValidatorOperationCapsBody
+	): Promise<ValidatorOperationCapObject[]> {
+		return this.fetchApi("validator-operation-caps", inputs);
+	}
+
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
@@ -96,6 +107,15 @@ export class Staking extends Caller {
 		);
 	}
 
+	public async getUpdateValidatorFeeTransaction(
+		inputs: ApiUpdateValidatorFeeBody
+	) {
+		return this.fetchApiTransaction<ApiUpdateValidatorFeeBody>(
+			"transactions/update-validator-fee",
+			inputs
+		);
+	}
+
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
@@ -108,7 +128,54 @@ export class Staking extends Caller {
 		return this.fetchApi("afsui-exchange-rate");
 	}
 
+	public async getStakedSuiVaultState(): Promise<StakedSuiVaultStateObject> {
+		return this.fetchApi("staked-sui-vault-state");
+	}
+
 	public async getApy(): Promise<number> {
 		return this.fetchApi("apy");
+	}
+
+	// =========================================================================
+	//  Public Static Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
+
+	public static calcAtomicUnstakeFee(inputs: {
+		stakedSuiVaultState: StakedSuiVaultStateObject;
+	}): Percentage {
+		const { stakedSuiVaultState } = inputs;
+
+		// iia. Calculate the `atomic_unstake_fee`.
+		if (
+			stakedSuiVaultState.atomicUnstakeSuiReserves >=
+			stakedSuiVaultState.atomicUnstakeSuiReservesTargetValue
+		) {
+			// Atomic unstakes that keep the `atomic_unstake_sui_reserves` larger than the desired target
+			//  value receive the minimum fee.
+
+			return Casting.bigIntToFixedNumber(
+				stakedSuiVaultState.minAtomicUnstakeFee
+			);
+		} else {
+			// Atomic unstakes that shift the `atomic_unstake_sui_reserves` below the desired target value
+			//  receive a variable fee dependent on the distance from the target the unstake brings the
+			//  `atomic_unstake_sui_reserves` to:
+			//      e.g. fee = max_fee - ((max_fee - min_fee) * liquidity_after / target_liquidity_value)
+
+			let atomic_fee_delta =
+				stakedSuiVaultState.maxAtomicUnstakeFee -
+				stakedSuiVaultState.minAtomicUnstakeFee;
+
+			return Casting.bigIntToFixedNumber(
+				stakedSuiVaultState.maxAtomicUnstakeFee -
+					(atomic_fee_delta *
+						stakedSuiVaultState.atomicUnstakeSuiReserves) /
+						stakedSuiVaultState.atomicUnstakeSuiReservesTargetValue
+			);
+		}
 	}
 }

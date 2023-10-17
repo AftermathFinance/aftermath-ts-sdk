@@ -1,9 +1,10 @@
+import { CoinType } from "../../types";
+import { CoinDecimal } from "../../types";
+import { ObjectId, SuiAddress } from "./generalTypes";
+
 // =========================================================================
 //  Name Only
 // =========================================================================
-
-import { CoinType } from "../../types";
-import { ObjectId, SuiAddress } from "./generalTypes";
 
 export type RpcEndpoint = string;
 
@@ -28,6 +29,7 @@ interface OptionalConfigAddresses {
 	perpetuals: PerpetualsAddresses;
 	oracle: OracleAddresses;
 	farms: FarmsAddresses;
+	dynamicGas: DynamicGasAddresses;
 }
 
 // =========================================================================
@@ -50,9 +52,11 @@ export interface StakingAddresses {
 	packages: {
 		lsd: SuiAddress;
 		afsui: SuiAddress;
+		events: SuiAddress;
 	};
 	objects: {
 		stakedSuiVault: ObjectId;
+		stakedSuiVaultState: ObjectId;
 		safe: ObjectId;
 		treasury: ObjectId;
 		referralVault: ObjectId;
@@ -73,8 +77,8 @@ export interface PoolsAddresses {
 		insuranceFund: ObjectId;
 		lpCoinsTable: ObjectId;
 	};
-	other: {
-		createLpCoinPackageCompilation: string;
+	other?: {
+		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
 	};
 }
 
@@ -124,6 +128,7 @@ export interface RequiredRouterAddresses {
 
 export interface OptionalRouterAddresses {
 	aftermath: AftermathRouterWrapperAddresses;
+	afSui: AfSuiRouterWrapperAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
@@ -141,6 +146,16 @@ export interface AftermathRouterWrapperAddresses {
 	};
 	objects: {
 		wrapperApp: ObjectId;
+	};
+}
+
+export interface AfSuiRouterWrapperAddresses {
+	packages: {
+		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
+		aftermathValidator: ObjectId;
 	};
 }
 
@@ -272,6 +287,10 @@ export interface FarmsAddresses {
 		vaults: SuiAddress;
 		vaultsInitial: SuiAddress;
 	};
+}
+
+export interface DynamicGasAddresses {
+	sponsorAddress: SuiAddress;
 }
 
 export interface ExchangeAddresses {

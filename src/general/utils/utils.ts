@@ -3,25 +3,17 @@ import {
 	SuiMoveObject,
 	SuiObjectResponse,
 } from "@mysten/sui.js/client";
-import { AnyObjectType, Balance, ObjectId, Slippage } from "../../types";
-import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
-import { EventsApiHelpers } from "../api/eventsApiHelpers";
-import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
-import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import {
+	AnyObjectType,
+	Balance,
+	CoinType,
+	ObjectId,
+	Slippage,
+} from "../../types";
 import { Casting } from "./casting";
+import { Coin } from "../../packages";
 
-export class Helpers {
-	// =========================================================================
-	//  Api Helpers
-	// =========================================================================
-
-	public static readonly dynamicFields = DynamicFieldsApiHelpers;
-	public static readonly events = EventsApiHelpers;
-	public static readonly inspections = InspectionsApiHelpers;
-	public static readonly objects = ObjectsApiHelpers;
-	public static readonly transactions = TransactionsApiHelpers;
-
+export class Utils {
 	// =========================================================================
 	//  Type Manipulation
 	// =========================================================================
@@ -79,7 +71,7 @@ export class Helpers {
 		a: bigint,
 		b: bigint,
 		tolerance: number
-	) => Helpers.closeEnough(Number(a), Number(b), tolerance);
+	) => this.closeEnough(Number(a), Number(b), tolerance);
 
 	public static veryCloseInt = (a: number, b: number, fixedOne: number) =>
 		Math.abs(Math.floor(a / fixedOne) - Math.floor(b / fixedOne)) <= 1;
@@ -96,9 +88,6 @@ export class Helpers {
 
 	public static maxBigInt = (...args: bigint[]) =>
 		args.reduce((m, e) => (e > m ? e : m));
-
-	public static minBigInt = (...args: bigint[]) =>
-		args.reduce((m, e) => (e < m ? e : m));
 
 	// =========================================================================
 	//  Display
@@ -243,20 +232,6 @@ export class Helpers {
 		return amount - Casting.normalizeSlippageTolerance(slippage) * amount;
 	};
 
-	public static zip<S1, S2>(
-		firstCollection: Array<S1>,
-		lastCollection: Array<S2>
-	): Array<[S1, S2]> {
-		const length = Math.min(firstCollection.length, lastCollection.length);
-		const zipped: Array<[S1, S2]> = [];
-
-		for (let index = 0; index < length; index++) {
-			zipped.push([firstCollection[index], lastCollection[index]]);
-		}
-
-		return zipped;
-	}
-
 	// =========================================================================
 	//  Type Checking
 	// =========================================================================
@@ -274,7 +249,6 @@ export class Helpers {
 
 	public static getObjectType(data: SuiObjectResponse): ObjectId {
 		const objectType = data.data?.type;
-		// NOTE: should `Helpers.addLeadingZeroesToType` be used here ?
 		if (objectType) return objectType;
 
 		throw new Error("no object type found on " + data.data?.objectId);
@@ -282,7 +256,7 @@ export class Helpers {
 
 	public static getObjectId(data: SuiObjectResponse): ObjectId {
 		const objectId = data.data?.objectId;
-		if (objectId) return Helpers.addLeadingZeroesToType(objectId);
+		if (objectId) return objectId;
 
 		throw new Error("no object id found on " + data.data?.type);
 	}
@@ -301,47 +275,9 @@ export class Helpers {
 	public static getObjectDisplay(
 		data: SuiObjectResponse
 	): DisplayFieldsResponse {
-		const display = Helpers.getObjectDisplay(data);
+		const display = this.getObjectDisplay(data);
 		if (display) return display;
 
 		throw new Error("no object display found on " + data.data?.objectId);
-	}
-
-	// =========================================================================
-	//  Error Parsing
-	// =========================================================================
-
-	public static moveErrorCode(inputs: {
-		errorMessage: string;
-		packageId: ObjectId;
-	}): number {
-		const { errorMessage, packageId } = inputs;
-
-		/*
-			MoveAbort(MoveLocation { module: ModuleId { address: 8d8946c2a433e2bf795414498d9f7b32e04aca8dbf35a20257542dc51406242b, name: Identifier("orderbook") }, function: 11, instruction: 117, function_name: Some("fill_market_order") }, 3005) in command 2
-		*/
-
-		if (
-			!errorMessage.includes(
-				Helpers.addLeadingZeroesToType(packageId).replace("0x", "")
-			)
-		)
-			return -1;
-
-		const startIndex = errorMessage.lastIndexOf(",");
-		const endIndex = errorMessage.lastIndexOf(")");
-		if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
-			return -1;
-
-		try {
-			const errorCode = parseInt(
-				errorMessage.slice(startIndex + 1, endIndex)
-			);
-			if (Number.isNaN(errorCode)) return -1;
-
-			return errorCode;
-		} catch (e) {
-			return -1;
-		}
 	}
 }

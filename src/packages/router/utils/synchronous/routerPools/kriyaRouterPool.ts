@@ -130,7 +130,8 @@ class KriyaRouterPool implements RouterPoolInterface {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 	}): Balance => {
-		throw new Error("not implemented");
+		// TODO: implement
+		return Casting.u64MaxBigInt;
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {

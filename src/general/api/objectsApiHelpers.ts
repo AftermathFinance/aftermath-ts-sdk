@@ -1,10 +1,7 @@
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
 import { Casting, Helpers } from "../utils";
-import {
-	SuiObjectDataOptions,
-	SuiObjectResponse,
-} from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectDataOptions, SuiObjectResponse } from "@mysten/sui.js/client";
 import { TypeName, BCS } from "@mysten/bcs";
 
 export class ObjectsApiHelpers {
