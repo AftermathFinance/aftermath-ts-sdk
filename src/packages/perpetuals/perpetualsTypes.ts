@@ -556,7 +556,7 @@ export interface ApiPerpetualsPositionOrderDatasBody {
 }
 
 export interface ApiPerpetualsOrderbookStateBody {
-	indexPrice: number;
+	orderbookPrice: number;
 	lotSize: number;
 	tickSize: number;
 }

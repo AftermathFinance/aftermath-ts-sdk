@@ -70,15 +70,15 @@ export class PerpetualsMarket extends Caller {
 		});
 	}
 
-	public getOrderbookState(inputs: { indexPrice: number }) {
-		const { indexPrice } = inputs;
+	public getOrderbookState(inputs: { orderbookPrice: number }) {
+		const { orderbookPrice } = inputs;
 		return this.fetchApi<
 			PerpetualsOrderbookState,
 			ApiPerpetualsOrderbookStateBody
 		>("orderbook-state", {
 			lotSize: this.lotSize(),
 			tickSize: this.tickSize(),
-			indexPrice,
+			orderbookPrice,
 		});
 	}
 
@@ -172,4 +172,16 @@ export class PerpetualsMarket extends Caller {
 		);
 		return this.orderPriceToPrice({ orderPrice });
 	}
+
+	public roundToValidPrice = (inputs: { price: number }) => {
+		const roundedPrice =
+			Math.round(inputs.price / this.tickSize()) * this.tickSize();
+		return roundedPrice;
+	};
+
+	public floorToValidSize = (inputs: { size: number }) => {
+		const floorAmount =
+			Math.floor(inputs.size / this.lotSize()) * this.lotSize();
+		return floorAmount;
+	};
 }

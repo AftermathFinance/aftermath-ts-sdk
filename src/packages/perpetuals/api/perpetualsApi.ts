@@ -638,16 +638,16 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<PerpetualsOrderbookState> => {
-		const { indexPrice } = inputs;
+		const { orderbookPrice } = inputs;
 		const constants = PerpetualsApi.constants.orderbookData;
 
 		const lowPrice = Perpetuals.priceToOrderPrice({
 			...inputs,
-			price: indexPrice * (1 - constants.pricePercentChange),
+			price: orderbookPrice * (1 - constants.pricePercentChange),
 		});
 		const highPrice = Perpetuals.priceToOrderPrice({
 			...inputs,
-			price: indexPrice * (1 + constants.pricePercentChange),
+			price: orderbookPrice * (1 + constants.pricePercentChange),
 		});
 		const [bids, asks] = await Promise.all([
 			this.fetchOrderbookOrders({
@@ -1514,13 +1514,13 @@ export class PerpetualsApi {
 		side: PerpetualsOrderSide;
 		lotSize: number;
 		tickSize: number;
-		indexPrice: number;
+		orderbookPrice: number;
 	}): OrderbookDataPoint[] => {
-		const { orders, side, lotSize, tickSize, indexPrice } = inputs;
+		const { orders, side, lotSize, tickSize, orderbookPrice } = inputs;
 		const constants = PerpetualsApi.constants.orderbookData;
 
 		const bucketSize =
-			(indexPrice * constants.pricePercentChange) / constants.buckets;
+			(orderbookPrice * constants.pricePercentChange) / constants.buckets;
 
 		const emptyDataPoints: OrderbookDataPoint[] = Array(constants.buckets)
 			.fill({
@@ -1532,7 +1532,7 @@ export class PerpetualsApi {
 				return {
 					...dataPoint,
 					price:
-						indexPrice +
+						orderbookPrice +
 						index *
 							bucketSize *
 							(side === PerpetualsOrderSide.Bid ? -1 : 1),
@@ -1546,7 +1546,7 @@ export class PerpetualsApi {
 				tickSize,
 			});
 			const bucketIndex = Math.floor(
-				Math.abs(indexPrice - price) / bucketSize
+				Math.abs(orderbookPrice - price) / bucketSize
 			);
 
 			acc[bucketIndex].size += order.size;
