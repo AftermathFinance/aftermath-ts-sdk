@@ -521,7 +521,10 @@ export class PerpetualsAccount extends Caller {
 		const side = Perpetuals.positionSide({ position });
 		return {
 			...inputs,
-			side,
+			side:
+				side === PerpetualsOrderSide.Bid
+					? PerpetualsOrderSide.Ask
+					: PerpetualsOrderSide.Bid,
 			size: position.baseAssetAmount,
 		};
 	};

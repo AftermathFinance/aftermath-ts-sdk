@@ -260,7 +260,7 @@ export class Perpetuals extends Caller {
 		const isLong = Math.sign(baseAmount);
 
 		const side =
-			isLong > 0 ? PerpetualsOrderSide.Ask : PerpetualsOrderSide.Bid;
+			isLong >= 0 ? PerpetualsOrderSide.Bid : PerpetualsOrderSide.Ask;
 		return side;
 	}
 
