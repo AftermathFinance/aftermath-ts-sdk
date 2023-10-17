@@ -886,13 +886,15 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		tx: TransactionBlock;
 		lpCoinDecimals: CoinDecimal;
 	}) => {
-		const { tx, lpCoinDecimals } = inputs;
+		const compilations =
+			this.addresses.pools.other?.createLpCoinPackageCompilations;
+		if (!compilations)
+			throw new Error(
+				"not all required addresses have been set in provider for lp coin publishing (requires pacakge compilations)"
+			);
 
-		const compiledModulesAndDeps = JSON.parse(
-			this.addresses.pools.other.createLpCoinPackageCompilations[
-				lpCoinDecimals
-			]
-		);
+		const { tx, lpCoinDecimals } = inputs;
+		const compiledModulesAndDeps = JSON.parse(compilations[lpCoinDecimals]);
 
 		return tx.publish({
 			modules: compiledModulesAndDeps.modules.map((m: any) =>

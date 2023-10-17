@@ -75,7 +75,7 @@ export interface PoolsAddresses {
 		insuranceFund: ObjectId;
 		lpCoinsTable: ObjectId;
 	};
-	other: {
+	other?: {
 		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
 	};
 }
