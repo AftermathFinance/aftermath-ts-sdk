@@ -43,6 +43,7 @@ import {
 	ObjectId,
 	SuiAddress,
 	ApiPublishLpCoinBody,
+	PoolLpInfo,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -1060,6 +1061,32 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 		const uniqueCoins = Helpers.uniqueArray(allCoins);
 		return uniqueCoins;
+	};
+
+	public fetchOwnedLpCoinPositions = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<PoolLpInfo[]> => {
+		const { walletAddress } = inputs;
+
+		const [coinsToBalance, pools] = await Promise.all([
+			this.Provider.Wallet().fetchAllCoinBalances({
+				walletAddress,
+			}),
+			this.fetchAllPools(),
+		]);
+
+		let lpInfo: PoolLpInfo[] = [];
+		for (const pool of pools) {
+			const lpCoinType = Helpers.addLeadingZeroesToType(pool.lpCoinType);
+			if (!(lpCoinType in coinsToBalance)) continue;
+
+			lpInfo.push({
+				lpCoinType,
+				poolId: pool.objectId,
+				balance: coinsToBalance[lpCoinType],
+			});
+		}
+		return lpInfo;
 	};
 
 	// =========================================================================

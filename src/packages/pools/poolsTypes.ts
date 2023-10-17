@@ -69,6 +69,12 @@ export const isPoolObject = (
 	);
 };
 
+export interface PoolLpInfo {
+	lpCoinType: CoinType;
+	poolId: ObjectId;
+	balance: Balance;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
