@@ -12,7 +12,7 @@ import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
 import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
 import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
-import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 
 export class Casting {
 	// =========================================================================

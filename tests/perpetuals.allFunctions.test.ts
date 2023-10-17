@@ -31,7 +31,7 @@ import {
 import { IFixedUtils } from "../src/general/utils/iFixedUtils";
 import { PerpetualsOrderUtils } from "../src/packages/perpetuals/utils";
 import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
-import { SuiClient } from "@mysten/sui.js/dist/cjs/client";
+import { SuiClient } from "@mysten/sui.js/client";
 import { Helpers, IndexerCaller } from "../src/general/utils";
 
 describe("Perpetuals Tests", () => {

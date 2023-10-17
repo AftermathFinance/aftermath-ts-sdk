@@ -64,7 +64,7 @@ import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
 import { IndexerEventOnChain } from "../../../general/types/castingTypes";
-import { Fixed } from "../../../general/utils/fixed";
+import { FixedUtils } from "../../../general/utils/fixedUtils";
 
 export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
@@ -1134,7 +1134,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		const firstCoin = Object.values(pool.pool.coins)[0];
 		const fees =
 			volume *
-			Fixed.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
+			FixedUtils.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
 
 		const apy = this.calcApy({
 			fees24Hours: fees,
@@ -1305,7 +1305,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	}): PoolDataPoint[] => {
 		const feeData = inputs.volumeData.map((data) => ({
 			time: data.time,
-			value: data.value * Fixed.directCast(inputs.poolTradeFee),
+			value: data.value * FixedUtils.directCast(inputs.poolTradeFee),
 		}));
 
 		return feeData;
