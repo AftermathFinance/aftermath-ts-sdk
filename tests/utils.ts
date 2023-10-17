@@ -2,7 +2,8 @@ import { SuiObjectChange, SuiObjectChangeCreated } from "@mysten/sui.js/client";
 import { fromB64 } from "@mysten/bcs";
 import { AftermathApi } from "../src/general/providers";
 import { PerpetualsAccount, PerpetualsMarket } from "../src/packages";
-import { Ed25519Keypair, RawSigner } from "@mysten/sui.js";
+import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
+import { RawSigner } from "@mysten/sui.js/dist/cjs/signers/raw-signer";
 import { ObjectId, SuiAddress } from "../src/types";
 
 export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";

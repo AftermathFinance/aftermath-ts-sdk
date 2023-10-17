@@ -44,6 +44,7 @@ export function getConfigs(): [
 	let perpetualsCfg: PerpetualsAddresses = {
 		packages: {
 			perpetuals: rustCfg.perpetuals?.package!,
+			events: rustCfg.perpetuals?.package!,
 		},
 		objects: {
 			adminCapability: rustCfg.perpetuals?.admin_capability!,

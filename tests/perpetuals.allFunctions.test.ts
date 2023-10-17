@@ -479,6 +479,7 @@ describe("Perpetuals Tests", () => {
 			user3Account,
 			user3AccountCapObject
 		).positionForMarketId({ marketId: MARKET_ID0 });
+		if (!position) throw new Error("position not found for market");
 		let { bidOrderIds: user3Bids, askOrderIds: user3Asks } =
 			await aftermathApi.Perpetuals().fetchPositionOrderIds({
 				positionAsksId: position.asks.objectId,
