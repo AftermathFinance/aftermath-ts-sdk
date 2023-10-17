@@ -189,14 +189,12 @@ export interface PerpetualsMarketData {
 
 export interface PerpetualsMarketManager extends Object {
 	feesAccrued: IFixed;
-	minOrderUsdValue: IFixed;
 	liquidationTolerance: bigint;
 }
 
 bcs.registerStructType("MarketManager", {
 	id: "UID",
 	feesAccrued: BCS.U256,
-	minOrderUsdValue: BCS.U256,
 	liquidationTolerance: BCS.U64,
 });
 
@@ -216,6 +214,7 @@ export interface PerpetualsMarketParams {
 	forceCancelFee: IFixed;
 	insuranceFundFee: IFixed;
 	insuranceFundId: bigint;
+	minOrderUsdValue: IFixed;
 }
 
 bcs.registerStructType("MarketParams", {
@@ -234,6 +233,7 @@ bcs.registerStructType("MarketParams", {
 	forceCancelFee: BCS.U256,
 	insuranceFundFee: BCS.U256,
 	insuranceFundId: BCS.U64,
+	minOrderUsdValue: BCS.U256,
 });
 
 export interface PerpetualsMarketState {

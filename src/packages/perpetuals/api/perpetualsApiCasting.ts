@@ -172,7 +172,6 @@ export class PerpetualsApiCasting {
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			feesAccrued: BigInt(data.feesAccrued),
-			minOrderUsdValue: BigInt(data.minOrderUsdValue),
 			liquidationTolerance: BigInt(data.liquidationTolerance),
 		};
 	}
@@ -194,6 +193,7 @@ export class PerpetualsApiCasting {
 			forceCancelFee: BigInt(data.forceCancelFee),
 			insuranceFundFee: BigInt(data.insuranceFundFee),
 			insuranceFundId: BigInt(data.insuranceFundId),
+			minOrderUsdValue: BigInt(data.minOrderUsdValue),
 		};
 	};
 
