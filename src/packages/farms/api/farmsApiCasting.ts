@@ -38,9 +38,9 @@ import {
 	PartialFarmsStakedPositionObject,
 	StakingPoolOneTimeAdminCapObject,
 } from "../farmsTypes";
-import { Coin } from "../..";
+import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils";
-import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 
 export class FarmsApiCasting {
 	// =========================================================================

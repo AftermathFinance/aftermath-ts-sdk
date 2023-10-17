@@ -16,7 +16,8 @@ import {
 	SuiAddress,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
-import { Coin, Pools } from "../..";
+import { Coin } from "../../coin/coin";
+import { Pools } from "../../pools/pools";
 import {
 	TransactionArgument,
 	TransactionBlock,

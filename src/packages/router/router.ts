@@ -79,17 +79,20 @@ export class Router extends Caller {
 	 *
 	 * @returns Complete graph of all pools used in router
 	 */
-	public async getGraph() {
-		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
+	public async getGraph(inputs?: { isDynamicGas: boolean }) {
+		return this.fetchApi<RouterSerializableCompleteGraph>(
+			"graph" + (inputs?.isDynamicGas ? "/dynamic-gas" : "")
+		);
 	}
 
 	public async getAsyncPools() {
 		return this.fetchApi<RouterAsyncSerializablePool[]>("async-pools");
 	}
 
-	public async getSynchronousPoolIds() {
+	public async getSynchronousPoolIds(inputs?: { isDynamicGas: boolean }) {
 		return this.fetchApi<Record<RouterSynchronousProtocolName, ObjectId[]>>(
-			"synchronous-pool-ids"
+			"synchronous-pool-ids" +
+				(inputs?.isDynamicGas ? "/dynamic-gas" : "")
 		);
 	}
 

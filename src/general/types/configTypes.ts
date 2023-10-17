@@ -27,6 +27,7 @@ interface OptionalConfigAddresses {
 	referralVault: ReferralVaultAddresses;
 	perpetuals: PerpetualsAddresses;
 	farms: FarmsAddresses;
+	dynamicGas: DynamicGasAddresses;
 }
 
 // =========================================================================
@@ -53,6 +54,7 @@ export interface StakingAddresses {
 	};
 	objects: {
 		stakedSuiVault: ObjectId;
+		stakedSuiVaultState: ObjectId;
 		safe: ObjectId;
 		treasury: ObjectId;
 		referralVault: ObjectId;
@@ -124,6 +126,7 @@ export interface RequiredRouterAddresses {
 
 export interface OptionalRouterAddresses {
 	aftermath: AftermathRouterWrapperAddresses;
+	afSui: AfSuiRouterWrapperAddresses;
 	deepBook: DeepBookAddresses;
 	cetus: CetusAddresses;
 	turbos: TurbosAddresses;
@@ -141,6 +144,16 @@ export interface AftermathRouterWrapperAddresses {
 	};
 	objects: {
 		wrapperApp: ObjectId;
+	};
+}
+
+export interface AfSuiRouterWrapperAddresses {
+	packages: {
+		wrapper: SuiAddress;
+	};
+	objects: {
+		wrapperApp: ObjectId;
+		aftermathValidator: ObjectId;
 	};
 }
 
@@ -272,6 +285,10 @@ export interface FarmsAddresses {
 		vaults: SuiAddress;
 		vaultsInitial: SuiAddress;
 	};
+}
+
+export interface DynamicGasAddresses {
+	sponsorAddress: SuiAddress;
 }
 
 export interface ExchangeAddresses {

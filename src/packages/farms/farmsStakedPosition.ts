@@ -271,6 +271,7 @@ export class FarmsStakedPosition extends Caller {
 	public async getDepositPrincipalTransaction(inputs: {
 		depositAmount: Balance;
 		walletAddress: SuiAddress;
+		isSponsoredTx?: boolean;
 	}) {
 		return this.fetchApiTransaction<ApiFarmsDepositPrincipalBody>(
 			"transactions/deposit-principal",

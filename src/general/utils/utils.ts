@@ -3,26 +3,17 @@ import {
 	SuiMoveObject,
 	SuiObjectResponse,
 } from "@mysten/sui.js/client";
-import { AnyObjectType, Balance, ObjectId, Slippage } from "../../types";
-import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
-import { EventsApiHelpers } from "../api/eventsApiHelpers";
-import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
-import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import {
+	AnyObjectType,
+	Balance,
+	CoinType,
+	ObjectId,
+	Slippage,
+} from "../../types";
 import { Casting } from "./casting";
-import { is } from "@mysten/sui.js/utils";
+import { Coin } from "../../packages";
 
-export class Helpers {
-	// =========================================================================
-	//  Api Helpers
-	// =========================================================================
-
-	public static readonly dynamicFields = DynamicFieldsApiHelpers;
-	public static readonly events = EventsApiHelpers;
-	public static readonly inspections = InspectionsApiHelpers;
-	public static readonly objects = ObjectsApiHelpers;
-	public static readonly transactions = TransactionsApiHelpers;
-
+export class Utils {
 	// =========================================================================
 	//  Type Manipulation
 	// =========================================================================
@@ -80,7 +71,7 @@ export class Helpers {
 		a: bigint,
 		b: bigint,
 		tolerance: number
-	) => Helpers.closeEnough(Number(a), Number(b), tolerance);
+	) => this.closeEnough(Number(a), Number(b), tolerance);
 
 	public static veryCloseInt = (a: number, b: number, fixedOne: number) =>
 		Math.abs(Math.floor(a / fixedOne) - Math.floor(b / fixedOne)) <= 1;
@@ -284,7 +275,7 @@ export class Helpers {
 	public static getObjectDisplay(
 		data: SuiObjectResponse
 	): DisplayFieldsResponse {
-		const display = Helpers.getObjectDisplay(data);
+		const display = this.getObjectDisplay(data);
 		if (display) return display;
 
 		throw new Error("no object display found on " + data.data?.objectId);

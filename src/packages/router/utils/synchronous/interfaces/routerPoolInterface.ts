@@ -14,6 +14,7 @@ import {
 	isPoolObject,
 	ObjectId,
 	SuiAddress,
+	isAfSuiRouterPoolObject,
 } from "../../../../../types";
 import { CoinType } from "../../../../coin/coinTypes";
 import AftermathRouterPool from "../routerPools/aftermathRouterPool";
@@ -36,6 +37,7 @@ import { isBlueMovePoolObject } from "../../../../external/blueMove/blueMoveType
 import BlueMoveRouterPool from "../routerPools/blueMoveRouterPool";
 import { isFlowXPoolObject } from "../../../../external/flowX/flowXTypes";
 import FlowXRouterPool from "../routerPools/flowXRouterPool";
+import AfSuiRouterPool from "../routerPools/afSuiRouterPool";
 
 // =========================================================================
 //  Types
@@ -82,6 +84,8 @@ export function createRouterPool(inputs: {
 		? new SuiswapRouterPool(pool, network)
 		: isBlueMovePoolObject(pool)
 		? new BlueMoveRouterPool(pool, network)
+		: isAfSuiRouterPoolObject(pool)
+		? new AfSuiRouterPool(pool, network)
 		: isPoolObject(pool)
 		? new AftermathRouterPool(pool, network)
 		: undefined;

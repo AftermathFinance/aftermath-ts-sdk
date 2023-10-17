@@ -24,10 +24,10 @@ import {
 	FarmsStakingPoolRewardCoin,
 } from "./farmsTypes";
 import { Casting, Helpers } from "../../general/utils";
-import { Coin } from "..";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { Fixed } from "../../general/utils/fixed";
+import { Coin } from "../coin/coin";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -238,6 +238,7 @@ export class FarmsStakingPool extends Caller {
 		stakeAmount: Balance;
 		lockDurationMs: Timestamp;
 		walletAddress: SuiAddress;
+		isSponsoredTx?: boolean;
 	}) {
 		return this.fetchApiTransaction<ApiFarmsStakeBody>(
 			"transactions/stake",
@@ -312,6 +313,7 @@ export class FarmsStakingPool extends Caller {
 			emissionDelayTimestampMs: Timestamp;
 			rewardCoinType: CoinType;
 			walletAddress: SuiAddress;
+			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
 		return this.fetchApiTransaction<ApiFarmsInitializeStakingPoolRewardBody>(
@@ -331,6 +333,7 @@ export class FarmsStakingPool extends Caller {
 				rewardCoinType: CoinType;
 			}[];
 			walletAddress: SuiAddress;
+			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
 		return this.fetchApiTransaction<ApiFarmsTopUpStakingPoolRewardsBody>(

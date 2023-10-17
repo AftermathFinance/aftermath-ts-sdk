@@ -15,7 +15,8 @@ import {
 import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
-import { CoinStruct, PaginatedCoins } from "@mysten/sui.js/dist/cjs/client";
+import { CoinStruct, PaginatedCoins } from "@mysten/sui.js/client";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 
 export class CoinApi {
 	// =========================================================================
@@ -88,16 +89,20 @@ export class CoinApi {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		coinAmount: Balance;
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionObjectArgument> => {
-		const { tx, walletAddress, coinType, coinAmount } = inputs;
+		const { tx, walletAddress, coinType, coinAmount, isSponsoredTx } =
+			inputs;
 
 		tx.setSender(walletAddress);
 
-		const coinData = await this.fetchCoinsUntilAmountReachedOrEnd(inputs);
+		const coinData = await this.fetchAllCoins(inputs);
 		return CoinApi.coinWithAmountTx({
 			tx,
 			coinData,
 			coinAmount,
+			coinType,
+			isSponsoredTx,
 		});
 	};
 
@@ -106,17 +111,18 @@ export class CoinApi {
 		walletAddress: SuiAddress;
 		coinTypes: CoinType[];
 		coinAmounts: Balance[];
+		isSponsoredTx?: boolean;
 	}): Promise<TransactionObjectArgument[]> => {
-		const { tx, walletAddress, coinTypes, coinAmounts } = inputs;
+		const { tx, walletAddress, coinTypes, coinAmounts, isSponsoredTx } =
+			inputs;
 
 		tx.setSender(walletAddress);
 
-		// TODO: handle cursoring until necessary coin amount is found
 		const allCoinsData = await Promise.all(
 			coinTypes.map(async (coinType, index) =>
-				this.fetchCoinsUntilAmountReachedOrEnd({
+				this.fetchAllCoins({
 					...inputs,
-					coinAmount: coinAmounts[index],
+					// coinAmount: coinAmounts[index],
 					coinType,
 				})
 			)
@@ -128,12 +134,54 @@ export class CoinApi {
 				tx,
 				coinData,
 				coinAmount: coinAmounts[index],
+				coinType: coinTypes[index],
+				isSponsoredTx,
 			});
 
 			coinArgs = [...coinArgs, coinArg];
 		}
 
 		return coinArgs;
+	};
+
+	// fetchCoinsUntilAmountReachedOrEnd
+	public fetchAllCoins = async (inputs: {
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		// coinAmount: Balance;
+	}): Promise<CoinStruct[]> => {
+		let allCoinData: CoinStruct[] = [];
+		let cursor: string | undefined = undefined;
+		do {
+			const paginatedCoins: PaginatedCoins =
+				await this.Provider.provider.getCoins({
+					...inputs,
+					owner: inputs.walletAddress,
+					cursor,
+				});
+
+			// const coinData = paginatedCoins.data.filter(
+			// 	(data) => BigInt(data.balance) > BigInt(0)
+			// );
+			const coinData = paginatedCoins.data;
+			allCoinData = [...allCoinData, ...coinData];
+
+			// const totalAmount = Helpers.sumBigInt(
+			// 	allCoinData.map((data) => BigInt(data.balance))
+			// );
+			// if (totalAmount >= inputs.coinAmount) return allCoinData;
+
+			if (
+				paginatedCoins.data.length === 0 ||
+				!paginatedCoins.hasNextPage ||
+				!paginatedCoins.nextCursor
+			)
+				return allCoinData.sort((b, a) =>
+					Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
+				);
+
+			cursor = paginatedCoins.nextCursor;
+		} while (true);
 	};
 
 	// =========================================================================
@@ -150,42 +198,6 @@ export class CoinApi {
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
-
-	private fetchCoinsUntilAmountReachedOrEnd = async (inputs: {
-		walletAddress: SuiAddress;
-		coinType: CoinType;
-		coinAmount: Balance;
-	}) => {
-		let allCoinData: CoinStruct[] = [];
-		let cursor: string | undefined = undefined;
-		do {
-			const paginatedCoins: PaginatedCoins =
-				await this.Provider.provider.getCoins({
-					...inputs,
-					owner: inputs.walletAddress,
-					cursor,
-				});
-
-			const coinData = paginatedCoins.data.filter(
-				(data) => BigInt(data.balance) > BigInt(0)
-			);
-			allCoinData = [...allCoinData, ...coinData];
-
-			const totalAmount = Helpers.sumBigInt(
-				allCoinData.map((data) => BigInt(data.balance))
-			);
-			if (totalAmount >= inputs.coinAmount) return allCoinData;
-
-			if (
-				paginatedCoins.data.length === 0 ||
-				!paginatedCoins.hasNextPage ||
-				!paginatedCoins.nextCursor
-			)
-				return allCoinData;
-
-			cursor = paginatedCoins.nextCursor;
-		} while (true);
-	};
 
 	// NOTE: this is temporary until LP coin metadata issue is solved on Sui
 	private createLpCoinMetadata = async (inputs: {
@@ -252,8 +264,10 @@ export class CoinApi {
 		tx: TransactionBlock;
 		coinData: CoinStruct[];
 		coinAmount: Balance;
+		coinType: CoinType;
+		isSponsoredTx?: boolean;
 	}): TransactionObjectArgument => {
-		const { tx, coinData, coinAmount } = inputs;
+		const { tx, coinData, coinAmount, coinType, isSponsoredTx } = inputs;
 
 		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);
 
@@ -263,7 +277,7 @@ export class CoinApi {
 		if (totalCoinBalance < coinAmount)
 			throw new Error("wallet does not have coins of sufficient balance");
 
-		if (isSuiCoin) {
+		if (!isSponsoredTx && isSuiCoin) {
 			tx.setGasPayment(
 				coinData.map((obj) => {
 					return {
@@ -274,6 +288,12 @@ export class CoinApi {
 			);
 
 			return tx.splitCoins(tx.gas, [tx.pure(coinAmount)]);
+			// return Helpers.transactions.splitCoinsTx({
+			// 	tx,
+			// 	coinId: tx.gas,
+			// 	amounts: [coinAmount],
+			// 	coinType,
+			// });
 		}
 
 		const coinObjectIds = coinData.map((data) => data.coinObjectId);
@@ -291,10 +311,16 @@ export class CoinApi {
 			});
 		}
 
-		return tx.add({
-			kind: "SplitCoins",
-			coin: tx.object(mergedCoinObjectId),
-			amounts: [tx.pure(coinAmount)],
+		// return tx.add({
+		// 	kind: "SplitCoins",
+		// 	coin: tx.object(mergedCoinObjectId),
+		// 	amounts: [tx.pure(coinAmount)],
+		// });
+		return TransactionsApiHelpers.splitCoinTx({
+			tx,
+			coinId: mergedCoinObjectId,
+			amount: coinAmount,
+			coinType,
 		});
 	};
 }

@@ -13,7 +13,7 @@ import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
 import {
 	DisplayFieldsResponse,
 	SuiObjectResponse,
-} from "@mysten/sui.js/dist/cjs/client";
+} from "@mysten/sui.js/client";
 
 export class NftAmmApiCasting {
 	// =========================================================================

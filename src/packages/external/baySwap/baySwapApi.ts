@@ -17,7 +17,7 @@ import { BaySwapPoolFieldsOnChain, BaySwapPoolObject } from "./baySwapTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { RouterPoolTradeTxInputs } from "../../router";
-import { SuiObjectResponse } from "@mysten/sui.js/dist/cjs/client";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 
 export class BaySwapApi
 	implements RouterSynchronousApiInterface<BaySwapPoolObject>

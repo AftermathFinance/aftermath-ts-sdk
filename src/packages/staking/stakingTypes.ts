@@ -1,3 +1,4 @@
+import { CoinType, RouterSerializablePool } from "../..";
 import {
 	ApiEventsBody,
 	Balance,
@@ -22,6 +23,15 @@ export interface ValidatorConfigObject extends Object {
 
 export interface ValidatorOperationCapObject extends Object {
 	authorizerValidatorAddress: SuiAddress;
+}
+
+export interface StakedSuiVaultStateObject extends Object {
+	atomicUnstakeSuiReservesTargetValue: Balance;
+	atomicUnstakeSuiReserves: Balance;
+	minAtomicUnstakeFee: bigint;
+	maxAtomicUnstakeFee: bigint;
+	totalRewardsAmount: Balance;
+	totalSuiAmount: Balance;
 }
 
 export interface StakeBalanceDynamicField {
@@ -102,6 +112,13 @@ export const isUnstakeEvent = (
 	return !isStakeEvent(event);
 };
 
+export interface EpochWasChangedEvent extends Event {
+	activeEpoch: bigint;
+	totalAfSuiSupply: Balance;
+	totalSuiRewardsAmount: Balance;
+	totalSuiAmount: Balance;
+}
+
 // =========================================================================
 //  Staking Positions
 // =========================================================================
@@ -163,6 +180,7 @@ export interface ApiStakeBody {
 	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiUnstakeBody {
@@ -170,6 +188,7 @@ export interface ApiUnstakeBody {
 	afSuiUnstakeAmount: Balance;
 	isAtomic: boolean;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiStakeStakedSuiBody {
@@ -177,12 +196,14 @@ export interface ApiStakeStakedSuiBody {
 	stakedSuiIds: ObjectId[];
 	validatorAddress: SuiAddress;
 	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiUpdateValidatorFeeBody {
 	walletAddress: SuiAddress;
 	validatorOperationCapId: ObjectId;
 	newFeePercentage: Percentage;
+	isSponsoredTx?: boolean;
 }
 
 // =========================================================================
@@ -207,4 +228,25 @@ export interface ApiValidatorOperationCapsBody {
 
 export type ApiStakingEventsBody = ApiEventsBody & {
 	walletAddress: SuiAddress;
+};
+
+// =========================================================================
+//  Router Pool
+// =========================================================================
+
+export type AfSuiRouterPoolObject = StakedSuiVaultStateObject & {
+	afSuiCoinType: CoinType;
+	aftermathValidatorAddress: SuiAddress;
+	afSuiToSuiExchangeRate: number;
+};
+
+export const isAfSuiRouterPoolObject = (
+	pool: RouterSerializablePool
+): pool is AfSuiRouterPoolObject => {
+	return (
+		"afSuiCoinType" in pool &&
+		"aftermathValidatorAddress" in pool &&
+		"afSuiToSuiExchangeRate" in pool &&
+		"totalSuiAmount" in pool
+	);
 };
