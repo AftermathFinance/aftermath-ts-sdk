@@ -638,7 +638,7 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<PerpetualsOrderbookState> => {
-		const { orderbookPrice } = inputs;
+		const { orderbookPrice, lotSize, tickSize } = inputs;
 		const constants = PerpetualsApi.constants.orderbookData;
 
 		const lowPrice = Perpetuals.priceToOrderPrice({
@@ -685,8 +685,16 @@ export class PerpetualsApi {
 				orders: bids,
 			}),
 			asks: bucketedAsks,
-			minAskPrice,
-			maxBidPrice,
+			minAskPrice: Perpetuals.orderPriceToPrice({
+				orderPrice: minAskPrice,
+				lotSize,
+				tickSize,
+			}),
+			maxBidPrice: Perpetuals.orderPriceToPrice({
+				orderPrice: maxBidPrice,
+				lotSize,
+				tickSize,
+			}),
 		};
 	};
 
