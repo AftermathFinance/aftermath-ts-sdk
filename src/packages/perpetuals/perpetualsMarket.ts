@@ -70,15 +70,18 @@ export class PerpetualsMarket extends Caller {
 		});
 	}
 
-	public getOrderbookState(inputs: { orderbookPrice: number }) {
-		const { orderbookPrice } = inputs;
+	public getOrderbookState(inputs: {
+		orderbookPrice: number;
+		priceBucketSize: number;
+		priceBuckets: number;
+	}) {
 		return this.fetchApi<
 			PerpetualsOrderbookState,
 			ApiPerpetualsOrderbookStateBody
 		>("orderbook-state", {
+			...inputs,
 			lotSize: this.lotSize(),
 			tickSize: this.tickSize(),
-			orderbookPrice,
 		});
 	}
 

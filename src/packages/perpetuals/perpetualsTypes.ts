@@ -559,6 +559,8 @@ export interface ApiPerpetualsOrderbookStateBody {
 	orderbookPrice: number;
 	lotSize: number;
 	tickSize: number;
+	priceBucketSize: number;
+	priceBuckets: number;
 }
 
 // =========================================================================
