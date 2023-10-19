@@ -85,10 +85,7 @@ export class FaucetApi {
 		const coins = addCoinEvents.events.map(
 			(event) => "0x" + event.coinType
 		);
-		const coinsWithoutAfSui = coins.filter(
-			(coin) => !coin.toLowerCase().includes("afsui")
-		);
-		return coinsWithoutAfSui;
+		return coins;
 	};
 
 	// =========================================================================
