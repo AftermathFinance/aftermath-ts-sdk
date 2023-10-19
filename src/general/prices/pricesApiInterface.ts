@@ -1,4 +1,9 @@
-import { CoinPriceInfo, CoinSymbolsToPriceInfo, CoinType } from "../../types";
+import {
+	CoinPriceInfo,
+	CoinSymbol,
+	CoinSymbolsToPriceInfo,
+	CoinType,
+} from "../../types";
 import { CoinGeckoCoinApiId } from "./coingecko/coinGeckoTypes";
 
 export interface PricesApiInterface {
@@ -6,7 +11,7 @@ export interface PricesApiInterface {
 	fetchCoinsToPrice: (coins: CoinType[]) => Promise<Record<CoinType, number>>;
 
 	fetchCoinSymbolsToPriceInfo: (inputs: {
-		coinSymbols: CoinGeckoCoinApiId[];
+		coinSymbolsToApiId: Record<CoinSymbol, CoinGeckoCoinApiId>;
 	}) => Promise<CoinSymbolsToPriceInfo>;
 
 	// fetchPriceGivenApiId: (inputs: {

@@ -1,8 +1,12 @@
 import { Coin } from "../../../packages";
-import { CoinPriceInfo, CoinType } from "../../../types";
+import { CoinPriceInfo, CoinSymbol, CoinType } from "../../../types";
 import { CoinHistoricalData } from "../../historicalData/historicalDataTypes";
 import { Helpers } from "../../utils";
-import { CoinGeckoCoinApiId, CoinGeckoCoinData } from "./coinGeckoTypes";
+import {
+	CoinGeckoCoinApiId,
+	CoinGeckoCoinData,
+	CoinGeckoCoinSymbolData,
+} from "./coinGeckoTypes";
 
 export class CoinGeckoApiHelpers {
 	// =========================================================================
@@ -25,20 +29,10 @@ export class CoinGeckoApiHelpers {
 	//  Coin Data
 	// =========================================================================
 
-	public fetchAllCoinData = async (): Promise<
+	public fetchAllSuiCoinData = async (): Promise<
 		Record<CoinType, CoinGeckoCoinData>
 	> => {
-		const coinData = await this.callApi<
-			{
-				id: string;
-				symbol: string;
-				name: string;
-				platforms: {
-					sui?: string;
-				};
-			}[]
-		>("coins/list?include_platform=true");
-
+		const coinData = await this.fetchRawCoinData();
 		const suiCoinData = coinData
 			.filter((data) => "sui" in data.platforms || data.id === "sui")
 			.map((data) => {
@@ -107,6 +101,22 @@ export class CoinGeckoApiHelpers {
 		}, partialCoinDataObject);
 
 		return coinDataObject;
+	};
+
+	public fetchAllCoinData = async (): Promise<
+		Record<CoinSymbol, CoinGeckoCoinSymbolData>
+	> => {
+		const coinData = await this.fetchRawCoinData();
+		return coinData.reduce((acc, data) => {
+			return {
+				[data.symbol.toLowerCase()]: {
+					apiId: data.id,
+					name: data.name,
+					symbol: data.symbol.toLowerCase(),
+				},
+				...acc,
+			};
+		}, {});
 	};
 
 	// =========================================================================
@@ -212,5 +222,18 @@ export class CoinGeckoApiHelpers {
 
 		const castedRes = someJson as OutputType;
 		return castedRes;
+	};
+
+	private fetchRawCoinData = () => {
+		return this.callApi<
+			{
+				id: string;
+				symbol: string;
+				name: string;
+				platforms: {
+					sui?: string;
+				};
+			}[]
+		>("coins/list?include_platform=true");
 	};
 }

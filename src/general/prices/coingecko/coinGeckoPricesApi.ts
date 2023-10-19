@@ -1,5 +1,6 @@
 import {
 	CoinPriceInfo,
+	CoinSymbol,
 	CoinSymbolsToPriceInfo,
 	CoinType,
 	CoinsToPrice,
@@ -41,7 +42,7 @@ export class CoinGeckoPricesApi
 	};
 
 	public fetchCoinsToPrice = async (coins: CoinType[]) => {
-		const allCoinsData = await this.fetchAllCoinData();
+		const allCoinsData = await this.fetchAllSuiCoinData();
 		const onlyInputCoinsData = Helpers.filterObject(allCoinsData, (coin) =>
 			coins
 				.map(Helpers.addLeadingZeroesToType)
@@ -77,17 +78,10 @@ export class CoinGeckoPricesApi
 	};
 
 	public async fetchCoinSymbolsToPriceInfo(inputs: {
-		coinSymbols: CoinGeckoCoinApiId[];
+		coinSymbolsToApiId: Record<CoinSymbol, CoinGeckoCoinApiId>;
 	}): Promise<CoinSymbolsToPriceInfo> {
-		const coinsToApiId = inputs.coinSymbols.reduce(
-			(acc, coinSymbol) => ({
-				...acc,
-				[coinSymbol]: coinSymbol,
-			}),
-			{}
-		);
 		return this.fetchCoinsToPriceInfo({
-			coinsToApiId,
+			coinsToApiId: inputs.coinSymbolsToApiId,
 		});
 	}
 

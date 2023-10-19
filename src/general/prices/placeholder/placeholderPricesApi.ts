@@ -1,6 +1,7 @@
 import { Coin } from "../../../packages/coin/coin";
 import {
 	CoinPriceInfo,
+	CoinSymbol,
 	CoinSymbolsToPriceInfo,
 	CoinType,
 	CoinsToPrice,
@@ -81,13 +82,13 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 	};
 
 	public async fetchCoinSymbolsToPriceInfo(inputs: {
-		coinSymbols: CoinGeckoCoinApiId[];
+		coinSymbolsToApiId: Record<CoinSymbol, CoinGeckoCoinApiId>;
 	}): Promise<CoinSymbolsToPriceInfo> {
 		// TODO: check constants for better fake data ?
-		return inputs.coinSymbols.reduce(
-			(acc, coinSymbol) => ({
+		return Object.keys(inputs.coinSymbolsToApiId).reduce(
+			(acc, symbol) => ({
 				...acc,
-				[coinSymbol]: {
+				[symbol]: {
 					price: Math.random() * 1000,
 					priceChange24HoursPercentage:
 						Math.random() > 0.5 ? 0 : (Math.random() - 0.5) / 10,
