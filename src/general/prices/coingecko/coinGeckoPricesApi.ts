@@ -1,4 +1,9 @@
-import { CoinType, CoinsToPrice } from "../../../types";
+import {
+	CoinPriceInfo,
+	CoinSymbolsToPriceInfo,
+	CoinType,
+	CoinsToPrice,
+} from "../../../types";
 import { Helpers } from "../../utils";
 import { PricesApiInterface } from "../pricesApiInterface";
 import { CoinGeckoApiHelpers } from "./coinGeckoApiHelpers";
@@ -70,6 +75,21 @@ export class CoinGeckoPricesApi
 			...coinsToPrice,
 		};
 	};
+
+	public async fetchCoinSymbolsToPriceInfo(inputs: {
+		coinSymbols: CoinGeckoCoinApiId[];
+	}): Promise<CoinSymbolsToPriceInfo> {
+		const coinsToApiId = inputs.coinSymbols.reduce(
+			(acc, coinSymbol) => ({
+				...acc,
+				[coinSymbol]: coinSymbol,
+			}),
+			{}
+		);
+		return this.fetchCoinsToPriceInfo({
+			coinsToApiId,
+		});
+	}
 
 	// =========================================================================
 	//  Non-Interface Methods
