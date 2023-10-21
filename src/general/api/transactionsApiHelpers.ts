@@ -65,7 +65,7 @@ export class TransactionsApiHelpers {
 		const [txResponse, referenceGasPrice] = await Promise.all([
 			this.Provider.provider.dryRunTransactionBlock({
 				transactionBlock: await tx.build({
-					provider: this.Provider.provider,
+					client: this.Provider.provider,
 				}),
 			}),
 			this.Provider.provider.getReferenceGasPrice(),
