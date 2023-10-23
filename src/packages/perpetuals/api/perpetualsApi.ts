@@ -1548,7 +1548,7 @@ export class PerpetualsApi {
 					...dataPoint,
 					price:
 						orderbookPrice +
-						index *
+						(index + 1) *
 							priceBucketSize *
 							(side === PerpetualsOrderSide.Bid ? -1 : 1),
 				};
