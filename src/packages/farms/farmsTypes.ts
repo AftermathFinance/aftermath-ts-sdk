@@ -241,6 +241,7 @@ export interface ApiFarmsUnstakeBody {
 	rewardCoinTypes: CoinType[];
 	withdrawAmount: Balance;
 	walletAddress: SuiAddress;
+	claimSuiAsAfSui?: boolean;
 }
 
 // =========================================================================
@@ -279,6 +280,7 @@ export interface ApiHarvestFarmsRewardsBody {
 	stakedPositionIds: ObjectId[];
 	rewardCoinTypes: CoinType[];
 	walletAddress: SuiAddress;
+	claimSuiAsAfSui?: boolean;
 }
 
 // =========================================================================
