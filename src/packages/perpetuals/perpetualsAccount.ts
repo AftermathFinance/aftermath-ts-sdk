@@ -481,6 +481,19 @@ export class PerpetualsAccount extends Caller {
 		return price < 0 ? 0 : price;
 	};
 
+	public calcMaxOrderSizeUsd = (inputs: {
+		market: PerpetualsMarket;
+		markets: PerpetualsMarket[];
+		indexPrices: number[];
+		collateralPrice: number;
+	}): number => {
+		const freeMargin = this.calcFreeMargin(inputs);
+		const imr = Casting.IFixed.numberFromIFixed(
+			inputs.market.marketParams.marginRatioInitial
+		);
+		return freeMargin / imr;
+	};
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
@@ -527,5 +540,32 @@ export class PerpetualsAccount extends Caller {
 					: PerpetualsOrderSide.Bid,
 			size: position.baseAssetAmount,
 		};
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private calcFreeMargin = (inputs: {
+		markets: PerpetualsMarket[];
+		indexPrices: number[];
+		collateralPrice: number;
+	}): number => {
+		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
+
+		const { totalPnL, totalMinInitialMargin } =
+			this.calcPnLAndMarginForAccount(inputs);
+
+		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
+
+		collateral -= totalFunding;
+
+		const cappedMargin = collateral * inputs.collateralPrice + totalPnL;
+
+		if (cappedMargin >= totalMinInitialMargin) {
+			return (
+				(cappedMargin - totalMinInitialMargin) / inputs.collateralPrice
+			);
+		} else return 0;
 	};
 }
