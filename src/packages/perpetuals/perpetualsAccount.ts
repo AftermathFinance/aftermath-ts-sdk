@@ -498,6 +498,29 @@ export class PerpetualsAccount extends Caller {
 		return price < 0 ? 0 : price;
 	};
 
+	public calcFreeMargin = (inputs: {
+		markets: PerpetualsMarket[];
+		indexPrices: number[];
+		collateralPrice: number;
+	}): number => {
+		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
+
+		const { totalPnL, totalMinInitialMargin } =
+			this.calcPnLAndMarginForAccount(inputs);
+
+		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
+
+		collateral -= totalFunding;
+
+		const cappedMargin = collateral * inputs.collateralPrice + totalPnL;
+
+		if (cappedMargin >= totalMinInitialMargin) {
+			return (
+				(cappedMargin - totalMinInitialMargin) / inputs.collateralPrice
+			);
+		} else return 0;
+	};
+
 	public calcMaxOrderSizeUsd = (inputs: {
 		market: PerpetualsMarket;
 		markets: PerpetualsMarket[];
@@ -557,32 +580,5 @@ export class PerpetualsAccount extends Caller {
 					: PerpetualsOrderSide.Bid,
 			size: position.baseAssetAmount,
 		};
-	};
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	private calcFreeMargin = (inputs: {
-		markets: PerpetualsMarket[];
-		indexPrices: number[];
-		collateralPrice: number;
-	}): number => {
-		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
-
-		const { totalPnL, totalMinInitialMargin } =
-			this.calcPnLAndMarginForAccount(inputs);
-
-		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
-
-		collateral -= totalFunding;
-
-		const cappedMargin = collateral * inputs.collateralPrice + totalPnL;
-
-		if (cappedMargin >= totalMinInitialMargin) {
-			return (
-				(cappedMargin - totalMinInitialMargin) / inputs.collateralPrice
-			);
-		} else return 0;
 	};
 }
