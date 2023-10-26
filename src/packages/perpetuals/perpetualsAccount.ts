@@ -29,6 +29,8 @@ import {
 	WithdrewCollateralEvent,
 	CollateralChangeEvent,
 	PerpetualsOrderEvent,
+	ApiPerpetualsTransferCollateralBody,
+	ObjectId,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -80,6 +82,21 @@ export class PerpetualsAccount extends Caller {
 				...inputs,
 				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
+			}
+		);
+	}
+
+	public async getTransferCollateralTx(inputs: {
+		walletAddress: SuiAddress;
+		amount: Balance;
+		toAccountCapId: ObjectId;
+	}) {
+		return this.fetchApiTransaction<ApiPerpetualsTransferCollateralBody>(
+			"transactions/transfer-collateral",
+			{
+				...inputs,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				fromAccountCapId: this.accountCap.objectId,
 			}
 		);
 	}

@@ -586,6 +586,14 @@ export interface ApiPerpetualsWithdrawCollateralBody {
 	amount: Balance;
 }
 
+export interface ApiPerpetualsTransferCollateralBody {
+	walletAddress: SuiAddress;
+	collateralCoinType: CoinType;
+	fromAccountCapId: ObjectId;
+	toAccountCapId: ObjectId;
+	amount: Balance;
+}
+
 export interface ApiPerpetualsMarketOrderBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;

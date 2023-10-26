@@ -16,6 +16,7 @@ import {
 	ApiIndexerUserEventsBody,
 	IndexerEventsWithCursor,
 	IFixed,
+	Balance,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -1011,8 +1012,8 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
-		amount: bigint;
-	}) => {
+		amount: Balance;
+	}): TransactionArgument => {
 		const { tx, collateralCoinType, accountCapId, amount } = inputs;
 		const exchangeCfg =
 			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
@@ -1355,7 +1356,7 @@ export class PerpetualsApi {
 		walletAddress: SuiAddress;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
-		amount: bigint;
+		amount: Balance;
 	}): TransactionBlock => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -1397,6 +1398,40 @@ export class PerpetualsApi {
 	public buildPlaceSLTPOrderTx = Helpers.transactions.createBuildTxFunc(
 		this.placeSLTPOrderTx
 	);
+
+	public buildTransferCollateralTx = (inputs: {
+		walletAddress: SuiAddress;
+		collateralCoinType: CoinType;
+		fromAccountCapId: ObjectId | TransactionArgument;
+		toAccountCapId: ObjectId | TransactionArgument;
+		amount: Balance;
+	}): TransactionBlock => {
+		const {
+			walletAddress,
+			collateralCoinType,
+			fromAccountCapId,
+			toAccountCapId,
+			amount,
+		} = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const coin = this.withdrawCollateralTx({
+			tx,
+			collateralCoinType,
+			amount,
+			accountCapId: fromAccountCapId,
+		});
+		this.depositCollateralTx({
+			tx,
+			collateralCoinType,
+			coin,
+			accountCapId: toAccountCapId,
+		});
+
+		return tx;
+	};
 
 	// =========================================================================
 	//  Helpers
