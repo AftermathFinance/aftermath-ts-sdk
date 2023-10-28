@@ -1622,7 +1622,7 @@ export class PerpetualsApi {
 
 	private eventType = (eventName: string) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.perpetuals.packages.perpetuals,
+			this.addresses.perpetuals.packages.events,
 			PerpetualsApi.constants.moduleNames.events,
 			eventName
 		);
