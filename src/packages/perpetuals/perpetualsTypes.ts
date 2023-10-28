@@ -280,8 +280,8 @@ bcs.registerStructType("MarketKey", {
 
 export interface OrderbookDataPoint {
 	price: number;
-	size: bigint;
-	totalSize: bigint;
+	sizeUsd: number;
+	totalSizeUsd: number;
 }
 
 export interface PerpetualsOrderbookState {
@@ -560,7 +560,6 @@ export interface ApiPerpetualsOrderbookStateBody {
 	lotSize: number;
 	tickSize: number;
 	priceBucketSize: number;
-	priceBuckets: number;
 }
 
 // =========================================================================

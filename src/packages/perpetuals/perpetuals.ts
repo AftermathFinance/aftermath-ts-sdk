@@ -28,6 +28,8 @@ export class Perpetuals extends Caller {
 	//  Constants
 	// =========================================================================
 
+	public static readonly OrderUtils = PerpetualsOrderUtils;
+
 	public static readonly constants = {
 		bounds: {
 			minLeverage: 1,

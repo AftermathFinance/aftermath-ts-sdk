@@ -635,21 +635,17 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<PerpetualsOrderbookState> => {
-		const {
-			orderbookPrice,
-			lotSize,
-			tickSize,
-			priceBuckets,
-			priceBucketSize,
-		} = inputs;
+		const { orderbookPrice, lotSize, tickSize } = inputs;
+
+		const PRICE_SCALE_BOUND = 10;
 
 		const lowPrice = Perpetuals.priceToOrderPrice({
 			...inputs,
-			price: orderbookPrice - priceBucketSize * priceBuckets,
+			price: orderbookPrice / PRICE_SCALE_BOUND,
 		});
 		const highPrice = Perpetuals.priceToOrderPrice({
 			...inputs,
-			price: orderbookPrice + priceBucketSize * priceBuckets,
+			price: orderbookPrice * PRICE_SCALE_BOUND,
 		});
 		const [bids, asks] = await Promise.all([
 			this.fetchOrderbookOrders({
@@ -667,13 +663,6 @@ export class PerpetualsApi {
 			}),
 		]);
 
-		const bucketedAsks = this.bucketOrders({
-			...inputs,
-			side: PerpetualsOrderSide.Ask,
-			orders: asks,
-		});
-		bucketedAsks.reverse();
-
 		const askPrices = asks.map((ask) => ask.price);
 		const bidPrices = bids.map((bid) => bid.price);
 		const minAskPrice =
@@ -681,12 +670,16 @@ export class PerpetualsApi {
 		const maxBidPrice =
 			bidPrices.length > 0 ? Helpers.maxBigInt(...bidPrices) : BigInt(0);
 		return {
-			bids: this.bucketOrders({
+			bids: PerpetualsApi.bucketOrders({
 				...inputs,
 				side: PerpetualsOrderSide.Bid,
 				orders: bids,
 			}),
-			asks: bucketedAsks,
+			asks: PerpetualsApi.bucketOrders({
+				...inputs,
+				side: PerpetualsOrderSide.Ask,
+				orders: asks,
+			}),
 			minAskPrice: Perpetuals.orderPriceToPrice({
 				orderPrice: minAskPrice,
 				lotSize,
@@ -1553,69 +1546,6 @@ export class PerpetualsApi {
 		);
 	};
 
-	private bucketOrders = (inputs: {
-		orders: PerpetualsOrderInfo[];
-		side: PerpetualsOrderSide;
-		lotSize: number;
-		tickSize: number;
-		orderbookPrice: number;
-		priceBucketSize: number;
-		priceBuckets: number;
-	}): OrderbookDataPoint[] => {
-		const {
-			orders,
-			side,
-			lotSize,
-			tickSize,
-			orderbookPrice,
-			priceBucketSize,
-			priceBuckets,
-		} = inputs;
-
-		const emptyDataPoints: OrderbookDataPoint[] = Array(priceBuckets)
-			.fill({
-				price: 0,
-				size: BigInt(0),
-				totalSize: BigInt(0),
-			})
-			.map((dataPoint, index) => {
-				return {
-					...dataPoint,
-					price:
-						orderbookPrice +
-						(index + 1) *
-							priceBucketSize *
-							(side === PerpetualsOrderSide.Bid ? -1 : 1),
-				};
-			});
-
-		let dataPoints = orders.reduce((acc, order) => {
-			const price = Perpetuals.orderPriceToPrice({
-				orderPrice: order.price,
-				lotSize,
-				tickSize,
-			});
-			const bucketIndex = Math.floor(
-				Math.abs(orderbookPrice - price) / priceBucketSize
-			);
-
-			acc[bucketIndex].size += order.size;
-
-			return acc;
-		}, emptyDataPoints);
-
-		for (const [index, data] of dataPoints.entries()) {
-			dataPoints[index] = {
-				...data,
-				totalSize:
-					index > 0
-						? dataPoints[index - 1].totalSize + data.size
-						: data.size,
-			};
-		}
-		return dataPoints;
-	};
-
 	// =========================================================================
 	//  Event Types
 	// =========================================================================
@@ -1626,4 +1556,104 @@ export class PerpetualsApi {
 			PerpetualsApi.constants.moduleNames.events,
 			eventName
 		);
+
+	// =========================================================================
+	//  Public Static Helpers
+	// =========================================================================
+
+	public static bucketOrders = (inputs: {
+		orders: PerpetualsOrderInfo[];
+		side: PerpetualsOrderSide;
+		lotSize: number;
+		tickSize: number;
+		priceBucketSize: number;
+		initialBucketedOrders?: OrderbookDataPoint[];
+	}): OrderbookDataPoint[] => {
+		const {
+			orders,
+			side,
+			lotSize,
+			tickSize,
+			priceBucketSize,
+			initialBucketedOrders,
+		} = inputs;
+
+		let dataPoints: OrderbookDataPoint[] = orders.reduce((acc, order) => {
+			const actualPrice = Perpetuals.orderPriceToPrice({
+				orderPrice: order.price,
+				lotSize,
+				tickSize,
+			});
+			const roundedPrice =
+				Math.floor(actualPrice / priceBucketSize) * priceBucketSize;
+			const sizeUsd = lotSize * Number(order.size) * actualPrice;
+
+			const placementIndex = acc.findIndex(
+				(dataPoint: OrderbookDataPoint) =>
+					side === PerpetualsOrderSide.Ask
+						? roundedPrice <= dataPoint.price &&
+						  roundedPrice > dataPoint.price - priceBucketSize
+						: roundedPrice >= dataPoint.price &&
+						  roundedPrice < dataPoint.price + priceBucketSize
+			);
+			if (placementIndex < 0) {
+				// no bucket exists; create bucket
+
+				// if (acc.length > )
+
+				// TODO: handle insert at 0 index edge case
+				// TODO: handle remove bucket
+				const insertIndex = acc.findIndex((dataPoint) =>
+					side === PerpetualsOrderSide.Ask
+						? roundedPrice <= dataPoint.price
+						: roundedPrice >= dataPoint.price
+				);
+
+				const newDataPoint = {
+					sizeUsd,
+					price: roundedPrice,
+					totalSizeUsd: 0,
+				};
+				if (insertIndex === 0) {
+					return [newDataPoint, ...acc];
+				} else if (insertIndex < 0) {
+					return [...acc, newDataPoint];
+				} else {
+					return [
+						...acc.slice(0, insertIndex),
+						newDataPoint,
+						...acc.slice(insertIndex + 1),
+					];
+				}
+			} else {
+				// bucket found
+				const newAcc = Array.from(acc);
+				newAcc[placementIndex] = {
+					...newAcc[placementIndex],
+					sizeUsd: newAcc[placementIndex].sizeUsd + sizeUsd,
+					totalSizeUsd: newAcc[placementIndex].totalSizeUsd + sizeUsd,
+				};
+				return newAcc;
+			}
+		}, initialBucketedOrders ?? ([] as OrderbookDataPoint[]));
+
+		// remove 0 size buckets
+		dataPoints = dataPoints.filter((data) => data.sizeUsd > 0);
+
+		// compute total sizes
+		for (const [index, data] of dataPoints.entries()) {
+			dataPoints[index] = {
+				...data,
+				totalSizeUsd:
+					index > 0
+						? dataPoints[index - 1].totalSizeUsd + data.sizeUsd
+						: data.sizeUsd,
+			};
+		}
+
+		if (side === PerpetualsOrderSide.Ask) {
+			dataPoints.reverse();
+		}
+		return dataPoints;
+	};
 }
