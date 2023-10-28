@@ -225,7 +225,7 @@ export class PerpetualsAccount extends Caller {
 
 		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
 
-		collateral -= totalFunding;
+		collateral += totalFunding;
 
 		let cappedMargin;
 		if (totalPnL < 0) {
@@ -250,7 +250,7 @@ export class PerpetualsAccount extends Caller {
 		totalLeverage: number;
 	} => {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
-		const collateral = this.collateral() - totalFunding;
+		const collateral = this.collateral() + totalFunding;
 
 		const { totalPnL, totalNetAbsBaseValue } =
 			this.calcPnLAndMarginForAccount(inputs);
@@ -291,7 +291,7 @@ export class PerpetualsAccount extends Caller {
 			market,
 			position,
 		});
-		const collateral = this.collateral() - funding;
+		const collateral = this.collateral() + funding;
 
 		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
 			market,
@@ -340,7 +340,7 @@ export class PerpetualsAccount extends Caller {
 		);
 		const isLong = Math.sign(baseAmount);
 
-		if (isLong > 0) {
+		if (isLong < 0) {
 			const fundingShort = IFixedUtils.numberFromIFixed(
 				position.cumFundingRateShort
 			);
@@ -462,7 +462,7 @@ export class PerpetualsAccount extends Caller {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
 		const collateral_usd =
-			(this.collateral() - totalFunding) * inputs.collateralPrice;
+			(this.collateral() + totalFunding) * inputs.collateralPrice;
 
 		const { totalPnL, totalMinMaintenanceMargin } =
 			this.calcPnLAndMarginForAccount(inputs);
@@ -492,7 +492,10 @@ export class PerpetualsAccount extends Caller {
 			if (baseAssetAmount > 0) {
 				return numerator / (MMR * baseAssetAmount - baseAssetAmount);
 			} else {
-				return numerator / -(MMR * baseAssetAmount + baseAssetAmount);
+				return (
+					numerator /
+					(MMR * Math.abs(baseAssetAmount) + baseAssetAmount)
+				);
 			}
 		})();
 		return price < 0 ? 0 : price;
@@ -510,7 +513,7 @@ export class PerpetualsAccount extends Caller {
 
 		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
 
-		collateral -= totalFunding;
+		collateral += totalFunding;
 
 		const cappedMargin = collateral * inputs.collateralPrice + totalPnL;
 
