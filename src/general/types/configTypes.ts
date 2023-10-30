@@ -20,7 +20,6 @@ interface OptionalConfigAddresses {
 	faucet: FaucetAddresses;
 	staking: StakingAddresses;
 	pools: PoolsAddresses;
-	utilities: UtilitiesAddresses;
 	suiFrens: SuiFrensAddresses;
 	nftAmm: NftAmmAddresses;
 	router: RouterAddresses;
@@ -77,12 +76,6 @@ export interface PoolsAddresses {
 	};
 	other?: {
 		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
-	};
-}
-
-export interface UtilitiesAddresses {
-	packages: {
-		utilities: SuiAddress;
 	};
 }
 
