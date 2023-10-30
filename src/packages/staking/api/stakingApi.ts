@@ -1,6 +1,7 @@
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -27,6 +28,7 @@ import {
 	UnstakeRequestedEvent,
 	StakedSuiVaultStateObject,
 	AfSuiRouterPoolObject,
+	ApiLeveragedStakeBody,
 } from "../stakingTypes";
 import {
 	AfSuiRouterWrapperAddresses,
@@ -46,6 +48,7 @@ import { Fixed } from "../../../general/utils/fixed";
 import { StakingApiCasting } from "./stakingApiCasting";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import { RouterPoolTradeTxInputs } from "../..";
+import { Scallop } from "@scallop-io/sui-scallop-sdk";
 
 export class StakingApi
 	implements RouterSynchronousApiInterface<AfSuiRouterPoolObject>
@@ -497,6 +500,77 @@ export class StakingApi
 		});
 		tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
 
+		return tx;
+	};
+
+	public fetchBuildLeveragedStakeTx = async (
+		inputs: ApiLeveragedStakeBody
+	): Promise<TransactionBlock> => {
+		const { referrer, walletAddress } = inputs;
+		// TODO: find out how to calc these values
+		const suiBorrowAmount = Number(inputs.suiStakeAmount);
+		const leverageLoops = 3;
+
+		const scallopSDK = new Scallop({
+			// TODO: handle other networks
+			networkType: "mainnet",
+		});
+		const scallopBuilder = await scallopSDK.createScallopBuilder();
+		scallopBuilder.init();
+
+		const scallopTx = scallopBuilder.createTxBlock();
+		const tx = scallopTx.txBlock;
+		tx.setSender(walletAddress);
+
+		// set referer
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		// get initial sui coin to stake
+		let suiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: Coin.constants.suiCoinType,
+			coinAmount: inputs.suiStakeAmount,
+			isSponsoredTx: inputs.isSponsoredTx,
+		});
+
+		// create a scallop account
+		const [obligation, obligationKey, hotPotato] =
+			scallopTx.openObligation();
+		scallopTx.openObligationEntry();
+
+		// perform leverage loops
+		let afSuiCoinId: TransactionObjectArgument;
+		for (const _ of Array(leverageLoops).fill(null)) {
+			// stake
+			afSuiCoinId = this.stakeTx({
+				tx,
+				...inputs,
+				suiCoin,
+				// withTransfer: true,
+			});
+
+			// supply afsui as collateral
+			scallopTx.addCollateral(obligation, afSuiCoinId, "afsui");
+			// borrow sui
+			suiCoin = scallopTx.borrow(
+				obligation,
+				obligationKey,
+				suiBorrowAmount,
+				"sui"
+			);
+		}
+
+		// return obligation
+		scallopTx.returnObligation(obligation, hotPotato);
+		scallopTx.transferObjects([obligationKey], walletAddress);
+
+		// transfer final afsui to holder
+		tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
 		return tx;
 	};
 

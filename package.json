@@ -36,6 +36,7 @@
 	"dependencies": {
 		"@mysten/sui.js": "^0.44.0",
 		"@pythnetwork/pyth-evm-js": "^1.16.1",
+		"@scallop-io/sui-scallop-sdk": "^0.44.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",
 		"node-fetch": "^3.3.1",
