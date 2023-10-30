@@ -280,6 +280,8 @@ bcs.registerStructType("MarketKey", {
 
 export interface OrderbookDataPoint {
 	price: number;
+	size: number;
+	totalSize: number;
 	sizeUsd: number;
 	totalSizeUsd: number;
 }

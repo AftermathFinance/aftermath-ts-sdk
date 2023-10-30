@@ -1586,7 +1586,8 @@ export class PerpetualsApi {
 			});
 			const roundedPrice =
 				Math.floor(actualPrice / priceBucketSize) * priceBucketSize;
-			const sizeUsd = lotSize * Number(order.size) * actualPrice;
+			const size = lotSize * Number(order.size);
+			const sizeUsd = size * actualPrice;
 
 			const placementIndex = acc.findIndex(
 				(dataPoint: OrderbookDataPoint) =>
@@ -1598,11 +1599,6 @@ export class PerpetualsApi {
 			);
 			if (placementIndex < 0) {
 				// no bucket exists; create bucket
-
-				// if (acc.length > )
-
-				// TODO: handle insert at 0 index edge case
-				// TODO: handle remove bucket
 				const insertIndex = acc.findIndex((dataPoint) =>
 					side === PerpetualsOrderSide.Ask
 						? roundedPrice <= dataPoint.price
@@ -1610,9 +1606,11 @@ export class PerpetualsApi {
 				);
 
 				const newDataPoint = {
+					size,
 					sizeUsd,
-					price: roundedPrice,
+					totalSize: 0,
 					totalSizeUsd: 0,
+					price: roundedPrice,
 				};
 				if (insertIndex === 0) {
 					return [newDataPoint, ...acc];
@@ -1630,6 +1628,8 @@ export class PerpetualsApi {
 				const newAcc = Array.from(acc);
 				newAcc[placementIndex] = {
 					...newAcc[placementIndex],
+					size: newAcc[placementIndex].size + size,
+					totalSize: newAcc[placementIndex].totalSize + size,
 					sizeUsd: newAcc[placementIndex].sizeUsd + sizeUsd,
 					totalSizeUsd: newAcc[placementIndex].totalSizeUsd + sizeUsd,
 				};
@@ -1638,12 +1638,16 @@ export class PerpetualsApi {
 		}, initialBucketedOrders ?? ([] as OrderbookDataPoint[]));
 
 		// remove 0 size buckets
-		dataPoints = dataPoints.filter((data) => data.sizeUsd > 0);
+		dataPoints = dataPoints.filter((data) => data.size > 0);
 
 		// compute total sizes
 		for (const [index, data] of dataPoints.entries()) {
 			dataPoints[index] = {
 				...data,
+				totalSize:
+					index > 0
+						? dataPoints[index - 1].totalSize + data.size
+						: data.size,
 				totalSizeUsd:
 					index > 0
 						? dataPoints[index - 1].totalSizeUsd + data.sizeUsd
