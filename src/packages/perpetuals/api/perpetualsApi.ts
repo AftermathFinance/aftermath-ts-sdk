@@ -1586,7 +1586,8 @@ export class PerpetualsApi {
 			});
 			const roundedPrice =
 				Math.floor(actualPrice / priceBucketSize) * priceBucketSize;
-			const size = lotSize * Number(order.size);
+			// negative tick size means order filled
+			const size = lotSize * Number(order.size) * (tickSize < 0 ? -1 : 1);
 			const sizeUsd = size * actualPrice;
 
 			const placementIndex = acc.findIndex(

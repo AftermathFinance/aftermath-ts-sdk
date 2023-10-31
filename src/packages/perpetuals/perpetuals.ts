@@ -92,7 +92,8 @@ export class Perpetuals extends Caller {
 		// allowed number of open positions.
 		2002: "Max Positions Exceeded",
 		// An operation brought an account below initial margin requirements.
-		2003: "Initial Margin Requirement Violated",
+		// 2003: "Initial Margin Requirement Violated",
+		2003: "Margin Requirements Violated, Try Lowering Size",
 		// Account is above MMR, so can't be liquidated.
 		2004: "Account Above MMR",
 		// Cannot realize bad debt via means other than calling 'liquidate'.
