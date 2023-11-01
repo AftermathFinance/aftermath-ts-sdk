@@ -259,28 +259,32 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		timeUnit: DurationUnitType;
 		time: number;
 	}): Promise<PoolTradeEvent[]> {
-		const { poolId, timeUnit, time } = inputs;
+		try {
+			const { poolId, timeUnit, time } = inputs;
 
-		dayjs.extend(duration);
-		const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
+			dayjs.extend(duration);
+			const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
 
-		const tradeEventsOnChain =
-			await this.Provider.indexerCaller.fetchIndexer<
-				IndexerEventOnChain<PoolTradeEventOnChainFields>[],
-				undefined,
-				IndexerDataWithCursorQueryParams
-			>(
-				`pools/${poolId}/swap-events-within-time/${durationMs}`,
-				undefined,
-				{
-					skip: 0,
-					limit: 10000, // max from mongo ?
-				}
+			const tradeEventsOnChain =
+				await this.Provider.indexerCaller.fetchIndexer<
+					IndexerEventOnChain<PoolTradeEventOnChainFields>[],
+					undefined,
+					IndexerDataWithCursorQueryParams
+				>(
+					`pools/${poolId}/swap-events-within-time/${durationMs}`,
+					undefined,
+					{
+						skip: 0,
+						limit: 10000, // max from mongo ?
+					}
+				);
+
+			return tradeEventsOnChain.map(
+				Casting.pools.poolTradeEventFromIndexerOnChain
 			);
-
-		return tradeEventsOnChain.map(
-			Casting.pools.poolTradeEventFromIndexerOnChain
-		);
+		} catch (e) {
+			return [];
+		}
 	}
 
 	// =========================================================================
