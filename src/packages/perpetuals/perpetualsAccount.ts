@@ -581,7 +581,7 @@ export class PerpetualsAccount extends Caller {
 				side === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
-			size: position.baseAssetAmount,
+			size: Casting.IFixed.abs(position.baseAssetAmount),
 		};
 	};
 }

@@ -27,6 +27,13 @@ export type DepositedCollateralEventOnChain = EventOnChain<{
 	vault: SuiAddress;
 }>;
 
+export type LiquidatedEventOnChain = EventOnChain<{
+	liqee_account_id: BigIntAsString;
+	liqee_collateral: BigIntAsString;
+	liqor_account_id: BigIntAsString;
+	liqor_collateral: BigIntAsString;
+}>;
+
 // =========================================================================
 //  Account
 // =========================================================================

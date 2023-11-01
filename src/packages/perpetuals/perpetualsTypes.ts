@@ -423,6 +423,18 @@ export const isDepositedCollateralEvent = (
 };
 
 // =========================================================================
+//  Liquidation
+// =========================================================================
+
+export interface LiquidatedEvent extends Event {
+	collateralCoinType: CoinType;
+	liqeeAccountId: PerpetualsAccountId;
+	liqeeCollateral: IFixed;
+	liqorAccountId: PerpetualsAccountId;
+	liqorCollateral: IFixed;
+}
+
+// =========================================================================
 //  Account
 // =========================================================================
 

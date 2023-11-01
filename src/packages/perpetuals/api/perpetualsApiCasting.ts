@@ -21,6 +21,7 @@ import {
 	FilledTakerOrderEvent,
 	FilledMakerOrderEvent,
 	PerpetualsOrderInfo,
+	LiquidatedEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
@@ -36,6 +37,7 @@ import {
 	AskOnChain,
 	FilledMakerOrderEventOnChain,
 	FilledTakerOrderEventOnChain,
+	LiquidatedEventOnChain,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 
@@ -302,6 +304,29 @@ export class PerpetualsApiCasting {
 			collateral: BigInt(fields.collateral),
 			collateralCoinType,
 			vault: Helpers.addLeadingZeroesToType(fields.vault),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Liquidation
+	// =========================================================================
+
+	public static liquidatedEventFromOnChain = (
+		eventOnChain: LiquidatedEventOnChain
+	): LiquidatedEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			liqeeAccountId: BigInt(fields.liqee_account_id),
+			liqeeCollateral: BigInt(fields.liqee_collateral),
+			liqorAccountId: BigInt(fields.liqor_account_id),
+			liqorCollateral: BigInt(fields.liqor_collateral),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
