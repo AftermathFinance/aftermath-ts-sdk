@@ -499,7 +499,7 @@ export class PerpetualsAccount extends Caller {
 		return price < 0 ? 0 : price;
 	};
 
-	public calcFreeMargin = (inputs: {
+	public calcFreeMarginUsd = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
@@ -513,13 +513,11 @@ export class PerpetualsAccount extends Caller {
 			IFixedUtils.numberFromIFixed(this.account.collateral) *
 			inputs.collateralPrice;
 
-		collateralUsd += totalFunding;
+		const margin = collateralUsd + totalFunding + totalPnL;
 
-		const cappedMargin = collateralUsd + totalPnL;
-
-		if (cappedMargin >= totalMinInitialMargin) {
+		if (margin >= totalMinInitialMargin) {
 			return (
-				(cappedMargin - totalMinInitialMargin) / inputs.collateralPrice
+				margin - totalMinInitialMargin
 			);
 		} else return 0;
 	};
@@ -530,7 +528,7 @@ export class PerpetualsAccount extends Caller {
 		indexPrices: number[];
 		collateralPrice: number;
 	}): number => {
-		const freeMargin = this.calcFreeMargin(inputs);
+		const freeMargin = this.calcFreeMarginUsd(inputs);
 		const imr = Casting.IFixed.numberFromIFixed(
 			inputs.market.marketParams.marginRatioInitial
 		);
