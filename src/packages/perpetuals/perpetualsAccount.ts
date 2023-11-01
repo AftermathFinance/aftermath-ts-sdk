@@ -223,15 +223,17 @@ export class PerpetualsAccount extends Caller {
 		const { totalPnL, totalMinInitialMargin } =
 			this.calcPnLAndMarginForAccount(inputs);
 
-		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
+		let collateralUsd =
+			IFixedUtils.numberFromIFixed(this.account.collateral) *
+			inputs.collateralPrice;
 
-		collateral += totalFunding;
+		collateralUsd += totalFunding;
 
 		let cappedMargin;
 		if (totalPnL < 0) {
-			cappedMargin = collateral * inputs.collateralPrice + totalPnL;
+			cappedMargin = collateralUsd + totalPnL;
 		} else {
-			cappedMargin = collateral * inputs.collateralPrice;
+			cappedMargin = collateralUsd;
 		}
 
 		if (cappedMargin >= totalMinInitialMargin) {
@@ -250,7 +252,8 @@ export class PerpetualsAccount extends Caller {
 		totalLeverage: number;
 	} => {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
-		const collateral = this.collateral() + totalFunding;
+		const collateralUsd =
+			this.collateral() * inputs.collateralPrice + totalFunding;
 
 		const { totalPnL, totalNetAbsBaseValue } =
 			this.calcPnLAndMarginForAccount(inputs);
@@ -262,8 +265,7 @@ export class PerpetualsAccount extends Caller {
 		const totalMarginRatio =
 			totalNetAbsBaseValue === 0
 				? 0
-				: (collateral * inputs.collateralPrice + totalPnL) /
-				  totalNetAbsBaseValue;
+				: (collateralUsd + totalPnL) / totalNetAbsBaseValue;
 		const totalLeverage = totalMarginRatio === 0 ? 0 : 1 / totalMarginRatio;
 
 		return {
@@ -291,7 +293,8 @@ export class PerpetualsAccount extends Caller {
 			market,
 			position,
 		});
-		const collateral = this.collateral() + funding;
+		const collateralUsd =
+			this.collateral() * inputs.collateralPrice + funding;
 
 		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
 			market,
@@ -300,9 +303,7 @@ export class PerpetualsAccount extends Caller {
 		});
 
 		const marginRatio =
-			netAbsBaseValue === 0
-				? 0
-				: (collateral * inputs.collateralPrice + pnl) / netAbsBaseValue;
+			netAbsBaseValue === 0 ? 0 : (collateralUsd + pnl) / netAbsBaseValue;
 		const leverage = marginRatio === 0 ? 0 : 1 / marginRatio;
 
 		return {
@@ -461,8 +462,8 @@ export class PerpetualsAccount extends Caller {
 
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
-		const collateral_usd =
-			(this.collateral() + totalFunding) * inputs.collateralPrice;
+		const collateralUsd =
+			this.collateral() * inputs.collateralPrice + totalFunding;
 
 		const { totalPnL, totalMinMaintenanceMargin } =
 			this.calcPnLAndMarginForAccount(inputs);
@@ -483,7 +484,7 @@ export class PerpetualsAccount extends Caller {
 			inputs.market.marketParams.marginRatioMaintenance
 		);
 		const numerator =
-			collateral_usd -
+			collateralUsd -
 			(totalMinMaintenanceMargin - minMaintenanceMargin) +
 			(totalPnL - pnl) -
 			quoteAssetAmount;
@@ -508,11 +509,13 @@ export class PerpetualsAccount extends Caller {
 		const { totalPnL, totalMinInitialMargin } =
 			this.calcPnLAndMarginForAccount(inputs);
 
-		let collateral = IFixedUtils.numberFromIFixed(this.account.collateral);
+		let collateralUsd =
+			IFixedUtils.numberFromIFixed(this.account.collateral) *
+			inputs.collateralPrice;
 
-		collateral += totalFunding;
+		collateralUsd += totalFunding;
 
-		const cappedMargin = collateral * inputs.collateralPrice + totalPnL;
+		const cappedMargin = collateralUsd + totalPnL;
 
 		if (cappedMargin >= totalMinInitialMargin) {
 			return (
