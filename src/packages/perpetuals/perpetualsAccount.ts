@@ -490,12 +490,9 @@ export class PerpetualsAccount extends Caller {
 
 		const price = (() => {
 			if (baseAssetAmount > 0) {
-				return numerator / (MMR * baseAssetAmount - baseAssetAmount);
+				return numerator / ((1 - MMR) * -baseAssetAmount);
 			} else {
-				return (
-					numerator /
-					(MMR * Math.abs(baseAssetAmount) + baseAssetAmount)
-				);
+				return numerator / ((1 + MMR) * -baseAssetAmount);
 			}
 		})();
 		return price < 0 ? 0 : price;
