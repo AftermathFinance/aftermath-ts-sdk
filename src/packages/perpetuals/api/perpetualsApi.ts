@@ -13,7 +13,6 @@ import {
 	SuiAddress,
 	OracleAddresses,
 	AnyObjectType,
-	ApiIndexerUserEventsBody,
 	IndexerEventsWithCursor,
 	IFixed,
 	Balance,
@@ -37,18 +36,13 @@ import {
 	PerpetualsOrderSide,
 	PerpetualsOrderType,
 	PerpetualsOrderbook,
-	ApiPerpetualsLimitOrderBody,
-	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsPreviewOrderBody,
 	ApiPerpetualsPreviewOrderResponse,
 	ApiPerpetualsAccountsBody,
 	PerpetualsOrderData,
 	ApiPerpetualsPositionOrderDatasBody,
 	ApiPerpetualsAccountEventsBody,
-	CollateralChangeEvent,
-	isWithdrewCollateralEvent,
-	DepositedCollateralEvent,
-	WithdrewCollateralEvent,
+	CollateralEvent,
 	PerpetualsOrderEvent,
 	PerpetualsOrderInfo,
 	PerpetualsOrderbookState,
@@ -60,10 +54,7 @@ import {
 	FilledTakerOrderEvent,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
-import { PerpetualsAccount } from "../perpetualsAccount";
 import { Perpetuals } from "../perpetuals";
-import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
-import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import {
@@ -71,10 +62,11 @@ import {
 	DepositedCollateralEventOnChain,
 	FilledMakerOrderEventOnChain,
 	FilledTakerOrderEventOnChain,
+	LiquidatedEventOnChain,
 	PostedOrderEventOnChain,
+	SettledFundingEventOnChain,
 	WithdrewCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
-import { IFixedUtils } from "../../../general/utils/iFixedUtils";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -99,6 +91,9 @@ export class PerpetualsApi {
 	public readonly eventTypes: {
 		withdrewCollateral: AnyObjectType;
 		depositedCollateral: AnyObjectType;
+		settledFunding: AnyObjectType;
+		liquidated: AnyObjectType;
+		acquiredLiqee: AnyObjectType;
 		createdAccount: AnyObjectType;
 		canceledOrder: AnyObjectType;
 		postedOrder: AnyObjectType;
@@ -126,6 +121,10 @@ export class PerpetualsApi {
 			// Collateral
 			withdrewCollateral: this.eventType("WithdrewCollateral"),
 			depositedCollateral: this.eventType("DepositedCollateral"),
+			settledFunding: this.eventType("SettledFunding"),
+			// Liquidation
+			liquidated: this.eventType("Liquidated"),
+			acquiredLiqee: this.eventType("AcquiredLiqee"),
 			// Account
 			createdAccount: this.eventType("CreatedAccount"),
 			// Order
@@ -398,25 +397,70 @@ export class PerpetualsApi {
 
 	public async fetchAccountCollateralEvents(
 		inputs: ApiPerpetualsAccountEventsBody
-	): Promise<IndexerEventsWithCursor<CollateralChangeEvent>> {
+	): Promise<IndexerEventsWithCursor<CollateralEvent>> {
 		const { accountId, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/accounts/${accountId}/events/collateral`,
-			{
-				cursor,
-				limit,
-			},
-			(event) =>
-				(event as EventOnChain<any>).type.includes(
-					this.eventTypes.withdrewCollateral
-				)
-					? Casting.perpetuals.withdrewCollateralEventFromOnChain(
-							event as WithdrewCollateralEventOnChain
-					  )
-					: Casting.perpetuals.depositedCollateralEventFromOnChain(
-							event as DepositedCollateralEventOnChain
-					  )
-		);
+
+		const eventsData: IndexerEventsWithCursor<CollateralEvent> =
+			await this.Provider.indexerCaller.fetchIndexerEvents(
+				`perpetuals/accounts/${accountId}/events/collateral`,
+				{
+					cursor,
+					limit,
+				},
+				(event) => {
+					const eventType = (event as EventOnChain<any>).type;
+					return eventType.includes(
+						this.eventTypes.withdrewCollateral
+					)
+						? Casting.perpetuals.withdrewCollateralEventFromOnChain(
+								event as WithdrewCollateralEventOnChain
+						  )
+						: eventType.includes(
+								this.eventTypes.depositedCollateral
+						  )
+						? Casting.perpetuals.depositedCollateralEventFromOnChain(
+								event as DepositedCollateralEventOnChain
+						  )
+						: eventType.includes(this.eventTypes.settledFunding)
+						? Casting.perpetuals.settledFundingEventFromOnChain(
+								event as SettledFundingEventOnChain
+						  )
+						: eventType.includes(this.eventTypes.liquidated)
+						? Casting.perpetuals.liquidatedEventFromOnChain(
+								event as LiquidatedEventOnChain
+						  )
+						: eventType.includes(this.eventTypes.filledMakerOrder)
+						? Casting.perpetuals.filledMakerOrderEventFromOnChain(
+								event as FilledMakerOrderEventOnChain
+						  )
+						: Casting.perpetuals.filledTakerOrderEventFromOnChain(
+								event as FilledTakerOrderEventOnChain
+						  );
+				}
+			);
+
+		// change collateral so collateral delta based off of previous event
+		for (const [index, event] of eventsData.events.slice(0, -1).entries()) {
+			const previousEvent = eventsData.events[index + 1];
+			eventsData.events[index].collateral =
+				Casting.IFixed.iFixedFromNumber(
+					Math.abs(
+						Casting.IFixed.numberFromIFixed(event.collateral)
+					) -
+						Math.abs(
+							Casting.IFixed.numberFromIFixed(
+								previousEvent.collateral
+							)
+						)
+				);
+		}
+
+		// most likely more events exist, so remove last event since unable to calculate collateral delta
+		if (limit && eventsData.events.length >= limit) {
+			eventsData.events = eventsData.events.slice(0, -1);
+		}
+
+		return eventsData;
 	}
 
 	public async fetchAccountOrderEvents(
@@ -452,9 +496,7 @@ export class PerpetualsApi {
 
 	public async fetchMarketFilledOrderEvents(
 		inputs: ApiPerpetualsMarketEventsBody
-	): Promise<
-		IndexerEventsWithCursor<FilledMakerOrderEvent | FilledTakerOrderEvent>
-	> {
+	): Promise<IndexerEventsWithCursor<FilledMakerOrderEvent>> {
 		const { marketId, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
 			`perpetuals/markets/${marketId}/events/filled-order`,
@@ -462,16 +504,10 @@ export class PerpetualsApi {
 				cursor,
 				limit,
 			},
-			(event) => {
-				const eventType = (event as EventOnChain<any>).type;
-				return eventType.includes(this.eventTypes.filledMakerOrder)
-					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
-							event as FilledMakerOrderEventOnChain
-					  )
-					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
-							event as FilledTakerOrderEventOnChain
-					  );
-			}
+			(event) =>
+				Casting.perpetuals.filledMakerOrderEventFromOnChain(
+					event as FilledMakerOrderEventOnChain
+				)
 		);
 	}
 

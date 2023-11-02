@@ -27,11 +27,31 @@ export type DepositedCollateralEventOnChain = EventOnChain<{
 	vault: SuiAddress;
 }>;
 
+export type SettledFundingEventOnChain = EventOnChain<{
+	account_id: BigIntAsString;
+	collateral: BigIntAsString;
+	market_ids: BigIntAsString[];
+	pos_funding_rates_long: BigIntAsString[];
+	pos_funding_rates_short: BigIntAsString[];
+}>;
+
+// =========================================================================
+//  Liquidation
+// =========================================================================
+
 export type LiquidatedEventOnChain = EventOnChain<{
 	liqee_account_id: BigIntAsString;
 	liqee_collateral: BigIntAsString;
 	liqor_account_id: BigIntAsString;
 	liqor_collateral: BigIntAsString;
+}>;
+
+export type AcquiredLiqeeEventOnChain = EventOnChain<{
+	account_id: BigIntAsString;
+	market_id: BigIntAsString;
+	base_asset_amount: BigIntAsString;
+	quote_asset_notional_amount: BigIntAsString;
+	size: BigIntAsString;
 }>;
 
 // =========================================================================

@@ -22,6 +22,8 @@ import {
 	FilledMakerOrderEvent,
 	PerpetualsOrderInfo,
 	LiquidatedEvent,
+	SettledFundingEvent,
+	AcquiredLiqeeEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
@@ -38,6 +40,8 @@ import {
 	FilledMakerOrderEventOnChain,
 	FilledTakerOrderEventOnChain,
 	LiquidatedEventOnChain,
+	SettledFundingEventOnChain,
+	AcquiredLiqeeEventOnChain,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 
@@ -310,6 +314,30 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	public static settledFundingEventFromOnChain = (
+		eventOnChain: SettledFundingEventOnChain
+	): SettledFundingEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			accountId: BigInt(fields.account_id),
+			collateral: BigInt(fields.collateral),
+			marketIds: fields.market_ids.map((marketId) => BigInt(marketId)),
+			posFundingRatesLong: fields.pos_funding_rates_long.map((rate) =>
+				BigInt(rate)
+			),
+			posFundingRatesShort: fields.pos_funding_rates_short.map((rate) =>
+				BigInt(rate)
+			),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
 	// =========================================================================
 	//  Liquidation
 	// =========================================================================
@@ -323,10 +351,32 @@ export class PerpetualsApiCasting {
 		);
 		return {
 			collateralCoinType,
-			liqeeAccountId: BigInt(fields.liqee_account_id),
-			liqeeCollateral: BigInt(fields.liqee_collateral),
+			accountId: BigInt(fields.liqee_account_id),
+			collateral: BigInt(fields.liqee_collateral),
 			liqorAccountId: BigInt(fields.liqor_account_id),
 			liqorCollateral: BigInt(fields.liqor_collateral),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static acquiredLiqeeEventFromOnChain = (
+		eventOnChain: AcquiredLiqeeEventOnChain
+	): AcquiredLiqeeEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			accountId: BigInt(fields.account_id),
+			marketId: BigInt(fields.market_id),
+			baseAssetAmount: BigInt(fields.base_asset_amount),
+			quoteAssetNotionalAmount: BigInt(
+				fields.quote_asset_notional_amount
+			),
+			size: BigInt(fields.size),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

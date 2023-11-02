@@ -27,7 +27,7 @@ import {
 	PostedOrderEvent,
 	CanceledOrderEvent,
 	WithdrewCollateralEvent,
-	CollateralChangeEvent,
+	CollateralEvent,
 	PerpetualsOrderEvent,
 	ApiPerpetualsTransferCollateralBody,
 	ObjectId,
@@ -196,7 +196,7 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	public async getCollateralEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<CollateralChangeEvent>(
+		return this.fetchApiIndexerEvents<CollateralEvent>(
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/events/collateral`,
 			inputs
 		);
@@ -516,9 +516,7 @@ export class PerpetualsAccount extends Caller {
 		const margin = collateralUsd + totalFunding + totalPnL;
 
 		if (margin >= totalMinInitialMargin) {
-			return (
-				margin - totalMinInitialMargin
-			);
+			return margin - totalMinInitialMargin;
 		} else return 0;
 	};
 

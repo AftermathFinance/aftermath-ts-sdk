@@ -406,20 +406,41 @@ export interface DepositedCollateralEvent extends Event {
 	vault: SuiAddress;
 }
 
-export type CollateralChangeEvent =
+export interface SettledFundingEvent extends Event {
+	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
+	collateral: IFixed;
+	marketIds: PerpetualsMarketId[];
+	posFundingRatesLong: IFixed[];
+	posFundingRatesShort: IFixed[];
+}
+
+export type CollateralEvent =
 	| WithdrewCollateralEvent
-	| DepositedCollateralEvent;
+	| DepositedCollateralEvent
+	| SettledFundingEvent
+	| LiquidatedEvent
+	| FilledTakerOrderEvent
+	| FilledMakerOrderEvent;
+
+// TODO: make all these checks use string value from perps api
 
 export const isWithdrewCollateralEvent = (
-	event: CollateralChangeEvent
+	event: Event
 ): event is WithdrewCollateralEvent => {
-	return !isDepositedCollateralEvent(event);
+	return event.type.toLowerCase().includes("withdrewcollateral");
 };
 
 export const isDepositedCollateralEvent = (
-	event: CollateralChangeEvent
+	event: Event
 ): event is DepositedCollateralEvent => {
-	return "vault" in event;
+	return event.type.toLowerCase().includes("depositedcollateral");
+};
+
+export const isSettledFundingEvent = (
+	event: Event
+): event is SettledFundingEvent => {
+	return event.type.toLowerCase().includes("settledfunding");
 };
 
 // =========================================================================
@@ -428,11 +449,30 @@ export const isDepositedCollateralEvent = (
 
 export interface LiquidatedEvent extends Event {
 	collateralCoinType: CoinType;
-	liqeeAccountId: PerpetualsAccountId;
-	liqeeCollateral: IFixed;
+	accountId: PerpetualsAccountId;
+	collateral: IFixed;
 	liqorAccountId: PerpetualsAccountId;
 	liqorCollateral: IFixed;
 }
+
+export interface AcquiredLiqeeEvent extends Event {
+	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
+	marketId: PerpetualsMarketId;
+	baseAssetAmount: IFixed;
+	quoteAssetNotionalAmount: IFixed;
+	size: bigint;
+}
+
+export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
+	return event.type.toLowerCase().includes("liquidated");
+};
+
+export const isAcquiredLiqeeEvent = (
+	event: Event
+): event is AcquiredLiqeeEvent => {
+	return event.type.toLowerCase().includes("acquiredliqee");
+};
 
 // =========================================================================
 //  Account
@@ -501,30 +541,29 @@ export type PerpetualsOrderEvent =
 	| CanceledOrderEvent
 	| PostedOrderEvent
 	| FilledMakerOrderEvent
-	| FilledTakerOrderEvent;
+	| FilledTakerOrderEvent
+	| AcquiredLiqeeEvent;
 
 // TODO: make all these checks use string value from perps api
 
 export const isCanceledOrderEvent = (
-	event: PerpetualsOrderEvent
+	event: Event
 ): event is CanceledOrderEvent => {
 	return event.type.toLowerCase().includes("canceledorder");
 };
 
-export const isPostedOrderEvent = (
-	event: PerpetualsOrderEvent
-): event is PostedOrderEvent => {
+export const isPostedOrderEvent = (event: Event): event is PostedOrderEvent => {
 	return event.type.toLowerCase().includes("postedorder");
 };
 
 export const isFilledMakerOrderEvent = (
-	event: PerpetualsOrderEvent
+	event: Event
 ): event is FilledMakerOrderEvent => {
 	return event.type.toLowerCase().includes("filledmakerorder");
 };
 
 export const isFilledTakerOrderEvent = (
-	event: PerpetualsOrderEvent
+	event: Event
 ): event is FilledTakerOrderEvent => {
 	return event.type.toLowerCase().includes("filledtakerorder");
 };

@@ -90,9 +90,10 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	public async getFilledOrderEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<
-			FilledMakerOrderEvent | FilledTakerOrderEvent
-		>(`events/filled-order`, inputs);
+		return this.fetchApiIndexerEvents<FilledMakerOrderEvent>(
+			`events/filled-order`,
+			inputs
+		);
 	}
 
 	// =========================================================================
