@@ -1,3 +1,4 @@
+import { Casting } from "../..";
 import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -86,19 +87,45 @@ export class PerpetualsMarket extends Caller {
 		});
 	}
 
-	public getExecutionPrice(inputs: {
+	// WARN: this may not work if the direction we're going is opposite of the
+	// current position
+	public getMaxOrderSizeUsd = async (inputs: {
+		freeMarginUsd: number;
+		indexPrice: number;
 		side: PerpetualsOrderSide;
-		size: bigint;
-	}) {
-		return this.fetchApi<number, ApiPerpetualsExecutionPriceBody>(
-			"execution-price",
-			{
-				...inputs,
-				lotSize: this.lotSize(),
-				tickSize: this.tickSize(),
-			}
+	}): Promise<number> => {
+		const { freeMarginUsd, indexPrice, side } = inputs;
+
+		const imr = Casting.IFixed.numberFromIFixed(
+			this.marketParams.marginRatioInitial
 		);
-	}
+		const takerFee = Casting.IFixed.numberFromIFixed(
+			this.marketParams.takerFee
+		);
+
+		// Compute the max size optimistically
+		const optimisticSizeUsd = freeMarginUsd / (imr + takerFee);
+		const baseSize = optimisticSizeUsd / indexPrice;
+		const size = BigInt(Math.floor(baseSize / this.lotSize()));
+
+		// Compute the execution size for an order of USD size computed above,
+		// assuming it gets fully matched
+		const executionPrice = await this.getExecutionPrice({
+			size,
+			side,
+		});
+
+		const slippage =
+			(side === PerpetualsOrderSide.Bid
+				? indexPrice - executionPrice
+				: executionPrice - indexPrice) / indexPrice;
+		const max_size =
+			freeMarginUsd /
+			(indexPrice * imr +
+				executionPrice * takerFee +
+				slippage * indexPrice);
+		return max_size * indexPrice;
+	};
 
 	// =========================================================================
 	//  Events
@@ -203,4 +230,22 @@ export class PerpetualsMarket extends Caller {
 			Math.floor(inputs.size / this.lotSize()) * this.lotSize();
 		return floorAmount;
 	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private getExecutionPrice(inputs: {
+		side: PerpetualsOrderSide;
+		size: bigint;
+	}) {
+		return this.fetchApi<number, ApiPerpetualsExecutionPriceBody>(
+			"execution-price",
+			{
+				...inputs,
+				lotSize: this.lotSize(),
+				tickSize: this.tickSize(),
+			}
+		);
+	}
 }

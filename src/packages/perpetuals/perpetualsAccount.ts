@@ -520,31 +520,6 @@ export class PerpetualsAccount extends Caller {
 		} else return 0;
 	};
 
-	public calcMaxOrderSizeUsd = (inputs: {
-		market: PerpetualsMarket;
-		markets: PerpetualsMarket[];
-		indexPrices: number[];
-		collateralPrice: number;
-		isLong: boolean; // whether we're going long or short
-	}): number => {
-		// TODO: define this based on a devInspect which simulates a market order
-		const executionPriceForSize = (sizeUsd: number) => {
-			const mktIndex = inputs.markets.findIndex(
-				(mkt) => mkt.marketId === inputs.market.marketId
-			);
-			const indexPrice = inputs.indexPrices[mktIndex];
-			const sizeBase = sizeUsd / indexPrice;
-			/// call devInspect with the appropriate `side` and converting
-			// `sizeBase` to lots
-			return indexPrice; // FIXME: replace this
-		};
-
-		return this.maxOrderSizeUsdWithExecPrice({
-			executionPriceForSize,
-			...inputs
-		});
-	};
-
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
@@ -592,43 +567,4 @@ export class PerpetualsAccount extends Caller {
 			size: Casting.IFixed.abs(position.baseAssetAmount),
 		};
 	};
-
-	// WARN: this may not work if the direction we're going is opposite of the
-	// current position
-	public maxOrderSizeUsdWithExecPrice = (inputs: {
-		market: PerpetualsMarket;
-		markets: PerpetualsMarket[];
-		indexPrices: number[];
-		collateralPrice: number;
-		isLong: boolean;
-		executionPriceForSize: (size: number) => number;
-	}): number => {
-		const freeMargin = this.calcFreeMarginUsd(inputs);
-		const imr = Casting.IFixed.numberFromIFixed(
-			inputs.market.marketParams.marginRatioInitial
-		);
-		const takerFee = Casting.IFixed.numberFromIFixed(
-			inputs.market.marketParams.takerFee
-		);
-
-		// Compute the max size optimistically
-		const optimisticSizeUsd = freeMargin / (imr + takerFee);
-
-		// Compute the execution size for an order of USD size computed above,
-		// assuming it gets fully matched
-		const executionPrice = inputs.executionPriceForSize(optimisticSizeUsd);
-
-		//
-		const mktIndex = inputs.markets.findIndex((mkt) => mkt.marketId === inputs.market.marketId);
-        const indexPrice = inputs.indexPrices[mktIndex];
-		const slippage = (
-			inputs.isLong ? (indexPrice - executionPrice) : (executionPrice - indexPrice)
-		) / indexPrice;
-        const max_size = freeMargin / (
-            indexPrice * imr
-            + executionPrice * takerFee
-            + slippage * indexPrice
-        );
-        return max_size * indexPrice
-	}
 }
