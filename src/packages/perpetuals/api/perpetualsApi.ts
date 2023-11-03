@@ -52,6 +52,7 @@ import {
 	ApiPerpetualsMarketEventsBody,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
+	PerpetualsFillReceipt,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -1374,6 +1375,30 @@ export class PerpetualsApi {
 		});
 	};
 
+	public inspectPlaceMarketOrderTx = (inputs: {
+		tx: TransactionBlock;
+		orderbookId: ObjectId | TransactionArgument;
+		side: PerpetualsOrderSide;
+		size: bigint;
+	}) /* vector<FillReceipt> */ => {
+		const { tx, orderbookId, size } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.orderbook,
+				"place_market_order"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof orderbookId === "string"
+					? tx.object(orderbookId)
+					: orderbookId, // Orderbook
+				tx.pure(Boolean(inputs.side), "bool"), // side
+				tx.pure(size),
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
@@ -1626,6 +1651,36 @@ export class PerpetualsApi {
 
 		return orderInfos.map((orderInfo) =>
 			Casting.perpetuals.orderInfoFromRaw(orderInfo)
+		);
+	};
+
+	public fetchExecutionPrice = async (inputs: {
+		collateralCoinType: CoinType;
+		marketId: PerpetualsMarketId;
+		side: PerpetualsOrderSide;
+		size: bigint;
+	}): Promise<PerpetualsFillReceipt[]> => {
+		const { collateralCoinType, marketId, side, size } = inputs;
+
+		const tx = new TransactionBlock();
+
+		const orderbookId = this.getOrderbookTx({
+			tx,
+			collateralCoinType,
+			marketId,
+		});
+		this.inspectPlaceMarketOrderTx({ tx, orderbookId, side, size });
+
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
+		const fillReceipts: any[] = bcs.de(
+			"vector<FillReceipt>",
+			new Uint8Array(bytes)
+		);
+		return fillReceipts.map((receipt) =>
+			Casting.perpetuals.fillReceiptFromRaw(receipt)
 		);
 	};
 

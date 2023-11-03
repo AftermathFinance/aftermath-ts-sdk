@@ -386,6 +386,20 @@ bcs.registerStructType(["Leaf", "V"], {
 	next: BCS.U64,
 });
 
+export interface PerpetualsFillReceipt {
+	accountId: PerpetualsAccountId;
+	orderId: PerpetualsOrderId;
+	size: bigint;
+	dropped: boolean;
+}
+
+bcs.registerStructType("FillReceipt", {
+	account_id: BCS.U64,
+	order_id: BCS.U128,
+	size: BCS.U64,
+	dropped: BCS.BOOL,
+});
+
 // =========================================================================
 //  Events
 // =========================================================================
