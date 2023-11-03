@@ -3,6 +3,7 @@ import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
 	ApiIndexerEventsBody,
+	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsOrderbookStateBody,
 	ApiPerpetualsPositionOrderDatasBody,
 	CoinType,
@@ -83,6 +84,20 @@ export class PerpetualsMarket extends Caller {
 			lotSize: this.lotSize(),
 			tickSize: this.tickSize(),
 		});
+	}
+
+	public getExecutionPrice(inputs: {
+		side: PerpetualsOrderSide;
+		size: bigint;
+	}) {
+		return this.fetchApi<number, ApiPerpetualsExecutionPriceBody>(
+			"execution-price",
+			{
+				...inputs,
+				lotSize: this.lotSize(),
+				tickSize: this.tickSize(),
+			}
+		);
 	}
 
 	// =========================================================================

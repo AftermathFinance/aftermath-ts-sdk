@@ -632,6 +632,13 @@ export interface ApiPerpetualsOrderbookStateBody {
 	priceBucketSize: number;
 }
 
+export interface ApiPerpetualsExecutionPriceBody {
+	side: PerpetualsOrderSide;
+	size: bigint;
+	lotSize: number;
+	tickSize: number;
+}
+
 // =========================================================================
 //  Transactions
 // =========================================================================

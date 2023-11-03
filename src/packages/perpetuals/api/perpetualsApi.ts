@@ -53,6 +53,7 @@ import {
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
 	PerpetualsFillReceipt,
+	ApiPerpetualsExecutionPriceBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -1655,14 +1656,12 @@ export class PerpetualsApi {
 		);
 	};
 
-	public fetchExecutionPrice = async (inputs: {
-		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-		side: PerpetualsOrderSide;
-		size: bigint;
-		lotSize: number;
-		tickSize: number;
-	}): Promise<number> => {
+	public fetchExecutionPrice = async (
+		inputs: ApiPerpetualsExecutionPriceBody & {
+			collateralCoinType: CoinType;
+			marketId: PerpetualsMarketId;
+		}
+	): Promise<number> => {
 		const { lotSize, tickSize, side } = inputs;
 
 		const orderReceipts = await this.fetchMarketFilledOrderReceipts(inputs);
