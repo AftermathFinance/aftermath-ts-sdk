@@ -394,8 +394,8 @@ export interface PerpetualsFillReceipt {
 }
 
 bcs.registerStructType("FillReceipt", {
-	account_id: BCS.U64,
-	order_id: BCS.U128,
+	accountId: BCS.U64,
+	orderId: BCS.U128,
 	size: BCS.U64,
 	dropped: BCS.BOOL,
 });

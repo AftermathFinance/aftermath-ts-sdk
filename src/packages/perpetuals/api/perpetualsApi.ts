@@ -445,8 +445,6 @@ export class PerpetualsApi {
 
 		// change collateral so collateral delta based off of previous event
 		for (const [index, event] of eventsData.events.slice(0, -1).entries()) {
-			console.log(event.type, typeof event.collateral);
-
 			const previousEvent = eventsData.events[index + 1];
 			eventsData.events[index].collateral =
 				Casting.IFixed.iFixedFromNumber(
