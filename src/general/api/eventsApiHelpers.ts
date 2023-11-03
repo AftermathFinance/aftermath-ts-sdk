@@ -227,15 +227,17 @@ export class EventsApiHelpers {
 		return castedEvent;
 	};
 
-	public static findCastEventInTransactionOrUndefined = <
+	public static findCastEventOrUndefined = <
 		EventTypeOnChain,
 		EventType
-	>(
-		transaction: SuiTransactionBlockResponse,
-		eventType: AnyObjectType | (() => AnyObjectType),
-		castFunction: (eventOnChain: EventTypeOnChain) => EventType
-	) => {
-		const foundEvent = transaction.events?.find(
+	>(inputs: {
+		events: SuiEvent[];
+		eventType: AnyObjectType | (() => AnyObjectType);
+		castFunction: (eventOnChain: EventTypeOnChain) => EventType;
+	}) => {
+		const { events, eventType, castFunction } = inputs;
+
+		const foundEvent = events.find(
 			(event) =>
 				EventsApiHelpers.suiEventOfTypeOrUndefined(event, eventType) !==
 				undefined
@@ -244,6 +246,21 @@ export class EventsApiHelpers {
 
 		const castedEvent = castFunction(foundEvent as EventTypeOnChain);
 		return castedEvent;
+	};
+
+	public static findCastEventInTransactionOrUndefined = <
+		EventTypeOnChain,
+		EventType
+	>(
+		transaction: SuiTransactionBlockResponse,
+		eventType: AnyObjectType | (() => AnyObjectType),
+		castFunction: (eventOnChain: EventTypeOnChain) => EventType
+	) => {
+		return this.findCastEventOrUndefined({
+			events: transaction.events ?? [],
+			eventType,
+			castFunction,
+		});
 	};
 
 	public static findCastEventInTransactionsOrUndefined = <

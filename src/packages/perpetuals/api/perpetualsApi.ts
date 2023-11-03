@@ -67,6 +67,7 @@ import {
 	SettledFundingEventOnChain,
 	WithdrewCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
+import { Aftermath } from "../../..";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -441,6 +442,8 @@ export class PerpetualsApi {
 
 		// change collateral so collateral delta based off of previous event
 		for (const [index, event] of eventsData.events.slice(0, -1).entries()) {
+			console.log(event.type, typeof event.collateral);
+
 			const previousEvent = eventsData.events[index + 1];
 			eventsData.events[index].collateral =
 				Casting.IFixed.iFixedFromNumber(
@@ -455,8 +458,8 @@ export class PerpetualsApi {
 				);
 		}
 
-		// most likely more events exist, so remove last event since unable to calculate collateral delta
-		if (limit && eventsData.events.length >= limit) {
+		// if more events exist then remove last event since unable to calculate collateral delta
+		if (cursor !== undefined) {
 			eventsData.events = eventsData.events.slice(0, -1);
 		}
 
@@ -565,7 +568,7 @@ export class PerpetualsApi {
 	public fetchPreviewOrder = async (
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
-		const { collateralCoinType, marketId } = inputs;
+		const { collateralCoinType, marketId, side } = inputs;
 		const sender = inputs.walletAddress;
 
 		const tx = new TransactionBlock();
@@ -577,8 +580,8 @@ export class PerpetualsApi {
 			marketId,
 		});
 
-		// get orderbook price before order
-		this.bookPriceTx({ tx, orderbookId });
+		// get orderbook best price before order
+		this.bestPriceTx({ tx, orderbookId, side });
 
 		// place order
 		if ("slPrice" in inputs) {
@@ -591,12 +594,10 @@ export class PerpetualsApi {
 
 		// get account state after order
 		this.getAccountTx({ ...inputs, tx });
-		// get orderbook price after order
-		this.bookPriceTx({ tx, orderbookId });
 
 		try {
 			// inspect tx
-			const allBytes =
+			const { allBytes, events } =
 				await this.Provider.Inspections().fetchAllBytesFromTx({
 					tx,
 					sender,
@@ -606,17 +607,40 @@ export class PerpetualsApi {
 			const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
 				bcs.de("Account", new Uint8Array(allBytes[3][0]))
 			);
-
-			// deserialize orderbook prices
-			const orderbookPriceBeforeOrder =
+			// deserialize orderbook price
+			const bestOrderbookPriceBeforeOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
-			const orderbookPriceAfterOrder =
-				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
+
+			// try find taker fill event
+			const filledOrderEvent =
+				Aftermath.helpers.events.findCastEventOrUndefined({
+					events,
+					eventType: this.eventTypes.filledTakerOrder,
+					castFunction:
+						Casting.perpetuals.filledTakerOrderEventFromOnChain,
+				});
+			if (!filledOrderEvent || !bestOrderbookPriceBeforeOrder)
+				return {
+					accountAfterOrder,
+					priceSlippage: 0,
+					percentSlippage: 0,
+				};
+
+			// calc slippages and fee
+			const avgEntryPrice = Perpetuals.orderPrice({
+				orderEvent: filledOrderEvent,
+			});
+			const priceSlippage = Math.abs(
+				bestOrderbookPriceBeforeOrder - avgEntryPrice
+			);
+			const percentSlippage =
+				priceSlippage / bestOrderbookPriceBeforeOrder;
 
 			return {
 				accountAfterOrder,
-				orderbookPriceBeforeOrder,
-				orderbookPriceAfterOrder,
+				priceSlippage,
+				percentSlippage,
+				filledOrderEvent,
 			};
 		} catch (error) {
 			if (!(error instanceof Error))
@@ -1258,6 +1282,28 @@ export class PerpetualsApi {
 		});
 	};
 
+	public bestPriceTx = (inputs: {
+		tx: TransactionBlock;
+		orderbookId: ObjectId | TransactionArgument;
+		side: PerpetualsOrderSide;
+	}) /* Option<u256> */ => {
+		const { tx, orderbookId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.orderbook,
+				"best_price"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof orderbookId === "string"
+					? tx.object(orderbookId)
+					: orderbookId, // Orderbook
+				tx.pure(Boolean(inputs.side), "bool"), // side
+			],
+		});
+	};
+
 	public getOrderSizeTx = (inputs: {
 		tx: TransactionBlock;
 		orderbookId: ObjectId | TransactionArgument;
@@ -1538,9 +1584,10 @@ export class PerpetualsApi {
 			});
 		}
 
-		const allBytes = await this.Provider.Inspections().fetchAllBytesFromTx({
-			tx,
-		});
+		const { allBytes } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
+				tx,
+			});
 
 		const sizes = allBytes
 			.slice(1)

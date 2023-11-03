@@ -1,6 +1,7 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../providers/aftermathApi";
 import { Byte, SuiAddress } from "../../types";
+import { SuiEvent, TransactionEffects } from "@mysten/sui.js/client";
 
 export class InspectionsApiHelpers {
 	public static constants = {
@@ -35,14 +36,18 @@ export class InspectionsApiHelpers {
 		tx: TransactionBlock;
 		sender?: SuiAddress;
 	}): Promise<Byte[][]> => {
-		const allBytes = await this.fetchAllBytesFromTx(inputs);
+		const { allBytes } = await this.fetchAllBytesFromTx(inputs);
 		return allBytes[allBytes.length - 1];
 	};
 
 	public fetchAllBytesFromTx = async (inputs: {
 		tx: TransactionBlock;
 		sender?: SuiAddress;
-	}): Promise<Byte[][][]> => {
+	}): Promise<{
+		events: SuiEvent[];
+		effects: TransactionEffects;
+		allBytes: Byte[][][];
+	}> => {
 		const sender =
 			inputs.sender ?? InspectionsApiHelpers.constants.devInspectSigner;
 		const response =
@@ -66,6 +71,10 @@ export class InspectionsApiHelpers {
 		const resultBytes = response.results.map(
 			(result) => result.returnValues?.map((val) => val[0]) ?? []
 		);
-		return resultBytes;
+		return {
+			events: response.events,
+			effects: response.effects,
+			allBytes: resultBytes,
+		};
 	};
 }

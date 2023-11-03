@@ -51,7 +51,8 @@ export type AcquiredLiqeeEventOnChain = EventOnChain<{
 	market_id: BigIntAsString;
 	base_asset_amount: BigIntAsString;
 	quote_asset_notional_amount: BigIntAsString;
-	size: BigIntAsString;
+	size_to_acquire: BigIntAsString;
+	mark_price: BigIntAsString;
 }>;
 
 // =========================================================================

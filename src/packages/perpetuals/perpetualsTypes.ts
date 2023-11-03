@@ -7,6 +7,7 @@ import {
 	IFixed,
 	Object,
 	ObjectId,
+	Percentage,
 	SuiAddress,
 	Timestamp,
 } from "../../general/types/generalTypes";
@@ -462,6 +463,7 @@ export interface AcquiredLiqeeEvent extends Event {
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;
 	size: bigint;
+	markPrice: IFixed;
 }
 
 export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
@@ -599,8 +601,9 @@ export type ApiPerpetualsPreviewOrderResponse =
 	  }
 	| {
 			accountAfterOrder: PerpetualsAccountObject;
-			orderbookPriceBeforeOrder: number;
-			orderbookPriceAfterOrder: number;
+			priceSlippage: number;
+			percentSlippage: Percentage;
+			filledOrderEvent?: FilledTakerOrderEvent;
 	  };
 
 export interface ApiPerpetualsPositionOrderDatasBody {
