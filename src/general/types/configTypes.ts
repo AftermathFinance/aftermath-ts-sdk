@@ -19,6 +19,7 @@ interface RequiredConfigAddresses {}
 interface OptionalConfigAddresses {
 	faucet: FaucetAddresses;
 	staking: StakingAddresses;
+	superStaking: SuperStakingAddresses;
 	pools: PoolsAddresses;
 	suiFrens: SuiFrensAddresses;
 	nftAmm: NftAmmAddresses;
@@ -58,6 +59,15 @@ export interface StakingAddresses {
 		treasury: ObjectId;
 		referralVault: ObjectId;
 		validatorConfigsTable: ObjectId;
+	};
+}
+
+export interface SuperStakingAddresses {
+	packages: {
+		lsd: SuiAddress;
+	};
+	objects: {
+		stakedSuiVault: ObjectId;
 	};
 }
 
