@@ -69,6 +69,7 @@ import {
 	WithdrewCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
 import { Aftermath } from "../../..";
+import { PerpetualsOrderUtils } from "../utils";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -1659,41 +1660,29 @@ export class PerpetualsApi {
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		size: bigint;
-	}): Promise<PerpetualsFillReceipt[]> => {
-		const { collateralCoinType, marketId, side, size } = inputs;
+		lotSize: number;
+		tickSize: number;
+	}): Promise<number> => {
+		const { lotSize, tickSize, side } = inputs;
 
-		const tx = new TransactionBlock();
+		const orderReceipts = await this.fetchMarketFilledOrderReceipts(inputs);
 
-		const orderbookId = this.getOrderbookTx({
-			tx,
-			collateralCoinType,
-			marketId,
-		});
-		this.inspectPlaceMarketOrderTx({ tx, orderbookId, side, size });
-
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
+		const totalSize = Number(
+			Helpers.maxBigInt(...orderReceipts.map((receipt) => receipt.size))
+		);
+		return orderReceipts.reduce((acc, receipt) => {
+			const orderPrice = PerpetualsOrderUtils.price(
+				receipt.orderId,
+				side
+			);
+			const orderPriceNum = Perpetuals.orderPriceToPrice({
+				orderPrice,
+				lotSize,
+				tickSize,
 			});
-		const fillReceipts: any[] = bcs.de(
-			"vector<FillReceipt>",
-			new Uint8Array(bytes)
-		);
-		return fillReceipts.map((receipt) =>
-			Casting.perpetuals.fillReceiptFromRaw(receipt)
-		);
+			return acc + orderPriceNum * (Number(receipt.size) / totalSize);
+		}, 0);
 	};
-
-	// =========================================================================
-	//  Event Types
-	// =========================================================================
-
-	private eventType = (eventName: string) =>
-		EventsApiHelpers.createEventType(
-			this.addresses.perpetuals.packages.events,
-			PerpetualsApi.constants.moduleNames.events,
-			eventName
-		);
 
 	// =========================================================================
 	//  Public Static Helpers
@@ -1799,4 +1788,49 @@ export class PerpetualsApi {
 		}
 		return dataPoints;
 	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private fetchMarketFilledOrderReceipts = async (inputs: {
+		collateralCoinType: CoinType;
+		marketId: PerpetualsMarketId;
+		side: PerpetualsOrderSide;
+		size: bigint;
+	}): Promise<PerpetualsFillReceipt[]> => {
+		const { collateralCoinType, marketId, side, size } = inputs;
+
+		const tx = new TransactionBlock();
+
+		const orderbookId = this.getOrderbookTx({
+			tx,
+			collateralCoinType,
+			marketId,
+		});
+		this.inspectPlaceMarketOrderTx({ tx, orderbookId, side, size });
+
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
+		const fillReceipts: any[] = bcs.de(
+			"vector<FillReceipt>",
+			new Uint8Array(bytes)
+		);
+		return fillReceipts.map((receipt) =>
+			Casting.perpetuals.fillReceiptFromRaw(receipt)
+		);
+	};
+
+	// =========================================================================
+	//  Event Types
+	// =========================================================================
+
+	private eventType = (eventName: string) =>
+		EventsApiHelpers.createEventType(
+			this.addresses.perpetuals.packages.events,
+			PerpetualsApi.constants.moduleNames.events,
+			eventName
+		);
 }
