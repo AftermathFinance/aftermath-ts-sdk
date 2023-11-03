@@ -331,7 +331,7 @@ export class Perpetuals extends Caller {
 	}
 
 	public static lotOrTickSizeToBigInt(lotOrTickSize: number): bigint {
-		return BigInt(Math.floor(lotOrTickSize * FixedUtils.fixedOneN9));
+		return BigInt(Math.round(lotOrTickSize * FixedUtils.fixedOneN9));
 	}
 
 	// =========================================================================

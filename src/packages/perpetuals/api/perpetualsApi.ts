@@ -1660,23 +1660,27 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<number> => {
-		const { lotSize, tickSize, side } = inputs;
+		const { lotSize, tickSize } = inputs;
 
 		const orderReceipts = await this.fetchMarketFilledOrderReceipts(inputs);
 
 		const totalSize = Number(
 			Helpers.maxBigInt(...orderReceipts.map((receipt) => receipt.size))
 		);
+
 		return orderReceipts.reduce((acc, receipt) => {
 			const orderPrice = PerpetualsOrderUtils.price(
 				receipt.orderId,
-				side
+				inputs.side === PerpetualsOrderSide.Ask
+					? PerpetualsOrderSide.Bid
+					: PerpetualsOrderSide.Ask
 			);
 			const orderPriceNum = Perpetuals.orderPriceToPrice({
 				orderPrice,
 				lotSize,
 				tickSize,
 			});
+
 			return acc + orderPriceNum * (Number(receipt.size) / totalSize);
 		}, 0);
 	};
@@ -1709,7 +1713,7 @@ export class PerpetualsApi {
 				tickSize,
 			});
 			const roundedPrice =
-				Math.floor(actualPrice / priceBucketSize) * priceBucketSize;
+				Math.round(actualPrice / priceBucketSize) * priceBucketSize;
 			// negative tick size means order filled
 			const size = lotSize * Number(order.size) * (tickSize < 0 ? -1 : 1);
 			const sizeUsd = size * actualPrice;
