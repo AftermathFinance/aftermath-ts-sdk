@@ -21,7 +21,7 @@ import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
-import { Scallop } from "@scallop-io/sui-scallop-sdk";
+import { Scallop, ScallopQuery } from "@scallop-io/sui-scallop-sdk";
 
 export class SuperStakingApi {
 	// =========================================================================
@@ -56,11 +56,19 @@ export class SuperStakingApi {
 		unverifiedValidatorOperationCap: AnyObjectType;
 	};
 
+	private readonly ScallopProviders: {
+		Main: Scallop;
+		Query: ScallopQuery;
+	};
+
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
+
+
+	constructor(private readonly Provider: AftermathApi,  ScallopProvider: Scallop) {
 		const superStaking = this.Provider.addresses.superStaking;
 		const staking = this.Provider.addresses.staking;
 		const pools = this.Provider.addresses.pools;
@@ -69,6 +77,7 @@ export class SuperStakingApi {
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
+
 
 		this.addresses = {
 			superStaking,
@@ -84,6 +93,12 @@ export class SuperStakingApi {
 		this.objectTypes = {
 			unverifiedValidatorOperationCap: `${staking.packages.lsd}::validator::UnverifiedValidatorOperationCap`,
 		};
+
+		this.ScallopProviders = {
+			Main: ScallopProvider,
+			Query: await ScallopProvider.createScallopQuery()
+
+		}
 	}
 
 	// =========================================================================
@@ -94,41 +109,19 @@ export class SuperStakingApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchDelegatedStakes = async (
-		inputs: ApiDelegatedStakesBody
-	): Promise<SuiDelegatedStake[]> => {
-		const rawStakes = await this.Provider.provider.getStakes({
-			owner: inputs.walletAddress,
-		});
+	public fetchSuperStakeObligation = async (
+		inputs: ApiSuperStakeObligationBody
+	): Promise< | "none"> => {
+		const leveragedObligationKeys = await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			walletAddress,
+			objectType: ,
+			objectFromSuiObjectResponse: 
+		})
+		if (leveragedObligationKeys.length <= 0) return "none"
 
-		const stakes = rawStakes.reduce((acc, stakeData) => {
-			const stakesToAdd: SuiDelegatedStake[] = stakeData.stakes.map(
-				(stake) => ({
-					...stake,
-					stakedSuiId: Helpers.addLeadingZeroesToType(
-						stake.stakedSuiId
-					),
-					stakeRequestEpoch: BigInt(stake.stakeRequestEpoch),
-					stakeActiveEpoch: BigInt(stake.stakeActiveEpoch),
-					principal: BigInt(stake.principal),
-					estimatedReward:
-						stake.status === "Active"
-							? BigInt(stake.estimatedReward)
-							: undefined,
-					stakingPool: Helpers.addLeadingZeroesToType(
-						stakeData.stakingPool
-					),
-					validatorAddress: Helpers.addLeadingZeroesToType(
-						stakeData.validatorAddress
-					),
-				})
-			);
-			return [...acc, ...stakesToAdd];
-		}, [] as SuiDelegatedStake[]);
+		const leverageKey = leveragedObligationKeys[0]
+		const obligationAccount = await this.ScallopProviders.Query.getObligationAccount(leverageKey)
 
-		stakes.sort((a, b) =>
-			Number(b.stakeRequestEpoch - a.stakeRequestEpoch)
-		);
 
 		return stakes;
 	};
@@ -183,17 +176,13 @@ export class SuperStakingApi {
 		const suiBorrowAmount = Number(inputs.suiStakeAmount);
 		const leverageLoops = 3;
 
-		const scallopSDK = new Scallop({
-			// TODO: handle other networks
-			networkType: "mainnet",
-		});
 
-		const scallopQuery = await scallopSDK.createScallopQuery();
-		const scallopClient = await scallopSDK.createScallopClient();
 
-		scallopQuery.
+		// const scallopClient = await scallopSDK.createScallopClient();
+		// 		const addresses =scallopClient.address.getAddresses("mainnet")
 
-		
+
+
 
 		const scallopBuilder = await scallopSDK.createScallopBuilder();
 		scallopBuilder.init();
