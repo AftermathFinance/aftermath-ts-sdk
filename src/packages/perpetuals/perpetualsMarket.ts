@@ -220,15 +220,15 @@ export class PerpetualsMarket extends Caller {
 	}
 
 	public roundToValidPrice = (inputs: { price: number }) => {
-		const roundedPrice =
-			Math.round(inputs.price / this.tickSize()) * this.tickSize();
-		return roundedPrice;
+		return Math.round(inputs.price / this.tickSize()) * this.tickSize();
 	};
 
-	public floorToValidSize = (inputs: { size: number }) => {
-		const floorAmount =
-			Math.floor(inputs.size / this.lotSize()) * this.lotSize();
-		return floorAmount;
+	public roundToValidSize = (inputs: { size: number; floor?: boolean }) => {
+		const lots = inputs.size / this.lotSize();
+		return (
+			(inputs.floor ? Math.floor(lots) : Math.round(lots)) *
+			this.lotSize()
+		);
 	};
 
 	// =========================================================================

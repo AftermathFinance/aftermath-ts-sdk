@@ -1399,6 +1399,37 @@ export class PerpetualsApi {
 		});
 	};
 
+	public inspectPlaceLimitOrderTx = (inputs: {
+		tx: TransactionBlock;
+		orderbookId: ObjectId | TransactionArgument;
+		accountId: PerpetualsAccountId;
+		side: PerpetualsOrderSide;
+		size: bigint;
+		price: bigint;
+		orderType: PerpetualsOrderType;
+	}) /* (vector<FillReceipt>, Option<PostReceipt>) */ => {
+		const { tx, orderbookId, accountId, side, size, price, orderType } =
+			inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.orderbook,
+				"place_limit_order"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof orderbookId === "string"
+					? tx.object(orderbookId)
+					: orderbookId, // Orderbook
+				tx.pure(accountId, "u64"), // account_id
+				tx.pure(Boolean(side), "bool"), // side
+				tx.pure(size, "u64"), // size
+				tx.pure(price, "u64"), // price
+				tx.pure(BigInt(orderType), "u64"), // order_type
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
@@ -1663,6 +1694,7 @@ export class PerpetualsApi {
 		const { lotSize, tickSize } = inputs;
 
 		const orderReceipts = await this.fetchMarketFilledOrderReceipts(inputs);
+		if (orderReceipts.length <= 0) return 0;
 
 		const totalSize = Number(
 			Helpers.maxBigInt(...orderReceipts.map((receipt) => receipt.size))
@@ -1809,7 +1841,19 @@ export class PerpetualsApi {
 			collateralCoinType,
 			marketId,
 		});
-		this.inspectPlaceMarketOrderTx({ tx, orderbookId, side, size });
+		// this.inspectPlaceMarketOrderTx({ tx, orderbookId, side, size });
+		this.inspectPlaceLimitOrderTx({
+			tx,
+			orderbookId,
+			side,
+			size,
+			accountId: BigInt(0),
+			orderType: PerpetualsOrderType.Standard,
+			price:
+				side === PerpetualsOrderSide.Bid
+					? BigInt("0x7FFFFFFFFFFFFFFF") // 2^63 - 1
+					: BigInt(0),
+		});
 
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({

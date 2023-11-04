@@ -386,12 +386,8 @@ export class PerpetualsApiCasting {
 			quoteAssetNotionalAmount: BigInt(
 				fields.quote_asset_notional_amount
 			),
-
-			// size: BigInt(fields.size_to_acquire),
-			// markPrice: BigInt(fields.mark_price),
-			size: BigInt(0),
-			markPrice: BigInt(0),
-
+			size: BigInt(fields.size_to_acquire),
+			markPrice: BigInt(fields.mark_price),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
