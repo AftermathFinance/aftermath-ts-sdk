@@ -443,10 +443,15 @@ export class PerpetualsApi {
 				}
 			);
 
-		// change collateral so collateral delta based off of previous event
-		for (const [index, event] of eventsData.events.slice(0, -1).entries()) {
+		// set collateral delta based off of previous event
+		for (const [index, event] of eventsData.events.entries()) {
+			if (index >= eventsData.events.length - 1) {
+				eventsData.events[index].collateralDelta = event.collateral;
+				continue;
+			}
+
 			const previousEvent = eventsData.events[index + 1];
-			eventsData.events[index].collateral =
+			eventsData.events[index].collateralDelta =
 				Casting.IFixed.iFixedFromNumber(
 					Math.abs(
 						Casting.IFixed.numberFromIFixed(event.collateral)
@@ -700,6 +705,10 @@ export class PerpetualsApi {
 
 		const PRICE_SCALE_BOUND = 10;
 
+		const midPrice = Perpetuals.priceToOrderPrice({
+			...inputs,
+			price: orderbookPrice,
+		});
 		const lowPrice = Perpetuals.priceToOrderPrice({
 			...inputs,
 			price: orderbookPrice / PRICE_SCALE_BOUND,
@@ -712,14 +721,13 @@ export class PerpetualsApi {
 			this.fetchOrderbookOrders({
 				...inputs,
 				side: PerpetualsOrderSide.Bid,
-				fromPrice: highPrice,
+				fromPrice: midPrice,
 				toPrice: lowPrice,
 			}),
-
 			this.fetchOrderbookOrders({
 				...inputs,
 				side: PerpetualsOrderSide.Ask,
-				fromPrice: lowPrice,
+				fromPrice: midPrice,
 				toPrice: highPrice,
 			}),
 		]);
@@ -1697,7 +1705,7 @@ export class PerpetualsApi {
 		if (orderReceipts.length <= 0) return 0;
 
 		const totalSize = Number(
-			Helpers.maxBigInt(...orderReceipts.map((receipt) => receipt.size))
+			Helpers.sumBigInt(orderReceipts.map((receipt) => receipt.size))
 		);
 
 		return orderReceipts.reduce((acc, receipt) => {
@@ -1740,9 +1748,9 @@ export class PerpetualsApi {
 
 		let dataPoints: OrderbookDataPoint[] = orders.reduce((acc, order) => {
 			const actualPrice = Perpetuals.orderPriceToPrice({
-				orderPrice: order.price,
 				lotSize,
-				tickSize,
+				tickSize: Math.abs(tickSize),
+				orderPrice: order.price,
 			});
 			const roundedPrice =
 				Math.round(actualPrice / priceBucketSize) * priceBucketSize;
@@ -1799,7 +1807,9 @@ export class PerpetualsApi {
 		}, initialBucketedOrders ?? ([] as OrderbookDataPoint[]));
 
 		// remove 0 size buckets
-		dataPoints = dataPoints.filter((data) => data.size > 0);
+		dataPoints = dataPoints.filter(
+			(data) => data.size > 0 && data.sizeUsd > 0
+		);
 
 		// compute total sizes
 		for (const [index, data] of dataPoints.entries()) {

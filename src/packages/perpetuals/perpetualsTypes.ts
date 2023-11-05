@@ -412,12 +412,14 @@ export interface WithdrewCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
+	collateralDelta: IFixed;
 }
 
 export interface DepositedCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
+	collateralDelta: IFixed;
 	vault: SuiAddress;
 }
 
@@ -425,6 +427,7 @@ export interface SettledFundingEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
+	collateralDelta: IFixed;
 	marketIds: PerpetualsMarketId[];
 	posFundingRatesLong: IFixed[];
 	posFundingRatesShort: IFixed[];
@@ -466,6 +469,7 @@ export interface LiquidatedEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
+	collateralDelta: IFixed;
 	liqorAccountId: PerpetualsAccountId;
 	liqorCollateral: IFixed;
 }
@@ -530,6 +534,7 @@ export interface FilledMakerOrderEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
+	collateralDelta: IFixed;
 	marketId: PerpetualsMarketId;
 	orderId: PerpetualsOrderId;
 	side: PerpetualsOrderSide;
@@ -545,6 +550,7 @@ export interface FilledTakerOrderEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
+	collateralDelta: IFixed;
 	marketId: PerpetualsMarketId;
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;

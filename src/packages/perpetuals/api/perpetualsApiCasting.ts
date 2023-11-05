@@ -297,9 +297,10 @@ export class PerpetualsApiCasting {
 			new Coin(eventOnChain.type).innerCoinType
 		);
 		return {
+			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
-			collateralCoinType,
+			collateralDelta: BigInt(0),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -314,9 +315,10 @@ export class PerpetualsApiCasting {
 			new Coin(eventOnChain.type).innerCoinType
 		);
 		return {
+			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
-			collateralCoinType,
+			collateralDelta: BigInt(0),
 			vault: Helpers.addLeadingZeroesToType(fields.vault),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -335,6 +337,7 @@ export class PerpetualsApiCasting {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
+			collateralDelta: BigInt(0),
 			marketIds: fields.market_ids.map((marketId) => BigInt(marketId)),
 			posFundingRatesLong: fields.pos_funding_rates_long.map((rate) =>
 				BigInt(rate)
@@ -363,6 +366,7 @@ export class PerpetualsApiCasting {
 			collateralCoinType,
 			accountId: BigInt(fields.liqee_account_id),
 			collateral: BigInt(fields.liqee_collateral),
+			collateralDelta: BigInt(0),
 			liqorAccountId: BigInt(fields.liqor_account_id),
 			liqorCollateral: BigInt(fields.liqor_collateral),
 			timestamp: eventOnChain.timestampMs,
@@ -480,6 +484,7 @@ export class PerpetualsApiCasting {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
+			collateralDelta: BigInt(0),
 			marketId: BigInt(fields.market_id),
 			orderId: BigInt(fields.order_id),
 			// TODO: move to helper func ?
@@ -512,6 +517,7 @@ export class PerpetualsApiCasting {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
+			collateralDelta: BigInt(0),
 			marketId: BigInt(fields.market_id),
 			baseAssetAmount: BigInt(fields.base_asset_amount),
 			quoteAssetNotionalAmount: BigInt(

@@ -10,6 +10,7 @@ import {
 	CoinType,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
+	ObjectId,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
@@ -61,15 +62,11 @@ export class PerpetualsMarket extends Caller {
 		return this.fetchApi<number>("24hr-volume");
 	}
 
-	public getPositionOrderDatas(inputs: { position: PerpetualsPosition }) {
-		const { position } = inputs;
+	public getPositionOrderDatas(inputs: ApiPerpetualsPositionOrderDatasBody) {
 		return this.fetchApi<
 			PerpetualsOrderData[],
 			ApiPerpetualsPositionOrderDatasBody
-		>("position-order-datas", {
-			positionAsksId: position.asks.objectId,
-			positionBidsId: position.bids.objectId,
-		});
+		>("position-order-datas", inputs);
 	}
 
 	public getOrderbookState(inputs: {
@@ -124,7 +121,7 @@ export class PerpetualsMarket extends Caller {
 			(indexPrice * imr +
 				executionPrice * takerFee +
 				slippage * indexPrice);
-		return max_size * indexPrice;
+		return Math.abs(max_size * indexPrice);
 	};
 
 	// =========================================================================
