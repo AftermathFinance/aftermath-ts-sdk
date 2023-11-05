@@ -64,10 +64,10 @@ export interface StakingAddresses {
 
 export interface SuperStakingAddresses {
 	packages: {
-		lsd: SuiAddress;
+		leveragedAfSui: SuiAddress;
 	};
 	objects: {
-		stakedSuiVault: ObjectId;
+		leveragedAfSuiState: ObjectId;
 	};
 }
 
