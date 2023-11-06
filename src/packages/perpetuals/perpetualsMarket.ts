@@ -90,8 +90,9 @@ export class PerpetualsMarket extends Caller {
 		freeMarginUsd: number;
 		indexPrice: number;
 		side: PerpetualsOrderSide;
+		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
-		const { freeMarginUsd, indexPrice, side } = inputs;
+		const { freeMarginUsd, indexPrice, side, price } = inputs;
 
 		const imr = Casting.IFixed.numberFromIFixed(
 			this.marketParams.marginRatioInitial
@@ -110,18 +111,19 @@ export class PerpetualsMarket extends Caller {
 		const executionPrice = await this.getExecutionPrice({
 			size,
 			side,
+			price,
 		});
 
 		const slippage =
 			(side === PerpetualsOrderSide.Bid
 				? indexPrice - executionPrice
 				: executionPrice - indexPrice) / indexPrice;
-		const max_size =
+		const maxSize =
 			freeMarginUsd /
 			(indexPrice * imr +
 				executionPrice * takerFee +
 				slippage * indexPrice);
-		return Math.abs(max_size * indexPrice);
+		return Math.abs(maxSize * indexPrice);
 	};
 
 	// =========================================================================
@@ -235,6 +237,7 @@ export class PerpetualsMarket extends Caller {
 	private getExecutionPrice(inputs: {
 		side: PerpetualsOrderSide;
 		size: bigint;
+		price?: PerpetualsOrderPrice;
 	}) {
 		return this.fetchApi<number, ApiPerpetualsExecutionPriceBody>(
 			"execution-price",

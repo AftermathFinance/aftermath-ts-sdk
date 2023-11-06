@@ -205,7 +205,10 @@ export class EventsApiHelpers {
 		event: SuiEvent,
 		eventType: AnyObjectType | (() => AnyObjectType)
 	): SuiEvent | undefined =>
-		event.type === (typeof eventType === "string" ? eventType : eventType())
+		// event.type === (typeof eventType === "string" ? eventType : eventType())
+		event.type.includes(
+			typeof eventType === "string" ? eventType : eventType()
+		)
 			? event
 			: undefined;
 

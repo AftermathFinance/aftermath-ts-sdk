@@ -624,6 +624,7 @@ export type ApiPerpetualsPreviewOrderResponse =
 			priceSlippage: number;
 			percentSlippage: Percentage;
 			filledOrderEvent?: FilledTakerOrderEvent;
+			postOrderEvent?: PostedOrderEvent;
 	  };
 
 export interface ApiPerpetualsPositionOrderDatasBody {
@@ -643,6 +644,7 @@ export interface ApiPerpetualsExecutionPriceBody {
 	size: bigint;
 	lotSize: number;
 	tickSize: number;
+	price?: PerpetualsOrderPrice;
 }
 
 // =========================================================================

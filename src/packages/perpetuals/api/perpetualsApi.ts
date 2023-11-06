@@ -617,7 +617,7 @@ export class PerpetualsApi {
 			const bestOrderbookPriceBeforeOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
 
-			// try find taker fill event
+			// try find relevant event
 			const filledOrderEvent =
 				Aftermath.helpers.events.findCastEventOrUndefined({
 					events,
@@ -625,9 +625,19 @@ export class PerpetualsApi {
 					castFunction:
 						Casting.perpetuals.filledTakerOrderEventFromOnChain,
 				});
+			const postOrderEvent =
+				Aftermath.helpers.events.findCastEventOrUndefined({
+					events,
+					eventType: this.eventTypes.postedOrder,
+					castFunction:
+						Casting.perpetuals.postedOrderEventFromOnChain,
+				});
+
 			if (!filledOrderEvent || !bestOrderbookPriceBeforeOrder)
 				return {
 					accountAfterOrder,
+					filledOrderEvent,
+					postOrderEvent,
 					priceSlippage: 0,
 					percentSlippage: 0,
 				};
@@ -647,6 +657,7 @@ export class PerpetualsApi {
 				priceSlippage,
 				percentSlippage,
 				filledOrderEvent,
+				postOrderEvent,
 			};
 		} catch (error) {
 			if (!(error instanceof Error))
@@ -1699,16 +1710,25 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<number> => {
-		const { lotSize, tickSize } = inputs;
+		const { lotSize, tickSize, price, size } = inputs;
 
 		const orderReceipts = await this.fetchMarketFilledOrderReceipts(inputs);
-		if (orderReceipts.length <= 0) return 0;
+		if (orderReceipts.length <= 0)
+			return price !== undefined
+				? // simulating limit order
+				  Perpetuals.orderPriceToPrice({
+						orderPrice: price,
+						lotSize,
+						tickSize,
+				  })
+				: // simulating market order
+				  0;
 
-		const totalSize = Number(
-			Helpers.sumBigInt(orderReceipts.map((receipt) => receipt.size))
+		const sizeFilled = Helpers.sumBigInt(
+			orderReceipts.map((receipt) => receipt.size)
 		);
 
-		return orderReceipts.reduce((acc, receipt) => {
+		const executionPrice = orderReceipts.reduce((acc, receipt) => {
 			const orderPrice = PerpetualsOrderUtils.price(
 				receipt.orderId,
 				inputs.side === PerpetualsOrderSide.Ask
@@ -1721,8 +1741,24 @@ export class PerpetualsApi {
 				tickSize,
 			});
 
-			return acc + orderPriceNum * (Number(receipt.size) / totalSize);
+			return (
+				acc +
+				orderPriceNum * (Number(receipt.size) / Number(sizeFilled))
+			);
 		}, 0);
+
+		// simulating market order
+		if (price === undefined) return executionPrice;
+		// simulating limit order
+		return (
+			Perpetuals.orderPriceToPrice({
+				orderPrice: price,
+				lotSize,
+				tickSize,
+			}) *
+				(Number(size - sizeFilled) / Number(size)) +
+			executionPrice * (Number(sizeFilled) / Number(size))
+		);
 	};
 
 	// =========================================================================
@@ -1841,8 +1877,9 @@ export class PerpetualsApi {
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		size: bigint;
+		price?: PerpetualsOrderPrice;
 	}): Promise<PerpetualsFillReceipt[]> => {
-		const { collateralCoinType, marketId, side, size } = inputs;
+		const { collateralCoinType, marketId, side, size, price } = inputs;
 
 		const tx = new TransactionBlock();
 
@@ -1860,9 +1897,10 @@ export class PerpetualsApi {
 			accountId: BigInt(0),
 			orderType: PerpetualsOrderType.Standard,
 			price:
-				side === PerpetualsOrderSide.Bid
+				price ??
+				(side === PerpetualsOrderSide.Bid
 					? BigInt("0x7FFFFFFFFFFFFFFF") // 2^63 - 1
-					: BigInt(0),
+					: BigInt(0)),
 		});
 
 		const bytes =
