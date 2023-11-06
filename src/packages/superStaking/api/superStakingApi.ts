@@ -21,7 +21,7 @@ import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
-import { Scallop, ScallopQuery } from "@scallop-io/sui-scallop-sdk";
+import { Scallop, ScallopBuilder, ScallopQuery } from "@scallop-io/sui-scallop-sdk";
 
 export class SuperStakingApi {
 	// =========================================================================
@@ -61,6 +61,7 @@ export class SuperStakingApi {
 
 	private readonly ScallopProviders: {
 		Main: Scallop;
+		Builder: ScallopBuilder;
 		Query: ScallopQuery;
 	};
 
@@ -93,15 +94,18 @@ export class SuperStakingApi {
 			superUnstaked: this.superUnstakedEventType(),
 		};
 
-
 		this.objectTypes = {
 			// unverifiedValidatorOperationCap: `${staking.packages.lsd}::validator::UnverifiedValidatorOperationCap`,
 		};
 
+		const [Builder, Query] = await Promise.all([ScallopProvider.createScallopBuilder(), ScallopProvider.createScallopQuery()])
+		Builder.init();
+		Query.init();
+
 		this.ScallopProviders = {
 			Main: ScallopProvider,
-			Query: await ScallopProvider.createScallopQuery()
-
+			Builder,
+			Query,
 		}
 	}
 
@@ -114,8 +118,14 @@ export class SuperStakingApi {
 	// =========================================================================
 
 	public fetchSuperStakeObligation = async (
-		inputs: ApiSuperStakeObligationBody
+		// inputs: ApiSuperStakeObligationBody
+		inputs: {
+			walletAddress: SuiAddress
+		}
 	): Promise< | "none"> => {
+		const {walletAddress} = inputs
+
+
 		const leveragedObligationKeys = await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
 			walletAddress,
 			objectType: ,
@@ -160,7 +170,6 @@ export class SuperStakingApi {
 	public initiateStakeAndOpenObligationTx = (inputs: {
 		tx: TransactionBlock;
 		afSuiCoinId: ObjectId | TransactionObjectArgument;
-		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
 	}) /* (StakeCap, LeveragedAfSuiObligationKey, Obligation, ObligationHotPotato) */ => {
 		const { tx } = inputs;
 	
@@ -185,6 +194,7 @@ export class SuperStakingApi {
 		stakeCapId: ObjectId | TransactionObjectArgument;
 		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
+		afSuiCoinId:  ObjectId | TransactionObjectArgument;
 	}) => {
 		const { tx } = inputs;
 	
@@ -233,7 +243,7 @@ export class SuperStakingApi {
 				tx.object(inputs.obligationId), // Obligation
 				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
 				tx.object(this.addresses.scallop.objects.coinDecimalsRegistry), // CoinDecimalsRegistry
-				tx.pure(borrowAmount, "u64"), // borrow_amount
+				tx.pure(inputs.borrowAmount, "u64"), // borrow_amount
 				tx.object(this.addresses.scallop.objects.xOracle), // XOracle
 				tx.object(Sui.constants.addresses.suiClockId) // Clock
 			],
@@ -278,6 +288,7 @@ export class SuperStakingApi {
 		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
 		obligationHotPotatoId: ObjectId | TransactionObjectArgument;
+		afSuiCoinId:ObjectId | TransactionObjectArgument;
 	}) => {
 		const { tx } = inputs;
 	
@@ -331,7 +342,7 @@ export class SuperStakingApi {
 				tx.object(inputs.obligationKeyId), // ObligationKey
 				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
 				tx.object(this.addresses.scallop.objects.coinDecimalsRegistry), // CoinDecimalsRegistry
-				tx.pure(withdrawAmount, "u64"), // withdraw_amount
+				tx.pure(inputs.withdrawAmount, "u64"), // withdraw_amount
 				tx.object(this.addresses.scallop.objects.xOracle), // XOracle
 				tx.object(Sui.constants.addresses.suiClockId) // Clock
 			],
@@ -394,29 +405,27 @@ export class SuperStakingApi {
 	//  Transaction Builders
 	// =========================================================================
 
-	public fetchBuildLeveragedStakeTx = async (
-		inputs: ApiLeveragedStakeBody
+	public fetchBuildOpenSuperStakeTx = async (
+		// inputs: ApiLeveragedStakeBody
+		inputs: {
+			walletAddress: SuiAddress,
+			referrer?: SuiAddress,
+			isSponsoredTx?: boolean
+		}
 	): Promise<TransactionBlock> => {
 		const { referrer, walletAddress } = inputs;
 
 
 
 		// TODO: find out how to calc these values
-		const suiBorrowAmount = Number(inputs.suiStakeAmount);
+		let borrowAmount = BigInt(0)
 		const leverageLoops = 3;
 
 
 
-		// const scallopClient = await scallopSDK.createScallopClient();
-		// 		const addresses =scallopClient.address.getAddresses("mainnet")
 
 
-
-
-		const scallopBuilder = await scallopSDK.createScallopBuilder();
-		scallopBuilder.init();
-
-		const scallopTx = scallopBuilder.createTxBlock();
+		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
 		const tx = scallopTx.txBlock;
 		tx.setSender(walletAddress);
 
@@ -428,47 +437,83 @@ export class SuperStakingApi {
 			});
 
 		// get initial sui coin to stake
-		let suiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		let afSuiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
-			coinType: Coin.constants.suiCoinType,
-			coinAmount: inputs.suiStakeAmount,
+			coinType: this.Provider.Staking().coinTypes.afSui,
+			coinAmount: borrowAmount,
 			isSponsoredTx: inputs.isSponsoredTx,
 		});
 
 		// create a scallop account
-		const [obligation, obligationKey, hotPotato] =
-			scallopTx.openObligation();
-		scallopTx.openObligationEntry();
+		// const [obligation, obligationKey, hotPotato] =
+		// 	scallopTx.openObligation();
+		// scallopTx.openObligationEntry();
+
+
+		const [stakeCapId, leveragedObligationKeyId, obligationId, obligationHotPotatoId] = this.initiateStakeAndOpenObligationTx({
+			tx,
+			afSuiCoinId
+		})
+
+
+
 
 		// perform leverage loops
-		let afSuiCoinId: TransactionObjectArgument;
+		let suiCoin: TransactionObjectArgument;
 		for (const _ of Array(leverageLoops).fill(null)) {
-			// stake
-			afSuiCoinId = this.stakeTx({
-				tx,
-				...inputs,
-				suiCoin,
-				// withTransfer: true,
-			});
 
-			// supply afsui as collateral
-			scallopTx.addCollateral(obligation, afSuiCoinId, "afsui");
-			// borrow sui
-			suiCoin = scallopTx.borrow(
-				obligation,
-				obligationKey,
-				suiBorrowAmount,
-				"sui"
-			);
+
+			suiCoin = this.borrowSuiTx({
+				tx,
+				stakeCapId,leveragedObligationKeyId,obligationId,borrowAmount
+			})
+
+			const afSuiCoinId = this.Provider.Staking().stakeTx({
+				// TODO: cleanup this validator address
+				tx, suiCoin, validatorAddress: this.Provider.addresses.router?.afSui?.objects.aftermathValidator ?? ""
+			})
+
+
+			this.depositAfSuiCollateralTx({
+				tx,
+				stakeCapId,
+				leveragedObligationKeyId,
+				obligationId,
+				afSuiCoinId
+			})
+	
+
+			// // stake
+			// afSuiCoinId = this.stakeTx({
+			// 	tx,
+			// 	...inputs,
+			// 	suiCoin,
+			// 	// withTransfer: true,
+			// });
+
+			// // supply afsui as collateral
+			// scallopTx.addCollateral(obligation, afSuiCoinId, "afsui");
+			// // borrow sui
+			// suiCoin = scallopTx.borrow(
+			// 	obligation,
+			// 	obligationKey,
+			// 	suiBorrowAmount,
+			// 	"sui"
+			// );
 		}
 
-		// return obligation
-		scallopTx.returnObligation(obligation, hotPotato);
-		scallopTx.transferObjects([obligationKey], walletAddress);
 
-		// transfer final afsui to holder
-		tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
+		this.completeStakeAndReturnObligation({
+			tx, stakeCapId, leveragedObligationKeyId, obligationId, obligationHotPotatoId, afSuiCoinId
+		})
+
+		// // return obligation
+		// scallopTx.returnObligation(obligation, hotPotato);
+		// scallopTx.transferObjects([obligationKey], walletAddress);
+
+		// // transfer final afsui to holder
+		// tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
 		return tx;
 	};
 
