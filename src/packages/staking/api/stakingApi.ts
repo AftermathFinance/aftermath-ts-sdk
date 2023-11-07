@@ -433,6 +433,26 @@ export class StakingApi
 		});
 	};
 
+	public afsuiToSuiTx = (inputs: {
+		tx: TransactionBlock;
+		afSuiAmount: Balance;
+	}) /* (u64) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.staking.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"afsui_to_sui"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+				tx.pure(inputs.afSuiAmount, "u64"),
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Validator Transaction Commands
 	// =========================================================================

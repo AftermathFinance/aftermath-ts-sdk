@@ -5,10 +5,17 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 //  Objects
 // =========================================================================
 
-export interface ValidatorConfigFieldsOnChain {
-	sui_address: SuiAddress;
-	operation_cap_id: ObjectId;
-	fee: BigIntAsString;
+export interface LeveragedObligationKeyFieldsOnChain {
+	obligation_key: {
+		id: ObjectId;
+		ownership: {
+			id: ObjectId;
+			of: ObjectId;
+		};
+	};
+	base_afsui_collateral: BigIntAsString;
+	afsui_collateral: BigIntAsString;
+	sui_debt: BigIntAsString;
 }
 
 // =========================================================================

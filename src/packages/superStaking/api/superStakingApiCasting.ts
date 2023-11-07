@@ -1,6 +1,13 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
-import { ValidatorOperationCapObject, StakedEvent } from "../../../types";
-import { StakedEventOnChain } from "./superStakingApiCastingTypes";
+import {
+	ValidatorOperationCapObject,
+	StakedEvent,
+	LeveragedObligationKey,
+} from "../../../types";
+import {
+	LeveragedObligationKeyFieldsOnChain,
+	StakedEventOnChain,
+} from "./superStakingApiCastingTypes";
 import { Fixed } from "../../../general/utils/fixed";
 import { Helpers } from "../../../general/utils";
 
@@ -9,20 +16,26 @@ export class SuperStakingApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static validatorOperationCapObjectFromSuiObjectResponse = (
+	public static leveragedObligationKeyFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): ValidatorOperationCapObject => {
+	): LeveragedObligationKey => {
 		const objectType = Helpers.getObjectType(data);
 		const fields = Helpers.getObjectFields(
 			data
-		) as ValidatorOperationCapFieldsOnChain;
+		) as LeveragedObligationKeyFieldsOnChain;
 
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
-			authorizerValidatorAddress: Helpers.addLeadingZeroesToType(
-				fields.authorizer_validator_address
+			obligationId: Helpers.addLeadingZeroesToType(
+				fields.obligation_key.ownership.of
 			),
+			obligationKeyId: Helpers.addLeadingZeroesToType(
+				fields.obligation_key.id
+			),
+			baseAfSuiCollateral: BigInt(fields.base_afsui_collateral),
+			afSuiCollateral: BigInt(fields.afsui_collateral),
+			suiDebt: BigInt(fields.sui_debt),
 		};
 	};
 

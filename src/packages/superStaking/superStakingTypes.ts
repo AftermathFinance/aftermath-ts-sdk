@@ -1,3 +1,4 @@
+import { ObligationAccount } from "@scallop-io/sui-scallop-sdk";
 import {
 	ApiEventsBody,
 	Balance,
@@ -12,10 +13,17 @@ import {
 //  Objects
 // =========================================================================
 
-export interface asdfValidatorConfigObject extends Object {
-	suiAddress: SuiAddress;
-	operationCapId: ObjectId;
-	fee: Percentage;
+export interface LeveragedObligationKey extends Object {
+	obligationId: ObjectId;
+	obligationKeyId: ObjectId;
+	baseAfSuiCollateral: Balance;
+	afSuiCollateral: Balance;
+	suiDebt: Balance;
+}
+
+export interface SuperStakeObligation {
+	obligationAccount: ObligationAccount;
+	leveragedObligationKey: LeveragedObligationKey;
 }
 
 // =========================================================================
