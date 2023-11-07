@@ -624,7 +624,7 @@ export type ApiPerpetualsPreviewOrderResponse =
 			priceSlippage: number;
 			percentSlippage: Percentage;
 			filledOrderEvent?: FilledTakerOrderEvent;
-			postOrderEvent?: PostedOrderEvent;
+			postedOrderEvent?: PostedOrderEvent;
 	  };
 
 export interface ApiPerpetualsPositionOrderDatasBody {

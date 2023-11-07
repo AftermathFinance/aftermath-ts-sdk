@@ -625,7 +625,7 @@ export class PerpetualsApi {
 					castFunction:
 						Casting.perpetuals.filledTakerOrderEventFromOnChain,
 				});
-			const postOrderEvent =
+			const postedOrderEvent =
 				Aftermath.helpers.events.findCastEventOrUndefined({
 					events,
 					eventType: this.eventTypes.postedOrder,
@@ -637,7 +637,7 @@ export class PerpetualsApi {
 				return {
 					accountAfterOrder,
 					filledOrderEvent,
-					postOrderEvent,
+					postedOrderEvent,
 					priceSlippage: 0,
 					percentSlippage: 0,
 				};
@@ -657,7 +657,7 @@ export class PerpetualsApi {
 				priceSlippage,
 				percentSlippage,
 				filledOrderEvent,
-				postOrderEvent,
+				postedOrderEvent,
 			};
 		} catch (error) {
 			if (!(error instanceof Error))
