@@ -161,6 +161,7 @@ export class PerpetualsAccount extends Caller {
 	public async getClosePositionTx(inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
+		lotSize: number;
 	}) {
 		return this.getPlaceMarketOrderTx(this.closePositionTxInputs(inputs));
 	}
@@ -552,6 +553,7 @@ export class PerpetualsAccount extends Caller {
 	public closePositionTxInputs = (inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
+		lotSize: number;
 	}): SdkPerpetualsMarketOrderInputs => {
 		const marketId = inputs.marketId;
 		const position = this.positionForMarketId({ marketId });
@@ -564,7 +566,13 @@ export class PerpetualsAccount extends Caller {
 				side === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
-			size: Casting.IFixed.abs(position.baseAssetAmount),
+			size: BigInt(
+				Math.round(
+					Casting.IFixed.numberFromIFixed(
+						Casting.IFixed.abs(position.baseAssetAmount)
+					) / inputs.lotSize
+				)
+			),
 		};
 	};
 }
