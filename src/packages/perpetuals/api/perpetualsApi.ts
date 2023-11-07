@@ -642,7 +642,7 @@ export class PerpetualsApi {
 					percentSlippage: 0,
 				};
 
-			// calc slippages and fee
+			// calc slippages
 			const avgEntryPrice = Perpetuals.orderPrice({
 				orderEvent: filledOrderEvent,
 			});
