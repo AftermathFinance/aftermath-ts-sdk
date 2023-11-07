@@ -1747,18 +1747,20 @@ export class PerpetualsApi {
 			);
 		}, 0);
 
-		// simulating market order
-		if (price === undefined) return executionPrice;
-		// simulating limit order
-		return (
-			Perpetuals.orderPriceToPrice({
-				orderPrice: price,
-				lotSize,
-				tickSize,
-			}) *
-				(Number(size - sizeFilled) / Number(size)) +
-			executionPrice * (Number(sizeFilled) / Number(size))
-		);
+		return executionPrice;
+
+		// // simulating market order
+		// if (price === undefined) return executionPrice;
+		// // simulating limit order
+		// return (
+		// 	Perpetuals.orderPriceToPrice({
+		// 		orderPrice: price,
+		// 		lotSize,
+		// 		tickSize,
+		// 	}) *
+		// 		(Number(size - sizeFilled) / Number(size)) +
+		// 	executionPrice * (Number(sizeFilled) / Number(size))
+		// );
 	};
 
 	// =========================================================================

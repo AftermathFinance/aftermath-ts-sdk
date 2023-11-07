@@ -84,46 +84,30 @@ export class PerpetualsMarket extends Caller {
 		});
 	}
 
-	// WARN: this may not work if the direction we're going is opposite of the
-	// current position
 	public getMaxOrderSizeUsd = async (inputs: {
-		freeMarginUsd: number;
+		position: PerpetualsPosition | undefined;
+		totalMinInitialMargin: number;
 		indexPrice: number;
 		side: PerpetualsOrderSide;
+		freeMarginUsd: number;
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
-		const { freeMarginUsd, indexPrice, side, price } = inputs;
+		const { side, price, indexPrice } = inputs;
 
-		const imr = Casting.IFixed.numberFromIFixed(
-			this.marketParams.marginRatioInitial
+		const optimisticSizeUsd = this.calcOptimisticMaxOrderSizeUsd(inputs);
+		// (in lots)
+		const size = BigInt(
+			Math.ceil(optimisticSizeUsd / indexPrice / this.lotSize())
 		);
-		const takerFee = Casting.IFixed.numberFromIFixed(
-			this.marketParams.takerFee
-		);
-
-		// Compute the max size optimistically
-		const optimisticSizeUsd = freeMarginUsd / (imr + takerFee);
-		const baseSize = optimisticSizeUsd / indexPrice;
-		const size = BigInt(Math.floor(baseSize / this.lotSize()));
-
-		// Compute the execution size for an order of USD size computed above,
-		// assuming it gets fully matched
 		const executionPrice = await this.getExecutionPrice({
 			size,
 			side,
 			price,
 		});
-
-		const slippage =
-			(side === PerpetualsOrderSide.Bid
-				? indexPrice - executionPrice
-				: executionPrice - indexPrice) / indexPrice;
-		const maxSize =
-			freeMarginUsd /
-			(indexPrice * imr +
-				executionPrice * takerFee +
-				slippage * indexPrice);
-		return Math.abs(maxSize * indexPrice);
+		return this.calcPessimisticMaxOrderSizeUsd({
+			...inputs,
+			executionPrice,
+		});
 	};
 
 	// =========================================================================
@@ -205,6 +189,115 @@ export class PerpetualsMarket extends Caller {
 		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.tickSize);
 	};
 
+	public calcOptimisticMaxOrderSizeUsd = (inputs: {
+		position: PerpetualsPosition | undefined;
+		freeMarginUsd: number;
+		indexPrice: number;
+		side: PerpetualsOrderSide;
+	}): number => {
+		const { position, freeMarginUsd, indexPrice, side } = inputs;
+
+		const imr = Casting.IFixed.numberFromIFixed(
+			this.marketParams.marginRatioInitial
+		);
+
+		const currentSize = position?.baseAssetAmount ?? BigInt(0);
+		const isReversing = position
+			? side ^ Perpetuals.positionSide({ position })
+			: false;
+
+		let maxSize = freeMarginUsd / (indexPrice * imr);
+		if (isReversing && position) {
+			maxSize +=
+				Perpetuals.positionSide({ position }) ===
+				PerpetualsOrderSide.Bid
+					? Math.max(
+							Math.abs(
+								Number(currentSize + position.bidsQuantity) -
+									Math.abs(
+										Number(
+											currentSize - position.asksQuantity
+										)
+									)
+							),
+							0
+					  )
+					: Math.max(
+							Math.abs(
+								Number(currentSize - position.asksQuantity)
+							) -
+								Math.abs(
+									Number(currentSize + position.bidsQuantity)
+								),
+							0
+					  );
+		}
+
+		return maxSize * indexPrice;
+	};
+
+	public calcPessimisticMaxOrderSizeUsd = async (inputs: {
+		position: PerpetualsPosition | undefined;
+		freeMarginUsd: number;
+		totalMinInitialMargin: number;
+		indexPrice: number;
+		side: PerpetualsOrderSide;
+		executionPrice: number;
+	}): Promise<number> => {
+		const {
+			indexPrice,
+			side,
+			position,
+			executionPrice,
+			freeMarginUsd,
+			totalMinInitialMargin,
+		} = inputs;
+
+		const marginRatioInitial = Casting.IFixed.numberFromIFixed(
+			this.marketParams.marginRatioInitial
+		);
+		const takerFee = Casting.IFixed.numberFromIFixed(
+			this.marketParams.takerFee
+		);
+
+		const currentSize = position?.baseAssetAmount ?? BigInt(0);
+		const isReversing = position
+			? side ^ Perpetuals.positionSide({ position })
+			: false;
+
+		const slippage =
+			(side === PerpetualsOrderSide.Bid
+				? executionPrice - indexPrice
+				: indexPrice - executionPrice) / indexPrice;
+
+		let maxSize: number;
+		if (isReversing) {
+			// Size that can be placed to close the position
+			maxSize = Math.abs(Number(currentSize));
+			const { marginDelta, reqDelta } = this.simulateClosePosition({
+				position,
+				indexPrice,
+				executionPrice,
+			});
+			const margin = freeMarginUsd + marginDelta;
+			const imr = totalMinInitialMargin + reqDelta;
+			// Size that adds margin requirement
+			maxSize +=
+				(margin - imr) /
+				(indexPrice * marginRatioInitial +
+					executionPrice * takerFee +
+					slippage * indexPrice);
+		} else {
+			maxSize =
+				(freeMarginUsd - totalMinInitialMargin) /
+				(indexPrice * marginRatioInitial +
+					executionPrice * takerFee +
+					slippage * indexPrice);
+		}
+
+		return maxSize * indexPrice;
+	};
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
@@ -247,5 +340,43 @@ export class PerpetualsMarket extends Caller {
 				tickSize: this.tickSize(),
 			}
 		);
+	}
+
+	private simulateClosePosition(inputs: {
+		position: PerpetualsPosition | undefined;
+		indexPrice: number;
+		executionPrice: number;
+	}): {
+		marginDelta: number;
+		reqDelta: number;
+	} {
+		const { position, indexPrice, executionPrice } = inputs;
+		if (!position) return { marginDelta: 0, reqDelta: 0 };
+
+		const imr = Casting.IFixed.numberFromIFixed(
+			this.marketParams.marginRatioInitial
+		);
+		const takerFee = Casting.IFixed.numberFromIFixed(
+			this.marketParams.takerFee
+		);
+
+		const size = Number(position.baseAssetAmount);
+		const netSizeBefore = Math.max(
+			Math.abs(Number(size + Number(position.bidsQuantity))),
+			Math.abs(Number(size - Number(position.asksQuantity)))
+		);
+		const netSizeAfter = Math.max(
+			Number(position.bidsQuantity),
+			Number(position.asksQuantity)
+		);
+		const entryPrice = Perpetuals.calcEntryPrice({ position });
+		const uPnl = size * (indexPrice - entryPrice);
+		const rPnl = size * (executionPrice - entryPrice);
+		// pessimistically don't consider positive pnl since the order may not actually be
+		// matched at the sell price
+		const fees = Math.abs(size) * executionPrice * takerFee;
+		const marginDelta = rPnl - uPnl - fees;
+		const reqDelta = (netSizeAfter - netSizeBefore) * indexPrice * imr;
+		return { marginDelta, reqDelta };
 	}
 }
