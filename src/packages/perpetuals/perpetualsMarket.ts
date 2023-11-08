@@ -206,7 +206,7 @@ export class PerpetualsMarket extends Caller {
 			: false;
 
 		let maxSize = freeMarginUsd / (indexPrice * imr);
-		if (isReversing && position) {
+		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
 			const currentSizeNum = position
 				? Casting.IFixed.numberFromIFixed(position.baseAssetAmount)
 				: 0;
@@ -268,10 +268,10 @@ export class PerpetualsMarket extends Caller {
 				: indexPrice - executionPrice) / indexPrice;
 
 		let maxSize: number;
-		if (isReversing) {
-			const currentSizeNum = position
-				? Casting.IFixed.numberFromIFixed(position.baseAssetAmount)
-				: 0;
+		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
+			const currentSizeNum = Casting.IFixed.numberFromIFixed(
+				position.baseAssetAmount
+			);
 
 			// Size that can be placed to close the position
 			maxSize = Math.abs(currentSizeNum);
@@ -344,7 +344,7 @@ export class PerpetualsMarket extends Caller {
 	}
 
 	private simulateClosePosition(inputs: {
-		position: PerpetualsPosition | undefined;
+		position: PerpetualsPosition;
 		indexPrice: number;
 		executionPrice: number;
 	}): {
@@ -352,7 +352,6 @@ export class PerpetualsMarket extends Caller {
 		reqDelta: number;
 	} {
 		const { position, indexPrice, executionPrice } = inputs;
-		if (!position) return { marginDelta: 0, reqDelta: 0 };
 
 		const imr = Casting.IFixed.numberFromIFixed(
 			this.marketParams.marginRatioInitial
