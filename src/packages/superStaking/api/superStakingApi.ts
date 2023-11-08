@@ -107,8 +107,7 @@ export class SuperStakingApi {
 			ScallopProvider.createScallopBuilder(),
 			ScallopProvider.createScallopQuery(),
 		]);
-		Builder.init();
-		Query.init();
+		await Promise.all([Builder.init(), Query.init()]);
 
 		this.ScallopProviders = {
 			Main: ScallopProvider,
@@ -125,7 +124,7 @@ export class SuperStakingApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchSuperStakeObligation = async (
+	public fetchObligationForUser = async (
 		// inputs: ApiSuperStakeObligationBody
 		inputs: {
 			walletAddress: SuiAddress;
@@ -153,6 +152,10 @@ export class SuperStakingApi {
 			obligationAccount,
 			leveragedObligationKey,
 		};
+	};
+
+	public fetchMarketPool = (inputs: { coin: "afsui" | "sui" }) => {
+		return this.ScallopProviders.Query.getMarketPool(inputs.coin);
 	};
 
 	// =========================================================================
