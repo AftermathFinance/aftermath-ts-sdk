@@ -9,6 +9,10 @@ import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
 import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
 import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
 
+/**
+ * Utility class for casting and conversion functions.
+ * @class
+ */
 export class Casting {
 	// =========================================================================
 	//  Api Casting
