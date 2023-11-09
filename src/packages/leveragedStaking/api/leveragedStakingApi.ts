@@ -138,8 +138,12 @@ export class LeveragedStakingApi {
 		};
 	};
 
-	public fetchMarketPool = (inputs: { coin: "afsui" | "sui" }) => {
-		return this.ScallopProviders.Query.getMarketPool(inputs.coin);
+	public fetchSuiMarketPool = () => {
+		return this.ScallopProviders.Query.getMarketPool("sui");
+	};
+
+	public fetchAfSuiMarketCollateral = () => {
+		return this.ScallopProviders.Query.getMarketCollateral("afsui");
 	};
 
 	// =========================================================================
