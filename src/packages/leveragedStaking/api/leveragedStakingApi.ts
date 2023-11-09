@@ -44,7 +44,7 @@ export class LeveragedStakingApi {
 		},
 		eventNames: {
 			leveragedStaked: "StakedEvent",
-			superUnstaked: "UnstakedEvent",
+			leveragedUnstaked: "UnstakedEvent",
 		},
 	};
 
@@ -61,7 +61,7 @@ export class LeveragedStakingApi {
 
 	public readonly eventTypes: {
 		leveragedStaked: AnyObjectType;
-		superUnstaked: AnyObjectType;
+		leveragedUnstaked: AnyObjectType;
 	};
 
 	public readonly objectTypes: {
@@ -95,7 +95,7 @@ export class LeveragedStakingApi {
 
 		this.eventTypes = {
 			leveragedStaked: this.leveragedStakedEventType(),
-			superUnstaked: this.superUnstakedEventType(),
+			leveragedUnstaked: this.leveragedUnstakedEventType(),
 		};
 
 		this.objectTypes = {
@@ -532,7 +532,7 @@ export class LeveragedStakingApi {
 	// 	);
 	// }
 
-	// private async fetchSuperUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
+	// private async fetchLeveragedUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
 	// 	const { walletAddress, cursor, limit } = inputs;
 	// 	return this.Provider.indexerCaller.fetchIndexerEvents(
 	// 		`super-staking/${walletAddress}/events/unstaked`,
@@ -540,7 +540,7 @@ export class LeveragedStakingApi {
 	// 			cursor,
 	// 			limit,
 	// 		},
-	// 		Casting.leveragedStaking.superUnstakedEventFromOnChain
+	// 		Casting.leveragedStaking.leveragedUnstakedEventFromOnChain
 	// 	);
 	// }
 
@@ -555,10 +555,10 @@ export class LeveragedStakingApi {
 			LeveragedStakingApi.constants.eventNames.leveragedStaked
 		);
 
-	private superUnstakedEventType = () =>
+	private leveragedUnstakedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.staking.packages.events,
 			LeveragedStakingApi.constants.moduleNames.events,
-			LeveragedStakingApi.constants.eventNames.superUnstaked
+			LeveragedStakingApi.constants.eventNames.leveragedUnstaked
 		);
 }
