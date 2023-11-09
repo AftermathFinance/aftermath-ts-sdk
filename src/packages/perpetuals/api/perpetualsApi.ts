@@ -54,6 +54,7 @@ import {
 	FilledTakerOrderEvent,
 	PerpetualsFillReceipt,
 	ApiPerpetualsExecutionPriceBody,
+	ApiPerpetualsExecutionPriceResponse,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -1709,20 +1710,26 @@ export class PerpetualsApi {
 			collateralCoinType: CoinType;
 			marketId: PerpetualsMarketId;
 		}
-	): Promise<number> => {
+	): Promise<ApiPerpetualsExecutionPriceResponse> => {
 		const { lotSize, tickSize, price, size } = inputs;
 
 		const orderReceipts = await this.fetchMarketFilledOrderReceipts(inputs);
 		if (orderReceipts.length <= 0)
 			return price !== undefined
 				? // simulating limit order
-				  Perpetuals.orderPriceToPrice({
-						orderPrice: price,
-						lotSize,
-						tickSize,
-				  })
+				  {
+						executionPrice: Perpetuals.orderPriceToPrice({
+							orderPrice: price,
+							lotSize,
+							tickSize,
+						}),
+						percentFilled: 0,
+				  }
 				: // simulating market order
-				  0;
+				  {
+						executionPrice: 0,
+						percentFilled: 0,
+				  };
 
 		const sizeFilled = Helpers.sumBigInt(
 			orderReceipts.map((receipt) => receipt.size)
@@ -1747,7 +1754,8 @@ export class PerpetualsApi {
 			);
 		}, 0);
 
-		return executionPrice;
+		const percentFilled = Number(sizeFilled) / Number(size);
+		return { executionPrice, percentFilled };
 
 		// // simulating market order
 		// if (price === undefined) return executionPrice;

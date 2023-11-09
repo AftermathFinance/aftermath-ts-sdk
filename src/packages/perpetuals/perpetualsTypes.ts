@@ -646,6 +646,10 @@ export interface ApiPerpetualsExecutionPriceBody {
 	tickSize: number;
 	price?: PerpetualsOrderPrice;
 }
+export interface ApiPerpetualsExecutionPriceResponse {
+	executionPrice: number;
+	percentFilled: number;
+}
 
 // =========================================================================
 //  Transactions

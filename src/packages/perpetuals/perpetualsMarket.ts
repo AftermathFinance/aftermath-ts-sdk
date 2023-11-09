@@ -5,6 +5,7 @@ import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import {
 	ApiIndexerEventsBody,
 	ApiPerpetualsExecutionPriceBody,
+	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsOrderbookStateBody,
 	ApiPerpetualsPositionOrderDatasBody,
 	CoinType,
@@ -98,24 +99,18 @@ export class PerpetualsMarket extends Caller {
 
 		const size = // (in lots)
 			BigInt(Math.ceil(optimisticSizeUsd / indexPrice / this.lotSize()));
-		const executionPrice = await this.getExecutionPrice({
+		const { executionPrice, percentFilled } = await this.getExecutionPrice({
 			size,
 			side,
 			price,
 		});
 
-		console.log({
-			optimisticSizeUsd,
-			executionPrice,
-			final: this.calcPessimisticMaxOrderSizeUsd({
-				...inputs,
-				executionPrice,
-			}),
-		});
+		console.log({ executionPrice, percentFilled });
 
 		return this.calcPessimisticMaxOrderSizeUsd({
 			...inputs,
 			executionPrice,
+			percentFilled,
 		});
 	};
 
@@ -300,23 +295,12 @@ export class PerpetualsMarket extends Caller {
 					executionPrice * takerFee +
 					slippage * indexPrice);
 		} else {
-			console.log({
-				totalMinInitialMargin,
-				freeMarginUsd,
-				indexPrice,
-				marginRatioInitial,
-				executionPrice,
-				takerFee,
-				slippage,
-			});
 			maxSize =
 				freeMarginUsd /
 				(indexPrice * marginRatioInitial +
 					(executionPrice * takerFee + slippage * indexPrice) *
 						percentFilled);
 		}
-
-		// freeMarginUsd / marginRatioInitial
 
 		return maxSize * indexPrice;
 	};
@@ -355,14 +339,14 @@ export class PerpetualsMarket extends Caller {
 		size: bigint;
 		price?: PerpetualsOrderPrice;
 	}) {
-		return this.fetchApi<number, ApiPerpetualsExecutionPriceBody>(
-			"execution-price",
-			{
-				...inputs,
-				lotSize: this.lotSize(),
-				tickSize: this.tickSize(),
-			}
-		);
+		return this.fetchApi<
+			ApiPerpetualsExecutionPriceResponse,
+			ApiPerpetualsExecutionPriceBody
+		>("execution-price", {
+			...inputs,
+			lotSize: this.lotSize(),
+			tickSize: this.tickSize(),
+		});
 	}
 
 	private simulateClosePosition(inputs: {
