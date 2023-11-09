@@ -15,7 +15,13 @@ import { Helpers } from "../utils/helpers";
 import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
-import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
+import {
+	LeveragedStaking,
+	NftAmm,
+	ReferralVault,
+	Router,
+	Sui,
+} from "../../packages";
 import { HistoricalData } from "../historicalData/historicalData";
 import { Perpetuals } from "../../packages/perpetuals";
 import { Farms } from "../../packages/farms/farms";
@@ -70,6 +76,7 @@ export class Aftermath extends Caller {
 
 	public Pools = () => new Pools(this.network);
 	public Staking = () => new Staking(this.network);
+	public LeveragedStaking = () => new LeveragedStaking(this.network);
 	public SuiFrens = () => new SuiFrens(this.network);
 	public Faucet = () => new Faucet(this.network);
 	public Router = () => new Router(this.network);

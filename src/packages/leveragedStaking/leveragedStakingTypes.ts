@@ -21,7 +21,7 @@ export interface LeveragedObligationKey extends Object {
 	suiDebt: Balance;
 }
 
-export interface SuperStakeObligation {
+export interface LeveragedStakeObligation {
 	obligationAccount: ObligationAccount;
 	leveragedObligationKey: LeveragedObligationKey;
 }

@@ -7,11 +7,11 @@ import {
 import {
 	LeveragedObligationKeyFieldsOnChain,
 	StakedEventOnChain,
-} from "./superStakingApiCastingTypes";
+} from "./leveragedStakingApiCastingTypes";
 import { Fixed } from "../../../general/utils/fixed";
 import { Helpers } from "../../../general/utils";
 
-export class SuperStakingApiCasting {
+export class LeveragedStakingApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================

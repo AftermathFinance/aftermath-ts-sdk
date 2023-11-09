@@ -20,6 +20,7 @@ import {
 	PartialRouterOptions,
 	RouterProtocolName,
 	RouterSynchronousOptions,
+	ScallopProviders,
 } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
@@ -30,6 +31,7 @@ import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
+import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 
 export class AftermathApi {
 	// =========================================================================
@@ -134,4 +136,7 @@ export class AftermathApi {
 		regularOptions?: PartialRouterOptions,
 		preAsyncOptions?: Partial<RouterSynchronousOptions>
 	) => new RouterApi(this, protocols, regularOptions, preAsyncOptions);
+
+	public LeveragedStaking = (ScallopProviders: ScallopProviders) =>
+		new LeveragedStakingApi(this, ScallopProviders);
 }

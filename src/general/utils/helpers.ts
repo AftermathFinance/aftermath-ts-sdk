@@ -3,7 +3,13 @@ import {
 	SuiMoveObject,
 	SuiObjectResponse,
 } from "@mysten/sui.js/client";
-import { AnyObjectType, Balance, ObjectId, Slippage } from "../../types";
+import {
+	AnyObjectType,
+	Balance,
+	ObjectId,
+	ScallopProviders,
+	Slippage,
+} from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
@@ -12,6 +18,7 @@ import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { Casting } from "./casting";
 import { is } from "@mysten/sui.js/utils";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
+import { NetworkType } from "@scallop-io/sui-kit";
 
 export class Helpers {
 	// =========================================================================
@@ -295,19 +302,21 @@ export class Helpers {
 	//  Constructors
 	// =========================================================================
 
-	public static async createScallopProviders() {
-		const ScallopProvider = new Scallop({
-			networkType: "mainnet",
+	public static async createScallopProviders(inputs: {
+		network: NetworkType;
+	}): Promise<ScallopProviders> {
+		const Main = new Scallop({
+			networkType: inputs.network,
 		});
 		const [Builder, Query] = await Promise.all([
-			ScallopProvider.createScallopBuilder(),
-			ScallopProvider.createScallopQuery(),
+			Main.createScallopBuilder(),
+			Main.createScallopQuery(),
 		]);
 		await Promise.all([Builder.init(), Query.init()]);
-
 		return {
-			ScallopBuilder,
-			ScallopQuery,
+			Main,
+			Builder,
+			Query,
 		};
 	}
 }

@@ -16,8 +16,10 @@ import {
 	PoolsAddresses,
 	StakingAddresses,
 	SuiAddress,
-	SuperStakeObligation,
-	SuperStakingAddresses,
+	LeveragedStakeObligation,
+	LeveragedStakingAddresses,
+	ScallopProviders,
+	ScallopAddresses,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -30,7 +32,7 @@ import {
 	ScallopQuery,
 } from "@scallop-io/sui-scallop-sdk";
 
-export class SuperStakingApi {
+export class LeveragedStakingApi {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -41,7 +43,7 @@ export class SuperStakingApi {
 			events: "events",
 		},
 		eventNames: {
-			superStaked: "StakedEvent",
+			leveragedStaked: "StakedEvent",
 			superUnstaked: "UnstakedEvent",
 		},
 	};
@@ -51,13 +53,14 @@ export class SuperStakingApi {
 	// =========================================================================
 
 	public readonly addresses: {
-		superStaking: SuperStakingAddresses;
+		leveragedStaking: LeveragedStakingAddresses;
 		staking: StakingAddresses;
 		pools: PoolsAddresses;
+		scallop: ScallopAddresses;
 	};
 
 	public readonly eventTypes: {
-		superStaked: AnyObjectType;
+		leveragedStaked: AnyObjectType;
 		superUnstaked: AnyObjectType;
 	};
 
@@ -65,45 +68,38 @@ export class SuperStakingApi {
 		leveragedObligationKey: AnyObjectType;
 	};
 
-	private readonly ScallopProviders: {
-		Main: Scallop;
-		Builder: ScallopBuilder;
-		Query: ScallopQuery;
-	};
-
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		const superStaking = this.Provider.addresses.superStaking;
+	constructor(
+		private readonly Provider: AftermathApi,
+		private readonly ScallopProviders: ScallopProviders
+	) {
+		const leveragedStaking = this.Provider.addresses.leveragedStaking;
 		const staking = this.Provider.addresses.staking;
 		const pools = this.Provider.addresses.pools;
+		const scallop = this.Provider.addresses.scallop;
 
-		if (!superStaking || !staking || !pools)
+		if (!leveragedStaking || !staking || !pools || !scallop)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
 		this.addresses = {
-			superStaking,
+			leveragedStaking,
 			staking,
 			pools,
+			scallop,
 		};
 
 		this.eventTypes = {
-			superStaked: this.superStakedEventType(),
+			leveragedStaked: this.leveragedStakedEventType(),
 			superUnstaked: this.superUnstakedEventType(),
 		};
 
 		this.objectTypes = {
-			leveragedObligationKey: `${superStaking.packages.leveragedAfSui}::leverage_stake::LeveragedAfSuiObligationKey`,
-		};
-
-		this.ScallopProviders = {
-			Main: ScallopProvider,
-			Builder,
-			Query,
+			leveragedObligationKey: `${leveragedStaking.packages.leveragedAfSui}::leverage_stake::LeveragedAfSuiObligationKey`,
 		};
 	}
 
@@ -115,12 +111,9 @@ export class SuperStakingApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchObligationForUser = async (
-		// inputs: ApiSuperStakeObligationBody
-		inputs: {
-			walletAddress: SuiAddress;
-		}
-	): Promise<SuperStakeObligation | "none"> => {
+	public fetchObligationForUser = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<LeveragedStakeObligation | "none"> => {
 		const { walletAddress } = inputs;
 
 		const leveragedObligationKeys =
@@ -128,7 +121,7 @@ export class SuperStakingApi {
 				walletAddress,
 				objectType: this.objectTypes.leveragedObligationKey,
 				objectFromSuiObjectResponse:
-					Casting.superStaking
+					Casting.leveragedStaking
 						.leveragedObligationKeyFromSuiObjectResponse,
 			});
 		if (leveragedObligationKeys.length <= 0) return "none";
@@ -162,8 +155,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"initiate_stake"
 			),
 			typeArguments: [],
@@ -182,8 +175,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"initiate_stake_and_open_obligation"
 			),
 			typeArguments: [],
@@ -205,8 +198,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"deposit_afsui_collateral"
 			),
 			typeArguments: [],
@@ -214,7 +207,7 @@ export class SuperStakingApi {
 				tx.object(inputs.stakeCapId), // StakeCap
 				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
 				tx.object(
-					this.addresses.superStaking.objects.leveragedAfSuiState
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
@@ -236,8 +229,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"borrow_sui"
 			),
 			typeArguments: [],
@@ -245,7 +238,7 @@ export class SuperStakingApi {
 				tx.object(inputs.stakeCapId), // StakeCap
 				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
 				tx.object(
-					this.addresses.superStaking.objects.leveragedAfSuiState
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
@@ -270,8 +263,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"complete_leverage_stake"
 			),
 			typeArguments: [],
@@ -279,7 +272,7 @@ export class SuperStakingApi {
 				tx.object(inputs.stakeCapId), // StakeCap
 				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
 				tx.object(
-					this.addresses.superStaking.objects.leveragedAfSuiState
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
@@ -302,8 +295,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"complete_stake_and_return_obligation"
 			),
 			typeArguments: [],
@@ -311,7 +304,7 @@ export class SuperStakingApi {
 				tx.object(inputs.stakeCapId), // StakeCap
 				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
 				tx.object(
-					this.addresses.superStaking.objects.leveragedAfSuiState
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
@@ -335,8 +328,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"withdraw_afsui_collateral"
 			),
 			typeArguments: [],
@@ -344,7 +337,7 @@ export class SuperStakingApi {
 				tx.object(inputs.stakeCapId), // StakeCap
 				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
 				tx.object(
-					this.addresses.superStaking.objects.leveragedAfSuiState
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
@@ -370,8 +363,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"repay_sui"
 			),
 			typeArguments: [],
@@ -379,7 +372,7 @@ export class SuperStakingApi {
 				tx.object(inputs.stakeCapId), // StakeCap
 				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
 				tx.object(
-					this.addresses.superStaking.objects.leveragedAfSuiState
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
@@ -399,8 +392,8 @@ export class SuperStakingApi {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.superStaking.packages.leveragedAfSui,
-				SuperStakingApi.constants.moduleNames.leverageStake,
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leverageStake,
 				"complete_unstake"
 			),
 			typeArguments: [],
@@ -415,7 +408,7 @@ export class SuperStakingApi {
 	// =========================================================================
 
 	// TODO: stake if not afsui
-	public fetchBuildOpenSuperStakeTx = async (
+	public fetchBuildOpenLeveragedStakeTx = async (
 		// inputs: ApiLeveragedStakeBody
 		inputs: {
 			walletAddress: SuiAddress;
@@ -527,45 +520,45 @@ export class SuperStakingApi {
 	//  Events
 	// =========================================================================
 
-	private async fetchSuperStakedEvents(inputs: ApiIndexerUserEventsBody) {
-		const { walletAddress, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`super-staking/${walletAddress}/events/staked`,
-			{
-				cursor,
-				limit,
-			},
-			Casting.superStaking.superStakedEventFromOnChain
-		);
-	}
+	// private async fetchLeveragedStakedEvents(inputs: ApiIndexerUserEventsBody) {
+	// 	const { walletAddress, cursor, limit } = inputs;
+	// 	return this.Provider.indexerCaller.fetchIndexerEvents(
+	// 		`super-staking/${walletAddress}/events/staked`,
+	// 		{
+	// 			cursor,
+	// 			limit,
+	// 		},
+	// 		Casting.leveragedStaking.leveragedStakedEventFromOnChain
+	// 	);
+	// }
 
-	private async fetchSuperUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
-		const { walletAddress, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`super-staking/${walletAddress}/events/unstaked`,
-			{
-				cursor,
-				limit,
-			},
-			Casting.superStaking.superUnstakedEventFromOnChain
-		);
-	}
+	// private async fetchSuperUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
+	// 	const { walletAddress, cursor, limit } = inputs;
+	// 	return this.Provider.indexerCaller.fetchIndexerEvents(
+	// 		`super-staking/${walletAddress}/events/unstaked`,
+	// 		{
+	// 			cursor,
+	// 			limit,
+	// 		},
+	// 		Casting.leveragedStaking.superUnstakedEventFromOnChain
+	// 	);
+	// }
 
 	// =========================================================================
 	//  Event Types
 	// =========================================================================
 
-	private superStakedEventType = () =>
+	private leveragedStakedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.staking.packages.events,
-			SuperStakingApi.constants.moduleNames.events,
-			SuperStakingApi.constants.eventNames.superStaked
+			LeveragedStakingApi.constants.moduleNames.events,
+			LeveragedStakingApi.constants.eventNames.leveragedStaked
 		);
 
 	private superUnstakedEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.staking.packages.events,
-			SuperStakingApi.constants.moduleNames.events,
-			SuperStakingApi.constants.eventNames.superUnstaked
+			LeveragedStakingApi.constants.moduleNames.events,
+			LeveragedStakingApi.constants.eventNames.superUnstaked
 		);
 }

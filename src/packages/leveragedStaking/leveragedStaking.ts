@@ -9,7 +9,7 @@ import {
 import { Caller } from "../../general/utils/caller";
 import { SuiValidatorSummary } from "@mysten/sui.js/client";
 
-export class SuperStaking extends Caller {
+export class LeveragedStaking extends Caller {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -23,7 +23,7 @@ export class SuperStaking extends Caller {
 	// =========================================================================
 
 	constructor(public readonly network?: SuiNetwork | Url) {
-		super(network, "super-staking");
+		super(network, "leveraged-staking");
 	}
 
 	// =========================================================================
@@ -40,7 +40,7 @@ export class SuperStaking extends Caller {
 
 	public async getStakeTransaction(inputs: ApiStakeBody) {
 		return this.fetchApiTransaction<ApiStakeBody>(
-			"transactions/super-stake",
+			"transactions/leveraged-stake",
 			inputs
 		);
 	}

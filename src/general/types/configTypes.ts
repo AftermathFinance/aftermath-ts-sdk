@@ -19,7 +19,7 @@ interface RequiredConfigAddresses {}
 interface OptionalConfigAddresses {
 	faucet: FaucetAddresses;
 	staking: StakingAddresses;
-	superStaking: SuperStakingAddresses;
+	leveragedStaking: LeveragedStakingAddresses;
 	pools: PoolsAddresses;
 	suiFrens: SuiFrensAddresses;
 	nftAmm: NftAmmAddresses;
@@ -28,6 +28,7 @@ interface OptionalConfigAddresses {
 	perpetuals: PerpetualsAddresses;
 	farms: FarmsAddresses;
 	dynamicGas: DynamicGasAddresses;
+	scallop: ScallopAddresses;
 }
 
 // =========================================================================
@@ -62,7 +63,7 @@ export interface StakingAddresses {
 	};
 }
 
-export interface SuperStakingAddresses {
+export interface LeveragedStakingAddresses {
 	packages: {
 		leveragedAfSui: SuiAddress;
 	};
@@ -308,5 +309,14 @@ export interface OracleAddresses {
 	objects: {
 		authorityCapability: ObjectId;
 		priceFeedStorage: ObjectId;
+	};
+}
+
+export interface ScallopAddresses {
+	objects: {
+		version: ObjectId;
+		afSuiMarket: ObjectId;
+		coinDecimalsRegistry: ObjectId;
+		xOracle: ObjectId;
 	};
 }
