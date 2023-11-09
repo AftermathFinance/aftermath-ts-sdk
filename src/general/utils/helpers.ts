@@ -11,6 +11,7 @@ import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { Casting } from "./casting";
 import { is } from "@mysten/sui.js/utils";
+import { Scallop } from "@scallop-io/sui-scallop-sdk";
 
 export class Helpers {
 	// =========================================================================
@@ -288,5 +289,25 @@ export class Helpers {
 		if (display) return display;
 
 		throw new Error("no object display found on " + data.data?.objectId);
+	}
+
+	// =========================================================================
+	//  Constructors
+	// =========================================================================
+
+	public static async createScallopProviders() {
+		const ScallopProvider = new Scallop({
+			networkType: "mainnet",
+		});
+		const [Builder, Query] = await Promise.all([
+			ScallopProvider.createScallopBuilder(),
+			ScallopProvider.createScallopQuery(),
+		]);
+		await Promise.all([Builder.init(), Query.init()]);
+
+		return {
+			ScallopBuilder,
+			ScallopQuery,
+		};
 	}
 }

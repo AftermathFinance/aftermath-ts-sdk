@@ -75,10 +75,7 @@ export class SuperStakingApi {
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		private readonly Provider: AftermathApi,
-		ScallopProvider: Scallop
-	) {
+	constructor(private readonly Provider: AftermathApi) {
 		const superStaking = this.Provider.addresses.superStaking;
 		const staking = this.Provider.addresses.staking;
 		const pools = this.Provider.addresses.pools;
@@ -102,12 +99,6 @@ export class SuperStakingApi {
 		this.objectTypes = {
 			leveragedObligationKey: `${superStaking.packages.leveragedAfSui}::leverage_stake::LeveragedAfSuiObligationKey`,
 		};
-
-		const [Builder, Query] = await Promise.all([
-			ScallopProvider.createScallopBuilder(),
-			ScallopProvider.createScallopQuery(),
-		]);
-		await Promise.all([Builder.init(), Query.init()]);
 
 		this.ScallopProviders = {
 			Main: ScallopProvider,
