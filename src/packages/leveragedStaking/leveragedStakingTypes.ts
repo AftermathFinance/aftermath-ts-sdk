@@ -13,7 +13,7 @@ import {
 //  Scallop
 // =========================================================================
 
-// TODO: export scallop types
+export type { MarketPool, MarketCollateral } from "@scallop-io/sui-scallop-sdk";
 
 // =========================================================================
 //  Objects
