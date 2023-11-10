@@ -55,6 +55,7 @@ import {
 	PerpetualsFillReceipt,
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
+	ApiPerpetualsCancelOrdersBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -1502,6 +1503,26 @@ export class PerpetualsApi {
 	public buildCancelOrderTx = Helpers.transactions.createBuildTxFunc(
 		this.cancelOrderTx
 	);
+
+	public buildCancelOrdersTx = (
+		inputs: ApiPerpetualsCancelOrdersBody
+	): TransactionBlock => {
+		const { orderDatas, collateralCoinType, accountCapId } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(inputs.walletAddress);
+
+		for (const orderData of orderDatas) {
+			this.cancelOrderTx({
+				tx,
+				collateralCoinType,
+				accountCapId,
+				...orderData,
+			});
+		}
+
+		return tx;
+	};
 
 	public buildWithdrawCollateralTx = (inputs: {
 		walletAddress: SuiAddress;

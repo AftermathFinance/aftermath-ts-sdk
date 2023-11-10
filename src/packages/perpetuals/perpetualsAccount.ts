@@ -31,6 +31,7 @@ import {
 	PerpetualsOrderEvent,
 	ApiPerpetualsTransferCollateralBody,
 	ObjectId,
+	ApiPerpetualsCancelOrdersBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -146,6 +147,24 @@ export class PerpetualsAccount extends Caller {
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrderBody>(
 			"transactions/cancel-order",
+			{
+				...inputs,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				accountCapId: this.accountCap.objectId,
+			}
+		);
+	}
+
+	public async getCancelOrdersTx(inputs: {
+		walletAddress: SuiAddress;
+		orderDatas: {
+			marketId: PerpetualsMarketId;
+			side: PerpetualsOrderSide;
+			orderId: PerpetualsOrderId;
+		}[];
+	}) {
+		return this.fetchApiTransaction<ApiPerpetualsCancelOrdersBody>(
+			"transactions/cancel-orders",
 			{
 				...inputs,
 				collateralCoinType: this.accountCap.collateralCoinType,

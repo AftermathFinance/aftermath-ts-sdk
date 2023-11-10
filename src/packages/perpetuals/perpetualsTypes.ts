@@ -711,6 +711,17 @@ export interface ApiPerpetualsCancelOrderBody {
 	orderId: PerpetualsOrderId;
 }
 
+export interface ApiPerpetualsCancelOrdersBody {
+	walletAddress: SuiAddress;
+	collateralCoinType: CoinType;
+	accountCapId: ObjectId;
+	orderDatas: {
+		marketId: PerpetualsMarketId;
+		side: PerpetualsOrderSide;
+		orderId: PerpetualsOrderId;
+	}[];
+}
+
 export type ApiPerpetualsSLTPOrderBody = (
 	| (ApiPerpetualsMarketOrderBody & {
 			marketPrice: PerpetualsOrderPrice;

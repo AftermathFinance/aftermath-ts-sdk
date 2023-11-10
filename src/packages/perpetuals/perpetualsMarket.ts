@@ -105,8 +105,6 @@ export class PerpetualsMarket extends Caller {
 			price,
 		});
 
-		console.log({ executionPrice, percentFilled });
-
 		return this.calcPessimisticMaxOrderSizeUsd({
 			...inputs,
 			executionPrice,
@@ -285,6 +283,7 @@ export class PerpetualsMarket extends Caller {
 				position,
 				indexPrice,
 				executionPrice,
+				percentFilled,
 			});
 			const margin = freeMarginUsd + totalMinInitialMargin + marginDelta;
 			const imr = totalMinInitialMargin + reqDelta;
@@ -292,8 +291,8 @@ export class PerpetualsMarket extends Caller {
 			maxSize +=
 				(margin - imr) /
 				(indexPrice * marginRatioInitial +
-					executionPrice * takerFee +
-					slippage * indexPrice);
+					(executionPrice * takerFee + slippage * indexPrice) *
+						percentFilled);
 		} else {
 			maxSize =
 				freeMarginUsd /
@@ -353,11 +352,12 @@ export class PerpetualsMarket extends Caller {
 		position: PerpetualsPosition;
 		indexPrice: number;
 		executionPrice: number;
+		percentFilled: number;
 	}): {
 		marginDelta: number;
 		reqDelta: number;
 	} {
-		const { position, indexPrice, executionPrice } = inputs;
+		const { position, indexPrice, executionPrice, percentFilled } = inputs;
 
 		const imr = Casting.IFixed.numberFromIFixed(
 			this.marketParams.marginRatioInitial
@@ -366,9 +366,11 @@ export class PerpetualsMarket extends Caller {
 			this.marketParams.takerFee
 		);
 
-		const sizeNum = Casting.IFixed.numberFromIFixed(
+		const totalSize = Casting.IFixed.numberFromIFixed(
 			position.baseAssetAmount
 		);
+		const sizeFilled = totalSize * percentFilled;
+		const sizeUnfilled = totalSize * (1 - percentFilled);
 		const bidsQuantityNum = Casting.IFixed.numberFromIFixed(
 			position.bidsQuantity
 		);
@@ -377,16 +379,19 @@ export class PerpetualsMarket extends Caller {
 		);
 
 		const netSizeBefore = Math.max(
-			Math.abs(sizeNum + bidsQuantityNum),
-			Math.abs(sizeNum - asksQuantityNum)
+			Math.abs(sizeFilled + bidsQuantityNum),
+			Math.abs(sizeFilled - asksQuantityNum)
 		);
-		const netSizeAfter = Math.max(bidsQuantityNum, asksQuantityNum);
+		const netSizeAfter = Math.max(
+			Math.abs(sizeUnfilled + bidsQuantityNum),
+			Math.abs(sizeUnfilled - asksQuantityNum)
+		);
 		const entryPrice = Perpetuals.calcEntryPrice({ position });
-		const uPnl = sizeNum * (indexPrice - entryPrice);
-		const rPnl = sizeNum * (executionPrice - entryPrice);
+		const uPnl = sizeFilled * (indexPrice - entryPrice);
+		const rPnl = sizeFilled * (executionPrice - entryPrice);
 		// pessimistically don't consider positive pnl since the order may not actually be
 		// matched at the sell price
-		const fees = Math.abs(sizeNum) * executionPrice * takerFee;
+		const fees = Math.abs(sizeFilled) * executionPrice * takerFee;
 		const marginDelta = rPnl - uPnl - fees;
 		const reqDelta = (netSizeAfter - netSizeBefore) * indexPrice * imr;
 		return { marginDelta, reqDelta };
