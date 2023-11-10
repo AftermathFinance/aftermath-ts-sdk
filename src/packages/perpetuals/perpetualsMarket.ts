@@ -109,6 +109,7 @@ export class PerpetualsMarket extends Caller {
 			...inputs,
 			executionPrice,
 			percentFilled,
+			sizeFilled: Number(size) * this.lotSize(),
 		});
 	};
 
@@ -244,6 +245,7 @@ export class PerpetualsMarket extends Caller {
 		side: PerpetualsOrderSide;
 		executionPrice: number;
 		percentFilled: number;
+		sizeFilled: number;
 	}): Promise<number> => {
 		const {
 			indexPrice,
@@ -253,6 +255,7 @@ export class PerpetualsMarket extends Caller {
 			freeMarginUsd,
 			totalMinInitialMargin,
 			percentFilled,
+			sizeFilled,
 		} = inputs;
 
 		const marginRatioInitial = Casting.IFixed.numberFromIFixed(
@@ -283,7 +286,7 @@ export class PerpetualsMarket extends Caller {
 				position,
 				indexPrice,
 				executionPrice,
-				percentFilled,
+				sizeFilled,
 			});
 			const margin = freeMarginUsd + totalMinInitialMargin + marginDelta;
 			const imr = totalMinInitialMargin + reqDelta;
@@ -301,7 +304,13 @@ export class PerpetualsMarket extends Caller {
 						percentFilled);
 		}
 
-		return maxSize * indexPrice;
+		// accounts for any minor price fluctatuations or possible rounding errors
+		const SAFETY_SCALAR = 0.999;
+		return (
+			this.roundToValidSize({ size: maxSize, floor: true }) *
+			indexPrice *
+			SAFETY_SCALAR
+		);
 	};
 
 	// =========================================================================
@@ -352,12 +361,12 @@ export class PerpetualsMarket extends Caller {
 		position: PerpetualsPosition;
 		indexPrice: number;
 		executionPrice: number;
-		percentFilled: number;
+		sizeFilled: number;
 	}): {
 		marginDelta: number;
 		reqDelta: number;
 	} {
-		const { position, indexPrice, executionPrice, percentFilled } = inputs;
+		const { position, indexPrice, executionPrice, sizeFilled } = inputs;
 
 		const imr = Casting.IFixed.numberFromIFixed(
 			this.marketParams.marginRatioInitial
@@ -366,11 +375,9 @@ export class PerpetualsMarket extends Caller {
 			this.marketParams.takerFee
 		);
 
-		const totalSize = Casting.IFixed.numberFromIFixed(
+		const sizeNum = Casting.IFixed.numberFromIFixed(
 			position.baseAssetAmount
 		);
-		const sizeFilled = totalSize * percentFilled;
-		const sizeUnfilled = totalSize * (1 - percentFilled);
 		const bidsQuantityNum = Casting.IFixed.numberFromIFixed(
 			position.bidsQuantity
 		);
@@ -379,12 +386,12 @@ export class PerpetualsMarket extends Caller {
 		);
 
 		const netSizeBefore = Math.max(
-			Math.abs(sizeFilled + bidsQuantityNum),
-			Math.abs(sizeFilled - asksQuantityNum)
+			Math.abs(sizeNum + bidsQuantityNum),
+			Math.abs(sizeNum - asksQuantityNum)
 		);
 		const netSizeAfter = Math.max(
-			Math.abs(sizeUnfilled + bidsQuantityNum),
-			Math.abs(sizeUnfilled - asksQuantityNum)
+			Math.abs(sizeNum - sizeFilled + bidsQuantityNum),
+			Math.abs(sizeNum + sizeFilled - asksQuantityNum)
 		);
 		const entryPrice = Perpetuals.calcEntryPrice({ position });
 		const uPnl = sizeFilled * (indexPrice - entryPrice);
