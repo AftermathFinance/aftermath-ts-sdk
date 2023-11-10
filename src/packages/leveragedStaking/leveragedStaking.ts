@@ -1,13 +1,14 @@
 import {
-	ApiStakeBody,
 	SuiNetwork,
-	Balance,
 	Url,
-	Percentage,
-	StakedSuiVaultStateObject,
+	ScallopMarketPool,
+	ScallopMarketCollateral,
+	LeveragedStakeObligation,
+	ApiLeveragedStakeObligationBody,
+	ApiLeveragedStakeObligationResponse,
+	LeveragedAfSuiState,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { SuiValidatorSummary } from "@mysten/sui.js/client";
 
 export class LeveragedStaking extends Caller {
 	// =========================================================================
@@ -15,7 +16,9 @@ export class LeveragedStaking extends Caller {
 	// =========================================================================
 
 	public static readonly constants = {
-		bounds: {},
+		bounds: {
+			maxLeverage: 3.5,
+		},
 	};
 
 	// =========================================================================
@@ -30,28 +33,42 @@ export class LeveragedStaking extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async getActiveValidators(): Promise<SuiValidatorSummary[]> {
-		return this.fetchApi("active-validators");
+	public async getOwnedObligation(
+		inputs: ApiLeveragedStakeObligationBody
+	): Promise<ApiLeveragedStakeObligationResponse> {
+		return this.fetchApi("obligation", inputs);
+	}
+
+	public async getLeveragedAfSuiState(): Promise<LeveragedAfSuiState> {
+		return this.fetchApi("leveraged-afsui-state");
+	}
+
+	public async getSuiMarketPool(): Promise<ScallopMarketPool> {
+		return this.fetchApi("sui-market-pool");
+	}
+
+	public async getAfSuiMarketCollateral(): Promise<ScallopMarketCollateral> {
+		return this.fetchApi("afsui-market-collateral");
 	}
 
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
-	public async getStakeTransaction(inputs: ApiStakeBody) {
-		return this.fetchApiTransaction<ApiStakeBody>(
-			"transactions/leveraged-stake",
-			inputs
-		);
-	}
+	// public async getStakeTransaction(inputs: ApiStakeBody) {
+	// 	return this.fetchApiTransaction<ApiStakeBody>(
+	// 		"transactions/leveraged-stake",
+	// 		inputs
+	// 	);
+	// }
 
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
 
-	public async getSuiTvl(): Promise<Balance> {
-		return this.fetchApi("sui-tvl");
-	}
+	// public async getSuiTvl(): Promise<Balance> {
+	// 	return this.fetchApi("sui-tvl");
+	// }
 
 	// =========================================================================
 	//  Public Static Methods
@@ -61,9 +78,9 @@ export class LeveragedStaking extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	public static calcAtomicUnstakeFee(inputs: {
-		stakedSuiVaultState: StakedSuiVaultStateObject;
-	}): Percentage {
-		return 0;
-	}
+	// public static calcAtomicUnstakeFee(inputs: {
+	// 	stakedSuiVaultState: StakedSuiVaultStateObject;
+	// }): Percentage {
+	// 	return 0;
+	// }
 }

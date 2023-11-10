@@ -13,7 +13,10 @@ import {
 //  Scallop
 // =========================================================================
 
-export type { MarketPool, MarketCollateral } from "@scallop-io/sui-scallop-sdk";
+export type {
+	MarketPool as ScallopMarketPool,
+	MarketCollateral as ScallopMarketCollateral,
+} from "@scallop-io/sui-scallop-sdk";
 
 // =========================================================================
 //  Objects
@@ -32,23 +35,29 @@ export interface LeveragedStakeObligation {
 	leveragedObligationKey: LeveragedObligationKey;
 }
 
+export interface LeveragedAfSuiState extends Object {
+	totalAfSuiCollateral: Balance;
+	totalSuiDebt: Balance;
+	protocolVersion: bigint;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
 
-export interface asdfStakedEvent extends Event {
-	stakedSuiId: ObjectId;
-	suiId: ObjectId;
-	staker: SuiAddress;
-	validatorAddress: SuiAddress;
-	epoch: bigint;
-	suiStakeAmount: Balance;
-	validatorFee: number;
-	isRestaked: boolean;
-	afSuiId: ObjectId;
-	afSuiAmount: Balance;
-	referrer?: SuiAddress;
-}
+// export interface asdfStakedEvent extends Event {
+// 	stakedSuiId: ObjectId;
+// 	suiId: ObjectId;
+// 	staker: SuiAddress;
+// 	validatorAddress: SuiAddress;
+// 	epoch: bigint;
+// 	suiStakeAmount: Balance;
+// 	validatorFee: number;
+// 	isRestaked: boolean;
+// 	afSuiId: ObjectId;
+// 	afSuiAmount: Balance;
+// 	referrer?: SuiAddress;
+// }
 
 // =========================================================================
 //  API
@@ -58,26 +67,25 @@ export interface asdfStakedEvent extends Event {
 //  Transactions API
 // =========================================================================
 
-export interface adfApiStakeBody {
+export interface ApiLeveragedStakeObligationBody {
 	walletAddress: SuiAddress;
-	suiStakeAmount: Balance;
-	validatorAddress: SuiAddress;
-	referrer?: SuiAddress;
-	isSponsoredTx?: boolean;
 }
+export type ApiLeveragedStakeObligationResponse =
+	| LeveragedStakeObligation
+	| "none";
 
 // =========================================================================
 //  Objects API
 // =========================================================================
 
-export interface asdfApiStakingPositionsBody {
-	walletAddress: SuiAddress;
-}
+// export interface asdfApiStakingPositionsBody {
+// 	walletAddress: SuiAddress;
+// }
 
 // =========================================================================
 //  Events API
 // =========================================================================
 
-export type asdfApiStakingEventsBody = ApiEventsBody & {
-	walletAddress: SuiAddress;
-};
+// export type asdfApiStakingEventsBody = ApiEventsBody & {
+// 	walletAddress: SuiAddress;
+// };

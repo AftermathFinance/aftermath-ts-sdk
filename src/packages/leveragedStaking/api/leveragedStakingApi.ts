@@ -20,6 +20,11 @@ import {
 	LeveragedStakingAddresses,
 	ScallopProviders,
 	ScallopAddresses,
+	ScallopMarketPool,
+	ScallopMarketCollateral,
+	ApiLeveragedStakeObligationBody,
+	ApiLeveragedStakeObligationResponse,
+	LeveragedAfSuiState,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -111,9 +116,9 @@ export class LeveragedStakingApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchObligationForUser = async (inputs: {
-		walletAddress: SuiAddress;
-	}): Promise<LeveragedStakeObligation | "none"> => {
+	public fetchOwnedObligation = async (
+		inputs: ApiLeveragedStakeObligationBody
+	): Promise<ApiLeveragedStakeObligationResponse> => {
 		const { walletAddress } = inputs;
 
 		const leveragedObligationKeys =
@@ -138,13 +143,33 @@ export class LeveragedStakingApi {
 		};
 	};
 
-	public fetchSuiMarketPool = () => {
-		return this.ScallopProviders.Query.getMarketPool("sui");
+	public fetchSuiMarketPool = async (): Promise<ScallopMarketPool> => {
+		const suiMarketPool = await this.ScallopProviders.Query.getMarketPool(
+			"sui"
+		);
+		if (!suiMarketPool) throw new Error("sui market pool not found");
+		return suiMarketPool;
 	};
 
-	public fetchAfSuiMarketCollateral = () => {
-		return this.ScallopProviders.Query.getMarketCollateral("afsui");
-	};
+	public fetchLeveragedAfSuiState =
+		async (): Promise<LeveragedAfSuiState> => {
+			return this.Provider.Objects().fetchCastObject({
+				objectId:
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState,
+				objectFromSuiObjectResponse:
+					Casting.leveragedStaking
+						.leveragedAfSuiStateFromSuiObjectResponse,
+			});
+		};
+
+	public fetchAfSuiMarketCollateral =
+		async (): Promise<ScallopMarketCollateral> => {
+			const afSuiMarketCollateral =
+				await this.ScallopProviders.Query.getMarketCollateral("afsui");
+			if (!afSuiMarketCollateral)
+				throw new Error("sui market pool not found");
+			return afSuiMarketCollateral;
+		};
 
 	// =========================================================================
 	//  Transaction Commands

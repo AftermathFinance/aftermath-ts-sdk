@@ -18,6 +18,12 @@ export interface LeveragedObligationKeyFieldsOnChain {
 	sui_debt: BigIntAsString;
 }
 
+export interface LeveragedAfSuiStateFieldsOnChain {
+	total_afsui_collateral: BigIntAsString;
+	total_sui_debt: BigIntAsString;
+	protocol_version: BigIntAsString;
+}
+
 // =========================================================================
 //  Events Fields
 // =========================================================================
