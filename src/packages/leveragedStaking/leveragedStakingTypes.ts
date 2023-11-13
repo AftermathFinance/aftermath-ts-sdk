@@ -30,11 +30,6 @@ export interface LeveragedAfSuiPosition extends Object {
 	suiDebt: Balance;
 }
 
-export interface LeveragedStakeObligation {
-	obligationAccount: ObligationAccount;
-	leveragedAfSuiPosition: LeveragedAfSuiPosition;
-}
-
 export interface LeveragedAfSuiState extends Object {
 	totalAfSuiCollateral: Balance;
 	totalSuiDebt: Balance;
@@ -67,12 +62,10 @@ export interface LeveragedAfSuiState extends Object {
 //  Transactions API
 // =========================================================================
 
-export interface ApiLeveragedStakeObligationBody {
+export interface ApiLeveragedStakePositionBody {
 	walletAddress: SuiAddress;
 }
-export type ApiLeveragedStakeObligationResponse =
-	| LeveragedStakeObligation
-	| "none";
+export type ApiLeveragedStakePositionResponse = LeveragedAfSuiPosition | "none";
 
 // =========================================================================
 //  Objects API

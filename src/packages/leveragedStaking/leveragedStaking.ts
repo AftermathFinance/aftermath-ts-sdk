@@ -3,9 +3,8 @@ import {
 	Url,
 	ScallopMarketPool,
 	ScallopMarketCollateral,
-	LeveragedStakeObligation,
-	ApiLeveragedStakeObligationBody,
-	ApiLeveragedStakeObligationResponse,
+	ApiLeveragedStakePositionBody,
+	ApiLeveragedStakePositionResponse,
 	LeveragedAfSuiState,
 	Balance,
 } from "../../types";
@@ -34,10 +33,10 @@ export class LeveragedStaking extends Caller {
 	//  Objects
 	// =========================================================================
 
-	public async getOwnedObligation(
-		inputs: ApiLeveragedStakeObligationBody
-	): Promise<ApiLeveragedStakeObligationResponse> {
-		return this.fetchApi("obligation", inputs);
+	public async getLeveragedStakePosition(
+		inputs: ApiLeveragedStakePositionBody
+	): Promise<ApiLeveragedStakePositionResponse> {
+		return this.fetchApi("leveraged-stake-position", inputs);
 	}
 
 	public async getLeveragedAfSuiState(): Promise<LeveragedAfSuiState> {
@@ -81,15 +80,27 @@ export class LeveragedStaking extends Caller {
 
 	// REVIEW: Math (1 vs 1_000_000_000_000_000_000, etc).
 	//
-	public static calcLeverageRatio = (inputs: {
+	public static calcLeverage = (inputs: {
 		totalSuiDebt: Balance;
 		totalAfSuiCollateral: Balance;
-	}) => {
+	}): number => {
+		if (inputs.totalAfSuiCollateral === BigInt(0)) return 1;
 		return (
 			1 /
 			(1 -
 				Number(inputs.totalSuiDebt) /
 					Number(inputs.totalAfSuiCollateral))
+		);
+	};
+
+	public static calcTotalSuiDebt = (inputs: {
+		leverage: number;
+		totalAfSuiCollateral: Balance;
+	}): Balance => {
+		return BigInt(
+			Math.floor(
+				Number(inputs.totalAfSuiCollateral) * (1 - 1 / inputs.leverage)
+			)
 		);
 	};
 }

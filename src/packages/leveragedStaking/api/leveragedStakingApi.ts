@@ -11,15 +11,14 @@ import {
 	PoolsAddresses,
 	StakingAddresses,
 	SuiAddress,
-	LeveragedStakeObligation,
 	LeveragedStakingAddresses,
 	ScallopProviders,
 	ScallopAddresses,
 	RouterAddresses,
 	ScallopMarketPool,
 	ScallopMarketCollateral,
-	ApiLeveragedStakeObligationBody,
-	ApiLeveragedStakeObligationResponse,
+	ApiLeveragedStakePositionBody,
+	ApiLeveragedStakePositionResponse,
 	LeveragedAfSuiState,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
@@ -109,9 +108,36 @@ export class LeveragedStakingApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchOwnedObligation = async (
-		inputs: ApiLeveragedStakeObligationBody
-	): Promise<ApiLeveragedStakeObligationResponse> => {
+	// public fetchOwnedObligation = async (
+	// 	inputs: ApiLeveragedStakeObligationBody
+	// ): Promise<ApiLeveragedStakePositionResponse> => {
+	// 	const { walletAddress } = inputs;
+
+	// 	const leveragedAfSuiPositions =
+	// 		await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+	// 			walletAddress,
+	// 			objectType: this.objectTypes.leveragedAfSuiPosition,
+	// 			objectFromSuiObjectResponse:
+	// 				Casting.leveragedStaking
+	// 					.leveragedAfSuiPositionFromSuiObjectResponse,
+	// 		});
+	// 	if (leveragedAfSuiPositions.length <= 0) return "none";
+
+	// 	const leveragedAfSuiPosition = leveragedAfSuiPositions[0];
+	// 	const obligationAccount =
+	// 		await this.ScallopProviders.Query.getObligationAccount(
+	// 			leveragedAfSuiPosition.obligationId
+	// 		);
+
+	// 	return {
+	// 		obligationAccount,
+	// 		leveragedAfSuiPosition,
+	// 	};
+	// };
+
+	public fetchLeveragedStakePosition = async (
+		inputs: ApiLeveragedStakePositionBody
+	): Promise<ApiLeveragedStakePositionResponse> => {
 		const { walletAddress } = inputs;
 
 		const leveragedAfSuiPositions =
@@ -124,16 +150,7 @@ export class LeveragedStakingApi {
 			});
 		if (leveragedAfSuiPositions.length <= 0) return "none";
 
-		const leveragedAfSuiPosition = leveragedAfSuiPositions[0];
-		const obligationAccount =
-			await this.ScallopProviders.Query.getObligationAccount(
-				leveragedAfSuiPosition.obligationId
-			);
-
-		return {
-			obligationAccount,
-			leveragedAfSuiPosition,
-		};
+		return leveragedAfSuiPositions[0];
 	};
 
 	public fetchSuiMarketPool = async (): Promise<ScallopMarketPool> => {
@@ -170,7 +187,11 @@ export class LeveragedStakingApi {
 
 	public openObligationTx = (inputs: {
 		tx: TransactionBlock;
-	}) /* (Obligation, LeveragedAfSuiPosition, ObligationHotPotato) */ => {
+	}): [
+		obligation: TransactionObjectArgument,
+		leveragedAfSuiPosition: TransactionObjectArgument,
+		obligationHotPotato: TransactionObjectArgument
+	] /* (Obligation, LeveragedAfSuiPosition, ObligationHotPotato) */ => {
 		const { tx } = inputs;
 
 		return tx.moveCall({
@@ -504,7 +525,7 @@ export class LeveragedStakingApi {
 			});
 
 		// ii. Leverage stake.
-		this.buildLeveragedStakeTx({
+		await this.buildLeveragedStakeTx({
 			...inputs,
 			scallopTx,
 			leveragedAfSuiPositionId,
@@ -541,7 +562,6 @@ export class LeveragedStakingApi {
 			...inputs,
 			scallopTx,
 		});
-
 		return tx;
 	};
 
@@ -556,7 +576,7 @@ export class LeveragedStakingApi {
 		leverage: number;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
-	}): Promise<TransactionBlock> => {
+	}) => {
 		const {
 			scallopTx,
 			referrer,
@@ -642,8 +662,6 @@ export class LeveragedStakingApi {
 			tx,
 			leveragedActionCapId,
 		});
-
-		return tx;
 	};
 
 	// TODO(Kevin): Documentation.
@@ -683,7 +701,7 @@ export class LeveragedStakingApi {
 		});
 
 		// ii. Calculate current leverage ratio.
-		const currentLeverageRatio = LeveragedStaking.calcLeverageRatio({
+		const currentLeverageRatio = LeveragedStaking.calcLeverage({
 			totalSuiDebt: inputs.totalSuiDebt,
 			totalAfSuiCollateral: inputs.totalAfSuiCollateral,
 		});
@@ -858,19 +876,7 @@ export class LeveragedStakingApi {
 	};
 
 	// TODO(Kevin): Documentation.
-	/**
-	 * Builds a transaction to increase leverage.
-	 * @param inputs Object containing the necessary inputs to build the transaction.
-	 * @param inputs.scallopTx The Scallop transaction block.
-	 * @param inputs.leveragedActionCapId The ID of the leveraged action capability.
-	 * @param inputs.obligationId The ID of the obligation.
-	 * @param inputs.initialAfSuiCollateral The initial amount of afSUI collateral.
-	 * @param inputs.totalAfSuiCollateral The total amount of afSUI collateral.
-	 * @param inputs.totalSuiDebt The total amount of SUI debt.
-	 * @param inputs.newLeverage The new leverage ratio.
-	 * @returns The built transaction.
-	 */
-	private buildIncreaseLeverageTx = async (inputs: {
+	private buildIncreaseLeverageTx = (inputs: {
 		scallopTx: ScallopTxBlock;
 		leveragedActionCapId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
