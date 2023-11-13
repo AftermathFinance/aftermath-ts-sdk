@@ -5,7 +5,7 @@ import { EventOnChain } from "../../../general/types/castingTypes";
 //  Objects
 // =========================================================================
 
-export interface LeveragedObligationKeyFieldsOnChain {
+export interface LeveragedAfSuiPositionFieldsOnChain {
 	obligation_key: {
 		id: ObjectId;
 		ownership: {
@@ -13,9 +13,11 @@ export interface LeveragedObligationKeyFieldsOnChain {
 			of: ObjectId;
 		};
 	};
-	base_afsui_collateral: BigIntAsString;
-	afsui_collateral: BigIntAsString;
-	sui_debt: BigIntAsString;
+	position_metadata: {
+		base_afsui_collateral: BigIntAsString;
+		afsui_collateral: BigIntAsString;
+		sui_debt: BigIntAsString;
+	};
 }
 
 // =========================================================================

@@ -400,7 +400,7 @@ export class StakingApi
 	//  Inspection Transaction Commands
 	// =========================================================================
 
-	public afsuiToSuiExchangeRateTx = (inputs: {
+	public afSuiToSuiExchangeRateTx = (inputs: {
 		tx: TransactionBlock;
 	}) /* (u128) */ => {
 		const { tx } = inputs;
@@ -409,6 +409,24 @@ export class StakingApi
 				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"afsui_to_sui_exchange_rate"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+			],
+		});
+	};
+
+	public suiToAfSuiExchangeRateTx = (inputs: {
+		tx: TransactionBlock;
+	}) /* (u128) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.staking.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"sui_to_afsui_exchange_rate"
 			),
 			typeArguments: [],
 			arguments: [
@@ -449,6 +467,26 @@ export class StakingApi
 				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
 				tx.object(this.addresses.staking.objects.safe), // Safe
 				tx.pure(inputs.afSuiAmount, "u64"),
+			],
+		});
+	};
+
+	public suiToAfsuiTx = (inputs: {
+		tx: TransactionBlock;
+		suiAmount: Balance;
+	}) /* (u64) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.staking.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"sui_to_afsui"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+				tx.pure(inputs.suiAmount, "u64"),
 			],
 		});
 	};

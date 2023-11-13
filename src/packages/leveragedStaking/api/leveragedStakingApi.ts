@@ -1,17 +1,12 @@
 import {
-	TransactionArgument,
 	TransactionBlock,
 	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
-import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
-	AfSuiRouterWrapperAddresses,
 	AnyObjectType,
-	ApiIndexerUserEventsBody,
 	Balance,
 	CoinType,
-	LeveragedObligationKey,
 	ObjectId,
 	PoolsAddresses,
 	StakingAddresses,
@@ -20,16 +15,14 @@ import {
 	LeveragedStakingAddresses,
 	ScallopProviders,
 	ScallopAddresses,
+	RouterAddresses,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
 import {
-	ObligationAccount,
-	Scallop,
-	ScallopBuilder,
-	ScallopQuery,
+	ScallopTxBlock,
 } from "@scallop-io/sui-scallop-sdk";
 
 export class LeveragedStakingApi {
@@ -39,7 +32,9 @@ export class LeveragedStakingApi {
 
 	private static readonly constants = {
 		moduleNames: {
-			leverageStake: "leverage_stake",
+			leveragedAfSuiPosition: "leveraged_afsui_position",
+			leveragedAfSuiState: "leveraged_afsui_state",
+			interface: "interface",
 			events: "events",
 		},
 		eventNames: {
@@ -56,6 +51,7 @@ export class LeveragedStakingApi {
 		leveragedStaking: LeveragedStakingAddresses;
 		staking: StakingAddresses;
 		pools: PoolsAddresses;
+		router: RouterAddresses;
 		scallop: ScallopAddresses;
 	};
 
@@ -65,7 +61,7 @@ export class LeveragedStakingApi {
 	};
 
 	public readonly objectTypes: {
-		leveragedObligationKey: AnyObjectType;
+		leveragedAfSuiPosition: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -79,9 +75,10 @@ export class LeveragedStakingApi {
 		const leveragedStaking = this.Provider.addresses.leveragedStaking;
 		const staking = this.Provider.addresses.staking;
 		const pools = this.Provider.addresses.pools;
+		const router = this.Provider.addresses.router;
 		const scallop = this.Provider.addresses.scallop;
 
-		if (!leveragedStaking || !staking || !pools || !scallop)
+		if (!leveragedStaking || !staking || !pools || !scallop || !router)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
@@ -90,6 +87,7 @@ export class LeveragedStakingApi {
 			leveragedStaking,
 			staking,
 			pools,
+			router,
 			scallop,
 		};
 
@@ -99,13 +97,29 @@ export class LeveragedStakingApi {
 		};
 
 		this.objectTypes = {
-			leveragedObligationKey: `${leveragedStaking.packages.leveragedAfSui}::leverage_stake::LeveragedAfSuiObligationKey`,
+			leveragedAfSuiPosition: `${leveragedStaking.packages.leveragedAfSui}::leveraged_afsui_position::LeveragedAfSuiPosition`,
 		};
 	}
 
 	// =========================================================================
 	//  Public Methods
 	// =========================================================================
+
+	// REVIEW: Math (1 vs 1_000_000_000_000_000_000, etc).
+	//
+	public calculateLeverageRatio = (
+		inputs: {
+			totalSuiDebt: Balance;
+			totalAfSuiCollateral: Balance;
+		}
+	) => {
+		return 1 / (
+			1 - (
+				Number(inputs.totalSuiDebt) 
+					/ Number(inputs.totalAfSuiCollateral)
+			)
+		)
+	}
 
 	// =========================================================================
 	//  Objects
@@ -116,25 +130,25 @@ export class LeveragedStakingApi {
 	}): Promise<LeveragedStakeObligation | "none"> => {
 		const { walletAddress } = inputs;
 
-		const leveragedObligationKeys =
+		const leveragedAfSuiPositions =
 			await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
 				walletAddress,
-				objectType: this.objectTypes.leveragedObligationKey,
+				objectType: this.objectTypes.leveragedAfSuiPosition,
 				objectFromSuiObjectResponse:
 					Casting.leveragedStaking
-						.leveragedObligationKeyFromSuiObjectResponse,
+						.leveragedAfSuiPositionFromSuiObjectResponse,
 			});
-		if (leveragedObligationKeys.length <= 0) return "none";
+		if (leveragedAfSuiPositions.length <= 0) return "none";
 
-		const leveragedObligationKey = leveragedObligationKeys[0];
+		const leveragedAfSuiPosition = leveragedAfSuiPositions[0];
 		const obligationAccount =
 			await this.ScallopProviders.Query.getObligationAccount(
-				leveragedObligationKey.obligationId
+				leveragedAfSuiPosition.obligationId
 			);
 
 		return {
 			obligationAccount,
-			leveragedObligationKey,
+			leveragedAfSuiPosition,
 		};
 	};
 
@@ -146,51 +160,196 @@ export class LeveragedStakingApi {
 	//  Transaction Commands
 	// =========================================================================
 
-	public initiateStakeTx = (inputs: {
+	public openObligationTx = (inputs: {
 		tx: TransactionBlock;
-		afSuiCoinId: ObjectId | TransactionObjectArgument;
-		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
-	}) /* StakeCap */ => {
+	}) /* (Obligation, LeveragedAfSuiPosition, ObligationHotPotato) */ => {
 		const { tx } = inputs;
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
-				"initiate_stake"
+				LeveragedStakingApi.constants.moduleNames.leveragedAfSuiPosition,
+				"open_obligation"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
-				tx.object(inputs.afSuiCoinId), // Coin
-			],
-		});
-	};
-
-	public initiateStakeAndOpenObligationTx = (inputs: {
-		tx: TransactionBlock;
-		afSuiCoinId: ObjectId | TransactionObjectArgument;
-	}) /* (StakeCap, LeveragedAfSuiObligationKey, Obligation, ObligationHotPotato) */ => {
-		const { tx } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
-				"initiate_stake_and_open_obligation"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(inputs.afSuiCoinId), // Coin
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), // LeveragedAfSuiState
 				tx.object(this.addresses.scallop.objects.version), // Version
 			],
 		});
 	};
 
+	public returnObligationTx = (inputs: {
+		tx: TransactionBlock;
+		obligationId: ObjectId | TransactionObjectArgument;
+		obligationHotPotatoId: ObjectId | TransactionObjectArgument;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.leveragedAfSuiPosition,
+				"return_obligation"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), // LeveragedAfSuiState
+
+				tx.object(this.addresses.scallop.objects.version), // Version
+				tx.object(inputs.obligationId), // Obligation
+				tx.object(inputs.obligationHotPotatoId), // ObligationHotPotato
+			],
+		});
+	};
+
+	public initiateLeverageStakeTx = (inputs: {
+		tx: TransactionBlock;
+		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+		obligationId: ObjectId | TransactionObjectArgument;
+		afSuiCoinId: ObjectId | TransactionObjectArgument;
+	}) /* LeveragedActionCap */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.interface,
+				"initiate_leverage_stake"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), // LeveragedAfSuiState
+				tx.object(this.addresses.scallop.objects.version), // Version
+				tx.object(inputs.obligationId), // Obligation
+				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
+				tx.object(inputs.afSuiCoinId), // Coin
+			],
+		});
+	};
+
+	public completeLeverageStakeTx = (inputs: {
+		tx: TransactionBlock;
+		leveragedActionCapId: ObjectId | TransactionObjectArgument;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.interface,
+				"complete_leverage_stake"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), // LeveragedAfSuiState
+			],
+		});
+	};
+
+	public initiateLeverageUnstakeTx = (inputs: {
+		tx: TransactionBlock;
+		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+		withdrawAmount: Balance;
+	}) /* LeveragedActionCap */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.interface,
+				"initiate_leverage_unstake"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), // LeveragedAfSuiState
+				tx.pure(inputs.withdrawAmount, "u64"), // withdraw_amount
+			],
+		});
+	};
+
+	public completeLeverageUnstakeTx = (inputs: {
+		tx: TransactionBlock;
+		leveragedActionCapId: ObjectId | TransactionObjectArgument;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.interface,
+				"complete_leverage_unstake"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), // LeveragedAfSuiState
+			],
+		});
+	};
+
+	public initiateChangeLeverageTx = (inputs: {
+		tx: TransactionBlock;
+		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+	}) /* LeveragedActionCap */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.interface,
+				"initiate_change_leverage"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), // LeveragedAfSuiState
+			],
+		});
+	};
+
+	public completeChangeLeverageTx = (inputs: {
+		tx: TransactionBlock;
+		leveragedActionCapId: ObjectId | TransactionObjectArgument;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.interface,
+				"complete_change_leverage"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), 	// LeveragedAfSuiState
+			],
+		});
+	};
+	
 	public depositAfSuiCollateralTx = (inputs: {
 		tx: TransactionBlock;
-		stakeCapId: ObjectId | TransactionObjectArgument;
-		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
+		leveragedActionCapId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
 		afSuiCoinId: ObjectId | TransactionObjectArgument;
 	}) => {
@@ -199,13 +358,12 @@ export class LeveragedStakingApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
+				LeveragedStakingApi.constants.moduleNames.interface,
 				"deposit_afsui_collateral"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.stakeCapId), // StakeCap
-				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
+				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
@@ -218,10 +376,41 @@ export class LeveragedStakingApi {
 		});
 	};
 
+	public withdrawAfSuiCollateralTx = (inputs: {
+		tx: TransactionBlock;
+		leveragedActionCapId: ObjectId | TransactionObjectArgument;
+		obligationId: ObjectId | TransactionObjectArgument;
+		withdrawAmount: Balance;
+	}) /* Coin<AFSUI> */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.leveragedStaking.packages.leveragedAfSui,
+				LeveragedStakingApi.constants.moduleNames.interface,
+				"withdraw_afsui_collateral"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				tx.object(
+					this.addresses.leveragedStaking.objects.leveragedAfSuiState
+				), // LeveragedAfSuiState
+
+				tx.object(this.addresses.scallop.objects.version), // Version
+				tx.object(inputs.obligationId), // Obligation
+				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
+				tx.object(this.addresses.scallop.objects.coinDecimalsRegistry), // CoinDecimalsRegistry
+				tx.pure(inputs.withdrawAmount, "u64"), // withdraw_amount
+				tx.object(this.addresses.scallop.objects.xOracle), // XOracle
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+			],
+		});
+	};
+
 	public borrowSuiTx = (inputs: {
 		tx: TransactionBlock;
-		stakeCapId: ObjectId | TransactionObjectArgument;
-		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
+		leveragedActionCapId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
 		borrowAmount: Balance;
 	}) /* Coin<SUI> */ => {
@@ -230,13 +419,12 @@ export class LeveragedStakingApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
+				LeveragedStakingApi.constants.moduleNames.interface,
 				"borrow_sui"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.stakeCapId), // StakeCap
-				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
+				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
@@ -252,110 +440,9 @@ export class LeveragedStakingApi {
 		});
 	};
 
-	public completeLeverageStakeTx = (inputs: {
-		tx: TransactionBlock;
-		stakeCapId: ObjectId | TransactionObjectArgument;
-		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
-		obligationId: ObjectId | TransactionObjectArgument;
-		afSuiCoinId: ObjectId | TransactionObjectArgument;
-	}) => {
-		const { tx } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
-				"complete_leverage_stake"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(inputs.stakeCapId), // StakeCap
-				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
-				tx.object(
-					this.addresses.leveragedStaking.objects.leveragedAfSuiState
-				), // LeveragedAfSuiState
-
-				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
-				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
-				tx.object(inputs.afSuiCoinId), // Coin
-			],
-		});
-	};
-
-	public completeStakeAndReturnObligation = (inputs: {
-		tx: TransactionBlock;
-		stakeCapId: ObjectId | TransactionObjectArgument;
-		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
-		obligationId: ObjectId | TransactionObjectArgument;
-		obligationHotPotatoId: ObjectId | TransactionObjectArgument;
-		afSuiCoinId: ObjectId | TransactionObjectArgument;
-	}) => {
-		const { tx } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
-				"complete_stake_and_return_obligation"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(inputs.stakeCapId), // StakeCap
-				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
-				tx.object(
-					this.addresses.leveragedStaking.objects.leveragedAfSuiState
-				), // LeveragedAfSuiState
-
-				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
-				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
-				tx.object(inputs.afSuiCoinId), // Coin
-				tx.object(inputs.obligationHotPotatoId), // ObligationHotPotato
-			],
-		});
-	};
-
-	public withdrawAfSuiCollateralTx = (inputs: {
-		tx: TransactionBlock;
-		stakeCapId: ObjectId | TransactionObjectArgument;
-		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
-		obligationId: ObjectId | TransactionObjectArgument;
-		obligationKeyId: ObjectId | TransactionObjectArgument;
-		withdrawAmount: Balance;
-	}) /* Coin<AFSUI> */ => {
-		const { tx } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
-				"withdraw_afsui_collateral"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(inputs.stakeCapId), // StakeCap
-				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
-				tx.object(
-					this.addresses.leveragedStaking.objects.leveragedAfSuiState
-				), // LeveragedAfSuiState
-
-				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
-				tx.object(inputs.obligationKeyId), // ObligationKey
-				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
-				tx.object(this.addresses.scallop.objects.coinDecimalsRegistry), // CoinDecimalsRegistry
-				tx.pure(inputs.withdrawAmount, "u64"), // withdraw_amount
-				tx.object(this.addresses.scallop.objects.xOracle), // XOracle
-				tx.object(Sui.constants.addresses.suiClockId), // Clock
-			],
-		});
-	};
-
 	public repaySuiTx = (inputs: {
 		tx: TransactionBlock;
-		stakeCapId: ObjectId | TransactionObjectArgument;
-		leveragedObligationKeyId: ObjectId | TransactionObjectArgument;
+		leveragedActionCapId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
 		suiCoinId: ObjectId | TransactionObjectArgument;
 	}) => {
@@ -364,13 +451,12 @@ export class LeveragedStakingApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
+				LeveragedStakingApi.constants.moduleNames.interface,
 				"repay_sui"
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.stakeCapId), // StakeCap
-				tx.object(inputs.leveragedObligationKeyId), // LeveragedAfSuiObligationKey
+				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
@@ -384,37 +470,186 @@ export class LeveragedStakingApi {
 		});
 	};
 
-	public completeUnstakeTx = (inputs: {
-		tx: TransactionBlock;
-		unstakeCapId: ObjectId | TransactionObjectArgument;
-	}) => {
-		const { tx } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.leveragedStaking.packages.leveragedAfSui,
-				LeveragedStakingApi.constants.moduleNames.leverageStake,
-				"complete_unstake"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(inputs.unstakeCapId), // UnstakeCap
-			],
-		});
-	};
-
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
 
-	// TODO: stake if not afsui
+	// TODO(kevin): Documentation
 	public fetchBuildOpenLeveragedStakeTx = async (
-		// inputs: ApiLeveragedStakeBody
 		inputs: {
 			walletAddress: SuiAddress;
 			stakeAmount: Balance;
+			stakeType: CoinType;
 			leverage: number;
-			maxCollateralWeight: number;
+			referrer?: SuiAddress;
+			isSponsoredTx?: boolean;
+		}
+	): Promise<TransactionBlock> => {
+		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
+		const tx = scallopTx.txBlock;
+		tx.setSender(inputs.walletAddress);
+
+		// i. Open a new `LeveragedAfSuiPosition` position
+		const [obligationId, leveragedAfSuiPositionId, obligationHotPotatoId] = this.openObligationTx({
+			tx
+		});
+
+		// ii. Leverage stake.
+		this.buildLeveragedStakeTx({
+			...inputs,
+			scallopTx,
+			leveragedAfSuiPositionId,
+			obligationId,
+		});
+
+		// iii. Share the associated Obligation object.
+		this.returnObligationTx({
+			tx,
+			obligationId,
+			obligationHotPotatoId,
+		});
+
+		return tx;
+	}
+
+	// TODO(kevin): Documentation
+	public fetchBuildLeveragedStakeTx = async (
+		inputs: {
+			walletAddress: SuiAddress;
+			leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+			obligationId: ObjectId | TransactionObjectArgument;
+			stakeAmount: Balance;
+			stakeType: CoinType;
+			leverage: number;
+			referrer?: SuiAddress;
+			isSponsoredTx?: boolean;
+		}
+	): Promise<TransactionBlock> => {
+		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
+		const tx = scallopTx.txBlock;
+		tx.setSender(inputs.walletAddress);
+
+		// i. Leverage stake.
+		this.buildLeveragedStakeTx({
+			...inputs,
+			scallopTx
+		});
+
+		return tx;
+	}
+
+	// TODO(kevin): Documentation
+	private buildLeveragedStakeTx = async (
+		inputs: {
+			scallopTx: ScallopTxBlock;
+			walletAddress: SuiAddress;
+			leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+			obligationId: ObjectId | TransactionObjectArgument;
+			stakeAmount: Balance;
+			stakeType: CoinType;
+			leverage: number;
+			referrer?: SuiAddress;
+			isSponsoredTx?: boolean;
+		}
+	): Promise<TransactionBlock> => {
+		const {
+			scallopTx,
+			referrer,
+			walletAddress,
+			leveragedAfSuiPositionId,
+			obligationId,
+			stakeAmount,
+			isSponsoredTx,
+		} = inputs;
+
+		const tx = scallopTx.txBlock;
+
+		// REVIEW(Collin): I am not sure how you want to handle errors, should we assert
+		//  that `leverage` is less than or equal to `1 / (1 - collateralWeight)`.
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		let initialAfSuiCollateral;
+		let afSuiCoinId;
+		// i. Obtain the initial amount of afSUI collateral.
+		if (Coin.isSuiCoin(inputs.stakeType)) {
+			// ia. If the input was denominated in SUI, stake to afSUI.
+			initialAfSuiCollateral = this.Provider.Staking().suiToAfsuiTx({
+				tx,
+				suiAmount: stakeAmount,
+			});
+
+			const suiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
+				walletAddress: walletAddress,
+				coinType: Coin.constants.suiCoinType,
+				coinAmount: stakeAmount,
+				isSponsoredTx: isSponsoredTx,
+			});
+
+			afSuiCoinId = this.Provider.Staking().stakeTx({
+				tx,
+				// REVIEW(Collin): set to our own validator,
+				//
+				validatorAddress: this.addresses.router.afSui!.objects.aftermathValidator,
+				suiCoin,
+			});
+		} else {
+			// ib. Obtain afSUI coin with `stakeAmount` value. 
+			initialAfSuiCollateral = stakeAmount;
+
+			afSuiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
+				walletAddress: walletAddress,
+				coinType: this.Provider.Staking().coinTypes.afSui,
+				coinAmount: stakeAmount,
+				isSponsoredTx: isSponsoredTx,
+			});
+		}
+
+		// ii. Obtain a `StakeCap` by depositing the initial afSUI collateral.
+		const leveragedActionCapId = this.initiateLeverageStakeTx({
+			tx,
+			leveragedAfSuiPositionId,
+			obligationId,
+			afSuiCoinId,
+		});
+
+		if (inputs.leverage > 1)
+			// iii. Increase the leverage to the desired leverage ratio.
+			this.buildIncreaseLeverageTx({
+				scallopTx,
+				leveragedActionCapId,
+				obligationId,
+				initialAfSuiCollateral,
+				totalAfSuiCollateral: initialAfSuiCollateral,
+				totalSuiDebt: BigInt(0),
+				newLeverage: inputs.leverage,
+			});
+
+		// iv. Complete the Stake transaction and emit an event.
+		this.completeLeverageStakeTx({
+			tx,
+			leveragedActionCapId,
+		});
+
+		return tx;
+	}
+
+	// TODO(Kevin): Documentation.
+	public fetchBuildLeveragedUnstakeTx = async (
+		inputs: {
+			walletAddress: SuiAddress;
+			leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+			obligationId: ObjectId | TransactionObjectArgument;
+			initialAfSuiCollateral: Balance;
+			totalAfSuiCollateral: Balance;
+			totalSuiDebt: Balance;
+			withdrawAmount: Balance;
 			referrer?: SuiAddress;
 			isSponsoredTx?: boolean;
 		}
@@ -422,99 +657,307 @@ export class LeveragedStakingApi {
 		const {
 			referrer,
 			walletAddress,
-			stakeAmount,
-			leverage,
-			maxCollateralWeight,
+			leveragedAfSuiPositionId,
+			obligationId,
 		} = inputs;
 
 		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
 		const tx = scallopTx.txBlock;
 		tx.setSender(walletAddress);
 
-		let borrowAmount = this.Provider.Staking().afsuiToSuiTx({
-			tx,
-			afSuiAmount: BigInt(
-				Math.floor(Number(stakeAmount) * maxCollateralWeight)
-			),
-		});
-
-		// TODO: find out how to calc these values
-		const leverageLoops = 3;
-
-		// set referer
 		if (referrer)
 			this.Provider.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
 
-		// get initial sui coin to stake
-		let afSuiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+		// i. Initiate Unstake tx.
+		const leveragedActionCapId = this.initiateLeverageUnstakeTx({
 			tx,
-			walletAddress,
-			coinType: this.Provider.Staking().coinTypes.afSui,
-			coinAmount: borrowAmount,
-			isSponsoredTx: inputs.isSponsoredTx,
+			leveragedAfSuiPositionId,
+			withdrawAmount: inputs.withdrawAmount,
 		});
 
-		const [
-			stakeCapId,
-			leveragedObligationKeyId,
+		// ii. Calculate current leverage ratio.
+		const currentLeverageRatio = this.calculateLeverageRatio({
+			totalSuiDebt: inputs.totalSuiDebt,
+			totalAfSuiCollateral: inputs.totalAfSuiCollateral,
+		}); 
+
+		// REVIEW(Kevin): Does this properly handle the unstake case.
+		//
+		// iii. Decrease the leverage to the desired leverage ratio.
+		const remainingAfSuiCoinId = await this.buildDecreaseLeverageTx({
+			scallopTx,
+			leveragedActionCapId,
 			obligationId,
-			obligationHotPotatoId,
-		] = this.initiateStakeAndOpenObligationTx({
-			tx,
-			afSuiCoinId,
+			initialAfSuiCollateral: inputs.initialAfSuiCollateral
+				- inputs.withdrawAmount,
+			totalAfSuiCollateral: inputs.totalAfSuiCollateral,
+			totalSuiDebt: inputs.totalSuiDebt,
+			newLeverage: currentLeverageRatio,	
 		});
 
-		// perform leverage loops
-		let suiCoin: TransactionObjectArgument;
-		for (const _ of Array(leverageLoops).fill(null)) {
-			borrowAmount = this.Provider.Staking().afsuiToSuiTx({
+		// iv. Return the afSUI to the sender.
+		tx.transferObjects(
+			remainingAfSuiCoinId,
+			walletAddress,
+		);
+
+		// v. Complete Unstake tx.
+		this.completeLeverageUnstakeTx({
+			tx,
+			leveragedActionCapId,
+		});
+
+		return tx;
+	}
+
+	// TODO(Kevin): Documentation.
+	public fetchBuildChangeLeverageTx = async (
+		inputs: {
+			walletAddress: SuiAddress;
+			leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+			obligationId: ObjectId | TransactionObjectArgument;
+			initialAfSuiCollateral: Balance;
+			totalAfSuiCollateral: Balance;
+			totalSuiDebt: Balance;
+			currentLeverage: number;
+			newLeverage: number;
+			referrer?: SuiAddress;
+			isSponsoredTx?: boolean;
+		}
+	) => {
+		const {
+			referrer,
+			walletAddress,
+			leveragedAfSuiPositionId,
+			obligationId,
+		} = inputs;
+
+		// REVIEW(Collin): I am not sure how you want to handle errors, should we assert
+		//  that `leverage` is less than or equal to `1 / (1 - collateralWeight)`.
+
+		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
+		const tx = scallopTx.txBlock;
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
 				tx,
-				afSuiAmount: BigInt(
-					Math.floor(Number(borrowAmount) * maxCollateralWeight)
-				),
+				referrer,
 			});
 
-			suiCoin = this.borrowSuiTx({
-				tx,
-				stakeCapId,
-				leveragedObligationKeyId,
-				obligationId,
-				borrowAmount,
+		// i. Initiate Change Leverage tx.
+		const leveragedActionCapId = this.initiateChangeLeverageTx({
+			tx,
+			leveragedAfSuiPositionId,
+		});
+
+		// ii. Update the leverage in the desired direction.
+		if (inputs.newLeverage < inputs.currentLeverage) {
+			// iia. Remove afSUI Collateral + repay debt to reach desired leverage. 
+			const remainingAfSuiCoinId = this.buildDecreaseLeverageTx({
+				...inputs,
+				scallopTx,
+				leveragedActionCapId,
 			});
 
-			const afSuiCoinId = this.Provider.Staking().stakeTx({
-				// TODO: cleanup this validator address
-				tx,
-				suiCoin,
-				validatorAddress:
-					this.Provider.addresses.router?.afSui?.objects
-						.aftermathValidator ?? "",
-			});
-
-			// levereage = 	totalBorrow / (stakeAmount as sui)
-
+			// iic. Deposit remaining afSUI as collateral on Scallop.
 			this.depositAfSuiCollateralTx({
 				tx,
-				stakeCapId,
-				leveragedObligationKeyId,
+				leveragedActionCapId,
 				obligationId,
-				afSuiCoinId,
+				afSuiCoinId: remainingAfSuiCoinId,
+			});
+		} else {
+			// iia. Borrow SUI and deposit more afSUI Collateral to reach desired leverage.
+			this.buildIncreaseLeverageTx({
+				...inputs,
+				scallopTx,
+				leveragedActionCapId,
 			});
 		}
 
-		this.completeStakeAndReturnObligation({
+		// iii. Complete Change Leverage tx.
+		this.completeLeverageStakeTx({
 			tx,
-			stakeCapId,
-			leveragedObligationKeyId,
-			obligationId,
-			obligationHotPotatoId,
-			afSuiCoinId,
+			leveragedActionCapId,
 		});
+
 		return tx;
-	};
+	}
+
+	// TODO(Kevin): Documentation.
+	private buildDecreaseLeverageTx = async (
+		inputs: {
+			scallopTx: ScallopTxBlock;
+			leveragedActionCapId: ObjectId | TransactionObjectArgument;
+			obligationId: ObjectId | TransactionObjectArgument;
+			initialAfSuiCollateral: Balance;
+			totalAfSuiCollateral: Balance;
+			totalSuiDebt: Balance;
+			newLeverage: number;
+		}
+	): Promise<ObjectId | TransactionObjectArgument> /* Coin<AFSUI> */ => {
+		const {
+			scallopTx,
+			leveragedActionCapId,
+			obligationId,
+		} = inputs;
+
+		const tx = scallopTx.txBlock;
+
+		// ia. Calculate the amount of afSUI collateral to unstake.
+        const newTotalAfSuiCollateral = BigInt(
+			Number(inputs.initialAfSuiCollateral) 
+				* inputs.newLeverage
+		);
+	
+        const decreaseInAfSuiCollateral = inputs.totalAfSuiCollateral
+            - newTotalAfSuiCollateral
+
+        // ib. Calculate the amount of SUI debt to repay.
+        const newSuiDebt = this.Provider.Staking().afsuiToSuiTx({
+			tx,
+			afSuiAmount: BigInt(
+				newTotalAfSuiCollateral - inputs.initialAfSuiCollateral
+			)
+		});
+
+        const decreaseInSuiDebt = inputs.totalSuiDebt
+			- newSuiDebt;
+
+		// ii. Flash loan `decreaseInSuiDebt` worth of SUI from Scallop.
+		const [flashLoanedSuiCoinId, loan] = scallopTx.borrowFlashLoan(
+			decreaseInSuiDebt, 
+			'sui'
+		);
+
+        // iii. Repay `decreaseInSuiDebt` of SUI debt.
+		this.repaySuiTx({
+			tx,
+			leveragedActionCapId,
+			obligationId,
+			suiCoinId: flashLoanedSuiCoinId
+		});
+
+		// iv. Withdraw `decreaseInCollateralAmount` worth of afSUI collateral.
+		this.withdrawAfSuiCollateralTx({
+			tx,
+			leveragedActionCapId,
+			obligationId,
+			withdrawAmount: decreaseInAfSuiCollateral,
+		});
+
+		// TODO(Collin): Instant unstake or swap afSUI back into SUI.
+		//
+		// v. Convert `decreaseInCollateralAmount` of withdrawn collateral into SUI.
+		const swappedSuiCoinId = 0;
+
+		// vi. Repay flash loan with converted SUI.
+		scallopTx.repayFlashLoan(
+			swappedSuiCoinId,
+			loan,
+			'sui'
+		);
+
+		// TODO(Collin): Stake OR swap (to account for when `suiFlashLoanAmount` < `minimum_stake_amount`).
+		//
+		// vii. [Potentially] Swap leftover SUI back into afSUI
+		const swappedAfSuiCoinId = 0;
+
+		swappedAfSuiCoinId
+	}
+
+	// TODO(Kevin): Documentation.
+	private buildIncreaseLeverageTx = async (
+		inputs: {
+			scallopTx: ScallopTxBlock;
+			leveragedActionCapId: ObjectId | TransactionObjectArgument;
+			obligationId: ObjectId | TransactionObjectArgument;
+			initialAfSuiCollateral: Balance;
+			totalAfSuiCollateral: Balance;
+			totalSuiDebt: Balance;
+			newLeverage: number;
+		}
+	) => {
+		const {
+			scallopTx,
+			leveragedActionCapId,
+			obligationId,
+		} = inputs;
+
+		const tx = scallopTx.txBlock;
+
+		// ia. Calculate the extra amount of afSUI collateral that must be borrowed to reach a leverage
+		//  ratio of `leverage`.
+		const newTotalAfSuiCollateral = BigInt(
+			Number(inputs.initialAfSuiCollateral) 
+				* inputs.newLeverage
+		);
+
+		const increaseInAfSuiCollateral = newTotalAfSuiCollateral 
+			- inputs.totalAfSuiCollateral;
+
+		// REVIEW(Collin): I am not sure how you want to handle errors, should we assert that
+		//  `flashLoanAmount` <= `totalLeveragedAfSuiCollateral` * `collateralWeight`?
+		//
+		// ib. Calculate amount of SUI that must be flash loaned to account for
+		//  `increaseInAfSuiCollateral`.
+		const flashLoanAmount = this.Provider.Staking().afsuiToSuiTx({
+			tx,
+			afSuiAmount: BigInt(increaseInAfSuiCollateral),
+		});
+		
+		// ii. Flash loan `requiredAfSuiCollateral` worth of SUI from Scallop.
+		const [flashLoanedSuiCoinId, loan] = scallopTx.borrowFlashLoan(
+			flashLoanAmount, 
+			'sui'
+		);
+
+		// TODO(Collin): Stake OR swap (to account for when `flashLoanAmount` < `minimum_stake_amount`).
+		//
+		// iii. Stake SUI into afSUI.
+		const stakedAfSuiCoinId = this.Provider.Staking().stakeTx({
+			tx,
+			// REVIEW(Collin): set to our own validator,
+			//
+			validatorAddress: this.addresses.router.afSui!.objects.aftermathValidator,
+			suiCoin: flashLoanedSuiCoinId,
+		});
+			
+		// iv. Deposit the staked afSUI as collateral on Scallop.
+		this.depositAfSuiCollateralTx({
+			tx,
+			leveragedActionCapId,
+			obligationId,
+			afSuiCoinId: stakedAfSuiCoinId,
+		});
+
+		// v. Borrow amount of SUI required to pay off flash loan.
+		const borrowedSuiCoinId = this.borrowSuiTx({
+			tx,
+			leveragedActionCapId,
+			obligationId,
+			borrowAmount: flashLoanAmount,
+		});
+
+		// vi. Repay flash loan on Scallop.
+		scallopTx.repayFlashLoan(
+			borrowedSuiCoinId, 
+			loan, 
+			'sui'
+		);
+
+		// vii. [Potentially] Use remaining SUI to repay debt.
+		this.repaySuiTx({
+			tx,
+			leveragedActionCapId,
+			obligationId,
+			suiCoinId: borrowedSuiCoinId
+		});
+	}
 
 	// =========================================================================
 	//  Events

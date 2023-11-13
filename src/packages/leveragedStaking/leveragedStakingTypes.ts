@@ -13,7 +13,7 @@ import {
 //  Objects
 // =========================================================================
 
-export interface LeveragedObligationKey extends Object {
+export interface LeveragedAfSuiPosition extends Object {
 	obligationId: ObjectId;
 	obligationKeyId: ObjectId;
 	baseAfSuiCollateral: Balance;
@@ -23,7 +23,7 @@ export interface LeveragedObligationKey extends Object {
 
 export interface LeveragedStakeObligation {
 	obligationAccount: ObligationAccount;
-	leveragedObligationKey: LeveragedObligationKey;
+	leveragedAfSuiPosition: LeveragedAfSuiPosition;
 }
 
 // =========================================================================

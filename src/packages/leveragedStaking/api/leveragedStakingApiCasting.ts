@@ -1,11 +1,10 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
-	ValidatorOperationCapObject,
 	StakedEvent,
-	LeveragedObligationKey,
+	LeveragedAfSuiPosition,
 } from "../../../types";
 import {
-	LeveragedObligationKeyFieldsOnChain,
+	LeveragedAfSuiPositionFieldsOnChain,
 	StakedEventOnChain,
 } from "./leveragedStakingApiCastingTypes";
 import { Fixed } from "../../../general/utils/fixed";
@@ -16,13 +15,13 @@ export class LeveragedStakingApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static leveragedObligationKeyFromSuiObjectResponse = (
+	public static leveragedAfSuiPositionFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): LeveragedObligationKey => {
+	): LeveragedAfSuiPosition => {
 		const objectType = Helpers.getObjectType(data);
 		const fields = Helpers.getObjectFields(
 			data
-		) as LeveragedObligationKeyFieldsOnChain;
+		) as LeveragedAfSuiPositionFieldsOnChain;
 
 		return {
 			objectType,
@@ -33,9 +32,15 @@ export class LeveragedStakingApiCasting {
 			obligationKeyId: Helpers.addLeadingZeroesToType(
 				fields.obligation_key.id
 			),
-			baseAfSuiCollateral: BigInt(fields.base_afsui_collateral),
-			afSuiCollateral: BigInt(fields.afsui_collateral),
-			suiDebt: BigInt(fields.sui_debt),
+			baseAfSuiCollateral: BigInt(
+				fields.position_metadata.base_afsui_collateral
+			),
+			afSuiCollateral: BigInt(
+				fields.position_metadata.afsui_collateral
+			),
+			suiDebt: BigInt(
+				fields.position_metadata.sui_debt
+			),
 		};
 	};
 
