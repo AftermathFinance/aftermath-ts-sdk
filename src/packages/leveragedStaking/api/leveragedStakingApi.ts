@@ -733,7 +733,7 @@ export class LeveragedStakingApi {
 	};
 
 	// TODO(Kevin): Documentation.
-	public fetchBuildChangeLeverageTx = async (inputs: {
+	public buildChangeLeverageTx = (inputs: {
 		walletAddress: SuiAddress;
 		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
