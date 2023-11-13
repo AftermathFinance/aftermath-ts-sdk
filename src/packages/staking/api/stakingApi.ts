@@ -451,7 +451,7 @@ export class StakingApi
 		});
 	};
 
-	public afsuiToSuiTx = (inputs: {
+	public afSuiToSuiTx = (inputs: {
 		tx: TransactionBlock;
 		afSuiAmount: Balance;
 	}) /* (u64) */ => {
@@ -471,7 +471,7 @@ export class StakingApi
 		});
 	};
 
-	public suiToAfsuiTx = (inputs: {
+	public suiToAfSuiTx = (inputs: {
 		tx: TransactionBlock;
 		suiAmount: Balance;
 	}) /* (u64) */ => {
@@ -856,7 +856,7 @@ export class StakingApi
 
 	public fetchAfSuiToSuiExchangeRate = async (): Promise<number> => {
 		const tx = new TransactionBlock();
-		this.afsuiToSuiExchangeRateTx({ tx });
+		this.afSuiToSuiExchangeRateTx({ tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
 

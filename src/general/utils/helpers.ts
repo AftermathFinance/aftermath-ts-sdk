@@ -325,7 +325,7 @@ export class Helpers {
 			Main.createScallopBuilder(),
 			Main.createScallopQuery(),
 		]);
-		await Promise.all([Builder.init(), Query.init()]);
+		// await Promise.all([Builder.init(), Query.init()]);
 		return {
 			Main,
 			Builder,

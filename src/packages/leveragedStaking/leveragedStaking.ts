@@ -7,6 +7,7 @@ import {
 	ApiLeveragedStakeObligationBody,
 	ApiLeveragedStakeObligationResponse,
 	LeveragedAfSuiState,
+	Balance,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -78,9 +79,17 @@ export class LeveragedStaking extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	// public static calcAtomicUnstakeFee(inputs: {
-	// 	stakedSuiVaultState: StakedSuiVaultStateObject;
-	// }): Percentage {
-	// 	return 0;
-	// }
+	// REVIEW: Math (1 vs 1_000_000_000_000_000_000, etc).
+	//
+	public static calcLeverageRatio = (inputs: {
+		totalSuiDebt: Balance;
+		totalAfSuiCollateral: Balance;
+	}) => {
+		return (
+			1 /
+			(1 -
+				Number(inputs.totalSuiDebt) /
+					Number(inputs.totalAfSuiCollateral))
+		);
+	};
 }
