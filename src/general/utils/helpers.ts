@@ -9,6 +9,7 @@ import {
 	ObjectId,
 	ScallopProviders,
 	Slippage,
+	SuiNetwork,
 } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
@@ -303,10 +304,22 @@ export class Helpers {
 	// =========================================================================
 
 	public static async createScallopProviders(inputs: {
-		network: NetworkType;
+		network: SuiNetwork;
 	}): Promise<ScallopProviders> {
+		const network = inputs.network.toLowerCase();
+		const networkType =
+			network === "local"
+				? "localnet"
+				: network !== "mainnet" &&
+				  network !== "testnet" &&
+				  network !== "localnet"
+				? undefined
+				: network;
+		if (!networkType)
+			throw new Error(`network \`${inputs.network}\` not found`);
+
 		const Main = new Scallop({
-			networkType: inputs.network,
+			networkType,
 		});
 		const [Builder, Query] = await Promise.all([
 			Main.createScallopBuilder(),
