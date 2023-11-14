@@ -594,7 +594,7 @@ export class PerpetualsApi {
 		this.bestPriceTx({ tx, orderbookId, side });
 
 		// place order
-		if ("slPrice" in inputs) {
+		if ("slPrice" in inputs || "tpPrice" in inputs) {
 			this.placeSLTPOrderTx({ ...inputs, tx });
 		} else if ("price" in inputs) {
 			this.placeLimitOrderTx({ ...inputs, tx });
@@ -1221,12 +1221,12 @@ export class PerpetualsApi {
 		}
 	) => {
 		const { tx } = inputs;
-		// TODO: make suggested changes
 
-		const txResult =
-			"price" in inputs
-				? this.placeLimitOrderTx({ ...inputs, tx })
-				: this.placeMarketOrderTx({ ...inputs, tx });
+		if ("price" in inputs) {
+			this.placeLimitOrderTx({ ...inputs, tx });
+		} else {
+			this.placeMarketOrderTx({ ...inputs, tx });
+		}
 
 		const orderType = PerpetualsOrderType.PostOnly;
 		const side =
@@ -1234,17 +1234,17 @@ export class PerpetualsApi {
 				? PerpetualsOrderSide.Bid
 				: PerpetualsOrderSide.Ask;
 
-		// TODO: we can improve these checks to trigger SL and TP
-
 		const orderPrice =
 			"price" in inputs ? inputs.price : inputs.marketPrice;
-		// If ASK and SL price is above target price, then place SL order too
+
 		if (
 			"slPrice" in inputs &&
-			inputs.side === PerpetualsOrderSide.Ask &&
-			inputs.slPrice > orderPrice
+			((inputs.side === PerpetualsOrderSide.Ask &&
+				inputs.slPrice > orderPrice) ||
+				(inputs.side === PerpetualsOrderSide.Bid &&
+					inputs.slPrice < orderPrice))
 		) {
-			return this.placeLimitOrderTx({
+			this.placeLimitOrderTx({
 				...inputs,
 				tx,
 				orderType,
@@ -1253,13 +1253,14 @@ export class PerpetualsApi {
 			});
 		}
 
-		// If BID and TP price is above target price, then place TP order too
 		if (
 			"tpPrice" in inputs &&
-			inputs.side === PerpetualsOrderSide.Bid &&
-			inputs.tpPrice > orderPrice
+			((inputs.side === PerpetualsOrderSide.Ask &&
+				inputs.tpPrice < orderPrice) ||
+				(inputs.side === PerpetualsOrderSide.Bid &&
+					inputs.tpPrice > orderPrice))
 		) {
-			return this.placeLimitOrderTx({
+			this.placeLimitOrderTx({
 				...inputs,
 				tx,
 				orderType,
@@ -1268,7 +1269,7 @@ export class PerpetualsApi {
 			});
 		}
 
-		return txResult;
+		return tx;
 	};
 
 	public getAccountTx = (inputs: {
