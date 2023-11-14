@@ -25,6 +25,7 @@ import {
 	SettledFundingEvent,
 	AcquiredLiqeeEvent,
 	PerpetualsFillReceipt,
+	PerpetualsPostReceipt,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
@@ -278,6 +279,14 @@ export class PerpetualsApiCasting {
 			orderId: BigInt(data.orderId),
 			size: BigInt(data.size),
 			dropped: data.dropped,
+		};
+	};
+
+	public static postReceiptFromRaw = (data: any): PerpetualsPostReceipt => {
+		return {
+			accountId: BigInt(data.accountId),
+			orderId: BigInt(data.orderId),
+			size: BigInt(data.size),
 		};
 	};
 

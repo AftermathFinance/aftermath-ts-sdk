@@ -400,6 +400,18 @@ bcs.registerStructType("FillReceipt", {
 	dropped: BCS.BOOL,
 });
 
+export interface PerpetualsPostReceipt {
+	accountId: PerpetualsAccountId;
+	orderId: PerpetualsOrderId;
+	size: bigint;
+}
+
+bcs.registerStructType("PostReceipt", {
+	accountId: BCS.U64,
+	orderId: BCS.U128,
+	size: BCS.U64,
+});
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -652,7 +664,8 @@ export interface ApiPerpetualsExecutionPriceBody {
 }
 export interface ApiPerpetualsExecutionPriceResponse {
 	executionPrice: number;
-	percentFilled: number;
+	sizeFilled: number;
+	sizePosted: number;
 }
 
 // =========================================================================

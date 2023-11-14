@@ -56,6 +56,7 @@ import {
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsCancelOrdersBody,
+	PerpetualsPostReceipt,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -1758,10 +1759,13 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<ApiPerpetualsExecutionPriceResponse> => {
-		const { lotSize, tickSize, price, size } = inputs;
+		const { lotSize, tickSize, price } = inputs;
 
-		const orderReceipts = await this.fetchMarketFilledOrderReceipts(inputs);
-		if (orderReceipts.length <= 0)
+		const { fillReceipts, postReceipt } =
+			await this.fetchMarketOrderReceipts(inputs);
+
+		const sizePosted = postReceipt !== undefined ? postReceipt.size : 0;
+		if (fillReceipts.length <= 0)
 			return price !== undefined
 				? // simulating limit order
 				  {
@@ -1770,19 +1774,21 @@ export class PerpetualsApi {
 							lotSize,
 							tickSize,
 						}),
-						percentFilled: 0,
+						sizeFilled: 0,
+						sizePosted: Number(sizePosted),
 				  }
 				: // simulating market order
 				  {
 						executionPrice: 0,
-						percentFilled: 0,
+						sizeFilled: 0,
+						sizePosted: 0,
 				  };
 
 		const sizeFilled = Helpers.sumBigInt(
-			orderReceipts.map((receipt) => receipt.size)
+			fillReceipts.map((receipt) => receipt.size)
 		);
 
-		const executionPrice = orderReceipts.reduce((acc, receipt) => {
+		const executionPrice = fillReceipts.reduce((acc, receipt) => {
 			const orderPrice = PerpetualsOrderUtils.price(
 				receipt.orderId,
 				inputs.side === PerpetualsOrderSide.Ask
@@ -1801,8 +1807,11 @@ export class PerpetualsApi {
 			);
 		}, 0);
 
-		const percentFilled = Number(sizeFilled) / Number(size);
-		return { executionPrice, percentFilled };
+		return {
+			executionPrice,
+			sizeFilled: Number(sizeFilled),
+			sizePosted: Number(sizePosted),
+		};
 
 		// // simulating market order
 		// if (price === undefined) return executionPrice;
@@ -1929,13 +1938,16 @@ export class PerpetualsApi {
 	//  Private Helpers
 	// =========================================================================
 
-	private fetchMarketFilledOrderReceipts = async (inputs: {
+	private fetchMarketOrderReceipts = async (inputs: {
 		collateralCoinType: CoinType;
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		size: bigint;
 		price?: PerpetualsOrderPrice;
-	}): Promise<PerpetualsFillReceipt[]> => {
+	}): Promise<{
+		fillReceipts: PerpetualsFillReceipt[];
+		postReceipt: PerpetualsPostReceipt | undefined;
+	}> => {
 		const { collateralCoinType, marketId, side, size, price } = inputs;
 
 		const tx = new TransactionBlock();
@@ -1960,17 +1972,30 @@ export class PerpetualsApi {
 					: BigInt(0)),
 		});
 
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+		const allBytes =
+			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
 				tx,
 			});
+
 		const fillReceipts: any[] = bcs.de(
 			"vector<FillReceipt>",
-			new Uint8Array(bytes)
+			new Uint8Array(allBytes[0])
 		);
-		return fillReceipts.map((receipt) =>
-			Casting.perpetuals.fillReceiptFromRaw(receipt)
-		);
+
+		const postReceipt: PerpetualsPostReceipt | undefined =
+			Casting.unwrapDeserializedOption(
+				bcs.de("Option<PostReceipt>", new Uint8Array(allBytes[1]))
+			);
+
+		return {
+			fillReceipts: fillReceipts.map((receipt) =>
+				Casting.perpetuals.fillReceiptFromRaw(receipt)
+			),
+			postReceipt:
+				postReceipt !== undefined
+					? Casting.perpetuals.postReceiptFromRaw(postReceipt)
+					: undefined,
+		};
 	};
 
 	// =========================================================================

@@ -93,23 +93,25 @@ export class PerpetualsMarket extends Caller {
 		freeMarginUsd: number;
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
-		const { side, price, indexPrice } = inputs;
+		const { side, price } = inputs;
 
-		const optimisticSizeUsd = this.calcOptimisticMaxOrderSizeUsd(inputs);
+		const optimisticSize = this.calcOptimisticMaxOrderSizeUsd(inputs);
 
 		const size = // (in lots)
-			BigInt(Math.ceil(optimisticSizeUsd / indexPrice / this.lotSize()));
-		const { executionPrice, percentFilled } = await this.getExecutionPrice({
-			size,
-			side,
-			price,
-		});
+			BigInt(Math.ceil(optimisticSize / this.lotSize()));
+		const { executionPrice, sizeFilled, sizePosted } =
+			await this.getExecutionPrice({
+				size,
+				side,
+				price,
+			});
 
 		return this.calcPessimisticMaxOrderSizeUsd({
 			...inputs,
 			executionPrice,
-			percentFilled,
-			size: Number(size) * this.lotSize(),
+			sizeFilled,
+			sizePosted,
+			optimisticSize,
 		});
 	};
 
@@ -210,9 +212,8 @@ export class PerpetualsMarket extends Caller {
 
 		let maxSize = freeMarginUsd / (indexPrice * imr);
 		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
-			const currentSizeNum = Casting.IFixed.numberFromIFixed(
-				position.baseAssetAmount
-			);
+			const currentSizeNum =
+				Casting.IFixed.numberFromIFixed(position.baseAssetAmount) * 2;
 			const bidsQuantityNum = Casting.IFixed.numberFromIFixed(
 				position.bidsQuantity
 			);
@@ -220,21 +221,13 @@ export class PerpetualsMarket extends Caller {
 				position.asksQuantity
 			);
 
-			maxSize +=
-				Perpetuals.positionSide({ position }) ===
-				PerpetualsOrderSide.Bid
-					? Math.max(
-							Math.abs(currentSizeNum + bidsQuantityNum) -
-								Math.abs(currentSizeNum - asksQuantityNum),
-							0
-					  )
-					: Math.max(
-							Math.abs(currentSizeNum - asksQuantityNum) -
-								Math.abs(currentSizeNum + bidsQuantityNum),
-							0
-					  );
+			maxSize += Math.max(
+				Math.abs(currentSizeNum + bidsQuantityNum),
+				Math.abs(currentSizeNum - asksQuantityNum)
+			);
 		}
-		return maxSize * indexPrice;
+
+		return maxSize;
 	};
 
 	public calcPessimisticMaxOrderSizeUsd = async (inputs: {
@@ -244,8 +237,9 @@ export class PerpetualsMarket extends Caller {
 		indexPrice: number;
 		side: PerpetualsOrderSide;
 		executionPrice: number;
-		percentFilled: number;
-		size: number;
+		sizeFilled: number;
+		sizePosted: number;
+		optimisticSize: number;
 	}): Promise<number> => {
 		const {
 			indexPrice,
@@ -254,9 +248,12 @@ export class PerpetualsMarket extends Caller {
 			executionPrice,
 			freeMarginUsd,
 			totalMinInitialMargin,
-			percentFilled,
-			size,
+			sizeFilled,
+			sizePosted,
+			optimisticSize,
 		} = inputs;
+
+		const percentFilled = sizeFilled / (sizeFilled + sizePosted);
 
 		const marginRatioInitial = Casting.IFixed.numberFromIFixed(
 			this.marketParams.marginRatioInitial
@@ -269,48 +266,52 @@ export class PerpetualsMarket extends Caller {
 			? Boolean(side ^ Perpetuals.positionSide({ position }))
 			: false;
 
-		const slippage =
+		let slippage =
 			(side === PerpetualsOrderSide.Bid
 				? executionPrice - indexPrice
 				: indexPrice - executionPrice) / indexPrice;
 
-		let maxSize: number;
+		if (percentFilled !== 1 && slippage < 0) slippage = 0;
+
+		const SAFETY_SCALAR = Math.min(1 - slippage, 0.995);
+		let maxSize: number = 0;
 		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
-			const currentSizeNum = Casting.IFixed.numberFromIFixed(
-				position.baseAssetAmount
+			maxSize += Math.abs(
+				Casting.IFixed.numberFromIFixed(position.baseAssetAmount)
 			);
 
 			// Size that can be placed to close the position
-			maxSize = Math.abs(currentSizeNum);
-			const { marginDelta, reqDelta } = this.simulateClosePosition({
-				position,
-				indexPrice,
-				executionPrice,
-				size,
-				percentFilled,
-			});
+			const { marginDelta, reqDelta, sizeFilled, sizePosted } =
+				this.simulateClosePosition({
+					position,
+					indexPrice,
+					executionPrice,
+					size: optimisticSize,
+					percentFilled,
+				});
+
+			const newPercentFilled = sizeFilled / (sizeFilled + sizePosted);
+
 			const margin = freeMarginUsd + totalMinInitialMargin + marginDelta;
 			const imr = totalMinInitialMargin + reqDelta;
+
 			// Size that adds margin requirement
 			maxSize +=
-				(margin - imr) /
+				((margin - imr) * SAFETY_SCALAR) /
 				(indexPrice * marginRatioInitial +
 					(executionPrice * takerFee + slippage * indexPrice) *
-						percentFilled);
+						newPercentFilled);
 		} else {
 			maxSize =
-				freeMarginUsd /
+				(freeMarginUsd * SAFETY_SCALAR) /
 				(indexPrice * marginRatioInitial +
 					(executionPrice * takerFee + slippage * indexPrice) *
 						percentFilled);
 		}
 
 		// accounts for any minor price fluctatuations or possible rounding errors
-		const SAFETY_SCALAR = 0.999;
 		return (
-			this.roundToValidSize({ size: maxSize, floor: true }) *
-			indexPrice *
-			SAFETY_SCALAR
+			this.roundToValidSize({ size: maxSize, floor: true }) * indexPrice
 		);
 	};
 
@@ -367,6 +368,8 @@ export class PerpetualsMarket extends Caller {
 	}): {
 		marginDelta: number;
 		reqDelta: number;
+		sizeFilled: number;
+		sizePosted: number;
 	} {
 		const { position, indexPrice, executionPrice, size, percentFilled } =
 			inputs;
@@ -397,28 +400,29 @@ export class PerpetualsMarket extends Caller {
 
 		let positionSizeFilledNum: number;
 		let positionSizePosted: number;
-		if (sizeFilled >= positionSizeNum) {
-			positionSizeFilledNum = positionSizeNum;
+		const positionSizeAbs = Math.abs(positionSizeNum);
+		if (sizeFilled >= positionSizeAbs) {
+			positionSizeFilledNum = positionSizeAbs;
 			positionSizePosted = 0;
-			sizeFilled = sizeFilled - positionSizeNum;
+			sizeFilled = sizeFilled - positionSizeAbs;
 		} else {
 			positionSizeFilledNum = sizeFilled;
-			positionSizePosted = positionSizeNum - sizeFilled;
+			positionSizePosted = positionSizeAbs - sizeFilled;
 			sizeFilled = 0;
 			sizePosted = sizePosted - positionSizePosted;
 		}
 
 		const netSizeAfter = Math.max(
 			Math.abs(
-				positionSizeNum -
+				positionSizeAbs -
 					positionSizeFilledNum +
 					positionBidsNum -
 					positionSizePosted
 			),
 			Math.abs(
-				positionSizeNum +
-					positionSizeFilledNum -
-					positionAsksNum +
+				positionSizeAbs -
+					positionSizeFilledNum +
+					positionAsksNum -
 					positionSizePosted
 			)
 		);
@@ -431,6 +435,7 @@ export class PerpetualsMarket extends Caller {
 			Math.abs(positionSizeFilledNum) * executionPrice * takerFee;
 		const marginDelta = rPnl - uPnl - fees;
 		const reqDelta = (netSizeAfter - netSizeBefore) * indexPrice * imr;
-		return { marginDelta, reqDelta };
+
+		return { marginDelta, reqDelta, sizeFilled, sizePosted };
 	}
 }
