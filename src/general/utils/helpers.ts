@@ -17,7 +17,10 @@ import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { Casting } from "./casting";
-import { is } from "@mysten/sui.js/utils";
+import {
+	TransactionBlock,
+	TransactionObjectArgument,
+} from "@mysten/sui.js/transactions";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { NetworkType } from "@scallop-io/sui-kit";
 
@@ -298,6 +301,18 @@ export class Helpers {
 
 		throw new Error("no object display found on " + data.data?.objectId);
 	}
+
+	// =========================================================================
+	//  Tx Command Input Construction
+	// =========================================================================
+
+	// TODO: use this everywhere in api for tx command creation
+	public static addTxObject = (
+		tx: TransactionBlock,
+		object: ObjectId | TransactionObjectArgument
+	): TransactionObjectArgument => {
+		return typeof object === "string" ? tx.object(object) : object;
+	};
 
 	// =========================================================================
 	//  Constructors

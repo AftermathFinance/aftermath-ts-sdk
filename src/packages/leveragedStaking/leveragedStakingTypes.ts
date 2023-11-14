@@ -7,7 +7,9 @@ import {
 	Percentage,
 	ObjectId,
 	SuiAddress,
+	Timestamp,
 } from "../../general/types/generalTypes";
+import { ManipulateType } from "dayjs";
 
 // =========================================================================
 //  Scallop
@@ -40,19 +42,40 @@ export interface LeveragedAfSuiState extends Object {
 //  Events
 // =========================================================================
 
-// export interface asdfStakedEvent extends Event {
-// 	stakedSuiId: ObjectId;
-// 	suiId: ObjectId;
-// 	staker: SuiAddress;
-// 	validatorAddress: SuiAddress;
-// 	epoch: bigint;
-// 	suiStakeAmount: Balance;
-// 	validatorFee: number;
-// 	isRestaked: boolean;
-// 	afSuiId: ObjectId;
-// 	afSuiAmount: Balance;
-// 	referrer?: SuiAddress;
-// }
+export type LeveragedStakingEvent =
+	| LeveragedStakedEvent
+	| LeveragedUnstakedEvent
+	| LeveragedStakeChangedLeverageEvent;
+
+export interface LeveragedStakedEvent extends Event {
+	userAddress: SuiAddress;
+	newAfSuiCollateral: Balance;
+	leverage: number;
+}
+
+export interface LeveragedUnstakedEvent extends Event {
+	userAddress: SuiAddress;
+	afsuiCollateral: Balance;
+}
+
+export interface LeveragedStakeChangedLeverageEvent extends Event {
+	userAddress: SuiAddress;
+	initialLeverage: number;
+	newLeverage: number;
+}
+
+// =========================================================================
+//  Graph Data
+// =========================================================================
+
+export interface LeveragedStakingPerformanceDataPoint {
+	time: Timestamp;
+	sui: number;
+	afSui: number;
+	leveragedAfSui: number;
+}
+
+export type LeveragedStakingPerformanceGraphDataTimeframeKey = "1M";
 
 // =========================================================================
 //  API
@@ -82,3 +105,11 @@ export type ApiLeveragedStakePositionResponse = LeveragedAfSuiPosition | "none";
 // export type asdfApiStakingEventsBody = ApiEventsBody & {
 // 	walletAddress: SuiAddress;
 // };
+
+// =========================================================================
+//  Graph Data API
+// =========================================================================
+
+export interface LeveragedStakingPerformanceDataBody {
+	timeframe: LeveragedStakingPerformanceGraphDataTimeframeKey;
+}

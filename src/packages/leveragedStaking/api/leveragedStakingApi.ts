@@ -20,6 +20,12 @@ import {
 	ApiLeveragedStakePositionBody,
 	ApiLeveragedStakePositionResponse,
 	LeveragedAfSuiState,
+	ApiIndexerUserEventsBody,
+	LeveragedStakingEvent,
+	IndexerEventsWithCursor,
+	LeveragedStakingPerformanceDataPoint,
+	LeveragedStakingPerformanceGraphDataTimeframeKey,
+	LeveragedStakingPerformanceDataBody,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
@@ -27,6 +33,14 @@ import { Coin } from "../../coin";
 import { Sui } from "../../sui";
 import { ScallopTxBlock } from "@scallop-io/sui-scallop-sdk";
 import { LeveragedStaking } from "..";
+import { EventOnChain } from "../../../general/types/castingTypes";
+import {
+	LeveragedStakeChangedLeverageEventOnChain,
+	LeveragedStakedEventOnChain,
+	LeveragedUnstakedEventOnChain,
+} from "./leveragedStakingApiCastingTypes";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 
 export class LeveragedStakingApi {
 	// =========================================================================
@@ -43,6 +57,7 @@ export class LeveragedStakingApi {
 		eventNames: {
 			leveragedStaked: "StakedEvent",
 			leveragedUnstaked: "UnstakedEvent",
+			leverageChanged: "ChangedLeverageEvent",
 		},
 	};
 
@@ -61,10 +76,18 @@ export class LeveragedStakingApi {
 	public readonly eventTypes: {
 		leveragedStaked: AnyObjectType;
 		leveragedUnstaked: AnyObjectType;
+		leverageChanged: AnyObjectType;
 	};
 
 	public readonly objectTypes: {
 		leveragedAfSuiPosition: AnyObjectType;
+	};
+
+	public static readonly dataTimeframesToDays: Record<
+		LeveragedStakingPerformanceGraphDataTimeframeKey,
+		number
+	> = {
+		"1M": 30,
 	};
 
 	// =========================================================================
@@ -97,6 +120,7 @@ export class LeveragedStakingApi {
 		this.eventTypes = {
 			leveragedStaked: this.leveragedStakedEventType(),
 			leveragedUnstaked: this.leveragedUnstakedEventType(),
+			leverageChanged: this.leverageChangedEventType(),
 		};
 
 		this.objectTypes = {
@@ -187,6 +211,7 @@ export class LeveragedStakingApi {
 
 	public openObligationTx = (inputs: {
 		tx: TransactionBlock;
+		// TODO: document return values like this for ALL tx commands in api
 	}): [
 		obligation: TransactionObjectArgument,
 		leveragedAfSuiPosition: TransactionObjectArgument,
@@ -232,8 +257,8 @@ export class LeveragedStakingApi {
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
-				tx.object(inputs.obligationHotPotatoId), // ObligationHotPotato
+				Helpers.addTxObject(tx, inputs.obligationId), // Obligation
+				Helpers.addTxObject(tx, inputs.obligationHotPotatoId), // ObligationHotPotato
 			],
 		});
 	};
@@ -254,14 +279,14 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
+				Helpers.addTxObject(tx, inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
+				Helpers.addTxObject(tx, inputs.obligationId), // Obligation
 				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
-				tx.object(inputs.afSuiCoinId), // Coin
+				Helpers.addTxObject(tx, inputs.afSuiCoinId), // Coin
 			],
 		});
 	};
@@ -280,7 +305,7 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				Helpers.addTxObject(tx, inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
@@ -303,7 +328,7 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
+				Helpers.addTxObject(tx, inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
@@ -326,7 +351,7 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				Helpers.addTxObject(tx, inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
@@ -348,7 +373,7 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
+				Helpers.addTxObject(tx, inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
@@ -370,7 +395,7 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				Helpers.addTxObject(tx, inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
@@ -394,15 +419,15 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				Helpers.addTxObject(tx, inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
+				Helpers.addTxObject(tx, inputs.obligationId), // Obligation
 				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
-				tx.object(inputs.afSuiCoinId), // Coin
+				Helpers.addTxObject(tx, inputs.afSuiCoinId), // Coin
 			],
 		});
 	};
@@ -423,13 +448,13 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				Helpers.addTxObject(tx, inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
+				Helpers.addTxObject(tx, inputs.obligationId), // Obligation
 				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
 				tx.object(this.addresses.scallop.objects.coinDecimalsRegistry), // CoinDecimalsRegistry
 				tx.pure(inputs.withdrawAmount, "u64"), // withdraw_amount
@@ -455,13 +480,13 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				Helpers.addTxObject(tx, inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
+				Helpers.addTxObject(tx, inputs.obligationId), // Obligation
 				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
 				tx.object(this.addresses.scallop.objects.coinDecimalsRegistry), // CoinDecimalsRegistry
 				tx.pure(inputs.borrowAmount, "u64"), // borrow_amount
@@ -487,15 +512,15 @@ export class LeveragedStakingApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(inputs.leveragedActionCapId), // LeveragedActionCap
+				Helpers.addTxObject(tx, inputs.leveragedActionCapId), // LeveragedActionCap
 				tx.object(
 					this.addresses.leveragedStaking.objects.leveragedAfSuiState
 				), // LeveragedAfSuiState
 
 				tx.object(this.addresses.scallop.objects.version), // Version
-				tx.object(inputs.obligationId), // Obligation
+				Helpers.addTxObject(tx, inputs.obligationId), // Obligation
 				tx.object(this.addresses.scallop.objects.afSuiMarket), // Market
-				tx.object(inputs.suiCoinId), // Coin
+				Helpers.addTxObject(tx, inputs.suiCoinId), // Coin
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 			],
 		});
@@ -958,29 +983,94 @@ export class LeveragedStakingApi {
 	//  Events
 	// =========================================================================
 
-	// private async fetchLeveragedStakedEvents(inputs: ApiIndexerUserEventsBody) {
-	// 	const { walletAddress, cursor, limit } = inputs;
-	// 	return this.Provider.indexerCaller.fetchIndexerEvents(
-	// 		`super-staking/${walletAddress}/events/staked`,
-	// 		{
-	// 			cursor,
-	// 			limit,
-	// 		},
-	// 		Casting.leveragedStaking.leveragedStakedEventFromOnChain
-	// 	);
-	// }
+	public async fetchEventsForUser(
+		inputs: ApiIndexerUserEventsBody
+	): Promise<IndexerEventsWithCursor<LeveragedStakingEvent>> {
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`leveraged-staking/${walletAddress}/events`,
+			{
+				cursor,
+				limit,
+			},
+			(event) => {
+				const eventType = (event as EventOnChain<any>).type;
+				return eventType.includes(this.eventTypes.leveragedStaked)
+					? Casting.leveragedStaking.leveragedStakedEventFromOnChain(
+							event as LeveragedStakedEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.leveragedUnstaked)
+					? Casting.leveragedStaking.leveragedUnstakedEventFromOnChain(
+							event as LeveragedUnstakedEventOnChain
+					  )
+					: Casting.leveragedStaking.leveragedStakeChangedEventFromOnChain(
+							event as LeveragedStakeChangedLeverageEventOnChain
+					  );
+			}
+		);
+	}
 
-	// private async fetchLeveragedUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
-	// 	const { walletAddress, cursor, limit } = inputs;
-	// 	return this.Provider.indexerCaller.fetchIndexerEvents(
-	// 		`super-staking/${walletAddress}/events/unstaked`,
-	// 		{
-	// 			cursor,
-	// 			limit,
-	// 		},
-	// 		Casting.leveragedStaking.leveragedUnstakedEventFromOnChain
-	// 	);
-	// }
+	// =========================================================================
+	//  Graph Data
+	// =========================================================================
+
+	public async fetchPerformanceData(
+		inputs: LeveragedStakingPerformanceDataBody
+	): Promise<LeveragedStakingPerformanceDataPoint[]> {
+		const { timeframe } = inputs;
+
+		dayjs.extend(duration);
+		const limit = // days ~ epochs
+			dayjs
+				.duration(
+					LeveragedStakingApi.dataTimeframesToDays[timeframe],
+					"days"
+				)
+				// + 1 to account for apy being calculated from events delta
+				.asDays() + 1;
+
+		const [recentEpochChanges] = await Promise.all([
+			this.Provider.Staking().fetchEpochWasChangedEvents({
+				limit,
+			}),
+		]);
+
+		const timeData = recentEpochChanges.events
+			.splice(1)
+			.map((event, index) => {
+				const currentRate = Number(event.totalAfSuiSupply)
+					? Number(event.totalSuiAmount) /
+					  Number(event.totalAfSuiSupply)
+					: 0;
+
+				const pastEvent = recentEpochChanges.events[index - 1];
+				const pastRate = Number(pastEvent.totalAfSuiSupply)
+					? Number(pastEvent.totalSuiAmount) /
+					  Number(pastEvent.totalAfSuiSupply)
+					: 0;
+
+				const apy = (currentRate - pastRate) / pastRate;
+				return {
+					time: event.timestamp ?? 0,
+					sui: 0,
+					afSui: apy,
+					leveragedAfSui:
+						apy * LeveragedStaking.constants.bounds.maxLeverage,
+				};
+			});
+		return timeData.map((data, index) => {
+			if (index === 0) return data;
+
+			const pastData = timeData[index - 1];
+
+			return {
+				...data,
+				afSui: pastData.afSui * (1 + data.afSui),
+				leveragedAfSui:
+					pastData.leveragedAfSui * (1 + data.leveragedAfSui),
+			};
+		});
+	}
 
 	// =========================================================================
 	//  Event Types
@@ -998,5 +1088,12 @@ export class LeveragedStakingApi {
 			this.addresses.staking.packages.events,
 			LeveragedStakingApi.constants.moduleNames.events,
 			LeveragedStakingApi.constants.eventNames.leveragedUnstaked
+		);
+
+	private leverageChangedEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.staking.packages.events,
+			LeveragedStakingApi.constants.moduleNames.events,
+			LeveragedStakingApi.constants.eventNames.leverageChanged
 		);
 }

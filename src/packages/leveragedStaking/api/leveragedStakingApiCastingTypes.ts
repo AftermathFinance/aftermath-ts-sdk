@@ -27,25 +27,22 @@ export interface LeveragedAfSuiStateFieldsOnChain {
 }
 
 // =========================================================================
-//  Events Fields
-// =========================================================================
-
-export interface StakedEventOnChainFields {
-	staker: SuiAddress;
-	validator: SuiAddress;
-	staked_sui_id: ObjectId;
-	sui_id: ObjectId;
-	sui_amount: BigIntAsString;
-	afsui_id: ObjectId;
-	afsui_amount: BigIntAsString;
-	validator_fee: BigIntAsString;
-	referrer: SuiAddress | null;
-	epoch: BigIntAsString;
-	is_restaked: boolean;
-}
-
-// =========================================================================
 //  Events
 // =========================================================================
 
-export type StakedEventOnChain = EventOnChain<StakedEventOnChainFields>;
+export type LeveragedStakedEventOnChain = EventOnChain<{
+	user: SuiAddress;
+	new_afsui_collateral: BigIntAsString;
+	leverage: BigIntAsString;
+}>;
+
+export type LeveragedUnstakedEventOnChain = EventOnChain<{
+	user: SuiAddress;
+	afsui_collateral: BigIntAsString;
+}>;
+
+export type LeveragedStakeChangedLeverageEventOnChain = EventOnChain<{
+	user: SuiAddress;
+	initial_leverage: BigIntAsString;
+	new_leverage: BigIntAsString;
+}>;

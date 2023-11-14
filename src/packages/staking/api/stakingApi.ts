@@ -33,6 +33,7 @@ import {
 import {
 	AfSuiRouterWrapperAddresses,
 	AnyObjectType,
+	ApiIndexerEventsBody,
 	ApiIndexerUserEventsBody,
 	Balance,
 	CoinType,
@@ -869,25 +870,11 @@ export class StakingApi
 	// =========================================================================
 
 	public liquidStakingApy = async (): Promise<number> => {
-		const limit = 30; // ~30 epochs of data
-		// const recentEpochChanges =
-		// 	await this.Provider.indexerCaller.fetchIndexerEvents(
-		// 		`staking/events/epoch-was-changed`,
-		// 		{
-		// 			limit,
-		// 		},
-		// 		Casting.staking.epochWasChangedEventFromOnChain
-		// 	);
-		const recentEpochChanges =
-			await this.Provider.Events().fetchCastEventsWithCursor({
-				query: {
-					MoveEventType: this.eventTypes.epochWasChanged,
-				},
-				eventFromEventOnChain:
-					Casting.staking.epochWasChangedEventFromOnChain,
-				limit,
-			});
-		if (recentEpochChanges.events.length <= 1) return 4.9;
+		const limit = 30; // ~30 days/epochs of data
+		const recentEpochChanges = await this.fetchEpochWasChangedEvents({
+			limit,
+		});
+		if (recentEpochChanges.events.length <= 1) return 0;
 
 		const avgApy =
 			Helpers.sum(
@@ -912,14 +899,22 @@ export class StakingApi
 	};
 
 	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
 	//  Events
 	// =========================================================================
 
-	private async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
+	public async fetchEpochWasChangedEvents(inputs: ApiIndexerEventsBody) {
+		const { cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/events/epoch-was-changed`,
+			{
+				cursor,
+				limit,
+			},
+			Casting.staking.epochWasChangedEventFromOnChain
+		);
+	}
+
+	public async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
 			`staking/${walletAddress}/events/staked`,
@@ -931,7 +926,7 @@ export class StakingApi
 		);
 	}
 
-	private async fetchUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
+	public async fetchUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
 			`staking/${walletAddress}/events/unstaked`,
@@ -943,9 +938,7 @@ export class StakingApi
 		);
 	}
 
-	private async fetchUnstakeRequestedEvents(
-		inputs: ApiIndexerUserEventsBody
-	) {
+	public async fetchUnstakeRequestedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
 			`staking/${walletAddress}/events/unstake-requested`,
@@ -956,6 +949,10 @@ export class StakingApi
 			Casting.staking.unstakeRequestedEventFromOnChain
 		);
 	}
+
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
 
 	// =========================================================================
 	//  Event Types

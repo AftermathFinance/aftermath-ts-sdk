@@ -7,6 +7,10 @@ import {
 	ApiLeveragedStakePositionResponse,
 	LeveragedAfSuiState,
 	Balance,
+	LeveragedStakingPerformanceDataBody,
+	LeveragedStakingPerformanceDataPoint,
+	LeveragedStakingEvent,
+	ApiIndexerUserEventsBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -52,6 +56,17 @@ export class LeveragedStaking extends Caller {
 	}
 
 	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async getEventsForUser(inputs: ApiIndexerUserEventsBody) {
+		return this.fetchApiEvents<
+			LeveragedStakingEvent,
+			ApiIndexerUserEventsBody
+		>("events", inputs);
+	}
+
+	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
@@ -63,12 +78,14 @@ export class LeveragedStaking extends Caller {
 	// }
 
 	// =========================================================================
-	//  Inspections
+	//  Graph Data
 	// =========================================================================
 
-	// public async getSuiTvl(): Promise<Balance> {
-	// 	return this.fetchApi("sui-tvl");
-	// }
+	public async getPerformanceData(
+		inputs: LeveragedStakingPerformanceDataBody
+	): Promise<LeveragedStakingPerformanceDataPoint[]> {
+		return this.fetchApi(`performance-data/${inputs.timeframe}`);
+	}
 
 	// =========================================================================
 	//  Public Static Methods
