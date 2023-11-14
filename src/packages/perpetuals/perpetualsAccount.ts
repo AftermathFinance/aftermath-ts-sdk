@@ -240,31 +240,8 @@ export class PerpetualsAccount extends Caller {
 	}): number => {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
-		// const { totalPnL, totalMinInitialMargin } =
-		// 	this.calcPnLAndMarginForAccount(inputs);
-
-		const zipped = Helpers.zip(inputs.markets, inputs.indexPrices);
-		let totalPnL = 0;
-		let totalMinInitialMargin = 0;
-		let totalMinMaintenanceMargin = 0;
-		let totalNetAbsBaseValue = 0;
-
-		zipped.forEach(([market, indexPrice]) => {
-			const {
-				pnl,
-				minInitialMargin,
-				minMaintenanceMargin,
-				netAbsBaseValue,
-			} = this.calcPnLAndMarginForPosition({
-				market,
-				indexPrice,
-			});
-
-			if (pnl < 0) totalPnL += pnl;
-			totalMinInitialMargin += minInitialMargin;
-			totalMinMaintenanceMargin += minMaintenanceMargin;
-			totalNetAbsBaseValue += netAbsBaseValue;
-		});
+		const { totalPnL, totalMinInitialMargin } =
+			this.calcPnLAndMarginForAccount(inputs);
 
 		let collateralUsd =
 			IFixedUtils.numberFromIFixed(this.account.collateral) *
