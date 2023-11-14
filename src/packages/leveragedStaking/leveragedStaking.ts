@@ -17,7 +17,7 @@ export class LeveragedStaking extends Caller {
 
 	public static readonly constants = {
 		bounds: {
-			maxLeverage: 3.5,
+			maxLeverage: 2.5,
 		},
 	};
 
