@@ -230,7 +230,7 @@ export class EventsApiHelpers {
 		return castedEvent;
 	};
 
-	public static findCastEventOrUndefined = <
+	public static findCastEventsOrUndefined = <
 		EventTypeOnChain,
 		EventType
 	>(inputs: {
@@ -240,15 +240,28 @@ export class EventsApiHelpers {
 	}) => {
 		const { events, eventType, castFunction } = inputs;
 
-		const foundEvent = events.find(
+		const foundEvents = events.filter(
 			(event) =>
 				EventsApiHelpers.suiEventOfTypeOrUndefined(event, eventType) !==
 				undefined
 		);
-		if (!foundEvent) return;
+		const castedEvents = foundEvents.map((event) =>
+			castFunction(event as EventTypeOnChain)
+		);
+		return castedEvents;
+	};
 
-		const castedEvent = castFunction(foundEvent as EventTypeOnChain);
-		return castedEvent;
+	public static findCastEventOrUndefined = <
+		EventTypeOnChain,
+		EventType
+	>(inputs: {
+		events: SuiEvent[];
+		eventType: AnyObjectType | (() => AnyObjectType);
+		castFunction: (eventOnChain: EventTypeOnChain) => EventType;
+	}) => {
+		const events = this.findCastEventsOrUndefined(inputs);
+		if (events.length <= 0) return;
+		return events[0];
 	};
 
 	public static findCastEventInTransactionOrUndefined = <

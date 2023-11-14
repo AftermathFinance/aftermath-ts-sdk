@@ -576,7 +576,8 @@ export class PerpetualsApi {
 	public fetchPreviewOrder = async (
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
-		const { collateralCoinType, marketId, side } = inputs;
+		const { collateralCoinType, marketId, side, lotSize, tickSize } =
+			inputs;
 		const sender = inputs.walletAddress;
 
 		const tx = new TransactionBlock();
@@ -619,47 +620,72 @@ export class PerpetualsApi {
 			const bestOrderbookPriceBeforeOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
 
-			// try find relevant event
-			const filledOrderEvent =
-				Aftermath.helpers.events.findCastEventOrUndefined({
+			// try find relevant events
+			const filledOrderEvents =
+				Aftermath.helpers.events.findCastEventsOrUndefined({
 					events,
 					eventType: this.eventTypes.filledTakerOrder,
 					castFunction:
 						Casting.perpetuals.filledTakerOrderEventFromOnChain,
 				});
-			const postedOrderEvent =
-				Aftermath.helpers.events.findCastEventOrUndefined({
+			const postedOrderEvents =
+				Aftermath.helpers.events.findCastEventsOrUndefined({
 					events,
 					eventType: this.eventTypes.postedOrder,
 					castFunction:
 						Casting.perpetuals.postedOrderEventFromOnChain,
 				});
 
-			if (!filledOrderEvent || !bestOrderbookPriceBeforeOrder)
-				return {
-					accountAfterOrder,
-					filledOrderEvent,
-					postedOrderEvent,
-					priceSlippage: 0,
-					percentSlippage: 0,
-				};
+			const [filledSize, filledSizeUsd] = filledOrderEvents.reduce(
+				(acc, event) => {
+					const filledSize = Math.abs(
+						Casting.IFixed.numberFromIFixed(event.baseAssetDelta)
+					);
+					const filledSizeUsd = Math.abs(
+						Casting.IFixed.numberFromIFixed(event.quoteAssetDelta)
+					);
+					return [acc[0] + filledSize, acc[1] + filledSizeUsd];
+				},
+				[0, 0]
+			);
+
+			const [postedSize, postedSizeUsd] = postedOrderEvents.reduce(
+				(acc, event) => {
+					const postedSize = Number(event.size) * lotSize;
+					const postedSizeUsd =
+						postedSize *
+						Perpetuals.orderPriceToPrice({
+							orderPrice: Perpetuals.OrderUtils.price(
+								event.orderId,
+								event.side
+							),
+							lotSize,
+							tickSize,
+						});
+					return [acc[0] + postedSize, acc[1] + postedSizeUsd];
+				},
+				[0, 0]
+			);
 
 			// calc slippages
-			const avgEntryPrice = Perpetuals.orderPrice({
-				orderEvent: filledOrderEvent,
-			});
-			const priceSlippage = Math.abs(
-				bestOrderbookPriceBeforeOrder - avgEntryPrice
-			);
-			const percentSlippage =
-				priceSlippage / bestOrderbookPriceBeforeOrder;
+			const avgEntryPrice = !filledSize
+				? bestOrderbookPriceBeforeOrder
+				: filledSizeUsd / filledSize;
+			const priceSlippage = !bestOrderbookPriceBeforeOrder
+				? 0
+				: Math.abs(bestOrderbookPriceBeforeOrder - avgEntryPrice);
+			const percentSlippage = !bestOrderbookPriceBeforeOrder
+				? 0
+				: priceSlippage / bestOrderbookPriceBeforeOrder;
 
 			return {
 				accountAfterOrder,
 				priceSlippage,
 				percentSlippage,
-				filledOrderEvent,
-				postedOrderEvent,
+				filledSize,
+				filledSizeUsd,
+				postedSize,
+				postedSizeUsd,
 			};
 		} catch (error) {
 			if (!(error instanceof Error))

@@ -613,6 +613,8 @@ export type ApiPerpetualsPreviewOrderBody = (
 ) & {
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
+	lotSize: number;
+	tickSize: number;
 };
 
 export type ApiPerpetualsPreviewOrderResponse =
@@ -623,8 +625,10 @@ export type ApiPerpetualsPreviewOrderResponse =
 			accountAfterOrder: PerpetualsAccountObject;
 			priceSlippage: number;
 			percentSlippage: Percentage;
-			filledOrderEvent?: FilledTakerOrderEvent;
-			postedOrderEvent?: PostedOrderEvent;
+			filledSize: number;
+			filledSizeUsd: number;
+			postedSize: number;
+			postedSizeUsd: number;
 	  };
 
 export interface ApiPerpetualsPositionOrderDatasBody {
