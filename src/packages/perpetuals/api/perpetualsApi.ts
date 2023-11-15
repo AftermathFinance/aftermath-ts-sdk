@@ -605,6 +605,9 @@ export class PerpetualsApi {
 		// get account state after order
 		this.getAccountTx({ ...inputs, tx });
 
+		// get orderbook best price after order
+		this.bestPriceTx({ tx, orderbookId, side });
+
 		try {
 			// inspect tx
 			const { allBytes, events } =
@@ -617,9 +620,11 @@ export class PerpetualsApi {
 			const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
 				bcs.de("Account", new Uint8Array(allBytes[3][0]))
 			);
-			// deserialize orderbook price
+			// deserialize orderbook prices
 			const bestOrderbookPriceBeforeOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
+			const bestOrderbookPriceAfterOrder =
+				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
 
 			// try find relevant events
 			const filledOrderEvents =
@@ -669,12 +674,23 @@ export class PerpetualsApi {
 			);
 
 			// calc slippages
-			const avgEntryPrice = !filledSize
-				? bestOrderbookPriceBeforeOrder
-				: filledSizeUsd / filledSize;
+			// const avgEntryPrice = !filledSize
+			// 	? bestOrderbookPriceBeforeOrder
+			// 	: filledSizeUsd / filledSize;
+			// const priceSlippage = !bestOrderbookPriceBeforeOrder
+			// 	? 0
+			// 	: Math.abs(bestOrderbookPriceBeforeOrder - avgEntryPrice);
+			// const percentSlippage = !bestOrderbookPriceBeforeOrder
+			// 	? 0
+			// 	: priceSlippage / bestOrderbookPriceBeforeOrder;
+
+			// calc slippages
 			const priceSlippage = !bestOrderbookPriceBeforeOrder
 				? 0
-				: Math.abs(bestOrderbookPriceBeforeOrder - avgEntryPrice);
+				: Math.abs(
+						bestOrderbookPriceBeforeOrder -
+							bestOrderbookPriceAfterOrder
+				  );
 			const percentSlippage = !bestOrderbookPriceBeforeOrder
 				? 0
 				: priceSlippage / bestOrderbookPriceBeforeOrder;
