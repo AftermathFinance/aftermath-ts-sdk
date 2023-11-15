@@ -84,7 +84,9 @@ export class LeveragedStaking extends Caller {
 	public async getPerformanceData(
 		inputs: LeveragedStakingPerformanceDataBody
 	): Promise<LeveragedStakingPerformanceDataPoint[]> {
-		return this.fetchApi(`performance-data/${inputs.timeframe}`);
+		return this.fetchApi(
+			`performance-data/${inputs.timeframe}/${inputs.borrowRate}`
+		);
 	}
 
 	// =========================================================================

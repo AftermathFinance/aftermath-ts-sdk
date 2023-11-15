@@ -1017,7 +1017,7 @@ export class LeveragedStakingApi {
 	public async fetchPerformanceData(
 		inputs: LeveragedStakingPerformanceDataBody
 	): Promise<LeveragedStakingPerformanceDataPoint[]> {
-		const { timeframe } = inputs;
+		const { timeframe, borrowRate } = inputs;
 
 		dayjs.extend(duration);
 		const limit = // days ~ epochs
@@ -1029,33 +1029,41 @@ export class LeveragedStakingApi {
 				// + 1 to account for apy being calculated from events delta
 				.asDays() + 1;
 
+		// TODO: fetch borrow rate historically once scallop implements
 		const [recentEpochChanges] = await Promise.all([
 			this.Provider.Staking().fetchEpochWasChangedEvents({
 				limit,
 			}),
 		]);
 
+		console.log("epochs", recentEpochChanges);
 		const timeData = recentEpochChanges.events
-			.splice(1)
+			.slice(2)
 			.map((event, index) => {
 				const currentRate = Number(event.totalAfSuiSupply)
 					? Number(event.totalSuiAmount) /
 					  Number(event.totalAfSuiSupply)
-					: 0;
+					: 1;
 
-				const pastEvent = recentEpochChanges.events[index - 1];
+				const pastEvent = recentEpochChanges.events[index];
 				const pastRate = Number(pastEvent.totalAfSuiSupply)
 					? Number(pastEvent.totalSuiAmount) /
 					  Number(pastEvent.totalAfSuiSupply)
-					: 0;
+					: 1;
 
-				const apy = (currentRate - pastRate) / pastRate;
+				console.log({
+					currentRate,
+					pastRate,
+					borrowRate,
+				});
+
+				const netApy = (currentRate - pastRate) / pastRate - borrowRate;
 				return {
 					time: event.timestamp ?? 0,
 					sui: 0,
-					afSui: apy,
+					afSui: netApy,
 					leveragedAfSui:
-						apy * LeveragedStaking.constants.bounds.maxLeverage,
+						netApy * LeveragedStaking.constants.bounds.maxLeverage,
 				};
 			});
 		return timeData.map((data, index) => {

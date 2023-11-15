@@ -878,17 +878,17 @@ export class StakingApi
 
 		const avgApy =
 			Helpers.sum(
-				recentEpochChanges.events.splice(1).map((event, index) => {
+				recentEpochChanges.events.slice(2).map((event, index) => {
 					const currentRate = Number(event.totalAfSuiSupply)
 						? Number(event.totalSuiAmount) /
 						  Number(event.totalAfSuiSupply)
-						: 0;
+						: 1;
 
-					const pastEvent = recentEpochChanges.events[index - 1];
+					const pastEvent = recentEpochChanges.events[index];
 					const pastRate = Number(pastEvent.totalAfSuiSupply)
 						? Number(pastEvent.totalSuiAmount) /
 						  Number(pastEvent.totalAfSuiSupply)
-						: 0;
+						: 1;
 
 					return (currentRate - pastRate) / pastRate;
 				})
@@ -904,7 +904,7 @@ export class StakingApi
 
 	public async fetchEpochWasChangedEvents(inputs: ApiIndexerEventsBody) {
 		const { cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
+		const eventsData = await this.Provider.indexerCaller.fetchIndexerEvents(
 			`staking/events/epoch-was-changed`,
 			{
 				cursor,
@@ -912,6 +912,9 @@ export class StakingApi
 			},
 			Casting.staking.epochWasChangedEventFromOnChain
 		);
+		// TODO: move timestamp ordering reversal to indexer
+		eventsData.events.reverse();
+		return eventsData;
 	}
 
 	public async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
