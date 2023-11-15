@@ -874,7 +874,7 @@ export class StakingApi
 		const recentEpochChanges = await this.fetchEpochWasChangedEvents({
 			limit,
 		});
-		if (recentEpochChanges.events.length <= 1) return 0;
+		if (recentEpochChanges.events.length <= 2) return 0;
 
 		const avgApy =
 			Helpers.sum(
@@ -893,7 +893,7 @@ export class StakingApi
 					return (currentRate - pastRate) / pastRate;
 				})
 			) /
-			(recentEpochChanges.events.length - 1);
+			(recentEpochChanges.events.length - 2);
 
 		return avgApy;
 	};

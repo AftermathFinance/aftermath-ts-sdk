@@ -1035,6 +1035,7 @@ export class LeveragedStakingApi {
 				limit,
 			}),
 		]);
+		if (recentEpochChanges.events.length <= 2) return [];
 
 		console.log("epochs", recentEpochChanges);
 		const timeData = recentEpochChanges.events
@@ -1066,18 +1067,21 @@ export class LeveragedStakingApi {
 						netApy * LeveragedStaking.constants.bounds.maxLeverage,
 				};
 			});
-		return timeData.map((data, index) => {
-			if (index === 0) return data;
 
-			const pastData = timeData[index - 1];
+		for (const [index, dataPoint] of timeData.entries()) {
+			if (index === 0) continue;
 
-			return {
-				...data,
-				afSui: pastData.afSui * (1 + data.afSui),
+			const pastDataPoint = timeData[index - 1];
+
+			timeData[index] = {
+				...dataPoint,
+				afSui: pastDataPoint.afSui * (1 + dataPoint.afSui),
 				leveragedAfSui:
-					pastData.leveragedAfSui * (1 + data.leveragedAfSui),
+					pastDataPoint.leveragedAfSui *
+					(1 + dataPoint.leveragedAfSui),
 			};
-		});
+		}
+		return timeData;
 	}
 
 	// =========================================================================
