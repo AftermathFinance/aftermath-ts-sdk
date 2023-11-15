@@ -95,7 +95,7 @@ export class PerpetualsMarket extends Caller {
 	}): Promise<number> => {
 		const { side, price } = inputs;
 
-		const optimisticSize = this.calcOptimisticMaxOrderSizeUsd(inputs);
+		const optimisticSize = this.calcOptimisticMaxOrderSize(inputs);
 
 		const size = // (in lots)
 			BigInt(Math.ceil(optimisticSize / this.lotSize()));
@@ -194,7 +194,7 @@ export class PerpetualsMarket extends Caller {
 		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.tickSize);
 	};
 
-	public calcOptimisticMaxOrderSizeUsd = (inputs: {
+	public calcOptimisticMaxOrderSize = (inputs: {
 		position: PerpetualsPosition | undefined;
 		freeMarginUsd: number;
 		indexPrice: number;
