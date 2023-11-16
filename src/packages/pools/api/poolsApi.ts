@@ -409,7 +409,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		slippage: Slippage;
-		poolId: ObjectId;
+		pool: Pool;
 		referrer?: SuiAddress;
 	}): Promise<TransactionObjectArgument> /* Coin */ => {
 		const {
@@ -419,12 +419,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			coinInType,
 			coinOutType,
 			slippage,
-			poolId,
+			pool,
 			referrer,
 		} = inputs;
-
-		const poolObject = await this.fetchPool({ objectId: poolId });
-		const pool = new Pool(poolObject);
 
 		const amountOut = pool.getTradeAmountOut({
 			coinInAmount,

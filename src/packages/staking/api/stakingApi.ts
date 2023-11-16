@@ -904,15 +904,26 @@ export class StakingApi
 
 	public async fetchEpochWasChangedEvents(inputs: ApiIndexerEventsBody) {
 		const { cursor, limit } = inputs;
-		const eventsData = await this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/events/epoch-was-changed`,
-			{
-				cursor,
+		// const eventsData = await this.Provider.indexerCaller.fetchIndexerEvents(
+		// 	`staking/events/epoch-was-changed`,
+		// 	{
+		// 		cursor,
+		// 		limit,
+		// 	},
+		// 	Casting.staking.epochWasChangedEventFromOnChain
+		// );
+		// // TODO: move timestamp ordering reversal to indexer
+		// eventsData.events.reverse();
+		// return eventsData;
+		const eventsData =
+			await this.Provider.Events().fetchCastEventsWithCursor({
+				query: {
+					MoveEventType: this.eventTypes.epochWasChanged,
+				},
+				eventFromEventOnChain:
+					Casting.staking.epochWasChangedEventFromOnChain,
 				limit,
-			},
-			Casting.staking.epochWasChangedEventFromOnChain
-		);
-		// TODO: move timestamp ordering reversal to indexer
+			});
 		eventsData.events.reverse();
 		return eventsData;
 	}

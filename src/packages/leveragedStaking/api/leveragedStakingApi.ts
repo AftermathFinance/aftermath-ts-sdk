@@ -41,6 +41,7 @@ import {
 } from "./leveragedStakingApiCastingTypes";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import { Pool } from "../..";
 
 export class LeveragedStakingApi {
 	// =========================================================================
@@ -672,7 +673,7 @@ export class LeveragedStakingApi {
 
 		if (inputs.leverage > 1)
 			// iii. Increase the leverage to the desired leverage ratio.
-			this.buildIncreaseLeverageTx({
+			this.fetchBuildIncreaseLeverageTx({
 				scallopTx,
 				leveragedActionCapId,
 				obligationId,
@@ -822,7 +823,7 @@ export class LeveragedStakingApi {
 			});
 		} else {
 			// iia. Borrow SUI and deposit more afSUI Collateral to reach desired leverage.
-			this.buildIncreaseLeverageTx({
+			this.fetchBuildIncreaseLeverageTx({
 				...inputs,
 				scallopTx,
 				leveragedActionCapId,
@@ -869,12 +870,16 @@ export class LeveragedStakingApi {
 			inputs.totalAfSuiCollateral - newTotalAfSuiCollateral;
 
 		// ib. Calculate the amount of SUI debt to repay.
-		const newSuiDebt = this.Provider.Staking().afSuiToSuiTx({
-			tx,
-			afSuiAmount:
-				newTotalAfSuiCollateral - inputs.initialAfSuiCollateral,
-		});
+		const afSuiToSuiExchangeRate =
+			await this.Provider.Staking().fetchAfSuiToSuiExchangeRate();
 
+		const newSuiDebt = BigInt(
+			Math.floor(
+				Number(
+					newTotalAfSuiCollateral - inputs.initialAfSuiCollateral
+				) / afSuiToSuiExchangeRate
+			)
+		);
 		const decreaseInSuiDebt = inputs.totalSuiDebt - newSuiDebt;
 
 		// ii. Flash loan `decreaseInSuiDebt` worth of SUI from Scallop.
@@ -902,33 +907,71 @@ export class LeveragedStakingApi {
 		// TODO(Collin): Instant unstake or swap afSUI back into SUI.
 		//
 		// v. Convert `decreaseInCollateralAmount` of withdrawn collateral into SUI.
-		const afSuiToSuiExchangeRate =
-			await this.Provider.Staking().fetchAfSuiToSuiExchangeRate();
+
+		const poolObject = await this.Provider.Pools().fetchPool({
+			objectId: afSuiSuiPoolId,
+		});
+		const pool = new Pool(poolObject);
+
+		console.log(
+			"ub aniybm",
+			BigInt(
+				Math.floor(Number(decreaseInSuiDebt) * afSuiToSuiExchangeRate)
+			)
+		);
+		console.log({
+			decreaseInSuiDebt,
+			afSuiToSuiExchangeRate,
+		});
 		const swappedSuiCoinId = await this.Provider.Pools().fetchAddTradeTx({
 			tx,
+			pool,
 			coinInAmount: BigInt(
 				Math.floor(Number(decreaseInSuiDebt) * afSuiToSuiExchangeRate)
 			),
 			coinInId: afSuiId,
 			coinInType: this.Provider.Staking().coinTypes.afSui,
 			coinOutType: Coin.constants.suiCoinType,
-			poolId: afSuiSuiPoolId,
-			slippage: 1,
+			slippage: 1, // 100%
 		});
 
+		const repayLoanSuiCoinId = tx.splitCoins(swappedSuiCoinId, [
+			decreaseInSuiDebt,
+		]);
+
 		// vi. Repay flash loan with converted SUI.
-		scallopTx.repayFlashLoan(swappedSuiCoinId, loan, "sui");
+		scallopTx.repayFlashLoan(repayLoanSuiCoinId, loan, "sui");
 
 		// TODO(Collin): Stake OR swap (to account for when `suiFlashLoanAmount` < `minimum_stake_amount`).
 		//
 		// vii. [Potentially] Swap leftover SUI back into afSUI
-		const swappedAfSuiCoinId = 0;
 
-		swappedAfSuiCoinId;
+		// TODO: make into swap in less than 1 sui
+
+		// return  this.Provider.Pools().fetchAddTradeTx({
+		// 	tx,
+		// 	pool,
+		// 	coinInAmount: BigInt(
+		// 		Math.floor(Number(decreaseInSuiDebt) * afSuiToSuiExchangeRate)
+		// 	),
+		// 	coinInId: swappedSuiCoinId,
+		// 	coinInType : Coin.constants.suiCoinType,
+		// 	coinOutType: this.Provider.Staking().coinTypes.afSui,
+		// 	slippage: 1, // 100%
+		// });
+
+		return this.Provider.Staking().stakeTx({
+			tx,
+			// REVIEW(Collin): set to our own validator,
+			//
+			validatorAddress:
+				this.addresses.router.afSui!.objects.aftermathValidator,
+			suiCoin: swappedSuiCoinId,
+		});
 	};
 
 	// TODO(Kevin): Documentation.
-	private buildIncreaseLeverageTx = (inputs: {
+	private fetchBuildIncreaseLeverageTx = async (inputs: {
 		scallopTx: ScallopTxBlock;
 		leveragedActionCapId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
@@ -957,10 +1000,14 @@ export class LeveragedStakingApi {
 		//
 		// ib. Calculate amount of SUI that must be flash loaned to account for
 		//  `increaseInAfSuiCollateral`.
-		const flashLoanAmount = this.Provider.Staking().afSuiToSuiTx({
-			tx,
-			afSuiAmount: increaseInAfSuiCollateral,
-		});
+		const afSuiToSuiExchangeRate =
+			await this.Provider.Staking().fetchAfSuiToSuiExchangeRate();
+
+		const flashLoanAmount = BigInt(
+			Math.floor(
+				Number(increaseInAfSuiCollateral) / afSuiToSuiExchangeRate
+			)
+		);
 
 		// ii. Flash loan `requiredAfSuiCollateral` worth of SUI from Scallop.
 		const [flashLoanedSuiCoinId, loan] = scallopTx.borrowFlashLoan(
@@ -1087,13 +1134,14 @@ export class LeveragedStakingApi {
 					borrowRate,
 				});
 
-				const netApy = (currentRate - pastRate) / pastRate - borrowRate;
+				const afSuiApy = (currentRate - pastRate) / pastRate;
 				return {
 					time: event.timestamp ?? 0,
 					sui: 0,
-					afSui: netApy,
+					afSui: afSuiApy,
 					leveragedAfSui:
-						netApy * LeveragedStaking.constants.bounds.maxLeverage,
+						(afSuiApy - borrowRate) *
+						LeveragedStaking.constants.bounds.maxLeverage,
 				};
 			});
 
