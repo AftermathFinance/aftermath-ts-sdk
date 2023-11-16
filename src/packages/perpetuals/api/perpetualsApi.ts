@@ -581,6 +581,11 @@ export class PerpetualsApi {
 			inputs;
 		const sender = inputs.walletAddress;
 
+		const bestPriceSide =
+			side === PerpetualsOrderSide.Ask
+				? PerpetualsOrderSide.Bid
+				: PerpetualsOrderSide.Ask;
+
 		const tx = new TransactionBlock();
 		tx.setSender(sender);
 
@@ -591,7 +596,7 @@ export class PerpetualsApi {
 		});
 
 		// get orderbook best price before order
-		this.bestPriceTx({ tx, orderbookId, side });
+		this.bestPriceTx({ tx, orderbookId, side: bestPriceSide });
 
 		// place order
 		if ("slPrice" in inputs || "tpPrice" in inputs) {
@@ -606,7 +611,7 @@ export class PerpetualsApi {
 		this.getAccountTx({ ...inputs, tx });
 
 		// get orderbook best price after order
-		// this.bestPriceTx({ tx, orderbookId, side });
+		this.bestPriceTx({ tx, orderbookId, side: bestPriceSide });
 
 		try {
 			// inspect tx
@@ -624,8 +629,8 @@ export class PerpetualsApi {
 			// deserialize orderbook prices
 			const bestOrderbookPriceBeforeOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
-			// const bestOrderbookPriceAfterOrder =
-			// 	PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
+			const bestOrderbookPriceAfterOrder =
+				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
 
 			// try find relevant events
 			const filledOrderEvents =
@@ -675,26 +680,26 @@ export class PerpetualsApi {
 			);
 
 			// calc slippages
-			const avgEntryPrice = !filledSize
-				? bestOrderbookPriceBeforeOrder
-				: filledSizeUsd / filledSize;
-			const priceSlippage = !bestOrderbookPriceBeforeOrder
-				? 0
-				: Math.abs(bestOrderbookPriceBeforeOrder - avgEntryPrice);
-			const percentSlippage = !bestOrderbookPriceBeforeOrder
-				? 0
-				: priceSlippage / bestOrderbookPriceBeforeOrder;
-
-			// calc slippages
+			// const avgEntryPrice = !filledSize
+			// 	? bestOrderbookPriceBeforeOrder
+			// 	: filledSizeUsd / filledSize;
 			// const priceSlippage = !bestOrderbookPriceBeforeOrder
 			// 	? 0
-			// 	: Math.abs(
-			// 			bestOrderbookPriceBeforeOrder -
-			// 				bestOrderbookPriceAfterOrder
-			// 	  );
+			// 	: Math.abs(bestOrderbookPriceBeforeOrder - avgEntryPrice);
 			// const percentSlippage = !bestOrderbookPriceBeforeOrder
 			// 	? 0
 			// 	: priceSlippage / bestOrderbookPriceBeforeOrder;
+
+			// calc slippages
+			const priceSlippage = !bestOrderbookPriceBeforeOrder
+				? 0
+				: Math.abs(
+						bestOrderbookPriceBeforeOrder -
+							bestOrderbookPriceAfterOrder
+				  );
+			const percentSlippage = !bestOrderbookPriceBeforeOrder
+				? 0
+				: priceSlippage / bestOrderbookPriceBeforeOrder;
 
 			return {
 				accountAfterOrder,
