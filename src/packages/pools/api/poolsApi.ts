@@ -402,6 +402,49 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
+	public fetchAddTradeTx = async (inputs: {
+		tx: TransactionBlock;
+		coinInId: ObjectId | TransactionObjectArgument;
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		poolId: ObjectId;
+		referrer?: SuiAddress;
+	}): Promise<TransactionObjectArgument> /* Coin */ => {
+		const {
+			tx,
+			coinInId,
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			slippage,
+			poolId,
+			referrer,
+		} = inputs;
+
+		const poolObject = await this.fetchPool({ objectId: poolId });
+		const pool = new Pool(poolObject);
+
+		const amountOut = pool.getTradeAmountOut({
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			referral: referrer !== undefined,
+		});
+
+		return this.tradeTx({
+			tx,
+			coinInId,
+			poolId: pool.pool.objectId,
+			expectedCoinOutAmount: amountOut,
+			lpCoinType: pool.pool.lpCoinType,
+			coinInType,
+			coinOutType,
+			slippage,
+		});
+	};
+
 	public fetchBuildDepositTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
