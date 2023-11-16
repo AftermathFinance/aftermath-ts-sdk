@@ -846,7 +846,9 @@ export class LeveragedStakingApi {
 
 		// ia. Calculate the amount of afSUI collateral to unstake.
 		const newTotalAfSuiCollateral = BigInt(
-			Number(inputs.initialAfSuiCollateral) * inputs.newLeverage
+			Math.floor(
+				Number(inputs.initialAfSuiCollateral) * inputs.newLeverage
+			)
 		);
 
 		const decreaseInAfSuiCollateral =
@@ -917,7 +919,9 @@ export class LeveragedStakingApi {
 		// ia. Calculate the extra amount of afSUI collateral that must be borrowed to reach a leverage
 		//  ratio of `leverage`.
 		const newTotalAfSuiCollateral = BigInt(
-			Number(inputs.initialAfSuiCollateral) * inputs.newLeverage
+			Math.floor(
+				Number(inputs.initialAfSuiCollateral) * inputs.newLeverage
+			)
 		);
 
 		const increaseInAfSuiCollateral =
@@ -930,7 +934,7 @@ export class LeveragedStakingApi {
 		//  `increaseInAfSuiCollateral`.
 		const flashLoanAmount = this.Provider.Staking().afSuiToSuiTx({
 			tx,
-			afSuiAmount: BigInt(increaseInAfSuiCollateral),
+			afSuiAmount: increaseInAfSuiCollateral,
 		});
 
 		// ii. Flash loan `requiredAfSuiCollateral` worth of SUI from Scallop.

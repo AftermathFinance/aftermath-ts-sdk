@@ -33,16 +33,18 @@ export class LeveragedStakingApiCasting {
 			objectType,
 			objectId: Helpers.getObjectId(data),
 			obligationId: Helpers.addLeadingZeroesToType(
-				fields.obligation_key.ownership.of
+				fields.obligation_key.fields.ownership.fields.of
 			),
 			obligationKeyId: Helpers.addLeadingZeroesToType(
-				fields.obligation_key.id
+				fields.obligation_key.fields.id.id
 			),
 			baseAfSuiCollateral: BigInt(
-				fields.position_metadata.base_afsui_collateral
+				fields.position_metadata.fields.base_afsui_collateral
 			),
-			afSuiCollateral: BigInt(fields.position_metadata.afsui_collateral),
-			suiDebt: BigInt(fields.position_metadata.sui_debt),
+			afSuiCollateral: BigInt(
+				fields.position_metadata.fields.total_afsui_collateral
+			),
+			suiDebt: BigInt(fields.position_metadata.fields.total_sui_debt),
 		};
 	};
 
