@@ -248,20 +248,20 @@ export class PerpetualsApi {
 		return PerpetualsApiCasting.accountFromRaw(accountField.value);
 	};
 
-	public fetchAllAccountDatas = async (
-		inputs: ApiPerpetualsAccountsBody & {
-			collateralCoinType: CoinType;
-		}
-	): Promise<PerpetualsAccountData[]> => {
-		const accountCaps = await this.fetchOwnedAccountCapsOfType(inputs);
-		const accounts = await Promise.all(
-			accountCaps.map((cap) => this.fetchAccount(cap))
-		);
-		return accounts.map((account, index) => ({
-			account,
-			accountCap: accountCaps[index],
-		}));
-	};
+	// public fetchAllAccountDatas = async (
+	// 	inputs: ApiPerpetualsAccountsBody & {
+	// 		collateralCoinType: CoinType;
+	// 	}
+	// ): Promise<PerpetualsAccountData[]> => {
+	// 	const accountCaps = await this.fetchOwnedAccountCapsOfType(inputs);
+	// 	const accounts = await Promise.all(
+	// 		accountCaps.map((cap) => this.fetchAccount(cap))
+	// 	);
+	// 	return accounts.map((account, index) => ({
+	// 		account,
+	// 		accountCap: accountCaps[index],
+	// 	}));
+	// };
 
 	public fetchPositionOrderDatas = async (
 		inputs: ApiPerpetualsPositionOrderDatasBody & {

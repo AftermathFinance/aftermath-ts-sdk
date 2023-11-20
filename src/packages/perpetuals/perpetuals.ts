@@ -19,6 +19,9 @@ import {
 	PerpetualsMarketPriceDataPoint,
 	PerpetualsMarketVolumeDataPoint,
 	ApiPerpetualsHistoricalMarketDataResponse,
+	PerpetualsAccountCap,
+	PerpetualsAccountId,
+	PerpetualsAccountObject,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -213,27 +216,27 @@ export class Perpetuals extends Caller {
 		);
 	}
 
-	public async getUserAccounts(
+	public async getAccount(inputs: {
+		accountCap: PerpetualsAccountCap;
+	}): Promise<PerpetualsAccount> {
+		const { accountCap } = inputs;
+		const account = await this.fetchApi<PerpetualsAccountObject>(
+			`${accountCap.collateralCoinType}/accounts/${accountCap.accountId}`
+		);
+		return new PerpetualsAccount(account, accountCap, this.network);
+	}
+
+	public async getUserAccountCaps(
 		inputs: ApiPerpetualsAccountsBody & {
 			collateralCoinType: CoinType;
 		}
-	): Promise<PerpetualsAccount[]> {
+	): Promise<PerpetualsAccountCap[]> {
 		const { collateralCoinType, walletAddress } = inputs;
-
-		const accountDatas = await this.fetchApi<
-			PerpetualsAccountData[],
-			ApiPerpetualsAccountsBody
-		>(`${collateralCoinType}/accounts`, {
-			walletAddress,
-		});
-
-		return accountDatas.map(
-			(account) =>
-				new PerpetualsAccount(
-					account.account,
-					account.accountCap,
-					this.network
-				)
+		return this.fetchApi<PerpetualsAccountCap[], ApiPerpetualsAccountsBody>(
+			`${collateralCoinType}/accounts`,
+			{
+				walletAddress,
+			}
 		);
 	}
 
