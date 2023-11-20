@@ -246,11 +246,17 @@ export class Perpetuals extends Caller {
 		marketId: PerpetualsMarketId;
 		fromTimestamp: Timestamp;
 		toTimestamp: Timestamp;
+		intervalMs: number;
 	}) {
-		const { collateralCoinType, marketId, fromTimestamp, toTimestamp } =
-			inputs;
+		const {
+			collateralCoinType,
+			marketId,
+			fromTimestamp,
+			toTimestamp,
+			intervalMs,
+		} = inputs;
 		return this.fetchApi<ApiPerpetualsHistoricalMarketDataResponse>(
-			`${collateralCoinType}/markets/${marketId}/historical-data/${fromTimestamp}/${toTimestamp}`
+			`${collateralCoinType}/markets/${marketId}/historical-data/${fromTimestamp}/${toTimestamp}/${intervalMs}`
 		);
 	}
 

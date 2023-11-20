@@ -110,6 +110,8 @@ export class PerpetualsApi {
 		postedOrder: AnyObjectType;
 		filledMakerOrder: AnyObjectType;
 		filledTakerOrder: AnyObjectType;
+		updatedPremiumTwap: AnyObjectType;
+		updatedSpreadTwap: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -143,6 +145,9 @@ export class PerpetualsApi {
 			postedOrder: this.eventType("PostedOrder"),
 			filledMakerOrder: this.eventType("FilledMakerOrder"),
 			filledTakerOrder: this.eventType("FilledTakerOrder"),
+			// Twap
+			updatedPremiumTwap: this.eventType("UpdatedPremiumTwap"),
+			updatedSpreadTwap: this.eventType("UpdatedSpreadTwap"),
 		};
 	}
 
@@ -578,8 +583,9 @@ export class PerpetualsApi {
 		marketId: PerpetualsMarketId;
 		fromTimestamp: Timestamp;
 		toTimestamp: Timestamp;
+		intervalMs: number;
 	}): Promise<ApiPerpetualsHistoricalMarketDataResponse> => {
-		const { marketId, fromTimestamp, toTimestamp } = inputs;
+		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
 		const [prices, volumes] = (await Promise.all([
 			this.Provider.indexerCaller.fetchIndexer(
 				`perpetuals/markets/${marketId}/historical-price`,
@@ -587,6 +593,7 @@ export class PerpetualsApi {
 				{
 					from: fromTimestamp,
 					to: toTimestamp,
+					interval: intervalMs,
 				}
 			),
 			this.Provider.indexerCaller.fetchIndexer(
@@ -595,6 +602,7 @@ export class PerpetualsApi {
 				{
 					from: fromTimestamp,
 					to: toTimestamp,
+					interval: intervalMs,
 				}
 			),
 		])) as [

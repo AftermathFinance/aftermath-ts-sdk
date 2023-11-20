@@ -112,3 +112,23 @@ export type FilledTakerOrderEventOnChain = EventOnChain<{
 	base_asset_delta: BigIntAsString;
 	quote_asset_delta: BigIntAsString;
 }>;
+
+// =========================================================================
+//  Twap
+// =========================================================================
+
+export type UpdatedPremiumTwapEventOnChain = EventOnChain<{
+	market_id: BigIntAsString;
+	index_price: BigIntAsString;
+	book_price: BigIntAsString;
+	premium_twap: BigIntAsString;
+	premium_twap_last_upd_ms: BigIntAsString;
+}>;
+
+export type UpdatedSpreadTwapEventOnChain = EventOnChain<{
+	market_id: BigIntAsString;
+	book_price: BigIntAsString;
+	index_price: BigIntAsString;
+	spread_twap: BigIntAsString;
+	spread_twap_last_upd_ms: BigIntAsString;
+}>;

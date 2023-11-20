@@ -615,6 +615,32 @@ export const isFilledTakerOrderEvent = (
 };
 
 // =========================================================================
+//  Twap
+// =========================================================================
+
+export interface UpdatedPremiumTwapEvent extends Event {
+	collateralCoinType: CoinType;
+	marketId: PerpetualsMarketId;
+	bookPrice: IFixed;
+	indexPrice: IFixed;
+	premiumTwap: IFixed;
+	premiumTwapLastUpdateMs: number;
+}
+
+export interface UpdatedSpreadTwapEvent extends Event {
+	collateralCoinType: CoinType;
+	marketId: PerpetualsMarketId;
+	bookPrice: IFixed;
+	indexPrice: IFixed;
+	spreadTwap: IFixed;
+	spreadTwapLastUpdateMs: number;
+}
+
+export type PerpetualsTwapEvent =
+	| UpdatedPremiumTwapEvent
+	| UpdatedSpreadTwapEvent;
+
+// =========================================================================
 //  API
 // =========================================================================
 

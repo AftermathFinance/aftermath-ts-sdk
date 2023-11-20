@@ -26,6 +26,8 @@ import {
 	AcquiredLiqeeEvent,
 	PerpetualsFillReceipt,
 	PerpetualsPostReceipt,
+	UpdatedSpreadTwapEvent,
+	UpdatedPremiumTwapEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
@@ -44,6 +46,8 @@ import {
 	LiquidatedEventOnChain,
 	SettledFundingEventOnChain,
 	AcquiredLiqeeEventOnChain,
+	UpdatedPremiumTwapEventOnChain,
+	UpdatedSpreadTwapEventOnChain,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 
@@ -538,6 +542,50 @@ export class PerpetualsApiCasting {
 					: PerpetualsOrderSide.Bid,
 			baseAssetDelta: BigInt(fields.base_asset_delta),
 			quoteAssetDelta: BigInt(fields.quote_asset_delta),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Twap
+	// =========================================================================
+
+	public static updatedPremiumTwapEventFromOnChain = (
+		eventOnChain: UpdatedPremiumTwapEventOnChain
+	): UpdatedPremiumTwapEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			marketId: BigInt(fields.market_id),
+			indexPrice: BigInt(fields.index_price),
+			bookPrice: BigInt(fields.book_price),
+			premiumTwap: BigInt(fields.premium_twap),
+			premiumTwapLastUpdateMs: Number(fields.premium_twap_last_upd_ms),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static updatedSpreadTwapEventFromOnChain = (
+		eventOnChain: UpdatedSpreadTwapEventOnChain
+	): UpdatedSpreadTwapEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			marketId: BigInt(fields.market_id),
+			bookPrice: BigInt(fields.book_price),
+			indexPrice: BigInt(fields.index_price),
+			spreadTwap: BigInt(fields.spread_twap),
+			spreadTwapLastUpdateMs: Number(fields.spread_twap_last_upd_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
