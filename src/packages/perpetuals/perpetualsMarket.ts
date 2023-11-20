@@ -12,6 +12,7 @@ import {
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
 	ObjectId,
+	PerpetualsMarketPriceDataPoint,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,

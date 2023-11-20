@@ -16,6 +16,7 @@ import {
 	IndexerEventsWithCursor,
 	IFixed,
 	Balance,
+	Timestamp,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -57,6 +58,9 @@ import {
 	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsCancelOrdersBody,
 	PerpetualsPostReceipt,
+	PerpetualsMarketPriceDataPoint,
+	ApiPerpetualsHistoricalMarketDataResponse,
+	PerpetualsMarketVolumeDataPoint,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -569,6 +573,36 @@ export class PerpetualsApi {
 
 		return response[0].volume;
 	}
+
+	public fetchHistoricalMarketData = async (inputs: {
+		marketId: PerpetualsMarketId;
+		fromTimestamp: Timestamp;
+		toTimestamp: Timestamp;
+	}): Promise<ApiPerpetualsHistoricalMarketDataResponse> => {
+		const { marketId, fromTimestamp, toTimestamp } = inputs;
+		const [prices, volumes] = (await Promise.all([
+			this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/markets/${marketId}/historical-price`,
+				undefined,
+				{
+					from: fromTimestamp,
+					to: toTimestamp,
+				}
+			),
+			this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/markets/${marketId}/historical-volume`,
+				undefined,
+				{
+					from: fromTimestamp,
+					to: toTimestamp,
+				}
+			),
+		])) as [
+			prices: PerpetualsMarketPriceDataPoint[],
+			volumes: PerpetualsMarketVolumeDataPoint[]
+		];
+		return { prices, volumes };
+	};
 
 	// =========================================================================
 	//  Inspections

@@ -15,6 +15,10 @@ import {
 	PerpetualsOrderId,
 	FilledTakerOrderEvent,
 	PerpetualsOrderPrice,
+	Timestamp,
+	PerpetualsMarketPriceDataPoint,
+	PerpetualsMarketVolumeDataPoint,
+	ApiPerpetualsHistoricalMarketDataResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -230,6 +234,23 @@ export class Perpetuals extends Caller {
 					account.accountCap,
 					this.network
 				)
+		);
+	}
+
+	// =========================================================================
+	//  Data
+	// =========================================================================
+
+	public getMarketHistoricalData(inputs: {
+		collateralCoinType: CoinType;
+		marketId: PerpetualsMarketId;
+		fromTimestamp: Timestamp;
+		toTimestamp: Timestamp;
+	}) {
+		const { collateralCoinType, marketId, fromTimestamp, toTimestamp } =
+			inputs;
+		return this.fetchApi<ApiPerpetualsHistoricalMarketDataResponse>(
+			`${collateralCoinType}/markets/${marketId}/historical-data/${fromTimestamp}/${toTimestamp}`
 		);
 	}
 

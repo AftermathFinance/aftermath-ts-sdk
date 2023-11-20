@@ -275,6 +275,18 @@ bcs.registerStructType("MarketKey", {
 	marketId: BCS.U64,
 });
 
+export interface PerpetualsMarketPriceDataPoint {
+	timestamp: Timestamp;
+	high: number;
+	low: number;
+	open: number;
+	close: number;
+}
+export interface PerpetualsMarketVolumeDataPoint {
+	timestamp: Timestamp;
+	volume: number;
+}
+
 // =========================================================================
 //  Orderbook
 // =========================================================================
@@ -666,6 +678,11 @@ export interface ApiPerpetualsExecutionPriceResponse {
 	executionPrice: number;
 	sizeFilled: number;
 	sizePosted: number;
+}
+
+export interface ApiPerpetualsHistoricalMarketDataResponse {
+	prices: PerpetualsMarketPriceDataPoint[];
+	volumes: PerpetualsMarketVolumeDataPoint[];
 }
 
 // =========================================================================
