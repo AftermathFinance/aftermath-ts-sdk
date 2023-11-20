@@ -64,6 +64,10 @@ export class PerpetualsMarket extends Caller {
 		return this.fetchApi<number>("24hr-volume");
 	}
 
+	public getPrice24hrsAgo() {
+		return this.fetchApi<number>("price-24hrs-ago");
+	}
+
 	public getPositionOrderDatas(inputs: ApiPerpetualsPositionOrderDatasBody) {
 		return this.fetchApi<
 			PerpetualsOrderData[],

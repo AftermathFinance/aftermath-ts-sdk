@@ -78,6 +78,8 @@ import {
 } from "../perpetualsCastingTypes";
 import { Aftermath } from "../../..";
 import { PerpetualsOrderUtils } from "../utils";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -611,6 +613,28 @@ export class PerpetualsApi {
 		];
 		return { prices, volumes };
 	};
+
+	public async fetchMarketPrice24hrsAgo(inputs: {
+		marketId: PerpetualsMarketId;
+	}): Promise<number> {
+		const { marketId } = inputs;
+
+		dayjs.extend(duration);
+		const timestamp =
+			dayjs().valueOf() - dayjs.duration(24, "hours").asMilliseconds();
+
+		const response: [{ timestamp: Timestamp; bookPrice: number }] | [] =
+			await this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/markets/${marketId}/first-historical-price`,
+				undefined,
+				{
+					timestamp,
+				}
+			);
+		if (response.length === 0) return 0;
+
+		return response[0].bookPrice;
+	}
 
 	// =========================================================================
 	//  Inspections
