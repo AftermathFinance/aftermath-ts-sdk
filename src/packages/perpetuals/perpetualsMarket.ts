@@ -125,7 +125,7 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	public async getFilledOrderEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<FilledMakerOrderEvent>(
+		return this.fetchApiIndexerEvents<FilledTakerOrderEvent>(
 			`events/filled-order`,
 			inputs
 		);
@@ -189,14 +189,6 @@ export class PerpetualsMarket extends Caller {
 			lotSize,
 			tickSize,
 		});
-	};
-
-	public lotSize = () => {
-		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.lotSize);
-	};
-
-	public tickSize = () => {
-		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.tickSize);
 	};
 
 	public calcOptimisticMaxOrderSize = (inputs: {
@@ -317,6 +309,27 @@ export class PerpetualsMarket extends Caller {
 		// accounts for any minor price fluctatuations or possible rounding errors
 		return (
 			this.roundToValidSize({ size: maxSize, floor: true }) * indexPrice
+		);
+	};
+
+	// =========================================================================
+	//  Value Conversions
+	// =========================================================================
+
+	public lotSize = () => {
+		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.lotSize);
+	};
+
+	public tickSize = () => {
+		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.tickSize);
+	};
+
+	public maxLeverage = () => {
+		return (
+			1 /
+			Casting.IFixed.numberFromIFixed(
+				this.marketParams.marginRatioInitial
+			)
 		);
 	};
 

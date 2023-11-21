@@ -519,7 +519,7 @@ export class PerpetualsApi {
 
 	public async fetchMarketFilledOrderEvents(
 		inputs: ApiPerpetualsMarketEventsBody
-	): Promise<IndexerEventsWithCursor<FilledMakerOrderEvent>> {
+	): Promise<IndexerEventsWithCursor<FilledTakerOrderEvent>> {
 		const { marketId, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
 			`perpetuals/markets/${marketId}/events/filled-order`,
@@ -528,8 +528,8 @@ export class PerpetualsApi {
 				limit,
 			},
 			(event) =>
-				Casting.perpetuals.filledMakerOrderEventFromOnChain(
-					event as FilledMakerOrderEventOnChain
+				Casting.perpetuals.filledTakerOrderEventFromOnChain(
+					event as FilledTakerOrderEventOnChain
 				)
 		);
 	}
