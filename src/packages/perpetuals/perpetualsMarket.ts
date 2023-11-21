@@ -78,7 +78,6 @@ export class PerpetualsMarket extends Caller {
 	public getOrderbookState(inputs: {
 		orderbookPrice: number;
 		priceBucketSize: number;
-		priceBuckets: number;
 	}) {
 		return this.fetchApi<
 			PerpetualsOrderbookState,
