@@ -16,6 +16,7 @@ import {
 	IndexerEventsWithCursor,
 	IFixed,
 	Balance,
+	Timestamp,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -57,6 +58,9 @@ import {
 	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsCancelOrdersBody,
 	PerpetualsPostReceipt,
+	PerpetualsMarketPriceDataPoint,
+	ApiPerpetualsHistoricalMarketDataResponse,
+	PerpetualsMarketVolumeDataPoint,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -74,6 +78,8 @@ import {
 } from "../perpetualsCastingTypes";
 import { Aftermath } from "../../..";
 import { PerpetualsOrderUtils } from "../utils";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -106,6 +112,8 @@ export class PerpetualsApi {
 		postedOrder: AnyObjectType;
 		filledMakerOrder: AnyObjectType;
 		filledTakerOrder: AnyObjectType;
+		updatedPremiumTwap: AnyObjectType;
+		updatedSpreadTwap: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -139,6 +147,9 @@ export class PerpetualsApi {
 			postedOrder: this.eventType("PostedOrder"),
 			filledMakerOrder: this.eventType("FilledMakerOrder"),
 			filledTakerOrder: this.eventType("FilledTakerOrder"),
+			// Twap
+			updatedPremiumTwap: this.eventType("UpdatedPremiumTwap"),
+			updatedSpreadTwap: this.eventType("UpdatedSpreadTwap"),
 		};
 	}
 
@@ -239,20 +250,20 @@ export class PerpetualsApi {
 		return PerpetualsApiCasting.accountFromRaw(accountField.value);
 	};
 
-	public fetchAllAccountDatas = async (
-		inputs: ApiPerpetualsAccountsBody & {
-			collateralCoinType: CoinType;
-		}
-	): Promise<PerpetualsAccountData[]> => {
-		const accountCaps = await this.fetchOwnedAccountCapsOfType(inputs);
-		const accounts = await Promise.all(
-			accountCaps.map((cap) => this.fetchAccount(cap))
-		);
-		return accounts.map((account, index) => ({
-			account,
-			accountCap: accountCaps[index],
-		}));
-	};
+	// public fetchAllAccountDatas = async (
+	// 	inputs: ApiPerpetualsAccountsBody & {
+	// 		collateralCoinType: CoinType;
+	// 	}
+	// ): Promise<PerpetualsAccountData[]> => {
+	// 	const accountCaps = await this.fetchOwnedAccountCapsOfType(inputs);
+	// 	const accounts = await Promise.all(
+	// 		accountCaps.map((cap) => this.fetchAccount(cap))
+	// 	);
+	// 	return accounts.map((account, index) => ({
+	// 		account,
+	// 		accountCap: accountCaps[index],
+	// 	}));
+	// };
 
 	public fetchPositionOrderDatas = async (
 		inputs: ApiPerpetualsPositionOrderDatasBody & {
@@ -568,6 +579,61 @@ export class PerpetualsApi {
 		if (response.length === 0) return 0;
 
 		return response[0].volume;
+	}
+
+	public fetchHistoricalMarketData = async (inputs: {
+		marketId: PerpetualsMarketId;
+		fromTimestamp: Timestamp;
+		toTimestamp: Timestamp;
+		intervalMs: number;
+	}): Promise<ApiPerpetualsHistoricalMarketDataResponse> => {
+		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
+		const [prices, volumes] = (await Promise.all([
+			this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/markets/${marketId}/historical-price`,
+				undefined,
+				{
+					from: fromTimestamp,
+					to: toTimestamp,
+					interval: intervalMs,
+				}
+			),
+			this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/markets/${marketId}/historical-volume`,
+				undefined,
+				{
+					from: fromTimestamp,
+					to: toTimestamp,
+					interval: intervalMs,
+				}
+			),
+		])) as [
+			prices: PerpetualsMarketPriceDataPoint[],
+			volumes: PerpetualsMarketVolumeDataPoint[]
+		];
+		return { prices, volumes };
+	};
+
+	public async fetchMarketPrice24hrsAgo(inputs: {
+		marketId: PerpetualsMarketId;
+	}): Promise<number> {
+		const { marketId } = inputs;
+
+		dayjs.extend(duration);
+		const timestamp =
+			dayjs().valueOf() - dayjs.duration(24, "hours").asMilliseconds();
+
+		const response: [{ timestamp: Timestamp; bookPrice: number }] | [] =
+			await this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/markets/${marketId}/first-historical-price`,
+				undefined,
+				{
+					timestamp,
+				}
+			);
+		if (response.length === 0) return 0;
+
+		return response[0].bookPrice;
 	}
 
 	// =========================================================================

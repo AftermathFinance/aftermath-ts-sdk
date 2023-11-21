@@ -12,6 +12,7 @@ import {
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
 	ObjectId,
+	PerpetualsMarketPriceDataPoint,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
@@ -61,6 +62,10 @@ export class PerpetualsMarket extends Caller {
 
 	public get24hrVolume() {
 		return this.fetchApi<number>("24hr-volume");
+	}
+
+	public getPrice24hrsAgo() {
+		return this.fetchApi<number>("price-24hrs-ago");
 	}
 
 	public getPositionOrderDatas(inputs: ApiPerpetualsPositionOrderDatasBody) {

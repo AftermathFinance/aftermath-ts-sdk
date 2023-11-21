@@ -275,6 +275,18 @@ bcs.registerStructType("MarketKey", {
 	marketId: BCS.U64,
 });
 
+export interface PerpetualsMarketPriceDataPoint {
+	timestamp: Timestamp;
+	high: number;
+	low: number;
+	open: number;
+	close: number;
+}
+export interface PerpetualsMarketVolumeDataPoint {
+	timestamp: Timestamp;
+	volume: number;
+}
+
 // =========================================================================
 //  Orderbook
 // =========================================================================
@@ -603,6 +615,32 @@ export const isFilledTakerOrderEvent = (
 };
 
 // =========================================================================
+//  Twap
+// =========================================================================
+
+export interface UpdatedPremiumTwapEvent extends Event {
+	collateralCoinType: CoinType;
+	marketId: PerpetualsMarketId;
+	bookPrice: IFixed;
+	indexPrice: IFixed;
+	premiumTwap: IFixed;
+	premiumTwapLastUpdateMs: number;
+}
+
+export interface UpdatedSpreadTwapEvent extends Event {
+	collateralCoinType: CoinType;
+	marketId: PerpetualsMarketId;
+	bookPrice: IFixed;
+	indexPrice: IFixed;
+	spreadTwap: IFixed;
+	spreadTwapLastUpdateMs: number;
+}
+
+export type PerpetualsTwapEvent =
+	| UpdatedPremiumTwapEvent
+	| UpdatedSpreadTwapEvent;
+
+// =========================================================================
 //  API
 // =========================================================================
 
@@ -666,6 +704,11 @@ export interface ApiPerpetualsExecutionPriceResponse {
 	executionPrice: number;
 	sizeFilled: number;
 	sizePosted: number;
+}
+
+export interface ApiPerpetualsHistoricalMarketDataResponse {
+	prices: PerpetualsMarketPriceDataPoint[];
+	volumes: PerpetualsMarketVolumeDataPoint[];
 }
 
 // =========================================================================
