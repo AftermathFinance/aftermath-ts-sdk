@@ -97,8 +97,6 @@ export class LeveragedStaking extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	// REVIEW: Math (1 vs 1_000_000_000_000_000_000, etc).
-	//
 	public static calcLeverage = (inputs: {
 		totalSuiDebt: Balance;
 		totalAfSuiCollateral: Balance;

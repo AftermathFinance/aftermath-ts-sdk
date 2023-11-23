@@ -66,6 +66,7 @@ export interface StakingAddresses {
 export interface LeveragedStakingAddresses {
 	packages: {
 		leveragedAfSui: SuiAddress;
+		leveragedAfSuiInitial: SuiAddress;
 	};
 	objects: {
 		leveragedAfSuiState: ObjectId;
