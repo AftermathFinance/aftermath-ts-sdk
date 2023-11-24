@@ -13,6 +13,8 @@ import {
 	RouterAsyncSerializablePool,
 	RouterSynchronousProtocolName,
 	ObjectId,
+	Balance,
+	ApiRouterPartialCompleteTradeRouteBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -22,7 +24,7 @@ import { Caller } from "../../general/utils/caller";
  * @example
  * ```
  * // Create provider
- * const router = (new Aftermath("TESTNET")).Router();
+ * const router = (new Aftermath("MAINNET")).Router();
  * // Call sdk
  * const supportedCoins = await router.getSupportedCoins();
  * ```
@@ -49,7 +51,7 @@ export class Router extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Router` instance
 	 */
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "router");
 	}
 
@@ -104,7 +106,13 @@ export class Router extends Caller {
 	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
 	 */
 	public async getCompleteTradeRouteGivenAmountIn(
-		inputs: ApiRouterCompleteTradeRouteBody,
+		inputs: ApiRouterPartialCompleteTradeRouteBody & {
+			/**
+			 * Amount of coin being given away
+			 */
+			coinInAmount: Balance;
+		},
+
 		abortSignal?: AbortSignal
 	) {
 		return this.fetchApi<
@@ -120,15 +128,20 @@ export class Router extends Caller {
 	 * @param abortSignal - Optional signal to abort passed to fetch call
 	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
 	 */
-	// public async getCompleteTradeRouteGivenAmountOut(
-	// 	inputs: ApiRouterCompleteTradeRouteBody,
-	// 	abortSignal?: AbortSignal
-	// ) {
-	// 	return this.fetchApi<
-	// 		RouterCompleteTradeRoute,
-	// 		ApiRouterCompleteTradeRouteBody
-	// 	>("trade-route", inputs, abortSignal);
-	// }
+	public async getCompleteTradeRouteGivenAmountOut(
+		inputs: ApiRouterPartialCompleteTradeRouteBody & {
+			/**
+			 * Amount of coin expected to receive
+			 */
+			coinOutAmount: Balance;
+		},
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route", inputs, abortSignal);
+	}
 
 	// =========================================================================
 	//  Transactions

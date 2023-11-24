@@ -14,6 +14,10 @@ import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsAp
 import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 
+/**
+ * Utility class for casting and conversion functions.
+ * @class
+ */
 export class Casting {
 	// =========================================================================
 	//  Api Casting

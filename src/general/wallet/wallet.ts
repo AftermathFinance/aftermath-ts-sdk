@@ -12,7 +12,7 @@ import { Caller } from "../utils/caller";
 export class Wallet extends Caller {
 	constructor(
 		public readonly address: SuiAddress,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, `wallet/${address}`);
 	}

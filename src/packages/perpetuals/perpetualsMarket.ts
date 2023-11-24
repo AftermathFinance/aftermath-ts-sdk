@@ -47,7 +47,7 @@ export class PerpetualsMarket extends Caller {
 		public readonly marketParams: PerpetualsMarketParams,
 		public readonly marketState: PerpetualsMarketState,
 		public readonly orderbook: PerpetualsOrderbook,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, `perpetuals/${collateralCoinType}/markets/${marketId}`);
 	}

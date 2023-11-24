@@ -37,7 +37,7 @@ export class FarmsStakedPosition extends Caller {
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
 		trueLastHarvestRewardsTimestamp?: Timestamp,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, "farms");
 		this.stakedPosition = stakedPosition;
@@ -287,6 +287,7 @@ export class FarmsStakedPosition extends Caller {
 	public async getUnstakeTransaction(inputs: {
 		walletAddress: SuiAddress;
 		stakingPool: FarmsStakingPool;
+		claimSuiAsAfSui?: boolean;
 	}) {
 		return this.fetchApiTransaction<ApiFarmsUnstakeBody>(
 			"transactions/unstake",
@@ -350,6 +351,7 @@ export class FarmsStakedPosition extends Caller {
 	public async getHarvestRewardsTransaction(inputs: {
 		walletAddress: SuiAddress;
 		stakingPool: FarmsStakingPool;
+		claimSuiAsAfSui?: boolean;
 	}) {
 		return this.fetchApiTransaction<ApiHarvestFarmsRewardsBody>(
 			"transactions/harvest-rewards",

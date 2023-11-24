@@ -278,10 +278,7 @@ export interface RouterTradeEvent extends Event {
 //  API
 // =========================================================================
 
-/**
- * Details for router to construct trade route
- */
-export type ApiRouterCompleteTradeRouteBody = {
+export type ApiRouterPartialCompleteTradeRouteBody = {
 	/**
 	 * Coin type of coin being given away
 	 */
@@ -298,18 +295,27 @@ export type ApiRouterCompleteTradeRouteBody = {
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
 	externalFee?: RouterExternalFee;
-} & {
-	/**
-	 * Amount of coin being given away
-	 */
-	coinInAmount: Balance;
 };
-// | {
-// 		/**
-// 		 * Amount of coin expected to receive
-// 		 */
-// 		coinOutAmount: Balance;
-//   }
+
+/**
+ * Details for router to construct trade route
+ */
+export type ApiRouterCompleteTradeRouteBody =
+	ApiRouterPartialCompleteTradeRouteBody &
+		(
+			| {
+					/**
+					 * Amount of coin being given away
+					 */
+					coinInAmount: Balance;
+			  }
+			| {
+					/**
+					 * Amount of coin expected to receive
+					 */
+					coinOutAmount: Balance;
+			  }
+		);
 
 /**
  * Info to construct router trade transaction from complete route

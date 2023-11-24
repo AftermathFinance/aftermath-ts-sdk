@@ -53,6 +53,7 @@ import {
 	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 import { bcs } from "@mysten/sui.js/bcs";
+import { Coin } from "../..";
 
 export class FarmsApi {
 	// =========================================================================
@@ -1098,16 +1099,35 @@ export class FarmsApi {
 			}
 		}
 
-		for (const harvestedCoinIds of Object.values(harvestedCoins)) {
+		this.endHarvestTx({ tx, harvestedRewardsEventMetadataId });
+
+		for (const [coinType, harvestedCoinIds] of Object.entries(
+			harvestedCoins
+		)) {
 			const coinToTransfer = harvestedCoinIds[0];
 
 			if (harvestedCoinIds.length > 1)
 				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
 
-			tx.transferObjects([coinToTransfer], tx.pure(walletAddress));
-		}
+			if (inputs.claimSuiAsAfSui && Coin.isSuiCoin(coinType)) {
+				const validatorAddress =
+					this.Provider.Staking().addresses.routerWrapper?.objects
+						.aftermathValidator;
+				if (!validatorAddress)
+					throw new Error(
+						"aftermath validator address has not been set in provider"
+					);
 
-		this.endHarvestTx({ tx, harvestedRewardsEventMetadataId });
+				this.Provider.Staking().stakeTx({
+					tx,
+					validatorAddress,
+					suiCoin: coinToTransfer,
+					withTransfer: true,
+				});
+			} else {
+				tx.transferObjects([coinToTransfer], tx.pure(walletAddress));
+			}
+		}
 
 		return tx;
 	};

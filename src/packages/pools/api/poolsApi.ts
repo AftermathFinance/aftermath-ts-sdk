@@ -66,11 +66,22 @@ import duration, { DurationUnitType } from "dayjs/plugin/duration";
 import { IndexerEventOnChain } from "../../../general/types/castingTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 
+/**
+ * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
+ * @packageDocumentation
+ */
+/**
+ * PoolsApi class that implements RouterSynchronousApiInterface<PoolObject> interface.
+ * Provides methods to interact with the Pools API.
+ */
 export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
+	/**
+	 * Constants used in the pools API.
+	 */
 	private static readonly constants = {
 		moduleNames: {
 			interface: "amm_interface",
@@ -96,6 +107,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Class Members
 	// =========================================================================
 
+	/**
+	 * Object containing the addresses of various contracts.
+	 */
 	public readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
@@ -133,6 +147,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates an instance of PoolsApi.
+	 * @param {AftermathApi} Provider - An instance of AftermathApi.
+	 * @throws {Error} Throws an error if not all required addresses have been set in provider.
+	 */
 	constructor(private readonly Provider: AftermathApi) {
 		const pools = Provider.addresses.pools;
 		const referralVault = Provider.addresses.referralVault;
@@ -163,6 +182,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Fetches a pool object by its object ID.
+	 * @async
+	 * @param {ObjectId} inputs.objectId - The object ID of the pool to fetch.
+	 * @returns {Promise<PoolObject>} A promise that resolves to the fetched pool object.
+	 */
 	public fetchPool = async (inputs: { objectId: ObjectId }) => {
 		return this.Provider.Objects().fetchCastObject({
 			...inputs,
@@ -170,6 +195,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Fetches an array of pool objects by their object IDs.
+	 * @async
+	 * @param {ObjectId[]} inputs.objectIds - An array of object IDs of the pools to fetch.
+	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of fetched pool objects.
+	 */
 	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
 		return this.Provider.Objects().fetchCastObjectBatch({
 			...inputs,
@@ -177,11 +208,21 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Fetches all pool objects.
+	 * @async
+	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
+	 */
 	public fetchAllPools = async () => {
 		const objectIds = await this.fetchAllPoolIds();
 		return this.fetchPoolsFromIds({ objectIds });
 	};
 
+	/**
+	 * Fetches all pool object IDs.
+	 * @async
+	 * @returns {Promise<ObjectId[]>} A promise that resolves to an array of all fetched pool object IDs.
+	 */
 	public fetchAllPoolIds = async (): Promise<ObjectId[]> => {
 		const objectIds =
 			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
@@ -206,6 +247,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Fetches trade events for a pool.
+	 * @async
+	 * @param {ApiIndexerEventsBody & { poolId: ObjectId }} inputs - An object containing the pool ID, cursor, and limit.
+	 * @returns {Promise<PoolTradeEvent[]>} A promise that resolves to an array of fetched trade events.
+	 */
 	public async fetchTradeEvents(
 		inputs: ApiIndexerEventsBody & {
 			poolId: ObjectId;
@@ -222,6 +269,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		);
 	}
 
+	/**
+	 * Fetches withdraw events for a pool.
+	 * @async
+	 * @param {ApiIndexerEventsBody & { poolId: ObjectId }} inputs - An object containing the pool ID, cursor, and limit.
+	 * @returns {Promise<PoolWithdrawEvent[]>} A promise that resolves to an array of fetched withdraw events.
+	 */
 	public async fetchWithdrawEvents(
 		inputs: ApiIndexerEventsBody & {
 			poolId: ObjectId;
@@ -238,6 +291,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		);
 	}
 
+	/**
+	 * Fetches deposit events for a pool.
+	 * @async
+	 * @param {ApiIndexerEventsBody & { poolId: ObjectId }} inputs - An object containing the pool ID, cursor, and limit.
+	 * @returns {Promise<PoolDepositEvent[]>} A promise that resolves to an array of fetched deposit events.
+	 */
 	public async fetchDepositEvents(
 		inputs: ApiIndexerEventsBody & {
 			poolId: ObjectId;
@@ -254,39 +313,66 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		);
 	}
 
+	/**
+	 * Fetches trade events for a pool within a specified time frame.
+	 * @async
+	 * @param {ObjectId} inputs.poolId - The object ID of the pool to fetch trade events for.
+	 * @param {DurationUnitType} inputs.timeUnit - The time unit of the time frame.
+	 * @param {number} inputs.time - The duration of the time frame.
+	 * @returns {Promise<PoolTradeEvent[]>} A promise that resolves to an array of fetched trade events.
+	 */
 	public async fetchTradeEventsWithinTime(inputs: {
 		poolId: ObjectId;
 		timeUnit: DurationUnitType;
 		time: number;
 	}): Promise<PoolTradeEvent[]> {
-		const { poolId, timeUnit, time } = inputs;
+		try {
+			const { poolId, timeUnit, time } = inputs;
 
-		dayjs.extend(duration);
-		const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
+			dayjs.extend(duration);
+			const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
 
-		const tradeEventsOnChain =
-			await this.Provider.indexerCaller.fetchIndexer<
-				IndexerEventOnChain<PoolTradeEventOnChainFields>[],
-				undefined,
-				IndexerDataWithCursorQueryParams
-			>(
-				`pools/${poolId}/swap-events-within-time/${durationMs}`,
-				undefined,
-				{
-					skip: 0,
-					limit: 10000, // max from mongo ?
-				}
+			const tradeEventsOnChain =
+				await this.Provider.indexerCaller.fetchIndexer<
+					IndexerEventOnChain<PoolTradeEventOnChainFields>[],
+					undefined,
+					IndexerDataWithCursorQueryParams
+				>(
+					`pools/${poolId}/swap-events-within-time/${durationMs}`,
+					undefined,
+					{
+						skip: 0,
+						limit: 10000, // max from mongo ?
+					}
+				);
+
+			return tradeEventsOnChain.map(
+				Casting.pools.poolTradeEventFromIndexerOnChain
 			);
-
-		return tradeEventsOnChain.map(
-			Casting.pools.poolTradeEventFromIndexerOnChain
-		);
+		} catch (e) {
+			return [];
+		}
 	}
 
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
 
+	/**
+	 * Fetches a transaction block for creating a new pool.
+	 * @async
+	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user creating the pool.
+	 * @param {CoinType} inputs.lpCoinType - The coin type of the LP token.
+	 * @param {PoolCreationLpCoinMetadata} inputs.lpCoinMetadata - The metadata of the LP token.
+	 * @param {{ coinType: CoinType; weight: Percentage; decimals?: CoinDecimal; tradeFeeIn: Percentage; initialDeposit: Balance; }[]} inputs.coinsInfo - An array of objects containing information about the coins in the pool.
+	 * @param {PoolName} inputs.poolName - The name of the pool.
+	 * @param {0 | 1} inputs.poolFlatness - The flatness of the pool.
+	 * @param {ObjectId} inputs.createPoolCapId - The object ID of the create pool cap.
+	 * @param {boolean} inputs.respectDecimals - Whether to respect decimals.
+	 * @param {CoinDecimal} [inputs.forceLpDecimals] - The decimal places to force for the LP token.
+	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
+	 * @returns {Promise<TransactionBlock>} A promise that resolves to the fetched transaction block.
+	 */
 	public fetchCreatePoolTx = async (inputs: {
 		walletAddress: SuiAddress;
 		lpCoinType: CoinType;
@@ -342,6 +428,19 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Fetches a transaction block for trading in a pool.
+	 * @async
+	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user trading in the pool.
+	 * @param {Pool} inputs.pool - The pool to trade in.
+	 * @param {CoinType} inputs.coinInType - The coin type of the coin being traded in.
+	 * @param {Balance} inputs.coinInAmount - The amount of the coin being traded in.
+	 * @param {CoinType} inputs.coinOutType - The coin type of the coin being traded out.
+	 * @param {Slippage} inputs.slippage - The slippage of the trade.
+	 * @param {SuiAddress} [inputs.referrer] - The referrer of the trade.
+	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
+	 * @returns {Promise<TransactionBlock>} A promise that resolves to the fetched transaction block.
+	 */
 	public fetchBuildTradeTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
@@ -402,6 +501,17 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
+	/**
+	 * Fetches a transaction block for depositing in a pool.
+	 * @async
+	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user depositing in the pool.
+	 * @param {Pool} inputs.pool - The pool to deposit in.
+	 * @param {CoinsToBalance} inputs.amountsIn - The amounts of coins being deposited.
+	 * @param {Slippage} inputs.slippage - The slippage of the deposit.
+	 * @param {SuiAddress} [inputs.referrer] - The referrer of the deposit.
+	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
+	 * @returns {Promise<TransactionBlock>} A promise that resolves to the fetched transaction block.
+	 */
 	public fetchBuildDepositTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
@@ -461,6 +571,17 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
+	/**
+	 * Fetches a transaction block for withdrawing from a pool.
+	 * @async
+	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user withdrawing from the pool.
+	 * @param {Pool} inputs.pool - The pool to withdraw from.
+	 * @param {CoinsToBalance} inputs.amountsOutDirection - The amounts of coins being withdrawn.
+	 * @param {Balance} inputs.lpCoinAmount - The amount of LP tokens being withdrawn.
+	 * @param {Slippage} inputs.slippage - The slippage of the withdrawal.
+	 * @param {SuiAddress} [inputs.referrer] - The referrer of the withdrawal.
+	 * @returns {Promise<TransactionBlock>} A promise that resolves to the fetched transaction block.
+	 */
 	public fetchBuildWithdrawTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
@@ -521,6 +642,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
+	/**
+	 * Fetches a transaction block that withdraws all coins from a pool in exchange for the corresponding LP tokens.
+	 * @param inputs An object containing the wallet address, pool, LP coin amount, and optional referrer.
+	 * @returns A promise that resolves to a TransactionBlock object.
+	 */
 	public fetchBuildAllCoinWithdrawTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
@@ -559,6 +685,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
+	/**
+	 * Builds a transaction block for publishing an LP coin.
+	 * @param inputs - The input parameters for the transaction.
+	 * @returns The built transaction block.
+	 */
 	public buildPublishLpCoinTx = (
 		inputs: ApiPublishLpCoinBody
 	): TransactionBlock => {
@@ -573,6 +704,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
+	/**
+	 * Fetches and builds a transaction for creating a new liquidity pool.
+	 * @param inputs An object containing the necessary inputs for creating the pool.
+	 * @returns A Promise that resolves to a TransactionBlock object representing the built transaction.
+	 */
 	public fetchBuildCreatePoolTx = async (inputs: {
 		walletAddress: SuiAddress;
 		lpCoinType: CoinType;
@@ -648,6 +784,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Transaction Commands
 	// =========================================================================
 
+	/**
+	 * Executes a trade transaction on the specified pool.
+	 * @param inputs An object containing the necessary inputs for the trade transaction.
+	 * @returns A `TransactionObjectArgument` representing the trade transaction.
+	 */
 	public tradeTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
@@ -697,6 +838,13 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Wraps a transaction object argument for adding a swap exact in to route on the router wrapper.
+	 * @param inputs - The inputs required for the transaction.
+	 * @param inputs.poolId - The ID of the pool.
+	 * @param inputs.lpCoinType - The type of the LP coin.
+	 * @returns The transaction object argument.
+	 */
 	public routerWrapperTradeTx = (
 		inputs: RouterPoolTradeTxInputs & {
 			poolId: ObjectId;
@@ -743,6 +891,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Creates a transaction object argument for depositing multiple coins into a pool.
+	 *
+	 * @param inputs - An object containing the necessary parameters for the deposit transaction.
+	 * @returns A transaction object argument representing the deposit transaction.
+	 */
 	public multiCoinDepositTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
@@ -794,6 +948,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Withdraws multiple coins from a pool.
+	 * @param inputs An object containing the necessary parameters for the transaction.
+	 * @returns A TransactionObjectArgument representing the transaction.
+	 */
 	public multiCoinWithdrawTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
@@ -844,6 +1003,17 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Withdraws all coins from a liquidity pool.
+	 * @param inputs - The inputs required for the transaction.
+	 * @param inputs.tx - The transaction block.
+	 * @param inputs.poolId - The ID of the liquidity pool.
+	 * @param inputs.lpCoinId - The ID of the LP coin.
+	 * @param inputs.lpCoinType - The type of the LP coin.
+	 * @param inputs.coinTypes - An array of coin types.
+	 * @param inputs.withTransfer - Whether or not to include a transfer.
+	 * @returns An array of transaction objects.
+	 */
 	public allCoinWithdrawTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
@@ -882,6 +1052,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Publishes a transaction block for creating a liquidity pool coin.
+	 * @param inputs An object containing the transaction block and the decimal value of the liquidity pool coin.
+	 * @returns A promise that resolves to the result of the transaction publishing.
+	 */
 	public publishLpCoinTx = (inputs: {
 		tx: TransactionBlock;
 		lpCoinDecimals: CoinDecimal;
@@ -907,6 +1082,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	};
 
 	// TODO: handle bounds checks here instead of just on-chain ?
+	/**
+	 * Creates a transaction to create a new pool.
+	 * @param inputs - An object containing the necessary inputs to create the pool.
+	 * @returns A transaction block to create the pool.
+	 */
 	public createPoolTx = async (inputs: {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
@@ -1021,6 +1201,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 	};
 
+	/**
+	 * Returns the pool object ID for a given LP coin type transaction.
+	 * @param inputs - An object containing the transaction block and LP coin type.
+	 * @returns The pool object ID.
+	 */
 	public poolObjectIdForLpCoinTypeTx = (inputs: {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
@@ -1042,6 +1227,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Inspections
 	// =========================================================================
 
+	/**
+	 * Fetches the pool object ID for a given LP coin type.
+	 * @param inputs - An object containing the LP coin type.
+	 * @returns A Promise that resolves to the pool object ID.
+	 */
 	public fetchPoolObjectIdForLpCoinType = async (inputs: {
 		lpCoinType: CoinType;
 	}): Promise<ObjectId> => {
@@ -1057,6 +1247,10 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return Casting.addressFromBytes(bytes);
 	};
 
+	/**
+	 * Fetches the list of unique supported coins across all pools.
+	 * @returns {Promise<CoinType[]>} A promise that resolves to an array of unique supported coins.
+	 */
 	public fetchSupportedCoins = async () => {
 		const pools = await this.Provider.Pools().fetchAllPools();
 		const allCoins: CoinType[] = pools
@@ -1067,6 +1261,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return uniqueCoins;
 	};
 
+	/**
+	 * Fetches the owned LP coin positions for a given wallet address.
+	 * @param inputs An object containing the wallet address.
+	 * @returns A Promise that resolves to an array of PoolLpInfo objects.
+	 */
 	public fetchOwnedLpCoinPositions = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<PoolLpInfo[]> => {
@@ -1098,6 +1297,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
 
 	// TODO: use promise.all to execute some of this fetching in parallel
+	/**
+	 * Fetches statistics for a given pool.
+	 * @param inputs An object containing the pool, trade events within a certain time frame, coins to price, and coins to decimals.
+	 * @returns A Promise that resolves to a PoolStats object containing the volume, TVL, supply per LP token, LP token price, fees, and APY.
+	 */
 	public fetchPoolStats = async (inputs: {
 		pool: Pool;
 		tradeEventsWithinTime: PoolTradeEvent[];
@@ -1153,6 +1357,13 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 	// NOTE: should this volume calculation also take into account deposits and withdraws
 	// (not just swaps) ?
+	/**
+	 * Calculates the total volume of a pool based on the provided trade events, coins to price, and coins to decimals.
+	 * @param tradeEvents - An array of PoolTradeEvent objects representing the trades made in the pool.
+	 * @param coinsToPrice - An object mapping coin types to their respective prices.
+	 * @param coinsToDecimals - An object mapping coin types to their respective decimal places.
+	 * @returns The total volume of the pool in USD.
+	 */
 	public fetchCalcPoolVolume = (
 		tradeEvents: PoolTradeEvent[],
 		coinsToPrice: CoinsToPrice,
@@ -1177,6 +1388,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return volume;
 	};
 
+	/**
+	 * Calculates the total value locked (TVL) for a given pool, based on its current balances and prices.
+	 * @param inputs - An object containing the pool's coins, their prices, and their decimal places.
+	 * @returns The total value locked (TVL) for the pool.
+	 */
 	public fetchCalcPoolTvl = async (inputs: {
 		poolCoins: PoolCoins;
 		coinsToPrice: CoinsToPrice;
@@ -1199,6 +1415,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tvl;
 	};
 
+	/**
+	 * Calculates the pool supply per LP token.
+	 * @param poolCoins - The pool coins object.
+	 * @param lpSupply - The total supply of LP tokens.
+	 * @returns An array of supply per LP token for each pool coin.
+	 */
 	public calcPoolSupplyPerLps = (poolCoins: PoolCoins, lpSupply: Balance) => {
 		const supplyPerLps = Object.values(poolCoins).map(
 			(poolCoin) => Number(poolCoin.balance) / Number(lpSupply)
@@ -1207,6 +1429,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return supplyPerLps;
 	};
 
+	/**
+	 * Calculates the price of a liquidity pool token.
+	 * @param inputs - An object containing the liquidity pool token supply, total value locked, and the number of decimal places for the token.
+	 * @returns The price of the liquidity pool token.
+	 */
 	public calcPoolLpPrice = (inputs: {
 		lpCoinSupply: Balance;
 		tvl: number;
@@ -1219,6 +1446,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return lpPrice;
 	};
 
+	/**
+	 * Calculates the APY (Annual Percentage Yield) based on the fees collected in the last 24 hours and the TVL (Total Value Locked) of a pool.
+	 * @param inputs - An object containing the fees collected in the last 24 hours and the TVL of a pool.
+	 * @returns The APY (Annual Percentage Yield) of the pool.
+	 */
 	public calcApy = (inputs: { fees24Hours: number; tvl: number }): number => {
 		const { fees24Hours, tvl } = inputs;
 		// TODO: use daysjs instead
@@ -1234,6 +1466,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// TODO: make this faster this is slow as shit when LP balances are involved...
 	// (so much fetching!)
 	// TODO: rename this function and/or move it ?
+	/**
+	 * Fetches the prices of the given LP coins.
+	 * @param provider The Aftermath instance to use for the API calls.
+	 * @param lpCoins The LP coins to fetch prices for.
+	 * @returns An object containing the prices of the LP coins.
+	 */
 	public fetchLpCoinsToPrice = async (
 		provider: Aftermath,
 		lpCoins: CoinType[]
@@ -1299,6 +1537,13 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Graph Data
 	// =========================================================================
 
+	/**
+	 * Calculates the pool fee data from the given volume data and pool trade fee.
+	 * @param inputs - The inputs required to calculate the pool fee data.
+	 * @param inputs.volumeData - The volume data to calculate the pool fee data from.
+	 * @param inputs.poolTradeFee - The pool trade fee to use for the calculation.
+	 * @returns The pool fee data calculated from the given volume data and pool trade fee.
+	 */
 	public calcPoolFeeDataFromVolume = (inputs: {
 		volumeData: PoolDataPoint[];
 		poolTradeFee: PoolTradeFee;
@@ -1311,6 +1556,16 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return feeData;
 	};
 
+	/**
+	 * Calculates the pool volume data based on the provided inputs.
+	 * @param inputs An object containing the necessary inputs for the calculation.
+	 * @param inputs.tradeEvents An array of pool trade events.
+	 * @param inputs.timeUnit The time unit to use for the calculation.
+	 * @param inputs.time The time duration to use for the calculation.
+	 * @param inputs.coinsToDecimals An object containing the decimal values for each coin.
+	 * @param inputs.coinsToPrice An object containing the price values for each coin.
+	 * @returns An array of pool data points.
+	 */
 	public calcPoolVolumeData = (inputs: {
 		tradeEvents: PoolTradeEvent[];
 		timeUnit: ManipulateType;
@@ -1373,6 +1628,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  LP Coin Metadata
 	// =========================================================================
 
+	/**
+	 * Creates a description for the Aftermath LP coin for a given pool.
+	 * @param inputs - An object containing the pool name and an array of coin types.
+	 * @returns A string describing the Aftermath LP coin for the given pool.
+	 */
 	public createLpCoinMetadataDescription = async (inputs: {
 		poolName: PoolName;
 		coinTypes: CoinType[];

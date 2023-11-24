@@ -45,7 +45,7 @@ export class Coin extends Caller {
 	// TODO: update this class to not be instantiated with a coin type at all
 	constructor(
 		public readonly coinType?: CoinType,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, "coins");
 		this.coinType = coinType;

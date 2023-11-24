@@ -13,7 +13,7 @@ export class NftAmm extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "nft-amm");
 	}
 
