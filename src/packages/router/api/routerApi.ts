@@ -19,9 +19,7 @@ import {
 	AllRouterOptions,
 	PartialRouterOptions,
 	SuiAddress,
-	SerializedTransaction,
 	TxBytes,
-	DynamicGasCoinData,
 	ApiRouterDynamicGasBody,
 } from "../../../types";
 import {
@@ -40,7 +38,6 @@ import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 import { FlowXApi } from "../../external/flowX/flowXApi";
 import { Coin } from "../..";
-import { MoveCallSuiTransaction, SuiTransaction } from "@mysten/sui.js/client";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
