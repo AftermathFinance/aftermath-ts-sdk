@@ -18,7 +18,7 @@ class CetusRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: CetusPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: CetusPoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.id;
@@ -34,7 +34,7 @@ class CetusRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = true;
 
 	readonly pool: CetusPoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

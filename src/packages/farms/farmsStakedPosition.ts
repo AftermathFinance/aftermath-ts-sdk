@@ -37,7 +37,7 @@ export class FarmsStakedPosition extends Caller {
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
 		trueLastHarvestRewardsTimestamp?: Timestamp,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, "farms");
 		this.stakedPosition = stakedPosition;

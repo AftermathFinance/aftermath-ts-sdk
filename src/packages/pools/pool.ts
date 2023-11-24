@@ -16,103 +16,156 @@ import {
 	Url,
 	ApiPoolAllCoinWithdrawBody,
 	ApiIndexerEventsBody,
+	IndexerEventsWithCursor,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
 import { Pools } from ".";
 import { Casting, Helpers } from "../../general/utils";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
+/**
+ * Represents a pool object and provides methods for interacting with the pool.
+ * @class
+ */
 export class Pool extends Caller {
-	// =========================================================================
-	//  Private Constants
-	// =========================================================================
-
+	/**
+	 * Private constants used in the class.
+	 */
 	private static readonly constants = {
 		percentageBoundsMarginOfError: 0.001, // 0.1%
 	};
 
-	// =========================================================================
-	//  Public Class Members
-	// =========================================================================
-
+	/**
+	 * The pool statistics.
+	 */
 	public stats: PoolStats | undefined;
 
-	// =========================================================================
-	//  Constructor
-	// =========================================================================
-
+	/**
+	 * Creates a new instance of the Pool class.
+	 * @constructor
+	 * @param {PoolObject} pool - The pool object.
+	 * @param {SuiNetwork} [network] - The network to use.
+	 */
 	constructor(
 		public readonly pool: PoolObject,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;
 	}
 
-	// =========================================================================
-	//  Stats
-	// =========================================================================
-
-	public async getStats() {
+	/**
+	 * Fetches the pool statistics.
+	 * @async
+	 * @returns {Promise<PoolStats>} The pool statistics.
+	 */
+	public async getStats(): Promise<PoolStats> {
 		const stats = await this.fetchApi<PoolStats>("stats");
 		this.setStats(stats);
 		return stats;
 	}
 
-	public setStats(stats: PoolStats) {
+	/**
+	 * Sets the pool statistics.
+	 * @param {PoolStats} stats - The pool statistics.
+	 */
+	public setStats(stats: PoolStats): void {
 		this.stats = stats;
 	}
 
+	/**
+	 * Fetches the volume data for the pool.
+	 * @async
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {PoolGraphDataTimeframeKey} inputs.timeframe - The timeframe for the data.
+	 * @returns {Promise<PoolDataPoint[]>} The volume data for the pool.
+	 */
 	public async getVolumeData(inputs: {
 		timeframe: PoolGraphDataTimeframeKey;
 	}): Promise<PoolDataPoint[]> {
 		return this.fetchApi(`volume/${inputs.timeframe}`);
 	}
 
+	/**
+	 * Fetches the fee data for the pool.
+	 * @async
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {PoolGraphDataTimeframeKey} inputs.timeframe - The timeframe for the data.
+	 * @returns {Promise<PoolDataPoint[]>} The fee data for the pool.
+	 */
 	public async getFeeData(inputs: {
 		timeframe: PoolGraphDataTimeframeKey;
 	}): Promise<PoolDataPoint[]> {
 		return this.fetchApi(`fees/${inputs.timeframe}`);
 	}
 
-	// =========================================================================
-	//  Transactions
-	// =========================================================================
-
-	public async getDepositTransaction(inputs: ApiPoolDepositBody) {
+	/**
+	 * Fetches the deposit transaction for the pool.
+	 * @async
+	 * @param {ApiPoolDepositBody} inputs - The inputs for the method.
+	 * @returns {Promise<TransactionBlock>} The deposit transaction for the pool.
+	 */
+	public async getDepositTransaction(
+		inputs: ApiPoolDepositBody
+	): Promise<TransactionBlock> {
 		return this.fetchApiTransaction<ApiPoolDepositBody>(
 			"transactions/deposit",
 			inputs
 		);
 	}
 
-	public async getWithdrawTransaction(inputs: ApiPoolWithdrawBody) {
+	/**
+	 * Fetches the withdraw transaction for the pool.
+	 * @async
+	 * @param {ApiPoolWithdrawBody} inputs - The inputs for the method.
+	 * @returns {Promise<TransactionBlock>} The withdraw transaction for the pool.
+	 */
+	public async getWithdrawTransaction(
+		inputs: ApiPoolWithdrawBody
+	): Promise<TransactionBlock> {
 		return this.fetchApiTransaction<ApiPoolWithdrawBody>(
 			"transactions/withdraw",
 			inputs
 		);
 	}
 
+	/**
+	 * Fetches the all coin withdraw transaction for the pool.
+	 * @async
+	 * @param {ApiPoolAllCoinWithdrawBody} inputs - The inputs for the method.
+	 * @returns {Promise<TransactionBlock>} The all coin withdraw transaction for the pool.
+	 */
 	public async getAllCoinWithdrawTransaction(
 		inputs: ApiPoolAllCoinWithdrawBody
-	) {
+	): Promise<TransactionBlock> {
 		return this.fetchApiTransaction<ApiPoolAllCoinWithdrawBody>(
 			"transactions/all-coin-withdraw",
 			inputs
 		);
 	}
 
-	public async getTradeTransaction(inputs: ApiPoolTradeBody) {
+	/**
+	 * Fetches the trade transaction for the pool.
+	 * @async
+	 * @param {ApiPoolTradeBody} inputs - The inputs for the method.
+	 * @returns {Promise<TransactionBlock>} The trade transaction for the pool.
+	 */
+	public async getTradeTransaction(
+		inputs: ApiPoolTradeBody
+	): Promise<TransactionBlock> {
 		return this.fetchApiTransaction<ApiPoolTradeBody>(
 			"transactions/trade",
 			inputs
 		);
 	}
 
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
+	/**
+	 * Fetches the deposit events for the pool.
+	 * @async
+	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
+	 * @returns {Promise<IndexerEventsWithCursor<PoolDepositEvent>>} The deposit events for the pool.
+	 */
 	public async getDepositEvents(inputs: ApiIndexerEventsBody) {
 		return this.fetchApiIndexerEvents<PoolDepositEvent>(
 			"events/deposit",
@@ -120,24 +173,44 @@ export class Pool extends Caller {
 		);
 	}
 
-	public async getWithdrawEvents(inputs: ApiIndexerEventsBody) {
+	/**
+	 * Fetches the withdraw events for the pool.
+	 * @async
+	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
+	 * @returns {Promise<IndexerEventsWithCursor<PoolWithdrawEvent>>} The withdraw events for the pool.
+	 */
+	public async getWithdrawEvents(
+		inputs: ApiIndexerEventsBody
+	): Promise<IndexerEventsWithCursor<PoolWithdrawEvent>> {
 		return this.fetchApiIndexerEvents<PoolWithdrawEvent>(
 			"events/withdraw",
 			inputs
 		);
 	}
 
-	public async getTradeEvents(inputs: ApiIndexerEventsBody) {
+	/**
+	 * Fetches the trade events for the pool.
+	 * @async
+	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
+	 * @returns {Promise<IndexerEventsWithCursor<PoolTradeEvent>>} The trade events for the pool.
+	 */
+	public async getTradeEvents(
+		inputs: ApiIndexerEventsBody
+	): Promise<IndexerEventsWithCursor<PoolTradeEvent>> {
 		return this.fetchApiIndexerEvents<PoolTradeEvent>(
 			"events/trade",
 			inputs
 		);
 	}
 
-	// =========================================================================
-	//  Calculations
-	// =========================================================================
-
+	/**
+	 * Calculates the spot price for the pool.
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {CoinType} inputs.coinInType - The input coin type.
+	 * @param {CoinType} inputs.coinOutType - The output coin type.
+	 * @param {boolean} [inputs.withFees] - Whether to include fees in the calculation.
+	 * @returns {number} The spot price for the pool.
+	 */
 	public getSpotPrice = (inputs: {
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -157,11 +230,21 @@ export class Pool extends Caller {
 		);
 	};
 
+	// TODO: account for referral discount for all calculations
+
+	/**
+	 * Calculates the output amount for a trade.
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {CoinType} inputs.coinInType - The input coin type.
+	 * @param {Balance} inputs.coinInAmount - The input coin amount.
+	 * @param {CoinType} inputs.coinOutType - The output coin type.
+	 * @param {boolean} [inputs.referral] - Whether the trade includes a referral.
+	 * @returns {Balance} The output amount for the trade.
+	 */
 	public getTradeAmountOut = (inputs: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
-		// PRODUCTION: handle referral in calculation
 		referral?: boolean;
 	}): Balance => {
 		const pool = Helpers.deepCopy(this.pool);
@@ -202,11 +285,19 @@ export class Pool extends Caller {
 		return coinOutAmount;
 	};
 
+	/**
+	 * Calculates the input amount for a trade.
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {CoinType} inputs.coinInType - The input coin type.
+	 * @param {Balance} inputs.coinOutAmount - The output coin amount.
+	 * @param {CoinType} inputs.coinOutType - The output coin type.
+	 * @param {boolean} [inputs.referral] - Whether the trade includes a referral.
+	 * @returns {Balance} The input amount for the trade.
+	 */
 	public getTradeAmountIn = (inputs: {
 		coinInType: CoinType;
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
-		// PRODUCTION: handle referral in calculation
 		referral?: boolean;
 	}): Balance => {
 		const pool = Helpers.deepCopy(this.pool);
@@ -247,9 +338,15 @@ export class Pool extends Caller {
 		return coinInAmountWithoutFees;
 	};
 
+	/**
+	 * Calculates the LP amount and ratio for a deposit.
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {CoinsToBalance} inputs.amountsIn - The input amounts.
+	 * @param {boolean} [inputs.referral] - Whether the deposit includes a referral.
+	 * @returns {Object} The LP amount and ratio for the deposit.
+	 */
 	public getDepositLpAmountOut = (inputs: {
 		amountsIn: CoinsToBalance;
-		// PRODUCTION: account for referral in calculation
 		referral?: boolean;
 	}): {
 		lpAmountOut: Balance;
@@ -274,10 +371,17 @@ export class Pool extends Caller {
 		};
 	};
 
+	/**
+	 * Calculates the output amounts for a withdraw.
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {number} inputs.lpRatio - The LP ratio.
+	 * @param {CoinsToBalance} inputs.amountsOutDirection - The output amounts.
+	 * @param {boolean} [inputs.referral] - Whether the withdraw includes a referral.
+	 * @returns {CoinsToBalance} The output amounts for the withdraw.
+	 */
 	public getWithdrawAmountsOut = (inputs: {
 		lpRatio: number;
 		amountsOutDirection: CoinsToBalance;
-		// PRODUCTION: account for referral in calculation
 		referral?: boolean;
 	}): CoinsToBalance => {
 		const amountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
@@ -310,9 +414,15 @@ export class Pool extends Caller {
 		return amountsOut;
 	};
 
+	/**
+	 * Calculates the output amounts for an all coin withdraw.
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {number} inputs.lpRatio - The LP ratio.
+	 * @param {boolean} [inputs.referral] - Whether the withdraw includes a referral.
+	 * @returns {CoinsToBalance} The output amounts for the all coin withdraw.
+	 */
 	public getAllCoinWithdrawAmountsOut = (inputs: {
 		lpRatio: number;
-		// PRODUCTION: account for referral in calculation
 		referral?: boolean;
 	}): CoinsToBalance => {
 		if (inputs.lpRatio >= 1) throw new Error("lpRatio >= 1");
@@ -331,12 +441,24 @@ export class Pool extends Caller {
 		return amountsOut;
 	};
 
+	/**
+	 * Calculates the LP ratio for a multi-coin withdraw.
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {bigint} inputs.lpCoinAmountOut - The LP coin amount out.
+	 * @returns {number} The LP ratio for the multi-coin withdraw.
+	 */
 	public getMultiCoinWithdrawLpRatio = (inputs: {
 		lpCoinAmountOut: bigint;
 	}): number =>
 		Number(this.pool.lpCoinSupply - inputs.lpCoinAmountOut) /
 		Number(this.pool.lpCoinSupply);
 
+	/**
+	 * Calculates the LP ratio for an all coin withdraw.
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {bigint} inputs.lpCoinAmountOut - The LP coin amount out.
+	 * @returns {number} The LP ratio for the all coin withdraw.
+	 */
 	public getAllCoinWithdrawLpRatio = (inputs: {
 		lpCoinAmountOut: bigint;
 	}): number =>

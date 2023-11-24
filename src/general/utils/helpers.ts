@@ -12,6 +12,9 @@ import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { Casting } from "./casting";
 import { is } from "@mysten/sui.js/utils";
 
+/**
+ * A utility class containing various helper functions for general use.
+ */
 export class Helpers {
 	// =========================================================================
 	//  Api Helpers
@@ -27,10 +30,22 @@ export class Helpers {
 	//  Type Manipulation
 	// =========================================================================
 
+	/**
+	 * Removes leading zeroes from the hexadecimal representation of a given object type.
+	 * @param type - The object type to strip leading zeroes from.
+	 * @returns The object type with leading zeroes removed from its hexadecimal representation.
+	 */
 	public static stripLeadingZeroesFromType = (
 		type: AnyObjectType
 	): AnyObjectType => type.replaceAll(/x0+/g, "x");
 
+	/**
+	 * Adds leading zeroes to a given `AnyObjectType` until it reaches a length of 64 characters.
+	 * If the input type already has a length greater than 64, an error is thrown.
+	 * @param type - The `AnyObjectType` to add leading zeroes to.
+	 * @returns The modified `AnyObjectType` with leading zeroes added.
+	 * @throws An error if the input type has a length greater than 64.
+	 */
 	public static addLeadingZeroesToType = (
 		type: AnyObjectType
 	): AnyObjectType => {

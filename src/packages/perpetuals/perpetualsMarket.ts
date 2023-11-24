@@ -28,7 +28,7 @@ export class PerpetualsMarket extends Caller {
 	constructor(
 		public readonly marketId: bigint,
 		public readonly marketParams: PerpetualsMarketParams,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, `perpetuals/markets/${marketId}`);
 	}

@@ -17,7 +17,7 @@ class FlowXRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: FlowXPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: FlowXPoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
@@ -33,7 +33,7 @@ class FlowXRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = true;
 
 	readonly pool: FlowXPoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

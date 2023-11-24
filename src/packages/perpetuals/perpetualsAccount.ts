@@ -22,7 +22,7 @@ export class PerpetualsAccount extends Caller {
 		public readonly walletAddress: SuiAddress,
 		public readonly accountId: bigint,
 		public account: PerpetualsAccountStruct,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, `perpetuals/accounts/${walletAddress}/${accountId}`);
 	}

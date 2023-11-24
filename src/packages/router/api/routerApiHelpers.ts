@@ -74,7 +74,7 @@ export class RouterApiHelpers {
 
 	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
 		protocols: RouterProtocolName[];
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
 		coinInType: CoinType;
 		coinInAmount: Balance;
@@ -168,7 +168,7 @@ export class RouterApiHelpers {
 
 	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
 		protocols: RouterProtocolName[];
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
 		coinInType: CoinType;
 		coinOutAmount: Balance;
@@ -246,51 +246,6 @@ export class RouterApiHelpers {
 			? []
 			: finalCompleteRoutes;
 	};
-
-	// public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
-	// 	protocols: RouterProtocolName[];
-	// 	network: SuiNetwork | Url;
-	// 	graph: RouterSerializableCompleteGraph;
-	// 	coinInType: CoinType;
-	// 	coinInAmount: Balance;
-	// 	coinOutType: CoinType;
-	// 	referrer?: SuiAddress;
-	// 	externalFee?: RouterExternalFee;
-	// 	// TODO: add options to set all these params ?
-	// 	// maxRouteLength?: number,
-	// }): Promise<RouterCompleteTradeRoute> => {
-	// 	if (inputs.protocols.length === 0)
-	// 		throw new Error("no protocols set in constructor");
-
-	// 	const { network, graph, coinInAmount } = inputs;
-
-	// 	const coinInAmounts = RouterApiHelpers.amountsInForRouterTrade({
-	// 		coinInAmount,
-	// 	});
-
-	// 	const tradeResults = await this.AsyncHelpers.fetchTradeResults({
-	// 		...inputs,
-	// 		protocols: inputs.protocols.filter(isRouterAsyncProtocolName),
-	// 		coinInAmounts,
-	// 	});
-
-	// 	const routerGraph = new RouterGraph(network, graph);
-
-	// 	if (tradeResults.results.length <= 0)
-	// 		return routerGraph.getCompleteRouteGivenAmountIn(inputs);
-
-	// 	const synchronousCompleteRoutes =
-	// 		routerGraph.getCompleteRoutesGivenAmountIns({
-	// 			...inputs,
-	// 			coinInAmounts,
-	// 		});
-
-	// 	return RouterAsyncGraph.createFinalCompleteRoute({
-	// 		tradeResults,
-	// 		synchronousCompleteRoutes,
-	// 		coinInAmounts,
-	// 	});
-	// };
 
 	// =========================================================================
 	//  Transaction Builders

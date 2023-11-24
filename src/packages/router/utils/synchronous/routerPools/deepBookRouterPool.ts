@@ -17,7 +17,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: DeepBookPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: DeepBookPoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
@@ -33,7 +33,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = true;
 
 	readonly pool: DeepBookPoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

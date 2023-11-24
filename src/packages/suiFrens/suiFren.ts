@@ -25,7 +25,7 @@ export class SuiFren extends Caller {
 
 	constructor(
 		public readonly suiFren: SuiFrenObject,
-		public readonly network?: SuiNetwork | Url,
+		public readonly network?: SuiNetwork,
 		public readonly isStaked: boolean = false,
 		public readonly isOwned: boolean = false
 	) {
