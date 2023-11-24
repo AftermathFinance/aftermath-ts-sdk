@@ -27,14 +27,14 @@ import { DynamicGas } from "../dynamicGas/dynamicGas";
  * @example
  * ```
  * // Create provider
- * const aftermath = new Aftermath("TESTNET");
+ * const aftermath = new Aftermath("MAINNET");
  * // Create package provider
  * const router = aftermath.Router();
  * // Call sdk from package provider
  * const supportedCoins = await router.getSupportedCoins();
  *
  * // Or do it all in one go
- * const supportedCoins = await (new Aftermath("TESTNET")).Router().getSupportedCoins();
+ * const supportedCoins = await (new Aftermath("MAINNET")).Router().getSupportedCoins();
  * ```
  */
 export class Aftermath extends Caller {
@@ -48,7 +48,7 @@ export class Aftermath extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Aftermath` instance
 	 */
-	constructor(network?: SuiNetwork | Url) {
+	constructor(network?: SuiNetwork) {
 		super(network);
 	}
 

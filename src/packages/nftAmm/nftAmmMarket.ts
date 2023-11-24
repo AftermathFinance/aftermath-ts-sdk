@@ -34,7 +34,7 @@ export class NftAmmMarket extends Caller {
 
 	constructor(
 		public readonly market: NftAmmMarketObject,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, `nft-amm/markets/${market.objectId}`);
 		this.market = market;

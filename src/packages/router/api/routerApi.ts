@@ -206,7 +206,7 @@ export class RouterApi {
 	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
 	 */
 	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
 		coinInType: CoinType;
 		coinInAmount: Balance;
@@ -226,7 +226,7 @@ export class RouterApi {
 	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
 	 */
 	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
 		coinInType: CoinType;
 		coinOutAmount: Balance;
@@ -287,7 +287,7 @@ export class RouterApi {
 	public async fetchAddDynamicGasRouteToTxKind(
 		inputs: Omit<ApiRouterDynamicGasBody, "coinOutAmount"> & {
 			coinOutAmount: Balance;
-			network: SuiNetwork | Url;
+			network: SuiNetwork;
 			graph: RouterSerializableCompleteGraph;
 		}
 	): Promise<TxBytes> {

@@ -68,7 +68,7 @@ export class RouterGraph {
 	// =========================================================================
 
 	constructor(
-		network: SuiNetwork | Url,
+		network: SuiNetwork,
 		graph: RouterSerializableCompleteGraph,
 		private options: RouterSynchronousOptions
 	) {
@@ -200,7 +200,7 @@ export class RouterGraph {
 
 	public static graphFromSerializable(inputs: {
 		graph: RouterSerializableCompleteGraph;
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 	}): RouterCompleteGraph {
 		const pools: RouterPoolsById = Object.entries(
 			inputs.graph.pools

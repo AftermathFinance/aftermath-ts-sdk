@@ -18,7 +18,7 @@ export class Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork | Url,
+		public readonly network?: SuiNetwork,
 		private readonly apiUrlPrefix: Url = ""
 	) {
 		this.apiBaseUrl =
@@ -45,7 +45,7 @@ export class Caller {
 	//  Api Calling
 	// =========================================================================
 
-	private static apiBaseUrlForNetwork(network: SuiNetwork | Url): Url {
+	private static apiBaseUrlForNetwork(network: SuiNetwork): Url {
 		if (network === "MAINNET") return "https://aftermath.finance";
 		if (network === "TESTNET") return "https://testnet.aftermath.finance";
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";

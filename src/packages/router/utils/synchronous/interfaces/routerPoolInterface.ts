@@ -62,7 +62,7 @@ export interface RouterPoolTradeTxInputs {
 export function createRouterPool(inputs: {
 	pool: RouterSerializablePool;
 	// NOTE: should this be optional and passed in only upon transaction creation or another way ?
-	network: SuiNetwork | Url;
+	network: SuiNetwork;
 }): RouterPoolInterface {
 	const { pool, network } = inputs;
 
@@ -107,7 +107,7 @@ export function createRouterPool(inputs: {
 // interface RouterPoolConstructor {
 // 	new (
 // 		pool: RouterSerializablePool,
-// 		network: SuiNetwork | Url
+// 		network: SuiNetwork
 // 	): RouterPoolInterface;
 // }
 
@@ -126,7 +126,7 @@ export interface RouterPoolInterface {
 
 	readonly protocolName: RouterProtocolName;
 	readonly pool: RouterSerializablePool;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly expectedGasCostPerHop: Balance; // in SUI
 	readonly coinTypes: CoinType[];

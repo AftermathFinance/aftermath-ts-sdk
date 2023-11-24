@@ -54,7 +54,7 @@ export class Staking extends Caller {
 	 * Creates a new instance of the Staking class.
 	 * @param network - The network to use for interacting with the Staking contract.
 	 */
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "staking");
 	}
 

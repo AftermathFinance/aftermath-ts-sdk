@@ -74,7 +74,7 @@ export class RouterApiHelpers {
 
 	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
 		protocols: RouterProtocolName[];
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
 		coinInType: CoinType;
 		coinInAmount: Balance;
@@ -168,7 +168,7 @@ export class RouterApiHelpers {
 
 	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
 		protocols: RouterProtocolName[];
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
 		coinInType: CoinType;
 		coinOutAmount: Balance;

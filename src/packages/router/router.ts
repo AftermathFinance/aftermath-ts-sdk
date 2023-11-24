@@ -24,7 +24,7 @@ import { Caller } from "../../general/utils/caller";
  * @example
  * ```
  * // Create provider
- * const router = (new Aftermath("TESTNET")).Router();
+ * const router = (new Aftermath("MAINNET")).Router();
  * // Call sdk
  * const supportedCoins = await router.getSupportedCoins();
  * ```
@@ -51,7 +51,7 @@ export class Router extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Router` instance
 	 */
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "router");
 	}
 

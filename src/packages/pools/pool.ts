@@ -45,11 +45,11 @@ export class Pool extends Caller {
 	 * Creates a new instance of the Pool class.
 	 * @constructor
 	 * @param {PoolObject} pool - The pool object.
-	 * @param {SuiNetwork | Url} [network] - The network to use.
+	 * @param {SuiNetwork} [network] - The network to use.
 	 */
 	constructor(
 		public readonly pool: PoolObject,
-		public readonly network?: SuiNetwork | Url
+		public readonly network?: SuiNetwork
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;

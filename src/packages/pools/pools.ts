@@ -28,7 +28,7 @@ import { Fixed } from "../../general/utils/fixed";
  * @example
  * ```
  * // Create provider
- * const pools = (new Aftermath("TESTNET")).Pools();
+ * const pools = (new Aftermath("MAINNET")).Pools();
  * // Call sdk
  * const pool = await pools.getPool({ objectId: "0xBEEF" });
  * ```
@@ -79,7 +79,7 @@ export class Pools extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Pools` instance
 	 */
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "pools");
 	}
 

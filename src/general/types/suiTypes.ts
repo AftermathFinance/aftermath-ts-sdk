@@ -4,7 +4,12 @@ import { Balance, ObjectId } from "./generalTypes";
 //  Network
 // =========================================================================
 
-export type SuiNetwork = "DEVNET" | "TESTNET" | "LOCAL" | "MAINNET";
+export type SuiNetwork =
+	| "DEVNET"
+	| "TESTNET"
+	| "LOCAL"
+	| "MAINNET"
+	| (string & {});
 
 // =========================================================================
 //  Objects
