@@ -70,6 +70,8 @@ export interface LeveragedStakingAddresses {
 	};
 	objects: {
 		leveragedAfSuiState: ObjectId;
+		afSuiSuiPoolId: ObjectId;
+		aftermathValidator: ObjectId;
 	};
 }
 

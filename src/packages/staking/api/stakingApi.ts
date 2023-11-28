@@ -876,8 +876,9 @@ export class StakingApi
 		});
 		if (recentEpochChanges.events.length <= 2) return 0;
 
+		const daysInYear = 365;
 		const avgApy =
-			Helpers.sum(
+			(Helpers.sum(
 				recentEpochChanges.events.slice(2).map((event, index) => {
 					const currentRate = Number(event.totalAfSuiSupply)
 						? Number(event.totalSuiAmount) /
@@ -893,7 +894,8 @@ export class StakingApi
 					return (currentRate - pastRate) / pastRate;
 				})
 			) /
-			(recentEpochChanges.events.length - 2);
+				(recentEpochChanges.events.length - 2)) *
+			daysInYear;
 
 		return avgApy;
 	};

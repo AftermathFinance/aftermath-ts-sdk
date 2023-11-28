@@ -38,12 +38,8 @@ export class LeveragedStakingApiCasting {
 			obligationKeyId: Helpers.addLeadingZeroesToType(
 				fields.obligation_key.fields.id.id
 			),
-			baseAfSuiCollateral: BigInt(
-				fields.base_afsui_collateral
-			),
-			afSuiCollateral: BigInt(
-				fields.total_afsui_collateral
-			),
+			baseAfSuiCollateral: BigInt(fields.base_afsui_collateral),
+			afSuiCollateral: BigInt(fields.total_afsui_collateral),
 			suiDebt: BigInt(fields.total_sui_debt),
 		};
 	};
