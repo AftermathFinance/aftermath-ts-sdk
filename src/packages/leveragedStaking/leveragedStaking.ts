@@ -98,15 +98,34 @@ export class LeveragedStaking extends Caller {
 	// =========================================================================
 
 	public static calcLeverage = (inputs: {
-		totalSuiDebt: Balance;
 		totalAfSuiCollateral: Balance;
+		totalSuiDebt: Balance;
+		afSuiToSuiExchangeRate: number;
 	}): number => {
-		if (inputs.totalAfSuiCollateral === BigInt(0)) return 1;
+		if (inputs.totalAfSuiCollateral === BigInt(0) || inputs.totalSuiDebt === BigInt(0)) return 1;
+
+		return LeveragedStaking.calcLeverageNormalized({
+			normalizedTotalSuiDebt: inputs.totalSuiDebt,
+			normalizedTotalAfSuiCollateral: BigInt(
+				Math.floor(
+					Number(inputs.totalAfSuiCollateral)
+					* inputs.afSuiToSuiExchangeRate
+				)
+			),
+		});
+	};
+
+	public static calcLeverageNormalized = (inputs: {
+		normalizedTotalAfSuiCollateral: Balance;
+		normalizedTotalSuiDebt: Balance;
+	}): number => {
+		if (inputs.normalizedTotalAfSuiCollateral === BigInt(0) || inputs.normalizedTotalSuiDebt === BigInt(0)) return 1;
+
 		return (
 			1 /
 			(1 -
-				Number(inputs.totalSuiDebt) /
-					Number(inputs.totalAfSuiCollateral))
+				Number(inputs.normalizedTotalAfSuiCollateral) /
+					Number(inputs.normalizedTotalSuiDebt))
 		);
 	};
 
