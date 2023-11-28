@@ -625,7 +625,6 @@ export class LeveragedStakingApi {
 		totalAfSuiCollateral: Balance;
 		totalSuiDebt: Balance;
 		leverage: number;
-		slippage: Percentage;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}) => {
@@ -637,7 +636,6 @@ export class LeveragedStakingApi {
 			obligationId,
 			stakeAmount,
 			isSponsoredTx,
-			slippage,
 		} = inputs;
 
 		const tx = scallopTx.txBlock;
@@ -672,7 +670,6 @@ export class LeveragedStakingApi {
 
 			const swapOrStakeResult = await this.swapOrStakeSuiToAfSui({
 				tx,
-				slippage,
 				suiAmount: stakeAmount,
 				suiCoinId: suiCoin,
 			});
@@ -920,9 +917,8 @@ export class LeveragedStakingApi {
 		totalAfSuiCollateral: Balance;
 		totalSuiDebt: Balance;
 		newLeverage: number;
-		slippage: Percentage;
 	}) => {
-		const { scallopTx, slippage } = inputs;
+		const { scallopTx } = inputs;
 
 		const tx = scallopTx.txBlock;
 
@@ -958,7 +954,6 @@ export class LeveragedStakingApi {
 
 		const { afSuiCoinId } = await this.swapOrStakeSuiToAfSui({
 			tx,
-			slippage,
 			suiAmount: flashLoanAmount,
 			suiCoinId: flashLoanedSuiCoinId,
 		});
@@ -1222,12 +1217,13 @@ export class LeveragedStakingApi {
 		tx: TransactionBlock;
 		suiAmount: Balance;
 		suiCoinId: ObjectId | TransactionObjectArgument;
-		slippage: Percentage;
 	}): Promise<{
 		afSuiCoinId: TransactionObjectArgument;
 		minAmountOut: Balance;
 	}> => {
-		const { tx, suiAmount, suiCoinId, slippage } = inputs;
+		const { tx, suiAmount, suiCoinId } = inputs;
+
+		const estimatedSlippageLowerBound = 0.0001; // 0.01%
 
 		let afSuiCoinId: TransactionObjectArgument;
 		let minAmountOut: Balance;
@@ -1263,14 +1259,14 @@ export class LeveragedStakingApi {
 								this.Provider.Staking().coinTypes.afSui,
 						})
 					) *
-						(1 - slippage)
+						(1 - estimatedSlippageLowerBound)
 				)
 			);
 
 			afSuiCoinId = await this.Provider.Pools().fetchAddTradeTx({
 				tx,
 				pool,
-				slippage,
+				slippage: 1, // 100%
 				coinInAmount: suiAmount,
 				coinInId: suiCoinId,
 				coinInType: Coin.constants.suiCoinType,
