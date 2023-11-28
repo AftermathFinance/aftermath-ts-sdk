@@ -42,7 +42,7 @@ import {
 } from "./leveragedStakingApiCastingTypes";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
-import { Pool } from "../..";
+import { Pool, Staking } from "../..";
 
 // TODO(Kevin): remove.
 import { bcs } from "@mysten/sui.js/bcs";
@@ -547,6 +547,7 @@ export class LeveragedStakingApi {
 		stakeAmount: Balance;
 		stakeCoinType: "sui" | "afsui";
 		leverage: number;
+		slippage: Percentage;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
@@ -595,6 +596,7 @@ export class LeveragedStakingApi {
 		totalAfSuiCollateral: Balance;
 		totalSuiDebt: Balance;
 		leverage: number;
+		slippage: Percentage;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
@@ -623,6 +625,7 @@ export class LeveragedStakingApi {
 		totalAfSuiCollateral: Balance;
 		totalSuiDebt: Balance;
 		leverage: number;
+		slippage: Percentage;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}) => {
@@ -634,6 +637,7 @@ export class LeveragedStakingApi {
 			obligationId,
 			stakeAmount,
 			isSponsoredTx,
+			slippage,
 		} = inputs;
 
 		const tx = scallopTx.txBlock;
@@ -646,41 +650,44 @@ export class LeveragedStakingApi {
 				referrer,
 			});
 
-		let newBaseAfSuiCollateral;
+		let newBaseAfSuiCollateral: Balance;
 		let afSuiCoinId;
 		// i. Obtain the amount and ID of the afSUI collateral to be deposited. The user can choose to
 		//  leverage stake starting in SUI in which case their SUI needs to be staked to afSUI.
 		if (inputs.stakeCoinType === "sui") {
 			// ia. If the input was denominated in SUI, stake to afSUI.
-			newBaseAfSuiCollateral = this.Provider.Staking().suiToAfSuiTx({
-				tx,
-				suiAmount: stakeAmount,
-			});
+
+			// newBaseAfSuiCollateral = this.Provider.Staking().suiToAfSuiTx({
+			// 	tx,
+			// 	suiAmount: stakeAmount,
+			// });
 
 			const suiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
 				tx,
-				walletAddress: walletAddress,
+				walletAddress,
+				isSponsoredTx,
 				coinType: Coin.constants.suiCoinType,
 				coinAmount: stakeAmount,
-				isSponsoredTx: isSponsoredTx,
 			});
 
-			afSuiCoinId = this.Provider.Staking().stakeTx({
+			const swapOrStakeResult = await this.swapOrStakeSuiToAfSui({
 				tx,
-				validatorAddress:
-					this.addresses.leveragedStaking.objects.aftermathValidator,
-				suiCoin,
+				slippage,
+				suiAmount: stakeAmount,
+				suiCoinId: suiCoin,
 			});
+			newBaseAfSuiCollateral = swapOrStakeResult.minAmountOut;
+			afSuiCoinId = swapOrStakeResult.afSuiCoinId;
 		} else {
 			// ib. Obtain afSUI coin with `stakeAmount` value.
 			newBaseAfSuiCollateral = stakeAmount;
 
 			afSuiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 				tx,
-				walletAddress: walletAddress,
+				walletAddress,
+				isSponsoredTx,
 				coinType: this.Provider.Staking().coinTypes.afSui,
 				coinAmount: stakeAmount,
-				isSponsoredTx: isSponsoredTx,
 			});
 		}
 
@@ -913,8 +920,9 @@ export class LeveragedStakingApi {
 		totalAfSuiCollateral: Balance;
 		totalSuiDebt: Balance;
 		newLeverage: number;
+		slippage: Percentage;
 	}) => {
-		const { scallopTx } = inputs;
+		const { scallopTx, slippage } = inputs;
 
 		const tx = scallopTx.txBlock;
 
@@ -948,21 +956,18 @@ export class LeveragedStakingApi {
 			"sui"
 		);
 
-		// TODO(Collin): Stake OR swap (to account for when `flashLoanAmount` < `minimum_stake_amount`).
-		//
-		// iii. Stake SUI into afSUI.
-		const stakedAfSuiCoinId = this.Provider.Staking().stakeTx({
+		const { afSuiCoinId } = await this.swapOrStakeSuiToAfSui({
 			tx,
-			validatorAddress:
-				this.addresses.leveragedStaking.objects.aftermathValidator,
-			suiCoin: flashLoanedSuiCoinId,
+			slippage,
+			suiAmount: flashLoanAmount,
+			suiCoinId: flashLoanedSuiCoinId,
 		});
 
 		// iv. Deposit the staked afSUI as collateral on Scallop.
 		this.depositAfSuiCollateralTx({
 			...inputs,
 			tx,
-			afSuiCoinId: stakedAfSuiCoinId,
+			afSuiCoinId,
 			obligationId: inputs.obligationId,
 		});
 
@@ -1066,10 +1071,7 @@ export class LeveragedStakingApi {
 			withdrawAmount: decreaseInAfSuiCollateral,
 		});
 
-		// TODO(Collin): Instant unstake or swap afSUI back into SUI.
-		//
 		// v. Convert `decreaseInCollateralAmount` of withdrawn collateral into SUI.
-
 		const poolObject = await this.Provider.Pools().fetchPool({
 			objectId: this.addresses.leveragedStaking.objects.afSuiSuiPoolId,
 		});
@@ -1211,6 +1213,72 @@ export class LeveragedStakingApi {
 		}
 		return timeData;
 	}
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private swapOrStakeSuiToAfSui = async (inputs: {
+		tx: TransactionBlock;
+		suiAmount: Balance;
+		suiCoinId: ObjectId | TransactionObjectArgument;
+		slippage: Percentage;
+	}): Promise<{
+		afSuiCoinId: TransactionObjectArgument;
+		minAmountOut: Balance;
+	}> => {
+		const { tx, suiAmount, suiCoinId, slippage } = inputs;
+
+		let afSuiCoinId: TransactionObjectArgument;
+		let minAmountOut: Balance;
+		if (suiAmount >= Staking.constants.bounds.minStake) {
+			// Stake SUI into afSUI.
+			afSuiCoinId = this.Provider.Staking().stakeTx({
+				tx,
+				validatorAddress:
+					this.addresses.leveragedStaking.objects.aftermathValidator,
+				suiCoin: suiCoinId,
+			});
+
+			const afSuiToSuiExchangeRate =
+				await this.Provider.Staking().fetchAfSuiToSuiExchangeRate();
+
+			minAmountOut = BigInt(
+				Math.floor(Number(suiAmount) * afSuiToSuiExchangeRate)
+			);
+		} else {
+			const poolObject = await this.Provider.Pools().fetchPool({
+				objectId:
+					this.addresses.leveragedStaking.objects.afSuiSuiPoolId,
+			});
+			const pool = new Pool(poolObject);
+
+			minAmountOut = BigInt(
+				Math.floor(
+					Number(
+						pool.getTradeAmountOut({
+							coinInAmount: suiAmount,
+							coinInType: Coin.constants.suiCoinType,
+							coinOutType:
+								this.Provider.Staking().coinTypes.afSui,
+						})
+					) *
+						(1 - slippage)
+				)
+			);
+
+			afSuiCoinId = await this.Provider.Pools().fetchAddTradeTx({
+				tx,
+				pool,
+				slippage,
+				coinInAmount: suiAmount,
+				coinInId: suiCoinId,
+				coinInType: Coin.constants.suiCoinType,
+				coinOutType: this.Provider.Staking().coinTypes.afSui,
+			});
+		}
+		return { afSuiCoinId, minAmountOut };
+	};
 
 	// =========================================================================
 	//  Event Types
