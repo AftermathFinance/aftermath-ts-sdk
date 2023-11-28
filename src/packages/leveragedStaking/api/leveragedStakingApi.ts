@@ -1153,7 +1153,7 @@ export class LeveragedStakingApi {
 	public async fetchPerformanceData(
 		inputs: LeveragedStakingPerformanceDataBody
 	): Promise<LeveragedStakingPerformanceDataPoint[]> {
-		const { timeframe, borrowRate } = inputs;
+		const { timeframe, borrowRate, maxLeverage } = inputs;
 
 		dayjs.extend(duration);
 		const limit = // days ~ epochs
@@ -1192,9 +1192,7 @@ export class LeveragedStakingApi {
 					time: event.timestamp ?? 0,
 					sui: 0,
 					afSui: afSuiApy,
-					leveragedAfSui:
-						(afSuiApy - borrowRate) *
-						LeveragedStaking.constants.bounds.maxLeverage,
+					leveragedAfSui: (afSuiApy - borrowRate) * maxLeverage,
 				};
 			});
 

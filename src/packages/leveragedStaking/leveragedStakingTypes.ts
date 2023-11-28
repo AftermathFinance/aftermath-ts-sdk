@@ -113,4 +113,5 @@ export type ApiLeveragedStakePositionResponse = LeveragedAfSuiPosition | "none";
 export interface LeveragedStakingPerformanceDataBody {
 	timeframe: LeveragedStakingPerformanceGraphDataTimeframeKey;
 	borrowRate: Percentage;
+	maxLeverage: number;
 }

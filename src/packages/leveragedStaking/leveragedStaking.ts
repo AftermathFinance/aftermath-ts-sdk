@@ -19,11 +19,7 @@ export class LeveragedStaking extends Caller {
 	//  Constants
 	// =========================================================================
 
-	public static readonly constants = {
-		bounds: {
-			maxLeverage: 2.5,
-		},
-	};
+	// public static readonly constants = {};
 
 	// =========================================================================
 	//  Constructor
@@ -85,7 +81,7 @@ export class LeveragedStaking extends Caller {
 		inputs: LeveragedStakingPerformanceDataBody
 	): Promise<LeveragedStakingPerformanceDataPoint[]> {
 		return this.fetchApi(
-			`performance-data/${inputs.timeframe}/${inputs.borrowRate}`
+			`performance-data/${inputs.timeframe}/${inputs.borrowRate}/${inputs.maxLeverage}`
 		);
 	}
 
@@ -102,50 +98,53 @@ export class LeveragedStaking extends Caller {
 		totalSuiDebt: Balance;
 		afSuiToSuiExchangeRate: number;
 	}): number => {
-		if (
-			inputs.totalAfSuiCollateral === BigInt(0) ||
-			inputs.totalSuiDebt === BigInt(0)
-		)
-			return 1;
-
 		return LeveragedStaking.calcLeverageNormalized({
 			normalizedTotalSuiDebt: inputs.totalSuiDebt,
 			normalizedTotalAfSuiCollateral: BigInt(
 				Math.floor(
-					Number(inputs.totalAfSuiCollateral) *
+					Number(inputs.totalAfSuiCollateral) /
 						inputs.afSuiToSuiExchangeRate
 				)
 			),
 		});
 	};
 
-	public static calcLeverageNormalized = (inputs: {
-		normalizedTotalAfSuiCollateral: Balance;
-		normalizedTotalSuiDebt: Balance;
-	}): number => {
-		if (
-			inputs.normalizedTotalAfSuiCollateral === BigInt(0) ||
-			inputs.normalizedTotalSuiDebt === BigInt(0)
-		)
-			return 1;
-
-		return (
-			1 /
-			(1 -
-				Number(inputs.normalizedTotalAfSuiCollateral) /
-					Number(inputs.normalizedTotalSuiDebt))
-		);
-	};
-
 	public static calcTotalSuiDebt = (inputs: {
 		leverage: number;
 		totalAfSuiCollateral: Balance;
+		afSuiToSuiExchangeRate: number;
 	}): Balance => {
 		return BigInt(
 			Math.floor(
 				Number(inputs.totalAfSuiCollateral) *
+					inputs.afSuiToSuiExchangeRate *
 					(1 - (inputs.leverage ? 1 / inputs.leverage : 0))
 			)
+		);
+	};
+
+	// =========================================================================
+	//  Private Static Methods
+	// =========================================================================
+
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
+
+	private static calcLeverageNormalized = (inputs: {
+		normalizedTotalAfSuiCollateral: Balance;
+		normalizedTotalSuiDebt: Balance;
+	}): number => {
+		const normalizedTotalAfSuiCollateralNum = Number(
+			inputs.normalizedTotalAfSuiCollateral
+		);
+		if (!normalizedTotalAfSuiCollateralNum) return 1;
+
+		return (
+			1 /
+			(1 -
+				Number(inputs.normalizedTotalSuiDebt) /
+					normalizedTotalAfSuiCollateralNum)
 		);
 	};
 }
