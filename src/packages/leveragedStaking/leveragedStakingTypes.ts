@@ -10,6 +10,7 @@ import {
 	Timestamp,
 } from "../../general/types/generalTypes";
 import { ManipulateType } from "dayjs";
+import { LeveragedStakingApi } from "./api/leveragedStakingApi";
 
 // =========================================================================
 //  Scallop
@@ -64,6 +65,30 @@ export interface LeveragedStakeChangedLeverageEvent extends Event {
 	newLeverage: number;
 }
 
+export const isLeveragedStakedEvent = (
+	event: LeveragedStakingEvent
+): event is LeveragedStakedEvent => {
+	return event.type.includes(
+		LeveragedStakingApi.constants.eventNames.leveragedStaked
+	);
+};
+
+export const isLeveragedUnstakedEvent = (
+	event: LeveragedStakingEvent
+): event is LeveragedUnstakedEvent => {
+	return event.type.includes(
+		LeveragedStakingApi.constants.eventNames.leveragedUnstaked
+	);
+};
+
+export const isLeveragedStakeChangedLeverageEvent = (
+	event: LeveragedStakingEvent
+): event is LeveragedStakeChangedLeverageEvent => {
+	return event.type.includes(
+		LeveragedStakingApi.constants.eventNames.leverageChanged
+	);
+};
+
 // =========================================================================
 //  Graph Data
 // =========================================================================
@@ -94,17 +119,9 @@ export type ApiLeveragedStakePositionResponse = LeveragedAfSuiPosition | "none";
 //  Objects API
 // =========================================================================
 
-// export interface asdfApiStakingPositionsBody {
-// 	walletAddress: SuiAddress;
-// }
-
 // =========================================================================
 //  Events API
 // =========================================================================
-
-// export type asdfApiStakingEventsBody = ApiEventsBody & {
-// 	walletAddress: SuiAddress;
-// };
 
 // =========================================================================
 //  Graph Data API

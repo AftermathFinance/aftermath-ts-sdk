@@ -53,7 +53,7 @@ export class LeveragedStakingApi {
 	//  Constants
 	// =========================================================================
 
-	private static readonly constants = {
+	public static readonly constants = {
 		moduleNames: {
 			leveragedAfSuiPosition: "leveraged_afsui_position",
 			leveragedAfSuiState: "leveraged_afsui_state",
