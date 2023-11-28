@@ -29,13 +29,9 @@ export interface LeveragedAfSuiPositionFieldsOnChain {
 			};
 		};
 	};
-	position_metadata: {
-		fields: {
-			base_afsui_collateral: BigIntAsString;
-			total_afsui_collateral: BigIntAsString;
-			total_sui_debt: BigIntAsString;
-		};
-	};
+	base_afsui_collateral: BigIntAsString;
+	total_afsui_collateral: BigIntAsString;
+	total_sui_debt: BigIntAsString;
 }
 
 export interface LeveragedAfSuiStateFieldsOnChain {
