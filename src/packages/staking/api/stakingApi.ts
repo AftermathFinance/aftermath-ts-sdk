@@ -870,7 +870,9 @@ export class StakingApi
 	// =========================================================================
 
 	public liquidStakingApy = async (): Promise<number> => {
-		const limit = 30; // ~30 days/epochs of data
+		const limit = 30 + 2; // ~30 days/epochs of data
+		// + 2 to account for apy being calculated from events delta
+		// (and possible initial 0 afsui supply)
 		const recentEpochChanges = await this.fetchEpochWasChangedEvents({
 			limit,
 		});
@@ -885,7 +887,7 @@ export class StakingApi
 						  Number(event.totalAfSuiSupply)
 						: 1;
 
-					const pastEvent = recentEpochChanges.events[index];
+					const pastEvent = recentEpochChanges.events[index + 1];
 					const pastRate = Number(pastEvent.totalAfSuiSupply)
 						? Number(pastEvent.totalSuiAmount) /
 						  Number(pastEvent.totalAfSuiSupply)

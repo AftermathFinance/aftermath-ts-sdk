@@ -1159,8 +1159,9 @@ export class LeveragedStakingApi {
 					LeveragedStakingApi.dataTimeframesToDays[timeframe],
 					"days"
 				)
-				// + 1 to account for apy being calculated from events delta
-				.asDays() + 1;
+				// + 2 to account for apy being calculated from events delta
+				// (and possible initial 0 afsui supply)
+				.asDays() + 2;
 
 		// TODO: fetch borrow rate historically once scallop implements
 		const [recentEpochChanges] = await Promise.all([
@@ -1170,6 +1171,7 @@ export class LeveragedStakingApi {
 		]);
 		if (recentEpochChanges.events.length <= 2) return [];
 
+		const daysInYear = 365;
 		const timeData = recentEpochChanges.events
 			.slice(2)
 			.map((event, index) => {
@@ -1178,34 +1180,24 @@ export class LeveragedStakingApi {
 					  Number(event.totalAfSuiSupply)
 					: 1;
 
-				const pastEvent = recentEpochChanges.events[index];
+				const pastEvent = recentEpochChanges.events[index + 1];
 				const pastRate = Number(pastEvent.totalAfSuiSupply)
 					? Number(pastEvent.totalSuiAmount) /
 					  Number(pastEvent.totalAfSuiSupply)
 					: 1;
 
-				const afSuiApy = (currentRate - pastRate) / pastRate;
+				const afSuiApy =
+					((currentRate - pastRate) / pastRate) * daysInYear;
 				return {
 					time: event.timestamp ?? 0,
 					sui: 0,
 					afSui: afSuiApy,
-					leveragedAfSui: (afSuiApy - borrowRate) * maxLeverage,
+					leveragedAfSui:
+						maxLeverage *
+						(afSuiApy - borrowRate * (1 - 1 / maxLeverage)),
 				};
 			});
 
-		for (const [index, dataPoint] of timeData.entries()) {
-			if (index === 0) continue;
-
-			const pastDataPoint = timeData[index - 1];
-
-			timeData[index] = {
-				...dataPoint,
-				afSui: pastDataPoint.afSui * (1 + dataPoint.afSui),
-				leveragedAfSui:
-					pastDataPoint.leveragedAfSui *
-					(1 + dataPoint.leveragedAfSui),
-			};
-		}
 		return timeData;
 	}
 
