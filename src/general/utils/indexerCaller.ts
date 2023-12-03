@@ -147,7 +147,6 @@ export class IndexerCaller {
 						Accept: "*/*",
 					},
 			  }));
-
 		if (noNestedData) {
 			return IndexerCaller.fetchResponseToType<Output>(uncastResponse);
 		}
