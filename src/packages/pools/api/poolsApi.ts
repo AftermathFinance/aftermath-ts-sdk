@@ -1357,6 +1357,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		};
 	};
 
+	/**
+	 * Fetches the pool volume for a given pool and duration.
+	 * @param inputs - The inputs for fetching the pool volume.
+	 * @returns A Promise that resolves to a CoinsToBalance object representing the pool volume.
+	 */
 	public fetchPoolVolume = async (inputs: {
 		poolId: ObjectId;
 		durationMs: number;
@@ -1369,6 +1374,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return this.volumeResponseToCoinsToBalance({ response });
 	};
 
+	/**
+	 * Fetches the total volume of swaps within a specified duration.
+	 * @param inputs - The inputs for fetching the total volume.
+	 * @returns A Promise that resolves to a CoinsToBalance object representing the total volume.
+	 */
 	public fetchTotalVolume = async (inputs: {
 		durationMs: number;
 	}): Promise<CoinsToBalance> => {
@@ -1670,13 +1680,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 	// NOTE: should this volume calculation also take into account deposits and withdraws
 	// (not just swaps) ?
-	// /**
-	//  * Calculates the total volume of a pool based on the provided trade events, coins to price, and coins to decimals.
-	//  * @param tradeEvents - An array of PoolTradeEvent objects representing the trades made in the pool.
-	//  * @param coinsToPrice - An object mapping coin types to their respective prices.
-	//  * @param coinsToDecimals - An object mapping coin types to their respective decimal places.
-	//  * @returns The total volume of the pool in USD.
-	//  */
 	private calcPoolVolumeUsd = (inputs: {
 		coinsToVolume: CoinsToBalance;
 		coinsToPrice: CoinsToPrice;
