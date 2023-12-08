@@ -196,7 +196,7 @@ export class Pools extends Caller {
 	 * @returns A Promise that resolves to a number representing the total volume.
 	 */
 	public getTotalVolume24hrs = async (): Promise<number> => {
-		return this.fetchApi("total-volume-24hrs");
+		return this.fetchApi("volume-24hrs");
 	};
 
 	// =========================================================================

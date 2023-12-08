@@ -1657,6 +1657,33 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		)})`;
 	};
 
+	/**
+	 * Calculates the total volume of a pool in USD.
+	 *
+	 * @param inputs - The input parameters for the calculation.
+	 * @param inputs.coinsToVolume - The mapping of coin types to their respective volumes.
+	 * @param inputs.coinsToPrice - The mapping of coin types to their respective prices.
+	 * @param inputs.coinsToDecimals - The mapping of coin types to their respective decimal places.
+	 * @returns The total volume of the pool in USD.
+	 */
+	public calcPoolVolumeUsd = (inputs: {
+		coinsToVolume: CoinsToBalance;
+		coinsToPrice: CoinsToPrice;
+		coinsToDecimals: Record<CoinType, CoinDecimal>;
+	}): number => {
+		const { coinsToVolume, coinsToPrice, coinsToDecimals } = inputs;
+		let volumeUsd = 0;
+		for (const [coinType, volume] of Object.entries(coinsToVolume)) {
+			const decimals = coinsToDecimals[coinType];
+			const tradeAmount = Coin.balanceWithDecimals(volume, decimals);
+
+			const coinInPrice = coinsToPrice[coinType];
+			const amountUsd = coinInPrice < 0 ? 0 : tradeAmount * coinInPrice;
+			volumeUsd += amountUsd;
+		}
+		return volumeUsd;
+	};
+
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================
@@ -1676,26 +1703,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				),
 			};
 		}, {} as CoinsToBalance);
-	};
-
-	// NOTE: should this volume calculation also take into account deposits and withdraws
-	// (not just swaps) ?
-	private calcPoolVolumeUsd = (inputs: {
-		coinsToVolume: CoinsToBalance;
-		coinsToPrice: CoinsToPrice;
-		coinsToDecimals: Record<CoinType, CoinDecimal>;
-	}): number => {
-		const { coinsToVolume, coinsToPrice, coinsToDecimals } = inputs;
-		let volumeUsd = 0;
-		for (const [coinType, volume] of Object.entries(coinsToVolume)) {
-			const decimals = coinsToDecimals[coinType];
-			const tradeAmount = Coin.balanceWithDecimals(volume, decimals);
-
-			const coinInPrice = coinsToPrice[coinType];
-			const amountUsd = coinInPrice < 0 ? 0 : tradeAmount * coinInPrice;
-			volumeUsd += amountUsd;
-		}
-		return volumeUsd;
 	};
 
 	// =========================================================================
