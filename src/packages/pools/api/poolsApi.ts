@@ -46,6 +46,7 @@ import {
 	PoolLpInfo,
 } from "../../../types";
 import {
+	IndexerVolumeResponse,
 	PoolDepositEventOnChain,
 	PoolTradeEventOnChain,
 	PoolTradeEventOnChainFields,
@@ -1302,20 +1303,23 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 */
 	public fetchPoolStats = async (inputs: {
 		pool: Pool;
-		tradeEventsWithinTime: PoolTradeEvent[];
 		coinsToPrice: CoinsToPrice;
 		coinsToDecimals: CoinsToDecimals;
 	}): Promise<PoolStats> => {
-		const { pool, tradeEventsWithinTime, coinsToPrice, coinsToDecimals } =
-			inputs;
+		const { pool, coinsToPrice, coinsToDecimals } = inputs;
 
 		const poolCoins = pool.pool.coins;
 
-		const volume = this.fetchCalcPoolVolume(
-			tradeEventsWithinTime,
+		const durationMs24hrs = 86400000;
+		const coinsToVolume = await this.fetchPoolVolume({
+			poolId: pool.pool.objectId,
+			durationMs: durationMs24hrs,
+		});
+		const volume = this.calcPoolVolumeUsd({
+			coinsToVolume,
+			coinsToDecimals,
 			coinsToPrice,
-			coinsToDecimals
-		);
+		});
 
 		const tvl = await this.fetchCalcPoolTvl({
 			poolCoins: pool.pool.coins,
@@ -1353,37 +1357,27 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		};
 	};
 
-	// NOTE: should this volume calculation also take into account deposits and withdraws
-	// (not just swaps) ?
-	/**
-	 * Calculates the total volume of a pool based on the provided trade events, coins to price, and coins to decimals.
-	 * @param tradeEvents - An array of PoolTradeEvent objects representing the trades made in the pool.
-	 * @param coinsToPrice - An object mapping coin types to their respective prices.
-	 * @param coinsToDecimals - An object mapping coin types to their respective decimal places.
-	 * @returns The total volume of the pool in USD.
-	 */
-	public fetchCalcPoolVolume = (
-		tradeEvents: PoolTradeEvent[],
-		coinsToPrice: CoinsToPrice,
-		coinsToDecimals: Record<CoinType, CoinDecimal>
-	) => {
-		let volume = 0;
-		for (const trade of tradeEvents) {
-			for (const [index, typeIn] of trade.typesIn.entries()) {
-				const decimals = coinsToDecimals[typeIn];
-				const tradeAmount = Coin.balanceWithDecimals(
-					trade.amountsIn[index],
-					decimals
-				);
+	public fetchPoolVolume = async (inputs: {
+		poolId: ObjectId;
+		durationMs: number;
+	}): Promise<CoinsToBalance> => {
+		const { poolId, durationMs } = inputs;
+		const response =
+			await this.Provider.indexerCaller.fetchIndexer<IndexerVolumeResponse>(
+				`pools/${poolId}/swap-volume/${durationMs}`
+			);
+		return this.volumeResponseToCoinsToBalance({ response });
+	};
 
-				const coinInPrice = coinsToPrice[typeIn];
-				const amountUsd =
-					coinInPrice < 0 ? 0 : tradeAmount * coinInPrice;
-				volume += amountUsd;
-			}
-		}
-
-		return volume;
+	public fetchTotalVolume = async (inputs: {
+		durationMs: number;
+	}): Promise<CoinsToBalance> => {
+		const { durationMs } = inputs;
+		const response =
+			await this.Provider.indexerCaller.fetchIndexer<IndexerVolumeResponse>(
+				`pools/total-swap-volume/${durationMs}`
+			);
+		return this.volumeResponseToCoinsToBalance({ response });
 	};
 
 	/**
@@ -1656,6 +1650,50 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private volumeResponseToCoinsToBalance = (inputs: {
+		response: IndexerVolumeResponse;
+	}): CoinsToBalance => {
+		return inputs.response.reduce((prev, cur) => {
+			return {
+				...prev,
+				[Helpers.addLeadingZeroesToType(cur.type)]: BigInt(
+					cur.totalAmountIn
+				),
+			};
+		}, {} as CoinsToBalance);
+	};
+
+	// NOTE: should this volume calculation also take into account deposits and withdraws
+	// (not just swaps) ?
+	// /**
+	//  * Calculates the total volume of a pool based on the provided trade events, coins to price, and coins to decimals.
+	//  * @param tradeEvents - An array of PoolTradeEvent objects representing the trades made in the pool.
+	//  * @param coinsToPrice - An object mapping coin types to their respective prices.
+	//  * @param coinsToDecimals - An object mapping coin types to their respective decimal places.
+	//  * @returns The total volume of the pool in USD.
+	//  */
+	private calcPoolVolumeUsd = (inputs: {
+		coinsToVolume: CoinsToBalance;
+		coinsToPrice: CoinsToPrice;
+		coinsToDecimals: Record<CoinType, CoinDecimal>;
+	}): number => {
+		const { coinsToVolume, coinsToPrice, coinsToDecimals } = inputs;
+		let volumeUsd = 0;
+		for (const [coinType, volume] of Object.entries(coinsToVolume)) {
+			const decimals = coinsToDecimals[coinType];
+			const tradeAmount = Coin.balanceWithDecimals(volume, decimals);
+
+			const coinInPrice = coinsToPrice[coinType];
+			const amountUsd = coinInPrice < 0 ? 0 : tradeAmount * coinInPrice;
+			volumeUsd += amountUsd;
+		}
+		return volumeUsd;
+	};
 
 	// =========================================================================
 	//  Event Types
