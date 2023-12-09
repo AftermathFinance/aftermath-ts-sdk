@@ -48,6 +48,9 @@ import { Pool, Staking } from "../..";
 import { bcs } from "@mysten/sui.js/bcs";
 import { BCS } from "@mysten/bcs";
 
+/**
+ * Represents the API for interacting with the Leveraged Staking module.
+ */
 export class LeveragedStakingApi {
 	// =========================================================================
 	//  Constants
@@ -99,6 +102,12 @@ export class LeveragedStakingApi {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates an instance of the LeveragedStakingApi class.
+	 * @param {AftermathApi} Provider - The AftermathApi instance.
+	 * @param {ScallopProviders} ScallopProviders - The ScallopProviders instance.
+	 * @throws {Error} If not all required addresses have been set in provider.
+	 */
 	constructor(
 		private readonly Provider: AftermathApi,
 		private readonly ScallopProviders: ScallopProviders
@@ -135,6 +144,11 @@ export class LeveragedStakingApi {
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Fetches the leveraged stake position for a given wallet address.
+	 * @param inputs - The input parameters for fetching the leveraged stake position.
+	 * @returns A promise that resolves to the leveraged stake position response.
+	 */
 	public fetchLeveragedStakePosition = async (
 		inputs: ApiLeveragedStakePositionBody
 	): Promise<ApiLeveragedStakePositionResponse> => {
@@ -153,6 +167,11 @@ export class LeveragedStakingApi {
 		return leveragedAfSuiPositions[0];
 	};
 
+	/**
+	 * Fetches the SUI market pool.
+	 * @returns A promise that resolves to the ScallopMarketPool object representing the SUI market pool.
+	 * @throws An error if the SUI market pool is not found.
+	 */
 	public fetchSuiMarketPool = async (): Promise<ScallopMarketPool> => {
 		const suiMarketPool = await this.ScallopProviders.Query.getMarketPool(
 			"sui"
@@ -161,6 +180,10 @@ export class LeveragedStakingApi {
 		return suiMarketPool;
 	};
 
+	/**
+	 * Fetches the LeveragedAfSuiState.
+	 * @returns A promise that resolves to the LeveragedAfSuiState.
+	 */
 	public fetchLeveragedAfSuiState =
 		async (): Promise<LeveragedAfSuiState> => {
 			return this.Provider.Objects().fetchCastObject({
@@ -172,6 +195,11 @@ export class LeveragedStakingApi {
 			});
 		};
 
+	/**
+	 * Fetches the market collateral for the AfSui market.
+	 * @returns A promise that resolves to the ScallopMarketCollateral object.
+	 * @throws An error if the Sui market pool is not found.
+	 */
 	public fetchAfSuiMarketCollateral =
 		async (): Promise<ScallopMarketCollateral> => {
 			const afSuiMarketCollateral =
@@ -1116,6 +1144,11 @@ export class LeveragedStakingApi {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Fetches events for a specific user.
+	 * @param inputs - The input parameters for fetching events.
+	 * @returns A promise that resolves to an object containing the fetched events and a cursor for pagination.
+	 */
 	public async fetchEventsForUser(
 		inputs: ApiIndexerUserEventsBody
 	): Promise<IndexerEventsWithCursor<LeveragedStakingEvent>> {
@@ -1147,6 +1180,11 @@ export class LeveragedStakingApi {
 	//  Graph Data
 	// =========================================================================
 
+	/**
+	 * Fetches the performance data for leveraged staking.
+	 * @param inputs - The inputs for fetching performance data.
+	 * @returns A promise that resolves to an array of LeveragedStakingPerformanceDataPoint objects.
+	 */
 	public async fetchPerformanceData(
 		inputs: LeveragedStakingPerformanceDataBody
 	): Promise<LeveragedStakingPerformanceDataPoint[]> {
