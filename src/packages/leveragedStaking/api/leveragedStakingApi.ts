@@ -110,7 +110,7 @@ export class LeveragedStakingApi {
 	 */
 	constructor(
 		private readonly Provider: AftermathApi,
-		private readonly ScallopProviders: ScallopProviders
+		private readonly ScallopProviders?: ScallopProviders
 	) {
 		const leveragedStaking = this.Provider.addresses.leveragedStaking;
 		const staking = this.Provider.addresses.staking;
@@ -173,6 +173,8 @@ export class LeveragedStakingApi {
 	 * @throws An error if the SUI market pool is not found.
 	 */
 	public fetchSuiMarketPool = async (): Promise<ScallopMarketPool> => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+
 		const suiMarketPool = await this.ScallopProviders.Query.getMarketPool(
 			"sui"
 		);
@@ -202,6 +204,9 @@ export class LeveragedStakingApi {
 	 */
 	public fetchAfSuiMarketCollateral =
 		async (): Promise<ScallopMarketCollateral> => {
+			if (!this.ScallopProviders)
+				throw new Error("ScallopProviders not set");
+
 			const afSuiMarketCollateral =
 				await this.ScallopProviders.Query.getMarketCollateral("afsui");
 			if (!afSuiMarketCollateral)
@@ -579,6 +584,8 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+
 		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
 		const tx = scallopTx.txBlock;
 		tx.setSender(inputs.walletAddress);
@@ -628,6 +635,8 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+
 		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
 		const tx = scallopTx.txBlock;
 		tx.setSender(inputs.walletAddress);
@@ -769,6 +778,7 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
 		const {
 			referrer,
 			walletAddress,
@@ -870,6 +880,7 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}) => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
 		const {
 			referrer,
 			walletAddress,

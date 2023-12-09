@@ -137,6 +137,6 @@ export class AftermathApi {
 		preAsyncOptions?: Partial<RouterSynchronousOptions>
 	) => new RouterApi(this, protocols, regularOptions, preAsyncOptions);
 
-	public LeveragedStaking = (ScallopProviders: ScallopProviders) =>
+	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
 		new LeveragedStakingApi(this, ScallopProviders);
 }
