@@ -95,11 +95,3 @@ export type PoolDepositEventOnChain =
 export type PoolWithdrawEventOnChain =
 	EventOnChain<PoolWithdrawEventFieldsOnChain>;
 
-// =========================================================================
-//  Indexer
-// =========================================================================
-
-export type IndexerVolumeResponse = {
-	totalAmountIn: number;
-	type: CoinType;
-}[];
