@@ -3,7 +3,14 @@ import {
 	SuiMoveObject,
 	SuiObjectResponse,
 } from "@mysten/sui.js/client";
-import { AnyObjectType, Balance, ObjectId, Slippage } from "../../types";
+import {
+	AnyObjectType,
+	Balance,
+	CoinsToDecimals,
+	CoinsToPrice,
+	ObjectId,
+	Slippage,
+} from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
 import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
@@ -11,6 +18,8 @@ import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { Casting } from "./casting";
 import { is } from "@mysten/sui.js/utils";
+import { IndexerSwapVolumeResponse } from "../types/castingTypes";
+import { Coin } from "../..";
 
 /**
  * A utility class containing various helper functions for general use.
@@ -304,4 +313,48 @@ export class Helpers {
 
 		throw new Error("no object display found on " + data.data?.objectId);
 	}
+
+	// =========================================================================
+	//  Indexer Calculations
+	// =========================================================================
+
+	/**
+	 * Calculates the total volume in USD.
+	 *
+	 * @param inputs - The input parameters for the calculation.
+	 * @param inputs.volumes - Swap volumes.
+	 * @param inputs.coinsToPrice - The mapping of coin types to their respective prices.
+	 * @param inputs.coinsToDecimals - The mapping of coin types to their respective decimal places.
+	 * @returns The total volume in USD.
+	 */
+	public static calcIndexerVolumeUsd = (inputs: {
+		volumes: IndexerSwapVolumeResponse;
+		coinsToPrice: CoinsToPrice;
+		coinsToDecimals: CoinsToDecimals;
+	}): number => {
+		const { volumes, coinsToPrice, coinsToDecimals } = inputs;
+		return volumes.reduce((acc, data) => {
+			const coinInPrice = coinsToPrice[data.coinTypeIn];
+			if (coinInPrice > 0) {
+				const decimals = coinsToDecimals[data.coinTypeIn];
+				const tradeAmount = Coin.balanceWithDecimals(
+					data.totalAmountIn,
+					decimals
+				);
+
+				const amountUsd = tradeAmount * coinInPrice;
+				return acc + amountUsd;
+			}
+
+			const coinOutPrice = coinsToPrice[data.coinTypeOut];
+			const decimals = coinsToDecimals[data.coinTypeOut];
+			const tradeAmount = Coin.balanceWithDecimals(
+				data.totalAmountOut,
+				decimals
+			);
+
+			const amountUsd = coinInPrice < 0 ? 0 : tradeAmount * coinOutPrice;
+			return acc + amountUsd;
+		}, 0);
+	};
 }
