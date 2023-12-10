@@ -101,6 +101,14 @@ export class Pool extends Caller {
 	}
 
 	/**
+	 * Retrieves the volume in the last 24 hours for the pool.
+	 * @returns A promise that resolves to the volume in the last 24 hours.
+	 */
+	public getVolume24hrs = async (): Promise<number> => {
+		return this.fetchApi("volume-24hrs");
+	};
+
+	/**
 	 * Fetches the deposit transaction for the pool.
 	 * @async
 	 * @param {ApiPoolDepositBody} inputs - The inputs for the method.

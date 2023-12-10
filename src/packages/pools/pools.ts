@@ -191,6 +191,14 @@ export class Pools extends Caller {
 		}
 	};
 
+	/**
+	 * Retrieves the total volume in the last 24 hours.
+	 * @returns A Promise that resolves to a number representing the total volume.
+	 */
+	public getTotalVolume24hrs = async (): Promise<number> => {
+		return this.fetchApi("volume-24hrs");
+	};
+
 	// =========================================================================
 	//  Fees
 	// =========================================================================
