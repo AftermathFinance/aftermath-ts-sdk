@@ -1,9 +1,17 @@
-import { CoinType } from "../../types";
-import { CoinGeckoCoinData } from "../prices/coingecko/coinGeckoTypes";
+import { CoinSymbol, CoinType } from "../../types";
+import {
+	CoinGeckoCoinData,
+	CoinGeckoCoinSymbolData,
+} from "../prices/coingecko/coinGeckoTypes";
 import { CoinHistoricalData } from "./historicalDataTypes";
 
 export interface HistoricalDataApiInterface {
-	fetchAllCoinData: () => Promise<Record<CoinType, CoinGeckoCoinData>>;
+	fetchAllSuiCoinData: () => Promise<Record<CoinType, CoinGeckoCoinData>>;
+
+	fetchAllCoinData: () => Promise<
+		Record<CoinSymbol, CoinGeckoCoinSymbolData>
+	>;
+
 	fetchHistoricalData: (inputs: {
 		coinApiId: string;
 		daysAgo: number;

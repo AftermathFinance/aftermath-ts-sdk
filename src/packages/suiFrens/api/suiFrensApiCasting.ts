@@ -45,7 +45,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			mixingLimit: BigInt(fields.mixing_limit),
 			coolDownPeriodEpochs: BigInt(fields.cool_down_period),
 			mixingPrice: BigInt(fields.mixing_price),
@@ -64,7 +64,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			generation: BigInt(fields.generation),
 			birthdate: Number(fields.birthdate),
 			cohort: BigInt(fields.cohort),
@@ -129,7 +129,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			collectedFees: BigInt(fields.collected_fees),
 			autoStakeFees: fields.auto_stake_fees,
@@ -169,7 +169,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 		};
 	};
@@ -185,7 +185,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			totalMixes: BigInt(fields.mixed),
 			stakedSuiFrens: BigInt(fields.suifrens_metadata.fields.size),
 		};
@@ -204,7 +204,7 @@ export class SuiFrensApiCasting {
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			name: fields.name,
 			type: fields.type,
 			imageUrl: display.image_url,

@@ -1,7 +1,8 @@
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
-import { Helpers } from "../utils";
+import { Casting, Helpers } from "../utils";
 import { SuiObjectDataOptions, SuiObjectResponse } from "@mysten/sui.js/client";
+import { TypeName, BCS } from "@mysten/bcs";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -16,9 +17,7 @@ export class ObjectsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-	}
+	constructor(private readonly Provider: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods
@@ -62,6 +61,7 @@ export class ObjectsApiHelpers {
 		walletAddress: SuiAddress;
 		objectType: AnyObjectType;
 		withDisplay?: boolean;
+		options?: SuiObjectDataOptions;
 	}): Promise<SuiObjectResponse[]> => {
 		const { walletAddress, objectType, withDisplay } = inputs;
 
@@ -72,7 +72,7 @@ export class ObjectsApiHelpers {
 				filter: {
 					StructType: Helpers.stripLeadingZeroesFromType(objectType),
 				},
-				options: {
+				options: inputs.options ?? {
 					showContent: true,
 					showDisplay: withDisplay,
 					showOwner: true,
@@ -88,15 +88,26 @@ export class ObjectsApiHelpers {
 		withDisplay?: boolean;
 	}): Promise<SuiObjectResponse> => {
 		const { objectId, withDisplay } = inputs;
-
-		const object = await this.Provider.provider.getObject({
-			id: objectId,
+		return await this.fetchObjectGeneral({
+			objectId,
 			options: {
 				showContent: true,
 				showDisplay: withDisplay,
 				showOwner: true,
 				showType: true,
 			},
+		});
+	};
+
+	public fetchObjectGeneral = async (inputs: {
+		objectId: ObjectId;
+		options?: SuiObjectDataOptions;
+	}): Promise<SuiObjectResponse> => {
+		const { objectId, options } = inputs;
+
+		const object = await this.Provider.provider.getObject({
+			id: objectId,
+			options,
 		});
 		if (object.error !== undefined)
 			throw new Error(
@@ -114,6 +125,19 @@ export class ObjectsApiHelpers {
 	}): Promise<ObjectType> => {
 		return inputs.objectFromSuiObjectResponse(
 			await this.fetchObject(inputs)
+		);
+	};
+
+	public fetchCastObjectGeneral = async <ObjectType>(inputs: {
+		objectId: ObjectId;
+		objectFromSuiObjectResponse: (
+			SuiObjectResponse: SuiObjectResponse
+		) => ObjectType;
+		options?: SuiObjectDataOptions;
+	}): Promise<ObjectType> => {
+		const { objectId, objectFromSuiObjectResponse, options } = inputs;
+		return objectFromSuiObjectResponse(
+			await this.fetchObjectGeneral({ objectId, options })
 		);
 	};
 
@@ -188,6 +212,7 @@ export class ObjectsApiHelpers {
 			SuiObjectResponse: SuiObjectResponse
 		) => ObjectType;
 		withDisplay?: boolean;
+		options?: SuiObjectDataOptions;
 	}): Promise<ObjectType[]> => {
 		// i. obtain all owned object IDs
 		const objects = (
@@ -197,5 +222,39 @@ export class ObjectsApiHelpers {
 		});
 
 		return objects;
+	};
+
+	// =========================================================================
+	//  BCS
+	// =========================================================================
+
+	public fetchObjectBcs = async (
+		objectId: ObjectId
+	): Promise<SuiObjectResponse> => {
+		const objectResponse = await this.Provider.provider.getObject({
+			id: objectId,
+			options: { showBcs: true },
+		});
+		if (objectResponse.error !== undefined)
+			throw new Error(
+				`an error occured fetching object: ${objectResponse.error?.code}`
+			);
+		return objectResponse;
+	};
+
+	public fetchCastObjectBcs = async <T>(inputs: {
+		objectId: ObjectId;
+		typeName: TypeName;
+		fromDeserialized: (deserialized: any) => T;
+		bcs: BCS;
+	}): Promise<T> => {
+		const { objectId } = inputs;
+		const suiObjectResponse = await this.Provider.Objects().fetchObjectBcs(
+			objectId
+		);
+		return Casting.castObjectBcs({
+			...inputs,
+			suiObjectResponse: suiObjectResponse,
+		});
 	};
 }

@@ -155,7 +155,9 @@ export class ReferralVaultApi {
 		const tx = new TransactionBlock();
 		this.balanceOfRebateTx({ ...inputs, tx });
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 		return Casting.bigIntFromBytes(bytes);
 	};
 
@@ -165,7 +167,9 @@ export class ReferralVaultApi {
 		const tx = new TransactionBlock();
 		this.referrerForTx({ ...inputs, tx });
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		const unwrapped = Casting.unwrapDeserializedOption(
 			bcs.de("Option<address>", new Uint8Array(bytes))

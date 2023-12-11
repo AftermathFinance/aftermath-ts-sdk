@@ -3,3 +3,4 @@ tsconfigtsbuildinfo
 dist/
 lib/
 .vscode/
+.env

@@ -365,7 +365,7 @@ export class Pool extends Caller {
 			inputs.amountsIn
 		);
 
-		if (calcedLpRatio >= Casting.fixedOneBigInt)
+		if (calcedLpRatio >= Casting.Fixed.fixedOneB)
 			throw new Error("lpRatio >= 1");
 
 		const lpRatio = Casting.bigIntToFixedNumber(calcedLpRatio);
@@ -407,7 +407,7 @@ export class Pool extends Caller {
 
 			const amountOut = amountsOut[coin];
 
-			if (amountOut <= Casting.zeroBigInt)
+			if (amountOut <= BigInt(0))
 				throw new Error(`amountsOut[${coin}] <= 0 `);
 
 			if (

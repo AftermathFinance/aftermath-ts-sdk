@@ -1,4 +1,10 @@
-import { CoinType, CoinsToPrice } from "../../../types";
+import {
+	CoinPriceInfo,
+	CoinSymbol,
+	CoinSymbolsToPriceInfo,
+	CoinType,
+	CoinsToPrice,
+} from "../../../types";
 import { Helpers } from "../../utils";
 import { PricesApiInterface } from "../pricesApiInterface";
 import { CoinGeckoApiHelpers } from "./coinGeckoApiHelpers";
@@ -36,7 +42,7 @@ export class CoinGeckoPricesApi
 	};
 
 	public fetchCoinsToPrice = async (coins: CoinType[]) => {
-		const allCoinsData = await this.fetchAllCoinData();
+		const allCoinsData = await this.fetchAllSuiCoinData();
 		const onlyInputCoinsData = Helpers.filterObject(allCoinsData, (coin) =>
 			coins
 				.map(Helpers.addLeadingZeroesToType)
@@ -70,6 +76,14 @@ export class CoinGeckoPricesApi
 			...coinsToPrice,
 		};
 	};
+
+	public async fetchCoinSymbolsToPriceInfo(inputs: {
+		coinSymbolsToApiId: Record<CoinSymbol, CoinGeckoCoinApiId>;
+	}): Promise<CoinSymbolsToPriceInfo> {
+		return this.fetchCoinsToPriceInfo({
+			coinsToApiId: inputs.coinSymbolsToApiId,
+		});
+	}
 
 	// =========================================================================
 	//  Non-Interface Methods

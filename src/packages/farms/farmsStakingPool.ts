@@ -26,7 +26,7 @@ import {
 import { Casting, Helpers } from "../../general/utils";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
-import { Fixed } from "../../general/utils/fixed";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Coin } from "../coin/coin";
 
 export class FarmsStakingPool extends Caller {
@@ -180,7 +180,9 @@ export class FarmsStakingPool extends Caller {
 					1);
 
 		const multiplier = Casting.numberToFixedBigInt(newMultiplier);
-		return multiplier < Fixed.fixedOneB ? Fixed.fixedOneB : multiplier;
+		return multiplier < FixedUtils.fixedOneB
+			? FixedUtils.fixedOneB
+			: multiplier;
 	};
 
 	// public calc_emitted_rewards(): bigint[] {

@@ -67,7 +67,7 @@ import {
 	IndexerEventOnChain,
 	IndexerSwapVolumeResponse,
 } from "../../../general/types/castingTypes";
-import { Fixed } from "../../../general/utils/fixed";
+import { FixedUtils } from "../../../general/utils/fixedUtils";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
@@ -402,7 +402,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			lpCoinIconUrl: inputs.lpCoinMetadata.iconUrl ?? "",
 
 			poolFlatness:
-				inputs.poolFlatness === 1 ? Casting.fixedOneBigInt : BigInt(0),
+				inputs.poolFlatness === 1 ? Casting.Fixed.fixedOneB : BigInt(0),
 
 			coinsInfo: inputs.coinsInfo.map((info, index) => {
 				let weight = Casting.numberToFixedBigInt(info.weight);
@@ -416,7 +416,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 							)
 					);
 
-					weight = Casting.fixedOneBigInt - otherWeightsSum;
+					weight = Casting.Fixed.fixedOneB - otherWeightsSum;
 				}
 
 				return {
@@ -1243,7 +1243,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		this.poolObjectIdForLpCoinTypeTx({ tx, ...inputs });
 
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		return Casting.addressFromBytes(bytes);
 	};
@@ -1343,7 +1345,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		const firstCoin = Object.values(pool.pool.coins)[0];
 		const fees =
 			volume *
-			Fixed.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
+			FixedUtils.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
 
 		const apy = this.calcApy({
 			fees24Hours: fees,
@@ -1549,7 +1551,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	}): PoolDataPoint[] => {
 		const feeData = inputs.volumeData.map((data) => ({
 			time: data.time,
-			value: data.value * Fixed.directCast(inputs.poolTradeFee),
+			value: data.value * FixedUtils.directCast(inputs.poolTradeFee),
 		}));
 
 		return feeData;
