@@ -38,6 +38,7 @@ import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 import { FlowXApi } from "../../external/flowX/flowXApi";
 import { Coin } from "../..";
+import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -147,6 +148,22 @@ export class RouterApi {
 	// =========================================================================
 	//  Public Methods
 	// =========================================================================
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
+
+	/**
+	 * Fetches the total volume of swaps within a specified duration.
+	 * @param inputs - The inputs for fetching the total volume.
+	 * @returns A Promise that resolves to an array of total volumes.
+	 */
+	public fetchVolume = async (inputs: { durationMs: number }) => {
+		const { durationMs } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+			`router/swap-volume/${durationMs}`
+		);
+	};
 
 	// =========================================================================
 	//  Graph

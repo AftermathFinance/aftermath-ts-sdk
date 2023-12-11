@@ -46,7 +46,6 @@ import {
 	PoolLpInfo,
 } from "../../../types";
 import {
-	IndexerVolumeResponse,
 	PoolDepositEventOnChain,
 	PoolTradeEventOnChain,
 	PoolTradeEventOnChainFields,
@@ -64,7 +63,10 @@ import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
-import { IndexerEventOnChain } from "../../../general/types/castingTypes";
+import {
+	IndexerEventOnChain,
+	IndexerSwapVolumeResponse,
+} from "../../../general/types/castingTypes";
 import { Fixed } from "../../../general/utils/fixed";
 
 /**
@@ -1310,13 +1312,14 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 		const poolCoins = pool.pool.coins;
 
+		// TODO: move common milliseconds to constants or use dayjs
 		const durationMs24hrs = 86400000;
-		const coinsToVolume = await this.fetchPoolVolume({
+		const volumes = await this.fetchPoolVolume({
 			poolId: pool.pool.objectId,
 			durationMs: durationMs24hrs,
 		});
-		const volume = this.calcPoolVolumeUsd({
-			coinsToVolume,
+		const volume = Helpers.calcIndexerVolumeUsd({
+			volumes,
 			coinsToDecimals,
 			coinsToPrice,
 		});
@@ -1360,34 +1363,28 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	/**
 	 * Fetches the pool volume for a given pool and duration.
 	 * @param inputs - The inputs for fetching the pool volume.
-	 * @returns A Promise that resolves to a CoinsToBalance object representing the pool volume.
+	 * @returns A Promise that resolves to an array of pool volumes.
 	 */
 	public fetchPoolVolume = async (inputs: {
 		poolId: ObjectId;
 		durationMs: number;
-	}): Promise<CoinsToBalance> => {
+	}) => {
 		const { poolId, durationMs } = inputs;
-		const response =
-			await this.Provider.indexerCaller.fetchIndexer<IndexerVolumeResponse>(
-				`pools/${poolId}/swap-volume/${durationMs}`
-			);
-		return this.volumeResponseToCoinsToBalance({ response });
+		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+			`pools/${poolId}/swap-volume/${durationMs}`
+		);
 	};
 
 	/**
 	 * Fetches the total volume of swaps within a specified duration.
 	 * @param inputs - The inputs for fetching the total volume.
-	 * @returns A Promise that resolves to a CoinsToBalance object representing the total volume.
+	 * @returns A Promise that resolves to an array of total volumes.
 	 */
-	public fetchTotalVolume = async (inputs: {
-		durationMs: number;
-	}): Promise<CoinsToBalance> => {
+	public fetchTotalVolume = async (inputs: { durationMs: number }) => {
 		const { durationMs } = inputs;
-		const response =
-			await this.Provider.indexerCaller.fetchIndexer<IndexerVolumeResponse>(
-				`pools/total-swap-volume/${durationMs}`
-			);
-		return this.volumeResponseToCoinsToBalance({ response });
+		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+			`pools/total-swap-volume/${durationMs}`
+		);
 	};
 
 	/**
@@ -1657,53 +1654,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		)})`;
 	};
 
-	/**
-	 * Calculates the total volume of a pool in USD.
-	 *
-	 * @param inputs - The input parameters for the calculation.
-	 * @param inputs.coinsToVolume - The mapping of coin types to their respective volumes.
-	 * @param inputs.coinsToPrice - The mapping of coin types to their respective prices.
-	 * @param inputs.coinsToDecimals - The mapping of coin types to their respective decimal places.
-	 * @returns The total volume of the pool in USD.
-	 */
-	public calcPoolVolumeUsd = (inputs: {
-		coinsToVolume: CoinsToBalance;
-		coinsToPrice: CoinsToPrice;
-		coinsToDecimals: Record<CoinType, CoinDecimal>;
-	}): number => {
-		const { coinsToVolume, coinsToPrice, coinsToDecimals } = inputs;
-		let volumeUsd = 0;
-		for (const [coinType, volume] of Object.entries(coinsToVolume)) {
-			const decimals = coinsToDecimals[coinType];
-			const tradeAmount = Coin.balanceWithDecimals(volume, decimals);
-
-			const coinInPrice = coinsToPrice[coinType];
-			const amountUsd = coinInPrice < 0 ? 0 : tradeAmount * coinInPrice;
-			volumeUsd += amountUsd;
-		}
-		return volumeUsd;
-	};
-
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	private volumeResponseToCoinsToBalance = (inputs: {
-		response: IndexerVolumeResponse;
-	}): CoinsToBalance => {
-		return inputs.response.reduce((prev, cur) => {
-			return {
-				...prev,
-				[Helpers.addLeadingZeroesToType(cur.type)]: BigInt(
-					cur.totalAmountIn
-				),
-			};
-		}, {} as CoinsToBalance);
-	};
 
 	// =========================================================================
 	//  Event Types
