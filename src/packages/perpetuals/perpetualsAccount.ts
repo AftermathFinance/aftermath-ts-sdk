@@ -62,6 +62,7 @@ export class PerpetualsAccount extends Caller {
 	public async getDepositCollateralTx(inputs: {
 		walletAddress: SuiAddress;
 		amount: Balance;
+		isSponsoredTx?: boolean;
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsDepositCollateralBody>(
 			"transactions/deposit-collateral",
