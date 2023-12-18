@@ -4,8 +4,7 @@ import { Casting, Helpers } from "../../../general/utils";
 import { OracleAddresses } from "../../../types";
 import { IFixedUtils } from "../../../general/utils/iFixedUtils";
 import { Sui } from "../../sui";
-
-export type OracleCoinSymbol = string;
+import { OracleCoinSymbol } from "../oracleTypes";
 
 export class OracleApi {
 	public readonly addresses: OracleAddresses;
@@ -64,9 +63,9 @@ export class OracleApi {
 				tx.object(this.addresses.objects.priceFeedStorage), // PriceFeedStorage
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				tx.pure(coinSymbol), // symbol
-				tx.pure(1000000000000000), // A really huge value for tolerance, we never want it here
-				tx.pure(Boolean(false)), // price of unit
-				tx.pure(Boolean(false)), // may abort
+				tx.pure(Casting.u64MaxBigInt), // A really huge value for tolerance, we never want it here
+				tx.pure(false), // price of unit
+				tx.pure(false), // may abort
 			],
 		});
 	};
