@@ -1,6 +1,6 @@
 import { Caller } from "../../general/utils/caller";
 import { SuiNetwork, Url } from "../../types";
-import { OracleCoinSymbol } from "./api/oracleApi";
+import { OracleCoinSymbol } from "./oracleTypes";
 
 export class Oracle extends Caller {
 	// =========================================================================

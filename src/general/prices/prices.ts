@@ -8,7 +8,7 @@ import {
 } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 import { Url } from "../types";
-import { OracleCoinSymbol } from "../../packages/oracle/api/oracleApi";
+import { OracleCoinSymbol } from "../../packages/oracle/oracleTypes";
 
 export class Prices extends Caller {
 	// =========================================================================
