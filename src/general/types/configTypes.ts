@@ -295,10 +295,9 @@ export interface ExchangeAddresses {
 
 export interface OracleAddresses {
 	packages: {
-		oracle: SuiAddress;
+		oracleReader: SuiAddress;
 	};
 	objects: {
-		authorityCapability: ObjectId;
 		priceFeedStorage: ObjectId;
 	};
 }

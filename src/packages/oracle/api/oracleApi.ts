@@ -54,7 +54,7 @@ export class OracleApi {
 		const { tx, coinSymbol } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.oracle,
+				this.addresses.packages.oracleReader,
 				"oracle_reader",
 				"get_average_price_for_all_sources"
 			),
