@@ -725,6 +725,7 @@ export interface ApiPerpetualsDepositCollateralBody {
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	amount: Balance;
+	isSponsoredTx?: boolean;
 }
 
 export interface ApiPerpetualsWithdrawCollateralBody {

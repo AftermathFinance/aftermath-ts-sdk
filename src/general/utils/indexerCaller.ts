@@ -85,8 +85,8 @@ export class IndexerCaller {
 
 	private static indexerBaseUrlForNetwork(network: SuiNetwork): Url {
 		if (network === "MAINNET") return "http://135.148.26.42:80";
-		if (network === "MAINNET_STAGING") return "http://15.204.90.115:8999";
-		if (network === "TESTNET") return "http://15.204.90.115:8086";
+		if (network === "MAINNET_STAGING") return "http://15.204.90.115:8100";
+		if (network === "TESTNET") return "http://15.204.90.115:8200";
 		if (network === "DEVNET") return "http://15.204.90.115:9986";
 		if (network === "LOCAL") return "http://localhost:8080";
 
