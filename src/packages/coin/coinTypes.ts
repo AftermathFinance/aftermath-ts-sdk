@@ -1,6 +1,6 @@
 import { CoinMetadata } from "@mysten/sui.js/client";
 import { Balance, Percentage } from "../../general/types/generalTypes";
-import { OracleCoinSymbol } from "../oracle/oracleTypes";
+import { OracleCoinSymbol } from "../../packages/oracle/api/oracleApi";
 
 // =========================================================================
 //  Name Only

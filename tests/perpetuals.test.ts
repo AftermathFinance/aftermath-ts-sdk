@@ -41,6 +41,16 @@ import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
 import { Helpers, IndexerCaller } from "../src/general/utils";
 
 // =========================================================================
+//
+// =========================================================================
+// =========================================================================
+//  THIS TESTS ARE OUTDATED
+// =========================================================================
+// =========================================================================
+//
+// =========================================================================
+
+// =========================================================================
 // TEST CASE FLOW
 // =========================================================================
 describe("Perpetuals Tests", () => {
@@ -102,53 +112,53 @@ describe("Perpetuals Tests", () => {
 		let tx: TransactionBlock;
 		const requestType = "WaitForLocalExecution";
 
-		// Create price feed for "BTC" perpetual (BTC/USD oracle price feed)
-		console.log("Create BTC price feed");
-		tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "BTC",
-		});
-		await admin.signAndExecuteTransactionBlock({
-			transactionBlock: tx,
-			requestType,
-		});
+		// // Create price feed for "BTC" perpetual (BTC/USD oracle price feed)
+		// console.log("Create BTC price feed");
+		// tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinSymbol: "BTC",
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
-		// Update price for "BTC" to 10000$ in fixed representation
-		console.log("Update BTC price feed");
-		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "BTC",
-			price: initialOraclePrice0,
-			timestamp: 0,
-		});
-		await admin.signAndExecuteTransactionBlock({
-			transactionBlock: tx,
-			requestType,
-		});
+		// // Update price for "BTC" to 10000$ in fixed representation
+		// console.log("Update BTC price feed");
+		// tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinSymbol: "BTC",
+		// 	price: initialOraclePrice0,
+		// 	timestamp: 0,
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
-		// Create price feed for "ETH" perpetual (ETH/USD oracle price feed)
-		console.log("Create ETH price feed");
-		tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "ETH",
-		});
-		await admin.signAndExecuteTransactionBlock({
-			transactionBlock: tx,
-			requestType,
-		});
+		// // Create price feed for "ETH" perpetual (ETH/USD oracle price feed)
+		// console.log("Create ETH price feed");
+		// tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinSymbol: "ETH",
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
-		// Update price for "ETH" to 2000$ in fixed representation
-		console.log("Update ETH price feed");
-		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "ETH",
-			price: initialOraclePrice1,
-			timestamp: 0,
-		});
-		await admin.signAndExecuteTransactionBlock({
-			transactionBlock: tx,
-			requestType,
-		});
+		// // Update price for "ETH" to 2000$ in fixed representation
+		// console.log("Update ETH price feed");
+		// tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinSymbol: "ETH",
+		// 	price: initialOraclePrice1,
+		// 	timestamp: 0,
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
 		//Create perpetuals market for BTC/USD with USDC as collateral
 		console.log("Create market 0");
@@ -461,17 +471,17 @@ describe("Perpetuals Tests", () => {
 		console.log("Liquidation price ETH user2 : ", liqPriceUser2);
 
 		// Update price for "BTC" to finalOraclePrice0 in fixed representation
-		console.log("Update BTC price feed");
-		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "BTC",
-			price: finalOraclePrice0,
-			timestamp: 0,
-		});
-		await admin.signAndExecuteTransactionBlock({
-			transactionBlock: tx,
-			requestType,
-		});
+		// console.log("Update BTC price feed");
+		// tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinSymbol: "BTC",
+		// 	price: finalOraclePrice0,
+		// 	timestamp: 0,
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
 		// Update price for "ETH" to finalOraclePrice1 in fixed representation
 		console.log("Update ETH price feed");
