@@ -53,6 +53,14 @@ export class ReferralVaultApi {
 		referrer: SuiAddress;
 	}) => {
 		const { tx, referrer } = inputs;
+
+		if (
+			tx.blockData.sender &&
+			Helpers.addLeadingZeroesToType(tx.blockData.sender) ===
+				Helpers.addLeadingZeroesToType(referrer)
+		)
+			return;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.referralVault,
