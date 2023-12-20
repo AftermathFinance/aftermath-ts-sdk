@@ -35,11 +35,6 @@ export class IndexerCaller {
 		if (!response.ok) throw new Error(await response.text());
 
 		const json = JSON.stringify(await response.json());
-
-		// const json = JSON.parse(
-		// 	new TextDecoder().decode(await response.arrayBuffer())
-		// );
-
 		const output = Helpers.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
@@ -65,19 +60,6 @@ export class IndexerCaller {
 				: ""
 		}`;
 	}
-
-	// 	if (!tx.blockData.sender)
-	// 	throw new Error(
-	// 		"unable to set dynamic gas budget with no sender set on tx"
-	// 	);
-
-	// const gasCoins =
-	// 	await this.Provider.Coin().fetchCoinsUntilAmountReachedOrEnd({
-	// 		walletAddress: tx.blockData.sender,
-	// 		coinType: gasCoinType,
-	// 		coinAmount: "TODO",
-	// 	});
-	// const gasCoinIds = gasCoins.map((coin) => coin.coinObjectId);
 
 	// =========================================================================
 	//  Indexer Calling
