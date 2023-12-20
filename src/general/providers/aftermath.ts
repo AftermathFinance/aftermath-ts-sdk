@@ -18,6 +18,8 @@ import { Prices } from "../prices/prices";
 import { NftAmm, ReferralVault, Router, Sui } from "../../packages";
 import { HistoricalData } from "../historicalData/historicalData";
 import { Perpetuals } from "../../packages/perpetuals";
+import { Oracle } from "../../packages/oracle/oracle";
+// import { PriceFeeds } from "../priceFeeds/priceFeeds";
 import { Farms } from "../../packages/farms/farms";
 import { DynamicGas } from "../dynamicGas/dynamicGas";
 
@@ -92,6 +94,7 @@ export class Aftermath extends Caller {
 	public NftAmm = () => new NftAmm(this.network);
 	public ReferralVault = () => new ReferralVault(this.network);
 	public Perpetuals = () => new Perpetuals(this.network);
+	public Oracle = () => new Oracle(this.network);
 	/**
 	 * Creates a new instance of the Farms class.
 	 * @returns A new instance of the Farms class.
@@ -117,6 +120,7 @@ export class Aftermath extends Caller {
 	 */
 	public Coin = (coinType?: CoinType) => new Coin(coinType, this.network);
 	public HistoricalData = () => new HistoricalData(this.network);
+	// public PriceFeeds = () => new PriceFeeds(this.network);
 	public DynamicGas = () => new DynamicGas(this.network);
 
 	// =========================================================================

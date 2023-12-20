@@ -20,7 +20,7 @@ import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
-import { Fixed } from "../../general/utils/fixed";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 
 /**
  * @class Pools Provider
@@ -243,7 +243,7 @@ export class Pools extends Caller {
 	};
 
 	public static normalizeSlippage = (slippage: Slippage) =>
-		Fixed.directUncast(1 - slippage);
+		FixedUtils.directUncast(1 - slippage);
 
 	// =========================================================================
 	//  Display

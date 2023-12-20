@@ -1,16 +1,10 @@
-import {
-	Balance,
-	CoinType,
-	CoinsToBalance,
-	NormalizedBalance,
-	PoolObject,
-} from "../../../types";
+import { Balance, CoinType, CoinsToBalance, PoolObject } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import {
-	Fixed,
+	FixedUtils,
 	LocalNumber,
 	OnChainScalar,
-} from "../../../general/utils/fixed";
+} from "../../../general/utils/fixedUtils";
 
 // This file is the typescript version of on-chain calculations. See the .move file for license info.
 // These calculations are useful for estimating values on-chain but the JS number format is LESS PRECISE!
@@ -81,7 +75,7 @@ export class CmmmCalculations {
 	// The difference is as swap fees are absorbed they increase the invariant without incrasing total lp, increasing lp worth.
 	// Every pool operation either explicitly or implicity calls this function.
 	public static calcInvariant = (pool: PoolObject): number => {
-		let flatness = Fixed.directCast(pool.flatness);
+		let flatness = FixedUtils.directCast(pool.flatness);
 
 		// The value for h which we want is the one for which the balances vector B lies on the curve through T.
 		// That is, C(T) = C(B). This turns out to be a quadratic equation which can be solved with
@@ -91,8 +85,8 @@ export class CmmmCalculations {
 		let balance;
 		let weight;
 		for (let coin of Object.values(pool.coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
 			sum += weight * balance;
 			prod += weight * Math.log(balance);
 		}
@@ -128,7 +122,7 @@ export class CmmmCalculations {
 		pool: PoolObject,
 		index: CoinType
 	): [prod: number, sum: number, p0: number, s0: number, h: number] => {
-		let flatness = Fixed.directCast(pool.flatness);
+		let flatness = FixedUtils.directCast(pool.flatness);
 		let prod = 0;
 		let sum = 0;
 		let p0 = 0;
@@ -139,8 +133,8 @@ export class CmmmCalculations {
 		let p;
 		let s;
 		for (let [coinType, coin] of Object.entries(pool.coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
 
 			p = weight * Math.log(balance);
 			s = weight * balance;
@@ -185,17 +179,21 @@ export class CmmmCalculations {
 		coinTypeOut: CoinType,
 		ignoreFees?: boolean
 	): number => {
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 		let part1 = CmmmCalculations.calcSpotPriceBody(pool);
 
 		let coinIn = pool.coins[coinTypeIn];
 		let coinOut = pool.coins[coinTypeOut];
-		let balanceIn = Fixed.directCast(coinIn.normalizedBalance);
-		let balanceOut = Fixed.directCast(coinOut.normalizedBalance);
-		let weightIn = Fixed.directCast(coinIn.weight);
-		let weightOut = Fixed.directCast(coinOut.weight);
-		let swapFeeIn = ignoreFees ? 0 : Fixed.directCast(coinIn.tradeFeeIn);
-		let swapFeeOut = ignoreFees ? 0 : Fixed.directCast(coinIn.tradeFeeOut);
+		let balanceIn = FixedUtils.directCast(coinIn.normalizedBalance);
+		let balanceOut = FixedUtils.directCast(coinOut.normalizedBalance);
+		let weightIn = FixedUtils.directCast(coinIn.weight);
+		let weightOut = FixedUtils.directCast(coinOut.weight);
+		let swapFeeIn = ignoreFees
+			? 0
+			: FixedUtils.directCast(coinIn.tradeFeeIn);
+		let swapFeeOut = ignoreFees
+			? 0
+			: FixedUtils.directCast(coinIn.tradeFeeOut);
 
 		let sbi = weightOut * balanceIn;
 		// this is the only place where fee values are used
@@ -210,7 +208,7 @@ export class CmmmCalculations {
 	// The spot price formula contains a factor of C0^2 / P(B0) + (1-A)P(B0), this returns that
 	private static calcSpotPriceBody = (pool: PoolObject): number => {
 		// The spot price formula comes from the partial derivatives of Cf, specifically -(dCf / dxOut) / (dCf / dxIn)
-		let a: number = Fixed.directCast(pool.flatness);
+		let a: number = FixedUtils.directCast(pool.flatness);
 		let ac: number = 1 - a;
 
 		let prod: number = 0;
@@ -221,8 +219,8 @@ export class CmmmCalculations {
 		// The spot price formula requires knowing the value of the invariant. We need the prod and sum parts
 		// also later on so no need to compute them twice by calling calcInvariant, just evaluate here.
 		for (let coin of Object.values(pool.coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
 
 			prod += weight * Math.log(balance);
 			sum += weight * balance;
@@ -241,39 +239,38 @@ export class CmmmCalculations {
 		coinTypeOut: CoinType,
 		amountIn: Balance
 	): Balance => {
-		if (coinTypeIn == coinTypeOut)
+		if (coinTypeIn === coinTypeOut)
 			throw Error("in and out must be different coins");
 		let coinIn = pool.coins[coinTypeIn];
 		let coinOut = pool.coins[coinTypeOut];
-		let swapFeeIn = Fixed.directCast(coinIn.tradeFeeIn);
-		let swapFeeOut = Fixed.directCast(coinOut.tradeFeeOut);
+		let swapFeeIn = FixedUtils.directCast(coinIn.tradeFeeIn);
+		let swapFeeOut = FixedUtils.directCast(coinOut.tradeFeeOut);
 		if (swapFeeIn >= 1 || swapFeeOut >= 1) {
 			// this swap is disabled
 			return BigInt(0);
 		}
 
-		let flatness = Fixed.directCast(pool.flatness);
-		let oldIn = Fixed.directCast(coinIn.normalizedBalance);
-		let oldOut = Fixed.directCast(coinOut.normalizedBalance);
+		let flatness = FixedUtils.directCast(pool.flatness);
+		let oldIn = FixedUtils.directCast(coinIn.normalizedBalance);
+		let oldOut = FixedUtils.directCast(coinOut.normalizedBalance);
 
-		let wIn = Fixed.directCast(coinIn.weight);
-		let [prod, _sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
+		let wIn = FixedUtils.directCast(coinIn.weight);
+		let wOut = FixedUtils.directCast(coinOut.weight);
+		let [prod, , p0, s0, h] = CmmmCalculations.calcInvariantComponents(
 			pool,
 			coinTypeOut
 		);
 
 		let feedAmountIn =
 			(1 - swapFeeIn) *
-			Fixed.castAndNormalize(coinIn.decimalsScalar, amountIn);
+			FixedUtils.castAndNormalize(coinIn.decimalsScalar, amountIn);
 		let newIn = oldIn + feedAmountIn;
 		let prodRatio = Math.pow(newIn / oldIn, wIn);
 
 		let newP0 = p0 * prodRatio;
 		// the initial estimate (xi) is from if there were only the product part of the curve
-		let xi = Math.pow(prod / newP0, 1 / wIn);
+		let xi = Math.pow(prod / newP0, 1 / wOut);
 		let newS0 = s0 + wIn * feedAmountIn;
-
-		let wOut = Fixed.directCast(coinOut.weight);
 
 		let tokenAmountOut =
 			CmmmCalculations.getTokenBalanceGivenInvariantAndAllOtherBalances(
@@ -285,7 +282,7 @@ export class CmmmCalculations {
 				newS0 // S(B) - xi / n (everything but the missing part)
 			);
 
-		let amountOut = Fixed.uncastAndUnnormalize(
+		let amountOut = FixedUtils.uncastAndUnnormalize(
 			coinOut.decimalsScalar,
 			(oldOut - tokenAmountOut) * (1 - swapFeeOut)
 		);
@@ -309,40 +306,39 @@ export class CmmmCalculations {
 		coinTypeOut: CoinType,
 		amountOut: Balance
 	): Balance => {
-		if (coinTypeIn == coinTypeOut)
+		if (coinTypeIn === coinTypeOut)
 			throw Error("in and out must be different coins");
 		let coinIn = pool.coins[coinTypeIn];
 		let coinOut = pool.coins[coinTypeOut];
-		let swapFeeIn = Fixed.directCast(coinIn.tradeFeeIn);
-		let swapFeeOut = Fixed.directCast(coinOut.tradeFeeOut);
+		let swapFeeIn = FixedUtils.directCast(coinIn.tradeFeeIn);
+		let swapFeeOut = FixedUtils.directCast(coinOut.tradeFeeOut);
 		if (swapFeeIn >= 1 || swapFeeOut >= 1) {
 			// this swap is disabled
-			if (amountOut == BigInt(0)) return BigInt(0);
+			if (amountOut === BigInt(0)) return BigInt(0);
 			throw Error("this swap is disabled");
 		}
 
-		let flatness = Fixed.directCast(pool.flatness);
-		let oldIn = Fixed.directCast(coinIn.normalizedBalance);
-		let oldOut = Fixed.directCast(coinOut.normalizedBalance);
+		let flatness = FixedUtils.directCast(pool.flatness);
+		let oldIn = FixedUtils.directCast(coinIn.normalizedBalance);
+		let oldOut = FixedUtils.directCast(coinOut.normalizedBalance);
 
-		let wOut = Fixed.directCast(coinOut.weight);
-		let [prod, _sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
+		let wOut = FixedUtils.directCast(coinOut.weight);
+		let wIn = FixedUtils.directCast(coinIn.weight);
+		let [prod, , p0, s0, h] = CmmmCalculations.calcInvariantComponents(
 			pool,
 			coinTypeIn
 		);
 
 		let feedAmountOut =
-			Fixed.castAndNormalize(coinIn.decimalsScalar, amountOut) /
+			FixedUtils.castAndNormalize(coinIn.decimalsScalar, amountOut) /
 			(1 - swapFeeOut);
 		let newOut = oldOut - feedAmountOut;
 		let prodRatio = Math.pow(newOut / oldOut, wOut);
 
 		let newP0 = p0 * prodRatio;
 		// the initial estimate (xi) is from if there were only the product part of the curve
-		let xi = Math.pow(prod / newP0, 1 / wOut);
+		let xi = Math.pow(prod / newP0, 1 / wIn);
 		let newS0 = s0 - wOut * feedAmountOut;
-
-		let wIn = Fixed.directCast(coinIn.weight);
 
 		let tokenAmountIn =
 			CmmmCalculations.getTokenBalanceGivenInvariantAndAllOtherBalances(
@@ -354,7 +350,7 @@ export class CmmmCalculations {
 				newS0 // S(B) - xi / n (everything but the missing part)
 			);
 
-		let amountIn = Fixed.uncastAndUnnormalize(
+		let amountIn = FixedUtils.uncastAndUnnormalize(
 			coinOut.decimalsScalar,
 			(tokenAmountIn - oldIn) / (1 - swapFeeIn)
 		);
@@ -374,7 +370,7 @@ export class CmmmCalculations {
 	// For computing swap amounts. Given the current balances (and any other parameters) and an amounts in vector,
 	// and a expected amounts out vector, determine the value of t > 0 such that t*expected_amounts_out
 	// is a valid swap from balances corresponding to adding amounts_in to the pool. The correct value of t is the one for which
-	// calc_swap_invariant(balances, ...parameters, amounts_in, t*expected_amounts_out) == calc_invariant_full(balances, ...parameters).
+	// calc_swap_invariant(balances, ...parameters, amounts_in, t*expected_amounts_out) === calc_invariant_full(balances, ...parameters).
 	public static calcSwapFixedIn = (
 		pool: PoolObject,
 		amountsIn: CoinsToBalance,
@@ -382,7 +378,7 @@ export class CmmmCalculations {
 	): OnChainScalar => {
 		let coins = pool.coins;
 		let invariant = CmmmCalculations.calcInvariant(pool);
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 		let ac = 1 - a;
 		let t = 1; // assume that the expected amounts out are close to the true amounts out
 		// this allows faster convergence if the caller chooses expected_amounts_out well
@@ -407,24 +403,26 @@ export class CmmmCalculations {
 
 		// make sure no disabled coin type is expected
 		for (let [coinType, coin] of Object.entries(coins)) {
-			amountOut = Fixed.castAndNormalize(
+			amountOut = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
-			feeOut = Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
+			feeOut = FixedUtils.complement(
+				FixedUtils.directCast(coin.tradeFeeOut)
+			);
 			if (amountOut > 0) {
-				if (feeOut == 0) {
+				if (feeOut === 0) {
 					throw Error("this trade is disabled");
 				} else {
 					// pool is drained when b + Ain * (1 - Sin) - t * Aout / (1 - Sout) = 0, or t = (b + Ain * (1 - Sin)) * (1 - So) / Aout
 					t =
-						((Fixed.directCast(coin.normalizedBalance) +
-							Fixed.castAndNormalize(
+						((FixedUtils.directCast(coin.normalizedBalance) +
+							FixedUtils.castAndNormalize(
 								coin.decimalsScalar,
 								amountsIn[coinType] || BigInt(0)
 							) *
-								Fixed.complement(
-									Fixed.directCast(coin.tradeFeeIn)
+								FixedUtils.complement(
+									FixedUtils.directCast(coin.tradeFeeIn)
 								)) /
 							amountOut) *
 						feeOut;
@@ -433,7 +431,7 @@ export class CmmmCalculations {
 			}
 		}
 		// drain_t is the maximum t can possibly be. It will be 0 if expected amounts out is way too high.
-		if (drainT == 0) return BigInt(0);
+		if (drainT === 0) return BigInt(0);
 		while (shifter >= drainT) shifter /= 2;
 
 		t = 1;
@@ -445,18 +443,22 @@ export class CmmmCalculations {
 			sum1 = 0;
 			skip = false;
 			for (let [coinType, coin] of Object.entries(coins)) {
-				balance = Fixed.directCast(coin.normalizedBalance);
-				weight = Fixed.directCast(coin.weight);
-				amountIn = Fixed.castAndNormalize(
+				balance = FixedUtils.directCast(coin.normalizedBalance);
+				weight = FixedUtils.directCast(coin.weight);
+				amountIn = FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsIn[coinType] || BigInt(0)
 				);
-				amountOut = Fixed.castAndNormalize(
+				amountOut = FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOutDirection[coinType] || BigInt(0)
 				);
-				feeIn = Fixed.complement(Fixed.directCast(coin.tradeFeeIn));
-				feeOut = Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
+				feeIn = FixedUtils.complement(
+					FixedUtils.directCast(coin.tradeFeeIn)
+				);
+				feeOut = FixedUtils.complement(
+					FixedUtils.directCast(coin.tradeFeeOut)
+				);
 
 				// pseudoin
 				part1 = feeIn * amountIn;
@@ -503,7 +505,7 @@ export class CmmmCalculations {
 					)
 				)
 					throw Error("invalid swap");
-				return Fixed.directUncast(t);
+				return FixedUtils.directUncast(t);
 			}
 
 			prevT = t;
@@ -520,7 +522,7 @@ export class CmmmCalculations {
 	): OnChainScalar => {
 		let coins = pool.coins;
 		let invariant = CmmmCalculations.calcInvariant(pool);
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 		let ac = 1 - a;
 		let t = 1; // assume that the expected amounts out are close to the true amounts out
 		// this allows faster convergence if the caller chooses expected_amounts_out well
@@ -543,7 +545,7 @@ export class CmmmCalculations {
 		// make sure no disabled coin type is expected
 		for (let [coinType, coin] of Object.entries(coins)) {
 			if (
-				coin.tradeFeeOut >= Fixed.fixedOneB &&
+				coin.tradeFeeOut >= FixedUtils.fixedOneB &&
 				(amountsOut[coinType] || BigInt(0)) > BigInt(0)
 			)
 				throw Error("this trade is disabled");
@@ -555,23 +557,23 @@ export class CmmmCalculations {
 			sum = 0;
 			sum1 = 0;
 			for (let [coinType, coin] of Object.entries(coins)) {
-				balance = Fixed.directCast(coin.normalizedBalance);
-				weight = Fixed.directCast(coin.weight);
-				amountIn = Fixed.castAndNormalize(
+				balance = FixedUtils.directCast(coin.normalizedBalance);
+				weight = FixedUtils.directCast(coin.weight);
+				amountIn = FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsInDirection[coinType] || BigInt(0)
 				);
-				amountOut = Fixed.castAndNormalize(
+				amountOut = FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOut[coinType] || BigInt(0)
 				);
-				feeIn = 1 - Fixed.directCast(coin.tradeFeeIn);
-				feeOut = 1 - Fixed.directCast(coin.tradeFeeOut);
+				feeIn = 1 - FixedUtils.directCast(coin.tradeFeeIn);
+				feeOut = 1 - FixedUtils.directCast(coin.tradeFeeOut);
 
 				// pseudoin expected
 				part1 = feeIn * amountIn;
 				// pseudoout
-				part2 = amountOut == 0 ? 0 : amountOut / feeOut;
+				part2 = amountOut === 0 ? 0 : amountOut / feeOut;
 				// pseudobalance
 				part3 = balance + t * part1 - part2;
 				// for derivatives: weight * fee_in * expected_amounts_in
@@ -607,7 +609,7 @@ export class CmmmCalculations {
 					)
 				)
 					throw Error("invalid swap");
-				return Fixed.directUncast(t);
+				return FixedUtils.directUncast(t);
 			}
 
 			prevT = t;
@@ -622,7 +624,7 @@ export class CmmmCalculations {
 	): OnChainScalar => {
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 		let ac = 1 - a;
 		let balance;
 		let weight;
@@ -637,15 +639,15 @@ export class CmmmCalculations {
 
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			amount = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			amount = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
 			fees[coinType] =
 				r * (balance + amount) >= balance
-					? 1 - Fixed.directCast(coin.tradeFeeIn)
-					: 1 / (1 - Fixed.directCast(coin.tradeFeeOut));
+					? 1 - FixedUtils.directCast(coin.tradeFeeIn)
+					: 1 / (1 - FixedUtils.directCast(coin.tradeFeeOut));
 		}
 
 		let i = 0;
@@ -662,9 +664,9 @@ export class CmmmCalculations {
 			sum = 0;
 			sum1 = 0;
 			for (let [coinType, coin] of Object.entries(coins)) {
-				balance = Fixed.directCast(coin.normalizedBalance);
-				weight = Fixed.directCast(coin.weight);
-				amount = Fixed.castAndNormalize(
+				balance = FixedUtils.directCast(coin.normalizedBalance);
+				weight = FixedUtils.directCast(coin.weight);
+				amount = FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsIn[coinType] || BigInt(0)
 				);
@@ -691,7 +693,7 @@ export class CmmmCalculations {
 			if (
 				Helpers.closeEnough(r, prevR, CmmmCalculations.convergenceBound)
 			) {
-				let scalar = Fixed.directUncast(r);
+				let scalar = FixedUtils.directUncast(r);
 				if (
 					!CmmmCalculations.checkValidDeposit(pool, amountsIn, scalar)
 				)
@@ -711,7 +713,7 @@ export class CmmmCalculations {
 	): LocalNumber => {
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 		let ac = 1 - a;
 		let balance;
 		let amount;
@@ -724,20 +726,21 @@ export class CmmmCalculations {
 		let part1;
 		// start cf_max as corresponding to r = 1
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			amount = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			amount = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
-			weight = Fixed.directCast(coin.weight);
+			weight = FixedUtils.directCast(coin.weight);
 
 			// this is all in so use fees in
-			part1 = balance + (1 - Fixed.directCast(coin.tradeFeeIn)) * amount;
+			part1 =
+				balance + (1 - FixedUtils.directCast(coin.tradeFeeIn)) * amount;
 			prod += weight * Math.log(part1);
 			sum += weight * part1;
 			// r_min portion of the loop
 			r =
-				(Fixed.directCast(coin.tradeFeeOut) * balance) /
+				(FixedUtils.directCast(coin.tradeFeeOut) * balance) /
 				(balance + amount);
 			rMin = Math.max(r, rMin);
 		}
@@ -747,9 +750,9 @@ export class CmmmCalculations {
 		let rMax = 1;
 		let cf: number;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
+			amount = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
@@ -759,9 +762,9 @@ export class CmmmCalculations {
 			prod = 0;
 			sum = 0;
 			for (let [coinType2, coin2] of Object.entries(coins)) {
-				balance = Fixed.directCast(coin2.normalizedBalance);
-				weight = Fixed.directCast(coin2.weight);
-				amount = Fixed.castAndNormalize(
+				balance = FixedUtils.directCast(coin2.normalizedBalance);
+				weight = FixedUtils.directCast(coin2.weight);
+				amount = FixedUtils.castAndNormalize(
 					coin2.decimalsScalar,
 					amountsIn[coinType2] || BigInt(0)
 				);
@@ -770,15 +773,15 @@ export class CmmmCalculations {
 					// r * (B0 + Din) >= B0 so use fees in
 					part1 =
 						balance +
-						(1 - Fixed.directCast(coin2.tradeFeeIn)) *
+						(1 - FixedUtils.directCast(coin2.tradeFeeIn)) *
 							(part1 - balance);
 				} else {
 					// r * (B0 + Din) < B0 so use fees out
 					part1 =
 						balance -
 						(balance - part1) /
-							Fixed.complement(
-								Fixed.directCast(coin.tradeFeeOut)
+							FixedUtils.complement(
+								FixedUtils.directCast(coin.tradeFeeOut)
 							);
 				}
 				prod += weight * Math.log(part1);
@@ -804,7 +807,7 @@ export class CmmmCalculations {
 		}
 
 		r =
-			cfMin == cfMax
+			cfMin === cfMax
 				? rMin
 				: (rMin * cfMax + (rMax - rMin) * invariant - rMax * cfMin) /
 				  (cfMax - cfMin);
@@ -822,7 +825,7 @@ export class CmmmCalculations {
 		let lpr = lpRatio;
 		let lpc = 1 - lpr;
 		let scaledInvariant = invariant * lpr;
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 		let ac = 1 - a;
 		let i;
 		let prevR = 0;
@@ -851,15 +854,15 @@ export class CmmmCalculations {
 
 		let fees: Record<CoinType, number> = {};
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			amountOut = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			amountOut = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
 			fees[coinType] =
 				balance * lpc >= r * amountOut
-					? 1 - Fixed.directCast(coin.tradeFeeIn)
-					: 1 / (1 - Fixed.directCast(coin.tradeFeeOut));
+					? 1 - FixedUtils.directCast(coin.tradeFeeIn)
+					: 1 / (1 - FixedUtils.directCast(coin.tradeFeeOut));
 		}
 
 		i = 0;
@@ -870,9 +873,9 @@ export class CmmmCalculations {
 			sum1 = 0;
 			skip = false;
 			for (let [coinType, coin] of Object.entries(coins)) {
-				balance = Fixed.directCast(coin.normalizedBalance);
-				weight = Fixed.directCast(coin.weight);
-				amountOut = Fixed.castAndNormalize(
+				balance = FixedUtils.directCast(coin.normalizedBalance);
+				weight = FixedUtils.directCast(coin.weight);
+				amountOut = FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOutDirection[coinType] || BigInt(0)
 				);
@@ -920,9 +923,9 @@ export class CmmmCalculations {
 			) {
 				let returner: CoinsToBalance = {};
 				for (let coinType of Object.keys(coins)) {
-					returner[coinType] = Fixed.directUncast(
+					returner[coinType] = FixedUtils.directUncast(
 						r *
-							Fixed.directCast(
+							FixedUtils.directCast(
 								amountsOutDirection[coinType] || BigInt(0)
 							)
 					);
@@ -954,7 +957,7 @@ export class CmmmCalculations {
 		let lpr = lpRatio;
 		let lpc = 1 - lpr;
 		let scaledInvariant = invariant * lpr;
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 		let ac = 1 - a;
 		let keepT: boolean;
 		let tDrain;
@@ -979,9 +982,9 @@ export class CmmmCalculations {
 		prod = 0;
 		sum = 0;
 		for (let coin of Object.values(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
-			fee = Fixed.directCast(coin.tradeFeeIn);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
+			fee = FixedUtils.directCast(coin.tradeFeeIn);
 			part1 = balance * (1 + lpr * fee - fee);
 			prod += weight * Math.log(part1);
 			sum += weight * part1;
@@ -993,15 +996,15 @@ export class CmmmCalculations {
 		cfMin = 0;
 		tMin = Number.POSITIVE_INFINITY;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			amountOut = Fixed.castAndNormalize(
+			amountOut = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
-			if (amountOut == 0) continue;
+			if (amountOut === 0) continue;
 			t =
-				(Fixed.directCast(coin.normalizedBalance) *
-					Fixed.complement(
-						Fixed.directCast(coin.tradeFeeOut) * lpRatio
+				(FixedUtils.directCast(coin.normalizedBalance) *
+					FixedUtils.complement(
+						FixedUtils.directCast(coin.tradeFeeOut) * lpRatio
 					)) /
 				amountOut;
 			if (t < tMin) tMin = t;
@@ -1010,20 +1013,20 @@ export class CmmmCalculations {
 
 		// remaining test points are the CF discontinuities: where B0 - t*D = R*B0
 		for (let [coinTypeT, coinT] of Object.entries(coins)) {
-			amountOut = Fixed.castAndNormalize(
+			amountOut = FixedUtils.castAndNormalize(
 				coinT.decimalsScalar,
 				amountsOutDirection[coinTypeT] || BigInt(0)
 			);
-			if (amountOut == 0) continue;
-			balance = Fixed.directCast(coinT.normalizedBalance);
+			if (amountOut === 0) continue;
+			balance = FixedUtils.directCast(coinT.normalizedBalance);
 			t = (balance * lpc) / amountOut;
 			prod = 0;
 			sum = 0;
 			keepT = true;
 			for (let [coinType, coin] of Object.entries(coins)) {
-				balance = Fixed.directCast(coin.normalizedBalance);
-				weight = Fixed.directCast(coin.weight);
-				amountOut = Fixed.castAndNormalize(
+				balance = FixedUtils.directCast(coin.normalizedBalance);
+				weight = FixedUtils.directCast(coin.weight);
+				amountOut = FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOutDirection[coinType] || BigInt(0)
 				);
@@ -1038,12 +1041,14 @@ export class CmmmCalculations {
 				part3 =
 					part1 >= part2
 						? part2 +
-						  Fixed.complement(Fixed.directCast(coin.tradeFeeIn)) *
+						  FixedUtils.complement(
+								FixedUtils.directCast(coin.tradeFeeIn)
+						  ) *
 								(part1 - part2)
 						: part2 -
 						  (part2 - part1) /
-								Fixed.complement(
-									Fixed.directCast(coin.tradeFeeOut)
+								FixedUtils.complement(
+									FixedUtils.directCast(coin.tradeFeeOut)
 								);
 				prod += weight * Math.log(part3);
 				sum += weight * part3;
@@ -1071,7 +1076,7 @@ export class CmmmCalculations {
 
 		// initial estimate is the linear interpolation between discontinuity bounds
 		t =
-			cfMax == cfMin
+			cfMax === cfMin
 				? tMin
 				: (tMin * cfMax +
 						tMax * scaledInvariant -
@@ -1098,8 +1103,8 @@ export class CmmmCalculations {
 		let s;
 		let sMin = Number.POSITIVE_INFINITY;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			amountIn = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			amountIn = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
@@ -1135,8 +1140,8 @@ export class CmmmCalculations {
 		let s;
 		let sMax = 0;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			amountOut = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			amountOut = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOut[coinType] || BigInt(0)
 			);
@@ -1165,6 +1170,8 @@ export class CmmmCalculations {
 		p0: number, // P(B) / xi^(1/n) (everything but the missing part)
 		s0: number // S(B) - xi / n (everything but the missing part)
 	): number => {
+		if (isNaN(xi)) throw new Error("initial estimate is not a number");
+
 		// Standard Newton method used here
 
 		// ---------------- setting constants ----------------
@@ -1272,7 +1279,7 @@ export class CmmmCalculations {
 		amountsOutScalar: LocalNumber
 	): boolean => {
 		let coins = pool.coins;
-		let flatness = Fixed.directCast(pool.flatness);
+		let flatness = FixedUtils.directCast(pool.flatness);
 
 		// balance = balances[i]
 		let balance;
@@ -1294,24 +1301,25 @@ export class CmmmCalculations {
 		let postsum = 0;
 
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
 			amountIn =
-				Fixed.castAndNormalize(
+				FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsIn[coinType] || BigInt(0)
 				) * amountsInScalar;
 			amountOut =
-				Fixed.castAndNormalize(
+				FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOut[coinType] || BigInt(0)
 				) * amountsOutScalar;
 			if (amountIn > 0 && amountOut > 0) return false;
-			feedAmountIn = amountIn * (1 - Fixed.directCast(coin.tradeFeeIn));
+			feedAmountIn =
+				amountIn * (1 - FixedUtils.directCast(coin.tradeFeeIn));
 			feedAmountOut =
-				amountOut == 0
+				amountOut === 0
 					? 0
-					: amountOut / (1 - Fixed.directCast(coin.tradeFeeOut));
+					: amountOut / (1 - FixedUtils.directCast(coin.tradeFeeOut));
 
 			postbalance = balance + amountIn;
 			if (amountOut > postbalance + 1) return false;
@@ -1352,7 +1360,7 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				Fixed.fixedOneN
+				FixedUtils.fixedOneN
 			) ||
 				Helpers.closeEnough(
 					preinvariant,
@@ -1372,11 +1380,11 @@ export class CmmmCalculations {
 		amountInB: Balance,
 		amountOutB: Balance
 	): boolean => {
-		if (coinTypeIn == coinTypeOut) return false;
+		if (coinTypeIn === coinTypeOut) return false;
 		let coins = pool.coins;
 		let coinIn = coins[coinTypeIn];
 		let coinOut = coins[coinTypeOut];
-		let flatness = Fixed.directCast(pool.flatness);
+		let flatness = FixedUtils.directCast(pool.flatness);
 
 		// balance = balances[i]
 		let balance;
@@ -1385,19 +1393,20 @@ export class CmmmCalculations {
 		// postbalance = balance + amount in - amount out
 		let postbalance;
 		let weight;
-		let amountIn = Fixed.castAndNormalize(
+		let amountIn = FixedUtils.castAndNormalize(
 			coinIn.decimalsScalar,
 			amountInB
 		);
-		let amountOut = Fixed.castAndNormalize(
+		let amountOut = FixedUtils.castAndNormalize(
 			coinOut.decimalsScalar,
 			amountOutB
 		);
-		let feedAmountIn = amountIn * (1 - Fixed.directCast(coinIn.tradeFeeIn));
+		let feedAmountIn =
+			amountIn * (1 - FixedUtils.directCast(coinIn.tradeFeeIn));
 		let feedAmountOut =
-			amountOut == 0
+			amountOut === 0
 				? 0
-				: amountOut / (1 - Fixed.directCast(coinOut.tradeFeeOut));
+				: amountOut / (1 - FixedUtils.directCast(coinOut.tradeFeeOut));
 
 		let preprod = 0;
 		let presum = 0;
@@ -1409,8 +1418,8 @@ export class CmmmCalculations {
 		let s;
 
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
 
 			p = weight * Math.log(balance);
 			s = weight * balance;
@@ -1418,7 +1427,7 @@ export class CmmmCalculations {
 			preprod += p;
 			presum += s;
 
-			if (coinType == coinTypeIn) {
+			if (coinType === coinTypeIn) {
 				pseudobalance = balance + feedAmountIn;
 				postbalance = balance + amountIn;
 
@@ -1427,7 +1436,7 @@ export class CmmmCalculations {
 				postprod += weight * Math.log(postbalance);
 				postsum += weight * postbalance;
 			} else {
-				if (coinType == coinTypeOut) {
+				if (coinType === coinTypeOut) {
 					if (feedAmountOut > balance + 1 || amountOut > balance + 1)
 						return false;
 					pseudobalance = balance - feedAmountOut;
@@ -1470,7 +1479,7 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				Fixed.fixedOneN
+				FixedUtils.fixedOneN
 			) ||
 				Helpers.closeEnough(
 					preinvariant,
@@ -1491,10 +1500,10 @@ export class CmmmCalculations {
 		// This test is check_valid_swap for those data
 
 		let coins = pool.coins;
-		let lpRatio = Fixed.directCast(lpRatioRaw);
+		let lpRatio = FixedUtils.directCast(lpRatioRaw);
 		if (lpRatio > 1) return false;
 
-		let flatness = Fixed.directCast(pool.flatness);
+		let flatness = FixedUtils.directCast(pool.flatness);
 
 		// balance = balances[i]
 		let balance;
@@ -1518,9 +1527,9 @@ export class CmmmCalculations {
 		let postsum = 0;
 
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
+			amount = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
@@ -1529,15 +1538,16 @@ export class CmmmCalculations {
 			if (postbalance >= balance) {
 				// use fee in
 				diff = postbalance - balance;
-				pseudodiff = diff * (1 - Fixed.directCast(coin.tradeFeeIn));
+				pseudodiff =
+					diff * (1 - FixedUtils.directCast(coin.tradeFeeIn));
 				pseudobalance = balance + pseudodiff;
 			} else {
 				// use fee out
 				diff = balance - postbalance;
 				pseudodiff =
-					diff == 0
+					diff === 0
 						? 0
-						: diff / (1 - Fixed.directCast(coin.tradeFeeOut));
+						: diff / (1 - FixedUtils.directCast(coin.tradeFeeOut));
 				if (pseudodiff >= balance + 1) return false;
 				pseudobalance = balance - pseudodiff;
 			}
@@ -1574,7 +1584,7 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				Fixed.fixedOneN
+				FixedUtils.fixedOneN
 			) ||
 				Helpers.closeEnough(
 					preinvariant,
@@ -1596,7 +1606,7 @@ export class CmmmCalculations {
 		let coins = pool.coins;
 		if (lpRatio > 1) return false;
 
-		let flatness = Fixed.directCast(pool.flatness);
+		let flatness = FixedUtils.directCast(pool.flatness);
 
 		// balance = balances[i]
 		let balance;
@@ -1620,10 +1630,10 @@ export class CmmmCalculations {
 		let postsum = 0;
 
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
 			scaledBalance = lpRatio * balance;
-			weight = Fixed.directCast(coin.weight);
-			amount = Fixed.castAndNormalize(
+			weight = FixedUtils.directCast(coin.weight);
+			amount = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutSrc[coinType] || BigInt(0)
 			);
@@ -1634,16 +1644,21 @@ export class CmmmCalculations {
 				// use fee in
 				diff = postbalance - scaledBalance;
 				pseudodiff =
-					diff * Fixed.complement(Fixed.directCast(coin.tradeFeeIn));
+					diff *
+					FixedUtils.complement(
+						FixedUtils.directCast(coin.tradeFeeIn)
+					);
 				pseudobalance = scaledBalance + pseudodiff;
 			} else {
 				// use fee out
 				diff = scaledBalance - postbalance;
 				pseudodiff =
-					diff == 0
+					diff === 0
 						? 0
 						: diff /
-						  Fixed.complement(Fixed.directCast(coin.tradeFeeOut));
+						  FixedUtils.complement(
+								FixedUtils.directCast(coin.tradeFeeOut)
+						  );
 				if (pseudodiff > scaledBalance + 1) return false;
 				pseudobalance = scaledBalance - pseudodiff;
 			}
@@ -1680,7 +1695,7 @@ export class CmmmCalculations {
 			(Helpers.veryCloseInt(
 				preinvariant,
 				pseudoinvariant,
-				Fixed.fixedOneN
+				FixedUtils.fixedOneN
 			) ||
 				Helpers.closeEnough(
 					preinvariant,
@@ -1739,7 +1754,7 @@ export class CmmmCalculations {
 
 		let coins = pool.coins;
 		let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 
 		let balance;
 		let grad;
@@ -1748,22 +1763,22 @@ export class CmmmCalculations {
 		let inDotGrad = 0;
 		let outDotGrad = 0;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			amountIn = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			amountIn = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsIn[coinType] || BigInt(0)
 			);
-			amountOut = Fixed.castAndNormalize(
+			amountOut = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOutDirection[coinType] || BigInt(0)
 			);
 			grad =
-				amountIn == 0
-					? (Fixed.directCast(coin.weight) *
+				amountIn === 0
+					? (FixedUtils.directCast(coin.weight) *
 							(spotBody + 2 * a * balance)) /
-					  (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
-					: (Fixed.directCast(coin.weight) *
-							(1 - Fixed.directCast(coin.tradeFeeIn)) *
+					  (balance * (1 - FixedUtils.directCast(coin.tradeFeeOut)))
+					: (FixedUtils.directCast(coin.weight) *
+							(1 - FixedUtils.directCast(coin.tradeFeeIn)) *
 							(spotBody + 2 * a * balance)) /
 					  balance;
 			inDotGrad += amountIn * grad;
@@ -1789,7 +1804,7 @@ export class CmmmCalculations {
 
 		let coins = pool.coins;
 		let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 
 		let balance;
 		let grad;
@@ -1798,22 +1813,22 @@ export class CmmmCalculations {
 		let inDotGrad = 0;
 		let outDotGrad = 0;
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			amountIn = Fixed.castAndNormalize(
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			amountIn = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsInDirection[coinType] || BigInt(0)
 			);
-			amountOut = Fixed.castAndNormalize(
+			amountOut = FixedUtils.castAndNormalize(
 				coin.decimalsScalar,
 				amountsOut[coinType] || BigInt(0)
 			);
 			grad =
-				amountIn == 0
-					? (Fixed.directCast(coin.weight) *
+				amountIn === 0
+					? (FixedUtils.directCast(coin.weight) *
 							(spotBody + 2 * a * balance)) /
-					  (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
-					: (Fixed.directCast(coin.weight) *
-							(1 - Fixed.directCast(coin.tradeFeeIn)) *
+					  (balance * (1 - FixedUtils.directCast(coin.tradeFeeOut)))
+					: (FixedUtils.directCast(coin.weight) *
+							(1 - FixedUtils.directCast(coin.tradeFeeIn)) *
 							(spotBody + 2 * a * balance)) /
 					  balance;
 			inDotGrad += amountIn * grad;
@@ -1846,7 +1861,7 @@ export class CmmmCalculations {
 
 		let coins = pool.coins;
 		let spotBody = CmmmCalculations.calcSpotPriceBody(pool);
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 
 		// dot(B0, g)
 		let d1 = 0;
@@ -1860,11 +1875,11 @@ export class CmmmCalculations {
 		let scaledAmount;
 
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
 			amount =
 				balance +
-				Fixed.castAndNormalize(
+				FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsIn[coinType] || BigInt(0)
 				);
@@ -1874,10 +1889,10 @@ export class CmmmCalculations {
 				scaledAmount < balance
 					? // use amount out
 					  (weight * (spotBody + 2 * a * balance)) /
-					  (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
+					  (balance * (1 - FixedUtils.directCast(coin.tradeFeeOut)))
 					: // use amount in
 					  (weight *
-							(1 - Fixed.directCast(coin.tradeFeeIn)) *
+							(1 - FixedUtils.directCast(coin.tradeFeeIn)) *
 							(spotBody + 2 * a * balance)) /
 					  balance;
 
@@ -1916,7 +1931,7 @@ export class CmmmCalculations {
 		let coins = pool.coins;
 		// Swap center is R*B0, not B0. Luckily the spot body formula is homogeneous.
 		let spotBody = CmmmCalculations.calcSpotPriceBody(pool) * lpRatio;
-		let a = Fixed.directCast(pool.flatness);
+		let a = FixedUtils.directCast(pool.flatness);
 
 		// dot(B0, g)
 		let d1 = 0;
@@ -1930,11 +1945,11 @@ export class CmmmCalculations {
 		let grad;
 
 		for (let [coinType, coin] of Object.entries(coins)) {
-			balance = Fixed.directCast(coin.normalizedBalance);
-			weight = Fixed.directCast(coin.weight);
+			balance = FixedUtils.directCast(coin.normalizedBalance);
+			weight = FixedUtils.directCast(coin.weight);
 			amount =
 				balance +
-				Fixed.castAndNormalize(
+				FixedUtils.castAndNormalize(
 					coin.decimalsScalar,
 					amountsOutDirection[coinType] || BigInt(0)
 				);
@@ -1944,10 +1959,10 @@ export class CmmmCalculations {
 				scaledAmount < balance
 					? // use amount out
 					  (weight * (spotBody + 2 * a * balance)) /
-					  (balance * (1 - Fixed.directCast(coin.tradeFeeOut)))
+					  (balance * (1 - FixedUtils.directCast(coin.tradeFeeOut)))
 					: // use amount in
 					  (weight *
-							(1 - Fixed.directCast(coin.tradeFeeIn)) *
+							(1 - FixedUtils.directCast(coin.tradeFeeIn)) *
 							(spotBody + 2 * a * balance)) /
 					  balance;
 

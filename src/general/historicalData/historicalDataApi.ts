@@ -20,6 +20,11 @@ export class HistoricalDataApi implements HistoricalDataApiInterface {
 	//  Public
 	// =========================================================================
 
+	public fetchAllSuiCoinData = new CoinGeckoApiHelpers(
+		this.coinGeckoApiKey,
+		this.coinApiIdsToCoinTypes
+	).fetchAllSuiCoinData;
+
 	public fetchAllCoinData = new CoinGeckoApiHelpers(
 		this.coinGeckoApiKey,
 		this.coinApiIdsToCoinTypes

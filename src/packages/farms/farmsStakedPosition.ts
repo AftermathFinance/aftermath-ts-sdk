@@ -17,7 +17,7 @@ import {
 	Url,
 } from "../../types";
 import { FarmsStakingPool } from "./farmsStakingPool";
-import { Fixed } from "../../general/utils/fixed";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Helpers } from "../../general/utils";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
@@ -396,12 +396,12 @@ export class FarmsStakedPosition extends Caller {
 		// Base [e.g. principal] staked amount receives full (unaltered) rewards.
 		const rewardsAttributedToPrincipal =
 			(principalStakedAmount * rewardsAccumulatedPerShare) /
-			Fixed.fixedOneB;
+			FixedUtils.fixedOneB;
 
 		const totalRewardsAttributedToLockMultiplier =
 			(this.stakedPosition.stakedAmountWithMultiplier *
 				rewardsAccumulatedPerShare) /
-			Fixed.fixedOneB;
+			FixedUtils.fixedOneB;
 
 		// The position should only receive multiplied rewards for the time that was spent locked since
 		//  the last harvest. This case occurs when the user calls `pending_rewards` after the position's
@@ -489,7 +489,7 @@ export class FarmsStakedPosition extends Caller {
 
 		// ib. Reset position's lock parameters.
 		this.stakedPosition.lockDurationMs = 0;
-		this.stakedPosition.lockMultiplier = Fixed.fixedOneB;
+		this.stakedPosition.lockMultiplier = FixedUtils.fixedOneB;
 	};
 
 	private isUnlocked = (inputs: {

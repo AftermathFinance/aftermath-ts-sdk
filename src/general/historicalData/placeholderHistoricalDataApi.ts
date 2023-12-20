@@ -4,6 +4,10 @@ import { CoinHistoricalData } from "./historicalDataTypes";
 export class PlaceholderHistoricalDataApi
 	implements HistoricalDataApiInterface
 {
+	public fetchAllSuiCoinData = async () => {
+		return {};
+	};
+
 	public fetchAllCoinData = async () => {
 		return {};
 	};

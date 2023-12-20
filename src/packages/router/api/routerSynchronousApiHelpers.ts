@@ -123,7 +123,7 @@ export class RouterSynchronousApiHelpers {
 					objectIds:
 						inputs.synchronousProtocolsToPoolObjectIds[
 							protocols[index]
-						],
+						] ?? [],
 				})
 			)
 		);

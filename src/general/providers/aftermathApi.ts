@@ -20,13 +20,16 @@ import {
 	PartialRouterOptions,
 	RouterProtocolName,
 	RouterSynchronousOptions,
+	Url,
 } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
-import { FarmsApi } from "../../packages/farms/api/farmsApi";
+import { OracleApi } from "../../packages/oracle/api/oracleApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
+// import { PriceFeedsApi } from "../priceFeeds/priceFeedsApi";
+import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
@@ -120,6 +123,8 @@ export class AftermathApi {
 				)
 		: () => new PlaceholderHistoricalDataApi();
 
+	// public PriceFeeds = new PriceFeedsApi(this.pythPriceServiceEndpoint);
+
 	// =========================================================================
 	//  General Packages
 	// =========================================================================
@@ -138,6 +143,7 @@ export class AftermathApi {
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);
+	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
 
 	/**

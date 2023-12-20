@@ -67,7 +67,6 @@ export class FarmsApi {
 			vaultRegistry: "vault_registry",
 			events: "events",
 		},
-
 		eventNames: {
 			// staking pools
 			// creation
@@ -1254,7 +1253,9 @@ export class FarmsApi {
 			tx,
 		});
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		const isUnlocked: boolean = bcs.de("bool", new Uint8Array(bytes));
 		return isUnlocked;
@@ -1270,7 +1271,9 @@ export class FarmsApi {
 			tx,
 		});
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
 		return (
 			bcs.de("vector<u64>", new Uint8Array(bytes)) as BigIntAsString[]

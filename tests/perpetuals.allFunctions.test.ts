@@ -34,6 +34,16 @@ import { PerpetualsOrderSide, PerpetualsOrderType } from "../src/types";
 import { SuiClient } from "@mysten/sui.js/client";
 import { Helpers, IndexerCaller } from "../src/general/utils";
 
+// =========================================================================
+//
+// =========================================================================
+// =========================================================================
+//  THIS TESTS ARE OUTDATED
+// =========================================================================
+// =========================================================================
+//
+// =========================================================================
+
 describe("Perpetuals Tests", () => {
 	test("All entry functions", async () => {
 		const provider = new SuiClient({
@@ -126,29 +136,29 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
-		// Create price feed for "BTC" perpetual (BTC/USD oracle price feed)
-		console.log("Create BTC price feed");
-		tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "BTC",
-		});
-		await admin.signAndExecuteTransactionBlock({
-			transactionBlock: tx,
-			requestType,
-		});
+		// // Create price feed for "BTC" perpetual (BTC/USD oracle price feed)
+		// // console.log("Create BTC price feed");
+		// tx = await aftermathApi.Oracle().buildDevCreatePriceFeedTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinSymbol: "BTC",
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
-		// Update price for "BTC" to 10000$ in fixed representation
-		console.log("Update BTC price feed");
-		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "BTC",
-			price: initialOraclePrice,
-			timestamp: 0,
-		});
-		await admin.signAndExecuteTransactionBlock({
-			transactionBlock: tx,
-			requestType,
-		});
+		// // Update price for "BTC" to 10000$ in fixed representation
+		// console.log("Update BTC price feed");
+		// tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinSymbol: "BTC",
+		// 	price: initialOraclePrice,
+		// 	timestamp: 0,
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
 		// Add insurance fund
 		console.log("Add insurance fund");
@@ -437,17 +447,17 @@ describe("Perpetuals Tests", () => {
 			requestType,
 		});
 
-		console.log("Update oracle price");
-		tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
-			walletAddress: await admin.getAddress(),
-			coinSymbol: "BTC",
-			price: finalOraclePrice,
-			timestamp: 0,
-		});
-		await admin.signAndExecuteTransactionBlock({
-			transactionBlock: tx,
-			requestType,
-		});
+		// console.log("Update oracle price");
+		// tx = await aftermathApi.Oracle().buildDevUpdatePriceFeedTx({
+		// 	walletAddress: await admin.getAddress(),
+		// 	coinSymbol: "BTC",
+		// 	price: finalOraclePrice,
+		// 	timestamp: 0,
+		// });
+		// await admin.signAndExecuteTransactionBlock({
+		// 	transactionBlock: tx,
+		// 	requestType,
+		// });
 
 		// `sizes` computed with `compute_size_to_liquidate_isolated` in
 		// `perpetuals/scripts/liquidation.py`
