@@ -113,9 +113,8 @@ export const isRouterSynchronousProtocolName = (
 	return RouterSynchronousProtocolNames.includes(protocolName);
 };
 
-export type SynchronousProtocolsToPoolObjectIds = Record<
-	Partial<RouterSynchronousProtocolName>,
-	ObjectId[]
+export type SynchronousProtocolsToPoolObjectIds = Partial<
+	Record<RouterSynchronousProtocolName, ObjectId[]>
 >;
 
 // =========================================================================

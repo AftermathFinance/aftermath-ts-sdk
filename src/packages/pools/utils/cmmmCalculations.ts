@@ -255,7 +255,8 @@ export class CmmmCalculations {
 		let oldOut = FixedUtils.directCast(coinOut.normalizedBalance);
 
 		let wIn = FixedUtils.directCast(coinIn.weight);
-		let [prod, _sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
+		let wOut = FixedUtils.directCast(coinOut.weight);
+		let [prod, , p0, s0, h] = CmmmCalculations.calcInvariantComponents(
 			pool,
 			coinTypeOut
 		);
@@ -268,10 +269,8 @@ export class CmmmCalculations {
 
 		let newP0 = p0 * prodRatio;
 		// the initial estimate (xi) is from if there were only the product part of the curve
-		let xi = Math.pow(prod / newP0, 1 / wIn);
+		let xi = Math.pow(prod / newP0, 1 / wOut);
 		let newS0 = s0 + wIn * feedAmountIn;
-
-		let wOut = FixedUtils.directCast(coinOut.weight);
 
 		let tokenAmountOut =
 			CmmmCalculations.getTokenBalanceGivenInvariantAndAllOtherBalances(
@@ -324,7 +323,8 @@ export class CmmmCalculations {
 		let oldOut = FixedUtils.directCast(coinOut.normalizedBalance);
 
 		let wOut = FixedUtils.directCast(coinOut.weight);
-		let [prod, _sum, p0, s0, h] = CmmmCalculations.calcInvariantComponents(
+		let wIn = FixedUtils.directCast(coinIn.weight);
+		let [prod, , p0, s0, h] = CmmmCalculations.calcInvariantComponents(
 			pool,
 			coinTypeIn
 		);
@@ -337,10 +337,8 @@ export class CmmmCalculations {
 
 		let newP0 = p0 * prodRatio;
 		// the initial estimate (xi) is from if there were only the product part of the curve
-		let xi = Math.pow(prod / newP0, 1 / wOut);
+		let xi = Math.pow(prod / newP0, 1 / wIn);
 		let newS0 = s0 - wOut * feedAmountOut;
-
-		let wIn = FixedUtils.directCast(coinIn.weight);
 
 		let tokenAmountIn =
 			CmmmCalculations.getTokenBalanceGivenInvariantAndAllOtherBalances(
@@ -1172,6 +1170,8 @@ export class CmmmCalculations {
 		p0: number, // P(B) / xi^(1/n) (everything but the missing part)
 		s0: number // S(B) - xi / n (everything but the missing part)
 	): number => {
+		if (isNaN(xi)) throw new Error("initial estimate is not a number");
+
 		// Standard Newton method used here
 
 		// ---------------- setting constants ----------------

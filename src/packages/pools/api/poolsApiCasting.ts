@@ -41,38 +41,26 @@ export class PoolsApiCasting {
 		);
 
 		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
-			(acc, cur, index) => {
-				return {
-					...acc,
-					["0x" + cur]: {
-						weight: BigInt(poolFieldsOnChain.weights[index]),
-						balance:
-							BigInt(
-								poolFieldsOnChain.normalized_balances[index]
-							) /
-							BigInt(poolFieldsOnChain.decimal_scalars[index]),
-						tradeFeeIn: BigInt(
-							poolFieldsOnChain.fees_swap_in[index]
-						),
-						tradeFeeOut: BigInt(
-							poolFieldsOnChain.fees_swap_out[index]
-						),
-						depositFee: BigInt(
-							poolFieldsOnChain.fees_deposit[index]
-						),
-						withdrawFee: BigInt(
-							poolFieldsOnChain.fees_withdraw[index]
-						),
-						normalizedBalance: BigInt(
-							poolFieldsOnChain.normalized_balances[index]
-						),
-						decimalsScalar: BigInt(
-							poolFieldsOnChain.decimal_scalars[index]
-						),
-					},
-				};
-			},
-			{} as PoolCoins
+			(acc, cur, index) => ({
+				...acc,
+				[Helpers.addLeadingZeroesToType("0x" + cur)]: {
+					weight: BigInt(poolFieldsOnChain.weights[index]),
+					balance:
+						BigInt(poolFieldsOnChain.normalized_balances[index]) /
+						BigInt(poolFieldsOnChain.decimal_scalars[index]),
+					tradeFeeIn: BigInt(poolFieldsOnChain.fees_swap_in[index]),
+					tradeFeeOut: BigInt(poolFieldsOnChain.fees_swap_out[index]),
+					depositFee: BigInt(poolFieldsOnChain.fees_deposit[index]),
+					withdrawFee: BigInt(poolFieldsOnChain.fees_withdraw[index]),
+					normalizedBalance: BigInt(
+						poolFieldsOnChain.normalized_balances[index]
+					),
+					decimalsScalar: BigInt(
+						poolFieldsOnChain.decimal_scalars[index]
+					),
+				},
+			}),
+			{}
 		);
 
 		return {
