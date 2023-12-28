@@ -10,7 +10,7 @@ import {
 } from "../../general/types/generalTypes";
 import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { RouterSerializablePool } from "../router/routerTypes";
+import { RouterSerializablePool, UniqueId } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
 
@@ -148,6 +148,30 @@ export interface PoolCreationLpCoinMetadata {
 	name: string;
 	symbol: string;
 	iconUrl?: Url;
+}
+
+// =========================================================================
+//  CoinGecko Integration
+// =========================================================================
+
+export interface CoinGeckoTickerData {
+	ticker_id: UniqueId;
+	base_currency: CoinType;
+	target_currency: CoinType;
+	pool_id: ObjectId;
+	last_price: number;
+	base_volume: number;
+	target_volume: number;
+	liquidity_in_usd: number;
+}
+
+export interface CoinGeckoHistoricalTradeData {
+	trade_id: UniqueId;
+	price: number;
+	base_volume: number;
+	target_volume: number;
+	trade_timestamp: Timestamp;
+	type: "buy" | "sell";
 }
 
 // =========================================================================

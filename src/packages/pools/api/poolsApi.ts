@@ -44,6 +44,8 @@ import {
 	SuiAddress,
 	ApiPublishLpCoinBody,
 	PoolLpInfo,
+	CoinGeckoTickerData,
+	CoinGeckoHistoricalTradeData,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -1370,11 +1372,17 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public fetchPoolVolume = async (inputs: {
 		poolId: ObjectId;
 		durationMs: number;
-	}) => {
+	}): Promise<IndexerSwapVolumeResponse> => {
 		const { poolId, durationMs } = inputs;
-		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
-			`pools/${poolId}/swap-volume/${durationMs}`
-		);
+		const response =
+			await this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+				`pools/${poolId}/swap-volume/${durationMs}`
+			);
+		return response.map((data) => ({
+			...data,
+			coinTypeIn: Helpers.addLeadingZeroesToType(data.coinTypeIn),
+			coinTypeOut: Helpers.addLeadingZeroesToType(data.coinTypeOut),
+		}));
 	};
 
 	/**
@@ -1654,6 +1662,127 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				acc + symbol + (index >= coinSymbols.length - 1 ? "" : ", "),
 			""
 		)})`;
+	};
+
+	// =========================================================================
+	//  CoinGecko Integration
+	// =========================================================================
+
+	public fetchCoinGeckoTickerData = async (inputs: {
+		pools: Pool[];
+		coinsToDecimals: CoinsToDecimals;
+	}): Promise<CoinGeckoTickerData[]> => {
+		const { pools, coinsToDecimals } = inputs;
+
+		return (
+			await Promise.all(
+				pools.map(async (pool) => {
+					const durationMs24hrs = 86400000;
+					const volumes = await this.fetchPoolVolume({
+						poolId: pool.pool.objectId,
+						durationMs: durationMs24hrs,
+					});
+
+					return Object.keys(pool.pool.coins)
+						.map((baseCoinType) => {
+							return Object.keys(pool.pool.coins)
+								.map((targetCoinType) => {
+									if (!pool.stats)
+										throw new Error(
+											"pool is missing stats"
+										);
+
+									if (baseCoinType === targetCoinType)
+										return undefined;
+
+									const volumeData = volumes.find(
+										(volume) =>
+											volume.coinTypeIn === baseCoinType
+									);
+									if (!volumeData)
+										throw new Error(
+											"volume data not found"
+										);
+
+									const baseDecimals =
+										coinsToDecimals[baseCoinType];
+									const targetDecimals =
+										coinsToDecimals[targetCoinType];
+									if (
+										baseDecimals === undefined ||
+										targetDecimals === undefined
+									)
+										throw new Error(
+											"coin decimals not found"
+										);
+
+									const baseVolume = Coin.balanceWithDecimals(
+										BigInt(volumeData.totalAmountIn),
+										baseDecimals
+									);
+									const targetVolume =
+										Coin.balanceWithDecimals(
+											BigInt(volumeData.totalAmountOut),
+											targetDecimals
+										);
+
+									const data: CoinGeckoTickerData = {
+										pool_id: pool.pool.objectId,
+										base_currency: baseCoinType,
+										target_currency: targetCoinType,
+										ticker_id: `${baseCoinType}_${targetCoinType}`,
+										liquidity_in_usd: pool.stats.tvl,
+										// TODO
+										base_volume: baseVolume,
+										target_volume: targetVolume,
+										last_price: 1,
+									};
+									return data;
+								})
+								.reduce(
+									(prev, curr) => [
+										...prev,
+										...(curr ? [curr] : []),
+									],
+									[] as CoinGeckoTickerData[]
+								);
+
+							return [];
+						})
+						.reduce(
+							(prev, curr) => [...prev, ...curr],
+							[] as CoinGeckoTickerData[]
+						);
+				})
+			)
+		).reduce(
+			(prev, curr) => [...prev, ...curr],
+			[] as CoinGeckoTickerData[]
+		);
+	};
+
+	public fetchCoinGeckoHistoricalTradeData = async (inputs: {
+		trades: PoolTradeEvent[];
+		coinsToDecimals: CoinsToDecimals;
+	}): Promise<CoinGeckoHistoricalTradeData[]> => {
+		const { trades, coinsToDecimals } = inputs;
+
+		return trades.map((trade) => {
+
+			return {
+
+				trade_id: `${trade.txnDigest}_${trade.amountsIn[0]}_${trade.amountsOut[0]}_${trade.typesIn[0]}_${trade.typesOut[0]}`,
+				price: number;
+				base_volume: number;
+				target_volume: number;
+				trade_timestamp: trade.timestamp,
+				// TODO
+				type:  "buy"
+	
+				// trade.amountsIn[0]
+	
+			}
+		})
 	};
 
 	// =========================================================================
