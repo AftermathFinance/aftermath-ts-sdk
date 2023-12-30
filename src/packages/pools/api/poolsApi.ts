@@ -46,6 +46,8 @@ import {
 	PoolLpInfo,
 	CoinGeckoTickerData,
 	CoinGeckoHistoricalTradeData,
+	Timestamp,
+	UniqueId,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -1762,32 +1764,78 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	};
 
 	public fetchCoinGeckoHistoricalTradeData = async (inputs: {
-		trades: PoolTradeEvent[];
+		limit: number;
+		baseCoinType: CoinType;
+		targetCoinType: CoinType;
 		coinsToDecimals: CoinsToDecimals;
 	}): Promise<CoinGeckoHistoricalTradeData[]> => {
-		const { trades, coinsToDecimals } = inputs;
+		const { coinsToDecimals } = inputs;
+		const trades = await this.fetchHistoricalTrades(inputs);
 
 		return trades.map((trade) => {
+			const amountInWithDecimals = Coin.balanceWithDecimals(
+				BigInt(trade.amountIn),
+				coinsToDecimals[trade.coinTypeIn]
+			);
+			const amountOutWithDecimals = Coin.balanceWithDecimals(
+				BigInt(trade.amountOut),
+				coinsToDecimals[trade.coinTypeOut]
+			);
 
+			const [baseAmount, targetAmount, type]: [
+				number,
+				number,
+				"buy" | "sell"
+			] =
+				trade.coinTypeIn === inputs.baseCoinType
+					? [amountInWithDecimals, amountOutWithDecimals, "sell"]
+					: [amountOutWithDecimals, amountInWithDecimals, "buy"];
+			const price = baseAmount / targetAmount;
 			return {
-
-				trade_id: `${trade.txnDigest}_${trade.amountsIn[0]}_${trade.amountsOut[0]}_${trade.typesIn[0]}_${trade.typesOut[0]}`,
-				price: number;
-				base_volume: number;
-				target_volume: number;
-				trade_timestamp: trade.timestamp,
-				// TODO
-				type:  "buy"
-	
-				// trade.amountsIn[0]
-	
-			}
-		})
+				price,
+				type,
+				trade_id: trade._id.$oid,
+				base_volume: baseAmount,
+				target_volume: targetAmount,
+				trade_timestamp: trade.timestampMs,
+			};
+		});
 	};
 
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private async fetchHistoricalTrades(inputs: {
+		limit: number;
+		baseCoinType: CoinType;
+		targetCoinType: CoinType;
+	}): Promise<
+		{
+			_id: {
+				$oid: UniqueId;
+			};
+			amountIn: number;
+			amountOut: number;
+			timestampMs: Timestamp;
+			coinTypeIn: CoinType;
+			coinTypeOut: CoinType;
+		}[]
+	> {
+		const { limit, baseCoinType, targetCoinType } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer(
+			`pools/coingecko/historical-trades/${Helpers.addLeadingZeroesToType(
+				baseCoinType
+			)}/${Helpers.addLeadingZeroesToType(targetCoinType)}`,
+			{
+				limit,
+			}
+		);
+	}
 
 	// =========================================================================
 	//  Event Types
