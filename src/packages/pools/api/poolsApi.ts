@@ -1700,11 +1700,10 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 									const volumeData = volumes.find(
 										(volume) =>
 											volume.coinTypeIn === baseCoinType
-									);
-									if (!volumeData)
-										throw new Error(
-											"volume data not found"
-										);
+									) ?? {
+										totalAmountIn: 0,
+										totalAmountOut: 0,
+									};
 
 									const baseDecimals =
 										coinsToDecimals[baseCoinType];
@@ -1728,6 +1727,20 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 											targetDecimals
 										);
 
+									const denominator =
+										Coin.balanceWithDecimals(
+											pool.pool.coins[targetCoinType]
+												.balance,
+											targetDecimals
+										);
+									const price = denominator
+										? Coin.balanceWithDecimals(
+												pool.pool.coins[baseCoinType]
+													.balance,
+												baseDecimals
+										  ) / denominator
+										: 0;
+
 									const data: CoinGeckoTickerData = {
 										pool_id: pool.pool.objectId,
 										base_currency: baseCoinType,
@@ -1737,7 +1750,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 										// TODO
 										base_volume: baseVolume,
 										target_volume: targetVolume,
-										last_price: 1,
+										last_price: price,
 									};
 									return data;
 								})
@@ -1763,44 +1776,44 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		);
 	};
 
-	public fetchCoinGeckoHistoricalTradeData = async (inputs: {
-		limit: number;
-		baseCoinType: CoinType;
-		targetCoinType: CoinType;
-		coinsToDecimals: CoinsToDecimals;
-	}): Promise<CoinGeckoHistoricalTradeData[]> => {
-		const { coinsToDecimals } = inputs;
-		const trades = await this.fetchHistoricalTrades(inputs);
+	// public fetchCoinGeckoHistoricalTradeData = async (inputs: {
+	// 	limit: number;
+	// 	baseCoinType: CoinType;
+	// 	targetCoinType: CoinType;
+	// 	coinsToDecimals: CoinsToDecimals;
+	// }): Promise<CoinGeckoHistoricalTradeData[]> => {
+	// 	const { coinsToDecimals } = inputs;
+	// 	const trades = await this.fetchCoinGeckoHistoricalTrades(inputs);
 
-		return trades.map((trade) => {
-			const amountInWithDecimals = Coin.balanceWithDecimals(
-				BigInt(trade.amountIn),
-				coinsToDecimals[trade.coinTypeIn]
-			);
-			const amountOutWithDecimals = Coin.balanceWithDecimals(
-				BigInt(trade.amountOut),
-				coinsToDecimals[trade.coinTypeOut]
-			);
+	// 	return trades.map((trade) => {
+	// 		const amountInWithDecimals = Coin.balanceWithDecimals(
+	// 			BigInt(trade.amountIn),
+	// 			coinsToDecimals[trade.coinTypeIn]
+	// 		);
+	// 		const amountOutWithDecimals = Coin.balanceWithDecimals(
+	// 			BigInt(trade.amountOut),
+	// 			coinsToDecimals[trade.coinTypeOut]
+	// 		);
 
-			const [baseAmount, targetAmount, type]: [
-				number,
-				number,
-				"buy" | "sell"
-			] =
-				trade.coinTypeIn === inputs.baseCoinType
-					? [amountInWithDecimals, amountOutWithDecimals, "sell"]
-					: [amountOutWithDecimals, amountInWithDecimals, "buy"];
-			const price = baseAmount / targetAmount;
-			return {
-				price,
-				type,
-				trade_id: trade._id.$oid,
-				base_volume: baseAmount,
-				target_volume: targetAmount,
-				trade_timestamp: trade.timestampMs,
-			};
-		});
-	};
+	// 		const [baseAmount, targetAmount, type]: [
+	// 			number,
+	// 			number,
+	// 			"buy" | "sell"
+	// 		] =
+	// 			trade.coinTypeIn === inputs.baseCoinType
+	// 				? [amountInWithDecimals, amountOutWithDecimals, "sell"]
+	// 				: [amountOutWithDecimals, amountInWithDecimals, "buy"];
+	// 		const price = baseAmount / targetAmount;
+	// 		return {
+	// 			price,
+	// 			type,
+	// 			trade_id: trade._id.$oid,
+	// 			base_volume: baseAmount,
+	// 			target_volume: targetAmount,
+	// 			trade_timestamp: trade.timestampMs,
+	// 		};
+	// 	});
+	// };
 
 	// =========================================================================
 	//  Private Methods
@@ -1810,32 +1823,32 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	//  Helpers
 	// =========================================================================
 
-	private async fetchHistoricalTrades(inputs: {
-		limit: number;
-		baseCoinType: CoinType;
-		targetCoinType: CoinType;
-	}): Promise<
-		{
-			_id: {
-				$oid: UniqueId;
-			};
-			amountIn: number;
-			amountOut: number;
-			timestampMs: Timestamp;
-			coinTypeIn: CoinType;
-			coinTypeOut: CoinType;
-		}[]
-	> {
-		const { limit, baseCoinType, targetCoinType } = inputs;
-		return this.Provider.indexerCaller.fetchIndexer(
-			`pools/coingecko/historical-trades/${Helpers.addLeadingZeroesToType(
-				baseCoinType
-			)}/${Helpers.addLeadingZeroesToType(targetCoinType)}`,
-			{
-				limit,
-			}
-		);
-	}
+	// private async fetchCoinGeckoHistoricalTrades(inputs: {
+	// 	limit: number;
+	// 	baseCoinType: CoinType;
+	// 	targetCoinType: CoinType;
+	// }): Promise<
+	// 	{
+	// 		_id: {
+	// 			$oid: UniqueId;
+	// 		};
+	// 		amountIn: number;
+	// 		amountOut: number;
+	// 		timestampMs: Timestamp;
+	// 		coinTypeIn: CoinType;
+	// 		coinTypeOut: CoinType;
+	// 	}[]
+	// > {
+	// 	const { limit, baseCoinType, targetCoinType } = inputs;
+	// 	return this.Provider.indexerCaller.fetchIndexer(
+	// 		`pools/coingecko/historical-trades/${Helpers.addLeadingZeroesToType(
+	// 			baseCoinType
+	// 		)}/${Helpers.addLeadingZeroesToType(targetCoinType)}`,
+	// 		{
+	// 			limit,
+	// 		}
+	// 	);
+	// }
 
 	// =========================================================================
 	//  Event Types
