@@ -584,6 +584,7 @@ export class LeveragedStakingApi {
 		// ii. Withdraw `withdrawAmount` worth of afSUI collateral.
 		const [unstakedAfSuiCollateral] = this.withdrawAfSuiCollateralTx({
 			...inputs,
+			// @ts-ignore
 			tx: scallopTx.txBlock,
 			leveragedActionCapId: inputs.leveragedActionCapId,
 			withdrawAmount: inputs.withdrawAmount,
@@ -615,6 +616,7 @@ export class LeveragedStakingApi {
 
 		// ii. Open a new `LeveragedAfSuiPosition` position.
 		const [leveragedAfSuiPositionId] = this.newLeveragedAfSuiPositionTx({
+			// @ts-ignore
 			tx,
 			obligationKeyId,
 		});
@@ -636,6 +638,7 @@ export class LeveragedStakingApi {
 		// v. Share the associated `Obligation` object.
 		scallopTx.returnObligation(obligationId, obligationHotPotatoId);
 
+		// @ts-ignore
 		return tx;
 	};
 
@@ -667,6 +670,7 @@ export class LeveragedStakingApi {
 			scallopTx,
 		});
 
+		// @ts-ignore
 		return tx;
 	};
 
@@ -701,6 +705,7 @@ export class LeveragedStakingApi {
 
 		if (referrer)
 			this.Provider.ReferralVault().updateReferrerTx({
+				// @ts-ignore
 				tx,
 				referrer,
 			});
@@ -712,6 +717,7 @@ export class LeveragedStakingApi {
 		if (inputs.stakeCoinType === "sui") {
 			// ia. If the input was denominated in SUI, stake to afSUI.
 			const suiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+				// @ts-ignore
 				tx,
 				walletAddress,
 				isSponsoredTx,
@@ -720,6 +726,7 @@ export class LeveragedStakingApi {
 			});
 
 			const swapOrStakeResult = await this.swapOrStakeSuiToAfSui({
+				// @ts-ignore
 				tx,
 				suiAmount: stakeAmount,
 				suiCoinId: suiCoin,
@@ -731,6 +738,7 @@ export class LeveragedStakingApi {
 			newBaseAfSuiCollateral = stakeAmount;
 
 			afSuiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+				// @ts-ignore
 				tx,
 				walletAddress,
 				isSponsoredTx,
@@ -741,6 +749,7 @@ export class LeveragedStakingApi {
 
 		// ii. Initiate Stake tx.
 		const leveragedActionCapId = this.initiateLeverageStakeTx({
+			// @ts-ignore
 			tx,
 			leveragedAfSuiPositionId,
 			afSuiCoinId,
@@ -749,6 +758,7 @@ export class LeveragedStakingApi {
 		// iii. Deposit afSUI as collateral on Scallop.
 		this.depositAfSuiCollateralTx({
 			...inputs,
+			// @ts-ignore
 			tx,
 			leveragedActionCapId,
 			afSuiCoinId,
@@ -771,6 +781,7 @@ export class LeveragedStakingApi {
 
 		// v. Complete the Stake transaction and emit an event.
 		this.completeActionTx({
+			// @ts-ignore
 			tx,
 			leveragedActionCapId,
 			leveragedAfSuiPositionId,
@@ -811,6 +822,7 @@ export class LeveragedStakingApi {
 		// i. Set the users referrer address.
 		if (referrer)
 			this.Provider.ReferralVault().updateReferrerTx({
+				// @ts-ignore
 				tx,
 				referrer,
 			});
@@ -823,6 +835,7 @@ export class LeveragedStakingApi {
 
 		// iii. Initiate Unstake tx.
 		const leveragedActionCapId = this.initiateLeverageUnstakeTx({
+			// @ts-ignore
 			tx,
 			leveragedAfSuiPositionId,
 			unstakeAmount,
@@ -888,6 +901,7 @@ export class LeveragedStakingApi {
 
 			const swappedSuiCoinId =
 				await this.Provider.Pools().fetchAddTradeTx({
+					// @ts-ignore
 					tx,
 					pool,
 					coinInAmount: unstakeAmount,
@@ -901,6 +915,7 @@ export class LeveragedStakingApi {
 		} /* if (desiredUnstakeCoinType == "afsui") */ else {
 			// vic. Stake the withdrawn SUI for afSUI and return to the user.
 			let [unstakedAfSuiCollateral] = this.Provider.Staking().stakeTx({
+				// @ts-ignore
 				tx,
 				validatorAddress:
 					this.addresses.leveragedStaking.objects.aftermathValidator,
@@ -912,12 +927,14 @@ export class LeveragedStakingApi {
 
 		// vii. Complete Unstake tx.
 		this.completeActionTx({
+			// @ts-ignore
 			tx,
 			leveragedActionCapId,
 			leveragedAfSuiPositionId,
 			obligationId,
 		});
 
+		// @ts-ignore
 		return tx;
 	};
 
@@ -954,12 +971,14 @@ export class LeveragedStakingApi {
 
 		if (referrer)
 			this.Provider.ReferralVault().updateReferrerTx({
+				// @ts-ignore
 				tx,
 				referrer,
 			});
 
 		// i. Initiate Change Leverage tx.
 		const leveragedActionCapId = this.initiateChangeLeverageTx({
+			// @ts-ignore
 			tx,
 			leveragedAfSuiPositionId,
 		});
@@ -976,6 +995,7 @@ export class LeveragedStakingApi {
 			// iib. Use remaining SUI to pay off SUI debt on Scallop.
 			this.repaySuiTx({
 				...inputs,
+				// @ts-ignore
 				tx,
 				leveragedActionCapId,
 				suiCoinId: remainingSuiCoinId,
@@ -991,6 +1011,7 @@ export class LeveragedStakingApi {
 
 		// iii. Complete Change Leverage tx.
 		this.completeActionTx({
+			// @ts-ignore
 			tx,
 			leveragedActionCapId,
 			leveragedAfSuiPositionId,
@@ -1045,6 +1066,7 @@ export class LeveragedStakingApi {
 		);
 
 		const { afSuiCoinId } = await this.swapOrStakeSuiToAfSui({
+			// @ts-ignore
 			tx,
 			suiAmount: flashLoanAmount,
 			suiCoinId: flashLoanedSuiCoinId,
@@ -1053,6 +1075,7 @@ export class LeveragedStakingApi {
 		// iv. Deposit the staked afSUI as collateral on Scallop.
 		this.depositAfSuiCollateralTx({
 			...inputs,
+			// @ts-ignore
 			tx,
 			afSuiCoinId,
 			obligationId: inputs.obligationId,
@@ -1064,6 +1087,7 @@ export class LeveragedStakingApi {
 		// v. Borrow amount of SUI required to pay off flash loan.
 		const [borrowedSuiCoinId] = this.borrowSuiTx({
 			...inputs,
+			// @ts-ignore
 			tx,
 			borrowAmount: flashLoanAmount + BigInt(/*0__0*/ 50_000_000),
 			// borrowAmount: flashLoanAmount,
@@ -1085,6 +1109,7 @@ export class LeveragedStakingApi {
 		// Leftover SUI is used to repay SUI debt.
 		this.repaySuiTx({
 			...inputs,
+			// @ts-ignore
 			tx,
 			suiCoinId: borrowedSuiCoinId,
 		});
@@ -1169,6 +1194,7 @@ export class LeveragedStakingApi {
 		// iii. Repay `decreaseInSuiDebt` of SUI debt.
 		this.repaySuiTx({
 			...inputs,
+			// @ts-ignore
 			tx,
 			suiCoinId: flashLoanedSuiCoinId,
 		});
@@ -1186,6 +1212,7 @@ export class LeveragedStakingApi {
 		const pool = new Pool(poolObject);
 
 		const swappedSuiCoinId = await this.Provider.Pools().fetchAddTradeTx({
+			// @ts-ignore
 			tx,
 			pool,
 			coinInAmount: BigInt(
