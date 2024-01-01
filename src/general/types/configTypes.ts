@@ -12,23 +12,18 @@ export type RpcEndpoint = string;
 //  All Addresses
 // =========================================================================
 
-export type ConfigAddresses = RequiredConfigAddresses &
-	Partial<OptionalConfigAddresses>;
-
-interface RequiredConfigAddresses {}
-
-interface OptionalConfigAddresses {
-	faucet: FaucetAddresses;
-	staking: StakingAddresses;
-	pools: PoolsAddresses;
-	suiFrens: SuiFrensAddresses;
-	nftAmm: NftAmmAddresses;
-	router: RouterAddresses;
-	referralVault: ReferralVaultAddresses;
-	perpetuals: PerpetualsAddresses;
-	oracle: OracleAddresses;
-	farms: FarmsAddresses;
-	dynamicGas: DynamicGasAddresses;
+export interface ConfigAddresses {
+	faucet?: FaucetAddresses;
+	staking?: StakingAddresses;
+	pools?: PoolsAddresses;
+	suiFrens?: SuiFrensAddresses;
+	nftAmm?: NftAmmAddresses;
+	router?: RouterAddresses;
+	referralVault?: ReferralVaultAddresses;
+	perpetuals?: PerpetualsAddresses;
+	oracle?: OracleAddresses;
+	farms?: FarmsAddresses;
+	dynamicGas?: DynamicGasAddresses;
 }
 
 // =========================================================================
