@@ -6,7 +6,6 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	Balance,
-	CoinType,
 	ObjectId,
 	PoolsAddresses,
 	StakingAddresses,
@@ -14,7 +13,6 @@ import {
 	LeveragedStakingAddresses,
 	ScallopProviders,
 	ScallopAddresses,
-	RouterAddresses,
 	ScallopMarketPool,
 	ScallopMarketCollateral,
 	ApiLeveragedStakePositionBody,
@@ -27,12 +25,12 @@ import {
 	LeveragedStakingPerformanceGraphDataTimeframeKey,
 	LeveragedStakingPerformanceDataBody,
 	Percentage,
+	LeveragedAfSuiPosition,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
-import { ScallopTxBlock } from "@scallop-io/sui-scallop-sdk";
 import { LeveragedStaking } from "..";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import {
@@ -43,10 +41,8 @@ import {
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { Pool, Staking } from "../..";
-
-// TODO(Kevin): remove.
-import { bcs } from "@mysten/sui.js/bcs";
-import { BCS } from "@mysten/bcs";
+import BigNumber from 'bignumber.js';
+import { BalanceSheet, BorrowIndex, InterestModel, MarketPool, ScallopTxBlock, SupportPoolCoins } from "@scallop-io/sui-scallop-sdk";
 
 export class LeveragedStakingApi {
 	// =========================================================================
@@ -181,63 +177,67 @@ export class LeveragedStakingApi {
 			return afSuiMarketCollateral;
 		};
 
+	public fetchLeveragedAfSuiPosition = async (inputs: {
+		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+		obligationId: ObjectId | TransactionObjectArgument;
+	}): Promise<LeveragedAfSuiPosition> => {		
+		// ia. Obtain the owned `LeveragedAfSuiPosition` object.
+		const leveragedAfSuiPosition = await this.Provider.Objects().fetchCastObject<LeveragedAfSuiPosition>({
+			objectId: inputs.leveragedAfSuiPositionId,
+			objectFromSuiObjectResponse: 
+				Casting.leveragedStaking
+					.leveragedAfSuiPositionFromSuiObjectResponse,
+		});
+
+		// ib. Obtain the shared `Obligation` object.
+		const obligation = await this.ScallopProviders.Query.queryObligation(
+			inputs.obligationId.toString()
+		);
+
+		// ic. Obtain Scallop's SUI Market.
+		const marketData = await this.getMarketData({...inputs, poolCoinName: 'sui'});
+		const oldBorrowIndex = Math.ceil(Number(marketData.borrowIndex));
+		
+		// ii. Update the position's Borrow Index to account for increase in the SUI Borrow Rate.
+		// 	new_borrow_index = old_borrow_index + (old_borrow_index * interest_rate * time_delta)
+		const currentTimestamp = Math.ceil(dayjs().valueOf() / 1000);
+		const lastUpdated = Number(marketData.lastUpdated);
+		const timeDelta = currentTimestamp
+			- lastUpdated
+		
+		const interestRate = Number(marketData.interestRate.value);
+		const interestRateScale = Number(marketData.interestRateScale) 
+			* 100;
+		
+		const borrowIndexDelta = (oldBorrowIndex * interestRate * timeDelta) 
+			/ interestRateScale;
+		
+		const newBorrowIndex = oldBorrowIndex
+			+ borrowIndexDelta;
+
+		// iii. Increase the Position's debt.
+		const positionBorrowIndex = Number(obligation.debts[0].borrowIndex || 0);
+		const increasedRate = newBorrowIndex 
+			/ positionBorrowIndex
+			- 1;
+		
+		const positionSuiDebt = BigNumber(obligation.debts[0].amount || 0);
+		const availableRepayAmount = positionSuiDebt
+			.multipliedBy(increasedRate + 1)
+			// .multipliedBy(1.01)
+			.toNumber();
+
+		const positionSuiDebtUpdated = BigInt(Math.ceil(availableRepayAmount));
+		
+		return {
+			...leveragedAfSuiPosition,
+			suiDebt: positionSuiDebtUpdated
+		};
+	}
+
 	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
-
-	// public openObligationTx = (inputs: {
-	// 	tx: TransactionBlock;
-	// 	// TODO: document return values like this for ALL tx commands in api
-	// }): [
-	// 	obligation: TransactionObjectArgument,
-	// 	leveragedAfSuiPosition: TransactionObjectArgument,
-	// 	obligationHotPotato: TransactionObjectArgument
-	// ] /* (Obligation, LeveragedAfSuiPosition, ObligationHotPotato) */ => {
-	// 	const { tx } = inputs;
-
-	// 	return tx.moveCall({
-	// 		target: Helpers.transactions.createTxTarget(
-	// 			this.addresses.leveragedStaking.packages.leveragedAfSui,
-	// 			LeveragedStakingApi.constants.moduleNames
-	// 				.leveragedAfSuiPosition,
-	// 			"open_obligation"
-	// 		),
-	// 		typeArguments: [],
-	// 		arguments: [
-	// 			tx.object(
-	// 				this.addresses.leveragedStaking.objects.leveragedAfSuiState
-	// 			), // LeveragedAfSuiState
-	// 			tx.object(this.addresses.scallop.objects.version), // Version
-	// 		],
-	// 	});
-	// };
-
-	// public returnObligationTx = (inputs: {
-	// 	tx: TransactionBlock;
-	// 	obligationId: ObjectId | TransactionObjectArgument;
-	// 	obligationHotPotatoId: ObjectId | TransactionObjectArgument;
-	// }) => {
-	// 	const { tx } = inputs;
-
-	// 	return tx.moveCall({
-	// 		target: Helpers.transactions.createTxTarget(
-	// 			this.addresses.leveragedStaking.packages.leveragedAfSui,
-	// 			LeveragedStakingApi.constants.moduleNames
-	// 				.leveragedAfSuiPosition,
-	// 			"return_obligation"
-	// 		),
-	// 		typeArguments: [],
-	// 		arguments: [
-	// 			tx.object(
-	// 				this.addresses.leveragedStaking.objects.leveragedAfSuiState
-	// 			), // LeveragedAfSuiState
-
-	// 			tx.object(this.addresses.scallop.objects.version), // Version
-	// 			Helpers.addTxObject(tx, inputs.obligationId), // Obligation
-	// 			Helpers.addTxObject(tx, inputs.obligationHotPotatoId), // ObligationHotPotato
-	// 		],
-	// 	});
-	// };
 
 	public newLeveragedAfSuiPositionTx = (inputs: {
 		tx: TransactionBlock;
@@ -263,25 +263,6 @@ export class LeveragedStakingApi {
 			],
 		});
 	};
-
-	// public borrowObligationKeyMutTx = (inputs: {
-	// 	tx: TransactionBlock;
-	// 	leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
-	// }) /* &mut ObligationKey */ => {
-	// 	const { tx } = inputs;
-
-	// 	return tx.moveCall({
-	// 		target: Helpers.transactions.createTxTarget(
-	// 			this.addresses.leveragedStaking.packages.leveragedAfSui,
-	// 			LeveragedStakingApi.constants.moduleNames.leveragedAfSuiPosition,
-	// 			"obligation_key_mut"
-	// 		),
-	// 		typeArguments: [],
-	// 		arguments: [
-	// 			Helpers.addTxObject(tx, inputs.leveragedAfSuiPositionId), // LeveragedAfSuiPosition
-	// 		],
-	// 	});
-	// };
 
 	public initiateLeverageStakeTx = (inputs: {
 		tx: TransactionBlock;
@@ -541,6 +522,29 @@ export class LeveragedStakingApi {
 	//  > [SUI] [dynamic_field] 1: EFieldDoesNotExist (The object does not have a dynamic field with
 	//      this name (with the value and type specified))
 
+	public fetchBuildWithdrawAfSuiCollateralTx = async (inputs: {
+		scallopTx: ScallopTxBlock;
+		leveragedActionCapId: ObjectId | TransactionObjectArgument;
+		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
+		obligationId: ObjectId | TransactionObjectArgument;
+		withdrawAmount: Balance;
+	}): Promise<[afSuiCoinId: TransactionObjectArgument]> /* Coin<AFSUI> */ => {
+		const { scallopTx } = inputs;
+
+		// i. Update Scallop's price feeds for SUI and afSUI.
+		await scallopTx.updateAssetPricesQuick(["sui", "afsui"]);
+		
+		// ii. Withdraw `withdrawAmount` worth of afSUI collateral.
+		const [unstakedAfSuiCollateral] = this.withdrawAfSuiCollateralTx({
+			...inputs,
+			tx: scallopTx.txBlock,
+			leveragedActionCapId: inputs.leveragedActionCapId,
+			withdrawAmount: inputs.withdrawAmount,
+		});
+
+		return unstakedAfSuiCollateral;
+	}
+
 	// TODO(kevin): Documentation
 	public fetchBuildOpenLeveragedStakeTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -654,12 +658,6 @@ export class LeveragedStakingApi {
 		//  leverage stake starting in SUI in which case their SUI needs to be staked to afSUI.
 		if (inputs.stakeCoinType === "sui") {
 			// ia. If the input was denominated in SUI, stake to afSUI.
-
-			// newBaseAfSuiCollateral = this.Provider.Staking().suiToAfSuiTx({
-			// 	tx,
-			// 	suiAmount: stakeAmount,
-			// });
-
 			const suiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
 				tx,
 				walletAddress,
@@ -733,10 +731,10 @@ export class LeveragedStakingApi {
 		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
 		baseAfSuiCollateral: Balance;
-		totalAfSuiCollateral: Balance;
-		totalSuiDebt: Balance;
+		totalAfSuiCollateral: Balance;  // TODO: remove
+		totalSuiDebt: Balance;			// TODO: remove
 		unstakeAmount: Balance;
-		unstakeCoinType: "sui" | "afsui";
+		desiredUnstakeCoinType: "sui" | "afsui";
 		slippage: Percentage;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
@@ -747,9 +745,7 @@ export class LeveragedStakingApi {
 			leveragedAfSuiPositionId,
 			obligationId,
 			unstakeAmount,
-			totalAfSuiCollateral,
-			totalSuiDebt,
-			unstakeCoinType,
+			desiredUnstakeCoinType,
 			slippage,
 		} = inputs;
 
@@ -757,13 +753,20 @@ export class LeveragedStakingApi {
 		const tx = scallopTx.txBlock;
 		tx.setSender(walletAddress);
 
+		// i. Set the users referrer address.
 		if (referrer)
 			this.Provider.ReferralVault().updateReferrerTx({
 				tx,
 				referrer,
 			});
 
-		// i. Initiate Unstake tx.
+		// ii. Obtain the user's `LeveragedAfSuiPosition`.
+		const leveragedAfSuiPosition = await this.fetchLeveragedAfSuiPosition({
+			leveragedAfSuiPositionId,
+    		obligationId,
+		});
+
+		// iii. Initiate Unstake tx.
 		const leveragedActionCapId = this.initiateLeverageUnstakeTx({
 			tx,
 			leveragedAfSuiPositionId,
@@ -773,51 +776,83 @@ export class LeveragedStakingApi {
 		const afSuiToSuiExchangeRate =
 			await this.Provider.Staking().fetchAfSuiToSuiExchangeRate();
 
-		// iia. Calculate current leverage ratio.
+		// iv. Calculate current leverage ratio.
 		const currentLeverageRatio = LeveragedStaking.calcLeverage({
-			totalSuiDebt,
-			totalAfSuiCollateral,
+			totalSuiDebt: leveragedAfSuiPosition.suiDebt,
+			totalAfSuiCollateral: leveragedAfSuiPosition.afSuiCollateral,
 			afSuiToSuiExchangeRate,
 		});
 
-		// TODO: [edge case] handle closing of position.
-		// TODO: [edge case] handle deleveraging back to 1x.
+		let unstakedCoinId;
+		let unstakedCoinType;
+		// [Edge Case] Position has no debt.
+		if (leveragedAfSuiPosition.suiDebt == BigInt(0)) {
+			// va. Withdraw `unstakeAmount` worth of afSUI collateral.
+			const [unstakedAfSuiCollateral] = await this.fetchBuildWithdrawAfSuiCollateralTx({
+				...inputs,
+				scallopTx,
+				leveragedActionCapId,
+				withdrawAmount: unstakeAmount,
+			});
+			unstakedCoinId = unstakedAfSuiCollateral;
+			unstakedCoinType = "afsui"
+		} else /* (leveragedAfSuiPosition.suiDebt > BigInt(0)) */ {
+			// vb. Decrease the leverage to the desired leverage ratio.
+			const remainingSuiCoinId = await this.fetchBuildDecreaseLeverageTx({
+				scallopTx,
+				leveragedActionCapId,
+				leveragedAfSuiPositionId,
+				obligationId,
+				totalSuiDebt: leveragedAfSuiPosition.suiDebt,
+				totalAfSuiCollateral: leveragedAfSuiPosition.afSuiCollateral,
+				// REVIEW(Kevin): should we be subtracting from here too?
+				//
+				// totalAfSuiCollateral:
+				// 	inputs.totalAfSuiCollateral - unstakeAmount,
+				newLeverage: currentLeverageRatio,
+				baseAfSuiCollateral: inputs.baseAfSuiCollateral - unstakeAmount,
+				slippage,
+			});
 
-		// REVIEW(Kevin): Does this properly handle the unstake case.
-		//
-		// iiia. Decrease the leverage to the desired leverage ratio.
-		const remainingSuiCoinId = await this.fetchBuildDecreaseLeverageTx({
-			scallopTx,
-			leveragedActionCapId,
-			leveragedAfSuiPositionId,
-			obligationId,
-			totalSuiDebt,
-			totalAfSuiCollateral,
-			// REVIEW(Kevin): should we be subtracting from here too?
-			//
-			// totalAfSuiCollateral:
-			// 	inputs.totalAfSuiCollateral - unstakeAmount,
-			newLeverage: currentLeverageRatio,
-			baseAfSuiCollateral: inputs.baseAfSuiCollateral - unstakeAmount,
-			slippage,
-		});
+			unstakedCoinId = remainingSuiCoinId;
+			unstakedCoinType = "sui"
+		};
 
-		if (unstakeCoinType === "afsui") {
-			/// iiib. Stake the withdrawn SUI for afSUI.
+		// vi. Return the unstaked coin to the user in their desired coin (SUI or afSUI).
+		if (unstakedCoinType == inputs.desiredUnstakeCoinType) {
+			// via. Unstaked coin already in desired coin type; no extra work needed.
+			tx.transferObjects([unstakedCoinId], walletAddress);
+		} else if (desiredUnstakeCoinType == "sui") {
+			// vib. Swap withdrawn afSUI into SUI and return to the user.
+			const poolObject = await this.Provider.Pools().fetchPool({
+				objectId: this.addresses.leveragedStaking.objects.afSuiSuiPoolId,
+			});
+			const pool = new Pool(poolObject);
+
+			const swappedSuiCoinId = await this.Provider.Pools().fetchAddTradeTx({
+				tx,
+				pool,
+				coinInAmount: unstakeAmount,
+				coinInId: unstakedCoinId,
+				coinInType: this.Provider.Staking().coinTypes.afSui,
+				coinOutType: Coin.constants.suiCoinType,
+				slippage,
+			});
+
+			tx.transferObjects([swappedSuiCoinId], walletAddress);
+		} else /* if (desiredUnstakeCoinType == "afsui") */ {
+			// vic. Stake the withdrawn SUI for afSUI and return to the user.
 			let [unstakedAfSuiCollateral] = this.Provider.Staking().stakeTx({
 				tx,
 				validatorAddress:
 					this.addresses.leveragedStaking.objects.aftermathValidator,
-				suiCoin: remainingSuiCoinId,
+				suiCoin: unstakedCoinId,
 			});
 
-			// iv. Return the afSUI to the sender.
 			tx.transferObjects([unstakedAfSuiCollateral], walletAddress);
-		} else {
-			tx.transferObjects([remainingSuiCoinId], walletAddress);
-		}
+		};
 
-		// v. Complete Unstake tx.
+		// vii. Complete Unstake tx.
 		this.completeActionTx({
 			tx,
 			leveragedActionCapId,
@@ -934,9 +969,6 @@ export class LeveragedStakingApi {
 		const increaseInTotalAfSuiCollateral =
 			newTotalAfSuiCollateral - inputs.totalAfSuiCollateral;
 
-		// REVIEW(Collin): I am not sure how you want to handle errors, should we assert that
-		//  `flashLoanAmount` <= `totalLeveragedAfSuiCollateral` * `collateralWeight`?
-		//
 		// ib. Calculate amount of SUI that must be flash loaned to account for
 		//  `increaseInAfSuiCollateral`.
 		const flashLoanAmount: Balance = BigInt(
@@ -973,11 +1005,29 @@ export class LeveragedStakingApi {
 		const [borrowedSuiCoinId] = this.borrowSuiTx({
 			...inputs,
 			tx,
-			borrowAmount: flashLoanAmount,
+			borrowAmount: flashLoanAmount + BigInt(/*0__0*/50_000_000),
+			// borrowAmount: flashLoanAmount,
 		});
 
+		const repayLoanSuiCoinId = tx.splitCoins(borrowedSuiCoinId, [
+			flashLoanAmount,
+		]);
+
 		// vi. Repay flash loan on Scallop.
-		scallopTx.repayFlashLoan(borrowedSuiCoinId, loan, "sui");
+		scallopTx.repayFlashLoan(
+			// flashLoanedSuiCoinId,
+			repayLoanSuiCoinId,
+			// borrowedSuiCoinId, 
+			loan, 
+			"sui"
+		);
+
+		// Leftover SUI is used to repay SUI debt.
+		this.repaySuiTx({
+			...inputs,
+			tx,
+			suiCoinId: borrowedSuiCoinId,
+		});
 
 		// REVIEW(kevin): will there even be any leftover SUI to repay?
 		//
@@ -988,7 +1038,6 @@ export class LeveragedStakingApi {
 		// 	obligationId,
 		// 	suiCoinId: borrowedSuiCoinId,
 		// });
-		// console.log(`[fetchBuildIncreaseLeverageTx] vii. [Potentially] Use remaining SUI to repay debt.`);
 	};
 
 	// TODO(Kevin): Documentation.
@@ -1013,37 +1062,44 @@ export class LeveragedStakingApi {
 		slippage: Percentage;
 	}): Promise<ObjectId | TransactionObjectArgument> /* Coin<SUI> */ => {
 		const { scallopTx, slippage } = inputs;
-
 		const tx = scallopTx.txBlock;
-
-		// TODO: Check for setting leverage to one
-		// TODO: Check for complete withdraw
 
 		const afSuiToSuiExchangeRate =
 			await this.Provider.Staking().fetchAfSuiToSuiExchangeRate();
 
-		// ia. Calculate the total amount of afSUI collateral required to reach a leverage ratio of
-		//  `newLeverage`.
-		const newTotalAfSuiCollateral = BigInt(
-			Math.floor(Number(inputs.baseAfSuiCollateral) * inputs.newLeverage)
-		);
+		let decreaseInAfSuiCollateral;
+		let decreaseInSuiDebt;
 
-		// ib. Calculate the amount of afSUI collateral that must be withdrawn to reach
-		//  `newTotalAfSuiCollateral`.
-		const decreaseInAfSuiCollateral =
-			inputs.totalAfSuiCollateral - newTotalAfSuiCollateral;
+		// [Edge Case] User wants to unstake their entire position.
+		if (inputs.baseAfSuiCollateral == BigInt(0)) {
+			// TODO: [edge case] handle closing of position.
+			//
+			decreaseInAfSuiCollateral = BigInt(inputs.totalAfSuiCollateral);
+			// decreaseInAfSuiCollateral = inputs.totalAfSuiCollateral;
+			decreaseInSuiDebt = inputs.totalSuiDebt;
+		} else {
+			// ia. Calculate the amount of afSUI collateral that must be withdrawn to reach
+			//  a leverage ratio of `newLeverage`.
+			const newTotalAfSuiCollateral = BigInt(
+				Math.floor(
+					Number(inputs.baseAfSuiCollateral) * inputs.newLeverage
+				)
+			);
+			decreaseInAfSuiCollateral = inputs.totalAfSuiCollateral 
+				- newTotalAfSuiCollateral;
 
-		// iia. Calculate the amount of SUI debt that must be repayed to allow withdrawing
-		//  `decreaseInAfSuiCollateral` worth of afSUI collateral.
-		const newSuiDebt = BigInt(
-			Math.floor(
-				Number(newTotalAfSuiCollateral - inputs.baseAfSuiCollateral) *
-					afSuiToSuiExchangeRate
-			)
-		);
-		const decreaseInSuiDebt = inputs.totalSuiDebt - newSuiDebt;
+			// ib. Calculate the amount of SUI debt that must be repayed to allow withdrawing
+			//  `decreaseInAfSuiCollateral` worth of afSUI collateral.
+			const newSuiDebt = BigInt(
+				Math.floor(
+					Number(newTotalAfSuiCollateral - inputs.baseAfSuiCollateral) *
+						afSuiToSuiExchangeRate
+				)
+			);
+			decreaseInSuiDebt = inputs.totalSuiDebt - newSuiDebt;
+		}
 
-		// iib. Flash loan `decreaseInSuiDebt` worth of SUI from Scallop.
+		// ii. Flash loan `decreaseInSuiDebt` worth of SUI from Scallop.
 		const [flashLoanedSuiCoinId, loan] = scallopTx.borrowFlashLoan(
 			decreaseInSuiDebt,
 			"sui"
@@ -1056,13 +1112,9 @@ export class LeveragedStakingApi {
 			suiCoinId: flashLoanedSuiCoinId,
 		});
 
-		// REVIEW(Kevin): check if both assets need to be updated.
-		//
-		await scallopTx.updateAssetPricesQuick(["sui", "afsui"]);
-		// ivb. Withdraw `decreaseInCollateralAmount` worth of afSUI collateral.
-		const [afSuiId] = this.withdrawAfSuiCollateralTx({
+		// iv. Withdraw `decreaseInCollateralAmount` worth of afSUI collateral.
+		const [afSuiId] = await this.fetchBuildWithdrawAfSuiCollateralTx({
 			...inputs,
-			tx,
 			withdrawAmount: decreaseInAfSuiCollateral,
 		});
 
@@ -1090,24 +1142,6 @@ export class LeveragedStakingApi {
 
 		// vi. Repay flash loan with converted SUI.
 		scallopTx.repayFlashLoan(repayLoanSuiCoinId, loan, "sui");
-
-		// TODO(Collin): Stake OR swap (to account for when `suiFlashLoanAmount` < `minimum_stake_amount`).
-		//
-		// vii. [Potentially] Swap leftover SUI back into afSUI
-
-		// TODO: make into swap if less than 1 sui
-
-		// return  this.Provider.Pools().fetchAddTradeTx({
-		// 	tx,
-		// 	pool,
-		// 	coinInAmount: BigInt(
-		// 		Math.floor(Number(decreaseInSuiDebt) * afSuiToSuiExchangeRate)
-		// 	),
-		// 	coinInId: swappedSuiCoinId,
-		// 	coinInType : Coin.constants.suiCoinType,
-		// 	coinOutType: this.Provider.Staking().coinTypes.afSui,
-		// 	slippage: 1, // 100%
-		// });
 
 		return swappedSuiCoinId;
 	};
@@ -1267,6 +1301,201 @@ export class LeveragedStakingApi {
 		}
 		return { afSuiCoinId, minAmountOut };
 	};
+
+	// REVIEW: this is only needed if a user's Obligation can have its debt increased by another address.
+	//  If that isn't possible, then obligation's debt amount + borrow index will always be accurate after 
+	//  a call to `completeActionTx`. -- needed because `liquidate` and `repay` don't require `ObligationKey`
+	//  to be called.
+	//
+	private updateTotalSuiDebt = async (inputs: {
+		tx: TransactionBlock;
+		obligationId: ObjectId | TransactionObjectArgument;
+	}): Promise<{
+		totalSuiDebt: Balance;
+	}> => {
+		const suiMarket = await this.ScallopProviders.Query.getMarketPool("sui");
+		const newBorrowIndex = suiMarket!.borrowIndex;
+		
+		const obligationAccount = await this.ScallopProviders.Query.queryObligation(
+			inputs.obligationId.toString()
+		);
+
+		const [positionSuiDebt, positionBorrowIndex] = obligationAccount.debts
+			? [
+				BigInt(obligationAccount.debts[0].amount), 
+				Number(obligationAccount.debts[0].borrowIndex)
+			]
+			: [BigInt(0), 0]
+
+		if (positionBorrowIndex == newBorrowIndex)
+			return { totalSuiDebt: positionSuiDebt }
+
+		return {
+			// REVIEW: calc. (seems to be undershooting/off by a little)
+			totalSuiDebt: BigInt(
+				Math.floor(
+					(Number(positionSuiDebt) * newBorrowIndex) / positionBorrowIndex
+				)
+			)
+		}
+	}
+
+	// NOTE: ported from Scallop's SDK.
+	//
+	private async getMarketData(inputs: {
+		poolCoinName: SupportPoolCoins;
+	}) {
+		let {poolCoinName} = inputs;
+		const marketId = this.ScallopProviders.Query.address.get('core.market');
+		const marketObject = (await this.ScallopProviders.Query.suiKit.client().getObject({
+			id: marketId,
+			options: {
+			showContent: true,
+			},
+		})).data;
+
+		let balanceSheet: BalanceSheet | undefined;
+		let borrowIndex: BorrowIndex | undefined;
+		let interestModel: InterestModel | undefined;
+		let borrowFeeRate: { value: string } | undefined;
+		if (marketObject) {
+			if (marketObject.content && 'fields' in marketObject.content) {
+				const fields = marketObject.content.fields as any;
+				const coinType = this.ScallopProviders.Query.utils.parseCoinType(poolCoinName);
+
+				// Get balance sheet.
+				const balanceSheetParentId =
+					fields.vault.fields.balance_sheets.fields.table.fields.id.id;
+				const balanceSheetDdynamicFieldObjectResponse = await this.ScallopProviders.Query.suiKit
+					.client()
+					.getDynamicFieldObject({
+					parentId: balanceSheetParentId,
+					name: {
+						type: '0x1::type_name::TypeName',
+						value: {
+						name: coinType.substring(2),
+						},
+					},
+					});
+				const balanceSheetDdynamicFieldObject =
+					balanceSheetDdynamicFieldObjectResponse.data;
+				if (
+					balanceSheetDdynamicFieldObject &&
+					balanceSheetDdynamicFieldObject.content &&
+					'fields' in balanceSheetDdynamicFieldObject.content
+				) {
+					const dynamicFields = balanceSheetDdynamicFieldObject.content
+					.fields as any;
+					balanceSheet = dynamicFields.value.fields;
+				}
+
+				// Get borrow index.
+				const borrowIndexParentId =
+					fields.borrow_dynamics.fields.table.fields.id.id;
+				const borrowIndexDynamicFieldObjectResponse = await this.ScallopProviders.Query.suiKit
+					.client()
+					.getDynamicFieldObject({
+					parentId: borrowIndexParentId,
+					name: {
+						type: '0x1::type_name::TypeName',
+						value: {
+						name: coinType.substring(2),
+						},
+					},
+					});
+				const borrowIndexDynamicFieldObject =
+					borrowIndexDynamicFieldObjectResponse.data;
+				if (
+					borrowIndexDynamicFieldObject &&
+					borrowIndexDynamicFieldObject.content &&
+					'fields' in borrowIndexDynamicFieldObject.content
+				) {
+					const dynamicFields = borrowIndexDynamicFieldObject.content
+					.fields as any;
+					borrowIndex = dynamicFields.value.fields;
+				}
+
+				// Get interest models.
+				const interestModelParentId =
+					fields.interest_models.fields.table.fields.id.id;
+				const interestModelDynamicFieldObjectResponse = await this.ScallopProviders.Query.suiKit
+					.client()
+					.getDynamicFieldObject({
+					parentId: interestModelParentId,
+					name: {
+						type: '0x1::type_name::TypeName',
+						value: {
+						name: coinType.substring(2),
+						},
+					},
+					});
+				const interestModelDynamicFieldObject =
+					interestModelDynamicFieldObjectResponse.data;
+				if (
+					interestModelDynamicFieldObject &&
+					interestModelDynamicFieldObject.content &&
+					'fields' in interestModelDynamicFieldObject.content
+				) {
+					const dynamicFields = interestModelDynamicFieldObject.content
+					.fields as any;
+					interestModel = dynamicFields.value.fields;
+				}
+
+				// Get borrow fee.
+				const borrowFeeDynamicFieldObjectResponse = await this.ScallopProviders.Query.suiKit
+					.client()
+					.getDynamicFieldObject({
+					parentId: marketId,
+					name: {
+						// TODO: obtain through ScallopSDK
+						//
+						type: `0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da::market_dynamic_keys::BorrowFeeKey`,
+						value: {
+						type: {
+							name: coinType.substring(2),
+						},
+						},
+					},
+					});
+
+				const borrowFeeDynamicFieldObject =
+					borrowFeeDynamicFieldObjectResponse.data;
+				if (
+					borrowFeeDynamicFieldObject &&
+					borrowFeeDynamicFieldObject.content &&
+					'fields' in borrowFeeDynamicFieldObject.content
+				) {
+					const dynamicFields = borrowFeeDynamicFieldObject.content.fields as any;
+					borrowFeeRate = dynamicFields.value.fields;
+				}
+			}
+		}
+
+		if (!balanceSheet || !borrowIndex || !interestModel || !borrowFeeRate) 
+			throw Error("Could not load MarketData");
+		
+		return {
+			type: interestModel.type.fields,
+			maxBorrowRate: interestModel.max_borrow_rate.fields,
+			interestRate: borrowIndex.interest_rate.fields,
+			interestRateScale: borrowIndex.interest_rate_scale,
+			borrowIndex: borrowIndex.borrow_index,
+			lastUpdated: borrowIndex.last_updated,
+			cash: balanceSheet.cash,
+			debt: balanceSheet.debt,
+			marketCoinSupply: balanceSheet.market_coin_supply,
+			reserve: balanceSheet.revenue,
+			reserveFactor: interestModel.revenue_factor.fields,
+			borrowWeight: interestModel.borrow_weight.fields,
+			borrowFeeRate: borrowFeeRate,
+			baseBorrowRatePerSec: interestModel.base_borrow_rate_per_sec.fields,
+			borrowRateOnHighKink: interestModel.borrow_rate_on_high_kink.fields,
+			borrowRateOnMidKink: interestModel.borrow_rate_on_mid_kink.fields,
+			highKink: interestModel.high_kink.fields,
+			midKink: interestModel.mid_kink.fields,
+			minBorrowAmount: interestModel.min_borrow_amount,
+		};
+	}
 
 	// =========================================================================
 	//  Event Types
