@@ -13,8 +13,7 @@ import {
 	LeveragedStakedEventOnChain,
 	LeveragedUnstakedEventOnChain,
 } from "./leveragedStakingApiCastingTypes";
-import { Helpers } from "../../../general/utils";
-import { Fixed } from "../../../general/utils/fixed";
+import { Casting, Helpers } from "../../../general/utils";
 
 export class LeveragedStakingApiCasting {
 	// =========================================================================
@@ -71,7 +70,7 @@ export class LeveragedStakingApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			userAddress: Helpers.addLeadingZeroesToType(fields.user),
-			leverage: Fixed.directCast(BigInt(fields.leverage)),
+			leverage: Casting.Fixed.directCast(BigInt(fields.leverage)),
 			newAfSuiCollateral: BigInt(fields.new_afsui_collateral),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -98,8 +97,10 @@ export class LeveragedStakingApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			userAddress: Helpers.addLeadingZeroesToType(fields.user),
-			newLeverage: Fixed.directCast(BigInt(fields.new_leverage)),
-			initialLeverage: Fixed.directCast(BigInt(fields.initial_leverage)),
+			newLeverage: Casting.Fixed.directCast(BigInt(fields.new_leverage)),
+			initialLeverage: Casting.Fixed.directCast(
+				BigInt(fields.initial_leverage)
+			),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

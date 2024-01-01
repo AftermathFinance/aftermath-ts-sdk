@@ -25,6 +25,7 @@ export interface ConfigAddresses {
 	farms?: FarmsAddresses;
 	dynamicGas?: DynamicGasAddresses;
 	scallop?: ScallopAddresses;
+	leveragedStaking?: LeveragedStakingAddresses;
 }
 
 // =========================================================================
