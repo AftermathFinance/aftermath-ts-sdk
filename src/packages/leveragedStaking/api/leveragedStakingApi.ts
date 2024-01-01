@@ -41,8 +41,15 @@ import {
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { Pool, Staking } from "../..";
-import BigNumber from 'bignumber.js';
-import { BalanceSheet, BorrowIndex, InterestModel, MarketPool, ScallopTxBlock, SupportPoolCoins } from "@scallop-io/sui-scallop-sdk";
+import BigNumber from "bignumber.js";
+import {
+	BalanceSheet,
+	BorrowIndex,
+	InterestModel,
+	MarketPool,
+	ScallopTxBlock,
+	SupportPoolCoins,
+} from "@scallop-io/sui-scallop-sdk";
 
 /**
  * Represents the API for interacting with the Leveraged Staking module.
@@ -169,7 +176,8 @@ export class LeveragedStakingApi {
 	 * @throws An error if the SUI market pool is not found.
 	 */
 	public fetchSuiMarketPool = async (): Promise<ScallopMarketPool> => {
-		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
 
 		const suiMarketPool = await this.ScallopProviders.Query.getMarketPool(
 			"sui"
@@ -201,7 +209,7 @@ export class LeveragedStakingApi {
 	public fetchAfSuiMarketCollateral =
 		async (): Promise<ScallopMarketCollateral> => {
 			if (!this.ScallopProviders)
-				throw new Error("ScallopProviders not set");
+				throw new Error("Scallop providers not set");
 
 			const afSuiMarketCollateral =
 				await this.ScallopProviders.Query.getMarketCollateral("afsui");
@@ -213,14 +221,20 @@ export class LeveragedStakingApi {
 	public fetchLeveragedAfSuiPosition = async (inputs: {
 		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
-	}): Promise<LeveragedAfSuiPosition> => {		
+	}): Promise<LeveragedAfSuiPosition> => {
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
+
 		// ia. Obtain the owned `LeveragedAfSuiPosition` object.
-		const leveragedAfSuiPosition = await this.Provider.Objects().fetchCastObject<LeveragedAfSuiPosition>({
-			objectId: inputs.leveragedAfSuiPositionId,
-			objectFromSuiObjectResponse: 
-				Casting.leveragedStaking
-					.leveragedAfSuiPositionFromSuiObjectResponse,
-		});
+		const leveragedAfSuiPosition =
+			await this.Provider.Objects().fetchCastObject<LeveragedAfSuiPosition>(
+				{
+					objectId: inputs.leveragedAfSuiPositionId,
+					objectFromSuiObjectResponse:
+						Casting.leveragedStaking
+							.leveragedAfSuiPositionFromSuiObjectResponse,
+				}
+			);
 
 		// ib. Obtain the shared `Obligation` object.
 		const obligation = await this.ScallopProviders.Query.queryObligation(
@@ -228,32 +242,32 @@ export class LeveragedStakingApi {
 		);
 
 		// ic. Obtain Scallop's SUI Market.
-		const marketData = await this.getMarketData({...inputs, poolCoinName: 'sui'});
+		const marketData = await this.getMarketData({
+			...inputs,
+			poolCoinName: "sui",
+		});
 		const oldBorrowIndex = Math.ceil(Number(marketData.borrowIndex));
-		
+
 		// ii. Update the position's Borrow Index to account for increase in the SUI Borrow Rate.
 		// 	new_borrow_index = old_borrow_index + (old_borrow_index * interest_rate * time_delta)
 		const currentTimestamp = Math.ceil(dayjs().valueOf() / 1000);
 		const lastUpdated = Number(marketData.lastUpdated);
-		const timeDelta = currentTimestamp
-			- lastUpdated
-		
+		const timeDelta = currentTimestamp - lastUpdated;
+
 		const interestRate = Number(marketData.interestRate.value);
-		const interestRateScale = Number(marketData.interestRateScale) 
-			* 100;
-		
-		const borrowIndexDelta = (oldBorrowIndex * interestRate * timeDelta) 
-			/ interestRateScale;
-		
-		const newBorrowIndex = oldBorrowIndex
-			+ borrowIndexDelta;
+		const interestRateScale = Number(marketData.interestRateScale) * 100;
+
+		const borrowIndexDelta =
+			(oldBorrowIndex * interestRate * timeDelta) / interestRateScale;
+
+		const newBorrowIndex = oldBorrowIndex + borrowIndexDelta;
 
 		// iii. Increase the Position's debt.
-		const positionBorrowIndex = Number(obligation.debts[0].borrowIndex || 0);
-		const increasedRate = newBorrowIndex 
-			/ positionBorrowIndex
-			- 1;
-		
+		const positionBorrowIndex = Number(
+			obligation.debts[0].borrowIndex || 0
+		);
+		const increasedRate = newBorrowIndex / positionBorrowIndex - 1;
+
 		const positionSuiDebt = BigNumber(obligation.debts[0].amount || 0);
 		const availableRepayAmount = positionSuiDebt
 			.multipliedBy(increasedRate + 1)
@@ -261,12 +275,12 @@ export class LeveragedStakingApi {
 			.toNumber();
 
 		const positionSuiDebtUpdated = BigInt(Math.ceil(availableRepayAmount));
-		
+
 		return {
 			...leveragedAfSuiPosition,
-			suiDebt: positionSuiDebtUpdated
+			suiDebt: positionSuiDebtUpdated,
 		};
-	}
+	};
 
 	// =========================================================================
 	//  Transaction Commands
@@ -566,7 +580,7 @@ export class LeveragedStakingApi {
 
 		// i. Update Scallop's price feeds for SUI and afSUI.
 		await scallopTx.updateAssetPricesQuick(["sui", "afsui"]);
-		
+
 		// ii. Withdraw `withdrawAmount` worth of afSUI collateral.
 		const [unstakedAfSuiCollateral] = this.withdrawAfSuiCollateralTx({
 			...inputs,
@@ -576,7 +590,7 @@ export class LeveragedStakingApi {
 		});
 
 		return unstakedAfSuiCollateral;
-	}
+	};
 
 	// TODO(kevin): Documentation
 	public fetchBuildOpenLeveragedStakeTx = async (inputs: {
@@ -588,7 +602,8 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
-		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
 
 		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
 		const tx = scallopTx.txBlock;
@@ -639,7 +654,8 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
-		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
 
 		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
 		const tx = scallopTx.txBlock;
@@ -768,15 +784,16 @@ export class LeveragedStakingApi {
 		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
 		baseAfSuiCollateral: Balance;
-		totalAfSuiCollateral: Balance;  // TODO: remove
-		totalSuiDebt: Balance;			// TODO: remove
+		totalAfSuiCollateral: Balance; // TODO: remove
+		totalSuiDebt: Balance; // TODO: remove
 		unstakeAmount: Balance;
 		desiredUnstakeCoinType: "sui" | "afsui";
 		slippage: Percentage;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
-		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
 		const {
 			referrer,
 			walletAddress,
@@ -801,7 +818,7 @@ export class LeveragedStakingApi {
 		// ii. Obtain the user's `LeveragedAfSuiPosition`.
 		const leveragedAfSuiPosition = await this.fetchLeveragedAfSuiPosition({
 			leveragedAfSuiPositionId,
-    		obligationId,
+			obligationId,
 		});
 
 		// iii. Initiate Unstake tx.
@@ -826,15 +843,16 @@ export class LeveragedStakingApi {
 		// [Edge Case] Position has no debt.
 		if (leveragedAfSuiPosition.suiDebt == BigInt(0)) {
 			// va. Withdraw `unstakeAmount` worth of afSUI collateral.
-			const [unstakedAfSuiCollateral] = await this.fetchBuildWithdrawAfSuiCollateralTx({
-				...inputs,
-				scallopTx,
-				leveragedActionCapId,
-				withdrawAmount: unstakeAmount,
-			});
+			const [unstakedAfSuiCollateral] =
+				await this.fetchBuildWithdrawAfSuiCollateralTx({
+					...inputs,
+					scallopTx,
+					leveragedActionCapId,
+					withdrawAmount: unstakeAmount,
+				});
 			unstakedCoinId = unstakedAfSuiCollateral;
-			unstakedCoinType = "afsui"
-		} else /* (leveragedAfSuiPosition.suiDebt > BigInt(0)) */ {
+			unstakedCoinType = "afsui";
+		} /* (leveragedAfSuiPosition.suiDebt > BigInt(0)) */ else {
 			// vb. Decrease the leverage to the desired leverage ratio.
 			const remainingSuiCoinId = await this.fetchBuildDecreaseLeverageTx({
 				scallopTx,
@@ -853,8 +871,8 @@ export class LeveragedStakingApi {
 			});
 
 			unstakedCoinId = remainingSuiCoinId;
-			unstakedCoinType = "sui"
-		};
+			unstakedCoinType = "sui";
+		}
 
 		// vi. Return the unstaked coin to the user in their desired coin (SUI or afSUI).
 		if (unstakedCoinType == inputs.desiredUnstakeCoinType) {
@@ -863,22 +881,24 @@ export class LeveragedStakingApi {
 		} else if (desiredUnstakeCoinType == "sui") {
 			// vib. Swap withdrawn afSUI into SUI and return to the user.
 			const poolObject = await this.Provider.Pools().fetchPool({
-				objectId: this.addresses.leveragedStaking.objects.afSuiSuiPoolId,
+				objectId:
+					this.addresses.leveragedStaking.objects.afSuiSuiPoolId,
 			});
 			const pool = new Pool(poolObject);
 
-			const swappedSuiCoinId = await this.Provider.Pools().fetchAddTradeTx({
-				tx,
-				pool,
-				coinInAmount: unstakeAmount,
-				coinInId: unstakedCoinId,
-				coinInType: this.Provider.Staking().coinTypes.afSui,
-				coinOutType: Coin.constants.suiCoinType,
-				slippage,
-			});
+			const swappedSuiCoinId =
+				await this.Provider.Pools().fetchAddTradeTx({
+					tx,
+					pool,
+					coinInAmount: unstakeAmount,
+					coinInId: unstakedCoinId,
+					coinInType: this.Provider.Staking().coinTypes.afSui,
+					coinOutType: Coin.constants.suiCoinType,
+					slippage,
+				});
 
 			tx.transferObjects([swappedSuiCoinId], walletAddress);
-		} else /* if (desiredUnstakeCoinType == "afsui") */ {
+		} /* if (desiredUnstakeCoinType == "afsui") */ else {
 			// vic. Stake the withdrawn SUI for afSUI and return to the user.
 			let [unstakedAfSuiCollateral] = this.Provider.Staking().stakeTx({
 				tx,
@@ -888,7 +908,7 @@ export class LeveragedStakingApi {
 			});
 
 			tx.transferObjects([unstakedAfSuiCollateral], walletAddress);
-		};
+		}
 
 		// vii. Complete Unstake tx.
 		this.completeActionTx({
@@ -915,7 +935,8 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}) => {
-		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
 		const {
 			referrer,
 			walletAddress,
@@ -1044,7 +1065,7 @@ export class LeveragedStakingApi {
 		const [borrowedSuiCoinId] = this.borrowSuiTx({
 			...inputs,
 			tx,
-			borrowAmount: flashLoanAmount + BigInt(/*0__0*/50_000_000),
+			borrowAmount: flashLoanAmount + BigInt(/*0__0*/ 50_000_000),
 			// borrowAmount: flashLoanAmount,
 		});
 
@@ -1056,8 +1077,8 @@ export class LeveragedStakingApi {
 		scallopTx.repayFlashLoan(
 			// flashLoanedSuiCoinId,
 			repayLoanSuiCoinId,
-			// borrowedSuiCoinId, 
-			loan, 
+			// borrowedSuiCoinId,
+			loan,
 			"sui"
 		);
 
@@ -1124,15 +1145,16 @@ export class LeveragedStakingApi {
 					Number(inputs.baseAfSuiCollateral) * inputs.newLeverage
 				)
 			);
-			decreaseInAfSuiCollateral = inputs.totalAfSuiCollateral 
-				- newTotalAfSuiCollateral;
+			decreaseInAfSuiCollateral =
+				inputs.totalAfSuiCollateral - newTotalAfSuiCollateral;
 
 			// ib. Calculate the amount of SUI debt that must be repayed to allow withdrawing
 			//  `decreaseInAfSuiCollateral` worth of afSUI collateral.
 			const newSuiDebt = BigInt(
 				Math.floor(
-					Number(newTotalAfSuiCollateral - inputs.baseAfSuiCollateral) *
-						afSuiToSuiExchangeRate
+					Number(
+						newTotalAfSuiCollateral - inputs.baseAfSuiCollateral
+					) * afSuiToSuiExchangeRate
 				)
 			);
 			decreaseInSuiDebt = inputs.totalSuiDebt - newSuiDebt;
@@ -1352,7 +1374,7 @@ export class LeveragedStakingApi {
 	};
 
 	// REVIEW: this is only needed if a user's Obligation can have its debt increased by another address.
-	//  If that isn't possible, then obligation's debt amount + borrow index will always be accurate after 
+	//  If that isn't possible, then obligation's debt amount + borrow index will always be accurate after
 	//  a call to `completeActionTx`. -- needed because `liquidate` and `repay` don't require `ObligationKey`
 	//  to be called.
 	//
@@ -1362,167 +1384,186 @@ export class LeveragedStakingApi {
 	}): Promise<{
 		totalSuiDebt: Balance;
 	}> => {
-		const suiMarket = await this.ScallopProviders.Query.getMarketPool("sui");
-		const newBorrowIndex = suiMarket!.borrowIndex;
-		
-		const obligationAccount = await this.ScallopProviders.Query.queryObligation(
-			inputs.obligationId.toString()
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
+
+		const suiMarket = await this.ScallopProviders.Query.getMarketPool(
+			"sui"
 		);
+		const newBorrowIndex = suiMarket!.borrowIndex;
+
+		const obligationAccount =
+			await this.ScallopProviders.Query.queryObligation(
+				inputs.obligationId.toString()
+			);
 
 		const [positionSuiDebt, positionBorrowIndex] = obligationAccount.debts
 			? [
-				BigInt(obligationAccount.debts[0].amount), 
-				Number(obligationAccount.debts[0].borrowIndex)
-			]
-			: [BigInt(0), 0]
+					BigInt(obligationAccount.debts[0].amount),
+					Number(obligationAccount.debts[0].borrowIndex),
+			  ]
+			: [BigInt(0), 0];
 
 		if (positionBorrowIndex == newBorrowIndex)
-			return { totalSuiDebt: positionSuiDebt }
+			return { totalSuiDebt: positionSuiDebt };
 
 		return {
 			// REVIEW: calc. (seems to be undershooting/off by a little)
 			totalSuiDebt: BigInt(
 				Math.floor(
-					(Number(positionSuiDebt) * newBorrowIndex) / positionBorrowIndex
+					(Number(positionSuiDebt) * newBorrowIndex) /
+						positionBorrowIndex
 				)
-			)
-		}
-	}
+			),
+		};
+	};
 
 	// NOTE: ported from Scallop's SDK.
 	//
-	private async getMarketData(inputs: {
-		poolCoinName: SupportPoolCoins;
-	}) {
-		let {poolCoinName} = inputs;
-		const marketId = this.ScallopProviders.Query.address.get('core.market');
-		const marketObject = (await this.ScallopProviders.Query.suiKit.client().getObject({
-			id: marketId,
-			options: {
-			showContent: true,
-			},
-		})).data;
+	private async getMarketData(inputs: { poolCoinName: SupportPoolCoins }) {
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
+
+		let { poolCoinName } = inputs;
+		const marketId = this.ScallopProviders.Query.address.get("core.market");
+		const marketObject = (
+			await this.ScallopProviders.Query.suiKit.client().getObject({
+				id: marketId,
+				options: {
+					showContent: true,
+				},
+			})
+		).data;
 
 		let balanceSheet: BalanceSheet | undefined;
 		let borrowIndex: BorrowIndex | undefined;
 		let interestModel: InterestModel | undefined;
 		let borrowFeeRate: { value: string } | undefined;
 		if (marketObject) {
-			if (marketObject.content && 'fields' in marketObject.content) {
+			if (marketObject.content && "fields" in marketObject.content) {
 				const fields = marketObject.content.fields as any;
-				const coinType = this.ScallopProviders.Query.utils.parseCoinType(poolCoinName);
+				const coinType =
+					this.ScallopProviders.Query.utils.parseCoinType(
+						poolCoinName
+					);
 
 				// Get balance sheet.
 				const balanceSheetParentId =
-					fields.vault.fields.balance_sheets.fields.table.fields.id.id;
-				const balanceSheetDdynamicFieldObjectResponse = await this.ScallopProviders.Query.suiKit
-					.client()
-					.getDynamicFieldObject({
-					parentId: balanceSheetParentId,
-					name: {
-						type: '0x1::type_name::TypeName',
-						value: {
-						name: coinType.substring(2),
-						},
-					},
-					});
+					fields.vault.fields.balance_sheets.fields.table.fields.id
+						.id;
+				const balanceSheetDdynamicFieldObjectResponse =
+					await this.ScallopProviders.Query.suiKit
+						.client()
+						.getDynamicFieldObject({
+							parentId: balanceSheetParentId,
+							name: {
+								type: "0x1::type_name::TypeName",
+								value: {
+									name: coinType.substring(2),
+								},
+							},
+						});
 				const balanceSheetDdynamicFieldObject =
 					balanceSheetDdynamicFieldObjectResponse.data;
 				if (
 					balanceSheetDdynamicFieldObject &&
 					balanceSheetDdynamicFieldObject.content &&
-					'fields' in balanceSheetDdynamicFieldObject.content
+					"fields" in balanceSheetDdynamicFieldObject.content
 				) {
-					const dynamicFields = balanceSheetDdynamicFieldObject.content
-					.fields as any;
+					const dynamicFields = balanceSheetDdynamicFieldObject
+						.content.fields as any;
 					balanceSheet = dynamicFields.value.fields;
 				}
 
 				// Get borrow index.
 				const borrowIndexParentId =
 					fields.borrow_dynamics.fields.table.fields.id.id;
-				const borrowIndexDynamicFieldObjectResponse = await this.ScallopProviders.Query.suiKit
-					.client()
-					.getDynamicFieldObject({
-					parentId: borrowIndexParentId,
-					name: {
-						type: '0x1::type_name::TypeName',
-						value: {
-						name: coinType.substring(2),
-						},
-					},
-					});
+				const borrowIndexDynamicFieldObjectResponse =
+					await this.ScallopProviders.Query.suiKit
+						.client()
+						.getDynamicFieldObject({
+							parentId: borrowIndexParentId,
+							name: {
+								type: "0x1::type_name::TypeName",
+								value: {
+									name: coinType.substring(2),
+								},
+							},
+						});
 				const borrowIndexDynamicFieldObject =
 					borrowIndexDynamicFieldObjectResponse.data;
 				if (
 					borrowIndexDynamicFieldObject &&
 					borrowIndexDynamicFieldObject.content &&
-					'fields' in borrowIndexDynamicFieldObject.content
+					"fields" in borrowIndexDynamicFieldObject.content
 				) {
 					const dynamicFields = borrowIndexDynamicFieldObject.content
-					.fields as any;
+						.fields as any;
 					borrowIndex = dynamicFields.value.fields;
 				}
 
 				// Get interest models.
 				const interestModelParentId =
 					fields.interest_models.fields.table.fields.id.id;
-				const interestModelDynamicFieldObjectResponse = await this.ScallopProviders.Query.suiKit
-					.client()
-					.getDynamicFieldObject({
-					parentId: interestModelParentId,
-					name: {
-						type: '0x1::type_name::TypeName',
-						value: {
-						name: coinType.substring(2),
-						},
-					},
-					});
+				const interestModelDynamicFieldObjectResponse =
+					await this.ScallopProviders.Query.suiKit
+						.client()
+						.getDynamicFieldObject({
+							parentId: interestModelParentId,
+							name: {
+								type: "0x1::type_name::TypeName",
+								value: {
+									name: coinType.substring(2),
+								},
+							},
+						});
 				const interestModelDynamicFieldObject =
 					interestModelDynamicFieldObjectResponse.data;
 				if (
 					interestModelDynamicFieldObject &&
 					interestModelDynamicFieldObject.content &&
-					'fields' in interestModelDynamicFieldObject.content
+					"fields" in interestModelDynamicFieldObject.content
 				) {
-					const dynamicFields = interestModelDynamicFieldObject.content
-					.fields as any;
+					const dynamicFields = interestModelDynamicFieldObject
+						.content.fields as any;
 					interestModel = dynamicFields.value.fields;
 				}
 
 				// Get borrow fee.
-				const borrowFeeDynamicFieldObjectResponse = await this.ScallopProviders.Query.suiKit
-					.client()
-					.getDynamicFieldObject({
-					parentId: marketId,
-					name: {
-						// TODO: obtain through ScallopSDK
-						//
-						type: `0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da::market_dynamic_keys::BorrowFeeKey`,
-						value: {
-						type: {
-							name: coinType.substring(2),
-						},
-						},
-					},
-					});
+				const borrowFeeDynamicFieldObjectResponse =
+					await this.ScallopProviders.Query.suiKit
+						.client()
+						.getDynamicFieldObject({
+							parentId: marketId,
+							name: {
+								// TODO: obtain through ScallopSDK
+								//
+								type: `0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da::market_dynamic_keys::BorrowFeeKey`,
+								value: {
+									type: {
+										name: coinType.substring(2),
+									},
+								},
+							},
+						});
 
 				const borrowFeeDynamicFieldObject =
 					borrowFeeDynamicFieldObjectResponse.data;
 				if (
 					borrowFeeDynamicFieldObject &&
 					borrowFeeDynamicFieldObject.content &&
-					'fields' in borrowFeeDynamicFieldObject.content
+					"fields" in borrowFeeDynamicFieldObject.content
 				) {
-					const dynamicFields = borrowFeeDynamicFieldObject.content.fields as any;
+					const dynamicFields = borrowFeeDynamicFieldObject.content
+						.fields as any;
 					borrowFeeRate = dynamicFields.value.fields;
 				}
 			}
 		}
 
-		if (!balanceSheet || !borrowIndex || !interestModel || !borrowFeeRate) 
+		if (!balanceSheet || !borrowIndex || !interestModel || !borrowFeeRate)
 			throw Error("Could not load MarketData");
-		
+
 		return {
 			type: interestModel.type.fields,
 			maxBorrowRate: interestModel.max_borrow_rate.fields,
