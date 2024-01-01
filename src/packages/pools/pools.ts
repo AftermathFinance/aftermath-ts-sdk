@@ -20,7 +20,7 @@ import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
-import { Fixed } from "../../general/utils/fixed";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 
 /**
  * @class Pools Provider
@@ -28,7 +28,7 @@ import { Fixed } from "../../general/utils/fixed";
  * @example
  * ```
  * // Create provider
- * const pools = (new Aftermath("TESTNET")).Pools();
+ * const pools = (new Aftermath("MAINNET")).Pools();
  * // Call sdk
  * const pool = await pools.getPool({ objectId: "0xBEEF" });
  * ```
@@ -38,6 +38,9 @@ export class Pools extends Caller {
 	//  Constants
 	// =========================================================================
 
+	/**
+	 * An object containing various constants used in the pools module.
+	 */
 	public static readonly constants = {
 		// TODO: remove this and use fixed class
 		feePercentages: {
@@ -76,7 +79,7 @@ export class Pools extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Pools` instance
 	 */
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "pools");
 	}
 
@@ -114,6 +117,11 @@ export class Pools extends Caller {
 		return pools;
 	}
 
+	/**
+	 * Retrieves all pools from the API and returns an array of Pool objects.
+	 * @returns {Promise<Pool[]>} A promise that resolves to an array of Pool objects.
+	 */
+
 	public async getAllPools() {
 		const pools = await this.fetchApi<PoolObject[]>("");
 		return pools.map((pool) => new Pool(pool, this.network));
@@ -123,6 +131,11 @@ export class Pools extends Caller {
 	//  Transactions
 	// =========================================================================
 
+	/**
+	 * Fetches the API transaction for publishing an LP coin.
+	 * @param inputs - The inputs for the transaction.
+	 * @returns A promise that resolves with the API transaction.
+	 */
 	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
 		return this.fetchApiTransaction<ApiPublishLpCoinBody>(
 			"transactions/publish-lp-coin",
@@ -130,6 +143,11 @@ export class Pools extends Caller {
 		);
 	}
 
+	/**
+	 * Fetches the transaction for creating a new pool.
+	 * @param inputs The inputs required for creating a new pool.
+	 * @returns A Promise that resolves to the transaction data.
+	 */
 	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
 		return this.fetchApiTransaction<ApiCreatePoolBody>(
 			"transactions/create-pool",
@@ -141,6 +159,12 @@ export class Pools extends Caller {
 	//  Inspections
 	// =========================================================================
 
+	/**
+	 * Returns the pool object ID for the given LP coin type.
+	 * @param inputs - The request body containing the LP coin type.
+	 * @returns The pool object ID.
+	 * @throws An error if the LP coin type is invalid.
+	 */
 	public getPoolObjectIdForLpCoinType = (
 		inputs: ApiPoolObjectIdForLpCoinTypeBody
 	) => {
@@ -153,6 +177,11 @@ export class Pools extends Caller {
 		);
 	};
 
+	/**
+	 * Checks if the given coin type is an LP coin type.
+	 * @param inputs - An object containing the LP coin type to check.
+	 * @returns A boolean indicating whether the given coin type is an LP coin type.
+	 */
 	public isLpCoinType = async (inputs: { lpCoinType: CoinType }) => {
 		try {
 			await this.getPoolObjectIdForLpCoinType(inputs);
@@ -160,6 +189,14 @@ export class Pools extends Caller {
 		} catch (e) {
 			return false;
 		}
+	};
+
+	/**
+	 * Retrieves the total volume in the last 24 hours.
+	 * @returns A Promise that resolves to a number representing the total volume.
+	 */
+	public getTotalVolume24hrs = async (): Promise<number> => {
+		return this.fetchApi("volume-24hrs");
 	};
 
 	// =========================================================================
@@ -206,7 +243,7 @@ export class Pools extends Caller {
 	};
 
 	public static normalizeSlippage = (slippage: Slippage) =>
-		Fixed.directUncast(1 - slippage);
+		FixedUtils.directUncast(1 - slippage);
 
 	// =========================================================================
 	//  Display

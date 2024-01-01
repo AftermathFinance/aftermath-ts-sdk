@@ -19,7 +19,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: TurbosPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: TurbosPoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.id;
@@ -35,7 +35,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = true;
 
 	readonly pool: TurbosPoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

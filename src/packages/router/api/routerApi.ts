@@ -19,9 +19,7 @@ import {
 	AllRouterOptions,
 	PartialRouterOptions,
 	SuiAddress,
-	SerializedTransaction,
 	TxBytes,
-	DynamicGasCoinData,
 	ApiRouterDynamicGasBody,
 } from "../../../types";
 import {
@@ -40,8 +38,12 @@ import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 import { FlowXApi } from "../../external/flowX/flowXApi";
 import { Coin } from "../..";
-import { MoveCallSuiTransaction, SuiTransaction } from "@mysten/sui.js/client";
+import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 
+/**
+ * RouterApi class provides methods for interacting with the Aftermath Router API.
+ * @class
+ */
 export class RouterApi {
 	// =========================================================================
 	//  Constants
@@ -88,6 +90,14 @@ export class RouterApi {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates an instance of RouterApi.
+	 * @constructor
+	 * @param {AftermathApi} Provider - The Aftermath API instance.
+	 * @param {RouterProtocolName[]} protocols - The list of protocols to use.
+	 * @param {PartialRouterOptions} regularOptions - The regular options to use.
+	 * @param {Partial<RouterSynchronousOptions>} preAsyncOptions - The pre-async options to use.
+	 */
 	constructor(
 		private readonly Provider: AftermathApi,
 		public readonly protocols: RouterProtocolName[] = [
@@ -116,7 +126,6 @@ export class RouterApi {
 
 		this.options = optionsToSet;
 
-		this.Provider = Provider;
 		this.Helpers = new RouterApiHelpers(Provider, optionsToSet);
 	}
 
@@ -138,6 +147,22 @@ export class RouterApi {
 	// =========================================================================
 	//  Public Methods
 	// =========================================================================
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
+
+	/**
+	 * Fetches the total volume of swaps within a specified duration.
+	 * @param inputs - The inputs for fetching the total volume.
+	 * @returns A Promise that resolves to an array of total volumes.
+	 */
+	public fetchVolume = async (inputs: { durationMs: number }) => {
+		const { durationMs } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+			`router/swap-volume/${durationMs}`
+		);
+	};
 
 	// =========================================================================
 	//  Graph
@@ -191,8 +216,13 @@ export class RouterApi {
 	//  Routing
 	// =========================================================================
 
+	/**
+	 * Fetches the complete trade route given an input amount of a specified coin type.
+	 * @param inputs An object containing the necessary inputs for the trade route calculation.
+	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
+	 */
 	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
 		coinInType: CoinType;
 		coinInAmount: Balance;
@@ -206,8 +236,13 @@ export class RouterApi {
 		});
 	};
 
+	/**
+	 * Fetches the complete trade route given the output amount of the trade.
+	 * @param inputs - An object containing the necessary inputs for fetching the trade route.
+	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
+	 */
 	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
-		network: SuiNetwork | Url;
+		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
 		coinInType: CoinType;
 		coinOutAmount: Balance;
@@ -225,6 +260,11 @@ export class RouterApi {
 	//  Transactions
 	// =========================================================================
 
+	/**
+	 * Fetches a transaction for a complete trade route.
+	 * @param inputs An object containing the wallet address, complete trade route, slippage, and optional sponsored transaction flag.
+	 * @returns A promise that resolves to a TransactionBlock object.
+	 */
 	public async fetchTransactionForCompleteTradeRoute(inputs: {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
@@ -240,6 +280,11 @@ export class RouterApi {
 		return tx;
 	}
 
+	/**
+	 * Fetches a transaction argument for a complete trade route.
+	 * @param inputs An object containing the necessary inputs for the transaction.
+	 * @returns A promise that resolves to a transaction argument, or undefined if the transaction failed.
+	 */
 	public async fetchAddTransactionForCompleteTradeRoute(inputs: {
 		tx: TransactionBlock;
 		walletAddress: SuiAddress;
@@ -258,7 +303,7 @@ export class RouterApi {
 	public async fetchAddDynamicGasRouteToTxKind(
 		inputs: Omit<ApiRouterDynamicGasBody, "coinOutAmount"> & {
 			coinOutAmount: Balance;
-			network: SuiNetwork | Url;
+			network: SuiNetwork;
 			graph: RouterSerializableCompleteGraph;
 		}
 	): Promise<TxBytes> {
@@ -346,6 +391,11 @@ export class RouterApi {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Fetches trade events for a given user.
+	 * @param inputs - The inputs for fetching trade events.
+	 * @returns A Promise that resolves with the fetched trade events.
+	 */
 	public async fetchTradeEvents(inputs: UserEventsInputs) {
 		return this.Helpers.SynchronousHelpers.fetchTradeEvents(inputs);
 	}

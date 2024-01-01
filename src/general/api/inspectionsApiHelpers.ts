@@ -1,6 +1,7 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../providers/aftermathApi";
-import { Byte } from "../../types";
+import { Byte, SuiAddress } from "../../types";
+import { SuiEvent, TransactionEffects } from "@mysten/sui.js/client";
 
 export class InspectionsApiHelpers {
 	public static constants = {
@@ -12,9 +13,7 @@ export class InspectionsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-	}
+	constructor(private readonly Provider: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods
@@ -24,36 +23,58 @@ export class InspectionsApiHelpers {
 	//  Fetching
 	// =========================================================================
 
-	public fetchFirstBytesFromTxOutput = async (tx: TransactionBlock) => {
-		return (await this.fetchAllBytesFromTxOutput({ tx }))[0];
+	// TODO: replace all bytes types with uint8array type
+
+	public fetchFirstBytesFromTxOutput = async (inputs: {
+		tx: TransactionBlock;
+		sender?: SuiAddress;
+	}) => {
+		return (await this.fetchAllBytesFromTxOutput(inputs))[0];
 	};
 
-	// TODO: replace all bytes types with uint8array type
 	public fetchAllBytesFromTxOutput = async (inputs: {
 		tx: TransactionBlock;
+		sender?: SuiAddress;
 	}): Promise<Byte[][]> => {
-		const signer = InspectionsApiHelpers.constants.devInspectSigner;
+		const { allBytes } = await this.fetchAllBytesFromTx(inputs);
+		return allBytes[allBytes.length - 1];
+	};
 
+	public fetchAllBytesFromTx = async (inputs: {
+		tx: TransactionBlock;
+		sender?: SuiAddress;
+	}): Promise<{
+		events: SuiEvent[];
+		effects: TransactionEffects;
+		allBytes: Byte[][][];
+	}> => {
+		const sender =
+			inputs.sender ?? InspectionsApiHelpers.constants.devInspectSigner;
 		const response =
 			await this.Provider.provider.devInspectTransactionBlock({
-				sender: signer, // TODO: get tx signer first
+				sender,
 				transactionBlock: inputs.tx,
 			});
 
 		if (response.effects.status.status === "failure") {
 			console.error(response.error);
-			console.error(response.effects.status.error);
-			throw Error("dev inspect move call failed");
+			throw Error(response.effects.status.error);
 		}
 
 		if (!response.results)
 			throw Error("dev inspect move call returned no results");
 
 		const returnVals = response.results[0].returnValues;
-		if (!returnVals)
+		if (!returnVals || returnVals.length <= 0)
 			throw Error("dev inspect move call had no return values");
 
-		const outputsBytes = returnVals.map((val) => val[0]);
-		return outputsBytes;
+		const resultBytes = response.results.map(
+			(result) => result.returnValues?.map((val) => val[0]) ?? []
+		);
+		return {
+			events: response.events,
+			effects: response.effects,
+			allBytes: resultBytes,
+		};
 	};
 }

@@ -21,7 +21,7 @@ class InterestRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: InterestPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: InterestPoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
@@ -38,7 +38,7 @@ class InterestRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = false;
 
 	readonly pool: InterestPoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

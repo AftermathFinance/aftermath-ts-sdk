@@ -27,7 +27,7 @@ export class StakedSuiFren extends Caller {
 
 	constructor(
 		public readonly info: StakedSuiFrenInfo,
-		public readonly network?: SuiNetwork | Url,
+		public readonly network?: SuiNetwork,
 		public readonly isOwned: boolean = false
 	) {
 		super(network, "sui-frens");

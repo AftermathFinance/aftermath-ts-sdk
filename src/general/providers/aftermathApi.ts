@@ -21,18 +21,25 @@ import {
 	RouterProtocolName,
 	RouterSynchronousOptions,
 	ScallopProviders,
+	Url,
 } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
 import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
 import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
-import { FarmsApi } from "../../packages/farms/api/farmsApi";
+import { OracleApi } from "../../packages/oracle/api/oracleApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
+// import { PriceFeedsApi } from "../priceFeeds/priceFeedsApi";
+import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 
+/**
+ * This class represents the Aftermath API and provides helper methods for various functionalities.
+ * @class
+ */
 export class AftermathApi {
 	// =========================================================================
 	//  Helpers
@@ -67,6 +74,13 @@ export class AftermathApi {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates an instance of AftermathApi.
+	 * @param provider - The SuiClient instance to use for interacting with the blockchain.
+	 * @param addresses - The configuration addresses for the Aftermath protocol.
+	 * @param indexerCaller - The IndexerCaller instance to use for querying the blockchain.
+	 * @param coinGeckoApiKey - (Optional) The API key to use for querying CoinGecko for token prices.
+	 */
 	public constructor(
 		public readonly provider: SuiClient,
 		public readonly addresses: ConfigAddresses,
@@ -111,6 +125,8 @@ export class AftermathApi {
 				)
 		: () => new PlaceholderHistoricalDataApi();
 
+	// public PriceFeeds = new PriceFeedsApi(this.pythPriceServiceEndpoint);
+
 	// =========================================================================
 	//  General Packages
 	// =========================================================================
@@ -129,8 +145,16 @@ export class AftermathApi {
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);
+	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
 
+	/**
+	 * Creates a new instance of the RouterApi class.
+	 * @param protocols An optional array of protocol names to use for the router.
+	 * @param regularOptions An optional object containing regular router options.
+	 * @param preAsyncOptions An optional object containing pre-async router options.
+	 * @returns A new instance of the RouterApi class.
+	 */
 	public Router = (
 		protocols?: RouterProtocolName[],
 		regularOptions?: PartialRouterOptions,

@@ -24,7 +24,7 @@ import { Caller } from "../../general/utils/caller";
  * @example
  * ```
  * // Create provider
- * const router = (new Aftermath("TESTNET")).Router();
+ * const router = (new Aftermath("MAINNET")).Router();
  * // Call sdk
  * const supportedCoins = await router.getSupportedCoins();
  * ```
@@ -51,7 +51,7 @@ export class Router extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Router` instance
 	 */
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "router");
 	}
 
@@ -62,6 +62,14 @@ export class Router extends Caller {
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
+
+	/**
+	 * Retrieves the total volume in the last 24 hours.
+	 * @returns A Promise that resolves to a number representing the total volume.
+	 */
+	public getVolume24hrs = async (): Promise<number> => {
+		return this.fetchApi("volume-24hrs");
+	};
 
 	/**
 	 * Queries all coins that router can trade between.

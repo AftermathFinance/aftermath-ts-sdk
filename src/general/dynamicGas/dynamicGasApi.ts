@@ -107,22 +107,26 @@ export class DynamicGasApi {
 			gas_asset: CoinType;
 			transaction_kind: TxBytes;
 			sender: SuiAddress;
+			sponsor: SuiAddress;
 		} = {
 			// TODO: make it so `as` doesn't have to be used here!
 			gas_coin: gasCoin as DynamicGasCoinData,
 			gas_asset: gasCoinType,
 			transaction_kind: b64TxBytes,
 			sender: walletAddress,
+			sponsor: this.addresses.sponsorAddress,
 		};
 
 		const res: {
 			tx_data: string;
 			signature: SerializedSignature;
 		} = await this.Provider.indexerCaller.fetchIndexer(
-			`${this.addresses.sponsorAddress}/apply.json`,
+			"dynamic-gas/apply",
 			body,
 			undefined,
-			"sui-dynamic-gas"
+			undefined,
+			undefined,
+			true
 		);
 
 		return {

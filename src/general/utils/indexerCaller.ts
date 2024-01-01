@@ -16,7 +16,7 @@ export class IndexerCaller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork | Url,
+		public readonly network?: SuiNetwork,
 		private readonly indexerUrlPrefix: Url = ""
 	) {
 		this.indexerBaseUrl =
@@ -35,11 +35,6 @@ export class IndexerCaller {
 		if (!response.ok) throw new Error(await response.text());
 
 		const json = JSON.stringify(await response.json());
-
-		// const json = JSON.parse(
-		// 	new TextDecoder().decode(await response.arrayBuffer())
-		// );
-
 		const output = Helpers.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
@@ -66,26 +61,14 @@ export class IndexerCaller {
 		}`;
 	}
 
-	// 	if (!tx.blockData.sender)
-	// 	throw new Error(
-	// 		"unable to set dynamic gas budget with no sender set on tx"
-	// 	);
-
-	// const gasCoins =
-	// 	await this.Provider.Coin().fetchCoinsUntilAmountReachedOrEnd({
-	// 		walletAddress: tx.blockData.sender,
-	// 		coinType: gasCoinType,
-	// 		coinAmount: "TODO",
-	// 	});
-	// const gasCoinIds = gasCoins.map((coin) => coin.coinObjectId);
-
 	// =========================================================================
 	//  Indexer Calling
 	// =========================================================================
 
-	private static indexerBaseUrlForNetwork(network: SuiNetwork | Url): Url {
+	private static indexerBaseUrlForNetwork(network: SuiNetwork): Url {
 		if (network === "MAINNET") return "http://135.148.26.42:80";
-		if (network === "TESTNET") return "http://15.204.90.115:8086";
+		if (network === "MAINNET_STAGING") return "http://15.204.90.115:8100";
+		if (network === "TESTNET") return "http://15.204.90.115:8200";
 		if (network === "DEVNET") return "http://15.204.90.115:9986";
 		if (network === "LOCAL") return "http://localhost:8080";
 
@@ -147,7 +130,6 @@ export class IndexerCaller {
 						Accept: "*/*",
 					},
 			  }));
-
 		if (noNestedData) {
 			return IndexerCaller.fetchResponseToType<Output>(uncastResponse);
 		}

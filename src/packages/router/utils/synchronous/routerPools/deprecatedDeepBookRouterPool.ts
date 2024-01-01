@@ -27,7 +27,7 @@ class DeprecatedDeepBookRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: DeepBookPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: DeepBookPoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
@@ -43,7 +43,7 @@ class DeprecatedDeepBookRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = false;
 
 	readonly pool: DeepBookPoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

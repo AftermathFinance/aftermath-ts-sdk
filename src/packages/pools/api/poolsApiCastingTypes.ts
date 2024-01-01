@@ -94,3 +94,4 @@ export type PoolDepositEventOnChain =
 
 export type PoolWithdrawEventOnChain =
 	EventOnChain<PoolWithdrawEventFieldsOnChain>;
+

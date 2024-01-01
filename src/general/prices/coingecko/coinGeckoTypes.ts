@@ -20,3 +20,9 @@ export interface CoinGeckoCoinData {
 	symbol: CoinSymbol;
 	coinType: CoinType;
 }
+
+export interface CoinGeckoCoinSymbolData {
+	apiId: CoinGeckoCoinApiId;
+	name: string;
+	symbol: CoinSymbol;
+}

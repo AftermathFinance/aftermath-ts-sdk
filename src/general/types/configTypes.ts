@@ -1,9 +1,10 @@
+import { CoinType } from "../../types";
+import { CoinDecimal } from "../../types";
+import { ObjectId, SuiAddress } from "./generalTypes";
+
 // =========================================================================
 //  Name Only
 // =========================================================================
-
-import { CoinDecimal } from "../../types";
-import { ObjectId, SuiAddress } from "./generalTypes";
 
 export type RpcEndpoint = string;
 
@@ -11,24 +12,19 @@ export type RpcEndpoint = string;
 //  All Addresses
 // =========================================================================
 
-export type ConfigAddresses = RequiredConfigAddresses &
-	Partial<OptionalConfigAddresses>;
-
-interface RequiredConfigAddresses {}
-
-interface OptionalConfigAddresses {
-	faucet: FaucetAddresses;
-	staking: StakingAddresses;
-	leveragedStaking: LeveragedStakingAddresses;
-	pools: PoolsAddresses;
-	suiFrens: SuiFrensAddresses;
-	nftAmm: NftAmmAddresses;
-	router: RouterAddresses;
-	referralVault: ReferralVaultAddresses;
-	perpetuals: PerpetualsAddresses;
-	farms: FarmsAddresses;
-	dynamicGas: DynamicGasAddresses;
-	scallop: ScallopAddresses;
+export interface ConfigAddresses {
+	faucet?: FaucetAddresses;
+	staking?: StakingAddresses;
+	pools?: PoolsAddresses;
+	suiFrens?: SuiFrensAddresses;
+	nftAmm?: NftAmmAddresses;
+	router?: RouterAddresses;
+	referralVault?: ReferralVaultAddresses;
+	perpetuals?: PerpetualsAddresses;
+	oracle?: OracleAddresses;
+	farms?: FarmsAddresses;
+	dynamicGas?: DynamicGasAddresses;
+	scallop?: ScallopAddresses;
 }
 
 // =========================================================================
@@ -278,12 +274,12 @@ export interface ReferralVaultAddresses {
 export interface PerpetualsAddresses {
 	packages: {
 		perpetuals: SuiAddress;
+		events: SuiAddress;
 	};
 	objects: {
 		adminCapability: ObjectId;
 		registry: ObjectId;
-		exchanges: ExchangeAddresses[]; // Probably a Map<CoinType, ExchangeAddresses> is better
-		oracle: OracleAddresses;
+		exchanges: Record<CoinType, ExchangeAddresses>;
 	};
 }
 
@@ -302,15 +298,14 @@ export interface ExchangeAddresses {
 	accountManager: ObjectId;
 	marketManager: ObjectId;
 	vault: ObjectId;
-	insuranceFund: ObjectId;
+	insuranceFunds: ObjectId;
 }
 
 export interface OracleAddresses {
 	packages: {
-		oracle: SuiAddress;
+		oracleReader: SuiAddress;
 	};
 	objects: {
-		authorityCapability: ObjectId;
 		priceFeedStorage: ObjectId;
 	};
 }

@@ -1,19 +1,21 @@
 import { SuiNetwork } from "../types/suiTypes";
 import {
 	CoinPriceInfo,
+	CoinSymbolsToPriceInfo,
 	CoinType,
 	CoinsToPrice,
 	CoinsToPriceInfo,
 } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 import { Url } from "../types";
+import { OracleCoinSymbol } from "../../packages/oracle/oracleTypes";
 
 export class Prices extends Caller {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "price-info");
 	}
 
@@ -34,6 +36,12 @@ export class Prices extends Caller {
 		coins: CoinType[];
 	}): Promise<CoinsToPriceInfo> {
 		return this.fetchApi(JSON.stringify(inputs.coins));
+	}
+
+	public async getCoinSymbolsToPriceInfo(inputs: {
+		coinSymbols: OracleCoinSymbol[];
+	}): Promise<CoinSymbolsToPriceInfo> {
+		return this.fetchApi(`symbols/${JSON.stringify(inputs.coinSymbols)}`);
 	}
 
 	public async getCoinPrice(inputs: { coin: CoinType }): Promise<number> {

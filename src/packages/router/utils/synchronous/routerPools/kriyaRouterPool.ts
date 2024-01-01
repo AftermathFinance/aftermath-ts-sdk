@@ -20,7 +20,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: KriyaPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: KriyaPoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
@@ -37,7 +37,7 @@ class KriyaRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = false;
 
 	readonly pool: KriyaPoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

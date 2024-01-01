@@ -224,7 +224,7 @@ export class SuiswapApi
 
 		return {
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(Helpers.getObjectId(data)),
+			objectId: Helpers.getObjectId(data),
 			version: BigInt(fields.version),
 			owner: fields.owner,
 			index: BigInt(fields.index),

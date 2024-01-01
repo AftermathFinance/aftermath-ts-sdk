@@ -19,7 +19,7 @@ class AfSuiRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: AfSuiRouterPoolObject, network: SuiNetwork | Url) {
+	constructor(pool: AfSuiRouterPoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = "afSUI";
@@ -35,7 +35,7 @@ class AfSuiRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = false;
 
 	readonly pool: AfSuiRouterPoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

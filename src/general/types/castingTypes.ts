@@ -1,3 +1,4 @@
+import { CoinType } from "../..";
 import {
 	AnyObjectType,
 	BigIntAsString,
@@ -54,3 +55,14 @@ export interface TypeNameOnChain {
 		name: AnyObjectType;
 	};
 }
+
+// =========================================================================
+//  Indexer
+// =========================================================================
+
+export type IndexerSwapVolumeResponse = {
+	totalAmountIn: number;
+	totalAmountOut: number;
+	coinTypeIn: CoinType;
+	coinTypeOut: CoinType;
+}[];

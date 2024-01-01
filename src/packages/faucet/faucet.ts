@@ -20,7 +20,7 @@ export class Faucet extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork | Url) {
+	constructor(public readonly network?: SuiNetwork) {
 		super(network, "faucet");
 	}
 

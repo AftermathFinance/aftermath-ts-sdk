@@ -384,7 +384,7 @@ export class DeepBookApi
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.pure(Casting.zeroBigInt.toString(), "u64"), // price_low
+				tx.pure(BigInt(0).toString(), "u64"), // price_low
 				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // price_high
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
@@ -407,7 +407,7 @@ export class DeepBookApi
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.pure(Casting.zeroBigInt.toString(), "u64"), // price_low
+				tx.pure(BigInt(0).toString(), "u64"), // price_low
 				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // price_high
 				tx.object(Sui.constants.addresses.suiClockId),
 			],

@@ -29,9 +29,7 @@ export class EventsApiHelpers {
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {
-		this.Provider = Provider;
-	}
+	constructor(private readonly Provider: AftermathApi) {}
 
 	// =========================================================================
 	//  Public Methods
@@ -42,6 +40,7 @@ export class EventsApiHelpers {
 	// =========================================================================
 
 	// TODO: make this filter by looking ONLY at all relevant AF packages
+	// TODO: move to wallet package ?
 	public fetchSubscribeToUserEvents = async (inputs: {
 		address: SuiAddress;
 		onEvent: (event: SuiEvent) => void;
@@ -206,7 +205,10 @@ export class EventsApiHelpers {
 		event: SuiEvent,
 		eventType: AnyObjectType | (() => AnyObjectType)
 	): SuiEvent | undefined =>
-		event.type === (typeof eventType === "string" ? eventType : eventType())
+		// event.type === (typeof eventType === "string" ? eventType : eventType())
+		event.type.includes(
+			typeof eventType === "string" ? eventType : eventType()
+		)
 			? event
 			: undefined;
 
@@ -216,15 +218,50 @@ export class EventsApiHelpers {
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
 	): EventType | undefined => {
 		if (
-			!(
-				event.type ===
-				(typeof eventType === "string" ? eventType : eventType())
+			// event.type !==
+			// (typeof eventType === "string" ? eventType : eventType())
+			!event.type.includes(
+				typeof eventType === "string" ? eventType : eventType()
 			)
 		)
 			return;
 
 		const castedEvent = castFunction(event as EventTypeOnChain);
 		return castedEvent;
+	};
+
+	public static findCastEventsOrUndefined = <
+		EventTypeOnChain,
+		EventType
+	>(inputs: {
+		events: SuiEvent[];
+		eventType: AnyObjectType | (() => AnyObjectType);
+		castFunction: (eventOnChain: EventTypeOnChain) => EventType;
+	}) => {
+		const { events, eventType, castFunction } = inputs;
+
+		const foundEvents = events.filter(
+			(event) =>
+				EventsApiHelpers.suiEventOfTypeOrUndefined(event, eventType) !==
+				undefined
+		);
+		const castedEvents = foundEvents.map((event) =>
+			castFunction(event as EventTypeOnChain)
+		);
+		return castedEvents;
+	};
+
+	public static findCastEventOrUndefined = <
+		EventTypeOnChain,
+		EventType
+	>(inputs: {
+		events: SuiEvent[];
+		eventType: AnyObjectType | (() => AnyObjectType);
+		castFunction: (eventOnChain: EventTypeOnChain) => EventType;
+	}) => {
+		const events = this.findCastEventsOrUndefined(inputs);
+		if (events.length <= 0) return;
+		return events[0];
 	};
 
 	public static findCastEventInTransactionOrUndefined = <
@@ -235,15 +272,11 @@ export class EventsApiHelpers {
 		eventType: AnyObjectType | (() => AnyObjectType),
 		castFunction: (eventOnChain: EventTypeOnChain) => EventType
 	) => {
-		const foundEvent = transaction.events?.find(
-			(event) =>
-				EventsApiHelpers.suiEventOfTypeOrUndefined(event, eventType) !==
-				undefined
-		);
-		if (!foundEvent) return;
-
-		const castedEvent = castFunction(foundEvent as EventTypeOnChain);
-		return castedEvent;
+		return this.findCastEventOrUndefined({
+			events: transaction.events ?? [],
+			eventType,
+			castFunction,
+		});
 	};
 
 	public static findCastEventInTransactionsOrUndefined = <

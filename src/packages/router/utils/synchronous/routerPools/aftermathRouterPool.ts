@@ -21,7 +21,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 	//  Constructor
 	// =========================================================================
 
-	constructor(pool: PoolObject, network: SuiNetwork | Url) {
+	constructor(pool: PoolObject, network: SuiNetwork) {
 		this.pool = pool;
 		this.network = network;
 		this.uid = pool.objectId;
@@ -41,7 +41,7 @@ class AftermathRouterPool implements RouterPoolInterface {
 	readonly noHopsAllowed = false;
 
 	readonly pool: PoolObject;
-	readonly network: SuiNetwork | Url;
+	readonly network: SuiNetwork;
 	readonly uid: UniqueId;
 	readonly coinTypes: CoinType[];
 

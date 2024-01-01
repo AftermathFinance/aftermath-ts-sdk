@@ -45,7 +45,7 @@ import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
-import { Fixed } from "../../../general/utils/fixed";
+import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { StakingApiCasting } from "./stakingApiCasting";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import { RouterPoolTradeTxInputs } from "../..";
@@ -851,7 +851,9 @@ export class StakingApi
 		const tx = new TransactionBlock();
 		this.totalSuiAmountTx({ tx });
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 		return Casting.bigIntFromBytes(bytes);
 	};
 
@@ -859,9 +861,13 @@ export class StakingApi
 		const tx = new TransactionBlock();
 		this.afSuiToSuiExchangeRateTx({ tx });
 		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput(tx);
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
 
-		const exchangeRate = Fixed.directCast(Casting.bigIntFromBytes(bytes));
+		const exchangeRate = FixedUtils.directCast(
+			Casting.bigIntFromBytes(bytes)
+		);
 		return exchangeRate <= 0 ? 1 : exchangeRate;
 	};
 

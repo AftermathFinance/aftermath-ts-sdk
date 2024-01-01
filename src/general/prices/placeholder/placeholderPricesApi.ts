@@ -1,5 +1,11 @@
 import { Coin } from "../../../packages/coin/coin";
-import { CoinPriceInfo, CoinType, CoinsToPrice } from "../../../types";
+import {
+	CoinPriceInfo,
+	CoinSymbol,
+	CoinSymbolsToPriceInfo,
+	CoinType,
+	CoinsToPrice,
+} from "../../../types";
 import { CoinGeckoCoinApiId } from "../coingecko/coinGeckoTypes";
 import { PricesApiInterface } from "../pricesApiInterface";
 
@@ -72,9 +78,25 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 			}),
 			{}
 		);
-
 		return coinsInfo;
 	};
+
+	public async fetchCoinSymbolsToPriceInfo(inputs: {
+		coinSymbolsToApiId: Record<CoinSymbol, CoinGeckoCoinApiId>;
+	}): Promise<CoinSymbolsToPriceInfo> {
+		// TODO: check constants for better fake data ?
+		return Object.keys(inputs.coinSymbolsToApiId).reduce(
+			(acc, symbol) => ({
+				...acc,
+				[symbol]: {
+					price: Math.random() * 1000,
+					priceChange24HoursPercentage:
+						Math.random() > 0.5 ? 0 : (Math.random() - 0.5) / 10,
+				},
+			}),
+			{}
+		);
+	}
 
 	// public fetchPriceGivenApiId = async (inputs: {
 	// 	coinType: CoinType;

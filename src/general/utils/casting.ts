@@ -6,10 +6,21 @@ import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
 import { Byte, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
+import { TypeName } from "@mysten/bcs";
+import { BCS } from "@mysten/bcs";
+import { FixedUtils } from "./fixedUtils";
+import { IFixedUtils } from "./iFixedUtils";
 import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
 import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
 import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/leveragedStakingApiCasting";
+import { CoinsToBalance, Helpers } from "../..";
+import { IndexerSwapVolumeResponse } from "../types/castingTypes";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 
+/**
+ * Utility class for casting and conversion functions.
+ * @class
+ */
 export class Casting {
 	// =========================================================================
 	//  Api Casting
@@ -30,16 +41,13 @@ export class Casting {
 	// =========================================================================
 
 	// =========================================================================
-	//  Fixed
+	//  Fixed / IFixed
 	// =========================================================================
 
-	public static fixedOneBigInt: bigint = BigInt("1000000000000000000");
-	public static fixedOneNumber: number = Number(this.fixedOneBigInt);
+	public static Fixed = FixedUtils;
+	public static IFixed = IFixedUtils;
+
 	public static u64MaxBigInt: bigint = BigInt("0xFFFFFFFFFFFFFFFF");
-	public static u128MaxBigInt: bigint = BigInt(
-		"0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-	);
-	public static zeroBigInt: bigint = BigInt(0);
 
 	// =========================================================================
 	//  Functions
@@ -49,16 +57,18 @@ export class Casting {
 	//  Fixed
 	// =========================================================================
 
+	// TODO: only use fixed class for these functions, remove from here
+
 	public static numberToFixedBigInt = (a: number): bigint =>
-		BigInt(Math.floor(a * this.fixedOneNumber));
+		BigInt(Math.floor(a * this.Fixed.fixedOneN));
 	public static bigIntToFixedNumber = (a: bigint): number =>
-		Number(a) / this.fixedOneNumber;
+		Number(a) / this.Fixed.fixedOneN;
 
 	public static scaleNumberByBigInt = (scalar: number, int: bigint): bigint =>
 		BigInt(Math.floor(scalar * Number(int)));
 
 	// =========================================================================
-	//  Bytes
+	//  Bytes / BCS
 	// =========================================================================
 
 	public static stringFromBytes = (bytes: Byte[]) =>
@@ -79,7 +89,11 @@ export class Casting {
 	public static unwrapDeserializedOption = (
 		deserializedData: any
 	): any | undefined => {
-		return "Some" in deserializedData ? deserializedData.Some : undefined;
+		return "vec" in deserializedData
+			? deserializedData.vec.length > 0
+				? deserializedData.vec[0]
+				: undefined
+			: undefined;
 	};
 
 	public static u8VectorFromString = (str: string) => {
@@ -96,4 +110,30 @@ export class Casting {
 	public static normalizeSlippageTolerance = (slippageTolerance: number) => {
 		return slippageTolerance / 100;
 	};
+
+	public static castObjectBcs = <T>(inputs: {
+		suiObjectResponse: SuiObjectResponse;
+		typeName: TypeName;
+		fromDeserialized: (deserialized: any) => T;
+		bcs: BCS;
+	}): T => {
+		const { suiObjectResponse, typeName, fromDeserialized } = inputs;
+
+		const deserialized = inputs.bcs.de(
+			typeName,
+			this.bcsBytesFromSuiObjectResponse(suiObjectResponse),
+			"base64"
+		);
+		return fromDeserialized(deserialized);
+	};
+
+	public static bcsBytesFromSuiObjectResponse(
+		suiObjectResponse: SuiObjectResponse
+	): string {
+		const rawData = suiObjectResponse.data?.bcs;
+		if (rawData && "bcsBytes" in rawData) return rawData.bcsBytes;
+		throw new Error(
+			`no bcs bytes found on object: ${suiObjectResponse.data?.objectId}`
+		);
+	}
 }

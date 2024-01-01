@@ -6,10 +6,12 @@ import {
 import {
 	AnyObjectType,
 	Balance,
-	ObjectId,
 	ScallopProviders,
-	Slippage,
 	SuiNetwork,
+	CoinsToDecimals,
+	CoinsToPrice,
+	ObjectId,
+	Slippage,
 } from "../../types";
 import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../api/eventsApiHelpers";
@@ -23,7 +25,13 @@ import {
 } from "@mysten/sui.js/transactions";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { NetworkType } from "@scallop-io/sui-kit";
+import { is } from "@mysten/sui.js/utils";
+import { IndexerSwapVolumeResponse } from "../types/castingTypes";
+import { Coin } from "../..";
 
+/**
+ * A utility class containing various helper functions for general use.
+ */
 export class Helpers {
 	// =========================================================================
 	//  Api Helpers
@@ -39,10 +47,22 @@ export class Helpers {
 	//  Type Manipulation
 	// =========================================================================
 
+	/**
+	 * Removes leading zeroes from the hexadecimal representation of a given object type.
+	 * @param type - The object type to strip leading zeroes from.
+	 * @returns The object type with leading zeroes removed from its hexadecimal representation.
+	 */
 	public static stripLeadingZeroesFromType = (
 		type: AnyObjectType
 	): AnyObjectType => type.replaceAll(/x0+/g, "x");
 
+	/**
+	 * Adds leading zeroes to a given `AnyObjectType` until it reaches a length of 64 characters.
+	 * If the input type already has a length greater than 64, an error is thrown.
+	 * @param type - The `AnyObjectType` to add leading zeroes to.
+	 * @returns The modified `AnyObjectType` with leading zeroes added.
+	 * @throws An error if the input type has a length greater than 64.
+	 */
 	public static addLeadingZeroesToType = (
 		type: AnyObjectType
 	): AnyObjectType => {
@@ -109,6 +129,9 @@ export class Helpers {
 
 	public static maxBigInt = (...args: bigint[]) =>
 		args.reduce((m, e) => (e > m ? e : m));
+
+	public static minBigInt = (...args: bigint[]) =>
+		args.reduce((m, e) => (e < m ? e : m));
 
 	// =========================================================================
 	//  Display
@@ -253,6 +276,20 @@ export class Helpers {
 		return amount - Casting.normalizeSlippageTolerance(slippage) * amount;
 	};
 
+	public static zip<S1, S2>(
+		firstCollection: Array<S1>,
+		lastCollection: Array<S2>
+	): Array<[S1, S2]> {
+		const length = Math.min(firstCollection.length, lastCollection.length);
+		const zipped: Array<[S1, S2]> = [];
+
+		for (let index = 0; index < length; index++) {
+			zipped.push([firstCollection[index], lastCollection[index]]);
+		}
+
+		return zipped;
+	}
+
 	// =========================================================================
 	//  Type Checking
 	// =========================================================================
@@ -270,6 +307,7 @@ export class Helpers {
 
 	public static getObjectType(data: SuiObjectResponse): ObjectId {
 		const objectType = data.data?.type;
+		// NOTE: should `Helpers.addLeadingZeroesToType` be used here ?
 		if (objectType) return objectType;
 
 		throw new Error("no object type found on " + data.data?.objectId);
@@ -277,7 +315,7 @@ export class Helpers {
 
 	public static getObjectId(data: SuiObjectResponse): ObjectId {
 		const objectId = data.data?.objectId;
-		if (objectId) return objectId;
+		if (objectId) return Helpers.addLeadingZeroesToType(objectId);
 
 		throw new Error("no object id found on " + data.data?.type);
 	}
@@ -346,5 +384,87 @@ export class Helpers {
 			Builder,
 			Query,
 		};
+	}
+
+	// =========================================================================
+	//  Indexer Calculations
+	// =========================================================================
+
+	/**
+	 * Calculates the total volume in USD.
+	 *
+	 * @param inputs - The input parameters for the calculation.
+	 * @param inputs.volumes - Swap volumes.
+	 * @param inputs.coinsToPrice - The mapping of coin types to their respective prices.
+	 * @param inputs.coinsToDecimals - The mapping of coin types to their respective decimal places.
+	 * @returns The total volume in USD.
+	 */
+	public static calcIndexerVolumeUsd = (inputs: {
+		volumes: IndexerSwapVolumeResponse;
+		coinsToPrice: CoinsToPrice;
+		coinsToDecimals: CoinsToDecimals;
+	}): number => {
+		const { volumes, coinsToPrice, coinsToDecimals } = inputs;
+		return volumes.reduce((acc, data) => {
+			const coinInPrice = coinsToPrice[data.coinTypeIn];
+			if (coinInPrice > 0) {
+				const decimals = coinsToDecimals[data.coinTypeIn];
+				const tradeAmount = Coin.balanceWithDecimals(
+					data.totalAmountIn,
+					decimals
+				);
+
+				const amountUsd = tradeAmount * coinInPrice;
+				return acc + amountUsd;
+			}
+
+			const coinOutPrice = coinsToPrice[data.coinTypeOut];
+			const decimals = coinsToDecimals[data.coinTypeOut];
+			const tradeAmount = Coin.balanceWithDecimals(
+				data.totalAmountOut,
+				decimals
+			);
+
+			const amountUsd = coinInPrice < 0 ? 0 : tradeAmount * coinOutPrice;
+			return acc + amountUsd;
+		}, 0);
+	};
+
+	// =========================================================================
+	//  Error Parsing
+	// =========================================================================
+
+	public static moveErrorCode(inputs: {
+		errorMessage: string;
+		packageId: ObjectId;
+	}): number {
+		const { errorMessage, packageId } = inputs;
+
+		/*
+			MoveAbort(MoveLocation { module: ModuleId { address: 8d8946c2a433e2bf795414498d9f7b32e04aca8dbf35a20257542dc51406242b, name: Identifier("orderbook") }, function: 11, instruction: 117, function_name: Some("fill_market_order") }, 3005) in command 2
+		*/
+
+		if (
+			!errorMessage.includes(
+				Helpers.addLeadingZeroesToType(packageId).replace("0x", "")
+			)
+		)
+			return -1;
+
+		const startIndex = errorMessage.lastIndexOf(",");
+		const endIndex = errorMessage.lastIndexOf(")");
+		if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+			return -1;
+
+		try {
+			const errorCode = parseInt(
+				errorMessage.slice(startIndex + 1, endIndex)
+			);
+			if (Number.isNaN(errorCode)) return -1;
+
+			return errorCode;
+		} catch (e) {
+			return -1;
+		}
 	}
 }
