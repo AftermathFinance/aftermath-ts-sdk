@@ -14,6 +14,9 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
+/**
+ * Represents the Leveraged Staking module.
+ */
 export class LeveragedStaking extends Caller {
 	// =========================================================================
 	//  Constants
@@ -25,6 +28,10 @@ export class LeveragedStaking extends Caller {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates an instance of the LeveragedStaking class.
+	 * @param network The network to connect to.
+	 */
 	constructor(public readonly network?: SuiNetwork | Url) {
 		super(network, "leveraged-staking");
 	}
@@ -33,20 +40,37 @@ export class LeveragedStaking extends Caller {
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Retrieves the leveraged stake position.
+	 * @param inputs The input parameters for the API request.
+	 * @returns A Promise that resolves to the API response.
+	 */
 	public async getLeveragedStakePosition(
 		inputs: ApiLeveragedStakePositionBody
 	): Promise<ApiLeveragedStakePositionResponse> {
 		return this.fetchApi("leveraged-stake-position", inputs);
 	}
 
+	/**
+	 * Retrieves the Leveraged AfSui state.
+	 * @returns A Promise that resolves to the LeveragedAfSuiState object.
+	 */
 	public async getLeveragedAfSuiState(): Promise<LeveragedAfSuiState> {
 		return this.fetchApi("leveraged-afsui-state");
 	}
 
+	/**
+	 * Retrieves the SUI market pool.
+	 * @returns A promise that resolves to a ScallopMarketPool object.
+	 */
 	public async getSuiMarketPool(): Promise<ScallopMarketPool> {
 		return this.fetchApi("sui-market-pool");
 	}
 
+	/**
+	 * Retrieves the AfSui market collateral.
+	 * @returns A promise that resolves to a `ScallopMarketCollateral` object.
+	 */
 	public async getAfSuiMarketCollateral(): Promise<ScallopMarketCollateral> {
 		return this.fetchApi("afsui-market-collateral");
 	}
@@ -55,6 +79,11 @@ export class LeveragedStaking extends Caller {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Retrieves events for a specific user.
+	 * @param inputs The input parameters for the API request.
+	 * @returns A promise that resolves to the fetched events.
+	 */
 	public async getEventsForUser(inputs: ApiIndexerUserEventsBody) {
 		return this.fetchApiEvents<
 			LeveragedStakingEvent,
@@ -77,6 +106,11 @@ export class LeveragedStaking extends Caller {
 	//  Graph Data
 	// =========================================================================
 
+	/**
+	 * Retrieves the performance data for leveraged staking.
+	 * @param inputs - The input parameters for fetching performance data.
+	 * @returns A promise that resolves to an array of LeveragedStakingPerformanceDataPoint objects.
+	 */
 	public async getPerformanceData(
 		inputs: LeveragedStakingPerformanceDataBody
 	): Promise<LeveragedStakingPerformanceDataPoint[]> {
@@ -93,6 +127,11 @@ export class LeveragedStaking extends Caller {
 	//  Calculations
 	// =========================================================================
 
+	/**
+	 * Calculates the leverage based on the provided inputs.
+	 * @param inputs - The inputs required for leverage calculation.
+	 * @returns The calculated leverage.
+	 */
 	public static calcLeverage = (inputs: {
 		totalAfSuiCollateral: Balance;
 		totalSuiDebt: Balance;
@@ -109,6 +148,12 @@ export class LeveragedStaking extends Caller {
 		});
 	};
 
+	/**
+	 * Calculates the total SUI debt based on the provided inputs.
+	 *
+	 * @param inputs - The inputs required for the calculation.
+	 * @returns The total SUI debt as a Balance.
+	 */
 	public static calcTotalSuiDebt = (inputs: {
 		leverage: number;
 		totalAfSuiCollateral: Balance;

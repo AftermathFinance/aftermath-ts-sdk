@@ -44,6 +44,9 @@ import { Pool, Staking } from "../..";
 import BigNumber from 'bignumber.js';
 import { BalanceSheet, BorrowIndex, InterestModel, MarketPool, ScallopTxBlock, SupportPoolCoins } from "@scallop-io/sui-scallop-sdk";
 
+/**
+ * Represents the API for interacting with the Leveraged Staking module.
+ */
 export class LeveragedStakingApi {
 	// =========================================================================
 	//  Constants
@@ -95,9 +98,15 @@ export class LeveragedStakingApi {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Creates an instance of the LeveragedStakingApi class.
+	 * @param {AftermathApi} Provider - The AftermathApi instance.
+	 * @param {ScallopProviders} ScallopProviders - The ScallopProviders instance.
+	 * @throws {Error} If not all required addresses have been set in provider.
+	 */
 	constructor(
 		private readonly Provider: AftermathApi,
-		private readonly ScallopProviders: ScallopProviders
+		private readonly ScallopProviders?: ScallopProviders
 	) {
 		const leveragedStaking = this.Provider.addresses.leveragedStaking;
 		const staking = this.Provider.addresses.staking;
@@ -131,6 +140,11 @@ export class LeveragedStakingApi {
 	//  Objects
 	// =========================================================================
 
+	/**
+	 * Fetches the leveraged stake position for a given wallet address.
+	 * @param inputs - The input parameters for fetching the leveraged stake position.
+	 * @returns A promise that resolves to the leveraged stake position response.
+	 */
 	public fetchLeveragedStakePosition = async (
 		inputs: ApiLeveragedStakePositionBody
 	): Promise<ApiLeveragedStakePositionResponse> => {
@@ -149,7 +163,14 @@ export class LeveragedStakingApi {
 		return leveragedAfSuiPositions[0];
 	};
 
+	/**
+	 * Fetches the SUI market pool.
+	 * @returns A promise that resolves to the ScallopMarketPool object representing the SUI market pool.
+	 * @throws An error if the SUI market pool is not found.
+	 */
 	public fetchSuiMarketPool = async (): Promise<ScallopMarketPool> => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+
 		const suiMarketPool = await this.ScallopProviders.Query.getMarketPool(
 			"sui"
 		);
@@ -157,6 +178,10 @@ export class LeveragedStakingApi {
 		return suiMarketPool;
 	};
 
+	/**
+	 * Fetches the LeveragedAfSuiState.
+	 * @returns A promise that resolves to the LeveragedAfSuiState.
+	 */
 	public fetchLeveragedAfSuiState =
 		async (): Promise<LeveragedAfSuiState> => {
 			return this.Provider.Objects().fetchCastObject({
@@ -168,8 +193,16 @@ export class LeveragedStakingApi {
 			});
 		};
 
+	/**
+	 * Fetches the market collateral for the AfSui market.
+	 * @returns A promise that resolves to the ScallopMarketCollateral object.
+	 * @throws An error if the Sui market pool is not found.
+	 */
 	public fetchAfSuiMarketCollateral =
 		async (): Promise<ScallopMarketCollateral> => {
+			if (!this.ScallopProviders)
+				throw new Error("ScallopProviders not set");
+
 			const afSuiMarketCollateral =
 				await this.ScallopProviders.Query.getMarketCollateral("afsui");
 			if (!afSuiMarketCollateral)
@@ -555,6 +588,8 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+
 		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
 		const tx = scallopTx.txBlock;
 		tx.setSender(inputs.walletAddress);
@@ -604,6 +639,8 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
+
 		const scallopTx = this.ScallopProviders.Builder.createTxBlock();
 		const tx = scallopTx.txBlock;
 		tx.setSender(inputs.walletAddress);
@@ -739,6 +776,7 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}): Promise<TransactionBlock> => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
 		const {
 			referrer,
 			walletAddress,
@@ -877,6 +915,7 @@ export class LeveragedStakingApi {
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
 	}) => {
+		if (!this.ScallopProviders) throw new Error("ScallopProviders not set");
 		const {
 			referrer,
 			walletAddress,
@@ -1150,6 +1189,11 @@ export class LeveragedStakingApi {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Fetches events for a specific user.
+	 * @param inputs - The input parameters for fetching events.
+	 * @returns A promise that resolves to an object containing the fetched events and a cursor for pagination.
+	 */
 	public async fetchEventsForUser(
 		inputs: ApiIndexerUserEventsBody
 	): Promise<IndexerEventsWithCursor<LeveragedStakingEvent>> {
@@ -1181,6 +1225,11 @@ export class LeveragedStakingApi {
 	//  Graph Data
 	// =========================================================================
 
+	/**
+	 * Fetches the performance data for leveraged staking.
+	 * @param inputs - The inputs for fetching performance data.
+	 * @returns A promise that resolves to an array of LeveragedStakingPerformanceDataPoint objects.
+	 */
 	public async fetchPerformanceData(
 		inputs: LeveragedStakingPerformanceDataBody
 	): Promise<LeveragedStakingPerformanceDataPoint[]> {
