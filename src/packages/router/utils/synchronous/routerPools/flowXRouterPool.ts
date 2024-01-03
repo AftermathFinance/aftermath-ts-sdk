@@ -59,7 +59,7 @@ class FlowXRouterPool implements RouterPoolInterface {
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
-		return inputs.provider.Router().FlowX().tradeTx(inputs);
+		return inputs.AfSdk.Router().FlowX().tradeTx(inputs);
 	};
 
 	getTradeAmountIn = (_: {

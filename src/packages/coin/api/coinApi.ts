@@ -33,7 +33,7 @@ export class CoinApi {
 		coin: CoinType
 	): Promise<CoinMetadaWithInfo> => {
 		try {
-			const coinMetadata = await this.Provider.provider.getCoinMetadata({
+			const coinMetadata = await this.Provider.AfSdk.getCoinMetadata({
 				coinType: Helpers.stripLeadingZeroesFromType(coin),
 			});
 			if (coinMetadata === null) throw new Error("coin metadata is null");
@@ -152,7 +152,7 @@ export class CoinApi {
 		let cursor: string | undefined = undefined;
 		do {
 			const paginatedCoins: PaginatedCoins =
-				await this.Provider.provider.getCoins({
+				await this.Provider.AfSdk.getCoins({
 					...inputs,
 					owner: inputs.walletAddress,
 					cursor,

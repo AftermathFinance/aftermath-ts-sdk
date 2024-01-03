@@ -28,7 +28,7 @@ export class ObjectsApiHelpers {
 	// =========================================================================
 
 	public fetchDoesObjectExist = async (objectId: ObjectId | PackageId) => {
-		const object = await this.Provider.provider.getObject({ id: objectId });
+		const object = await this.Provider.AfSdk.getObject({ id: objectId });
 		return object.error === undefined;
 	};
 
@@ -67,7 +67,7 @@ export class ObjectsApiHelpers {
 
 		// TODO: handle pagination to make sure that ALL owned objects are found !
 		const objectsOwnedByAddress =
-			await this.Provider.provider.getOwnedObjects({
+			await this.Provider.AfSdk.getOwnedObjects({
 				owner: walletAddress,
 				filter: {
 					StructType: Helpers.stripLeadingZeroesFromType(objectType),
@@ -105,7 +105,7 @@ export class ObjectsApiHelpers {
 	}): Promise<SuiObjectResponse> => {
 		const { objectId, options } = inputs;
 
-		const object = await this.Provider.provider.getObject({
+		const object = await this.Provider.AfSdk.getObject({
 			id: objectId,
 			options,
 		});
@@ -166,7 +166,7 @@ export class ObjectsApiHelpers {
 
 		const objectBatches = await Promise.all(
 			objectIdsBatches.map((objectIds) =>
-				this.Provider.provider.multiGetObjects({
+				this.Provider.AfSdk.multiGetObjects({
 					ids: objectIds,
 					options:
 						options === undefined
@@ -231,7 +231,7 @@ export class ObjectsApiHelpers {
 	public fetchObjectBcs = async (
 		objectId: ObjectId
 	): Promise<SuiObjectResponse> => {
-		const objectResponse = await this.Provider.provider.getObject({
+		const objectResponse = await this.Provider.AfSdk.getObject({
 			id: objectId,
 			options: { showBcs: true },
 		});

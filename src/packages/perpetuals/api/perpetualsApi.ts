@@ -237,7 +237,7 @@ export class PerpetualsApi {
 			);
 		})!;
 
-		const objectResponse = await this.Provider.provider.getObject({
+		const objectResponse = await this.Provider.AfSdk.getObject({
 			id: accountDfInfo.objectId,
 			options: { showBcs: true },
 		});
@@ -344,7 +344,7 @@ export class PerpetualsApi {
 					value: { market_id: String(inputs.marketId) },
 				},
 			});
-		const objectResp = await this.Provider.provider.getObject({
+		const objectResp = await this.Provider.AfSdk.getObject({
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
 		});
@@ -370,7 +370,7 @@ export class PerpetualsApi {
 					value: { market_id: String(inputs.marketId) },
 				},
 			});
-		const objectResp = await this.Provider.provider.getObject({
+		const objectResp = await this.Provider.AfSdk.getObject({
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
 		});
@@ -396,7 +396,7 @@ export class PerpetualsApi {
 					value: { market_id: String(inputs.marketId) },
 				},
 			});
-		const objectResp = await this.Provider.provider.getObject({
+		const objectResp = await this.Provider.AfSdk.getObject({
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
 		});
@@ -539,7 +539,7 @@ export class PerpetualsApi {
 	}): Promise<Unsubscribe> => {
 		const { onEvent } = inputs;
 
-		const unsubscribe = await this.Provider.provider.subscribeEvent({
+		const unsubscribe = await this.Provider.AfSdk.subscribeEvent({
 			// filter: {
 			// 	MoveModule: {
 			// 		module: PerpetualsApi.constants.moduleNames.events,
@@ -1756,7 +1756,7 @@ export class PerpetualsApi {
 				},
 			});
 
-		const objectResp = await this.Provider.provider.getObject({
+		const objectResp = await this.Provider.AfSdk.getObject({
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
 		});

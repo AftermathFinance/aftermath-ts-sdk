@@ -157,7 +157,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	/**
 	 * Creates an instance of PoolsApi.
 	 * @param {AftermathApi} Provider - An instance of AftermathApi.
-	 * @throws {Error} Throws an error if not all required addresses have been set in provider.
+	 * @throws {Error} Throws an error if not all required addresses have been set in AfSdk
 	 */
 	constructor(private readonly Provider: AftermathApi) {
 		const pools = Provider.addresses.pools;

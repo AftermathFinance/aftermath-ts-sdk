@@ -18,12 +18,12 @@ export class SuiApi {
 	// =========================================================================
 
 	public fetchCommitteeInfo = async (): Promise<CommitteeInfo> => {
-		return this.Provider.provider.getCommitteeInfo();
+		return this.Provider.AfSdk.getCommitteeInfo();
 	};
 
 	public fetchSystemState = async (): Promise<SuiSystemStateSummary> => {
 		const systemState =
-			await this.Provider.provider.getLatestSuiSystemState();
+			await this.Provider.AfSdk.getLatestSuiSystemState();
 
 		const activeValidators = systemState.activeValidators.map(
 			(validator) => ({

@@ -109,7 +109,7 @@ export class LeveragedStakingApi {
 	 * Creates an instance of the LeveragedStakingApi class.
 	 * @param {AftermathApi} Provider - The AftermathApi instance.
 	 * @param {ScallopProviders} ScallopProviders - The ScallopProviders instance.
-	 * @throws {Error} If not all required addresses have been set in provider.
+	 * @throws {Error} If not all required addresses have been set in AfSdk
 	 */
 	constructor(
 		private readonly Provider: AftermathApi,

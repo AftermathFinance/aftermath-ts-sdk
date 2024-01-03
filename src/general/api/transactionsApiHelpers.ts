@@ -37,7 +37,7 @@ export class TransactionsApiHelpers {
 		const { query, cursor, limit } = inputs;
 
 		const transactionsWithCursor =
-			await this.Provider.provider.queryTransactionBlocks({
+			await this.Provider.AfSdk.queryTransactionBlocks({
 				...query,
 				cursor,
 				limit,
@@ -61,12 +61,12 @@ export class TransactionsApiHelpers {
 		const { tx } = inputs;
 
 		const [txResponse, referenceGasPrice] = await Promise.all([
-			this.Provider.provider.dryRunTransactionBlock({
+			this.Provider.AfSdk.dryRunTransactionBlock({
 				transactionBlock: await tx.build({
 					client: this.Provider.provider,
 				}),
 			}),
-			this.Provider.provider.getReferenceGasPrice(),
+			this.Provider.AfSdk.getReferenceGasPrice(),
 		]);
 
 		const gasData = txResponse.effects.gasUsed;

@@ -94,7 +94,7 @@ class AfSuiRouterPool implements RouterPoolInterface {
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
 		// TODO: try set referrer in tx as well ?
-		const stakingProvider = inputs.provider.Staking();
+		const stakingProvider = inputs.AfSdk.Staking();
 
 		if (this.isStake(inputs)) {
 			// stake
