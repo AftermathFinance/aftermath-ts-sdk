@@ -72,6 +72,10 @@ export class Aftermath extends Caller {
 		return this.fetchApi<ConfigAddresses>("addresses");
 	}
 
+	public async getFrontEndConfig() {
+		return this.fetchApi<unknown>("config");
+	}
+
 	// =========================================================================
 	//  Class Object Creation
 	// =========================================================================
