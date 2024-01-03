@@ -1686,8 +1686,10 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 					});
 
 					return Object.keys(pool.pool.coins)
-						.map((baseCoinType) => {
+						.slice(0, -1)
+						.map((baseCoinType, index) => {
 							return Object.keys(pool.pool.coins)
+								.slice(index + 1)
 								.map((targetCoinType) => {
 									if (!pool.stats)
 										throw new Error(
@@ -1697,13 +1699,33 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 									if (baseCoinType === targetCoinType)
 										return undefined;
 
-									const volumeData = volumes.find(
-										(volume) =>
-											volume.coinTypeIn === baseCoinType
-									) ?? {
-										totalAmountIn: 0,
-										totalAmountOut: 0,
-									};
+									const volumeData = (() => {
+										const volumeDataIn = volumes.find(
+											(volume) =>
+												volume.coinTypeIn ===
+												baseCoinType
+										) ?? {
+											totalAmountIn: 0,
+											totalAmountOut: 0,
+										};
+										const volumeDataOut = volumes.find(
+											(volume) =>
+												volume.coinTypeOut ===
+												baseCoinType
+										) ?? {
+											totalAmountIn: 0,
+											totalAmountOut: 0,
+										};
+
+										return {
+											baseVolume:
+												volumeDataIn.totalAmountIn +
+												volumeDataOut.totalAmountOut,
+											targetVolume:
+												volumeDataIn.totalAmountOut +
+												volumeDataOut.totalAmountIn,
+										};
+									})();
 
 									const baseDecimals =
 										coinsToDecimals[baseCoinType];
@@ -1718,12 +1740,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 										);
 
 									const baseVolume = Coin.balanceWithDecimals(
-										BigInt(volumeData.totalAmountIn),
+										BigInt(volumeData.baseVolume),
 										baseDecimals
 									);
 									const targetVolume =
 										Coin.balanceWithDecimals(
-											BigInt(volumeData.totalAmountOut),
+											BigInt(volumeData.targetVolume),
 											targetDecimals
 										);
 
@@ -1747,7 +1769,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 										target_currency: targetCoinType,
 										ticker_id: `${baseCoinType}_${targetCoinType}`,
 										liquidity_in_usd: pool.stats.tvl,
-										// TODO
 										base_volume: baseVolume,
 										target_volume: targetVolume,
 										last_price: price,
