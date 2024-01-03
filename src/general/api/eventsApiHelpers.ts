@@ -47,7 +47,7 @@ export class EventsApiHelpers {
 	}): Promise<Unsubscribe> => {
 		const { address, onEvent } = inputs;
 
-		const unsubscribe = await this.Provider.AfSdk.subscribeEvent({
+		const unsubscribe = await this.Provider.provider.subscribeEvent({
 			filter: {
 				Sender: address,
 			},
@@ -64,7 +64,7 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventOnChainType>> => {
 		const { query, cursor, limit } = inputs;
 
-		const fetchedEvents = await this.Provider.AfSdk.queryEvents({
+		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
 			cursor: cursor
 				? {
@@ -91,7 +91,7 @@ export class EventsApiHelpers {
 	): Promise<EventsWithCursor<EventType>> => {
 		const { query, eventFromEventOnChain, cursor, limit } = inputs;
 
-		const fetchedEvents = await this.Provider.AfSdk.queryEvents({
+		const fetchedEvents = await this.Provider.provider.queryEvents({
 			query,
 			cursor: cursor
 				? {

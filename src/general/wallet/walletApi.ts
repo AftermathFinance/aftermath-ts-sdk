@@ -24,7 +24,7 @@ export class WalletApi {
 		coin: CoinType;
 	}) => {
 		const { walletAddress, coin } = inputs;
-		const coinBalance = await this.Provider.AfSdk.getBalance({
+		const coinBalance = await this.Provider.provider.getBalance({
 			owner: walletAddress,
 			coinType: Helpers.stripLeadingZeroesFromType(coin),
 		});
@@ -38,7 +38,7 @@ export class WalletApi {
 	}): Promise<CoinsToBalance> => {
 		const { walletAddress } = inputs;
 
-		const allBalances = await this.Provider.AfSdk.getAllBalances({
+		const allBalances = await this.Provider.provider.getAllBalances({
 			owner: walletAddress,
 		});
 

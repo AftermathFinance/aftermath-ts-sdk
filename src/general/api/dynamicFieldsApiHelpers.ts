@@ -161,7 +161,7 @@ export class DynamicFieldsApiHelpers {
 		const { parentObjectId, dynamicFieldType } = inputs;
 
 		const dynamicFieldsResponse =
-			await this.Provider.AfSdk.getDynamicFields({
+			await this.Provider.provider.getDynamicFields({
 				...inputs,
 				limit:
 					inputs.limit ??
@@ -193,6 +193,6 @@ export class DynamicFieldsApiHelpers {
 		parentId: ObjectId;
 		name: DynamicFieldName;
 	}) => {
-		return this.Provider.AfSdk.getDynamicFieldObject(inputs);
+		return this.Provider.provider.getDynamicFieldObject(inputs);
 	};
 }

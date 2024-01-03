@@ -51,7 +51,7 @@ export class InspectionsApiHelpers {
 		const sender =
 			inputs.sender ?? InspectionsApiHelpers.constants.devInspectSigner;
 		const response =
-			await this.Provider.AfSdk.devInspectTransactionBlock({
+			await this.Provider.provider.devInspectTransactionBlock({
 				sender,
 				transactionBlock: inputs.tx,
 			});
