@@ -46,7 +46,6 @@ export class PerpetualsMarket extends Caller {
 		public readonly collateralCoinType: CoinType,
 		public readonly marketParams: PerpetualsMarketParams,
 		public readonly marketState: PerpetualsMarketState,
-		public readonly orderbook: PerpetualsOrderbook,
 		public readonly network?: SuiNetwork
 	) {
 		super(network, `perpetuals/${collateralCoinType}/markets/${marketId}`);
@@ -168,8 +167,8 @@ export class PerpetualsMarket extends Caller {
 		price: number;
 	}): PerpetualsOrderPrice => {
 		const { price } = inputs;
-		const lotSize = this.orderbook.lotSize;
-		const tickSize = this.orderbook.tickSize;
+		const lotSize = this.marketParams.lotSize;
+		const tickSize = this.marketParams.tickSize;
 		return Perpetuals.priceToOrderPrice({
 			price,
 			lotSize,
@@ -181,8 +180,8 @@ export class PerpetualsMarket extends Caller {
 		orderPrice: PerpetualsOrderPrice;
 	}): number => {
 		const { orderPrice } = inputs;
-		const lotSize = this.orderbook.lotSize;
-		const tickSize = this.orderbook.tickSize;
+		const lotSize = this.marketParams.lotSize;
+		const tickSize = this.marketParams.tickSize;
 		return Perpetuals.orderPriceToPrice({
 			orderPrice,
 			lotSize,
@@ -316,11 +315,11 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	public lotSize = () => {
-		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.lotSize);
+		return Perpetuals.lotOrTickSizeToNumber(this.marketParams.lotSize);
 	};
 
 	public tickSize = () => {
-		return Perpetuals.lotOrTickSizeToNumber(this.orderbook.tickSize);
+		return Perpetuals.lotOrTickSizeToNumber(this.marketParams.tickSize);
 	};
 
 	public maxLeverage = () => {

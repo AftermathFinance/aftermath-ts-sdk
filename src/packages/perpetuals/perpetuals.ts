@@ -155,10 +155,9 @@ export class Perpetuals extends Caller {
 		const { marketId, collateralCoinType } = inputs;
 
 		const urlPrefix = `${collateralCoinType}/markets/${marketId}`;
-		const [marketData, marketState, orderbook] = await Promise.all([
+		const [marketData, marketState] = await Promise.all([
 			this.fetchApi<PerpetualsMarketData>(urlPrefix),
 			this.fetchApi<PerpetualsMarketState>(`${urlPrefix}/market-state`),
-			this.fetchApi<PerpetualsOrderbook>(`${urlPrefix}/orderbook`),
 		]);
 
 		return new PerpetualsMarket(
@@ -166,7 +165,6 @@ export class Perpetuals extends Caller {
 			collateralCoinType,
 			marketData.marketParams,
 			marketState,
-			orderbook,
 			this.network
 		);
 	}

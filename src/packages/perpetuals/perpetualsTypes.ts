@@ -58,7 +58,7 @@ bcs.registerStructType(["Field", "N", "V"], {
 bcs.registerAlias("UID", BCS.ADDRESS);
 
 // =========================================================================
-//  Clearing House
+//  Admin
 // =========================================================================
 
 export interface PerpetualsAdminCapability extends Object {}
@@ -67,6 +67,8 @@ bcs.registerStructType("AdminCapability", {
 	id: "UID",
 });
 
+// -----------------------------------------
+
 export interface PerpetualsRegistry extends Object {
 	activeCollaterals: CoinType[];
 }
@@ -74,7 +76,16 @@ export interface PerpetualsRegistry extends Object {
 bcs.registerStructType("Registry", {
 	id: "UID",
 	activeCollaterals: ["vector", BCS.STRING],
+	nextAccountId: BCS.U64,
 });
+
+bcs.registerStructType("MarketKey", {
+	marketId: BCS.U64,
+});
+
+// =========================================================================
+//  Clearing House
+// =========================================================================
 
 export interface PerpetualsVault extends Object {
 	balance: Balance;
@@ -83,121 +94,67 @@ export interface PerpetualsVault extends Object {
 
 bcs.registerStructType(["Vault", "T"], {
 	id: "UID",
-	balance: ["Balance", "T"],
+	collateral_balance: ["Balance", "T"],
+	insurance_fund_balance: ["Balance", "T"],
 	scalingFactor: BCS.U64,
 });
 
-// export interface InsuranceFunds extends Object {
-// 	balances: Balance[];
-// 	scaling_factor: bigint;
-// }
+// -----------------------------------------
 
-// TODO: how to register vector<Balance<T>>?
-// bcs.registerStructType(["InsuranceFunds", "T"], {
-// 	id: "UID",
-// 	balances: ["vector", "Balance", "T"],
-// 	scalingFactor: BCS.U64,
-// });
-
-// =========================================================================
-//  Account Manager
-// =========================================================================
-
-export interface PerpetualsAccountData {
-	accountCap: PerpetualsAccountCap;
-	account: PerpetualsAccountObject;
+export interface PerpetualsClearingHouse extends Object {
+	marketParams: PerpetualsMarketParams;
+	marketState: PerpetualsMarketState;
 }
 
-export interface PerpetualsAccountManager extends Object {
-	maxPositionsPerAccount: bigint;
-	maxPendingOrdersPerPosition: bigint;
-	nextAccountId: PerpetualsAccountId;
-}
-
-bcs.registerStructType("AccountManager", {
+bcs.registerStructType(["ClearingHouse", "T"], {
 	id: "UID",
-	maxPositionsPerAccount: BCS.U64,
-	maxPendingOrdersPerPosition: BCS.U64,
-	nextAccountId: BCS.U64,
+	marketParams: "MarketParams",
+	marketState: "MarketState",
 });
+
+// -----------------------------------------
 
 export interface PerpetualsAccountCap extends Object {
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
+	collateral: bigint;
 }
 
-bcs.registerStructType("AccountCap", {
+bcs.registerStructType(["Account", "T"], {
 	id: "UID",
 	accountId: BCS.U64,
+	collateral: ["Balance", "T"],
 });
 
-export interface PerpetualsAccountObject {
-	collateral: IFixed;
-	positions: PerpetualsPosition[];
-}
-
-bcs.registerStructType("Account", {
-	collateral: BCS.U256,
-	marketIds: ["vector", BCS.U64],
-	positions: ["vector", "Position"],
-});
+// -----------------------------------------
 
 export interface PerpetualsPosition {
-	marketId: PerpetualsMarketId;
+	collateral: IFixed;
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;
 	cumFundingRateLong: IFixed;
 	cumFundingRateShort: IFixed;
-	asks: OrderedVecSet;
-	bids: OrderedVecSet;
 	asksQuantity: IFixed;
 	bidsQuantity: IFixed;
 }
 
 bcs.registerStructType("Position", {
+	collateral: BCS.U256,
 	baseAssetAmount: BCS.U256,
 	quoteAssetNotionalAmount: BCS.U256,
 	cumFundingRateLong: BCS.U256,
 	cumFundingRateShort: BCS.U256,
-	asks: "OrderedVecSet",
-	bids: "OrderedVecSet",
 	asksQuantity: BCS.U256,
 	bidsQuantity: BCS.U256,
 });
 
-export interface OrderedVecSet extends Object {}
-
-bcs.registerStructType("OrderedVecSet", {
-	id: "UID",
-});
-
-bcs.registerStructType("Contents", {
-	dummy_field: BCS.BOOL,
-});
-
-bcs.registerStructType("AccountKey", {
+bcs.registerStructType("PositionKey", {
 	accountId: BCS.U64,
 });
 
 // =========================================================================
-//  Market Manager
+//  Market
 // =========================================================================
-
-export interface PerpetualsMarketData {
-	marketId: PerpetualsMarketId;
-	marketParams: PerpetualsMarketParams;
-}
-
-export interface PerpetualsMarketManager extends Object {
-	feesAccrued: IFixed;
-	liquidationTolerance: bigint;
-}
-
-bcs.registerStructType("MarketManager", {
-	id: "UID",
-	feesAccrued: BCS.U256,
-	liquidationTolerance: BCS.U64,
-});
 
 export interface PerpetualsMarketParams {
 	marginRatioInitial: IFixed;
@@ -214,8 +171,11 @@ export interface PerpetualsMarketParams {
 	liquidationFee: IFixed;
 	forceCancelFee: IFixed;
 	insuranceFundFee: IFixed;
-	insuranceFundId: bigint;
 	minOrderUsdValue: IFixed;
+	lotSize: bigint;
+	tickSize: bigint;
+	liquidationTolerance: bigint;
+	maxPendingOrdersPerPosition: bigint;
 }
 
 bcs.registerStructType("MarketParams", {
@@ -233,9 +193,19 @@ bcs.registerStructType("MarketParams", {
 	liquidationFee: BCS.U256,
 	forceCancelFee: BCS.U256,
 	insuranceFundFee: BCS.U256,
-	insuranceFundId: BCS.U64,
 	minOrderUsdValue: BCS.U256,
+	lotSize: BCS.U64,
+	tickSize: BCS.U64,
+	liquidationTolerance: BCS.U64,
+	maxPendingOrdersPerPosition: BCS.U64,
 });
+
+export interface PerpetualsMarketData {
+	marketId: PerpetualsMarketId;
+	marketParams: PerpetualsMarketParams;
+}
+
+// -----------------------------------------
 
 export interface PerpetualsMarketState {
 	cumFundingRateLong: IFixed;
@@ -246,6 +216,7 @@ export interface PerpetualsMarketState {
 	spreadTwap: IFixed;
 	spreadTwapLastUpdMs: Timestamp;
 	openInterest: IFixed;
+	feesAccrued: IFixed;
 }
 
 bcs.registerStructType("MarketState", {
@@ -257,23 +228,10 @@ bcs.registerStructType("MarketState", {
 	spreadTwap: BCS.U256,
 	spreadTwapLastUpdMs: BCS.U64,
 	openInterest: BCS.U256,
+	feesAccrued: BCS.U256,
 });
 
-export interface PerpetualsMarginRatioProposal {
-	maturity: bigint;
-	marginRatioInitial: IFixed;
-	marginRatioMaintenance: IFixed;
-}
-
-bcs.registerStructType("MarginRatioProposal", {
-	maturity: BCS.U64,
-	marginRatioInitial: BCS.U256,
-	marginRatioMaintenance: BCS.U256,
-});
-
-bcs.registerStructType("MarketKey", {
-	marketId: BCS.U64,
-});
+// -----------------------------------------
 
 export interface PerpetualsMarketPriceDataPoint {
 	timestamp: Timestamp;
@@ -313,8 +271,6 @@ export interface PerpetualsOrderData {
 }
 
 export interface PerpetualsOrderbook extends Object {
-	lotSize: bigint;
-	tickSize: bigint;
 	asks: PerpetualsOrderedMap<PerpetualsOrder>;
 	bids: PerpetualsOrderedMap<PerpetualsOrder>;
 	counter: bigint;
@@ -322,8 +278,6 @@ export interface PerpetualsOrderbook extends Object {
 
 bcs.registerStructType("Orderbook", {
 	id: "UID",
-	lotSize: BCS.U64,
-	tickSize: BCS.U64,
 	asks: ["Map", "Order"],
 	bids: ["Map", "Order"],
 	counter: BCS.U64,
@@ -348,6 +302,38 @@ bcs.registerStructType("OrderInfo", {
 	price: BCS.U64,
 	size: BCS.U64,
 });
+
+export interface PerpetualsFillReceipt {
+	accountId: PerpetualsAccountId;
+	baseAsk: bigint;
+	quoteAsk: bigint;
+	baseBid: bigint;
+	quoteBid: bigint;
+	pendingOrders: bigint;
+}
+
+bcs.registerStructType("FillReceipt", {
+	accountId: BCS.U64,
+	baseAsk: BCS.U64,
+	quoteAsk: BCS.U128,
+	baseBid: BCS.U64,
+	quoteBid: BCS.U128,
+	pendingOrders: BCS.U64,
+});
+
+export interface PerpetualsPostReceipt {
+	baseAsk: bigint;
+	baseBid: bigint;
+	pendingOrders: bigint;
+}
+
+bcs.registerStructType("PostReceipt", {
+	baseAsk: BCS.U64,
+	baseBid: BCS.U64,
+	pending_orders: BCS.U64,
+});
+
+// -----------------------------------------
 
 export interface PerpetualsOrderedMap<T> extends Object {
 	size: bigint;
@@ -398,31 +384,14 @@ bcs.registerStructType(["Leaf", "V"], {
 	next: BCS.U64,
 });
 
-export interface PerpetualsFillReceipt {
-	accountId: PerpetualsAccountId;
-	orderId: PerpetualsOrderId;
-	size: bigint;
-	dropped: boolean;
+export interface PerpetualsAccountData {
+	accountCap: PerpetualsAccountCap;
+	account: PerpetualsAccountObject;
 }
 
-bcs.registerStructType("FillReceipt", {
-	accountId: BCS.U64,
-	orderId: BCS.U128,
-	size: BCS.U64,
-	dropped: BCS.BOOL,
-});
-
-export interface PerpetualsPostReceipt {
-	accountId: PerpetualsAccountId;
-	orderId: PerpetualsOrderId;
-	size: bigint;
+export interface PerpetualsAccountObject {
+	positions: PerpetualsPosition[];
 }
-
-bcs.registerStructType("PostReceipt", {
-	accountId: BCS.U64,
-	orderId: BCS.U128,
-	size: BCS.U64,
-});
 
 // =========================================================================
 //  Events
@@ -432,19 +401,33 @@ bcs.registerStructType("PostReceipt", {
 //  Collateral
 // =========================================================================
 
-export interface WithdrewCollateralEvent extends Event {
+export interface DepositedCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
 	collateralDelta: IFixed;
 }
 
-export interface DepositedCollateralEvent extends Event {
+export interface AllocatedCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
 	collateralDelta: IFixed;
-	vault: SuiAddress;
+	vaultBalance: Balance;
+}
+
+export interface DeallocatedCollateralEvent extends Event {
+	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
+	collateral: IFixed;
+	collateralDelta: IFixed;
+}
+
+export interface WithdrewCollateralEvent extends Event {
+	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
+	collateral: IFixed;
+	collateralDelta: IFixed;
 }
 
 export interface SettledFundingEvent extends Event {
@@ -461,7 +444,7 @@ export type CollateralEvent =
 	| WithdrewCollateralEvent
 	| DepositedCollateralEvent
 	| SettledFundingEvent
-	| LiquidatedEvent
+	| LiquidatedPositionEvent
 	| FilledTakerOrderEvent
 	| FilledMakerOrderEvent;
 
@@ -479,6 +462,18 @@ export const isDepositedCollateralEvent = (
 	return event.type.toLowerCase().includes("depositedcollateral");
 };
 
+export const isDeallocatedCollateralEvent = (
+	event: Event
+): event is DeallocatedCollateralEvent => {
+	return event.type.toLowerCase().includes("deallocatedcollateral");
+};
+
+export const isAllocatedCollateralEvent = (
+	event: Event
+): event is AllocatedCollateralEvent => {
+	return event.type.toLowerCase().includes("allocatedcollateral");
+};
+
 export const isSettledFundingEvent = (
 	event: Event
 ): event is SettledFundingEvent => {
@@ -489,7 +484,7 @@ export const isSettledFundingEvent = (
 //  Liquidation
 // =========================================================================
 
-export interface LiquidatedEvent extends Event {
+export interface LiquidatedPositionEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
@@ -498,24 +493,10 @@ export interface LiquidatedEvent extends Event {
 	liqorCollateral: IFixed;
 }
 
-export interface AcquiredLiqeeEvent extends Event {
-	collateralCoinType: CoinType;
-	accountId: PerpetualsAccountId;
-	marketId: PerpetualsMarketId;
-	baseAssetAmount: IFixed;
-	quoteAssetNotionalAmount: IFixed;
-	size: bigint;
-	markPrice: IFixed;
-}
-
-export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
-	return event.type.toLowerCase().includes("liquidated");
-};
-
-export const isAcquiredLiqeeEvent = (
+export const isLiquidatedPositionEvent = (
 	event: Event
-): event is AcquiredLiqeeEvent => {
-	return event.type.toLowerCase().includes("acquiredliqee");
+): event is LiquidatedPositionEvent => {
+	return event.type.toLowerCase().includes("liquidatedposition");
 };
 
 // =========================================================================
@@ -531,6 +512,21 @@ export interface CreatedAccountEvent extends Event {
 // =========================================================================
 //  Order
 // =========================================================================
+
+export interface OrderbookPostReceiptEvent extends Event {
+	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
+	orderId: PerpetualsOrderId;
+	size: bigint;
+}
+
+export interface OrderbookFillReceiptEvent extends Event {
+	collateralCoinType: CoinType;
+	accountId: PerpetualsAccountId;
+	orderId: PerpetualsOrderId;
+	size: bigint;
+	dropped: boolean;
+}
 
 export interface CanceledOrderEvent extends Event {
 	collateralCoinType: CoinType;
@@ -588,7 +584,7 @@ export type PerpetualsOrderEvent =
 	| PostedOrderEvent
 	| FilledMakerOrderEvent
 	| FilledTakerOrderEvent
-	| AcquiredLiqeeEvent;
+	| LiquidatedPositionEvent;
 
 // TODO: make all these checks use string value from perps api
 
@@ -682,8 +678,7 @@ export type ApiPerpetualsPreviewOrderResponse =
 	  };
 
 export interface ApiPerpetualsPositionOrderDatasBody {
-	positionAsksId: ObjectId;
-	positionBidsId: ObjectId;
+	openOrders: number;
 }
 
 export interface ApiPerpetualsOrderbookStateBody {
