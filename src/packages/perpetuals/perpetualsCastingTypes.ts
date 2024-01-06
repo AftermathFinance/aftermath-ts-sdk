@@ -1,5 +1,5 @@
 import { EventOnChain } from "../../general/types/castingTypes";
-import { BigIntAsString, SuiAddress } from "../../types";
+import { BigIntAsString, ObjectId, SuiAddress } from "../../types";
 
 // =========================================================================
 //  Constants
@@ -30,7 +30,7 @@ export type DepositedCollateralEventOnChain = EventOnChain<{
 export type SettledFundingEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
 	collateral: BigIntAsString;
-	market_ids: BigIntAsString[];
+	market_ids: ObjectId[];
 	pos_funding_rates_long: BigIntAsString[];
 	pos_funding_rates_short: BigIntAsString[];
 }>;
@@ -48,7 +48,7 @@ export type LiquidatedEventOnChain = EventOnChain<{
 
 export type AcquiredLiqeeEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
-	market_id: BigIntAsString;
+	market_id: ObjectId;
 	base_asset_amount: BigIntAsString;
 	quote_asset_notional_amount: BigIntAsString;
 	size_to_acquire: BigIntAsString;
@@ -70,7 +70,7 @@ export type CreatedAccountEventOnChain = EventOnChain<{
 
 export type CanceledOrderEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
-	market_id: BigIntAsString;
+	market_id: ObjectId;
 	side: boolean;
 	size: BigIntAsString;
 	order_id: BigIntAsString;
@@ -80,7 +80,7 @@ export type CanceledOrderEventOnChain = EventOnChain<{
 
 export type PostedOrderEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
-	market_id: BigIntAsString;
+	market_id: ObjectId;
 	order_id: BigIntAsString;
 	side: boolean;
 	size: BigIntAsString;
@@ -91,7 +91,7 @@ export type PostedOrderEventOnChain = EventOnChain<{
 export type FilledMakerOrderEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
 	collateral: BigIntAsString;
-	market_id: BigIntAsString;
+	market_id: ObjectId;
 	order_id: BigIntAsString;
 	side: boolean;
 	size: BigIntAsString;
@@ -105,7 +105,7 @@ export type FilledMakerOrderEventOnChain = EventOnChain<{
 export type FilledTakerOrderEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
 	collateral: BigIntAsString;
-	market_id: BigIntAsString;
+	market_id: ObjectId;
 	base_asset_amount: BigIntAsString;
 	quote_asset_notional_amount: BigIntAsString;
 	side: boolean;
@@ -118,7 +118,7 @@ export type FilledTakerOrderEventOnChain = EventOnChain<{
 // =========================================================================
 
 export type UpdatedPremiumTwapEventOnChain = EventOnChain<{
-	market_id: BigIntAsString;
+	market_id: ObjectId;
 	index_price: BigIntAsString;
 	book_price: BigIntAsString;
 	premium_twap: BigIntAsString;
@@ -126,7 +126,7 @@ export type UpdatedPremiumTwapEventOnChain = EventOnChain<{
 }>;
 
 export type UpdatedSpreadTwapEventOnChain = EventOnChain<{
-	market_id: BigIntAsString;
+	market_id: ObjectId;
 	book_price: BigIntAsString;
 	index_price: BigIntAsString;
 	spread_twap: BigIntAsString;

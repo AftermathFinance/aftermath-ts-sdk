@@ -1,12 +1,9 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import {
-	PerpetualsAccountManager,
-	PerpetualsMarketManager,
 	PerpetualsMarketState,
 	PerpetualsOrderbook,
 	PerpetualsOrder,
 	PerpetualsOrderedMap,
-	OrderedVecSet,
 	PerpetualsMarketParams,
 	PerpetualsAccountObject,
 	PerpetualsPosition,
@@ -21,13 +18,13 @@ import {
 	FilledTakerOrderEvent,
 	FilledMakerOrderEvent,
 	PerpetualsOrderInfo,
-	LiquidatedEvent,
 	SettledFundingEvent,
-	AcquiredLiqeeEvent,
 	PerpetualsFillReceipt,
 	PerpetualsPostReceipt,
 	UpdatedSpreadTwapEvent,
 	UpdatedPremiumTwapEvent,
+	PerpetualsClearingHouse,
+	LiquidatedEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
@@ -54,92 +51,12 @@ import { BigIntAsString } from "../../../types";
 // TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {
 	// =========================================================================
-	//  Account Manager
+	//  Objects
 	// =========================================================================
 
-	public static accountManagerFromSuiResponse = (
-		data: SuiObjectResponse
-	): PerpetualsAccountManager => {
-		return Casting.castObjectBcs({
-			suiObjectResponse: data,
-			typeName: "AccountManager",
-			fromDeserialized: this.accountManagerFromRaw,
-			bcs,
-		});
-	};
-
-	public static accountManagerFromRaw(data: any): PerpetualsAccountManager {
-		return {
-			objectId: Helpers.addLeadingZeroesToType(data.id),
-			objectType: data.objectType,
-			maxPositionsPerAccount: BigInt(data.maxPositionsPerAccount),
-			maxPendingOrdersPerPosition: BigInt(
-				data.maxPendingOrdersPerPosition
-			),
-			nextAccountId: BigInt(data.nextAccountId),
-		};
-	}
-
-	public static accountFromSuiResponse = (
-		data: SuiObjectResponse
-	): PerpetualsAccountObject => {
-		const objectFields = Helpers.getObjectFields(data);
-		const value = objectFields.value.fields;
-		return {
-			collateral: BigInt(value.collateral),
-			positions: (value.positions as any[]).map((pos: any, index) => ({
-				...this.partialPositionFromRaw(pos),
-				marketId: BigInt(value.marketIds[index]),
-			})),
-		};
-	};
-
-	public static accountFromRaw = (data: any): PerpetualsAccountObject => {
-		return {
-			collateral: BigInt(data.collateral),
-			positions: (data.positions as any[]).map((pos: any, index) => ({
-				...this.partialPositionFromRaw(pos),
-				marketId: BigInt(data.marketIds[index]),
-			})),
-		};
-	};
-
-	public static partialPositionFromRaw = (
-		data: any
-	): Omit<PerpetualsPosition, "marketId"> => {
-		return {
-			baseAssetAmount: BigInt(data.baseAssetAmount),
-			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
-			cumFundingRateLong: BigInt(data.cumFundingRateLong),
-			cumFundingRateShort: BigInt(data.cumFundingRateShort),
-			asks: this.orderedVecSetFromRaw(data.asks),
-			bids: this.orderedVecSetFromRaw(data.bids),
-			asksQuantity: BigInt(data.asksQuantity),
-			bidsQuantity: BigInt(data.bidsQuantity),
-		};
-	};
-
-	public static orderedVecSetFromRaw(data: any): OrderedVecSet {
-		return {
-			objectId: Helpers.addLeadingZeroesToType(data.id),
-			objectType: data.objectType,
-		};
-	}
-
-	public static contentsFromRaw<T>(): (v: any) => T {
-		return (v: any) => v;
-	}
-
-	public static accountCapFromSuiResponse = (
-		data: SuiObjectResponse
-	): PerpetualsAccountCap => {
-		return Casting.castObjectBcs({
-			suiObjectResponse: data,
-			typeName: "AccountCap",
-			fromDeserialized: this.accountCapFromRaw,
-			bcs,
-		});
-	};
+	// =========================================================================
+	//  Account
+	// =========================================================================
 
 	public static accountCapFromRaw(data: any): PerpetualsAccountCap {
 		const coinType = Helpers.addLeadingZeroesToType(
@@ -150,45 +67,38 @@ export class PerpetualsApiCasting {
 			objectType: data.objectType,
 			accountId: BigInt(data.accountId),
 			collateralCoinType: coinType,
+			collateral: BigInt(data.collateral),
 		};
 	}
 
-	public static accountCapWithTypeFromRaw(
-		data: any,
-		coinType: CoinType
-	): PerpetualsAccountCap {
+	public static positionFromRaw = (data: any): PerpetualsPosition => {
 		return {
-			objectId: Helpers.addLeadingZeroesToType(data.id),
-			objectType: data.objectType,
-			accountId: BigInt(data.accountId),
-			collateralCoinType: coinType,
+			collateral: BigInt(data.collateral),
+			baseAssetAmount: BigInt(data.baseAssetAmount),
+			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
+			cumFundingRateLong: BigInt(data.cumFundingRateLong),
+			cumFundingRateShort: BigInt(data.cumFundingRateShort),
+			asksQuantity: BigInt(data.asksQuantity),
+			bidsQuantity: BigInt(data.bidsQuantity),
 		};
-	}
-	// =========================================================================
-	//  Market Manager
-	// =========================================================================
-
-	public static marketManagerFromSuiResponse = (
-		data: SuiObjectResponse
-	): PerpetualsMarketManager => {
-		return Casting.castObjectBcs({
-			suiObjectResponse: data,
-			typeName: "MarketManager",
-			fromDeserialized: this.marketManagerFromRaw,
-			bcs,
-		});
 	};
 
-	public static marketManagerFromRaw(data: any): PerpetualsMarketManager {
+	// =========================================================================
+	//  Clearing House
+	// =========================================================================
+
+	public static clearingHouseFromRaw(data: any): PerpetualsClearingHouse {
 		return {
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
-			feesAccrued: BigInt(data.feesAccrued),
-			liquidationTolerance: BigInt(data.liquidationTolerance),
+			marketParams: this.marketParamsFromRaw(data.market_params),
+			marketState: this.marketStateFromRaw(data.market_state),
 		};
 	}
 
-	public static marketParamsFromRaw = (data: any): PerpetualsMarketParams => {
+	private static marketParamsFromRaw = (
+		data: any
+	): PerpetualsMarketParams => {
 		return {
 			baseAssetSymbol: data.baseAssetSymbol,
 			marginRatioInitial: BigInt(data.marginRatioInitial),
@@ -204,12 +114,17 @@ export class PerpetualsApiCasting {
 			liquidationFee: BigInt(data.liquidationFee),
 			forceCancelFee: BigInt(data.forceCancelFee),
 			insuranceFundFee: BigInt(data.insuranceFundFee),
-			insuranceFundId: BigInt(data.insuranceFundId),
+			lotSize: BigInt(data.lotSize),
+			tickSize: BigInt(data.tickSize),
+			liquidationTolerance: BigInt(data.liquidationTolerance),
+			maxPendingOrdersPerPosition: BigInt(
+				data.maxPendingOrdersPerPosition
+			),
 			minOrderUsdValue: BigInt(data.minOrderUsdValue),
 		};
 	};
 
-	public static marketStateFromRaw = (data: any): PerpetualsMarketState => {
+	private static marketStateFromRaw = (data: any): PerpetualsMarketState => {
 		return {
 			cumFundingRateLong: BigInt(data.cumFundingRateLong),
 			cumFundingRateShort: BigInt(data.cumFundingRateShort),
@@ -219,46 +134,13 @@ export class PerpetualsApiCasting {
 			spreadTwap: BigInt(data.spreadTwap),
 			spreadTwapLastUpdMs: Number(data.spreadTwapLastUpdMs),
 			openInterest: BigInt(data.openInterest),
+			feesAccrued: BigInt(data.feesAccrued),
 		};
 	};
 
-	public static orderbookFromRaw = (data: any): PerpetualsOrderbook => {
-		return {
-			objectType: data.objectType,
-			objectId: Helpers.addLeadingZeroesToType(data.id),
-			lotSize: BigInt(data.lotSize),
-			tickSize: BigInt(data.tickSize),
-			asks: this.orderedMapFromRaw<PerpetualsOrder>(data.asks),
-			bids: this.orderedMapFromRaw<PerpetualsOrder>(data.bids),
-			counter: BigInt(data.counter),
-		};
-	};
-
-	public static orderedMapFromRaw<T>(data: any): PerpetualsOrderedMap<T> {
-		return {
-			objectId: Helpers.addLeadingZeroesToType(data.id),
-			objectType: data.objectType,
-			size: BigInt(data.size),
-			counter: BigInt(data.counter),
-			root: BigInt(data.root),
-			first: BigInt(data.first),
-			branchMin: BigInt(data.branchMin),
-			branchMax: BigInt(data.branchMax),
-			leafMin: BigInt(data.leafMin),
-			leafMax: BigInt(data.leafMax),
-			branchesMergeMax: BigInt(data.branchesMergeMax),
-			leavesMergeMax: BigInt(data.leavesMergeMax),
-		};
-	}
-
-	public static partialOrderFromRaw = (
-		data: any
-	): Omit<PerpetualsOrder, "side"> => {
-		return {
-			accountId: BigInt(data.accountId),
-			size: BigInt(data.size),
-		};
-	};
+	// =========================================================================
+	//  Orderbook
+	// =========================================================================
 
 	public static orderbookPriceFromBytes = (bytes: number[]): number => {
 		const unwrapped: BigIntAsString | undefined =
@@ -273,23 +155,6 @@ export class PerpetualsApiCasting {
 	public static orderInfoFromRaw = (data: any): PerpetualsOrderInfo => {
 		return {
 			price: BigInt(data.price),
-			size: BigInt(data.size),
-		};
-	};
-
-	public static fillReceiptFromRaw = (data: any): PerpetualsFillReceipt => {
-		return {
-			accountId: BigInt(data.accountId),
-			orderId: BigInt(data.orderId),
-			size: BigInt(data.size),
-			dropped: data.dropped,
-		};
-	};
-
-	public static postReceiptFromRaw = (data: any): PerpetualsPostReceipt => {
-		return {
-			accountId: BigInt(data.accountId),
-			orderId: BigInt(data.orderId),
 			size: BigInt(data.size),
 		};
 	};
@@ -332,7 +197,6 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
 			collateralDelta: BigInt(0),
-			vault: Helpers.addLeadingZeroesToType(fields.vault),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -351,7 +215,9 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
 			collateralDelta: BigInt(0),
-			marketIds: fields.market_ids.map((marketId) => BigInt(marketId)),
+			marketIds: fields.market_ids.map((marketId) =>
+				Helpers.addLeadingZeroesToType(marketId)
+			),
 			posFundingRatesLong: fields.pos_funding_rates_long.map((rate) =>
 				BigInt(rate)
 			),
@@ -382,29 +248,6 @@ export class PerpetualsApiCasting {
 			collateralDelta: BigInt(0),
 			liqorAccountId: BigInt(fields.liqor_account_id),
 			liqorCollateral: BigInt(fields.liqor_collateral),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static acquiredLiqeeEventFromOnChain = (
-		eventOnChain: AcquiredLiqeeEventOnChain
-	): AcquiredLiqeeEvent => {
-		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
-		return {
-			collateralCoinType,
-			accountId: BigInt(fields.account_id),
-			marketId: BigInt(fields.market_id),
-			baseAssetAmount: BigInt(fields.base_asset_amount),
-			quoteAssetNotionalAmount: BigInt(
-				fields.quote_asset_notional_amount
-			),
-			size: BigInt(fields.size_to_acquire),
-			markPrice: BigInt(fields.mark_price),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -445,7 +288,7 @@ export class PerpetualsApiCasting {
 		);
 		return {
 			accountId: BigInt(fields.account_id),
-			marketId: BigInt(fields.market_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.market_id),
 			side:
 				fields.side === AskOnChain
 					? PerpetualsOrderSide.Ask
@@ -470,7 +313,7 @@ export class PerpetualsApiCasting {
 		);
 		return {
 			accountId: BigInt(fields.account_id),
-			marketId: BigInt(fields.market_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.market_id),
 			orderId: BigInt(fields.order_id),
 			side:
 				fields.side === AskOnChain
@@ -498,7 +341,7 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
 			collateralDelta: BigInt(0),
-			marketId: BigInt(fields.market_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.market_id),
 			orderId: BigInt(fields.order_id),
 			// TODO: move to helper func ?
 			side:
@@ -531,7 +374,7 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.account_id),
 			collateral: BigInt(fields.collateral),
 			collateralDelta: BigInt(0),
-			marketId: BigInt(fields.market_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.market_id),
 			baseAssetAmount: BigInt(fields.base_asset_amount),
 			quoteAssetNotionalAmount: BigInt(
 				fields.quote_asset_notional_amount
@@ -561,7 +404,7 @@ export class PerpetualsApiCasting {
 		);
 		return {
 			collateralCoinType,
-			marketId: BigInt(fields.market_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.market_id),
 			indexPrice: BigInt(fields.index_price),
 			bookPrice: BigInt(fields.book_price),
 			premiumTwap: BigInt(fields.premium_twap),
@@ -581,7 +424,7 @@ export class PerpetualsApiCasting {
 		);
 		return {
 			collateralCoinType,
-			marketId: BigInt(fields.market_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.market_id),
 			bookPrice: BigInt(fields.book_price),
 			indexPrice: BigInt(fields.index_price),
 			spreadTwap: BigInt(fields.spread_twap),

@@ -61,6 +61,7 @@ import {
 	PerpetualsAccountCap,
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsLimitOrderBody,
+	PerpetualsPosition,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -163,7 +164,7 @@ export class PerpetualsApi {
 		const { walletAddress, collateralCoinType } = inputs;
 		const objectType = this.getAccountCapType({ collateralCoinType });
 
-		let objectResponse =
+		const objectResponse =
 			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
 				objectType,
 				walletAddress,
@@ -173,50 +174,51 @@ export class PerpetualsApi {
 				},
 			});
 
-		let accCaps: PerpetualsAccountCap[] = objectResponse.map((accCap) => {
+		const accCaps: PerpetualsAccountCap[] = objectResponse.map((accCap) => {
 			const accCapObj = bcs.de(
 				"AccountCap",
 				Casting.bcsBytesFromSuiObjectResponse(accCap),
 				"base64"
 			);
-			return PerpetualsApiCasting.accountCapWithTypeFromRaw(
-				accCapObj,
-				collateralCoinType
-			);
+			return PerpetualsApiCasting.accountCapFromRaw(accCapObj);
 		});
 
 		return accCaps;
 	};
 
-	public fetchAccount = async (inputs: {
-		collateralCoinType: CoinType;
+	public fetchPositionsForAccount = async (inputs: {
 		accountId: PerpetualsAccountId;
-	}): Promise<PerpetualsAccountObject> => {
-		const accountDfInfos =
-			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
-				parentObjectId:
-					this.addresses.perpetuals.objects.exchanges[
-						inputs.collateralCoinType
-					]?.accountManager!,
-			});
+	}): Promise<PerpetualsPosition[]> => {
+		const { accountId } = inputs;
 
-		const accountDfInfo = accountDfInfos.find((info) => {
-			return (
-				BigInt((info.name.value as any).account_id) === inputs.accountId
-			);
-		})!;
-
-		const objectResponse = await this.Provider.provider.getObject({
-			id: accountDfInfo.objectId,
-			options: { showBcs: true },
-		});
-		const accountField = bcs.de(
-			"Field<u64, Account>",
-			Casting.bcsBytesFromSuiObjectResponse(objectResponse),
-			"base64"
+		const positions: {
+			marketId: PerpetualsMarketId;
+			collateralCoinType: CoinType;
+		}[] = await this.Provider.indexerCaller.fetchIndexer(
+			`perpetuals/accounts/${accountId}/positions`
 		);
 
-		return PerpetualsApiCasting.accountFromRaw(accountField.value);
+		const tx = new TransactionBlock();
+
+		for (const { marketId, collateralCoinType } of positions) {
+			this.getPositionTx({
+				tx,
+				accountId,
+				marketId,
+				collateralCoinType,
+			});
+		}
+
+		const { allBytes } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
+				tx,
+			});
+
+		return allBytes.map((outputBytes) =>
+			PerpetualsApiCasting.positionFromRaw(
+				bcs.de("Position", new Uint8Array(outputBytes[0]))
+			)
+		);
 	};
 
 	// public fetchAllAccountDatas = async (
@@ -236,53 +238,34 @@ export class PerpetualsApi {
 
 	public fetchPositionOrderDatas = async (
 		inputs: ApiPerpetualsPositionOrderDatasBody & {
-			marketId: PerpetualsMarketId;
 			accountId: PerpetualsAccountId;
 		}
 	): Promise<PerpetualsOrderData[]> => {
-		const { accountId, marketId, openOrders } = inputs;
+		const { accountId, openOrders } = inputs;
 
-		// TODO
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`perpetuals/accounts/${accountId}/events/order-receipts`,
+			{
+				cursor: 0,
+				// since worst case need to look back at
+				limit: openOrders * 2,
+			},
+			(event) =>
+				Casting.perpetuals.filledTakerOrderEventFromOnChain(
+					event as FilledTakerOrderEventOnChain
+				)
+		);
 	};
 
-	public fetchPositionOrderIds = async (inputs: {
-		positionAsksId: ObjectId;
-		positionBidsId: ObjectId;
-	}): Promise<{
-		askOrderIds: PerpetualsOrderId[];
-		bidOrderIds: PerpetualsOrderId[];
-	}> => {
-		const { positionAsksId, positionBidsId } = inputs;
-
-		const [askOrderIds, bidOrderIds] = await Promise.all([
-			this.fetchOrderedVecSet({
-				objectId: positionAsksId,
-			}),
-			this.fetchOrderedVecSet({
-				objectId: positionBidsId,
-			}),
-		]);
-
-		return {
-			askOrderIds,
-			bidOrderIds,
-		};
-	};
-
-	public fetchMarketState = async (inputs: {
-		collateralCoinType: CoinType;
+	public fetchMarket = async (inputs: {
 		marketId: PerpetualsMarketId;
 	}): Promise<PerpetualsMarketState> => {
-		const pkg = this.addresses.perpetuals.packages.perpetuals;
-		const mktMngId = this.getExchangeConfig(inputs).marketManager;
-		const resp =
-			await this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: mktMngId,
-				name: {
-					type: `${pkg}::keys::Market<${pkg}::keys::State>`,
-					value: { market_id: String(inputs.marketId) },
-				},
-			});
+		const resp = await this.Provider.Objects().fetchCastObjectBcs({
+			objectId: inputs.marketId,
+			bcs,
+			fromDeserialized: PerpetualsApiCasting.clearingHouseFromRaw,
+			typeName: "ClearingHouse",
+		});
 		const objectResp = await this.Provider.provider.getObject({
 			id: resp.data?.objectId!,
 			options: { showBcs: true },
@@ -293,59 +276,6 @@ export class PerpetualsApi {
 			"base64"
 		);
 		return PerpetualsApiCasting.marketStateFromRaw(mktStateField.value);
-	};
-
-	public fetchMarketParams = async (inputs: {
-		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-	}): Promise<PerpetualsMarketParams> => {
-		const pkg = this.addresses.perpetuals.packages.perpetuals;
-		const mktMngId = this.getExchangeConfig(inputs).marketManager;
-		const resp =
-			await this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: mktMngId,
-				name: {
-					type: `${pkg}::keys::Market<${pkg}::keys::Params>`,
-					value: { market_id: String(inputs.marketId) },
-				},
-			});
-		const objectResp = await this.Provider.provider.getObject({
-			id: resp.data?.objectId!,
-			options: { showBcs: true },
-		});
-		const mktParamsField = bcs.de(
-			"Field<MarketKey, MarketParams>",
-			Casting.bcsBytesFromSuiObjectResponse(objectResp),
-			"base64"
-		);
-		return PerpetualsApiCasting.marketParamsFromRaw(mktParamsField.value);
-	};
-
-	public fetchOrderbook = async (inputs: {
-		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-	}): Promise<PerpetualsOrderbook> => {
-		const pkg = this.addresses.perpetuals.packages.perpetuals;
-		const mktMngId = this.getExchangeConfig(inputs).marketManager;
-		const resp =
-			await this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: mktMngId,
-				name: {
-					type: `${pkg}::keys::Market<${pkg}::keys::Orderbook>`,
-					value: { market_id: String(inputs.marketId) },
-				},
-			});
-		const objectResp = await this.Provider.provider.getObject({
-			id: resp.data?.objectId!,
-			options: { showBcs: true },
-		});
-		const orderbook = bcs.de(
-			"Orderbook",
-			Casting.bcsBytesFromSuiObjectResponse(objectResp),
-			"base64"
-		);
-
-		return PerpetualsApiCasting.orderbookFromRaw(orderbook);
 	};
 
 	// =========================================================================
@@ -646,7 +576,7 @@ export class PerpetualsApi {
 				});
 
 			// deserialize account
-			const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
+			const accountAfterOrder = PerpetualsApiCasting.positionFromRaw(
 				bcs.de("Account", new Uint8Array(allBytes[3][0]))
 			);
 

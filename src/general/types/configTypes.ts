@@ -271,7 +271,6 @@ export interface PerpetualsAddresses {
 	objects: {
 		adminCapability: ObjectId;
 		registry: ObjectId;
-		exchanges: Record<CoinType, ExchangeAddresses>;
 	};
 }
 

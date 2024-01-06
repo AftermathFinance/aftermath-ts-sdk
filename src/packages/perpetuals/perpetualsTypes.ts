@@ -17,7 +17,7 @@ import { CoinType } from "../coin/coinTypes";
 //  Name Only
 // =========================================================================
 
-export type PerpetualsMarketId = bigint;
+export type PerpetualsMarketId = ObjectId;
 export type PerpetualsAccountId = bigint;
 export type PerpetualsOrderId = bigint;
 export type PerpetualsOrderPrice = bigint;
@@ -444,7 +444,7 @@ export type CollateralEvent =
 	| WithdrewCollateralEvent
 	| DepositedCollateralEvent
 	| SettledFundingEvent
-	| LiquidatedPositionEvent
+	| LiquidatedEvent
 	| FilledTakerOrderEvent
 	| FilledMakerOrderEvent;
 
@@ -484,7 +484,7 @@ export const isSettledFundingEvent = (
 //  Liquidation
 // =========================================================================
 
-export interface LiquidatedPositionEvent extends Event {
+export interface LiquidatedEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
@@ -493,9 +493,7 @@ export interface LiquidatedPositionEvent extends Event {
 	liqorCollateral: IFixed;
 }
 
-export const isLiquidatedPositionEvent = (
-	event: Event
-): event is LiquidatedPositionEvent => {
+export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
 	return event.type.toLowerCase().includes("liquidatedposition");
 };
 
@@ -584,7 +582,7 @@ export type PerpetualsOrderEvent =
 	| PostedOrderEvent
 	| FilledMakerOrderEvent
 	| FilledTakerOrderEvent
-	| LiquidatedPositionEvent;
+	| LiquidatedEvent;
 
 // TODO: make all these checks use string value from perps api
 
