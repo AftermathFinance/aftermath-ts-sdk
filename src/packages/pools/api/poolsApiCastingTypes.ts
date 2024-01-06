@@ -31,9 +31,9 @@ export interface PoolFieldsOnChain {
 	fees_deposit: BigIntAsString[];
 	fees_withdraw: BigIntAsString[];
 	decimal_scalars: BigIntAsString[];
-	// coin_decimals: Option<vector<u8>>
 	lp_decimals: BigIntAsString;
 	lp_decimal_scalar: BigIntAsString;
+	coin_decimals?: BigIntAsString[];
 }
 
 // =========================================================================
@@ -94,4 +94,3 @@ export type PoolDepositEventOnChain =
 
 export type PoolWithdrawEventOnChain =
 	EventOnChain<PoolWithdrawEventFieldsOnChain>;
-

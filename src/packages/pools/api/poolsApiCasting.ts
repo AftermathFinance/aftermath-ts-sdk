@@ -58,6 +58,13 @@ export class PoolsApiCasting {
 					decimalsScalar: BigInt(
 						poolFieldsOnChain.decimal_scalars[index]
 					),
+					...(poolFieldsOnChain.coin_decimals
+						? {
+								decimals: Number(
+									poolFieldsOnChain.coin_decimals[index]
+								),
+						  }
+						: {}),
 				},
 			}),
 			{}
