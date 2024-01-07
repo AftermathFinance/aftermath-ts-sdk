@@ -244,16 +244,26 @@ export class PerpetualsApi {
 		const { accountId, openOrders } = inputs;
 
 		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/accounts/${accountId}/events/order-receipts`,
+			`perpetuals/accounts/${accountId}/events/receipt`,
 			{
 				cursor: 0,
 				// since worst case need to look back at
 				limit: openOrders * 2,
 			},
-			(event) =>
-				Casting.perpetuals.filledTakerOrderEventFromOnChain(
-					event as FilledTakerOrderEventOnChain
-				)
+			(event) => {
+				const eventType = (event as EventOnChain<any>).type;
+				return eventType.includes(this.eventTypes.canceledOrder)
+					? Casting.perpetuals.canceledOrderEventFromOnChain(
+							event as CanceledOrderEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.postedOrderReceipt)
+					? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
+							event as PostedOrderReceiptEventOnChain
+					  )
+					: Casting.perpetuals.filledOrderReceiptEventFromOnChain(
+							event as FilledOrderReceiptEventOnChain
+					  );
+			}
 		);
 	};
 
