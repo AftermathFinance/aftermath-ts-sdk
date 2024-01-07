@@ -1753,10 +1753,14 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 										coinInType: baseCoinType,
 										coinOutType: targetCoinType,
 									});
-									const price = Coin.balanceWithDecimals(
-										unscaledPrice,
-										baseDecimals - targetDecimals
-									);
+									const denominator =
+										Coin.balanceWithDecimals(
+											unscaledPrice,
+											baseDecimals - targetDecimals
+										);
+									const price = denominator
+										? 1 / denominator
+										: 0;
 
 									const data: CoinGeckoTickerData = {
 										pool_id: pool.pool.objectId,
