@@ -243,7 +243,8 @@ export class PerpetualsApiCasting {
 		return {
 			collateralCoinType,
 			accountId: BigInt(fields.liqee_account_id),
-			collateral: BigInt(fields.liqee_collateral),
+			// TODO: update event on chain
+			collateral: BigInt(0),
 			collateralDelta: BigInt(0),
 			liqorAccountId: BigInt(fields.liqor_account_id),
 			timestamp: eventOnChain.timestampMs,
@@ -310,7 +311,8 @@ export class PerpetualsApiCasting {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			orderId: BigInt(fields.order_id),
+			// TODO: change everything
+			orderId: BigInt(0),
 			side:
 				BigInt(fields.posted_base_ask) > BigInt(fields.posted_base_bid)
 					? PerpetualsOrderSide.Ask
@@ -340,8 +342,8 @@ export class PerpetualsApiCasting {
 			collateralDelta: BigInt(0),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			side: Perpetuals.positionSide({ baseAssetAmount }),
-			size: BigInt(fields.size),
-			dropped: fields.dropped,
+			// size: BigInt(fields.size),
+			// dropped: fields.dropped,
 			quoteAssetNotionalAmount: BigInt(fields.maker_quote_amount),
 			asksQuantity: BigInt(fields.maker_pending_asks_quantity),
 			bidsQuantity: BigInt(fields.maker_pending_bids_quantity),

@@ -202,7 +202,7 @@ export class PerpetualsMarket extends Caller {
 		);
 
 		const isReversing = position
-			? Boolean(side ^ Perpetuals.positionSide({ position }))
+			? Boolean(side ^ Perpetuals.positionSide(position))
 			: false;
 
 		let maxSize = freeMarginUsd / (indexPrice * imr);
@@ -258,7 +258,7 @@ export class PerpetualsMarket extends Caller {
 		);
 
 		const isReversing = position
-			? Boolean(side ^ Perpetuals.positionSide({ position }))
+			? Boolean(side ^ Perpetuals.positionSide(position))
 			: false;
 
 		let slippage =

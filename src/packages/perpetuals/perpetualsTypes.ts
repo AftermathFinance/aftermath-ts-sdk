@@ -553,8 +553,10 @@ export interface FilledMakerOrderEvent extends Event {
 	collateralDelta: IFixed;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
-	size: bigint;
-	dropped: boolean;
+	// NOTE: is this the same as base asset amount ?
+	// size: bigint;
+	// TODO: add this back ?
+	// dropped: boolean;
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;
 	asksQuantity: IFixed;

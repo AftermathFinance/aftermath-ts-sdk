@@ -608,7 +608,7 @@ export class PerpetualsAccount extends Caller {
 		const position = this.positionForMarketId({ marketId });
 		if (!position) throw new Error("no position found for market");
 
-		const side = Perpetuals.positionSide({ position });
+		const side = Perpetuals.positionSide(position);
 		return {
 			...inputs,
 			side:
