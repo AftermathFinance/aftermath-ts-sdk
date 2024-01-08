@@ -1,12 +1,10 @@
 import { EventOnChain } from "../../general/types/castingTypes";
-import { BigIntAsString, ObjectId, SuiAddress } from "../../types";
-
-// =========================================================================
-//  Constants
-// =========================================================================
-
-export const AskOnChain = true;
-export const BidOnChain = false;
+import {
+	BigIntAsString,
+	IFixedAsString,
+	ObjectId,
+	SuiAddress,
+} from "../../types";
 
 // =========================================================================
 //  Events
@@ -24,15 +22,27 @@ export type WithdrewCollateralEventOnChain = EventOnChain<{
 export type DepositedCollateralEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
 	collateral: BigIntAsString;
-	vault: SuiAddress;
+}>;
+
+export type AllocatedCollateralEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	account_id: BigIntAsString;
+	position_collateral: IFixedAsString;
+	vault_balance: BigIntAsString;
+}>;
+
+export type DeallocatedCollateralEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	account_id: BigIntAsString;
+	collateral: IFixedAsString;
 }>;
 
 export type SettledFundingEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
 	account_id: BigIntAsString;
-	collateral: BigIntAsString;
-	market_ids: ObjectId[];
-	pos_funding_rates_long: BigIntAsString[];
-	pos_funding_rates_short: BigIntAsString[];
+	collateral: IFixedAsString;
+	mkt_funding_rate_long: IFixedAsString;
+	mkt_funding_rate_short: IFixedAsString;
 }>;
 
 // =========================================================================
@@ -40,10 +50,15 @@ export type SettledFundingEventOnChain = EventOnChain<{
 // =========================================================================
 
 export type LiquidatedEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
 	liqee_account_id: BigIntAsString;
-	liqee_collateral: BigIntAsString;
 	liqor_account_id: BigIntAsString;
-	liqor_collateral: BigIntAsString;
+	is_liqee_long: boolean;
+	size_liquidated: BigIntAsString;
+	mark_price: IFixedAsString;
+	liqee_base_amount: IFixedAsString;
+	liqee_quote_amount: IFixedAsString;
+	bad_debt: IFixedAsString;
 }>;
 
 // =========================================================================
@@ -60,48 +75,47 @@ export type CreatedAccountEventOnChain = EventOnChain<{
 // =========================================================================
 
 export type CanceledOrderEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
 	account_id: BigIntAsString;
-	market_id: ObjectId;
-	side: boolean;
 	size: BigIntAsString;
 	order_id: BigIntAsString;
-	asks_quantity: BigIntAsString;
-	bids_quantity: BigIntAsString;
+	asks_quantity: IFixedAsString;
+	bids_quantity: IFixedAsString;
 }>;
 
 export type PostedOrderEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
 	account_id: BigIntAsString;
-	market_id: ObjectId;
-	order_id: BigIntAsString;
-	side: boolean;
-	size: BigIntAsString;
-	asks_quantity: BigIntAsString;
-	bids_quantity: BigIntAsString;
+	posted_base_ask: BigIntAsString;
+	posted_base_bid: BigIntAsString;
+	pending_asks: IFixedAsString;
+	pending_bids: IFixedAsString;
 }>;
 
 export type FilledMakerOrderEventOnChain = EventOnChain<{
-	account_id: BigIntAsString;
-	collateral: BigIntAsString;
-	market_id: ObjectId;
-	order_id: BigIntAsString;
-	side: boolean;
-	size: BigIntAsString;
-	dropped: boolean;
-	base_asset_amount: BigIntAsString;
-	quote_asset_notional_amount: BigIntAsString;
-	asks_quantity: BigIntAsString;
-	bids_quantity: BigIntAsString;
+	ch_id: ObjectId;
+	maker_account_id: BigIntAsString;
+	maker_collateral: IFixedAsString;
+	base_asset_delta_ask: IFixedAsString;
+	quote_asset_delta_ask: IFixedAsString;
+	base_asset_delta_bid: IFixedAsString;
+	quote_asset_delta_bid: IFixedAsString;
+	maker_base_amount: IFixedAsString;
+	maker_quote_amount: IFixedAsString;
+	maker_pending_asks_quantity: IFixedAsString;
+	maker_pending_bids_quantity: IFixedAsString;
 }>;
 
 export type FilledTakerOrderEventOnChain = EventOnChain<{
-	account_id: BigIntAsString;
-	collateral: BigIntAsString;
-	market_id: ObjectId;
-	base_asset_amount: BigIntAsString;
-	quote_asset_notional_amount: BigIntAsString;
-	side: boolean;
-	base_asset_delta: BigIntAsString;
-	quote_asset_delta: BigIntAsString;
+	ch_id: ObjectId;
+	taker_account_id: BigIntAsString;
+	taker_collateral: IFixedAsString;
+	base_asset_delta_ask: IFixedAsString;
+	quote_asset_delta_ask: IFixedAsString;
+	base_asset_delta_bid: IFixedAsString;
+	quote_asset_delta_bid: IFixedAsString;
+	taker_base_amount: IFixedAsString;
+	taker_quote_amount: IFixedAsString;
 }>;
 
 export type PostedOrderReceiptEventOnChain = EventOnChain<{
@@ -116,7 +130,7 @@ export type PostedOrderReceiptEventOnChain = EventOnChain<{
 // =========================================================================
 
 export type UpdatedPremiumTwapEventOnChain = EventOnChain<{
-	market_id: ObjectId;
+	ch_id: ObjectId;
 	index_price: BigIntAsString;
 	book_price: BigIntAsString;
 	premium_twap: BigIntAsString;
@@ -124,7 +138,7 @@ export type UpdatedPremiumTwapEventOnChain = EventOnChain<{
 }>;
 
 export type UpdatedSpreadTwapEventOnChain = EventOnChain<{
-	market_id: ObjectId;
+	ch_id: ObjectId;
 	book_price: BigIntAsString;
 	index_price: BigIntAsString;
 	spread_twap: BigIntAsString;

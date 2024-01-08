@@ -434,9 +434,9 @@ export interface SettledFundingEvent extends Event {
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
 	collateralDelta: IFixed;
-	marketIds: PerpetualsMarketId[];
-	posFundingRatesLong: IFixed[];
-	posFundingRatesShort: IFixed[];
+	marketId: PerpetualsMarketId;
+	marketFundingRateLong: IFixed;
+	marketFundingRateShort: IFixed;
 }
 
 export type CollateralEvent =
@@ -489,7 +489,6 @@ export interface LiquidatedEvent extends Event {
 	collateral: IFixed;
 	collateralDelta: IFixed;
 	liqorAccountId: PerpetualsAccountId;
-	liqorCollateral: IFixed;
 }
 
 export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
@@ -553,7 +552,6 @@ export interface FilledMakerOrderEvent extends Event {
 	collateral: IFixed;
 	collateralDelta: IFixed;
 	marketId: PerpetualsMarketId;
-	orderId: PerpetualsOrderId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	dropped: boolean;

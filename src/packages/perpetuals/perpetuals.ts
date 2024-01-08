@@ -254,15 +254,10 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public static positionSide(inputs: {
-		position: PerpetualsPosition;
+		baseAssetAmount: IFixed;
 	}): PerpetualsOrderSide {
-		const { position } = inputs;
-
-		const baseAmount = IFixedUtils.numberFromIFixed(
-			position.baseAssetAmount
-		);
+		const baseAmount = IFixedUtils.numberFromIFixed(inputs.baseAssetAmount);
 		const isLong = Math.sign(baseAmount);
-
 		const side =
 			isLong >= 0 ? PerpetualsOrderSide.Bid : PerpetualsOrderSide.Ask;
 		return side;
@@ -334,6 +329,14 @@ export class Perpetuals extends Caller {
 	public static lotOrTickSizeToBigInt(lotOrTickSize: number): bigint {
 		return BigInt(Math.round(lotOrTickSize * FixedUtils.fixedOneN9));
 	}
+
+	public static orderIdToSide = (
+		orderId: PerpetualsOrderId
+	): PerpetualsOrderSide => {
+		return Perpetuals.OrderUtils.isAsk(orderId)
+			? PerpetualsOrderSide.Ask
+			: PerpetualsOrderSide.Bid;
+	};
 
 	// =========================================================================
 	//  Calculations

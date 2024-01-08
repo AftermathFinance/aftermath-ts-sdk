@@ -241,9 +241,7 @@ export class PerpetualsApi {
 				Casting.perpetuals.postedOrderReceiptEventFromOnChain(order);
 			return {
 				...event,
-				side: Perpetuals.OrderUtils.isAsk(event.orderId)
-					? PerpetualsOrderSide.Ask
-					: PerpetualsOrderSide.Bid,
+				side: Perpetuals.orderIdToSide(event.orderId),
 			};
 		});
 	};
