@@ -32,11 +32,14 @@ import {
 	ApiPerpetualsTransferCollateralBody,
 	ObjectId,
 	ApiPerpetualsCancelOrdersBody,
+	PerpetualsOrderData,
+	CoinDecimal,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
+import { Coin } from "..";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
@@ -212,6 +215,10 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
+	public getPositionOrderDatas() {
+		return this.fetchApi<PerpetualsOrderData[]>("position-order-datas");
+	}
+
 	// =========================================================================
 	//  Events
 	// =========================================================================
@@ -239,42 +246,50 @@ export class PerpetualsAccount extends Caller {
 		indexPrices: number[];
 		collateralPrice: number;
 	}): number => {
-		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
+		throw new Error("TODO");
 
-		const { totalPnL, totalMinInitialMargin } =
-			this.calcPnLAndMarginForAccount(inputs);
+		// const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
-		let collateralUsd =
-			IFixedUtils.numberFromIFixed(this.account.collateral) *
-			inputs.collateralPrice;
+		// const { totalPnL, totalMinInitialMargin } =
+		// 	this.calcPnLAndMarginForAccount(inputs);
 
-		collateralUsd += totalFunding;
+		// let collateralUsd =
+		// 	IFixedUtils.numberFromIFixed(this.account.collateral) *
+		// 	inputs.collateralPrice;
 
-		let cappedMargin;
-		if (totalPnL < 0) {
-			cappedMargin = collateralUsd + totalPnL;
-		} else {
-			cappedMargin = collateralUsd;
-		}
+		// collateralUsd += totalFunding;
 
-		if (cappedMargin >= totalMinInitialMargin) {
-			return (
-				(cappedMargin - totalMinInitialMargin) / inputs.collateralPrice
-			);
-		} else return 0;
+		// let cappedMargin;
+		// if (totalPnL < 0) {
+		// 	cappedMargin = collateralUsd + totalPnL;
+		// } else {
+		// 	cappedMargin = collateralUsd;
+		// }
+
+		// if (cappedMargin >= totalMinInitialMargin) {
+		// 	return (
+		// 		(cappedMargin - totalMinInitialMargin) / inputs.collateralPrice
+		// 	);
+		// } else return 0;
 	};
 
 	public calcMarginRatioAndLeverageForAccount = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
+		collateralDecimals: CoinDecimal;
 	}): {
 		totalMarginRatio: number;
 		totalLeverage: number;
 	} => {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 		const collateralUsd =
-			this.collateral() * inputs.collateralPrice + totalFunding;
+			Coin.balanceWithDecimals(
+				this.collateral(),
+				inputs.collateralDecimals
+			) *
+				inputs.collateralPrice +
+			totalFunding;
 
 		const { totalPnL, totalNetAbsBaseValue } =
 			this.calcPnLAndMarginForAccount(inputs);
@@ -299,6 +314,7 @@ export class PerpetualsAccount extends Caller {
 		market: PerpetualsMarket;
 		indexPrice: number;
 		collateralPrice: number;
+		collateralDecimals: CoinDecimal;
 		position?: PerpetualsPosition;
 	}): {
 		marginRatio: number;
@@ -315,7 +331,12 @@ export class PerpetualsAccount extends Caller {
 			position,
 		});
 		const collateralUsd =
-			this.collateral() * inputs.collateralPrice + funding;
+			Coin.balanceWithDecimals(
+				this.collateral(),
+				inputs.collateralDecimals
+			) *
+				inputs.collateralPrice +
+			funding;
 
 		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
 			market,
@@ -475,6 +496,7 @@ export class PerpetualsAccount extends Caller {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
+		collateralDecimals: CoinDecimal;
 	}): number => {
 		const marketId = inputs.market.marketId;
 		const position =
@@ -484,7 +506,12 @@ export class PerpetualsAccount extends Caller {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
 		const collateralUsd =
-			this.collateral() * inputs.collateralPrice + totalFunding;
+			Coin.balanceWithDecimals(
+				this.collateral(),
+				inputs.collateralDecimals
+			) *
+				inputs.collateralPrice +
+			totalFunding;
 
 		const { totalPnL, totalMinMaintenanceMargin } =
 			this.calcPnLAndMarginForAccount(inputs);
@@ -525,20 +552,22 @@ export class PerpetualsAccount extends Caller {
 		indexPrices: number[];
 		collateralPrice: number;
 	}): number => {
-		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
+		throw new Error("TODO");
 
-		const { totalPnL, totalMinInitialMargin } =
-			this.calcPnLAndMarginForAccount(inputs);
+		// const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
-		let collateralUsd =
-			IFixedUtils.numberFromIFixed(this.account.collateral) *
-			inputs.collateralPrice;
+		// const { totalPnL, totalMinInitialMargin } =
+		// 	this.calcPnLAndMarginForAccount(inputs);
 
-		const margin = collateralUsd + totalFunding + totalPnL;
+		// let collateralUsd =
+		// 	IFixedUtils.numberFromIFixed(this.account.collateral) *
+		// 	inputs.collateralPrice;
 
-		if (margin >= totalMinInitialMargin) {
-			return margin - totalMinInitialMargin;
-		} else return 0;
+		// const margin = collateralUsd + totalFunding + totalPnL;
+
+		// if (margin >= totalMinInitialMargin) {
+		// 	return margin - totalMinInitialMargin;
+		// } else return 0;
 	};
 
 	// =========================================================================
@@ -566,8 +595,8 @@ export class PerpetualsAccount extends Caller {
 		}
 	}
 
-	public collateral(): number {
-		return Casting.IFixed.numberFromIFixed(this.account.collateral);
+	public collateral(): Balance {
+		return this.accountCap.collateral;
 	}
 
 	public closePositionTxInputs = (inputs: {

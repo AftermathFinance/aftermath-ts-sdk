@@ -22,6 +22,7 @@ import {
 	PerpetualsAccountCap,
 	PerpetualsAccountId,
 	PerpetualsAccountObject,
+	IFixed,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -150,35 +151,18 @@ export class Perpetuals extends Caller {
 
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
-		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket> {
-		const { marketId, collateralCoinType } = inputs;
-
-		const urlPrefix = `${collateralCoinType}/markets/${marketId}`;
-		const [marketData, marketState] = await Promise.all([
-			this.fetchApi<PerpetualsMarketData>(urlPrefix),
-			this.fetchApi<PerpetualsMarketState>(`${urlPrefix}/market-state`),
-		]);
-
-		return new PerpetualsMarket(
-			marketData.marketId,
-			collateralCoinType,
-			marketData.marketParams,
-			marketState,
-			this.network
-		);
+		const marketData = await this.getMarketData(inputs);
+		return new PerpetualsMarket(marketData, this.network);
 	}
 
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
-		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket[]> {
-		const { collateralCoinType } = inputs;
 		return Promise.all(
 			inputs.marketIds.map((marketId) =>
 				this.getMarket({
 					marketId,
-					collateralCoinType,
 				})
 			)
 		);
@@ -186,22 +170,18 @@ export class Perpetuals extends Caller {
 
 	public async getMarketData(inputs: {
 		marketId: PerpetualsMarketId;
-		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketData> {
-		const { marketId, collateralCoinType } = inputs;
-		return this.fetchApi(`${collateralCoinType}/markets/${marketId}`);
+		const { marketId } = inputs;
+		return this.fetchApi(`0xplaceholder/markets/${marketId}`);
 	}
 
 	public async getMarketDatas(inputs: {
 		marketIds: PerpetualsMarketId[];
-		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketData[]> {
-		const { collateralCoinType } = inputs;
 		return Promise.all(
 			inputs.marketIds.map((marketId) =>
 				this.getMarketData({
 					marketId,
-					collateralCoinType,
 				})
 			)
 		);
@@ -360,17 +340,16 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public static calcEntryPrice(inputs: {
-		position: PerpetualsPosition;
+		baseAssetAmount: IFixed;
+		quoteAssetNotionalAmount: IFixed;
 	}): number {
-		const { position } = inputs;
+		const { baseAssetAmount, quoteAssetNotionalAmount } = inputs;
 
-		const denominator = Casting.IFixed.numberFromIFixed(
-			position.baseAssetAmount
-		);
+		const denominator = Casting.IFixed.numberFromIFixed(baseAssetAmount);
 		if (!denominator) return 0;
 
 		return (
-			Casting.IFixed.numberFromIFixed(position.quoteAssetNotionalAmount) /
+			Casting.IFixed.numberFromIFixed(quoteAssetNotionalAmount) /
 			denominator
 		);
 	}

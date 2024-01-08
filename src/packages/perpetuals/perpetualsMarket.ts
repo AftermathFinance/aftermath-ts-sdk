@@ -7,7 +7,6 @@ import {
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsOrderbookStateBody,
-	ApiPerpetualsPositionOrderDatasBody,
 	CoinType,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
@@ -26,6 +25,7 @@ import {
 	SuiNetwork,
 	Timestamp,
 	Url,
+	PerpetualsMarketData,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -35,20 +35,27 @@ export class PerpetualsMarket extends Caller {
 	//  Constants
 	// =========================================================================
 
-	public static readonly constants = {};
+	public readonly marketId: PerpetualsMarketId;
+	public readonly collateralCoinType: CoinType;
+	public readonly marketParams: PerpetualsMarketParams;
+	public readonly marketState: PerpetualsMarketState;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(
-		public readonly marketId: PerpetualsMarketId,
-		public readonly collateralCoinType: CoinType,
-		public readonly marketParams: PerpetualsMarketParams,
-		public readonly marketState: PerpetualsMarketState,
+		public marketData: PerpetualsMarketData,
 		public readonly network?: SuiNetwork
 	) {
-		super(network, `perpetuals/${collateralCoinType}/markets/${marketId}`);
+		super(
+			network,
+			`perpetuals/${marketData.collateralCoinType}/markets/${marketData.objectId}`
+		);
+		this.marketId = marketData.objectId;
+		this.collateralCoinType = marketData.collateralCoinType;
+		this.marketParams = marketData.marketParams;
+		this.marketState = marketData.marketState;
 	}
 
 	// =========================================================================
@@ -65,13 +72,6 @@ export class PerpetualsMarket extends Caller {
 
 	public getPrice24hrsAgo() {
 		return this.fetchApi<number>("price-24hrs-ago");
-	}
-
-	public getPositionOrderDatas(inputs: ApiPerpetualsPositionOrderDatasBody) {
-		return this.fetchApi<
-			PerpetualsOrderData[],
-			ApiPerpetualsPositionOrderDatasBody
-		>("position-order-datas", inputs);
 	}
 
 	public getOrderbookState(inputs: {
@@ -371,7 +371,6 @@ export class PerpetualsMarket extends Caller {
 		>("execution-price", {
 			...inputs,
 			lotSize: this.lotSize(),
-			tickSize: this.tickSize(),
 		});
 	}
 
@@ -442,7 +441,7 @@ export class PerpetualsMarket extends Caller {
 					positionSizePosted
 			)
 		);
-		const entryPrice = Perpetuals.calcEntryPrice({ position });
+		const entryPrice = Perpetuals.calcEntryPrice(position);
 		const uPnl = positionSizeFilledNum * (indexPrice - entryPrice);
 		const rPnl = positionSizeFilledNum * (executionPrice - entryPrice);
 		// pessimistically don't consider positive pnl since the order may not actually be

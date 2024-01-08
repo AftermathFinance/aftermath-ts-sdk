@@ -60,19 +60,21 @@ export class PerpetualsApiCasting {
 	// =========================================================================
 
 	public static accountCapFromRaw(data: any): PerpetualsAccountCap {
-		const coinType = Helpers.addLeadingZeroesToType(
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
 			Coin.getInnerCoinType(data.objectType)
 		);
 		return {
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			accountId: BigInt(data.accountId),
-			collateralCoinType: coinType,
 			collateral: BigInt(data.collateral),
+			collateralCoinType,
 		};
 	}
 
-	public static positionFromRaw = (data: any): PerpetualsPosition => {
+	public static partialPositionFromRaw = (
+		data: any
+	): Omit<PerpetualsPosition, "collateralCoinType" | "marketId"> => {
 		return {
 			collateral: BigInt(data.collateral),
 			baseAssetAmount: BigInt(data.baseAssetAmount),
@@ -89,11 +91,15 @@ export class PerpetualsApiCasting {
 	// =========================================================================
 
 	public static clearingHouseFromRaw(data: any): PerpetualsMarketData {
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			Coin.getInnerCoinType(data.objectType)
+		);
 		return {
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			marketParams: this.marketParamsFromRaw(data.market_params),
 			marketState: this.marketStateFromRaw(data.market_state),
+			collateralCoinType,
 		};
 	}
 

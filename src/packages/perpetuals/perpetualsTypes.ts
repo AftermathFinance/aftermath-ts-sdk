@@ -102,6 +102,7 @@ bcs.registerStructType(["Vault", "T"], {
 // -----------------------------------------
 
 export interface PerpetualsMarketData extends Object {
+	collateralCoinType: CoinType;
 	marketParams: PerpetualsMarketParams;
 	marketState: PerpetualsMarketState;
 }
@@ -136,6 +137,8 @@ export interface PerpetualsPosition {
 	cumFundingRateShort: IFixed;
 	asksQuantity: IFixed;
 	bidsQuantity: IFixed;
+	collateralCoinType: CoinType;
+	marketId: PerpetualsMarketId;
 }
 
 bcs.registerStructType("Position", {
@@ -689,7 +692,6 @@ export interface ApiPerpetualsExecutionPriceBody {
 	side: PerpetualsOrderSide;
 	size: bigint;
 	lotSize: number;
-	tickSize: number;
 	price?: PerpetualsOrderPrice;
 }
 export interface ApiPerpetualsExecutionPriceResponse {
