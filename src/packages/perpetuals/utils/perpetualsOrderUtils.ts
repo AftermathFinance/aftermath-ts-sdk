@@ -62,4 +62,8 @@ export class PerpetualsOrderUtils {
 		let mask_bn = new BN(`0000000000000000ffffffffffffffff`, 16);
 		return BigInt(orderIdBn.and(mask_bn).toString());
 	};
+
+	public static isAsk = (orderId: PerpetualsOrderId): boolean => {
+		return new BN(orderId) < new BN(`80000000000000000000000000000000`, 16);
+	};
 }

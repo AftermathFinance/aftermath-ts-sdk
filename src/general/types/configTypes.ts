@@ -285,13 +285,6 @@ export interface DynamicGasAddresses {
 	sponsorAddress: SuiAddress;
 }
 
-export interface ExchangeAddresses {
-	accountManager: ObjectId;
-	marketManager: ObjectId;
-	vault: ObjectId;
-	insuranceFunds: ObjectId;
-}
-
 export interface OracleAddresses {
 	packages: {
 		oracleReader: SuiAddress;

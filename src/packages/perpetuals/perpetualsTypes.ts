@@ -101,7 +101,7 @@ bcs.registerStructType(["Vault", "T"], {
 
 // -----------------------------------------
 
-export interface PerpetualsClearingHouse extends Object {
+export interface PerpetualsMarketData extends Object {
 	marketParams: PerpetualsMarketParams;
 	marketState: PerpetualsMarketState;
 }
@@ -200,11 +200,6 @@ bcs.registerStructType("MarketParams", {
 	maxPendingOrdersPerPosition: BCS.U64,
 });
 
-export interface PerpetualsMarketData {
-	marketId: PerpetualsMarketId;
-	marketParams: PerpetualsMarketParams;
-}
-
 // -----------------------------------------
 
 export interface PerpetualsMarketState {
@@ -268,6 +263,7 @@ export interface PerpetualsOrderData {
 	orderId: PerpetualsOrderId;
 	size: bigint;
 	side: PerpetualsOrderSide;
+	marketId: PerpetualsMarketId;
 }
 
 export interface PerpetualsOrderbook extends Object {
@@ -584,6 +580,13 @@ export type PerpetualsOrderEvent =
 	| FilledTakerOrderEvent
 	| LiquidatedEvent;
 
+export interface PostedOrderReceiptEvent extends Event {
+	accountId: PerpetualsAccountId;
+	marketId: PerpetualsMarketId;
+	orderId: PerpetualsOrderId;
+	size: bigint;
+}
+
 // TODO: make all these checks use string value from perps api
 
 export const isCanceledOrderEvent = (
@@ -666,7 +669,7 @@ export type ApiPerpetualsPreviewOrderResponse =
 			error: string;
 	  }
 	| {
-			accountAfterOrder: PerpetualsAccountObject;
+			positionAfterOrder: PerpetualsPosition;
 			priceSlippage: number;
 			percentSlippage: Percentage;
 			filledSize: number;
@@ -674,10 +677,6 @@ export type ApiPerpetualsPreviewOrderResponse =
 			postedSize: number;
 			postedSizeUsd: number;
 	  };
-
-export interface ApiPerpetualsPositionOrderDatasBody {
-	openOrders: number;
-}
 
 export interface ApiPerpetualsOrderbookStateBody {
 	orderbookPrice: number;

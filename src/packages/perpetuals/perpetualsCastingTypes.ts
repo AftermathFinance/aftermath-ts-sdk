@@ -46,15 +46,6 @@ export type LiquidatedEventOnChain = EventOnChain<{
 	liqor_collateral: BigIntAsString;
 }>;
 
-export type AcquiredLiqeeEventOnChain = EventOnChain<{
-	account_id: BigIntAsString;
-	market_id: ObjectId;
-	base_asset_amount: BigIntAsString;
-	quote_asset_notional_amount: BigIntAsString;
-	size_to_acquire: BigIntAsString;
-	mark_price: BigIntAsString;
-}>;
-
 // =========================================================================
 //  Account
 // =========================================================================
@@ -111,6 +102,13 @@ export type FilledTakerOrderEventOnChain = EventOnChain<{
 	side: boolean;
 	base_asset_delta: BigIntAsString;
 	quote_asset_delta: BigIntAsString;
+}>;
+
+export type PostedOrderReceiptEventOnChain = EventOnChain<{
+	account_id: BigIntAsString;
+	ch_id: ObjectId;
+	order_id: BigIntAsString;
+	order_size: BigIntAsString;
 }>;
 
 // =========================================================================

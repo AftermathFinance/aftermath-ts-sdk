@@ -23,8 +23,9 @@ import {
 	PerpetualsPostReceipt,
 	UpdatedSpreadTwapEvent,
 	UpdatedPremiumTwapEvent,
-	PerpetualsClearingHouse,
 	LiquidatedEvent,
+	PerpetualsMarketData,
+	PostedOrderReceiptEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../..";
@@ -42,9 +43,9 @@ import {
 	FilledTakerOrderEventOnChain,
 	LiquidatedEventOnChain,
 	SettledFundingEventOnChain,
-	AcquiredLiqeeEventOnChain,
 	UpdatedPremiumTwapEventOnChain,
 	UpdatedSpreadTwapEventOnChain,
+	PostedOrderReceiptEventOnChain,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 
@@ -87,7 +88,7 @@ export class PerpetualsApiCasting {
 	//  Clearing House
 	// =========================================================================
 
-	public static clearingHouseFromRaw(data: any): PerpetualsClearingHouse {
+	public static clearingHouseFromRaw(data: any): PerpetualsMarketData {
 		return {
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
@@ -385,6 +386,21 @@ export class PerpetualsApiCasting {
 					: PerpetualsOrderSide.Bid,
 			baseAssetDelta: BigInt(fields.base_asset_delta),
 			quoteAssetDelta: BigInt(fields.quote_asset_delta),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static postedOrderReceiptEventFromOnChain = (
+		eventOnChain: PostedOrderReceiptEventOnChain
+	): PostedOrderReceiptEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			accountId: BigInt(fields.account_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+			size: BigInt(fields.order_size),
+			orderId: BigInt(fields.order_id),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
