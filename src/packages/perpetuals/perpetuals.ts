@@ -140,19 +140,24 @@ export class Perpetuals extends Caller {
 	//  Class Objects
 	// =========================================================================
 
-	public async getAllMarketDatas(inputs: {
+	public async getMarketsForCollateral(inputs: {
 		collateralCoinType: CoinType;
-	}): Promise<PerpetualsMarketData[]> {
+	}): Promise<PerpetualsMarket[]> {
 		const { collateralCoinType } = inputs;
-		return this.fetchApi<PerpetualsMarketData[]>(
+		const marketDatas = await this.fetchApi<PerpetualsMarketData[]>(
 			`${collateralCoinType}/markets`
+		);
+		return marketDatas.map(
+			(marketData) => new PerpetualsMarket(marketData, this.network)
 		);
 	}
 
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
 	}): Promise<PerpetualsMarket> {
-		const marketData = await this.getMarketData(inputs);
+		const marketData = await this.fetchApi<PerpetualsMarketData>(
+			`0xplaceholder/markets/${inputs.marketId}`
+		);
 		return new PerpetualsMarket(marketData, this.network);
 	}
 
@@ -162,25 +167,6 @@ export class Perpetuals extends Caller {
 		return Promise.all(
 			inputs.marketIds.map((marketId) =>
 				this.getMarket({
-					marketId,
-				})
-			)
-		);
-	}
-
-	public async getMarketData(inputs: {
-		marketId: PerpetualsMarketId;
-	}): Promise<PerpetualsMarketData> {
-		const { marketId } = inputs;
-		return this.fetchApi(`0xplaceholder/markets/${marketId}`);
-	}
-
-	public async getMarketDatas(inputs: {
-		marketIds: PerpetualsMarketId[];
-	}): Promise<PerpetualsMarketData[]> {
-		return Promise.all(
-			inputs.marketIds.map((marketId) =>
-				this.getMarketData({
 					marketId,
 				})
 			)
