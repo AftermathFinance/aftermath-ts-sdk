@@ -25,7 +25,6 @@ import {
 } from "../../../types";
 import { Coin } from "../../coin";
 import { RouterPoolTradeTxInputs } from "../../router";
-import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 import { RouterAsyncApiHelpers } from "../../router/api/routerAsyncApiHelpers";
 

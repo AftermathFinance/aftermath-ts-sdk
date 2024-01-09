@@ -7,7 +7,7 @@ import {
 	PerpetualsMarketParams,
 	PerpetualsAccountObject,
 	PerpetualsPosition,
-	bcs,
+	perpetualsBcsRegistry,
 	PerpetualsAccountCap,
 	DepositedCollateralEvent,
 	WithdrewCollateralEvent,
@@ -151,7 +151,7 @@ export class PerpetualsApiCasting {
 	public static orderbookPriceFromBytes = (bytes: number[]): number => {
 		const unwrapped: BigIntAsString | undefined =
 			Casting.unwrapDeserializedOption(
-				bcs.de("Option<u256>", new Uint8Array(bytes))
+				perpetualsBcsRegistry.de("Option<u256>", new Uint8Array(bytes))
 			);
 		return FixedUtils.directCast(
 			unwrapped !== undefined ? BigInt(unwrapped) : BigInt(0)
@@ -343,8 +343,8 @@ export class PerpetualsApiCasting {
 			collateralDelta: BigInt(0),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			side: Perpetuals.positionSide({ baseAssetAmount }),
-			// size: BigInt(fields.size),
-			// dropped: fields.dropped,
+			size: BigInt(fields.maker_size),
+			dropped: fields.dropped,
 			quoteAssetNotionalAmount: BigInt(fields.maker_quote_amount),
 			asksQuantity: BigInt(fields.maker_pending_asks_quantity),
 			bidsQuantity: BigInt(fields.maker_pending_bids_quantity),

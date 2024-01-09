@@ -21,7 +21,7 @@ import {
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import {
-	bcs,
+	perpetualsBcsRegistry,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
 	ApiPerpetualsDepositCollateralBody,
@@ -177,7 +177,7 @@ export class PerpetualsApi {
 
 		const accCaps: PerpetualsRawAccountCap[] = objectResponse.map(
 			(accCap) => {
-				const accCapObj = bcs.de(
+				const accCapObj = perpetualsBcsRegistry.de(
 					"AccountCap",
 					Casting.bcsBytesFromSuiObjectResponse(accCap),
 					"base64"
@@ -219,7 +219,10 @@ export class PerpetualsApi {
 
 		const partialPositions = allBytes.map((outputBytes) =>
 			PerpetualsApiCasting.partialPositionFromRaw(
-				bcs.de("Position", new Uint8Array(outputBytes[0]))
+				perpetualsBcsRegistry.de(
+					"Position",
+					new Uint8Array(outputBytes[0])
+				)
 			)
 		);
 		const positions = partialPositions.map((position, index) => ({
@@ -256,7 +259,7 @@ export class PerpetualsApi {
 	}): Promise<PerpetualsMarketData> => {
 		return this.Provider.Objects().fetchCastObjectBcs({
 			objectId: inputs.marketId,
-			bcs,
+			bcs: perpetualsBcsRegistry,
 			fromDeserialized: PerpetualsApiCasting.clearingHouseFromRaw,
 			typeName: "ClearingHouse",
 		});
@@ -562,7 +565,10 @@ export class PerpetualsApi {
 			// deserialize position
 			const positionAfterOrder = {
 				...PerpetualsApiCasting.partialPositionFromRaw(
-					bcs.de("Position", new Uint8Array(allBytes[3][0]))
+					perpetualsBcsRegistry.de(
+						"Position",
+						new Uint8Array(allBytes[3][0])
+					)
 				),
 				collateralCoinType,
 				marketId,
@@ -1429,7 +1435,7 @@ export class PerpetualsApi {
 				tx,
 			});
 
-		const orderInfos: any[] = bcs.de(
+		const orderInfos: any[] = perpetualsBcsRegistry.de(
 			"vector<OrderInfo>",
 			new Uint8Array(bytes)
 		);
@@ -1448,7 +1454,7 @@ export class PerpetualsApi {
 		const { collateralCoinType, marketId, side, size, price, lotSize } =
 			inputs;
 
-		const accountCapId = bcs
+		const accountCapId = perpetualsBcsRegistry
 			.ser(`Account<${collateralCoinType}>`, {
 				id: {
 					id: {

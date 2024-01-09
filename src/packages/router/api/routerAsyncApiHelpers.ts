@@ -14,7 +14,6 @@ import { isTurbosPoolObject } from "../../external/turbos/turbosTypes";
 import { isCetusPoolObject } from "../../external/cetus/cetusTypes";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
-import { BCS } from "@mysten/bcs";
 import {
 	TransactionArgument,
 	TransactionBlock,
@@ -226,7 +225,7 @@ export class RouterAsyncApiHelpers {
 		}
 
 		bcs.registerStructType("ID", {
-			bytes: BCS.ADDRESS,
+			bytes: "address",
 		});
 
 		bcs.registerStructType("UID", {
@@ -234,7 +233,7 @@ export class RouterAsyncApiHelpers {
 		});
 
 		bcs.registerStructType(`Balance<${coinInStructName}>`, {
-			value: BCS.U64,
+			value: "u64",
 		});
 
 		bcs.registerStructType(`Coin<${coinInStructName}>`, {
@@ -267,18 +266,18 @@ export class RouterAsyncApiHelpers {
 		*/
 
 		bcs.registerStructType("RouterFeeMetadata", {
-			recipient: BCS.ADDRESS,
-			fee: BCS.U64,
+			recipient: "address",
+			fee: "u64",
 		});
 
 		bcs.registerStructType("SwapMetadata", {
 			type: "vector<u8>",
-			amount: BCS.U64,
+			amount: "u64",
 		});
 
 		bcs.registerStructType(`RouterSwapCap<${coinInStructName}>`, {
 			coin_in: `Coin<${coinInStructName}>`,
-			min_amount_out: BCS.U64,
+			min_amount_out: "u64",
 			first_swap: "SwapMetadata",
 			previous_swap: "SwapMetadata",
 			final_swap: "SwapMetadata",

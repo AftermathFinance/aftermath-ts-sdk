@@ -96,10 +96,9 @@ export type FilledMakerOrderEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	maker_account_id: BigIntAsString;
 	maker_collateral: IFixedAsString;
-	base_asset_delta_ask: IFixedAsString;
-	quote_asset_delta_ask: IFixedAsString;
-	base_asset_delta_bid: IFixedAsString;
-	quote_asset_delta_bid: IFixedAsString;
+	order_id: BigIntAsString;
+	maker_size: BigIntAsString;
+	dropped: boolean;
 	maker_base_amount: IFixedAsString;
 	maker_quote_amount: IFixedAsString;
 	maker_pending_asks_quantity: IFixedAsString;
@@ -119,8 +118,8 @@ export type FilledTakerOrderEventOnChain = EventOnChain<{
 }>;
 
 export type PostedOrderReceiptEventOnChain = EventOnChain<{
-	account_id: BigIntAsString;
 	ch_id: ObjectId;
+	account_id: BigIntAsString;
 	order_id: BigIntAsString;
 	order_size: BigIntAsString;
 }>;
