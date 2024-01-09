@@ -239,7 +239,7 @@ export class PerpetualsApi {
 		return { positions };
 	};
 
-	public fetchPositionOrderDatas = async (inputs: {
+	public fetchAccountOrderDatas = async (inputs: {
 		accountId: PerpetualsAccountId;
 	}): Promise<PerpetualsOrderData[]> => {
 		const { accountId } = inputs;
@@ -1281,6 +1281,7 @@ export class PerpetualsApi {
 
 	public buildPlaceLimitOrderTx = (inputs: ApiPerpetualsLimitOrderBody) => {
 		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+		// TODO: handle (de)allocations everywhere
 		this.placeLimitOrderTx({
 			...inputs,
 			tx,

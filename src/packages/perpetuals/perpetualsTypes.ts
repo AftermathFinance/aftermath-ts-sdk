@@ -117,7 +117,7 @@ perpetualsBcsRegistry.registerStructType(["ClearingHouse", "T"], {
 export interface PerpetualsAccountCap extends Object {
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
-	collateral: number;
+	collateral: IFixed;
 }
 
 export type PerpetualsRawAccountCap = Omit<
@@ -495,6 +495,10 @@ export interface LiquidatedEvent extends Event {
 	collateral: IFixed;
 	collateralDelta: IFixed;
 	liqorAccountId: PerpetualsAccountId;
+	size: bigint;
+	markPrice: IFixed;
+	marketId: PerpetualsMarketId;
+	side: PerpetualsOrderSide;
 }
 
 export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
@@ -559,6 +563,7 @@ export interface FilledMakerOrderEvent extends Event {
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
+	orderId: PerpetualsOrderId;
 	dropped: boolean;
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;

@@ -40,6 +40,7 @@ import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
 import { Coin } from "..";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
@@ -215,8 +216,10 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public getPositionOrderDatas() {
-		return this.fetchApi<PerpetualsOrderData[]>("position-order-datas");
+	public getOrderDatas() {
+		return this.fetchApi<PerpetualsOrderData[]>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`
+		);
 	}
 
 	// =========================================================================
@@ -578,7 +581,7 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public collateral(): number {
-		return this.accountCap.collateral;
+		return Casting.IFixed.numberFromIFixed(this.accountCap.collateral);
 	}
 
 	public closePositionTxInputs = (inputs: {

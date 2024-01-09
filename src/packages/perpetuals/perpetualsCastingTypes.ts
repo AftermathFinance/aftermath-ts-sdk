@@ -28,13 +28,15 @@ export type AllocatedCollateralEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	account_id: BigIntAsString;
 	position_collateral: IFixedAsString;
+	account_collateral: IFixedAsString;
 	vault_balance: BigIntAsString;
 }>;
 
 export type DeallocatedCollateralEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	account_id: BigIntAsString;
-	collateral: IFixedAsString;
+	position_collateral: IFixedAsString;
+	account_collateral: IFixedAsString;
 }>;
 
 export type SettledFundingEventOnChain = EventOnChain<{
