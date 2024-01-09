@@ -545,7 +545,6 @@ export interface PostedOrderEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
-	orderId: PerpetualsOrderId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	asksQuantity: IFixed;
@@ -582,7 +581,8 @@ export interface FilledTakerOrderEvent extends Event {
 
 export type PerpetualsOrderEvent =
 	| CanceledOrderEvent
-	| PostedOrderEvent
+	// | PostedOrderEvent
+	| PostedOrderReceiptEvent
 	| FilledMakerOrderEvent
 	| FilledTakerOrderEvent
 	| LiquidatedEvent;
@@ -592,6 +592,7 @@ export interface PostedOrderReceiptEvent extends Event {
 	marketId: PerpetualsMarketId;
 	orderId: PerpetualsOrderId;
 	size: bigint;
+	side: PerpetualsOrderSide;
 }
 
 // TODO: make all these checks use string value from perps api
@@ -604,6 +605,12 @@ export const isCanceledOrderEvent = (
 
 export const isPostedOrderEvent = (event: Event): event is PostedOrderEvent => {
 	return event.type.toLowerCase().includes("postedorder");
+};
+
+export const isPostedOrderReceiptEvent = (
+	event: Event
+): event is PostedOrderReceiptEvent => {
+	return event.type.toLowerCase().includes("orderbookpostreceipt");
 };
 
 export const isFilledMakerOrderEvent = (

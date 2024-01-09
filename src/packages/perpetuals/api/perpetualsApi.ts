@@ -112,6 +112,7 @@ export class PerpetualsApi {
 		createdAccount: AnyObjectType;
 		canceledOrder: AnyObjectType;
 		postedOrder: AnyObjectType;
+		postedOrderReceipt: AnyObjectType;
 		filledMakerOrder: AnyObjectType;
 		filledTakerOrder: AnyObjectType;
 		updatedPremiumTwap: AnyObjectType;
@@ -148,6 +149,8 @@ export class PerpetualsApi {
 			postedOrder: this.eventType("PostedOrder"),
 			filledMakerOrder: this.eventType("FilledMakerOrder"),
 			filledTakerOrder: this.eventType("FilledTakerOrder"),
+			// Order Receipts
+			postedOrderReceipt: this.eventType("OrderbookPostReceipt"),
 			// Twap
 			updatedPremiumTwap: this.eventType("UpdatedPremiumTwap"),
 			updatedSpreadTwap: this.eventType("UpdatedSpreadTwap"),
@@ -358,9 +361,9 @@ export class PerpetualsApi {
 					? Casting.perpetuals.canceledOrderEventFromOnChain(
 							event as CanceledOrderEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.postedOrder)
-					? Casting.perpetuals.postedOrderEventFromOnChain(
-							event as PostedOrderEventOnChain
+					: eventType.includes(this.eventTypes.postedOrderReceipt)
+					? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
+							event as PostedOrderReceiptEventOnChain
 					  )
 					: eventType.includes(this.eventTypes.filledMakerOrder)
 					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
@@ -588,12 +591,12 @@ export class PerpetualsApi {
 					castFunction:
 						Casting.perpetuals.filledTakerOrderEventFromOnChain,
 				});
-			const postedOrderEvents =
+			const postedOrderReceiptEvents =
 				Aftermath.helpers.events.findCastEventsOrUndefined({
 					events,
-					eventType: this.eventTypes.postedOrder,
+					eventType: this.eventTypes.postedOrderReceipt,
 					castFunction:
-						Casting.perpetuals.postedOrderEventFromOnChain,
+						Casting.perpetuals.postedOrderReceiptEventFromOnChain,
 				});
 
 			const [filledSize, filledSizeUsd] = filledOrderEvents.reduce(
@@ -609,7 +612,7 @@ export class PerpetualsApi {
 				[0, 0]
 			);
 
-			const [postedSize, postedSizeUsd] = postedOrderEvents.reduce(
+			const [postedSize, postedSizeUsd] = postedOrderReceiptEvents.reduce(
 				(acc, event) => {
 					const postedSize = Number(event.size) * lotSize;
 					const postedSizeUsd =
@@ -617,7 +620,7 @@ export class PerpetualsApi {
 						Perpetuals.orderPriceToPrice({
 							orderPrice: Perpetuals.OrderUtils.price(
 								event.orderId,
-								event.side
+								Perpetuals.orderIdToSide(event.orderId)
 							),
 							lotSize,
 							tickSize,

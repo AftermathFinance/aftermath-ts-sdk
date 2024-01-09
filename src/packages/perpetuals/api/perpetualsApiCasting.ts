@@ -312,8 +312,6 @@ export class PerpetualsApiCasting {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			// TODO: change everything
-			orderId: BigInt(0),
 			side:
 				BigInt(fields.posted_base_ask) > BigInt(fields.posted_base_bid)
 					? PerpetualsOrderSide.Ask
@@ -402,6 +400,7 @@ export class PerpetualsApiCasting {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			size: BigInt(fields.order_size),
 			orderId: BigInt(fields.order_id),
+			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
