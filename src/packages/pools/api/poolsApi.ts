@@ -1749,18 +1749,17 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 											targetDecimals
 										);
 
+									const unscaledPrice = pool.getSpotPrice({
+										coinInType: baseCoinType,
+										coinOutType: targetCoinType,
+									});
 									const denominator =
 										Coin.balanceWithDecimals(
-											pool.pool.coins[targetCoinType]
-												.balance,
-											targetDecimals
+											unscaledPrice,
+											baseDecimals - targetDecimals
 										);
 									const price = denominator
-										? Coin.balanceWithDecimals(
-												pool.pool.coins[baseCoinType]
-													.balance,
-												baseDecimals
-										  ) / denominator
+										? 1 / denominator
 										: 0;
 
 									const data: CoinGeckoTickerData = {
@@ -1782,8 +1781,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 									],
 									[] as CoinGeckoTickerData[]
 								);
-
-							return [];
 						})
 						.reduce(
 							(prev, curr) => [...prev, ...curr],

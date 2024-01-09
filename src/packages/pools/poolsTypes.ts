@@ -42,6 +42,7 @@ export interface PoolCoin {
 	withdrawFee: PoolWithdrawFee;
 	decimalsScalar: DecimalsScalar;
 	normalizedBalance: NormalizedBalance;
+	decimals?: CoinDecimal;
 }
 
 export interface PoolObject extends Object {

@@ -23,6 +23,7 @@ import { Caller } from "../../general/utils/caller";
 import { Pools } from ".";
 import { Casting, Helpers } from "../../general/utils";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Coin } from "..";
 
 /**
  * Represents a pool object and provides methods for interacting with the pool.
