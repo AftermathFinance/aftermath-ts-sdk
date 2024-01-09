@@ -418,6 +418,7 @@ export interface AllocatedCollateralEvent extends Event {
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
 	collateralDelta: IFixed;
+	positionCollateral: IFixed;
 	vaultBalance: Balance;
 }
 
@@ -426,6 +427,7 @@ export interface DeallocatedCollateralEvent extends Event {
 	accountId: PerpetualsAccountId;
 	collateral: IFixed;
 	collateralDelta: IFixed;
+	positionCollateral: IFixed;
 }
 
 export interface WithdrewCollateralEvent extends Event {
@@ -451,7 +453,9 @@ export type CollateralEvent =
 	| SettledFundingEvent
 	| LiquidatedEvent
 	| FilledTakerOrderEvent
-	| FilledMakerOrderEvent;
+	| FilledMakerOrderEvent
+	| AllocatedCollateralEvent
+	| DeallocatedCollateralEvent;
 
 // TODO: make all these checks use string value from perps api
 

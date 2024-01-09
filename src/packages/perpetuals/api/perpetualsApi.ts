@@ -68,7 +68,9 @@ import { Perpetuals } from "../perpetuals";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import {
+	AllocatedCollateralEventOnChain,
 	CanceledOrderEventOnChain,
+	DeallocatedCollateralEventOnChain,
 	DepositedCollateralEventOnChain,
 	FilledMakerOrderEventOnChain,
 	FilledTakerOrderEventOnChain,
@@ -108,6 +110,8 @@ export class PerpetualsApi {
 		withdrewCollateral: AnyObjectType;
 		depositedCollateral: AnyObjectType;
 		settledFunding: AnyObjectType;
+		allocatedCollateral: AnyObjectType;
+		deallocatedCollateral: AnyObjectType;
 		liquidated: AnyObjectType;
 		createdAccount: AnyObjectType;
 		canceledOrder: AnyObjectType;
@@ -140,6 +144,8 @@ export class PerpetualsApi {
 			withdrewCollateral: this.eventType("WithdrewCollateral"),
 			depositedCollateral: this.eventType("DepositedCollateral"),
 			settledFunding: this.eventType("SettledFunding"),
+			allocatedCollateral: this.eventType("AllocatedCollateral"),
+			deallocatedCollateral: this.eventType("DeallocatedCollateral"),
 			// Liquidation
 			liquidated: this.eventType("Liquidated"),
 			// Account
@@ -301,6 +307,18 @@ export class PerpetualsApi {
 						: eventType.includes(this.eventTypes.settledFunding)
 						? Casting.perpetuals.settledFundingEventFromOnChain(
 								event as SettledFundingEventOnChain
+						  )
+						: eventType.includes(
+								this.eventTypes.allocatedCollateral
+						  )
+						? Casting.perpetuals.allocatedCollaterlaEventFromOnChain(
+								event as AllocatedCollateralEventOnChain
+						  )
+						: eventType.includes(
+								this.eventTypes.deallocatedCollateral
+						  )
+						? Casting.perpetuals.deallocatedCollaterlaEventFromOnChain(
+								event as DeallocatedCollateralEventOnChain
 						  )
 						: eventType.includes(this.eventTypes.liquidated)
 						? Casting.perpetuals.liquidatedEventFromOnChain(

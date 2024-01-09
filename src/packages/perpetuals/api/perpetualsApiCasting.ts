@@ -27,6 +27,8 @@ import {
 	PerpetualsMarketData,
 	PostedOrderReceiptEvent,
 	PerpetualsRawAccountCap,
+	AllocatedCollateralEvent,
+	DeallocatedCollateralEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -45,6 +47,8 @@ import {
 	UpdatedPremiumTwapEventOnChain,
 	UpdatedSpreadTwapEventOnChain,
 	PostedOrderReceiptEventOnChain,
+	AllocatedCollateralEventOnChain,
+	DeallocatedCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 
@@ -224,6 +228,45 @@ export class PerpetualsApiCasting {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			marketFundingRateLong: BigInt(fields.mkt_funding_rate_long),
 			marketFundingRateShort: BigInt(fields.mkt_funding_rate_short),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static allocatedCollaterlaEventFromOnChain = (
+		eventOnChain: AllocatedCollateralEventOnChain
+	): AllocatedCollateralEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			accountId: BigInt(fields.account_id),
+			collateral: BigInt(fields.account_collateral),
+			collateralDelta: BigInt(0),
+			positionCollateral: BigInt(fields.position_collateral),
+			vaultBalance: BigInt(fields.vault_balance),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static deallocatedCollaterlaEventFromOnChain = (
+		eventOnChain: DeallocatedCollateralEventOnChain
+	): DeallocatedCollateralEvent => {
+		const fields = eventOnChain.parsedJson;
+		const collateralCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(eventOnChain.type).innerCoinType
+		);
+		return {
+			collateralCoinType,
+			accountId: BigInt(fields.account_id),
+			collateral: BigInt(fields.account_collateral),
+			collateralDelta: BigInt(0),
+			positionCollateral: BigInt(fields.position_collateral),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
