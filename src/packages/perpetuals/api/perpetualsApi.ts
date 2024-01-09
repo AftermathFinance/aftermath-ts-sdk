@@ -61,6 +61,7 @@ import {
 	ApiPerpetualsLimitOrderBody,
 	PerpetualsPosition,
 	PerpetualsMarketData,
+	PerpetualsRawAccountCap,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -157,10 +158,10 @@ export class PerpetualsApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchOwnedAccountCapsOfType = async (inputs: {
+	public fetchOwnedRawAccountCapsOfType = async (inputs: {
 		walletAddress: SuiAddress;
 		collateralCoinType: CoinType;
-	}): Promise<PerpetualsAccountCap[]> => {
+	}): Promise<PerpetualsRawAccountCap[]> => {
 		const { walletAddress, collateralCoinType } = inputs;
 		const objectType = this.getAccountCapType({ collateralCoinType });
 
@@ -174,21 +175,23 @@ export class PerpetualsApi {
 				},
 			});
 
-		const accCaps: PerpetualsAccountCap[] = objectResponse.map((accCap) => {
-			const accCapObj = bcs.de(
-				"AccountCap",
-				Casting.bcsBytesFromSuiObjectResponse(accCap),
-				"base64"
-			);
-			return PerpetualsApiCasting.accountCapFromRaw(accCapObj);
-		});
+		const accCaps: PerpetualsRawAccountCap[] = objectResponse.map(
+			(accCap) => {
+				const accCapObj = bcs.de(
+					"AccountCap",
+					Casting.bcsBytesFromSuiObjectResponse(accCap),
+					"base64"
+				);
+				return PerpetualsApiCasting.rawAccountCapFromRaw(accCapObj);
+			}
+		);
 
 		return accCaps;
 	};
 
-	public fetchPositionsForAccount = async (inputs: {
+	public fetchAccount = async (inputs: {
 		accountId: PerpetualsAccountId;
-	}): Promise<PerpetualsPosition[]> => {
+	}): Promise<PerpetualsAccountObject> => {
 		const { accountId } = inputs;
 
 		const positionDatas: {
@@ -219,13 +222,15 @@ export class PerpetualsApi {
 				bcs.de("Position", new Uint8Array(outputBytes[0]))
 			)
 		);
-		return partialPositions.map((position, index) => ({
+		const positions = partialPositions.map((position, index) => ({
 			...position,
 			collateralCoinType: Helpers.addLeadingZeroesToType(
 				positionDatas[index].collateralCoinType
 			),
 			marketId: positionDatas[index].marketId,
 		}));
+
+		return { positions };
 	};
 
 	public fetchPositionOrderDatas = async (inputs: {
@@ -1338,9 +1343,19 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildPlaceSLTPOrderTx = Helpers.transactions.createBuildTxFunc(
-		this.placeSLTPOrderTx
-	);
+	public buildPlaceSLTPOrderTx = (
+		inputs: ApiPerpetualsSLTPOrderBody
+	): TransactionBlock => {
+		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+
+		this.placeSLTPOrderTx({
+			...inputs,
+			tx,
+			sessionPotatoId,
+		});
+
+		return tx;
+	};
 
 	public buildTransferCollateralTx = (inputs: {
 		walletAddress: SuiAddress;

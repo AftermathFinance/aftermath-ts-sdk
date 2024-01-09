@@ -26,6 +26,7 @@ import {
 	LiquidatedEvent,
 	PerpetualsMarketData,
 	PostedOrderReceiptEvent,
+	PerpetualsRawAccountCap,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -57,7 +58,7 @@ export class PerpetualsApiCasting {
 	//  Account
 	// =========================================================================
 
-	public static accountCapFromRaw(data: any): PerpetualsAccountCap {
+	public static rawAccountCapFromRaw(data: any): PerpetualsRawAccountCap {
 		const collateralCoinType = Helpers.addLeadingZeroesToType(
 			Coin.getInnerCoinType(data.objectType)
 		);

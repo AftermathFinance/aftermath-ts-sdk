@@ -11,7 +11,7 @@ import {
 	SuiAddress,
 	Timestamp,
 } from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
+import { CoinDecimal, CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Name Only
@@ -118,8 +118,15 @@ bcs.registerStructType(["ClearingHouse", "T"], {
 export interface PerpetualsAccountCap extends Object {
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
-	collateral: bigint;
+	collateral: number;
 }
+
+export type PerpetualsRawAccountCap = Omit<
+	PerpetualsAccountCap,
+	"collateral"
+> & {
+	collateral: Balance;
+};
 
 bcs.registerStructType(["Account", "T"], {
 	id: "UID",

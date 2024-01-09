@@ -277,19 +277,13 @@ export class PerpetualsAccount extends Caller {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
-		collateralDecimals: CoinDecimal;
 	}): {
 		totalMarginRatio: number;
 		totalLeverage: number;
 	} => {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 		const collateralUsd =
-			Coin.balanceWithDecimals(
-				this.collateral(),
-				inputs.collateralDecimals
-			) *
-				inputs.collateralPrice +
-			totalFunding;
+			this.collateral() * inputs.collateralPrice + totalFunding;
 
 		const { totalPnL, totalNetAbsBaseValue } =
 			this.calcPnLAndMarginForAccount(inputs);
@@ -314,7 +308,6 @@ export class PerpetualsAccount extends Caller {
 		market: PerpetualsMarket;
 		indexPrice: number;
 		collateralPrice: number;
-		collateralDecimals: CoinDecimal;
 		position?: PerpetualsPosition;
 	}): {
 		marginRatio: number;
@@ -331,12 +324,7 @@ export class PerpetualsAccount extends Caller {
 			position,
 		});
 		const collateralUsd =
-			Coin.balanceWithDecimals(
-				this.collateral(),
-				inputs.collateralDecimals
-			) *
-				inputs.collateralPrice +
-			funding;
+			this.collateral() * inputs.collateralPrice + funding;
 
 		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
 			market,
@@ -496,7 +484,6 @@ export class PerpetualsAccount extends Caller {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
-		collateralDecimals: CoinDecimal;
 	}): number => {
 		const marketId = inputs.market.marketId;
 		const position =
@@ -506,12 +493,7 @@ export class PerpetualsAccount extends Caller {
 		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
 
 		const collateralUsd =
-			Coin.balanceWithDecimals(
-				this.collateral(),
-				inputs.collateralDecimals
-			) *
-				inputs.collateralPrice +
-			totalFunding;
+			this.collateral() * inputs.collateralPrice + totalFunding;
 
 		const { totalPnL, totalMinMaintenanceMargin } =
 			this.calcPnLAndMarginForAccount(inputs);
@@ -595,7 +577,7 @@ export class PerpetualsAccount extends Caller {
 		}
 	}
 
-	public collateral(): Balance {
+	public collateral(): number {
 		return this.accountCap.collateral;
 	}
 
