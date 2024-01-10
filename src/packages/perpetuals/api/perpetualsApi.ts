@@ -383,6 +383,10 @@ export class PerpetualsApi {
 					? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
 							event as PostedOrderReceiptEventOnChain
 					  )
+					: eventType.includes(this.eventTypes.liquidated)
+					? Casting.perpetuals.liquidatedEventFromOnChain(
+							event as LiquidatedEventOnChain
+					  )
 					: eventType.includes(this.eventTypes.filledMakerOrder)
 					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
 							event as FilledMakerOrderEventOnChain
