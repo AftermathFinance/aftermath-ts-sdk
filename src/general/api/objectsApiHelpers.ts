@@ -66,22 +66,38 @@ export class ObjectsApiHelpers {
 	}): Promise<SuiObjectResponse[]> => {
 		const { walletAddress, objectType, withDisplay } = inputs;
 
-		// TODO: handle pagination to make sure that ALL owned objects are found !
-		const objectsOwnedByAddress =
-			await this.Provider.provider.getOwnedObjects({
-				owner: walletAddress,
-				filter: {
-					StructType: Helpers.stripLeadingZeroesFromType(objectType),
-				},
-				options: inputs.options ?? {
-					showContent: true,
-					showDisplay: withDisplay,
-					showOwner: true,
-					showType: true,
-				},
-			});
+		let allObjectData: SuiObjectResponse[] = [];
+		let cursor: string | undefined = undefined;
+		do {
+			const paginatedObjects =
+				await this.Provider.provider.getOwnedObjects({
+					owner: walletAddress,
+					filter: {
+						StructType:
+							Helpers.stripLeadingZeroesFromType(objectType),
+					},
+					options: inputs.options ?? {
+						showContent: true,
+						showDisplay: withDisplay,
+						showOwner: true,
+						showType: true,
+					},
+					cursor,
+					limit: ObjectsApiHelpers.constants.maxObjectFetchingLimit,
+				});
 
-		return objectsOwnedByAddress.data;
+			const objectData = paginatedObjects.data;
+			allObjectData = [...allObjectData, ...objectData];
+
+			if (
+				paginatedObjects.data.length === 0 ||
+				!paginatedObjects.hasNextPage ||
+				!paginatedObjects.nextCursor
+			)
+				return allObjectData;
+
+			cursor = paginatedObjects.nextCursor;
+		} while (true);
 	};
 
 	public fetchObject = async (inputs: {
