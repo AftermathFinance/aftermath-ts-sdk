@@ -681,8 +681,7 @@ export class PerpetualsApi {
 						postedSize *
 						Perpetuals.orderPriceToPrice({
 							orderPrice: Perpetuals.OrderUtils.price(
-								event.orderId,
-								Perpetuals.orderIdToSide(event.orderId)
+								event.orderId
 							),
 							lotSize,
 							tickSize,

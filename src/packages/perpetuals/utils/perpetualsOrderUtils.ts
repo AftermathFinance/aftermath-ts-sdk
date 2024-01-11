@@ -1,3 +1,4 @@
+import { Perpetuals } from "..";
 import { PerpetualsOrderId, PerpetualsOrderSide } from "../../../types";
 const BN = require("bn.js");
 
@@ -36,10 +37,8 @@ export class PerpetualsOrderUtils {
 	};
 
 	// Return price of given `order_id`, (works for ask or bid)
-	public static price = (
-		orderId: PerpetualsOrderId,
-		side: PerpetualsOrderSide
-	): bigint => {
+	public static price = (orderId: PerpetualsOrderId): bigint => {
+		const side = Perpetuals.orderIdToSide(orderId);
 		if (side === PerpetualsOrderSide.Ask) return this.priceAsk(orderId);
 		else return this.priceBid(orderId);
 	};

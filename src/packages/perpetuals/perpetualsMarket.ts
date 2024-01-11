@@ -338,12 +338,9 @@ export class PerpetualsMarket extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	public orderPrice(inputs: { orderData: PerpetualsOrderData }): number {
-		const { orderData } = inputs;
-		const orderPrice = PerpetualsOrderUtils.price(
-			orderData.orderId,
-			orderData.side
-		);
+	public orderPrice(inputs: { orderId: PerpetualsOrderId }): number {
+		const { orderId } = inputs;
+		const orderPrice = PerpetualsOrderUtils.price(orderId);
 		return this.orderPriceToPrice({ orderPrice });
 	}
 
