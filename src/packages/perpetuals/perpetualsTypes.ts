@@ -118,11 +118,12 @@ export interface PerpetualsAccountCap extends Object {
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
 	collateral: IFixed;
+	collateralDecimals: CoinDecimal;
 }
 
 export type PerpetualsRawAccountCap = Omit<
 	PerpetualsAccountCap,
-	"collateral"
+	"collateral" | "collateralDecimals"
 > & {
 	collateral: Balance;
 };

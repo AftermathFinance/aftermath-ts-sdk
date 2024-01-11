@@ -246,9 +246,9 @@ export class PerpetualsApi {
 
 	public fetchAccountOrderDatas = async (inputs: {
 		accountId: PerpetualsAccountId;
-		marketIdsToCollateralCoinType: Record<PerpetualsMarketId, CoinType>;
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsOrderData[]> => {
-		const { accountId, marketIdsToCollateralCoinType } = inputs;
+		const { accountId, collateralCoinType } = inputs;
 		const orders: PostedOrderReceiptEventOnChain[] =
 			await this.Provider.indexerCaller.fetchIndexer(
 				`perpetuals/accounts/${accountId}/orders`
@@ -281,8 +281,7 @@ export class PerpetualsApi {
 					async ([marketId, orderEvents]) => {
 						const currentOrderSizes = await this.fetchOrdersSizes({
 							marketId,
-							collateralCoinType:
-								marketIdsToCollateralCoinType[marketId],
+							collateralCoinType,
 							orderIds: orderEvents.map((event) => event.orderId),
 						});
 						return orders.map((order, index) => {

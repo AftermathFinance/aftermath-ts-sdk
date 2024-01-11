@@ -496,6 +496,17 @@ export class PerpetualsAccount extends Caller {
 		return Casting.IFixed.numberFromIFixed(this.accountCap.collateral);
 	}
 
+	public collateralDecimals(): CoinDecimal {
+		return this.accountCap.collateralDecimals;
+	}
+
+	public collateralBalance(): Balance {
+		return Coin.normalizeBalance(
+			this.collateral(),
+			this.collateralDecimals()
+		);
+	}
+
 	public closePositionTxInputs = (inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
