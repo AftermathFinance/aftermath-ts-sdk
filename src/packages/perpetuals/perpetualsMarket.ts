@@ -192,6 +192,20 @@ export class PerpetualsMarket extends Caller {
 		});
 	};
 
+	public calcOrderCollateral(inputs: {
+		orderId: PerpetualsOrderId;
+		size: bigint;
+	}): number {
+		const { orderId, size } = inputs;
+
+		const imr = Casting.IFixed.numberFromIFixed(
+			this.marketParams.marginRatioInitial
+		);
+		return (
+			Number(size) * this.lotSize() * this.orderPrice({ orderId }) * imr
+		);
+	}
+
 	public calcOptimisticMaxOrderSize = (inputs: {
 		position: PerpetualsPosition | undefined;
 		freeMarginUsd: number;
