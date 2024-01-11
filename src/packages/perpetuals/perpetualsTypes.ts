@@ -308,36 +308,6 @@ perpetualsBcsRegistry.registerStructType("OrderInfo", {
 	size: "u64",
 });
 
-export interface PerpetualsFillReceipt {
-	accountId: PerpetualsAccountId;
-	baseAsk: bigint;
-	quoteAsk: bigint;
-	baseBid: bigint;
-	quoteBid: bigint;
-	pendingOrders: bigint;
-}
-
-perpetualsBcsRegistry.registerStructType("FillReceipt", {
-	accountId: "u64",
-	baseAsk: "u64",
-	quoteAsk: "u128",
-	baseBid: "u64",
-	quoteBid: "u128",
-	pendingOrders: "u64",
-});
-
-export interface PerpetualsPostReceipt {
-	baseAsk: bigint;
-	baseBid: bigint;
-	pendingOrders: bigint;
-}
-
-perpetualsBcsRegistry.registerStructType("PostReceipt", {
-	baseAsk: "u64",
-	baseBid: "u64",
-	pending_orders: "u64",
-});
-
 // -----------------------------------------
 
 export interface PerpetualsOrderedMap<T> extends Object {
@@ -712,6 +682,7 @@ export interface ApiPerpetualsExecutionPriceBody {
 	side: PerpetualsOrderSide;
 	size: bigint;
 	lotSize: number;
+	collateral: Balance;
 	price?: PerpetualsOrderPrice;
 }
 export interface ApiPerpetualsExecutionPriceResponse {
@@ -764,6 +735,8 @@ export interface ApiPerpetualsMarketOrderBody {
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
+	collateralChange: Balance;
+	hasPosition: boolean;
 }
 
 export interface ApiPerpetualsLimitOrderBody {
@@ -775,6 +748,8 @@ export interface ApiPerpetualsLimitOrderBody {
 	size: bigint;
 	price: PerpetualsOrderPrice;
 	orderType: PerpetualsOrderType;
+	collateralChange: Balance;
+	hasPosition: boolean;
 }
 
 export interface ApiPerpetualsCancelOrderBody {
@@ -784,6 +759,7 @@ export interface ApiPerpetualsCancelOrderBody {
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	orderId: PerpetualsOrderId;
+	collateral: Balance;
 }
 
 export interface ApiPerpetualsCancelOrdersBody {
@@ -794,6 +770,7 @@ export interface ApiPerpetualsCancelOrdersBody {
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		orderId: PerpetualsOrderId;
+		collateral: Balance;
 	}[];
 }
 

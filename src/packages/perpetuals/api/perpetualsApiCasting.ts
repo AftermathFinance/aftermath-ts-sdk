@@ -19,8 +19,6 @@ import {
 	FilledMakerOrderEvent,
 	PerpetualsOrderInfo,
 	SettledFundingEvent,
-	PerpetualsFillReceipt,
-	PerpetualsPostReceipt,
 	UpdatedSpreadTwapEvent,
 	UpdatedPremiumTwapEvent,
 	LiquidatedEvent,

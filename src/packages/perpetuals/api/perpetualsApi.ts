@@ -48,11 +48,9 @@ import {
 	ApiPerpetualsMarketEventsBody,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
-	PerpetualsFillReceipt,
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsCancelOrdersBody,
-	PerpetualsPostReceipt,
 	PerpetualsMarketPriceDataPoint,
 	ApiPerpetualsHistoricalMarketDataResponse,
 	PerpetualsMarketVolumeDataPoint,
@@ -871,6 +869,29 @@ export class PerpetualsApi {
 		});
 	};
 
+	public createMarketPositionTx = (inputs: {
+		tx: TransactionBlock;
+		collateralCoinType: CoinType;
+		accountCapId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+	}) => {
+		const { tx, collateralCoinType, accountCapId, marketId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"create_market_position"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				tx.object(marketId),
+				typeof accountCapId === "string"
+					? tx.object(accountCapId)
+					: accountCapId,
+			],
+		});
+	};
+
 	public startSessionTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
@@ -1477,8 +1498,15 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<ApiPerpetualsExecutionPriceResponse> => {
-		const { collateralCoinType, marketId, side, size, price, lotSize } =
-			inputs;
+		const {
+			collateral,
+			collateralCoinType,
+			marketId,
+			side,
+			size,
+			price,
+			lotSize,
+		} = inputs;
 
 		const accountCapId = perpetualsBcsRegistry
 			.ser(`Account<${collateralCoinType}>`, {
@@ -1488,15 +1516,17 @@ export class PerpetualsApi {
 					},
 				},
 				accountId: 0,
-				collateral: 0,
+				collateral,
 			})
 			.toBytes();
 
 		const { tx, sessionPotatoId } = this.createTxAndStartSession({
-			walletAddress: InspectionsApiHelpers.constants.devInspectSigner,
 			accountCapId,
 			collateralCoinType,
 			marketId,
+			walletAddress: InspectionsApiHelpers.constants.devInspectSigner,
+			collateralChange: collateral,
+			hasPosition: false,
 		});
 		this.placeLimitOrderTx({
 			tx,
@@ -1609,11 +1639,34 @@ export class PerpetualsApi {
 		accountCapId: ObjectId | TransactionArgument | Uint8Array;
 		marketId: PerpetualsMarketId;
 		walletAddress: SuiAddress;
+		collateralChange: Balance;
+		hasPosition: boolean;
 	}) => {
-		const { walletAddress } = inputs;
+		const { collateralChange, walletAddress, hasPosition } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
+
+		if (!hasPosition) {
+			this.createMarketPositionTx({
+				...inputs,
+				tx,
+			});
+		}
+
+		if (collateralChange > BigInt(0)) {
+			this.allocateCollateralTx({
+				...inputs,
+				tx,
+				amount: collateralChange,
+			});
+		} else if (collateralChange < BigInt(0)) {
+			this.deallocateCollateralTx({
+				...inputs,
+				tx,
+				amount: collateralChange,
+			});
+		}
 
 		const sessionPotatoId = this.startSessionTx({
 			...inputs,
