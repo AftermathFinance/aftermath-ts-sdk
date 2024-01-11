@@ -193,16 +193,14 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	public calcOrderCollateral(inputs: {
-		orderId: PerpetualsOrderId;
+		indexPrice: number;
 		size: bigint;
-	}): number {
-		const { orderId, size } = inputs;
+	}): Balance {
+		const { indexPrice, size } = inputs;
 
-		const imr = Casting.IFixed.numberFromIFixed(
-			this.marketParams.marginRatioInitial
-		);
-		return (
-			Number(size) * this.lotSize() * this.orderPrice({ orderId }) * imr
+		const imr = this.initialMarginRatio();
+		return BigInt(
+			Math.floor(Number(size) * this.lotSize() * indexPrice * imr)
 		);
 	}
 
@@ -214,9 +212,7 @@ export class PerpetualsMarket extends Caller {
 	}): number => {
 		const { position, freeMarginUsd, indexPrice, side } = inputs;
 
-		const imr = Casting.IFixed.numberFromIFixed(
-			this.marketParams.marginRatioInitial
-		);
+		const imr = this.initialMarginRatio();
 
 		const isReversing = position
 			? Boolean(side ^ Perpetuals.positionSide(position))
@@ -267,9 +263,7 @@ export class PerpetualsMarket extends Caller {
 
 		const percentFilled = sizeFilled / (sizeFilled + sizePosted);
 
-		const marginRatioInitial = Casting.IFixed.numberFromIFixed(
-			this.marketParams.marginRatioInitial
-		);
+		const marginRatioInitial = this.initialMarginRatio();
 		const takerFee = Casting.IFixed.numberFromIFixed(
 			this.marketParams.takerFee
 		);
@@ -331,22 +325,28 @@ export class PerpetualsMarket extends Caller {
 	//  Value Conversions
 	// =========================================================================
 
-	public lotSize = () => {
+	public lotSize() {
 		return Perpetuals.lotOrTickSizeToNumber(this.marketParams.lotSize);
-	};
+	}
 
-	public tickSize = () => {
+	public tickSize() {
 		return Perpetuals.lotOrTickSizeToNumber(this.marketParams.tickSize);
-	};
+	}
 
-	public maxLeverage = () => {
+	public maxLeverage() {
 		return (
 			1 /
 			Casting.IFixed.numberFromIFixed(
 				this.marketParams.marginRatioInitial
 			)
 		);
-	};
+	}
+
+	public initialMarginRatio() {
+		return Casting.IFixed.numberFromIFixed(
+			this.marketParams.marginRatioInitial
+		);
+	}
 
 	// =========================================================================
 	//  Helpers
@@ -404,9 +404,7 @@ export class PerpetualsMarket extends Caller {
 		const { position, indexPrice, executionPrice, size, percentFilled } =
 			inputs;
 
-		const imr = Casting.IFixed.numberFromIFixed(
-			this.marketParams.marginRatioInitial
-		);
+		const imr = this.initialMarginRatio();
 		const takerFee = Casting.IFixed.numberFromIFixed(
 			this.marketParams.takerFee
 		);
