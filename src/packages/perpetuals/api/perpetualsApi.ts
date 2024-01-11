@@ -60,6 +60,7 @@ import {
 	PerpetualsPosition,
 	PerpetualsMarketData,
 	PerpetualsRawAccountCap,
+	PostedOrderReceiptEvent,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -245,20 +246,61 @@ export class PerpetualsApi {
 
 	public fetchAccountOrderDatas = async (inputs: {
 		accountId: PerpetualsAccountId;
+		marketIdsToCollateralCoinType: Record<PerpetualsMarketId, CoinType>;
 	}): Promise<PerpetualsOrderData[]> => {
-		const { accountId } = inputs;
+		const { accountId, marketIdsToCollateralCoinType } = inputs;
 		const orders: PostedOrderReceiptEventOnChain[] =
 			await this.Provider.indexerCaller.fetchIndexer(
 				`perpetuals/accounts/${accountId}/orders`
 			);
-		return orders.map((order) => {
-			const event =
-				Casting.perpetuals.postedOrderReceiptEventFromOnChain(order);
-			return {
-				...event,
-				side: Perpetuals.orderIdToSide(event.orderId),
-			};
-		});
+
+		const marketIdsToOrderEvents: Record<
+			PerpetualsMarketId,
+			PostedOrderReceiptEvent[]
+		> = orders
+			.map((order) =>
+				Casting.perpetuals.postedOrderReceiptEventFromOnChain(order)
+			)
+			.reduce((acc, event) => {
+				if (event.marketId in acc) {
+					return {
+						...acc,
+						[event.marketId]: [...acc[event.marketId], event],
+					};
+				}
+
+				return {
+					...acc,
+					[event.marketId]: [event],
+				};
+			}, {} as Record<PerpetualsMarketId, PostedOrderReceiptEvent[]>);
+
+		return (
+			await Promise.all(
+				Object.entries(marketIdsToOrderEvents).map(
+					async ([marketId, orderEvents]) => {
+						const currentOrderSizes = await this.fetchOrdersSizes({
+							marketId,
+							collateralCoinType:
+								marketIdsToCollateralCoinType[marketId],
+							orderIds: orderEvents.map((event) => event.orderId),
+						});
+						return orders.map((order, index) => {
+							const { size: initialSize, ...event } =
+								Casting.perpetuals.postedOrderReceiptEventFromOnChain(
+									order
+								);
+							return {
+								...event,
+								side: Perpetuals.orderIdToSide(event.orderId),
+								filledSize: currentOrderSizes[index],
+								initialSize,
+							};
+						});
+					}
+				)
+			)
+		).reduce((acc, orderDatas) => [...acc, ...orderDatas], []);
 	};
 
 	public fetchMarket = async (inputs: {
@@ -1281,6 +1323,28 @@ export class PerpetualsApi {
 		});
 	};
 
+	public getOrderSizeTx = (inputs: {
+		tx: TransactionBlock;
+		orderbookId: ObjectId | TransactionArgument;
+		orderId: PerpetualsOrderId;
+	}) /* u64 */ => {
+		const { tx, orderbookId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.orderbook,
+				"get_order_size"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof orderbookId === "string"
+					? tx.object(orderbookId)
+					: orderbookId, // Orderbook
+				tx.pure(inputs.orderId, "u128"), // order_id
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
@@ -1457,6 +1521,40 @@ export class PerpetualsApi {
 	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
+
+	private fetchOrdersSizes = async (inputs: {
+		orderIds: PerpetualsOrderId[];
+		collateralCoinType: ObjectId;
+		marketId: PerpetualsMarketId;
+	}): Promise<bigint[]> => {
+		const { orderIds, marketId, collateralCoinType } = inputs;
+
+		const tx = new TransactionBlock();
+
+		const orderbookId = this.getOrderbookTx({
+			tx,
+			collateralCoinType,
+			marketId,
+		});
+
+		for (const orderId of orderIds) {
+			this.getOrderSizeTx({
+				tx,
+				orderId,
+				orderbookId,
+			});
+		}
+
+		const { allBytes } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
+				tx,
+			});
+
+		const sizes = allBytes
+			.slice(1)
+			.map((bytes) => Casting.bigIntFromBytes(bytes[0]));
+		return sizes;
+	};
 
 	private fetchOrderbookOrders = async (inputs: {
 		collateralCoinType: ObjectId;

@@ -270,7 +270,8 @@ export interface PerpetualsOrderbookState {
 
 export interface PerpetualsOrderData {
 	orderId: PerpetualsOrderId;
-	size: bigint;
+	initialSize: bigint;
+	filledSize: bigint;
 	side: PerpetualsOrderSide;
 	marketId: PerpetualsMarketId;
 }
