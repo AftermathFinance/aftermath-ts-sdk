@@ -149,6 +149,7 @@ export class PerpetualsAccount extends Caller {
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		orderId: PerpetualsOrderId;
+		collateral: Balance;
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrderBody>(
 			"transactions/cancel-order",
@@ -166,6 +167,7 @@ export class PerpetualsAccount extends Caller {
 			marketId: PerpetualsMarketId;
 			side: PerpetualsOrderSide;
 			orderId: PerpetualsOrderId;
+			collateral: Balance;
 		}[];
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrdersBody>(
@@ -607,6 +609,8 @@ export class PerpetualsAccount extends Caller {
 					) / inputs.lotSize
 				)
 			),
+			hasPosition: true,
+			collateralChange: position.collateral * BigInt(-1),
 		};
 	};
 }

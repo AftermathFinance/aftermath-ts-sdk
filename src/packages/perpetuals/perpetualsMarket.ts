@@ -26,6 +26,7 @@ import {
 	Timestamp,
 	Url,
 	PerpetualsMarketData,
+	Balance,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -94,9 +95,10 @@ export class PerpetualsMarket extends Caller {
 		indexPrice: number;
 		side: PerpetualsOrderSide;
 		freeMarginUsd: number;
+		collateral: Balance;
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
-		const { side, price } = inputs;
+		const { side, price, collateral } = inputs;
 
 		const optimisticSize = this.calcOptimisticMaxOrderSize(inputs);
 
@@ -107,6 +109,7 @@ export class PerpetualsMarket extends Caller {
 				size,
 				side,
 				price,
+				collateral,
 			});
 
 		return this.calcPessimisticMaxOrderSizeUsd({
@@ -363,6 +366,7 @@ export class PerpetualsMarket extends Caller {
 	private getExecutionPrice(inputs: {
 		side: PerpetualsOrderSide;
 		size: bigint;
+		collateral: Balance;
 		price?: PerpetualsOrderPrice;
 	}) {
 		return this.fetchApi<
