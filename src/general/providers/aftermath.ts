@@ -76,6 +76,10 @@ export class Aftermath extends Caller {
 		return this.fetchApi<unknown>("config");
 	}
 
+	public getApiBaseUrl() {
+		return this.apiBaseUrl;
+	}
+
 	// =========================================================================
 	//  Class Object Creation
 	// =========================================================================
