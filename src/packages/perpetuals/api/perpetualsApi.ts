@@ -1066,7 +1066,7 @@ export class PerpetualsApi {
 	public createAccountTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-	}) => {
+	}) /* Account<T> */ => {
 		const { tx, collateralCoinType } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
@@ -1508,21 +1508,27 @@ export class PerpetualsApi {
 			lotSize,
 		} = inputs;
 
-		const accountCapId = perpetualsBcsRegistry
-			.ser(`Account<${collateralCoinType}>`, {
-				id: {
-					id: {
-						bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
-					},
-				},
-				accountId: 0,
-				collateral,
-			})
-			.toBytes();
+		// const accountCapId = perpetualsBcsRegistry
+		// 	.ser(`Account<${collateralCoinType}>`, {
+		// 		id: {
+		// 			id: {
+		// 				bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
+		// 			},
+		// 		},
+		// 		accountId: 0,
+		// 		collateral,
+		// 	})
+		// 	.toBytes();
 
 		const walletAddress = InspectionsApiHelpers.constants.devInspectSigner;
 
-		const { tx, sessionPotatoId } = this.createTxAndStartSession({
+		const tx = new TransactionBlock();
+
+		const accountCapId = this.createAccountTx({
+			...inputs,
+			tx,
+		});
+		const { sessionPotatoId } = this.createTxAndStartSession({
 			accountCapId,
 			collateralCoinType,
 			marketId,
@@ -1643,6 +1649,7 @@ export class PerpetualsApi {
 	};
 
 	private createTxAndStartSession = (inputs: {
+		tx?: TransactionBlock;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument | Uint8Array;
 		marketId: PerpetualsMarketId;
@@ -1652,7 +1659,7 @@ export class PerpetualsApi {
 	}) => {
 		const { collateralChange, walletAddress, hasPosition } = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = inputs.tx ?? new TransactionBlock();
 		tx.setSender(walletAddress);
 
 		if (!hasPosition) {
