@@ -1520,11 +1520,13 @@ export class PerpetualsApi {
 			})
 			.toBytes();
 
+		const walletAddress = InspectionsApiHelpers.constants.devInspectSigner;
+
 		const { tx, sessionPotatoId } = this.createTxAndStartSession({
 			accountCapId,
 			collateralCoinType,
 			marketId,
-			walletAddress: InspectionsApiHelpers.constants.devInspectSigner,
+			walletAddress,
 			collateralChange: collateral,
 			hasPosition: false,
 		});
@@ -1546,6 +1548,12 @@ export class PerpetualsApi {
 			tx,
 			collateralCoinType,
 			sessionPotatoId,
+		});
+		this.endSessionAndTransferAccount({
+			...inputs,
+			tx,
+			sessionPotatoId,
+			walletAddress,
 		});
 
 		const { events } =
