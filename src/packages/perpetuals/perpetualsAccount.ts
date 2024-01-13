@@ -246,25 +246,34 @@ export class PerpetualsAccount extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	public calcFreeCollateral = (inputs: {
-		position: PerpetualsPosition;
+	public calcFreeCollateralForPosition = (inputs: {
 		market: PerpetualsMarket;
 		indexPrice: number;
 		collateralPrice: number;
+		position?: PerpetualsPosition;
 	}): number => {
+		const marketId = inputs.market.marketId;
+		const position =
+			inputs.position ?? this.positionForMarketId({ marketId });
+		if (!position) throw new Error("no position found for market");
+
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 		const { pnl, minInitialMargin } =
 			this.calcPnLAndMarginForPosition(inputs);
+
 		let collateralUsd =
-			IFixedUtils.numberFromIFixed(inputs.position.collateral) *
+			IFixedUtils.numberFromIFixed(position.collateral) *
 			inputs.collateralPrice;
+
 		collateralUsd += funding;
+
 		let cappedMargin;
 		if (pnl < 0) {
 			cappedMargin = collateralUsd + pnl;
 		} else {
 			cappedMargin = collateralUsd;
 		}
+
 		if (cappedMargin >= minInitialMargin) {
 			return (cappedMargin - minInitialMargin) / inputs.collateralPrice;
 		} else return 0;
@@ -283,7 +292,6 @@ export class PerpetualsAccount extends Caller {
 		const marketId = market.marketId;
 		const position =
 			inputs.position ?? this.positionForMarketId({ marketId });
-
 		if (!position) throw new Error("no position found for market");
 
 		const funding = this.calcUnrealizedFundingsForPosition({
@@ -311,14 +319,16 @@ export class PerpetualsAccount extends Caller {
 		};
 	};
 
-	public calcUnrealizedFundingsForAccount = (inputs: {
+	public calcUnrealizedFundings = (inputs: {
 		markets: PerpetualsMarket[];
+		positions?: PerpetualsPosition[];
 	}): number => {
 		let totalFunding = 0;
 
-		inputs.markets.forEach((market) => {
+		inputs.markets.forEach((market, index) => {
 			totalFunding += this.calcUnrealizedFundingsForPosition({
 				market,
+				position: inputs.positions?.[index],
 			});
 		});
 
@@ -408,9 +418,9 @@ export class PerpetualsAccount extends Caller {
 
 	public calcLiquidationPriceForPosition = (inputs: {
 		market: PerpetualsMarket;
-		position?: PerpetualsPosition;
 		indexPrice: number;
 		collateralPrice: number;
+		position?: PerpetualsPosition;
 	}): number => {
 		const marketId = inputs.market.marketId;
 		const position =
@@ -445,19 +455,24 @@ export class PerpetualsAccount extends Caller {
 		return price < 0 ? 0 : price;
 	};
 
-	public calcFreeMarginUsd = (inputs: {
-		position: PerpetualsPosition;
+	public calcFreeMarginUsdForPosition = (inputs: {
 		market: PerpetualsMarket;
 		indexPrice: number;
 		collateralPrice: number;
+		position?: PerpetualsPosition;
 	}): number => {
+		const marketId = inputs.market.marketId;
+		const position =
+			inputs.position ?? this.positionForMarketId({ marketId });
+		if (!position) throw new Error("no position found for market");
+
 		const totalFunding = this.calcUnrealizedFundingsForPosition(inputs);
 
 		const { pnl, minInitialMargin } =
 			this.calcPnLAndMarginForPosition(inputs);
 
 		let collateralUsd =
-			IFixedUtils.numberFromIFixed(inputs.position.collateral) *
+			IFixedUtils.numberFromIFixed(position.collateral) *
 			inputs.collateralPrice;
 
 		const margin = collateralUsd + totalFunding + pnl;
@@ -467,7 +482,7 @@ export class PerpetualsAccount extends Caller {
 		} else return 0;
 	};
 
-	public getAccountValues = (inputs: {
+	public calcAccountState = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
@@ -519,15 +534,6 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
-
-	public accountMarketIds(): PerpetualsMarketId[] {
-		let res: PerpetualsMarketId[] = [];
-		this.account.positions.forEach((position) => {
-			res.push(position.marketId);
-		});
-
-		return res;
-	}
 
 	public positionForMarketId(inputs: {
 		marketId: PerpetualsMarketId;
