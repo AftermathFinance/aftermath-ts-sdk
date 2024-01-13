@@ -321,14 +321,12 @@ export class PerpetualsAccount extends Caller {
 
 	public calcUnrealizedFundings = (inputs: {
 		markets: PerpetualsMarket[];
-		positions?: PerpetualsPosition[];
 	}): number => {
 		let totalFunding = 0;
 
-		inputs.markets.forEach((market, index) => {
+		inputs.markets.forEach((market) => {
 			totalFunding += this.calcUnrealizedFundingsForPosition({
 				market,
-				position: inputs.positions?.[index],
 			});
 		});
 

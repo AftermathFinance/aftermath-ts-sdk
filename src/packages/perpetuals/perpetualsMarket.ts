@@ -1,4 +1,4 @@
-import { Casting } from "../..";
+import { Casting, Coin, PerpetualsAccount } from "../..";
 import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -90,20 +90,29 @@ export class PerpetualsMarket extends Caller {
 	}
 
 	public getMaxOrderSizeUsd = async (inputs: {
+		account: PerpetualsAccount;
 		position: PerpetualsPosition | undefined;
-		totalMinInitialMargin: number;
+		minInitialMargin: number;
 		indexPrice: number;
+		collateralPrice: number;
 		side: PerpetualsOrderSide;
-		freeMarginUsd: number;
-		collateral: Balance;
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
-		const { side, price, collateral } = inputs;
+		const { side, price, account } = inputs;
 
 		const optimisticSize = this.calcOptimisticMaxOrderSize(inputs);
 
+		const freeCollateral = account.calcFreeCollateralForPosition({
+			...inputs,
+			market: this,
+		});
+		const collateral =
+			account.collateralBalance() +
+			Coin.normalizeBalance(freeCollateral, account.collateralDecimals());
+
 		const size = // (in lots)
 			BigInt(Math.ceil(optimisticSize / this.lotSize()));
+
 		const { executionPrice, sizeFilled, sizePosted } =
 			await this.getExecutionPrice({
 				size,
@@ -112,8 +121,13 @@ export class PerpetualsMarket extends Caller {
 				collateral,
 			});
 
+		const freeMarginUsd = account.calcFreeMarginUsdForPosition({
+			...inputs,
+			market: this,
+		});
 		return this.calcPessimisticMaxOrderSizeUsd({
 			...inputs,
+			freeMarginUsd,
 			executionPrice,
 			sizeFilled,
 			sizePosted,
@@ -206,17 +220,23 @@ export class PerpetualsMarket extends Caller {
 
 	public calcOptimisticMaxOrderSize = (inputs: {
 		position: PerpetualsPosition | undefined;
-		freeMarginUsd: number;
+		account: PerpetualsAccount;
 		indexPrice: number;
+		collateralPrice: number;
 		side: PerpetualsOrderSide;
 	}): number => {
-		const { position, freeMarginUsd, indexPrice, side } = inputs;
+		const { position, indexPrice, side, account } = inputs;
 
 		const imr = this.initialMarginRatio();
 
 		const isReversing = position
 			? Boolean(side ^ Perpetuals.positionSide(position))
 			: false;
+
+		const freeMarginUsd = account.calcFreeMarginUsdForPosition({
+			...inputs,
+			market: this,
+		});
 
 		let maxSize = freeMarginUsd / (indexPrice * imr);
 		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
@@ -241,7 +261,7 @@ export class PerpetualsMarket extends Caller {
 	public calcPessimisticMaxOrderSizeUsd = async (inputs: {
 		position: PerpetualsPosition | undefined;
 		freeMarginUsd: number;
-		totalMinInitialMargin: number;
+		minInitialMargin: number;
 		indexPrice: number;
 		side: PerpetualsOrderSide;
 		executionPrice: number;
@@ -255,7 +275,7 @@ export class PerpetualsMarket extends Caller {
 			position,
 			executionPrice,
 			freeMarginUsd,
-			totalMinInitialMargin,
+			minInitialMargin,
 			sizeFilled,
 			sizePosted,
 			optimisticSize,
@@ -298,8 +318,8 @@ export class PerpetualsMarket extends Caller {
 
 			const newPercentFilled = sizeFilled / (sizeFilled + sizePosted);
 
-			const margin = freeMarginUsd + totalMinInitialMargin + marginDelta;
-			const imr = totalMinInitialMargin + reqDelta;
+			const margin = freeMarginUsd + minInitialMargin + marginDelta;
+			const imr = minInitialMargin + reqDelta;
 
 			// Size that adds margin requirement
 			maxSize +=
