@@ -467,15 +467,21 @@ export class PerpetualsAccount extends Caller {
 		} else return 0;
 	};
 
-	public calcAccountEquityUsd = (inputs: {
+	public getAccountValues = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
 	}): {
 		accountEquity: number;
+		totalPnL: number;
+		totalFunding: number;
+		totalCollateralAllocated: number;
 	} => {
 		const zipped = Helpers.zip(inputs.markets, inputs.indexPrices);
 		let accountEquity = 0;
+		let totalPnL = 0;
+		let totalFunding = 0;
+		let totalCollateralAllocated = 0;
 
 		zipped.forEach(([market, indexPrice]) => {
 			const marketId = market.marketId;
@@ -497,10 +503,16 @@ export class PerpetualsAccount extends Caller {
 				IFixedUtils.numberFromIFixed(position.collateral) *
 				inputs.collateralPrice;
 
+			totalPnL += pnl;
+			totalFunding += funding;
+			totalCollateralAllocated += collateralUsd;
 			accountEquity += collateralUsd + funding + pnl;
 		});
 		return {
 			accountEquity,
+			totalPnL,
+			totalFunding,
+			totalCollateralAllocated,
 		};
 	};
 
