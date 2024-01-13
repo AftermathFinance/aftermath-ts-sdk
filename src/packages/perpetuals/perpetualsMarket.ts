@@ -92,7 +92,6 @@ export class PerpetualsMarket extends Caller {
 	public getMaxOrderSizeUsd = async (inputs: {
 		account: PerpetualsAccount;
 		position: PerpetualsPosition | undefined;
-		minInitialMargin: number;
 		indexPrice: number;
 		collateralPrice: number;
 		side: PerpetualsOrderSide;
@@ -125,9 +124,14 @@ export class PerpetualsMarket extends Caller {
 			...inputs,
 			market: this,
 		});
+		const { minInitialMargin } = account.calcPnLAndMarginForPosition({
+			...inputs,
+			market: this,
+		});
 		return this.calcPessimisticMaxOrderSizeUsd({
 			...inputs,
 			freeMarginUsd,
+			minInitialMargin,
 			executionPrice,
 			sizeFilled,
 			sizePosted,
