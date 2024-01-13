@@ -467,6 +467,43 @@ export class PerpetualsAccount extends Caller {
 		} else return 0;
 	};
 
+	public calcAccountEquityUsd = (inputs: {
+		markets: PerpetualsMarket[];
+		indexPrices: number[];
+		collateralPrice: number;
+	}): {
+		accountEquity: number;
+	} => {
+		const zipped = Helpers.zip(inputs.markets, inputs.indexPrices);
+		let accountEquity = 0;
+
+		zipped.forEach(([market, indexPrice]) => {
+			const marketId = market.marketId;
+			const position = this.positionForMarketId({ marketId });
+			if (!position) throw new Error("no position found for market");
+
+			const funding = this.calcUnrealizedFundingsForPosition({
+				market,
+				position,
+			});
+
+			const { pnl } = this.calcPnLAndMarginForPosition({
+				market,
+				indexPrice,
+				position,
+			});
+
+			let collateralUsd =
+				IFixedUtils.numberFromIFixed(position.collateral) *
+				inputs.collateralPrice;
+
+			accountEquity += collateralUsd + funding + pnl;
+		});
+		return {
+			accountEquity,
+		};
+	};
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
