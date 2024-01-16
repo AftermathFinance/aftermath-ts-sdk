@@ -91,6 +91,10 @@ export interface PerpetualsVault extends Object {
 	scalingFactor: bigint;
 }
 
+perpetualsBcsRegistry.registerStructType(["Balance", "T"], {
+	value: "u64",
+});
+
 perpetualsBcsRegistry.registerStructType(["Vault", "T"], {
 	id: "UID",
 	collateral_balance: ["Balance", "T"],

@@ -254,8 +254,9 @@ export class PerpetualsAccount extends Caller {
 	}): number => {
 		const marketId = inputs.market.marketId;
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 		const { pnl, minInitialMargin } =
@@ -291,8 +292,9 @@ export class PerpetualsAccount extends Caller {
 		const { market, indexPrice, collateralPrice } = inputs;
 		const marketId = market.marketId;
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const funding = this.calcUnrealizedFundingsForPosition({
 			market,
@@ -340,8 +342,9 @@ export class PerpetualsAccount extends Caller {
 		const marketId = inputs.market.marketId;
 
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const baseAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
@@ -379,8 +382,9 @@ export class PerpetualsAccount extends Caller {
 	} => {
 		const marketId = inputs.market.marketId;
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const marginRatioInitial = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioInitial
@@ -422,8 +426,9 @@ export class PerpetualsAccount extends Caller {
 	}): number => {
 		const marketId = inputs.market.marketId;
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 
@@ -461,8 +466,9 @@ export class PerpetualsAccount extends Caller {
 	}): number => {
 		const marketId = inputs.market.marketId;
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const totalFunding = this.calcUnrealizedFundingsForPosition(inputs);
 
@@ -498,8 +504,9 @@ export class PerpetualsAccount extends Caller {
 
 		zipped.forEach(([market, indexPrice]) => {
 			const marketId = market.marketId;
-			const position = this.positionForMarketId({ marketId });
-			if (!position) throw new Error("no position found for market");
+			const position =
+				this.positionForMarketId({ marketId }) ??
+				this.emptyPosition({ marketId });
 
 			const funding = this.calcUnrealizedFundingsForPosition({
 				market,
@@ -566,8 +573,9 @@ export class PerpetualsAccount extends Caller {
 		lotSize: number;
 	}): SdkPerpetualsMarketOrderInputs => {
 		const marketId = inputs.marketId;
-		const position = this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+		const position =
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const side = Perpetuals.positionSide(position);
 		return {
@@ -585,6 +593,21 @@ export class PerpetualsAccount extends Caller {
 			),
 			hasPosition: true,
 			collateralChange: position.collateral * BigInt(-1),
+		};
+	};
+
+	public emptyPosition = (inputs: { marketId: PerpetualsMarketId }) => {
+		const { marketId } = inputs;
+		return {
+			marketId,
+			collateralCoinType: this.accountCap.collateralCoinType,
+			collateral: BigInt(0),
+			baseAssetAmount: BigInt(0),
+			quoteAssetNotionalAmount: BigInt(0),
+			cumFundingRateLong: BigInt(0),
+			cumFundingRateShort: BigInt(0),
+			asksQuantity: BigInt(0),
+			bidsQuantity: BigInt(0),
 		};
 	};
 }

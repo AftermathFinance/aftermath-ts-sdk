@@ -68,7 +68,7 @@ export class PerpetualsApiCasting {
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			accountId: BigInt(data.accountId),
-			collateral: BigInt(data.collateral),
+			collateral: BigInt(data.collateral.value),
 			collateralCoinType,
 		};
 	}

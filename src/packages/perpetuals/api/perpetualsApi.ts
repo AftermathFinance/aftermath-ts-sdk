@@ -211,6 +211,7 @@ export class PerpetualsApi {
 		}[] = await this.Provider.indexerCaller.fetchIndexer(
 			`perpetuals/accounts/${accountId}/positions`
 		);
+		if (positionDatas.length <= 0) return { positions: [] };
 
 		const tx = new TransactionBlock();
 
