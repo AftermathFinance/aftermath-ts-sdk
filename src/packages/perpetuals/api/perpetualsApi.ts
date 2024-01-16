@@ -186,11 +186,14 @@ export class PerpetualsApi {
 		const accCaps: PerpetualsRawAccountCap[] = objectResponse.map(
 			(accCap) => {
 				const accCapObj = perpetualsBcsRegistry.de(
-					"AccountCap",
+					["Account", collateralCoinType],
 					Casting.bcsBytesFromSuiObjectResponse(accCap),
 					"base64"
 				);
-				return PerpetualsApiCasting.rawAccountCapFromRaw(accCapObj);
+				return PerpetualsApiCasting.rawAccountCapFromRaw(
+					accCapObj,
+					collateralCoinType
+				);
 			}
 		);
 
@@ -304,12 +307,18 @@ export class PerpetualsApi {
 
 	public fetchMarket = async (inputs: {
 		marketId: PerpetualsMarketId;
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketData> => {
+		const { collateralCoinType } = inputs;
 		return this.Provider.Objects().fetchCastObjectBcs({
 			objectId: inputs.marketId,
 			bcs: perpetualsBcsRegistry,
-			fromDeserialized: PerpetualsApiCasting.clearingHouseFromRaw,
-			typeName: "ClearingHouse",
+			fromDeserialized: (data) =>
+				PerpetualsApiCasting.clearingHouseFromRaw(
+					data,
+					collateralCoinType
+				),
+			typeName: ["ClearingHouse", collateralCoinType],
 		});
 	};
 
@@ -1248,7 +1257,7 @@ export class PerpetualsApi {
 				"get_orderbook"
 			),
 			typeArguments: [collateralCoinType],
-			arguments: [tx.pure(inputs.marketId, "u64")],
+			arguments: [tx.object(inputs.marketId)],
 		});
 	};
 

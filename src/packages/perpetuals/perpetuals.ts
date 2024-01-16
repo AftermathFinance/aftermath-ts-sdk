@@ -140,7 +140,7 @@ export class Perpetuals extends Caller {
 	//  Class Objects
 	// =========================================================================
 
-	public async getMarketsForCollateral(inputs: {
+	public async getAllMarkets(inputs: {
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket[]> {
 		const { collateralCoinType } = inputs;
@@ -154,20 +154,24 @@ export class Perpetuals extends Caller {
 
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket> {
 		const marketData = await this.fetchApi<PerpetualsMarketData>(
-			`0xplaceholder/markets/${inputs.marketId}`
+			`${inputs.collateralCoinType}/markets/${inputs.marketId}`
 		);
 		return new PerpetualsMarket(marketData, this.network);
 	}
 
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket[]> {
+		const { collateralCoinType } = inputs;
 		return Promise.all(
 			inputs.marketIds.map((marketId) =>
 				this.getMarket({
 					marketId,
+					collateralCoinType,
 				})
 			)
 		);
