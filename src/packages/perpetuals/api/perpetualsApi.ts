@@ -577,6 +577,8 @@ export class PerpetualsApi {
 		const { collateralCoinType, marketId, side, lotSize, tickSize } =
 			inputs;
 
+		console.log("INPUTS", inputs);
+
 		const bestPriceSide =
 			side === PerpetualsOrderSide.Ask
 				? PerpetualsOrderSide.Bid
@@ -628,6 +630,11 @@ export class PerpetualsApi {
 			tx,
 			sessionPotatoId,
 		});
+
+		console.log("PREVIEW");
+		tx.blockData.transactions.forEach((command, index) =>
+			console.log(index, command)
+		);
 
 		try {
 			// inspect tx
@@ -1722,6 +1729,11 @@ export class PerpetualsApi {
 			walletAddress,
 		});
 
+		console.log("EXECUTION");
+		tx.blockData.transactions.forEach((command, index) =>
+			console.log(index, command)
+		);
+
 		const { events } =
 			await this.Provider.Inspections().fetchAllBytesFromTx({
 				tx,
@@ -1859,14 +1871,10 @@ export class PerpetualsApi {
 		marketId: PerpetualsMarketId;
 		walletAddress: SuiAddress;
 	}) => {
-		const { tx, sessionPotatoId, walletAddress } = inputs;
+		const { tx, walletAddress } = inputs;
 
-		const account = this.endSessionTx({
-			...inputs,
-			tx,
-			sessionPotatoId,
-		});
-		tx.transferObjects([account], tx.pure(walletAddress));
+		const accountId = this.endSessionTx(inputs);
+		tx.transferObjects([accountId], tx.pure(walletAddress));
 	};
 
 	// =========================================================================
