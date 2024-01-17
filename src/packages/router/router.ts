@@ -123,7 +123,6 @@ export class Router extends Caller {
 			 */
 			coinInAmount: Balance;
 		},
-
 		abortSignal?: AbortSignal
 	) {
 		return this.fetchApi<

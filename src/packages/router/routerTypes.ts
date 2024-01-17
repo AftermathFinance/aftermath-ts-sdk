@@ -296,6 +296,7 @@ export type ApiRouterPartialCompleteTradeRouteBody = {
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
 	externalFee?: RouterExternalFee;
+	excludeProtocols?: RouterProtocolName[];
 };
 
 /**

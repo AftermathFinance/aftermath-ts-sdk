@@ -21,6 +21,8 @@ import {
 	RouterPoolsById,
 	RouterSerializablePool,
 	SuiAddress,
+	RouterSynchronousProtocolName,
+	RouterProtocolName,
 } from "../../../../types";
 import {
 	RouterPoolInterface,
@@ -70,9 +72,14 @@ export class RouterGraph {
 	constructor(
 		network: SuiNetwork,
 		graph: RouterSerializableCompleteGraph,
-		private options: RouterSynchronousOptions
+		private options: RouterSynchronousOptions,
+		private readonly excludeProtocols?: RouterProtocolName[]
 	) {
-		this.graph = RouterGraph.graphFromSerializable({ graph, network });
+		this.graph = RouterGraph.graphFromSerializable({
+			graph,
+			network,
+			excludeProtocols,
+		});
 	}
 
 	// =========================================================================
@@ -201,6 +208,7 @@ export class RouterGraph {
 	public static graphFromSerializable(inputs: {
 		graph: RouterSerializableCompleteGraph;
 		network: SuiNetwork;
+		excludeProtocols?: RouterProtocolName[];
 	}): RouterCompleteGraph {
 		const pools: RouterPoolsById = Object.entries(
 			inputs.graph.pools
@@ -210,7 +218,11 @@ export class RouterGraph {
 				network: inputs.network,
 			});
 
-			if (poolClass.noHopsAllowed) return acc;
+			if (
+				poolClass.noHopsAllowed ||
+				inputs.excludeProtocols?.includes(poolClass.protocolName)
+			)
+				return acc;
 
 			return {
 				...acc,

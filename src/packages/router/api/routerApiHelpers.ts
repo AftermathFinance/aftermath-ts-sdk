@@ -81,11 +81,12 @@ export class RouterApiHelpers {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
+		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		if (inputs.protocols.length === 0)
 			throw new Error("no protocols set in constructor");
 
-		const { network, graph, coinInAmount } = inputs;
+		const { network, graph, coinInAmount, excludeProtocols } = inputs;
 
 		const coinInAmounts = this.amountsInForRouterTrade({
 			coinInAmount,
@@ -106,7 +107,8 @@ export class RouterApiHelpers {
 		const routerGraph = new RouterGraph(
 			network,
 			graph,
-			this.options.regular.synchronous
+			this.options.regular.synchronous,
+			excludeProtocols
 		);
 
 		if (exactMatchPools.length <= 0 && partialMatchPools.length <= 0)
@@ -175,16 +177,18 @@ export class RouterApiHelpers {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
+		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		if (inputs.protocols.length === 0)
 			throw new Error("no protocols set in constructor");
 
-		const { network, graph } = inputs;
+		const { network, graph, excludeProtocols } = inputs;
 
 		const routerGraph = new RouterGraph(
 			network,
 			graph,
-			this.options.regular.synchronous
+			this.options.regular.synchronous,
+			excludeProtocols
 		);
 		return routerGraph.getCompleteRouteGivenAmountOut(inputs);
 	};

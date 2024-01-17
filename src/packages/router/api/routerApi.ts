@@ -229,6 +229,7 @@ export class RouterApi {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
+		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
 			...inputs,
@@ -249,6 +250,7 @@ export class RouterApi {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
+		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountOut({
 			...inputs,
