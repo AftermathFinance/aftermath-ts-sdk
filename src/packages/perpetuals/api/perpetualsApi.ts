@@ -847,7 +847,7 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
-		coinId: ObjectId | TransactionArgument;
+		coinId: ObjectId | TransactionArgument | Uint8Array;
 	}) => {
 		const { tx, collateralCoinType, accountCapId, coinId } = inputs;
 		return tx.moveCall({
@@ -861,7 +861,11 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				typeof coinId === "string" ? tx.object(coinId) : coinId,
+				typeof coinId === "string"
+					? tx.object(coinId)
+					: coinId instanceof Uint8Array
+					? tx.pure(coinId)
+					: coinId,
 			],
 		});
 	};
@@ -1163,11 +1167,15 @@ export class PerpetualsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
+				PerpetualsApi.constants.moduleNames.clearingHouse,
 				"get_hot_potato_fields"
 			),
 			typeArguments: [collateralCoinType],
-			arguments: [tx.object(sessionPotatoId)],
+			arguments: [
+				typeof sessionPotatoId === "string"
+					? tx.object(sessionPotatoId)
+					: sessionPotatoId,
+			],
 		});
 	};
 
@@ -1628,6 +1636,42 @@ export class PerpetualsApi {
 		// 	})
 		// 	.toBytes();
 
+		perpetualsBcsRegistry.registerStructType("ID", {
+			bytes: "address",
+		});
+
+		perpetualsBcsRegistry.registerStructType("UID", {
+			id: "ID",
+		});
+
+		perpetualsBcsRegistry.registerStructType(
+			`Balance<${collateralCoinType}>`,
+			{
+				value: "u64",
+			}
+		);
+
+		perpetualsBcsRegistry.registerStructType(
+			`Coin<${collateralCoinType}>`,
+			{
+				id: "UID",
+				balance: `Balance<${collateralCoinType}>`,
+			}
+		);
+
+		const depositCoinId = perpetualsBcsRegistry
+			.ser(`Coin<${collateralCoinType}>`, {
+				id: {
+					id: {
+						bytes: "0x0000000000000000000000000000000000000000000000000000000000000123",
+					},
+				},
+				balance: {
+					value: Casting.u64MaxBigInt,
+				},
+			})
+			.toBytes();
+
 		const walletAddress = InspectionsApiHelpers.constants.devInspectSigner;
 
 		const tx = new TransactionBlock();
@@ -1636,6 +1680,12 @@ export class PerpetualsApi {
 		const accountCapId = this.createAccountTx({
 			...inputs,
 			tx,
+		});
+		this.depositCollateralTx({
+			tx,
+			collateralCoinType,
+			accountCapId,
+			coinId: depositCoinId,
 		});
 		const { sessionPotatoId } = this.createTxAndStartSession({
 			tx,

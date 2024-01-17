@@ -229,7 +229,7 @@ export class PerpetualsMarket extends Caller {
 		collateralPrice: number;
 		side: PerpetualsOrderSide;
 	}): number => {
-		const { position, indexPrice, side, account } = inputs;
+		const { position, indexPrice, side, account, collateralPrice } = inputs;
 
 		const imr = this.initialMarginRatio();
 
@@ -237,10 +237,12 @@ export class PerpetualsMarket extends Caller {
 			? Boolean(side ^ Perpetuals.positionSide(position))
 			: false;
 
-		const freeMarginUsd = account.calcFreeMarginUsdForPosition({
-			...inputs,
-			market: this,
-		});
+		const freeMarginUsd =
+			account.calcFreeMarginUsdForPosition({
+				...inputs,
+				market: this,
+			}) +
+			account.collateral() * collateralPrice;
 
 		let maxSize = freeMarginUsd / (indexPrice * imr);
 		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
