@@ -15,8 +15,11 @@ import {
 	ObjectId,
 	Balance,
 	ApiRouterPartialCompleteTradeRouteBody,
+	ApiRouterAddTransactionForCompleteTradeRouteBody,
+	ApiRouterAddTransactionForCompleteTradeRouteResponse,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 /**
  * @class Router Provider
@@ -179,6 +182,24 @@ export class Router extends Caller {
 			"transactions/trade",
 			inputs
 		);
+	}
+
+	public async addTransactionForCompleteTradeRoute(
+		inputs: Omit<
+			ApiRouterAddTransactionForCompleteTradeRouteBody,
+			"serializedTx"
+		> & {
+			tx: TransactionBlock;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApi<
+			ApiRouterAddTransactionForCompleteTradeRouteResponse,
+			ApiRouterAddTransactionForCompleteTradeRouteBody
+		>("transactions/add-trade", {
+			...otherInputs,
+			serializedTx: tx.serialize(),
+		});
 	}
 
 	// =========================================================================

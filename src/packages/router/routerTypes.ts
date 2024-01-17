@@ -9,6 +9,7 @@ import {
 	SuiAddress,
 	TxBytes,
 	BigIntAsString,
+	SerializedTransaction,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
@@ -35,6 +36,7 @@ import {
 	isFlowXPoolObject,
 } from "../external/flowX/flowXTypes";
 import { AfSuiRouterPoolObject, DynamicGasCoinData } from "../..";
+import { TransactionArgument } from "@mysten/sui.js/transactions";
 
 // =========================================================================
 //  Name Only
@@ -333,6 +335,17 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 */
 	slippage: Slippage;
 	isSponsoredTx?: boolean;
+}
+
+export type ApiRouterAddTransactionForCompleteTradeRouteBody =
+	ApiRouterTransactionForCompleteTradeRouteBody & {
+		serializedTx: SerializedTransaction;
+		coinInId?: TransactionArgument;
+	};
+
+export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
+	tx: SerializedTransaction;
+	coinOutId: TransactionArgument | undefined;
 }
 
 export type ApiRouterTradeEventsBody = ApiEventsBody & {
