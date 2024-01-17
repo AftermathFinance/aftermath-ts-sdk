@@ -257,6 +257,7 @@ export class PerpetualsApi {
 			await this.Provider.indexerCaller.fetchIndexer(
 				`perpetuals/accounts/${accountId}/orders`
 			);
+		if (orders.length <= 0) return [];
 
 		const marketIdsToOrderEvents: Record<
 			PerpetualsMarketId,
@@ -1536,6 +1537,7 @@ export class PerpetualsApi {
 		marketId: PerpetualsMarketId;
 	}): Promise<bigint[]> => {
 		const { orderIds, marketId, collateralCoinType } = inputs;
+		if (orderIds.length <= 0) return [];
 
 		const tx = new TransactionBlock();
 
@@ -1629,12 +1631,14 @@ export class PerpetualsApi {
 		const walletAddress = InspectionsApiHelpers.constants.devInspectSigner;
 
 		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
 
 		const accountCapId = this.createAccountTx({
 			...inputs,
 			tx,
 		});
 		const { sessionPotatoId } = this.createTxAndStartSession({
+			tx,
 			accountCapId,
 			collateralCoinType,
 			marketId,
@@ -1757,40 +1761,41 @@ export class PerpetualsApi {
 	private createTxAndStartSession = (inputs: {
 		tx?: TransactionBlock;
 		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument | Uint8Array;
+		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
 		walletAddress: SuiAddress;
 		collateralChange: Balance;
 		hasPosition: boolean;
 	}) => {
 		const { collateralChange, walletAddress, hasPosition } = inputs;
+		const { tx: inputsTx, ...nonTxInputs } = inputs;
 
-		const tx = inputs.tx ?? new TransactionBlock();
+		const tx = inputsTx ?? new TransactionBlock();
 		tx.setSender(walletAddress);
 
 		if (!hasPosition) {
 			this.createMarketPositionTx({
-				...inputs,
+				...nonTxInputs,
 				tx,
 			});
 		}
 
 		if (collateralChange > BigInt(0)) {
 			this.allocateCollateralTx({
-				...inputs,
+				...nonTxInputs,
 				tx,
 				amount: collateralChange,
 			});
 		} else if (collateralChange < BigInt(0)) {
 			this.deallocateCollateralTx({
-				...inputs,
+				...nonTxInputs,
 				tx,
 				amount: collateralChange,
 			});
 		}
 
 		const sessionPotatoId = this.startSessionTx({
-			...inputs,
+			...nonTxInputs,
 			tx,
 		});
 
