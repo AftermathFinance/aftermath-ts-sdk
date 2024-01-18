@@ -1351,7 +1351,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			volume *
 			FixedUtils.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
 
-		const apy = this.calcApy({
+		const apr = this.calcApr({
 			fees24Hours: fees,
 			tvl,
 		});
@@ -1362,7 +1362,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			supplyPerLps,
 			lpPrice,
 			fees,
-			apy,
+			apr,
 		};
 	};
 
@@ -1458,11 +1458,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	};
 
 	/**
-	 * Calculates the APY (Annual Percentage Yield) based on the fees collected in the last 24 hours and the TVL (Total Value Locked) of a pool.
+	 * Calculates the APR (Annual Percentage Rate) based on the fees collected in the last 24 hours and the TVL (Total Value Locked) of a pool.
 	 * @param inputs - An object containing the fees collected in the last 24 hours and the TVL of a pool.
-	 * @returns The APY (Annual Percentage Yield) of the pool.
+	 * @returns The APR (Annual Percentage Rate) of the pool.
 	 */
-	public calcApy = (inputs: { fees24Hours: number; tvl: number }): number => {
+	public calcApr = (inputs: { fees24Hours: number; tvl: number }): number => {
 		const { fees24Hours, tvl } = inputs;
 		// TODO: use daysjs instead
 		const daysInYear = 365;

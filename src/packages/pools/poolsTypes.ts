@@ -115,7 +115,7 @@ export interface PoolStats {
 	supplyPerLps: number[];
 	lpPrice: number;
 	fees: number;
-	apy: number;
+	apr: number;
 }
 
 export interface PoolDataPoint {

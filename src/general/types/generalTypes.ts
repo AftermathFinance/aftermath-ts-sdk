@@ -25,7 +25,7 @@ export type Slippage = number;
  * @remarks 0.54 = 54%
  */
 export type Percentage = number;
-export type Apy = number;
+export type Apr = number;
 
 // =========================================================================
 //  string

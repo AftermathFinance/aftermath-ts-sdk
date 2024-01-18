@@ -6,7 +6,7 @@ import {
 	ApiFarmsUnlockBody,
 	ApiFarmsUnstakeBody,
 	ApiHarvestFarmsRewardsBody,
-	Apy,
+	Apr,
 	Balance,
 	CoinType,
 	CoinsToBalance,
@@ -240,10 +240,10 @@ export class FarmsStakedPosition extends Caller {
 		this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
 	};
 
-	public calcTotalApy = (inputs: {
+	public calcTotalApr = (inputs: {
 		rewardsUsd: number;
 		stakeUsd: number;
-	}): Apy => {
+	}): Apr => {
 		const { rewardsUsd, stakeUsd } = inputs;
 
 		dayjs.extend(duration);
@@ -256,8 +256,8 @@ export class FarmsStakedPosition extends Caller {
 				? rewardsUsd * (oneYearMs / timeSinceLastHarvestMs)
 				: 0;
 
-		const apy = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
-		return apy < 0 ? 0 : apy;
+		const apr = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
+		return apr < 0 ? 0 : apr;
 	};
 
 	// =========================================================================
