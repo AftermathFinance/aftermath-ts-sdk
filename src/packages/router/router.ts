@@ -74,15 +74,6 @@ export class Router extends Caller {
 		return this.fetchApi("volume-24hrs");
 	};
 
-	/**
-	 * Queries all coins that router can trade between.
-	 *
-	 * @returns Mapping of coin type in to array of supported coin types out
-	 */
-	public async getSupportedCoinPaths() {
-		return this.fetchApi<RouterSupportedCoinPaths>("supported-coin-paths");
-	}
-
 	public async getSupportedCoins() {
 		return this.fetchApi<CoinType[]>("supported-coins");
 	}
