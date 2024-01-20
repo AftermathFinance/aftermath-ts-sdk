@@ -1725,7 +1725,7 @@ export class PerpetualsApi {
 			collateralCoinType,
 			marketId,
 			walletAddress,
-			collateralChange: collateral,
+			collateralChange: Casting.u64MaxBigInt,
 			hasPosition: false,
 		});
 		this.placeLimitOrderTx({
