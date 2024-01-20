@@ -151,7 +151,7 @@ export class PerpetualsApi {
 			// Account
 			createdAccount: this.eventType("CreatedAccount"),
 			// Order
-			canceledOrder: this.eventType("CanceledOrder"),
+			canceledOrder: this.eventType("OrderbookCanceledOrder"),
 			postedOrder: this.eventType("PostedOrder"),
 			filledMakerOrder: this.eventType("FilledMakerOrder"),
 			filledTakerOrder: this.eventType("FilledTakerOrder"),

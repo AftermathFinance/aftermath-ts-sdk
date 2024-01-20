@@ -81,8 +81,6 @@ export type CanceledOrderEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
 	size: BigIntAsString;
 	order_id: BigIntAsString;
-	asks_quantity: IFixedAsString;
-	bids_quantity: IFixedAsString;
 }>;
 
 export type PostedOrderEventOnChain = EventOnChain<{

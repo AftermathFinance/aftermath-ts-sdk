@@ -521,8 +521,6 @@ export interface CanceledOrderEvent extends Event {
 	side: PerpetualsOrderSide;
 	size: bigint;
 	orderId: PerpetualsOrderId;
-	asksQuantity: IFixed;
-	bidsQuantity: IFixed;
 }
 
 export interface PostedOrderEvent extends Event {
@@ -585,7 +583,7 @@ export interface PostedOrderReceiptEvent extends Event {
 export const isCanceledOrderEvent = (
 	event: Event
 ): event is CanceledOrderEvent => {
-	return event.type.toLowerCase().includes("canceledorder");
+	return event.type.toLowerCase().includes("orderbookcanceledorder");
 };
 
 export const isPostedOrderEvent = (event: Event): event is PostedOrderEvent => {

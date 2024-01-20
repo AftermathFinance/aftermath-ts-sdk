@@ -334,14 +334,12 @@ export class PerpetualsApiCasting {
 			new Coin(eventOnChain.type).innerCoinType
 		);
 		return {
+			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
 			size: BigInt(fields.size),
 			orderId: BigInt(fields.order_id),
-			asksQuantity: BigInt(fields.asks_quantity),
-			bidsQuantity: BigInt(fields.bids_quantity),
-			collateralCoinType,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
