@@ -596,7 +596,9 @@ export class PerpetualsAccount extends Caller {
 		};
 	};
 
-	public emptyPosition = (inputs: { marketId: PerpetualsMarketId }) => {
+	public emptyPosition = (inputs: {
+		marketId: PerpetualsMarketId;
+	}): PerpetualsPosition => {
 		const { marketId } = inputs;
 		return {
 			marketId,
@@ -608,6 +610,10 @@ export class PerpetualsAccount extends Caller {
 			cumFundingRateShort: BigInt(0),
 			asksQuantity: BigInt(0),
 			bidsQuantity: BigInt(0),
+			pendingOrders: BigInt(0),
+			// NOTE: should these default fees be 100% or 0% ?
+			makerFee: BigInt(0),
+			takerFee: BigInt(0),
 		};
 	};
 }

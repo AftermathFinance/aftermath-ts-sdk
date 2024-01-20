@@ -64,6 +64,7 @@ export class PerpetualsApiCasting {
 		data: any,
 		collateralCoinType: CoinType
 	): PerpetualsRawAccountCap {
+		console.log("ACCOUNT", data);
 		return {
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
@@ -84,6 +85,9 @@ export class PerpetualsApiCasting {
 			cumFundingRateShort: BigInt(data.cumFundingRateShort),
 			asksQuantity: BigInt(data.asksQuantity),
 			bidsQuantity: BigInt(data.bidsQuantity),
+			pendingOrders: BigInt(data.pendingOrders),
+			makerFee: BigInt(data.makerFee),
+			takerFee: BigInt(data.takerFee),
 		};
 	};
 
@@ -96,7 +100,7 @@ export class PerpetualsApiCasting {
 		collateralCoinType: CoinType
 	): PerpetualsMarketData {
 		return {
-			objectId: Helpers.addLeadingZeroesToType(data.id),
+			objectId: Helpers.addLeadingZeroesToType("0x" + data.id),
 			objectType: data.objectType,
 			marketParams: this.marketParamsFromRaw(data.marketParams),
 			marketState: this.marketStateFromRaw(data.marketState),

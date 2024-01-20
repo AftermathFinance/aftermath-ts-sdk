@@ -112,6 +112,13 @@ export class PerpetualsMarket extends Caller {
 		const size = // (in lots)
 			BigInt(Math.ceil(optimisticSize / this.lotSize()));
 
+		console.log("INPUTS_1", {
+			size,
+			side,
+			price,
+			collateral,
+		});
+
 		const { executionPrice, sizeFilled, sizePosted } =
 			await this.getExecutionPrice({
 				size,
@@ -128,6 +135,17 @@ export class PerpetualsMarket extends Caller {
 			...inputs,
 			market: this,
 		});
+
+		console.log("INPUTS_2", {
+			...inputs,
+			freeMarginUsd,
+			minInitialMargin,
+			executionPrice,
+			sizeFilled,
+			sizePosted,
+			optimisticSize,
+		});
+
 		return this.calcPessimisticMaxOrderSizeUsd({
 			...inputs,
 			freeMarginUsd,

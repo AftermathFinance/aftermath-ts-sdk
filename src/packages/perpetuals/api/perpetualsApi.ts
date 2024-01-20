@@ -578,8 +578,6 @@ export class PerpetualsApi {
 		const { collateralCoinType, marketId, side, lotSize, tickSize } =
 			inputs;
 
-		console.log("INPUTS", inputs);
-
 		const bestPriceSide =
 			side === PerpetualsOrderSide.Ask
 				? PerpetualsOrderSide.Bid
@@ -632,11 +630,6 @@ export class PerpetualsApi {
 			sessionPotatoId,
 		});
 
-		console.log("PREVIEW");
-		tx.blockData.transactions.forEach((command, index) =>
-			console.log(index, command)
-		);
-
 		try {
 			// inspect tx
 			const { allBytes, events } =
@@ -645,12 +638,14 @@ export class PerpetualsApi {
 					sender: inputs.walletAddress,
 				});
 
+			const bytesIndexOffet = inputs.hasPosition ? 0 : 1;
+
 			// deserialize position
-			const positionAfterOrder = {
+			const positionAfterOrder: PerpetualsPosition = {
 				...PerpetualsApiCasting.partialPositionFromRaw(
 					perpetualsBcsRegistry.de(
 						"Position",
-						new Uint8Array(allBytes[3][0])
+						new Uint8Array(allBytes[5 + bytesIndexOffet][0])
 					)
 				),
 				collateralCoinType,
@@ -659,9 +654,13 @@ export class PerpetualsApi {
 
 			// deserialize orderbook prices
 			const bestOrderbookPriceBeforeOrder =
-				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
+				PerpetualsApiCasting.orderbookPriceFromBytes(
+					allBytes[3 + bytesIndexOffet][0]
+				);
 			const bestOrderbookPriceAfterOrder =
-				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
+				PerpetualsApiCasting.orderbookPriceFromBytes(
+					allBytes[6 + bytesIndexOffet][0]
+				);
 
 			// try find relevant events
 			const filledOrderEvents =
@@ -851,13 +850,21 @@ export class PerpetualsApi {
 	//  Transaction Commands
 	// =========================================================================
 
-	public depositCollateralTx = (inputs: {
-		tx: TransactionBlock;
-		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		coinId: ObjectId | TransactionArgument | Uint8Array;
-	}) => {
-		const { tx, collateralCoinType, accountCapId, coinId } = inputs;
+	public depositCollateralTx = (
+		inputs: {
+			tx: TransactionBlock;
+			collateralCoinType: CoinType;
+			accountCapId: ObjectId | TransactionArgument;
+		} & (
+			| {
+					coinId: ObjectId | TransactionArgument;
+			  }
+			| {
+					coinBytes: Uint8Array;
+			  }
+		)
+	) => {
+		const { tx, collateralCoinType, accountCapId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -869,11 +876,11 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				typeof coinId === "string"
-					? tx.object(coinId)
-					: coinId instanceof Uint8Array
-					? tx.pure(coinId)
-					: coinId,
+				"coinBytes" in inputs
+					? tx.pure(inputs.coinBytes)
+					: typeof inputs.coinId === "string"
+					? tx.object(inputs.coinId)
+					: inputs.coinId,
 			],
 		});
 	};
@@ -1668,38 +1675,11 @@ export class PerpetualsApi {
 		// 	})
 		// 	.toBytes();
 
-		perpetualsBcsRegistry.registerStructType("ID", {
-			bytes: "address",
-		});
-
-		perpetualsBcsRegistry.registerStructType("UID", {
-			id: "ID",
-		});
-
-		perpetualsBcsRegistry.registerStructType(
-			`Balance<${collateralCoinType}>`,
-			{
-				value: "u64",
-			}
-		);
-
-		perpetualsBcsRegistry.registerStructType(
-			`Coin<${collateralCoinType}>`,
-			{
-				id: "UID",
-				balance: `Balance<${collateralCoinType}>`,
-			}
-		);
-
-		const depositCoinId = perpetualsBcsRegistry
-			.ser(`Coin<${collateralCoinType}>`, {
-				id: {
-					id: {
-						bytes: "0x0000000000000000000000000000000000000000000000000000000000000123",
-					},
-				},
+		const depositCoinBytes = perpetualsBcsRegistry
+			.ser(["Coin", collateralCoinType], {
+				id: "0x0000000000000000000000000000000000000000000000000000000000000123",
 				balance: {
-					value: Casting.u64MaxBigInt,
+					value: BigInt(1000000000000000),
 				},
 			})
 			.toBytes();
@@ -1717,7 +1697,7 @@ export class PerpetualsApi {
 			tx,
 			collateralCoinType,
 			accountCapId,
-			coinId: depositCoinId,
+			coinBytes: depositCoinBytes,
 		});
 		const { sessionPotatoId } = this.createTxAndStartSession({
 			tx,
@@ -1725,7 +1705,7 @@ export class PerpetualsApi {
 			collateralCoinType,
 			marketId,
 			walletAddress,
-			collateralChange: Casting.u64MaxBigInt,
+			collateralChange: BigInt(1000000000000000),
 			hasPosition: false,
 		});
 		this.placeLimitOrderTx({
@@ -1753,11 +1733,6 @@ export class PerpetualsApi {
 			sessionPotatoId,
 			walletAddress,
 		});
-
-		console.log("EXECUTION");
-		tx.blockData.transactions.forEach((command, index) =>
-			console.log(index, command)
-		);
 
 		const { events } =
 			await this.Provider.Inspections().fetchAllBytesFromTx({

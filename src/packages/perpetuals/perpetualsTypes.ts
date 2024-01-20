@@ -95,6 +95,11 @@ perpetualsBcsRegistry.registerStructType(["Balance", "T"], {
 	value: "u64",
 });
 
+perpetualsBcsRegistry.registerStructType(["Coin", "T"], {
+	id: "UID",
+	balance: ["Balance", "T"],
+});
+
 perpetualsBcsRegistry.registerStructType(["Vault", "T"], {
 	id: "UID",
 	collateral_balance: ["Balance", "T"],
@@ -150,6 +155,9 @@ export interface PerpetualsPosition {
 	bidsQuantity: IFixed;
 	collateralCoinType: CoinType;
 	marketId: PerpetualsMarketId;
+	pendingOrders: bigint;
+	makerFee: IFixed;
+	takerFee: IFixed;
 }
 
 perpetualsBcsRegistry.registerStructType("Position", {
@@ -160,6 +168,9 @@ perpetualsBcsRegistry.registerStructType("Position", {
 	cumFundingRateShort: "u256",
 	asksQuantity: "u256",
 	bidsQuantity: "u256",
+	pendingOrders: "u64",
+	makerFee: "u256",
+	takerFee: "u256",
 });
 
 perpetualsBcsRegistry.registerStructType("PositionKey", {
