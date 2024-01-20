@@ -61,6 +61,7 @@ import {
 	PerpetualsMarketData,
 	PerpetualsRawAccountCap,
 	PostedOrderReceiptEvent,
+	ApiPerpetualsCancelOrderBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -1076,20 +1077,20 @@ export class PerpetualsApi {
 		});
 	};
 
-	public cancelOrderTx = (inputs: {
+	public cancelOrdersTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
-		orderId: PerpetualsOrderId;
+		orderIds: PerpetualsOrderId[];
 	}) => {
-		const { tx, collateralCoinType, accountCapId, marketId, orderId } =
+		const { tx, collateralCoinType, accountCapId, marketId, orderIds } =
 			inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
 				PerpetualsApi.constants.moduleNames.interface,
-				"cancel_order"
+				"cancel_orders"
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
@@ -1097,7 +1098,7 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.pure(orderId, "u128"),
+				tx.pure(orderIds, "vector<u128>"),
 			],
 		});
 	};
@@ -1426,24 +1427,48 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildCancelOrderTx = Helpers.transactions.createBuildTxFunc(
-		this.cancelOrderTx
-	);
+	public buildCancelOrderTx = (
+		inputs: ApiPerpetualsCancelOrderBody
+	): TransactionBlock => {
+		const { orderId, marketId, ...otherInputs } = inputs;
+
+		return this.buildCancelOrdersTx({
+			...otherInputs,
+			orderDatas: [{ orderId, marketId }],
+		});
+	};
 
 	public buildCancelOrdersTx = (
 		inputs: ApiPerpetualsCancelOrdersBody
 	): TransactionBlock => {
 		const { orderDatas, collateralCoinType, accountCapId } = inputs;
 
+		if (orderDatas.length <= 0)
+			throw new Error("cannot have order datas of length zero");
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		for (const orderData of orderDatas) {
-			this.cancelOrderTx({
+		const marketIdToOrderIds = orderDatas.reduce((acc, order) => {
+			if (order.marketId in acc) {
+				return {
+					...acc,
+					[order.marketId]: [...acc[order.marketId], order.orderId],
+				};
+			}
+			return {
+				...acc,
+				[order.marketId]: [order.orderId],
+			};
+		}, {} as Record<PerpetualsMarketId, PerpetualsOrderId[]>);
+
+		for (const [marketId, orderIds] of Object.entries(marketIdToOrderIds)) {
+			this.cancelOrdersTx({
 				tx,
 				collateralCoinType,
 				accountCapId,
-				...orderData,
+				marketId,
+				orderIds,
 			});
 		}
 
