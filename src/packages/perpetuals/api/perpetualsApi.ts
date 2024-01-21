@@ -586,15 +586,13 @@ export class PerpetualsApi {
 		// init tx and start session
 		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
 
-		// get orderbook object
-		const orderbookId = this.getOrderbookTx({
-			tx,
-			collateralCoinType,
-			marketId,
-		});
-
 		// get orderbook best price before order
-		this.bestPriceTx({ tx, orderbookId, side: bestPriceSide });
+		this.bestPriceTx({
+			tx,
+			marketId,
+			collateralCoinType,
+			side: bestPriceSide,
+		});
 
 		// place order
 		if ("slPrice" in inputs || "tpPrice" in inputs) {
@@ -621,7 +619,12 @@ export class PerpetualsApi {
 		this.getPositionTx({ ...inputs, tx });
 
 		// get orderbook best price after order
-		this.bestPriceTx({ tx, orderbookId, side: bestPriceSide });
+		this.bestPriceTx({
+			tx,
+			marketId,
+			collateralCoinType,
+			side: bestPriceSide,
+		});
 
 		// end session
 		this.endSessionAndTransferAccount({
@@ -645,7 +648,7 @@ export class PerpetualsApi {
 				...PerpetualsApiCasting.partialPositionFromRaw(
 					perpetualsBcsRegistry.de(
 						"Position",
-						new Uint8Array(allBytes[5 + bytesIndexOffet][0])
+						new Uint8Array(allBytes[4 + bytesIndexOffet][0])
 					)
 				),
 				collateralCoinType,
@@ -655,11 +658,11 @@ export class PerpetualsApi {
 			// deserialize orderbook prices
 			const bestOrderbookPriceBeforeOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(
-					allBytes[3 + bytesIndexOffet][0]
+					allBytes[2 + bytesIndexOffet][0]
 				);
 			const bestOrderbookPriceAfterOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(
-					allBytes[6 + bytesIndexOffet][0]
+					allBytes[5 + bytesIndexOffet][0]
 				);
 
 			// try find relevant events
@@ -741,7 +744,7 @@ export class PerpetualsApi {
 			};
 		} catch (error) {
 			if (!(error instanceof Error))
-				throw new Error("Invalid error thrown on preview order");
+				throw new Error("invalid error thrown on preview order");
 
 			return { error: error.message };
 		}
@@ -1308,21 +1311,20 @@ export class PerpetualsApi {
 
 	public bestPriceTx = (inputs: {
 		tx: TransactionBlock;
-		orderbookId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
+		collateralCoinType: CoinType;
 	}) /* Option<u256> */ => {
-		const { tx, orderbookId } = inputs;
+		const { tx, marketId, collateralCoinType } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.orderbook,
-				"best_price"
+				PerpetualsApi.constants.moduleNames.clearingHouse,
+				"get_best_price"
 			),
-			typeArguments: [],
+			typeArguments: [collateralCoinType],
 			arguments: [
-				typeof orderbookId === "string"
-					? tx.object(orderbookId)
-					: orderbookId, // Orderbook
+				tx.object(marketId), // ClearingHouse
 				tx.pure(Boolean(inputs.side), "bool"), // side
 			],
 		});
@@ -1756,8 +1758,8 @@ export class PerpetualsApi {
 		}
 
 		const executionPrice = Perpetuals.calcEntryPrice(filledTakerEvent);
-		const sizeFilled = Casting.IFixed.numberFromIFixed(
-			filledTakerEvent.baseAssetDelta
+		const sizeFilled = Math.abs(
+			Casting.IFixed.numberFromIFixed(filledTakerEvent.baseAssetDelta)
 		);
 		const sizePosted = sizeNum - sizeFilled;
 

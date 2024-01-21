@@ -64,7 +64,6 @@ export class PerpetualsApiCasting {
 		data: any,
 		collateralCoinType: CoinType
 	): PerpetualsRawAccountCap {
-		console.log("ACCOUNT", data);
 		return {
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,

@@ -112,13 +112,6 @@ export class PerpetualsMarket extends Caller {
 		const size = // (in lots)
 			BigInt(Math.ceil(optimisticSize / this.lotSize()));
 
-		console.log("INPUTS_1", {
-			size,
-			side,
-			price,
-			collateral,
-		});
-
 		const { executionPrice, sizeFilled, sizePosted } =
 			await this.getExecutionPrice({
 				size,
@@ -127,23 +120,16 @@ export class PerpetualsMarket extends Caller {
 				collateral,
 			});
 
-		const freeMarginUsd = account.calcFreeMarginUsdForPosition({
-			...inputs,
-			market: this,
-		});
+		const freeMarginUsd =
+			account.calcFreeMarginUsdForPosition({
+				...inputs,
+				market: this,
+			}) +
+			// assuming all account collateral is allocated to position
+			account.collateral() * inputs.collateralPrice;
 		const { minInitialMargin } = account.calcPnLAndMarginForPosition({
 			...inputs,
 			market: this,
-		});
-
-		console.log("INPUTS_2", {
-			...inputs,
-			freeMarginUsd,
-			minInitialMargin,
-			executionPrice,
-			sizeFilled,
-			sizePosted,
-			optimisticSize,
 		});
 
 		return this.calcPessimisticMaxOrderSizeUsd({
@@ -321,7 +307,8 @@ export class PerpetualsMarket extends Caller {
 				? executionPrice - indexPrice
 				: indexPrice - executionPrice) / indexPrice;
 
-		if (percentFilled !== 1 && slippage < 0) slippage = 0;
+		if ((percentFilled !== 1 && slippage < 0) || percentFilled === 0)
+			slippage = 0;
 
 		const SAFETY_SCALAR = Math.min(1 - slippage, 0.995);
 		let maxSize: number = 0;
