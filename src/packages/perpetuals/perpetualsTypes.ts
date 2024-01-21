@@ -396,39 +396,33 @@ export interface PerpetualsAccountObject {
 export interface DepositedCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: IFixed;
-	collateralDelta: IFixed;
+	collateralDelta: Balance;
 }
 
 export interface AllocatedCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: IFixed;
-	collateralDelta: IFixed;
-	positionCollateral: IFixed;
-	vaultBalance: Balance;
+	collateralDelta: Balance;
+	positionCollateralAfter: IFixed;
 }
 
 export interface DeallocatedCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: IFixed;
-	collateralDelta: IFixed;
-	positionCollateral: IFixed;
+	collateralDelta: Balance;
+	positionCollateralAfter: IFixed;
 }
 
 export interface WithdrewCollateralEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: IFixed;
-	collateralDelta: IFixed;
+	collateralDelta: Balance;
 }
 
 export interface SettledFundingEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: IFixed;
-	collateralDelta: IFixed;
+	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
 	marketFundingRateLong: IFixed;
 	marketFundingRateShort: IFixed;
@@ -483,8 +477,7 @@ export const isSettledFundingEvent = (
 export interface LiquidatedEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: IFixed;
-	collateralDelta: IFixed;
+	collateralDeltaUsd: IFixed;
 	liqorAccountId: PerpetualsAccountId;
 	size: bigint;
 	markPrice: IFixed;
@@ -547,8 +540,7 @@ export interface PostedOrderEvent extends Event {
 export interface FilledMakerOrderEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: IFixed;
-	collateralDelta: IFixed;
+	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
@@ -563,8 +555,7 @@ export interface FilledMakerOrderEvent extends Event {
 export interface FilledTakerOrderEvent extends Event {
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
-	collateral: IFixed;
-	collateralDelta: IFixed;
+	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
 	baseAssetAmount: IFixed;
 	quoteAssetNotionalAmount: IFixed;

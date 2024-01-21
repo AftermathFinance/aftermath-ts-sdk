@@ -65,11 +65,11 @@ export class PerpetualsApiCasting {
 		collateralCoinType: CoinType
 	): PerpetualsRawAccountCap {
 		return {
+			collateralCoinType,
 			objectId: Helpers.addLeadingZeroesToType(data.id),
 			objectType: data.objectType,
 			accountId: BigInt(data.accountId),
 			collateral: BigInt(data.collateral.value),
-			collateralCoinType,
 		};
 	}
 
@@ -99,11 +99,11 @@ export class PerpetualsApiCasting {
 		collateralCoinType: CoinType
 	): PerpetualsMarketData {
 		return {
+			collateralCoinType,
 			objectId: Helpers.addLeadingZeroesToType("0x" + data.id),
 			objectType: data.objectType,
 			marketParams: this.marketParamsFromRaw(data.marketParams),
 			marketState: this.marketStateFromRaw(data.marketState),
-			collateralCoinType,
 		};
 	}
 
@@ -188,8 +188,7 @@ export class PerpetualsApiCasting {
 		return {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
-			collateral: BigInt(fields.collateral),
-			collateralDelta: BigInt(0),
+			collateralDelta: BigInt(fields.collateral),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -206,8 +205,7 @@ export class PerpetualsApiCasting {
 		return {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
-			collateral: BigInt(fields.collateral),
-			collateralDelta: BigInt(0),
+			collateralDelta: BigInt(fields.collateral),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -224,8 +222,7 @@ export class PerpetualsApiCasting {
 		return {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
-			collateral: BigInt(fields.collateral),
-			collateralDelta: BigInt(0),
+			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			marketFundingRateLong: BigInt(fields.mkt_funding_rate_long),
 			marketFundingRateShort: BigInt(fields.mkt_funding_rate_short),
@@ -235,7 +232,7 @@ export class PerpetualsApiCasting {
 		};
 	};
 
-	public static allocatedCollaterlaEventFromOnChain = (
+	public static allocatedCollateralEventFromOnChain = (
 		eventOnChain: AllocatedCollateralEventOnChain
 	): AllocatedCollateralEvent => {
 		const fields = eventOnChain.parsedJson;
@@ -245,17 +242,15 @@ export class PerpetualsApiCasting {
 		return {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
-			collateral: BigInt(fields.account_collateral),
-			collateralDelta: BigInt(0),
-			positionCollateral: BigInt(fields.position_collateral),
-			vaultBalance: BigInt(fields.vault_balance),
+			collateralDelta: BigInt(fields.collateral),
+			positionCollateralAfter: BigInt(fields.position_collateral_after),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static deallocatedCollaterlaEventFromOnChain = (
+	public static deallocatedCollateralEventFromOnChain = (
 		eventOnChain: DeallocatedCollateralEventOnChain
 	): DeallocatedCollateralEvent => {
 		const fields = eventOnChain.parsedJson;
@@ -265,9 +260,8 @@ export class PerpetualsApiCasting {
 		return {
 			collateralCoinType,
 			accountId: BigInt(fields.account_id),
-			collateral: BigInt(fields.account_collateral),
-			collateralDelta: BigInt(0),
-			positionCollateral: BigInt(fields.position_collateral),
+			collateralDelta: BigInt(fields.collateral),
+			positionCollateralAfter: BigInt(fields.position_collateral_after),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -288,9 +282,7 @@ export class PerpetualsApiCasting {
 		return {
 			collateralCoinType,
 			accountId: BigInt(fields.liqee_account_id),
-			// TODO: update event on chain
-			collateral: BigInt(0),
-			collateralDelta: BigInt(0),
+			collateralDeltaUsd: BigInt(fields.liqee_collateral_change_usd),
 			liqorAccountId: BigInt(fields.liqor_account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			markPrice: BigInt(fields.mark_price),
@@ -316,9 +308,9 @@ export class PerpetualsApiCasting {
 			new Coin(eventOnChain.type).innerCoinType
 		);
 		return {
+			collateralCoinType,
 			user: Helpers.addLeadingZeroesToType(fields.user),
 			accountId: BigInt(fields.account_id),
-			collateralCoinType,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -384,8 +376,7 @@ export class PerpetualsApiCasting {
 			collateralCoinType,
 			baseAssetAmount: BigInt(fields.maker_base_amount),
 			accountId: BigInt(fields.maker_account_id),
-			collateral: BigInt(fields.maker_collateral),
-			collateralDelta: BigInt(0),
+			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			orderId: BigInt(fields.order_id),
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
@@ -419,8 +410,7 @@ export class PerpetualsApiCasting {
 			collateralCoinType,
 			baseAssetDelta,
 			accountId: BigInt(fields.taker_account_id),
-			collateral: BigInt(fields.taker_collateral),
-			collateralDelta: BigInt(0),
+			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			baseAssetAmount: BigInt(fields.taker_base_amount),
 			quoteAssetNotionalAmount: BigInt(fields.taker_quote_amount),

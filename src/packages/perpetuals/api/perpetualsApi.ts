@@ -298,7 +298,8 @@ export class PerpetualsApi {
 							return {
 								...event,
 								side: Perpetuals.orderIdToSide(event.orderId),
-								filledSize: currentOrderSizes[index],
+								filledSize:
+									initialSize - currentOrderSizes[index],
 								initialSize,
 							};
 						});
@@ -334,84 +335,75 @@ export class PerpetualsApi {
 	): Promise<IndexerEventsWithCursor<CollateralEvent>> {
 		const { accountId, cursor, limit } = inputs;
 
-		const eventsData: IndexerEventsWithCursor<CollateralEvent> =
-			await this.Provider.indexerCaller.fetchIndexerEvents(
-				`perpetuals/accounts/${accountId}/events/collateral`,
-				{
-					cursor,
-					limit,
-				},
-				(event) => {
-					const eventType = (event as EventOnChain<any>).type;
-					return eventType.includes(
-						this.eventTypes.withdrewCollateral
-					)
-						? Casting.perpetuals.withdrewCollateralEventFromOnChain(
-								event as WithdrewCollateralEventOnChain
-						  )
-						: eventType.includes(
-								this.eventTypes.depositedCollateral
-						  )
-						? Casting.perpetuals.depositedCollateralEventFromOnChain(
-								event as DepositedCollateralEventOnChain
-						  )
-						: eventType.includes(this.eventTypes.settledFunding)
-						? Casting.perpetuals.settledFundingEventFromOnChain(
-								event as SettledFundingEventOnChain
-						  )
-						: eventType.includes(
-								this.eventTypes.allocatedCollateral
-						  )
-						? Casting.perpetuals.allocatedCollaterlaEventFromOnChain(
-								event as AllocatedCollateralEventOnChain
-						  )
-						: eventType.includes(
-								this.eventTypes.deallocatedCollateral
-						  )
-						? Casting.perpetuals.deallocatedCollaterlaEventFromOnChain(
-								event as DeallocatedCollateralEventOnChain
-						  )
-						: eventType.includes(this.eventTypes.liquidated)
-						? Casting.perpetuals.liquidatedEventFromOnChain(
-								event as LiquidatedEventOnChain
-						  )
-						: eventType.includes(this.eventTypes.filledMakerOrder)
-						? Casting.perpetuals.filledMakerOrderEventFromOnChain(
-								event as FilledMakerOrderEventOnChain
-						  )
-						: Casting.perpetuals.filledTakerOrderEventFromOnChain(
-								event as FilledTakerOrderEventOnChain
-						  );
-				}
-			);
-
-		// set collateral delta based off of previous event
-		for (const [index, event] of eventsData.events.entries()) {
-			if (index >= eventsData.events.length - 1) {
-				eventsData.events[index].collateralDelta = event.collateral;
-				continue;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`perpetuals/accounts/${accountId}/events/collateral`,
+			{
+				cursor,
+				limit,
+			},
+			(event) => {
+				const eventType = (event as EventOnChain<any>).type;
+				return eventType.includes(this.eventTypes.withdrewCollateral)
+					? Casting.perpetuals.withdrewCollateralEventFromOnChain(
+							event as WithdrewCollateralEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.depositedCollateral)
+					? Casting.perpetuals.depositedCollateralEventFromOnChain(
+							event as DepositedCollateralEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.settledFunding)
+					? Casting.perpetuals.settledFundingEventFromOnChain(
+							event as SettledFundingEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.allocatedCollateral)
+					? Casting.perpetuals.allocatedCollateralEventFromOnChain(
+							event as AllocatedCollateralEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.deallocatedCollateral)
+					? Casting.perpetuals.deallocatedCollateralEventFromOnChain(
+							event as DeallocatedCollateralEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.liquidated)
+					? Casting.perpetuals.liquidatedEventFromOnChain(
+							event as LiquidatedEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.filledMakerOrder)
+					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
+							event as FilledMakerOrderEventOnChain
+					  )
+					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
+							event as FilledTakerOrderEventOnChain
+					  );
 			}
+		);
 
-			const previousEvent = eventsData.events[index + 1];
-			eventsData.events[index].collateralDelta =
-				Casting.IFixed.iFixedFromNumber(
-					Math.abs(
-						Casting.IFixed.numberFromIFixed(event.collateral)
-					) -
-						Math.abs(
-							Casting.IFixed.numberFromIFixed(
-								previousEvent.collateral
-							)
-						)
-				);
-		}
+		// // set collateral delta based off of previous event
+		// for (const [index, event] of eventsData.events.entries()) {
+		// 	if (index >= eventsData.events.length - 1) {
+		// 		eventsData.events[index].collateralDelta = event.collateral;
+		// 		continue;
+		// 	}
 
-		// if more events exist then remove last event since unable to calculate collateral delta
-		if (cursor !== undefined) {
-			eventsData.events = eventsData.events.slice(0, -1);
-		}
+		// 	const previousEvent = eventsData.events[index + 1];
+		// 	eventsData.events[index].collateralDelta =
+		// 		Casting.IFixed.iFixedFromNumber(
+		// 			Math.abs(
+		// 				Casting.IFixed.numberFromIFixed(event.collateral)
+		// 			) -
+		// 				Math.abs(
+		// 					Casting.IFixed.numberFromIFixed(
+		// 						previousEvent.collateral
+		// 					)
+		// 				)
+		// 		);
+		// }
 
-		return eventsData;
+		// // if more events exist then remove last event since unable to calculate collateral delta
+		// if (cursor !== undefined) {
+		// 	eventsData.events = eventsData.events.slice(0, -1);
+		// }
+
+		// return eventsData;
 	}
 
 	public async fetchAccountOrderEvents(
@@ -778,7 +770,9 @@ export class PerpetualsApi {
 	}): Promise<PerpetualsMarketId[]> => {
 		const { collateralCoinType } = inputs;
 		return this.Provider.indexerCaller.fetchIndexer(
-			`perpetuals/markets/${collateralCoinType}`
+			`perpetuals/markets/${Helpers.addLeadingZeroesToType(
+				collateralCoinType
+			)}`
 		);
 	};
 
