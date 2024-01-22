@@ -611,9 +611,8 @@ export class PerpetualsAccount extends Caller {
 			asksQuantity: BigInt(0),
 			bidsQuantity: BigInt(0),
 			pendingOrders: BigInt(0),
-			// NOTE: should these default fees be 100% or 0% ?
-			makerFee: BigInt(0),
-			takerFee: BigInt(0),
+			makerFee: BigInt(1000000000000000000), // 100%
+			takerFee: BigInt(1000000000000000000), // 100%
 		};
 	};
 }
