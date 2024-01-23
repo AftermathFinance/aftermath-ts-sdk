@@ -85,6 +85,7 @@ import { PerpetualsOrderUtils } from "../utils";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -1559,6 +1560,15 @@ export class PerpetualsApi {
 
 		return tx;
 	};
+
+	// TODO: add to sdk
+	public buildAllocateCollateralTx = TransactionsApiHelpers.createBuildTxFunc(
+		this.allocateCollateralTx
+	);
+
+	// TODO: add to sdk
+	public buildDeallocateCollateralTx =
+		TransactionsApiHelpers.createBuildTxFunc(this.deallocateCollateralTx);
 
 	// =========================================================================
 	//  Helpers
