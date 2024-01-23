@@ -201,8 +201,6 @@ export interface RouterSerializableCompleteGraph {
 	pools: RouterSerializablePoolsById;
 }
 
-export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
-
 export interface RouterSynchronousOptions {
 	maxRouteLength: number;
 	tradePartitionCount: number;

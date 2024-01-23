@@ -7,7 +7,6 @@ import {
 	RouterExternalFee,
 	RouterSynchronousOptions,
 	RouterSerializableCompleteGraph,
-	RouterSupportedCoinPaths,
 	RouterTradeCoin,
 	RouterTradeInfo,
 	RouterTradePath,
@@ -261,76 +260,6 @@ export class RouterGraph {
 	// =========================================================================
 	//  Supported Coins
 	// =========================================================================
-
-	// TODO: do this more efficiently
-	public static supportedCoinPathsFromGraph = (inputs: {
-		graph: RouterSerializableCompleteGraph;
-		maxRouteLength: number;
-	}): RouterSupportedCoinPaths => {
-		const nodes = Object.values(inputs.graph.coinNodes);
-		const pools = inputs.graph.pools;
-
-		let startingUnhoppableCoinPaths: RouterSupportedCoinPaths = {};
-
-		const startingCoinPaths: RouterSupportedCoinPaths = nodes.reduce(
-			(acc, node) => {
-				const coinIn = node.coin;
-				const coinsOut = Object.entries(node.coinOutThroughPoolEdges)
-					.filter(([coinOut, poolUids]) => {
-						const unHoppablePoolUids = poolUids.filter(
-							(uid) =>
-								createRouterPool({
-									pool: pools[uid],
-									network: "",
-								}).noHopsAllowed
-						);
-
-						if (unHoppablePoolUids.length > 0) {
-							if (coinIn in startingUnhoppableCoinPaths) {
-								startingUnhoppableCoinPaths = {
-									...startingUnhoppableCoinPaths,
-									[coinIn]: Helpers.uniqueArray([
-										...startingUnhoppableCoinPaths[coinIn],
-										coinOut,
-									]),
-								};
-							} else {
-								startingUnhoppableCoinPaths = {
-									...startingUnhoppableCoinPaths,
-									[coinIn]: [coinOut],
-								};
-							}
-						}
-
-						const allPoolsAreUnHoppable =
-							unHoppablePoolUids.length === poolUids.length;
-						return !allPoolsAreUnHoppable;
-					})
-					.map(([key]) => key);
-
-				return {
-					...acc,
-					[coinIn]: coinsOut,
-				};
-			},
-			{}
-		);
-
-		const regularCoinPaths = this.extendCoinPathsForHops({
-			startingCoinPaths,
-			maxHops: inputs.maxRouteLength,
-		});
-		const unhoppableCoinPaths = this.extendCoinPathsForHops({
-			startingCoinPaths: startingUnhoppableCoinPaths,
-			maxHops: 1,
-		});
-
-		const mergedCoinPaths = this.mergeCoinPaths({
-			coinPaths1: regularCoinPaths,
-			coinPaths2: unhoppableCoinPaths,
-		});
-		return mergedCoinPaths;
-	};
 
 	public static supportedCoinsFromGraph = (inputs: {
 		graph: RouterSerializableCompleteGraph;
@@ -1143,74 +1072,5 @@ export class RouterGraph {
 			externalFee,
 			referrer,
 		};
-	};
-
-	// =========================================================================
-	//  Supported Coins
-	// =========================================================================
-
-	private static extendCoinPathsForHops = (inputs: {
-		startingCoinPaths: RouterSupportedCoinPaths;
-		maxHops: number;
-	}): RouterSupportedCoinPaths => {
-		const { startingCoinPaths, maxHops } = inputs;
-
-		let extendedCoinPaths: RouterSupportedCoinPaths =
-			Helpers.deepCopy(startingCoinPaths);
-
-		// account for max possible hops
-		for (const _ of Array(maxHops).fill(0)) {
-			for (const [coinIn, coinsOut] of Object.entries(
-				startingCoinPaths
-			)) {
-				let newCoinsOut = [...coinsOut];
-
-				for (const coinOut of coinsOut) {
-					newCoinsOut = [
-						...newCoinsOut,
-						...startingCoinPaths[coinOut],
-					];
-				}
-
-				extendedCoinPaths[coinIn] = Helpers.uniqueArray([
-					...newCoinsOut,
-				]).filter((coin) => coin !== coinIn);
-			}
-		}
-
-		return extendedCoinPaths;
-	};
-
-	private static mergeCoinPaths = (inputs: {
-		coinPaths1: RouterSupportedCoinPaths;
-		coinPaths2: RouterSupportedCoinPaths;
-	}) => {
-		const { coinPaths1, coinPaths2 } = inputs;
-
-		let mergedCoinPaths: RouterSupportedCoinPaths =
-			Helpers.deepCopy(coinPaths1);
-
-		for (const coinPath of Object.entries(coinPaths2)) {
-			const fromCoin = coinPath[0];
-			const toCoins = coinPath[1];
-
-			if (fromCoin in mergedCoinPaths) {
-				mergedCoinPaths = {
-					...mergedCoinPaths,
-					[fromCoin]: Helpers.uniqueArray([
-						...mergedCoinPaths[fromCoin],
-						...toCoins,
-					]),
-				};
-				continue;
-			}
-
-			mergedCoinPaths = {
-				...mergedCoinPaths,
-				[fromCoin]: toCoins,
-			};
-		}
-
-		return mergedCoinPaths;
 	};
 }
