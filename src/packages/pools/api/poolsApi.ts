@@ -157,7 +157,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	/**
 	 * Creates an instance of PoolsApi.
 	 * @param {AftermathApi} Provider - An instance of AftermathApi.
-	 * @throws {Error} Throws an error if not all required addresses have been set in provider.
+	 * @throws {Error} Throws an error if not all required addresses have been set in AfSdk
 	 */
 	constructor(private readonly Provider: AftermathApi) {
 		const pools = Provider.addresses.pools;
@@ -506,6 +506,46 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		});
 
 		return tx;
+	};
+
+	public fetchAddTradeTx = async (inputs: {
+		tx: TransactionBlock;
+		coinInId: ObjectId | TransactionObjectArgument;
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		pool: Pool;
+		referrer?: SuiAddress;
+	}): Promise<TransactionObjectArgument> /* Coin */ => {
+		const {
+			tx,
+			coinInId,
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			slippage,
+			pool,
+			referrer,
+		} = inputs;
+
+		const amountOut = pool.getTradeAmountOut({
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			referral: referrer !== undefined,
+		});
+
+		return this.tradeTx({
+			tx,
+			coinInId,
+			poolId: pool.pool.objectId,
+			expectedCoinOutAmount: amountOut,
+			lpCoinType: pool.pool.lpCoinType,
+			coinInType,
+			coinOutType,
+			slippage,
+		});
 	};
 
 	/**

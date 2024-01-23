@@ -34,8 +34,9 @@
 	},
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
-		"@mysten/sui.js": "^0.47.0",
+		"@mysten/sui.js": "^0.48.1",
 		"@pythnetwork/pyth-sui-js": "^1.2.3",
+		"@scallop-io/sui-scallop-sdk": "^0.44.10",
 		"bn.js": "^5.2.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",

@@ -12,23 +12,20 @@ export type RpcEndpoint = string;
 //  All Addresses
 // =========================================================================
 
-export type ConfigAddresses = RequiredConfigAddresses &
-	Partial<OptionalConfigAddresses>;
-
-interface RequiredConfigAddresses {}
-
-interface OptionalConfigAddresses {
-	faucet: FaucetAddresses;
-	staking: StakingAddresses;
-	pools: PoolsAddresses;
-	suiFrens: SuiFrensAddresses;
-	nftAmm: NftAmmAddresses;
-	router: RouterAddresses;
-	referralVault: ReferralVaultAddresses;
-	perpetuals: PerpetualsAddresses;
-	oracle: OracleAddresses;
-	farms: FarmsAddresses;
-	dynamicGas: DynamicGasAddresses;
+export interface ConfigAddresses {
+	faucet?: FaucetAddresses;
+	staking?: StakingAddresses;
+	pools?: PoolsAddresses;
+	suiFrens?: SuiFrensAddresses;
+	nftAmm?: NftAmmAddresses;
+	router?: RouterAddresses;
+	referralVault?: ReferralVaultAddresses;
+	perpetuals?: PerpetualsAddresses;
+	oracle?: OracleAddresses;
+	farms?: FarmsAddresses;
+	dynamicGas?: DynamicGasAddresses;
+	scallop?: ScallopAddresses;
+	leveragedStaking?: LeveragedStakingAddresses;
 }
 
 // =========================================================================
@@ -60,6 +57,18 @@ export interface StakingAddresses {
 		treasury: ObjectId;
 		referralVault: ObjectId;
 		validatorConfigsTable: ObjectId;
+	};
+}
+
+export interface LeveragedStakingAddresses {
+	packages: {
+		leveragedAfSui: SuiAddress;
+		leveragedAfSuiInitial: SuiAddress;
+	};
+	objects: {
+		leveragedAfSuiState: ObjectId;
+		afSuiSuiPoolId: ObjectId;
+		aftermathValidator: ObjectId;
 	};
 }
 
@@ -299,5 +308,14 @@ export interface OracleAddresses {
 	};
 	objects: {
 		priceFeedStorage: ObjectId;
+	};
+}
+
+export interface ScallopAddresses {
+	objects: {
+		version: ObjectId;
+		afSuiMarket: ObjectId;
+		coinDecimalsRegistry: ObjectId;
+		xOracle: ObjectId;
 	};
 }

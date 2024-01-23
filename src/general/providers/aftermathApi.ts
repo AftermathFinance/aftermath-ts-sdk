@@ -20,6 +20,7 @@ import {
 	PartialRouterOptions,
 	RouterProtocolName,
 	RouterSynchronousOptions,
+	ScallopProviders,
 	Url,
 } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
@@ -33,6 +34,7 @@ import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
+import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -158,4 +160,7 @@ export class AftermathApi {
 		regularOptions?: PartialRouterOptions,
 		preAsyncOptions?: Partial<RouterSynchronousOptions>
 	) => new RouterApi(this, protocols, regularOptions, preAsyncOptions);
+
+	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
+		new LeveragedStakingApi(this, ScallopProviders);
 }

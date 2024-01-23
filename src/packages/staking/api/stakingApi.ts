@@ -1,6 +1,7 @@
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -27,10 +28,12 @@ import {
 	UnstakeRequestedEvent,
 	StakedSuiVaultStateObject,
 	AfSuiRouterPoolObject,
+	ApiLeveragedStakeBody,
 } from "../stakingTypes";
 import {
 	AfSuiRouterWrapperAddresses,
 	AnyObjectType,
+	ApiIndexerEventsBody,
 	ApiIndexerUserEventsBody,
 	Balance,
 	CoinType,
@@ -46,6 +49,7 @@ import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { StakingApiCasting } from "./stakingApiCasting";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import { RouterPoolTradeTxInputs } from "../..";
+import { Scallop } from "@scallop-io/sui-scallop-sdk";
 
 export class StakingApi
 	implements RouterSynchronousApiInterface<AfSuiRouterPoolObject>
@@ -397,7 +401,7 @@ export class StakingApi
 	//  Inspection Transaction Commands
 	// =========================================================================
 
-	public afsuiToSuiExchangeRateTx = (inputs: {
+	public afSuiToSuiExchangeRateTx = (inputs: {
 		tx: TransactionBlock;
 	}) /* (u128) */ => {
 		const { tx } = inputs;
@@ -406,6 +410,24 @@ export class StakingApi
 				this.addresses.staking.packages.lsd,
 				StakingApi.constants.moduleNames.stakedSuiVault,
 				"afsui_to_sui_exchange_rate"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+			],
+		});
+	};
+
+	public suiToAfSuiExchangeRateTx = (inputs: {
+		tx: TransactionBlock;
+	}) /* (u128) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.staking.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"sui_to_afsui_exchange_rate"
 			),
 			typeArguments: [],
 			arguments: [
@@ -426,6 +448,46 @@ export class StakingApi
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.staking.objects.stakedSuiVault),
+			],
+		});
+	};
+
+	public afSuiToSuiTx = (inputs: {
+		tx: TransactionBlock;
+		afSuiAmount: Balance;
+	}) /* (u64) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.staking.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"afsui_to_sui"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+				tx.pure(inputs.afSuiAmount, "u64"),
+			],
+		});
+	};
+
+	public suiToAfSuiTx = (inputs: {
+		tx: TransactionBlock;
+		suiAmount: Balance;
+	}) /* (u64) */ => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.staking.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"sui_to_afsui"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.staking.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.staking.objects.safe), // Safe
+				tx.pure(inputs.suiAmount, "u64"),
 			],
 		});
 	};
@@ -797,7 +859,7 @@ export class StakingApi
 
 	public fetchAfSuiToSuiExchangeRate = async (): Promise<number> => {
 		const tx = new TransactionBlock();
-		this.afsuiToSuiExchangeRateTx({ tx });
+		this.afSuiToSuiExchangeRateTx({ tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
 				tx,
@@ -814,16 +876,56 @@ export class StakingApi
 	// =========================================================================
 
 	public liquidStakingApy = async (): Promise<number> => {
-		const limit = 30; // ~30 epochs of data
-		// const recentEpochChanges =
-		// 	await this.Provider.indexerCaller.fetchIndexerEvents(
-		// 		`staking/events/epoch-was-changed`,
-		// 		{
-		// 			limit,
-		// 		},
-		// 		Casting.staking.epochWasChangedEventFromOnChain
-		// 	);
-		const recentEpochChanges =
+		const limit = 30 + 2; // ~30 days/epochs of data
+		// + 2 to account for apy being calculated from events delta
+		// (and possible initial 0 afsui supply)
+		const recentEpochChanges = await this.fetchEpochWasChangedEvents({
+			limit,
+		});
+		if (recentEpochChanges.events.length <= 2) return 0;
+
+		const daysInYear = 365;
+		const avgApy =
+			(Helpers.sum(
+				recentEpochChanges.events.slice(2).map((event, index) => {
+					const currentRate = Number(event.totalAfSuiSupply)
+						? Number(event.totalSuiAmount) /
+						  Number(event.totalAfSuiSupply)
+						: 1;
+
+					const pastEvent = recentEpochChanges.events[index + 1];
+					const pastRate = Number(pastEvent.totalAfSuiSupply)
+						? Number(pastEvent.totalSuiAmount) /
+						  Number(pastEvent.totalAfSuiSupply)
+						: 1;
+
+					return (currentRate - pastRate) / pastRate;
+				})
+			) /
+				(recentEpochChanges.events.length - 2)) *
+			daysInYear;
+
+		return avgApy;
+	};
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async fetchEpochWasChangedEvents(inputs: ApiIndexerEventsBody) {
+		const { cursor, limit } = inputs;
+		// const eventsData = await this.Provider.indexerCaller.fetchIndexerEvents(
+		// 	`staking/events/epoch-was-changed`,
+		// 	{
+		// 		cursor,
+		// 		limit,
+		// 	},
+		// 	Casting.staking.epochWasChangedEventFromOnChain
+		// );
+		// // TODO: move timestamp ordering reversal to indexer
+		// eventsData.events.reverse();
+		// return eventsData;
+		const eventsData =
 			await this.Provider.Events().fetchCastEventsWithCursor({
 				query: {
 					MoveEventType: this.eventTypes.epochWasChanged,
@@ -832,39 +934,11 @@ export class StakingApi
 					Casting.staking.epochWasChangedEventFromOnChain,
 				limit,
 			});
-		if (recentEpochChanges.events.length <= 1) return 4.9;
+		eventsData.events.reverse();
+		return eventsData;
+	}
 
-		const avgApy =
-			Helpers.sum(
-				recentEpochChanges.events.splice(1).map((event, index) => {
-					const currentRate = Number(event.totalAfSuiSupply)
-						? Number(event.totalSuiAmount) /
-						  Number(event.totalAfSuiSupply)
-						: 0;
-
-					const pastEvent = recentEpochChanges.events[index - 1];
-					const pastRate = Number(pastEvent.totalAfSuiSupply)
-						? Number(pastEvent.totalSuiAmount) /
-						  Number(pastEvent.totalAfSuiSupply)
-						: 0;
-
-					return (currentRate - pastRate) / pastRate;
-				})
-			) /
-			(recentEpochChanges.events.length - 1);
-
-		return avgApy;
-	};
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	private async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
+	public async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
 			`staking/${walletAddress}/events/staked`,
@@ -876,7 +950,7 @@ export class StakingApi
 		);
 	}
 
-	private async fetchUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
+	public async fetchUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
 			`staking/${walletAddress}/events/unstaked`,
@@ -888,9 +962,7 @@ export class StakingApi
 		);
 	}
 
-	private async fetchUnstakeRequestedEvents(
-		inputs: ApiIndexerUserEventsBody
-	) {
+	public async fetchUnstakeRequestedEvents(inputs: ApiIndexerUserEventsBody) {
 		const { walletAddress, cursor, limit } = inputs;
 		return this.Provider.indexerCaller.fetchIndexerEvents(
 			`staking/${walletAddress}/events/unstake-requested`,
@@ -901,6 +973,10 @@ export class StakingApi
 			Casting.staking.unstakeRequestedEventFromOnChain
 		);
 	}
+
+	// =========================================================================
+	//  Private Methods
+	// =========================================================================
 
 	// =========================================================================
 	//  Event Types

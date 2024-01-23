@@ -11,7 +11,7 @@ import {
 import { Helpers } from "./helpers";
 
 export class Caller {
-	private readonly apiBaseUrl?: Url;
+	protected readonly apiBaseUrl?: Url;
 
 	// =========================================================================
 	//  Constructor

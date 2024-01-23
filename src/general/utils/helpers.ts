@@ -6,6 +6,8 @@ import {
 import {
 	AnyObjectType,
 	Balance,
+	ScallopProviders,
+	SuiNetwork,
 	CoinsToDecimals,
 	CoinsToPrice,
 	ObjectId,
@@ -17,6 +19,12 @@ import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
 import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
 import { Casting } from "./casting";
+import {
+	TransactionBlock,
+	TransactionObjectArgument,
+} from "@mysten/sui.js/transactions";
+import { Scallop } from "@scallop-io/sui-scallop-sdk";
+import { NetworkType } from "@scallop-io/sui-kit";
 import { is } from "@mysten/sui.js/utils";
 import { IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { Coin } from "../..";
@@ -330,6 +338,52 @@ export class Helpers {
 		if (display) return display;
 
 		throw new Error("no object display found on " + data.data?.objectId);
+	}
+
+	// =========================================================================
+	//  Tx Command Input Construction
+	// =========================================================================
+
+	// TODO: use this everywhere in api for tx command creation
+	public static addTxObject = (
+		tx: TransactionBlock,
+		object: ObjectId | TransactionObjectArgument
+	): TransactionObjectArgument => {
+		return typeof object === "string" ? tx.object(object) : object;
+	};
+
+	// =========================================================================
+	//  Constructors
+	// =========================================================================
+
+	public static async createScallopProviders(inputs: {
+		network: SuiNetwork;
+	}): Promise<ScallopProviders> {
+		const network = inputs.network.toLowerCase();
+		const networkType =
+			network === "local"
+				? "localnet"
+				: network !== "mainnet" &&
+				  network !== "testnet" &&
+				  network !== "localnet"
+				? undefined
+				: network;
+		if (!networkType)
+			throw new Error(`network \`${inputs.network}\` not found`);
+
+		const Main = new Scallop({
+			networkType,
+		});
+		const [Builder, Query] = await Promise.all([
+			Main.createScallopBuilder(),
+			Main.createScallopQuery(),
+		]);
+		// await Promise.all([Builder.init(), Query.init()]);
+		return {
+			Main,
+			Builder,
+			Query,
+		};
 	}
 
 	// =========================================================================
