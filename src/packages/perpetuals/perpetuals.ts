@@ -22,6 +22,7 @@ import {
 	PerpetualsAccountCap,
 	PerpetualsAccountId,
 	PerpetualsAccountObject,
+	IFixed,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -139,12 +140,15 @@ export class Perpetuals extends Caller {
 	//  Class Objects
 	// =========================================================================
 
-	public async getAllMarketDatas(inputs: {
+	public async getAllMarkets(inputs: {
 		collateralCoinType: CoinType;
-	}): Promise<PerpetualsMarketData[]> {
+	}): Promise<PerpetualsMarket[]> {
 		const { collateralCoinType } = inputs;
-		return this.fetchApi<PerpetualsMarketData[]>(
+		const marketDatas = await this.fetchApi<PerpetualsMarketData[]>(
 			`${collateralCoinType}/markets`
+		);
+		return marketDatas.map(
+			(marketData) => new PerpetualsMarket(marketData, this.network)
 		);
 	}
 
@@ -152,23 +156,10 @@ export class Perpetuals extends Caller {
 		marketId: PerpetualsMarketId;
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket> {
-		const { marketId, collateralCoinType } = inputs;
-
-		const urlPrefix = `${collateralCoinType}/markets/${marketId}`;
-		const [marketData, marketState, orderbook] = await Promise.all([
-			this.fetchApi<PerpetualsMarketData>(urlPrefix),
-			this.fetchApi<PerpetualsMarketState>(`${urlPrefix}/market-state`),
-			this.fetchApi<PerpetualsOrderbook>(`${urlPrefix}/orderbook`),
-		]);
-
-		return new PerpetualsMarket(
-			marketData.marketId,
-			collateralCoinType,
-			marketData.marketParams,
-			marketState,
-			orderbook,
-			this.network
+		const marketData = await this.fetchApi<PerpetualsMarketData>(
+			`${inputs.collateralCoinType}/markets/${inputs.marketId}`
 		);
+		return new PerpetualsMarket(marketData, this.network);
 	}
 
 	public async getMarkets(inputs: {
@@ -179,29 +170,6 @@ export class Perpetuals extends Caller {
 		return Promise.all(
 			inputs.marketIds.map((marketId) =>
 				this.getMarket({
-					marketId,
-					collateralCoinType,
-				})
-			)
-		);
-	}
-
-	public async getMarketData(inputs: {
-		marketId: PerpetualsMarketId;
-		collateralCoinType: CoinType;
-	}): Promise<PerpetualsMarketData> {
-		const { marketId, collateralCoinType } = inputs;
-		return this.fetchApi(`${collateralCoinType}/markets/${marketId}`);
-	}
-
-	public async getMarketDatas(inputs: {
-		marketIds: PerpetualsMarketId[];
-		collateralCoinType: CoinType;
-	}): Promise<PerpetualsMarketData[]> {
-		const { collateralCoinType } = inputs;
-		return Promise.all(
-			inputs.marketIds.map((marketId) =>
-				this.getMarketData({
 					marketId,
 					collateralCoinType,
 				})
@@ -276,15 +244,10 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public static positionSide(inputs: {
-		position: PerpetualsPosition;
+		baseAssetAmount: IFixed;
 	}): PerpetualsOrderSide {
-		const { position } = inputs;
-
-		const baseAmount = IFixedUtils.numberFromIFixed(
-			position.baseAssetAmount
-		);
+		const baseAmount = IFixedUtils.numberFromIFixed(inputs.baseAssetAmount);
 		const isLong = Math.sign(baseAmount);
-
 		const side =
 			isLong >= 0 ? PerpetualsOrderSide.Bid : PerpetualsOrderSide.Ask;
 		return side;
@@ -357,22 +320,29 @@ export class Perpetuals extends Caller {
 		return BigInt(Math.round(lotOrTickSize * FixedUtils.fixedOneN9));
 	}
 
+	public static orderIdToSide = (
+		orderId: PerpetualsOrderId
+	): PerpetualsOrderSide => {
+		return Perpetuals.OrderUtils.isAsk(orderId)
+			? PerpetualsOrderSide.Ask
+			: PerpetualsOrderSide.Bid;
+	};
+
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
 
 	public static calcEntryPrice(inputs: {
-		position: PerpetualsPosition;
+		baseAssetAmount: IFixed;
+		quoteAssetNotionalAmount: IFixed;
 	}): number {
-		const { position } = inputs;
+		const { baseAssetAmount, quoteAssetNotionalAmount } = inputs;
 
-		const denominator = Casting.IFixed.numberFromIFixed(
-			position.baseAssetAmount
-		);
+		const denominator = Casting.IFixed.numberFromIFixed(baseAssetAmount);
 		if (!denominator) return 0;
 
 		return (
-			Casting.IFixed.numberFromIFixed(position.quoteAssetNotionalAmount) /
+			Casting.IFixed.numberFromIFixed(quoteAssetNotionalAmount) /
 			denominator
 		);
 	}

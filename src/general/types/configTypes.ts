@@ -280,7 +280,6 @@ export interface PerpetualsAddresses {
 	objects: {
 		adminCapability: ObjectId;
 		registry: ObjectId;
-		exchanges: Record<CoinType, ExchangeAddresses>;
 	};
 }
 
@@ -293,13 +292,6 @@ export interface FarmsAddresses {
 
 export interface DynamicGasAddresses {
 	sponsorAddress: SuiAddress;
-}
-
-export interface ExchangeAddresses {
-	accountManager: ObjectId;
-	marketManager: ObjectId;
-	vault: ObjectId;
-	insuranceFunds: ObjectId;
 }
 
 export interface OracleAddresses {

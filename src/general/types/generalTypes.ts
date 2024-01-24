@@ -40,6 +40,7 @@ export type Apy = number;
 export type SerializedTransaction = string;
 export type TxBytes = string;
 export type BigIntAsString = string;
+export type IFixedAsString = string;
 export type KeyType = string;
 export type AnyObjectType = string;
 export type ModuleName = string;

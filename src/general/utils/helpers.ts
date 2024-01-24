@@ -133,6 +133,8 @@ export class Helpers {
 	public static minBigInt = (...args: bigint[]) =>
 		args.reduce((m, e) => (e < m ? e : m));
 
+	public static absBigInt = (num: bigint) => (num < BigInt(0) ? -num : num);
+
 	// =========================================================================
 	//  Display
 	// =========================================================================
