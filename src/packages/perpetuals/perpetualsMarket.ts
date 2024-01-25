@@ -364,7 +364,7 @@ export class PerpetualsMarket extends Caller {
 		);
 	};
 
-	public calcCollateralRequiredForOrder = async (inputs: {
+	public calcCollateralRequiredForOrder = (inputs: {
 		fills: PerpetualsFilledOrderData[];
 		position: PerpetualsPosition | undefined;
 		side: PerpetualsOrderSide;
@@ -372,7 +372,7 @@ export class PerpetualsMarket extends Caller {
 		indexPrice: number;
 		collateralPrice: number;
 		price: number | undefined;
-	}): Promise<number> => {
+	}): number => {
 		const {
 			position,
 			size,
