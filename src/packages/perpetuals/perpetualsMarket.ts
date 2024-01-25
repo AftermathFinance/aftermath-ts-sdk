@@ -1,4 +1,4 @@
-import { Casting, Coin, PerpetualsAccount } from "../..";
+import { Casting, Coin, Helpers, PerpetualsAccount } from "../..";
 import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -384,7 +384,7 @@ export class PerpetualsMarket extends Caller {
 		} = inputs;
 
 		let sizeRemaining = size;
-		let fillsRemaining = fills;
+		let fillsRemaining = Helpers.deepCopy(fills);
 		let sizeFilled = 0;
 		let sizeFilledUsd = 0;
 		while (sizeRemaining > 0 && fillsRemaining.length > 0) {
@@ -406,20 +406,29 @@ export class PerpetualsMarket extends Caller {
 			sizeRemaining -= sizeToFill;
 			fillsRemaining[0].size -= sizeToFill;
 
-			if (fill.size <= 0) {
+			if (fillsRemaining[0].size <= 0) {
 				fillsRemaining = [...fillsRemaining.slice(1)];
 			}
 		}
 
 		const imr = this.initialMarginRatio();
-		const sizePosted = size - sizeFilled;
-		const executionPrice = sizeFilledUsd / sizeFilled;
+		const sizePosted = sizeRemaining;
+		const executionPrice = sizeFilled ? sizeFilledUsd / sizeFilled : 0;
 
 		const collateralChangeAbs =
-			((1 + Perpetuals.constants.marginOfError) *
-				(sizeFilled * executionPrice * imr +
-					sizePosted * indexPrice * imr)) /
+			(sizeFilled * executionPrice * imr +
+				sizePosted * indexPrice * imr) /
 			collateralPrice;
+
+		console.log({
+			size,
+			sizeFilled,
+			executionPrice,
+			imr,
+			sizePosted,
+			indexPrice,
+			collateralPrice,
+		});
 
 		return position
 			? (Perpetuals.positionSide(position) === side ? 1 : -1) *

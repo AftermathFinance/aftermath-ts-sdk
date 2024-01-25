@@ -609,9 +609,6 @@ export class PerpetualsApi {
 			});
 		}
 
-		// get position state after order
-		this.getPositionTx({ ...inputs, tx });
-
 		// get orderbook best price after order
 		this.bestPriceTx({
 			tx,
@@ -626,6 +623,9 @@ export class PerpetualsApi {
 			tx,
 			sessionPotatoId,
 		});
+
+		// get position state after order
+		this.getPositionTx({ ...inputs, tx });
 
 		try {
 			// inspect tx
@@ -642,7 +642,7 @@ export class PerpetualsApi {
 				...PerpetualsApiCasting.partialPositionFromRaw(
 					perpetualsBcsRegistry.de(
 						"Position",
-						new Uint8Array(allBytes[4 + bytesIndexOffet][0])
+						new Uint8Array(allBytes[7 + bytesIndexOffet][0])
 					)
 				),
 				collateralCoinType,
@@ -656,7 +656,7 @@ export class PerpetualsApi {
 				);
 			const bestOrderbookPriceAfterOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(
-					allBytes[5 + bytesIndexOffet][0]
+					allBytes[4 + bytesIndexOffet][0]
 				);
 
 			// try find relevant events
@@ -1729,7 +1729,7 @@ export class PerpetualsApi {
 				price ??
 				(side === PerpetualsOrderSide.Bid
 					? BigInt("0x7FFFFFFFFFFFFFFF") // 2^63 - 1
-					: BigInt(0)),
+					: BigInt(1)),
 		});
 		this.getHotPotatoFieldsTx({
 			tx,
