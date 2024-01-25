@@ -96,8 +96,11 @@ export class PerpetualsMarket extends Caller {
 		collateralPrice: number;
 		side: PerpetualsOrderSide;
 		price?: PerpetualsOrderPrice;
-	}): Promise<number> => {
-		const { side, price, account } = inputs;
+	}): Promise<{
+		maxOrderSizeUsd: number;
+		collateralRequired: number;
+	}> => {
+		const { side, price, account, indexPrice, collateralPrice } = inputs;
 
 		const optimisticSize = this.calcOptimisticMaxOrderSize(inputs);
 
@@ -132,7 +135,7 @@ export class PerpetualsMarket extends Caller {
 			market: this,
 		});
 
-		return this.calcPessimisticMaxOrderSizeUsd({
+		const maxOrderSizeUsd = await this.calcPessimisticMaxOrderSizeUsd({
 			...inputs,
 			freeMarginUsd,
 			minInitialMargin,
@@ -141,6 +144,18 @@ export class PerpetualsMarket extends Caller {
 			sizePosted,
 			optimisticSize,
 		});
+
+		const imr = this.initialMarginRatio();
+		const collateralRequired =
+			((1 + Perpetuals.constants.marginOfError) *
+				(sizeFilled * executionPrice * imr +
+					sizePosted * indexPrice * imr)) /
+			collateralPrice;
+
+		return {
+			maxOrderSizeUsd,
+			collateralRequired,
+		};
 	};
 
 	// =========================================================================
@@ -310,7 +325,10 @@ export class PerpetualsMarket extends Caller {
 		if ((percentFilled !== 1 && slippage < 0) || percentFilled === 0)
 			slippage = 0;
 
-		const SAFETY_SCALAR = Math.min(1 - slippage, 0.995);
+		const safetyScalar = Math.min(
+			1 - slippage,
+			1 - Perpetuals.constants.marginOfError
+		);
 		let maxSize: number = 0;
 		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
 			maxSize += Math.abs(
@@ -334,13 +352,13 @@ export class PerpetualsMarket extends Caller {
 
 			// Size that adds margin requirement
 			maxSize +=
-				((margin - imr) * SAFETY_SCALAR) /
+				((margin - imr) * safetyScalar) /
 				(indexPrice * marginRatioInitial +
 					(executionPrice * takerFee + slippage * indexPrice) *
 						newPercentFilled);
 		} else {
 			maxSize =
-				(freeMarginUsd * SAFETY_SCALAR) /
+				(freeMarginUsd * safetyScalar) /
 				(indexPrice * marginRatioInitial +
 					(executionPrice * takerFee + slippage * indexPrice) *
 						percentFilled);
