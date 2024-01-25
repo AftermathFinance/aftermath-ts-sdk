@@ -27,6 +27,7 @@ import {
 	Url,
 	PerpetualsMarketData,
 	Balance,
+	PerpetualsFilledOrderData,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -98,7 +99,7 @@ export class PerpetualsMarket extends Caller {
 		price?: PerpetualsOrderPrice;
 	}): Promise<{
 		maxOrderSizeUsd: number;
-		collateralRequired: number;
+		fills: PerpetualsFilledOrderData[];
 	}> => {
 		const { side, price, account, indexPrice, collateralPrice } = inputs;
 
@@ -115,7 +116,7 @@ export class PerpetualsMarket extends Caller {
 		const size = // (in lots)
 			BigInt(Math.ceil(optimisticSize / this.lotSize()));
 
-		const { executionPrice, sizeFilled, sizePosted } =
+		const { executionPrice, sizeFilled, sizePosted, fills } =
 			await this.getExecutionPrice({
 				size,
 				side,
@@ -145,16 +146,9 @@ export class PerpetualsMarket extends Caller {
 			optimisticSize,
 		});
 
-		const imr = this.initialMarginRatio();
-		const collateralRequired =
-			((1 + Perpetuals.constants.marginOfError) *
-				(sizeFilled * executionPrice * imr +
-					sizePosted * indexPrice * imr)) /
-			collateralPrice;
-
 		return {
 			maxOrderSizeUsd,
-			collateralRequired,
+			fills,
 		};
 	};
 
@@ -368,6 +362,69 @@ export class PerpetualsMarket extends Caller {
 		return (
 			this.roundToValidSize({ size: maxSize, floor: true }) * indexPrice
 		);
+	};
+
+	public calcCollateralRequiredForOrder = async (inputs: {
+		fills: PerpetualsFilledOrderData[];
+		position: PerpetualsPosition | undefined;
+		side: PerpetualsOrderSide;
+		size: number;
+		indexPrice: number;
+		collateralPrice: number;
+		price: number | undefined;
+	}): Promise<number> => {
+		const {
+			position,
+			size,
+			fills,
+			side,
+			price,
+			indexPrice,
+			collateralPrice,
+		} = inputs;
+
+		let sizeRemaining = size;
+		let fillsRemaining = fills;
+		let sizeFilled = 0;
+		let sizeFilledUsd = 0;
+		while (sizeRemaining > 0 && fillsRemaining.length > 0) {
+			const fill = fillsRemaining[0];
+
+			if (
+				price !== undefined &&
+				(side === PerpetualsOrderSide.Bid
+					? price < fill.price
+					: price > fill.price)
+			)
+				break;
+
+			const sizeToFill = Math.min(sizeRemaining, fill.size);
+
+			sizeFilled += sizeToFill;
+			sizeFilledUsd += sizeToFill * fill.price;
+
+			sizeRemaining -= sizeToFill;
+			fillsRemaining[0].size -= sizeToFill;
+
+			if (fill.size <= 0) {
+				fillsRemaining = [...fillsRemaining.slice(1)];
+			}
+		}
+
+		const imr = this.initialMarginRatio();
+		const sizePosted = size - sizeFilled;
+		const executionPrice = sizeFilledUsd / sizeFilled;
+
+		const collateralChangeAbs =
+			((1 + Perpetuals.constants.marginOfError) *
+				(sizeFilled * executionPrice * imr +
+					sizePosted * indexPrice * imr)) /
+			collateralPrice;
+
+		return position
+			? (Perpetuals.positionSide(position) === side ? 1 : -1) *
+					collateralChangeAbs
+			: collateralChangeAbs;
 	};
 
 	// =========================================================================

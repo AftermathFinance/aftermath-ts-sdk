@@ -62,6 +62,7 @@ import {
 	PerpetualsRawAccountCap,
 	PostedOrderReceiptEvent,
 	ApiPerpetualsCancelOrderBody,
+	PerpetualsFilledOrderData,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -1660,7 +1661,7 @@ export class PerpetualsApi {
 		}
 	): Promise<ApiPerpetualsExecutionPriceResponse> => {
 		const {
-			collateral,
+			// collateral,
 			collateralCoinType,
 			marketId,
 			side,
@@ -1668,6 +1669,8 @@ export class PerpetualsApi {
 			price,
 			lotSize,
 		} = inputs;
+		// TODO: change this
+		const collateral = BigInt(1000000000000000);
 
 		// const accountCapId = perpetualsBcsRegistry
 		// 	.ser(`Account<${collateralCoinType}>`, {
@@ -1685,7 +1688,7 @@ export class PerpetualsApi {
 			.ser(["Coin", collateralCoinType], {
 				id: "0x0000000000000000000000000000000000000000000000000000000000000123",
 				balance: {
-					value: BigInt(1000000000000000),
+					value: collateral,
 				},
 			})
 			.toBytes();
@@ -1711,7 +1714,7 @@ export class PerpetualsApi {
 			collateralCoinType,
 			marketId,
 			walletAddress,
-			collateralChange: BigInt(1000000000000000),
+			collateralChange: collateral,
 			hasPosition: false,
 		});
 		this.placeLimitOrderTx({
@@ -1758,8 +1761,32 @@ export class PerpetualsApi {
 				executionPrice: 0,
 				sizeFilled: 0,
 				sizePosted: sizeNum,
+				fills: [],
 			};
 		}
+
+		const filledOrderEvents =
+			Aftermath.helpers.events.findCastEventsOrUndefined({
+				events,
+				eventType: this.eventTypes.filledTakerOrder,
+				castFunction:
+					Casting.perpetuals.filledTakerOrderEventFromOnChain,
+			});
+		const fills: PerpetualsFilledOrderData[] = filledOrderEvents.map(
+			(event) => {
+				const size = Math.abs(
+					Casting.IFixed.numberFromIFixed(event.baseAssetDelta)
+				);
+				const sizeUsd = Math.abs(
+					Casting.IFixed.numberFromIFixed(event.quoteAssetDelta)
+				);
+				const price = sizeUsd / size;
+				return {
+					size,
+					price,
+				};
+			}
+		);
 
 		const executionPrice = Perpetuals.calcEntryPrice(filledTakerEvent);
 		const sizeFilled = Math.abs(
@@ -1771,6 +1798,7 @@ export class PerpetualsApi {
 			executionPrice,
 			sizeFilled,
 			sizePosted,
+			fills,
 		};
 
 		// const { fillReceipts, postReceipt } =

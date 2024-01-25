@@ -292,6 +292,11 @@ export interface PerpetualsOrderData {
 	marketId: PerpetualsMarketId;
 }
 
+export interface PerpetualsFilledOrderData {
+	size: number;
+	price: number;
+}
+
 export interface PerpetualsOrderbook extends Object {
 	asks: PerpetualsOrderedMap<PerpetualsOrder>;
 	bids: PerpetualsOrderedMap<PerpetualsOrder>;
@@ -695,6 +700,7 @@ export interface ApiPerpetualsExecutionPriceResponse {
 	executionPrice: number;
 	sizeFilled: number;
 	sizePosted: number;
+	fills: PerpetualsFilledOrderData[];
 }
 
 export interface ApiPerpetualsHistoricalMarketDataResponse {
