@@ -581,7 +581,7 @@ export class PerpetualsApi {
 		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
 
 		// get orderbook best price before order
-		this.bestPriceTx({
+		this.getBestPriceTx({
 			tx,
 			marketId,
 			collateralCoinType,
@@ -610,7 +610,7 @@ export class PerpetualsApi {
 		}
 
 		// get orderbook best price after order
-		this.bestPriceTx({
+		this.getBestPriceTx({
 			tx,
 			marketId,
 			collateralCoinType,
@@ -752,12 +752,7 @@ export class PerpetualsApi {
 
 		const tx = new TransactionBlock();
 
-		const orderbookId = this.getOrderbookTx({
-			tx,
-			collateralCoinType,
-			marketId,
-		});
-		this.bookPriceTx({ tx, orderbookId });
+		this.getBookPriceTx({ tx, marketId, collateralCoinType });
 
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
@@ -1285,27 +1280,26 @@ export class PerpetualsApi {
 		});
 	};
 
-	public bookPriceTx = (inputs: {
+	public getBookPriceTx = (inputs: {
 		tx: TransactionBlock;
-		orderbookId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+		collateralCoinType: CoinType;
 	}) /* Option<u256> */ => {
-		const { tx, orderbookId } = inputs;
+		const { tx, marketId, collateralCoinType } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.orderbook,
-				"book_price"
+				PerpetualsApi.constants.moduleNames.clearingHouse,
+				"get_book_price"
 			),
-			typeArguments: [],
+			typeArguments: [collateralCoinType],
 			arguments: [
-				typeof orderbookId === "string"
-					? tx.object(orderbookId)
-					: orderbookId, // Orderbook
+				tx.object(marketId), // ClearingHouse
 			],
 		});
 	};
 
-	public bestPriceTx = (inputs: {
+	public getBestPriceTx = (inputs: {
 		tx: TransactionBlock;
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
