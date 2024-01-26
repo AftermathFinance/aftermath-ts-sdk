@@ -319,10 +319,8 @@ export class PerpetualsMarket extends Caller {
 		if ((percentFilled !== 1 && slippage < 0) || percentFilled === 0)
 			slippage = 0;
 
-		const safetyScalar = Math.min(
-			1 - slippage,
-			1 - Perpetuals.constants.marginOfError
-		);
+		const marginOfError = 0.005;
+		const safetyScalar = Math.min(1 - slippage, 1 - marginOfError);
 		let maxSize: number = 0;
 		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
 			maxSize += Math.abs(
@@ -430,9 +428,11 @@ export class PerpetualsMarket extends Caller {
 			collateralPrice,
 		});
 
+		const marginOfError = 0.1;
 		return position
-			? (Perpetuals.positionSide(position) === side ? 1 : -1) *
-					collateralChangeAbs
+			? (Perpetuals.positionSide(position) === side
+					? 1 + marginOfError
+					: -(1 - marginOfError)) * collateralChangeAbs
 			: collateralChangeAbs;
 	};
 

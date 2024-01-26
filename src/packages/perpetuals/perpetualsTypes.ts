@@ -200,7 +200,8 @@ export interface PerpetualsMarketParams {
 	lotSize: bigint;
 	tickSize: bigint;
 	liquidationTolerance: bigint;
-	maxPendingOrdersPerPosition: bigint;
+	maxPendingOrders: bigint;
+	oracleTolerance: bigint;
 }
 
 perpetualsBcsRegistry.registerStructType("MarketParams", {
@@ -222,7 +223,8 @@ perpetualsBcsRegistry.registerStructType("MarketParams", {
 	lotSize: "u64",
 	tickSize: "u64",
 	liquidationTolerance: "u64",
-	maxPendingOrdersPerPosition: "u64",
+	maxPendingOrders: "u64",
+	oracleTolerance: "u64",
 });
 
 // -----------------------------------------

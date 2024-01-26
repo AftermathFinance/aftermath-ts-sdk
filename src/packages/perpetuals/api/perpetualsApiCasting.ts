@@ -47,6 +47,9 @@ import {
 	PostedOrderReceiptEventOnChain,
 	AllocatedCollateralEventOnChain,
 	DeallocatedCollateralEventOnChain,
+	PerpetualsClearingHouseFieldsOnChain,
+	PerpetualsMarketParamsFieldsOnChain,
+	PerpetualsMarketStateFieldsOnChain,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 
@@ -94,58 +97,72 @@ export class PerpetualsApiCasting {
 	//  Clearing House
 	// =========================================================================
 
-	public static clearingHouseFromRaw(
-		data: any,
+	public static clearingHouseFromOnChain(
+		data: SuiObjectResponse,
 		collateralCoinType: CoinType
 	): PerpetualsMarketData {
+		console.log("MARKETTTTTTTTTTTTTTTTTTTTTTtt", data);
+		const objectId = Helpers.getObjectId(data);
+		const objectType = Helpers.getObjectType(data);
+		const fields = Helpers.getObjectFields(
+			data
+		) as PerpetualsClearingHouseFieldsOnChain;
+
+		console.log("FIELSSSSSSS", fields);
+
 		return {
+			objectId,
+			objectType,
 			collateralCoinType,
-			objectId: Helpers.addLeadingZeroesToType("0x" + data.id),
-			objectType: data.objectType,
-			marketParams: this.marketParamsFromRaw(data.marketParams),
-			marketState: this.marketStateFromRaw(data.marketState),
+			marketParams: this.marketParamsFromOnChain(
+				fields.market_params.fields
+			),
+			marketState: this.marketStateFromOnChain(
+				fields.market_state.fields
+			),
 		};
 	}
 
-	private static marketParamsFromRaw = (
-		data: any
+	private static marketParamsFromOnChain = (
+		fields: PerpetualsMarketParamsFieldsOnChain
 	): PerpetualsMarketParams => {
 		return {
-			baseAssetSymbol: data.baseAssetSymbol,
-			marginRatioInitial: BigInt(data.marginRatioInitial),
-			marginRatioMaintenance: BigInt(data.marginRatioMaintenance),
-			fundingFrequencyMs: BigInt(data.fundingFrequencyMs),
-			fundingPeriodMs: BigInt(data.fundingPeriodMs),
-			premiumTwapFrequencyMs: BigInt(data.premiumTwapFrequencyMs),
-			premiumTwapPeriodMs: BigInt(data.premiumTwapPeriodMs),
-			spreadTwapFrequencyMs: BigInt(data.spreadTwapFrequencyMs),
-			spreadTwapPeriodMs: BigInt(data.spreadTwapPeriodMs),
-			makerFee: BigInt(data.makerFee),
-			takerFee: BigInt(data.takerFee),
-			liquidationFee: BigInt(data.liquidationFee),
-			forceCancelFee: BigInt(data.forceCancelFee),
-			insuranceFundFee: BigInt(data.insuranceFundFee),
-			lotSize: BigInt(data.lotSize),
-			tickSize: BigInt(data.tickSize),
-			liquidationTolerance: BigInt(data.liquidationTolerance),
-			maxPendingOrdersPerPosition: BigInt(
-				data.maxPendingOrdersPerPosition
-			),
-			minOrderUsdValue: BigInt(data.minOrderUsdValue),
+			baseAssetSymbol: fields.base_asset_symbol,
+			marginRatioInitial: BigInt(fields.margin_ratio_initial),
+			marginRatioMaintenance: BigInt(fields.margin_ratio_maintenance),
+			fundingFrequencyMs: BigInt(fields.funding_frequency_ms),
+			fundingPeriodMs: BigInt(fields.funding_period_ms),
+			premiumTwapFrequencyMs: BigInt(fields.premium_twap_frequency_ms),
+			premiumTwapPeriodMs: BigInt(fields.premium_twap_period_ms),
+			spreadTwapFrequencyMs: BigInt(fields.spread_twap_frequency_ms),
+			spreadTwapPeriodMs: BigInt(fields.spread_twap_period_ms),
+			makerFee: BigInt(fields.maker_fee),
+			takerFee: BigInt(fields.taker_fee),
+			liquidationFee: BigInt(fields.liquidation_fee),
+			forceCancelFee: BigInt(fields.force_cancel_fee),
+			insuranceFundFee: BigInt(fields.insurance_fund_fee),
+			lotSize: BigInt(fields.lot_size),
+			tickSize: BigInt(fields.tick_size),
+			liquidationTolerance: BigInt(fields.liquidation_tolerance),
+			maxPendingOrders: BigInt(fields.max_pending_orders),
+			minOrderUsdValue: BigInt(fields.min_order_usd_value),
+			oracleTolerance: BigInt(fields.oracle_tolerance),
 		};
 	};
 
-	private static marketStateFromRaw = (data: any): PerpetualsMarketState => {
+	private static marketStateFromOnChain = (
+		fields: PerpetualsMarketStateFieldsOnChain
+	): PerpetualsMarketState => {
 		return {
-			cumFundingRateLong: BigInt(data.cumFundingRateLong),
-			cumFundingRateShort: BigInt(data.cumFundingRateShort),
-			fundingLastUpdMs: Number(data.fundingLastUpdMs),
-			premiumTwap: BigInt(data.premiumTwap),
-			premiumTwapLastUpdMs: Number(data.premiumTwapLastUpdMs),
-			spreadTwap: BigInt(data.spreadTwap),
-			spreadTwapLastUpdMs: Number(data.spreadTwapLastUpdMs),
-			openInterest: BigInt(data.openInterest),
-			feesAccrued: BigInt(data.feesAccrued),
+			cumFundingRateLong: BigInt(fields.cum_funding_rate_long),
+			cumFundingRateShort: BigInt(fields.cum_funding_rate_short),
+			fundingLastUpdMs: Number(fields.funding_last_upd_ms),
+			premiumTwap: BigInt(fields.premium_twap),
+			premiumTwapLastUpdMs: Number(fields.premium_twap_last_upd_ms),
+			spreadTwap: BigInt(fields.spread_twap),
+			spreadTwapLastUpdMs: Number(fields.spread_twap_last_upd_ms),
+			openInterest: BigInt(fields.open_interest),
+			feesAccrued: BigInt(fields.fees_accrued),
 		};
 	};
 

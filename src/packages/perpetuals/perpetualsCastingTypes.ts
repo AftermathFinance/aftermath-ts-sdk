@@ -1,10 +1,116 @@
 import { EventOnChain } from "../../general/types/castingTypes";
 import {
+	AnyObjectType,
 	BigIntAsString,
 	IFixedAsString,
 	ObjectId,
 	SuiAddress,
 } from "../../types";
+
+// =========================================================================
+//  Objects
+// =========================================================================
+
+/// Used to dynamically load market objects as needed.
+/// Used to dynamically load traders' position objects as needed.
+export interface PerpetualsClearingHouseFieldsOnChain {
+	market_params: {
+		type: AnyObjectType;
+		fields: PerpetualsMarketParamsFieldsOnChain;
+	};
+	market_state: {
+		type: AnyObjectType;
+		fields: PerpetualsMarketStateFieldsOnChain;
+	};
+}
+
+/// Static attributes of a perpetuals market.
+export interface PerpetualsMarketParamsFieldsOnChain {
+	/// Minimum margin ratio for opening a new position.
+	margin_ratio_initial: IFixedAsString;
+	/// Margin ratio below which full liquidations can occur.
+	margin_ratio_maintenance: IFixedAsString;
+	/// Identifier to query the index price of the base asset from the oracle.
+	base_asset_symbol: string;
+	/// The time span between each funding rate update.
+	funding_frequency_ms: BigIntAsString;
+	/// Period of time over which funding (the difference between book and
+	/// index prices) gets paid.
+	///
+	/// Setting the funding period too long may cause the perpetual to start
+	/// trading at a very dislocated price to the index because there's less
+	/// of an incentive for basis arbitrageurs to push the prices back in
+	/// line since they would have to carry the basis risk for a longer
+	/// period of time.
+	///
+	/// Setting the funding period too short may cause nobody to trade the
+	/// perpetual because there's too punitive of a price to pay in the case
+	/// the funding rate flips sign.
+	funding_period_ms: BigIntAsString;
+	/// The time span between each funding TWAP (both index price and orderbook price) update.
+	premium_twap_frequency_ms: BigIntAsString;
+	/// The reference time span used for weighting the TWAP (both index price and orderbook price)
+	/// updates for funding rates estimation
+	premium_twap_period_ms: BigIntAsString;
+	/// The time span between each spread TWAP updates (used for liquidations).
+	spread_twap_frequency_ms: BigIntAsString;
+	/// The reference time span used for weighting the TWAP updates for spread.
+	spread_twap_period_ms: BigIntAsString;
+	/// Proportion of volume charged as fees from makers upon processing
+	/// fill events.
+	maker_fee: IFixedAsString;
+	/// Proportion of volume charged as fees from takers after processing
+	/// fill events.
+	taker_fee: IFixedAsString;
+	/// Proportion of volume charged as fees from liquidatees
+	liquidation_fee: IFixedAsString;
+	/// Proportion of volume charged as fees from liquidatees after forced cancelling
+	/// of pending orders during liquidation.
+	force_cancel_fee: IFixedAsString;
+	/// Proportion of volume charged as fees from liquidatees to deposit into insurance fund
+	insurance_fund_fee: IFixedAsString;
+	/// Minimum USD value an order is required to be worth to be placed
+	min_order_usd_value: IFixedAsString;
+	/// Number of base units exchanged per lot
+	lot_size: BigIntAsString;
+	/// Number of quote units exchanged per tick
+	tick_size: BigIntAsString;
+	/// Number of lots in a position that a liquidator may buy in excess of what would be
+	/// strictly required to bring the liqee's account back to IMR.
+	liquidation_tolerance: BigIntAsString;
+	/// Maximum number of pending orders that a position can have.
+	max_pending_orders: BigIntAsString;
+	/// Timestamp tolerance for oracle prices
+	oracle_tolerance: BigIntAsString;
+}
+
+/// The state of a perpetuals market.
+export interface PerpetualsMarketStateFieldsOnChain {
+	/// The latest cumulative funding premium in this market for longs. Must be updated
+	/// periodically.
+	cum_funding_rate_long: IFixedAsString;
+	/// The latest cumulative funding premium in this market for shorts. Must be updated
+	/// periodically.
+	cum_funding_rate_short: IFixedAsString;
+	/// The timestamp (millisec) of the latest cumulative funding premium update
+	/// (both longs and shorts).
+	funding_last_upd_ms: BigIntAsString;
+	/// The last calculated funding premium TWAP (used for funding settlement).
+	premium_twap: IFixedAsString;
+	/// The timestamp (millisec) of the last update of `premium_twap`.
+	premium_twap_last_upd_ms: BigIntAsString;
+	/// The last calculated spread TWAP (used for liquidations).
+	/// Spread is (book - index).
+	spread_twap: IFixedAsString;
+	/// The timestamp (millisec) of `spread_twap` last update.
+	spread_twap_last_upd_ms: BigIntAsString;
+	/// Open interest (in base tokens) as a fixed-point number. Counts the
+	/// total size of contracts as the sum of all long positions.
+	open_interest: IFixedAsString;
+	/// Total amount of fees accrued by this market (in T's units)
+	/// Only admin can withdraw these fees.
+	fees_accrued: IFixedAsString;
+}
 
 // =========================================================================
 //  Events

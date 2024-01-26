@@ -316,15 +316,13 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketData> => {
 		const { collateralCoinType } = inputs;
-		return this.Provider.Objects().fetchCastObjectBcs({
+		return this.Provider.Objects().fetchCastObject({
 			objectId: inputs.marketId,
-			bcs: perpetualsBcsRegistry,
-			fromDeserialized: (data) =>
-				PerpetualsApiCasting.clearingHouseFromRaw(
+			objectFromSuiObjectResponse: (data) =>
+				Casting.perpetuals.clearingHouseFromOnChain(
 					data,
 					collateralCoinType
 				),
-			typeName: ["ClearingHouse", collateralCoinType],
 		});
 	};
 
