@@ -376,7 +376,8 @@ export class RouterGraph {
 			coinInType,
 			coinOutType,
 			this.options.maxRouteLength,
-			isGivenAmountOut
+			isGivenAmountOut,
+			this.options.maxRoutesToCheck
 		);
 
 		const routesAfterTrades = this.splitTradeBetweenRoutes(
@@ -485,7 +486,8 @@ export class RouterGraph {
 		coinIn: CoinType,
 		coinOut: CoinType,
 		maxRouteLength: number,
-		isGivenAmountOut: boolean
+		isGivenAmountOut: boolean,
+		maxRoutesToCheck: number
 	): TradeRoute[] => {
 		const syncCoinInEdges =
 			syncGraph.coinNodes[coinIn].coinOutThroughPoolEdges;
@@ -493,16 +495,17 @@ export class RouterGraph {
 			syncGraph.pools,
 			syncCoinInEdges,
 			coinIn,
-			coinOut,
 			false
 		);
+		console.log("startingRoutes", startingRoutes);
 
 		const routes = this.findCompleteRoutes(
 			syncGraph,
 			startingRoutes,
 			coinOut,
 			maxRouteLength,
-			isGivenAmountOut
+			isGivenAmountOut,
+			maxRoutesToCheck
 		);
 
 		// const asyncCoinInEdges =
@@ -523,8 +526,6 @@ export class RouterGraph {
 		pools: RouterPoolsById,
 		coinInEdges: RouterCoinOutThroughPoolEdges,
 		coinIn: CoinType,
-		// NOTE: should this really be unused ?
-		finalCoinOut: CoinType,
 		onlyNoHopPools: boolean
 	): TradeRoute[] => {
 		let routes: TradeRoute[] = [];
@@ -578,12 +579,13 @@ export class RouterGraph {
 		routes: TradeRoute[],
 		coinOut: CoinType,
 		maxRouteLength: number,
-		isGivenAmountOut: boolean
+		isGivenAmountOut: boolean,
+		maxRoutesToCheck: number
 	): TradeRoute[] => {
 		let currentRoutes = [...routes];
 		let completeRoutes: TradeRoute[] = [];
 
-		while (currentRoutes.length > 0) {
+		outerLoop: while (currentRoutes.length > 0) {
 			let newCurrentRoutes: TradeRoute[] = [];
 
 			for (const route of currentRoutes) {
@@ -591,6 +593,11 @@ export class RouterGraph {
 
 				if (lastPath.coinOut.type === coinOut) {
 					completeRoutes = [...completeRoutes, route];
+
+					// break if too many routes to look at
+					if (completeRoutes.length >= maxRoutesToCheck)
+						break outerLoop;
+
 					continue;
 				}
 
@@ -739,12 +746,13 @@ export class RouterGraph {
 			  }
 			| undefined = undefined;
 
-		const routesAndPoolsUnderGasCost = updatedRoutesAndPools.filter(
-			(data) => !data.isOverMaxGasCost
-		);
-		if (routesAndPoolsUnderGasCost.length > 0)
+		// TODO: add me back
+		// const routesAndPoolsUnderGasCost = updatedRoutesAndPools.filter(
+		// 	(data) => !data.isOverMaxGasCost
+		// );
+		if (updatedRoutesAndPools.length > 0)
 			cutRoutesAndPools = this.cutUpdatedRouteAndPools(
-				Helpers.deepCopy(routesAndPoolsUnderGasCost),
+				Helpers.deepCopy(updatedRoutesAndPools),
 				isGivenAmountOut
 				// "LINEAR",
 				// linearCutStepSize
@@ -766,6 +774,7 @@ export class RouterGraph {
 		if (cutRoutesAndPools === undefined)
 			throw Error("unable to find synchronous route");
 
+		// TODO: update me
 		const oldRouteIndex = routes.findIndex(
 			(route) =>
 				JSON.stringify(route.paths.map((path) => path.poolUid)) ===
@@ -802,7 +811,7 @@ export class RouterGraph {
 		if (routeDecreaseType === "LINEAR" && linearCutStepSize === undefined)
 			throw new Error("linear cut step size has not been provided");
 
-		// TODO: speed this up further by not sorting routesAndPools is already at minRoutesToCheck length
+		// TODO: speed this up further by not sorting routesAndPools if already at minRoutesToCheck length
 
 		const sortedRoutesAndPoolsByAmountOut = routesAndPools.sort((a, b) =>
 			isGivenAmountOut
@@ -1075,19 +1084,22 @@ export class RouterGraph {
 		};
 	};
 
+	// TODO: fix me
 	private static gasCostForRoutes = (routes: TradeRoute[]): Balance =>
-		routes
-			.filter((route) => route.coinIn.amount > BigInt(0))
-			.reduce(
-				(acc, route) => acc + RouterGraph.gasCostForRoute(route),
-				BigInt(0)
-			);
+		BigInt(0);
+	// routes
+	// 	.filter((route) => route.coinIn.amount > BigInt(0))
+	// 	.reduce(
+	// 		(acc, route) => acc + RouterGraph.gasCostForRoute(route),
+	// 		BigInt(0)
+	// 	);
 
-	private static gasCostForRoute = (route: TradeRoute): Balance =>
-		route.paths.reduce(
-			(acc, route) => acc + route.estimatedGasCost,
-			BigInt(0)
-		);
+	// TODO: fix me
+	private static gasCostForRoute = (route: TradeRoute): Balance => BigInt(0);
+	// route.paths.reduce(
+	// 	(acc, route) => acc + route.estimatedGasCost,
+	// 	BigInt(0)
+	// );
 
 	private static routerCompleteTradeRouteFromCompleteTradeRoute = (
 		completeRoute: CompleteTradeRoute,

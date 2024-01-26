@@ -207,6 +207,7 @@ export interface RouterSynchronousOptions {
 	maxRouteLength: number;
 	tradePartitionCount: number;
 	minRoutesToCheck: number;
+	maxRoutesToCheck: number;
 	maxGasCost: bigint;
 }
 

@@ -55,6 +55,7 @@ export class RouterApi {
 				maxRouteLength: 3,
 				tradePartitionCount: 2,
 				minRoutesToCheck: 5,
+				maxRoutesToCheck: 20,
 				maxGasCost: BigInt(500_000_000), // 0.5 SUI
 			},
 			async: {
@@ -66,6 +67,7 @@ export class RouterApi {
 			maxRouteLength: 2,
 			tradePartitionCount: 1,
 			minRoutesToCheck: 5,
+			maxRoutesToCheck: 20,
 			maxGasCost: BigInt(500_000_000), // 0.5 SUI
 			// maxGasCost: BigInt(333_333_333), // 0.333 SUI
 		},
