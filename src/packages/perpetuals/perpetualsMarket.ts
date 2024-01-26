@@ -364,7 +364,7 @@ export class PerpetualsMarket extends Caller {
 
 	public calcCollateralRequiredForOrder = (inputs: {
 		fills: PerpetualsFilledOrderData[];
-		position: PerpetualsPosition | undefined;
+		acccount: PerpetualsAccount;
 		side: PerpetualsOrderSide;
 		size: number;
 		indexPrice: number;
@@ -372,7 +372,7 @@ export class PerpetualsMarket extends Caller {
 		price: number | undefined;
 	}): number => {
 		const {
-			position,
+			acccount,
 			size,
 			fills,
 			side,
@@ -380,6 +380,10 @@ export class PerpetualsMarket extends Caller {
 			indexPrice,
 			collateralPrice,
 		} = inputs;
+
+		const position = acccount.positionForMarketId({
+			marketId: this.marketId,
+		});
 
 		let sizeRemaining = size;
 		let fillsRemaining = Helpers.deepCopy(fills);
@@ -413,11 +417,6 @@ export class PerpetualsMarket extends Caller {
 		const sizePosted = sizeRemaining;
 		const executionPrice = sizeFilled ? sizeFilledUsd / sizeFilled : 0;
 
-		const collateralChangeAbs =
-			(sizeFilled * executionPrice * imr +
-				sizePosted * indexPrice * imr) /
-			collateralPrice;
-
 		console.log({
 			size,
 			sizeFilled,
@@ -428,12 +427,41 @@ export class PerpetualsMarket extends Caller {
 			collateralPrice,
 		});
 
+		const collateralForFilled =
+			(sizeFilled * executionPrice * imr) / collateralPrice;
+		const collateralForPosted =
+			(sizePosted * indexPrice * imr) / collateralPrice;
+
 		const marginOfError = 0.1;
-		return position
-			? (Perpetuals.positionSide(position) === side
-					? 1 + marginOfError
-					: -(1 - marginOfError)) * collateralChangeAbs
-			: collateralChangeAbs;
+
+		// opening/increasing position
+		if (!position || Perpetuals.positionSide(position) === side)
+			return (
+				(1 + marginOfError) *
+				(collateralForFilled + collateralForPosted)
+			);
+
+		const positionSize = Casting.IFixed.numberFromIFixed(
+			position.baseAssetAmount
+		);
+		if (sizeFilled > positionSize) {
+			// reversing position
+
+			const positionFreeCollateral =
+				acccount.calcFreeCollateralForPosition({
+					...inputs,
+					market: this,
+				});
+
+			return (
+				(1 + marginOfError) *
+				(collateralForPosted +
+					(collateralForFilled - positionFreeCollateral))
+			);
+		} else {
+			// reducing position
+			return 0;
+		}
 	};
 
 	public calcCollateralUsedForOrder = (inputs: {
