@@ -65,6 +65,8 @@ export class RouterGraph {
 
 	public readonly graph: RouterCompleteGraph;
 
+	private routesCache: Record<string, TradeRoute[]>;
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -75,6 +77,7 @@ export class RouterGraph {
 		private options: RouterSynchronousOptions,
 		private readonly excludeProtocols?: RouterProtocolName[]
 	) {
+		this.routesCache = {};
 		this.graph = RouterGraph.graphFromSerializable({
 			graph,
 			network,
@@ -371,14 +374,23 @@ export class RouterGraph {
 				`external fee percentage exceeds max of ${Router.constants.maxExternalFeePercentage}`
 			);
 
-		const routes = RouterGraph.findRoutes(
-			Helpers.deepCopy(this.graph),
-			coinInType,
-			coinOutType,
-			this.options.maxRouteLength,
-			isGivenAmountOut,
-			this.options.maxRoutesToCheck
-		);
+		let routes: TradeRoute[];
+
+		const keyForRoutesCache = `${coinInType}_${coinOutType}_${this.options.maxRouteLength}_${isGivenAmountOut}_${this.options.maxRoutesToCheck}`;
+
+		if (keyForRoutesCache in this.routesCache) {
+			routes = this.routesCache[keyForRoutesCache];
+		} else {
+			routes = RouterGraph.findRoutes(
+				Helpers.deepCopy(this.graph),
+				coinInType,
+				coinOutType,
+				this.options.maxRouteLength,
+				isGivenAmountOut,
+				this.options.maxRoutesToCheck
+			);
+			this.routesCache[keyForRoutesCache] = routes;
+		}
 
 		const routesAfterTrades = this.splitTradeBetweenRoutes(
 			Helpers.deepCopy(this.graph),
@@ -497,7 +509,6 @@ export class RouterGraph {
 			coinIn,
 			false
 		);
-		console.log("startingRoutes", startingRoutes);
 
 		const routes = this.findCompleteRoutes(
 			syncGraph,
@@ -577,7 +588,7 @@ export class RouterGraph {
 	private static findCompleteRoutes = (
 		graph: RouterCompleteGraph,
 		routes: TradeRoute[],
-		coinOut: CoinType,
+		finalCoinOut: CoinType,
 		maxRouteLength: number,
 		isGivenAmountOut: boolean,
 		maxRoutesToCheck: number
@@ -591,7 +602,7 @@ export class RouterGraph {
 			for (const route of currentRoutes) {
 				const lastPath = route.paths[route.paths.length - 1];
 
-				if (lastPath.coinOut.type === coinOut) {
+				if (lastPath.coinOut.type === finalCoinOut) {
 					completeRoutes = [...completeRoutes, route];
 
 					// break if too many routes to look at
@@ -640,6 +651,16 @@ export class RouterGraph {
 							],
 						};
 
+						if (coinOut === finalCoinOut) {
+							completeRoutes = [...completeRoutes, newRoute];
+
+							// break if too many routes to look at
+							if (completeRoutes.length >= maxRoutesToCheck)
+								break outerLoop;
+
+							continue;
+						}
+
 						newCurrentRoutes = [...newCurrentRoutes, newRoute];
 					}
 				}
@@ -659,6 +680,10 @@ export class RouterGraph {
 					};
 			  })
 			: completeRoutes;
+
+		console.log("completeRoutes", completeRoutes);
+		console.log("completeRoutes", completeRoutes.length);
+
 		return finalRoutes;
 	};
 
