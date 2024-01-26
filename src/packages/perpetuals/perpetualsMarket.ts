@@ -436,6 +436,31 @@ export class PerpetualsMarket extends Caller {
 			: collateralChangeAbs;
 	};
 
+	public calcCollateralUsedForOrder = (inputs: {
+		orderData: PerpetualsOrderData;
+		indexPrice: number;
+		collateralPrice: number;
+	}): {
+		collateral: number;
+		collateralUsd: number;
+	} => {
+		const { orderData, indexPrice, collateralPrice } = inputs;
+
+		const imr = this.initialMarginRatio();
+
+		const collateralUsd =
+			Number(orderData.initialSize - orderData.filledSize) *
+			this.lotSize() *
+			indexPrice *
+			imr;
+		const collateral = collateralUsd / collateralPrice;
+
+		return {
+			collateralUsd,
+			collateral,
+		};
+	};
+
 	// =========================================================================
 	//  Value Conversions
 	// =========================================================================

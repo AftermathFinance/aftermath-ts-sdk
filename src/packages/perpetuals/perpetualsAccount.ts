@@ -186,8 +186,10 @@ export class PerpetualsAccount extends Caller {
 
 	public async getClosePositionTx(inputs: {
 		walletAddress: SuiAddress;
-		marketId: PerpetualsMarketId;
-		lotSize: number;
+		market: PerpetualsMarket;
+		orderDatas: PerpetualsOrderData[];
+		indexPrice: number;
+		collateralPrice: number;
 	}) {
 		return this.getPlaceMarketOrderTx(this.closePositionTxInputs(inputs));
 	}
@@ -569,30 +571,54 @@ export class PerpetualsAccount extends Caller {
 
 	public closePositionTxInputs = (inputs: {
 		walletAddress: SuiAddress;
-		marketId: PerpetualsMarketId;
-		lotSize: number;
+		market: PerpetualsMarket;
+		orderDatas: PerpetualsOrderData[];
+		indexPrice: number;
+		collateralPrice: number;
 	}): SdkPerpetualsMarketOrderInputs => {
-		const marketId = inputs.marketId;
+		const { market, walletAddress, orderDatas } = inputs;
+
+		const marketId = market.marketId;
 		const position =
 			this.positionForMarketId({ marketId }) ??
 			this.emptyPosition({ marketId });
 
-		const side = Perpetuals.positionSide(position);
+		// TODO: move conversion to helper function, since used often
+		const ordersCollateral = Coin.normalizeBalance(
+			Helpers.sum(
+				orderDatas.map(
+					(orderData) =>
+						market.calcCollateralUsedForOrder({
+							...inputs,
+							orderData,
+						}).collateral
+				)
+			),
+			this.collateralDecimals()
+		);
+		const collateralChange =
+			Helpers.maxBigInt(
+				position.collateral - ordersCollateral,
+				BigInt(0)
+			) * BigInt(-1);
+
+		const positionSide = Perpetuals.positionSide(position);
 		return {
-			...inputs,
+			marketId,
+			walletAddress,
+			collateralChange,
 			side:
-				side === PerpetualsOrderSide.Bid
+				positionSide === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
 			size: BigInt(
 				Math.round(
 					Casting.IFixed.numberFromIFixed(
 						Casting.IFixed.abs(position.baseAssetAmount)
-					) / inputs.lotSize
+					) / market.lotSize()
 				)
 			),
 			hasPosition: true,
-			collateralChange: position.collateral * BigInt(-1),
 		};
 	};
 
