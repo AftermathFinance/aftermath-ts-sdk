@@ -192,16 +192,14 @@ export interface RouterTradeCoin {
 // =========================================================================
 
 export interface RouterCompleteGraph {
-	coinNodes: RouterGraphCoinNodes;
+	coinNodes: RouterGraphCoinToPoolIds;
 	pools: RouterPoolsById;
 }
 
 export interface RouterSerializableCompleteGraph {
-	coinNodes: RouterGraphCoinNodes;
+	coinNodes: RouterGraphCoinToPoolIds;
 	pools: RouterSerializablePoolsById;
 }
-
-export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
 
 export interface RouterSynchronousOptions {
 	maxRouteLength: number;
@@ -235,15 +233,17 @@ export type RouterSerializablePoolsById = Record<
 	RouterSerializablePool
 >;
 
-export type RouterGraphCoinNodes = Record<CoinType, RouterCoinNode>;
+// export type RouterGraphCoinNodes = Record<CoinType, RouterCoinNode>;
 export type RouterPoolsById = Record<UniqueId, RouterPoolInterface>;
 
-export interface RouterCoinNode {
-	coin: CoinType;
-	coinOutThroughPoolEdges: RouterCoinOutThroughPoolEdges;
-}
+export type RouterGraphCoinToPoolIds = Record<CoinType, UniqueId[]>;
 
-export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
+// export interface RouterCoinNode {
+// 	coin: CoinType;
+// 	coinOutThroughPoolEdges: RouterCoinOutThroughPoolEdges;
+// }
+
+// export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 
 // =========================================================================
 //  Async Router Trade Results

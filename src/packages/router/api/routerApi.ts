@@ -198,16 +198,6 @@ export class RouterApi {
 	//  Coin Paths
 	// =========================================================================
 
-	public supportedCoinPathsFromGraph = (inputs: {
-		graph: RouterSerializableCompleteGraph;
-	}) => {
-		const maxRouteLength = this.options.regular.synchronous.maxRouteLength;
-		return RouterGraph.supportedCoinPathsFromGraph({
-			...inputs,
-			maxRouteLength,
-		});
-	};
-
 	public supportedCoinsFromGraph = (inputs: {
 		graph: RouterSerializableCompleteGraph;
 	}) => {

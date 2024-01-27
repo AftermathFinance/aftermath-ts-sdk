@@ -5,7 +5,6 @@ import {
 	RouterCompleteTradeRoute,
 	RouterSerializableCompleteGraph,
 	RouterSynchronousSerializablePool,
-	RouterSupportedCoinPaths,
 	SuiNetwork,
 	Url,
 	ApiRouterTradeEventsBody,
