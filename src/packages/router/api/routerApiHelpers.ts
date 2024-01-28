@@ -15,6 +15,7 @@ import {
 	isRouterAsyncSerializablePool,
 	AllRouterOptions,
 	SuiAddress,
+	RouterSerializablePool,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
@@ -57,15 +58,9 @@ export class RouterApiHelpers {
 	// =========================================================================
 
 	public fetchCreateSerializableGraph = async (inputs: {
-		asyncPools: RouterAsyncSerializablePool[];
-		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
+		pools: RouterSerializablePool[];
 	}) => {
-		const synchronousPools =
-			await this.SynchronousHelpers.fetchPoolsFromIds(inputs);
-
-		return RouterGraph.createGraph({
-			pools: [...synchronousPools, ...inputs.asyncPools],
-		});
+		return RouterGraph.createGraph(inputs);
 	};
 
 	// =========================================================================

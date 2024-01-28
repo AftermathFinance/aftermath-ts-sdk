@@ -81,76 +81,14 @@ export class BlueMoveApi
 	//  Objects
 	// =========================================================================
 
-	// public fetchAllPoolIds = async () => {
-	// 	const [poolObjectIds, stablePoolObjectIds] = await Promise.all([
-	// 		this.Provider.Events().fetchAllEvents({
-	// 			fetchEventsFunc: (eventsInputs) =>
-	// 				this.Provider.Events().fetchCastEventsWithCursor({
-	// 					...eventsInputs,
-	// 					query: {
-	// 						MoveEventType: this.eventTypes.poolCreated,
-	// 					},
-	// 					eventFromEventOnChain: (eventOnChain) =>
-	// 						BlueMoveApi.blueMoveCreatedPoolEventFromOnChain(
-	// 							eventOnChain as BlueMoveCreatedPoolEventOnChain
-	// 						).poolId,
-	// 				}),
-	// 		}),
-	// 		this.Provider.Events().fetchAllEvents({
-	// 			fetchEventsFunc: (eventsInputs) =>
-	// 				this.Provider.Events().fetchCastEventsWithCursor({
-	// 					...eventsInputs,
-	// 					query: {
-	// 						MoveEventType: this.eventTypes.stablePoolCreated,
-	// 					},
-	// 					eventFromEventOnChain: (eventOnChain) =>
-	// 						BlueMoveApi.blueMoveCreatedStablePoolEventFromOnChain(
-	// 							eventOnChain as BlueMoveCreatedStablePoolEventOnChain
-	// 						).poolId,
-	// 				}),
-	// 		}),
-	// 	]);
-
-	// 	return [...poolObjectIds, ...stablePoolObjectIds];
-	// };
-
-	// public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
-	// 	const { objectIds } = inputs;
-
-	// 	const pools = await this.Provider.Objects().fetchCastObjectBatch({
-	// 		objectIds,
-	// 		objectFromSuiObjectResponse: (data) =>
-	// 			data.data?.type?.toLowerCase().includes("stable")
-	// 				? BlueMoveApi.blueMoveStablePoolObjectFromSuiObjectResponse(
-	// 						data
-	// 				  )
-	// 				: BlueMoveApi.blueMovePoolObjectFromSuiObjectResponse(data),
-	// 	});
-
-	// 	const unlockedPools = pools.filter(
-	// 		(pool) =>
-	// 			!pool.isFreeze &&
-	// 			pool.tokenXValue > BigInt(0) &&
-	// 			pool.tokenYValue > BigInt(0)
-	// 	);
-	// 	return unlockedPools;
-	// };
-
-	public fetchAllPoolIds = async () => {
-		return ["0xbluemove"];
-		// return this.Provider.indexerCaller.fetchIndexer<ObjectId[]>(
-		// 	"router/pool-ids/blue-move"
-		// );
-	};
-
-	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
+	public fetchAllPools = async () => {
 		const pools = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				objectId: ObjectId;
 				type: AnyObjectType;
 				content: any;
 			}[]
-		>("router/pools/blue-move");
+		>("router/pools/blue_move");
 
 		return pools.map((pool) => {
 			return pool.type
@@ -257,77 +195,6 @@ export class BlueMoveApi
 	//  Casting
 	// =========================================================================
 
-	// private static blueMovePoolObjectFromSuiObjectResponse = (
-	// 	data: SuiObjectResponse
-	// ): BlueMovePoolObject => {
-	// 	const objectType = Helpers.getObjectType(data);
-
-	// 	const coinTypes = Coin.getInnerCoinType(objectType)
-	// 		.replaceAll(" ", "")
-	// 		.split(",")
-	// 		.map((coin) => Helpers.addLeadingZeroesToType(coin));
-
-	// 	const fields = Helpers.getObjectFields(
-	// 		data
-	// 	) as BlueMovePoolFieldsOnChain;
-
-	// 	return {
-	// 		objectType,
-	// 		objectId: Helpers.getObjectId(data),
-	// 		creator: fields.creator,
-	// 		tokenXValue: BigInt(fields.token_x),
-	// 		tokenYValue: BigInt(fields.token_y),
-	// 		lspSupplyValue: BigInt(fields.lsp_supply.fields.value),
-	// 		feeXValue: BigInt(fields.fee_x),
-	// 		feeYValue: BigInt(fields.fee_y),
-	// 		isFreeze: fields.is_freeze,
-	// 		uncorrelated: {
-	// 			feeAmountValue: BigInt(fields.fee_amount),
-	// 			// minimumLiqValue: BigInt(fields.minimum_liq),
-	// 			// kLast: BigInt(fields.k_last),
-	// 			// reserveX: BigInt(fields.reserve_x),
-	// 			// reserveY: BigInt(fields.reserve_y),
-	// 		},
-	// 		coinTypeX: coinTypes[0],
-	// 		coinTypeY: coinTypes[1],
-	// 	};
-	// };
-
-	// private static blueMoveStablePoolObjectFromSuiObjectResponse = (
-	// 	data: SuiObjectResponse
-	// ): BlueMovePoolObject => {
-	// 	const objectType = Helpers.getObjectType(data);
-
-	// 	const coinTypes = Coin.getInnerCoinType(objectType)
-	// 		.replaceAll(" ", "")
-	// 		.split(",")
-	// 		.map((coin) => Helpers.addLeadingZeroesToType(coin));
-
-	// 	const fields = Helpers.getObjectFields(
-	// 		data
-	// 	) as BlueMoveStablePoolFieldsOnChain;
-
-	// 	return {
-	// 		objectType,
-	// 		objectId: Helpers.getObjectId(data),
-	// 		creator: fields.creator,
-	// 		tokenXValue: BigInt(fields.token_x),
-	// 		tokenYValue: BigInt(fields.token_y),
-	// 		lspSupplyValue: BigInt(fields.lsp_supply.fields.value),
-	// 		feeXValue: BigInt(fields.fee_x),
-	// 		feeYValue: BigInt(fields.fee_y),
-	// 		isFreeze: fields.is_freeze,
-	// 		stable: {
-	// 			xScale: BigInt(fields.x_scale),
-	// 			yScale: BigInt(fields.y_scale),
-	// 			fee: BigInt(fields.fee),
-	// 			daoFee: BigInt(fields.dao_fee),
-	// 		},
-	// 		coinTypeX: coinTypes[0],
-	// 		coinTypeY: coinTypes[1],
-	// 	};
-	// };
-
 	private static blueMovePoolObjectFromIndexer = (data: {
 		objectId: ObjectId;
 		type: AnyObjectType;
@@ -396,42 +263,6 @@ export class BlueMoveApi
 			},
 			coinTypeX: coinTypes[0],
 			coinTypeY: coinTypes[1],
-		};
-	};
-
-	private static blueMoveCreatedPoolEventFromOnChain = (
-		eventOnChain: BlueMoveCreatedPoolEventOnChain
-	): BlueMovePoolCreatedEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			poolId: fields.pool_id,
-			creator: fields.creator,
-			tokenXName: fields.token_x_name,
-			tokenYName: fields.token_y_name,
-			tokenXAmountIn: BigInt(fields.token_x_amount_in),
-			tokenYAmountIn: BigInt(fields.token_y_amount_in),
-			lspBalance: BigInt(fields.lsp_balance),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	private static blueMoveCreatedStablePoolEventFromOnChain = (
-		eventOnChain: BlueMoveCreatedStablePoolEventOnChain
-	): BlueMovePoolCreatedEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			poolId: fields.pool_id,
-			creator: fields.creator,
-			tokenXName: fields.token_x_name,
-			tokenYName: fields.token_y_name,
-			tokenXAmountIn: BigInt(fields.token_x_amount_in),
-			tokenYAmountIn: BigInt(fields.token_y_amount_in),
-			lspBalance: BigInt(fields.lsp_balance),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
 		};
 	};
 }

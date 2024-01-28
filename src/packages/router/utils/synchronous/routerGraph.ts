@@ -300,8 +300,6 @@ export class RouterGraph {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): RouterCompleteTradeRoute {
-		const start = new Date().getTime();
-
 		if (Object.keys(this.graph).length <= 0)
 			throw new Error("empty graphs");
 
@@ -367,9 +365,6 @@ export class RouterGraph {
 				referrer,
 				externalFee
 			);
-
-		let elapsed = new Date().getTime() - start;
-		console.log("elapsed", elapsed);
 
 		return completeTradeRoute;
 	}

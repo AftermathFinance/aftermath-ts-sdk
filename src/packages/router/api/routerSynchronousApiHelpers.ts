@@ -108,50 +108,14 @@ export class RouterSynchronousApiHelpers {
 	//  Objects
 	// =========================================================================
 
-	public fetchPoolsFromIds = async (inputs: {
-		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
-	}): Promise<RouterSynchronousSerializablePool[]> => {
-		const protocols = Object.keys(
-			inputs.synchronousProtocolsToPoolObjectIds
-		) as RouterSynchronousProtocolName[];
-
-		const apis = this.protocolApisFromNames({ protocols });
-
-		const poolsByProtocol = await Promise.all(
-			apis.map((api, index) =>
-				api.fetchPoolsFromIds({
-					objectIds:
-						inputs.synchronousProtocolsToPoolObjectIds[
-							protocols[index]
-						] ?? [],
-				})
-			)
-		);
-
-		const pools = poolsByProtocol.reduce(
-			(arr, acc) => [...acc, ...arr],
-			[]
-		);
-		return pools;
-	};
-
-	public fetchAllPoolIds = async (inputs: {
+	public fetchAllPools = async (inputs: {
 		protocols: RouterSynchronousProtocolName[];
-	}): Promise<SynchronousProtocolsToPoolObjectIds> => {
+	}): Promise<RouterSynchronousSerializablePool[]> => {
 		const apis = this.protocolApisFromNames(inputs);
-
-		const poolIdsByProtocol = await Promise.all(
-			apis.map((api) => api.fetchAllPoolIds())
+		const expandedPools = await Promise.all(
+			apis.map((api) => api.fetchAllPools())
 		);
-
-		const poolIds = poolIdsByProtocol.reduce(
-			(acc, ids, index) => ({
-				...acc,
-				[inputs.protocols[index]]: ids,
-			}),
-			{} as SynchronousProtocolsToPoolObjectIds
-		);
-		return poolIds;
+		return expandedPools.reduce((acc, pools) => [...acc, ...pools], []);
 	};
 
 	// =========================================================================

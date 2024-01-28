@@ -50,25 +50,17 @@ export class FlowXApi implements RouterAsyncApiInterface<FlowXPoolObject> {
 	// =========================================================================
 
 	public fetchAllPools = async (): Promise<FlowXPoolObject[]> => {
-		const dynamicFields =
-			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
-				parentObjectId: this.addresses.objects.pairsBag,
-			});
+		const uncastedPools = await this.Provider.indexerCaller.fetchIndexer<
+			FlowXPoolObject[]
+		>("router/pools/flow_x");
 
-		return dynamicFields.map((field) => {
-			const coinTypes = Coin.getInnerCoinType(field.objectType)
-				.replaceAll(" ", "")
-				.split(",")
-				.map((coin) => Helpers.addLeadingZeroesToType(coin));
-
-			return {
-				objectId: field.objectId,
-				objectType: field.objectType,
-				dummyField: "FlowX",
-				coinTypeX: coinTypes[0],
-				coinTypeY: coinTypes[1],
-			};
-		});
+		return uncastedPools.map((pool) => ({
+			objectId: pool.objectId,
+			objectType: pool.objectType,
+			dummyField: pool.dummyField,
+			coinTypeX: Helpers.addLeadingZeroesToType(pool.coinTypeX),
+			coinTypeY: Helpers.addLeadingZeroesToType(pool.coinTypeY),
+		}));
 	};
 
 	// =========================================================================

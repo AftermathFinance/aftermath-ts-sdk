@@ -203,51 +203,19 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	};
 
 	/**
-	 * Fetches an array of pool objects by their object IDs.
-	 * @async
-	 * @param {ObjectId[]} inputs.objectIds - An array of object IDs of the pools to fetch.
-	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of fetched pool objects.
-	 */
-	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
-		return this.Provider.Objects().fetchCastObjectBatch({
-			...inputs,
-			objectFromSuiObjectResponse: Casting.pools.poolObjectFromSuiObject,
-		});
-	};
-
-	/**
 	 * Fetches all pool objects.
 	 * @async
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
 	public fetchAllPools = async () => {
-		const objectIds = await this.fetchAllPoolIds();
-		return this.fetchPoolsFromIds({ objectIds });
-	};
-
-	/**
-	 * Fetches all pool object IDs.
-	 * @async
-	 * @returns {Promise<ObjectId[]>} A promise that resolves to an array of all fetched pool object IDs.
-	 */
-	public fetchAllPoolIds = async (): Promise<ObjectId[]> => {
-		const objectIds =
-			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				{
-					parentObjectId: this.addresses.pools.objects.lpCoinsTable,
-					objectsFromObjectIds: (objectIds) =>
-						this.Provider.Objects().fetchCastObjectBatch({
-							objectIds,
-							objectFromSuiObjectResponse:
-								PoolsApiCasting.poolObjectIdFromSuiObjectResponse,
-						}),
-				}
-			);
-
-		const filteredIds = objectIds.filter(
-			(id) => !PoolsApi.constants.blacklistedPoolIds.includes(id)
-		);
-		return filteredIds;
+		const pools = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				objectId: ObjectId;
+				type: AnyObjectType;
+				content: any;
+			}[]
+		>("router/pools/af");
+		return pools.map(PoolsApiCasting.poolObjectFromIndexer);
 	};
 
 	// =========================================================================

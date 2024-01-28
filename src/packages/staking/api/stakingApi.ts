@@ -136,14 +136,7 @@ export class StakingApi
 	//  Router Interface
 	// =========================================================================
 
-	public fetchAllPoolIds = async (): Promise<ObjectId[]> => {
-		//placeholder
-		return ["afSUI"];
-	};
-
-	public fetchPoolsFromIds = async (inputs: {
-		objectIds: ObjectId[];
-	}): Promise<AfSuiRouterPoolObject[]> => {
+	public fetchAllPools = async (): Promise<AfSuiRouterPoolObject[]> => {
 		const wrapperAddresses = this.addresses.routerWrapper;
 		if (!wrapperAddresses)
 			throw new Error(

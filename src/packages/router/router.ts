@@ -88,17 +88,6 @@ export class Router extends Caller {
 		);
 	}
 
-	public async getAsyncPools() {
-		return this.fetchApi<RouterAsyncSerializablePool[]>("async-pools");
-	}
-
-	public async getSynchronousPoolIds(inputs?: { isDynamicGas: boolean }) {
-		return this.fetchApi<Record<RouterSynchronousProtocolName, ObjectId[]>>(
-			"synchronous-pool-ids" +
-				(inputs?.isDynamicGas ? "/dynamic-gas" : "")
-		);
-	}
-
 	/**
 	 * Creates route across multiple pools and protocols for best trade execution price
 	 *

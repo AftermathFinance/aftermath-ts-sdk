@@ -21,6 +21,7 @@ import {
 	SuiAddress,
 	TxBytes,
 	ApiRouterDynamicGasBody,
+	RouterSynchronousSerializablePool,
 } from "../../../types";
 import {
 	TransactionArgument,
@@ -170,27 +171,14 @@ export class RouterApi {
 	//  Graph
 	// =========================================================================
 
-	public fetchCreateSerializableGraph = async (inputs: {
-		asyncPools: RouterAsyncSerializablePool[];
-		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
-	}): Promise<RouterSerializableCompleteGraph> => {
-		return this.Helpers.fetchCreateSerializableGraph(inputs);
-	};
-
-	public fetchAsyncPools = async (): Promise<
-		RouterAsyncSerializablePool[]
-	> => {
-		return this.Helpers.AsyncHelpers.fetchAllPools({
-			protocols: this.protocols.filter(isRouterAsyncProtocolName),
-		});
-	};
-
-	public fetchSynchronousPoolIds =
-		async (): Promise<SynchronousProtocolsToPoolObjectIds> => {
-			return this.Helpers.SynchronousHelpers.fetchAllPoolIds({
-				protocols: this.protocols.filter(
-					isRouterSynchronousProtocolName
-				),
+	public fetchCreateSerializableGraph =
+		async (): Promise<RouterSerializableCompleteGraph> => {
+			const [asyncPools, synchronousPools] = await Promise.all([
+				this.fetchAsyncPools(),
+				this.fetchSynchronousPools(),
+			]);
+			return this.Helpers.fetchCreateSerializableGraph({
+				pools: [...asyncPools, ...synchronousPools],
 			});
 		};
 
@@ -393,4 +381,24 @@ export class RouterApi {
 	public async fetchTradeEvents(inputs: UserEventsInputs) {
 		return this.Helpers.SynchronousHelpers.fetchTradeEvents(inputs);
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private fetchAsyncPools = async (): Promise<
+		RouterAsyncSerializablePool[]
+	> => {
+		return this.Helpers.AsyncHelpers.fetchAllPools({
+			protocols: this.protocols.filter(isRouterAsyncProtocolName),
+		});
+	};
+
+	private fetchSynchronousPools = async (): Promise<
+		RouterSynchronousSerializablePool[]
+	> => {
+		return this.Helpers.SynchronousHelpers.fetchAllPools({
+			protocols: this.protocols.filter(isRouterSynchronousProtocolName),
+		});
+	};
 }

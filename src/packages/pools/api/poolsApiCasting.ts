@@ -84,6 +84,63 @@ export class PoolsApiCasting {
 		};
 	};
 
+	public static poolObjectFromIndexer = (data: {
+		objectId: ObjectId;
+		type: AnyObjectType;
+		content: any;
+	}): PoolObject => {
+		const objectType = Helpers.addLeadingZeroesToType(data.type);
+
+		const poolFieldsOnChain = data.content as PoolFieldsOnChain;
+
+		const lpCoinType = Helpers.addLeadingZeroesToType(
+			new Coin(poolFieldsOnChain.lp_supply.type).innerCoinType
+		);
+
+		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
+			(acc, cur, index) => ({
+				...acc,
+				[Helpers.addLeadingZeroesToType("0x" + cur)]: {
+					weight: BigInt(poolFieldsOnChain.weights[index]),
+					balance:
+						BigInt(poolFieldsOnChain.normalized_balances[index]) /
+						BigInt(poolFieldsOnChain.decimal_scalars[index]),
+					tradeFeeIn: BigInt(poolFieldsOnChain.fees_swap_in[index]),
+					tradeFeeOut: BigInt(poolFieldsOnChain.fees_swap_out[index]),
+					depositFee: BigInt(poolFieldsOnChain.fees_deposit[index]),
+					withdrawFee: BigInt(poolFieldsOnChain.fees_withdraw[index]),
+					normalizedBalance: BigInt(
+						poolFieldsOnChain.normalized_balances[index]
+					),
+					decimalsScalar: BigInt(
+						poolFieldsOnChain.decimal_scalars[index]
+					),
+					...(poolFieldsOnChain.coin_decimals
+						? {
+								decimals: Number(
+									poolFieldsOnChain.coin_decimals[index]
+								),
+						  }
+						: {}),
+				},
+			}),
+			{}
+		);
+
+		return {
+			objectType,
+			objectId: Helpers.addLeadingZeroesToType(data.objectId),
+			lpCoinType,
+			name: poolFieldsOnChain.name,
+			creator: poolFieldsOnChain.creator,
+			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
+			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
+			flatness: BigInt(poolFieldsOnChain.flatness),
+			lpCoinDecimals: Number(poolFieldsOnChain.lp_decimals),
+			coins,
+		};
+	};
+
 	public static poolObjectIdFromSuiObjectResponse = (
 		data: SuiObjectResponse
 	): ObjectId => {

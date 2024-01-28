@@ -52,29 +52,25 @@ export class InterestApi
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPoolIds = async () => {
-		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
-			parentObjectId: this.addresses.objects.poolsBag,
-			objectsFromObjectIds: (objectIds) => objectIds,
-		});
-	};
+	public fetchAllPools = async () => {
+		// TODO
+		return [];
 
-	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
-		const { objectIds } = inputs;
+		// const { objectIds } = inputs;
 
-		const pools = await this.Provider.Objects().fetchCastObjectBatch({
-			objectIds,
-			objectFromSuiObjectResponse:
-				InterestApi.interestPoolObjectFromSuiObjectResponse,
-		});
+		// const pools = await this.Provider.Objects().fetchCastObjectBatch({
+		// 	objectIds,
+		// 	objectFromSuiObjectResponse:
+		// 		InterestApi.interestPoolObjectFromSuiObjectResponse,
+		// });
 
-		const unlockedPools = pools.filter(
-			(pool) =>
-				!pool.locked &&
-				pool.balanceXValue > BigInt(0) &&
-				pool.balanceYValue > BigInt(0)
-		);
-		return unlockedPools;
+		// const unlockedPools = pools.filter(
+		// 	(pool) =>
+		// 		!pool.locked &&
+		// 		pool.balanceXValue > BigInt(0) &&
+		// 		pool.balanceYValue > BigInt(0)
+		// );
+		// return unlockedPools;
 	};
 
 	// =========================================================================
