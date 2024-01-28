@@ -17,7 +17,6 @@ import {
 	TurbosPoolObject,
 } from "./turbosTypes";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
-import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { RouterPoolTradeTxInputs } from "../../router";
@@ -358,20 +357,20 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 				});
 
 			bcs.registerStructType("I32", {
-				bits: BCS.U32,
+				bits: "u32",
 			});
 
 			bcs.registerStructType("ComputeSwapState", {
-				amount_a: BCS.U128,
-				amount_b: BCS.U128,
-				amount_specified_remaining: BCS.U128,
-				amount_calculated: BCS.U128,
-				sqrt_price: BCS.U128,
+				amount_a: "u128",
+				amount_b: "u128",
+				amount_specified_remaining: "u128",
+				amount_calculated: "u128",
+				sqrt_price: "u128",
 				tick_current_index: "I32",
-				fee_growth_global: BCS.U128,
-				protocol_fee: BCS.U128,
-				liquidity: BCS.U128,
-				fee_amount: BCS.U128,
+				fee_growth_global: "u128",
+				protocol_fee: "u128",
+				liquidity: "u128",
+				fee_amount: "u128",
 			});
 
 			const data = bcs.de(

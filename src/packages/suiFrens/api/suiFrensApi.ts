@@ -45,7 +45,6 @@ import {
 import { Casting } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { Sui } from "../../sui/sui";
-import { BCS } from "@mysten/bcs";
 import { SuiFrens } from "../suiFrens";
 
 export class SuiFrensApi {

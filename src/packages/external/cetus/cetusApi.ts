@@ -14,7 +14,6 @@ import {
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
-import { BCS } from "@mysten/bcs";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
 import { bcs } from "@mysten/sui.js/bcs";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
@@ -179,22 +178,22 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 			});
 
 		bcs.registerStructType("SwapStepResult", {
-			current_sqrt_price: BCS.U128,
-			target_sqrt_price: BCS.U128,
-			current_liquidity: BCS.U128,
-			amount_in: BCS.U64,
-			amount_out: BCS.U64,
-			fee_amount: BCS.U64,
-			remainer_amount: BCS.U64,
+			current_sqrt_price: "u128",
+			target_sqrt_price: "u128",
+			current_liquidity: "u128",
+			amount_in: "u64",
+			amount_out: "u64",
+			fee_amount: "u64",
+			remainer_amount: "u64",
 		});
 
 		bcs.registerStructType("CalculatedSwapResult", {
-			amount_in: BCS.U64,
-			amount_out: BCS.U64,
-			fee_amount: BCS.U64,
-			fee_rate: BCS.U64,
-			after_sqrt_price: BCS.U128,
-			is_exceed: BCS.BOOL,
+			amount_in: "u64",
+			amount_out: "u64",
+			fee_amount: "u64",
+			fee_rate: "u64",
+			after_sqrt_price: "u128",
+			is_exceed: "bool",
 			step_results: "vector<SwapStepResult>",
 		});
 

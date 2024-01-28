@@ -282,6 +282,10 @@ export class RouterGraph {
 		return graph;
 	}
 
+	// =========================================================================
+	//  Supported Coins
+	// =========================================================================
+
 	public static supportedCoinsFromGraph = (inputs: {
 		graph: RouterSerializableCompleteGraph;
 	}): CoinType[] => {

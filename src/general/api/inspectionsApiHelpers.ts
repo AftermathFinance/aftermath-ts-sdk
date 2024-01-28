@@ -64,10 +64,6 @@ export class InspectionsApiHelpers {
 		if (!response.results)
 			throw Error("dev inspect move call returned no results");
 
-		const returnVals = response.results[0].returnValues;
-		if (!returnVals || returnVals.length <= 0)
-			throw Error("dev inspect move call had no return values");
-
 		const resultBytes = response.results.map(
 			(result) => result.returnValues?.map((val) => val[0]) ?? []
 		);

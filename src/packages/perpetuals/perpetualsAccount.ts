@@ -32,11 +32,15 @@ import {
 	ApiPerpetualsTransferCollateralBody,
 	ObjectId,
 	ApiPerpetualsCancelOrdersBody,
+	PerpetualsOrderData,
+	CoinDecimal,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
+import { Coin } from "..";
+import { FixedUtils } from "../../general/utils/fixedUtils";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
@@ -145,6 +149,7 @@ export class PerpetualsAccount extends Caller {
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		orderId: PerpetualsOrderId;
+		collateral: Balance;
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrderBody>(
 			"transactions/cancel-order",
@@ -162,6 +167,7 @@ export class PerpetualsAccount extends Caller {
 			marketId: PerpetualsMarketId;
 			side: PerpetualsOrderSide;
 			orderId: PerpetualsOrderId;
+			collateral: Balance;
 		}[];
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrdersBody>(
@@ -212,6 +218,12 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
+	public getOrderDatas() {
+		return this.fetchApi<PerpetualsOrderData[]>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`
+		);
+	}
+
 	// =========================================================================
 	//  Events
 	// =========================================================================
@@ -234,65 +246,38 @@ export class PerpetualsAccount extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	public calcFreeCollateral = (inputs: {
-		markets: PerpetualsMarket[];
-		indexPrices: number[];
+	public calcFreeCollateralForPosition = (inputs: {
+		market: PerpetualsMarket;
+		indexPrice: number;
 		collateralPrice: number;
+		position?: PerpetualsPosition;
 	}): number => {
-		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
+		const marketId = inputs.market.marketId;
+		const position =
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
-		const { totalPnL, totalMinInitialMargin } =
-			this.calcPnLAndMarginForAccount(inputs);
+		const funding = this.calcUnrealizedFundingsForPosition(inputs);
+		const { pnl, minInitialMargin } =
+			this.calcPnLAndMarginForPosition(inputs);
 
 		let collateralUsd =
-			IFixedUtils.numberFromIFixed(this.account.collateral) *
+			IFixedUtils.numberFromIFixed(position.collateral) *
 			inputs.collateralPrice;
 
-		collateralUsd += totalFunding;
+		collateralUsd += funding;
 
 		let cappedMargin;
-		if (totalPnL < 0) {
-			cappedMargin = collateralUsd + totalPnL;
+		if (pnl < 0) {
+			cappedMargin = collateralUsd + pnl;
 		} else {
 			cappedMargin = collateralUsd;
 		}
 
-		if (cappedMargin >= totalMinInitialMargin) {
-			return (
-				(cappedMargin - totalMinInitialMargin) / inputs.collateralPrice
-			);
+		if (cappedMargin >= minInitialMargin) {
+			return (cappedMargin - minInitialMargin) / inputs.collateralPrice;
 		} else return 0;
-	};
-
-	public calcMarginRatioAndLeverageForAccount = (inputs: {
-		markets: PerpetualsMarket[];
-		indexPrices: number[];
-		collateralPrice: number;
-	}): {
-		totalMarginRatio: number;
-		totalLeverage: number;
-	} => {
-		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
-		const collateralUsd =
-			this.collateral() * inputs.collateralPrice + totalFunding;
-
-		const { totalPnL, totalNetAbsBaseValue } =
-			this.calcPnLAndMarginForAccount(inputs);
-
-		// If totalNetAbsBaseValue is 0 (no positions opened), MR would be +inf,
-		// which can be displayed as N/A.
-		// If also the collateral is 0 (no positions and nothing deposited yet),
-		// then MR would be NaN, which can be displayed as N/A as well.
-		const totalMarginRatio =
-			totalNetAbsBaseValue === 0
-				? 0
-				: (collateralUsd + totalPnL) / totalNetAbsBaseValue;
-		const totalLeverage = totalMarginRatio === 0 ? 0 : 1 / totalMarginRatio;
-
-		return {
-			totalMarginRatio,
-			totalLeverage,
-		};
 	};
 
 	public calcMarginRatioAndLeverageForPosition = (inputs: {
@@ -304,18 +289,21 @@ export class PerpetualsAccount extends Caller {
 		marginRatio: number;
 		leverage: number;
 	} => {
-		const { market, indexPrice } = inputs;
-
+		const { market, indexPrice, collateralPrice } = inputs;
 		const marketId = market.marketId;
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const funding = this.calcUnrealizedFundingsForPosition({
 			market,
 			position,
 		});
 		const collateralUsd =
-			this.collateral() * inputs.collateralPrice + funding;
+			IFixedUtils.numberFromIFixed(position?.collateral) *
+				collateralPrice +
+			funding;
 
 		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
 			market,
@@ -333,7 +321,7 @@ export class PerpetualsAccount extends Caller {
 		};
 	};
 
-	public calcUnrealizedFundingsForAccount = (inputs: {
+	public calcUnrealizedFundings = (inputs: {
 		markets: PerpetualsMarket[];
 	}): number => {
 		let totalFunding = 0;
@@ -354,8 +342,9 @@ export class PerpetualsAccount extends Caller {
 		const marketId = inputs.market.marketId;
 
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const baseAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
@@ -381,46 +370,6 @@ export class PerpetualsAccount extends Caller {
 		}
 	};
 
-	public calcPnLAndMarginForAccount = (inputs: {
-		markets: PerpetualsMarket[];
-		indexPrices: number[];
-		collateralPrice: number;
-	}): {
-		totalPnL: number;
-		totalMinInitialMargin: number;
-		totalMinMaintenanceMargin: number;
-		totalNetAbsBaseValue: number;
-	} => {
-		const zipped = Helpers.zip(inputs.markets, inputs.indexPrices);
-		let totalPnL = 0;
-		let totalMinInitialMargin = 0;
-		let totalMinMaintenanceMargin = 0;
-		let totalNetAbsBaseValue = 0;
-
-		zipped.forEach(([market, indexPrice]) => {
-			const {
-				pnl,
-				minInitialMargin,
-				minMaintenanceMargin,
-				netAbsBaseValue,
-			} = this.calcPnLAndMarginForPosition({
-				market,
-				indexPrice,
-			});
-
-			totalPnL += pnl;
-			totalMinInitialMargin += minInitialMargin;
-			totalMinMaintenanceMargin += minMaintenanceMargin;
-			totalNetAbsBaseValue += netAbsBaseValue;
-		});
-		return {
-			totalPnL,
-			totalMinInitialMargin,
-			totalMinMaintenanceMargin,
-			totalNetAbsBaseValue,
-		};
-	};
-
 	public calcPnLAndMarginForPosition = (inputs: {
 		market: PerpetualsMarket;
 		indexPrice: number;
@@ -433,8 +382,9 @@ export class PerpetualsAccount extends Caller {
 	} => {
 		const marketId = inputs.market.marketId;
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
 		const marginRatioInitial = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioInitial
@@ -470,30 +420,22 @@ export class PerpetualsAccount extends Caller {
 
 	public calcLiquidationPriceForPosition = (inputs: {
 		market: PerpetualsMarket;
-		position?: PerpetualsPosition;
 		indexPrice: number;
-		markets: PerpetualsMarket[];
-		indexPrices: number[];
 		collateralPrice: number;
+		position?: PerpetualsPosition;
 	}): number => {
 		const marketId = inputs.market.marketId;
 		const position =
-			inputs.position ?? this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
-		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
+		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 
 		const collateralUsd =
-			this.collateral() * inputs.collateralPrice + totalFunding;
-
-		const { totalPnL, totalMinMaintenanceMargin } =
-			this.calcPnLAndMarginForAccount(inputs);
-
-		const { pnl, minMaintenanceMargin } = this.calcPnLAndMarginForPosition({
-			market: inputs.market,
-			indexPrice: inputs.indexPrice,
-			position,
-		});
+			IFixedUtils.numberFromIFixed(position?.collateral) *
+				inputs.collateralPrice +
+			funding;
 
 		const baseAssetAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
@@ -504,11 +446,7 @@ export class PerpetualsAccount extends Caller {
 		const MMR = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioMaintenance
 		);
-		const numerator =
-			collateralUsd -
-			(totalMinMaintenanceMargin - minMaintenanceMargin) +
-			(totalPnL - pnl) -
-			quoteAssetAmount;
+		const numerator = collateralUsd - quoteAssetAmount;
 
 		const price = (() => {
 			if (baseAssetAmount > 0) {
@@ -520,39 +458,87 @@ export class PerpetualsAccount extends Caller {
 		return price < 0 ? 0 : price;
 	};
 
-	public calcFreeMarginUsd = (inputs: {
+	public calcFreeMarginUsdForPosition = (inputs: {
+		market: PerpetualsMarket;
+		indexPrice: number;
+		collateralPrice: number;
+		position?: PerpetualsPosition;
+	}): number => {
+		const marketId = inputs.market.marketId;
+		const position =
+			inputs.position ??
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
+
+		const totalFunding = this.calcUnrealizedFundingsForPosition(inputs);
+
+		const { pnl, minInitialMargin } =
+			this.calcPnLAndMarginForPosition(inputs);
+
+		let collateralUsd =
+			IFixedUtils.numberFromIFixed(position.collateral) *
+			inputs.collateralPrice;
+
+		const margin = collateralUsd + totalFunding + pnl;
+
+		if (margin >= minInitialMargin) {
+			return margin - minInitialMargin;
+		} else return 0;
+	};
+
+	public calcAccountState = (inputs: {
 		markets: PerpetualsMarket[];
 		indexPrices: number[];
 		collateralPrice: number;
-	}): number => {
-		const totalFunding = this.calcUnrealizedFundingsForAccount(inputs);
+	}): {
+		accountEquity: number;
+		totalPnL: number;
+		totalFunding: number;
+		totalCollateralAllocated: number;
+	} => {
+		const zipped = Helpers.zip(inputs.markets, inputs.indexPrices);
+		let accountEquity = 0;
+		let totalPnL = 0;
+		let totalFunding = 0;
+		let totalCollateralAllocated = 0;
 
-		const { totalPnL, totalMinInitialMargin } =
-			this.calcPnLAndMarginForAccount(inputs);
+		zipped.forEach(([market, indexPrice]) => {
+			const marketId = market.marketId;
+			const position =
+				this.positionForMarketId({ marketId }) ??
+				this.emptyPosition({ marketId });
 
-		let collateralUsd =
-			IFixedUtils.numberFromIFixed(this.account.collateral) *
-			inputs.collateralPrice;
+			const funding = this.calcUnrealizedFundingsForPosition({
+				market,
+				position,
+			});
 
-		const margin = collateralUsd + totalFunding + totalPnL;
+			const { pnl } = this.calcPnLAndMarginForPosition({
+				market,
+				indexPrice,
+				position,
+			});
 
-		if (margin >= totalMinInitialMargin) {
-			return margin - totalMinInitialMargin;
-		} else return 0;
+			let collateralUsd =
+				IFixedUtils.numberFromIFixed(position.collateral) *
+				inputs.collateralPrice;
+
+			totalPnL += pnl;
+			totalFunding += funding;
+			totalCollateralAllocated += collateralUsd;
+			accountEquity += collateralUsd + funding + pnl;
+		});
+		return {
+			accountEquity,
+			totalPnL,
+			totalFunding,
+			totalCollateralAllocated,
+		};
 	};
 
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
-
-	public accountMarketIds(): PerpetualsMarketId[] {
-		let res: PerpetualsMarketId[] = [];
-		this.account.positions.forEach((position) => {
-			res.push(position.marketId);
-		});
-
-		return res;
-	}
 
 	public positionForMarketId(inputs: {
 		marketId: PerpetualsMarketId;
@@ -567,7 +553,18 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public collateral(): number {
-		return Casting.IFixed.numberFromIFixed(this.account.collateral);
+		return Casting.IFixed.numberFromIFixed(this.accountCap.collateral);
+	}
+
+	public collateralDecimals(): CoinDecimal {
+		return this.accountCap.collateralDecimals;
+	}
+
+	public collateralBalance(): Balance {
+		return Coin.normalizeBalance(
+			this.collateral(),
+			this.collateralDecimals()
+		);
 	}
 
 	public closePositionTxInputs = (inputs: {
@@ -576,10 +573,11 @@ export class PerpetualsAccount extends Caller {
 		lotSize: number;
 	}): SdkPerpetualsMarketOrderInputs => {
 		const marketId = inputs.marketId;
-		const position = this.positionForMarketId({ marketId });
-		if (!position) throw new Error("no position found for market");
+		const position =
+			this.positionForMarketId({ marketId }) ??
+			this.emptyPosition({ marketId });
 
-		const side = Perpetuals.positionSide({ position });
+		const side = Perpetuals.positionSide(position);
 		return {
 			...inputs,
 			side:
@@ -593,6 +591,28 @@ export class PerpetualsAccount extends Caller {
 					) / inputs.lotSize
 				)
 			),
+			hasPosition: true,
+			collateralChange: position.collateral * BigInt(-1),
+		};
+	};
+
+	public emptyPosition = (inputs: {
+		marketId: PerpetualsMarketId;
+	}): PerpetualsPosition => {
+		const { marketId } = inputs;
+		return {
+			marketId,
+			collateralCoinType: this.accountCap.collateralCoinType,
+			collateral: BigInt(0),
+			baseAssetAmount: BigInt(0),
+			quoteAssetNotionalAmount: BigInt(0),
+			cumFundingRateLong: BigInt(0),
+			cumFundingRateShort: BigInt(0),
+			asksQuantity: BigInt(0),
+			bidsQuantity: BigInt(0),
+			pendingOrders: BigInt(0),
+			makerFee: BigInt(1000000000000000000), // 100%
+			takerFee: BigInt(1000000000000000000), // 100%
 		};
 	};
 }

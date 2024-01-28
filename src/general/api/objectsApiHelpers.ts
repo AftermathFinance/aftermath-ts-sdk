@@ -2,7 +2,8 @@ import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
 import { Casting, Helpers } from "../utils";
 import { SuiObjectDataOptions, SuiObjectResponse } from "@mysten/sui.js/client";
-import { TypeName, BCS } from "@mysten/bcs";
+import { BcsTypeName } from "../types/castingTypes";
+import { bcsRegistry } from "@mysten/sui.js/bcs";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -260,9 +261,9 @@ export class ObjectsApiHelpers {
 
 	public fetchCastObjectBcs = async <T>(inputs: {
 		objectId: ObjectId;
-		typeName: TypeName;
+		typeName: BcsTypeName;
 		fromDeserialized: (deserialized: any) => T;
-		bcs: BCS;
+		bcs: typeof bcsRegistry;
 	}): Promise<T> => {
 		const { objectId } = inputs;
 		const suiObjectResponse = await this.Provider.Objects().fetchObjectBcs(

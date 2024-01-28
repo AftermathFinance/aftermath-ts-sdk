@@ -1,6 +1,7 @@
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 import { SuiEvent, Unsubscribe } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -8,7 +9,6 @@ import {
 	CoinType,
 	PerpetualsAccountObject,
 	PerpetualsAddresses,
-	ExchangeAddresses,
 	ObjectId,
 	SuiAddress,
 	OracleAddresses,
@@ -21,9 +21,7 @@ import {
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import {
-	PerpetualsAccountManager,
-	bcs,
-	PerpetualsMarketManager,
+	perpetualsBcsRegistry,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
 	ApiPerpetualsDepositCollateralBody,
@@ -31,8 +29,6 @@ import {
 	PerpetualsMarketId,
 	PerpetualsAccountId,
 	PerpetualsOrderId,
-	PerpetualsAccountCap,
-	PerpetualsAccountData,
 	ApiPerpetualsSLTPOrderBody,
 	PerpetualsOrderSide,
 	PerpetualsOrderType,
@@ -41,7 +37,6 @@ import {
 	ApiPerpetualsPreviewOrderResponse,
 	ApiPerpetualsAccountsBody,
 	PerpetualsOrderData,
-	ApiPerpetualsPositionOrderDatasBody,
 	ApiPerpetualsAccountEventsBody,
 	CollateralEvent,
 	PerpetualsOrderEvent,
@@ -53,26 +48,35 @@ import {
 	ApiPerpetualsMarketEventsBody,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
-	PerpetualsFillReceipt,
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsCancelOrdersBody,
-	PerpetualsPostReceipt,
 	PerpetualsMarketPriceDataPoint,
 	ApiPerpetualsHistoricalMarketDataResponse,
 	PerpetualsMarketVolumeDataPoint,
+	PerpetualsAccountCap,
+	ApiPerpetualsMarketOrderBody,
+	ApiPerpetualsLimitOrderBody,
+	PerpetualsPosition,
+	PerpetualsMarketData,
+	PerpetualsRawAccountCap,
+	PostedOrderReceiptEvent,
+	ApiPerpetualsCancelOrderBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
 import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import {
+	AllocatedCollateralEventOnChain,
 	CanceledOrderEventOnChain,
+	DeallocatedCollateralEventOnChain,
 	DepositedCollateralEventOnChain,
 	FilledMakerOrderEventOnChain,
 	FilledTakerOrderEventOnChain,
 	LiquidatedEventOnChain,
 	PostedOrderEventOnChain,
+	PostedOrderReceiptEventOnChain,
 	SettledFundingEventOnChain,
 	WithdrewCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
@@ -80,6 +84,8 @@ import { Aftermath } from "../../..";
 import { PerpetualsOrderUtils } from "../utils";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
+import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -89,10 +95,10 @@ export class PerpetualsApi {
 	private static readonly constants = {
 		moduleNames: {
 			interface: "interface",
-			accountManager: "account_manager",
-			marketManager: "market_manager",
 			orderbook: "orderbook",
 			events: "events",
+			clearingHouse: "clearing_house",
+			account: "account",
 		},
 	};
 
@@ -105,11 +111,13 @@ export class PerpetualsApi {
 		withdrewCollateral: AnyObjectType;
 		depositedCollateral: AnyObjectType;
 		settledFunding: AnyObjectType;
+		allocatedCollateral: AnyObjectType;
+		deallocatedCollateral: AnyObjectType;
 		liquidated: AnyObjectType;
-		acquiredLiqee: AnyObjectType;
 		createdAccount: AnyObjectType;
 		canceledOrder: AnyObjectType;
 		postedOrder: AnyObjectType;
+		postedOrderReceipt: AnyObjectType;
 		filledMakerOrder: AnyObjectType;
 		filledTakerOrder: AnyObjectType;
 		updatedPremiumTwap: AnyObjectType;
@@ -137,16 +145,19 @@ export class PerpetualsApi {
 			withdrewCollateral: this.eventType("WithdrewCollateral"),
 			depositedCollateral: this.eventType("DepositedCollateral"),
 			settledFunding: this.eventType("SettledFunding"),
+			allocatedCollateral: this.eventType("AllocatedCollateral"),
+			deallocatedCollateral: this.eventType("DeallocatedCollateral"),
 			// Liquidation
 			liquidated: this.eventType("Liquidated"),
-			acquiredLiqee: this.eventType("AcquiredLiqee"),
 			// Account
 			createdAccount: this.eventType("CreatedAccount"),
 			// Order
-			canceledOrder: this.eventType("CanceledOrder"),
+			canceledOrder: this.eventType("OrderbookCanceledOrder"),
 			postedOrder: this.eventType("PostedOrder"),
 			filledMakerOrder: this.eventType("FilledMakerOrder"),
 			filledTakerOrder: this.eventType("FilledTakerOrder"),
+			// Order Receipts
+			postedOrderReceipt: this.eventType("OrderbookPostReceipt"),
 			// Twap
 			updatedPremiumTwap: this.eventType("UpdatedPremiumTwap"),
 			updatedSpreadTwap: this.eventType("UpdatedSpreadTwap"),
@@ -157,44 +168,14 @@ export class PerpetualsApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchAccountManager = async (inputs: {
-		collateralCoinType: CoinType;
-	}): Promise<PerpetualsAccountManager> => {
-		const exchangeCfg = this.getExchangeConfig(inputs);
-		return await this.Provider.Objects().fetchCastObjectGeneral({
-			objectId: exchangeCfg.accountManager,
-			objectFromSuiObjectResponse:
-				PerpetualsApiCasting.accountManagerFromSuiResponse,
-			options: {
-				showBcs: true,
-				showType: true,
-			},
-		});
-	};
-
-	public fetchMarketManager = async (inputs: {
-		collateralCoinType: CoinType;
-	}): Promise<PerpetualsMarketManager> => {
-		const exchangeCfg = this.getExchangeConfig(inputs);
-		return await this.Provider.Objects().fetchCastObjectGeneral({
-			objectId: exchangeCfg.marketManager,
-			objectFromSuiObjectResponse:
-				PerpetualsApiCasting.marketManagerFromSuiResponse,
-			options: {
-				showBcs: true,
-				showType: true,
-			},
-		});
-	};
-
-	public fetchOwnedAccountCapsOfType = async (inputs: {
+	public fetchOwnedRawAccountCapsOfType = async (inputs: {
 		walletAddress: SuiAddress;
 		collateralCoinType: CoinType;
-	}): Promise<PerpetualsAccountCap[]> => {
+	}): Promise<PerpetualsRawAccountCap[]> => {
 		const { walletAddress, collateralCoinType } = inputs;
 		const objectType = this.getAccountCapType({ collateralCoinType });
 
-		let objectResponse =
+		const objectResponse =
 			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
 				objectType,
 				walletAddress,
@@ -204,209 +185,146 @@ export class PerpetualsApi {
 				},
 			});
 
-		let accCaps: PerpetualsAccountCap[] = objectResponse.map((accCap) => {
-			const accCapObj = bcs.de(
-				"AccountCap",
-				Casting.bcsBytesFromSuiObjectResponse(accCap),
-				"base64"
-			);
-			return PerpetualsApiCasting.accountCapWithTypeFromRaw(
-				accCapObj,
-				collateralCoinType
-			);
-		});
+		const accCaps: PerpetualsRawAccountCap[] = objectResponse.map(
+			(accCap) => {
+				const accCapObj = perpetualsBcsRegistry.de(
+					["Account", collateralCoinType],
+					Casting.bcsBytesFromSuiObjectResponse(accCap),
+					"base64"
+				);
+				return PerpetualsApiCasting.rawAccountCapFromRaw(
+					accCapObj,
+					collateralCoinType
+				);
+			}
+		);
 
 		return accCaps;
 	};
 
 	public fetchAccount = async (inputs: {
-		collateralCoinType: CoinType;
 		accountId: PerpetualsAccountId;
 	}): Promise<PerpetualsAccountObject> => {
-		const accountDfInfos =
-			await this.Provider.DynamicFields().fetchAllDynamicFieldsOfType({
-				parentObjectId:
-					this.addresses.perpetuals.objects.exchanges[
-						inputs.collateralCoinType
-					]?.accountManager!,
-			});
+		const { accountId } = inputs;
 
-		const accountDfInfo = accountDfInfos.find((info) => {
-			return (
-				BigInt((info.name.value as any).account_id) === inputs.accountId
-			);
-		})!;
-
-		const objectResponse = await this.Provider.provider.getObject({
-			id: accountDfInfo.objectId,
-			options: { showBcs: true },
-		});
-		const accountField = bcs.de(
-			"Field<u64, Account>",
-			Casting.bcsBytesFromSuiObjectResponse(objectResponse),
-			"base64"
-		);
-
-		return PerpetualsApiCasting.accountFromRaw(accountField.value);
-	};
-
-	// public fetchAllAccountDatas = async (
-	// 	inputs: ApiPerpetualsAccountsBody & {
-	// 		collateralCoinType: CoinType;
-	// 	}
-	// ): Promise<PerpetualsAccountData[]> => {
-	// 	const accountCaps = await this.fetchOwnedAccountCapsOfType(inputs);
-	// 	const accounts = await Promise.all(
-	// 		accountCaps.map((cap) => this.fetchAccount(cap))
-	// 	);
-	// 	return accounts.map((account, index) => ({
-	// 		account,
-	// 		accountCap: accountCaps[index],
-	// 	}));
-	// };
-
-	public fetchPositionOrderDatas = async (
-		inputs: ApiPerpetualsPositionOrderDatasBody & {
-			collateralCoinType: ObjectId;
+		const positionDatas: {
 			marketId: PerpetualsMarketId;
+			collateralCoinType: CoinType;
+		}[] = await this.Provider.indexerCaller.fetchIndexer(
+			`perpetuals/accounts/${accountId}/positions`
+		);
+		if (positionDatas.length <= 0) return { positions: [] };
+
+		const tx = new TransactionBlock();
+
+		for (const { marketId, collateralCoinType } of positionDatas) {
+			this.getPositionTx({
+				tx,
+				accountId,
+				marketId,
+				collateralCoinType,
+			});
 		}
-	): Promise<PerpetualsOrderData[]> => {
-		const { collateralCoinType, marketId } = inputs;
 
-		const { askOrderIds, bidOrderIds } = await this.fetchPositionOrderIds(
-			inputs
+		const { allBytes } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
+				tx,
+			});
+
+		const partialPositions = allBytes.map((outputBytes) =>
+			PerpetualsApiCasting.partialPositionFromRaw(
+				perpetualsBcsRegistry.de(
+					"Position",
+					new Uint8Array(outputBytes[0])
+				)
+			)
 		);
-
-		const [askOrderSizes, bidOrderSizes] = await Promise.all([
-			this.fetchOrdersSizes({
-				orderIds: askOrderIds,
-				side: PerpetualsOrderSide.Ask,
-				collateralCoinType,
-				marketId,
-			}),
-			this.fetchOrdersSizes({
-				orderIds: bidOrderIds,
-				side: PerpetualsOrderSide.Bid,
-				collateralCoinType,
-				marketId,
-			}),
-		]);
-
-		const askOrders = askOrderIds.map((orderId, index) => ({
-			orderId,
-			size: askOrderSizes[index],
-			side: PerpetualsOrderSide.Ask,
-		}));
-		const bidOrders = bidOrderIds.map((orderId, index) => ({
-			orderId,
-			size: bidOrderSizes[index],
-			side: PerpetualsOrderSide.Bid,
+		const positions = partialPositions.map((position, index) => ({
+			...position,
+			collateralCoinType: Helpers.addLeadingZeroesToType(
+				positionDatas[index].collateralCoinType
+			),
+			marketId: positionDatas[index].marketId,
 		}));
 
-		return [...askOrders, ...bidOrders];
+		return { positions };
 	};
 
-	public fetchPositionOrderIds = async (inputs: {
-		positionAsksId: ObjectId;
-		positionBidsId: ObjectId;
-	}): Promise<{
-		askOrderIds: PerpetualsOrderId[];
-		bidOrderIds: PerpetualsOrderId[];
-	}> => {
-		const { positionAsksId, positionBidsId } = inputs;
-
-		const [askOrderIds, bidOrderIds] = await Promise.all([
-			this.fetchOrderedVecSet({
-				objectId: positionAsksId,
-			}),
-			this.fetchOrderedVecSet({
-				objectId: positionBidsId,
-			}),
-		]);
-
-		return {
-			askOrderIds,
-			bidOrderIds,
-		};
-	};
-
-	public fetchMarketState = async (inputs: {
+	public fetchAccountOrderDatas = async (inputs: {
+		accountId: PerpetualsAccountId;
 		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-	}): Promise<PerpetualsMarketState> => {
-		const pkg = this.addresses.perpetuals.packages.perpetuals;
-		const mktMngId = this.getExchangeConfig(inputs).marketManager;
-		const resp =
-			await this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: mktMngId,
-				name: {
-					type: `${pkg}::keys::Market<${pkg}::keys::State>`,
-					value: { market_id: String(inputs.marketId) },
-				},
-			});
-		const objectResp = await this.Provider.provider.getObject({
-			id: resp.data?.objectId!,
-			options: { showBcs: true },
-		});
-		const mktStateField = bcs.de(
-			"Field<MarketKey, MarketState>",
-			Casting.bcsBytesFromSuiObjectResponse(objectResp),
-			"base64"
-		);
-		return PerpetualsApiCasting.marketStateFromRaw(mktStateField.value);
+	}): Promise<PerpetualsOrderData[]> => {
+		const { accountId, collateralCoinType } = inputs;
+		const orders: PostedOrderReceiptEventOnChain[] =
+			await this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/accounts/${accountId}/orders`
+			);
+		if (orders.length <= 0) return [];
+
+		const marketIdsToOrderEvents: Record<
+			PerpetualsMarketId,
+			PostedOrderReceiptEvent[]
+		> = orders
+			.map((order) =>
+				Casting.perpetuals.postedOrderReceiptEventFromOnChain(order)
+			)
+			.reduce((acc, event) => {
+				if (event.marketId in acc) {
+					return {
+						...acc,
+						[event.marketId]: [...acc[event.marketId], event],
+					};
+				}
+
+				return {
+					...acc,
+					[event.marketId]: [event],
+				};
+			}, {} as Record<PerpetualsMarketId, PostedOrderReceiptEvent[]>);
+
+		return (
+			await Promise.all(
+				Object.entries(marketIdsToOrderEvents).map(
+					async ([marketId, orderEvents]) => {
+						const currentOrderSizes = await this.fetchOrdersSizes({
+							marketId,
+							collateralCoinType,
+							orderIds: orderEvents.map((event) => event.orderId),
+						});
+						return orders.map((order, index) => {
+							const { size: initialSize, ...event } =
+								Casting.perpetuals.postedOrderReceiptEventFromOnChain(
+									order
+								);
+							return {
+								...event,
+								side: Perpetuals.orderIdToSide(event.orderId),
+								filledSize:
+									initialSize - currentOrderSizes[index],
+								initialSize,
+							};
+						});
+					}
+				)
+			)
+		).reduce((acc, orderDatas) => [...acc, ...orderDatas], []);
 	};
 
-	public fetchMarketParams = async (inputs: {
-		collateralCoinType: CoinType;
+	public fetchMarket = async (inputs: {
 		marketId: PerpetualsMarketId;
-	}): Promise<PerpetualsMarketParams> => {
-		const pkg = this.addresses.perpetuals.packages.perpetuals;
-		const mktMngId = this.getExchangeConfig(inputs).marketManager;
-		const resp =
-			await this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: mktMngId,
-				name: {
-					type: `${pkg}::keys::Market<${pkg}::keys::Params>`,
-					value: { market_id: String(inputs.marketId) },
-				},
-			});
-		const objectResp = await this.Provider.provider.getObject({
-			id: resp.data?.objectId!,
-			options: { showBcs: true },
-		});
-		const mktParamsField = bcs.de(
-			"Field<MarketKey, MarketParams>",
-			Casting.bcsBytesFromSuiObjectResponse(objectResp),
-			"base64"
-		);
-		return PerpetualsApiCasting.marketParamsFromRaw(mktParamsField.value);
-	};
-
-	public fetchOrderbook = async (inputs: {
 		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-	}): Promise<PerpetualsOrderbook> => {
-		const pkg = this.addresses.perpetuals.packages.perpetuals;
-		const mktMngId = this.getExchangeConfig(inputs).marketManager;
-		const resp =
-			await this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: mktMngId,
-				name: {
-					type: `${pkg}::keys::Market<${pkg}::keys::Orderbook>`,
-					value: { market_id: String(inputs.marketId) },
-				},
-			});
-		const objectResp = await this.Provider.provider.getObject({
-			id: resp.data?.objectId!,
-			options: { showBcs: true },
+	}): Promise<PerpetualsMarketData> => {
+		const { collateralCoinType } = inputs;
+		return this.Provider.Objects().fetchCastObjectBcs({
+			objectId: inputs.marketId,
+			bcs: perpetualsBcsRegistry,
+			fromDeserialized: (data) =>
+				PerpetualsApiCasting.clearingHouseFromRaw(
+					data,
+					collateralCoinType
+				),
+			typeName: ["ClearingHouse", collateralCoinType],
 		});
-		const orderbook = bcs.de(
-			"Orderbook",
-			Casting.bcsBytesFromSuiObjectResponse(objectResp),
-			"base64"
-		);
-
-		return PerpetualsApiCasting.orderbookFromRaw(orderbook);
 	};
 
 	// =========================================================================
@@ -418,72 +336,75 @@ export class PerpetualsApi {
 	): Promise<IndexerEventsWithCursor<CollateralEvent>> {
 		const { accountId, cursor, limit } = inputs;
 
-		const eventsData: IndexerEventsWithCursor<CollateralEvent> =
-			await this.Provider.indexerCaller.fetchIndexerEvents(
-				`perpetuals/accounts/${accountId}/events/collateral`,
-				{
-					cursor,
-					limit,
-				},
-				(event) => {
-					const eventType = (event as EventOnChain<any>).type;
-					return eventType.includes(
-						this.eventTypes.withdrewCollateral
-					)
-						? Casting.perpetuals.withdrewCollateralEventFromOnChain(
-								event as WithdrewCollateralEventOnChain
-						  )
-						: eventType.includes(
-								this.eventTypes.depositedCollateral
-						  )
-						? Casting.perpetuals.depositedCollateralEventFromOnChain(
-								event as DepositedCollateralEventOnChain
-						  )
-						: eventType.includes(this.eventTypes.settledFunding)
-						? Casting.perpetuals.settledFundingEventFromOnChain(
-								event as SettledFundingEventOnChain
-						  )
-						: eventType.includes(this.eventTypes.liquidated)
-						? Casting.perpetuals.liquidatedEventFromOnChain(
-								event as LiquidatedEventOnChain
-						  )
-						: eventType.includes(this.eventTypes.filledMakerOrder)
-						? Casting.perpetuals.filledMakerOrderEventFromOnChain(
-								event as FilledMakerOrderEventOnChain
-						  )
-						: Casting.perpetuals.filledTakerOrderEventFromOnChain(
-								event as FilledTakerOrderEventOnChain
-						  );
-				}
-			);
-
-		// set collateral delta based off of previous event
-		for (const [index, event] of eventsData.events.entries()) {
-			if (index >= eventsData.events.length - 1) {
-				eventsData.events[index].collateralDelta = event.collateral;
-				continue;
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`perpetuals/accounts/${accountId}/events/collateral`,
+			{
+				cursor,
+				limit,
+			},
+			(event) => {
+				const eventType = (event as EventOnChain<any>).type;
+				return eventType.includes(this.eventTypes.withdrewCollateral)
+					? Casting.perpetuals.withdrewCollateralEventFromOnChain(
+							event as WithdrewCollateralEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.depositedCollateral)
+					? Casting.perpetuals.depositedCollateralEventFromOnChain(
+							event as DepositedCollateralEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.settledFunding)
+					? Casting.perpetuals.settledFundingEventFromOnChain(
+							event as SettledFundingEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.allocatedCollateral)
+					? Casting.perpetuals.allocatedCollateralEventFromOnChain(
+							event as AllocatedCollateralEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.deallocatedCollateral)
+					? Casting.perpetuals.deallocatedCollateralEventFromOnChain(
+							event as DeallocatedCollateralEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.liquidated)
+					? Casting.perpetuals.liquidatedEventFromOnChain(
+							event as LiquidatedEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.filledMakerOrder)
+					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
+							event as FilledMakerOrderEventOnChain
+					  )
+					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
+							event as FilledTakerOrderEventOnChain
+					  );
 			}
+		);
 
-			const previousEvent = eventsData.events[index + 1];
-			eventsData.events[index].collateralDelta =
-				Casting.IFixed.iFixedFromNumber(
-					Math.abs(
-						Casting.IFixed.numberFromIFixed(event.collateral)
-					) -
-						Math.abs(
-							Casting.IFixed.numberFromIFixed(
-								previousEvent.collateral
-							)
-						)
-				);
-		}
+		// // set collateral delta based off of previous event
+		// for (const [index, event] of eventsData.events.entries()) {
+		// 	if (index >= eventsData.events.length - 1) {
+		// 		eventsData.events[index].collateralDelta = event.collateral;
+		// 		continue;
+		// 	}
 
-		// if more events exist then remove last event since unable to calculate collateral delta
-		if (cursor !== undefined) {
-			eventsData.events = eventsData.events.slice(0, -1);
-		}
+		// 	const previousEvent = eventsData.events[index + 1];
+		// 	eventsData.events[index].collateralDelta =
+		// 		Casting.IFixed.iFixedFromNumber(
+		// 			Math.abs(
+		// 				Casting.IFixed.numberFromIFixed(event.collateral)
+		// 			) -
+		// 				Math.abs(
+		// 					Casting.IFixed.numberFromIFixed(
+		// 						previousEvent.collateral
+		// 					)
+		// 				)
+		// 		);
+		// }
 
-		return eventsData;
+		// // if more events exist then remove last event since unable to calculate collateral delta
+		// if (cursor !== undefined) {
+		// 	eventsData.events = eventsData.events.slice(0, -1);
+		// }
+
+		// return eventsData;
 	}
 
 	public async fetchAccountOrderEvents(
@@ -502,9 +423,13 @@ export class PerpetualsApi {
 					? Casting.perpetuals.canceledOrderEventFromOnChain(
 							event as CanceledOrderEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.postedOrder)
-					? Casting.perpetuals.postedOrderEventFromOnChain(
-							event as PostedOrderEventOnChain
+					: eventType.includes(this.eventTypes.postedOrderReceipt)
+					? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
+							event as PostedOrderReceiptEventOnChain
+					  )
+					: eventType.includes(this.eventTypes.liquidated)
+					? Casting.perpetuals.liquidatedEventFromOnChain(
+							event as LiquidatedEventOnChain
 					  )
 					: eventType.includes(this.eventTypes.filledMakerOrder)
 					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
@@ -645,58 +570,93 @@ export class PerpetualsApi {
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
 		const { collateralCoinType, marketId, side, lotSize, tickSize } =
 			inputs;
-		const sender = inputs.walletAddress;
 
 		const bestPriceSide =
 			side === PerpetualsOrderSide.Ask
 				? PerpetualsOrderSide.Bid
 				: PerpetualsOrderSide.Ask;
 
-		const tx = new TransactionBlock();
-		tx.setSender(sender);
-
-		const orderbookId = this.getOrderbookTx({
-			tx,
-			collateralCoinType,
-			marketId,
-		});
+		// init tx and start session
+		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
 
 		// get orderbook best price before order
-		this.bestPriceTx({ tx, orderbookId, side: bestPriceSide });
+		this.bestPriceTx({
+			tx,
+			marketId,
+			collateralCoinType,
+			side: bestPriceSide,
+		});
 
 		// place order
 		if ("slPrice" in inputs || "tpPrice" in inputs) {
-			this.placeSLTPOrderTx({ ...inputs, tx });
+			this.placeSLTPOrderTx({
+				...inputs,
+				tx,
+				sessionPotatoId,
+			});
 		} else if ("price" in inputs) {
-			this.placeLimitOrderTx({ ...inputs, tx });
+			this.placeLimitOrderTx({
+				...inputs,
+				tx,
+				sessionPotatoId,
+			});
 		} else {
-			this.placeMarketOrderTx({ ...inputs, tx });
+			this.placeMarketOrderTx({
+				...inputs,
+				tx,
+				sessionPotatoId,
+			});
 		}
 
-		// get account state after order
-		this.getAccountTx({ ...inputs, tx });
+		// get position state after order
+		this.getPositionTx({ ...inputs, tx });
 
 		// get orderbook best price after order
-		this.bestPriceTx({ tx, orderbookId, side: bestPriceSide });
+		this.bestPriceTx({
+			tx,
+			marketId,
+			collateralCoinType,
+			side: bestPriceSide,
+		});
+
+		// end session
+		this.endSessionAndTransferAccount({
+			...inputs,
+			tx,
+			sessionPotatoId,
+		});
 
 		try {
 			// inspect tx
 			const { allBytes, events } =
 				await this.Provider.Inspections().fetchAllBytesFromTx({
 					tx,
-					sender,
+					sender: inputs.walletAddress,
 				});
 
-			// deserialize account
-			const accountAfterOrder = PerpetualsApiCasting.accountFromRaw(
-				bcs.de("Account", new Uint8Array(allBytes[3][0]))
-			);
+			const bytesIndexOffet = inputs.hasPosition ? 0 : 1;
+
+			// deserialize position
+			const positionAfterOrder: PerpetualsPosition = {
+				...PerpetualsApiCasting.partialPositionFromRaw(
+					perpetualsBcsRegistry.de(
+						"Position",
+						new Uint8Array(allBytes[4 + bytesIndexOffet][0])
+					)
+				),
+				collateralCoinType,
+				marketId,
+			};
 
 			// deserialize orderbook prices
 			const bestOrderbookPriceBeforeOrder =
-				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[1][0]);
+				PerpetualsApiCasting.orderbookPriceFromBytes(
+					allBytes[2 + bytesIndexOffet][0]
+				);
 			const bestOrderbookPriceAfterOrder =
-				PerpetualsApiCasting.orderbookPriceFromBytes(allBytes[4][0]);
+				PerpetualsApiCasting.orderbookPriceFromBytes(
+					allBytes[5 + bytesIndexOffet][0]
+				);
 
 			// try find relevant events
 			const filledOrderEvents =
@@ -706,12 +666,12 @@ export class PerpetualsApi {
 					castFunction:
 						Casting.perpetuals.filledTakerOrderEventFromOnChain,
 				});
-			const postedOrderEvents =
+			const postedOrderReceiptEvents =
 				Aftermath.helpers.events.findCastEventsOrUndefined({
 					events,
-					eventType: this.eventTypes.postedOrder,
+					eventType: this.eventTypes.postedOrderReceipt,
 					castFunction:
-						Casting.perpetuals.postedOrderEventFromOnChain,
+						Casting.perpetuals.postedOrderReceiptEventFromOnChain,
 				});
 
 			const [filledSize, filledSizeUsd] = filledOrderEvents.reduce(
@@ -727,15 +687,14 @@ export class PerpetualsApi {
 				[0, 0]
 			);
 
-			const [postedSize, postedSizeUsd] = postedOrderEvents.reduce(
+			const [postedSize, postedSizeUsd] = postedOrderReceiptEvents.reduce(
 				(acc, event) => {
 					const postedSize = Number(event.size) * lotSize;
 					const postedSizeUsd =
 						postedSize *
 						Perpetuals.orderPriceToPrice({
 							orderPrice: Perpetuals.OrderUtils.price(
-								event.orderId,
-								event.side
+								event.orderId
 							),
 							lotSize,
 							tickSize,
@@ -768,7 +727,7 @@ export class PerpetualsApi {
 				: priceSlippage / bestOrderbookPriceBeforeOrder;
 
 			return {
-				accountAfterOrder,
+				positionAfterOrder,
 				priceSlippage,
 				percentSlippage,
 				filledSize,
@@ -778,7 +737,7 @@ export class PerpetualsApi {
 			};
 		} catch (error) {
 			if (!(error instanceof Error))
-				throw new Error("Invalid error thrown on preview order");
+				throw new Error("invalid error thrown on preview order");
 
 			return { error: error.message };
 		}
@@ -808,19 +767,14 @@ export class PerpetualsApi {
 	};
 
 	public fetchAllMarketIds = async (inputs: {
-		collateralCoinType: ObjectId;
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketId[]> => {
-		const tx = new TransactionBlock();
-
-		this.getMarketIdsTx({ ...inputs, tx });
-
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
-
-		const marketIds: any[] = bcs.de("vector<u64>", new Uint8Array(bytes));
-		return marketIds.map((marketId) => BigInt(marketId));
+		const { collateralCoinType } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer(
+			`perpetuals/markets/${Helpers.addLeadingZeroesToType(
+				collateralCoinType
+			)}`
+		);
 	};
 
 	public fetchOrderbookState = async (
@@ -894,174 +848,21 @@ export class PerpetualsApi {
 	//  Transaction Commands
 	// =========================================================================
 
-	public initializeForCollateralTx = (inputs: {
-		tx: TransactionBlock;
-		collateralCoinType: CoinType;
-	}) => {
-		const { tx, collateralCoinType } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"initialize_for_collateral"
-			),
-			typeArguments: [collateralCoinType],
-			arguments: [
-				tx.object(this.addresses.perpetuals.objects.adminCapability),
-				tx.object(this.addresses.perpetuals.objects.registry),
-			],
-		});
-	};
-
-	public transferAdminCapTx = (inputs: {
-		tx: TransactionBlock;
-		targetAddress: SuiAddress;
-	}) => {
-		const { tx, targetAddress } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"transfer_admin_cap"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(this.addresses.perpetuals.objects.adminCapability),
-				tx.pure(targetAddress),
-			],
-		});
-	};
-
-	public addInsuranceFundTx = (inputs: {
-		tx: TransactionBlock;
-		collateralCoinType: CoinType;
-	}) => {
-		const { tx, collateralCoinType } = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"add_insurance_fund"
-			),
-			typeArguments: [collateralCoinType],
-			arguments: [
-				tx.object(this.addresses.perpetuals.objects.adminCapability),
-				tx.object(exchangeCfg.insuranceFunds),
-			],
-		});
-	};
-
-	public createMarketTx = (inputs: {
-		tx: TransactionBlock;
-		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-		marginRatioInitial: bigint;
-		marginRatioMaintenance: bigint;
-		baseAssetSymbol: string;
-		fundingFrequencyMs: bigint;
-		fundingPeriodMs: bigint;
-		premiumTwapFrequencyMs: bigint;
-		premiumTwapPeriodMs: bigint;
-		spreadTwapFrequencyMs: bigint;
-		spreadTwapPeriodMs: bigint;
-		makerFee: bigint;
-		takerFee: bigint;
-		liquidationFee: bigint;
-		forceCancelFee: bigint;
-		insuranceFundFee: bigint;
-		insuranceFundId: bigint;
-		lotSize: bigint;
-		tickSize: bigint;
-		branchMin: bigint;
-		branchMax: bigint;
-		leafMin: bigint;
-		leafMax: bigint;
-		branchesMergeMax: bigint;
-		leavesMergeMax: bigint;
-	}) => {
-		const {
-			tx,
-			collateralCoinType,
-			marketId,
-			marginRatioInitial,
-			marginRatioMaintenance,
-			baseAssetSymbol,
-			fundingFrequencyMs,
-			fundingPeriodMs,
-			premiumTwapFrequencyMs,
-			premiumTwapPeriodMs,
-			spreadTwapFrequencyMs,
-			spreadTwapPeriodMs,
-			makerFee,
-			takerFee,
-			liquidationFee,
-			forceCancelFee,
-			insuranceFundFee,
-			insuranceFundId,
-			lotSize,
-			tickSize,
-			branchMin,
-			branchMax,
-			leafMin,
-			leafMax,
-			branchesMergeMax,
-			leavesMergeMax,
-		} = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"create_market"
-			),
-			typeArguments: [collateralCoinType],
-			arguments: [
-				tx.object(this.addresses.perpetuals.objects.adminCapability),
-				tx.object(exchangeCfg.marketManager),
-				tx.object(exchangeCfg.insuranceFunds),
-				tx.object(Sui.constants.addresses.suiClockId),
-				tx.object(this.addresses.oracle.objects.priceFeedStorage),
-				tx.pure(marketId),
-				tx.pure(marginRatioInitial),
-				tx.pure(marginRatioMaintenance),
-				tx.pure(baseAssetSymbol),
-				tx.pure(fundingFrequencyMs),
-				tx.pure(fundingPeriodMs),
-				tx.pure(premiumTwapFrequencyMs),
-				tx.pure(premiumTwapPeriodMs),
-				tx.pure(spreadTwapFrequencyMs),
-				tx.pure(spreadTwapPeriodMs),
-				tx.pure(makerFee),
-				tx.pure(takerFee),
-				tx.pure(liquidationFee),
-				tx.pure(forceCancelFee),
-				tx.pure(insuranceFundFee),
-				tx.pure(insuranceFundId),
-				tx.pure(lotSize),
-				tx.pure(tickSize),
-				tx.pure(branchMin),
-				tx.pure(branchMax),
-				tx.pure(leafMin),
-				tx.pure(leafMax),
-				tx.pure(branchesMergeMax),
-				tx.pure(leavesMergeMax),
-			],
-		});
-	};
-
-	public depositCollateralTx = (inputs: {
-		tx: TransactionBlock;
-		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		coin: ObjectId | TransactionArgument;
-	}) => {
-		const { tx, collateralCoinType, accountCapId, coin } = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
+	public depositCollateralTx = (
+		inputs: {
+			tx: TransactionBlock;
+			collateralCoinType: CoinType;
+			accountCapId: ObjectId | TransactionArgument;
+		} & (
+			| {
+					coinId: ObjectId | TransactionArgument;
+			  }
+			| {
+					coinBytes: Uint8Array;
+			  }
+		)
+	) => {
+		const { tx, collateralCoinType, accountCapId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1073,9 +874,136 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(exchangeCfg.accountManager),
-				tx.object(exchangeCfg.vault),
-				typeof coin === "string" ? tx.object(coin) : coin,
+				"coinBytes" in inputs
+					? tx.pure(inputs.coinBytes)
+					: typeof inputs.coinId === "string"
+					? tx.object(inputs.coinId)
+					: inputs.coinId,
+			],
+		});
+	};
+
+	public allocateCollateralTx = (inputs: {
+		tx: TransactionBlock;
+		collateralCoinType: CoinType;
+		accountCapId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+		amount: Balance;
+	}) => {
+		const { tx, collateralCoinType, accountCapId, marketId, amount } =
+			inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"allocate_collateral"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				tx.object(marketId),
+				typeof accountCapId === "string"
+					? tx.object(accountCapId)
+					: accountCapId,
+				tx.pure(amount, "u64"),
+			],
+		});
+	};
+
+	public deallocateCollateralTx = (inputs: {
+		tx: TransactionBlock;
+		collateralCoinType: CoinType;
+		accountCapId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+		amount: Balance;
+	}) => {
+		const { tx, collateralCoinType, accountCapId, marketId, amount } =
+			inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"deallocate_collateral"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				tx.object(marketId),
+				typeof accountCapId === "string"
+					? tx.object(accountCapId)
+					: accountCapId,
+				tx.object(this.addresses.oracle.objects.priceFeedStorage),
+				tx.object(Sui.constants.addresses.suiClockId),
+				tx.pure(amount, "u64"),
+			],
+		});
+	};
+
+	public createMarketPositionTx = (inputs: {
+		tx: TransactionBlock;
+		collateralCoinType: CoinType;
+		accountCapId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+	}) => {
+		const { tx, collateralCoinType, accountCapId, marketId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"create_market_position"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				tx.object(marketId),
+				typeof accountCapId === "string"
+					? tx.object(accountCapId)
+					: accountCapId,
+			],
+		});
+	};
+
+	public startSessionTx = (inputs: {
+		tx: TransactionBlock;
+		collateralCoinType: CoinType;
+		accountCapId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+	}) /* SessionHotPotato<T> */ => {
+		const { tx, collateralCoinType, accountCapId, marketId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"start_session"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				tx.object(marketId),
+				typeof accountCapId === "string"
+					? tx.object(accountCapId)
+					: accountCapId,
+				tx.object(this.addresses.oracle.objects.priceFeedStorage),
+				tx.object(Sui.constants.addresses.suiClockId),
+			],
+		});
+	};
+
+	public endSessionTx = (inputs: {
+		tx: TransactionBlock;
+		collateralCoinType: CoinType;
+		sessionPotatoId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+	}) /* Account<T> */ => {
+		const { tx, collateralCoinType, sessionPotatoId, marketId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"end_session"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				tx.object(marketId),
+				typeof sessionPotatoId === "string"
+					? tx.object(sessionPotatoId)
+					: sessionPotatoId,
 			],
 		});
 	};
@@ -1083,15 +1011,19 @@ export class PerpetualsApi {
 	public placeMarketOrderTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
+		sessionPotatoId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		size: bigint;
 	}) => {
-		const { tx, collateralCoinType, accountCapId, marketId, side, size } =
-			inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
+		const {
+			tx,
+			collateralCoinType,
+			sessionPotatoId,
+			marketId,
+			side,
+			size,
+		} = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1100,16 +1032,12 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
-				tx.object(exchangeCfg.accountManager),
-				tx.object(exchangeCfg.marketManager),
-				tx.object(this.addresses.oracle.objects.priceFeedStorage),
-				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(marketId),
-				tx.pure(Boolean(side)),
-				tx.pure(size),
+				tx.object(marketId),
+				typeof sessionPotatoId === "string"
+					? tx.object(sessionPotatoId)
+					: sessionPotatoId,
+				tx.pure(Boolean(side), "bool"),
+				tx.pure(size, "u64"),
 			],
 		});
 	};
@@ -1117,7 +1045,7 @@ export class PerpetualsApi {
 	public placeLimitOrderTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
+		sessionPotatoId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		size: bigint;
@@ -1127,15 +1055,13 @@ export class PerpetualsApi {
 		const {
 			tx,
 			collateralCoinType,
-			accountCapId,
+			sessionPotatoId,
 			marketId,
 			side,
 			size,
 			price,
 			orderType,
 		} = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1144,56 +1070,40 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
-				tx.object(exchangeCfg.accountManager),
-				tx.object(exchangeCfg.marketManager),
-				tx.object(this.addresses.oracle.objects.priceFeedStorage),
-				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(marketId),
-				tx.pure(Boolean(side)),
-				tx.pure(size),
-				tx.pure(price),
-				tx.pure(BigInt(orderType)),
+				tx.object(marketId),
+				typeof sessionPotatoId === "string"
+					? tx.object(sessionPotatoId)
+					: sessionPotatoId,
+				tx.pure(Boolean(side), "bool"),
+				tx.pure(size, "u64"),
+				tx.pure(price, "u64"),
+				tx.pure(BigInt(orderType), "u64"),
 			],
 		});
 	};
 
-	public cancelOrderTx = (inputs: {
+	public cancelOrdersTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
-		side: PerpetualsOrderSide;
-		orderId: PerpetualsOrderId;
+		orderIds: PerpetualsOrderId[];
 	}) => {
-		const {
-			tx,
-			collateralCoinType,
-			accountCapId,
-			marketId,
-			side,
-			orderId,
-		} = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
+		const { tx, collateralCoinType, accountCapId, marketId, orderIds } =
+			inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
 				PerpetualsApi.constants.moduleNames.interface,
-				"cancel_order"
+				"cancel_orders"
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
+				tx.object(marketId),
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(exchangeCfg.accountManager),
-				tx.object(exchangeCfg.marketManager),
-				tx.pure(marketId),
-				tx.pure(Boolean(side)),
-				tx.pure(orderId),
+				tx.pure(orderIds, "vector<u128>"),
 			],
 		});
 	};
@@ -1205,8 +1115,6 @@ export class PerpetualsApi {
 		amount: Balance;
 	}): TransactionArgument => {
 		const { tx, collateralCoinType, accountCapId, amount } = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1218,69 +1126,7 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(exchangeCfg.accountManager),
-				tx.object(exchangeCfg.marketManager),
-				tx.object(this.addresses.oracle.objects.priceFeedStorage),
-				tx.object(exchangeCfg.vault),
-				tx.pure(amount),
-			],
-		});
-	};
-
-	public liquidateTx = (inputs: {
-		tx: TransactionBlock;
-		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		liqeeAccountId: PerpetualsAccountId;
-		sizes: bigint[];
-	}) => {
-		const { tx, collateralCoinType, accountCapId, liqeeAccountId, sizes } =
-			inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"liquidate"
-			),
-			typeArguments: [collateralCoinType],
-			arguments: [
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
-				tx.object(exchangeCfg.accountManager),
-				tx.object(exchangeCfg.marketManager),
-				tx.object(exchangeCfg.vault),
-				tx.object(exchangeCfg.insuranceFunds),
-				tx.object(this.addresses.oracle.objects.priceFeedStorage),
-				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(liqeeAccountId),
-				tx.pure(sizes),
-			],
-		});
-	};
-
-	public updateFundingTx = (inputs: {
-		tx: TransactionBlock;
-		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-	}) => {
-		const { tx, collateralCoinType, marketId } = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"update_funding"
-			),
-			typeArguments: [collateralCoinType],
-			arguments: [
-				tx.object(exchangeCfg.marketManager),
-				tx.object(this.addresses.oracle.objects.priceFeedStorage),
-				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(marketId),
+				tx.pure(amount, "u64"),
 			],
 		});
 	};
@@ -1288,10 +1134,8 @@ export class PerpetualsApi {
 	public createAccountTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-	}) => {
+	}) /* Account<T> */ => {
 		const { tx, collateralCoinType } = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType]!;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1299,13 +1143,59 @@ export class PerpetualsApi {
 				"create_account"
 			),
 			typeArguments: [collateralCoinType],
-			arguments: [tx.object(exchangeCfg.accountManager)],
+			arguments: [tx.object(this.addresses.perpetuals.objects.registry)],
+		});
+	};
+
+	public getHotPotatoFieldsTx = (
+		inputs: {
+			tx: TransactionBlock;
+			collateralCoinType: CoinType;
+			sessionPotatoId: ObjectId | TransactionArgument;
+		}
+		/*
+			(
+				lot_size,
+				tick_size,
+				timestamp_ms,
+				collateral_price,
+				index_price,
+				book_price,
+				fills, 
+				post
+			): (
+				u64,
+				u64,
+				u64,
+				u64,
+				u256,
+				u256,
+				u256,
+				&vector<FillReceipt>,
+				&PostReceipt
+			)
+		*/
+	) => {
+		const { tx, collateralCoinType, sessionPotatoId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.clearingHouse,
+				"get_hot_potato_fields"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				typeof sessionPotatoId === "string"
+					? tx.object(sessionPotatoId)
+					: sessionPotatoId,
+			],
 		});
 	};
 
 	public placeSLTPOrderTx = (
 		inputs: ApiPerpetualsSLTPOrderBody & {
 			tx: TransactionBlock;
+			sessionPotatoId: TransactionObjectArgument;
 		}
 	) => {
 		const { tx } = inputs;
@@ -1356,29 +1246,24 @@ export class PerpetualsApi {
 				price: inputs.tpPrice,
 			});
 		}
-
-		return tx;
 	};
 
-	public getAccountTx = (inputs: {
+	public getPositionTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		accountId: PerpetualsAccountId;
-	}) /* Account */ => {
-		const { tx, collateralCoinType } = inputs;
-		const exchangeCfg =
-			this.addresses.perpetuals.objects.exchanges[collateralCoinType];
+		marketId: PerpetualsMarketId;
+	}) /* Position */ => {
+		const { tx, marketId, collateralCoinType } = inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.accountManager,
-				"get_account"
+				PerpetualsApi.constants.moduleNames.clearingHouse,
+				"get_position"
 			),
 			typeArguments: [collateralCoinType],
-			arguments: [
-				tx.object(exchangeCfg.accountManager),
-				tx.pure(inputs.accountId, "u64"),
-			],
+			arguments: [tx.object(marketId), tx.pure(inputs.accountId, "u64")],
 		});
 	};
 
@@ -1388,15 +1273,14 @@ export class PerpetualsApi {
 		marketId: PerpetualsMarketId;
 	}) /* Orderbook */ => {
 		const { tx, collateralCoinType } = inputs;
-		const mktMngId = this.getExchangeConfig(inputs).marketManager;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.marketManager,
+				PerpetualsApi.constants.moduleNames.clearingHouse,
 				"get_orderbook"
 			),
 			typeArguments: [collateralCoinType],
-			arguments: [tx.object(mktMngId), tx.pure(inputs.marketId, "u64")],
+			arguments: [tx.object(inputs.marketId)],
 		});
 	};
 
@@ -1422,66 +1306,22 @@ export class PerpetualsApi {
 
 	public bestPriceTx = (inputs: {
 		tx: TransactionBlock;
-		orderbookId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
-	}) /* Option<u256> */ => {
-		const { tx, orderbookId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.orderbook,
-				"best_price"
-			),
-			typeArguments: [],
-			arguments: [
-				typeof orderbookId === "string"
-					? tx.object(orderbookId)
-					: orderbookId, // Orderbook
-				tx.pure(Boolean(inputs.side), "bool"), // side
-			],
-		});
-	};
-
-	public getOrderSizeTx = (inputs: {
-		tx: TransactionBlock;
-		orderbookId: ObjectId | TransactionArgument;
-		orderId: PerpetualsOrderId;
-		side: PerpetualsOrderSide;
-	}) /* u64 */ => {
-		const { tx, orderbookId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.orderbook,
-				"get_order_size"
-			),
-			typeArguments: [],
-			arguments: [
-				typeof orderbookId === "string"
-					? tx.object(orderbookId)
-					: orderbookId, // Orderbook
-				tx.pure(inputs.orderId, "u128"), // order_id
-				tx.pure(Boolean(inputs.side), "bool"), // side
-			],
-		});
-	};
-
-	public getMarketIdsTx = (inputs: {
-		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-	}) /* &vector<u64> */ => {
-		const { tx, collateralCoinType } = inputs;
-		const mktMngId = this.getExchangeConfig({
-			collateralCoinType,
-		}).marketManager;
+	}) /* Option<u256> */ => {
+		const { tx, marketId, collateralCoinType } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.marketManager,
-				"get_market_ids"
+				PerpetualsApi.constants.moduleNames.clearingHouse,
+				"get_best_price"
 			),
 			typeArguments: [collateralCoinType],
-			arguments: [tx.object(mktMngId)],
+			arguments: [
+				tx.object(marketId), // ClearingHouse
+				tx.pure(Boolean(inputs.side), "bool"), // side
+			],
 		});
 	};
 
@@ -1512,57 +1352,24 @@ export class PerpetualsApi {
 		});
 	};
 
-	public inspectPlaceMarketOrderTx = (inputs: {
+	public getOrderSizeTx = (inputs: {
 		tx: TransactionBlock;
 		orderbookId: ObjectId | TransactionArgument;
-		side: PerpetualsOrderSide;
-		size: bigint;
-	}) /* vector<FillReceipt> */ => {
-		const { tx, orderbookId, size } = inputs;
+		orderId: PerpetualsOrderId;
+	}) /* u64 */ => {
+		const { tx, orderbookId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
 				PerpetualsApi.constants.moduleNames.orderbook,
-				"place_market_order"
+				"get_order_size"
 			),
 			typeArguments: [],
 			arguments: [
 				typeof orderbookId === "string"
 					? tx.object(orderbookId)
 					: orderbookId, // Orderbook
-				tx.pure(Boolean(inputs.side), "bool"), // side
-				tx.pure(size),
-			],
-		});
-	};
-
-	public inspectPlaceLimitOrderTx = (inputs: {
-		tx: TransactionBlock;
-		orderbookId: ObjectId | TransactionArgument;
-		accountId: PerpetualsAccountId;
-		side: PerpetualsOrderSide;
-		size: bigint;
-		price: bigint;
-		orderType: PerpetualsOrderType;
-	}) /* (vector<FillReceipt>, Option<PostReceipt>) */ => {
-		const { tx, orderbookId, accountId, side, size, price, orderType } =
-			inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.orderbook,
-				"place_limit_order"
-			),
-			typeArguments: [],
-			arguments: [
-				typeof orderbookId === "string"
-					? tx.object(orderbookId)
-					: orderbookId, // Orderbook
-				tx.pure(accountId, "u64"), // account_id
-				tx.pure(Boolean(side), "bool"), // side
-				tx.pure(size, "u64"), // size
-				tx.pure(price, "u64"), // price
-				tx.pure(BigInt(orderType), "u64"), // order_type
+				tx.pure(inputs.orderId, "u128"), // order_id
 			],
 		});
 	};
@@ -1571,21 +1378,6 @@ export class PerpetualsApi {
 	//  Transaction Builders
 	// =========================================================================
 
-	public buildInitializeForCollateralTx =
-		Helpers.transactions.createBuildTxFunc(this.initializeForCollateralTx);
-
-	public buildTransferAdminCapTx = Helpers.transactions.createBuildTxFunc(
-		this.transferAdminCapTx
-	);
-
-	public buildAddInsuranceFundTx = Helpers.transactions.createBuildTxFunc(
-		this.addInsuranceFundTx
-	);
-
-	public buildCreateMarketTx = Helpers.transactions.createBuildTxFunc(
-		this.createMarketTx
-	);
-
 	public fetchBuildDepositCollateralTx = async (
 		inputs: ApiPerpetualsDepositCollateralBody
 	): Promise<TransactionBlock> => {
@@ -1593,7 +1385,7 @@ export class PerpetualsApi {
 		tx.setSender(inputs.walletAddress);
 
 		const { walletAddress, collateralCoinType, amount } = inputs;
-		const coin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		const coinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: collateralCoinType,
@@ -1601,39 +1393,86 @@ export class PerpetualsApi {
 		});
 		this.depositCollateralTx({
 			tx,
-			coin,
+			coinId,
 			...inputs,
 		});
 
 		return tx;
 	};
 
-	public buildPlaceMarketOrderTx = Helpers.transactions.createBuildTxFunc(
-		this.placeMarketOrderTx
-	);
+	public buildPlaceMarketOrderTx = (inputs: ApiPerpetualsMarketOrderBody) => {
+		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+		this.placeMarketOrderTx({
+			...inputs,
+			tx,
+			sessionPotatoId,
+		});
+		this.endSessionAndTransferAccount({
+			...inputs,
+			tx,
+			sessionPotatoId,
+		});
+		return tx;
+	};
 
-	public buildPlaceLimitOrderTx = Helpers.transactions.createBuildTxFunc(
-		this.placeLimitOrderTx
-	);
+	public buildPlaceLimitOrderTx = (inputs: ApiPerpetualsLimitOrderBody) => {
+		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+		// TODO: handle (de)allocations everywhere
+		this.placeLimitOrderTx({
+			...inputs,
+			tx,
+			sessionPotatoId,
+		});
+		this.endSessionAndTransferAccount({
+			...inputs,
+			tx,
+			sessionPotatoId,
+		});
+		return tx;
+	};
 
-	public buildCancelOrderTx = Helpers.transactions.createBuildTxFunc(
-		this.cancelOrderTx
-	);
+	public buildCancelOrderTx = (
+		inputs: ApiPerpetualsCancelOrderBody
+	): TransactionBlock => {
+		const { orderId, marketId, ...otherInputs } = inputs;
+
+		return this.buildCancelOrdersTx({
+			...otherInputs,
+			orderDatas: [{ orderId, marketId }],
+		});
+	};
 
 	public buildCancelOrdersTx = (
 		inputs: ApiPerpetualsCancelOrdersBody
 	): TransactionBlock => {
 		const { orderDatas, collateralCoinType, accountCapId } = inputs;
 
+		if (orderDatas.length <= 0)
+			throw new Error("cannot have order datas of length zero");
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		for (const orderData of orderDatas) {
-			this.cancelOrderTx({
+		const marketIdToOrderIds = orderDatas.reduce((acc, order) => {
+			if (order.marketId in acc) {
+				return {
+					...acc,
+					[order.marketId]: [...acc[order.marketId], order.orderId],
+				};
+			}
+			return {
+				...acc,
+				[order.marketId]: [order.orderId],
+			};
+		}, {} as Record<PerpetualsMarketId, PerpetualsOrderId[]>);
+
+		for (const [marketId, orderIds] of Object.entries(marketIdToOrderIds)) {
+			this.cancelOrdersTx({
 				tx,
 				collateralCoinType,
 				accountCapId,
-				...orderData,
+				marketId,
+				orderIds,
 			});
 		}
 
@@ -1659,33 +1498,34 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildLiquidateTx = Helpers.transactions.createBuildTxFunc(
-		this.liquidateTx
-	);
-
-	public buildUpdateFundingTx = Helpers.transactions.createBuildTxFunc(
-		this.updateFundingTx
-	);
-
 	public buildCreateAccountTx = (
 		inputs: ApiPerpetualsCreateAccountBody
 	): TransactionBlock => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const accCap = this.createAccountTx({
+		const accountCap = this.createAccountTx({
 			tx,
 			...inputs,
 		});
-
-		tx.transferObjects([accCap], tx.pure(inputs.walletAddress));
+		tx.transferObjects([accountCap], tx.pure(inputs.walletAddress));
 
 		return tx;
 	};
 
-	public buildPlaceSLTPOrderTx = Helpers.transactions.createBuildTxFunc(
-		this.placeSLTPOrderTx
-	);
+	public buildPlaceSLTPOrderTx = (
+		inputs: ApiPerpetualsSLTPOrderBody
+	): TransactionBlock => {
+		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+
+		this.placeSLTPOrderTx({
+			...inputs,
+			tx,
+			sessionPotatoId,
+		});
+
+		return tx;
+	};
 
 	public buildTransferCollateralTx = (inputs: {
 		walletAddress: SuiAddress;
@@ -1705,7 +1545,7 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(walletAddress);
 
-		const coin = this.withdrawCollateralTx({
+		const coinId = this.withdrawCollateralTx({
 			tx,
 			collateralCoinType,
 			amount,
@@ -1714,71 +1554,43 @@ export class PerpetualsApi {
 		this.depositCollateralTx({
 			tx,
 			collateralCoinType,
-			coin,
+			coinId,
 			accountCapId: toAccountCapId,
 		});
 
 		return tx;
 	};
 
+	// TODO: add to sdk
+	public buildAllocateCollateralTx = TransactionsApiHelpers.createBuildTxFunc(
+		this.allocateCollateralTx
+	);
+
+	// TODO: add to sdk
+	public buildDeallocateCollateralTx =
+		TransactionsApiHelpers.createBuildTxFunc(this.deallocateCollateralTx);
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
 
-	public getExchangeConfig = (inputs: {
-		collateralCoinType: CoinType;
-	}): ExchangeAddresses => {
-		return this.addresses.perpetuals.objects.exchanges[
-			inputs.collateralCoinType
-		]!;
-	};
-
 	public getAccountCapType = (inputs: {
 		collateralCoinType: CoinType;
 	}): string => {
-		return `${this.addresses.perpetuals.packages.perpetuals}::${PerpetualsApi.constants.moduleNames.accountManager}::AccountCap<${inputs.collateralCoinType}>`;
+		return `${this.addresses.perpetuals.packages.perpetuals}::${PerpetualsApi.constants.moduleNames.account}::Account<${inputs.collateralCoinType}>`;
 	};
 
 	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
 
-	private fetchOrderedVecSet = async (inputs: {
-		objectId: ObjectId;
-	}): Promise<bigint[]> => {
-		const keyType = `${this.addresses.perpetuals.packages.perpetuals}::ordered_vec_set::Contents`;
-		const resp =
-			await this.Provider.DynamicFields().fetchDynamicFieldObject({
-				parentId: inputs.objectId,
-				name: {
-					type: keyType,
-					value: { dummy_field: Boolean() },
-				},
-			});
-
-		const objectResp = await this.Provider.provider.getObject({
-			id: resp.data?.objectId!,
-			options: { showBcs: true },
-		});
-		const orderKeys = bcs.de(
-			`Field<Contents, vector<u128>>`,
-			Casting.bcsBytesFromSuiObjectResponse(objectResp),
-			"base64"
-		);
-
-		const res = orderKeys.value.map((value: string) => {
-			return BigInt(value);
-		});
-		return res;
-	};
-
 	private fetchOrdersSizes = async (inputs: {
 		orderIds: PerpetualsOrderId[];
-		side: PerpetualsOrderSide;
 		collateralCoinType: ObjectId;
 		marketId: PerpetualsMarketId;
 	}): Promise<bigint[]> => {
-		const { orderIds, marketId, side, collateralCoinType } = inputs;
+		const { orderIds, marketId, collateralCoinType } = inputs;
+		if (orderIds.length <= 0) return [];
 
 		const tx = new TransactionBlock();
 
@@ -1793,7 +1605,6 @@ export class PerpetualsApi {
 				tx,
 				orderId,
 				orderbookId,
-				side,
 			});
 		}
 
@@ -1832,7 +1643,7 @@ export class PerpetualsApi {
 				tx,
 			});
 
-		const orderInfos: any[] = bcs.de(
+		const orderInfos: any[] = perpetualsBcsRegistry.de(
 			"vector<OrderInfo>",
 			new Uint8Array(bytes)
 		);
@@ -1848,72 +1659,228 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<ApiPerpetualsExecutionPriceResponse> => {
-		const { lotSize, tickSize, price } = inputs;
+		const {
+			collateral,
+			collateralCoinType,
+			marketId,
+			side,
+			size,
+			price,
+			lotSize,
+		} = inputs;
 
-		const { fillReceipts, postReceipt } =
-			await this.fetchMarketOrderReceipts(inputs);
+		// const accountCapId = perpetualsBcsRegistry
+		// 	.ser(`Account<${collateralCoinType}>`, {
+		// 		id: {
+		// 			id: {
+		// 				bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
+		// 			},
+		// 		},
+		// 		accountId: 0,
+		// 		collateral,
+		// 	})
+		// 	.toBytes();
 
-		const sizePosted = postReceipt !== undefined ? postReceipt.size : 0;
-		if (fillReceipts.length <= 0)
-			return price !== undefined
-				? // simulating limit order
-				  {
-						executionPrice: Perpetuals.orderPriceToPrice({
-							orderPrice: price,
-							lotSize,
-							tickSize,
-						}),
-						sizeFilled: 0,
-						sizePosted: Number(sizePosted),
-				  }
-				: // simulating market order
-				  {
-						executionPrice: 0,
-						sizeFilled: 0,
-						sizePosted: 0,
-				  };
+		const depositCoinBytes = perpetualsBcsRegistry
+			.ser(["Coin", collateralCoinType], {
+				id: "0x0000000000000000000000000000000000000000000000000000000000000123",
+				balance: {
+					value: BigInt(1000000000000000),
+				},
+			})
+			.toBytes();
 
-		const sizeFilled = Helpers.sumBigInt(
-			fillReceipts.map((receipt) => receipt.size)
-		);
+		const walletAddress = InspectionsApiHelpers.constants.devInspectSigner;
 
-		const executionPrice = fillReceipts.reduce((acc, receipt) => {
-			const orderPrice = PerpetualsOrderUtils.price(
-				receipt.orderId,
-				inputs.side === PerpetualsOrderSide.Ask
-					? PerpetualsOrderSide.Bid
-					: PerpetualsOrderSide.Ask
-			);
-			const orderPriceNum = Perpetuals.orderPriceToPrice({
-				orderPrice,
-				lotSize,
-				tickSize,
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const accountCapId = this.createAccountTx({
+			...inputs,
+			tx,
+		});
+		this.depositCollateralTx({
+			tx,
+			collateralCoinType,
+			accountCapId,
+			coinBytes: depositCoinBytes,
+		});
+		const { sessionPotatoId } = this.createTxAndStartSession({
+			tx,
+			accountCapId,
+			collateralCoinType,
+			marketId,
+			walletAddress,
+			collateralChange: BigInt(1000000000000000),
+			hasPosition: false,
+		});
+		this.placeLimitOrderTx({
+			tx,
+			side,
+			size,
+			collateralCoinType,
+			marketId,
+			sessionPotatoId,
+			orderType: PerpetualsOrderType.Standard,
+			price:
+				price ??
+				(side === PerpetualsOrderSide.Bid
+					? BigInt("0x7FFFFFFFFFFFFFFF") // 2^63 - 1
+					: BigInt(0)),
+		});
+		this.getHotPotatoFieldsTx({
+			tx,
+			collateralCoinType,
+			sessionPotatoId,
+		});
+		this.endSessionAndTransferAccount({
+			...inputs,
+			tx,
+			sessionPotatoId,
+			walletAddress,
+		});
+
+		const { events } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
+				tx,
 			});
 
-			return (
-				acc +
-				orderPriceNum * (Number(receipt.size) / Number(sizeFilled))
-			);
-		}, 0);
+		const filledTakerEvent = EventsApiHelpers.findCastEventOrUndefined({
+			events,
+			eventType: this.eventTypes.filledTakerOrder,
+			castFunction: Casting.perpetuals.filledTakerOrderEventFromOnChain,
+		});
+
+		const sizeNum = lotSize * Number(size);
+
+		if (!filledTakerEvent) {
+			return {
+				executionPrice: 0,
+				sizeFilled: 0,
+				sizePosted: sizeNum,
+			};
+		}
+
+		const executionPrice = Perpetuals.calcEntryPrice(filledTakerEvent);
+		const sizeFilled = Math.abs(
+			Casting.IFixed.numberFromIFixed(filledTakerEvent.baseAssetDelta)
+		);
+		const sizePosted = sizeNum - sizeFilled;
 
 		return {
 			executionPrice,
-			sizeFilled: Number(sizeFilled),
-			sizePosted: Number(sizePosted),
+			sizeFilled,
+			sizePosted,
 		};
 
-		// // simulating market order
-		// if (price === undefined) return executionPrice;
-		// // simulating limit order
-		// return (
-		// 	Perpetuals.orderPriceToPrice({
-		// 		orderPrice: price,
+		// const { fillReceipts, postReceipt } =
+		// 	await this.fetchMarketOrderReceipts(inputs);
+
+		// const sizePosted = postReceipt !== undefined ? postReceipt.size : 0;
+		// if (fillReceipts.length <= 0)
+		// 	return price !== undefined
+		// 		? // simulating limit order
+		// 		  {
+		// 				executionPrice: Perpetuals.orderPriceToPrice({
+		// 					orderPrice: price,
+		// 					lotSize,
+		// 					tickSize,
+		// 				}),
+		// 				sizeFilled: 0,
+		// 				sizePosted: Number(sizePosted),
+		// 		  }
+		// 		: // simulating market order
+		// 		  {
+		// 				executionPrice: 0,
+		// 				sizeFilled: 0,
+		// 				sizePosted: 0,
+		// 		  };
+
+		// const sizeFilled = Helpers.sumBigInt(
+		// 	fillReceipts.map((receipt) => receipt.size)
+		// );
+
+		// const executionPrice = fillReceipts.reduce((acc, receipt) => {
+		// 	const orderPrice = PerpetualsOrderUtils.price(
+		// 		receipt.orderId,
+		// 		inputs.side === PerpetualsOrderSide.Ask
+		// 			? PerpetualsOrderSide.Bid
+		// 			: PerpetualsOrderSide.Ask
+		// 	);
+		// 	const orderPriceNum = Perpetuals.orderPriceToPrice({
+		// 		orderPrice,
 		// 		lotSize,
 		// 		tickSize,
-		// 	}) *
-		// 		(Number(size - sizeFilled) / Number(size)) +
-		// 	executionPrice * (Number(sizeFilled) / Number(size))
-		// );
+		// 	});
+
+		// 	return (
+		// 		acc +
+		// 		orderPriceNum * (Number(receipt.size) / Number(sizeFilled))
+		// 	);
+		// }, 0);
+
+		// return {
+		// 	executionPrice,
+		// 	sizeFilled: Number(sizeFilled),
+		// 	sizePosted: Number(sizePosted),
+		// };
+	};
+
+	private createTxAndStartSession = (inputs: {
+		tx?: TransactionBlock;
+		collateralCoinType: CoinType;
+		accountCapId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+		walletAddress: SuiAddress;
+		collateralChange: Balance;
+		hasPosition: boolean;
+	}) => {
+		const { collateralChange, walletAddress, hasPosition } = inputs;
+		const { tx: inputsTx, ...nonTxInputs } = inputs;
+
+		const tx = inputsTx ?? new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		if (!hasPosition) {
+			this.createMarketPositionTx({
+				...nonTxInputs,
+				tx,
+			});
+		}
+
+		if (collateralChange > BigInt(0)) {
+			this.allocateCollateralTx({
+				...nonTxInputs,
+				tx,
+				amount: collateralChange,
+			});
+		} else if (collateralChange < BigInt(0)) {
+			this.deallocateCollateralTx({
+				...nonTxInputs,
+				tx,
+				amount: collateralChange,
+			});
+		}
+
+		const sessionPotatoId = this.startSessionTx({
+			...nonTxInputs,
+			tx,
+		});
+
+		return { tx, sessionPotatoId };
+	};
+
+	private endSessionAndTransferAccount = (inputs: {
+		tx: TransactionBlock;
+		collateralCoinType: CoinType;
+		sessionPotatoId: ObjectId | TransactionArgument;
+		marketId: PerpetualsMarketId;
+		walletAddress: SuiAddress;
+	}) => {
+		const { tx, walletAddress } = inputs;
+
+		const accountId = this.endSessionTx(inputs);
+		tx.transferObjects([accountId], tx.pure(walletAddress));
 	};
 
 	// =========================================================================
@@ -2021,70 +1988,6 @@ export class PerpetualsApi {
 			dataPoints.reverse();
 		}
 		return dataPoints;
-	};
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	private fetchMarketOrderReceipts = async (inputs: {
-		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-		side: PerpetualsOrderSide;
-		size: bigint;
-		price?: PerpetualsOrderPrice;
-	}): Promise<{
-		fillReceipts: PerpetualsFillReceipt[];
-		postReceipt: PerpetualsPostReceipt | undefined;
-	}> => {
-		const { collateralCoinType, marketId, side, size, price } = inputs;
-
-		const tx = new TransactionBlock();
-
-		const orderbookId = this.getOrderbookTx({
-			tx,
-			collateralCoinType,
-			marketId,
-		});
-		// this.inspectPlaceMarketOrderTx({ tx, orderbookId, side, size });
-		this.inspectPlaceLimitOrderTx({
-			tx,
-			orderbookId,
-			side,
-			size,
-			accountId: BigInt(0),
-			orderType: PerpetualsOrderType.Standard,
-			price:
-				price ??
-				(side === PerpetualsOrderSide.Bid
-					? BigInt("0x7FFFFFFFFFFFFFFF") // 2^63 - 1
-					: BigInt(0)),
-		});
-
-		const allBytes =
-			await this.Provider.Inspections().fetchAllBytesFromTxOutput({
-				tx,
-			});
-
-		const fillReceipts: any[] = bcs.de(
-			"vector<FillReceipt>",
-			new Uint8Array(allBytes[0])
-		);
-
-		const postReceipt: PerpetualsPostReceipt | undefined =
-			Casting.unwrapDeserializedOption(
-				bcs.de("Option<PostReceipt>", new Uint8Array(allBytes[1]))
-			);
-
-		return {
-			fillReceipts: fillReceipts.map((receipt) =>
-				Casting.perpetuals.fillReceiptFromRaw(receipt)
-			),
-			postReceipt:
-				postReceipt !== undefined
-					? Casting.perpetuals.postReceiptFromRaw(postReceipt)
-					: undefined,
-		};
 	};
 
 	// =========================================================================

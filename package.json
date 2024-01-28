@@ -1,6 +1,6 @@
 {
 	"name": "aftermath-ts-sdk",
-	"version": "1.1.27-test.4",
+	"version": "1.1.27-test.5",
 	"description": "Aftermath TypeScript SDK",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -36,6 +36,7 @@
 	"dependencies": {
 		"@mysten/sui.js": "^0.47.0",
 		"@pythnetwork/pyth-sui-js": "^1.2.3",
+		"@scallop-io/sui-scallop-sdk": "^0.44.10",
 		"bn.js": "^5.2.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",

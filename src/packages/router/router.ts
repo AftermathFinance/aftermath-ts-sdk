@@ -82,10 +82,8 @@ export class Router extends Caller {
 	 *
 	 * @returns Complete graph of all pools used in router
 	 */
-	public async getGraph(inputs?: { isDynamicGas: boolean }) {
-		return this.fetchApi<RouterSerializableCompleteGraph>(
-			"graph" + (inputs?.isDynamicGas ? "/dynamic-gas" : "")
-		);
+	public async getGraph() {
+		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
 	}
 
 	/**

@@ -183,6 +183,14 @@ export interface ApiStakeBody {
 	isSponsoredTx?: boolean;
 }
 
+export interface ApiLeveragedStakeBody {
+	walletAddress: SuiAddress;
+	suiStakeAmount: Balance;
+	validatorAddress: SuiAddress;
+	referrer?: SuiAddress;
+	isSponsoredTx?: boolean;
+}
+
 export interface ApiUnstakeBody {
 	walletAddress: SuiAddress;
 	afSuiUnstakeAmount: Balance;

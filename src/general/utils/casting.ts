@@ -6,14 +6,14 @@ import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
 import { Byte, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
-import { TypeName } from "@mysten/bcs";
-import { BCS } from "@mysten/bcs";
+import { bcsRegistry } from "@mysten/sui.js/bcs";
 import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
 import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
 import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
+import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/leveragedStakingApiCasting";
 import { CoinsToBalance, Helpers } from "../..";
-import { IndexerSwapVolumeResponse } from "../types/castingTypes";
+import { BcsTypeName, IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 
 /**
@@ -29,6 +29,7 @@ export class Casting {
 	public static suiFrens = SuiFrensApiCasting;
 	public static faucet = FaucetApiCasting;
 	public static staking = StakingApiCasting;
+	public static leveragedStaking = LeveragedStakingApiCasting;
 	public static nftAmm = NftAmmApiCasting;
 	public static router = RouterApiCasting;
 	public static perpetuals = PerpetualsApiCasting;
@@ -111,9 +112,9 @@ export class Casting {
 
 	public static castObjectBcs = <T>(inputs: {
 		suiObjectResponse: SuiObjectResponse;
-		typeName: TypeName;
+		typeName: BcsTypeName;
 		fromDeserialized: (deserialized: any) => T;
-		bcs: BCS;
+		bcs: typeof bcsRegistry;
 	}): T => {
 		const { suiObjectResponse, typeName, fromDeserialized } = inputs;
 
