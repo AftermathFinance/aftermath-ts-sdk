@@ -137,9 +137,10 @@ export class BlueMoveApi
 	// };
 
 	public fetchAllPoolIds = async () => {
-		return this.Provider.indexerCaller.fetchIndexer<ObjectId[]>(
-			"router/pool-ids/blue-move"
-		);
+		return ["0xbluemove"];
+		// return this.Provider.indexerCaller.fetchIndexer<ObjectId[]>(
+		// 	"router/pool-ids/blue-move"
+		// );
 	};
 
 	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
