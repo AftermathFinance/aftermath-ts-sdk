@@ -16,6 +16,7 @@ import {
 	AllRouterOptions,
 	SuiAddress,
 	RouterSerializablePool,
+	RouterSynchronousOptions,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
@@ -25,6 +26,7 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
+import handleDoRoute from "../../../workerCaller";
 
 export class RouterApiHelpers {
 	// =========================================================================
@@ -99,15 +101,28 @@ export class RouterApiHelpers {
 				protocols: asyncProtocols,
 			});
 
-		const routerGraph = new RouterGraph(
+		// const routerGraph = new RouterGraph(
+		// 	network,
+		// 	graph,
+		// 	this.options.regular.synchronous,
+		// 	excludeProtocols
+		// );
+
+		const graphInputs = {
 			network,
 			graph,
-			this.options.regular.synchronous,
-			excludeProtocols
-		);
+			excludeProtocols: excludeProtocols ?? [],
+			options: this.options.regular.synchronous,
+		};
 
 		if (exactMatchPools.length <= 0 && partialMatchPools.length <= 0)
-			return routerGraph.getCompleteRouteGivenAmountIn(inputs);
+			return (
+				await handleDoRoute({
+					graphInputs,
+					inputs: { ...inputs, coinInAmounts: [inputs.coinInAmount] },
+				})
+			)[0];
+		// return routerGraph.getCompleteRouteGivenAmountIn(inputs);
 
 		const [exactTradeResults, completeRoutesForLastPoolAsync] =
 			await Promise.all([
@@ -120,7 +135,7 @@ export class RouterApiHelpers {
 					partialMatchPools.map((lastPool) =>
 						this.fetchCompleteTradeRoutesForLastRouteAsyncPool({
 							...inputs,
-							routerGraph,
+							routerGraphInputs: graphInputs,
 							coinInAmounts,
 							lastPool,
 						})
@@ -129,12 +144,18 @@ export class RouterApiHelpers {
 			]);
 
 		// NOTE: is this actually needed ?
-		routerGraph.updateOptions(this.options.regular.synchronous);
-		const synchronousCompleteRoutes =
-			routerGraph.getCompleteRoutesGivenAmountIns({
-				...inputs,
-				coinInAmounts,
-			});
+		// routerGraph.updateOptions(this.options.regular.synchronous);
+		const synchronousCompleteRoutes = await handleDoRoute({
+			graphInputs: {
+				...graphInputs,
+				options: this.options.regular.synchronous,
+			},
+			inputs: { ...inputs, coinInAmounts },
+		});
+		// routerGraph.getCompleteRoutesGivenAmountIns({
+		// 	...inputs,
+		// 	coinInAmounts,
+		// });
 
 		const allCompleteRoutes = [
 			...completeRoutesForLastPoolAsync,
@@ -189,7 +210,12 @@ export class RouterApiHelpers {
 	};
 
 	private fetchCompleteTradeRoutesForLastRouteAsyncPool = async (inputs: {
-		routerGraph: RouterGraph;
+		routerGraphInputs: {
+			network: SuiNetwork;
+			graph: RouterSerializableCompleteGraph;
+			options: RouterSynchronousOptions;
+			excludeProtocols: RouterProtocolName[];
+		};
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmounts: Balance[];
@@ -197,7 +223,7 @@ export class RouterApiHelpers {
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
 	}): Promise<RouterCompleteTradeRoute[]> => {
-		const { routerGraph } = inputs;
+		const { routerGraphInputs } = inputs;
 
 		const asyncApi =
 			this.AsyncHelpers.protocolNamesToApi[
@@ -211,12 +237,20 @@ export class RouterApiHelpers {
 			pool: inputs.lastPool,
 		});
 
-		routerGraph.updateOptions(this.options.preAsync);
-		const synchronousCompleteRoutes =
-			routerGraph.getCompleteRoutesGivenAmountIns({
-				...inputs,
-				coinOutType: lastPoolCoinInType,
-			});
+		// routerGraph.updateOptions(this.options.preAsync);
+		// const synchronousCompleteRoutes =
+		// 	routerGraph.getCompleteRoutesGivenAmountIns({
+		// 		...inputs,
+		// 		coinOutType: lastPoolCoinInType,
+		// 	});
+
+		const synchronousCompleteRoutes = await handleDoRoute({
+			graphInputs: {
+				...routerGraphInputs,
+				options: this.options.preAsync,
+			},
+			inputs: { ...inputs, coinOutType: lastPoolCoinInType },
+		});
 
 		const lastPoolCoinInAmounts = synchronousCompleteRoutes.map(
 			(route) => route.coinOut.amount
