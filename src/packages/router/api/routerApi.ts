@@ -40,6 +40,7 @@ import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 import { FlowXApi } from "../../external/flowX/flowXApi";
 import { Coin } from "../..";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
+import { Helpers } from "../../..";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -213,6 +214,8 @@ export class RouterApi {
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
 			...inputs,
+			coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
+			coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
 			protocols: this.protocols,
 		});
 	};
@@ -234,6 +237,8 @@ export class RouterApi {
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountOut({
 			...inputs,
+			coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
+			coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
 			protocols: this.protocols,
 		});
 	};
