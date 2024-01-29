@@ -220,7 +220,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 		if (!isRouter) return pools;
 
-		const minSuiBalance = BigInt(1000_000_000_000);
+		const minSuiBalance = BigInt(1000_000_000_000); // 1000 SUI
 		return pools.filter(
 			(pool) =>
 				!Object.keys(pool.coins).some((coin) => Coin.isSuiCoin(coin)) ||
