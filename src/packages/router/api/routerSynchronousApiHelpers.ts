@@ -113,7 +113,7 @@ export class RouterSynchronousApiHelpers {
 	}): Promise<RouterSynchronousSerializablePool[]> => {
 		const apis = this.protocolApisFromNames(inputs);
 		const expandedPools = await Promise.all(
-			apis.map((api) => api.fetchAllPools())
+			apis.map((api) => api.fetchAllPools(true))
 		);
 		return expandedPools.reduce((acc, pools) => [...acc, ...pools], []);
 	};

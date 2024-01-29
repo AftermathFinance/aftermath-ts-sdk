@@ -12,5 +12,5 @@ export interface RouterSynchronousApiInterface<
 	//  Required Functions
 	// =========================================================================
 
-	fetchAllPools: () => Promise<PoolType[]>;
+	fetchAllPools: (isRouter?: true) => Promise<PoolType[]>;
 }

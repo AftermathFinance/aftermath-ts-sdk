@@ -207,15 +207,27 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @async
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
-	public fetchAllPools = async () => {
-		const pools = await this.Provider.indexerCaller.fetchIndexer<
+	public fetchAllPools = async (isRouter?: true) => {
+		const uncastedPools = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				objectId: ObjectId;
 				type: AnyObjectType;
 				content: any;
 			}[]
 		>("router/pools/af");
-		return pools.map(PoolsApiCasting.poolObjectFromIndexer);
+
+		const pools = uncastedPools.map(PoolsApiCasting.poolObjectFromIndexer);
+
+		if (!isRouter) return pools;
+
+		const minSuiBalance = BigInt(1000_000_000_000);
+		return pools.filter(
+			(pool) =>
+				!Object.keys(pool.coins).some((coin) => Coin.isSuiCoin(coin)) ||
+				(Object.keys(pool.coins).some((coin) => Coin.isSuiCoin(coin)) &&
+					pool.coins[Coin.constants.suiCoinType].balance >=
+						minSuiBalance)
+		);
 	};
 
 	// =========================================================================
@@ -1412,7 +1424,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param inputs - An object containing the pool's coins, their prices, and their decimal places.
 	 * @returns The total value locked (TVL) for the pool.
 	 */
-	public fetchCalcPoolTvl = async (inputs: {
+	public fetchCalcPoolTvl = (inputs: {
 		poolCoins: PoolCoins;
 		coinsToPrice: CoinsToPrice;
 		coinsToDecimals: Record<CoinType, CoinDecimal>;
