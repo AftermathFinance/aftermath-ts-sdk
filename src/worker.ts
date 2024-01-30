@@ -1,20 +1,10 @@
-import {
-	Balance,
-	CoinType,
-	RouterExternalFee,
-	RouterProtocolName,
-	RouterSerializableCompleteGraph,
-	RouterSynchronousOptions,
-	SuiAddress,
-	SuiNetwork,
-} from ".";
 import { RouterGraph } from "./packages/router/utils/synchronous/routerGraph";
 import { WorkerData } from "./workerCaller";
-import { parentPort } from "node:worker_threads";
+import { parentPort } from "worker_threads";
+
+// const { parentPort } = require("worker_threads");
 
 // worker side
-// const { parentPort } = require("node:worker_threads");
-
 parentPort?.on("message", (data: any) => {
 	const doRoute = (data: WorkerData) => {
 		const { graphInputs, inputs } = data;
