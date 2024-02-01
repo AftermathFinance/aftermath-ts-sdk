@@ -260,10 +260,7 @@ export class RouterApi {
 		referrer?: SuiAddress;
 		// TODO: handle this
 		externalFee?: RouterExternalFee;
-	}): Promise<{
-		completeTradeRoute: RouterCompleteTradeRoute;
-		coinOutAmount: Balance;
-	}> => {
+	}): Promise<RouterCompleteTradeRoute> => {
 		const { coinInType, coinOutType, coinInAmount, referrer, externalFee } =
 			inputs;
 
@@ -296,15 +293,10 @@ export class RouterApi {
 		// tx.transferObjects([output_coin], tx.pure(walletAddress));
 
 		return {
-			coinOutAmount: BigInt(Math.floor(output_amount)),
-			completeTradeRoute: {
-				...Casting.router.routerCompleteTradeRouteFromServicePaths(
-					paths
-				),
-				// NOTE: should these be here ?
-				referrer,
-				externalFee,
-			},
+			...Casting.router.routerCompleteTradeRouteFromServicePaths(paths),
+			// NOTE: should these be here ?
+			referrer,
+			externalFee,
 		};
 	};
 
@@ -323,7 +315,7 @@ export class RouterApi {
 		isSponsoredTx?: boolean;
 	}): Promise<{
 		tx: TransactionBlock;
-		completeTradeRoute: RouterCompleteTradeRoute;
+		completeRoute: RouterCompleteTradeRoute;
 		coinOut: TransactionArgument;
 		coinOutAmount: Balance;
 	}> => {
@@ -407,7 +399,7 @@ export class RouterApi {
 			tx,
 			coinOut: output_coin,
 			coinOutAmount: BigInt(Math.floor(output_amount)),
-			completeTradeRoute: {
+			completeRoute: {
 				...Casting.router.routerCompleteTradeRouteFromServicePaths(
 					paths
 				),
@@ -462,7 +454,7 @@ export class RouterApi {
 	// =========================================================================
 
 	public fetchAddTxForCompleteTradeRouteV2 = async (inputs: {
-		completeTradeRoute: RouterCompleteTradeRoute;
+		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		tx?: TransactionBlock;
 		coinIn?: TransactionArgument;
@@ -479,7 +471,7 @@ export class RouterApi {
 		coinOut: TransactionArgument;
 	}> => {
 		const {
-			completeTradeRoute,
+			completeRoute,
 			coinInType,
 			coinInAmount,
 			walletAddress,
@@ -532,7 +524,7 @@ export class RouterApi {
 				{
 					slippage,
 					paths: Casting.router.routerServicePathsFromCompleteTradeRoute(
-						completeTradeRoute
+						completeRoute
 					),
 					input_coin:
 						Helpers.transactions.serviceCoinDataFromCoinTxArg({

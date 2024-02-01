@@ -1,3 +1,4 @@
+import { Helpers } from "../../..";
 import {
 	RouterCompleteTradeRoute,
 	RouterServicePath,
@@ -59,8 +60,18 @@ export class RouterApiCasting {
 		}));
 		return {
 			routes,
-			coinIn: routes[0].coinIn,
-			coinOut: routes[routes.length - 1].coinOut,
+			coinIn: {
+				type: routes[0].coinIn.type,
+				amount: Helpers.sumBigInt(
+					routes.map((route) => route.coinIn.amount)
+				),
+			},
+			coinOut: {
+				type: routes[routes.length - 1].coinOut.type,
+				amount: Helpers.sumBigInt(
+					routes.map((route) => route.coinOut.amount)
+				),
+			},
 		};
 	};
 
