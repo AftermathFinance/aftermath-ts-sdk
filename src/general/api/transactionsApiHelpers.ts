@@ -170,24 +170,50 @@ export class TransactionsApiHelpers {
 	public static serviceCoinDataFromCoinTxArg = (inputs: {
 		coinTxArg: CoinTransactionObjectArgument | ObjectId;
 	}): ServiceCoinData => {
-		const { coinTxArg: coinTxObjectArg } = inputs;
+		const { coinTxArg } = inputs;
 
-		if (typeof coinTxObjectArg === "string")
-			return { Coin: Helpers.addLeadingZeroesToType(coinTxObjectArg) };
+		if (typeof coinTxArg === "string")
+			return { Coin: Helpers.addLeadingZeroesToType(coinTxArg) };
 
-		if (coinTxObjectArg.kind === "NestedResult")
+		if (coinTxArg.kind === "NestedResult")
 			return {
-				[coinTxObjectArg.kind]: [
-					coinTxObjectArg.index,
-					coinTxObjectArg.resultIndex,
-				],
+				[coinTxArg.kind]: [coinTxArg.index, coinTxArg.resultIndex],
 			};
 
-		if (coinTxObjectArg.kind === "Result")
-			return { [coinTxObjectArg.kind]: coinTxObjectArg.index };
+		if (coinTxArg.kind === "Result")
+			return { [coinTxArg.kind]: coinTxArg.index };
 
 		// Input
-		return { [coinTxObjectArg.kind]: coinTxObjectArg.index };
+		return { [coinTxArg.kind]: coinTxArg.index };
+	};
+
+	public static coinTxArgFromServiceCoinData = (inputs: {
+		serviceCoinData: ServiceCoinData;
+	}): CoinTransactionObjectArgument => {
+		const { serviceCoinData } = inputs;
+
+		const key = Object.keys(serviceCoinData)[0];
+
+		// TODO: handle all cases
+		if (key === "Coin")
+			throw new Error(
+				"serviceCoinData in format { Coin: ObjectId } not supported"
+			);
+
+		// TODO: handle this cleaner
+		const kind = key as "Input" | "NestedResult" | "Result";
+
+		if (kind === "NestedResult") {
+			return {
+				kind,
+				index: Object.values(serviceCoinData)[0][0],
+				resultIndex: Object.values(serviceCoinData)[0][1],
+			};
+		}
+		return {
+			kind,
+			index: Object.values(serviceCoinData)[0],
+		};
 	};
 
 	// public static mergeCoinsTx(inputs: {

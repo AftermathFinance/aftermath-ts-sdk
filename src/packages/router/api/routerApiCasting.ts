@@ -38,21 +38,21 @@ export class RouterApiCasting {
 				pool: hop.pool_id,
 				coinIn: {
 					type: hop.input,
-					amount: BigInt(Math.floor(hop.input_amount)),
+					amount: BigInt(Math.round(hop.input_amount)),
 				},
 				coinOut: {
 					type: hop.output,
-					amount: BigInt(Math.floor(hop.output_amount)),
+					amount: BigInt(Math.round(hop.output_amount)),
 				},
 			})),
 			coinIn: {
 				type: path.path.data[0].input,
-				amount: BigInt(Math.floor(path.path.data[0].input_amount)),
+				amount: BigInt(Math.round(path.path.data[0].input_amount)),
 			},
 			coinOut: {
 				type: path.path.data[path.path.data.length - 1].output,
 				amount: BigInt(
-					Math.floor(
+					Math.round(
 						path.path.data[path.path.data.length - 1].output_amount
 					)
 				),

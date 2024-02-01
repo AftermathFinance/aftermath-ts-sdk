@@ -332,7 +332,6 @@ export class RouterApi {
 		} = inputs;
 
 		const initTx = inputs.tx ?? new TransactionBlock();
-
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
@@ -351,13 +350,14 @@ export class RouterApi {
 
 		const txBytes = await initTx.build({
 			client: this.Provider.provider,
+			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
 
 		const { output_coin, tx_kind, output_amount, paths } =
 			await this.Provider.indexerCaller.fetchIndexer<
 				{
-					output_coin: TransactionArgument;
+					output_coin: ServiceCoinData;
 					tx_kind: SerializedTransaction;
 					output_amount: number;
 					paths: RouterServicePaths;
@@ -392,13 +392,18 @@ export class RouterApi {
 
 		const tx = TransactionBlock.fromKind(tx_kind);
 
+		// TODO: set remaining missing data from init tx (and do same for other v2 func)
+		if (initTx.blockData.sender) tx.setSender(initTx.blockData.sender);
+
 		// TODO: take fee / return coin ?
 		// tx.transferObjects([output_coin], tx.pure(walletAddress));
 
 		return {
 			tx,
-			coinOut: output_coin,
-			coinOutAmount: BigInt(Math.floor(output_amount)),
+			coinOut: Helpers.transactions.coinTxArgFromServiceCoinData({
+				serviceCoinData: output_coin,
+			}),
+			coinOutAmount: BigInt(Math.round(output_amount)),
 			completeRoute: {
 				...Casting.router.routerCompleteTradeRouteFromServicePaths(
 					paths
@@ -458,13 +463,11 @@ export class RouterApi {
 		slippage: Slippage;
 		tx?: TransactionBlock;
 		coinIn?: TransactionArgument;
-		coinInType?: CoinType;
-		coinInAmount?: Balance;
 		walletAddress?: SuiAddress;
-		// TODO: handle this
-		referrer?: SuiAddress;
-		// TODO: handle this
-		externalFee?: RouterExternalFee;
+		// // TODO: handle this
+		// referrer?: SuiAddress;
+		// // TODO: handle this
+		// externalFee?: RouterExternalFee;
 		isSponsoredTx?: boolean;
 	}): Promise<{
 		tx: TransactionBlock;
@@ -472,45 +475,39 @@ export class RouterApi {
 	}> => {
 		const {
 			completeRoute,
-			coinInType,
-			coinInAmount,
 			walletAddress,
-			referrer,
-			externalFee,
 			coinIn,
 			isSponsoredTx,
 			slippage,
 		} = inputs;
 
 		const initTx = inputs.tx ?? new TransactionBlock();
-
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
 			coinIn ??
-			(walletAddress && coinInType && coinInAmount
+			(walletAddress
 				? await this.Provider.Coin().fetchCoinWithAmountTx({
 						tx: initTx,
-						coinAmount: coinInAmount,
-						coinType: coinInType,
+						coinAmount: completeRoute.coinIn.amount,
+						coinType: completeRoute.coinIn.type,
 						walletAddress,
 						isSponsoredTx,
 				  })
 				: (() => {
-						throw new Error(
-							"no walletAddress or coinInType or coinInAmount provided"
-						);
+						throw new Error("no walletAddress provided");
 				  })());
 
 		const txBytes = await initTx.build({
 			client: this.Provider.provider,
+			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
 
 		const { output_coin, tx_kind } =
 			await this.Provider.indexerCaller.fetchIndexer<
 				{
-					output_coin: TransactionArgument;
+					output_coin: ServiceCoinData;
 					tx_kind: SerializedTransaction;
 				},
 				{
@@ -540,12 +537,17 @@ export class RouterApi {
 
 		const tx = TransactionBlock.fromKind(tx_kind);
 
+		// TODO: set remaining missing data from init tx (and do same for other v2 func)
+		if (initTx.blockData.sender) tx.setSender(initTx.blockData.sender);
+
 		// TODO: take fee / return coin ?
 		// tx.transferObjects([output_coin], tx.pure(walletAddress));
 
 		return {
 			tx,
-			coinOut: output_coin,
+			coinOut: Helpers.transactions.coinTxArgFromServiceCoinData({
+				serviceCoinData: output_coin,
+			}),
 		};
 	};
 
