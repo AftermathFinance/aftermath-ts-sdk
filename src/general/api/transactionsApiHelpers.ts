@@ -1,18 +1,23 @@
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 import {
 	Balance,
+	CoinTransactionObjectArgument,
 	CoinType,
 	ObjectId,
 	SerializedTransaction,
+	ServiceCoinData,
 	SuiAddress,
 	TransactionDigest,
 	TransactionsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/client";
+import { Helpers } from "../utils";
+import { Sui } from "../..";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -149,8 +154,8 @@ export class TransactionsApiHelpers {
 		const { tx, coinType, coinId, amount } = inputs;
 		return tx.moveCall({
 			target: this.createTxTarget(
-				// Sui.constants.addresses.suiPackageId,
-				"0x2",
+				Sui.constants.addresses.suiPackageId,
+				// "0x0000000000000000000000000000000000000000000000000000000000000002",
 				"coin",
 				"split"
 			),
@@ -161,6 +166,29 @@ export class TransactionsApiHelpers {
 			],
 		});
 	}
+
+	public static serviceCoinDataFromCoinTxArg = (inputs: {
+		coinTxArg: CoinTransactionObjectArgument | ObjectId;
+	}): ServiceCoinData => {
+		const { coinTxArg: coinTxObjectArg } = inputs;
+
+		if (typeof coinTxObjectArg === "string")
+			return { Coin: Helpers.addLeadingZeroesToType(coinTxObjectArg) };
+
+		if (coinTxObjectArg.kind === "NestedResult")
+			return {
+				[coinTxObjectArg.kind]: [
+					coinTxObjectArg.index,
+					coinTxObjectArg.resultIndex,
+				],
+			};
+
+		if (coinTxObjectArg.kind === "Result")
+			return { [coinTxObjectArg.kind]: coinTxObjectArg.index };
+
+		// Input
+		return { [coinTxObjectArg.kind]: coinTxObjectArg.index };
+	};
 
 	// public static mergeCoinsTx(inputs: {
 	// 	tx: TransactionBlock;

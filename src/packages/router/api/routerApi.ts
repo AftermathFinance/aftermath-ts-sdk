@@ -22,6 +22,8 @@ import {
 	TxBytes,
 	ApiRouterDynamicGasBody,
 	RouterSynchronousSerializablePool,
+	ServiceCoinData,
+	SerializedTransaction,
 } from "../../../types";
 import {
 	TransactionArgument,
@@ -41,6 +43,8 @@ import { FlowXApi } from "../../external/flowX/flowXApi";
 import { Coin } from "../..";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 import { Helpers } from "../../..";
+import { SuiArgument } from "@mysten/sui.js/client";
+import { TransactionObjectArgument } from "@scallop-io/sui-kit";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -244,6 +248,175 @@ export class RouterApi {
 	};
 
 	// =========================================================================
+	//  V2
+	// =========================================================================
+
+	public fetchCompleteTradeRouteGivenAmountInV2 = async (inputs: {
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		// TODO: handle this
+		referrer?: SuiAddress;
+		// TODO: handle this
+		externalFee?: RouterExternalFee;
+	}): Promise<{
+		completeTradeRoute: RouterCompleteTradeRoute;
+		coinOutAmount: Balance;
+	}> => {
+		const { coinInType, coinOutType, coinInAmount, referrer, externalFee } =
+			inputs;
+
+		const { output_amount, paths } =
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					output_amount: number;
+					paths: any;
+				},
+				{
+					from_coin_type: CoinType;
+					to_coin_type: CoinType;
+					input_amount: number;
+				}
+			>(
+				"router/forward-trade-route",
+				{
+					from_coin_type: coinInType,
+					to_coin_type: coinOutType,
+					// NOTE: is this conversion safe ?
+					input_amount: Number(coinInAmount),
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+
+		// TODO: take fee / return coin ?
+		// tx.transferObjects([output_coin], tx.pure(walletAddress));
+
+		return {
+			coinOutAmount: BigInt(Math.floor(output_amount)),
+			// @ts-ignore
+			completeTradeRoute: {
+				// NOTE: should these be here ?
+				referrer,
+				externalFee,
+				// TODO
+				routes: paths,
+			},
+		};
+	};
+
+	public fetchCompleteTradeRouteAndTxGivenAmountInV2 = async (inputs: {
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		tx?: TransactionBlock;
+		coinIn?: TransactionArgument;
+		walletAddress?: SuiAddress;
+		// TODO: handle this
+		referrer?: SuiAddress;
+		// TODO: handle this
+		externalFee?: RouterExternalFee;
+		isSponsoredTx?: boolean;
+	}): Promise<{
+		tx: TransactionBlock;
+		completeTradeRoute: RouterCompleteTradeRoute;
+		coinOut: TransactionArgument;
+		coinOutAmount: Balance;
+	}> => {
+		const {
+			coinInType,
+			coinOutType,
+			coinInAmount,
+			walletAddress,
+			referrer,
+			externalFee,
+			coinIn,
+			isSponsoredTx,
+			slippage,
+		} = inputs;
+
+		const initTx = inputs.tx ?? new TransactionBlock();
+
+		if (walletAddress) initTx.setSender(walletAddress);
+
+		const coinTxArg =
+			coinIn ??
+			(walletAddress
+				? await this.Provider.Coin().fetchCoinWithAmountTx({
+						tx: initTx,
+						coinAmount: coinInAmount,
+						coinType: coinInType,
+						walletAddress,
+						isSponsoredTx,
+				  })
+				: (() => {
+						throw new Error("no walletAddress provided");
+				  })());
+
+		const txBytes = await initTx.build({
+			client: this.Provider.provider,
+		});
+		const b64TxBytes = Buffer.from(txBytes).toString("base64");
+
+		const { output_coin, tx_kind, output_amount, paths } =
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					output_coin: TransactionArgument;
+					tx_kind: SerializedTransaction;
+					output_amount: number;
+					paths: any;
+				},
+				{
+					from_coin_type: CoinType;
+					to_coin_type: CoinType;
+					input_amount: number;
+					input_coin: ServiceCoinData;
+					slippage: number;
+					tx_kind: SerializedTransaction;
+				}
+			>(
+				"router/forward-trade-route-tx",
+				{
+					slippage,
+					from_coin_type: coinInType,
+					to_coin_type: coinOutType,
+					// NOTE: is this conversion safe ?
+					input_amount: Number(coinInAmount),
+					input_coin:
+						Helpers.transactions.serviceCoinDataFromCoinTxArg({
+							coinTxArg,
+						}),
+					tx_kind: b64TxBytes,
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+
+		const tx = TransactionBlock.fromKind(tx_kind);
+
+		// TODO: take fee / return coin ?
+		// tx.transferObjects([output_coin], tx.pure(walletAddress));
+
+		return {
+			tx,
+			coinOut: output_coin,
+			coinOutAmount: BigInt(Math.floor(output_amount)),
+			// @ts-ignore
+			completeTradeRoute: {
+				referrer,
+				externalFee,
+				// TODO
+				routes: paths,
+			},
+		};
+	};
+
+	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
@@ -284,95 +457,102 @@ export class RouterApi {
 	}
 
 	// =========================================================================
-	//  Dynamic Gas Helper
+	//  V2
 	// =========================================================================
 
-	public async fetchAddDynamicGasRouteToTxKind(
-		inputs: Omit<ApiRouterDynamicGasBody, "coinOutAmount"> & {
-			coinOutAmount: Balance;
-			network: SuiNetwork;
-			graph: RouterSerializableCompleteGraph;
-		}
-	): Promise<TxBytes> {
-		const { gasCoinData } = inputs;
+	public fetchAddTxForCompleteTradeRouteV2 = async (inputs: {
+		paths: any;
+		slippage: Slippage;
+		tx?: TransactionBlock;
+		coinIn?: TransactionArgument;
+		coinInType?: CoinType;
+		coinInAmount?: Balance;
+		walletAddress?: SuiAddress;
+		// TODO: handle this
+		referrer?: SuiAddress;
+		// TODO: handle this
+		externalFee?: RouterExternalFee;
+		isSponsoredTx?: boolean;
+	}): Promise<{
+		tx: TransactionBlock;
+		coinOut: TransactionArgument;
+	}> => {
+		const {
+			paths,
+			coinInType,
+			coinInAmount,
+			walletAddress,
+			referrer,
+			externalFee,
+			coinIn,
+			isSponsoredTx,
+			slippage,
+		} = inputs;
 
-		const tx = TransactionBlock.fromKind(inputs.txKindBytes);
+		const initTx = inputs.tx ?? new TransactionBlock();
 
-		const completeRoute = await this.fetchCompleteTradeRouteGivenAmountOut({
-			...inputs,
-			coinInType: inputs.gasCoinType,
-			coinOutType: Coin.constants.suiCoinType,
-			coinOutAmount:
-				inputs.coinOutAmount +
-				RouterApi.constants.dynamicGas.expectedRouterGasCostUpperBound,
-		});
+		if (walletAddress) initTx.setSender(walletAddress);
 
-		let fullCoinInId: TransactionArgument;
-		if ("Coin" in gasCoinData) {
-			// coin object has NOT been used previously in tx
-			fullCoinInId = tx.object(gasCoinData.Coin);
-		} else {
-			// coin object has been used previously in tx
-			const txArgs = tx.blockData.transactions.reduce(
-				(acc, aTx) => [
-					...acc,
-					...("objects" in aTx
-						? aTx.objects
-						: "arguments" in aTx
-						? aTx.arguments
-						: "destination" in aTx
-						? [aTx.destination]
-						: "coin" in aTx
-						? [aTx.coin]
-						: []),
-				],
-				[] as TransactionArgument[]
-			);
+		const coinTxArg =
+			coinIn ??
+			(walletAddress && coinInType && coinInAmount
+				? await this.Provider.Coin().fetchCoinWithAmountTx({
+						tx: initTx,
+						coinAmount: coinInAmount,
+						coinType: coinInType,
+						walletAddress,
+						isSponsoredTx,
+				  })
+				: (() => {
+						throw new Error(
+							"no walletAddress or coinInType or coinInAmount provided"
+						);
+				  })());
 
-			fullCoinInId = txArgs.find((arg) => {
-				if (!arg) return false;
-
-				// this is here because TS having troubles inferring type for some reason
-				// (still being weird)
-				const txArg = arg as TransactionArgument;
-				return (
-					("Input" in gasCoinData &&
-						txArg.kind === "Input" &&
-						txArg.index === gasCoinData.Input) ||
-					("Result" in gasCoinData &&
-						txArg.kind === "Result" &&
-						txArg.index === gasCoinData.Result) ||
-					("NestedResult" in gasCoinData &&
-						txArg.kind === "NestedResult" &&
-						txArg.index === gasCoinData.NestedResult[0] &&
-						txArg.resultIndex === gasCoinData.NestedResult[1])
-				);
-			});
-		}
-
-		const coinInId = tx.splitCoins(fullCoinInId, [
-			tx.pure(completeRoute.coinIn.amount),
-		]);
-
-		const coinOutId = await this.fetchAddTransactionForCompleteTradeRoute({
-			tx,
-			completeRoute,
-			coinInId,
-			// TODO: set this elsewhere
-			slippage: RouterApi.constants.dynamicGas.slippage,
-			walletAddress: inputs.senderAddress,
-		});
-
-		tx.transferObjects([coinOutId], tx.pure(inputs.sponsorAddress));
-
-		const txBytes = await tx.build({
+		const txBytes = await initTx.build({
 			client: this.Provider.provider,
-			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
 
-		return b64TxBytes;
-	}
+		const { output_coin, tx_kind } =
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					output_coin: TransactionArgument;
+					tx_kind: SerializedTransaction;
+				},
+				{
+					paths: any;
+					input_coin: ServiceCoinData;
+					slippage: number;
+					tx_kind: SerializedTransaction;
+				}
+			>(
+				"router/tx-from-trade-route",
+				{
+					slippage,
+					paths,
+					input_coin:
+						Helpers.transactions.serviceCoinDataFromCoinTxArg({
+							coinTxArg,
+						}),
+					tx_kind: b64TxBytes,
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+
+		const tx = TransactionBlock.fromKind(tx_kind);
+
+		// TODO: take fee / return coin ?
+		// tx.transferObjects([output_coin], tx.pure(walletAddress));
+
+		return {
+			tx,
+			coinOut: output_coin,
+		};
+	};
 
 	// =========================================================================
 	//  Events

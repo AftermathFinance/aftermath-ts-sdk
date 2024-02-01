@@ -10,6 +10,7 @@ import {
 	CoinMetadaWithInfo,
 	CoinType,
 	ObjectId,
+	ServiceCoinData,
 	SuiAddress,
 } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
@@ -17,6 +18,7 @@ import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
 import { CoinStruct, PaginatedCoins } from "@mysten/sui.js/client";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
+import { Sui } from "../..";
 
 export class CoinApi {
 	// =========================================================================

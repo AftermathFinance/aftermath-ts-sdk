@@ -11,7 +11,7 @@ import {
 	BigIntAsString,
 	SerializedTransaction,
 } from "../../general/types/generalTypes";
-import { CoinType } from "../coin/coinTypes";
+import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
 import {
 	DeepBookPoolObject,
@@ -35,7 +35,7 @@ import {
 	FlowXPoolObject,
 	isFlowXPoolObject,
 } from "../external/flowX/flowXTypes";
-import { AfSuiRouterPoolObject, DynamicGasCoinData } from "../..";
+import { AfSuiRouterPoolObject,  } from "../..";
 import { TransactionArgument } from "@mysten/sui.js/transactions";
 
 // =========================================================================
@@ -357,7 +357,7 @@ export type ApiRouterTradeEventsBody = ApiEventsBody & {
 export interface ApiRouterDynamicGasBody {
 	txKindBytes: TxBytes;
 	gasCoinType: CoinType;
-	gasCoinData: DynamicGasCoinData;
+	gasCoinData: ServiceCoinData;
 	coinOutAmount: BigIntAsString;
 	senderAddress: SuiAddress;
 	sponsorAddress: SuiAddress;
