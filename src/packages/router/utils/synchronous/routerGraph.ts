@@ -525,12 +525,10 @@ export class RouterGraph {
 					coinIn: {
 						type: coinIn,
 						amount: BigInt(0),
-						tradeFee: BigInt(0),
 					},
 					coinOut: {
 						type: coinOut,
 						amount: BigInt(0),
-						tradeFee: BigInt(0),
 					},
 					spotPrice: 0,
 					paths: [
@@ -540,12 +538,10 @@ export class RouterGraph {
 							coinIn: {
 								type: coinIn,
 								amount: BigInt(0),
-								tradeFee: BigInt(0),
 							},
 							coinOut: {
 								type: coinOut,
 								amount: BigInt(0),
-								tradeFee: BigInt(0),
 							},
 							spotPrice: 0,
 						},
@@ -765,7 +761,6 @@ export class RouterGraph {
 									coinOut: {
 										type: coinOut,
 										amount: BigInt(0),
-										tradeFee: BigInt(0),
 									},
 									spotPrice: 0,
 								},
@@ -1161,7 +1156,7 @@ export class RouterGraph {
 			(acc, cur) =>
 				acc +
 				(Number(cur.coinIn.amount) / Number(coinInAmount)) *
-					cur.spotPrice,
+					(cur.spotPrice ?? 1),
 			0
 		);
 		const estimatedGasCost = RouterGraph.gasCostForRoutes(routes);
@@ -1171,12 +1166,10 @@ export class RouterGraph {
 			coinIn: {
 				type: coinIn,
 				amount: coinInAmount,
-				tradeFee: BigInt(0),
 			},
 			coinOut: {
 				type: coinOut,
 				amount: totalCoinOutAmount,
-				tradeFee: BigInt(0),
 			},
 			routes: nonZeroRoutes,
 			spotPrice,
@@ -1209,7 +1202,7 @@ export class RouterGraph {
 	};
 
 	private static transformRouterTradeInfoIfGivenAmountOut = <
-		T extends Required<TradeInfo>
+		T extends TradeInfo
 	>(
 		tradeInfo: T
 	) => {

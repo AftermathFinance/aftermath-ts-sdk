@@ -344,6 +344,10 @@ export class RouterSynchronousApiHelpers {
 			coinInAmountRemaining -= route.coinIn.amount;
 
 			for (const [, path] of route.paths.entries()) {
+				if (typeof path.pool === "string")
+					throw new Error(
+						"pool within path is string, but expected object"
+					);
 				const poolForPath = createRouterPool({
 					pool: path.pool,
 					network: "",

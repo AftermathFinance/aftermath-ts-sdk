@@ -171,7 +171,7 @@ export type RouterTradeRoute = RouterTradeInfo & {
 
 export type RouterTradePath = RouterTradeInfo & {
 	protocolName: RouterProtocolName;
-	pool?: RouterSerializablePool | ObjectId;
+	pool: RouterSerializablePool | ObjectId;
 };
 
 export interface RouterTradeInfo {

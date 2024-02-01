@@ -34,6 +34,7 @@ export class RouterApiCasting {
 		const routes: RouterTradeRoute[] = paths.data.map((path) => ({
 			paths: path.path.data.map((hop) => ({
 				protocolName: hop.protocol,
+				pool: hop.pool_id,
 				coinIn: {
 					type: hop.input,
 					amount: BigInt(Math.floor(hop.input_amount)),
