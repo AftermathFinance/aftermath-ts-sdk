@@ -344,7 +344,8 @@ export class RouterApiHelpers {
 				...endCompleteRoute.coinOut,
 			},
 			spotPrice:
-				startCompleteRoute.spotPrice * endCompleteRoute.spotPrice,
+				(startCompleteRoute.spotPrice ?? 1) *
+				(endCompleteRoute.spotPrice ?? 1),
 		};
 	};
 }

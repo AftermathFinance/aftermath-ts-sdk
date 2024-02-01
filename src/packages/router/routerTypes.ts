@@ -35,7 +35,7 @@ import {
 	FlowXPoolObject,
 	isFlowXPoolObject,
 } from "../external/flowX/flowXTypes";
-import { AfSuiRouterPoolObject,  } from "../..";
+import { AfSuiRouterPoolObject } from "../..";
 import { TransactionArgument } from "@mysten/sui.js/transactions";
 
 // =========================================================================
@@ -163,7 +163,6 @@ export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
 	referrer?: SuiAddress;
 	externalFee?: RouterExternalFee;
-	// mergeLastPath?: boolean;
 };
 
 export type RouterTradeRoute = RouterTradeInfo & {
@@ -172,19 +171,18 @@ export type RouterTradeRoute = RouterTradeInfo & {
 
 export type RouterTradePath = RouterTradeInfo & {
 	protocolName: RouterProtocolName;
-	pool: RouterSerializablePool;
+	pool?: RouterSerializablePool | ObjectId;
 };
 
 export interface RouterTradeInfo {
 	coinIn: RouterTradeCoin;
 	coinOut: RouterTradeCoin;
-	spotPrice: number;
+	spotPrice?: number;
 }
 
 export interface RouterTradeCoin {
 	type: CoinType;
 	amount: Balance;
-	tradeFee: PoolTradeFee;
 }
 
 // =========================================================================
@@ -362,4 +360,28 @@ export interface ApiRouterDynamicGasBody {
 	senderAddress: SuiAddress;
 	sponsorAddress: SuiAddress;
 	referrer?: SuiAddress;
+}
+
+// =========================================================================
+//  V2
+// =========================================================================
+
+export interface RouterServicePaths {
+	data: RouterServicePath[];
+}
+
+export interface RouterServicePath {
+	amount: number;
+	path: {
+		data: RouterServiceHop[];
+	};
+}
+
+export interface RouterServiceHop {
+	protocol: RouterProtocolName;
+	pool_id: ObjectId;
+	input: CoinType;
+	output: CoinType;
+	input_amount: number;
+	output_amount: number;
 }

@@ -24,6 +24,7 @@ import {
 	RouterSynchronousSerializablePool,
 	ServiceCoinData,
 	SerializedTransaction,
+	RouterServicePaths,
 } from "../../../types";
 import {
 	TransactionArgument,
@@ -42,7 +43,7 @@ import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 import { FlowXApi } from "../../external/flowX/flowXApi";
 import { Coin } from "../..";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
-import { Helpers } from "../../..";
+import { Casting, Helpers } from "../../..";
 import { SuiArgument } from "@mysten/sui.js/client";
 import { TransactionObjectArgument } from "@scallop-io/sui-kit";
 
@@ -270,7 +271,7 @@ export class RouterApi {
 			await this.Provider.indexerCaller.fetchIndexer<
 				{
 					output_amount: number;
-					paths: any;
+					paths: RouterServicePaths;
 				},
 				{
 					from_coin_type: CoinType;
@@ -296,13 +297,13 @@ export class RouterApi {
 
 		return {
 			coinOutAmount: BigInt(Math.floor(output_amount)),
-			// @ts-ignore
 			completeTradeRoute: {
+				...Casting.router.routerCompleteTradeRouteFromServicePaths(
+					paths
+				),
 				// NOTE: should these be here ?
 				referrer,
 				externalFee,
-				// TODO
-				routes: paths,
 			},
 		};
 	};
@@ -367,7 +368,7 @@ export class RouterApi {
 					output_coin: TransactionArgument;
 					tx_kind: SerializedTransaction;
 					output_amount: number;
-					paths: any;
+					paths: RouterServicePaths;
 				},
 				{
 					from_coin_type: CoinType;
@@ -406,12 +407,12 @@ export class RouterApi {
 			tx,
 			coinOut: output_coin,
 			coinOutAmount: BigInt(Math.floor(output_amount)),
-			// @ts-ignore
 			completeTradeRoute: {
+				...Casting.router.routerCompleteTradeRouteFromServicePaths(
+					paths
+				),
 				referrer,
 				externalFee,
-				// TODO
-				routes: paths,
 			},
 		};
 	};
@@ -461,7 +462,7 @@ export class RouterApi {
 	// =========================================================================
 
 	public fetchAddTxForCompleteTradeRouteV2 = async (inputs: {
-		paths: any;
+		completeTradeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		tx?: TransactionBlock;
 		coinIn?: TransactionArgument;
@@ -478,7 +479,7 @@ export class RouterApi {
 		coinOut: TransactionArgument;
 	}> => {
 		const {
-			paths,
+			completeTradeRoute,
 			coinInType,
 			coinInAmount,
 			walletAddress,
@@ -521,7 +522,7 @@ export class RouterApi {
 					tx_kind: SerializedTransaction;
 				},
 				{
-					paths: any;
+					paths: RouterServicePaths;
 					input_coin: ServiceCoinData;
 					slippage: number;
 					tx_kind: SerializedTransaction;
@@ -530,7 +531,9 @@ export class RouterApi {
 				"router/tx-from-trade-route",
 				{
 					slippage,
-					paths,
+					paths: Casting.router.routerServicePathsFromCompleteTradeRoute(
+						completeTradeRoute
+					),
 					input_coin:
 						Helpers.transactions.serviceCoinDataFromCoinTxArg({
 							coinTxArg,

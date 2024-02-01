@@ -1,4 +1,10 @@
-import { RouterTradeEvent } from "../routerTypes";
+import {
+	RouterCompleteTradeRoute,
+	RouterServicePath,
+	RouterServicePaths,
+	RouterTradeEvent,
+	RouterTradeRoute,
+} from "../routerTypes";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 
 export class RouterApiCasting {
@@ -20,5 +26,68 @@ export class RouterApiCasting {
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
+	};
+
+	public static routerCompleteTradeRouteFromServicePaths = (
+		paths: RouterServicePaths
+	): RouterCompleteTradeRoute => {
+		const routes: RouterTradeRoute[] = paths.data.map((path) => ({
+			paths: path.path.data.map((hop) => ({
+				protocolName: hop.protocol,
+				coinIn: {
+					type: hop.input,
+					amount: BigInt(Math.floor(hop.input_amount)),
+				},
+				coinOut: {
+					type: hop.output,
+					amount: BigInt(Math.floor(hop.output_amount)),
+				},
+			})),
+			coinIn: {
+				type: path.path.data[0].input,
+				amount: BigInt(Math.floor(path.path.data[0].input_amount)),
+			},
+			coinOut: {
+				type: path.path.data[path.path.data.length - 1].output,
+				amount: BigInt(
+					Math.floor(
+						path.path.data[path.path.data.length - 1].output_amount
+					)
+				),
+			},
+		}));
+		return {
+			routes,
+			coinIn: routes[0].coinIn,
+			coinOut: routes[routes.length - 1].coinOut,
+		};
+	};
+
+	public static routerServicePathsFromCompleteTradeRoute = (
+		completeTradeRoute: RouterCompleteTradeRoute
+	): RouterServicePaths => {
+		const data: RouterServicePath[] = completeTradeRoute.routes.map(
+			(route) => ({
+				amount: Number(route.coinIn.amount),
+				path: {
+					data: route.paths.map((path) => ({
+						protocol: path.protocolName,
+						pool_id:
+							typeof path.pool === "string"
+								? path.pool
+								: (() => {
+										throw new Error(
+											"pool within path is object, but expected string"
+										);
+								  })(),
+						input: path.coinIn.type,
+						output: path.coinOut.type,
+						input_amount: Number(path.coinIn.amount),
+						output_amount: Number(path.coinOut.amount),
+					})),
+				},
+			})
+		);
+		return { data };
 	};
 }
