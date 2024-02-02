@@ -115,6 +115,50 @@ export class Router extends Caller {
 	 * @param abortSignal - Optional signal to abort passed to fetch call
 	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
 	 */
+	public async getCompleteTradeRouteGivenAmountInV1(
+		inputs: ApiRouterPartialCompleteTradeRouteBody & {
+			/**
+			 * Amount of coin being given away
+			 */
+			coinInAmount: Balance;
+		},
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route-v1", inputs, abortSignal);
+	}
+
+	/**
+	 * Creates route across multiple pools and protocols for best trade execution price
+	 *
+	 * @param inputs - Details for router to construct trade route
+	 * @param abortSignal - Optional signal to abort passed to fetch call
+	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
+	 */
+	public async getCompleteTradeRouteGivenAmountInV2(
+		inputs: ApiRouterPartialCompleteTradeRouteBody & {
+			/**
+			 * Amount of coin being given away
+			 */
+			coinInAmount: Balance;
+		},
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route-v2", inputs, abortSignal);
+	}
+
+	/**
+	 * Creates route across multiple pools and protocols for best trade execution price
+	 *
+	 * @param inputs - Details for router to construct trade route
+	 * @param abortSignal - Optional signal to abort passed to fetch call
+	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
+	 */
 	public async getCompleteTradeRouteGivenAmountOut(
 		inputs: ApiRouterPartialCompleteTradeRouteBody & {
 			/**
@@ -128,6 +172,50 @@ export class Router extends Caller {
 			RouterCompleteTradeRoute,
 			ApiRouterCompleteTradeRouteBody
 		>("trade-route", inputs, abortSignal);
+	}
+
+	/**
+	 * Creates route across multiple pools and protocols for best trade execution price
+	 *
+	 * @param inputs - Details for router to construct trade route
+	 * @param abortSignal - Optional signal to abort passed to fetch call
+	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
+	 */
+	public async getCompleteTradeRouteGivenAmountOutV1(
+		inputs: ApiRouterPartialCompleteTradeRouteBody & {
+			/**
+			 * Amount of coin expected to receive
+			 */
+			coinOutAmount: Balance;
+		},
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route-v1", inputs, abortSignal);
+	}
+
+	/**
+	 * Creates route across multiple pools and protocols for best trade execution price
+	 *
+	 * @param inputs - Details for router to construct trade route
+	 * @param abortSignal - Optional signal to abort passed to fetch call
+	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
+	 */
+	public async getCompleteTradeRouteGivenAmountOutV2(
+		inputs: ApiRouterPartialCompleteTradeRouteBody & {
+			/**
+			 * Amount of coin expected to receive
+			 */
+			coinOutAmount: Balance;
+		},
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<
+			RouterCompleteTradeRoute,
+			ApiRouterCompleteTradeRouteBody
+		>("trade-route-v2", inputs, abortSignal);
 	}
 
 	// =========================================================================

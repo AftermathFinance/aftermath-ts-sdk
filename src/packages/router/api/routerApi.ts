@@ -264,33 +264,31 @@ export class RouterApi {
 		const { coinInType, coinOutType, coinInAmount, referrer, externalFee } =
 			inputs;
 
-		const { output_amount, paths } =
-			await this.Provider.indexerCaller.fetchIndexer<
-				{
-					output_amount: number;
-					paths: RouterServicePaths;
-				},
-				{
-					from_coin_type: CoinType;
-					to_coin_type: CoinType;
-					input_amount: number;
-				}
-			>(
-				"router/forward-trade-route",
-				{
-					from_coin_type: coinInType,
-					to_coin_type: coinOutType,
-					// NOTE: is this conversion safe ?
-					input_amount: Number(coinInAmount),
-				},
-				undefined,
-				undefined,
-				undefined,
-				true
-			);
+		const { paths } = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				output_amount: number;
+				paths: RouterServicePaths;
+			},
+			{
+				from_coin_type: CoinType;
+				to_coin_type: CoinType;
+				input_amount: number;
+			}
+		>(
+			"router/forward-trade-route",
+			{
+				from_coin_type: coinInType,
+				to_coin_type: coinOutType,
+				// NOTE: is this conversion safe ?
+				input_amount: Number(coinInAmount),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 
-		// TODO: take fee / return coin ?
-		// tx.transferObjects([output_coin], tx.pure(walletAddress));
+		console.log("paths", JSON.stringify(paths, null, 4));
 
 		return {
 			...Casting.router.routerCompleteTradeRouteFromServicePaths(paths),
@@ -313,6 +311,7 @@ export class RouterApi {
 		// TODO: handle this
 		externalFee?: RouterExternalFee;
 		isSponsoredTx?: boolean;
+		transferCoinOut?: boolean;
 	}): Promise<{
 		tx: TransactionBlock;
 		completeRoute: RouterCompleteTradeRoute;
@@ -329,6 +328,7 @@ export class RouterApi {
 			coinIn,
 			isSponsoredTx,
 			slippage,
+			transferCoinOut,
 		} = inputs;
 
 		const initTx = inputs.tx ?? new TransactionBlock();
@@ -391,18 +391,24 @@ export class RouterApi {
 			);
 
 		const tx = TransactionBlock.fromKind(tx_kind);
+		RouterApi.transferTxMetadata({
+			initTx,
+			newTx: tx,
+		});
 
-		// TODO: set remaining missing data from init tx (and do same for other v2 func)
-		if (initTx.blockData.sender) tx.setSender(initTx.blockData.sender);
+		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinData({
+			serviceCoinData: output_coin,
+		});
+		if (transferCoinOut) {
+			tx.transferObjects([coinOut], tx.pure(walletAddress));
+		}
 
 		// TODO: take fee / return coin ?
 		// tx.transferObjects([output_coin], tx.pure(walletAddress));
 
 		return {
 			tx,
-			coinOut: Helpers.transactions.coinTxArgFromServiceCoinData({
-				serviceCoinData: output_coin,
-			}),
+			coinOut,
 			coinOutAmount: BigInt(Math.round(output_amount)),
 			completeRoute: {
 				...Casting.router.routerCompleteTradeRouteFromServicePaths(
@@ -469,6 +475,7 @@ export class RouterApi {
 		// // TODO: handle this
 		// externalFee?: RouterExternalFee;
 		isSponsoredTx?: boolean;
+		transferCoinOut?: boolean;
 	}): Promise<{
 		tx: TransactionBlock;
 		coinOut: TransactionArgument;
@@ -479,6 +486,7 @@ export class RouterApi {
 			coinIn,
 			isSponsoredTx,
 			slippage,
+			transferCoinOut,
 		} = inputs;
 
 		const initTx = inputs.tx ?? new TransactionBlock();
@@ -536,18 +544,21 @@ export class RouterApi {
 			);
 
 		const tx = TransactionBlock.fromKind(tx_kind);
+		RouterApi.transferTxMetadata({
+			initTx,
+			newTx: tx,
+		});
 
-		// TODO: set remaining missing data from init tx (and do same for other v2 func)
-		if (initTx.blockData.sender) tx.setSender(initTx.blockData.sender);
-
-		// TODO: take fee / return coin ?
-		// tx.transferObjects([output_coin], tx.pure(walletAddress));
+		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinData({
+			serviceCoinData: output_coin,
+		});
+		if (transferCoinOut) {
+			tx.transferObjects([coinOut], tx.pure(walletAddress));
+		}
 
 		return {
 			tx,
-			coinOut: Helpers.transactions.coinTxArgFromServiceCoinData({
-				serviceCoinData: output_coin,
-			}),
+			coinOut,
 		};
 	};
 
@@ -582,5 +593,35 @@ export class RouterApi {
 		return this.Helpers.SynchronousHelpers.fetchAllPools({
 			protocols: this.protocols.filter(isRouterSynchronousProtocolName),
 		});
+	};
+
+	private static transferTxMetadata = (inputs: {
+		initTx: TransactionBlock;
+		newTx: TransactionBlock;
+	}) => {
+		const { initTx, newTx } = inputs;
+
+		if (initTx.blockData.sender) newTx.setSender(initTx.blockData.sender);
+
+		if (initTx.blockData.expiration)
+			newTx.setExpiration(initTx.blockData.expiration);
+
+		if (
+			initTx.blockData.gasConfig.budget &&
+			typeof initTx.blockData.gasConfig.budget !== "string"
+		)
+			newTx.setGasBudget(initTx.blockData.gasConfig.budget);
+
+		if (initTx.blockData.gasConfig.owner)
+			newTx.setGasOwner(initTx.blockData.gasConfig.owner);
+
+		if (initTx.blockData.gasConfig.payment)
+			newTx.setGasPayment(initTx.blockData.gasConfig.payment);
+
+		if (
+			initTx.blockData.gasConfig.price &&
+			typeof initTx.blockData.gasConfig.price !== "string"
+		)
+			newTx.setGasPrice(initTx.blockData.gasConfig.price);
 	};
 }
