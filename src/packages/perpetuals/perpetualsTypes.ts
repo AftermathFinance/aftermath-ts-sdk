@@ -450,31 +450,31 @@ export type CollateralEvent =
 export const isWithdrewCollateralEvent = (
 	event: Event
 ): event is WithdrewCollateralEvent => {
-	return event.type.toLowerCase().includes("withdrewcollateral");
+	return event.type.toLowerCase().includes("::withdrewcollateral<");
 };
 
 export const isDepositedCollateralEvent = (
 	event: Event
 ): event is DepositedCollateralEvent => {
-	return event.type.toLowerCase().includes("depositedcollateral");
+	return event.type.toLowerCase().includes("::depositedcollateral<");
 };
 
 export const isDeallocatedCollateralEvent = (
 	event: Event
 ): event is DeallocatedCollateralEvent => {
-	return event.type.toLowerCase().includes("deallocatedcollateral");
+	return event.type.toLowerCase().includes("::deallocatedcollateral<");
 };
 
 export const isAllocatedCollateralEvent = (
 	event: Event
 ): event is AllocatedCollateralEvent => {
-	return event.type.toLowerCase().includes("allocatedcollateral");
+	return event.type.toLowerCase().includes("::allocatedcollateral<");
 };
 
 export const isSettledFundingEvent = (
 	event: Event
 ): event is SettledFundingEvent => {
-	return event.type.toLowerCase().includes("settledfunding");
+	return event.type.toLowerCase().includes("::settledfunding<");
 };
 
 // =========================================================================
@@ -493,7 +493,7 @@ export interface LiquidatedEvent extends Event {
 }
 
 export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
-	return event.type.toLowerCase().includes("liquidatedposition");
+	return event.type.toLowerCase().includes("::liquidatedposition<");
 };
 
 // =========================================================================
@@ -592,29 +592,29 @@ export interface PostedOrderReceiptEvent extends Event {
 export const isCanceledOrderEvent = (
 	event: Event
 ): event is CanceledOrderEvent => {
-	return event.type.toLowerCase().includes("orderbookcanceledorder");
+	return event.type.toLowerCase().includes("::canceledorder<");
 };
 
 export const isPostedOrderEvent = (event: Event): event is PostedOrderEvent => {
-	return event.type.toLowerCase().includes("postedorder");
+	return event.type.toLowerCase().includes("::postedorder<");
 };
 
 export const isPostedOrderReceiptEvent = (
 	event: Event
 ): event is PostedOrderReceiptEvent => {
-	return event.type.toLowerCase().includes("orderbookpostreceipt");
+	return event.type.toLowerCase().includes("::orderbookpostreceipt");
 };
 
 export const isFilledMakerOrderEvent = (
 	event: Event
 ): event is FilledMakerOrderEvent => {
-	return event.type.toLowerCase().includes("filledmakerorder");
+	return event.type.toLowerCase().includes("::filledmakerorder<");
 };
 
 export const isFilledTakerOrderEvent = (
 	event: Event
 ): event is FilledTakerOrderEvent => {
-	return event.type.toLowerCase().includes("filledtakerorder");
+	return event.type.toLowerCase().includes("::filledtakerorder<");
 };
 
 // =========================================================================

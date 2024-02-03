@@ -79,6 +79,7 @@ export class PerpetualsApiCasting {
 	public static partialPositionFromRaw = (
 		data: any
 	): Omit<PerpetualsPosition, "collateralCoinType" | "marketId"> => {
+		console.log("SOME DATA", data);
 		return {
 			collateral: BigInt(data.collateral),
 			baseAssetAmount: BigInt(data.baseAssetAmount),
@@ -101,14 +102,11 @@ export class PerpetualsApiCasting {
 		data: SuiObjectResponse,
 		collateralCoinType: CoinType
 	): PerpetualsMarketData {
-		console.log("MARKETTTTTTTTTTTTTTTTTTTTTTtt", data);
 		const objectId = Helpers.getObjectId(data);
 		const objectType = Helpers.getObjectType(data);
 		const fields = Helpers.getObjectFields(
 			data
 		) as PerpetualsClearingHouseFieldsOnChain;
-
-		console.log("FIELSSSSSSS", fields);
 
 		return {
 			objectId,

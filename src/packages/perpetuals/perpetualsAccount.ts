@@ -598,7 +598,10 @@ export class PerpetualsAccount extends Caller {
 		);
 		const collateralChange =
 			Helpers.maxBigInt(
-				position.collateral - ordersCollateral,
+				Coin.normalizeBalance(
+					this.calcFreeCollateralForPosition(inputs),
+					this.collateralDecimals()
+				) - ordersCollateral,
 				BigInt(0)
 			) * BigInt(-1);
 

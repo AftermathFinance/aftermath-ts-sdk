@@ -447,16 +447,17 @@ export class PerpetualsMarket extends Caller {
 		if (sizeFilled > positionSize) {
 			// reversing position
 
-			const positionFreeCollateral =
-				account.calcFreeCollateralForPosition({
-					...inputs,
-					market: this,
-				});
+			const positionCollateral = account.calcFreeCollateralForPosition({
+				...inputs,
+				market: this,
+			});
 
+			const collateralChange =
+				collateralForPosted +
+				(collateralForFilled - positionCollateral);
 			return (
-				(1 + marginOfError) *
-				(collateralForPosted +
-					(collateralForFilled - positionFreeCollateral))
+				(1 + marginOfError * (collateralChange > 0 ? 1 : -1)) *
+				collateralChange
 			);
 		} else {
 			// reducing position

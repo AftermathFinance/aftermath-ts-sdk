@@ -152,8 +152,8 @@ export class Helpers {
 	) =>
 		JSON.parse(json, (key, value) => {
 			// handles bigint casting
-			if (typeof value === "string" && /^\d+n$/.test(value)) {
-				return BigInt(value.slice(0, value.length - 1));
+			if (typeof value === "string" && /^-?\d+n$/.test(value)) {
+				return BigInt(value.slice(0, -1));
 			}
 
 			if (
