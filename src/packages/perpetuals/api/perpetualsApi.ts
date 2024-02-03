@@ -764,10 +764,17 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketId[]> => {
 		const { collateralCoinType } = inputs;
-		return this.Provider.indexerCaller.fetchIndexer(
+		const marketIdsData = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				marketId: ObjectId;
+			}[]
+		>(
 			`perpetuals/markets/${Helpers.addLeadingZeroesToType(
 				collateralCoinType
 			)}`
+		);
+		return marketIdsData.map((data) =>
+			Helpers.addLeadingZeroesToType(data.marketId)
 		);
 	};
 
@@ -1427,11 +1434,11 @@ export class PerpetualsApi {
 	public buildCancelOrderTx = (
 		inputs: ApiPerpetualsCancelOrderBody
 	): TransactionBlock => {
-		const { orderId, marketId, ...otherInputs } = inputs;
+		const { orderId, marketId, collateral, ...otherInputs } = inputs;
 
 		return this.buildCancelOrdersTx({
 			...otherInputs,
-			orderDatas: [{ orderId, marketId }],
+			orderDatas: [{ orderId, marketId, collateral }],
 		});
 	};
 
@@ -1446,26 +1453,45 @@ export class PerpetualsApi {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const marketIdToOrderIds = orderDatas.reduce((acc, order) => {
-			if (order.marketId in acc) {
+		const marketIdToOrderIds = orderDatas.reduce(
+			(acc, order) => {
+				if (order.marketId in acc) {
+					return {
+						...acc,
+						[order.marketId]: [...acc[order.marketId], order],
+					};
+				}
 				return {
 					...acc,
-					[order.marketId]: [...acc[order.marketId], order.orderId],
+					[order.marketId]: [order],
 				};
-			}
-			return {
-				...acc,
-				[order.marketId]: [order.orderId],
-			};
-		}, {} as Record<PerpetualsMarketId, PerpetualsOrderId[]>);
+			},
+			{} as Record<
+				PerpetualsMarketId,
+				{
+					orderId: PerpetualsOrderId;
+					marketId: PerpetualsMarketId;
+					collateral: Balance;
+				}[]
+			>
+		);
 
-		for (const [marketId, orderIds] of Object.entries(marketIdToOrderIds)) {
+		for (const [marketId, orders] of Object.entries(marketIdToOrderIds)) {
 			this.cancelOrdersTx({
 				tx,
 				collateralCoinType,
 				accountCapId,
 				marketId,
-				orderIds,
+				orderIds: orders.map((order) => order.orderId),
+			});
+			this.deallocateCollateralTx({
+				tx,
+				accountCapId,
+				collateralCoinType,
+				marketId,
+				amount: Helpers.sumBigInt(
+					orders.map((order) => order.collateral)
+				),
 			});
 		}
 

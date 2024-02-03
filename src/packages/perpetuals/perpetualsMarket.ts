@@ -364,7 +364,7 @@ export class PerpetualsMarket extends Caller {
 
 	public calcCollateralRequiredForOrder = (inputs: {
 		fills: PerpetualsFilledOrderData[];
-		acccount: PerpetualsAccount;
+		account: PerpetualsAccount;
 		side: PerpetualsOrderSide;
 		size: number;
 		indexPrice: number;
@@ -372,7 +372,7 @@ export class PerpetualsMarket extends Caller {
 		price: number | undefined;
 	}): number => {
 		const {
-			acccount,
+			account,
 			size,
 			fills,
 			side,
@@ -381,7 +381,7 @@ export class PerpetualsMarket extends Caller {
 			collateralPrice,
 		} = inputs;
 
-		const position = acccount.positionForMarketId({
+		const position = account.positionForMarketId({
 			marketId: this.marketId,
 		});
 
@@ -448,7 +448,7 @@ export class PerpetualsMarket extends Caller {
 			// reversing position
 
 			const positionFreeCollateral =
-				acccount.calcFreeCollateralForPosition({
+				account.calcFreeCollateralForPosition({
 					...inputs,
 					market: this,
 				});

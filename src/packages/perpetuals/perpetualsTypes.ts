@@ -772,6 +772,7 @@ export interface ApiPerpetualsCancelOrderBody {
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
 	orderId: PerpetualsOrderId;
+	collateral: Balance;
 }
 
 export interface ApiPerpetualsCancelOrdersBody {
@@ -779,8 +780,9 @@ export interface ApiPerpetualsCancelOrdersBody {
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	orderDatas: {
-		marketId: PerpetualsMarketId;
 		orderId: PerpetualsOrderId;
+		marketId: PerpetualsMarketId;
+		collateral: Balance;
 	}[];
 }
 
