@@ -576,7 +576,7 @@ export class PerpetualsAccount extends Caller {
 		indexPrice: number;
 		collateralPrice: number;
 	}): SdkPerpetualsMarketOrderInputs => {
-		const { market, walletAddress, orderDatas } = inputs;
+		const { market, walletAddress, orderDatas, collateralPrice } = inputs;
 
 		const marketId = market.marketId;
 		const position =
@@ -596,12 +596,21 @@ export class PerpetualsAccount extends Caller {
 			),
 			this.collateralDecimals()
 		);
+		const marginOfError = 0.1;
 		const collateralChange =
 			Helpers.maxBigInt(
-				Coin.normalizeBalance(
-					this.calcFreeCollateralForPosition(inputs),
-					this.collateralDecimals()
-				) - ordersCollateral,
+				BigInt(
+					Math.floor(
+						Number(
+							Coin.normalizeBalance(
+								this.calcFreeMarginUsdForPosition(inputs) /
+									collateralPrice,
+								this.collateralDecimals()
+							) - ordersCollateral
+						) *
+							(1 - marginOfError)
+					)
+				),
 				BigInt(0)
 			) * BigInt(-1);
 

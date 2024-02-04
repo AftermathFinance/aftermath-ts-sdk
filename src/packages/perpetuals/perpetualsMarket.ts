@@ -384,11 +384,18 @@ export class PerpetualsMarket extends Caller {
 		const position = account.positionForMarketId({
 			marketId: this.marketId,
 		});
+		const positionSize = position
+			? Casting.IFixed.numberFromIFixed(position.baseAssetAmount)
+			: 0;
+		const isOpeningOrIncreasingPosition =
+			!position || Perpetuals.positionSide(position) === side;
 
 		let sizeRemaining = size;
 		let fillsRemaining = Helpers.deepCopy(fills);
 		let sizeFilled = 0;
 		let sizeFilledUsd = 0;
+		let sizeFilledForReversing = 0;
+		let sizeFilledForReversingUsd = 0;
 		while (sizeRemaining > 0 && fillsRemaining.length > 0) {
 			const fill = fillsRemaining[0];
 
@@ -400,10 +407,25 @@ export class PerpetualsMarket extends Caller {
 			)
 				break;
 
-			const sizeToFill = Math.min(sizeRemaining, fill.size);
+			let sizeToFill: number;
 
-			sizeFilled += sizeToFill;
-			sizeFilledUsd += sizeToFill * fill.price;
+			if (!isOpeningOrIncreasingPosition && sizeFilled >= positionSize) {
+				sizeToFill = Math.min(sizeRemaining, fill.size);
+
+				sizeFilledForReversing += sizeToFill;
+				sizeFilledForReversingUsd += sizeToFill * fill.price;
+			} else {
+				sizeToFill = Math.min(
+					sizeRemaining,
+					fill.size,
+					isOpeningOrIncreasingPosition
+						? Number.MAX_VALUE
+						: positionSize - sizeFilled
+				);
+
+				sizeFilled += sizeToFill;
+				sizeFilledUsd += sizeToFill * fill.price;
+			}
 
 			sizeRemaining -= sizeToFill;
 			fillsRemaining[0].size -= sizeToFill;
@@ -435,26 +457,36 @@ export class PerpetualsMarket extends Caller {
 		const marginOfError = 0.1;
 
 		// opening/increasing position
-		if (!position || Perpetuals.positionSide(position) === side)
+		if (isOpeningOrIncreasingPosition)
 			return (
 				(1 + marginOfError) *
 				(collateralForFilled + collateralForPosted)
 			);
 
-		const positionSize = Casting.IFixed.numberFromIFixed(
-			position.baseAssetAmount
-		);
-		if (sizeFilled > positionSize) {
+		if (sizeFilledForReversing > 0) {
 			// reversing position
 
-			const positionCollateral = account.calcFreeCollateralForPosition({
-				...inputs,
-				market: this,
+			const executionPriceForReversing = sizeFilledForReversing
+				? sizeFilledForReversingUsd / sizeFilledForReversing
+				: 0;
+			const collateralForFilledForReversing =
+				(sizeFilledForReversing * executionPriceForReversing * imr) /
+				collateralPrice;
+
+			const positionFreeMargin =
+				account.calcFreeMarginUsdForPosition({
+					...inputs,
+					market: this,
+				}) / collateralPrice;
+
+			console.log({
+				positionFreeMargin,
+				collateralForFilledForReversing,
 			});
 
 			const collateralChange =
 				collateralForPosted +
-				(collateralForFilled - positionCollateral);
+				(collateralForFilledForReversing - positionFreeMargin);
 			return (
 				(1 + marginOfError * (collateralChange > 0 ? 1 : -1)) *
 				collateralChange
