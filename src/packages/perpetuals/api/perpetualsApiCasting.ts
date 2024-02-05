@@ -79,7 +79,6 @@ export class PerpetualsApiCasting {
 	public static partialPositionFromRaw = (
 		data: any
 	): Omit<PerpetualsPosition, "collateralCoinType" | "marketId"> => {
-		console.log("SOME DATA", data);
 		return {
 			collateral: BigInt(data.collateral),
 			baseAssetAmount: BigInt(data.baseAssetAmount),

@@ -567,10 +567,16 @@ export class PerpetualsApi {
 	public fetchPreviewOrder = async (
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
-		const { collateralCoinType, marketId, side, lotSize, tickSize } =
-			inputs;
+		const {
+			collateralCoinType,
+			marketId,
+			side,
+			lotSize,
+			tickSize,
+			isClose,
+		} = inputs;
 
-		console.log("PREVIEW INPUTS", inputs);
+		const collateralChange = isClose ? BigInt(0) : inputs.collateralChange;
 
 		const bestPriceSide =
 			side === PerpetualsOrderSide.Ask
@@ -578,7 +584,10 @@ export class PerpetualsApi {
 				: PerpetualsOrderSide.Ask;
 
 		// init tx and start session
-		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+		const { tx, sessionPotatoId } = this.createTxAndStartSession({
+			...inputs,
+			collateralChange,
+		});
 
 		// get orderbook best price before order
 		this.getBestPriceTx({
@@ -622,14 +631,13 @@ export class PerpetualsApi {
 			...inputs,
 			tx,
 			sessionPotatoId,
+			collateralChange,
 		});
 
 		// get position state after order
 		this.getPositionTx({ ...inputs, tx });
 
 		try {
-			console.log("1");
-
 			// inspect tx
 			const { allBytes, events } =
 				await this.Provider.Inspections().fetchAllBytesFromTx({
@@ -637,17 +645,12 @@ export class PerpetualsApi {
 					sender: inputs.walletAddress,
 				});
 
-			console.log("allBytes");
-			allBytes.map((bytes, index) => {
-				console.log(index, bytes[0]);
-			});
-
 			const bytesIndexHasPositionOffset = inputs.hasPosition ? 0 : 1;
 			const bytesIndexCollateralChangeOffset =
-				inputs.collateralChange === BigInt(0) ? 0 : 1;
+				collateralChange === BigInt(0) ? 0 : 1;
 
 			// deserialize position
-			const positionAfterOrder: PerpetualsPosition = {
+			let positionAfterOrder: PerpetualsPosition = {
 				...PerpetualsApiCasting.partialPositionFromRaw(
 					perpetualsBcsRegistry.de(
 						"Position",
@@ -663,11 +666,15 @@ export class PerpetualsApi {
 				collateralCoinType,
 				marketId,
 			};
+			const collateralToDellocateForClose = positionAfterOrder.collateral;
 
-			console.log("2");
+			// simulate deallocate locally if position is being closed
+			if (isClose) {
+				positionAfterOrder.collateral = BigInt(0);
+			}
 
 			const bytesIndexAllocateCollateralOffset =
-				inputs.collateralChange <= BigInt(0) ? 0 : 1;
+				collateralChange <= BigInt(0) ? 0 : 1;
 
 			// deserialize orderbook prices
 			const bestOrderbookPriceBeforeOrder =
@@ -678,20 +685,6 @@ export class PerpetualsApi {
 							bytesIndexAllocateCollateralOffset
 					][0]
 				);
-			console.log("3");
-
-			console.log(
-				3 +
-					bytesIndexHasPositionOffset +
-					bytesIndexAllocateCollateralOffset
-			);
-			console.log(
-				allBytes[
-					3 +
-						bytesIndexHasPositionOffset +
-						bytesIndexAllocateCollateralOffset
-				][0]
-			);
 
 			const bestOrderbookPriceAfterOrder =
 				PerpetualsApiCasting.orderbookPriceFromBytes(
@@ -701,8 +694,6 @@ export class PerpetualsApi {
 							bytesIndexAllocateCollateralOffset
 					][0]
 				);
-
-			console.log("4");
 
 			// try find relevant events
 			const filledOrderEvents =
@@ -720,8 +711,6 @@ export class PerpetualsApi {
 						Casting.perpetuals.postedOrderReceiptEventFromOnChain,
 				});
 
-			console.log("5");
-
 			const [filledSize, filledSizeUsd] = filledOrderEvents.reduce(
 				(acc, event) => {
 					const filledSize = Math.abs(
@@ -734,8 +723,6 @@ export class PerpetualsApi {
 				},
 				[0, 0]
 			);
-
-			console.log("6");
 
 			const [postedSize, postedSizeUsd] = postedOrderReceiptEvents.reduce(
 				(acc, event) => {
@@ -753,8 +740,6 @@ export class PerpetualsApi {
 				},
 				[0, 0]
 			);
-
-			console.log("7");
 
 			// calc slippages
 			// const avgEntryPrice = !filledSize
@@ -778,8 +763,6 @@ export class PerpetualsApi {
 				? 0
 				: priceSlippage / bestOrderbookPriceBeforeOrder;
 
-			console.log("8");
-
 			return {
 				positionAfterOrder,
 				priceSlippage,
@@ -788,6 +771,7 @@ export class PerpetualsApi {
 				filledSizeUsd,
 				postedSize,
 				postedSizeUsd,
+				collateralToDellocateForClose,
 			};
 		} catch (error) {
 			if (!(error instanceof Error))
@@ -1539,6 +1523,7 @@ export class PerpetualsApi {
 				marketId,
 				orderIds: orders.map((order) => order.orderId),
 			});
+			// TODO: handle deallocating too much ?
 			this.deallocateCollateralTx({
 				tx,
 				accountCapId,
@@ -1828,7 +1813,7 @@ export class PerpetualsApi {
 			castFunction: Casting.perpetuals.filledTakerOrderEventFromOnChain,
 		});
 
-		const sizeNum = lotSize * Number(size);
+		const sizeNum = lotSize * Math.abs(Number(size));
 
 		if (!filledTakerEvent) {
 			return {

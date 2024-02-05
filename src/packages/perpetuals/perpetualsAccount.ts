@@ -575,7 +575,7 @@ export class PerpetualsAccount extends Caller {
 		orderDatas: PerpetualsOrderData[];
 		indexPrice: number;
 		collateralPrice: number;
-	}): SdkPerpetualsMarketOrderInputs => {
+	}): SdkPerpetualsMarketOrderInputs & { isClose: boolean } => {
 		const { market, walletAddress, orderDatas, collateralPrice } = inputs;
 
 		const marketId = market.marketId;
@@ -584,41 +584,41 @@ export class PerpetualsAccount extends Caller {
 			this.emptyPosition({ marketId });
 
 		// TODO: move conversion to helper function, since used often
-		const ordersCollateral = Coin.normalizeBalance(
-			Helpers.sum(
-				orderDatas.map(
-					(orderData) =>
-						market.calcCollateralUsedForOrder({
-							...inputs,
-							orderData,
-						}).collateral
-				)
-			),
-			this.collateralDecimals()
-		);
-		const marginOfError = 0.1;
-		const collateralChange =
-			Helpers.maxBigInt(
-				BigInt(
-					Math.floor(
-						Number(
-							Coin.normalizeBalance(
-								this.calcFreeMarginUsdForPosition(inputs) /
-									collateralPrice,
-								this.collateralDecimals()
-							) - ordersCollateral
-						) *
-							(1 - marginOfError)
-					)
-				),
-				BigInt(0)
-			) * BigInt(-1);
+		// const ordersCollateral = Coin.normalizeBalance(
+		// 	Helpers.sum(
+		// 		orderDatas.map(
+		// 			(orderData) =>
+		// 				market.calcCollateralUsedForOrder({
+		// 					...inputs,
+		// 					orderData,
+		// 				}).collateral
+		// 		)
+		// 	),
+		// 	this.collateralDecimals()
+		// );
+		// const marginOfError = 0.1;
+		// const collateralChange =
+		// 	Helpers.maxBigInt(
+		// 		BigInt(
+		// 			Math.floor(
+		// 				Number(
+		// 					Coin.normalizeBalance(
+		// 						this.calcFreeMarginUsdForPosition(inputs) *
+		// 							collateralPrice,
+		// 						this.collateralDecimals()
+		// 					) - ordersCollateral
+		// 				) *
+		// 					(1 - marginOfError)
+		// 			)
+		// 		),
+		// 		BigInt(0)
+		// 	) * BigInt(-1);
 
 		const positionSide = Perpetuals.positionSide(position);
 		return {
 			marketId,
 			walletAddress,
-			collateralChange,
+			collateralChange: BigInt(0),
 			side:
 				positionSide === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask
@@ -631,6 +631,7 @@ export class PerpetualsAccount extends Caller {
 				)
 			),
 			hasPosition: true,
+			isClose: true,
 		};
 	};
 
