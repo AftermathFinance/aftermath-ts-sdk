@@ -71,38 +71,15 @@ export class KriyaApi
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPoolIds = async () => {
-		return this.Provider.Events().fetchAllEvents({
-			fetchEventsFunc: (eventsInputs) =>
-				this.Provider.Events().fetchCastEventsWithCursor({
-					...eventsInputs,
-					query: {
-						MoveEventType: this.eventTypes.poolCreated,
-					},
-					eventFromEventOnChain: (eventOnChain) =>
-						KriyaApi.kriyaPoolCreatedEventFromOnChain(
-							eventOnChain as KriyaPoolCreatedEventOnChain
-						).poolId,
-				}),
-		});
-	};
-
-	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
-		const { objectIds } = inputs;
-
-		const pools = await this.Provider.Objects().fetchCastObjectBatch({
-			objectIds,
-			objectFromSuiObjectResponse:
-				KriyaApi.kriyaPoolObjectFromSuiObjectResponse,
-		});
-
-		const unlockedPools = pools.filter(
-			(pool) =>
-				pool.isSwapEnabled &&
-				pool.tokenXValue > BigInt(0) &&
-				pool.tokenYValue > BigInt(0)
-		);
-		return unlockedPools;
+	public fetchAllPools = async () => {
+		const pools = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				objectId: ObjectId;
+				type: AnyObjectType;
+				content: any;
+			}[]
+		>("router/pools/kriya");
+		return pools.map(KriyaApi.kriyaPoolObjectFromIndexer);
 	};
 
 	// =========================================================================
@@ -206,21 +183,23 @@ export class KriyaApi
 	//  Casting
 	// =========================================================================
 
-	private static kriyaPoolObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): KriyaPoolObject => {
-		const objectType = Helpers.getObjectType(data);
+	private static kriyaPoolObjectFromIndexer = (data: {
+		objectId: ObjectId;
+		type: AnyObjectType;
+		content: any;
+	}): KriyaPoolObject => {
+		const objectType = Helpers.addLeadingZeroesToType(data.type);
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = Helpers.getObjectFields(data) as KriyaPoolFieldsOnChain;
+		const fields = data.content as KriyaPoolFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(data.objectId),
 			tokenYValue: BigInt(fields.token_y),
 			tokenXValue: BigInt(fields.token_x),
 			lspSupplyValue: BigInt(fields.lsp_supply.fields.value),
@@ -237,24 +216,6 @@ export class KriyaApi
 			isWithdrawEnabled: fields.is_withdraw_enabled,
 			coinTypeX: coinTypes[0],
 			coinTypeY: coinTypes[1],
-		};
-	};
-
-	private static kriyaPoolCreatedEventFromOnChain = (
-		eventOnChain: KriyaPoolCreatedEventOnChain
-	): KriyaPoolCreatedEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			poolId: fields.pool_id,
-			creator: fields.creator,
-			lpFeePercent: BigInt(fields.lp_fee_percent),
-			protocolFeePercent: BigInt(fields.protocol_fee_percent),
-			isStable: fields.is_stable,
-			scaleX: BigInt(fields.scaleX),
-			scaleY: BigInt(fields.scaleY),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
 		};
 	};
 }

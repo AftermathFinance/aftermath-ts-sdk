@@ -21,6 +21,7 @@ import {
 	SuiAddress,
 	TxBytes,
 	ApiRouterDynamicGasBody,
+	RouterSynchronousSerializablePool,
 } from "../../../types";
 import {
 	TransactionArgument,
@@ -39,6 +40,7 @@ import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 import { FlowXApi } from "../../external/flowX/flowXApi";
 import { Coin } from "../..";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
+import { Helpers } from "../../..";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -55,6 +57,7 @@ export class RouterApi {
 				maxRouteLength: 3,
 				tradePartitionCount: 2,
 				minRoutesToCheck: 5,
+				maxRoutesToCheck: 20,
 				maxGasCost: BigInt(500_000_000), // 0.5 SUI
 			},
 			async: {
@@ -66,6 +69,7 @@ export class RouterApi {
 			maxRouteLength: 2,
 			tradePartitionCount: 1,
 			minRoutesToCheck: 5,
+			maxRoutesToCheck: 20,
 			maxGasCost: BigInt(500_000_000), // 0.5 SUI
 			// maxGasCost: BigInt(333_333_333), // 0.333 SUI
 		},
@@ -168,43 +172,20 @@ export class RouterApi {
 	//  Graph
 	// =========================================================================
 
-	public fetchCreateSerializableGraph = async (inputs: {
-		asyncPools: RouterAsyncSerializablePool[];
-		synchronousProtocolsToPoolObjectIds: SynchronousProtocolsToPoolObjectIds;
-	}): Promise<RouterSerializableCompleteGraph> => {
-		return this.Helpers.fetchCreateSerializableGraph(inputs);
-	};
-
-	public fetchAsyncPools = async (): Promise<
-		RouterAsyncSerializablePool[]
-	> => {
-		return this.Helpers.AsyncHelpers.fetchAllPools({
-			protocols: this.protocols.filter(isRouterAsyncProtocolName),
-		});
-	};
-
-	public fetchSynchronousPoolIds =
-		async (): Promise<SynchronousProtocolsToPoolObjectIds> => {
-			return this.Helpers.SynchronousHelpers.fetchAllPoolIds({
-				protocols: this.protocols.filter(
-					isRouterSynchronousProtocolName
-				),
+	public fetchCreateSerializableGraph =
+		async (): Promise<RouterSerializableCompleteGraph> => {
+			const [asyncPools, synchronousPools] = await Promise.all([
+				this.fetchAsyncPools(),
+				this.fetchSynchronousPools(),
+			]);
+			return this.Helpers.fetchCreateSerializableGraph({
+				pools: [...asyncPools, ...synchronousPools],
 			});
 		};
 
 	// =========================================================================
 	//  Coin Paths
 	// =========================================================================
-
-	public supportedCoinPathsFromGraph = (inputs: {
-		graph: RouterSerializableCompleteGraph;
-	}) => {
-		const maxRouteLength = this.options.regular.synchronous.maxRouteLength;
-		return RouterGraph.supportedCoinPathsFromGraph({
-			...inputs,
-			maxRouteLength,
-		});
-	};
 
 	public supportedCoinsFromGraph = (inputs: {
 		graph: RouterSerializableCompleteGraph;
@@ -229,9 +210,12 @@ export class RouterApi {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
+		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
 			...inputs,
+			coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
+			coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
 			protocols: this.protocols,
 		});
 	};
@@ -249,9 +233,12 @@ export class RouterApi {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: RouterExternalFee;
+		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountOut({
 			...inputs,
+			coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
+			coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
 			protocols: this.protocols,
 		});
 	};
@@ -399,4 +386,24 @@ export class RouterApi {
 	public async fetchTradeEvents(inputs: UserEventsInputs) {
 		return this.Helpers.SynchronousHelpers.fetchTradeEvents(inputs);
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private fetchAsyncPools = async (): Promise<
+		RouterAsyncSerializablePool[]
+	> => {
+		return this.Helpers.AsyncHelpers.fetchAllPools({
+			protocols: this.protocols.filter(isRouterAsyncProtocolName),
+		});
+	};
+
+	private fetchSynchronousPools = async (): Promise<
+		RouterSynchronousSerializablePool[]
+	> => {
+		return this.Helpers.SynchronousHelpers.fetchAllPools({
+			protocols: this.protocols.filter(isRouterSynchronousProtocolName),
+		});
+	};
 }

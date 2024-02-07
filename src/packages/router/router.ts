@@ -5,7 +5,6 @@ import {
 	RouterCompleteTradeRoute,
 	RouterSerializableCompleteGraph,
 	RouterSynchronousSerializablePool,
-	RouterSupportedCoinPaths,
 	SuiNetwork,
 	Url,
 	ApiRouterTradeEventsBody,
@@ -15,8 +14,11 @@ import {
 	ObjectId,
 	Balance,
 	ApiRouterPartialCompleteTradeRouteBody,
+	ApiRouterAddTransactionForCompleteTradeRouteBody,
+	ApiRouterAddTransactionForCompleteTradeRouteResponse,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 /**
  * @class Router Provider
@@ -71,15 +73,6 @@ export class Router extends Caller {
 		return this.fetchApi("volume-24hrs");
 	};
 
-	/**
-	 * Queries all coins that router can trade between.
-	 *
-	 * @returns Mapping of coin type in to array of supported coin types out
-	 */
-	public async getSupportedCoinPaths() {
-		return this.fetchApi<RouterSupportedCoinPaths>("supported-coin-paths");
-	}
-
 	public async getSupportedCoins() {
 		return this.fetchApi<CoinType[]>("supported-coins");
 	}
@@ -91,16 +84,6 @@ export class Router extends Caller {
 	 */
 	public async getGraph() {
 		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
-	}
-
-	public async getAsyncPools() {
-		return this.fetchApi<RouterAsyncSerializablePool[]>("async-pools");
-	}
-
-	public async getSynchronousPoolIds() {
-		return this.fetchApi<Record<RouterSynchronousProtocolName, ObjectId[]>>(
-			"synchronous-pool-ids"
-		);
 	}
 
 	/**
@@ -175,6 +158,24 @@ export class Router extends Caller {
 			"transactions/trade",
 			inputs
 		);
+	}
+
+	public async addTransactionForCompleteTradeRoute(
+		inputs: Omit<
+			ApiRouterAddTransactionForCompleteTradeRouteBody,
+			"serializedTx"
+		> & {
+			tx: TransactionBlock;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApi<
+			ApiRouterAddTransactionForCompleteTradeRouteResponse,
+			ApiRouterAddTransactionForCompleteTradeRouteBody
+		>("transactions/add-trade", {
+			...otherInputs,
+			serializedTx: tx.serialize(),
+		});
 	}
 
 	// =========================================================================

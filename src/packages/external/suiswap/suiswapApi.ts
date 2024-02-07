@@ -71,38 +71,15 @@ export class SuiswapApi
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPoolIds = async () => {
-		return this.Provider.Events().fetchAllEvents({
-			fetchEventsFunc: (eventsInputs) =>
-				this.Provider.Events().fetchCastEventsWithCursor({
-					...eventsInputs,
-					query: {
-						MoveEventType: this.eventTypes.poolCreated,
-					},
-					eventFromEventOnChain: (eventOnChain) =>
-						SuiswapApi.suiswapPoolCreatedEventFromOnChain(
-							eventOnChain as SuiswapPoolCreateEventOnChain
-						).poolId,
-				}),
-		});
-	};
-
-	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
-		const { objectIds } = inputs;
-
-		const pools = await this.Provider.Objects().fetchCastObjectBatch({
-			objectIds,
-			objectFromSuiObjectResponse:
-				SuiswapApi.suiswapPoolObjectFromSuiObjectResponse,
-		});
-
-		const unlockedPools = pools.filter(
-			(pool) =>
-				!pool.isFrozen &&
-				pool.xValue > BigInt(0) &&
-				pool.yValue > BigInt(0)
-		);
-		return unlockedPools;
+	public fetchAllPools = async () => {
+		const pools = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				objectId: ObjectId;
+				type: AnyObjectType;
+				content: any;
+			}[]
+		>("router/pools/suiswap");
+		return pools.map(SuiswapApi.suiswapPoolObjectFromIndexer);
 	};
 
 	// =========================================================================
@@ -208,23 +185,23 @@ export class SuiswapApi
 	//  Casting
 	// =========================================================================
 
-	private static suiswapPoolObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): SuiswapPoolObject => {
-		const objectType = Helpers.getObjectType(data);
+	private static suiswapPoolObjectFromIndexer = (data: {
+		objectId: ObjectId;
+		type: AnyObjectType;
+		content: any;
+	}): SuiswapPoolObject => {
+		const objectType = Helpers.addLeadingZeroesToType(data.type);
 
 		const coinTypes = Coin.getInnerCoinType(objectType)
 			.replaceAll(" ", "")
 			.split(",")
 			.map((coin) => Helpers.addLeadingZeroesToType(coin));
 
-		const fields = Helpers.getObjectFields(
-			data
-		) as SuiswapPoolFieldsOnChain;
+		const fields = data.content as SuiswapPoolFieldsOnChain;
 
 		return {
 			objectType,
-			objectId: Helpers.getObjectId(data),
+			objectId: Helpers.addLeadingZeroesToType(data.objectId),
 			version: BigInt(fields.version),
 			owner: fields.owner,
 			index: BigInt(fields.index),
@@ -251,18 +228,6 @@ export class SuiswapApi
 			by: BigInt(fields.balance.fields.by),
 			coinTypeX: coinTypes[0],
 			coinTypeY: coinTypes[1],
-		};
-	};
-
-	private static suiswapPoolCreatedEventFromOnChain = (
-		eventOnChain: SuiswapPoolCreateEventOnChain
-	): SuiswapPoolCreateEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			poolId: fields.pool_id,
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
 		};
 	};
 }

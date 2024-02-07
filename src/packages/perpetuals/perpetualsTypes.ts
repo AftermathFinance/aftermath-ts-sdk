@@ -43,11 +43,6 @@ export enum PerpetualsOrderType {
 
 export const perpetualsBcsRegistry: typeof bcsRegistry = bcsRegistry;
 
-// NOTE: should this be moved elsewhere ?
-perpetualsBcsRegistry.registerStructType(["Option", "E"], {
-	vec: ["vector", "E"],
-});
-
 perpetualsBcsRegistry.registerStructType(["Field", "N", "V"], {
 	id: "UID",
 	name: "N",

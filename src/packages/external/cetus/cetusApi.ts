@@ -70,52 +70,18 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	// =========================================================================
 
 	public fetchAllPools = async (): Promise<CetusPoolObject[]> => {
-		const poolsSimpleInfo =
-			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				{
-					parentObjectId: this.addresses.objects.poolsTable,
-					objectsFromObjectIds: (objectIds) =>
-						this.Provider.Objects().fetchCastObjectBatch({
-							objectIds,
-							objectFromSuiObjectResponse:
-								CetusApi.poolSimpleInfoFromSuiObjectResponse,
-						}),
-				}
-			);
+		const uncastedPools = await this.Provider.indexerCaller.fetchIndexer<
+			CetusPoolObject[]
+		>("router/pools/cetus");
 
-		const poolsMoreInfo =
-			await this.Provider.Objects().fetchCastObjectBatch({
-				objectIds: poolsSimpleInfo.map((poolInfo) => poolInfo.id),
-				objectFromSuiObjectResponse: (data) => {
-					const fields = Helpers.getObjectFields(data);
-					if (!fields)
-						throw new Error("no fields found on cetus pool object");
-
-					const coinABalance = BigInt(fields.coin_a);
-					const coinBBalance = BigInt(fields.coin_b);
-					const isPaused = fields.is_pause as unknown as boolean;
-
-					return {
-						coinABalance,
-						coinBBalance,
-						isPaused,
-					};
-				},
-			});
-
-		const pools = poolsSimpleInfo.map((info, index) => ({
-			...info,
-			...poolsMoreInfo[index],
+		return uncastedPools.map((pool) => ({
+			coinABalance: BigInt(pool.coinABalance),
+			coinBBalance: BigInt(pool.coinBBalance),
+			coinTypeA: Helpers.addLeadingZeroesToType(pool.coinTypeA),
+			coinTypeB: Helpers.addLeadingZeroesToType(pool.coinTypeB),
+			isPaused: pool.isPaused,
+			id: Helpers.addLeadingZeroesToType(pool.id),
 		}));
-
-		const usablePools = pools.filter(
-			(pool) =>
-				!pool.isPaused &&
-				pool.coinABalance > BigInt(0) &&
-				pool.coinBBalance > BigInt(0)
-		);
-
-		return usablePools;
 	};
 
 	public filterPoolsForTrade = (inputs: {
@@ -408,27 +374,6 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 	// =========================================================================
 	//  Private Static Methods
 	// =========================================================================
-
-	// =========================================================================
-	//  Casting
-	// =========================================================================
-
-	private static poolSimpleInfoFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): CetusPoolSimpleInfo => {
-		const fields = Helpers.getObjectFields(data).value.fields.value
-			.fields as {
-			coin_type_a: TypeNameOnChain;
-			coin_type_b: TypeNameOnChain;
-			pool_id: ObjectId;
-		};
-
-		return {
-			coinTypeA: "0x" + fields.coin_type_a.fields.name,
-			coinTypeB: "0x" + fields.coin_type_b.fields.name,
-			id: fields.pool_id,
-		};
-	};
 
 	// =========================================================================
 	//  Helpers

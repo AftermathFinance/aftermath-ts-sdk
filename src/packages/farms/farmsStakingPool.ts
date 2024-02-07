@@ -1,5 +1,5 @@
 import {
-	Apy,
+	Apr,
 	Balance,
 	CoinType,
 	CoinsToDecimals,
@@ -108,12 +108,12 @@ export class FarmsStakingPool extends Caller {
 		}
 	};
 
-	public calcApy = (inputs: {
+	public calcApr = (inputs: {
 		coinType: CoinType;
 		price: number;
 		decimals: number;
 		tvlUsd: number;
-	}): Apy => {
+	}): Apr => {
 		const { coinType, price, decimals, tvlUsd } = inputs;
 
 		if (price <= 0 || tvlUsd <= 0) return 0;
@@ -137,26 +137,29 @@ export class FarmsStakingPool extends Caller {
 		const rewardsUsdOneYear =
 			emissionRateUsd * (oneYearMs / rewardCoin.emissionSchedulesMs);
 
-		const apy = rewardsUsdOneYear / tvlUsd;
-		return apy < 0 ? 0 : apy;
+		const apr =
+			rewardsUsdOneYear /
+			tvlUsd /
+			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
+		return apr < 0 ? 0 : apr;
 	};
 
-	public calcTotalApy = (inputs: {
+	public calcTotalApr = (inputs: {
 		coinsToPrice: CoinsToPrice;
 		coinsToDecimals: CoinsToDecimals;
 		tvlUsd: number;
-	}): Apy => {
+	}): Apr => {
 		const { coinsToPrice, coinsToDecimals, tvlUsd } = inputs;
 
-		const apys = this.rewardCoinTypes().map((coinType) =>
-			this.calcApy({
+		const aprs = this.rewardCoinTypes().map((coinType) =>
+			this.calcApr({
 				coinType,
 				price: coinsToPrice[coinType],
 				decimals: coinsToDecimals[coinType],
 				tvlUsd,
 			})
 		);
-		return Helpers.sum(apys);
+		return Helpers.sum(aprs);
 	};
 
 	public calcMultiplier = (inputs: {

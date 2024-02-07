@@ -77,55 +77,21 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================
 
 	public fetchAllPools = async (): Promise<TurbosPoolObject[]> => {
-		const poolsSimpleInfo =
-			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				{
-					parentObjectId: this.addresses.turbos.objects.poolsTable,
-					objectsFromObjectIds: (objectIds) =>
-						this.Provider.Objects().fetchCastObjectBatch({
-							objectIds,
-							objectFromSuiObjectResponse:
-								TurbosApi.partialPoolFromSuiObjectResponse,
-						}),
-				}
-			);
+		const uncastedPools = await this.Provider.indexerCaller.fetchIndexer<
+			TurbosPoolObject[]
+		>("router/pools/turbos");
 
-		const poolsMoreInfo =
-			await this.Provider.Objects().fetchCastObjectBatch({
-				objectIds: poolsSimpleInfo.map((poolInfo) => poolInfo.id),
-				objectFromSuiObjectResponse: (data) => {
-					const fields = Helpers.getObjectFields(data);
-					if (!fields)
-						throw new Error(
-							"no fields found on turbos pool object"
-						);
-
-					const sqrtPrice = BigInt(fields.sqrt_price);
-					const coinABalance = BigInt(fields.coin_a);
-					const coinBBalance = BigInt(fields.coin_b);
-					const isUnlocked = fields.unlocked as unknown as boolean;
-
-					return {
-						coinABalance,
-						coinBBalance,
-						isUnlocked,
-						sqrtPrice,
-					};
-				},
-			});
-
-		const completePools = poolsSimpleInfo.map((info, index) => ({
-			...info,
-			...poolsMoreInfo[index],
+		return uncastedPools.map((pool) => ({
+			coinABalance: BigInt(pool.coinABalance),
+			coinBBalance: BigInt(pool.coinBBalance),
+			fee: BigInt(pool.fee),
+			coinTypeA: Helpers.addLeadingZeroesToType(pool.coinTypeA),
+			coinTypeB: Helpers.addLeadingZeroesToType(pool.coinTypeB),
+			feeCoinType: Helpers.addLeadingZeroesToType(pool.feeCoinType),
+			isUnlocked: pool.isUnlocked,
+			id: Helpers.addLeadingZeroesToType(pool.id),
+			sqrtPrice: BigInt(pool.sqrtPrice),
 		}));
-		const usablePools = completePools.filter(
-			(pool) =>
-				pool.isUnlocked &&
-				pool.coinABalance > BigInt(0) &&
-				pool.coinBBalance > BigInt(0)
-		);
-
-		return usablePools;
 	};
 
 	public filterPoolsForTrade = (inputs: {
@@ -448,37 +414,6 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================
 	//  Private Static Methods
 	// =========================================================================
-
-	// =========================================================================
-	//  Casting
-	// =========================================================================
-
-	private static partialPoolFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): TurbosPartialPoolObject => {
-		const fields = Helpers.getObjectFields(data).value.fields as {
-			pool_id: ObjectId;
-			coin_type_a: TypeNameOnChain;
-			coin_type_b: TypeNameOnChain;
-			fee_type: TypeNameOnChain;
-			fee: BigIntAsString;
-			sqrt_price: BigIntAsString;
-		};
-
-		return {
-			id: fields.pool_id,
-			coinTypeA: Helpers.addLeadingZeroesToType(
-				"0x" + fields.coin_type_a.fields.name
-			),
-			coinTypeB: Helpers.addLeadingZeroesToType(
-				"0x" + fields.coin_type_b.fields.name
-			),
-			feeCoinType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.fee_type.fields.name
-			),
-			fee: BigInt(fields.fee),
-		};
-	};
 
 	// =========================================================================
 	//  Helpers

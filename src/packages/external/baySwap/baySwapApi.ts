@@ -62,31 +62,25 @@ export class BaySwapApi
 	//  Objects
 	// =========================================================================
 
-	public fetchAllPoolIds = async () => {
-		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
-			parentObjectId: this.addresses.objects.poolsBag,
-			objectsFromObjectIds: (objectIds) => objectIds,
-		});
-	};
+	public fetchAllPools = async (): Promise<BaySwapPoolObject[]> => {
+		// TODO
+		return [];
 
-	public fetchPoolsFromIds = async (inputs: {
-		objectIds: ObjectId[];
-	}): Promise<BaySwapPoolObject[]> => {
-		const { objectIds } = inputs;
+		// const { objectIds } = inputs;
 
-		const pools = await this.Provider.Objects().fetchCastObjectBatch({
-			objectIds,
-			objectFromSuiObjectResponse:
-				BaySwapApi.baySwapPoolObjectFromSuiObjectResponse,
-		});
+		// const pools = await this.Provider.Objects().fetchCastObjectBatch({
+		// 	objectIds,
+		// 	objectFromSuiObjectResponse:
+		// 		BaySwapApi.baySwapPoolObjectFromSuiObjectResponse,
+		// });
 
-		const unlockedPools = pools.filter(
-			(pool) =>
-				!pool.isLocked &&
-				pool.coinXReserveValue > BigInt(0) &&
-				pool.coinYReserveValue > BigInt(0)
-		);
-		return unlockedPools;
+		// const unlockedPools = pools.filter(
+		// 	(pool) =>
+		// 		!pool.isLocked &&
+		// 		pool.coinXReserveValue > BigInt(0) &&
+		// 		pool.coinYReserveValue > BigInt(0)
+		// );
+		// return unlockedPools;
 	};
 
 	// =========================================================================

@@ -9,6 +9,7 @@ import {
 	SuiAddress,
 	TxBytes,
 	BigIntAsString,
+	SerializedTransaction,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
@@ -35,6 +36,7 @@ import {
 	isFlowXPoolObject,
 } from "../external/flowX/flowXTypes";
 import { AfSuiRouterPoolObject, DynamicGasCoinData } from "../..";
+import { TransactionArgument } from "@mysten/sui.js/transactions";
 
 // =========================================================================
 //  Name Only
@@ -190,21 +192,20 @@ export interface RouterTradeCoin {
 // =========================================================================
 
 export interface RouterCompleteGraph {
-	coinNodes: RouterGraphCoinNodes;
+	coinNodes: RouterGraphCoinToPoolIds;
 	pools: RouterPoolsById;
 }
 
 export interface RouterSerializableCompleteGraph {
-	coinNodes: RouterGraphCoinNodes;
+	coinNodes: RouterGraphCoinToPoolIds;
 	pools: RouterSerializablePoolsById;
 }
-
-export type RouterSupportedCoinPaths = Record<CoinType, CoinType[]>;
 
 export interface RouterSynchronousOptions {
 	maxRouteLength: number;
 	tradePartitionCount: number;
 	minRoutesToCheck: number;
+	maxRoutesToCheck: number;
 	maxGasCost: bigint;
 }
 
@@ -232,15 +233,17 @@ export type RouterSerializablePoolsById = Record<
 	RouterSerializablePool
 >;
 
-export type RouterGraphCoinNodes = Record<CoinType, RouterCoinNode>;
+// export type RouterGraphCoinNodes = Record<CoinType, RouterCoinNode>;
 export type RouterPoolsById = Record<UniqueId, RouterPoolInterface>;
 
-export interface RouterCoinNode {
-	coin: CoinType;
-	coinOutThroughPoolEdges: RouterCoinOutThroughPoolEdges;
-}
+export type RouterGraphCoinToPoolIds = Record<CoinType, UniqueId[]>;
 
-export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
+// export interface RouterCoinNode {
+// 	coin: CoinType;
+// 	coinOutThroughPoolEdges: RouterCoinOutThroughPoolEdges;
+// }
+
+// export type RouterCoinOutThroughPoolEdges = Record<CoinType, UniqueId[]>;
 
 // =========================================================================
 //  Async Router Trade Results
@@ -294,6 +297,7 @@ export type ApiRouterPartialCompleteTradeRouteBody = {
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
 	externalFee?: RouterExternalFee;
+	excludeProtocols?: RouterProtocolName[];
 };
 
 /**
@@ -333,6 +337,17 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 */
 	slippage: Slippage;
 	isSponsoredTx?: boolean;
+}
+
+export type ApiRouterAddTransactionForCompleteTradeRouteBody =
+	ApiRouterTransactionForCompleteTradeRouteBody & {
+		serializedTx: SerializedTransaction;
+		coinInId?: TransactionArgument;
+	};
+
+export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
+	tx: SerializedTransaction;
+	coinOutId: TransactionArgument | undefined;
 }
 
 export type ApiRouterTradeEventsBody = ApiEventsBody & {

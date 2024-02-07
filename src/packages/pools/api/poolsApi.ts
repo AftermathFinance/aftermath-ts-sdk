@@ -203,51 +203,31 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	};
 
 	/**
-	 * Fetches an array of pool objects by their object IDs.
-	 * @async
-	 * @param {ObjectId[]} inputs.objectIds - An array of object IDs of the pools to fetch.
-	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of fetched pool objects.
-	 */
-	public fetchPoolsFromIds = async (inputs: { objectIds: ObjectId[] }) => {
-		return this.Provider.Objects().fetchCastObjectBatch({
-			...inputs,
-			objectFromSuiObjectResponse: Casting.pools.poolObjectFromSuiObject,
-		});
-	};
-
-	/**
 	 * Fetches all pool objects.
 	 * @async
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
-	public fetchAllPools = async () => {
-		const objectIds = await this.fetchAllPoolIds();
-		return this.fetchPoolsFromIds({ objectIds });
-	};
+	public fetchAllPools = async (isRouter?: true) => {
+		const uncastedPools = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				objectId: ObjectId;
+				type: AnyObjectType;
+				content: any;
+			}[]
+		>("router/pools/af");
 
-	/**
-	 * Fetches all pool object IDs.
-	 * @async
-	 * @returns {Promise<ObjectId[]>} A promise that resolves to an array of all fetched pool object IDs.
-	 */
-	public fetchAllPoolIds = async (): Promise<ObjectId[]> => {
-		const objectIds =
-			await this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
-				{
-					parentObjectId: this.addresses.pools.objects.lpCoinsTable,
-					objectsFromObjectIds: (objectIds) =>
-						this.Provider.Objects().fetchCastObjectBatch({
-							objectIds,
-							objectFromSuiObjectResponse:
-								PoolsApiCasting.poolObjectIdFromSuiObjectResponse,
-						}),
-				}
-			);
+		const pools = uncastedPools.map(PoolsApiCasting.poolObjectFromIndexer);
 
-		const filteredIds = objectIds.filter(
-			(id) => !PoolsApi.constants.blacklistedPoolIds.includes(id)
+		if (!isRouter) return pools;
+
+		const minSuiBalance = BigInt(1000_000_000_000); // 1000 SUI
+		return pools.filter(
+			(pool) =>
+				!Object.keys(pool.coins).some((coin) => Coin.isSuiCoin(coin)) ||
+				(Object.keys(pool.coins).some((coin) => Coin.isSuiCoin(coin)) &&
+					pool.coins[Coin.constants.suiCoinType].balance >=
+						minSuiBalance)
 		);
-		return filteredIds;
 	};
 
 	// =========================================================================
@@ -1391,7 +1371,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			volume *
 			FixedUtils.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
 
-		const apy = this.calcApy({
+		const apr = this.calcApr({
 			fees24Hours: fees,
 			tvl,
 		});
@@ -1402,7 +1382,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			supplyPerLps,
 			lpPrice,
 			fees,
-			apy,
+			apr,
 		};
 	};
 
@@ -1444,7 +1424,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param inputs - An object containing the pool's coins, their prices, and their decimal places.
 	 * @returns The total value locked (TVL) for the pool.
 	 */
-	public fetchCalcPoolTvl = async (inputs: {
+	public fetchCalcPoolTvl = (inputs: {
 		poolCoins: PoolCoins;
 		coinsToPrice: CoinsToPrice;
 		coinsToDecimals: Record<CoinType, CoinDecimal>;
@@ -1498,11 +1478,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	};
 
 	/**
-	 * Calculates the APY (Annual Percentage Yield) based on the fees collected in the last 24 hours and the TVL (Total Value Locked) of a pool.
+	 * Calculates the APR (Annual Percentage Rate) based on the fees collected in the last 24 hours and the TVL (Total Value Locked) of a pool.
 	 * @param inputs - An object containing the fees collected in the last 24 hours and the TVL of a pool.
-	 * @returns The APY (Annual Percentage Yield) of the pool.
+	 * @returns The APR (Annual Percentage Rate) of the pool.
 	 */
-	public calcApy = (inputs: { fees24Hours: number; tvl: number }): number => {
+	public calcApr = (inputs: { fees24Hours: number; tvl: number }): number => {
 		const { fees24Hours, tvl } = inputs;
 		// TODO: use daysjs instead
 		const daysInYear = 365;
