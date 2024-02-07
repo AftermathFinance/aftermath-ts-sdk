@@ -489,16 +489,6 @@ export class PerpetualsMarket extends Caller {
 			// reversing position
 
 			// TODO: use correct calculations
-			const executionPriceForReversing = sizeFilledForReversing
-				? sizeFilledForReversingUsd / sizeFilledForReversing
-				: 0;
-			const collateralForFilledForReversing =
-				(sizeFilledForReversing * executionPriceForReversing * imr) /
-				collateralPrice;
-
-			collateralRequired =
-				(1 + marginOfError) *
-				(collateralForFilledForReversing + collateralForPosted);
 
 			// const executionPriceForReversing = sizeFilledForReversing
 			// 	? sizeFilledForReversingUsd / sizeFilledForReversing
@@ -507,19 +497,42 @@ export class PerpetualsMarket extends Caller {
 			// 	(sizeFilledForReversing * executionPriceForReversing * imr) /
 			// 	collateralPrice;
 
+			// collateralRequired =
+			// 	(1 + marginOfError) *
+			// 	(collateralForFilledForReversing + collateralForPosted);
+
+			const executionPriceForReversing = sizeFilledForReversing
+				? sizeFilledForReversingUsd / sizeFilledForReversing
+				: 0;
+			const collateralForFilledForReversing =
+				(sizeFilledForReversing * executionPriceForReversing * imr) /
+				collateralPrice;
+
+			const collateralForUnrealizedPnlForReversing =
+				(sizeFilledForReversing *
+					Math.max(
+						0,
+						side === PerpetualsOrderSide.Bid
+							? executionPriceForReversing - indexPrice
+							: indexPrice - executionPriceForReversing
+					)) /
+				collateralPrice;
+
 			// const positionFreeMargin =
 			// 	account.calcFreeMarginUsdForPosition({
 			// 		...inputs,
 			// 		market: this,
 			// 	}) * collateralPrice;
 
-			// const collateralChange =
-			// 	collateralForPosted +
-			// 	(collateralForFilledForReversing - positionFreeMargin);
-			// return (
-			// 	(1 + marginOfError * (collateralChange > 0 ? 1 : -1)) *
-			// 	collateralChange
-			// );
+			const collateralChange =
+				collateralForPosted +
+				(collateralForFilledForReversing +
+					// - positionFreeMargin
+					collateralForUnrealizedPnlForReversing);
+			return (
+				(1 + marginOfError * (collateralChange > 0 ? 1 : -1)) *
+				collateralChange
+			);
 		} else {
 			// reducing position
 			return 0;
