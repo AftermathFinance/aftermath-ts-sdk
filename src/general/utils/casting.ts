@@ -88,11 +88,12 @@ export class Casting {
 	public static unwrapDeserializedOption = (
 		deserializedData: any
 	): any | undefined => {
-		return "vec" in deserializedData
-			? deserializedData.vec.length > 0
-				? deserializedData.vec[0]
-				: undefined
-			: undefined;
+		// return "vec" in deserializedData
+		// 	? deserializedData.vec.length > 0
+		// 		? deserializedData.vec[0]
+		// 		: undefined
+		// 	: undefined;
+		return "Some" in deserializedData ? deserializedData.Some : undefined;
 	};
 
 	public static u8VectorFromString = (str: string) => {
