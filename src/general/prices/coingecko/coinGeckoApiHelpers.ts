@@ -155,7 +155,7 @@ export class CoinGeckoApiHelpers {
 	//  Current Prices
 	// =========================================================================
 
-	public fetchCoinsToPriceInfo = async (inputs: {
+	public fetchCoinsToPriceInfoInternal = async (inputs: {
 		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
 	}): Promise<Record<CoinType, CoinPriceInfo>> => {
 		const { coinsToApiId } = inputs;

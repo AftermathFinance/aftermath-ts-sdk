@@ -83,7 +83,9 @@ export class Casting {
 		);
 
 	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
-		"0x" + bcs.de("address", new Uint8Array(bytes));
+		Helpers.addLeadingZeroesToType(
+			"0x" + bcs.de("address", new Uint8Array(bytes))
+		);
 
 	public static unwrapDeserializedOption = (
 		deserializedData: any

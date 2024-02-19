@@ -38,11 +38,13 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 	//  Interface Methods
 	// =========================================================================
 
-	public fetchPrice = async (coin: CoinType) => {
-		return (await this.fetchPrices([coin]))[0];
+	public fetchPrice = async (inputs: { coin: CoinType }) => {
+		return (await this.fetchPrices([inputs.coin]))[0];
 	};
 
-	public fetchCoinsToPrice = async (coins: CoinType[]) => {
+	public fetchCoinsToPrice = async (inputs: { coins: CoinType[] }) => {
+		const { coins } = inputs;
+
 		const prices = await this.fetchPrices(coins);
 
 		const coinsToPrice: Record<CoinType, number> = coins.reduce(
@@ -58,14 +60,14 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 	};
 
 	public fetchCoinsToPriceInfo = async (inputs: {
-		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
+		coins: CoinType[];
 	}): Promise<Record<CoinType, CoinPriceInfo>> => {
-		const { coinsToApiId } = inputs;
-		if (Object.keys(coinsToApiId).length <= 0) return {};
+		const { coins } = inputs;
+		if (coins.length <= 0) return {};
 
-		const coinsToPrice = await this.fetchCoinsToPrice(
-			Object.keys(inputs.coinsToApiId)
-		);
+		const coinsToPrice = await this.fetchCoinsToPrice({
+			coins,
+		});
 
 		const coinsInfo = Object.entries(coinsToPrice).reduce(
 			(acc, [coin, price]) => ({
@@ -97,23 +99,6 @@ export class PlaceholderPricesApi implements PricesApiInterface {
 			{}
 		);
 	}
-
-	// public fetchPriceGivenApiId = async (inputs: {
-	// 	coinType: CoinType;
-	// 	coinApiId: CoinGeckoCoinApiId;
-	// }): Promise<number> => {
-	// 	const charCode = inputs.coinType.charCodeAt(0);
-	// 	return isNaN(charCode) ? 0 : charCode;
-	// };
-
-	// public fetchCoinsToPriceGivenApiIds = async (inputs: {
-	// 	coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
-	// }): Promise<Record<CoinType, number>> => {
-	// 	const coinsToPrice = await this.fetchCoinsToPrice(
-	// 		Object.keys(inputs.coinsToApiId)
-	// 	);
-	// 	return coinsToPrice;
-	// };
 
 	// =========================================================================
 	//  Private

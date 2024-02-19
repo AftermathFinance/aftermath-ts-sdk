@@ -1,3 +1,5 @@
+import { CoinSymbol } from "../../types";
+import { CoinGeckoCoinSymbolData } from "../prices/coingecko/coinGeckoTypes";
 import { HistoricalDataApiInterface } from "./historicalDataApiInterface";
 import { CoinHistoricalData } from "./historicalDataTypes";
 

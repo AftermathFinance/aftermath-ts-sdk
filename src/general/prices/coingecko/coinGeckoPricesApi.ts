@@ -4,11 +4,13 @@ import {
 	CoinSymbolsToPriceInfo,
 	CoinType,
 	CoinsToPrice,
+	CoinsToPriceInfo,
 } from "../../../types";
+import { AftermathApi } from "../../providers";
 import { Helpers } from "../../utils";
 import { PricesApiInterface } from "../pricesApiInterface";
 import { CoinGeckoApiHelpers } from "./coinGeckoApiHelpers";
-import { CoinGeckoCoinApiId } from "./coinGeckoTypes";
+import { CoinGeckoCoinApiId, CoinGeckoCoinSymbolData } from "./coinGeckoTypes";
 
 export class CoinGeckoPricesApi
 	extends CoinGeckoApiHelpers
@@ -19,6 +21,7 @@ export class CoinGeckoPricesApi
 	// =========================================================================
 
 	constructor(
+		private readonly Provider: AftermathApi,
 		coinGeckoApiKey: string,
 		coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>
 	) {
@@ -37,11 +40,17 @@ export class CoinGeckoPricesApi
 	//  Interface Methods
 	// =========================================================================
 
-	public fetchPrice = async (coin: string): Promise<number> => {
-		return Object.values(await this.fetchCoinsToPrice([coin]))[0];
+	public fetchPrice = async (inputs: { coin: CoinType }): Promise<number> => {
+		return Object.values(
+			await this.fetchCoinsToPrice({
+				coins: [inputs.coin],
+			})
+		)[0];
 	};
 
-	public fetchCoinsToPrice = async (coins: CoinType[]) => {
+	public fetchCoinsToPrice = async (inputs: { coins: CoinType[] }) => {
+		const { coins } = inputs;
+
 		const allCoinsData = await this.fetchAllSuiCoinData();
 		const onlyInputCoinsData = Helpers.filterObject(allCoinsData, (coin) =>
 			coins
@@ -77,32 +86,108 @@ export class CoinGeckoPricesApi
 		};
 	};
 
-	public async fetchCoinSymbolsToPriceInfo(inputs: {
-		coinSymbolsToApiId: Record<CoinSymbol, CoinGeckoCoinApiId>;
-	}): Promise<CoinSymbolsToPriceInfo> {
-		return this.fetchCoinsToPriceInfo({
-			coinsToApiId: inputs.coinSymbolsToApiId,
-		});
-	}
+	public fetchCoinsToPriceInfo = this.Provider.withCache({
+		key: "fetchCoinsToPriceInfo",
+		expirationSeconds: 300, // 5 minutes
+		callback: async (inputs: {
+			coins: CoinType[];
+		}): Promise<Record<CoinType, CoinPriceInfo>> => {
+			const { coins } = inputs;
+
+			// filter regular vs LP coins
+			const [lpCoins, regularCoins] = await Helpers.bifilterAsync(
+				coins,
+				async (coin) => {
+					try {
+						await this.Provider.Pools().fetchPoolObjectIdForLpCoinType(
+							{
+								lpCoinType: coin,
+							}
+						);
+						return true;
+					} catch (e) {
+						return false;
+					}
+				}
+			);
+
+			let coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
+
+			const allSuiCoinData: Record<CoinSymbol, CoinGeckoCoinSymbolData> =
+				await this.fetchAllSuiCoinData();
+			const neededCoinData = Helpers.filterObject(
+				allSuiCoinData,
+				(coin) =>
+					regularCoins
+						.map(Helpers.addLeadingZeroesToType)
+						.includes(Helpers.addLeadingZeroesToType(coin))
+			);
+
+			coinsToApiId = Object.entries(neededCoinData).reduce(
+				(acc, [coin, data]) => ({
+					...acc,
+					[coin]: data.apiId,
+				}),
+				{}
+			);
+
+			// get coin price info for regular coins and calc info for LP coins
+			const [regularCoinsToPriceInfo, lpCoinsToPrice] = await Promise.all(
+				[
+					this.fetchCoinsToPriceInfoInternal({ coinsToApiId }),
+					this.Provider.Pools().fetchLpCoinsToPrice({ lpCoins }),
+				]
+			);
+
+			const lpCoinsToPriceInfo: CoinsToPriceInfo = Object.entries(
+				lpCoinsToPrice
+			).reduce(
+				(acc, [coin, price]) => ({
+					...acc,
+					[coin]: {
+						price,
+						priceChange24HoursPercentage: 0,
+					},
+				}),
+				{}
+			);
+
+			// fill in missing any price info data
+			const missingRegularCoins: CoinsToPriceInfo = regularCoins.reduce(
+				(acc, coin) =>
+					Helpers.addLeadingZeroesToType(coin) in
+					regularCoinsToPriceInfo
+						? acc
+						: {
+								...acc,
+								[Helpers.addLeadingZeroesToType(coin)]: {
+									price: -1,
+									priceChange24HoursPercentage: 0,
+								},
+						  },
+				{}
+			);
+
+			// merge all collected data
+			const allInfo: CoinsToPriceInfo = {
+				...missingRegularCoins,
+				...lpCoinsToPriceInfo,
+				...regularCoinsToPriceInfo,
+			};
+			return allInfo;
+		},
+	});
 
 	// =========================================================================
 	//  Non-Interface Methods
 	// =========================================================================
 
-	public fetchPriceGivenApiId = async (inputs: {
-		coinType: CoinType;
-		coinApiId: CoinGeckoCoinApiId;
-	}): Promise<number> => {
-		const priceInfo = await this.fetchCoinsToPriceInfo({
-			coinsToApiId: { [inputs.coinType]: inputs.coinApiId },
-		});
-		return Object.values(priceInfo)[0].price;
-	};
-
 	public fetchCoinsToPriceGivenApiIds = async (inputs: {
 		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
 	}): Promise<Record<CoinType, number>> => {
-		const coinsToPriceInfo = await this.fetchCoinsToPriceInfo(inputs);
+		const coinsToPriceInfo = await this.fetchCoinsToPriceInfoInternal(
+			inputs
+		);
 		const coinsToPrice: CoinsToPrice = Object.entries(
 			coinsToPriceInfo
 		).reduce(
