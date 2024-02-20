@@ -34,7 +34,11 @@ export class CoinApi {
 	public fetchCoinMetadata = this.Provider.withCache({
 		key: "fetchCoinMetadata",
 		expirationSeconds: -1,
-		callback: async (coin: CoinType): Promise<CoinMetadaWithInfo> => {
+		callback: async (inputs: {
+			coin: CoinType;
+		}): Promise<CoinMetadaWithInfo> => {
+			const { coin } = inputs;
+
 			try {
 				const coinMetadata =
 					await this.Provider.provider.getCoinMetadata({
@@ -96,7 +100,7 @@ export class CoinApi {
 				coins.map(
 					async (coin) =>
 						(
-							await this.fetchCoinMetadata(coin)
+							await this.fetchCoinMetadata({ coin })
 						).decimals
 				)
 			);

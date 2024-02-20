@@ -189,11 +189,11 @@ export class AftermathApi {
 	public withCache = <Input, Output>(inputs: {
 		key: string;
 		expirationSeconds: number; // < 0 means never expires
-		callback: (inputs: Input) => Promise<Output>;
-	}): ((inputs: Input) => Promise<Output>) => {
+		callback: (...inputs: Input[]) => Promise<Output>;
+	}): ((...inputs: Input[]) => Promise<Output>) => {
 		const { key, expirationSeconds, callback } = inputs;
 
-		const fetchFunc = async (inputs: Input): Promise<Output> => {
+		const fetchFunc = async (...inputs: Input[]): Promise<Output> => {
 			// this allows BigInt to be JSON serialized (as string)
 			(BigInt.prototype as any).toJSON = function () {
 				return this.toString() + "n";
@@ -212,7 +212,7 @@ export class AftermathApi {
 				return this.cache[cacheKey].data as Output;
 			}
 
-			const newData = await callback(inputs);
+			const newData = await callback(...inputs);
 
 			this.cache[cacheKey] = {
 				data: newData,
