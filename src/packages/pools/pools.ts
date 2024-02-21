@@ -15,6 +15,8 @@ import {
 	SuiNetwork,
 	Url,
 	ObjectId,
+	PoolStats,
+	ApiPoolsStatsBody,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -198,6 +200,17 @@ export class Pools extends Caller {
 	public getTotalVolume24hrs = async (): Promise<number> => {
 		return this.fetchApi("volume-24hrs");
 	};
+
+	/**
+	 * Fetches statistics for pools.
+	 * @async
+	 * @returns {Promise<PoolStats[]>} The statistics for pools.
+	 */
+	public async getPoolsStats(
+		inputs: ApiPoolsStatsBody
+	): Promise<PoolStats[]> {
+		return this.fetchApi("stats", inputs);
+	}
 
 	// =========================================================================
 	//  Fees
