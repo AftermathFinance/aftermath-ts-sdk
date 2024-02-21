@@ -21,6 +21,7 @@ import {
 	RouterProtocolName,
 	RouterSynchronousOptions,
 	ScallopProviders,
+	UniqueId,
 	Url,
 } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
@@ -41,6 +42,15 @@ import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leverag
  * @class
  */
 export class AftermathApi {
+	private cache: Record<
+		UniqueId,
+		{
+			data: unknown;
+			expirationMs: number;
+			lastUsed: number;
+		}
+	>;
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
@@ -85,8 +95,15 @@ export class AftermathApi {
 		public readonly provider: SuiClient,
 		public readonly addresses: ConfigAddresses,
 		public readonly indexerCaller: IndexerCaller,
-		private readonly coinGeckoApiKey?: string
-	) {}
+		private readonly config?: {
+			prices?: {
+				coinGeckoApiKey?: string;
+				coinApiIdsToCoinTypes?: Record<CoinGeckoCoinApiId, CoinType[]>;
+			};
+		}
+	) {
+		this.cache = {};
+	}
 
 	// =========================================================================
 	//  Class Object Creation
@@ -109,19 +126,20 @@ export class AftermathApi {
 	public Wallet = () => new WalletApi(this);
 	public DynamicGas = () => new DynamicGasApi(this);
 
-	public Prices = this.coinGeckoApiKey
-		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+	public Prices = this?.config?.prices?.coinGeckoApiKey
+		? () =>
 				new CoinGeckoPricesApi(
-					this.coinGeckoApiKey ?? "",
-					coinApiIdsToCoinTypes
+					this,
+					this?.config?.prices?.coinGeckoApiKey ?? "",
+					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
 				)
 		: () => new PlaceholderPricesApi();
 
-	public HistoricalData = this.coinGeckoApiKey
-		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+	public HistoricalData = this?.config?.prices?.coinGeckoApiKey
+		? () =>
 				new HistoricalDataApi(
-					this.coinGeckoApiKey ?? "",
-					coinApiIdsToCoinTypes
+					this?.config?.prices?.coinGeckoApiKey ?? "",
+					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
 				)
 		: () => new PlaceholderHistoricalDataApi();
 
@@ -163,4 +181,48 @@ export class AftermathApi {
 
 	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
 		new LeveragedStakingApi(this, ScallopProviders);
+
+	// =========================================================================
+	//  Cache
+	// =========================================================================
+
+	public withCache = <Input, Output>(inputs: {
+		key: string;
+		expirationSeconds: number; // < 0 means never expires
+		callback: (...inputs: Input[]) => Promise<Output>;
+	}): ((...inputs: Input[]) => Promise<Output>) => {
+		const { key, expirationSeconds, callback } = inputs;
+
+		const fetchFunc = async (...inputs: Input[]): Promise<Output> => {
+			// this allows BigInt to be JSON serialized (as string)
+			(BigInt.prototype as any).toJSON = function () {
+				return this.toString() + "n";
+			};
+
+			// TODO: hash me
+			const cacheKey = `${key}_${JSON.stringify(inputs)}`;
+
+			if (
+				cacheKey in this.cache &&
+				(this.cache[cacheKey].lastUsed +
+					this.cache[cacheKey].expirationMs >=
+					Date.now() ||
+					expirationSeconds < 0)
+			) {
+				return this.cache[cacheKey].data as Output;
+			}
+
+			const newData = await callback(...inputs);
+
+			this.cache[cacheKey] = {
+				data: newData,
+				lastUsed: Date.now(),
+				expirationMs: expirationSeconds * 1000, // convert to ms
+			};
+
+			return newData;
+		};
+
+		return fetchFunc;
+	};
 }

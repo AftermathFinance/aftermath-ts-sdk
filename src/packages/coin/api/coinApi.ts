@@ -7,8 +7,10 @@ import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	Balance,
+	CoinDecimal,
 	CoinMetadaWithInfo,
 	CoinType,
+	CoinsToDecimals,
 	ObjectId,
 	SuiAddress,
 } from "../../../types";
@@ -29,54 +31,87 @@ export class CoinApi {
 	//  Inspections
 	// =========================================================================
 
-	public fetchCoinMetadata = async (
-		coin: CoinType
-	): Promise<CoinMetadaWithInfo> => {
-		try {
-			const coinMetadata = await this.Provider.provider.getCoinMetadata({
-				coinType: Helpers.stripLeadingZeroesFromType(coin),
-			});
-			if (coinMetadata === null) throw new Error("coin metadata is null");
+	public fetchCoinMetadata = this.Provider.withCache({
+		key: "fetchCoinMetadata",
+		expirationSeconds: -1,
+		callback: async (inputs: {
+			coin: CoinType;
+		}): Promise<CoinMetadaWithInfo> => {
+			const { coin } = inputs;
 
-			return {
-				...coinMetadata,
-				isGenerated: false,
-			};
-		} catch (error) {
 			try {
-				const lpCoinType = coin;
+				const coinMetadata =
+					await this.Provider.provider.getCoinMetadata({
+						coinType: Helpers.stripLeadingZeroesFromType(coin),
+					});
+				if (coinMetadata === null)
+					throw new Error("coin metadata is null");
 
-				await this.Provider.Pools().fetchPoolObjectIdForLpCoinType({
-					lpCoinType,
-				});
-				return this.createLpCoinMetadata({ lpCoinType });
-			} catch (e) {}
+				return {
+					...coinMetadata,
+					isGenerated: false,
+				};
+			} catch (error) {
+				try {
+					const lpCoinType = coin;
 
-			const maxSymbolLength = 10;
-			const maxPackageNameLength = 24;
+					await this.Provider.Pools().fetchPoolObjectIdForLpCoinType({
+						lpCoinType,
+					});
+					return this.createLpCoinMetadata({ lpCoinType });
+				} catch (e) {}
 
-			const coinClass = new Coin(coin);
-			const symbol = coinClass.coinTypeSymbol
-				.toUpperCase()
-				.slice(0, maxSymbolLength);
-			const packageName = coinClass.coinTypePackageName.slice(
-				0,
-				maxPackageNameLength
+				const maxSymbolLength = 10;
+				const maxPackageNameLength = 24;
+
+				const coinClass = new Coin(coin);
+				const symbol = coinClass.coinTypeSymbol
+					.toUpperCase()
+					.slice(0, maxSymbolLength);
+				const packageName = coinClass.coinTypePackageName.slice(
+					0,
+					maxPackageNameLength
+				);
+				return {
+					symbol,
+					id: null,
+					description: `${symbol} (${packageName})`,
+					name: symbol
+						.split("_")
+						.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
+						.join(" "),
+					decimals: 9,
+					iconUrl: null,
+					isGenerated: true,
+				};
+			}
+		},
+	});
+
+	public fetchCoinsToDecimals = this.Provider.withCache({
+		key: "fetchCoinsToDecimals",
+		expirationSeconds: -1,
+		callback: async (inputs: {
+			coins: CoinType[];
+		}): Promise<CoinsToDecimals> => {
+			const { coins } = inputs;
+
+			const allDecimals = await Promise.all(
+				coins.map(
+					async (coin) =>
+						(
+							await this.fetchCoinMetadata({ coin })
+						).decimals
+				)
 			);
-			return {
-				symbol,
-				id: null,
-				description: `${symbol} (${packageName})`,
-				name: symbol
-					.split("_")
-					.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
-					.join(" "),
-				decimals: 9,
-				iconUrl: null,
-				isGenerated: true,
-			};
-		}
-	};
+
+			const coinsToDecimals: Record<CoinType, CoinDecimal> =
+				allDecimals.reduce((acc, decimals, index) => {
+					return { ...acc, [coins[index]]: decimals };
+				}, {});
+			return coinsToDecimals;
+		},
+	});
 
 	// =========================================================================
 	//  Transaction Builders

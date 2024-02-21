@@ -172,8 +172,10 @@ export class RouterApi {
 	//  Graph
 	// =========================================================================
 
-	public fetchCreateSerializableGraph =
-		async (): Promise<RouterSerializableCompleteGraph> => {
+	public fetchCreateSerializableGraph = this.Provider.withCache({
+		key: "fetchCreateSerializableGraph",
+		expirationSeconds: 60,
+		callback: async (): Promise<RouterSerializableCompleteGraph> => {
 			const [asyncPools, synchronousPools] = await Promise.all([
 				this.fetchAsyncPools(),
 				this.fetchSynchronousPools(),
@@ -181,7 +183,8 @@ export class RouterApi {
 			return this.Helpers.fetchCreateSerializableGraph({
 				pools: [...asyncPools, ...synchronousPools],
 			});
-		};
+		},
+	});
 
 	// =========================================================================
 	//  Coin Paths

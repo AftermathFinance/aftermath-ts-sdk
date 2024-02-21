@@ -217,6 +217,42 @@ export class FarmsApi {
 		};
 	};
 
+	public fetchStakingPools = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<FarmsStakingPoolObject[]> => {
+		const partialStakingPools =
+			await this.Provider.Objects().fetchCastObjectBatch({
+				...inputs,
+				objectFromSuiObjectResponse:
+					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
+			});
+
+		const [isUnlockedForPools, remainingRewardsForPools] =
+			await Promise.all([
+				this.fetchIsUnlockedForStakingPools({
+					stakingPoolIds: inputs.objectIds,
+					stakeCoinTypes: partialStakingPools.map(
+						(pool) => pool.stakeCoinType
+					),
+				}),
+				this.fetchRemainingRewardsForStakingPools({
+					stakingPoolIds: inputs.objectIds,
+					stakeCoinTypes: partialStakingPools.map(
+						(pool) => pool.stakeCoinType
+					),
+				}),
+			]);
+
+		return partialStakingPools.map((partialStakingPool, poolIndex) => ({
+			...partialStakingPool,
+			isUnlocked: isUnlockedForPools[poolIndex],
+			rewardCoins: partialStakingPool.rewardCoins.map((coin, index) => ({
+				...coin,
+				rewardsRemaining: remainingRewardsForPools[poolIndex][index],
+			})),
+		}));
+	};
+
 	public fetchAllStakingPools = async (): Promise<
 		FarmsStakingPoolObject[]
 	> => {
@@ -1247,37 +1283,77 @@ export class FarmsApi {
 		stakingPoolId: ObjectId;
 		stakeCoinType: CoinType;
 	}): Promise<boolean> {
-		const tx = new TransactionBlock();
-		this.isVaultUnlockedTx({
-			...inputs,
-			tx,
-		});
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
-
-		const isUnlocked: boolean = bcs.de("bool", new Uint8Array(bytes));
-		return isUnlocked;
+		return (
+			await this.fetchIsUnlockedForStakingPools({
+				stakingPoolIds: [inputs.stakingPoolId],
+				stakeCoinTypes: [inputs.stakeCoinType],
+			})
+		)[0];
 	}
 
 	public async fetchStakingPoolRemainingRewards(inputs: {
 		stakingPoolId: ObjectId;
 		stakeCoinType: CoinType;
 	}): Promise<Balance[]> {
+		return (
+			await this.fetchRemainingRewardsForStakingPools({
+				stakingPoolIds: [inputs.stakingPoolId],
+				stakeCoinTypes: [inputs.stakeCoinType],
+			})
+		)[0];
+	}
+
+	public async fetchIsUnlockedForStakingPools(inputs: {
+		stakingPoolIds: ObjectId[];
+		stakeCoinTypes: CoinType[];
+	}): Promise<boolean[]> {
 		const tx = new TransactionBlock();
-		this.remainingRewardsTx({
-			...inputs,
-			tx,
-		});
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+
+		for (const [index, stakingPoolId] of inputs.stakingPoolIds.entries()) {
+			this.isVaultUnlockedTx({
+				tx,
+				stakingPoolId,
+				stakeCoinType: inputs.stakeCoinTypes[index],
+			});
+		}
+
+		const { allBytes } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
 				tx,
 			});
 
-		return (
-			bcs.de("vector<u64>", new Uint8Array(bytes)) as BigIntAsString[]
-		).map((num) => BigInt(num));
+		return allBytes.map((bytes) =>
+			bcs.de("bool", new Uint8Array(bytes[0]))
+		);
+	}
+
+	public async fetchRemainingRewardsForStakingPools(inputs: {
+		stakingPoolIds: ObjectId[];
+		stakeCoinTypes: CoinType[];
+	}): Promise<Balance[][]> {
+		const tx = new TransactionBlock();
+
+		for (const [index, stakingPoolId] of inputs.stakingPoolIds.entries()) {
+			this.remainingRewardsTx({
+				tx,
+				stakingPoolId,
+				stakeCoinType: inputs.stakeCoinTypes[index],
+			});
+		}
+
+		const { allBytes } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
+				tx,
+			});
+
+		return allBytes.map((bytes) =>
+			(
+				bcs.de(
+					"vector<u64>",
+					new Uint8Array(bytes[0])
+				) as BigIntAsString[]
+			).map((num) => BigInt(num))
+		);
 	}
 
 	// =========================================================================
