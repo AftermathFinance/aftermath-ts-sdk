@@ -4,6 +4,8 @@ import { Casting, Helpers } from "../utils";
 import { SuiObjectDataOptions, SuiObjectResponse } from "@mysten/sui.js/client";
 import { BcsTypeName } from "../types/castingTypes";
 import { bcsRegistry } from "@mysten/sui.js/bcs";
+import { TransactionObjectArgument } from "@scallop-io/sui-kit";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -272,6 +274,44 @@ export class ObjectsApiHelpers {
 		return Casting.castObjectBcs({
 			...inputs,
 			suiObjectResponse: suiObjectResponse,
+		});
+	};
+
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
+
+	public burnObjectTx = async (inputs: {
+		tx: TransactionBlock;
+		object: TransactionObjectArgument;
+	}): Promise<TransactionObjectArgument> => {
+		const { tx, object } = inputs;
+
+		return tx.transferObjects(
+			[object],
+			// not using constants because of strange build bug on frontend otherwise
+			// tx.pure(Sui.constants.addresses.zero)
+			tx.pure("0x0")
+		);
+	};
+
+	public publicShareObjectTx = async (inputs: {
+		tx: TransactionBlock;
+		object: TransactionObjectArgument;
+		objectType: AnyObjectType;
+	}): Promise<TransactionObjectArgument> => {
+		const { tx, object, objectType } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				// not using constants because of strange build bug on frontend otherwise
+				// Sui.constants.addresses.suiPackageId,
+				"0x2",
+				"transfer",
+				"public_share_object"
+			),
+			typeArguments: [objectType],
+			arguments: [object],
 		});
 	};
 }

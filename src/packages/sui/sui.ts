@@ -9,6 +9,8 @@ export class Sui extends Caller {
 
 	public static readonly constants = {
 		addresses: {
+			zero:
+				"0x0000000000000000000000000000000000000000000000000000000000000000",
 			suiPackageId:
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
 			suiSystemStateId:

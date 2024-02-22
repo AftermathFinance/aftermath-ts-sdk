@@ -237,6 +237,7 @@ export interface ApiCreatePoolBody {
 	respectDecimals: boolean;
 	forceLpDecimals?: CoinDecimal;
 	isSponsoredTx?: boolean;
+	burnLpCoin?: boolean;
 }
 
 // =========================================================================

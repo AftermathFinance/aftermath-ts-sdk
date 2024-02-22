@@ -99,6 +99,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			events: "events",
 			poolRegistry: "pool_registry",
 			routerWrapper: "router",
+			poolFactory: "pool_factory",
 		},
 		eventNames: {
 			swap: "SwapEvent",
@@ -107,7 +108,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		},
 		defaultLpCoinIconImageUrl:
 			"https://aftermath.finance/coins/lp/af_lp.svg",
-		blacklistedPoolIds: [""],
 	};
 
 	// =========================================================================
@@ -121,6 +121,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
 		routerWrapper?: AftermathRouterWrapperAddresses;
+	};
+	public readonly objectTypes: {
+		pool: AnyObjectType;
 	};
 	public readonly eventTypes: {
 		trade: AnyObjectType;
@@ -173,6 +176,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			pools,
 			referralVault,
 			routerWrapper,
+		};
+		this.objectTypes = {
+			pool: `${pools.packages.events}::pool::Pool`,
 		};
 		this.eventTypes = {
 			trade: this.tradeEventType(),
@@ -409,6 +415,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		respectDecimals: boolean;
 		forceLpDecimals?: CoinDecimal;
 		isSponsoredTx?: boolean;
+		burnLpCoin?: boolean;
 	}): Promise<TransactionBlock> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
@@ -778,8 +785,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		forceLpDecimals?: CoinDecimal;
 		lpCoinIconUrl: Url;
 		isSponsoredTx?: boolean;
+		burnLpCoin?: boolean;
 	}): Promise<TransactionBlock> => {
-		const { coinsInfo, isSponsoredTx } = inputs;
+		const { coinsInfo, isSponsoredTx, burnLpCoin, lpCoinType } = inputs;
 
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -821,7 +829,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			isSponsoredTx,
 		});
 
-		await this.createPoolTx({
+		const createPoolTxArgs = {
 			tx,
 			...inputs,
 			// createPoolCapId,
@@ -832,7 +840,27 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				};
 			}),
 			lpCoinDescription,
-		});
+		};
+
+		if (burnLpCoin) {
+			const [poolId, lpCoinId] = await this.createPoolTx(
+				createPoolTxArgs
+			);
+			this.Provider.Objects().publicShareObjectTx({
+				tx,
+				object: poolId,
+				objectType: `${this.objectTypes.pool}<${lpCoinType}>`,
+			});
+			this.Provider.Objects().burnObjectTx({
+				tx,
+				object: lpCoinId,
+			});
+		} else {
+			await this.createPoolTx({
+				...createPoolTxArgs,
+				withTransfer: true,
+			});
+		}
 
 		return tx;
 	};
@@ -1165,7 +1193,8 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		lpCoinDescription: string;
 		respectDecimals: boolean;
 		forceLpDecimals?: CoinDecimal;
-	}) => {
+		withTransfer?: boolean;
+	}) /* (Pool<L>, Coin<L>) */ => {
 		const {
 			tx,
 			lpCoinType,
@@ -1174,6 +1203,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			lpCoinMetadata,
 			lpCoinDescription,
 			lpCoinIconUrl,
+			withTransfer,
 		} = inputs;
 
 		const poolSize = coinsInfo.length;
@@ -1183,8 +1213,12 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.pools.packages.ammInterface,
-				PoolsApi.constants.moduleNames.interface,
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.poolFactory,
 				`create_pool_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
