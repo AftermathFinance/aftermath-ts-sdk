@@ -773,7 +773,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param inputs An object containing the necessary inputs for creating the pool.
 	 * @returns A Promise that resolves to a TransactionBlock object representing the built transaction.
 	 */
-	public fetchBuildCreatePoolTx = async (inputs: {
+	private fetchBuildCreatePoolTx = async (inputs: {
 		walletAddress: SuiAddress;
 		lpCoinType: CoinType;
 		lpCoinMetadata: PoolCreationLpCoinMetadata;

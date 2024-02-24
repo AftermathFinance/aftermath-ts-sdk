@@ -56,31 +56,6 @@ export class EventsApiHelpers {
 		return unsubscribe;
 	};
 
-	// TODO: handle extending event type correctly (for access to timestamp, etc)
-	public fetchEventsOnChainWithCursor = async <EventOnChainType>(
-		inputs: {
-			query: SuiEventFilter;
-		} & EventsInputs
-	): Promise<EventsWithCursor<EventOnChainType>> => {
-		const { query, cursor, limit } = inputs;
-
-		const fetchedEvents = await this.Provider.provider.queryEvents({
-			query,
-			cursor: cursor
-				? {
-						...cursor,
-						eventSeq: cursor?.eventSeq.toString(),
-				  }
-				: undefined,
-			limit, // defaultlimit ?
-		});
-
-		const events = fetchedEvents.data as EventOnChainType[];
-		const nextCursor = fetchedEvents.nextCursor ?? null;
-
-		return { events, nextCursor };
-	};
-
 	public fetchCastEventsWithCursor = async <EventOnChainType, EventType>(
 		inputs: {
 			query: SuiEventFilter;

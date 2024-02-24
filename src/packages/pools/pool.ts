@@ -24,6 +24,7 @@ import { Pools } from ".";
 import { Casting, Helpers } from "../../general/utils";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { Coin } from "..";
+import { AftermathApi } from "../../general/providers";
 
 /**
  * Represents a pool object and provides methods for interacting with the pool.
@@ -50,7 +51,8 @@ export class Pool extends Caller {
 	 */
 	constructor(
 		public readonly pool: PoolObject,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;
@@ -118,10 +120,10 @@ export class Pool extends Caller {
 	public async getDepositTransaction(
 		inputs: ApiPoolDepositBody
 	): Promise<TransactionBlock> {
-		return this.fetchApiTransaction<ApiPoolDepositBody>(
-			"transactions/deposit",
-			inputs
-		);
+		return this.useProvider().fetchBuildDepositTx({
+			...inputs,
+			pool: this,
+		});
 	}
 
 	/**
@@ -133,10 +135,10 @@ export class Pool extends Caller {
 	public async getWithdrawTransaction(
 		inputs: ApiPoolWithdrawBody
 	): Promise<TransactionBlock> {
-		return this.fetchApiTransaction<ApiPoolWithdrawBody>(
-			"transactions/withdraw",
-			inputs
-		);
+		return this.useProvider().fetchBuildWithdrawTx({
+			...inputs,
+			pool: this,
+		});
 	}
 
 	/**
@@ -148,10 +150,10 @@ export class Pool extends Caller {
 	public async getAllCoinWithdrawTransaction(
 		inputs: ApiPoolAllCoinWithdrawBody
 	): Promise<TransactionBlock> {
-		return this.fetchApiTransaction<ApiPoolAllCoinWithdrawBody>(
-			"transactions/all-coin-withdraw",
-			inputs
-		);
+		return this.useProvider().fetchBuildAllCoinWithdrawTx({
+			...inputs,
+			pool: this,
+		});
 	}
 
 	/**
@@ -163,10 +165,10 @@ export class Pool extends Caller {
 	public async getTradeTransaction(
 		inputs: ApiPoolTradeBody
 	): Promise<TransactionBlock> {
-		return this.fetchApiTransaction<ApiPoolTradeBody>(
-			"transactions/trade",
-			inputs
-		);
+		return this.useProvider().fetchBuildTradeTx({
+			...inputs,
+			pool: this,
+		});
 	}
 
 	/**
@@ -472,4 +474,14 @@ export class Pool extends Caller {
 		lpCoinAmountOut: bigint;
 	}): number =>
 		Number(inputs.lpCoinAmountOut) / Number(this.pool.lpCoinSupply);
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Pools();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }
