@@ -8,11 +8,13 @@ import {
 } from "../types/generalTypes";
 import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
+import { AftermathApi } from "../providers";
 
 export class Wallet extends Caller {
 	constructor(
 		public readonly address: SuiAddress,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
 	) {
 		super(network, `wallet/${address}`);
 	}
@@ -22,7 +24,10 @@ export class Wallet extends Caller {
 	// =========================================================================
 
 	public async getBalance(inputs: { coin: CoinType }): Promise<Balance> {
-		return this.fetchApi(`balances/${inputs.coin}`);
+		return this.useProvider().fetchCoinBalance({
+			...inputs,
+			walletAddress: this.address,
+		});
 	}
 
 	// TODO: change return type to Record<Coin, Balance> ?
@@ -34,7 +39,9 @@ export class Wallet extends Caller {
 	}
 
 	public async getAllBalances(): Promise<CoinsToBalance> {
-		return this.fetchApi("balances");
+		return this.useProvider().fetchAllCoinBalances({
+			walletAddress: this.address,
+		});
 	}
 
 	// =========================================================================
@@ -42,9 +49,19 @@ export class Wallet extends Caller {
 	// =========================================================================
 
 	public async getPastAftermathTransactions(inputs: ApiTransactionsBody) {
-		return this.fetchApi<TransactionsWithCursor, ApiTransactionsBody>(
-			"transactions",
-			inputs
-		);
+		return this.useProvider().fetchPastAftermathTransactions({
+			...inputs,
+			walletAddress: this.address,
+		});
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Wallet();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }
