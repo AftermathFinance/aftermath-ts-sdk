@@ -29,6 +29,7 @@ import { StakedSuiFren } from "./stakedSuiFren";
 import { Caller } from "../../general/utils/caller";
 import { Coin } from "../coin";
 import { Helpers } from "../../general/utils";
+import { AftermathApi } from "../../general/providers";
 
 export class SuiFrens extends Caller {
 	// =========================================================================
@@ -52,7 +53,10 @@ export class SuiFrens extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(
+		public readonly network?: SuiNetwork | Url,
+		private readonly Provider?: AftermathApi
+	) {
 		super(network, "sui-frens");
 	}
 
@@ -230,17 +234,11 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	public async getMixTransaction(inputs: ApiMixSuiFrensBody) {
-		return this.fetchApiTransaction<ApiMixSuiFrensBody>(
-			"transactions/mix",
-			inputs
-		);
+		return this.useProvider().fetchBuildMixTx(inputs);
 	}
 
 	public async getHarvestFeesTransaction(inputs: ApiHarvestSuiFrenFeesBody) {
-		return this.fetchApiTransaction<ApiHarvestSuiFrenFeesBody>(
-			"transactions/harvest-fees",
-			inputs
-		);
+		return this.useProvider().fetchBuildHarvestFeesTx(inputs);
 	}
 
 	// =========================================================================
@@ -307,4 +305,14 @@ export class SuiFrens extends Caller {
 						)
 						.reduce((acc, curr) => acc + curr, "");
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.SuiFrens();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

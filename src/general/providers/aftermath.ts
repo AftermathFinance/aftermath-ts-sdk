@@ -120,18 +120,17 @@ export class Aftermath extends Caller {
 	 * @returns A new instance of the Staking class.
 	 */
 	public Staking = () => new Staking(this.network, this.Provider);
-	public LeveragedStaking = () =>
-		new LeveragedStaking(this.network, this.Provider);
+	public LeveragedStaking = () => new LeveragedStaking(this.network);
 	public SuiFrens = () => new SuiFrens(this.network, this.Provider);
 	public Faucet = () => new Faucet(this.network, this.Provider);
 	/**
 	 * Creates a new instance of the Router class with the current network.
 	 * @returns A new instance of the Router class.
 	 */
-	public Router = () => new Router(this.network, this.Provider);
+	public Router = () => new Router(this.network);
 	public NftAmm = () => new NftAmm(this.network, this.Provider);
 	public ReferralVault = () => new ReferralVault(this.network, this.Provider);
-	public Perpetuals = () => new Perpetuals(this.network, this.Provider);
+	public Perpetuals = () => new Perpetuals(this.network);
 	public Oracle = () => new Oracle(this.network, this.Provider);
 	/**
 	 * Creates a new instance of the Farms class.
@@ -144,7 +143,7 @@ export class Aftermath extends Caller {
 	// =========================================================================
 
 	public Sui = () => new Sui(this.network, this.Provider);
-	public Prices = () => new Prices(this.network, this.Provider);
+	public Prices = () => new Prices(this.network);
 	/**
 	 * Creates a new instance of the Wallet class.
 	 * @param address - The address of the wallet.
@@ -159,10 +158,9 @@ export class Aftermath extends Caller {
 	 */
 	public Coin = (coinType?: CoinType) =>
 		new Coin(coinType, this.network, this.Provider);
-	public HistoricalData = () =>
-		new HistoricalData(this.network, this.Provider);
+	public HistoricalData = () => new HistoricalData(this.network);
 	// public PriceFeeds = () => new PriceFeeds(this.network, this.Provider);
-	public DynamicGas = () => new DynamicGas(this.network, this.Provider);
+	public DynamicGas = () => new DynamicGas(this.network);
 
 	// =========================================================================
 	//  Utils

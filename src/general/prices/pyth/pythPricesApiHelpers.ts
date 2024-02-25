@@ -7,6 +7,7 @@ import {
 	Url,
 } from "../../../types";
 import { Coin } from "../../../packages";
+import { Helpers } from "../../utils";
 
 export class PythPricesApiHelpers {
 	// =========================================================================
@@ -62,10 +63,10 @@ export class PythPricesApiHelpers {
 
 	protected fetchPriceFeeds = async (coins: CoinType[]) => {
 		const filteredPriceIds = coins.map((coin) => {
-			const coinSymbol = Coin.coinSymbolForCoinType(
-				coin,
-				this.coinSymbolToCoinTypes
-			);
+			const coinSymbol = PythPricesApiHelpers.coinSymbolForCoinType({
+				coinType: coin,
+				coinSymbolToCoinTypes: this.coinSymbolToCoinTypes,
+			});
 			if (!coinSymbol) return "";
 
 			const priceFeedIds = PythPricesApiHelpers.constants.priceFeedIds;
@@ -95,5 +96,30 @@ export class PythPricesApiHelpers {
 		});
 
 		return priceFeeds;
+	};
+
+	// =========================================================================
+	//  Private Static Methods
+	// =========================================================================
+
+	private static coinSymbolForCoinType = (inputs: {
+		coinType: CoinType;
+		coinSymbolToCoinTypes: CoinSymbolToCoinTypes;
+	}): CoinSymbol | undefined => {
+		const { coinType, coinSymbolToCoinTypes } = inputs;
+		try {
+			const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
+			const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
+				([, coinsTypes]) =>
+					coinsTypes
+						.map(Helpers.addLeadingZeroesToType)
+						.includes(fullCoinType)
+			);
+
+			const foundCoinSymbol = foundCoinData?.[0];
+			return foundCoinSymbol;
+		} catch (e) {
+			return undefined;
+		}
 	};
 }

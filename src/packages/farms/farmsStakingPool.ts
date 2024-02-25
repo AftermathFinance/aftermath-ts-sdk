@@ -28,6 +28,7 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Coin } from "../coin/coin";
+import { AftermathApi } from "../../general/providers";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -36,7 +37,8 @@ export class FarmsStakingPool extends Caller {
 
 	constructor(
 		public stakingPool: FarmsStakingPoolObject,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
 	) {
 		super(network, "farms");
 		this.stakingPool = stakingPool;
@@ -245,14 +247,11 @@ export class FarmsStakingPool extends Caller {
 		walletAddress: SuiAddress;
 		isSponsoredTx?: boolean;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsStakeBody>(
-			"transactions/stake",
-			{
-				...inputs,
-				stakeCoinType: this.stakingPool.stakeCoinType,
-				stakingPoolId: this.stakingPool.objectId,
-			}
-		);
+		return this.useProvider().fetchBuildStakeTx({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
 	}
 
 	// =========================================================================
@@ -263,15 +262,12 @@ export class FarmsStakingPool extends Caller {
 		stakedPositionIds: ObjectId[];
 		walletAddress: SuiAddress;
 	}) {
-		return this.fetchApiTransaction<ApiHarvestFarmsRewardsBody>(
-			"transactions/harvest-rewards",
-			{
-				...inputs,
-				stakeCoinType: this.stakingPool.stakeCoinType,
-				stakingPoolId: this.stakingPool.objectId,
-				rewardCoinTypes: this.rewardCoinTypes(),
-			}
-		);
+		return this.useProvider().fetchBuildHarvestRewardsTx({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+			rewardCoinTypes: this.rewardCoinTypes(),
+		});
 	}
 
 	// =========================================================================
@@ -287,23 +283,17 @@ export class FarmsStakingPool extends Caller {
 		}[];
 		walletAddress: SuiAddress;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsIncreaseStakingPoolRewardsEmissionsBody>(
-			"transactions/increase-reward-emissions",
-			{
-				...inputs,
-				stakeCoinType: this.stakingPool.stakeCoinType,
-				stakingPoolId: this.stakingPool.objectId,
-			}
-		);
+		return this.useProvider().fetchIncreaseStakingPoolRewardsEmissionsTx({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
 	}
 
-	public async getGrantOneTimeAdminCapTransaction(
+	public getGrantOneTimeAdminCapTransaction(
 		inputs: ApiFarmsGrantOneTimeAdminCapBody
 	) {
-		return this.fetchApiTransaction<ApiFarmsGrantOneTimeAdminCapBody>(
-			"transactions/grant-one-time-admin-cap",
-			inputs
-		);
+		return this.useProvider().buildGrantOneTimeAdminCapTx(inputs);
 	}
 
 	// =========================================================================
@@ -321,14 +311,11 @@ export class FarmsStakingPool extends Caller {
 			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
-		return this.fetchApiTransaction<ApiFarmsInitializeStakingPoolRewardBody>(
-			"transactions/initialize-reward",
-			{
-				...inputs,
-				stakeCoinType: this.stakingPool.stakeCoinType,
-				stakingPoolId: this.stakingPool.objectId,
-			}
-		);
+		return this.useProvider().fetchBuildInitializeStakingPoolRewardTx({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
 	}
 
 	public async getTopUpRewardsTransaction(
@@ -341,14 +328,11 @@ export class FarmsStakingPool extends Caller {
 			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
-		return this.fetchApiTransaction<ApiFarmsTopUpStakingPoolRewardsBody>(
-			"transactions/top-up-reward",
-			{
-				...inputs,
-				stakeCoinType: this.stakingPool.stakeCoinType,
-				stakingPoolId: this.stakingPool.objectId,
-			}
-		);
+		return this.useProvider().fetchBuildTopUpStakingPoolRewardsTx({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
 	}
 
 	// =========================================================================
@@ -435,4 +419,14 @@ export class FarmsStakingPool extends Caller {
 			rewardCoin.emissionRate
 		);
 	}
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Farms();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }
