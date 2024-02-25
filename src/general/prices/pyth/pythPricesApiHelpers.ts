@@ -63,7 +63,7 @@ export class PythPricesApiHelpers {
 
 	protected fetchPriceFeeds = async (coins: CoinType[]) => {
 		const filteredPriceIds = coins.map((coin) => {
-			const coinSymbol = PythPricesApiHelpers.coinSymbolForCoinType({
+			const coinSymbol = Coin.coinSymbolForCoinType({
 				coinType: coin,
 				coinSymbolToCoinTypes: this.coinSymbolToCoinTypes,
 			});
@@ -96,30 +96,5 @@ export class PythPricesApiHelpers {
 		});
 
 		return priceFeeds;
-	};
-
-	// =========================================================================
-	//  Private Static Methods
-	// =========================================================================
-
-	private static coinSymbolForCoinType = (inputs: {
-		coinType: CoinType;
-		coinSymbolToCoinTypes: CoinSymbolToCoinTypes;
-	}): CoinSymbol | undefined => {
-		const { coinType, coinSymbolToCoinTypes } = inputs;
-		try {
-			const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
-			const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
-				([, coinsTypes]) =>
-					coinsTypes
-						.map(Helpers.addLeadingZeroesToType)
-						.includes(fullCoinType)
-			);
-
-			const foundCoinSymbol = foundCoinData?.[0];
-			return foundCoinSymbol;
-		} catch (e) {
-			return undefined;
-		}
 	};
 }
