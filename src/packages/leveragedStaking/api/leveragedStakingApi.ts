@@ -28,7 +28,7 @@ import {
 	LeveragedAfSuiPosition,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
 import { LeveragedStaking } from "..";

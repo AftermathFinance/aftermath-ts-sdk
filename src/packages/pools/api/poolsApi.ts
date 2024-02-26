@@ -63,7 +63,7 @@ import { Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
 import dayjs, { ManipulateType } from "dayjs";
 import { PoolsApiCasting } from "./poolsApiCasting";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";

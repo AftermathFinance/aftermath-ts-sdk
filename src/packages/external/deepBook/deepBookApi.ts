@@ -11,7 +11,7 @@ import {
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import { bcs } from "@mysten/sui.js/bcs";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import { Sui } from "../../sui";
 import {

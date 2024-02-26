@@ -13,11 +13,11 @@ import {
 	ObjectId,
 	Slippage,
 } from "../../types";
-import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
-import { EventsApiHelpers } from "../api/eventsApiHelpers";
-import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
-import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
+import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
+import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
+import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
+import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { Casting } from "./casting";
 import {
 	TransactionBlock,

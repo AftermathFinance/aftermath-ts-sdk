@@ -15,7 +15,7 @@ export class ObjectsApiHelpers {
 	private static readonly constants = {
 		maxObjectFetchingLimit: 50,
 	};
-
+	
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
