@@ -239,10 +239,11 @@ export class CoinApi {
 		try {
 			const PoolsApi = this.Provider.Pools();
 
-			// TODO: find the best way to do all of this using cached server data
 			const poolObjectId = await PoolsApi.fetchPoolObjectIdForLpCoinType(
 				inputs
 			);
+			if (!poolObjectId) throw new Error("invalid lp coin type");
+
 			const pool = await PoolsApi.fetchPool({ objectId: poolObjectId });
 
 			const maxCoinSymbolLength = 5;
@@ -271,7 +272,7 @@ export class CoinApi {
 				id: null,
 				description: coinDescription,
 				name: `Af Lp ${coinName}`,
-				// TODO: fetch this
+				// TODO: fetch this ?
 				decimals: Pools.constants.defaults.lpCoinDecimals,
 				iconUrl: null,
 				isGenerated: true,

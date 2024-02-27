@@ -63,7 +63,6 @@ import { Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
 import dayjs, { ManipulateType } from "dayjs";
 import { PoolsApiCasting } from "./poolsApiCasting";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
@@ -72,6 +71,7 @@ import {
 	IndexerSwapVolumeResponse,
 } from "../../../general/types/castingTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
+import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
@@ -1328,9 +1328,8 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		expirationSeconds: -1,
 		callback: async (inputs: {
 			lpCoinType: CoinType;
-		}): Promise<ObjectId> => {
-			if (!Pools.isPossibleLpCoinType(inputs))
-				throw new Error("invalid lp coin type");
+		}): Promise<ObjectId | undefined> => {
+			if (!Pools.isPossibleLpCoinType(inputs)) return "";
 
 			const tx = new TransactionBlock();
 
@@ -1342,6 +1341,23 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				});
 
 			return Casting.addressFromBytes(bytes);
+		},
+	});
+
+	public fetchIsLpCoinType = this.Provider.withCache({
+		key: "fetchIsLpCoinType",
+		expirationSeconds: -1,
+		callback: async (inputs: {
+			lpCoinType: CoinType;
+		}): Promise<boolean> => {
+			const { lpCoinType } = inputs;
+
+			const poolId = await this.fetchPoolObjectIdForLpCoinType({
+				lpCoinType,
+			});
+			if (!poolId) return false;
+
+			return true;
 		},
 	});
 
@@ -1400,72 +1416,76 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param inputs An object containing the pool, trade events within a certain time frame, coins to price, and coins to decimals.
 	 * @returns A Promise that resolves to a PoolStats object containing the volume, TVL, supply per LP token, LP token price, fees, and APY.
 	 */
-	public fetchPoolStats = async (inputs: {
-		poolId: ObjectId;
-	}): Promise<PoolStats> => {
-		const { poolId } = inputs;
+	public fetchPoolStats = this.Provider.withCache({
+		key: "fetchPoolStats",
+		expirationSeconds: 60,
+		callback: async (inputs: { poolId: ObjectId }): Promise<PoolStats> => {
+			const { poolId } = inputs;
 
-		const pool = await this.fetchPool({ objectId: poolId });
+			const pool = await this.fetchPool({ objectId: poolId });
 
-		const poolCoins = pool.coins;
-		const poolCoinTypes = Object.keys(pool.coins);
+			const poolCoins = pool.coins;
+			const poolCoinTypes = Object.keys(pool.coins);
 
-		const [coinsToPrice, coinsToDecimals] = await Promise.all([
-			this.Provider.Prices().fetchCoinsToPrice({
-				coins: poolCoinTypes,
-			}),
-			this.Provider.Coin().fetchCoinsToDecimals({
-				coins: poolCoinTypes,
-			}),
-		]);
+			// TODO: move common milliseconds to constants or use dayjs
+			const durationMs24hrs = 86400000;
 
-		// TODO: move common milliseconds to constants or use dayjs
-		const durationMs24hrs = 86400000;
-		const volumes = await this.fetchPoolVolume({
-			poolId: pool.objectId,
-			durationMs: durationMs24hrs,
-		});
-		const volume = Helpers.calcIndexerVolumeUsd({
-			volumes,
-			coinsToDecimals,
-			coinsToPrice,
-		});
+			const [coinsToPrice, coinsToDecimals, volumes] = await Promise.all([
+				this.Provider.Prices().fetchCoinsToPrice({
+					coins: poolCoinTypes,
+				}),
+				this.Provider.Coin().fetchCoinsToDecimals({
+					coins: poolCoinTypes,
+				}),
+				this.fetchPoolVolume({
+					poolId: pool.objectId,
+					durationMs: durationMs24hrs,
+				}),
+			]);
+			const volume = Helpers.calcIndexerVolumeUsd({
+				volumes,
+				coinsToDecimals,
+				coinsToPrice,
+			});
 
-		const tvl = await this.fetchCalcPoolTvl({
-			poolCoins: pool.coins,
-			coinsToPrice,
-			coinsToDecimals,
-		});
-		const supplyPerLps = this.calcPoolSupplyPerLps(
-			poolCoins,
-			pool.lpCoinSupply
-		);
-		const lpPrice = this.calcPoolLpPrice({
-			lpCoinDecimals: pool.lpCoinDecimals,
-			lpCoinSupply: pool.lpCoinSupply,
-			tvl,
-		});
+			const tvl = this.calcPoolTvl({
+				poolCoins: pool.coins,
+				coinsToPrice,
+				coinsToDecimals,
+			});
+			const supplyPerLps = this.calcPoolSupplyPerLps(
+				poolCoins,
+				pool.lpCoinSupply
+			);
+			const lpPrice = this.calcPoolLpPrice({
+				lpCoinDecimals: pool.lpCoinDecimals,
+				lpCoinSupply: pool.lpCoinSupply,
+				tvl,
+			});
 
-		// this is okay since all trade fees are currently the same for every coin
-		const firstCoin = Object.values(pool.coins)[0];
-		const fees =
-			volume *
-			FixedUtils.directCast(firstCoin.tradeFeeIn + firstCoin.tradeFeeOut);
+			// this is okay since all trade fees are currently the same for every coin
+			const firstCoin = Object.values(pool.coins)[0];
+			const fees =
+				volume *
+				FixedUtils.directCast(
+					firstCoin.tradeFeeIn + firstCoin.tradeFeeOut
+				);
 
-		const apr = this.calcApr({
-			fees24Hours: fees,
-			tvl,
-		});
+			const apr = this.calcApr({
+				fees24Hours: fees,
+				tvl,
+			});
 
-		return {
-			volume,
-			tvl,
-			supplyPerLps,
-			lpPrice,
-			fees,
-			apr,
-		};
-	};
+			return {
+				volume,
+				tvl,
+				supplyPerLps,
+				lpPrice,
+				fees,
+				apr,
+			};
+		},
+	});
 
 	/**
 	 * Fetches the pool volume for a given pool and duration.
@@ -1505,7 +1525,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param inputs - An object containing the pool's coins, their prices, and their decimal places.
 	 * @returns The total value locked (TVL) for the pool.
 	 */
-	public fetchCalcPoolTvl = (inputs: {
+	public calcPoolTvl = (inputs: {
 		poolCoins: PoolCoins;
 		coinsToPrice: CoinsToPrice;
 		coinsToDecimals: Record<CoinType, CoinDecimal>;
@@ -1617,27 +1637,21 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		const { lpCoins } = inputs;
 
 		const unsafeLpCoinPoolObjectIds = await Promise.all(
-			lpCoins.map(async (lpCoinType) => {
-				try {
-					return await this.fetchPoolObjectIdForLpCoinType({
-						lpCoinType,
-					});
-				} catch (e) {
-					return "";
-				}
-			})
+			lpCoins.map(async (lpCoinType) =>
+				this.fetchPoolObjectIdForLpCoinType({
+					lpCoinType,
+				})
+			)
 		);
 
 		const safeIndexes: number[] = [];
 		const lpCoinPoolObjectIds = unsafeLpCoinPoolObjectIds.filter(
 			(id, index) => {
-				const isValid = id !== "";
-
+				const isValid = id !== undefined;
 				if (isValid) safeIndexes.push(index);
-
 				return isValid;
 			}
-		);
+		) as ObjectId[];
 
 		const poolStats = await Promise.all(
 			lpCoinPoolObjectIds.map((poolId) => this.fetchPoolStats({ poolId }))

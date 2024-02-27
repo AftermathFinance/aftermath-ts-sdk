@@ -138,6 +138,7 @@ export class AftermathApi {
 	public HistoricalData = this?.config?.prices?.coinGeckoApiKey
 		? () =>
 				new HistoricalDataApi(
+					this,
 					this?.config?.prices?.coinGeckoApiKey ?? "",
 					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
 				)
@@ -199,30 +200,66 @@ export class AftermathApi {
 				return this.toString() + "n";
 			};
 
-			// TODO: hash me
-			const cacheKey = `${key}_${JSON.stringify(inputs)}`;
-
-			if (
-				cacheKey in this.cache &&
-				(this.cache[cacheKey].lastUsed +
-					this.cache[cacheKey].expirationMs >=
-					Date.now() ||
-					expirationSeconds < 0)
-			) {
-				return this.cache[cacheKey].data as Output;
+			const cachedData = this.getCache<Input, Output>({ key, inputs });
+			if (cachedData !== "NO_CACHED_DATA") {
+				return cachedData;
 			}
 
 			const newData = await callback(...inputs);
 
-			this.cache[cacheKey] = {
+			this.setCache({
+				key,
+				expirationSeconds,
+				inputs,
 				data: newData,
-				lastUsed: Date.now(),
-				expirationMs: expirationSeconds * 1000, // convert to ms
-			};
-
+			});
 			return newData;
 		};
 
 		return fetchFunc;
+	};
+
+	public setCache = <Input, Output>(inputs: {
+		key: string;
+		expirationSeconds: number; // < 0 means never expires
+		data: Output;
+		inputs: Input[];
+	}) => {
+		const cacheKey = this.getCacheKey(inputs);
+
+		this.cache[cacheKey] = {
+			data: inputs.data,
+			lastUsed: Date.now(),
+			expirationMs: inputs.expirationSeconds * 1000, // convert to ms
+		};
+	};
+
+	public getCache = <Input, Output>(inputs: {
+		key: string;
+		inputs: Input[];
+	}): Output | "NO_CACHED_DATA" => {
+		const cacheKey = this.getCacheKey(inputs);
+
+		if (
+			cacheKey in this.cache &&
+			(this.cache[cacheKey].lastUsed +
+				this.cache[cacheKey].expirationMs >=
+				Date.now() ||
+				this.cache[cacheKey].expirationMs < 0)
+		) {
+			return this.cache[cacheKey].data as Output;
+		}
+		return "NO_CACHED_DATA";
+	};
+
+	private getCacheKey = <Input, Output>(inputs: {
+		key: string;
+		inputs: Input[];
+	}) => {
+		// this allows BigInt to be JSON serialized (as string)
+		(BigInt.prototype as any).toJSON = function () {
+			return this.toString() + "n";
+		};
+		return `${inputs.key}_${JSON.stringify(inputs.inputs)}`; // TODO: hash me
 	};
 }
