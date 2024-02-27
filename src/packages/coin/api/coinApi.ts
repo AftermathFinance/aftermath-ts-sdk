@@ -53,12 +53,7 @@ export class CoinApi {
 				};
 			} catch (error) {
 				try {
-					const lpCoinType = coin;
-
-					await this.Provider.Pools().fetchPoolObjectIdForLpCoinType({
-						lpCoinType,
-					});
-					return this.createLpCoinMetadata({ lpCoinType });
+					return this.createLpCoinMetadata({ lpCoinType: coin });
 				} catch (e) {}
 
 				const maxSymbolLength = 10;

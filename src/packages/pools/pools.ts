@@ -173,10 +173,13 @@ export class Pools extends Caller {
 		if (!Pools.isPossibleLpCoinType(inputs))
 			throw new Error("invalid lp coin type");
 
-		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
-			"pool-object-id",
-			inputs
-		);
+		const poolId = this.fetchApi<
+			ObjectId | undefined,
+			ApiPoolObjectIdForLpCoinTypeBody
+		>("pool-object-id", inputs);
+
+		if (!poolId) throw new Error("invalid lp coin type");
+		return poolId;
 	};
 
 	/**
