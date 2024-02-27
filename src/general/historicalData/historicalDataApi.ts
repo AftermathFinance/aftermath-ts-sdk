@@ -1,37 +1,22 @@
 import { CoinType } from "../../types";
 import { CoinGeckoApiHelpers } from "../prices/coingecko/coinGeckoApiHelpers";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
+import { AftermathApi } from "../providers";
 import { HistoricalDataApiInterface } from "./historicalDataApiInterface";
 
-export class HistoricalDataApi implements HistoricalDataApiInterface {
+export class HistoricalDataApi
+	extends CoinGeckoApiHelpers
+	implements HistoricalDataApiInterface
+{
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(
-		private readonly coinGeckoApiKey: string,
-		private readonly coinApiIdsToCoinTypes: Record<
-			CoinGeckoCoinApiId,
-			CoinType[]
-		>
-	) {}
-
-	// =========================================================================
-	//  Public
-	// =========================================================================
-
-	public fetchAllSuiCoinData = new CoinGeckoApiHelpers(
-		this.coinGeckoApiKey,
-		this.coinApiIdsToCoinTypes
-	).fetchAllSuiCoinData;
-
-	public fetchAllCoinData = new CoinGeckoApiHelpers(
-		this.coinGeckoApiKey,
-		this.coinApiIdsToCoinTypes
-	).fetchAllCoinData;
-
-	public fetchHistoricalData = new CoinGeckoApiHelpers(
-		this.coinGeckoApiKey,
-		this.coinApiIdsToCoinTypes
-	).fetchHistoricalData;
+		Provider: AftermathApi,
+		coinGeckoApiKey: string,
+		coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>
+	) {
+		super(Provider, coinGeckoApiKey, coinApiIdsToCoinTypes);
+	}
 }

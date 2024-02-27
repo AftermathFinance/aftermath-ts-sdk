@@ -21,11 +21,11 @@ export class CoinGeckoPricesApi
 	// =========================================================================
 
 	constructor(
-		private readonly Provider: AftermathApi,
+		Provider: AftermathApi,
 		coinGeckoApiKey: string,
 		coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>
 	) {
-		super(coinGeckoApiKey, coinApiIdsToCoinTypes);
+		super(Provider, coinGeckoApiKey, coinApiIdsToCoinTypes);
 	}
 
 	// =========================================================================
@@ -86,6 +86,7 @@ export class CoinGeckoPricesApi
 		};
 	};
 
+	// TODO: add single cache by coin type ?
 	public fetchCoinsToPriceInfo = this.Provider.withCache({
 		key: "fetchCoinsToPriceInfo",
 		expirationSeconds: 300, // 5 minutes
@@ -97,18 +98,10 @@ export class CoinGeckoPricesApi
 			// filter regular vs LP coins
 			const [lpCoins, regularCoins] = await Helpers.bifilterAsync(
 				coins,
-				async (coin) => {
-					try {
-						await this.Provider.Pools().fetchPoolObjectIdForLpCoinType(
-							{
-								lpCoinType: coin,
-							}
-						);
-						return true;
-					} catch (e) {
-						return false;
-					}
-				}
+				async (coin) =>
+					this.Provider.Pools().fetchIsLpCoinType({
+						lpCoinType: coin,
+					})
 			);
 
 			let coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
