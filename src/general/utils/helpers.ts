@@ -336,9 +336,8 @@ export class Helpers {
 	public static getObjectDisplay(
 		data: SuiObjectResponse
 	): DisplayFieldsResponse {
-		const display = Helpers.getObjectDisplay(data);
+		const display = data.data?.display;
 		if (display) return display;
-
 		throw new Error("no object display found on " + data.data?.objectId);
 	}
 

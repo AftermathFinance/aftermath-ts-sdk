@@ -1410,28 +1410,28 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		const poolCoins = pool.coins;
 		const poolCoinTypes = Object.keys(pool.coins);
 
-		const [coinsToPrice, coinsToDecimals] = await Promise.all([
+		// TODO: move common milliseconds to constants or use dayjs
+		const durationMs24hrs = 86400000;
+
+		const [coinsToPrice, coinsToDecimals, volumes] = await Promise.all([
 			this.Provider.Prices().fetchCoinsToPrice({
 				coins: poolCoinTypes,
 			}),
 			this.Provider.Coin().fetchCoinsToDecimals({
 				coins: poolCoinTypes,
 			}),
+			this.fetchPoolVolume({
+				poolId: pool.objectId,
+				durationMs: durationMs24hrs,
+			}),
 		]);
-
-		// TODO: move common milliseconds to constants or use dayjs
-		const durationMs24hrs = 86400000;
-		const volumes = await this.fetchPoolVolume({
-			poolId: pool.objectId,
-			durationMs: durationMs24hrs,
-		});
 		const volume = Helpers.calcIndexerVolumeUsd({
 			volumes,
 			coinsToDecimals,
 			coinsToPrice,
 		});
 
-		const tvl = await this.fetchCalcPoolTvl({
+		const tvl = this.calcPoolTvl({
 			poolCoins: pool.coins,
 			coinsToPrice,
 			coinsToDecimals,
@@ -1505,7 +1505,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param inputs - An object containing the pool's coins, their prices, and their decimal places.
 	 * @returns The total value locked (TVL) for the pool.
 	 */
-	public fetchCalcPoolTvl = (inputs: {
+	public calcPoolTvl = (inputs: {
 		poolCoins: PoolCoins;
 		coinsToPrice: CoinsToPrice;
 		coinsToDecimals: Record<CoinType, CoinDecimal>;

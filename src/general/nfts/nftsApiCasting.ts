@@ -105,10 +105,10 @@ export class NftsApiCasting {
 		let other: NftDisplayOther = Helpers.deepCopy(fields);
 
 		for (const field of suggestedFields) {
-			if (!(field.onChain in field)) continue;
+			if (!(field.onChain in other)) continue;
 
-			suggested[field.offChain] = fields[field.onChain];
-			delete other[field.offChain];
+			suggested[field.offChain] = other[field.onChain];
+			delete other[field.onChain];
 		}
 
 		return {

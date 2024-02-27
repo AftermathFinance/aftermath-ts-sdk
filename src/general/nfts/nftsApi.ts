@@ -35,6 +35,25 @@ export class NftsApi {
 	//  Nft Objects
 	// =========================================================================
 
+	public fetchOwnedNfts = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<Nft[]> => {
+		const objects = await this.Provider.Objects().fetchOwnedObjects({
+			...inputs,
+			options: {
+				// NOTE: do we need all of this ?
+				showContent: true,
+				showOwner: true,
+				showType: true,
+				showDisplay: true,
+			},
+		});
+		const nfts = objects.filter(
+			(object) => object.data?.display !== undefined
+		);
+		return nfts.map((nft) => NftsApiCasting.nftFromSuiObject(nft));
+	};
+
 	public fetchNfts = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<Nft[]> => {
@@ -70,7 +89,7 @@ export class NftsApi {
 				return {
 					objectId,
 					objectType,
-					kioskObjectId: fields.for as ObjectId,
+					kioskObjectId: Helpers.addLeadingZeroesToType(fields.for),
 				};
 			},
 		});

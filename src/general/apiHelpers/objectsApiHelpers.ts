@@ -1,7 +1,11 @@
 import { AftermathApi } from "../providers/aftermathApi";
 import { AnyObjectType, ObjectId, PackageId, SuiAddress } from "../../types";
 import { Casting, Helpers } from "../utils";
-import { SuiObjectDataOptions, SuiObjectResponse } from "@mysten/sui.js/client";
+import {
+	SuiObjectDataFilter,
+	SuiObjectDataOptions,
+	SuiObjectResponse,
+} from "@mysten/sui.js/client";
 import { BcsTypeName } from "../types/castingTypes";
 import { bcsRegistry } from "@mysten/sui.js/bcs";
 import { TransactionObjectArgument } from "@scallop-io/sui-kit";
@@ -15,7 +19,7 @@ export class ObjectsApiHelpers {
 	private static readonly constants = {
 		maxObjectFetchingLimit: 50,
 	};
-	
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -66,7 +70,23 @@ export class ObjectsApiHelpers {
 		withDisplay?: boolean;
 		options?: SuiObjectDataOptions;
 	}): Promise<SuiObjectResponse[]> => {
-		const { walletAddress, objectType, withDisplay } = inputs;
+		return this.fetchOwnedObjects({
+			...inputs,
+			filter: {
+				StructType: Helpers.stripLeadingZeroesFromType(
+					inputs.objectType
+				),
+			},
+		});
+	};
+
+	public fetchOwnedObjects = async (inputs: {
+		walletAddress: SuiAddress;
+		filter?: SuiObjectDataFilter;
+		withDisplay?: boolean;
+		options?: SuiObjectDataOptions;
+	}): Promise<SuiObjectResponse[]> => {
+		const { walletAddress, withDisplay, filter } = inputs;
 
 		let allObjectData: SuiObjectResponse[] = [];
 		let cursor: string | undefined = undefined;
@@ -74,18 +94,15 @@ export class ObjectsApiHelpers {
 			const paginatedObjects =
 				await this.Provider.provider.getOwnedObjects({
 					owner: walletAddress,
-					filter: {
-						StructType:
-							Helpers.stripLeadingZeroesFromType(objectType),
-					},
 					options: inputs.options ?? {
 						showContent: true,
 						showDisplay: withDisplay,
 						showOwner: true,
 						showType: true,
 					},
-					cursor,
 					limit: ObjectsApiHelpers.constants.maxObjectFetchingLimit,
+					cursor,
+					filter,
 				});
 
 			const objectData = paginatedObjects.data;
@@ -233,13 +250,11 @@ export class ObjectsApiHelpers {
 		withDisplay?: boolean;
 		options?: SuiObjectDataOptions;
 	}): Promise<ObjectType[]> => {
-		// i. obtain all owned object IDs
 		const objects = (
 			await this.fetchObjectsOfTypeOwnedByAddress(inputs)
 		).map((SuiObjectResponse: SuiObjectResponse) => {
 			return inputs.objectFromSuiObjectResponse(SuiObjectResponse);
 		});
-
 		return objects;
 	};
 
