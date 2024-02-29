@@ -6,7 +6,7 @@ import {
 	ObjectId,
 	SuiAddress,
 } from "../../types";
-import { Helpers } from "../utils";
+import { Casting, Helpers } from "../utils";
 import { NftsApiCasting } from "./nftsApiCasting";
 
 export class NftsApi {
@@ -14,12 +14,12 @@ export class NftsApi {
 	//  Constants
 	// =========================================================================
 
-	private static readonly constants: {
-		objectTypes: {
-			kiosk: "0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk";
-			kioskOwnerCap: "0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap";
-		};
-	};
+	// private static readonly constants: {
+	// 	objectTypes: {
+	// 		kiosk: "0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk";
+	// 		kioskOwnerCap: "0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap";
+	// 	};
+	// };
 
 	constructor(private readonly Provider: AftermathApi) {}
 
@@ -48,18 +48,14 @@ export class NftsApi {
 				showDisplay: true,
 			},
 		});
-		const nfts = objects.filter(
-			(object) => object.data?.display !== undefined
-		);
-		return nfts.map((nft) => NftsApiCasting.nftFromSuiObject(nft));
+		return Casting.nfts.nftsFromSuiObjects(objects);
 	};
 
 	public fetchNfts = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<Nft[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch({
+		const objects = await this.Provider.Objects().fetchObjectBatch({
 			...inputs,
-			objectFromSuiObjectResponse: NftsApiCasting.nftFromSuiObject,
 			options: {
 				// NOTE: do we need all of this ?
 				showContent: true,
@@ -68,6 +64,7 @@ export class NftsApi {
 				showDisplay: true,
 			},
 		});
+		return Casting.nfts.nftsFromSuiObjects(objects);
 	};
 
 	// =========================================================================
@@ -81,7 +78,8 @@ export class NftsApi {
 
 		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
 			walletAddress,
-			objectType: NftsApi.constants.objectTypes.kioskOwnerCap,
+			objectType:
+				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap",
 			objectFromSuiObjectResponse: (data) => {
 				const fields = Helpers.getObjectFields(data);
 				const objectId = Helpers.getObjectId(data);
@@ -112,17 +110,16 @@ export class NftsApi {
 
 		const nfts = await Promise.all(
 			kioskOwnerCaps.map((kioskOwnerCap) =>
-				this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
-					parentObjectId: kioskOwnerCap.kioskObjectId,
-					objectsFromObjectIds: (objectIds) =>
-						this.fetchNfts({ objectIds }),
+				this.fetchNftsInKiosk({
+					kioskObjectId: kioskOwnerCap.kioskObjectId,
 				})
 			)
 		);
 
 		return kioskOwnerCaps.map((kioskOwnerCap, index) => ({
 			objectId: kioskOwnerCap.kioskObjectId,
-			objectType: NftsApi.constants.objectTypes.kiosk,
+			objectType:
+				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
 			kioskOwnerCapId: kioskOwnerCap.objectId,
 			nfts: nfts[index],
 		}));

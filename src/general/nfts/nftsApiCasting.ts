@@ -20,6 +20,19 @@ export class NftsApiCasting {
 	//  Objects
 	// =========================================================================
 
+	public static nftsFromSuiObjects = (
+		objects: SuiObjectResponse[]
+	): Nft[] => {
+		const nfts = objects.filter((object) => object.data?.display);
+		return nfts
+			.map((nft) => NftsApiCasting.nftFromSuiObject(nft))
+			.filter(
+				(nft) =>
+					Object.keys(nft.display.suggested).length > 0 ||
+					Object.keys(nft.display.other).length > 0
+			);
+	};
+
 	public static nftFromSuiObject = (object: SuiObjectResponse): Nft => {
 		const info = this.nftInfoFromSuiObject(object);
 
