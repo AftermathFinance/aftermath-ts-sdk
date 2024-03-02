@@ -1,4 +1,5 @@
 import {
+	AnyObjectType,
 	Balance,
 	CoinDecimal,
 	CoinMetadaWithInfo,
@@ -26,6 +27,8 @@ export class Coin extends Caller {
 		suiCoinType:
 			"0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 		suiCoinDecimals: 9,
+		coinObjectType:
+			"0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin",
 	};
 
 	// =========================================================================
@@ -169,6 +172,11 @@ export class Coin extends Caller {
 	public static isSuiCoin = (coin: CoinType) =>
 		Helpers.stripLeadingZeroesFromType(coin) ===
 		Helpers.stripLeadingZeroesFromType(Coin.constants.suiCoinType);
+
+	public static isCoinObjectType = (objectType: AnyObjectType) =>
+		Helpers.stripLeadingZeroesFromType(objectType).startsWith(
+			Helpers.stripLeadingZeroesFromType(Coin.constants.coinObjectType)
+		);
 
 	// =========================================================================
 	//  Helpers

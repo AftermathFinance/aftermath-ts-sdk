@@ -80,16 +80,8 @@ export class NftsApi {
 			walletAddress,
 			objectType:
 				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap",
-			objectFromSuiObjectResponse: (data) => {
-				const fields = Helpers.getObjectFields(data);
-				const objectId = Helpers.getObjectId(data);
-				const objectType = Helpers.getObjectType(data);
-				return {
-					objectId,
-					objectType,
-					kioskObjectId: Helpers.addLeadingZeroesToType(fields.for),
-				};
-			},
+			objectFromSuiObjectResponse:
+				Casting.nfts.kioskOwnerCapFromSuiObject,
 		});
 	};
 
@@ -101,6 +93,47 @@ export class NftsApi {
 			parentObjectId: kioskObjectId,
 			objectsFromObjectIds: (objectIds) => this.fetchNfts({ objectIds }),
 		});
+	};
+
+	public fetchKioskOwnerCaps = async (inputs: {
+		kioskOwnerCapIds: ObjectId[];
+	}): Promise<KioskOwnerCapObject[]> => {
+		const { kioskOwnerCapIds } = inputs;
+
+		return this.Provider.Objects().fetchCastObjectBatch({
+			objectIds: kioskOwnerCapIds,
+			objectFromSuiObjectResponse:
+				Casting.nfts.kioskOwnerCapFromSuiObject,
+		});
+	};
+
+	public fetchKiosks = async (inputs: {
+		kioskOwnerCaps: KioskOwnerCapObject[];
+	}): Promise<KioskObject[]> => {
+		const { kioskOwnerCaps } = inputs;
+
+		const nfts = await Promise.all(
+			kioskOwnerCaps.map((kioskOwnerCap) =>
+				this.fetchNftsInKiosk({
+					kioskObjectId: kioskOwnerCap.kioskObjectId,
+				})
+			)
+		);
+
+		return kioskOwnerCaps.map((kioskOwnerCap, index) => ({
+			objectId: kioskOwnerCap.kioskObjectId,
+			objectType:
+				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
+			kioskOwnerCapId: kioskOwnerCap.objectId,
+			nfts: nfts[index],
+		}));
+	};
+
+	public fetchKiosksFromOwnerCaps = async (inputs: {
+		kioskOwnerCapIds: ObjectId[];
+	}): Promise<KioskObject[]> => {
+		const kioskOwnerCaps = await this.fetchKioskOwnerCaps(inputs);
+		return this.fetchKiosks({ kioskOwnerCaps });
 	};
 
 	public fetchOwnedKiosks = async (inputs: {

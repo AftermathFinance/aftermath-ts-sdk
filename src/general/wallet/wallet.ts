@@ -48,8 +48,8 @@ export class Wallet extends Caller {
 	//  Transactions
 	// =========================================================================
 
-	public async getPastAftermathTransactions(inputs: ApiTransactionsBody) {
-		return this.useProvider().fetchPastAftermathTransactions({
+	public async getPastTransactions(inputs: ApiTransactionsBody) {
+		return this.useProvider().fetchPastTransactions({
 			...inputs,
 			walletAddress: this.address,
 		});

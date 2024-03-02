@@ -3,6 +3,7 @@ import {
 	SuiObjectResponse,
 } from "@mysten/sui.js/client";
 import {
+	KioskOwnerCapObject,
 	Nft,
 	NftDisplay,
 	NftDisplayOther,
@@ -42,6 +43,19 @@ export class NftsApiCasting {
 		return {
 			info,
 			display,
+		};
+	};
+
+	public static kioskOwnerCapFromSuiObject = (
+		object: SuiObjectResponse
+	): KioskOwnerCapObject => {
+		const fields = Helpers.getObjectFields(object);
+		const objectId = Helpers.getObjectId(object);
+		const objectType = Helpers.getObjectType(object);
+		return {
+			objectId,
+			objectType,
+			kioskObjectId: Helpers.addLeadingZeroesToType(fields.for),
 		};
 	};
 
