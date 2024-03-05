@@ -41,15 +41,20 @@ import {
 import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { BigIntAsString } from "../../../types";
 
 export class FarmsApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
 
-	public static partialStakingPoolObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): Omit<FarmsStakingPoolObject, "isUnlocked"> => {
+	public static stakingPoolObjectFromIndexer = (
+		data: SuiObjectResponse & {
+			// from indexer
+			isUnlocked: boolean;
+			rewardsRemaining: BigIntAsString[];
+		}
+	): FarmsStakingPoolObject => {
 		const objectType = Helpers.getObjectType(data);
 
 		const fields = Helpers.getObjectFields(
@@ -82,7 +87,7 @@ export class FarmsApiCasting {
 				),
 
 				// TODO: make this type prettier
-				rewardsRemaining: BigInt(0),
+				rewardsRemaining: BigInt(data.rewardsRemaining[index]),
 			})),
 			emissionEndTimestamp: Number(fields.emission_end_timestamp_ms),
 			stakedAmount: BigInt(fields.total_staked_amount),
@@ -97,6 +102,7 @@ export class FarmsApiCasting {
 				BigInt(fields.lock_enforcement) === BigInt(0)
 					? "Strict"
 					: "Relaxed",
+			isUnlocked: data.isUnlocked,
 		};
 	};
 

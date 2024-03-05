@@ -50,6 +50,7 @@ import { StakingApiCasting } from "./stakingApiCasting";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import { RouterPoolTradeTxInputs } from "../..";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
+import { ValidatorConfigOnIndexer } from "./stakingApiCastingTypes";
 
 export class StakingApi
 	implements RouterSynchronousApiInterface<AfSuiRouterPoolObject>
@@ -221,16 +222,11 @@ export class StakingApi
 	public fetchValidatorConfigs = async (): Promise<
 		ValidatorConfigObject[]
 	> => {
-		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
-			parentObjectId:
-				this.addresses.staking.objects.validatorConfigsTable,
-			objectsFromObjectIds: (objectIds) =>
-				this.Provider.Objects().fetchCastObjectBatch({
-					objectIds,
-					objectFromSuiObjectResponse:
-						StakingApiCasting.validatorConfigObjectFromSuiObjectResponse,
-				}),
-		});
+		const configs: ValidatorConfigOnIndexer[] =
+			await this.Provider.indexerCaller.fetchIndexer(
+				`staking/validator-configs`
+			);
+		return configs.map(StakingApiCasting.validatorConfigObjectFromIndexer);
 	};
 
 	public fetchOwnedValidatorOperationCaps = async (inputs: {
