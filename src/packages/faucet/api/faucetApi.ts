@@ -25,8 +25,8 @@ import {
 	SuiAddress,
 } from "../../../types";
 import { Coin } from "../../coin";
-import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Sui } from "../../sui";
 
 export class FaucetApi {

@@ -2,11 +2,11 @@ import { ConfigAddresses } from "../types/configTypes";
 import { PoolsApi } from "../../packages/pools/api/poolsApi";
 import { FaucetApi } from "../../packages/faucet/api/faucetApi";
 import { CoinApi } from "../../packages/coin/api/coinApi";
-import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
-import { EventsApiHelpers } from "../api/eventsApiHelpers";
-import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
-import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
+import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
+import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
+import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
+import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { SuiApi } from "../../packages/sui/api/suiApi";
 import { WalletApi } from "../wallet/walletApi";
 import { RouterApi } from "../../packages/router/api/routerApi";
@@ -36,6 +36,7 @@ import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
+import { NftsApi } from "../nfts/nftsApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -125,6 +126,7 @@ export class AftermathApi {
 
 	public Wallet = () => new WalletApi(this);
 	public DynamicGas = () => new DynamicGasApi(this);
+	public Nfts = () => new NftsApi(this);
 
 	public Prices = this?.config?.prices?.coinGeckoApiKey
 		? () =>

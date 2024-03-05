@@ -35,7 +35,7 @@ import {
 	BigIntAsString,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Sui } from "../../sui";
 import {
 	FarmsCreatedVaultEventOnChain,
@@ -1145,7 +1145,7 @@ export class FarmsApi {
 			if (harvestedCoinIds.length > 1)
 				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
 
-			if (inputs.claimSuiAsAfSui && Coin.isSuiCoin(coinType)) {
+			if (inputs.claimSuiAsAfSui && Coin.isCoinObjectType(coinType)) {
 				const validatorAddress =
 					this.Provider.Staking().addresses.routerWrapper?.objects
 						.aftermathValidator;

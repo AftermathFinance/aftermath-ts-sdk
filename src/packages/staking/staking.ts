@@ -234,13 +234,13 @@ export class Staking extends Caller {
 			//  `atomic_unstake_sui_reserves` to:
 			//      e.g. fee = max_fee - ((max_fee - min_fee) * liquidity_after / target_liquidity_value)
 
-			let atomic_fee_delta =
+			const atomicFeeDelta =
 				stakedSuiVaultState.maxAtomicUnstakeFee -
 				stakedSuiVaultState.minAtomicUnstakeFee;
 
 			return Casting.bigIntToFixedNumber(
 				stakedSuiVaultState.maxAtomicUnstakeFee -
-					(atomic_fee_delta *
+					(atomicFeeDelta *
 						stakedSuiVaultState.atomicUnstakeSuiReserves) /
 						stakedSuiVaultState.atomicUnstakeSuiReservesTargetValue
 			);

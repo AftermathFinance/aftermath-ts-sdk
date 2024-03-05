@@ -15,6 +15,7 @@ import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/
 import { CoinsToBalance, Helpers } from "../..";
 import { BcsTypeName, IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { NftsApiCasting } from "../nfts/nftsApiCasting";
 
 /**
  * Utility class for casting and conversion functions.
@@ -34,6 +35,7 @@ export class Casting {
 	public static router = RouterApiCasting;
 	public static perpetuals = PerpetualsApiCasting;
 	public static farms = FarmsApiCasting;
+	public static nfts = NftsApiCasting;
 
 	// =========================================================================
 	//  Constants
