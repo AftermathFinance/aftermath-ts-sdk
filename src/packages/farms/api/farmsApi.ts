@@ -54,6 +54,7 @@ import {
 } from "@mysten/sui.js/transactions";
 import { bcs } from "@mysten/sui.js/bcs";
 import { Coin } from "../..";
+import { SuiObjectResponse } from "@mysten/sui.js/client";
 
 export class FarmsApi {
 	// =========================================================================
@@ -189,100 +190,39 @@ export class FarmsApi {
 	public fetchStakingPool = async (inputs: {
 		objectId: ObjectId;
 	}): Promise<FarmsStakingPoolObject> => {
-		const partialStakingPool =
-			await this.Provider.Objects().fetchCastObject({
-				...inputs,
-				objectFromSuiObjectResponse:
-					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
-			});
-
-		const [isUnlocked, remainingRewards] = await Promise.all([
-			this.fetchIsStakingPoolUnlocked({
-				stakingPoolId: inputs.objectId,
-				stakeCoinType: partialStakingPool.stakeCoinType,
-			}),
-			this.fetchStakingPoolRemainingRewards({
-				stakingPoolId: inputs.objectId,
-				stakeCoinType: partialStakingPool.stakeCoinType,
-			}),
-		]);
-
-		return {
-			...partialStakingPool,
-			isUnlocked,
-			rewardCoins: partialStakingPool.rewardCoins.map((coin, index) => ({
-				...coin,
-				rewardsRemaining: remainingRewards[index],
-			})),
-		};
+		return (
+			await this.fetchStakingPools({ objectIds: [inputs.objectId] })
+		)[0];
 	};
 
 	public fetchStakingPools = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<FarmsStakingPoolObject[]> => {
-		const partialStakingPools =
-			await this.Provider.Objects().fetchCastObjectBatch({
-				...inputs,
-				objectFromSuiObjectResponse:
-					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
-			});
-
-		const [isUnlockedForPools, remainingRewardsForPools] =
-			await Promise.all([
-				this.fetchIsUnlockedForStakingPools({
-					stakingPoolIds: inputs.objectIds,
-					stakeCoinTypes: partialStakingPools.map(
-						(pool) => pool.stakeCoinType
-					),
-				}),
-				this.fetchRemainingRewardsForStakingPools({
-					stakingPoolIds: inputs.objectIds,
-					stakeCoinTypes: partialStakingPools.map(
-						(pool) => pool.stakeCoinType
-					),
-				}),
-			]);
-
-		return partialStakingPools.map((partialStakingPool, poolIndex) => ({
-			...partialStakingPool,
-			isUnlocked: isUnlockedForPools[poolIndex],
-			rewardCoins: partialStakingPool.rewardCoins.map((coin, index) => ({
-				...coin,
-				rewardsRemaining: remainingRewardsForPools[poolIndex][index],
-			})),
-		}));
+		const farms: (SuiObjectResponse & {
+			// data added by indexer
+			isUnlocked: boolean;
+			rewardsRemaining: BigIntAsString[];
+		})[] = await this.Provider.indexerCaller.fetchIndexer(
+			"afterburner-vaults/vaults",
+			undefined,
+			{
+				vault_ids: inputs.objectIds,
+			}
+		);
+		return farms.map(Casting.farms.stakingPoolObjectFromIndexer);
 	};
 
 	public fetchAllStakingPools = async (): Promise<
 		FarmsStakingPoolObject[]
 	> => {
-		const objectIds = (
-			await this.Provider.Events().fetchAllEvents({
-				fetchEventsFunc: (eventInputs) =>
-					this.fetchCreatedVaultEvents(eventInputs),
-			})
-		).map((event) => event.vaultId);
-
-		const partialStakingPools =
-			await this.Provider.Objects().fetchCastObjectBatch({
-				objectIds,
-				objectFromSuiObjectResponse:
-					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
-			});
-
-		return Promise.all(
-			partialStakingPools.map(async (stakingPool) => {
-				const isUnlocked = await this.fetchIsStakingPoolUnlocked({
-					stakingPoolId: stakingPool.objectId,
-					stakeCoinType: stakingPool.stakeCoinType,
-				});
-
-				return {
-					...stakingPool,
-					isUnlocked,
-				};
-			})
+		const farms: (SuiObjectResponse & {
+			// data added by indexer
+			isUnlocked: boolean;
+			rewardsRemaining: BigIntAsString[];
+		})[] = await this.Provider.indexerCaller.fetchIndexer(
+			"afterburner-vaults/vaults"
 		);
+		return farms.map(Casting.farms.stakingPoolObjectFromIndexer);
 	};
 
 	public fetchOwnedStakingPoolOwnerCaps = async (
