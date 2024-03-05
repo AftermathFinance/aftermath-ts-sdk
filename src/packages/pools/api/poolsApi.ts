@@ -71,6 +71,7 @@ import {
 	IndexerSwapVolumeResponse,
 } from "../../../general/types/castingTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
