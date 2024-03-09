@@ -92,64 +92,19 @@ export class PerpetualsMarket extends Caller {
 
 	public getMaxOrderSizeUsd = async (inputs: {
 		account: PerpetualsAccount;
-		position: PerpetualsPosition | undefined;
 		indexPrice: number;
-		collateralPrice: number;
 		side: PerpetualsOrderSide;
 		price?: PerpetualsOrderPrice;
-	}): Promise<{
-		maxOrderSizeUsd: number;
-		fills: PerpetualsFilledOrderData[];
-	}> => {
-		const { side, price, account, indexPrice, collateralPrice } = inputs;
+	}): Promise<number> => {
+		const { side, price, account, indexPrice } = inputs;
 
-		const optimisticSize = this.calcOptimisticMaxOrderSize(inputs);
-
-		const freeCollateral = account.calcFreeCollateralForPosition({
-			...inputs,
-			market: this,
+		const maxSize: bigint = await this.fetchApi("max-order-size", {
+			accountId: account.accountCap.accountId,
+			collateral: account.collateralBalance(),
+			side,
+			price,
 		});
-		const collateral =
-			account.collateralBalance() +
-			Coin.normalizeBalance(freeCollateral, account.collateralDecimals());
-
-		const size = // (in lots)
-			BigInt(Math.ceil(optimisticSize / this.lotSize()));
-
-		const { executionPrice, sizeFilled, sizePosted, fills } =
-			await this.getExecutionPrice({
-				size,
-				side,
-				price,
-				collateral,
-			});
-
-		const freeMarginUsd =
-			account.calcFreeMarginUsdForPosition({
-				...inputs,
-				market: this,
-			}) +
-			// assuming all account collateral is allocated to position
-			account.collateral() * inputs.collateralPrice;
-		const { minInitialMargin } = account.calcPnLAndMarginForPosition({
-			...inputs,
-			market: this,
-		});
-
-		const maxOrderSizeUsd = await this.calcPessimisticMaxOrderSizeUsd({
-			...inputs,
-			freeMarginUsd,
-			minInitialMargin,
-			executionPrice,
-			sizeFilled,
-			sizePosted,
-			optimisticSize,
-		});
-
-		return {
-			maxOrderSizeUsd,
-			fills,
-		};
+		return Number(maxSize) * this.lotSize() * indexPrice;
 	};
 
 	// =========================================================================
