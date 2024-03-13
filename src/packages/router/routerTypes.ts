@@ -51,10 +51,9 @@ export type UniqueId = string;
 
 /**
  * Fee info for third party packages wanting to fee route transactions
- * @deprecated
+ * @deprecated please use `ExternalFee` instead
  */
 export type RouterExternalFee = ExternalFee;
-//
 
 // =========================================================================
 //  All Router Pools

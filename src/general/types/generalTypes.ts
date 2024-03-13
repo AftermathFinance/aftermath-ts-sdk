@@ -59,7 +59,7 @@ export type TransactionDigest = string;
 // =========================================================================
 
 /**
- * Fee info for third party packages wanting to transactions
+ * Fee info for third party packages wanting to fee transactions
  */
 export interface ExternalFee {
 	/**

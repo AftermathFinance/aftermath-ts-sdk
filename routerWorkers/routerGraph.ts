@@ -3,7 +3,6 @@ import {
 	Balance,
 	RouterCompleteGraph,
 	RouterCompleteTradeRoute,
-	RouterExternalFee,
 	RouterSynchronousOptions,
 	RouterSerializableCompleteGraph,
 	RouterTradeCoin,
@@ -20,6 +19,7 @@ import {
 	RouterSynchronousProtocolName,
 	RouterProtocolName,
 	RouterGraphCoinToPoolIds,
+	ExternalFee,
 } from "../src/types";
 import {
 	// RouterPoolInterface,
@@ -124,7 +124,7 @@ export class RouterGraph {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		// constructor
 		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
@@ -145,7 +145,7 @@ export class RouterGraph {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		// constructor
 		network: SuiNetwork;
 		graph: RouterSerializableCompleteGraph;
@@ -167,7 +167,7 @@ export class RouterGraph {
 		coinInAmounts: Balance[];
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		// constructor
 		network: SuiNetwork;
 		graph: RouterCompleteGraph;
@@ -346,7 +346,7 @@ export class RouterGraph {
 		coinOutType: CoinType;
 		isGivenAmountOut: boolean;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		// constructor
 		network: SuiNetwork;
 		graph: RouterCompleteGraph;
@@ -1289,7 +1289,7 @@ export class RouterGraph {
 		completeRoute: CompleteTradeRoute,
 		pools: RouterPoolsById,
 		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
+		externalFee?: ExternalFee
 	): RouterCompleteTradeRoute => {
 		const { coinIn, coinOut, spotPrice } = completeRoute;
 
