@@ -3,7 +3,7 @@ import { RouterGraph } from "../utils/synchronous/routerGraph";
 import {
 	Balance,
 	CoinType,
-	RouterExternalFee,
+	ExternalFee,
 	RouterCompleteTradeRoute,
 	Slippage,
 	SuiNetwork,
@@ -212,7 +212,7 @@ export class RouterApi {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
@@ -235,7 +235,7 @@ export class RouterApi {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountOut({

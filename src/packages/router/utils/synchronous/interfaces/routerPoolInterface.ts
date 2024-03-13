@@ -4,7 +4,7 @@ import {
 } from "@mysten/sui.js/transactions";
 import {
 	Balance,
-	RouterExternalFee,
+	ExternalFee,
 	RouterProtocolName,
 	RouterSerializablePool,
 	Slippage,

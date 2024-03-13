@@ -10,6 +10,7 @@ import {
 	TxBytes,
 	BigIntAsString,
 	SerializedTransaction,
+	ExternalFee,
 } from "../../general/types/generalTypes";
 import { CoinType } from "../coin/coinTypes";
 import { PoolObject, PoolTradeFee } from "../pools/poolsTypes";
@@ -50,19 +51,10 @@ export type UniqueId = string;
 
 /**
  * Fee info for third party packages wanting to fee route transactions
+ * @deprecated
  */
-export interface RouterExternalFee {
-	/**
-	 * Address of recipient for collected fees
-	 */
-	recipient: SuiAddress;
-	/**
-	 * Percent of fees to be collected from final coin out amount
-	 *
-	 * @remarks 0.54 = 54%
-	 */
-	feePercentage: Percentage;
-}
+export type RouterExternalFee = ExternalFee;
+//
 
 // =========================================================================
 //  All Router Pools
@@ -162,8 +154,7 @@ export const isRouterAsyncProtocolName = (
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
 	referrer?: SuiAddress;
-	externalFee?: RouterExternalFee;
-	// mergeLastPath?: boolean;
+	externalFee?: ExternalFee;
 };
 
 export type RouterTradeRoute = RouterTradeInfo & {
@@ -273,7 +264,7 @@ export interface RouterTradeEvent extends Event {
 	coinOutType: AnyObjectType;
 	coinOutAmount: Balance;
 	// referrer?: SuiAddress;
-	// externalFee?: RouterExternalFee;
+	// externalFee?: ExternalFee;
 }
 
 // =========================================================================
@@ -296,7 +287,7 @@ export type ApiRouterPartialCompleteTradeRouteBody = {
 	/**
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
-	externalFee?: RouterExternalFee;
+	externalFee?: ExternalFee;
 	excludeProtocols?: RouterProtocolName[];
 };
 

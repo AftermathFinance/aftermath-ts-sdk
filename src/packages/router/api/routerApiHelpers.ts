@@ -4,7 +4,7 @@ import {
 	CoinType,
 	RouterAsyncSerializablePool,
 	RouterCompleteTradeRoute,
-	RouterExternalFee,
+	ExternalFee,
 	RouterProtocolName,
 	RouterSerializableCompleteGraph,
 	Slippage,
@@ -75,7 +75,7 @@ export class RouterApiHelpers {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		if (inputs.protocols.length === 0)
@@ -171,7 +171,7 @@ export class RouterApiHelpers {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		if (inputs.protocols.length === 0)
@@ -195,7 +195,7 @@ export class RouterApiHelpers {
 		coinInAmounts: Balance[];
 		lastPool: RouterAsyncSerializablePool;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 	}): Promise<RouterCompleteTradeRoute[]> => {
 		const { routerGraph } = inputs;
 

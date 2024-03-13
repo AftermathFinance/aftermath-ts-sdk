@@ -4,7 +4,7 @@ import {
 	Balance,
 	RouterCompleteGraph,
 	RouterCompleteTradeRoute,
-	RouterExternalFee,
+	ExternalFee,
 	RouterSynchronousOptions,
 	RouterSerializableCompleteGraph,
 	RouterTradeCoin,
@@ -99,7 +99,7 @@ export class RouterGraph {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 	}): RouterCompleteTradeRoute {
 		const result = this.getCompleteRoute({
 			...inputs,
@@ -113,7 +113,7 @@ export class RouterGraph {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 	}): RouterCompleteTradeRoute {
 		const result = this.getCompleteRoute({
 			...inputs,
@@ -128,7 +128,7 @@ export class RouterGraph {
 		coinInAmounts: Balance[];
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 	}): RouterCompleteTradeRoute[] {
 		const completeRoutes = inputs.coinInAmounts.map((coinInAmount) => {
 			try {
@@ -302,7 +302,7 @@ export class RouterGraph {
 		coinOutType: CoinType;
 		isGivenAmountOut: boolean;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 	}): RouterCompleteTradeRoute {
 		if (Object.keys(this.graph).length <= 0)
 			throw new Error("empty graphs");
@@ -1248,7 +1248,7 @@ export class RouterGraph {
 		completeRoute: CompleteTradeRoute,
 		pools: RouterPoolsById,
 		referrer?: SuiAddress,
-		externalFee?: RouterExternalFee
+		externalFee?: ExternalFee
 	): RouterCompleteTradeRoute => {
 		const { coinIn, coinOut, spotPrice } = completeRoute;
 
