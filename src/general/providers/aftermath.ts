@@ -77,7 +77,7 @@ export class Aftermath extends Caller {
 				? "https://fullnode.devnet.sui.io:443"
 				: this.network === "TESTNET"
 				? "https://fullnode.testnet.sui.io:443"
-				: "https://fullnode.devnet.sui.io:443");
+				: "https://fullnode.mainnet.sui.io:443");
 
 		this.Provider = new AftermathApi(
 			new SuiClient({
