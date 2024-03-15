@@ -63,6 +63,7 @@ import {
 	PostedOrderReceiptEvent,
 	ApiPerpetualsCancelOrderBody,
 	PerpetualsFilledOrderData,
+	ApiPerpetualsMaxOrderSizeBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -207,47 +208,19 @@ export class PerpetualsApi {
 		accountId: PerpetualsAccountId;
 	}): Promise<PerpetualsAccountObject> => {
 		const { accountId } = inputs;
-
-		const positionDatas: {
-			marketId: PerpetualsMarketId;
-			collateralCoinType: CoinType;
-		}[] = await this.Provider.indexerCaller.fetchIndexer(
-			`perpetuals/accounts/${accountId}/positions`
+		const {
+			positions,
+		}: {
+			positions: string;
+		} = await this.Provider.indexerCaller.fetchIndexer(
+			`perpetuals/accounts/${accountId}/positions`,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
 		);
-		if (positionDatas.length <= 0) return { positions: [] };
-
-		const tx = new TransactionBlock();
-
-		for (const { marketId, collateralCoinType } of positionDatas) {
-			this.getPositionTx({
-				tx,
-				accountId,
-				marketId,
-				collateralCoinType,
-			});
-		}
-
-		const { allBytes } =
-			await this.Provider.Inspections().fetchAllBytesFromTx({
-				tx,
-			});
-
-		const partialPositions = allBytes.map((outputBytes) =>
-			PerpetualsApiCasting.partialPositionFromRaw(
-				perpetualsBcsRegistry.de(
-					"Position",
-					new Uint8Array(outputBytes[0])
-				)
-			)
-		);
-		const positions = partialPositions.map((position, index) => ({
-			...position,
-			collateralCoinType: Helpers.addLeadingZeroesToType(
-				positionDatas[index].collateralCoinType
-			),
-			marketId: positionDatas[index].marketId,
-		}));
-
+		// TODO: parse positions
 		return { positions };
 	};
 
@@ -565,220 +538,70 @@ export class PerpetualsApi {
 	// =========================================================================
 
 	public fetchPreviewOrder = async (
+		// TODO: remove unused inputs
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
-		const {
-			collateralCoinType,
-			marketId,
-			side,
-			lotSize,
-			tickSize,
-			isClose,
-		} = inputs;
+		const { marketId, side, isClose, accountId, collateralChange } = inputs;
 
-		const collateralChange = isClose ? BigInt(0) : inputs.collateralChange;
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				position_json: string;
+				price_slippage: number;
+				percent_slippage: number;
+			},
+			{
+				ch_id: PerpetualsMarketId;
+				account_id: number;
+				collateral_to_allocate: number;
+				side: boolean;
+			} & (
+				| {}
+				| {
+						price: number;
+						order_type: number;
+				  }
+			)
+		>(
+			`perpetuals/previews/${
+				"price" in inputs ? "limit" : "market"
+			}-order`,
+			{
+				ch_id: marketId,
+				account_id: Number(accountId),
+				// TODO: update func inputs
+				collateral_to_allocate: Number(collateral),
+				side: Boolean(side),
+				...("price" in inputs
+					? {
+							price: Number(inputs.price),
+							order_type: inputs.orderType,
+					  }
+					: {}),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+		return {
+			// TODO: handle json parsing, add missing data
+			positionAfterOrder: response.position_json,
+			priceSlippage: response.price_slippage,
+			percentSlippage: response.percent_slippage,
+		};
 
-		const bestPriceSide =
-			side === PerpetualsOrderSide.Ask
-				? PerpetualsOrderSide.Bid
-				: PerpetualsOrderSide.Ask;
+		// return {
+		// 	positionAfterOrder,
+		// 	priceSlippage,
+		// 	percentSlippage,
+		// 	filledSize,
+		// 	filledSizeUsd,
+		// 	postedSize,
+		// 	postedSizeUsd,
+		// 	collateralToDellocateForClose,
+		// };
 
-		// init tx and start session
-		const { tx, sessionPotatoId } = this.createTxAndStartSession({
-			...inputs,
-			collateralChange,
-		});
-
-		// get orderbook best price before order
-		this.getBestPriceTx({
-			tx,
-			marketId,
-			collateralCoinType,
-			side: bestPriceSide,
-		});
-
-		// place order
-		if ("slPrice" in inputs || "tpPrice" in inputs) {
-			this.placeSLTPOrderTx({
-				...inputs,
-				tx,
-				sessionPotatoId,
-			});
-		} else if ("price" in inputs) {
-			this.placeLimitOrderTx({
-				...inputs,
-				tx,
-				sessionPotatoId,
-			});
-		} else {
-			this.placeMarketOrderTx({
-				...inputs,
-				tx,
-				sessionPotatoId,
-			});
-		}
-
-		// get orderbook best price after order
-		this.getBestPriceTx({
-			tx,
-			marketId,
-			collateralCoinType,
-			side: bestPriceSide,
-		});
-
-		// end session
-		this.endSessionAndTransferAccount({
-			...inputs,
-			tx,
-			sessionPotatoId,
-			collateralChange,
-		});
-
-		// get position state after order
-		this.getPositionTx({ ...inputs, tx });
-
-		try {
-			// inspect tx
-			const { allBytes, events } =
-				await this.Provider.Inspections().fetchAllBytesFromTx({
-					tx,
-					sender: inputs.walletAddress,
-				});
-
-			const bytesIndexHasPositionOffset = inputs.hasPosition ? 0 : 1;
-			const bytesIndexCollateralChangeOffset =
-				collateralChange === BigInt(0) ? 0 : 1;
-
-			// deserialize position
-			let positionAfterOrder: PerpetualsPosition = {
-				...PerpetualsApiCasting.partialPositionFromRaw(
-					perpetualsBcsRegistry.de(
-						"Position",
-						new Uint8Array(
-							allBytes[
-								6 +
-									bytesIndexHasPositionOffset +
-									bytesIndexCollateralChangeOffset
-							][0]
-						)
-					)
-				),
-				collateralCoinType,
-				marketId,
-			};
-			const collateralToDellocateForClose = positionAfterOrder.collateral;
-
-			// simulate deallocate locally if position is being closed
-			if (isClose) {
-				positionAfterOrder.collateral = BigInt(0);
-			}
-
-			const bytesIndexAllocateCollateralOffset =
-				collateralChange <= BigInt(0) ? 0 : 1;
-
-			// deserialize orderbook prices
-			const bestOrderbookPriceBeforeOrder =
-				PerpetualsApiCasting.orderbookPriceFromBytes(
-					allBytes[
-						1 +
-							bytesIndexHasPositionOffset +
-							bytesIndexAllocateCollateralOffset
-					][0]
-				);
-
-			const bestOrderbookPriceAfterOrder =
-				PerpetualsApiCasting.orderbookPriceFromBytes(
-					allBytes[
-						3 +
-							bytesIndexHasPositionOffset +
-							bytesIndexAllocateCollateralOffset
-					][0]
-				);
-
-			// try find relevant events
-			const filledOrderEvents =
-				Aftermath.helpers.events.findCastEventsOrUndefined({
-					events,
-					eventType: this.eventTypes.filledTakerOrder,
-					castFunction:
-						Casting.perpetuals.filledTakerOrderEventFromOnChain,
-				});
-			const postedOrderReceiptEvents =
-				Aftermath.helpers.events.findCastEventsOrUndefined({
-					events,
-					eventType: this.eventTypes.postedOrderReceipt,
-					castFunction:
-						Casting.perpetuals.postedOrderReceiptEventFromOnChain,
-				});
-
-			const [filledSize, filledSizeUsd] = filledOrderEvents.reduce(
-				(acc, event) => {
-					const filledSize = Math.abs(
-						Casting.IFixed.numberFromIFixed(event.baseAssetDelta)
-					);
-					const filledSizeUsd = Math.abs(
-						Casting.IFixed.numberFromIFixed(event.quoteAssetDelta)
-					);
-					return [acc[0] + filledSize, acc[1] + filledSizeUsd];
-				},
-				[0, 0]
-			);
-
-			const [postedSize, postedSizeUsd] = postedOrderReceiptEvents.reduce(
-				(acc, event) => {
-					const postedSize = Number(event.size) * lotSize;
-					const postedSizeUsd =
-						postedSize *
-						Perpetuals.orderPriceToPrice({
-							orderPrice: Perpetuals.OrderUtils.price(
-								event.orderId
-							),
-							lotSize,
-							tickSize,
-						});
-					return [acc[0] + postedSize, acc[1] + postedSizeUsd];
-				},
-				[0, 0]
-			);
-
-			// calc slippages
-			// const avgEntryPrice = !filledSize
-			// 	? bestOrderbookPriceBeforeOrder
-			// 	: filledSizeUsd / filledSize;
-			// const priceSlippage = !bestOrderbookPriceBeforeOrder
-			// 	? 0
-			// 	: Math.abs(bestOrderbookPriceBeforeOrder - avgEntryPrice);
-			// const percentSlippage = !bestOrderbookPriceBeforeOrder
-			// 	? 0
-			// 	: priceSlippage / bestOrderbookPriceBeforeOrder;
-
-			// calc slippages
-			const priceSlippage = !bestOrderbookPriceBeforeOrder
-				? 0
-				: Math.abs(
-						bestOrderbookPriceBeforeOrder -
-							bestOrderbookPriceAfterOrder
-				  );
-			const percentSlippage = !bestOrderbookPriceBeforeOrder
-				? 0
-				: priceSlippage / bestOrderbookPriceBeforeOrder;
-
-			return {
-				positionAfterOrder,
-				priceSlippage,
-				percentSlippage,
-				filledSize,
-				filledSizeUsd,
-				postedSize,
-				postedSizeUsd,
-				collateralToDellocateForClose,
-			};
-		} catch (error) {
-			if (!(error instanceof Error))
-				throw new Error("invalid error thrown on preview order");
-
-			return { error: error.message };
-		}
+		// return { error: error.message };
 	};
 
 	public fetchOrderbookPrice = async (inputs: {
@@ -882,6 +705,38 @@ export class PerpetualsApi {
 				tickSize,
 			}),
 		};
+	};
+
+	public fetchMaxOrderSize = async (
+		inputs: ApiPerpetualsMaxOrderSizeBody
+	): Promise<bigint> => {
+		const { marketId, accountId, collateral, side, price } = inputs;
+		const maxSize = await this.Provider.indexerCaller.fetchIndexer<
+			number,
+			{
+				ch_id: PerpetualsMarketId;
+				account_id: number;
+				collateral_to_allocate: number;
+				side: boolean;
+				price?: number;
+			}
+		>(
+			`perpetuals/calculations/${
+				inputs.price !== undefined ? "limit" : "market"
+			}-order-max-size`,
+			{
+				ch_id: marketId,
+				account_id: Number(accountId),
+				collateral_to_allocate: Number(collateral),
+				side: Boolean(side),
+				...(price !== undefined ? { price: Number(price) } : {}),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+		return BigInt(Math.floor(maxSize));
 	};
 
 	// =========================================================================

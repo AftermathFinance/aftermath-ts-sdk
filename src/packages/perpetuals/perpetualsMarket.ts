@@ -28,6 +28,7 @@ import {
 	PerpetualsMarketData,
 	Balance,
 	PerpetualsFilledOrderData,
+	ApiPerpetualsMaxOrderSizeBody,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -97,8 +98,11 @@ export class PerpetualsMarket extends Caller {
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
 		const { side, price, account, indexPrice } = inputs;
-
-		const maxSize: bigint = await this.fetchApi("max-order-size", {
+		const maxSize: bigint = await this.fetchApi<
+			bigint,
+			ApiPerpetualsMaxOrderSizeBody
+		>("max-order-size", {
+			marketId: this.marketId,
 			accountId: account.accountCap.accountId,
 			collateral: account.collateralBalance(),
 			side,

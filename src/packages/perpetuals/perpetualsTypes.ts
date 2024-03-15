@@ -707,6 +707,14 @@ export interface ApiPerpetualsHistoricalMarketDataResponse {
 	volumes: PerpetualsMarketVolumeDataPoint[];
 }
 
+export interface ApiPerpetualsMaxOrderSizeBody {
+	marketId: PerpetualsMarketId;
+	accountId: PerpetualsAccountId;
+	collateral: Balance;
+	side: PerpetualsOrderSide;
+	price?: PerpetualsOrderPrice;
+}
+
 // =========================================================================
 //  Transactions
 // =========================================================================
