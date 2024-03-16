@@ -49,42 +49,64 @@ export class CoinGeckoPricesApi
 		)[0];
 	};
 
-	public fetchCoinsToPrice = async (inputs: { coins: CoinType[] }) => {
-		const { coins } = inputs;
+	// TODO: abstract any duplicate logic with this and price info func below
+	public fetchCoinsToPrice = this.Provider.withCache({
+		key: "coinGeckoPricesApi.fetchCoinsToPrice",
+		expirationSeconds: 300, // 5 minutes
+		callback: async (inputs: { coins: CoinType[] }) => {
+			const { coins } = inputs;
 
-		const allCoinsData = await this.fetchAllSuiCoinData();
-		const onlyInputCoinsData = Helpers.filterObject(allCoinsData, (coin) =>
-			coins
-				.map(Helpers.addLeadingZeroesToType)
-				.includes(Helpers.addLeadingZeroesToType(coin))
-		);
-		const coinsToApiId: Record<CoinType, CoinGeckoCoinApiId> =
-			Object.entries(onlyInputCoinsData).reduce(
-				(acc, [coinType, data]) => ({
-					...acc,
-					[coinType]: data.apiId,
-				}),
-				{}
+			// filter regular vs LP coins
+			const [lpCoins, regularCoins] = await Helpers.bifilterAsync(
+				coins,
+				async (coin) =>
+					this.Provider.Pools().fetchIsLpCoinType({
+						lpCoinType: coin,
+					})
 			);
 
-		const [coinsToPrice, missingCoinsToPrice] = await Promise.all([
-			this.fetchCoinsToPriceGivenApiIds({
-				coinsToApiId,
-			}),
-			new RouterPricesApi(this.Provider).fetchCoinsToPrice({
-				coins: coins.filter(
-					(coin) =>
-						!Object.keys(onlyInputCoinsData)
-							.map(Helpers.addLeadingZeroesToType)
-							.includes(Helpers.addLeadingZeroesToType(coin))
-				),
-			}),
-		]);
-		return {
-			...missingCoinsToPrice,
-			...coinsToPrice,
-		};
-	};
+			const allSuiCoinData: Record<CoinSymbol, CoinGeckoCoinSymbolData> =
+				await this.fetchAllSuiCoinData();
+			const neededCoinData = Helpers.filterObject(
+				allSuiCoinData,
+				(coin) =>
+					regularCoins
+						.map(Helpers.addLeadingZeroesToType)
+						.includes(Helpers.addLeadingZeroesToType(coin))
+			);
+			const coinsToApiId: Record<CoinType, CoinGeckoCoinApiId> =
+				Object.entries(neededCoinData).reduce(
+					(acc, [coin, data]) => ({
+						...acc,
+						[coin]: data.apiId,
+					}),
+					{}
+				);
+
+			const [coinsToPrice, lpCoinsToPrice, missingCoinsToPrice] =
+				await Promise.all([
+					this.fetchCoinsToPriceGivenApiIds({
+						coinsToApiId,
+					}),
+					this.Provider.Pools().fetchLpCoinsToPrice({ lpCoins }),
+					new RouterPricesApi(this.Provider).fetchCoinsToPrice({
+						coins: coins.filter(
+							(coin) =>
+								!Object.keys(neededCoinData)
+									.map(Helpers.addLeadingZeroesToType)
+									.includes(
+										Helpers.addLeadingZeroesToType(coin)
+									)
+						),
+					}),
+				]);
+			return {
+				...coinsToPrice,
+				...lpCoinsToPrice,
+				...missingCoinsToPrice,
+			};
+		},
+	});
 
 	// TODO: add single cache by coin type ?
 	public fetchCoinsToPriceInfo = this.Provider.withCache({

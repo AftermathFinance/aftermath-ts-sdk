@@ -37,29 +37,35 @@ export class RouterPricesApi implements PricesApiInterface {
 		)[0];
 	};
 
-	public fetchCoinsToPrice = async (inputs: {
-		coins: CoinType[];
-	}): Promise<CoinsToPrice> => {
-		const { coins } = inputs;
+	// TODO: add single caches
+	public fetchCoinsToPrice = this.Provider.withCache({
+		key: "routerPricesApi.fetchCoinsToPrice",
+		expirationSeconds: 300, // 5 minutes
+		callback: async (inputs: {
+			coins: CoinType[];
+		}): Promise<CoinsToPrice> => {
+			const { coins } = inputs;
 
-		const prices: number[] = await this.Provider.indexerCaller.fetchIndexer(
-			"prices",
-			undefined,
-			{
-				coin_types: coins,
-			},
-			undefined,
-			undefined,
-			true
-		);
-		return coins.reduce(
-			(acc, coin, index) => ({
-				...acc,
-				[coin]: prices[index] <= 0 ? -1 : prices[index],
-			}),
-			{}
-		);
-	};
+			const prices: number[] =
+				await this.Provider.indexerCaller.fetchIndexer(
+					"prices",
+					undefined,
+					{
+						coin_types: coins,
+					},
+					undefined,
+					undefined,
+					true
+				);
+			return coins.reduce(
+				(acc, coin, index) => ({
+					...acc,
+					[coin]: prices[index] <= 0 ? -1 : prices[index],
+				}),
+				{}
+			);
+		},
+	});
 
 	// TODO: add single cache by coin type ?
 	public fetchCoinsToPriceInfo = this.Provider.withCache({
