@@ -45,6 +45,7 @@ export class RouterPricesApi implements PricesApiInterface {
 			coins: CoinType[];
 		}): Promise<CoinsToPrice> => {
 			const { coins } = inputs;
+			if (coins.length <= 0) return {}
 
 			const prices: number[] =
 				await this.Provider.indexerCaller.fetchIndexer(
