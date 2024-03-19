@@ -61,16 +61,19 @@ class AfSuiRouterPool implements RouterPoolInterface {
 		if (this.isStake(inputs)) {
 			// stake
 
-			// check min stake bound
-			if (inputs.coinInAmount < Staking.constants.bounds.minStake)
-				return BigInt(0);
+			// disabling router stakes because gas cost too high
+			return BigInt(0);
 
-			// NOTE: is this safe or possible overflow ?
-			return BigInt(
-				Math.floor(
-					this.exchangeRate(inputs) * Number(inputs.coinInAmount)
-				)
-			);
+			// // check min stake bound
+			// if (inputs.coinInAmount < Staking.constants.bounds.minStake)
+			// 	return BigInt(0);
+
+			// // NOTE: is this safe or possible overflow ?
+			// return BigInt(
+			// 	Math.floor(
+			// 		this.exchangeRate(inputs) * Number(inputs.coinInAmount)
+			// 	)
+			// );
 		}
 
 		// unstake
@@ -116,18 +119,21 @@ class AfSuiRouterPool implements RouterPoolInterface {
 		if (this.isStake(inputs)) {
 			// stake
 
-			// check divide by 0
-			if (this.exchangeRate(inputs) <= 0) return Casting.u64MaxBigInt;
+			// disabling router stakes because gas cost too high
+			return Casting.u64MaxBigInt;
 
-			const coinInAmount = BigInt(
-				Math.ceil(
-					Number(inputs.coinOutAmount) / this.exchangeRate(inputs)
-				)
-			);
+			// // check divide by 0
+			// if (this.exchangeRate(inputs) <= 0) return Casting.u64MaxBigInt;
 
-			// check min stake bound
-			if (coinInAmount < Staking.constants.bounds.minStake)
-				return Casting.u64MaxBigInt;
+			// const coinInAmount = BigInt(
+			// 	Math.ceil(
+			// 		Number(inputs.coinOutAmount) / this.exchangeRate(inputs)
+			// 	)
+			// );
+
+			// // check min stake bound
+			// if (coinInAmount < Staking.constants.bounds.minStake)
+			// 	return Casting.u64MaxBigInt;
 		}
 
 		// unstake
