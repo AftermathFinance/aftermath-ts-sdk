@@ -211,7 +211,7 @@ export class PerpetualsApi {
 		const {
 			positions,
 		}: {
-			positions: string;
+			positions: [positionId: ObjectId, position: string][];
 		} = await this.Provider.indexerCaller.fetchIndexer(
 			`perpetuals/accounts/${accountId}/positions`,
 			undefined,
@@ -220,8 +220,7 @@ export class PerpetualsApi {
 			undefined,
 			true
 		);
-		// TODO: parse positions
-		return { positions };
+		return positions.map(([, position]) => position);
 	};
 
 	public fetchAccountOrderDatas = async (inputs: {
@@ -284,20 +283,20 @@ export class PerpetualsApi {
 		).reduce((acc, orderDatas) => [...acc, ...orderDatas], []);
 	};
 
-	public fetchMarket = async (inputs: {
-		marketId: PerpetualsMarketId;
-		collateralCoinType: CoinType;
-	}): Promise<PerpetualsMarketData> => {
-		const { collateralCoinType } = inputs;
-		return this.Provider.Objects().fetchCastObject({
-			objectId: inputs.marketId,
-			objectFromSuiObjectResponse: (data) =>
-				Casting.perpetuals.clearingHouseFromOnChain(
-					data,
-					collateralCoinType
-				),
-		});
-	};
+	// public fetchMarket = async (inputs: {
+	// 	marketId: PerpetualsMarketId;
+	// 	collateralCoinType: CoinType;
+	// }): Promise<PerpetualsMarketData> => {
+	// 	const { collateralCoinType } = inputs;
+	// 	return this.Provider.Objects().fetchCastObject({
+	// 		objectId: inputs.marketId,
+	// 		objectFromSuiObjectResponse: (data) =>
+	// 			Casting.perpetuals.clearingHouseFromOnChain(
+	// 				data,
+	// 				collateralCoinType
+	// 			),
+	// 	});
+	// };
 
 	// =========================================================================
 	//  Events
@@ -546,8 +545,10 @@ export class PerpetualsApi {
 		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				position_json: string;
-				price_slippage: number;
-				percent_slippage: number;
+				price_slippage: string;
+				percent_slippage: string;
+				execution_price: string;
+				size_filled: string;
 			},
 			{
 				ch_id: PerpetualsMarketId;
@@ -568,11 +569,12 @@ export class PerpetualsApi {
 			{
 				ch_id: marketId,
 				account_id: Number(accountId),
-				// TODO: update func inputs
-				collateral_to_allocate: Number(collateral),
+				// TODO: perform correct conversions
+				collateral_to_allocate: Number(collateralChange),
 				side: Boolean(side),
 				...("price" in inputs
 					? {
+							// TODO: perform correct conversions
 							price: Number(inputs.price),
 							order_type: inputs.orderType,
 					  }
@@ -583,11 +585,32 @@ export class PerpetualsApi {
 			undefined,
 			true
 		);
+
+		// TODO: perform correct conversions
+		const executionPrice = Casting.IFixed.numberFromIFixed(
+			BigInt(response.execution_price)
+		);
+		const sizeFilled = Casting.IFixed.numberFromIFixed(
+			BigInt(response.size_filled)
+		);
+		const sizeFilledUsd = sizeFilled * executionPrice;
+		const sizePosted = inputs.size - sizeFilled;
+		const sizePostedUsd = sizePosted * price;
+
+		// TODO: handle json parsing, add missing data
+		const positionAfterOrder = response.position_json;
+
 		return {
-			// TODO: handle json parsing, add missing data
-			positionAfterOrder: response.position_json,
+			sizePosted,
+			sizePostedUsd,
+			sizeFilled,
+			sizeFilledUsd,
+			executionPrice,
+			positionAfterOrder,
 			priceSlippage: response.price_slippage,
 			percentSlippage: response.percent_slippage,
+			collateralToDellocateForClose:
+				positionAfterOrder.collateral - initialCollateral,
 		};
 
 		// return {
@@ -622,23 +645,42 @@ export class PerpetualsApi {
 		return PerpetualsApiCasting.orderbookPriceFromBytes(bytes);
 	};
 
-	public fetchAllMarketIds = async (inputs: {
+	public fetchAllMarkets = async (inputs: {
 		collateralCoinType: CoinType;
-	}): Promise<PerpetualsMarketId[]> => {
+	}): Promise<PerpetualsMarketData[]> => {
 		const { collateralCoinType } = inputs;
-		const marketIdsData = await this.Provider.indexerCaller.fetchIndexer<
-			{
-				marketId: ObjectId;
-			}[]
+		const markets = await this.Provider.indexerCaller.fetchIndexer<
+			Record<ObjectId, string>
 		>(
 			`perpetuals/markets/${Helpers.addLeadingZeroesToType(
 				collateralCoinType
 			)}`
 		);
-		return marketIdsData.map((data) =>
-			Helpers.addLeadingZeroesToType(data.marketId)
+		return Object.values(markets).map((market) =>
+			Casting.perpetuals.clearingHouseFromOnChain(
+				market,
+				collateralCoinType
+			)
 		);
 	};
+
+	// public fetchAllMarketIds = async (inputs: {
+	// 	collateralCoinType: CoinType;
+	// }): Promise<PerpetualsMarketId[]> => {
+	// 	const { collateralCoinType } = inputs;
+	// 	const marketIdsData = await this.Provider.indexerCaller.fetchIndexer<
+	// 		{
+	// 			marketId: ObjectId;
+	// 		}[]
+	// 	>(
+	// 		`perpetuals/markets/${Helpers.addLeadingZeroesToType(
+	// 			collateralCoinType
+	// 		)}`
+	// 	);
+	// 	return marketIdsData.map((data) =>
+	// 		Helpers.addLeadingZeroesToType(data.marketId)
+	// 	);
+	// };
 
 	public fetchOrderbookState = async (
 		inputs: ApiPerpetualsOrderbookStateBody & {
