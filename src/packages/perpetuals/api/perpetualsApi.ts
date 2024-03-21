@@ -543,25 +543,33 @@ export class PerpetualsApi {
 		const { marketId, side, isClose, accountId, collateralChange } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
-			{
-				position_json: string;
-				price_slippage: string;
-				percent_slippage: string;
-				execution_price: string;
-				size_filled: string;
-			},
-			{
-				ch_id: PerpetualsMarketId;
-				account_id: number;
-				collateral_to_allocate: number;
-				side: boolean;
-			} & (
-				| {}
-				| {
-						price: number;
-						order_type: number;
-				  }
-			)
+			| {
+					position_json: string;
+					price_slippage: string;
+					percent_slippage: string;
+					execution_price: string;
+					size_filled: string;
+			  }
+			| {
+					error: string;
+			  },
+			| {
+					ch_id: PerpetualsMarketId;
+					account_id: number;
+					collateral_to_allocate: number; // balance
+					side: boolean;
+					size: number;
+					cancel_all: boolean;
+			  } & (
+					| {
+							// limit order
+							price: number;
+							order_type: number;
+					  }
+					| {
+							// market order
+					  }
+			  )
 		>(
 			`perpetuals/previews/${
 				"price" in inputs ? "limit" : "market"
@@ -569,22 +577,27 @@ export class PerpetualsApi {
 			{
 				ch_id: marketId,
 				account_id: Number(accountId),
-				// TODO: perform correct conversions
 				collateral_to_allocate: Number(collateralChange),
+				size: Number(inputs.size),
+				// TODO: take as input ?
+				cancel_all: false,
 				side: Boolean(side),
 				...("price" in inputs
 					? {
-							// TODO: perform correct conversions
+							// limit order
 							price: Number(inputs.price),
 							order_type: inputs.orderType,
 					  }
-					: {}),
+					: {
+							// market order
+					  }),
 			},
 			undefined,
 			undefined,
 			undefined,
 			true
 		);
+		if ("error" in response) return response;
 
 		// TODO: perform correct conversions
 		const executionPrice = Casting.IFixed.numberFromIFixed(
@@ -594,8 +607,18 @@ export class PerpetualsApi {
 			BigInt(response.size_filled)
 		);
 		const sizeFilledUsd = sizeFilled * executionPrice;
-		const sizePosted = inputs.size - sizeFilled;
-		const sizePostedUsd = sizePosted * price;
+		const sizePosted = Number(inputs.size) * inputs.lotSize - sizeFilled;
+		const sizePostedUsd =
+			"price" in inputs
+				? // limit order
+				  sizePosted *
+				  Perpetuals.orderPriceToPrice({
+						orderPrice: inputs.price,
+						lotSize: inputs.lotSize,
+						tickSize: inputs.tickSize,
+				  })
+				: // market order
+				  0;
 
 		// TODO: handle json parsing, add missing data
 		const positionAfterOrder = response.position_json;
@@ -607,24 +630,16 @@ export class PerpetualsApi {
 			sizeFilledUsd,
 			executionPrice,
 			positionAfterOrder,
-			priceSlippage: response.price_slippage,
-			percentSlippage: response.percent_slippage,
+			priceSlippage: Casting.IFixed.numberFromIFixed(
+				BigInt(response.price_slippage)
+			),
+			percentSlippage: Casting.IFixed.numberFromIFixed(
+				BigInt(response.percent_slippage)
+			),
+			// do we still need this ?
 			collateralToDellocateForClose:
 				positionAfterOrder.collateral - initialCollateral,
 		};
-
-		// return {
-		// 	positionAfterOrder,
-		// 	priceSlippage,
-		// 	percentSlippage,
-		// 	filledSize,
-		// 	filledSizeUsd,
-		// 	postedSize,
-		// 	postedSizeUsd,
-		// 	collateralToDellocateForClose,
-		// };
-
-		// return { error: error.message };
 	};
 
 	public fetchOrderbookPrice = async (inputs: {
