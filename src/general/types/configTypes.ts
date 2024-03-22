@@ -18,6 +18,7 @@ export interface ConfigAddresses {
 	pools?: PoolsAddresses;
 	suiFrens?: SuiFrensAddresses;
 	nftAmm?: NftAmmAddresses;
+	afNft?: AfNftAddresses;
 	router?: RouterAddresses;
 	referralVault?: ReferralVaultAddresses;
 	perpetuals?: PerpetualsAddresses;
@@ -116,6 +117,16 @@ export interface NftAmmAddresses {
 		treasury: ObjectId;
 		insuranceFund: ObjectId;
 		referralVault: ObjectId;
+	};
+}
+
+export interface AfNftAddresses {
+	packages: {
+		afEgg: SuiAddress;
+		afEggInitial: SuiAddress;
+	};
+	objects: {
+		afEggTransferPolicy: ObjectId;
 	};
 }
 

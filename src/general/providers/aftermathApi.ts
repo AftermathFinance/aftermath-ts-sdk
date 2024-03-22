@@ -164,6 +164,7 @@ export class AftermathApi {
 	public SuiFrens = () => new SuiFrensApi(this);
 	public Staking = () => new StakingApi(this);
 	public NftAmm = () => new NftAmmApi(this);
+	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);
 	public Oracle = () => new OracleApi(this);
