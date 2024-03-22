@@ -215,12 +215,23 @@ export class RouterApi {
 		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
-		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
-			...inputs,
-			coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
-			coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
-			protocols: this.protocols,
-		});
+		const completeRoute =
+			await this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
+				...inputs,
+				coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
+				coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
+				protocols: this.protocols,
+			});
+		const netTradeFeePercentage =
+			await this.Helpers.fetchCalcNetTradeFeePercentageFromCompleteTradeRoute(
+				{
+					completeRoute,
+				}
+			);
+		return {
+			...completeRoute,
+			netTradeFeePercentage,
+		};
 	};
 
 	/**
@@ -238,12 +249,23 @@ export class RouterApi {
 		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
-		return this.Helpers.fetchCompleteTradeRouteGivenAmountOut({
-			...inputs,
-			coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
-			coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
-			protocols: this.protocols,
-		});
+		const completeRoute =
+			await this.Helpers.fetchCompleteTradeRouteGivenAmountOut({
+				...inputs,
+				coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
+				coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
+				protocols: this.protocols,
+			});
+		const netTradeFeePercentage =
+			await this.Helpers.fetchCalcNetTradeFeePercentageFromCompleteTradeRoute(
+				{
+					completeRoute,
+				}
+			);
+		return {
+			...completeRoute,
+			netTradeFeePercentage,
+		};
 	};
 
 	// =========================================================================

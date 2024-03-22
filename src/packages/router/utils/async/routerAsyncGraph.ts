@@ -22,8 +22,11 @@ export class RouterAsyncGraph {
 	public static createFinalCompleteRoute(inputs: {
 		tradeResults: RouterAsyncTradeResults;
 		coinInAmounts: Balance[];
-		completeRoutes?: RouterCompleteTradeRoute[][];
-	}): RouterCompleteTradeRoute {
+		completeRoutes?: Omit<
+			RouterCompleteTradeRoute,
+			"netTradeFeePercentage"
+		>[][];
+	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> {
 		const asyncCompleteRoutes = this.completeRoutesFromTradeResults(inputs);
 		const completeRoutes = inputs.completeRoutes
 			? [...asyncCompleteRoutes, ...inputs.completeRoutes]
@@ -48,51 +51,52 @@ export class RouterAsyncGraph {
 
 	public static completeRoutesFromTradeResults = (inputs: {
 		tradeResults: RouterAsyncTradeResults;
-	}): RouterCompleteTradeRoute[][] => {
+	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">[][] => {
 		const { tradeResults } = inputs;
 
-		const completeRoutes: RouterCompleteTradeRoute[][] =
-			tradeResults.results.map((result) => {
-				const routes: RouterTradeRoute[] = result.amountsOut.map(
-					(amountOut, amountOutIndex) => {
-						const path = {
-							pool: result.pool,
-							protocolName: result.protocol,
-							coinIn: {
-								type: tradeResults.coinInType,
-								amount: tradeResults.coinInAmounts[
-									amountOutIndex
-								],
-								tradeFee: result.feesIn[amountOutIndex],
-							},
-							coinOut: {
-								type: tradeResults.coinOutType,
-								amount: amountOut,
-								tradeFee: result.feesOut[amountOutIndex],
-							},
-							spotPrice:
-								Number(tradeResults.coinInAmounts[0]) /
-								Number(result.amountsOut[0]),
-						};
+		const completeRoutes: Omit<
+			RouterCompleteTradeRoute,
+			"netTradeFeePercentage"
+		>[][] = tradeResults.results.map((result) => {
+			const routes: RouterTradeRoute[] = result.amountsOut.map(
+				(amountOut, amountOutIndex) => {
+					const path = {
+						pool: result.pool,
+						protocolName: result.protocol,
+						coinIn: {
+							type: tradeResults.coinInType,
+							amount: tradeResults.coinInAmounts[amountOutIndex],
+							tradeFee: result.feesIn[amountOutIndex],
+						},
+						coinOut: {
+							type: tradeResults.coinOutType,
+							amount: amountOut,
+							tradeFee: result.feesOut[amountOutIndex],
+						},
+						spotPrice:
+							Number(tradeResults.coinInAmounts[0]) /
+							Number(result.amountsOut[0]),
+					};
 
-						return {
-							...path,
-							paths: [path],
-						};
-					}
-				);
+					return {
+						...path,
+						paths: [path],
+					};
+				}
+			);
 
-				const completeRoutes: RouterCompleteTradeRoute[] = routes.map(
-					(route) => {
-						return {
-							routes: [route],
-							...route,
-						};
-					}
-				);
-
-				return completeRoutes;
+			const completeRoutes: Omit<
+				RouterCompleteTradeRoute,
+				"netTradeFeePercentage"
+			>[] = routes.map((route) => {
+				return {
+					routes: [route],
+					...route,
+				};
 			});
+
+			return completeRoutes;
+		});
 
 		return completeRoutes;
 	};
@@ -106,9 +110,12 @@ export class RouterAsyncGraph {
 	// =========================================================================
 
 	private static splitTradeBetweenRoutes = (inputs: {
-		completeRoutes: RouterCompleteTradeRoute[][];
+		completeRoutes: Omit<
+			RouterCompleteTradeRoute,
+			"netTradeFeePercentage"
+		>[][];
 		coinInAmounts: Balance[];
-	}): RouterCompleteTradeRoute[] => {
+	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">[] => {
 		const { completeRoutes, coinInAmounts } = inputs;
 
 		let chosenRouteIndexes: number[] = Array(completeRoutes.length).fill(
@@ -143,16 +150,20 @@ export class RouterAsyncGraph {
 					? completeRoutes[routeIndex][chosenIndex]
 					: undefined
 			)
-			.filter(
-				(route) => route !== undefined
-			) as RouterCompleteTradeRoute[];
+			.filter((route) => route !== undefined) as Omit<
+			RouterCompleteTradeRoute,
+			"netTradeFeePercentage"
+		>[];
 
 		return selectedCompleteRoutes;
 	};
 
 	private static singleCompleteRouteFromMany = (inputs: {
-		completeRoutes: RouterCompleteTradeRoute[];
-	}): RouterCompleteTradeRoute => {
+		completeRoutes: Omit<
+			RouterCompleteTradeRoute,
+			"netTradeFeePercentage"
+		>[];
+	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> => {
 		const { completeRoutes } = inputs;
 
 		let routes: RouterTradeRoute[] = [];

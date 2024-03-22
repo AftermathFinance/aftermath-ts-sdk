@@ -152,6 +152,7 @@ export const isRouterAsyncProtocolName = (
 
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
+	netTradeFeePercentage: Percentage;
 	referrer?: SuiAddress;
 	externalFee?: ExternalFee;
 };
