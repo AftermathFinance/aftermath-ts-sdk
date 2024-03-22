@@ -55,7 +55,12 @@ class AfSuiRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
+		const failedResult = {
+			coinOutAmount: BigInt(0),
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 		// TODO: handle referrer discount
 
 		if (this.isStake(inputs)) {
@@ -63,33 +68,43 @@ class AfSuiRouterPool implements RouterPoolInterface {
 
 			// check min stake bound
 			if (inputs.coinInAmount < Staking.constants.bounds.minStake)
-				return BigInt(0);
+				return failedResult;
 
 			// NOTE: is this safe or possible overflow ?
-			return BigInt(
-				Math.floor(
-					this.exchangeRate(inputs) * Number(inputs.coinInAmount)
-				)
-			);
+			return {
+				coinOutAmount: BigInt(
+					Math.floor(
+						this.exchangeRate(inputs) * Number(inputs.coinInAmount)
+					)
+				),
+				// NOTE: this is incorrect
+				feeInAmount: BigInt(0),
+				feeOutAmount: BigInt(0),
+			};
 		}
 
 		// unstake
 
 		// check sui reserves
 		if (inputs.coinInAmount > this.pool.atomicUnstakeSuiReserves)
-			return BigInt(0);
+			return failedResult;
 
 		// NOTE: is this safe or possible overflow ?
-		return BigInt(
-			Math.floor(
-				this.exchangeRate(inputs) *
-					Number(inputs.coinInAmount) *
-					(1 -
-						Staking.calcAtomicUnstakeFee({
-							stakedSuiVaultState: this.pool,
-						}))
-			)
-		);
+		return {
+			coinOutAmount: BigInt(
+				Math.floor(
+					this.exchangeRate(inputs) *
+						Number(inputs.coinInAmount) *
+						(1 -
+							Staking.calcAtomicUnstakeFee({
+								stakedSuiVaultState: this.pool,
+							}))
+				)
+			),
+			// NOTE: this is incorrect
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
@@ -110,14 +125,19 @@ class AfSuiRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
+		const failedResult = {
+			coinInAmount: Casting.u64MaxBigInt,
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 		// TODO: handle referrer discount
 
 		if (this.isStake(inputs)) {
 			// stake
 
 			// check divide by 0
-			if (this.exchangeRate(inputs) <= 0) return Casting.u64MaxBigInt;
+			if (this.exchangeRate(inputs) <= 0) return failedResult;
 
 			const coinInAmount = BigInt(
 				Math.ceil(
@@ -127,7 +147,7 @@ class AfSuiRouterPool implements RouterPoolInterface {
 
 			// check min stake bound
 			if (coinInAmount < Staking.constants.bounds.minStake)
-				return Casting.u64MaxBigInt;
+				return failedResult;
 		}
 
 		// unstake
@@ -140,7 +160,7 @@ class AfSuiRouterPool implements RouterPoolInterface {
 				}));
 
 		// check divide by 0
-		if (denominator <= 0) return Casting.u64MaxBigInt;
+		if (denominator <= 0) return failedResult;
 
 		const coinInAmount = BigInt(
 			Math.ceil(Number(inputs.coinOutAmount) / denominator)
@@ -148,9 +168,14 @@ class AfSuiRouterPool implements RouterPoolInterface {
 
 		// check sui reserves
 		if (coinInAmount > this.pool.atomicUnstakeSuiReserves)
-			return Casting.u64MaxBigInt;
+			return failedResult;
 
-		return coinInAmount;
+		return {
+			coinInAmount,
+			// NOTE: this is incorrect
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {

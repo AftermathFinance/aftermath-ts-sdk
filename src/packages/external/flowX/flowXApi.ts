@@ -125,21 +125,31 @@ export class FlowXApi implements RouterAsyncApiInterface<FlowXPoolObject> {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
-	}): Promise<Balance> => {
-		return RouterAsyncApiHelpers.devInspectTradeAmountOut({
-			...inputs,
-			Provider: this.Provider,
-			devInspectTx: (txInputs: {
-				tx: TransactionBlock;
-				coinInBytes: Uint8Array;
-				routerSwapCapBytes: Uint8Array;
-			}) =>
-				this.tradeDevInspectTx({
-					...inputs,
-					...txInputs,
-					routerSwapCapCoinType: inputs.coinInType,
-				}),
-		});
+	}) => {
+		const coinOutAmount =
+			await RouterAsyncApiHelpers.devInspectTradeAmountOut({
+				...inputs,
+				Provider: this.Provider,
+				devInspectTx: (txInputs: {
+					tx: TransactionBlock;
+					coinInBytes: Uint8Array;
+					routerSwapCapBytes: Uint8Array;
+				}) =>
+					this.tradeDevInspectTx({
+						...inputs,
+						...txInputs,
+						routerSwapCapCoinType: inputs.coinInType,
+					}),
+			});
+		// TODO: set correct fee (just assuming all fees are 0.3% for now)
+		const feeInAmount = BigInt(
+			Math.round(Number(inputs.coinInAmount) * (0.3 / 100))
+		);
+		return {
+			coinOutAmount,
+			feeInAmount,
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	public otherCoinInPool = (inputs: {

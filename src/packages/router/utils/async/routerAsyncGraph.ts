@@ -63,12 +63,12 @@ export class RouterAsyncGraph {
 								amount: tradeResults.coinInAmounts[
 									amountOutIndex
 								],
-								tradeFee: BigInt(0),
+								tradeFee: result.feesIn[amountOutIndex],
 							},
 							coinOut: {
 								type: tradeResults.coinOutType,
 								amount: amountOut,
-								tradeFee: BigInt(0),
+								tradeFee: result.feesOut[amountOutIndex],
 							},
 							spotPrice:
 								Number(tradeResults.coinInAmounts[0]) /

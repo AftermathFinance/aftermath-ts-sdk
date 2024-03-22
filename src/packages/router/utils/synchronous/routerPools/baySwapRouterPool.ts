@@ -60,10 +60,11 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		let smallAmountIn = BigInt(100000);
 		while (smallAmountIn < Casting.u64MaxBigInt) {
 			try {
-				const smallAmountOut = this.getTradeAmountOut({
-					...inputs,
-					coinInAmount: smallAmountIn,
-				});
+				const { coinOutAmount: smallAmountOut } =
+					this.getTradeAmountOut({
+						...inputs,
+						coinInAmount: smallAmountIn,
+					});
 
 				if (smallAmountOut <= BigInt(0))
 					throw new Error("0 amount out");
@@ -84,7 +85,7 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		const coinInReserve = this.getPoolBalance(inputs.coinInType);
 		const coinOutReserve = this.getPoolBalance(inputs.coinOutType);
 
@@ -92,11 +93,10 @@ class BaySwapRouterPool implements RouterPoolInterface {
 			Number(this.pool.feePercent + this.pool.daoFeePercent) /
 			BaySwapRouterPool.BAY_SWAP_FEE_SCALING;
 
-		const coinInAmountMinusFee =
-			inputs.coinInAmount -
-			BigInt(
-				Math.floor(Number(inputs.coinInAmount) * totalFeePercentage)
-			);
+		const feeInAmount = BigInt(
+			Math.floor(Number(inputs.coinInAmount) * totalFeePercentage)
+		);
+		const coinInAmountMinusFee = inputs.coinInAmount - feeInAmount;
 
 		if (this.pool.isStable) {
 			const isCoinInX = BaySwapApi.isCoinX({
@@ -111,7 +111,12 @@ class BaySwapRouterPool implements RouterPoolInterface {
 				Number(isCoinInX ? this.pool.yScale : this.pool.xScale),
 				Number(coinInAmountMinusFee)
 			);
-			return BigInt(Math.floor(recievedAmount));
+			const coinOutAmount = BigInt(Math.floor(recievedAmount));
+			return {
+				coinOutAmount,
+				feeInAmount,
+				feeOutAmount: BigInt(0),
+			};
 		}
 
 		const { recievedAmount } = this.getSwapAmountUncorrelated(
@@ -119,7 +124,12 @@ class BaySwapRouterPool implements RouterPoolInterface {
 			coinOutReserve,
 			Number(coinInAmountMinusFee)
 		);
-		return BigInt(Math.floor(recievedAmount));
+		const coinOutAmount = BigInt(Math.floor(recievedAmount));
+		return {
+			coinOutAmount,
+			feeInAmount,
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
@@ -137,9 +147,13 @@ class BaySwapRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		// TODO: implement
-		return Casting.u64MaxBigInt;
+		return {
+			coinInAmount: Casting.u64MaxBigInt,
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {

@@ -56,10 +56,11 @@ class KriyaRouterPool implements RouterPoolInterface {
 		let smallAmountIn = BigInt(100000);
 		while (smallAmountIn < Casting.u64MaxBigInt) {
 			try {
-				const smallAmountOut = this.getTradeAmountOut({
-					...inputs,
-					coinInAmount: smallAmountIn,
-				});
+				const { coinOutAmount: smallAmountOut } =
+					this.getTradeAmountOut({
+						...inputs,
+						coinInAmount: smallAmountIn,
+					});
 
 				if (smallAmountOut <= BigInt(0))
 					throw new Error("0 amount out");
@@ -79,13 +80,16 @@ class KriyaRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		const coinInReserve = this.getPoolBalance(inputs.coinInType);
 		const coinOutReserve = this.getPoolBalance(inputs.coinOutType);
 
 		const coinInAmount = Number(inputs.coinInAmount);
 		const totalFee = Number(
 			this.pool.protocolFeePercent + this.pool.lpFeePercent
+		);
+		const feeInAmount = BigInt(
+			Math.round((coinInAmount * totalFee) / KriyaRouterPool.FEE_SCALING)
 		);
 
 		if (this.pool.isStable) {
@@ -102,7 +106,12 @@ class KriyaRouterPool implements RouterPoolInterface {
 				coinInAmount,
 				totalFee
 			);
-			return BigInt(Math.floor(recievedAmount));
+			const coinOutAmount = BigInt(Math.floor(recievedAmount));
+			return {
+				coinOutAmount,
+				feeInAmount,
+				feeOutAmount: BigInt(0),
+			};
 		}
 
 		const { recievedAmount } = this.getSwapAmountUncorrelated(
@@ -111,7 +120,13 @@ class KriyaRouterPool implements RouterPoolInterface {
 			coinInAmount,
 			totalFee
 		);
-		return BigInt(Math.floor(recievedAmount));
+
+		const coinOutAmount = BigInt(Math.floor(recievedAmount));
+		return {
+			coinOutAmount,
+			feeInAmount,
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
@@ -129,9 +144,13 @@ class KriyaRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		// TODO: implement
-		return Casting.u64MaxBigInt;
+		return {
+			coinInAmount: Casting.u64MaxBigInt,
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {

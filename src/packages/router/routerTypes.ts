@@ -250,6 +250,8 @@ export interface RouterAsyncTradeResult {
 	protocol: RouterAsyncProtocolName;
 	pool: RouterAsyncSerializablePool;
 	amountsOut: Balance[];
+	feesIn: Balance[];
+	feesOut: Balance[];
 }
 
 // =========================================================================
