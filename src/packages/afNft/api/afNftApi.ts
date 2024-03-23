@@ -8,6 +8,7 @@ import {
 	ObjectId,
 	Slippage,
 	SuiAddress,
+	AnyObjectType,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../../coin/coin";
@@ -25,9 +26,10 @@ export class AfNftApi {
 
 	private static readonly constants = {
 		moduleNames: {
-			interface: "interface",
-			actions: "actions",
-			market: "market",
+			whitelistManager: "wl_manager",
+			egg: "egg",
+			kioskLockRule: "kiosk_lock_rule",
+			kioskRoyaltyRule: "royalty_rule",
 		},
 	};
 
@@ -42,7 +44,7 @@ export class AfNftApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.AfNft;
+		const addresses = this.Provider.addresses.afNft;
 		if (!addresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
@@ -59,381 +61,55 @@ export class AfNftApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchNftsInMarketTable = async (inputs: {
-		marketTableObjectId: ObjectId;
-		cursor?: ObjectId;
-		limit?: number;
-	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
-		return await this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
-			{
-				...inputs,
-				parentObjectId: inputs.marketTableObjectId,
-				objectsFromObjectIds: (objectIds) =>
-					this.Provider.Nfts().fetchNfts({ objectIds }),
-			}
-		);
-	};
-
-	public fetchMarket = async (inputs: {
-		objectId: ObjectId;
-	}): Promise<AfNftMarketObject> => {
-		return this.Provider.Objects().fetchCastObject({
-			...inputs,
-			objectFromSuiObjectResponse:
-				AfNftApiCasting.marketObjectFromSuiObject,
-		});
-	};
-
-	public fetchMarkets = async (inputs: {
-		objectIds: ObjectId[];
-	}): Promise<AfNftMarketObject[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch({
-			...inputs,
-			objectFromSuiObjectResponse:
-				AfNftApiCasting.marketObjectFromSuiObject,
-		});
-	};
-
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
-
-	public fetchBuildBuyTx = async (inputs: {
-		market: AfNftMarket;
-		walletAddress: SuiAddress;
-		nftObjectIds: ObjectId[];
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		const { market } = inputs;
-		const marketObject = market.market;
-
-		const expectedAssetCoinAmountIn = market.getBuyAssetCoinAmountIn({
-			nftsCount: inputs.nftObjectIds.length,
-			referral: inputs.referrer !== undefined,
-		});
-
-		const assetCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress: inputs.walletAddress,
-			coinType: marketObject.assetCoinType,
-			coinAmount: expectedAssetCoinAmountIn,
-		});
-
-		this.buyTx({
-			tx,
-			...inputs,
-			marketObjectId: marketObject.objectId,
-			genericTypes: AfNftApi.genericTypesForMarket({ market }),
-			assetCoin,
-			expectedAssetCoinAmountIn,
-			withTransfer: true,
-		});
-
-		return tx;
-	};
-
-	public fetchBuildSellTx = async (inputs: {
-		market: AfNftMarket;
-		walletAddress: SuiAddress;
-		nftObjectIds: ObjectId[];
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		const { market } = inputs;
-		const marketObject = market.market;
-
-		const expectedAssetCoinAmountOut = market.getSellAssetCoinAmountOut({
-			nftsCount: inputs.nftObjectIds.length,
-			referral: inputs.referrer !== undefined,
-		});
-
-		this.sellTx({
-			...inputs,
-			tx,
-			nfts: inputs.nftObjectIds,
-			marketObjectId: marketObject.objectId,
-			genericTypes: AfNftApi.genericTypesForMarket({ market }),
-			expectedAssetCoinAmountOut,
-			withTransfer: true,
-		});
-
-		return tx;
-	};
-
-	public fetchBuildDepositTx = async (inputs: {
-		market: AfNftMarket;
-		walletAddress: SuiAddress;
-		assetCoinAmountIn: Balance;
-		nfts: (ObjectId | TransactionArgument)[];
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		const { market } = inputs;
-		const marketObject = market.market;
-
-		const { lpRatio } = market.getDepositLpCoinAmountOut({
-			assetCoinAmountIn: inputs.assetCoinAmountIn,
-			referral: inputs.referrer !== undefined,
-		});
-
-		// // TODO: move this somewhere else and into its own func
-		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
-
-		const assetCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress: inputs.walletAddress,
-			coinType: marketObject.assetCoinType,
-			coinAmount: inputs.assetCoinAmountIn,
-		});
-
-		this.depositTx({
-			tx,
-			...inputs,
-			marketObjectId: marketObject.objectId,
-			genericTypes: AfNftApi.genericTypesForMarket({ market }),
-			expectedLpRatio,
-			assetCoin,
-			withTransfer: true,
-		});
-
-		return tx;
-	};
-
-	public fetchBuildWithdrawTx = async (inputs: {
-		market: AfNftMarket;
-		walletAddress: SuiAddress;
-		lpCoinAmount: Balance;
-		nftObjectIds: ObjectId[];
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
-		tx.setSender(inputs.walletAddress);
-
-		const { market } = inputs;
-		const marketObject = market.market;
-
-		const fractionalizedCoinAmountOut =
-			market.getWithdrawFractionalizedCoinAmountOut({
-				lpCoinAmount: inputs.lpCoinAmount,
-				referral: inputs.referrer !== undefined,
-			});
-
-		const { balances: coinAmountsOut } = Coin.coinsAndBalancesOverZero({
-			[marketObject.fractionalizedCoinType]: fractionalizedCoinAmountOut,
-		});
-		const expectedAssetCoinAmountOut = coinAmountsOut[0];
-
-		const lpCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress: inputs.walletAddress,
-			coinType: marketObject.lpCoinType,
-			coinAmount: inputs.lpCoinAmount,
-		});
-
-		this.addWithdrawCommandToTransaction({
-			tx,
-			...inputs,
-			marketObjectId: marketObject.objectId,
-			genericTypes: AfNftApi.genericTypesForMarket({ market }),
-			expectedAssetCoinAmountOut,
-			lpCoin,
-			withTransfer: true,
-		});
-
-		return tx;
-	};
 
 	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
 
-	public buyTx = (inputs: {
+	public proveRuleTx = (inputs: {
 		tx: TransactionBlock;
-		marketObjectId: ObjectId;
-		assetCoin: ObjectId | TransactionArgument;
-		nftObjectIds: ObjectId[];
-		expectedAssetCoinAmountIn: Balance;
-		genericTypes: AfNftInterfaceGenericTypes;
-		slippage: Slippage;
-		withTransfer?: boolean;
+		nftType: AnyObjectType;
+		kioskId: ObjectId;
+		transferRequestId: ObjectId;
 	}) => {
-		const { tx, assetCoin, genericTypes, nftObjectIds } = inputs;
+		const { tx, nftType, kioskId, transferRequestId } = inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.AfNft,
-				inputs.withTransfer
-					? AfNftApi.constants.moduleNames.interface
-					: AfNftApi.constants.moduleNames.actions,
-				"buy"
+				this.addresses.packages.afEgg,
+				AfNftApi.constants.moduleNames.kioskLockRule,
+				"prove"
 			),
-			typeArguments: genericTypes,
-			arguments: [
-				tx.object(inputs.marketObjectId),
-				tx.object(this.addresses.objects.protocolFeeVault),
-				tx.object(this.addresses.objects.treasury),
-				tx.object(this.addresses.objects.insuranceFund),
-				tx.object(this.addresses.objects.referralVault),
-				typeof assetCoin === "string"
-					? tx.object(assetCoin)
-					: assetCoin,
-				tx.makeMoveVec({
-					objects: nftObjectIds.map((id) => tx.object(id)),
-					type: "ID",
-				}),
-				tx.pure(inputs.expectedAssetCoinAmountIn.toString()),
-				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
-			],
+			typeArguments: [nftType],
+			arguments: [tx.object(transferRequestId), tx.object(kioskId)],
 		});
 	};
 
-	public sellTx = (inputs: {
+	public payRoyaltyRuleTx = (inputs: {
 		tx: TransactionBlock;
-		marketObjectId: ObjectId;
-		nfts: (ObjectId | TransactionArgument)[];
-		expectedAssetCoinAmountOut: Balance;
-		genericTypes: AfNftInterfaceGenericTypes;
-		slippage: Slippage;
-		withTransfer?: boolean;
+		nftType: AnyObjectType;
+		coinId: ObjectId;
+		transferPolicyId: ObjectId;
+		transferRequestId: ObjectId;
 	}) => {
-		const { tx, genericTypes, nfts } = inputs;
+		const { tx, nftType, coinId, transferPolicyId, transferRequestId } =
+			inputs;
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.AfNft,
-				inputs.withTransfer
-					? AfNftApi.constants.moduleNames.interface
-					: AfNftApi.constants.moduleNames.actions,
-				"sell"
+				this.addresses.packages.afEgg,
+				AfNftApi.constants.moduleNames.kioskRoyaltyRule,
+				"pay"
 			),
-			typeArguments: genericTypes,
+			typeArguments: [nftType],
 			arguments: [
-				tx.object(inputs.marketObjectId),
-				tx.object(this.addresses.objects.protocolFeeVault),
-				tx.object(this.addresses.objects.treasury),
-				tx.object(this.addresses.objects.insuranceFund),
-				tx.object(this.addresses.objects.referralVault),
-				tx.makeMoveVec({
-					objects: Helpers.isArrayOfStrings(nfts)
-						? nfts.map((nft) => tx.object(nft))
-						: (nfts as TransactionObjectArgument[]),
-					type: genericTypes[3],
-				}),
-				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
-				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
+				tx.object(transferPolicyId),
+				tx.object(transferRequestId),
+				tx.object(coinId),
 			],
 		});
-	};
-
-	public depositTx = (inputs: {
-		tx: TransactionBlock;
-		marketObjectId: ObjectId;
-		assetCoin: ObjectId | TransactionArgument;
-		nfts: (ObjectId | TransactionArgument)[];
-		expectedLpRatio: bigint;
-		genericTypes: AfNftInterfaceGenericTypes;
-		slippage: Slippage;
-		withTransfer?: boolean;
-	}) => {
-		const { tx, assetCoin, genericTypes, nfts } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.AfNft,
-				inputs.withTransfer
-					? AfNftApi.constants.moduleNames.interface
-					: AfNftApi.constants.moduleNames.actions,
-				"deposit"
-			),
-			typeArguments: genericTypes,
-			arguments: [
-				tx.object(inputs.marketObjectId),
-				tx.object(this.addresses.objects.protocolFeeVault),
-				tx.object(this.addresses.objects.treasury),
-				tx.object(this.addresses.objects.insuranceFund),
-				tx.object(this.addresses.objects.referralVault),
-				typeof assetCoin === "string"
-					? tx.object(assetCoin)
-					: assetCoin,
-				tx.makeMoveVec({
-					objects: Helpers.isArrayOfStrings(nfts)
-						? nfts.map((nft) => tx.object(nft))
-						: (nfts as TransactionObjectArgument[]),
-					type: genericTypes[3],
-				}),
-				tx.pure(inputs.expectedLpRatio.toString()),
-				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
-			],
-		});
-	};
-
-	public addWithdrawCommandToTransaction = (inputs: {
-		tx: TransactionBlock;
-		marketObjectId: ObjectId;
-		lpCoin: ObjectId | TransactionArgument;
-		nftObjectIds: ObjectId[];
-		expectedAssetCoinAmountOut: Balance;
-		genericTypes: AfNftInterfaceGenericTypes;
-		slippage: Slippage;
-		withTransfer?: boolean;
-	}) => {
-		const { tx, lpCoin, genericTypes, nftObjectIds } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.AfNft,
-				inputs.withTransfer
-					? AfNftApi.constants.moduleNames.interface
-					: AfNftApi.constants.moduleNames.actions,
-				"withdraw"
-			),
-			typeArguments: genericTypes,
-			arguments: [
-				tx.object(inputs.marketObjectId),
-				tx.object(this.addresses.objects.protocolFeeVault),
-				tx.object(this.addresses.objects.treasury),
-				tx.object(this.addresses.objects.insuranceFund),
-				tx.object(this.addresses.objects.referralVault),
-				typeof lpCoin === "string" ? tx.object(lpCoin) : lpCoin,
-				tx.makeMoveVec({
-					objects: nftObjectIds.map((id) => tx.object(id)),
-					type: "ID",
-				}),
-				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
-				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
-			],
-		});
-	};
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	private static genericTypesForMarket = (inputs: {
-		market: AfNftMarket;
-	}): [
-		lpCoinType: CoinType,
-		fractionalizedCoinType: CoinType,
-		assetCoinType: CoinType,
-		nftType: CoinType
-	] => {
-		const marketObject = inputs.market.market;
-		return [
-			marketObject.lpCoinType,
-			marketObject.fractionalizedCoinType,
-			marketObject.assetCoinType,
-			marketObject.nftType,
-		];
 	};
 }

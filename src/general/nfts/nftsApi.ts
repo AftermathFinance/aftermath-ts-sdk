@@ -1,5 +1,6 @@
 import { AftermathApi } from "../providers/aftermathApi";
 import {
+	AnyObjectType,
 	KioskObject,
 	KioskOwnerCapObject,
 	Nft,
@@ -179,6 +180,63 @@ export class NftsApi {
 			),
 			typeArguments: [],
 			arguments: [],
+		});
+	};
+
+	public kioskPurchaseWithCapTx = (inputs: {
+		tx: TransactionBlock;
+		nftType: AnyObjectType;
+		kioskId: ObjectId;
+		purchaseCapId: ObjectId;
+		coinId: ObjectId;
+	}) /* (NFT, TransferRequest) */ => {
+		const { tx, nftType, kioskId, purchaseCapId, coinId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				"0x0000000000000000000000000000000000000000000000000000000000000002",
+				NftsApi.constants.moduleNames.kiosk,
+				"purchase_with_cap"
+			),
+			typeArguments: [nftType],
+			arguments: [
+				tx.object(kioskId),
+				tx.object(purchaseCapId),
+				tx.object(coinId),
+			],
+		});
+	};
+
+	public kioskLockTx = (inputs: {
+		tx: TransactionBlock;
+		nftType: AnyObjectType;
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
+		transferPolicyId: ObjectId;
+		nftId: ObjectId;
+	}) => {
+		const {
+			tx,
+			nftType,
+			kioskId,
+			kioskOwnerCapId,
+			transferPolicyId,
+			nftId,
+		} = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				"0x0000000000000000000000000000000000000000000000000000000000000002",
+				NftsApi.constants.moduleNames.kiosk,
+				"lock"
+			),
+			typeArguments: [nftType],
+			arguments: [
+				tx.object(kioskId),
+				tx.object(kioskOwnerCapId),
+				tx.object(transferPolicyId),
+				tx.object(nftId),
+			],
 		});
 	};
 }
