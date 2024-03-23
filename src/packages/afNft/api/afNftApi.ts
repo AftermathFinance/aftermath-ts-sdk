@@ -1,23 +1,7 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	Balance,
-	CoinType,
-	DynamicFieldObjectsWithCursor,
-	Nft,
-	AfNftAddresses,
-	ObjectId,
-	Slippage,
-	SuiAddress,
-	AnyObjectType,
-} from "../../../types";
-import { Casting, Helpers } from "../../../general/utils";
-import { Coin } from "../../coin/coin";
-import { Pools } from "../../pools/pools";
-import {
-	TransactionArgument,
-	TransactionBlock,
-	TransactionObjectArgument,
-} from "@mysten/sui.js/transactions";
+import { AfNftAddresses, ObjectId, AnyObjectType } from "../../../types";
+import { Helpers } from "../../../general/utils";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class AfNftApi {
 	// =========================================================================

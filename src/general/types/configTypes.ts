@@ -19,6 +19,7 @@ export interface ConfigAddresses {
 	suiFrens?: SuiFrensAddresses;
 	nftAmm?: NftAmmAddresses;
 	afNft?: AfNftAddresses;
+	fractionalNfts?: FractionalNftsAddresses;
 	router?: RouterAddresses;
 	referralVault?: ReferralVaultAddresses;
 	perpetuals?: PerpetualsAddresses;
@@ -127,6 +128,13 @@ export interface AfNftAddresses {
 	};
 	objects: {
 		afEggTransferPolicy: ObjectId;
+	};
+}
+
+export interface FractionalNftsAddresses {
+	packages: {
+		nftVault: SuiAddress;
+		nftVaultInitial: SuiAddress;
 	};
 }
 

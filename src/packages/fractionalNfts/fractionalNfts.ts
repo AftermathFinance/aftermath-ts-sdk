@@ -1,8 +1,8 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { ObjectId, SuiNetwork, Url } from "../../types";
+import { SuiNetwork } from "../../types";
 
-export class AfNft extends Caller {
+export class FractionalNfts extends Caller {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -17,7 +17,7 @@ export class AfNft extends Caller {
 		public readonly network?: SuiNetwork,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "af-nft");
+		super(network, "fractional-nfts");
 	}
 
 	// =========================================================================
@@ -39,7 +39,7 @@ export class AfNft extends Caller {
 	// =========================================================================
 
 	private useProvider = () => {
-		const provider = this.Provider?.AfNft();
+		const provider = this.Provider?.FractionalNfts();
 		if (!provider) throw new Error("missing AftermathApi Provider");
 		return provider;
 	};
