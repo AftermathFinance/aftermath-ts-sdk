@@ -1548,7 +1548,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	};
 
 	public fetchCalcPoolVolume24hrs = this.Provider.withCache({
-		key: "fetchPool",
+		key: "fetchCalcPoolVolume24hrs",
 		expirationSeconds: 300, // 5 minutes
 		callback: async (inputs: { poolId: ObjectId }) => {
 			const { poolId } = inputs;
