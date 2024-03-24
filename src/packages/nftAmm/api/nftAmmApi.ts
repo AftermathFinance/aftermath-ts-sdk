@@ -6,12 +6,15 @@ import {
 import { NftAmmApiCasting } from "./nftAmmApiCasting";
 import { NftAmmMarket } from "../nftAmmMarket";
 import {
+	AfNftAddresses,
 	Balance,
 	CoinType,
 	DynamicFieldObjectsWithCursor,
+	FractionalNftsAddresses,
 	Nft,
 	NftAmmAddresses,
 	ObjectId,
+	PoolsAddresses,
 	Slippage,
 	SuiAddress,
 } from "../../../types";
@@ -41,20 +44,31 @@ export class NftAmmApi {
 	//  Class Members
 	// =========================================================================
 
-	public readonly addresses: NftAmmAddresses;
+	public readonly addresses: {
+		pools: PoolsAddresses;
+		fractionalNfts: FractionalNftsAddresses;
+		afNft?: AfNftAddresses;
+	};
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.nftAmm;
-		if (!addresses)
+		const pools = Provider.addresses.pools;
+		const fractionalNfts = Provider.addresses.fractionalNfts;
+		const afNft = Provider.addresses.afNft;
+
+		if (!pools || !fractionalNfts)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = addresses;
+		this.addresses = {
+			pools,
+			fractionalNfts,
+			afNft,
+		};
 	}
 
 	// =========================================================================

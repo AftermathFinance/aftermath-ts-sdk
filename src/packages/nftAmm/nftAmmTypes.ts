@@ -29,17 +29,6 @@ export interface NftAmmMarketObject extends Object {
 }
 
 // =========================================================================
-//  Generic Types
-// =========================================================================
-
-export type NftAmmInterfaceGenericTypes = [
-	lpCoinType: CoinType,
-	fractionalizedCoinType: CoinType,
-	assetCoinType: CoinType,
-	nftType: AnyObjectType
-];
-
-// =========================================================================
 //  API
 // =========================================================================
 
