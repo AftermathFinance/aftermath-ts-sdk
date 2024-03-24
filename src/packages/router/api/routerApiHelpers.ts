@@ -17,6 +17,7 @@ import {
 	SuiAddress,
 	RouterSerializablePool,
 	Percentage,
+	RouterTradePath,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
@@ -256,18 +257,22 @@ export class RouterApiHelpers {
 
 		const coinsWithFees = completeRoute.routes
 			.reduce(
-				(acc, route) => [
+				(acc, route) => [...acc, ...route.paths],
+				[] as RouterTradePath[]
+			)
+			.reduce(
+				(acc, path) => [
 					...acc,
 					{
-						coinType: route.coinIn.type,
-						fee: route.coinIn.tradeFee,
+						coinType: path.coinIn.type,
+						fee: path.coinIn.tradeFee,
 					},
 					{
-						coinType: route.coinOut.type,
-						fee: route.coinOut.tradeFee,
+						coinType: path.coinOut.type,
+						fee: path.coinOut.tradeFee,
 					},
 				],
-				{} as { coinType: CoinType; fee: Balance }[]
+				[] as { coinType: CoinType; fee: Balance }[]
 			)
 			.filter((data) => data.fee > BigInt(0));
 
