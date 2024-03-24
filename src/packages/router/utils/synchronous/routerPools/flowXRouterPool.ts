@@ -54,7 +54,7 @@ class FlowXRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		throw new Error("uncallable");
 	};
 
@@ -67,7 +67,7 @@ class FlowXRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		throw new Error("uncallable");
 	};
 

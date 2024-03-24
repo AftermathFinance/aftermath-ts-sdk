@@ -52,7 +52,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		throw new Error("uncallable");
 	};
 
@@ -74,7 +74,7 @@ class TurbosRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		throw new Error("uncallable");
 	};
 

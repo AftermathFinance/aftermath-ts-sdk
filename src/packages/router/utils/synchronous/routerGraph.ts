@@ -1058,7 +1058,7 @@ export class RouterGraph {
 				const totalCoinInAmount =
 					currentCoinInAmount + path.coinIn.amount;
 
-				const totalCoinOutAmount = isGivenAmountOut
+				const tradeResult = isGivenAmountOut
 					? poolBeforePathTrades.getTradeAmountIn({
 							coinInType: path.coinIn.type,
 							coinOutType: path.coinOut.type,
@@ -1072,6 +1072,10 @@ export class RouterGraph {
 							referrer,
 					  });
 
+				const totalCoinOutAmount =
+					"coinOutAmount" in tradeResult
+						? tradeResult.coinOutAmount
+						: tradeResult.coinInAmount;
 				const coinOutAmountFromTrade =
 					totalCoinOutAmount - path.coinOut.amount;
 
@@ -1096,10 +1100,18 @@ export class RouterGraph {
 					coinIn: {
 						...path.coinIn,
 						amount: totalCoinInAmount,
+						tradeFee:
+							"coinOutAmount" in tradeResult
+								? tradeResult.feeOutAmount
+								: tradeResult.feeInAmount,
 					},
 					coinOut: {
 						...path.coinOut,
 						amount: totalCoinOutAmount,
+						tradeFee:
+							"coinOutAmount" in tradeResult
+								? tradeResult.feeInAmount
+								: tradeResult.feeOutAmount,
 					},
 					spotPrice,
 				};

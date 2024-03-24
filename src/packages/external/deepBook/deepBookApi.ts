@@ -250,8 +250,19 @@ export class DeepBookApi
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
-	}): Promise<Balance> => {
-		return this.fetchCalcTradeAmountOut(inputs);
+	}) => {
+		const coinOutAmount = await this.fetchCalcTradeAmountOut(inputs);
+		const feeInAmount = BigInt(
+			Math.round(
+				Number(inputs.coinInAmount) *
+					(Number(inputs.pool.takerFeeRate) / 1000000000)
+			)
+		);
+		return {
+			coinOutAmount,
+			feeInAmount,
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	public otherCoinInPool = (inputs: {

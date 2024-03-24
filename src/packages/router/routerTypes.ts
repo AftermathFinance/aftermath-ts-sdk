@@ -156,6 +156,10 @@ export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	externalFee?: ExternalFee;
 };
 
+export type RouterCompleteTradeRouteWithFee = RouterCompleteTradeRoute & {
+	netTradeFeePercentage: Percentage;
+};
+
 export type RouterTradeRoute = RouterTradeInfo & {
 	paths: RouterTradePath[];
 };
@@ -250,6 +254,8 @@ export interface RouterAsyncTradeResult {
 	protocol: RouterAsyncProtocolName;
 	pool: RouterAsyncSerializablePool;
 	amountsOut: Balance[];
+	feesIn: Balance[];
+	feesOut: Balance[];
 }
 
 // =========================================================================

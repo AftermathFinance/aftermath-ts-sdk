@@ -73,9 +73,10 @@ class DeprecatedDeepBookRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
-		const { amountOut } = this.getTradeAmountOutAndPoolAfterTrade(inputs);
-		return amountOut;
+	}) => {
+		throw new Error("deprecated");
+		// const { amountOut } = this.getTradeAmountOutAndPoolAfterTrade(inputs);
+		// return amountOut;
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs): TransactionObjectArgument => {
@@ -93,8 +94,9 @@ class DeprecatedDeepBookRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
-		return BigInt(0);
+	}) => {
+		throw new Error("deprecated");
+		// return BigInt(0);
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {

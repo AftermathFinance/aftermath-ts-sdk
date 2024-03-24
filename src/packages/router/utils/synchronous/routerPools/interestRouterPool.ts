@@ -58,10 +58,11 @@ class InterestRouterPool implements RouterPoolInterface {
 		let smallAmountIn = BigInt(100000);
 		while (smallAmountIn < Casting.u64MaxBigInt) {
 			try {
-				const smallAmountOut = this.getTradeAmountOut({
-					...inputs,
-					coinInAmount: smallAmountIn,
-				});
+				const { coinOutAmount: smallAmountOut } =
+					this.getTradeAmountOut({
+						...inputs,
+						coinInAmount: smallAmountIn,
+					});
 
 				if (smallAmountOut <= BigInt(0))
 					throw new Error("0 amount out");
@@ -81,7 +82,7 @@ class InterestRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		if (this.pool.isStable) {
 			const coinInAmountMinusFeesAdjusted =
 				inputs.coinInAmount -
@@ -117,10 +118,16 @@ class InterestRouterPool implements RouterPoolInterface {
 				: reserveX -
 				  this.calcY(amountInDecimals + reserveY, _k, reserveX);
 
-			return (
-				(y * (isCoinInX ? this.pool.decimalsY : this.pool.decimalsX)) /
-				InterestRouterPool.PRECISION
-			);
+			return {
+				coinOutAmount:
+					(y *
+						(isCoinInX
+							? this.pool.decimalsY
+							: this.pool.decimalsX)) /
+					InterestRouterPool.PRECISION,
+				feeInAmount: BigInt(0),
+				feeOutAmount: BigInt(0),
+			};
 		}
 
 		const coinInAmountMinusFeesAdjusted =
@@ -135,7 +142,11 @@ class InterestRouterPool implements RouterPoolInterface {
 			this.getPoolBalance(inputs.coinInType) +
 			coinInAmountMinusFeesAdjusted;
 
-		return numerator / denominator;
+		return {
+			coinOutAmount: numerator / denominator,
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
@@ -153,9 +164,13 @@ class InterestRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		// TODO: implement
-		return Casting.u64MaxBigInt;
+		return {
+			coinInAmount: Casting.u64MaxBigInt,
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {

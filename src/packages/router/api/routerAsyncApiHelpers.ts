@@ -130,7 +130,7 @@ export class RouterAsyncApiHelpers {
 					try {
 						const pool = inputs.pools[index];
 
-						const amountsOut = await Promise.all(
+						const tradeResults = await Promise.all(
 							coinInAmounts.map(async (amountIn) => {
 								try {
 									return await api.fetchTradeAmountOut({
@@ -140,7 +140,11 @@ export class RouterAsyncApiHelpers {
 									});
 								} catch (e) {
 									console.error(e);
-									return BigInt(0);
+									return {
+										coinOutAmount: BigInt(0),
+										feeInAmount: BigInt(0),
+										feeOutAmount: BigInt(0),
+									};
 								}
 							})
 						);
@@ -149,8 +153,16 @@ export class RouterAsyncApiHelpers {
 
 						return {
 							pool,
-							amountsOut,
 							protocol,
+							amountsOut: tradeResults.map(
+								(result) => result.coinOutAmount
+							),
+							feesIn: tradeResults.map(
+								(result) => result.feeInAmount
+							),
+							feesOut: tradeResults.map(
+								(result) => result.feeOutAmount
+							),
 						};
 					} catch (e) {
 						return undefined;

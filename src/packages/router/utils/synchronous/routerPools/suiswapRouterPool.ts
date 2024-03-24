@@ -56,10 +56,11 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		let smallAmountIn = BigInt(100000);
 		while (smallAmountIn < Casting.u64MaxBigInt) {
 			try {
-				const smallAmountOut = this.getTradeAmountOut({
-					...inputs,
-					coinInAmount: smallAmountIn,
-				});
+				const { coinOutAmount: smallAmountOut } =
+					this.getTradeAmountOut({
+						...inputs,
+						coinInAmount: smallAmountIn,
+					});
 
 				if (smallAmountOut <= BigInt(0))
 					throw new Error("0 amount out");
@@ -80,7 +81,7 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		const isCoinInX = SuiswapApi.isCoinX({
 			coinType: inputs.coinInType,
 			pool: this.pool,
@@ -108,9 +109,13 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		// TODO: implement
-		return Casting.u64MaxBigInt;
+		return {
+			coinInAmount: Casting.u64MaxBigInt,
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
@@ -168,7 +173,11 @@ class SuiswapRouterPool implements RouterPoolInterface {
 
 		dx = dx - (dx * this.totalLpFee()) / SuiswapRouterPool.BPS_SCALING;
 		if (dx < BigInt(0)) {
-			return BigInt(0);
+			return {
+				coinOutAmount: BigInt(0),
+				feeInAmount: BigInt(0),
+				feeOutAmount: BigInt(0),
+			};
 		}
 
 		let dy =
@@ -187,7 +196,22 @@ class SuiswapRouterPool implements RouterPoolInterface {
 				(dy * this.totalAdminFee()) / SuiswapRouterPool.BPS_SCALING;
 		}
 
-		return dy;
+		return {
+			coinOutAmount: dy,
+			feeInAmount:
+				(dx *
+					(this.totalLpFee() +
+						(this.pool.feeDirection === "X"
+							? (dx * this.totalAdminFee()) /
+							  SuiswapRouterPool.BPS_SCALING
+							: BigInt(0)))) /
+				SuiswapRouterPool.BPS_SCALING,
+			feeOutAmount:
+				this.pool.feeDirection === "Y"
+					? (dy * this.totalAdminFee()) /
+					  SuiswapRouterPool.BPS_SCALING
+					: BigInt(0),
+		};
 	};
 
 	private getYToXAmount = (dy: bigint) => {
@@ -202,7 +226,11 @@ class SuiswapRouterPool implements RouterPoolInterface {
 
 		dy = dy - (dy * this.totalLpFee()) / SuiswapRouterPool.BPS_SCALING;
 		if (dy < BigInt(0)) {
-			return BigInt(0);
+			return {
+				coinOutAmount: BigInt(0),
+				feeInAmount: BigInt(0),
+				feeOutAmount: BigInt(0),
+			};
 		}
 
 		let dx =
@@ -221,7 +249,22 @@ class SuiswapRouterPool implements RouterPoolInterface {
 				(dx * this.totalAdminFee()) / SuiswapRouterPool.BPS_SCALING;
 		}
 
-		return dx;
+		return {
+			coinOutAmount: dx,
+			feeInAmount:
+				(dy *
+					(this.totalLpFee() +
+						(this.pool.feeDirection === "Y"
+							? (dy * this.totalAdminFee()) /
+							  SuiswapRouterPool.BPS_SCALING
+							: BigInt(0)))) /
+				SuiswapRouterPool.BPS_SCALING,
+			feeOutAmount:
+				this.pool.feeDirection === "X"
+					? (dx * this.totalAdminFee()) /
+					  SuiswapRouterPool.BPS_SCALING
+					: BigInt(0),
+		};
 	};
 
 	private _computeAmount = (dx: bigint, x: bigint, y: bigint) => {

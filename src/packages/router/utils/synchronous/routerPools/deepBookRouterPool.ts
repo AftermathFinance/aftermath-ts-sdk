@@ -54,7 +54,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		throw new Error("uncallable");
 	};
 
@@ -73,7 +73,7 @@ class DeepBookRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		throw new Error("uncallable");
 	};
 

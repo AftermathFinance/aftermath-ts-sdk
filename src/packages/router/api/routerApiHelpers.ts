@@ -16,6 +16,8 @@ import {
 	AllRouterOptions,
 	SuiAddress,
 	RouterSerializablePool,
+	Percentage,
+	RouterTradePath,
 } from "../../../types";
 import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
@@ -25,6 +27,8 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
+import { Helpers } from "../../../general/utils";
+import { Coin } from "../..";
 
 export class RouterApiHelpers {
 	// =========================================================================
@@ -39,7 +43,7 @@ export class RouterApiHelpers {
 	// =========================================================================
 
 	constructor(
-		Provider: AftermathApi,
+		private readonly Provider: AftermathApi,
 		private readonly options: AllRouterOptions
 	) {
 		this.SynchronousHelpers = new RouterSynchronousApiHelpers(Provider);
@@ -246,6 +250,69 @@ export class RouterApiHelpers {
 			: finalCompleteRoutes;
 	};
 
+	public async fetchCalcNetTradeFeePercentageFromCompleteTradeRoute(inputs: {
+		completeRoute: RouterCompleteTradeRoute;
+	}): Promise<Percentage> {
+		const { completeRoute } = inputs;
+
+		const coinsWithFees = completeRoute.routes
+			.reduce(
+				(acc, route) => [...acc, ...route.paths],
+				[] as RouterTradePath[]
+			)
+			.reduce(
+				(acc, path) => [
+					...acc,
+					{
+						coinType: path.coinIn.type,
+						fee: path.coinIn.tradeFee,
+					},
+					{
+						coinType: path.coinOut.type,
+						fee: path.coinOut.tradeFee,
+					},
+				],
+				[] as { coinType: CoinType; fee: Balance }[]
+			)
+			.filter((data) => data.fee > BigInt(0));
+
+		const coins = Helpers.uniqueArray([
+			...coinsWithFees.map((data) => data.coinType),
+			completeRoute.coinOut.type,
+		]);
+		const [coinsToPrice, coinsToDecimals] = await Promise.all([
+			this.Provider.Prices().fetchCoinsToPrice({
+				coins,
+			}),
+			this.Provider.Coin().fetchCoinsToDecimals({
+				coins,
+			}),
+		]);
+
+		const netFeeUsd = coinsWithFees.reduce(
+			(acc, data) =>
+				acc +
+				(coinsToPrice[data.coinType] < 0
+					? 0
+					: coinsToPrice[data.coinType]) *
+					Coin.balanceWithDecimals(
+						data.fee,
+						coinsToDecimals[data.coinType]
+					),
+			0
+		);
+		const coinOutAmountUsd =
+			(coinsToPrice[completeRoute.coinOut.type] < 0
+				? 0
+				: coinsToPrice[completeRoute.coinOut.type]) *
+			Coin.balanceWithDecimals(
+				completeRoute.coinOut.amount,
+				coinsToDecimals[completeRoute.coinOut.type]
+			);
+
+		return coinOutAmountUsd <= 0 ? 0 : netFeeUsd / coinOutAmountUsd;
+	}
+
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
@@ -304,8 +371,14 @@ export class RouterApiHelpers {
 	// =========================================================================
 
 	private static addFinalRouterCompleteTradeRouteToRoute = (inputs: {
-		startCompleteRoute: RouterCompleteTradeRoute;
-		endCompleteRoute: RouterCompleteTradeRoute;
+		startCompleteRoute: Omit<
+			RouterCompleteTradeRoute,
+			"netTradeFeePercentage"
+		>;
+		endCompleteRoute: Omit<
+			RouterCompleteTradeRoute,
+			"netTradeFeePercentage"
+		>;
 	}): RouterCompleteTradeRoute => {
 		const { startCompleteRoute, endCompleteRoute } = inputs;
 
