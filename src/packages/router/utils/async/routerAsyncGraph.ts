@@ -26,7 +26,7 @@ export class RouterAsyncGraph {
 			RouterCompleteTradeRoute,
 			"netTradeFeePercentage"
 		>[][];
-	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> {
+	}): RouterCompleteTradeRoute {
 		const asyncCompleteRoutes = this.completeRoutesFromTradeResults(inputs);
 		const completeRoutes = inputs.completeRoutes
 			? [...asyncCompleteRoutes, ...inputs.completeRoutes]
@@ -51,7 +51,7 @@ export class RouterAsyncGraph {
 
 	public static completeRoutesFromTradeResults = (inputs: {
 		tradeResults: RouterAsyncTradeResults;
-	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">[][] => {
+	}): RouterCompleteTradeRoute[][] => {
 		const { tradeResults } = inputs;
 
 		const completeRoutes: Omit<
@@ -115,7 +115,7 @@ export class RouterAsyncGraph {
 			"netTradeFeePercentage"
 		>[][];
 		coinInAmounts: Balance[];
-	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">[] => {
+	}): RouterCompleteTradeRoute[] => {
 		const { completeRoutes, coinInAmounts } = inputs;
 
 		let chosenRouteIndexes: number[] = Array(completeRoutes.length).fill(
@@ -163,7 +163,7 @@ export class RouterAsyncGraph {
 			RouterCompleteTradeRoute,
 			"netTradeFeePercentage"
 		>[];
-	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> => {
+	}): RouterCompleteTradeRoute => {
 		const { completeRoutes } = inputs;
 
 		let routes: RouterTradeRoute[] = [];

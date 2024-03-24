@@ -81,7 +81,7 @@ export class RouterApiHelpers {
 		referrer?: SuiAddress;
 		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
-	}): Promise<Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">> => {
+	}): Promise<RouterCompleteTradeRoute> => {
 		if (inputs.protocols.length === 0)
 			throw new Error("no protocols set in constructor");
 
@@ -177,7 +177,7 @@ export class RouterApiHelpers {
 		referrer?: SuiAddress;
 		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
-	}): Promise<Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">> => {
+	}): Promise<RouterCompleteTradeRoute> => {
 		if (inputs.protocols.length === 0)
 			throw new Error("no protocols set in constructor");
 
@@ -200,7 +200,7 @@ export class RouterApiHelpers {
 		lastPool: RouterAsyncSerializablePool;
 		referrer?: SuiAddress;
 		externalFee?: ExternalFee;
-	}): Promise<Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">[]> => {
+	}): Promise<RouterCompleteTradeRoute[]> => {
 		const { routerGraph } = inputs;
 
 		const asyncApi =
@@ -251,7 +251,7 @@ export class RouterApiHelpers {
 	};
 
 	public async fetchCalcNetTradeFeePercentageFromCompleteTradeRoute(inputs: {
-		completeRoute: Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">;
+		completeRoute: RouterCompleteTradeRoute;
 	}): Promise<Percentage> {
 		const { completeRoute } = inputs;
 
@@ -379,7 +379,7 @@ export class RouterApiHelpers {
 			RouterCompleteTradeRoute,
 			"netTradeFeePercentage"
 		>;
-	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> => {
+	}): RouterCompleteTradeRoute => {
 		const { startCompleteRoute, endCompleteRoute } = inputs;
 
 		const totalEndRouteAmountIn = endCompleteRoute.coinIn.amount;
