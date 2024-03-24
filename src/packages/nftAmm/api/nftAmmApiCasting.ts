@@ -1,4 +1,4 @@
-import { NftAmmMarketObject } from "../nftAmmTypes";
+import { NftAmmMarketData } from "../nftAmmTypes";
 import { Helpers } from "../../../general/utils";
 import { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
 import { Coin } from "../../coin";
@@ -16,7 +16,7 @@ export class NftAmmApiCasting {
 
 	public static marketObjectFromSuiObject = (
 		suiObject: SuiObjectResponse
-	): NftAmmMarketObject => {
+	): NftAmmMarketData => {
 		const objectId = Helpers.getObjectId(suiObject);
 		const marketType = Helpers.getObjectType(suiObject);
 		if (!marketType) throw new Error("no object type found");

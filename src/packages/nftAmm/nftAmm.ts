@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { NftAmmMarketObject, ObjectId, SuiNetwork, Url } from "../../types";
+import { NftAmmMarketData, ObjectId, SuiNetwork, Url } from "../../types";
 import { NftAmmMarket } from "./nftAmmMarket";
 
 export class NftAmm extends Caller {
@@ -30,10 +30,10 @@ export class NftAmm extends Caller {
 	// =========================================================================
 
 	public async getMarket(inputs: { objectId: ObjectId }) {
-		const market = await this.fetchApi<NftAmmMarketObject>(
+		const market = await this.fetchApi<NftAmmMarketData>(
 			`markets/${inputs.objectId}`
 		);
-		return new NftAmmMarket(market, this.network);
+		return new NftAmmMarket(market, this.network, this.Provider);
 	}
 
 	public async getMarkets(inputs: { objectIds: ObjectId[] }) {
@@ -44,8 +44,10 @@ export class NftAmm extends Caller {
 	}
 
 	public async getAllMarkets() {
-		const markets = await this.fetchApi<NftAmmMarketObject[]>("markets");
-		return markets.map((pool) => new NftAmmMarket(pool, this.network));
+		const markets = await this.fetchApi<NftAmmMarketData[]>("markets");
+		return markets.map(
+			(pool) => new NftAmmMarket(pool, this.network, this.Provider)
+		);
 	}
 
 	// =========================================================================

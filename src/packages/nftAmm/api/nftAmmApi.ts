@@ -1,8 +1,5 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	NftAmmInterfaceGenericTypes,
-	NftAmmMarketObject,
-} from "../nftAmmTypes";
+import { NftAmmMarketData } from "../nftAmmTypes";
 import { NftAmmApiCasting } from "./nftAmmApiCasting";
 import { NftAmmMarket } from "../nftAmmMarket";
 import {
@@ -96,7 +93,7 @@ export class NftAmmApi {
 
 	public fetchMarket = async (inputs: {
 		objectId: ObjectId;
-	}): Promise<NftAmmMarketObject> => {
+	}): Promise<NftAmmMarketData> => {
 		return this.Provider.Objects().fetchCastObject({
 			...inputs,
 			objectFromSuiObjectResponse:
@@ -106,7 +103,7 @@ export class NftAmmApi {
 
 	public fetchMarkets = async (inputs: {
 		objectIds: ObjectId[];
-	}): Promise<NftAmmMarketObject[]> => {
+	}): Promise<NftAmmMarketData[]> => {
 		return this.Provider.Objects().fetchCastObjectBatch({
 			...inputs,
 			objectFromSuiObjectResponse:
@@ -121,7 +118,7 @@ export class NftAmmApi {
 	public fetchBuildBuyTx = async (inputs: {
 		market: NftAmmMarket;
 		walletAddress: SuiAddress;
-		nftObjectIds: ObjectId[];
+		nftIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
@@ -132,14 +129,14 @@ export class NftAmmApi {
 		const marketObject = market.market;
 
 		const expectedAssetCoinAmountIn = market.getBuyAssetCoinAmountIn({
-			nftsCount: inputs.nftObjectIds.length,
+			nftsCount: inputs.nftIds.length,
 			referral: inputs.referrer !== undefined,
 		});
 
 		const assetCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
-			coinType: marketObject.assetCoinType,
+			coinType: market.otherCoinType(),
 			coinAmount: expectedAssetCoinAmountIn,
 		});
 
@@ -159,7 +156,7 @@ export class NftAmmApi {
 	public fetchBuildSellTx = async (inputs: {
 		market: NftAmmMarket;
 		walletAddress: SuiAddress;
-		nftObjectIds: ObjectId[];
+		nftIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
@@ -170,14 +167,14 @@ export class NftAmmApi {
 		const marketObject = market.market;
 
 		const expectedAssetCoinAmountOut = market.getSellAssetCoinAmountOut({
-			nftsCount: inputs.nftObjectIds.length,
+			nftsCount: inputs.nftIds.length,
 			referral: inputs.referrer !== undefined,
 		});
 
 		this.sellTx({
 			...inputs,
 			tx,
-			nfts: inputs.nftObjectIds,
+			nfts: inputs.nftIds,
 			marketObjectId: marketObject.objectId,
 			genericTypes: NftAmmApi.genericTypesForMarket({ market }),
 			expectedAssetCoinAmountOut,
@@ -212,7 +209,7 @@ export class NftAmmApi {
 		const assetCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
-			coinType: marketObject.assetCoinType,
+			coinType: market.otherCoinType(),
 			coinAmount: inputs.assetCoinAmountIn,
 		});
 
@@ -233,7 +230,7 @@ export class NftAmmApi {
 		market: NftAmmMarket;
 		walletAddress: SuiAddress;
 		lpCoinAmount: Balance;
-		nftObjectIds: ObjectId[];
+		nftIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
@@ -282,13 +279,13 @@ export class NftAmmApi {
 		tx: TransactionBlock;
 		marketObjectId: ObjectId;
 		assetCoin: ObjectId | TransactionArgument;
-		nftObjectIds: ObjectId[];
+		nftIds: ObjectId[];
 		expectedAssetCoinAmountIn: Balance;
 		genericTypes: NftAmmInterfaceGenericTypes;
 		slippage: Slippage;
 		withTransfer?: boolean;
 	}) => {
-		const { tx, assetCoin, genericTypes, nftObjectIds } = inputs;
+		const { tx, assetCoin, genericTypes, nftIds } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftAmm,
@@ -308,7 +305,7 @@ export class NftAmmApi {
 					? tx.object(assetCoin)
 					: assetCoin,
 				tx.makeMoveVec({
-					objects: nftObjectIds.map((id) => tx.object(id)),
+					objects: nftIds.map((id) => tx.object(id)),
 					type: "ID",
 				}),
 				tx.pure(inputs.expectedAssetCoinAmountIn.toString()),
@@ -399,13 +396,13 @@ export class NftAmmApi {
 		tx: TransactionBlock;
 		marketObjectId: ObjectId;
 		lpCoin: ObjectId | TransactionArgument;
-		nftObjectIds: ObjectId[];
+		nftIds: ObjectId[];
 		expectedAssetCoinAmountOut: Balance;
 		genericTypes: NftAmmInterfaceGenericTypes;
 		slippage: Slippage;
 		withTransfer?: boolean;
 	}) => {
-		const { tx, lpCoin, genericTypes, nftObjectIds } = inputs;
+		const { tx, lpCoin, genericTypes, nftIds } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftAmm,
@@ -423,37 +420,12 @@ export class NftAmmApi {
 				tx.object(this.addresses.objects.referralVault),
 				typeof lpCoin === "string" ? tx.object(lpCoin) : lpCoin,
 				tx.makeMoveVec({
-					objects: nftObjectIds.map((id) => tx.object(id)),
+					objects: nftIds.map((id) => tx.object(id)),
 					type: "ID",
 				}),
 				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
 				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
 			],
 		});
-	};
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	private static genericTypesForMarket = (inputs: {
-		market: NftAmmMarket;
-	}): [
-		lpCoinType: CoinType,
-		fractionalizedCoinType: CoinType,
-		assetCoinType: CoinType,
-		nftType: CoinType
-	] => {
-		const marketObject = inputs.market.market;
-		return [
-			marketObject.lpCoinType,
-			marketObject.fractionalizedCoinType,
-			marketObject.assetCoinType,
-			marketObject.nftType,
-		];
 	};
 }

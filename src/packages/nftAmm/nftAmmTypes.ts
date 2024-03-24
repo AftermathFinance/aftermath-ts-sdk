@@ -1,67 +1,15 @@
-import {
-	AnyObjectType,
-	Balance,
-	CoinType,
-	Object,
-	PoolObject,
-	Slippage,
-	Url,
-	ObjectId,
-	SuiAddress,
-} from "../../types";
+import { PoolObject } from "../../types";
+import { FractionalNftsVaultObject } from "../fractionalNfts/fractionalNftsTypes";
 
 // =========================================================================
 //  Objects
 // =========================================================================
 
-export interface NftAmmMarketObject extends Object {
-	nftsTable: {
-		objectId: ObjectId;
-		size: bigint;
-	};
+export interface NftAmmMarketData {
 	pool: PoolObject;
-	fractionalizedSupply: Balance;
-	fractionalizedCoinAmount: Balance;
-	fractionalizedCoinType: CoinType;
-	assetCoinType: CoinType;
-	lpCoinType: CoinType;
-	nftType: AnyObjectType;
+	vault: FractionalNftsVaultObject;
 }
 
 // =========================================================================
 //  API
 // =========================================================================
-
-export interface ApiNftAmmBuyBody {
-	marketObjectId: ObjectId;
-	walletAddress: SuiAddress;
-	nftObjectIds: ObjectId[];
-	slippage: Slippage;
-	referrer?: SuiAddress;
-}
-
-export interface ApiNftAmmSellBody {
-	marketObjectId: ObjectId;
-	walletAddress: SuiAddress;
-	nftObjectIds: ObjectId[];
-	slippage: Slippage;
-	referrer?: SuiAddress;
-}
-
-export interface ApiNftAmmDepositBody {
-	walletAddress: SuiAddress;
-	marketObjectId: ObjectId;
-	assetCoinAmountIn: Balance;
-	nftObjectIds: ObjectId[];
-	slippage: Slippage;
-	referrer?: SuiAddress;
-}
-
-export interface ApiNftAmmWithdrawBody {
-	walletAddress: SuiAddress;
-	marketObjectId: ObjectId;
-	lpCoinAmount: Balance;
-	nftObjectIds: ObjectId[];
-	slippage: Slippage;
-	referrer?: SuiAddress;
-}

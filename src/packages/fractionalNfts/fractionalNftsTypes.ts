@@ -1,4 +1,11 @@
-import { Balance, Object, ObjectId, SuiAddress } from "../../types";
+import {
+	AnyObjectType,
+	Balance,
+	CoinType,
+	Object,
+	ObjectId,
+	SuiAddress,
+} from "../../types";
 
 // =========================================================================
 //  Objects
@@ -29,6 +36,8 @@ export interface FractionalNftsVaultObject extends Object {
 	 * Token fractions amount.
 	 */
 	fractionsAmount: Balance;
+	nftType: AnyObjectType;
+	fractionalCoinType: CoinType;
 }
 
 export interface FractionalNftsKioskStorage {

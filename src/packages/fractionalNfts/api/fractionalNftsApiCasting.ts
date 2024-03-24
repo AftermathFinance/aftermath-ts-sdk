@@ -10,6 +10,7 @@ import {
 	KioskStorageOnChain,
 	PlainStorageOnChain,
 } from "./fractionalNftsApiCastingTypes";
+import { Coin } from "../..";
 
 export class FractionalNftsApiCasting {
 	// =========================================================================
@@ -25,9 +26,17 @@ export class FractionalNftsApiCasting {
 			data
 		) as FractionalNftsVaultFieldsOnChain;
 
+		// TODO: move pattern to helpers or casting class
+		const genericTypes = Coin.getInnerCoinType(objectType)
+			.replaceAll(" ", "")
+			.split(",")
+			.map((type) => Helpers.addLeadingZeroesToType(type));
+
 		return {
 			objectId,
 			objectType,
+			nftType: genericTypes[1],
+			fractionalCoinType: genericTypes[0],
 			version: BigInt(fields.version),
 			plainStorage: fields.plain_storage
 				? this.plainStorageFromOnChain(fields.plain_storage)
