@@ -10,6 +10,7 @@ import {
 	SuiAddress,
 	Slippage,
 	CoinType,
+	AnyObjectType,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
@@ -83,7 +84,7 @@ export class NftAmmMarket extends Caller {
 
 	public async getDepositTransaction(inputs: {
 		walletAddress: SuiAddress;
-		assetCoinAmountIn: Balance;
+		afSuiAmount: Balance;
 		nfts: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
@@ -111,63 +112,63 @@ export class NftAmmMarket extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	public getNftSpotPriceInAssetCoin = (inputs?: {
+	public getNftSpotPriceInAfSui = (inputs?: {
 		withFees: boolean;
 	}): Balance => {
 		const assetToFractionalizedSpotPrice =
-			this.getAssetCoinToFractionalizeCoinSpotPrice(inputs);
+			this.getAfSuiToFractionalizeCoinSpotPrice(inputs);
 
 		return BigInt(
 			assetToFractionalizedSpotPrice * Number(this.fractionsAmount())
 		);
 	};
 
-	public getFractionalizedCoinToAssetCoinSpotPrice = (inputs?: {
+	public getFractionalizedCoinToAfSuiSpotPrice = (inputs?: {
 		withFees: boolean;
 	}): number => {
 		return this.pool.getSpotPrice({
 			coinInType: this.fractionalCoinType(),
-			coinOutType: this.otherCoinType(),
+			coinOutType: this.afSuiCoinType(),
 			withFees: inputs?.withFees,
 		});
 	};
 
-	public getAssetCoinToFractionalizeCoinSpotPrice = (inputs?: {
+	public getAfSuiToFractionalizeCoinSpotPrice = (inputs?: {
 		withFees: boolean;
 	}): number => {
 		return this.pool.getSpotPrice({
-			coinInType: this.otherCoinType(),
+			coinInType: this.afSuiCoinType(),
 			coinOutType: this.fractionalCoinType(),
 			withFees: inputs?.withFees,
 		});
 	};
 
-	public getBuyAssetCoinAmountIn = (inputs: {
+	public getBuyAfSuiAmountIn = (inputs: {
 		nftsCount: number;
 		referral?: boolean;
 	}): Balance => {
 		return this.pool.getTradeAmountIn({
 			coinOutAmount: BigInt(inputs.nftsCount) * this.fractionsAmount(),
-			coinInType: this.otherCoinType(),
+			coinInType: this.afSuiCoinType(),
 			coinOutType: this.fractionalCoinType(),
 			referral: inputs.referral,
 		});
 	};
 
-	public getSellAssetCoinAmountOut = (inputs: {
+	public getSellAfSuiAmountOut = (inputs: {
 		nftsCount: number;
 		referral?: boolean;
 	}): Balance => {
 		return this.pool.getTradeAmountOut({
 			coinInAmount: BigInt(inputs.nftsCount) * this.fractionsAmount(),
 			coinInType: this.fractionalCoinType(),
-			coinOutType: this.otherCoinType(),
+			coinOutType: this.afSuiCoinType(),
 			referral: inputs.referral,
 		});
 	};
 
 	public getDepositLpCoinAmountOut = (inputs: {
-		assetCoinAmountIn: Balance;
+		afSuiAmount: Balance;
 		referral?: boolean;
 	}): {
 		lpAmountOut: Balance;
@@ -175,7 +176,7 @@ export class NftAmmMarket extends Caller {
 	} => {
 		return this.pool.getDepositLpAmountOut({
 			amountsIn: {
-				[this.otherCoinType()]: inputs.assetCoinAmountIn,
+				[this.afSuiCoinType()]: inputs.afSuiAmount,
 			},
 			referral: inputs.referral,
 		});
@@ -222,10 +223,18 @@ export class NftAmmMarket extends Caller {
 		return this.market.vault.fractionalCoinType;
 	};
 
-	public otherCoinType = (): CoinType => {
+	public afSuiCoinType = (): CoinType => {
 		return Object.keys(this.market.pool.coins).find(
 			(coin) => coin !== this.fractionalCoinType()
 		)!;
+	};
+
+	public lpCoinType = (): CoinType => {
+		return this.market.pool.lpCoinType;
+	};
+
+	public nftType = (): AnyObjectType => {
+		return this.market.vault.nftType;
 	};
 
 	public fractionsAmount = (): Balance => {

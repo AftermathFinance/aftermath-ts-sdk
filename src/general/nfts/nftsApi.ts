@@ -1,6 +1,7 @@
 import { AftermathApi } from "../providers/aftermathApi";
 import {
 	AnyObjectType,
+	Balance,
 	KioskObject,
 	KioskOwnerCapObject,
 	Nft,
@@ -9,7 +10,10 @@ import {
 } from "../../types";
 import { Casting, Helpers } from "../utils";
 import { NftsApiCasting } from "./nftsApiCasting";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import {
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js/transactions";
 
 export class NftsApi {
 	// =========================================================================
@@ -23,6 +27,7 @@ export class NftsApi {
 		// };
 		moduleNames: {
 			kiosk: "kiosk";
+			transferPolicy: "transfer_policy";
 		};
 	};
 
@@ -189,7 +194,10 @@ export class NftsApi {
 		kioskId: ObjectId;
 		purchaseCapId: ObjectId;
 		coinId: ObjectId;
-	}) /* (NFT, TransferRequest) */ => {
+	}): [
+		nft: TransactionArgument,
+		transferRequest: TransactionArgument
+	] /* (NFT, TransferRequest) */ => {
 		const { tx, nftType, kioskId, purchaseCapId, coinId } = inputs;
 
 		return tx.moveCall({
@@ -236,6 +244,55 @@ export class NftsApi {
 				tx.object(kioskOwnerCapId),
 				tx.object(transferPolicyId),
 				tx.object(nftId),
+			],
+		});
+	};
+
+	public kioskConfirmRequestTx = (inputs: {
+		tx: TransactionBlock;
+		nftType: AnyObjectType;
+		transferPolicyId: ObjectId;
+		transferRequestId: ObjectId;
+	}) => {
+		const { tx, nftType, transferPolicyId, transferRequestId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				"0x0000000000000000000000000000000000000000000000000000000000000002",
+				NftsApi.constants.moduleNames.transferPolicy,
+				"confirm_request"
+			),
+			typeArguments: [nftType],
+			arguments: [
+				tx.object(transferPolicyId),
+				tx.object(transferRequestId),
+			],
+		});
+	};
+
+	public kioskListWithPurchaseCapTx = (inputs: {
+		tx: TransactionBlock;
+		nftType: AnyObjectType;
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
+		nftId: ObjectId;
+		minPrice: Balance;
+	}): TransactionArgument /* PurchaseCap<nftType> */ => {
+		const { tx, nftType, kioskId, kioskOwnerCapId, nftId, minPrice } =
+			inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				"0x0000000000000000000000000000000000000000000000000000000000000002",
+				NftsApi.constants.moduleNames.kiosk,
+				"list_with_purchase_cap"
+			),
+			typeArguments: [nftType],
+			arguments: [
+				tx.object(kioskId),
+				tx.object(kioskOwnerCapId),
+				tx.pure(nftId, "ID"),
+				tx.pure(minPrice, "u64"),
 			],
 		});
 	};

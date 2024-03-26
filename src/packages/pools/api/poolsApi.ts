@@ -1,5 +1,5 @@
 import {
-	TransactionObjectArgument,
+	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import { fromB64, normalizeSuiObjectId } from "@mysten/sui.js/utils";
@@ -527,14 +527,14 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 	public fetchAddTradeTx = async (inputs: {
 		tx: TransactionBlock;
-		coinInId: ObjectId | TransactionObjectArgument;
+		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		slippage: Slippage;
 		pool: Pool;
 		referrer?: SuiAddress;
-	}): Promise<TransactionObjectArgument> /* Coin */ => {
+	}): Promise<TransactionArgument> /* Coin */ => {
 		const {
 			tx,
 			coinInId,
@@ -872,19 +872,19 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	/**
 	 * Executes a trade transaction on the specified pool.
 	 * @param inputs An object containing the necessary inputs for the trade transaction.
-	 * @returns A `TransactionObjectArgument` representing the trade transaction.
+	 * @returns A `TransactionArgument` representing the trade transaction.
 	 */
 	public tradeTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
-		coinInId: ObjectId | TransactionObjectArgument;
+		coinInId: ObjectId | TransactionArgument;
 		coinInType: CoinType;
 		expectedCoinOutAmount: Balance;
 		coinOutType: CoinType;
 		lpCoinType: CoinType;
 		slippage: Slippage;
 		withTransfer?: boolean;
-	}): TransactionObjectArgument => {
+	}): TransactionArgument => {
 		const {
 			tx,
 			poolId,
@@ -935,7 +935,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			poolId: ObjectId;
 			lpCoinType: CoinType;
 		}
-	): TransactionObjectArgument => {
+	): TransactionArgument => {
 		if (!this.addresses.routerWrapper)
 			throw new Error(
 				"not all required addresses have been set in provider"
@@ -985,13 +985,13 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public multiCoinDepositTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
-		coinIds: ObjectId[] | TransactionObjectArgument[];
+		coinIds: ObjectId[] | TransactionArgument[];
 		coinTypes: CoinType[];
 		expectedLpRatio: bigint;
 		lpCoinType: CoinType;
 		slippage: Slippage;
 		withTransfer?: boolean;
-	}): TransactionObjectArgument => {
+	}): TransactionArgument => {
 		const {
 			tx,
 			poolId,
@@ -1036,18 +1036,18 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	/**
 	 * Withdraws multiple coins from a pool.
 	 * @param inputs An object containing the necessary parameters for the transaction.
-	 * @returns A TransactionObjectArgument representing the transaction.
+	 * @returns A TransactionArgument representing the transaction.
 	 */
 	public multiCoinWithdrawTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
-		lpCoinId: ObjectId | TransactionObjectArgument;
+		lpCoinId: ObjectId | TransactionArgument;
 		lpCoinType: CoinType;
 		expectedAmountsOut: Balance[];
 		coinTypes: CoinType[];
 		slippage: Slippage;
 		withTransfer?: boolean;
-	}): TransactionObjectArgument => {
+	}): TransactionArgument => {
 		const {
 			tx,
 			poolId,
@@ -1102,11 +1102,11 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public allCoinWithdrawTx = (inputs: {
 		tx: TransactionBlock;
 		poolId: ObjectId;
-		lpCoinId: ObjectId | TransactionObjectArgument;
+		lpCoinId: ObjectId | TransactionArgument;
 		lpCoinType: CoinType;
 		coinTypes: CoinType[];
 		withTransfer?: boolean;
-	}): TransactionObjectArgument[] => {
+	}): TransactionArgument[] => {
 		const { tx, poolId, lpCoinId, coinTypes, lpCoinType, withTransfer } =
 			inputs;
 
@@ -1176,7 +1176,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		tx: TransactionBlock;
 		lpCoinType: CoinType;
 		coinsInfo: {
-			coinId: ObjectId | TransactionObjectArgument;
+			coinId: ObjectId | TransactionArgument;
 			coinType: CoinType;
 			weight: PoolWeight;
 			decimals?: CoinDecimal;
@@ -1187,13 +1187,14 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		}[];
 		lpCoinMetadata: PoolCreationLpCoinMetadata;
 		lpCoinIconUrl: Url;
-		createPoolCapId: ObjectId | TransactionObjectArgument;
+		createPoolCapId: ObjectId | TransactionArgument;
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 		lpCoinDescription: string;
 		respectDecimals: boolean;
 		forceLpDecimals?: CoinDecimal;
 		withTransfer?: boolean;
+		// TODO: cleanup all return arg types of txs to use `TransactionArgument`
 	}) /* (Pool<L>, Coin<L>) */ => {
 		const {
 			tx,

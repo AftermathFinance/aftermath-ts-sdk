@@ -75,11 +75,11 @@ export class AfNftApi {
 	public payRoyaltyRuleTx = (inputs: {
 		tx: TransactionBlock;
 		nftType: AnyObjectType;
-		coinId: ObjectId;
+		suiCoinId: ObjectId;
 		transferPolicyId: ObjectId;
 		transferRequestId: ObjectId;
 	}) => {
-		const { tx, nftType, coinId, transferPolicyId, transferRequestId } =
+		const { tx, nftType, suiCoinId, transferPolicyId, transferRequestId } =
 			inputs;
 
 		return tx.moveCall({
@@ -92,7 +92,7 @@ export class AfNftApi {
 			arguments: [
 				tx.object(transferPolicyId),
 				tx.object(transferRequestId),
-				tx.object(coinId),
+				tx.object(suiCoinId),
 			],
 		});
 	};

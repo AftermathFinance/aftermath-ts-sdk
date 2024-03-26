@@ -6,7 +6,10 @@ import {
 	ObjectId,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import {
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js/transactions";
 import { FractionalNftsVaultObject } from "../fractionalNftsTypes";
 import { FractionalNftsApiCasting } from "./fractionalNftsApiCasting";
 
@@ -66,12 +69,12 @@ export class FractionalNftsApi {
 	public depositIntoKioskStorageTx = (inputs: {
 		tx: TransactionBlock;
 		nftVaultId: ObjectId;
-		nftIds: ObjectId[];
+		nftIds: TransactionArgument[];
 		transferPolicyId: ObjectId;
 		fractionalCoinType: CoinType;
 		nftType: AnyObjectType;
 		withTransfer?: boolean;
-	}) /* (Coin) */ => {
+	}): TransactionArgument /* (Coin) */ => {
 		const { tx, withTransfer } = inputs;
 
 		return tx.moveCall({
@@ -84,7 +87,7 @@ export class FractionalNftsApi {
 			arguments: [
 				tx.object(inputs.nftVaultId), // Vault
 				tx.makeMoveVec({
-					objects: inputs.nftIds.map((id) => tx.object(id)),
+					objects: inputs.nftIds,
 					type: inputs.nftType,
 				}),
 				tx.object(inputs.transferPolicyId), // TransferPolicy
@@ -99,7 +102,7 @@ export class FractionalNftsApi {
 		fractionalCoinType: CoinType;
 		nftType: AnyObjectType;
 		withTransfer?: boolean;
-	}) /* (Coin) */ => {
+	}): TransactionArgument /* (Coin) */ => {
 		const { tx, withTransfer } = inputs;
 
 		return tx.moveCall({
@@ -147,7 +150,7 @@ export class FractionalNftsApi {
 		nftVaultId: ObjectId;
 		fractionalCoinType: CoinType;
 		nftType: AnyObjectType;
-	}) /* (vector<ID>) */ => {
+	}): [nftIds: TransactionArgument[]] => /* (vector<ID>) */ {
 		const { tx } = inputs;
 
 		return tx.moveCall({
@@ -168,7 +171,7 @@ export class FractionalNftsApi {
 		nftVaultId: ObjectId;
 		fractionalCoinType: CoinType;
 		nftType: AnyObjectType;
-	}) /* (U64) */ => {
+	}): TransactionArgument /* (U64) */ => {
 		const { tx } = inputs;
 
 		return tx.moveCall({
@@ -191,7 +194,10 @@ export class FractionalNftsApi {
 		fractionalCoinId: ObjectId;
 		fractionalCoinType: CoinType;
 		nftType: AnyObjectType;
-	}) /* (vector<nftType>, vector<TransferRequest>) */ => {
+	}): [
+		nfts: TransactionArgument[],
+		transferRequests: TransactionArgument[]
+	] /* (vector<nftType>, vector<TransferRequest>) */ => {
 		const { tx } = inputs;
 
 		return tx.moveCall({
@@ -220,7 +226,7 @@ export class FractionalNftsApi {
 		fractionalCoinId: ObjectId;
 		fractionalCoinType: CoinType;
 		nftType: AnyObjectType;
-	}) /* (vector<nftType>) */ => {
+	}): [nfts: TransactionArgument[]] /* (vector<nftType>) */ => {
 		const { tx } = inputs;
 
 		return tx.moveCall({

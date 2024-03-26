@@ -29,25 +29,9 @@ export class NftAmm extends Caller {
 	//  Market Class
 	// =========================================================================
 
-	public async getMarket(inputs: { objectId: ObjectId }) {
-		const market = await this.fetchApi<NftAmmMarketData>(
-			`markets/${inputs.objectId}`
-		);
+	public async getAfEggMarket() {
+		const market = await this.fetchApi<NftAmmMarketData>(`markets/af-egg`);
 		return new NftAmmMarket(market, this.network, this.Provider);
-	}
-
-	public async getMarkets(inputs: { objectIds: ObjectId[] }) {
-		const markets = await Promise.all(
-			inputs.objectIds.map((objectId) => this.getMarket({ objectId }))
-		);
-		return markets;
-	}
-
-	public async getAllMarkets() {
-		const markets = await this.fetchApi<NftAmmMarketData[]>("markets");
-		return markets.map(
-			(pool) => new NftAmmMarket(pool, this.network, this.Provider)
-		);
 	}
 
 	// =========================================================================

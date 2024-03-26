@@ -110,14 +110,11 @@ export interface SuiFrensAddresses {
 }
 
 export interface NftAmmAddresses {
-	packages: {
-		nftAmm: SuiAddress;
-	};
 	objects: {
-		protocolFeeVault: ObjectId;
-		treasury: ObjectId;
-		insuranceFund: ObjectId;
-		referralVault: ObjectId;
+		afEgg: {
+			vaultId: ObjectId;
+			poolId: ObjectId;
+		}
 	};
 }
 
