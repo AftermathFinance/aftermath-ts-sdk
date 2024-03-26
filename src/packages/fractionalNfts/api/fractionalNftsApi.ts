@@ -12,6 +12,7 @@ import {
 } from "@mysten/sui.js/transactions";
 import { FractionalNftsVaultObject } from "../fractionalNftsTypes";
 import { FractionalNftsApiCasting } from "./fractionalNftsApiCasting";
+import { Coin } from "../..";
 
 export class FractionalNftsApi {
 	// =========================================================================
@@ -60,6 +61,192 @@ export class FractionalNftsApi {
 			objectFromSuiObjectResponse:
 				FractionalNftsApiCasting.vaultObjectFromSuiObjectResponse,
 		});
+	};
+
+	// =========================================================================
+	//  Transaction Builders
+	// =========================================================================
+
+	public depositAfEggsTx = (inputs: {
+		tx: TransactionBlock;
+		nftIds: ObjectId[];
+		kioskIds: ObjectId[];
+		kioskOwnerCapIds: ObjectId[];
+		nftType: AnyObjectType;
+		fractionalCoinType: CoinType;
+	}): TransactionArgument /* (Coin<fCoin>) */ => {
+		const {
+			tx,
+			nftIds,
+			kioskIds,
+			kioskOwnerCapIds,
+			nftType,
+			fractionalCoinType,
+		} = inputs;
+
+		const nftVaultId =
+			this.Provider.NftAmm().addresses.nftAmm.objects.afEgg.vaultId;
+
+		let nftArgs: TransactionArgument[] = [];
+		let transferRequestArgs: TransactionArgument[] = [];
+		for (const [index, nftId] of nftIds.entries()) {
+			const kioskId = kioskIds[index];
+
+			const purchaseCapId =
+				this.Provider.Nfts().kioskListWithPurchaseCapTx({
+					tx,
+					nftId,
+					kioskId,
+					nftType,
+					kioskOwnerCapId: kioskOwnerCapIds[index],
+					minPrice: BigInt(0),
+				});
+
+			const zeroSuiCoinId = this.Provider.Coin().zeroTx({
+				tx,
+				coinType: Coin.constants.suiCoinType,
+			});
+			const [nft, transferRequest] =
+				this.Provider.Nfts().kioskPurchaseWithCapTx({
+					tx,
+					kioskId,
+					purchaseCapId,
+					nftType,
+					coinId: zeroSuiCoinId,
+				});
+
+			nftArgs.push(nft);
+			transferRequestArgs.push(transferRequest);
+		}
+
+		const transferPolicyId =
+			this.Provider.AfNft().addresses.objects.afEggTransferPolicy;
+
+		// convert fCoin -> (nfts + transferRequests)
+		const fractionalCoinId =
+			this.Provider.FractionalNfts().depositIntoKioskStorageTx({
+				tx,
+				nftIds: nftArgs,
+				withTransfer: false,
+				nftType,
+				fractionalCoinType,
+				nftVaultId,
+				transferPolicyId,
+			});
+
+		// get reference to vault's kiosk
+		const vaultKioskId = this.Provider.FractionalNfts().kioskReferenceTx({
+			tx,
+			nftType,
+			fractionalCoinType,
+			nftVaultId,
+		});
+		// complete all nft transfers
+		for (const [, transferRequestId] of transferRequestArgs.entries()) {
+			// pay royalty (using zero coin)
+			const zeroSuiCoinId = this.Provider.Coin().zeroTx({
+				tx,
+				coinType: Coin.constants.suiCoinType,
+			});
+			this.Provider.AfNft().payRoyaltyRuleTx({
+				tx,
+				transferRequestId,
+				suiCoinId: zeroSuiCoinId,
+				nftType,
+				transferPolicyId,
+			});
+			// prove nft is in a kiosk (vault's)
+			this.Provider.AfNft().proveRuleTx({
+				tx,
+				kioskId: vaultKioskId,
+				transferRequestId,
+				nftType,
+			});
+			// complete transfer
+			this.Provider.Nfts().kioskConfirmRequestTx({
+				tx,
+				transferRequestId,
+				nftType,
+				transferPolicyId,
+			});
+		}
+
+		return fractionalCoinId;
+	};
+
+	public withdrawAfEggsTx = (inputs: {
+		tx: TransactionBlock;
+		nftIds: ObjectId[];
+		fractionalCoinId: TransactionArgument;
+		nftType: AnyObjectType;
+		fractionalCoinType: CoinType;
+	}): TransactionArgument[] /* (vector<KioskOwnerCap>) */ => {
+		const { tx, nftIds, fractionalCoinId, nftType, fractionalCoinType } =
+			inputs;
+
+		const nftVaultId =
+			this.Provider.NftAmm().addresses.nftAmm.objects.afEgg.vaultId;
+
+		// convert fCoin -> (nfts + transferRequests)
+		const [nfts, transferRequests] =
+			this.Provider.FractionalNfts().withdrawFromKioskStorageTx({
+				tx,
+				nftIds,
+				fractionalCoinId,
+				nftType,
+				fractionalCoinType,
+				nftVaultId,
+			});
+
+		// complete all nft transfers
+		let kioskOwnerCapIds: TransactionArgument[] = [];
+		for (const [index, nftId] of nfts.entries()) {
+			// create new kiosk to store nfts
+			const [kioskId, kioskOwnerCapId] = this.Provider.Nfts().kioskNewTx({
+				tx,
+			});
+			// lock nft in user's kiosk
+			this.Provider.Nfts().kioskLockTx({
+				tx,
+				kioskId,
+				kioskOwnerCapId,
+				nftId,
+				nftType,
+				transferPolicyId:
+					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
+			});
+			// pay royalty (using zero coin)
+			const zeroSuiCoinId = this.Provider.Coin().zeroTx({
+				tx,
+				coinType: Coin.constants.suiCoinType,
+			});
+			this.Provider.AfNft().payRoyaltyRuleTx({
+				tx,
+				suiCoinId: zeroSuiCoinId,
+				nftType,
+				transferRequestId: transferRequests[index],
+				transferPolicyId:
+					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
+			});
+			// prove nft is in a kiosk (user's)
+			this.Provider.AfNft().proveRuleTx({
+				tx,
+				kioskId,
+				nftType,
+				transferRequestId: transferRequests[index],
+			});
+			// complete transfer
+			this.Provider.Nfts().kioskConfirmRequestTx({
+				tx,
+				nftType,
+				transferRequestId: transferRequests[index],
+				transferPolicyId:
+					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
+			});
+
+			kioskOwnerCapIds.push(kioskOwnerCapId);
+		}
+		return kioskOwnerCapIds;
 	};
 
 	// =========================================================================
@@ -218,8 +405,7 @@ export class FractionalNftsApi {
 		});
 	};
 
-	// TODO: fix typos here
-	public withdrawFromPlaneStorageTx = (inputs: {
+	public withdrawFromPlainStorageTx = (inputs: {
 		tx: TransactionBlock;
 		nftVaultId: ObjectId;
 		nftIds: ObjectId[];
@@ -233,7 +419,7 @@ export class FractionalNftsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftVault,
 				FractionalNftsApi.constants.moduleNames.interface,
-				"withdraw_from_plane_storage"
+				"withdraw_from_plain_storage"
 			),
 			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
 			arguments: [
@@ -243,6 +429,27 @@ export class FractionalNftsApi {
 					type: "ID",
 				}),
 				tx.object(inputs.fractionalCoinId), // Coin
+			],
+		});
+	};
+
+	public kioskReferenceTx = (inputs: {
+		tx: TransactionBlock;
+		nftVaultId: ObjectId;
+		fractionalCoinType: CoinType;
+		nftType: AnyObjectType;
+	}): TransactionArgument /* (&Kiosk) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.nftVault,
+				FractionalNftsApi.constants.moduleNames.interface,
+				"kiosk"
+			),
+			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
+			arguments: [
+				tx.object(inputs.nftVaultId), // Vault
 			],
 		});
 	};

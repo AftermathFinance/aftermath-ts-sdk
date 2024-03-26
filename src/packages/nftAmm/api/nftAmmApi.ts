@@ -1,7 +1,5 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { NftAmmMarketData } from "../nftAmmTypes";
 import { NftAmmApiCasting } from "./nftAmmApiCasting";
-import { NftAmmMarket } from "../nftAmmMarket";
 import {
 	AfNftAddresses,
 	Balance,
@@ -10,6 +8,7 @@ import {
 	FractionalNftsAddresses,
 	Nft,
 	NftAmmAddresses,
+	NftAmmMarketData,
 	ObjectId,
 	PoolsAddresses,
 	Slippage,
@@ -19,10 +18,10 @@ import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../../coin/coin";
 import { Pools } from "../../pools/pools";
 import {
-	TransactionArgument,
 	TransactionBlock,
 	TransactionArgument,
 } from "@mysten/sui.js/transactions";
+import { AfEggNftAmmMarket } from "../afEggNftAmmMarket";
 
 export class NftAmmApi {
 	// =========================================================================
@@ -105,7 +104,7 @@ export class NftAmmApi {
 	// =========================================================================
 
 	public fetchBuildBuyAfEggsTx = async (inputs: {
-		market?: NftAmmMarket;
+		market?: AfEggNftAmmMarket;
 		walletAddress: SuiAddress;
 		nftIds: ObjectId[];
 		slippage: Slippage;
@@ -114,7 +113,8 @@ export class NftAmmApi {
 		const { slippage, referrer, nftIds } = inputs;
 
 		const market =
-			inputs.market ?? new NftAmmMarket(await this.fetchAfEggMarket());
+			inputs.market ??
+			new AfEggNftAmmMarket(await this.fetchAfEggMarket());
 
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -149,67 +149,22 @@ export class NftAmmApi {
 			poolId: market.pool.pool.objectId,
 			withTransfer: false,
 		});
-		// convert fCoin -> (nfts + transferRequests)
-		const [nfts, transferRequests] =
-			this.Provider.FractionalNfts().withdrawFromKioskStorageTx({
-				tx,
-				nftIds,
-				fractionalCoinId,
-				nftType: market.nftType(),
-				fractionalCoinType: market.fractionalCoinType(),
-				nftVaultId: market.market.vault.objectId,
-			});
 
-		for (const [index, nftId] of nfts.entries()) {
-			// create new kiosk to store nfts
-			const [kioskId, kioskOwnerCapId] = this.Provider.Nfts().kioskNewTx({
+		const kioskOwnerCapIds =
+			this.Provider.FractionalNfts().withdrawAfEggsTx({
+				...inputs,
 				tx,
-			});
-			// lock nft in user's kiosk
-			this.Provider.Nfts().kioskLockTx({
-				tx,
-				kioskId,
-				kioskOwnerCapId,
-				nftId,
+				fractionalCoinId,
+				fractionalCoinType: market.fractionalCoinType(),
 				nftType: market.nftType(),
-				transferPolicyId:
-					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
 			});
-			// pay royalty (using zero coin)
-			const zeroSuiCoinId = this.Provider.Coin().zeroTx({
-				tx,
-				coinType: Coin.constants.suiCoinType,
-			});
-			this.Provider.AfNft().payRoyaltyRuleTx({
-				tx,
-				suiCoinId: zeroSuiCoinId,
-				nftType: market.nftType(),
-				transferRequestId: transferRequests[index],
-				transferPolicyId:
-					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
-			});
-			// prove nft is in a kiosk (user's)
-			this.Provider.AfNft().proveRuleTx({
-				tx,
-				kioskId,
-				nftType: market.nftType(),
-				transferRequestId: transferRequests[index],
-			});
-			// complete transfer
-			this.Provider.Nfts().kioskConfirmRequestTx({
-				tx,
-				nftType: market.nftType(),
-				transferRequestId: transferRequests[index],
-				transferPolicyId:
-					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
-			});
-		}
+		tx.transferObjects(kioskOwnerCapIds, tx.pure(inputs.walletAddress));
 
 		return tx;
 	};
 
 	public fetchBuildSellAfEggsTx = async (inputs: {
-		market?: NftAmmMarket;
+		market?: AfEggNftAmmMarket;
 		walletAddress: SuiAddress;
 		nftIds: ObjectId[];
 		kioskIds: ObjectId[];
@@ -221,7 +176,8 @@ export class NftAmmApi {
 			inputs;
 
 		const market =
-			inputs.market ?? new NftAmmMarket(await this.fetchAfEggMarket());
+			inputs.market ??
+			new AfEggNftAmmMarket(await this.fetchAfEggMarket());
 
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -232,84 +188,15 @@ export class NftAmmApi {
 				referrer,
 			});
 
-		let nftArgs: TransactionArgument[] = [];
-		let transferRequestArgs: TransactionArgument[] = [];
-		for (const [index, nftId] of nftIds.entries()) {
-			const kioskId = kioskIds[index];
-
-			const purchaseCapId =
-				this.Provider.Nfts().kioskListWithPurchaseCapTx({
-					tx,
-					nftId,
-					kioskId,
-					nftType: market.nftType(),
-					kioskOwnerCapId: kioskOwnerCapIds[index],
-					minPrice: BigInt(0),
-				});
-
-			const zeroSuiCoinId = this.Provider.Coin().zeroTx({
+		// fractionalize eggs
+		const fractionalCoinId = this.Provider.FractionalNfts().depositAfEggsTx(
+			{
+				...inputs,
 				tx,
-				coinType: Coin.constants.suiCoinType,
-			});
-			const [nft, transferRequest] =
-				this.Provider.Nfts().kioskPurchaseWithCapTx({
-					tx,
-					kioskId,
-					purchaseCapId,
-					nftType: market.nftType(),
-					coinId: zeroSuiCoinId,
-				});
-
-			nftArgs.push(nft);
-			transferRequestArgs.push(transferRequest);
-		}
-
-		// convert fCoin -> (nfts + transferRequests)
-		const fractionalCoinId =
-			this.Provider.FractionalNfts().depositIntoKioskStorageTx({
-				tx,
-				nftIds: nftArgs,
-				withTransfer: false,
 				nftType: market.nftType(),
 				fractionalCoinType: market.fractionalCoinType(),
-				nftVaultId: market.market.vault.objectId,
-				transferPolicyId:
-					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
-			});
-
-		for (const [
-			index,
-			transferRequestId,
-		] of transferRequestArgs.entries()) {
-			// pay royalty (using zero coin)
-			const zeroSuiCoinId = this.Provider.Coin().zeroTx({
-				tx,
-				coinType: Coin.constants.suiCoinType,
-			});
-			this.Provider.AfNft().payRoyaltyRuleTx({
-				tx,
-				transferRequestId,
-				suiCoinId: zeroSuiCoinId,
-				nftType: market.nftType(),
-				transferPolicyId:
-					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
-			});
-			// prove nft is in a kiosk (user's)
-			this.Provider.AfNft().proveRuleTx({
-				tx,
-				kioskId: TODO,
-				transferRequestId,
-				nftType: market.nftType(),
-			});
-			// complete transfer
-			this.Provider.Nfts().kioskConfirmRequestTx({
-				tx,
-				transferRequestId,
-				nftType: market.nftType(),
-				transferPolicyId:
-					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
-			});
-		}
+			}
+		);
 
 		// swap fCoin -> afSUI
 		const expectedAfSuiAmountOut = market.getSellAfSuiAmountOut({
@@ -332,41 +219,54 @@ export class NftAmmApi {
 	};
 
 	public fetchBuildDepositAfEggsTx = async (inputs: {
-		market: NftAmmMarket;
+		market: AfEggNftAmmMarket;
 		walletAddress: SuiAddress;
-		afSuiAmount: Balance;
-		nfts: ObjectId[];
+		nftIds: ObjectId[];
+		kioskIds: ObjectId[];
+		kioskOwnerCapIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
+		const { referrer, slippage } = inputs;
+
+		const market =
+			inputs.market ??
+			new AfEggNftAmmMarket(await this.fetchAfEggMarket());
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const { market } = inputs;
-		const marketObject = market.market;
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
 
-		const { lpRatio } = market.getDepositLpCoinAmountOut({
-			afSuiAmount: inputs.afSuiAmount,
+		// fractionalize eggs
+		const fractionalCoinId = this.Provider.FractionalNfts().depositAfEggsTx(
+			{
+				...inputs,
+				tx,
+				nftType: market.nftType(),
+				fractionalCoinType: market.fractionalCoinType(),
+			}
+		);
+
+		// deposit fractional coin
+		const { lpRatio } = market.getDepositAfEggsLpAmountOut({
+			eggsCount: inputs.nftIds.length,
 			referral: inputs.referrer !== undefined,
 		});
-
-		// // TODO: move this somewhere else and into its own func
+		// TODO: move this somewhere else and into its own func
 		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
-
-		const afSuiCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		this.Provider.Pools().multiCoinDepositTx({
 			tx,
-			walletAddress: inputs.walletAddress,
-			coinType: market.afSuiCoinType(),
-			coinAmount: inputs.afSuiAmount,
-		});
-
-		this.depositTx({
-			tx,
-			...inputs,
-			marketObjectId: marketObject.objectId,
-			genericTypes: NftAmmApi.genericTypesForMarket({ market }),
 			expectedLpRatio,
-			afSuiCoin,
+			slippage,
+			coinIds: [fractionalCoinId],
+			coinTypes: [market.fractionalCoinType()],
+			poolId: market.pool.pool.objectId,
+			lpCoinType: market.lpCoinType(),
 			withTransfer: true,
 		});
 
@@ -374,52 +274,69 @@ export class NftAmmApi {
 	};
 
 	public fetchBuildWithdrawAfEggsTx = async (inputs: {
-		market: NftAmmMarket;
+		market: AfEggNftAmmMarket;
 		walletAddress: SuiAddress;
 		lpCoinAmount: Balance;
 		nftIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
+		const { referrer } = inputs;
+
+		const market =
+			inputs.market ??
+			new AfEggNftAmmMarket(await this.fetchAfEggMarket());
+
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
 
-		const { market } = inputs;
-		const marketObject = market.market;
-
-		const fractionalizedCoinAmountOut =
-			market.getWithdrawFractionalizedCoinAmountOut({
-				lpCoinAmount: inputs.lpCoinAmount,
-				referral: inputs.referrer !== undefined,
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
 			});
 
-		const { balances: coinAmountsOut } = Coin.coinsAndBalancesOverZero({
-			[market.fractionalCoinType()]: fractionalizedCoinAmountOut,
-		});
-		const expectedAfSuiAmountOut = coinAmountsOut[0];
-
-		const lpCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+		// get lp coin with amount
+		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
-			coinType: marketObject.lpCoinType,
+			coinType: market.lpCoinType(),
 			coinAmount: inputs.lpCoinAmount,
 		});
 
-		this.Provider.Pools().this.addWithdrawCommandToTransaction({
-			tx,
+		// withdraw fractional coin
+		const fractionalCoinAmountOut =
+			market.getWithdrawFractionalCoinAmountOut({
+				lpCoinAmountOut: inputs.lpCoinAmount,
+				referral: inputs.referrer !== undefined,
+			});
+		const [fractionalCoinId] = this.Provider.Pools().multiCoinWithdrawTx({
 			...inputs,
-			marketObjectId: marketObject.objectId,
-			genericTypes: NftAmmApi.genericTypesForMarket({ market }),
-			expectedAfSuiAmountOut,
-			lpCoin,
-			withTransfer: true,
+			tx,
+			lpCoinId,
+			coinTypes: [market.fractionalCoinType()],
+			expectedAmountsOut: [fractionalCoinAmountOut],
+			lpCoinType: market.lpCoinType(),
+			poolId: market.pool.pool.objectId,
+			withTransfer: false,
 		});
+
+		// convert fractional coin to eggs
+		const kioskOwnerCapIds =
+			this.Provider.FractionalNfts().withdrawAfEggsTx({
+				...inputs,
+				tx,
+				fractionalCoinId,
+				nftType: market.nftType(),
+				fractionalCoinType: market.fractionalCoinType(),
+			});
+		tx.transferObjects(kioskOwnerCapIds, tx.pure(inputs.walletAddress));
 
 		return tx;
 	};
 
 	// public fetchBuildBuyTx = async (inputs: {
-	// 	market: NftAmmMarket;
+	// 	market: AfEggNftAmmMarket;
 	// 	walletAddress: SuiAddress;
 	// 	nftIds: ObjectId[];
 	// 	slippage: Slippage;
@@ -457,7 +374,7 @@ export class NftAmmApi {
 	// };
 
 	// public fetchBuildSellTx = async (inputs: {
-	// 	market: NftAmmMarket;
+	// 	market: AfEggNftAmmMarket;
 	// 	walletAddress: SuiAddress;
 	// 	nftIds: ObjectId[];
 	// 	slippage: Slippage;
@@ -488,7 +405,7 @@ export class NftAmmApi {
 	// };
 
 	// public fetchBuildDepositTx = async (inputs: {
-	// 	market: NftAmmMarket;
+	// 	market: AfEggNftAmmMarket;
 	// 	walletAddress: SuiAddress;
 	// 	afSuiAmount: Balance;
 	// 	nfts: (ObjectId | TransactionArgument)[];
@@ -530,7 +447,7 @@ export class NftAmmApi {
 	// };
 
 	// public fetchBuildWithdrawTx = async (inputs: {
-	// 	market: NftAmmMarket;
+	// 	market: AfEggNftAmmMarket;
 	// 	walletAddress: SuiAddress;
 	// 	lpCoinAmount: Balance;
 	// 	nftIds: ObjectId[];

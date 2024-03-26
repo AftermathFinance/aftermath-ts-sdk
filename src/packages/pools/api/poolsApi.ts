@@ -1047,7 +1047,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		coinTypes: CoinType[];
 		slippage: Slippage;
 		withTransfer?: boolean;
-	}): TransactionArgument => {
+	}): TransactionArgument[] => {
 		const {
 			tx,
 			poolId,
