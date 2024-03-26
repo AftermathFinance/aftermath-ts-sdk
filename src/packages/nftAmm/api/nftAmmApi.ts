@@ -248,8 +248,8 @@ export class NftAmmApi {
 		);
 
 		// deposit fractional coin
-		const { lpRatio } = market.getDepositAfEggsLpAmountOut({
-			eggsCount: inputs.nftIds.length,
+		const { lpRatio } = market.getDepositNftsLpAmountOut({
+			nftsCount: inputs.nftIds.length,
 			referral: inputs.referrer !== undefined,
 		});
 		// TODO: move this somewhere else and into its own func
