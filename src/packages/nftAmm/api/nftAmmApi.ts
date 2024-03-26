@@ -79,19 +79,43 @@ export class NftAmmApi {
 		});
 	};
 
-	public fetchAfEggMarket = async (): Promise<NftAmmMarketData> => {
+	public fetchAllMarkets = async (): Promise<NftAmmMarketData[]> => {
+		const nftAmmVaultIds = Object.values(this.addresses.nftAmm.objects).map(
+			(data) => data.vaultId
+		);
+		return await Promise.all(
+			nftAmmVaultIds.map((vaultId) => this.fetchMarket({ vaultId }))
+		);
+	};
+
+	public fetchMarket = async (inputs: {
+		vaultId: ObjectId;
+	}): Promise<NftAmmMarketData> => {
+		const nftAmmData = Object.values(this.addresses.nftAmm.objects).find(
+			(object) =>
+				Helpers.addLeadingZeroesToType(object.vaultId) ===
+				Helpers.addLeadingZeroesToType(inputs.vaultId)
+		);
+		if (!nftAmmData) throw new Error("no vault found with id");
+
 		const [pool, vault] = await Promise.all([
 			this.Provider.Pools().fetchPool({
-				objectId: this.addresses.nftAmm.objects.afEgg.poolId,
+				objectId: nftAmmData.poolId,
 			}),
 			this.Provider.FractionalNfts().fetchNftVault({
-				objectId: this.addresses.nftAmm.objects.afEgg.vaultId,
+				objectId: nftAmmData.vaultId,
 			}),
 		]);
 		return {
 			pool,
 			vault,
 		};
+	};
+
+	public fetchAfEggMarket = async (): Promise<NftAmmMarketData> => {
+		return this.fetchMarket({
+			vaultId: this.addresses.nftAmm.objects.afEgg.vaultId,
+		});
 	};
 
 	// =========================================================================

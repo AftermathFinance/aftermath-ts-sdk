@@ -29,6 +29,11 @@ export class NftAmm extends Caller {
 	//  Market Class
 	// =========================================================================
 
+	public async getAllMarkets() {
+		const market = await this.fetchApi<NftAmmMarketData>(`markets`);
+		return new AfEggNftAmmMarket(market, this.network, this.Provider);
+	}
+
 	public async getAfEggMarket() {
 		const market = await this.fetchApi<NftAmmMarketData>(`markets/af-egg`);
 		return new AfEggNftAmmMarket(market, this.network, this.Provider);
