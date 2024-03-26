@@ -42,15 +42,15 @@ export interface FractionalNftsVaultObject extends Object {
 
 export interface FractionalNftsKioskStorage {
 	kiosk: {
-		id: ObjectId;
+		objectId: ObjectId;
 		profits: Balance;
 		owner: SuiAddress;
 		itemCount: bigint;
 		allowExtensions: boolean;
 	};
 	ownerCap: {
-		id: ObjectId;
-		for: ObjectId;
+		objectId: ObjectId;
+		forObjectId: ObjectId;
 	};
 	balance: Balance;
 	nftDefaultPrice: Balance;
@@ -58,7 +58,7 @@ export interface FractionalNftsKioskStorage {
 
 export interface FractionalNftsPlainStorage {
 	nfts: {
-		id: ObjectId;
+		objectId: ObjectId;
 		size: bigint;
 	};
 }

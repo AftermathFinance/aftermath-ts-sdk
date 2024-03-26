@@ -2,6 +2,7 @@ import { AftermathApi } from "../providers/aftermathApi";
 import {
 	AnyObjectType,
 	Balance,
+	DynamicFieldObjectsWithCursor,
 	KioskObject,
 	KioskOwnerCapObject,
 	Nft,
@@ -103,6 +104,23 @@ export class NftsApi {
 			parentObjectId: kioskObjectId,
 			objectsFromObjectIds: (objectIds) => this.fetchNfts({ objectIds }),
 		});
+	};
+
+	public fetchNftsInKioskWithCursor = async (inputs: {
+		kioskObjectId: ObjectId;
+		cursor?: ObjectId;
+		limit?: number;
+	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
+		const { kioskObjectId, cursor, limit } = inputs;
+		return this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
+			{
+				parentObjectId: kioskObjectId,
+				objectsFromObjectIds: (objectIds) =>
+					this.fetchNfts({ objectIds }),
+				cursor,
+				limit,
+			}
+		);
 	};
 
 	public fetchKioskOwnerCaps = async (inputs: {

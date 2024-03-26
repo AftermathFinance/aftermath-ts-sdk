@@ -49,10 +49,10 @@ export class AfEggNftAmmMarket extends Caller {
 	// =========================================================================
 
 	public async getNfts(inputs: { cursor?: ObjectId; limit?: number }) {
-		return this.fetchApi<
-			DynamicFieldObjectsWithCursor<Nft>,
-			ApiDynamicFieldsBody
-		>("nfts", inputs);
+		return this.useProvider().fetchNftsInMarketWithCursor({
+			...inputs,
+			kioskId: this.market.vault.kioskStorage?.kiosk.objectId!,
+		});
 	}
 
 	// =========================================================================

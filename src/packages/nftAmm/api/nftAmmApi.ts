@@ -69,19 +69,14 @@ export class NftAmmApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchNftsInMarketTable = async (inputs: {
-		marketTableObjectId: ObjectId;
+	public fetchNftsInMarketWithCursor = async (inputs: {
+		kioskId: ObjectId;
 		cursor?: ObjectId;
 		limit?: number;
 	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
-		return await this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
-			{
-				...inputs,
-				parentObjectId: inputs.marketTableObjectId,
-				objectsFromObjectIds: (objectIds) =>
-					this.Provider.Nfts().fetchNfts({ objectIds }),
-			}
-		);
+		return this.Provider.Nfts().fetchNftsInKioskWithCursor({
+			kioskObjectId: inputs.kioskId,
+		});
 	};
 
 	public fetchAfEggMarket = async (): Promise<NftAmmMarketData> => {

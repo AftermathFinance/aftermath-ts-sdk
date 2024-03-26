@@ -55,15 +55,15 @@ export class FractionalNftsApiCasting {
 	): FractionalNftsKioskStorage => {
 		return {
 			kiosk: {
-				id: Helpers.addLeadingZeroesToType(data.kiosk.id),
+				objectId: Helpers.addLeadingZeroesToType(data.kiosk.id),
 				profits: BigInt(data.kiosk.profits),
 				owner: Helpers.addLeadingZeroesToType(data.kiosk.owner),
 				itemCount: BigInt(data.kiosk.item_count),
 				allowExtensions: data.kiosk.allow_extensions,
 			},
 			ownerCap: {
-				id: Helpers.addLeadingZeroesToType(data.owner_cap.id),
-				for: Helpers.addLeadingZeroesToType(data.owner_cap.for),
+				objectId: Helpers.addLeadingZeroesToType(data.owner_cap.id),
+				forObjectId: Helpers.addLeadingZeroesToType(data.owner_cap.for),
 			},
 			balance: BigInt(data.balance),
 			nftDefaultPrice: BigInt(data.nft_default_price),
@@ -75,7 +75,7 @@ export class FractionalNftsApiCasting {
 	): FractionalNftsPlainStorage => {
 		return {
 			nfts: {
-				id: Helpers.addLeadingZeroesToType(data.nfts.id),
+				objectId: Helpers.addLeadingZeroesToType(data.nfts.id),
 				size: BigInt(data.nfts.size),
 			},
 		};
