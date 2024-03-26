@@ -1,5 +1,4 @@
 import {
-	TransactionArgument,
 	TransactionBlock,
 	TransactionArgument,
 } from "@mysten/sui.js/transactions";
