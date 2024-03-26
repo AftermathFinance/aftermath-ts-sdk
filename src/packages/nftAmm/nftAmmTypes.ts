@@ -9,7 +9,3 @@ export interface NftAmmMarketData {
 	pool: PoolObject;
 	vault: FractionalNftsVaultObject;
 }
-
-// =========================================================================
-//  API
-// =========================================================================

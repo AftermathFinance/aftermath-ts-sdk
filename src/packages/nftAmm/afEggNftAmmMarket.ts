@@ -2,10 +2,6 @@ import {
 	SuiNetwork,
 	NftAmmMarketData,
 	Balance,
-	Nft,
-	DynamicFieldObjectsWithCursor,
-	ApiDynamicFieldsBody,
-	Url,
 	ObjectId,
 	SuiAddress,
 	Slippage,
@@ -39,7 +35,7 @@ export class AfEggNftAmmMarket extends Caller {
 		public readonly network?: SuiNetwork,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, `nft-amm/markets/${market.vault}`);
+		super(network, `nft-amm/markets/${market.vault.objectId}`);
 		this.market = market;
 		this.pool = new Pool(market.pool, network, Provider);
 	}
