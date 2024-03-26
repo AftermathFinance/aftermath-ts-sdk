@@ -1,14 +1,90 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
+	AnyObjectType,
 	Balance,
+	CoinsToBalance,
+	CoinType,
 	DynamicFieldObjectsWithCursor,
 	Nft,
+	NftAmmMarketData,
 	ObjectId,
 	Slippage,
 	SuiAddress,
+	SuiNetwork,
 } from "../../types";
+import { AftermathApi } from "../../general/providers";
+import { Pool } from "..";
 
 export interface NftAmmMarketInterface {
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	readonly pool: Pool;
+	readonly market: NftAmmMarketData;
+	readonly network?: SuiNetwork;
+
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
+
+	// TODO: clean all this up / do this more effectively
+	getNftSpotPriceInAfSui: (inputs?: { withFees: boolean }) => Balance;
+	getFractionalCoinToAfSuiSpotPrice: (inputs?: {
+		withFees: boolean;
+	}) => number;
+	getAfSuiToFractionalCoinSpotPrice: (inputs?: {
+		withFees: boolean;
+	}) => number;
+	getBuyAfSuiAmountIn: (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}) => Balance;
+	getSellAfSuiAmountOut: (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}) => Balance;
+	getDepositLpAmountOut: (inputs: {
+		amountsIn: CoinsToBalance;
+		referral?: boolean;
+	}) => {
+		lpAmountOut: Balance;
+		lpRatio: number;
+	};
+	getDepositNftsLpAmountOut: (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}) => {
+		lpAmountOut: Balance;
+		lpRatio: number;
+	};
+	getWithdrawFractionalCoinAmountOut: (inputs: {
+		lpCoinAmountOut: Balance;
+		referral?: boolean;
+	}) => Balance;
+	getWithdrawAfSuiAmountOut: (inputs: {
+		lpCoinAmountOut: Balance;
+		referral?: boolean;
+	}) => Balance;
+	getWithdrawNftsCountOut: (inputs: {
+		lpCoinAmountOut: Balance;
+		referral?: boolean;
+	}) => bigint;
+
+	// =========================================================================
+	//  Getters
+	// =========================================================================
+
+	fractionalCoinType: () => CoinType;
+	afSuiCoinType: () => CoinType;
+	lpCoinType: () => CoinType;
+	nftType: () => AnyObjectType;
+	fractionsAmount: () => Balance;
+
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
+
 	getNfts: NftAmmMarketGetNfts;
 	getBuyNftsTransaction: NftAmmMarketGetBuyNftsTransaction;
 	getSellNftsTransaction: NftAmmMarketGetSellNftsTransaction;
