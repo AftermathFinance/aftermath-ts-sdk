@@ -1,11 +1,11 @@
 import { SuiNetwork, NftAmmMarketData } from "../../types";
 import { AftermathApi } from "../../general/providers";
 import {
-	NftAmmMarketGetBuyTransaction,
-	NftAmmMarketGetDepositTransaction,
+	NftAmmMarketGetBuyNftsTransaction,
+	NftAmmMarketGetDepositNftsTransaction,
 	NftAmmMarketGetNfts,
-	NftAmmMarketGetSellTransaction,
-	NftAmmMarketGetWithdrawTransaction,
+	NftAmmMarketGetSellNftsTransaction,
+	NftAmmMarketGetWithdrawNftsTransaction,
 	NftAmmMarketInterface,
 } from "./nftAmmMarketInterface";
 import { NftAmmMarket } from "./nftAmmMarket";
@@ -41,28 +41,32 @@ export class AfEggNftAmmMarket
 	//  Transactions
 	// =========================================================================
 
-	getBuyTransaction: NftAmmMarketGetBuyTransaction = (inputs) => {
+	getBuyNftsTransaction: NftAmmMarketGetBuyNftsTransaction = (inputs) => {
 		return this.useProvider().fetchBuildBuyAfEggsTx({
 			...inputs,
 			market: this,
 		});
 	};
 
-	getSellTransaction: NftAmmMarketGetSellTransaction = (inputs) => {
+	getSellNftsTransaction: NftAmmMarketGetSellNftsTransaction = (inputs) => {
 		return this.useProvider().fetchBuildSellAfEggsTx({
 			...inputs,
 			market: this,
 		});
 	};
 
-	getDepositTransaction: NftAmmMarketGetDepositTransaction = (inputs) => {
+	getDepositNftsTransaction: NftAmmMarketGetDepositNftsTransaction = (
+		inputs
+	) => {
 		return this.useProvider().fetchBuildDepositAfEggsTx({
 			...inputs,
 			market: this,
 		});
 	};
 
-	getWithdrawTransaction: NftAmmMarketGetWithdrawTransaction = (inputs) => {
+	getWithdrawNftsTransaction: NftAmmMarketGetWithdrawNftsTransaction = (
+		inputs
+	) => {
 		return this.useProvider().fetchBuildWithdrawAfEggsTx({
 			...inputs,
 			market: this,

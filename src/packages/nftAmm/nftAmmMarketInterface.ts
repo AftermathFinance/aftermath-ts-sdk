@@ -10,10 +10,10 @@ import {
 
 export interface NftAmmMarketInterface {
 	getNfts: NftAmmMarketGetNfts;
-	getBuyTransaction: NftAmmMarketGetBuyTransaction;
-	getSellTransaction: NftAmmMarketGetSellTransaction;
-	getDepositTransaction: NftAmmMarketGetDepositTransaction;
-	getWithdrawTransaction: NftAmmMarketGetWithdrawTransaction;
+	getBuyNftsTransaction: NftAmmMarketGetBuyNftsTransaction;
+	getSellNftsTransaction: NftAmmMarketGetSellNftsTransaction;
+	getDepositNftsTransaction: NftAmmMarketGetDepositNftsTransaction;
+	getWithdrawNftsTransaction: NftAmmMarketGetWithdrawNftsTransaction;
 }
 
 export type NftAmmMarketGetNfts = (inputs: {
@@ -21,23 +21,14 @@ export type NftAmmMarketGetNfts = (inputs: {
 	limit?: number;
 }) => Promise<DynamicFieldObjectsWithCursor<Nft>>;
 
-export type NftAmmMarketGetBuyTransaction = (inputs: {
+export type NftAmmMarketGetBuyNftsTransaction = (inputs: {
 	walletAddress: SuiAddress;
 	nftIds: ObjectId[];
 	slippage: Slippage;
 	referrer?: SuiAddress;
 }) => Promise<TransactionBlock>;
 
-export type NftAmmMarketGetSellTransaction = (inputs: {
-	walletAddress: SuiAddress;
-	nftIds: ObjectId[];
-	kioskIds: ObjectId[];
-	kioskOwnerCapIds: ObjectId[];
-	slippage: Slippage;
-	referrer?: SuiAddress;
-}) => Promise<TransactionBlock>;
-
-export type NftAmmMarketGetDepositTransaction = (inputs: {
+export type NftAmmMarketGetSellNftsTransaction = (inputs: {
 	walletAddress: SuiAddress;
 	nftIds: ObjectId[];
 	kioskIds: ObjectId[];
@@ -46,7 +37,16 @@ export type NftAmmMarketGetDepositTransaction = (inputs: {
 	referrer?: SuiAddress;
 }) => Promise<TransactionBlock>;
 
-export type NftAmmMarketGetWithdrawTransaction = (inputs: {
+export type NftAmmMarketGetDepositNftsTransaction = (inputs: {
+	walletAddress: SuiAddress;
+	nftIds: ObjectId[];
+	kioskIds: ObjectId[];
+	kioskOwnerCapIds: ObjectId[];
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}) => Promise<TransactionBlock>;
+
+export type NftAmmMarketGetWithdrawNftsTransaction = (inputs: {
 	walletAddress: SuiAddress;
 	lpCoinAmount: Balance;
 	nftIds: ObjectId[];
