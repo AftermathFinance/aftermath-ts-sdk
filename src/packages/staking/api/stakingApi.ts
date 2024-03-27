@@ -890,6 +890,17 @@ export class StakingApi
 		return exchangeRate <= 0 ? 1 : exchangeRate;
 	};
 
+	public fetchUniqueStakers = async (): Promise<number> => {
+		return this.Provider.indexerCaller.fetchIndexer(
+			"staking/unique-stakers",
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+	};
+
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
