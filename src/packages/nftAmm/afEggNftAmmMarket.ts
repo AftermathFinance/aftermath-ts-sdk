@@ -34,6 +34,7 @@ export class AfEggNftAmmMarket
 		return this.useProvider().fetchNftsInMarketWithCursor({
 			...inputs,
 			kioskId: this.market.vault.kioskStorage?.kiosk.objectId!,
+			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
 		});
 	};
 

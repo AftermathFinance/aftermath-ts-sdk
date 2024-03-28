@@ -71,11 +71,13 @@ export class NftAmmApi {
 
 	public fetchNftsInMarketWithCursor = async (inputs: {
 		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
 		cursor?: ObjectId;
 		limit?: number;
 	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
 		return this.Provider.Nfts().fetchNftsInKioskWithCursor({
-			kioskObjectId: inputs.kioskId,
+			kioskId: inputs.kioskId,
+			kioskOwnerCapId: inputs.kioskOwnerCapId,
 		});
 	};
 
