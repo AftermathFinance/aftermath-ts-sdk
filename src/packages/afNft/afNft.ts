@@ -1,9 +1,8 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { NftAmmMarketData, SuiNetwork } from "../../types";
-import { AfEggNftAmmMarket } from "./afEggNftAmmMarket";
+import { ObjectId, SuiNetwork, Url } from "../../types";
 
-export class NftAmm extends Caller {
+export class AfNft extends Caller {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -18,24 +17,30 @@ export class NftAmm extends Caller {
 		public readonly network?: SuiNetwork,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "nft-amm");
+		super(network, "af-nft");
 	}
 
 	// =========================================================================
-	//  Class Objects
+	//  Objects
 	// =========================================================================
 
+	// public async getNft(inputs: { objectId: ObjectId }): Promise<Nft> {
+	// 	return this.fetchApi(`nfts/${inputs.objectId}`);
+	// }
+
+	// public async getNfts(inputs: { objectIds: ObjectId[] }): Promise<Nft[]> {
+	// 	return Promise.all(
+	// 		inputs.objectIds.map((objectId) => this.getNft({ objectId }))
+	// 	);
+	// }
+
 	// =========================================================================
-	//  Market Class
+	//  Private Helpers
 	// =========================================================================
 
-	public async getAllMarkets() {
-		const market = await this.fetchApi<NftAmmMarketData>(`markets`);
-		return new AfEggNftAmmMarket(market, this.network, this.Provider);
-	}
-
-	public async getAfEggMarket() {
-		const market = await this.fetchApi<NftAmmMarketData>(`markets/af-egg`);
-		return new AfEggNftAmmMarket(market, this.network, this.Provider);
-	}
+	private useProvider = () => {
+		const provider = this.Provider?.AfNft();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

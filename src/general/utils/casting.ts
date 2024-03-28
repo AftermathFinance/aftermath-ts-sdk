@@ -16,6 +16,8 @@ import { CoinsToBalance, Helpers } from "../..";
 import { BcsTypeName, IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { NftsApiCasting } from "../nfts/nftsApiCasting";
+import { AfNftApiCasting } from "../../packages/afNft/api/afNftApiCasting";
+import { FractionalNftsApiCasting } from "../../packages/fractionalNfts/api/fractionalNftsApiCasting";
 
 /**
  * Utility class for casting and conversion functions.
@@ -32,6 +34,8 @@ export class Casting {
 	public static staking = StakingApiCasting;
 	public static leveragedStaking = LeveragedStakingApiCasting;
 	public static nftAmm = NftAmmApiCasting;
+	public static fractionalNfts = FractionalNftsApiCasting;
+	public static afNft = AfNftApiCasting;
 	public static router = RouterApiCasting;
 	public static perpetuals = PerpetualsApiCasting;
 	public static farms = FarmsApiCasting;

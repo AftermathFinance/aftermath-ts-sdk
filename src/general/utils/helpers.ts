@@ -21,7 +21,7 @@ import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { Casting } from "./casting";
 import {
 	TransactionBlock,
-	TransactionObjectArgument,
+	TransactionArgument,
 } from "@mysten/sui.js/transactions";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { NetworkType } from "@scallop-io/sui-kit";
@@ -348,8 +348,8 @@ export class Helpers {
 	// TODO: use this everywhere in api for tx command creation
 	public static addTxObject = (
 		tx: TransactionBlock,
-		object: ObjectId | TransactionObjectArgument
-	): TransactionObjectArgument => {
+		object: ObjectId | TransactionArgument
+	): TransactionArgument => {
 		return typeof object === "string" ? tx.object(object) : object;
 	};
 

@@ -1,7 +1,6 @@
 import {
-	TransactionArgument,
 	TransactionBlock,
-	TransactionObjectArgument,
+	TransactionArgument,
 } from "@mysten/sui.js/transactions";
 import { SuiEvent, Unsubscribe } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -1195,7 +1194,7 @@ export class PerpetualsApi {
 	public placeSLTPOrderTx = (
 		inputs: ApiPerpetualsSLTPOrderBody & {
 			tx: TransactionBlock;
-			sessionPotatoId: TransactionObjectArgument;
+			sessionPotatoId: TransactionArgument;
 		}
 	) => {
 		const { tx } = inputs;

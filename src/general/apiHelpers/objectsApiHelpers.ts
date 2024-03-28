@@ -8,7 +8,7 @@ import {
 } from "@mysten/sui.js/client";
 import { BcsTypeName } from "../types/castingTypes";
 import { bcsRegistry } from "@mysten/sui.js/bcs";
-import { TransactionObjectArgument } from "@scallop-io/sui-kit";
+import { TransactionArgument } from "@scallop-io/sui-kit";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class ObjectsApiHelpers {
@@ -298,8 +298,8 @@ export class ObjectsApiHelpers {
 
 	public burnObjectTx = async (inputs: {
 		tx: TransactionBlock;
-		object: TransactionObjectArgument;
-	}): Promise<TransactionObjectArgument> => {
+		object: TransactionArgument;
+	}): Promise<TransactionArgument> => {
 		const { tx, object } = inputs;
 
 		return tx.transferObjects(
@@ -312,9 +312,9 @@ export class ObjectsApiHelpers {
 
 	public publicShareObjectTx = async (inputs: {
 		tx: TransactionBlock;
-		object: TransactionObjectArgument;
+		object: TransactionArgument;
 		objectType: AnyObjectType;
-	}): Promise<TransactionObjectArgument> => {
+	}): Promise<TransactionArgument> => {
 		const { tx, object, objectType } = inputs;
 
 		return tx.moveCall({

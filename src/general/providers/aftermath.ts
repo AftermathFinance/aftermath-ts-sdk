@@ -31,6 +31,8 @@ import { DynamicGas } from "../dynamicGas/dynamicGas";
 import { AftermathApi } from "./aftermathApi";
 import { IndexerCaller } from "../utils";
 import { SuiClient, SuiHTTPTransport } from "@mysten/sui.js/client";
+import { AfNft } from "../../packages/afNft";
+import { FractionalNfts } from "../../packages/fractionalNfts";
 
 /**
  * @class Aftermath Provider
@@ -129,6 +131,9 @@ export class Aftermath extends Caller {
 	 */
 	public Router = () => new Router(this.network);
 	public NftAmm = () => new NftAmm(this.network, this.Provider);
+	public AfNft = () => new AfNft(this.network, this.Provider);
+	public FractionalNfts = () =>
+		new FractionalNfts(this.network, this.Provider);
 	public ReferralVault = () => new ReferralVault(this.network, this.Provider);
 	public Perpetuals = () => new Perpetuals(this.network);
 	public Oracle = () => new Oracle(this.network, this.Provider);
