@@ -5,7 +5,7 @@ import { AnyObjectType, Object, ObjectId, Url } from "../types/generalTypes";
 // =========================================================================
 
 export interface KioskOwnerCapObject extends Object {
-	kioskObjectId: ObjectId;
+	kioskId: ObjectId;
 }
 
 export interface KioskObject extends Object {
@@ -20,6 +20,10 @@ export interface KioskObject extends Object {
 export interface Nft {
 	info: NftInfo;
 	display: NftDisplay;
+	kiosk?: {
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
+	};
 }
 
 export interface NftInfo {

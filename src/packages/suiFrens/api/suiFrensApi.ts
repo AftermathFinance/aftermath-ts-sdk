@@ -1301,7 +1301,7 @@ export class SuiFrensApi {
 		const allBullsharks = await Promise.all(
 			kioskOwnerCaps.map((kioskOwnerCap) =>
 				this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
-					parentObjectId: kioskOwnerCap.kioskObjectId,
+					parentObjectId: kioskOwnerCap.kioskId,
 					objectsFromObjectIds: (suiFrenIds) =>
 						this.fetchSuiFrens({ suiFrenIds }),
 					dynamicFieldType: (fieldType) =>

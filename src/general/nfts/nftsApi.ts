@@ -97,26 +97,41 @@ export class NftsApi {
 	};
 
 	public fetchNftsInKiosk = async (inputs: {
-		kioskObjectId: ObjectId;
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
 	}): Promise<Nft[]> => {
-		const { kioskObjectId } = inputs;
+		const { kioskId, kioskOwnerCapId } = inputs;
 		return this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
-			parentObjectId: kioskObjectId,
-			objectsFromObjectIds: (objectIds) => this.fetchNfts({ objectIds }),
+			parentObjectId: kioskId,
+			objectsFromObjectIds: async (objectIds) =>
+				(await this.fetchNfts({ objectIds })).map((nft) => ({
+					...nft,
+					kiosk: {
+						kioskId,
+						kioskOwnerCapId,
+					},
+				})),
 		});
 	};
 
 	public fetchNftsInKioskWithCursor = async (inputs: {
-		kioskObjectId: ObjectId;
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
 		cursor?: ObjectId;
 		limit?: number;
 	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
-		const { kioskObjectId, cursor, limit } = inputs;
+		const { kioskId, kioskOwnerCapId, cursor, limit } = inputs;
 		return this.Provider.DynamicFields().fetchCastDynamicFieldsOfTypeWithCursor(
 			{
-				parentObjectId: kioskObjectId,
-				objectsFromObjectIds: (objectIds) =>
-					this.fetchNfts({ objectIds }),
+				parentObjectId: kioskId,
+				objectsFromObjectIds: async (objectIds) =>
+					(await this.fetchNfts({ objectIds })).map((nft) => ({
+						...nft,
+						kiosk: {
+							kioskId,
+							kioskOwnerCapId,
+						},
+					})),
 				cursor,
 				limit,
 			}
@@ -143,13 +158,14 @@ export class NftsApi {
 		const nfts = await Promise.all(
 			kioskOwnerCaps.map((kioskOwnerCap) =>
 				this.fetchNftsInKiosk({
-					kioskObjectId: kioskOwnerCap.kioskObjectId,
+					kioskId: kioskOwnerCap.kioskId,
+					kioskOwnerCapId: kioskOwnerCap.objectId,
 				})
 			)
 		);
 
 		return kioskOwnerCaps.map((kioskOwnerCap, index) => ({
-			objectId: kioskOwnerCap.kioskObjectId,
+			objectId: kioskOwnerCap.kioskId,
 			objectType:
 				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
 			kioskOwnerCapId: kioskOwnerCap.objectId,
@@ -172,13 +188,14 @@ export class NftsApi {
 		const nfts = await Promise.all(
 			kioskOwnerCaps.map((kioskOwnerCap) =>
 				this.fetchNftsInKiosk({
-					kioskObjectId: kioskOwnerCap.kioskObjectId,
+					kioskId: kioskOwnerCap.kioskId,
+					kioskOwnerCapId: kioskOwnerCap.objectId,
 				})
 			)
 		);
 
 		return kioskOwnerCaps.map((kioskOwnerCap, index) => ({
-			objectId: kioskOwnerCap.kioskObjectId,
+			objectId: kioskOwnerCap.kioskId,
 			objectType:
 				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
 			kioskOwnerCapId: kioskOwnerCap.objectId,

@@ -55,7 +55,7 @@ export class NftsApiCasting {
 		return {
 			objectId,
 			objectType,
-			kioskObjectId: Helpers.addLeadingZeroesToType(fields.for),
+			kioskId: Helpers.addLeadingZeroesToType(fields.for),
 		};
 	};
 
