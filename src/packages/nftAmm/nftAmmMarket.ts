@@ -151,10 +151,13 @@ export class NftAmmMarket extends Caller {
 	};
 
 	public getWithdrawFractionalCoinAmountOut = (inputs: {
-		lpCoinAmountOut: Balance;
+		lpCoinAmount: Balance;
 		referral?: boolean;
 	}): Balance => {
-		const lpRatio = this.pool.getMultiCoinWithdrawLpRatio(inputs);
+		const lpRatio = this.pool.getMultiCoinWithdrawLpRatio({
+			...inputs,
+			lpCoinAmountOut: inputs.lpCoinAmount,
+		});
 		const amountsOut = this.pool.getWithdrawAmountsOut({
 			lpRatio,
 			amountsOutDirection: {
@@ -166,10 +169,13 @@ export class NftAmmMarket extends Caller {
 	};
 
 	public getWithdrawAfSuiAmountOut = (inputs: {
-		lpCoinAmountOut: Balance;
+		lpCoinAmount: Balance;
 		referral?: boolean;
 	}): Balance => {
-		const lpRatio = this.pool.getMultiCoinWithdrawLpRatio(inputs);
+		const lpRatio = this.pool.getMultiCoinWithdrawLpRatio({
+			...inputs,
+			lpCoinAmountOut: inputs.lpCoinAmount,
+		});
 		const amountsOut = this.pool.getWithdrawAmountsOut({
 			lpRatio,
 			amountsOutDirection: {
@@ -186,12 +192,22 @@ export class NftAmmMarket extends Caller {
 	};
 
 	public getWithdrawNftsCountOut = (inputs: {
-		lpCoinAmountOut: Balance;
+		lpCoinAmount: Balance;
 		referral?: boolean;
 	}): bigint => {
 		const fractionalCoinAmountOut =
 			this.getWithdrawFractionalCoinAmountOut(inputs);
 		return fractionalCoinAmountOut / this.fractionsAmount();
+	};
+
+	// TODO
+	public getWithdrawLpAmountIn = (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}): bigint => {
+		const lpAmount = this.getDepositNftsLpAmountOut(inputs);
+
+		this.pool.getWithdrawAmountsOut({});
 	};
 
 	// =========================================================================
