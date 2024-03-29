@@ -199,13 +199,11 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		return {
 			coinOutAmount: dy,
 			feeInAmount:
-				(dx *
-					(this.totalLpFee() +
-						(this.pool.feeDirection === "X"
-							? (dx * this.totalAdminFee()) /
-							  SuiswapRouterPool.BPS_SCALING
-							: BigInt(0)))) /
-				SuiswapRouterPool.BPS_SCALING,
+				(dx * this.totalLpFee()) / SuiswapRouterPool.BPS_SCALING +
+				(this.pool.feeDirection === "X"
+					? (dx * this.totalAdminFee()) /
+					  SuiswapRouterPool.BPS_SCALING
+					: BigInt(0)),
 			feeOutAmount:
 				this.pool.feeDirection === "Y"
 					? (dy * this.totalAdminFee()) /
@@ -252,13 +250,11 @@ class SuiswapRouterPool implements RouterPoolInterface {
 		return {
 			coinOutAmount: dx,
 			feeInAmount:
-				(dy *
-					(this.totalLpFee() +
-						(this.pool.feeDirection === "Y"
-							? (dy * this.totalAdminFee()) /
-							  SuiswapRouterPool.BPS_SCALING
-							: BigInt(0)))) /
-				SuiswapRouterPool.BPS_SCALING,
+				(dy * this.totalLpFee()) / SuiswapRouterPool.BPS_SCALING +
+				(this.pool.feeDirection === "Y"
+					? (dy * this.totalAdminFee()) /
+					  SuiswapRouterPool.BPS_SCALING
+					: BigInt(0)),
 			feeOutAmount:
 				this.pool.feeDirection === "X"
 					? (dx * this.totalAdminFee()) /
