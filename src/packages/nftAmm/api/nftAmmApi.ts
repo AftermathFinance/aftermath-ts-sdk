@@ -338,7 +338,7 @@ export class NftAmmApi {
 		// withdraw fractional coin
 		const fractionalCoinAmountOut =
 			market.getWithdrawFractionalCoinAmountOut({
-				lpCoinAmountOut: inputs.lpCoinAmount,
+				lpCoinAmount: inputs.lpCoinAmount,
 				referral: inputs.referrer !== undefined,
 			});
 		const [fractionalCoinId] = this.Provider.Pools().multiCoinWithdrawTx({

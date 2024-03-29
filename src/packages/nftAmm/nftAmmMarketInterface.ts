@@ -66,17 +66,17 @@ export interface NftAmmMarketInterface {
 		lpRatio: number;
 	};
 	getWithdrawFractionalCoinAmountOut: (inputs: {
-		lpCoinAmountOut: Balance;
+		lpCoinAmount: Balance;
 		referral?: boolean;
 	}) => Balance;
 	getWithdrawAfSuiAmountOut: (inputs: {
-		lpCoinAmountOut: Balance;
+		lpCoinAmount: Balance;
 		referral?: boolean;
 	}) => Balance;
 	getWithdrawNftsCountOut: (inputs: {
-		lpCoinAmountOut: Balance;
+		lpCoinAmount: Balance;
 		referral?: boolean;
-	}) => bigint;
+	}) => number;
 
 	// =========================================================================
 	//  Getters

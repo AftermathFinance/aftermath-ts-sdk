@@ -194,20 +194,10 @@ export class NftAmmMarket extends Caller {
 	public getWithdrawNftsCountOut = (inputs: {
 		lpCoinAmount: Balance;
 		referral?: boolean;
-	}): bigint => {
+	}): number => {
 		const fractionalCoinAmountOut =
 			this.getWithdrawFractionalCoinAmountOut(inputs);
-		return fractionalCoinAmountOut / this.fractionsAmount();
-	};
-
-	// TODO
-	public getWithdrawLpAmountIn = (inputs: {
-		nftsCount: number;
-		referral?: boolean;
-	}): bigint => {
-		const lpAmount = this.getDepositNftsLpAmountOut(inputs);
-
-		this.pool.getWithdrawAmountsOut({});
+		return Number(fractionalCoinAmountOut / this.fractionsAmount());
 	};
 
 	// =========================================================================
