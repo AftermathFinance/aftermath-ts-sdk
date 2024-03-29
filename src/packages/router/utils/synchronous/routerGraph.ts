@@ -1102,16 +1102,16 @@ export class RouterGraph {
 						amount: totalCoinInAmount,
 						tradeFee:
 							"coinOutAmount" in tradeResult
-								? tradeResult.feeOutAmount
-								: tradeResult.feeInAmount,
+								? tradeResult.feeInAmount
+								: tradeResult.feeOutAmount,
 					},
 					coinOut: {
 						...path.coinOut,
 						amount: totalCoinOutAmount,
 						tradeFee:
 							"coinOutAmount" in tradeResult
-								? tradeResult.feeInAmount
-								: tradeResult.feeOutAmount,
+								? tradeResult.feeOutAmount
+								: tradeResult.feeInAmount,
 					},
 					spotPrice,
 				};
