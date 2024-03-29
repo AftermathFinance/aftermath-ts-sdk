@@ -6,6 +6,7 @@ import {
 	FractionalNftsVaultObject,
 } from "../fractionalNftsTypes";
 import {
+	FractionalNftsVaultDisplayFieldsOnChain,
 	FractionalNftsVaultFieldsOnChain,
 	KioskStorageOnChain,
 	PlainStorageOnChain,
@@ -25,6 +26,8 @@ export class FractionalNftsApiCasting {
 		const fields = Helpers.getObjectFields(
 			data
 		) as FractionalNftsVaultFieldsOnChain;
+		const displayFields = Helpers.getObjectDisplay(data)
+			?.data! as unknown as FractionalNftsVaultDisplayFieldsOnChain;
 
 		// TODO: move pattern to helpers or casting class
 		const genericTypes = Coin.getInnerCoinType(objectType)
@@ -47,6 +50,13 @@ export class FractionalNftsApiCasting {
 			isKioskDepositEnabled: fields.kiosk_deposit_enabled,
 			fractionalCoinSupply: BigInt(fields.supply.fields.value),
 			fractionsAmount: BigInt(fields.fractions_amount),
+			display: {
+				name: displayFields.name,
+				imageUrl: displayFields.image_url,
+				thumbnailUrl: displayFields.thumbnail_url,
+				projectUrl: displayFields.project_url,
+				description: displayFields.description,
+			},
 		};
 	};
 

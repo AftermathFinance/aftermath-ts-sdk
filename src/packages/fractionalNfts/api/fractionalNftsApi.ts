@@ -60,6 +60,7 @@ export class FractionalNftsApi {
 			...inputs,
 			objectFromSuiObjectResponse:
 				FractionalNftsApiCasting.vaultObjectFromSuiObjectResponse,
+			withDisplay: true,
 		});
 	};
 

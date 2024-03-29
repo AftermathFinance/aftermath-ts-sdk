@@ -81,6 +81,16 @@ export class NftAmmApi {
 		});
 	};
 
+	public fetchNftsInMarket = async (inputs: {
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
+	}): Promise<Nft[]> => {
+		return this.Provider.Nfts().fetchNftsInKiosk({
+			kioskId: inputs.kioskId,
+			kioskOwnerCapId: inputs.kioskOwnerCapId,
+		});
+	};
+
 	public fetchAllMarkets = async (): Promise<NftAmmMarketData[]> => {
 		const nftAmmVaultIds = Object.values(this.addresses.nftAmm.objects).map(
 			(data) => data.vaultId

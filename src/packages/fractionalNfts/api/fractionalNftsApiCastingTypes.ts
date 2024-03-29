@@ -1,5 +1,5 @@
 import { SupplyOnChain } from "../../../general/types/castingTypes";
-import { BigIntAsString, ObjectId, SuiAddress } from "../../../types";
+import { BigIntAsString, ObjectId, SuiAddress, Url } from "../../../types";
 
 // =========================================================================
 //  Objects
@@ -14,6 +14,14 @@ export interface FractionalNftsVaultFieldsOnChain {
 	// ids: LinkedSet<ID>,
 	supply: SupplyOnChain;
 	fractions_amount: BigIntAsString;
+}
+
+export interface FractionalNftsVaultDisplayFieldsOnChain {
+	name: string;
+	image_url: Url;
+	thumbnail_url: Url;
+	project_url: Url;
+	description: string;
 }
 
 export interface KioskStorageOnChain {

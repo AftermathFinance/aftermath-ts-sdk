@@ -12,7 +12,11 @@ import {
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
 import { AftermathApi } from "../../general/providers";
-import { NftAmmMarketInterface } from "./nftAmmMarketInterface";
+import {
+	NftAmmMarketGetAllNfts,
+	NftAmmMarketGetNfts,
+	NftAmmMarketInterface,
+} from "./nftAmmMarketInterface";
 
 export class NftAmmMarket extends Caller {
 	// =========================================================================
@@ -40,6 +44,25 @@ export class NftAmmMarket extends Caller {
 		this.market = market;
 		this.pool = new Pool(market.pool, network, Provider);
 	}
+
+	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	getNfts: NftAmmMarketGetNfts = (inputs) => {
+		return this.useProvider().fetchNftsInMarketWithCursor({
+			...inputs,
+			kioskId: this.market.vault.kioskStorage?.kiosk.objectId!,
+			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
+		});
+	};
+
+	getAllNfts: NftAmmMarketGetAllNfts = () => {
+		return this.useProvider().fetchNftsInMarket({
+			kioskId: this.market.vault.kioskStorage?.kiosk.objectId!,
+			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
+		});
+	};
 
 	// =========================================================================
 	//  Calculations

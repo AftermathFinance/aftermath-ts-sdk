@@ -5,6 +5,7 @@ import {
 	Object,
 	ObjectId,
 	SuiAddress,
+	Url,
 } from "../../types";
 
 // =========================================================================
@@ -38,6 +39,13 @@ export interface FractionalNftsVaultObject extends Object {
 	fractionsAmount: Balance;
 	nftType: AnyObjectType;
 	fractionalCoinType: CoinType;
+	display: {
+		name: string;
+		imageUrl: Url;
+		thumbnailUrl: Url;
+		projectUrl: Url;
+		description: string;
+	};
 }
 
 export interface FractionalNftsKioskStorage {

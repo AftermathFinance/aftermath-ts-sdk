@@ -25,6 +25,13 @@ export interface NftAmmMarketInterface {
 	readonly network?: SuiNetwork;
 
 	// =========================================================================
+	//  Objects
+	// =========================================================================
+
+	getNfts: NftAmmMarketGetNfts;
+	getAllNfts: NftAmmMarketGetAllNfts;
+
+	// =========================================================================
 	//  Calculations
 	// =========================================================================
 
@@ -85,7 +92,6 @@ export interface NftAmmMarketInterface {
 	//  Transactions
 	// =========================================================================
 
-	getNfts: NftAmmMarketGetNfts;
 	getBuyNftsTransaction: NftAmmMarketGetBuyNftsTransaction;
 	getSellNftsTransaction: NftAmmMarketGetSellNftsTransaction;
 	getDepositNftsTransaction: NftAmmMarketGetDepositNftsTransaction;
@@ -96,6 +102,8 @@ export type NftAmmMarketGetNfts = (inputs: {
 	cursor?: ObjectId;
 	limit?: number;
 }) => Promise<DynamicFieldObjectsWithCursor<Nft>>;
+
+export type NftAmmMarketGetAllNfts = () => Promise<Nft[]>;
 
 export type NftAmmMarketGetBuyNftsTransaction = (inputs: {
 	walletAddress: SuiAddress;
