@@ -7,8 +7,12 @@ import { BigIntAsString, ObjectId, SuiAddress, Url } from "../../../types";
 
 export interface FractionalNftsVaultFieldsOnChain {
 	version: BigIntAsString;
-	plain_storage?: PlainStorageOnChain;
-	kiosk_storage?: KioskStorageOnChain;
+	plain_storage?: {
+		fields: PlainStorageFieldsOnChain;
+	};
+	kiosk_storage?: {
+		fields: KioskStorageFieldsOnChain;
+	};
 	kiosk_deposit_enabled: boolean;
 	// TODO: find best way to handle this data
 	// ids: LinkedSet<ID>,
@@ -24,25 +28,37 @@ export interface FractionalNftsVaultDisplayFieldsOnChain {
 	description: string;
 }
 
-export interface KioskStorageOnChain {
+export interface KioskStorageFieldsOnChain {
 	kiosk: {
-		id: ObjectId;
-		profits: BigIntAsString;
-		owner: SuiAddress;
-		item_count: BigIntAsString;
-		allow_extensions: boolean;
+		fields: {
+			id: {
+				id: ObjectId;
+			};
+			profits: BigIntAsString;
+			owner: SuiAddress;
+			item_count: BigIntAsString;
+			allow_extensions: boolean;
+		};
 	};
 	owner_cap: {
-		id: ObjectId;
-		for: ObjectId;
+		fields: {
+			id: {
+				id: ObjectId;
+			};
+			for: ObjectId;
+		};
 	};
 	balance: BigIntAsString;
 	nft_default_price: BigIntAsString;
 }
 
-export interface PlainStorageOnChain {
+export interface PlainStorageFieldsOnChain {
 	nfts: {
-		id: ObjectId;
-		size: BigIntAsString;
+		fields: {
+			id: {
+				id: ObjectId;
+			};
+			size: BigIntAsString;
+		};
 	};
 }

@@ -2,6 +2,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { NftAmmApiCasting } from "./nftAmmApiCasting";
 import {
 	AfNftAddresses,
+	AnyObjectType,
 	Balance,
 	CoinType,
 	DynamicFieldObjectsWithCursor,
@@ -69,26 +70,28 @@ export class NftAmmApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchNftsInMarketWithCursor = async (inputs: {
-		kioskId: ObjectId;
-		kioskOwnerCapId: ObjectId;
-		cursor?: ObjectId;
-		limit?: number;
-	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
-		return this.Provider.Nfts().fetchNftsInKioskWithCursor({
-			kioskId: inputs.kioskId,
-			kioskOwnerCapId: inputs.kioskOwnerCapId,
-		});
-	};
+	// public fetchNftsInMarketWithCursor = async (inputs: {
+	// 	kioskId: ObjectId;
+	// 	kioskOwnerCapId: ObjectId;
+	// 	cursor?: ObjectId;
+	// 	limit?: number;
+	// }): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
+	// 	return this.Provider.Nfts().fetchNftsInKioskWithCursor({
+	// 		kioskId: inputs.kioskId,
+	// 		kioskOwnerCapId: inputs.kioskOwnerCapId,
+	// 	});
+	// };
 
-	public fetchNftsInMarket = async (inputs: {
-		kioskId: ObjectId;
-		kioskOwnerCapId: ObjectId;
+	public fetchNftsInKioskForMarket = async (inputs: {
+		nftVaultId: ObjectId;
+		fractionalCoinType: CoinType;
+		nftType: AnyObjectType;
 	}): Promise<Nft[]> => {
-		return this.Provider.Nfts().fetchNftsInKiosk({
-			kioskId: inputs.kioskId,
-			kioskOwnerCapId: inputs.kioskOwnerCapId,
-		});
+		const objectIds =
+			await this.Provider.FractionalNfts().fetchKioskNftIdsInVault(
+				inputs
+			);
+		return this.Provider.Nfts().fetchNfts({ objectIds });
 	};
 
 	public fetchAllMarkets = async (): Promise<NftAmmMarketData[]> => {

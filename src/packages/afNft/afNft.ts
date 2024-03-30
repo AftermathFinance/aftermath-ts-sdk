@@ -7,7 +7,9 @@ export class AfNft extends Caller {
 	//  Constants
 	// =========================================================================
 
-	public static readonly constants = {};
+	public static readonly constants = {
+		eggRoyaltyFee: 0.05, // 5%
+	};
 
 	// =========================================================================
 	//  Constructor

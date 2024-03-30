@@ -14,7 +14,6 @@ import { Pool } from "../pools";
 import { AftermathApi } from "../../general/providers";
 import {
 	NftAmmMarketGetAllNfts,
-	NftAmmMarketGetNfts,
 	NftAmmMarketInterface,
 } from "./nftAmmMarketInterface";
 
@@ -49,18 +48,19 @@ export class NftAmmMarket extends Caller {
 	//  Objects
 	// =========================================================================
 
-	getNfts: NftAmmMarketGetNfts = (inputs) => {
-		return this.useProvider().fetchNftsInMarketWithCursor({
-			...inputs,
-			kioskId: this.market.vault.kioskStorage?.kiosk.objectId!,
-			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
-		});
-	};
+	// getNfts: NftAmmMarketGetNfts = (inputs) => {
+	// 	return this.useProvider().fetchNftsInMarketWithCursor({
+	// 		...inputs,
+	// 		kioskId: this.market.vault.kioskStorage?.kiosk.objectId!,
+	// 		kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
+	// 	});
+	// };
 
 	getAllNfts: NftAmmMarketGetAllNfts = () => {
-		return this.useProvider().fetchNftsInMarket({
-			kioskId: this.market.vault.kioskStorage?.kiosk.objectId!,
-			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
+		return this.useProvider().fetchNftsInKioskForMarket({
+			nftVaultId: this.market.vault.objectId,
+			nftType: this.nftType(),
+			fractionalCoinType: this.fractionalCoinType(),
 		});
 	};
 

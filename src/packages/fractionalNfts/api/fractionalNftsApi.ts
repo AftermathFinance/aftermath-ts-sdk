@@ -13,6 +13,7 @@ import {
 import { FractionalNftsVaultObject } from "../fractionalNftsTypes";
 import { FractionalNftsApiCasting } from "./fractionalNftsApiCasting";
 import { Coin } from "../..";
+import { bcs } from "@mysten/sui.js/bcs";
 
 export class FractionalNftsApi {
 	// =========================================================================
@@ -62,6 +63,28 @@ export class FractionalNftsApi {
 				FractionalNftsApiCasting.vaultObjectFromSuiObjectResponse,
 			withDisplay: true,
 		});
+	};
+
+	public fetchKioskNftIdsInVault = async (inputs: {
+		nftVaultId: ObjectId;
+		fractionalCoinType: CoinType;
+		nftType: AnyObjectType;
+	}): Promise<ObjectId[]> => {
+		const tx = new TransactionBlock();
+		tx.setSender(Helpers.inspections.constants.devInspectSigner);
+
+		this.nftIdsTx({
+			...inputs,
+			tx,
+		});
+
+		const bytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
+
+		const ids: ObjectId[] = bcs.de("vector<ID>", new Uint8Array(bytes));
+		return ids.map((id) => Helpers.addLeadingZeroesToType(id));
 	};
 
 	// =========================================================================
@@ -447,6 +470,28 @@ export class FractionalNftsApi {
 				this.addresses.packages.nftVault,
 				FractionalNftsApi.constants.moduleNames.interface,
 				"kiosk"
+			),
+			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
+			arguments: [
+				tx.object(inputs.nftVaultId), // Vault
+			],
+		});
+	};
+
+	// TODO: add kiosk and plain storage variants
+	public nftIdsTx = (inputs: {
+		tx: TransactionBlock;
+		nftVaultId: ObjectId;
+		fractionalCoinType: CoinType;
+		nftType: AnyObjectType;
+	}): TransactionArgument /* (vector<ID>) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.nftVault,
+				FractionalNftsApi.constants.moduleNames.interface,
+				"ids"
 			),
 			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
 			arguments: [

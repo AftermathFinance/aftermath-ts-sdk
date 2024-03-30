@@ -28,7 +28,7 @@ export interface NftAmmMarketInterface {
 	//  Objects
 	// =========================================================================
 
-	getNfts: NftAmmMarketGetNfts;
+	// getNfts: NftAmmMarketGetNfts;
 	getAllNfts: NftAmmMarketGetAllNfts;
 
 	// =========================================================================
@@ -98,10 +98,10 @@ export interface NftAmmMarketInterface {
 	getWithdrawNftsTransaction: NftAmmMarketGetWithdrawNftsTransaction;
 }
 
-export type NftAmmMarketGetNfts = (inputs: {
-	cursor?: ObjectId;
-	limit?: number;
-}) => Promise<DynamicFieldObjectsWithCursor<Nft>>;
+// export type NftAmmMarketGetNfts = (inputs: {
+// 	cursor?: ObjectId;
+// 	limit?: number;
+// }) => Promise<DynamicFieldObjectsWithCursor<Nft>>;
 
 export type NftAmmMarketGetAllNfts = () => Promise<Nft[]>;
 
