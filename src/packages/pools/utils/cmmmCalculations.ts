@@ -973,7 +973,7 @@ export class CmmmCalculations {
 		pool.coins = feeVec;
 		let feedInvariant = CmmmCalculations.calcInvariant(pool);
 		pool.coins = coins;
-		return feedInvariant;
+		return feedInvariant / invariant;
 	}
 
 	private static calcWithdrawFlpAmountsOutInitialEstimate = (
