@@ -951,8 +951,10 @@ export class CmmmCalculations {
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
 		let finalCoins = Helpers.deepCopy(pool.coins);
-		for (let [coinType, coin] of Object.entries(amountsOut)) {
-			finalCoins[coinType].balance -= coin;
+		for (let [coinType, balance] of Object.entries(amountsOut)) {
+			finalCoins[coinType].balance -= balance;
+			finalCoins[coinType].normalizedBalance =
+			finalCoins[coinType].balance * finalCoins[coinType].decimalsScalar;
 		}
 		pool.coins = finalCoins;
 		let postInvariant = CmmmCalculations.calcInvariant(pool);
@@ -965,10 +967,14 @@ export class CmmmCalculations {
 			// from RB to B-A, (B-A) - RB + RB = B-A
 			// (B-A) - RB is split into +/-, scale + by fee in and - by fee out
 			let diff = balance - amountOut - ratio * balance;
-			diff = diff >= 0?
-				diff * Number(FixedUtils.fixedOneB - coin.tradeFeeIn) / FixedUtils.fixedOneN
-				: diff * FixedUtils.fixedOneN / Number(FixedUtils.fixedOneB - coin.tradeFeeOut);
-			coin.balance = BigInt(ratio * balance + diff);
+			diff =
+				diff >= 0
+					? (diff * Number(FixedUtils.fixedOneB - coin.tradeFeeIn)) /
+						FixedUtils.fixedOneN
+				: (diff * FixedUtils.fixedOneN) /
+					Number(FixedUtils.fixedOneB - coin.tradeFeeOut);
+			coin.balance = BigInt(Math.floor(ratio * balance + diff));
+			coin.normalizedBalance = coin.balance * coin.decimalsScalar;
 		}
 		pool.coins = feeVec;
 		let feedInvariant = CmmmCalculations.calcInvariant(pool);
