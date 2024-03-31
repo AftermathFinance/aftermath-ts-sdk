@@ -947,14 +947,18 @@ export class CmmmCalculations {
 		throw Error("Newton diverged");
 	};
 
-	public static calcWithdrawFixedAmountsDirty = (pool: PoolObject, amountsOut: CoinsToBalance): LocalNumber => {
+	public static calcWithdrawFixedAmountsDirty = (
+		pool: PoolObject,
+		amountsOut: CoinsToBalance
+	): LocalNumber => {
 		let invariant = CmmmCalculations.calcInvariant(pool);
 		let coins = pool.coins;
 		let finalCoins = Helpers.deepCopy(pool.coins);
 		for (let [coinType, balance] of Object.entries(amountsOut)) {
 			finalCoins[coinType].balance -= balance;
 			finalCoins[coinType].normalizedBalance =
-			finalCoins[coinType].balance * finalCoins[coinType].decimalsScalar;
+				finalCoins[coinType].balance *
+				finalCoins[coinType].decimalsScalar;
 		}
 		pool.coins = finalCoins;
 		let postInvariant = CmmmCalculations.calcInvariant(pool);
@@ -970,9 +974,9 @@ export class CmmmCalculations {
 			diff =
 				diff >= 0
 					? (diff * Number(FixedUtils.fixedOneB - coin.tradeFeeIn)) /
-						FixedUtils.fixedOneN
-				: (diff * FixedUtils.fixedOneN) /
-					Number(FixedUtils.fixedOneB - coin.tradeFeeOut);
+					  FixedUtils.fixedOneN
+					: (diff * FixedUtils.fixedOneN) /
+					  Number(FixedUtils.fixedOneB - coin.tradeFeeOut);
 			coin.balance = BigInt(Math.floor(ratio * balance + diff));
 			coin.normalizedBalance = coin.balance * coin.decimalsScalar;
 		}
@@ -980,7 +984,7 @@ export class CmmmCalculations {
 		let feedInvariant = CmmmCalculations.calcInvariant(pool);
 		pool.coins = coins;
 		return feedInvariant / invariant;
-	}
+	};
 
 	private static calcWithdrawFlpAmountsOutInitialEstimate = (
 		pool: PoolObject,
