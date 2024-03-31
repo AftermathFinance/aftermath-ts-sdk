@@ -209,6 +209,19 @@ export class NftAmmMarket extends Caller {
 		return Number(fractionalCoinAmountOut / this.fractionsAmount());
 	};
 
+	public getWithdrawLpAmountIn = (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}): Balance => {
+		return this.pool.getWithdrawLpAmountIn({
+			amountsOut: {
+				[this.fractionalCoinType()]:
+					this.fractionsAmount() * BigInt(inputs.nftsCount),
+			},
+			referral: inputs.referral,
+		});
+	};
+
 	// =========================================================================
 	//  Getters
 	// =========================================================================

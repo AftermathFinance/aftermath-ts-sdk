@@ -77,6 +77,10 @@ export interface NftAmmMarketInterface {
 		lpCoinAmount: Balance;
 		referral?: boolean;
 	}) => number;
+	getWithdrawLpAmountIn: (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}) => Balance;
 
 	// =========================================================================
 	//  Getters
