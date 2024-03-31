@@ -965,7 +965,9 @@ export class CmmmCalculations {
 			// from RB to B-A, (B-A) - RB + RB = B-A
 			// (B-A) - RB is split into +/-, scale + by fee in and - by fee out
 			let diff = balance - amountOut - ratio * balance;
-			diff = diff >= 0? diff * Number(FixedUtils.fixedOneB - coin.tradeFeeIn): diff / Number(FixedUtils.fixedOneB - coin.tradeFeeOut);
+			diff = diff >= 0?
+				diff * Number(FixedUtils.fixedOneB - coin.tradeFeeIn) / FixedUtils.fixedOneN
+				: diff * FixedUtils.fixedOneN / Number(FixedUtils.fixedOneB - coin.tradeFeeOut);
 			coin.balance = BigInt(ratio * balance + diff);
 		}
 		pool.coins = feeVec;
