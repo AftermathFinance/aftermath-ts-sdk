@@ -26,18 +26,6 @@ import { AfEggNftAmmMarket } from "../afEggNftAmmMarket";
 
 export class NftAmmApi {
 	// =========================================================================
-	//  Constants
-	// =========================================================================
-
-	private static readonly constants = {
-		moduleNames: {
-			interface: "interface",
-			actions: "actions",
-			market: "market",
-		},
-	};
-
-	// =========================================================================
 	//  Class Members
 	// =========================================================================
 
@@ -70,28 +58,26 @@ export class NftAmmApi {
 	//  Objects
 	// =========================================================================
 
-	// public fetchNftsInMarketWithCursor = async (inputs: {
-	// 	kioskId: ObjectId;
-	// 	kioskOwnerCapId: ObjectId;
-	// 	cursor?: ObjectId;
-	// 	limit?: number;
-	// }): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
-	// 	return this.Provider.Nfts().fetchNftsInKioskWithCursor({
-	// 		kioskId: inputs.kioskId,
-	// 		kioskOwnerCapId: inputs.kioskOwnerCapId,
-	// 	});
-	// };
+	public fetchNftsInMarketWithCursor = async (inputs: {
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
+		cursor?: ObjectId;
+		limit?: number;
+	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
+		return this.Provider.Nfts().fetchNftsInKioskWithCursor({
+			kioskId: inputs.kioskId,
+			kioskOwnerCapId: inputs.kioskOwnerCapId,
+		});
+	};
 
-	public fetchNftsInKioskForMarket = async (inputs: {
-		nftVaultId: ObjectId;
-		fractionalCoinType: CoinType;
-		nftType: AnyObjectType;
+	public fetchNftsInKiosk = async (inputs: {
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
 	}): Promise<Nft[]> => {
-		const objectIds =
-			await this.Provider.FractionalNfts().fetchKioskNftIdsInVault(
-				inputs
-			);
-		return this.Provider.Nfts().fetchNfts({ objectIds });
+		return this.Provider.Nfts().fetchNftsInKiosk({
+			kioskId: inputs.kioskId,
+			kioskOwnerCapId: inputs.kioskOwnerCapId,
+		});
 	};
 
 	public fetchAllMarkets = async (): Promise<NftAmmMarketData[]> => {

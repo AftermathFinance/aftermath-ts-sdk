@@ -49,13 +49,6 @@ export interface FractionalNftsVaultObject extends Object {
 }
 
 export interface FractionalNftsKioskStorage {
-	kiosk: {
-		objectId: ObjectId;
-		profits: Balance;
-		owner: SuiAddress;
-		itemCount: bigint;
-		allowExtensions: boolean;
-	};
 	ownerCap: {
 		objectId: ObjectId;
 		forObjectId: ObjectId;

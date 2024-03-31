@@ -113,8 +113,9 @@ export interface NftAmmAddresses {
 	objects: {
 		afEgg: {
 			vaultId: ObjectId;
+			vaultKioskId: ObjectId;
 			poolId: ObjectId;
-		}
+		};
 	};
 }
 

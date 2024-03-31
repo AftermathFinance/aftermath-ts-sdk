@@ -68,17 +68,6 @@ export class FractionalNftsApiCasting {
 		fields: KioskStorageFieldsOnChain
 	): FractionalNftsKioskStorage => {
 		return {
-			kiosk: {
-				objectId: Helpers.addLeadingZeroesToType(
-					fields.kiosk.fields.id.id
-				),
-				profits: BigInt(fields.kiosk.fields.profits),
-				owner: Helpers.addLeadingZeroesToType(
-					fields.kiosk.fields.owner
-				),
-				itemCount: BigInt(fields.kiosk.fields.item_count),
-				allowExtensions: fields.kiosk.fields.allow_extensions,
-			},
 			ownerCap: {
 				objectId: Helpers.addLeadingZeroesToType(
 					fields.owner_cap.fields.id.id

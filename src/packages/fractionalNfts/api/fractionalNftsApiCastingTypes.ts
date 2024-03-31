@@ -29,17 +29,6 @@ export interface FractionalNftsVaultDisplayFieldsOnChain {
 }
 
 export interface KioskStorageFieldsOnChain {
-	kiosk: {
-		fields: {
-			id: {
-				id: ObjectId;
-			};
-			profits: BigIntAsString;
-			owner: SuiAddress;
-			item_count: BigIntAsString;
-			allow_extensions: boolean;
-		};
-	};
 	owner_cap: {
 		fields: {
 			id: {

@@ -14,6 +14,7 @@ import { Pool } from "../pools";
 import { AftermathApi } from "../../general/providers";
 import {
 	NftAmmMarketGetAllNfts,
+	NftAmmMarketGetNfts,
 	NftAmmMarketInterface,
 } from "./nftAmmMarketInterface";
 
@@ -48,19 +49,18 @@ export class NftAmmMarket extends Caller {
 	//  Objects
 	// =========================================================================
 
-	// getNfts: NftAmmMarketGetNfts = (inputs) => {
-	// 	return this.useProvider().fetchNftsInMarketWithCursor({
-	// 		...inputs,
-	// 		kioskId: this.market.vault.kioskStorage?.kiosk.objectId!,
-	// 		kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
-	// 	});
-	// };
+	getNfts: NftAmmMarketGetNfts = (inputs) => {
+		return this.useProvider().fetchNftsInMarketWithCursor({
+			...inputs,
+			kioskId: this.market.vault.kioskStorage?.ownerCap.forObjectId!,
+			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
+		});
+	};
 
 	getAllNfts: NftAmmMarketGetAllNfts = () => {
-		return this.useProvider().fetchNftsInKioskForMarket({
-			nftVaultId: this.market.vault.objectId,
-			nftType: this.nftType(),
-			fractionalCoinType: this.fractionalCoinType(),
+		return this.useProvider().fetchNftsInKiosk({
+			kioskId: this.market.vault.kioskStorage?.ownerCap.forObjectId!,
+			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
 		});
 	};
 
@@ -75,7 +75,9 @@ export class NftAmmMarket extends Caller {
 			this.getAfSuiToFractionalCoinSpotPrice(inputs);
 
 		return BigInt(
-			assetToFractionalizedSpotPrice * Number(this.fractionsAmount())
+			Math.round(
+				assetToFractionalizedSpotPrice * Number(this.fractionsAmount())
+			)
 		);
 	};
 
@@ -103,6 +105,7 @@ export class NftAmmMarket extends Caller {
 		nftsCount: number;
 		referral?: boolean;
 	}): Balance => {
+		if (inputs.nftsCount <= 0) return BigInt(0);
 		return this.pool.getTradeAmountIn({
 			coinOutAmount: BigInt(inputs.nftsCount) * this.fractionsAmount(),
 			coinInType: this.afSuiCoinType(),
@@ -115,6 +118,7 @@ export class NftAmmMarket extends Caller {
 		nftsCount: number;
 		referral?: boolean;
 	}): Balance => {
+		if (inputs.nftsCount <= 0) return BigInt(0);
 		return this.pool.getTradeAmountOut({
 			coinInAmount: BigInt(inputs.nftsCount) * this.fractionsAmount(),
 			coinInType: this.fractionalCoinType(),
@@ -140,6 +144,11 @@ export class NftAmmMarket extends Caller {
 		lpAmountOut: Balance;
 		lpRatio: number;
 	} => {
+		if (inputs.nftsCount <= 0)
+			return {
+				lpAmountOut: BigInt(0),
+				lpRatio: 1,
+			};
 		return this.getDepositLpAmountOut({
 			...inputs,
 			amountsIn: {
