@@ -2,6 +2,7 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { NftAmmApiCasting } from "./nftAmmApiCasting";
 import {
 	AfNftAddresses,
+	AnyObjectType,
 	Balance,
 	CoinType,
 	DynamicFieldObjectsWithCursor,
@@ -24,18 +25,6 @@ import {
 import { AfEggNftAmmMarket } from "../afEggNftAmmMarket";
 
 export class NftAmmApi {
-	// =========================================================================
-	//  Constants
-	// =========================================================================
-
-	private static readonly constants = {
-		moduleNames: {
-			interface: "interface",
-			actions: "actions",
-			market: "market",
-		},
-	};
-
 	// =========================================================================
 	//  Class Members
 	// =========================================================================
@@ -81,7 +70,7 @@ export class NftAmmApi {
 		});
 	};
 
-	public fetchNftsInMarket = async (inputs: {
+	public fetchNftsInKiosk = async (inputs: {
 		kioskId: ObjectId;
 		kioskOwnerCapId: ObjectId;
 	}): Promise<Nft[]> => {

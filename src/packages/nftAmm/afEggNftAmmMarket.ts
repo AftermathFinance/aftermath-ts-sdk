@@ -3,7 +3,6 @@ import { AftermathApi } from "../../general/providers";
 import {
 	NftAmmMarketGetBuyNftsTransaction,
 	NftAmmMarketGetDepositNftsTransaction,
-	NftAmmMarketGetNfts,
 	NftAmmMarketGetSellNftsTransaction,
 	NftAmmMarketGetWithdrawNftsTransaction,
 	NftAmmMarketInterface,

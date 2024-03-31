@@ -17,7 +17,7 @@ import {
 
 export class EventsApiHelpers {
 	// =========================================================================
-	//  Private Static Constants
+	//  private static readonly constants
 	// =========================================================================
 
 	private static readonly constants = {

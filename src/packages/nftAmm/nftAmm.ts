@@ -1,6 +1,10 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { NftAmmMarketData, SuiNetwork } from "../../types";
+import {
+	NftAmmMarketData,
+	NftAmmMarketInterface,
+	SuiNetwork,
+} from "../../types";
 import { AfEggNftAmmMarket } from "./afEggNftAmmMarket";
 
 export class NftAmm extends Caller {
@@ -29,9 +33,13 @@ export class NftAmm extends Caller {
 	//  Market Class
 	// =========================================================================
 
-	public async getAllMarkets() {
-		const market = await this.fetchApi<NftAmmMarketData>(`markets`);
-		return new AfEggNftAmmMarket(market, this.network, this.Provider);
+	public async getAllMarkets(): Promise<NftAmmMarketInterface[]> {
+		const markets = await this.fetchApi<NftAmmMarketData[]>(`markets`);
+		// NOTE: this works now because ONLY egg market exists
+		return markets.map(
+			(market) =>
+				new AfEggNftAmmMarket(market, this.network, this.Provider)
+		);
 	}
 
 	public async getAfEggMarket() {

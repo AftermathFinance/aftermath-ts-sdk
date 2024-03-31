@@ -15,6 +15,7 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui.js/bcs";
 
 export class NftsApi {
 	// =========================================================================
@@ -215,7 +216,8 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				NftsApi.constants.moduleNames.kiosk,
+				// NftsApi.constants.moduleNames.kiosk,
+				"kiosk",
 				"new"
 			),
 			typeArguments: [],
@@ -238,7 +240,8 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				NftsApi.constants.moduleNames.kiosk,
+				// NftsApi.constants.moduleNames.kiosk,
+				"kiosk",
 				"purchase_with_cap"
 			),
 			typeArguments: [nftType],
@@ -270,7 +273,8 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				NftsApi.constants.moduleNames.kiosk,
+				// NftsApi.constants.moduleNames.kiosk,
+				"kiosk",
 				"lock"
 			),
 			typeArguments: [nftType],
@@ -294,7 +298,8 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				NftsApi.constants.moduleNames.transferPolicy,
+				// NftsApi.constants.moduleNames.transferPolicy,
+				"transfer_policy",
 				"confirm_request"
 			),
 			typeArguments: [nftType],
@@ -316,17 +321,27 @@ export class NftsApi {
 		const { tx, nftType, kioskId, kioskOwnerCapId, nftId, minPrice } =
 			inputs;
 
+		bcs.registerStructType("ID", {
+			bytes: "address",
+		});
+
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				NftsApi.constants.moduleNames.kiosk,
+				// NftsApi.constants.moduleNames.kiosk,
+				"kiosk",
 				"list_with_purchase_cap"
 			),
 			typeArguments: [nftType],
 			arguments: [
 				tx.object(kioskId),
 				tx.object(kioskOwnerCapId),
-				tx.pure(nftId, "ID"),
+				tx.pure(
+					{
+						bytes: nftId,
+					},
+					"ID"
+				),
 				tx.pure(minPrice, "u64"),
 			],
 		});

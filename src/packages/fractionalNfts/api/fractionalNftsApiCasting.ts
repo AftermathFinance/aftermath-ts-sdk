@@ -8,8 +8,8 @@ import {
 import {
 	FractionalNftsVaultDisplayFieldsOnChain,
 	FractionalNftsVaultFieldsOnChain,
-	KioskStorageOnChain,
-	PlainStorageOnChain,
+	KioskStorageFieldsOnChain,
+	PlainStorageFieldsOnChain,
 } from "./fractionalNftsApiCastingTypes";
 import { Coin } from "../..";
 
@@ -42,10 +42,14 @@ export class FractionalNftsApiCasting {
 			fractionalCoinType: genericTypes[0],
 			version: BigInt(fields.version),
 			plainStorage: fields.plain_storage
-				? this.plainStorageFromOnChain(fields.plain_storage)
+				? this.plainStorageFromFieldsOnChain(
+						fields.plain_storage.fields
+				  )
 				: undefined,
 			kioskStorage: fields.kiosk_storage
-				? this.kioskStorageFromOnChain(fields.kiosk_storage)
+				? this.kioskStorageFromFieldsOnChain(
+						fields.kiosk_storage.fields
+				  )
 				: undefined,
 			isKioskDepositEnabled: fields.kiosk_deposit_enabled,
 			fractionalCoinSupply: BigInt(fields.supply.fields.value),
@@ -60,33 +64,32 @@ export class FractionalNftsApiCasting {
 		};
 	};
 
-	public static kioskStorageFromOnChain = (
-		data: KioskStorageOnChain
+	public static kioskStorageFromFieldsOnChain = (
+		fields: KioskStorageFieldsOnChain
 	): FractionalNftsKioskStorage => {
 		return {
-			kiosk: {
-				objectId: Helpers.addLeadingZeroesToType(data.kiosk.id),
-				profits: BigInt(data.kiosk.profits),
-				owner: Helpers.addLeadingZeroesToType(data.kiosk.owner),
-				itemCount: BigInt(data.kiosk.item_count),
-				allowExtensions: data.kiosk.allow_extensions,
-			},
 			ownerCap: {
-				objectId: Helpers.addLeadingZeroesToType(data.owner_cap.id),
-				forObjectId: Helpers.addLeadingZeroesToType(data.owner_cap.for),
+				objectId: Helpers.addLeadingZeroesToType(
+					fields.owner_cap.fields.id.id
+				),
+				forObjectId: Helpers.addLeadingZeroesToType(
+					fields.owner_cap.fields.for
+				),
 			},
-			balance: BigInt(data.balance),
-			nftDefaultPrice: BigInt(data.nft_default_price),
+			balance: BigInt(fields.balance),
+			nftDefaultPrice: BigInt(fields.nft_default_price),
 		};
 	};
 
-	public static plainStorageFromOnChain = (
-		data: PlainStorageOnChain
+	public static plainStorageFromFieldsOnChain = (
+		fields: PlainStorageFieldsOnChain
 	): FractionalNftsPlainStorage => {
 		return {
 			nfts: {
-				objectId: Helpers.addLeadingZeroesToType(data.nfts.id),
-				size: BigInt(data.nfts.size),
+				objectId: Helpers.addLeadingZeroesToType(
+					fields.nfts.fields.id.id
+				),
+				size: BigInt(fields.nfts.fields.size),
 			},
 		};
 	};

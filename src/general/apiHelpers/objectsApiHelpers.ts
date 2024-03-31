@@ -13,7 +13,7 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
-	//  Private Static Constants
+	//  private static readonly constants
 	// =========================================================================
 
 	private static readonly constants = {
