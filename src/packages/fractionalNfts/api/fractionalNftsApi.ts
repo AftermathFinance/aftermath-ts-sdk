@@ -146,7 +146,7 @@ export class FractionalNftsApi {
 				tx,
 				coinType: Coin.constants.suiCoinType,
 			});
-			this.Provider.AfNft().payRoyaltyRuleTx({
+			this.Provider.Nfts().kioskPayRoyaltyRuleTx({
 				tx,
 				transferRequestId,
 				suiCoinId: zeroSuiCoinId,
@@ -154,7 +154,7 @@ export class FractionalNftsApi {
 				transferPolicyId,
 			});
 			// prove nft is in a kiosk (vault's)
-			this.Provider.AfNft().proveRuleTx({
+			this.Provider.Nfts().kioskProveRuleTx({
 				tx,
 				kioskId: tx.object(
 					this.Provider.NftAmm().addresses.nftAmm.objects.afEgg
@@ -224,7 +224,7 @@ export class FractionalNftsApi {
 				tx,
 				coinType: Coin.constants.suiCoinType,
 			});
-			this.Provider.AfNft().payRoyaltyRuleTx({
+			this.Provider.Nfts().kioskPayRoyaltyRuleTx({
 				tx,
 				suiCoinId: zeroSuiCoinId,
 				nftType,
@@ -233,7 +233,7 @@ export class FractionalNftsApi {
 					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
 			});
 			// prove nft is in a kiosk (user's)
-			this.Provider.AfNft().proveRuleTx({
+			this.Provider.Nfts().kioskProveRuleTx({
 				tx,
 				kioskId,
 				nftType,

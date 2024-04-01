@@ -12,8 +12,6 @@ export class AfNftApi {
 		moduleNames: {
 			whitelistManager: "wl_manager",
 			egg: "egg",
-			kioskLockRule: "kiosk_lock_rule",
-			kioskRoyaltyRule: "royalty_rule",
 		},
 	};
 
@@ -52,48 +50,4 @@ export class AfNftApi {
 	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
-
-	public proveRuleTx = (inputs: {
-		tx: TransactionBlock;
-		nftType: AnyObjectType;
-		kioskId: ObjectId;
-		transferRequestId: ObjectId;
-	}) => {
-		const { tx, nftType, kioskId, transferRequestId } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.afEgg,
-				AfNftApi.constants.moduleNames.kioskLockRule,
-				"prove"
-			),
-			typeArguments: [nftType],
-			arguments: [tx.object(transferRequestId), tx.object(kioskId)],
-		});
-	};
-
-	public payRoyaltyRuleTx = (inputs: {
-		tx: TransactionBlock;
-		nftType: AnyObjectType;
-		suiCoinId: ObjectId;
-		transferPolicyId: ObjectId;
-		transferRequestId: ObjectId;
-	}) => {
-		const { tx, nftType, suiCoinId, transferPolicyId, transferRequestId } =
-			inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.afEgg,
-				AfNftApi.constants.moduleNames.kioskRoyaltyRule,
-				"pay"
-			),
-			typeArguments: [nftType],
-			arguments: [
-				tx.object(transferPolicyId),
-				tx.object(transferRequestId),
-				tx.object(suiCoinId),
-			],
-		});
-	};
 }

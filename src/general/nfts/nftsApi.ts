@@ -6,6 +6,7 @@ import {
 	KioskObject,
 	KioskOwnerCapObject,
 	Nft,
+	NftsAddresses,
 	ObjectId,
 	SuiAddress,
 } from "../../types";
@@ -33,7 +34,25 @@ export class NftsApi {
 		};
 	};
 
-	constructor(private readonly Provider: AftermathApi) {}
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	public readonly addresses: NftsAddresses;
+
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
+
+	constructor(private readonly Provider: AftermathApi) {
+		const addresses = this.Provider.addresses.nfts;
+		if (!addresses)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		this.addresses = addresses;
+	}
 
 	// =========================================================================
 	//  Public Methods
@@ -343,6 +362,50 @@ export class NftsApi {
 					"ID"
 				),
 				tx.pure(minPrice, "u64"),
+			],
+		});
+	};
+
+	public kioskProveRuleTx = (inputs: {
+		tx: TransactionBlock;
+		nftType: AnyObjectType;
+		kioskId: ObjectId;
+		transferRequestId: ObjectId;
+	}) => {
+		const { tx, nftType, kioskId, transferRequestId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.transferPolicy,
+				"kiosk_lock_rule",
+				"prove"
+			),
+			typeArguments: [nftType],
+			arguments: [tx.object(transferRequestId), tx.object(kioskId)],
+		});
+	};
+
+	public kioskPayRoyaltyRuleTx = (inputs: {
+		tx: TransactionBlock;
+		nftType: AnyObjectType;
+		suiCoinId: ObjectId;
+		transferPolicyId: ObjectId;
+		transferRequestId: ObjectId;
+	}) => {
+		const { tx, nftType, suiCoinId, transferPolicyId, transferRequestId } =
+			inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.transferPolicy,
+				"royalty_rule",
+				"pay"
+			),
+			typeArguments: [nftType],
+			arguments: [
+				tx.object(transferPolicyId),
+				tx.object(transferRequestId),
+				tx.object(suiCoinId),
 			],
 		});
 	};
