@@ -1,4 +1,7 @@
-import { SupplyOnChain } from "../../../general/types/castingTypes";
+import {
+	EventOnChain,
+	SupplyOnChain,
+} from "../../../general/types/castingTypes";
 import { BigIntAsString, ObjectId, SuiAddress, Url } from "../../../types";
 
 // =========================================================================
@@ -51,3 +54,17 @@ export interface PlainStorageFieldsOnChain {
 		};
 	};
 }
+
+// =========================================================================
+//  Events
+// =========================================================================
+
+export type FractionalNftsDepositedEventOnChain = EventOnChain<{
+	vault_id: ObjectId;
+	nft_ids: ObjectId[];
+}>;
+
+export type FractionalNftsWithdrawnEventOnChain = EventOnChain<{
+	vault_id: ObjectId;
+	nft_ids: ObjectId[];
+}>;

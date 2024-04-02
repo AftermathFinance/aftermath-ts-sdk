@@ -16,6 +16,7 @@ import { Coin } from "../..";
 import { bcs } from "@mysten/sui.js/bcs";
 import { SuiApi } from "../../sui/api/suiApi";
 import { NftsApi } from "../../../general/nfts/nftsApi";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
 export class FractionalNftsApi {
 	// =========================================================================
@@ -34,6 +35,11 @@ export class FractionalNftsApi {
 
 	public readonly addresses: FractionalNftsAddresses;
 
+	public readonly eventTypes: {
+		deposited: AnyObjectType;
+		withdrawn: AnyObjectType;
+	};
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -46,6 +52,19 @@ export class FractionalNftsApi {
 			);
 
 		this.addresses = addresses;
+
+		this.eventTypes = {
+			deposited: EventsApiHelpers.createEventType(
+				this.addresses.packages.nftVaultInitial,
+				"events",
+				"DepositedEvent"
+			),
+			withdrawn: EventsApiHelpers.createEventType(
+				this.addresses.packages.nftVaultInitial,
+				"events",
+				"WithdrawnEvent"
+			),
+		};
 	}
 
 	// =========================================================================

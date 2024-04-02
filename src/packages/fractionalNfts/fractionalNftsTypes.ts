@@ -2,6 +2,7 @@ import {
 	AnyObjectType,
 	Balance,
 	CoinType,
+	Event,
 	Object,
 	ObjectId,
 	SuiAddress,
@@ -65,5 +66,15 @@ export interface FractionalNftsPlainStorage {
 }
 
 // =========================================================================
-//  API
+//  Events
 // =========================================================================
+
+export interface FractionalNftsDepositedEvent extends Event {
+	vaultId: ObjectId;
+	nftIds: ObjectId[];
+}
+
+export interface FractionalNftsWithdrawnEvent extends Event {
+	vaultId: ObjectId;
+	nftIds: ObjectId[];
+}

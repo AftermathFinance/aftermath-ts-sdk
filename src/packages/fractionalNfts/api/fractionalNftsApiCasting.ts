@@ -1,13 +1,17 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { Helpers } from "../../../general/utils";
 import {
+	FractionalNftsDepositedEvent,
 	FractionalNftsKioskStorage,
 	FractionalNftsPlainStorage,
 	FractionalNftsVaultObject,
+	FractionalNftsWithdrawnEvent,
 } from "../fractionalNftsTypes";
 import {
+	FractionalNftsDepositedEventOnChain,
 	FractionalNftsVaultDisplayFieldsOnChain,
 	FractionalNftsVaultFieldsOnChain,
+	FractionalNftsWithdrawnEventOnChain,
 	KioskStorageFieldsOnChain,
 	PlainStorageFieldsOnChain,
 } from "./fractionalNftsApiCastingTypes";
@@ -15,7 +19,7 @@ import { Coin } from "../..";
 
 export class FractionalNftsApiCasting {
 	// =========================================================================
-	//  Public Methods
+	//  Objects
 	// =========================================================================
 
 	public static vaultObjectFromSuiObjectResponse = (
@@ -64,7 +68,37 @@ export class FractionalNftsApiCasting {
 		};
 	};
 
-	public static kioskStorageFromFieldsOnChain = (
+	public static depositedEventFromOnChain = (
+		eventOnChain: FractionalNftsDepositedEventOnChain
+	): FractionalNftsDepositedEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			vaultId: fields.vault_id,
+			nftIds: fields.nft_ids,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static withdrawnEventFromOnChain = (
+		eventOnChain: FractionalNftsWithdrawnEventOnChain
+	): FractionalNftsWithdrawnEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			vaultId: fields.vault_id,
+			nftIds: fields.nft_ids,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private static kioskStorageFromFieldsOnChain = (
 		fields: KioskStorageFieldsOnChain
 	): FractionalNftsKioskStorage => {
 		return {
@@ -81,7 +115,7 @@ export class FractionalNftsApiCasting {
 		};
 	};
 
-	public static plainStorageFromFieldsOnChain = (
+	private static plainStorageFromFieldsOnChain = (
 		fields: PlainStorageFieldsOnChain
 	): FractionalNftsPlainStorage => {
 		return {
