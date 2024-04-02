@@ -149,16 +149,13 @@ export class NftAmmApi {
 		const afSuiAmountIn = market.getBuyAfSuiAmountIn({
 			nftsCount: inputs.nftIds.length,
 			referral: referrer !== undefined,
+			slippage: inputs.slippage,
 		});
-		// increase afSUI in amount to account for slippage
-		const afSuiAmountInWithSlippage = BigInt(
-			Math.ceil(Number(afSuiAmountIn) * (1 + inputs.slippage))
-		);
 		const afSuiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: market.afSuiCoinType(),
-			coinAmount: afSuiAmountInWithSlippage,
+			coinAmount: afSuiAmountIn,
 		});
 
 		// swap afSUI -> fCoin
@@ -301,7 +298,6 @@ export class NftAmmApi {
 	public fetchBuildWithdrawAfEggsTx = async (inputs: {
 		market: AfEggNftAmmMarket;
 		walletAddress: SuiAddress;
-		lpCoinAmount: Balance;
 		nftIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
@@ -321,22 +317,24 @@ export class NftAmmApi {
 				referrer,
 			});
 
-		// increase lp amount to account for slippage
-		const lpCoinAmountWithSlippage = BigInt(
-			Math.ceil(Number(inputs.lpCoinAmount) * (1 + inputs.slippage))
-		);
+		const lpAmountIn = market.getWithdrawLpAmountIn({
+			nftsCount: inputs.nftIds.length,
+			referral: inputs.referrer !== undefined,
+			slippage: inputs.slippage,
+		});
+
 		// get lp coin with amount
 		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: market.lpCoinType(),
-			coinAmount: lpCoinAmountWithSlippage,
+			coinAmount: lpAmountIn,
 		});
 
 		// withdraw fractional coin
 		const fractionalCoinAmountOut =
 			market.getWithdrawFractionalCoinAmountOut({
-				lpCoinAmount: lpCoinAmountWithSlippage,
+				lpCoinAmount: lpAmountIn,
 				referral: inputs.referrer !== undefined,
 			});
 		const [fractionalCoinId] = this.Provider.Pools().multiCoinWithdrawTx({

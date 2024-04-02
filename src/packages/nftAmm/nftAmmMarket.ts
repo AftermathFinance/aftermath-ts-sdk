@@ -103,15 +103,18 @@ export class NftAmmMarket extends Caller {
 
 	public getBuyAfSuiAmountIn = (inputs: {
 		nftsCount: number;
+		slippage: Slippage;
 		referral?: boolean;
 	}): Balance => {
 		if (inputs.nftsCount <= 0) return BigInt(0);
-		return this.pool.getTradeAmountIn({
+		const amountIn = this.pool.getTradeAmountIn({
 			coinOutAmount: BigInt(inputs.nftsCount) * this.fractionsAmount(),
 			coinInType: this.afSuiCoinType(),
 			coinOutType: this.fractionalCoinType(),
 			referral: inputs.referral,
 		});
+		// increase amount to account for slippage
+		return BigInt(Math.ceil(Number(amountIn) * (1 + inputs.slippage)));
 	};
 
 	public getSellAfSuiAmountOut = (inputs: {
@@ -211,15 +214,18 @@ export class NftAmmMarket extends Caller {
 
 	public getWithdrawLpAmountIn = (inputs: {
 		nftsCount: number;
+		slippage: Slippage;
 		referral?: boolean;
 	}): Balance => {
-		return this.pool.getWithdrawLpAmountIn({
+		const amountIn = this.pool.getWithdrawLpAmountIn({
 			amountsOut: {
 				[this.fractionalCoinType()]:
 					this.fractionsAmount() * BigInt(inputs.nftsCount),
 			},
 			referral: inputs.referral,
 		});
+		// increase amount to account for slippage
+		return BigInt(Math.ceil(Number(amountIn) * (1 + inputs.slippage)));
 	};
 
 	// =========================================================================

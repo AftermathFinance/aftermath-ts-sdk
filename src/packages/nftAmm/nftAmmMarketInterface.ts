@@ -45,6 +45,7 @@ export interface NftAmmMarketInterface {
 	}) => number;
 	getBuyAfSuiAmountIn: (inputs: {
 		nftsCount: number;
+		slippage: Slippage;
 		referral?: boolean;
 	}) => Balance;
 	getSellAfSuiAmountOut: (inputs: {
@@ -79,6 +80,7 @@ export interface NftAmmMarketInterface {
 	}) => number;
 	getWithdrawLpAmountIn: (inputs: {
 		nftsCount: number;
+		slippage: Slippage;
 		referral?: boolean;
 	}) => Balance;
 
