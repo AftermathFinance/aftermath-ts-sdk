@@ -23,6 +23,7 @@ import {
 	TransactionArgument,
 } from "@mysten/sui.js/transactions";
 import { AfEggNftAmmMarket } from "../afEggNftAmmMarket";
+import { NftsApi } from "../../../general/nfts/nftsApi";
 
 export class NftAmmApi {
 	// =========================================================================
@@ -130,7 +131,7 @@ export class NftAmmApi {
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
-		const { slippage, referrer, nftIds } = inputs;
+		const { slippage, referrer } = inputs;
 
 		const market =
 			inputs.market ??
@@ -149,11 +150,15 @@ export class NftAmmApi {
 			nftsCount: inputs.nftIds.length,
 			referral: referrer !== undefined,
 		});
+		// increase afSUI in amount to account for slippage
+		const afSuiAmountInWithSlippage = BigInt(
+			Math.ceil(Number(afSuiAmountIn) * (1 + inputs.slippage))
+		);
 		const afSuiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: market.afSuiCoinType(),
-			coinAmount: afSuiAmountIn,
+			coinAmount: afSuiAmountInWithSlippage,
 		});
 
 		// swap afSUI -> fCoin
@@ -316,18 +321,22 @@ export class NftAmmApi {
 				referrer,
 			});
 
+		// increase lp amount to account for slippage
+		const lpCoinAmountWithSlippage = BigInt(
+			Math.ceil(Number(inputs.lpCoinAmount) * (1 + inputs.slippage))
+		);
 		// get lp coin with amount
 		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: market.lpCoinType(),
-			coinAmount: inputs.lpCoinAmount,
+			coinAmount: lpCoinAmountWithSlippage,
 		});
 
 		// withdraw fractional coin
 		const fractionalCoinAmountOut =
 			market.getWithdrawFractionalCoinAmountOut({
-				lpCoinAmount: inputs.lpCoinAmount,
+				lpCoinAmount: lpCoinAmountWithSlippage,
 				referral: inputs.referrer !== undefined,
 			});
 		const [fractionalCoinId] = this.Provider.Pools().multiCoinWithdrawTx({

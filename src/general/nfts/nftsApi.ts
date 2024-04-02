@@ -23,15 +23,16 @@ export class NftsApi {
 	//  Constants
 	// =========================================================================
 
-	private static readonly constants: {
-		// objectTypes: {
-		// 	kiosk: "0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk";
-		// 	kioskOwnerCap: "0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap";
-		// };
+	public static readonly constants = {
+		objectTypes: {
+			kiosk: "0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
+			kioskOwnerCap:
+				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap",
+		},
 		moduleNames: {
-			kiosk: "kiosk";
-			transferPolicy: "transfer_policy";
-		};
+			kiosk: "kiosk",
+			transferPolicy: "transfer_policy",
+		},
 	};
 
 	// =========================================================================
@@ -109,8 +110,7 @@ export class NftsApi {
 
 		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
 			walletAddress,
-			objectType:
-				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap",
+			objectType: NftsApi.constants.objectTypes.kioskOwnerCap,
 			objectFromSuiObjectResponse:
 				Casting.nfts.kioskOwnerCapFromSuiObject,
 		});
@@ -186,8 +186,7 @@ export class NftsApi {
 
 		return kioskOwnerCaps.map((kioskOwnerCap, index) => ({
 			objectId: kioskOwnerCap.kioskId,
-			objectType:
-				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
+			objectType: NftsApi.constants.objectTypes.kiosk,
 			kioskOwnerCapId: kioskOwnerCap.objectId,
 			nfts: nfts[index],
 		}));
@@ -216,15 +215,14 @@ export class NftsApi {
 
 		return kioskOwnerCaps.map((kioskOwnerCap, index) => ({
 			objectId: kioskOwnerCap.kioskId,
-			objectType:
-				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
+			objectType: NftsApi.constants.objectTypes.kiosk,
 			kioskOwnerCapId: kioskOwnerCap.objectId,
 			nfts: nfts[index],
 		}));
 	};
 
 	// =========================================================================
-	//  Transactions
+	//  Transaction Commands
 	// =========================================================================
 
 	public kioskNewTx = (inputs: {
@@ -235,8 +233,7 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				// NftsApi.constants.moduleNames.kiosk,
-				"kiosk",
+				NftsApi.constants.moduleNames.kiosk,
 				"new"
 			),
 			typeArguments: [],
@@ -259,8 +256,7 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				// NftsApi.constants.moduleNames.kiosk,
-				"kiosk",
+				NftsApi.constants.moduleNames.kiosk,
 				"purchase_with_cap"
 			),
 			typeArguments: [nftType],
@@ -292,8 +288,7 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				// NftsApi.constants.moduleNames.kiosk,
-				"kiosk",
+				NftsApi.constants.moduleNames.kiosk,
 				"lock"
 			),
 			typeArguments: [nftType],
@@ -317,8 +312,7 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				// NftsApi.constants.moduleNames.transferPolicy,
-				"transfer_policy",
+				NftsApi.constants.moduleNames.transferPolicy,
 				"confirm_request"
 			),
 			typeArguments: [nftType],
@@ -347,8 +341,7 @@ export class NftsApi {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				"0x0000000000000000000000000000000000000000000000000000000000000002",
-				// NftsApi.constants.moduleNames.kiosk,
-				"kiosk",
+				NftsApi.constants.moduleNames.kiosk,
 				"list_with_purchase_cap"
 			),
 			typeArguments: [nftType],

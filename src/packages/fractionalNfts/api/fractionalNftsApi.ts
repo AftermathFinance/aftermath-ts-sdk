@@ -14,6 +14,8 @@ import { FractionalNftsVaultObject } from "../fractionalNftsTypes";
 import { FractionalNftsApiCasting } from "./fractionalNftsApiCasting";
 import { Coin } from "../..";
 import { bcs } from "@mysten/sui.js/bcs";
+import { SuiApi } from "../../sui/api/suiApi";
+import { NftsApi } from "../../../general/nfts/nftsApi";
 
 export class FractionalNftsApi {
 	// =========================================================================
@@ -202,9 +204,24 @@ export class FractionalNftsApi {
 				vaultKioskId,
 			});
 
+		// create transfer request type
+		const transferRequestType = SuiApi.transferRequestType({
+			innerType: nftType,
+		});
 		// complete all nft transfers
 		let kioskOwnerCapIds: TransactionArgument[] = [];
-		for (const [index, nftId] of nfts.entries()) {
+		for (const [] of nftIds.entries()) {
+			const nftId = this.Provider.Sui().vectorPopBackTx({
+				tx,
+				vectorId: nfts,
+				objectType: nftType,
+			});
+			const transferRequestId = this.Provider.Sui().vectorPopBackTx({
+				tx,
+				vectorId: transferRequests,
+				objectType: transferRequestType,
+			});
+
 			// create new kiosk to store nfts
 			const [kioskId, kioskOwnerCapId] = this.Provider.Nfts().kioskNewTx({
 				tx,
@@ -228,7 +245,7 @@ export class FractionalNftsApi {
 				tx,
 				suiCoinId: zeroSuiCoinId,
 				nftType,
-				transferRequestId: transferRequests[index],
+				transferRequestId,
 				transferPolicyId:
 					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
 			});
@@ -237,19 +254,40 @@ export class FractionalNftsApi {
 				tx,
 				kioskId,
 				nftType,
-				transferRequestId: transferRequests[index],
+				transferRequestId,
 			});
 			// complete transfer
 			this.Provider.Nfts().kioskConfirmRequestTx({
 				tx,
 				nftType,
-				transferRequestId: transferRequests[index],
+				transferRequestId,
 				transferPolicyId:
 					this.Provider.AfNft().addresses.objects.afEggTransferPolicy,
 			});
 
+			// share kiosk
+			this.Provider.Sui().publicShareObjectTx({
+				tx,
+				objectId: kioskId,
+				objectType: NftsApi.constants.objectTypes.kiosk,
+			});
+
 			kioskOwnerCapIds.push(kioskOwnerCapId);
 		}
+
+		// NOTE: do we need to do this or can we drop ?
+		// destroy empty vectors
+		this.Provider.Sui().vectorDestroyEmptyTx({
+			tx,
+			vectorId: nfts,
+			objectType: nftType,
+		});
+		this.Provider.Sui().vectorDestroyEmptyTx({
+			tx,
+			vectorId: transferRequests,
+			objectType: transferRequestType,
+		});
+
 		return kioskOwnerCapIds;
 	};
 
@@ -389,8 +427,8 @@ export class FractionalNftsApi {
 		fractionalCoinType: CoinType;
 		nftType: AnyObjectType;
 	}): [
-		nfts: TransactionArgument[],
-		transferRequests: TransactionArgument[]
+		nfts: TransactionArgument,
+		transferRequests: TransactionArgument
 	] /* (vector<nftType>, vector<TransferRequest>) */ => {
 		const { tx } = inputs;
 
