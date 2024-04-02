@@ -103,7 +103,7 @@ export class NftAmmMarket extends Caller {
 
 	public getBuyAfSuiAmountIn = (inputs: {
 		nftsCount: number;
-		slippage: Slippage;
+		// slippage: Slippage;
 		referral?: boolean;
 	}): Balance => {
 		if (inputs.nftsCount <= 0) return BigInt(0);
@@ -113,8 +113,9 @@ export class NftAmmMarket extends Caller {
 			coinOutType: this.fractionalCoinType(),
 			referral: inputs.referral,
 		});
+		return amountIn;
 		// increase amount to account for slippage
-		return BigInt(Math.ceil(Number(amountIn) * (1 + inputs.slippage)));
+		// return BigInt(Math.ceil(Number(amountIn) * (1 + inputs.slippage)));
 	};
 
 	public getSellAfSuiAmountOut = (inputs: {

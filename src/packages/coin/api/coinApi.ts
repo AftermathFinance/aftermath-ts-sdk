@@ -133,6 +133,29 @@ export class CoinApi {
 		});
 	};
 
+	public fetchCoinWithAllAmountTx = async (inputs: {
+		tx: TransactionBlock;
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		isSponsoredTx?: boolean;
+	}): Promise<TransactionArgument> => {
+		const { tx, walletAddress, coinType, isSponsoredTx } = inputs;
+
+		tx.setSender(walletAddress);
+
+		const coinData = await this.fetchAllCoins(inputs);
+		const coinAmount = Helpers.sumBigInt(
+			coinData.map((data) => BigInt(data.balance))
+		);
+		return CoinApi.coinWithAmountTx({
+			tx,
+			coinData,
+			coinAmount,
+			coinType,
+			isSponsoredTx,
+		});
+	};
+
 	public fetchCoinsWithAmountTx = async (inputs: {
 		tx: TransactionBlock;
 		walletAddress: SuiAddress;

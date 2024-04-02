@@ -917,8 +917,60 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedCoinOutAmount.toString()),
-				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure(expectedCoinOutAmount, "u64"),
+				tx.pure(Pools.normalizeSlippage(slippage), "u64"),
+			],
+		});
+	};
+
+	public tradeAmountOutTx = (inputs: {
+		tx: TransactionBlock;
+		poolId: ObjectId;
+		coinInId: ObjectId | TransactionArgument;
+		coinInType: CoinType;
+		expectedCoinInAmount: Balance;
+		coinOutType: CoinType;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+		coinOutAmount: Balance;
+		withTransfer?: boolean;
+	}): TransactionArgument => {
+		const {
+			tx,
+			poolId,
+			coinInId,
+			coinInType,
+			expectedCoinInAmount,
+			coinOutType,
+			lpCoinType,
+			slippage,
+			withTransfer,
+			coinOutAmount,
+		} = inputs;
+
+		return tx.add({
+			kind: "MoveCall",
+			target: Helpers.transactions.createTxTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.swap,
+				"swap_exact_out"
+			),
+			typeArguments: [lpCoinType, coinInType, coinOutType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				tx.pure(coinOutAmount, "u64"),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.pure(expectedCoinInAmount, "u64"),
+				tx.pure(Pools.normalizeSlippage(slippage), "u64"),
 			],
 		});
 	};
@@ -971,7 +1023,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(poolId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedCoinOutAmount.toString(), "u64"),
+				tx.pure(expectedCoinOutAmount, "u64"),
 			],
 		});
 	};
@@ -1027,8 +1079,8 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				...coinIds.map((coinId) =>
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
-				tx.pure(expectedLpRatio.toString()),
-				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure(expectedLpRatio, "u128"),
+				tx.pure(Pools.normalizeSlippage(slippage), "u64"),
 			],
 		});
 	};
@@ -1082,8 +1134,8 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
-				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
-				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure(expectedAmountsOut.map((amount) => amount)),
+				tx.pure(Pools.normalizeSlippage(slippage), "u64"),
 			],
 		});
 	};

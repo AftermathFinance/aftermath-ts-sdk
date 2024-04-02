@@ -149,20 +149,25 @@ export class NftAmmApi {
 		const afSuiAmountIn = market.getBuyAfSuiAmountIn({
 			nftsCount: inputs.nftIds.length,
 			referral: referrer !== undefined,
-			slippage: inputs.slippage,
+			// slippage: inputs.slippage,
 		});
+		// gather slightly more than needed (by adding slippage) to avoid abort
+		const afSuiAmountInWithSlippage = BigInt(
+			Math.ceil(Number(afSuiAmountIn) * (1 + inputs.slippage))
+		);
 		const afSuiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress: inputs.walletAddress,
 			coinType: market.afSuiCoinType(),
-			coinAmount: afSuiAmountIn,
+			coinAmount: afSuiAmountInWithSlippage,
 		});
 
 		// swap afSUI -> fCoin
-		const fractionalCoinId = this.Provider.Pools().tradeTx({
+		const fractionalCoinId = this.Provider.Pools().tradeAmountOutTx({
 			tx,
 			slippage,
-			expectedCoinOutAmount:
+			expectedCoinInAmount: afSuiAmountIn,
+			coinOutAmount:
 				BigInt(inputs.nftIds.length) * market.fractionsAmount(),
 			coinInId: afSuiCoinId,
 			coinInType: market.afSuiCoinType(),
@@ -171,6 +176,8 @@ export class NftAmmApi {
 			poolId: market.pool.pool.objectId,
 			withTransfer: false,
 		});
+		// return any remaining coin to user
+		tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
 
 		const kioskOwnerCapIds =
 			this.Provider.FractionalNfts().withdrawAfEggsTx({
