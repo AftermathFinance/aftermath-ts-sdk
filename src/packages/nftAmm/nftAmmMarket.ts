@@ -101,7 +101,7 @@ export class NftAmmMarket extends Caller {
 		});
 	};
 
-	public getBuyAfSuiAmountIn = (inputs: {
+	public getBuyNftsAfSuiAmountIn = (inputs: {
 		nftsCount: number;
 		// slippage: Slippage;
 		referral?: boolean;
@@ -118,13 +118,38 @@ export class NftAmmMarket extends Caller {
 		// return BigInt(Math.ceil(Number(amountIn) * (1 + inputs.slippage)));
 	};
 
-	public getSellAfSuiAmountOut = (inputs: {
+	public getSellNftsAfSuiAmountOut = (inputs: {
 		nftsCount: number;
 		referral?: boolean;
 	}): Balance => {
 		if (inputs.nftsCount <= 0) return BigInt(0);
 		return this.pool.getTradeAmountOut({
 			coinInAmount: BigInt(inputs.nftsCount) * this.fractionsAmount(),
+			coinInType: this.fractionalCoinType(),
+			coinOutType: this.afSuiCoinType(),
+			referral: inputs.referral,
+		});
+	};
+
+	public getBuyFractionalCoinAfSuiAmountIn = (inputs: {
+		fractionalAmountOut: Balance;
+		// slippage: Slippage;
+		referral?: boolean;
+	}): Balance => {
+		return this.pool.getTradeAmountIn({
+			coinOutAmount: inputs.fractionalAmountOut,
+			coinInType: this.afSuiCoinType(),
+			coinOutType: this.fractionalCoinType(),
+			referral: inputs.referral,
+		});
+	};
+
+	public getSellFractionalCoinAfSuiAmountOut = (inputs: {
+		fractionalAmountIn: Balance;
+		referral?: boolean;
+	}): Balance => {
+		return this.pool.getTradeAmountOut({
+			coinInAmount: inputs.fractionalAmountIn,
 			coinInType: this.fractionalCoinType(),
 			coinOutType: this.afSuiCoinType(),
 			referral: inputs.referral,
@@ -213,7 +238,7 @@ export class NftAmmMarket extends Caller {
 		return Number(fractionalCoinAmountOut / this.fractionsAmount());
 	};
 
-	public getWithdrawLpAmountIn = (inputs: {
+	public getWithdrawNftsLpAmountIn = (inputs: {
 		nftsCount: number;
 		slippage: Slippage;
 		referral?: boolean;
@@ -227,6 +252,16 @@ export class NftAmmMarket extends Caller {
 		});
 		// increase amount to account for slippage
 		return BigInt(Math.ceil(Number(amountIn) * (1 + inputs.slippage)));
+	};
+
+	public getWithdrawLpAmountIn = (inputs: {
+		amountsOut: CoinsToBalance;
+		referral?: boolean;
+	}): Balance => {
+		return  this.pool.getWithdrawLpAmountIn({
+			amountsOut: inputs.amountsOut,
+			referral: inputs.referral,
+		});
 	};
 
 	// =========================================================================

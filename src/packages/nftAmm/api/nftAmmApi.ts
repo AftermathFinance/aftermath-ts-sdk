@@ -146,7 +146,7 @@ export class NftAmmApi {
 				referrer,
 			});
 
-		const afSuiAmountIn = market.getBuyAfSuiAmountIn({
+		const afSuiAmountIn = market.getBuyNftsAfSuiAmountIn({
 			nftsCount: inputs.nftIds.length,
 			referral: referrer !== undefined,
 			// slippage: inputs.slippage,
@@ -228,7 +228,7 @@ export class NftAmmApi {
 		);
 
 		// swap fCoin -> afSUI
-		const expectedAfSuiAmountOut = market.getSellAfSuiAmountOut({
+		const expectedAfSuiAmountOut = market.getSellNftsAfSuiAmountOut({
 			nftsCount: nftIds.length,
 			referral: inputs.referrer !== undefined,
 		});
@@ -324,7 +324,7 @@ export class NftAmmApi {
 				referrer,
 			});
 
-		const lpAmountIn = market.getWithdrawLpAmountIn({
+		const lpAmountIn = market.getWithdrawNftsLpAmountIn({
 			nftsCount: inputs.nftIds.length,
 			referral: inputs.referrer !== undefined,
 			slippage: inputs.slippage,

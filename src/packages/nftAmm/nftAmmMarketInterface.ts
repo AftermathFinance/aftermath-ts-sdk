@@ -43,13 +43,22 @@ export interface NftAmmMarketInterface {
 	getAfSuiToFractionalCoinSpotPrice: (inputs?: {
 		withFees: boolean;
 	}) => number;
-	getBuyAfSuiAmountIn: (inputs: {
+	getBuyNftsAfSuiAmountIn: (inputs: {
 		nftsCount: number;
 		// slippage: Slippage;
 		referral?: boolean;
 	}) => Balance;
-	getSellAfSuiAmountOut: (inputs: {
+	getSellNftsAfSuiAmountOut: (inputs: {
 		nftsCount: number;
+		referral?: boolean;
+	}) => Balance;
+	getBuyFractionalCoinAfSuiAmountIn: (inputs: {
+		fractionalAmountOut: Balance;
+		// slippage: Slippage;
+		referral?: boolean;
+	}) => Balance;
+	getSellFractionalCoinAfSuiAmountOut: (inputs: {
+		fractionalAmountIn: Balance;
 		referral?: boolean;
 	}) => Balance;
 	getDepositLpAmountOut: (inputs: {
@@ -78,11 +87,15 @@ export interface NftAmmMarketInterface {
 		lpCoinAmount: Balance;
 		referral?: boolean;
 	}) => number;
-	getWithdrawLpAmountIn: (inputs: {
+	getWithdrawNftsLpAmountIn: (inputs: {
 		nftsCount: number;
 		slippage: Slippage;
 		referral?: boolean;
 	}) => Balance;
+	getWithdrawLpAmountIn: (inputs: {
+		amountsOut: CoinsToBalance;
+		referral?: boolean;
+	}) => Balance
 
 	// =========================================================================
 	//  Getters
