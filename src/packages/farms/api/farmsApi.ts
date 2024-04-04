@@ -48,9 +48,8 @@ import {
 	FarmsWithdrewPrincipalEventOnChain,
 } from "./farmsApiCastingTypes";
 import {
-	TransactionArgument,
 	TransactionBlock,
-	TransactionObjectArgument,
+	TransactionArgument,
 } from "@mysten/sui.js/transactions";
 import { bcs } from "@mysten/sui.js/bcs";
 import { Coin } from "../..";
@@ -1115,7 +1114,7 @@ export class FarmsApi {
 			tx,
 		});
 
-		let harvestedCoins: Record<CoinType, TransactionObjectArgument[]> = {};
+		let harvestedCoins: Record<CoinType, TransactionArgument[]> = {};
 
 		for (const stakedPositionId of stakedPositionIds) {
 			for (const rewardCoinType of inputs.rewardCoinTypes) {

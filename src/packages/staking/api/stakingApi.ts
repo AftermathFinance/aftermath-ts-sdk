@@ -1,7 +1,6 @@
 import {
-	TransactionArgument,
 	TransactionBlock,
-	TransactionObjectArgument,
+	TransactionArgument,
 } from "@mysten/sui.js/transactions";
 import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";

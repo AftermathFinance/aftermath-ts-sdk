@@ -1,7 +1,6 @@
 import {
-	TransactionArgument,
 	TransactionBlock,
-	TransactionObjectArgument,
+	TransactionArgument,
 } from "@mysten/sui.js/transactions";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -118,7 +117,7 @@ export class CoinApi {
 		coinType: CoinType;
 		coinAmount: Balance;
 		isSponsoredTx?: boolean;
-	}): Promise<TransactionObjectArgument> => {
+	}): Promise<TransactionArgument> => {
 		const { tx, walletAddress, coinType, coinAmount, isSponsoredTx } =
 			inputs;
 
@@ -134,13 +133,36 @@ export class CoinApi {
 		});
 	};
 
+	public fetchCoinWithAllAmountTx = async (inputs: {
+		tx: TransactionBlock;
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		isSponsoredTx?: boolean;
+	}): Promise<TransactionArgument> => {
+		const { tx, walletAddress, coinType, isSponsoredTx } = inputs;
+
+		tx.setSender(walletAddress);
+
+		const coinData = await this.fetchAllCoins(inputs);
+		const coinAmount = Helpers.sumBigInt(
+			coinData.map((data) => BigInt(data.balance))
+		);
+		return CoinApi.coinWithAmountTx({
+			tx,
+			coinData,
+			coinAmount,
+			coinType,
+			isSponsoredTx,
+		});
+	};
+
 	public fetchCoinsWithAmountTx = async (inputs: {
 		tx: TransactionBlock;
 		walletAddress: SuiAddress;
 		coinTypes: CoinType[];
 		coinAmounts: Balance[];
 		isSponsoredTx?: boolean;
-	}): Promise<TransactionObjectArgument[]> => {
+	}): Promise<TransactionArgument[]> => {
 		const { tx, walletAddress, coinTypes, coinAmounts, isSponsoredTx } =
 			inputs;
 
@@ -156,7 +178,7 @@ export class CoinApi {
 			)
 		);
 
-		let coinArgs: TransactionObjectArgument[] = [];
+		let coinArgs: TransactionArgument[] = [];
 		for (const [index, coinData] of allCoinsData.entries()) {
 			const coinArg = CoinApi.coinWithAmountTx({
 				tx,
@@ -210,6 +232,27 @@ export class CoinApi {
 
 			cursor = paginatedCoins.nextCursor;
 		} while (true);
+	};
+
+	// =========================================================================
+	//  Transaction Commands
+	// =========================================================================
+
+	public zeroTx = (inputs: {
+		tx: TransactionBlock;
+		coinType: CoinType;
+	}): TransactionArgument /* (Coin) */ => {
+		const { tx, coinType } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				"0x0000000000000000000000000000000000000000000000000000000000000002",
+				"coin",
+				"zero"
+			),
+			typeArguments: [coinType],
+			arguments: [],
+		});
 	};
 
 	// =========================================================================
@@ -295,7 +338,7 @@ export class CoinApi {
 		coinAmount: Balance;
 		coinType: CoinType;
 		isSponsoredTx?: boolean;
-	}): TransactionObjectArgument => {
+	}): TransactionArgument => {
 		const { tx, coinData, coinAmount, coinType, isSponsoredTx } = inputs;
 
 		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);

@@ -393,6 +393,7 @@ export class Pool extends Caller {
 	public getWithdrawAmountsOut = (inputs: {
 		lpRatio: number;
 		amountsOutDirection: CoinsToBalance;
+		// TODO: use this in calc
 		referral?: boolean;
 	}): CoinsToBalance => {
 		const amountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
@@ -423,6 +424,20 @@ export class Pool extends Caller {
 		}
 
 		return amountsOut;
+	};
+
+	public getWithdrawLpAmountIn = (inputs: {
+		amountsOut: CoinsToBalance;
+		// TODO: use this in calc
+		referral?: boolean;
+	}): Balance => {
+		const lpRatio = CmmmCalculations.calcWithdrawFixedAmountsDirty(
+			this.pool,
+			inputs.amountsOut
+		);
+		return BigInt(
+			Math.floor(Number(this.pool.lpCoinSupply) * (1 - lpRatio))
+		);
 	};
 
 	/**

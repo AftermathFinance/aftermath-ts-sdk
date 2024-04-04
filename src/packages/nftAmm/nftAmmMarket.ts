@@ -1,19 +1,28 @@
 import {
 	SuiNetwork,
-	NftAmmMarketObject,
-	ApiNftAmmDepositBody,
+	NftAmmMarketData,
 	Balance,
-	ApiNftAmmWithdrawBody,
-	ApiNftAmmBuyBody,
-	Nft,
-	DynamicFieldObjectsWithCursor,
-	ApiDynamicFieldsBody,
-	ApiNftAmmSellBody,
-	Url,
 	ObjectId,
+	SuiAddress,
+	Slippage,
+	CoinType,
+	AnyObjectType,
+	CoinsToBalance,
+	CoinDecimal,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
+import { AftermathApi } from "../../general/providers";
+import {
+	NftAmmMarketGetAllNfts,
+	NftAmmMarketGetBuyFractionalCoinTransaction,
+	NftAmmMarketGetDepositCoinsTransaction,
+	NftAmmMarketGetNfts,
+	NftAmmMarketGetSellFractionalCoinTransaction,
+	NftAmmMarketGetWithdrawCoinsTransaction,
+	NftAmmMarketInterface,
+} from "./nftAmmMarketInterface";
+import { Coin } from "..";
 
 export class NftAmmMarket extends Caller {
 	// =========================================================================
@@ -26,172 +35,357 @@ export class NftAmmMarket extends Caller {
 	//  Public Class Members
 	// =========================================================================
 
-	public pool: Pool;
+	public readonly pool: Pool;
 
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
 	constructor(
-		public readonly market: NftAmmMarketObject,
-		public readonly network?: SuiNetwork
+		public readonly market: NftAmmMarketData,
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
 	) {
-		super(network, `nft-amm/markets/${market.objectId}`);
+		super(network, `nft-amm/markets/${market.vault.objectId}`);
 		this.market = market;
-		this.pool = new Pool(market.pool, network);
+		this.pool = new Pool(market.pool, network, Provider);
 	}
 
 	// =========================================================================
 	//  Objects
 	// =========================================================================
 
-	public async getNfts(inputs: { cursor?: ObjectId; limit?: number }) {
-		return this.fetchApi<
-			DynamicFieldObjectsWithCursor<Nft>,
-			ApiDynamicFieldsBody
-		>("nfts", inputs);
-	}
+	getNfts: NftAmmMarketGetNfts = (inputs) => {
+		return this.useProvider().nftAmm.fetchNftsInMarketWithCursor({
+			...inputs,
+			kioskId: this.market.vault.kioskStorage?.ownerCap.forObjectId!,
+			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
+		});
+	};
+
+	getAllNfts: NftAmmMarketGetAllNfts = () => {
+		return this.useProvider().nftAmm.fetchNftsInKiosk({
+			kioskId: this.market.vault.kioskStorage?.ownerCap.forObjectId!,
+			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
+		});
+	};
 
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
-	public async getBuyTransaction(inputs: ApiNftAmmBuyBody) {
-		return this.fetchApiTransaction<ApiNftAmmBuyBody>(
-			"transactions/buy",
-			inputs
-		);
-	}
+	getBuyFractionalCoinTransaction: NftAmmMarketGetBuyFractionalCoinTransaction =
+		(inputs) => {
+			return this.useProvider().pools.fetchBuildTradeAmountOutTx({
+				...inputs,
+				pool: this.pool,
+				coinOutAmount: inputs.fractionalAmountOut,
+				coinInType: this.afSuiCoinType(),
+				coinOutType: this.fractionalCoinType(),
+			});
+		};
 
-	public async getSellTransaction(inputs: ApiNftAmmSellBody) {
-		return this.fetchApiTransaction<ApiNftAmmSellBody>(
-			"transactions/sell",
-			inputs
-		);
-	}
+	getSellFractionalCoinTransaction: NftAmmMarketGetSellFractionalCoinTransaction =
+		(inputs) => {
+			return this.useProvider().pools.fetchBuildTradeTx({
+				...inputs,
+				pool: this.pool,
+				coinInAmount: inputs.fractionalAmountIn,
+				coinInType: this.afSuiCoinType(),
+				coinOutType: this.fractionalCoinType(),
+			});
+		};
 
-	public async getDepositTransaction(inputs: ApiNftAmmDepositBody) {
-		return this.fetchApiTransaction<ApiNftAmmDepositBody>(
-			"transactions/deposit",
-			inputs
-		);
-	}
+	getDepositCoinsTransaction: NftAmmMarketGetDepositCoinsTransaction = (
+		inputs
+	) => {
+		return this.useProvider().pools.fetchBuildDepositTx({
+			...inputs,
+			pool: this.pool,
+		});
+	};
 
-	public async getWithdrawTransaction(inputs: ApiNftAmmWithdrawBody) {
-		return this.fetchApiTransaction<ApiNftAmmWithdrawBody>(
-			"transactions/withdraw",
-			inputs
-		);
-	}
+	getWithdrawCoinsTransaction: NftAmmMarketGetWithdrawCoinsTransaction = (
+		inputs
+	) => {
+		return this.useProvider().pools.fetchBuildWithdrawTx({
+			...inputs,
+			pool: this.pool,
+		});
+	};
 
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
 
-	public getNftSpotPriceInAssetCoin = (inputs?: {
+	public getNftSpotPriceInAfSui = (inputs?: {
 		withFees: boolean;
 	}): Balance => {
 		const assetToFractionalizedSpotPrice =
-			this.getAssetCoinToFractionalizeCoinSpotPrice(inputs);
+			this.getAfSuiToFractionalCoinSpotPrice(inputs);
 
 		return BigInt(
-			assetToFractionalizedSpotPrice *
-				Number(this.market.fractionalizedCoinAmount)
+			Math.round(
+				assetToFractionalizedSpotPrice * Number(this.fractionsAmount())
+			)
 		);
 	};
 
-	public getFractionalizedCoinToAssetCoinSpotPrice = (inputs?: {
+	public getFractionalCoinToAfSuiSpotPrice = (inputs?: {
 		withFees: boolean;
 	}): number => {
 		return this.pool.getSpotPrice({
-			coinInType: this.market.fractionalizedCoinType,
-			coinOutType: this.market.assetCoinType,
+			coinInType: this.fractionalCoinType(),
+			coinOutType: this.afSuiCoinType(),
 			withFees: inputs?.withFees,
 		});
 	};
 
-	public getAssetCoinToFractionalizeCoinSpotPrice = (inputs?: {
+	public getAfSuiToFractionalCoinSpotPrice = (inputs?: {
 		withFees: boolean;
 	}): number => {
 		return this.pool.getSpotPrice({
-			coinInType: this.market.assetCoinType,
-			coinOutType: this.market.fractionalizedCoinType,
+			coinInType: this.afSuiCoinType(),
+			coinOutType: this.fractionalCoinType(),
 			withFees: inputs?.withFees,
 		});
 	};
 
-	public getBuyAssetCoinAmountIn = (inputs: {
+	public getBuyNftsAfSuiAmountIn = (inputs: {
 		nftsCount: number;
+		// slippage: Slippage;
+		referral?: boolean;
+	}): Balance => {
+		if (inputs.nftsCount <= 0) return BigInt(0);
+		const amountIn = this.pool.getTradeAmountIn({
+			coinOutAmount: BigInt(inputs.nftsCount) * this.fractionsAmount(),
+			coinInType: this.afSuiCoinType(),
+			coinOutType: this.fractionalCoinType(),
+			referral: inputs.referral,
+		});
+		return amountIn;
+		// increase amount to account for slippage
+		// return BigInt(Math.ceil(Number(amountIn) * (1 + inputs.slippage)));
+	};
+
+	public getSellNftsAfSuiAmountOut = (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}): Balance => {
+		if (inputs.nftsCount <= 0) return BigInt(0);
+		return this.pool.getTradeAmountOut({
+			coinInAmount: BigInt(inputs.nftsCount) * this.fractionsAmount(),
+			coinInType: this.fractionalCoinType(),
+			coinOutType: this.afSuiCoinType(),
+			referral: inputs.referral,
+		});
+	};
+
+	public getBuyFractionalCoinAfSuiAmountIn = (inputs: {
+		fractionalAmountOut: Balance;
+		// slippage: Slippage;
 		referral?: boolean;
 	}): Balance => {
 		return this.pool.getTradeAmountIn({
-			coinOutAmount:
-				BigInt(inputs.nftsCount) * this.market.fractionalizedCoinAmount,
-			coinInType: this.market.assetCoinType,
-			coinOutType: this.market.fractionalizedCoinType,
+			coinOutAmount: inputs.fractionalAmountOut,
+			coinInType: this.afSuiCoinType(),
+			coinOutType: this.fractionalCoinType(),
 			referral: inputs.referral,
 		});
 	};
 
-	public getSellAssetCoinAmountOut = (inputs: {
-		nftsCount: number;
+	public getSellFractionalCoinAfSuiAmountOut = (inputs: {
+		fractionalAmountIn: Balance;
 		referral?: boolean;
 	}): Balance => {
 		return this.pool.getTradeAmountOut({
-			coinInAmount:
-				BigInt(inputs.nftsCount) * this.market.fractionalizedCoinAmount,
-			coinInType: this.market.fractionalizedCoinType,
-			coinOutType: this.market.assetCoinType,
+			coinInAmount: inputs.fractionalAmountIn,
+			coinInType: this.fractionalCoinType(),
+			coinOutType: this.afSuiCoinType(),
 			referral: inputs.referral,
 		});
 	};
 
-	public getDepositLpCoinAmountOut = (inputs: {
-		assetCoinAmountIn: Balance;
+	public getDepositLpAmountOut = (inputs: {
+		amountsIn: CoinsToBalance;
 		referral?: boolean;
 	}): {
 		lpAmountOut: Balance;
 		lpRatio: number;
 	} => {
-		return this.pool.getDepositLpAmountOut({
+		return this.pool.getDepositLpAmountOut(inputs);
+	};
+
+	public getDepositNftsLpAmountOut = (inputs: {
+		nftsCount: number;
+		referral?: boolean;
+	}): {
+		lpAmountOut: Balance;
+		lpRatio: number;
+	} => {
+		if (inputs.nftsCount <= 0)
+			return {
+				lpAmountOut: BigInt(0),
+				lpRatio: 1,
+			};
+		return this.getDepositLpAmountOut({
+			...inputs,
 			amountsIn: {
-				[this.market.assetCoinType]: inputs.assetCoinAmountIn,
+				[this.fractionalCoinType()]:
+					BigInt(Math.round(inputs.nftsCount)) *
+					this.fractionsAmount(),
 			},
-			referral: inputs.referral,
 		});
 	};
 
-	public getWithdrawFractionalizedCoinAmountOut = (inputs: {
-		// NOTE: do we need a better direction approximation here ?
+	public getWithdrawFractionalCoinAmountOut = (inputs: {
 		lpCoinAmount: Balance;
 		referral?: boolean;
 	}): Balance => {
 		const lpRatio = this.pool.getMultiCoinWithdrawLpRatio({
+			...inputs,
 			lpCoinAmountOut: inputs.lpCoinAmount,
 		});
-
 		const amountsOut = this.pool.getWithdrawAmountsOut({
 			lpRatio,
 			amountsOutDirection: {
-				[this.market.fractionalizedCoinType]:
-					this.market.fractionalizedCoinAmount,
+				[this.fractionalCoinType()]: this.fractionsAmount(),
 			},
 			referral: inputs.referral,
 		});
+		return Object.values(amountsOut)[0];
+	};
 
-		const fractionalizedCoinAmountOut = amountsOut[0];
-		return fractionalizedCoinAmountOut;
+	public getWithdrawAfSuiAmountOut = (inputs: {
+		lpCoinAmount: Balance;
+		referral?: boolean;
+	}): Balance => {
+		const lpRatio = this.pool.getMultiCoinWithdrawLpRatio({
+			...inputs,
+			lpCoinAmountOut: inputs.lpCoinAmount,
+		});
+		const amountsOut = this.pool.getWithdrawAmountsOut({
+			lpRatio,
+			amountsOutDirection: {
+				[this.afSuiCoinType()]: BigInt(
+					Math.round(
+						Number(this.fractionsAmount()) *
+							this.getAfSuiToFractionalCoinSpotPrice()
+					)
+				),
+			},
+			referral: inputs.referral,
+		});
+		return Object.values(amountsOut)[0];
 	};
 
 	public getWithdrawNftsCountOut = (inputs: {
 		lpCoinAmount: Balance;
 		referral?: boolean;
-	}): bigint => {
-		const fractionalizedCoinAmountOut =
-			this.getWithdrawFractionalizedCoinAmountOut(inputs);
-		const minNftsCountOut =
-			fractionalizedCoinAmountOut / this.market.fractionalizedCoinAmount;
+	}): number => {
+		const fractionalCoinAmountOut =
+			this.getWithdrawFractionalCoinAmountOut(inputs);
+		return Number(fractionalCoinAmountOut / this.fractionsAmount());
+	};
 
-		return minNftsCountOut;
+	public getWithdrawNftsLpAmountIn = (inputs: {
+		nftsCount: number;
+		slippage: Slippage;
+		referral?: boolean;
+	}): Balance => {
+		const amountIn = this.pool.getWithdrawLpAmountIn({
+			amountsOut: {
+				[this.fractionalCoinType()]:
+					this.fractionsAmount() * BigInt(inputs.nftsCount),
+			},
+			referral: inputs.referral,
+		});
+		// increase amount to account for slippage
+		return BigInt(Math.ceil(Number(amountIn) * (1 + inputs.slippage)));
+	};
+
+	public getWithdrawLpAmountIn = (inputs: {
+		amountsOut: CoinsToBalance;
+		referral?: boolean;
+	}): Balance => {
+		return this.pool.getWithdrawLpAmountIn({
+			amountsOut: inputs.amountsOut,
+			referral: inputs.referral,
+		});
+	};
+
+	public getNftEquivalence = (inputs: {
+		fractionalAmount: Balance | number;
+	}) => {
+		return (
+			(typeof inputs.fractionalAmount === "number"
+				? inputs.fractionalAmount
+				: Coin.balanceWithDecimals(
+						inputs.fractionalAmount,
+						this.fractionalCoinDecimals()
+				  )) /
+			Coin.balanceWithDecimals(
+				this.fractionsAmount(),
+				this.fractionalCoinDecimals()
+			)
+		);
+	};
+
+	// =========================================================================
+	//  Getters
+	// =========================================================================
+
+	public fractionalCoinType = (): CoinType => {
+		return this.market.vault.fractionalCoinType;
+	};
+
+	public afSuiCoinType = (): CoinType => {
+		return Object.keys(this.market.pool.coins).find(
+			(coin) => coin !== this.fractionalCoinType()
+		)!;
+	};
+
+	public lpCoinType = (): CoinType => {
+		return this.market.pool.lpCoinType;
+	};
+
+	public nftType = (): AnyObjectType => {
+		return this.market.vault.nftType;
+	};
+
+	public fractionsAmount = (): Balance => {
+		return this.market.vault.fractionsAmount;
+	};
+
+	public fractionalCoinDecimals = (): CoinDecimal => {
+		const decimals =
+			this.market.pool.coins[this.fractionalCoinType()].decimals;
+		if (!decimals) throw new Error("no decimals found for fractional coin");
+		return decimals;
+	};
+
+	public lpCoinDecimals = (): CoinDecimal => {
+		return this.pool.pool.lpCoinDecimals;
+	};
+
+	// NOTE: should this just be hardcoded ?
+	public afSuiCoinDecimals = (): CoinDecimal => {
+		const decimals = this.market.pool.coins[this.afSuiCoinType()].decimals;
+		if (!decimals) throw new Error("no decimals found for afsui coin");
+		return decimals;
+	};
+
+	// =========================================================================
+	//  Protected Helpers
+	// =========================================================================
+
+	protected useProvider = () => {
+		const nftAmm = this.Provider?.NftAmm();
+		const pools = this.Provider?.Pools();
+		if (!nftAmm || !pools) throw new Error("missing AftermathApi Provider");
+		return {
+			nftAmm,
+			pools,
+		};
 	};
 }

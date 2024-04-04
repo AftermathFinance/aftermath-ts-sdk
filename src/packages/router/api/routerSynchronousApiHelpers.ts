@@ -1,5 +1,5 @@
 import {
-	TransactionObjectArgument,
+	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
@@ -124,7 +124,7 @@ export class RouterSynchronousApiHelpers {
 
 	public obtainRouterCapTx = (inputs: {
 		tx: TransactionBlock;
-		coinInId: ObjectId | TransactionObjectArgument;
+		coinInId: ObjectId | TransactionArgument;
 		minAmountOut: Balance;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -177,7 +177,7 @@ export class RouterSynchronousApiHelpers {
 
 	public initiatePathTx = (inputs: {
 		tx: TransactionBlock;
-		routerSwapCap: TransactionObjectArgument;
+		routerSwapCap: TransactionArgument;
 		coinInAmount: Balance;
 		coinInType: CoinType;
 	}) /* (Coin) */ => {
@@ -199,8 +199,8 @@ export class RouterSynchronousApiHelpers {
 
 	public returnRouterCapTx = (inputs: {
 		tx: TransactionBlock;
-		routerSwapCap: TransactionObjectArgument;
-		coinOutId: ObjectId | TransactionObjectArgument;
+		routerSwapCap: TransactionArgument;
+		coinOutId: ObjectId | TransactionArgument;
 		routerSwapCapCoinType: CoinType;
 		coinOutType: CoinType;
 	}) => {
@@ -236,7 +236,7 @@ export class RouterSynchronousApiHelpers {
 
 	public returnRouterCapAlreadyPayedFeeTx = (inputs: {
 		tx: TransactionBlock;
-		routerSwapCap: TransactionObjectArgument;
+		routerSwapCap: TransactionArgument;
 		routerSwapCapCoinType: CoinType;
 	}) => {
 		const { tx, routerSwapCap, routerSwapCapCoinType } = inputs;
@@ -263,10 +263,10 @@ export class RouterSynchronousApiHelpers {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
-		coinInId?: TransactionObjectArgument;
+		coinInId?: TransactionArgument;
 		isSponsoredTx?: boolean;
 		withTransfer?: boolean;
-	}): Promise<TransactionObjectArgument | undefined> {
+	}): Promise<TransactionArgument | undefined> {
 		const {
 			walletAddress,
 			completeRoute,
@@ -295,7 +295,7 @@ export class RouterSynchronousApiHelpers {
 				referrer,
 			});
 
-		let startCoinInId: TransactionObjectArgument;
+		let startCoinInId: TransactionArgument;
 		if (inputs.coinInId) {
 			startCoinInId = inputs.coinInId;
 		} else {
@@ -325,12 +325,12 @@ export class RouterSynchronousApiHelpers {
 			minAmountOut,
 		});
 
-		let coinsOut: TransactionObjectArgument[] = [];
+		let coinsOut: TransactionArgument[] = [];
 
 		let coinInAmountRemaining = completeRoute.coinIn.amount;
 		for (const [routeIndex, route] of completeRoute.routes.entries()) {
-			let coinInId: TransactionObjectArgument | undefined =
-				this.initiatePathTx({
+			let coinInId: TransactionArgument | undefined = this.initiatePathTx(
+				{
 					tx,
 					routerSwapCap,
 					// this is for possible route amount rounding protection
@@ -339,7 +339,8 @@ export class RouterSynchronousApiHelpers {
 							? coinInAmountRemaining
 							: route.coinIn.amount,
 					coinInType: route.coinIn.type,
-				});
+				}
+			);
 
 			coinInAmountRemaining -= route.coinIn.amount;
 
@@ -380,7 +381,7 @@ export class RouterSynchronousApiHelpers {
 			if (coinInId) coinsOut.push(coinInId);
 		}
 
-		let coinOutId: undefined | TransactionObjectArgument = undefined;
+		let coinOutId: undefined | TransactionArgument = undefined;
 
 		if (coinsOut.length > 0) {
 			coinOutId = coinsOut[0];
