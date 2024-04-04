@@ -30,14 +30,14 @@ export class AfEggNftAmmMarket
 	// =========================================================================
 
 	getBuyNftsTransaction: NftAmmMarketGetBuyNftsTransaction = (inputs) => {
-		return this.useProvider().fetchBuildBuyAfEggsTx({
+		return this.useProvider().nftAmm.fetchBuildBuyAfEggsTx({
 			...inputs,
 			market: this,
 		});
 	};
 
 	getSellNftsTransaction: NftAmmMarketGetSellNftsTransaction = (inputs) => {
-		return this.useProvider().fetchBuildSellAfEggsTx({
+		return this.useProvider().nftAmm.fetchBuildSellAfEggsTx({
 			...inputs,
 			market: this,
 		});
@@ -46,7 +46,7 @@ export class AfEggNftAmmMarket
 	getDepositNftsTransaction: NftAmmMarketGetDepositNftsTransaction = (
 		inputs
 	) => {
-		return this.useProvider().fetchBuildDepositAfEggsTx({
+		return this.useProvider().nftAmm.fetchBuildDepositAfEggsTx({
 			...inputs,
 			market: this,
 		});
@@ -55,7 +55,7 @@ export class AfEggNftAmmMarket
 	getWithdrawNftsTransaction: NftAmmMarketGetWithdrawNftsTransaction = (
 		inputs
 	) => {
-		return this.useProvider().fetchBuildWithdrawAfEggsTx({
+		return this.useProvider().nftAmm.fetchBuildWithdrawAfEggsTx({
 			...inputs,
 			market: this,
 		});

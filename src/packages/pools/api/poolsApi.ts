@@ -525,6 +525,68 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		return tx;
 	};
 
+	public fetchBuildTradeAmountOutTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		coinInType: CoinType;
+		coinOutAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+		isSponsoredTx?: boolean;
+	}): Promise<TransactionBlock> => {
+		const {
+			walletAddress,
+			pool,
+			coinOutAmount,
+			coinInType,
+			coinOutType,
+			slippage,
+			referrer,
+			isSponsoredTx,
+		} = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const coinInAmount = pool.getTradeAmountIn({
+			...inputs,
+			referral: referrer !== undefined,
+		});
+		// gather slightly more than needed (by adding slippage) to avoid abort
+		const coinInAmountWithSlippage = BigInt(
+			Math.ceil(Number(coinInAmount) * (1 + inputs.slippage))
+		);
+		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: coinInType,
+			coinAmount: coinInAmountWithSlippage,
+			isSponsoredTx,
+		});
+
+		this.tradeAmountOutTx({
+			tx,
+			coinInId,
+			poolId: pool.pool.objectId,
+			lpCoinType: pool.pool.lpCoinType,
+			expectedCoinInAmount: coinInAmount,
+			coinOutAmount,
+			coinInType,
+			coinOutType,
+			slippage,
+			withTransfer: true,
+		});
+
+		return tx;
+	};
+
 	public fetchAddTradeTx = async (inputs: {
 		tx: TransactionBlock;
 		coinInId: ObjectId | TransactionArgument;

@@ -14,7 +14,11 @@ import { Pool } from "../pools";
 import { AftermathApi } from "../../general/providers";
 import {
 	NftAmmMarketGetAllNfts,
+	NftAmmMarketGetBuyFractionalCoinTransaction,
+	NftAmmMarketGetDepositCoinsTransaction,
 	NftAmmMarketGetNfts,
+	NftAmmMarketGetSellFractionalCoinTransaction,
+	NftAmmMarketGetWithdrawCoinsTransaction,
 	NftAmmMarketInterface,
 } from "./nftAmmMarketInterface";
 
@@ -50,7 +54,7 @@ export class NftAmmMarket extends Caller {
 	// =========================================================================
 
 	getNfts: NftAmmMarketGetNfts = (inputs) => {
-		return this.useProvider().fetchNftsInMarketWithCursor({
+		return this.useProvider().nftAmm.fetchNftsInMarketWithCursor({
 			...inputs,
 			kioskId: this.market.vault.kioskStorage?.ownerCap.forObjectId!,
 			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
@@ -58,9 +62,53 @@ export class NftAmmMarket extends Caller {
 	};
 
 	getAllNfts: NftAmmMarketGetAllNfts = () => {
-		return this.useProvider().fetchNftsInKiosk({
+		return this.useProvider().nftAmm.fetchNftsInKiosk({
 			kioskId: this.market.vault.kioskStorage?.ownerCap.forObjectId!,
 			kioskOwnerCapId: this.market.vault.kioskStorage?.ownerCap.objectId!,
+		});
+	};
+
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
+
+	getBuyFractionalCoinTransaction: NftAmmMarketGetBuyFractionalCoinTransaction =
+		(inputs) => {
+			return this.useProvider().pools.fetchBuildTradeAmountOutTx({
+				...inputs,
+				pool: this.pool,
+				coinOutAmount: inputs.fractionalAmountOut,
+				coinInType: this.afSuiCoinType(),
+				coinOutType: this.fractionalCoinType(),
+			});
+		};
+
+	getSellFractionalCoinTransaction: NftAmmMarketGetSellFractionalCoinTransaction =
+		(inputs) => {
+			return this.useProvider().pools.fetchBuildTradeTx({
+				...inputs,
+				pool: this.pool,
+				coinInAmount: inputs.fractionalAmountIn,
+				coinInType: this.afSuiCoinType(),
+				coinOutType: this.fractionalCoinType(),
+			});
+		};
+
+	getDepositCoinsTransaction: NftAmmMarketGetDepositCoinsTransaction = (
+		inputs
+	) => {
+		return this.useProvider().pools.fetchBuildDepositTx({
+			...inputs,
+			pool: this.pool,
+		});
+	};
+
+	getWithdrawCoinsTransaction: NftAmmMarketGetWithdrawCoinsTransaction = (
+		inputs
+	) => {
+		return this.useProvider().pools.fetchBuildWithdrawTx({
+			...inputs,
+			pool: this.pool,
 		});
 	};
 
@@ -258,7 +306,7 @@ export class NftAmmMarket extends Caller {
 		amountsOut: CoinsToBalance;
 		referral?: boolean;
 	}): Balance => {
-		return  this.pool.getWithdrawLpAmountIn({
+		return this.pool.getWithdrawLpAmountIn({
 			amountsOut: inputs.amountsOut,
 			referral: inputs.referral,
 		});
@@ -295,8 +343,12 @@ export class NftAmmMarket extends Caller {
 	// =========================================================================
 
 	protected useProvider = () => {
-		const provider = this.Provider?.NftAmm();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
+		const nftAmm = this.Provider?.NftAmm();
+		const pools = this.Provider?.Pools();
+		if (!nftAmm || !pools) throw new Error("missing AftermathApi Provider");
+		return {
+			nftAmm,
+			pools,
+		};
 	};
 }

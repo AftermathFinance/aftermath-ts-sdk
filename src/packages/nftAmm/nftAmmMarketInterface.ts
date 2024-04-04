@@ -95,7 +95,7 @@ export interface NftAmmMarketInterface {
 	getWithdrawLpAmountIn: (inputs: {
 		amountsOut: CoinsToBalance;
 		referral?: boolean;
-	}) => Balance
+	}) => Balance;
 
 	// =========================================================================
 	//  Getters
@@ -108,13 +108,22 @@ export interface NftAmmMarketInterface {
 	fractionsAmount: () => Balance;
 
 	// =========================================================================
-	//  Transactions
+	//  NFT Transactions
 	// =========================================================================
 
 	getBuyNftsTransaction: NftAmmMarketGetBuyNftsTransaction;
 	getSellNftsTransaction: NftAmmMarketGetSellNftsTransaction;
 	getDepositNftsTransaction: NftAmmMarketGetDepositNftsTransaction;
 	getWithdrawNftsTransaction: NftAmmMarketGetWithdrawNftsTransaction;
+
+	// =========================================================================
+	//  Coin Transactions
+	// =========================================================================
+
+	getBuyFractionalCoinTransaction: NftAmmMarketGetBuyFractionalCoinTransaction;
+	getSellFractionalCoinTransaction: NftAmmMarketGetSellFractionalCoinTransaction;
+	getDepositCoinsTransaction: NftAmmMarketGetDepositCoinsTransaction;
+	getWithdrawCoinsTransaction: NftAmmMarketGetWithdrawCoinsTransaction;
 }
 
 export type NftAmmMarketGetNfts = (inputs: {
@@ -123,6 +132,10 @@ export type NftAmmMarketGetNfts = (inputs: {
 }) => Promise<DynamicFieldObjectsWithCursor<Nft>>;
 
 export type NftAmmMarketGetAllNfts = () => Promise<Nft[]>;
+
+// =========================================================================
+//  NFT Transactions
+// =========================================================================
 
 export type NftAmmMarketGetBuyNftsTransaction = (inputs: {
 	walletAddress: SuiAddress;
@@ -153,6 +166,39 @@ export type NftAmmMarketGetWithdrawNftsTransaction = (inputs: {
 	walletAddress: SuiAddress;
 	lpCoinAmount: Balance;
 	nftIds: ObjectId[];
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}) => Promise<TransactionBlock>;
+
+// =========================================================================
+//  Coin Transactions
+// =========================================================================
+
+export type NftAmmMarketGetBuyFractionalCoinTransaction = (inputs: {
+	walletAddress: SuiAddress;
+	fractionalAmountOut: Balance;
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}) => Promise<TransactionBlock>;
+
+export type NftAmmMarketGetSellFractionalCoinTransaction = (inputs: {
+	walletAddress: SuiAddress;
+	fractionalAmountIn: Balance;
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}) => Promise<TransactionBlock>;
+
+export type NftAmmMarketGetDepositCoinsTransaction = (inputs: {
+	walletAddress: SuiAddress;
+	amountsIn: CoinsToBalance;
+	slippage: Slippage;
+	referrer?: SuiAddress;
+}) => Promise<TransactionBlock>;
+
+export type NftAmmMarketGetWithdrawCoinsTransaction = (inputs: {
+	walletAddress: SuiAddress;
+	amountsOutDirection: CoinsToBalance;
+	lpCoinAmount: Balance;
 	slippage: Slippage;
 	referrer?: SuiAddress;
 }) => Promise<TransactionBlock>;
