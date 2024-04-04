@@ -2,6 +2,7 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
 	AnyObjectType,
 	Balance,
+	CoinDecimal,
 	CoinsToBalance,
 	CoinType,
 	DynamicFieldObjectsWithCursor,
@@ -96,6 +97,9 @@ export interface NftAmmMarketInterface {
 		amountsOut: CoinsToBalance;
 		referral?: boolean;
 	}) => Balance;
+	getNftEquivalence: (inputs: {
+		fractionalAmount: Balance | number;
+	}) => number;
 
 	// =========================================================================
 	//  Getters
@@ -106,6 +110,9 @@ export interface NftAmmMarketInterface {
 	lpCoinType: () => CoinType;
 	nftType: () => AnyObjectType;
 	fractionsAmount: () => Balance;
+	fractionalCoinDecimals: () => CoinDecimal;
+	lpCoinDecimals: () => CoinDecimal;
+	afSuiCoinDecimals: () => CoinDecimal;
 
 	// =========================================================================
 	//  NFT Transactions
@@ -164,7 +171,6 @@ export type NftAmmMarketGetDepositNftsTransaction = (inputs: {
 
 export type NftAmmMarketGetWithdrawNftsTransaction = (inputs: {
 	walletAddress: SuiAddress;
-	lpCoinAmount: Balance;
 	nftIds: ObjectId[];
 	slippage: Slippage;
 	referrer?: SuiAddress;

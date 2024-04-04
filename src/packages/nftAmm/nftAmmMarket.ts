@@ -8,6 +8,7 @@ import {
 	CoinType,
 	AnyObjectType,
 	CoinsToBalance,
+	CoinDecimal,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
@@ -21,6 +22,7 @@ import {
 	NftAmmMarketGetWithdrawCoinsTransaction,
 	NftAmmMarketInterface,
 } from "./nftAmmMarketInterface";
+import { Coin } from "..";
 
 export class NftAmmMarket extends Caller {
 	// =========================================================================
@@ -312,6 +314,23 @@ export class NftAmmMarket extends Caller {
 		});
 	};
 
+	public getNftEquivalence = (inputs: {
+		fractionalAmount: Balance | number;
+	}) => {
+		return (
+			(typeof inputs.fractionalAmount === "number"
+				? inputs.fractionalAmount
+				: Coin.balanceWithDecimals(
+						inputs.fractionalAmount,
+						this.fractionalCoinDecimals()
+				  )) /
+			Coin.balanceWithDecimals(
+				this.fractionsAmount(),
+				this.fractionalCoinDecimals()
+			)
+		);
+	};
+
 	// =========================================================================
 	//  Getters
 	// =========================================================================
@@ -336,6 +355,24 @@ export class NftAmmMarket extends Caller {
 
 	public fractionsAmount = (): Balance => {
 		return this.market.vault.fractionsAmount;
+	};
+
+	public fractionalCoinDecimals = (): CoinDecimal => {
+		const decimals =
+			this.market.pool.coins[this.fractionalCoinType()].decimals;
+		if (!decimals) throw new Error("no decimals found for fractional coin");
+		return decimals;
+	};
+
+	public lpCoinDecimals = (): CoinDecimal => {
+		return this.pool.pool.lpCoinDecimals;
+	};
+
+	// NOTE: should this just be hardcoded ?
+	public afSuiCoinDecimals = (): CoinDecimal => {
+		const decimals = this.market.pool.coins[this.afSuiCoinType()].decimals;
+		if (!decimals) throw new Error("no decimals found for afsui coin");
+		return decimals;
 	};
 
 	// =========================================================================
