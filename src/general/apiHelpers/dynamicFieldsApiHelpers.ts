@@ -10,7 +10,7 @@ import { AftermathApi } from "../providers/aftermathApi";
 
 export class DynamicFieldsApiHelpers {
 	// =========================================================================
-	//  private static readonly constants
+	//  Private Static Constants
 	// =========================================================================
 
 	private static readonly constants = {
