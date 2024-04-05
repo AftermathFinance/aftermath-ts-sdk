@@ -241,43 +241,40 @@ export class CoinApi {
 
 			const pool = await PoolsApi.fetchPool({ objectId: poolObjectId });
 
-			const maxCoinSymbolLength = 5;
-			const notPrettyCoinSymbol =
-				pool.name.length > maxCoinSymbolLength
-					? pool.name.toUpperCase().slice(0, maxCoinSymbolLength)
-					: pool.name.toUpperCase();
-			const coinSymbol =
-				notPrettyCoinSymbol.slice(-1) === "_"
-					? notPrettyCoinSymbol.slice(0, -1)
-					: notPrettyCoinSymbol;
+			const coinSymbols = Object.keys(pool.coins).map(
+				(coin) => new Coin(coin).coinTypeSymbol
+			);
+			// const coinSymbols = (
+			// 	await Promise.all(
+			// 		Object.keys(pool.coins).map((coin) =>
+			// 			this.Provider.Coin().fetchCoinMetadata({
+			// 				coin,
+			// 			})
+			// 		)
+			// 	)
+			// ).map((metadata) => metadata.symbol);
 
-			const coinName = pool.name
-				.split(" ")
-				.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
-				.join(" ");
-
-			const coinDescription =
-				await PoolsApi.createLpCoinMetadataDescription({
-					poolName: pool.name,
-					coinTypes: Object.keys(pool.coins),
-				});
+			const coinsString = `${coinSymbols.reduce(
+				(acc, symbol, index) =>
+					acc + symbol + (index >= coinSymbols.length - 1 ? "" : "/"),
+				""
+			)}`;
 
 			return {
-				symbol: `AF_LP_${coinSymbol}`,
+				symbol: `${coinsString} afLP`,
 				id: null,
-				description: coinDescription,
-				name: `Af Lp ${coinName}`,
-				// TODO: fetch this ?
-				decimals: Pools.constants.defaults.lpCoinDecimals,
+				description: `Aftermath LP Coin for ${coinsString} Pool`,
+				name: `${coinsString} LP`,
+				decimals: pool.lpCoinDecimals,
 				iconUrl: null,
 				isGenerated: true,
 			};
 		} catch (e) {
 			return {
-				symbol: "AF_LP",
+				symbol: "afLP",
 				id: null,
 				description: "Aftermath Finance LP",
-				name: "Af Lp",
+				name: "LP",
 				decimals: Pools.constants.defaults.lpCoinDecimals,
 				iconUrl: null,
 				isGenerated: true,
