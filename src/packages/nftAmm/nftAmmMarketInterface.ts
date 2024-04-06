@@ -58,8 +58,16 @@ export interface NftAmmMarketInterface {
 		// slippage: Slippage;
 		referral?: boolean;
 	}) => Balance;
+	getBuyFractionalCoinAmountOut: (inputs: {
+		afSuiAmountIn: Balance;
+		referral?: boolean;
+	}) => Balance;
 	getSellFractionalCoinAfSuiAmountOut: (inputs: {
 		fractionalAmountIn: Balance;
+		referral?: boolean;
+	}) => Balance;
+	getSellFractionalCoinAmountIn: (inputs: {
+		afSuiAmountOut: Balance;
 		referral?: boolean;
 	}) => Balance;
 	getDepositLpAmountOut: (inputs: {

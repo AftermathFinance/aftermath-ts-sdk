@@ -194,12 +194,36 @@ export class NftAmmMarket extends Caller {
 		});
 	};
 
+	public getBuyFractionalCoinAmountOut = (inputs: {
+		afSuiAmountIn: Balance;
+		referral?: boolean;
+	}): Balance => {
+		return this.pool.getTradeAmountOut({
+			coinInAmount: inputs.afSuiAmountIn,
+			coinInType: this.afSuiCoinType(),
+			coinOutType: this.fractionalCoinType(),
+			referral: inputs.referral,
+		});
+	};
+
 	public getSellFractionalCoinAfSuiAmountOut = (inputs: {
 		fractionalAmountIn: Balance;
 		referral?: boolean;
 	}): Balance => {
 		return this.pool.getTradeAmountOut({
 			coinInAmount: inputs.fractionalAmountIn,
+			coinInType: this.fractionalCoinType(),
+			coinOutType: this.afSuiCoinType(),
+			referral: inputs.referral,
+		});
+	};
+
+	public getSellFractionalCoinAmountIn = (inputs: {
+		afSuiAmountOut: Balance;
+		referral?: boolean;
+	}): Balance => {
+		return this.pool.getTradeAmountIn({
+			coinOutAmount: inputs.afSuiAmountOut,
 			coinInType: this.fractionalCoinType(),
 			coinOutType: this.afSuiCoinType(),
 			referral: inputs.referral,
