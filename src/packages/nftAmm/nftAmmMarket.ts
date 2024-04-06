@@ -279,6 +279,21 @@ export class NftAmmMarket extends Caller {
 		return Object.values(amountsOut)[0];
 	};
 
+	public getWithdrawAmountsOut = (inputs: {
+		lpCoinAmount: Balance;
+		amountsOutDirection: CoinsToBalance;
+		referral?: boolean;
+	}): CoinsToBalance => {
+		const lpRatio = this.pool.getMultiCoinWithdrawLpRatio({
+			...inputs,
+			lpCoinAmountOut: inputs.lpCoinAmount,
+		});
+		return this.pool.getWithdrawAmountsOut({
+			...inputs,
+			lpRatio,
+		});
+	};
+
 	public getWithdrawNftsCountOut = (inputs: {
 		lpCoinAmount: Balance;
 		referral?: boolean;
