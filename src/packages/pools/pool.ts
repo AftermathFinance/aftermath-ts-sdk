@@ -258,6 +258,8 @@ export class Pool extends Caller {
 		coinOutType: CoinType;
 		referral?: boolean;
 	}): Balance => {
+		if (inputs.coinInAmount <= BigInt(0)) return BigInt(0);
+
 		const pool = Helpers.deepCopy(this.pool);
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
@@ -311,6 +313,8 @@ export class Pool extends Caller {
 		coinOutType: CoinType;
 		referral?: boolean;
 	}): Balance => {
+		if (inputs.coinOutAmount <= BigInt(0)) return BigInt(0);
+
 		const pool = Helpers.deepCopy(this.pool);
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
@@ -363,6 +367,12 @@ export class Pool extends Caller {
 		lpAmountOut: Balance;
 		lpRatio: number;
 	} => {
+		if (Helpers.sumBigInt(Object.values(inputs.amountsIn)) <= BigInt(0))
+			return {
+				lpAmountOut: BigInt(0),
+				lpRatio: 1,
+			};
+
 		const calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
 			this.pool,
 			inputs.amountsIn
@@ -396,6 +406,12 @@ export class Pool extends Caller {
 		// TODO: use this in calc
 		referral?: boolean;
 	}): CoinsToBalance => {
+		if (
+			Helpers.sumBigInt(Object.values(inputs.amountsOutDirection)) <=
+			BigInt(0)
+		)
+			return {};
+
 		const amountsOut = CmmmCalculations.calcWithdrawFlpAmountsOut(
 			this.pool,
 			inputs.amountsOutDirection,
@@ -431,6 +447,9 @@ export class Pool extends Caller {
 		// TODO: use this in calc
 		referral?: boolean;
 	}): Balance => {
+		if (Helpers.sumBigInt(Object.values(inputs.amountsOut)) <= BigInt(0))
+			return BigInt(0);
+
 		const lpRatio = CmmmCalculations.calcWithdrawFixedAmountsDirty(
 			this.pool,
 			inputs.amountsOut
@@ -452,6 +471,7 @@ export class Pool extends Caller {
 		referral?: boolean;
 	}): CoinsToBalance => {
 		if (inputs.lpRatio >= 1) throw new Error("lpRatio >= 1");
+		if (inputs.lpRatio <= 0) return {};
 
 		const amountsOut: CoinsToBalance = Object.entries(
 			this.pool.coins
