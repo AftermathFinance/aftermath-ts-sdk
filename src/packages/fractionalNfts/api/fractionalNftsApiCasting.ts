@@ -75,6 +75,7 @@ export class FractionalNftsApiCasting {
 		return {
 			vaultId: fields.vault_id,
 			nftIds: fields.nft_ids,
+			mintedFractionAmount: BigInt(fields.minted_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -88,6 +89,7 @@ export class FractionalNftsApiCasting {
 		return {
 			vaultId: fields.vault_id,
 			nftIds: fields.nft_ids,
+			burnedFractionAmount: BigInt(fields.burned_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

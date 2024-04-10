@@ -72,9 +72,11 @@ export interface FractionalNftsPlainStorage {
 export interface FractionalNftsDepositedEvent extends Event {
 	vaultId: ObjectId;
 	nftIds: ObjectId[];
+	mintedFractionAmount: Balance;
 }
 
 export interface FractionalNftsWithdrawnEvent extends Event {
 	vaultId: ObjectId;
 	nftIds: ObjectId[];
+	burnedFractionAmount: Balance;
 }

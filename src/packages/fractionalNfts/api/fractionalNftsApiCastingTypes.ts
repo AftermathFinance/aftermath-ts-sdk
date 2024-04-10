@@ -62,9 +62,11 @@ export interface PlainStorageFieldsOnChain {
 export type FractionalNftsDepositedEventOnChain = EventOnChain<{
 	vault_id: ObjectId;
 	nft_ids: ObjectId[];
+	minted_amount: BigIntAsString;
 }>;
 
 export type FractionalNftsWithdrawnEventOnChain = EventOnChain<{
 	vault_id: ObjectId;
 	nft_ids: ObjectId[];
+	burned_amount: BigIntAsString;
 }>;

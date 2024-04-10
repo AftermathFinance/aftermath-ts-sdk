@@ -330,7 +330,8 @@ export class FractionalNftsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftVault,
 				FractionalNftsApi.constants.moduleNames.interface,
-				"deposit_into_kiosk_storage" + (withTransfer ? "_and_keep" : "")
+				"deposit_into_kiosk_storage_get_coin" +
+					(withTransfer ? "_and_keep" : "")
 			),
 			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
 			arguments: [
@@ -359,7 +360,8 @@ export class FractionalNftsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftVault,
 				FractionalNftsApi.constants.moduleNames.interface,
-				"deposit_into_plain_storage" + (withTransfer ? "_and_keep" : "")
+				"deposit_into_plain_storage_get_coin" +
+					(withTransfer ? "_and_keep" : "")
 			),
 			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
 			arguments: [
@@ -459,7 +461,7 @@ export class FractionalNftsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftVault,
 				FractionalNftsApi.constants.moduleNames.interface,
-				"withdraw_from_kiosk_storage"
+				"withdraw_from_kiosk_storage_provide_coin"
 			),
 			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
 			arguments: [
@@ -498,7 +500,7 @@ export class FractionalNftsApi {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.nftVault,
 				FractionalNftsApi.constants.moduleNames.interface,
-				"withdraw_from_plain_storage"
+				"withdraw_from_plain_storage_provide_coin"
 			),
 			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
 			arguments: [
