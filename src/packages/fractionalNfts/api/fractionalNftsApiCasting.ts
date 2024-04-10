@@ -71,8 +71,16 @@ export class FractionalNftsApiCasting {
 	public static depositedEventFromOnChain = (
 		eventOnChain: FractionalNftsDepositedEventOnChain
 	): FractionalNftsDepositedEvent => {
+		// TODO: move to casting class
+		const coinTypes = Coin.getInnerCoinType(eventOnChain.type)
+			.replaceAll(" ", "")
+			.split(",")
+			.map((coin) => Helpers.addLeadingZeroesToType(coin));
+
 		const fields = eventOnChain.parsedJson;
 		return {
+			fractionalCoinType: coinTypes[0],
+			nftType: coinTypes[1],
 			vaultId: fields.vault_id,
 			nftIds: fields.nft_ids,
 			mintedFractionAmount: BigInt(fields.minted_amount),
@@ -85,8 +93,15 @@ export class FractionalNftsApiCasting {
 	public static withdrawnEventFromOnChain = (
 		eventOnChain: FractionalNftsWithdrawnEventOnChain
 	): FractionalNftsWithdrawnEvent => {
+		const coinTypes = Coin.getInnerCoinType(eventOnChain.type)
+			.replaceAll(" ", "")
+			.split(",")
+			.map((coin) => Helpers.addLeadingZeroesToType(coin));
+
 		const fields = eventOnChain.parsedJson;
 		return {
+			fractionalCoinType: coinTypes[0],
+			nftType: coinTypes[1],
 			vaultId: fields.vault_id,
 			nftIds: fields.nft_ids,
 			burnedFractionAmount: BigInt(fields.burned_amount),
