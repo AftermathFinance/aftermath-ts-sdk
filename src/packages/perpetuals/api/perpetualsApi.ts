@@ -77,6 +77,7 @@ import {
 	FilledMakerOrderEventOnChain,
 	FilledTakerOrderEventOnChain,
 	LiquidatedEventOnChain,
+	PerpetualsAccountPositionsIndexerResponse,
 	PostedOrderEventOnChain,
 	PostedOrderReceiptEventOnChain,
 	SettledFundingEventOnChain,
@@ -208,19 +209,16 @@ export class PerpetualsApi {
 		accountId: PerpetualsAccountId;
 	}): Promise<PerpetualsAccountObject> => {
 		const { accountId } = inputs;
-		const {
-			positions,
-		}: {
-			positions: [positionId: ObjectId, position: string][];
-		} = await this.Provider.indexerCaller.fetchIndexer(
-			`perpetuals/accounts/${accountId}/positions`,
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
-		return positions.map(([, position]) => position);
+		const response: PerpetualsAccountPositionsIndexerResponse =
+			await this.Provider.indexerCaller.fetchIndexer(
+				`perpetuals/accounts/${accountId}/positions`,
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+		return Casting.perpetuals.accountObjectFromIndexerResponse(response);
 	};
 
 	public fetchAccountOrderDatas = async (inputs: {

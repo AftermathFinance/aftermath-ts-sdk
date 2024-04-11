@@ -50,6 +50,7 @@ import {
 	PerpetualsClearingHouseFieldsOnChain,
 	PerpetualsMarketParamsFieldsOnChain,
 	PerpetualsMarketStateFieldsOnChain,
+	PerpetualsAccountPositionsIndexerResponse,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 import { bcs } from "@mysten/sui.js/bcs";
@@ -91,6 +92,27 @@ export class PerpetualsApiCasting {
 			pendingOrders: BigInt(data.pendingOrders),
 			makerFee: BigInt(data.makerFee),
 			takerFee: BigInt(data.takerFee),
+		};
+	};
+
+	public static accountObjectFromIndexerResponse = (
+		response: PerpetualsAccountPositionsIndexerResponse
+	): PerpetualsAccountObject => {
+		return {
+			positions: response.map(data => ({
+				collateral: BigInt(data[1].position.collateral),
+			baseAssetAmount: BigInt(data[1].position.base_asset_amount),
+			quoteAssetNotionalAmount: BigInt(data[1].position.quote_asset_notional_amount),
+			cumFundingRateLong: BigInt(data[1].position.cum_funding_rate_long),
+			cumFundingRateShort: BigInt(data[1].position.cum_funding_rate_short),
+			asksQuantity: BigInt(data[1].position.asks_quantity),
+			bidsQuantity: BigInt(data[1].position.bids_quantity),
+			collateralCoinType: Helpers.addLeadingZeroesToType("TODO"),
+			marketId: Helpers.addLeadingZeroesToType(data[0]),
+			pendingOrders: bigint;
+			makerFee: BigInt(data[1].position.maker_fee),
+			takerFee: BigInt(data[1].position.taker_fee),
+			}))
 		};
 	};
 
