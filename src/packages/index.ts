@@ -9,6 +9,7 @@ export * from "./fractionalNfts";
 export * from "./referralVault";
 export * from "./farms";
 export * from "./perpetuals";
+export * from "./afNft";
 
 export * from "./sui";
 export * from "./coin";
