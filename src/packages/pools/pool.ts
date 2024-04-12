@@ -234,11 +234,12 @@ export class Pool extends Caller {
 			!inputs.withFees
 		);
 
-		return (
+		const spotPrice =
 			(spotPriceWithDecimals *
 				Number(this.pool.coins[inputs.coinOutType].decimalsScalar)) /
-			Number(this.pool.coins[inputs.coinInType].decimalsScalar)
-		);
+			Number(this.pool.coins[inputs.coinInType].decimalsScalar);
+
+		return isNaN(spotPrice) ? 0 : spotPrice;
 	};
 
 	// TODO: account for referral discount for all calculations
@@ -261,21 +262,21 @@ export class Pool extends Caller {
 		if (inputs.coinInAmount <= BigInt(0)) return BigInt(0);
 
 		const pool = Helpers.deepCopy(this.pool);
-		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
+		// const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
 		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
 			amount: inputs.coinInAmount,
 		});
 
-		if (
-			Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
-				Pool.constants.percentageBoundsMarginOfError
-		)
-			throw new Error(
-				"coinInAmountWithFees / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
-			);
+		// if (
+		// 	Number(coinInAmountWithFees) / Number(coinInPoolBalance) >=
+		// 	Pools.constants.bounds.maxTradePercentageOfPoolBalance -
+		// 		Pool.constants.percentageBoundsMarginOfError
+		// )
+		// 	throw new Error(
+		// 		"coinInAmountWithFees / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
+		// 	);
 
 		const coinOutAmount = CmmmCalculations.calcOutGivenIn(
 			pool,
@@ -316,7 +317,7 @@ export class Pool extends Caller {
 		if (inputs.coinOutAmount <= BigInt(0)) return BigInt(0);
 
 		const pool = Helpers.deepCopy(this.pool);
-		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
+		// const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
 		if (
@@ -337,14 +338,14 @@ export class Pool extends Caller {
 
 		if (coinInAmount <= 0) throw new Error("coinInAmount <= 0");
 
-		if (
-			Number(coinInAmount) / Number(coinInPoolBalance) >=
-			Pools.constants.bounds.maxTradePercentageOfPoolBalance -
-				Pool.constants.percentageBoundsMarginOfError
-		)
-			throw new Error(
-				"coinInAmount / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
-			);
+		// if (
+		// 	Number(coinInAmount) / Number(coinInPoolBalance) >=
+		// 	Pools.constants.bounds.maxTradePercentageOfPoolBalance -
+		// 		Pool.constants.percentageBoundsMarginOfError
+		// )
+		// 	throw new Error(
+		// 		"coinInAmount / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
+		// 	);
 
 		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
 			amount: coinInAmount,
@@ -449,6 +450,16 @@ export class Pool extends Caller {
 	}): Balance => {
 		if (Helpers.sumBigInt(Object.values(inputs.amountsOut)) <= BigInt(0))
 			return BigInt(0);
+
+		for (const [coin, amountOut] of Object.entries(inputs.amountsOut)) {
+			if (
+				amountOut / this.pool.coins[coin].balance >=
+				Pools.constants.bounds.maxWithdrawPercentageOfPoolBalance
+			)
+				throw new Error(
+					"coinOutAmount / coinOutPoolBalance >= maxWithdrawPercentageOfPoolBalance"
+				);
+		}
 
 		const lpRatio = CmmmCalculations.calcWithdrawFixedAmountsDirty(
 			this.pool,

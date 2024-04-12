@@ -19,7 +19,6 @@ export interface FractionalNftsVaultFieldsOnChain {
 	kiosk_deposit_enabled: boolean;
 	// TODO: find best way to handle this data
 	// ids: LinkedSet<ID>,
-	supply: SupplyOnChain;
 	fractions_amount: BigIntAsString;
 }
 

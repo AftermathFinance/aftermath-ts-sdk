@@ -33,7 +33,7 @@ export interface FractionalNftsVaultObject extends Object {
 	/**
 	 * Vault has possibility to mint fractionalized coins.
 	 */
-	fractionalCoinSupply: Balance;
+	// fractionalCoinSupply: Balance;
 	/**
 	 * Token fractions amount.
 	 */

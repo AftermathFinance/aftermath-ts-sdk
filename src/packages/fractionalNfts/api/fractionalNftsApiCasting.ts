@@ -56,7 +56,7 @@ export class FractionalNftsApiCasting {
 				  )
 				: undefined,
 			isKioskDepositEnabled: fields.kiosk_deposit_enabled,
-			fractionalCoinSupply: BigInt(fields.supply.fields.value),
+			// fractionalCoinSupply: BigInt(fields.supply.fields.value),
 			fractionsAmount: BigInt(fields.fractions_amount),
 			display: {
 				name: displayFields.name,

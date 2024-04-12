@@ -91,8 +91,8 @@ export class NftAmmMarket extends Caller {
 				...inputs,
 				pool: this.pool,
 				coinInAmount: inputs.fractionalAmountIn,
-				coinInType: this.afSuiCoinType(),
-				coinOutType: this.fractionalCoinType(),
+				coinInType: this.fractionalCoinType(),
+				coinOutType: this.afSuiCoinType(),
 			});
 		};
 

@@ -61,8 +61,8 @@ export class Pools extends Caller {
 		},
 		bounds: {
 			maxCoinsInPool: 8,
-			maxTradePercentageOfPoolBalance: 0.3, // 30%
-			maxWithdrawPercentageOfPoolBalance: 0.3, // 10%
+			maxTradePercentageOfPoolBalance: 1, // 100%
+			maxWithdrawPercentageOfPoolBalance: 1, // 100%
 			minSwapFee: 0.0001, // 0.01%
 			maxSwapFee: 0.1, // 10%
 			minWeight: 0.01, // 1%
