@@ -277,7 +277,7 @@ export class NftAmmMarket extends Caller {
 			},
 			referral: inputs.referral,
 		});
-		return Object.values(amountsOut)[0];
+		return amountsOut[this.fractionalCoinType()];
 	};
 
 	public getWithdrawAfSuiAmountOut = (inputs: {
@@ -288,19 +288,20 @@ export class NftAmmMarket extends Caller {
 			...inputs,
 			lpCoinAmountOut: inputs.lpCoinAmount,
 		});
+		const spotPrice = this.getAfSuiToFractionalCoinSpotPrice();
 		const amountsOut = this.pool.getWithdrawAmountsOut({
 			lpRatio,
 			amountsOutDirection: {
 				[this.afSuiCoinType()]: BigInt(
 					Math.round(
 						Number(this.fractionsAmount()) *
-							this.getAfSuiToFractionalCoinSpotPrice()
+							(spotPrice <= 0 ? 1 : spotPrice)
 					)
 				),
 			},
 			referral: inputs.referral,
 		});
-		return Object.values(amountsOut)[0];
+		return amountsOut[this.afSuiCoinType()];
 	};
 
 	public getWithdrawAmountsOut = (inputs: {

@@ -1174,7 +1174,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		} = inputs;
 
 		const poolSize = coinTypes.length;
-
 		return tx.add({
 			kind: "MoveCall",
 			target: Helpers.transactions.createTxTarget(
@@ -1186,7 +1185,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 					: PoolsApi.constants.moduleNames.withdraw,
 				`withdraw_${poolSize}_coins`
 			),
-
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
@@ -1196,7 +1194,10 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
-				tx.pure(expectedAmountsOut.map((amount) => amount)),
+				tx.pure(
+					expectedAmountsOut.map((amount) => BigInt(amount)),
+					"vector<u64>"
+				),
 				tx.pure(Pools.normalizeSlippage(slippage), "u64"),
 			],
 		});
