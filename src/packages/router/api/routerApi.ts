@@ -260,7 +260,7 @@ export class RouterApi {
 		// TODO: handle this
 		referrer?: SuiAddress;
 		// TODO: handle this
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 	}): Promise<RouterCompleteTradeRoute> => {
 		const { coinInType, coinOutType, coinInAmount, referrer, externalFee } =
 			inputs;
@@ -310,7 +310,7 @@ export class RouterApi {
 		coinIn?: TransactionArgument;
 		walletAddress?: SuiAddress;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
 	}): Promise<{
@@ -485,7 +485,7 @@ export class RouterApi {
 		coinIn?: TransactionArgument;
 		walletAddress?: SuiAddress;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
 	}): Promise<{

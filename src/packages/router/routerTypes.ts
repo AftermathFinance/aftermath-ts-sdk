@@ -183,6 +183,7 @@ export interface RouterTradeInfo {
 export interface RouterTradeCoin {
 	type: CoinType;
 	amount: Balance;
+	tradeFee: PoolTradeFee;
 }
 
 // =========================================================================

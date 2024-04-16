@@ -39,21 +39,34 @@ export class RouterApiCasting {
 				coinIn: {
 					type: hop.input,
 					amount: BigInt(Math.round(hop.input_amount)),
+					tradeFee: BigInt(Math.round(hop.swap_fee.input_fee_amount)),
 				},
 				coinOut: {
 					type: hop.output,
 					amount: BigInt(Math.round(hop.output_amount)),
+					tradeFee: BigInt(
+						Math.round(hop.swap_fee.output_fee_amount)
+					),
 				},
 			})),
 			coinIn: {
 				type: path.path.data[0].input,
 				amount: BigInt(Math.round(path.path.data[0].input_amount)),
+				tradeFee: BigInt(
+					Math.round(path.path.data[0].swap_fee.input_fee_amount)
+				),
 			},
 			coinOut: {
 				type: path.path.data[path.path.data.length - 1].output,
 				amount: BigInt(
 					Math.round(
 						path.path.data[path.path.data.length - 1].output_amount
+					)
+				),
+				tradeFee: BigInt(
+					Math.round(
+						path.path.data[path.path.data.length - 1].swap_fee
+							.output_fee_amount
 					)
 				),
 			},
@@ -65,11 +78,17 @@ export class RouterApiCasting {
 				amount: Helpers.sumBigInt(
 					routes.map((route) => route.coinIn.amount)
 				),
+				tradeFee: BigInt(
+					Math.round(paths.protocol_fee.input_fee_amount)
+				),
 			},
 			coinOut: {
 				type: routes[routes.length - 1].coinOut.type,
 				amount: Helpers.sumBigInt(
 					routes.map((route) => route.coinOut.amount)
+				),
+				tradeFee: BigInt(
+					Math.round(paths.protocol_fee.output_fee_amount)
 				),
 			},
 		};
@@ -96,10 +115,20 @@ export class RouterApiCasting {
 						output: path.coinOut.type,
 						input_amount: Number(path.coinIn.amount),
 						output_amount: Number(path.coinOut.amount),
+						swap_fee: {
+							input_fee_amount: Number(path.coinIn.tradeFee),
+							output_fee_amount: Number(path.coinOut.tradeFee),
+						},
 					})),
 				},
 			})
 		);
-		return { data };
+		return {
+			data,
+			protocol_fee: {
+				input_fee_amount: Number(completeTradeRoute.coinIn.tradeFee),
+				output_fee_amount: Number(completeTradeRoute.coinOut.tradeFee),
+			},
+		};
 	};
 }
