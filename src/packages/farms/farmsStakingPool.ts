@@ -54,7 +54,11 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 
 	public rewardCoinTypes = (): CoinType[] => {
-		return this.stakingPool.rewardCoins.map((coin) => coin.coinType);
+		return (
+			this.stakingPool.rewardCoins
+				// .filter((coin) => coin.emissionRate <= coin.actualRewards)
+				.map((coin) => coin.coinType)
+		);
 	};
 
 	public rewardCoin = (inputs: { coinType: CoinType }) => {
@@ -125,6 +129,7 @@ export class FarmsStakingPool extends Caller {
 		const rewardCoin = this.rewardCoin({ coinType });
 		const currentTimestamp = dayjs().valueOf();
 
+		if (rewardCoin.emissionRate > rewardCoin.actualRewards) return 0;
 		if (
 			rewardCoin.emissionStartTimestamp > currentTimestamp ||
 			currentTimestamp > this.stakingPool.emissionEndTimestamp
@@ -167,7 +172,12 @@ export class FarmsStakingPool extends Caller {
 	public calcMultiplier = (inputs: {
 		lockDurationMs: number;
 	}): FarmsMultiplier => {
-		const { lockDurationMs } = inputs;
+		const lockDurationMs =
+			inputs.lockDurationMs > this.stakingPool.maxLockDurationMs
+				? this.stakingPool.maxLockDurationMs
+				: inputs.lockDurationMs < this.stakingPool.minLockDurationMs
+				? this.stakingPool.minLockDurationMs
+				: inputs.lockDurationMs;
 
 		const totalPossibleLockDurationMs =
 			this.stakingPool.maxLockDurationMs -

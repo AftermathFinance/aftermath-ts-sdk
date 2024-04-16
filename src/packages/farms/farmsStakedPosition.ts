@@ -138,7 +138,8 @@ export class FarmsStakedPosition extends Caller {
 		const totalRewards =
 			rewardCoin.multiplierRewardsAccumulated +
 			rewardCoin.baseRewardsAccumulated;
-		return totalRewards < Farms.constants.minimalRewardsToClaim
+		return totalRewards < Farms.constants.minimalRewardsToClaim ||
+			totalRewards > inputs.stakingPool.rewardCoin(inputs).actualRewards
 			? BigInt(0)
 			: totalRewards;
 	};
