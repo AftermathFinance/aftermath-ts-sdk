@@ -35,7 +35,7 @@ export class RouterApiCasting {
 		const routes: RouterTradeRoute[] = paths.data.map((path) => ({
 			paths: path.path.data.map((hop) => ({
 				protocolName: hop.protocol,
-				pool: hop.pool_id,
+				pool: hop.pool,
 				coinIn: {
 					type: hop.input,
 					amount: BigInt(Math.round(hop.input_amount)),
@@ -84,12 +84,12 @@ export class RouterApiCasting {
 				path: {
 					data: route.paths.map((path) => ({
 						protocol: path.protocolName,
-						pool_id:
-							typeof path.pool === "string"
+						pool:
+							"tb_data" in path.pool
 								? path.pool
 								: (() => {
 										throw new Error(
-											"pool within path is object, but expected string"
+											"pool within path is for router v1, expected v2"
 										);
 								  })(),
 						input: path.coinIn.type,

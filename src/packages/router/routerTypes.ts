@@ -171,7 +171,7 @@ export type RouterTradeRoute = RouterTradeInfo & {
 
 export type RouterTradePath = RouterTradeInfo & {
 	protocolName: RouterProtocolName;
-	pool: RouterSerializablePool | ObjectId;
+	pool: RouterSerializablePool | RouterServicePoolMetadata;
 };
 
 export interface RouterTradeInfo {
@@ -368,6 +368,7 @@ export interface ApiRouterDynamicGasBody {
 
 export interface RouterServicePaths {
 	data: RouterServicePath[];
+	protocol_fee: RouterServiceSwapFee;
 }
 
 export interface RouterServicePath {
@@ -379,9 +380,22 @@ export interface RouterServicePath {
 
 export interface RouterServiceHop {
 	protocol: RouterProtocolName;
-	pool_id: ObjectId;
+	pool: RouterServicePoolMetadata;
 	input: CoinType;
 	output: CoinType;
 	input_amount: number;
 	output_amount: number;
+	swap_fee: RouterServiceSwapFee;
+}
+
+export interface RouterServiceSwapFee {
+	input_fee_amount: number;
+	output_fee_amount: number;
+}
+
+export interface RouterServicePoolMetadata {
+	// protocol: ProtocolFiner
+	pool_id: ObjectId;
+	tb_data: any; // TBData
+	// assets: Vec<Asset>
 }

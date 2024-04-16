@@ -25,6 +25,7 @@ import {
 	ServiceCoinData,
 	SerializedTransaction,
 	RouterServicePaths,
+	IFixed,
 } from "../../../types";
 import {
 	TransactionArgument,
@@ -273,6 +274,7 @@ export class RouterApi {
 				from_coin_type: CoinType;
 				to_coin_type: CoinType;
 				input_amount: number;
+				referred: boolean;
 			}
 		>(
 			"router/forward-trade-route",
@@ -281,6 +283,7 @@ export class RouterApi {
 				to_coin_type: coinOutType,
 				// NOTE: is this conversion safe ?
 				input_amount: Number(coinInAmount),
+				referred: referrer !== undefined,
 			},
 			undefined,
 			undefined,
@@ -306,9 +309,7 @@ export class RouterApi {
 		tx?: TransactionBlock;
 		coinIn?: TransactionArgument;
 		walletAddress?: SuiAddress;
-		// TODO: handle this
 		referrer?: SuiAddress;
-		// TODO: handle this
 		externalFee?: RouterExternalFee;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
@@ -369,11 +370,15 @@ export class RouterApi {
 					input_coin: ServiceCoinData;
 					slippage: number;
 					tx_kind: SerializedTransaction;
+					referrer?: SuiAddress;
+					router_fee_recipient?: SuiAddress;
+					router_fee?: number; // u64 format (same as on-chain)
 				}
 			>(
 				"router/forward-trade-route-tx",
 				{
 					slippage,
+					referrer,
 					from_coin_type: coinInType,
 					to_coin_type: coinOutType,
 					// NOTE: is this conversion safe ?
@@ -383,6 +388,15 @@ export class RouterApi {
 							coinTxArg,
 						}),
 					tx_kind: b64TxBytes,
+					router_fee_recipient: externalFee?.recipient,
+					// NOTE: is this conversion safe ?
+					router_fee: externalFee
+						? Number(
+								Casting.numberToFixedBigInt(
+									externalFee.feePercentage
+								)
+						  )
+						: undefined,
 				},
 				undefined,
 				undefined,
@@ -470,10 +484,8 @@ export class RouterApi {
 		tx?: TransactionBlock;
 		coinIn?: TransactionArgument;
 		walletAddress?: SuiAddress;
-		// // TODO: handle this
-		// referrer?: SuiAddress;
-		// // TODO: handle this
-		// externalFee?: RouterExternalFee;
+		referrer?: SuiAddress;
+		externalFee?: RouterExternalFee;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
 	}): Promise<{
@@ -487,6 +499,8 @@ export class RouterApi {
 			isSponsoredTx,
 			slippage,
 			transferCoinOut,
+			referrer,
+			externalFee,
 		} = inputs;
 
 		const initTx = inputs.tx ?? new TransactionBlock();
@@ -523,11 +537,15 @@ export class RouterApi {
 					input_coin: ServiceCoinData;
 					slippage: number;
 					tx_kind: SerializedTransaction;
+					referrer?: SuiAddress;
+					router_fee_recipient?: SuiAddress;
+					router_fee?: number; // u64 format (same as on-chain)
 				}
 			>(
 				"router/tx-from-trade-route",
 				{
 					slippage,
+					referrer,
 					paths: Casting.router.routerServicePathsFromCompleteTradeRoute(
 						completeRoute
 					),
@@ -536,6 +554,15 @@ export class RouterApi {
 							coinTxArg,
 						}),
 					tx_kind: b64TxBytes,
+					router_fee_recipient: externalFee?.recipient,
+					// NOTE: is this conversion safe ?
+					router_fee: externalFee
+						? Number(
+								Casting.numberToFixedBigInt(
+									externalFee.feePercentage
+								)
+						  )
+						: undefined,
 				},
 				undefined,
 				undefined,
