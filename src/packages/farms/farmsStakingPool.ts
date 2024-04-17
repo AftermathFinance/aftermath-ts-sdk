@@ -54,11 +54,17 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 
 	public rewardCoinTypes = (): CoinType[] => {
-		return (
-			this.stakingPool.rewardCoins
-				// .filter((coin) => coin.emissionRate <= coin.actualRewards)
-				.map((coin) => coin.coinType)
-		);
+		return this.stakingPool.rewardCoins.map((coin) => coin.coinType);
+	};
+
+	public nonZeroRewardCoinTypes = (): CoinType[] => {
+		return this.stakingPool.rewardCoins
+			.filter(
+				(coin) =>
+					coin.emissionRate <= coin.actualRewards &&
+					coin.actualRewards > BigInt(0)
+			)
+			.map((coin) => coin.coinType);
 	};
 
 	public rewardCoin = (inputs: { coinType: CoinType }) => {
@@ -148,7 +154,7 @@ export class FarmsStakingPool extends Caller {
 			rewardsUsdOneYear /
 			tvlUsd /
 			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
-		return apr < 0 ? 0 : apr;
+		return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
 	};
 
 	public calcTotalApr = (inputs: {
@@ -276,7 +282,7 @@ export class FarmsStakingPool extends Caller {
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,
-			rewardCoinTypes: this.rewardCoinTypes(),
+			rewardCoinTypes: this.nonZeroRewardCoinTypes(),
 		});
 	}
 
