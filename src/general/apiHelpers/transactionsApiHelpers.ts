@@ -155,8 +155,8 @@ export class TransactionsApiHelpers {
 		const { tx, coinType, coinId, amount } = inputs;
 		return tx.moveCall({
 			target: this.createTxTarget(
-				Sui.constants.addresses.suiPackageId,
-				// "0x0000000000000000000000000000000000000000000000000000000000000002",
+				// Sui.constants.addresses.suiPackageId,
+				"0x2",
 				"coin",
 				"split"
 			),

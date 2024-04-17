@@ -344,9 +344,9 @@ export class RouterSynchronousApiHelpers {
 			coinInAmountRemaining -= route.coinIn.amount;
 
 			for (const [, path] of route.paths.entries()) {
-				if (typeof path.pool === "string")
+				if ("tb_data" in path.pool)
 					throw new Error(
-						"pool within path is string, but expected object"
+						"pool within path is for router v2, but expected v1"
 					);
 				const poolForPath = createRouterPool({
 					pool: path.pool,

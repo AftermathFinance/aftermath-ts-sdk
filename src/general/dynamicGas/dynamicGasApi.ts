@@ -46,18 +46,14 @@ export class DynamicGasApi {
 	}): Promise<ApiDynamicGasResponse> => {
 		const { tx, gasCoinType, walletAddress } = inputs;
 
-		// const mergeCoinTxs = tx.blockData.transactions.filter(
-		// 	(tx) => tx.kind === "MergeCoins"
-		// );
-		// mergeCoinTxs.find((tx) => tx.kind === "MergeCoins" && tx.destination);
-
 		// TODO: handle all split cases
 		const gasSplitMoveCall = tx.blockData.transactions.find(
 			(command) =>
 				command.kind === "MoveCall" &&
 				command.target ===
 					Helpers.transactions.createTxTarget(
-						Sui.constants.addresses.suiPackageId,
+						// Sui.constants.addresses.suiPackageId,
+						"0x2",
 						"coin",
 						"split"
 					) &&
