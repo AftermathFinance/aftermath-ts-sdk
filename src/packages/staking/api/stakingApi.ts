@@ -28,7 +28,6 @@ import {
 	UnstakeRequestedEvent,
 	StakedSuiVaultStateObject,
 	AfSuiRouterPoolObject,
-	ApiLeveragedStakeBody,
 } from "../stakingTypes";
 import {
 	AfSuiRouterWrapperAddresses,
@@ -37,19 +36,21 @@ import {
 	ApiIndexerUserEventsBody,
 	Balance,
 	CoinType,
+	ExternalFee,
 	ObjectId,
 	StakingAddresses,
 	SuiAddress,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { StakingApiCasting } from "./stakingApiCasting";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
-import { RouterPoolTradeTxInputs } from "../..";
+import { RouterPoolTradeTxInputs, Staking } from "../..";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 
 export class StakingApi
 	implements RouterSynchronousApiInterface<AfSuiRouterPoolObject>
@@ -525,7 +526,9 @@ export class StakingApi
 	public fetchBuildStakeTx = async (
 		inputs: ApiStakeBody
 	): Promise<TransactionBlock> => {
-		const { referrer } = inputs;
+		const { referrer, externalFee } = inputs;
+
+		if (externalFee) StakingApi.assertValidExternalFee(externalFee);
 
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -543,6 +546,16 @@ export class StakingApi
 			coinAmount: inputs.suiStakeAmount,
 			isSponsoredTx: inputs.isSponsoredTx,
 		});
+
+		if (externalFee) {
+			const feeAmount = BigInt(
+				Math.floor(
+					Number(inputs.suiStakeAmount) * externalFee.feePercentage
+				)
+			);
+			const suiFeeCoin = tx.splitCoins(suiCoin, [tx.pure(feeAmount)]);
+			tx.transferObjects([suiFeeCoin], tx.pure(externalFee.recipient));
+		}
 
 		const afSuiCoinId = this.stakeTx({
 			tx,
@@ -563,7 +576,9 @@ export class StakingApi
 	public fetchBuildUnstakeTx = async (
 		inputs: ApiUnstakeBody
 	): Promise<TransactionBlock> => {
-		const { referrer } = inputs;
+		const { referrer, externalFee } = inputs;
+
+		if (externalFee) StakingApi.assertValidExternalFee(externalFee);
 
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
@@ -581,6 +596,16 @@ export class StakingApi
 			coinAmount: inputs.afSuiUnstakeAmount,
 		});
 
+		if (externalFee) {
+			const feeAmount = BigInt(
+				Math.floor(
+					Number(inputs.afSuiUnstakeAmount) *
+						externalFee.feePercentage
+				)
+			);
+			const afSuiFeeCoin = tx.splitCoins(afSuiCoin, [tx.pure(feeAmount)]);
+			tx.transferObjects([afSuiFeeCoin], tx.pure(externalFee.recipient));
+		}
 		if (inputs.isAtomic) {
 			const suiCoinId = this.atomicUnstakeTx({
 				tx,
@@ -620,6 +645,7 @@ export class StakingApi
 				referrer,
 			});
 
+		// TODO: add external fee here
 		const afSuiCoinId = this.requestStakeStakedSuiVecTx({
 			tx,
 			...inputs,
@@ -864,6 +890,17 @@ export class StakingApi
 		return exchangeRate <= 0 ? 1 : exchangeRate;
 	};
 
+	public fetchUniqueStakers = async (): Promise<number> => {
+		return this.Provider.indexerCaller.fetchIndexer(
+			"staking/unique-stakers",
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+	};
+
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
@@ -1046,6 +1083,20 @@ export class StakingApi
 	// =========================================================================
 	//  Private Static Methods
 	// =========================================================================
+
+	private static assertValidExternalFee = (externalFee: ExternalFee) => {
+		if (
+			externalFee.feePercentage >=
+			Staking.constants.bounds.maxExternalFeePercentage
+		)
+			throw new Error(
+				`external fee percentage exceeds max of ${
+					Staking.constants.bounds.maxExternalFeePercentage * 100
+				}%`
+			);
+		if (externalFee.feePercentage <= 0)
+			throw new Error(`external fee percentage must be greater than 0`);
+	};
 
 	// =========================================================================
 	//  Unstake Event Processing

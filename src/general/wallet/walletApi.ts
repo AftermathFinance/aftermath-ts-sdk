@@ -1,5 +1,5 @@
 import { Helpers } from "../utils/helpers";
-import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { AftermathApi } from "../providers/aftermathApi";
 import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
 import { SuiAddress, TransactionDigest } from "../types";
@@ -63,7 +63,7 @@ export class WalletApi {
 
 	// TODO: make this only look at aftermath relevant addresses in to address
 	// TODO: restrict all filtering for events, etc. similarly using updated sdk filters
-	public fetchPastAftermathTransactions = async (inputs: {
+	public fetchPastTransactions = async (inputs: {
 		walletAddress: SuiAddress;
 		cursor?: TransactionDigest;
 		limit?: number;

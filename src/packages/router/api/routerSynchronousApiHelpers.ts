@@ -5,7 +5,6 @@ import {
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
-	RouterExternalFee,
 	RouterSynchronousProtocolName,
 	RouterSynchronousSerializablePool,
 	RouterTradeEvent,
@@ -23,14 +22,15 @@ import {
 	Slippage,
 	ObjectId,
 	SuiAddress,
+	ExternalFee,
 } from "../../../types";
 import { createRouterPool } from "../utils/synchronous/interfaces/routerPoolInterface";
 import { Router } from "../router";
 import { RouterSynchronousApiInterface } from "../utils/synchronous/interfaces/routerSynchronousApiInterface";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { Casting, Helpers } from "../../../general/utils";
-import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { InterestApi } from "../../external/interest/interestApi";
@@ -129,7 +129,7 @@ export class RouterSynchronousApiHelpers {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 	}) /* (RouterSwapCap) */ => {
 		const {
 			tx,

@@ -9,6 +9,7 @@ import {
 	ObjectId,
 	SuiAddress,
 	TransactionDigest,
+	ExternalFee,
 } from "../../general/types/generalTypes";
 
 // =========================================================================
@@ -180,14 +181,7 @@ export interface ApiStakeBody {
 	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
 	referrer?: SuiAddress;
-	isSponsoredTx?: boolean;
-}
-
-export interface ApiLeveragedStakeBody {
-	walletAddress: SuiAddress;
-	suiStakeAmount: Balance;
-	validatorAddress: SuiAddress;
-	referrer?: SuiAddress;
+	externalFee?: ExternalFee;
 	isSponsoredTx?: boolean;
 }
 
@@ -196,6 +190,7 @@ export interface ApiUnstakeBody {
 	afSuiUnstakeAmount: Balance;
 	isAtomic: boolean;
 	referrer?: SuiAddress;
+	externalFee?: ExternalFee;
 	isSponsoredTx?: boolean;
 }
 

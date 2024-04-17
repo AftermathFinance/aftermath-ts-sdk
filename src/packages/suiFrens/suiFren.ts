@@ -17,6 +17,7 @@ import {
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
 import { Coin } from "..";
+import { AftermathApi } from "../../general/providers";
 
 export class SuiFren extends Caller {
 	// =========================================================================
@@ -27,7 +28,8 @@ export class SuiFren extends Caller {
 		public readonly suiFren: SuiFrenObject,
 		public readonly network?: SuiNetwork,
 		public readonly isStaked: boolean = false,
-		public readonly isOwned: boolean = false
+		public readonly isOwned: boolean = false,
+		private readonly Provider?: AftermathApi
 	) {
 		super(network, "sui-frens");
 	}
@@ -151,29 +153,23 @@ export class SuiFren extends Caller {
 		if (this.isStaked)
 			throw new Error("unable to stake already staked suiFren");
 
-		return this.fetchApiTransaction<ApiStakeSuiFrenBody>(
-			"transactions/stake",
-			{
-				...inputs,
-				suiFrenType: this.suiFrenType(),
-				suiFrenId: this.suiFren.objectId,
-			}
-		);
+		return this.useProvider().fetchStakeTx({
+			...inputs,
+			suiFrenType: this.suiFrenType(),
+			suiFrenId: this.suiFren.objectId,
+		});
 	}
 
 	public async getAddAccessoryTransaction(inputs: {
 		accessoryId: ObjectId;
 		walletAddress: SuiAddress;
 	}) {
-		return this.fetchApiTransaction<ApiAddSuiFrenAccessoryBody>(
-			"transactions/add-accessory",
-			{
-				...inputs,
-				isOwned: this.isOwned,
-				suiFrenType: this.suiFrenType(),
-				suiFrenId: this.suiFren.objectId,
-			}
-		);
+		return this.useProvider().fetchBuildAddAccessoryTx({
+			...inputs,
+			isOwned: this.isOwned,
+			suiFrenType: this.suiFrenType(),
+			suiFrenId: this.suiFren.objectId,
+		});
 	}
 
 	public async getRemoveAccessoryTransaction(inputs: {
@@ -185,13 +181,20 @@ export class SuiFren extends Caller {
 				"unable to remove accessory from suiFren that is not owned by caller"
 			);
 
-		return this.fetchApiTransaction<ApiRemoveSuiFrenAccessoryBody>(
-			"transactions/remove-accessory",
-			{
-				...inputs,
-				suiFrenType: this.suiFrenType(),
-				suiFrenId: this.suiFren.objectId,
-			}
-		);
+		return this.useProvider().fetchBuildRemoveAccessoryTx({
+			...inputs,
+			suiFrenType: this.suiFrenType(),
+			suiFrenId: this.suiFren.objectId,
+		});
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.SuiFrens();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

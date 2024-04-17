@@ -52,27 +52,31 @@ export class ReferralVaultApi {
 		tx: TransactionBlock;
 		referrer: SuiAddress;
 	}) => {
-		const { tx, referrer } = inputs;
+		// TODO: handle this case better
+		// in try catch in case referrer is invalid address and throws
+		try {
+			const { tx, referrer } = inputs;
 
-		if (
-			tx.blockData.sender &&
-			Helpers.addLeadingZeroesToType(tx.blockData.sender) ===
-				Helpers.addLeadingZeroesToType(referrer)
-		)
-			return;
+			if (
+				tx.blockData.sender &&
+				Helpers.addLeadingZeroesToType(tx.blockData.sender) ===
+					Helpers.addLeadingZeroesToType(referrer)
+			)
+				return;
 
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.referralVault,
-				ReferralVaultApi.constants.moduleNames.referralVault,
-				"update_referrer_address"
-			),
-			typeArguments: [],
-			arguments: [
-				tx.object(this.addresses.objects.referralVault),
-				tx.pure(referrer, "address"),
-			],
-		});
+			return tx.moveCall({
+				target: Helpers.transactions.createTxTarget(
+					this.addresses.packages.referralVault,
+					ReferralVaultApi.constants.moduleNames.referralVault,
+					"update_referrer_address"
+				),
+				typeArguments: [],
+				arguments: [
+					tx.object(this.addresses.objects.referralVault),
+					tx.pure(referrer, "address"),
+				],
+			});
+		} catch (e) {}
 	};
 
 	public withdrawRebateTx = (inputs: {

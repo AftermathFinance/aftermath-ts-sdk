@@ -48,9 +48,10 @@ export class TransactionsApiHelpers {
 				limit,
 				options: {
 					showEvents: true,
-					// showBalanceChanges: true,
-					// showEffects: true,
-					// showObjectChanges: true
+					showBalanceChanges: true,
+					showEffects: true,
+					showObjectChanges: true,
+					showInput: true,
 				},
 			});
 

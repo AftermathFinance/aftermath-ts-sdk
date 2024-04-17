@@ -4,7 +4,7 @@ import {
 } from "@mysten/sui.js/transactions";
 import {
 	Balance,
-	RouterExternalFee,
+	ExternalFee,
 	RouterProtocolName,
 	RouterSerializablePool,
 	Slippage,
@@ -147,7 +147,11 @@ export interface RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}) => Balance;
+	}) => {
+		coinOutAmount: Balance;
+		feeInAmount: Balance;
+		feeOutAmount: Balance;
+	};
 
 	tradeTx: (inputs: RouterPoolTradeTxInputs) => TransactionObjectArgument;
 
@@ -166,7 +170,11 @@ export interface RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}) => Balance;
+	}) => {
+		coinInAmount: Balance;
+		feeInAmount: Balance;
+		feeOutAmount: Balance;
+	};
 
 	getUpdatedPoolBeforeTrade: (inputs: {
 		coinInType: CoinType;

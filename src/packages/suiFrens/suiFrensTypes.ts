@@ -172,7 +172,6 @@ export interface ApiMixSuiFrensBody {
 
 export interface ApiHarvestSuiFrenFeesBody {
 	stakedPositionIds: ObjectId[];
-	suiFrenType: AnyObjectType;
 	walletAddress: SuiAddress;
 }
 

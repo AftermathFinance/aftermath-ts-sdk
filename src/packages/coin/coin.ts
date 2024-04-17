@@ -1,4 +1,5 @@
 import {
+	AnyObjectType,
 	Balance,
 	CoinDecimal,
 	CoinMetadaWithInfo,
@@ -15,6 +16,7 @@ import {
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { Prices } from "../../general/prices/prices";
+import { AftermathApi } from "../../general/providers";
 
 export class Coin extends Caller {
 	// =========================================================================
@@ -25,6 +27,8 @@ export class Coin extends Caller {
 		suiCoinType:
 			"0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 		suiCoinDecimals: 9,
+		coinObjectType:
+			"0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin",
 	};
 
 	// =========================================================================
@@ -45,7 +49,8 @@ export class Coin extends Caller {
 	// TODO: update this class to not be instantiated with a coin type at all
 	constructor(
 		public readonly coinType?: CoinType,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
 	) {
 		super(network, "coins");
 		this.coinType = coinType;
@@ -166,6 +171,11 @@ export class Coin extends Caller {
 		Helpers.stripLeadingZeroesFromType(coin) ===
 		Helpers.stripLeadingZeroesFromType(Coin.constants.suiCoinType);
 
+	public static isCoinObjectType = (objectType: AnyObjectType) =>
+		Helpers.stripLeadingZeroesFromType(objectType).startsWith(
+			Helpers.stripLeadingZeroesFromType(Coin.constants.coinObjectType)
+		);
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
@@ -196,26 +206,6 @@ export class Coin extends Caller {
 			.filter((amount) => amount > BigInt(0));
 
 		return { coins, balances };
-	};
-
-	public static coinSymbolForCoinType = (
-		coinType: CoinType,
-		coinSymbolToCoinTypes: CoinSymbolToCoinTypes
-	): CoinSymbol | undefined => {
-		try {
-			const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
-			const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
-				([, coinsTypes]) =>
-					coinsTypes
-						.map(Helpers.addLeadingZeroesToType)
-						.includes(fullCoinType)
-			);
-
-			const foundCoinSymbol = foundCoinData?.[0];
-			return foundCoinSymbol;
-		} catch (e) {
-			return undefined;
-		}
 	};
 
 	// =========================================================================
@@ -253,5 +243,36 @@ export class Coin extends Caller {
 		price: number
 	) => {
 		return Coin.balanceWithDecimals(amount, decimals) * price;
+	};
+
+	public static coinSymbolForCoinType = (inputs: {
+		coinType: CoinType;
+		coinSymbolToCoinTypes: CoinSymbolToCoinTypes;
+	}): CoinSymbol | undefined => {
+		const { coinType, coinSymbolToCoinTypes } = inputs;
+		try {
+			const fullCoinType = Helpers.addLeadingZeroesToType(coinType);
+			const foundCoinData = Object.entries(coinSymbolToCoinTypes).find(
+				([, coinsTypes]) =>
+					coinsTypes
+						.map(Helpers.addLeadingZeroesToType)
+						.includes(fullCoinType)
+			);
+
+			const foundCoinSymbol = foundCoinData?.[0];
+			return foundCoinSymbol;
+		} catch (e) {
+			return undefined;
+		}
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Coin();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
 	};
 }

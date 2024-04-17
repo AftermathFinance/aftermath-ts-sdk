@@ -40,7 +40,11 @@ export interface RouterAsyncApiInterface<
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
-	}) => Promise<Balance>;
+	}) => Promise<{
+		coinOutAmount: Balance;
+		feeInAmount: Balance;
+		feeOutAmount: Balance;
+	}>;
 
 	// fetchTradeAmountIn: (inputs: {
 	// 	walletAddress: SuiAddress;

@@ -43,7 +43,7 @@ import {
 	SuiAddress,
 } from "../../../types";
 import { Casting } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Sui } from "../../sui/sui";
 import { SuiFrens } from "../suiFrens";
 
@@ -1291,25 +1291,17 @@ export class SuiFrensApi {
 		};
 	};
 
+	// TODO: refactor to use NftsApi class
 	private fetchOwnedPartialSuiFrenBullsharks = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<PartialSuiFrenObject[]> => {
-		const { walletAddress } = inputs;
-
-		const kioskIds =
-			await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
-				walletAddress,
-				objectType: Sui.constants.objectTypes.kioskOwnerCap,
-				objectFromSuiObjectResponse: (data) => {
-					const fields = Helpers.getObjectFields(data);
-					return fields?.for as ObjectId;
-				},
-			});
+		const kioskOwnerCaps =
+			await this.Provider.Nfts().fetchOwnedKioskOwnerCaps(inputs);
 
 		const allBullsharks = await Promise.all(
-			kioskIds.map((kioskId) =>
+			kioskOwnerCaps.map((kioskOwnerCap) =>
 				this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType({
-					parentObjectId: kioskId,
+					parentObjectId: kioskOwnerCap.kioskObjectId,
 					objectsFromObjectIds: (suiFrenIds) =>
 						this.fetchSuiFrens({ suiFrenIds }),
 					dynamicFieldType: (fieldType) =>

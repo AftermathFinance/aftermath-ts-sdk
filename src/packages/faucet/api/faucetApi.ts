@@ -25,8 +25,8 @@ import {
 	SuiAddress,
 } from "../../../types";
 import { Coin } from "../../coin";
-import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Sui } from "../../sui";
 
 export class FaucetApi {
@@ -94,11 +94,18 @@ export class FaucetApi {
 
 	public fetchRequestCoinAmountTx = async (inputs: {
 		coinType: CoinType;
-		coinPrice: number;
-		coinDecimals: CoinDecimal;
 		walletAddress: SuiAddress;
 	}): Promise<TransactionBlock> => {
-		const { coinType, coinPrice, coinDecimals, walletAddress } = inputs;
+		const { coinType, walletAddress } = inputs;
+
+		const [coinPrice, coinDecimals] = await Promise.all([
+			this.Provider.Prices().fetchPrice({
+				coin: coinType,
+			}),
+			(
+				await this.Provider.Coin().fetchCoinMetadata({ coin: coinType })
+			).decimals,
+		]);
 
 		const requestAmount =
 			Faucet.constants.defaultRequestAmountUsd /

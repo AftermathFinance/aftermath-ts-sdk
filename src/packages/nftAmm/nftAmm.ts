@@ -1,3 +1,4 @@
+import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
 import { NftAmmMarketObject, ObjectId, SuiNetwork, Url } from "../../types";
 import { NftAmmMarket } from "./nftAmmMarket";
@@ -13,7 +14,10 @@ export class NftAmm extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
+	) {
 		super(network, "nft-amm");
 	}
 
@@ -57,4 +61,14 @@ export class NftAmm extends Caller {
 	// 		inputs.objectIds.map((objectId) => this.getNft({ objectId }))
 	// 	);
 	// }
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.NftAmm();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

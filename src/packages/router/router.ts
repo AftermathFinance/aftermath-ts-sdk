@@ -16,6 +16,7 @@ import {
 	ApiRouterPartialCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
+	RouterCompleteTradeRouteWithFee,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
@@ -103,7 +104,7 @@ export class Router extends Caller {
 		abortSignal?: AbortSignal
 	) {
 		return this.fetchApi<
-			RouterCompleteTradeRoute,
+			RouterCompleteTradeRouteWithFee,
 			ApiRouterCompleteTradeRouteBody
 		>("trade-route", inputs, abortSignal);
 	}
@@ -169,7 +170,7 @@ export class Router extends Caller {
 		abortSignal?: AbortSignal
 	) {
 		return this.fetchApi<
-			RouterCompleteTradeRoute,
+			RouterCompleteTradeRouteWithFee,
 			ApiRouterCompleteTradeRouteBody
 		>("trade-route", inputs, abortSignal);
 	}

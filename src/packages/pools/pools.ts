@@ -15,12 +15,16 @@ import {
 	SuiNetwork,
 	Url,
 	ObjectId,
+	PoolStats,
+	ApiPoolsStatsBody,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
 import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { FixedUtils } from "../../general/utils/fixedUtils";
+import { AftermathApi } from "../../general/providers";
+import { PoolsApi } from "./api/poolsApi";
 
 /**
  * @class Pools Provider
@@ -79,7 +83,11 @@ export class Pools extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Pools` instance
 	 */
-	constructor(public readonly network?: SuiNetwork) {
+
+	constructor(
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
+	) {
 		super(network, "pools");
 	}
 
@@ -99,7 +107,7 @@ export class Pools extends Caller {
 	 */
 	public async getPool(inputs: { objectId: ObjectId }) {
 		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
-		return new Pool(pool, this.network);
+		return new Pool(pool, this.network, this.Provider);
 	}
 
 	/**
@@ -124,7 +132,7 @@ export class Pools extends Caller {
 
 	public async getAllPools() {
 		const pools = await this.fetchApi<PoolObject[]>("");
-		return pools.map((pool) => new Pool(pool, this.network));
+		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
 	}
 
 	// =========================================================================
@@ -137,10 +145,7 @@ export class Pools extends Caller {
 	 * @returns A promise that resolves with the API transaction.
 	 */
 	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
-		return this.fetchApiTransaction<ApiPublishLpCoinBody>(
-			"transactions/publish-lp-coin",
-			inputs
-		);
+		return this.useProvider().buildPublishLpCoinTx(inputs);
 	}
 
 	/**
@@ -149,10 +154,7 @@ export class Pools extends Caller {
 	 * @returns A Promise that resolves to the transaction data.
 	 */
 	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
-		return this.fetchApiTransaction<ApiCreatePoolBody>(
-			"transactions/create-pool",
-			inputs
-		);
+		return this.useProvider().fetchCreatePoolTx(inputs);
 	}
 
 	// =========================================================================
@@ -171,10 +173,13 @@ export class Pools extends Caller {
 		if (!Pools.isPossibleLpCoinType(inputs))
 			throw new Error("invalid lp coin type");
 
-		return this.fetchApi<ObjectId, ApiPoolObjectIdForLpCoinTypeBody>(
-			"pool-object-id",
-			inputs
-		);
+		const poolId = this.fetchApi<
+			ObjectId | undefined,
+			ApiPoolObjectIdForLpCoinTypeBody
+		>("pool-object-id", inputs);
+
+		if (!poolId) throw new Error("invalid lp coin type");
+		return poolId;
 	};
 
 	/**
@@ -198,6 +203,17 @@ export class Pools extends Caller {
 	public getTotalVolume24hrs = async (): Promise<number> => {
 		return this.fetchApi("volume-24hrs");
 	};
+
+	/**
+	 * Fetches statistics for pools.
+	 * @async
+	 * @returns {Promise<PoolStats[]>} The statistics for pools.
+	 */
+	public async getPoolsStats(
+		inputs: ApiPoolsStatsBody
+	): Promise<PoolStats[]> {
+		return this.fetchApi("stats", inputs);
+	}
 
 	// =========================================================================
 	//  Fees
@@ -268,5 +284,15 @@ export class Pools extends Caller {
 			lpCoinType.split("::")[1].includes("af_lp") &&
 			lpCoinType.split("::")[2].includes("AF_LP")
 		);
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Pools();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
 	};
 }
