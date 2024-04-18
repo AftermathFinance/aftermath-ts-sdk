@@ -180,7 +180,7 @@ export class RouterAsyncGraph {
 			(acc, cur) =>
 				acc +
 				(Number(cur.coinIn.amount) / Number(coinInAmount)) *
-					(cur.spotPrice ?? 1),
+					cur.spotPrice,
 			0
 		);
 
@@ -190,10 +190,12 @@ export class RouterAsyncGraph {
 			coinIn: {
 				type: completeRoutes[0].coinIn.type,
 				amount: coinInAmount,
+				tradeFee: BigInt(0),
 			},
 			coinOut: {
 				type: completeRoutes[0].coinOut.type,
 				amount: coinOutAmount,
+				tradeFee: BigInt(0),
 			},
 		};
 	};

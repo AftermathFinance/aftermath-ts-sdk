@@ -172,13 +172,13 @@ export type RouterTradePath = RouterTradeInfo & {
 export interface RouterTradeInfo {
 	coinIn: RouterTradeCoin;
 	coinOut: RouterTradeCoin;
-	spotPrice?: number;
+	spotPrice: number;
 }
 
 export interface RouterTradeCoin {
 	type: CoinType;
 	amount: Balance;
-	tradeFee: PoolTradeFee;
+	tradeFee: Balance;
 }
 
 // =========================================================================

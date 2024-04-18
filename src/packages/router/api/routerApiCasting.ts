@@ -33,6 +33,7 @@ export class RouterApiCasting {
 		paths: RouterServicePaths
 	): RouterCompleteTradeRoute => {
 		const routes: RouterTradeRoute[] = paths.data.map((path) => ({
+			// TODO: add spot price
 			paths: path.path.data.map((hop) => ({
 				protocolName: hop.protocol,
 				pool: hop.pool,
@@ -48,6 +49,9 @@ export class RouterApiCasting {
 						Math.round(hop.swap_fee.output_fee_amount)
 					),
 				},
+				spotPrice:
+					Number(BigInt(Math.round(hop.input_amount))) /
+					Number(BigInt(Math.round(hop.output_amount))),
 			})),
 			coinIn: {
 				type: path.path.data[0].input,
@@ -70,27 +74,42 @@ export class RouterApiCasting {
 					)
 				),
 			},
+			spotPrice:
+				Number(BigInt(Math.round(path.path.data[0].input_amount))) /
+				Number(
+					BigInt(
+						Math.round(
+							path.path.data[path.path.data.length - 1]
+								.output_amount
+						)
+					)
+				),
 		}));
+
+		const coinInAmount = Helpers.sumBigInt(
+			routes.map((route) => route.coinIn.amount)
+		);
+		const coinOutAmount = Helpers.sumBigInt(
+			routes.map((route) => route.coinOut.amount)
+		);
+
 		return {
 			routes,
 			coinIn: {
 				type: routes[0].coinIn.type,
-				amount: Helpers.sumBigInt(
-					routes.map((route) => route.coinIn.amount)
-				),
+				amount: coinInAmount,
 				tradeFee: BigInt(
 					Math.round(paths.protocol_fee.input_fee_amount)
 				),
 			},
 			coinOut: {
 				type: routes[routes.length - 1].coinOut.type,
-				amount: Helpers.sumBigInt(
-					routes.map((route) => route.coinOut.amount)
-				),
+				amount: coinOutAmount,
 				tradeFee: BigInt(
 					Math.round(paths.protocol_fee.output_fee_amount)
 				),
 			},
+			spotPrice: Number(coinInAmount) / Number(coinInAmount),
 		};
 	};
 
