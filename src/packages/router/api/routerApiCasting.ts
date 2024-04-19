@@ -122,14 +122,7 @@ export class RouterApiCasting {
 				path: {
 					data: route.paths.map((path) => ({
 						protocol: path.protocolName,
-						pool:
-							"tb_data" in path.pool
-								? path.pool
-								: (() => {
-										throw new Error(
-											"pool within path is for router v1, expected v2"
-										);
-								  })(),
+						pool: path.pool.tb_data,
 						input: path.coinIn.type,
 						output: path.coinOut.type,
 						input_amount: Number(path.coinIn.amount),

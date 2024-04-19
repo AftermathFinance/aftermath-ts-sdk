@@ -3,20 +3,13 @@ import {
 	ApiRouterTransactionForCompleteTradeRouteBody,
 	CoinType,
 	RouterCompleteTradeRoute,
-	RouterSerializableCompleteGraph,
-	RouterSynchronousSerializablePool,
 	SuiNetwork,
-	Url,
 	ApiRouterTradeEventsBody,
 	RouterTradeEvent,
-	RouterAsyncSerializablePool,
-	RouterSynchronousProtocolName,
-	ObjectId,
 	Balance,
 	ApiRouterPartialCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
-	RouterCompleteTradeRouteWithFee,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
@@ -79,15 +72,6 @@ export class Router extends Caller {
 	}
 
 	/**
-	 * Queries current graph of router including all pools and coins.
-	 *
-	 * @returns Complete graph of all pools used in router
-	 */
-	public async getGraph() {
-		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
-	}
-
-	/**
 	 * Creates route across multiple pools and protocols for best trade execution price
 	 *
 	 * @param inputs - Details for router to construct trade route
@@ -104,53 +88,9 @@ export class Router extends Caller {
 		abortSignal?: AbortSignal
 	) {
 		return this.fetchApi<
-			RouterCompleteTradeRouteWithFee,
+			RouterCompleteTradeRoute,
 			ApiRouterCompleteTradeRouteBody
 		>("trade-route", inputs, abortSignal);
-	}
-
-	/**
-	 * Creates route across multiple pools and protocols for best trade execution price
-	 *
-	 * @param inputs - Details for router to construct trade route
-	 * @param abortSignal - Optional signal to abort passed to fetch call
-	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
-	 */
-	public async getCompleteTradeRouteGivenAmountInV1(
-		inputs: ApiRouterPartialCompleteTradeRouteBody & {
-			/**
-			 * Amount of coin being given away
-			 */
-			coinInAmount: Balance;
-		},
-		abortSignal?: AbortSignal
-	) {
-		return this.fetchApi<
-			RouterCompleteTradeRoute,
-			ApiRouterCompleteTradeRouteBody
-		>("trade-route-v1", inputs, abortSignal);
-	}
-
-	/**
-	 * Creates route across multiple pools and protocols for best trade execution price
-	 *
-	 * @param inputs - Details for router to construct trade route
-	 * @param abortSignal - Optional signal to abort passed to fetch call
-	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
-	 */
-	public async getCompleteTradeRouteGivenAmountInV2(
-		inputs: ApiRouterPartialCompleteTradeRouteBody & {
-			/**
-			 * Amount of coin being given away
-			 */
-			coinInAmount: Balance;
-		},
-		abortSignal?: AbortSignal
-	) {
-		return this.fetchApi<
-			RouterCompleteTradeRoute,
-			ApiRouterCompleteTradeRouteBody
-		>("trade-route-v2", inputs, abortSignal);
 	}
 
 	/**
@@ -170,76 +110,15 @@ export class Router extends Caller {
 		abortSignal?: AbortSignal
 	) {
 		return this.fetchApi<
-			RouterCompleteTradeRouteWithFee,
+			RouterCompleteTradeRoute,
 			ApiRouterCompleteTradeRouteBody
 		>("trade-route", inputs, abortSignal);
-	}
-
-	/**
-	 * Creates route across multiple pools and protocols for best trade execution price
-	 *
-	 * @param inputs - Details for router to construct trade route
-	 * @param abortSignal - Optional signal to abort passed to fetch call
-	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
-	 */
-	public async getCompleteTradeRouteGivenAmountOutV1(
-		inputs: ApiRouterPartialCompleteTradeRouteBody & {
-			/**
-			 * Amount of coin expected to receive
-			 */
-			coinOutAmount: Balance;
-		},
-		abortSignal?: AbortSignal
-	) {
-		return this.fetchApi<
-			RouterCompleteTradeRoute,
-			ApiRouterCompleteTradeRouteBody
-		>("trade-route-v1", inputs, abortSignal);
-	}
-
-	/**
-	 * Creates route across multiple pools and protocols for best trade execution price
-	 *
-	 * @param inputs - Details for router to construct trade route
-	 * @param abortSignal - Optional signal to abort passed to fetch call
-	 * @returns Routes, paths, and amounts of each smaller trade within complete trade
-	 */
-	public async getCompleteTradeRouteGivenAmountOutV2(
-		inputs: ApiRouterPartialCompleteTradeRouteBody & {
-			/**
-			 * Amount of coin expected to receive
-			 */
-			coinOutAmount: Balance;
-		},
-		abortSignal?: AbortSignal
-	) {
-		return this.fetchApi<
-			RouterCompleteTradeRoute,
-			ApiRouterCompleteTradeRouteBody
-		>("trade-route-v2", inputs, abortSignal);
 	}
 
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
-	/**
-	 * Creates `TranscationBlock` from previously created complete trade route
-	 *
-	 * @example
-	 * ```
-	 * const route = await router.getCompleteTradeRouteGivenAmountIn(routeDetails);
-	 * const tx = await router.getTransactionForCompleteTradeRoute({
-	 * 	completeRoute: route,
-	 * 	walletAddress: "0xBEEF",
-	 * 	slippage: 0.01
-	 * });
-	 * // sign and execute tx using wallet
-	 * ```
-	 *
-	 * @param inputs - Info to construct router trade transaction from complete route
-	 * @returns Executable `TranscationBlock` trading from `coinIn` to `coinOut`
-	 */
 	public async getTransactionForCompleteTradeRoute(
 		inputs: ApiRouterTransactionForCompleteTradeRouteBody
 	) {
@@ -249,6 +128,7 @@ export class Router extends Caller {
 		);
 	}
 
+	// TODO: update inputs ?
 	public async addTransactionForCompleteTradeRoute(
 		inputs: Omit<
 			ApiRouterAddTransactionForCompleteTradeRouteBody,

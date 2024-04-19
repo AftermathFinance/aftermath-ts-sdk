@@ -17,9 +17,7 @@ import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
 import {
 	CoinType,
-	PartialRouterOptions,
 	RouterProtocolName,
-	RouterSynchronousOptions,
 	ScallopProviders,
 	UniqueId,
 	Url,
@@ -168,19 +166,11 @@ export class AftermathApi {
 	public Perpetuals = () => new PerpetualsApi(this);
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
-
 	/**
 	 * Creates a new instance of the RouterApi class.
-	 * @param protocols An optional array of protocol names to use for the router.
-	 * @param regularOptions An optional object containing regular router options.
-	 * @param preAsyncOptions An optional object containing pre-async router options.
 	 * @returns A new instance of the RouterApi class.
 	 */
-	public Router = (
-		protocols?: RouterProtocolName[],
-		regularOptions?: PartialRouterOptions,
-		preAsyncOptions?: Partial<RouterSynchronousOptions>
-	) => new RouterApi(this, protocols, regularOptions, preAsyncOptions);
+	public Router = () => new RouterApi(this);
 
 	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
 		new LeveragedStakingApi(this, ScallopProviders);

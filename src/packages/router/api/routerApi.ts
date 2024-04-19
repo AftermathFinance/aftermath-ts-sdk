@@ -1,52 +1,28 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { RouterGraph } from "../utils/synchronous/routerGraph";
 import {
 	Balance,
 	CoinType,
 	ExternalFee,
 	RouterCompleteTradeRoute,
 	Slippage,
-	SuiNetwork,
-	Url,
-	RouterSerializableCompleteGraph,
-	RouterProtocolName,
 	UserEventsInputs,
-	RouterAsyncSerializablePool,
-	isRouterSynchronousProtocolName,
-	isRouterAsyncProtocolName,
-	SynchronousProtocolsToPoolObjectIds,
-	RouterSynchronousOptions,
-	AllRouterOptions,
-	PartialRouterOptions,
 	SuiAddress,
-	TxBytes,
-	ApiRouterDynamicGasBody,
-	RouterSynchronousSerializablePool,
 	ServiceCoinData,
 	SerializedTransaction,
 	RouterServicePaths,
-	IFixed,
+	RouterTradeEvent,
+	AnyObjectType,
+	RouterAddresses,
 } from "../../../types";
 import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
-import { DeepBookApi } from "../../external/deepBook/deepBookApi";
-import { PoolsApi } from "../../pools/api/poolsApi";
-import { CetusApi } from "../../external/cetus/cetusApi";
-import { TurbosApi } from "../../external/turbos/turbosApi";
-import { RouterApiHelpers } from "./routerApiHelpers";
-import { InterestApi } from "../../external/interest/interestApi";
-import { KriyaApi } from "../../external/kriya/kriyaApi";
-import { BaySwapApi } from "../../external/baySwap/baySwapApi";
-import { SuiswapApi } from "../../external/suiswap/suiswapApi";
-import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
-import { FlowXApi } from "../../external/flowX/flowXApi";
-import { Coin } from "../..";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 import { Casting, Helpers } from "../../..";
-import { SuiArgument } from "@mysten/sui.js/client";
-import { TransactionObjectArgument } from "@scallop-io/sui-kit";
+import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { RouterApiCasting } from "./routerApiCasting";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -57,34 +33,12 @@ export class RouterApi {
 	//  Constants
 	// =========================================================================
 
-	private static readonly defaultRouterOptions: AllRouterOptions = {
-		regular: {
-			synchronous: {
-				maxRouteLength: 3,
-				tradePartitionCount: 2,
-				minRoutesToCheck: 5,
-				maxRoutesToCheck: 20,
-				maxGasCost: BigInt(500_000_000), // 0.5 SUI
-			},
-			async: {
-				tradePartitionCount: 1,
-				maxAsyncPoolsPerProtocol: 2,
-			},
+	public static readonly constants = {
+		moduleNames: {
+			swapCap: "swap_cap",
 		},
-		preAsync: {
-			maxRouteLength: 2,
-			tradePartitionCount: 1,
-			minRoutesToCheck: 5,
-			maxRoutesToCheck: 20,
-			maxGasCost: BigInt(500_000_000), // 0.5 SUI
-			// maxGasCost: BigInt(333_333_333), // 0.333 SUI
-		},
-	};
-
-	private static readonly constants = {
-		dynamicGas: {
-			expectedRouterGasCostUpperBound: BigInt(7_000_000), // 0.007 SUI (mainnet)
-			slippage: 0.1, // 10%
+		eventNames: {
+			routerTrade: "SwapCompletedEvent",
 		},
 	};
 
@@ -92,9 +46,10 @@ export class RouterApi {
 	//  Class Members
 	// =========================================================================
 
-	public readonly Helpers;
-
-	private readonly options;
+	public readonly addresses: RouterAddresses;
+	public readonly eventTypes: {
+		routerTrade: AnyObjectType;
+	};
 
 	// =========================================================================
 	//  Constructor
@@ -104,55 +59,18 @@ export class RouterApi {
 	 * Creates an instance of RouterApi.
 	 * @constructor
 	 * @param {AftermathApi} Provider - The Aftermath API instance.
-	 * @param {RouterProtocolName[]} protocols - The list of protocols to use.
-	 * @param {PartialRouterOptions} regularOptions - The regular options to use.
-	 * @param {Partial<RouterSynchronousOptions>} preAsyncOptions - The pre-async options to use.
 	 */
-	constructor(
-		private readonly Provider: AftermathApi,
-		public readonly protocols: RouterProtocolName[] = [
-			"Aftermath",
-			"afSUI",
-		],
-		regularOptions?: PartialRouterOptions,
-		preAsyncOptions?: Partial<RouterSynchronousOptions>
-	) {
-		const optionsToSet: AllRouterOptions = {
-			regular: {
-				synchronous: {
-					...RouterApi.defaultRouterOptions.regular.synchronous,
-					...regularOptions?.synchronous,
-				},
-				async: {
-					...RouterApi.defaultRouterOptions.regular.async,
-					...regularOptions?.async,
-				},
-			},
-			preAsync: {
-				...RouterApi.defaultRouterOptions.preAsync,
-				...preAsyncOptions,
-			},
+	constructor(private readonly Provider: AftermathApi) {
+		if (!this.Provider.addresses.router)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		this.addresses = this.Provider.addresses.router;
+		this.eventTypes = {
+			routerTrade: this.routerTradeEventType(),
 		};
-
-		this.options = optionsToSet;
-
-		this.Helpers = new RouterApiHelpers(Provider, optionsToSet);
 	}
-
-	// =========================================================================
-	//  External Packages
-	// =========================================================================
-
-	public Aftermath = () => new PoolsApi(this.Provider);
-	public DeepBook = () => new DeepBookApi(this.Provider);
-	public Cetus = () => new CetusApi(this.Provider);
-	public Turbos = () => new TurbosApi(this.Provider);
-	public FlowX = () => new FlowXApi(this.Provider);
-	public Interest = () => new InterestApi(this.Provider);
-	public Kriya = () => new KriyaApi(this.Provider);
-	public BaySwap = () => new BaySwapApi(this.Provider);
-	public Suiswap = () => new SuiswapApi(this.Provider);
-	public BlueMove = () => new BlueMoveApi(this.Provider);
 
 	// =========================================================================
 	//  Public Methods
@@ -175,32 +93,8 @@ export class RouterApi {
 	};
 
 	// =========================================================================
-	//  Graph
-	// =========================================================================
-
-	public fetchCreateSerializableGraph = this.Provider.withCache({
-		key: "fetchCreateSerializableGraph",
-		expirationSeconds: 60,
-		callback: async (): Promise<RouterSerializableCompleteGraph> => {
-			const [asyncPools, synchronousPools] = await Promise.all([
-				this.fetchAsyncPools(),
-				this.fetchSynchronousPools(),
-			]);
-			return this.Helpers.fetchCreateSerializableGraph({
-				pools: [...asyncPools, ...synchronousPools],
-			});
-		},
-	});
-
-	// =========================================================================
 	//  Coin Paths
 	// =========================================================================
-
-	public supportedCoinsFromGraph = (inputs: {
-		graph: RouterSerializableCompleteGraph;
-	}) => {
-		return RouterGraph.supportedCoinsFromGraph(inputs);
-	};
 
 	public supportedCoins = () => {
 		return this.Provider.indexerCaller.fetchIndexer(
@@ -223,51 +117,6 @@ export class RouterApi {
 	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
 	 */
 	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
-		network: SuiNetwork;
-		graph: RouterSerializableCompleteGraph;
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		referrer?: SuiAddress;
-		externalFee?: ExternalFee;
-		excludeProtocols?: RouterProtocolName[];
-	}): Promise<RouterCompleteTradeRoute> => {
-		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
-			...inputs,
-			coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
-			coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
-			protocols: this.protocols,
-		});
-	};
-
-	/**
-	 * Fetches the complete trade route given the output amount of the trade.
-	 * @param inputs - An object containing the necessary inputs for fetching the trade route.
-	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
-	 */
-	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
-		network: SuiNetwork;
-		graph: RouterSerializableCompleteGraph;
-		coinInType: CoinType;
-		coinOutAmount: Balance;
-		coinOutType: CoinType;
-		referrer?: SuiAddress;
-		externalFee?: ExternalFee;
-		excludeProtocols?: RouterProtocolName[];
-	}): Promise<RouterCompleteTradeRoute> => {
-		return this.Helpers.fetchCompleteTradeRouteGivenAmountOut({
-			...inputs,
-			coinInType: Helpers.addLeadingZeroesToType(inputs.coinInType),
-			coinOutType: Helpers.addLeadingZeroesToType(inputs.coinOutType),
-			protocols: this.protocols,
-		});
-	};
-
-	// =========================================================================
-	//  V2
-	// =========================================================================
-
-	public fetchCompleteTradeRouteGivenAmountInV2 = async (inputs: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
@@ -313,7 +162,12 @@ export class RouterApi {
 		};
 	};
 
-	public fetchCompleteTradeRouteGivenAmountOutV2 = async (inputs: {
+	/**
+	 * Fetches the complete trade route given the output amount of the trade.
+	 * @param inputs - An object containing the necessary inputs for fetching the trade route.
+	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
+	 */
+	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
 		coinInType: CoinType;
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
@@ -364,7 +218,7 @@ export class RouterApi {
 		};
 	};
 
-	public fetchCompleteTradeRouteAndTxGivenAmountInV2 = async (inputs: {
+	public fetchCompleteTradeRouteAndTxGivenAmountIn = async (inputs: {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
@@ -494,7 +348,7 @@ export class RouterApi {
 		};
 	};
 
-	public fetchCompleteTradeRouteAndTxGivenAmountOutV2 = async (inputs: {
+	public fetchCompleteTradeRouteAndTxGivenAmountOut = async (inputs: {
 		coinInType: CoinType;
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
@@ -520,8 +374,9 @@ export class RouterApi {
 			transferCoinOut,
 		} = inputs;
 
-		const completeRoute =
-			await this.fetchCompleteTradeRouteGivenAmountOutV2(inputs);
+		const completeRoute = await this.fetchCompleteTradeRouteGivenAmountOut(
+			inputs
+		);
 
 		const initTx = inputs.tx ?? new TransactionBlock();
 		if (walletAddress) initTx.setSender(walletAddress);
@@ -540,7 +395,7 @@ export class RouterApi {
 						throw new Error("no walletAddress provided");
 				  })());
 
-		const { tx, coinOut } = await this.fetchAddTxForCompleteTradeRouteV2({
+		const { tx, coinOut } = await this.fetchTxForCompleteTradeRoute({
 			...inputs,
 			completeRoute,
 			coinIn: coinTxArg,
@@ -562,47 +417,7 @@ export class RouterApi {
 	//  Transactions
 	// =========================================================================
 
-	/**
-	 * Fetches a transaction for a complete trade route.
-	 * @param inputs An object containing the wallet address, complete trade route, slippage, and optional sponsored transaction flag.
-	 * @returns A promise that resolves to a TransactionBlock object.
-	 */
-	public async fetchTransactionForCompleteTradeRoute(inputs: {
-		walletAddress: SuiAddress;
-		completeRoute: RouterCompleteTradeRoute;
-		slippage: Slippage;
-		isSponsoredTx?: boolean;
-	}): Promise<TransactionBlock> {
-		const tx = new TransactionBlock();
-		await this.Helpers.fetchTransactionForCompleteTradeRoute({
-			...inputs,
-			tx,
-			withTransfer: true,
-		});
-		return tx;
-	}
-
-	/**
-	 * Fetches a transaction argument for a complete trade route.
-	 * @param inputs An object containing the necessary inputs for the transaction.
-	 * @returns A promise that resolves to a transaction argument, or undefined if the transaction failed.
-	 */
-	public async fetchAddTransactionForCompleteTradeRoute(inputs: {
-		tx: TransactionBlock;
-		walletAddress: SuiAddress;
-		completeRoute: RouterCompleteTradeRoute;
-		slippage: Slippage;
-		coinInId?: TransactionArgument;
-		isSponsoredTx?: boolean;
-	}): Promise<TransactionArgument | undefined> {
-		return this.Helpers.fetchTransactionForCompleteTradeRoute(inputs);
-	}
-
-	// =========================================================================
-	//  V2
-	// =========================================================================
-
-	public fetchAddTxForCompleteTradeRouteV2 = async (inputs: {
+	public fetchTxForCompleteTradeRoute = async (inputs: {
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		tx?: TransactionBlock;
@@ -723,28 +538,32 @@ export class RouterApi {
 	 * @returns A Promise that resolves with the fetched trade events.
 	 */
 	public async fetchTradeEvents(inputs: UserEventsInputs) {
-		return this.Helpers.SynchronousHelpers.fetchTradeEvents(inputs);
+		return this.Provider.Events().fetchCastEventsWithCursor<
+			RouterTradeEventOnChain,
+			RouterTradeEvent
+		>({
+			...inputs,
+			query: {
+				// And: [
+				// 	{
+				MoveEventType: this.eventTypes.routerTrade,
+				// 	},
+				// 	{
+				// 		Sender: inputs.walletAddress,
+				// 	},
+				// ],
+			},
+			eventFromEventOnChain: RouterApiCasting.routerTradeEventFromOnChain,
+		});
 	}
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
 	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
-
-	private fetchAsyncPools = async (): Promise<
-		RouterAsyncSerializablePool[]
-	> => {
-		return this.Helpers.AsyncHelpers.fetchAllPools({
-			protocols: this.protocols.filter(isRouterAsyncProtocolName),
-		});
-	};
-
-	private fetchSynchronousPools = async (): Promise<
-		RouterSynchronousSerializablePool[]
-	> => {
-		return this.Helpers.SynchronousHelpers.fetchAllPools({
-			protocols: this.protocols.filter(isRouterSynchronousProtocolName),
-		});
-	};
 
 	private static transferTxMetadata = (inputs: {
 		initTx: TransactionBlock;
@@ -775,4 +594,15 @@ export class RouterApi {
 		)
 			newTx.setGasPrice(initTx.blockData.gasConfig.price);
 	};
+
+	// =========================================================================
+	//  Event Types
+	// =========================================================================
+
+	private routerTradeEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.utils,
+			RouterApi.constants.moduleNames.swapCap,
+			RouterApi.constants.eventNames.routerTrade
+		);
 }

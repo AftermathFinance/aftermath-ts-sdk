@@ -1145,19 +1145,13 @@ export class FarmsApi {
 				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
 
 			if (inputs.claimSuiAsAfSui && Coin.isCoinObjectType(coinType)) {
-				const validatorAddress =
-					this.Provider.Staking().addresses.routerWrapper?.objects
-						.aftermathValidator;
-				if (!validatorAddress)
-					throw new Error(
-						"aftermath validator address has not been set in provider"
-					);
-
 				this.Provider.Staking().stakeTx({
 					tx,
-					validatorAddress,
 					suiCoin: coinToTransfer,
 					withTransfer: true,
+					validatorAddress:
+						this.Provider.Staking().addresses.objects
+							.aftermathValidator,
 				});
 			} else {
 				tx.transferObjects([coinToTransfer], tx.pure(walletAddress));
