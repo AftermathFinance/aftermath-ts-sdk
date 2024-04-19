@@ -202,6 +202,17 @@ export class RouterApi {
 		return RouterGraph.supportedCoinsFromGraph(inputs);
 	};
 
+	public supportedCoins = () => {
+		return this.Provider.indexerCaller.fetchIndexer(
+			"router/supported-coins",
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+	};
+
 	// =========================================================================
 	//  Routing
 	// =========================================================================
@@ -260,9 +271,7 @@ export class RouterApi {
 		coinInType: CoinType;
 		coinInAmount: Balance;
 		coinOutType: CoinType;
-		// TODO: handle this
 		referrer?: SuiAddress;
-		// TODO: handle this
 		externalFee?: ExternalFee;
 	}): Promise<RouterCompleteTradeRoute> => {
 		const { coinInType, coinOutType, coinInAmount, referrer, externalFee } =
@@ -286,6 +295,57 @@ export class RouterApi {
 				to_coin_type: coinOutType,
 				// NOTE: is this conversion safe ?
 				input_amount: Number(coinInAmount),
+				referred: referrer !== undefined,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+
+		console.log("paths", JSON.stringify(paths, null, 4));
+
+		return {
+			...Casting.router.routerCompleteTradeRouteFromServicePaths(paths),
+			// NOTE: should these be here ?
+			referrer,
+			externalFee,
+		};
+	};
+
+	public fetchCompleteTradeRouteGivenAmountOutV2 = async (inputs: {
+		coinInType: CoinType;
+		coinOutAmount: Balance;
+		coinOutType: CoinType;
+		referrer?: SuiAddress;
+		externalFee?: ExternalFee;
+	}): Promise<RouterCompleteTradeRoute> => {
+		const {
+			coinInType,
+			coinOutType,
+			coinOutAmount,
+			referrer,
+			externalFee,
+		} = inputs;
+
+		const { paths } = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				input_amount: number;
+				paths: RouterServicePaths;
+			},
+			{
+				from_coin_type: CoinType;
+				to_coin_type: CoinType;
+				output_amount: number;
+				referred: boolean;
+			}
+		>(
+			"router/backward-trade-route",
+			{
+				from_coin_type: coinInType,
+				to_coin_type: coinOutType,
+				// NOTE: is this conversion safe ?
+				output_amount: Number(coinOutAmount),
 				referred: referrer !== undefined,
 			},
 			undefined,
@@ -420,9 +480,6 @@ export class RouterApi {
 			tx.transferObjects([coinOut], tx.pure(walletAddress));
 		}
 
-		// TODO: take fee / return coin ?
-		// tx.transferObjects([output_coin], tx.pure(walletAddress));
-
 		return {
 			tx,
 			coinOut,
@@ -434,6 +491,70 @@ export class RouterApi {
 				referrer,
 				externalFee,
 			},
+		};
+	};
+
+	public fetchCompleteTradeRouteAndTxGivenAmountOutV2 = async (inputs: {
+		coinInType: CoinType;
+		coinOutAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		tx?: TransactionBlock;
+		coinIn?: TransactionArgument;
+		walletAddress?: SuiAddress;
+		referrer?: SuiAddress;
+		externalFee?: ExternalFee;
+		isSponsoredTx?: boolean;
+		transferCoinOut?: boolean;
+	}): Promise<{
+		tx: TransactionBlock;
+		completeRoute: RouterCompleteTradeRoute;
+		coinOut: TransactionArgument;
+		coinInAmount: Balance;
+	}> => {
+		const {
+			coinInType,
+			walletAddress,
+			coinIn,
+			isSponsoredTx,
+			transferCoinOut,
+		} = inputs;
+
+		const completeRoute =
+			await this.fetchCompleteTradeRouteGivenAmountOutV2(inputs);
+
+		const initTx = inputs.tx ?? new TransactionBlock();
+		if (walletAddress) initTx.setSender(walletAddress);
+
+		const coinTxArg =
+			coinIn ??
+			(walletAddress
+				? await this.Provider.Coin().fetchCoinWithAmountTx({
+						tx: initTx,
+						coinAmount: completeRoute.coinIn.amount,
+						coinType: coinInType,
+						walletAddress,
+						isSponsoredTx,
+				  })
+				: (() => {
+						throw new Error("no walletAddress provided");
+				  })());
+
+		const { tx, coinOut } = await this.fetchAddTxForCompleteTradeRouteV2({
+			...inputs,
+			completeRoute,
+			coinIn: coinTxArg,
+		});
+
+		if (transferCoinOut) {
+			tx.transferObjects([coinOut], tx.pure(walletAddress));
+		}
+
+		return {
+			tx,
+			coinOut,
+			coinInAmount: completeRoute.coinIn.amount,
+			completeRoute,
 		};
 	};
 
