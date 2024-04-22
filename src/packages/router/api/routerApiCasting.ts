@@ -31,7 +31,7 @@ export class RouterApiCasting {
 
 	public static routerCompleteTradeRouteFromServicePaths = (
 		paths: RouterServicePaths
-	): RouterCompleteTradeRoute => {
+	): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> => {
 		const routes: RouterTradeRoute[] = paths.data.map((path) => ({
 			// TODO: add spot price
 			paths: path.path.data.map((hop) => ({
@@ -109,7 +109,7 @@ export class RouterApiCasting {
 					Math.round(paths.protocol_fee.output_fee_amount)
 				),
 			},
-			spotPrice: Number(coinInAmount) / Number(coinInAmount),
+			spotPrice: Number(coinInAmount) / Number(coinOutAmount),
 		};
 	};
 
@@ -122,7 +122,7 @@ export class RouterApiCasting {
 				path: {
 					data: route.paths.map((path) => ({
 						protocol: path.protocolName,
-						pool: path.pool.tb_data,
+						pool: path.pool,
 						input: path.coinIn.type,
 						output: path.coinOut.type,
 						input_amount: Number(path.coinIn.amount),

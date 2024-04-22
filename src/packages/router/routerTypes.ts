@@ -55,13 +55,15 @@ export type RouterProtocolName =
 
 export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	routes: RouterTradeRoute[];
+	netTradeFeePercentage: Percentage;
 	referrer?: SuiAddress;
 	externalFee?: ExternalFee;
 };
 
-export type RouterCompleteTradeRouteWithFee = RouterCompleteTradeRoute & {
-	netTradeFeePercentage: Percentage;
-};
+/**
+ * @deprecated please use `RouterCompleteTradeRoute` instead
+ */
+export type RouterCompleteTradeRouteWithFee = RouterCompleteTradeRoute;
 
 export type RouterTradeRoute = RouterTradeInfo & {
 	paths: RouterTradePath[];
@@ -218,8 +220,8 @@ export interface RouterServiceSwapFee {
 }
 
 export interface RouterServicePoolMetadata {
-	// protocol: ProtocolFiner
+	protocol: any; // ?
 	pool_id: ObjectId;
 	tb_data: any; // TBData
-	// assets: Vec<Asset>
+	assets: [CoinType, CoinType];
 }

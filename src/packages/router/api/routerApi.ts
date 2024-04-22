@@ -13,13 +13,15 @@ import {
 	RouterTradeEvent,
 	AnyObjectType,
 	RouterAddresses,
+	Percentage,
+	RouterTradePath,
 } from "../../../types";
 import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
-import { Casting, Helpers } from "../../..";
+import { Casting, Coin, Helpers } from "../../..";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
@@ -154,8 +156,15 @@ export class RouterApi {
 
 		console.log("paths", JSON.stringify(paths, null, 4));
 
+		const completeRoute =
+			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
+				completeRoute:
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
+			});
 		return {
-			...Casting.router.routerCompleteTradeRouteFromServicePaths(paths),
+			...completeRoute,
 			// NOTE: should these be here ?
 			referrer,
 			externalFee,
@@ -210,8 +219,15 @@ export class RouterApi {
 
 		console.log("paths", JSON.stringify(paths, null, 4));
 
+		const completeRoute =
+			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
+				completeRoute:
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
+			});
 		return {
-			...Casting.router.routerCompleteTradeRouteFromServicePaths(paths),
+			...completeRoute,
 			// NOTE: should these be here ?
 			referrer,
 			externalFee,
@@ -334,14 +350,19 @@ export class RouterApi {
 			tx.transferObjects([coinOut], tx.pure(walletAddress));
 		}
 
+		const completeRoute =
+			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
+				completeRoute:
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
+			});
 		return {
 			tx,
 			coinOut,
 			coinOutAmount: BigInt(Math.round(output_amount)),
 			completeRoute: {
-				...Casting.router.routerCompleteTradeRouteFromServicePaths(
-					paths
-				),
+				...completeRoute,
 				referrer,
 				externalFee,
 			},
@@ -459,11 +480,13 @@ export class RouterApi {
 						throw new Error("no walletAddress provided");
 				  })());
 
+		console.log("1");
 		const txBytes = await initTx.build({
 			client: this.Provider.provider,
 			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
+		console.log("2");
 
 		const { output_coin, tx_kind } =
 			await this.Provider.indexerCaller.fetchIndexer<
@@ -508,12 +531,14 @@ export class RouterApi {
 				undefined,
 				true
 			);
+		console.log("3");
 
 		const tx = TransactionBlock.fromKind(tx_kind);
 		RouterApi.transferTxMetadata({
 			initTx,
 			newTx: tx,
 		});
+		console.log("4");
 
 		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinData({
 			serviceCoinData: output_coin,
@@ -521,6 +546,7 @@ export class RouterApi {
 		if (transferCoinOut) {
 			tx.transferObjects([coinOut], tx.pure(walletAddress));
 		}
+		console.log("5");
 
 		return {
 			tx,
@@ -558,11 +584,83 @@ export class RouterApi {
 	}
 
 	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private async fetchAddNetTradeFeePercentageToCompleteTradeRoute(inputs: {
+		completeRoute: Omit<RouterCompleteTradeRoute, "netTradeFeePercentage">;
+	}): Promise<RouterCompleteTradeRoute> {
+		const { completeRoute } = inputs;
+
+		const coinsWithFees = completeRoute.routes
+			.reduce(
+				(acc, route) => [...acc, ...route.paths],
+				[] as RouterTradePath[]
+			)
+			.reduce(
+				(acc, path) => [
+					...acc,
+					{
+						coinType: path.coinIn.type,
+						fee: path.coinIn.tradeFee,
+					},
+					{
+						coinType: path.coinOut.type,
+						fee: path.coinOut.tradeFee,
+					},
+				],
+				[] as { coinType: CoinType; fee: Balance }[]
+			)
+			.filter((data) => data.fee > BigInt(0));
+
+		const coins = Helpers.uniqueArray([
+			...coinsWithFees.map((data) => data.coinType),
+			completeRoute.coinOut.type,
+		]);
+		const [coinsToPrice, coinsToDecimals] = await Promise.all([
+			this.Provider.Prices().fetchCoinsToPrice({
+				coins,
+			}),
+			this.Provider.Coin().fetchCoinsToDecimals({
+				coins,
+			}),
+		]);
+
+		const netFeeUsd = coinsWithFees.reduce(
+			(acc, data) =>
+				acc +
+				(coinsToPrice[data.coinType] < 0
+					? 0
+					: coinsToPrice[data.coinType]) *
+					Coin.balanceWithDecimals(
+						data.fee,
+						coinsToDecimals[data.coinType]
+					),
+			0
+		);
+		const coinOutAmountUsd =
+			(coinsToPrice[completeRoute.coinOut.type] < 0
+				? 0
+				: coinsToPrice[completeRoute.coinOut.type]) *
+			Coin.balanceWithDecimals(
+				completeRoute.coinOut.amount,
+				coinsToDecimals[completeRoute.coinOut.type]
+			);
+
+		const netTradeFeePercentage =
+			coinOutAmountUsd <= 0 ? 0 : netFeeUsd / coinOutAmountUsd;
+		return {
+			...completeRoute,
+			netTradeFeePercentage,
+		};
+	}
+
+	// =========================================================================
 	//  Events
 	// =========================================================================
 
 	// =========================================================================
-	//  Private Helpers
+	//  Private Static Helpers
 	// =========================================================================
 
 	private static transferTxMetadata = (inputs: {

@@ -35,6 +35,7 @@ export class IndexerCaller {
 		if (!response.ok) throw new Error(await response.text());
 
 		const json = JSON.stringify(await response.json());
+		console.log("json", JSON.stringify(json, null, 4));
 		const output = Helpers.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
