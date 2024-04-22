@@ -99,20 +99,44 @@ export class PerpetualsApiCasting {
 		response: PerpetualsAccountPositionsIndexerResponse
 	): PerpetualsAccountObject => {
 		return {
-			positions: response.map(data => ({
-				collateral: BigInt(data[1].position.collateral),
-			baseAssetAmount: BigInt(data[1].position.base_asset_amount),
-			quoteAssetNotionalAmount: BigInt(data[1].position.quote_asset_notional_amount),
-			cumFundingRateLong: BigInt(data[1].position.cum_funding_rate_long),
-			cumFundingRateShort: BigInt(data[1].position.cum_funding_rate_short),
-			asksQuantity: BigInt(data[1].position.asks_quantity),
-			bidsQuantity: BigInt(data[1].position.bids_quantity),
-			collateralCoinType: Helpers.addLeadingZeroesToType("TODO"),
-			marketId: Helpers.addLeadingZeroesToType(data[0]),
-			pendingOrders: bigint;
-			makerFee: BigInt(data[1].position.maker_fee),
-			takerFee: BigInt(data[1].position.taker_fee),
-			}))
+			positions: response.map((data) => ({
+				collateral: Casting.IFixed.iFixedFromBytes(
+					data[1].position.collateral
+				),
+				baseAssetAmount: Casting.IFixed.iFixedFromBytes(
+					data[1].position.base_asset_amount
+				),
+				quoteAssetNotionalAmount: Casting.IFixed.iFixedFromBytes(
+					data[1].position.quote_asset_notional_amount
+				),
+				cumFundingRateLong: Casting.IFixed.iFixedFromBytes(
+					data[1].position.cum_funding_rate_long
+				),
+				cumFundingRateShort: Casting.IFixed.iFixedFromBytes(
+					data[1].position.cum_funding_rate_short
+				),
+				asksQuantity: Casting.IFixed.iFixedFromBytes(
+					data[1].position.asks_quantity
+				),
+				bidsQuantity: Casting.IFixed.iFixedFromBytes(
+					data[1].position.bids_quantity
+				),
+				collateralCoinType: Helpers.addLeadingZeroesToType("TODO"),
+				marketId: Helpers.addLeadingZeroesToType(data[0]),
+				// NOTE: do we want to store all pending order data here as well ?
+				pendingOrders: BigInt(
+					Math.round(
+						Object.keys(data[1].pending_orders.bids).length +
+							Object.keys(data[1].pending_orders.asks).length
+					)
+				),
+				makerFee: Casting.IFixed.iFixedFromBytes(
+					data[1].position.maker_fee
+				),
+				takerFee: Casting.IFixed.iFixedFromBytes(
+					data[1].position.taker_fee
+				),
+			})),
 		};
 	};
 

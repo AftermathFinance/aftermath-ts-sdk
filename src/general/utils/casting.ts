@@ -4,7 +4,7 @@ import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
-import { Byte, SuiAddress } from "../types";
+import { Byte, IFixed, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
 import { bcsRegistry } from "@mysten/sui.js/bcs";
 import { FixedUtils } from "./fixedUtils";

@@ -35,4 +35,14 @@ export class IFixedUtils {
 			((value ^ this.NOT_GREATEST_BIT) + BigInt(1)) ^ this.GREATEST_BIT
 		);
 	};
+
+	public static iFixedFromBytes = (bytes: number[]): IFixed => {
+		// Convert byte array to hexadecimal string
+		const hexString = bytes.reduce(
+			(str, byte) => str + byte.toString(16).padStart(2, "0"),
+			""
+		);
+		// Convert hexadecimal string to BigInt
+		return BigInt("0x" + hexString);
+	};
 }
