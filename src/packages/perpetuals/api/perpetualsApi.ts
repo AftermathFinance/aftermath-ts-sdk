@@ -78,6 +78,7 @@ import {
 	FilledTakerOrderEventOnChain,
 	LiquidatedEventOnChain,
 	PerpetualsAccountPositionsIndexerResponse,
+	PerpetualsPreviewOrderIndexerResponse,
 	PostedOrderEventOnChain,
 	PostedOrderReceiptEventOnChain,
 	SettledFundingEventOnChain,
@@ -89,6 +90,42 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
 import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
+
+// curl --location --request POST --header "Content-type: application/json" --header "Accept: application/json"  --data-raw '{
+// "ch_id": "0x8cf75b38f573c6349ac7ca5d1893db076b20b7aa4983773907b6a7b20268bf8a",
+// "account_id": 0,
+// "side": true,
+// "size": 1,
+// "price": 100000000000,
+// "order_type": 0,
+// "collateral_to_allocate": 10000000000,
+// "cancel_all": false
+// }' 'http://0.0.0.0:8080/af-fe/perpetuals/previews/limit-order'
+
+// curl --location --request POST --header "Content-type: application/json" --header "Accept: application/json"  --data-raw '{
+// "ch_id": "0x8cf75b38f573c6349ac7ca5d1893db076b20b7aa4983773907b6a7b20268bf8a",
+// "account_id": 0,
+// "side": false,
+// "size": 1,
+// "order_type": 0,
+// "collateral_to_allocate": 10000000000,
+// "cancel_all": false
+// }' 'http://0.0.0.0:8080/af-fe/perpetuals/previews/market-order'
+
+// curl --location --request POST --header "Content-type: application/json" --header "Accept: application/json"  --data-raw '{
+// "ch_id": "0x8cf75b38f573c6349ac7ca5d1893db076b20b7aa4983773907b6a7b20268bf8a",
+// "account_id": 0,
+// "side": true,
+// "price": 100000000000,
+// "collateral_to_allocate": 10000000000
+// }' 'http://0.0.0.0:8080/af-fe/perpetuals/calculations/limit-order-max-size'
+
+// curl --location --request POST --header "Content-type: application/json" --header "Accept: application/json"  --data-raw '{
+// "ch_id": "0x8cf75b38f573c6349ac7ca5d1893db076b20b7aa4983773907b6a7b20268bf8a",
+// "account_id": 0,
+// "side": false,
+// "collateral_to_allocate": 10000000000
+// }' 'http://0.0.0.0:8080/af-fe/perpetuals/calculations/market-order-max-size'
 
 export class PerpetualsApi {
 	// =========================================================================
@@ -207,6 +244,7 @@ export class PerpetualsApi {
 
 	public fetchAccount = async (inputs: {
 		accountId: PerpetualsAccountId;
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsAccountObject> => {
 		const { accountId } = inputs;
 		const response: PerpetualsAccountPositionsIndexerResponse =
@@ -218,7 +256,10 @@ export class PerpetualsApi {
 				undefined,
 				true
 			);
-		return Casting.perpetuals.accountObjectFromIndexerResponse(response);
+		return Casting.perpetuals.accountObjectFromIndexerResponse(
+			response,
+			inputs.collateralCoinType
+		);
 	};
 
 	public fetchAccountOrderDatas = async (inputs: {
@@ -541,16 +582,7 @@ export class PerpetualsApi {
 		const { marketId, side, isClose, accountId, collateralChange } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
-			| {
-					position_json: string;
-					price_slippage: string;
-					percent_slippage: string;
-					execution_price: string;
-					size_filled: string;
-			  }
-			| {
-					error: string;
-			  },
+			PerpetualsPreviewOrderIndexerResponse,
 			| {
 					ch_id: PerpetualsMarketId;
 					account_id: number;
@@ -597,12 +629,11 @@ export class PerpetualsApi {
 		);
 		if ("error" in response) return response;
 
-		// TODO: perform correct conversions
 		const executionPrice = Casting.IFixed.numberFromIFixed(
-			BigInt(response.execution_price)
+			Casting.IFixed.iFixedFromBytes(response.execution_price)
 		);
 		const sizeFilled = Casting.IFixed.numberFromIFixed(
-			BigInt(response.size_filled)
+			Casting.IFixed.iFixedFromBytes(response.size_filled)
 		);
 		const sizeFilledUsd = sizeFilled * executionPrice;
 		const sizePosted = Number(inputs.size) * inputs.lotSize - sizeFilled;
@@ -618,21 +649,26 @@ export class PerpetualsApi {
 				: // market order
 				  0;
 
-		// TODO: handle json parsing, add missing data
-		const positionAfterOrder = response.position_json;
+		const positionAfterOrder =
+			Casting.perpetuals.positionFromIndexerReponse({
+				position: response.position,
+				collateralCoinType: inputs.collateralCoinType,
+				marketId: inputs.marketId,
+			});
 
 		return {
 			sizePosted,
 			sizePostedUsd,
 			sizeFilled,
 			sizeFilledUsd,
+			// NOTE: is this not needed ?
 			executionPrice,
 			positionAfterOrder,
 			priceSlippage: Casting.IFixed.numberFromIFixed(
-				BigInt(response.price_slippage)
+				Casting.IFixed.iFixedFromBytes(response.price_slippage)
 			),
 			percentSlippage: Casting.IFixed.numberFromIFixed(
-				BigInt(response.percent_slippage)
+				Casting.IFixed.iFixedFromBytes(response.percent_slippage)
 			),
 			// do we still need this ?
 			collateralToDellocateForClose:

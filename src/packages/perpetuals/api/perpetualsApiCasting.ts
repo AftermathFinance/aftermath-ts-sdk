@@ -27,6 +27,7 @@ import {
 	PerpetualsRawAccountCap,
 	AllocatedCollateralEvent,
 	DeallocatedCollateralEvent,
+	PerpetualsMarketId,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -51,6 +52,7 @@ import {
 	PerpetualsMarketParamsFieldsOnChain,
 	PerpetualsMarketStateFieldsOnChain,
 	PerpetualsAccountPositionsIndexerResponse,
+	PerpetualsPositionIndexerResponse,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 import { bcs } from "@mysten/sui.js/bcs";
@@ -78,65 +80,91 @@ export class PerpetualsApiCasting {
 		};
 	}
 
-	public static partialPositionFromRaw = (
-		data: any
-	): Omit<PerpetualsPosition, "collateralCoinType" | "marketId"> => {
+	// public static partialPositionFromRaw = (
+	// 	data: any
+	// ): Omit<PerpetualsPosition, "collateralCoinType" | "marketId"> => {
+	// 	return {
+	// 		collateral: BigInt(data.collateral),
+	// 		baseAssetAmount: BigInt(data.baseAssetAmount),
+	// 		quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
+	// 		cumFundingRateLong: BigInt(data.cumFundingRateLong),
+	// 		cumFundingRateShort: BigInt(data.cumFundingRateShort),
+	// 		asksQuantity: BigInt(data.asksQuantity),
+	// 		bidsQuantity: BigInt(data.bidsQuantity),
+	// 		pendingOrders: BigInt(data.pendingOrders),
+	// 		makerFee: BigInt(data.makerFee),
+	// 		takerFee: BigInt(data.takerFee),
+	// 	};
+	// };
+
+	public static positionFromIndexerReponse = (inputs: {
+		position: PerpetualsPositionIndexerResponse;
+		collateralCoinType: CoinType;
+		marketId: PerpetualsMarketId;
+	}): PerpetualsPosition => {
+		const { position, collateralCoinType, marketId } = inputs;
 		return {
-			collateral: BigInt(data.collateral),
-			baseAssetAmount: BigInt(data.baseAssetAmount),
-			quoteAssetNotionalAmount: BigInt(data.quoteAssetNotionalAmount),
-			cumFundingRateLong: BigInt(data.cumFundingRateLong),
-			cumFundingRateShort: BigInt(data.cumFundingRateShort),
-			asksQuantity: BigInt(data.asksQuantity),
-			bidsQuantity: BigInt(data.bidsQuantity),
-			pendingOrders: BigInt(data.pendingOrders),
-			makerFee: BigInt(data.makerFee),
-			takerFee: BigInt(data.takerFee),
+			collateralCoinType,
+			collateral: Casting.IFixed.iFixedFromBytes(
+				position.position.collateral
+			),
+			baseAssetAmount: Casting.IFixed.iFixedFromBytes(
+				position.position.base_asset_amount
+			),
+			quoteAssetNotionalAmount: Casting.IFixed.iFixedFromBytes(
+				position.position.quote_asset_notional_amount
+			),
+			cumFundingRateLong: Casting.IFixed.iFixedFromBytes(
+				position.position.cum_funding_rate_long
+			),
+			cumFundingRateShort: Casting.IFixed.iFixedFromBytes(
+				position.position.cum_funding_rate_short
+			),
+			asksQuantity: Casting.IFixed.iFixedFromBytes(
+				position.position.asks_quantity
+			),
+			bidsQuantity: Casting.IFixed.iFixedFromBytes(
+				position.position.bids_quantity
+			),
+			marketId: Helpers.addLeadingZeroesToType(marketId),
+			// NOTE: do we want to store all pending order data here as well ?
+			pendingOrders: [
+				...Object.entries(position.pending_orders.bids).map(
+					([orderId, size]) => ({
+						size: BigInt(size),
+						orderId: BigInt(orderId),
+						side: PerpetualsOrderSide.Bid,
+					})
+				),
+				...Object.entries(position.pending_orders.asks).map(
+					([orderId, size]) => ({
+						size: BigInt(size),
+						orderId: BigInt(orderId),
+						side: PerpetualsOrderSide.Ask,
+					})
+				),
+			],
+			makerFee: Casting.IFixed.iFixedFromBytes(
+				position.position.maker_fee
+			),
+			takerFee: Casting.IFixed.iFixedFromBytes(
+				position.position.taker_fee
+			),
 		};
 	};
 
 	public static accountObjectFromIndexerResponse = (
-		response: PerpetualsAccountPositionsIndexerResponse
+		response: PerpetualsAccountPositionsIndexerResponse,
+		collateralCoinType: CoinType
 	): PerpetualsAccountObject => {
 		return {
-			positions: response.map((data) => ({
-				collateral: Casting.IFixed.iFixedFromBytes(
-					data[1].position.collateral
-				),
-				baseAssetAmount: Casting.IFixed.iFixedFromBytes(
-					data[1].position.base_asset_amount
-				),
-				quoteAssetNotionalAmount: Casting.IFixed.iFixedFromBytes(
-					data[1].position.quote_asset_notional_amount
-				),
-				cumFundingRateLong: Casting.IFixed.iFixedFromBytes(
-					data[1].position.cum_funding_rate_long
-				),
-				cumFundingRateShort: Casting.IFixed.iFixedFromBytes(
-					data[1].position.cum_funding_rate_short
-				),
-				asksQuantity: Casting.IFixed.iFixedFromBytes(
-					data[1].position.asks_quantity
-				),
-				bidsQuantity: Casting.IFixed.iFixedFromBytes(
-					data[1].position.bids_quantity
-				),
-				collateralCoinType: Helpers.addLeadingZeroesToType("TODO"),
-				marketId: Helpers.addLeadingZeroesToType(data[0]),
-				// NOTE: do we want to store all pending order data here as well ?
-				pendingOrders: BigInt(
-					Math.round(
-						Object.keys(data[1].pending_orders.bids).length +
-							Object.keys(data[1].pending_orders.asks).length
-					)
-				),
-				makerFee: Casting.IFixed.iFixedFromBytes(
-					data[1].position.maker_fee
-				),
-				takerFee: Casting.IFixed.iFixedFromBytes(
-					data[1].position.taker_fee
-				),
-			})),
+			positions: response.map(([marketId, position]) =>
+				this.positionFromIndexerReponse({
+					position,
+					collateralCoinType,
+					marketId,
+				})
+			),
 		};
 	};
 

@@ -150,7 +150,11 @@ export interface PerpetualsPosition {
 	bidsQuantity: IFixed;
 	collateralCoinType: CoinType;
 	marketId: PerpetualsMarketId;
-	pendingOrders: bigint;
+	pendingOrders: {
+		orderId: PerpetualsOrderId;
+		side: PerpetualsOrderSide;
+		size: bigint;
+	}[];
 	makerFee: IFixed;
 	takerFee: IFixed;
 }
