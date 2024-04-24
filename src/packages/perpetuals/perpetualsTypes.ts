@@ -667,7 +667,8 @@ export type ApiPerpetualsPreviewOrderBody = (
 	accountId: PerpetualsAccountId;
 	lotSize: number;
 	tickSize: number;
-	isClose?: boolean;
+	// NOTE: do we need this ?
+	// isClose?: boolean;
 };
 
 export type ApiPerpetualsPreviewOrderResponse =
@@ -682,7 +683,8 @@ export type ApiPerpetualsPreviewOrderResponse =
 			sizeFilledUsd: number;
 			sizePosted: number;
 			sizePostedUsd: number;
-			collateralToDellocateForClose: Balance;
+			// collateralToDellocateForClose: Balance;
+			executionPrice: number
 	  };
 
 export interface ApiPerpetualsOrderbookStateBody {

@@ -579,7 +579,7 @@ export class PerpetualsApi {
 		// TODO: remove unused inputs
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
-		const { marketId, side, isClose, accountId, collateralChange } = inputs;
+		const { marketId, side, accountId, collateralChange } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
 			PerpetualsPreviewOrderIndexerResponse,
@@ -671,8 +671,8 @@ export class PerpetualsApi {
 				Casting.IFixed.iFixedFromBytes(response.percent_slippage)
 			),
 			// do we still need this ?
-			collateralToDellocateForClose:
-				positionAfterOrder.collateral - initialCollateral,
+			// collateralToDellocateForClose:
+			// 	positionAfterOrder.collateral - initialCollateral,
 		};
 	};
 
