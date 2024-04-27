@@ -71,6 +71,17 @@ export class Router extends Caller {
 		return this.fetchApi<CoinType[]>("supported-coins");
 	}
 
+	public async searchSupportedCoins(
+		inputs: { filter: string },
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<CoinType[]>(
+			`supported-coins/${inputs.filter}`,
+			undefined,
+			abortSignal
+		);
+	}
+
 	/**
 	 * Creates route across multiple pools and protocols for best trade execution price
 	 *

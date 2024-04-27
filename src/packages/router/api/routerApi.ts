@@ -98,7 +98,7 @@ export class RouterApi {
 	//  Coin Paths
 	// =========================================================================
 
-	public supportedCoins = () => {
+	public supportedCoins = (): Promise<CoinType[]> => {
 		return this.Provider.indexerCaller.fetchIndexer(
 			"router/supported-coins",
 			undefined,
@@ -107,6 +107,36 @@ export class RouterApi {
 			undefined,
 			true
 		);
+	};
+
+	public searchSupportedCoins = async (inputs: {
+		filter: string;
+	}): Promise<CoinType[]> => {
+		const { filter } = inputs;
+
+		const coinTypes = await this.supportedCoins();
+		if (coinTypes.includes(filter)) return [filter];
+
+		const coinMetadatas = (
+			await Promise.all(
+				coinTypes.map((coin) =>
+					this.Provider.Coin().fetchCoinMetadata({ coin })
+				)
+			)
+		).reduce(
+			(acc, metadata, index) => ({
+				...acc,
+				[coinTypes[index]]: metadata,
+			}),
+			{}
+		);
+		return Helpers.uniqueArray([
+			...Coin.filterCoinsByMetadata({
+				filter: filter,
+				coinMetadatas,
+			}),
+			...Coin.filterCoinsByType({ filter, coinTypes }),
+		]);
 	};
 
 	// =========================================================================
