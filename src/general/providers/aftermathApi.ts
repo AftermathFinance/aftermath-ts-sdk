@@ -37,6 +37,7 @@ import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
+import { LendingApi } from "../../packages/lending/api/lendingApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -163,6 +164,7 @@ export class AftermathApi {
 	public Faucet = () => new FaucetApi(this);
 	public SuiFrens = () => new SuiFrensApi(this);
 	public Staking = () => new StakingApi(this);
+	public Lending = () => new LendingApi(this);
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);

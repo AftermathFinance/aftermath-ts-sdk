@@ -26,7 +26,7 @@ import {
 	ApiUnlockBody,
 	ApiUtilizationRatioBody,
 	ApiWithdrawBody,
-	IssuePositionTicketBody,
+	ApiIssuePositionTicketBody,
 	PositionTicketObject
 } from "../lendingTypes";
 
@@ -146,6 +146,7 @@ export class LendingApi
 					.positionTicketObjectFromSuiObjectResponse,
 		});
 	};
+
 	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
@@ -546,7 +547,7 @@ export class LendingApi
 	// =========================================================================
 
 	public fetchIssuePositionTicket = async (
-		inputs: IssuePositionTicketBody
+		inputs: ApiIssuePositionTicketBody
 	): Promise<TransactionBlock> => {
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);

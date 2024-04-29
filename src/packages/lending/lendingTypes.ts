@@ -48,7 +48,7 @@ export interface SubPositionObject extends Object {
 //  Transactions API
 // =========================================================================
 
-export interface IssuePositionTicketBody{
+export interface ApiIssuePositionTicketBody{
 	walletAddress: SuiAddress;
 }
 
