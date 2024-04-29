@@ -15,6 +15,7 @@ export type RpcEndpoint = string;
 export interface ConfigAddresses {
 	faucet?: FaucetAddresses;
 	staking?: StakingAddresses;
+	lending?: LendingAddresses;
 	pools?: PoolsAddresses;
 	suiFrens?: SuiFrensAddresses;
 	nftAmm?: NftAmmAddresses;
@@ -41,6 +42,17 @@ export interface FaucetAddresses {
 		faucet: ObjectId;
 		faucetRegistry: ObjectId;
 		suiFrensMint: ObjectId;
+	};
+}
+
+export interface LendingAddresses {
+	packages: {
+		lending: SuiAddress;
+		events: SuiAddress;
+	};
+	objects: {
+		Market: ObjectId;
+		Oracle: ObjectId;
 	};
 }
 

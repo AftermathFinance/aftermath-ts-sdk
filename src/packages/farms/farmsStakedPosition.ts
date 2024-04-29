@@ -132,13 +132,21 @@ export class FarmsStakedPosition extends Caller {
 		coinType: CoinType;
 		stakingPool: FarmsStakingPool;
 	}) => {
+		if (
+			inputs.stakingPool.rewardCoin(inputs).actualRewards === BigInt(0) ||
+			inputs.stakingPool.rewardCoin(inputs).actualRewards <
+				inputs.stakingPool.rewardCoin(inputs).emissionRate
+		)
+			return BigInt(0);
+
 		this.updatePosition(inputs);
 
 		const rewardCoin = this.rewardCoin(inputs);
 		const totalRewards =
 			rewardCoin.multiplierRewardsAccumulated +
 			rewardCoin.baseRewardsAccumulated;
-		return totalRewards < Farms.constants.minimalRewardsToClaim
+		return totalRewards < Farms.constants.minimalRewardsToClaim ||
+			totalRewards > inputs.stakingPool.rewardCoin(inputs).actualRewards
 			? BigInt(0)
 			: totalRewards;
 	};
@@ -259,7 +267,7 @@ export class FarmsStakedPosition extends Caller {
 				: 0;
 
 		const apr = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
-		return apr < 0 ? 0 : apr;
+		return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
 	};
 
 	// =========================================================================

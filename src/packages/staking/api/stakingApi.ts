@@ -532,7 +532,6 @@ export class StakingApi
 
 		const tx = new TransactionBlock();
 		tx.setSender(inputs.walletAddress);
-
 		if (referrer)
 			this.Provider.ReferralVault().updateReferrerTx({
 				tx,

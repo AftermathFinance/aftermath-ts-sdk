@@ -55,6 +55,16 @@ export interface SupplyOnChain {
 	};
 }
 
+export interface TreasuryCapOnChain {
+	type: AnyObjectType;
+	fields: {
+		id: {
+			id: ObjectId;
+		};
+		total_supply: SupplyOnChain
+	};
+}
+
 export interface TypeNameOnChain {
 	type: AnyObjectType;
 	fields: {
