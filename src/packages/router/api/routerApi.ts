@@ -510,13 +510,11 @@ export class RouterApi {
 						throw new Error("no walletAddress provided");
 				  })());
 
-		console.log("1");
 		const txBytes = await initTx.build({
 			client: this.Provider.provider,
 			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
-		console.log("2");
 
 		const { output_coin, tx_kind } =
 			await this.Provider.indexerCaller.fetchIndexer<
@@ -561,14 +559,12 @@ export class RouterApi {
 				undefined,
 				true
 			);
-		console.log("3");
 
 		const tx = TransactionBlock.fromKind(tx_kind);
 		RouterApi.transferTxMetadata({
 			initTx,
 			newTx: tx,
 		});
-		console.log("4");
 
 		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinData({
 			serviceCoinData: output_coin,
@@ -576,7 +572,6 @@ export class RouterApi {
 		if (transferCoinOut) {
 			tx.transferObjects([coinOut], tx.pure(walletAddress));
 		}
-		console.log("5");
 
 		return {
 			tx,
