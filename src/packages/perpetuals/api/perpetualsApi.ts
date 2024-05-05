@@ -699,16 +699,36 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketData[]> => {
 		const { collateralCoinType } = inputs;
-		const markets =
+		const response =
 			await this.Provider.indexerCaller.fetchIndexer<PerpetualsMarketsIndexerResponse>(
 				`perpetuals/markets/${Helpers.stripLeadingZeroesFromType(
 					collateralCoinType
 				)}`
 			);
-		return Object.values(markets).map((market) =>
+		const markets = Object.values(response);
+
+		// const priceFeedIds = markets
+		// 	.map((market) => [
+		// 		Casting.addressFromStringBytes(
+		// 			market.market_params.base_pfs_id
+		// 		),
+		// 		Casting.addressFromStringBytes(
+		// 			market.market_params.collateral_pfs_id
+		// 		),
+		// 	])
+		// 	.reduce((acc, curr) => [...acc, ...curr], []);
+		const priceFeedIds = markets.map((market) =>
+			Casting.addressFromStringBytes(market.market_params.base_pfs_id)
+		);
+		const symbols = await this.Provider.Oracle().fetchPriceFeedSymbols({
+			priceFeedIds,
+		});
+		return markets.map((market, index) =>
 			Casting.perpetuals.marketDataFromIndexerResponse(
 				market,
-				collateralCoinType
+				collateralCoinType,
+				symbols[index].symbol
+				// `${symbols[index * 2].symbol}${symbols[index * 2 + 1].symbol}`
 			)
 		);
 	};

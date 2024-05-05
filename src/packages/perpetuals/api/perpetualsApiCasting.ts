@@ -31,7 +31,7 @@ import {
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
-import { CoinType } from "../../coin/coinTypes";
+import { CoinSymbol, CoinType } from "../../coin/coinTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import {
 	CanceledOrderEventOnChain,
@@ -174,27 +174,30 @@ export class PerpetualsApiCasting {
 
 	public static marketDataFromIndexerResponse(
 		data: PerpetualsMarketDataIndexerResponse,
-		collateralCoinType: CoinType
+		collateralCoinType: CoinType,
+		baseAssetSymbol: CoinSymbol
 	): PerpetualsMarketData {
 		return {
 			objectId: Casting.addressFromStringBytes(data.id.id),
 			collateralCoinType,
 			marketParams: this.marketParamsFromIndexerResponse(
-				data.market_params
+				data.market_params,
+				baseAssetSymbol
 			),
 			marketState: this.marketStateFromIndexerResponse(data.market_state),
 		};
 	}
 
 	private static marketParamsFromIndexerResponse = (
-		data: PerpetualsMarketParamsFieldsIndexerReponse
+		data: PerpetualsMarketParamsFieldsIndexerReponse,
+		baseAssetSymbol: CoinSymbol
 	): PerpetualsMarketParams => {
 		return {
+			baseAssetSymbol,
 			basePriceFeedId: Casting.addressFromStringBytes(data.base_pfs_id),
 			collateralPriceFeedId: Casting.addressFromStringBytes(
 				data.collateral_pfs_id
 			),
-
 			marginRatioInitial: Casting.IFixed.iFixedFromStringBytes(
 				data.margin_ratio_initial
 			),

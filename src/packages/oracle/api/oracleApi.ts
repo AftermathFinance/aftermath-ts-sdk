@@ -1,7 +1,12 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
-import { ObjectId, OracleAddresses } from "../../../types";
+import {
+	CoinDecimal,
+	CoinSymbol,
+	ObjectId,
+	OracleAddresses,
+} from "../../../types";
 import { IFixedUtils } from "../../../general/utils/iFixedUtils";
 import { Sui } from "../../sui";
 
@@ -40,6 +45,23 @@ export class OracleApi {
 
 		const price = Casting.bigIntFromBytes(priceBytes);
 		return IFixedUtils.numberFromIFixed(price);
+	};
+
+	public fetchPriceFeedSymbols = async (inputs: {
+		priceFeedIds: ObjectId[];
+	}): Promise<
+		{
+			symbol: CoinSymbol;
+			decimals: CoinDecimal;
+		}[]
+	> => {
+		return this.Provider.indexerCaller.fetchIndexer(
+			`oracle/price-feed-symbols`,
+			undefined,
+			{
+				price_feed_ids: inputs.priceFeedIds,
+			}
+		);
 	};
 
 	// =========================================================================

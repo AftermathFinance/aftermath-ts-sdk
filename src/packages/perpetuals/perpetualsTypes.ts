@@ -10,7 +10,7 @@ import {
 	SuiAddress,
 	Timestamp,
 } from "../../general/types/generalTypes";
-import { CoinDecimal, CoinType } from "../coin/coinTypes";
+import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Name Only
@@ -178,6 +178,7 @@ perpetualsBcsRegistry.registerStructType("PositionKey", {
 export interface PerpetualsMarketParams {
 	marginRatioInitial: IFixed;
 	marginRatioMaintenance: IFixed;
+	baseAssetSymbol: CoinSymbol;
 	basePriceFeedId: ObjectId;
 	collateralPriceFeedId: ObjectId;
 	fundingFrequencyMs: bigint;
