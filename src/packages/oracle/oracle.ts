@@ -14,16 +14,16 @@ export class Oracle extends Caller {
 	//  Price Feeds
 	// =========================================================================
 
-	public async getPrice(inputs: { PriceFeedId: ObjectId }): Promise<number> {
-		return this.fetchApi(`price/${inputs.PriceFeedId}`);
+	public async getPrice(inputs: { priceFeedId: ObjectId }): Promise<number> {
+		return this.fetchApi(`price/${inputs.priceFeedId}`);
 	}
 
 	public async getPrices(inputs: {
-		PriceFeedIds: ObjectId[];
+		priceFeedIds: ObjectId[];
 	}): Promise<number[]> {
 		return Promise.all(
-			inputs.PriceFeedIds.map((PriceFeedId) =>
-				this.getPrice({ PriceFeedId })
+			inputs.priceFeedIds.map((priceFeedId) =>
+				this.getPrice({ priceFeedId })
 			)
 		);
 	}

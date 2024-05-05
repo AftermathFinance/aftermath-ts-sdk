@@ -27,7 +27,7 @@ export class OracleApi {
 	// =========================================================================
 
 	public fetchPrice = async (inputs: {
-		PriceFeedId: ObjectId;
+		priceFeedId: ObjectId;
 	}): Promise<number> => {
 		const tx = new TransactionBlock();
 
@@ -48,9 +48,9 @@ export class OracleApi {
 
 	public getPriceTx = (inputs: {
 		tx: TransactionBlock;
-		PriceFeedId: ObjectId;
+		priceFeedId: ObjectId;
 	}) /* u256 */ => {
-		const { tx, PriceFeedId } = inputs;
+		const { tx, priceFeedId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.oracleReader,
@@ -59,7 +59,7 @@ export class OracleApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(PriceFeedId), // PriceFeedStorage
+				tx.object(priceFeedId), // PriceFeedStorage
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				tx.pure(Casting.u64MaxBigInt), // A really huge value for tolerance, we never want it here
 				tx.pure(false), // price of unit

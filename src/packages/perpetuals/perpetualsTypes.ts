@@ -660,6 +660,8 @@ export interface ApiPerpetualsExecutionPriceBody {
 	size: bigint;
 	lotSize: number;
 	collateral: Balance;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 	price?: PerpetualsOrderPrice;
 }
 export interface ApiPerpetualsExecutionPriceResponse {

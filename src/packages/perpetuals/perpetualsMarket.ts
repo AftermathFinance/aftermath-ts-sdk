@@ -590,6 +590,8 @@ export class PerpetualsMarket extends Caller {
 		>("execution-price", {
 			...inputs,
 			lotSize: this.lotSize(),
+			basePriceFeedId: this.marketParams.basePriceFeedId,
+			collateralPriceFeedId: this.marketParams.collateralPriceFeedId,
 		});
 	}
 

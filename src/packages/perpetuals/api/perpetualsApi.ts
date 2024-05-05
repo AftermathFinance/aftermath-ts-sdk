@@ -1689,8 +1689,6 @@ export class PerpetualsApi {
 		inputs: ApiPerpetualsExecutionPriceBody & {
 			collateralCoinType: CoinType;
 			marketId: PerpetualsMarketId;
-			basePriceFeedId: ObjectId;
-			collateralPriceFeedId: ObjectId;
 		}
 	): Promise<ApiPerpetualsExecutionPriceResponse> => {
 		const {
