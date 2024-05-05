@@ -1,10 +1,9 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
-import { OracleAddresses } from "../../../types";
+import { ObjectId, OracleAddresses } from "../../../types";
 import { IFixedUtils } from "../../../general/utils/iFixedUtils";
 import { Sui } from "../../sui";
-import { OracleCoinSymbol } from "../oracleTypes";
 
 export class OracleApi {
 	public readonly addresses: OracleAddresses;
@@ -28,7 +27,7 @@ export class OracleApi {
 	// =========================================================================
 
 	public fetchPrice = async (inputs: {
-		coinSymbol: OracleCoinSymbol;
+		PriceFeedId: ObjectId;
 	}): Promise<number> => {
 		const tx = new TransactionBlock();
 
@@ -49,9 +48,9 @@ export class OracleApi {
 
 	public getPriceTx = (inputs: {
 		tx: TransactionBlock;
-		coinSymbol: OracleCoinSymbol;
+		PriceFeedId: ObjectId;
 	}) /* u256 */ => {
-		const { tx, coinSymbol } = inputs;
+		const { tx, PriceFeedId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.oracleReader,
@@ -60,9 +59,8 @@ export class OracleApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.priceFeedStorage), // PriceFeedStorage
+				tx.object(PriceFeedId), // PriceFeedStorage
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-				tx.pure(coinSymbol), // symbol
 				tx.pure(Casting.u64MaxBigInt), // A really huge value for tolerance, we never want it here
 				tx.pure(false), // price of unit
 				tx.pure(false), // may abort

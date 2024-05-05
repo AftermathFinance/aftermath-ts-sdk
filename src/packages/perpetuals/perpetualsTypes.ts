@@ -719,6 +719,8 @@ export interface ApiPerpetualsMarketOrderBody {
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	collateralChange: Balance;
@@ -730,6 +732,8 @@ export interface ApiPerpetualsLimitOrderBody {
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	price: PerpetualsOrderPrice;
@@ -745,6 +749,8 @@ export interface ApiPerpetualsCancelOrderBody {
 	marketId: PerpetualsMarketId;
 	orderId: PerpetualsOrderId;
 	collateral: Balance;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 }
 
 export interface ApiPerpetualsCancelOrdersBody {
@@ -755,6 +761,8 @@ export interface ApiPerpetualsCancelOrdersBody {
 		orderId: PerpetualsOrderId;
 		marketId: PerpetualsMarketId;
 		collateral: Balance;
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
 	}[];
 }
 

@@ -899,6 +899,8 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
 		marketId: PerpetualsMarketId;
 		amount: Balance;
 	}) => {
@@ -916,7 +918,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.oracle.objects.priceFeedStorage),
+				tx.object(inputs.basePriceFeedId),
+				tx.object(inputs.collateralPriceFeedId),
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.pure(amount, "u64"),
 			],
@@ -950,6 +953,8 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
 		marketId: PerpetualsMarketId;
 	}) /* SessionHotPotato<T> */ => {
 		const { tx, collateralCoinType, accountCapId, marketId } = inputs;
@@ -965,7 +970,8 @@ export class PerpetualsApi {
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
-				tx.object(this.addresses.oracle.objects.priceFeedStorage),
+				tx.object(inputs.basePriceFeedId),
+				tx.object(inputs.collateralPriceFeedId),
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
@@ -1419,11 +1425,26 @@ export class PerpetualsApi {
 	public buildCancelOrderTx = (
 		inputs: ApiPerpetualsCancelOrderBody
 	): TransactionBlock => {
-		const { orderId, marketId, collateral, ...otherInputs } = inputs;
+		const {
+			orderId,
+			marketId,
+			collateral,
+			basePriceFeedId,
+			collateralPriceFeedId,
+			...otherInputs
+		} = inputs;
 
 		return this.buildCancelOrdersTx({
 			...otherInputs,
-			orderDatas: [{ orderId, marketId, collateral }],
+			orderDatas: [
+				{
+					orderId,
+					marketId,
+					collateral,
+					basePriceFeedId,
+					collateralPriceFeedId,
+				},
+			],
 		});
 	};
 
@@ -1457,11 +1478,15 @@ export class PerpetualsApi {
 					orderId: PerpetualsOrderId;
 					marketId: PerpetualsMarketId;
 					collateral: Balance;
+					basePriceFeedId: ObjectId;
+					collateralPriceFeedId: ObjectId;
 				}[]
 			>
 		);
 
 		for (const [marketId, orders] of Object.entries(marketIdToOrderIds)) {
+			if (orders.length <= 0) continue;
+
 			this.cancelOrdersTx({
 				tx,
 				collateralCoinType,
@@ -1478,6 +1503,8 @@ export class PerpetualsApi {
 				amount: Helpers.sumBigInt(
 					orders.map((order) => order.collateral)
 				),
+				basePriceFeedId: orders[0].basePriceFeedId,
+				collateralPriceFeedId: orders[0].collateralPriceFeedId,
 			});
 		}
 
@@ -1662,6 +1689,8 @@ export class PerpetualsApi {
 		inputs: ApiPerpetualsExecutionPriceBody & {
 			collateralCoinType: CoinType;
 			marketId: PerpetualsMarketId;
+			basePriceFeedId: ObjectId;
+			collateralPriceFeedId: ObjectId;
 		}
 	): Promise<ApiPerpetualsExecutionPriceResponse> => {
 		const {
@@ -1672,6 +1701,8 @@ export class PerpetualsApi {
 			size,
 			price,
 			lotSize,
+			basePriceFeedId,
+			collateralPriceFeedId,
 		} = inputs;
 		// TODO: change this
 		const collateral = BigInt(1000000000000000);
@@ -1718,6 +1749,8 @@ export class PerpetualsApi {
 			collateralCoinType,
 			marketId,
 			walletAddress,
+			basePriceFeedId,
+			collateralPriceFeedId,
 			collateralChange: collateral,
 			hasPosition: false,
 		});
@@ -1864,6 +1897,8 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
 		walletAddress: SuiAddress;
 		collateralChange: Balance;
 		hasPosition: boolean;
@@ -1902,6 +1937,8 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
 		walletAddress: SuiAddress;
 		collateralChange: Balance;
 	}) => {
@@ -1911,6 +1948,8 @@ export class PerpetualsApi {
 			collateralChange,
 			collateralCoinType,
 			marketId,
+			basePriceFeedId,
+			collateralPriceFeedId,
 		} = inputs;
 
 		const accountCapId = this.endSessionTx(inputs);
@@ -1921,6 +1960,8 @@ export class PerpetualsApi {
 				accountCapId,
 				collateralCoinType,
 				marketId,
+				basePriceFeedId,
+				collateralPriceFeedId,
 				amount: Helpers.absBigInt(collateralChange),
 			});
 		}

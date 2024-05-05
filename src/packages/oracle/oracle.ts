@@ -1,6 +1,5 @@
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork, Url } from "../../types";
-import { OracleCoinSymbol } from "./oracleTypes";
+import { ObjectId, SuiNetwork, Url } from "../../types";
 
 export class Oracle extends Caller {
 	// =========================================================================
@@ -15,18 +14,16 @@ export class Oracle extends Caller {
 	//  Price Feeds
 	// =========================================================================
 
-	public async getPrice(inputs: {
-		coinSymbol: OracleCoinSymbol;
-	}): Promise<number> {
-		return this.fetchApi(`price/${inputs.coinSymbol}`);
+	public async getPrice(inputs: { PriceFeedId: ObjectId }): Promise<number> {
+		return this.fetchApi(`price/${inputs.PriceFeedId}`);
 	}
 
 	public async getPrices(inputs: {
-		coinSymbols: OracleCoinSymbol[];
+		PriceFeedIds: ObjectId[];
 	}): Promise<number[]> {
 		return Promise.all(
-			inputs.coinSymbols.map((coinSymbol) =>
-				this.getPrice({ coinSymbol })
+			inputs.PriceFeedIds.map((PriceFeedId) =>
+				this.getPrice({ PriceFeedId })
 			)
 		);
 	}

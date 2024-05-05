@@ -298,9 +298,6 @@ export interface OracleAddresses {
 	packages: {
 		oracleReader: SuiAddress;
 	};
-	objects: {
-		priceFeedStorage: ObjectId;
-	};
 }
 
 export interface ScallopAddresses {

@@ -147,6 +147,8 @@ export class PerpetualsAccount extends Caller {
 	public async getCancelOrderTx(inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
 		side: PerpetualsOrderSide;
 		orderId: PerpetualsOrderId;
 		collateral: Balance;
@@ -165,6 +167,8 @@ export class PerpetualsAccount extends Caller {
 		walletAddress: SuiAddress;
 		orderDatas: {
 			marketId: PerpetualsMarketId;
+			basePriceFeedId: ObjectId;
+			collateralPriceFeedId: ObjectId;
 			side: PerpetualsOrderSide;
 			orderId: PerpetualsOrderId;
 			collateral: Balance;
@@ -618,6 +622,8 @@ export class PerpetualsAccount extends Caller {
 		return {
 			marketId,
 			walletAddress,
+			basePriceFeedId: market.marketParams.basePriceFeedId,
+			collateralPriceFeedId: market.marketParams.collateralPriceFeedId,
 			collateralChange: BigInt(0),
 			side:
 				positionSide === PerpetualsOrderSide.Bid
