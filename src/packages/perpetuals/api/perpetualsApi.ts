@@ -78,6 +78,7 @@ import {
 	FilledTakerOrderEventOnChain,
 	LiquidatedEventOnChain,
 	PerpetualsAccountPositionsIndexerResponse,
+	PerpetualsMarketsIndexerResponse,
 	PerpetualsPreviewOrderIndexerResponse,
 	PostedOrderEventOnChain,
 	PostedOrderReceiptEventOnChain,
@@ -698,15 +699,14 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketData[]> => {
 		const { collateralCoinType } = inputs;
-		const markets = await this.Provider.indexerCaller.fetchIndexer<
-			Record<ObjectId, string>
-		>(
-			`perpetuals/markets/${Helpers.addLeadingZeroesToType(
-				collateralCoinType
-			)}`
-		);
+		const markets =
+			await this.Provider.indexerCaller.fetchIndexer<PerpetualsMarketsIndexerResponse>(
+				`perpetuals/markets/${Helpers.stripLeadingZeroesFromType(
+					collateralCoinType
+				)}`
+			);
 		return Object.values(markets).map((market) =>
-			Casting.perpetuals.clearingHouseFromOnChain(
+			Casting.perpetuals.marketDataFromIndexerResponse(
 				market,
 				collateralCoinType
 			)

@@ -649,7 +649,7 @@ export class PerpetualsAccount extends Caller {
 			cumFundingRateShort: BigInt(0),
 			asksQuantity: BigInt(0),
 			bidsQuantity: BigInt(0),
-			pendingOrders: BigInt(0),
+			pendingOrders: [],
 			makerFee: BigInt(1000000000000000000), // 100%
 			takerFee: BigInt(1000000000000000000), // 100%
 		};

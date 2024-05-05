@@ -104,17 +104,12 @@ perpetualsBcsRegistry.registerStructType(["Vault", "T"], {
 
 // -----------------------------------------
 
-export interface PerpetualsMarketData extends Object {
+export interface PerpetualsMarketData {
+	objectId: ObjectId;
 	collateralCoinType: CoinType;
 	marketParams: PerpetualsMarketParams;
 	marketState: PerpetualsMarketState;
 }
-
-perpetualsBcsRegistry.registerStructType(["ClearingHouse", "T"], {
-	id: "UID",
-	marketParams: "MarketParams",
-	marketState: "MarketState",
-});
 
 // -----------------------------------------
 
@@ -183,7 +178,8 @@ perpetualsBcsRegistry.registerStructType("PositionKey", {
 export interface PerpetualsMarketParams {
 	marginRatioInitial: IFixed;
 	marginRatioMaintenance: IFixed;
-	baseAssetSymbol: string;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 	fundingFrequencyMs: bigint;
 	fundingPeriodMs: bigint;
 	premiumTwapFrequencyMs: bigint;
@@ -203,29 +199,6 @@ export interface PerpetualsMarketParams {
 	oracleTolerance: bigint;
 }
 
-perpetualsBcsRegistry.registerStructType("MarketParams", {
-	marginRatioInitial: "u256",
-	marginRatioMaintenance: "u256",
-	baseAssetSymbol: "string",
-	fundingFrequencyMs: "u64",
-	fundingPeriodMs: "u64",
-	premiumTwapFrequencyMs: "u64",
-	premiumTwapPeriodMs: "u64",
-	spreadTwapFrequencyMs: "u64",
-	spreadTwapPeriodMs: "u64",
-	makerFee: "u256",
-	takerFee: "u256",
-	liquidationFee: "u256",
-	forceCancelFee: "u256",
-	insuranceFundFee: "u256",
-	minOrderUsdValue: "u256",
-	lotSize: "u64",
-	tickSize: "u64",
-	liquidationTolerance: "u64",
-	maxPendingOrders: "u64",
-	oracleTolerance: "u64",
-});
-
 // -----------------------------------------
 
 export interface PerpetualsMarketState {
@@ -239,18 +212,6 @@ export interface PerpetualsMarketState {
 	openInterest: IFixed;
 	feesAccrued: IFixed;
 }
-
-perpetualsBcsRegistry.registerStructType("MarketState", {
-	cumFundingRateLong: "u256",
-	cumFundingRateShort: "u256",
-	fundingLastUpdMs: "u64",
-	premiumTwap: "u256",
-	premiumTwapLastUpdMs: "u64",
-	spreadTwap: "u256",
-	spreadTwapLastUpdMs: "u64",
-	openInterest: "u256",
-	feesAccrued: "u256",
-});
 
 // -----------------------------------------
 
@@ -684,7 +645,7 @@ export type ApiPerpetualsPreviewOrderResponse =
 			sizePosted: number;
 			sizePostedUsd: number;
 			// collateralToDellocateForClose: Balance;
-			executionPrice: number
+			executionPrice: number;
 	  };
 
 export interface ApiPerpetualsOrderbookStateBody {

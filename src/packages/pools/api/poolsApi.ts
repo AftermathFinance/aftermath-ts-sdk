@@ -1271,7 +1271,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				tx,
 			});
 
-		return Casting.addressFromBytes(bytes);
+		return Casting.addressFromBcsBytes(bytes);
 	};
 
 	/**

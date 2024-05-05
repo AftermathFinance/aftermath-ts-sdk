@@ -82,8 +82,18 @@ export class Casting {
 					.join("")
 		);
 
-	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
-		"0x" + bcs.de("address", new Uint8Array(bytes));
+	public static addressFromBcsBytes = (bytes: Byte[]): SuiAddress =>
+		Helpers.addLeadingZeroesToType(
+			"0x" + bcs.de("address", new Uint8Array(bytes))
+		);
+
+	public static addressFromStringBytes = (bytes: string[]): SuiAddress =>
+		Helpers.addLeadingZeroesToType(
+			this.stringFromBytes(this.bytesFromStringBytes(bytes))
+		);
+
+	public static bytesFromStringBytes = (bytes: string[]): Byte[] =>
+		bytes.map((byte) => Number(byte));
 
 	public static unwrapDeserializedOption = (
 		deserializedData: any

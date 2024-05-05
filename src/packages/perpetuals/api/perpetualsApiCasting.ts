@@ -48,11 +48,11 @@ import {
 	PostedOrderReceiptEventOnChain,
 	AllocatedCollateralEventOnChain,
 	DeallocatedCollateralEventOnChain,
-	PerpetualsClearingHouseFieldsOnChain,
-	PerpetualsMarketParamsFieldsOnChain,
-	PerpetualsMarketStateFieldsOnChain,
+	PerpetualsMarketParamsFieldsIndexerReponse,
+	PerpetualsMarketStateFieldsIndexerReponse,
 	PerpetualsAccountPositionsIndexerResponse,
 	PerpetualsPositionIndexerResponse,
+	PerpetualsMarketDataIndexerResponse,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
 import { bcs } from "@mysten/sui.js/bcs";
@@ -172,69 +172,86 @@ export class PerpetualsApiCasting {
 	//  Clearing House
 	// =========================================================================
 
-	public static clearingHouseFromOnChain(
-		data: SuiObjectResponse,
+	public static marketDataFromIndexerResponse(
+		data: PerpetualsMarketDataIndexerResponse,
 		collateralCoinType: CoinType
 	): PerpetualsMarketData {
-		const objectId = Helpers.getObjectId(data);
-		const objectType = Helpers.getObjectType(data);
-		const fields = Helpers.getObjectFields(
-			data
-		) as PerpetualsClearingHouseFieldsOnChain;
-
 		return {
-			objectId,
-			objectType,
+			objectId: Casting.addressFromStringBytes(data.id.id),
 			collateralCoinType,
-			marketParams: this.marketParamsFromOnChain(
-				fields.market_params.fields
+			marketParams: this.marketParamsFromIndexerResponse(
+				data.market_params
 			),
-			marketState: this.marketStateFromOnChain(
-				fields.market_state.fields
-			),
+			marketState: this.marketStateFromIndexerResponse(data.market_state),
 		};
 	}
 
-	private static marketParamsFromOnChain = (
-		fields: PerpetualsMarketParamsFieldsOnChain
+	private static marketParamsFromIndexerResponse = (
+		data: PerpetualsMarketParamsFieldsIndexerReponse
 	): PerpetualsMarketParams => {
 		return {
-			baseAssetSymbol: fields.base_asset_symbol,
-			marginRatioInitial: BigInt(fields.margin_ratio_initial),
-			marginRatioMaintenance: BigInt(fields.margin_ratio_maintenance),
-			fundingFrequencyMs: BigInt(fields.funding_frequency_ms),
-			fundingPeriodMs: BigInt(fields.funding_period_ms),
-			premiumTwapFrequencyMs: BigInt(fields.premium_twap_frequency_ms),
-			premiumTwapPeriodMs: BigInt(fields.premium_twap_period_ms),
-			spreadTwapFrequencyMs: BigInt(fields.spread_twap_frequency_ms),
-			spreadTwapPeriodMs: BigInt(fields.spread_twap_period_ms),
-			makerFee: BigInt(fields.maker_fee),
-			takerFee: BigInt(fields.taker_fee),
-			liquidationFee: BigInt(fields.liquidation_fee),
-			forceCancelFee: BigInt(fields.force_cancel_fee),
-			insuranceFundFee: BigInt(fields.insurance_fund_fee),
-			lotSize: BigInt(fields.lot_size),
-			tickSize: BigInt(fields.tick_size),
-			liquidationTolerance: BigInt(fields.liquidation_tolerance),
-			maxPendingOrders: BigInt(fields.max_pending_orders),
-			minOrderUsdValue: BigInt(fields.min_order_usd_value),
-			oracleTolerance: BigInt(fields.oracle_tolerance),
+			basePriceFeedId: Casting.addressFromStringBytes(data.base_pfs_id),
+			collateralPriceFeedId: Casting.addressFromStringBytes(
+				data.collateral_pfs_id
+			),
+
+			marginRatioInitial: Casting.IFixed.iFixedFromStringBytes(
+				data.margin_ratio_initial
+			),
+			marginRatioMaintenance: Casting.IFixed.iFixedFromStringBytes(
+				data.margin_ratio_maintenance
+			),
+			fundingFrequencyMs: BigInt(data.funding_frequency_ms),
+			fundingPeriodMs: BigInt(data.funding_period_ms),
+			premiumTwapFrequencyMs: BigInt(data.premium_twap_frequency_ms),
+			premiumTwapPeriodMs: BigInt(data.premium_twap_period_ms),
+			spreadTwapFrequencyMs: BigInt(data.spread_twap_frequency_ms),
+			spreadTwapPeriodMs: BigInt(data.spread_twap_period_ms),
+			makerFee: Casting.IFixed.iFixedFromStringBytes(data.maker_fee),
+			takerFee: Casting.IFixed.iFixedFromStringBytes(data.taker_fee),
+			liquidationFee: Casting.IFixed.iFixedFromStringBytes(
+				data.liquidation_fee
+			),
+			forceCancelFee: Casting.IFixed.iFixedFromStringBytes(
+				data.force_cancel_fee
+			),
+			insuranceFundFee: Casting.IFixed.iFixedFromStringBytes(
+				data.insurance_fund_fee
+			),
+			lotSize: BigInt(data.lot_size),
+			tickSize: BigInt(data.tick_size),
+			liquidationTolerance: BigInt(data.liquidation_tolerance),
+			maxPendingOrders: BigInt(data.max_pending_orders),
+			minOrderUsdValue: Casting.IFixed.iFixedFromStringBytes(
+				data.min_order_usd_value
+			),
+			oracleTolerance: BigInt(data.oracle_tolerance),
 		};
 	};
 
-	private static marketStateFromOnChain = (
-		fields: PerpetualsMarketStateFieldsOnChain
+	private static marketStateFromIndexerResponse = (
+		data: PerpetualsMarketStateFieldsIndexerReponse
 	): PerpetualsMarketState => {
 		return {
-			cumFundingRateLong: BigInt(fields.cum_funding_rate_long),
-			cumFundingRateShort: BigInt(fields.cum_funding_rate_short),
-			fundingLastUpdMs: Number(fields.funding_last_upd_ms),
-			premiumTwap: BigInt(fields.premium_twap),
-			premiumTwapLastUpdMs: Number(fields.premium_twap_last_upd_ms),
-			spreadTwap: BigInt(fields.spread_twap),
-			spreadTwapLastUpdMs: Number(fields.spread_twap_last_upd_ms),
-			openInterest: BigInt(fields.open_interest),
-			feesAccrued: BigInt(fields.fees_accrued),
+			cumFundingRateLong: Casting.IFixed.iFixedFromStringBytes(
+				data.cum_funding_rate_long
+			),
+			cumFundingRateShort: Casting.IFixed.iFixedFromStringBytes(
+				data.cum_funding_rate_short
+			),
+			fundingLastUpdMs: Number(data.funding_last_upd_ms),
+			premiumTwap: Casting.IFixed.iFixedFromStringBytes(
+				data.premium_twap
+			),
+			premiumTwapLastUpdMs: Number(data.premium_twap_last_upd_ms),
+			spreadTwap: Casting.IFixed.iFixedFromStringBytes(data.spread_twap),
+			spreadTwapLastUpdMs: Number(data.spread_twap_last_upd_ms),
+			openInterest: Casting.IFixed.iFixedFromStringBytes(
+				data.open_interest
+			),
+			feesAccrued: Casting.IFixed.iFixedFromStringBytes(
+				data.fees_accrued
+			),
 		};
 	};
 

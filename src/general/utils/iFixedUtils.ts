@@ -1,4 +1,5 @@
 import { IFixed } from "../types";
+import { Casting } from "./casting";
 
 export class IFixedUtils {
 	public static readonly ONE: IFixed = BigInt(1_000_000_000_000_000_000);
@@ -44,5 +45,9 @@ export class IFixedUtils {
 		);
 		// Convert hexadecimal string to BigInt
 		return BigInt("0x" + hexString);
+	};
+
+	public static iFixedFromStringBytes = (bytes: string[]): IFixed => {
+		return this.iFixedFromBytes(Casting.bytesFromStringBytes(bytes));
 	};
 }

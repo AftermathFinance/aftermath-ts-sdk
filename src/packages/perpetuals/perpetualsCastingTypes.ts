@@ -2,7 +2,11 @@ import { EventOnChain } from "../../general/types/castingTypes";
 import {
 	AnyObjectType,
 	BigIntAsString,
+	Byte,
+	IdAsStringBytes,
+	IFixedAsBytes,
 	IFixedAsString,
+	IFixedAsStringBytes,
 	ObjectId,
 	PerpetualsMarketId,
 	SuiAddress,
@@ -14,25 +18,23 @@ import {
 
 /// Used to dynamically load market objects as needed.
 /// Used to dynamically load traders' position objects as needed.
-export interface PerpetualsClearingHouseFieldsOnChain {
-	market_params: {
-		type: AnyObjectType;
-		fields: PerpetualsMarketParamsFieldsOnChain;
+export interface PerpetualsMarketDataIndexerResponse {
+	id: {
+		id: IdAsStringBytes;
 	};
-	market_state: {
-		type: AnyObjectType;
-		fields: PerpetualsMarketStateFieldsOnChain;
-	};
+	market_params: PerpetualsMarketParamsFieldsIndexerReponse;
+	market_state: PerpetualsMarketStateFieldsIndexerReponse;
 }
 
 /// Static attributes of a perpetuals market.
-export interface PerpetualsMarketParamsFieldsOnChain {
+export interface PerpetualsMarketParamsFieldsIndexerReponse {
 	/// Minimum margin ratio for opening a new position.
-	margin_ratio_initial: IFixedAsString;
+	margin_ratio_initial: IFixedAsStringBytes;
 	/// Margin ratio below which full liquidations can occur.
-	margin_ratio_maintenance: IFixedAsString;
+	margin_ratio_maintenance: IFixedAsStringBytes;
 	/// Identifier to query the index price of the base asset from the oracle.
-	base_asset_symbol: string;
+	base_pfs_id: IdAsStringBytes;
+	collateral_pfs_id: IdAsStringBytes;
 	/// The time span between each funding rate update.
 	funding_frequency_ms: BigIntAsString;
 	/// Period of time over which funding (the difference between book and
@@ -59,19 +61,19 @@ export interface PerpetualsMarketParamsFieldsOnChain {
 	spread_twap_period_ms: BigIntAsString;
 	/// Proportion of volume charged as fees from makers upon processing
 	/// fill events.
-	maker_fee: IFixedAsString;
+	maker_fee: IFixedAsStringBytes;
 	/// Proportion of volume charged as fees from takers after processing
 	/// fill events.
-	taker_fee: IFixedAsString;
+	taker_fee: IFixedAsStringBytes;
 	/// Proportion of volume charged as fees from liquidatees
-	liquidation_fee: IFixedAsString;
+	liquidation_fee: IFixedAsStringBytes;
 	/// Proportion of volume charged as fees from liquidatees after forced cancelling
 	/// of pending orders during liquidation.
-	force_cancel_fee: IFixedAsString;
+	force_cancel_fee: IFixedAsStringBytes;
 	/// Proportion of volume charged as fees from liquidatees to deposit into insurance fund
-	insurance_fund_fee: IFixedAsString;
+	insurance_fund_fee: IFixedAsStringBytes;
 	/// Minimum USD value an order is required to be worth to be placed
-	min_order_usd_value: IFixedAsString;
+	min_order_usd_value: IFixedAsStringBytes;
 	/// Number of base units exchanged per lot
 	lot_size: BigIntAsString;
 	/// Number of quote units exchanged per tick
@@ -86,44 +88,44 @@ export interface PerpetualsMarketParamsFieldsOnChain {
 }
 
 /// The state of a perpetuals market.
-export interface PerpetualsMarketStateFieldsOnChain {
+export interface PerpetualsMarketStateFieldsIndexerReponse {
 	/// The latest cumulative funding premium in this market for longs. Must be updated
 	/// periodically.
-	cum_funding_rate_long: IFixedAsString;
+	cum_funding_rate_long: IFixedAsStringBytes;
 	/// The latest cumulative funding premium in this market for shorts. Must be updated
 	/// periodically.
-	cum_funding_rate_short: IFixedAsString;
+	cum_funding_rate_short: IFixedAsStringBytes;
 	/// The timestamp (millisec) of the latest cumulative funding premium update
 	/// (both longs and shorts).
 	funding_last_upd_ms: BigIntAsString;
 	/// The last calculated funding premium TWAP (used for funding settlement).
-	premium_twap: IFixedAsString;
+	premium_twap: IFixedAsStringBytes;
 	/// The timestamp (millisec) of the last update of `premium_twap`.
 	premium_twap_last_upd_ms: BigIntAsString;
 	/// The last calculated spread TWAP (used for liquidations).
 	/// Spread is (book - index).
-	spread_twap: IFixedAsString;
+	spread_twap: IFixedAsStringBytes;
 	/// The timestamp (millisec) of `spread_twap` last update.
 	spread_twap_last_upd_ms: BigIntAsString;
 	/// Open interest (in base tokens) as a fixed-point number. Counts the
 	/// total size of contracts as the sum of all long positions.
-	open_interest: IFixedAsString;
+	open_interest: IFixedAsStringBytes;
 	/// Total amount of fees accrued by this market (in T's units)
 	/// Only admin can withdraw these fees.
-	fees_accrued: IFixedAsString;
+	fees_accrued: IFixedAsStringBytes;
 }
 
 export interface PerpetualsPositionIndexerResponse {
 	position: {
 		/// Amount of allocated tokens (e.g., USD stables) backing this account's position.
-		collateral: number[];
+		collateral: IFixedAsBytes;
 		/// The perpetual contract size, controlling the amount of exposure to
 		/// the underlying asset. Positive implies long position and negative,
 		/// short. Represented as a signed fixed-point number.
-		base_asset_amount: number[];
+		base_asset_amount: IFixedAsBytes;
 		/// The entry value for this position, including leverage. Represented
 		/// as a signed fixed-point number.
-		quote_asset_notional_amount: number[];
+		quote_asset_notional_amount: IFixedAsBytes;
 		/// Last long cumulative funding rate used to update this position. The
 		/// market's latest long cumulative funding rate minus this gives the funding
 		/// rate this position must pay. This rate multiplied by this position's
@@ -131,7 +133,7 @@ export interface PerpetualsPositionIndexerResponse {
 		/// owed, which is deducted from the trader account's margin. This debt
 		/// is accounted for in margin ratio calculations, which may lead to
 		/// liquidation. Represented as a signed fixed-point number.
-		cum_funding_rate_long: number[];
+		cum_funding_rate_long: IFixedAsBytes;
 		/// Last short cumulative funding rate used to update this position. The
 		/// market's latest short cumulative funding rate minus this gives the funding
 		/// rate this position must pay. This rate multiplied by this position's
@@ -139,19 +141,19 @@ export interface PerpetualsPositionIndexerResponse {
 		/// owed, which is deducted from the trader account's margin. This debt
 		/// is accounted for in margin ratio calculations, which may lead to
 		/// liquidation. Represented as a signed fixed-point number.
-		cum_funding_rate_short: number[];
+		cum_funding_rate_short: IFixedAsBytes;
 		/// Base asset amount resting in ask orders in the orderbook.
 		/// Represented as a signed fixed-point number.
-		asks_quantity: number[];
+		asks_quantity: IFixedAsBytes;
 		/// Base asset amount resting in bid orders in the orderbook.
 		/// Represented as a signed fixed-point number.
-		bids_quantity: number[];
+		bids_quantity: IFixedAsBytes;
 		/// Number of pending orders in this position.
 		pending_orders: number;
 		/// Custom maker fee for this position, set at default value of 100%
-		maker_fee: number[];
+		maker_fee: IFixedAsBytes;
 		/// Custom taker fee for this position, set at default value of 100%
-		taker_fee: number[];
+		taker_fee: IFixedAsBytes;
 	};
 	pending_orders: {
 		bids: Record<
@@ -173,14 +175,19 @@ export type PerpetualsAccountPositionsIndexerResponse = [
 export type PerpetualsPreviewOrderIndexerResponse =
 	| {
 			position: PerpetualsPositionIndexerResponse;
-			price_slippage: number[];
-			percent_slippage: number[];
-			execution_price: number[];
-			size_filled: number[];
+			price_slippage: IFixedAsBytes;
+			percent_slippage: IFixedAsBytes;
+			execution_price: IFixedAsBytes;
+			size_filled: IFixedAsBytes;
 	  }
 	| {
 			error: string;
 	  };
+
+export type PerpetualsMarketsIndexerResponse = Record<
+	PerpetualsMarketId,
+	PerpetualsMarketDataIndexerResponse
+>;
 
 // =========================================================================
 //  Events
