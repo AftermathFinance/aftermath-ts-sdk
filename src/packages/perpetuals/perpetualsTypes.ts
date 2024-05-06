@@ -641,10 +641,10 @@ export type ApiPerpetualsPreviewOrderResponse =
 			positionAfterOrder: PerpetualsPosition;
 			priceSlippage: number;
 			percentSlippage: Percentage;
-			sizeFilled: number;
-			sizeFilledUsd: number;
-			sizePosted: number;
-			sizePostedUsd: number;
+			filledSize: number;
+			filledSizeUsd: number;
+			postedSize: number;
+			postedSizeUsd: number;
 			// collateralToDellocateForClose: Balance;
 			executionPrice: number;
 	  };

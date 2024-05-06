@@ -633,15 +633,15 @@ export class PerpetualsApi {
 		const executionPrice = Casting.IFixed.numberFromIFixed(
 			Casting.IFixed.iFixedFromBytes(response.execution_price)
 		);
-		const sizeFilled = Casting.IFixed.numberFromIFixed(
+		const filledSize = Casting.IFixed.numberFromIFixed(
 			Casting.IFixed.iFixedFromBytes(response.size_filled)
 		);
-		const sizeFilledUsd = sizeFilled * executionPrice;
-		const sizePosted = Number(inputs.size) * inputs.lotSize - sizeFilled;
-		const sizePostedUsd =
+		const filledSizeUsd = filledSize * executionPrice;
+		const postedSize = Number(inputs.size) * inputs.lotSize - filledSize;
+		const postedSizeUsd =
 			"price" in inputs
 				? // limit order
-				  sizePosted *
+				  postedSize *
 				  Perpetuals.orderPriceToPrice({
 						orderPrice: inputs.price,
 						lotSize: inputs.lotSize,
@@ -658,10 +658,10 @@ export class PerpetualsApi {
 			});
 
 		return {
-			sizePosted,
-			sizePostedUsd,
-			sizeFilled,
-			sizeFilledUsd,
+			postedSize,
+			postedSizeUsd,
+			filledSize,
+			filledSizeUsd,
 			// NOTE: is this not needed ?
 			executionPrice,
 			positionAfterOrder,
