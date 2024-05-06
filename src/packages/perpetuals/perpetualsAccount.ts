@@ -34,6 +34,7 @@ import {
 	ApiPerpetualsCancelOrdersBody,
 	PerpetualsOrderData,
 	CoinDecimal,
+	Percentage,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -208,8 +209,23 @@ export class PerpetualsAccount extends Caller {
 			"accountId" | "collateralCoinType" | "accountCapId"
 		>,
 		abortSignal?: AbortSignal
-	) {
-		return this.fetchApi<
+	): Promise<
+		| {
+				error: string;
+		  }
+		| {
+				positionAfterOrder: PerpetualsPosition;
+				priceSlippage: number;
+				percentSlippage: Percentage;
+				filledSize: number;
+				filledSizeUsd: number;
+				postedSize: number;
+				postedSizeUsd: number;
+				collateralToDellocateForClose: Balance;
+				executionPrice: number;
+		  }
+	> {
+		const response = await this.fetchApi<
 			ApiPerpetualsPreviewOrderResponse,
 			ApiPerpetualsPreviewOrderBody
 		>(
@@ -222,6 +238,21 @@ export class PerpetualsAccount extends Caller {
 			},
 			abortSignal
 		);
+
+		if ("error" in response) return response;
+
+		const positionBeforeOrder = this.positionForMarketId(inputs);
+
+		// TODO: move this elsewhere ?
+		const collateralToDellocateForClose = positionBeforeOrder
+			? positionBeforeOrder.collateral -
+			  response.positionAfterOrder.collateral
+			: BigInt(0);
+
+		return {
+			...response,
+			collateralToDellocateForClose,
+		};
 	}
 
 	public getOrderDatas() {
