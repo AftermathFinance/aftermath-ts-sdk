@@ -87,10 +87,17 @@ export class Casting {
 			"0x" + bcs.de("address", new Uint8Array(bytes))
 		);
 
-	public static addressFromStringBytes = (bytes: string[]): SuiAddress =>
+	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
 		Helpers.addLeadingZeroesToType(
-			this.stringFromBytes(this.bytesFromStringBytes(bytes))
+			"0x" +
+				bytes
+					.reverse()
+					.map((byte) => byte.toString(16).padStart(2, "0"))
+					.join("")
 		);
+
+	public static addressFromStringBytes = (bytes: string[]): SuiAddress =>
+		this.addressFromBytes(this.bytesFromStringBytes(bytes));
 
 	public static bytesFromStringBytes = (bytes: string[]): Byte[] =>
 		bytes.map((byte) => Number(byte));

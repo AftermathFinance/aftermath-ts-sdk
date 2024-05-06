@@ -257,6 +257,8 @@ export class PerpetualsApi {
 				undefined,
 				true
 			);
+		console.log("ACCOUNTresponse", response);
+		console.log("ACCOUNTresponse", JSON.stringify(response, null, 4));
 		return Casting.perpetuals.accountObjectFromIndexerResponse(
 			response,
 			inputs.collateralCoinType
@@ -272,6 +274,8 @@ export class PerpetualsApi {
 			await this.Provider.indexerCaller.fetchIndexer(
 				`perpetuals/accounts/${accountId}/orders`
 			);
+		// console.log("ORDERSresponse", orders);
+		// console.log("ORDERSresponse", JSON.stringify(orders, null, 4));
 		if (orders.length <= 0) return [];
 
 		const marketIdsToOrderEvents: Record<
@@ -628,6 +632,8 @@ export class PerpetualsApi {
 			undefined,
 			true
 		);
+		console.log("PREVIEWresponse", response);
+		console.log("PREVIEWresponse", JSON.stringify(response, null, 4));
 		if ("error" in response) return response;
 
 		const executionPrice = Casting.IFixed.numberFromIFixed(
@@ -703,8 +709,15 @@ export class PerpetualsApi {
 			await this.Provider.indexerCaller.fetchIndexer<PerpetualsMarketsIndexerResponse>(
 				`perpetuals/markets/${Helpers.stripLeadingZeroesFromType(
 					collateralCoinType
-				)}`
+				)}`,
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				true
 			);
+		console.log("response", response);
+		console.log("response", JSON.stringify(response, null, 4));
 		const markets = Object.values(response);
 
 		// const priceFeedIds = markets
@@ -720,6 +733,7 @@ export class PerpetualsApi {
 		const priceFeedIds = markets.map((market) =>
 			Casting.addressFromStringBytes(market.market_params.base_pfs_id)
 		);
+		console.log("priceFeedIds", priceFeedIds);
 		const symbols = await this.Provider.Oracle().fetchPriceFeedSymbols({
 			priceFeedIds,
 		});
@@ -847,6 +861,8 @@ export class PerpetualsApi {
 			undefined,
 			true
 		);
+		console.log("maxSize", maxSize);
+		console.log("maxSize", JSON.stringify(maxSize, null, 4));
 		return BigInt(Math.floor(maxSize));
 	};
 
