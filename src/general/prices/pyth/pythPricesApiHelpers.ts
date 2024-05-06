@@ -7,6 +7,7 @@ import {
 	Url,
 } from "../../../types";
 import { Coin } from "../../../packages";
+import { Helpers } from "../../utils";
 
 export class PythPricesApiHelpers {
 	// =========================================================================
@@ -62,10 +63,10 @@ export class PythPricesApiHelpers {
 
 	protected fetchPriceFeeds = async (coins: CoinType[]) => {
 		const filteredPriceIds = coins.map((coin) => {
-			const coinSymbol = Coin.coinSymbolForCoinType(
-				coin,
-				this.coinSymbolToCoinTypes
-			);
+			const coinSymbol = Coin.coinSymbolForCoinType({
+				coinType: coin,
+				coinSymbolToCoinTypes: this.coinSymbolToCoinTypes,
+			});
 			if (!coinSymbol) return "";
 
 			const priceFeedIds = PythPricesApiHelpers.constants.priceFeedIds;

@@ -1,6 +1,7 @@
 import { Coin } from "../../../packages";
 import { CoinPriceInfo, CoinSymbol, CoinType } from "../../../types";
 import { CoinHistoricalData } from "../../historicalData/historicalDataTypes";
+import { AftermathApi } from "../../providers";
 import { Helpers } from "../../utils";
 import {
 	CoinGeckoCoinApiId,
@@ -14,6 +15,7 @@ export class CoinGeckoApiHelpers {
 	// =========================================================================
 
 	constructor(
+		protected readonly Provider: AftermathApi,
 		private readonly coinGeckoApiKey: string,
 		private readonly coinApiIdsToCoinTypes: Record<
 			CoinGeckoCoinApiId,
@@ -123,81 +125,132 @@ export class CoinGeckoApiHelpers {
 	//  Historical Data
 	// =========================================================================
 
-	public fetchHistoricalData = async (inputs: {
-		coinApiId: CoinGeckoCoinApiId;
-		daysAgo: number;
-	}): Promise<CoinHistoricalData> => {
-		const { coinApiId, daysAgo } = inputs;
+	public fetchHistoricalData = this.Provider.withCache({
+		key: "coinGeckoApiHelpers.fetchHistoricalData",
+		expirationSeconds: 3600, // 1 hour
+		callback: async (inputs: {
+			coinApiId: CoinGeckoCoinApiId;
+			daysAgo: number;
+		}): Promise<CoinHistoricalData> => {
+			const { coinApiId, daysAgo } = inputs;
 
-		const allData = await this.callApi<{
-			prices: [timestamp: number, price: number][];
-			market_caps: [timestamp: number, marketCap: number][];
-			total_volumes: [timestamp: number, volume: number][];
-		}>(`coins/${coinApiId}/market_chart?vs_currency=USD&days=${daysAgo}`);
-
-		const formattedData: CoinHistoricalData = {
-			prices: allData.prices,
-			marketCaps: allData.market_caps,
-			volumes24Hours: allData.total_volumes,
-			time: inputs.daysAgo,
-			timeUnit: "D",
-		};
-
-		if (allData.prices.some((val) => val[0] <= 0))
-			throw new Error(
-				"invalid historical data for coin api id: " + coinApiId
+			const allData = await this.callApi<{
+				prices: [timestamp: number, price: number][];
+				market_caps: [timestamp: number, marketCap: number][];
+				total_volumes: [timestamp: number, volume: number][];
+			}>(
+				`coins/${coinApiId}/market_chart?vs_currency=USD&days=${daysAgo}`
 			);
 
-		return formattedData;
-	};
+			const formattedData: CoinHistoricalData = {
+				prices: allData.prices,
+				marketCaps: allData.market_caps,
+				volumes24Hours: allData.total_volumes,
+				time: inputs.daysAgo,
+				timeUnit: "D",
+			};
+
+			if (allData.prices.some((val) => val[0] <= 0))
+				throw new Error(
+					"invalid historical data for coin api id: " + coinApiId
+				);
+
+			return formattedData;
+		},
+	});
 
 	// =========================================================================
 	//  Current Prices
 	// =========================================================================
 
-	public fetchCoinsToPriceInfo = async (inputs: {
-		coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
-	}): Promise<Record<CoinType, CoinPriceInfo>> => {
-		const { coinsToApiId } = inputs;
-		if (Object.keys(coinsToApiId).length <= 0) return {};
+	public fetchCoinsToPriceInfoInternal = this.Provider.withCache({
+		key: "coinGeckoApiHelpers.fetchCoinsToPriceInfoInternal",
+		expirationSeconds: 300, // 5 minutes
+		callback: async (inputs: {
+			coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
+		}): Promise<Record<CoinType, CoinPriceInfo>> => {
+			const { coinsToApiId } = inputs;
+			if (Object.keys(coinsToApiId).length <= 0) return {};
 
-		const rawCoinsInfo = await this.callApi<
-			Record<CoinGeckoCoinApiId, { usd: number; usd_24h_change: number }>
-		>(
-			`simple/price?ids=${Helpers.uniqueArray(
-				Object.values(coinsToApiId)
-			).reduce(
-				(acc, apiId) => `${acc},${apiId}`,
-				""
-			)}&vs_currencies=USD&include_24hr_change=true&precision=full`
-		);
+			const singleCacheKey =
+				"coinGeckoApiHelpers.fetchCoinsToPriceInfoInternal_coin";
 
-		const coinsInfo: Record<CoinType, CoinPriceInfo> = Object.entries(
-			coinsToApiId
-		).reduce((acc, [coinType, coinApiId]) => {
-			const info = Object.entries(rawCoinsInfo).find(
-				([id]) => id === coinApiId
-			)?.[1];
+			const cachedCoinsToPriceInfo: Record<CoinType, CoinPriceInfo> =
+				Object.entries(coinsToApiId).reduce((acc, [coin]) => {
+					const cachedData = this.Provider.getCache<
+						CoinType,
+						CoinPriceInfo
+					>({
+						key: singleCacheKey,
+						inputs: [coin],
+					});
+					if (cachedData === "NO_CACHED_DATA") return acc;
 
-			if (!info)
-				throw new Error(
-					`coin type: '${coinType}' not found for coingecko coin api id: '${coinApiId}'`
+					return {
+						...acc,
+						[coin]: cachedData,
+					};
+				}, {});
+
+			const nonCachedCoinsToApiId = Helpers.filterObject(
+				coinsToApiId,
+				(coin) => !Object.keys(cachedCoinsToPriceInfo).includes(coin)
+			);
+
+			const rawCoinsInfo = await this.callApi<
+				Record<
+					CoinGeckoCoinApiId,
+					{ usd: number; usd_24h_change: number }
+				>
+			>(
+				`simple/price?ids=${Helpers.uniqueArray(
+					Object.values(nonCachedCoinsToApiId)
+				).reduce(
+					(acc, apiId) => `${acc},${apiId}`,
+					""
+				)}&vs_currencies=USD&include_24hr_change=true&precision=full`
+			);
+
+			const nonCachedCoinsInfo: Record<CoinType, CoinPriceInfo> =
+				Object.entries(nonCachedCoinsToApiId).reduce(
+					(acc, [coinType, coinApiId]) => {
+						const info = Object.entries(rawCoinsInfo).find(
+							([id]) => id === coinApiId
+						)?.[1];
+
+						if (!info)
+							throw new Error(
+								`coin type: '${coinType}' not found for coingecko coin api id: '${coinApiId}'`
+							);
+
+						return {
+							...acc,
+							[coinType]: {
+								price: info.usd ?? -1,
+								priceChange24HoursPercentage:
+									info.usd_24h_change === undefined
+										? 0
+										: info.usd_24h_change / 100,
+							},
+						};
+					},
+					{}
 				);
 
-			return {
-				...acc,
-				[coinType]: {
-					price: info.usd ?? -1,
-					priceChange24HoursPercentage:
-						info.usd_24h_change === undefined
-							? 0
-							: info.usd_24h_change / 100,
-				},
-			};
-		}, {});
+			for (const [coin, coinsInfo] of Object.entries(
+				nonCachedCoinsInfo
+			)) {
+				this.Provider.setCache({
+					key: singleCacheKey,
+					data: coinsInfo,
+					inputs: [coin],
+					expirationSeconds: 300, // 5 minutes
+				});
+			}
 
-		return coinsInfo;
-	};
+			return { ...cachedCoinsToPriceInfo, ...nonCachedCoinsInfo };
+		},
+	});
 
 	// =========================================================================
 	//  Private
@@ -224,16 +277,20 @@ export class CoinGeckoApiHelpers {
 		return castedRes;
 	};
 
-	private fetchRawCoinData = () => {
-		return this.callApi<
-			{
-				id: string;
-				symbol: string;
-				name: string;
-				platforms: {
-					sui?: string;
-				};
-			}[]
-		>("coins/list?include_platform=true");
-	};
+	private fetchRawCoinData = this.Provider.withCache({
+		key: "coinGeckoApiHelpers.fetchAllSuiCoinData",
+		expirationSeconds: 86400, // 24 hours
+		callback: () => {
+			return this.callApi<
+				{
+					id: string;
+					symbol: string;
+					name: string;
+					platforms: {
+						sui?: string;
+					};
+				}[]
+			>("coins/list?include_platform=true");
+		},
+	});
 }

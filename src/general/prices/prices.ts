@@ -38,12 +38,6 @@ export class Prices extends Caller {
 		return this.fetchApi(JSON.stringify(inputs.coins));
 	}
 
-	public async getCoinSymbolsToPriceInfo(inputs: {
-		coinSymbols: CoinSymbol[];
-	}): Promise<CoinSymbolsToPriceInfo> {
-		return this.fetchApi(`symbols/${JSON.stringify(inputs.coinSymbols)}`);
-	}
-
 	public async getCoinPrice(inputs: { coin: CoinType }): Promise<number> {
 		const priceInfo = await this.getCoinPriceInfo(inputs);
 		return priceInfo.price;

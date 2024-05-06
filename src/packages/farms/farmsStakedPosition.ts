@@ -22,6 +22,7 @@ import { Helpers } from "../../general/utils";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { Farms } from "./farms";
+import { AftermathApi } from "../../general/providers";
 
 export class FarmsStakedPosition extends Caller {
 	// =========================================================================
@@ -37,7 +38,8 @@ export class FarmsStakedPosition extends Caller {
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
 		trueLastHarvestRewardsTimestamp?: Timestamp,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
 	) {
 		super(network, "farms");
 		this.stakedPosition = stakedPosition;
@@ -130,13 +132,21 @@ export class FarmsStakedPosition extends Caller {
 		coinType: CoinType;
 		stakingPool: FarmsStakingPool;
 	}) => {
+		if (
+			inputs.stakingPool.rewardCoin(inputs).actualRewards === BigInt(0) ||
+			inputs.stakingPool.rewardCoin(inputs).actualRewards <
+				inputs.stakingPool.rewardCoin(inputs).emissionRate
+		)
+			return BigInt(0);
+
 		this.updatePosition(inputs);
 
 		const rewardCoin = this.rewardCoin(inputs);
 		const totalRewards =
 			rewardCoin.multiplierRewardsAccumulated +
 			rewardCoin.baseRewardsAccumulated;
-		return totalRewards < Farms.constants.minimalRewardsToClaim
+		return totalRewards < Farms.constants.minimalRewardsToClaim ||
+			totalRewards > inputs.stakingPool.rewardCoin(inputs).actualRewards
 			? BigInt(0)
 			: totalRewards;
 	};
@@ -257,7 +267,7 @@ export class FarmsStakedPosition extends Caller {
 				: 0;
 
 		const apr = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
-		return apr < 0 ? 0 : apr;
+		return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
 	};
 
 	// =========================================================================
@@ -273,15 +283,12 @@ export class FarmsStakedPosition extends Caller {
 		walletAddress: SuiAddress;
 		isSponsoredTx?: boolean;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsDepositPrincipalBody>(
-			"transactions/deposit-principal",
-			{
-				...inputs,
-				stakedPositionId: this.stakedPosition.objectId,
-				stakeCoinType: this.stakedPosition.stakeCoinType,
-				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-			}
-		);
+		return this.useProvider().fetchBuildDepositPrincipalTx({
+			...inputs,
+			stakedPositionId: this.stakedPosition.objectId,
+			stakeCoinType: this.stakedPosition.stakeCoinType,
+			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+		});
 	}
 
 	public async getUnstakeTransaction(inputs: {
@@ -289,17 +296,14 @@ export class FarmsStakedPosition extends Caller {
 		stakingPool: FarmsStakingPool;
 		claimSuiAsAfSui?: boolean;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsUnstakeBody>(
-			"transactions/unstake",
-			{
-				...inputs,
-				stakedPositionId: this.stakedPosition.objectId,
-				stakeCoinType: this.stakedPosition.stakeCoinType,
-				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-				withdrawAmount: this.stakedPosition.stakedAmount,
-				rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
-			}
-		);
+		return this.useProvider().fetchBuildUnstakeTx({
+			...inputs,
+			stakedPositionId: this.stakedPosition.objectId,
+			stakeCoinType: this.stakedPosition.stakeCoinType,
+			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+			withdrawAmount: this.stakedPosition.stakedAmount,
+			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
+		});
 	}
 
 	// =========================================================================
@@ -310,7 +314,7 @@ export class FarmsStakedPosition extends Caller {
 		lockDurationMs: Timestamp;
 		walletAddress: SuiAddress;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsLockBody>("transactions/lock", {
+		return this.useProvider().buildLockTx({
 			...inputs,
 			stakedPositionId: this.stakedPosition.objectId,
 			stakeCoinType: this.stakedPosition.stakeCoinType,
@@ -321,27 +325,21 @@ export class FarmsStakedPosition extends Caller {
 	public async getRenewLockTransaction(inputs: {
 		walletAddress: SuiAddress;
 	}) {
-		return this.fetchApiTransaction<ApiFarmsRenewLockBody>(
-			"transactions/renew-lock",
-			{
-				...inputs,
-				stakedPositionId: this.stakedPosition.objectId,
-				stakeCoinType: this.stakedPosition.stakeCoinType,
-				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-			}
-		);
+		return this.useProvider().buildRenewLockTx({
+			...inputs,
+			stakedPositionId: this.stakedPosition.objectId,
+			stakeCoinType: this.stakedPosition.stakeCoinType,
+			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+		});
 	}
 
 	public async getUnlockTransaction(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApiTransaction<ApiFarmsUnlockBody>(
-			"transactions/unlock",
-			{
-				...inputs,
-				stakedPositionId: this.stakedPosition.objectId,
-				stakeCoinType: this.stakedPosition.stakeCoinType,
-				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-			}
-		);
+		return this.useProvider().buildUnlockTx({
+			...inputs,
+			stakedPositionId: this.stakedPosition.objectId,
+			stakeCoinType: this.stakedPosition.stakeCoinType,
+			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+		});
 	}
 
 	// =========================================================================
@@ -353,16 +351,13 @@ export class FarmsStakedPosition extends Caller {
 		stakingPool: FarmsStakingPool;
 		claimSuiAsAfSui?: boolean;
 	}) {
-		return this.fetchApiTransaction<ApiHarvestFarmsRewardsBody>(
-			"transactions/harvest-rewards",
-			{
-				...inputs,
-				stakedPositionIds: [this.stakedPosition.objectId],
-				stakeCoinType: this.stakedPosition.stakeCoinType,
-				stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-				rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
-			}
-		);
+		return this.useProvider().fetchBuildHarvestRewardsTx({
+			...inputs,
+			stakedPositionIds: [this.stakedPosition.objectId],
+			stakeCoinType: this.stakedPosition.stakeCoinType,
+			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
+			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
+		});
 	}
 
 	// =========================================================================
@@ -520,5 +515,15 @@ export class FarmsStakedPosition extends Caller {
 			// no_rewards_are_remaining
 			stakingPool.stakingPool.isUnlocked
 		);
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Farms();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
 	};
 }

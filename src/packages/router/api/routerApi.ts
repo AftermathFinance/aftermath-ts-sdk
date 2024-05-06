@@ -3,7 +3,7 @@ import { RouterGraph } from "../utils/synchronous/routerGraph";
 import {
 	Balance,
 	CoinType,
-	RouterExternalFee,
+	ExternalFee,
 	RouterCompleteTradeRoute,
 	Slippage,
 	SuiNetwork,
@@ -172,8 +172,10 @@ export class RouterApi {
 	//  Graph
 	// =========================================================================
 
-	public fetchCreateSerializableGraph =
-		async (): Promise<RouterSerializableCompleteGraph> => {
+	public fetchCreateSerializableGraph = this.Provider.withCache({
+		key: "fetchCreateSerializableGraph",
+		expirationSeconds: 60,
+		callback: async (): Promise<RouterSerializableCompleteGraph> => {
 			const [asyncPools, synchronousPools] = await Promise.all([
 				this.fetchAsyncPools(),
 				this.fetchSynchronousPools(),
@@ -181,7 +183,8 @@ export class RouterApi {
 			return this.Helpers.fetchCreateSerializableGraph({
 				pools: [...asyncPools, ...synchronousPools],
 			});
-		};
+		},
+	});
 
 	// =========================================================================
 	//  Coin Paths
@@ -209,7 +212,7 @@ export class RouterApi {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountIn({
@@ -232,7 +235,7 @@ export class RouterApi {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-		externalFee?: RouterExternalFee;
+		externalFee?: ExternalFee;
 		excludeProtocols?: RouterProtocolName[];
 	}): Promise<RouterCompleteTradeRoute> => {
 		return this.Helpers.fetchCompleteTradeRouteGivenAmountOut({

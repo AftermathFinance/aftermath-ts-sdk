@@ -322,9 +322,13 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		coinInAmount: Balance;
-	}): Promise<Balance> => {
+	}) => {
 		const tradeResult = await this.fetchCalcTradeResult(inputs);
-		return tradeResult.amountOut;
+		return {
+			coinOutAmount: tradeResult.amountOut,
+			feeInAmount: tradeResult.feeAmount,
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	public otherCoinInPool = (inputs: {

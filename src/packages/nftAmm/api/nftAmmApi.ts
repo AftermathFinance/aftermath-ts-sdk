@@ -1,6 +1,5 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
-	Nft,
 	NftAmmInterfaceGenericTypes,
 	NftAmmMarketObject,
 } from "../nftAmmTypes";
@@ -10,6 +9,7 @@ import {
 	Balance,
 	CoinType,
 	DynamicFieldObjectsWithCursor,
+	Nft,
 	NftAmmAddresses,
 	ObjectId,
 	Slippage,
@@ -65,22 +65,6 @@ export class NftAmmApi {
 	//  Objects
 	// =========================================================================
 
-	public fetchNfts = async (inputs: {
-		objectIds: ObjectId[];
-	}): Promise<Nft[]> => {
-		return this.Provider.Objects().fetchCastObjectBatch({
-			...inputs,
-			objectFromSuiObjectResponse: NftAmmApiCasting.nftFromSuiObject,
-			options: {
-				// NOTE: do we need all of this ?
-				showContent: true,
-				showOwner: true,
-				showType: true,
-				showDisplay: true,
-			},
-		});
-	};
-
 	public fetchNftsInMarketTable = async (inputs: {
 		marketTableObjectId: ObjectId;
 		cursor?: ObjectId;
@@ -91,7 +75,7 @@ export class NftAmmApi {
 				...inputs,
 				parentObjectId: inputs.marketTableObjectId,
 				objectsFromObjectIds: (objectIds) =>
-					this.fetchNfts({ objectIds }),
+					this.Provider.Nfts().fetchNfts({ objectIds }),
 			}
 		);
 	};

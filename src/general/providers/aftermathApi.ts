@@ -2,11 +2,11 @@ import { ConfigAddresses } from "../types/configTypes";
 import { PoolsApi } from "../../packages/pools/api/poolsApi";
 import { FaucetApi } from "../../packages/faucet/api/faucetApi";
 import { CoinApi } from "../../packages/coin/api/coinApi";
-import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
-import { EventsApiHelpers } from "../api/eventsApiHelpers";
-import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
-import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
+import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
+import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
+import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
+import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { SuiApi } from "../../packages/sui/api/suiApi";
 import { WalletApi } from "../wallet/walletApi";
 import { RouterApi } from "../../packages/router/api/routerApi";
@@ -21,6 +21,7 @@ import {
 	RouterProtocolName,
 	RouterSynchronousOptions,
 	ScallopProviders,
+	UniqueId,
 	Url,
 } from "../../types";
 import { HistoricalDataApi } from "../historicalData/historicalDataApi";
@@ -35,12 +36,22 @@ import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
+import { NftsApi } from "../nfts/nftsApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
  * @class
  */
 export class AftermathApi {
+	private cache: Record<
+		UniqueId,
+		{
+			data: unknown;
+			expirationMs: number;
+			lastUsed: number;
+		}
+	>;
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
@@ -85,8 +96,15 @@ export class AftermathApi {
 		public readonly provider: SuiClient,
 		public readonly addresses: ConfigAddresses,
 		public readonly indexerCaller: IndexerCaller,
-		private readonly coinGeckoApiKey?: string
-	) {}
+		private readonly config?: {
+			prices?: {
+				coinGeckoApiKey?: string;
+				coinApiIdsToCoinTypes?: Record<CoinGeckoCoinApiId, CoinType[]>;
+			};
+		}
+	) {
+		this.cache = {};
+	}
 
 	// =========================================================================
 	//  Class Object Creation
@@ -108,20 +126,23 @@ export class AftermathApi {
 
 	public Wallet = () => new WalletApi(this);
 	public DynamicGas = () => new DynamicGasApi(this);
+	public Nfts = () => new NftsApi(this);
 
-	public Prices = this.coinGeckoApiKey
-		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+	public Prices = this?.config?.prices?.coinGeckoApiKey
+		? () =>
 				new CoinGeckoPricesApi(
-					this.coinGeckoApiKey ?? "",
-					coinApiIdsToCoinTypes
+					this,
+					this?.config?.prices?.coinGeckoApiKey ?? "",
+					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
 				)
 		: () => new PlaceholderPricesApi();
 
-	public HistoricalData = this.coinGeckoApiKey
-		? (coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>) =>
+	public HistoricalData = this?.config?.prices?.coinGeckoApiKey
+		? () =>
 				new HistoricalDataApi(
-					this.coinGeckoApiKey ?? "",
-					coinApiIdsToCoinTypes
+					this,
+					this?.config?.prices?.coinGeckoApiKey ?? "",
+					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
 				)
 		: () => new PlaceholderHistoricalDataApi();
 
@@ -163,4 +184,84 @@ export class AftermathApi {
 
 	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
 		new LeveragedStakingApi(this, ScallopProviders);
+
+	// =========================================================================
+	//  Cache
+	// =========================================================================
+
+	public withCache = <Input, Output>(inputs: {
+		key: string;
+		expirationSeconds: number; // < 0 means never expires
+		callback: (...inputs: Input[]) => Promise<Output>;
+	}): ((...inputs: Input[]) => Promise<Output>) => {
+		const { key, expirationSeconds, callback } = inputs;
+
+		const fetchFunc = async (...inputs: Input[]): Promise<Output> => {
+			// this allows BigInt to be JSON serialized (as string)
+			(BigInt.prototype as any).toJSON = function () {
+				return this.toString() + "n";
+			};
+
+			const cachedData = this.getCache<Input, Output>({ key, inputs });
+			if (cachedData !== "NO_CACHED_DATA") {
+				return cachedData;
+			}
+
+			const newData = await callback(...inputs);
+
+			this.setCache({
+				key,
+				expirationSeconds,
+				inputs,
+				data: newData,
+			});
+			return newData;
+		};
+
+		return fetchFunc;
+	};
+
+	public setCache = <Input, Output>(inputs: {
+		key: string;
+		expirationSeconds: number; // < 0 means never expires
+		data: Output;
+		inputs: Input[];
+	}) => {
+		const cacheKey = this.getCacheKey(inputs);
+
+		this.cache[cacheKey] = {
+			data: inputs.data,
+			lastUsed: Date.now(),
+			expirationMs: inputs.expirationSeconds * 1000, // convert to ms
+		};
+	};
+
+	public getCache = <Input, Output>(inputs: {
+		key: string;
+		inputs: Input[];
+	}): Output | "NO_CACHED_DATA" => {
+		const cacheKey = this.getCacheKey(inputs);
+
+		if (
+			cacheKey in this.cache &&
+			(this.cache[cacheKey].lastUsed +
+				this.cache[cacheKey].expirationMs >=
+				Date.now() ||
+				this.cache[cacheKey].expirationMs < 0)
+		) {
+			return this.cache[cacheKey].data as Output;
+		}
+		return "NO_CACHED_DATA";
+	};
+
+	private getCacheKey = <Input, Output>(inputs: {
+		key: string;
+		inputs: Input[];
+	}) => {
+		// this allows BigInt to be JSON serialized (as string)
+		(BigInt.prototype as any).toJSON = function () {
+			return this.toString() + "n";
+		};
+		return `${inputs.key}_${JSON.stringify(inputs.inputs)}`; // TODO: hash me
+	};
 }

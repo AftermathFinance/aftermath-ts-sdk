@@ -55,32 +55,33 @@ class AftermathRouterPool implements RouterPoolInterface {
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}) => {
-		// withdraw/deposit
-		if (
-			inputs.coinInType === this.pool.lpCoinType ||
-			inputs.coinOutType === this.pool.lpCoinType
-		) {
-			// TODO: do this calc more efficiently
-			let smallAmountIn = BigInt(100000);
-			while (smallAmountIn < Casting.u64MaxBigInt) {
-				try {
-					const smallAmountOut = this.getTradeAmountOut({
-						...inputs,
-						coinInAmount: smallAmountIn,
-					});
+		// // withdraw/deposit
+		// if (
+		// 	inputs.coinInType === this.pool.lpCoinType ||
+		// 	inputs.coinOutType === this.pool.lpCoinType
+		// ) {
+		// 	// TODO: do this calc more efficiently
+		// 	let smallAmountIn = BigInt(100000);
+		// 	while (smallAmountIn < Casting.u64MaxBigInt) {
+		// 		try {
+		// 			const { coinOutAmount: smallAmountOut } =
+		// 				this.getTradeAmountOut({
+		// 					...inputs,
+		// 					coinInAmount: smallAmountIn,
+		// 				});
 
-					if (smallAmountOut <= BigInt(0))
-						throw new Error("0 amount out");
+		// 			if (smallAmountOut <= BigInt(0))
+		// 				throw new Error("0 amount out");
 
-					return Number(smallAmountIn) / Number(smallAmountOut);
-				} catch (e) {}
+		// 			return Number(smallAmountIn) / Number(smallAmountOut);
+		// 		} catch (e) {}
 
-				smallAmountIn *= BigInt(10);
-			}
+		// 		smallAmountIn *= BigInt(10);
+		// 	}
 
-			// this shouldn't be reached
-			return 1;
-		}
+		// 	// this shouldn't be reached
+		// 	return 1;
+		// }
 
 		// trade
 		return this.poolClass.getSpotPrice(inputs);
@@ -91,90 +92,97 @@ class AftermathRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
-		// withdraw
+	}) => {
+		// // withdraw
+		// if (inputs.coinInType === this.pool.lpCoinType) {
+		// 	const lpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
+		// 		lpCoinAmountOut: inputs.coinInAmount,
+		// 	});
 
-		if (inputs.coinInType === this.pool.lpCoinType) {
-			const lpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
-				lpCoinAmountOut: inputs.coinInAmount,
-			});
+		// 	// TODO: move this estimation to helper function within sdk
+		// 	const poolCoinOut = this.pool.coins[inputs.coinOutType];
+		// 	const coinOutPoolBalance = poolCoinOut.balance;
 
-			// TODO: move this estimation to helper function within sdk
-			const poolCoinOut = this.pool.coins[inputs.coinOutType];
-			const coinOutPoolBalance = poolCoinOut.balance;
+		// 	const lpCoinSupply = Number(this.pool.lpCoinSupply);
+		// 	const lpTotal = Number(inputs.coinInAmount);
+		// 	const poolCoinAmount =
+		// 		lpTotal < 0
+		// 			? 0
+		// 			: Number(coinOutPoolBalance) * (lpTotal / lpCoinSupply);
 
-			const lpCoinSupply = Number(this.pool.lpCoinSupply);
-			const lpTotal = Number(inputs.coinInAmount);
-			const poolCoinAmount =
-				lpTotal < 0
-					? 0
-					: Number(coinOutPoolBalance) * (lpTotal / lpCoinSupply);
+		// 	const amountOutEstimate = BigInt(Math.floor(poolCoinAmount));
 
-			const amountOutEstimate = BigInt(Math.floor(poolCoinAmount));
+		// 	const amountsOuts = this.poolClass.getWithdrawAmountsOut({
+		// 		lpRatio,
+		// 		amountsOutDirection: {
+		// 			[inputs.coinOutType]: amountOutEstimate,
+		// 		},
+		// 		referral: inputs.referrer !== undefined,
+		// 	});
 
-			const amountsOuts = this.poolClass.getWithdrawAmountsOut({
-				lpRatio,
-				amountsOutDirection: {
-					[inputs.coinOutType]: amountOutEstimate,
-				},
-				referral: inputs.referrer !== undefined,
-			});
+		// 	return amountsOuts[inputs.coinOutType];
+		// }
 
-			return amountsOuts[inputs.coinOutType];
-		}
+		// // deposit
+		// if (inputs.coinOutType === this.pool.lpCoinType) {
+		// 	const { lpAmountOut } = this.poolClass.getDepositLpAmountOut({
+		// 		amountsIn: {
+		// 			[inputs.coinInType]: inputs.coinInAmount,
+		// 		},
+		// 		referral: inputs.referrer !== undefined,
+		// 	});
 
-		// deposit
-		if (inputs.coinOutType === this.pool.lpCoinType) {
-			const { lpAmountOut } = this.poolClass.getDepositLpAmountOut({
-				amountsIn: {
-					[inputs.coinInType]: inputs.coinInAmount,
-				},
-				referral: inputs.referrer !== undefined,
-			});
-
-			return lpAmountOut;
-		}
+		// 	return lpAmountOut;
+		// }
 
 		// trade
-		return this.poolClass.getTradeAmountOut(inputs);
+		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
+			amount: inputs.coinInAmount,
+		});
+		const coinOutAmount = this.poolClass.getTradeAmountOut(inputs);
+		return {
+			coinOutAmount,
+			feeInAmount: inputs.coinInAmount - coinInAmountWithFees,
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
-		const slippage = 100;
+		// const slippage = 100;
 
-		// withdraw
-		if (inputs.coinInType === this.pool.lpCoinType) {
-			return inputs.provider.Pools().multiCoinWithdrawTx({
-				...inputs,
-				poolId: this.pool.objectId,
-				lpCoinId: inputs.coinInId,
-				coinTypes: [inputs.coinOutType],
-				expectedAmountsOut: [inputs.expectedCoinOutAmount],
-				lpCoinType: this.pool.lpCoinType,
-				slippage,
-			});
-		}
+		// // withdraw
+		// if (inputs.coinInType === this.pool.lpCoinType) {
+		// 	return inputs.provider.Pools().multiCoinWithdrawTx({
+		// 		...inputs,
+		// 		poolId: this.pool.objectId,
+		// 		lpCoinId: inputs.coinInId,
+		// 		coinTypes: [inputs.coinOutType],
+		// 		expectedAmountsOut: [inputs.expectedCoinOutAmount],
+		// 		lpCoinType: this.pool.lpCoinType,
+		// 		slippage,
+		// 	});
+		// }
 
-		// deposit
-		if (inputs.coinOutType === this.pool.lpCoinType) {
-			const expectedLpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
-				lpCoinAmountOut: inputs.expectedCoinOutAmount,
-			});
+		// // deposit
+		// if (inputs.coinOutType === this.pool.lpCoinType) {
+		// 	const expectedLpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
+		// 		lpCoinAmountOut: inputs.expectedCoinOutAmount,
+		// 	});
 
-			return inputs.provider.Pools().multiCoinDepositTx({
-				...inputs,
-				poolId: this.pool.objectId,
-				// this is because typescript complains for some reason otherwise
-				coinIds:
-					typeof inputs.coinInId === "string"
-						? [inputs.coinInId]
-						: [inputs.coinInId],
-				coinTypes: [inputs.coinInType],
-				expectedLpRatio: Casting.numberToFixedBigInt(expectedLpRatio),
-				lpCoinType: this.pool.lpCoinType,
-				slippage,
-			});
-		}
+		// 	return inputs.provider.Pools().multiCoinDepositTx({
+		// 		...inputs,
+		// 		poolId: this.pool.objectId,
+		// 		// this is because typescript complains for some reason otherwise
+		// 		coinIds:
+		// 			typeof inputs.coinInId === "string"
+		// 				? [inputs.coinInId]
+		// 				: [inputs.coinInId],
+		// 		coinTypes: [inputs.coinInType],
+		// 		expectedLpRatio: Casting.numberToFixedBigInt(expectedLpRatio),
+		// 		lpCoinType: this.pool.lpCoinType,
+		// 		slippage,
+		// 	});
+		// }
 
 		// trade
 		const coinOut = inputs.provider.Pools().routerWrapperTradeTx({
@@ -191,39 +199,48 @@ class AftermathRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
-		// reverse withdraw (deposit)
-		if (inputs.coinInType === this.pool.lpCoinType) {
-			const { lpAmountOut } = this.poolClass.getDepositLpAmountOut({
-				amountsIn: {
-					[inputs.coinOutType]: inputs.coinOutAmount,
-				},
-				referral: inputs.referrer !== undefined,
-			});
+	}) => {
+		// // reverse withdraw (deposit)
+		// if (inputs.coinInType === this.pool.lpCoinType) {
+		// 	const { lpAmountOut } = this.poolClass.getDepositLpAmountOut({
+		// 		amountsIn: {
+		// 			[inputs.coinOutType]: inputs.coinOutAmount,
+		// 		},
+		// 		referral: inputs.referrer !== undefined,
+		// 	});
 
-			return lpAmountOut;
-		}
+		// 	return lpAmountOut;
+		// }
 
-		// reverse deposit (withdraw)
-		if (inputs.coinOutType === this.pool.lpCoinType) {
-			const lpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
-				lpCoinAmountOut: inputs.coinOutAmount,
-			});
+		// // reverse deposit (withdraw)
+		// if (inputs.coinOutType === this.pool.lpCoinType) {
+		// 	const lpRatio = this.poolClass.getMultiCoinWithdrawLpRatio({
+		// 		lpCoinAmountOut: inputs.coinOutAmount,
+		// 	});
 
-			const amountsOuts = this.poolClass.getWithdrawAmountsOut({
-				lpRatio,
-				amountsOutDirection: {
-					// TODO: give a better approximation for direction amount ?
-					[inputs.coinInType]: inputs.coinOutAmount,
-				},
-				referral: inputs.referrer !== undefined,
-			});
+		// 	const amountsOuts = this.poolClass.getWithdrawAmountsOut({
+		// 		lpRatio,
+		// 		amountsOutDirection: {
+		// 			// TODO: give a better approximation for direction amount ?
+		// 			[inputs.coinInType]: inputs.coinOutAmount,
+		// 		},
+		// 		referral: inputs.referrer !== undefined,
+		// 	});
 
-			return amountsOuts[inputs.coinInType];
-		}
+		// 	return amountsOuts[inputs.coinInType];
+		// }
 
 		// reverse trade
-		return this.poolClass.getTradeAmountIn(inputs);
+
+		const coinInAmount = this.poolClass.getTradeAmountIn(inputs);
+		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
+			amount: coinInAmount,
+		});
+		return {
+			coinInAmount,
+			feeOutAmount: BigInt(0),
+			feeInAmount: coinInAmount - coinInAmountWithFees,
+		};
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {
@@ -247,28 +264,30 @@ class AftermathRouterPool implements RouterPoolInterface {
 	}): RouterPoolInterface => {
 		let newPoolObject = Helpers.deepCopy(this.pool);
 
-		if (inputs.coinInType === this.pool.lpCoinType) {
-			// withdraw
+		// if (inputs.coinInType === this.pool.lpCoinType) {
+		// 	// withdraw
 
-			newPoolObject.lpCoinSupply += inputs.coinInAmount;
+		// 	newPoolObject.lpCoinSupply += inputs.coinInAmount;
 
-			newPoolObject.coins[inputs.coinOutType].balance -=
-				inputs.coinOutAmount;
-		} else if (inputs.coinOutType === this.pool.lpCoinType) {
-			// deposit
+		// 	newPoolObject.coins[inputs.coinOutType].balance -=
+		// 		inputs.coinOutAmount;
+		// } else if (inputs.coinOutType === this.pool.lpCoinType) {
+		// 	// deposit
 
-			newPoolObject.coins[inputs.coinInType].balance +=
-				inputs.coinInAmount;
+		// 	newPoolObject.coins[inputs.coinInType].balance +=
+		// 		inputs.coinInAmount;
 
-			newPoolObject.lpCoinSupply -= inputs.coinOutAmount;
-		} else {
-			// trade
+		// 	newPoolObject.lpCoinSupply -= inputs.coinOutAmount;
+		// } else {
+		// 	// trade
 
-			newPoolObject.coins[inputs.coinInType].balance +=
-				inputs.coinInAmount;
-			newPoolObject.coins[inputs.coinOutType].balance -=
-				inputs.coinOutAmount;
-		}
+		// 	newPoolObject.coins[inputs.coinInType].balance +=
+		// 		inputs.coinInAmount;
+		// 	newPoolObject.coins[inputs.coinOutType].balance -=
+		// 		inputs.coinOutAmount;
+		// }
+		newPoolObject.coins[inputs.coinInType].balance += inputs.coinInAmount;
+		newPoolObject.coins[inputs.coinOutType].balance -= inputs.coinOutAmount;
 
 		return new AftermathRouterPool(
 			Helpers.deepCopy(newPoolObject),

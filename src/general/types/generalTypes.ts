@@ -68,6 +68,26 @@ export type IFixedAsStringBytes = string[];
 export type IdAsStringBytes = string[];
 
 // =========================================================================
+//  General
+// =========================================================================
+
+/**
+ * Fee info for third party packages wanting to fee transactions
+ */
+export interface ExternalFee {
+	/**
+	 * Address of recipient for collected fees
+	 */
+	recipient: SuiAddress;
+	/**
+	 * Percent of fees to be collected from coin
+	 *
+	 * @remarks 0.54 = 54%
+	 */
+	feePercentage: Percentage;
+}
+
+// =========================================================================
 //  Events
 // =========================================================================
 

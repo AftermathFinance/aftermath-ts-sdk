@@ -6,6 +6,7 @@ import {
 	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { AftermathApi } from "../../general/providers";
 
 export class Faucet extends Caller {
 	// =========================================================================
@@ -20,7 +21,10 @@ export class Faucet extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(
+		public readonly network?: SuiNetwork | Url,
+		private readonly Provider?: AftermathApi
+	) {
 		super(network, "faucet");
 	}
 
@@ -43,16 +47,20 @@ export class Faucet extends Caller {
 	// =========================================================================
 
 	public async getRequestCoinTransaction(inputs: ApiFaucetRequestBody) {
-		return this.fetchApiTransaction<ApiFaucetRequestBody>(
-			"transactions/request",
-			inputs
-		);
+		return this.useProvider().fetchRequestCoinAmountTx(inputs);
 	}
 
 	public async getMintSuiFrenTransaction(inputs: ApiFaucetMintSuiFrenBody) {
-		return this.fetchApiTransaction<ApiFaucetMintSuiFrenBody>(
-			"transactions/mint-sui-fren",
-			inputs
-		);
+		return this.useProvider().fetchBuildMintSuiFrenTx(inputs);
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Faucet();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

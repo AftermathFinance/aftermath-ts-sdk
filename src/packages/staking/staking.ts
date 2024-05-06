@@ -21,6 +21,7 @@ import {
 import { Caller } from "../../general/utils/caller";
 import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui.js/client";
 import { Casting } from "../../general/utils";
+import { AftermathApi } from "../../general/providers";
 
 /**
  * The Staking class provides an interface for interacting with the Staking contract.
@@ -42,6 +43,10 @@ export class Staking extends Caller {
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
 			minUnstake: BigInt("1000000000"), // 1 afSUI
+			/**
+			 * Max fee percentage that third parties can charge on staking/unstaking transactions
+			 */
+			maxExternalFeePercentage: 0.5, // 50%
 		},
 		defaultValidatorFee: 0, // 0%
 	};
@@ -54,7 +59,10 @@ export class Staking extends Caller {
 	 * Creates a new instance of the Staking class.
 	 * @param network - The network to use for interacting with the Staking contract.
 	 */
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
+	) {
 		super(network, "staking");
 	}
 
@@ -129,10 +137,7 @@ export class Staking extends Caller {
 	 * @returns A Promise that resolves to a transaction object.
 	 */
 	public async getStakeTransaction(inputs: ApiStakeBody) {
-		return this.fetchApiTransaction<ApiStakeBody>(
-			"transactions/stake",
-			inputs
-		);
+		return this.useProvider().fetchBuildStakeTx(inputs);
 	}
 
 	/**
@@ -141,10 +146,7 @@ export class Staking extends Caller {
 	 * @returns A Promise that resolves to a transaction object.
 	 */
 	public async getUnstakeTransaction(inputs: ApiUnstakeBody) {
-		return this.fetchApiTransaction<ApiUnstakeBody>(
-			"transactions/unstake",
-			inputs
-		);
+		return this.useProvider().fetchBuildUnstakeTx(inputs);
 	}
 
 	/**
@@ -153,10 +155,7 @@ export class Staking extends Caller {
 	 * @returns A Promise that resolves to a transaction object.
 	 */
 	public async getStakeStakedSuiTransaction(inputs: ApiStakeStakedSuiBody) {
-		return this.fetchApiTransaction<ApiStakeStakedSuiBody>(
-			"transactions/stake-staked-sui",
-			inputs
-		);
+		return this.useProvider().fetchBuildStakeStakedSuiTx(inputs);
 	}
 
 	/**
@@ -164,13 +163,8 @@ export class Staking extends Caller {
 	 * @param inputs - An object containing the validator address and the new fee percentage.
 	 * @returns A Promise that resolves to a transaction object.
 	 */
-	public async getUpdateValidatorFeeTransaction(
-		inputs: ApiUpdateValidatorFeeBody
-	) {
-		return this.fetchApiTransaction<ApiUpdateValidatorFeeBody>(
-			"transactions/update-validator-fee",
-			inputs
-		);
+	public getUpdateValidatorFeeTransaction(inputs: ApiUpdateValidatorFeeBody) {
+		return this.useProvider().buildUpdateValidatorFeeTx(inputs);
 	}
 
 	// =========================================================================
@@ -244,16 +238,26 @@ export class Staking extends Caller {
 			//  `atomic_unstake_sui_reserves` to:
 			//      e.g. fee = max_fee - ((max_fee - min_fee) * liquidity_after / target_liquidity_value)
 
-			let atomic_fee_delta =
+			const atomicFeeDelta =
 				stakedSuiVaultState.maxAtomicUnstakeFee -
 				stakedSuiVaultState.minAtomicUnstakeFee;
 
 			return Casting.bigIntToFixedNumber(
 				stakedSuiVaultState.maxAtomicUnstakeFee -
-					(atomic_fee_delta *
+					(atomicFeeDelta *
 						stakedSuiVaultState.atomicUnstakeSuiReserves) /
 						stakedSuiVaultState.atomicUnstakeSuiReservesTargetValue
 			);
 		}
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Staking();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

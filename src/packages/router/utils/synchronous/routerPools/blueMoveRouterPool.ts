@@ -61,10 +61,11 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 		let smallAmountIn = BigInt(100000);
 		while (smallAmountIn < Casting.u64MaxBigInt) {
 			try {
-				const smallAmountOut = this.getTradeAmountOut({
-					...inputs,
-					coinInAmount: smallAmountIn,
-				});
+				const { coinOutAmount: smallAmountOut } =
+					this.getTradeAmountOut({
+						...inputs,
+						coinInAmount: smallAmountIn,
+					});
 
 				if (smallAmountOut <= BigInt(0))
 					throw new Error("0 amount out");
@@ -85,7 +86,7 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		const coinInReserve = this.getPoolBalance(inputs.coinInType);
 		const coinOutReserve = this.getPoolBalance(inputs.coinOutType);
 
@@ -99,11 +100,10 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 				Number(this.pool.stable.daoFee + this.pool.stable.fee) /
 				BlueMoveRouterPool.BLUE_MOVE_FEE_SCALING;
 
-			const coinInAmountMinusFee =
-				inputs.coinInAmount -
-				BigInt(
-					Math.floor(Number(inputs.coinInAmount) * totalFeePercentage)
-				);
+			const feeInAmount = BigInt(
+				Math.floor(Number(inputs.coinInAmount) * totalFeePercentage)
+			);
+			const coinInAmountMinusFee = inputs.coinInAmount - feeInAmount;
 
 			const [scaleIn, scaleOut] = isCoinInX
 				? [this.pool.stable.xScale, this.pool.stable.yScale]
@@ -116,24 +116,31 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 				Number(scaleOut),
 				Number(coinInAmountMinusFee)
 			);
-			return BigInt(Math.floor(recievedAmount));
+			return {
+				coinOutAmount: BigInt(Math.floor(recievedAmount)),
+				feeInAmount,
+				feeOutAmount: BigInt(0),
+			};
 		}
 
-		const coinInAmountMinusFee =
-			inputs.coinInAmount -
-			BigInt(
-				Math.floor(
-					Number(inputs.coinInAmount) *
-						BlueMoveRouterPool.BLUE_MOVE_ASSUMED_UNCORRELATED_FEE
-				)
-			);
+		const feeInAmount = BigInt(
+			Math.floor(
+				Number(inputs.coinInAmount) *
+					BlueMoveRouterPool.BLUE_MOVE_ASSUMED_UNCORRELATED_FEE
+			)
+		);
+		const coinInAmountMinusFee = inputs.coinInAmount - feeInAmount;
 
 		const { recievedAmount } = this.getSwapAmountUncorrelated(
 			coinInReserve,
 			coinOutReserve,
 			Number(coinInAmountMinusFee)
 		);
-		return BigInt(Math.floor(recievedAmount));
+		return {
+			coinOutAmount: BigInt(Math.floor(recievedAmount)),
+			feeInAmount,
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	tradeTx = (inputs: RouterPoolTradeTxInputs) => {
@@ -151,9 +158,13 @@ class BlueMoveRouterPool implements RouterPoolInterface {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
-	}): Balance => {
+	}) => {
 		// TODO: implement
-		return Casting.u64MaxBigInt;
+		return {
+			coinInAmount: Casting.u64MaxBigInt,
+			feeInAmount: BigInt(0),
+			feeOutAmount: BigInt(0),
+		};
 	};
 
 	getUpdatedPoolBeforeTrade = (inputs: {

@@ -67,7 +67,7 @@ import {
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import {
 	AllocatedCollateralEventOnChain,
@@ -89,8 +89,8 @@ import { Aftermath } from "../../..";
 import { PerpetualsOrderUtils } from "../utils";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
-import { InspectionsApiHelpers } from "../../../general/api/inspectionsApiHelpers";
-import { TransactionsApiHelpers } from "../../../general/api/transactionsApiHelpers";
+import { InspectionsApiHelpers } from "../../../general/apiHelpers/inspectionsApiHelpers";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 
 // curl --location --request POST --header "Content-type: application/json" --header "Accept: application/json"  --data-raw '{
 // "ch_id": "0x8cf75b38f573c6349ac7ca5d1893db076b20b7aa4983773907b6a7b20268bf8a",

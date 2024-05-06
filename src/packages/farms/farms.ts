@@ -19,6 +19,7 @@ import {
 } from "./farmsTypes";
 import { FarmsStakingPool } from "./farmsStakingPool";
 import { FarmsStakedPosition } from "./farmsStakedPosition";
+import { AftermathApi } from "../../general/providers";
 
 export class Farms extends Caller {
 	// =========================================================================
@@ -33,7 +34,10 @@ export class Farms extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
+	) {
 		super(network, "farms");
 	}
 
@@ -49,7 +53,7 @@ export class Farms extends Caller {
 		const stakingPool = await this.fetchApi<FarmsStakingPoolObject>(
 			inputs.objectId
 		);
-		return new FarmsStakingPool(stakingPool, this.network);
+		return new FarmsStakingPool(stakingPool, this.network, this.Provider);
 	}
 
 	public async getStakingPools(inputs: { objectIds: ObjectId[] }) {
@@ -63,7 +67,7 @@ export class Farms extends Caller {
 	public async getAllStakingPools() {
 		const stakingPools = await this.fetchApi<FarmsStakingPoolObject[]>("");
 		return stakingPools.map(
-			(pool) => new FarmsStakingPool(pool, this.network)
+			(pool) => new FarmsStakingPool(pool, this.network, this.Provider)
 		);
 	}
 
@@ -75,7 +79,13 @@ export class Farms extends Caller {
 			ApiFarmsOwnedStakedPositionsBody
 		>("owned-staked-positions", inputs);
 		return positions.map(
-			(pool) => new FarmsStakedPosition(pool, undefined, this.network)
+			(pool) =>
+				new FarmsStakedPosition(
+					pool,
+					undefined,
+					this.network,
+					this.Provider
+				)
 		);
 	}
 
@@ -104,10 +114,7 @@ export class Farms extends Caller {
 	public async getCreateStakingPoolTransaction(
 		inputs: ApiFarmsCreateStakingPoolBody
 	) {
-		return this.fetchApiTransaction<ApiFarmsCreateStakingPoolBody>(
-			"transactions/create-staking-pool",
-			inputs
-		);
+		return this.useProvider().fetchBuildCreateStakingPoolTx(inputs);
 	}
 
 	// =========================================================================
@@ -172,4 +179,14 @@ export class Farms extends Caller {
 			inputs
 		);
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Farms();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

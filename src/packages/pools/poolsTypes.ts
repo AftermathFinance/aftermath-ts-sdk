@@ -237,6 +237,7 @@ export interface ApiCreatePoolBody {
 	respectDecimals: boolean;
 	forceLpDecimals?: CoinDecimal;
 	isSponsoredTx?: boolean;
+	burnLpCoin?: boolean;
 }
 
 // =========================================================================
@@ -250,4 +251,8 @@ export interface ApiPoolSpotPriceBody {
 
 export interface ApiPoolObjectIdForLpCoinTypeBody {
 	lpCoinType: CoinType;
+}
+
+export interface ApiPoolsStatsBody {
+	poolIds: ObjectId[];
 }

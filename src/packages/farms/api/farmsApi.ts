@@ -35,7 +35,7 @@ import {
 	BigIntAsString,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Sui } from "../../sui";
 import {
 	FarmsCreatedVaultEventOnChain,
@@ -189,32 +189,84 @@ export class FarmsApi {
 	public fetchStakingPool = async (inputs: {
 		objectId: ObjectId;
 	}): Promise<FarmsStakingPoolObject> => {
-		const partialStakingPool =
-			await this.Provider.Objects().fetchCastObject({
+		return (
+			await this.fetchStakingPools({
+				objectIds: [inputs.objectId],
+			})
+		)[0];
+	};
+
+	public fetchStakingPools = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<FarmsStakingPoolObject[]> => {
+		const partialStakingPools =
+			await this.Provider.Objects().fetchCastObjectBatch({
 				...inputs,
 				objectFromSuiObjectResponse:
 					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
 			});
 
-		const [isUnlocked, remainingRewards] = await Promise.all([
-			this.fetchIsStakingPoolUnlocked({
-				stakingPoolId: inputs.objectId,
-				stakeCoinType: partialStakingPool.stakeCoinType,
+		const [
+			isUnlockedForPools,
+			remainingRewardsForPools,
+			actualRewardsDynamicFields,
+		] = await Promise.all([
+			this.fetchIsUnlockedForStakingPools({
+				stakingPoolIds: inputs.objectIds,
+				stakeCoinTypes: partialStakingPools.map(
+					(pool) => pool.stakeCoinType
+				),
 			}),
-			this.fetchStakingPoolRemainingRewards({
-				stakingPoolId: inputs.objectId,
-				stakeCoinType: partialStakingPool.stakeCoinType,
+			this.fetchRemainingRewardsForStakingPools({
+				stakingPoolIds: inputs.objectIds,
+				stakeCoinTypes: partialStakingPools.map(
+					(pool) => pool.stakeCoinType
+				),
 			}),
+			Promise.all(
+				partialStakingPools.map((pool) =>
+					this.Provider.DynamicFields().fetchCastAllDynamicFieldsOfType(
+						{
+							parentObjectId: pool.objectId,
+							dynamicFieldType: (objectType) =>
+								objectType
+									.toLowerCase()
+									.includes("0x2::balance::balance<"),
+							objectsFromObjectIds: (objectIds) =>
+								this.Provider.Objects().fetchCastObjectBatch({
+									objectIds,
+									objectFromSuiObjectResponse: (data) => ({
+										coinType:
+											Helpers.addLeadingZeroesToType(
+												"0x" +
+													(Helpers.getObjectFields(
+														data
+													).name as string)
+											),
+										balance: BigInt(
+											Helpers.getObjectFields(data)
+												.value as BigIntAsString
+										),
+									}),
+								}),
+						}
+					)
+				)
+			),
 		]);
 
-		return {
+		return partialStakingPools.map((partialStakingPool, poolIndex) => ({
 			...partialStakingPool,
-			isUnlocked,
+			isUnlocked: isUnlockedForPools[poolIndex],
 			rewardCoins: partialStakingPool.rewardCoins.map((coin, index) => ({
 				...coin,
-				rewardsRemaining: remainingRewards[index],
+				rewardsRemaining: remainingRewardsForPools[poolIndex][index],
+				actualRewards:
+					actualRewardsDynamicFields[poolIndex].find(
+						(field) => field.coinType === coin.coinType
+					)?.balance ?? BigInt(0),
 			})),
-		};
+		}));
 	};
 
 	public fetchAllStakingPools = async (): Promise<
@@ -227,26 +279,9 @@ export class FarmsApi {
 			})
 		).map((event) => event.vaultId);
 
-		const partialStakingPools =
-			await this.Provider.Objects().fetchCastObjectBatch({
-				objectIds,
-				objectFromSuiObjectResponse:
-					Casting.farms.partialStakingPoolObjectFromSuiObjectResponse,
-			});
-
-		return Promise.all(
-			partialStakingPools.map(async (stakingPool) => {
-				const isUnlocked = await this.fetchIsStakingPoolUnlocked({
-					stakingPoolId: stakingPool.objectId,
-					stakeCoinType: stakingPool.stakeCoinType,
-				});
-
-				return {
-					...stakingPool,
-					isUnlocked,
-				};
-			})
-		);
+		return this.fetchStakingPools({
+			objectIds,
+		});
 	};
 
 	public fetchOwnedStakingPoolOwnerCaps = async (
@@ -1109,7 +1144,7 @@ export class FarmsApi {
 			if (harvestedCoinIds.length > 1)
 				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
 
-			if (inputs.claimSuiAsAfSui && Coin.isSuiCoin(coinType)) {
+			if (inputs.claimSuiAsAfSui && Coin.isCoinObjectType(coinType)) {
 				const validatorAddress =
 					this.Provider.Staking().addresses.routerWrapper?.objects
 						.aftermathValidator;
@@ -1247,37 +1282,77 @@ export class FarmsApi {
 		stakingPoolId: ObjectId;
 		stakeCoinType: CoinType;
 	}): Promise<boolean> {
-		const tx = new TransactionBlock();
-		this.isVaultUnlockedTx({
-			...inputs,
-			tx,
-		});
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
-
-		const isUnlocked: boolean = bcs.de("bool", new Uint8Array(bytes));
-		return isUnlocked;
+		return (
+			await this.fetchIsUnlockedForStakingPools({
+				stakingPoolIds: [inputs.stakingPoolId],
+				stakeCoinTypes: [inputs.stakeCoinType],
+			})
+		)[0];
 	}
 
 	public async fetchStakingPoolRemainingRewards(inputs: {
 		stakingPoolId: ObjectId;
 		stakeCoinType: CoinType;
 	}): Promise<Balance[]> {
+		return (
+			await this.fetchRemainingRewardsForStakingPools({
+				stakingPoolIds: [inputs.stakingPoolId],
+				stakeCoinTypes: [inputs.stakeCoinType],
+			})
+		)[0];
+	}
+
+	public async fetchIsUnlockedForStakingPools(inputs: {
+		stakingPoolIds: ObjectId[];
+		stakeCoinTypes: CoinType[];
+	}): Promise<boolean[]> {
 		const tx = new TransactionBlock();
-		this.remainingRewardsTx({
-			...inputs,
-			tx,
-		});
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+
+		for (const [index, stakingPoolId] of inputs.stakingPoolIds.entries()) {
+			this.isVaultUnlockedTx({
+				tx,
+				stakingPoolId,
+				stakeCoinType: inputs.stakeCoinTypes[index],
+			});
+		}
+
+		const { allBytes } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
 				tx,
 			});
 
-		return (
-			bcs.de("vector<u64>", new Uint8Array(bytes)) as BigIntAsString[]
-		).map((num) => BigInt(num));
+		return allBytes.map((bytes) =>
+			bcs.de("bool", new Uint8Array(bytes[0]))
+		);
+	}
+
+	public async fetchRemainingRewardsForStakingPools(inputs: {
+		stakingPoolIds: ObjectId[];
+		stakeCoinTypes: CoinType[];
+	}): Promise<Balance[][]> {
+		const tx = new TransactionBlock();
+
+		for (const [index, stakingPoolId] of inputs.stakingPoolIds.entries()) {
+			this.remainingRewardsTx({
+				tx,
+				stakingPoolId,
+				stakeCoinType: inputs.stakeCoinTypes[index],
+			});
+		}
+
+		const { allBytes } =
+			await this.Provider.Inspections().fetchAllBytesFromTx({
+				tx,
+			});
+
+		return allBytes.map((bytes) =>
+			(
+				bcs.de(
+					"vector<u64>",
+					new Uint8Array(bytes[0])
+				) as BigIntAsString[]
+			).map((num) => BigInt(num))
+		);
 	}
 
 	// =========================================================================
