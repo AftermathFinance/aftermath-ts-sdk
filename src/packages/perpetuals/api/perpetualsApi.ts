@@ -741,7 +741,7 @@ export class PerpetualsApi {
 			Casting.perpetuals.marketDataFromIndexerResponse(
 				market,
 				collateralCoinType,
-				symbols[index].symbol
+				symbols[index].symbol.split("_")[0]
 				// `${symbols[index * 2].symbol}${symbols[index * 2 + 1].symbol}`
 			)
 		);

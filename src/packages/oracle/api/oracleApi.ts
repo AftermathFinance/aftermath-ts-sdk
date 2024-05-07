@@ -55,6 +55,14 @@ export class OracleApi {
 			decimals: CoinDecimal;
 		}[]
 	> => {
+		const result = await this.Provider.indexerCaller.fetchIndexer(
+			`oracle/price-feed-symbols`,
+			undefined,
+			{
+				price_feed_ids: inputs.priceFeedIds,
+			}
+		);
+		console.log("result", result);
 		return this.Provider.indexerCaller.fetchIndexer(
 			`oracle/price-feed-symbols`,
 			undefined,

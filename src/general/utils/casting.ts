@@ -93,8 +93,10 @@ export class Casting {
 		Helpers.addLeadingZeroesToType(
 			"0x" +
 				bytes
-					.reverse()
-					.map((byte) => byte.toString(16).padStart(2, "0"))
+					.map((byte) => {
+						const hex = byte.toString(16);
+						return hex.length === 1 ? "0" + hex : hex;
+					})
 					.join("")
 		);
 

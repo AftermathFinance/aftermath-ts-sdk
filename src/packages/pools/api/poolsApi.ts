@@ -1357,8 +1357,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			});
 			if (!poolId) return false;
 
-		return Casting.addressFromBcsBytes(bytes);
-	};
+			return true;
+		},
+	});
 
 	/**
 	 * Fetches the list of unique supported coins across all pools.
