@@ -327,7 +327,7 @@ export class RouterApiHelpers {
 		withTransfer?: boolean;
 	}): Promise<TransactionArgument | undefined> {
 		return this.SynchronousHelpers.fetchBuildTransactionForCompleteTradeRoute(
-			inputs
+			{ ...inputs, slippage: inputs.slippage * 100 }
 		);
 	}
 
