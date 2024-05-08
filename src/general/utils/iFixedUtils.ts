@@ -1,4 +1,4 @@
-import { IFixed } from "../types";
+import { Byte, IFixed } from "../types";
 import { Casting } from "./casting";
 
 export class IFixedUtils {
@@ -37,14 +37,8 @@ export class IFixedUtils {
 		);
 	};
 
-	public static iFixedFromBytes = (bytes: number[]): IFixed => {
-		// Convert byte array to hexadecimal string
-		const hexString = bytes.reduce(
-			(str, byte) => str + byte.toString(16).padStart(2, "0"),
-			""
-		);
-		// Convert hexadecimal string to BigInt
-		return BigInt("0x" + hexString);
+	public static iFixedFromBytes = (bytes: Byte[]): IFixed => {
+		return Casting.bigIntFromBytes(bytes);
 	};
 
 	public static iFixedFromStringBytes = (bytes: string[]): IFixed => {

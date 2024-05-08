@@ -2,6 +2,7 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
 import {
+	BigIntAsString,
 	CoinDecimal,
 	CoinSymbol,
 	ObjectId,
@@ -55,21 +56,32 @@ export class OracleApi {
 			decimals: CoinDecimal;
 		}[]
 	> => {
-		const result = await this.Provider.indexerCaller.fetchIndexer(
-			`oracle/price-feed-symbols`,
-			undefined,
+		const { priceFeedIds } = inputs;
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
-				price_feed_ids: inputs.priceFeedIds,
-			}
-		);
-		console.log("result", result);
-		return this.Provider.indexerCaller.fetchIndexer(
-			`oracle/price-feed-symbols`,
-			undefined,
-			{
-				price_feed_ids: inputs.priceFeedIds,
-			}
-		);
+				symbol: CoinSymbol;
+				decimals: BigIntAsString;
+				priceFeedId: ObjectId;
+			}[]
+		>(`oracle/price-feed-symbols`, undefined, {
+			price_feed_ids: priceFeedIds,
+		});
+
+		let result: {
+			symbol: CoinSymbol;
+			decimals: CoinDecimal;
+		}[] = [];
+		for (const priceFeedId of priceFeedIds) {
+			const foundData = response.find(
+				(data) => data.priceFeedId === priceFeedId
+			)!;
+			result.push({
+				symbol: foundData.symbol,
+				decimals: Math.log10(Number(foundData.decimals)),
+			});
+		}
+		return result;
 	};
 
 	// =========================================================================

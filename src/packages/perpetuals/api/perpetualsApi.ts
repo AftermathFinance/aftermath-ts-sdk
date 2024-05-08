@@ -257,8 +257,6 @@ export class PerpetualsApi {
 				undefined,
 				true
 			);
-		console.log("ACCOUNTresponse", response);
-		console.log("ACCOUNTresponse", JSON.stringify(response, null, 4));
 		return Casting.perpetuals.accountObjectFromIndexerResponse(
 			response,
 			inputs.collateralCoinType
@@ -274,8 +272,6 @@ export class PerpetualsApi {
 			await this.Provider.indexerCaller.fetchIndexer(
 				`perpetuals/accounts/${accountId}/orders`
 			);
-		// console.log("ORDERSresponse", orders);
-		// console.log("ORDERSresponse", JSON.stringify(orders, null, 4));
 		if (orders.length <= 0) return [];
 
 		const marketIdsToOrderEvents: Record<
@@ -632,8 +628,6 @@ export class PerpetualsApi {
 			undefined,
 			true
 		);
-		console.log("PREVIEWresponse", response);
-		console.log("PREVIEWresponse", JSON.stringify(response, null, 4));
 		if ("error" in response) return response;
 
 		const executionPrice = Casting.IFixed.numberFromIFixed(
@@ -716,8 +710,6 @@ export class PerpetualsApi {
 				undefined,
 				true
 			);
-		console.log("response", response);
-		console.log("response", JSON.stringify(response, null, 4));
 		const markets = Object.values(response);
 
 		// const priceFeedIds = markets
@@ -733,7 +725,6 @@ export class PerpetualsApi {
 		const priceFeedIds = markets.map((market) =>
 			Casting.addressFromStringBytes(market.market_params.base_pfs_id)
 		);
-		console.log("priceFeedIds", priceFeedIds);
 		const symbols = await this.Provider.Oracle().fetchPriceFeedSymbols({
 			priceFeedIds,
 		});
@@ -833,7 +824,9 @@ export class PerpetualsApi {
 	};
 
 	public fetchMaxOrderSize = async (
-		inputs: ApiPerpetualsMaxOrderSizeBody
+		inputs: ApiPerpetualsMaxOrderSizeBody & {
+			marketId: PerpetualsMarketId;
+		}
 	): Promise<bigint> => {
 		const { marketId, accountId, collateral, side, price } = inputs;
 		const maxSize = await this.Provider.indexerCaller.fetchIndexer<
@@ -861,8 +854,6 @@ export class PerpetualsApi {
 			undefined,
 			true
 		);
-		console.log("maxSize", maxSize);
-		console.log("maxSize", JSON.stringify(maxSize, null, 4));
 		return BigInt(Math.floor(maxSize));
 	};
 
@@ -1017,9 +1008,8 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
-		marketId: PerpetualsMarketId;
-	}) /* Account<T> */ => {
-		const { tx, collateralCoinType, sessionPotatoId, marketId } = inputs;
+	}) /* ClearingHouse<T> */ => {
+		const { tx, collateralCoinType, sessionPotatoId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1028,7 +1018,6 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId),
 				typeof sessionPotatoId === "string"
 					? tx.object(sessionPotatoId)
 					: sessionPotatoId,
@@ -1040,18 +1029,10 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
-		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		size: bigint;
 	}) => {
-		const {
-			tx,
-			collateralCoinType,
-			sessionPotatoId,
-			marketId,
-			side,
-			size,
-		} = inputs;
+		const { tx, collateralCoinType, sessionPotatoId, side, size } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1060,7 +1041,6 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId),
 				typeof sessionPotatoId === "string"
 					? tx.object(sessionPotatoId)
 					: sessionPotatoId,
@@ -1074,7 +1054,6 @@ export class PerpetualsApi {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
-		marketId: PerpetualsMarketId;
 		side: PerpetualsOrderSide;
 		size: bigint;
 		price: bigint;
@@ -1084,7 +1063,6 @@ export class PerpetualsApi {
 			tx,
 			collateralCoinType,
 			sessionPotatoId,
-			marketId,
 			side,
 			size,
 			price,
@@ -1098,7 +1076,6 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId),
 				typeof sessionPotatoId === "string"
 					? tx.object(sessionPotatoId)
 					: sessionPotatoId,
@@ -1175,50 +1152,50 @@ export class PerpetualsApi {
 		});
 	};
 
-	public getHotPotatoFieldsTx = (
-		inputs: {
-			tx: TransactionBlock;
-			collateralCoinType: CoinType;
-			sessionPotatoId: ObjectId | TransactionArgument;
-		}
-		/*
-			(
-				lot_size,
-				tick_size,
-				timestamp_ms,
-				collateral_price,
-				index_price,
-				book_price,
-				fills, 
-				post
-			): (
-				u64,
-				u64,
-				u64,
-				u64,
-				u256,
-				u256,
-				u256,
-				&vector<FillReceipt>,
-				&PostReceipt
-			)
-		*/
-	) => {
-		const { tx, collateralCoinType, sessionPotatoId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.clearingHouse,
-				"get_hot_potato_fields"
-			),
-			typeArguments: [collateralCoinType],
-			arguments: [
-				typeof sessionPotatoId === "string"
-					? tx.object(sessionPotatoId)
-					: sessionPotatoId,
-			],
-		});
-	};
+	// public getHotPotatoFieldsTx = (
+	// 	inputs: {
+	// 		tx: TransactionBlock;
+	// 		collateralCoinType: CoinType;
+	// 		sessionPotatoId: ObjectId | TransactionArgument;
+	// 	}
+	// 	/*
+	// 		(
+	// 			lot_size,
+	// 			tick_size,
+	// 			timestamp_ms,
+	// 			collateral_price,
+	// 			index_price,
+	// 			book_price,
+	// 			fills,
+	// 			post
+	// 		): (
+	// 			u64,
+	// 			u64,
+	// 			u64,
+	// 			u64,
+	// 			u256,
+	// 			u256,
+	// 			u256,
+	// 			&vector<FillReceipt>,
+	// 			&PostReceipt
+	// 		)
+	// 	*/
+	// ) => {
+	// 	const { tx, collateralCoinType, sessionPotatoId } = inputs;
+	// 	return tx.moveCall({
+	// 		target: Helpers.transactions.createTxTarget(
+	// 			this.addresses.perpetuals.packages.perpetuals,
+	// 			PerpetualsApi.constants.moduleNames.clearingHouse,
+	// 			"get_hot_potato_fields"
+	// 		),
+	// 		typeArguments: [collateralCoinType],
+	// 		arguments: [
+	// 			typeof sessionPotatoId === "string"
+	// 				? tx.object(sessionPotatoId)
+	// 				: sessionPotatoId,
+	// 		],
+	// 	});
+	// };
 
 	public placeSLTPOrderTx = (
 		inputs: ApiPerpetualsSLTPOrderBody & {
@@ -1434,11 +1411,18 @@ export class PerpetualsApi {
 			tx,
 			sessionPotatoId,
 		});
-		this.endSessionAndTransferAccount({
+		this.endSessionAndTransferMarket({
 			...inputs,
 			tx,
 			sessionPotatoId,
 		});
+		if (inputs.collateralChange < BigInt(0)) {
+			this.deallocateCollateralTx({
+				...inputs,
+				tx,
+				amount: Helpers.absBigInt(inputs.collateralChange),
+			});
+		}
 		return tx;
 	};
 
@@ -1450,11 +1434,18 @@ export class PerpetualsApi {
 			tx,
 			sessionPotatoId,
 		});
-		this.endSessionAndTransferAccount({
+		this.endSessionAndTransferMarket({
 			...inputs,
 			tx,
 			sessionPotatoId,
 		});
+		if (inputs.collateralChange < BigInt(0)) {
+			this.deallocateCollateralTx({
+				...inputs,
+				tx,
+				amount: Helpers.absBigInt(inputs.collateralChange),
+			});
+		}
 		return tx;
 	};
 
@@ -1721,210 +1712,209 @@ export class PerpetualsApi {
 		);
 	};
 
-	public fetchExecutionPrice = async (
-		inputs: ApiPerpetualsExecutionPriceBody & {
-			collateralCoinType: CoinType;
-			marketId: PerpetualsMarketId;
-		}
-	): Promise<ApiPerpetualsExecutionPriceResponse> => {
-		const {
-			// collateral,
-			collateralCoinType,
-			marketId,
-			side,
-			size,
-			price,
-			lotSize,
-			basePriceFeedId,
-			collateralPriceFeedId,
-		} = inputs;
-		// TODO: change this
-		const collateral = BigInt(1000000000000000);
+	// public fetchExecutionPrice = async (
+	// 	inputs: ApiPerpetualsExecutionPriceBody & {
+	// 		collateralCoinType: CoinType;
+	// 		marketId: PerpetualsMarketId;
+	// 	}
+	// ): Promise<ApiPerpetualsExecutionPriceResponse> => {
+	// 	const {
+	// 		// collateral,
+	// 		collateralCoinType,
+	// 		marketId,
+	// 		side,
+	// 		size,
+	// 		price,
+	// 		lotSize,
+	// 		basePriceFeedId,
+	// 		collateralPriceFeedId,
+	// 	} = inputs;
+	// 	// TODO: change this
+	// 	const collateral = BigInt(1000000000000000);
 
-		// const accountCapId = perpetualsBcsRegistry
-		// 	.ser(`Account<${collateralCoinType}>`, {
-		// 		id: {
-		// 			id: {
-		// 				bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
-		// 			},
-		// 		},
-		// 		accountId: 0,
-		// 		collateral,
-		// 	})
-		// 	.toBytes();
+	// 	// const accountCapId = perpetualsBcsRegistry
+	// 	// 	.ser(`Account<${collateralCoinType}>`, {
+	// 	// 		id: {
+	// 	// 			id: {
+	// 	// 				bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
+	// 	// 			},
+	// 	// 		},
+	// 	// 		accountId: 0,
+	// 	// 		collateral,
+	// 	// 	})
+	// 	// 	.toBytes();
 
-		const depositCoinBytes = perpetualsBcsRegistry
-			.ser(["Coin", collateralCoinType], {
-				id: "0x0000000000000000000000000000000000000000000000000000000000000123",
-				balance: {
-					value: collateral,
-				},
-			})
-			.toBytes();
+	// 	const depositCoinBytes = perpetualsBcsRegistry
+	// 		.ser(["Coin", collateralCoinType], {
+	// 			id: "0x0000000000000000000000000000000000000000000000000000000000000123",
+	// 			balance: {
+	// 				value: collateral,
+	// 			},
+	// 		})
+	// 		.toBytes();
 
-		const walletAddress = InspectionsApiHelpers.constants.devInspectSigner;
+	// 	const walletAddress = InspectionsApiHelpers.constants.devInspectSigner;
 
-		const tx = new TransactionBlock();
-		tx.setSender(walletAddress);
+	// 	const tx = new TransactionBlock();
+	// 	tx.setSender(walletAddress);
 
-		const accountCapId = this.createAccountTx({
-			...inputs,
-			tx,
-		});
-		this.depositCollateralTx({
-			tx,
-			collateralCoinType,
-			accountCapId,
-			coinBytes: depositCoinBytes,
-		});
-		const { sessionPotatoId } = this.createTxAndStartSession({
-			tx,
-			accountCapId,
-			collateralCoinType,
-			marketId,
-			walletAddress,
-			basePriceFeedId,
-			collateralPriceFeedId,
-			collateralChange: collateral,
-			hasPosition: false,
-		});
-		this.placeLimitOrderTx({
-			tx,
-			side,
-			size,
-			collateralCoinType,
-			marketId,
-			sessionPotatoId,
-			orderType: PerpetualsOrderType.Standard,
-			price:
-				price ??
-				(side === PerpetualsOrderSide.Bid
-					? BigInt("0x7FFFFFFFFFFFFFFF") // 2^63 - 1
-					: BigInt(1)),
-		});
-		this.getHotPotatoFieldsTx({
-			tx,
-			collateralCoinType,
-			sessionPotatoId,
-		});
-		this.endSessionAndTransferAccount({
-			...inputs,
-			tx,
-			sessionPotatoId,
-			walletAddress,
-			collateralChange: BigInt(0),
-		});
+	// 	const accountCapId = this.createAccountTx({
+	// 		...inputs,
+	// 		tx,
+	// 	});
+	// 	this.depositCollateralTx({
+	// 		tx,
+	// 		collateralCoinType,
+	// 		accountCapId,
+	// 		coinBytes: depositCoinBytes,
+	// 	});
+	// 	const { sessionPotatoId } = this.createTxAndStartSession({
+	// 		tx,
+	// 		accountCapId,
+	// 		collateralCoinType,
+	// 		marketId,
+	// 		walletAddress,
+	// 		basePriceFeedId,
+	// 		collateralPriceFeedId,
+	// 		collateralChange: collateral,
+	// 		hasPosition: false,
+	// 	});
+	// 	this.placeLimitOrderTx({
+	// 		tx,
+	// 		side,
+	// 		size,
+	// 		collateralCoinType,
+	// 		sessionPotatoId,
+	// 		orderType: PerpetualsOrderType.Standard,
+	// 		price:
+	// 			price ??
+	// 			(side === PerpetualsOrderSide.Bid
+	// 				? BigInt("0x7FFFFFFFFFFFFFFF") // 2^63 - 1
+	// 				: BigInt(1)),
+	// 	});
+	// 	this.getHotPotatoFieldsTx({
+	// 		tx,
+	// 		collateralCoinType,
+	// 		sessionPotatoId,
+	// 	});
+	// 	this.endSessionAndTransferAccount({
+	// 		...inputs,
+	// 		tx,
+	// 		sessionPotatoId,
+	// 		walletAddress,
+	// 		collateralChange: BigInt(0),
+	// 	});
 
-		const { events } =
-			await this.Provider.Inspections().fetchAllBytesFromTx({
-				tx,
-			});
+	// 	const { events } =
+	// 		await this.Provider.Inspections().fetchAllBytesFromTx({
+	// 			tx,
+	// 		});
 
-		const filledTakerEvent = EventsApiHelpers.findCastEventOrUndefined({
-			events,
-			eventType: this.eventTypes.filledTakerOrder,
-			castFunction: Casting.perpetuals.filledTakerOrderEventFromOnChain,
-		});
+	// 	const filledTakerEvent = EventsApiHelpers.findCastEventOrUndefined({
+	// 		events,
+	// 		eventType: this.eventTypes.filledTakerOrder,
+	// 		castFunction: Casting.perpetuals.filledTakerOrderEventFromOnChain,
+	// 	});
 
-		const sizeNum = lotSize * Math.abs(Number(size));
+	// 	const sizeNum = lotSize * Math.abs(Number(size));
 
-		if (!filledTakerEvent) {
-			return {
-				executionPrice: 0,
-				sizeFilled: 0,
-				sizePosted: sizeNum,
-				fills: [],
-			};
-		}
+	// 	if (!filledTakerEvent) {
+	// 		return {
+	// 			executionPrice: 0,
+	// 			sizeFilled: 0,
+	// 			sizePosted: sizeNum,
+	// 			fills: [],
+	// 		};
+	// 	}
 
-		const filledOrderEvents =
-			Aftermath.helpers.events.findCastEventsOrUndefined({
-				events,
-				eventType: this.eventTypes.filledTakerOrder,
-				castFunction:
-					Casting.perpetuals.filledTakerOrderEventFromOnChain,
-			});
-		const fills: PerpetualsFilledOrderData[] = filledOrderEvents.map(
-			(event) => {
-				const size = Math.abs(
-					Casting.IFixed.numberFromIFixed(event.baseAssetDelta)
-				);
-				const sizeUsd = Math.abs(
-					Casting.IFixed.numberFromIFixed(event.quoteAssetDelta)
-				);
-				const price = sizeUsd / size;
-				return {
-					size,
-					price,
-				};
-			}
-		);
+	// 	const filledOrderEvents =
+	// 		Aftermath.helpers.events.findCastEventsOrUndefined({
+	// 			events,
+	// 			eventType: this.eventTypes.filledTakerOrder,
+	// 			castFunction:
+	// 				Casting.perpetuals.filledTakerOrderEventFromOnChain,
+	// 		});
+	// 	const fills: PerpetualsFilledOrderData[] = filledOrderEvents.map(
+	// 		(event) => {
+	// 			const size = Math.abs(
+	// 				Casting.IFixed.numberFromIFixed(event.baseAssetDelta)
+	// 			);
+	// 			const sizeUsd = Math.abs(
+	// 				Casting.IFixed.numberFromIFixed(event.quoteAssetDelta)
+	// 			);
+	// 			const price = sizeUsd / size;
+	// 			return {
+	// 				size,
+	// 				price,
+	// 			};
+	// 		}
+	// 	);
 
-		const executionPrice = Perpetuals.calcEntryPrice(filledTakerEvent);
-		const sizeFilled = Math.abs(
-			Casting.IFixed.numberFromIFixed(filledTakerEvent.baseAssetDelta)
-		);
-		const sizePosted = sizeNum - sizeFilled;
+	// 	const executionPrice = Perpetuals.calcEntryPrice(filledTakerEvent);
+	// 	const sizeFilled = Math.abs(
+	// 		Casting.IFixed.numberFromIFixed(filledTakerEvent.baseAssetDelta)
+	// 	);
+	// 	const sizePosted = sizeNum - sizeFilled;
 
-		return {
-			executionPrice,
-			sizeFilled,
-			sizePosted,
-			fills,
-		};
+	// 	return {
+	// 		executionPrice,
+	// 		sizeFilled,
+	// 		sizePosted,
+	// 		fills,
+	// 	};
 
-		// const { fillReceipts, postReceipt } =
-		// 	await this.fetchMarketOrderReceipts(inputs);
+	// 	// const { fillReceipts, postReceipt } =
+	// 	// 	await this.fetchMarketOrderReceipts(inputs);
 
-		// const sizePosted = postReceipt !== undefined ? postReceipt.size : 0;
-		// if (fillReceipts.length <= 0)
-		// 	return price !== undefined
-		// 		? // simulating limit order
-		// 		  {
-		// 				executionPrice: Perpetuals.orderPriceToPrice({
-		// 					orderPrice: price,
-		// 					lotSize,
-		// 					tickSize,
-		// 				}),
-		// 				sizeFilled: 0,
-		// 				sizePosted: Number(sizePosted),
-		// 		  }
-		// 		: // simulating market order
-		// 		  {
-		// 				executionPrice: 0,
-		// 				sizeFilled: 0,
-		// 				sizePosted: 0,
-		// 		  };
+	// 	// const sizePosted = postReceipt !== undefined ? postReceipt.size : 0;
+	// 	// if (fillReceipts.length <= 0)
+	// 	// 	return price !== undefined
+	// 	// 		? // simulating limit order
+	// 	// 		  {
+	// 	// 				executionPrice: Perpetuals.orderPriceToPrice({
+	// 	// 					orderPrice: price,
+	// 	// 					lotSize,
+	// 	// 					tickSize,
+	// 	// 				}),
+	// 	// 				sizeFilled: 0,
+	// 	// 				sizePosted: Number(sizePosted),
+	// 	// 		  }
+	// 	// 		: // simulating market order
+	// 	// 		  {
+	// 	// 				executionPrice: 0,
+	// 	// 				sizeFilled: 0,
+	// 	// 				sizePosted: 0,
+	// 	// 		  };
 
-		// const sizeFilled = Helpers.sumBigInt(
-		// 	fillReceipts.map((receipt) => receipt.size)
-		// );
+	// 	// const sizeFilled = Helpers.sumBigInt(
+	// 	// 	fillReceipts.map((receipt) => receipt.size)
+	// 	// );
 
-		// const executionPrice = fillReceipts.reduce((acc, receipt) => {
-		// 	const orderPrice = PerpetualsOrderUtils.price(
-		// 		receipt.orderId,
-		// 		inputs.side === PerpetualsOrderSide.Ask
-		// 			? PerpetualsOrderSide.Bid
-		// 			: PerpetualsOrderSide.Ask
-		// 	);
-		// 	const orderPriceNum = Perpetuals.orderPriceToPrice({
-		// 		orderPrice,
-		// 		lotSize,
-		// 		tickSize,
-		// 	});
+	// 	// const executionPrice = fillReceipts.reduce((acc, receipt) => {
+	// 	// 	const orderPrice = PerpetualsOrderUtils.price(
+	// 	// 		receipt.orderId,
+	// 	// 		inputs.side === PerpetualsOrderSide.Ask
+	// 	// 			? PerpetualsOrderSide.Bid
+	// 	// 			: PerpetualsOrderSide.Ask
+	// 	// 	);
+	// 	// 	const orderPriceNum = Perpetuals.orderPriceToPrice({
+	// 	// 		orderPrice,
+	// 	// 		lotSize,
+	// 	// 		tickSize,
+	// 	// 	});
 
-		// 	return (
-		// 		acc +
-		// 		orderPriceNum * (Number(receipt.size) / Number(sizeFilled))
-		// 	);
-		// }, 0);
+	// 	// 	return (
+	// 	// 		acc +
+	// 	// 		orderPriceNum * (Number(receipt.size) / Number(sizeFilled))
+	// 	// 	);
+	// 	// }, 0);
 
-		// return {
-		// 	executionPrice,
-		// 	sizeFilled: Number(sizeFilled),
-		// 	sizePosted: Number(sizePosted),
-		// };
-	};
+	// 	// return {
+	// 	// 	executionPrice,
+	// 	// 	sizeFilled: Number(sizeFilled),
+	// 	// 	sizePosted: Number(sizePosted),
+	// 	// };
+	// };
 
 	private createTxAndStartSession = (inputs: {
 		tx?: TransactionBlock;
@@ -1966,41 +1956,18 @@ export class PerpetualsApi {
 		return { tx, sessionPotatoId };
 	};
 
-	private endSessionAndTransferAccount = (inputs: {
+	private endSessionAndTransferMarket = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
-		marketId: PerpetualsMarketId;
-		basePriceFeedId: ObjectId;
-		collateralPriceFeedId: ObjectId;
-		walletAddress: SuiAddress;
-		collateralChange: Balance;
 	}) => {
-		const {
-			tx,
-			walletAddress,
-			collateralChange,
-			collateralCoinType,
-			marketId,
-			basePriceFeedId,
-			collateralPriceFeedId,
-		} = inputs;
+		const marketId = this.endSessionTx(inputs);
 
-		const accountCapId = this.endSessionTx(inputs);
-
-		if (collateralChange < BigInt(0)) {
-			this.deallocateCollateralTx({
-				tx,
-				accountCapId,
-				collateralCoinType,
-				marketId,
-				basePriceFeedId,
-				collateralPriceFeedId,
-				amount: Helpers.absBigInt(collateralChange),
-			});
-		}
-
-		tx.transferObjects([accountCapId], tx.pure(walletAddress));
+		this.Provider.Objects().publicShareObjectTx({
+			...inputs,
+			object: marketId,
+			objectType: this.marketObjectType(inputs),
+		});
 	};
 
 	// =========================================================================
@@ -2120,4 +2087,15 @@ export class PerpetualsApi {
 			PerpetualsApi.constants.moduleNames.events,
 			eventName
 		);
+
+	// =========================================================================
+	//  Object Types
+	// =========================================================================
+
+	private marketObjectType = (inputs: { collateralCoinType: CoinType }) =>
+		`${
+			this.addresses.perpetuals.packages.perpetuals
+		}::clearing_house::ClearingHouse<${Helpers.addLeadingZeroesToType(
+			inputs.collateralCoinType
+		)}>`;
 }

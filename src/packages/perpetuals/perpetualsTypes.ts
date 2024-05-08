@@ -362,33 +362,28 @@ export interface PerpetualsAccountObject {
 // =========================================================================
 
 export interface DepositedCollateralEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
 }
 
 export interface AllocatedCollateralEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
 	positionCollateralAfter: IFixed;
 }
 
 export interface DeallocatedCollateralEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
 	positionCollateralAfter: IFixed;
 }
 
 export interface WithdrewCollateralEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
 }
 
 export interface SettledFundingEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
@@ -411,31 +406,31 @@ export type CollateralEvent =
 export const isWithdrewCollateralEvent = (
 	event: Event
 ): event is WithdrewCollateralEvent => {
-	return event.type.toLowerCase().includes("::withdrewcollateral<");
+	return event.type.toLowerCase().includes("::withdrewcollateral");
 };
 
 export const isDepositedCollateralEvent = (
 	event: Event
 ): event is DepositedCollateralEvent => {
-	return event.type.toLowerCase().includes("::depositedcollateral<");
+	return event.type.toLowerCase().includes("::depositedcollateral");
 };
 
 export const isDeallocatedCollateralEvent = (
 	event: Event
 ): event is DeallocatedCollateralEvent => {
-	return event.type.toLowerCase().includes("::deallocatedcollateral<");
+	return event.type.toLowerCase().includes("::deallocatedcollateral");
 };
 
 export const isAllocatedCollateralEvent = (
 	event: Event
 ): event is AllocatedCollateralEvent => {
-	return event.type.toLowerCase().includes("::allocatedcollateral<");
+	return event.type.toLowerCase().includes("::allocatedcollateral");
 };
 
 export const isSettledFundingEvent = (
 	event: Event
 ): event is SettledFundingEvent => {
-	return event.type.toLowerCase().includes("::settledfunding<");
+	return event.type.toLowerCase().includes("::settledfunding");
 };
 
 // =========================================================================
@@ -443,7 +438,6 @@ export const isSettledFundingEvent = (
 // =========================================================================
 
 export interface LiquidatedEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	liqorAccountId: PerpetualsAccountId;
@@ -454,7 +448,7 @@ export interface LiquidatedEvent extends Event {
 }
 
 export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
-	return event.type.toLowerCase().includes("::liquidatedposition<");
+	return event.type.toLowerCase().includes("::liquidatedposition");
 };
 
 // =========================================================================
@@ -462,7 +456,6 @@ export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
 // =========================================================================
 
 export interface CreatedAccountEvent extends Event {
-	collateralCoinType: CoinType;
 	user: SuiAddress;
 	accountId: PerpetualsAccountId;
 }
@@ -472,14 +465,12 @@ export interface CreatedAccountEvent extends Event {
 // =========================================================================
 
 export interface OrderbookPostReceiptEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	orderId: PerpetualsOrderId;
 	size: bigint;
 }
 
 export interface OrderbookFillReceiptEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	orderId: PerpetualsOrderId;
 	size: bigint;
@@ -487,7 +478,6 @@ export interface OrderbookFillReceiptEvent extends Event {
 }
 
 export interface CanceledOrderEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
@@ -496,7 +486,6 @@ export interface CanceledOrderEvent extends Event {
 }
 
 export interface PostedOrderEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
@@ -506,7 +495,6 @@ export interface PostedOrderEvent extends Event {
 }
 
 export interface FilledMakerOrderEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
@@ -521,7 +509,6 @@ export interface FilledMakerOrderEvent extends Event {
 }
 
 export interface FilledTakerOrderEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
@@ -553,11 +540,11 @@ export interface PostedOrderReceiptEvent extends Event {
 export const isCanceledOrderEvent = (
 	event: Event
 ): event is CanceledOrderEvent => {
-	return event.type.toLowerCase().includes("::canceledorder<");
+	return event.type.toLowerCase().includes("::canceledorder");
 };
 
 export const isPostedOrderEvent = (event: Event): event is PostedOrderEvent => {
-	return event.type.toLowerCase().includes("::postedorder<");
+	return event.type.toLowerCase().includes("::postedorder");
 };
 
 export const isPostedOrderReceiptEvent = (
@@ -569,13 +556,13 @@ export const isPostedOrderReceiptEvent = (
 export const isFilledMakerOrderEvent = (
 	event: Event
 ): event is FilledMakerOrderEvent => {
-	return event.type.toLowerCase().includes("::filledmakerorder<");
+	return event.type.toLowerCase().includes("::filledmakerorder");
 };
 
 export const isFilledTakerOrderEvent = (
 	event: Event
 ): event is FilledTakerOrderEvent => {
-	return event.type.toLowerCase().includes("::filledtakerorder<");
+	return event.type.toLowerCase().includes("::filledtakerorder");
 };
 
 // =========================================================================
@@ -583,7 +570,6 @@ export const isFilledTakerOrderEvent = (
 // =========================================================================
 
 export interface UpdatedPremiumTwapEvent extends Event {
-	collateralCoinType: CoinType;
 	marketId: PerpetualsMarketId;
 	bookPrice: IFixed;
 	indexPrice: IFixed;
@@ -592,7 +578,6 @@ export interface UpdatedPremiumTwapEvent extends Event {
 }
 
 export interface UpdatedSpreadTwapEvent extends Event {
-	collateralCoinType: CoinType;
 	marketId: PerpetualsMarketId;
 	bookPrice: IFixed;
 	indexPrice: IFixed;
@@ -678,7 +663,6 @@ export interface ApiPerpetualsHistoricalMarketDataResponse {
 }
 
 export interface ApiPerpetualsMaxOrderSizeBody {
-	marketId: PerpetualsMarketId;
 	accountId: PerpetualsAccountId;
 	collateral: Balance;
 	side: PerpetualsOrderSide;

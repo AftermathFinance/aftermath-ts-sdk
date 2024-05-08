@@ -118,14 +118,14 @@ export interface PerpetualsMarketStateFieldsIndexerReponse {
 export interface PerpetualsPositionIndexerResponse {
 	position: {
 		/// Amount of allocated tokens (e.g., USD stables) backing this account's position.
-		collateral: IFixedAsBytes;
+		collateral: IFixedAsStringBytes;
 		/// The perpetual contract size, controlling the amount of exposure to
 		/// the underlying asset. Positive implies long position and negative,
 		/// short. Represented as a signed fixed-point number.
-		base_asset_amount: IFixedAsBytes;
+		base_asset_amount: IFixedAsStringBytes;
 		/// The entry value for this position, including leverage. Represented
 		/// as a signed fixed-point number.
-		quote_asset_notional_amount: IFixedAsBytes;
+		quote_asset_notional_amount: IFixedAsStringBytes;
 		/// Last long cumulative funding rate used to update this position. The
 		/// market's latest long cumulative funding rate minus this gives the funding
 		/// rate this position must pay. This rate multiplied by this position's
@@ -133,7 +133,7 @@ export interface PerpetualsPositionIndexerResponse {
 		/// owed, which is deducted from the trader account's margin. This debt
 		/// is accounted for in margin ratio calculations, which may lead to
 		/// liquidation. Represented as a signed fixed-point number.
-		cum_funding_rate_long: IFixedAsBytes;
+		cum_funding_rate_long: IFixedAsStringBytes;
 		/// Last short cumulative funding rate used to update this position. The
 		/// market's latest short cumulative funding rate minus this gives the funding
 		/// rate this position must pay. This rate multiplied by this position's
@@ -141,19 +141,19 @@ export interface PerpetualsPositionIndexerResponse {
 		/// owed, which is deducted from the trader account's margin. This debt
 		/// is accounted for in margin ratio calculations, which may lead to
 		/// liquidation. Represented as a signed fixed-point number.
-		cum_funding_rate_short: IFixedAsBytes;
+		cum_funding_rate_short: IFixedAsStringBytes;
 		/// Base asset amount resting in ask orders in the orderbook.
 		/// Represented as a signed fixed-point number.
-		asks_quantity: IFixedAsBytes;
+		asks_quantity: IFixedAsStringBytes;
 		/// Base asset amount resting in bid orders in the orderbook.
 		/// Represented as a signed fixed-point number.
-		bids_quantity: IFixedAsBytes;
+		bids_quantity: IFixedAsStringBytes;
 		/// Number of pending orders in this position.
 		pending_orders: number;
 		/// Custom maker fee for this position, set at default value of 100%
-		maker_fee: IFixedAsBytes;
+		maker_fee: IFixedAsStringBytes;
 		/// Custom taker fee for this position, set at default value of 100%
-		taker_fee: IFixedAsBytes;
+		taker_fee: IFixedAsStringBytes;
 	};
 	pending_orders: {
 		bids: Record<

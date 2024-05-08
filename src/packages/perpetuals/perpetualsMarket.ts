@@ -102,7 +102,6 @@ export class PerpetualsMarket extends Caller {
 			bigint,
 			ApiPerpetualsMaxOrderSizeBody
 		>("max-order-size", {
-			marketId: this.marketId,
 			accountId: account.accountCap.accountId,
 			collateral: account.collateralBalance(),
 			side,
@@ -578,22 +577,22 @@ export class PerpetualsMarket extends Caller {
 	//  Private Helpers
 	// =========================================================================
 
-	private getExecutionPrice(inputs: {
-		side: PerpetualsOrderSide;
-		size: bigint;
-		collateral: Balance;
-		price?: PerpetualsOrderPrice;
-	}) {
-		return this.fetchApi<
-			ApiPerpetualsExecutionPriceResponse,
-			ApiPerpetualsExecutionPriceBody
-		>("execution-price", {
-			...inputs,
-			lotSize: this.lotSize(),
-			basePriceFeedId: this.marketParams.basePriceFeedId,
-			collateralPriceFeedId: this.marketParams.collateralPriceFeedId,
-		});
-	}
+	// private getExecutionPrice(inputs: {
+	// 	side: PerpetualsOrderSide;
+	// 	size: bigint;
+	// 	collateral: Balance;
+	// 	price?: PerpetualsOrderPrice;
+	// }) {
+	// 	return this.fetchApi<
+	// 		ApiPerpetualsExecutionPriceResponse,
+	// 		ApiPerpetualsExecutionPriceBody
+	// 	>("execution-price", {
+	// 		...inputs,
+	// 		lotSize: this.lotSize(),
+	// 		basePriceFeedId: this.marketParams.basePriceFeedId,
+	// 		collateralPriceFeedId: this.marketParams.collateralPriceFeedId,
+	// 	});
+	// }
 
 	private simulateClosePosition(inputs: {
 		position: PerpetualsPosition;

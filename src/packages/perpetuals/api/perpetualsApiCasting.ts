@@ -103,27 +103,28 @@ export class PerpetualsApiCasting {
 		marketId: PerpetualsMarketId;
 	}): PerpetualsPosition => {
 		const { position, collateralCoinType, marketId } = inputs;
+		console.log("position");
 		return {
 			collateralCoinType,
-			collateral: Casting.IFixed.iFixedFromBytes(
+			collateral: Casting.IFixed.iFixedFromStringBytes(
 				position.position.collateral
 			),
-			baseAssetAmount: Casting.IFixed.iFixedFromBytes(
+			baseAssetAmount: Casting.IFixed.iFixedFromStringBytes(
 				position.position.base_asset_amount
 			),
-			quoteAssetNotionalAmount: Casting.IFixed.iFixedFromBytes(
+			quoteAssetNotionalAmount: Casting.IFixed.iFixedFromStringBytes(
 				position.position.quote_asset_notional_amount
 			),
-			cumFundingRateLong: Casting.IFixed.iFixedFromBytes(
+			cumFundingRateLong: Casting.IFixed.iFixedFromStringBytes(
 				position.position.cum_funding_rate_long
 			),
-			cumFundingRateShort: Casting.IFixed.iFixedFromBytes(
+			cumFundingRateShort: Casting.IFixed.iFixedFromStringBytes(
 				position.position.cum_funding_rate_short
 			),
-			asksQuantity: Casting.IFixed.iFixedFromBytes(
+			asksQuantity: Casting.IFixed.iFixedFromStringBytes(
 				position.position.asks_quantity
 			),
-			bidsQuantity: Casting.IFixed.iFixedFromBytes(
+			bidsQuantity: Casting.IFixed.iFixedFromStringBytes(
 				position.position.bids_quantity
 			),
 			marketId: Helpers.addLeadingZeroesToType(marketId),
@@ -144,10 +145,10 @@ export class PerpetualsApiCasting {
 					})
 				),
 			],
-			makerFee: Casting.IFixed.iFixedFromBytes(
+			makerFee: Casting.IFixed.iFixedFromStringBytes(
 				position.position.maker_fee
 			),
-			takerFee: Casting.IFixed.iFixedFromBytes(
+			takerFee: Casting.IFixed.iFixedFromStringBytes(
 				position.position.taker_fee
 			),
 		};
@@ -300,11 +301,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: WithdrewCollateralEventOnChain
 	): WithdrewCollateralEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateralDelta: BigInt(fields.collateral),
 			timestamp: eventOnChain.timestampMs,
@@ -317,11 +314,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: DepositedCollateralEventOnChain
 	): DepositedCollateralEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateralDelta: BigInt(fields.collateral),
 			timestamp: eventOnChain.timestampMs,
@@ -334,11 +327,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: SettledFundingEventOnChain
 	): SettledFundingEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
@@ -354,11 +343,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: AllocatedCollateralEventOnChain
 	): AllocatedCollateralEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateralDelta: BigInt(fields.collateral),
 			positionCollateralAfter: BigInt(fields.position_collateral_after),
@@ -372,11 +357,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: DeallocatedCollateralEventOnChain
 	): DeallocatedCollateralEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			collateralDelta: BigInt(fields.collateral),
 			positionCollateralAfter: BigInt(fields.position_collateral_after),
@@ -394,11 +375,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: LiquidatedEventOnChain
 	): LiquidatedEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			accountId: BigInt(fields.liqee_account_id),
 			collateralDeltaUsd: BigInt(fields.liqee_collateral_change_usd),
 			liqorAccountId: BigInt(fields.liqor_account_id),
@@ -422,11 +399,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: CreatedAccountEventOnChain
 	): CreatedAccountEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			user: Helpers.addLeadingZeroesToType(fields.user),
 			accountId: BigInt(fields.account_id),
 			timestamp: eventOnChain.timestampMs,
@@ -443,11 +416,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: CanceledOrderEventOnChain
 	): CanceledOrderEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
@@ -463,11 +432,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: PostedOrderEventOnChain
 	): PostedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			side:
@@ -487,11 +452,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: FilledMakerOrderEventOnChain
 	): FilledMakerOrderEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			baseAssetAmount: BigInt(fields.maker_base_amount),
 			accountId: BigInt(fields.maker_account_id),
 			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
@@ -513,9 +474,6 @@ export class PerpetualsApiCasting {
 		eventOnChain: FilledTakerOrderEventOnChain
 	): FilledTakerOrderEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		const baseAssetDelta = Casting.IFixed.iFixedFromNumber(
 			Casting.IFixed.numberFromIFixed(
 				BigInt(fields.base_asset_delta_bid)
@@ -525,7 +483,6 @@ export class PerpetualsApiCasting {
 				)
 		);
 		return {
-			collateralCoinType,
 			baseAssetDelta,
 			accountId: BigInt(fields.taker_account_id),
 			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
@@ -571,11 +528,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: UpdatedPremiumTwapEventOnChain
 	): UpdatedPremiumTwapEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			indexPrice: BigInt(fields.index_price),
 			bookPrice: BigInt(fields.book_price),
@@ -591,11 +544,7 @@ export class PerpetualsApiCasting {
 		eventOnChain: UpdatedSpreadTwapEventOnChain
 	): UpdatedSpreadTwapEvent => {
 		const fields = eventOnChain.parsedJson;
-		const collateralCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(eventOnChain.type).innerCoinType
-		);
 		return {
-			collateralCoinType,
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			bookPrice: BigInt(fields.book_price),
 			indexPrice: BigInt(fields.index_price),
