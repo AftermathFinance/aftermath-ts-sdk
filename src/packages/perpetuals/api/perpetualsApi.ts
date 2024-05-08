@@ -976,6 +976,25 @@ export class PerpetualsApi {
 		});
 	};
 
+	public shareClearingHouseTx = (inputs: {
+		tx: TransactionBlock;
+		collateralCoinType: CoinType;
+		marketId: PerpetualsMarketId | TransactionArgument;
+	}) => {
+		const { tx, collateralCoinType, marketId } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.perpetuals.packages.perpetuals,
+				PerpetualsApi.constants.moduleNames.interface,
+				"share_clearing_house"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				typeof marketId === "string" ? tx.object(marketId) : marketId,
+			],
+		});
+	};
+
 	public startSessionTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
@@ -1411,7 +1430,7 @@ export class PerpetualsApi {
 			tx,
 			sessionPotatoId,
 		});
-		this.endSessionAndTransferMarket({
+		this.endSessionAndShareMarket({
 			...inputs,
 			tx,
 			sessionPotatoId,
@@ -1434,7 +1453,7 @@ export class PerpetualsApi {
 			tx,
 			sessionPotatoId,
 		});
-		this.endSessionAndTransferMarket({
+		this.endSessionAndShareMarket({
 			...inputs,
 			tx,
 			sessionPotatoId,
@@ -1956,17 +1975,16 @@ export class PerpetualsApi {
 		return { tx, sessionPotatoId };
 	};
 
-	private endSessionAndTransferMarket = (inputs: {
+	private endSessionAndShareMarket = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
 	}) => {
 		const marketId = this.endSessionTx(inputs);
 
-		this.Provider.Objects().publicShareObjectTx({
+		this.shareClearingHouseTx({
 			...inputs,
-			object: marketId,
-			objectType: this.marketObjectType(inputs),
+			marketId,
 		});
 	};
 
@@ -2092,10 +2110,10 @@ export class PerpetualsApi {
 	//  Object Types
 	// =========================================================================
 
-	private marketObjectType = (inputs: { collateralCoinType: CoinType }) =>
-		`${
-			this.addresses.perpetuals.packages.perpetuals
-		}::clearing_house::ClearingHouse<${Helpers.addLeadingZeroesToType(
-			inputs.collateralCoinType
-		)}>`;
+	// private marketObjectType = (inputs: { collateralCoinType: CoinType }) =>
+	// 	`${
+	// 		this.addresses.perpetuals.packages.perpetuals
+	// 	}::clearing_house::ClearingHouse<${Helpers.addLeadingZeroesToType(
+	// 		inputs.collateralCoinType
+	// 	)}>`;
 }
