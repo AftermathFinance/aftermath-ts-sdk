@@ -174,7 +174,7 @@ export class RouterApi {
 
 	public fetchCreateSerializableGraph = this.Provider.withCache({
 		key: "fetchCreateSerializableGraph",
-		expirationSeconds: 60,
+		expirationSeconds: 10,
 		callback: async (): Promise<RouterSerializableCompleteGraph> => {
 			const [asyncPools, synchronousPools] = await Promise.all([
 				this.fetchAsyncPools(),
