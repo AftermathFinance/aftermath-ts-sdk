@@ -732,8 +732,7 @@ export class PerpetualsApi {
 			Casting.perpetuals.marketDataFromIndexerResponse(
 				market,
 				collateralCoinType,
-				symbols[index].symbol.split("_")[0]
-				// `${symbols[index * 2].symbol}${symbols[index * 2 + 1].symbol}`
+				symbols[index].symbol
 			)
 		);
 	};
@@ -1367,7 +1366,6 @@ export class PerpetualsApi {
 				typeof orderbookId === "string"
 					? tx.object(orderbookId)
 					: orderbookId, // Orderbook
-
 				tx.pure(Boolean(inputs.side), "bool"), // side
 				tx.pure(inputs.fromPrice, "u64"), // price_from
 				tx.pure(inputs.toPrice, "u64"), // price_to

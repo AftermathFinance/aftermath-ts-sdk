@@ -149,7 +149,7 @@ export interface PerpetualsPositionIndexerResponse {
 		/// Represented as a signed fixed-point number.
 		bids_quantity: IFixedAsStringBytes;
 		/// Number of pending orders in this position.
-		pending_orders: number;
+		pending_orders: BigIntAsString;
 		/// Custom maker fee for this position, set at default value of 100%
 		maker_fee: IFixedAsStringBytes;
 		/// Custom taker fee for this position, set at default value of 100%
@@ -158,17 +158,17 @@ export interface PerpetualsPositionIndexerResponse {
 	pending_orders: {
 		bids: Record<
 			string, // PerpetualsOrderId
-			number // size
+			BigIntAsString // size
 		>;
 		asks: Record<
 			string, // PerpetualsOrderId
-			number // size
+			BigIntAsString // size
 		>;
 	};
 }
 
 export type PerpetualsAccountPositionsIndexerResponse = [
-	PerpetualsMarketId,
+	IdAsStringBytes, // PerpetualsMarketId
 	PerpetualsPositionIndexerResponse
 ][];
 

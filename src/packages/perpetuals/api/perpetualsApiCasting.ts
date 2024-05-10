@@ -159,11 +159,13 @@ export class PerpetualsApiCasting {
 		collateralCoinType: CoinType
 	): PerpetualsAccountObject => {
 		return {
-			positions: response.map(([marketId, position]) =>
+			positions: response.map(([marketIdAsStringBytes, position]) =>
 				this.positionFromIndexerReponse({
 					position,
 					collateralCoinType,
-					marketId,
+					marketId: Casting.addressFromStringBytes(
+						marketIdAsStringBytes
+					),
 				})
 			),
 		};
@@ -194,14 +196,6 @@ export class PerpetualsApiCasting {
 		data: PerpetualsMarketParamsFieldsIndexerReponse,
 		baseAssetSymbol: CoinSymbol
 	): PerpetualsMarketParams => {
-		console.log(
-			"base_pfs_id",
-			Casting.addressFromStringBytes(data.base_pfs_id)
-		);
-		console.log(
-			"collateral_pfs_id",
-			Casting.addressFromStringBytes(data.collateral_pfs_id)
-		);
 		return {
 			baseAssetSymbol,
 			basePriceFeedId: Casting.addressFromStringBytes(data.base_pfs_id),
