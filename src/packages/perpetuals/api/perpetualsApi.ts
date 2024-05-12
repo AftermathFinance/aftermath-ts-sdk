@@ -189,7 +189,7 @@ export class PerpetualsApi {
 			allocatedCollateral: this.eventType("AllocatedCollateral"),
 			deallocatedCollateral: this.eventType("DeallocatedCollateral"),
 			// Liquidation
-			liquidated: this.eventType("Liquidated"),
+			liquidated: this.eventType("LiquidatedPosition"),
 			// Account
 			createdAccount: this.eventType("CreatedAccount"),
 			// Order
@@ -631,10 +631,10 @@ export class PerpetualsApi {
 		if ("error" in response) return response;
 
 		const executionPrice = Casting.IFixed.numberFromIFixed(
-			Casting.IFixed.iFixedFromBytes(response.execution_price)
+			Casting.IFixed.iFixedFromStringBytes(response.execution_price)
 		);
 		const filledSize = Casting.IFixed.numberFromIFixed(
-			Casting.IFixed.iFixedFromBytes(response.size_filled)
+			Casting.IFixed.iFixedFromStringBytes(response.size_filled)
 		);
 		const filledSizeUsd = filledSize * executionPrice;
 		const postedSize = Number(inputs.size) * inputs.lotSize - filledSize;
@@ -666,10 +666,10 @@ export class PerpetualsApi {
 			executionPrice,
 			positionAfterOrder,
 			priceSlippage: Casting.IFixed.numberFromIFixed(
-				Casting.IFixed.iFixedFromBytes(response.price_slippage)
+				Casting.IFixed.iFixedFromStringBytes(response.price_slippage)
 			),
 			percentSlippage: Casting.IFixed.numberFromIFixed(
-				Casting.IFixed.iFixedFromBytes(response.percent_slippage)
+				Casting.IFixed.iFixedFromStringBytes(response.percent_slippage)
 			),
 			// do we still need this ?
 			// collateralToDellocateForClose:

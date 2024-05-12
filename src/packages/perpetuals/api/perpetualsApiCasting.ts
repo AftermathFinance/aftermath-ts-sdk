@@ -492,6 +492,7 @@ export class PerpetualsApiCasting {
 						BigInt(fields.quote_asset_delta_ask)
 					)
 			),
+			liquidatedVolume: BigInt(fields.liquidated_volume),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

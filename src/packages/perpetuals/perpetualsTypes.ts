@@ -517,6 +517,7 @@ export interface FilledTakerOrderEvent extends Event {
 	side: PerpetualsOrderSide;
 	baseAssetDelta: IFixed;
 	quoteAssetDelta: IFixed;
+	liquidatedVolume: IFixed;
 }
 
 export type PerpetualsOrderEvent =

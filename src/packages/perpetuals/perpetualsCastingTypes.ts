@@ -175,10 +175,10 @@ export type PerpetualsAccountPositionsIndexerResponse = [
 export type PerpetualsPreviewOrderIndexerResponse =
 	| {
 			position: PerpetualsPositionIndexerResponse;
-			price_slippage: IFixedAsBytes;
-			percent_slippage: IFixedAsBytes;
-			execution_price: IFixedAsBytes;
-			size_filled: IFixedAsBytes;
+			price_slippage: IFixedAsStringBytes;
+			percent_slippage: IFixedAsStringBytes;
+			execution_price: IFixedAsStringBytes;
+			size_filled: IFixedAsStringBytes;
 	  }
 	| {
 			error: string;
@@ -300,6 +300,7 @@ export type FilledTakerOrderEventOnChain = EventOnChain<{
 	quote_asset_delta_bid: IFixedAsString;
 	taker_base_amount: IFixedAsString;
 	taker_quote_amount: IFixedAsString;
+	liquidated_volume: IFixedAsString;
 }>;
 
 export type PostedOrderReceiptEventOnChain = EventOnChain<{
