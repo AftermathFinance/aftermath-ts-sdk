@@ -1012,6 +1012,13 @@ export class PerpetualsApi {
 			typeArguments: [collateralCoinType],
 			arguments: [
 				tx.object(marketId),
+				// tx.object({
+				// 	Shared: {
+				// 		objectId: marketId,
+				// 		initialSharedVersion: 0,
+				// 		mutable: true,
+				// 	},
+				// }),
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
