@@ -61,11 +61,24 @@ export type RouterExternalFee = ExternalFee;
 
 export type RouterSerializablePool =
 	| RouterSynchronousSerializablePool
-	| RouterAsyncSerializablePool;
+	| RouterAsyncSerializablePool
+	| {
+			amount_in: {
+				token: string;
+				amount: string;
+			};
+			amount_out: {
+				token: string;
+				amount: string;
+			};
+			nodes: any;
+			edges: any;
+	  };
 
 export type RouterProtocolName =
 	| RouterSynchronousProtocolName
-	| RouterAsyncProtocolName;
+	| RouterAsyncProtocolName
+	| "Hop";
 
 // =========================================================================
 //  Synchronous Router Pools

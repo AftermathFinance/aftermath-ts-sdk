@@ -105,7 +105,9 @@ export class Router extends Caller {
 	) {
 		return this.fetchApi<
 			RouterCompleteTradeRouteWithFee,
-			ApiRouterCompleteTradeRouteBody
+			ApiRouterCompleteTradeRouteBody & {
+				v2?: boolean;
+			}
 		>("trade-route", inputs, abortSignal);
 	}
 
