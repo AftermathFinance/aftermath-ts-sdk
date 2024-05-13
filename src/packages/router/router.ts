@@ -100,6 +100,7 @@ export class Router extends Caller {
 			 * Amount of coin being given away
 			 */
 			coinInAmount: Balance;
+			v2?: boolean;
 		},
 		abortSignal?: AbortSignal
 	) {
