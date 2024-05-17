@@ -17,6 +17,8 @@ import {
 	IFixed,
 	Balance,
 	Timestamp,
+	Byte,
+	StringByte,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -233,9 +235,12 @@ export class PerpetualsApi {
 					Casting.bcsBytesFromSuiObjectResponse(accCap),
 					"base64"
 				);
+				console.log("accCap", accCap);
 				return PerpetualsApiCasting.rawAccountCapFromRaw(
 					accCapObj,
-					collateralCoinType
+					collateralCoinType,
+					Number(accCap.data?.version!),
+					accCap.data?.digest!
 				);
 			}
 		);
@@ -580,18 +585,18 @@ export class PerpetualsApi {
 		// TODO: remove unused inputs
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
-		const { marketId, side, accountId, collateralChange } = inputs;
+		const { marketId, side, leverage, accountId } = inputs;
 
-		const response = await this.Provider.indexerCaller.fetchIndexer<
-			PerpetualsPreviewOrderIndexerResponse,
-			| {
+		try {
+			const response = await this.Provider.indexerCaller.fetchIndexer<
+				PerpetualsPreviewOrderIndexerResponse,
+				{
 					ch_id: PerpetualsMarketId;
 					account_id: number;
-					collateral_to_allocate: number; // balance
 					side: boolean;
 					size: number;
-					cancel_all: boolean;
-			  } & (
+					leverage: number;
+				} & (
 					| {
 							// limit order
 							price: number;
@@ -600,81 +605,95 @@ export class PerpetualsApi {
 					| {
 							// market order
 					  }
-			  )
-		>(
-			`perpetuals/previews/${
-				"price" in inputs ? "limit" : "market"
-			}-order`,
-			{
-				ch_id: marketId,
-				account_id: Number(accountId),
-				collateral_to_allocate: Number(collateralChange),
-				size: Number(inputs.size),
-				// TODO: take as input ?
-				cancel_all: false,
-				side: Boolean(side),
-				...("price" in inputs
-					? {
-							// limit order
-							price: Number(inputs.price),
-							order_type: inputs.orderType,
-					  }
-					: {
-							// market order
-					  }),
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
-		if ("error" in response) return response;
+				)
+			>(
+				`perpetuals/previews/${
+					"price" in inputs ? "limit" : "market"
+				}-order`,
+				{
+					leverage: Math.round(leverage),
+					ch_id: marketId,
+					account_id: Number(accountId),
+					side: Boolean(side),
+					size: Number(inputs.size),
+					...("price" in inputs
+						? {
+								// limit order
+								price: Number(inputs.price),
+								order_type: inputs.orderType,
+						  }
+						: {
+								// market order
+						  }),
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
 
-		const executionPrice = Casting.IFixed.numberFromIFixed(
-			Casting.IFixed.iFixedFromStringBytes(response.execution_price)
-		);
-		const filledSize = Casting.IFixed.numberFromIFixed(
-			Casting.IFixed.iFixedFromStringBytes(response.size_filled)
-		);
-		const filledSizeUsd = filledSize * executionPrice;
-		const postedSize = Number(inputs.size) * inputs.lotSize - filledSize;
-		const postedSizeUsd =
-			"price" in inputs
-				? // limit order
-				  postedSize *
-				  Perpetuals.orderPriceToPrice({
-						orderPrice: inputs.price,
-						lotSize: inputs.lotSize,
-						tickSize: inputs.tickSize,
-				  })
-				: // market order
-				  0;
+			const executionPrice = Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(response.execution_price)
+			);
+			const filledSize = Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(response.size_filled)
+			);
+			const filledSizeUsd = filledSize * executionPrice;
+			const postedSize = response.size_posted
+				? Casting.IFixed.numberFromIFixed(
+						Casting.IFixed.iFixedFromStringBytes(
+							response.size_posted
+						)
+				  )
+				: 0;
+			const postedSizeUsd =
+				"price" in inputs
+					? // limit order
+					  postedSize *
+					  Perpetuals.orderPriceToPrice({
+							orderPrice: inputs.price,
+							lotSize: inputs.lotSize,
+							tickSize: inputs.tickSize,
+					  })
+					: // market order
+					  0;
 
-		const positionAfterOrder =
-			Casting.perpetuals.positionFromIndexerReponse({
-				position: response.position,
-				collateralCoinType: inputs.collateralCoinType,
-				marketId: inputs.marketId,
-			});
+			const positionAfterOrder =
+				Casting.perpetuals.positionFromIndexerReponse({
+					position: response.position,
+					collateralCoinType: inputs.collateralCoinType,
+					marketId: inputs.marketId,
+				});
 
-		return {
-			postedSize,
-			postedSizeUsd,
-			filledSize,
-			filledSizeUsd,
-			// NOTE: is this not needed ?
-			executionPrice,
-			positionAfterOrder,
-			priceSlippage: Casting.IFixed.numberFromIFixed(
-				Casting.IFixed.iFixedFromStringBytes(response.price_slippage)
-			),
-			percentSlippage: Casting.IFixed.numberFromIFixed(
-				Casting.IFixed.iFixedFromStringBytes(response.percent_slippage)
-			),
-			// do we still need this ?
-			// collateralToDellocateForClose:
-			// 	positionAfterOrder.collateral - initialCollateral,
-		};
+			return {
+				postedSize,
+				postedSizeUsd,
+				filledSize,
+				filledSizeUsd,
+				// NOTE: is this not needed ?
+				executionPrice,
+				positionAfterOrder,
+				priceSlippage: Casting.IFixed.numberFromIFixed(
+					Casting.IFixed.iFixedFromStringBytes(
+						response.price_slippage
+					)
+				),
+				percentSlippage: Casting.IFixed.numberFromIFixed(
+					Casting.IFixed.iFixedFromStringBytes(
+						response.percent_slippage
+					)
+				),
+				collateralChange: Casting.IFixed.numberFromIFixed(
+					Casting.IFixed.iFixedFromStringBytes(
+						response.collateral_change
+					)
+				),
+			};
+		} catch (e) {
+			return {
+				error: String(e),
+			};
+		}
 	};
 
 	public fetchOrderbookPrice = async (inputs: {
@@ -827,32 +846,39 @@ export class PerpetualsApi {
 			marketId: PerpetualsMarketId;
 		}
 	): Promise<bigint> => {
-		const { marketId, accountId, collateral, side, price } = inputs;
-		const maxSize = await this.Provider.indexerCaller.fetchIndexer<
-			number,
-			{
-				ch_id: PerpetualsMarketId;
-				account_id: number;
-				collateral_to_allocate: number;
-				side: boolean;
-				price?: number;
-			}
-		>(
-			`perpetuals/calculations/${
-				inputs.price !== undefined ? "limit" : "market"
-			}-order-max-size`,
-			{
-				ch_id: marketId,
-				account_id: Number(accountId),
-				collateral_to_allocate: Number(collateral),
-				side: Boolean(side),
-				...(price !== undefined ? { price: Number(price) } : {}),
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		const { marketId, accountId, collateral, side, price, leverage } =
+			inputs;
+		const { max_size: maxSize } =
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					max_size: number;
+					position_found: boolean;
+				},
+				{
+					ch_id: PerpetualsMarketId;
+					account_id: number;
+					collateral_to_allocate: number;
+					side: boolean;
+					leverage: number;
+					price?: number;
+				}
+			>(
+				`perpetuals/calculations/${
+					inputs.price !== undefined ? "limit" : "market"
+				}-order-max-size`,
+				{
+					leverage: Math.round(leverage),
+					ch_id: marketId,
+					account_id: Number(accountId),
+					collateral_to_allocate: Number(collateral),
+					side: Boolean(side),
+					...(price !== undefined ? { price: Number(price) } : {}),
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
 		return BigInt(Math.floor(maxSize));
 	};
 
@@ -1228,54 +1254,56 @@ export class PerpetualsApi {
 			sessionPotatoId: TransactionObjectArgument;
 		}
 	) => {
-		const { tx } = inputs;
+		throw new Error("TODO");
 
-		if ("price" in inputs) {
-			this.placeLimitOrderTx({ ...inputs, tx });
-		} else {
-			this.placeMarketOrderTx({ ...inputs, tx });
-		}
+		// const { tx } = inputs;
 
-		const orderType = PerpetualsOrderType.PostOnly;
-		const side =
-			inputs.side === PerpetualsOrderSide.Ask
-				? PerpetualsOrderSide.Bid
-				: PerpetualsOrderSide.Ask;
+		// if ("price" in inputs) {
+		// 	this.placeLimitOrderTx({ ...inputs, tx });
+		// } else {
+		// 	this.placeMarketOrderTx({ ...inputs, tx });
+		// }
 
-		const orderPrice =
-			"price" in inputs ? inputs.price : inputs.marketPrice;
+		// const orderType = PerpetualsOrderType.PostOnly;
+		// const side =
+		// 	inputs.side === PerpetualsOrderSide.Ask
+		// 		? PerpetualsOrderSide.Bid
+		// 		: PerpetualsOrderSide.Ask;
 
-		if (
-			"slPrice" in inputs &&
-			((inputs.side === PerpetualsOrderSide.Ask &&
-				inputs.slPrice > orderPrice) ||
-				(inputs.side === PerpetualsOrderSide.Bid &&
-					inputs.slPrice < orderPrice))
-		) {
-			this.placeLimitOrderTx({
-				...inputs,
-				tx,
-				orderType,
-				side,
-				price: inputs.slPrice,
-			});
-		}
+		// const orderPrice =
+		// 	"price" in inputs ? inputs.price : inputs.marketPrice;
 
-		if (
-			"tpPrice" in inputs &&
-			((inputs.side === PerpetualsOrderSide.Ask &&
-				inputs.tpPrice < orderPrice) ||
-				(inputs.side === PerpetualsOrderSide.Bid &&
-					inputs.tpPrice > orderPrice))
-		) {
-			this.placeLimitOrderTx({
-				...inputs,
-				tx,
-				orderType,
-				side,
-				price: inputs.tpPrice,
-			});
-		}
+		// if (
+		// 	"slPrice" in inputs &&
+		// 	((inputs.side === PerpetualsOrderSide.Ask &&
+		// 		inputs.slPrice > orderPrice) ||
+		// 		(inputs.side === PerpetualsOrderSide.Bid &&
+		// 			inputs.slPrice < orderPrice))
+		// ) {
+		// 	this.placeLimitOrderTx({
+		// 		...inputs,
+		// 		tx,
+		// 		orderType,
+		// 		side,
+		// 		price: inputs.slPrice,
+		// 	});
+		// }
+
+		// if (
+		// 	"tpPrice" in inputs &&
+		// 	((inputs.side === PerpetualsOrderSide.Ask &&
+		// 		inputs.tpPrice < orderPrice) ||
+		// 		(inputs.side === PerpetualsOrderSide.Bid &&
+		// 			inputs.tpPrice > orderPrice))
+		// ) {
+		// 	this.placeLimitOrderTx({
+		// 		...inputs,
+		// 		tx,
+		// 		orderType,
+		// 		side,
+		// 		price: inputs.tpPrice,
+		// 	});
+		// }
 	};
 
 	public getPositionTx = (inputs: {
@@ -1428,49 +1456,163 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildPlaceMarketOrderTx = (inputs: ApiPerpetualsMarketOrderBody) => {
-		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
-		this.placeMarketOrderTx({
-			...inputs,
-			tx,
-			sessionPotatoId,
-		});
-		this.endSessionAndShareMarket({
-			...inputs,
-			tx,
-			sessionPotatoId,
-		});
-		if (inputs.collateralChange < BigInt(0)) {
-			this.deallocateCollateralTx({
-				...inputs,
-				tx,
-				amount: Helpers.absBigInt(inputs.collateralChange),
-			});
-		}
+	public fetchBuildPlaceMarketOrderTx = async (
+		inputs: ApiPerpetualsMarketOrderBody
+	): Promise<TransactionBlock> => {
+		const {
+			walletAddress,
+			marketId,
+			accountObjectId,
+			accountObjectVersion,
+			accountObjectDigest,
+			side,
+			size,
+			collateralChange,
+		} = inputs;
+
+		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				ptb: StringByte[];
+			},
+			{
+				ch_id: PerpetualsMarketId;
+				account_obj_id: ObjectId;
+				account_obj_version: number;
+				account_obj_digest: ObjectId;
+				side: boolean;
+				size: number;
+				collateral_to_allocate: number; // Balance
+				collateral_to_deallocate: number; // Balance
+			}
+		>(
+			`perpetuals/transactions/market-order`,
+			{
+				ch_id: marketId,
+				account_obj_id: accountObjectId,
+				account_obj_version: accountObjectVersion,
+				account_obj_digest: accountObjectDigest,
+				side: Boolean(side),
+				size: Number(size),
+				collateral_to_allocate:
+					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
+				collateral_to_deallocate:
+					collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+
+		const tx = TransactionBlock.fromKind(
+			new Uint8Array(txKind.map((byte) => Number(byte)))
+		);
+		tx.setSender(walletAddress);
+
 		return tx;
+
+		// const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+		// this.placeMarketOrderTx({
+		// 	...inputs,
+		// 	tx,
+		// 	sessionPotatoId,
+		// });
+		// this.endSessionAndShareMarket({
+		// 	...inputs,
+		// 	tx,
+		// 	sessionPotatoId,
+		// });
+		// if (inputs.collateralChange < BigInt(0)) {
+		// 	this.deallocateCollateralTx({
+		// 		...inputs,
+		// 		tx,
+		// 		amount: Helpers.absBigInt(inputs.collateralChange),
+		// 	});
+		// }
+		// return tx;
 	};
 
-	public buildPlaceLimitOrderTx = (inputs: ApiPerpetualsLimitOrderBody) => {
-		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
-		// TODO: handle (de)allocations everywhere
-		this.placeLimitOrderTx({
-			...inputs,
-			tx,
-			sessionPotatoId,
-		});
-		this.endSessionAndShareMarket({
-			...inputs,
-			tx,
-			sessionPotatoId,
-		});
-		if (inputs.collateralChange < BigInt(0)) {
-			this.deallocateCollateralTx({
-				...inputs,
-				tx,
-				amount: Helpers.absBigInt(inputs.collateralChange),
-			});
-		}
+	public fetchBuildPlaceLimitOrderTx = async (
+		inputs: ApiPerpetualsLimitOrderBody
+	) => {
+		const {
+			walletAddress,
+			marketId,
+			accountObjectId,
+			accountObjectVersion,
+			accountObjectDigest,
+			side,
+			size,
+			orderType,
+			price,
+			collateralChange,
+		} = inputs;
+
+		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				ptb: StringByte[];
+			},
+			{
+				ch_id: PerpetualsMarketId;
+				account_obj_id: ObjectId;
+				account_obj_version: number;
+				account_obj_digest: ObjectId;
+				side: boolean;
+				size: number;
+				price: number; // iFixed
+				order_type: number;
+				collateral_to_allocate: number; // Balance
+				collateral_to_deallocate: number; // Balance
+			}
+		>(
+			`perpetuals/transactions/limit-order`,
+			{
+				ch_id: marketId,
+				account_obj_id: accountObjectId,
+				account_obj_version: accountObjectVersion,
+				account_obj_digest: accountObjectDigest,
+				side: Boolean(side),
+				size: Number(size),
+				price: Number(price),
+				order_type: orderType,
+				collateral_to_allocate:
+					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
+				collateral_to_deallocate:
+					collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+
+		const tx = TransactionBlock.fromKind(
+			new Uint8Array(txKind.map((byte) => Number(byte)))
+		);
+		tx.setSender(walletAddress);
+
 		return tx;
+
+		// const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+		// // TODO: handle (de)allocations everywhere
+		// this.placeLimitOrderTx({
+		// 	...inputs,
+		// 	tx,
+		// 	sessionPotatoId,
+		// });
+		// this.endSessionAndShareMarket({
+		// 	...inputs,
+		// 	tx,
+		// 	sessionPotatoId,
+		// });
+		// if (inputs.collateralChange < BigInt(0)) {
+		// 	this.deallocateCollateralTx({
+		// 		...inputs,
+		// 		tx,
+		// 		amount: Helpers.absBigInt(inputs.collateralChange),
+		// 	});
+		// }
+		// return tx;
 	};
 
 	public buildCancelOrderTx = (
@@ -1596,18 +1738,20 @@ export class PerpetualsApi {
 		return tx;
 	};
 
-	public buildPlaceSLTPOrderTx = (
+	public fetchBuildPlaceSLTPOrderTx = (
 		inputs: ApiPerpetualsSLTPOrderBody
-	): TransactionBlock => {
-		const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
+	): Promise<TransactionBlock> => {
+		throw new Error("TODO");
 
-		this.placeSLTPOrderTx({
-			...inputs,
-			tx,
-			sessionPotatoId,
-		});
+		// const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
 
-		return tx;
+		// this.placeSLTPOrderTx({
+		// 	...inputs,
+		// 	tx,
+		// 	sessionPotatoId,
+		// });
+
+		// return tx;
 	};
 
 	public buildTransferCollateralTx = (inputs: {

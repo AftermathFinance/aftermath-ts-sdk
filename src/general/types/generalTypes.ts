@@ -32,6 +32,7 @@ export type Slippage = number;
 export type Percentage = number;
 export type Apr = number;
 export type Apy = number;
+export type ObjectVersion = number;
 
 // =========================================================================
 //  string
@@ -53,6 +54,8 @@ export type FilePath = string;
 export type ObjectId = string;
 export type SuiAddress = string;
 export type TransactionDigest = string;
+export type StringByte = string;
+export type ObjectDigest = string;
 
 // =========================================================================
 //  number[]

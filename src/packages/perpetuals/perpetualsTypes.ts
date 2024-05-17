@@ -5,7 +5,9 @@ import {
 	Event,
 	IFixed,
 	Object,
+	ObjectDigest,
 	ObjectId,
+	ObjectVersion,
 	Percentage,
 	SuiAddress,
 	Timestamp,
@@ -118,6 +120,8 @@ export interface PerpetualsAccountCap extends Object {
 	collateralCoinType: CoinType;
 	collateral: IFixed;
 	collateralDecimals: CoinDecimal;
+	objectVersion: ObjectVersion;
+	objectDigest: ObjectDigest;
 }
 
 export type PerpetualsRawAccountCap = Omit<
@@ -607,14 +611,37 @@ export interface ApiPerpetualsAccountsBody {
 // =========================================================================
 
 export type ApiPerpetualsPreviewOrderBody = (
-	| ApiPerpetualsLimitOrderBody
-	| ApiPerpetualsMarketOrderBody
-	| ApiPerpetualsSLTPOrderBody
+	| Omit<
+			ApiPerpetualsLimitOrderBody,
+			| "collateralChange"
+			| "walletAddress"
+			| "accountObjectId"
+			| "accountObjectVersion"
+			| "accountObjectDigest"
+	  >
+	| Omit<
+			ApiPerpetualsMarketOrderBody,
+			| "collateralChange"
+			| "walletAddress"
+			| "accountObjectId"
+			| "accountObjectVersion"
+			| "accountObjectDigest"
+	  >
+	| Omit<
+			ApiPerpetualsSLTPOrderBody,
+			| "collateralChange"
+			| "walletAddress"
+			| "accountObjectId"
+			| "accountObjectVersion"
+			| "accountObjectDigest"
+	  >
 ) & {
-	walletAddress: SuiAddress;
+	// TODO: remove eventually ?
+	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	lotSize: number;
 	tickSize: number;
+	leverage: number;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
 };
@@ -631,7 +658,7 @@ export type ApiPerpetualsPreviewOrderResponse =
 			filledSizeUsd: number;
 			postedSize: number;
 			postedSizeUsd: number;
-			// collateralToDellocateForClose: Balance;
+			collateralChange: number;
 			executionPrice: number;
 	  };
 
@@ -667,6 +694,7 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 	accountId: PerpetualsAccountId;
 	collateral: Balance;
 	side: PerpetualsOrderSide;
+	leverage: number;
 	price?: PerpetualsOrderPrice;
 }
 
@@ -704,30 +732,26 @@ export interface ApiPerpetualsTransferCollateralBody {
 
 export interface ApiPerpetualsMarketOrderBody {
 	walletAddress: SuiAddress;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
-	basePriceFeedId: ObjectId;
-	collateralPriceFeedId: ObjectId;
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	collateralChange: Balance;
-	hasPosition: boolean;
 }
 
 export interface ApiPerpetualsLimitOrderBody {
 	walletAddress: SuiAddress;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
-	basePriceFeedId: ObjectId;
-	collateralPriceFeedId: ObjectId;
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	price: PerpetualsOrderPrice;
 	orderType: PerpetualsOrderType;
 	collateralChange: Balance;
-	hasPosition: boolean;
 }
 
 export interface ApiPerpetualsCancelOrderBody {
@@ -787,12 +811,12 @@ export type ApiPerpetualsMarketEventsBody = ApiIndexerEventsBody & {
 
 export type SdkPerpetualsMarketOrderInputs = Omit<
 	ApiPerpetualsMarketOrderBody,
-	"accountCapId" | "collateralCoinType"
+	"accountObjectId" | "accountObjectVersion" | "accountObjectDigest"
 >;
 
 export type SdkPerpetualsLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
-	"accountCapId" | "collateralCoinType"
+	"accountObjectId" | "accountObjectVersion" | "accountObjectDigest"
 >;
 
 export type SdkPerpetualsSLTPOrderInputs = (

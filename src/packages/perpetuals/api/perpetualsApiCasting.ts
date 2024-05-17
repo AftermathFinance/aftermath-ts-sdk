@@ -54,7 +54,7 @@ import {
 	PerpetualsPositionIndexerResponse,
 	PerpetualsMarketDataIndexerResponse,
 } from "../perpetualsCastingTypes";
-import { BigIntAsString } from "../../../types";
+import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types";
 import { bcs } from "@mysten/sui.js/bcs";
 
 // TODO: handle 0xs and leading 0s everywhere
@@ -69,12 +69,17 @@ export class PerpetualsApiCasting {
 
 	public static rawAccountCapFromRaw(
 		data: any,
-		collateralCoinType: CoinType
+		collateralCoinType: CoinType,
+		version: ObjectVersion,
+		digest: ObjectDigest
 	): PerpetualsRawAccountCap {
+		console.log("data", data);
 		return {
 			collateralCoinType,
 			objectId: Helpers.addLeadingZeroesToType(data.id),
-			objectType: data.objectType,
+			objectType: data.objectType, // use Helpers.addLeadingZeroesToType ?
+			objectVersion: version,
+			objectDigest: digest,
 			accountId: BigInt(data.accountId),
 			collateral: BigInt(data.collateral.value),
 		};

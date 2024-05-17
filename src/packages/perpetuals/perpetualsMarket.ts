@@ -95,9 +95,10 @@ export class PerpetualsMarket extends Caller {
 		account: PerpetualsAccount;
 		indexPrice: number;
 		side: PerpetualsOrderSide;
+		leverage: number;
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
-		const { side, price, account, indexPrice } = inputs;
+		const { side, price, account, indexPrice, leverage } = inputs;
 		const maxSize: bigint = await this.fetchApi<
 			bigint,
 			ApiPerpetualsMaxOrderSizeBody
@@ -106,6 +107,7 @@ export class PerpetualsMarket extends Caller {
 			collateral: account.collateralBalance(),
 			side,
 			price,
+			leverage,
 		});
 		return Number(maxSize) * this.lotSize() * indexPrice;
 	};

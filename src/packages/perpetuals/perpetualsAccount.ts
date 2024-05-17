@@ -42,6 +42,7 @@ import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
 import { Coin } from "..";
 import { FixedUtils } from "../../general/utils/fixedUtils";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
@@ -117,8 +118,9 @@ export class PerpetualsAccount extends Caller {
 			"transactions/market-order",
 			{
 				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
 			}
 		);
 	}
@@ -128,19 +130,23 @@ export class PerpetualsAccount extends Caller {
 			"transactions/limit-order",
 			{
 				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
 			}
 		);
 	}
 
-	public async getPlaceSLTPOrder(inputs: SdkPerpetualsSLTPOrderInputs) {
+	public async getPlaceSLTPOrder(
+		inputs: SdkPerpetualsSLTPOrderInputs
+	): Promise<TransactionBlock> {
 		return this.fetchApiTransaction<ApiPerpetualsSLTPOrderBody>(
 			"transactions/sltp-order",
 			{
 				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
 			}
 		);
 	}
@@ -221,7 +227,7 @@ export class PerpetualsAccount extends Caller {
 				filledSizeUsd: number;
 				postedSize: number;
 				postedSizeUsd: number;
-				collateralToDellocateForClose: Balance;
+				collateralChange: Balance;
 				executionPrice: number;
 		  }
 	> {
@@ -234,24 +240,19 @@ export class PerpetualsAccount extends Caller {
 				...inputs,
 				accountId: this.accountCap.accountId,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
 			},
 			abortSignal
 		);
 
 		if ("error" in response) return response;
 
-		const positionBeforeOrder = this.positionForMarketId(inputs);
-
-		// TODO: move this elsewhere ?
-		const collateralToDellocateForClose = positionBeforeOrder
-			? positionBeforeOrder.collateral -
-			  response.positionAfterOrder.collateral
-			: BigInt(0);
-
+		const { collateralChange, ...remainingResponse } = response;
 		return {
-			...response,
-			collateralToDellocateForClose,
+			...remainingResponse,
+			collateralChange: Coin.normalizeBalance(
+				collateralChange,
+				this.collateralDecimals()
+			),
 		};
 	}
 
@@ -607,11 +608,8 @@ export class PerpetualsAccount extends Caller {
 	public closePositionTxInputs = (inputs: {
 		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
-		orderDatas: PerpetualsOrderData[];
-		indexPrice: number;
-		collateralPrice: number;
-	}): SdkPerpetualsMarketOrderInputs & { isClose: boolean } => {
-		const { market, walletAddress, orderDatas, collateralPrice } = inputs;
+	}): SdkPerpetualsMarketOrderInputs => {
+		const { market, walletAddress } = inputs;
 
 		const marketId = market.marketId;
 		const position =
@@ -653,8 +651,6 @@ export class PerpetualsAccount extends Caller {
 		return {
 			marketId,
 			walletAddress,
-			basePriceFeedId: market.marketParams.basePriceFeedId,
-			collateralPriceFeedId: market.marketParams.collateralPriceFeedId,
 			collateralChange: BigInt(0),
 			side:
 				positionSide === PerpetualsOrderSide.Bid
@@ -667,8 +663,6 @@ export class PerpetualsAccount extends Caller {
 					) / market.lotSize()
 				)
 			),
-			hasPosition: true,
-			isClose: true,
 		};
 	};
 
