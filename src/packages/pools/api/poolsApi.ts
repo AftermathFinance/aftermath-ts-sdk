@@ -105,6 +105,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			swap: "SwapEvent",
 			deposit: "DepositEvent",
 			withdraw: "WithdrawEvent",
+			swapV2: "SwapEventV2",
+			depositV2: "DepositEventV2",
+			withdrawV2: "WithdrawEventV2",
 		},
 		defaultLpCoinIconImageUrl:
 			"https://aftermath.finance/coins/lp/af_lp.svg",
@@ -129,6 +132,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		trade: AnyObjectType;
 		deposit: AnyObjectType;
 		withdraw: AnyObjectType;
+		tradeV2: AnyObjectType;
+		depositV2: AnyObjectType;
+		withdrawV2: AnyObjectType;
 	};
 
 	public static readonly poolVolumeDataTimeframes: Record<
@@ -184,6 +190,9 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			trade: this.tradeEventType(),
 			deposit: this.depositEventType(),
 			withdraw: this.withdrawEventType(),
+			tradeV2: this.tradeV2EventType(),
+			depositV2: this.depositV2EventType(),
+			withdrawV2: this.withdrawV2EventType(),
 		};
 	}
 
@@ -2040,5 +2049,26 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			this.addresses.pools.packages.events,
 			PoolsApi.constants.moduleNames.events,
 			PoolsApi.constants.eventNames.withdraw
+		);
+
+	private tradeV2EventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.pools.packages.eventsV2,
+			PoolsApi.constants.moduleNames.events,
+			PoolsApi.constants.eventNames.swapV2
+		);
+
+	private depositV2EventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.pools.packages.eventsV2,
+			PoolsApi.constants.moduleNames.events,
+			PoolsApi.constants.eventNames.depositV2
+		);
+
+	private withdrawV2EventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.pools.packages.eventsV2,
+			PoolsApi.constants.moduleNames.events,
+			PoolsApi.constants.eventNames.withdrawV2
 		);
 }

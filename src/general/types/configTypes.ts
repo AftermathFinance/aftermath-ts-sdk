@@ -77,6 +77,7 @@ export interface PoolsAddresses {
 		amm: SuiAddress;
 		ammInterface: SuiAddress;
 		events: SuiAddress;
+		eventsV2: SuiAddress;
 	};
 	objects: {
 		poolRegistry: ObjectId;
