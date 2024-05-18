@@ -757,7 +757,9 @@ export interface ApiPerpetualsLimitOrderBody {
 export interface ApiPerpetualsCancelOrderBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
 	marketId: PerpetualsMarketId;
 	orderId: PerpetualsOrderId;
 	collateral: Balance;
@@ -768,7 +770,9 @@ export interface ApiPerpetualsCancelOrderBody {
 export interface ApiPerpetualsCancelOrdersBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
 	orderDatas: {
 		orderId: PerpetualsOrderId;
 		marketId: PerpetualsMarketId;

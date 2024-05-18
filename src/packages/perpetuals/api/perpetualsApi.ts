@@ -689,10 +689,17 @@ export class PerpetualsApi {
 					)
 				),
 			};
-		} catch (e) {
-			return {
-				error: String(e),
-			};
+		} catch (e1) {
+			try {
+				const splitErr = String(e1).split("500 Internal Server Error ");
+				return {
+					error: splitErr[splitErr.length - 1],
+				};
+			} catch (e2) {
+				return {
+					error: "An error occurred.",
+				};
+			}
 		}
 	};
 
@@ -950,14 +957,23 @@ export class PerpetualsApi {
 	public deallocateCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
+		accountObjectId: ObjectId;
+		accountObjectVersion: number;
+		accountObjectDigest: ObjectId;
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;
 		marketId: PerpetualsMarketId;
 		amount: Balance;
 	}) => {
-		const { tx, collateralCoinType, accountCapId, marketId, amount } =
-			inputs;
+		const {
+			tx,
+			collateralCoinType,
+			accountObjectId,
+			accountObjectVersion,
+			accountObjectDigest,
+			marketId,
+			amount,
+		} = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -967,9 +983,13 @@ export class PerpetualsApi {
 			typeArguments: [collateralCoinType],
 			arguments: [
 				tx.object(marketId),
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
+				tx.object({
+					ImmOrOwned: {
+						digest: accountObjectDigest,
+						objectId: accountObjectId,
+						version: accountObjectVersion,
+					},
+				}),
 				tx.object(inputs.basePriceFeedId),
 				tx.object(inputs.collateralPriceFeedId),
 				tx.object(Sui.constants.addresses.suiClockId),
@@ -1141,12 +1161,21 @@ export class PerpetualsApi {
 	public cancelOrdersTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
+		accountObjectId: ObjectId;
+		accountObjectVersion: number;
+		accountObjectDigest: ObjectId;
 		marketId: PerpetualsMarketId;
 		orderIds: PerpetualsOrderId[];
 	}) => {
-		const { tx, collateralCoinType, accountCapId, marketId, orderIds } =
-			inputs;
+		const {
+			tx,
+			collateralCoinType,
+			accountObjectId,
+			accountObjectVersion,
+			accountObjectDigest,
+			marketId,
+			orderIds,
+		} = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1155,10 +1184,21 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
+				// tx.object({
+				// 	Shared: {
+				// 		objectId: marketId,
+				// 		initialSharedVersion: 0,
+				// 		mutable: true,
+				// 	},
+				// }),
 				tx.object(marketId),
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
+				tx.object({
+					ImmOrOwned: {
+						digest: accountObjectDigest,
+						objectId: accountObjectId,
+						version: accountObjectVersion,
+					},
+				}),
 				tx.pure(orderIds, "vector<u128>"),
 			],
 		});
@@ -1470,6 +1510,18 @@ export class PerpetualsApi {
 			collateralChange,
 		} = inputs;
 
+		console.log("INPUTS", {
+			ch_id: marketId,
+			account_obj_id: accountObjectId,
+			account_obj_version: accountObjectVersion,
+			account_obj_digest: accountObjectDigest,
+			side: Boolean(side),
+			size: Number(size),
+			collateral_to_allocate:
+				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
+			collateral_to_deallocate:
+				collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+		});
 		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				ptb: StringByte[];
@@ -1547,6 +1599,21 @@ export class PerpetualsApi {
 			price,
 			collateralChange,
 		} = inputs;
+
+		console.log("INPUTS", {
+			ch_id: marketId,
+			account_obj_id: accountObjectId,
+			account_obj_version: accountObjectVersion,
+			account_obj_digest: accountObjectDigest,
+			side: Boolean(side),
+			size: Number(size),
+			price: Number(price),
+			order_type: orderType,
+			collateral_to_allocate:
+				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
+			collateral_to_deallocate:
+				collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+		});
 
 		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
 			{
@@ -1644,7 +1711,13 @@ export class PerpetualsApi {
 	public buildCancelOrdersTx = (
 		inputs: ApiPerpetualsCancelOrdersBody
 	): TransactionBlock => {
-		const { orderDatas, collateralCoinType, accountCapId } = inputs;
+		const {
+			orderDatas,
+			collateralCoinType,
+			accountObjectId,
+			accountObjectVersion,
+			accountObjectDigest,
+		} = inputs;
 
 		if (orderDatas.length <= 0)
 			throw new Error("cannot have order datas of length zero");
@@ -1683,14 +1756,18 @@ export class PerpetualsApi {
 			this.cancelOrdersTx({
 				tx,
 				collateralCoinType,
-				accountCapId,
+				accountObjectId,
+				accountObjectVersion,
+				accountObjectDigest,
 				marketId,
 				orderIds: orders.map((order) => order.orderId),
 			});
 			// TODO: handle deallocating too much ?
 			this.deallocateCollateralTx({
 				tx,
-				accountCapId,
+				accountObjectId,
+				accountObjectVersion,
+				accountObjectDigest,
 				collateralCoinType,
 				marketId,
 				amount: Helpers.sumBigInt(

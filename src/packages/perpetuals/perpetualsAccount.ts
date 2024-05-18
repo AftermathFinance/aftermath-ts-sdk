@@ -165,7 +165,9 @@ export class PerpetualsAccount extends Caller {
 			{
 				...inputs,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
 			}
 		);
 	}
@@ -186,7 +188,9 @@ export class PerpetualsAccount extends Caller {
 			{
 				...inputs,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
 			}
 		);
 	}
