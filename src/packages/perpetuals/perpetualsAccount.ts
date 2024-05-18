@@ -121,6 +121,7 @@ export class PerpetualsAccount extends Caller {
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
+				hasPosition: this.positionForMarketId(inputs) !== undefined,
 			}
 		);
 	}
@@ -133,6 +134,7 @@ export class PerpetualsAccount extends Caller {
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
+				hasPosition: this.positionForMarketId(inputs) !== undefined,
 			}
 		);
 	}
@@ -667,6 +669,7 @@ export class PerpetualsAccount extends Caller {
 					) / market.lotSize()
 				)
 			),
+			hasPosition: this.positionForMarketId({ marketId }) !== undefined,
 		};
 	};
 

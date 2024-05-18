@@ -739,6 +739,7 @@ export interface ApiPerpetualsMarketOrderBody {
 	side: PerpetualsOrderSide;
 	size: bigint;
 	collateralChange: Balance;
+	hasPosition: boolean;
 }
 
 export interface ApiPerpetualsLimitOrderBody {
@@ -752,6 +753,7 @@ export interface ApiPerpetualsLimitOrderBody {
 	price: PerpetualsOrderPrice;
 	orderType: PerpetualsOrderType;
 	collateralChange: Balance;
+	hasPosition: boolean;
 }
 
 export interface ApiPerpetualsCancelOrderBody {

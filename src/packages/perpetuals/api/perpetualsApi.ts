@@ -611,7 +611,7 @@ export class PerpetualsApi {
 					"price" in inputs ? "limit" : "market"
 				}-order`,
 				{
-					leverage: Math.round(leverage),
+					leverage,
 					ch_id: marketId,
 					account_id: Number(accountId),
 					side: Boolean(side),
@@ -874,7 +874,7 @@ export class PerpetualsApi {
 					inputs.price !== undefined ? "limit" : "market"
 				}-order-max-size`,
 				{
-					leverage: Math.round(leverage),
+					leverage,
 					ch_id: marketId,
 					account_id: Number(accountId),
 					collateral_to_allocate: Number(collateral),
@@ -1508,6 +1508,7 @@ export class PerpetualsApi {
 			side,
 			size,
 			collateralChange,
+			hasPosition,
 		} = inputs;
 
 		console.log("INPUTS", {
@@ -1521,6 +1522,7 @@ export class PerpetualsApi {
 				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
 			collateral_to_deallocate:
 				collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+			position_found: hasPosition,
 		});
 		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
 			{
@@ -1535,6 +1537,7 @@ export class PerpetualsApi {
 				size: number;
 				collateral_to_allocate: number; // Balance
 				collateral_to_deallocate: number; // Balance
+				position_found: boolean;
 			}
 		>(
 			`perpetuals/transactions/market-order`,
@@ -1549,6 +1552,7 @@ export class PerpetualsApi {
 					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
 				collateral_to_deallocate:
 					collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+				position_found: hasPosition,
 			},
 			undefined,
 			undefined,
@@ -1598,6 +1602,7 @@ export class PerpetualsApi {
 			orderType,
 			price,
 			collateralChange,
+			hasPosition,
 		} = inputs;
 
 		console.log("INPUTS", {
@@ -1613,6 +1618,7 @@ export class PerpetualsApi {
 				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
 			collateral_to_deallocate:
 				collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+			position_found: hasPosition,
 		});
 
 		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
@@ -1630,6 +1636,7 @@ export class PerpetualsApi {
 				order_type: number;
 				collateral_to_allocate: number; // Balance
 				collateral_to_deallocate: number; // Balance
+				position_found: boolean;
 			}
 		>(
 			`perpetuals/transactions/limit-order`,
@@ -1646,6 +1653,7 @@ export class PerpetualsApi {
 					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
 				collateral_to_deallocate:
 					collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+				position_found: hasPosition,
 			},
 			undefined,
 			undefined,
