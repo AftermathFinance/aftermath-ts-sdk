@@ -759,7 +759,9 @@ export class PerpetualsApi {
 		// 	])
 		// 	.reduce((acc, curr) => [...acc, ...curr], []);
 		const priceFeedIds = markets.map((market) =>
-			Casting.addressFromStringBytes(market.market_params.base_pfs_id)
+			Casting.addressFromStringBytes(
+				market.object.market_params.base_pfs_id
+			)
 		);
 		const symbols = await this.Provider.Oracle().fetchPriceFeedSymbols({
 			priceFeedIds,

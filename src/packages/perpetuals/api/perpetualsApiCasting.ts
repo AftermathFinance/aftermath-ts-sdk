@@ -184,14 +184,16 @@ export class PerpetualsApiCasting {
 		baseAssetSymbol: CoinSymbol
 	): PerpetualsMarketData {
 		return {
-			objectId: Casting.addressFromStringBytes(data.id.id),
+			objectId: Casting.addressFromStringBytes(data.object.id.id),
 			initialSharedVersion: Number(data.initial_shared_version),
 			collateralCoinType,
 			marketParams: this.marketParamsFromIndexerResponse(
-				data.market_params,
+				data.object.market_params,
 				baseAssetSymbol
 			),
-			marketState: this.marketStateFromIndexerResponse(data.market_state),
+			marketState: this.marketStateFromIndexerResponse(
+				data.object.market_state
+			),
 		};
 	}
 
