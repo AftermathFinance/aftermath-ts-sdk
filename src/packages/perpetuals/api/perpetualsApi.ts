@@ -706,10 +706,13 @@ export class PerpetualsApi {
 	public fetchOrderbookPrice = async (inputs: {
 		collateralCoinType: ObjectId;
 		marketId: PerpetualsMarketId;
-		marketInitialSharedVersion: ObjectVersion;
+		// marketInitialSharedVersion: ObjectVersion;
 	}): Promise<number> => {
-		const { collateralCoinType, marketId, marketInitialSharedVersion } =
-			inputs;
+		const {
+			collateralCoinType,
+			marketId,
+			// marketInitialSharedVersion
+		} = inputs;
 
 		const tx = new TransactionBlock();
 
@@ -717,7 +720,7 @@ export class PerpetualsApi {
 			tx,
 			marketId,
 			collateralCoinType,
-			marketInitialSharedVersion,
+			// marketInitialSharedVersion,
 		});
 
 		const bytes =
@@ -1381,7 +1384,7 @@ export class PerpetualsApi {
 	public getBookPriceTx = (inputs: {
 		tx: TransactionBlock;
 		marketId: PerpetualsMarketId;
-		marketInitialSharedVersion: ObjectVersion;
+		// marketInitialSharedVersion: ObjectVersion;
 		collateralCoinType: CoinType;
 	}) /* Option<u256> */ => {
 		const { tx, marketId, collateralCoinType } = inputs;
@@ -1393,11 +1396,12 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.sharedObjectRef({
-					objectId: marketId,
-					initialSharedVersion: inputs.marketInitialSharedVersion,
-					mutable: false,
-				}), // ClearingHouse
+				tx.object(marketId),
+				// tx.sharedObjectRef({
+				// 	objectId: marketId,
+				// 	initialSharedVersion: inputs.marketInitialSharedVersion,
+				// 	mutable: false,
+				// }),
 			],
 		});
 	};
