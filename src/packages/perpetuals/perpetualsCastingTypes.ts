@@ -22,6 +22,8 @@ export interface PerpetualsMarketDataIndexerResponse {
 	id: {
 		id: IdAsStringBytes;
 	};
+	version: BigIntAsString;
+	initial_shared_version: BigIntAsString;
 	market_params: PerpetualsMarketParamsFieldsIndexerReponse;
 	market_state: PerpetualsMarketStateFieldsIndexerReponse;
 }

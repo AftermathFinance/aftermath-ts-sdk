@@ -108,6 +108,7 @@ perpetualsBcsRegistry.registerStructType(["Vault", "T"], {
 
 export interface PerpetualsMarketData {
 	objectId: ObjectId;
+	initialSharedVersion: ObjectVersion;
 	collateralCoinType: CoinType;
 	marketParams: PerpetualsMarketParams;
 	marketState: PerpetualsMarketState;
@@ -759,10 +760,9 @@ export interface ApiPerpetualsLimitOrderBody {
 export interface ApiPerpetualsCancelOrderBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
-	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
+	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
+	marketInitialSharedVersion: ObjectVersion;
 	orderId: PerpetualsOrderId;
 	collateral: Balance;
 	basePriceFeedId: ObjectId;
@@ -772,12 +772,11 @@ export interface ApiPerpetualsCancelOrderBody {
 export interface ApiPerpetualsCancelOrdersBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
-	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
+	accountCapId: ObjectId;
 	orderDatas: {
 		orderId: PerpetualsOrderId;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 		collateral: Balance;
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;

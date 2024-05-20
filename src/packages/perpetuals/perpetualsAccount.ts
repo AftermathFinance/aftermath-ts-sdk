@@ -35,6 +35,7 @@ import {
 	PerpetualsOrderData,
 	CoinDecimal,
 	Percentage,
+	ObjectVersion,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -156,6 +157,7 @@ export class PerpetualsAccount extends Caller {
 	public async getCancelOrderTx(inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;
 		side: PerpetualsOrderSide;
@@ -167,9 +169,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				...inputs,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
+				accountCapId: this.accountCap.objectId,
 			}
 		);
 	}
@@ -178,6 +178,7 @@ export class PerpetualsAccount extends Caller {
 		walletAddress: SuiAddress;
 		orderDatas: {
 			marketId: PerpetualsMarketId;
+			marketInitialSharedVersion: ObjectVersion;
 			basePriceFeedId: ObjectId;
 			collateralPriceFeedId: ObjectId;
 			side: PerpetualsOrderSide;
@@ -190,9 +191,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				...inputs,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
+				accountCapId: this.accountCap.objectId,
 			}
 		);
 	}

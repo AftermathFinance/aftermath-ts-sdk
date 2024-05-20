@@ -19,6 +19,7 @@ import {
 	Timestamp,
 	Byte,
 	StringByte,
+	ObjectVersion,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -235,7 +236,6 @@ export class PerpetualsApi {
 					Casting.bcsBytesFromSuiObjectResponse(accCap),
 					"base64"
 				);
-				console.log("accCap", accCap);
 				return PerpetualsApiCasting.rawAccountCapFromRaw(
 					accCapObj,
 					collateralCoinType,
@@ -706,12 +706,19 @@ export class PerpetualsApi {
 	public fetchOrderbookPrice = async (inputs: {
 		collateralCoinType: ObjectId;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 	}): Promise<number> => {
-		const { collateralCoinType, marketId } = inputs;
+		const { collateralCoinType, marketId, marketInitialSharedVersion } =
+			inputs;
 
 		const tx = new TransactionBlock();
 
-		this.getBookPriceTx({ tx, marketId, collateralCoinType });
+		this.getBookPriceTx({
+			tx,
+			marketId,
+			collateralCoinType,
+			marketInitialSharedVersion,
+		});
 
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
@@ -933,6 +940,7 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 		amount: Balance;
 	}) => {
 		const { tx, collateralCoinType, accountCapId, marketId, amount } =
@@ -945,7 +953,11 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId),
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: true,
+				}),
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
@@ -957,23 +969,15 @@ export class PerpetualsApi {
 	public deallocateCollateralTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-		accountObjectId: ObjectId;
-		accountObjectVersion: number;
-		accountObjectDigest: ObjectId;
+		accountCapId: ObjectId;
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 		amount: Balance;
 	}) => {
-		const {
-			tx,
-			collateralCoinType,
-			accountObjectId,
-			accountObjectVersion,
-			accountObjectDigest,
-			marketId,
-			amount,
-		} = inputs;
+		const { tx, collateralCoinType, accountCapId, marketId, amount } =
+			inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -982,14 +986,12 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId),
-				tx.object({
-					ImmOrOwned: {
-						digest: accountObjectDigest,
-						objectId: accountObjectId,
-						version: accountObjectVersion,
-					},
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: true,
 				}),
+				tx.object(accountCapId),
 				tx.object(inputs.basePriceFeedId),
 				tx.object(inputs.collateralPriceFeedId),
 				tx.object(Sui.constants.addresses.suiClockId),
@@ -1003,6 +1005,7 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 	}) => {
 		const { tx, collateralCoinType, accountCapId, marketId } = inputs;
 		return tx.moveCall({
@@ -1013,7 +1016,11 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId),
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: true,
+				}),
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
@@ -1047,6 +1054,7 @@ export class PerpetualsApi {
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 	}) /* SessionHotPotato<T> */ => {
 		const { tx, collateralCoinType, accountCapId, marketId } = inputs;
 		return tx.moveCall({
@@ -1057,14 +1065,11 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId),
-				// tx.object({
-				// 	Shared: {
-				// 		objectId: marketId,
-				// 		initialSharedVersion: 0,
-				// 		mutable: true,
-				// 	},
-				// }),
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: true,
+				}),
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
 					: accountCapId,
@@ -1161,21 +1166,13 @@ export class PerpetualsApi {
 	public cancelOrdersTx = (inputs: {
 		tx: TransactionBlock;
 		collateralCoinType: CoinType;
-		accountObjectId: ObjectId;
-		accountObjectVersion: number;
-		accountObjectDigest: ObjectId;
+		accountCapId: ObjectId;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 		orderIds: PerpetualsOrderId[];
 	}) => {
-		const {
-			tx,
-			collateralCoinType,
-			accountObjectId,
-			accountObjectVersion,
-			accountObjectDigest,
-			marketId,
-			orderIds,
-		} = inputs;
+		const { tx, collateralCoinType, accountCapId, marketId, orderIds } =
+			inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.perpetuals.packages.perpetuals,
@@ -1184,21 +1181,12 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				// tx.object({
-				// 	Shared: {
-				// 		objectId: marketId,
-				// 		initialSharedVersion: 0,
-				// 		mutable: true,
-				// 	},
-				// }),
-				tx.object(marketId),
-				tx.object({
-					ImmOrOwned: {
-						digest: accountObjectDigest,
-						objectId: accountObjectId,
-						version: accountObjectVersion,
-					},
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: true,
 				}),
+				tx.object(accountCapId),
 				tx.pure(orderIds, "vector<u128>"),
 			],
 		});
@@ -1351,6 +1339,7 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 		accountId: PerpetualsAccountId;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 	}) /* Position */ => {
 		const { tx, marketId, collateralCoinType } = inputs;
 
@@ -1361,7 +1350,14 @@ export class PerpetualsApi {
 				"get_position"
 			),
 			typeArguments: [collateralCoinType],
-			arguments: [tx.object(marketId), tx.pure(inputs.accountId, "u64")],
+			arguments: [
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: false,
+				}),
+				tx.pure(inputs.accountId, "u64"),
+			],
 		});
 	};
 
@@ -1385,6 +1381,7 @@ export class PerpetualsApi {
 	public getBookPriceTx = (inputs: {
 		tx: TransactionBlock;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 		collateralCoinType: CoinType;
 	}) /* Option<u256> */ => {
 		const { tx, marketId, collateralCoinType } = inputs;
@@ -1396,7 +1393,11 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId), // ClearingHouse
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: false,
+				}), // ClearingHouse
 			],
 		});
 	};
@@ -1404,6 +1405,7 @@ export class PerpetualsApi {
 	public getBestPriceTx = (inputs: {
 		tx: TransactionBlock;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 		side: PerpetualsOrderSide;
 		collateralCoinType: CoinType;
 	}) /* Option<u256> */ => {
@@ -1416,7 +1418,11 @@ export class PerpetualsApi {
 			),
 			typeArguments: [collateralCoinType],
 			arguments: [
-				tx.object(marketId), // ClearingHouse
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: false,
+				}), // ClearingHouse
 				tx.pure(Boolean(inputs.side), "bool"), // side
 			],
 		});
@@ -1696,6 +1702,7 @@ export class PerpetualsApi {
 		const {
 			orderId,
 			marketId,
+			marketInitialSharedVersion,
 			collateral,
 			basePriceFeedId,
 			collateralPriceFeedId,
@@ -1708,6 +1715,7 @@ export class PerpetualsApi {
 				{
 					orderId,
 					marketId,
+					marketInitialSharedVersion,
 					collateral,
 					basePriceFeedId,
 					collateralPriceFeedId,
@@ -1719,13 +1727,7 @@ export class PerpetualsApi {
 	public buildCancelOrdersTx = (
 		inputs: ApiPerpetualsCancelOrdersBody
 	): TransactionBlock => {
-		const {
-			orderDatas,
-			collateralCoinType,
-			accountObjectId,
-			accountObjectVersion,
-			accountObjectDigest,
-		} = inputs;
+		const { orderDatas, collateralCoinType, accountCapId } = inputs;
 
 		if (orderDatas.length <= 0)
 			throw new Error("cannot have order datas of length zero");
@@ -1751,6 +1753,7 @@ export class PerpetualsApi {
 				{
 					orderId: PerpetualsOrderId;
 					marketId: PerpetualsMarketId;
+					marketInitialSharedVersion: ObjectVersion;
 					collateral: Balance;
 					basePriceFeedId: ObjectId;
 					collateralPriceFeedId: ObjectId;
@@ -1761,23 +1764,24 @@ export class PerpetualsApi {
 		for (const [marketId, orders] of Object.entries(marketIdToOrderIds)) {
 			if (orders.length <= 0) continue;
 
+			const marketInitialSharedVersion =
+				orders[0].marketInitialSharedVersion;
+
 			this.cancelOrdersTx({
 				tx,
 				collateralCoinType,
-				accountObjectId,
-				accountObjectVersion,
-				accountObjectDigest,
+				accountCapId,
 				marketId,
+				marketInitialSharedVersion,
 				orderIds: orders.map((order) => order.orderId),
 			});
 			// TODO: handle deallocating too much ?
 			this.deallocateCollateralTx({
 				tx,
-				accountObjectId,
-				accountObjectVersion,
-				accountObjectDigest,
+				accountCapId,
 				collateralCoinType,
 				marketId,
+				marketInitialSharedVersion,
 				amount: Helpers.sumBigInt(
 					orders.map((order) => order.collateral)
 				),
@@ -2174,6 +2178,7 @@ export class PerpetualsApi {
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;
 		walletAddress: SuiAddress;

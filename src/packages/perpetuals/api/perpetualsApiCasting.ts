@@ -73,7 +73,6 @@ export class PerpetualsApiCasting {
 		version: ObjectVersion,
 		digest: ObjectDigest
 	): PerpetualsRawAccountCap {
-		console.log("data", data);
 		return {
 			collateralCoinType,
 			objectId: Helpers.addLeadingZeroesToType(data.id),
@@ -108,7 +107,6 @@ export class PerpetualsApiCasting {
 		marketId: PerpetualsMarketId;
 	}): PerpetualsPosition => {
 		const { position, collateralCoinType, marketId } = inputs;
-		console.log("position");
 		return {
 			collateralCoinType,
 			collateral: Casting.IFixed.iFixedFromStringBytes(
@@ -185,9 +183,9 @@ export class PerpetualsApiCasting {
 		collateralCoinType: CoinType,
 		baseAssetSymbol: CoinSymbol
 	): PerpetualsMarketData {
-		console.log("id.id", Casting.addressFromStringBytes(data.id.id));
 		return {
 			objectId: Casting.addressFromStringBytes(data.id.id),
+			initialSharedVersion: Number(data.initial_shared_version),
 			collateralCoinType,
 			marketParams: this.marketParamsFromIndexerResponse(
 				data.market_params,
