@@ -867,37 +867,33 @@ export class PerpetualsApi {
 	): Promise<bigint> => {
 		const { marketId, accountId, collateral, side, price, leverage } =
 			inputs;
-		const { max_size: maxSize } =
-			await this.Provider.indexerCaller.fetchIndexer<
-				{
-					max_size: number;
-					position_found: boolean;
-				},
-				{
-					ch_id: PerpetualsMarketId;
-					account_id: number;
-					collateral_to_allocate: number;
-					side: boolean;
-					leverage: number;
-					price?: number;
-				}
-			>(
-				`perpetuals/calculations/${
-					inputs.price !== undefined ? "limit" : "market"
-				}-order-max-size`,
-				{
-					leverage,
-					ch_id: marketId,
-					account_id: Number(accountId),
-					collateral_to_allocate: Number(collateral),
-					side: Boolean(side),
-					...(price !== undefined ? { price: Number(price) } : {}),
-				},
-				undefined,
-				undefined,
-				undefined,
-				true
-			);
+		const maxSize = await this.Provider.indexerCaller.fetchIndexer<
+			number,
+			{
+				ch_id: PerpetualsMarketId;
+				account_id: number;
+				collateral_to_allocate: number;
+				side: boolean;
+				leverage: number;
+				price?: number;
+			}
+		>(
+			`perpetuals/calculations/${
+				inputs.price !== undefined ? "limit" : "market"
+			}-order-max-size`,
+			{
+				leverage,
+				ch_id: marketId,
+				account_id: Number(accountId),
+				collateral_to_allocate: Number(collateral),
+				side: Boolean(side),
+				...(price !== undefined ? { price: Number(price) } : {}),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 		return BigInt(Math.floor(maxSize));
 	};
 
