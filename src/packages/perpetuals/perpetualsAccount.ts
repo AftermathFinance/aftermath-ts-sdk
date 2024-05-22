@@ -613,8 +613,11 @@ export class PerpetualsAccount extends Caller {
 	public closePositionTxInputs = (inputs: {
 		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
+		orderDatas: PerpetualsOrderData[];
+		indexPrice: number;
+		collateralPrice: number;
 	}): SdkPerpetualsMarketOrderInputs => {
-		const { market, walletAddress } = inputs;
+		const { market, walletAddress, orderDatas, collateralPrice } = inputs;
 
 		const marketId = market.marketId;
 		const position =
@@ -622,50 +625,56 @@ export class PerpetualsAccount extends Caller {
 			this.emptyPosition({ marketId });
 
 		// TODO: move conversion to helper function, since used often
-		// const ordersCollateral = Coin.normalizeBalance(
-		// 	Helpers.sum(
-		// 		orderDatas.map(
-		// 			(orderData) =>
-		// 				market.calcCollateralUsedForOrder({
-		// 					...inputs,
-		// 					orderData,
-		// 				}).collateral
-		// 		)
-		// 	),
-		// 	this.collateralDecimals()
-		// );
-		// const marginOfError = 0.1;
-		// const collateralChange =
-		// 	Helpers.maxBigInt(
-		// 		BigInt(
-		// 			Math.floor(
-		// 				Number(
-		// 					Coin.normalizeBalance(
-		// 						this.calcFreeMarginUsdForPosition(inputs) *
-		// 							collateralPrice,
-		// 						this.collateralDecimals()
-		// 					) - ordersCollateral
-		// 				) *
-		// 					(1 - marginOfError)
-		// 			)
-		// 		),
-		// 		BigInt(0)
-		// 	) * BigInt(-1);
+		const ordersCollateral = Coin.normalizeBalance(
+			Helpers.sum(
+				orderDatas
+					.filter(
+						(orderData) => orderData.marketId === market.marketId
+					)
+					.map(
+						(orderData) =>
+							market.calcCollateralUsedForOrder({
+								...inputs,
+								orderData,
+							}).collateral
+					)
+			),
+			this.collateralDecimals()
+		);
+		const marginOfError = 0.1;
+		const collateralChange =
+			Helpers.maxBigInt(
+				BigInt(
+					Math.floor(
+						Number(
+							Coin.normalizeBalance(
+								this.calcFreeMarginUsdForPosition(inputs) *
+									collateralPrice,
+								this.collateralDecimals()
+							) - ordersCollateral
+						) *
+							(1 - marginOfError)
+					)
+				),
+				BigInt(0)
+			) * BigInt(-1);
 
 		const positionSide = Perpetuals.positionSide(position);
 		return {
 			marketId,
 			walletAddress,
-			collateralChange: BigInt(0),
+			collateralChange,
 			side:
 				positionSide === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
 			size: BigInt(
 				Math.round(
-					Casting.IFixed.numberFromIFixed(
-						Casting.IFixed.abs(position.baseAssetAmount)
-					) / market.lotSize()
+					Math.abs(
+						Casting.IFixed.numberFromIFixed(
+							position.baseAssetAmount
+						) / market.lotSize()
+					)
 				)
 			),
 			hasPosition: this.positionForMarketId({ marketId }) !== undefined,

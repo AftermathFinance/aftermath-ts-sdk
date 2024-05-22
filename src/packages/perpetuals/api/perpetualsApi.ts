@@ -1529,7 +1529,9 @@ export class PerpetualsApi {
 			collateral_to_allocate:
 				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
 			collateral_to_deallocate:
-				collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+				collateralChange < BigInt(0)
+					? Math.abs(Number(collateralChange))
+					: 0,
 			position_found: hasPosition,
 		});
 		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
@@ -1559,7 +1561,9 @@ export class PerpetualsApi {
 				collateral_to_allocate:
 					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
 				collateral_to_deallocate:
-					collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+					collateralChange < BigInt(0)
+						? Math.abs(Number(collateralChange))
+						: 0,
 				position_found: hasPosition,
 			},
 			undefined,
@@ -1625,7 +1629,9 @@ export class PerpetualsApi {
 			collateral_to_allocate:
 				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
 			collateral_to_deallocate:
-				collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+				collateralChange < BigInt(0)
+					? Math.abs(Number(collateralChange))
+					: 0,
 			position_found: hasPosition,
 		});
 
@@ -1660,7 +1666,9 @@ export class PerpetualsApi {
 				collateral_to_allocate:
 					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
 				collateral_to_deallocate:
-					collateralChange < BigInt(0) ? Number(collateralChange) : 0,
+					collateralChange < BigInt(0)
+						? Math.abs(Number(collateralChange))
+						: 0,
 				position_found: hasPosition,
 			},
 			undefined,
