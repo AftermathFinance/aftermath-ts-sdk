@@ -1,6 +1,9 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork } from "../../types";
+import { FractionalNftsVaultObject, ObjectId, SuiNetwork } from "../../types";
+import { AfEggFractionalNftsVault } from "./afEggFractionalNftsVault";
+import { FractionalNftsVault } from "./fractionalNftsVault";
+import { FractionalNftsVaultInterface } from "./fractionalNftsVaultInterface";
 
 export class FractionalNfts extends Caller {
 	// =========================================================================
@@ -21,16 +24,32 @@ export class FractionalNfts extends Caller {
 	}
 
 	// =========================================================================
-	//  Objects
+	//  Class Objects
 	// =========================================================================
 
 	// =========================================================================
-	//  Private Helpers
+	//  Vault Class
 	// =========================================================================
 
-	private useProvider = () => {
-		const provider = this.Provider?.FractionalNfts();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
-	};
+	public async getAllVaults(): Promise<FractionalNftsVaultInterface[]> {
+		const vaults = await this.fetchApi<FractionalNftsVaultObject[]>(
+			`vaults`
+		);
+		// NOTE: this works now because ONLY egg vault exists
+		return vaults.map(
+			(vault) =>
+				new AfEggFractionalNftsVault(vault, this.network, this.Provider)
+		);
+	}
+
+	public async getAfEggVault() {
+		const market = await this.fetchApi<FractionalNftsVaultObject>(
+			`vaults/af-egg`
+		);
+		return new AfEggFractionalNftsVault(
+			market,
+			this.network,
+			this.Provider
+		);
+	}
 }

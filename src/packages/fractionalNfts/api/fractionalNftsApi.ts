@@ -2,8 +2,11 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
 	CoinType,
+	DynamicFieldObjectsWithCursor,
 	FractionalNftsAddresses,
+	Nft,
 	ObjectId,
+	SuiAddress,
 } from "../../../types";
 import { Helpers } from "../../../general/utils";
 import {
@@ -17,6 +20,7 @@ import { bcs } from "@mysten/sui.js/bcs";
 import { SuiApi } from "../../sui/api/suiApi";
 import { NftsApi } from "../../../general/nfts/nftsApi";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { AfEggFractionalNftsVault } from "../afEggFractionalNftsVault";
 
 export class FractionalNftsApi {
 	// =========================================================================
@@ -75,20 +79,125 @@ export class FractionalNftsApi {
 	//  Objects
 	// =========================================================================
 
+	public fetchNftsInMarketWithCursor = async (inputs: {
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
+		cursor?: ObjectId;
+		limit?: number;
+	}): Promise<DynamicFieldObjectsWithCursor<Nft>> => {
+		return this.Provider.Nfts().fetchNftsInKioskWithCursor({
+			kioskId: inputs.kioskId,
+			kioskOwnerCapId: inputs.kioskOwnerCapId,
+		});
+	};
+
+	public fetchNftsInKiosk = async (inputs: {
+		kioskId: ObjectId;
+		kioskOwnerCapId: ObjectId;
+	}): Promise<Nft[]> => {
+		return this.Provider.Nfts().fetchNftsInKiosk({
+			kioskId: inputs.kioskId,
+			kioskOwnerCapId: inputs.kioskOwnerCapId,
+		});
+	};
+
+	public fetchAllNftVaults = async (): Promise<
+		FractionalNftsVaultObject[]
+	> => {
+		const nftAmmVaultIds = Object.values(this.addresses.objects).map(
+			(data) => data.vaultId
+		);
+		return await Promise.all(
+			nftAmmVaultIds.map((vaultId) => this.fetchNftVault({ vaultId }))
+		);
+	};
+
 	public fetchNftVault = async (inputs: {
-		objectId: ObjectId;
+		vaultId: ObjectId;
 	}): Promise<FractionalNftsVaultObject> => {
 		return this.Provider.Objects().fetchCastObject({
 			...inputs,
+			objectId: inputs.vaultId,
 			objectFromSuiObjectResponse:
 				FractionalNftsApiCasting.vaultObjectFromSuiObjectResponse,
 			withDisplay: true,
 		});
 	};
 
+	public fetchAfEggNftVault =
+		async (): Promise<FractionalNftsVaultObject> => {
+			return this.fetchNftVault({
+				vaultId: this.addresses.objects.afEgg.vaultId,
+			});
+		};
+
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
+
+	public buildDepositAfEggsTx = async (inputs: {
+		vault: AfEggFractionalNftsVault;
+		walletAddress: SuiAddress;
+		nftIds: ObjectId[];
+		kioskIds: ObjectId[];
+		kioskOwnerCapIds: ObjectId[];
+	}): Promise<TransactionBlock> => {
+		const { walletAddress } = inputs;
+
+		const vault =
+			inputs.vault ??
+			new AfEggFractionalNftsVault(await this.fetchAfEggNftVault());
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const fractionalCoinId = this.depositAfEggsTx({
+			...inputs,
+			tx,
+			fractionalCoinType: vault.fractionalCoinType(),
+			nftType: vault.nftType(),
+		});
+		tx.transferObjects([fractionalCoinId], tx.object(walletAddress));
+
+		return tx;
+	};
+
+	public buildWithdrawAfEggsTx = async (inputs: {
+		vault: AfEggFractionalNftsVault;
+		walletAddress: SuiAddress;
+		nftIds: ObjectId[];
+		isSponsoredTx?: boolean;
+	}): Promise<TransactionBlock> => {
+		const { walletAddress, nftIds, isSponsoredTx } = inputs;
+
+		const vault =
+			inputs.vault ??
+			new AfEggFractionalNftsVault(await this.fetchAfEggNftVault());
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const fractionalCoinId =
+			await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
+				walletAddress,
+				isSponsoredTx,
+				coinAmount: vault.getFractionalCoinEquivalence({
+					nftsCount: nftIds.length,
+				}),
+				coinType: vault.fractionalCoinType(),
+			});
+		const kioskOwnerCapIds = this.withdrawAfEggsTx({
+			...inputs,
+			tx,
+			fractionalCoinId,
+			fractionalCoinType: vault.fractionalCoinType(),
+			nftType: vault.nftType(),
+		});
+		tx.transferObjects(kioskOwnerCapIds, tx.pure(walletAddress));
+
+		return tx;
+	};
 
 	public depositAfEggsTx = (inputs: {
 		tx: TransactionBlock;

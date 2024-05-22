@@ -371,6 +371,10 @@ export class NftAmmMarket extends Caller {
 		);
 	};
 
+	public getFractionalCoinEquivalence = (inputs: { nftsCount: number }) => {
+		return BigInt(Math.round(inputs.nftsCount)) * this.fractionsAmount();
+	};
+
 	// =========================================================================
 	//  Getters
 	// =========================================================================

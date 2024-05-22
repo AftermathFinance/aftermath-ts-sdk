@@ -113,6 +113,7 @@ export interface NftAmmMarketInterface {
 	getNftEquivalence: (inputs: {
 		fractionalAmount: Balance | number;
 	}) => number;
+	getFractionalCoinEquivalence: (inputs: { nftsCount: number }) => Balance;
 
 	// =========================================================================
 	//  Getters

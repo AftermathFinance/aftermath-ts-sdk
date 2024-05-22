@@ -105,7 +105,7 @@ export class NftAmmApi {
 				objectId: nftAmmData.poolId,
 			}),
 			this.Provider.FractionalNfts().fetchNftVault({
-				objectId: nftAmmData.vaultId,
+				vaultId: nftAmmData.vaultId,
 			}),
 		]);
 		return {
@@ -201,8 +201,7 @@ export class NftAmmApi {
 		slippage: Slippage;
 		referrer?: SuiAddress;
 	}): Promise<TransactionBlock> => {
-		const { slippage, referrer, nftIds, kioskIds, kioskOwnerCapIds } =
-			inputs;
+		const { slippage, referrer, nftIds } = inputs;
 
 		const market =
 			inputs.market ??

@@ -141,6 +141,12 @@ export interface FractionalNftsAddresses {
 		nftVault: SuiAddress;
 		nftVaultInitial: SuiAddress;
 	};
+	objects: {
+		afEgg: {
+			vaultId: ObjectId;
+			vaultKioskId: ObjectId;
+		};
+	};
 }
 
 export type RouterAddresses = RequiredRouterAddresses &
