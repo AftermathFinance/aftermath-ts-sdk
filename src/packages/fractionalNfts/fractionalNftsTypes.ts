@@ -81,7 +81,7 @@ export interface ApiCreateFractionalNftVaultBody {
 	walletAddress: SuiAddress;
 	suiCoinAmount: Balance;
 	nftDefaultPrice: Balance;
-	mintsToken: boolean;
+	// mintsToken: boolean;
 	createPlainStorage: boolean;
 	createKioskStorage: boolean;
 	name: string;

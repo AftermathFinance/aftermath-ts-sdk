@@ -746,7 +746,7 @@ export class FractionalNftsApi {
 		createVaultCapId: ObjectId;
 		suiCoinId: ObjectId | TransactionArgument;
 		nftDefaultPrice: Balance;
-		mintsToken: boolean;
+		// mintsToken: boolean;
 		createPlainStorage: boolean;
 		createKioskStorage: boolean;
 		name: string;
@@ -768,13 +768,13 @@ export class FractionalNftsApi {
 			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
 			arguments: [
 				tx.object(inputs.createVaultCapId), // CreateVaultCap,
-				tx.object(this.addresses.objects.config), // Config
+				// tx.object(this.addresses.objects.config), // Config
 				tx.object(this.addresses.objects.sharedWrapper), // SharedWrapper
 				typeof inputs.suiCoinId === "string"
 					? tx.object(inputs.suiCoinId)
 					: inputs.suiCoinId, // Coin,
 				tx.pure(inputs.nftDefaultPrice, "u64"),
-				tx.pure(inputs.mintsToken, "bool"),
+				// tx.pure(inputs.mintsToken, "bool"),
 				tx.pure(inputs.createPlainStorage, "bool"),
 				tx.pure(inputs.createKioskStorage, "bool"),
 				tx.pure(Casting.u8VectorFromString(inputs.name), "vector<u8>"),

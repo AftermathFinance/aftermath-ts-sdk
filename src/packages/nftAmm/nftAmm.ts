@@ -42,8 +42,10 @@ export class NftAmm extends Caller {
 		);
 	}
 
-	public async getAfEggMarket() {
-		const market = await this.fetchApi<NftAmmMarketData>(`markets/af-egg`);
-		return new AfEggNftAmmMarket(market, this.network, this.Provider);
-	}
+	// TODO
+
+	// public async getAfEggMarket() {
+	// 	const market = await this.fetchApi<NftAmmMarketData>(`markets/af-egg`);
+	// 	return new AfEggNftAmmMarket(market, this.network, this.Provider);
+	// }
 }

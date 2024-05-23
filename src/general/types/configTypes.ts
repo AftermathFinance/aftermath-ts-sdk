@@ -142,7 +142,7 @@ export interface FractionalNftsAddresses {
 		nftVaultInitial: SuiAddress;
 	};
 	objects: {
-		config: ObjectId;
+		// config: ObjectId;
 		sharedWrapper: ObjectId;
 		afEgg: {
 			vaultId: ObjectId;

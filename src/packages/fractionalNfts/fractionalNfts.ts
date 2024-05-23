@@ -51,16 +51,18 @@ export class FractionalNfts extends Caller {
 	// 	);
 	// }
 
-	public async getAfEggVault() {
-		const market = await this.fetchApi<FractionalNftsVaultObject>(
-			`vaults/af-egg`
-		);
-		return new AfEggFractionalNftsVault(
-			market,
-			this.network,
-			this.Provider
-		);
-	}
+	// TODO: add back
+
+	// public async getAfEggVault() {
+	// 	const market = await this.fetchApi<FractionalNftsVaultObject>(
+	// 		`vaults/af-egg`
+	// 	);
+	// 	return new AfEggFractionalNftsVault(
+	// 		market,
+	// 		this.network,
+	// 		this.Provider
+	// 	);
+	// }
 
 	// =========================================================================
 	//  Objects
