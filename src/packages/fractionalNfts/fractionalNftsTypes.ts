@@ -66,6 +66,49 @@ export interface FractionalNftsPlainStorage {
 }
 
 // =========================================================================
+//  API
+// =========================================================================
+
+// =========================================================================
+//  Transactions
+// =========================================================================
+
+export interface ApiPublishFractionalCoinBody {
+	walletAddress: SuiAddress;
+}
+
+export interface ApiCreateFractionalNftVaultBody {
+	walletAddress: SuiAddress;
+	suiCoinAmount: Balance;
+	nftDefaultPrice: Balance;
+	mintsToken: boolean;
+	createPlainStorage: boolean;
+	createKioskStorage: boolean;
+	name: string;
+	imageUrl: string;
+	thumbnailUrl: string;
+	projectUrl: string;
+	description: string;
+	fractionalCoinType: AnyObjectType;
+	nftType: AnyObjectType;
+	createVaultCapId?: ObjectId;
+	isSponsoredTx?: boolean;
+}
+
+// =========================================================================
+//  API
+// =========================================================================
+
+export interface ApiOwnedCreateFractionalVaultCapIds {
+	walletAddress: SuiAddress;
+	fractionalCoinType: CoinType;
+}
+
+// =========================================================================
+//  Objects
+// =========================================================================
+
+// =========================================================================
 //  Events
 // =========================================================================
 

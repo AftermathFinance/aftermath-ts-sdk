@@ -34,6 +34,7 @@
 	},
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
+		"@mysten/move-bytecode-template": "^0.1.0",
 		"@pythnetwork/pyth-sui-js": "^1.2.3",
 		"@scallop-io/sui-scallop-sdk": "^0.44.10",
 		"bn.js": "^5.2.1",

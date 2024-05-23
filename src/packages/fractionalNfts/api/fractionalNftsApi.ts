@@ -1,6 +1,7 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	AnyObjectType,
+	Balance,
 	CoinType,
 	DynamicFieldObjectsWithCursor,
 	FractionalNftsAddresses,
@@ -8,12 +9,17 @@ import {
 	ObjectId,
 	SuiAddress,
 } from "../../../types";
-import { Helpers } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
-import { FractionalNftsVaultObject } from "../fractionalNftsTypes";
+import {
+	ApiCreateFractionalNftVaultBody,
+	ApiOwnedCreateFractionalVaultCapIds,
+	ApiPublishFractionalCoinBody,
+	FractionalNftsVaultObject,
+} from "../fractionalNftsTypes";
 import { FractionalNftsApiCasting } from "./fractionalNftsApiCasting";
 import { Coin } from "../..";
 import { bcs } from "@mysten/sui.js/bcs";
@@ -21,6 +27,7 @@ import { SuiApi } from "../../sui/api/suiApi";
 import { NftsApi } from "../../../general/nfts/nftsApi";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { AfEggFractionalNftsVault } from "../afEggFractionalNftsVault";
+import { fromB64, normalizeSuiObjectId } from "@mysten/sui.js/utils";
 
 export class FractionalNftsApi {
 	// =========================================================================
@@ -30,6 +37,7 @@ export class FractionalNftsApi {
 	private static readonly constants = {
 		moduleNames: {
 			interface: "interface",
+			vault: "vault",
 		},
 	};
 
@@ -101,16 +109,16 @@ export class FractionalNftsApi {
 		});
 	};
 
-	public fetchAllNftVaults = async (): Promise<
-		FractionalNftsVaultObject[]
-	> => {
-		const nftAmmVaultIds = Object.values(this.addresses.objects).map(
-			(data) => data.vaultId
-		);
-		return await Promise.all(
-			nftAmmVaultIds.map((vaultId) => this.fetchNftVault({ vaultId }))
-		);
-	};
+	// public fetchAllNftVaults = async (): Promise<
+	// 	FractionalNftsVaultObject[]
+	// > => {
+	// 	const nftAmmVaultIds = Object.values(this.addresses.objects).map(
+	// 		(data) => data.vaultId
+	// 	);
+	// 	return await Promise.all(
+	// 		nftAmmVaultIds.map((vaultId) => this.fetchNftVault({ vaultId }))
+	// 	);
+	// };
 
 	public fetchNftVault = async (inputs: {
 		vaultId: ObjectId;
@@ -131,9 +139,64 @@ export class FractionalNftsApi {
 			});
 		};
 
+	public fetchOwnedCreateFractionalVaultCapIds = async (
+		inputs: ApiOwnedCreateFractionalVaultCapIds
+	): Promise<ObjectId[]> => {
+		return (
+			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
+				walletAddress: inputs.walletAddress,
+				objectType: `${this.addresses.packages.nftVaultInitial}::${FractionalNftsApi.constants.moduleNames.vault}::CreateVaultCap<${inputs.fractionalCoinType}>`,
+				options: {},
+			})
+		).map((object) => Helpers.getObjectId(object));
+	};
+
 	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
+
+	public buildPublishFactionalCoinTx = (
+		inputs: ApiPublishFractionalCoinBody
+	): TransactionBlock => {
+		const { walletAddress } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const upgradeCap = this.publishFractionalCoinTx({ tx });
+		tx.transferObjects([upgradeCap], tx.pure(walletAddress));
+
+		return tx;
+	};
+
+	public fetchBuildCreateFractionalNftVaultTx = async (
+		inputs: ApiCreateFractionalNftVaultBody
+	): Promise<TransactionBlock> => {
+		const { walletAddress, isSponsoredTx, suiCoinAmount } = inputs;
+
+		const tx = new TransactionBlock();
+		tx.setSender(walletAddress);
+
+		const createVaultCapId =
+			inputs.createVaultCapId ??
+			(await this.fetchOwnedCreateFractionalVaultCapIds(inputs))[0];
+
+		const suiCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			isSponsoredTx,
+			coinAmount: suiCoinAmount,
+			coinType: Coin.constants.suiCoinType,
+		});
+		this.publishVaultTx({
+			...inputs,
+			createVaultCapId,
+			suiCoinId,
+			tx,
+		});
+
+		return tx;
+	};
 
 	public buildDepositAfEggsTx = async (inputs: {
 		vault: AfEggFractionalNftsVault;
@@ -625,6 +688,112 @@ export class FractionalNftsApi {
 					"vector<ID>"
 				),
 				tx.object(inputs.fractionalCoinId), // Coin
+			],
+		});
+	};
+
+	// public todo = async () => {
+	// 	// TODO: get bytecode
+	// 	const bytecode = new Uint8Array([0]);
+
+	// 	// please, manually scan the existing values, this operation is very sensitive
+	// 	console.log(template.get_constants(bytecode));
+
+	// 	let updated;
+
+	// 	// Update DECIMALS
+	// 	updated = template.update_constants(
+	// 		bytecode,
+	// 		bcs.u8().serialize(3).toBytes(), // new value
+	// 		bcs.u8().serialize(6).toBytes(), // current value
+	// 		"U8" // type of the constant
+	// 	);
+
+	// 	// Update SYMBOL
+	// 	updated = template.update_constants(
+	// 		updated,
+	// 		bcs.vector(bcs.string()).serialize("MYC").toBytes(), // new value
+	// 		bcs.vector(bcs.string()).serialize("TMPL").toBytes(), // current value
+	// 		"Vector(U8)" // type of the constant
+	// 	);
+
+	// 	// Update NAME
+	// 	updated = template.update_constants(
+	// 		updated,
+	// 		bcs.vector(bcs.string()).serialize("My Coin").toBytes(), // new value
+	// 		bcs.vector(bcs.string()).serialize("Template Coin").toBytes(), // current value
+	// 		"Vector(U8)" // type of the constant
+	// 	);
+	// };
+
+	public publishFractionalCoinTx = (inputs: { tx: TransactionBlock }) => {
+		const { tx } = inputs;
+		const compiledModulesAndDeps = JSON.parse(
+			this.addresses.other.publishFractionalCoinBytecode
+		);
+		return tx.publish({
+			modules: compiledModulesAndDeps.modules.map((m: any) =>
+				Array.from(fromB64(m))
+			),
+			dependencies: compiledModulesAndDeps.dependencies.map(
+				(addr: string) => normalizeSuiObjectId(addr)
+			),
+		});
+	};
+
+	public publishVaultTx = (inputs: {
+		tx: TransactionBlock;
+		createVaultCapId: ObjectId;
+		suiCoinId: ObjectId | TransactionArgument;
+		nftDefaultPrice: Balance;
+		mintsToken: boolean;
+		createPlainStorage: boolean;
+		createKioskStorage: boolean;
+		name: string;
+		imageUrl: string;
+		thumbnailUrl: string;
+		projectUrl: string;
+		description: string;
+		fractionalCoinType: AnyObjectType;
+		nftType: AnyObjectType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.nftVault,
+				FractionalNftsApi.constants.moduleNames.interface,
+				"publish_vault"
+			),
+			typeArguments: [inputs.fractionalCoinType, inputs.nftType],
+			arguments: [
+				tx.object(inputs.createVaultCapId), // CreateVaultCap,
+				tx.object(this.addresses.objects.config), // Config
+				tx.object(this.addresses.objects.sharedWrapper), // SharedWrapper
+				typeof inputs.suiCoinId === "string"
+					? tx.object(inputs.suiCoinId)
+					: inputs.suiCoinId, // Coin,
+				tx.pure(inputs.nftDefaultPrice, "u64"),
+				tx.pure(inputs.mintsToken, "bool"),
+				tx.pure(inputs.createPlainStorage, "bool"),
+				tx.pure(inputs.createKioskStorage, "bool"),
+				tx.pure(Casting.u8VectorFromString(inputs.name), "vector<u8>"),
+				tx.pure(
+					Casting.u8VectorFromString(inputs.imageUrl),
+					"vector<u8>"
+				),
+				tx.pure(
+					Casting.u8VectorFromString(inputs.thumbnailUrl),
+					"vector<u8>"
+				),
+				tx.pure(
+					Casting.u8VectorFromString(inputs.projectUrl),
+					"vector<u8>"
+				),
+				tx.pure(
+					Casting.u8VectorFromString(inputs.description),
+					"vector<u8>"
+				),
 			],
 		});
 	};
