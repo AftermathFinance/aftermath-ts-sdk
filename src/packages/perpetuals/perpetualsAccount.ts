@@ -36,6 +36,7 @@ import {
 	CoinDecimal,
 	Percentage,
 	ObjectVersion,
+	ApiPerpetualsAccountOrderDatasBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -262,8 +263,31 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public getOrderDatas() {
-		return this.fetchApi<PerpetualsOrderData[]>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`
+		const orderDatas = this.account.positions.reduce(
+			(acc, position) => [
+				...acc,
+				...position.pendingOrders.map((order) => ({
+					orderId: order.orderId,
+					marketId: position.marketId,
+					currentSize: order.size,
+				})),
+			],
+			[] as {
+				orderId: PerpetualsOrderId;
+				marketId: PerpetualsMarketId;
+				currentSize: bigint;
+			}[]
+		);
+		if (orderDatas.length <= 0) return [] as PerpetualsOrderData[];
+
+		return this.fetchApi<
+			PerpetualsOrderData[],
+			ApiPerpetualsAccountOrderDatasBody
+		>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`,
+			{
+				orderDatas,
+			}
 		);
 	}
 

@@ -699,6 +699,14 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 	price?: PerpetualsOrderPrice;
 }
 
+export interface ApiPerpetualsAccountOrderDatasBody {
+	orderDatas: {
+		orderId: PerpetualsOrderId;
+		marketId: PerpetualsMarketId;
+		currentSize: bigint;
+	}[];
+}
+
 // =========================================================================
 //  Transactions
 // =========================================================================

@@ -67,6 +67,7 @@ import {
 	ApiPerpetualsCancelOrderBody,
 	PerpetualsFilledOrderData,
 	ApiPerpetualsMaxOrderSizeBody,
+	ApiPerpetualsAccountOrderDatasBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -268,64 +269,42 @@ export class PerpetualsApi {
 		);
 	};
 
-	public fetchAccountOrderDatas = async (inputs: {
-		accountId: PerpetualsAccountId;
-		collateralCoinType: CoinType;
-	}): Promise<PerpetualsOrderData[]> => {
-		const { accountId, collateralCoinType } = inputs;
-		const orders: PostedOrderReceiptEventOnChain[] =
+	public fetchAccountOrderDatas = async (
+		inputs: ApiPerpetualsAccountOrderDatasBody & {
+			accountId: PerpetualsAccountId;
+		}
+	): Promise<PerpetualsOrderData[]> => {
+		const { accountId, orderDatas } = inputs;
+
+		const orderReceiptEvents: PostedOrderReceiptEventOnChain[] =
 			await this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/accounts/${accountId}/orders`
-			);
-		if (orders.length <= 0) return [];
-
-		const marketIdsToOrderEvents: Record<
-			PerpetualsMarketId,
-			PostedOrderReceiptEvent[]
-		> = orders
-			.map((order) =>
-				Casting.perpetuals.postedOrderReceiptEventFromOnChain(order)
-			)
-			.reduce((acc, event) => {
-				if (event.marketId in acc) {
-					return {
-						...acc,
-						[event.marketId]: [...acc[event.marketId], event],
-					};
+				`perpetuals/accounts/${accountId}/orders`,
+				undefined,
+				{
+					order_ids: orderDatas.map((order) =>
+						String(order.orderId).replaceAll("n", "")
+					),
 				}
+			);
+		if (orderReceiptEvents.length !== orderDatas.length)
+			throw new Error("unable to find all orders");
 
-				return {
-					...acc,
-					[event.marketId]: [event],
-				};
-			}, {} as Record<PerpetualsMarketId, PostedOrderReceiptEvent[]>);
+		return orderReceiptEvents.map((event, index) => {
+			const { size: initialSize, ...castEvent } =
+				Casting.perpetuals.postedOrderReceiptEventFromOnChain(event);
 
-		return (
-			await Promise.all(
-				Object.entries(marketIdsToOrderEvents).map(
-					async ([marketId, orderEvents]) => {
-						const currentOrderSizes = await this.fetchOrdersSizes({
-							marketId,
-							collateralCoinType,
-							orderIds: orderEvents.map((event) => event.orderId),
-						});
-						return orders.map((order, index) => {
-							const { size: initialSize, ...event } =
-								Casting.perpetuals.postedOrderReceiptEventFromOnChain(
-									order
-								);
-							return {
-								...event,
-								side: Perpetuals.orderIdToSide(event.orderId),
-								filledSize:
-									initialSize - currentOrderSizes[index],
-								initialSize,
-							};
-						});
-					}
-				)
-			)
-		).reduce((acc, orderDatas) => [...acc, ...orderDatas], []);
+			const orderData = orderDatas.find(
+				(orderData) => orderData.orderId === castEvent.orderId
+			);
+			if (!orderData) throw new Error("unable to find all orders");
+
+			return {
+				...castEvent,
+				side: Perpetuals.orderIdToSide(castEvent.orderId),
+				filledSize: initialSize - orderData.currentSize,
+				initialSize,
+			};
+		});
 	};
 
 	// public fetchMarket = async (inputs: {

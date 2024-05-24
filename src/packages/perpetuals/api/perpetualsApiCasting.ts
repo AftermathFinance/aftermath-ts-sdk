@@ -415,6 +415,8 @@ export class PerpetualsApiCasting {
 		eventOnChain: CanceledOrderEventOnChain
 	): CanceledOrderEvent => {
 		const fields = eventOnChain.parsedJson;
+		console.log("eventOnChain", eventOnChain);
+		console.log("fields", fields);
 		return {
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
