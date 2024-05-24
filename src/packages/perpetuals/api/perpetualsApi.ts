@@ -360,31 +360,31 @@ export class PerpetualsApi {
 			},
 			(event) => {
 				const eventType = (event as EventOnChain<any>).type;
-				return eventType.includes(this.eventTypes.withdrewCollateral)
+				return eventType === this.eventTypes.withdrewCollateral
 					? Casting.perpetuals.withdrewCollateralEventFromOnChain(
 							event as WithdrewCollateralEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.depositedCollateral)
+					: eventType === this.eventTypes.depositedCollateral
 					? Casting.perpetuals.depositedCollateralEventFromOnChain(
 							event as DepositedCollateralEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.settledFunding)
+					: eventType === this.eventTypes.settledFunding
 					? Casting.perpetuals.settledFundingEventFromOnChain(
 							event as SettledFundingEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.allocatedCollateral)
+					: eventType === this.eventTypes.allocatedCollateral
 					? Casting.perpetuals.allocatedCollateralEventFromOnChain(
 							event as AllocatedCollateralEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.deallocatedCollateral)
+					: eventType === this.eventTypes.deallocatedCollateral
 					? Casting.perpetuals.deallocatedCollateralEventFromOnChain(
 							event as DeallocatedCollateralEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.liquidated)
+					: eventType === this.eventTypes.liquidated
 					? Casting.perpetuals.liquidatedEventFromOnChain(
 							event as LiquidatedEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.filledMakerOrder)
+					: eventType === this.eventTypes.filledMakerOrder
 					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
 							event as FilledMakerOrderEventOnChain
 					  )
@@ -435,19 +435,19 @@ export class PerpetualsApi {
 			},
 			(event) => {
 				const eventType = (event as EventOnChain<any>).type;
-				return eventType.includes(this.eventTypes.canceledOrder)
+				return eventType === this.eventTypes.canceledOrder
 					? Casting.perpetuals.canceledOrderEventFromOnChain(
 							event as CanceledOrderEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.postedOrderReceipt)
+					: eventType === this.eventTypes.postedOrderReceipt
 					? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
 							event as PostedOrderReceiptEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.liquidated)
+					: eventType === this.eventTypes.liquidated
 					? Casting.perpetuals.liquidatedEventFromOnChain(
 							event as LiquidatedEventOnChain
 					  )
-					: eventType.includes(this.eventTypes.filledMakerOrder)
+					: eventType === this.eventTypes.filledMakerOrder
 					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
 							event as FilledMakerOrderEventOnChain
 					  )
