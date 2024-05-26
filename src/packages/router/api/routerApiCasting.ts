@@ -1,4 +1,4 @@
-import { Helpers } from "../../..";
+import { Balance, Helpers } from "../../..";
 import {
 	RouterCompleteTradeRoute,
 	RouterServicePath,
@@ -29,9 +29,12 @@ export class RouterApiCasting {
 		};
 	};
 
-	public static routerCompleteTradeRouteFromServicePaths = (
-		paths: RouterServicePaths
-	): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> => {
+	public static routerCompleteTradeRouteFromServicePaths = (inputs: {
+		paths: RouterServicePaths;
+		outputAmount: number;
+	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> => {
+		const { paths, outputAmount } = inputs;
+
 		const routes: RouterTradeRoute[] = paths.data.map((path) => ({
 			// TODO: add spot price
 			paths: path.path.data.map((hop) => ({
@@ -89,9 +92,6 @@ export class RouterApiCasting {
 		const coinInAmount = Helpers.sumBigInt(
 			routes.map((route) => route.coinIn.amount)
 		);
-		const coinOutAmount = Helpers.sumBigInt(
-			routes.map((route) => route.coinOut.amount)
-		);
 
 		return {
 			routes,
@@ -104,12 +104,12 @@ export class RouterApiCasting {
 			},
 			coinOut: {
 				type: routes[routes.length - 1].coinOut.type,
-				amount: coinOutAmount,
+				amount: BigInt(Math.round(outputAmount)),
 				tradeFee: BigInt(
 					Math.round(paths.protocol_fee.output_fee_amount)
 				),
 			},
-			spotPrice: Number(coinInAmount) / Number(coinOutAmount),
+			spotPrice: Number(coinInAmount) / Number(outputAmount),
 		};
 	};
 

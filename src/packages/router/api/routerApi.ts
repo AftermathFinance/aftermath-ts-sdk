@@ -158,40 +158,42 @@ export class RouterApi {
 		const { coinInType, coinOutType, coinInAmount, referrer, externalFee } =
 			inputs;
 
-		const { paths } = await this.Provider.indexerCaller.fetchIndexer<
-			{
-				output_amount: number;
-				paths: RouterServicePaths;
-			},
-			{
-				from_coin_type: CoinType;
-				to_coin_type: CoinType;
-				input_amount: number;
-				referred: boolean;
-			}
-		>(
-			"router/forward-trade-route",
-			{
-				from_coin_type: coinInType,
-				to_coin_type: coinOutType,
-				// NOTE: is this conversion safe ?
-				input_amount: Number(coinInAmount),
-				referred: referrer !== undefined,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		const { paths, output_amount } =
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					output_amount: number;
+					paths: RouterServicePaths;
+				},
+				{
+					from_coin_type: CoinType;
+					to_coin_type: CoinType;
+					input_amount: number;
+					referred: boolean;
+				}
+			>(
+				"router/forward-trade-route",
+				{
+					from_coin_type: coinInType,
+					to_coin_type: coinOutType,
+					// NOTE: is this conversion safe ?
+					input_amount: Number(coinInAmount),
+					referred: referrer !== undefined,
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
 
 		console.log("paths", JSON.stringify(paths, null, 4));
 
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths(
-						paths
-					),
+					Casting.router.routerCompleteTradeRouteFromServicePaths({
+						paths,
+						outputAmount: output_amount,
+					}),
 			});
 		return {
 			...completeRoute,
@@ -252,9 +254,10 @@ export class RouterApi {
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths(
-						paths
-					),
+					Casting.router.routerCompleteTradeRouteFromServicePaths({
+						paths,
+						outputAmount: Number(coinOutAmount),
+					}),
 			});
 		return {
 			...completeRoute,
@@ -383,9 +386,10 @@ export class RouterApi {
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths(
-						paths
-					),
+					Casting.router.routerCompleteTradeRouteFromServicePaths({
+						paths,
+						outputAmount: output_amount,
+					}),
 			});
 		return {
 			tx,
