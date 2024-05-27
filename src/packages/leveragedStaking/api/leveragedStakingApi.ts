@@ -28,7 +28,7 @@ import {
 	LeveragedAfSuiPosition,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
 import { LeveragedStaking } from "..";
@@ -918,7 +918,7 @@ export class LeveragedStakingApi {
 				// @ts-ignore
 				tx,
 				validatorAddress:
-					this.addresses.leveragedStaking.objects.aftermathValidator,
+					this.addresses.staking.objects.aftermathValidator,
 				suiCoin: unstakedCoinId,
 			});
 
@@ -1356,7 +1356,7 @@ export class LeveragedStakingApi {
 			afSuiCoinId = this.Provider.Staking().stakeTx({
 				tx,
 				validatorAddress:
-					this.addresses.leveragedStaking.objects.aftermathValidator,
+					this.addresses.staking.objects.aftermathValidator,
 				suiCoin: suiCoinId,
 			});
 

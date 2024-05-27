@@ -2,11 +2,11 @@ import { ConfigAddresses } from "../types/configTypes";
 import { PoolsApi } from "../../packages/pools/api/poolsApi";
 import { FaucetApi } from "../../packages/faucet/api/faucetApi";
 import { CoinApi } from "../../packages/coin/api/coinApi";
-import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
-import { EventsApiHelpers } from "../api/eventsApiHelpers";
-import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
-import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
+import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
+import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
+import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
+import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { SuiApi } from "../../packages/sui/api/suiApi";
 import { WalletApi } from "../wallet/walletApi";
 import { RouterApi } from "../../packages/router/api/routerApi";
@@ -17,9 +17,7 @@ import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
 import {
 	CoinType,
-	PartialRouterOptions,
 	RouterProtocolName,
-	RouterSynchronousOptions,
 	ScallopProviders,
 	UniqueId,
 	Url,
@@ -36,6 +34,7 @@ import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
+import { NftsApi } from "../nfts/nftsApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -125,6 +124,7 @@ export class AftermathApi {
 
 	public Wallet = () => new WalletApi(this);
 	public DynamicGas = () => new DynamicGasApi(this);
+	public Nfts = () => new NftsApi(this);
 
 	public Prices = this?.config?.prices?.coinGeckoApiKey
 		? () =>
@@ -166,19 +166,11 @@ export class AftermathApi {
 	public Perpetuals = () => new PerpetualsApi(this);
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
-
 	/**
 	 * Creates a new instance of the RouterApi class.
-	 * @param protocols An optional array of protocol names to use for the router.
-	 * @param regularOptions An optional object containing regular router options.
-	 * @param preAsyncOptions An optional object containing pre-async router options.
 	 * @returns A new instance of the RouterApi class.
 	 */
-	public Router = (
-		protocols?: RouterProtocolName[],
-		regularOptions?: PartialRouterOptions,
-		preAsyncOptions?: Partial<RouterSynchronousOptions>
-	) => new RouterApi(this, protocols, regularOptions, preAsyncOptions);
+	public Router = () => new RouterApi(this);
 
 	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
 		new LeveragedStakingApi(this, ScallopProviders);

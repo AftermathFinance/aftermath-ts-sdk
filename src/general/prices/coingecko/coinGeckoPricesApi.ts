@@ -9,6 +9,7 @@ import {
 import { AftermathApi } from "../../providers";
 import { Helpers } from "../../utils";
 import { PricesApiInterface } from "../pricesApiInterface";
+import { RouterPricesApi } from "../router/routerPricesApi";
 import { CoinGeckoApiHelpers } from "./coinGeckoApiHelpers";
 import { CoinGeckoCoinApiId, CoinGeckoCoinSymbolData } from "./coinGeckoTypes";
 
@@ -48,47 +49,68 @@ export class CoinGeckoPricesApi
 		)[0];
 	};
 
-	public fetchCoinsToPrice = async (inputs: { coins: CoinType[] }) => {
-		const { coins } = inputs;
+	// TODO: abstract any duplicate logic with this and price info func below
+	public fetchCoinsToPrice = this.Provider.withCache({
+		key: "coinGeckoPricesApi.fetchCoinsToPrice",
+		expirationSeconds: 300, // 5 minutes
+		callback: async (inputs: { coins: CoinType[] }) => {
+			const { coins } = inputs;
 
-		const allCoinsData = await this.fetchAllSuiCoinData();
-		const onlyInputCoinsData = Helpers.filterObject(allCoinsData, (coin) =>
-			coins
-				.map(Helpers.addLeadingZeroesToType)
-				.includes(Helpers.addLeadingZeroesToType(coin))
-		);
-		const coinsToApiId: Record<CoinType, CoinGeckoCoinApiId> =
-			Object.entries(onlyInputCoinsData).reduce(
-				(acc, [coinType, data]) => ({
-					...acc,
-					[coinType]: data.apiId,
-				}),
-				{}
+			// filter regular vs LP coins
+			const [lpCoins, regularCoins] = await Helpers.bifilterAsync(
+				coins,
+				async (coin) =>
+					this.Provider.Pools().fetchIsLpCoinType({
+						lpCoinType: coin,
+					})
 			);
 
-		const coinsToPrice = await this.fetchCoinsToPriceGivenApiIds({
-			coinsToApiId,
-		});
-		const missingCoinsToPrice: CoinsToPrice = coins.reduce(
-			(acc, coin) =>
-				Helpers.addLeadingZeroesToType(coin) in coinsToPrice
-					? acc
-					: {
-							...acc,
-							[Helpers.addLeadingZeroesToType(coin)]: -1,
-					  },
-			{}
-		);
+			const allSuiCoinData: Record<CoinSymbol, CoinGeckoCoinSymbolData> =
+				await this.fetchAllSuiCoinData();
+			const neededCoinData = Helpers.filterObject(
+				allSuiCoinData,
+				(coin) =>
+					regularCoins
+						.map(Helpers.addLeadingZeroesToType)
+						.includes(Helpers.addLeadingZeroesToType(coin))
+			);
+			const coinsToApiId: Record<CoinType, CoinGeckoCoinApiId> =
+				Object.entries(neededCoinData).reduce(
+					(acc, [coin, data]) => ({
+						...acc,
+						[coin]: data.apiId,
+					}),
+					{}
+				);
 
-		return {
-			...missingCoinsToPrice,
-			...coinsToPrice,
-		};
-	};
+			const [coinsToPrice, lpCoinsToPrice, missingCoinsToPrice] =
+				await Promise.all([
+					this.fetchCoinsToPriceGivenApiIds({
+						coinsToApiId,
+					}),
+					this.Provider.Pools().fetchLpCoinsToPrice({ lpCoins }),
+					new RouterPricesApi(this.Provider).fetchCoinsToPrice({
+						coins: coins.filter(
+							(coin) =>
+								!Object.keys(neededCoinData)
+									.map(Helpers.addLeadingZeroesToType)
+									.includes(
+										Helpers.addLeadingZeroesToType(coin)
+									)
+						),
+					}),
+				]);
+			return {
+				...coinsToPrice,
+				...lpCoinsToPrice,
+				...missingCoinsToPrice,
+			};
+		},
+	});
 
 	// TODO: add single cache by coin type ?
 	public fetchCoinsToPriceInfo = this.Provider.withCache({
-		key: "fetchCoinsToPriceInfo",
+		key: "coinGeckoPricesApi.fetchCoinsToPriceInfo",
 		expirationSeconds: 300, // 5 minutes
 		callback: async (inputs: {
 			coins: CoinType[];
@@ -104,8 +126,6 @@ export class CoinGeckoPricesApi
 					})
 			);
 
-			let coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
-
 			const allSuiCoinData: Record<CoinSymbol, CoinGeckoCoinSymbolData> =
 				await this.fetchAllSuiCoinData();
 			const neededCoinData = Helpers.filterObject(
@@ -116,21 +136,32 @@ export class CoinGeckoPricesApi
 						.includes(Helpers.addLeadingZeroesToType(coin))
 			);
 
-			coinsToApiId = Object.entries(neededCoinData).reduce(
-				(acc, [coin, data]) => ({
-					...acc,
-					[coin]: data.apiId,
-				}),
-				{}
-			);
+			const coinsToApiId: Record<CoinType, CoinGeckoCoinApiId> =
+				Object.entries(neededCoinData).reduce(
+					(acc, [coin, data]) => ({
+						...acc,
+						[coin]: data.apiId,
+					}),
+					{}
+				);
 
 			// get coin price info for regular coins and calc info for LP coins
-			const [regularCoinsToPriceInfo, lpCoinsToPrice] = await Promise.all(
-				[
-					this.fetchCoinsToPriceInfoInternal({ coinsToApiId }),
-					this.Provider.Pools().fetchLpCoinsToPrice({ lpCoins }),
-				]
-			);
+			const [
+				regularCoinsToPriceInfo,
+				lpCoinsToPrice,
+				missingRegularCoins,
+			] = await Promise.all([
+				this.fetchCoinsToPriceInfoInternal({ coinsToApiId }),
+				this.Provider.Pools().fetchLpCoinsToPrice({ lpCoins }),
+				new RouterPricesApi(this.Provider).fetchCoinsToPriceInfo({
+					coins: coins.filter(
+						(coin) =>
+							!Object.keys(neededCoinData)
+								.map(Helpers.addLeadingZeroesToType)
+								.includes(Helpers.addLeadingZeroesToType(coin))
+					),
+				}),
+			]);
 
 			const lpCoinsToPriceInfo: CoinsToPriceInfo = Object.entries(
 				lpCoinsToPrice
@@ -142,22 +173,6 @@ export class CoinGeckoPricesApi
 						priceChange24HoursPercentage: 0,
 					},
 				}),
-				{}
-			);
-
-			// fill in missing any price info data
-			const missingRegularCoins: CoinsToPriceInfo = regularCoins.reduce(
-				(acc, coin) =>
-					Helpers.addLeadingZeroesToType(coin) in
-					regularCoinsToPriceInfo
-						? acc
-						: {
-								...acc,
-								[Helpers.addLeadingZeroesToType(coin)]: {
-									price: -1,
-									priceChange24HoursPercentage: 0,
-								},
-						  },
 				{}
 			);
 

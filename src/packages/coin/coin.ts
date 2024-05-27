@@ -1,4 +1,5 @@
 import {
+	AnyObjectType,
 	Balance,
 	CoinDecimal,
 	CoinMetadaWithInfo,
@@ -16,6 +17,7 @@ import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { Prices } from "../../general/prices/prices";
 import { AftermathApi } from "../../general/providers";
+import { CoinMetadata } from "@mysten/sui.js/client";
 
 export class Coin extends Caller {
 	// =========================================================================
@@ -26,6 +28,8 @@ export class Coin extends Caller {
 		suiCoinType:
 			"0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 		suiCoinDecimals: 9,
+		coinObjectType:
+			"0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin",
 	};
 
 	// =========================================================================
@@ -168,6 +172,11 @@ export class Coin extends Caller {
 		Helpers.stripLeadingZeroesFromType(coin) ===
 		Helpers.stripLeadingZeroesFromType(Coin.constants.suiCoinType);
 
+	public static isCoinObjectType = (objectType: AnyObjectType) =>
+		Helpers.stripLeadingZeroesFromType(objectType).startsWith(
+			Helpers.stripLeadingZeroesFromType(Coin.constants.coinObjectType)
+		);
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
@@ -198,6 +207,47 @@ export class Coin extends Caller {
 			.filter((amount) => amount > BigInt(0));
 
 		return { coins, balances };
+	};
+
+	public static filterCoinsByType = (inputs: {
+		filter: string;
+		coinTypes: CoinType[];
+	}): CoinType[] => {
+		const filter = inputs.filter.toLowerCase().trim();
+		return inputs.coinTypes?.filter((coinType) => {
+			try {
+				return (
+					Helpers.stripLeadingZeroesFromType(coinType)
+						.toLowerCase()
+						.includes(Helpers.stripLeadingZeroesFromType(filter)) ||
+					coinType
+						.toLowerCase()
+						.includes(Helpers.addLeadingZeroesToType(filter))
+				);
+			} catch (e) {}
+			return (
+				Helpers.stripLeadingZeroesFromType(coinType)
+					.toLowerCase()
+					.includes(filter) || coinType.toLowerCase().includes(filter)
+			);
+		});
+	};
+
+	public static filterCoinsByMetadata = (inputs: {
+		filter: string;
+		coinMetadatas: Record<CoinType, CoinMetadata>;
+	}): CoinType[] => {
+		return Object.entries(inputs.coinMetadatas)
+			?.filter(([coin, metadata]) => {
+				const cleanInput = inputs.filter.toLowerCase().trim();
+				return (
+					coin.startsWith(cleanInput) ||
+					[metadata.name, metadata.symbol].some((str) =>
+						str.toLowerCase().includes(cleanInput)
+					)
+				);
+			})
+			.map(([coin]) => coin);
 	};
 
 	// =========================================================================

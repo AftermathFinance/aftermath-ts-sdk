@@ -57,6 +57,16 @@ export class FarmsStakingPool extends Caller {
 		return this.stakingPool.rewardCoins.map((coin) => coin.coinType);
 	};
 
+	public nonZeroRewardCoinTypes = (): CoinType[] => {
+		return this.stakingPool.rewardCoins
+			.filter(
+				(coin) =>
+					coin.emissionRate <= coin.actualRewards &&
+					coin.actualRewards > BigInt(0)
+			)
+			.map((coin) => coin.coinType);
+	};
+
 	public rewardCoin = (inputs: { coinType: CoinType }) => {
 		const foundCoin = this.stakingPool.rewardCoins.find(
 			(coin) => coin.coinType === inputs.coinType
@@ -125,6 +135,7 @@ export class FarmsStakingPool extends Caller {
 		const rewardCoin = this.rewardCoin({ coinType });
 		const currentTimestamp = dayjs().valueOf();
 
+		if (rewardCoin.emissionRate > rewardCoin.actualRewards) return 0;
 		if (
 			rewardCoin.emissionStartTimestamp > currentTimestamp ||
 			currentTimestamp > this.stakingPool.emissionEndTimestamp
@@ -143,7 +154,7 @@ export class FarmsStakingPool extends Caller {
 			rewardsUsdOneYear /
 			tvlUsd /
 			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
-		return apr < 0 ? 0 : apr;
+		return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
 	};
 
 	public calcTotalApr = (inputs: {
@@ -167,7 +178,12 @@ export class FarmsStakingPool extends Caller {
 	public calcMultiplier = (inputs: {
 		lockDurationMs: number;
 	}): FarmsMultiplier => {
-		const { lockDurationMs } = inputs;
+		const lockDurationMs =
+			inputs.lockDurationMs > this.stakingPool.maxLockDurationMs
+				? this.stakingPool.maxLockDurationMs
+				: inputs.lockDurationMs < this.stakingPool.minLockDurationMs
+				? this.stakingPool.minLockDurationMs
+				: inputs.lockDurationMs;
 
 		const totalPossibleLockDurationMs =
 			this.stakingPool.maxLockDurationMs -
@@ -266,7 +282,7 @@ export class FarmsStakingPool extends Caller {
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,
-			rewardCoinTypes: this.rewardCoinTypes(),
+			rewardCoinTypes: this.nonZeroRewardCoinTypes(),
 		});
 	}
 

@@ -3,15 +3,9 @@ import {
 	ApiRouterTransactionForCompleteTradeRouteBody,
 	CoinType,
 	RouterCompleteTradeRoute,
-	RouterSerializableCompleteGraph,
-	RouterSynchronousSerializablePool,
 	SuiNetwork,
-	Url,
 	ApiRouterTradeEventsBody,
 	RouterTradeEvent,
-	RouterAsyncSerializablePool,
-	RouterSynchronousProtocolName,
-	ObjectId,
 	Balance,
 	ApiRouterPartialCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
@@ -77,13 +71,15 @@ export class Router extends Caller {
 		return this.fetchApi<CoinType[]>("supported-coins");
 	}
 
-	/**
-	 * Queries current graph of router including all pools and coins.
-	 *
-	 * @returns Complete graph of all pools used in router
-	 */
-	public async getGraph() {
-		return this.fetchApi<RouterSerializableCompleteGraph>("graph");
+	public async searchSupportedCoins(
+		inputs: { filter: string },
+		abortSignal?: AbortSignal
+	) {
+		return this.fetchApi<CoinType[]>(
+			`supported-coins/${inputs.filter}`,
+			undefined,
+			abortSignal
+		);
 	}
 
 	/**
@@ -134,23 +130,6 @@ export class Router extends Caller {
 	//  Transactions
 	// =========================================================================
 
-	/**
-	 * Creates `TranscationBlock` from previously created complete trade route
-	 *
-	 * @example
-	 * ```
-	 * const route = await router.getCompleteTradeRouteGivenAmountIn(routeDetails);
-	 * const tx = await router.getTransactionForCompleteTradeRoute({
-	 * 	completeRoute: route,
-	 * 	walletAddress: "0xBEEF",
-	 * 	slippage: 0.01
-	 * });
-	 * // sign and execute tx using wallet
-	 * ```
-	 *
-	 * @param inputs - Info to construct router trade transaction from complete route
-	 * @returns Executable `TranscationBlock` trading from `coinIn` to `coinOut`
-	 */
 	public async getTransactionForCompleteTradeRoute(
 		inputs: ApiRouterTransactionForCompleteTradeRouteBody
 	) {
@@ -160,6 +139,7 @@ export class Router extends Caller {
 		);
 	}
 
+	// TODO: update inputs ?
 	public async addTransactionForCompleteTradeRoute(
 		inputs: Omit<
 			ApiRouterAddTransactionForCompleteTradeRouteBody,

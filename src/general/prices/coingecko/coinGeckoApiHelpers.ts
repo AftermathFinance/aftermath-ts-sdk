@@ -126,7 +126,7 @@ export class CoinGeckoApiHelpers {
 	// =========================================================================
 
 	public fetchHistoricalData = this.Provider.withCache({
-		key: "fetchHistoricalData",
+		key: "coinGeckoApiHelpers.fetchHistoricalData",
 		expirationSeconds: 3600, // 1 hour
 		callback: async (inputs: {
 			coinApiId: CoinGeckoCoinApiId;
@@ -164,7 +164,7 @@ export class CoinGeckoApiHelpers {
 	// =========================================================================
 
 	public fetchCoinsToPriceInfoInternal = this.Provider.withCache({
-		key: "fetchCoinsToPriceInfoInternal",
+		key: "coinGeckoApiHelpers.fetchCoinsToPriceInfoInternal",
 		expirationSeconds: 300, // 5 minutes
 		callback: async (inputs: {
 			coinsToApiId: Record<CoinType, CoinGeckoCoinApiId>;
@@ -172,9 +172,10 @@ export class CoinGeckoApiHelpers {
 			const { coinsToApiId } = inputs;
 			if (Object.keys(coinsToApiId).length <= 0) return {};
 
-			const singleCacheKey = "fetchCoinsToPriceInfoInternal_coin";
+			const singleCacheKey =
+				"coinGeckoApiHelpers.fetchCoinsToPriceInfoInternal_coin";
 
-			const cachedCoinPriceInfo: Record<CoinType, CoinPriceInfo> =
+			const cachedCoinsToPriceInfo: Record<CoinType, CoinPriceInfo> =
 				Object.entries(coinsToApiId).reduce((acc, [coin]) => {
 					const cachedData = this.Provider.getCache<
 						CoinType,
@@ -193,7 +194,7 @@ export class CoinGeckoApiHelpers {
 
 			const nonCachedCoinsToApiId = Helpers.filterObject(
 				coinsToApiId,
-				(coin) => !Object.keys(cachedCoinPriceInfo).includes(coin)
+				(coin) => !Object.keys(cachedCoinsToPriceInfo).includes(coin)
 			);
 
 			const rawCoinsInfo = await this.callApi<
@@ -247,7 +248,7 @@ export class CoinGeckoApiHelpers {
 				});
 			}
 
-			return { ...cachedCoinPriceInfo, ...nonCachedCoinsInfo };
+			return { ...cachedCoinsToPriceInfo, ...nonCachedCoinsInfo };
 		},
 	});
 
@@ -277,7 +278,7 @@ export class CoinGeckoApiHelpers {
 	};
 
 	private fetchRawCoinData = this.Provider.withCache({
-		key: "fetchAllSuiCoinData",
+		key: "coinGeckoApiHelpers.fetchAllSuiCoinData",
 		expirationSeconds: 86400, // 24 hours
 		callback: () => {
 			return this.callApi<

@@ -88,6 +88,7 @@ export class FarmsApiCasting {
 
 				// TODO: make this type prettier
 				rewardsRemaining: BigInt(data.rewardsRemaining[index]),
+        // TODO: add actual rewards
 			})),
 			emissionEndTimestamp: Number(fields.emission_end_timestamp_ms),
 			stakedAmount: BigInt(fields.total_staked_amount),

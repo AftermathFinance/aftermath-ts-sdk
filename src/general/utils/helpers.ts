@@ -13,11 +13,11 @@ import {
 	ObjectId,
 	Slippage,
 } from "../../types";
-import { DynamicFieldsApiHelpers } from "../api/dynamicFieldsApiHelpers";
-import { EventsApiHelpers } from "../api/eventsApiHelpers";
-import { InspectionsApiHelpers } from "../api/inspectionsApiHelpers";
-import { ObjectsApiHelpers } from "../api/objectsApiHelpers";
-import { TransactionsApiHelpers } from "../api/transactionsApiHelpers";
+import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
+import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
+import { InspectionsApiHelpers } from "../apiHelpers/inspectionsApiHelpers";
+import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
+import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { Casting } from "./casting";
 import {
 	TransactionBlock,
@@ -303,6 +303,18 @@ export class Helpers {
 		);
 	}
 
+	public static isValidType = (str: string): boolean => {
+		// TODO: use regex
+		const trimmedStr = str.trim();
+		return (
+			trimmedStr.startsWith("0x") &&
+			trimmedStr.length >= 9 &&
+			trimmedStr.indexOf("::") >= 3 &&
+			trimmedStr.lastIndexOf("::") >= 6 &&
+			!trimmedStr.endsWith(":")
+		);
+	};
+
 	// =========================================================================
 	//  Sui Object Parsing
 	// =========================================================================
@@ -336,9 +348,8 @@ export class Helpers {
 	public static getObjectDisplay(
 		data: SuiObjectResponse
 	): DisplayFieldsResponse {
-		const display = Helpers.getObjectDisplay(data);
+		const display = data.data?.display;
 		if (display) return display;
-
 		throw new Error("no object display found on " + data.data?.objectId);
 	}
 

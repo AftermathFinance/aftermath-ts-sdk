@@ -45,15 +45,21 @@ export class IndexerCaller {
 		if (!queryParams || Object.keys(queryParams).length <= 0) return url;
 
 		const queryParamsUrl = new URLSearchParams(
-			Object.entries(queryParams).reduce(
-				(acc, [key, val]) => ({
+			Object.entries(queryParams).reduce((acc, [key, val]) => {
+				if (val === undefined || Array.isArray(val)) return acc;
+				return {
 					...acc,
-					...(val === undefined ? {} : { [key]: val.toString() }),
-				}),
-				{} as Record<string, string>
-			)
+					[key]: val.toString(),
+				};
+			}, {} as Record<string, string>)
 		);
-
+		// add array args
+		for (const [key, val] of Object.entries(queryParams)) {
+			if (!Array.isArray(val)) continue;
+			for (const item of val) {
+				queryParamsUrl.append(key, item.toString());
+			}
+		}
 		return `${url}${
 			queryParamsUrl.toString() !== ""
 				? "?" + queryParamsUrl.toString()

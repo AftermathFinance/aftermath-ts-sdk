@@ -10,7 +10,7 @@ import {
 } from "../../general/types/generalTypes";
 import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { RouterSerializablePool, UniqueId } from "../router/routerTypes";
+import { UniqueId } from "../router/routerTypes";
 
 // TODO: create LpCoinType ?
 
@@ -55,20 +55,6 @@ export interface PoolObject extends Object {
 	coins: PoolCoins;
 	lpCoinDecimals: CoinDecimal;
 }
-
-export const isPoolObject = (
-	pool: RouterSerializablePool
-): pool is PoolObject => {
-	return (
-		"name" in pool &&
-		"creator" in pool &&
-		"lpCoinType" in pool &&
-		"lpCoinSupply" in pool &&
-		"illiquidLpCoinSupply" in pool &&
-		"flatness" in pool &&
-		"coins" in pool
-	);
-};
 
 export interface PoolLpInfo {
 	lpCoinType: CoinType;

@@ -43,6 +43,10 @@ export class Staking extends Caller {
 		bounds: {
 			minStake: BigInt("1000000000"), // 1 SUI
 			minUnstake: BigInt("1000000000"), // 1 afSUI
+			/**
+			 * Max fee percentage that third parties can charge on staking/unstaking transactions
+			 */
+			maxExternalFeePercentage: 0.5, // 50%
 		},
 		defaultValidatorFee: 0, // 0%
 	};
@@ -234,13 +238,13 @@ export class Staking extends Caller {
 			//  `atomic_unstake_sui_reserves` to:
 			//      e.g. fee = max_fee - ((max_fee - min_fee) * liquidity_after / target_liquidity_value)
 
-			let atomic_fee_delta =
+			const atomicFeeDelta =
 				stakedSuiVaultState.maxAtomicUnstakeFee -
 				stakedSuiVaultState.minAtomicUnstakeFee;
 
 			return Casting.bigIntToFixedNumber(
 				stakedSuiVaultState.maxAtomicUnstakeFee -
-					(atomic_fee_delta *
+					(atomicFeeDelta *
 						stakedSuiVaultState.atomicUnstakeSuiReserves) /
 						stakedSuiVaultState.atomicUnstakeSuiReservesTargetValue
 			);

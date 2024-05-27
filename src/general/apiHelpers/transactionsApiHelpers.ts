@@ -1,18 +1,23 @@
 import {
 	TransactionArgument,
 	TransactionBlock,
+	TransactionObjectArgument,
 } from "@mysten/sui.js/transactions";
 import {
 	Balance,
+	CoinTransactionObjectArgument,
 	CoinType,
 	ObjectId,
 	SerializedTransaction,
+	ServiceCoinData,
 	SuiAddress,
 	TransactionDigest,
 	TransactionsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/client";
+import { Helpers } from "../utils";
+import { Sui } from "../..";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -43,9 +48,10 @@ export class TransactionsApiHelpers {
 				limit,
 				options: {
 					showEvents: true,
-					// showBalanceChanges: true,
-					// showEffects: true,
-					// showObjectChanges: true
+					showBalanceChanges: true,
+					showEffects: true,
+					showObjectChanges: true,
+					showInput: true,
 				},
 			});
 
@@ -161,6 +167,55 @@ export class TransactionsApiHelpers {
 			],
 		});
 	}
+
+	public static serviceCoinDataFromCoinTxArg = (inputs: {
+		coinTxArg: CoinTransactionObjectArgument | ObjectId;
+	}): ServiceCoinData => {
+		const { coinTxArg } = inputs;
+
+		if (typeof coinTxArg === "string")
+			return { Coin: Helpers.addLeadingZeroesToType(coinTxArg) };
+
+		if (coinTxArg.kind === "NestedResult")
+			return {
+				[coinTxArg.kind]: [coinTxArg.index, coinTxArg.resultIndex],
+			};
+
+		if (coinTxArg.kind === "Result")
+			return { [coinTxArg.kind]: coinTxArg.index };
+
+		// Input
+		return { [coinTxArg.kind]: coinTxArg.index };
+	};
+
+	public static coinTxArgFromServiceCoinData = (inputs: {
+		serviceCoinData: ServiceCoinData;
+	}): CoinTransactionObjectArgument => {
+		const { serviceCoinData } = inputs;
+
+		const key = Object.keys(serviceCoinData)[0];
+
+		// TODO: handle all cases
+		if (key === "Coin")
+			throw new Error(
+				"serviceCoinData in format { Coin: ObjectId } not supported"
+			);
+
+		// TODO: handle this cleaner
+		const kind = key as "Input" | "NestedResult" | "Result";
+
+		if (kind === "NestedResult") {
+			return {
+				kind,
+				index: Object.values(serviceCoinData)[0][0],
+				resultIndex: Object.values(serviceCoinData)[0][1],
+			};
+		}
+		return {
+			kind,
+			index: Object.values(serviceCoinData)[0],
+		};
+	};
 
 	// public static mergeCoinsTx(inputs: {
 	// 	tx: TransactionBlock;

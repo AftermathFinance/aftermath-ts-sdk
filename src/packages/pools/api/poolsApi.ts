@@ -36,8 +36,6 @@ import {
 	PoolCoins,
 	EventsInputs,
 	Url,
-	AftermathRouterWrapperAddresses,
-	PoolObject,
 	IndexerDataWithCursorQueryParams,
 	ApiIndexerEventsBody,
 	ObjectId,
@@ -63,25 +61,22 @@ import { Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
 import dayjs, { ManipulateType } from "dayjs";
 import { PoolsApiCasting } from "./poolsApiCasting";
-import { RouterPoolTradeTxInputs } from "../../router";
-import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
 import {
 	IndexerEventOnChain,
 	IndexerSwapVolumeResponse,
 } from "../../../general/types/castingTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
  * @packageDocumentation
  */
 /**
- * PoolsApi class that implements RouterSynchronousApiInterface<PoolObject> interface.
  * Provides methods to interact with the Pools API.
  */
-export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
+export class PoolsApi {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -120,7 +115,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
-		routerWrapper?: AftermathRouterWrapperAddresses;
 	};
 	public readonly objectTypes: {
 		pool: AnyObjectType;
@@ -165,7 +159,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	constructor(private readonly Provider: AftermathApi) {
 		const pools = Provider.addresses.pools;
 		const referralVault = Provider.addresses.referralVault;
-		const routerWrapper = Provider.addresses.router?.aftermath;
 
 		if (!pools || !referralVault)
 			throw new Error(
@@ -175,7 +168,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		this.addresses = {
 			pools,
 			referralVault,
-			routerWrapper,
 		};
 		this.objectTypes = {
 			pool: `${pools.packages.events}::pool::Pool`,
@@ -919,59 +911,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure(expectedCoinOutAmount.toString()),
 				tx.pure(Pools.normalizeSlippage(slippage)),
-			],
-		});
-	};
-
-	/**
-	 * Wraps a transaction object argument for adding a swap exact in to route on the router wrapper.
-	 * @param inputs - The inputs required for the transaction.
-	 * @param inputs.poolId - The ID of the pool.
-	 * @param inputs.lpCoinType - The type of the LP coin.
-	 * @returns The transaction object argument.
-	 */
-	public routerWrapperTradeTx = (
-		inputs: RouterPoolTradeTxInputs & {
-			poolId: ObjectId;
-			lpCoinType: CoinType;
-		}
-	): TransactionObjectArgument => {
-		if (!this.addresses.routerWrapper)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
-
-		const {
-			tx,
-			poolId,
-			coinInId,
-			coinInType,
-			expectedCoinOutAmount,
-			coinOutType,
-			lpCoinType,
-			routerSwapCap,
-		} = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.routerWrapper.packages.wrapper,
-				PoolsApi.constants.moduleNames.routerWrapper,
-				"add_swap_exact_in_to_route"
-			),
-			typeArguments: [
-				inputs.routerSwapCapCoinType,
-				lpCoinType,
-				coinInType,
-				coinOutType,
-			],
-			arguments: [
-				tx.object(this.addresses.routerWrapper.objects.wrapperApp),
-				routerSwapCap,
-
-				tx.object(this.addresses.pools.objects.poolRegistry),
-				tx.object(poolId),
-				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedCoinOutAmount.toString(), "u64"),
 			],
 		});
 	};

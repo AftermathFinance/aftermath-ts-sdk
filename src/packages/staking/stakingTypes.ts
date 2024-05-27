@@ -1,4 +1,4 @@
-import { CoinType, RouterSerializablePool } from "../..";
+import { CoinType } from "../..";
 import {
 	ApiEventsBody,
 	Balance,
@@ -9,6 +9,7 @@ import {
 	ObjectId,
 	SuiAddress,
 	TransactionDigest,
+	ExternalFee,
 } from "../../general/types/generalTypes";
 
 // =========================================================================
@@ -180,14 +181,7 @@ export interface ApiStakeBody {
 	suiStakeAmount: Balance;
 	validatorAddress: SuiAddress;
 	referrer?: SuiAddress;
-	isSponsoredTx?: boolean;
-}
-
-export interface ApiLeveragedStakeBody {
-	walletAddress: SuiAddress;
-	suiStakeAmount: Balance;
-	validatorAddress: SuiAddress;
-	referrer?: SuiAddress;
+	externalFee?: ExternalFee;
 	isSponsoredTx?: boolean;
 }
 
@@ -196,6 +190,7 @@ export interface ApiUnstakeBody {
 	afSuiUnstakeAmount: Balance;
 	isAtomic: boolean;
 	referrer?: SuiAddress;
+	externalFee?: ExternalFee;
 	isSponsoredTx?: boolean;
 }
 
@@ -246,15 +241,4 @@ export type AfSuiRouterPoolObject = StakedSuiVaultStateObject & {
 	afSuiCoinType: CoinType;
 	aftermathValidatorAddress: SuiAddress;
 	afSuiToSuiExchangeRate: number;
-};
-
-export const isAfSuiRouterPoolObject = (
-	pool: RouterSerializablePool
-): pool is AfSuiRouterPoolObject => {
-	return (
-		"afSuiCoinType" in pool &&
-		"aftermathValidatorAddress" in pool &&
-		"afSuiToSuiExchangeRate" in pool &&
-		"totalSuiAmount" in pool
-	);
 };

@@ -35,7 +35,7 @@ import {
 	BigIntAsString,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
-import { EventsApiHelpers } from "../../../general/api/eventsApiHelpers";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Sui } from "../../sui";
 import {
 	FarmsCreatedVaultEventOnChain,
@@ -1085,20 +1085,14 @@ export class FarmsApi {
 			if (harvestedCoinIds.length > 1)
 				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
 
-			if (inputs.claimSuiAsAfSui && Coin.isSuiCoin(coinType)) {
-				const validatorAddress =
-					this.Provider.Staking().addresses.routerWrapper?.objects
-						.aftermathValidator;
-				if (!validatorAddress)
-					throw new Error(
-						"aftermath validator address has not been set in provider"
-					);
-
+			if (inputs.claimSuiAsAfSui && Coin.isCoinObjectType(coinType)) {
 				this.Provider.Staking().stakeTx({
 					tx,
-					validatorAddress,
 					suiCoin: coinToTransfer,
 					withTransfer: true,
+					validatorAddress:
+						this.Provider.Staking().addresses.objects
+							.aftermathValidator,
 				});
 			} else {
 				tx.transferObjects([coinToTransfer], tx.pure(walletAddress));

@@ -57,6 +57,7 @@ export interface StakingAddresses {
 		treasury: ObjectId;
 		referralVault: ObjectId;
 		validatorConfigsTable: ObjectId;
+		aftermathValidator: ObjectId;
 	};
 }
 
@@ -68,7 +69,6 @@ export interface LeveragedStakingAddresses {
 	objects: {
 		leveragedAfSuiState: ObjectId;
 		afSuiSuiPoolId: ObjectId;
-		aftermathValidator: ObjectId;
 	};
 }
 
@@ -119,147 +119,9 @@ export interface NftAmmAddresses {
 	};
 }
 
-export type RouterAddresses = RequiredRouterAddresses &
-	Partial<OptionalRouterAddresses>;
-
-export interface RequiredRouterAddresses {
+export interface RouterAddresses {
 	packages: {
 		utils: SuiAddress;
-	};
-}
-
-export interface OptionalRouterAddresses {
-	aftermath: AftermathRouterWrapperAddresses;
-	afSui: AfSuiRouterWrapperAddresses;
-	deepBook: DeepBookAddresses;
-	cetus: CetusAddresses;
-	turbos: TurbosAddresses;
-	flowX: FlowXAddresses;
-	interest: InterestAddresses;
-	kriya: KriyaAddresses;
-	baySwap: BaySwapAddresses;
-	suiswap: SuiswapAddresses;
-	blueMove: BlueMoveAddresses;
-}
-
-export interface AftermathRouterWrapperAddresses {
-	packages: {
-		wrapper: SuiAddress;
-	};
-	objects: {
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface AfSuiRouterWrapperAddresses {
-	packages: {
-		wrapper: SuiAddress;
-	};
-	objects: {
-		wrapperApp: ObjectId;
-		aftermathValidator: ObjectId;
-	};
-}
-
-export interface DeepBookAddresses {
-	packages: {
-		clob: SuiAddress;
-		wrapper: SuiAddress;
-	};
-	objects: {
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface CetusAddresses {
-	packages: {
-		scripts: SuiAddress;
-		clmm: SuiAddress;
-		wrapper: SuiAddress;
-	};
-	objects: {
-		globalConfig: ObjectId;
-		poolsTable: ObjectId;
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface TurbosAddresses {
-	packages: {
-		clmm: SuiAddress;
-		wrapper: SuiAddress;
-	};
-	objects: {
-		versioned: ObjectId;
-		poolsTable: ObjectId;
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface FlowXAddresses {
-	packages: {
-		wrapper: SuiAddress;
-	};
-	objects: {
-		container: ObjectId;
-		pairsBag: ObjectId;
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface InterestAddresses {
-	packages: {
-		dex: SuiAddress;
-		wrapper: SuiAddress;
-	};
-	objects: {
-		poolsBag: ObjectId;
-		dexStorage: ObjectId;
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface KriyaAddresses {
-	packages: {
-		dex: SuiAddress;
-		wrapper: SuiAddress;
-	};
-	objects: {
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface BaySwapAddresses {
-	packages: {
-		dex: SuiAddress;
-		wrapper: SuiAddress;
-	};
-	objects: {
-		poolsBag: ObjectId;
-		globalStorage: ObjectId;
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface SuiswapAddresses {
-	packages: {
-		dex: SuiAddress;
-		wrapper: SuiAddress;
-	};
-	objects: {
-		wrapperApp: ObjectId;
-	};
-}
-
-export interface BlueMoveAddresses {
-	packages: {
-		dex: SuiAddress;
-		wrapper: SuiAddress;
-	};
-	objects: {
-		dexInfo: ObjectId;
-		dexStableInfo: ObjectId;
-		wrapperApp: ObjectId;
 	};
 }
 

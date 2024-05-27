@@ -1,5 +1,9 @@
 import { CoinMetadata } from "@mysten/sui.js/client";
-import { Balance, Percentage } from "../../general/types/generalTypes";
+import {
+	Balance,
+	ObjectId,
+	Percentage,
+} from "../../general/types/generalTypes";
 import { OracleCoinSymbol } from "../oracle/oracleTypes";
 
 // =========================================================================
@@ -57,3 +61,28 @@ export interface CoinPriceInfo {
 export type CoinMetadaWithInfo = CoinMetadata & {
 	isGenerated?: boolean;
 };
+
+// =========================================================================
+//  Services
+// =========================================================================
+
+export type ServiceCoinData =
+	| { Coin: ObjectId }
+	| { Input: number }
+	| { Result: number }
+	| { NestedResult: [number, number] };
+
+export type CoinTransactionObjectArgument =
+	| {
+			kind: "Input";
+			index: number;
+	  }
+	| {
+			kind: "NestedResult";
+			index: number;
+			resultIndex: number;
+	  }
+	| {
+			kind: "Result";
+			index: number;
+	  };
