@@ -303,6 +303,18 @@ export class Helpers {
 		);
 	}
 
+	public static isValidType = (str: string): boolean => {
+		// TODO: use regex
+		const trimmedStr = str.trim();
+		return (
+			trimmedStr.startsWith("0x") &&
+			trimmedStr.length >= 9 &&
+			trimmedStr.indexOf("::") >= 3 &&
+			trimmedStr.lastIndexOf("::") >= 6 &&
+			!trimmedStr.endsWith(":")
+		);
+	};
+
 	// =========================================================================
 	//  Sui Object Parsing
 	// =========================================================================

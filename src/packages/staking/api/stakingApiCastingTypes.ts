@@ -1,4 +1,10 @@
-import { BigIntAsString, ObjectId, SuiAddress } from "../../../types";
+import {
+	AnyObjectType,
+	BigIntAsString,
+	IFixedAsString,
+	ObjectId,
+	SuiAddress,
+} from "../../../types";
 import {
 	EventOnChain,
 	IndexerEventOnChain,
@@ -8,10 +14,12 @@ import {
 //  Objects
 // =========================================================================
 
-export interface ValidatorConfigFieldsOnChain {
-	sui_address: SuiAddress;
-	operation_cap_id: ObjectId;
-	fee: BigIntAsString;
+export interface ValidatorConfigOnIndexer {
+	objectType: AnyObjectType;
+	objectId: ObjectId;
+	suiAddress: SuiAddress;
+	operationCapId: ObjectId;
+	fee: IFixedAsString;
 }
 
 export interface ValidatorOperationCapFieldsOnChain {
