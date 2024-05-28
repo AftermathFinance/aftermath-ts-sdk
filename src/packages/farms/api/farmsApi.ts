@@ -202,6 +202,7 @@ export class FarmsApi {
 			// data added by indexer
 			isUnlocked: boolean;
 			rewardsRemaining: BigIntAsString[];
+			actualRewards: BigIntAsString[];
 		})[] = await this.Provider.indexerCaller.fetchIndexer(
 			"afterburner-vaults/vaults",
 			undefined,
@@ -219,6 +220,7 @@ export class FarmsApi {
 			// data added by indexer
 			isUnlocked: boolean;
 			rewardsRemaining: BigIntAsString[];
+			actualRewards: BigIntAsString[];
 		})[] = await this.Provider.indexerCaller.fetchIndexer(
 			"afterburner-vaults/vaults"
 		);
