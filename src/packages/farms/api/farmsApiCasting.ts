@@ -17,6 +17,7 @@ import {
 	FarmsUnlockedEventOnChain,
 	FarmsWithdrewPrincipalEventOnChain,
 	FarmsStakingPoolOneTimeAdminCapFieldsOnChain,
+	FarmsIndexerVaultsResponse,
 } from "./farmsApiCastingTypes";
 import {
 	FarmsAddedRewardEvent,
@@ -48,63 +49,72 @@ export class FarmsApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static stakingPoolObjectFromIndexer = (
-		data: SuiObjectResponse & {
-			// from indexer
-			isUnlocked: boolean;
-			rewardsRemaining: BigIntAsString[];
-		}
-	): FarmsStakingPoolObject => {
-		const objectType = Helpers.getObjectType(data);
+	public static stakingPoolObjectsFromIndexerResponse = (
+		response: FarmsIndexerVaultsResponse
+	): FarmsStakingPoolObject[] => {
+		return response.map((data) => {
+			const objectType = Helpers.getObjectType({
+				data,
+			});
 
-		const fields = Helpers.getObjectFields(
-			data
-		) as FarmsAfterburnerVaultFieldsOnChain;
-		const stakeCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(objectType).innerCoinType
-		);
+			const fields = Helpers.getObjectFields({
+				data,
+			}) as FarmsAfterburnerVaultFieldsOnChain;
+			const stakeCoinType = Helpers.addLeadingZeroesToType(
+				new Coin(objectType).innerCoinType
+			);
 
-		return {
-			objectType,
-			objectId: Helpers.getObjectId(data),
-			stakeCoinType,
-			rewardCoins: fields.type_names.map((coinType, index) => ({
-				coinType: Helpers.addLeadingZeroesToType("0x" + coinType),
-				rewards: BigInt(fields.rewards[index]),
-				rewardsAccumulatedPerShare: BigInt(
-					fields.rewards_accumulated_per_share[index]
-				),
-				emissionRate: BigInt(fields.emission_rates[index]),
-				emissionSchedulesMs: Number(
-					fields.emission_schedules_ms[index]
-				),
-				emissionStartTimestamp: Number(
-					fields.emission_start_timestamps_ms[index]
-				),
+			return {
+				objectType,
+				objectId: Helpers.getObjectId({
+					data,
+				}),
+				stakeCoinType,
+				rewardCoins: fields.type_names.map((coinType, index) => ({
+					coinType: Helpers.addLeadingZeroesToType("0x" + coinType),
+					rewards: BigInt(fields.rewards[index]),
+					rewardsAccumulatedPerShare: BigInt(
+						fields.rewards_accumulated_per_share[index]
+					),
+					emissionRate: BigInt(fields.emission_rates[index]),
+					emissionSchedulesMs: Number(
+						fields.emission_schedules_ms[index]
+					),
+					emissionStartTimestamp: Number(
+						fields.emission_start_timestamps_ms[index]
+					),
 
-				lastRewardTimestamp: Number(
-					fields.last_reward_timestamps_ms[index]
+					lastRewardTimestamp: Number(
+						fields.last_reward_timestamps_ms[index]
+					),
+					rewardsRemaining: BigInt(data.rewardsRemaining[index]),
+					// NOTE: this should never fallback - dynamic field data should always be found
+					actualRewards: BigInt(
+						data.actualRewards.find(
+							(actualRewards) =>
+								Helpers.addLeadingZeroesToType(
+									actualRewards.type
+								) ===
+								Helpers.addLeadingZeroesToType("0x" + coinType)
+						)?.balance ?? 0
+					),
+				})),
+				emissionEndTimestamp: Number(fields.emission_end_timestamp_ms),
+				stakedAmount: BigInt(fields.total_staked_amount),
+				stakedAmountWithMultiplier: BigInt(
+					fields.total_staked_amount_with_multiplier
 				),
-
-				// TODO: make this type prettier
-				rewardsRemaining: BigInt(data.rewardsRemaining[index]),
-        // TODO: add actual rewards
-			})),
-			emissionEndTimestamp: Number(fields.emission_end_timestamp_ms),
-			stakedAmount: BigInt(fields.total_staked_amount),
-			stakedAmountWithMultiplier: BigInt(
-				fields.total_staked_amount_with_multiplier
-			),
-			minLockDurationMs: Number(fields.min_lock_duration_ms),
-			maxLockDurationMs: Number(fields.max_lock_duration_ms),
-			maxLockMultiplier: BigInt(fields.max_lock_multiplier),
-			minStakeAmount: BigInt(fields.min_stake_amount),
-			lockEnforcement:
-				BigInt(fields.lock_enforcement) === BigInt(0)
-					? "Strict"
-					: "Relaxed",
-			isUnlocked: data.isUnlocked,
-		};
+				minLockDurationMs: Number(fields.min_lock_duration_ms),
+				maxLockDurationMs: Number(fields.max_lock_duration_ms),
+				maxLockMultiplier: BigInt(fields.max_lock_multiplier),
+				minStakeAmount: BigInt(fields.min_stake_amount),
+				lockEnforcement:
+					BigInt(fields.lock_enforcement) === BigInt(0)
+						? "Strict"
+						: "Relaxed",
+				isUnlocked: data.isUnlocked,
+			};
+		});
 	};
 
 	public static partialStakedPositionObjectFromSuiObjectResponse = (

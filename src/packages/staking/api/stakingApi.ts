@@ -46,8 +46,6 @@ import { Coin } from "../../coin";
 import { Sui } from "../../sui";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { StakingApiCasting } from "./stakingApiCasting";
-import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
-import { RouterPoolTradeTxInputs } from "../..";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { ValidatorConfigOnIndexer } from "./stakingApiCastingTypes";
 import { Staking } from "../..";
