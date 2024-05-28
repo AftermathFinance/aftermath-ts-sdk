@@ -48,6 +48,14 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
+	//  Private Constants
+	// =========================================================================
+
+	private static readonly constants = {
+		closePositionMarginOfError: 0.1, // 10%
+	};
+
+	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
@@ -202,6 +210,7 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	public async getClosePositionTx(inputs: {
+		size: bigint;
 		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
 		orderDatas: PerpetualsOrderData[];
@@ -635,13 +644,15 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public closePositionTxInputs = (inputs: {
+		size: bigint;
 		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
 		orderDatas: PerpetualsOrderData[];
 		indexPrice: number;
 		collateralPrice: number;
 	}): SdkPerpetualsMarketOrderInputs => {
-		const { market, walletAddress, orderDatas, collateralPrice } = inputs;
+		const { size, market, walletAddress, orderDatas, collateralPrice } =
+			inputs;
 
 		const marketId = market.marketId;
 		const position =
@@ -665,8 +676,8 @@ export class PerpetualsAccount extends Caller {
 			),
 			this.collateralDecimals()
 		);
-		const marginOfError = 0.1;
-		const collateralChange =
+
+		const fullPositionCollateralChange =
 			Helpers.maxBigInt(
 				BigInt(
 					Math.floor(
@@ -677,14 +688,31 @@ export class PerpetualsAccount extends Caller {
 								this.collateralDecimals()
 							) - ordersCollateral
 						) *
-							(1 - marginOfError)
+							(1 -
+								PerpetualsAccount.constants
+									.closePositionMarginOfError)
 					)
 				),
 				BigInt(0)
 			) * BigInt(-1);
+		const positionSize = BigInt(
+			Math.round(
+				Math.abs(
+					Casting.IFixed.numberFromIFixed(position.baseAssetAmount) /
+						market.lotSize()
+				)
+			)
+		);
+		const collateralChange = BigInt(
+			Math.round(
+				Number(fullPositionCollateralChange) *
+					(Number(size) / Number(positionSize))
+			)
+		);
 
 		const positionSide = Perpetuals.positionSide(position);
 		return {
+			size,
 			marketId,
 			walletAddress,
 			collateralChange,
@@ -692,15 +720,6 @@ export class PerpetualsAccount extends Caller {
 				positionSide === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
-			size: BigInt(
-				Math.round(
-					Math.abs(
-						Casting.IFixed.numberFromIFixed(
-							position.baseAssetAmount
-						) / market.lotSize()
-					)
-				)
-			),
 			hasPosition: this.positionForMarketId({ marketId }) !== undefined,
 		};
 	};
