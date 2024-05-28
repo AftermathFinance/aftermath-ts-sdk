@@ -1,4 +1,4 @@
-import { Casting, Coin, PerpetualsAccount } from "../..";
+import { Casting, Coin, Helpers, PerpetualsAccount } from "../..";
 import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -27,6 +27,8 @@ import {
 	Url,
 	PerpetualsMarketData,
 	Balance,
+	PerpetualsFilledOrderData,
+	ApiPerpetualsMaxOrderSizeBody,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -91,56 +93,23 @@ export class PerpetualsMarket extends Caller {
 
 	public getMaxOrderSizeUsd = async (inputs: {
 		account: PerpetualsAccount;
-		position: PerpetualsPosition | undefined;
 		indexPrice: number;
-		collateralPrice: number;
 		side: PerpetualsOrderSide;
+		leverage: number;
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
-		const { side, price, account } = inputs;
-
-		const optimisticSize = this.calcOptimisticMaxOrderSize(inputs);
-
-		const freeCollateral = account.calcFreeCollateralForPosition({
-			...inputs,
-			market: this,
+		const { side, price, account, indexPrice, leverage } = inputs;
+		const maxSize: bigint = await this.fetchApi<
+			bigint,
+			ApiPerpetualsMaxOrderSizeBody
+		>("max-order-size", {
+			accountId: account.accountCap.accountId,
+			collateral: account.collateralBalance(),
+			side,
+			price,
+			leverage,
 		});
-		const collateral =
-			account.collateralBalance() +
-			Coin.normalizeBalance(freeCollateral, account.collateralDecimals());
-
-		const size = // (in lots)
-			BigInt(Math.ceil(optimisticSize / this.lotSize()));
-
-		const { executionPrice, sizeFilled, sizePosted } =
-			await this.getExecutionPrice({
-				size,
-				side,
-				price,
-				collateral,
-			});
-
-		const freeMarginUsd =
-			account.calcFreeMarginUsdForPosition({
-				...inputs,
-				market: this,
-			}) +
-			// assuming all account collateral is allocated to position
-			account.collateral() * inputs.collateralPrice;
-		const { minInitialMargin } = account.calcPnLAndMarginForPosition({
-			...inputs,
-			market: this,
-		});
-
-		return this.calcPessimisticMaxOrderSizeUsd({
-			...inputs,
-			freeMarginUsd,
-			minInitialMargin,
-			executionPrice,
-			sizeFilled,
-			sizePosted,
-			optimisticSize,
-		});
+		return Number(maxSize) * this.lotSize() * indexPrice;
 	};
 
 	// =========================================================================
@@ -291,7 +260,10 @@ export class PerpetualsMarket extends Caller {
 			optimisticSize,
 		} = inputs;
 
-		const percentFilled = sizeFilled / (sizeFilled + sizePosted);
+		const percentFilled = Math.min(
+			sizeFilled / (sizeFilled + sizePosted),
+			1
+		);
 
 		const marginRatioInitial = this.initialMarginRatio();
 		const takerFee = Casting.IFixed.numberFromIFixed(
@@ -302,17 +274,20 @@ export class PerpetualsMarket extends Caller {
 			? Boolean(side ^ Perpetuals.positionSide(position))
 			: false;
 
-		let slippage =
-			(side === PerpetualsOrderSide.Bid
-				? executionPrice - indexPrice
-				: indexPrice - executionPrice) / indexPrice;
+		const slippage =
+			percentFilled === 0
+				? 0
+				: Math.max(
+						(side === PerpetualsOrderSide.Bid
+							? executionPrice - indexPrice
+							: indexPrice - executionPrice) / indexPrice,
+						0
+				  );
 
-		if ((percentFilled !== 1 && slippage < 0) || percentFilled === 0)
-			slippage = 0;
-
-		const SAFETY_SCALAR = Math.min(1 - slippage, 0.995);
+		const marginOfError = 0.005;
+		const safetyScalar = Math.min(1 - slippage, 1 - marginOfError);
 		let maxSize: number = 0;
-		if (isReversing && position && position.baseAssetAmount > BigInt(0)) {
+		if (isReversing && position && position.baseAssetAmount !== BigInt(0)) {
 			maxSize += Math.abs(
 				Casting.IFixed.numberFromIFixed(position.baseAssetAmount)
 			);
@@ -334,13 +309,13 @@ export class PerpetualsMarket extends Caller {
 
 			// Size that adds margin requirement
 			maxSize +=
-				((margin - imr) * SAFETY_SCALAR) /
+				((margin - imr) * safetyScalar) /
 				(indexPrice * marginRatioInitial +
 					(executionPrice * takerFee + slippage * indexPrice) *
 						newPercentFilled);
 		} else {
 			maxSize =
-				(freeMarginUsd * SAFETY_SCALAR) /
+				(freeMarginUsd * safetyScalar) /
 				(indexPrice * marginRatioInitial +
 					(executionPrice * takerFee + slippage * indexPrice) *
 						percentFilled);
@@ -350,6 +325,205 @@ export class PerpetualsMarket extends Caller {
 		return (
 			this.roundToValidSize({ size: maxSize, floor: true }) * indexPrice
 		);
+	};
+
+	public calcCollateralRequiredForOrder = (inputs: {
+		fills: PerpetualsFilledOrderData[];
+		account: PerpetualsAccount;
+		side: PerpetualsOrderSide;
+		size: number;
+		indexPrice: number;
+		collateralPrice: number;
+		price: number | undefined;
+	}): number => {
+		const {
+			account,
+			size,
+			fills,
+			side,
+			price,
+			indexPrice,
+			collateralPrice,
+		} = inputs;
+
+		const position = account.positionForMarketId({
+			marketId: this.marketId,
+		});
+		const positionSize = position
+			? Math.abs(
+					Casting.IFixed.numberFromIFixed(position.baseAssetAmount)
+			  )
+			: 0;
+		const isOpeningOrIncreasingPosition =
+			!position ||
+			!positionSize ||
+			Perpetuals.positionSide(position) === side;
+
+		let sizeRemaining = Math.abs(size);
+		let fillsRemaining = Helpers.deepCopy(
+			fills.map((fill) => ({
+				...fill,
+				size: Math.abs(fill.size),
+			}))
+		);
+		let sizeFilled = 0;
+		let sizeFilledUsd = 0;
+		let sizeFilledForReversing = 0;
+		let sizeFilledForReversingUsd = 0;
+		while (sizeRemaining > 0 && fillsRemaining.length > 0) {
+			const fill = fillsRemaining[0];
+
+			if (
+				price !== undefined &&
+				(side === PerpetualsOrderSide.Bid
+					? price < fill.price
+					: price > fill.price)
+			)
+				break;
+
+			let sizeToFill: number;
+
+			if (!isOpeningOrIncreasingPosition && sizeFilled >= positionSize) {
+				sizeToFill = Math.min(sizeRemaining, fill.size);
+
+				sizeFilledForReversing += sizeToFill;
+				sizeFilledForReversingUsd += sizeToFill * fill.price;
+			} else {
+				sizeToFill = Math.min(
+					sizeRemaining,
+					fill.size,
+					isOpeningOrIncreasingPosition
+						? Number.MAX_VALUE
+						: positionSize - sizeFilled
+				);
+
+				sizeFilled += sizeToFill;
+				sizeFilledUsd += sizeToFill * fill.price;
+			}
+
+			sizeRemaining -= sizeToFill;
+			fillsRemaining[0].size -= sizeToFill;
+
+			if (fillsRemaining[0].size <= 0) {
+				fillsRemaining = [...fillsRemaining.slice(1)];
+			}
+		}
+
+		const imr = this.initialMarginRatio();
+		const sizePosted = sizeRemaining;
+		const executionPrice = sizeFilled ? sizeFilledUsd / sizeFilled : 0;
+
+		const collateralForUnrealizedPnl =
+			(sizeFilled *
+				Math.max(
+					0,
+					side === PerpetualsOrderSide.Bid
+						? executionPrice - indexPrice
+						: indexPrice - executionPrice
+				)) /
+			collateralPrice;
+		const collateralForFilled =
+			(sizeFilled * executionPrice * imr) / collateralPrice;
+		const collateralForPosted =
+			(sizePosted * indexPrice * imr) / collateralPrice;
+
+		const marginOfError = 0.1;
+
+		let collateralRequired;
+
+		if (isOpeningOrIncreasingPosition) {
+			// opening/increasing position
+			collateralRequired =
+				(1 + marginOfError) *
+				(collateralForFilled +
+					collateralForPosted +
+					collateralForUnrealizedPnl);
+		} else if (
+			sizeFilled === positionSize &&
+			sizeFilledForReversing === 0
+		) {
+			// closing position
+			// TODO: make this match account close position tx inputs calc
+			return 0;
+		} else if (sizeFilledForReversing > 0) {
+			// reversing position
+
+			// TODO: use correct calculations
+
+			// const executionPriceForReversing = sizeFilledForReversing
+			// 	? sizeFilledForReversingUsd / sizeFilledForReversing
+			// 	: 0;
+			// const collateralForFilledForReversing =
+			// 	(sizeFilledForReversing * executionPriceForReversing * imr) /
+			// 	collateralPrice;
+
+			// collateralRequired =
+			// 	(1 + marginOfError) *
+			// 	(collateralForFilledForReversing + collateralForPosted);
+
+			const executionPriceForReversing = sizeFilledForReversing
+				? sizeFilledForReversingUsd / sizeFilledForReversing
+				: 0;
+			const collateralForFilledForReversing =
+				(sizeFilledForReversing * executionPriceForReversing * imr) /
+				collateralPrice;
+
+			const collateralForUnrealizedPnlForReversing =
+				(sizeFilledForReversing *
+					Math.max(
+						0,
+						side === PerpetualsOrderSide.Bid
+							? executionPriceForReversing - indexPrice
+							: indexPrice - executionPriceForReversing
+					)) /
+				collateralPrice;
+
+			// const positionFreeMargin =
+			// 	account.calcFreeMarginUsdForPosition({
+			// 		...inputs,
+			// 		market: this,
+			// 	}) * collateralPrice;
+
+			const collateralChange =
+				collateralForPosted +
+				(collateralForFilledForReversing +
+					// - positionFreeMargin
+					collateralForUnrealizedPnlForReversing);
+			return (
+				(1 + marginOfError * (collateralChange > 0 ? 1 : -1)) *
+				collateralChange
+			);
+		} else {
+			// reducing position
+			return 0;
+		}
+
+		return Math.min(collateralRequired, account.collateral());
+	};
+
+	public calcCollateralUsedForOrder = (inputs: {
+		orderData: PerpetualsOrderData;
+		indexPrice: number;
+		collateralPrice: number;
+	}): {
+		collateral: number;
+		collateralUsd: number;
+	} => {
+		const { orderData, indexPrice, collateralPrice } = inputs;
+
+		const imr = this.initialMarginRatio();
+
+		const collateralUsd =
+			Number(orderData.initialSize - orderData.filledSize) *
+			this.lotSize() *
+			indexPrice *
+			imr;
+		const collateral = collateralUsd / collateralPrice;
+
+		return {
+			collateralUsd,
+			collateral,
+		};
 	};
 
 	// =========================================================================
@@ -405,20 +579,22 @@ export class PerpetualsMarket extends Caller {
 	//  Private Helpers
 	// =========================================================================
 
-	private getExecutionPrice(inputs: {
-		side: PerpetualsOrderSide;
-		size: bigint;
-		collateral: Balance;
-		price?: PerpetualsOrderPrice;
-	}) {
-		return this.fetchApi<
-			ApiPerpetualsExecutionPriceResponse,
-			ApiPerpetualsExecutionPriceBody
-		>("execution-price", {
-			...inputs,
-			lotSize: this.lotSize(),
-		});
-	}
+	// private getExecutionPrice(inputs: {
+	// 	side: PerpetualsOrderSide;
+	// 	size: bigint;
+	// 	collateral: Balance;
+	// 	price?: PerpetualsOrderPrice;
+	// }) {
+	// 	return this.fetchApi<
+	// 		ApiPerpetualsExecutionPriceResponse,
+	// 		ApiPerpetualsExecutionPriceBody
+	// 	>("execution-price", {
+	// 		...inputs,
+	// 		lotSize: this.lotSize(),
+	// 		basePriceFeedId: this.marketParams.basePriceFeedId,
+	// 		collateralPriceFeedId: this.marketParams.collateralPriceFeedId,
+	// 	});
+	// }
 
 	private simulateClosePosition(inputs: {
 		position: PerpetualsPosition;

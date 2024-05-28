@@ -1,10 +1,15 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
-import { OracleAddresses } from "../../../types";
+import {
+	BigIntAsString,
+	CoinDecimal,
+	CoinSymbol,
+	ObjectId,
+	OracleAddresses,
+} from "../../../types";
 import { IFixedUtils } from "../../../general/utils/iFixedUtils";
 import { Sui } from "../../sui";
-import { OracleCoinSymbol } from "../oracleTypes";
 
 export class OracleApi {
 	public readonly addresses: OracleAddresses;
@@ -28,7 +33,7 @@ export class OracleApi {
 	// =========================================================================
 
 	public fetchPrice = async (inputs: {
-		coinSymbol: OracleCoinSymbol;
+		priceFeedId: ObjectId;
 	}): Promise<number> => {
 		const tx = new TransactionBlock();
 
@@ -43,15 +48,51 @@ export class OracleApi {
 		return IFixedUtils.numberFromIFixed(price);
 	};
 
+	public fetchPriceFeedSymbols = async (inputs: {
+		priceFeedIds: ObjectId[];
+	}): Promise<
+		{
+			symbol: CoinSymbol;
+			decimals: CoinDecimal;
+		}[]
+	> => {
+		const { priceFeedIds } = inputs;
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				symbol: CoinSymbol;
+				decimals: BigIntAsString;
+				priceFeedId: ObjectId;
+			}[]
+		>(`oracle/price-feed-symbols`, undefined, {
+			price_feed_ids: priceFeedIds,
+		});
+
+		let result: {
+			symbol: CoinSymbol;
+			decimals: CoinDecimal;
+		}[] = [];
+		for (const priceFeedId of priceFeedIds) {
+			const foundData = response.find(
+				(data) => data.priceFeedId === priceFeedId
+			)!;
+			result.push({
+				symbol: foundData.symbol,
+				decimals: Math.log10(Number(foundData.decimals)),
+			});
+		}
+		return result;
+	};
+
 	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
 
 	public getPriceTx = (inputs: {
 		tx: TransactionBlock;
-		coinSymbol: OracleCoinSymbol;
+		priceFeedId: ObjectId;
 	}) /* u256 */ => {
-		const { tx, coinSymbol } = inputs;
+		const { tx, priceFeedId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.oracleReader,
@@ -60,9 +101,8 @@ export class OracleApi {
 			),
 			typeArguments: [],
 			arguments: [
-				tx.object(this.addresses.objects.priceFeedStorage), // PriceFeedStorage
+				tx.object(priceFeedId), // PriceFeedStorage
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
-				tx.pure(coinSymbol), // symbol
 				tx.pure(Casting.u64MaxBigInt), // A really huge value for tolerance, we never want it here
 				tx.pure(false), // price of unit
 				tx.pure(false), // may abort

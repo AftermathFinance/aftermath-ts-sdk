@@ -4,7 +4,6 @@ import {
 	ObjectId,
 	Percentage,
 } from "../../general/types/generalTypes";
-import { OracleCoinSymbol } from "../oracle/oracleTypes";
 
 // =========================================================================
 //  Name Only
@@ -46,7 +45,7 @@ export type CoinsToBalanceOrUndefined = Record<CoinType, Balance | undefined>;
 export type CoinsToPrice = Record<CoinType, number>;
 export type CoinsToDecimals = Record<CoinType, CoinDecimal>;
 export type CoinsToPriceInfo = Record<CoinType, CoinPriceInfo>;
-export type CoinSymbolsToPriceInfo = Record<OracleCoinSymbol, CoinPriceInfo>;
+export type CoinSymbolsToPriceInfo = Record<CoinSymbol, CoinPriceInfo>;
 export type CoinSymbolToCoinTypes = Record<CoinSymbol, CoinType[]>;
 
 export interface CoinPriceInfo {
