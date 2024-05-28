@@ -3,10 +3,20 @@ import {
 	EventOnChain,
 	TableOnChain,
 } from "../../../general/types/castingTypes";
+import { SuiObjectData } from "@mysten/sui.js/client";
 
 // =========================================================================
 //  Objects
 // =========================================================================
+
+export type FarmsIndexerVaultsResponse = (SuiObjectData & {
+	isUnlocked: boolean;
+	rewardsRemaining: BigIntAsString[];
+	actualRewards: {
+		type: CoinType;
+		balance: BigIntAsString;
+	}[];
+})[];
 
 export interface FarmsAfterburnerVaultFieldsOnChain {
 	id: ObjectId;

@@ -41,6 +41,7 @@ import {
 	FarmsCreatedVaultEventOnChain,
 	FarmsDepositedPrincipalEventOnChain,
 	FarmsHarvestedRewardsEventOnChain,
+	FarmsIndexerVaultsResponse,
 	FarmsLockedEventOnChain,
 	FarmsStakedEventOnChain,
 	FarmsStakedRelaxedEventOnChain,
@@ -198,33 +199,25 @@ export class FarmsApi {
 	public fetchStakingPools = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<FarmsStakingPoolObject[]> => {
-		const farms: (SuiObjectResponse & {
-			// data added by indexer
-			isUnlocked: boolean;
-			rewardsRemaining: BigIntAsString[];
-			actualRewards: BigIntAsString[];
-		})[] = await this.Provider.indexerCaller.fetchIndexer(
-			"afterburner-vaults/vaults",
-			undefined,
-			{
-				vault_ids: inputs.objectIds,
-			}
-		);
-		return farms.map(Casting.farms.stakingPoolObjectFromIndexer);
+		const farms =
+			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
+				"afterburner-vaults/vaults",
+				undefined,
+				{
+					vault_ids: inputs.objectIds,
+				}
+			);
+		return Casting.farms.stakingPoolObjectsFromIndexerResponse(farms);
 	};
 
 	public fetchAllStakingPools = async (): Promise<
 		FarmsStakingPoolObject[]
 	> => {
-		const farms: (SuiObjectResponse & {
-			// data added by indexer
-			isUnlocked: boolean;
-			rewardsRemaining: BigIntAsString[];
-			actualRewards: BigIntAsString[];
-		})[] = await this.Provider.indexerCaller.fetchIndexer(
-			"afterburner-vaults/vaults"
-		);
-		return farms.map(Casting.farms.stakingPoolObjectFromIndexer);
+		const farms =
+			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
+				"afterburner-vaults/vaults"
+			);
+		return Casting.farms.stakingPoolObjectsFromIndexerResponse(farms);
 	};
 
 	public fetchOwnedStakingPoolOwnerCaps = async (
