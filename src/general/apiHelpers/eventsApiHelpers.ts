@@ -190,14 +190,16 @@ export class EventsApiHelpers {
 	public static castEventOfTypeOrUndefined = <EventTypeOnChain, EventType>(
 		event: SuiEvent,
 		eventType: AnyObjectType | (() => AnyObjectType),
-		castFunction: (eventOnChain: EventTypeOnChain) => EventType
+		castFunction: (eventOnChain: EventTypeOnChain) => EventType,
+		exactMatch?: boolean
 	): EventType | undefined => {
 		if (
-			// event.type !==
-			// (typeof eventType === "string" ? eventType : eventType())
-			!event.type.includes(
-				typeof eventType === "string" ? eventType : eventType()
-			)
+			exactMatch
+				? event.type !==
+				  (typeof eventType === "string" ? eventType : eventType())
+				: !event.type.includes(
+						typeof eventType === "string" ? eventType : eventType()
+				  )
 		)
 			return;
 
