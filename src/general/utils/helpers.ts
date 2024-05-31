@@ -2,7 +2,7 @@ import {
 	DisplayFieldsResponse,
 	SuiMoveObject,
 	SuiObjectResponse,
-} from "@mysten/sui.js/client";
+} from "@mysten/sui/client";
 import {
 	AnyObjectType,
 	Balance,
@@ -20,12 +20,11 @@ import { ObjectsApiHelpers } from "../apiHelpers/objectsApiHelpers";
 import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { Casting } from "./casting";
 import {
-	TransactionBlock,
+	Transaction,
 	TransactionObjectArgument,
-} from "@mysten/sui.js/transactions";
+} from "@mysten/sui/transactions";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { NetworkType } from "@scallop-io/sui-kit";
-import { is } from "@mysten/sui.js/utils";
 import { IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { Coin } from "../..";
 
@@ -347,7 +346,7 @@ export class Helpers {
 
 	// TODO: use this everywhere in api for tx command creation
 	public static addTxObject = (
-		tx: TransactionBlock,
+		tx: Transaction,
 		object: ObjectId | TransactionObjectArgument
 	): TransactionObjectArgument => {
 		return typeof object === "string" ? tx.object(object) : object;

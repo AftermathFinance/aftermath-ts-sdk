@@ -1,4 +1,4 @@
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 import {
 	PerpetualsMarketState,
 	PerpetualsOrderbook,
@@ -7,7 +7,7 @@ import {
 	PerpetualsMarketParams,
 	PerpetualsAccountObject,
 	PerpetualsPosition,
-	perpetualsBcsRegistry,
+	perpetualsRegistry,
 	PerpetualsAccountCap,
 	DepositedCollateralEvent,
 	WithdrewCollateralEvent,
@@ -49,6 +49,7 @@ import {
 	DeallocatedCollateralEventOnChain,
 } from "../perpetualsCastingTypes";
 import { BigIntAsString } from "../../../types";
+import { bcs } from "@mysten/sui/bcs";
 
 // TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {
@@ -154,12 +155,10 @@ export class PerpetualsApiCasting {
 	// =========================================================================
 
 	public static orderbookPriceFromBytes = (bytes: number[]): number => {
-		const unwrapped: BigIntAsString | undefined =
-			Casting.unwrapDeserializedOption(
-				perpetualsBcsRegistry.de("Option<u256>", new Uint8Array(bytes))
-			);
+		const unwrapped = bcs.option(bcs.u256()).parse(new Uint8Array(bytes));
+
 		return FixedUtils.directCast(
-			unwrapped !== undefined ? BigInt(unwrapped) : BigInt(0)
+			unwrapped != null ? BigInt(unwrapped) : BigInt(0)
 		);
 	};
 

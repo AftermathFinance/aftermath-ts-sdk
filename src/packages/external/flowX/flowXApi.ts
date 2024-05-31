@@ -1,7 +1,7 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { Helpers } from "../../../general/utils";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 import { Balance, FlowXAddresses } from "../../../types";
 import { Coin } from "../../coin";
 import { RouterPoolTradeTxInputs } from "../../router";
@@ -131,7 +131,7 @@ export class FlowXApi implements RouterAsyncApiInterface<FlowXPoolObject> {
 				...inputs,
 				Provider: this.Provider,
 				devInspectTx: (txInputs: {
-					tx: TransactionBlock;
+					tx: Transaction;
 					coinInBytes: Uint8Array;
 					routerSwapCapBytes: Uint8Array;
 				}) =>
@@ -198,7 +198,7 @@ export class FlowXApi implements RouterAsyncApiInterface<FlowXPoolObject> {
 	// =========================================================================
 
 	private tradeDevInspectTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		routerSwapCapCoinType: CoinType;

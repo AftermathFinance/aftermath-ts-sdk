@@ -1,9 +1,6 @@
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import { Faucet } from "../faucet";
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
 import { FaucetApiCasting } from "./faucetApiCasting";
 import { CoinDecimal, CoinType } from "../../coin/coinTypes";
 import {
@@ -95,7 +92,7 @@ export class FaucetApi {
 	public fetchRequestCoinAmountTx = async (inputs: {
 		coinType: CoinType;
 		walletAddress: SuiAddress;
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		const { coinType, walletAddress } = inputs;
 
 		const [coinPrice, coinDecimals] = await Promise.all([
@@ -115,7 +112,7 @@ export class FaucetApi {
 			coinDecimals
 		);
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
 		this.requestCoinAmountTx({
@@ -131,9 +128,9 @@ export class FaucetApi {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		amount: bigint;
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		const { walletAddress, coinType, amount } = inputs;
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
 		this.requestCoinAmountTx({
@@ -150,7 +147,7 @@ export class FaucetApi {
 	) => {
 		const { walletAddress, mintFee, suiFrenType } = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
 		const suiPaymentCoinId =
@@ -171,7 +168,7 @@ export class FaucetApi {
 	// =========================================================================
 
 	public addCoinTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		treasuryCapId: ObjectId;
 		treasuryCapType: AnyObjectType;
 	}) => {
@@ -192,7 +189,7 @@ export class FaucetApi {
 	};
 
 	public requestCoinAmountTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinType: CoinType;
 		amount: Balance;
 	}) => {
@@ -207,13 +204,13 @@ export class FaucetApi {
 			typeArguments: [coinType],
 			arguments: [
 				tx.object(this.addresses.objects.faucet),
-				tx.pure(amount),
+				tx.pure.u64(amount),
 			],
 		});
 	};
 
 	public requestCoinTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinType: CoinType;
 	}) => {
 		const { tx, coinType } = inputs;
@@ -230,7 +227,7 @@ export class FaucetApi {
 	};
 
 	public mintSuiFrenTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiPaymentCoinId: ObjectId | TransactionArgument;
 		suiFrenType: AnyObjectType;
 	}) => {

@@ -1,7 +1,7 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import { bcs } from "@mysten/sui.js/bcs";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui/bcs";
+import { Transaction } from "@mysten/sui/transactions";
 import {
 	Balance,
 	BigIntAsString,
@@ -18,7 +18,7 @@ import {
 } from "./turbosTypes";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { Sui } from "../../sui";
 
@@ -168,8 +168,8 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_a
-				tx.pure(minAmountOut.toString(), "u64"), // amount_threshold
-				tx.pure(TurbosApi.calcSqrtPriceLimit(true).toString(), "u128"), // sqrt_price_limit
+				tx.pure.u64(minAmountOut.toString()), // amount_threshold
+				tx.pure.u128(TurbosApi.calcSqrtPriceLimit(true).toString()), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
 
@@ -207,8 +207,8 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_b
-				tx.pure(minAmountOut.toString(), "u64"), // amount_threshold
-				tx.pure(TurbosApi.calcSqrtPriceLimit(false).toString(), "u128"), // sqrt_price_limit
+				tx.pure.u64(minAmountOut.toString()), // amount_threshold
+				tx.pure.u128(TurbosApi.calcSqrtPriceLimit(false).toString()), // sqrt_price_limit
 				tx.object(Sui.constants.addresses.suiClockId),
 				tx.object(this.addresses.turbos.objects.versioned),
 
@@ -244,7 +244,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 	// =========================================================================
 
 	public calcTradeResultTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolObjectId: ObjectId;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -258,7 +258,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 
 			struct ComputeSwapState has copy, drop {
 				amount_a: u128,
-				amount_b: u128, 
+				amount_b: u128,
 				amount_specified_remaining: u128,
 				amount_calculated: u128,
 				sqrt_price: u128,
@@ -290,12 +290,11 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 				],
 				arguments: [
 					tx.object(inputs.poolObjectId),
-					tx.pure(isCoinAToCoinB, "bool"), // a2b
-					tx.pure(inputs.coinInAmount, "u128"), // amount_specified
-					tx.pure(true, "bool"), // amount_specified_is_input
-					tx.pure(
-						TurbosApi.calcSqrtPriceLimit(isCoinAToCoinB).toString(),
-						"u128"
+					tx.pure.bool(isCoinAToCoinB), // a2b
+					tx.pure.u128(inputs.coinInAmount), // amount_specified
+					tx.pure.bool(true), // amount_specified_is_input
+					tx.pure.u128(
+						TurbosApi.calcSqrtPriceLimit(isCoinAToCoinB).toString()
 					), // sqrt_price_limit
 					tx.object(Sui.constants.addresses.suiClockId),
 					tx.object(this.addresses.turbos.objects.versioned),
@@ -344,7 +343,7 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<TurbosCalcTradeResult> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(Helpers.inspections.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
@@ -360,27 +359,24 @@ export class TurbosApi implements RouterAsyncApiInterface<TurbosPoolObject> {
 					tx,
 				});
 
-			bcs.registerStructType("I32", {
-				bits: "u32",
+			const I32 = bcs.struct("I32", {
+				bits: bcs.u32(),
 			});
 
-			bcs.registerStructType("ComputeSwapState", {
-				amount_a: "u128",
-				amount_b: "u128",
-				amount_specified_remaining: "u128",
-				amount_calculated: "u128",
-				sqrt_price: "u128",
-				tick_current_index: "I32",
-				fee_growth_global: "u128",
-				protocol_fee: "u128",
-				liquidity: "u128",
-				fee_amount: "u128",
+			const ComputeSwapState = bcs.struct("ComputeSwapState", {
+				amount_a: bcs.u128(),
+				amount_b: bcs.u128(),
+				amount_specified_remaining: bcs.u128(),
+				amount_calculated: bcs.u128(),
+				sqrt_price: bcs.u128(),
+				tick_current_index: I32,
+				fee_growth_global: bcs.u128(),
+				protocol_fee: bcs.u128(),
+				liquidity: bcs.u128(),
+				fee_amount: bcs.u128(),
 			});
 
-			const data = bcs.de(
-				"ComputeSwapState",
-				new Uint8Array(resultBytes)
-			);
+			const data = ComputeSwapState.parse(new Uint8Array(resultBytes));
 
 			const amountIn =
 				BigInt(data.amount_a) <= BigInt(0)

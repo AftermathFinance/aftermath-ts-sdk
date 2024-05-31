@@ -2,7 +2,7 @@ import {
 	DynamicFieldInfo,
 	EventId,
 	SuiTransactionBlockResponse,
-} from "@mysten/sui.js/client";
+} from "@mysten/sui/client";
 import {
 	Scallop,
 	ScallopBuilder,

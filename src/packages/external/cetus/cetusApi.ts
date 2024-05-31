@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 import {
 	CetusCalcTradeResult,
 	CetusPoolObject,
@@ -15,8 +15,8 @@ import {
 import { Helpers } from "../../../general/utils";
 import { TypeNameOnChain } from "../../../general/types/castingTypes";
 import { RouterAsyncApiInterface } from "../../router/utils/async/routerAsyncApiInterface";
-import { bcs } from "@mysten/sui.js/bcs";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { bcs } from "@mysten/sui/bcs";
+import { SuiObjectResponse } from "@mysten/sui/client";
 import { RouterPoolTradeTxInputs } from "../../router";
 import { Sui } from "../../sui";
 
@@ -166,7 +166,7 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 	}): Promise<CetusCalcTradeResult> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(Helpers.inspections.constants.devInspectSigner);
 
 		this.calcTradeResultTx({
@@ -181,30 +181,27 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 				tx,
 			});
 
-		bcs.registerStructType("SwapStepResult", {
-			current_sqrt_price: "u128",
-			target_sqrt_price: "u128",
-			current_liquidity: "u128",
-			amount_in: "u64",
-			amount_out: "u64",
-			fee_amount: "u64",
-			remainer_amount: "u64",
+		const SwapStepResult = bcs.struct("SwapStepResult", {
+			current_sqrt_price: bcs.u128(),
+			target_sqrt_price: bcs.u128(),
+			current_liquidity: bcs.u128(),
+			amount_in: bcs.u64(),
+			amount_out: bcs.u64(),
+			fee_amount: bcs.u64(),
+			remainer_amount: bcs.u64(),
 		});
 
-		bcs.registerStructType("CalculatedSwapResult", {
-			amount_in: "u64",
-			amount_out: "u64",
-			fee_amount: "u64",
-			fee_rate: "u64",
-			after_sqrt_price: "u128",
-			is_exceed: "bool",
-			step_results: "vector<SwapStepResult>",
+		const CalculatedSwapResult = bcs.struct("CalculatedSwapResult", {
+			amount_in: bcs.u64(),
+			amount_out: bcs.u64(),
+			fee_amount: bcs.u64(),
+			fee_rate: bcs.u64(),
+			after_sqrt_price: bcs.u128(),
+			is_exceed: bcs.bool(),
+			step_results: bcs.vector(SwapStepResult),
 		});
 
-		const data = bcs.de(
-			"CalculatedSwapResult",
-			new Uint8Array(resultBytes)
-		);
+		const data = CalculatedSwapResult.parse(new Uint8Array(resultBytes));
 
 		return {
 			amountIn: BigInt(data.amount_in),
@@ -302,7 +299,7 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 
 	public calcTradeResultTx = (
 		inputs: {
-			tx: TransactionBlock;
+			tx: Transaction;
 			poolObjectId: ObjectId;
 			coinInType: CoinType;
 			coinOutType: CoinType;
@@ -350,13 +347,12 @@ export class CetusApi implements RouterAsyncApiInterface<CetusPoolObject> {
 				typeArguments: [inputs.coinTypeA, inputs.coinTypeB],
 				arguments: [
 					tx.object(inputs.poolObjectId),
-					tx.pure(inputs.coinInType === inputs.coinTypeA, "bool"), // a2b
-					tx.pure("coinInAmount" in inputs, "bool"), // by_amount_in
-					tx.pure(
+					tx.pure.bool(inputs.coinInType === inputs.coinTypeA), // a2b
+					tx.pure.bool("coinInAmount" in inputs), // by_amount_in
+					tx.pure.u64(
 						"coinInAmount" in inputs
 							? inputs.coinInAmount
-							: inputs.coinOutAmount,
-						"u64"
+							: inputs.coinOutAmount
 					), // amount
 				],
 			});

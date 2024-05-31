@@ -1,8 +1,8 @@
 import {
 	TransactionArgument,
-	TransactionBlock,
+	Transaction,
 	TransactionObjectArgument,
-} from "@mysten/sui.js/transactions";
+} from "@mysten/sui/transactions";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
@@ -17,7 +17,7 @@ import {
 import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
-import { CoinStruct, PaginatedCoins } from "@mysten/sui.js/client";
+import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 
 export class CoinApi {
@@ -113,7 +113,7 @@ export class CoinApi {
 	// =========================================================================
 
 	public fetchCoinWithAmountTx = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		coinAmount: Balance;
@@ -135,7 +135,7 @@ export class CoinApi {
 	};
 
 	public fetchCoinsWithAmountTx = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		coinTypes: CoinType[];
 		coinAmounts: Balance[];
@@ -287,7 +287,7 @@ export class CoinApi {
 	// =========================================================================
 
 	private static coinWithAmountTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinData: CoinStruct[];
 		coinAmount: Balance;
 		coinType: CoinType;
@@ -313,7 +313,7 @@ export class CoinApi {
 				})
 			);
 
-			return tx.splitCoins(tx.gas, [tx.pure(coinAmount)]);
+			return tx.splitCoins(tx.gas, [coinAmount]);
 			// return Helpers.transactions.splitCoinsTx({
 			// 	tx,
 			// 	coinId: tx.gas,
@@ -326,15 +326,9 @@ export class CoinApi {
 		const mergedCoinObjectId: ObjectId = coinObjectIds[0];
 
 		if (coinObjectIds.length > 1) {
-			tx.add({
-				kind: "MergeCoins",
-				destination: tx.object(mergedCoinObjectId),
-				sources: [
-					...coinObjectIds
-						.slice(1)
-						.map((coinId) => tx.object(coinId)),
-				],
-			});
+			tx.mergeCoins(tx.object(mergedCoinObjectId), [
+				...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
+			]);
 		}
 
 		// return tx.add({

@@ -40,7 +40,7 @@ import {
 } from "../farmsTypes";
 import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class FarmsApiCasting {
 	// =========================================================================

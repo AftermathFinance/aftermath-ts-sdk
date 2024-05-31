@@ -13,7 +13,7 @@ import {
 	SuiEventFilter,
 	SuiTransactionBlockResponse,
 	Unsubscribe,
-} from "@mysten/sui.js/client";
+} from "@mysten/sui/client";
 
 export class EventsApiHelpers {
 	// =========================================================================

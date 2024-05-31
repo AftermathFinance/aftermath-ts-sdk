@@ -1,7 +1,7 @@
 import {
 	TransactionArgument,
 	TransactionObjectArgument,
-} from "@mysten/sui.js/transactions";
+} from "@mysten/sui/transactions";
 import {
 	SuiAddress,
 	Balance,

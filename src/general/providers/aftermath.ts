@@ -30,7 +30,7 @@ import { Farms } from "../../packages/farms/farms";
 import { DynamicGas } from "../dynamicGas/dynamicGas";
 import { AftermathApi } from "./aftermathApi";
 import { IndexerCaller } from "../utils";
-import { SuiClient, SuiHTTPTransport } from "@mysten/sui.js/client";
+import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
 
 /**
  * @class Aftermath Provider

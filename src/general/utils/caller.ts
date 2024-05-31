@@ -1,4 +1,4 @@
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 import {
 	ApiEventsBody,
 	ApiIndexerEventsBody,
@@ -105,7 +105,7 @@ export class Caller {
 		body?: BodyType,
 		signal?: AbortSignal
 	) {
-		return TransactionBlock.from(
+		return Transaction.from(
 			await this.fetchApi<SerializedTransaction, BodyType>(
 				url,
 				body,

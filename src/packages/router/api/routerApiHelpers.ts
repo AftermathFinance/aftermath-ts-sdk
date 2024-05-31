@@ -23,10 +23,7 @@ import { RouterGraph } from "../utils/synchronous/routerGraph";
 import { RouterAsyncApiHelpers } from "./routerAsyncApiHelpers";
 import { RouterSynchronousApiHelpers } from "./routerSynchronousApiHelpers";
 import { RouterAsyncGraph } from "../utils/async/routerAsyncGraph";
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
 import { Helpers } from "../../../general/utils";
 import { Coin } from "../..";
 
@@ -318,7 +315,7 @@ export class RouterApiHelpers {
 	// =========================================================================
 
 	public async fetchTransactionForCompleteTradeRoute(inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;

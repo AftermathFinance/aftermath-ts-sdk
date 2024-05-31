@@ -2,7 +2,7 @@ import { SuiNetwork } from "../types/suiTypes";
 import { SuiAddress, Url } from "../types/generalTypes";
 import { CoinType } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 import { ApiDynamicGasBody, ApiDynamicGasResponse } from "./dynamicGasTypes";
 
 export class DynamicGas extends Caller {
@@ -19,7 +19,7 @@ export class DynamicGas extends Caller {
 	// =========================================================================
 
 	public async getUseDynamicGasForTx(inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		gasCoinType: CoinType;
 	}) {

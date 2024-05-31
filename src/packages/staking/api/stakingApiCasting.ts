@@ -1,4 +1,4 @@
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 import {
 	ValidatorConfigObject,
 	ValidatorOperationCapObject,

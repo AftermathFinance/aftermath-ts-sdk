@@ -1,7 +1,7 @@
 import {
 	TransactionObjectArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+	Transaction,
+} from "@mysten/sui/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	RouterCompleteTradeRoute,
@@ -39,6 +39,7 @@ import { BaySwapApi } from "../../external/baySwap/baySwapApi";
 import { SuiswapApi } from "../../external/suiswap/suiswapApi";
 import { BlueMoveApi } from "../../external/blueMove/blueMoveApi";
 import { StakingApi } from "../../staking/api/stakingApi";
+import { bcs } from "@mysten/sui/bcs";
 
 export class RouterSynchronousApiHelpers {
 	// =========================================================================
@@ -123,7 +124,7 @@ export class RouterSynchronousApiHelpers {
 	// =========================================================================
 
 	public obtainRouterCapTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinInId: ObjectId | TransactionObjectArgument;
 		minAmountOut: Balance;
 		coinInType: CoinType;
@@ -150,33 +151,28 @@ export class RouterSynchronousApiHelpers {
 			typeArguments: [coinInType, coinOutType],
 			arguments: [
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId, // coin_in
-				tx.pure(minAmountOut, "u64"), // min_amount_out
+				tx.pure.u64(minAmountOut), // min_amount_out
+				tx.pure(bcs.option(bcs.Address).serialize(referrer)), // referrer
 				tx.pure(
-					TransactionsApiHelpers.createOptionObject(referrer),
-					"Option<address>"
-				), // referrer
-				tx.pure(
-					TransactionsApiHelpers.createOptionObject(
-						externalFee?.recipient
-					),
-					"Option<address>"
+					bcs.option(bcs.Address).serialize(externalFee?.recipient)
 				), // router_fee_recipient
 				tx.pure(
-					TransactionsApiHelpers.createOptionObject(
-						externalFee
-							? Casting.numberToFixedBigInt(
-									externalFee.feePercentage
-							  )
-							: undefined
-					),
-					"Option<u64>"
+					bcs
+						.option(bcs.U64)
+						.serialize(
+							externalFee
+								? Casting.numberToFixedBigInt(
+										externalFee.feePercentage
+								  )
+								: undefined
+						)
 				), // router_fee
 			],
 		});
 	};
 
 	public initiatePathTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		routerSwapCap: TransactionObjectArgument;
 		coinInAmount: Balance;
 		coinInType: CoinType;
@@ -192,13 +188,13 @@ export class RouterSynchronousApiHelpers {
 			typeArguments: [inputs.coinInType],
 			arguments: [
 				inputs.routerSwapCap, // RouterSwapCap
-				tx.pure(inputs.coinInAmount, "u64"),
+				tx.pure.u64(inputs.coinInAmount),
 			],
 		});
 	};
 
 	public returnRouterCapTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		routerSwapCap: TransactionObjectArgument;
 		coinOutId: ObjectId | TransactionObjectArgument;
 		routerSwapCapCoinType: CoinType;
@@ -235,7 +231,7 @@ export class RouterSynchronousApiHelpers {
 	};
 
 	public returnRouterCapAlreadyPayedFeeTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		routerSwapCap: TransactionObjectArgument;
 		routerSwapCapCoinType: CoinType;
 	}) => {
@@ -259,7 +255,7 @@ export class RouterSynchronousApiHelpers {
 	// =========================================================================
 
 	public async fetchBuildTransactionForCompleteTradeRoute(inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
@@ -400,10 +396,7 @@ export class RouterSynchronousApiHelpers {
 			});
 
 			if (withTransfer) {
-				tx.transferObjects(
-					[coinOutId],
-					tx.pure(walletAddress, "address")
-				);
+				tx.transferObjects([coinOutId], tx.pure.address(walletAddress));
 			}
 
 			return coinOutId;

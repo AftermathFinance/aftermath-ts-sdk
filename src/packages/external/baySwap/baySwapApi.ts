@@ -1,10 +1,7 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
 import {
 	AnyObjectType,
 	Balance,
@@ -17,7 +14,7 @@ import { BaySwapPoolFieldsOnChain, BaySwapPoolObject } from "./baySwapTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { RouterPoolTradeTxInputs } from "../../router";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class BaySwapApi
 	implements RouterSynchronousApiInterface<BaySwapPoolObject>
@@ -151,7 +148,7 @@ export class BaySwapApi
 
 	public tradeTx = (
 		inputs: RouterPoolTradeTxInputs & {
-			tx: TransactionBlock;
+			tx: Transaction;
 			pool: BaySwapPoolObject;
 		}
 	) => {
