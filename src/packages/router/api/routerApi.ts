@@ -478,8 +478,6 @@ export class RouterApi {
 		tx?: TransactionBlock;
 		coinIn?: TransactionArgument;
 		walletAddress?: SuiAddress;
-		referrer?: SuiAddress;
-		externalFee?: ExternalFee;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
 	}): Promise<{
@@ -493,9 +491,10 @@ export class RouterApi {
 			isSponsoredTx,
 			slippage,
 			transferCoinOut,
-			referrer,
-			externalFee,
 		} = inputs;
+
+		const externalFee = inputs.completeRoute.externalFee;
+		const referrer = inputs.completeRoute.referrer;
 
 		const initTx = inputs.tx ?? new TransactionBlock();
 		if (walletAddress) initTx.setSender(walletAddress);
