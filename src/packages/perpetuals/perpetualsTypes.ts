@@ -818,6 +818,11 @@ export type ApiPerpetualsMarketEventsBody = ApiIndexerEventsBody & {
 	marketId: PerpetualsMarketId;
 };
 
+export interface ApiPerpetualsMarket24hrVolumeResponse {
+	volumeUsd: number;
+	volumeBaseAssetAmount: number;
+}
+
 // =========================================================================
 //  SDK
 // =========================================================================

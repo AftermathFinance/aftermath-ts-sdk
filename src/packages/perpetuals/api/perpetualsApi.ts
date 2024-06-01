@@ -68,6 +68,7 @@ import {
 	PerpetualsFilledOrderData,
 	ApiPerpetualsMaxOrderSizeBody,
 	ApiPerpetualsAccountOrderDatasBody,
+	ApiPerpetualsMarket24hrVolumeResponse,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -489,16 +490,23 @@ export class PerpetualsApi {
 
 	public async fetchMarket24hrVolume(inputs: {
 		marketId: PerpetualsMarketId;
-	}): Promise<number> {
+	}): Promise<ApiPerpetualsMarket24hrVolumeResponse> {
 		const { marketId } = inputs;
 
-		const response: [{ volume: number }] | [] =
+		const response: [{ volumeUsd: number; volume: number }] | [] =
 			await this.Provider.indexerCaller.fetchIndexer(
 				`perpetuals/markets/${marketId}/24hr-volume`
 			);
-		if (response.length === 0) return 0;
+		if (response.length === 0)
+			return {
+				volumeUsd: 0,
+				volumeBaseAssetAmount: 0,
+			};
 
-		return response[0].volume;
+		return {
+			volumeUsd: response[0].volumeUsd,
+			volumeBaseAssetAmount: response[0].volume,
+		};
 	}
 
 	public fetchHistoricalMarketData = async (inputs: {
