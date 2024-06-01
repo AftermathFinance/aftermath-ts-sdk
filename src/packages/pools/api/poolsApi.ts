@@ -46,9 +46,11 @@ import {
 	CoinGeckoHistoricalTradeData,
 	Timestamp,
 	UniqueId,
+	PoolObject,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
+	PoolFieldsOnChain,
 	PoolTradeEventOnChain,
 	PoolTradeEventOnChainFields,
 	PoolWithdrawEventOnChain,
@@ -195,68 +197,42 @@ export class PoolsApi {
 	 * @param {ObjectId} inputs.objectId - The object ID of the pool to fetch.
 	 * @returns {Promise<PoolObject>} A promise that resolves to the fetched pool object.
 	 */
-	public fetchPool = this.Provider.withCache({
-		key: "fetchPool",
-		expirationSeconds: 10,
-		callback: async (inputs: { objectId: ObjectId }) => {
-			return this.Provider.Objects().fetchCastObject({
-				...inputs,
-				objectFromSuiObjectResponse:
-					Casting.pools.poolObjectFromSuiObject,
-			});
-		},
-	});
+	public fetchPool = async (inputs: {
+		objectId: ObjectId;
+	}): Promise<PoolObject> => {
+		return (await this.fetchPools({ objectIds: [inputs.objectId] }))[0];
+	};
 
-	public fetchPools = this.Provider.withCache({
-		key: "fetchPools",
-		expirationSeconds: 10,
-		callback: async (inputs: { objectIds: ObjectId[] }) => {
-			return this.Provider.Objects().fetchCastObjectBatch({
-				...inputs,
-				objectFromSuiObjectResponse:
-					Casting.pools.poolObjectFromSuiObject,
-			});
-		},
-	});
+	public fetchPools = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<PoolObject[]> => {
+		const uncastPools = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				objectId: ObjectId;
+				type: AnyObjectType;
+				content: PoolFieldsOnChain;
+			}[]
+		>("pools", undefined, {
+			pool_ids: inputs.objectIds,
+		});
+		return uncastPools.map(PoolsApiCasting.poolObjectFromIndexer);
+	};
 
 	/**
 	 * Fetches all pool objects.
 	 * @async
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
-	public fetchAllPools = this.Provider.withCache({
-		key: "fetchAllPools",
-		expirationSeconds: 10,
-		callback: async (isRouter?: boolean) => {
-			const uncastedPools =
-				await this.Provider.indexerCaller.fetchIndexer<
-					{
-						objectId: ObjectId;
-						type: AnyObjectType;
-						content: any;
-					}[]
-				>("router/pools/af");
-
-			const pools = uncastedPools.map(
-				PoolsApiCasting.poolObjectFromIndexer
-			);
-
-			if (!isRouter) return pools;
-
-			const minSuiBalance = BigInt(1000_000_000_000); // 1000 SUI
-			return pools.filter(
-				(pool) =>
-					!Object.keys(pool.coins).some((coin) =>
-						Coin.isSuiCoin(coin)
-					) ||
-					(Object.keys(pool.coins).some((coin) =>
-						Coin.isSuiCoin(coin)
-					) &&
-						pool.coins[Coin.constants.suiCoinType].balance >=
-							minSuiBalance)
-			);
-		},
-	});
+	public fetchAllPools = async (): Promise<PoolObject[]> => {
+		const uncastPools = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				objectId: ObjectId;
+				type: AnyObjectType;
+				content: PoolFieldsOnChain;
+			}[]
+		>("pools");
+		return uncastPools.map(PoolsApiCasting.poolObjectFromIndexer);
+	};
 
 	// =========================================================================
 	//  Events
