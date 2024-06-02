@@ -26,6 +26,7 @@ export interface ConfigAddresses {
 	dynamicGas?: DynamicGasAddresses;
 	scallop?: ScallopAddresses;
 	leveragedStaking?: LeveragedStakingAddresses;
+	dca?: DcaAddresses
 }
 
 // =========================================================================
@@ -310,5 +311,12 @@ export interface ScallopAddresses {
 		afSuiMarket: ObjectId;
 		coinDecimalsRegistry: ObjectId;
 		xOracle: ObjectId;
+	};
+}
+
+export interface DcaAddresses {
+	packages: {
+		vaults: SuiAddress;
+		vaultsInitial: SuiAddress;
 	};
 }
