@@ -36,6 +36,7 @@ import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { Helpers, IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui/client";
 import { SuiClient as SuiClientV0 } from "@mysten/sui.js/client";
+import { DcaApi } from "../../packages/dca/api/dcaApi";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
@@ -172,6 +173,8 @@ export class AftermathApi {
 	public Perpetuals = () => new PerpetualsApi(this);
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
+	public Dca = () => new DcaApi(this);
+
 	/**
 	 * Creates a new instance of the RouterApi class.
 	 * @returns A new instance of the RouterApi class.

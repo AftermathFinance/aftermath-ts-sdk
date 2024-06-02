@@ -1,3 +1,4 @@
+import { Sui } from "../../packages";
 import { CoinType } from "../../types";
 import { CoinDecimal } from "../../types";
 import { ObjectId, SuiAddress } from "./generalTypes";
@@ -27,6 +28,8 @@ export interface ConfigAddresses {
 	dynamicGas?: DynamicGasAddresses;
 	scallop?: ScallopAddresses;
 	leveragedStaking?: LeveragedStakingAddresses;
+	dca?: DcaAddresses;
+	sharedCustody?: SharedCustodyAddresses;
 }
 
 // =========================================================================
@@ -180,4 +183,23 @@ export interface ScallopAddresses {
 		coinDecimalsRegistry: ObjectId;
 		xOracle: ObjectId;
 	};
+}
+
+export interface DcaAddresses {
+	packages: {
+		dca: SuiAddress;
+	};
+	objects: {
+		config: ObjectId;	
+	}
+}
+
+export interface SharedCustodyAddresses {
+	packages: {
+		config: SuiAddress;	
+	};
+	objects: {
+		address: ObjectId;
+		publicKey: ObjectId;
+	}
 }
