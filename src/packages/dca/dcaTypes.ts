@@ -65,6 +65,17 @@ export interface DcaVaultObject {
 //  API
 // =========================================================================
 
+export interface DcaCreatedVaultEvent extends Event {
+	
+	// Todo: - update with real smart-contract data
+
+	vaultId: ObjectId;
+	allocatedCoin: CoinType;
+	allocatedCoinAmount: Balance;
+	buyCoin: CoinType;
+	buyCoinAmount: Balance;
+}
+
 // =========================================================================
 //  Owned DCAs
 // =========================================================================

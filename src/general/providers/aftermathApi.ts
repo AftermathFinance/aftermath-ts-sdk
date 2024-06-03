@@ -32,7 +32,7 @@ import { OracleApi } from "../../packages/oracle/api/oracleApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 // import { PriceFeedsApi } from "../priceFeeds/priceFeedsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
-import { DcaApi } from "../../packages/dca/dcaApi";
+import { DcaApi } from "../../packages/dca/api/dcaApi";
 import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";

@@ -1,8 +1,10 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { ApiDcaInitializeVaultBody, DcaVaultObject } from "./dcaTypes";
-import { AftermathApi } from "../../general/providers";
-import { AnyObjectType, DcaAddresses, SuiAddress } from "../../types";
-import { EventsApiHelpers } from "../../general/apiHelpers/eventsApiHelpers";
+import { ApiDcaInitializeVaultBody, DcaCreatedVaultEvent, DcaVaultObject } from "../dcaTypes";
+import { AftermathApi } from "../../../general/providers";
+import { AnyObjectType, DcaAddresses, EventsInputs, SuiAddress } from "../../../types";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { DcaCreatedVaultEventOnChain } from "./dcaApiCastingTypes";
+import { Casting } from "../../../general/utils";
 
     
 export class DcaApi {
@@ -79,6 +81,22 @@ export class DcaApi {
         })
         return [];
     }
+
+    // =========================================================================
+    // Events
+    // =========================================================================
+
+    public fetchCreatedVaultEvents = (inputs: EventsInputs) =>
+		this.Provider.Events().fetchCastEventsWithCursor<
+			DcaCreatedVaultEventOnChain,
+			DcaCreatedVaultEvent
+		>({
+			...inputs,
+			query: {
+				MoveEventType: this.eventTypes.createdVault,
+			},
+			eventFromEventOnChain: Casting.dca.createdVaultEventFromOnChain,
+		});
 
     // =========================================================================
     // Vault Creation
