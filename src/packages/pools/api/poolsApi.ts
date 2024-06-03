@@ -206,6 +206,9 @@ export class PoolsApi {
 	public fetchPools = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<PoolObject[]> => {
+		const poolIds = inputs.objectIds.map((objectId) =>
+			Helpers.addLeadingZeroesToType(objectId)
+		);
 		const uncastPools = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				objectId: ObjectId;
@@ -213,9 +216,18 @@ export class PoolsApi {
 				content: PoolFieldsOnChain;
 			}[]
 		>("pools", undefined, {
-			pool_ids: inputs.objectIds,
+			pool_ids: poolIds,
 		});
-		return uncastPools.map(PoolsApiCasting.poolObjectFromIndexer);
+		const pools = uncastPools.map(PoolsApiCasting.poolObjectFromIndexer);
+		return poolIds.map(
+			(objectId) =>
+				pools.find(
+					(pool) =>
+						pool.objectId ===
+						Helpers.addLeadingZeroesToType(objectId)
+					// TODO: handle this error case better
+				)!
+		);
 	};
 
 	/**

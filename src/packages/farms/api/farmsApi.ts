@@ -199,15 +199,28 @@ export class FarmsApi {
 	public fetchStakingPools = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<FarmsStakingPoolObject[]> => {
-		const farms =
+		const vaultIds = inputs.objectIds.map((objectId) =>
+			Helpers.addLeadingZeroesToType(objectId)
+		);
+		const uncastFarms =
 			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
 				"afterburner-vaults/vaults",
 				undefined,
 				{
-					vault_ids: inputs.objectIds,
+					vault_ids: vaultIds,
 				}
 			);
-		return Casting.farms.stakingPoolObjectsFromIndexerResponse(farms);
+		const farms =
+			Casting.farms.stakingPoolObjectsFromIndexerResponse(uncastFarms);
+		return vaultIds.map(
+			(objectId) =>
+				farms.find(
+					(farm) =>
+						farm.objectId ===
+						Helpers.addLeadingZeroesToType(objectId)
+					// TODO: handle this error case better
+				)!
+		);
 	};
 
 	public fetchAllStakingPools = async (): Promise<
