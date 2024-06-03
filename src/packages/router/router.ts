@@ -156,12 +156,15 @@ export class Router extends Caller {
 	 * @returns Executable `TranscationBlock` trading from `coinIn` to `coinOut`
 	 */
 	public async getTransactionForCompleteTradeRoute(
-		inputs: ApiRouterTransactionForCompleteTradeRouteBody
+		inputs: ApiRouterTransactionForCompleteTradeRouteBody & {
+			v2?: boolean;
+		}
 	) {
-		return this.fetchApiTransaction<ApiRouterTransactionForCompleteTradeRouteBody>(
-			"transactions/trade",
-			inputs
-		);
+		return this.fetchApiTransaction<
+			ApiRouterTransactionForCompleteTradeRouteBody & {
+				v2?: boolean;
+			}
+		>("transactions/trade", inputs);
 	}
 
 	public async addTransactionForCompleteTradeRoute(
