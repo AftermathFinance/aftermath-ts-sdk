@@ -1,15 +1,21 @@
-import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import {
+	TransactionArgument,
+	Transaction,
+	TransactionObjectArgument,
+} from "@mysten/sui/transactions";
 import {
 	Balance,
 	CoinType,
 	ObjectId,
 	SerializedTransaction,
+	ServiceCoinData,
 	SuiAddress,
 	TransactionDigest,
 	TransactionsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui/client";
+import { Helpers } from "../utils";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -154,6 +160,77 @@ export class TransactionsApiHelpers {
 			],
 		});
 	}
+
+	public static serviceCoinDataFromCoinTxArg = (inputs: {
+		coinTxArg: TransactionArgument | ObjectId;
+	}): ServiceCoinData => {
+		const { coinTxArg } = inputs;
+
+		if (typeof coinTxArg === "string")
+			return { Coin: Helpers.addLeadingZeroesToType(coinTxArg) };
+
+		if ("GasCoin" in coinTxArg || typeof coinTxArg === "function")
+			throw new Error(
+				"unable to convert gas coin arg to service coin data"
+			);
+
+		return coinTxArg;
+
+		// if ("kind" in coinTxArg) {
+		// if (coinTxArg.kind === "NestedResult")
+		// 	return {
+		// 		[coinTxArg.kind]: [coinTxArg.index, coinTxArg.resultIndex],
+		// 	};
+
+		// if (coinTxArg.kind === "Result")
+		// 	return { [coinTxArg.kind]: coinTxArg.index };
+
+		// // Input
+		// return { [coinTxArg.kind]: coinTxArg.index };
+		// }
+
+		// if (coinTxArg.$kind === "NestedResult")
+		// 	return {
+		// 		[coinTxArg.$kind]: coinTxArg.NestedResult,
+		// 	};
+
+		// if (coinTxArg.$kind === "Result")
+		// 	return { [coinTxArg.$kind]: coinTxArg.Result };
+
+		// // Input
+		// return { [coinTxArg.$kind]: coinTxArg.Input };
+	};
+
+	public static coinTxArgFromServiceCoinData = (inputs: {
+		serviceCoinData: ServiceCoinData;
+	}): TransactionObjectArgument => {
+		const { serviceCoinData } = inputs;
+
+		const key = Object.keys(serviceCoinData)[0];
+
+		// TODO: handle all cases
+		if (key === "Coin")
+			throw new Error(
+				"serviceCoinData in format { Coin: ObjectId } not supported"
+			);
+
+		// TODO: handle this cleaner
+		const kind = key as "Input" | "NestedResult" | "Result";
+
+		if (kind === "NestedResult") {
+			return {
+				NestedResult: Object.values(serviceCoinData)[0],
+			};
+		}
+		if (kind === "Input") {
+			return {
+				Input: Object.values(serviceCoinData)[0],
+			};
+		}
+		return {
+			Result: Object.values(serviceCoinData)[0],
+		};
+	};
 
 	// public static mergeCoinsTx(inputs: {
 	// 	tx: Transaction;

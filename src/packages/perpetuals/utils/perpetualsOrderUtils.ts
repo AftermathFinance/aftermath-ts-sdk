@@ -19,8 +19,8 @@ export class PerpetualsOrderUtils {
 		price: bigint,
 		counter: bigint
 	): PerpetualsOrderId => {
-		let priceBn = new BN(price);
-		let counterBn = new BN(counter);
+		let priceBn = new BN(price, 10);
+		let counterBn = new BN(counter, 10);
 		return BigInt(priceBn.shln(64).or(counterBn).toString());
 	};
 
@@ -30,8 +30,8 @@ export class PerpetualsOrderUtils {
 		price: bigint,
 		counter: bigint
 	): PerpetualsOrderId => {
-		let priceBn = new BN(price);
-		let counterBn = new BN(counter);
+		let priceBn = new BN(price, 10);
+		let counterBn = new BN(counter, 10);
 		let mask_bn = new BN(`ffffffffffffffff`, 16);
 		return BigInt(priceBn.xor(mask_bn).shln(64).or(counterBn).toString());
 	};
@@ -45,24 +45,26 @@ export class PerpetualsOrderUtils {
 
 	// Returns price of a given ask `order_id`.
 	private static priceAsk = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId);
+		let orderIdBn = new BN(orderId, 10);
 		return BigInt(orderIdBn.shrn(64).toString());
 	};
 
 	// Returns price of a given bid `order_id`.
 	private static priceBid = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId);
+		let orderIdBn = new BN(orderId, 10);
 		let mask_bn = new BN(`ffffffffffffffff`, 16);
 		return BigInt(orderIdBn.shrn(64).xor(mask_bn).toString());
 	};
 
 	public static counter = (orderId: PerpetualsOrderId): bigint => {
-		let orderIdBn = new BN(orderId);
+		let orderIdBn = new BN(orderId, 10);
 		let mask_bn = new BN(`0000000000000000ffffffffffffffff`, 16);
 		return BigInt(orderIdBn.and(mask_bn).toString());
 	};
 
 	public static isAsk = (orderId: PerpetualsOrderId): boolean => {
-		return new BN(orderId) < new BN(`80000000000000000000000000000000`, 16);
+		return new BN(orderId, 10).lt(
+			new BN(`80000000000000000000000000000000`, 16)
+		);
 	};
 }

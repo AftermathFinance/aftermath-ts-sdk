@@ -1,15 +1,5 @@
 import { CoinType } from "../../types";
-import { ObjectId, SerializedTransaction, SuiAddress } from "../types";
-
-// =========================================================================
-//  Shared With Service
-// =========================================================================
-
-export type DynamicGasCoinData =
-	| { Coin: ObjectId }
-	| { Input: number }
-	| { Result: number }
-	| { NestedResult: [number, number] };
+import { SerializedTransaction, SuiAddress } from "../types";
 
 // =========================================================================
 //  API

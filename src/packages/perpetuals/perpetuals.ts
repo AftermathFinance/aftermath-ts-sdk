@@ -341,9 +341,9 @@ export class Perpetuals extends Caller {
 		const denominator = Casting.IFixed.numberFromIFixed(baseAssetAmount);
 		if (!denominator) return 0;
 
-		return (
+		return Math.abs(
 			Casting.IFixed.numberFromIFixed(quoteAssetNotionalAmount) /
-			denominator
+				denominator
 		);
 	}
 

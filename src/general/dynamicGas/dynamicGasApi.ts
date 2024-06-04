@@ -1,11 +1,10 @@
 import { Helpers } from "../utils/helpers";
 import { AftermathApi } from "../providers/aftermathApi";
-import { CoinType } from "../../packages/coin/coinTypes";
+import { CoinType, ServiceCoinData } from "../../packages/coin/coinTypes";
 import { Transaction } from "@mysten/sui/transactions";
 import {
 	ApiDynamicGasResponse,
 	DynamicGasAddresses,
-	DynamicGasCoinData,
 	SuiAddress,
 	TxBytes,
 } from "../types";
@@ -41,17 +40,13 @@ export class DynamicGasApi {
 	}): Promise<ApiDynamicGasResponse> => {
 		const { tx, gasCoinType, walletAddress } = inputs;
 
-		const mergeCoinTxs = tx.blockData.transactions.filter(
-			(tx) => tx.kind === "MergeCoins"
-		);
-		mergeCoinTxs.find((tx) => tx.kind === "MergeCoins" && tx.destination);
-
 		// TODO: handle all split cases
 		const gasSplitMoveCall = tx.blockData.transactions.find(
 			(command) =>
 				command.kind === "MoveCall" &&
 				command.target ===
 					Helpers.transactions.createTxTarget(
+						// Sui.constants.addresses.suiPackageId,
 						"0x2",
 						"coin",
 						"split"
@@ -61,7 +56,7 @@ export class DynamicGasApi {
 					Helpers.addLeadingZeroesToType(gasCoinType)
 		);
 
-		const gasCoin = await (async () => {
+		const gasCoin: ServiceCoinData = await (async () => {
 			if (
 				!gasSplitMoveCall ||
 				!("arguments" in gasSplitMoveCall) ||
@@ -74,7 +69,9 @@ export class DynamicGasApi {
 				const coinIds = allCoins.map((coin) => coin.coinObjectId);
 
 				if (coinIds.length <= 1) {
-					return { Coin: coinIds[0] };
+					return Helpers.transactions.serviceCoinDataFromCoinTxArg({
+						coinTxArg: coinIds[0],
+					});
 				}
 
 				const mergedCoinArg = tx.object(coinIds[0]);
@@ -83,16 +80,15 @@ export class DynamicGasApi {
 					coinIds.slice(1).map((coinId) => tx.object(coinId))
 				);
 
-				return { [mergedCoinArg.$kind]: mergedCoinArg.Input };
+				return Helpers.transactions.serviceCoinDataFromCoinTxArg({
+					coinTxArg: mergedCoinArg,
+				});
 			}
 
 			const gasCoinArg = gasSplitMoveCall.arguments[0];
-			const gasCoinVal =
-				gasCoinArg.kind === "NestedResult"
-					? [gasCoinArg.index, gasCoinArg.resultIndex]
-					: gasCoinArg.index;
-
-			return { [gasCoinArg.kind]: gasCoinVal };
+			return Helpers.transactions.serviceCoinDataFromCoinTxArg({
+				coinTxArg: gasCoinArg,
+			});
 		})();
 
 		const txBytes = await tx.build({
@@ -102,14 +98,14 @@ export class DynamicGasApi {
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
 
 		const body: {
-			gas_coin: DynamicGasCoinData;
+			gas_coin: ServiceCoinData;
 			gas_asset: CoinType;
 			transaction_kind: TxBytes;
 			sender: SuiAddress;
 			sponsor: SuiAddress;
 		} = {
 			// TODO: make it so `as` doesn't have to be used here!
-			gas_coin: gasCoin as DynamicGasCoinData,
+			gas_coin: gasCoin,
 			gas_asset: gasCoinType,
 			transaction_kind: b64TxBytes,
 			sender: walletAddress,

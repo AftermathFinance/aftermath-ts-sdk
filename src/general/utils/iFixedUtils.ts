@@ -1,4 +1,5 @@
-import { IFixed } from "../types";
+import { Byte, IFixed } from "../types";
+import { Casting } from "./casting";
 
 export class IFixedUtils {
 	public static readonly ONE: IFixed = BigInt(1_000_000_000_000_000_000);
@@ -34,5 +35,13 @@ export class IFixedUtils {
 		return (
 			((value ^ this.NOT_GREATEST_BIT) + BigInt(1)) ^ this.GREATEST_BIT
 		);
+	};
+
+	public static iFixedFromBytes = (bytes: Byte[]): IFixed => {
+		return Casting.bigIntFromBytes(bytes);
+	};
+
+	public static iFixedFromStringBytes = (bytes: string[]): IFixed => {
+		return this.iFixedFromBytes(Casting.bytesFromStringBytes(bytes));
 	};
 }

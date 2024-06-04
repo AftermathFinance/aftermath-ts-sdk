@@ -5,12 +5,14 @@ import {
 	Event,
 	IFixed,
 	Object,
+	ObjectDigest,
 	ObjectId,
+	ObjectVersion,
 	Percentage,
 	SuiAddress,
 	Timestamp,
 } from "../../general/types/generalTypes";
-import { CoinDecimal, CoinType } from "../coin/coinTypes";
+import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 
 // =========================================================================
 //  Name Only
@@ -99,7 +101,9 @@ const Vault = bcs.struct("Vault", {
 
 // -----------------------------------------
 
-export interface PerpetualsMarketData extends Object {
+export interface PerpetualsMarketData {
+	objectId: ObjectId;
+	initialSharedVersion: ObjectVersion;
 	collateralCoinType: CoinType;
 	marketParams: PerpetualsMarketParams;
 	marketState: PerpetualsMarketState;
@@ -112,6 +116,8 @@ export interface PerpetualsAccountCap extends Object {
 	collateralCoinType: CoinType;
 	collateral: IFixed;
 	collateralDecimals: CoinDecimal;
+	objectVersion: ObjectVersion;
+	objectDigest: ObjectDigest;
 }
 
 export type PerpetualsRawAccountCap = Omit<
@@ -139,7 +145,11 @@ export interface PerpetualsPosition {
 	bidsQuantity: IFixed;
 	collateralCoinType: CoinType;
 	marketId: PerpetualsMarketId;
-	pendingOrders: bigint;
+	pendingOrders: {
+		orderId: PerpetualsOrderId;
+		side: PerpetualsOrderSide;
+		size: bigint;
+	}[];
 	makerFee: IFixed;
 	takerFee: IFixed;
 }
@@ -168,7 +178,9 @@ const PositionKey = bcs.struct("PositionKey", {
 export interface PerpetualsMarketParams {
 	marginRatioInitial: IFixed;
 	marginRatioMaintenance: IFixed;
-	baseAssetSymbol: string;
+	baseAssetSymbol: CoinSymbol;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 	fundingFrequencyMs: bigint;
 	fundingPeriodMs: bigint;
 	premiumTwapFrequencyMs: bigint;
@@ -184,30 +196,9 @@ export interface PerpetualsMarketParams {
 	lotSize: bigint;
 	tickSize: bigint;
 	liquidationTolerance: bigint;
-	maxPendingOrdersPerPosition: bigint;
+	maxPendingOrders: bigint;
+	oracleTolerance: bigint;
 }
-
-const MarketParams = bcs.struct("MarketParams", {
-	marginRatioInitial: bcs.u256(),
-	marginRatioMaintenance: bcs.u256(),
-	baseAssetSymbol: bcs.string(),
-	fundingFrequencyMs: bcs.u64(),
-	fundingPeriodMs: bcs.u64(),
-	premiumTwapFrequencyMs: bcs.u64(),
-	premiumTwapPeriodMs: bcs.u64(),
-	spreadTwapFrequencyMs: bcs.u64(),
-	spreadTwapPeriodMs: bcs.u64(),
-	makerFee: bcs.u256(),
-	takerFee: bcs.u256(),
-	liquidationFee: bcs.u256(),
-	forceCancelFee: bcs.u256(),
-	insuranceFundFee: bcs.u256(),
-	minOrderUsdValue: bcs.u256(),
-	lotSize: bcs.u64(),
-	tickSize: bcs.u64(),
-	liquidationTolerance: bcs.u64(),
-	maxPendingOrdersPerPosition: bcs.u64(),
-});
 
 // -----------------------------------------
 
@@ -222,24 +213,6 @@ export interface PerpetualsMarketState {
 	openInterest: IFixed;
 	feesAccrued: IFixed;
 }
-
-const MarketState = bcs.struct("MarketState", {
-	cumFundingRateLong: bcs.u256(),
-	cumFundingRateShort: bcs.u256(),
-	fundingLastUpdMs: bcs.u64(),
-	premiumTwap: bcs.u256(),
-	premiumTwapLastUpdMs: bcs.u64(),
-	spreadTwap: bcs.u256(),
-	spreadTwapLastUpdMs: bcs.u64(),
-	openInterest: bcs.u256(),
-	feesAccrued: bcs.u256(),
-});
-
-const ClearingHouse = bcs.struct("ClearingHouse", {
-	id: bcs.Address,
-	marketParams: MarketParams,
-	marketState: MarketState,
-});
 
 // -----------------------------------------
 
@@ -280,6 +253,11 @@ export interface PerpetualsOrderData {
 	filledSize: bigint;
 	side: PerpetualsOrderSide;
 	marketId: PerpetualsMarketId;
+}
+
+export interface PerpetualsFilledOrderData {
+	size: number;
+	price: number;
 }
 
 export interface PerpetualsOrderbook extends Object {
@@ -388,33 +366,28 @@ export interface PerpetualsAccountObject {
 // =========================================================================
 
 export interface DepositedCollateralEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
 }
 
 export interface AllocatedCollateralEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
 	positionCollateralAfter: IFixed;
 }
 
 export interface DeallocatedCollateralEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
 	positionCollateralAfter: IFixed;
 }
 
 export interface WithdrewCollateralEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
 }
 
 export interface SettledFundingEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
@@ -437,31 +410,31 @@ export type CollateralEvent =
 export const isWithdrewCollateralEvent = (
 	event: Event
 ): event is WithdrewCollateralEvent => {
-	return event.type.toLowerCase().includes("withdrewcollateral");
+	return event.type.toLowerCase().endsWith("::withdrewcollateral");
 };
 
 export const isDepositedCollateralEvent = (
 	event: Event
 ): event is DepositedCollateralEvent => {
-	return event.type.toLowerCase().includes("depositedcollateral");
+	return event.type.toLowerCase().endsWith("::depositedcollateral");
 };
 
 export const isDeallocatedCollateralEvent = (
 	event: Event
 ): event is DeallocatedCollateralEvent => {
-	return event.type.toLowerCase().includes("deallocatedcollateral");
+	return event.type.toLowerCase().endsWith("::deallocatedcollateral");
 };
 
 export const isAllocatedCollateralEvent = (
 	event: Event
 ): event is AllocatedCollateralEvent => {
-	return event.type.toLowerCase().includes("allocatedcollateral");
+	return event.type.toLowerCase().endsWith("::allocatedcollateral");
 };
 
 export const isSettledFundingEvent = (
 	event: Event
 ): event is SettledFundingEvent => {
-	return event.type.toLowerCase().includes("settledfunding");
+	return event.type.toLowerCase().endsWith("::settledfunding");
 };
 
 // =========================================================================
@@ -469,7 +442,6 @@ export const isSettledFundingEvent = (
 // =========================================================================
 
 export interface LiquidatedEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	liqorAccountId: PerpetualsAccountId;
@@ -480,7 +452,7 @@ export interface LiquidatedEvent extends Event {
 }
 
 export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
-	return event.type.toLowerCase().includes("liquidatedposition");
+	return event.type.toLowerCase().endsWith("::liquidatedposition");
 };
 
 // =========================================================================
@@ -488,7 +460,6 @@ export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
 // =========================================================================
 
 export interface CreatedAccountEvent extends Event {
-	collateralCoinType: CoinType;
 	user: SuiAddress;
 	accountId: PerpetualsAccountId;
 }
@@ -498,14 +469,12 @@ export interface CreatedAccountEvent extends Event {
 // =========================================================================
 
 export interface OrderbookPostReceiptEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	orderId: PerpetualsOrderId;
 	size: bigint;
 }
 
 export interface OrderbookFillReceiptEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	orderId: PerpetualsOrderId;
 	size: bigint;
@@ -513,7 +482,6 @@ export interface OrderbookFillReceiptEvent extends Event {
 }
 
 export interface CanceledOrderEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
@@ -522,7 +490,6 @@ export interface CanceledOrderEvent extends Event {
 }
 
 export interface PostedOrderEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
@@ -532,7 +499,6 @@ export interface PostedOrderEvent extends Event {
 }
 
 export interface FilledMakerOrderEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
@@ -547,7 +513,6 @@ export interface FilledMakerOrderEvent extends Event {
 }
 
 export interface FilledTakerOrderEvent extends Event {
-	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
@@ -556,6 +521,7 @@ export interface FilledTakerOrderEvent extends Event {
 	side: PerpetualsOrderSide;
 	baseAssetDelta: IFixed;
 	quoteAssetDelta: IFixed;
+	liquidatedVolume: IFixed;
 }
 
 export type PerpetualsOrderEvent =
@@ -579,29 +545,29 @@ export interface PostedOrderReceiptEvent extends Event {
 export const isCanceledOrderEvent = (
 	event: Event
 ): event is CanceledOrderEvent => {
-	return event.type.toLowerCase().includes("orderbookcanceledorder");
+	return event.type.toLowerCase().endsWith("::canceledorder");
 };
 
 export const isPostedOrderEvent = (event: Event): event is PostedOrderEvent => {
-	return event.type.toLowerCase().includes("postedorder");
+	return event.type.toLowerCase().endsWith("::postedorder");
 };
 
 export const isPostedOrderReceiptEvent = (
 	event: Event
 ): event is PostedOrderReceiptEvent => {
-	return event.type.toLowerCase().includes("orderbookpostreceipt");
+	return event.type.toLowerCase().endsWith("::orderbookpostreceipt");
 };
 
 export const isFilledMakerOrderEvent = (
 	event: Event
 ): event is FilledMakerOrderEvent => {
-	return event.type.toLowerCase().includes("filledmakerorder");
+	return event.type.toLowerCase().endsWith("::filledmakerorder");
 };
 
 export const isFilledTakerOrderEvent = (
 	event: Event
 ): event is FilledTakerOrderEvent => {
-	return event.type.toLowerCase().includes("filledtakerorder");
+	return event.type.toLowerCase().endsWith("::filledtakerorder");
 };
 
 // =========================================================================
@@ -609,7 +575,6 @@ export const isFilledTakerOrderEvent = (
 // =========================================================================
 
 export interface UpdatedPremiumTwapEvent extends Event {
-	collateralCoinType: CoinType;
 	marketId: PerpetualsMarketId;
 	bookPrice: IFixed;
 	indexPrice: IFixed;
@@ -618,7 +583,6 @@ export interface UpdatedPremiumTwapEvent extends Event {
 }
 
 export interface UpdatedSpreadTwapEvent extends Event {
-	collateralCoinType: CoinType;
 	marketId: PerpetualsMarketId;
 	bookPrice: IFixed;
 	indexPrice: IFixed;
@@ -647,14 +611,39 @@ export interface ApiPerpetualsAccountsBody {
 // =========================================================================
 
 export type ApiPerpetualsPreviewOrderBody = (
-	| ApiPerpetualsLimitOrderBody
-	| ApiPerpetualsMarketOrderBody
-	| ApiPerpetualsSLTPOrderBody
+	| Omit<
+			ApiPerpetualsLimitOrderBody,
+			| "collateralChange"
+			| "walletAddress"
+			| "accountObjectId"
+			| "accountObjectVersion"
+			| "accountObjectDigest"
+	  >
+	| Omit<
+			ApiPerpetualsMarketOrderBody,
+			| "collateralChange"
+			| "walletAddress"
+			| "accountObjectId"
+			| "accountObjectVersion"
+			| "accountObjectDigest"
+	  >
+	| Omit<
+			ApiPerpetualsSLTPOrderBody,
+			| "collateralChange"
+			| "walletAddress"
+			| "accountObjectId"
+			| "accountObjectVersion"
+			| "accountObjectDigest"
+	  >
 ) & {
-	walletAddress: SuiAddress;
+	// TODO: remove eventually ?
+	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
 	lotSize: number;
 	tickSize: number;
+	leverage: number;
+	// NOTE: do we need this ?
+	// isClose?: boolean;
 };
 
 export type ApiPerpetualsPreviewOrderResponse =
@@ -669,6 +658,8 @@ export type ApiPerpetualsPreviewOrderResponse =
 			filledSizeUsd: number;
 			postedSize: number;
 			postedSizeUsd: number;
+			collateralChange: number;
+			executionPrice: number;
 	  };
 
 export interface ApiPerpetualsOrderbookStateBody {
@@ -683,17 +674,36 @@ export interface ApiPerpetualsExecutionPriceBody {
 	size: bigint;
 	lotSize: number;
 	collateral: Balance;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 	price?: PerpetualsOrderPrice;
 }
 export interface ApiPerpetualsExecutionPriceResponse {
 	executionPrice: number;
 	sizeFilled: number;
 	sizePosted: number;
+	fills: PerpetualsFilledOrderData[];
 }
 
 export interface ApiPerpetualsHistoricalMarketDataResponse {
 	prices: PerpetualsMarketPriceDataPoint[];
 	volumes: PerpetualsMarketVolumeDataPoint[];
+}
+
+export interface ApiPerpetualsMaxOrderSizeBody {
+	accountId: PerpetualsAccountId;
+	collateral: Balance;
+	side: PerpetualsOrderSide;
+	leverage: number;
+	price?: PerpetualsOrderPrice;
+}
+
+export interface ApiPerpetualsAccountOrderDatasBody {
+	orderDatas: {
+		orderId: PerpetualsOrderId;
+		marketId: PerpetualsMarketId;
+		currentSize: bigint;
+	}[];
 }
 
 // =========================================================================
@@ -730,9 +740,10 @@ export interface ApiPerpetualsTransferCollateralBody {
 
 export interface ApiPerpetualsMarketOrderBody {
 	walletAddress: SuiAddress;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	collateralChange: Balance;
@@ -741,9 +752,10 @@ export interface ApiPerpetualsMarketOrderBody {
 
 export interface ApiPerpetualsLimitOrderBody {
 	walletAddress: SuiAddress;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	price: PerpetualsOrderPrice;
@@ -757,7 +769,11 @@ export interface ApiPerpetualsCancelOrderBody {
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
+	marketInitialSharedVersion: ObjectVersion;
 	orderId: PerpetualsOrderId;
+	collateral: Balance;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 }
 
 export interface ApiPerpetualsCancelOrdersBody {
@@ -765,8 +781,12 @@ export interface ApiPerpetualsCancelOrdersBody {
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	orderDatas: {
-		marketId: PerpetualsMarketId;
 		orderId: PerpetualsOrderId;
+		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
+		collateral: Balance;
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
 	}[];
 }
 
@@ -797,18 +817,23 @@ export type ApiPerpetualsMarketEventsBody = ApiIndexerEventsBody & {
 	marketId: PerpetualsMarketId;
 };
 
+export interface ApiPerpetualsMarket24hrVolumeResponse {
+	volumeUsd: number;
+	volumeBaseAssetAmount: number;
+}
+
 // =========================================================================
 //  SDK
 // =========================================================================
 
 export type SdkPerpetualsMarketOrderInputs = Omit<
 	ApiPerpetualsMarketOrderBody,
-	"accountCapId" | "collateralCoinType"
+	"accountObjectId" | "accountObjectVersion" | "accountObjectDigest"
 >;
 
 export type SdkPerpetualsLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
-	"accountCapId" | "collateralCoinType"
+	"accountObjectId" | "accountObjectVersion" | "accountObjectDigest"
 >;
 
 export type SdkPerpetualsSLTPOrderInputs = (
@@ -835,13 +860,10 @@ export const perpetualsRegistry = {
 	AdminCapability,
 	BalanceStruct,
 	Branch,
-	ClearingHouse,
 	Coin,
 	Field,
 	Leaf,
 	MarketKey,
-	MarketParams,
-	MarketState,
 	Order,
 	Orderbook,
 	OrderInfo,

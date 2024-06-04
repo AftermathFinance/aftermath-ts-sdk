@@ -151,8 +151,8 @@ export class Helpers {
 	) =>
 		JSON.parse(json, (key, value) => {
 			// handles bigint casting
-			if (typeof value === "string" && /^\d+n$/.test(value)) {
-				return BigInt(value.slice(0, value.length - 1));
+			if (typeof value === "string" && /^-?\d+n$/.test(value)) {
+				return BigInt(value.slice(0, -1));
 			}
 
 			if (
@@ -301,6 +301,18 @@ export class Helpers {
 			value.every((item) => typeof item === "string")
 		);
 	}
+
+	public static isValidType = (str: string): boolean => {
+		// TODO: use regex
+		const trimmedStr = str.trim();
+		return (
+			trimmedStr.startsWith("0x") &&
+			trimmedStr.length >= 9 &&
+			trimmedStr.indexOf("::") >= 3 &&
+			trimmedStr.lastIndexOf("::") >= 6 &&
+			!trimmedStr.endsWith(":")
+		);
+	};
 
 	// =========================================================================
 	//  Sui Object Parsing

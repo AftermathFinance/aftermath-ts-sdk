@@ -36,8 +36,6 @@ import {
 	PoolCoins,
 	EventsInputs,
 	Url,
-	AftermathRouterWrapperAddresses,
-	PoolObject,
 	IndexerDataWithCursorQueryParams,
 	ApiIndexerEventsBody,
 	ObjectId,
@@ -48,9 +46,11 @@ import {
 	CoinGeckoHistoricalTradeData,
 	Timestamp,
 	UniqueId,
+	PoolObject,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
+	PoolFieldsOnChain,
 	PoolTradeEventOnChain,
 	PoolTradeEventOnChainFields,
 	PoolWithdrawEventOnChain,
@@ -63,8 +63,6 @@ import { Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
 import dayjs, { ManipulateType } from "dayjs";
 import { PoolsApiCasting } from "./poolsApiCasting";
-import { RouterPoolTradeTxInputs } from "../../router";
-import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
 import {
 	IndexerEventOnChain,
@@ -79,10 +77,9 @@ import { bcs } from "@mysten/sui/bcs";
  * @packageDocumentation
  */
 /**
- * PoolsApi class that implements RouterSynchronousApiInterface<PoolObject> interface.
  * Provides methods to interact with the Pools API.
  */
-export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
+export class PoolsApi {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -124,7 +121,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	public readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
-		routerWrapper?: AftermathRouterWrapperAddresses;
 	};
 	public readonly objectTypes: {
 		pool: AnyObjectType;
@@ -172,7 +168,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	constructor(private readonly Provider: AftermathApi) {
 		const pools = Provider.addresses.pools;
 		const referralVault = Provider.addresses.referralVault;
-		const routerWrapper = Provider.addresses.router?.aftermath;
 
 		if (!pools || !referralVault)
 			throw new Error(
@@ -182,7 +177,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		this.addresses = {
 			pools,
 			referralVault,
-			routerWrapper,
 		};
 		this.objectTypes = {
 			pool: `${pools.packages.events}::pool::Pool`,
@@ -213,68 +207,54 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param {ObjectId} inputs.objectId - The object ID of the pool to fetch.
 	 * @returns {Promise<PoolObject>} A promise that resolves to the fetched pool object.
 	 */
-	public fetchPool = this.Provider.withCache({
-		key: "fetchPool",
-		expirationSeconds: 10,
-		callback: async (inputs: { objectId: ObjectId }) => {
-			return this.Provider.Objects().fetchCastObject({
-				...inputs,
-				objectFromSuiObjectResponse:
-					Casting.pools.poolObjectFromSuiObject,
-			});
-		},
-	});
+	public fetchPool = async (inputs: {
+		objectId: ObjectId;
+	}): Promise<PoolObject> => {
+		return (await this.fetchPools({ objectIds: [inputs.objectId] }))[0];
+	};
 
-	public fetchPools = this.Provider.withCache({
-		key: "fetchPools",
-		expirationSeconds: 10,
-		callback: async (inputs: { objectIds: ObjectId[] }) => {
-			return this.Provider.Objects().fetchCastObjectBatch({
-				...inputs,
-				objectFromSuiObjectResponse:
-					Casting.pools.poolObjectFromSuiObject,
-			});
-		},
-	});
+	public fetchPools = async (inputs: {
+		objectIds: ObjectId[];
+	}): Promise<PoolObject[]> => {
+		const poolIds = inputs.objectIds.map((objectId) =>
+			Helpers.addLeadingZeroesToType(objectId)
+		);
+		const uncastPools = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				objectId: ObjectId;
+				type: AnyObjectType;
+				content: PoolFieldsOnChain;
+			}[]
+		>("pools", undefined, {
+			pool_ids: poolIds,
+		});
+		const pools = uncastPools.map(PoolsApiCasting.poolObjectFromIndexer);
+		return poolIds.map(
+			(objectId) =>
+				pools.find(
+					(pool) =>
+						pool.objectId ===
+						Helpers.addLeadingZeroesToType(objectId)
+					// TODO: handle this error case better
+				)!
+		);
+	};
 
 	/**
 	 * Fetches all pool objects.
 	 * @async
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
-	public fetchAllPools = this.Provider.withCache({
-		key: "fetchAllPools",
-		expirationSeconds: 10,
-		callback: async (isRouter?: boolean) => {
-			const uncastedPools =
-				await this.Provider.indexerCaller.fetchIndexer<
-					{
-						objectId: ObjectId;
-						type: AnyObjectType;
-						content: any;
-					}[]
-				>("router/pools/af");
-
-			const pools = uncastedPools.map(
-				PoolsApiCasting.poolObjectFromIndexer
-			);
-
-			if (!isRouter) return pools;
-
-			const minSuiBalance = BigInt(1000_000_000_000); // 1000 SUI
-			return pools.filter(
-				(pool) =>
-					!Object.keys(pool.coins).some((coin) =>
-						Coin.isSuiCoin(coin)
-					) ||
-					(Object.keys(pool.coins).some((coin) =>
-						Coin.isSuiCoin(coin)
-					) &&
-						pool.coins[Coin.constants.suiCoinType].balance >=
-							minSuiBalance)
-			);
-		},
-	});
+	public fetchAllPools = async (): Promise<PoolObject[]> => {
+		const uncastPools = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				objectId: ObjectId;
+				type: AnyObjectType;
+				content: PoolFieldsOnChain;
+			}[]
+		>("pools");
+		return uncastPools.map(PoolsApiCasting.poolObjectFromIndexer);
+	};
 
 	// =========================================================================
 	//  Events
@@ -928,59 +908,6 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure.u64(expectedCoinOutAmount.toString()),
 				tx.pure.u64(Pools.normalizeSlippage(slippage)),
-			],
-		});
-	};
-
-	/**
-	 * Wraps a transaction object argument for adding a swap exact in to route on the router wrapper.
-	 * @param inputs - The inputs required for the transaction.
-	 * @param inputs.poolId - The ID of the pool.
-	 * @param inputs.lpCoinType - The type of the LP coin.
-	 * @returns The transaction object argument.
-	 */
-	public routerWrapperTradeTx = (
-		inputs: RouterPoolTradeTxInputs & {
-			poolId: ObjectId;
-			lpCoinType: CoinType;
-		}
-	): TransactionObjectArgument => {
-		if (!this.addresses.routerWrapper)
-			throw new Error(
-				"not all required addresses have been set in provider"
-			);
-
-		const {
-			tx,
-			poolId,
-			coinInId,
-			coinInType,
-			expectedCoinOutAmount,
-			coinOutType,
-			lpCoinType,
-			routerSwapCap,
-		} = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.routerWrapper.packages.wrapper,
-				PoolsApi.constants.moduleNames.routerWrapper,
-				"add_swap_exact_in_to_route"
-			),
-			typeArguments: [
-				inputs.routerSwapCapCoinType,
-				lpCoinType,
-				coinInType,
-				coinOutType,
-			],
-			arguments: [
-				tx.object(this.addresses.routerWrapper.objects.wrapperApp),
-				routerSwapCap,
-
-				tx.object(this.addresses.pools.objects.poolRegistry),
-				tx.object(poolId),
-				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure.u64(expectedCoinOutAmount.toString()),
 			],
 		});
 	};

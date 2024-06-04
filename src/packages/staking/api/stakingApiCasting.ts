@@ -7,6 +7,10 @@ import {
 	StakedEvent,
 	EpochWasChangedEvent,
 	StakedSuiVaultStateObject,
+	ObjectId,
+	SuiAddress,
+	AnyObjectType,
+	IFixedAsString,
 } from "../../../types";
 import {
 	EpochWasChangedEventOnChain,
@@ -14,7 +18,7 @@ import {
 	StakedSuiVaultStateV1FieldsOnChain,
 	UnstakeRequestedEventOnChain,
 	UnstakedEventOnChain,
-	ValidatorConfigFieldsOnChain,
+	ValidatorConfigOnIndexer,
 	ValidatorOperationCapFieldsOnChain,
 } from "./stakingApiCastingTypes";
 import { Helpers } from "../../../general/utils";
@@ -25,29 +29,15 @@ export class StakingApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static validatorConfigObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
+	public static validatorConfigObjectFromIndexer = (
+		data: ValidatorConfigOnIndexer
 	): ValidatorConfigObject => {
-		const objectType = Helpers.getObjectType(data);
-		const allFields = Helpers.getObjectFields(data) as {
-			value: {
-				fields: {
-					value: {
-						fields: ValidatorConfigFieldsOnChain;
-					};
-				};
-			};
-		};
-		const fields = allFields.value.fields.value.fields;
-
 		return {
-			objectType,
-			objectId: Helpers.getObjectId(data),
-			suiAddress: Helpers.addLeadingZeroesToType(fields.sui_address),
-			operationCapId: Helpers.addLeadingZeroesToType(
-				fields.operation_cap_id
-			),
-			fee: FixedUtils.directCast(BigInt(fields.fee)),
+			objectType: Helpers.addLeadingZeroesToType(data.objectType),
+			objectId: Helpers.addLeadingZeroesToType(data.objectId),
+			suiAddress: Helpers.addLeadingZeroesToType(data.suiAddress),
+			operationCapId: Helpers.addLeadingZeroesToType(data.operationCapId),
+			fee: FixedUtils.directCast(BigInt(data.fee)),
 		};
 	};
 

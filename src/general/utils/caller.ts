@@ -32,12 +32,15 @@ export class Caller {
 	// =========================================================================
 
 	private static async fetchResponseToType<OutputType>(
-		response: Response
+		response: Response,
+		disableBigIntJsonParsing: boolean
 	): Promise<OutputType> {
 		if (!response.ok) throw new Error(await response.text());
 
 		const json = JSON.stringify(await response.json());
-		const output = Helpers.parseJsonWithBigint(json);
+		const output = disableBigIntJsonParsing
+			? JSON.parse(json)
+			: Helpers.parseJsonWithBigint(json);
 		return output as OutputType;
 	}
 
@@ -77,12 +80,19 @@ export class Caller {
 	protected async fetchApi<Output, BodyType = undefined>(
 		url: Url,
 		body?: BodyType,
-		signal?: AbortSignal
+		signal?: AbortSignal,
+		options?: {
+			disableBigIntJsonParsing?: boolean;
+		}
 	): Promise<Output> {
-		// this allows BigInt to be JSON serialized (as string)
-		(BigInt.prototype as any).toJSON = function () {
-			return this.toString() + "n";
-		};
+		if (!options?.disableBigIntJsonParsing) {
+			(() => {
+				// this allows BigInt to be JSON serialized (as string)
+				(BigInt.prototype as any).toJSON = function () {
+					return this.toString() + "n";
+				};
+			})();
+		}
 
 		const apiCallUrl = this.urlForApiCall(url);
 
@@ -95,7 +105,8 @@ export class Caller {
 			  }));
 
 		const response = await Caller.fetchResponseToType<Output>(
-			uncastResponse
+			uncastResponse,
+			options?.disableBigIntJsonParsing!!
 		);
 		return response;
 	}
@@ -103,13 +114,17 @@ export class Caller {
 	protected async fetchApiTransaction<BodyType = undefined>(
 		url: Url,
 		body?: BodyType,
-		signal?: AbortSignal
+		signal?: AbortSignal,
+		options?: {
+			disableBigIntJsonParsing?: boolean;
+		}
 	) {
 		return Transaction.from(
 			await this.fetchApi<SerializedTransaction, BodyType>(
 				url,
 				body,
-				signal
+				signal,
+				options
 			)
 		);
 	}
@@ -117,23 +132,35 @@ export class Caller {
 	protected async fetchApiEvents<EventType, BodyType = ApiEventsBody>(
 		url: Url,
 		body: BodyType,
-		signal?: AbortSignal
+		signal?: AbortSignal,
+		options?: {
+			disableBigIntJsonParsing?: boolean;
+		}
 	) {
 		return this.fetchApi<EventsWithCursor<EventType>, BodyType>(
 			url,
 			body,
-			signal
+			signal,
+			options
 		);
 	}
 
 	protected async fetchApiIndexerEvents<
 		EventType,
 		BodyType = ApiIndexerEventsBody
-	>(url: Url, body: BodyType, signal?: AbortSignal) {
+	>(
+		url: Url,
+		body: BodyType,
+		signal?: AbortSignal,
+		options?: {
+			disableBigIntJsonParsing?: boolean;
+		}
+	) {
 		return this.fetchApi<IndexerEventsWithCursor<EventType>, BodyType>(
 			url,
 			body,
-			signal
+			signal,
+			options
 		);
 	}
 }

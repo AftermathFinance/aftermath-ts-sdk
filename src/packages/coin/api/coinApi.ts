@@ -12,6 +12,7 @@ import {
 	CoinType,
 	CoinsToDecimals,
 	ObjectId,
+	ServiceCoinData,
 	SuiAddress,
 } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";

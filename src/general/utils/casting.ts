@@ -4,7 +4,7 @@ import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
-import { Byte, SuiAddress } from "../types";
+import { Byte, IFixed, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
 import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
@@ -83,10 +83,38 @@ export class Casting {
 					.join("")
 		);
 
-	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
+	public static addressFromBcsBytes = (bytes: Byte[]): SuiAddress =>
 		Helpers.addLeadingZeroesToType(
 			bcs.Address.parse(new Uint8Array(bytes))
 		);
+
+	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
+		Helpers.addLeadingZeroesToType(
+			"0x" +
+				bytes
+					.map((byte) => {
+						const hex = byte.toString(16);
+						return hex.length === 1 ? "0" + hex : hex;
+					})
+					.join("")
+		);
+
+	public static addressFromStringBytes = (bytes: string[]): SuiAddress =>
+		this.addressFromBytes(this.bytesFromStringBytes(bytes));
+
+	public static bytesFromStringBytes = (bytes: string[]): Byte[] =>
+		bytes.map((byte) => Number(byte));
+
+	public static unwrapDeserializedOption = (
+		deserializedData: any
+	): any | undefined => {
+		// return "vec" in deserializedData
+		// 	? deserializedData.vec.length > 0
+		// 		? deserializedData.vec[0]
+		// 		: undefined
+		// 	: undefined;
+		return "Some" in deserializedData ? deserializedData.Some : undefined;
+	};
 
 	public static u8VectorFromString = (str: string) => {
 		const textEncode = new TextEncoder();

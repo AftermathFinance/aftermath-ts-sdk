@@ -34,6 +34,9 @@ import {
 	ApiPerpetualsCancelOrdersBody,
 	PerpetualsOrderData,
 	CoinDecimal,
+	Percentage,
+	ObjectVersion,
+	ApiPerpetualsAccountOrderDatasBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -41,8 +44,17 @@ import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
 import { Coin } from "..";
 import { FixedUtils } from "../../general/utils/fixedUtils";
+import { Transaction } from "@mysten/sui/transactions";
 
 export class PerpetualsAccount extends Caller {
+	// =========================================================================
+	//  Private Constants
+	// =========================================================================
+
+	private static readonly constants = {
+		closePositionMarginOfError: 0.1, // 10%
+	};
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -116,8 +128,10 @@ export class PerpetualsAccount extends Caller {
 			"transactions/market-order",
 			{
 				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
+				hasPosition: this.positionForMarketId(inputs) !== undefined,
 			}
 		);
 	}
@@ -127,19 +141,24 @@ export class PerpetualsAccount extends Caller {
 			"transactions/limit-order",
 			{
 				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
+				hasPosition: this.positionForMarketId(inputs) !== undefined,
 			}
 		);
 	}
 
-	public async getPlaceSLTPOrder(inputs: SdkPerpetualsSLTPOrderInputs) {
+	public async getPlaceSLTPOrder(
+		inputs: SdkPerpetualsSLTPOrderInputs
+	): Promise<Transaction> {
 		return this.fetchApiTransaction<ApiPerpetualsSLTPOrderBody>(
 			"transactions/sltp-order",
 			{
 				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
 			}
 		);
 	}
@@ -147,6 +166,9 @@ export class PerpetualsAccount extends Caller {
 	public async getCancelOrderTx(inputs: {
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
 		side: PerpetualsOrderSide;
 		orderId: PerpetualsOrderId;
 		collateral: Balance;
@@ -165,6 +187,9 @@ export class PerpetualsAccount extends Caller {
 		walletAddress: SuiAddress;
 		orderDatas: {
 			marketId: PerpetualsMarketId;
+			marketInitialSharedVersion: ObjectVersion;
+			basePriceFeedId: ObjectId;
+			collateralPriceFeedId: ObjectId;
 			side: PerpetualsOrderSide;
 			orderId: PerpetualsOrderId;
 			collateral: Balance;
@@ -185,9 +210,12 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	public async getClosePositionTx(inputs: {
+		size: bigint;
 		walletAddress: SuiAddress;
-		marketId: PerpetualsMarketId;
-		lotSize: number;
+		market: PerpetualsMarket;
+		orderDatas: PerpetualsOrderData[];
+		indexPrice: number;
+		collateralPrice: number;
 	}) {
 		return this.getPlaceMarketOrderTx(this.closePositionTxInputs(inputs));
 	}
@@ -202,8 +230,23 @@ export class PerpetualsAccount extends Caller {
 			"accountId" | "collateralCoinType" | "accountCapId"
 		>,
 		abortSignal?: AbortSignal
-	) {
-		return this.fetchApi<
+	): Promise<
+		| {
+				error: string;
+		  }
+		| {
+				positionAfterOrder: PerpetualsPosition;
+				priceSlippage: number;
+				percentSlippage: Percentage;
+				filledSize: number;
+				filledSizeUsd: number;
+				postedSize: number;
+				postedSizeUsd: number;
+				collateralChange: Balance;
+				executionPrice: number;
+		  }
+	> {
+		const response = await this.fetchApi<
 			ApiPerpetualsPreviewOrderResponse,
 			ApiPerpetualsPreviewOrderBody
 		>(
@@ -212,15 +255,48 @@ export class PerpetualsAccount extends Caller {
 				...inputs,
 				accountId: this.accountCap.accountId,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
 			},
 			abortSignal
 		);
+
+		if ("error" in response) return response;
+
+		const { collateralChange, ...remainingResponse } = response;
+		return {
+			...remainingResponse,
+			collateralChange: Coin.normalizeBalance(
+				collateralChange,
+				this.collateralDecimals()
+			),
+		};
 	}
 
 	public getOrderDatas() {
-		return this.fetchApi<PerpetualsOrderData[]>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`
+		const orderDatas = this.account.positions.reduce(
+			(acc, position) => [
+				...acc,
+				...position.pendingOrders.map((order) => ({
+					orderId: order.orderId,
+					marketId: position.marketId,
+					currentSize: order.size,
+				})),
+			],
+			[] as {
+				orderId: PerpetualsOrderId;
+				marketId: PerpetualsMarketId;
+				currentSize: bigint;
+			}[]
+		);
+		if (orderDatas.length <= 0) return [] as PerpetualsOrderData[];
+
+		return this.fetchApi<
+			PerpetualsOrderData[],
+			ApiPerpetualsAccountOrderDatasBody
+		>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`,
+			{
+				orderDatas,
+			}
 		);
 	}
 
@@ -568,31 +644,83 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public closePositionTxInputs = (inputs: {
+		size: bigint;
 		walletAddress: SuiAddress;
-		marketId: PerpetualsMarketId;
-		lotSize: number;
+		market: PerpetualsMarket;
+		orderDatas: PerpetualsOrderData[];
+		indexPrice: number;
+		collateralPrice: number;
 	}): SdkPerpetualsMarketOrderInputs => {
-		const marketId = inputs.marketId;
+		const { size, market, walletAddress, orderDatas, collateralPrice } =
+			inputs;
+
+		const marketId = market.marketId;
 		const position =
 			this.positionForMarketId({ marketId }) ??
 			this.emptyPosition({ marketId });
 
-		const side = Perpetuals.positionSide(position);
+		// TODO: move conversion to helper function, since used often
+		const ordersCollateral = Coin.normalizeBalance(
+			Helpers.sum(
+				orderDatas
+					.filter(
+						(orderData) => orderData.marketId === market.marketId
+					)
+					.map(
+						(orderData) =>
+							market.calcCollateralUsedForOrder({
+								...inputs,
+								orderData,
+							}).collateral
+					)
+			),
+			this.collateralDecimals()
+		);
+
+		const fullPositionCollateralChange =
+			Helpers.maxBigInt(
+				BigInt(
+					Math.floor(
+						Number(
+							Coin.normalizeBalance(
+								this.calcFreeMarginUsdForPosition(inputs) *
+									collateralPrice,
+								this.collateralDecimals()
+							) - ordersCollateral
+						) *
+							(1 -
+								PerpetualsAccount.constants
+									.closePositionMarginOfError)
+					)
+				),
+				BigInt(0)
+			) * BigInt(-1);
+		const positionSize = BigInt(
+			Math.round(
+				Math.abs(
+					Casting.IFixed.numberFromIFixed(position.baseAssetAmount) /
+						market.lotSize()
+				)
+			)
+		);
+		const collateralChange = BigInt(
+			Math.round(
+				Number(fullPositionCollateralChange) *
+					(Number(size) / Number(positionSize))
+			)
+		);
+
+		const positionSide = Perpetuals.positionSide(position);
 		return {
-			...inputs,
+			size,
+			marketId,
+			walletAddress,
+			collateralChange,
 			side:
-				side === PerpetualsOrderSide.Bid
+				positionSide === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
-			size: BigInt(
-				Math.round(
-					Casting.IFixed.numberFromIFixed(
-						Casting.IFixed.abs(position.baseAssetAmount)
-					) / inputs.lotSize
-				)
-			),
-			hasPosition: true,
-			collateralChange: position.collateral * BigInt(-1),
+			hasPosition: this.positionForMarketId({ marketId }) !== undefined,
 		};
 	};
 
@@ -610,7 +738,7 @@ export class PerpetualsAccount extends Caller {
 			cumFundingRateShort: BigInt(0),
 			asksQuantity: BigInt(0),
 			bidsQuantity: BigInt(0),
-			pendingOrders: BigInt(0),
+			pendingOrders: [],
 			makerFee: BigInt(1000000000000000000), // 100%
 			takerFee: BigInt(1000000000000000000), // 100%
 		};

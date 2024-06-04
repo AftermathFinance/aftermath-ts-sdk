@@ -87,11 +87,11 @@ export class PoolsApiCasting {
 	public static poolObjectFromIndexer = (data: {
 		objectId: ObjectId;
 		type: AnyObjectType;
-		content: any;
+		content: PoolFieldsOnChain;
 	}): PoolObject => {
 		const objectType = Helpers.addLeadingZeroesToType(data.type);
 
-		const poolFieldsOnChain = data.content as PoolFieldsOnChain;
+		const poolFieldsOnChain = data.content;
 
 		const lpCoinType = Helpers.addLeadingZeroesToType(
 			new Coin(poolFieldsOnChain.lp_supply.type).innerCoinType

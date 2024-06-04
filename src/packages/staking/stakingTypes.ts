@@ -1,4 +1,4 @@
-import { CoinType, RouterSerializablePool } from "../..";
+import { CoinType } from "../..";
 import {
 	ApiEventsBody,
 	Balance,
@@ -241,15 +241,4 @@ export type AfSuiRouterPoolObject = StakedSuiVaultStateObject & {
 	afSuiCoinType: CoinType;
 	aftermathValidatorAddress: SuiAddress;
 	afSuiToSuiExchangeRate: number;
-};
-
-export const isAfSuiRouterPoolObject = (
-	pool: RouterSerializablePool
-): pool is AfSuiRouterPoolObject => {
-	return (
-		"afSuiCoinType" in pool &&
-		"aftermathValidatorAddress" in pool &&
-		"afSuiToSuiExchangeRate" in pool &&
-		"totalSuiAmount" in pool
-	);
 };
