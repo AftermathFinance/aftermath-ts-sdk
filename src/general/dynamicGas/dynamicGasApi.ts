@@ -41,26 +41,28 @@ export class DynamicGasApi {
 		const { tx, gasCoinType, walletAddress } = inputs;
 
 		// TODO: handle all split cases
-		const gasSplitMoveCall = tx.blockData.transactions.find(
+		const gasSplitMoveCall = tx.getData().commands.find(
 			(command) =>
-				command.kind === "MoveCall" &&
-				command.target ===
-					Helpers.transactions.createTxTarget(
-						// Sui.constants.addresses.suiPackageId,
-						"0x2",
-						"coin",
-						"split"
+				command.$kind === "MoveCall" &&
+				command.MoveCall.package ===
+					Helpers.addLeadingZeroesToType(
+						// Sui.constants.addresses.suiPackageId
+						"0x2"
 					) &&
-				command.typeArguments.length > 0 &&
-				Helpers.addLeadingZeroesToType(command.typeArguments[0]) ===
-					Helpers.addLeadingZeroesToType(gasCoinType)
+				command.MoveCall.module === "coin" &&
+				command.MoveCall.function === "split" &&
+				command.MoveCall.typeArguments.length > 0 &&
+				Helpers.addLeadingZeroesToType(
+					command.MoveCall.typeArguments[0]
+				) === Helpers.addLeadingZeroesToType(gasCoinType)
 		);
 
 		const gasCoin: ServiceCoinData = await (async () => {
 			if (
 				!gasSplitMoveCall ||
 				!("arguments" in gasSplitMoveCall) ||
-				gasSplitMoveCall.arguments[0].kind === "GasCoin"
+				(gasSplitMoveCall.MoveCall?.arguments &&
+					gasSplitMoveCall.MoveCall.arguments[0].$kind === "GasCoin")
 			) {
 				const allCoins = await this.Provider.Coin().fetchAllCoins({
 					walletAddress,
@@ -85,7 +87,7 @@ export class DynamicGasApi {
 				});
 			}
 
-			const gasCoinArg = gasSplitMoveCall.arguments[0];
+			const gasCoinArg = gasSplitMoveCall.MoveCall!.arguments[0];
 			return Helpers.transactions.serviceCoinDataFromCoinTxArg({
 				coinTxArg: gasCoinArg,
 			});

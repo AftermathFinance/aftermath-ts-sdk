@@ -698,28 +698,23 @@ export class RouterApi {
 		const { initTx, newTx } = inputs;
 		// MERGE
 
-		if (initTx.blockData.sender) newTx.setSender(initTx.blockData.sender);
+		const sender = initTx.getData().sender;
+		if (sender) newTx.setSender(sender);
 
-		if (initTx.blockData.expiration)
-			newTx.setExpiration(initTx.blockData.expiration);
+		const expiration = initTx.getData().expiration;
+		if (expiration) newTx.setExpiration(expiration);
 
-		if (
-			initTx.blockData.gasConfig.budget &&
-			typeof initTx.blockData.gasConfig.budget !== "string"
-		)
-			newTx.setGasBudget(initTx.blockData.gasConfig.budget);
+		const gasData = initTx.getData().gasData;
 
-		if (initTx.blockData.gasConfig.owner)
-			newTx.setGasOwner(initTx.blockData.gasConfig.owner);
+		if (gasData.budget && typeof gasData.budget !== "string")
+			newTx.setGasBudget(gasData.budget);
 
-		if (initTx.blockData.gasConfig.payment)
-			newTx.setGasPayment(initTx.blockData.gasConfig.payment);
+		if (gasData.owner) newTx.setGasOwner(gasData.owner);
 
-		if (
-			initTx.blockData.gasConfig.price &&
-			typeof initTx.blockData.gasConfig.price !== "string"
-		)
-			newTx.setGasPrice(initTx.blockData.gasConfig.price);
+		if (gasData.payment) newTx.setGasPayment(gasData.payment);
+
+		if (gasData.price && typeof gasData.price !== "string")
+			newTx.setGasPrice(gasData.price);
 	};
 
 	// =========================================================================
