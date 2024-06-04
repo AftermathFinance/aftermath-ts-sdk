@@ -1,7 +1,4 @@
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
 import {
 	Balance,
 	CoinType,
@@ -12,7 +9,7 @@ import {
 	TransactionsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/client";
+import { SuiTransactionBlockResponseQuery } from "@mysten/sui/client";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -57,8 +54,8 @@ export class TransactionsApiHelpers {
 	};
 
 	public fetchSetGasBudgetForTx = async (inputs: {
-		tx: TransactionBlock;
-	}): Promise<TransactionBlock> => {
+		tx: Transaction;
+	}): Promise<Transaction> => {
 		const { tx } = inputs;
 
 		const [txResponse, referenceGasPrice] = await Promise.all([
@@ -82,7 +79,7 @@ export class TransactionsApiHelpers {
 	};
 
 	public fetchSetGasBudgetAndSerializeTx = async (inputs: {
-		tx: TransactionBlock | Promise<TransactionBlock>;
+		tx: Transaction | Promise<Transaction>;
 		isSponsoredTx?: boolean;
 	}): Promise<SerializedTransaction> => {
 		const { tx, isSponsoredTx } = inputs;
@@ -109,24 +106,19 @@ export class TransactionsApiHelpers {
 	): `${string}::${string}::${string}` =>
 		`${packageAddress}::${packageName}::${functionName}`;
 
-	public static createOptionObject = <InnerType>(
-		inner: InnerType | undefined
-	): { None: true } | { Some: InnerType } =>
-		inner === undefined ? { None: true } : { Some: inner };
-
 	public static createBuildTxFunc = <Inputs>(
 		func: (inputs: Inputs) => TransactionArgument
 	): ((
 		inputs: {
 			walletAddress: SuiAddress;
 		} & Omit<Inputs, "tx">
-	) => TransactionBlock) => {
+	) => Transaction) => {
 		const builderFunc = (
 			someInputs: {
 				walletAddress: SuiAddress;
 			} & Omit<Inputs, "tx">
 		) => {
-			const tx = new TransactionBlock();
+			const tx = new Transaction();
 			tx.setSender(someInputs.walletAddress);
 
 			func({
@@ -141,11 +133,11 @@ export class TransactionsApiHelpers {
 	};
 
 	public static splitCoinTx(inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinType: CoinType;
 		// coinId: TransactionArgument | ObjectId;
 		coinId: ObjectId;
-		amount: TransactionArgument | Balance;
+		amount: Balance;
 	}) {
 		const { tx, coinType, coinId, amount } = inputs;
 		return tx.moveCall({
@@ -158,13 +150,13 @@ export class TransactionsApiHelpers {
 			typeArguments: [coinType],
 			arguments: [
 				typeof coinId === "string" ? tx.object(coinId) : coinId, // Coin,
-				tx.pure(amount, "u64"), // split_amount
+				tx.pure.u64(amount), // split_amount
 			],
 		});
 	}
 
 	// public static mergeCoinsTx(inputs: {
-	// 	tx: TransactionBlock;
+	// 	tx: Transaction;
 	// 	coinType: CoinType;
 	// 	destinationCoinId: TransactionArgument | string;
 	// 	sources: TransactionArgument[] | ObjectId[];

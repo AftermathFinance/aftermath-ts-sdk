@@ -1,4 +1,4 @@
-import { bcs } from "@mysten/sui.js/bcs";
+import { BcsType, bcs } from "@mysten/sui/bcs";
 import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
@@ -6,15 +6,14 @@ import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
 import { Byte, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
-import { bcsRegistry } from "@mysten/sui.js/bcs";
 import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
 import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
 import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
 import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/leveragedStakingApiCasting";
-import { CoinsToBalance, Helpers } from "../..";
-import { BcsTypeName, IndexerSwapVolumeResponse } from "../types/castingTypes";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { Helpers } from "../..";
+import { BcsTypeName } from "../types/castingTypes";
+import { SuiObjectResponse } from "@mysten/sui/client";
 import { NftsApiCasting } from "../nfts/nftsApiCasting";
 
 /**
@@ -86,18 +85,8 @@ export class Casting {
 
 	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
 		Helpers.addLeadingZeroesToType(
-			"0x" + bcs.de("address", new Uint8Array(bytes))
+			bcs.Address.parse(new Uint8Array(bytes))
 		);
-
-	public static unwrapDeserializedOption = (
-		deserializedData: any
-	): any | undefined => {
-		return "vec" in deserializedData
-			? deserializedData.vec.length > 0
-				? deserializedData.vec[0]
-				: undefined
-			: undefined;
-	};
 
 	public static u8VectorFromString = (str: string) => {
 		const textEncode = new TextEncoder();
@@ -114,19 +103,17 @@ export class Casting {
 		return slippageTolerance / 100;
 	};
 
-	public static castObjectBcs = <T>(inputs: {
+	public static castObjectBcs = <T, U>(inputs: {
 		suiObjectResponse: SuiObjectResponse;
-		typeName: BcsTypeName;
+		bcsType: BcsType<U>;
 		fromDeserialized: (deserialized: any) => T;
-		bcs: typeof bcsRegistry;
 	}): T => {
-		const { suiObjectResponse, typeName, fromDeserialized } = inputs;
+		const { suiObjectResponse, bcsType, fromDeserialized } = inputs;
 
-		const deserialized = inputs.bcs.de(
-			typeName,
-			this.bcsBytesFromSuiObjectResponse(suiObjectResponse),
-			"base64"
+		const deserialized = bcsType.fromBase64(
+			this.bcsBytesFromSuiObjectResponse(suiObjectResponse)
 		);
+
 		return fromDeserialized(deserialized);
 	};
 

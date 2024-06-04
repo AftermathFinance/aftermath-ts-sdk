@@ -37,7 +37,7 @@ import {
 	isFlowXPoolObject,
 } from "../external/flowX/flowXTypes";
 import { AfSuiRouterPoolObject, DynamicGasCoinData } from "../..";
-import { TransactionArgument } from "@mysten/sui.js/transactions";
+import { TransactionArgument } from "@mysten/sui/transactions";
 
 // =========================================================================
 //  Name Only

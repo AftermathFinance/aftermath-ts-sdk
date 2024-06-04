@@ -6,11 +6,8 @@ import {
 	DeepBookPriceRange,
 	PartialDeepBookPoolObject,
 } from "./deepBookTypes";
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
-import { bcs } from "@mysten/sui.js/bcs";
+import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import { bcs } from "@mysten/sui/bcs";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { EventOnChain } from "../../../general/types/castingTypes";
 import { Sui } from "../../sui";
@@ -288,7 +285,7 @@ export class DeepBookApi
 			...inputs,
 			Provider: this.Provider,
 			devInspectTx: (txInputs: {
-				tx: TransactionBlock;
+				tx: Transaction;
 				coinInBytes: Uint8Array;
 				routerSwapCapBytes: Uint8Array;
 			}) => {
@@ -344,7 +341,7 @@ export class DeepBookApi
 				tx.object(inputs.poolObjectId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(inputs.lotSize, "u64"), // lot_size
+				tx.pure.u64(inputs.lotSize), // lot_size
 			],
 		});
 	};
@@ -379,7 +376,7 @@ export class DeepBookApi
 	};
 
 	public getAsksTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolObjectId: ObjectId;
 		baseCoinType: CoinType;
 		quoteCoinType: CoinType;
@@ -394,15 +391,15 @@ export class DeepBookApi
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.pure(BigInt(0).toString(), "u64"), // price_low
-				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // price_high
+				tx.pure.u64(BigInt(0).toString()), // price_low
+				tx.pure.u64(Casting.u64MaxBigInt.toString()), // price_high
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
 	};
 
 	public getBidsTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolObjectId: ObjectId;
 		baseCoinType: CoinType;
 		quoteCoinType: CoinType;
@@ -417,8 +414,8 @@ export class DeepBookApi
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.pure(BigInt(0).toString(), "u64"), // price_low
-				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // price_high
+				tx.pure.u64(BigInt(0).toString()), // price_low
+				tx.pure.u64(Casting.u64MaxBigInt.toString()), // price_high
 				tx.object(Sui.constants.addresses.suiClockId),
 			],
 		});
@@ -429,7 +426,7 @@ export class DeepBookApi
 	// =========================================================================
 
 	public createPoolTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		tickSize: bigint;
 		lotSize: bigint;
 		suiFeeCoinId: ObjectId | TransactionArgument;
@@ -445,8 +442,8 @@ export class DeepBookApi
 			),
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
 			arguments: [
-				tx.pure(inputs.tickSize, "u64"),
-				tx.pure(inputs.lotSize, "u64"),
+				tx.pure.u64(inputs.tickSize),
+				tx.pure.u64(inputs.lotSize),
 				typeof suiFeeCoinId === "string"
 					? tx.object(suiFeeCoinId)
 					: suiFeeCoinId,
@@ -454,9 +451,7 @@ export class DeepBookApi
 		});
 	};
 
-	public createAccountTx = (inputs: {
-		tx: TransactionBlock;
-	}) /* AccountCap */ => {
+	public createAccountTx = (inputs: { tx: Transaction }) /* AccountCap */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
@@ -470,7 +465,7 @@ export class DeepBookApi
 	};
 
 	public depositBaseTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolObjectId: ObjectId;
 		baseCoinId: ObjectId | TransactionArgument;
 		accountCapId: ObjectId | TransactionArgument;
@@ -498,7 +493,7 @@ export class DeepBookApi
 	};
 
 	public depositQuoteTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolObjectId: ObjectId;
 		quoteCoinId: ObjectId | TransactionArgument;
 		accountCapId: ObjectId | TransactionArgument;
@@ -526,7 +521,7 @@ export class DeepBookApi
 	};
 
 	public placeLimitOrderTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolObjectId: ObjectId;
 		accountCapId: ObjectId | TransactionArgument;
 		price: bigint;
@@ -545,11 +540,11 @@ export class DeepBookApi
 			typeArguments: [inputs.baseCoinType, inputs.quoteCoinType],
 			arguments: [
 				tx.object(inputs.poolObjectId),
-				tx.pure(inputs.price, "u64"),
-				tx.pure(inputs.quantity, "u64"),
-				tx.pure(inputs.isBidOrder, "bool"),
-				tx.pure(Casting.u64MaxBigInt.toString(), "u64"), // expire_timestamp
-				tx.pure(3, "u8"), // restriction (0 = NO_RESTRICTION, 1 = IMMEDIATE_OR_CANCEL, 2 = FILL_OR_KILL, 3 = POST_OR_ABORT)
+				tx.pure.u64(inputs.price),
+				tx.pure.u64(inputs.quantity),
+				tx.pure.bool(inputs.isBidOrder),
+				tx.pure.u64(Casting.u64MaxBigInt.toString()), // expire_timestamp
+				tx.pure.u8(3), // restriction (0 = NO_RESTRICTION, 1 = IMMEDIATE_OR_CANCEL, 2 = FILL_OR_KILL, 3 = POST_OR_ABORT)
 				tx.object(Sui.constants.addresses.suiClockId),
 				typeof accountCapId === "string"
 					? tx.object(accountCapId)
@@ -586,7 +581,7 @@ export class DeepBookApi
 	};
 
 	public getBookPricesAndDepthsTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		pool: PartialDeepBookPoolObject;
 		coinInType: CoinType;
 		coinOutType: CoinType;
@@ -619,7 +614,7 @@ export class DeepBookApi
 		coinInType: CoinType;
 		coinOutType: CoinType;
 	}): Promise<DeepBookPriceRange[]> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		this.getBookPricesAndDepthsTx({
 			...inputs,
 			tx,
@@ -639,11 +634,11 @@ export class DeepBookApi
 		}
 
 		const bookPricesU64 = (
-			bcs.de("vector<u64>", new Uint8Array(prices)) as string[]
+			bcs.vector(bcs.u64()).parse(new Uint8Array(prices)) as string[]
 		).map((val) => BigInt(val));
 
 		const bookDepths = (
-			bcs.de("vector<u64>", new Uint8Array(depths)) as string[]
+			bcs.vector(bcs.u64()).parse(new Uint8Array(depths)) as string[]
 		).map((val) => BigInt(val));
 
 		// TOOD: move decimal to constants
@@ -678,13 +673,13 @@ export class DeepBookApi
 
 	public buildCreateAccountTx = (inputs: {
 		walletAddress: SuiAddress;
-	}): TransactionBlock => {
-		const tx = new TransactionBlock();
+	}): Transaction => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const [accountCap] = this.createAccountTx({ tx });
 
-		tx.transferObjects([accountCap], tx.pure(inputs.walletAddress));
+		tx.transferObjects([accountCap], inputs.walletAddress);
 
 		return tx;
 	};
@@ -694,8 +689,8 @@ export class DeepBookApi
 		pool: PartialDeepBookPoolObject;
 		baseCoinAmount: Balance;
 		quoteCoinAmount: Balance;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
+	}): Promise<Transaction> => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const accountCapId = await this.fetchOwnedAccountCapObjectId(inputs);
@@ -734,8 +729,8 @@ export class DeepBookApi
 		price: bigint;
 		quantity: Balance;
 		isBidOrder: boolean;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
+	}): Promise<Transaction> => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const accountCapId = await this.fetchOwnedAccountCapObjectId(inputs);
@@ -760,8 +755,8 @@ export class DeepBookApi
 		quoteCoinType: CoinType;
 		tickSize: bigint;
 		lotSize: bigint;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
+	}): Promise<Transaction> => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const suiFeeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
@@ -791,7 +786,7 @@ export class DeepBookApi
 	// =========================================================================
 
 	private tradeBaseToQuoteDevInspectTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		routerSwapCapCoinType: CoinType;
@@ -820,13 +815,13 @@ export class DeepBookApi
 				tx.object(inputs.poolObjectId),
 				tx.pure(inputs.coinInBytes),
 				tx.object(Sui.constants.addresses.suiClockId),
-				tx.pure(inputs.lotSize, "u64"), // lot_size
+				tx.pure.u64(inputs.lotSize), // lot_size
 			],
 		});
 	};
 
 	private tradeQuoteToBaseDevInspectTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinInType: CoinType;
 		coinOutType: CoinType;
 		routerSwapCapCoinType: CoinType;

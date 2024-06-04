@@ -1,7 +1,7 @@
 import { Helpers } from "../utils/helpers";
 import { AftermathApi } from "../providers/aftermathApi";
 import { CoinType } from "../../packages/coin/coinTypes";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 import {
 	ApiDynamicGasResponse,
 	DynamicGasAddresses,
@@ -9,7 +9,6 @@ import {
 	SuiAddress,
 	TxBytes,
 } from "../types";
-import { SerializedSignature } from "@mysten/sui.js/cryptography";
 
 export class DynamicGasApi {
 	// =========================================================================
@@ -36,7 +35,7 @@ export class DynamicGasApi {
 	// =========================================================================
 
 	public fetchUseDynamicGasForTx = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		gasCoinType: CoinType;
 	}): Promise<ApiDynamicGasResponse> => {
@@ -84,7 +83,7 @@ export class DynamicGasApi {
 					coinIds.slice(1).map((coinId) => tx.object(coinId))
 				);
 
-				return { [mergedCoinArg.kind]: mergedCoinArg.index };
+				return { [mergedCoinArg.$kind]: mergedCoinArg.Input };
 			}
 
 			const gasCoinArg = gasSplitMoveCall.arguments[0];
@@ -119,7 +118,7 @@ export class DynamicGasApi {
 
 		const res: {
 			tx_data: string;
-			signature: SerializedSignature;
+			signature: string;
 		} = await this.Provider.indexerCaller.fetchIndexer(
 			"dynamic-gas/apply",
 			body,

@@ -19,7 +19,7 @@ import {
 	StakedSuiVaultStateObject,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui.js/client";
+import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui/client";
 import { Casting } from "../../general/utils";
 import { AftermathApi } from "../../general/providers";
 

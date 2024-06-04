@@ -22,7 +22,7 @@ import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
 import { Pools } from ".";
 import { Casting, Helpers } from "../../general/utils";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 import { Coin } from "..";
 import { AftermathApi } from "../../general/providers";
 
@@ -115,11 +115,11 @@ export class Pool extends Caller {
 	 * Fetches the deposit transaction for the pool.
 	 * @async
 	 * @param {ApiPoolDepositBody} inputs - The inputs for the method.
-	 * @returns {Promise<TransactionBlock>} The deposit transaction for the pool.
+	 * @returns {Promise<Transaction>} The deposit transaction for the pool.
 	 */
 	public async getDepositTransaction(
 		inputs: ApiPoolDepositBody
-	): Promise<TransactionBlock> {
+	): Promise<Transaction> {
 		return this.useProvider().fetchBuildDepositTx({
 			...inputs,
 			pool: this,
@@ -130,11 +130,11 @@ export class Pool extends Caller {
 	 * Fetches the withdraw transaction for the pool.
 	 * @async
 	 * @param {ApiPoolWithdrawBody} inputs - The inputs for the method.
-	 * @returns {Promise<TransactionBlock>} The withdraw transaction for the pool.
+	 * @returns {Promise<Transaction>} The withdraw transaction for the pool.
 	 */
 	public async getWithdrawTransaction(
 		inputs: ApiPoolWithdrawBody
-	): Promise<TransactionBlock> {
+	): Promise<Transaction> {
 		return this.useProvider().fetchBuildWithdrawTx({
 			...inputs,
 			pool: this,
@@ -145,11 +145,11 @@ export class Pool extends Caller {
 	 * Fetches the all coin withdraw transaction for the pool.
 	 * @async
 	 * @param {ApiPoolAllCoinWithdrawBody} inputs - The inputs for the method.
-	 * @returns {Promise<TransactionBlock>} The all coin withdraw transaction for the pool.
+	 * @returns {Promise<Transaction>} The all coin withdraw transaction for the pool.
 	 */
 	public async getAllCoinWithdrawTransaction(
 		inputs: ApiPoolAllCoinWithdrawBody
-	): Promise<TransactionBlock> {
+	): Promise<Transaction> {
 		return this.useProvider().fetchBuildAllCoinWithdrawTx({
 			...inputs,
 			pool: this,
@@ -160,11 +160,11 @@ export class Pool extends Caller {
 	 * Fetches the trade transaction for the pool.
 	 * @async
 	 * @param {ApiPoolTradeBody} inputs - The inputs for the method.
-	 * @returns {Promise<TransactionBlock>} The trade transaction for the pool.
+	 * @returns {Promise<Transaction>} The trade transaction for the pool.
 	 */
 	public async getTradeTransaction(
 		inputs: ApiPoolTradeBody
-	): Promise<TransactionBlock> {
+	): Promise<Transaction> {
 		return this.useProvider().fetchBuildTradeTx({
 			...inputs,
 			pool: this,

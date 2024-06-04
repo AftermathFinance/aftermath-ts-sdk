@@ -1,8 +1,8 @@
 import {
 	TransactionObjectArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
-import { fromB64, normalizeSuiObjectId } from "@mysten/sui.js/utils";
+	Transaction,
+} from "@mysten/sui/transactions";
+import { fromB64, normalizeSuiObjectId } from "@mysten/sui/utils";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinDecimal,
@@ -72,6 +72,7 @@ import {
 } from "../../../general/types/castingTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { bcs } from "@mysten/sui/bcs";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
@@ -403,7 +404,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param {boolean} inputs.respectDecimals - Whether to respect decimals.
 	 * @param {CoinDecimal} [inputs.forceLpDecimals] - The decimal places to force for the LP token.
 	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
-	 * @returns {Promise<TransactionBlock>} A promise that resolves to the fetched transaction block.
+	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
 	 */
 	public fetchCreatePoolTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -425,7 +426,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		forceLpDecimals?: CoinDecimal;
 		isSponsoredTx?: boolean;
 		burnLpCoin?: boolean;
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
 			...inputs,
@@ -472,7 +473,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param {Slippage} inputs.slippage - The slippage of the trade.
 	 * @param {SuiAddress} [inputs.referrer] - The referrer of the trade.
 	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
-	 * @returns {Promise<TransactionBlock>} A promise that resolves to the fetched transaction block.
+	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
 	 */
 	public fetchBuildTradeTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -483,7 +484,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		slippage: Slippage;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		const {
 			walletAddress,
 			pool,
@@ -495,7 +496,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			isSponsoredTx,
 		} = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
 		if (referrer)
@@ -535,7 +536,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	};
 
 	public fetchAddTradeTx = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinInId: ObjectId | TransactionObjectArgument;
 		coinInType: CoinType;
 		coinInAmount: Balance;
@@ -583,7 +584,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param {Slippage} inputs.slippage - The slippage of the deposit.
 	 * @param {SuiAddress} [inputs.referrer] - The referrer of the deposit.
 	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
-	 * @returns {Promise<TransactionBlock>} A promise that resolves to the fetched transaction block.
+	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
 	 */
 	public fetchBuildDepositTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -592,7 +593,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		slippage: Slippage;
 		referrer?: SuiAddress;
 		isSponsoredTx?: boolean;
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		const {
 			walletAddress,
 			pool,
@@ -602,7 +603,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			isSponsoredTx,
 		} = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
 		if (referrer)
@@ -653,7 +654,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @param {Balance} inputs.lpCoinAmount - The amount of LP tokens being withdrawn.
 	 * @param {Slippage} inputs.slippage - The slippage of the withdrawal.
 	 * @param {SuiAddress} [inputs.referrer] - The referrer of the withdrawal.
-	 * @returns {Promise<TransactionBlock>} A promise that resolves to the fetched transaction block.
+	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
 	 */
 	public fetchBuildWithdrawTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -662,7 +663,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		lpCoinAmount: Balance;
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		const {
 			walletAddress,
 			pool,
@@ -672,7 +673,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			referrer,
 		} = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
 		if (referrer)
@@ -718,17 +719,17 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	/**
 	 * Fetches a transaction block that withdraws all coins from a pool in exchange for the corresponding LP tokens.
 	 * @param inputs An object containing the wallet address, pool, LP coin amount, and optional referrer.
-	 * @returns A promise that resolves to a TransactionBlock object.
+	 * @returns A promise that resolves to a Transaction object.
 	 */
 	public fetchBuildAllCoinWithdrawTx = async (inputs: {
 		walletAddress: SuiAddress;
 		pool: Pool;
 		lpCoinAmount: Balance;
 		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		const { walletAddress, pool, lpCoinAmount, referrer } = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
 		if (referrer)
@@ -765,14 +766,14 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 */
 	public buildPublishLpCoinTx = (
 		inputs: ApiPublishLpCoinBody
-	): TransactionBlock => {
+	): Transaction => {
 		const { lpCoinDecimals } = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const upgradeCap = this.publishLpCoinTx({ tx, lpCoinDecimals });
-		tx.transferObjects([upgradeCap], tx.pure(inputs.walletAddress));
+		tx.transferObjects([upgradeCap], inputs.walletAddress);
 
 		return tx;
 	};
@@ -780,7 +781,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	/**
 	 * Fetches and builds a transaction for creating a new liquidity pool.
 	 * @param inputs An object containing the necessary inputs for creating the pool.
-	 * @returns A Promise that resolves to a TransactionBlock object representing the built transaction.
+	 * @returns A Promise that resolves to a Transaction object representing the built transaction.
 	 */
 	private fetchBuildCreatePoolTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -795,10 +796,10 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		lpCoinIconUrl: Url;
 		isSponsoredTx?: boolean;
 		burnLpCoin?: boolean;
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		const { coinsInfo, isSponsoredTx, burnLpCoin, lpCoinType } = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		// TODO: make this fetching work
@@ -884,7 +885,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @returns A `TransactionObjectArgument` representing the trade transaction.
 	 */
 	public tradeTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolId: ObjectId;
 		coinInId: ObjectId | TransactionObjectArgument;
 		coinInType: CoinType;
@@ -906,8 +907,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 			withTransfer,
 		} = inputs;
 
-		return tx.add({
-			kind: "MoveCall",
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
@@ -926,8 +926,8 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedCoinOutAmount.toString()),
-				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure.u64(expectedCoinOutAmount.toString()),
+				tx.pure.u64(Pools.normalizeSlippage(slippage)),
 			],
 		});
 	};
@@ -980,7 +980,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.object(poolId),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
-				tx.pure(expectedCoinOutAmount.toString(), "u64"),
+				tx.pure.u64(expectedCoinOutAmount.toString()),
 			],
 		});
 	};
@@ -992,7 +992,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @returns A transaction object argument representing the deposit transaction.
 	 */
 	public multiCoinDepositTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolId: ObjectId;
 		coinIds: ObjectId[] | TransactionObjectArgument[];
 		coinTypes: CoinType[];
@@ -1014,8 +1014,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 		const poolSize = coinTypes.length;
 
-		return tx.add({
-			kind: "MoveCall",
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
@@ -1036,8 +1035,8 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				...coinIds.map((coinId) =>
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
-				tx.pure(expectedLpRatio.toString()),
-				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure.u128(expectedLpRatio.toString()),
+				tx.pure.u64(Pools.normalizeSlippage(slippage)),
 			],
 		});
 	};
@@ -1048,7 +1047,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @returns A TransactionObjectArgument representing the transaction.
 	 */
 	public multiCoinWithdrawTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolId: ObjectId;
 		lpCoinId: ObjectId | TransactionObjectArgument;
 		lpCoinType: CoinType;
@@ -1070,8 +1069,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 		const poolSize = coinTypes.length;
 
-		return tx.add({
-			kind: "MoveCall",
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
@@ -1091,8 +1089,16 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 				tx.object(this.addresses.pools.objects.insuranceFund),
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
-				tx.pure(expectedAmountsOut.map((amount) => amount.toString())),
-				tx.pure(Pools.normalizeSlippage(slippage)),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(
+							expectedAmountsOut.map((amount) =>
+								amount.toString()
+							)
+						)
+				),
+				tx.pure.u64(Pools.normalizeSlippage(slippage)),
 			],
 		});
 	};
@@ -1109,7 +1115,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @returns An array of transaction objects.
 	 */
 	public allCoinWithdrawTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		poolId: ObjectId;
 		lpCoinId: ObjectId | TransactionObjectArgument;
 		lpCoinType: CoinType;
@@ -1121,8 +1127,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 
 		const poolSize = coinTypes.length;
 
-		return tx.add({
-			kind: "MoveCall",
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
@@ -1152,7 +1157,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @returns A promise that resolves to the result of the transaction publishing.
 	 */
 	public publishLpCoinTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		lpCoinDecimals: CoinDecimal;
 	}) => {
 		const compilations =
@@ -1182,7 +1187,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @returns A transaction block to create the pool.
 	 */
 	public createPoolTx = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		lpCoinType: CoinType;
 		coinsInfo: {
 			coinId: ObjectId | TransactionObjectArgument;
@@ -1219,8 +1224,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		const coinTypes = coinsInfo.map((coin) => coin.coinType);
 		const decimals = coinsInfo.map((coin) => coin.decimals);
 
-		return tx.add({
-			kind: "MoveCall",
+		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
 					? this.addresses.pools.packages.ammInterface
@@ -1237,47 +1241,65 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 					: createPoolCapId,
 				tx.object(this.addresses.pools.objects.poolRegistry),
 				tx.pure(
-					Casting.u8VectorFromString(inputs.poolName),
-					"vector<u8>"
+					bcs
+						.vector(bcs.u8())
+						.serialize(Casting.u8VectorFromString(inputs.poolName))
 				),
 				tx.pure(
-					Casting.u8VectorFromString(lpCoinMetadata.name.toString()),
-					"vector<u8>"
+					bcs
+						.vector(bcs.u8())
+						.serialize(
+							Casting.u8VectorFromString(
+								lpCoinMetadata.name.toString()
+							)
+						)
 				),
 				tx.pure(
-					Casting.u8VectorFromString(
-						lpCoinMetadata.symbol.toString().toUpperCase()
-					),
-					"vector<u8>"
+					bcs
+						.vector(bcs.u8())
+						.serialize(
+							Casting.u8VectorFromString(
+								lpCoinMetadata.symbol.toString().toUpperCase()
+							)
+						)
 				),
 				tx.pure(
-					Casting.u8VectorFromString(lpCoinDescription),
-					"vector<u8>"
+					bcs
+						.vector(bcs.u8())
+						.serialize(
+							Casting.u8VectorFromString(lpCoinDescription)
+						)
 				),
 				tx.pure(
-					Casting.u8VectorFromString(lpCoinIconUrl),
-					"vector<u8>"
+					bcs
+						.vector(bcs.u8())
+						.serialize(Casting.u8VectorFromString(lpCoinIconUrl))
 				), // lp_icon_url
 				tx.pure(
-					coinsInfo.map((coin) => coin.weight),
-					"vector<u64>"
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.weight))
 				),
-				tx.pure(inputs.poolFlatness, "u64"),
+				tx.pure.u64(inputs.poolFlatness),
 				tx.pure(
-					coinsInfo.map((coin) => coin.tradeFeeIn),
-					"vector<u64>"
-				),
-				tx.pure(
-					coinsInfo.map((coin) => coin.tradeFeeOut),
-					"vector<u64>"
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.tradeFeeIn))
 				),
 				tx.pure(
-					coinsInfo.map((coin) => coin.depositFee),
-					"vector<u64>"
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.tradeFeeOut))
 				),
 				tx.pure(
-					coinsInfo.map((coin) => coin.withdrawFee),
-					"vector<u64>"
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.depositFee))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.withdrawFee))
 				),
 				...coinsInfo.map((coin) =>
 					typeof coin.coinId === "string"
@@ -1285,18 +1307,16 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 						: coin.coinId
 				),
 				tx.pure(
-					Helpers.transactions.createOptionObject(
-						decimals.includes(undefined) ? undefined : decimals
-					),
-					"Option<vector<u8>>"
+					bcs
+						.option(bcs.vector(bcs.u8()))
+						.serialize(
+							decimals.includes(undefined)
+								? undefined
+								: (decimals as number[])
+						)
 				), // decimals
-				tx.pure(inputs.respectDecimals, "bool"), // respect_decimals
-				tx.pure(
-					Helpers.transactions.createOptionObject(
-						inputs.forceLpDecimals
-					),
-					"Option<u8>"
-				), // force_lp_decimals
+				tx.pure.bool(inputs.respectDecimals), // respect_decimals
+				tx.pure(bcs.option(bcs.u8()).serialize(inputs.forceLpDecimals)), // force_lp_decimals
 			],
 		});
 	};
@@ -1307,7 +1327,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 	 * @returns The pool object ID.
 	 */
 	public poolObjectIdForLpCoinTypeTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		lpCoinType: CoinType;
 	}) => {
 		const { tx, lpCoinType } = inputs;
@@ -1340,7 +1360,7 @@ export class PoolsApi implements RouterSynchronousApiInterface<PoolObject> {
 		}): Promise<ObjectId | undefined> => {
 			if (!Pools.isPossibleLpCoinType(inputs)) return "";
 
-			const tx = new TransactionBlock();
+			const tx = new Transaction();
 
 			this.poolObjectIdForLpCoinTypeTx({ tx, ...inputs });
 

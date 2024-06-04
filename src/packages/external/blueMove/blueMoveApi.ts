@@ -2,10 +2,6 @@ import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
 import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
-import {
 	AnyObjectType,
 	Balance,
 	BlueMoveAddresses,
@@ -25,7 +21,7 @@ import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { RouterPoolTradeTxInputs } from "../../router";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class BlueMoveApi
 	implements RouterSynchronousApiInterface<BlueMovePoolObject>

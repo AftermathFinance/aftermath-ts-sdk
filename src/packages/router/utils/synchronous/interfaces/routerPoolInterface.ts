@@ -1,7 +1,7 @@
 import {
 	TransactionObjectArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+	Transaction,
+} from "@mysten/sui/transactions";
 import {
 	Balance,
 	ExternalFee,
@@ -45,7 +45,7 @@ import AfSuiRouterPool from "../routerPools/afSuiRouterPool";
 
 export interface RouterPoolTradeTxInputs {
 	provider: AftermathApi;
-	tx: TransactionBlock;
+	tx: Transaction;
 	coinInId: ObjectId | TransactionObjectArgument;
 	expectedCoinOutAmount: Balance;
 	minAmountOut: Balance;

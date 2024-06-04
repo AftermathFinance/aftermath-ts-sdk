@@ -25,8 +25,9 @@ import {
 } from "../../../types";
 import {
 	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+	Transaction,
+	TransactionDataBuilder,
+} from "@mysten/sui/transactions";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { PoolsApi } from "../../pools/api/poolsApi";
 import { CetusApi } from "../../external/cetus/cetusApi";
@@ -253,15 +254,15 @@ export class RouterApi {
 	/**
 	 * Fetches a transaction for a complete trade route.
 	 * @param inputs An object containing the wallet address, complete trade route, slippage, and optional sponsored transaction flag.
-	 * @returns A promise that resolves to a TransactionBlock object.
+	 * @returns A promise that resolves to a Transaction object.
 	 */
 	public async fetchTransactionForCompleteTradeRoute(inputs: {
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		isSponsoredTx?: boolean;
-	}): Promise<TransactionBlock> {
-		const tx = new TransactionBlock();
+	}): Promise<Transaction> {
+		const tx = new Transaction();
 		await this.Helpers.fetchTransactionForCompleteTradeRoute({
 			...inputs,
 			tx,
@@ -276,7 +277,7 @@ export class RouterApi {
 	 * @returns A promise that resolves to a transaction argument, or undefined if the transaction failed.
 	 */
 	public async fetchAddTransactionForCompleteTradeRoute(inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
@@ -299,7 +300,7 @@ export class RouterApi {
 	): Promise<TxBytes> {
 		const { gasCoinData } = inputs;
 
-		const tx = TransactionBlock.fromKind(inputs.txKindBytes);
+		const tx = Transaction.fromKind(inputs.txKindBytes);
 
 		const completeRoute = await this.fetchCompleteTradeRouteGivenAmountOut({
 			...inputs,
@@ -315,46 +316,36 @@ export class RouterApi {
 			// coin object has NOT been used previously in tx
 			fullCoinInId = tx.object(gasCoinData.Coin);
 		} else {
-			// coin object has been used previously in tx
-			const txArgs = tx.blockData.transactions.reduce(
-				(acc, aTx) => [
-					...acc,
-					...("objects" in aTx
-						? aTx.objects
-						: "arguments" in aTx
-						? aTx.arguments
-						: "destination" in aTx
-						? [aTx.destination]
-						: "coin" in aTx
-						? [aTx.coin]
-						: []),
-				],
-				[] as TransactionArgument[]
-			);
+			const data = TransactionDataBuilder.restore(tx.getData());
 
-			fullCoinInId = txArgs.find((arg) => {
-				if (!arg) return false;
+			data.mapArguments((arg) => {
+				if (
+					"Input" in gasCoinData &&
+					arg.$kind === "Input" &&
+					gasCoinData.Input === arg.Input
+				) {
+					fullCoinInId = tx.object(data.inputs[arg.Input]);
+				} else if (
+					"Result" in gasCoinData &&
+					arg.$kind === "Result" &&
+					gasCoinData.Result === arg.Result
+				) {
+					fullCoinInId = arg;
+				} else if (
+					"NestedResult" in gasCoinData &&
+					arg.$kind === "NestedResult" &&
+					gasCoinData.NestedResult[0] === arg.NestedResult[0] &&
+					gasCoinData.NestedResult[1] === arg.NestedResult[1]
+				) {
+					fullCoinInId = arg;
+				}
 
-				// this is here because TS having troubles inferring type for some reason
-				// (still being weird)
-				const txArg = arg as TransactionArgument;
-				return (
-					("Input" in gasCoinData &&
-						txArg.kind === "Input" &&
-						txArg.index === gasCoinData.Input) ||
-					("Result" in gasCoinData &&
-						txArg.kind === "Result" &&
-						txArg.index === gasCoinData.Result) ||
-					("NestedResult" in gasCoinData &&
-						txArg.kind === "NestedResult" &&
-						txArg.index === gasCoinData.NestedResult[0] &&
-						txArg.resultIndex === gasCoinData.NestedResult[1])
-				);
+				return arg;
 			});
 		}
 
-		const coinInId = tx.splitCoins(fullCoinInId, [
-			tx.pure(completeRoute.coinIn.amount),
+		const coinInId = tx.splitCoins(fullCoinInId!, [
+			completeRoute.coinIn.amount,
 		]);
 
 		const coinOutId = await this.fetchAddTransactionForCompleteTradeRoute({
@@ -366,7 +357,7 @@ export class RouterApi {
 			walletAddress: inputs.senderAddress,
 		});
 
-		tx.transferObjects([coinOutId], tx.pure(inputs.sponsorAddress));
+		tx.transferObjects([coinOutId!], inputs.sponsorAddress);
 
 		const txBytes = await tx.build({
 			client: this.Provider.provider,

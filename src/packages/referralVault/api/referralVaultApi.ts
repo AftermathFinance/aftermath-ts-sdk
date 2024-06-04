@@ -1,5 +1,5 @@
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { bcs } from "@mysten/sui.js/bcs";
+import { Transaction } from "@mysten/sui/transactions";
+import { bcs } from "@mysten/sui/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	Balance,
@@ -49,7 +49,7 @@ export class ReferralVaultApi {
 	// =========================================================================
 
 	public updateReferrerTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		referrer: SuiAddress;
 	}) => {
 		// TODO: handle this case better
@@ -73,14 +73,14 @@ export class ReferralVaultApi {
 				typeArguments: [],
 				arguments: [
 					tx.object(this.addresses.objects.referralVault),
-					tx.pure(referrer, "address"),
+					tx.pure.address(referrer),
 				],
 			});
 		} catch (e) {}
 	};
 
 	public withdrawRebateTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinType: CoinType;
 		withTransfer?: boolean;
 	}) => {
@@ -99,7 +99,7 @@ export class ReferralVaultApi {
 	};
 
 	public balanceOfRebateTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		coinType: CoinType;
 		referrer: SuiAddress;
 	}) /* u64 */ => {
@@ -113,13 +113,13 @@ export class ReferralVaultApi {
 			typeArguments: [inputs.coinType],
 			arguments: [
 				tx.object(this.addresses.objects.referralVault),
-				tx.pure(inputs.referrer, "address"),
+				tx.pure.address(inputs.referrer),
 			],
 		});
 	};
 
 	public referrerForTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		referee: SuiAddress;
 	}) /* Option<address> */ => {
 		const { tx } = inputs;
@@ -132,13 +132,13 @@ export class ReferralVaultApi {
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.objects.referralVault),
-				tx.pure(inputs.referee, "address"),
+				tx.pure.address(inputs.referee),
 			],
 		});
 	};
 
 	public hasReffererTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		referee: SuiAddress;
 	}) /* bool */ => {
 		const { tx } = inputs;
@@ -151,7 +151,7 @@ export class ReferralVaultApi {
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.objects.referralVault),
-				tx.pure(inputs.referee, "address"),
+				tx.pure.address(inputs.referee),
 			],
 		});
 	};
@@ -164,7 +164,7 @@ export class ReferralVaultApi {
 		coinType: CoinType;
 		referrer: SuiAddress;
 	}): Promise<Balance> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		this.balanceOfRebateTx({ ...inputs, tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
@@ -176,16 +176,14 @@ export class ReferralVaultApi {
 	public fetchReferrer = async (inputs: {
 		referee: SuiAddress;
 	}): Promise<SuiAddress | undefined> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		this.referrerForTx({ ...inputs, tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
 				tx,
 			});
 
-		const unwrapped = Casting.unwrapDeserializedOption(
-			bcs.de("Option<address>", new Uint8Array(bytes))
-		);
-		return unwrapped ? `0x${unwrapped}` : undefined;
+		const unwrapped = bcs.option(bcs.Address).parse(new Uint8Array(bytes));
+		return unwrapped ?? undefined;
 	};
 }

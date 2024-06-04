@@ -1,7 +1,7 @@
 import { AftermathApi } from "../../../general/providers";
 import { CoinType } from "../../coin/coinTypes";
 import { RouterSynchronousApiInterface } from "../../router/utils/synchronous/interfaces/routerSynchronousApiInterface";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 import { InterestAddresses, ObjectId } from "../../../types";
 import { InterestPoolFieldsOnChain, InterestPoolObject } from "./interestTypes";
 import { Coin } from "../../coin";

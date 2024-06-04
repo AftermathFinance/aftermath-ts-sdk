@@ -19,7 +19,7 @@ import {
 	RouterCompleteTradeRouteWithFee,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 
 /**
  * @class Router Provider
@@ -172,7 +172,7 @@ export class Router extends Caller {
 			ApiRouterAddTransactionForCompleteTradeRouteBody,
 			"serializedTx"
 		> & {
-			tx: TransactionBlock;
+			tx: Transaction;
 		}
 	) {
 		const { tx, ...otherInputs } = inputs;

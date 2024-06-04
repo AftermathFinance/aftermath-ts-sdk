@@ -3,7 +3,7 @@ import { Helpers } from "../../../general/utils";
 import { NftAmmMarketFieldsOnChain } from "./nftAmmApiCastingTypes";
 import { Coin } from "../../coin";
 import { PoolsApiCasting } from "../../pools/api/poolsApiCasting";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class NftAmmApiCasting {
 	// =========================================================================

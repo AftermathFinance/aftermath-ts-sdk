@@ -33,7 +33,7 @@ import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 // import { PriceFeedsApi } from "../priceFeeds/priceFeedsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { IndexerCaller } from "../utils";
-import { SuiClient } from "@mysten/sui.js/client";
+import { SuiClient } from "@mysten/sui/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";

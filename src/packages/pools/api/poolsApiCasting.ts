@@ -19,7 +19,7 @@ import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { AnyObjectType, ObjectId } from "../../../types";
 import { IndexerEventOnChain } from "../../../general/types/castingTypes";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class PoolsApiCasting {
 	// =========================================================================

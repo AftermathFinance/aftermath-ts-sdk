@@ -14,11 +14,8 @@ import { isTurbosPoolObject } from "../../external/turbos/turbosTypes";
 import { isCetusPoolObject } from "../../external/cetus/cetusTypes";
 import { DeepBookApi } from "../../external/deepBook/deepBookApi";
 import { isDeepBookPoolObject } from "../../external/deepBook/deepBookTypes";
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
-import { bcs } from "@mysten/sui.js/bcs";
+import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import { bcs } from "@mysten/sui/bcs";
 import { Coin } from "../../coin";
 import { Casting, Helpers } from "../../../general/utils";
 import { isFlowXPoolObject } from "../../external/flowX/flowXTypes";
@@ -221,36 +218,32 @@ export class RouterAsyncApiHelpers {
 		coinOutType: CoinType;
 		coinInAmount: Balance;
 		devInspectTx: (inputs: {
-			tx: TransactionBlock;
+			tx: Transaction;
 			coinInBytes: Uint8Array;
 			routerSwapCapBytes: Uint8Array;
 		}) => TransactionArgument;
 	}): Promise<Balance> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(Helpers.inspections.constants.devInspectSigner);
 
 		const coinInStructName = new Coin(inputs.coinInType).coinTypeSymbol;
 		const coinOutStructName = new Coin(inputs.coinOutType).coinTypeSymbol;
 
-		for (const coinStructName of [coinInStructName, coinOutStructName]) {
-			bcs.registerStructType(coinStructName, {});
-		}
-
-		bcs.registerStructType("ID", {
-			bytes: "address",
+		const ID = bcs.struct("ID", {
+			bytes: bcs.Address,
 		});
 
-		bcs.registerStructType("UID", {
-			id: "ID",
+		const UID = bcs.struct("UID", {
+			id: ID,
 		});
 
-		bcs.registerStructType(`Balance<${coinInStructName}>`, {
-			value: "u64",
+		const Balance = bcs.struct("Balance", {
+			value: bcs.u64(),
 		});
 
-		bcs.registerStructType(`Coin<${coinInStructName}>`, {
-			id: "UID",
-			balance: `Balance<${coinInStructName}>`,
+		const CoinStruct = bcs.struct("Coin", {
+			id: UID,
+			balance: Balance,
 		});
 
 		/*
@@ -264,7 +257,7 @@ export class RouterAsyncApiHelpers {
 			type: vector<u8>,
 			amount: u64,
 		}
-		
+
 		struct RouterSwapCap<phantom CS> {
 			coin_in: Coin<CS>,
 			min_amount_out: u64,
@@ -277,80 +270,74 @@ export class RouterAsyncApiHelpers {
 
 		*/
 
-		bcs.registerStructType("RouterFeeMetadata", {
-			recipient: "address",
-			fee: "u64",
+		const RouterFeeMetadata = bcs.struct("RouterFeeMetadata", {
+			recipient: bcs.Address,
+			fee: bcs.u64(),
 		});
 
-		bcs.registerStructType("SwapMetadata", {
-			type: "vector<u8>",
-			amount: "u64",
+		const SwapMetadata = bcs.struct("SwapMetadata", {
+			type: bcs.vector(bcs.u8()),
+			amount: bcs.u64(),
 		});
 
-		bcs.registerStructType(`RouterSwapCap<${coinInStructName}>`, {
-			coin_in: `Coin<${coinInStructName}>`,
-			min_amount_out: "u64",
-			first_swap: "SwapMetadata",
-			previous_swap: "SwapMetadata",
-			final_swap: "SwapMetadata",
-			router_fee_metadata: "RouterFeeMetadata",
-			referrer: "Option<address>",
+		const RouterSwapCap = bcs.struct(`RouterSwapCap`, {
+			coin_in: CoinStruct,
+			min_amount_out: bcs.u64(),
+			first_swap: SwapMetadata,
+			previous_swap: SwapMetadata,
+			final_swap: SwapMetadata,
+			router_fee_metadata: RouterFeeMetadata,
+			referrer: bcs.option(bcs.Address),
 		});
 
-		const coinInBytes = bcs
-			.ser(`Coin<${coinInStructName}>`, {
+		const coinInBytes = CoinStruct.serialize({
+			id: {
+				id: {
+					bytes: "0x0000000000000000000000000000000000000000000000000000000000000123",
+				},
+			},
+			balance: {
+				value: inputs.coinInAmount,
+			},
+		}).toBytes();
+
+		const routerSwapCapBytes = RouterSwapCap.serialize({
+			coin_in: {
 				id: {
 					id: {
-						bytes: "0x0000000000000000000000000000000000000000000000000000000000000123",
+						bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
 					},
 				},
 				balance: {
 					value: inputs.coinInAmount,
 				},
-			})
-			.toBytes();
-
-		const routerSwapCapBytes = bcs
-			.ser(`RouterSwapCap<${coinInStructName}>`, {
-				coin_in: {
-					id: {
-						id: {
-							bytes: "0x0000000000000000000000000000000000000000000000000000000000000321",
-						},
-					},
-					balance: {
-						value: inputs.coinInAmount,
-					},
-				},
-				min_amount_out: 0,
-				first_swap: {
-					type: Casting.u8VectorFromString(
-						inputs.coinInType.replace("0x", "")
-					),
-					amount: inputs.coinInAmount,
-				},
-				previous_swap: {
-					type: Casting.u8VectorFromString(
-						inputs.coinInType.replace("0x", "")
-					),
-					amount: inputs.coinInAmount,
-				},
-				final_swap: {
-					type: Casting.u8VectorFromString(
-						inputs.coinOutType.replace("0x", "")
-					),
-					amount: 0,
-				},
-				router_fee_metadata: {
-					recipient:
-						"0x0000000000000000000000000000000000000000000000000000000000000000",
-					fee: 0,
-				},
-				referrer: {
-					None: true,
-				},
-			})
-			.toBytes();
+			},
+			min_amount_out: 0,
+			first_swap: {
+				type: Casting.u8VectorFromString(
+					inputs.coinInType.replace("0x", "")
+				),
+				amount: inputs.coinInAmount,
+			},
+			previous_swap: {
+				type: Casting.u8VectorFromString(
+					inputs.coinInType.replace("0x", "")
+				),
+				amount: inputs.coinInAmount,
+			},
+			final_swap: {
+				type: Casting.u8VectorFromString(
+					inputs.coinOutType.replace("0x", "")
+				),
+				amount: 0,
+			},
+			router_fee_metadata: {
+				recipient:
+					"0x0000000000000000000000000000000000000000000000000000000000000000",
+				fee: 0,
+			},
+			referrer: null,
+		}).toBytes();
 
 		inputs.devInspectTx({ tx, coinInBytes, routerSwapCapBytes });
 
@@ -359,10 +346,7 @@ export class RouterAsyncApiHelpers {
 				tx,
 			});
 
-		const data = bcs.de(
-			`Coin<${coinOutStructName}>`,
-			new Uint8Array(resultBytes)
-		);
+		const data = CoinStruct.parse(new Uint8Array(resultBytes));
 
 		return BigInt(data.balance.value);
 	};
