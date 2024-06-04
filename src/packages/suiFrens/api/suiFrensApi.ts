@@ -177,7 +177,10 @@ export class SuiFrensApi {
 			.parse(new Uint8Array(lastEpochMixedBytes));
 
 		return mixLimits.map((mixLimit, index) => ({
-			mixLimit: mixLimit == null ? undefined : BigInt(mixLimit),
+			mixLimit:
+				mixLimit === null || mixLimit === undefined
+					? undefined
+					: BigInt(mixLimit),
 			lastEpochMixed:
 				lastEpochMixeds[index] === undefined
 					? undefined
@@ -203,7 +206,9 @@ export class SuiFrensApi {
 
 		const unwrapped = bcs.option(bcs.u8()).parse(new Uint8Array(bytes));
 
-		return unwrapped == null ? undefined : BigInt(unwrapped);
+		return unwrapped === null || unwrapped === undefined
+			? undefined
+			: BigInt(unwrapped);
 	};
 
 	public fetchLastEpochMixed = async (inputs: {
@@ -224,7 +229,9 @@ export class SuiFrensApi {
 
 		const unwrapped = bcs.option(bcs.u64()).parse(new Uint8Array(bytes));
 
-		return unwrapped == null ? undefined : BigInt(unwrapped);
+		return unwrapped === null || unwrapped === undefined
+			? undefined
+			: BigInt(unwrapped);
 	};
 
 	public fetchStakedSuiFrenMetadataIds = async (inputs: {

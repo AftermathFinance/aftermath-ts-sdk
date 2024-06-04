@@ -342,6 +342,45 @@ export class RouterApi {
 
 				return arg;
 			});
+
+			// TODO: fix this (v1)
+
+			// // coin object has been used previously in tx
+			// const txArgs = tx.blockData.transactions.reduce(
+			// 	(acc, aTx) => [
+			// 		...acc,
+			// 		...("objects" in aTx
+			// 			? aTx.objects
+			// 			: "arguments" in aTx
+			// 			? aTx.arguments
+			// 			: "destination" in aTx
+			// 			? [aTx.destination]
+			// 			: "coin" in aTx
+			// 			? [aTx.coin]
+			// 			: []),
+			// 	],
+			// 	[] as TransactionArgument[]
+			// );
+
+			// fullCoinInId = txArgs.find((arg) => {
+			// 	if (!arg) return false;
+
+			// 	// this is here because TS having troubles inferring type for some reason
+			// 	// (still being weird)
+			// 	const txArg = arg as TransactionArgument;
+			// 	return (
+			// 		("Input" in gasCoinData &&
+			// 			txArg.kind === "Input" &&
+			// 			txArg.index === gasCoinData.Input) ||
+			// 		("Result" in gasCoinData &&
+			// 			txArg.kind === "Result" &&
+			// 			txArg.index === gasCoinData.Result) ||
+			// 		("NestedResult" in gasCoinData &&
+			// 			txArg.kind === "NestedResult" &&
+			// 			txArg.index === gasCoinData.NestedResult[0] &&
+			// 			txArg.resultIndex === gasCoinData.NestedResult[1])
+			// 	);
+			// });
 		}
 
 		const coinInId = tx.splitCoins(fullCoinInId!, [

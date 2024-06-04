@@ -845,7 +845,7 @@ export class LeveragedStakingApi {
 		let unstakedCoinId;
 		let unstakedCoinType;
 		// [Edge Case] Position has no debt.
-		if (leveragedAfSuiPosition.suiDebt == BigInt(0)) {
+		if (leveragedAfSuiPosition.suiDebt === BigInt(0)) {
 			// va. Withdraw `unstakeAmount` worth of afSUI collateral.
 			const [unstakedAfSuiCollateral] =
 				await this.fetchBuildWithdrawAfSuiCollateralTx({
@@ -879,10 +879,10 @@ export class LeveragedStakingApi {
 		}
 
 		// vi. Return the unstaked coin to the user in their desired coin (SUI or afSUI).
-		if (unstakedCoinType == inputs.desiredUnstakeCoinType) {
+		if (unstakedCoinType === inputs.desiredUnstakeCoinType) {
 			// via. Unstaked coin already in desired coin type; no extra work needed.
 			tx.transferObjects([unstakedCoinId], walletAddress);
-		} else if (desiredUnstakeCoinType == "sui") {
+		} else if (desiredUnstakeCoinType === "sui") {
 			// vib. Swap withdrawn afSUI into SUI and return to the user.
 			const poolObject = await this.Provider.Pools().fetchPool({
 				objectId:
@@ -903,7 +903,7 @@ export class LeveragedStakingApi {
 				});
 
 			tx.transferObjects([swappedSuiCoinId], walletAddress);
-		} /* if (desiredUnstakeCoinType == "afsui") */ else {
+		} /* if (desiredUnstakeCoinType === "afsui") */ else {
 			// vic. Stake the withdrawn SUI for afSUI and return to the user.
 			let [unstakedAfSuiCollateral] = this.Provider.Staking().stakeTx({
 				// @ts-ignore
@@ -1147,7 +1147,7 @@ export class LeveragedStakingApi {
 		let decreaseInSuiDebt;
 
 		// [Edge Case] User wants to unstake their entire position.
-		if (inputs.baseAfSuiCollateral == BigInt(0)) {
+		if (inputs.baseAfSuiCollateral === BigInt(0)) {
 			// TODO: [edge case] handle closing of position.
 			//
 			decreaseInAfSuiCollateral = BigInt(inputs.totalAfSuiCollateral);
@@ -1422,7 +1422,7 @@ export class LeveragedStakingApi {
 			  ]
 			: [BigInt(0), 0];
 
-		if (positionBorrowIndex == newBorrowIndex)
+		if (positionBorrowIndex === newBorrowIndex)
 			return { totalSuiDebt: positionSuiDebt };
 
 		return {

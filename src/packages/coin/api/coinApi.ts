@@ -326,9 +326,23 @@ export class CoinApi {
 		const mergedCoinObjectId: ObjectId = coinObjectIds[0];
 
 		if (coinObjectIds.length > 1) {
-			tx.mergeCoins(tx.object(mergedCoinObjectId), [
-				...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
-			]);
+			// tx.mergeCoins(tx.object(mergedCoinObjectId), [
+			// 	...coinObjectIds.slice(1).map((coinId) => tx.object(coinId)),
+			// ]);
+
+			// TODO: fix this (v1)
+
+			tx.add({
+				$kind: "MergeCoins",
+				MergeCoins: {
+					destination: tx.object(mergedCoinObjectId),
+					sources: [
+						...coinObjectIds
+							.slice(1)
+							.map((coinId) => tx.object(coinId)),
+					],
+				},
+			});
 		}
 
 		// return tx.add({
