@@ -13,7 +13,6 @@ import {
 // Helpers
 // =========================================================================
 
-export type DcaVaultObjects = DcaVaultObject[];
 export type DcaVaultOrders = DcaVaultOrder[];
 
 // =========================================================================
@@ -59,6 +58,11 @@ export interface DcaVaultObject {
 	interval: IFixed;
 	ordersRemaining: Balance;
 	orders: DcaVaultOrders;
+}
+
+export interface DcaVaultsOjbect {
+	active: DcaVaultObject[];
+	past: DcaVaultObject[];
 }
 
 // =========================================================================

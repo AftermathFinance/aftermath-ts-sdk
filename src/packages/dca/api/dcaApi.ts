@@ -1,5 +1,5 @@
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { ApiDcaInitializeVaultBody, DcaCreatedVaultEvent, DcaVaultObject } from "../dcaTypes";
+import { ApiDcaInitializeVaultBody, DcaCreatedVaultEvent, DcaVaultsOjbect } from "../dcaTypes";
 import { AftermathApi } from "../../../general/providers";
 import { AnyObjectType, DcaAddresses, EventsInputs, SuiAddress } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
@@ -71,15 +71,67 @@ export class DcaApi {
     // Class Objects
     // =========================================================================
 
-    public fetchDcaVaultObjects = async (inputs: {
+    public fetchDcaVaultsObject = async (inputs: {
         walletAddress: SuiAddress;   
-    }): Promise<DcaVaultObject[]> => {
+    }): Promise<DcaVaultsOjbect> => {
         const { walletAddress } = inputs;
         console.log({
             function: "fetchDcaVaultObjects",
             walletAddress: walletAddress
         })
-        return [];
+        return {
+            active: [
+                {
+                    currentAllocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                    currentAllocatedCoinAmount: BigInt(0),
+                    currentBuyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                    currentBuyCoinAmount: BigInt(0),
+                    widthrowAmount: BigInt(0),
+                    totalDeposited: BigInt(0),
+                    totalSpent: BigInt(0),
+                    averagePrice: BigInt(0),
+                    interval: BigInt(0),
+                    ordersRemaining: BigInt(0),
+                    orders: [
+                        {
+                            allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                            allocatedCoinAmount: BigInt(1000000000000),
+                            buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                            buyCoinAmount: BigInt(83000000),
+                            buyDate: 1715456204000
+                        },
+                        {
+                            allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                            allocatedCoinAmount: BigInt(1000000000000),
+                            buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                            buyCoinAmount: BigInt(83000000),
+                            buyDate: 1715456204000
+                        }
+                    ]
+                }
+            ],
+            past: [
+                {
+                    currentAllocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                    currentAllocatedCoinAmount: BigInt(0),
+                    currentBuyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                    currentBuyCoinAmount: BigInt(0),
+                    widthrowAmount: BigInt(0),
+                    totalDeposited: BigInt(0),
+                    totalSpent: BigInt(0),
+                    averagePrice: BigInt(0),
+                    interval: BigInt(0),
+                    ordersRemaining: BigInt(0),
+                    orders: [{
+                        allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                        allocatedCoinAmount: BigInt(1000000000000),
+                        buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                        buyCoinAmount: BigInt(83000000),
+                        buyDate: 1715456204000
+                    }]
+                }
+            ]
+        };
     }
 
     // =========================================================================

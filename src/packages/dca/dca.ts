@@ -35,6 +35,12 @@ export class Dca extends Caller {
         return inputs;
     }
 
+	public async getDcaVaults(inputs: {
+        walletAddress: SuiAddress;
+    }) {
+		return this.useProvider().fetchDcaVaultsObject(inputs)
+	}
+
     public async getCreateDcaVaultTx(
 		inputs: ApiDcaInitializeVaultBody
 	) {
