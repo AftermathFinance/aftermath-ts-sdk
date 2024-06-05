@@ -82,53 +82,118 @@ export class DcaApi {
         return {
             active: [
                 {
-                    currentAllocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                    currentAllocatedCoinAmount: BigInt(0),
-                    currentBuyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                    currentBuyCoinAmount: BigInt(0),
-                    widthrowAmount: BigInt(0),
-                    totalDeposited: BigInt(0),
-                    totalSpent: BigInt(0),
-                    averagePrice: BigInt(0),
-                    interval: BigInt(0),
-                    ordersRemaining: BigInt(0),
+                    overview: {
+                        allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                        buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                        startAllocatedCoinAmount: BigInt(1000000000000),
+                        currentAllocatedCoinAmount: BigInt(1000000000000),
+                        buyCoinAmount: BigInt(100000000000),
+                        progress: 0.7,
+                        widthrowAmount: BigInt(1000000000000),
+                        totalDeposited: BigInt(1000000000000),
+                        totalSpent: BigInt(1000000000000),
+                        averagePrice: BigInt(1000000000000),
+                        totalOrders: 6,
+                        interval: BigInt(0),
+                        ordersRemaining: 4,
+                        eachOrderSize: BigInt(0),
+                        created: 1715360395000
+                    },
                     orders: [
                         {
                             allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
                             allocatedCoinAmount: BigInt(1000000000000),
                             buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
                             buyCoinAmount: BigInt(83000000),
-                            buyDate: 1715456204000
+                            buyDate: 1715456204000,
+                            rate: 1.14
                         },
                         {
                             allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
                             allocatedCoinAmount: BigInt(1000000000000),
                             buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
                             buyCoinAmount: BigInt(83000000),
-                            buyDate: 1715456204000
+                            buyDate: 1715456204000,
+                            rate: 1.45
+                        }
+                    ]
+                },
+                {
+                    overview: {
+                        allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                        buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                        startAllocatedCoinAmount: BigInt(0),
+                        currentAllocatedCoinAmount: BigInt(0),
+                        buyCoinAmount: BigInt(0),
+                        progress: 0.7,
+                        widthrowAmount: BigInt(0),
+                        totalDeposited: BigInt(0),
+                        totalSpent: BigInt(0),
+                        averagePrice: BigInt(0),
+                        totalOrders: 6,
+                        interval: BigInt(0),
+                        ordersRemaining: 4,
+                        eachOrderSize: BigInt(0),
+                        created: 1715360395000
+
+                    },
+                    orders: [
+                        {
+                            allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                            allocatedCoinAmount: BigInt(1000000000000),
+                            buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                            buyCoinAmount: BigInt(83000000),
+                            buyDate: 1715456204000,
+                            rate: 1.14
+                        },
+                        {
+                            allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                            allocatedCoinAmount: BigInt(1000000000000),
+                            buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                            buyCoinAmount: BigInt(83000000),
+                            buyDate: 1715456204000,
+                            rate: 1.45
                         }
                     ]
                 }
             ],
             past: [
                 {
-                    currentAllocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                    currentAllocatedCoinAmount: BigInt(0),
-                    currentBuyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                    currentBuyCoinAmount: BigInt(0),
-                    widthrowAmount: BigInt(0),
-                    totalDeposited: BigInt(0),
-                    totalSpent: BigInt(0),
-                    averagePrice: BigInt(0),
-                    interval: BigInt(0),
-                    ordersRemaining: BigInt(0),
-                    orders: [{
+                    overview: {
                         allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                        allocatedCoinAmount: BigInt(1000000000000),
                         buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                        buyCoinAmount: BigInt(83000000),
-                        buyDate: 1715456204000
-                    }]
+                        startAllocatedCoinAmount: BigInt(0),
+                        currentAllocatedCoinAmount: BigInt(0),
+                        buyCoinAmount: BigInt(0),
+                        progress: 0.7,
+                        widthrowAmount: BigInt(0),
+                        totalDeposited: BigInt(0),
+                        totalSpent: BigInt(0),
+                        averagePrice: BigInt(0),
+                        totalOrders: 6,
+                        interval: BigInt(0),
+                        ordersRemaining: 4,
+                        eachOrderSize: BigInt(0),
+                        created: 1715360395000
+                    },
+                    orders: [
+                        {
+                            allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                            allocatedCoinAmount: BigInt(1000000000000),
+                            buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                            buyCoinAmount: BigInt(83000000),
+                            buyDate: 1715456204000,
+                            rate: 1.14
+                        },
+                        {
+                            allocatedCoin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+                            allocatedCoinAmount: BigInt(1000000000000),
+                            buyCoin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+                            buyCoinAmount: BigInt(83000000),
+                            buyDate: 1715456204000,
+                            rate: 1.45
+                        }
+                    ]
                 }
             ]
         };

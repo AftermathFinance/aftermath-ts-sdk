@@ -13,7 +13,7 @@ import {
 // Helpers
 // =========================================================================
 
-export type DcaVaultOrders = DcaVaultOrder[];
+export type DcaVaultOrders = DcaVaultOrderObject[];
 
 // =========================================================================
 //  Initialize Vault
@@ -38,25 +38,37 @@ export interface ApiDcaInitializeVaultBody {
 //  DCA Vault
 // =========================================================================
 
-export interface DcaVaultOrder {
+export interface DcaVaultOrderObject {
 	allocatedCoin: CoinType;
 	allocatedCoinAmount: Balance;
 	buyCoin: CoinType;
 	buyCoinAmount: Balance;
 	buyDate: Timestamp;
+	rate: number;
+}
+
+export interface DcaVaultOverviewObject {
+	allocatedCoin: CoinType;
+	buyCoin: CoinType;
+	startAllocatedCoinAmount: Balance;
+	currentAllocatedCoinAmount: Balance;
+	buyCoinAmount: Balance;
+	widthrowAmount: Balance;
+	progress: number;
+
+	totalDeposited: Balance;
+	totalSpent: Balance;
+	eachOrderSize: Balance;
+	averagePrice: Balance;
+
+	totalOrders: number;
+	interval: IFixed;
+	ordersRemaining: number;
+	created: Timestamp;
 }
 
 export interface DcaVaultObject {
-	currentAllocatedCoin: CoinType;
-	currentAllocatedCoinAmount: Balance;
-	currentBuyCoin: CoinType;
-	currentBuyCoinAmount: Balance;
-	widthrowAmount: Balance;
-	totalDeposited: Balance;
-	totalSpent: Balance;
-	averagePrice: Balance;
-	interval: IFixed;
-	ordersRemaining: Balance;
+	overview: DcaVaultOverviewObject;
 	orders: DcaVaultOrders;
 }
 
