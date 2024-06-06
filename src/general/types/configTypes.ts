@@ -1,3 +1,4 @@
+import { Sui } from "../../packages";
 import { CoinType } from "../../types";
 import { CoinDecimal } from "../../types";
 import { ObjectId, SuiAddress } from "./generalTypes";
@@ -316,7 +317,9 @@ export interface ScallopAddresses {
 
 export interface DcaAddresses {
 	packages: {
-		vaults: SuiAddress;
-		vaultsInitial: SuiAddress;
+		dca: SuiAddress;
 	};
+	objects: {
+		config: ObjectId;	
+	}
 }

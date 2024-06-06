@@ -1,10 +1,10 @@
 
-import { EventsInputs, SuiNetwork, Url, ObjectId } from "../../types";
+import { EventsInputs, SuiNetwork, Url, ObjectId, AnyObjectType } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 
 import { SuiAddress } from "../../types";
-import { ApiDcaInitializeVaultBody } from "./dcaTypes";
+import { ApiDCAsOwnedBody, ApiDcaInitializeOrderBody, DcaOrdersOjbect } from "./dcaTypes";
 
 export class Dca extends Caller {
 	
@@ -17,7 +17,18 @@ export class Dca extends Caller {
 		private readonly Provider?: AftermathApi
 	) {
 		super(network, "dca");
+		// this.test();
 	}
+
+	private test = async () => {
+		const body: ApiDCAsOwnedBody = {
+			walletAddress: "0x45c7d4f327ec05e35ced427b44241dd932e7c8532b5d3791fe0e5c7277ce3c4a"
+		}
+        const dcaOrders = await this.fetchApi<DcaOrdersOjbect, ApiDCAsOwnedBody>("", body);
+        console.log({
+			dcaOrders: dcaOrders
+		});
+    }
 
 	// =========================================================================
 	//  Public
@@ -38,13 +49,14 @@ export class Dca extends Caller {
 	public async getDcaVaults(inputs: {
         walletAddress: SuiAddress;
     }) {
-		return this.useProvider().fetchDcaVaultsObject(inputs)
+		return this.useProvider().fetchDcaOrdersObject(inputs)
 	}
 
     public async getCreateDcaVaultTx(
-		inputs: ApiDcaInitializeVaultBody
+		inputs: ApiDcaInitializeOrderBody
 	) {
-		return this.useProvider().fetchBuildCreateVault(inputs);
+		console.log("getCreateDcaVaultTx")
+		return this.useProvider().fetchBuildCreateOrder(inputs);
 	}
 
 	// =========================================================================

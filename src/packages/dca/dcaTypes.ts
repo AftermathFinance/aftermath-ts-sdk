@@ -1,11 +1,12 @@
 import { ObjectId, SuiAddress } from "../../types";
-import { CoinType } from "../coin/coinTypes";
+import { CoinType, CoinWithAmount } from "../coin/coinTypes";
 import {
 	Balance,
 	Event,
 	IFixed,
 	Object,
 	Timestamp,
+	TransactionDigest,
 } from "../../general/types/generalTypes";
 
 
@@ -13,46 +14,43 @@ import {
 // Helpers
 // =========================================================================
 
-export type DcaVaultOrders = DcaVaultOrderObject[];
+export type DcaOrderTrades = DcaOrderTradeObject[];
 
 // =========================================================================
-//  Initialize Vault
+//  Initialize Order (Объекты для пост запроса с клиента в sdk)
 // =========================================================================
 
-export interface ApiDcaInitializeVaultStrategy {
+export interface ApiDcaInitializeOrdertStrategyBody {
     priceMin: Balance;
     priceMax: Balance;
 }
 
-export interface ApiDcaInitializeVaultBody {
+export interface ApiDcaInitializeOrderBody {
 	walletAddress: SuiAddress;
 	allocateCoinType: CoinType;
 	allocateCoinAmount: Balance;
     buyCoinType: CoinType;
 	timeInterval: Timestamp;
 	orderCount: Timestamp;
-    straregy?: ApiDcaInitializeVaultStrategy;
+    straregy?: ApiDcaInitializeOrdertStrategyBody;
+	isSponsoredTx?: boolean;
 }
 
 // =========================================================================
-//  DCA Vault
+//  DCA Order
 // =========================================================================
 
-export interface DcaVaultOrderObject {
-	allocatedCoin: CoinType;
-	allocatedCoinAmount: Balance;
-	buyCoin: CoinType;
-	buyCoinAmount: Balance;
+export interface DcaOrderTradeObject {
+	allocatedCoin: CoinWithAmount;
+	buyCoin: CoinWithAmount;
 	buyDate: Timestamp;
 	rate: number;
 }
 
-export interface DcaVaultOverviewObject {
-	allocatedCoin: CoinType;
-	buyCoin: CoinType;
-	startAllocatedCoinAmount: Balance;
-	currentAllocatedCoinAmount: Balance;
-	buyCoinAmount: Balance;
+export interface DcaOrderOverviewObject {
+	allocatedCoin: CoinWithAmount;
+	allocatedCoinStartAmount: Balance;
+	buyCoin: CoinWithAmount;
 	widthrowAmount: Balance;
 	progress: number;
 
@@ -65,31 +63,64 @@ export interface DcaVaultOverviewObject {
 	interval: IFixed;
 	ordersRemaining: number;
 	created: Timestamp;
+	tnxDigest: TransactionDigest
 }
 
-export interface DcaVaultObject {
-	overview: DcaVaultOverviewObject;
-	orders: DcaVaultOrders;
+export interface DcaOrderObject {
+	overview: DcaOrderOverviewObject;
+	trades: DcaOrderTrades;
 }
 
-export interface DcaVaultsOjbect {
-	active: DcaVaultObject[];
-	past: DcaVaultObject[];
+export interface DcaOrdersOjbect {
+	active: DcaOrderObject[];
+	past: DcaOrderObject[];
 }
 
 // =========================================================================
-//  API
+//  API (Ивента оповещения от смарт-контракта)
 // =========================================================================
 
-export interface DcaCreatedVaultEvent extends Event {
-	
-	// Todo: - update with real smart-contract data
+export interface DcaCreatedOrderEvent extends Event {
+	orderId: ObjectId;
+    owner: ObjectId;
+	inputValue: Balance;
+	inputType: CoinType;
+	outputType: CoinType;
+	gasValue: Balance;
+	frequencyMs: Timestamp;
+    allowableDeviationMs: Timestamp;
+    startTimestampMs: Timestamp;
+    amountPerTrade: Balance;
+    maxAllowableSlippageBps: Balance;
+    minAmountOut: Balance;
+    maxAmountOut: Balance;
+    remainingTrades: IFixed;
+}
 
-	vaultId: ObjectId;
-	allocatedCoin: CoinType;
-	allocatedCoinAmount: Balance;
-	buyCoin: CoinType;
-	buyCoinAmount: Balance;
+export interface DcaCancelledOrderEvent extends Event {
+	orderId: ObjectId;
+    owner: ObjectId;
+	remainingValue: Balance;
+	inputType: CoinType;
+	outputType: CoinType;
+	gasValue: Balance;
+	frequencyMs: Timestamp;
+    allowableDeviationMs: Timestamp;
+    lastTradeTimestampMs: Timestamp;
+    amountPerTrade: Balance;
+    maxAllowableSlippageBps: Balance;
+    minAmountOut: Balance;
+    maxAmountOut: Balance;
+    remainingTrades: IFixed;
+}
+
+export interface DcaExecutedTradeEvent extends Event {
+	orderId: ObjectId;
+    owner: ObjectId;
+    inputType: CoinType;
+    inputAmount: Balance;
+    outputType: CoinType;
+    outputAmount: Balance;
 }
 
 // =========================================================================
