@@ -2,6 +2,7 @@ import {
 	TransactionArgument,
 	Transaction,
 	TransactionObjectArgument,
+	Argument,
 } from "@mysten/sui/transactions";
 import {
 	Balance,
@@ -162,43 +163,37 @@ export class TransactionsApiHelpers {
 	}
 
 	public static serviceCoinDataFromCoinTxArg = (inputs: {
-		coinTxArg: TransactionArgument | ObjectId;
+		coinTxArg: TransactionObjectArgument | Argument | ObjectId;
 	}): ServiceCoinData => {
 		const { coinTxArg } = inputs;
 
 		if (typeof coinTxArg === "string")
 			return { Coin: Helpers.addLeadingZeroesToType(coinTxArg) };
 
-		if ("GasCoin" in coinTxArg || typeof coinTxArg === "function")
+		if (!("$kind" in coinTxArg)) {
+			if (typeof coinTxArg === "function" || "GasCoin" in coinTxArg)
+				throw new Error(
+					"unable to convert gas coin arg to service coin data"
+				);
+			// Input
+			return coinTxArg;
+		}
+
+		if (coinTxArg.$kind === "NestedResult")
+			return {
+				[coinTxArg.$kind]: coinTxArg.NestedResult,
+			};
+
+		if (coinTxArg.$kind === "Result")
+			return { [coinTxArg.$kind]: coinTxArg.Result };
+
+		if (coinTxArg.$kind === "GasCoin")
 			throw new Error(
 				"unable to convert gas coin arg to service coin data"
 			);
 
-		return coinTxArg;
-
-		// if ("kind" in coinTxArg) {
-		// if (coinTxArg.kind === "NestedResult")
-		// 	return {
-		// 		[coinTxArg.kind]: [coinTxArg.index, coinTxArg.resultIndex],
-		// 	};
-
-		// if (coinTxArg.kind === "Result")
-		// 	return { [coinTxArg.kind]: coinTxArg.index };
-
-		// // Input
-		// return { [coinTxArg.kind]: coinTxArg.index };
-		// }
-
-		// if (coinTxArg.$kind === "NestedResult")
-		// 	return {
-		// 		[coinTxArg.$kind]: coinTxArg.NestedResult,
-		// 	};
-
-		// if (coinTxArg.$kind === "Result")
-		// 	return { [coinTxArg.$kind]: coinTxArg.Result };
-
-		// // Input
-		// return { [coinTxArg.$kind]: coinTxArg.Input };
+		// Input
+		return { [coinTxArg.$kind]: coinTxArg.Input };
 	};
 
 	public static coinTxArgFromServiceCoinData = (inputs: {

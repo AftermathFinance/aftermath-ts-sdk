@@ -563,7 +563,12 @@ export class RouterApi {
 				true
 			);
 
+		console.log("tx_kind", tx_kind);
+
 		const tx = Transaction.fromKind(tx_kind);
+
+		console.log("here");
+
 		RouterApi.transferTxMetadata({
 			initTx,
 			newTx: tx,
