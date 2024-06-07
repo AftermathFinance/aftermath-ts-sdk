@@ -1505,21 +1505,6 @@ export class PerpetualsApi {
 			hasPosition,
 		} = inputs;
 
-		console.log("INPUTS", {
-			ch_id: marketId,
-			account_obj_id: accountObjectId,
-			account_obj_version: accountObjectVersion,
-			account_obj_digest: accountObjectDigest,
-			side: Boolean(side),
-			size: Number(size),
-			collateral_to_allocate:
-				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
-			collateral_to_deallocate:
-				collateralChange < BigInt(0)
-					? Math.abs(Number(collateralChange))
-					: 0,
-			position_found: hasPosition,
-		});
 		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				ptb: StringByte[];
@@ -1602,24 +1587,6 @@ export class PerpetualsApi {
 			collateralChange,
 			hasPosition,
 		} = inputs;
-
-		console.log("INPUTS", {
-			ch_id: marketId,
-			account_obj_id: accountObjectId,
-			account_obj_version: accountObjectVersion,
-			account_obj_digest: accountObjectDigest,
-			side: Boolean(side),
-			size: Number(size),
-			price: Number(price),
-			order_type: orderType,
-			collateral_to_allocate:
-				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
-			collateral_to_deallocate:
-				collateralChange < BigInt(0)
-					? Math.abs(Number(collateralChange))
-					: 0,
-			position_found: hasPosition,
-		});
 
 		const { ptb: txKind } = await this.Provider.indexerCaller.fetchIndexer<
 			{

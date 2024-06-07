@@ -185,8 +185,6 @@ export class RouterApi {
 				true
 			);
 
-		console.log("paths", JSON.stringify(paths, null, 4));
-
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
@@ -248,8 +246,6 @@ export class RouterApi {
 			undefined,
 			true
 		);
-
-		console.log("paths", JSON.stringify(paths, null, 4));
 
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
@@ -563,11 +559,7 @@ export class RouterApi {
 				true
 			);
 
-		console.log("tx_kind", tx_kind);
-
 		const tx = Transaction.fromKind(tx_kind);
-
-		console.log("here");
 
 		RouterApi.transferTxMetadata({
 			initTx,

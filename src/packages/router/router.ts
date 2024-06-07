@@ -95,7 +95,6 @@ export class Router extends Caller {
 			 * Amount of coin being given away
 			 */
 			coinInAmount: Balance;
-			v2?: boolean;
 		},
 		abortSignal?: AbortSignal
 	) {
@@ -132,15 +131,12 @@ export class Router extends Caller {
 	// =========================================================================
 
 	public async getTransactionForCompleteTradeRoute(
-		inputs: ApiRouterTransactionForCompleteTradeRouteBody & {
-			v2?: boolean;
-		}
+		inputs: ApiRouterTransactionForCompleteTradeRouteBody
 	) {
-		return this.fetchApiTransaction<
-			ApiRouterTransactionForCompleteTradeRouteBody & {
-				v2?: boolean;
-			}
-		>("transactions/trade", inputs);
+		return this.fetchApiTransaction<ApiRouterTransactionForCompleteTradeRouteBody>(
+			"transactions/trade",
+			inputs
+		);
 	}
 
 	// TODO: update inputs ?
