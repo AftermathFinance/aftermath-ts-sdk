@@ -69,6 +69,8 @@ import {
 	ApiPerpetualsMaxOrderSizeBody,
 	ApiPerpetualsAccountOrderDatasBody,
 	ApiPerpetualsMarket24hrVolumeResponse,
+	ApiPerpetualsGetPositionLeverageBody,
+	ApiPerpetualsSetPositionLeverageBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -566,6 +568,39 @@ export class PerpetualsApi {
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
+
+	public fetchPositionLeverage = async (
+		inputs: ApiPerpetualsGetPositionLeverageBody & {
+			accountId: PerpetualsAccountId;
+		}
+	): Promise<number> => {
+		const { marketId, accountId } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer<number>(
+			`perpetuals/accounts/${accountId
+				.toString()
+				.replaceAll("n", "")}/markets/${marketId}/position-leverage`
+		);
+	};
+
+	public setPositionLeverage = async (
+		inputs: ApiPerpetualsSetPositionLeverageBody & {
+			accountId: PerpetualsAccountId;
+		}
+	): Promise<void> => {
+		const { marketId, accountId, leverage } = inputs;
+		await this.Provider.indexerCaller.fetchIndexer<
+			void,
+			{
+				account_id: number;
+				market_id: ObjectId;
+				leverage: number;
+			}
+		>(`perpetuals/account/set-position-leverage`, {
+			account_id: Number(accountId),
+			market_id: marketId,
+			leverage,
+		});
+	};
 
 	public fetchPreviewOrder = async (
 		// TODO: remove unused inputs

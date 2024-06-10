@@ -610,6 +610,15 @@ export interface ApiPerpetualsAccountsBody {
 //  Inspections
 // =========================================================================
 
+export interface ApiPerpetualsGetPositionLeverageBody {
+	marketId: PerpetualsMarketId;
+}
+
+export interface ApiPerpetualsSetPositionLeverageBody {
+	marketId: PerpetualsMarketId;
+	leverage: number;
+}
+
 export type ApiPerpetualsPreviewOrderBody = (
 	| Omit<
 			ApiPerpetualsLimitOrderBody,
