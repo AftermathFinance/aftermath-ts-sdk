@@ -226,15 +226,6 @@ export class PerpetualsAccount extends Caller {
 	//  Inspections
 	// =========================================================================
 
-	public async getPositionLeverage(
-		inputs: ApiPerpetualsGetPositionLeverageBody
-	): Promise<number> {
-		return this.fetchApi<number, ApiPerpetualsGetPositionLeverageBody>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/position-leverage`,
-			inputs
-		);
-	}
-
 	public async setPositionLeverage(
 		inputs: ApiPerpetualsSetPositionLeverageBody
 	): Promise<void> {

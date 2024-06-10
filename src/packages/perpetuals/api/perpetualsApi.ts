@@ -569,19 +569,6 @@ export class PerpetualsApi {
 	//  Inspections
 	// =========================================================================
 
-	public fetchPositionLeverage = async (
-		inputs: ApiPerpetualsGetPositionLeverageBody & {
-			accountId: PerpetualsAccountId;
-		}
-	): Promise<number> => {
-		const { marketId, accountId } = inputs;
-		return this.Provider.indexerCaller.fetchIndexer<number>(
-			`perpetuals/accounts/${accountId
-				.toString()
-				.replaceAll("n", "")}/markets/${marketId}/position-leverage`
-		);
-	};
-
 	public setPositionLeverage = async (
 		inputs: ApiPerpetualsSetPositionLeverageBody & {
 			accountId: PerpetualsAccountId;
@@ -597,7 +584,7 @@ export class PerpetualsApi {
 			}
 		>(`perpetuals/account/set-position-leverage`, {
 			account_id: Number(accountId),
-			market_id: marketId,
+			market_id: Helpers.addLeadingZeroesToType(marketId),
 			leverage,
 		});
 	};

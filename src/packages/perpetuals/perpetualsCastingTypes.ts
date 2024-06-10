@@ -169,6 +169,7 @@ export interface PerpetualsPositionIndexerResponse {
 			BigIntAsString // size
 		>;
 	};
+	// leverage: number
 }
 
 export type PerpetualsAccountPositionsIndexerResponse = [
