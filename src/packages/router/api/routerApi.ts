@@ -173,8 +173,8 @@ export class RouterApi {
 			>(
 				"router/forward-trade-route",
 				{
-					from_coin_type: coinInType,
-					to_coin_type: coinOutType,
+					from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
+					to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
 					// NOTE: is this conversion safe ?
 					input_amount: Number(coinInAmount),
 					referred: referrer !== undefined,
@@ -235,8 +235,8 @@ export class RouterApi {
 		>(
 			"router/backward-trade-route",
 			{
-				from_coin_type: coinInType,
-				to_coin_type: coinOutType,
+				from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
+				to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
 				// NOTE: is this conversion safe ?
 				output_amount: Number(coinOutAmount),
 				referred: referrer !== undefined,
@@ -341,8 +341,8 @@ export class RouterApi {
 				{
 					slippage,
 					referrer,
-					from_coin_type: coinInType,
-					to_coin_type: coinOutType,
+					from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
+					to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
 					// NOTE: is this conversion safe ?
 					input_amount: Number(coinInAmount),
 					input_coin:
