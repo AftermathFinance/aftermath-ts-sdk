@@ -1,3 +1,4 @@
+import { TransactionArgument } from "@mysten/sui.js/transactions";
 import {
 	AnyObjectType,
 	Balance,
@@ -14,6 +15,7 @@ import {
 } from "../../general/types/generalTypes";
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
+import { TransactionObjectArgument as TransactionObjectArgumentV1 } from "@mysten/sui.js/transactions";
 
 // =========================================================================
 //  Name Only
@@ -169,9 +171,20 @@ export type ApiRouterAddTransactionForCompleteTradeRouteBody =
 		coinInId?: TransactionObjectArgument;
 	};
 
+export type ApiRouterAddTransactionForCompleteTradeRouteV1Body =
+	ApiRouterTransactionForCompleteTradeRouteBody & {
+		serializedTx: SerializedTransaction;
+		coinInId?: TransactionObjectArgumentV1;
+	};
+
 export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
 	tx: SerializedTransaction;
 	coinOutId: TransactionObjectArgument | undefined;
+}
+
+export interface ApiRouterAddTransactionForCompleteTradeRouteV1Response {
+	tx: SerializedTransaction;
+	coinOutId: TransactionObjectArgumentV1 | undefined;
 }
 
 export type ApiRouterTradeEventsBody = ApiEventsBody & {

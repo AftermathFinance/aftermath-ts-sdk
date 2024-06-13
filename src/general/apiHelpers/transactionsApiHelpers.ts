@@ -3,9 +3,11 @@ import {
 	Transaction,
 	TransactionObjectArgument,
 	Argument,
+	isTransaction,
 } from "@mysten/sui/transactions";
 import {
 	Balance,
+	CoinTransactionObjectArgumentV1,
 	CoinType,
 	ObjectId,
 	SerializedTransaction,
@@ -17,6 +19,11 @@ import {
 import { AftermathApi } from "../providers/aftermathApi";
 import { SuiTransactionBlockResponseQuery } from "@mysten/sui/client";
 import { Helpers } from "../utils";
+import {
+	TransactionBlock,
+	TransactionObjectArgument as TransactionObjectArgumentV1,
+	TransactionArgument as TransactionArgumentV1,
+} from "@mysten/sui.js/transactions";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -77,6 +84,40 @@ export class TransactionsApiHelpers {
 		const gasData = txResponse.effects.gasUsed;
 		const gasUsed =
 			BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
+
+		// scale up by 10% for safety margin
+		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
+
+		tx.setGasBudget(safeGasBudget);
+		tx.setGasPrice(referenceGasPrice);
+		return tx;
+	};
+
+	public fetchSetGasBudgetForTxV1 = async (inputs: {
+		tx: TransactionBlock;
+	}): Promise<TransactionBlock> => {
+		const { tx } = inputs;
+
+		const [txResponse, referenceGasPrice] = await Promise.all([
+			this.Provider.providerV1?.dryRunTransactionBlock({
+				transactionBlock: await tx.build({
+					client: this.Provider.providerV1,
+				}),
+			}),
+			this.Provider.provider.getReferenceGasPrice(),
+		]);
+
+		const gasUsed = !txResponse
+			? // TODO: make this into larger val
+			  BigInt(0)
+			: (() => {
+					const gasData = txResponse.effects.gasUsed;
+					return (
+						BigInt(gasData.computationCost) +
+						BigInt(gasData.storageCost)
+					);
+			  })();
+
 		// scale up by 10% for safety margin
 		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
@@ -95,6 +136,19 @@ export class TransactionsApiHelpers {
 
 		return (
 			await this.fetchSetGasBudgetForTx({ tx: await tx })
+		).serialize();
+	};
+
+	public fetchSetGasBudgetAndSerializeTxV1 = async (inputs: {
+		tx: TransactionBlock | Promise<TransactionBlock>;
+		isSponsoredTx?: boolean;
+	}): Promise<SerializedTransaction> => {
+		const { tx, isSponsoredTx } = inputs;
+
+		if (isSponsoredTx) return (await tx).serialize();
+
+		return (
+			await this.fetchSetGasBudgetForTxV1({ tx: await tx })
 		).serialize();
 	};
 
@@ -140,7 +194,7 @@ export class TransactionsApiHelpers {
 	};
 
 	public static splitCoinTx(inputs: {
-		tx: Transaction;
+		tx: Transaction | TransactionBlock;
 		coinType: CoinType;
 		// coinId: TransactionArgument | ObjectId;
 		coinId: ObjectId;
@@ -196,6 +250,26 @@ export class TransactionsApiHelpers {
 		return { [coinTxArg.$kind]: coinTxArg.Input };
 	};
 
+	public static serviceCoinDataFromCoinTxArgV1 = (inputs: {
+		coinTxArg: CoinTransactionObjectArgumentV1 | ObjectId;
+	}): ServiceCoinData => {
+		const { coinTxArg } = inputs;
+
+		if (typeof coinTxArg === "string")
+			return { Coin: Helpers.addLeadingZeroesToType(coinTxArg) };
+
+		if (coinTxArg.kind === "NestedResult")
+			return {
+				[coinTxArg.kind]: [coinTxArg.index, coinTxArg.resultIndex],
+			};
+
+		if (coinTxArg.kind === "Result")
+			return { [coinTxArg.kind]: coinTxArg.index };
+
+		// Input
+		return { [coinTxArg.kind]: coinTxArg.index };
+	};
+
 	public static coinTxArgFromServiceCoinData = (inputs: {
 		serviceCoinData: ServiceCoinData;
 	}): TransactionObjectArgument => {
@@ -224,6 +298,35 @@ export class TransactionsApiHelpers {
 		}
 		return {
 			Result: Object.values(serviceCoinData)[0],
+		};
+	};
+
+	public static coinTxArgFromServiceCoinDataV1 = (inputs: {
+		serviceCoinData: ServiceCoinData;
+	}): CoinTransactionObjectArgumentV1 => {
+		const { serviceCoinData } = inputs;
+
+		const key = Object.keys(serviceCoinData)[0];
+
+		// TODO: handle all cases
+		if (key === "Coin")
+			throw new Error(
+				"serviceCoinData in format { Coin: ObjectId } not supported"
+			);
+
+		// TODO: handle this cleaner
+		const kind = key as "Input" | "NestedResult" | "Result";
+
+		if (kind === "NestedResult") {
+			return {
+				kind,
+				index: Object.values(serviceCoinData)[0][0],
+				resultIndex: Object.values(serviceCoinData)[0][1],
+			};
+		}
+		return {
+			kind,
+			index: Object.values(serviceCoinData)[0],
 		};
 	};
 

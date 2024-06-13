@@ -71,30 +71,17 @@ export type ServiceCoinData =
 	| { Result: number }
 	| { NestedResult: [number, number] };
 
-// export type CoinTransactionObjectArgument =
-// 	| {
-// 			$kind: "Input";
-// 			Input: number;
-// 			type?: "object" | undefined;
-// 	  }
-// 	| {
-// 			$kind: "Result";
-// 			Result: number;
-// 	  }
-// 	| {
-// 			$kind: "NestedResult";
-// 			NestedResult: [number, number];
-// 	  }
-// 	| {
-// 			kind: "Input";
-// 			index: number;
-// 	  }
-// 	| {
-// 			kind: "NestedResult";
-// 			index: number;
-// 			resultIndex: number;
-// 	  }
-// 	| {
-// 			kind: "Result";
-// 			index: number;
-// 	  };
+export type CoinTransactionObjectArgumentV1 =
+	| {
+			kind: "Input";
+			index: number;
+	  }
+	| {
+			kind: "NestedResult";
+			index: number;
+			resultIndex: number;
+	  }
+	| {
+			kind: "Result";
+			index: number;
+	  };

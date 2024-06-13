@@ -10,9 +10,12 @@ import {
 	ApiRouterPartialCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
+	ApiRouterAddTransactionForCompleteTradeRouteV1Body,
+	ApiRouterAddTransactionForCompleteTradeRouteV1Response,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Transaction } from "@mysten/sui/transactions";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 /**
  * @class Router Provider
@@ -139,7 +142,15 @@ export class Router extends Caller {
 		);
 	}
 
-	// TODO: update inputs ?
+	public async getTransactionForCompleteTradeRouteV1(
+		inputs: ApiRouterTransactionForCompleteTradeRouteBody
+	) {
+		return this.fetchApiTransactionV1<ApiRouterTransactionForCompleteTradeRouteBody>(
+			"transactions/trade-v1",
+			inputs
+		);
+	}
+
 	public async addTransactionForCompleteTradeRoute(
 		inputs: Omit<
 			ApiRouterAddTransactionForCompleteTradeRouteBody,
@@ -149,13 +160,39 @@ export class Router extends Caller {
 		}
 	) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApi<
+		const { tx: newTx, coinOutId } = await this.fetchApi<
 			ApiRouterAddTransactionForCompleteTradeRouteResponse,
 			ApiRouterAddTransactionForCompleteTradeRouteBody
 		>("transactions/add-trade", {
 			...otherInputs,
 			serializedTx: tx.serialize(),
 		});
+		return {
+			tx: Transaction.from(newTx),
+			coinOutId,
+		};
+	}
+
+	public async addTransactionForCompleteTradeRouteV1(
+		inputs: Omit<
+			ApiRouterAddTransactionForCompleteTradeRouteV1Body,
+			"serializedTx"
+		> & {
+			tx: TransactionBlock;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+		const { tx: newTx, coinOutId } = await this.fetchApi<
+			ApiRouterAddTransactionForCompleteTradeRouteV1Response,
+			ApiRouterAddTransactionForCompleteTradeRouteV1Body
+		>("transactions/add-trade-v1", {
+			...otherInputs,
+			serializedTx: tx.serialize(),
+		});
+		return {
+			tx: TransactionBlock.from(newTx),
+			coinOutId,
+		};
 	}
 
 	// =========================================================================

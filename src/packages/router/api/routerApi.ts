@@ -25,6 +25,8 @@ import { Casting, Coin, Helpers } from "../../..";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { TransactionObjectArgument as TransactionObjectArgumentV1 } from "@mysten/sui.js/transactions";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -579,6 +581,117 @@ export class RouterApi {
 		};
 	};
 
+	public fetchTxForCompleteTradeRouteV1 = async (inputs: {
+		completeRoute: RouterCompleteTradeRoute;
+		slippage: Slippage;
+		tx?: TransactionBlock;
+		coinIn?: TransactionObjectArgumentV1;
+		walletAddress?: SuiAddress;
+		isSponsoredTx?: boolean;
+		transferCoinOut?: boolean;
+	}): Promise<{
+		tx: TransactionBlock;
+		coinOut: TransactionObjectArgumentV1;
+	}> => {
+		const {
+			completeRoute,
+			walletAddress,
+			coinIn,
+			isSponsoredTx,
+			slippage,
+			transferCoinOut,
+		} = inputs;
+
+		const externalFee = inputs.completeRoute.externalFee;
+		const referrer = inputs.completeRoute.referrer;
+
+		const initTx = inputs.tx ?? new TransactionBlock();
+		if (walletAddress) initTx.setSender(walletAddress);
+
+		const coinTxArg =
+			coinIn ??
+			(walletAddress
+				? await this.Provider.Coin().fetchCoinWithAmountTx({
+						tx: initTx,
+						coinAmount: completeRoute.coinIn.amount,
+						coinType: completeRoute.coinIn.type,
+						walletAddress,
+						isSponsoredTx,
+				  })
+				: (() => {
+						throw new Error("no walletAddress provided");
+				  })());
+
+		const txBytes = await initTx.build({
+			client: this.Provider.providerV1,
+			onlyTransactionKind: true,
+		});
+		const b64TxBytes = Buffer.from(txBytes).toString("base64");
+
+		const { output_coin, tx_kind } =
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					output_coin: ServiceCoinData;
+					tx_kind: SerializedTransaction;
+				},
+				{
+					paths: RouterServicePaths;
+					input_coin: ServiceCoinData;
+					slippage: number;
+					tx_kind: SerializedTransaction;
+					referrer?: SuiAddress;
+					router_fee_recipient?: SuiAddress;
+					router_fee?: number; // u64 format (same as on-chain)
+				}
+			>(
+				"router/tx-from-trade-route",
+				{
+					slippage,
+					referrer,
+					paths: Casting.router.routerServicePathsFromCompleteTradeRoute(
+						completeRoute
+					),
+					input_coin:
+						Helpers.transactions.serviceCoinDataFromCoinTxArgV1({
+							coinTxArg,
+						}),
+					tx_kind: b64TxBytes,
+					router_fee_recipient: externalFee?.recipient,
+					// NOTE: is this conversion safe ?
+					router_fee: externalFee
+						? Number(
+								Casting.numberToFixedBigInt(
+									externalFee.feePercentage
+								)
+						  )
+						: undefined,
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+
+		const tx = TransactionBlock.fromKind(tx_kind);
+
+		RouterApi.transferTxMetadataV1({
+			initTx,
+			newTx: tx,
+		});
+
+		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinDataV1({
+			serviceCoinData: output_coin,
+		});
+		if (transferCoinOut && walletAddress) {
+			tx.transferObjects([coinOut], walletAddress);
+		}
+
+		return {
+			tx,
+			coinOut,
+		};
+	};
+
 	// =========================================================================
 	//  Events
 	// =========================================================================
@@ -693,7 +806,6 @@ export class RouterApi {
 		newTx: Transaction;
 	}) => {
 		const { initTx, newTx } = inputs;
-		// MERGE
 
 		const sender = initTx.getData().sender;
 		if (sender) newTx.setSender(sender);
@@ -709,6 +821,42 @@ export class RouterApi {
 		if (gasData.owner) newTx.setGasOwner(gasData.owner);
 
 		if (gasData.payment) newTx.setGasPayment(gasData.payment);
+
+		if (gasData.price && typeof gasData.price !== "string")
+			newTx.setGasPrice(gasData.price);
+	};
+
+	private static transferTxMetadataV1 = (inputs: {
+		initTx: TransactionBlock;
+		newTx: TransactionBlock;
+	}) => {
+		const { initTx, newTx } = inputs;
+
+		const sender = initTx.blockData.sender;
+		if (sender) newTx.setSender(sender);
+
+		const expiration = initTx.blockData.expiration;
+		if (expiration && !("None" in expiration && expiration.None === null))
+			// @ts-ignore
+			newTx.setExpiration(expiration);
+
+		const gasData = initTx.blockData.gasConfig;
+
+		if (gasData.budget && typeof gasData.budget !== "string")
+			newTx.setGasBudget(gasData.budget);
+
+		if (gasData.owner) newTx.setGasOwner(gasData.owner);
+
+		if (gasData.payment)
+			newTx.setGasPayment(
+				gasData.payment.map((payment) => ({
+					...payment,
+					version:
+						typeof payment.version === "bigint"
+							? Number(payment.version)
+							: payment.version,
+				}))
+			);
 
 		if (gasData.price && typeof gasData.price !== "string")
 			newTx.setGasPrice(gasData.price);

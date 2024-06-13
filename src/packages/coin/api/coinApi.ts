@@ -20,6 +20,7 @@ import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
 import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class CoinApi {
 	// =========================================================================
@@ -114,7 +115,7 @@ export class CoinApi {
 	// =========================================================================
 
 	public fetchCoinWithAmountTx = async (inputs: {
-		tx: Transaction;
+		tx: Transaction | TransactionBlock;
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		coinAmount: Balance;
@@ -288,7 +289,7 @@ export class CoinApi {
 	// =========================================================================
 
 	private static coinWithAmountTx = (inputs: {
-		tx: Transaction;
+		tx: Transaction | TransactionBlock;
 		coinData: CoinStruct[];
 		coinAmount: Balance;
 		coinType: CoinType;
