@@ -1,12 +1,17 @@
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
 import { ApiDcaInitializeOrderBody, ApiDcaInitializeOrdertStrategyBody, DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrdersOjbect } from "../dcaTypes";
 import { AftermathApi } from "../../../general/providers";
-import { AnyObjectType, Balance, CoinType, DcaAddresses, EventsInputs, ObjectId, SuiAddress, Timestamp } from "../../../types";
+import { AnyObjectType, Balance, CoinType, DcaAddresses, EventsInputs, IFixed, ObjectId, SuiAddress, Timestamp } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { DcaCancelledOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain } from "./dcaApiCastingTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 
+const GAS_SUI_AMOUNT = BigInt(50_000_000);                  // 0.5 SUI
+const ALLOWABLE_DEVIATION_MS = BigInt(0.1 * 1e9);
+const ORDER_MAX_AMOUNT_OUT = BigInt(18_446_744_073_709_551_615);
+
+const SUI_COIN_TYPE = '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI';       //SUI
     
 export class DcaApi {
 
@@ -68,14 +73,20 @@ export class DcaApi {
 	//  Public Methods
 	// =========================================================================
 
-    public fetchBuildCreateOrder = async (
+    public fetchBuildCreateOrderTx = async (
         inputs: ApiDcaInitializeOrderBody
     ): Promise<TransactionBlock> => {
         const { walletAddress } = inputs;
         const tx = new TransactionBlock();
         tx.setSender(walletAddress);
 
-        const gasCoinAmount: Balance = BigInt(0.5 * 1e9); // Todo - Calculate it dynamicaly 
+        const gasCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: SUI_COIN_TYPE,
+			coinAmount: GAS_SUI_AMOUNT,                    
+            isSponsoredTx: inputs.isSponsoredTx
+		});
 
         const inputCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
@@ -84,32 +95,19 @@ export class DcaApi {
 			coinAmount: inputs.allocateCoinAmount,
             isSponsoredTx: inputs.isSponsoredTx
 		});
-
-        const gasCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: inputs.allocateCoinType,
-			coinAmount: gasCoinAmount,                    
-            isSponsoredTx: inputs.isSponsoredTx
-		});
         
-        const orderId = this.createNewOrderTx({
-			...inputs,
-			tx,
-            inputCoinId,
-            gasCoinId
-		});
+        const [orderId] = this.createNewOrderTx({
+            ...inputs,
+            tx,
+            gasCoinId,
+            inputCoinId
+        });
 
-        const result = this.createMoveNewOrderTx({
+        this.createtTransferNewOrderTx({
             ...inputs,
             tx,
             orderId,
-            walletAddress
-        })
-
-        console.log({
-            orderId: orderId,
-            result: result
+            recipientAddress: walletAddress
         })
         
         return tx;
@@ -117,38 +115,25 @@ export class DcaApi {
 
     public createNewOrderTx = (inputs: {
         tx: TransactionBlock,
-        inputCoinId: ObjectId,
-        gasCoinId: bigint,
         walletAddress: SuiAddress,
         allocateCoinType: CoinType,
         allocateCoinAmount: Balance,
         buyCoinType: CoinType,
-        timeInterval: Timestamp,
-        orderCount: Timestamp,
+        inputCoinId: ObjectId,
+        gasCoinId: bigint,
+        frequencyMs: Timestamp,
+        delayTimeMs: Timestamp,
+        coinPerTradeAmount: Balance
+        maxAllowableSlippageBps: Balance,
+        tradesAmount: number,
         straregy?: ApiDcaInitializeOrdertStrategyBody,
     }) => {
-        const {
-            tx,
-            inputCoinId,
-            gasCoinId
-         } = inputs;
+        const { tx } = inputs;
 
-        const prepared = {
-            inputCoinId: inputCoinId,
-            config: this.addresses.objects.config,
-            gas: inputs.allocateCoinType,
-            clock: Sui.constants.addresses.suiClockId,
-            frequency_ms: inputs.timeInterval,
-            allowable_deviation_ms: 0,
-            delay_timestamp_ms: 0,
-            amount_per_trade: 0,
-            max_allowable_slippage_bps: 0,
-            min_amount_out: inputs.straregy?.priceMin || 0,
-            max_amount_out: inputs.straregy?.priceMin || 0,
-            number_of_trades: inputs.orderCount
-        }
+        const ORDER_AMOUNT_PER_TRADE = BigInt(250_000_000);         // 0.25 SUI (1 SUI = 10^9)
+        const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum value
 
-        const result = tx.moveCall({
+        const moveOject = {
             target: Helpers.transactions.createTxTarget(
                 this.addresses.packages.dca,
                 DcaApi.constants.moduleNames.dca,
@@ -156,37 +141,35 @@ export class DcaApi {
             ),
             typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
             arguments: [
-                tx.object(prepared.config),
-                tx.object(inputCoinId),
-                tx.object(gasCoinId),
-                tx.object(prepared.clock),
-                tx.pure(prepared.frequency_ms, "u64"),
-                tx.pure(prepared.delay_timestamp_ms, "u64"),
-                tx.pure(prepared.allowable_deviation_ms, "u64"),
-                tx.pure(prepared.amount_per_trade, "u64"),
-                tx.pure(prepared.max_allowable_slippage_bps, "u16"),
-                tx.pure(prepared.min_amount_out, "u64"),
-                tx.pure(prepared.max_amount_out, "u64"),
-                tx.pure(prepared.number_of_trades, "u8"),
+                tx.object(this.addresses.objects.config),
+                tx.object(inputs.inputCoinId),
+                tx.object(inputs.gasCoinId),
+                tx.object(Sui.constants.addresses.suiClockId),
+                tx.pure(inputs.frequencyMs, "u64"),
+                tx.pure(inputs.delayTimeMs, "u64"),
+                tx.pure(ALLOWABLE_DEVIATION_MS, "u64"),
+                tx.pure(ORDER_AMOUNT_PER_TRADE, "u64"),
+                tx.pure(ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS, "u16"),
+                tx.pure(inputs.straregy?.priceMin ?? 0, "u64"),
+                tx.pure(inputs.straregy?.priceMax ?? ORDER_MAX_AMOUNT_OUT, "u64"),
+                tx.pure(inputs.tradesAmount, "u8"),
             ],
-        });
-        console.log({
-            prepared: prepared,
-            result: result
-        })
+        }
 
+        console.log("max strategy", inputs.straregy?.priceMax ?? ORDER_MAX_AMOUNT_OUT);
+        const result = tx.moveCall(moveOject);
         return result;
     }
 
-    public createMoveNewOrderTx = (inputs: {
+    public createtTransferNewOrderTx = (inputs: {
         tx: TransactionBlock,
-        orderId: ObjectId,
+        orderId: ObjectId | TransactionArgument,
         allocateCoinType: CoinType,
         buyCoinType: CoinType,
-        walletAddress: SuiAddress
+        recipientAddress: SuiAddress
     }) => {
-        const { tx } = inputs;
-        return tx.moveCall({
+        const { tx, orderId } = inputs;
+        const moveOject = {
             target: Helpers.transactions.createTxTarget(
                 this.addresses.packages.dca,
                 DcaApi.constants.moduleNames.dca,
@@ -194,11 +177,24 @@ export class DcaApi {
             ),
             typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
             arguments: [
-                tx.object(inputs.orderId),
+                typeof orderId === "string"
+					? tx.object(orderId)
+					: orderId,
                 tx.object(this.addresses.objects.config),
-                tx.pure(inputs.walletAddress)
+                tx.pure(inputs.recipientAddress, "address")
             ],
-        });
+        }
+        console.log(moveOject)
+        return tx.moveCall(moveOject);
+    }
+
+    public fetchBuildCancelOrderTx = async (
+        inputs: ApiDcaInitializeOrderBody
+    ): Promise<TransactionBlock> => {
+        const { walletAddress } = inputs;
+        const tx = new TransactionBlock();
+        tx.setSender(walletAddress);
+        return tx;
     }
 
     // =========================================================================
@@ -458,3 +454,4 @@ export class DcaApi {
 //     ],
 //     type_arguments: []
 // };
+// /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222

@@ -30,10 +30,13 @@ export interface ApiDcaInitializeOrderBody {
 	allocateCoinType: CoinType;
 	allocateCoinAmount: Balance;
     buyCoinType: CoinType;
-	timeInterval: Timestamp;
-	orderCount: Timestamp;
+	frequencyMs: Timestamp;
+	tradesAmount: number;
     straregy?: ApiDcaInitializeOrdertStrategyBody;
 	isSponsoredTx?: boolean;
+	delayTimeMs: Timestamp;
+	maxAllowableSlippageBps: Balance;
+	coinPerTradeAmount: Balance;
 }
 
 // =========================================================================

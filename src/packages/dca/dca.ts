@@ -52,11 +52,10 @@ export class Dca extends Caller {
 		return this.useProvider().fetchDcaOrdersObject(inputs)
 	}
 
-    public async getCreateDcaVaultTx(
+    public async getCreateDcaOrderTx(
 		inputs: ApiDcaInitializeOrderBody
 	) {
-		console.log("getCreateDcaVaultTx")
-		return this.useProvider().fetchBuildCreateOrder(inputs);
+		return this.useProvider().fetchBuildCreateOrderTx(inputs);
 	}
 
 	// =========================================================================
