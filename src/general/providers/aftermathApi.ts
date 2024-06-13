@@ -32,7 +32,7 @@ import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui/client";
-import { SuiClient as SuiClientV1 } from "@mysten/sui.js/client";
+import { SuiClient as SuiClientV0 } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
@@ -101,7 +101,7 @@ export class AftermathApi {
 				coinApiIdsToCoinTypes?: Record<CoinGeckoCoinApiId, CoinType[]>;
 			};
 		},
-		public readonly providerV1?: SuiClientV1
+		public readonly providerV0?: SuiClientV0
 	) {
 		this.cache = {};
 	}

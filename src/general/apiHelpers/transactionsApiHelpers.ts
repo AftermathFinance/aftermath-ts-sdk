@@ -7,7 +7,7 @@ import {
 } from "@mysten/sui/transactions";
 import {
 	Balance,
-	CoinTransactionObjectArgumentV1,
+	CoinTransactionObjectArgumentV0,
 	CoinType,
 	ObjectId,
 	SerializedTransaction,
@@ -21,8 +21,8 @@ import { SuiTransactionBlockResponseQuery } from "@mysten/sui/client";
 import { Helpers } from "../utils";
 import {
 	TransactionBlock,
-	TransactionObjectArgument as TransactionObjectArgumentV1,
-	TransactionArgument as TransactionArgumentV1,
+	TransactionObjectArgument as TransactionObjectArgumentV0,
+	TransactionArgument as TransactionArgumentV0,
 } from "@mysten/sui.js/transactions";
 
 export class TransactionsApiHelpers {
@@ -93,15 +93,15 @@ export class TransactionsApiHelpers {
 		return tx;
 	};
 
-	public fetchSetGasBudgetForTxV1 = async (inputs: {
+	public fetchSetGasBudgetForTxV0 = async (inputs: {
 		tx: TransactionBlock;
 	}): Promise<TransactionBlock> => {
 		const { tx } = inputs;
 
 		const [txResponse, referenceGasPrice] = await Promise.all([
-			this.Provider.providerV1?.dryRunTransactionBlock({
+			this.Provider.providerV0?.dryRunTransactionBlock({
 				transactionBlock: await tx.build({
-					client: this.Provider.providerV1,
+					client: this.Provider.providerV0,
 				}),
 			}),
 			this.Provider.provider.getReferenceGasPrice(),
@@ -139,7 +139,7 @@ export class TransactionsApiHelpers {
 		).serialize();
 	};
 
-	public fetchSetGasBudgetAndSerializeTxV1 = async (inputs: {
+	public fetchSetGasBudgetAndSerializeTxV0 = async (inputs: {
 		tx: TransactionBlock | Promise<TransactionBlock>;
 		isSponsoredTx?: boolean;
 	}): Promise<SerializedTransaction> => {
@@ -148,7 +148,7 @@ export class TransactionsApiHelpers {
 		if (isSponsoredTx) return (await tx).serialize();
 
 		return (
-			await this.fetchSetGasBudgetForTxV1({ tx: await tx })
+			await this.fetchSetGasBudgetForTxV0({ tx: await tx })
 		).serialize();
 	};
 
@@ -250,8 +250,8 @@ export class TransactionsApiHelpers {
 		return { [coinTxArg.$kind]: coinTxArg.Input };
 	};
 
-	public static serviceCoinDataFromCoinTxArgV1 = (inputs: {
-		coinTxArg: CoinTransactionObjectArgumentV1 | ObjectId;
+	public static serviceCoinDataFromCoinTxArgV0 = (inputs: {
+		coinTxArg: CoinTransactionObjectArgumentV0 | ObjectId;
 	}): ServiceCoinData => {
 		const { coinTxArg } = inputs;
 
@@ -301,9 +301,9 @@ export class TransactionsApiHelpers {
 		};
 	};
 
-	public static coinTxArgFromServiceCoinDataV1 = (inputs: {
+	public static coinTxArgFromServiceCoinDataV0 = (inputs: {
 		serviceCoinData: ServiceCoinData;
-	}): CoinTransactionObjectArgumentV1 => {
+	}): CoinTransactionObjectArgumentV0 => {
 		const { serviceCoinData } = inputs;
 
 		const key = Object.keys(serviceCoinData)[0];

@@ -10,8 +10,8 @@ import {
 	ApiRouterPartialCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
-	ApiRouterAddTransactionForCompleteTradeRouteV1Body,
-	ApiRouterAddTransactionForCompleteTradeRouteV1Response,
+	ApiRouterAddTransactionForCompleteTradeRouteV0Body,
+	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Transaction } from "@mysten/sui/transactions";
@@ -142,11 +142,11 @@ export class Router extends Caller {
 		);
 	}
 
-	public async getTransactionForCompleteTradeRouteV1(
+	public async getTransactionForCompleteTradeRouteV0(
 		inputs: ApiRouterTransactionForCompleteTradeRouteBody
 	) {
-		return this.fetchApiTransactionV1<ApiRouterTransactionForCompleteTradeRouteBody>(
-			"transactions/trade-v1",
+		return this.fetchApiTransactionV0<ApiRouterTransactionForCompleteTradeRouteBody>(
+			"transactions/trade-v0",
 			inputs
 		);
 	}
@@ -173,9 +173,9 @@ export class Router extends Caller {
 		};
 	}
 
-	public async addTransactionForCompleteTradeRouteV1(
+	public async addTransactionForCompleteTradeRouteV0(
 		inputs: Omit<
-			ApiRouterAddTransactionForCompleteTradeRouteV1Body,
+			ApiRouterAddTransactionForCompleteTradeRouteV0Body,
 			"serializedTx"
 		> & {
 			tx: TransactionBlock;
@@ -183,9 +183,9 @@ export class Router extends Caller {
 	) {
 		const { tx, ...otherInputs } = inputs;
 		const { tx: newTx, coinOutId } = await this.fetchApi<
-			ApiRouterAddTransactionForCompleteTradeRouteV1Response,
-			ApiRouterAddTransactionForCompleteTradeRouteV1Body
-		>("transactions/add-trade-v1", {
+			ApiRouterAddTransactionForCompleteTradeRouteV0Response,
+			ApiRouterAddTransactionForCompleteTradeRouteV0Body
+		>("transactions/add-trade-v0", {
 			...otherInputs,
 			serializedTx: tx.serialize(),
 		});

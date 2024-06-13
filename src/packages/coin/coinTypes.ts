@@ -71,7 +71,7 @@ export type ServiceCoinData =
 	| { Result: number }
 	| { NestedResult: [number, number] };
 
-export type CoinTransactionObjectArgumentV1 =
+export type CoinTransactionObjectArgumentV0 =
 	| {
 			kind: "Input";
 			index: number;

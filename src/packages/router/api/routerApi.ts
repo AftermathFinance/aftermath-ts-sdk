@@ -26,7 +26,7 @@ import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { TransactionObjectArgument as TransactionObjectArgumentV1 } from "@mysten/sui.js/transactions";
+import { TransactionObjectArgument as TransactionObjectArgumentV0 } from "@mysten/sui.js/transactions";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -581,17 +581,17 @@ export class RouterApi {
 		};
 	};
 
-	public fetchTxForCompleteTradeRouteV1 = async (inputs: {
+	public fetchTxForCompleteTradeRouteV0 = async (inputs: {
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		tx?: TransactionBlock;
-		coinIn?: TransactionObjectArgumentV1;
+		coinIn?: TransactionObjectArgumentV0;
 		walletAddress?: SuiAddress;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
 	}): Promise<{
 		tx: TransactionBlock;
-		coinOut: TransactionObjectArgumentV1;
+		coinOut: TransactionObjectArgumentV0;
 	}> => {
 		const {
 			completeRoute,
@@ -623,7 +623,7 @@ export class RouterApi {
 				  })());
 
 		const txBytes = await initTx.build({
-			client: this.Provider.providerV1,
+			client: this.Provider.providerV0,
 			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
@@ -652,7 +652,7 @@ export class RouterApi {
 						completeRoute
 					),
 					input_coin:
-						Helpers.transactions.serviceCoinDataFromCoinTxArgV1({
+						Helpers.transactions.serviceCoinDataFromCoinTxArgV0({
 							coinTxArg,
 						}),
 					tx_kind: b64TxBytes,
@@ -674,12 +674,12 @@ export class RouterApi {
 
 		const tx = TransactionBlock.fromKind(tx_kind);
 
-		RouterApi.transferTxMetadataV1({
+		RouterApi.transferTxMetadataV0({
 			initTx,
 			newTx: tx,
 		});
 
-		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinDataV1({
+		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinDataV0({
 			serviceCoinData: output_coin,
 		});
 		if (transferCoinOut && walletAddress) {
@@ -826,7 +826,7 @@ export class RouterApi {
 			newTx.setGasPrice(gasData.price);
 	};
 
-	private static transferTxMetadataV1 = (inputs: {
+	private static transferTxMetadataV0 = (inputs: {
 		initTx: TransactionBlock;
 		newTx: TransactionBlock;
 	}) => {

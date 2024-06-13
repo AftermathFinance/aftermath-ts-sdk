@@ -130,7 +130,7 @@ export class Caller {
 		);
 	}
 
-	protected async fetchApiTransactionV1<BodyType = undefined>(
+	protected async fetchApiTransactionV0<BodyType = undefined>(
 		url: Url,
 		body?: BodyType,
 		signal?: AbortSignal,
