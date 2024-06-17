@@ -236,6 +236,15 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
+	public async getPositionLeverage(
+		inputs: ApiPerpetualsGetPositionLeverageBody
+	): Promise<number> {
+		return this.fetchApi<number, ApiPerpetualsGetPositionLeverageBody>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/get-position-leverage`,
+			inputs
+		);
+	}
+
 	public setPositionLeverageMessageToSign(inputs: {
 		marketId: PerpetualsMarketId;
 		leverage: number;
@@ -768,6 +777,7 @@ export class PerpetualsAccount extends Caller {
 			pendingOrders: [],
 			makerFee: BigInt(1000000000000000000), // 100%
 			takerFee: BigInt(1000000000000000000), // 100%
+			leverage: 1,
 		};
 	};
 }

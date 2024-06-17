@@ -595,6 +595,23 @@ export class PerpetualsApi {
 		);
 	};
 
+	public fetchPositionLeverage = async (
+		inputs: ApiPerpetualsGetPositionLeverageBody & {
+			accountId: PerpetualsAccountId;
+		}
+	): Promise<number> => {
+		return (
+			(await this.Provider.indexerCaller.fetchIndexer<number>(
+				`perpetuals/accounts/${inputs.accountId}/markets/${inputs.marketId}/position-leverage`,
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				true
+			)) || 1
+		);
+	};
+
 	public fetchPreviewOrder = async (
 		// TODO: remove unused inputs
 		inputs: ApiPerpetualsPreviewOrderBody
@@ -677,6 +694,7 @@ export class PerpetualsApi {
 					position: response.position,
 					collateralCoinType: inputs.collateralCoinType,
 					marketId: inputs.marketId,
+					leverage,
 				});
 
 			return {

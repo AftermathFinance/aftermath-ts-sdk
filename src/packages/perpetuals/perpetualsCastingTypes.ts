@@ -169,12 +169,12 @@ export interface PerpetualsPositionIndexerResponse {
 			BigIntAsString // size
 		>;
 	};
-	// leverage: number
 }
 
 export type PerpetualsAccountPositionsIndexerResponse = [
 	IdAsStringBytes, // PerpetualsMarketId
-	PerpetualsPositionIndexerResponse
+	PerpetualsPositionIndexerResponse,
+	IFixedAsStringBytes // leverage
 ][];
 
 export type PerpetualsPreviewOrderIndexerResponse = {

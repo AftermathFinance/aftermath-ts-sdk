@@ -105,10 +105,12 @@ export class PerpetualsApiCasting {
 		position: PerpetualsPositionIndexerResponse;
 		collateralCoinType: CoinType;
 		marketId: PerpetualsMarketId;
+		leverage: number;
 	}): PerpetualsPosition => {
-		const { position, collateralCoinType, marketId } = inputs;
+		const { position, collateralCoinType, marketId, leverage } = inputs;
 		return {
 			collateralCoinType,
+			leverage,
 			collateral: Casting.IFixed.iFixedFromStringBytes(
 				position.position.collateral
 			),
@@ -162,14 +164,21 @@ export class PerpetualsApiCasting {
 		collateralCoinType: CoinType
 	): PerpetualsAccountObject => {
 		return {
-			positions: response.map(([marketIdAsStringBytes, position]) =>
-				this.positionFromIndexerReponse({
-					position,
-					collateralCoinType,
-					marketId: Casting.addressFromStringBytes(
-						marketIdAsStringBytes
-					),
-				})
+			positions: response.map(
+				([marketIdAsStringBytes, position, leverageAsStringBytes]) =>
+					this.positionFromIndexerReponse({
+						position,
+						collateralCoinType,
+						leverage:
+							Casting.IFixed.numberFromIFixed(
+								Casting.IFixed.iFixedFromStringBytes(
+									leverageAsStringBytes
+								)
+							) || 1,
+						marketId: Casting.addressFromStringBytes(
+							marketIdAsStringBytes
+						),
+					})
 			),
 		};
 	};

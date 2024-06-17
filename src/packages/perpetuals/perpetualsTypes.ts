@@ -152,6 +152,7 @@ export interface PerpetualsPosition {
 	}[];
 	makerFee: IFixed;
 	takerFee: IFixed;
+	leverage: number;
 }
 
 const Position = bcs.struct("Position", {
