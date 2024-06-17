@@ -570,23 +570,29 @@ export class PerpetualsApi {
 	// =========================================================================
 
 	public setPositionLeverage = async (
-		inputs: ApiPerpetualsSetPositionLeverageBody & {
-			accountId: PerpetualsAccountId;
-		}
-	): Promise<void> => {
-		const { marketId, accountId, leverage } = inputs;
-		await this.Provider.indexerCaller.fetchIndexer<
-			void,
+		inputs: ApiPerpetualsSetPositionLeverageBody
+	): Promise<boolean> => {
+		return this.Provider.indexerCaller.fetchIndexer<
+			boolean,
 			{
-				account_id: number;
-				market_id: ObjectId;
-				leverage: number;
+				wallet_address: string;
+				signature: string;
+				bytes: string;
 			}
-		>(`perpetuals/account/set-position-leverage`, {
-			account_id: Number(accountId),
-			market_id: Helpers.addLeadingZeroesToType(marketId),
-			leverage,
-		});
+		>(
+			`perpetuals/account/set-position-leverage`,
+			{
+				wallet_address: Helpers.addLeadingZeroesToType(
+					inputs.walletAddress
+				),
+				signature: inputs.signature,
+				bytes: inputs.bytes,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 	};
 
 	public fetchPreviewOrder = async (

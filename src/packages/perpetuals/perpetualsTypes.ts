@@ -615,8 +615,9 @@ export interface ApiPerpetualsGetPositionLeverageBody {
 }
 
 export interface ApiPerpetualsSetPositionLeverageBody {
-	marketId: PerpetualsMarketId;
-	leverage: number;
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
 }
 
 export type ApiPerpetualsPreviewOrderBody = (

@@ -39,6 +39,7 @@ import {
 	ApiPerpetualsAccountOrderDatasBody,
 	ApiPerpetualsGetPositionLeverageBody,
 	ApiPerpetualsSetPositionLeverageBody,
+	PerpetualsAccountId,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -228,11 +229,26 @@ export class PerpetualsAccount extends Caller {
 
 	public async setPositionLeverage(
 		inputs: ApiPerpetualsSetPositionLeverageBody
-	): Promise<void> {
-		return this.fetchApi<void, ApiPerpetualsSetPositionLeverageBody>(
+	): Promise<boolean> {
+		return this.fetchApi<boolean, ApiPerpetualsSetPositionLeverageBody>(
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/set-position-leverage`,
 			inputs
 		);
+	}
+
+	public setPositionLeverageMessageToSign(inputs: {
+		marketId: PerpetualsMarketId;
+		leverage: number;
+	}): {
+		account_id: number;
+		market_id: PerpetualsMarketId;
+		leverage: number;
+	} {
+		return {
+			account_id: Number(this.accountCap.accountId),
+			market_id: inputs.marketId,
+			leverage: inputs.leverage,
+		};
 	}
 
 	public async getOrderPreview(
