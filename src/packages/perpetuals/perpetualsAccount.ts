@@ -498,9 +498,8 @@ export class PerpetualsAccount extends Caller {
 			this.positionForMarketId({ marketId }) ??
 			this.emptyPosition({ marketId });
 
-		const marginRatioInitial = IFixedUtils.numberFromIFixed(
-			inputs.market.marketParams.marginRatioInitial
-		);
+		const marginRatioInitial = 1 / position.leverage;
+		// const marginRatioInitial = inputs.market.initialMarginRatio();
 		const marginRatioMaintenance = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioMaintenance
 		);
@@ -707,6 +706,7 @@ export class PerpetualsAccount extends Caller {
 							market.calcCollateralUsedForOrder({
 								...inputs,
 								orderData,
+								leverage: position.leverage,
 							}).collateral
 					)
 			),

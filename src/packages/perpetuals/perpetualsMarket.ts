@@ -187,27 +187,38 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	public calcOrderCollateral(inputs: {
+		leverage: number;
 		indexPrice: number;
 		size: bigint;
 	}): Balance {
-		const { indexPrice, size } = inputs;
+		const { leverage, indexPrice, size } = inputs;
 
-		const imr = this.initialMarginRatio();
+		const imr = 1 / leverage;
+		// const imr = this.initialMarginRatio();
 		return BigInt(
 			Math.floor(Number(size) * this.lotSize() * indexPrice * imr)
 		);
 	}
 
 	public calcOptimisticMaxOrderSize = (inputs: {
+		leverage: number;
 		position: PerpetualsPosition | undefined;
 		account: PerpetualsAccount;
 		indexPrice: number;
 		collateralPrice: number;
 		side: PerpetualsOrderSide;
 	}): number => {
-		const { position, indexPrice, side, account, collateralPrice } = inputs;
+		const {
+			leverage,
+			position,
+			indexPrice,
+			side,
+			account,
+			collateralPrice,
+		} = inputs;
 
-		const imr = this.initialMarginRatio();
+		const imr = 1 / leverage;
+		// const imr = this.initialMarginRatio();
 
 		const isReversing = position
 			? Boolean(side ^ Perpetuals.positionSide(position))
@@ -242,6 +253,7 @@ export class PerpetualsMarket extends Caller {
 
 	public calcPessimisticMaxOrderSizeUsd = async (inputs: {
 		position: PerpetualsPosition | undefined;
+		leverage: number;
 		freeMarginUsd: number;
 		minInitialMargin: number;
 		indexPrice: number;
@@ -252,6 +264,7 @@ export class PerpetualsMarket extends Caller {
 		optimisticSize: number;
 	}): Promise<number> => {
 		const {
+			leverage,
 			indexPrice,
 			side,
 			position,
@@ -268,7 +281,8 @@ export class PerpetualsMarket extends Caller {
 			1
 		);
 
-		const marginRatioInitial = this.initialMarginRatio();
+		const marginRatioInitial = 1 / leverage;
+		// const marginRatioInitial = this.initialMarginRatio();
 		const takerFee = Casting.IFixed.numberFromIFixed(
 			this.marketParams.takerFee
 		);
@@ -331,6 +345,7 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	public calcCollateralRequiredForOrder = (inputs: {
+		leverage: number;
 		fills: PerpetualsFilledOrderData[];
 		account: PerpetualsAccount;
 		side: PerpetualsOrderSide;
@@ -340,6 +355,7 @@ export class PerpetualsMarket extends Caller {
 		price: number | undefined;
 	}): number => {
 		const {
+			leverage,
 			account,
 			size,
 			fills,
@@ -412,7 +428,8 @@ export class PerpetualsMarket extends Caller {
 			}
 		}
 
-		const imr = this.initialMarginRatio();
+		const imr = 1 / leverage;
+		// const imr = this.initialMarginRatio();
 		const sizePosted = sizeRemaining;
 		const executionPrice = sizeFilled ? sizeFilledUsd / sizeFilled : 0;
 
@@ -505,6 +522,7 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	public calcCollateralUsedForOrder = (inputs: {
+		leverage: number;
 		orderData: PerpetualsOrderData;
 		indexPrice: number;
 		collateralPrice: number;
@@ -512,9 +530,10 @@ export class PerpetualsMarket extends Caller {
 		collateral: number;
 		collateralUsd: number;
 	} => {
-		const { orderData, indexPrice, collateralPrice } = inputs;
+		const { leverage, orderData, indexPrice, collateralPrice } = inputs;
 
-		const imr = this.initialMarginRatio();
+		const imr = 1 / leverage;
+		// const imr = this.initialMarginRatio();
 
 		const collateralUsd =
 			Number(orderData.initialSize - orderData.filledSize) *
@@ -614,7 +633,8 @@ export class PerpetualsMarket extends Caller {
 		const { position, indexPrice, executionPrice, size, percentFilled } =
 			inputs;
 
-		const imr = this.initialMarginRatio();
+		const imr = 1 / position.leverage;
+		// const imr = this.initialMarginRatio();
 		const takerFee = Casting.IFixed.numberFromIFixed(
 			this.marketParams.takerFee
 		);
