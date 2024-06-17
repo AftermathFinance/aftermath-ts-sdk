@@ -37,6 +37,7 @@ export interface ApiDcaInitializeOrderBody {
 	delayTimeMs: Timestamp;
 	maxAllowableSlippageBps: Balance;
 	coinPerTradeAmount: Balance;
+	publicKey: Uint8Array;
 }
 
 // =========================================================================
