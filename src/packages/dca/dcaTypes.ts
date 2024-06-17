@@ -40,6 +40,13 @@ export interface ApiDcaInitializeOrderBody {
 	publicKey: Uint8Array;
 }
 
+export interface ApiDcaCancelOrderBody {
+	walletAddress: SuiAddress;
+    buyCoinType: CoinType;
+	allocateCoinType: CoinType;
+	orderId: SuiAddress;
+}
+
 // =========================================================================
 //  DCA Order
 // =========================================================================

@@ -1,23 +1,17 @@
 import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
-import { ApiDcaInitializeOrderBody, ApiDcaInitializeOrdertStrategyBody, DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrdersOjbect } from "../dcaTypes";
+import { ApiDcaCancelOrderBody, ApiDcaInitializeOrderBody, ApiDcaInitializeOrdertStrategyBody, DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrdersOjbect } from "../dcaTypes";
 import { AftermathApi } from "../../../general/providers";
 import { AnyObjectType, Balance, CoinType, DcaAddresses, EventsInputs, IFixed, ObjectId, SuiAddress, Timestamp } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { DcaCancelledOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain } from "./dcaApiCastingTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { bcs } from "@mysten/sui.js/bcs";
-import { fromHEX, toHEX } from "@mysten/sui.js/utils";
-import { blake2b } from "blakejs";
+import { Coin } from "../../coin";
 
-const GAS_SUI_AMOUNT = BigInt(50_000_000);                  // 0.5 SUI
+const ED25519_PK_FLAG = 0x00;
+const GAS_SUI_AMOUNT = BigInt(50_000_000);                  // 0.05 SUI
 const ALLOWABLE_DEVIATION_MS = BigInt(0.1 * 1e9);
-const ORDER_MAX_AMOUNT_OUT = Casting.u64MaxBigInt;
-const ORDER_AMOUNT_PER_TRADE = BigInt(250_000_000);         // 0.25 SUI (1 SUI = 10^9)
-const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum value
-
-const SUI_COIN_TYPE = '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI';       //SUI
+const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
     
 export class DcaApi {
 
@@ -76,7 +70,7 @@ export class DcaApi {
     }
 
     // =========================================================================
-	//  Public Methods
+	//  Public Transaction Methods
 	// =========================================================================
 
     public fetchBuildCreateOrderTx = async (
@@ -89,7 +83,7 @@ export class DcaApi {
         const gasCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
-			coinType: SUI_COIN_TYPE,
+			coinType: Coin.constants.suiCoinType,
 			coinAmount: GAS_SUI_AMOUNT,                    
             isSponsoredTx: inputs.isSponsoredTx
 		});
@@ -101,29 +95,36 @@ export class DcaApi {
 			coinAmount: inputs.allocateCoinAmount,
             isSponsoredTx: inputs.isSponsoredTx
 		});
+
+        const orderAmountPerTrade = inputs.allocateCoinAmount / BigInt(inputs.tradesAmount);
         
-        const orderId = this.createNewOrderTx({
+        this.createNewOrderTx({
             ...inputs,
             tx,
             gasCoinId,
-            inputCoinId
+            inputCoinId,
+            orderAmountPerTrade
         });
-
-        const keypair = new Ed25519Keypair();
-        const message = new TextEncoder().encode("afe2fafac0b048c9c70a61cc1798400a85173df96b30118c40af6f3382b5a777");
-        const { signature } = await keypair.signPersonalMessage(message);
-        console.log("sig", signature, message)
-
 
         return tx;
     };
 
-    private prependZeroToUint8Array = (arr: Uint8Array): Uint8Array => {
-        const newArr = new Uint8Array(arr.length + 1);
-        newArr[0] = 0;
-        newArr.set(arr, 1);
-        return newArr;
+    public fetchBuildCancelOrderTx = async (
+        inputs: ApiDcaCancelOrderBody
+    ): Promise<TransactionBlock> => {
+        const { walletAddress } = inputs;
+        const tx = new TransactionBlock();
+        tx.setSender(walletAddress);
+        this.createCancelOrderTx({
+            ...inputs,
+            tx,
+        });
+        return tx;
     }
+
+    // =========================================================================
+    // Transaction Commands
+    // =========================================================================
 
     public createNewOrderTx = (inputs: {
         tx: TransactionBlock,
@@ -139,20 +140,15 @@ export class DcaApi {
         maxAllowableSlippageBps: Balance,
         tradesAmount: number,
         publicKey: Uint8Array,
+        orderAmountPerTrade: Balance;
         straregy?: ApiDcaInitializeOrdertStrategyBody,
     }) => {
         const { tx } = inputs;
 
-        // Добавляем флаг в начало буфера
-        const ED25519_PK_FLAG = 0x00;
-        const buffer = Buffer.concat([Buffer.from([ED25519_PK_FLAG]), inputs.publicKey]);
+        // Todo: - Do we need it here? Added ED25519 flag at the beggining of the array. 
+        const publicKeyPrepared = Array.from(Buffer.concat([Buffer.from([ED25519_PK_FLAG]), inputs.publicKey]));
 
-        console.log({
-            uintArray: Uint8Array.from(buffer),
-            simpleArray: Array.from(buffer),
-        })
-        
-        const moveOject = {
+        return tx.moveCall({
             target: Helpers.transactions.createTxTarget(
                 this.addresses.packages.dca,
                 DcaApi.constants.moduleNames.dca,
@@ -164,67 +160,38 @@ export class DcaApi {
                 tx.object(inputs.inputCoinId),
                 tx.object(inputs.gasCoinId),
                 tx.object(Sui.constants.addresses.suiClockId),
-                tx.pure(Array.from(buffer), "vector<u8>"),
+                tx.pure(publicKeyPrepared, "vector<u8>"),
                 tx.pure(inputs.frequencyMs, "u64"),
                 tx.pure(inputs.delayTimeMs, "u64"),
                 tx.pure(ALLOWABLE_DEVIATION_MS, "u64"),
-                tx.pure(ORDER_AMOUNT_PER_TRADE, "u64"),
+                tx.pure(inputs.orderAmountPerTrade, "u64"),
                 tx.pure(ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS, "u16"),
                 tx.pure(inputs.straregy?.priceMin ?? 0, "u64"),
-                tx.pure(inputs.straregy?.priceMax ?? ORDER_MAX_AMOUNT_OUT, "u64"),
+                tx.pure(inputs.straregy?.priceMax ?? Casting.u64MaxBigInt, "u64"),
                 tx.pure(inputs.tradesAmount, "u8"),
             ],
-        }
-
-        return tx.moveCall(moveOject);
+        });
     }
 
-    public createTestDadFedorTx = (inputs: {
+    public createCancelOrderTx = (inputs: {
         tx: TransactionBlock,
-        gasCoinId: ObjectId | TransactionArgument,
+        allocateCoinType: CoinType,
+        buyCoinType: CoinType,
+        orderId: ObjectId | TransactionArgument
     }) => {
         const { tx } = inputs;
         return tx.moveCall({
             target: Helpers.transactions.createTxTarget(
-                "0x6d104bd1a6c0657806ae5d3846c1ec1029a9d1fbf93f3b712be856245b098081",
-                "DadFedorContract",
-                "create_dadfedor_object"
+                this.addresses.packages.dca,
+                DcaApi.constants.moduleNames.dca,
+                "cancel_order"
             ),
-            typeArguments: [],
+            typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
             arguments: [
-                tx.object(inputs.gasCoinId),
-                tx.pure(BigInt(5), "u8"),
+                tx.object(this.addresses.objects.config),
+                tx.object(inputs.orderId),
             ],
         });
-    }
-
-    public createTestTransferDadFedorTx = (inputs: {
-        tx: TransactionBlock,
-        order: ObjectId | TransactionArgument,
-    }) => {
-        const { tx } = inputs;
-        return tx.moveCall({
-            target: Helpers.transactions.createTxTarget(
-                "0x6d104bd1a6c0657806ae5d3846c1ec1029a9d1fbf93f3b712be856245b098081",
-                "DadFedorContract",
-                "transfer_object"
-            ),
-            typeArguments: [],
-            arguments: [
-                tx.object(inputs.order),
-            ],
-        });
-    }
-
-
-
-    public fetchBuildCancelOrderTx = async (
-        inputs: ApiDcaInitializeOrderBody
-    ): Promise<TransactionBlock> => {
-        const { walletAddress } = inputs;
-        const tx = new TransactionBlock();
-        tx.setSender(walletAddress);
-        return tx;
     }
 
     // =========================================================================
@@ -472,14 +439,3 @@ export class DcaApi {
 			DcaApi.constants.eventNames.executedTrade
 		);
 }
-    
-// const payload = {
-//     type: "entry_function_payload",
-//     function: `${contractAddress}::${moduleName}::${functionName}`,
-//     arguments: [
-//         witness, // передаем witness как аргумент
-//         ctx // передаем ctx как аргумент
-//     ],
-//     type_arguments: []
-// };
-// /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222

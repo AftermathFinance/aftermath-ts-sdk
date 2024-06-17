@@ -4,7 +4,7 @@ import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 
 import { SuiAddress } from "../../types";
-import { ApiDCAsOwnedBody, ApiDcaInitializeOrderBody, DcaOrdersOjbect } from "./dcaTypes";
+import { ApiDCAsOwnedBody, ApiDcaCancelOrderBody, ApiDcaInitializeOrderBody, DcaOrdersOjbect } from "./dcaTypes";
 
 export class Dca extends Caller {
 	
@@ -31,7 +31,7 @@ export class Dca extends Caller {
     }
 
 	// =========================================================================
-	//  Public
+	//  Class Objects
 	// =========================================================================
 
     public async getActiveDcaOrders(inputs: {
@@ -52,15 +52,21 @@ export class Dca extends Caller {
 		return this.useProvider().fetchDcaOrdersObject(inputs)
 	}
 
+	// =========================================================================
+	// Transactions
+	// =========================================================================
+
     public async getCreateDcaOrderTx(
 		inputs: ApiDcaInitializeOrderBody
 	) {
 		return this.useProvider().fetchBuildCreateOrderTx(inputs);
 	}
 
-	// =========================================================================
-	//  Class Objects
-	// =========================================================================
+	public async getCancelDcaOrderTx(
+		inputs: ApiDcaCancelOrderBody
+	) {
+		return this.useProvider().fetchBuildCancelOrderTx(inputs);
+	}
 
     // =========================================================================
 	//  Private Helpers
