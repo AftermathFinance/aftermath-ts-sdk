@@ -1,7 +1,8 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { Helpers } from "../../../general/utils";
-import { DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrdersOjbect } from "../dcaTypes";
-import { DcaCancelledOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain } from "./dcaApiCastingTypes";
+import { DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrderObject, DcaOrderTradeObject, DcaOrdersOjbect } from "../dcaTypes";
+import { DcaCancelledOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain, DcaOrderFieldsOnChain } from "./dcaApiCastingTypes";
+import { Coin } from "../../coin/coin";
 
 export class DcaApiCasting {
 
@@ -13,8 +14,8 @@ export class DcaApiCasting {
 			orderId: fields.order_id,
 			owner: fields.owner,
 			inputValue: BigInt(fields.input_value),
-			inputType: Helpers.addLeadingZeroesToType("0x" + fields.input_type),
-			outputType: Helpers.addLeadingZeroesToType("0x" + fields.output_type),
+			inputType: Helpers.addLeadingZeroesToType("0x" + Buffer.from(fields.input_type).toString()),
+			outputType: Helpers.addLeadingZeroesToType("0x" + Buffer.from(fields.output_type).toString()),
 			gasValue: BigInt(fields.gas_value),
 			frequencyMs: Number(fields.frequency_ms),
 			allowableDeviationMs: Number(fields.allowable_deviation_ms),
@@ -60,6 +61,7 @@ export class DcaApiCasting {
 		eventOnChain: DcaExecutedTradeEventOnChain
 	): DcaExecutedTradeEvent => {
 		const fields = eventOnChain.parsedJson;
+		console.log("executedTradeEventFromChain", fields);
 		return {
 			orderId: fields.order_id,
 			owner: fields.owner,
@@ -72,4 +74,69 @@ export class DcaApiCasting {
 			type: eventOnChain.type
 		};
 	};
+
+	// =========================================================================
+	// Object 
+	// =========================================================================
+
+	public static partialOrdersObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): DcaOrderObject => {
+		const objectType = Helpers.getObjectType(data);
+
+		const fields = Helpers.getObjectFields(
+			data
+		) as DcaOrderFieldsOnChain;
+
+		console.log("data", data);
+		console.log("fields", fields);
+
+		const coinsTypes = new Coin(objectType).innerCoinType.split(", ");
+		const inCoin = Helpers.addLeadingZeroesToType(coinsTypes[0]);
+		const outCoin = Helpers.addLeadingZeroesToType(coinsTypes[1]);
+
+		return {
+			objectId: Helpers.getObjectId(data),
+			objectType: objectType,
+			overview: {
+				allocatedCoin: {
+					coin: inCoin,
+					amount: BigInt(fields.remaining_balance),
+				},
+				buyCoin: {
+					coin: outCoin,
+					amount: BigInt(0),
+				},
+				widthrowAmount: BigInt(0),
+				progress: 0,
+				totalDeposited: BigInt(0),
+				totalSpent: BigInt(0),
+				eachOrderSize: BigInt(fields.amount_per_trade),
+				averagePrice: BigInt(0),
+				totalOrders: 0,
+				interval: BigInt(fields.frequency_ms),
+				ordersRemaining: Number(fields.remaining_trades),
+				created: 0,
+				tnxDigest: ""
+			},
+			trades: []
+		};
+	}
+
+	public static tradeEventToObject = (
+		eventObject: DcaExecutedTradeEvent
+	): DcaOrderTradeObject => {
+		return {
+			allocatedCoin: {
+				coin: eventObject.inputType,
+				amount: eventObject.inputAmount
+			},
+			buyCoin: {
+				coin: eventObject.outputType,
+				amount: eventObject.outputAmount
+			},
+			buyDate: Number(eventObject.timestamp),
+			rate: 0
+		};
+	}
 }

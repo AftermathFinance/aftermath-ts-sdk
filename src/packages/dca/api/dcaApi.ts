@@ -22,6 +22,7 @@ export class DcaApi {
     private static readonly constants = {
         moduleNames: {
             dca: "dca",
+            events: "events"
         },
         eventNames: {
             createdOrder: "CreatedOrderEvent",
@@ -29,6 +30,11 @@ export class DcaApi {
             executedTrade: "ExecutedTradeEvent",
         }
     }
+
+    public readonly objectTypes: {
+		order: AnyObjectType;
+		trade: AnyObjectType;
+	};
 
     // =========================================================================
     // Class Members
@@ -60,13 +66,11 @@ export class DcaApi {
             canceledOrder: this.canceledOrderEventType(),
             executedTrade: this.executedOrderEventType(),
         }
-    }
 
-    private test = async (inputs: {
-        walletAddress: SuiAddress;   
-    }) => {
-        const t = await this.Provider.Objects().fetchOwnedObjects(inputs);
-        console.log(t);
+        this.objectTypes = {
+            order: `${addresses.packages.dca}::${DcaApi.constants.moduleNames.dca}::Order`,
+            trade: `${addresses.packages.dca}::${DcaApi.constants.moduleNames.dca}::trade`,
+        }
     }
 
     // =========================================================================
@@ -202,176 +206,71 @@ export class DcaApi {
         walletAddress: SuiAddress;   
     }): Promise<DcaOrdersOjbect> => {
         const { walletAddress } = inputs;
-        // if (!walletAddress) return Promise.reject(new Error('walletAddress is undefined'));
 
+        const [createdOrderEvents, allTrades] = await Promise.all([
+            (
+                await this.Provider.Events().fetchAllEvents({
+                    fetchEventsFunc: (eventInputs) =>
+                        this.fetchCreatedDcaOrdersEvents(eventInputs),
+                })
+            ).filter(order => order.owner == walletAddress),
+            this.fetchAllDcaOrderTradesObject()
+        ])
 
-        // const objectIds = (
-		// 	await this.Provider.Events().fetchAllEvents({
-		// 		fetchEventsFunc: (eventInputs) =>
-		// 			this.fetchCreatedDcaOrdersEvents(eventInputs),
-		// 	})
-		// );
+        const createdOrderEventsIds = createdOrderEvents.map(order => order.orderId)
 
-        // console.log({
-        //     objectIds: objectIds
-        // })
+        const partialCreatedOrderObjects =
+			await this.Provider.Objects().fetchCastObjectBatch({
+                objectIds: createdOrderEventsIds,
+                objectFromSuiObjectResponse: Casting.dca.partialOrdersObjectFromSuiObjectResponse,
+            });
+
+        const createdOrderObjects = partialCreatedOrderObjects.map(order => {
+            const eventOrder = createdOrderEvents.find(eventOrder => eventOrder.orderId == order.objectId);
+            var orderTrades = allTrades.filter(trade => trade.orderId == order.objectId)
+            order.overview.tnxDigest = eventOrder?.txnDigest ?? "";
+            order.overview.created = Number(eventOrder?.timestamp);
+            order.overview.totalOrders = order.overview.ordersRemaining + orderTrades.length;
+
+            // FOR TEST PURPOSE ONLY
+            orderTrades.push(this.getTestTradeEvent(BigInt(100_000_000)));
+            orderTrades.push(this.getTestTradeEvent(BigInt(200_000_000)));
+            orderTrades.push(this.getTestTradeEvent(BigInt(300_000_000)));
+
+            var totalTradesPriceValue: Balance = BigInt(0);
+            orderTrades.map(trade => {
+                totalTradesPriceValue += trade.inputAmount;
+                order.trades.push(Casting.dca.tradeEventToObject(trade))
+            })
+            order.overview.averagePrice = totalTradesPriceValue /= BigInt(orderTrades.length);
+            return order;
+        })
 
         return Promise.resolve({
-            active: [
-                {
-                    overview: {
-                        allocatedCoin: {
-                            coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                            amount: 1000
-                        },
-                        buyCoin: {
-                            coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                            amount: 100
-                        },
-                        allocatedCoinStartAmount: BigInt(1000000000000),
-                        progress: 0.7,
-                        widthrowAmount: BigInt(1000000000000),
-                        totalDeposited: BigInt(1000000000000),
-                        totalSpent: BigInt(1000000000000),
-                        averagePrice: BigInt(1000000000000),
-                        totalOrders: 6,
-                        interval: BigInt(1000000000000),
-                        ordersRemaining: 4,
-                        eachOrderSize: BigInt(0),
-                        created: 1715360395000,
-                        tnxDigest: ""
-                    },
-                    trades: [
-                        {
-                            allocatedCoin: {
-                                coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                                amount: 1000
-                            },
-                            buyCoin: {
-                                coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                                amount: 100
-                            },
-                            buyDate: 1715456204000,
-                            rate: 1.14
-                        },
-                        {
-                            allocatedCoin: {
-                                coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                                amount: 1000
-                            },
-                            buyCoin: {
-                                coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                                amount: 100
-                            },
-                            buyDate: 1715456204000,
-                            rate: 1.45
-                        }
-                    ]
-                },
-                {
-                    overview: {
-                        allocatedCoin: {
-                            coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                            amount: 1000
-                        },
-                        buyCoin: {
-                            coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                            amount: 100
-                        },
-                        allocatedCoinStartAmount: BigInt(1000000000000),
-                        progress: 0.7,
-                        widthrowAmount: BigInt(1000000000000),
-                        totalDeposited: BigInt(1000000000000),
-                        totalSpent: BigInt(1000000000000),
-                        averagePrice: BigInt(1000000000000),
-                        totalOrders: 6,
-                        interval: BigInt(1000000000000),
-                        ordersRemaining: 4,
-                        eachOrderSize: BigInt(0),
-                        created: 1715360395000,
-                        tnxDigest: ""
-                    },
-                    trades: [
-                        {
-                            allocatedCoin: {
-                                coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                                amount: 1000
-                            },
-                            buyCoin: {
-                                coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                                amount: 100
-                            },
-                            buyDate: 1715456204000,
-                            rate: 1.14
-                        },
-                        {
-                            allocatedCoin: {
-                                coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                                amount: 1000
-                            },
-                            buyCoin: {
-                                coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                                amount: 100
-                            },
-                            buyDate: 1715456204000,
-                            rate: 1.45
-                        }
-                    ]
-                }
-            ],
-            past: [
-                {
-                    overview: {
-                        allocatedCoin: {
-                            coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                            amount: 1000
-                        },
-                        buyCoin: {
-                            coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                            amount: 100
-                        },
-                        allocatedCoinStartAmount: BigInt(1000000000000),
-                        progress: 0.7,
-                        widthrowAmount: BigInt(1000000000000),
-                        totalDeposited: BigInt(1000000000000),
-                        totalSpent: BigInt(1000000000000),
-                        averagePrice: BigInt(1000000000000),
-                        totalOrders: 6,
-                        interval: BigInt(1000000000000),
-                        ordersRemaining: 4,
-                        eachOrderSize: BigInt(0),
-                        created: 1715360395000,
-                        tnxDigest: ""
-                    },
-                    trades: [
-                        {
-                            allocatedCoin: {
-                                coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                                amount: 1000
-                            },
-                            buyCoin: {
-                                coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                                amount: 100
-                            },
-                            buyDate: 1715456204000,
-                            rate: 1.14
-                        },
-                        {
-                            allocatedCoin: {
-                                coin: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
-                                amount: 1000
-                            },
-                            buyCoin: {
-                                coin: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
-                                amount: 100
-                            },
-                            buyDate: 1715456204000,
-                            rate: 1.45
-                        }
-                    ]
-                }
-            ]
+            active: createdOrderObjects,
+            past: []
         });
+    }
+
+    // Todo: - Change it with cursor fetching
+    public fetchAllDcaOrderTradesObject = async (): Promise<DcaExecutedTradeEvent[]> => {
+        return (
+			await this.Provider.Events().fetchAllEvents({
+				fetchEventsFunc: (eventInputs) =>
+					this.fetchExecutedTradeEvents(eventInputs),
+			})
+		)
+    }
+
+    public fetchDcaOrderTradesObject = async (inputs: {
+        orderId: ObjectId
+    }): Promise<DcaExecutedTradeEvent[]> => {
+        return (
+			await this.Provider.Events().fetchAllEvents({
+				fetchEventsFunc: (eventInputs) =>
+					this.fetchExecutedTradeEvents(eventInputs),
+			})
+		).filter(trade => trade.orderId == inputs.orderId)
     }
 
     // =========================================================================
@@ -421,21 +320,52 @@ export class DcaApi {
     private createdOrderEventType = () => 
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.dca,
-			DcaApi.constants.moduleNames.dca,
+			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.createdOrder
 		);
     
     private canceledOrderEventType = () => 
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.dca,
-			DcaApi.constants.moduleNames.dca,
+			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.canceledOrder
 		);
 
     private executedOrderEventType = () => 
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.dca,
-			DcaApi.constants.moduleNames.dca,
+			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.executedTrade
 		);
+
+    private getTestTradeEvent = (amount: bigint) => {
+        return {
+            orderId: "0x577aedab658687dd03c41a566928c98cd85c96885fb43b17a8bc7568da1d876b",
+            owner: "0x45c7d4f327ec05e35ced427b44241dd932e7c8532b5d3791fe0e5c7277ce3c4a",
+            inputType: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+            inputAmount: amount,
+            outputType: "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN",
+            outputAmount: amount,
+            type: "",
+            timestamp: 1715456204000,
+            txnDigest: ""
+        }
+    }
 }
+
+
+
+// const canceledObjectIds = (
+// 	await this.Provider.Events().fetchAllEvents({
+// 		fetchEventsFunc: (eventInputs) =>
+// 			this.fetchCanceledDcaOrdersEvents(eventInputs),
+// 	})
+// ).map(order => order.orderId);
+
+
+// const partialCreatedOrders =
+// 	await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+//         walletAddress: walletAddress,
+//         objectType: this.objectTypes.order,
+//         objectFromSuiObjectResponse: Casting.dca.partialOrdersObjectFromSuiObjectResponse,
+//     });

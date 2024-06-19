@@ -52,16 +52,27 @@ export interface ApiDcaCancelOrderBody {
 // =========================================================================
 
 export interface DcaOrderTradeObject {
-	allocatedCoin: CoinWithAmount;
-	buyCoin: CoinWithAmount;
+	allocatedCoin: {
+		coin: CoinType;
+		amount: Balance;
+	};
+	buyCoin: {
+		coin: CoinType;
+		amount: Balance;
+	};
 	buyDate: Timestamp;
 	rate: number;
 }
 
 export interface DcaOrderOverviewObject {
-	allocatedCoin: CoinWithAmount;
-	allocatedCoinStartAmount: Balance;
-	buyCoin: CoinWithAmount;
+	allocatedCoin: {
+		coin: CoinType;
+		amount: Balance;
+	};
+	buyCoin: {
+		coin: CoinType;
+		amount: Balance;
+	};
 	widthrowAmount: Balance;
 	progress: number;
 
@@ -74,10 +85,10 @@ export interface DcaOrderOverviewObject {
 	interval: IFixed;
 	ordersRemaining: number;
 	created: Timestamp;
-	tnxDigest: TransactionDigest
+	tnxDigest: TransactionDigest;
 }
 
-export interface DcaOrderObject {
+export interface DcaOrderObject extends Object {
 	overview: DcaOrderOverviewObject;
 	trades: DcaOrderTrades;
 }

@@ -17,19 +17,8 @@ export class Dca extends Caller {
 		private readonly Provider?: AftermathApi
 	) {
 		super(network, "dca");
-		// this.test();
 	}
-
-	private test = async () => {
-		const body: ApiDCAsOwnedBody = {
-			walletAddress: "0x45c7d4f327ec05e35ced427b44241dd932e7c8532b5d3791fe0e5c7277ce3c4a"
-		}
-        const dcaOrders = await this.fetchApi<DcaOrdersOjbect, ApiDCAsOwnedBody>("", body);
-        console.log({
-			dcaOrders: dcaOrders
-		});
-    }
-
+	
 	// =========================================================================
 	//  Class Objects
 	// =========================================================================
@@ -46,10 +35,8 @@ export class Dca extends Caller {
         return inputs;
     }
 
-	public async getDcaVaults(inputs: {
-        walletAddress: SuiAddress;
-    }) {
-		return this.useProvider().fetchDcaOrdersObject(inputs)
+	public async getDcaOrdersObject(inputs: ApiDCAsOwnedBody) {
+		return this.fetchApi<DcaOrdersOjbect, ApiDCAsOwnedBody>("", inputs);
 	}
 
 	// =========================================================================
