@@ -69,7 +69,6 @@ import {
 	ApiPerpetualsMaxOrderSizeBody,
 	ApiPerpetualsAccountOrderDatasBody,
 	ApiPerpetualsMarket24hrVolumeResponse,
-	ApiPerpetualsGetPositionLeverageBody,
 	ApiPerpetualsSetPositionLeverageBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
@@ -595,20 +594,63 @@ export class PerpetualsApi {
 		);
 	};
 
-	public fetchPositionLeverage = async (
-		inputs: ApiPerpetualsGetPositionLeverageBody & {
-			accountId: PerpetualsAccountId;
-		}
-	): Promise<number> => {
+	public fetchAllPositionLeverages = async (inputs: {
+		accountId: PerpetualsAccountId;
+	}): Promise<
+		{
+			marketId: PerpetualsMarketId;
+			leverage: number;
+		}[]
+	> => {
 		return (
-			(await this.Provider.indexerCaller.fetchIndexer<number>(
-				`perpetuals/accounts/${inputs.accountId}/markets/${inputs.marketId}/position-leverage`,
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					market_id: PerpetualsMarketId;
+					leverage: number;
+				}[]
+			>(
+				`perpetuals/accounts/${inputs.accountId}/position-leverages`,
 				undefined,
 				undefined,
 				undefined,
 				undefined,
 				true
-			)) || 1
+			)
+		).map((data) => ({
+			marketId: data.market_id,
+			leverage: data.leverage,
+		}));
+	};
+
+	public fetchPositionLeverages = async (inputs: {
+		accountId: PerpetualsAccountId;
+		marketIds: PerpetualsMarketId[];
+	}): Promise<number[]> => {
+		const marketIds = inputs.marketIds.map((objectId) =>
+			Helpers.addLeadingZeroesToType(objectId)
+		);
+		const leverages = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				market_id: PerpetualsMarketId;
+				leverage: number;
+			}[]
+		>(
+			`perpetuals/accounts/${inputs.accountId}/position-leverages`,
+			undefined,
+			{
+				market_ids: marketIds,
+			},
+			undefined,
+			undefined,
+			true
+		);
+		// TODO: move this common pattern to helpers
+		return marketIds.map(
+			(objectId) =>
+				leverages.find(
+					(leverage) => leverage.market_id === objectId
+					// TODO: handle this error case better
+				)!.leverage
 		);
 	};
 

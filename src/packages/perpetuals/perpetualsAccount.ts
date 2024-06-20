@@ -37,7 +37,6 @@ import {
 	Percentage,
 	ObjectVersion,
 	ApiPerpetualsAccountOrderDatasBody,
-	ApiPerpetualsGetPositionLeverageBody,
 	ApiPerpetualsSetPositionLeverageBody,
 	PerpetualsAccountId,
 } from "../../types";
@@ -236,12 +235,24 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getPositionLeverage(
-		inputs: ApiPerpetualsGetPositionLeverageBody
-	): Promise<number> {
-		return this.fetchApi<number, ApiPerpetualsGetPositionLeverageBody>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/get-position-leverage`,
-			inputs
+	// public async getAllPositionLeverages(): Promise<
+	// 	{
+	// 		marketId: PerpetualsMarketId;
+	// 		leverage: number;
+	// 	}[]
+	// > {
+	// 	return this.fetchApi(
+	// 		`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/position-leverages`
+	// 	);
+	// }
+
+	public async getPositionLeverages(inputs: {
+		marketIds: PerpetualsMarketId[];
+	}): Promise<number[]> {
+		return this.fetchApi(
+			`${this.accountCap.collateralCoinType}/accounts/${
+				this.accountCap.accountId
+			}/position-leverages/${JSON.stringify(inputs.marketIds)}`
 		);
 	}
 

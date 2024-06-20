@@ -611,10 +611,6 @@ export interface ApiPerpetualsAccountsBody {
 //  Inspections
 // =========================================================================
 
-export interface ApiPerpetualsGetPositionLeverageBody {
-	marketId: PerpetualsMarketId;
-}
-
 export interface ApiPerpetualsSetPositionLeverageBody {
 	walletAddress: SuiAddress;
 	bytes: string;
