@@ -644,13 +644,15 @@ export class PerpetualsApi {
 			undefined,
 			true
 		);
-		// TODO: move this common pattern to helpers
 		return marketIds.map(
 			(objectId) =>
-				leverages.find(
-					(leverage) => leverage.market_id === objectId
-					// TODO: handle this error case better
-				)!.leverage
+				(
+					leverages.find(
+						(leverage) => leverage.market_id === objectId
+					) ?? {
+						leverage: 1,
+					}
+				).leverage
 		);
 	};
 
