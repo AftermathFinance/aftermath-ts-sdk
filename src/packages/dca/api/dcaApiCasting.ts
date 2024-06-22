@@ -1,6 +1,6 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
-import { Helpers } from "../../../general/utils";
-import { DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrderObject, DcaOrderTradeObject, DcaOrdersOjbect } from "../dcaTypes";
+import { Casting, Helpers } from "../../../general/utils";
+import { DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrderObject, DcaOrderTradeObject, DcaOrdersOjbect, DcaOrdertStrategyObject } from "../dcaTypes";
 import { DcaCancelledOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain, DcaOrderFieldsOnChain } from "./dcaApiCastingTypes";
 import { Coin } from "../../coin/coin";
 
@@ -94,6 +94,13 @@ export class DcaApiCasting {
 		const coinsTypes = new Coin(objectType).innerCoinType.split(", ");
 		const inCoin = Helpers.addLeadingZeroesToType(coinsTypes[0]);
 		const outCoin = Helpers.addLeadingZeroesToType(coinsTypes[1]);
+		const strategy: DcaOrdertStrategyObject | undefined = (
+							(Number(fields.min_amount_out) === 0) && 
+							(BigInt(fields.max_amount_out) === Casting.u64MaxBigInt)) 
+								? undefined : {
+									priceMin: BigInt(fields.min_amount_out),
+    								priceMax: BigInt(fields.max_amount_out)
+								};
 
 		return {
 			objectId: Helpers.getObjectId(data),
@@ -107,17 +114,21 @@ export class DcaApiCasting {
 					coin: outCoin,
 					amount: BigInt(0),
 				},
-				widthrowAmount: BigInt(0),
-				progress: 0,
-				totalDeposited: BigInt(0),
-				totalSpent: BigInt(0),
-				eachOrderSize: BigInt(fields.amount_per_trade),
 				averagePrice: BigInt(0),
-				totalOrders: 0,
+				totalSpent: BigInt(0),
 				interval: BigInt(fields.frequency_ms),
-				ordersRemaining: Number(fields.remaining_trades),
+				totalTrades: 0,
+				tradesRemaining: Number(fields.remaining_trades),
+				maxSlippage: BigInt(0),
+				strategy: strategy,
 				created: 0,
-				tnxDigest: ""
+				started: 0,
+				lastExecutedTradeTime: {
+					time: 0,
+					tnxDigest: ""
+				},
+				progress: 0,
+				tnxDigest: "",
 			},
 			trades: []
 		};

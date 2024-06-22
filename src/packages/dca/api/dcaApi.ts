@@ -152,6 +152,10 @@ export class DcaApi {
         // Todo: - Do we need it here? Added ED25519 flag at the beggining of the array. 
         const publicKeyPrepared = Array.from(Buffer.concat([Buffer.from([ED25519_PK_FLAG]), inputs.publicKey]));
 
+        console.log("SDK", {
+            frequencyMs: inputs.frequencyMs
+        })
+
         return tx.moveCall({
             target: Helpers.transactions.createTxTarget(
                 this.addresses.packages.dca,
@@ -192,8 +196,8 @@ export class DcaApi {
             ),
             typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
             arguments: [
-                tx.object(this.addresses.objects.config),
                 tx.object(inputs.orderId),
+                tx.object(this.addresses.objects.config),
             ],
         });
     }
@@ -230,7 +234,7 @@ export class DcaApi {
             var orderTrades = allTrades.filter(trade => trade.orderId == order.objectId)
             order.overview.tnxDigest = eventOrder?.txnDigest ?? "";
             order.overview.created = Number(eventOrder?.timestamp);
-            order.overview.totalOrders = order.overview.ordersRemaining + orderTrades.length;
+            order.overview.totalTrades = order.overview.tradesRemaining + orderTrades.length;
 
             // FOR TEST PURPOSE ONLY
             orderTrades.push(this.getTestTradeEvent(BigInt(100_000_000)));
@@ -238,11 +242,20 @@ export class DcaApi {
             orderTrades.push(this.getTestTradeEvent(BigInt(300_000_000)));
 
             var totalTradesPriceValue: Balance = BigInt(0);
+            const lastExecutedTrade = orderTrades.length > 0 ? 
+                                                    orderTrades[orderTrades.length - 1]
+                                                        : 
+                                                    undefined;
             orderTrades.map(trade => {
                 totalTradesPriceValue += trade.inputAmount;
                 order.trades.push(Casting.dca.tradeEventToObject(trade))
             })
             order.overview.averagePrice = totalTradesPriceValue /= BigInt(orderTrades.length);
+            order.overview.lastExecutedTradeTime = lastExecutedTrade ? {
+                time: lastExecutedTrade.timestamp,
+                tnxDigest: lastExecutedTrade.txnDigest
+            } : undefined;
+
             return order;
         })
 

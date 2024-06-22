@@ -64,6 +64,11 @@ export interface DcaOrderTradeObject {
 	rate: number;
 }
 
+export interface DcaOrdertStrategyObject {
+    priceMin: Balance;
+    priceMax: Balance;
+}
+
 export interface DcaOrderOverviewObject {
 	allocatedCoin: {
 		coin: CoinType;
@@ -73,18 +78,22 @@ export interface DcaOrderOverviewObject {
 		coin: CoinType;
 		amount: Balance;
 	};
-	widthrowAmount: Balance;
-	progress: number;
-
-	totalDeposited: Balance;
-	totalSpent: Balance;
-	eachOrderSize: Balance;
 	averagePrice: Balance;
+	totalSpent: Balance;
 
-	totalOrders: number;
 	interval: IFixed;
-	ordersRemaining: number;
+	totalTrades: number;
+	tradesRemaining: number;
+	maxSlippage: Balance;
+	strategy?: DcaOrdertStrategyObject;
+
 	created: Timestamp;
+	started: Timestamp;
+	lastExecutedTradeTime?: {
+		time: Timestamp | undefined;
+		tnxDigest: TransactionDigest;
+	};
+	progress: number;
 	tnxDigest: TransactionDigest;
 }
 
