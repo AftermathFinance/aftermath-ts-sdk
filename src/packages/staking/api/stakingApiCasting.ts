@@ -87,6 +87,7 @@ export class StakingApiCasting {
 			),
 			totalSuiAmount: BigInt(fields.total_sui_amount),
 			totalRewardsAmount: BigInt(fields.total_rewards_amount),
+			activeEpoch: BigInt(fields.active_epoch),
 		};
 	};
 
