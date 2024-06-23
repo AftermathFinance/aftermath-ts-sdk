@@ -87,14 +87,19 @@ export interface DcaOrderOverviewObject {
 	maxSlippage: Balance;
 	strategy?: DcaOrdertStrategyObject;
 
-	created: Timestamp;
-	started: Timestamp;
+	progress: number;
+	created: {
+		time: Timestamp | undefined;
+		tnxDigest: TransactionDigest;
+	};
+	started: {
+		time: Timestamp | undefined;
+		tnxDigest: TransactionDigest;
+	};
 	lastExecutedTradeTime?: {
 		time: Timestamp | undefined;
 		tnxDigest: TransactionDigest;
 	};
-	progress: number;
-	tnxDigest: TransactionDigest;
 }
 
 export interface DcaOrderObject extends Object {

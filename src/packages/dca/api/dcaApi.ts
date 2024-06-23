@@ -232,8 +232,10 @@ export class DcaApi {
         const createdOrderObjects = partialCreatedOrderObjects.map(order => {
             const eventOrder = createdOrderEvents.find(eventOrder => eventOrder.orderId == order.objectId);
             var orderTrades = allTrades.filter(trade => trade.orderId == order.objectId)
-            order.overview.tnxDigest = eventOrder?.txnDigest ?? "";
-            order.overview.created = Number(eventOrder?.timestamp);
+            order.overview.created = {
+                time:  Number(eventOrder?.timestamp),
+                tnxDigest: eventOrder?.txnDigest ?? "",
+            }
             order.overview.totalTrades = order.overview.tradesRemaining + orderTrades.length;
 
             // FOR TEST PURPOSE ONLY

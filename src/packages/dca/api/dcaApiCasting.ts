@@ -121,14 +121,10 @@ export class DcaApiCasting {
 				tradesRemaining: Number(fields.remaining_trades),
 				maxSlippage: BigInt(0),
 				strategy: strategy,
-				created: 0,
-				started: 0,
-				lastExecutedTradeTime: {
-					time: 0,
-					tnxDigest: ""
-				},
 				progress: 0,
-				tnxDigest: "",
+				created: { time: undefined, tnxDigest: "" },
+				started: { time: undefined, tnxDigest: "" },
+				lastExecutedTradeTime: { time: undefined, tnxDigest: ""},
 			},
 			trades: []
 		};
