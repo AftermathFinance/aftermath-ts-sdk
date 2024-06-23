@@ -345,6 +345,26 @@ export class StakingApi {
 		});
 	};
 
+	public epochWasChangedTx = (inputs: { tx: Transaction }) => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"epoch_was_changed"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.objects.safe), // Safe
+				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
+				tx.object(this.addresses.objects.referralVault), // ReferralVault
+				tx.object(this.addresses.objects.treasury), // Treasury
+				tx.pure.u64(BigInt(1000)), // fields_requests_per_tx
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Inspection Transaction Commands
 	// =========================================================================
@@ -622,6 +642,10 @@ export class StakingApi {
 
 		return tx;
 	};
+
+	public buildEpochWasChangedTx = Helpers.transactions.createBuildTxFunc(
+		this.epochWasChangedTx
+	);
 
 	// =========================================================================
 	//  Positions
