@@ -1,10 +1,10 @@
 
-import { SuiNetwork } from "../../types";
+import { ApiIndexerUserEventsBody, ObjectId, SuiNetwork } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 
 import { SuiAddress } from "../../types";
-import { ApiDCAsOwnedBody, ApiDcaCancelOrderBody, ApiDcaInitializeOrderBody, DcaOrdersObject } from "./dcaTypes";
+import { ApiDCAsOwnedBody, ApiDcaCancelOrderBody, ApiDcaInitializeOrderBody, DcaOrdersObject, DcaOrderObject, DcaCreatedOrderEvent } from "./dcaTypes";
 
 export class Dca extends Caller {
 	

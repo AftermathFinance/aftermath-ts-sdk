@@ -1,6 +1,6 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { Casting, Helpers } from "../../../general/utils";
-import { DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrderObject, DcaOrderTradeObject, DcaOrdersOjbect, DcaOrdertStrategyObject } from "../dcaTypes";
+import { DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrderObject, DcaOrderTradeObject, DcaOrdertStrategyObject } from "../dcaTypes";
 import { DcaCancelledOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain, DcaOrderFieldsOnChain } from "./dcaApiCastingTypes";
 import { Coin } from "../../coin/coin";
 

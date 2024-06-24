@@ -1,5 +1,5 @@
 import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
-import { ApiDcaCancelOrderBody, ApiDcaInitializeOrderBody, ApiDcaInitializeOrdertStrategyBody, DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrdersOjbect } from "../dcaTypes";
+import { ApiDcaCancelOrderBody, ApiDcaInitializeOrderBody, ApiDcaInitializeOrdertStrategyBody, DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrderObject, DcaOrdersObject } from "../dcaTypes";
 import { AftermathApi } from "../../../general/providers";
 import { AnyObjectType, Balance, CoinType, DcaAddresses, EventsInputs, IFixed, ObjectId, SuiAddress, Timestamp } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
@@ -90,7 +90,6 @@ export class DcaApi {
 			tx,
 			walletAddress,
 			coinType: Coin.constants.suiCoinType,
-			coinAmount: GAS_SUI_AMOUNT,                    
 			coinAmount: tradesGasAmount,                    
             isSponsoredTx: inputs.isSponsoredTx
 		});
@@ -210,17 +209,18 @@ export class DcaApi {
     // =========================================================================
 
     public fetchDcaOrdersObject = async (inputs: {
-        walletAddress: SuiAddress;   
-    }): Promise<DcaOrdersOjbect> => {
+        walletAddress: SuiAddress;
+    }): Promise<DcaOrdersObject> => {
         const { walletAddress } = inputs;
 
-        const [createdOrderEvents, allTrades] = await Promise.all([
+        const [allEventOrders, allTrades] = await Promise.all([
             (
                 await this.Provider.Events().fetchAllEvents({
                     fetchEventsFunc: (eventInputs) =>
                         this.fetchCreatedDcaOrdersEvents(eventInputs),
                 })
             ).filter(order => order.owner == walletAddress),
+            ).filter(order => order.owner == walletAddress), // Is it good to fetch all and then filter?
             this.fetchAllDcaOrderTradesObject()
         ])
 
@@ -229,11 +229,13 @@ export class DcaApi {
         const partialCreatedOrderObjects =
 			await this.Provider.Objects().fetchCastObjectBatch({
                 objectIds: createdOrderEventsIds,
+                objectIds: allEventOrdersIds,
                 objectFromSuiObjectResponse: Casting.dca.partialOrdersObjectFromSuiObjectResponse,
             });
 
         const createdOrderObjects = partialCreatedOrderObjects.map(order => {
             const eventOrder = createdOrderEvents.find(eventOrder => eventOrder.orderId == order.objectId);
+            const eventOrder = allEventOrders.find(eventOrder => eventOrder.orderId == order.objectId);
             var orderTrades = allTrades.filter(trade => trade.orderId == order.objectId)
             order.overview.created = {
                 time:  Number(eventOrder?.timestamp),

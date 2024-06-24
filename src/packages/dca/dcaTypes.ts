@@ -107,7 +107,7 @@ export interface DcaOrderObject extends Object {
 	trades: DcaOrderTrades;
 }
 
-export interface DcaOrdersOjbect {
+export interface DcaOrdersObject {
 	active: DcaOrderObject[];
 	past: DcaOrderObject[];
 }
