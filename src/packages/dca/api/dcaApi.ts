@@ -9,7 +9,7 @@ import { Sui } from "../../sui";
 import { Coin } from "../../coin";
 
 const ED25519_PK_FLAG = 0x00;
-const GAS_SUI_AMOUNT = BigInt(50_000_000);                  // 0.05 SUI
+const GAS_SUI_AMOUNT = BigInt(5_000_000);                  // 0.005 SUI
 const ALLOWABLE_DEVIATION_MS = BigInt(0.1 * 1e9);
 const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
     
@@ -84,11 +84,14 @@ export class DcaApi {
         const tx = new TransactionBlock();
         tx.setSender(walletAddress);
 
+        const tradesGasAmount = BigInt(inputs.tradesAmount) * GAS_SUI_AMOUNT;
+
         const gasCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
 			tx,
 			walletAddress,
 			coinType: Coin.constants.suiCoinType,
 			coinAmount: GAS_SUI_AMOUNT,                    
+			coinAmount: tradesGasAmount,                    
             isSponsoredTx: inputs.isSponsoredTx
 		});
 
