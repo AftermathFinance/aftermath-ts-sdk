@@ -41,61 +41,6 @@ export class Router extends Caller {
 		maxExternalFeePercentage: 0.5, // 50%
 	};
 
-	private static readonly moveErrors: Record<
-		ModuleName,
-		Record<number, string>
-	> = {
-		protocol_fee: {
-			/// A non-one-time-witness type has been provided to the `ProtocolFeeConfig`'s `create` function.
-			1: "Protocol Fee Config Already Created",
-			/// Occurs when `change_fee` is called more than once during the same Epoch.
-			2: "Bad Epoch",
-			/// A user provided a new protocol fees that do not sum to one.
-			3: "Not Normalized",
-		},
-		router: {
-			0: "Not Authorized",
-			1: "Invalid Coin In",
-			2: "Invalid Coin Out",
-			4: "Invalid Previous Swap",
-			5: "Invalid Slippage",
-			/// A route is constructed that bypasses one of `begin_router_tx_and_pay_fees` or
-			///  `end_router_tx_and_pay_fees`.
-			6: "No Fees Paid",
-		},
-		version: {
-			/// A user tries to interact with an old contract.
-			0: "Invalid Version",
-		},
-		admin: {
-			/// Admin has not authorized the calling shared object to acess a permissioned function.
-			0: "Not Authorized",
-			/// Admin has already authorized the calling shared object to acess a permissioned function.
-			1: "Already Authorized",
-		},
-
-		// protocol_fee: {
-		// 	1: "A non-one-time-witness type has been provided to the `ProtocolFeeConfig`'s `create` function.",
-		// 	2: "Occurs when `change_fee` is called more than once during the same Epoch.",
-		// 	3: "A user provided a new protocol fees that do not sum to one.",
-		// },
-		// router: {
-		// 	0: "ENotAuthorized",
-		// 	1: "EInvalidCoinIn",
-		// 	2: "EInvalidCoinOut",
-		// 	4: "EInvalidPreviousSwap",
-		// 	5: "EInvalidSlippage",
-		// 	6: "A route is constructed that bypasses one of `begin_router_tx_and_pay_fees` or `end_router_tx_and_pay_fees`.",
-		// },
-		// version: {
-		// 	0: "A user tries to interact with an old contract.",
-		// },
-		// admin: {
-		// 	0: "Admin has not authorized the calling shared object to acess a permissioned function.",
-		// 	1: "Admin has already authorized the calling shared object to acess a permissioned function.",
-		// },
-	};
-
 	// =========================================================================
 	//  Constructor
 	// =========================================================================

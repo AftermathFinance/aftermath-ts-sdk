@@ -30,6 +30,7 @@ import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { NetworkType } from "@scallop-io/sui-kit";
 import { IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { Coin } from "../..";
+import { MoveErrors } from "../types/moveErrorsInterface";
 
 /**
  * A utility class containing various helper functions for general use.
@@ -496,7 +497,7 @@ export class Helpers {
 			const { errorMessage } = inputs;
 
 			const startIndex = errorMessage.toLowerCase().indexOf("address:");
-			const endIndex = errorMessage.indexOf(",");
+			const endIndex = errorMessage.indexOf(", name:");
 			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
 				return undefined;
 
@@ -560,18 +561,31 @@ export class Helpers {
 
 	public static translateMoveErrorMessage(inputs: {
 		errorMessage: string;
-		moveErrors: Record<ModuleName, Record<MoveErrorCode, string>>;
-	}): string | undefined {
+		moveErrors: MoveErrors;
+	}):
+		| {
+				errorCode: MoveErrorCode;
+				packageId: ObjectId;
+				module: ModuleName;
+				error: string;
+		  }
+		| undefined {
 		const { errorMessage, moveErrors } = inputs;
 
 		const parsed = this.parseMoveErrorMessage({ errorMessage });
 		if (
 			!parsed ||
-			!(parsed.module in moveErrors) ||
-			!(parsed.errorCode in moveErrors[parsed.module])
+			!(parsed.packageId in moveErrors) ||
+			!(parsed.module in moveErrors[parsed.packageId]) ||
+			!(parsed.errorCode in moveErrors[parsed.packageId][parsed.module])
 		)
 			return undefined;
 
-		return moveErrors[parsed.module][parsed.errorCode];
+		return {
+			...parsed,
+			error: moveErrors[parsed.packageId][parsed.module][
+				parsed.errorCode
+			],
+		};
 	}
 }

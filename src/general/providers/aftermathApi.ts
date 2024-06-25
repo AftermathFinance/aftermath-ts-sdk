@@ -17,6 +17,9 @@ import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
 import {
 	CoinType,
+	ModuleName,
+	MoveErrorCode,
+	ObjectId,
 	RouterProtocolName,
 	ScallopProviders,
 	UniqueId,
@@ -30,12 +33,13 @@ import { OracleApi } from "../../packages/oracle/api/oracleApi";
 import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
 // import { PriceFeedsApi } from "../priceFeeds/priceFeedsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
-import { IndexerCaller } from "../utils";
+import { Helpers, IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui/client";
 import { SuiClient as SuiClientV0 } from "@mysten/sui.js/client";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
+import { MoveErrorsInterface } from "../types/moveErrorsInterface";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -176,6 +180,51 @@ export class AftermathApi {
 
 	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
 		new LeveragedStakingApi(this, ScallopProviders);
+
+	// =========================================================================
+	//  Helpers
+	// =========================================================================
+
+	public translateMoveErrorMessage = <T extends MoveErrorsInterface>(inputs: {
+		errorMessage: string;
+	}):
+		| {
+				errorCode: MoveErrorCode;
+				packageId: ObjectId;
+				module: ModuleName;
+				error: string;
+		  }
+		| undefined => {
+		const { errorMessage } = inputs;
+
+		// TODO: make this work more cleanly
+		const packageApis: (() => T)[] = [
+			// @ts-ignore
+			this.Pools,
+			// @ts-ignore
+			this.Staking,
+			// @ts-ignore
+			this.Perpetuals,
+			// @ts-ignore
+			this.Farms,
+			// @ts-ignore
+			this.Router,
+		];
+		for (const packageApi of packageApis) {
+			try {
+				const moveErrors = packageApi().moveErrors;
+				const translation = Helpers.translateMoveErrorMessage({
+					errorMessage,
+					moveErrors,
+				});
+				if (!translation) continue;
+
+				return translation;
+			} catch (e) {}
+		}
+
+		return undefined;
+	};
 
 	// =========================================================================
 	//  Cache

@@ -15,6 +15,9 @@ import {
 	RouterAddresses,
 	Percentage,
 	RouterTradePath,
+	MoveErrorCode,
+	ModuleName,
+	PackageId,
 } from "../../../types";
 import {
 	TransactionObjectArgument,
@@ -27,19 +30,26 @@ import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { TransactionObjectArgument as TransactionObjectArgumentV0 } from "@mysten/sui.js/transactions";
+import {
+	MoveErrors,
+	MoveErrorsInterface,
+} from "../../../general/types/moveErrorsInterface";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
  * @class
  */
-export class RouterApi {
+export class RouterApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
 	public static readonly constants = {
 		moduleNames: {
-			swapCap: "swap_cap",
+			router: "router",
+			protocolFee: "protocol_fee",
+			version: "version",
+			admin: "admin",
 		},
 		eventNames: {
 			routerTrade: "SwapCompletedEvent",
@@ -54,6 +64,7 @@ export class RouterApi {
 	public readonly eventTypes: {
 		routerTrade: AnyObjectType;
 	};
+	public readonly moveErrors: MoveErrors;
 
 	// =========================================================================
 	//  Constructor
@@ -73,6 +84,38 @@ export class RouterApi {
 		this.addresses = this.Provider.addresses.router;
 		this.eventTypes = {
 			routerTrade: this.routerTradeEventType(),
+		};
+		this.moveErrors = {
+			[this.addresses.packages.utils]: {
+				[RouterApi.constants.moduleNames.protocolFee]: {
+					/// A non-one-time-witness type has been provided to the `ProtocolFeeConfig`'s `create` function.
+					1: "Protocol Fee Config Already Created",
+					/// Occurs when `change_fee` is called more than once during the same Epoch.
+					2: "Bad Epoch",
+					/// A user provided a new protocol fees that do not sum to one.
+					3: "Not Normalized",
+				},
+				[RouterApi.constants.moduleNames.router]: {
+					0: "Not Authorized",
+					1: "Invalid Coin In",
+					2: "Invalid Coin Out",
+					4: "Invalid Previous Swap",
+					5: "Invalid Slippage",
+					/// A route is constructed that bypasses one of `begin_router_tx_and_pay_fees` or
+					///  `end_router_tx_and_pay_fees`.
+					6: "No Fees Paid",
+				},
+				[RouterApi.constants.moduleNames.version]: {
+					/// A user tries to interact with an old contract.
+					0: "Invalid Version",
+				},
+				[RouterApi.constants.moduleNames.admin]: {
+					/// Admin has not authorized the calling shared object to acess a permissioned function.
+					0: "Not Authorized",
+					/// Admin has already authorized the calling shared object to acess a permissioned function.
+					1: "Already Authorized",
+				},
+			},
 		};
 	}
 
@@ -869,7 +912,7 @@ export class RouterApi {
 	private routerTradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.utils,
-			RouterApi.constants.moduleNames.swapCap,
+			RouterApi.constants.moduleNames.router,
 			RouterApi.constants.eventNames.routerTrade
 		);
 }

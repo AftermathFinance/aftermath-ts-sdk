@@ -55,8 +55,12 @@ import {
 } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
 import { Coin } from "../..";
+import {
+	MoveErrors,
+	MoveErrorsInterface,
+} from "../../../general/types/moveErrorsInterface";
 
-export class FarmsApi {
+export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -66,7 +70,7 @@ export class FarmsApi {
 			vault: "afterburner_vault",
 			stakedPosition: "staked_position",
 			vaultRegistry: "vault_registry",
-			events: "events",
+			events: "vents",
 		},
 		eventNames: {
 			// staking pools
@@ -102,13 +106,11 @@ export class FarmsApi {
 	// =========================================================================
 
 	public readonly addresses: FarmsAddresses;
-
 	public readonly objectTypes: {
 		stakedPosition: AnyObjectType;
 		stakingPoolOwnerCap: AnyObjectType;
 		stakingPoolOneTimeAdminCap: AnyObjectType;
 	};
-
 	public readonly eventTypes: {
 		// staking pools
 		// creation
@@ -131,6 +133,7 @@ export class FarmsApi {
 		// reward harvesting
 		harvestedRewards: AnyObjectType;
 	};
+	public readonly moveErrors: MoveErrors;
 
 	// =========================================================================
 	//  Constructor
@@ -144,13 +147,11 @@ export class FarmsApi {
 			);
 
 		this.addresses = addresses;
-
 		this.objectTypes = {
 			stakedPosition: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
 			stakingPoolOwnerCap: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
 			stakingPoolOneTimeAdminCap: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OneTimeAdminCap`,
 		};
-
 		this.eventTypes = {
 			// staking pools
 			// creation
@@ -172,6 +173,63 @@ export class FarmsApi {
 			withdrewPrincipal: this.withdrewPrincipalEventType(),
 			// reward harvesting
 			harvestedRewards: this.harvestedRewardsEventType(),
+		};
+		this.moveErrors = {
+			[this.addresses.packages.vaults]: {
+				[FarmsApi.constants.moduleNames.vault]: {
+					/// A user attempts provides a `Coin` or `u64` with value zero.
+					0: "Zero",
+					/// A user provides a `StakedPosition` and a `AfterburnerVault` that don't correspond with one
+					///  another. This can only occur if two `AfterburnerVault` with the same underlying `STAKED` generic
+					///  are created.
+					1: "Invalid Afterburner Vault",
+					/// A user tries to create an `AfterburnerVault` where `min_lock_duration_ms` is strictly greater than
+					///  `max_lock_duration_ms`.
+					2: "Invalid Min Max Lock Durations",
+					/// The creator of a `AfterburnerVault` tries to update the vault's emission rate or add more rewards
+					///  without first initializing the emissions schedule.
+					3: "Emissions Not Initialized",
+					/// The creator of a `AfterburnerVault` tries to update the vault's emission schedule/rate but
+					///  provides a schedule/rate pair that will decrease emissions for the specified reward type.
+					4: "Emissions Not Increasing",
+					5: "Bad Type",
+					/// A user attempts to stake into a `AfterburnerVault` below the vault's `min_stake_amount` or
+					///  an amount of principal that would bring their position below the vault's `min_stake_amount`.
+					6: "Invalid Stake Amount",
+					/// A user attempts to create an `AfterburnerVault` and provides a `lock_enforcement` that doesn't
+					///  match one of `STRICT_LOCK_ENFORCEMENT` or `RELAXED_LOCK_ENFORCEMENT`.
+					7: "Invalid Lock Enforcement",
+					/// A user tries to claim zero rewards
+					8: "Zero Claim",
+					/// A user provided invalid max lock multiplier (< 1)
+					9: "Invalid Lock Multiplier",
+					10: "Invalid Argument",
+					11: "Deprecated",
+				},
+				[FarmsApi.constants.moduleNames.stakedPosition]: {
+					/// A user attempts provides a `Coin` or `u64` with value zero.
+					0: "Zero",
+					/// A user attempts to withdraw funds from a `StakedPosition` that is still locked.
+					1: "Locked",
+					/// A user provides a `StakedPosition` and a `AfterburnerVault` that don't correspond with one another.
+					///  This can only occur if two `AfterburnerVault` with the same underlying `STAKED` generic are created.
+					2: "Invalid Afterburner Vault",
+					/// A user tries to lock the coins in a `AfterburnerVault` with a `lock_duration_ms` below the vault's
+					///  `min_lock_duration_ms`.
+					3: "Invalid Lock Duration",
+					/// A user attempts to destroy a `StakedPosition` that still holds rewards that can be harvested.
+					4: "Harvest Rewards",
+					/// A user attempts to stake into a `AfterburnerVault` below the vault's `min_stake_amount` or
+					///  an amount of principal that would bring their position below the vault's `min_stake_amount`.
+					5: "Invalid Stake Amount",
+					6: "Invalid Withdraw Amount",
+					7: "Invalid Split Amount",
+					8: "Uninitialized Vault Rewards",
+					9: "Not Implemented",
+					/// A user requested to harvest zero base rewards.
+					10: "Zero Rewards",
+				},
+			},
 		};
 	}
 
