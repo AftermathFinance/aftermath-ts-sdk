@@ -23,6 +23,7 @@ import {
 	PerpetualsAccountId,
 	PerpetualsAccountObject,
 	IFixed,
+	MoveErrorCode,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -38,7 +39,7 @@ export class Perpetuals extends Caller {
 
 	public static readonly OrderUtils = PerpetualsOrderUtils;
 
-	private static readonly moveErrors: Record<number, string> = {
+	private static readonly moveErrors: Record<MoveErrorCode, string> = {
 		// Clearing House
 
 		// Cannot deposit/withdraw zero coins to/from the account's collateral.
@@ -351,7 +352,7 @@ export class Perpetuals extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	public static translateMoveErrorCode(errorCode: number) {
+	public static translateMoveErrorCode(errorCode: MoveErrorCode) {
 		return errorCode in this.moveErrors
 			? this.moveErrors[errorCode]
 			: undefined;

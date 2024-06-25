@@ -12,6 +12,9 @@ import {
 	CoinsToPrice,
 	ObjectId,
 	Slippage,
+	ModuleName,
+	PackageId,
+	MoveErrorCode,
 } from "../../types";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
@@ -451,10 +454,11 @@ export class Helpers {
 	//  Error Parsing
 	// =========================================================================
 
-	public static moveErrorCodeAndPackageId(inputs: { errorMessage: string }):
+	public static parseMoveErrorMessage(inputs: { errorMessage: string }):
 		| {
-				errorCode: number;
+				errorCode: MoveErrorCode;
 				packageId: ObjectId;
+				module: ModuleName;
 		  }
 		| undefined {
 		const { errorMessage } = inputs;
@@ -466,7 +470,7 @@ export class Helpers {
 
 		const moveErrorCode = (inputs: {
 			errorMessage: string;
-		}): number | undefined => {
+		}): MoveErrorCode | undefined => {
 			const { errorMessage } = inputs;
 
 			const startIndex = errorMessage.lastIndexOf(",");
@@ -486,32 +490,88 @@ export class Helpers {
 			}
 		};
 
-		const startIndex = errorMessage.toLowerCase().indexOf("address:");
-		const endIndex = errorMessage.indexOf(",");
-		if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
-			return undefined;
+		const moveErrorPackageId = (inputs: {
+			errorMessage: string;
+		}): PackageId | undefined => {
+			const { errorMessage } = inputs;
+
+			const startIndex = errorMessage.toLowerCase().indexOf("address:");
+			const endIndex = errorMessage.indexOf(",");
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+				return undefined;
+
+			try {
+				const packageId = Helpers.addLeadingZeroesToType(
+					"0x" +
+						errorMessage
+							.slice(startIndex + 8, endIndex)
+							.trim()
+							.replaceAll("0x", "")
+				);
+				if (!this.isValidHex(packageId)) return undefined;
+
+				return packageId;
+			} catch (e) {
+				return undefined;
+			}
+		};
+
+		const moveErrorModule = (inputs: {
+			errorMessage: string;
+		}): ModuleName | undefined => {
+			const { errorMessage } = inputs;
+
+			const startIndex = errorMessage
+				.toLowerCase()
+				.indexOf('identifier("');
+			const endIndex = errorMessage.indexOf('")');
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+				return undefined;
+
+			try {
+				return errorMessage.slice(startIndex + 12, endIndex).trim();
+			} catch (e) {
+				return undefined;
+			}
+		};
 
 		try {
-			const packageId = Helpers.addLeadingZeroesToType(
-				"0x" +
-					errorMessage
-						.slice(startIndex + 8, endIndex)
-						.trim()
-						.replaceAll("0x", "")
-			);
-			if (!this.isValidHex(packageId)) return undefined;
-
 			const errorCode = moveErrorCode({
 				errorMessage,
 			});
-			if (errorCode === undefined) return undefined;
+			const packageId = moveErrorPackageId({
+				errorMessage,
+			});
+			const module = moveErrorModule({
+				errorMessage,
+			});
+			if (errorCode === undefined || !packageId || !module)
+				return undefined;
 
 			return {
 				errorCode,
 				packageId,
+				module,
 			};
 		} catch (e) {
 			return undefined;
 		}
+	}
+
+	public static translateMoveErrorMessage(inputs: {
+		errorMessage: string;
+		moveErrors: Record<ModuleName, Record<MoveErrorCode, string>>;
+	}): string | undefined {
+		const { errorMessage, moveErrors } = inputs;
+
+		const parsed = this.parseMoveErrorMessage({ errorMessage });
+		if (
+			!parsed ||
+			!(parsed.module in moveErrors) ||
+			!(parsed.errorCode in moveErrors[parsed.module])
+		)
+			return undefined;
+
+		return moveErrors[parsed.module][parsed.errorCode];
 	}
 }
