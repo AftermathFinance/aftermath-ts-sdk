@@ -314,6 +314,11 @@ export class Helpers {
 		);
 	};
 
+	public static isValidHex = (hexString: string): boolean => {
+		const hexPattern = /^(0x)?[0-9A-F]+$/i;
+		return hexPattern.test(hexString);
+	};
+
 	// =========================================================================
 	//  Sui Object Parsing
 	// =========================================================================
@@ -446,37 +451,66 @@ export class Helpers {
 	//  Error Parsing
 	// =========================================================================
 
-	public static moveErrorCode(inputs: {
-		errorMessage: string;
-		packageId: ObjectId;
-	}): number {
-		const { errorMessage, packageId } = inputs;
+	public static moveErrorCodeAndPackageId(inputs: { errorMessage: string }):
+		| {
+				errorCode: number;
+				packageId: ObjectId;
+		  }
+		| undefined {
+		const { errorMessage } = inputs;
 
 		/*
 			MoveAbort(MoveLocation { module: ModuleId { address: 8d8946c2a433e2bf795414498d9f7b32e04aca8dbf35a20257542dc51406242b, name: Identifier("orderbook") }, function: 11, instruction: 117, function_name: Some("fill_market_order") }, 3005) in command 2
 		*/
 
-		if (
-			!errorMessage.includes(
-				Helpers.addLeadingZeroesToType(packageId).replace("0x", "")
-			)
-		)
-			return -1;
+		const moveErrorCode = (inputs: {
+			errorMessage: string;
+		}): number | undefined => {
+			const { errorMessage } = inputs;
 
-		const startIndex = errorMessage.lastIndexOf(",");
-		const endIndex = errorMessage.lastIndexOf(")");
+			const startIndex = errorMessage.lastIndexOf(",");
+			const endIndex = errorMessage.lastIndexOf(")");
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+				return undefined;
+
+			try {
+				const errorCode = parseInt(
+					errorMessage.slice(startIndex + 1, endIndex)
+				);
+				if (Number.isNaN(errorCode)) return undefined;
+
+				return errorCode;
+			} catch (e) {
+				return undefined;
+			}
+		};
+
+		const startIndex = errorMessage.indexOf("address:");
+		const endIndex = errorMessage.indexOf(",");
 		if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
-			return -1;
+			return undefined;
 
 		try {
-			const errorCode = parseInt(
-				errorMessage.slice(startIndex + 1, endIndex)
+			const packageId = Helpers.addLeadingZeroesToType(
+				"0x" +
+					errorMessage
+						.slice(startIndex + 8, endIndex)
+						.trim()
+						.replaceAll("0x", "")
 			);
-			if (Number.isNaN(errorCode)) return -1;
+			if (!this.isValidHex(packageId)) return undefined;
 
-			return errorCode;
+			const errorCode = moveErrorCode({
+				errorMessage,
+			});
+			if (errorCode === undefined) return undefined;
+
+			return {
+				errorCode,
+				packageId,
+			};
 		} catch (e) {
-			return -1;
+			return undefined;
 		}
 	}
 }
