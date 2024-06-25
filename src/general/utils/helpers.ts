@@ -458,6 +458,7 @@ export class Helpers {
 		  }
 		| undefined {
 		const { errorMessage } = inputs;
+		if (!errorMessage.toLowerCase().includes("moveabort")) return undefined;
 
 		/*
 			MoveAbort(MoveLocation { module: ModuleId { address: 8d8946c2a433e2bf795414498d9f7b32e04aca8dbf35a20257542dc51406242b, name: Identifier("orderbook") }, function: 11, instruction: 117, function_name: Some("fill_market_order") }, 3005) in command 2
@@ -485,7 +486,7 @@ export class Helpers {
 			}
 		};
 
-		const startIndex = errorMessage.indexOf("address:");
+		const startIndex = errorMessage.toLowerCase().indexOf("address:");
 		const endIndex = errorMessage.indexOf(",");
 		if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
 			return undefined;
