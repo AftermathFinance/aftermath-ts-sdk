@@ -3,14 +3,13 @@ import { ApiDcaCancelOrderBody, ApiDcaInitializeOrderBody, ApiDcaInitializeOrder
 import { AftermathApi } from "../../../general/providers";
 import { AnyObjectType, Balance, CoinType, DcaAddresses, EventsInputs, IFixed, ObjectId, SuiAddress, Timestamp } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { DcaCancelledOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain } from "./dcaApiCastingTypes";
+import { DcaClosedOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain } from "./dcaApiCastingTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { Coin } from "../../coin";
 
 const ED25519_PK_FLAG = 0x00;
 const GAS_SUI_AMOUNT = BigInt(5_000_000);                  // 0.005 SUI
-const ALLOWABLE_DEVIATION_MS = BigInt(0.1 * 1e9);
 const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
     
 export class DcaApi {
@@ -26,7 +25,7 @@ export class DcaApi {
         },
         eventNames: {
             createdOrder: "CreatedOrderEvent",
-            canceledOrder: "CancelledOrderEvent",
+            closedOrder: "CancelledOrderEvent",
             executedTrade: "ExecutedTradeEvent",
         }
     }
@@ -44,7 +43,7 @@ export class DcaApi {
 
     public readonly eventTypes: {
         createdOrder: AnyObjectType;
-        canceledOrder: AnyObjectType;
+        closedOrder: AnyObjectType;
         executedTrade: AnyObjectType;
     }
 
@@ -63,7 +62,7 @@ export class DcaApi {
 
         this.eventTypes = {
             createdOrder: this.createdOrderEventType(),
-            canceledOrder: this.canceledOrderEventType(),
+            closedOrder: this.closedOrderEventType(),
             executedTrade: this.executedOrderEventType(),
         }
 
@@ -173,7 +172,6 @@ export class DcaApi {
                 tx.pure(publicKeyPrepared, "vector<u8>"),
                 tx.pure(inputs.frequencyMs, "u64"),
                 tx.pure(inputs.delayTimeMs, "u64"),
-                tx.pure(ALLOWABLE_DEVIATION_MS, "u64"),
                 tx.pure(inputs.orderAmountPerTrade, "u64"),
                 tx.pure(ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS, "u16"),
                 tx.pure(inputs.straregy?.priceMin ?? 0, "u64"),
@@ -219,22 +217,21 @@ export class DcaApi {
                     fetchEventsFunc: (eventInputs) =>
                         this.fetchCreatedDcaOrdersEvents(eventInputs),
                 })
-            ).filter(order => order.owner == walletAddress),
             ).filter(order => order.owner == walletAddress), // Is it good to fetch all and then filter?
             this.fetchAllDcaOrderTradesObject()
         ])
 
-        const createdOrderEventsIds = createdOrderEvents.map(order => order.orderId)
+
+
+        const allEventOrdersIds = allEventOrders.map(order => order.orderId)
 
         const partialCreatedOrderObjects =
 			await this.Provider.Objects().fetchCastObjectBatch({
-                objectIds: createdOrderEventsIds,
                 objectIds: allEventOrdersIds,
                 objectFromSuiObjectResponse: Casting.dca.partialOrdersObjectFromSuiObjectResponse,
             });
 
         const createdOrderObjects = partialCreatedOrderObjects.map(order => {
-            const eventOrder = createdOrderEvents.find(eventOrder => eventOrder.orderId == order.objectId);
             const eventOrder = allEventOrders.find(eventOrder => eventOrder.orderId == order.objectId);
             var orderTrades = allTrades.filter(trade => trade.orderId == order.objectId)
             order.overview.created = {
@@ -271,6 +268,7 @@ export class DcaApi {
             past: []
         });
     }
+    
 
     // Todo: - Change it with cursor fetching
     public fetchAllDcaOrderTradesObject = async (): Promise<DcaExecutedTradeEvent[]> => {
@@ -293,6 +291,25 @@ export class DcaApi {
 		).filter(trade => trade.orderId == inputs.orderId)
     }
 
+    public fetchActiveDcaOrdersObject = async (inputs: {
+        walletAddress: SuiAddress
+    }): Promise<DcaOrderObject[]> => {
+        return [];
+    }
+
+    public fetchPastDcaOrdersObject = async (inputs: {
+        walletAddress: SuiAddress
+    }): Promise<DcaOrderObject[]> => {
+        return [];
+    }
+
+    public fetchDcaOrderObject = async (inputs: { 
+        objectId: ObjectId 
+    }): Promise<DcaOrderObject | undefined> => {
+        // Todo: - Create one single method for fetching by IDs with preparing data. Remove | undefined
+        return undefined;
+    }
+
     // =========================================================================
     // Events
     // =========================================================================
@@ -311,12 +328,12 @@ export class DcaApi {
 
     public fetchCanceledDcaOrdersEvents = (inputs: EventsInputs) =>
 		this.Provider.Events().fetchCastEventsWithCursor<
-			DcaCancelledOrderEventOnChain,
+			DcaClosedOrderEventOnChain,
 			DcaCancelledOrderEvent
 		>({
 			...inputs,
 			query: {
-				MoveEventType: this.eventTypes.canceledOrder,
+				MoveEventType: this.eventTypes.closedOrder,
 			},
 			eventFromEventOnChain: Casting.dca.cancelledDcaOrderEventFromChain,
 		});
@@ -344,11 +361,11 @@ export class DcaApi {
 			DcaApi.constants.eventNames.createdOrder
 		);
     
-    private canceledOrderEventType = () => 
+    private closedOrderEventType = () => 
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.dca,
 			DcaApi.constants.moduleNames.events,
-			DcaApi.constants.eventNames.canceledOrder
+			DcaApi.constants.eventNames.closedOrder
 		);
 
     private executedOrderEventType = () => 

@@ -1,7 +1,7 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { Casting, Helpers } from "../../../general/utils";
 import { DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrderObject, DcaOrderTradeObject, DcaOrdertStrategyObject } from "../dcaTypes";
-import { DcaCancelledOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain, DcaOrderFieldsOnChain } from "./dcaApiCastingTypes";
+import { DcaClosedOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain, DcaOrderFieldsOnChain } from "./dcaApiCastingTypes";
 import { Coin } from "../../coin/coin";
 
 export class DcaApiCasting {
@@ -18,7 +18,6 @@ export class DcaApiCasting {
 			outputType: Helpers.addLeadingZeroesToType("0x" + Buffer.from(fields.output_type).toString()),
 			gasValue: BigInt(fields.gas_value),
 			frequencyMs: Number(fields.frequency_ms),
-			allowableDeviationMs: Number(fields.allowable_deviation_ms),
 			startTimestampMs: Number(fields.start_timestamp_ms),
 			amountPerTrade: BigInt(fields.amount_per_trade),
 			maxAllowableSlippageBps: BigInt(fields.max_allowable_slippage_bps),
@@ -33,7 +32,7 @@ export class DcaApiCasting {
 
 
 	public static cancelledDcaOrderEventFromChain = (
-		eventOnChain: DcaCancelledOrderEventOnChain
+		eventOnChain: DcaClosedOrderEventOnChain
 	): DcaCancelledOrderEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -44,7 +43,6 @@ export class DcaApiCasting {
 			outputType: Helpers.addLeadingZeroesToType("0x" + fields.output_type),
 			gasValue: BigInt(fields.gas_value),
 			frequencyMs: Number(fields.frequency_ms),
-			allowableDeviationMs: Number(fields.allowable_deviation_ms),
 			lastTradeTimestampMs: Number(fields.last_trade_timestamp_ms),
 			amountPerTrade: BigInt(fields.amount_per_trade),
 			maxAllowableSlippageBps: BigInt(fields.max_allowable_slippage_bps),

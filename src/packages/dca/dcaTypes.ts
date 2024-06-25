@@ -1,5 +1,5 @@
 import { ObjectId, SuiAddress } from "../../types";
-import { CoinType, CoinWithAmount } from "../coin/coinTypes";
+import { CoinType } from "../coin/coinTypes";
 import {
 	Balance,
 	Event,
@@ -124,7 +124,6 @@ export interface DcaCreatedOrderEvent extends Event {
 	outputType: CoinType;
 	gasValue: Balance;
 	frequencyMs: Timestamp;
-    allowableDeviationMs: Timestamp;
     startTimestampMs: Timestamp;
     amountPerTrade: Balance;
     maxAllowableSlippageBps: Balance;
@@ -141,7 +140,6 @@ export interface DcaCancelledOrderEvent extends Event {
 	outputType: CoinType;
 	gasValue: Balance;
 	frequencyMs: Timestamp;
-    allowableDeviationMs: Timestamp;
     lastTradeTimestampMs: Timestamp;
     amountPerTrade: Balance;
     maxAllowableSlippageBps: Balance;
