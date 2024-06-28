@@ -49,7 +49,8 @@ export type RouterProtocolName =
 	| "Cetus"
 	| "Turbos"
 	| "DeepBook"
-	| "FlowX";
+	| "FlowX"
+	| "FlowXClmm";
 
 // =========================================================================
 //  Paths
