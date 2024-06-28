@@ -12,6 +12,7 @@ import {
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
 	ApiRouterAddTransactionForCompleteTradeRouteV0Body,
 	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
+	ModuleName,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Transaction } from "@mysten/sui/transactions";

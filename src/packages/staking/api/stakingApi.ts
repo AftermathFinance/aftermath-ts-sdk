@@ -49,8 +49,12 @@ import { StakingApiCasting } from "./stakingApiCasting";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { ValidatorConfigOnIndexer } from "./stakingApiCastingTypes";
 import { Staking } from "../..";
+import {
+	MoveErrors,
+	MoveErrorsInterface,
+} from "../../../general/types/moveErrorsInterface";
 
-export class StakingApi {
+export class StakingApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -62,6 +66,9 @@ export class StakingApi {
 			stakedSuiVault: "staked_sui_vault",
 			stakedSuiVaultState: "staked_sui_vault_state",
 			routerWrapper: "router",
+			sort: "sort",
+			receipt: "receipt",
+			calculations: "calculations",
 		},
 		eventNames: {
 			staked: "StakedEvent",
@@ -76,21 +83,19 @@ export class StakingApi {
 	// =========================================================================
 
 	public readonly addresses: StakingAddresses;
-
 	public readonly eventTypes: {
 		staked: AnyObjectType;
 		unstakeRequested: AnyObjectType;
 		unstaked: AnyObjectType;
 		epochWasChanged: AnyObjectType;
 	};
-
 	public readonly coinTypes: {
 		afSui: CoinType;
 	};
-
 	public readonly objectTypes: {
 		unverifiedValidatorOperationCap: AnyObjectType;
 	};
+	public readonly moveErrors: MoveErrors;
 
 	// =========================================================================
 	//  Constructor
@@ -103,20 +108,78 @@ export class StakingApi {
 			);
 
 		this.addresses = this.Provider.addresses.staking;
-
 		this.eventTypes = {
 			staked: this.stakedEventType(),
 			unstakeRequested: this.unstakeRequestedEventType(),
 			unstaked: this.unstakedEventType(),
 			epochWasChanged: this.epochWasChangedEventType(),
 		};
-
 		this.coinTypes = {
 			afSui: `${this.addresses.packages.afsui}::afsui::AFSUI`,
 		};
-
 		this.objectTypes = {
 			unverifiedValidatorOperationCap: `${this.addresses.packages.lsd}::validator::UnverifiedValidatorOperationCap`,
+		};
+		this.moveErrors = {
+			[this.addresses.packages.lsd]: {
+				[StakingApi.constants.moduleNames.stakedSuiVault]: {
+					/// The admin calls `migrate` on an outdated package.
+					0: "Version Incompatibility",
+					/// A user tries to interact with the `StakedSuiVault` through an outdated package.
+					1: "Wrong Package Version",
+					/// One tries to call deprecated function.
+					2: "Deprecated",
+				},
+				[StakingApi.constants.moduleNames.sort]: {
+					/// One provided keys and values vectors of different lengths.
+					1: "Different Inputs Length",
+					/// Error for tests.
+					2: "Dummy Error",
+				},
+				[StakingApi.constants.moduleNames.calculations]: {
+					/// User provided a percentage value larger than 10^18 = 1 = 100%.
+					0: "Invalid Percentage",
+				},
+				[StakingApi.constants.moduleNames.actions]: {
+					/// Epoch advancement has not yet been processed.
+					0: "Epoch Change Has Not Been Treated",
+					/// Epoch advancement has already been processed.
+					1: "Epoch Change Has Already Been Treated",
+					/// User tried to delegate stake to a validator that is inactive.
+					2: "Validator Is Not Active",
+					/// User tried to delegate stake with value less than the minimum staking threshold.
+					3: "Less Than Minimum Staking Threshold",
+					/// User tried to delegate stake to a validator whose history of exchange rates is too short.
+					4: "Insufficient Validator History",
+					/// User provided an empty vector as input.
+					5: "Empty Vector",
+					/// User requested to unstake more SUI than held in the `atomic_unstake_sui_reserves`.
+					6: "Insufficient Sui Reserves",
+					/// User provided afSUI coin with insufficient balance.
+					7: "Insufficient Balance afSUI Coin Provided",
+				},
+				[StakingApi.constants.moduleNames.receipt]: {
+					0: "Not Enough Amount In Receipt",
+					1: "Try To Burn Non Zero Receipt",
+				},
+				[StakingApi.constants.moduleNames.stakedSuiVaultState]: {
+					/// One provided value larger than 1 (100%) when opposite is supposed.
+					1: "Invalid Percentage",
+					/// One provided min atomic unstake fee value larger than max atomic unstake fee value.
+					2: "Invalid Atomic Unstake Fees Values",
+					/// A `validator` address - that isn't recognized by the afSUI framework - is provided to a function
+					///  that requests a `ValidatorConfig`.
+					3: "Invalid Validator",
+					/// An address tries to create a `UnverifiedValidatorOperationCap` without being an active validator.
+					4: "Validator Is Not Active",
+					/// An authorized owner of an `UnverifiedValidatorOperationCap` object tries to perform a permissioned
+					///  function for another validator.
+					5: "Invalid Operation Cap",
+					/// An authorized owner of an `UnverifiedValidatorOperationCap` object tries to set a `validator_fee`
+					///  that is greater than the maximum allowed validator fee.
+					6: "Invalid Validator Fee",
+				},
+			},
 		};
 	}
 

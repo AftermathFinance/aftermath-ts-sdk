@@ -12,6 +12,9 @@ import {
 	CoinsToPrice,
 	ObjectId,
 	Slippage,
+	ModuleName,
+	PackageId,
+	MoveErrorCode,
 } from "../../types";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
@@ -27,6 +30,7 @@ import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { NetworkType } from "@scallop-io/sui-kit";
 import { IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { Coin } from "../..";
+import { MoveErrors } from "../types/moveErrorsInterface";
 
 /**
  * A utility class containing various helper functions for general use.
@@ -314,6 +318,11 @@ export class Helpers {
 		);
 	};
 
+	public static isValidHex = (hexString: string): boolean => {
+		const hexPattern = /^(0x)?[0-9A-F]+$/i;
+		return hexPattern.test(hexString);
+	};
+
 	// =========================================================================
 	//  Sui Object Parsing
 	// =========================================================================
@@ -446,37 +455,137 @@ export class Helpers {
 	//  Error Parsing
 	// =========================================================================
 
-	public static moveErrorCode(inputs: {
-		errorMessage: string;
-		packageId: ObjectId;
-	}): number {
-		const { errorMessage, packageId } = inputs;
+	public static parseMoveErrorMessage(inputs: { errorMessage: string }):
+		| {
+				errorCode: MoveErrorCode;
+				packageId: ObjectId;
+				module: ModuleName;
+		  }
+		| undefined {
+		const { errorMessage } = inputs;
+		if (!errorMessage.toLowerCase().includes("moveabort")) return undefined;
 
 		/*
 			MoveAbort(MoveLocation { module: ModuleId { address: 8d8946c2a433e2bf795414498d9f7b32e04aca8dbf35a20257542dc51406242b, name: Identifier("orderbook") }, function: 11, instruction: 117, function_name: Some("fill_market_order") }, 3005) in command 2
 		*/
 
-		if (
-			!errorMessage.includes(
-				Helpers.addLeadingZeroesToType(packageId).replace("0x", "")
-			)
-		)
-			return -1;
+		const moveErrorCode = (inputs: {
+			errorMessage: string;
+		}): MoveErrorCode | undefined => {
+			const { errorMessage } = inputs;
 
-		const startIndex = errorMessage.lastIndexOf(",");
-		const endIndex = errorMessage.lastIndexOf(")");
-		if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
-			return -1;
+			const startIndex = errorMessage.lastIndexOf(",");
+			const endIndex = errorMessage.lastIndexOf(")");
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+				return undefined;
+
+			try {
+				const errorCode = parseInt(
+					errorMessage.slice(startIndex + 1, endIndex)
+				);
+				if (Number.isNaN(errorCode)) return undefined;
+
+				return errorCode;
+			} catch (e) {
+				return undefined;
+			}
+		};
+
+		const moveErrorPackageId = (inputs: {
+			errorMessage: string;
+		}): PackageId | undefined => {
+			const { errorMessage } = inputs;
+
+			const startIndex = errorMessage.toLowerCase().indexOf("address:");
+			const endIndex = errorMessage.indexOf(", name:");
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+				return undefined;
+
+			try {
+				const packageId = Helpers.addLeadingZeroesToType(
+					"0x" +
+						errorMessage
+							.slice(startIndex + 8, endIndex)
+							.trim()
+							.replaceAll("0x", "")
+				);
+				if (!this.isValidHex(packageId)) return undefined;
+
+				return packageId;
+			} catch (e) {
+				return undefined;
+			}
+		};
+
+		const moveErrorModule = (inputs: {
+			errorMessage: string;
+		}): ModuleName | undefined => {
+			const { errorMessage } = inputs;
+
+			const startIndex = errorMessage
+				.toLowerCase()
+				.indexOf('identifier("');
+			const endIndex = errorMessage.indexOf('")');
+			if (startIndex <= 0 || endIndex <= 0 || startIndex >= endIndex)
+				return undefined;
+
+			try {
+				return errorMessage.slice(startIndex + 12, endIndex).trim();
+			} catch (e) {
+				return undefined;
+			}
+		};
 
 		try {
-			const errorCode = parseInt(
-				errorMessage.slice(startIndex + 1, endIndex)
-			);
-			if (Number.isNaN(errorCode)) return -1;
+			const errorCode = moveErrorCode({
+				errorMessage,
+			});
+			const packageId = moveErrorPackageId({
+				errorMessage,
+			});
+			const module = moveErrorModule({
+				errorMessage,
+			});
+			if (errorCode === undefined || !packageId || !module)
+				return undefined;
 
-			return errorCode;
+			return {
+				errorCode,
+				packageId,
+				module,
+			};
 		} catch (e) {
-			return -1;
+			return undefined;
 		}
+	}
+
+	public static translateMoveErrorMessage(inputs: {
+		errorMessage: string;
+		moveErrors: MoveErrors;
+	}):
+		| {
+				errorCode: MoveErrorCode;
+				packageId: ObjectId;
+				module: ModuleName;
+				error: string;
+		  }
+		| undefined {
+		const { errorMessage, moveErrors } = inputs;
+
+		const parsed = this.parseMoveErrorMessage({ errorMessage });
+		if (
+			!parsed ||
+			!(parsed.packageId in moveErrors) ||
+			!(parsed.module in moveErrors[parsed.packageId]) ||
+			!(parsed.errorCode in moveErrors[parsed.packageId][parsed.module])
+		)
+			return undefined;
+
+		return {
+			...parsed,
+			error: moveErrors[parsed.packageId][parsed.module][
+				parsed.errorCode
+			],
+		};
 	}
 }

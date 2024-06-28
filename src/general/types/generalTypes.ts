@@ -33,6 +33,7 @@ export type Percentage = number;
 export type Apr = number;
 export type Apy = number;
 export type ObjectVersion = number;
+export type MoveErrorCode = number;
 
 // =========================================================================
 //  string

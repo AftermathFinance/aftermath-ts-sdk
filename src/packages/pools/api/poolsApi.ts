@@ -71,6 +71,10 @@ import {
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { bcs } from "@mysten/sui/bcs";
+import {
+	MoveErrors,
+	MoveErrorsInterface,
+} from "../../../general/types/moveErrorsInterface";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
@@ -79,7 +83,7 @@ import { bcs } from "@mysten/sui/bcs";
 /**
  * Provides methods to interact with the Pools API.
  */
-export class PoolsApi {
+export class PoolsApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -98,6 +102,10 @@ export class PoolsApi {
 			poolRegistry: "pool_registry",
 			routerWrapper: "router",
 			poolFactory: "pool_factory",
+			math: "math",
+			geometricMeanCalculations: "geometric_mean_calculations",
+			stableCalculations: "stable_calculations",
+			price: "price",
 		},
 		eventNames: {
 			swap: "SwapEvent",
@@ -133,6 +141,7 @@ export class PoolsApi {
 		depositV2: AnyObjectType;
 		withdrawV2: AnyObjectType;
 	};
+	public readonly moveErrors: MoveErrors;
 
 	public static readonly poolVolumeDataTimeframes: Record<
 		PoolGraphDataTimeframeKey,
@@ -188,6 +197,131 @@ export class PoolsApi {
 			tradeV2: this.tradeV2EventType(),
 			depositV2: this.depositV2EventType(),
 			withdrawV2: this.withdrawV2EventType(),
+		};
+		this.moveErrors = {
+			[this.addresses.pools.packages.amm]: {
+				[PoolsApi.constants.moduleNames.pool]: {
+					/// A user provides a input that should be between 0 and `FIXED_ONE` but isn't.
+					0: "Flatness Not Normalized",
+					/// A user attempts to create a Pool with a `flatness` parameter we do not support yet.
+					1: "Flatness Not Supported",
+					/// A user attempts to create a pool with weights that don't sum to `FIXED_ONE`.
+					2: "Weights Not Normalized",
+					/// A user attempts to create a Pool with an individual weight outside of the
+					///  range [MIN_WEIGHT, MAX_WEIGHT].
+					3: "Invalid Weight",
+					/// A user attempts to create a Pool with an individual fee outside of the
+					///  range [MIN_FEE, MAX_FEE].
+					4: "Invalid Fee",
+					/// A user provides an input vector (with length m != n) for a pool of size n.
+					5: "Bad Vector Length",
+					/// A user tries to create a Pool but provides an initial deposit that equates to less than
+					///  `MIN_LP_SUPPLY` worth of LP Coins.
+					6: "Not Enough Initial Liquidity",
+					/// A user attempts to create a Pool with an LP `TreasuryCap` that has already minted Coins.
+					7: "Non Zero Total Supply",
+					/// A user attempts to interact with the Pool and specifies a type that isn't in the Pool.
+					8: "Bad Type",
+					/// A user attempts to create a pool with invalid decimal scalars
+					9: "Bad Decimals",
+					/// A user attempts to create a pool with type names which are not sorted
+					10: "Not Sorted",
+				},
+				[PoolsApi.constants.moduleNames.poolRegistry]: {
+					/// A user tries to create a Pool and the generic parameters of `create_pool_n_coins` were
+					///  provided in nonlexicographical order.
+					60: "NotSorted",
+					/// A user tries to create a Pool with exact parameters as an already active Pool.
+					61: "DuplicatePool",
+					/// A user tries to upgrade the `PoolRegistry` to a value
+					62: "InvalidUpgrade",
+				},
+				[PoolsApi.constants.moduleNames.deposit]: {
+					/// A user attempts to perform a `deposit` with an older contract.
+					20: "InvalidProtocolVersion",
+					/// A user attempts to perform `deposit-n-coins` on a Pool with a size `m` < `n`.
+					21: "InvalidPoolSize",
+					/// A user attempts to perform a deposit and provides a coin with a value of zero.
+					22: "ZeroValue",
+					// A user calls `deposit_n_coins` or `all_coin_deposit_n_coins` and provides the same generic
+					//  at least twice.
+					23: "DuplicateTypes",
+				},
+				[PoolsApi.constants.moduleNames.poolFactory]: {
+					/// A user attempts to create a pool on an older contract.
+					10: "InvalidProtocolVersion",
+					/// A user attempts to create a Pool and provides a coin with a value of zero.
+					11: "ZeroValue",
+				},
+				[PoolsApi.constants.moduleNames.price]: {
+					/// A user attempts to query spot/oracle price using an old contract.
+					10: "InvalidProtocolVersion",
+				},
+				[PoolsApi.constants.moduleNames.swap]: {
+					/// A user attempts to perform a `swap` with an older contract.
+					40: "InvalidProtocolVersion",
+					/// A user attempts to perform `multi-swap-exact-in/out-n-to-m` on a Pool with a size
+					///  `s` < `n` + `m`.
+					41: "InvalidPoolSize",
+					/// A user attempts to perform swap and providing provides a coin with a
+					///  value of zero.
+					42: "ZeroValue",
+					/// A user attempts to perform a multi-coin withdraw and provides an `amounts_out`
+					///  vector whose length does
+					43: "BadVectorLength",
+					/// A user attempts to swap attempts to swap `Coin<CI>` for `amount_out` of `Coin<CO>`
+					///  but its value is insufficient.
+					44: "InsufficientCoinIn",
+					// A user calls `multi_swap_exact_in_1_to_n` or `multi_swap_exact_out_1_to_n` and provides the same
+					//  generic at least twice.
+					45: "DuplicateTypes",
+					/// Something went wrong with the internal calculations
+					46: "InternalError",
+					/// An external app is trying to call authorized functions without permission.
+					47: "NotAuthorized",
+				},
+				[PoolsApi.constants.moduleNames.withdraw]: {
+					/// A user attempts to perform a `withdraw` with an older contract.
+					30: "InvalidProtocolVersion",
+					/// A user attempts to perform `withdraw-n-coins` on a Pool with a size `m` < `n`.
+					31: "InvalidPoolSize",
+					/// A user attempts to perform a withdraw and provides an LP coin with a value of zero.
+					32: "ZeroValue",
+					/// A user attempts to perform a multi-coin withdraw and provides an `amounts_out`
+					///  vector whose length does
+					33: "BadVectorLength",
+					// A user calls `withdraw_n_coins` or `all_coin_withdraw_n_coins` and provides the same generic
+					//  at least twice.
+					34: "DuplicateTypes",
+				},
+				[PoolsApi.constants.moduleNames.math]: {
+					// TODO: change error code in move
+
+					/// A user tries to create a Pool that would result in the Pool's invariant equalling zero.
+					// 51: "ZeroInvariant",
+
+					/// A user tries to perform an action with the Pool that results in too much slippage.
+					51: "Slippage",
+					/// A user tries to perform a swap that would result in more than `MAX_SWAP_AMOUNT_IN` worth of
+					///  one of the Pool's coins entering the Pool.
+					52: "InvalidSwapAmountIn",
+					/// A user tries to perform a swap that would result in more than `MAX_SWAP_AMOUNT_OUT` worth of
+					///  one of the Pool's coins exiting the Pool.
+					53: "InvalidSwapAmountOut",
+					/// A user tries to perform a `swap_exact_out` with a value for `amount_out` that equates to
+					///  zero amount of `Coin<CI>`.
+					54: "ZeroAmountIn",
+					/// A user tries to perform a `swap_exact_in` with an amount of `Coin<CI>` that equates to
+					///  zero amount of `Coin<CO>`.
+					55: "ZeroAmountOut",
+					/// A user tries to deposit into a Pool with a deposit that is worth zero LP coins.
+					56: "ZeroLpOut",
+					/// A user tries to invest with an lp ratio of 0
+					57: "ZeroLpRatio",
+				},
+				[PoolsApi.constants.moduleNames.geometricMeanCalculations]: {},
+				[PoolsApi.constants.moduleNames.stableCalculations]: {},
+			},
 		};
 	}
 
