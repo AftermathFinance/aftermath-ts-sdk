@@ -129,6 +129,10 @@ export class Coin extends Caller {
 		this.priceInfo = priceInfo;
 	}
 
+	public async getVerifiedCoins() {
+		return this.fetchApi<CoinType[]>("verified");
+	}
+
 	// =========================================================================
 	//  Public Static Methods
 	// =========================================================================
