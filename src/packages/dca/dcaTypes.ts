@@ -38,6 +38,7 @@ export interface ApiDcaInitializeOrderBody {
 	maxAllowableSlippageBps: Balance;
 	coinPerTradeAmount: Balance;
 	publicKey: Uint8Array;
+	customRecipient?: SuiAddress;
 }
 
 export interface ApiDcaCancelOrderBody {

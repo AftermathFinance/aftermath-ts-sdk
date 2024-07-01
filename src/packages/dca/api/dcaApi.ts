@@ -9,7 +9,7 @@ import { Sui } from "../../sui";
 import { Coin } from "../../coin";
 
 const ED25519_PK_FLAG = 0x00;
-const GAS_SUI_AMOUNT = BigInt(5_000_000);                  // 0.005 SUI
+const GAS_SUI_AMOUNT = BigInt(5_000_000);                   // 0.005 SUI
 const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
     
 export class DcaApi {
@@ -29,11 +29,6 @@ export class DcaApi {
             executedTrade: "ExecutedTradeEvent",
         }
     }
-
-    public readonly objectTypes: {
-		order: AnyObjectType;
-		trade: AnyObjectType;
-	};
 
     // =========================================================================
     // Class Members
@@ -64,11 +59,6 @@ export class DcaApi {
             createdOrder: this.createdOrderEventType(),
             closedOrder: this.closedOrderEventType(),
             executedTrade: this.executedOrderEventType(),
-        }
-
-        this.objectTypes = {
-            order: `${addresses.packages.dca}::${DcaApi.constants.moduleNames.dca}::Order`,
-            trade: `${addresses.packages.dca}::${DcaApi.constants.moduleNames.dca}::trade`,
         }
     }
 
@@ -102,13 +92,16 @@ export class DcaApi {
 		});
 
         const orderAmountPerTrade = inputs.allocateCoinAmount / BigInt(inputs.tradesAmount);
+
+        const recipientAddress = inputs.customRecipient ? inputs.customRecipient : walletAddress;
         
         this.createNewOrderTx({
             ...inputs,
             tx,
             gasCoinId,
             inputCoinId,
-            orderAmountPerTrade
+            orderAmountPerTrade,
+            recipientAddress
         });
 
         return tx;
@@ -145,17 +138,14 @@ export class DcaApi {
         maxAllowableSlippageBps: Balance,
         tradesAmount: number,
         publicKey: Uint8Array,
-        orderAmountPerTrade: Balance;
+        recipientAddress: SuiAddress,
+        orderAmountPerTrade: Balance,
         straregy?: ApiDcaInitializeOrdertStrategyBody,
     }) => {
         const { tx } = inputs;
 
         // Todo: - Do we need it here? Added ED25519 flag at the beggining of the array. 
         const publicKeyPrepared = Array.from(Buffer.concat([Buffer.from([ED25519_PK_FLAG]), inputs.publicKey]));
-
-        console.log("SDK", {
-            frequencyMs: inputs.frequencyMs
-        })
 
         return tx.moveCall({
             target: Helpers.transactions.createTxTarget(
@@ -170,6 +160,7 @@ export class DcaApi {
                 tx.object(inputs.gasCoinId),
                 tx.object(Sui.constants.addresses.suiClockId),
                 tx.pure(publicKeyPrepared, "vector<u8>"),
+                tx.pure(inputs.recipientAddress, "address"),
                 tx.pure(inputs.frequencyMs, "u64"),
                 tx.pure(inputs.delayTimeMs, "u64"),
                 tx.pure(inputs.orderAmountPerTrade, "u64"),
@@ -220,8 +211,14 @@ export class DcaApi {
             ).filter(order => order.owner == walletAddress), // Is it good to fetch all and then filter?
             this.fetchAllDcaOrderTradesObject()
         ])
+        
+        // const ordersFromIndexer = await this.Provider.indexerCaller.fetchIndexer(
+        //     `dollar-cost-averaging/order/get`
+        // )
 
-
+        // console.log({
+        //     ordersFromIndexer: ordersFromIndexer
+        // })
 
         const allEventOrdersIds = allEventOrders.map(order => order.orderId)
 
@@ -389,20 +386,3 @@ export class DcaApi {
         }
     }
 }
-
-
-
-// const canceledObjectIds = (
-// 	await this.Provider.Events().fetchAllEvents({
-// 		fetchEventsFunc: (eventInputs) =>
-// 			this.fetchCanceledDcaOrdersEvents(eventInputs),
-// 	})
-// ).map(order => order.orderId);
-
-
-// const partialCreatedOrders =
-// 	await this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
-//         walletAddress: walletAddress,
-//         objectType: this.objectTypes.order,
-//         objectFromSuiObjectResponse: Casting.dca.partialOrdersObjectFromSuiObjectResponse,
-//     });
