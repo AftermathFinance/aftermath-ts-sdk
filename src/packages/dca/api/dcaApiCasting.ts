@@ -1,10 +1,10 @@
 import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { Casting, Helpers } from "../../../general/utils";
 import { DcaCancelledOrderEvent, DcaCreatedOrderEvent, DcaExecutedTradeEvent, DcaOrderObject, DcaOrderTradeObject, DcaOrdertStrategyObject } from "../dcaTypes";
-import { DcaClosedOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain, DcaOrderFieldsOnChain } from "./dcaApiCastingTypes";
+import { DcaClosedOrderEventOnChain, DcaCreatedOrderEventOnChain, DcaExecutedTradeEventOnChain, DcaIndexerOrdersResponse, DcaOrderFieldsOnChain } from "./dcaApiCastingTypes";
 import { Coin } from "../../coin/coin";
 
-export class DcaApiCasting {
+export class DcaApiCasting {	
 
     public static createdDcaOrderEventFromOnChain = (
 		eventOnChain: DcaCreatedOrderEventOnChain
@@ -12,7 +12,7 @@ export class DcaApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			orderId: fields.order_id,
-			owner: fields.owner,
+			owner: fields.user,
 			inputValue: BigInt(fields.input_value),
 			inputType: Helpers.addLeadingZeroesToType("0x" + Buffer.from(fields.input_type).toString()),
 			outputType: Helpers.addLeadingZeroesToType("0x" + Buffer.from(fields.output_type).toString()),
@@ -37,7 +37,7 @@ export class DcaApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			orderId: fields.order_id,
-			owner: fields.owner,
+			owner: fields.user,
 			remainingValue: BigInt(fields.remaining_value),
 			inputType: Helpers.addLeadingZeroesToType("0x" + fields.input_type),
 			outputType: Helpers.addLeadingZeroesToType("0x" + fields.output_type),
@@ -62,7 +62,7 @@ export class DcaApiCasting {
 		console.log("executedTradeEventFromChain", fields);
 		return {
 			orderId: fields.order_id,
-			owner: fields.owner,
+			owner: fields.user,
 			inputType: Helpers.addLeadingZeroesToType("0x" + fields.input_type),
 			inputAmount: BigInt(fields.input_amount),
 			outputType: Helpers.addLeadingZeroesToType("0x" + fields.output_type),
@@ -144,4 +144,29 @@ export class DcaApiCasting {
 			rate: 0
 		};
 	}
+
+	// =========================================================================
+	// Indexer
+	// =========================================================================
+
+	public static createdOrdersEventsOnIndexer = (
+		response: DcaIndexerOrdersResponse
+	): DcaExecutedTradeEvent => {
+		
+		console.log("createdOrdersEventsOnIndexer", response);
+		// const objectType = Helpers.getObjectType(response);
+		// const fields = Helpers.getObjectFields(response) as DcaOrderFieldsOnChain;
+		
+		return {
+			orderId: "",
+			owner: "",
+			inputType: "",
+			inputAmount: BigInt(123),
+			outputType: "",
+			outputAmount: BigInt(123),
+			timestamp: 123,
+			txnDigest: "",
+			type: ""
+		};
+	};
 }
