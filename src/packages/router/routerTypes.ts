@@ -61,6 +61,7 @@ export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	netTradeFeePercentage: Percentage;
 	referrer?: SuiAddress;
 	externalFee?: ExternalFee;
+	slippage?: Slippage;
 };
 
 /**
@@ -144,6 +145,7 @@ export type ApiRouterCompleteTradeRouteBody =
 					 * Amount of coin expected to receive
 					 */
 					coinOutAmount: Balance;
+					slippage: Slippage;
 			  }
 		);
 

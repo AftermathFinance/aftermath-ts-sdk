@@ -13,6 +13,7 @@ import {
 	ApiRouterAddTransactionForCompleteTradeRouteV0Body,
 	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
 	ModuleName,
+	Slippage,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Transaction } from "@mysten/sui/transactions";
@@ -121,6 +122,7 @@ export class Router extends Caller {
 			 * Amount of coin expected to receive
 			 */
 			coinOutAmount: Balance;
+			slippage: Slippage;
 		},
 		abortSignal?: AbortSignal
 	) {

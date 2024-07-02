@@ -255,6 +255,7 @@ export class RouterApi implements MoveErrorsInterface {
 		coinInType: CoinType;
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
+		slippage: Slippage;
 		referrer?: SuiAddress;
 		externalFee?: ExternalFee;
 	}): Promise<RouterCompleteTradeRoute> => {
@@ -264,6 +265,7 @@ export class RouterApi implements MoveErrorsInterface {
 			coinOutAmount,
 			referrer,
 			externalFee,
+			slippage,
 		} = inputs;
 
 		const { paths } = await this.Provider.indexerCaller.fetchIndexer<
@@ -283,7 +285,10 @@ export class RouterApi implements MoveErrorsInterface {
 				from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
 				to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
 				// NOTE: is this conversion safe ?
-				output_amount: Number(coinOutAmount),
+				output_amount: Math.ceil(
+					(1 + slippage + (externalFee?.feePercentage ?? 0)) *
+						Number(coinOutAmount)
+				),
 				referred: referrer !== undefined,
 			},
 			undefined,
@@ -305,6 +310,7 @@ export class RouterApi implements MoveErrorsInterface {
 			// NOTE: should these be here ?
 			referrer,
 			externalFee,
+			slippage,
 		};
 	};
 
