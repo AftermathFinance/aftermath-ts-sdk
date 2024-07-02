@@ -39,93 +39,113 @@ export class Perpetuals extends Caller {
 	public static readonly OrderUtils = PerpetualsOrderUtils;
 
 	private static readonly moveErrors: Record<number, string> = {
-		// Clearing House
+		// ClearingHouse
 
-		// Cannot deposit/withdraw zero coins to/from the account's collateral.
+		/// Cannot deposit/withdraw zero coins to/from the account's collateral.
 		0: "Deposit Or Withdraw Amount Zero",
-		// Orderbook size or price are invalid values
+		/// Orderbook size or price are invalid values
 		1: "Invalid Size Or Price",
-		// When trying to access a particular insurance fund, but it does not exist.
-		2: "Invalid Insurance Fund Id",
-		// Index price returned from oracle is 0 or invalid value
-		3: "Bad Index Price",
-		// Registry already contains the specified collateral type
-		4: "Invalid Collateral Type",
-		// Order value in USD is too low
-		5: "Order Usd Value Too Low",
-		// Wrong number of sizes passed to liquidation.
-		// It must match the number of liqee's positions.
-		6: "Invalid Number Of Sizes",
+		/// Index price returned from oracle is 0 or invalid value
+		2: "Bad Index Price",
+		/// Market id already used to register a market
+		3: "Market Id Already Used",
+		/// Order value in USD is too low
+		4: "Order Usd Value Too Low",
+		/// Passed a vector of invalid order ids to perform force cancellation
+		/// during liquidation
+		5: "Invalid Force Cancel Ids",
+		/// Liquidate must be the first operation of the session, if performed.
+		6: "Liquidate Not First Operation",
+		/// Passed a vector of invalid order ids to cancel
+		7: "Invalid Cancel Order Ids",
+		/// Ticket has already passed `expire_timestamp` and can only be cancelled
+		8: "Stop Order Ticket Expired",
+		/// Index price is not at correct value to satisfy stop order conditions
+		9: "Stop Order Conditions Violated",
+		/// Index price is not at correct value to satisfy stop order conditions
+		10: "Wrong Order Details",
+		/// Invalid price feed storage for the clearing house
+		11: "Invalid Price Feed Storage",
+		/// Same liquidator and liqee account ids
+		12: "Self Liquidation",
+		/// User trying to access the subaccount is not the one specified by parent
+		13: "Invalid Sub Account User",
+		/// The parent `Account` trying to delete the subaccount is not the correct one.
+		14: "Wrong Parent For Sub Account",
+		/// Raised when trying to delete a subaccount still containing collateral.
+		15: "Sub Account Contains Collateral",
+		/// Raised when trying to call a function with the wrong package's version
+		16: "Wrong Version",
+		/// Raised when trying to have a session composed by only `start_session` and `end_session`
+		17: "Empty Session",
 
-		// MarketManager
+		// Market
 
-		// Tried to create a new market with invalid parameters.
+		/// While creating ordered map with invalid parameters,
+		/// or changing them improperly for an existent map.
 		1000: "Invalid Market Parameters",
-		// Tried to call `update_funding` before enough time has passed since the
-		// last update.
+		/// Tried to call `update_funding` before enough time has passed since the
+		/// last update.
 		1001: "Updating Funding Too Early",
-		// Margin ratio update proposal already exists for market
+		/// Margin ratio update proposal already exists for market
 		1002: "Proposal Already Exists",
-		// Margin ratio update proposal cannot be commited too early
+		/// Margin ratio update proposal cannot be committed too early
 		1003: "Premature Proposal",
-		// Margin ratio update proposal delay is outside the valid range
+		/// Margin ratio update proposal delay is outside the valid range
 		1004: "Invalid Proposal Delay",
-		// Market does not exist
-		1005: "Market Does Not Exist",
-		// Tried to update a config with a value outside of the allowed range
-		1006: "Value Out Of Range",
-		// Margin ratio update proposal does not exist for market
-		1007: "Proposal Does Not Exist",
-		// Exchange has no available fees to withdraw
-		1008: "No Fees Accrued",
-		// Tried to withdraw more insurance funds than the allowed amount
-		1009: "Insufficient Insurance Surplus",
-		// Cannot create a market for which a price feed does not exist
-		1010: "No Price Feed For Market",
+		/// Margin ratio update proposal does not exist for market
+		1005: "Proposal Does Not Exist",
+		/// Exchange has no available fees to withdraw
+		1006: "No Fees Accrued",
+		/// Tried to withdraw more insurance funds than the allowed amount
+		1007: "Insufficient Insurance Surplus",
+		/// Cannot create a market for which a price feed does not exist
+		1008: "No Price Feed For Market",
+		/// Cannot delete a proposal that already matured. It can only be committed.
+		1009: "Proposal Already Matured",
 
-		// Account Manager
+		// Position
 
-		// Tried accessing a nonexistent account.
-		2000: "Account Not Found",
-		// Tried accessing a nonexistent account position.
-		2001: "Position Not Found",
-		// Tried creating a new position when the account already has the maximum
-		// allowed number of open positions.
-		2002: "Max Positions Exceeded",
-		// An operation brought an account below initial margin requirements.
-		// 2003: "Initial Margin Requirement Violated",
-		2003: "Margin Requirements Violated, Try Lowering Size",
-		// Account is above MMR, so can't be liquidated.
-		2004: "Account Above MMR",
-		// Cannot realize bad debt via means other than calling 'liquidate'.
-		2005: "Account Bad Debt",
-		// Cannot withdraw more than the account's free collateral.
+		/// Tried placing a new pending order when the position already has the maximum
+		/// allowed number of pending orders.
+		2000: "Max Pending Orders Exceeded",
+		/// Used for checking both liqee and liqor positions during liquidation
+		2001: "Position Below IMR",
+		/// When leaving liqee's position with a margin ratio above tolerance,
+		/// meaning that liqor has overbought position
+		2002: "Position Above Tolerance",
+		/// An operation brought an account below initial margin requirements.
+		2003: "Initial Margin Requirement Violated",
+		/// Position is above MMR, so can't be liquidated.
+		2004: "Position Above MMR",
+		/// Cannot realize bad debt via means other than calling 'liquidate'.
+		2005: "Position Bad Debt",
+		/// Cannot withdraw more than the account's free collateral.
 		2006: "Insufficient Free Collateral",
-		// Cannot delete a position that is not worthless
-		2007: "Position Not Null",
-		// Tried placing a new pending order when the position already has the maximum
-		// allowed number of pending orders.
-		2008: "Max Pending Orders Exceeded",
-		// Used for checking both liqee and liqor positions during liquidation
-		2009: "Account Below IMR",
-		// When leaving liqee's account with a margin ratio above tolerance,
-		// meaning that liqor has overbought position
-		2010: "Account Above Tolerance",
+		/// Cannot have more than 1 position in a market.
+		2007: "Position Already Exists",
 
 		// Orderbook & OrderedMap
 
-		// While searching for a key, but it doesn't exist.
-		3000: "Key Does Not Exist",
-		// While inserting already existing key.
-		3001: "Key Already Exists",
-		// When attempting to destroy a non-empty map
-		3002: "Destroying Not Empty Map",
-		// Invalid user tries to modify an order
-		3003: "Invalid User For Order",
-		// Orderbook flag requirements violated
-		3004: "Flag Requirements Violated",
-		// Minimum size matched not reached
-		3005: "Not Enough Liquidity",
+		/// While creating ordered map with wrong parameters.
+		3000: "Invalid Map Parameters",
+		/// While searching for a key, but it doesn't exist.
+		3001: "Key Not Exist",
+		/// While inserting already existing key.
+		3002: "Key Already Exists",
+		/// When attempting to destroy a non-empty map
+		3003: "Destroy Not Empty",
+		/// Invalid user tries to modify an order
+		3004: "Invalid User For Order",
+		/// Orderbook flag requirements violated
+		3005: "Flag Requirements Violated",
+		/// Minimum size matched not reached
+		3006: "Not Enough Liquidity",
+		/// When trying to change a map configuration, but the map has
+		/// length less than 4
+		3007: "Map Too Small",
+		/// When taker matches its own order
+		3008: "Self Trading",
 	};
 
 	// =========================================================================

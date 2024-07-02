@@ -2223,58 +2223,58 @@ export class PerpetualsApi {
 	// 	// };
 	// };
 
-	private createTxAndStartSession = (inputs: {
-		tx?: Transaction;
-		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		marketId: PerpetualsMarketId;
-		marketInitialSharedVersion: ObjectVersion;
-		basePriceFeedId: ObjectId;
-		collateralPriceFeedId: ObjectId;
-		walletAddress: SuiAddress;
-		collateralChange: Balance;
-		hasPosition: boolean;
-	}) => {
-		const { collateralChange, walletAddress, hasPosition } = inputs;
-		const { tx: inputsTx, ...nonTxInputs } = inputs;
+	// private createTxAndStartSession = (inputs: {
+	// 	tx?: Transaction;
+	// 	collateralCoinType: CoinType;
+	// 	accountCapId: ObjectId | TransactionArgument;
+	// 	marketId: PerpetualsMarketId;
+	// 	marketInitialSharedVersion: ObjectVersion;
+	// 	basePriceFeedId: ObjectId;
+	// 	collateralPriceFeedId: ObjectId;
+	// 	walletAddress: SuiAddress;
+	// 	collateralChange: Balance;
+	// 	hasPosition: boolean;
+	// }) => {
+	// 	const { collateralChange, walletAddress, hasPosition } = inputs;
+	// 	const { tx: inputsTx, ...nonTxInputs } = inputs;
 
-		const tx = inputsTx ?? new Transaction();
-		tx.setSender(walletAddress);
+	// 	const tx = inputsTx ?? new Transaction();
+	// 	tx.setSender(walletAddress);
 
-		if (!hasPosition) {
-			this.createMarketPositionTx({
-				...nonTxInputs,
-				tx,
-			});
-		}
+	// 	if (!hasPosition) {
+	// 		this.createMarketPositionTx({
+	// 			...nonTxInputs,
+	// 			tx,
+	// 		});
+	// 	}
 
-		if (collateralChange > BigInt(0)) {
-			this.allocateCollateralTx({
-				...nonTxInputs,
-				tx,
-				amount: collateralChange,
-			});
-		}
+	// 	if (collateralChange > BigInt(0)) {
+	// 		this.allocateCollateralTx({
+	// 			...nonTxInputs,
+	// 			tx,
+	// 			amount: collateralChange,
+	// 		});
+	// 	}
 
-		const sessionPotatoId = this.startSessionTx({
-			...nonTxInputs,
-			tx,
-		});
+	// 	const sessionPotatoId = this.startSessionTx({
+	// 		...nonTxInputs,
+	// 		tx,
+	// 	});
 
-		return { tx, sessionPotatoId };
-	};
+	// 	return { tx, sessionPotatoId };
+	// };
 
-	private endSessionAndShareMarket = (inputs: {
-		tx: Transaction;
-		collateralCoinType: CoinType;
-		sessionPotatoId: ObjectId | TransactionArgument;
-	}) => {
-		const marketId = this.endSessionTx(inputs);
-		this.shareClearingHouseTx({
-			...inputs,
-			marketId,
-		});
-	};
+	// private endSessionAndShareMarket = (inputs: {
+	// 	tx: Transaction;
+	// 	collateralCoinType: CoinType;
+	// 	sessionPotatoId: ObjectId | TransactionArgument;
+	// }) => {
+	// 	const marketId = this.endSessionTx(inputs);
+	// 	this.shareClearingHouseTx({
+	// 		...inputs,
+	// 		marketId,
+	// 	});
+	// };
 
 	// =========================================================================
 	//  Public Static Helpers
@@ -2297,7 +2297,10 @@ export class PerpetualsApi {
 			initialBucketedOrders,
 		} = inputs;
 
-		let dataPoints: OrderbookDataPoint[] = orders.reduce((acc, order) => {
+		let dataPoints: OrderbookDataPoint[] = initialBucketedOrders ?? [];
+
+		// Process each order
+		orders.forEach((order) => {
 			const actualPrice = Perpetuals.orderPriceToPrice({
 				lotSize,
 				tickSize: Math.abs(tickSize),
@@ -2305,11 +2308,10 @@ export class PerpetualsApi {
 			});
 			const roundedPrice =
 				Math.round(actualPrice / priceBucketSize) * priceBucketSize;
-			// negative tick size means order filled
 			const size = lotSize * Number(order.size) * (tickSize < 0 ? -1 : 1);
 			const sizeUsd = size * actualPrice;
 
-			const placementIndex = acc.findIndex(
+			const placementIndex = dataPoints.findIndex(
 				(dataPoint: OrderbookDataPoint) =>
 					side === PerpetualsOrderSide.Ask
 						? roundedPrice <= dataPoint.price &&
@@ -2317,69 +2319,60 @@ export class PerpetualsApi {
 						: roundedPrice >= dataPoint.price &&
 						  roundedPrice < dataPoint.price + priceBucketSize
 			);
+
 			if (placementIndex < 0) {
-				// no bucket exists; create bucket
-				const insertIndex = acc.findIndex((dataPoint) =>
+				// No bucket exists; create bucket
+				const newDataPoint: OrderbookDataPoint = {
+					size,
+					sizeUsd,
+					totalSize: size,
+					totalSizeUsd: sizeUsd,
+					price: roundedPrice,
+				};
+				// Find the correct insert index
+				const insertIndex = dataPoints.findIndex((dataPoint) =>
 					side === PerpetualsOrderSide.Ask
 						? roundedPrice <= dataPoint.price
 						: roundedPrice >= dataPoint.price
 				);
-
-				const newDataPoint = {
-					size,
-					sizeUsd,
-					totalSize: 0,
-					totalSizeUsd: 0,
-					price: roundedPrice,
-				};
-				if (insertIndex === 0) {
-					return [newDataPoint, ...acc];
-				} else if (insertIndex < 0) {
-					return [...acc, newDataPoint];
+				if (insertIndex < 0) {
+					dataPoints.push(newDataPoint);
 				} else {
-					return [
-						...acc.slice(0, insertIndex),
-						newDataPoint,
-						...acc.slice(insertIndex + 1),
-					];
+					dataPoints.splice(insertIndex, 0, newDataPoint);
 				}
 			} else {
-				// bucket found
-				const newAcc = Array.from(acc);
-				newAcc[placementIndex] = {
-					...newAcc[placementIndex],
-					size: newAcc[placementIndex].size + size,
-					totalSize: newAcc[placementIndex].totalSize + size,
-					sizeUsd: newAcc[placementIndex].sizeUsd + sizeUsd,
-					totalSizeUsd: newAcc[placementIndex].totalSizeUsd + sizeUsd,
-				};
-				return newAcc;
+				// Bucket found; update existing bucket
+				dataPoints[placementIndex].size += size;
+				dataPoints[placementIndex].sizeUsd += sizeUsd;
+				dataPoints[placementIndex].totalSize += size;
+				dataPoints[placementIndex].totalSizeUsd += sizeUsd;
 			}
-		}, initialBucketedOrders ?? ([] as OrderbookDataPoint[]));
+		});
 
-		// remove 0 size buckets
+		// Remove 0 size buckets
 		dataPoints = dataPoints.filter(
 			(data) => data.size > 0 && data.sizeUsd > 0
 		);
 
-		// compute total sizes
-		for (const [index, data] of dataPoints.entries()) {
-			dataPoints[index] = {
-				...data,
-				totalSize:
-					index > 0
-						? dataPoints[index - 1].totalSize + data.size
-						: data.size,
-				totalSizeUsd:
-					index > 0
-						? dataPoints[index - 1].totalSizeUsd + data.sizeUsd
-						: data.sizeUsd,
-			};
+		// Compute total sizes
+		for (let index = 0; index < dataPoints.length; index++) {
+			if (index > 0) {
+				dataPoints[index].totalSize =
+					dataPoints[index - 1].totalSize + dataPoints[index].size;
+				dataPoints[index].totalSizeUsd =
+					dataPoints[index - 1].totalSizeUsd +
+					dataPoints[index].sizeUsd;
+			} else {
+				dataPoints[index].totalSize = dataPoints[index].size;
+				dataPoints[index].totalSizeUsd = dataPoints[index].sizeUsd;
+			}
 		}
 
+		// Reverse data points for asks
 		if (side === PerpetualsOrderSide.Ask) {
 			dataPoints.reverse();
 		}
+
 		return dataPoints;
 	};
 
