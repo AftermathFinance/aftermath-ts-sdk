@@ -2299,29 +2299,38 @@ export class PerpetualsApi {
 
 		let dataPoints: OrderbookDataPoint[] = initialBucketedOrders ?? [];
 
-		// Process each order
+		const roundPrice = (price: number, bucketSize: number): number => {
+			return Math.round(price / bucketSize) * bucketSize;
+		};
+
+		const comparePrices = (
+			price1: number,
+			price2: number,
+			bucketSize: number
+		): boolean => {
+			return Math.abs(price1 - price2) < bucketSize / 2;
+		};
+
 		orders.forEach((order) => {
 			const actualPrice = Perpetuals.orderPriceToPrice({
 				lotSize,
 				tickSize: Math.abs(tickSize),
 				orderPrice: order.price,
 			});
-			const roundedPrice =
-				Math.round(actualPrice / priceBucketSize) * priceBucketSize;
+			const roundedPrice = roundPrice(actualPrice, priceBucketSize);
 			const size = lotSize * Number(order.size) * (tickSize < 0 ? -1 : 1);
 			const sizeUsd = size * actualPrice;
 
 			const placementIndex = dataPoints.findIndex(
 				(dataPoint: OrderbookDataPoint) =>
-					side === PerpetualsOrderSide.Ask
-						? roundedPrice <= dataPoint.price &&
-						  roundedPrice > dataPoint.price - priceBucketSize
-						: roundedPrice >= dataPoint.price &&
-						  roundedPrice < dataPoint.price + priceBucketSize
+					comparePrices(
+						roundedPrice,
+						dataPoint.price,
+						priceBucketSize
+					)
 			);
 
 			if (placementIndex < 0) {
-				// No bucket exists; create bucket
 				const newDataPoint: OrderbookDataPoint = {
 					size,
 					sizeUsd,
@@ -2329,7 +2338,6 @@ export class PerpetualsApi {
 					totalSizeUsd: sizeUsd,
 					price: roundedPrice,
 				};
-				// Find the correct insert index
 				const insertIndex = dataPoints.findIndex((dataPoint) =>
 					side === PerpetualsOrderSide.Ask
 						? roundedPrice <= dataPoint.price
@@ -2341,7 +2349,6 @@ export class PerpetualsApi {
 					dataPoints.splice(insertIndex, 0, newDataPoint);
 				}
 			} else {
-				// Bucket found; update existing bucket
 				dataPoints[placementIndex].size += size;
 				dataPoints[placementIndex].sizeUsd += sizeUsd;
 				dataPoints[placementIndex].totalSize += size;
@@ -2349,12 +2356,10 @@ export class PerpetualsApi {
 			}
 		});
 
-		// Remove 0 size buckets
 		dataPoints = dataPoints.filter(
 			(data) => data.size > 0 && data.sizeUsd > 0
 		);
 
-		// Compute total sizes
 		for (let index = 0; index < dataPoints.length; index++) {
 			if (index > 0) {
 				dataPoints[index].totalSize =
@@ -2368,7 +2373,6 @@ export class PerpetualsApi {
 			}
 		}
 
-		// Reverse data points for asks
 		if (side === PerpetualsOrderSide.Ask) {
 			dataPoints.reverse();
 		}
