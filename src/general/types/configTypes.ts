@@ -16,6 +16,7 @@ export interface ConfigAddresses {
 	faucet?: FaucetAddresses;
 	staking?: StakingAddresses;
 	pools?: PoolsAddresses;
+	daoFeePools?: DaoFeePoolsAddresses;
 	suiFrens?: SuiFrensAddresses;
 	nftAmm?: NftAmmAddresses;
 	router?: RouterAddresses;
@@ -88,6 +89,15 @@ export interface PoolsAddresses {
 	};
 	other?: {
 		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
+	};
+}
+
+export interface DaoFeePoolsAddresses {
+	packages: {
+		amm: SuiAddress;
+	};
+	objects: {
+		version: ObjectId;
 	};
 }
 

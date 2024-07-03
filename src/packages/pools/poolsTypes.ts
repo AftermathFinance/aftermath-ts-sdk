@@ -62,6 +62,11 @@ export interface PoolLpInfo {
 	balance: Balance;
 }
 
+export interface DaoFeePoolObject extends Object {
+	feeBps: bigint;
+	feeRecipient: SuiAddress;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -89,6 +94,25 @@ export interface PoolWithdrawEvent extends Event {
 	types: CoinType[];
 	withdrawn: Balance[];
 	lpBurned: Balance;
+}
+
+export interface CreatedDaoFeePoolEvent extends Event {
+	daoFeePoolId: ObjectId;
+	innerPoolId: ObjectId;
+	feeBps: bigint;
+	feeRecipient: SuiAddress;
+}
+
+export interface UpdatedFeeBpsEvent extends Event {
+	daoFeePoolId: ObjectId;
+	oldFeeBps: bigint;
+	newFeeBps: bigint;
+}
+
+export interface UpdatedFeeRecipientEvent extends Event {
+	daoFeePoolId: ObjectId;
+	oldFeeAddress: SuiAddress;
+	newFeeAddress: SuiAddress;
 }
 
 // =========================================================================

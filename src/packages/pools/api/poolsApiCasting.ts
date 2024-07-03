@@ -1,4 +1,5 @@
 import {
+	DaoFeePoolObject,
 	PoolCoins,
 	PoolDepositEvent,
 	PoolObject,
@@ -14,6 +15,7 @@ import {
 	PoolTradeEventOnChain,
 	PoolDepositEventOnChain,
 	PoolWithdrawEventOnChain,
+	DaoFeePoolFieldsOnChain,
 } from "./poolsApiCastingTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
@@ -141,19 +143,19 @@ export class PoolsApiCasting {
 		};
 	};
 
-	public static poolObjectIdFromSuiObjectResponse = (
+	public static daoFeePoolObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): ObjectId => {
-		const content = data.data?.content;
-		if (content?.dataType !== "moveObject")
-			throw new Error("sui object response is not an object");
+	): DaoFeePoolObject => {
+		const objectId = Helpers.getObjectId(data);
+		const objectType = Helpers.getObjectType(data);
+		const fields = Helpers.getObjectFields(data) as DaoFeePoolFieldsOnChain;
 
-		const fields = content.fields as {
-			name: AnyObjectType; // lp coin type
-			value: ObjectId; // pool object id
+		return {
+			objectId,
+			objectType,
+			feeBps: BigInt(fields.fee_bps),
+			feeRecipient: Helpers.addLeadingZeroesToType(fields.fee_recipient),
 		};
-
-		return fields.value;
 	};
 
 	// =========================================================================

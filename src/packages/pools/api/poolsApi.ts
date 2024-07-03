@@ -47,6 +47,7 @@ import {
 	Timestamp,
 	UniqueId,
 	PoolObject,
+	DaoFeePoolsAddresses,
 } from "../../../types";
 import {
 	PoolDepositEventOnChain,
@@ -129,6 +130,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	public readonly addresses: {
 		pools: PoolsAddresses;
 		referralVault: ReferralVaultAddresses;
+		daoFeePools?: DaoFeePoolsAddresses;
 	};
 	public readonly objectTypes: {
 		pool: AnyObjectType;
@@ -177,6 +179,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	constructor(private readonly Provider: AftermathApi) {
 		const pools = Provider.addresses.pools;
 		const referralVault = Provider.addresses.referralVault;
+		const daoFeePools = Provider.addresses.daoFeePools;
 
 		if (!pools || !referralVault)
 			throw new Error(
@@ -186,6 +189,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		this.addresses = {
 			pools,
 			referralVault,
+			daoFeePools,
 		};
 		this.objectTypes = {
 			pool: `${pools.packages.events}::pool::Pool`,
@@ -1198,7 +1202,6 @@ export class PoolsApi implements MoveErrorsInterface {
 					: PoolsApi.constants.moduleNames.withdraw,
 				`all_coin_withdraw_${poolSize}_coins`
 			),
-
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
 				tx.object(poolId),
@@ -1401,6 +1404,269 @@ export class PoolsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [lpCoinType],
 			arguments: [tx.object(this.addresses.pools.objects.poolRegistry)],
+		});
+	};
+
+	public daoFeePoolNewTx = (inputs: {
+		tx: Transaction;
+		daoFeePoolId: ObjectId;
+		feeBps: bigint;
+		PURE_2: SuiAddress;
+		lpCoinType: CoinType;
+	}) /* (DaoFeePool, AdminCap) */ => {
+		const { tx } = inputs;
+		if (!this.addresses.daoFeePools)
+			throw new Error(
+				"dao fee pool addresses have not been set in provider"
+			);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.daoFeePools.packages.amm,
+				PoolsApi.constants.moduleNames.pool,
+				"new"
+			),
+			typeArguments: [inputs.lpCoinType],
+			arguments: [
+				tx.object(inputs.daoFeePoolId), // Pool
+				tx.pure.u16(Number(inputs.feeBps)),
+				tx.pure.address(inputs.PURE_2),
+			],
+		});
+	};
+
+	public daoFeePoolShareTx = (inputs: {
+		tx: Transaction;
+		daoFeePoolId: ObjectId;
+		lpCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+		if (!this.addresses.daoFeePools)
+			throw new Error(
+				"dao fee pool addresses have not been set in provider"
+			);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.daoFeePools.packages.amm,
+				PoolsApi.constants.moduleNames.pool,
+				"share"
+			),
+			typeArguments: [inputs.lpCoinType],
+			arguments: [
+				tx.object(inputs.daoFeePoolId), // DaoFeePool
+			],
+		});
+	};
+
+	public daoFeePoolUpdateFeeBpsTx = (inputs: {
+		tx: Transaction;
+		daoFeePoolAdminCapId: ObjectId;
+		daoFeePoolId: ObjectId;
+		newFeeBps: bigint;
+		lpCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+		if (!this.addresses.daoFeePools)
+			throw new Error(
+				"dao fee pool addresses have not been set in provider"
+			);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.daoFeePools.packages.amm,
+				PoolsApi.constants.moduleNames.pool,
+				"update_fee_bps"
+			),
+			typeArguments: [inputs.lpCoinType],
+			arguments: [
+				tx.object(inputs.daoFeePoolAdminCapId), // AdminCap
+				tx.object(inputs.daoFeePoolId), // DaoFeePool
+				tx.pure.u16(Number(inputs.newFeeBps)),
+			],
+		});
+	};
+
+	public daoFeePoolUpdateFeeRecipientTx = (inputs: {
+		tx: Transaction;
+		daoFeePoolAdminCapId: ObjectId;
+		daoFeePoolId: ObjectId;
+		newFeeRecipient: SuiAddress;
+		lpCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+		if (!this.addresses.daoFeePools)
+			throw new Error(
+				"dao fee pool addresses have not been set in provider"
+			);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.daoFeePools.packages.amm,
+				PoolsApi.constants.moduleNames.pool,
+				"update_fee_recipient"
+			),
+			typeArguments: [inputs.lpCoinType],
+			arguments: [
+				tx.object(inputs.daoFeePoolAdminCapId), // AdminCap
+				tx.object(inputs.daoFeePoolId), // DaoFeePool
+				tx.pure.address(inputs.newFeeRecipient),
+			],
+		});
+	};
+
+	/**
+	 * Executes a trade transaction on the specified pool.
+	 * @param inputs An object containing the necessary inputs for the trade transaction.
+	 * @returns A `TransactionObjectArgument` representing the trade transaction.
+	 */
+	public daoFeePoolTradeTx = (inputs: {
+		tx: Transaction;
+		daoFeePoolId: ObjectId;
+		coinInId: ObjectId | TransactionObjectArgument;
+		coinInType: CoinType;
+		expectedCoinOutAmount: Balance;
+		coinOutType: CoinType;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+	}): TransactionObjectArgument => {
+		const {
+			tx,
+			daoFeePoolId,
+			coinInId,
+			coinInType,
+			expectedCoinOutAmount,
+			coinOutType,
+			lpCoinType,
+			slippage,
+		} = inputs;
+
+		if (!this.addresses.daoFeePools)
+			throw new Error(
+				"dao fee pool addresses have not been set in provider"
+			);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.pools.packages.amm,
+				PoolsApi.constants.moduleNames.swap,
+				"swap_exact_in"
+			),
+			typeArguments: [lpCoinType, coinInType, coinOutType],
+			arguments: [
+				tx.object(daoFeePoolId),
+				tx.object(this.addresses.daoFeePools.objects.version),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.pure.u64(expectedCoinOutAmount.toString()),
+				tx.pure.u64(Pools.normalizeSlippage(slippage)),
+			],
+		});
+	};
+
+	/**
+	 * Creates a transaction object argument for depositing multiple coins into a pool.
+	 *
+	 * @param inputs - An object containing the necessary parameters for the deposit transaction.
+	 * @returns A transaction object argument representing the deposit transaction.
+	 */
+	public daoFeePoolMultiCoinDepositTx = (inputs: {
+		tx: Transaction;
+		daoFeePoolId: ObjectId;
+		coinIds: ObjectId[] | TransactionObjectArgument[];
+		coinTypes: CoinType[];
+		expectedLpRatio: bigint;
+		lpCoinType: CoinType;
+		slippage: Slippage;
+	}): TransactionObjectArgument => {
+		const {
+			tx,
+			daoFeePoolId,
+			coinIds,
+			coinTypes,
+			expectedLpRatio,
+			lpCoinType,
+			slippage,
+		} = inputs;
+
+		if (!this.addresses.daoFeePools)
+			throw new Error(
+				"dao fee pool addresses have not been set in provider"
+			);
+
+		const poolSize = coinTypes.length;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.pools.packages.amm,
+				PoolsApi.constants.moduleNames.deposit,
+				`deposit_${poolSize}_coins`
+			),
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				tx.object(daoFeePoolId),
+				tx.object(this.addresses.daoFeePools.objects.version),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				...coinIds.map((coinId) =>
+					typeof coinId === "string" ? tx.object(coinId) : coinId
+				),
+				tx.pure.u128(expectedLpRatio.toString()),
+				tx.pure.u64(Pools.normalizeSlippage(slippage)),
+			],
+		});
+	};
+
+	/**
+	 * Withdraws all coins from a liquidity pool.
+	 * @param inputs - The inputs required for the transaction.
+	 * @param inputs.tx - The transaction block.
+	 * @param inputs.poolId - The ID of the liquidity pool.
+	 * @param inputs.lpCoinId - The ID of the LP coin.
+	 * @param inputs.lpCoinType - The type of the LP coin.
+	 * @param inputs.coinTypes - An array of coin types.
+	 * @returns An array of transaction objects.
+	 */
+	public daoFeePoolAllCoinWithdrawTx = (inputs: {
+		tx: Transaction;
+		daoFeePoolId: ObjectId;
+		lpCoinId: ObjectId | TransactionObjectArgument;
+		lpCoinType: CoinType;
+		coinTypes: CoinType[];
+	}): TransactionObjectArgument[] => {
+		const { tx, daoFeePoolId, lpCoinId, coinTypes, lpCoinType } = inputs;
+
+		if (!this.addresses.daoFeePools)
+			throw new Error(
+				"dao fee pool addresses have not been set in provider"
+			);
+
+		const poolSize = coinTypes.length;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.pools.packages.amm,
+				PoolsApi.constants.moduleNames.withdraw,
+				`all_coin_withdraw_${poolSize}_coins`
+			),
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				tx.object(daoFeePoolId),
+				tx.object(this.addresses.daoFeePools.objects.version),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				typeof lpCoinId === "string" ? tx.object(lpCoinId) : lpCoinId,
+			],
 		});
 	};
 

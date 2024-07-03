@@ -36,6 +36,12 @@ export interface PoolFieldsOnChain {
 	coin_decimals?: BigIntAsString[];
 }
 
+export interface DaoFeePoolFieldsOnChain {
+	id: ObjectId;
+	fee_bps: BigIntAsString;
+	fee_recipient: SuiAddress;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
