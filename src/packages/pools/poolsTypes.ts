@@ -3,6 +3,7 @@ import {
 	Event,
 	Object,
 	ObjectId,
+	Percentage,
 	Slippage,
 	SuiAddress,
 	Timestamp,
@@ -54,6 +55,7 @@ export interface PoolObject extends Object {
 	flatness: PoolFlatness;
 	coins: PoolCoins;
 	lpCoinDecimals: CoinDecimal;
+	daoFeePoolObject?: DaoFeePoolObject;
 }
 
 export interface PoolLpInfo {
@@ -236,9 +238,11 @@ export interface ApiCreatePoolBody {
 	lpCoinMetadata: PoolCreationLpCoinMetadata;
 	coinsInfo: {
 		coinType: CoinType;
-		weight: number;
+		weight: Percentage;
+		// TODO: make decimals optional and fetch if unset ?
+		// TODO: make decimals only bigint ?
 		decimals?: CoinDecimal;
-		tradeFeeIn: number;
+		tradeFeeIn: Percentage;
 		initialDeposit: Balance;
 	}[];
 	poolName: PoolName;
@@ -248,6 +252,10 @@ export interface ApiCreatePoolBody {
 	forceLpDecimals?: CoinDecimal;
 	isSponsoredTx?: boolean;
 	burnLpCoin?: boolean;
+	daoFeeInfo?: {
+		feeBps: bigint;
+		feeRecipient: SuiAddress;
+	};
 }
 
 // =========================================================================

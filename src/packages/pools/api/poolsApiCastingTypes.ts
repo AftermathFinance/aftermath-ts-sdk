@@ -100,3 +100,22 @@ export type PoolDepositEventOnChain =
 
 export type PoolWithdrawEventOnChain =
 	EventOnChain<PoolWithdrawEventFieldsOnChain>;
+
+// =========================================================================
+//  Indexer
+// =========================================================================
+
+export type PoolsIndexerResponse = {
+	objectId: ObjectId;
+	type: AnyObjectType;
+	content: PoolFieldsOnChain;
+	daoFeePoolObject:
+		| [
+				{
+					objectId: ObjectId;
+					type: AnyObjectType;
+					content: DaoFeePoolFieldsOnChain;
+				}
+		  ]
+		| [];
+}[];

@@ -48,10 +48,13 @@ import {
 	UniqueId,
 	PoolObject,
 	DaoFeePoolsAddresses,
+	ApiCreatePoolBody,
 } from "../../../types";
 import {
+	DaoFeePoolFieldsOnChain,
 	PoolDepositEventOnChain,
 	PoolFieldsOnChain,
+	PoolsIndexerResponse,
 	PoolTradeEventOnChain,
 	PoolTradeEventOnChainFields,
 	PoolWithdrawEventOnChain,
@@ -357,16 +360,15 @@ export class PoolsApi implements MoveErrorsInterface {
 		const poolIds = inputs.objectIds.map((objectId) =>
 			Helpers.addLeadingZeroesToType(objectId)
 		);
-		const uncastPools = await this.Provider.indexerCaller.fetchIndexer<
-			{
-				objectId: ObjectId;
-				type: AnyObjectType;
-				content: PoolFieldsOnChain;
-			}[]
-		>("pools", undefined, {
-			pool_ids: poolIds,
-		});
-		const pools = uncastPools.map(PoolsApiCasting.poolObjectFromIndexer);
+		const response =
+			await this.Provider.indexerCaller.fetchIndexer<PoolsIndexerResponse>(
+				"pools",
+				undefined,
+				{
+					pool_ids: poolIds,
+				}
+			);
+		const pools = PoolsApiCasting.poolObjectsFromIndexerResponse(response);
 		return poolIds.map(
 			(objectId) =>
 				pools.find(
@@ -384,14 +386,11 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
 	public fetchAllPools = async (): Promise<PoolObject[]> => {
-		const uncastPools = await this.Provider.indexerCaller.fetchIndexer<
-			{
-				objectId: ObjectId;
-				type: AnyObjectType;
-				content: PoolFieldsOnChain;
-			}[]
-		>("pools");
-		return uncastPools.map(PoolsApiCasting.poolObjectFromIndexer);
+		const response =
+			await this.Provider.indexerCaller.fetchIndexer<PoolsIndexerResponse>(
+				"pools"
+			);
+		return PoolsApiCasting.poolObjectsFromIndexerResponse(response);
 	};
 
 	// =========================================================================
@@ -524,35 +523,15 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
 	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
 	 */
-	public fetchCreatePoolTx = async (inputs: {
-		walletAddress: SuiAddress;
-		lpCoinType: CoinType;
-		lpCoinMetadata: PoolCreationLpCoinMetadata;
-		coinsInfo: {
-			coinType: CoinType;
-			weight: Percentage;
-			// TODO: make decimals optional and fetch if unset ?
-			// TODO: make decimals only bigint ?
-			decimals?: CoinDecimal;
-			tradeFeeIn: Percentage;
-			initialDeposit: Balance;
-		}[];
-		poolName: PoolName;
-		poolFlatness: 0 | 1;
-		createPoolCapId: ObjectId;
-		respectDecimals: boolean;
-		forceLpDecimals?: CoinDecimal;
-		isSponsoredTx?: boolean;
-		burnLpCoin?: boolean;
-	}): Promise<Transaction> => {
+	public fetchCreatePoolTx = async (
+		inputs: ApiCreatePoolBody
+	): Promise<Transaction> => {
 		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
 		return this.fetchBuildCreatePoolTx({
 			...inputs,
 			lpCoinIconUrl: inputs.lpCoinMetadata.iconUrl ?? "",
-
 			poolFlatness:
 				inputs.poolFlatness === 1 ? Casting.Fixed.fixedOneB : BigInt(0),
-
 			coinsInfo: inputs.coinsInfo.map((info, index) => {
 				let weight = Casting.numberToFixedBigInt(info.weight);
 
@@ -638,17 +617,31 @@ export class PoolsApi implements MoveErrorsInterface {
 			isSponsoredTx,
 		});
 
-		this.tradeTx({
-			tx,
-			coinInId,
-			poolId: pool.pool.objectId,
-			expectedCoinOutAmount: amountOut,
-			lpCoinType: pool.pool.lpCoinType,
-			coinInType,
-			coinOutType,
-			slippage,
-			withTransfer: true,
-		});
+		if (pool.pool.daoFeePoolObject) {
+			const coinOutId = this.daoFeePoolTradeTx({
+				tx,
+				coinInId,
+				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+				expectedCoinOutAmount: amountOut,
+				lpCoinType: pool.pool.lpCoinType,
+				coinInType,
+				coinOutType,
+				slippage,
+			});
+			tx.transferObjects([coinOutId], walletAddress);
+		} else {
+			this.tradeTx({
+				tx,
+				coinInId,
+				poolId: pool.pool.objectId,
+				expectedCoinOutAmount: amountOut,
+				lpCoinType: pool.pool.lpCoinType,
+				coinInType,
+				coinOutType,
+				slippage,
+				withTransfer: true,
+			});
+		}
 
 		return tx;
 	};
@@ -749,16 +742,29 @@ export class PoolsApi implements MoveErrorsInterface {
 			isSponsoredTx,
 		});
 
-		this.multiCoinDepositTx({
-			tx,
-			poolId: pool.pool.objectId,
-			lpCoinType: pool.pool.lpCoinType,
-			coinIds,
-			coinTypes,
-			expectedLpRatio,
-			slippage,
-			withTransfer: true,
-		});
+		if (pool.pool.daoFeePoolObject) {
+			const lpCoinId = this.daoFeePoolMultiCoinDepositTx({
+				tx,
+				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				coinIds,
+				coinTypes,
+				expectedLpRatio,
+				slippage,
+			});
+			tx.transferObjects([lpCoinId], walletAddress);
+		} else {
+			this.multiCoinDepositTx({
+				tx,
+				poolId: pool.pool.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				coinIds,
+				coinTypes,
+				expectedLpRatio,
+				slippage,
+				withTransfer: true,
+			});
+		}
 
 		return tx;
 	};
@@ -820,16 +826,21 @@ export class PoolsApi implements MoveErrorsInterface {
 			coinAmount: lpCoinAmount,
 		});
 
-		this.multiCoinWithdrawTx({
-			tx,
-			poolId: pool.pool.objectId,
-			lpCoinType: pool.pool.lpCoinType,
-			expectedAmountsOut: coinAmounts,
-			coinTypes: coinTypes,
-			lpCoinId,
-			slippage,
-			withTransfer: true,
-		});
+		if (pool.pool.daoFeePoolObject) {
+			// TODO: handle dao fee pool
+			// TODO: handle transfer
+		} else {
+			this.multiCoinWithdrawTx({
+				tx,
+				poolId: pool.pool.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				expectedAmountsOut: coinAmounts,
+				coinTypes: coinTypes,
+				lpCoinId,
+				slippage,
+				withTransfer: true,
+			});
+		}
 
 		return tx;
 	};
@@ -865,14 +876,25 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		const coinTypes = Object.keys(pool.pool.coins);
 
-		this.allCoinWithdrawTx({
-			tx,
-			poolId: pool.pool.objectId,
-			lpCoinType: pool.pool.lpCoinType,
-			coinTypes,
-			lpCoinId,
-			withTransfer: true,
-		});
+		if (pool.pool.daoFeePoolObject) {
+			const withdrawnCoinIds = this.daoFeePoolAllCoinWithdrawTx({
+				tx,
+				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				coinTypes,
+				lpCoinId,
+			});
+			tx.transferObjects(withdrawnCoinIds, walletAddress);
+		} else {
+			this.allCoinWithdrawTx({
+				tx,
+				poolId: pool.pool.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				coinTypes,
+				lpCoinId,
+				withTransfer: true,
+			});
+		}
 
 		return tx;
 	};
@@ -914,8 +936,13 @@ export class PoolsApi implements MoveErrorsInterface {
 		lpCoinIconUrl: Url;
 		isSponsoredTx?: boolean;
 		burnLpCoin?: boolean;
+		daoFeeInfo?: {
+			feeBps: bigint;
+			feeRecipient: SuiAddress;
+		};
 	}): Promise<Transaction> => {
-		const { coinsInfo, isSponsoredTx, burnLpCoin, lpCoinType } = inputs;
+		const { coinsInfo, isSponsoredTx, burnLpCoin, lpCoinType, daoFeeInfo } =
+			inputs;
 
 		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
@@ -970,24 +997,54 @@ export class PoolsApi implements MoveErrorsInterface {
 			lpCoinDescription,
 		};
 
-		if (burnLpCoin) {
-			const [poolId, lpCoinId] = await this.createPoolTx(
-				createPoolTxArgs
-			);
-			this.Provider.Objects().publicShareObjectTx({
+		if (daoFeeInfo) {
+			const [poolId, lpCoinId] = this.createPoolTx(createPoolTxArgs);
+
+			const [daoFeePoolId, daoFeePoolAdminCapId] = this.daoFeePoolNewTx({
 				tx,
-				object: poolId,
-				objectType: `${this.objectTypes.pool}<${lpCoinType}>`,
+				poolId,
+				lpCoinType,
+				...daoFeeInfo,
 			});
-			this.Provider.Objects().burnObjectTx({
+			this.daoFeePoolShareTx({
 				tx,
-				object: lpCoinId,
+				daoFeePoolId,
+				lpCoinType,
 			});
+
+			if (burnLpCoin) {
+				this.Provider.Objects().burnObjectTx({
+					tx,
+					object: lpCoinId,
+				});
+				tx.transferObjects(
+					[daoFeePoolAdminCapId],
+					inputs.walletAddress
+				);
+			} else {
+				tx.transferObjects(
+					[lpCoinId, daoFeePoolAdminCapId],
+					inputs.walletAddress
+				);
+			}
 		} else {
-			await this.createPoolTx({
-				...createPoolTxArgs,
-				withTransfer: true,
-			});
+			if (burnLpCoin) {
+				const [poolId, lpCoinId] = this.createPoolTx(createPoolTxArgs);
+				this.Provider.Objects().publicShareObjectTx({
+					tx,
+					object: poolId,
+					objectType: `${this.objectTypes.pool}<${lpCoinType}>`,
+				});
+				this.Provider.Objects().burnObjectTx({
+					tx,
+					object: lpCoinId,
+				});
+			} else {
+				this.createPoolTx({
+					...createPoolTxArgs,
+					withTransfer: true,
+				});
+			}
 		}
 
 		return tx;
@@ -1250,7 +1307,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - An object containing the necessary inputs to create the pool.
 	 * @returns A transaction block to create the pool.
 	 */
-	public createPoolTx = async (inputs: {
+	public createPoolTx = (inputs: {
 		tx: Transaction;
 		lpCoinType: CoinType;
 		coinsInfo: {
@@ -1272,7 +1329,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		respectDecimals: boolean;
 		forceLpDecimals?: CoinDecimal;
 		withTransfer?: boolean;
-	}) /* (Pool<L>, Coin<L>) */ => {
+	}): TransactionObjectArgument[] /* (Pool<L>, Coin<L>) */ => {
 		const {
 			tx,
 			lpCoinType,
@@ -1409,12 +1466,12 @@ export class PoolsApi implements MoveErrorsInterface {
 
 	public daoFeePoolNewTx = (inputs: {
 		tx: Transaction;
-		daoFeePoolId: ObjectId;
+		poolId: ObjectId | TransactionObjectArgument;
 		feeBps: bigint;
-		PURE_2: SuiAddress;
+		feeRecipient: SuiAddress;
 		lpCoinType: CoinType;
 	}) /* (DaoFeePool, AdminCap) */ => {
-		const { tx } = inputs;
+		const { tx, poolId } = inputs;
 		if (!this.addresses.daoFeePools)
 			throw new Error(
 				"dao fee pool addresses have not been set in provider"
@@ -1428,19 +1485,19 @@ export class PoolsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [inputs.lpCoinType],
 			arguments: [
-				tx.object(inputs.daoFeePoolId), // Pool
+				typeof poolId === "string" ? tx.object(poolId) : poolId, // Pool
 				tx.pure.u16(Number(inputs.feeBps)),
-				tx.pure.address(inputs.PURE_2),
+				tx.pure.address(inputs.feeRecipient),
 			],
 		});
 	};
 
 	public daoFeePoolShareTx = (inputs: {
 		tx: Transaction;
-		daoFeePoolId: ObjectId;
+		daoFeePoolId: ObjectId | TransactionObjectArgument;
 		lpCoinType: CoinType;
 	}) => {
-		const { tx } = inputs;
+		const { tx, daoFeePoolId } = inputs;
 		if (!this.addresses.daoFeePools)
 			throw new Error(
 				"dao fee pool addresses have not been set in provider"
@@ -1454,7 +1511,9 @@ export class PoolsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [inputs.lpCoinType],
 			arguments: [
-				tx.object(inputs.daoFeePoolId), // DaoFeePool
+				typeof daoFeePoolId === "string"
+					? tx.object(daoFeePoolId)
+					: daoFeePoolId, // DaoFeePool
 			],
 		});
 	};
@@ -1766,7 +1825,6 @@ export class PoolsApi implements MoveErrorsInterface {
 	//  Stats
 	// =========================================================================
 
-	// TODO: use promise.all to execute some of this fetching in parallel
 	/**
 	 * Fetches statistics for a given pool.
 	 * @param inputs An object containing the pool, trade events within a certain time frame, coins to price, and coins to decimals.
