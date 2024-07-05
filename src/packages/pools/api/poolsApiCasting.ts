@@ -1,5 +1,6 @@
 import {
 	DaoFeePoolObject,
+	DaoFeePoolOwnerCapObject,
 	PoolCoins,
 	PoolDepositEvent,
 	PoolObject,
@@ -17,6 +18,7 @@ import {
 	PoolWithdrawEventOnChain,
 	DaoFeePoolFieldsOnChain,
 	PoolsIndexerResponse,
+	DaoFeePoolOwnerCapFieldsOnChain,
 } from "./poolsApiCastingTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
@@ -173,6 +175,24 @@ export class PoolsApiCasting {
 			objectType,
 			feeBps: BigInt(fields.fee_bps),
 			feeRecipient: Helpers.addLeadingZeroesToType(fields.fee_recipient),
+		};
+	};
+
+	public static daoFeePoolOwnerCapObjectFromSuiObjectResponse = (
+		data: SuiObjectResponse
+	): DaoFeePoolOwnerCapObject => {
+		const objectType = Helpers.getObjectType(data);
+
+		const fields = Helpers.getObjectFields(
+			data
+		) as DaoFeePoolOwnerCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: Helpers.getObjectId(data),
+			daoFeePoolId: Helpers.addLeadingZeroesToType(
+				fields.dao_fee_pool_id
+			),
 		};
 	};
 

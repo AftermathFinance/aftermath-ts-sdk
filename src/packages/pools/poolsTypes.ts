@@ -69,6 +69,10 @@ export interface DaoFeePoolObject extends Object {
 	feeRecipient: SuiAddress;
 }
 
+export interface DaoFeePoolOwnerCapObject extends Object {
+	daoFeePoolId: ObjectId;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -253,7 +257,7 @@ export interface ApiCreatePoolBody {
 	isSponsoredTx?: boolean;
 	burnLpCoin?: boolean;
 	daoFeeInfo?: {
-		feeBps: bigint;
+		feePercentage: Percentage;
 		feeRecipient: SuiAddress;
 	};
 }
@@ -273,4 +277,8 @@ export interface ApiPoolObjectIdForLpCoinTypeBody {
 
 export interface ApiPoolsStatsBody {
 	poolIds: ObjectId[];
+}
+
+export interface ApiPoolsOwnedDaoFeePoolOwnerCapsBody {
+	walletAddress: SuiAddress;
 }

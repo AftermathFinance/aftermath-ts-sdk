@@ -298,7 +298,7 @@ export class NftAmmApi {
 					type: "ID",
 				}),
 				tx.pure.u64(inputs.expectedAssetCoinAmountIn.toString()),
-				tx.pure.u64(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(inputs.slippage)),
 			],
 		});
 	};
@@ -335,7 +335,7 @@ export class NftAmmApi {
 					type: genericTypes[3],
 				}),
 				tx.pure.u64(inputs.expectedAssetCoinAmountOut.toString()),
-				tx.pure.u64(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(inputs.slippage)),
 			],
 		});
 	};
@@ -376,7 +376,7 @@ export class NftAmmApi {
 					type: genericTypes[3],
 				}),
 				tx.pure.u64(inputs.expectedLpRatio.toString()),
-				tx.pure.u64(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(inputs.slippage)),
 			],
 		});
 	};
@@ -413,7 +413,7 @@ export class NftAmmApi {
 					type: "ID",
 				}),
 				tx.pure.u64(inputs.expectedAssetCoinAmountOut.toString()),
-				tx.pure.u64(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(inputs.slippage)),
 			],
 		});
 	};

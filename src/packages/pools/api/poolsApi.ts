@@ -49,6 +49,8 @@ import {
 	PoolObject,
 	DaoFeePoolsAddresses,
 	ApiCreatePoolBody,
+	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
+	DaoFeePoolOwnerCapObject,
 } from "../../../types";
 import {
 	DaoFeePoolFieldsOnChain,
@@ -137,6 +139,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	};
 	public readonly objectTypes: {
 		pool: AnyObjectType;
+		daoFeePoolOwnerCap?: AnyObjectType;
 	};
 	public readonly eventTypes: {
 		trade: AnyObjectType;
@@ -196,6 +199,9 @@ export class PoolsApi implements MoveErrorsInterface {
 		};
 		this.objectTypes = {
 			pool: `${pools.packages.events}::pool::Pool`,
+			daoFeePoolOwnerCap: daoFeePools
+				? `${daoFeePools.packages.amm}::pool::OwnerCap`
+				: undefined,
 		};
 		this.eventTypes = {
 			trade: this.tradeEventType(),
@@ -391,6 +397,24 @@ export class PoolsApi implements MoveErrorsInterface {
 				"pools"
 			);
 		return PoolsApiCasting.poolObjectsFromIndexerResponse(response);
+	};
+
+	public fetchOwnedDaoFeePoolOwnerCaps = async (
+		inputs: ApiPoolsOwnedDaoFeePoolOwnerCapsBody
+	): Promise<DaoFeePoolOwnerCapObject[]> => {
+		const { walletAddress } = inputs;
+
+		if (!this.objectTypes.daoFeePoolOwnerCap)
+			throw new Error(
+				"dao fee pool addresses have not been set in provider"
+			);
+
+		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+			walletAddress,
+			objectType: this.objectTypes.daoFeePoolOwnerCap,
+			objectFromSuiObjectResponse:
+				Casting.pools.daoFeePoolOwnerCapObjectFromSuiObjectResponse,
+		});
 	};
 
 	// =========================================================================
@@ -937,7 +961,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		isSponsoredTx?: boolean;
 		burnLpCoin?: boolean;
 		daoFeeInfo?: {
-			feeBps: bigint;
+			feePercentage: Percentage;
 			feeRecipient: SuiAddress;
 		};
 	}): Promise<Transaction> => {
@@ -1000,11 +1024,12 @@ export class PoolsApi implements MoveErrorsInterface {
 		if (daoFeeInfo) {
 			const [poolId, lpCoinId] = this.createPoolTx(createPoolTxArgs);
 
-			const [daoFeePoolId, daoFeePoolAdminCapId] = this.daoFeePoolNewTx({
+			const [daoFeePoolId, daoFeePoolOwnerCapId] = this.daoFeePoolNewTx({
 				tx,
 				poolId,
 				lpCoinType,
-				...daoFeeInfo,
+				feeRecipient: daoFeeInfo.feeRecipient,
+				feeBps: Casting.percentageToBps(daoFeeInfo.feePercentage),
 			});
 			this.daoFeePoolShareTx({
 				tx,
@@ -1018,12 +1043,12 @@ export class PoolsApi implements MoveErrorsInterface {
 					object: lpCoinId,
 				});
 				tx.transferObjects(
-					[daoFeePoolAdminCapId],
+					[daoFeePoolOwnerCapId],
 					inputs.walletAddress
 				);
 			} else {
 				tx.transferObjects(
-					[lpCoinId, daoFeePoolAdminCapId],
+					[lpCoinId, daoFeePoolOwnerCapId],
 					inputs.walletAddress
 				);
 			}
@@ -1102,7 +1127,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure.u64(expectedCoinOutAmount.toString()),
-				tx.pure.u64(Pools.normalizeSlippage(slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -1158,7 +1183,7 @@ export class PoolsApi implements MoveErrorsInterface {
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
 				tx.pure.u128(expectedLpRatio.toString()),
-				tx.pure.u64(Pools.normalizeSlippage(slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -1220,7 +1245,7 @@ export class PoolsApi implements MoveErrorsInterface {
 							)
 						)
 				),
-				tx.pure.u64(Pools.normalizeSlippage(slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -1285,7 +1310,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			this.addresses.pools.other?.createLpCoinPackageCompilations;
 		if (!compilations)
 			throw new Error(
-				"not all required addresses have been set in provider for lp coin publishing (requires pacakge compilations)"
+				"not all required addresses have been set in provider for lp coin publishing (requires package compilations)"
 			);
 
 		const { tx, lpCoinDecimals } = inputs;
@@ -1470,7 +1495,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		feeBps: bigint;
 		feeRecipient: SuiAddress;
 		lpCoinType: CoinType;
-	}) /* (DaoFeePool, AdminCap) */ => {
+	}) /* (DaoFeePool, OwnerCap) */ => {
 		const { tx, poolId } = inputs;
 		if (!this.addresses.daoFeePools)
 			throw new Error(
@@ -1486,6 +1511,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			typeArguments: [inputs.lpCoinType],
 			arguments: [
 				typeof poolId === "string" ? tx.object(poolId) : poolId, // Pool
+				tx.object(this.addresses.daoFeePools.objects.version),
 				tx.pure.u16(Number(inputs.feeBps)),
 				tx.pure.address(inputs.feeRecipient),
 			],
@@ -1520,7 +1546,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 	public daoFeePoolUpdateFeeBpsTx = (inputs: {
 		tx: Transaction;
-		daoFeePoolAdminCapId: ObjectId;
+		daoFeePoolOwnerCapId: ObjectId;
 		daoFeePoolId: ObjectId;
 		newFeeBps: bigint;
 		lpCoinType: CoinType;
@@ -1539,8 +1565,9 @@ export class PoolsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [inputs.lpCoinType],
 			arguments: [
-				tx.object(inputs.daoFeePoolAdminCapId), // AdminCap
+				tx.object(inputs.daoFeePoolOwnerCapId), // OwnerCap
 				tx.object(inputs.daoFeePoolId), // DaoFeePool
+				tx.object(this.addresses.daoFeePools.objects.version),
 				tx.pure.u16(Number(inputs.newFeeBps)),
 			],
 		});
@@ -1548,7 +1575,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 	public daoFeePoolUpdateFeeRecipientTx = (inputs: {
 		tx: Transaction;
-		daoFeePoolAdminCapId: ObjectId;
+		daoFeePoolOwnerCapId: ObjectId;
 		daoFeePoolId: ObjectId;
 		newFeeRecipient: SuiAddress;
 		lpCoinType: CoinType;
@@ -1567,8 +1594,9 @@ export class PoolsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [inputs.lpCoinType],
 			arguments: [
-				tx.object(inputs.daoFeePoolAdminCapId), // AdminCap
+				tx.object(inputs.daoFeePoolOwnerCapId), // OwnerCap
 				tx.object(inputs.daoFeePoolId), // DaoFeePool
+				tx.object(this.addresses.daoFeePools.objects.version),
 				tx.pure.address(inputs.newFeeRecipient),
 			],
 		});
@@ -1622,7 +1650,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure.u64(expectedCoinOutAmount.toString()),
-				tx.pure.u64(Pools.normalizeSlippage(slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -1678,7 +1706,7 @@ export class PoolsApi implements MoveErrorsInterface {
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
 				tx.pure.u128(expectedLpRatio.toString()),
-				tx.pure.u64(Pools.normalizeSlippage(slippage)),
+				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};

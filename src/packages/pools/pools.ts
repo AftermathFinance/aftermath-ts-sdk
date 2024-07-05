@@ -17,6 +17,7 @@ import {
 	ObjectId,
 	PoolStats,
 	ApiPoolsStatsBody,
+	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -67,6 +68,8 @@ export class Pools extends Caller {
 			maxSwapFee: 0.1, // 10%
 			minWeight: 0.01, // 1%
 			maxWeight: 0.99, // 99%
+			minDaoFee: 0, // 0%
+			maxDaoFee: 1, // 100%
 		},
 		defaults: {
 			lpCoinDecimals: 9,
@@ -215,6 +218,12 @@ export class Pools extends Caller {
 		return this.fetchApi("stats", inputs);
 	}
 
+	public async getOwnedDaoFeePoolOwnerCaps(
+		inputs: ApiPoolsOwnedDaoFeePoolOwnerCapsBody
+	) {
+		return this.useProvider().fetchOwnedDaoFeePoolOwnerCaps(inputs);
+	}
+
 	// =========================================================================
 	//  Fees
 	// =========================================================================
@@ -258,7 +267,7 @@ export class Pools extends Caller {
 		);
 	};
 
-	public static normalizeSlippage = (slippage: Slippage) =>
+	public static normalizeInvertSlippage = (slippage: Slippage) =>
 		FixedUtils.directUncast(1 - slippage);
 
 	// =========================================================================

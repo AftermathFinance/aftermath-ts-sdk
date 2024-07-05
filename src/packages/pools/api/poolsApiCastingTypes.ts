@@ -42,6 +42,11 @@ export interface DaoFeePoolFieldsOnChain {
 	fee_recipient: SuiAddress;
 }
 
+export interface DaoFeePoolOwnerCapFieldsOnChain {
+	id: ObjectId;
+	dao_fee_pool_id: ObjectId;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================

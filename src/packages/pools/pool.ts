@@ -17,6 +17,7 @@ import {
 	ApiPoolAllCoinWithdrawBody,
 	ApiIndexerEventsBody,
 	IndexerEventsWithCursor,
+	Percentage,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -262,8 +263,10 @@ export class Pool extends Caller {
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
-		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
-			amount: inputs.coinInAmount,
+		const coinInAmountWithFees = this.getAmountWithDAOFee({
+			amount: Pools.getAmountWithProtocolFees({
+				amount: inputs.coinInAmount,
+			}),
 		});
 
 		if (
@@ -342,8 +345,10 @@ export class Pool extends Caller {
 				"coinInAmount / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
-		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
-			amount: coinInAmount,
+		const coinInAmountWithoutFees = this.getAmountWithoutDAOFee({
+			amount: Pools.getAmountWithoutProtocolFees({
+				amount: coinInAmount,
+			}),
 		});
 
 		return coinInAmountWithoutFees;
@@ -365,7 +370,13 @@ export class Pool extends Caller {
 	} => {
 		const calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
 			this.pool,
-			inputs.amountsIn
+			Object.entries(inputs.amountsIn).reduce(
+				(acc, [coin, amount]) => ({
+					...acc,
+					[coin]: this.getAmountWithDAOFee({ amount }),
+				}),
+				{}
+			)
 		);
 
 		if (calcedLpRatio >= Casting.Fixed.fixedOneB)
@@ -420,6 +431,10 @@ export class Pool extends Caller {
 				throw new Error(
 					"coinOutAmount / coinOutPoolBalance >= maxWithdrawPercentageOfPoolBalance"
 				);
+
+			amountsOut[coin] = this.getAmountWithDAOFee({
+				amount: amountOut,
+			});
 		}
 
 		return amountsOut;
@@ -443,9 +458,11 @@ export class Pool extends Caller {
 		).reduce((acc, [coin, info]) => {
 			return {
 				...acc,
-				[coin]: BigInt(
-					Math.floor(Number(info.balance) * inputs.lpRatio)
-				),
+				[coin]: this.getAmountWithDAOFee({
+					amount: BigInt(
+						Math.floor(Number(info.balance) * inputs.lpRatio)
+					),
+				}),
 			};
 		}, {});
 
@@ -476,8 +493,36 @@ export class Pool extends Caller {
 		Number(inputs.lpCoinAmountOut) / Number(this.pool.lpCoinSupply);
 
 	// =========================================================================
+	//  Getters
+	// =========================================================================
+
+	public daoFeePercentage = (): Percentage | undefined => {
+		return this.pool.daoFeePoolObject
+			? Casting.bpsToPercentage(this.pool.daoFeePoolObject.feeBps)
+			: undefined;
+	};
+
+	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
+
+	private getAmountWithDAOFee = (inputs: { amount: Balance }) => {
+		const daoFeePercentage = this.daoFeePercentage();
+		if (!daoFeePercentage) return inputs.amount;
+
+		return BigInt(
+			Math.floor(Number(inputs.amount) * (1 - daoFeePercentage))
+		);
+	};
+
+	private getAmountWithoutDAOFee = (inputs: { amount: Balance }) => {
+		const daoFeePercentage = this.daoFeePercentage();
+		if (!daoFeePercentage) return inputs.amount;
+
+		return BigInt(
+			Math.floor(Number(inputs.amount) * (1 / (1 - daoFeePercentage)))
+		);
+	};
 
 	private useProvider = () => {
 		const provider = this.Provider?.Pools();
