@@ -243,69 +243,69 @@ export class PoolsApi implements MoveErrorsInterface {
 				[PoolsApi.constants.moduleNames.poolRegistry]: {
 					/// A user tries to create a Pool and the generic parameters of `create_pool_n_coins` were
 					///  provided in nonlexicographical order.
-					60: "NotSorted",
+					60: "Not Sorted",
 					/// A user tries to create a Pool with exact parameters as an already active Pool.
-					61: "DuplicatePool",
+					61: "Duplicate Pool",
 					/// A user tries to upgrade the `PoolRegistry` to a value
-					62: "InvalidUpgrade",
+					62: "Invalid Upgrade",
 				},
 				[PoolsApi.constants.moduleNames.deposit]: {
 					/// A user attempts to perform a `deposit` with an older contract.
-					20: "InvalidProtocolVersion",
+					20: "Invalid Protocol Version",
 					/// A user attempts to perform `deposit-n-coins` on a Pool with a size `m` < `n`.
-					21: "InvalidPoolSize",
+					21: "Invalid Pool Size",
 					/// A user attempts to perform a deposit and provides a coin with a value of zero.
-					22: "ZeroValue",
+					22: "Zero Value",
 					// A user calls `deposit_n_coins` or `all_coin_deposit_n_coins` and provides the same generic
 					//  at least twice.
-					23: "DuplicateTypes",
+					23: "Duplicate Types",
 				},
 				[PoolsApi.constants.moduleNames.poolFactory]: {
 					/// A user attempts to create a pool on an older contract.
-					10: "InvalidProtocolVersion",
+					10: "Invalid Protocol Version",
 					/// A user attempts to create a Pool and provides a coin with a value of zero.
-					11: "ZeroValue",
+					11: "Zero Value",
 				},
 				[PoolsApi.constants.moduleNames.price]: {
 					/// A user attempts to query spot/oracle price using an old contract.
-					10: "InvalidProtocolVersion",
+					10: "Invalid Protocol Version",
 				},
 				[PoolsApi.constants.moduleNames.swap]: {
 					/// A user attempts to perform a `swap` with an older contract.
-					40: "InvalidProtocolVersion",
+					40: "Invalid Protocol Version",
 					/// A user attempts to perform `multi-swap-exact-in/out-n-to-m` on a Pool with a size
 					///  `s` < `n` + `m`.
-					41: "InvalidPoolSize",
+					41: "Invalid Pool Size",
 					/// A user attempts to perform swap and providing provides a coin with a
 					///  value of zero.
-					42: "ZeroValue",
+					42: "Zero Value",
 					/// A user attempts to perform a multi-coin withdraw and provides an `amounts_out`
 					///  vector whose length does
-					43: "BadVectorLength",
+					43: "Bad Vector Length",
 					/// A user attempts to swap attempts to swap `Coin<CI>` for `amount_out` of `Coin<CO>`
 					///  but its value is insufficient.
-					44: "InsufficientCoinIn",
+					44: "Insufficient Coin In",
 					// A user calls `multi_swap_exact_in_1_to_n` or `multi_swap_exact_out_1_to_n` and provides the same
 					//  generic at least twice.
-					45: "DuplicateTypes",
+					45: "Duplicate Types",
 					/// Something went wrong with the internal calculations
-					46: "InternalError",
+					46: "Internal Error",
 					/// An external app is trying to call authorized functions without permission.
-					47: "NotAuthorized",
+					47: "Not Authorized",
 				},
 				[PoolsApi.constants.moduleNames.withdraw]: {
 					/// A user attempts to perform a `withdraw` with an older contract.
-					30: "InvalidProtocolVersion",
+					30: "Invalid Protocol Version",
 					/// A user attempts to perform `withdraw-n-coins` on a Pool with a size `m` < `n`.
-					31: "InvalidPoolSize",
+					31: "Invalid PoolSize",
 					/// A user attempts to perform a withdraw and provides an LP coin with a value of zero.
-					32: "ZeroValue",
+					32: "Zero Value",
 					/// A user attempts to perform a multi-coin withdraw and provides an `amounts_out`
 					///  vector whose length does
-					33: "BadVectorLength",
+					33: "Bad Vector Length",
 					// A user calls `withdraw_n_coins` or `all_coin_withdraw_n_coins` and provides the same generic
 					//  at least twice.
-					34: "DuplicateTypes",
+					34: "Duplicate Types",
 				},
 				[PoolsApi.constants.moduleNames.math]: {
 					// TODO: change error code in move
@@ -317,24 +317,36 @@ export class PoolsApi implements MoveErrorsInterface {
 					51: "Slippage",
 					/// A user tries to perform a swap that would result in more than `MAX_SWAP_AMOUNT_IN` worth of
 					///  one of the Pool's coins entering the Pool.
-					52: "InvalidSwapAmountIn",
+					52: "Invalid Swap Amount In",
 					/// A user tries to perform a swap that would result in more than `MAX_SWAP_AMOUNT_OUT` worth of
 					///  one of the Pool's coins exiting the Pool.
-					53: "InvalidSwapAmountOut",
+					53: "Invalid Swap Amount Out",
 					/// A user tries to perform a `swap_exact_out` with a value for `amount_out` that equates to
 					///  zero amount of `Coin<CI>`.
-					54: "ZeroAmountIn",
+					54: "Zero Amount In",
 					/// A user tries to perform a `swap_exact_in` with an amount of `Coin<CI>` that equates to
 					///  zero amount of `Coin<CO>`.
-					55: "ZeroAmountOut",
+					55: "Zero Amount Out",
 					/// A user tries to deposit into a Pool with a deposit that is worth zero LP coins.
-					56: "ZeroLpOut",
+					56: "Zero Lp Out",
 					/// A user tries to invest with an lp ratio of 0
-					57: "ZeroLpRatio",
+					57: "Zero Lp Ratio",
 				},
 				[PoolsApi.constants.moduleNames.geometricMeanCalculations]: {},
 				[PoolsApi.constants.moduleNames.stableCalculations]: {},
 			},
+			...(this.addresses.daoFeePools
+				? {
+						[this.addresses.daoFeePools.packages.amm]: {
+							version: {
+								/// A user tried to interact with an old contract.
+								0: "Invalid Version",
+								/// `init_package_version` has been called outside of this packages `init` function.
+								1: "Version Object Already Created",
+							},
+						},
+				  }
+				: {}),
 		};
 	}
 
