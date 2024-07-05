@@ -541,553 +541,6 @@ export class PoolsApi implements MoveErrorsInterface {
 	}
 
 	// =========================================================================
-	//  Transaction Builders
-	// =========================================================================
-
-	/**
-	 * Fetches a transaction block for creating a new pool.
-	 * @async
-	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user creating the pool.
-	 * @param {CoinType} inputs.lpCoinType - The coin type of the LP token.
-	 * @param {PoolCreationLpCoinMetadata} inputs.lpCoinMetadata - The metadata of the LP token.
-	 * @param {{ coinType: CoinType; weight: Percentage; decimals?: CoinDecimal; tradeFeeIn: Percentage; initialDeposit: Balance; }[]} inputs.coinsInfo - An array of objects containing information about the coins in the pool.
-	 * @param {PoolName} inputs.poolName - The name of the pool.
-	 * @param {0 | 1} inputs.poolFlatness - The flatness of the pool.
-	 * @param {ObjectId} inputs.createPoolCapId - The object ID of the create pool cap.
-	 * @param {boolean} inputs.respectDecimals - Whether to respect decimals.
-	 * @param {CoinDecimal} [inputs.forceLpDecimals] - The decimal places to force for the LP token.
-	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
-	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
-	 */
-	public fetchCreatePoolTx = async (
-		inputs: ApiCreatePoolBody
-	): Promise<Transaction> => {
-		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
-		return this.fetchBuildCreatePoolTx({
-			...inputs,
-			lpCoinIconUrl: inputs.lpCoinMetadata.iconUrl ?? "",
-			poolFlatness:
-				inputs.poolFlatness === 1 ? Casting.Fixed.fixedOneB : BigInt(0),
-			coinsInfo: inputs.coinsInfo.map((info, index) => {
-				let weight = Casting.numberToFixedBigInt(info.weight);
-
-				if (index === 0) {
-					const otherWeightsSum = Helpers.sumBigInt(
-						inputs.coinsInfo
-							.slice(1)
-							.map((info) =>
-								Casting.numberToFixedBigInt(info.weight)
-							)
-					);
-
-					weight = Casting.Fixed.fixedOneB - otherWeightsSum;
-				}
-
-				return {
-					...info,
-					weight,
-					tradeFeeIn: Casting.numberToFixedBigInt(info.tradeFeeIn),
-					depositFee: BigInt(0),
-					withdrawFee: BigInt(0),
-					tradeFeeOut: BigInt(0),
-				};
-			}),
-		});
-	};
-
-	/**
-	 * Fetches a transaction block for trading in a pool.
-	 * @async
-	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user trading in the pool.
-	 * @param {Pool} inputs.pool - The pool to trade in.
-	 * @param {CoinType} inputs.coinInType - The coin type of the coin being traded in.
-	 * @param {Balance} inputs.coinInAmount - The amount of the coin being traded in.
-	 * @param {CoinType} inputs.coinOutType - The coin type of the coin being traded out.
-	 * @param {Slippage} inputs.slippage - The slippage of the trade.
-	 * @param {SuiAddress} [inputs.referrer] - The referrer of the trade.
-	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
-	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
-	 */
-	public fetchBuildTradeTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-		isSponsoredTx?: boolean;
-	}): Promise<Transaction> => {
-		const {
-			walletAddress,
-			pool,
-			coinInAmount,
-			coinInType,
-			coinOutType,
-			slippage,
-			referrer,
-			isSponsoredTx,
-		} = inputs;
-
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
-
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
-				tx,
-				referrer,
-			});
-
-		const amountOut = pool.getTradeAmountOut({
-			coinInAmount,
-			coinInType,
-			coinOutType,
-			referral: referrer !== undefined,
-		});
-
-		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: coinInType,
-			coinAmount: coinInAmount,
-			isSponsoredTx,
-		});
-
-		if (pool.pool.daoFeePoolObject) {
-			const coinOutId = this.daoFeePoolTradeTx({
-				tx,
-				coinInId,
-				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
-				expectedCoinOutAmount: amountOut,
-				lpCoinType: pool.pool.lpCoinType,
-				coinInType,
-				coinOutType,
-				slippage,
-			});
-			tx.transferObjects([coinOutId], walletAddress);
-		} else {
-			this.tradeTx({
-				tx,
-				coinInId,
-				poolId: pool.pool.objectId,
-				expectedCoinOutAmount: amountOut,
-				lpCoinType: pool.pool.lpCoinType,
-				coinInType,
-				coinOutType,
-				slippage,
-				withTransfer: true,
-			});
-		}
-
-		return tx;
-	};
-
-	public fetchAddTradeTx = async (inputs: {
-		tx: Transaction;
-		coinInId: ObjectId | TransactionObjectArgument;
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		pool: Pool;
-		referrer?: SuiAddress;
-	}): Promise<TransactionObjectArgument> /* Coin */ => {
-		const {
-			tx,
-			coinInId,
-			coinInAmount,
-			coinInType,
-			coinOutType,
-			slippage,
-			pool,
-			referrer,
-		} = inputs;
-
-		const amountOut = pool.getTradeAmountOut({
-			coinInAmount,
-			coinInType,
-			coinOutType,
-			referral: referrer !== undefined,
-		});
-
-		return this.tradeTx({
-			tx,
-			coinInId,
-			poolId: pool.pool.objectId,
-			expectedCoinOutAmount: amountOut,
-			lpCoinType: pool.pool.lpCoinType,
-			coinInType,
-			coinOutType,
-			slippage,
-		});
-	};
-
-	/**
-	 * Fetches a transaction block for depositing in a pool.
-	 * @async
-	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user depositing in the pool.
-	 * @param {Pool} inputs.pool - The pool to deposit in.
-	 * @param {CoinsToBalance} inputs.amountsIn - The amounts of coins being deposited.
-	 * @param {Slippage} inputs.slippage - The slippage of the deposit.
-	 * @param {SuiAddress} [inputs.referrer] - The referrer of the deposit.
-	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
-	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
-	 */
-	public fetchBuildDepositTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		amountsIn: CoinsToBalance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-		isSponsoredTx?: boolean;
-	}): Promise<Transaction> => {
-		const {
-			walletAddress,
-			pool,
-			amountsIn,
-			slippage,
-			referrer,
-			isSponsoredTx,
-		} = inputs;
-
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
-
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
-				tx,
-				referrer,
-			});
-
-		const { coins: coinTypes, balances: coinAmounts } =
-			Coin.coinsAndBalancesOverZero(amountsIn);
-
-		const { lpRatio } = pool.getDepositLpAmountOut({
-			amountsIn,
-			referral: referrer !== undefined,
-		});
-
-		// TODO: move this somewhere else and into its own func
-		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
-
-		const coinIds = await this.Provider.Coin().fetchCoinsWithAmountTx({
-			...inputs,
-			tx,
-			coinTypes,
-			coinAmounts,
-			isSponsoredTx,
-		});
-
-		if (pool.pool.daoFeePoolObject) {
-			const lpCoinId = this.daoFeePoolMultiCoinDepositTx({
-				tx,
-				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				coinIds,
-				coinTypes,
-				expectedLpRatio,
-				slippage,
-			});
-			tx.transferObjects([lpCoinId], walletAddress);
-		} else {
-			this.multiCoinDepositTx({
-				tx,
-				poolId: pool.pool.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				coinIds,
-				coinTypes,
-				expectedLpRatio,
-				slippage,
-				withTransfer: true,
-			});
-		}
-
-		return tx;
-	};
-
-	/**
-	 * Fetches a transaction block for withdrawing from a pool.
-	 * @async
-	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user withdrawing from the pool.
-	 * @param {Pool} inputs.pool - The pool to withdraw from.
-	 * @param {CoinsToBalance} inputs.amountsOutDirection - The amounts of coins being withdrawn.
-	 * @param {Balance} inputs.lpCoinAmount - The amount of LP tokens being withdrawn.
-	 * @param {Slippage} inputs.slippage - The slippage of the withdrawal.
-	 * @param {SuiAddress} [inputs.referrer] - The referrer of the withdrawal.
-	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
-	 */
-	public fetchBuildWithdrawTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		amountsOutDirection: CoinsToBalance;
-		lpCoinAmount: Balance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<Transaction> => {
-		const {
-			walletAddress,
-			pool,
-			amountsOutDirection,
-			lpCoinAmount,
-			slippage,
-			referrer,
-		} = inputs;
-
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
-
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
-				tx,
-				referrer,
-			});
-
-		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
-			lpCoinAmountOut: lpCoinAmount,
-		});
-
-		const amountsOut = pool.getWithdrawAmountsOut({
-			lpRatio,
-			amountsOutDirection,
-			referral: referrer !== undefined,
-		});
-
-		const { coins: coinTypes, balances: coinAmounts } =
-			Coin.coinsAndBalancesOverZero(amountsOut);
-
-		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: pool.pool.lpCoinType,
-			coinAmount: lpCoinAmount,
-		});
-
-		if (pool.pool.daoFeePoolObject) {
-			// TODO: handle dao fee pool
-			// TODO: handle transfer
-		} else {
-			this.multiCoinWithdrawTx({
-				tx,
-				poolId: pool.pool.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				expectedAmountsOut: coinAmounts,
-				coinTypes: coinTypes,
-				lpCoinId,
-				slippage,
-				withTransfer: true,
-			});
-		}
-
-		return tx;
-	};
-
-	/**
-	 * Fetches a transaction block that withdraws all coins from a pool in exchange for the corresponding LP tokens.
-	 * @param inputs An object containing the wallet address, pool, LP coin amount, and optional referrer.
-	 * @returns A promise that resolves to a Transaction object.
-	 */
-	public fetchBuildAllCoinWithdrawTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		lpCoinAmount: Balance;
-		referrer?: SuiAddress;
-	}): Promise<Transaction> => {
-		const { walletAddress, pool, lpCoinAmount, referrer } = inputs;
-
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
-
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
-				tx,
-				referrer,
-			});
-
-		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: pool.pool.lpCoinType,
-			coinAmount: lpCoinAmount,
-		});
-
-		const coinTypes = Object.keys(pool.pool.coins);
-
-		if (pool.pool.daoFeePoolObject) {
-			const withdrawnCoinIds = this.daoFeePoolAllCoinWithdrawTx({
-				tx,
-				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				coinTypes,
-				lpCoinId,
-			});
-			tx.transferObjects(withdrawnCoinIds, walletAddress);
-		} else {
-			this.allCoinWithdrawTx({
-				tx,
-				poolId: pool.pool.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				coinTypes,
-				lpCoinId,
-				withTransfer: true,
-			});
-		}
-
-		return tx;
-	};
-
-	/**
-	 * Builds a transaction block for publishing an LP coin.
-	 * @param inputs - The input parameters for the transaction.
-	 * @returns The built transaction block.
-	 */
-	public buildPublishLpCoinTx = (
-		inputs: ApiPublishLpCoinBody
-	): Transaction => {
-		const { lpCoinDecimals } = inputs;
-
-		const tx = new Transaction();
-		tx.setSender(inputs.walletAddress);
-
-		const upgradeCap = this.publishLpCoinTx({ tx, lpCoinDecimals });
-		tx.transferObjects([upgradeCap], inputs.walletAddress);
-
-		return tx;
-	};
-
-	/**
-	 * Fetches and builds a transaction for creating a new liquidity pool.
-	 * @param inputs An object containing the necessary inputs for creating the pool.
-	 * @returns A Promise that resolves to a Transaction object representing the built transaction.
-	 */
-	private fetchBuildCreatePoolTx = async (inputs: {
-		walletAddress: SuiAddress;
-		lpCoinType: CoinType;
-		lpCoinMetadata: PoolCreationLpCoinMetadata;
-		coinsInfo: PoolCreationCoinInfo[];
-		poolName: PoolName;
-		poolFlatness: PoolFlatness;
-		createPoolCapId: ObjectId;
-		respectDecimals: boolean;
-		forceLpDecimals?: CoinDecimal;
-		lpCoinIconUrl: Url;
-		isSponsoredTx?: boolean;
-		burnLpCoin?: boolean;
-		daoFeeInfo?: {
-			feePercentage: Percentage;
-			feeRecipient: SuiAddress;
-		};
-	}): Promise<Transaction> => {
-		const { coinsInfo, isSponsoredTx, burnLpCoin, lpCoinType, daoFeeInfo } =
-			inputs;
-
-		const tx = new Transaction();
-		tx.setSender(inputs.walletAddress);
-
-		// TODO: make this fetching work
-
-		// const createPoolCapId =
-		// 	inputs.createPoolCapId !== undefined
-		// 		? inputs.createPoolCapId
-		// 		: (
-		// 				await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
-		// 					inputs.walletAddress,
-		// 					`${this.addresses.pools.packages.cmmm}::${PoolsApi.constants.moduleNames.pool}::CreatePoolCap<${inputs.lpCoinType}>`
-		// 				)
-		// 		  )[0].data?.objectId;
-
-		// if (createPoolCapId === undefined)
-		// 	throw new Error(
-		// 		"no CreatePoolCap for LP Coin Type found owned by address"
-		// 	);
-
-		coinsInfo.sort((a, b) => {
-			const coinA = a.coinType.toUpperCase();
-			const coinB = b.coinType.toUpperCase();
-			return coinA < coinB ? -1 : coinA > coinB ? 1 : 0;
-		});
-
-		const coinTypes = coinsInfo.map((coin) => coin.coinType);
-		const lpCoinDescription = await this.createLpCoinMetadataDescription({
-			...inputs,
-			coinTypes,
-		});
-
-		const coinArgs = await this.Provider.Coin().fetchCoinsWithAmountTx({
-			tx,
-			...inputs,
-			coinTypes,
-			coinAmounts: coinsInfo.map((info) => info.initialDeposit),
-			isSponsoredTx,
-		});
-
-		const createPoolTxArgs = {
-			tx,
-			...inputs,
-			// createPoolCapId,
-			coinsInfo: coinsInfo.map((info, index) => {
-				return {
-					...info,
-					coinId: coinArgs[index],
-				};
-			}),
-			lpCoinDescription,
-		};
-
-		if (daoFeeInfo) {
-			const [poolId, lpCoinId] = this.createPoolTx(createPoolTxArgs);
-
-			const [daoFeePoolId, daoFeePoolOwnerCapId] = this.daoFeePoolNewTx({
-				tx,
-				poolId,
-				lpCoinType,
-				feeRecipient: daoFeeInfo.feeRecipient,
-				feeBps: Casting.percentageToBps(daoFeeInfo.feePercentage),
-			});
-			this.daoFeePoolShareTx({
-				tx,
-				daoFeePoolId,
-				lpCoinType,
-			});
-
-			if (burnLpCoin) {
-				this.Provider.Objects().burnObjectTx({
-					tx,
-					object: lpCoinId,
-				});
-				tx.transferObjects(
-					[daoFeePoolOwnerCapId],
-					inputs.walletAddress
-				);
-			} else {
-				tx.transferObjects(
-					[lpCoinId, daoFeePoolOwnerCapId],
-					inputs.walletAddress
-				);
-			}
-		} else {
-			if (burnLpCoin) {
-				const [poolId, lpCoinId] = this.createPoolTx(createPoolTxArgs);
-				this.Provider.Objects().publicShareObjectTx({
-					tx,
-					object: poolId,
-					objectType: `${this.objectTypes.pool}<${lpCoinType}>`,
-				});
-				this.Provider.Objects().burnObjectTx({
-					tx,
-					object: lpCoinId,
-				});
-			} else {
-				this.createPoolTx({
-					...createPoolTxArgs,
-					withTransfer: true,
-				});
-			}
-		}
-
-		return tx;
-	};
-
-	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
 
@@ -1768,6 +1221,561 @@ export class PoolsApi implements MoveErrorsInterface {
 			],
 		});
 	};
+
+	// =========================================================================
+	//  Transaction Builders
+	// =========================================================================
+
+	/**
+	 * Fetches a transaction block for creating a new pool.
+	 * @async
+	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user creating the pool.
+	 * @param {CoinType} inputs.lpCoinType - The coin type of the LP token.
+	 * @param {PoolCreationLpCoinMetadata} inputs.lpCoinMetadata - The metadata of the LP token.
+	 * @param {{ coinType: CoinType; weight: Percentage; decimals?: CoinDecimal; tradeFeeIn: Percentage; initialDeposit: Balance; }[]} inputs.coinsInfo - An array of objects containing information about the coins in the pool.
+	 * @param {PoolName} inputs.poolName - The name of the pool.
+	 * @param {0 | 1} inputs.poolFlatness - The flatness of the pool.
+	 * @param {ObjectId} inputs.createPoolCapId - The object ID of the create pool cap.
+	 * @param {boolean} inputs.respectDecimals - Whether to respect decimals.
+	 * @param {CoinDecimal} [inputs.forceLpDecimals] - The decimal places to force for the LP token.
+	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
+	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
+	 */
+	public fetchCreatePoolTx = async (
+		inputs: ApiCreatePoolBody
+	): Promise<Transaction> => {
+		// NOTE: these are temp defaults down below since some selections are currently disabled in contracts
+		return this.fetchBuildCreatePoolTx({
+			...inputs,
+			lpCoinIconUrl: inputs.lpCoinMetadata.iconUrl ?? "",
+			poolFlatness:
+				inputs.poolFlatness === 1 ? Casting.Fixed.fixedOneB : BigInt(0),
+			coinsInfo: inputs.coinsInfo.map((info, index) => {
+				let weight = Casting.numberToFixedBigInt(info.weight);
+
+				if (index === 0) {
+					const otherWeightsSum = Helpers.sumBigInt(
+						inputs.coinsInfo
+							.slice(1)
+							.map((info) =>
+								Casting.numberToFixedBigInt(info.weight)
+							)
+					);
+
+					weight = Casting.Fixed.fixedOneB - otherWeightsSum;
+				}
+
+				return {
+					...info,
+					weight,
+					tradeFeeIn: Casting.numberToFixedBigInt(info.tradeFeeIn),
+					depositFee: BigInt(0),
+					withdrawFee: BigInt(0),
+					tradeFeeOut: BigInt(0),
+				};
+			}),
+		});
+	};
+
+	/**
+	 * Fetches a transaction block for trading in a pool.
+	 * @async
+	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user trading in the pool.
+	 * @param {Pool} inputs.pool - The pool to trade in.
+	 * @param {CoinType} inputs.coinInType - The coin type of the coin being traded in.
+	 * @param {Balance} inputs.coinInAmount - The amount of the coin being traded in.
+	 * @param {CoinType} inputs.coinOutType - The coin type of the coin being traded out.
+	 * @param {Slippage} inputs.slippage - The slippage of the trade.
+	 * @param {SuiAddress} [inputs.referrer] - The referrer of the trade.
+	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
+	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
+	 */
+	public fetchBuildTradeTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+		isSponsoredTx?: boolean;
+	}): Promise<Transaction> => {
+		const {
+			walletAddress,
+			pool,
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			slippage,
+			referrer,
+			isSponsoredTx,
+		} = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const amountOut = pool.getTradeAmountOut({
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			referral: referrer !== undefined,
+		});
+
+		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: coinInType,
+			coinAmount: coinInAmount,
+			isSponsoredTx,
+		});
+
+		if (pool.pool.daoFeePoolObject) {
+			const coinOutId = this.daoFeePoolTradeTx({
+				tx,
+				coinInId,
+				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+				expectedCoinOutAmount: amountOut,
+				lpCoinType: pool.pool.lpCoinType,
+				coinInType,
+				coinOutType,
+				slippage,
+			});
+			tx.transferObjects([coinOutId], walletAddress);
+		} else {
+			this.tradeTx({
+				tx,
+				coinInId,
+				poolId: pool.pool.objectId,
+				expectedCoinOutAmount: amountOut,
+				lpCoinType: pool.pool.lpCoinType,
+				coinInType,
+				coinOutType,
+				slippage,
+				withTransfer: true,
+			});
+		}
+
+		return tx;
+	};
+
+	public fetchAddTradeTx = async (inputs: {
+		tx: Transaction;
+		coinInId: ObjectId | TransactionObjectArgument;
+		coinInType: CoinType;
+		coinInAmount: Balance;
+		coinOutType: CoinType;
+		slippage: Slippage;
+		pool: Pool;
+		referrer?: SuiAddress;
+	}): Promise<TransactionObjectArgument> /* Coin */ => {
+		const {
+			tx,
+			coinInId,
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			slippage,
+			pool,
+			referrer,
+		} = inputs;
+
+		const amountOut = pool.getTradeAmountOut({
+			coinInAmount,
+			coinInType,
+			coinOutType,
+			referral: referrer !== undefined,
+		});
+
+		return this.tradeTx({
+			tx,
+			coinInId,
+			poolId: pool.pool.objectId,
+			expectedCoinOutAmount: amountOut,
+			lpCoinType: pool.pool.lpCoinType,
+			coinInType,
+			coinOutType,
+			slippage,
+		});
+	};
+
+	/**
+	 * Fetches a transaction block for depositing in a pool.
+	 * @async
+	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user depositing in the pool.
+	 * @param {Pool} inputs.pool - The pool to deposit in.
+	 * @param {CoinsToBalance} inputs.amountsIn - The amounts of coins being deposited.
+	 * @param {Slippage} inputs.slippage - The slippage of the deposit.
+	 * @param {SuiAddress} [inputs.referrer] - The referrer of the deposit.
+	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
+	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
+	 */
+	public fetchBuildDepositTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		amountsIn: CoinsToBalance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+		isSponsoredTx?: boolean;
+	}): Promise<Transaction> => {
+		const {
+			walletAddress,
+			pool,
+			amountsIn,
+			slippage,
+			referrer,
+			isSponsoredTx,
+		} = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const { coins: coinTypes, balances: coinAmounts } =
+			Coin.coinsAndBalancesOverZero(amountsIn);
+
+		const { lpRatio } = pool.getDepositLpAmountOut({
+			amountsIn,
+			referral: referrer !== undefined,
+		});
+
+		// TODO: move this somewhere else and into its own func
+		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
+
+		const coinIds = await this.Provider.Coin().fetchCoinsWithAmountTx({
+			...inputs,
+			tx,
+			coinTypes,
+			coinAmounts,
+			isSponsoredTx,
+		});
+
+		if (pool.pool.daoFeePoolObject) {
+			const lpCoinId = this.daoFeePoolMultiCoinDepositTx({
+				tx,
+				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				coinIds,
+				coinTypes,
+				expectedLpRatio,
+				slippage,
+			});
+			tx.transferObjects([lpCoinId], walletAddress);
+		} else {
+			this.multiCoinDepositTx({
+				tx,
+				poolId: pool.pool.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				coinIds,
+				coinTypes,
+				expectedLpRatio,
+				slippage,
+				withTransfer: true,
+			});
+		}
+
+		return tx;
+	};
+
+	/**
+	 * Fetches a transaction block for withdrawing from a pool.
+	 * @async
+	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user withdrawing from the pool.
+	 * @param {Pool} inputs.pool - The pool to withdraw from.
+	 * @param {CoinsToBalance} inputs.amountsOutDirection - The amounts of coins being withdrawn.
+	 * @param {Balance} inputs.lpCoinAmount - The amount of LP tokens being withdrawn.
+	 * @param {Slippage} inputs.slippage - The slippage of the withdrawal.
+	 * @param {SuiAddress} [inputs.referrer] - The referrer of the withdrawal.
+	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
+	 */
+	public fetchBuildWithdrawTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		amountsOutDirection: CoinsToBalance;
+		lpCoinAmount: Balance;
+		slippage: Slippage;
+		referrer?: SuiAddress;
+	}): Promise<Transaction> => {
+		const {
+			walletAddress,
+			pool,
+			amountsOutDirection,
+			lpCoinAmount,
+			slippage,
+			referrer,
+		} = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
+			lpCoinAmountOut: lpCoinAmount,
+		});
+
+		const amountsOut = pool.getWithdrawAmountsOut({
+			lpRatio,
+			amountsOutDirection,
+			referral: referrer !== undefined,
+		});
+
+		const { coins: coinTypes, balances: coinAmounts } =
+			Coin.coinsAndBalancesOverZero(amountsOut);
+
+		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: pool.pool.lpCoinType,
+			coinAmount: lpCoinAmount,
+		});
+
+		if (pool.pool.daoFeePoolObject) {
+			// TODO: handle dao fee pool
+			// TODO: handle transfer
+		} else {
+			this.multiCoinWithdrawTx({
+				tx,
+				poolId: pool.pool.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				expectedAmountsOut: coinAmounts,
+				coinTypes: coinTypes,
+				lpCoinId,
+				slippage,
+				withTransfer: true,
+			});
+		}
+
+		return tx;
+	};
+
+	/**
+	 * Fetches a transaction block that withdraws all coins from a pool in exchange for the corresponding LP tokens.
+	 * @param inputs An object containing the wallet address, pool, LP coin amount, and optional referrer.
+	 * @returns A promise that resolves to a Transaction object.
+	 */
+	public fetchBuildAllCoinWithdrawTx = async (inputs: {
+		walletAddress: SuiAddress;
+		pool: Pool;
+		lpCoinAmount: Balance;
+		referrer?: SuiAddress;
+	}): Promise<Transaction> => {
+		const { walletAddress, pool, lpCoinAmount, referrer } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		if (referrer)
+			this.Provider.ReferralVault().updateReferrerTx({
+				tx,
+				referrer,
+			});
+
+		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: pool.pool.lpCoinType,
+			coinAmount: lpCoinAmount,
+		});
+
+		const coinTypes = Object.keys(pool.pool.coins);
+
+		if (pool.pool.daoFeePoolObject) {
+			const withdrawnCoinIds = this.daoFeePoolAllCoinWithdrawTx({
+				tx,
+				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				coinTypes,
+				lpCoinId,
+			});
+			tx.transferObjects(withdrawnCoinIds, walletAddress);
+		} else {
+			this.allCoinWithdrawTx({
+				tx,
+				poolId: pool.pool.objectId,
+				lpCoinType: pool.pool.lpCoinType,
+				coinTypes,
+				lpCoinId,
+				withTransfer: true,
+			});
+		}
+
+		return tx;
+	};
+
+	/**
+	 * Builds a transaction block for publishing an LP coin.
+	 * @param inputs - The input parameters for the transaction.
+	 * @returns The built transaction block.
+	 */
+	public buildPublishLpCoinTx = (
+		inputs: ApiPublishLpCoinBody
+	): Transaction => {
+		const { lpCoinDecimals } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(inputs.walletAddress);
+
+		const upgradeCap = this.publishLpCoinTx({ tx, lpCoinDecimals });
+		tx.transferObjects([upgradeCap], inputs.walletAddress);
+
+		return tx;
+	};
+
+	/**
+	 * Fetches and builds a transaction for creating a new liquidity pool.
+	 * @param inputs An object containing the necessary inputs for creating the pool.
+	 * @returns A Promise that resolves to a Transaction object representing the built transaction.
+	 */
+	private fetchBuildCreatePoolTx = async (inputs: {
+		walletAddress: SuiAddress;
+		lpCoinType: CoinType;
+		lpCoinMetadata: PoolCreationLpCoinMetadata;
+		coinsInfo: PoolCreationCoinInfo[];
+		poolName: PoolName;
+		poolFlatness: PoolFlatness;
+		createPoolCapId: ObjectId;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
+		lpCoinIconUrl: Url;
+		isSponsoredTx?: boolean;
+		burnLpCoin?: boolean;
+		daoFeeInfo?: {
+			feePercentage: Percentage;
+			feeRecipient: SuiAddress;
+		};
+	}): Promise<Transaction> => {
+		const { coinsInfo, isSponsoredTx, burnLpCoin, lpCoinType, daoFeeInfo } =
+			inputs;
+
+		const tx = new Transaction();
+		tx.setSender(inputs.walletAddress);
+
+		// TODO: make this fetching work
+
+		// const createPoolCapId =
+		// 	inputs.createPoolCapId !== undefined
+		// 		? inputs.createPoolCapId
+		// 		: (
+		// 				await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress(
+		// 					inputs.walletAddress,
+		// 					`${this.addresses.pools.packages.cmmm}::${PoolsApi.constants.moduleNames.pool}::CreatePoolCap<${inputs.lpCoinType}>`
+		// 				)
+		// 		  )[0].data?.objectId;
+
+		// if (createPoolCapId === undefined)
+		// 	throw new Error(
+		// 		"no CreatePoolCap for LP Coin Type found owned by address"
+		// 	);
+
+		coinsInfo.sort((a, b) => {
+			const coinA = a.coinType.toUpperCase();
+			const coinB = b.coinType.toUpperCase();
+			return coinA < coinB ? -1 : coinA > coinB ? 1 : 0;
+		});
+
+		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+		const lpCoinDescription = await this.createLpCoinMetadataDescription({
+			...inputs,
+			coinTypes,
+		});
+
+		const coinArgs = await this.Provider.Coin().fetchCoinsWithAmountTx({
+			tx,
+			...inputs,
+			coinTypes,
+			coinAmounts: coinsInfo.map((info) => info.initialDeposit),
+			isSponsoredTx,
+		});
+
+		const createPoolTxArgs = {
+			tx,
+			...inputs,
+			// createPoolCapId,
+			coinsInfo: coinsInfo.map((info, index) => {
+				return {
+					...info,
+					coinId: coinArgs[index],
+				};
+			}),
+			lpCoinDescription,
+		};
+
+		if (daoFeeInfo) {
+			const [poolId, lpCoinId] = this.createPoolTx(createPoolTxArgs);
+
+			const [daoFeePoolId, daoFeePoolOwnerCapId] = this.daoFeePoolNewTx({
+				tx,
+				poolId,
+				lpCoinType,
+				feeRecipient: daoFeeInfo.feeRecipient,
+				feeBps: Casting.percentageToBps(daoFeeInfo.feePercentage),
+			});
+			this.daoFeePoolShareTx({
+				tx,
+				daoFeePoolId,
+				lpCoinType,
+			});
+
+			if (burnLpCoin) {
+				this.Provider.Objects().burnObjectTx({
+					tx,
+					object: lpCoinId,
+				});
+				tx.transferObjects(
+					[daoFeePoolOwnerCapId],
+					inputs.walletAddress
+				);
+			} else {
+				tx.transferObjects(
+					[lpCoinId, daoFeePoolOwnerCapId],
+					inputs.walletAddress
+				);
+			}
+		} else {
+			if (burnLpCoin) {
+				const [poolId, lpCoinId] = this.createPoolTx(createPoolTxArgs);
+				this.Provider.Objects().publicShareObjectTx({
+					tx,
+					object: poolId,
+					objectType: `${this.objectTypes.pool}<${lpCoinType}>`,
+				});
+				this.Provider.Objects().burnObjectTx({
+					tx,
+					object: lpCoinId,
+				});
+			} else {
+				this.createPoolTx({
+					...createPoolTxArgs,
+					withTransfer: true,
+				});
+			}
+		}
+
+		return tx;
+	};
+
+	public buildDaoFeePoolUpdateFeeBpsTx =
+		Helpers.transactions.createBuildTxFunc(this.daoFeePoolUpdateFeeBpsTx);
+
+	public buildDaoFeePoolUpdateFeeRecipientTx =
+		Helpers.transactions.createBuildTxFunc(
+			this.daoFeePoolUpdateFeeRecipientTx
+		);
 
 	// =========================================================================
 	//  Inspections

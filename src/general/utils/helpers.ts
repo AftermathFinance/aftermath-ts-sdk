@@ -15,6 +15,7 @@ import {
 	ModuleName,
 	PackageId,
 	MoveErrorCode,
+	SuiAddress,
 } from "../../types";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
@@ -31,6 +32,7 @@ import { NetworkType } from "@scallop-io/sui-kit";
 import { IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { Coin } from "../..";
 import { MoveErrors } from "../types/moveErrorsInterface";
+import { isValidSuiAddress } from "@mysten/sui/utils";
 
 /**
  * A utility class containing various helper functions for general use.
@@ -450,6 +452,18 @@ export class Helpers {
 			return acc + amountUsd;
 		}, 0);
 	};
+
+	public static isValidSuiAddress = (address: SuiAddress) =>
+		isValidSuiAddress(
+			(() => {
+				if (!address.startsWith("0x") || address.length < 3) return "";
+				try {
+					return Helpers.addLeadingZeroesToType(address);
+				} catch (e) {
+					return "";
+				}
+			})()
+		);
 
 	// =========================================================================
 	//  Error Parsing
