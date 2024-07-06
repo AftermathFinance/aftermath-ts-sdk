@@ -17,6 +17,9 @@ import {
 	ApiPoolAllCoinWithdrawBody,
 	ApiIndexerEventsBody,
 	IndexerEventsWithCursor,
+	Percentage,
+	SuiAddress,
+	ObjectId,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -58,58 +61,9 @@ export class Pool extends Caller {
 		this.pool = pool;
 	}
 
-	/**
-	 * Fetches the pool statistics.
-	 * @async
-	 * @returns {Promise<PoolStats>} The pool statistics.
-	 */
-	public async getStats(): Promise<PoolStats> {
-		const stats = await this.fetchApi<PoolStats>("stats");
-		this.setStats(stats);
-		return stats;
-	}
-
-	/**
-	 * Sets the pool statistics.
-	 * @param {PoolStats} stats - The pool statistics.
-	 */
-	public setStats(stats: PoolStats): void {
-		this.stats = stats;
-	}
-
-	/**
-	 * Fetches the volume data for the pool.
-	 * @async
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {PoolGraphDataTimeframeKey} inputs.timeframe - The timeframe for the data.
-	 * @returns {Promise<PoolDataPoint[]>} The volume data for the pool.
-	 */
-	public async getVolumeData(inputs: {
-		timeframe: PoolGraphDataTimeframeKey;
-	}): Promise<PoolDataPoint[]> {
-		return this.fetchApi(`volume/${inputs.timeframe}`);
-	}
-
-	/**
-	 * Fetches the fee data for the pool.
-	 * @async
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {PoolGraphDataTimeframeKey} inputs.timeframe - The timeframe for the data.
-	 * @returns {Promise<PoolDataPoint[]>} The fee data for the pool.
-	 */
-	public async getFeeData(inputs: {
-		timeframe: PoolGraphDataTimeframeKey;
-	}): Promise<PoolDataPoint[]> {
-		return this.fetchApi(`fees/${inputs.timeframe}`);
-	}
-
-	/**
-	 * Retrieves the volume in the last 24 hours for the pool.
-	 * @returns A promise that resolves to the volume in the last 24 hours.
-	 */
-	public getVolume24hrs = async (): Promise<number> => {
-		return this.fetchApi("volume-24hrs");
-	};
+	// =========================================================================
+	//  Transactions
+	// =========================================================================
 
 	/**
 	 * Fetches the deposit transaction for the pool.
@@ -171,6 +125,97 @@ export class Pool extends Caller {
 		});
 	}
 
+	public async getUpdateDaoFeeTransaction(inputs: {
+		walletAddress: SuiAddress;
+		daoFeePoolOwnerCapId: ObjectId;
+		newFeePercentage: Percentage;
+	}): Promise<Transaction> {
+		const daoFeePoolId = this.pool.daoFeePoolObject?.objectId;
+		if (!daoFeePoolId) throw new Error("this pool has no DAO fee");
+
+		return this.useProvider().buildDaoFeePoolUpdateFeeBpsTx({
+			...inputs,
+			daoFeePoolId,
+			lpCoinType: this.pool.lpCoinType,
+			newFeeBps: Casting.percentageToBps(inputs.newFeePercentage),
+		});
+	}
+
+	public async getUpdateDaoFeeRecipientTransaction(inputs: {
+		walletAddress: SuiAddress;
+		daoFeePoolOwnerCapId: ObjectId;
+		newFeeRecipient: SuiAddress;
+	}): Promise<Transaction> {
+		const daoFeePoolId = this.pool.daoFeePoolObject?.objectId;
+		if (!daoFeePoolId) throw new Error("this pool has no DAO fee");
+
+		return this.useProvider().buildDaoFeePoolUpdateFeeRecipientTx({
+			...inputs,
+			daoFeePoolId,
+			lpCoinType: this.pool.lpCoinType,
+			newFeeRecipient: Helpers.addLeadingZeroesToType(
+				inputs.newFeeRecipient
+			),
+		});
+	}
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
+
+	/**
+	 * Fetches the pool statistics.
+	 * @async
+	 * @returns {Promise<PoolStats>} The pool statistics.
+	 */
+	public async getStats(): Promise<PoolStats> {
+		const stats = await this.fetchApi<PoolStats>("stats");
+		this.setStats(stats);
+		return stats;
+	}
+
+	/**
+	 * Sets the pool statistics.
+	 * @param {PoolStats} stats - The pool statistics.
+	 */
+	public setStats(stats: PoolStats): void {
+		this.stats = stats;
+	}
+
+	/**
+	 * Fetches the volume data for the pool.
+	 * @async
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {PoolGraphDataTimeframeKey} inputs.timeframe - The timeframe for the data.
+	 * @returns {Promise<PoolDataPoint[]>} The volume data for the pool.
+	 */
+	public async getVolumeData(inputs: {
+		timeframe: PoolGraphDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> {
+		return this.fetchApi(`volume/${inputs.timeframe}`);
+	}
+
+	/**
+	 * Fetches the fee data for the pool.
+	 * @async
+	 * @param {Object} inputs - The inputs for the method.
+	 * @param {PoolGraphDataTimeframeKey} inputs.timeframe - The timeframe for the data.
+	 * @returns {Promise<PoolDataPoint[]>} The fee data for the pool.
+	 */
+	public async getFeeData(inputs: {
+		timeframe: PoolGraphDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> {
+		return this.fetchApi(`fees/${inputs.timeframe}`);
+	}
+
+	/**
+	 * Retrieves the volume in the last 24 hours for the pool.
+	 * @returns A promise that resolves to the volume in the last 24 hours.
+	 */
+	public getVolume24hrs = async (): Promise<number> => {
+		return this.fetchApi("volume-24hrs");
+	};
+
 	/**
 	 * Fetches the deposit events for the pool.
 	 * @async
@@ -213,6 +258,10 @@ export class Pool extends Caller {
 			inputs
 		);
 	}
+
+	// =========================================================================
+	//  Calculations
+	// =========================================================================
 
 	/**
 	 * Calculates the spot price for the pool.
@@ -262,8 +311,10 @@ export class Pool extends Caller {
 		const coinInPoolBalance = pool.coins[inputs.coinInType].balance;
 		const coinOutPoolBalance = pool.coins[inputs.coinOutType].balance;
 
-		const coinInAmountWithFees = Pools.getAmountWithProtocolFees({
-			amount: inputs.coinInAmount,
+		const coinInAmountWithFees = this.getAmountWithDAOFee({
+			amount: Pools.getAmountWithProtocolFees({
+				amount: inputs.coinInAmount,
+			}),
 		});
 
 		if (
@@ -342,8 +393,10 @@ export class Pool extends Caller {
 				"coinInAmount / coinInPoolBalance >= maxTradePercentageOfPoolBalance"
 			);
 
-		const coinInAmountWithoutFees = Pools.getAmountWithoutProtocolFees({
-			amount: coinInAmount,
+		const coinInAmountWithoutFees = this.getAmountWithoutDAOFee({
+			amount: Pools.getAmountWithoutProtocolFees({
+				amount: coinInAmount,
+			}),
 		});
 
 		return coinInAmountWithoutFees;
@@ -365,7 +418,13 @@ export class Pool extends Caller {
 	} => {
 		const calcedLpRatio = CmmmCalculations.calcDepositFixedAmounts(
 			this.pool,
-			inputs.amountsIn
+			Object.entries(inputs.amountsIn).reduce(
+				(acc, [coin, amount]) => ({
+					...acc,
+					[coin]: this.getAmountWithDAOFee({ amount }),
+				}),
+				{}
+			)
 		);
 
 		if (calcedLpRatio >= Casting.Fixed.fixedOneB)
@@ -420,6 +479,10 @@ export class Pool extends Caller {
 				throw new Error(
 					"coinOutAmount / coinOutPoolBalance >= maxWithdrawPercentageOfPoolBalance"
 				);
+
+			amountsOut[coin] = this.getAmountWithDAOFee({
+				amount: amountOut,
+			});
 		}
 
 		return amountsOut;
@@ -443,9 +506,11 @@ export class Pool extends Caller {
 		).reduce((acc, [coin, info]) => {
 			return {
 				...acc,
-				[coin]: BigInt(
-					Math.floor(Number(info.balance) * inputs.lpRatio)
-				),
+				[coin]: this.getAmountWithDAOFee({
+					amount: BigInt(
+						Math.floor(Number(info.balance) * inputs.lpRatio)
+					),
+				}),
 			};
 		}, {});
 
@@ -476,8 +541,40 @@ export class Pool extends Caller {
 		Number(inputs.lpCoinAmountOut) / Number(this.pool.lpCoinSupply);
 
 	// =========================================================================
+	//  Getters
+	// =========================================================================
+
+	public daoFeePercentage = (): Percentage | undefined => {
+		return this.pool.daoFeePoolObject
+			? Casting.bpsToPercentage(this.pool.daoFeePoolObject.feeBps)
+			: undefined;
+	};
+
+	public daoFeeRecipient = (): SuiAddress | undefined => {
+		return this.pool.daoFeePoolObject?.feeRecipient;
+	};
+
+	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
+
+	private getAmountWithDAOFee = (inputs: { amount: Balance }) => {
+		const daoFeePercentage = this.daoFeePercentage();
+		if (!daoFeePercentage) return inputs.amount;
+
+		return BigInt(
+			Math.floor(Number(inputs.amount) * (1 - daoFeePercentage))
+		);
+	};
+
+	private getAmountWithoutDAOFee = (inputs: { amount: Balance }) => {
+		const daoFeePercentage = this.daoFeePercentage();
+		if (!daoFeePercentage) return inputs.amount;
+
+		return BigInt(
+			Math.floor(Number(inputs.amount) * (1 / (1 - daoFeePercentage)))
+		);
+	};
 
 	private useProvider = () => {
 		const provider = this.Provider?.Pools();

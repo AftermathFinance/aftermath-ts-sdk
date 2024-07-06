@@ -1,5 +1,5 @@
 import { Balance, CoinType, CoinsToBalance, PoolObject } from "../../../types";
-import { Helpers } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import {
 	FixedUtils,
 	LocalNumber,
@@ -197,7 +197,17 @@ export class CmmmCalculations {
 
 		let sbi = weightOut * balanceIn;
 		// this is the only place where fee values are used
-		let sbo = (1 - swapFeeIn) * (1 - swapFeeOut) * weightIn * balanceOut;
+		let sbo =
+			(1 -
+				(ignoreFees
+					? 0
+					: Casting.bpsToPercentage(
+							pool.daoFeePoolObject?.feeBps ?? BigInt(0)
+					  ))) *
+			(1 - swapFeeIn) *
+			(1 - swapFeeOut) *
+			weightIn *
+			balanceOut;
 
 		return (
 			(sbi * (part1 + 2 * a * balanceOut)) /

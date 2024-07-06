@@ -4,7 +4,7 @@ import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
-import { Byte, IFixed, SuiAddress } from "../types";
+import { Byte, IFixed, Percentage, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
 import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
@@ -66,6 +66,26 @@ export class Casting {
 
 	public static scaleNumberByBigInt = (scalar: number, int: bigint): bigint =>
 		BigInt(Math.floor(scalar * Number(int)));
+
+	// =========================================================================
+	//  Fixed
+	// =========================================================================
+
+	public static percentageToBps(percentage: Percentage): bigint {
+		// Convert decimal percentage to basis points
+		const bps = percentage * 10000;
+		// Convert basis points to bigint
+		const bpsBigint = BigInt(Math.round(bps));
+		return bpsBigint;
+	}
+
+	public static bpsToPercentage(bps: bigint): Percentage {
+		// Convert bigint basis points to number
+		const bpsNumber = Number(bps);
+		// Convert basis points to decimal percentage
+		const percentage = bpsNumber / 10000;
+		return percentage;
+	}
 
 	// =========================================================================
 	//  Bytes / BCS

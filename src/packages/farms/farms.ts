@@ -92,19 +92,25 @@ export class Farms extends Caller {
 	public async getOwnedStakingPoolOwnerCaps(
 		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody
 	) {
-		return this.fetchApi<
-			StakingPoolOwnerCapObject[],
-			ApiFarmsOwnedStakingPoolOwnerCapsBody
-		>("owned-staking-pool-owner-caps", inputs);
+		// TODO: remove endpoint eventually ?
+
+		// return this.fetchApi<
+		// 	StakingPoolOwnerCapObject[],
+		// 	ApiFarmsOwnedStakingPoolOwnerCapsBody
+		// >("owned-staking-pool-owner-caps", inputs);
+		return this.useProvider().fetchOwnedStakingPoolOwnerCaps(inputs);
 	}
 
 	public async getOwnedStakingPoolOneTimeAdminCaps(
 		inputs: ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody
 	) {
-		return this.fetchApi<
-			StakingPoolOneTimeAdminCapObject[],
-			ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody
-		>("owned-staking-pool-one-time-admin-caps", inputs);
+		// TODO: remove endpoint eventually ?
+
+		// return this.fetchApi<
+		// 	StakingPoolOneTimeAdminCapObject[],
+		// 	ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody
+		// >("owned-staking-pool-one-time-admin-caps", inputs);
+		return this.useProvider().fetchOwnedStakingPoolOneTimeAdminCaps(inputs);
 	}
 
 	// =========================================================================
