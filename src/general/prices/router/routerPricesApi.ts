@@ -40,12 +40,12 @@ export class RouterPricesApi implements PricesApiInterface {
 	// TODO: add single caches
 	public fetchCoinsToPrice = this.Provider.withCache({
 		key: "routerPricesApi.fetchCoinsToPrice",
-		expirationSeconds: 300, // 5 minutes
+		expirationSeconds: 60 * 60,
 		callback: async (inputs: {
 			coins: CoinType[];
 		}): Promise<CoinsToPrice> => {
 			const { coins } = inputs;
-			if (coins.length <= 0) return {}
+			if (coins.length <= 0) return {};
 
 			const prices: number[] =
 				await this.Provider.indexerCaller.fetchIndexer(
@@ -71,7 +71,7 @@ export class RouterPricesApi implements PricesApiInterface {
 	// TODO: add single cache by coin type ?
 	public fetchCoinsToPriceInfo = this.Provider.withCache({
 		key: "routerPricesApi.fetchCoinsToPriceInfo",
-		expirationSeconds: 300, // 5 minutes
+		expirationSeconds: 60 * 60,
 		callback: async (inputs: {
 			coins: CoinType[];
 		}): Promise<Record<CoinType, CoinPriceInfo>> => {
@@ -139,7 +139,7 @@ export class RouterPricesApi implements PricesApiInterface {
 
 	private fetchCoinsToPriceInfoInternal = this.Provider.withCache({
 		key: "routerPricesApi.fetchCoinsToPriceInfoInternal",
-		expirationSeconds: 300, // 5 minutes
+		expirationSeconds: 60 * 60,
 		callback: async (inputs: {
 			coins: CoinType[];
 		}): Promise<Record<CoinType, CoinPriceInfo>> => {
@@ -195,7 +195,7 @@ export class RouterPricesApi implements PricesApiInterface {
 					key: singleCacheKey,
 					data: coinsInfo,
 					inputs: [coin],
-					expirationSeconds: 300, // 5 minutes
+					expirationSeconds: 60 * 60,
 				});
 			}
 

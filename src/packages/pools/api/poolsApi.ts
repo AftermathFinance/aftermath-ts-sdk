@@ -1508,7 +1508,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 */
 	public fetchPoolStats = this.Provider.withCache({
 		key: "fetchPoolStats",
-		expirationSeconds: 60,
+		expirationSeconds: 60 * 60,
 		callback: async (inputs: { poolId: ObjectId }): Promise<PoolStats> => {
 			const { poolId } = inputs;
 

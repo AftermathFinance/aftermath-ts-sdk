@@ -82,11 +82,10 @@ export class FarmsApiCasting {
 					emissionStartTimestamp: Number(
 						fields.emission_start_timestamps_ms[index]
 					),
-
 					lastRewardTimestamp: Number(
 						fields.last_reward_timestamps_ms[index]
 					),
-					rewardsRemaining: BigInt(data.rewardsRemaining[index]),
+					rewardsRemaining: BigInt(data.rewardsRemaining[index] ?? 0),
 					// NOTE: this should never fallback - dynamic field data should always be found
 					actualRewards: BigInt(
 						data.actualRewards.find(
