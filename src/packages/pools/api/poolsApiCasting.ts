@@ -164,11 +164,13 @@ export class PoolsApiCasting {
 	public static daoFeePoolObjectFromIndexerResponse = (data: {
 		objectId: ObjectId;
 		type: AnyObjectType;
-		content: DaoFeePoolFieldsOnChain;
+		content: {
+			fields: DaoFeePoolFieldsOnChain;
+		};
 	}): DaoFeePoolObject => {
 		const objectId = Helpers.addLeadingZeroesToType(data.objectId);
 		const objectType = Helpers.addLeadingZeroesToType(data.type);
-		const fields = data.content;
+		const fields = data.content.fields;
 
 		return {
 			objectId,

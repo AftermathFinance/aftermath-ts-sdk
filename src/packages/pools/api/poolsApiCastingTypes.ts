@@ -37,7 +37,6 @@ export interface PoolFieldsOnChain {
 }
 
 export interface DaoFeePoolFieldsOnChain {
-	id: ObjectId;
 	fee_bps: BigIntAsString;
 	fee_recipient: SuiAddress;
 }
@@ -119,7 +118,9 @@ export type PoolsIndexerResponse = {
 				{
 					objectId: ObjectId;
 					type: AnyObjectType;
-					content: DaoFeePoolFieldsOnChain;
+					content: {
+						fields: DaoFeePoolFieldsOnChain;
+					};
 				}
 		  ]
 		| [];
