@@ -9,11 +9,11 @@ import { CoinHistoricalData } from "./historicalDataTypes";
 export class PlaceholderHistoricalDataApi
 	implements HistoricalDataApiInterface
 {
-	public fetchAllSuiCoinData = async (): Promise<
-		Record<CoinType, CoinGeckoCoinData>
-	> => {
-		return {};
-	};
+	// public fetchAllSuiCoinData = async (): Promise<
+	// 	Record<CoinType, CoinGeckoCoinData>
+	// > => {
+	// 	return {};
+	// };
 
 	public fetchAllCoinData = async (): Promise<
 		Record<CoinType, CoinGeckoCoinData>

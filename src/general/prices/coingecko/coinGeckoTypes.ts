@@ -18,6 +18,7 @@ export type CoinGeckoCoinApiId = string;
 // =========================================================================
 
 export interface CoinGeckoCoinData {
+	chain: CoinGeckoChain | "";
 	apiId: CoinGeckoCoinApiId;
 	name: string;
 	symbol: CoinSymbol;

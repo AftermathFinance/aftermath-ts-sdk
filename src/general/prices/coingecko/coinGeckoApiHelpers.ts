@@ -39,34 +39,46 @@ export class CoinGeckoApiHelpers {
 	//  Coin Data
 	// =========================================================================
 
-	public fetchAllSuiCoinData = async (): Promise<
-		Record<CoinType, CoinGeckoCoinData>
+	public fetchAllCoinDataForChains = async (inputs: {
+		chains: CoinGeckoChain[];
+	}): Promise<
+		Partial<Record<CoinGeckoChain, Record<CoinType, CoinGeckoCoinData>>>
 	> => {
-		const coinData = await this.fetchRawCoinData();
-		const suiCoinData = coinData
-			.filter((data) => "sui" in data.platforms || data.id === "sui")
-			.map((data) => {
-				const coinType =
-					data.id === "sui"
-						? Coin.constants.suiCoinType
-						: data.platforms.sui;
+		const { chains } = inputs;
+		if (chains.length <= 0) return {};
 
-				try {
-					if (!coinType) throw new Error("no coin type found");
+		const coinData = await this.fetchRawCoinData();
+		const chainsCoinData = coinData
+			.filter(
+				(data) =>
+					chains.some((chain) => chain in data.platforms) ||
+					chains.some((chain) => chain === data.id)
+			)
+			.map((data) =>
+				chains.map((chain) => {
+					const coinType =
+						chain === "sui" && data.id === "sui"
+							? Coin.constants.suiCoinType
+							: data.platforms[chain];
+					if (!coinType) return undefined;
+
 					return {
+						chain,
 						apiId: data.id,
 						name: data.name,
 						symbol: data.symbol,
-						coinType: Helpers.addLeadingZeroesToType(coinType),
+						coinType:
+							chain === "sui"
+								? Helpers.addLeadingZeroesToType(coinType)
+								: coinType,
 					};
-				} catch (e) {
-					return undefined;
-				}
-			})
+				})
+			)
+			.reduce((acc, data) => [...acc, ...data], [])
 			.filter((data) => data !== undefined) as CoinGeckoCoinData[];
 
 		const partialCoinDataObject: Record<CoinType, CoinGeckoCoinData> =
-			suiCoinData.reduce((acc, data) => {
+			chainsCoinData.reduce((acc, data) => {
 				return {
 					[data.coinType]: data,
 					...acc,
@@ -93,6 +105,7 @@ export class CoinGeckoApiHelpers {
 					name: foundCoinData.name,
 					symbol: foundCoinData.symbol,
 					coinType: "",
+					chain: "",
 				};
 			}
 
@@ -110,7 +123,21 @@ export class CoinGeckoApiHelpers {
 			return newData;
 		}, partialCoinDataObject);
 
-		return coinDataObject;
+		return Object.entries(coinDataObject).reduce(
+			(acc, [coinType, data]) =>
+				data.chain === ""
+					? {}
+					: {
+							...acc,
+							[data.chain]: {
+								...(acc[data.chain] ?? {}),
+								[coinType]: data,
+							},
+					  },
+			{} as Partial<
+				Record<CoinGeckoChain, Record<CoinType, CoinGeckoCoinData>>
+			>
+		);
 	};
 
 	public fetchAllCoinData = async (): Promise<
@@ -343,7 +370,7 @@ export class CoinGeckoApiHelpers {
 	};
 
 	private fetchRawCoinData = this.Provider.withCache({
-		key: "coinGeckoApiHelpers.fetchAllSuiCoinData",
+		key: "coinGeckoApiHelpers.fetchRawCoinData",
 		expirationSeconds: 86400, // 24 hours
 		callback: () => {
 			return this.callApi<
