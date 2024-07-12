@@ -71,6 +71,9 @@ export class Helpers {
 	public static addLeadingZeroesToType = (
 		type: AnyObjectType
 	): AnyObjectType => {
+		// NOTE: can this be added back instead of throwing error ?
+		// if (!Helpers.isValidType(type)) return type
+
 		const expectedTypeLength = 64;
 
 		let strippedType = type.replace("0x", "");

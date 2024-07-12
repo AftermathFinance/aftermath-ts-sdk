@@ -6,7 +6,7 @@ import {
 import { CoinHistoricalData } from "./historicalDataTypes";
 
 export interface HistoricalDataApiInterface {
-	fetchAllSuiCoinData: () => Promise<Record<CoinType, CoinGeckoCoinData>>;
+	// fetchAllSuiCoinData: () => Promise<Record<CoinType, CoinGeckoCoinData>>;
 
 	fetchAllCoinData: () => Promise<
 		Record<CoinSymbol, CoinGeckoCoinSymbolData>
