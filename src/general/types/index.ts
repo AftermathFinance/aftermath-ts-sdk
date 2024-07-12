@@ -3,3 +3,4 @@ export * from "./generalTypes";
 export * from "./suiTypes";
 export * from "../nfts/nftsTypes";
 export * from "../dynamicGas/dynamicGasTypes";
+export * from "../prices/coingecko/coinGeckoTypes";

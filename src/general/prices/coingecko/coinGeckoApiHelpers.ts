@@ -1,9 +1,17 @@
 import { Coin } from "../../../packages";
-import { CoinPriceInfo, CoinSymbol, CoinType } from "../../../types";
+import {
+	CoinDecimal,
+	CoinMetadaWithInfo,
+	CoinPriceInfo,
+	CoinSymbol,
+	CoinType,
+	Url,
+} from "../../../types";
 import { CoinHistoricalData } from "../../historicalData/historicalDataTypes";
 import { AftermathApi } from "../../providers";
 import { Helpers } from "../../utils";
 import {
+	CoinGeckoChain,
 	CoinGeckoCoinApiId,
 	CoinGeckoCoinData,
 	CoinGeckoCoinSymbolData,
@@ -120,6 +128,63 @@ export class CoinGeckoApiHelpers {
 			};
 		}, {});
 	};
+
+	// TODO: handle multiple
+	public fetchCoinMetadata = this.Provider.withCache({
+		key: "coinGeckoApiHelpers.fetchCoinMetadata",
+		expirationSeconds: -1,
+		callback: async (inputs: {
+			coinType: CoinType;
+			chain: CoinGeckoChain;
+		}): Promise<CoinMetadaWithInfo | undefined> => {
+			const { coinType, chain } = inputs;
+
+			// Fetch the list of coins and filter by token address
+			const coins = await this.fetchRawCoinData();
+			const coin = coins.find(
+				(c) =>
+					c.platforms[chain]?.toLowerCase() === coinType.toLowerCase()
+			);
+			if (!coin) return undefined;
+
+			// Fetch detailed coin metadata
+			const coinDetails = await this.callApi<{
+				id: string;
+				symbol: string;
+				name: string;
+				// platforms: Partial<Record<CoinGeckoChain, CoinType>>;
+				description: {
+					en: string;
+				};
+				image: {
+					small: Url;
+				};
+				detail_platforms: Partial<
+					Record<
+						CoinGeckoChain,
+						{
+							decimal_place: CoinDecimal;
+							contract_address: CoinType;
+						}
+					>
+				>;
+			}>(
+				`coins/${coin.id}?tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`
+			);
+			const { detail_platforms, name, symbol, description, image } =
+				coinDetails;
+
+			return {
+				id: null,
+				name,
+				symbol: symbol.toUpperCase(),
+				description: description.en,
+				iconUrl: image.small,
+				decimals: detail_platforms.ethereum?.decimal_place ?? -1,
+				isGenerated: false,
+			};
+		},
+	});
 
 	// =========================================================================
 	//  Historical Data
@@ -286,9 +351,7 @@ export class CoinGeckoApiHelpers {
 					id: string;
 					symbol: string;
 					name: string;
-					platforms: {
-						sui?: string;
-					};
+					platforms: Partial<Record<CoinGeckoChain, CoinType>>;
 				}[]
 			>("coins/list?include_platform=true");
 		},
