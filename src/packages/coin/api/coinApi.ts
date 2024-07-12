@@ -21,13 +21,24 @@ import { Casting } from "../../../general/utils";
 import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { CoinGeckoApiHelpers } from "../../../general/prices/coingecko/coinGeckoApiHelpers";
+import { CoinGeckoChain } from "../../../general/prices/coingecko/coinGeckoTypes";
+import { ethers, Networkish } from "ethers";
 
 export class CoinApi {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(private readonly Provider: AftermathApi) {}
+	constructor(
+		private readonly Provider: AftermathApi,
+		private readonly coinGeckoApiKey?: string,
+		private readonly infuraConfig?: {
+			network: Networkish;
+			projectId: string;
+			projectSecret: string;
+		}
+	) {}
 
 	// =========================================================================
 	//  Inspections
@@ -77,8 +88,87 @@ export class CoinApi {
 						.split("_")
 						.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
 						.join(" "),
-					decimals: 9,
+					decimals: Coin.constants.defaultCoinDecimals.sui,
 					iconUrl: null,
+					isGenerated: true,
+				};
+			}
+		},
+	});
+
+	public fetchEvmCoinMetadata = this.Provider.withCache({
+		key: "fetchEvmCoinMetadata",
+		expirationSeconds: -1,
+		callback: async (inputs: {
+			coinType: CoinType;
+			chain: Exclude<CoinGeckoChain, "sui">;
+		}): Promise<CoinMetadaWithInfo> => {
+			// NOTE: do leading 0s need to be handled ?
+			const { coinType, chain } = inputs;
+
+			try {
+				if (!this.coinGeckoApiKey)
+					throw new Error("no coinGeckoApiKey provided");
+
+				const ERC20_ABI = [
+					"function name() view returns (string)",
+					"function symbol() view returns (string)",
+					"function decimals() view returns (uint8)",
+				];
+				const infuraProvider = new ethers.InfuraProvider(
+					chain === "ethereum" ? "mainnet" : chain,
+					this.infuraConfig?.projectId,
+					this.infuraConfig?.projectSecret
+				);
+				const contract = new ethers.Contract(
+					coinType,
+					ERC20_ABI,
+					infuraProvider
+				);
+
+				const coingeckoApi = new CoinGeckoApiHelpers(
+					this.Provider,
+					this.coinGeckoApiKey,
+					{}
+				);
+
+				let coinMetadata = await coingeckoApi.fetchCoinMetadata(inputs);
+
+				let decimals = coinMetadata?.decimals;
+				if (decimals === undefined || decimals < 0) {
+					decimals = (await contract.decimals()) as CoinDecimal;
+				}
+
+				if (!coinMetadata) {
+					const [name, symbol]: [string, string] = await Promise.all([
+						contract.name(),
+						contract.symbol(),
+					]);
+					coinMetadata = {
+						symbol,
+						name,
+						description: `${name} (${chain})`,
+						decimals,
+					};
+				}
+
+				return {
+					iconUrl: null,
+					...(coinMetadata ?? {}),
+					decimals,
+					id: null,
+					isGenerated: false,
+				};
+			} catch (error) {
+				console.error(error);
+				return {
+					id: null,
+					iconUrl: null,
+					// NOTE: should this be shortened ?
+					symbol: coinType,
+					name: coinType,
+					description: `${coinType} (${chain})`,
+					decimals: Coin.constants.defaultCoinDecimals.evm,
 					isGenerated: true,
 				};
 			}

@@ -43,6 +43,7 @@ import { NftsApi } from "../nfts/nftsApi";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
 import { RouterPricesApi } from "../prices/router/routerPricesApi";
 // import { MultisigApi } from "../../packages/multisig/api/multisigApi";
+import { Networkish } from "ethers";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -96,16 +97,21 @@ export class AftermathApi {
 	 * @param provider - The SuiClient instance to use for interacting with the blockchain.
 	 * @param addresses - The configuration addresses for the Aftermath protocol.
 	 * @param indexerCaller - The IndexerCaller instance to use for querying the blockchain.
-	 * @param coinGeckoApiKey - (Optional) The API key to use for querying CoinGecko for token prices.
+	 * @param apiKey - (Optional) The API key to use for querying CoinGecko for token prices.
 	 */
 	public constructor(
 		public readonly provider: SuiClient,
 		public readonly addresses: ConfigAddresses,
 		public readonly indexerCaller: IndexerCaller,
 		private readonly config?: {
-			prices?: {
-				coinGeckoApiKey?: string;
+			coinGecko?: {
+				apiKey?: string;
 				coinApiIdsToCoinTypes?: Record<CoinGeckoCoinApiId, CoinType[]>;
+			};
+			infura?: {
+				network: Networkish;
+				projectId: string;
+				projectSecret: string;
 			};
 		},
 		public readonly providerV0?: SuiClientV0
@@ -135,22 +141,22 @@ export class AftermathApi {
 	public DynamicGas = () => new DynamicGasApi(this);
 	public Nfts = () => new NftsApi(this);
 
-	public Prices = this?.config?.prices?.coinGeckoApiKey
-		? // ? () =>
-		  // 		new CoinGeckoPricesApi(
-		  // 			this,
-		  // 			this?.config?.prices?.coinGeckoApiKey ?? "",
-		  // 			this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
-		  // 		)
-		  () => new RouterPricesApi(this)
-		: () => new PlaceholderPricesApi();
+	public Prices = this?.config?.coinGecko?.apiKey
+		? () =>
+				new CoinGeckoPricesApi(
+					this,
+					this?.config?.coinGecko?.apiKey ?? "",
+					this?.config?.coinGecko?.coinApiIdsToCoinTypes ?? {}
+				)
+		: // () => new RouterPricesApi(this)
+		  () => new PlaceholderPricesApi();
 
-	public HistoricalData = this?.config?.prices?.coinGeckoApiKey
+	public HistoricalData = this?.config?.coinGecko?.apiKey
 		? () =>
 				new HistoricalDataApi(
 					this,
-					this?.config?.prices?.coinGeckoApiKey ?? "",
-					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
+					this?.config?.coinGecko?.apiKey ?? "",
+					this?.config?.coinGecko?.coinApiIdsToCoinTypes ?? {}
 				)
 		: () => new PlaceholderHistoricalDataApi();
 
@@ -160,7 +166,12 @@ export class AftermathApi {
 	//  General Packages
 	// =========================================================================
 
-	public Coin = () => new CoinApi(this);
+	public Coin = () =>
+		new CoinApi(
+			this,
+			this?.config?.coinGecko?.apiKey,
+			this?.config?.infura
+		);
 	public Sui = () => new SuiApi(this);
 
 	// =========================================================================

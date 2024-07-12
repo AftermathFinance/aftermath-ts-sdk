@@ -18,6 +18,7 @@ import { Helpers } from "../../general/utils/helpers";
 import { Prices } from "../../general/prices/prices";
 import { AftermathApi } from "../../general/providers";
 import { CoinMetadata } from "@mysten/sui/client";
+import { CoinGeckoChain } from "../../general/prices/coingecko/coinGeckoTypes";
 
 export class Coin extends Caller {
 	// =========================================================================
@@ -30,6 +31,10 @@ export class Coin extends Caller {
 		suiCoinDecimals: 9,
 		coinObjectType:
 			"0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin",
+		defaultCoinDecimals: {
+			sui: 9,
+			evm: 18,
+		},
 	};
 
 	// =========================================================================
@@ -110,6 +115,22 @@ export class Coin extends Caller {
 			"metadata",
 			inputs
 		);
+	}
+
+	public async getEvmCoinMetadata(inputs: {
+		coinType?: CoinType;
+		chain: Exclude<CoinGeckoChain, "sui">;
+	}): Promise<CoinMetadaWithInfo> {
+		if (this.metadata) return this.metadata;
+
+		const coinType = this.coinType ?? inputs.coinType;
+		if (!coinType) throw new Error("no valid coin type");
+
+		const metadata = await this.fetchApi<CoinMetadaWithInfo>(
+			`evm/${inputs.chain}/${coinType}`
+		);
+		this.setCoinMetadata(metadata);
+		return metadata;
 	}
 
 	public setCoinMetadata(metadata: CoinMetadaWithInfo) {

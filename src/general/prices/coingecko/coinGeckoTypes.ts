@@ -4,6 +4,9 @@ import { CoinSymbol, CoinType, Percentage } from "../../../types";
 //  Coin Gecko
 // =========================================================================
 
+// TODO: add all supported chains
+export type CoinGeckoChain = "sui" | "ethereum";
+
 // =========================================================================
 //  Name Only
 // =========================================================================
