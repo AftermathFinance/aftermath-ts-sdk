@@ -42,7 +42,6 @@ import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leverag
 import { NftsApi } from "../nfts/nftsApi";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
 import { RouterPricesApi } from "../prices/router/routerPricesApi";
-// import { MultisigApi } from "../../packages/multisig/api/multisigApi";
 import { Networkish } from "ethers";
 
 /**
@@ -109,7 +108,7 @@ export class AftermathApi {
 				coinApiIdsToCoinTypes?: Record<CoinGeckoCoinApiId, CoinType[]>;
 			};
 			infura?: {
-				network: Networkish;
+				// network: Networkish;
 				projectId: string;
 				projectSecret: string;
 			};
@@ -169,8 +168,8 @@ export class AftermathApi {
 	public Coin = () =>
 		new CoinApi(
 			this,
-			this?.config?.coinGecko?.apiKey,
-			this?.config?.infura
+			this?.config?.coinGecko?.apiKey
+			// this?.config?.infura
 		);
 	public Sui = () => new SuiApi(this);
 

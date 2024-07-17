@@ -34,6 +34,7 @@ export class Coin extends Caller {
 		defaultCoinDecimals: {
 			sui: 9,
 			evm: 18,
+			svm: 9,
 		},
 	};
 
