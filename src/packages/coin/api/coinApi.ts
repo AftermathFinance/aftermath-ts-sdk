@@ -23,7 +23,7 @@ import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactions
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { CoinGeckoApiHelpers } from "../../../general/prices/coingecko/coinGeckoApiHelpers";
 import { CoinGeckoChain } from "../../../general/prices/coingecko/coinGeckoTypes";
-import { ethers, Networkish } from "ethers";
+// import { ethers, Networkish } from "ethers";
 
 export class CoinApi {
 	// =========================================================================
@@ -32,13 +32,11 @@ export class CoinApi {
 
 	constructor(
 		private readonly Provider: AftermathApi,
-		private readonly coinGeckoApiKey?: string,
-		private readonly infuraConfig?: {
-			network: Networkish;
-			projectId: string;
-			projectSecret: string;
-		}
-	) {}
+		private readonly coinGeckoApiKey?: string // private readonly infuraConfig?: { // 	network: Networkish;
+	) // 	projectId: string;
+	// 	projectSecret: string;
+	// }
+	{}
 
 	// =========================================================================
 	//  Inspections
@@ -52,125 +50,67 @@ export class CoinApi {
 		}): Promise<CoinMetadaWithInfo> => {
 			const { coin } = inputs;
 
-			try {
-				const coinMetadata =
-					await this.Provider.provider.getCoinMetadata({
-						coinType: Helpers.stripLeadingZeroesFromType(coin),
-					});
-				if (coinMetadata === null)
-					throw new Error("coin metadata is null");
-
-				return {
-					...coinMetadata,
-					isGenerated: false,
-				};
-			} catch (error) {
+			if (Helpers.isValidType(coin)) {
+				// sui coin
 				try {
-					return this.createLpCoinMetadata({ lpCoinType: coin });
-				} catch (e) {}
+					const coinMetadata =
+						await this.Provider.provider.getCoinMetadata({
+							coinType: Helpers.stripLeadingZeroesFromType(coin),
+						});
+					if (coinMetadata === null)
+						throw new Error("coin metadata is null");
 
-				const maxSymbolLength = 10;
-				const maxPackageNameLength = 24;
+					return {
+						...coinMetadata,
+						isGenerated: false,
+					};
+				} catch (error) {
+					try {
+						return this.createLpCoinMetadata({ lpCoinType: coin });
+					} catch (e) {}
 
-				const coinClass = new Coin(coin);
-				const symbol = coinClass.coinTypeSymbol
-					.toUpperCase()
-					.slice(0, maxSymbolLength);
-				const packageName = coinClass.coinTypePackageName.slice(
-					0,
-					maxPackageNameLength
-				);
-				return {
-					symbol,
-					id: null,
-					description: `${symbol} (${packageName})`,
-					name: symbol
-						.split("_")
-						.map((word) => Helpers.capitalizeOnlyFirstLetter(word))
-						.join(" "),
-					decimals: Coin.constants.defaultCoinDecimals.sui,
-					iconUrl: null,
-					isGenerated: true,
-				};
-			}
-		},
-	});
+					const maxSymbolLength = 10;
+					const maxPackageNameLength = 24;
 
-	public fetchEvmCoinMetadata = this.Provider.withCache({
-		key: "fetchEvmCoinMetadata",
-		expirationSeconds: -1,
-		callback: async (inputs: {
-			coinType: CoinType;
-			chain: Exclude<CoinGeckoChain, "sui">;
-		}): Promise<CoinMetadaWithInfo> => {
-			// NOTE: do leading 0s need to be handled ?
-			const { coinType, chain } = inputs;
-
-			try {
-				if (!this.coinGeckoApiKey)
-					throw new Error("no coinGeckoApiKey provided");
-
-				const ERC20_ABI = [
-					"function name() view returns (string)",
-					"function symbol() view returns (string)",
-					"function decimals() view returns (uint8)",
-				];
-				const infuraProvider = new ethers.InfuraProvider(
-					chain === "ethereum" ? "mainnet" : chain,
-					this.infuraConfig?.projectId,
-					this.infuraConfig?.projectSecret
-				);
-				const contract = new ethers.Contract(
-					coinType,
-					ERC20_ABI,
-					infuraProvider
-				);
-
-				const coingeckoApi = new CoinGeckoApiHelpers(
-					this.Provider,
-					this.coinGeckoApiKey,
-					{}
-				);
-
-				let coinMetadata = await coingeckoApi.fetchCoinMetadata(inputs);
-
-				let decimals = coinMetadata?.decimals;
-				if (decimals === undefined || decimals < 0) {
-					decimals = (await contract.decimals()) as CoinDecimal;
-				}
-
-				if (!coinMetadata) {
-					const [name, symbol]: [string, string] = await Promise.all([
-						contract.name(),
-						contract.symbol(),
-					]);
-					coinMetadata = {
+					const coinClass = new Coin(coin);
+					const symbol = coinClass.coinTypeSymbol
+						.toUpperCase()
+						.slice(0, maxSymbolLength);
+					const packageName = coinClass.coinTypePackageName.slice(
+						0,
+						maxPackageNameLength
+					);
+					return {
 						symbol,
-						name,
-						description: `${name} (${chain})`,
-						decimals,
+						id: null,
+						description: `${symbol} (${packageName})`,
+						name: symbol
+							.split("_")
+							.map((word) =>
+								Helpers.capitalizeOnlyFirstLetter(word)
+							)
+							.join(" "),
+						decimals: Coin.constants.defaultCoinDecimals.sui,
+						iconUrl: null,
+						isGenerated: true,
 					};
 				}
+			} else {
+				// non sui coin
+				const { coinType, chain } = Helpers.splitNonSuiCoinType(coin);
 
-				return {
-					iconUrl: null,
-					...(coinMetadata ?? {}),
-					decimals,
-					id: null,
-					isGenerated: false,
-				};
-			} catch (error) {
-				console.error(error);
-				return {
-					id: null,
-					iconUrl: null,
-					// NOTE: should this be shortened ?
-					symbol: coinType,
-					name: coinType,
-					description: `${coinType} (${chain})`,
-					decimals: Coin.constants.defaultCoinDecimals.evm,
-					isGenerated: true,
-				};
+				if (chain === "solana") {
+					// svm
+					return this.fetchSvmCoinMetadata({
+						coinType,
+					});
+				} else {
+					// evm
+					return this.fetchEvmCoinMetadata({
+						coinType,
+						chain,
+					});
+				}
 			}
 		},
 	});
@@ -373,6 +313,152 @@ export class CoinApi {
 			};
 		}
 	};
+
+	private fetchEvmCoinMetadata = this.Provider.withCache({
+		key: "fetchEvmCoinMetadata",
+		expirationSeconds: -1,
+		callback: async (inputs: {
+			coinType: CoinType;
+			chain: Exclude<CoinGeckoChain, "sui">;
+		}): Promise<CoinMetadaWithInfo> => {
+			// NOTE: do leading 0s need to be handled ?
+			const { coinType, chain } = inputs;
+
+			try {
+				if (!this.coinGeckoApiKey)
+					throw new Error("no coinGeckoApiKey provided");
+
+				// const ERC20_ABI = [
+				// 	"function name() view returns (string)",
+				// 	"function symbol() view returns (string)",
+				// 	"function decimals() view returns (uint8)",
+				// ];
+				// const infuraProvider = new ethers.InfuraProvider(
+				// 	// TODO: add more conversions, move to helpers ?
+				// 	chain === "ethereum"
+				// 		? "mainnet"
+				// 		: chain === "bsc"
+				// 		? "bnb"
+				// 		: // : chain === "polygon"
+				// 		  // ? "matic"
+				// 		  chain,
+				// 	this.infuraConfig?.projectId,
+				// 	this.infuraConfig?.projectSecret
+				// );
+				// const contract = new ethers.Contract(
+				// 	coinType,
+				// 	ERC20_ABI,
+				// 	infuraProvider
+				// );
+
+				const coingeckoApi = new CoinGeckoApiHelpers(
+					this.Provider,
+					this.coinGeckoApiKey,
+					{}
+				);
+
+				let coinMetadata = await coingeckoApi.fetchCoinMetadata(inputs);
+
+				// let decimals = coinMetadata?.decimals;
+				// if (decimals === undefined || decimals < 0) {
+				// 	decimals = (await contract.decimals()) as CoinDecimal;
+				// }
+
+				// if (!coinMetadata) {
+				// 	const [name, symbol]: [string, string] = await Promise.all([
+				// 		contract.name(),
+				// 		contract.symbol(),
+				// 	]);
+				// 	coinMetadata = {
+				// 		symbol,
+				// 		name,
+				// 		description: `${name} (${chain})`,
+				// 		decimals,
+				// 	};
+				// }
+
+				return {
+					// id: null,
+					// iconUrl: null,
+					// NOTE: should this be shortened ?
+					symbol: coinType,
+					name: coinType,
+					description: `${coinType} (${chain})`,
+					decimals: Coin.constants.defaultCoinDecimals.evm,
+					// isGenerated: true,
+					iconUrl: null,
+					...(coinMetadata ?? {}),
+					// decimals,
+					id: null,
+					isGenerated: false,
+				};
+			} catch (error) {
+				console.error(error);
+				return {
+					id: null,
+					iconUrl: null,
+					// NOTE: should this be shortened ?
+					symbol: coinType,
+					name: coinType,
+					description: `${coinType} (${chain})`,
+					decimals: Coin.constants.defaultCoinDecimals.evm,
+					isGenerated: true,
+				};
+			}
+		},
+	});
+
+	private fetchSvmCoinMetadata = this.Provider.withCache({
+		key: "fetchSvmCoinMetadata",
+		expirationSeconds: -1,
+		callback: async (inputs: {
+			coinType: CoinType;
+		}): Promise<CoinMetadaWithInfo> => {
+			// NOTE: do leading 0s need to be handled ?
+			const { coinType } = inputs;
+
+			const fallbackCoinMetadata = {
+				// NOTE: should this be shortened ?
+				symbol: coinType,
+				name: coinType,
+				description: `${coinType} (solana)`,
+				decimals: Coin.constants.defaultCoinDecimals.svm,
+			};
+
+			try {
+				if (!this.coinGeckoApiKey)
+					throw new Error("no coinGeckoApiKey provided");
+
+				// TODO: handle missing coingecko data
+
+				const coingeckoApi = new CoinGeckoApiHelpers(
+					this.Provider,
+					this.coinGeckoApiKey,
+					{}
+				);
+
+				const coinMetadata = await coingeckoApi.fetchCoinMetadata({
+					coinType,
+					chain: "solana",
+				});
+
+				return {
+					iconUrl: null,
+					...(coinMetadata ?? fallbackCoinMetadata),
+					id: null,
+					isGenerated: !coinMetadata,
+				};
+			} catch (error) {
+				console.error(error);
+				return {
+					id: null,
+					iconUrl: null,
+					...fallbackCoinMetadata,
+					isGenerated: true,
+				};
+			}
+		},
+	});
 
 	// =========================================================================
 	//  Private Static Methods

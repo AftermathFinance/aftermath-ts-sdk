@@ -207,7 +207,7 @@ export class CoinGeckoApiHelpers {
 				symbol: symbol.toUpperCase(),
 				description: description.en,
 				iconUrl: image.small,
-				decimals: detail_platforms.ethereum?.decimal_place ?? -1,
+				decimals: detail_platforms[inputs.chain]?.decimal_place ?? -1,
 				isGenerated: false,
 			};
 		},

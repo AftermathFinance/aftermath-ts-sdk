@@ -34,6 +34,7 @@ export class Coin extends Caller {
 		defaultCoinDecimals: {
 			sui: 9,
 			evm: 18,
+			svm: 9,
 		},
 	};
 
@@ -105,22 +106,6 @@ export class Coin extends Caller {
 		if (!coinType) throw new Error("no valid coin type");
 
 		const metadata = await this.fetchApi<CoinMetadaWithInfo>(coinType);
-		this.setCoinMetadata(metadata);
-		return metadata;
-	}
-
-	public async getEvmCoinMetadata(inputs: {
-		coinType?: CoinType;
-		chain: Exclude<CoinGeckoChain, "sui">;
-	}): Promise<CoinMetadaWithInfo> {
-		if (this.metadata) return this.metadata;
-
-		const coinType = this.coinType ?? inputs.coinType;
-		if (!coinType) throw new Error("no valid coin type");
-
-		const metadata = await this.fetchApi<CoinMetadaWithInfo>(
-			`evm/${inputs.chain}/${coinType}`
-		);
 		this.setCoinMetadata(metadata);
 		return metadata;
 	}

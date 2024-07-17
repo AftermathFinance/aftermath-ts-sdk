@@ -40,7 +40,7 @@ import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
-import { Networkish } from "ethers";
+// import { Networkish } from "ethers";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -106,7 +106,7 @@ export class AftermathApi {
 				coinApiIdsToCoinTypes?: Record<CoinGeckoCoinApiId, CoinType[]>;
 			};
 			infura?: {
-				network: Networkish;
+				// network: Networkish;
 				projectId: string;
 				projectSecret: string;
 			};
@@ -165,8 +165,8 @@ export class AftermathApi {
 	public Coin = () =>
 		new CoinApi(
 			this,
-			this?.config?.coinGecko?.apiKey,
-			this?.config?.infura
+			this?.config?.coinGecko?.apiKey
+			// this?.config?.infura
 		);
 	public Sui = () => new SuiApi(this);
 
