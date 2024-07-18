@@ -39,122 +39,131 @@ export class CoinGeckoApiHelpers {
 	//  Coin Data
 	// =========================================================================
 
-	public fetchAllCoinDataForChains = async (inputs: {
-		chains: CoinGeckoChain[];
-	}): Promise<
-		Partial<Record<CoinGeckoChain, Record<CoinType, CoinGeckoCoinData>>>
-	> => {
-		const { chains } = inputs;
-		if (chains.length <= 0) return {};
+	// TODO: add cache by chain as well
+	public fetchAllCoinDataForChains = this.Provider.withCache({
+		key: "coinGeckoApiHelpers.fetchAllCoinDataForChains",
+		expirationSeconds: 604800, // 1 week
+		callback: async (inputs: {
+			chains: CoinGeckoChain[];
+		}): Promise<
+			Partial<Record<CoinGeckoChain, Record<CoinType, CoinGeckoCoinData>>>
+		> => {
+			const { chains } = inputs;
+			if (chains.length <= 0) return {};
 
-		const coinData = await this.fetchRawCoinData();
-		const chainsCoinData = coinData
-			.filter(
-				(data) =>
-					chains.some((chain) => chain in data.platforms) ||
-					chains.some((chain) => chain === data.id)
-			)
-			.map((data) =>
-				chains.map((chain) => {
-					const coinType =
-						chain === "sui" && data.id === "sui"
-							? Coin.constants.suiCoinType
-							: data.platforms[chain];
-					if (!coinType) return undefined;
+			const coinData = await this.fetchRawCoinData();
+			const chainsCoinData = coinData
+				.filter(
+					(data) =>
+						chains.some((chain) => chain in data.platforms) ||
+						chains.some((chain) => chain === data.id)
+				)
+				.map((data) =>
+					chains.map((chain) => {
+						const coinType =
+							chain === "sui" && data.id === "sui"
+								? Coin.constants.suiCoinType
+								: data.platforms[chain];
+						if (!coinType) return undefined;
 
+						return {
+							chain,
+							apiId: data.id,
+							name: data.name,
+							symbol: data.symbol,
+							coinType:
+								chain === "sui"
+									? Helpers.addLeadingZeroesToType(coinType)
+									: coinType,
+						};
+					})
+				)
+				.reduce((acc, data) => [...acc, ...data], [])
+				.filter((data) => data !== undefined) as CoinGeckoCoinData[];
+
+			const partialCoinDataObject: Record<CoinType, CoinGeckoCoinData> =
+				chainsCoinData.reduce((acc, data) => {
 					return {
-						chain,
+						[data.coinType]: data,
+						...acc,
+					};
+				}, {});
+
+			const coinDataObject = Object.entries(
+				this.coinApiIdsToCoinTypes
+			).reduce((acc, [coinApiId, coinTypes]) => {
+				const foundSuiData = Object.values(partialCoinDataObject).find(
+					(data) => data.apiId === coinApiId
+				);
+
+				let foundData = foundSuiData;
+
+				if (!foundData) {
+					const foundCoinData = coinData.find(
+						(data) => data.id === coinApiId
+					);
+					if (!foundCoinData) return acc;
+
+					foundData = {
+						apiId: coinApiId,
+						name: foundCoinData.name,
+						symbol: foundCoinData.symbol,
+						coinType: "",
+						chain: "",
+					};
+				}
+
+				if (!foundData) return acc;
+
+				const dataToDuplicate = foundData;
+				const newData = coinTypes.reduce(
+					(acc, coinType) => ({
+						[coinType]: { ...dataToDuplicate, coinType },
+						...acc,
+					}),
+					acc
+				);
+
+				return newData;
+			}, partialCoinDataObject);
+
+			return Object.entries(coinDataObject).reduce(
+				(acc, [coinType, data]) =>
+					data.chain === ""
+						? {}
+						: {
+								...acc,
+								[data.chain]: {
+									...(acc[data.chain] ?? {}),
+									[coinType]: data,
+								},
+						  },
+				{} as Partial<
+					Record<CoinGeckoChain, Record<CoinType, CoinGeckoCoinData>>
+				>
+			);
+		},
+	});
+
+	public fetchAllCoinData = this.Provider.withCache({
+		key: "coinGeckoApiHelpers.fetchAllCoinData",
+		expirationSeconds: 604800, // 1 week
+		callback: async (): Promise<
+			Record<CoinSymbol, CoinGeckoCoinSymbolData>
+		> => {
+			const coinData = await this.fetchRawCoinData();
+			return coinData.reduce((acc, data) => {
+				return {
+					[data.symbol.toLowerCase()]: {
 						apiId: data.id,
 						name: data.name,
-						symbol: data.symbol,
-						coinType:
-							chain === "sui"
-								? Helpers.addLeadingZeroesToType(coinType)
-								: coinType,
-					};
-				})
-			)
-			.reduce((acc, data) => [...acc, ...data], [])
-			.filter((data) => data !== undefined) as CoinGeckoCoinData[];
-
-		const partialCoinDataObject: Record<CoinType, CoinGeckoCoinData> =
-			chainsCoinData.reduce((acc, data) => {
-				return {
-					[data.coinType]: data,
+						symbol: data.symbol.toLowerCase(),
+					},
 					...acc,
 				};
 			}, {});
-
-		const coinDataObject = Object.entries(
-			this.coinApiIdsToCoinTypes
-		).reduce((acc, [coinApiId, coinTypes]) => {
-			const foundSuiData = Object.values(partialCoinDataObject).find(
-				(data) => data.apiId === coinApiId
-			);
-
-			let foundData = foundSuiData;
-
-			if (!foundData) {
-				const foundCoinData = coinData.find(
-					(data) => data.id === coinApiId
-				);
-				if (!foundCoinData) return acc;
-
-				foundData = {
-					apiId: coinApiId,
-					name: foundCoinData.name,
-					symbol: foundCoinData.symbol,
-					coinType: "",
-					chain: "",
-				};
-			}
-
-			if (!foundData) return acc;
-
-			const dataToDuplicate = foundData;
-			const newData = coinTypes.reduce(
-				(acc, coinType) => ({
-					[coinType]: { ...dataToDuplicate, coinType },
-					...acc,
-				}),
-				acc
-			);
-
-			return newData;
-		}, partialCoinDataObject);
-
-		return Object.entries(coinDataObject).reduce(
-			(acc, [coinType, data]) =>
-				data.chain === ""
-					? {}
-					: {
-							...acc,
-							[data.chain]: {
-								...(acc[data.chain] ?? {}),
-								[coinType]: data,
-							},
-					  },
-			{} as Partial<
-				Record<CoinGeckoChain, Record<CoinType, CoinGeckoCoinData>>
-			>
-		);
-	};
-
-	public fetchAllCoinData = async (): Promise<
-		Record<CoinSymbol, CoinGeckoCoinSymbolData>
-	> => {
-		const coinData = await this.fetchRawCoinData();
-		return coinData.reduce((acc, data) => {
-			return {
-				[data.symbol.toLowerCase()]: {
-					apiId: data.id,
-					name: data.name,
-					symbol: data.symbol.toLowerCase(),
-				},
-				...acc,
-			};
-		}, {});
-	};
+		},
+	});
 
 	// TODO: handle multiple
 	public fetchCoinMetadata = this.Provider.withCache({
