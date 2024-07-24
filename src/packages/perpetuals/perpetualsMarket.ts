@@ -11,7 +11,7 @@ import {
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
 	ObjectId,
-	PerpetualsMarketPriceDataPoint,
+	PerpetualsMarketCandleDataPoint,
 	PerpetualsMarketId,
 	PerpetualsMarketParams,
 	PerpetualsMarketState,
@@ -30,6 +30,9 @@ import {
 	PerpetualsFilledOrderData,
 	ApiPerpetualsMaxOrderSizeBody,
 	ApiPerpetualsMarket24hrVolumeResponse,
+	ApiDataWithCursorBody,
+	PerpetualsTradeHistoryWithCursor,
+	ApiPerpetualsMarketTradeHistoryBody,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -116,14 +119,17 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	// =========================================================================
-	//  Events
+	//  Trade History
 	// =========================================================================
 
-	public async getFilledOrderEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<FilledTakerOrderEvent>(
-			`events/filled-order`,
-			inputs
-		);
+	public async getTradeHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
+		return this.fetchApi<
+			PerpetualsTradeHistoryWithCursor,
+			ApiPerpetualsMarketTradeHistoryBody
+		>(`trade-history`, {
+			limit: inputs.limit ?? Perpetuals.constants.defaultLimitStepSize,
+			cursor: inputs.cursor ?? new Date().valueOf(),
+		});
 	}
 
 	// =========================================================================

@@ -20,6 +20,7 @@ import {
 	Byte,
 	StringByte,
 	ObjectVersion,
+	TransactionDigest,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -48,15 +49,14 @@ import {
 	OrderbookDataPoint,
 	ApiPerpetualsOrderbookStateBody,
 	PerpetualsOrderPrice,
-	ApiPerpetualsMarketEventsBody,
+	ApiPerpetualsMarketTradeHistoryBody,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsCancelOrdersBody,
-	PerpetualsMarketPriceDataPoint,
+	PerpetualsMarketCandleDataPoint,
 	ApiPerpetualsHistoricalMarketDataResponse,
-	PerpetualsMarketVolumeDataPoint,
 	PerpetualsAccountCap,
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsLimitOrderBody,
@@ -69,6 +69,9 @@ import {
 	ApiPerpetualsMaxOrderSizeBody,
 	ApiPerpetualsAccountOrderDatasBody,
 	ApiPerpetualsMarket24hrVolumeResponse,
+	PerpetualsTradeHistoryWithCursor,
+	PerpetualsAccountOrderEventsWithCursor,
+	PerpetualsAccountCollateralChangesWithCursor,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -327,162 +330,144 @@ export class PerpetualsApi {
 	//  Events
 	// =========================================================================
 
-	public async fetchAccountCollateralEvents(
+	public async fetchAccountCollateralChanges(
 		inputs: ApiPerpetualsAccountEventsBody
-	): Promise<IndexerEventsWithCursor<CollateralEvent>> {
-		const { accountId, cursor, limit } = inputs;
+	): Promise<PerpetualsAccountCollateralChangesWithCursor> {
+		const { accountCapId, timestampBeforeMs, limit } = inputs;
 
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/accounts/${accountId}/events/collateral`,
+		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
-				cursor,
-				limit,
-			},
-			(event) => {
-				const eventType = (event as EventOnChain<any>).type;
-				return eventType === this.eventTypes.withdrewCollateral
-					? Casting.perpetuals.withdrewCollateralEventFromOnChain(
-							event as WithdrewCollateralEventOnChain
-					  )
-					: eventType === this.eventTypes.depositedCollateral
-					? Casting.perpetuals.depositedCollateralEventFromOnChain(
-							event as DepositedCollateralEventOnChain
-					  )
-					: eventType === this.eventTypes.settledFunding
-					? Casting.perpetuals.settledFundingEventFromOnChain(
-							event as SettledFundingEventOnChain
-					  )
-					: eventType === this.eventTypes.allocatedCollateral
-					? Casting.perpetuals.allocatedCollateralEventFromOnChain(
-							event as AllocatedCollateralEventOnChain
-					  )
-					: eventType === this.eventTypes.deallocatedCollateral
-					? Casting.perpetuals.deallocatedCollateralEventFromOnChain(
-							event as DeallocatedCollateralEventOnChain
-					  )
-					: eventType === this.eventTypes.liquidated
-					? Casting.perpetuals.liquidatedEventFromOnChain(
-							event as LiquidatedEventOnChain
-					  )
-					: eventType === this.eventTypes.filledMakerOrder
-					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
-							event as FilledMakerOrderEventOnChain
-					  )
-					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
-							event as FilledTakerOrderEventOnChain
-					  );
+				timestamp: Timestamp; // u64
+				tx_digest: TransactionDigest;
+				ch_id: ObjectId;
+				event_type: AnyObjectType;
+				collateral_change: number; // f64
+				collateral_change_usd: number; // f64
+			}[],
+			{
+				account_id: ObjectId; // accountCapId
+				timestamp_before_ms: Timestamp; // u64
+				limit: number; // u64
 			}
-		);
+		>(`perpetuals/accounts/trade-history`, {
+			account_id: Helpers.addLeadingZeroesToType(accountCapId),
+			timestamp_before_ms: timestampBeforeMs,
+			limit,
+		});
 
-		// // set collateral delta based off of previous event
-		// for (const [index, event] of eventsData.events.entries()) {
-		// 	if (index >= eventsData.events.length - 1) {
-		// 		eventsData.events[index].collateralDelta = event.collateral;
-		// 		continue;
-		// 	}
-
-		// 	const previousEvent = eventsData.events[index + 1];
-		// 	eventsData.events[index].collateralDelta =
-		// 		Casting.IFixed.iFixedFromNumber(
-		// 			Math.abs(
-		// 				Casting.IFixed.numberFromIFixed(event.collateral)
-		// 			) -
-		// 				Math.abs(
-		// 					Casting.IFixed.numberFromIFixed(
-		// 						previousEvent.collateral
-		// 					)
-		// 				)
-		// 		);
-		// }
-
-		// // if more events exist then remove last event since unable to calculate collateral delta
-		// if (cursor !== undefined) {
-		// 	eventsData.events = eventsData.events.slice(0, -1);
-		// }
-
-		// return eventsData;
+		const collateralChanges = response.map((data) => ({
+			timestamp: data.timestamp,
+			txDigest: data.tx_digest,
+			marketId: Helpers.addLeadingZeroesToType(data.ch_id),
+			eventType: data.event_type,
+			collateralChange: data.collateral_change,
+			collateralChangeUsd: data.collateral_change_usd,
+		}));
+		return {
+			collateralChanges,
+			// TODO: move `nextCursor` finding pattern to helper ?
+			nextCursor:
+				collateralChanges.length > 0
+					? collateralChanges[collateralChanges.length - 1].timestamp
+					: undefined,
+		};
 	}
 
 	public async fetchAccountOrderEvents(
 		inputs: ApiPerpetualsAccountEventsBody
-	): Promise<IndexerEventsWithCursor<PerpetualsOrderEvent>> {
-		const { accountId, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/accounts/${accountId}/events/order`,
+	): Promise<PerpetualsAccountOrderEventsWithCursor> {
+		const { accountCapId, timestampBeforeMs, limit } = inputs;
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			(
+				| CanceledOrderEventOnChain
+				| PostedOrderReceiptEventOnChain
+				| LiquidatedEventOnChain
+				| FilledMakerOrderEventOnChain
+				| FilledTakerOrderEventOnChain
+			)[],
 			{
-				cursor,
-				limit,
-			},
-			(event) => {
-				const eventType = (event as EventOnChain<any>).type;
-				return eventType === this.eventTypes.canceledOrder
-					? Casting.perpetuals.canceledOrderEventFromOnChain(
-							event as CanceledOrderEventOnChain
-					  )
-					: eventType === this.eventTypes.postedOrderReceipt
-					? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
-							event as PostedOrderReceiptEventOnChain
-					  )
-					: eventType === this.eventTypes.liquidated
-					? Casting.perpetuals.liquidatedEventFromOnChain(
-							event as LiquidatedEventOnChain
-					  )
-					: eventType === this.eventTypes.filledMakerOrder
-					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
-							event as FilledMakerOrderEventOnChain
-					  )
-					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
-							event as FilledTakerOrderEventOnChain
-					  );
+				account_id: ObjectId; // accountCapId
+				timestamp_before_ms: Timestamp; // u64
+				limit: number; // u64
 			}
-		);
-	}
-
-	public async fetchMarketFilledOrderEvents(
-		inputs: ApiPerpetualsMarketEventsBody
-	): Promise<IndexerEventsWithCursor<FilledTakerOrderEvent>> {
-		const { marketId, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/markets/${marketId}/events/filled-order`,
-			{
-				cursor,
-				limit,
-			},
-			(event) =>
-				Casting.perpetuals.filledTakerOrderEventFromOnChain(
-					event as FilledTakerOrderEventOnChain
-				)
-		);
-	}
-
-	public fetchSubscribeToAllEvents = async (inputs: {
-		onEvent: (event: SuiEvent) => void;
-	}): Promise<Unsubscribe> => {
-		const { onEvent } = inputs;
-
-		const unsubscribe = await this.Provider.provider.subscribeEvent({
-			// filter: {
-			// 	MoveModule: {
-			// 		module: PerpetualsApi.constants.moduleNames.events,
-			// 		package: this.addresses.perpetuals.packages.perpetuals,
-			// 	},
-			// },
-			// filter: {
-			// 	MoveEventModule: {
-			// 		module: PerpetualsApi.constants.moduleNames.events,
-			// 		package: this.addresses.perpetuals.packages.events,
-			// 	},
-			// },
-			filter: {
-				MoveEventModule: {
-					module: "interface",
-					package: this.addresses.perpetuals.packages.events,
-				},
-			},
-			onMessage: onEvent,
+		>(`perpetuals/accounts/trade-history`, {
+			account_id: Helpers.addLeadingZeroesToType(accountCapId),
+			timestamp_before_ms: timestampBeforeMs,
+			limit,
 		});
-		return unsubscribe;
-	};
+
+		const events = response.map((data) => {
+			const eventType = (data as EventOnChain<any>).type;
+			return eventType === this.eventTypes.canceledOrder
+				? Casting.perpetuals.canceledOrderEventFromOnChain(
+						data as CanceledOrderEventOnChain
+				  )
+				: eventType === this.eventTypes.postedOrderReceipt
+				? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
+						data as PostedOrderReceiptEventOnChain
+				  )
+				: eventType === this.eventTypes.liquidated
+				? Casting.perpetuals.liquidatedEventFromOnChain(
+						data as LiquidatedEventOnChain
+				  )
+				: eventType === this.eventTypes.filledMakerOrder
+				? Casting.perpetuals.filledMakerOrderEventFromOnChain(
+						data as FilledMakerOrderEventOnChain
+				  )
+				: Casting.perpetuals.filledTakerOrderEventFromOnChain(
+						data as FilledTakerOrderEventOnChain
+				  );
+		});
+		return {
+			events,
+			nextCursor:
+				events.length > 0
+					? events[events.length - 1].timestamp
+					: undefined,
+		};
+	}
+
+	public async fetchMarketTradeHistory(
+		inputs: ApiPerpetualsMarketTradeHistoryBody
+	): Promise<PerpetualsTradeHistoryWithCursor> {
+		const { marketId, timestampBeforeMs, limit } = inputs;
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				timestamp: Timestamp; // u64
+				tx_digest: TransactionDigest;
+				is_ask: boolean;
+				size_filled: number; // f64
+				order_price: number; // f64
+			}[],
+			{
+				ch_id: ObjectId;
+				timestamp_before_ms: Timestamp; // u64
+				limit: number; // u64
+			}
+		>(`perpetuals/markets/trade-history`, {
+			ch_id: Helpers.addLeadingZeroesToType(marketId),
+			timestamp_before_ms: timestampBeforeMs,
+			limit,
+		});
+
+		const trades = response.map((data) => ({
+			timestamp: data.timestamp,
+			txDigest: data.tx_digest,
+			side: data.is_ask
+				? PerpetualsOrderSide.Ask
+				: PerpetualsOrderSide.Bid,
+			sizeFilled: data.size_filled,
+			orderPrice: data.order_price,
+		}));
+		return {
+			trades,
+			nextCursor:
+				trades.length > 0
+					? trades[trades.length - 1].timestamp
+					: undefined,
+		};
+	}
 
 	// =========================================================================
 	//  Indexer Data
@@ -493,19 +478,14 @@ export class PerpetualsApi {
 	}): Promise<ApiPerpetualsMarket24hrVolumeResponse> {
 		const { marketId } = inputs;
 
-		const response: [{ volumeUsd: number; volume: number }] | [] =
-			await this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/markets/${marketId}/24hr-volume`
-			);
-		if (response.length === 0)
-			return {
-				volumeUsd: 0,
-				volumeBaseAssetAmount: 0,
-			};
+		const response = await this.Provider.indexerCaller.fetchIndexer<{
+			market_volume: number; // f64
+			market_volume_usd: number; // f64
+		}>(`perpetuals/markets/${marketId}/24hr-volume`);
 
 		return {
-			volumeUsd: response[0].volumeUsd,
-			volumeBaseAssetAmount: response[0].volume,
+			volumeBaseAssetAmount: response.market_volume,
+			volumeUsd: response.market_volume_usd,
 		};
 	}
 
@@ -516,30 +496,37 @@ export class PerpetualsApi {
 		intervalMs: number;
 	}): Promise<ApiPerpetualsHistoricalMarketDataResponse> => {
 		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
-		const [prices, volumes] = (await Promise.all([
-			this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/markets/${marketId}/historical-price`,
-				undefined,
-				{
-					from: fromTimestamp,
-					to: toTimestamp,
-					interval: intervalMs,
-				}
-			),
-			this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/markets/${marketId}/historical-volume`,
-				undefined,
-				{
-					from: fromTimestamp,
-					to: toTimestamp,
-					interval: intervalMs,
-				}
-			),
-		])) as [
-			prices: PerpetualsMarketPriceDataPoint[],
-			volumes: PerpetualsMarketVolumeDataPoint[]
-		];
-		return { prices, volumes };
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				timestamp_ms: number; // u64,
+				open: number; // f64,
+				close: number; // f64,
+				high: number; // f64,
+				low: number; // f64,
+				volume: number; // f64,
+			}[],
+			{
+				ch_id: string;
+				timestamp_ms_from: Timestamp; // u64,
+				timestamp_ms_to: Timestamp; // u64,
+				resolution_ms: number; // u64,
+			}
+		>(`perpetuals/markets/candle-history`, {
+			ch_id: Helpers.addLeadingZeroesToType(marketId),
+			timestamp_ms_from: fromTimestamp,
+			timestamp_ms_to: toTimestamp,
+			resolution_ms: intervalMs,
+		});
+
+		return response.map((data) => ({
+			timestamp: data.timestamp_ms,
+			open: data.open,
+			close: data.close,
+			high: data.high,
+			low: data.low,
+			volume: data.volume,
+		}));
 	};
 
 	public async fetchMarketPrice24hrsAgo(inputs: {

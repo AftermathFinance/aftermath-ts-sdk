@@ -37,6 +37,8 @@ import {
 	Percentage,
 	ObjectVersion,
 	ApiPerpetualsAccountOrderDatasBody,
+	ApiDataWithCursorBody,
+	Timestamp,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -300,20 +302,31 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
+	public async getCollateralChanges(
+		inputs: ApiDataWithCursorBody<Timestamp>
+	) {
+		return this.fetchApiIndexerEvents<CollateralEvent>(inputs);
+		return this.fetchApi<
+			PerpetualsTradeHistoryWithCursor,
+			ApiPerpetualsMarketTradeHistoryBody
+		>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/collateral-history`,
+			{
+				marketId: this.marketId,
+				limit:
+					inputs.limit ?? Perpetuals.constants.defaultLimitStepSize,
+				timestampBeforeMs: inputs.cursor ?? new Date().valueOf(),
+			}
+		);
+	}
+
 	// =========================================================================
 	//  Events
 	// =========================================================================
 
-	public async getCollateralEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<CollateralEvent>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/events/collateral`,
-			inputs
-		);
-	}
-
-	public async getOrderEvents(inputs: ApiIndexerEventsBody) {
+	public async getOrderEvents(inputs: ApiDataWithCursorBody<Timestamp>) {
 		return this.fetchApiIndexerEvents<PerpetualsOrderEvent>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/events/order`,
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-history`,
 			inputs
 		);
 	}
