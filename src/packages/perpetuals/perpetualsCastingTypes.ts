@@ -173,7 +173,8 @@ export interface PerpetualsPositionIndexerResponse {
 
 export type PerpetualsAccountPositionsIndexerResponse = [
 	IdAsStringBytes, // PerpetualsMarketId
-	PerpetualsPositionIndexerResponse
+	PerpetualsPositionIndexerResponse,
+	IFixedAsStringBytes // leverage
 ][];
 
 export type PerpetualsPreviewOrderIndexerResponse = {

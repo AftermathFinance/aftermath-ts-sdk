@@ -41,6 +41,8 @@ import {
 	Timestamp,
 	PerpetualsAccountCollateralChangesWithCursor,
 	PerpetualsAccountOrderEventsWithCursor,
+	ApiPerpetualsSetPositionLeverageBody,
+	PerpetualsAccountId,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -227,6 +229,51 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
+
+	public async setPositionLeverage(
+		inputs: ApiPerpetualsSetPositionLeverageBody
+	): Promise<boolean> {
+		return this.fetchApi<boolean, ApiPerpetualsSetPositionLeverageBody>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/set-position-leverage`,
+			inputs
+		);
+	}
+
+	// public async getAllPositionLeverages(): Promise<
+	// 	{
+	// 		marketId: PerpetualsMarketId;
+	// 		leverage: number;
+	// 	}[]
+	// > {
+	// 	return this.fetchApi(
+	// 		`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/position-leverages`
+	// 	);
+	// }
+
+	public async getPositionLeverages(inputs: {
+		marketIds: PerpetualsMarketId[];
+	}): Promise<number[]> {
+		return this.fetchApi(
+			`${this.accountCap.collateralCoinType}/accounts/${
+				this.accountCap.accountId
+			}/position-leverages/${JSON.stringify(inputs.marketIds)}`
+		);
+	}
+
+	public setPositionLeverageMessageToSign(inputs: {
+		marketId: PerpetualsMarketId;
+		leverage: number;
+	}): {
+		account_id: number;
+		market_id: PerpetualsMarketId;
+		leverage: number;
+	} {
+		return {
+			account_id: Number(this.accountCap.accountId),
+			market_id: inputs.marketId,
+			leverage: inputs.leverage,
+		};
+	}
 
 	public async getOrderPreview(
 		inputs: Omit<
@@ -474,9 +521,8 @@ export class PerpetualsAccount extends Caller {
 			this.positionForMarketId({ marketId }) ??
 			this.emptyPosition({ marketId });
 
-		const marginRatioInitial = IFixedUtils.numberFromIFixed(
-			inputs.market.marketParams.marginRatioInitial
-		);
+		const marginRatioInitial = 1 / position.leverage;
+		// const marginRatioInitial = inputs.market.initialMarginRatio();
 		const marginRatioMaintenance = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioMaintenance
 		);
@@ -683,6 +729,7 @@ export class PerpetualsAccount extends Caller {
 							market.calcCollateralUsedForOrder({
 								...inputs,
 								orderData,
+								leverage: position.leverage,
 							}).collateral
 					)
 			),
@@ -753,6 +800,7 @@ export class PerpetualsAccount extends Caller {
 			pendingOrders: [],
 			makerFee: BigInt(1000000000000000000), // 100%
 			takerFee: BigInt(1000000000000000000), // 100%
+			leverage: 1,
 		};
 	};
 }
