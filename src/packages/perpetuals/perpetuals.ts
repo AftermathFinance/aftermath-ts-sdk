@@ -37,9 +37,6 @@ export class Perpetuals extends Caller {
 
 	public static readonly OrderUtils = PerpetualsOrderUtils;
 
-	public static readonly constants = {
-		defaultLimitStepSize: 256,
-	};
 	private static readonly moveErrors: Record<number, string> = {
 		// Clearing House
 

@@ -32,7 +32,6 @@ import {
 	ApiPerpetualsMarket24hrVolumeResponse,
 	ApiDataWithCursorBody,
 	PerpetualsTradeHistoryWithCursor,
-	ApiPerpetualsMarketTradeHistoryBody,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -125,11 +124,8 @@ export class PerpetualsMarket extends Caller {
 	public async getTradeHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
 		return this.fetchApi<
 			PerpetualsTradeHistoryWithCursor,
-			ApiPerpetualsMarketTradeHistoryBody
-		>(`trade-history`, {
-			limit: inputs.limit ?? Perpetuals.constants.defaultLimitStepSize,
-			cursor: inputs.cursor ?? new Date().valueOf(),
-		});
+			ApiDataWithCursorBody<Timestamp>
+		>(`trade-history`, inputs);
 	}
 
 	// =========================================================================

@@ -826,16 +826,6 @@ export type ApiPerpetualsSLTPOrderBody = (
 		  }
 	);
 
-export type ApiPerpetualsAccountEventsBody = {
-	cursor: Timestamp;
-	limit: number;
-};
-
-export type ApiPerpetualsMarketTradeHistoryBody = {
-	cursor: Timestamp;
-	limit: number;
-};
-
 export interface ApiPerpetualsMarket24hrVolumeResponse {
 	volumeBaseAssetAmount: number;
 	volumeUsd: number;

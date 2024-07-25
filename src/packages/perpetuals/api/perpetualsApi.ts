@@ -21,6 +21,7 @@ import {
 	StringByte,
 	ObjectVersion,
 	TransactionDigest,
+	ApiDataWithCursorBody,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -41,7 +42,6 @@ import {
 	ApiPerpetualsPreviewOrderResponse,
 	ApiPerpetualsAccountsBody,
 	PerpetualsOrderData,
-	ApiPerpetualsAccountEventsBody,
 	CollateralEvent,
 	PerpetualsOrderEvent,
 	PerpetualsOrderInfo,
@@ -49,7 +49,6 @@ import {
 	OrderbookDataPoint,
 	ApiPerpetualsOrderbookStateBody,
 	PerpetualsOrderPrice,
-	ApiPerpetualsMarketTradeHistoryBody,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
 	ApiPerpetualsExecutionPriceBody,
@@ -149,6 +148,7 @@ export class PerpetualsApi {
 			clearingHouse: "clearing_house",
 			account: "account",
 		},
+		defaultLimitStepSize: 256,
 	};
 
 	public readonly addresses: {
@@ -331,9 +331,11 @@ export class PerpetualsApi {
 	// =========================================================================
 
 	public async fetchAccountCollateralChanges(
-		inputs: ApiPerpetualsAccountEventsBody
+		inputs: ApiDataWithCursorBody<Timestamp> & {
+			accountCapId: ObjectId;
+		}
 	): Promise<PerpetualsAccountCollateralChangesWithCursor> {
-		const { accountCapId, timestampBeforeMs, limit } = inputs;
+		const { accountCapId, cursor, limit } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
@@ -351,8 +353,8 @@ export class PerpetualsApi {
 			}
 		>(`perpetuals/accounts/trade-history`, {
 			account_id: Helpers.addLeadingZeroesToType(accountCapId),
-			timestamp_before_ms: timestampBeforeMs,
-			limit,
+			timestamp_before_ms: cursor ?? new Date().valueOf(),
+			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
 		});
 
 		const collateralChanges = response.map((data) => ({
@@ -374,9 +376,11 @@ export class PerpetualsApi {
 	}
 
 	public async fetchAccountOrderEvents(
-		inputs: ApiPerpetualsAccountEventsBody
+		inputs: ApiDataWithCursorBody<Timestamp> & {
+			accountCapId: ObjectId;
+		}
 	): Promise<PerpetualsAccountOrderEventsWithCursor> {
-		const { accountCapId, timestampBeforeMs, limit } = inputs;
+		const { accountCapId, cursor, limit } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
 			(
@@ -393,8 +397,8 @@ export class PerpetualsApi {
 			}
 		>(`perpetuals/accounts/trade-history`, {
 			account_id: Helpers.addLeadingZeroesToType(accountCapId),
-			timestamp_before_ms: timestampBeforeMs,
-			limit,
+			timestamp_before_ms: cursor ?? new Date().valueOf(),
+			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
 		});
 
 		const events = response.map((data) => {
@@ -429,9 +433,11 @@ export class PerpetualsApi {
 	}
 
 	public async fetchMarketTradeHistory(
-		inputs: ApiPerpetualsMarketTradeHistoryBody
+		inputs: ApiDataWithCursorBody<Timestamp> & {
+			marketId: PerpetualsMarketId;
+		}
 	): Promise<PerpetualsTradeHistoryWithCursor> {
-		const { marketId, timestampBeforeMs, limit } = inputs;
+		const { marketId, cursor, limit } = inputs;
 		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				timestamp: Timestamp; // u64
@@ -447,8 +453,8 @@ export class PerpetualsApi {
 			}
 		>(`perpetuals/markets/trade-history`, {
 			ch_id: Helpers.addLeadingZeroesToType(marketId),
-			timestamp_before_ms: timestampBeforeMs,
-			limit,
+			timestamp_before_ms: cursor ?? new Date().valueOf(),
+			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
 		});
 
 		const trades = response.map((data) => ({
