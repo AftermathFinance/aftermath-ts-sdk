@@ -1,7 +1,7 @@
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../providers/aftermathApi";
 import { Byte, SuiAddress } from "../../types";
-import { SuiEvent, TransactionEffects } from "@mysten/sui.js/client";
+import { SuiEvent, TransactionEffects } from "@mysten/sui/client";
 
 export class InspectionsApiHelpers {
 	public static constants = {
@@ -26,14 +26,14 @@ export class InspectionsApiHelpers {
 	// TODO: replace all bytes types with uint8array type
 
 	public fetchFirstBytesFromTxOutput = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		sender?: SuiAddress;
 	}) => {
 		return (await this.fetchAllBytesFromTxOutput(inputs))[0];
 	};
 
 	public fetchAllBytesFromTxOutput = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		sender?: SuiAddress;
 	}): Promise<Byte[][]> => {
 		const { allBytes } = await this.fetchAllBytesFromTx(inputs);
@@ -41,7 +41,7 @@ export class InspectionsApiHelpers {
 	};
 
 	public fetchAllBytesFromTx = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		sender?: SuiAddress;
 	}): Promise<{
 		events: SuiEvent[];

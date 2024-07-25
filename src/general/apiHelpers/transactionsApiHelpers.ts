@@ -1,11 +1,13 @@
 import {
 	TransactionArgument,
-	TransactionBlock,
+	Transaction,
 	TransactionObjectArgument,
-} from "@mysten/sui.js/transactions";
+	Argument,
+	isTransaction,
+} from "@mysten/sui/transactions";
 import {
 	Balance,
-	CoinTransactionObjectArgument,
+	CoinTransactionObjectArgumentV0,
 	CoinType,
 	ObjectId,
 	SerializedTransaction,
@@ -15,9 +17,13 @@ import {
 	TransactionsWithCursor,
 } from "../../types";
 import { AftermathApi } from "../providers/aftermathApi";
-import { SuiTransactionBlockResponseQuery } from "@mysten/sui.js/client";
+import { SuiTransactionBlockResponseQuery } from "@mysten/sui/client";
 import { Helpers } from "../utils";
-import { Sui } from "../..";
+import {
+	TransactionBlock,
+	TransactionObjectArgument as TransactionObjectArgumentV0,
+	TransactionArgument as TransactionArgumentV0,
+} from "@mysten/sui.js/transactions";
 
 export class TransactionsApiHelpers {
 	// =========================================================================
@@ -62,8 +68,8 @@ export class TransactionsApiHelpers {
 	};
 
 	public fetchSetGasBudgetForTx = async (inputs: {
-		tx: TransactionBlock;
-	}): Promise<TransactionBlock> => {
+		tx: Transaction;
+	}): Promise<Transaction> => {
 		const { tx } = inputs;
 
 		const [txResponse, referenceGasPrice] = await Promise.all([
@@ -78,6 +84,40 @@ export class TransactionsApiHelpers {
 		const gasData = txResponse.effects.gasUsed;
 		const gasUsed =
 			BigInt(gasData.computationCost) + BigInt(gasData.storageCost);
+
+		// scale up by 10% for safety margin
+		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
+
+		tx.setGasBudget(safeGasBudget);
+		tx.setGasPrice(referenceGasPrice);
+		return tx;
+	};
+
+	public fetchSetGasBudgetForTxV0 = async (inputs: {
+		tx: TransactionBlock;
+	}): Promise<TransactionBlock> => {
+		const { tx } = inputs;
+
+		const [txResponse, referenceGasPrice] = await Promise.all([
+			this.Provider.providerV0?.dryRunTransactionBlock({
+				transactionBlock: await tx.build({
+					client: this.Provider.providerV0,
+				}),
+			}),
+			this.Provider.provider.getReferenceGasPrice(),
+		]);
+
+		const gasUsed = !txResponse
+			? // TODO: make this into larger val
+			  BigInt(0)
+			: (() => {
+					const gasData = txResponse.effects.gasUsed;
+					return (
+						BigInt(gasData.computationCost) +
+						BigInt(gasData.storageCost)
+					);
+			  })();
+
 		// scale up by 10% for safety margin
 		const safeGasBudget = gasUsed + gasUsed / BigInt(10);
 
@@ -87,7 +127,7 @@ export class TransactionsApiHelpers {
 	};
 
 	public fetchSetGasBudgetAndSerializeTx = async (inputs: {
-		tx: TransactionBlock | Promise<TransactionBlock>;
+		tx: Transaction | Promise<Transaction>;
 		isSponsoredTx?: boolean;
 	}): Promise<SerializedTransaction> => {
 		const { tx, isSponsoredTx } = inputs;
@@ -96,6 +136,19 @@ export class TransactionsApiHelpers {
 
 		return (
 			await this.fetchSetGasBudgetForTx({ tx: await tx })
+		).serialize();
+	};
+
+	public fetchSetGasBudgetAndSerializeTxV0 = async (inputs: {
+		tx: TransactionBlock | Promise<TransactionBlock>;
+		isSponsoredTx?: boolean;
+	}): Promise<SerializedTransaction> => {
+		const { tx, isSponsoredTx } = inputs;
+
+		if (isSponsoredTx) return (await tx).serialize();
+
+		return (
+			await this.fetchSetGasBudgetForTxV0({ tx: await tx })
 		).serialize();
 	};
 
@@ -114,24 +167,19 @@ export class TransactionsApiHelpers {
 	): `${string}::${string}::${string}` =>
 		`${packageAddress}::${packageName}::${functionName}`;
 
-	public static createOptionObject = <InnerType>(
-		inner: InnerType | undefined
-	): { None: true } | { Some: InnerType } =>
-		inner === undefined ? { None: true } : { Some: inner };
-
 	public static createBuildTxFunc = <Inputs>(
 		func: (inputs: Inputs) => TransactionArgument
 	): ((
 		inputs: {
 			walletAddress: SuiAddress;
 		} & Omit<Inputs, "tx">
-	) => TransactionBlock) => {
+	) => Transaction) => {
 		const builderFunc = (
 			someInputs: {
 				walletAddress: SuiAddress;
 			} & Omit<Inputs, "tx">
 		) => {
-			const tx = new TransactionBlock();
+			const tx = new Transaction();
 			tx.setSender(someInputs.walletAddress);
 
 			func({
@@ -146,11 +194,11 @@ export class TransactionsApiHelpers {
 	};
 
 	public static splitCoinTx(inputs: {
-		tx: TransactionBlock;
+		tx: Transaction | TransactionBlock;
 		coinType: CoinType;
 		// coinId: TransactionArgument | ObjectId;
 		coinId: ObjectId;
-		amount: TransactionArgument | Balance;
+		amount: Balance;
 	}) {
 		const { tx, coinType, coinId, amount } = inputs;
 		return tx.moveCall({
@@ -163,13 +211,47 @@ export class TransactionsApiHelpers {
 			typeArguments: [coinType],
 			arguments: [
 				typeof coinId === "string" ? tx.object(coinId) : coinId, // Coin,
-				tx.pure(amount, "u64"), // split_amount
+				tx.pure.u64(amount), // split_amount
 			],
 		});
 	}
 
 	public static serviceCoinDataFromCoinTxArg = (inputs: {
-		coinTxArg: CoinTransactionObjectArgument | ObjectId;
+		coinTxArg: TransactionObjectArgument | Argument | ObjectId;
+	}): ServiceCoinData => {
+		const { coinTxArg } = inputs;
+
+		if (typeof coinTxArg === "string")
+			return { Coin: Helpers.addLeadingZeroesToType(coinTxArg) };
+
+		if (!("$kind" in coinTxArg)) {
+			if (typeof coinTxArg === "function" || "GasCoin" in coinTxArg)
+				throw new Error(
+					"unable to convert gas coin arg to service coin data"
+				);
+			// Input
+			return coinTxArg;
+		}
+
+		if (coinTxArg.$kind === "NestedResult")
+			return {
+				[coinTxArg.$kind]: coinTxArg.NestedResult,
+			};
+
+		if (coinTxArg.$kind === "Result")
+			return { [coinTxArg.$kind]: coinTxArg.Result };
+
+		if (coinTxArg.$kind === "GasCoin")
+			throw new Error(
+				"unable to convert gas coin arg to service coin data"
+			);
+
+		// Input
+		return { [coinTxArg.$kind]: coinTxArg.Input };
+	};
+
+	public static serviceCoinDataFromCoinTxArgV0 = (inputs: {
+		coinTxArg: CoinTransactionObjectArgumentV0 | ObjectId;
 	}): ServiceCoinData => {
 		const { coinTxArg } = inputs;
 
@@ -190,7 +272,38 @@ export class TransactionsApiHelpers {
 
 	public static coinTxArgFromServiceCoinData = (inputs: {
 		serviceCoinData: ServiceCoinData;
-	}): CoinTransactionObjectArgument => {
+	}): TransactionObjectArgument => {
+		const { serviceCoinData } = inputs;
+
+		const key = Object.keys(serviceCoinData)[0];
+
+		// TODO: handle all cases
+		if (key === "Coin")
+			throw new Error(
+				"serviceCoinData in format { Coin: ObjectId } not supported"
+			);
+
+		// TODO: handle this cleaner
+		const kind = key as "Input" | "NestedResult" | "Result";
+
+		if (kind === "NestedResult") {
+			return {
+				NestedResult: Object.values(serviceCoinData)[0],
+			};
+		}
+		if (kind === "Input") {
+			return {
+				Input: Object.values(serviceCoinData)[0],
+			};
+		}
+		return {
+			Result: Object.values(serviceCoinData)[0],
+		};
+	};
+
+	public static coinTxArgFromServiceCoinDataV0 = (inputs: {
+		serviceCoinData: ServiceCoinData;
+	}): CoinTransactionObjectArgumentV0 => {
 		const { serviceCoinData } = inputs;
 
 		const key = Object.keys(serviceCoinData)[0];
@@ -218,7 +331,7 @@ export class TransactionsApiHelpers {
 	};
 
 	// public static mergeCoinsTx(inputs: {
-	// 	tx: TransactionBlock;
+	// 	tx: Transaction;
 	// 	coinType: CoinType;
 	// 	destinationCoinId: TransactionArgument | string;
 	// 	sources: TransactionArgument[] | ObjectId[];

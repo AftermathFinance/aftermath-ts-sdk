@@ -1,4 +1,4 @@
-import { bcsRegistry } from "@mysten/sui.js/bcs";
+import { BcsType, bcs } from "@mysten/sui/bcs";
 import {
 	AnyObjectType,
 	ApiIndexerEventsBody,
@@ -45,15 +45,12 @@ export enum PerpetualsOrderType {
 //  BCS - Binary Canonical Serialization
 // =========================================================================
 
-export const perpetualsBcsRegistry: typeof bcsRegistry = bcsRegistry;
-
-perpetualsBcsRegistry.registerStructType(["Field", "N", "V"], {
-	id: "UID",
-	name: "N",
-	value: "V",
-});
-
-perpetualsBcsRegistry.registerAlias("UID", "address");
+function Field<N extends BcsType<any>, V extends BcsType<any>>(
+	name: N,
+	value: V
+) {
+	return bcs.struct("Field", { name, value });
+}
 
 // =========================================================================
 //  Admin
@@ -61,22 +58,22 @@ perpetualsBcsRegistry.registerAlias("UID", "address");
 
 export interface PerpetualsAdminCapability extends Object {}
 
-perpetualsBcsRegistry.registerStructType("AdminCapability", {
-	id: "UID",
+const AdminCapability = bcs.struct("AdminCapability", {
+	id: bcs.Address,
 });
 
 export interface PerpetualsRegistry extends Object {
 	activeCollaterals: CoinType[];
 }
 
-perpetualsBcsRegistry.registerStructType("Registry", {
-	id: "UID",
-	activeCollaterals: ["vector", "string"],
-	nextAccountId: "u64",
+const Registry = bcs.struct("Registry", {
+	id: bcs.Address,
+	activeCollaterals: bcs.vector(bcs.string()),
+	nextAccountId: bcs.u64(),
 });
 
-perpetualsBcsRegistry.registerStructType("MarketKey", {
-	marketId: "u64",
+const MarketKey = bcs.struct("MarketKey", {
+	marketId: bcs.u64(),
 });
 
 // =========================================================================
@@ -88,20 +85,18 @@ export interface PerpetualsVault extends Object {
 	scalingFactor: bigint;
 }
 
-perpetualsBcsRegistry.registerStructType(["Balance", "T"], {
-	value: "u64",
+const BalanceStruct = bcs.struct("Balance", { value: bcs.u64() });
+
+const Coin = bcs.struct("Coin", {
+	id: bcs.Address,
+	balance: BalanceStruct,
 });
 
-perpetualsBcsRegistry.registerStructType(["Coin", "T"], {
-	id: "UID",
-	balance: ["Balance", "T"],
-});
-
-perpetualsBcsRegistry.registerStructType(["Vault", "T"], {
-	id: "UID",
-	collateral_balance: ["Balance", "T"],
-	insurance_fund_balance: ["Balance", "T"],
-	scalingFactor: "u64",
+const Vault = bcs.struct("Vault", {
+	id: bcs.Address,
+	collateral_balance: BalanceStruct,
+	insurance_fund_balance: BalanceStruct,
+	scalingFactor: bcs.u64(),
 });
 
 export interface PerpetualsMarketData {
@@ -128,10 +123,10 @@ export type PerpetualsRawAccountCap = Omit<
 	collateral: Balance;
 };
 
-perpetualsBcsRegistry.registerStructType(["Account", "T"], {
-	id: "UID",
-	accountId: "u64",
-	collateral: ["Balance", "T"],
+const Account = bcs.struct("Account", {
+	id: bcs.Address,
+	accountId: bcs.u64(),
+	collateral: BalanceStruct,
 });
 
 export interface PerpetualsPosition {
@@ -153,21 +148,21 @@ export interface PerpetualsPosition {
 	takerFee: IFixed;
 }
 
-perpetualsBcsRegistry.registerStructType("Position", {
-	collateral: "u256",
-	baseAssetAmount: "u256",
-	quoteAssetNotionalAmount: "u256",
-	cumFundingRateLong: "u256",
-	cumFundingRateShort: "u256",
-	asksQuantity: "u256",
-	bidsQuantity: "u256",
-	pendingOrders: "u64",
-	makerFee: "u256",
-	takerFee: "u256",
+const Position = bcs.struct("Position", {
+	collateral: bcs.u256(),
+	baseAssetAmount: bcs.u256(),
+	quoteAssetNotionalAmount: bcs.u256(),
+	cumFundingRateLong: bcs.u256(),
+	cumFundingRateShort: bcs.u256(),
+	asksQuantity: bcs.u256(),
+	bidsQuantity: bcs.u256(),
+	pendingOrders: bcs.u64(),
+	makerFee: bcs.u256(),
+	takerFee: bcs.u256(),
 });
 
-perpetualsBcsRegistry.registerStructType("PositionKey", {
-	accountId: "u64",
+const PositionKey = bcs.struct("PositionKey", {
+	accountId: bcs.u64(),
 });
 
 // =========================================================================
@@ -258,11 +253,16 @@ export interface PerpetualsOrderbook extends Object {
 	counter: bigint;
 }
 
-perpetualsBcsRegistry.registerStructType("Orderbook", {
-	id: "UID",
-	asks: ["Map", "Order"],
-	bids: ["Map", "Order"],
-	counter: "u64",
+const Order = bcs.struct("Order", {
+	accountId: bcs.u64(),
+	size: bcs.u64(),
+});
+
+const Orderbook = bcs.struct("Orderbook", {
+	id: bcs.Address,
+	asks: PerpetualsMap(Order),
+	bids: PerpetualsMap(Order),
+	counter: bcs.u64(),
 });
 
 export interface PerpetualsOrder {
@@ -270,19 +270,14 @@ export interface PerpetualsOrder {
 	size: bigint;
 }
 
-perpetualsBcsRegistry.registerStructType("Order", {
-	accountId: "u64",
-	size: "u64",
-});
-
 export interface PerpetualsOrderInfo {
 	price: PerpetualsOrderPrice;
 	size: bigint;
 }
 
-perpetualsBcsRegistry.registerStructType("OrderInfo", {
-	price: "u64",
-	size: "u64",
+const OrderInfo = bcs.struct("OrderInfo", {
+	price: bcs.u64(),
+	size: bcs.u64(),
 });
 
 export interface PerpetualsOrderedMap<T> extends Object {
@@ -298,28 +293,30 @@ export interface PerpetualsOrderedMap<T> extends Object {
 	leavesMergeMax: bigint;
 }
 
-perpetualsBcsRegistry.registerStructType(["Map", "V"], {
-	id: "UID",
-	size: "u64",
-	counter: "u64",
-	root: "u64",
-	first: "u64",
-	branchMin: "u64",
-	branchMax: "u64",
-	leafMin: "u64",
-	leafMax: "u64",
-	branchesMergeMax: "u64",
-	leavesMergeMax: "u64",
-});
+function PerpetualsMap<T extends BcsType<any>>(T: T) {
+	return bcs.struct("Map", {
+		id: bcs.Address,
+		size: bcs.u64(),
+		counter: bcs.u64(),
+		root: bcs.u64(),
+		first: bcs.u64(),
+		branchMin: bcs.u64(),
+		branchMax: bcs.u64(),
+		leafMin: bcs.u64(),
+		leafMax: bcs.u64(),
+		branchesMergeMax: bcs.u64(),
+		leavesMergeMax: bcs.u64(),
+	});
+}
 
 export interface PerpetualsBranch {
 	keys: bigint[];
 	kids: bigint[];
 }
 
-perpetualsBcsRegistry.registerStructType("Branch", {
-	keys: ["vector", "u128"],
-	kids: ["vector", "u64"],
+export const Branch = bcs.struct("Branch", {
+	keys: bcs.vector(bcs.u128()),
+	kids: bcs.vector(bcs.u64()),
 });
 
 export interface PerpetualsLeaf<V> {
@@ -328,11 +325,13 @@ export interface PerpetualsLeaf<V> {
 	next: bigint;
 }
 
-perpetualsBcsRegistry.registerStructType(["Leaf", "V"], {
-	keys: ["vector", "u128"],
-	vals: ["vector", "V"],
-	next: "u64",
-});
+export function Leaf<V extends BcsType<any>>(V: V) {
+	return bcs.struct("Leaf", {
+		keys: bcs.vector(bcs.u128()),
+		vals: bcs.vector(V),
+		next: bcs.u64(),
+	});
+}
 
 export interface PerpetualsAccountData {
 	accountCap: PerpetualsAccountCap;
@@ -831,6 +830,11 @@ export interface ApiPerpetualsMarket24hrVolumeResponse {
 	volumeUsd: number;
 }
 
+export interface ApiPerpetualsMarket24hrVolumeResponse {
+	volumeUsd: number;
+	volumeBaseAssetAmount: number;
+}
+
 // =========================================================================
 //  SDK
 // =========================================================================
@@ -863,3 +867,22 @@ export type SdkPerpetualsSLTPOrderInputs = (
 				tpPrice: PerpetualsOrderPrice;
 		  }
 	);
+
+export const perpetualsRegistry = {
+	Account,
+	AdminCapability,
+	BalanceStruct,
+	Branch,
+	Coin,
+	Field,
+	Leaf,
+	MarketKey,
+	Order,
+	Orderbook,
+	OrderInfo,
+	PerpetualsMap,
+	Position,
+	PositionKey,
+	Registry,
+	Vault,
+};

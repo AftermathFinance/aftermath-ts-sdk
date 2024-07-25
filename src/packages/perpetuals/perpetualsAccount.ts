@@ -48,7 +48,7 @@ import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
 import { Coin } from "..";
 import { FixedUtils } from "../../general/utils/fixedUtils";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
@@ -155,7 +155,7 @@ export class PerpetualsAccount extends Caller {
 
 	public async getPlaceSLTPOrder(
 		inputs: SdkPerpetualsSLTPOrderInputs
-	): Promise<TransactionBlock> {
+	): Promise<Transaction> {
 		return this.fetchApiTransaction<ApiPerpetualsSLTPOrderBody>(
 			"transactions/sltp-order",
 			{

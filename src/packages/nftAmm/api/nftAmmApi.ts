@@ -20,9 +20,9 @@ import { Coin } from "../../coin/coin";
 import { Pools } from "../../pools/pools";
 import {
 	TransactionArgument,
-	TransactionBlock,
+	Transaction,
 	TransactionObjectArgument,
-} from "@mysten/sui.js/transactions";
+} from "@mysten/sui/transactions";
 
 export class NftAmmApi {
 	// =========================================================================
@@ -110,8 +110,8 @@ export class NftAmmApi {
 		nftObjectIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
+	}): Promise<Transaction> => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const { market } = inputs;
@@ -148,8 +148,8 @@ export class NftAmmApi {
 		nftObjectIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
+	}): Promise<Transaction> => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const { market } = inputs;
@@ -180,8 +180,8 @@ export class NftAmmApi {
 		nfts: (ObjectId | TransactionArgument)[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
+	}): Promise<Transaction> => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const { market } = inputs;
@@ -222,8 +222,8 @@ export class NftAmmApi {
 		nftObjectIds: ObjectId[];
 		slippage: Slippage;
 		referrer?: SuiAddress;
-	}): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
+	}): Promise<Transaction> => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const { market } = inputs;
@@ -265,7 +265,7 @@ export class NftAmmApi {
 	// =========================================================================
 
 	public buyTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		marketObjectId: ObjectId;
 		assetCoin: ObjectId | TransactionArgument;
 		nftObjectIds: ObjectId[];
@@ -294,17 +294,17 @@ export class NftAmmApi {
 					? tx.object(assetCoin)
 					: assetCoin,
 				tx.makeMoveVec({
-					objects: nftObjectIds.map((id) => tx.object(id)),
+					elements: nftObjectIds.map((id) => tx.object(id)),
 					type: "ID",
 				}),
-				tx.pure(inputs.expectedAssetCoinAmountIn.toString()),
-				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure.u64(inputs.expectedAssetCoinAmountIn.toString()),
+				tx.pure.u64(Pools.normalizeInvertSlippage(inputs.slippage)),
 			],
 		});
 	};
 
 	public sellTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		marketObjectId: ObjectId;
 		nfts: (ObjectId | TransactionArgument)[];
 		expectedAssetCoinAmountOut: Balance;
@@ -329,19 +329,19 @@ export class NftAmmApi {
 				tx.object(this.addresses.objects.insuranceFund),
 				tx.object(this.addresses.objects.referralVault),
 				tx.makeMoveVec({
-					objects: Helpers.isArrayOfStrings(nfts)
+					elements: Helpers.isArrayOfStrings(nfts)
 						? nfts.map((nft) => tx.object(nft))
 						: (nfts as TransactionObjectArgument[]),
 					type: genericTypes[3],
 				}),
-				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
-				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure.u64(inputs.expectedAssetCoinAmountOut.toString()),
+				tx.pure.u64(Pools.normalizeInvertSlippage(inputs.slippage)),
 			],
 		});
 	};
 
 	public depositTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		marketObjectId: ObjectId;
 		assetCoin: ObjectId | TransactionArgument;
 		nfts: (ObjectId | TransactionArgument)[];
@@ -370,19 +370,19 @@ export class NftAmmApi {
 					? tx.object(assetCoin)
 					: assetCoin,
 				tx.makeMoveVec({
-					objects: Helpers.isArrayOfStrings(nfts)
+					elements: Helpers.isArrayOfStrings(nfts)
 						? nfts.map((nft) => tx.object(nft))
 						: (nfts as TransactionObjectArgument[]),
 					type: genericTypes[3],
 				}),
-				tx.pure(inputs.expectedLpRatio.toString()),
-				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure.u64(inputs.expectedLpRatio.toString()),
+				tx.pure.u64(Pools.normalizeInvertSlippage(inputs.slippage)),
 			],
 		});
 	};
 
 	public addWithdrawCommandToTransaction = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		marketObjectId: ObjectId;
 		lpCoin: ObjectId | TransactionArgument;
 		nftObjectIds: ObjectId[];
@@ -409,11 +409,11 @@ export class NftAmmApi {
 				tx.object(this.addresses.objects.referralVault),
 				typeof lpCoin === "string" ? tx.object(lpCoin) : lpCoin,
 				tx.makeMoveVec({
-					objects: nftObjectIds.map((id) => tx.object(id)),
+					elements: nftObjectIds.map((id) => tx.object(id)),
 					type: "ID",
 				}),
-				tx.pure(inputs.expectedAssetCoinAmountOut.toString()),
-				tx.pure(Pools.normalizeSlippage(inputs.slippage)),
+				tx.pure.u64(inputs.expectedAssetCoinAmountOut.toString()),
+				tx.pure.u64(Pools.normalizeInvertSlippage(inputs.slippage)),
 			],
 		});
 	};

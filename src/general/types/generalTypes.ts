@@ -2,7 +2,7 @@ import {
 	DynamicFieldInfo,
 	EventId,
 	SuiTransactionBlockResponse,
-} from "@mysten/sui.js/client";
+} from "@mysten/sui/client";
 import {
 	Scallop,
 	ScallopBuilder,
@@ -33,6 +33,7 @@ export type Percentage = number;
 export type Apr = number;
 export type Apy = number;
 export type ObjectVersion = number;
+export type MoveErrorCode = number;
 
 // =========================================================================
 //  string

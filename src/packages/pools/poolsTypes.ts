@@ -3,6 +3,7 @@ import {
 	Event,
 	Object,
 	ObjectId,
+	Percentage,
 	Slippage,
 	SuiAddress,
 	Timestamp,
@@ -54,12 +55,22 @@ export interface PoolObject extends Object {
 	flatness: PoolFlatness;
 	coins: PoolCoins;
 	lpCoinDecimals: CoinDecimal;
+	daoFeePoolObject?: DaoFeePoolObject;
 }
 
 export interface PoolLpInfo {
 	lpCoinType: CoinType;
 	poolId: ObjectId;
 	balance: Balance;
+}
+
+export interface DaoFeePoolObject extends Object {
+	feeBps: bigint;
+	feeRecipient: SuiAddress;
+}
+
+export interface DaoFeePoolOwnerCapObject extends Object {
+	daoFeePoolId: ObjectId;
 }
 
 // =========================================================================
@@ -89,6 +100,25 @@ export interface PoolWithdrawEvent extends Event {
 	types: CoinType[];
 	withdrawn: Balance[];
 	lpBurned: Balance;
+}
+
+export interface CreatedDaoFeePoolEvent extends Event {
+	daoFeePoolId: ObjectId;
+	innerPoolId: ObjectId;
+	feeBps: bigint;
+	feeRecipient: SuiAddress;
+}
+
+export interface UpdatedFeeBpsEvent extends Event {
+	daoFeePoolId: ObjectId;
+	oldFeeBps: bigint;
+	newFeeBps: bigint;
+}
+
+export interface UpdatedFeeRecipientEvent extends Event {
+	daoFeePoolId: ObjectId;
+	oldFeeAddress: SuiAddress;
+	newFeeAddress: SuiAddress;
 }
 
 // =========================================================================
@@ -212,9 +242,11 @@ export interface ApiCreatePoolBody {
 	lpCoinMetadata: PoolCreationLpCoinMetadata;
 	coinsInfo: {
 		coinType: CoinType;
-		weight: number;
+		weight: Percentage;
+		// TODO: make decimals optional and fetch if unset ?
+		// TODO: make decimals only bigint ?
 		decimals?: CoinDecimal;
-		tradeFeeIn: number;
+		tradeFeeIn: Percentage;
 		initialDeposit: Balance;
 	}[];
 	poolName: PoolName;
@@ -224,6 +256,10 @@ export interface ApiCreatePoolBody {
 	forceLpDecimals?: CoinDecimal;
 	isSponsoredTx?: boolean;
 	burnLpCoin?: boolean;
+	daoFeeInfo?: {
+		feePercentage: Percentage;
+		feeRecipient: SuiAddress;
+	};
 }
 
 // =========================================================================
@@ -241,4 +277,8 @@ export interface ApiPoolObjectIdForLpCoinTypeBody {
 
 export interface ApiPoolsStatsBody {
 	poolIds: ObjectId[];
+}
+
+export interface ApiPoolsOwnedDaoFeePoolOwnerCapsBody {
+	walletAddress: SuiAddress;
 }

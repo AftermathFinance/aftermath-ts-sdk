@@ -5,11 +5,11 @@ import {
 	SuiObjectDataFilter,
 	SuiObjectDataOptions,
 	SuiObjectResponse,
-} from "@mysten/sui.js/client";
+} from "@mysten/sui/client";
 import { BcsTypeName } from "../types/castingTypes";
-import { bcsRegistry } from "@mysten/sui.js/bcs";
 import { TransactionObjectArgument } from "@scallop-io/sui-kit";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { Transaction } from "@mysten/sui/transactions";
+import { BcsType } from "@mysten/sui/bcs";
 
 export class ObjectsApiHelpers {
 	// =========================================================================
@@ -276,11 +276,10 @@ export class ObjectsApiHelpers {
 		return objectResponse;
 	};
 
-	public fetchCastObjectBcs = async <T>(inputs: {
+	public fetchCastObjectBcs = async <T, U>(inputs: {
 		objectId: ObjectId;
-		typeName: BcsTypeName;
-		fromDeserialized: (deserialized: any) => T;
-		bcs: typeof bcsRegistry;
+		bcsType: BcsType<U>;
+		fromDeserialized: (deserialized: U) => T;
 	}): Promise<T> => {
 		const { objectId } = inputs;
 		const suiObjectResponse = await this.Provider.Objects().fetchObjectBcs(
@@ -297,7 +296,7 @@ export class ObjectsApiHelpers {
 	// =========================================================================
 
 	public burnObjectTx = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		object: TransactionObjectArgument;
 	}): Promise<TransactionObjectArgument> => {
 		const { tx, object } = inputs;
@@ -306,12 +305,12 @@ export class ObjectsApiHelpers {
 			[object],
 			// not using constants because of strange build bug on frontend otherwise
 			// tx.pure(Sui.constants.addresses.zero)
-			tx.pure("0x0")
+			"0x0"
 		);
 	};
 
 	public publicShareObjectTx = async (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		object: TransactionObjectArgument;
 		objectType: AnyObjectType;
 	}): Promise<TransactionObjectArgument> => {

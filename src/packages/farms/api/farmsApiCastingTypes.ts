@@ -3,7 +3,7 @@ import {
 	EventOnChain,
 	TableOnChain,
 } from "../../../general/types/castingTypes";
-import { SuiObjectData } from "@mysten/sui.js/client";
+import { SuiObjectData } from "@mysten/sui/client";
 
 // =========================================================================
 //  Objects

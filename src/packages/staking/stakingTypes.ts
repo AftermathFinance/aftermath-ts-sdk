@@ -33,6 +33,7 @@ export interface StakedSuiVaultStateObject extends Object {
 	maxAtomicUnstakeFee: bigint;
 	totalRewardsAmount: Balance;
 	totalSuiAmount: Balance;
+	activeEpoch: bigint;
 }
 
 export interface StakeBalanceDynamicField {

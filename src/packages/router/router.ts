@@ -10,8 +10,13 @@ import {
 	ApiRouterPartialCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
+	ApiRouterAddTransactionForCompleteTradeRouteV0Body,
+	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
+	ModuleName,
+	Slippage,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
+import { Transaction } from "@mysten/sui/transactions";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 /**
@@ -117,6 +122,7 @@ export class Router extends Caller {
 			 * Amount of coin expected to receive
 			 */
 			coinOutAmount: Balance;
+			slippage: Slippage;
 		},
 		abortSignal?: AbortSignal
 	) {
@@ -139,23 +145,57 @@ export class Router extends Caller {
 		);
 	}
 
-	// TODO: update inputs ?
+	public async getTransactionForCompleteTradeRouteV0(
+		inputs: ApiRouterTransactionForCompleteTradeRouteBody
+	) {
+		return this.fetchApiTransactionV0<ApiRouterTransactionForCompleteTradeRouteBody>(
+			"transactions/trade-v0",
+			inputs
+		);
+	}
+
 	public async addTransactionForCompleteTradeRoute(
 		inputs: Omit<
 			ApiRouterAddTransactionForCompleteTradeRouteBody,
 			"serializedTx"
 		> & {
-			tx: TransactionBlock;
+			tx: Transaction;
 		}
 	) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApi<
+		const { tx: newTx, coinOutId } = await this.fetchApi<
 			ApiRouterAddTransactionForCompleteTradeRouteResponse,
 			ApiRouterAddTransactionForCompleteTradeRouteBody
 		>("transactions/add-trade", {
 			...otherInputs,
 			serializedTx: tx.serialize(),
 		});
+		return {
+			tx: Transaction.from(newTx),
+			coinOutId,
+		};
+	}
+
+	public async addTransactionForCompleteTradeRouteV0(
+		inputs: Omit<
+			ApiRouterAddTransactionForCompleteTradeRouteV0Body,
+			"serializedTx"
+		> & {
+			tx: TransactionBlock;
+		}
+	) {
+		const { tx, ...otherInputs } = inputs;
+		const { tx: newTx, coinOutId } = await this.fetchApi<
+			ApiRouterAddTransactionForCompleteTradeRouteV0Response,
+			ApiRouterAddTransactionForCompleteTradeRouteV0Body
+		>("transactions/add-trade-v0", {
+			...otherInputs,
+			serializedTx: tx.serialize(),
+		});
+		return {
+			tx: TransactionBlock.from(newTx),
+			coinOutId,
+		};
 	}
 
 	// =========================================================================

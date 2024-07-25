@@ -1,4 +1,6 @@
 import {
+	DaoFeePoolObject,
+	DaoFeePoolOwnerCapObject,
 	PoolCoins,
 	PoolDepositEvent,
 	PoolObject,
@@ -14,12 +16,15 @@ import {
 	PoolTradeEventOnChain,
 	PoolDepositEventOnChain,
 	PoolWithdrawEventOnChain,
+	DaoFeePoolFieldsOnChain,
+	PoolsIndexerResponse,
+	DaoFeePoolOwnerCapFieldsOnChain,
 } from "./poolsApiCastingTypes";
 import { Coin } from "../../coin";
 import { Helpers } from "../../../general/utils";
 import { AnyObjectType, ObjectId } from "../../../types";
 import { IndexerEventOnChain } from "../../../general/types/castingTypes";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class PoolsApiCasting {
 	// =========================================================================
@@ -84,76 +89,113 @@ export class PoolsApiCasting {
 		};
 	};
 
-	public static poolObjectFromIndexer = (data: {
+	public static poolObjectsFromIndexerResponse = (
+		response: PoolsIndexerResponse
+	): PoolObject[] => {
+		return response.map((data) => {
+			const objectType = Helpers.addLeadingZeroesToType(data.type);
+			const poolFieldsOnChain = data.content;
+			const lpCoinType = Helpers.addLeadingZeroesToType(
+				new Coin(poolFieldsOnChain.lp_supply.type).innerCoinType
+			);
+			const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
+				(acc, cur, index) => ({
+					...acc,
+					[Helpers.addLeadingZeroesToType("0x" + cur)]: {
+						weight: BigInt(poolFieldsOnChain.weights[index]),
+						balance:
+							BigInt(
+								poolFieldsOnChain.normalized_balances[index]
+							) /
+							BigInt(poolFieldsOnChain.decimal_scalars[index]),
+						tradeFeeIn: BigInt(
+							poolFieldsOnChain.fees_swap_in[index]
+						),
+						tradeFeeOut: BigInt(
+							poolFieldsOnChain.fees_swap_out[index]
+						),
+						depositFee: BigInt(
+							poolFieldsOnChain.fees_deposit[index]
+						),
+						withdrawFee: BigInt(
+							poolFieldsOnChain.fees_withdraw[index]
+						),
+						normalizedBalance: BigInt(
+							poolFieldsOnChain.normalized_balances[index]
+						),
+						decimalsScalar: BigInt(
+							poolFieldsOnChain.decimal_scalars[index]
+						),
+						...(poolFieldsOnChain.coin_decimals
+							? {
+									decimals: Number(
+										poolFieldsOnChain.coin_decimals[index]
+									),
+							  }
+							: {}),
+					},
+				}),
+				{}
+			);
+			const daoFeePoolObject =
+				data.daoFeePoolObject.length === 1
+					? this.daoFeePoolObjectFromIndexerResponse(
+							data.daoFeePoolObject[0]
+					  )
+					: undefined;
+			return {
+				objectType,
+				lpCoinType,
+				coins,
+				daoFeePoolObject,
+				objectId: Helpers.addLeadingZeroesToType(data.objectId),
+				name: poolFieldsOnChain.name,
+				creator: poolFieldsOnChain.creator,
+				lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
+				illiquidLpCoinSupply: BigInt(
+					poolFieldsOnChain.illiquid_lp_supply
+				),
+				flatness: BigInt(poolFieldsOnChain.flatness),
+				lpCoinDecimals: Number(poolFieldsOnChain.lp_decimals),
+			};
+		});
+	};
+
+	public static daoFeePoolObjectFromIndexerResponse = (data: {
 		objectId: ObjectId;
 		type: AnyObjectType;
-		content: any;
-	}): PoolObject => {
+		content: {
+			fields: DaoFeePoolFieldsOnChain;
+		};
+	}): DaoFeePoolObject => {
+		const objectId = Helpers.addLeadingZeroesToType(data.objectId);
 		const objectType = Helpers.addLeadingZeroesToType(data.type);
-
-		const poolFieldsOnChain = data.content as PoolFieldsOnChain;
-
-		const lpCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(poolFieldsOnChain.lp_supply.type).innerCoinType
-		);
-
-		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
-			(acc, cur, index) => ({
-				...acc,
-				[Helpers.addLeadingZeroesToType("0x" + cur)]: {
-					weight: BigInt(poolFieldsOnChain.weights[index]),
-					balance:
-						BigInt(poolFieldsOnChain.normalized_balances[index]) /
-						BigInt(poolFieldsOnChain.decimal_scalars[index]),
-					tradeFeeIn: BigInt(poolFieldsOnChain.fees_swap_in[index]),
-					tradeFeeOut: BigInt(poolFieldsOnChain.fees_swap_out[index]),
-					depositFee: BigInt(poolFieldsOnChain.fees_deposit[index]),
-					withdrawFee: BigInt(poolFieldsOnChain.fees_withdraw[index]),
-					normalizedBalance: BigInt(
-						poolFieldsOnChain.normalized_balances[index]
-					),
-					decimalsScalar: BigInt(
-						poolFieldsOnChain.decimal_scalars[index]
-					),
-					...(poolFieldsOnChain.coin_decimals
-						? {
-								decimals: Number(
-									poolFieldsOnChain.coin_decimals[index]
-								),
-						  }
-						: {}),
-				},
-			}),
-			{}
-		);
+		const fields = data.content.fields;
 
 		return {
+			objectId,
 			objectType,
-			objectId: Helpers.addLeadingZeroesToType(data.objectId),
-			lpCoinType,
-			name: poolFieldsOnChain.name,
-			creator: poolFieldsOnChain.creator,
-			lpCoinSupply: BigInt(poolFieldsOnChain.lp_supply.fields.value),
-			illiquidLpCoinSupply: BigInt(poolFieldsOnChain.illiquid_lp_supply),
-			flatness: BigInt(poolFieldsOnChain.flatness),
-			lpCoinDecimals: Number(poolFieldsOnChain.lp_decimals),
-			coins,
+			feeBps: BigInt(fields.fee_bps),
+			feeRecipient: Helpers.addLeadingZeroesToType(fields.fee_recipient),
 		};
 	};
 
-	public static poolObjectIdFromSuiObjectResponse = (
+	public static daoFeePoolOwnerCapObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): ObjectId => {
-		const content = data.data?.content;
-		if (content?.dataType !== "moveObject")
-			throw new Error("sui object response is not an object");
+	): DaoFeePoolOwnerCapObject => {
+		const objectType = Helpers.getObjectType(data);
 
-		const fields = content.fields as {
-			name: AnyObjectType; // lp coin type
-			value: ObjectId; // pool object id
+		const fields = Helpers.getObjectFields(
+			data
+		) as DaoFeePoolOwnerCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: Helpers.getObjectId(data),
+			daoFeePoolId: Helpers.addLeadingZeroesToType(
+				fields.dao_fee_pool_id
+			),
 		};
-
-		return fields.value;
 	};
 
 	// =========================================================================

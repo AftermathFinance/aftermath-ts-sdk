@@ -15,29 +15,41 @@ import {
 	RouterAddresses,
 	Percentage,
 	RouterTradePath,
+	MoveErrorCode,
+	ModuleName,
+	PackageId,
 } from "../../../types";
 import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
+	TransactionObjectArgument,
+	Transaction,
+} from "@mysten/sui/transactions";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 import { Casting, Coin, Helpers } from "../../..";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { TransactionObjectArgument as TransactionObjectArgumentV0 } from "@mysten/sui.js/transactions";
+import {
+	MoveErrors,
+	MoveErrorsInterface,
+} from "../../../general/types/moveErrorsInterface";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
  * @class
  */
-export class RouterApi {
+export class RouterApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
 
 	public static readonly constants = {
 		moduleNames: {
-			swapCap: "swap_cap",
+			router: "router",
+			protocolFee: "protocol_fee",
+			version: "version",
+			admin: "admin",
 		},
 		eventNames: {
 			routerTrade: "SwapCompletedEvent",
@@ -52,6 +64,7 @@ export class RouterApi {
 	public readonly eventTypes: {
 		routerTrade: AnyObjectType;
 	};
+	public readonly moveErrors: MoveErrors;
 
 	// =========================================================================
 	//  Constructor
@@ -71,6 +84,38 @@ export class RouterApi {
 		this.addresses = this.Provider.addresses.router;
 		this.eventTypes = {
 			routerTrade: this.routerTradeEventType(),
+		};
+		this.moveErrors = {
+			[this.addresses.packages.utils]: {
+				[RouterApi.constants.moduleNames.protocolFee]: {
+					/// A non-one-time-witness type has been provided to the `ProtocolFeeConfig`'s `create` function.
+					1: "Protocol Fee Config Already Created",
+					/// Occurs when `change_fee` is called more than once during the same Epoch.
+					2: "Bad Epoch",
+					/// A user provided a new protocol fees that do not sum to one.
+					3: "Not Normalized",
+				},
+				[RouterApi.constants.moduleNames.router]: {
+					0: "Not Authorized",
+					1: "Invalid Coin In",
+					2: "Invalid Coin Out",
+					4: "Invalid Previous Swap",
+					5: "Invalid Slippage",
+					/// A route is constructed that bypasses one of `begin_router_tx_and_pay_fees` or
+					///  `end_router_tx_and_pay_fees`.
+					6: "No Fees Paid",
+				},
+				[RouterApi.constants.moduleNames.version]: {
+					/// A user tries to interact with an old contract.
+					0: "Invalid Version",
+				},
+				[RouterApi.constants.moduleNames.admin]: {
+					/// Admin has not authorized the calling shared object to acess a permissioned function.
+					0: "Not Authorized",
+					/// Admin has already authorized the calling shared object to acess a permissioned function.
+					1: "Already Authorized",
+				},
+			},
 		};
 	}
 
@@ -173,8 +218,8 @@ export class RouterApi {
 			>(
 				"router/forward-trade-route",
 				{
-					from_coin_type: coinInType,
-					to_coin_type: coinOutType,
+					from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
+					to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
 					// NOTE: is this conversion safe ?
 					input_amount: Number(coinInAmount),
 					referred: referrer !== undefined,
@@ -184,8 +229,6 @@ export class RouterApi {
 				undefined,
 				true
 			);
-
-		console.log("paths", JSON.stringify(paths, null, 4));
 
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
@@ -212,6 +255,7 @@ export class RouterApi {
 		coinInType: CoinType;
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
+		slippage: Slippage;
 		referrer?: SuiAddress;
 		externalFee?: ExternalFee;
 	}): Promise<RouterCompleteTradeRoute> => {
@@ -221,6 +265,7 @@ export class RouterApi {
 			coinOutAmount,
 			referrer,
 			externalFee,
+			slippage,
 		} = inputs;
 
 		const { paths } = await this.Provider.indexerCaller.fetchIndexer<
@@ -237,10 +282,13 @@ export class RouterApi {
 		>(
 			"router/backward-trade-route",
 			{
-				from_coin_type: coinInType,
-				to_coin_type: coinOutType,
+				from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
+				to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
 				// NOTE: is this conversion safe ?
-				output_amount: Number(coinOutAmount),
+				output_amount: Math.ceil(
+					(1 + slippage + (externalFee?.feePercentage ?? 0)) *
+						Number(coinOutAmount)
+				),
 				referred: referrer !== undefined,
 			},
 			undefined,
@@ -248,8 +296,6 @@ export class RouterApi {
 			undefined,
 			true
 		);
-
-		console.log("paths", JSON.stringify(paths, null, 4));
 
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
@@ -264,6 +310,7 @@ export class RouterApi {
 			// NOTE: should these be here ?
 			referrer,
 			externalFee,
+			slippage,
 		};
 	};
 
@@ -272,17 +319,17 @@ export class RouterApi {
 		coinInAmount: Balance;
 		coinOutType: CoinType;
 		slippage: Slippage;
-		tx?: TransactionBlock;
-		coinIn?: TransactionArgument;
+		tx?: Transaction;
+		coinIn?: TransactionObjectArgument;
 		walletAddress?: SuiAddress;
 		referrer?: SuiAddress;
 		externalFee?: ExternalFee;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
 	}): Promise<{
-		tx: TransactionBlock;
+		tx: Transaction;
 		completeRoute: RouterCompleteTradeRoute;
-		coinOut: TransactionArgument;
+		coinOut: TransactionObjectArgument;
 		coinOutAmount: Balance;
 	}> => {
 		const {
@@ -298,7 +345,7 @@ export class RouterApi {
 			transferCoinOut,
 		} = inputs;
 
-		const initTx = inputs.tx ?? new TransactionBlock();
+		const initTx = inputs.tx ?? new Transaction();
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
@@ -345,8 +392,8 @@ export class RouterApi {
 				{
 					slippage,
 					referrer,
-					from_coin_type: coinInType,
-					to_coin_type: coinOutType,
+					from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
+					to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
 					// NOTE: is this conversion safe ?
 					input_amount: Number(coinInAmount),
 					input_coin:
@@ -370,7 +417,7 @@ export class RouterApi {
 				true
 			);
 
-		const tx = TransactionBlock.fromKind(tx_kind);
+		const tx = Transaction.fromKind(tx_kind);
 		RouterApi.transferTxMetadata({
 			initTx,
 			newTx: tx,
@@ -379,8 +426,8 @@ export class RouterApi {
 		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinData({
 			serviceCoinData: output_coin,
 		});
-		if (transferCoinOut) {
-			tx.transferObjects([coinOut], tx.pure(walletAddress));
+		if (transferCoinOut && walletAddress) {
+			tx.transferObjects([coinOut], walletAddress);
 		}
 
 		const completeRoute =
@@ -408,17 +455,17 @@ export class RouterApi {
 		coinOutAmount: Balance;
 		coinOutType: CoinType;
 		slippage: Slippage;
-		tx?: TransactionBlock;
-		coinIn?: TransactionArgument;
+		tx?: Transaction;
+		coinIn?: TransactionObjectArgument;
 		walletAddress?: SuiAddress;
 		referrer?: SuiAddress;
 		externalFee?: ExternalFee;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
 	}): Promise<{
-		tx: TransactionBlock;
+		tx: Transaction;
 		completeRoute: RouterCompleteTradeRoute;
-		coinOut: TransactionArgument;
+		coinOut: TransactionObjectArgument;
 		coinInAmount: Balance;
 	}> => {
 		const {
@@ -433,7 +480,7 @@ export class RouterApi {
 			inputs
 		);
 
-		const initTx = inputs.tx ?? new TransactionBlock();
+		const initTx = inputs.tx ?? new Transaction();
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
@@ -456,8 +503,8 @@ export class RouterApi {
 			coinIn: coinTxArg,
 		});
 
-		if (transferCoinOut) {
-			tx.transferObjects([coinOut], tx.pure(walletAddress));
+		if (transferCoinOut && walletAddress) {
+			tx.transferObjects([coinOut], walletAddress);
 		}
 
 		return {
@@ -475,14 +522,14 @@ export class RouterApi {
 	public fetchTxForCompleteTradeRoute = async (inputs: {
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
-		tx?: TransactionBlock;
-		coinIn?: TransactionArgument;
+		tx?: Transaction;
+		coinIn?: TransactionObjectArgument;
 		walletAddress?: SuiAddress;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
 	}): Promise<{
-		tx: TransactionBlock;
-		coinOut: TransactionArgument;
+		tx: Transaction;
+		coinOut: TransactionObjectArgument;
 	}> => {
 		const {
 			completeRoute,
@@ -496,7 +543,7 @@ export class RouterApi {
 		const externalFee = inputs.completeRoute.externalFee;
 		const referrer = inputs.completeRoute.referrer;
 
-		const initTx = inputs.tx ?? new TransactionBlock();
+		const initTx = inputs.tx ?? new Transaction();
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
@@ -563,7 +610,8 @@ export class RouterApi {
 				true
 			);
 
-		const tx = TransactionBlock.fromKind(tx_kind);
+		const tx = Transaction.fromKind(tx_kind);
+
 		RouterApi.transferTxMetadata({
 			initTx,
 			newTx: tx,
@@ -572,8 +620,119 @@ export class RouterApi {
 		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinData({
 			serviceCoinData: output_coin,
 		});
-		if (transferCoinOut) {
-			tx.transferObjects([coinOut], tx.pure(walletAddress));
+		if (transferCoinOut && walletAddress) {
+			tx.transferObjects([coinOut], walletAddress);
+		}
+
+		return {
+			tx,
+			coinOut,
+		};
+	};
+
+	public fetchTxForCompleteTradeRouteV0 = async (inputs: {
+		completeRoute: RouterCompleteTradeRoute;
+		slippage: Slippage;
+		tx?: TransactionBlock;
+		coinIn?: TransactionObjectArgumentV0;
+		walletAddress?: SuiAddress;
+		isSponsoredTx?: boolean;
+		transferCoinOut?: boolean;
+	}): Promise<{
+		tx: TransactionBlock;
+		coinOut: TransactionObjectArgumentV0;
+	}> => {
+		const {
+			completeRoute,
+			walletAddress,
+			coinIn,
+			isSponsoredTx,
+			slippage,
+			transferCoinOut,
+		} = inputs;
+
+		const externalFee = inputs.completeRoute.externalFee;
+		const referrer = inputs.completeRoute.referrer;
+
+		const initTx = inputs.tx ?? new TransactionBlock();
+		if (walletAddress) initTx.setSender(walletAddress);
+
+		const coinTxArg =
+			coinIn ??
+			(walletAddress
+				? await this.Provider.Coin().fetchCoinWithAmountTx({
+						tx: initTx,
+						coinAmount: completeRoute.coinIn.amount,
+						coinType: completeRoute.coinIn.type,
+						walletAddress,
+						isSponsoredTx,
+				  })
+				: (() => {
+						throw new Error("no walletAddress provided");
+				  })());
+
+		const txBytes = await initTx.build({
+			client: this.Provider.providerV0,
+			onlyTransactionKind: true,
+		});
+		const b64TxBytes = Buffer.from(txBytes).toString("base64");
+
+		const { output_coin, tx_kind } =
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					output_coin: ServiceCoinData;
+					tx_kind: SerializedTransaction;
+				},
+				{
+					paths: RouterServicePaths;
+					input_coin: ServiceCoinData;
+					slippage: number;
+					tx_kind: SerializedTransaction;
+					referrer?: SuiAddress;
+					router_fee_recipient?: SuiAddress;
+					router_fee?: number; // u64 format (same as on-chain)
+				}
+			>(
+				"router/tx-from-trade-route",
+				{
+					slippage,
+					referrer,
+					paths: Casting.router.routerServicePathsFromCompleteTradeRoute(
+						completeRoute
+					),
+					input_coin:
+						Helpers.transactions.serviceCoinDataFromCoinTxArgV0({
+							coinTxArg,
+						}),
+					tx_kind: b64TxBytes,
+					router_fee_recipient: externalFee?.recipient,
+					// NOTE: is this conversion safe ?
+					router_fee: externalFee
+						? Number(
+								Casting.numberToFixedBigInt(
+									externalFee.feePercentage
+								)
+						  )
+						: undefined,
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+
+		const tx = TransactionBlock.fromKind(tx_kind);
+
+		RouterApi.transferTxMetadataV0({
+			initTx,
+			newTx: tx,
+		});
+
+		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinDataV0({
+			serviceCoinData: output_coin,
+		});
+		if (transferCoinOut && walletAddress) {
+			tx.transferObjects([coinOut], walletAddress);
 		}
 
 		return {
@@ -692,33 +851,64 @@ export class RouterApi {
 	// =========================================================================
 
 	private static transferTxMetadata = (inputs: {
+		initTx: Transaction;
+		newTx: Transaction;
+	}) => {
+		const { initTx, newTx } = inputs;
+
+		const sender = initTx.getData().sender;
+		if (sender) newTx.setSender(sender);
+
+		const expiration = initTx.getData().expiration;
+		if (expiration) newTx.setExpiration(expiration);
+
+		const gasData = initTx.getData().gasData;
+
+		if (gasData.budget && typeof gasData.budget !== "string")
+			newTx.setGasBudget(gasData.budget);
+
+		if (gasData.owner) newTx.setGasOwner(gasData.owner);
+
+		if (gasData.payment) newTx.setGasPayment(gasData.payment);
+
+		if (gasData.price && typeof gasData.price !== "string")
+			newTx.setGasPrice(gasData.price);
+	};
+
+	private static transferTxMetadataV0 = (inputs: {
 		initTx: TransactionBlock;
 		newTx: TransactionBlock;
 	}) => {
 		const { initTx, newTx } = inputs;
 
-		if (initTx.blockData.sender) newTx.setSender(initTx.blockData.sender);
+		const sender = initTx.blockData.sender;
+		if (sender) newTx.setSender(sender);
 
-		if (initTx.blockData.expiration)
-			newTx.setExpiration(initTx.blockData.expiration);
+		const expiration = initTx.blockData.expiration;
+		if (expiration && !("None" in expiration && expiration.None === null))
+			// @ts-ignore
+			newTx.setExpiration(expiration);
 
-		if (
-			initTx.blockData.gasConfig.budget &&
-			typeof initTx.blockData.gasConfig.budget !== "string"
-		)
-			newTx.setGasBudget(initTx.blockData.gasConfig.budget);
+		const gasData = initTx.blockData.gasConfig;
 
-		if (initTx.blockData.gasConfig.owner)
-			newTx.setGasOwner(initTx.blockData.gasConfig.owner);
+		if (gasData.budget && typeof gasData.budget !== "string")
+			newTx.setGasBudget(gasData.budget);
 
-		if (initTx.blockData.gasConfig.payment)
-			newTx.setGasPayment(initTx.blockData.gasConfig.payment);
+		if (gasData.owner) newTx.setGasOwner(gasData.owner);
 
-		if (
-			initTx.blockData.gasConfig.price &&
-			typeof initTx.blockData.gasConfig.price !== "string"
-		)
-			newTx.setGasPrice(initTx.blockData.gasConfig.price);
+		if (gasData.payment)
+			newTx.setGasPayment(
+				gasData.payment.map((payment) => ({
+					...payment,
+					version:
+						typeof payment.version === "bigint"
+							? Number(payment.version)
+							: payment.version,
+				}))
+			);
+
+		if (gasData.price && typeof gasData.price !== "string")
+			newTx.setGasPrice(gasData.price);
 	};
 
 	// =========================================================================
@@ -728,7 +918,7 @@ export class RouterApi {
 	private routerTradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.utils,
-			RouterApi.constants.moduleNames.swapCap,
+			RouterApi.constants.moduleNames.router,
 			RouterApi.constants.eventNames.routerTrade
 		);
 }

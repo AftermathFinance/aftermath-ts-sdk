@@ -1,10 +1,10 @@
-import { SuiObjectChange, SuiObjectChangeCreated } from "@mysten/sui.js/client";
+import { SuiObjectChange, SuiObjectChangeCreated } from "@mysten/sui/client";
 import { fromB64 } from "@mysten/bcs";
 import { AftermathApi } from "../src/general/providers";
 import { PerpetualsAccount, PerpetualsMarket } from "../src/packages";
-import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-import { RawSigner } from "@mysten/sui.js/dist/cjs/signers/raw-signer";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { ObjectId, SuiAddress } from "../src/types";
+import { Signer } from "@mysten/sui/cryptography";
 
 export const adminPrivateKey = "AFHMjegm2IwuiLemXb6o7XvuDL7xn1JTHc66CZefYY+B";
 export const user1PrivateKey = "AOzplQlAK2Uznvog7xmcMtlFC+DfuJx3axo9lfyI876G";
@@ -29,13 +29,12 @@ export const MARKET_ID1 = BigInt(1);
 export const getSigner = (
 	private_key: string,
 	providerApi: AftermathApi
-): RawSigner => {
+): Signer => {
 	const decoded_array_buffer = fromB64(private_key); // UInt8Array
 	const decoded_array = Array.from(decoded_array_buffer);
 	decoded_array.shift(); // shift the scheme flag byte which should be 0 since it is ed25519
 	const seed = Uint8Array.from(decoded_array);
-	const keypair = Ed25519Keypair.fromSecretKey(seed);
-	return new RawSigner(keypair, providerApi.provider);
+	return Ed25519Keypair.fromSecretKey(seed);
 };
 
 export const fromOraclePriceToOrderbookPrice = (
@@ -55,7 +54,7 @@ export async function getPerpetualsAccount(
 ): Promise<PerpetualsAccount> {
 	let accountObj = await aftermathApi
 		.Perpetuals()
-		.fetchAccount({ collateralCoinType: coinType, accountId });
+		.fetchAccount({ accountId });
 	let accCap = await aftermathApi.Perpetuals().fetchOwnedAccountCapsOfType({
 		walletAddress,
 		collateralCoinType: coinType,

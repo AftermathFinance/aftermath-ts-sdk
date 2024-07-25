@@ -1,3 +1,4 @@
+import { TransactionArgument } from "@mysten/sui.js/transactions";
 import {
 	AnyObjectType,
 	Balance,
@@ -13,7 +14,8 @@ import {
 	ExternalFee,
 } from "../../general/types/generalTypes";
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
-import { TransactionArgument } from "@mysten/sui.js/transactions";
+import { TransactionObjectArgument } from "@mysten/sui/transactions";
+import { TransactionObjectArgument as TransactionObjectArgumentV0 } from "@mysten/sui.js/transactions";
 
 // =========================================================================
 //  Name Only
@@ -47,7 +49,8 @@ export type RouterProtocolName =
 	| "Cetus"
 	| "Turbos"
 	| "DeepBook"
-	| "FlowX";
+	| "FlowX"
+	| "FlowXClmm";
 
 // =========================================================================
 //  Paths
@@ -58,6 +61,7 @@ export type RouterCompleteTradeRoute = RouterTradeInfo & {
 	netTradeFeePercentage: Percentage;
 	referrer?: SuiAddress;
 	externalFee?: ExternalFee;
+	slippage?: Slippage;
 };
 
 /**
@@ -141,6 +145,7 @@ export type ApiRouterCompleteTradeRouteBody =
 					 * Amount of coin expected to receive
 					 */
 					coinOutAmount: Balance;
+					slippage: Slippage;
 			  }
 		);
 
@@ -166,12 +171,23 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 export type ApiRouterAddTransactionForCompleteTradeRouteBody =
 	ApiRouterTransactionForCompleteTradeRouteBody & {
 		serializedTx: SerializedTransaction;
-		coinInId?: TransactionArgument;
+		coinInId?: TransactionObjectArgument;
+	};
+
+export type ApiRouterAddTransactionForCompleteTradeRouteV0Body =
+	ApiRouterTransactionForCompleteTradeRouteBody & {
+		serializedTx: SerializedTransaction;
+		coinInId?: TransactionObjectArgumentV0;
 	};
 
 export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
 	tx: SerializedTransaction;
-	coinOutId: TransactionArgument | undefined;
+	coinOutId: TransactionObjectArgument | undefined;
+}
+
+export interface ApiRouterAddTransactionForCompleteTradeRouteV0Response {
+	tx: SerializedTransaction;
+	coinOutId: TransactionObjectArgumentV0 | undefined;
 }
 
 export type ApiRouterTradeEventsBody = ApiEventsBody & {

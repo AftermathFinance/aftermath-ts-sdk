@@ -41,8 +41,7 @@ import {
 } from "../farmsTypes";
 import { Coin } from "../../coin/coin";
 import { Helpers } from "../../../general/utils";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
-import { BigIntAsString } from "../../../types";
+import { SuiObjectResponse } from "@mysten/sui/client";
 
 export class FarmsApiCasting {
 	// =========================================================================
@@ -83,11 +82,10 @@ export class FarmsApiCasting {
 					emissionStartTimestamp: Number(
 						fields.emission_start_timestamps_ms[index]
 					),
-
 					lastRewardTimestamp: Number(
 						fields.last_reward_timestamps_ms[index]
 					),
-					rewardsRemaining: BigInt(data.rewardsRemaining[index]),
+					rewardsRemaining: BigInt(data.rewardsRemaining[index] ?? 0),
 					// NOTE: this should never fallback - dynamic field data should always be found
 					actualRewards: BigInt(
 						data.actualRewards.find(

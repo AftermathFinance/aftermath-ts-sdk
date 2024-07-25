@@ -1,7 +1,4 @@
-import {
-	DisplayFieldsResponse,
-	SuiObjectResponse,
-} from "@mysten/sui.js/client";
+import { DisplayFieldsResponse, SuiObjectResponse } from "@mysten/sui/client";
 import {
 	KioskOwnerCapObject,
 	Nft,

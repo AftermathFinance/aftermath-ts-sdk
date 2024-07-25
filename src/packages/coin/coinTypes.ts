@@ -1,4 +1,4 @@
-import { CoinMetadata } from "@mysten/sui.js/client";
+import { CoinMetadata } from "@mysten/sui/client";
 import {
 	Balance,
 	ObjectId,
@@ -71,7 +71,7 @@ export type ServiceCoinData =
 	| { Result: number }
 	| { NestedResult: [number, number] };
 
-export type CoinTransactionObjectArgument =
+export type CoinTransactionObjectArgumentV0 =
 	| {
 			kind: "Input";
 			index: number;

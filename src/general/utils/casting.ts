@@ -1,20 +1,19 @@
-import { bcs } from "@mysten/sui.js/bcs";
+import { BcsType, bcs } from "@mysten/sui/bcs";
 import { SuiFrensApiCasting } from "../../packages/suiFrens/api/suiFrensApiCasting";
 import { FaucetApiCasting } from "../../packages/faucet/api/faucetApiCasting";
 import { NftAmmApiCasting } from "../../packages/nftAmm/api/nftAmmApiCasting";
 import { PoolsApiCasting } from "../../packages/pools/api/poolsApiCasting";
 import { StakingApiCasting } from "../../packages/staking/api/stakingApiCasting";
-import { Byte, IFixed, SuiAddress } from "../types";
+import { Byte, IFixed, Percentage, SuiAddress } from "../types";
 import { RouterApiCasting } from "../../packages/router/api/routerApiCasting";
-import { bcsRegistry } from "@mysten/sui.js/bcs";
 import { FixedUtils } from "./fixedUtils";
 import { IFixedUtils } from "./iFixedUtils";
 import { PerpetualsApiCasting } from "../../packages/perpetuals/api/perpetualsApiCasting";
 import { FarmsApiCasting } from "../../packages/farms/api/farmsApiCasting";
 import { LeveragedStakingApiCasting } from "../../packages/leveragedStaking/api/leveragedStakingApiCasting";
-import { CoinsToBalance, Helpers } from "../..";
-import { BcsTypeName, IndexerSwapVolumeResponse } from "../types/castingTypes";
-import { SuiObjectResponse } from "@mysten/sui.js/client";
+import { Helpers } from "../..";
+import { BcsTypeName } from "../types/castingTypes";
+import { SuiObjectResponse } from "@mysten/sui/client";
 import { NftsApiCasting } from "../nfts/nftsApiCasting";
 
 /**
@@ -69,6 +68,26 @@ export class Casting {
 		BigInt(Math.floor(scalar * Number(int)));
 
 	// =========================================================================
+	//  Fixed
+	// =========================================================================
+
+	public static percentageToBps(percentage: Percentage): bigint {
+		// Convert decimal percentage to basis points
+		const bps = percentage * 10000;
+		// Convert basis points to bigint
+		const bpsBigint = BigInt(Math.round(bps));
+		return bpsBigint;
+	}
+
+	public static bpsToPercentage(bps: bigint): Percentage {
+		// Convert bigint basis points to number
+		const bpsNumber = Number(bps);
+		// Convert basis points to decimal percentage
+		const percentage = bpsNumber / 10000;
+		return percentage;
+	}
+
+	// =========================================================================
 	//  Bytes / BCS
 	// =========================================================================
 
@@ -86,7 +105,7 @@ export class Casting {
 
 	public static addressFromBcsBytes = (bytes: Byte[]): SuiAddress =>
 		Helpers.addLeadingZeroesToType(
-			"0x" + bcs.de("address", new Uint8Array(bytes))
+			bcs.Address.parse(new Uint8Array(bytes))
 		);
 
 	public static addressFromBytes = (bytes: Byte[]): SuiAddress =>
@@ -132,19 +151,17 @@ export class Casting {
 		return slippageTolerance / 100;
 	};
 
-	public static castObjectBcs = <T>(inputs: {
+	public static castObjectBcs = <T, U>(inputs: {
 		suiObjectResponse: SuiObjectResponse;
-		typeName: BcsTypeName;
+		bcsType: BcsType<U>;
 		fromDeserialized: (deserialized: any) => T;
-		bcs: typeof bcsRegistry;
 	}): T => {
-		const { suiObjectResponse, typeName, fromDeserialized } = inputs;
+		const { suiObjectResponse, bcsType, fromDeserialized } = inputs;
 
-		const deserialized = inputs.bcs.de(
-			typeName,
-			this.bcsBytesFromSuiObjectResponse(suiObjectResponse),
-			"base64"
+		const deserialized = bcsType.fromBase64(
+			this.bcsBytesFromSuiObjectResponse(suiObjectResponse)
 		);
+
 		return fromDeserialized(deserialized);
 	};
 

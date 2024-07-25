@@ -1,8 +1,5 @@
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
-import { bcs } from "@mysten/sui.js/bcs";
+import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
+import { bcs } from "@mysten/sui/bcs";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	MixSuiFrensEvent,
@@ -163,7 +160,7 @@ export class SuiFrensApi {
 			lastEpochMixed: bigint | undefined;
 		}[]
 	> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		this.devInspectMixLimitAndLastEpochMixedMulTx({ ...inputs, tx });
 
 		const [mixLimitBytes, lastEpochMixedBytes] =
@@ -171,16 +168,19 @@ export class SuiFrensApi {
 				tx,
 			});
 
-		const mixLimits: any[] = bcs
-			.de("vector<Option<u8>>", new Uint8Array(mixLimitBytes))
-			.map((data: any) => Casting.unwrapDeserializedOption(data));
+		const mixLimits = bcs
+			.vector(bcs.option(bcs.u8()))
+			.parse(new Uint8Array(mixLimitBytes));
 
 		const lastEpochMixeds: any[] = bcs
-			.de("vector<Option<u64>>", new Uint8Array(lastEpochMixedBytes))
-			.map((data: any) => Casting.unwrapDeserializedOption(data));
+			.vector(bcs.option(bcs.u64()))
+			.parse(new Uint8Array(lastEpochMixedBytes));
 
 		return mixLimits.map((mixLimit, index) => ({
-			mixLimit: mixLimit === undefined ? undefined : BigInt(mixLimit),
+			mixLimit:
+				mixLimit === null || mixLimit === undefined
+					? undefined
+					: BigInt(mixLimit),
 			lastEpochMixed:
 				lastEpochMixeds[index] === undefined
 					? undefined
@@ -195,7 +195,7 @@ export class SuiFrensApi {
 		// TODO: handle bullshark types more cleanly
 		if (inputs.suiFrenType === this.objectTypes.bullshark) return undefined;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 
 		this.mixingLimitTx({ tx, ...inputs });
 
@@ -204,10 +204,11 @@ export class SuiFrensApi {
 				tx,
 			});
 
-		const unwrapped = Casting.unwrapDeserializedOption(
-			bcs.de("Option<u8>", new Uint8Array(bytes))
-		);
-		return unwrapped === undefined ? undefined : BigInt(unwrapped);
+		const unwrapped = bcs.option(bcs.u8()).parse(new Uint8Array(bytes));
+
+		return unwrapped === null || unwrapped === undefined
+			? undefined
+			: BigInt(unwrapped);
 	};
 
 	public fetchLastEpochMixed = async (inputs: {
@@ -217,7 +218,7 @@ export class SuiFrensApi {
 		// TODO: handle bullshark types more cleanly
 		if (inputs.suiFrenType === this.objectTypes.bullshark) return undefined;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 
 		this.lastEpochMixedTx({ tx, ...inputs });
 
@@ -226,10 +227,11 @@ export class SuiFrensApi {
 				tx,
 			});
 
-		const unwrapped = Casting.unwrapDeserializedOption(
-			bcs.de("Option<u64>", new Uint8Array(bytes))
-		);
-		return unwrapped === undefined ? undefined : BigInt(unwrapped);
+		const unwrapped = bcs.option(bcs.u64()).parse(new Uint8Array(bytes));
+
+		return unwrapped === null || unwrapped === undefined
+			? undefined
+			: BigInt(unwrapped);
 	};
 
 	public fetchStakedSuiFrenMetadataIds = async (inputs: {
@@ -237,7 +239,7 @@ export class SuiFrensApi {
 	}): Promise<ObjectId[]> => {
 		const { suiFrenIds } = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		this.devInspectMetadataObjectIdMulTx({ tx, suiFrenIds });
 
 		const idBytes =
@@ -245,9 +247,9 @@ export class SuiFrensApi {
 				tx,
 			});
 
-		const stakedSuiFrenMetadataIds = (
-			bcs.de("vector<address>", new Uint8Array(idBytes)) as string[]
-		).map((id) => "0x" + id);
+		const stakedSuiFrenMetadataIds = bcs
+			.vector(bcs.Address)
+			.parse(new Uint8Array(idBytes));
 
 		return stakedSuiFrenMetadataIds;
 	};
@@ -571,7 +573,7 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	public devInspectMetadataObjectIdMulTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiFrenIds: ObjectId[];
 	}) /* vector<address> */ => {
 		const { tx } = inputs;
@@ -585,13 +587,13 @@ export class SuiFrensApi {
 			typeArguments: [],
 			arguments: [
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
-				tx.pure(inputs.suiFrenIds, "vector<address>"), // suifren_ids
+				tx.pure(bcs.vector(bcs.Address).serialize(inputs.suiFrenIds)), // suifren_ids
 			],
 		});
 	};
 
 	public devInspectMixLimitAndLastEpochMixedMulTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiFrenIds: ObjectId[];
 		suiFrenType: AnyObjectType;
 	}) /* (vector<Option<u8>>, vector<Option<u64>>) */ => {
@@ -610,13 +612,13 @@ export class SuiFrensApi {
 					this.addresses.objects.suiFrensVaultCapyLabsExtension
 				), // SuiFrensVaultCapyLabsExt
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
-				tx.pure(inputs.suiFrenIds, "vector<address>"), // suifren_ids
+				tx.pure(bcs.vector(bcs.Address).serialize(inputs.suiFrenIds)), // suifren_ids
 			],
 		});
 	};
 
 	public mixingLimitTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiFrenId: ObjectId;
 		suiFrenType: AnyObjectType;
 	}) /* Option<u8> */ => {
@@ -636,7 +638,7 @@ export class SuiFrensApi {
 	};
 
 	public lastEpochMixedTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiFrenId: ObjectId;
 		suiFrenType: AnyObjectType;
 	}) /* Option<u64> */ => {
@@ -660,7 +662,7 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	public mixAndKeepTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		parentOneId: ObjectId;
 		parentTwoId: ObjectId;
 		suiPaymentCoinId: ObjectId | TransactionArgument;
@@ -695,7 +697,7 @@ export class SuiFrensApi {
 	};
 
 	public mixWithStakedAndKeepTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		nonStakedParentId: ObjectId;
 		stakedParentId: ObjectId;
 		suiPaymentCoinId: ObjectId | TransactionArgument;
@@ -730,7 +732,7 @@ export class SuiFrensApi {
 	};
 
 	public mixStakedWithStakedAndKeepTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		parentOneId: ObjectId;
 		parentTwoId: ObjectId;
 		suiPaymentCoinId: ObjectId | TransactionArgument;
@@ -769,7 +771,7 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	public stakeAndKeepTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiFrenId: ObjectId;
 		autoStakeFees: boolean;
 		baseFee: Balance;
@@ -795,16 +797,16 @@ export class SuiFrensApi {
 				tx.object(this.addresses.objects.suiFrensVault), // SuiFrenVault
 				tx.object(inputs.suiFrenId), // SuiFren
 
-				tx.pure(inputs.autoStakeFees, "bool"),
-				tx.pure(inputs.baseFee, "u64"),
-				tx.pure(inputs.feeIncrementPerMix, "u64"),
-				tx.pure(inputs.minRemainingMixesToKeep, "u8"),
+				tx.pure.bool(inputs.autoStakeFees),
+				tx.pure.u64(inputs.baseFee),
+				tx.pure.u64(inputs.feeIncrementPerMix),
+				tx.pure.u8(Number(inputs.minRemainingMixesToKeep)),
 			],
 		});
 	};
 
 	public unstakeAndKeepTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		stakedPositionId: ObjectId;
 		suiFrenType: AnyObjectType;
 	}) => {
@@ -833,7 +835,7 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	public beginHarvestTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 	}) /* (HarvestedFeesEventMetadata) */ => {
 		const { tx } = inputs;
 
@@ -849,7 +851,7 @@ export class SuiFrensApi {
 	};
 
 	public harvestTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		stakedPositionId: ObjectId;
 		harvestFeesEventMetadataId: ObjectId | TransactionArgument;
 	}) /* (Coin) */ => {
@@ -873,7 +875,7 @@ export class SuiFrensApi {
 	};
 
 	public endHarvestTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		harvestFeesEventMetadataId: ObjectId | TransactionArgument;
 	}) => {
 		const { tx, harvestFeesEventMetadataId } = inputs;
@@ -898,7 +900,7 @@ export class SuiFrensApi {
 	// =========================================================================
 
 	public addAccessoryTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiFrenId: ObjectId;
 		accessoryId: ObjectId;
 		suiFrenType: AnyObjectType;
@@ -921,7 +923,7 @@ export class SuiFrensApi {
 	};
 
 	public addAccessoryToOwnedSuiFrenTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiFrenId: ObjectId;
 		accessoryId: ObjectId;
 		suiFrenType: AnyObjectType;
@@ -943,7 +945,7 @@ export class SuiFrensApi {
 	};
 
 	public removeAccessoryAndKeepTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		stakedPositionId: ObjectId;
 		accessoryType: SuiFrenAccessoryType;
 		suiFrenType: AnyObjectType;
@@ -966,7 +968,7 @@ export class SuiFrensApi {
 	};
 
 	public removeAccessoryFromOwnedSuiFrenAndKeepTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiFrenId: ObjectId;
 		accessoryType: SuiFrenAccessoryType;
 		suiFrenType: AnyObjectType;
@@ -997,7 +999,7 @@ export class SuiFrensApi {
 
 	public fetchStakeTx = Helpers.transactions.createBuildTxFunc(
 		(inputs: {
-			tx: TransactionBlock;
+			tx: Transaction;
 			suiFrenId: ObjectId;
 			baseFee: Balance;
 			feeIncrementPerMix: Balance;
@@ -1016,7 +1018,7 @@ export class SuiFrensApi {
 
 	public fetchBuildMixTx = async (
 		inputs: ApiMixSuiFrensBody
-	): Promise<TransactionBlock> => {
+	): Promise<Transaction> => {
 		const {
 			walletAddress,
 			suiFrenParentOne,
@@ -1026,7 +1028,7 @@ export class SuiFrensApi {
 			isSponsoredTx,
 		} = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
 		const totalFee =
@@ -1094,10 +1096,10 @@ export class SuiFrensApi {
 	public fetchBuildHarvestFeesTx = async (inputs: {
 		walletAddress: SuiAddress;
 		stakedPositionIds: ObjectId[];
-	}): Promise<TransactionBlock> => {
+	}): Promise<Transaction> => {
 		const { stakedPositionIds } = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		const harvestFeesEventMetadataId = this.beginHarvestTx({ tx });
@@ -1118,7 +1120,7 @@ export class SuiFrensApi {
 		if (harvestedCoins.length > 1)
 			tx.mergeCoins(coinToTransfer, harvestedCoins.slice(1));
 
-		tx.transferObjects([coinToTransfer], tx.pure(inputs.walletAddress));
+		tx.transferObjects([coinToTransfer], inputs.walletAddress);
 
 		this.endHarvestTx({ tx, harvestFeesEventMetadataId });
 

@@ -17,7 +17,7 @@ import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { Prices } from "../../general/prices/prices";
 import { AftermathApi } from "../../general/providers";
-import { CoinMetadata } from "@mysten/sui.js/client";
+import { CoinMetadata } from "@mysten/sui/client";
 
 export class Coin extends Caller {
 	// =========================================================================
@@ -127,6 +127,10 @@ export class Coin extends Caller {
 
 	public setPriceInfo(priceInfo: CoinPriceInfo) {
 		this.priceInfo = priceInfo;
+	}
+
+	public async getVerifiedCoins() {
+		return this.fetchApi<CoinType[]>("verified");
 	}
 
 	// =========================================================================

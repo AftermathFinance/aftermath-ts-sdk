@@ -1,4 +1,3 @@
-import { SerializedSignature } from "@mysten/sui.js/cryptography";
 import { CoinType } from "../../types";
 import { SerializedTransaction, SuiAddress } from "../types";
 
@@ -14,5 +13,5 @@ export interface ApiDynamicGasBody {
 
 export interface ApiDynamicGasResponse {
 	txBytes: SerializedTransaction;
-	sponsoredSignature: SerializedSignature;
+	sponsoredSignature: string;
 }

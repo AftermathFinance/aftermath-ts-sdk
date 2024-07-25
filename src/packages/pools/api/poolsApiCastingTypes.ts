@@ -36,6 +36,16 @@ export interface PoolFieldsOnChain {
 	coin_decimals?: BigIntAsString[];
 }
 
+export interface DaoFeePoolFieldsOnChain {
+	fee_bps: BigIntAsString;
+	fee_recipient: SuiAddress;
+}
+
+export interface DaoFeePoolOwnerCapFieldsOnChain {
+	id: ObjectId;
+	dao_fee_pool_id: ObjectId;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -94,3 +104,24 @@ export type PoolDepositEventOnChain =
 
 export type PoolWithdrawEventOnChain =
 	EventOnChain<PoolWithdrawEventFieldsOnChain>;
+
+// =========================================================================
+//  Indexer
+// =========================================================================
+
+export type PoolsIndexerResponse = {
+	objectId: ObjectId;
+	type: AnyObjectType;
+	content: PoolFieldsOnChain;
+	daoFeePoolObject:
+		| [
+				{
+					objectId: ObjectId;
+					type: AnyObjectType;
+					content: {
+						fields: DaoFeePoolFieldsOnChain;
+					};
+				}
+		  ]
+		| [];
+}[];

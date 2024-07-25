@@ -1,9 +1,9 @@
 import {
 	TransactionArgument,
-	TransactionBlock,
+	Transaction,
 	TransactionObjectArgument,
-} from "@mysten/sui.js/transactions";
-import { DelegatedStake, ValidatorsApy } from "@mysten/sui.js/client";
+} from "@mysten/sui/transactions";
+import { DelegatedStake, ValidatorsApy } from "@mysten/sui/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	StakeEvent,
@@ -49,8 +49,12 @@ import { StakingApiCasting } from "./stakingApiCasting";
 import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { ValidatorConfigOnIndexer } from "./stakingApiCastingTypes";
 import { Staking } from "../..";
+import {
+	MoveErrors,
+	MoveErrorsInterface,
+} from "../../../general/types/moveErrorsInterface";
 
-export class StakingApi {
+export class StakingApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -62,6 +66,9 @@ export class StakingApi {
 			stakedSuiVault: "staked_sui_vault",
 			stakedSuiVaultState: "staked_sui_vault_state",
 			routerWrapper: "router",
+			sort: "sort",
+			receipt: "receipt",
+			calculations: "calculations",
 		},
 		eventNames: {
 			staked: "StakedEvent",
@@ -76,21 +83,19 @@ export class StakingApi {
 	// =========================================================================
 
 	public readonly addresses: StakingAddresses;
-
 	public readonly eventTypes: {
 		staked: AnyObjectType;
 		unstakeRequested: AnyObjectType;
 		unstaked: AnyObjectType;
 		epochWasChanged: AnyObjectType;
 	};
-
 	public readonly coinTypes: {
 		afSui: CoinType;
 	};
-
 	public readonly objectTypes: {
 		unverifiedValidatorOperationCap: AnyObjectType;
 	};
+	public readonly moveErrors: MoveErrors;
 
 	// =========================================================================
 	//  Constructor
@@ -103,20 +108,78 @@ export class StakingApi {
 			);
 
 		this.addresses = this.Provider.addresses.staking;
-
 		this.eventTypes = {
 			staked: this.stakedEventType(),
 			unstakeRequested: this.unstakeRequestedEventType(),
 			unstaked: this.unstakedEventType(),
 			epochWasChanged: this.epochWasChangedEventType(),
 		};
-
 		this.coinTypes = {
 			afSui: `${this.addresses.packages.afsui}::afsui::AFSUI`,
 		};
-
 		this.objectTypes = {
 			unverifiedValidatorOperationCap: `${this.addresses.packages.lsd}::validator::UnverifiedValidatorOperationCap`,
+		};
+		this.moveErrors = {
+			[this.addresses.packages.lsd]: {
+				[StakingApi.constants.moduleNames.stakedSuiVault]: {
+					/// The admin calls `migrate` on an outdated package.
+					0: "Version Incompatibility",
+					/// A user tries to interact with the `StakedSuiVault` through an outdated package.
+					1: "Wrong Package Version",
+					/// One tries to call deprecated function.
+					2: "Deprecated",
+				},
+				[StakingApi.constants.moduleNames.sort]: {
+					/// One provided keys and values vectors of different lengths.
+					1: "Different Inputs Length",
+					/// Error for tests.
+					2: "Dummy Error",
+				},
+				[StakingApi.constants.moduleNames.calculations]: {
+					/// User provided a percentage value larger than 10^18 = 1 = 100%.
+					0: "Invalid Percentage",
+				},
+				[StakingApi.constants.moduleNames.actions]: {
+					/// Epoch advancement has not yet been processed.
+					0: "Epoch Change Has Not Been Treated",
+					/// Epoch advancement has already been processed.
+					1: "Epoch Change Has Already Been Treated",
+					/// User tried to delegate stake to a validator that is inactive.
+					2: "Validator Is Not Active",
+					/// User tried to delegate stake with value less than the minimum staking threshold.
+					3: "Less Than Minimum Staking Threshold",
+					/// User tried to delegate stake to a validator whose history of exchange rates is too short.
+					4: "Insufficient Validator History",
+					/// User provided an empty vector as input.
+					5: "Empty Vector",
+					/// User requested to unstake more SUI than held in the `atomic_unstake_sui_reserves`.
+					6: "Insufficient Sui Reserves",
+					/// User provided afSUI coin with insufficient balance.
+					7: "Insufficient Balance afSUI Coin Provided",
+				},
+				[StakingApi.constants.moduleNames.receipt]: {
+					0: "Not Enough Amount In Receipt",
+					1: "Try To Burn Non Zero Receipt",
+				},
+				[StakingApi.constants.moduleNames.stakedSuiVaultState]: {
+					/// One provided value larger than 1 (100%) when opposite is supposed.
+					1: "Invalid Percentage",
+					/// One provided min atomic unstake fee value larger than max atomic unstake fee value.
+					2: "Invalid Atomic Unstake Fees Values",
+					/// A `validator` address - that isn't recognized by the afSUI framework - is provided to a function
+					///  that requests a `ValidatorConfig`.
+					3: "Invalid Validator",
+					/// An address tries to create a `UnverifiedValidatorOperationCap` without being an active validator.
+					4: "Validator Is Not Active",
+					/// An authorized owner of an `UnverifiedValidatorOperationCap` object tries to perform a permissioned
+					///  function for another validator.
+					5: "Invalid Operation Cap",
+					/// An authorized owner of an `UnverifiedValidatorOperationCap` object tries to set a `validator_fee`
+					///  that is greater than the maximum allowed validator fee.
+					6: "Invalid Validator Fee",
+				},
+			},
 		};
 	}
 
@@ -225,7 +288,7 @@ export class StakingApi {
 	 * @returns `Coin<AFSUI>` if `withTransfer` is `undefined` or `false`
 	 */
 	public stakeTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiCoin: ObjectId | TransactionArgument;
 		validatorAddress: SuiAddress;
 		withTransfer?: boolean;
@@ -244,7 +307,7 @@ export class StakingApi {
 				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
 				tx.object(this.addresses.objects.referralVault), // ReferralVault
 				typeof suiCoin === "string" ? tx.object(suiCoin) : suiCoin,
-				tx.pure(inputs.validatorAddress, "address"),
+				tx.pure.address(inputs.validatorAddress),
 			],
 		});
 	};
@@ -256,7 +319,7 @@ export class StakingApi {
 	 * @returns ()
 	 */
 	public unstakeTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		afSuiCoin: ObjectId | TransactionArgument;
 	}) => {
 		const { tx, afSuiCoin } = inputs;
@@ -284,7 +347,7 @@ export class StakingApi {
 	 * @returns `Coin<SUI>` if `withTransfer` is `undefined` or `false`
 	 */
 	public atomicUnstakeTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		afSuiCoin: ObjectId | TransactionArgument;
 		withTransfer?: boolean;
 	}) => {
@@ -315,7 +378,7 @@ export class StakingApi {
 	 * @returns `Coin<AFSUI>` if `withTransfer` is `undefined` or `false`
 	 */
 	public requestStakeStakedSuiVecTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		stakedSuiIds: ObjectId[];
 		validatorAddress: SuiAddress;
 		withTransfer?: boolean;
@@ -323,7 +386,7 @@ export class StakingApi {
 		const { tx, stakedSuiIds, withTransfer } = inputs;
 
 		const stakedSuiIdsVec = tx.makeMoveVec({
-			objects: stakedSuiIds.map((id) => tx.object(id)),
+			elements: stakedSuiIds.map((id) => tx.object(id)),
 		});
 
 		return tx.moveCall({
@@ -340,7 +403,27 @@ export class StakingApi {
 				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
 				tx.object(this.addresses.objects.referralVault), // ReferralVault
 				stakedSuiIdsVec,
-				tx.pure(inputs.validatorAddress, "address"),
+				tx.pure.address(inputs.validatorAddress),
+			],
+		});
+	};
+
+	public epochWasChangedTx = (inputs: { tx: Transaction }) => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.lsd,
+				StakingApi.constants.moduleNames.stakedSuiVault,
+				"epoch_was_changed"
+			),
+			typeArguments: [],
+			arguments: [
+				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
+				tx.object(this.addresses.objects.safe), // Safe
+				tx.object(Sui.constants.addresses.suiSystemStateId), // SuiSystemState
+				tx.object(this.addresses.objects.referralVault), // ReferralVault
+				tx.object(this.addresses.objects.treasury), // Treasury
+				tx.pure.u64(BigInt(1000)), // fields_requests_per_tx
 			],
 		});
 	};
@@ -350,7 +433,7 @@ export class StakingApi {
 	// =========================================================================
 
 	public afSuiToSuiExchangeRateTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 	}) /* (u128) */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
@@ -368,7 +451,7 @@ export class StakingApi {
 	};
 
 	public suiToAfSuiExchangeRateTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 	}) /* (u128) */ => {
 		const { tx } = inputs;
 		return tx.moveCall({
@@ -385,7 +468,7 @@ export class StakingApi {
 		});
 	};
 
-	public totalSuiAmountTx = (inputs: { tx: TransactionBlock }) => {
+	public totalSuiAmountTx = (inputs: { tx: Transaction }) => {
 		const { tx } = inputs;
 		return tx.moveCall({
 			target: AftermathApi.helpers.transactions.createTxTarget(
@@ -399,7 +482,7 @@ export class StakingApi {
 	};
 
 	public afSuiToSuiTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		afSuiAmount: Balance;
 	}) /* (u64) */ => {
 		const { tx } = inputs;
@@ -413,13 +496,13 @@ export class StakingApi {
 			arguments: [
 				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
 				tx.object(this.addresses.objects.safe), // Safe
-				tx.pure(inputs.afSuiAmount, "u64"),
+				tx.pure.u64(inputs.afSuiAmount),
 			],
 		});
 	};
 
 	public suiToAfSuiTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		suiAmount: Balance;
 	}) /* (u64) */ => {
 		const { tx } = inputs;
@@ -433,7 +516,7 @@ export class StakingApi {
 			arguments: [
 				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
 				tx.object(this.addresses.objects.safe), // Safe
-				tx.pure(inputs.suiAmount, "u64"),
+				tx.pure.u64(inputs.suiAmount),
 			],
 		});
 	};
@@ -443,7 +526,7 @@ export class StakingApi {
 	// =========================================================================
 
 	public updateValidatorFeeTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction;
 		validatorOperationCapId: ObjectId;
 		newFee: bigint;
 	}) => {
@@ -461,7 +544,7 @@ export class StakingApi {
 					? tx.object(validatorOperationCapId)
 					: validatorOperationCapId, // UnverifiedValidatorOperationCap
 				tx.object(this.addresses.objects.stakedSuiVault), // StakedSuiVault
-				tx.pure(inputs.newFee, "u64"),
+				tx.pure.u64(inputs.newFee),
 			],
 		});
 	};
@@ -477,12 +560,12 @@ export class StakingApi {
 	 */
 	public fetchBuildStakeTx = async (
 		inputs: ApiStakeBody
-	): Promise<TransactionBlock> => {
+	): Promise<Transaction> => {
 		const { referrer, externalFee } = inputs;
 
 		if (externalFee) StakingApi.assertValidExternalFee(externalFee);
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		if (referrer)
@@ -505,8 +588,8 @@ export class StakingApi {
 					Number(inputs.suiStakeAmount) * externalFee.feePercentage
 				)
 			);
-			const suiFeeCoin = tx.splitCoins(suiCoin, [tx.pure(feeAmount)]);
-			tx.transferObjects([suiFeeCoin], tx.pure(externalFee.recipient));
+			const suiFeeCoin = tx.splitCoins(suiCoin, [feeAmount]);
+			tx.transferObjects([suiFeeCoin], externalFee.recipient);
 		}
 
 		const afSuiCoinId = this.stakeTx({
@@ -515,7 +598,7 @@ export class StakingApi {
 			suiCoin,
 			// withTransfer: true,
 		});
-		tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
+		tx.transferObjects([afSuiCoinId], inputs.walletAddress);
 
 		return tx;
 	};
@@ -527,12 +610,12 @@ export class StakingApi {
 	 */
 	public fetchBuildUnstakeTx = async (
 		inputs: ApiUnstakeBody
-	): Promise<TransactionBlock> => {
+	): Promise<Transaction> => {
 		const { referrer, externalFee } = inputs;
 
 		if (externalFee) StakingApi.assertValidExternalFee(externalFee);
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		if (referrer)
@@ -555,8 +638,8 @@ export class StakingApi {
 						externalFee.feePercentage
 				)
 			);
-			const afSuiFeeCoin = tx.splitCoins(afSuiCoin, [tx.pure(feeAmount)]);
-			tx.transferObjects([afSuiFeeCoin], tx.pure(externalFee.recipient));
+			const afSuiFeeCoin = tx.splitCoins(afSuiCoin, [feeAmount]);
+			tx.transferObjects([afSuiFeeCoin], externalFee.recipient);
 		}
 		if (inputs.isAtomic) {
 			const suiCoinId = this.atomicUnstakeTx({
@@ -565,7 +648,7 @@ export class StakingApi {
 				afSuiCoin,
 				// withTransfer: true,
 			});
-			tx.transferObjects([suiCoinId], tx.pure(inputs.walletAddress));
+			tx.transferObjects([suiCoinId], inputs.walletAddress);
 		} else {
 			this.unstakeTx({
 				tx,
@@ -585,10 +668,10 @@ export class StakingApi {
 	 */
 	public fetchBuildStakeStakedSuiTx = async (
 		inputs: ApiStakeStakedSuiBody
-	): Promise<TransactionBlock> => {
+	): Promise<Transaction> => {
 		const { referrer } = inputs;
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		if (referrer)
@@ -603,15 +686,15 @@ export class StakingApi {
 			...inputs,
 			// withTransfer: true,
 		});
-		tx.transferObjects([afSuiCoinId], tx.pure(inputs.walletAddress));
+		tx.transferObjects([afSuiCoinId], inputs.walletAddress);
 
 		return tx;
 	};
 
 	public buildUpdateValidatorFeeTx = async (
 		inputs: ApiUpdateValidatorFeeBody
-	): Promise<TransactionBlock> => {
-		const tx = new TransactionBlock();
+	): Promise<Transaction> => {
+		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
 		this.updateValidatorFeeTx({
@@ -622,6 +705,10 @@ export class StakingApi {
 
 		return tx;
 	};
+
+	public buildEpochWasChangedTx = Helpers.transactions.createBuildTxFunc(
+		this.epochWasChangedTx
+	);
 
 	// =========================================================================
 	//  Positions
@@ -751,7 +838,7 @@ export class StakingApi {
 	 * @returns SUI staked for afSUI as `bigint`
 	 */
 	public fetchSuiTvl = async (): Promise<Balance> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		this.totalSuiAmountTx({ tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
@@ -761,7 +848,7 @@ export class StakingApi {
 	};
 
 	public fetchAfSuiToSuiExchangeRate = async (): Promise<number> => {
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		this.afSuiToSuiExchangeRateTx({ tx });
 		const bytes =
 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
