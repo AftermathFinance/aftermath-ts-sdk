@@ -72,6 +72,8 @@ import {
 	PerpetualsAccountOrderEventsWithCursor,
 	PerpetualsAccountCollateralChangesWithCursor,
 	ApiPerpetualsSetPositionLeverageBody,
+	ApiPerpetualsAccountOrderHistoryBody,
+	ApiPerpetualsAccountCollateralHistoryBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -390,10 +392,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Events
 	// =========================================================================
 
-	public async fetchAccountCollateralChanges(
-		inputs: ApiDataWithCursorBody<Timestamp> & {
-			accountCapId: ObjectId;
-		}
+	public async fetchAccountCollateralHistory(
+		inputs: ApiPerpetualsAccountCollateralHistoryBody
 	): Promise<PerpetualsAccountCollateralChangesWithCursor> {
 		const { accountCapId, cursor, limit } = inputs;
 
@@ -435,10 +435,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		};
 	}
 
-	public async fetchAccountOrderEvents(
-		inputs: ApiDataWithCursorBody<Timestamp> & {
-			accountCapId: ObjectId;
-		}
+	public async fetchAccountOrderHistory(
+		inputs: ApiPerpetualsAccountOrderHistoryBody
 	): Promise<PerpetualsAccountOrderEventsWithCursor> {
 		const { accountCapId, cursor, limit } = inputs;
 

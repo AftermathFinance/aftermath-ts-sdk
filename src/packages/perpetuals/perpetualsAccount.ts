@@ -43,6 +43,8 @@ import {
 	PerpetualsAccountOrderEventsWithCursor,
 	ApiPerpetualsSetPositionLeverageBody,
 	PerpetualsAccountId,
+	ApiPerpetualsAccountCollateralHistoryBody,
+	ApiPerpetualsAccountOrderHistoryBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -351,29 +353,31 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getCollateralChanges(
+	public async getCollateralHistory(
 		inputs: ApiDataWithCursorBody<Timestamp>
 	) {
 		return this.fetchApi<
 			PerpetualsAccountCollateralChangesWithCursor,
-			ApiDataWithCursorBody<Timestamp>
+			ApiPerpetualsAccountCollateralHistoryBody
 		>(
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/collateral-history`,
-			inputs
+			{
+				...inputs,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public async getOrderEvents(inputs: ApiDataWithCursorBody<Timestamp>) {
-		return this.fetchApiIndexerEvents<
+	public async getOrderHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
+		return this.fetchApi<
 			PerpetualsAccountOrderEventsWithCursor,
-			ApiDataWithCursorBody<Timestamp>
+			ApiPerpetualsAccountOrderHistoryBody
 		>(
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-history`,
-			inputs
+			{
+				...inputs,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 

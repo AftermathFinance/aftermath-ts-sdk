@@ -1,6 +1,7 @@
 import { BcsType, bcs } from "@mysten/sui/bcs";
 import {
 	AnyObjectType,
+	ApiDataWithCursorBody,
 	ApiIndexerEventsBody,
 	Balance,
 	Event,
@@ -628,6 +629,16 @@ export interface ApiPerpetualsAccountsBody {
 // =========================================================================
 //  Inspections
 // =========================================================================
+
+export type ApiPerpetualsAccountOrderHistoryBody =
+	ApiDataWithCursorBody<Timestamp> & {
+		accountCapId: ObjectId;
+	};
+
+export type ApiPerpetualsAccountCollateralHistoryBody =
+	ApiDataWithCursorBody<Timestamp> & {
+		accountCapId: ObjectId;
+	};
 
 export interface ApiPerpetualsSetPositionLeverageBody {
 	walletAddress: SuiAddress;
