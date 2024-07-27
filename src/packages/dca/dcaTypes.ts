@@ -104,7 +104,8 @@ export interface DcaOrderOverviewObject {
 	};
 }
 
-export interface DcaOrderObject extends Object {
+export interface DcaOrderObject {
+	objectId: ObjectId;
 	overview: DcaOrderOverviewObject;
 	trades: DcaOrderTrades;
 }

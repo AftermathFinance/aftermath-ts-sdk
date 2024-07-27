@@ -29,6 +29,8 @@ import {
     DcaClosedOrderEventOnChain, 
     DcaCreatedOrderEventOnChain, 
     DcaExecutedTradeEventOnChain,
+    DcaIndexerOrderCancelRequest,
+    DcaIndexerOrderCancelResponse,
     DcaIndexerOrdersRequest, 
     DcaIndexerOrdersResponse
 } from "./dcaApiCastingTypes";
@@ -316,6 +318,27 @@ export class DcaApi {
             .map(order => Casting.dca.createdOrderEventOnIndexer(order));
     }
 
+    public fetchOrderExecutionPause = async (
+		inputs: DcaIndexerOrderCancelRequest
+	): Promise<DcaIndexerOrderCancelResponse> => {
+        const { order_object_id } = inputs;
+        const uncastedResponse = 
+            await this.Provider.indexerCaller.fetchIndexer<
+                DcaIndexerOrderCancelResponse,
+                DcaIndexerOrderCancelRequest
+            >(
+                "dca/cancel", 
+                {
+                    order_object_id
+                },
+                undefined,
+                undefined,
+                undefined,
+                true
+            );
+        return uncastedResponse;
+    }
+
     // =========================================================================
     // Onchain Objects Fetch
     // =========================================================================
@@ -454,7 +477,7 @@ export class DcaApi {
 		});
 
     // =========================================================================
-    // Order Creation
+    // Helpers
     // =========================================================================
 
     private createdOrderEventType = () => 
@@ -525,7 +548,7 @@ export class DcaApi {
         return order;
     }
 
-    private getSponsorTransaction = async(
+    private getSponsorTransaction = async (
         sponsor: SuiAddress
     ): Promise<TransactionBlock> => {
         const txBlock = new TransactionBlock();

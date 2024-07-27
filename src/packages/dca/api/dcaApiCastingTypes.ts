@@ -112,3 +112,11 @@ export type DcaIndexerOrdersResponse = {
 export type DcaIndexerOrdersRequest = {
     sender: SuiAddress;
 }
+
+export type DcaIndexerOrderCancelRequest = {
+    order_object_id: ObjectId;
+}
+
+export type DcaIndexerOrderCancelResponse = {
+    
+}

@@ -11,6 +11,7 @@ import {
 	DcaOrderObject, 
 	DcaCreatedOrderEvent 
 } from "./dcaTypes";
+import { DcaIndexerOrderCancelRequest, DcaIndexerOrderCancelResponse } from "./api/dcaApiCastingTypes";
 
 export class Dca extends Caller {
 	
@@ -73,6 +74,19 @@ export class Dca extends Caller {
 		return await this.fetchApi<DcaOrderObject>(inputs.objectId);
 	}
 
+	/**
+	 * Fetches backend to stop / delay order execution on BE before executing canceling TX onchain.
+	 * @async
+	 * @param { ObjectId } inputs - An object containing the DCA object identificator.
+	 * @returns {Promise<DcaIndexerOrderCancelResponse>} A promise that resolves to result of delaying
+	 */
+	public async createOrderExecutionPause(inputs: DcaIndexerOrderCancelRequest) {
+		return this.fetchApi<
+			DcaIndexerOrderCancelResponse,
+			DcaIndexerOrderCancelRequest
+		>("pause-order-execution", inputs);
+	}
+
 	// =========================================================================
 	// Transactions
 	// =========================================================================
@@ -125,7 +139,7 @@ export class Dca extends Caller {
 			name: domainName
 		});
 	}
-
+	
     // =========================================================================
 	//  Private Helpers
 	// =========================================================================
