@@ -364,7 +364,9 @@ export class DcaApi {
                 objectFromSuiObjectResponse: Casting.dca.partialOrdersObjectFromSuiObjectResponse,
             });
 
-        const createdOrderObjects = partialCreatedOrderObjects.map(
+        const createdOrderObjects = partialCreatedOrderObjects
+        .filter(order => order != undefined)
+        .map(
             order => this.preparePartialDcaOrder(order, allEventOrders, allExecutedTrades)
         );
 

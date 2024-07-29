@@ -106,7 +106,8 @@ export class DcaApiCasting {
 
 	public static partialOrdersObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
-	): DcaOrderObject => {
+	): DcaOrderObject | undefined => {
+		if (data.error) return undefined;
 		const objectType = Helpers.getObjectType(data);
 		const fields = Helpers.getObjectFields(data) as DcaOrderFieldsOnChain;
 		const coinsTypes = new Coin(objectType).innerCoinType.split(", ");
