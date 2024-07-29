@@ -322,21 +322,19 @@ export class DcaApi {
 		inputs: DcaIndexerOrderCancelRequest
 	): Promise<DcaIndexerOrderCancelResponse> => {
         const { order_object_id } = inputs;
-        const uncastedResponse = 
-            await this.Provider.indexerCaller.fetchIndexer<
-                DcaIndexerOrderCancelResponse,
-                DcaIndexerOrderCancelRequest
-            >(
-                "dca/cancel", 
-                {
-                    order_object_id
-                },
-                undefined,
-                undefined,
-                undefined,
-                true
-            );
-        return uncastedResponse;
+        return this.Provider.indexerCaller.fetchIndexer<
+            DcaIndexerOrderCancelResponse,
+            DcaIndexerOrderCancelRequest
+        >(
+            "dca/cancel", 
+            {
+                order_object_id
+            },
+            undefined,
+            undefined,
+            undefined,
+            true
+        );
     }
 
     // =========================================================================
@@ -405,35 +403,6 @@ export class DcaApi {
 					this.fetchExecutedTradeEvents(eventInputs),
 			})
 		);
-    }
-
-    public fetchOrderObjectOnChain = async (inputs: { 
-        orderId: ObjectId 
-    }): Promise<DcaOrderObject | undefined> => {
-        const { orderId } = inputs;
-        const partialOrderObject =
-			await this.Provider.Objects().fetchCastObject({
-                objectId: orderId,
-                objectFromSuiObjectResponse: Casting.dca.partialOrdersObjectFromSuiObjectResponse,
-            });
-
-        const [orderEvent, orderTradesEvents] = await Promise.all([
-            (
-                await this.Provider.Events().fetchAllEvents({
-                    fetchEventsFunc: (eventInputs) =>
-                        this.fetchCreatedDcaOrdersEvents(eventInputs),
-                })
-            ).filter(order => order.orderId == orderId), // Is it good to fetch all and then filter?
-            (
-                await this.fetchAllTradesObjectsOnChain()
-            ).filter(trade => trade.orderId == orderId)
-        ]);
-
-        return this.preparePartialDcaOrder(
-            partialOrderObject, 
-            orderEvent, 
-            orderTradesEvents
-        )
     }
 
     // =========================================================================
@@ -510,10 +479,6 @@ export class DcaApi {
         const executedOrders = allExecutedTrades.filter(trade => trade.orderId == order.objectId)
         const executedOrdersAmount = executedOrders.length;
         const totalTradesAmount = order.overview.tradesRemaining + executedOrdersAmount;
-        const lastExecutedTrade = executedOrdersAmount > 0 ? 
-                                                executedOrders[executedOrdersAmount - 1]
-                                                    : 
-                                                undefined;
 
         const { totalSpent, totalBought } = executedOrders.reduce((total, order) => {
             total.totalSpent += order.inputAmount;
@@ -523,6 +488,16 @@ export class DcaApi {
             totalSpent: BigInt(0), 
             totalBought: BigInt(0) 
         });
+
+        const started = executedOrdersAmount > 0 ? { 
+			timestamp:executedOrders[0].timestamp,
+			digest:  executedOrders[0].txnDigest,
+		} : undefined;
+
+        const lastExecutedTrade = executedOrdersAmount > 0 ? { 
+			timestamp: executedOrders[executedOrdersAmount - 1].timestamp,
+			digest:  executedOrders[executedOrdersAmount - 1].txnDigest,
+		} : undefined;
 
         order.trades = executedOrders.map(trade => Casting.dca.tradeEventToObject(trade))
         order.overview.totalSpent = totalSpent;
@@ -540,9 +515,13 @@ export class DcaApi {
             time:  Number(eventOrder?.timestamp),
             tnxDigest: eventOrder?.txnDigest ?? "",
         }
+        order.overview.started = started ? {
+            time: started.timestamp,
+            tnxDigest: started.digest
+        } : undefined;
         order.overview.lastExecutedTradeTime = lastExecutedTrade ? {
             time: lastExecutedTrade.timestamp,
-            tnxDigest: lastExecutedTrade.txnDigest
+            tnxDigest: lastExecutedTrade.digest
         } : undefined;
 
         return order;

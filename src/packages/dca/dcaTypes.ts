@@ -4,9 +4,8 @@ import {
 	Balance,
 	Event,
 	IFixed,
-	Object,
 	Timestamp,
-	TransactionDigest,
+	TransactionDigest
 } from "../../general/types/generalTypes";
 
 

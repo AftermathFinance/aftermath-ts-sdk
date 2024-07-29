@@ -1,5 +1,5 @@
 
-import { ApiIndexerUserEventsBody, ObjectId, SuiNetwork } from "../../types";
+import { ObjectId, SuiNetwork } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
@@ -8,8 +8,7 @@ import {
 	ApiDcaCancelOrderBody, 
 	ApiDcaInitializeOrderBody, 
 	DcaOrdersObject, 
-	DcaOrderObject, 
-	DcaCreatedOrderEvent 
+	DcaOrderObject
 } from "./dcaTypes";
 import { DcaIndexerOrderCancelRequest, DcaIndexerOrderCancelResponse } from "./api/dcaApiCastingTypes";
 
@@ -64,17 +63,6 @@ export class Dca extends Caller {
     }
 
 	/**
-	 * Fetches the API for dollar cost averaging orders by id.
-	 * @async
-	 * @param { ObjectId } inputs - An object containing the DCA object identificator.
-	 * @returns {Promise<DcaOrderObject>} A promise that resolves to concrete dca order object.
-	 */
-
-	public async getDcaOrderObject(inputs: { objectId: ObjectId }) {
-		return await this.fetchApi<DcaOrderObject>(inputs.objectId);
-	}
-
-	/**
 	 * Fetches backend to stop / delay order execution on BE before executing canceling TX onchain.
 	 * @async
 	 * @param { ObjectId } inputs - An object containing the DCA object identificator.
@@ -109,17 +97,6 @@ export class Dca extends Caller {
 
 	public async getCancelDcaOrderTx(inputs: ApiDcaCancelOrderBody) {
 		return this.useProvider().fetchBuildCancelOrderTx(inputs);
-	}
-
-	// =========================================================================
-	// Events
-	// =========================================================================
-
-	public async getOrdersEvents(inputs: ApiIndexerUserEventsBody) {
-		return this.fetchApiEvents<
-			DcaCreatedOrderEvent,
-			ApiIndexerUserEventsBody
-		>("events", inputs);
 	}
 
 	// =========================================================================
