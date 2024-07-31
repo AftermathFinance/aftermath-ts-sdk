@@ -198,8 +198,6 @@ export interface SharedCustodyAddresses {
 	packages: {
 		config: SuiAddress;	
 	};
-	objects: {
-		address: ObjectId;
-		publicKey: ObjectId;
-	}
+	address: ObjectId;
+	publicKey: ObjectId;
 }
