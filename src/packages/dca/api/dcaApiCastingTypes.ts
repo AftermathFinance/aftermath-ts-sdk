@@ -95,6 +95,7 @@ export type DcaIndexerOrderResponse = {
     frequency_ms: BigIntAsString;
     slippage: BigIntAsString;
     total_spent: BigIntAsString;
+    recipient: SuiAddress;
     created: {
         timestamp: Timestamp;
         tx_digest: TransactionDigest;

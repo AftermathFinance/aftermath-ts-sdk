@@ -81,13 +81,12 @@ export interface DcaOrderOverviewObject {
 	};
 	averagePrice: Balance;
 	totalSpent: Balance;
-
 	interval: IFixed;
 	totalTrades: number;
 	tradesRemaining: number;
 	maxSlippage: Balance;
 	strategy?: DcaOrdertStrategyObject;
-
+	recipient?: SuiAddress;
 	progress: number;
 	created: {
 		time: Timestamp | undefined;

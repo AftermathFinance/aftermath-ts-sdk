@@ -140,6 +140,7 @@ export class DcaApiCasting {
 				maxSlippage: BigInt(0),
 				strategy: strategy,
 				progress: 0,
+				recipient: fields.recipient,
 				created: { time: undefined, tnxDigest: "" },
 				started: { time: undefined, tnxDigest: "" },
 				lastExecutedTradeTime: { time: undefined, tnxDigest: "" },
@@ -239,6 +240,7 @@ export class DcaApiCasting {
 				maxSlippage: BigInt(response.slippage),
 				strategy: strategy,
 				progress: progress,
+				recipient: response.recipient,
 				created: {
 					time: response.created.timestamp,
 					tnxDigest: response.created.tx_digest,
