@@ -350,7 +350,10 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					order_ids: orderDatas.map((order) =>
 						String(order.orderId).replaceAll("n", "")
 					),
-				}
+				},
+				undefined,
+				undefined,
+				true
 			);
 		if (orderReceiptEvents.length !== orderDatas.length)
 			throw new Error("unable to find all orders");
@@ -411,11 +414,18 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
-		>(`perpetuals/accounts/trade-history`, {
-			account_id: Helpers.addLeadingZeroesToType(accountCapId),
-			timestamp_before_ms: cursor ?? new Date().valueOf(),
-			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
-		});
+		>(
+			`perpetuals/accounts/trade-history`,
+			{
+				account_id: Helpers.addLeadingZeroesToType(accountCapId),
+				timestamp_before_ms: cursor ?? new Date().valueOf(),
+				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 
 		const collateralChanges = response.map((data) => ({
 			timestamp: data.timestamp,
@@ -453,11 +463,18 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
-		>(`perpetuals/accounts/trade-history`, {
-			account_id: Helpers.addLeadingZeroesToType(accountCapId),
-			timestamp_before_ms: cursor ?? new Date().valueOf(),
-			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
-		});
+		>(
+			`perpetuals/accounts/trade-history`,
+			{
+				account_id: Helpers.addLeadingZeroesToType(accountCapId),
+				timestamp_before_ms: cursor ?? new Date().valueOf(),
+				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 
 		const events = response.map((data) => {
 			const eventType = (data as EventOnChain<any>).type;
@@ -509,11 +526,18 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
-		>(`perpetuals/markets/trade-history`, {
-			ch_id: Helpers.addLeadingZeroesToType(marketId),
-			timestamp_before_ms: cursor ?? new Date().valueOf(),
-			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
-		});
+		>(
+			`perpetuals/markets/trade-history`,
+			{
+				ch_id: Helpers.addLeadingZeroesToType(marketId),
+				timestamp_before_ms: cursor ?? new Date().valueOf(),
+				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 
 		const trades = response.map((data) => ({
 			timestamp: data.timestamp,
@@ -545,7 +569,14 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const response = await this.Provider.indexerCaller.fetchIndexer<{
 			market_volume: number; // f64
 			market_volume_usd: number; // f64
-		}>(`perpetuals/markets/${marketId}/24hr-volume`);
+		}>(
+			`perpetuals/markets/${marketId}/24hr-volume`,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 
 		return {
 			volumeBaseAssetAmount: response.market_volume,
@@ -576,12 +607,19 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				timestamp_ms_to: Timestamp; // u64,
 				resolution_ms: number; // u64,
 			}
-		>(`perpetuals/markets/candle-history`, {
-			ch_id: Helpers.addLeadingZeroesToType(marketId),
-			timestamp_ms_from: fromTimestamp,
-			timestamp_ms_to: toTimestamp,
-			resolution_ms: intervalMs,
-		});
+		>(
+			`perpetuals/markets/candle-history`,
+			{
+				ch_id: Helpers.addLeadingZeroesToType(marketId),
+				timestamp_ms_from: fromTimestamp,
+				timestamp_ms_to: toTimestamp,
+				resolution_ms: intervalMs,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 
 		return response.map((data) => ({
 			timestamp: data.timestamp_ms,
