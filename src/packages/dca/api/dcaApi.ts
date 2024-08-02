@@ -1,36 +1,22 @@
 import { AftermathApi } from "../../../general/providers";
 import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
-import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Casting, Helpers } from "../../../general/utils";
-import { Sui } from "../../sui";
 import { Coin } from "../../coin";
 import { 
     ApiDcaTransactionForCancelOrderBody, 
-    ApiDcaInitializeOrdertStrategyBody, 
     ApiDcaTransactionForCreateOrderBody, 
-    DcaCancelledOrderEvent, 
-    DcaCreatedOrderEvent, 
-    DcaExecutedTradeEvent, 
     DcaOrderObject, 
     DcaOrdersObject 
 } from "../dcaTypes";
 import { 
-    AnyObjectType, 
+    AnyObjectType,
     Balance, 
     CoinType, 
     DcaAddresses, 
-    EventsInputs, 
     ObjectId, 
-    SerializedTransaction, 
-    ServiceCoinData, 
-    SharedCustodyAddresses, 
     SuiAddress, 
-    Timestamp 
 } from "../../../types";
 import { 
-    DcaClosedOrderEventOnChain, 
-    DcaCreatedOrderEventOnChain, 
-    DcaExecutedTradeEventOnChain,
     DcaIndexerOrderCancelRequest,
     DcaIndexerOrderCancelResponse,
     DcaIndexerOrderCreateRequest,
@@ -38,10 +24,9 @@ import {
     DcaIndexerOrdersRequest, 
     DcaIndexerOrdersResponse
 } from "./dcaApiCastingTypes";
-import { MoveErrors } from "../../../general/types/moveErrorsInterface";
 import { Transaction, TransactionObjectArgument } from "@mysten/sui/transactions";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
-const ED25519_PK_FLAG = 0x00;
 const GAS_SUI_AMOUNT = BigInt(5_000_000);                   // 0.005 SUI
 const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
 const MAX_AMOUNT_OUT = 2 ** 52;
@@ -70,9 +55,6 @@ export class DcaApi {
     // =========================================================================
 
     public readonly addresses: DcaAddresses;
-    public readonly sharedCustodyAddresses: SharedCustodyAddresses;
-    public readonly moveErrors: MoveErrors;
-
     public readonly eventTypes: {
         createdOrder: AnyObjectType;
         closedOrder: AnyObjectType;
@@ -85,48 +67,16 @@ export class DcaApi {
 
 	constructor(private readonly Provider: AftermathApi) {
         const addresses = this.Provider.addresses.dca;
-        const sharedCustodyAddresses = this.Provider.addresses.sharedCustody;
-		if (!addresses || !sharedCustodyAddresses)
+		if (!addresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
 		this.addresses = addresses;
-        this.sharedCustodyAddresses = sharedCustodyAddresses;
         this.eventTypes = {
             createdOrder: this.createdOrderEventType(),
             closedOrder: this.closedOrderEventType(),
             executedTrade: this.executedOrderEventType(),
-        }
-        this.moveErrors = {
-			[this.addresses.packages.dca]: {
-				[DcaApi.constants.moduleNames.dca]: {
-                    /// A trade resulted in a price outside of the maximum slippage.
-                    0: "Invalid slippage",
-                    // A user tried to create an `Order` by passing an `input_coin` with a value of zero.
-                    1: "Input coin has zero value",
-                    /// A user tried to perform a DCA trade that results in a `coin_out` with a value:
-                    ///   i. less than the permissible minimum amount out (`order.min_amount_out`), or 
-                    ///  ii. greater than the permissible maximum amount out (`order.max_amount_out`).
-                    2: "Invalid strategy min or max values",
-                    /// A user tried to execute a DCA tx on an `order` that has no balance left to trade.
-                    3: "Not enough balance",
-                    /// A user tried to send themselves the same coin type over time using this DCA package.
-                    4: "Sending same coin type to same address is prohibited"
-                },
-                [DcaApi.constants.moduleNames.config]: {
-                    /// A user tried to interact with an old contract.
-                    0: "Invalid contract version",
-                    /// A user tried to create an order with a `frequncy_ms` value smaller than the minimum permissible
-                    ///  trading frequency.
-                    1: "Invalid frequency value. Value is smaller then the minimum permissible.",
-                    /// A user tried to create an `Order` but didn't provide enough SUI to cover the expected gas for
-                    ///  all of the dca trades.
-                    2: "Not enough gas to cover all dca trades",
-                    /// `create_package_config` has been called outside of this packages `init` function.
-                    3: "Incorrect create package config call. Called outside the packages `init` function",
-                }
-            }
         }
     }
 
@@ -355,117 +305,7 @@ export class DcaApi {
     }
 
     // =========================================================================
-    // Onchain Objects Fetch
-    // =========================================================================
-
-    public fetchAllOrdersObjectsOnChain = async (inputs: {
-        walletAddress: SuiAddress
-    }): Promise<DcaOrdersObject> => {
-        const { walletAddress } = inputs;
-
-        const [allEventOrders, allExecutedTrades] = await Promise.all([
-            (
-                await this.Provider.Events().fetchAllEvents({
-                    fetchEventsFunc: (eventInputs) =>
-                        this.fetchCreatedDcaOrdersEvents(eventInputs),
-                })
-            ).filter(order => order.owner == walletAddress), // Is it good to fetch all and then filter?
-            this.fetchAllTradesObjectsOnChain()
-        ]);
-
-        const allEventOrdersIds = allEventOrders.map(order => order.orderId)
-
-        const partialCreatedOrderObjects =
-			await this.Provider.Objects().fetchCastObjectBatch({
-                objectIds: allEventOrdersIds,
-                objectFromSuiObjectResponse: Casting.dca.partialOrdersObjectFromSuiObjectResponse,
-            });
-
-        const createdOrderObjects = partialCreatedOrderObjects
-        .filter(order => order != undefined)
-        .map(
-            order => this.preparePartialDcaOrder(order, allEventOrders, allExecutedTrades)
-        );
-
-        const activeOrdersObjects = createdOrderObjects.filter(
-            order => order.overview.tradesRemaining != 0
-        );
-        
-        const pastOrdersObjects = createdOrderObjects.filter(
-            order => order.overview.tradesRemaining == 0
-        );
-
-        return Promise.resolve({
-            active: activeOrdersObjects,
-            past: pastOrdersObjects
-        });
-    }
-
-    public fetchActiveOrdersObjectsOnChain = async (inputs: {
-        walletAddress: SuiAddress
-    }): Promise<DcaOrderObject[]> => {
-        const allOrders = await this.fetchAllOrdersObjectsOnChain(inputs);
-        return allOrders.active;
-    }
-
-    public fetchPastOrdersObjectsOnChain = async (inputs: {
-        walletAddress: SuiAddress
-    }): Promise<DcaOrderObject[]> => {
-        const allOrders = await this.fetchAllOrdersObjectsOnChain(inputs);
-        return allOrders.past;
-    }
-
-    public fetchAllTradesObjectsOnChain = async (): Promise<DcaExecutedTradeEvent[]> => {
-        return (
-			await this.Provider.Events().fetchAllEvents({
-				fetchEventsFunc: (eventInputs) =>
-					this.fetchExecutedTradeEvents(eventInputs),
-			})
-		);
-    }
-
-    // =========================================================================
     // Events
-    // =========================================================================
-
-    public fetchCreatedDcaOrdersEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			DcaCreatedOrderEventOnChain,
-			DcaCreatedOrderEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.createdOrder,
-			},
-			eventFromEventOnChain: Casting.dca.createdDcaOrderEventFromOnChain,
-		});
-
-    public fetchCanceledDcaOrdersEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			DcaClosedOrderEventOnChain,
-			DcaCancelledOrderEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.closedOrder,
-			},
-			eventFromEventOnChain: Casting.dca.cancelledDcaOrderEventFromChain,
-		});
-
-    public fetchExecutedTradeEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			DcaExecutedTradeEventOnChain,
-			DcaExecutedTradeEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.executedTrade,
-			},
-			eventFromEventOnChain: Casting.dca.executedTradeEventFromChain,
-		});
-
-    // =========================================================================
-    // Helpers
     // =========================================================================
 
     private createdOrderEventType = () => 
@@ -489,62 +329,9 @@ export class DcaApi {
 			DcaApi.constants.eventNames.executedTrade
 		);
 
-    private preparePartialDcaOrder = (
-        order: DcaOrderObject,
-        allEventOrders: DcaCreatedOrderEvent[],
-        allExecutedTrades: DcaExecutedTradeEvent[]
-    ) => {
-        const eventOrder = allEventOrders.find(eventOrder => eventOrder.orderId == order.objectId);
-        const executedOrders = allExecutedTrades.filter(trade => trade.orderId == order.objectId)
-        const executedOrdersAmount = executedOrders.length;
-        const totalTradesAmount = order.overview.tradesRemaining + executedOrdersAmount;
-
-        const { totalSpent, totalBought } = executedOrders.reduce((total, order) => {
-            total.totalSpent += order.inputAmount;
-            total.totalBought += order.outputAmount;
-            return total;
-        }, { 
-            totalSpent: BigInt(0), 
-            totalBought: BigInt(0) 
-        });
-
-        const started = executedOrdersAmount > 0 ? { 
-			timestamp:executedOrders[0].timestamp,
-			digest:  executedOrders[0].txnDigest,
-		} : undefined;
-
-        const lastExecutedTrade = executedOrdersAmount > 0 ? { 
-			timestamp: executedOrders[executedOrdersAmount - 1].timestamp,
-			digest:  executedOrders[executedOrdersAmount - 1].txnDigest,
-		} : undefined;
-
-        order.trades = executedOrders.map(trade => Casting.dca.tradeEventToObject(trade))
-        order.overview.totalSpent = totalSpent;
-        order.overview.buyCoin.amount = totalBought;
-        order.overview.totalTrades = totalTradesAmount;
-        order.overview.progress = totalTradesAmount !== 0 ?
-                                    (totalTradesAmount - order.overview.tradesRemaining) / totalTradesAmount
-                                        :
-                                    0;
-        order.overview.averagePrice = executedOrdersAmount ? 
-                                        totalSpent / BigInt(executedOrdersAmount) 
-                                            : 
-                                        BigInt(0);
-        order.overview.created = {
-            time:  Number(eventOrder?.timestamp),
-            tnxDigest: eventOrder?.txnDigest ?? "",
-        }
-        order.overview.started = started ? {
-            time: started.timestamp,
-            tnxDigest: started.digest
-        } : undefined;
-        order.overview.lastExecutedTradeTime = lastExecutedTrade ? {
-            time: lastExecutedTrade.timestamp,
-            tnxDigest: lastExecutedTrade.digest
-        } : undefined;
-
-        return order;
-    }
+    // =========================================================================
+    // Helpers
+    // =========================================================================
 
     private getSponsorTransaction = async (
         sponsor: SuiAddress

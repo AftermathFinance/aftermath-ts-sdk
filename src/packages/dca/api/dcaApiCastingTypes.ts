@@ -1,6 +1,13 @@
-import { SuiObjectData } from "@mysten/sui.js/client";
 import { EventOnChain } from "../../../general/types/castingTypes";
-import { BigIntAsString, CoinType, ObjectDigest, ObjectId, SerializedTransaction, ServiceCoinData, SuiAddress, Timestamp, TransactionDigest } from "../../../types";
+import { 
+    BigIntAsString,
+    CoinType,ObjectId,
+    SerializedTransaction,
+    ServiceCoinData,
+    SuiAddress,
+    Timestamp,
+    TransactionDigest 
+} from "../../../types";
 
 
 // =========================================================================
@@ -76,13 +83,12 @@ export type DcaExecutedTradeEventOnChain = EventOnChain<{
 // Indexer
 // =========================================================================
 
-export type DcaIndexerOrderTradeResponse = {
-    input_amount: BigIntAsString;
-    output_amount: BigIntAsString;
-    event: {
-        timestamp: Timestamp;
-        tx_digest: TransactionDigest;
-    }
+export type DcaIndexerOrdersRequest = {
+    sender: SuiAddress;
+}
+
+export type DcaIndexerOrdersResponse = {
+    orders: DcaIndexerOrderResponse[]
 };
 
 export type DcaIndexerOrderResponse = {
@@ -106,22 +112,18 @@ export type DcaIndexerOrderResponse = {
     trades: DcaIndexerOrderTradeResponse[];
 };
 
-export type DcaIndexerOrdersResponse = {
-    orders: DcaIndexerOrderResponse[]
+export type DcaIndexerOrderTradeResponse = {
+    input_amount: BigIntAsString;
+    output_amount: BigIntAsString;
+    event: {
+        timestamp: Timestamp;
+        tx_digest: TransactionDigest;
+    }
 };
 
-export type DcaIndexerOrdersRequest = {
-    sender: SuiAddress;
-}
-
-export type DcaIndexerOrderCancelRequest = {
-    order_object_id: ObjectId;
-}
-
-export type DcaIndexerOrderCancelResponse = {
-    
-}
-
+// =========================================================================
+// Create Order
+// =========================================================================
 
 export type DcaIndexerOrderCreateRequest = {
     tx_kind: string,
@@ -146,3 +148,13 @@ export type DcaIndexerOrderCreateRequest = {
 export type DcaIndexerOrderCreateResponse = {
     tx_data: SerializedTransaction;
 }
+
+// =========================================================================
+// Cancel Order
+// =========================================================================
+
+export type DcaIndexerOrderCancelRequest = {
+    order_object_id: ObjectId;
+}
+
+export type DcaIndexerOrderCancelResponse = { }

@@ -16,7 +16,7 @@ import {
 export type DcaOrderTrades = DcaOrderTradeObject[];
 
 // =========================================================================
-//  Initialize Order 
+//  Initialize Order Transaction
 // =========================================================================
 
 export interface ApiDcaInitializeOrdertStrategyBody {
@@ -40,6 +40,10 @@ export interface ApiDcaTransactionForCreateOrderBody {
 	customRecipient?: SuiAddress;
 }
 
+// =========================================================================
+// Cancel Order Transaction
+// =========================================================================
+
 export interface ApiDcaTransactionForCancelOrderBody {
 	walletAddress: SuiAddress;
     buyCoinType: CoinType;
@@ -48,7 +52,7 @@ export interface ApiDcaTransactionForCancelOrderBody {
 }
 
 // =========================================================================
-//  DCA Order
+//  DCA Order Fetch
 // =========================================================================
 
 export interface DcaOrderTradeObject {

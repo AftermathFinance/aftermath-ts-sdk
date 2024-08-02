@@ -1,6 +1,4 @@
-import { SuiObjectResponse } from "@mysten/sui.js/client";
 import { Casting, Helpers } from "../../../general/utils";
-import { Coin } from "../../coin/coin";
 import {
 	DcaCancelledOrderEvent,
 	DcaCreatedOrderEvent,
@@ -15,7 +13,6 @@ import {
 	DcaExecutedTradeEventOnChain,
 	DcaIndexerOrderResponse,
 	DcaIndexerOrderTradeResponse,
-	DcaOrderFieldsOnChain,
 } from "./dcaApiCastingTypes";
 import { Balance } from "../../../types";
 
@@ -97,78 +94,6 @@ export class DcaApiCasting {
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
-		};
-	};
-
-	// =========================================================================
-	// Object
-	// =========================================================================
-
-	public static partialOrdersObjectFromSuiObjectResponse = (
-		data: SuiObjectResponse
-	): DcaOrderObject | undefined => {
-		if (data.error) return undefined;
-		const objectType = Helpers.getObjectType(data);
-		const fields = Helpers.getObjectFields(data) as DcaOrderFieldsOnChain;
-		const coinsTypes = new Coin(objectType).innerCoinType.split(", ");
-		const inCoin = Helpers.addLeadingZeroesToType(coinsTypes[0]);
-		const outCoin = Helpers.addLeadingZeroesToType(coinsTypes[1]);
-
-		// Todo: - Remove 2 ** 32 check when the issue with sending bigint to af-fe is solved
-		const strategy: DcaOrdertStrategyObject | undefined =
-			Number(fields.min_amount_out) === 0 &&
-			(
-				(BigInt(fields.max_amount_out) === Casting.u64MaxBigInt) || 
-				Number(fields.max_amount_out) === 2 ** 32
-			)
-				? undefined
-				: {
-						priceMin: BigInt(fields.min_amount_out),
-						priceMax: BigInt(fields.max_amount_out),
-				  };
-		return {
-			objectId: Helpers.getObjectId(data),
-			overview: {
-				allocatedCoin: {
-					coin: inCoin,
-					amount: BigInt(fields.balance),
-				},
-				buyCoin: {
-					coin: outCoin,
-					amount: BigInt(0),
-				},
-				averagePrice: BigInt(0),
-				totalSpent: BigInt(0),
-				interval: BigInt(fields.frequency_ms),
-				totalTrades: 0,
-				tradesRemaining: Number(fields.remaining_trades),
-				maxSlippage: BigInt(0),
-				strategy: strategy,
-				progress: 0,
-				recipient: fields.recipient,
-				created: { time: undefined, tnxDigest: "" },
-				started: { time: undefined, tnxDigest: "" },
-				lastExecutedTradeTime: { time: undefined, tnxDigest: "" },
-			},
-			trades: [],
-		};
-	};
-
-	public static tradeEventToObject = (
-		eventObject: DcaExecutedTradeEvent
-	): DcaOrderTradeObject => {
-		return {
-			allocatedCoin: {
-				coin: eventObject.inputType,
-				amount: eventObject.inputAmount,
-			},
-			buyCoin: {
-				coin: eventObject.outputType,
-				amount: eventObject.outputAmount,
-			},
-			tnxDate: Number(eventObject.timestamp),
-			tnxDigest: eventObject.txnDigest,
-			rate: 0,
 		};
 	};
 

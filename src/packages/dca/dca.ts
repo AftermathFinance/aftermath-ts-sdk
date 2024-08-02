@@ -1,5 +1,5 @@
 
-import { ObjectId, SuiNetwork } from "../../types";
+import { SuiNetwork } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
@@ -36,7 +36,7 @@ export class Dca extends Caller {
 	 * @returns { Promise<DcaOrdersObject> } A promise that resolves to object with array of fetched events for active and past dca's.
 	 */
 
-	public async getAllDcaOrdersObject(inputs: ApiDCAsOwnedBody) {
+	public async getAllDcaOrders(inputs: ApiDCAsOwnedBody) {
 		return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>("", inputs);
 	}
 
