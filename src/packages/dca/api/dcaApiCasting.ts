@@ -113,9 +113,14 @@ export class DcaApiCasting {
 		const coinsTypes = new Coin(objectType).innerCoinType.split(", ");
 		const inCoin = Helpers.addLeadingZeroesToType(coinsTypes[0]);
 		const outCoin = Helpers.addLeadingZeroesToType(coinsTypes[1]);
+
+		// Todo: - Remove 2 ** 32 check when the issue with sending bigint to af-fe is solved
 		const strategy: DcaOrdertStrategyObject | undefined =
 			Number(fields.min_amount_out) === 0 &&
-			BigInt(fields.max_amount_out) === Casting.u64MaxBigInt
+			(
+				(BigInt(fields.max_amount_out) === Casting.u64MaxBigInt) || 
+				Number(fields.max_amount_out) === 2 ** 32
+			)
 				? undefined
 				: {
 						priceMin: BigInt(fields.min_amount_out),

@@ -1,6 +1,6 @@
 import { SuiObjectData } from "@mysten/sui.js/client";
 import { EventOnChain } from "../../../general/types/castingTypes";
-import { BigIntAsString, ObjectDigest, ObjectId, SuiAddress, Timestamp, TransactionDigest } from "../../../types";
+import { BigIntAsString, CoinType, ObjectDigest, ObjectId, SerializedTransaction, ServiceCoinData, SuiAddress, Timestamp, TransactionDigest } from "../../../types";
 
 
 // =========================================================================
@@ -120,4 +120,29 @@ export type DcaIndexerOrderCancelRequest = {
 
 export type DcaIndexerOrderCancelResponse = {
     
+}
+
+
+export type DcaIndexerOrderCreateRequest = {
+    tx_kind: string,
+    order: {
+        input_coin: ServiceCoinData;
+        input_coin_type: CoinType;
+        output_coin_type: CoinType;
+        gas_coin: ServiceCoinData;
+        owner: SuiAddress
+        user_pk: string;
+        recipient: SuiAddress;
+        frequency_ms: Timestamp;
+        delay_timestamp_ms: Timestamp;
+        amount_per_trade: number;
+        max_allowable_slippage_bps: number;
+        min_amount_out: number;
+        max_amount_out: number;
+        number_of_trades: number;
+    }
+}
+
+export type DcaIndexerOrderCreateResponse = {
+    tx_data: SerializedTransaction;
 }

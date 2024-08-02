@@ -5,12 +5,12 @@ import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import { 
 	ApiDCAsOwnedBody, 
-	ApiDcaCancelOrderBody, 
-	ApiDcaInitializeOrderBody, 
+	ApiDcaTransactionForCancelOrderBody,  
 	DcaOrdersObject, 
-	DcaOrderObject
+	ApiDcaTransactionForCreateOrderBody
 } from "./dcaTypes";
 import { DcaIndexerOrderCancelRequest, DcaIndexerOrderCancelResponse } from "./api/dcaApiCastingTypes";
+import { Transaction } from "@mysten/sui/transactions";
 
 export class Dca extends Caller {
 	
@@ -85,8 +85,11 @@ export class Dca extends Caller {
 	 * @returns A promise that resolves with the API transaction.
 	 */
 
-    public async getCreateDcaOrderTx(inputs: ApiDcaInitializeOrderBody) {
-		return this.useProvider().fetchBuildCreateOrderTx(inputs);
+    public async getCreateDcaOrderTx(inputs: ApiDcaTransactionForCreateOrderBody): Promise<Transaction> {
+		return this.fetchApiTransaction<ApiDcaTransactionForCreateOrderBody>(
+			"transactions/create-order",
+			inputs
+		);
 	}
 
 	/**
@@ -95,8 +98,12 @@ export class Dca extends Caller {
 	 * @returns A promise that resolves with the API transaction.
 	 */
 
-	public async getCancelDcaOrderTx(inputs: ApiDcaCancelOrderBody) {
+	public async getCancelDcaOrderTx(inputs: ApiDcaTransactionForCancelOrderBody) {
 		return this.useProvider().fetchBuildCancelOrderTx(inputs);
+		// return this.fetchApiTransaction<ApiDcaTransactionForCancelOrderBody>(
+		// 	"transactions/cancel-order",
+		// 	inputs
+		// );
 	}
 
 	// =========================================================================

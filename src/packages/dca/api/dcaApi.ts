@@ -5,9 +5,9 @@ import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import { Coin } from "../../coin";
 import { 
-    ApiDcaCancelOrderBody, 
-    ApiDcaInitializeOrderBody, 
+    ApiDcaTransactionForCancelOrderBody, 
     ApiDcaInitializeOrdertStrategyBody, 
+    ApiDcaTransactionForCreateOrderBody, 
     DcaCancelledOrderEvent, 
     DcaCreatedOrderEvent, 
     DcaExecutedTradeEvent, 
@@ -21,6 +21,8 @@ import {
     DcaAddresses, 
     EventsInputs, 
     ObjectId, 
+    SerializedTransaction, 
+    ServiceCoinData, 
     SharedCustodyAddresses, 
     SuiAddress, 
     Timestamp 
@@ -31,14 +33,18 @@ import {
     DcaExecutedTradeEventOnChain,
     DcaIndexerOrderCancelRequest,
     DcaIndexerOrderCancelResponse,
+    DcaIndexerOrderCreateRequest,
+    DcaIndexerOrderCreateResponse,
     DcaIndexerOrdersRequest, 
     DcaIndexerOrdersResponse
 } from "./dcaApiCastingTypes";
 import { MoveErrors } from "../../../general/types/moveErrorsInterface";
+import { Transaction, TransactionObjectArgument } from "@mysten/sui/transactions";
 
 const ED25519_PK_FLAG = 0x00;
 const GAS_SUI_AMOUNT = BigInt(5_000_000);                   // 0.005 SUI
 const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
+const MAX_AMOUNT_OUT = 2 ** 52;
     
 export class DcaApi {
 
@@ -129,47 +135,48 @@ export class DcaApi {
 	// =========================================================================
 
     public fetchBuildCreateOrderTx = async (
-        inputs: ApiDcaInitializeOrderBody
-    ): Promise<TransactionBlock> => {
+        inputs: ApiDcaTransactionForCreateOrderBody
+    ): Promise<Transaction> => {
         const { walletAddress } = inputs;
-        const tx = new TransactionBlock();
+        const tx = new Transaction();
         tx.setSender(walletAddress);
 
         const tradesGasAmount = BigInt(inputs.tradesAmount) * GAS_SUI_AMOUNT;
         const orderAmountPerTrade = inputs.allocateCoinAmount / BigInt(inputs.tradesAmount);
         const recipientAddress = inputs.customRecipient ? inputs.customRecipient : walletAddress;
 
-        const gasCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: Coin.constants.suiCoinType,
-			coinAmount: tradesGasAmount,                    
-            isSponsoredTx: inputs.isSponsoredTx
-		});
-
-        const inputCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: inputs.allocateCoinType,
-			coinAmount: inputs.allocateCoinAmount,
-            isSponsoredTx: inputs.isSponsoredTx
-		});
+        const [gasCoinTxArg, inputCoinTxArg] = await Promise.all([
+            this.Provider.Coin().fetchCoinWithAmountTx({
+                tx,
+                walletAddress,
+                coinType: Coin.constants.suiCoinType,
+                coinAmount: tradesGasAmount,                    
+                isSponsoredTx: inputs.isSponsoredTx
+            }),
+            this.Provider.Coin().fetchCoinWithAmountTx({
+                tx,
+                walletAddress,
+                coinType: inputs.allocateCoinType,
+                coinAmount: inputs.allocateCoinAmount,
+                isSponsoredTx: inputs.isSponsoredTx
+            })
+        ])
         
-        this.createNewOrderTx({
+        const resultTx = await this.createNewOrderTx({
             ...inputs,
             tx,
-            gasCoinId,
-            inputCoinId,
+            gasCoinTxArg,
+            inputCoinTxArg,
             orderAmountPerTrade,
-            recipientAddress
+            recipientAddress,
         });
 
-        return tx;
+        return resultTx;
     };
 
     public fetchBuildCancelOrderTx = async (
-        inputs: ApiDcaCancelOrderBody
-    ): Promise<TransactionBlock> => {
+        inputs: ApiDcaTransactionForCancelOrderBody
+        ): Promise<Transaction> =>  {
         const { walletAddress } = inputs;
         const tx = await this.getSponsorTransaction(walletAddress);
         this.createCancelOrderTx({
@@ -183,57 +190,67 @@ export class DcaApi {
     // Transaction Commands
     // =========================================================================
 
-    public createNewOrderTx = (inputs: {
-        tx: TransactionBlock,
-        walletAddress: SuiAddress,
-        allocateCoinType: CoinType,
-        allocateCoinAmount: Balance,
-        buyCoinType: CoinType,
-        inputCoinId: ObjectId | TransactionArgument,
-        gasCoinId: ObjectId | TransactionArgument,
-        frequencyMs: Timestamp,
-        delayTimeMs: Timestamp,
-        coinPerTradeAmount: Balance,
-        maxAllowableSlippageBps: Balance,
-        tradesAmount: number,
-        publicKey: Uint8Array,
+    public createNewOrderTx = async (inputs: {
+        tx: Transaction,
+        inputCoinTxArg: TransactionObjectArgument,
+        gasCoinTxArg: TransactionObjectArgument,
         recipientAddress: SuiAddress,
         orderAmountPerTrade: Balance,
-        straregy?: ApiDcaInitializeOrdertStrategyBody,
-    }) => {
-        const { tx } = inputs;
+    } & ApiDcaTransactionForCreateOrderBody) => {
+        const initTx = inputs.tx ?? new Transaction();
 
-        // Todo: - Do we need it here? Added ED25519 flag at the beggining of the array. 
-        const publicKeyPrepared = Array.from(Buffer.concat([Buffer.from([ED25519_PK_FLAG]), inputs.publicKey]));
+        const txBytes = await initTx.build({
+			client: this.Provider.provider,
+			onlyTransactionKind: true,
+		});
 
-        return tx.moveCall({
-            target: Helpers.transactions.createTxTarget(
-                this.addresses.packages.dca,
-                DcaApi.constants.moduleNames.dca,
-                "create_order"
-            ),
-            typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
-            arguments: [
-                tx.object(this.sharedCustodyAddresses.packages.config),
-                tx.object(this.addresses.objects.config),
-                tx.object(inputs.inputCoinId),
-                tx.object(inputs.gasCoinId),
-                tx.object(Sui.constants.addresses.suiClockId),
-                tx.pure(publicKeyPrepared, "vector<u8>"),
-                tx.pure(inputs.recipientAddress, "address"),
-                tx.pure(inputs.frequencyMs, "u64"),
-                tx.pure(inputs.delayTimeMs, "u64"),
-                tx.pure(inputs.orderAmountPerTrade, "u64"),
-                tx.pure(ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS, "u16"),
-                tx.pure(inputs.straregy?.priceMin ?? 0, "u64"),
-                tx.pure(inputs.straregy?.priceMax ?? Casting.u64MaxBigInt, "u64"),
-                tx.pure(inputs.tradesAmount, "u8"),
-            ],
-        });
+		const b64TxBytes = Buffer.from(txBytes).toString("base64");
+
+        const { tx_data } =
+			await this.Provider.indexerCaller.fetchIndexer<
+                DcaIndexerOrderCreateResponse,
+                DcaIndexerOrderCreateRequest
+			>(
+				"dca/create",
+				{
+                    tx_kind: b64TxBytes,
+					order: {
+                        input_coin: Helpers.transactions.serviceCoinDataFromCoinTxArg({
+                            coinTxArg: inputs.inputCoinTxArg,
+                        }),
+                        input_coin_type: inputs.allocateCoinType,
+                        output_coin_type: inputs.buyCoinType,
+                        gas_coin: Helpers.transactions.serviceCoinDataFromCoinTxArg({
+                            coinTxArg: inputs.gasCoinTxArg,
+                        }),
+                        owner: inputs.walletAddress,
+                        user_pk: inputs.publicKey,
+                        recipient: inputs.recipientAddress,
+                        frequency_ms: inputs.frequencyMs,
+                        delay_timestamp_ms: inputs.delayTimeMs,
+                        amount_per_trade: Number(inputs.orderAmountPerTrade),
+                        max_allowable_slippage_bps: Number(ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS),
+                        min_amount_out: Number(inputs.straregy?.priceMin ?? 0),
+                        max_amount_out: Number(inputs.straregy?.priceMax ?? MAX_AMOUNT_OUT),
+                        number_of_trades: Number(inputs.tradesAmount)
+                    }
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+
+        const tx = Transaction.fromKind(tx_data);
+        DcaApi.transferTxMetadata({
+			initTx,
+			newTx: tx,
+		});
+        return tx;
     }
 
     public createCancelOrderTx = (inputs: {
-        tx: TransactionBlock,
+        tx: Transaction | TransactionBlock,
         allocateCoinType: CoinType,
         buyCoinType: CoinType,
         orderId: ObjectId | TransactionArgument
@@ -531,11 +548,43 @@ export class DcaApi {
 
     private getSponsorTransaction = async (
         sponsor: SuiAddress
-    ): Promise<TransactionBlock> => {
-        const txBlock = new TransactionBlock();
+    ): Promise<Transaction> => {
+        const txBlock = new Transaction();
         const kindBytes = await txBlock.build({ onlyTransactionKind: true });
-        const tx = TransactionBlock.fromKind(kindBytes);
+        const tx = Transaction.fromKind(kindBytes);
         tx.setGasOwner(sponsor);
         return tx;
     }
+
+    private static transferTxMetadata = (inputs: {
+		initTx: Transaction;
+		newTx: Transaction;
+	}) => {
+		const { initTx, newTx } = inputs;
+
+		const sender = initTx.getData().sender;
+		if (sender) newTx.setSender(sender);
+
+		const expiration = initTx.getData().expiration;
+		if (expiration) newTx.setExpiration(expiration);
+
+		const gasData = initTx.getData().gasData;
+
+		if (gasData.budget && typeof gasData.budget !== "string")
+			newTx.setGasBudget(gasData.budget);
+
+		if (gasData.owner) newTx.setGasOwner(gasData.owner);
+
+		if (gasData.payment) newTx.setGasPayment(gasData.payment);
+
+		if (gasData.price && typeof gasData.price !== "string")
+			newTx.setGasPrice(gasData.price);
+
+        console.log({
+            gasData,
+            budget: gasData.budget,
+            owner: gasData.owner,
+            payment: gasData.payment,
+        })
+	};
 }

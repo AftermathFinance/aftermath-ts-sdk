@@ -24,7 +24,7 @@ export interface ApiDcaInitializeOrdertStrategyBody {
     priceMax: Balance;
 }
 
-export interface ApiDcaInitializeOrderBody {
+export interface ApiDcaTransactionForCreateOrderBody {
 	walletAddress: SuiAddress;
 	allocateCoinType: CoinType;
 	allocateCoinAmount: Balance;
@@ -36,11 +36,11 @@ export interface ApiDcaInitializeOrderBody {
 	delayTimeMs: Timestamp;
 	maxAllowableSlippageBps: Balance;
 	coinPerTradeAmount: Balance;
-	publicKey: Uint8Array;
+	publicKey: string;
 	customRecipient?: SuiAddress;
 }
 
-export interface ApiDcaCancelOrderBody {
+export interface ApiDcaTransactionForCancelOrderBody {
 	walletAddress: SuiAddress;
     buyCoinType: CoinType;
 	allocateCoinType: CoinType;
