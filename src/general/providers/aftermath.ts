@@ -32,6 +32,7 @@ import { AftermathApi } from "./aftermathApi";
 import { IndexerCaller } from "../utils";
 import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
 import { Dca } from "../../packages/dca/dca";
+import { Multisig } from "../../packages/multisig/multisig";
 
 /**
  * @class Aftermath Provider
@@ -143,6 +144,7 @@ export class Aftermath extends Caller {
 	 * @returns A new instance of the DCA class.
 	 */
 	public Dca = () => new Dca(this.network, this.Provider);
+	public Multisig = () => new Multisig(this.network, this.Provider);
 
 	// =========================================================================
 	//  General
