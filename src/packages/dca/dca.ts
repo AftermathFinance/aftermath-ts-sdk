@@ -99,11 +99,10 @@ export class Dca extends Caller {
 	 */
 
 	public async getCancelDcaOrderTx(inputs: ApiDcaTransactionForCancelOrderBody) {
-		return this.useProvider().fetchBuildCancelOrderTx(inputs);
-		// return this.fetchApiTransaction<ApiDcaTransactionForCancelOrderBody>(
-		// 	"transactions/cancel-order",
-		// 	inputs
-		// );
+		return this.fetchApiTransaction<ApiDcaTransactionForCancelOrderBody>(
+			"transactions/cancel-order",
+			inputs
+		);
 	}
 
 	// =========================================================================

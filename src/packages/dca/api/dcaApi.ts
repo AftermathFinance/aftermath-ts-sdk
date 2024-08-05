@@ -26,6 +26,7 @@ import {
 } from "./dcaApiCastingTypes";
 import { Transaction, TransactionObjectArgument } from "@mysten/sui/transactions";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { ApiMultisigUserBody } from "../../multisig/multisigTypes";
 
 const GAS_SUI_AMOUNT = BigInt(5_000_000);                   // 0.005 SUI
 const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
@@ -126,8 +127,13 @@ export class DcaApi {
     public fetchBuildCancelOrderTx = async (
         inputs: ApiDcaTransactionForCancelOrderBody
         ): Promise<Transaction> =>  {
-        const { walletAddress } = inputs;
+        const { walletAddress, userPublicKey } = inputs;
         const tx = await this.getSponsorTransaction(walletAddress);
+        const pulicKey = Uint8Array.from(Buffer.from(userPublicKey, "hex"))
+        const multisig = await this.Provider.Multisig().fetchMultisigForUser({
+            userPublicKey: pulicKey
+        });
+        tx.setSender(multisig.address);
         this.createCancelOrderTx({
             ...inputs,
             tx,

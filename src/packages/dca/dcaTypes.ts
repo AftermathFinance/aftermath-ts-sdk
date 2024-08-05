@@ -49,6 +49,7 @@ export interface ApiDcaTransactionForCancelOrderBody {
     buyCoinType: CoinType;
 	allocateCoinType: CoinType;
 	orderId: SuiAddress;
+	userPublicKey: string;
 }
 
 // =========================================================================
