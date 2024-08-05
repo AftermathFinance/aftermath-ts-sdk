@@ -135,12 +135,12 @@ export type DcaIndexerOrderCreateRequest = {
         owner: SuiAddress
         user_pk: string;
         recipient: SuiAddress;
-        frequency_ms: Timestamp;
-        delay_timestamp_ms: Timestamp;
-        amount_per_trade: number;
+        frequency_ms: string;
+        delay_timestamp_ms: string;
+        amount_per_trade: string;
         max_allowable_slippage_bps: number;
-        min_amount_out: number;
-        max_amount_out: number;
+        min_amount_out: string;
+        max_amount_out: string;
         number_of_trades: number;
     }
 }

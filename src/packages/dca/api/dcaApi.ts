@@ -29,7 +29,6 @@ import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
 const GAS_SUI_AMOUNT = BigInt(5_000_000);                   // 0.005 SUI
 const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
-const MAX_AMOUNT_OUT = 2 ** 52;
     
 export class DcaApi {
 
@@ -176,12 +175,12 @@ export class DcaApi {
                         owner: inputs.walletAddress,
                         user_pk: inputs.publicKey,
                         recipient: inputs.recipientAddress,
-                        frequency_ms: inputs.frequencyMs,
-                        delay_timestamp_ms: inputs.delayTimeMs,
-                        amount_per_trade: Number(inputs.orderAmountPerTrade),
+                        frequency_ms: inputs.frequencyMs.toString(),
+                        delay_timestamp_ms: inputs.delayTimeMs.toString(),
+                        amount_per_trade: inputs.orderAmountPerTrade.toString(),
                         max_allowable_slippage_bps: Number(ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS),
-                        min_amount_out: Number(inputs.straregy?.priceMin ?? 0),
-                        max_amount_out: Number(inputs.straregy?.priceMax ?? MAX_AMOUNT_OUT),
+                        min_amount_out: (inputs.straregy?.priceMin ?? 0).toString().replace("n", ""),
+                        max_amount_out: (inputs.straregy?.priceMax ?? Casting.u64MaxBigInt).toString().replace("n", ""),
                         number_of_trades: Number(inputs.tradesAmount)
                     }
 				},
