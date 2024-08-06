@@ -465,7 +465,7 @@ export class PerpetualsApiCasting {
 			orderId: BigInt(fields.order_id),
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
 			size: BigInt(fields.maker_size),
-			dropped: fields.dropped,
+			dropped: BigInt(fields.maker_final_size) === BigInt(0),
 			quoteAssetNotionalAmount: BigInt(fields.maker_quote_amount),
 			asksQuantity: BigInt(fields.maker_pending_asks_quantity),
 			bidsQuantity: BigInt(fields.maker_pending_bids_quantity),

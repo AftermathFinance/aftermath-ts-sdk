@@ -324,23 +324,21 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
-	public getOrderDatas() {
+	public async getOrderDatas(): Promise<PerpetualsOrderData[]> {
 		const orderDatas = this.account.positions.reduce(
 			(acc, position) => [
 				...acc,
 				...position.pendingOrders.map((order) => ({
 					orderId: order.orderId,
-					marketId: position.marketId,
 					currentSize: order.size,
 				})),
 			],
 			[] as {
 				orderId: PerpetualsOrderId;
-				marketId: PerpetualsMarketId;
 				currentSize: bigint;
 			}[]
 		);
-		if (orderDatas.length <= 0) return [] as PerpetualsOrderData[];
+		if (orderDatas.length <= 0) return [];
 
 		return this.fetchApi<
 			PerpetualsOrderData[],
@@ -349,6 +347,7 @@ export class PerpetualsAccount extends Caller {
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`,
 			{
 				orderDatas,
+				accountCapId: this.accountCap.objectId,
 			}
 		);
 	}

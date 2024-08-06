@@ -285,15 +285,15 @@ export type PostedOrderEventOnChain = EventOnChain<{
 export type FilledMakerOrderEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	maker_account_id: BigIntAsString;
-	maker_collateral: IFixedAsString;
 	collateral_change_usd: IFixedAsString;
-	order_id: BigIntAsString;
-	maker_size: BigIntAsString;
-	dropped: boolean;
 	maker_base_amount: IFixedAsString;
-	maker_quote_amount: IFixedAsString;
+	maker_collateral: IFixedAsString;
+	maker_final_size: BigIntAsString;
 	maker_pending_asks_quantity: IFixedAsString;
 	maker_pending_bids_quantity: IFixedAsString;
+	maker_quote_amount: IFixedAsString;
+	maker_size: BigIntAsString;
+	order_id: BigIntAsString;
 }>;
 
 export type FilledTakerOrderEventOnChain = EventOnChain<{

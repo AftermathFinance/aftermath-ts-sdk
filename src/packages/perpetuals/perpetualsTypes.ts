@@ -357,14 +357,29 @@ export interface PerpetualsAccountCollateralChangesWithCursor {
 	nextCursor: Timestamp | undefined;
 }
 
-export interface PerpetualsAccountCollateralChange {
+export type PerpetualsCollateralEventName =
+	| "WithdrewCollateral"
+	| "DepositedCollateral"
+	| "AllocatedCollateral"
+	| "DeallocatedCollateral"
+	| "SettledFunding"
+	| "Liquidated"
+	| "FilledTakerOrder"
+	| "FilledMakerOrder";
+
+export type PerpetualsAccountCollateralChange = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
-	marketId: PerpetualsMarketId;
-	eventType: AnyObjectType;
-	collateralChange: number;
-	collateralChangeUsd: number;
-}
+	// marketId: PerpetualsMarketId;
+	eventName: PerpetualsCollateralEventName;
+} & (
+	| {
+			collateralChange: Balance;
+	  }
+	| {
+			collateralChangeUsd: number;
+	  }
+);
 
 export interface DepositedCollateralEvent extends Event {
 	accountId: PerpetualsAccountId;
@@ -733,9 +748,9 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 }
 
 export interface ApiPerpetualsAccountOrderDatasBody {
+	accountCapId: ObjectId;
 	orderDatas: {
 		orderId: PerpetualsOrderId;
-		marketId: PerpetualsMarketId;
 		currentSize: bigint;
 	}[];
 }
