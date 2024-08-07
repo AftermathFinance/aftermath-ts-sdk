@@ -271,23 +271,27 @@ export class DcaApi {
             type,
             walletAddress
         } = inputs;
-        const uncastedResponse = 
-            await this.Provider.indexerCaller.fetchIndexer<
-                DcaIndexerOrdersResponse, 
-                DcaIndexerOrdersRequest
-            >(
-                `dca/get/${type}`, 
-                {
-                    sender: walletAddress,
-                },
-                undefined,
-                undefined,
-                undefined,
-                true
-            );
-        return uncastedResponse.orders
-            .sort((lhs, rhs) => rhs.created.timestamp - lhs.created.timestamp)
-            .map(order => Casting.dca.createdOrderEventOnIndexer(order));
+        try {
+            const uncastedResponse = 
+                await this.Provider.indexerCaller.fetchIndexer<
+                    DcaIndexerOrdersResponse, 
+                    DcaIndexerOrdersRequest
+                >(
+                    `dca/get/${type}`, 
+                    {
+                        sender: walletAddress,
+                    },
+                    undefined,
+                    undefined,
+                    undefined,
+                    true
+                );
+            return uncastedResponse.orders
+                .sort((lhs, rhs) => rhs.created.timestamp - lhs.created.timestamp)
+                .map(order => Casting.dca.createdOrderEventOnIndexer(order));
+        } catch (error) {
+            return [];
+        }
     }
 
     public fetchOrderExecutionPause = async (
