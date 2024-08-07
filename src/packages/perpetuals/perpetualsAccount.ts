@@ -40,7 +40,7 @@ import {
 	ApiDataWithCursorBody,
 	Timestamp,
 	PerpetualsAccountCollateralChangesWithCursor,
-	PerpetualsAccountOrderEventsWithCursor,
+	PerpetualsAccountTradesWithCursor,
 	ApiPerpetualsSetPositionLeverageBody,
 	PerpetualsAccountId,
 	ApiPerpetualsAccountCollateralHistoryBody,
@@ -369,7 +369,7 @@ export class PerpetualsAccount extends Caller {
 
 	public async getOrderHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
 		return this.fetchApi<
-			PerpetualsAccountOrderEventsWithCursor,
+			PerpetualsAccountTradesWithCursor,
 			ApiPerpetualsAccountOrderHistoryBody
 		>(
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-history`,

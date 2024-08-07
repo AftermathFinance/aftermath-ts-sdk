@@ -23,6 +23,7 @@ import {
 	TransactionDigest,
 	ApiDataWithCursorBody,
 	BigIntAsString,
+	NumberAsString,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -70,12 +71,13 @@ import {
 	ApiPerpetualsAccountOrderDatasBody,
 	ApiPerpetualsMarket24hrVolumeResponse,
 	PerpetualsTradeHistoryWithCursor,
-	PerpetualsAccountOrderEventsWithCursor,
+	PerpetualsAccountTradesWithCursor,
 	PerpetualsAccountCollateralChangesWithCursor,
 	ApiPerpetualsSetPositionLeverageBody,
 	ApiPerpetualsAccountOrderHistoryBody,
 	ApiPerpetualsAccountCollateralHistoryBody,
 	PerpetualsCollateralEventName,
+	PerpetualsTradeEventName,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -444,19 +446,18 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		);
 
 		const collateralChanges = response.map((data) => ({
+			eventName: data.event_type,
 			timestamp: data.timestamp,
 			txDigest: data.tx_digest,
 			// marketId: Helpers.addLeadingZeroesToType(data.ch_id),
-			...(data.event_type === "DepositedCollateral" ||
-			data.event_type === "WithdrewCollateral" ||
-			data.event_type === "AllocatedCollateral" ||
-			data.event_type === "DeallocatedCollateral"
+			...(data.event_type === "Deposit" ||
+			data.event_type === "Withdraw" ||
+			data.event_type === "Allocate" ||
+			data.event_type === "Deallocate"
 				? {
-						eventName: data.event_type,
 						collateralChange: BigInt(data.collateral_change),
 				  }
 				: {
-						eventName: data.event_type,
 						collateralChangeUsd: Number(data.collateral_change_usd),
 				  }),
 		}));
@@ -472,20 +473,19 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public async fetchAccountOrderHistory(
 		inputs: ApiPerpetualsAccountOrderHistoryBody
-	): Promise<PerpetualsAccountOrderEventsWithCursor> {
+	): Promise<PerpetualsAccountTradesWithCursor> {
 		const { accountCapId, cursor, limit } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
-			(Omit<
-				| CanceledOrderEventOnChain
-				| PostedOrderReceiptEventOnChain
-				| LiquidatedEventOnChain
-				| FilledMakerOrderEventOnChain
-				| FilledTakerOrderEventOnChain,
-				"timestampMs"
-			> & {
-				timestampMs: string;
-			})[],
+			{
+				timestamp: Timestamp;
+				tx_digest: TransactionDigest;
+				ch_id: ObjectId;
+				event_type: PerpetualsTradeEventName;
+				is_ask: boolean;
+				size: NumberAsString | BigIntAsString;
+				price: NumberAsString | BigIntAsString;
+			}[],
 			{
 				account_id: ObjectId; // accountCapId
 				timestamp_before_ms: Timestamp; // u64
@@ -504,45 +504,39 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			true
 		);
 
-		const events = response.map((data) => {
-			const eventOnChain: EventOnChain<any> = {
-				...data,
-				parsedJson: {
-					...data.parsedJson,
-					// TODO: handle in cleaner way
-					// @ts-ignore
-					ch_id: `0x${data.parsedJson.ch_id.bytes}`,
-				},
-				timestampMs: Number(data.timestampMs),
-			};
-
-			// TODO: handle in cleaner way
-			const eventType = eventOnChain.type;
-			return eventType === this.eventTypes.canceledOrder
-				? Casting.perpetuals.canceledOrderEventFromOnChain(
-						eventOnChain as CanceledOrderEventOnChain
-				  )
-				: eventType === this.eventTypes.postedOrderReceipt
-				? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
-						eventOnChain as PostedOrderReceiptEventOnChain
-				  )
-				: eventType === this.eventTypes.liquidated
-				? Casting.perpetuals.liquidatedEventFromOnChain(
-						eventOnChain as LiquidatedEventOnChain
-				  )
-				: eventType === this.eventTypes.filledMakerOrder
-				? Casting.perpetuals.filledMakerOrderEventFromOnChain(
-						eventOnChain as FilledMakerOrderEventOnChain
-				  )
-				: Casting.perpetuals.filledTakerOrderEventFromOnChain(
-						eventOnChain as FilledTakerOrderEventOnChain
-				  );
-		});
+		const trades = response.map((data) => ({
+			eventName: data.event_type,
+			timestamp: data.timestamp,
+			txDigest: data.tx_digest,
+			marketId: Helpers.addLeadingZeroesToType(data.ch_id),
+			side: data.is_ask
+				? PerpetualsOrderSide.Ask
+				: PerpetualsOrderSide.Bid,
+			...(data.event_type === "Canceled" ||
+			data.event_type === "Posted" ||
+			data.event_type === "FilledMaker"
+				? {
+						sizeLots: BigInt(data.size),
+				  }
+				: {
+						size: Number(data.size),
+				  }),
+			...(data.event_type === "Canceled" ||
+			data.event_type === "Posted" ||
+			data.event_type === "FilledMaker"
+				? {
+						orderPrice: BigInt(data.price),
+				  }
+				: {
+						price: Number(data.price),
+				  }),
+		}));
 		return {
-			events,
+			trades,
+			// TODO: move `nextCursor` finding pattern to helper ?
 			nextCursor:
-				events.length > 0
-					? events[events.length - 1].timestamp
+				trades.length > 0
+					? trades[trades.length - 1].timestamp
 					: undefined,
 		};
 	}

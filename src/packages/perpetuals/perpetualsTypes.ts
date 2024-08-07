@@ -358,14 +358,14 @@ export interface PerpetualsAccountCollateralChangesWithCursor {
 }
 
 export type PerpetualsCollateralEventName =
-	| "WithdrewCollateral"
-	| "DepositedCollateral"
-	| "AllocatedCollateral"
-	| "DeallocatedCollateral"
-	| "SettledFunding"
+	| "Withdraw"
+	| "Deposit"
+	| "Allocate"
+	| "Deallocate"
+	| "SettleFunding"
 	| "Liquidated"
-	| "FilledTakerOrder"
-	| "FilledMakerOrder";
+	| "FilledTaker"
+	| "FilledMaker";
 
 export type PerpetualsAccountCollateralChange = {
 	timestamp: Timestamp;
@@ -380,6 +380,41 @@ export type PerpetualsAccountCollateralChange = {
 			collateralChangeUsd: number;
 	  }
 );
+
+export interface PerpetualsAccountTradesWithCursor {
+	trades: PerpetualsAccountTrade[];
+	nextCursor: Timestamp | undefined;
+}
+
+export type PerpetualsTradeEventName =
+	| "Canceled"
+	| "Posted"
+	| "FilledMaker"
+	| "FilledTaker"
+	| "Liquidated";
+
+export type PerpetualsAccountTrade = {
+	timestamp: Timestamp;
+	txDigest: TransactionDigest;
+	marketId: PerpetualsMarketId;
+	eventName: PerpetualsTradeEventName;
+	side: PerpetualsOrderSide;
+} & (
+	| {
+			orderPrice: bigint;
+	  }
+	| {
+			price: number;
+	  }
+) &
+	(
+		| {
+				sizeLots: bigint;
+		  }
+		| {
+				size: number;
+		  }
+	);
 
 export interface DepositedCollateralEvent extends Event {
 	accountId: PerpetualsAccountId;
@@ -495,11 +530,6 @@ export interface PerpetualsTradeHistoryData {
 export interface PerpetualsTradeHistoryWithCursor {
 	trades: PerpetualsTradeHistoryData[];
 	// TODO: move `nextCursor` pattern to general types ?
-	nextCursor: Timestamp | undefined;
-}
-
-export interface PerpetualsAccountOrderEventsWithCursor {
-	events: PerpetualsOrderEvent[];
 	nextCursor: Timestamp | undefined;
 }
 
