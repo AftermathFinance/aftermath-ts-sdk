@@ -500,7 +500,7 @@ export class RouterApi implements MoveErrorsInterface {
 		const { tx, coinOut } = await this.fetchTxForCompleteTradeRoute({
 			...inputs,
 			completeRoute,
-			coinIn: coinTxArg,
+			coinInId: coinTxArg,
 		});
 
 		if (transferCoinOut && walletAddress) {
@@ -523,7 +523,7 @@ export class RouterApi implements MoveErrorsInterface {
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		tx?: Transaction;
-		coinIn?: TransactionObjectArgument;
+		coinInId?: TransactionObjectArgument;
 		walletAddress?: SuiAddress;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
@@ -534,7 +534,7 @@ export class RouterApi implements MoveErrorsInterface {
 		const {
 			completeRoute,
 			walletAddress,
-			coinIn,
+			coinInId,
 			isSponsoredTx,
 			slippage,
 			transferCoinOut,
@@ -547,7 +547,7 @@ export class RouterApi implements MoveErrorsInterface {
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
-			coinIn ??
+			coinInId ??
 			(walletAddress
 				? await this.Provider.Coin().fetchCoinWithAmountTx({
 						tx: initTx,
@@ -634,7 +634,7 @@ export class RouterApi implements MoveErrorsInterface {
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		tx?: TransactionBlock;
-		coinIn?: TransactionObjectArgumentV0;
+		coinInId?: TransactionObjectArgumentV0;
 		walletAddress?: SuiAddress;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
@@ -645,7 +645,7 @@ export class RouterApi implements MoveErrorsInterface {
 		const {
 			completeRoute,
 			walletAddress,
-			coinIn,
+			coinInId,
 			isSponsoredTx,
 			slippage,
 			transferCoinOut,
@@ -658,7 +658,7 @@ export class RouterApi implements MoveErrorsInterface {
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
-			coinIn ??
+			coinInId ??
 			(walletAddress
 				? await this.Provider.Coin().fetchCoinWithAmountTx({
 						tx: initTx,
