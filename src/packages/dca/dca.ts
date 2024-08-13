@@ -104,32 +104,4 @@ export class Dca extends Caller {
 			inputs
 		);
 	}
-
-	// =========================================================================
-	// Helpers
-	// =========================================================================
-
-	/**
-	 * Fetches address by SuiNS domain
-	 * @async
-	 * @param string domainName - An object containing the walletAddress.
-	 * @returns {Promise<string | undefined | null>} A promise that resolves to a 
-	 * string object with wallet address if it exist
-	 */
-
-	public async getNameServiceAddress(domainName: string): Promise<string | undefined | null> {
-		return this.Provider?.provider.resolveNameServiceAddress({
-			name: domainName
-		});
-	}
-	
-    // =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	private useProvider = () => {
-		const provider = this.Provider?.Dca();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
-	};
 }
