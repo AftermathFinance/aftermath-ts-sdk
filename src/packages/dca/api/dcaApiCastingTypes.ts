@@ -150,11 +150,11 @@ export type DcaIndexerOrderCreateResponse = {
 }
 
 // =========================================================================
-// Cancel Order
+// Close Order
 // =========================================================================
 
-export type DcaIndexerOrderCancelRequest = {
+export type DcaIndexerOrderCloseRequest = {
     order_object_id: ObjectId;
 }
 
-export type DcaIndexerOrderCancelResponse = { }
+export type DcaIndexerOrderCloseResponse = { }

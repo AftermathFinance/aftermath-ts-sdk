@@ -3,7 +3,7 @@ import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactio
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
 import { 
-    ApiDcaTransactionForCancelOrderBody, 
+    ApiDcaTransactionForCloseOrderBody, 
     ApiDcaTransactionForCreateOrderBody, 
     DcaOrderObject, 
     DcaOrdersObject 
@@ -17,8 +17,8 @@ import {
     SuiAddress, 
 } from "../../../types";
 import { 
-    DcaIndexerOrderCancelRequest,
-    DcaIndexerOrderCancelResponse,
+    DcaIndexerOrderCloseRequest,
+    DcaIndexerOrderCloseResponse,
     DcaIndexerOrderCreateRequest,
     DcaIndexerOrderCreateResponse,
     DcaIndexerOrdersRequest, 
@@ -26,7 +26,6 @@ import {
 } from "./dcaApiCastingTypes";
 import { Transaction, TransactionObjectArgument } from "@mysten/sui/transactions";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { ApiMultisigUserBody } from "../../multisig/multisigTypes";
 
 const GAS_SUI_AMOUNT = BigInt(5_000_000);                   // 0.005 SUI
 const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
@@ -124,8 +123,8 @@ export class DcaApi {
         return resultTx;
     };
 
-    public fetchBuildCancelOrderTx = async (
-        inputs: ApiDcaTransactionForCancelOrderBody
+    public fetchBuildCloseOrderTx = async (
+        inputs: ApiDcaTransactionForCloseOrderBody
         ): Promise<Transaction> =>  {
         const { walletAddress, userPublicKey } = inputs;
         const tx = await this.getSponsorTransaction(walletAddress);
@@ -134,7 +133,7 @@ export class DcaApi {
             userPublicKey: pulicKey
         });
         tx.setSender(multisig.address);
-        this.createCancelOrderTx({
+        this.createCloseOrderTx({
             ...inputs,
             tx,
         });
@@ -204,7 +203,7 @@ export class DcaApi {
         return tx;
     }
 
-    public createCancelOrderTx = (inputs: {
+    public createCloseOrderTx = (inputs: {
         tx: Transaction | TransactionBlock,
         allocateCoinType: CoinType,
         buyCoinType: CoinType,
@@ -295,12 +294,12 @@ export class DcaApi {
     }
 
     public fetchOrderExecutionPause = async (
-		inputs: DcaIndexerOrderCancelRequest
-	): Promise<DcaIndexerOrderCancelResponse> => {
+		inputs: DcaIndexerOrderCloseRequest
+	): Promise<DcaIndexerOrderCloseResponse> => {
         const { order_object_id } = inputs;
         return this.Provider.indexerCaller.fetchIndexer<
-            DcaIndexerOrderCancelResponse,
-            DcaIndexerOrderCancelRequest
+            DcaIndexerOrderCloseResponse,
+            DcaIndexerOrderCloseRequest
         >(
             "dca/cancel", 
             {

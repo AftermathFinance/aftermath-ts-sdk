@@ -41,10 +41,10 @@ export interface ApiDcaTransactionForCreateOrderBody {
 }
 
 // =========================================================================
-// Cancel Order Transaction
+// Close Order Transaction
 // =========================================================================
 
-export interface ApiDcaTransactionForCancelOrderBody {
+export interface ApiDcaTransactionForCloseOrderBody {
 	walletAddress: SuiAddress;
     buyCoinType: CoinType;
 	allocateCoinType: CoinType;
@@ -138,7 +138,7 @@ export interface DcaCreatedOrderEvent extends Event {
     remainingTrades: IFixed;
 }
 
-export interface DcaCancelledOrderEvent extends Event {
+export interface DcaClosedOrderEvent extends Event {
 	orderId: ObjectId;
     owner: ObjectId;
 	remainingValue: Balance;

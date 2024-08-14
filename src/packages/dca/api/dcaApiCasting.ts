@@ -1,6 +1,6 @@
 import { Casting, Helpers } from "../../../general/utils";
 import {
-	DcaCancelledOrderEvent,
+	DcaClosedOrderEvent,
 	DcaCreatedOrderEvent,
 	DcaExecutedTradeEvent,
 	DcaOrderObject,
@@ -26,7 +26,6 @@ export class DcaApiCasting {
 		eventOnChain: DcaCreatedOrderEventOnChain
 	): DcaCreatedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
-		console.log("createdDcaOrderEventFromOnChain", {fields})
 		return {
 			orderId: fields.order_id,
 			owner: fields.user,
@@ -51,11 +50,10 @@ export class DcaApiCasting {
 		};
 	};
 
-	public static cancelledDcaOrderEventFromOnChain = (
+	public static closedDcaOrderEventFromOnChain = (
 		eventOnChain: DcaClosedOrderEventOnChain
-	): DcaCancelledOrderEvent => {
+	): DcaClosedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
-		console.log("cancelledDcaOrderEventFromChain", {fields})
 		return {
 			orderId: fields.order_id,
 			owner: fields.user,
@@ -82,7 +80,6 @@ export class DcaApiCasting {
 		eventOnChain: DcaExecutedTradeEventOnChain
 	): DcaExecutedTradeEvent => {
 		const fields = eventOnChain.parsedJson;
-		console.log("executedTradeEventFromChain", {fields})
 		return {
 			orderId: fields.order_id,
 			user: fields.user,

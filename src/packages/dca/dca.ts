@@ -5,11 +5,11 @@ import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import { 
 	ApiDCAsOwnedBody, 
-	ApiDcaTransactionForCancelOrderBody,  
+	ApiDcaTransactionForCloseOrderBody,  
 	DcaOrdersObject, 
 	ApiDcaTransactionForCreateOrderBody
 } from "./dcaTypes";
-import { DcaIndexerOrderCancelRequest, DcaIndexerOrderCancelResponse } from "./api/dcaApiCastingTypes";
+import { DcaIndexerOrderCloseRequest, DcaIndexerOrderCloseResponse } from "./api/dcaApiCastingTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
 export class Dca extends Caller {
@@ -66,12 +66,12 @@ export class Dca extends Caller {
 	 * Fetches backend to stop / delay order execution on BE before executing canceling TX onchain.
 	 * @async
 	 * @param { ObjectId } inputs - An object containing the DCA object identificator.
-	 * @returns {Promise<DcaIndexerOrderCancelResponse>} A promise that resolves to result of delaying
+	 * @returns {Promise<DcaIndexerOrderCloseResponse>} A promise that resolves to result of delaying
 	 */
-	public async createOrderExecutionPause(inputs: DcaIndexerOrderCancelRequest) {
+	public async createOrderExecutionPause(inputs: DcaIndexerOrderCloseRequest) {
 		return this.fetchApi<
-			DcaIndexerOrderCancelResponse,
-			DcaIndexerOrderCancelRequest
+			DcaIndexerOrderCloseResponse,
+			DcaIndexerOrderCloseRequest
 		>("pause-order-execution", inputs);
 	}
 
@@ -98,9 +98,9 @@ export class Dca extends Caller {
 	 * @returns A promise that resolves with the API transaction.
 	 */
 
-	public async getCancelDcaOrderTx(inputs: ApiDcaTransactionForCancelOrderBody) {
-		return this.fetchApiTransaction<ApiDcaTransactionForCancelOrderBody>(
-			"transactions/cancel-order",
+	public async getCloseDcaOrderTx(inputs: ApiDcaTransactionForCloseOrderBody) {
+		return this.fetchApiTransaction<ApiDcaTransactionForCloseOrderBody>(
+			"transactions/close-order",
 			inputs
 		);
 	}
