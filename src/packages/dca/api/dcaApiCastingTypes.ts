@@ -55,10 +55,10 @@ export type DcaClosedOrderEventOnChain = EventOnChain<{
 	order_id: ObjectId;
     user: ObjectId;
     recipient: ObjectId;
-	remaining_value: BigIntAsString;
+	remaining_amount: BigIntAsString;
 	input_type: Uint8Array;
 	output_type: Uint8Array;
-	gas_value: BigIntAsString;
+	gas_amount: BigIntAsString;
 	frequency_ms: BigIntAsString;
     last_trade_timestamp_ms: BigIntAsString;
     amount_per_trade: BigIntAsString;
@@ -72,10 +72,10 @@ export type DcaExecutedTradeEventOnChain = EventOnChain<{
 	order_id: ObjectId;
     user: ObjectId;
     recipient: ObjectId;
-    input_type: Uint8Array;
     input_amount: BigIntAsString;
-    output_type: Uint8Array;
+    input_type: Uint8Array;
     output_amount: BigIntAsString;
+    output_type: Uint8Array;
 }>;
 
 

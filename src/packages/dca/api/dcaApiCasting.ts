@@ -26,6 +26,7 @@ export class DcaApiCasting {
 		eventOnChain: DcaCreatedOrderEventOnChain
 	): DcaCreatedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
+		console.log("createdDcaOrderEventFromOnChain", {fields})
 		return {
 			orderId: fields.order_id,
 			owner: fields.user,
@@ -50,19 +51,20 @@ export class DcaApiCasting {
 		};
 	};
 
-	public static cancelledDcaOrderEventFromChain = (
+	public static cancelledDcaOrderEventFromOnChain = (
 		eventOnChain: DcaClosedOrderEventOnChain
 	): DcaCancelledOrderEvent => {
 		const fields = eventOnChain.parsedJson;
+		console.log("cancelledDcaOrderEventFromChain", {fields})
 		return {
 			orderId: fields.order_id,
 			owner: fields.user,
-			remainingValue: BigInt(fields.remaining_value),
+			remainingValue: BigInt(fields.remaining_amount),
 			inputType: Helpers.addLeadingZeroesToType("0x" + fields.input_type),
 			outputType: Helpers.addLeadingZeroesToType(
 				"0x" + fields.output_type
 			),
-			gasValue: BigInt(fields.gas_value),
+			gasValue: BigInt(fields.gas_amount),
 			frequencyMs: Number(fields.frequency_ms),
 			lastTradeTimestampMs: Number(fields.last_trade_timestamp_ms),
 			amountPerTrade: BigInt(fields.amount_per_trade),
@@ -76,10 +78,11 @@ export class DcaApiCasting {
 		};
 	};
 
-	public static executedTradeEventFromChain = (
+	public static executedTradeEventFromOnChain = (
 		eventOnChain: DcaExecutedTradeEventOnChain
 	): DcaExecutedTradeEvent => {
 		const fields = eventOnChain.parsedJson;
+		console.log("executedTradeEventFromChain", {fields})
 		return {
 			orderId: fields.order_id,
 			user: fields.user,

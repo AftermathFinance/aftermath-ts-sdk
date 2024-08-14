@@ -45,7 +45,7 @@ export class DcaApi {
         },
         eventNames: {
             createdOrder: "CreatedOrderEvent",
-            closedOrder: "CancelledOrderEvent",
+            closedOrder: "ClosedOrderEvent",
             executedTrade: "ExecutedTradeEvent",
         }
     }
