@@ -160,7 +160,7 @@ export class CoinGeckoPricesApi
 							Helpers.filterObject(
 								Object.entries(data)
 									.map(([coinType, filteredData]) => ({
-										[`${chain}:${coinType}`]: filteredData,
+										[coinType]: filteredData,
 									}))
 									.reduce(
 										(acc, curr) => ({
@@ -340,8 +340,7 @@ export class CoinGeckoPricesApi
 								Helpers.filterObject(
 									Object.entries(data)
 										.map(([coinType, filteredData]) => ({
-											[`${chain}:${coinType}`]:
-												filteredData,
+											[coinType]: filteredData,
 										}))
 										.reduce(
 											(acc, curr) => ({
