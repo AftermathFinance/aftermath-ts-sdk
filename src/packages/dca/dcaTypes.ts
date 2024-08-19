@@ -34,7 +34,7 @@ export interface ApiDcaTransactionForCreateOrderBody {
     straregy?: ApiDcaInitializeOrdertStrategyBody;
 	isSponsoredTx?: boolean;
 	delayTimeMs: Timestamp;
-	maxAllowableSlippageBps: Balance;
+	maxAllowableSlippageBps: number;
 	coinPerTradeAmount: Balance;
 	publicKey: string;
 	customRecipient?: SuiAddress;
@@ -89,20 +89,20 @@ export interface DcaOrderOverviewObject {
 	interval: IFixed;
 	totalTrades: number;
 	tradesRemaining: number;
-	maxSlippage: Balance;
+	maxSlippageBps: number;
 	strategy?: DcaOrdertStrategyObject;
 	recipient?: SuiAddress;
 	progress: number;
 	created: {
-		time: Timestamp | undefined;
+		time: Timestamp;
 		tnxDigest: TransactionDigest;
 	};
 	started?: {
-		time: Timestamp | undefined;
+		time: Timestamp;
 		tnxDigest: TransactionDigest;
 	};
 	lastExecutedTradeTime?: {
-		time: Timestamp | undefined;
+		time: Timestamp;
 		tnxDigest: TransactionDigest;
 	};
 }

@@ -183,7 +183,7 @@ export class DcaApi {
                         frequency_ms: inputs.frequencyMs.toString(),
                         delay_timestamp_ms: inputs.delayTimeMs.toString(),
                         amount_per_trade: inputs.orderAmountPerTrade.toString(),
-                        max_allowable_slippage_bps: Number(ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS),
+                        max_allowable_slippage_bps: inputs.maxAllowableSlippageBps, 
                         min_amount_out: (inputs.straregy?.priceMin ?? 0).toString().replace("n", ""),
                         max_amount_out: (inputs.straregy?.priceMax ?? Casting.u64MaxBigInt).toString().replace("n", ""),
                         number_of_trades: Number(inputs.tradesAmount)
@@ -374,12 +374,5 @@ export class DcaApi {
 
 		if (gasData.price && typeof gasData.price !== "string")
 			newTx.setGasPrice(gasData.price);
-
-        console.log({
-            gasData,
-            budget: gasData.budget,
-            owner: gasData.owner,
-            payment: gasData.payment,
-        })
 	};
 }

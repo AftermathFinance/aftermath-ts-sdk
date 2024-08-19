@@ -17,7 +17,6 @@ import {
 import { Balance } from "../../../types";
 
 export class DcaApiCasting {
-	
 	// =========================================================================
 	// Chain Event objects
 	// =========================================================================
@@ -58,9 +57,11 @@ export class DcaApiCasting {
 			orderId: fields.order_id,
 			owner: fields.user,
 			remainingValue: BigInt(fields.remaining_amount),
-			inputType: Helpers.addLeadingZeroesToType("0x" + fields.input_type),
+			inputType: Helpers.addLeadingZeroesToType(
+				"0x" + Buffer.from(fields.input_type).toString()
+			),
 			outputType: Helpers.addLeadingZeroesToType(
-				"0x" + fields.output_type
+				"0x" + Buffer.from(fields.output_type).toString()
 			),
 			gasValue: BigInt(fields.gas_amount),
 			frequencyMs: Number(fields.frequency_ms),
@@ -120,14 +121,17 @@ export class DcaApiCasting {
 						priceMin: BigInt(response.min_amount_out),
 						priceMax: BigInt(response.max_amount_out),
 				  };
-		const { totalSpent, totalBought } = response.trades.reduce((total, order) => {
-            total.totalSpent += BigInt(order.input_amount);
-            total.totalBought += BigInt(order.output_amount);
-            return total;
-        }, { 
-            totalSpent: BigInt(0), 
-            totalBought: BigInt(0) 
-        });
+		const { totalSpent, totalBought } = response.trades.reduce(
+			(total, order) => {
+				total.totalSpent += BigInt(order.input_amount);
+				total.totalBought += BigInt(order.output_amount);
+				return total;
+			},
+			{
+				totalSpent: BigInt(0),
+				totalBought: BigInt(0),
+			}
+		);
 		const tradesPrepared = response.trades.map((trade) => {
 			const tradePrepared = this.createdOrderTradeEventOnIndexer(
 				trade,
@@ -167,7 +171,7 @@ export class DcaApiCasting {
 				interval: BigInt(response.frequency_ms),
 				totalTrades: totalOrdersAmount,
 				tradesRemaining: ordersLeft,
-				maxSlippage: BigInt(response.slippage),
+				maxSlippageBps: Number(response.slippage),
 				strategy: strategy,
 				progress: progress,
 				recipient: response.recipient,
@@ -184,7 +188,7 @@ export class DcaApiCasting {
 				lastExecutedTradeTime: lastTrade
 					? {
 							time: lastTrade.timestamp,
-							tnxDigest:lastTrade.digest,
+							tnxDigest: lastTrade.digest,
 					  }
 					: undefined,
 			},
@@ -210,7 +214,7 @@ export class DcaApiCasting {
 			},
 			tnxDigest: response.event.tx_digest,
 			tnxDate: response.event.timestamp,
-			rate: rate
+			rate: rate,
 		};
 	};
 }
