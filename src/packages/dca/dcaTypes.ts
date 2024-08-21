@@ -45,11 +45,10 @@ export interface ApiDcaTransactionForCreateOrderBody {
 // =========================================================================
 
 export interface ApiDcaTransactionForCloseOrderBody {
-	walletAddress: SuiAddress;
-    buyCoinType: CoinType;
-	allocateCoinType: CoinType;
 	orderId: SuiAddress;
-	userPublicKey: string;
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
 }
 
 // =========================================================================

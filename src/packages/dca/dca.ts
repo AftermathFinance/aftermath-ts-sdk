@@ -1,15 +1,14 @@
 
-import { SuiNetwork } from "../../types";
+import { ObjectId, SuiNetwork } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import { 
 	ApiDCAsOwnedBody, 
-	ApiDcaTransactionForCloseOrderBody,  
 	DcaOrdersObject, 
-	ApiDcaTransactionForCreateOrderBody
+	ApiDcaTransactionForCreateOrderBody,
+	ApiDcaTransactionForCloseOrderBody
 } from "./dcaTypes";
-import { DcaIndexerOrderCloseRequest, DcaIndexerOrderCloseResponse } from "./api/dcaApiCastingTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
 export class Dca extends Caller {
@@ -62,19 +61,6 @@ export class Dca extends Caller {
         return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>("owned-past-orders", inputs);
     }
 
-	/**
-	 * Fetches backend to stop / delay order execution on BE before executing canceling TX onchain.
-	 * @async
-	 * @param { ObjectId } inputs - An object containing the DCA object identificator.
-	 * @returns {Promise<DcaIndexerOrderCloseResponse>} A promise that resolves to result of delaying
-	 */
-	public async createOrderExecutionPause(inputs: DcaIndexerOrderCloseRequest) {
-		return this.fetchApi<
-			DcaIndexerOrderCloseResponse,
-			DcaIndexerOrderCloseRequest
-		>("pause-order-execution", inputs);
-	}
-
 	// =========================================================================
 	// Transactions
 	// =========================================================================
@@ -91,17 +77,38 @@ export class Dca extends Caller {
 			inputs
 		);
 	}
-
+	
 	/**
-	 * Fetches the API transaction for canceling DCA order.
+	 * Fetches the API for canceling DCA order.
 	 * @param inputs - The inputs for the transaction.
-	 * @returns A promise that resolves with the API transaction.
+	 * @returns A promise that resolves with transaction execution status.
 	 */
 
-	public async getCloseDcaOrderTx(inputs: ApiDcaTransactionForCloseOrderBody) {
-		return this.fetchApiTransaction<ApiDcaTransactionForCloseOrderBody>(
-			"transactions/close-order",
+	public async closeDcaOrder(
+		inputs: ApiDcaTransactionForCloseOrderBody
+	): Promise<boolean> {
+		return this.fetchApi<boolean, ApiDcaTransactionForCloseOrderBody>(
+			`ineractions/close-order`,
 			inputs
 		);
+	}
+
+	/**
+	 * Method for getting the message to sign.
+	 * @param inputs - The inputs for the transaction.
+	 * @returns A promise that resolves with transaction execution status.
+	 */
+
+	public closeDcaOrderMessageToSign(inputs: {
+		orderId: ObjectId;
+		walletAddress: SuiAddress;
+	}): {
+		order_object_id: string;
+		wallet_address: SuiAddress;
+	} {
+		return {
+			order_object_id: inputs.orderId,
+			wallet_address: inputs.walletAddress,
+		};
 	}
 }

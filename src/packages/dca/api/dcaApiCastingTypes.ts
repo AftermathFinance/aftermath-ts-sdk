@@ -154,7 +154,10 @@ export type DcaIndexerOrderCreateResponse = {
 // =========================================================================
 
 export type DcaIndexerOrderCloseRequest = {
-    order_object_id: ObjectId;
+    order_object_id: string;
+    wallet_address: string;
+    signature: string;
+    bytes: string;
 }
 
 export type DcaIndexerOrderCloseResponse = { }

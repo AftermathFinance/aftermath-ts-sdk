@@ -1,9 +1,8 @@
 import { AftermathApi } from "../../../general/providers";
-import { TransactionArgument, TransactionBlock } from "@mysten/sui.js/transactions";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
 import { 
-    ApiDcaTransactionForCloseOrderBody, 
+    ApiDcaTransactionForCloseOrderBody,
     ApiDcaTransactionForCreateOrderBody, 
     DcaOrderObject, 
     DcaOrdersObject 
@@ -11,14 +10,11 @@ import {
 import { 
     AnyObjectType,
     Balance, 
-    CoinType, 
     DcaAddresses, 
-    ObjectId, 
     SuiAddress, 
 } from "../../../types";
 import { 
     DcaIndexerOrderCloseRequest,
-    DcaIndexerOrderCloseResponse,
     DcaIndexerOrderCreateRequest,
     DcaIndexerOrderCreateResponse,
     DcaIndexerOrdersRequest, 
@@ -28,7 +24,6 @@ import { Transaction, TransactionObjectArgument } from "@mysten/sui/transactions
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
 const GAS_SUI_AMOUNT = BigInt(5_000_000);                   // 0.005 SUI
-const ORDER_MAX_ALLOWABLE_SLIPPAGE_BPS = BigInt(10000);     // Maximum valued
     
 export class DcaApi {
 
@@ -123,23 +118,6 @@ export class DcaApi {
         return resultTx;
     };
 
-    public fetchBuildCloseOrderTx = async (
-        inputs: ApiDcaTransactionForCloseOrderBody
-        ): Promise<Transaction> =>  {
-        const { walletAddress, userPublicKey } = inputs;
-        const tx = await this.getSponsorTransaction(walletAddress);
-        const pulicKey = Uint8Array.from(Buffer.from(userPublicKey, "hex"))
-        const multisig = await this.Provider.Multisig().fetchMultisigForUser({
-            userPublicKey: pulicKey
-        });
-        tx.setSender(multisig.address);
-        this.createCloseOrderTx({
-            ...inputs,
-            tx,
-        });
-        return tx;
-    }
-
     // =========================================================================
     // Transaction Commands
     // =========================================================================
@@ -203,26 +181,30 @@ export class DcaApi {
         return tx;
     }
 
-    public createCloseOrderTx = (inputs: {
-        tx: Transaction | TransactionBlock,
-        allocateCoinType: CoinType,
-        buyCoinType: CoinType,
-        orderId: ObjectId | TransactionArgument
-    }) => {
-        const { tx } = inputs;
-        return tx.moveCall({
-            target: Helpers.transactions.createTxTarget(
-                this.addresses.packages.dca,
-                DcaApi.constants.moduleNames.dca,
-                "close_order"
-            ),
-            typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
-            arguments: [
-                tx.object(inputs.orderId),
-                tx.object(this.addresses.objects.config),
-            ],
-        });
-    }
+    // =========================================================================
+	//  Inspections
+	// =========================================================================
+
+    public fetchCloseDcaOrder = async (
+		inputs: ApiDcaTransactionForCloseOrderBody
+	): Promise<boolean> => {
+		return this.Provider.indexerCaller.fetchIndexer<
+			boolean,
+			DcaIndexerOrderCloseRequest
+		>(
+			`dca/cancel`,
+			{
+                order_object_id: inputs.orderId,
+				wallet_address: inputs.walletAddress,
+				signature: inputs.signature,
+				bytes: inputs.bytes,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+	};
 
     // =========================================================================
     // Class Objects
@@ -293,25 +275,6 @@ export class DcaApi {
         }
     }
 
-    public fetchOrderExecutionPause = async (
-		inputs: DcaIndexerOrderCloseRequest
-	): Promise<DcaIndexerOrderCloseResponse> => {
-        const { order_object_id } = inputs;
-        return this.Provider.indexerCaller.fetchIndexer<
-            DcaIndexerOrderCloseResponse,
-            DcaIndexerOrderCloseRequest
-        >(
-            "dca/cancel", 
-            {
-                order_object_id
-            },
-            undefined,
-            undefined,
-            undefined,
-            true
-        );
-    }
-
     // =========================================================================
     // Events
     // =========================================================================
@@ -340,16 +303,6 @@ export class DcaApi {
     // =========================================================================
     // Helpers
     // =========================================================================
-
-    private getSponsorTransaction = async (
-        sponsor: SuiAddress
-    ): Promise<Transaction> => {
-        const txBlock = new Transaction();
-        const kindBytes = await txBlock.build({ onlyTransactionKind: true });
-        const tx = Transaction.fromKind(kindBytes);
-        tx.setGasOwner(sponsor);
-        return tx;
-    }
 
     private static transferTxMetadata = (inputs: {
 		initTx: Transaction;
