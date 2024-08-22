@@ -357,47 +357,25 @@ export interface PerpetualsAccountCollateralChangesWithCursor {
 	nextCursor: Timestamp | undefined;
 }
 
-export type PerpetualsCollateralEventName =
-	| "Withdraw"
-	| "Deposit"
-	| "Allocate"
-	| "Deallocate"
-	| "SettleFunding"
-	| "Liquidated"
-	| "FilledTaker"
-	| "FilledMaker";
-
 export type PerpetualsAccountCollateralChange = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
 	// marketId: PerpetualsMarketId;
-	eventName: PerpetualsCollateralEventName;
-} & (
-	| {
-			collateralChange: Balance;
-	  }
-	| {
-			collateralChangeUsd: number;
-	  }
-);
+	eventType: AnyObjectType;
+	collateralChange: number;
+	collateralChangeUsd: number;
+};
 
 export interface PerpetualsAccountTradesWithCursor {
 	trades: PerpetualsAccountTrade[];
 	nextCursor: Timestamp | undefined;
 }
 
-export type PerpetualsTradeEventName =
-	| "Canceled"
-	| "Posted"
-	| "FilledMaker"
-	| "FilledTaker"
-	| "Liquidated";
-
 export type PerpetualsAccountTrade = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
 	marketId: PerpetualsMarketId;
-	eventName: PerpetualsTradeEventName;
+	eventType: AnyObjectType;
 	side: PerpetualsOrderSide;
 } & (
 	| {
@@ -676,14 +654,10 @@ export interface ApiPerpetualsAccountsBody {
 // =========================================================================
 
 export type ApiPerpetualsAccountOrderHistoryBody =
-	ApiDataWithCursorBody<Timestamp> & {
-		accountCapId: ObjectId;
-	};
+	ApiDataWithCursorBody<Timestamp>;
 
 export type ApiPerpetualsAccountCollateralHistoryBody =
-	ApiDataWithCursorBody<Timestamp> & {
-		accountCapId: ObjectId;
-	};
+	ApiDataWithCursorBody<Timestamp>;
 
 export interface ApiPerpetualsSetPositionLeverageBody {
 	walletAddress: SuiAddress;
@@ -778,7 +752,6 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 }
 
 export interface ApiPerpetualsAccountOrderDatasBody {
-	accountCapId: ObjectId;
 	orderDatas: {
 		orderId: PerpetualsOrderId;
 		currentSize: bigint;

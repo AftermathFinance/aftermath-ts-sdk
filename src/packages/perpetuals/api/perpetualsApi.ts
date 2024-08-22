@@ -76,8 +76,6 @@ import {
 	ApiPerpetualsSetPositionLeverageBody,
 	ApiPerpetualsAccountOrderHistoryBody,
 	ApiPerpetualsAccountCollateralHistoryBody,
-	PerpetualsCollateralEventName,
-	PerpetualsTradeEventName,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -343,9 +341,11 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	};
 
 	public fetchAccountOrderDatas = async (
-		inputs: ApiPerpetualsAccountOrderDatasBody
+		inputs: ApiPerpetualsAccountOrderDatasBody & {
+			accountId: PerpetualsAccountId;
+		}
 	): Promise<PerpetualsOrderData[]> => {
-		const { accountCapId, orderDatas } = inputs;
+		const { accountId, orderDatas } = inputs;
 
 		const orders = await this.Provider.indexerCaller.fetchIndexer<
 			{
@@ -356,13 +356,13 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				initial_size: number;
 			}[],
 			{
-				account_id: ObjectId; // accountCapId
+				account_id: number;
 				order_ids: string[];
 			}
 		>(
 			`perpetuals/accounts/orders`,
 			{
-				account_id: Helpers.addLeadingZeroesToType(accountCapId),
+				account_id: Number(accountId),
 				order_ids: orderDatas.map((orderData) =>
 					String(orderData.orderId).replaceAll("n", "")
 				),
@@ -414,28 +414,30 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	public async fetchAccountCollateralHistory(
-		inputs: ApiPerpetualsAccountCollateralHistoryBody
+		inputs: ApiPerpetualsAccountCollateralHistoryBody & {
+			accountId: PerpetualsAccountId;
+		}
 	): Promise<PerpetualsAccountCollateralChangesWithCursor> {
-		const { accountCapId, cursor, limit } = inputs;
+		const { accountId, cursor, limit } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				timestamp: Timestamp; // u64
 				tx_digest: TransactionDigest;
 				ch_id: ObjectId | "";
-				event_type: PerpetualsCollateralEventName;
-				collateral_change: BigIntAsString; // u64
-				collateral_change_usd: string; // f64
+				event_type: AnyObjectType;
+				collateral_change: number; // f64
+				collateral_change_usd: number; // f64
 			}[],
 			{
-				account_id: ObjectId; // accountCapId
+				account_id: number;
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
 		>(
 			`perpetuals/accounts/collateral-history`,
 			{
-				account_id: Helpers.addLeadingZeroesToType(accountCapId),
+				account_id: Number(accountId),
 				timestamp_before_ms: cursor ?? new Date().valueOf(),
 				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
 			},
@@ -446,20 +448,12 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		);
 
 		const collateralChanges = response.map((data) => ({
-			eventName: data.event_type,
+			eventType: data.event_type,
 			timestamp: data.timestamp,
 			txDigest: data.tx_digest,
 			// marketId: Helpers.addLeadingZeroesToType(data.ch_id),
-			...(data.event_type === "Deposit" ||
-			data.event_type === "Withdraw" ||
-			data.event_type === "Allocate" ||
-			data.event_type === "Deallocate"
-				? {
-						collateralChange: BigInt(data.collateral_change),
-				  }
-				: {
-						collateralChangeUsd: Number(data.collateral_change_usd),
-				  }),
+			collateralChange: data.collateral_change,
+			collateralChangeUsd: data.collateral_change_usd,
 		}));
 		return {
 			collateralChanges,
@@ -472,29 +466,33 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	}
 
 	public async fetchAccountOrderHistory(
-		inputs: ApiPerpetualsAccountOrderHistoryBody
+		inputs: ApiPerpetualsAccountOrderHistoryBody & {
+			accountId: PerpetualsAccountId;
+		}
 	): Promise<PerpetualsAccountTradesWithCursor> {
-		const { accountCapId, cursor, limit } = inputs;
+		const { accountId, cursor, limit } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
 				timestamp: Timestamp;
 				tx_digest: TransactionDigest;
 				ch_id: ObjectId;
-				event_type: PerpetualsTradeEventName;
+				event_type: AnyObjectType;
 				is_ask: boolean;
-				size: NumberAsString | BigIntAsString;
-				price: NumberAsString | BigIntAsString;
+				// size: NumberAsString | BigIntAsString;
+				// price: NumberAsString | BigIntAsString;
+				size: NumberAsString;
+				price: NumberAsString;
 			}[],
 			{
-				account_id: ObjectId; // accountCapId
+				account_id: number;
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
 		>(
 			`perpetuals/accounts/trade-history`,
 			{
-				account_id: Helpers.addLeadingZeroesToType(accountCapId),
+				account_id: Number(accountId),
 				timestamp_before_ms: cursor ?? new Date().valueOf(),
 				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
 			},
@@ -505,31 +503,15 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		);
 
 		const trades = response.map((data) => ({
-			eventName: data.event_type,
+			eventType: data.event_type,
 			timestamp: data.timestamp,
 			txDigest: data.tx_digest,
 			marketId: Helpers.addLeadingZeroesToType(data.ch_id),
 			side: data.is_ask
 				? PerpetualsOrderSide.Ask
 				: PerpetualsOrderSide.Bid,
-			...(data.event_type === "Canceled" ||
-			data.event_type === "Posted" ||
-			data.event_type === "FilledMaker"
-				? {
-						sizeLots: BigInt(data.size),
-				  }
-				: {
-						size: Number(data.size),
-				  }),
-			...(data.event_type === "Canceled" ||
-			data.event_type === "Posted" ||
-			data.event_type === "FilledMaker"
-				? {
-						orderPrice: BigInt(data.price),
-				  }
-				: {
-						price: Number(data.price),
-				  }),
+			size: Number(data.size),
+			price: Number(data.price),
 		}));
 		return {
 			trades,

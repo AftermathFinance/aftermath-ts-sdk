@@ -347,7 +347,6 @@ export class PerpetualsAccount extends Caller {
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`,
 			{
 				orderDatas,
-				accountCapId: this.accountCap.objectId,
 			}
 		);
 	}
@@ -360,10 +359,7 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsAccountCollateralHistoryBody
 		>(
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/collateral-history`,
-			{
-				...inputs,
-				accountCapId: this.accountCap.objectId,
-			}
+			inputs
 		);
 	}
 
@@ -373,10 +369,7 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsAccountOrderHistoryBody
 		>(
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-history`,
-			{
-				...inputs,
-				accountCapId: this.accountCap.objectId,
-			}
+			inputs
 		);
 	}
 
