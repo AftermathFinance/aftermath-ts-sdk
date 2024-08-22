@@ -7,7 +7,8 @@ import {
 	ApiDCAsOwnedBody, 
 	DcaOrdersObject, 
 	ApiDcaTransactionForCreateOrderBody,
-	ApiDcaTransactionForCloseOrderBody
+	ApiDcaTransactionForCloseOrderBody,
+	DcaOrderObject
 } from "./dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
@@ -43,22 +44,22 @@ export class Dca extends Caller {
 	 * Fetches the API for dollar cost averaging active orders list.
 	 * @async
 	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns {Promise<DcaOrdersObject>} A promise that resolves to object with array of fetched events for active dca's.
+	 * @returns {Promise<DcaOrderObject[]>} A promise that resolves to object with array of fetched events for active dca's.
 	 */
 
     public async getActiveDcaOrders(inputs: { walletAddress: SuiAddress; }) {
-        return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>("owned-active-orders", inputs);
+        return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>("owned-active-orders", inputs);
     }
 
 	/**
 	 * Fetches the API for dollar cost averaging past orders list.
 	 * @async
 	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns {Promise<DcaOrdersObject>} A promise that resolves to object with array of fetched events for past dca's.
+	 * @returns {Promise<DcaOrderObject[]>} A promise that resolves to object with array of fetched events for past dca's.
 	 */
 
     public async getPastDcaOrders(inputs: { walletAddress: SuiAddress; }) {
-        return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>("owned-past-orders", inputs);
+        return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>("owned-past-orders", inputs);
     }
 
 	// =========================================================================

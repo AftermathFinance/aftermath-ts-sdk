@@ -96,11 +96,11 @@ export interface DcaOrderOverviewObject {
 		time: Timestamp;
 		tnxDigest: TransactionDigest;
 	};
-	started?: {
+	nextTrade: {
 		time: Timestamp;
 		tnxDigest: TransactionDigest;
 	};
-	lastExecutedTradeTime?: {
+	lastExecutedTrade?: {
 		time: Timestamp;
 		tnxDigest: TransactionDigest;
 	};

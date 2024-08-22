@@ -145,7 +145,10 @@ export class DcaApiCasting {
 		const started = tradesPrepared.length > 0 ? { 
 			timestamp: tradesPrepared[0].tnxDate,
 			digest:  tradesPrepared[0].tnxDigest,
-		} : undefined;
+		} : {
+			timestamp: Number(response.next_execution_timestamp_ms),
+			digest: ""
+		};
 
 		const lastTrade = tradesPrepared.length > 0 ? { 
 			timestamp: tradesPrepared[tradesPrepared.length - 1].tnxDate,
@@ -179,13 +182,11 @@ export class DcaApiCasting {
 					time: response.created.timestamp,
 					tnxDigest: response.created.tx_digest,
 				},
-				started: started
-					? {
-							time: started.timestamp,
-							tnxDigest: started.digest,
-					  }
-					: undefined,
-				lastExecutedTradeTime: lastTrade
+				nextTrade: {
+					time: started.timestamp,
+					tnxDigest: started.digest,
+				},
+				lastExecutedTrade: lastTrade
 					? {
 							time: lastTrade.timestamp,
 							tnxDigest: lastTrade.digest,

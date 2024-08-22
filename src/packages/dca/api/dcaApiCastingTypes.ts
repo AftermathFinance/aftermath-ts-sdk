@@ -100,7 +100,6 @@ export type DcaIndexerOrderResponse = {
     orders_left: BigIntAsString;
     frequency_ms: BigIntAsString;
     slippage: BigIntAsString;
-    total_spent: BigIntAsString;
     recipient: SuiAddress;
     created: {
         timestamp: Timestamp;
@@ -109,6 +108,7 @@ export type DcaIndexerOrderResponse = {
     average_price: BigIntAsString;
     min_amount_out: BigIntAsString;
     max_amount_out: BigIntAsString;
+    next_execution_timestamp_ms: string;
     trades: DcaIndexerOrderTradeResponse[];
 };
 
