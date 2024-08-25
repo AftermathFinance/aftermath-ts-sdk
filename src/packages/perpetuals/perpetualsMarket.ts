@@ -256,11 +256,18 @@ export class PerpetualsMarket extends Caller {
 		return Math.round(inputs.price / this.tickSize()) * this.tickSize();
 	};
 
-	public roundToValidSize = (inputs: { size: number; floor?: boolean }) => {
+	public roundToValidSize = (inputs: {
+		size: number;
+		floor?: boolean;
+		ceil?: boolean;
+	}) => {
 		const lots = inputs.size / this.lotSize();
 		return (
-			(inputs.floor ? Math.floor(lots) : Math.round(lots)) *
-			this.lotSize()
+			(inputs.floor
+				? Math.floor(lots)
+				: inputs.ceil
+				? Math.ceil(lots)
+				: Math.round(lots)) * this.lotSize()
 		);
 	};
 
