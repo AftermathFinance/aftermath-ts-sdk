@@ -45,7 +45,6 @@ export interface ApiDcaTransactionForCreateOrderBody {
 // =========================================================================
 
 export interface ApiDcaTransactionForCloseOrderBody {
-	orderId: SuiAddress;
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;

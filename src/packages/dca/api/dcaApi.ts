@@ -194,7 +194,6 @@ export class DcaApi {
 		>(
 			`dca/cancel`,
 			{
-                order_object_id: inputs.orderId,
 				wallet_address: inputs.walletAddress,
 				signature: inputs.signature,
 				bytes: inputs.bytes,
