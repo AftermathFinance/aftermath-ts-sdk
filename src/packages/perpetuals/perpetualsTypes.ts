@@ -701,6 +701,19 @@ export type ApiPerpetualsPreviewOrderBody = (
 	// isClose?: boolean;
 };
 
+export interface ApiPerpetualsPreviewCancelOrdersBody {
+	accountId: PerpetualsAccountId;
+	// TODO: remove eventually ?
+	collateralCoinType: CoinType;
+	marketIdsToData: Record<
+		PerpetualsMarketId,
+		{
+			orderIds: PerpetualsOrderId[];
+			leverage: number;
+		}
+	>;
+}
+
 export type ApiPerpetualsPreviewOrderResponse =
 	| {
 			error: string;
@@ -715,6 +728,18 @@ export type ApiPerpetualsPreviewOrderResponse =
 			postedSizeUsd: number;
 			collateralChange: number;
 			executionPrice: number;
+	  };
+
+export type ApiPerpetualsPreviewCancelOrdersResponse =
+	| {
+			error: string;
+	  }
+	| {
+			marketIdsToPositionAfterCancelOrders: Record<
+				PerpetualsMarketId,
+				PerpetualsPosition
+			>;
+			collateralToDeallocate: Balance;
 	  };
 
 export interface ApiPerpetualsOrderbookStateBody {

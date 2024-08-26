@@ -76,6 +76,8 @@ import {
 	ApiPerpetualsSetPositionLeverageBody,
 	ApiPerpetualsAccountOrderHistoryBody,
 	ApiPerpetualsAccountCollateralHistoryBody,
+	ApiPerpetualsPreviewCancelOrdersBody,
+	ApiPerpetualsPreviewCancelOrdersResponse,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -94,6 +96,7 @@ import {
 	LiquidatedEventOnChain,
 	PerpetualsAccountPositionsIndexerResponse,
 	PerpetualsMarketsIndexerResponse,
+	PerpetualsPreviewCancelOrdersIndexerResponse,
 	PerpetualsPreviewOrderIndexerResponse,
 	PostedOrderEventOnChain,
 	PostedOrderReceiptEventOnChain,
@@ -762,126 +765,175 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	};
 
 	public fetchPreviewOrder = async (
-		// TODO: remove unused inputs
 		inputs: ApiPerpetualsPreviewOrderBody
 	): Promise<ApiPerpetualsPreviewOrderResponse> => {
 		const { marketId, side, leverage, accountId } = inputs;
 
-		try {
-			const response = await this.Provider.indexerCaller.fetchIndexer<
-				PerpetualsPreviewOrderIndexerResponse,
-				{
-					ch_id: PerpetualsMarketId;
-					account_id: number;
-					side: boolean;
-					size: number;
-					leverage: number;
-				} & (
-					| {
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			PerpetualsPreviewOrderIndexerResponse,
+			{
+				ch_id: PerpetualsMarketId;
+				account_id: number;
+				side: boolean;
+				size: number;
+				leverage: number;
+			} & (
+				| {
+						// limit order
+						price: number;
+						order_type: number;
+				  }
+				| {
+						// market order
+				  }
+			)
+		>(
+			`perpetuals/previews/${
+				"price" in inputs ? "limit" : "market"
+			}-order`,
+			{
+				leverage,
+				ch_id: marketId,
+				account_id: Number(accountId),
+				side: Boolean(side),
+				size: Number(inputs.size),
+				...("price" in inputs
+					? {
 							// limit order
-							price: number;
-							order_type: number;
+							price: Number(inputs.price),
+							order_type: inputs.orderType,
 					  }
-					| {
+					: {
 							// market order
-					  }
-				)
-			>(
-				`perpetuals/previews/${
-					"price" in inputs ? "limit" : "market"
-				}-order`,
-				{
-					leverage,
-					ch_id: marketId,
-					account_id: Number(accountId),
-					side: Boolean(side),
-					size: Number(inputs.size),
-					...("price" in inputs
-						? {
-								// limit order
-								price: Number(inputs.price),
-								order_type: inputs.orderType,
-						  }
-						: {
-								// market order
-						  }),
-				},
-				undefined,
-				undefined,
-				undefined,
-				true
-			);
+					  }),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 
-			const executionPrice = Casting.IFixed.numberFromIFixed(
-				Casting.IFixed.iFixedFromStringBytes(response.execution_price)
-			);
-			const filledSize = Casting.IFixed.numberFromIFixed(
-				Casting.IFixed.iFixedFromStringBytes(response.size_filled)
-			);
-			const filledSizeUsd = filledSize * executionPrice;
-			const postedSize = response.size_posted
-				? Casting.IFixed.numberFromIFixed(
-						Casting.IFixed.iFixedFromStringBytes(
-							response.size_posted
-						)
-				  )
-				: 0;
-			const postedSizeUsd =
-				"price" in inputs
-					? // limit order
-					  postedSize *
-					  Perpetuals.orderPriceToPrice({
-							orderPrice: inputs.price,
-							lotSize: inputs.lotSize,
-							tickSize: inputs.tickSize,
-					  })
-					: // market order
-					  0;
+		const executionPrice = Casting.IFixed.numberFromIFixed(
+			Casting.IFixed.iFixedFromStringBytes(response.execution_price)
+		);
+		const filledSize = Casting.IFixed.numberFromIFixed(
+			Casting.IFixed.iFixedFromStringBytes(response.size_filled)
+		);
+		const filledSizeUsd = filledSize * executionPrice;
+		const postedSize = response.size_posted
+			? Casting.IFixed.numberFromIFixed(
+					Casting.IFixed.iFixedFromStringBytes(response.size_posted)
+			  )
+			: 0;
+		const postedSizeUsd =
+			"price" in inputs
+				? // limit order
+				  postedSize *
+				  Perpetuals.orderPriceToPrice({
+						orderPrice: inputs.price,
+						lotSize: inputs.lotSize,
+						tickSize: inputs.tickSize,
+				  })
+				: // market order
+				  0;
 
-			const positionAfterOrder =
-				Casting.perpetuals.positionFromIndexerReponse({
-					position: response.position,
-					collateralCoinType: inputs.collateralCoinType,
-					marketId: inputs.marketId,
-					leverage,
-				});
+		const positionAfterOrder =
+			Casting.perpetuals.positionFromIndexerReponse({
+				position: response.position,
+				collateralCoinType: inputs.collateralCoinType,
+				marketId: inputs.marketId,
+				leverage,
+			});
 
-			return {
-				postedSize,
-				postedSizeUsd,
-				filledSize,
-				filledSizeUsd,
-				// NOTE: is this not needed ?
-				executionPrice,
-				positionAfterOrder,
-				priceSlippage: Casting.IFixed.numberFromIFixed(
-					Casting.IFixed.iFixedFromStringBytes(
-						response.price_slippage
-					)
-				),
-				percentSlippage: Casting.IFixed.numberFromIFixed(
-					Casting.IFixed.iFixedFromStringBytes(
-						response.percent_slippage
-					)
-				),
-				collateralChange: Casting.IFixed.numberFromIFixed(
-					Casting.IFixed.iFixedFromStringBytes(
-						response.collateral_change
-					)
-				),
-			};
-		} catch (e1) {
-			try {
-				const splitErr = String(e1).split("500 Internal Server Error ");
+		return {
+			postedSize,
+			postedSizeUsd,
+			filledSize,
+			filledSizeUsd,
+			// NOTE: is this not needed ?
+			executionPrice,
+			positionAfterOrder,
+			priceSlippage: Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(response.price_slippage)
+			),
+			percentSlippage: Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(response.percent_slippage)
+			),
+			collateralChange: Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(response.collateral_change)
+			),
+		};
+	};
+
+	public fetchPreviewCancelOrders = async (
+		inputs: ApiPerpetualsPreviewCancelOrdersBody
+	): Promise<ApiPerpetualsPreviewCancelOrdersResponse> => {
+		const { accountId, collateralCoinType, marketIdsToData } = inputs;
+
+		const responses = await Promise.all(
+			Object.entries(marketIdsToData).map(
+				async ([marketId, { leverage, orderIds }]) => {
+					const response =
+						await this.Provider.indexerCaller.fetchIndexer<
+							PerpetualsPreviewCancelOrdersIndexerResponse,
+							{
+								ch_id: PerpetualsMarketId;
+								account_id: number;
+								leverage: number;
+								order_ids: string[];
+							}
+						>(
+							`perpetuals/previews/cancel-orders`,
+							{
+								leverage,
+								ch_id: marketId,
+								account_id: Number(accountId),
+								order_ids: orderIds.map((orderId) =>
+									orderId.toString().replaceAll("n", "")
+								),
+							},
+							undefined,
+							undefined,
+							undefined,
+							true
+						);
+
+					const positionAfterCancelOrders =
+						Casting.perpetuals.positionFromIndexerReponse({
+							marketId,
+							leverage,
+							collateralCoinType,
+							position: response.position,
+						});
+					return {
+						marketId,
+						positionAfterCancelOrders,
+						collateralToDeallocate: BigInt(
+							response.collateral_to_deallocate
+						),
+					};
+				}
+			)
+		);
+		return responses.reduce(
+			(
+				acc,
+				{ marketId, positionAfterCancelOrders, collateralToDeallocate }
+			) => {
 				return {
-					error: splitErr[splitErr.length - 1],
+					marketIdsToPositionAfterCancelOrders: {
+						...acc.marketIdsToPositionAfterCancelOrders,
+						[marketId]: positionAfterCancelOrders,
+					},
+					collateralToDeallocate:
+						acc.collateralToDeallocate + collateralToDeallocate,
 				};
-			} catch (e2) {
-				return {
-					error: "An error occurred.",
-				};
+			},
+			{
+				marketIdsToPositionAfterCancelOrders: {},
+				collateralToDeallocate: BigInt(0),
 			}
-		}
+		);
 	};
 
 	public fetchOrderbookPrice = async (inputs: {

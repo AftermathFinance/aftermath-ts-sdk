@@ -45,6 +45,8 @@ import {
 	PerpetualsAccountId,
 	ApiPerpetualsAccountCollateralHistoryBody,
 	ApiPerpetualsAccountOrderHistoryBody,
+	ApiPerpetualsPreviewCancelOrdersBody,
+	ApiPerpetualsPreviewCancelOrdersResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -322,6 +324,29 @@ export class PerpetualsAccount extends Caller {
 				this.collateralDecimals()
 			),
 		};
+	}
+
+	public async getCancelOrdersPreview(
+		inputs: Omit<
+			ApiPerpetualsPreviewCancelOrdersBody,
+			"accountId" | "collateralCoinType"
+		>
+	): Promise<ApiPerpetualsPreviewCancelOrdersResponse> {
+		// NOTE: should this case return an error instead ?
+		if (Object.keys(inputs.marketIdsToData).length <= 0)
+			return {
+				collateralToDeallocate: BigInt(0),
+				marketIdsToPositionAfterCancelOrders: {},
+			};
+
+		return this.fetchApi<
+			ApiPerpetualsPreviewCancelOrdersResponse,
+			ApiPerpetualsPreviewCancelOrdersBody
+		>("preview-cancel-orders", {
+			...inputs,
+			accountId: this.accountCap.accountId,
+			collateralCoinType: this.accountCap.collateralCoinType,
+		});
 	}
 
 	public async getOrderDatas(): Promise<PerpetualsOrderData[]> {

@@ -191,6 +191,15 @@ export type PerpetualsPreviewOrderIndexerResponse = {
 // 		error: string;
 //   };
 
+export type PerpetualsPreviewCancelOrdersIndexerResponse = {
+	position: PerpetualsPositionIndexerResponse;
+	// NOTE: is this a number ?
+	collateral_to_deallocate: BigIntAsString;
+};
+// | {
+// 		error: string;
+//   };
+
 export type PerpetualsMarketsIndexerResponse = Record<
 	PerpetualsMarketId,
 	PerpetualsMarketDataIndexerResponse
