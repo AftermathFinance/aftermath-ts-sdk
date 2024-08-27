@@ -2,8 +2,11 @@ import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin } from "../../coin";
 import { 
+    ApiDcaCreateUserBody,
+    ApiDCAsOwnedBody,
     ApiDcaTransactionForCloseOrderBody,
     ApiDcaTransactionForCreateOrderBody, 
+    ApiDcaUser, 
     DcaOrderObject, 
     DcaOrdersObject 
 } from "../dcaTypes";
@@ -14,11 +17,16 @@ import {
     SuiAddress, 
 } from "../../../types";
 import { 
+    DcaIndexerCreateUserRequest,
+    DcaIndexerCreateUserResponse,
     DcaIndexerOrderCloseRequest,
+    DcaIndexerOrderCloseResponse,
     DcaIndexerOrderCreateRequest,
     DcaIndexerOrderCreateResponse,
     DcaIndexerOrdersRequest, 
-    DcaIndexerOrdersResponse
+    DcaIndexerOrdersResponse,
+    DcaIndexerUserRequest,
+    DcaIndexerUserResponse
 } from "./dcaApiCastingTypes";
 import { Transaction, TransactionObjectArgument } from "@mysten/sui/transactions";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
@@ -189,12 +197,57 @@ export class DcaApi {
 		inputs: ApiDcaTransactionForCloseOrderBody
 	): Promise<boolean> => {
 		return this.Provider.indexerCaller.fetchIndexer<
-			boolean,
+			DcaIndexerOrderCloseResponse,
 			DcaIndexerOrderCloseRequest
 		>(
 			`dca/cancel`,
 			{
 				wallet_address: inputs.walletAddress,
+				signature: inputs.signature,
+				bytes: inputs.bytes,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+	};
+
+    // =========================================================================
+    // User Public Key
+    // =========================================================================
+
+    public fetchUserPublicKey = async (
+		inputs: ApiDCAsOwnedBody
+	): Promise<ApiDcaUser> => {
+		const data = await this.Provider.indexerCaller.fetchIndexer<
+			DcaIndexerUserResponse,
+			DcaIndexerUserRequest
+		>(
+			`dca/user/get`,
+			{
+                wallet_address: inputs.walletAddress,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+        return {
+           publicKey: data.public_key
+        }
+	};
+
+     public fetchCreateUserPublicKey = async (
+		inputs: ApiDcaCreateUserBody
+	): Promise<boolean> => {
+		return this.Provider.indexerCaller.fetchIndexer<
+			DcaIndexerCreateUserResponse,
+			DcaIndexerCreateUserRequest
+		>(
+			`dca/user/add`,
+			{
+                wallet_address: inputs.walletAddress,
 				signature: inputs.signature,
 				bytes: inputs.bytes,
 			},
