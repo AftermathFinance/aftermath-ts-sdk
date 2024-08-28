@@ -2465,7 +2465,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			price2: number,
 			bucketSize: number
 		): boolean => {
-			return Math.abs(price1 - price2) < bucketSize / 2;
+			return Math.abs(price1 - price2) < bucketSize;
 		};
 
 		orders.forEach((order) => {
@@ -2475,7 +2475,10 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				orderPrice: order.price,
 			});
 			const roundedPrice = roundPrice(actualPrice, priceBucketSize);
-			const size = lotSize * Number(order.size) * (tickSize < 0 ? -1 : 1);
+			const size =
+				lotSize *
+				Math.abs(Number(order.size)) *
+				(tickSize < 0 ? -1 : 1);
 			const sizeUsd = size * actualPrice;
 
 			const placementIndex = dataPoints.findIndex(
@@ -2488,24 +2491,31 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			);
 
 			if (placementIndex < 0) {
-				const newDataPoint: OrderbookDataPoint = {
-					size,
-					sizeUsd,
-					totalSize: size,
-					totalSizeUsd: sizeUsd,
-					price: roundedPrice,
-				};
-				const insertIndex = dataPoints.findIndex((dataPoint) =>
-					side === PerpetualsOrderSide.Ask
-						? roundedPrice <= dataPoint.price
-						: roundedPrice >= dataPoint.price
-				);
-				if (insertIndex < 0) {
-					dataPoints.push(newDataPoint);
-				} else {
-					dataPoints.splice(insertIndex, 0, newDataPoint);
+				if (size > 0) {
+					const newDataPoint: OrderbookDataPoint = {
+						size,
+						sizeUsd,
+						totalSize: size,
+						totalSizeUsd: sizeUsd,
+						price: roundedPrice,
+					};
+					const insertIndex = dataPoints.findIndex((dataPoint) =>
+						side === PerpetualsOrderSide.Ask
+							? roundedPrice < dataPoint.price
+							: roundedPrice > dataPoint.price
+					);
+					if (insertIndex < 0) {
+						dataPoints.push(newDataPoint);
+					} else {
+						dataPoints.splice(insertIndex, 0, newDataPoint);
+					}
 				}
 			} else {
+				if (!dataPoints[placementIndex]) {
+					console.log("placementIndex", placementIndex);
+					console.log("dataPoints.length", dataPoints.length);
+					console.log("dataPoints", dataPoints);
+				}
 				dataPoints[placementIndex].size += size;
 				dataPoints[placementIndex].sizeUsd += sizeUsd;
 				dataPoints[placementIndex].totalSize += size;
@@ -2513,9 +2523,9 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			}
 		});
 
-		dataPoints = dataPoints.filter(
-			(data) => data.size > 0 && data.sizeUsd > 0
-		);
+		console.log("dataPoints1", dataPoints);
+		dataPoints = dataPoints.filter((data) => data.size >= lotSize);
+		console.log("dataPoints2", dataPoints);
 
 		for (let index = 0; index < dataPoints.length; index++) {
 			if (index > 0) {
@@ -2533,7 +2543,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		if (side === PerpetualsOrderSide.Ask) {
 			dataPoints.reverse();
 		}
-
 		return dataPoints;
 	};
 
