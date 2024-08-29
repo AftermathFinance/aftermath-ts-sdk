@@ -193,8 +193,7 @@ export type PerpetualsPreviewOrderIndexerResponse = {
 
 export type PerpetualsPreviewCancelOrdersIndexerResponse = {
 	position: PerpetualsPositionIndexerResponse;
-	// NOTE: is this a number ?
-	collateral_to_deallocate: BigIntAsString;
+	collateral_change: IFixedAsStringBytes;
 };
 // | {
 // 		error: string;

@@ -897,6 +897,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 							undefined,
 							true
 						);
+					console.log("response_response", response);
 
 					const positionAfterCancelOrders =
 						Casting.perpetuals.positionFromIndexerReponse({
@@ -908,8 +909,10 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					return {
 						marketId,
 						positionAfterCancelOrders,
-						collateralToDeallocate: BigInt(
-							response.collateral_to_deallocate
+						collateralChange: Casting.IFixed.numberFromIFixed(
+							Casting.IFixed.iFixedFromStringBytes(
+								response.collateral_change
+							)
 						),
 					};
 				}
@@ -918,20 +921,19 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		return responses.reduce(
 			(
 				acc,
-				{ marketId, positionAfterCancelOrders, collateralToDeallocate }
+				{ marketId, positionAfterCancelOrders, collateralChange }
 			) => {
 				return {
 					marketIdsToPositionAfterCancelOrders: {
 						...acc.marketIdsToPositionAfterCancelOrders,
 						[marketId]: positionAfterCancelOrders,
 					},
-					collateralToDeallocate:
-						acc.collateralToDeallocate + collateralToDeallocate,
+					collateralChange: acc.collateralChange + collateralChange,
 				};
 			},
 			{
 				marketIdsToPositionAfterCancelOrders: {},
-				collateralToDeallocate: BigInt(0),
+				collateralChange: 0,
 			}
 		);
 	};
@@ -1913,7 +1915,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			orderId,
 			marketId,
 			marketInitialSharedVersion,
-			collateral,
+			collateralChange,
 			basePriceFeedId,
 			collateralPriceFeedId,
 			...otherInputs
@@ -1926,7 +1928,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					orderId,
 					marketId,
 					marketInitialSharedVersion,
-					collateral,
+					collateralChange,
 					basePriceFeedId,
 					collateralPriceFeedId,
 				},
@@ -1964,7 +1966,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					orderId: PerpetualsOrderId;
 					marketId: PerpetualsMarketId;
 					marketInitialSharedVersion: ObjectVersion;
-					collateral: Balance;
+					collateralChange: Balance;
 					basePriceFeedId: ObjectId;
 					collateralPriceFeedId: ObjectId;
 				}[]
@@ -1985,19 +1987,33 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				marketInitialSharedVersion,
 				orderIds: orders.map((order) => order.orderId),
 			});
-			// TODO: handle deallocating too much ?
-			this.deallocateCollateralTx({
-				tx,
-				accountCapId,
-				collateralCoinType,
-				marketId,
-				marketInitialSharedVersion,
-				amount: Helpers.sumBigInt(
-					orders.map((order) => order.collateral)
-				),
-				basePriceFeedId: orders[0].basePriceFeedId,
-				collateralPriceFeedId: orders[0].collateralPriceFeedId,
-			});
+
+			const netCollateralChange = Helpers.sumBigInt(
+				orders.map((order) => order.collateralChange)
+			);
+			if (netCollateralChange > BigInt(0)) {
+				this.deallocateCollateralTx({
+					tx,
+					accountCapId,
+					collateralCoinType,
+					marketId,
+					marketInitialSharedVersion,
+					amount: netCollateralChange,
+					basePriceFeedId: orders[0].basePriceFeedId,
+					collateralPriceFeedId: orders[0].collateralPriceFeedId,
+				});
+			} else if (netCollateralChange < BigInt(0)) {
+				this.allocateCollateralTx({
+					tx,
+					accountCapId,
+					collateralCoinType,
+					marketId,
+					marketInitialSharedVersion,
+					amount: netCollateralChange,
+				});
+			} else {
+				// no collateral change
+			}
 		}
 
 		return tx;

@@ -181,7 +181,7 @@ export class PerpetualsAccount extends Caller {
 		collateralPriceFeedId: ObjectId;
 		side: PerpetualsOrderSide;
 		orderId: PerpetualsOrderId;
-		collateral: Balance;
+		collateralChange: Balance;
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrderBody>(
 			"transactions/cancel-order",
@@ -202,7 +202,7 @@ export class PerpetualsAccount extends Caller {
 			collateralPriceFeedId: ObjectId;
 			side: PerpetualsOrderSide;
 			orderId: PerpetualsOrderId;
-			collateral: Balance;
+			collateralChange: Balance;
 		}[];
 	}) {
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrdersBody>(
@@ -331,15 +331,26 @@ export class PerpetualsAccount extends Caller {
 			ApiPerpetualsPreviewCancelOrdersBody,
 			"accountId" | "collateralCoinType"
 		>
-	): Promise<ApiPerpetualsPreviewCancelOrdersResponse> {
+	): Promise<
+		| {
+				marketIdsToPositionAfterCancelOrders: Record<
+					PerpetualsMarketId,
+					PerpetualsPosition
+				>;
+				collateralChange: Balance;
+		  }
+		| {
+				error: string;
+		  }
+	> {
 		// NOTE: should this case return an error instead ?
 		if (Object.keys(inputs.marketIdsToData).length <= 0)
 			return {
-				collateralToDeallocate: BigInt(0),
+				collateralChange: BigInt(0),
 				marketIdsToPositionAfterCancelOrders: {},
 			};
 
-		return this.fetchApi<
+		const response = await this.fetchApi<
 			ApiPerpetualsPreviewCancelOrdersResponse,
 			ApiPerpetualsPreviewCancelOrdersBody
 		>("preview-cancel-orders", {
@@ -347,6 +358,16 @@ export class PerpetualsAccount extends Caller {
 			accountId: this.accountCap.accountId,
 			collateralCoinType: this.accountCap.collateralCoinType,
 		});
+		if ("error" in response) return response;
+
+		return {
+			marketIdsToPositionAfterCancelOrders:
+				response.marketIdsToPositionAfterCancelOrders,
+			collateralChange: Coin.normalizeBalance(
+				response.collateralChange,
+				this.collateralDecimals()
+			),
+		};
 	}
 
 	public async getOrderDatas(): Promise<PerpetualsOrderData[]> {

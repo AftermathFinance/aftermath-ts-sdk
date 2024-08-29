@@ -739,7 +739,7 @@ export type ApiPerpetualsPreviewCancelOrdersResponse =
 				PerpetualsMarketId,
 				PerpetualsPosition
 			>;
-			collateralToDeallocate: Balance;
+			collateralChange: number;
 	  };
 
 export interface ApiPerpetualsOrderbookStateBody {
@@ -848,7 +848,7 @@ export interface ApiPerpetualsCancelOrderBody {
 	marketId: PerpetualsMarketId;
 	marketInitialSharedVersion: ObjectVersion;
 	orderId: PerpetualsOrderId;
-	collateral: Balance;
+	collateralChange: Balance;
 	basePriceFeedId: ObjectId;
 	collateralPriceFeedId: ObjectId;
 }
@@ -861,7 +861,7 @@ export interface ApiPerpetualsCancelOrdersBody {
 		orderId: PerpetualsOrderId;
 		marketId: PerpetualsMarketId;
 		marketInitialSharedVersion: ObjectVersion;
-		collateral: Balance;
+		collateralChange: Balance;
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;
 	}[];
