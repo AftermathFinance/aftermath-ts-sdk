@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { ObjectId, SuiNetwork, Url } from "../../types";
+import { CoinSymbol, ObjectId, SuiNetwork, Url } from "../../types";
 
 export class Oracle extends Caller {
 	// =========================================================================
@@ -19,7 +19,13 @@ export class Oracle extends Caller {
 	// =========================================================================
 
 	public async getPrice(inputs: { priceFeedId: ObjectId }): Promise<number> {
-		return this.fetchApi(`price/${inputs.priceFeedId}`);
+		return this.fetchApi(`${inputs.priceFeedId}/price`);
+	}
+
+	public async getSymbol(inputs: {
+		priceFeedId: ObjectId;
+	}): Promise<CoinSymbol> {
+		return this.fetchApi(`${inputs.priceFeedId}/symbol`);
 	}
 
 	public async getPrices(inputs: {

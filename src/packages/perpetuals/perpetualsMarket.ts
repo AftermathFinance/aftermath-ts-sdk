@@ -242,6 +242,12 @@ export class PerpetualsMarket extends Caller {
 		);
 	}
 
+	public maintenanceMarginRatio() {
+		return Casting.IFixed.numberFromIFixed(
+			this.marketParams.marginRatioMaintenance
+		);
+	}
+
 	// =========================================================================
 	//  Helpers
 	// =========================================================================

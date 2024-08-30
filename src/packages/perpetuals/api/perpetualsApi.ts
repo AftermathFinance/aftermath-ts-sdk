@@ -2009,7 +2009,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					collateralCoinType,
 					marketId,
 					marketInitialSharedVersion,
-					amount: netCollateralChange,
+					amount: Helpers.absBigInt(netCollateralChange),
 				});
 			} else {
 				// no collateral change
