@@ -812,6 +812,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			undefined,
 			true
 		);
+		if ("error" in response) return response;
 
 		const executionPrice = Casting.IFixed.numberFromIFixed(
 			Casting.IFixed.iFixedFromStringBytes(response.execution_price)

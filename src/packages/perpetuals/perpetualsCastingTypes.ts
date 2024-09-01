@@ -177,19 +177,20 @@ export type PerpetualsAccountPositionsIndexerResponse = [
 	IFixedAsStringBytes // leverage
 ][];
 
-export type PerpetualsPreviewOrderIndexerResponse = {
-	position: PerpetualsPositionIndexerResponse;
-	price_slippage: IFixedAsStringBytes;
-	percent_slippage: IFixedAsStringBytes;
-	execution_price: IFixedAsStringBytes;
-	size_filled: IFixedAsStringBytes;
-	collateral_change: IFixedAsStringBytes;
-	position_found: boolean;
-	size_posted?: IFixedAsStringBytes;
-};
-// | {
-// 		error: string;
-//   };
+export type PerpetualsPreviewOrderIndexerResponse =
+	| {
+			position: PerpetualsPositionIndexerResponse;
+			price_slippage: IFixedAsStringBytes;
+			percent_slippage: IFixedAsStringBytes;
+			execution_price: IFixedAsStringBytes;
+			size_filled: IFixedAsStringBytes;
+			collateral_change: IFixedAsStringBytes;
+			position_found: boolean;
+			size_posted?: IFixedAsStringBytes;
+	  }
+	| {
+			error: string;
+	  };
 
 export type PerpetualsPreviewCancelOrdersIndexerResponse = {
 	position: PerpetualsPositionIndexerResponse;
