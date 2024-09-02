@@ -898,7 +898,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 							undefined,
 							true
 						);
-					console.log("response_response", response);
 
 					const positionAfterCancelOrders =
 						Casting.perpetuals.positionFromIndexerReponse({
@@ -1992,7 +1991,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			const netCollateralChange = Helpers.sumBigInt(
 				orders.map((order) => order.collateralChange)
 			);
-			if (netCollateralChange > BigInt(0)) {
+			if (netCollateralChange < BigInt(0)) {
 				this.deallocateCollateralTx({
 					tx,
 					accountCapId,
@@ -2003,7 +2002,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					basePriceFeedId: orders[0].basePriceFeedId,
 					collateralPriceFeedId: orders[0].collateralPriceFeedId,
 				});
-			} else if (netCollateralChange < BigInt(0)) {
+			} else if (netCollateralChange > BigInt(0)) {
 				this.allocateCollateralTx({
 					tx,
 					accountCapId,
@@ -2528,11 +2527,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					}
 				}
 			} else {
-				if (!dataPoints[placementIndex]) {
-					console.log("placementIndex", placementIndex);
-					console.log("dataPoints.length", dataPoints.length);
-					console.log("dataPoints", dataPoints);
-				}
 				dataPoints[placementIndex].size += size;
 				dataPoints[placementIndex].sizeUsd += sizeUsd;
 				dataPoints[placementIndex].totalSize += size;
@@ -2540,9 +2534,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			}
 		});
 
-		console.log("dataPoints1", dataPoints);
 		dataPoints = dataPoints.filter((data) => data.size >= lotSize);
-		console.log("dataPoints2", dataPoints);
 
 		for (let index = 0; index < dataPoints.length; index++) {
 			if (index > 0) {
