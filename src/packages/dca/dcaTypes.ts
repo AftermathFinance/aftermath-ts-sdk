@@ -5,9 +5,8 @@ import {
 	Event,
 	IFixed,
 	Timestamp,
-	TransactionDigest
+	TransactionDigest,
 } from "../../general/types/generalTypes";
-
 
 // =========================================================================
 // Helpers
@@ -20,23 +19,22 @@ export type DcaOrderTrades = DcaOrderTradeObject[];
 // =========================================================================
 
 export interface ApiDcaInitializeOrdertStrategyBody {
-    priceMin: Balance;
-    priceMax: Balance;
+	priceMin: Balance;
+	priceMax: Balance;
 }
 
 export interface ApiDcaTransactionForCreateOrderBody {
 	walletAddress: SuiAddress;
 	allocateCoinType: CoinType;
 	allocateCoinAmount: Balance;
-    buyCoinType: CoinType;
+	buyCoinType: CoinType;
 	frequencyMs: Timestamp;
 	tradesAmount: number;
-    straregy?: ApiDcaInitializeOrdertStrategyBody;
+	straregy?: ApiDcaInitializeOrdertStrategyBody;
 	isSponsoredTx?: boolean;
 	delayTimeMs: Timestamp;
 	maxAllowableSlippageBps: number;
 	coinPerTradeAmount: Balance;
-	publicKey: string;
 	customRecipient?: SuiAddress;
 }
 
@@ -69,8 +67,8 @@ export interface DcaOrderTradeObject {
 }
 
 export interface DcaOrdertStrategyObject {
-    priceMin: Balance;
-    priceMax: Balance;
+	priceMin: Balance;
+	priceMax: Balance;
 }
 
 export interface DcaOrderOverviewObject {
@@ -122,43 +120,43 @@ export interface DcaOrdersObject {
 
 export interface DcaCreatedOrderEvent extends Event {
 	orderId: ObjectId;
-    owner: ObjectId;
+	owner: ObjectId;
 	inputValue: Balance;
 	inputType: CoinType;
 	outputType: CoinType;
 	gasValue: Balance;
 	frequencyMs: Timestamp;
-    startTimestampMs: Timestamp;
-    amountPerTrade: Balance;
-    maxAllowableSlippageBps: Balance;
-    minAmountOut: Balance;
-    maxAmountOut: Balance;
-    remainingTrades: IFixed;
+	startTimestampMs: Timestamp;
+	amountPerTrade: Balance;
+	maxAllowableSlippageBps: Balance;
+	minAmountOut: Balance;
+	maxAmountOut: Balance;
+	remainingTrades: IFixed;
 }
 
 export interface DcaClosedOrderEvent extends Event {
 	orderId: ObjectId;
-    owner: ObjectId;
+	owner: ObjectId;
 	remainingValue: Balance;
 	inputType: CoinType;
 	outputType: CoinType;
 	gasValue: Balance;
 	frequencyMs: Timestamp;
-    lastTradeTimestampMs: Timestamp;
-    amountPerTrade: Balance;
-    maxAllowableSlippageBps: Balance;
-    minAmountOut: Balance;
-    maxAmountOut: Balance;
-    remainingTrades: IFixed;
+	lastTradeTimestampMs: Timestamp;
+	amountPerTrade: Balance;
+	maxAllowableSlippageBps: Balance;
+	minAmountOut: Balance;
+	maxAmountOut: Balance;
+	remainingTrades: IFixed;
 }
 
 export interface DcaExecutedTradeEvent extends Event {
 	orderId: ObjectId;
-    user: ObjectId;
-    inputType: CoinType;
-    inputAmount: Balance;
-    outputType: CoinType;
-    outputAmount: Balance;
+	user: ObjectId;
+	inputType: CoinType;
+	inputAmount: Balance;
+	outputType: CoinType;
+	outputAmount: Balance;
 }
 
 // =========================================================================

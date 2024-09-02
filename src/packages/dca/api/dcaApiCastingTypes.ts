@@ -132,7 +132,6 @@ export type DcaIndexerOrderCreateRequest = {
 		output_coin_type: CoinType;
 		gas_coin: ServiceCoinData;
 		owner: SuiAddress;
-		user_pk: string;
 		recipient: SuiAddress;
 		frequency_ms: string;
 		delay_timestamp_ms: string;
