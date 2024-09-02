@@ -1998,7 +1998,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					collateralCoinType,
 					marketId,
 					marketInitialSharedVersion,
-					amount: netCollateralChange,
+					amount: Helpers.absBigInt(netCollateralChange),
 					basePriceFeedId: orders[0].basePriceFeedId,
 					collateralPriceFeedId: orders[0].collateralPriceFeedId,
 				});
@@ -2009,7 +2009,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					collateralCoinType,
 					marketId,
 					marketInitialSharedVersion,
-					amount: Helpers.absBigInt(netCollateralChange),
+					amount: netCollateralChange,
 				});
 			} else {
 				// no collateral change
