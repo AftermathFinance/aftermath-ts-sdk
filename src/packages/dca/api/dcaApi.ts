@@ -9,6 +9,7 @@ import {
 	ApiDcaUser,
 	DcaOrderObject,
 	DcaOrdersObject,
+	DcaOrderTradeObject,
 } from "../dcaTypes";
 import {
 	AnyObjectType,
@@ -327,14 +328,55 @@ export class DcaApi {
 					undefined,
 					true
 				);
-			return uncastedResponse.orders
+			const orders = uncastedResponse.orders
 				.sort(
 					(lhs, rhs) => rhs.created.timestamp - lhs.created.timestamp
 				)
 				.map((order) => Casting.dca.createdOrderEventOnIndexer(order));
+
+			for (const order of orders) {
+				for (const trade of order.trades) {
+					trade.rate = await this.getRate(trade);
+				}
+			}
+			return orders;
 		} catch (error) {
 			return [];
 		}
+	};
+
+	private getRate = async (trade: DcaOrderTradeObject) => {
+		const allocatedCoinType = Helpers.addLeadingZeroesToType(
+			trade.allocatedCoin.coin
+		);
+		const buyCoinType = Helpers.addLeadingZeroesToType(trade.buyCoin.coin);
+
+		const [allocateCoinDecimals, buyCoinDecimals] = await Promise.all([
+			(
+				await this.Provider.Coin().fetchCoinMetadata({
+					coin: allocatedCoinType,
+				})
+			).decimals,
+			(
+				await this.Provider.Coin().fetchCoinMetadata({
+					coin: buyCoinType,
+				})
+			).decimals,
+		]);
+
+		const allocatedBalance = Coin.balanceWithDecimals(
+			trade.allocatedCoin.amount,
+			allocateCoinDecimals
+		);
+
+		const buyBalance = Coin.balanceWithDecimals(
+			trade.buyCoin.amount,
+			buyCoinDecimals
+		);
+
+		return allocatedBalance !== 0
+			? buyBalance / allocatedBalance
+			: undefined;
 	};
 
 	// =========================================================================

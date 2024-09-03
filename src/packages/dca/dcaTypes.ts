@@ -63,7 +63,7 @@ export interface DcaOrderTradeObject {
 	};
 	tnxDigest: TransactionDigest;
 	tnxDate: Timestamp;
-	rate: number;
+	rate: number | undefined;
 }
 
 export interface DcaOrdertStrategyObject {

@@ -133,27 +133,33 @@ export class DcaApiCasting {
 			}
 		);
 		const tradesPrepared = response.trades.map((trade) => {
-			const tradePrepared = this.createdOrderTradeEventOnIndexer(
+			return this.createdOrderTradeEventOnIndexer(
 				trade,
 				inputCoinType,
-				outputCoinType,
-				totalSpent
+				outputCoinType
 			);
-			return tradePrepared;
 		});
 
-		const started = tradesPrepared.length > 0 ? { 
-			timestamp: tradesPrepared[0].tnxDate,
-			digest:  tradesPrepared[0].tnxDigest,
-		} : {
-			timestamp: Number(response.next_execution_timestamp_ms),
-			digest: ""
-		};
+		const started =
+			tradesPrepared.length > 0
+				? {
+						timestamp: tradesPrepared[0].tnxDate,
+						digest: tradesPrepared[0].tnxDigest,
+				  }
+				: {
+						timestamp: Number(response.next_execution_timestamp_ms),
+						digest: "",
+				  };
 
-		const lastTrade = tradesPrepared.length > 0 ? { 
-			timestamp: tradesPrepared[tradesPrepared.length - 1].tnxDate,
-			digest:  tradesPrepared[tradesPrepared.length - 1].tnxDigest,
-		} : undefined;
+		const lastTrade =
+			tradesPrepared.length > 0
+				? {
+						timestamp:
+							tradesPrepared[tradesPrepared.length - 1].tnxDate,
+						digest: tradesPrepared[tradesPrepared.length - 1]
+							.tnxDigest,
+				  }
+				: undefined;
 
 		return {
 			objectId: response.order_object_id,
@@ -200,22 +206,22 @@ export class DcaApiCasting {
 	public static createdOrderTradeEventOnIndexer = (
 		response: DcaIndexerOrderTradeResponse,
 		inputCounType: string,
-		outputCoinType: string,
-		totalSpent: Balance
+		outputCoinType: string
 	): DcaOrderTradeObject => {
-		const rate = totalSpent > 0 ? Number(BigInt(response.input_amount) / totalSpent) : 0;
+		const inputAmount = BigInt(response.input_amount);
+		const outputAmount = BigInt(response.output_amount);
 		return {
 			allocatedCoin: {
 				coin: inputCounType,
-				amount: BigInt(response.input_amount),
+				amount: inputAmount,
 			},
 			buyCoin: {
 				coin: outputCoinType,
-				amount: BigInt(response.output_amount),
+				amount: outputAmount,
 			},
 			tnxDigest: response.event.tx_digest,
 			tnxDate: response.event.timestamp,
-			rate: rate,
+			rate: undefined,
 		};
 	};
 }
