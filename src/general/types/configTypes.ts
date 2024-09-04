@@ -190,11 +190,11 @@ export interface DcaAddresses {
 		dca: SuiAddress;
 	};
 	objects: {
-		config: ObjectId;	
-	}
+		config: ObjectId;
+	};
 }
 
 export interface SharedCustodyAddresses {
 	address: ObjectId;
-	publicKey: ObjectId;
+	// publicKey: ObjectId;
 }
