@@ -35,7 +35,7 @@ import {
 } from "@mysten/sui/transactions";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
-const GAS_SUI_AMOUNT = BigInt(5_000_000); // 0.005 SUI
+const GAS_SUI_AMOUNT = BigInt(50_000_000); // 0.05 SUI
 
 export class DcaApi {
 	// =========================================================================
