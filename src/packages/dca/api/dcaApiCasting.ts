@@ -26,8 +26,8 @@ export class DcaApiCasting {
 	): DcaCreatedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			orderId: fields.order_id,
-			owner: fields.user,
+			orderId: Helpers.addLeadingZeroesToType(fields.order_id),
+			owner: Helpers.addLeadingZeroesToType(fields.user),
 			inputValue: BigInt(fields.input_amount),
 			inputType: Helpers.addLeadingZeroesToType(
 				"0x" + Buffer.from(fields.input_type).toString()
@@ -54,8 +54,8 @@ export class DcaApiCasting {
 	): DcaClosedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			orderId: fields.order_id,
-			owner: fields.user,
+			orderId: Helpers.addLeadingZeroesToType(fields.order_id),
+			owner: Helpers.addLeadingZeroesToType(fields.user),
 			remainingValue: BigInt(fields.remaining_amount),
 			inputType: Helpers.addLeadingZeroesToType(
 				"0x" + Buffer.from(fields.input_type).toString()
@@ -82,8 +82,8 @@ export class DcaApiCasting {
 	): DcaExecutedTradeEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
-			orderId: fields.order_id,
-			user: fields.user,
+			orderId: Helpers.addLeadingZeroesToType(fields.order_id),
+			user: Helpers.addLeadingZeroesToType(fields.user),
 			inputType: Helpers.addLeadingZeroesToType(
 				"0x" + Buffer.from(fields.input_type).toString()
 			),
@@ -111,10 +111,14 @@ export class DcaApiCasting {
 			totalOrdersAmount > 0
 				? (totalOrdersAmount - ordersLeft) / totalOrdersAmount
 				: 1;
-		const inputCoinType = String(response.coin_sell);
-		const outputCoinType = String(response.coin_buy);
+		const inputCoinType = Helpers.addLeadingZeroesToType(
+			String(response.coin_sell)
+		);
+		const outputCoinType = Helpers.addLeadingZeroesToType(
+			String(response.coin_buy)
+		);
 		const strategy: DcaOrdertStrategyObject | undefined =
-			Number(response.min_amount_out) === 0 &&
+			BigInt(response.min_amount_out) === BigInt(0) &&
 			BigInt(response.max_amount_out) === Casting.u64MaxBigInt
 				? undefined
 				: {
@@ -162,7 +166,7 @@ export class DcaApiCasting {
 				: undefined;
 
 		return {
-			objectId: response.order_object_id,
+			objectId: Helpers.addLeadingZeroesToType(response.order_object_id),
 			overview: {
 				allocatedCoin: {
 					coin: inputCoinType,
@@ -177,13 +181,13 @@ export class DcaApiCasting {
 						? totalBought / BigInt(tradesPrepared.length)
 						: BigInt(0),
 				totalSpent: totalSpent,
-				interval: BigInt(response.frequency_ms),
+				intervalMs: BigInt(response.frequency_ms),
 				totalTrades: totalOrdersAmount,
 				tradesRemaining: ordersLeft,
 				maxSlippageBps: Number(response.slippage),
 				strategy: strategy,
 				progress: progress,
-				recipient: response.recipient,
+				recipient: Helpers.addLeadingZeroesToType(response.recipient),
 				created: {
 					time: response.created.timestamp,
 					tnxDigest: response.created.tx_digest,
@@ -205,14 +209,14 @@ export class DcaApiCasting {
 
 	public static createdOrderTradeEventOnIndexer = (
 		response: DcaIndexerOrderTradeResponse,
-		inputCounType: string,
+		inputCoinType: string,
 		outputCoinType: string
 	): DcaOrderTradeObject => {
 		const inputAmount = BigInt(response.input_amount);
 		const outputAmount = BigInt(response.output_amount);
 		return {
 			allocatedCoin: {
-				coin: inputCounType,
+				coin: inputCoinType,
 				amount: inputAmount,
 			},
 			buyCoin: {

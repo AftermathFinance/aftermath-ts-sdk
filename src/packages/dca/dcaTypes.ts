@@ -9,12 +9,6 @@ import {
 } from "../../general/types/generalTypes";
 
 // =========================================================================
-// Helpers
-// =========================================================================
-
-export type DcaOrderTrades = DcaOrderTradeObject[];
-
-// =========================================================================
 //  Initialize Order Transaction
 // =========================================================================
 
@@ -30,7 +24,7 @@ export interface ApiDcaTransactionForCreateOrderBody {
 	buyCoinType: CoinType;
 	frequencyMs: Timestamp;
 	tradesAmount: number;
-	straregy?: ApiDcaInitializeOrdertStrategyBody;
+	strategy?: ApiDcaInitializeOrdertStrategyBody;
 	isSponsoredTx?: boolean;
 	delayTimeMs: Timestamp;
 	maxAllowableSlippageBps: number;
@@ -82,7 +76,7 @@ export interface DcaOrderOverviewObject {
 	};
 	averagePrice: Balance;
 	totalSpent: Balance;
-	interval: IFixed;
+	intervalMs: bigint;
 	totalTrades: number;
 	tradesRemaining: number;
 	maxSlippageBps: number;
@@ -106,7 +100,7 @@ export interface DcaOrderOverviewObject {
 export interface DcaOrderObject {
 	objectId: ObjectId;
 	overview: DcaOrderOverviewObject;
-	trades: DcaOrderTrades;
+	trades: DcaOrderTradeObject[];
 }
 
 export interface DcaOrdersObject {
@@ -131,7 +125,7 @@ export interface DcaCreatedOrderEvent extends Event {
 	maxAllowableSlippageBps: Balance;
 	minAmountOut: Balance;
 	maxAmountOut: Balance;
-	remainingTrades: IFixed;
+	remainingTrades: bigint;
 }
 
 export interface DcaClosedOrderEvent extends Event {
@@ -147,7 +141,7 @@ export interface DcaClosedOrderEvent extends Event {
 	maxAllowableSlippageBps: Balance;
 	minAmountOut: Balance;
 	maxAmountOut: Balance;
-	remainingTrades: IFixed;
+	remainingTrades: bigint;
 }
 
 export interface DcaExecutedTradeEvent extends Event {

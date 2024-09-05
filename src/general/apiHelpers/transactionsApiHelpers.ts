@@ -366,4 +366,65 @@ export class TransactionsApiHelpers {
 	// 		],
 	// 	});
 	// }
+
+	public static transferTxMetadata = (inputs: {
+		initTx: Transaction;
+		newTx: Transaction;
+	}) => {
+		const { initTx, newTx } = inputs;
+
+		const sender = initTx.getData().sender;
+		if (sender) newTx.setSender(sender);
+
+		const expiration = initTx.getData().expiration;
+		if (expiration) newTx.setExpiration(expiration);
+
+		const gasData = initTx.getData().gasData;
+
+		if (gasData.budget && typeof gasData.budget !== "string")
+			newTx.setGasBudget(gasData.budget);
+
+		if (gasData.owner) newTx.setGasOwner(gasData.owner);
+
+		if (gasData.payment) newTx.setGasPayment(gasData.payment);
+
+		if (gasData.price && typeof gasData.price !== "string")
+			newTx.setGasPrice(gasData.price);
+	};
+
+	public static transferTxMetadataV0 = (inputs: {
+		initTx: TransactionBlock;
+		newTx: TransactionBlock;
+	}) => {
+		const { initTx, newTx } = inputs;
+
+		const sender = initTx.blockData.sender;
+		if (sender) newTx.setSender(sender);
+
+		const expiration = initTx.blockData.expiration;
+		if (expiration && !("None" in expiration && expiration.None === null))
+			// @ts-ignore
+			newTx.setExpiration(expiration);
+
+		const gasData = initTx.blockData.gasConfig;
+
+		if (gasData.budget && typeof gasData.budget !== "string")
+			newTx.setGasBudget(gasData.budget);
+
+		if (gasData.owner) newTx.setGasOwner(gasData.owner);
+
+		if (gasData.payment)
+			newTx.setGasPayment(
+				gasData.payment.map((payment) => ({
+					...payment,
+					version:
+						typeof payment.version === "bigint"
+							? Number(payment.version)
+							: payment.version,
+				}))
+			);
+
+		if (gasData.price && typeof gasData.price !== "string")
+			newTx.setGasPrice(gasData.price);
+	};
 }

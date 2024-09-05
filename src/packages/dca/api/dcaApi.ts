@@ -34,6 +34,7 @@ import {
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 
 const GAS_SUI_AMOUNT = BigInt(50_000_000); // 0.05 SUI
 
@@ -179,11 +180,11 @@ export class DcaApi {
 					delay_timestamp_ms: inputs.delayTimeMs.toString(),
 					amount_per_trade: inputs.orderAmountPerTrade.toString(),
 					max_allowable_slippage_bps: inputs.maxAllowableSlippageBps,
-					min_amount_out: (inputs.straregy?.priceMin ?? 0)
+					min_amount_out: (inputs.strategy?.priceMin ?? 0)
 						.toString()
 						.replace("n", ""),
 					max_amount_out: (
-						inputs.straregy?.priceMax ?? Casting.u64MaxBigInt
+						inputs.strategy?.priceMax ?? Casting.u64MaxBigInt
 					)
 						.toString()
 						.replace("n", ""),
@@ -197,7 +198,7 @@ export class DcaApi {
 		);
 
 		const tx = Transaction.fromKind(tx_data);
-		DcaApi.transferTxMetadata({
+		TransactionsApiHelpers.transferTxMetadata({
 			initTx,
 			newTx: tx,
 		});
@@ -313,36 +314,37 @@ export class DcaApi {
 		type: "active" | "past";
 	}): Promise<DcaOrderObject[]> => {
 		const { type, walletAddress } = inputs;
-		try {
-			const uncastedResponse =
-				await this.Provider.indexerCaller.fetchIndexer<
-					DcaIndexerOrdersResponse,
-					DcaIndexerOrdersRequest
-				>(
-					`dca/get/${type}`,
-					{
-						sender: walletAddress,
-					},
-					undefined,
-					undefined,
-					undefined,
-					true
-				);
-			const orders = uncastedResponse.orders
-				.sort(
-					(lhs, rhs) => rhs.created.timestamp - lhs.created.timestamp
-				)
-				.map((order) => Casting.dca.createdOrderEventOnIndexer(order));
+		const uncastedResponse = await this.Provider.indexerCaller.fetchIndexer<
+			DcaIndexerOrdersResponse,
+			DcaIndexerOrdersRequest
+		>(
+			`dca/get/${type}`,
+			{
+				sender: walletAddress,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+		const orders = uncastedResponse.orders
+			.sort((lhs, rhs) => rhs.created.timestamp - lhs.created.timestamp)
+			.map((order) => Casting.dca.createdOrderEventOnIndexer(order));
 
-			for (const order of orders) {
-				for (const trade of order.trades) {
-					trade.rate = await this.getRate(trade);
-				}
-			}
-			return orders;
-		} catch (error) {
-			return [];
-		}
+		await Promise.all(
+			orders.map(async (order) => {
+				await Promise.all(
+					order.trades.map(async (trade) => {
+						trade.rate = await this.getRate(trade);
+						return trade;
+					})
+				);
+
+				return order;
+			})
+		);
+
+		return orders;
 	};
 
 	private getRate = async (trade: DcaOrderTradeObject) => {
@@ -403,33 +405,4 @@ export class DcaApi {
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.executedTrade
 		);
-
-	// =========================================================================
-	// Helpers
-	// =========================================================================
-
-	private static transferTxMetadata = (inputs: {
-		initTx: Transaction;
-		newTx: Transaction;
-	}) => {
-		const { initTx, newTx } = inputs;
-
-		const sender = initTx.getData().sender;
-		if (sender) newTx.setSender(sender);
-
-		const expiration = initTx.getData().expiration;
-		if (expiration) newTx.setExpiration(expiration);
-
-		const gasData = initTx.getData().gasData;
-
-		if (gasData.budget && typeof gasData.budget !== "string")
-			newTx.setGasBudget(gasData.budget);
-
-		if (gasData.owner) newTx.setGasOwner(gasData.owner);
-
-		if (gasData.payment) newTx.setGasPayment(gasData.payment);
-
-		if (gasData.price && typeof gasData.price !== "string")
-			newTx.setGasPrice(gasData.price);
-	};
 }

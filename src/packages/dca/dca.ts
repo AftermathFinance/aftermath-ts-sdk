@@ -38,7 +38,10 @@ export class Dca extends Caller {
 	 */
 
 	public async getAllDcaOrders(inputs: ApiDCAsOwnedBody) {
-		return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>("", inputs);
+		return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>(
+			"orders",
+			inputs
+		);
 	}
 
 	/**
@@ -50,7 +53,7 @@ export class Dca extends Caller {
 
 	public async getActiveDcaOrders(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"owned-active-orders",
+			"order/active",
 			inputs
 		);
 	}
@@ -64,7 +67,7 @@ export class Dca extends Caller {
 
 	public async getPastDcaOrders(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"owned-past-orders",
+			"order/past",
 			inputs
 		);
 	}
@@ -94,11 +97,11 @@ export class Dca extends Caller {
 	 * @returns { Promise<boolean> } A promise that resolves with transaction execution status.
 	 */
 
-	public async getCloseDcaOrder(
+	public async closeDcaOrder(
 		inputs: ApiDcaTransactionForCloseOrderBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiDcaTransactionForCloseOrderBody>(
-			`ineractions/close-order`,
+			`interactions/close-order`,
 			inputs
 		);
 	}
@@ -156,7 +159,7 @@ export class Dca extends Caller {
 			{
 				walletAddress: SuiAddress;
 			}
-		>(`get-user-pk`, inputs);
+		>(`public-key`, inputs);
 	}
 
 	/**
@@ -166,11 +169,11 @@ export class Dca extends Caller {
 	 * @returns { Promise<boolean> } A promise that resolves to result if user pk has been created.
 	 */
 
-	public async getCreateUserPublicKey(
+	public async createUserPublicKey(
 		inputs: ApiDcaCreateUserBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiDcaCreateUserBody>(
-			`create-user-pk`,
+			`save-public-key`,
 			inputs
 		);
 	}
