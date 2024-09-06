@@ -12,8 +12,8 @@ import {
 // =========================================================================
 
 export interface ApiDcaInitializeOrdertStrategyBody {
-	priceMin: Balance;
-	priceMax: Balance;
+	minPrice: Balance;
+	maxPrice: Balance;
 }
 
 export interface ApiDcaTransactionForCreateOrderBody {
@@ -60,8 +60,8 @@ export interface DcaOrderTradeObject {
 }
 
 export interface DcaOrdertStrategyObject {
-	priceMin: Balance;
-	priceMax: Balance;
+	minPrice: Balance;
+	maxPrice: Balance;
 }
 
 export interface DcaOrderOverviewObject {

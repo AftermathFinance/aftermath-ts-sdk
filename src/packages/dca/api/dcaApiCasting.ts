@@ -122,8 +122,8 @@ export class DcaApiCasting {
 			BigInt(response.max_amount_out) === Casting.u64MaxBigInt
 				? undefined
 				: {
-						priceMin: BigInt(response.min_amount_out),
-						priceMax: BigInt(response.max_amount_out),
+						minPrice: BigInt(response.min_amount_out),
+						maxPrice: BigInt(response.max_amount_out),
 				  };
 		const { totalSpent, totalBought } = response.trades.reduce(
 			(total, order) => {

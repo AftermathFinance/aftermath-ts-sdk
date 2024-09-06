@@ -179,11 +179,11 @@ export class DcaApi {
 					delay_timestamp_ms: inputs.delayTimeMs.toString(),
 					amount_per_trade: inputs.orderAmountPerTrade.toString(),
 					max_allowable_slippage_bps: inputs.maxAllowableSlippageBps,
-					min_amount_out: (inputs.strategy?.priceMin ?? 0)
+					min_amount_out: (inputs.strategy?.minPrice ?? 0)
 						.toString()
 						.replace("n", ""),
 					max_amount_out: (
-						inputs.strategy?.priceMax ?? Casting.u64MaxBigInt
+						inputs.strategy?.maxPrice ?? Casting.u64MaxBigInt
 					)
 						.toString()
 						.replace("n", ""),
