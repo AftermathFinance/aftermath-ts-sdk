@@ -52,7 +52,7 @@ export class Dca extends Caller {
 
 	public async getActiveDcaOrders(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"order/active",
+			"orders/active",
 			inputs
 		);
 	}
@@ -66,7 +66,7 @@ export class Dca extends Caller {
 
 	public async getPastDcaOrders(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"order/past",
+			"orders/past",
 			inputs
 		);
 	}
@@ -154,7 +154,7 @@ export class Dca extends Caller {
 		walletAddress: SuiAddress;
 	}): Promise<string | undefined> {
 		return this.fetchApi<
-			string,
+			string | undefined,
 			{
 				walletAddress: SuiAddress;
 			}

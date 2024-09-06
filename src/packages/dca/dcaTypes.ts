@@ -3,7 +3,6 @@ import { CoinType } from "../coin/coinTypes";
 import {
 	Balance,
 	Event,
-	IFixed,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
@@ -76,7 +75,7 @@ export interface DcaOrderOverviewObject {
 	};
 	averagePrice: Balance;
 	totalSpent: Balance;
-	intervalMs: bigint;
+	intervalMs: Timestamp;
 	totalTrades: number;
 	tradesRemaining: number;
 	maxSlippageBps: number;

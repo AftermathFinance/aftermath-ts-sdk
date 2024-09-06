@@ -14,7 +14,7 @@ import {
 	DcaIndexerOrderResponse,
 	DcaIndexerOrderTradeResponse,
 } from "./dcaApiCastingTypes";
-import { Balance } from "../../../types";
+import { Balance, CoinType } from "../../../types";
 
 export class DcaApiCasting {
 	// =========================================================================
@@ -181,7 +181,7 @@ export class DcaApiCasting {
 						? totalBought / BigInt(tradesPrepared.length)
 						: BigInt(0),
 				totalSpent: totalSpent,
-				intervalMs: BigInt(response.frequency_ms),
+				intervalMs: Number(response.frequency_ms),
 				totalTrades: totalOrdersAmount,
 				tradesRemaining: ordersLeft,
 				maxSlippageBps: Number(response.slippage),
@@ -209,8 +209,8 @@ export class DcaApiCasting {
 
 	public static createdOrderTradeEventOnIndexer = (
 		response: DcaIndexerOrderTradeResponse,
-		inputCoinType: string,
-		outputCoinType: string
+		inputCoinType: CoinType,
+		outputCoinType: CoinType
 	): DcaOrderTradeObject => {
 		const inputAmount = BigInt(response.input_amount);
 		const outputAmount = BigInt(response.output_amount);

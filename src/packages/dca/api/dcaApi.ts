@@ -35,14 +35,13 @@ import {
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 
-const GAS_SUI_AMOUNT = BigInt(50_000_000); // 0.05 SUI
-
 export class DcaApi {
 	// =========================================================================
 	// Constants
 	// =========================================================================
 
 	private static readonly constants = {
+		gasAmount: 50_000_000,
 		moduleNames: {
 			dca: "order",
 			events: "events",
@@ -96,7 +95,8 @@ export class DcaApi {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const tradesGasAmount = BigInt(inputs.tradesAmount) * GAS_SUI_AMOUNT;
+		const tradesGasAmount =
+			BigInt(inputs.tradesAmount) * BigInt(DcaApi.constants.gasAmount);
 		const orderAmountPerTrade =
 			inputs.allocateCoinAmount / BigInt(inputs.tradesAmount);
 		const recipientAddress = inputs.customRecipient
@@ -328,20 +328,19 @@ export class DcaApi {
 			.sort((lhs, rhs) => rhs.created.timestamp - lhs.created.timestamp)
 			.map((order) => Casting.dca.createdOrderEventOnIndexer(order));
 
-		await Promise.all(
+		const preparedOrders = await Promise.all(
 			orders.map(async (order) => {
-				await Promise.all(
+				const preparedTrades = await Promise.all(
 					order.trades.map(async (trade) => {
-						trade.rate = await this.getRate(trade);
-						return trade;
+						const rate = await this.getRate(trade);
+						return { ...trade, rate };
 					})
 				);
-
-				return order;
+				return { ...order, trades: preparedTrades };
 			})
 		);
 
-		return orders;
+		return preparedOrders;
 	};
 
 	private getRate = async (trade: DcaOrderTradeObject) => {
