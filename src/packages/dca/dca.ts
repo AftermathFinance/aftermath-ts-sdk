@@ -11,9 +11,16 @@ import {
 	ApiDcaCreateUserBody,
 } from "./dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
-import { DcaIndexerUserResponse } from "./api/dcaApiCastingTypes";
 
 export class Dca extends Caller {
+	// =========================================================================
+	//  Constants
+	// =========================================================================
+
+	public static readonly constants = {
+		gasAmount: BigInt(50_000_000),
+	};
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================

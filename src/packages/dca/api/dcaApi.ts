@@ -34,6 +34,7 @@ import {
 } from "@mysten/sui/transactions";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
+import { Dca } from "../dca";
 
 export class DcaApi {
 	// =========================================================================
@@ -41,7 +42,6 @@ export class DcaApi {
 	// =========================================================================
 
 	private static readonly constants = {
-		gasAmount: 50_000_000,
 		moduleNames: {
 			dca: "order",
 			events: "events",
@@ -96,7 +96,7 @@ export class DcaApi {
 		tx.setSender(walletAddress);
 
 		const tradesGasAmount =
-			BigInt(inputs.tradesAmount) * BigInt(DcaApi.constants.gasAmount);
+			BigInt(inputs.tradesAmount) * Dca.constants.gasAmount;
 		const orderAmountPerTrade =
 			inputs.allocateCoinAmount / BigInt(inputs.tradesAmount);
 		const recipientAddress = inputs.customRecipient
