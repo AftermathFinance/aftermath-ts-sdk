@@ -6,7 +6,6 @@ import {
 	ApiDCAsOwnedBody,
 	ApiDcaTransactionForCloseOrderBody,
 	ApiDcaTransactionForCreateOrderBody,
-	ApiDcaUser,
 	DcaOrderObject,
 	DcaOrdersObject,
 	DcaOrderTradeObject,
@@ -235,7 +234,7 @@ export class DcaApi {
 
 	public fetchUserPublicKey = async (
 		inputs: ApiDCAsOwnedBody
-	): Promise<ApiDcaUser> => {
+	): Promise<string | undefined> => {
 		const data = await this.Provider.indexerCaller.fetchIndexer<
 			DcaIndexerUserResponse,
 			DcaIndexerUserRequest
@@ -249,9 +248,7 @@ export class DcaApi {
 			undefined,
 			true
 		);
-		return {
-			publicKey: data.public_key,
-		};
+		return data.public_key;
 	};
 
 	public fetchCreateUserPublicKey = async (

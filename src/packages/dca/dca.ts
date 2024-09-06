@@ -9,7 +9,6 @@ import {
 	ApiDcaTransactionForCloseOrderBody,
 	DcaOrderObject,
 	ApiDcaCreateUserBody,
-	ApiDcaUser,
 } from "./dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
 import { DcaIndexerUserResponse } from "./api/dcaApiCastingTypes";
@@ -148,14 +147,14 @@ export class Dca extends Caller {
 	 * Fetches the API for users public key.
 	 * @async
 	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns { Promise<ApiDcaUser> } A promise that resolves users public key.
+	 * @returns { Promise<string | undefined> } A promise that resolves users public key.
 	 */
 
 	public async getUserPublicKey(inputs: {
 		walletAddress: SuiAddress;
-	}): Promise<ApiDcaUser> {
+	}): Promise<string | undefined> {
 		return this.fetchApi<
-			ApiDcaUser,
+			string,
 			{
 				walletAddress: SuiAddress;
 			}

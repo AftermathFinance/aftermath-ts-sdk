@@ -163,10 +163,6 @@ export interface ApiDcaCreateUserBody {
 	signature: string;
 }
 
-export interface ApiDcaUser {
-	publicKey?: string;
-}
-
 // =========================================================================
 //  Owned DCAs
 // =========================================================================
