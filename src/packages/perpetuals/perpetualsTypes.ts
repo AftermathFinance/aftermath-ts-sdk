@@ -24,6 +24,7 @@ import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 export type PerpetualsMarketId = ObjectId;
 export type PerpetualsAccountId = bigint;
 export type PerpetualsOrderId = bigint;
+export type PerpetualsOrderIdAsString = string;
 export type PerpetualsOrderPrice = bigint;
 
 // =========================================================================
@@ -221,20 +222,44 @@ export interface PerpetualsMarketCandleDataPoint {
 //  Orderbook
 // =========================================================================
 
-export interface OrderbookDataPoint {
-	price: number;
-	size: number;
-	totalSize: number;
-	sizeUsd: number;
-	totalSizeUsd: number;
+export interface PerpetualsOrderbook {
+	bids: Record<
+		PerpetualsOrderIdAsString,
+		{
+			accountId: PerpetualsAccountId;
+			size: number;
+			price: number;
+		}
+	>;
+	asks: Record<
+		PerpetualsOrderIdAsString,
+		{
+			accountId: PerpetualsAccountId;
+			size: number;
+			price: number;
+		}
+	>;
+	asksTotalSize: number;
+	bidsTotalSize: number;
+	bestBidPrice: number | undefined;
+	bestAskPrice: number | undefined;
+	midPrice: number | undefined;
 }
 
-export interface PerpetualsOrderbookState {
-	bids: OrderbookDataPoint[];
-	asks: OrderbookDataPoint[];
-	minAskPrice: number;
-	maxBidPrice: number;
-}
+// export interface OrderbookDataPoint {
+// 	price: number;
+// 	size: number;
+// 	totalSize: number;
+// 	sizeUsd: number;
+// 	totalSizeUsd: number;
+// }
+
+// export interface PerpetualsOrderbookState {
+// 	bids: OrderbookDataPoint[];
+// 	asks: OrderbookDataPoint[];
+// 	minAskPrice: number;
+// 	maxBidPrice: number;
+// }
 
 export interface PerpetualsOrderData {
 	orderId: PerpetualsOrderId;
@@ -249,28 +274,28 @@ export interface PerpetualsFilledOrderData {
 	price: number;
 }
 
-export interface PerpetualsOrderbook extends Object {
-	asks: PerpetualsOrderedMap<PerpetualsOrder>;
-	bids: PerpetualsOrderedMap<PerpetualsOrder>;
-	counter: bigint;
-}
+// export interface PerpetualsOrderbook extends Object {
+// 	asks: PerpetualsOrderedMap<PerpetualsOrder>;
+// 	bids: PerpetualsOrderedMap<PerpetualsOrder>;
+// 	counter: bigint;
+// }
 
-const Order = bcs.struct("Order", {
-	accountId: bcs.u64(),
-	size: bcs.u64(),
-});
+// const Order = bcs.struct("Order", {
+// 	accountId: bcs.u64(),
+// 	size: bcs.u64(),
+// });
 
-const Orderbook = bcs.struct("Orderbook", {
-	id: bcs.Address,
-	asks: PerpetualsMap(Order),
-	bids: PerpetualsMap(Order),
-	counter: bcs.u64(),
-});
+// const Orderbook = bcs.struct("Orderbook", {
+// 	id: bcs.Address,
+// 	asks: PerpetualsMap(Order),
+// 	bids: PerpetualsMap(Order),
+// 	counter: bcs.u64(),
+// });
 
-export interface PerpetualsOrder {
-	accountId: PerpetualsAccountId;
-	size: bigint;
-}
+// export interface PerpetualsOrder {
+// 	accountId: PerpetualsAccountId;
+// 	size: bigint;
+// }
 
 export interface PerpetualsOrderInfo {
 	price: PerpetualsOrderPrice;
@@ -282,58 +307,58 @@ const OrderInfo = bcs.struct("OrderInfo", {
 	size: bcs.u64(),
 });
 
-export interface PerpetualsOrderedMap<T> extends Object {
-	size: bigint;
-	counter: bigint;
-	root: bigint;
-	first: bigint;
-	branchMin: bigint;
-	branchMax: bigint;
-	leafMin: bigint;
-	leafMax: bigint;
-	branchesMergeMax: bigint;
-	leavesMergeMax: bigint;
-}
+// export interface PerpetualsOrderedMap<T> extends Object {
+// 	size: bigint;
+// 	counter: bigint;
+// 	root: bigint;
+// 	first: bigint;
+// 	branchMin: bigint;
+// 	branchMax: bigint;
+// 	leafMin: bigint;
+// 	leafMax: bigint;
+// 	branchesMergeMax: bigint;
+// 	leavesMergeMax: bigint;
+// }
 
-function PerpetualsMap<T extends BcsType<any>>(T: T) {
-	return bcs.struct("Map", {
-		id: bcs.Address,
-		size: bcs.u64(),
-		counter: bcs.u64(),
-		root: bcs.u64(),
-		first: bcs.u64(),
-		branchMin: bcs.u64(),
-		branchMax: bcs.u64(),
-		leafMin: bcs.u64(),
-		leafMax: bcs.u64(),
-		branchesMergeMax: bcs.u64(),
-		leavesMergeMax: bcs.u64(),
-	});
-}
+// function PerpetualsMap<T extends BcsType<any>>(T: T) {
+// 	return bcs.struct("Map", {
+// 		id: bcs.Address,
+// 		size: bcs.u64(),
+// 		counter: bcs.u64(),
+// 		root: bcs.u64(),
+// 		first: bcs.u64(),
+// 		branchMin: bcs.u64(),
+// 		branchMax: bcs.u64(),
+// 		leafMin: bcs.u64(),
+// 		leafMax: bcs.u64(),
+// 		branchesMergeMax: bcs.u64(),
+// 		leavesMergeMax: bcs.u64(),
+// 	});
+// }
 
-export interface PerpetualsBranch {
-	keys: bigint[];
-	kids: bigint[];
-}
+// export interface PerpetualsBranch {
+// 	keys: bigint[];
+// 	kids: bigint[];
+// }
 
-export const Branch = bcs.struct("Branch", {
-	keys: bcs.vector(bcs.u128()),
-	kids: bcs.vector(bcs.u64()),
-});
+// export const Branch = bcs.struct("Branch", {
+// 	keys: bcs.vector(bcs.u128()),
+// 	kids: bcs.vector(bcs.u64()),
+// });
 
-export interface PerpetualsLeaf<V> {
-	keys: bigint[];
-	vals: V[];
-	next: bigint;
-}
+// export interface PerpetualsLeaf<V> {
+// 	keys: bigint[];
+// 	vals: V[];
+// 	next: bigint;
+// }
 
-export function Leaf<V extends BcsType<any>>(V: V) {
-	return bcs.struct("Leaf", {
-		keys: bcs.vector(bcs.u128()),
-		vals: bcs.vector(V),
-		next: bcs.u64(),
-	});
-}
+// export function Leaf<V extends BcsType<any>>(V: V) {
+// 	return bcs.struct("Leaf", {
+// 		keys: bcs.vector(bcs.u128()),
+// 		vals: bcs.vector(V),
+// 		next: bcs.u64(),
+// 	});
+// }
 
 export interface PerpetualsAccountData {
 	accountCap: PerpetualsAccountCap;
@@ -742,12 +767,12 @@ export type ApiPerpetualsPreviewCancelOrdersResponse =
 			collateralChange: number;
 	  };
 
-export interface ApiPerpetualsOrderbookStateBody {
-	orderbookPrice: number;
-	lotSize: number;
-	tickSize: number;
-	priceBucketSize: number;
-}
+// export interface ApiPerpetualsOrderbookStateBody {
+// 	orderbookPrice: number;
+// 	lotSize: number;
+// 	tickSize: number;
+// 	priceBucketSize: number;
+// }
 
 export interface ApiPerpetualsExecutionPriceBody {
 	side: PerpetualsOrderSide;
@@ -933,15 +958,15 @@ export const perpetualsRegistry = {
 	Account,
 	AdminCapability,
 	BalanceStruct,
-	Branch,
+	// Branch,
 	Coin,
 	Field,
-	Leaf,
+	// Leaf,
 	MarketKey,
-	Order,
-	Orderbook,
+	// Order,
+	// Orderbook,
 	OrderInfo,
-	PerpetualsMap,
+	// PerpetualsMap,
 	Position,
 	PositionKey,
 	Registry,

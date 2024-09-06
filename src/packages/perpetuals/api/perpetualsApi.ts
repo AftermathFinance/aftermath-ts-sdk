@@ -47,9 +47,6 @@ import {
 	CollateralEvent,
 	PerpetualsOrderEvent,
 	PerpetualsOrderInfo,
-	PerpetualsOrderbookState,
-	OrderbookDataPoint,
-	ApiPerpetualsOrderbookStateBody,
 	PerpetualsOrderPrice,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
@@ -95,6 +92,7 @@ import {
 	FilledTakerOrderEventOnChain,
 	LiquidatedEventOnChain,
 	PerpetualsAccountPositionsIndexerResponse,
+	PerpetualsMarketIndexerResponse,
 	PerpetualsMarketsIndexerResponse,
 	PerpetualsPreviewCancelOrdersIndexerResponse,
 	PerpetualsPreviewOrderIndexerResponse,
@@ -938,38 +936,39 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		);
 	};
 
-	public fetchOrderbookPrice = async (inputs: {
-		collateralCoinType: ObjectId;
-		marketId: PerpetualsMarketId;
-		// marketInitialSharedVersion: ObjectVersion;
-	}): Promise<number> => {
-		const {
-			collateralCoinType,
-			marketId,
-			// marketInitialSharedVersion
-		} = inputs;
+	// public fetchOrderbookPrice = async (inputs: {
+	// 	collateralCoinType: ObjectId;
+	// 	marketId: PerpetualsMarketId;
+	// 	// marketInitialSharedVersion: ObjectVersion;
+	// }): Promise<number> => {
+	// 	const {
+	// 		collateralCoinType,
+	// 		marketId,
+	// 		// marketInitialSharedVersion
+	// 	} = inputs;
 
-		const tx = new Transaction();
+	// 	const tx = new Transaction();
 
-		this.getBookPriceTx({
-			tx,
-			marketId,
-			collateralCoinType,
-			// marketInitialSharedVersion,
-		});
+	// 	this.getBookPriceTx({
+	// 		tx,
+	// 		marketId,
+	// 		collateralCoinType,
+	// 		// marketInitialSharedVersion,
+	// 	});
 
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
+	// 	const bytes =
+	// 		await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+	// 			tx,
+	// 		});
 
-		return PerpetualsApiCasting.orderbookPriceFromBytes(bytes);
-	};
+	// 	return PerpetualsApiCasting.orderbookPriceFromBytes(bytes);
+	// };
 
 	public fetchAllMarkets = async (inputs: {
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarketData[]> => {
 		const { collateralCoinType } = inputs;
+
 		const response =
 			await this.Provider.indexerCaller.fetchIndexer<PerpetualsMarketsIndexerResponse>(
 				`perpetuals/markets/${Helpers.stripLeadingZeroesFromType(
@@ -1004,10 +1003,51 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		return markets.map((market, index) =>
 			Casting.perpetuals.marketDataFromIndexerResponse(
 				market,
-				collateralCoinType,
+				Helpers.addLeadingZeroesToType(collateralCoinType),
 				symbols[index].symbol
 			)
 		);
+	};
+
+	public fetchMarketWithOrderbook = async (inputs: {
+		marketId: PerpetualsMarketId;
+		collateralCoinType: CoinType;
+	}): Promise<{
+		market: PerpetualsMarketData;
+		orderbook: PerpetualsOrderbook;
+	}> => {
+		const { marketId, collateralCoinType } = inputs;
+
+		const response =
+			await this.Provider.indexerCaller.fetchIndexer<PerpetualsMarketIndexerResponse>(
+				`perpetuals/market/${marketId}`,
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+
+		const priceFeedId = Casting.addressFromStringBytes(
+			response.ch.object.market_params.base_pfs_id
+		);
+		const symbols = await this.Provider.Oracle().fetchPriceFeedSymbols({
+			priceFeedIds: [priceFeedId],
+		});
+		const market = Casting.perpetuals.marketDataFromIndexerResponse(
+			response.ch,
+			Helpers.addLeadingZeroesToType(collateralCoinType),
+			symbols[0].symbol
+		);
+
+		return {
+			market,
+			orderbook: Casting.perpetuals.orderbookFromIndexerResponse(
+				response.orderbook,
+				market.marketParams.lotSize,
+				market.marketParams.tickSize
+			),
+		};
 	};
 
 	// public fetchAllMarketIds = async (inputs: {
@@ -1027,73 +1067,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 		Helpers.addLeadingZeroesToType(data.marketId)
 	// 	);
 	// };
-
-	public fetchOrderbookState = async (
-		inputs: ApiPerpetualsOrderbookStateBody & {
-			collateralCoinType: ObjectId;
-			marketId: PerpetualsMarketId;
-		}
-	): Promise<PerpetualsOrderbookState> => {
-		const { orderbookPrice, lotSize, tickSize } = inputs;
-
-		const PRICE_SCALE_BOUND = 10;
-
-		const midPrice = Perpetuals.priceToOrderPrice({
-			...inputs,
-			price: orderbookPrice,
-		});
-		const lowPrice = Perpetuals.priceToOrderPrice({
-			...inputs,
-			price: orderbookPrice / PRICE_SCALE_BOUND,
-		});
-		const highPrice = Perpetuals.priceToOrderPrice({
-			...inputs,
-			price: orderbookPrice * PRICE_SCALE_BOUND,
-		});
-		const [bids, asks] = await Promise.all([
-			this.fetchOrderbookOrders({
-				...inputs,
-				side: PerpetualsOrderSide.Bid,
-				fromPrice: midPrice,
-				toPrice: lowPrice,
-			}),
-			this.fetchOrderbookOrders({
-				...inputs,
-				side: PerpetualsOrderSide.Ask,
-				fromPrice: midPrice,
-				toPrice: highPrice,
-			}),
-		]);
-
-		const askPrices = asks.map((ask) => ask.price);
-		const bidPrices = bids.map((bid) => bid.price);
-		const minAskPrice =
-			askPrices.length > 0 ? Helpers.minBigInt(...askPrices) : BigInt(0);
-		const maxBidPrice =
-			bidPrices.length > 0 ? Helpers.maxBigInt(...bidPrices) : BigInt(0);
-		return {
-			bids: PerpetualsApi.bucketOrders({
-				...inputs,
-				side: PerpetualsOrderSide.Bid,
-				orders: bids,
-			}),
-			asks: PerpetualsApi.bucketOrders({
-				...inputs,
-				side: PerpetualsOrderSide.Ask,
-				orders: asks,
-			}),
-			minAskPrice: Perpetuals.orderPriceToPrice({
-				orderPrice: minAskPrice,
-				lotSize,
-				tickSize,
-			}),
-			maxBidPrice: Perpetuals.orderPriceToPrice({
-				orderPrice: maxBidPrice,
-				lotSize,
-				tickSize,
-			}),
-		};
-	};
 
 	public fetchMaxOrderSize = async (
 		inputs: ApiPerpetualsMaxOrderSizeBody & {
@@ -2126,73 +2099,73 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Private Helpers
 	// =========================================================================
 
-	private fetchOrdersSizes = async (inputs: {
-		orderIds: PerpetualsOrderId[];
-		collateralCoinType: ObjectId;
-		marketId: PerpetualsMarketId;
-	}): Promise<bigint[]> => {
-		const { orderIds, marketId, collateralCoinType } = inputs;
-		if (orderIds.length <= 0) return [];
+	// private fetchOrdersSizes = async (inputs: {
+	// 	orderIds: PerpetualsOrderId[];
+	// 	collateralCoinType: ObjectId;
+	// 	marketId: PerpetualsMarketId;
+	// }): Promise<bigint[]> => {
+	// 	const { orderIds, marketId, collateralCoinType } = inputs;
+	// 	if (orderIds.length <= 0) return [];
 
-		const tx = new Transaction();
+	// 	const tx = new Transaction();
 
-		const orderbookId = this.getOrderbookTx({
-			tx,
-			collateralCoinType,
-			marketId,
-		});
+	// 	const orderbookId = this.getOrderbookTx({
+	// 		tx,
+	// 		collateralCoinType,
+	// 		marketId,
+	// 	});
 
-		for (const orderId of orderIds) {
-			this.getOrderSizeTx({
-				tx,
-				orderId,
-				orderbookId,
-			});
-		}
+	// 	for (const orderId of orderIds) {
+	// 		this.getOrderSizeTx({
+	// 			tx,
+	// 			orderId,
+	// 			orderbookId,
+	// 		});
+	// 	}
 
-		const { allBytes } =
-			await this.Provider.Inspections().fetchAllBytesFromTx({
-				tx,
-			});
+	// 	const { allBytes } =
+	// 		await this.Provider.Inspections().fetchAllBytesFromTx({
+	// 			tx,
+	// 		});
 
-		const sizes = allBytes
-			.slice(1)
-			.map((bytes) => Casting.bigIntFromBytes(bytes[0]));
-		return sizes;
-	};
+	// 	const sizes = allBytes
+	// 		.slice(1)
+	// 		.map((bytes) => Casting.bigIntFromBytes(bytes[0]));
+	// 	return sizes;
+	// };
 
-	private fetchOrderbookOrders = async (inputs: {
-		collateralCoinType: ObjectId;
-		marketId: PerpetualsMarketId;
-		side: PerpetualsOrderSide;
-		fromPrice: PerpetualsOrderPrice;
-		toPrice: PerpetualsOrderPrice;
-	}): Promise<PerpetualsOrderInfo[]> => {
-		const { collateralCoinType, marketId, side, fromPrice, toPrice } =
-			inputs;
+	// private fetchOrderbookOrders = async (inputs: {
+	// 	collateralCoinType: ObjectId;
+	// 	marketId: PerpetualsMarketId;
+	// 	side: PerpetualsOrderSide;
+	// 	fromPrice: PerpetualsOrderPrice;
+	// 	toPrice: PerpetualsOrderPrice;
+	// }): Promise<PerpetualsOrderInfo[]> => {
+	// 	const { collateralCoinType, marketId, side, fromPrice, toPrice } =
+	// 		inputs;
 
-		const tx = new Transaction();
+	// 	const tx = new Transaction();
 
-		const orderbookId = this.getOrderbookTx({
-			tx,
-			collateralCoinType,
-			marketId,
-		});
-		this.inspectOrdersTx({ tx, orderbookId, side, fromPrice, toPrice });
+	// 	const orderbookId = this.getOrderbookTx({
+	// 		tx,
+	// 		collateralCoinType,
+	// 		marketId,
+	// 	});
+	// 	this.inspectOrdersTx({ tx, orderbookId, side, fromPrice, toPrice });
 
-		const bytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
+	// 	const bytes =
+	// 		await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+	// 			tx,
+	// 		});
 
-		const orderInfos: any[] = bcs
-			.vector(perpetualsRegistry.OrderInfo)
-			.parse(new Uint8Array(bytes));
+	// 	const orderInfos: any[] = bcs
+	// 		.vector(perpetualsRegistry.OrderInfo)
+	// 		.parse(new Uint8Array(bytes));
 
-		return orderInfos.map((orderInfo) =>
-			Casting.perpetuals.orderInfoFromRaw(orderInfo)
-		);
-	};
+	// 	return orderInfos.map((orderInfo) =>
+	// 		Casting.perpetuals.orderInfoFromRaw(orderInfo)
+	// 	);
+	// };
 
 	// public fetchExecutionPrice = async (
 	// 	inputs: ApiPerpetualsExecutionPriceBody & {
@@ -2453,107 +2426,107 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Public Static Helpers
 	// =========================================================================
 
-	public static bucketOrders = (inputs: {
-		orders: PerpetualsOrderInfo[];
-		side: PerpetualsOrderSide;
-		lotSize: number;
-		tickSize: number;
-		priceBucketSize: number;
-		initialBucketedOrders?: OrderbookDataPoint[];
-	}): OrderbookDataPoint[] => {
-		const {
-			orders,
-			side,
-			lotSize,
-			tickSize,
-			priceBucketSize,
-			initialBucketedOrders,
-		} = inputs;
+	// public static bucketOrders = (inputs: {
+	// 	orders: PerpetualsOrderInfo[];
+	// 	side: PerpetualsOrderSide;
+	// 	lotSize: number;
+	// 	tickSize: number;
+	// 	priceBucketSize: number;
+	// 	initialBucketedOrders?: OrderbookDataPoint[];
+	// }): OrderbookDataPoint[] => {
+	// 	const {
+	// 		orders,
+	// 		side,
+	// 		lotSize,
+	// 		tickSize,
+	// 		priceBucketSize,
+	// 		initialBucketedOrders,
+	// 	} = inputs;
 
-		let dataPoints: OrderbookDataPoint[] = initialBucketedOrders ?? [];
+	// 	let dataPoints: OrderbookDataPoint[] = initialBucketedOrders ?? [];
 
-		const roundPrice = (price: number, bucketSize: number): number => {
-			return Math.round(price / bucketSize) * bucketSize;
-		};
+	// 	const roundPrice = (price: number, bucketSize: number): number => {
+	// 		return Math.round(price / bucketSize) * bucketSize;
+	// 	};
 
-		const comparePrices = (
-			price1: number,
-			price2: number,
-			bucketSize: number
-		): boolean => {
-			return Math.abs(price1 - price2) < bucketSize;
-		};
+	// 	const comparePrices = (
+	// 		price1: number,
+	// 		price2: number,
+	// 		bucketSize: number
+	// 	): boolean => {
+	// 		return Math.abs(price1 - price2) < bucketSize;
+	// 	};
 
-		orders.forEach((order) => {
-			const actualPrice = Perpetuals.orderPriceToPrice({
-				lotSize,
-				tickSize: Math.abs(tickSize),
-				orderPrice: order.price,
-			});
-			const roundedPrice = roundPrice(actualPrice, priceBucketSize);
-			const size =
-				lotSize *
-				Math.abs(Number(order.size)) *
-				(tickSize < 0 ? -1 : 1);
-			const sizeUsd = size * actualPrice;
+	// 	orders.forEach((order) => {
+	// 		const actualPrice = Perpetuals.orderPriceToPrice({
+	// 			lotSize,
+	// 			tickSize: Math.abs(tickSize),
+	// 			orderPrice: order.price,
+	// 		});
+	// 		const roundedPrice = roundPrice(actualPrice, priceBucketSize);
+	// 		const size =
+	// 			lotSize *
+	// 			Math.abs(Number(order.size)) *
+	// 			(tickSize < 0 ? -1 : 1);
+	// 		const sizeUsd = size * actualPrice;
 
-			const placementIndex = dataPoints.findIndex(
-				(dataPoint: OrderbookDataPoint) =>
-					comparePrices(
-						roundedPrice,
-						dataPoint.price,
-						priceBucketSize
-					)
-			);
+	// 		const placementIndex = dataPoints.findIndex(
+	// 			(dataPoint: OrderbookDataPoint) =>
+	// 				comparePrices(
+	// 					roundedPrice,
+	// 					dataPoint.price,
+	// 					priceBucketSize
+	// 				)
+	// 		);
 
-			if (placementIndex < 0) {
-				if (size > 0) {
-					const newDataPoint: OrderbookDataPoint = {
-						size,
-						sizeUsd,
-						totalSize: size,
-						totalSizeUsd: sizeUsd,
-						price: roundedPrice,
-					};
-					const insertIndex = dataPoints.findIndex((dataPoint) =>
-						side === PerpetualsOrderSide.Ask
-							? roundedPrice < dataPoint.price
-							: roundedPrice > dataPoint.price
-					);
-					if (insertIndex < 0) {
-						dataPoints.push(newDataPoint);
-					} else {
-						dataPoints.splice(insertIndex, 0, newDataPoint);
-					}
-				}
-			} else {
-				dataPoints[placementIndex].size += size;
-				dataPoints[placementIndex].sizeUsd += sizeUsd;
-				dataPoints[placementIndex].totalSize += size;
-				dataPoints[placementIndex].totalSizeUsd += sizeUsd;
-			}
-		});
+	// 		if (placementIndex < 0) {
+	// 			if (size > 0) {
+	// 				const newDataPoint: OrderbookDataPoint = {
+	// 					size,
+	// 					sizeUsd,
+	// 					totalSize: size,
+	// 					totalSizeUsd: sizeUsd,
+	// 					price: roundedPrice,
+	// 				};
+	// 				const insertIndex = dataPoints.findIndex((dataPoint) =>
+	// 					side === PerpetualsOrderSide.Ask
+	// 						? roundedPrice < dataPoint.price
+	// 						: roundedPrice > dataPoint.price
+	// 				);
+	// 				if (insertIndex < 0) {
+	// 					dataPoints.push(newDataPoint);
+	// 				} else {
+	// 					dataPoints.splice(insertIndex, 0, newDataPoint);
+	// 				}
+	// 			}
+	// 		} else {
+	// 			dataPoints[placementIndex].size += size;
+	// 			dataPoints[placementIndex].sizeUsd += sizeUsd;
+	// 			dataPoints[placementIndex].totalSize += size;
+	// 			dataPoints[placementIndex].totalSizeUsd += sizeUsd;
+	// 		}
+	// 	});
 
-		dataPoints = dataPoints.filter((data) => data.size >= lotSize);
+	// 	dataPoints = dataPoints.filter((data) => data.size >= lotSize);
 
-		for (let index = 0; index < dataPoints.length; index++) {
-			if (index > 0) {
-				dataPoints[index].totalSize =
-					dataPoints[index - 1].totalSize + dataPoints[index].size;
-				dataPoints[index].totalSizeUsd =
-					dataPoints[index - 1].totalSizeUsd +
-					dataPoints[index].sizeUsd;
-			} else {
-				dataPoints[index].totalSize = dataPoints[index].size;
-				dataPoints[index].totalSizeUsd = dataPoints[index].sizeUsd;
-			}
-		}
+	// 	for (let index = 0; index < dataPoints.length; index++) {
+	// 		if (index > 0) {
+	// 			dataPoints[index].totalSize =
+	// 				dataPoints[index - 1].totalSize + dataPoints[index].size;
+	// 			dataPoints[index].totalSizeUsd =
+	// 				dataPoints[index - 1].totalSizeUsd +
+	// 				dataPoints[index].sizeUsd;
+	// 		} else {
+	// 			dataPoints[index].totalSize = dataPoints[index].size;
+	// 			dataPoints[index].totalSizeUsd = dataPoints[index].sizeUsd;
+	// 		}
+	// 	}
 
-		if (side === PerpetualsOrderSide.Ask) {
-			dataPoints.reverse();
-		}
-		return dataPoints;
-	};
+	// 	if (side === PerpetualsOrderSide.Ask) {
+	// 		dataPoints.reverse();
+	// 	}
+	// 	return dataPoints;
+	// };
 
 	// =========================================================================
 	//  Event Types

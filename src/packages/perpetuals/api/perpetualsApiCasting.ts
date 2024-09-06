@@ -2,8 +2,6 @@ import { SuiObjectResponse } from "@mysten/sui/client";
 import {
 	PerpetualsMarketState,
 	PerpetualsOrderbook,
-	PerpetualsOrder,
-	PerpetualsOrderedMap,
 	PerpetualsMarketParams,
 	PerpetualsAccountObject,
 	PerpetualsPosition,
@@ -28,6 +26,8 @@ import {
 	AllocatedCollateralEvent,
 	DeallocatedCollateralEvent,
 	PerpetualsMarketId,
+	PerpetualsOrderIdAsString,
+	PerpetualsAccountId,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -53,6 +53,7 @@ import {
 	PerpetualsAccountPositionsIndexerResponse,
 	PerpetualsPositionIndexerResponse,
 	PerpetualsMarketDataIndexerResponse,
+	PerpetualsOrderbookIndexerResponse,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
 import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types";
@@ -279,6 +280,97 @@ export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Orderbook
 	// =========================================================================
+
+	public static orderbookFromIndexerResponse(
+		data: PerpetualsOrderbookIndexerResponse,
+		lotSize: bigint,
+		tickSize: bigint
+	): PerpetualsOrderbook {
+		const partialOrderbook = {
+			asks: Object.entries(data.asks).reduce(
+				(acc, [orderId, order]) => ({
+					...acc,
+					[orderId]: {
+						accountId: BigInt(order.account_id),
+						size:
+							Number(order.size) *
+							Perpetuals.lotOrTickSizeToNumber(lotSize),
+						price: Perpetuals.orderPriceToPrice({
+							orderPrice: Perpetuals.OrderUtils.price(
+								BigInt(orderId)
+							),
+							lotSize,
+							tickSize,
+						}),
+					},
+				}),
+				{} as Record<
+					PerpetualsOrderIdAsString,
+					{
+						accountId: PerpetualsAccountId;
+						size: number;
+						price: number;
+					}
+				>
+			),
+			bids: Object.entries(data.bids).reduce(
+				(acc, [orderId, order]) => ({
+					...acc,
+					[orderId]: {
+						accountId: BigInt(order.account_id),
+						size:
+							Number(order.size) *
+							Perpetuals.lotOrTickSizeToNumber(lotSize),
+						price: Perpetuals.orderPriceToPrice({
+							orderPrice: Perpetuals.OrderUtils.price(
+								BigInt(orderId)
+							),
+							lotSize,
+							tickSize,
+						}),
+					},
+				}),
+				{} as Record<
+					PerpetualsOrderIdAsString,
+					{
+						accountId: PerpetualsAccountId;
+						size: number;
+						price: number;
+					}
+				>
+			),
+			asksTotalSize:
+				Number(data.asks_size) *
+				Perpetuals.lotOrTickSizeToNumber(lotSize),
+			bidsTotalSize:
+				Number(data.bids_size) *
+				Perpetuals.lotOrTickSizeToNumber(lotSize),
+		};
+
+		const bids = Object.values(partialOrderbook.bids);
+		const asks = Object.values(partialOrderbook.asks);
+
+		const bestBidPrice =
+			bids.length <= 0
+				? undefined
+				: Math.max(...bids.map((order) => order.price));
+		const bestAskPrice =
+			asks.length <= 0
+				? undefined
+				: Math.min(...asks.map((order) => order.price));
+
+		const midPrice =
+			bestBidPrice === undefined || bestAskPrice === undefined
+				? undefined
+				: (bestBidPrice + bestAskPrice) / 2;
+
+		return {
+			...partialOrderbook,
+			bestBidPrice,
+			bestAskPrice,
+			midPrice,
+		};
+	}
 
 	public static orderbookPriceFromBytes = (bytes: number[]): number => {
 		const unwrapped = bcs.option(bcs.u256()).parse(new Uint8Array(bytes));

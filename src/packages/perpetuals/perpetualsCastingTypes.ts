@@ -9,6 +9,8 @@ import {
 	IFixedAsStringBytes,
 	ObjectId,
 	PerpetualsMarketId,
+	PerpetualsOrderId,
+	PerpetualsOrderIdAsString,
 	SuiAddress,
 } from "../../types";
 
@@ -28,6 +30,25 @@ export interface PerpetualsMarketDataIndexerResponse {
 		market_params: PerpetualsMarketParamsFieldsIndexerReponse;
 		market_state: PerpetualsMarketStateFieldsIndexerReponse;
 	};
+}
+
+export interface PerpetualsOrderbookIndexerResponse {
+	asks: Record<
+		PerpetualsOrderIdAsString,
+		{
+			account_id: BigIntAsString;
+			size: BigIntAsString;
+		}
+	>;
+	bids: Record<
+		PerpetualsOrderIdAsString,
+		{
+			account_id: BigIntAsString;
+			size: BigIntAsString;
+		}
+	>;
+	asks_size: BigIntAsString;
+	bids_size: BigIntAsString;
 }
 
 /// Static attributes of a perpetuals market.
@@ -204,6 +225,11 @@ export type PerpetualsMarketsIndexerResponse = Record<
 	PerpetualsMarketId,
 	PerpetualsMarketDataIndexerResponse
 >;
+
+export type PerpetualsMarketIndexerResponse = {
+	ch: PerpetualsMarketDataIndexerResponse;
+	orderbook: PerpetualsOrderbookIndexerResponse;
+};
 
 // =========================================================================
 //  Events

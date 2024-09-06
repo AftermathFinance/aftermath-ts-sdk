@@ -6,7 +6,6 @@ import {
 	ApiIndexerEventsBody,
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
-	ApiPerpetualsOrderbookStateBody,
 	CoinType,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
@@ -20,7 +19,6 @@ import {
 	PerpetualsOrderPrice,
 	PerpetualsOrderSide,
 	PerpetualsOrderbook,
-	PerpetualsOrderbookState,
 	PerpetualsPosition,
 	SuiNetwork,
 	Timestamp,
@@ -68,8 +66,9 @@ export class PerpetualsMarket extends Caller {
 	//  Inspections
 	// =========================================================================
 
+	// NOTE: should this be entirely removed since data already in orderbook function ?
 	public getOrderbookPrice() {
-		return this.fetchApi<number>("orderbook-price");
+		return this.fetchApi<number | undefined>("orderbook-price");
 	}
 
 	public get24hrVolume(): Promise<ApiPerpetualsMarket24hrVolumeResponse> {
@@ -82,18 +81,8 @@ export class PerpetualsMarket extends Caller {
 		return this.fetchApi<number>("price-24hrs-ago");
 	}
 
-	public getOrderbookState(inputs: {
-		orderbookPrice: number;
-		priceBucketSize: number;
-	}) {
-		return this.fetchApi<
-			PerpetualsOrderbookState,
-			ApiPerpetualsOrderbookStateBody
-		>("orderbook-state", {
-			...inputs,
-			lotSize: this.lotSize(),
-			tickSize: this.tickSize(),
-		});
+	public getOrderbook() {
+		return this.fetchApi<PerpetualsOrderbook>("orderbook");
 	}
 
 	public getMaxOrderSizeUsd = async (inputs: {
@@ -298,82 +287,82 @@ export class PerpetualsMarket extends Caller {
 	// 	});
 	// }
 
-	private simulateClosePosition(inputs: {
-		position: PerpetualsPosition;
-		indexPrice: number;
-		executionPrice: number;
-		size: number;
-		percentFilled: number;
-	}): {
-		marginDelta: number;
-		reqDelta: number;
-		sizeFilled: number;
-		sizePosted: number;
-	} {
-		const { position, indexPrice, executionPrice, size, percentFilled } =
-			inputs;
+	// private simulateClosePosition(inputs: {
+	// 	position: PerpetualsPosition;
+	// 	indexPrice: number;
+	// 	executionPrice: number;
+	// 	size: number;
+	// 	percentFilled: number;
+	// }): {
+	// 	marginDelta: number;
+	// 	reqDelta: number;
+	// 	sizeFilled: number;
+	// 	sizePosted: number;
+	// } {
+	// 	const { position, indexPrice, executionPrice, size, percentFilled } =
+	// 		inputs;
 
-		const imr = 1 / position.leverage;
-		// const imr = this.initialMarginRatio();
-		const takerFee = Casting.IFixed.numberFromIFixed(
-			this.marketParams.takerFee
-		);
+	// 	const imr = 1 / position.leverage;
+	// 	// const imr = this.initialMarginRatio();
+	// 	const takerFee = Casting.IFixed.numberFromIFixed(
+	// 		this.marketParams.takerFee
+	// 	);
 
-		const positionSizeNum = Casting.IFixed.numberFromIFixed(
-			position.baseAssetAmount
-		);
-		const positionBidsNum = Casting.IFixed.numberFromIFixed(
-			position.bidsQuantity
-		);
-		const positionAsksNum = Casting.IFixed.numberFromIFixed(
-			position.asksQuantity
-		);
-		const netSizeBefore = Math.max(
-			Math.abs(positionSizeNum + positionBidsNum),
-			Math.abs(positionSizeNum - positionAsksNum)
-		);
+	// 	const positionSizeNum = Casting.IFixed.numberFromIFixed(
+	// 		position.baseAssetAmount
+	// 	);
+	// 	const positionBidsNum = Casting.IFixed.numberFromIFixed(
+	// 		position.bidsQuantity
+	// 	);
+	// 	const positionAsksNum = Casting.IFixed.numberFromIFixed(
+	// 		position.asksQuantity
+	// 	);
+	// 	const netSizeBefore = Math.max(
+	// 		Math.abs(positionSizeNum + positionBidsNum),
+	// 		Math.abs(positionSizeNum - positionAsksNum)
+	// 	);
 
-		let sizeFilled = size * percentFilled;
-		let sizePosted = size * (1 - percentFilled);
+	// 	let sizeFilled = size * percentFilled;
+	// 	let sizePosted = size * (1 - percentFilled);
 
-		let positionSizeFilledNum: number;
-		let positionSizePosted: number;
-		const positionSizeAbs = Math.abs(positionSizeNum);
-		if (sizeFilled >= positionSizeAbs) {
-			positionSizeFilledNum = positionSizeAbs;
-			positionSizePosted = 0;
-			sizeFilled = sizeFilled - positionSizeAbs;
-		} else {
-			positionSizeFilledNum = sizeFilled;
-			positionSizePosted = positionSizeAbs - sizeFilled;
-			sizeFilled = 0;
-			sizePosted = sizePosted - positionSizePosted;
-		}
+	// 	let positionSizeFilledNum: number;
+	// 	let positionSizePosted: number;
+	// 	const positionSizeAbs = Math.abs(positionSizeNum);
+	// 	if (sizeFilled >= positionSizeAbs) {
+	// 		positionSizeFilledNum = positionSizeAbs;
+	// 		positionSizePosted = 0;
+	// 		sizeFilled = sizeFilled - positionSizeAbs;
+	// 	} else {
+	// 		positionSizeFilledNum = sizeFilled;
+	// 		positionSizePosted = positionSizeAbs - sizeFilled;
+	// 		sizeFilled = 0;
+	// 		sizePosted = sizePosted - positionSizePosted;
+	// 	}
 
-		const netSizeAfter = Math.max(
-			Math.abs(
-				positionSizeAbs -
-					positionSizeFilledNum +
-					positionBidsNum -
-					positionSizePosted
-			),
-			Math.abs(
-				positionSizeAbs -
-					positionSizeFilledNum +
-					positionAsksNum -
-					positionSizePosted
-			)
-		);
-		const entryPrice = Perpetuals.calcEntryPrice(position);
-		const uPnl = positionSizeFilledNum * (indexPrice - entryPrice);
-		const rPnl = positionSizeFilledNum * (executionPrice - entryPrice);
-		// pessimistically don't consider positive pnl since the order may not actually be
-		// matched at the sell price
-		const fees =
-			Math.abs(positionSizeFilledNum) * executionPrice * takerFee;
-		const marginDelta = rPnl - uPnl - fees;
-		const reqDelta = (netSizeAfter - netSizeBefore) * indexPrice * imr;
+	// 	const netSizeAfter = Math.max(
+	// 		Math.abs(
+	// 			positionSizeAbs -
+	// 				positionSizeFilledNum +
+	// 				positionBidsNum -
+	// 				positionSizePosted
+	// 		),
+	// 		Math.abs(
+	// 			positionSizeAbs -
+	// 				positionSizeFilledNum +
+	// 				positionAsksNum -
+	// 				positionSizePosted
+	// 		)
+	// 	);
+	// 	const entryPrice = Perpetuals.calcEntryPrice(position);
+	// 	const uPnl = positionSizeFilledNum * (indexPrice - entryPrice);
+	// 	const rPnl = positionSizeFilledNum * (executionPrice - entryPrice);
+	// 	// pessimistically don't consider positive pnl since the order may not actually be
+	// 	// matched at the sell price
+	// 	const fees =
+	// 		Math.abs(positionSizeFilledNum) * executionPrice * takerFee;
+	// 	const marginDelta = rPnl - uPnl - fees;
+	// 	const reqDelta = (netSizeAfter - netSizeBefore) * indexPrice * imr;
 
-		return { marginDelta, reqDelta, sizeFilled, sizePosted };
-	}
+	// 	return { marginDelta, reqDelta, sizeFilled, sizePosted };
+	// }
 }
