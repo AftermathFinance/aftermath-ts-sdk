@@ -169,6 +169,7 @@ export interface DynamicGasAddresses {
 
 export interface OracleAddresses {
 	packages: {
+		events: SuiAddress;
 		oracleReader: SuiAddress;
 	};
 }

@@ -662,6 +662,18 @@ export type PerpetualsTwapEvent =
 	| UpdatedPremiumTwapEvent
 	| UpdatedSpreadTwapEvent;
 
+export const isUpdatedPremiumTwapEvent = (
+	event: Event
+): event is UpdatedPremiumTwapEvent => {
+	return event.type.toLowerCase().endsWith("::updatedpremiumtwap");
+};
+
+export const isUpdatedSpreadTwapEvent = (
+	event: Event
+): event is UpdatedSpreadTwapEvent => {
+	return event.type.toLowerCase().endsWith("::updatedspreadtwap");
+};
+
 // =========================================================================
 //  API
 // =========================================================================

@@ -2,6 +2,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
 import {
+	AnyObjectType,
 	BigIntAsString,
 	CoinDecimal,
 	CoinSymbol,
@@ -10,9 +11,24 @@ import {
 } from "../../../types";
 import { IFixedUtils } from "../../../general/utils/iFixedUtils";
 import { Sui } from "../../sui";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
 export class OracleApi {
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	private static readonly constants = {
+		moduleNames: {
+			events: "events",
+		},
+	};
+
 	public readonly addresses: OracleAddresses;
+
+	public readonly eventTypes: {
+		updatedPriceFeed: AnyObjectType;
+	};
 
 	// =========================================================================
 	//  Constructor
@@ -26,6 +42,9 @@ export class OracleApi {
 			);
 
 		this.addresses = addresses;
+		this.eventTypes = {
+			updatedPriceFeed: this.eventType("UpdatedPriceFeed"),
+		};
 	}
 
 	// =========================================================================
@@ -109,4 +128,19 @@ export class OracleApi {
 			],
 		});
 	};
+
+	// =========================================================================
+	//  Private
+	// =========================================================================
+
+	// =========================================================================
+	//  Event Types
+	// =========================================================================
+
+	private eventType = (eventName: string) =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.events,
+			OracleApi.constants.moduleNames.events,
+			eventName
+		);
 }
