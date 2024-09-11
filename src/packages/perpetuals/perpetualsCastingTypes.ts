@@ -371,3 +371,14 @@ export type UpdatedSpreadTwapEventOnChain = EventOnChain<{
 	spread_twap: IFixedAsString;
 	spread_twap_last_upd_ms: BigIntAsString;
 }>;
+
+// =========================================================================
+//  Funding
+// =========================================================================
+
+export type UpdatedFundingEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	cum_funding_rate_long: IFixedAsString;
+	cum_funding_rate_short: IFixedAsString;
+	funding_last_upd_ms: BigIntAsString;
+}>;

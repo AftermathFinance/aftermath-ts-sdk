@@ -200,11 +200,11 @@ export interface PerpetualsMarketParams {
 export interface PerpetualsMarketState {
 	cumFundingRateLong: IFixed;
 	cumFundingRateShort: IFixed;
-	fundingLastUpdMs: Timestamp;
+	fundingLastUpdateMs: Timestamp;
 	premiumTwap: IFixed;
-	premiumTwapLastUpdMs: Timestamp;
+	premiumTwapLastUpdateMs: Timestamp;
 	spreadTwap: IFixed;
-	spreadTwapLastUpdMs: Timestamp;
+	spreadTwapLastUpdateMs: Timestamp;
 	openInterest: IFixed;
 	feesAccrued: IFixed;
 }
@@ -386,7 +386,7 @@ export type PerpetualsAccountCollateralChange = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
 	// marketId: PerpetualsMarketId;
-	eventType: AnyObjectType;
+	eventType: AnyObjectType | "FilledTakerOrderLiquidator";
 	collateralChange: number;
 	collateralChangeUsd: number;
 };
@@ -400,7 +400,7 @@ export type PerpetualsAccountTrade = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
 	marketId: PerpetualsMarketId;
-	eventType: AnyObjectType;
+	eventType: AnyObjectType | "FilledTakerOrderLiquidator";
 	side: PerpetualsOrderSide;
 } & (
 	| {
@@ -672,6 +672,23 @@ export const isUpdatedSpreadTwapEvent = (
 	event: Event
 ): event is UpdatedSpreadTwapEvent => {
 	return event.type.toLowerCase().endsWith("::updatedspreadtwap");
+};
+
+// =========================================================================
+//  Funding
+// =========================================================================
+
+export interface UpdatedFundingEvent extends Event {
+	marketId: PerpetualsMarketId;
+	cumFundingRateLong: IFixed;
+	cumFundingRateShort: IFixed;
+	fundingLastUpdateMs: Timestamp;
+}
+
+export const isUpdatedFundingEvent = (
+	event: Event
+): event is UpdatedFundingEvent => {
+	return event.type.toLowerCase().endsWith("::updatedfunding");
 };
 
 // =========================================================================

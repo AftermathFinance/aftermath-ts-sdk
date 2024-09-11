@@ -149,6 +149,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		filledTakerOrder: AnyObjectType;
 		updatedPremiumTwap: AnyObjectType;
 		updatedSpreadTwap: AnyObjectType;
+		updatedFunding: AnyObjectType;
 	};
 	public readonly moveErrors: MoveErrors;
 
@@ -189,6 +190,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			// Twap
 			updatedPremiumTwap: this.eventType("UpdatedPremiumTwap"),
 			updatedSpreadTwap: this.eventType("UpdatedSpreadTwap"),
+			// Funding
+			updatedFunding: this.eventType("UpdatedFunding"),
 		};
 		this.moveErrors = {
 			[this.addresses.perpetuals.packages.perpetuals]: {

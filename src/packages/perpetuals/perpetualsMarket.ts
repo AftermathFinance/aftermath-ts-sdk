@@ -128,7 +128,7 @@ export class PerpetualsMarket extends Caller {
 	public nextFundingTimeMs = (): Timestamp => {
 		const fundingFrequencyMs = Number(this.marketParams.fundingFrequencyMs);
 		const lastFundingIntervalNumber = Math.floor(
-			this.marketState.fundingLastUpdMs / fundingFrequencyMs
+			this.marketState.fundingLastUpdateMs / fundingFrequencyMs
 		);
 		return (lastFundingIntervalNumber + 1) * fundingFrequencyMs;
 	};

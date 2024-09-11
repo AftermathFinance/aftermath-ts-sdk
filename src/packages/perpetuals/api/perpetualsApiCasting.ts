@@ -28,6 +28,7 @@ import {
 	PerpetualsMarketId,
 	PerpetualsOrderIdAsString,
 	PerpetualsAccountId,
+	UpdatedFundingEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -54,6 +55,7 @@ import {
 	PerpetualsPositionIndexerResponse,
 	PerpetualsMarketDataIndexerResponse,
 	PerpetualsOrderbookIndexerResponse,
+	UpdatedFundingEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
 import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types";
@@ -261,13 +263,13 @@ export class PerpetualsApiCasting {
 			cumFundingRateShort: Casting.IFixed.iFixedFromStringBytes(
 				data.cum_funding_rate_short
 			),
-			fundingLastUpdMs: Number(data.funding_last_upd_ms),
+			fundingLastUpdateMs: Number(data.funding_last_upd_ms),
 			premiumTwap: Casting.IFixed.iFixedFromStringBytes(
 				data.premium_twap
 			),
-			premiumTwapLastUpdMs: Number(data.premium_twap_last_upd_ms),
+			premiumTwapLastUpdateMs: Number(data.premium_twap_last_upd_ms),
 			spreadTwap: Casting.IFixed.iFixedFromStringBytes(data.spread_twap),
-			spreadTwapLastUpdMs: Number(data.spread_twap_last_upd_ms),
+			spreadTwapLastUpdateMs: Number(data.spread_twap_last_upd_ms),
 			openInterest: Casting.IFixed.iFixedFromStringBytes(
 				data.open_interest
 			),
@@ -648,6 +650,25 @@ export class PerpetualsApiCasting {
 			indexPrice: BigInt(fields.index_price),
 			spreadTwap: BigInt(fields.spread_twap),
 			spreadTwapLastUpdateMs: Number(fields.spread_twap_last_upd_ms),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Funding
+	// =========================================================================
+
+	public static updatedFundingEventFromOnChain = (
+		eventOnChain: UpdatedFundingEventOnChain
+	): UpdatedFundingEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+			cumFundingRateLong: BigInt(fields.cum_funding_rate_long),
+			cumFundingRateShort: BigInt(fields.cum_funding_rate_short),
+			fundingLastUpdateMs: Number(fields.funding_last_upd_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
