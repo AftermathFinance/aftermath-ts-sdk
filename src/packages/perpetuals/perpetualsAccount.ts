@@ -433,7 +433,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ marketId });
+			this.emptyPosition({ market: inputs.market });
 
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 		const { pnl, minInitialMargin } =
@@ -471,7 +471,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ marketId });
+			this.emptyPosition({ market });
 
 		const funding = this.calcUnrealizedFundingsForPosition({
 			market,
@@ -521,7 +521,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ marketId });
+			this.emptyPosition({ market: inputs.market });
 
 		const baseAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
@@ -561,7 +561,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ marketId });
+			this.emptyPosition({ market: inputs.market });
 
 		const marginRatioInitial = 1 / position.leverage;
 		// const marginRatioInitial = inputs.market.initialMarginRatio();
@@ -604,7 +604,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ marketId });
+			this.emptyPosition({ market: inputs.market });
 
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 
@@ -644,7 +644,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ marketId });
+			this.emptyPosition({ market: inputs.market });
 
 		const totalFunding = this.calcUnrealizedFundingsForPosition(inputs);
 
@@ -682,7 +682,7 @@ export class PerpetualsAccount extends Caller {
 			const marketId = market.marketId;
 			const position =
 				this.positionForMarketId({ marketId }) ??
-				this.emptyPosition({ marketId });
+				this.emptyPosition({ market });
 
 			const funding = this.calcUnrealizedFundingsForPosition({
 				market,
@@ -757,7 +757,7 @@ export class PerpetualsAccount extends Caller {
 		const marketId = market.marketId;
 		const position =
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ marketId });
+			this.emptyPosition({ market });
 
 		// TODO: move conversion to helper function, since used often
 		const ordersCollateral = Coin.normalizeBalance(
@@ -826,17 +826,17 @@ export class PerpetualsAccount extends Caller {
 	};
 
 	public emptyPosition = (inputs: {
-		marketId: PerpetualsMarketId;
+		market: PerpetualsMarket;
 	}): PerpetualsPosition => {
-		const { marketId } = inputs;
+		const { market } = inputs;
 		return {
-			marketId,
+			marketId: market.marketId,
 			collateralCoinType: this.accountCap.collateralCoinType,
 			collateral: BigInt(0),
 			baseAssetAmount: BigInt(0),
 			quoteAssetNotionalAmount: BigInt(0),
-			cumFundingRateLong: BigInt(0),
-			cumFundingRateShort: BigInt(0),
+			cumFundingRateLong: market.marketState.cumFundingRateLong,
+			cumFundingRateShort: market.marketState.cumFundingRateShort,
 			asksQuantity: BigInt(0),
 			bidsQuantity: BigInt(0),
 			pendingOrders: [],
