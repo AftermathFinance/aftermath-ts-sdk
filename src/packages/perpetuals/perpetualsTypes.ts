@@ -28,6 +28,12 @@ export type PerpetualsOrderIdAsString = string;
 export type PerpetualsOrderPrice = bigint;
 
 // =========================================================================
+//  Constants
+// =========================================================================
+
+export type FilledTakerOrderLiquidatorEventName = "FilledTakerOrderLiquidator";
+
+// =========================================================================
 //  Enums
 // =========================================================================
 
@@ -386,7 +392,7 @@ export type PerpetualsAccountCollateralChange = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
 	// marketId: PerpetualsMarketId;
-	eventType: AnyObjectType | "FilledTakerOrderLiquidator";
+	eventType: AnyObjectType | FilledTakerOrderLiquidatorEventName;
 	collateralChange: number;
 	collateralChangeUsd: number;
 };
@@ -400,7 +406,7 @@ export type PerpetualsAccountTrade = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
 	marketId: PerpetualsMarketId;
-	eventType: AnyObjectType | "FilledTakerOrderLiquidator";
+	eventType: AnyObjectType | FilledTakerOrderLiquidatorEventName;
 	side: PerpetualsOrderSide;
 } & (
 	| {
