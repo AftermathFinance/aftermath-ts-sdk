@@ -150,6 +150,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		updatedPremiumTwap: AnyObjectType;
 		updatedSpreadTwap: AnyObjectType;
 		updatedFunding: AnyObjectType;
+		filledTakerOrderLiquidator: AnyObjectType;
 	};
 	public readonly moveErrors: MoveErrors;
 
@@ -178,6 +179,9 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			deallocatedCollateral: this.eventType("DeallocatedCollateral"),
 			// Liquidation
 			liquidated: this.eventType("LiquidatedPosition"),
+			filledTakerOrderLiquidator: this.eventType(
+				"FilledTakerOrderLiquidator"
+			),
 			// Account
 			createdAccount: this.eventType("CreatedAccount"),
 			// Order

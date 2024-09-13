@@ -23,7 +23,6 @@ import {
 	PerpetualsAccountObject,
 	IFixed,
 	MoveErrorCode,
-	FilledTakerOrderLiquidatorEventName,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -38,11 +37,6 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public static readonly OrderUtils = PerpetualsOrderUtils;
-	public static readonly constants: {
-		filledTakerOrderLiquidatorEventName: FilledTakerOrderLiquidatorEventName;
-	} = {
-		filledTakerOrderLiquidatorEventName: "FilledTakerOrderLiquidator",
-	};
 
 	// =========================================================================
 	//  Constructor
