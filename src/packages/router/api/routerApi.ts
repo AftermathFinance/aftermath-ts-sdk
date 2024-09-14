@@ -34,6 +34,7 @@ import {
 	MoveErrors,
 	MoveErrorsInterface,
 } from "../../../general/types/moveErrorsInterface";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -418,7 +419,7 @@ export class RouterApi implements MoveErrorsInterface {
 			);
 
 		const tx = Transaction.fromKind(tx_kind);
-		RouterApi.transferTxMetadata({
+		TransactionsApiHelpers.transferTxMetadata({
 			initTx,
 			newTx: tx,
 		});
@@ -612,7 +613,7 @@ export class RouterApi implements MoveErrorsInterface {
 
 		const tx = Transaction.fromKind(tx_kind);
 
-		RouterApi.transferTxMetadata({
+		TransactionsApiHelpers.transferTxMetadata({
 			initTx,
 			newTx: tx,
 		});
@@ -723,7 +724,7 @@ export class RouterApi implements MoveErrorsInterface {
 
 		const tx = TransactionBlock.fromKind(tx_kind);
 
-		RouterApi.transferTxMetadataV0({
+		TransactionsApiHelpers.transferTxMetadataV0({
 			initTx,
 			newTx: tx,
 		});
@@ -845,71 +846,6 @@ export class RouterApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Events
 	// =========================================================================
-
-	// =========================================================================
-	//  Private Static Helpers
-	// =========================================================================
-
-	private static transferTxMetadata = (inputs: {
-		initTx: Transaction;
-		newTx: Transaction;
-	}) => {
-		const { initTx, newTx } = inputs;
-
-		const sender = initTx.getData().sender;
-		if (sender) newTx.setSender(sender);
-
-		const expiration = initTx.getData().expiration;
-		if (expiration) newTx.setExpiration(expiration);
-
-		const gasData = initTx.getData().gasData;
-
-		if (gasData.budget && typeof gasData.budget !== "string")
-			newTx.setGasBudget(gasData.budget);
-
-		if (gasData.owner) newTx.setGasOwner(gasData.owner);
-
-		if (gasData.payment) newTx.setGasPayment(gasData.payment);
-
-		if (gasData.price && typeof gasData.price !== "string")
-			newTx.setGasPrice(gasData.price);
-	};
-
-	private static transferTxMetadataV0 = (inputs: {
-		initTx: TransactionBlock;
-		newTx: TransactionBlock;
-	}) => {
-		const { initTx, newTx } = inputs;
-
-		const sender = initTx.blockData.sender;
-		if (sender) newTx.setSender(sender);
-
-		const expiration = initTx.blockData.expiration;
-		if (expiration && !("None" in expiration && expiration.None === null))
-			// @ts-ignore
-			newTx.setExpiration(expiration);
-
-		const gasData = initTx.blockData.gasConfig;
-
-		if (gasData.budget && typeof gasData.budget !== "string")
-			newTx.setGasBudget(gasData.budget);
-
-		if (gasData.owner) newTx.setGasOwner(gasData.owner);
-
-		if (gasData.payment)
-			newTx.setGasPayment(
-				gasData.payment.map((payment) => ({
-					...payment,
-					version:
-						typeof payment.version === "bigint"
-							? Number(payment.version)
-							: payment.version,
-				}))
-			);
-
-		if (gasData.price && typeof gasData.price !== "string")
-			newTx.setGasPrice(gasData.price);
-	};
 
 	// =========================================================================
 	//  Event Types

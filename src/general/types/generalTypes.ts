@@ -42,6 +42,7 @@ export type MoveErrorCode = number;
 export type SerializedTransaction = string;
 export type TxBytes = string;
 export type BigIntAsString = string;
+export type NumberAsString = string;
 export type IFixedAsString = string;
 export type KeyType = string;
 export type AnyObjectType = string;

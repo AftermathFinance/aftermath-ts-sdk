@@ -1,5 +1,7 @@
 import { BcsType, bcs } from "@mysten/sui/bcs";
 import {
+	AnyObjectType,
+	ApiDataWithCursorBody,
 	ApiIndexerEventsBody,
 	Balance,
 	Event,
@@ -11,6 +13,7 @@ import {
 	Percentage,
 	SuiAddress,
 	Timestamp,
+	TransactionDigest,
 } from "../../general/types/generalTypes";
 import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 
@@ -60,8 +63,6 @@ const AdminCapability = bcs.struct("AdminCapability", {
 	id: bcs.Address,
 });
 
-// -----------------------------------------
-
 export interface PerpetualsRegistry extends Object {
 	activeCollaterals: CoinType[];
 }
@@ -99,8 +100,6 @@ const Vault = bcs.struct("Vault", {
 	scalingFactor: bcs.u64(),
 });
 
-// -----------------------------------------
-
 export interface PerpetualsMarketData {
 	objectId: ObjectId;
 	initialSharedVersion: ObjectVersion;
@@ -108,8 +107,6 @@ export interface PerpetualsMarketData {
 	marketParams: PerpetualsMarketParams;
 	marketState: PerpetualsMarketState;
 }
-
-// -----------------------------------------
 
 export interface PerpetualsAccountCap extends Object {
 	accountId: PerpetualsAccountId;
@@ -133,8 +130,6 @@ const Account = bcs.struct("Account", {
 	collateral: BalanceStruct,
 });
 
-// -----------------------------------------
-
 export interface PerpetualsPosition {
 	collateral: IFixed;
 	baseAssetAmount: IFixed;
@@ -152,6 +147,7 @@ export interface PerpetualsPosition {
 	}[];
 	makerFee: IFixed;
 	takerFee: IFixed;
+	leverage: number;
 }
 
 const Position = bcs.struct("Position", {
@@ -200,8 +196,6 @@ export interface PerpetualsMarketParams {
 	oracleTolerance: bigint;
 }
 
-// -----------------------------------------
-
 export interface PerpetualsMarketState {
 	cumFundingRateLong: IFixed;
 	cumFundingRateShort: IFixed;
@@ -214,17 +208,12 @@ export interface PerpetualsMarketState {
 	feesAccrued: IFixed;
 }
 
-// -----------------------------------------
-
-export interface PerpetualsMarketPriceDataPoint {
+export interface PerpetualsMarketCandleDataPoint {
 	timestamp: Timestamp;
 	high: number;
 	low: number;
 	open: number;
 	close: number;
-}
-export interface PerpetualsMarketVolumeDataPoint {
-	timestamp: Timestamp;
 	volume: number;
 }
 
@@ -292,8 +281,6 @@ const OrderInfo = bcs.struct("OrderInfo", {
 	price: bcs.u64(),
 	size: bcs.u64(),
 });
-
-// -----------------------------------------
 
 export interface PerpetualsOrderedMap<T> extends Object {
 	size: bigint;
@@ -364,6 +351,70 @@ export interface PerpetualsAccountObject {
 // =========================================================================
 //  Collateral
 // =========================================================================
+
+export interface PerpetualsAccountCollateralChangesWithCursor {
+	collateralChanges: PerpetualsAccountCollateralChange[];
+	nextCursor: Timestamp | undefined;
+}
+
+export type PerpetualsCollateralEventName =
+	| "Withdraw"
+	| "Deposit"
+	| "Allocate"
+	| "Deallocate"
+	| "SettleFunding"
+	| "Liquidated"
+	| "FilledTaker"
+	| "FilledMaker";
+
+export type PerpetualsAccountCollateralChange = {
+	timestamp: Timestamp;
+	txDigest: TransactionDigest;
+	// marketId: PerpetualsMarketId;
+	eventName: PerpetualsCollateralEventName;
+} & (
+	| {
+			collateralChange: Balance;
+	  }
+	| {
+			collateralChangeUsd: number;
+	  }
+);
+
+export interface PerpetualsAccountTradesWithCursor {
+	trades: PerpetualsAccountTrade[];
+	nextCursor: Timestamp | undefined;
+}
+
+export type PerpetualsTradeEventName =
+	| "Canceled"
+	| "Posted"
+	| "FilledMaker"
+	| "FilledTaker"
+	| "Liquidated";
+
+export type PerpetualsAccountTrade = {
+	timestamp: Timestamp;
+	txDigest: TransactionDigest;
+	marketId: PerpetualsMarketId;
+	eventName: PerpetualsTradeEventName;
+	side: PerpetualsOrderSide;
+} & (
+	| {
+			orderPrice: bigint;
+	  }
+	| {
+			price: number;
+	  }
+) &
+	(
+		| {
+				sizeLots: bigint;
+		  }
+		| {
+				size: number;
+		  }
+	);
 
 export interface DepositedCollateralEvent extends Event {
 	accountId: PerpetualsAccountId;
@@ -467,6 +518,20 @@ export interface CreatedAccountEvent extends Event {
 // =========================================================================
 //  Order
 // =========================================================================
+
+export interface PerpetualsTradeHistoryData {
+	timestamp: Timestamp;
+	txDigest: TransactionDigest;
+	side: PerpetualsOrderSide;
+	sizeFilled: number;
+	orderPrice: number;
+}
+
+export interface PerpetualsTradeHistoryWithCursor {
+	trades: PerpetualsTradeHistoryData[];
+	// TODO: move `nextCursor` pattern to general types ?
+	nextCursor: Timestamp | undefined;
+}
 
 export interface OrderbookPostReceiptEvent extends Event {
 	accountId: PerpetualsAccountId;
@@ -610,6 +675,22 @@ export interface ApiPerpetualsAccountsBody {
 //  Inspections
 // =========================================================================
 
+export type ApiPerpetualsAccountOrderHistoryBody =
+	ApiDataWithCursorBody<Timestamp> & {
+		accountCapId: ObjectId;
+	};
+
+export type ApiPerpetualsAccountCollateralHistoryBody =
+	ApiDataWithCursorBody<Timestamp> & {
+		accountCapId: ObjectId;
+	};
+
+export interface ApiPerpetualsSetPositionLeverageBody {
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+}
+
 export type ApiPerpetualsPreviewOrderBody = (
 	| Omit<
 			ApiPerpetualsLimitOrderBody,
@@ -685,10 +766,8 @@ export interface ApiPerpetualsExecutionPriceResponse {
 	fills: PerpetualsFilledOrderData[];
 }
 
-export interface ApiPerpetualsHistoricalMarketDataResponse {
-	prices: PerpetualsMarketPriceDataPoint[];
-	volumes: PerpetualsMarketVolumeDataPoint[];
-}
+export type ApiPerpetualsHistoricalMarketDataResponse =
+	PerpetualsMarketCandleDataPoint[];
 
 export interface ApiPerpetualsMaxOrderSizeBody {
 	accountId: PerpetualsAccountId;
@@ -699,9 +778,9 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 }
 
 export interface ApiPerpetualsAccountOrderDatasBody {
+	accountCapId: ObjectId;
 	orderDatas: {
 		orderId: PerpetualsOrderId;
-		marketId: PerpetualsMarketId;
 		currentSize: bigint;
 	}[];
 }
@@ -809,13 +888,10 @@ export type ApiPerpetualsSLTPOrderBody = (
 		  }
 	);
 
-export type ApiPerpetualsAccountEventsBody = ApiIndexerEventsBody & {
-	accountId: PerpetualsAccountId;
-};
-
-export type ApiPerpetualsMarketEventsBody = ApiIndexerEventsBody & {
-	marketId: PerpetualsMarketId;
-};
+export interface ApiPerpetualsMarket24hrVolumeResponse {
+	volumeBaseAssetAmount: number;
+	volumeUsd: number;
+}
 
 export interface ApiPerpetualsMarket24hrVolumeResponse {
 	volumeUsd: number;

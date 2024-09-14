@@ -37,6 +37,14 @@ import {
 	Percentage,
 	ObjectVersion,
 	ApiPerpetualsAccountOrderDatasBody,
+	ApiDataWithCursorBody,
+	Timestamp,
+	PerpetualsAccountCollateralChangesWithCursor,
+	PerpetualsAccountTradesWithCursor,
+	ApiPerpetualsSetPositionLeverageBody,
+	PerpetualsAccountId,
+	ApiPerpetualsAccountCollateralHistoryBody,
+	ApiPerpetualsAccountOrderHistoryBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -224,6 +232,51 @@ export class PerpetualsAccount extends Caller {
 	//  Inspections
 	// =========================================================================
 
+	public async setPositionLeverage(
+		inputs: ApiPerpetualsSetPositionLeverageBody
+	): Promise<boolean> {
+		return this.fetchApi<boolean, ApiPerpetualsSetPositionLeverageBody>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/set-position-leverage`,
+			inputs
+		);
+	}
+
+	// public async getAllPositionLeverages(): Promise<
+	// 	{
+	// 		marketId: PerpetualsMarketId;
+	// 		leverage: number;
+	// 	}[]
+	// > {
+	// 	return this.fetchApi(
+	// 		`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/position-leverages`
+	// 	);
+	// }
+
+	public async getPositionLeverages(inputs: {
+		marketIds: PerpetualsMarketId[];
+	}): Promise<number[]> {
+		return this.fetchApi(
+			`${this.accountCap.collateralCoinType}/accounts/${
+				this.accountCap.accountId
+			}/position-leverages/${JSON.stringify(inputs.marketIds)}`
+		);
+	}
+
+	public setPositionLeverageMessageToSign(inputs: {
+		marketId: PerpetualsMarketId;
+		leverage: number;
+	}): {
+		account_id: number;
+		market_id: PerpetualsMarketId;
+		leverage: number;
+	} {
+		return {
+			account_id: Number(this.accountCap.accountId),
+			market_id: inputs.marketId,
+			leverage: inputs.leverage,
+		};
+	}
+
 	public async getOrderPreview(
 		inputs: Omit<
 			ApiPerpetualsPreviewOrderBody,
@@ -271,23 +324,21 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
-	public getOrderDatas() {
+	public async getOrderDatas(): Promise<PerpetualsOrderData[]> {
 		const orderDatas = this.account.positions.reduce(
 			(acc, position) => [
 				...acc,
 				...position.pendingOrders.map((order) => ({
 					orderId: order.orderId,
-					marketId: position.marketId,
 					currentSize: order.size,
 				})),
 			],
 			[] as {
 				orderId: PerpetualsOrderId;
-				marketId: PerpetualsMarketId;
 				currentSize: bigint;
 			}[]
 		);
-		if (orderDatas.length <= 0) return [] as PerpetualsOrderData[];
+		if (orderDatas.length <= 0) return [];
 
 		return this.fetchApi<
 			PerpetualsOrderData[],
@@ -296,25 +347,36 @@ export class PerpetualsAccount extends Caller {
 			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`,
 			{
 				orderDatas,
+				accountCapId: this.accountCap.objectId,
 			}
 		);
 	}
 
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public async getCollateralEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<CollateralEvent>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/events/collateral`,
-			inputs
+	public async getCollateralHistory(
+		inputs: ApiDataWithCursorBody<Timestamp>
+	) {
+		return this.fetchApi<
+			PerpetualsAccountCollateralChangesWithCursor,
+			ApiPerpetualsAccountCollateralHistoryBody
+		>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/collateral-history`,
+			{
+				...inputs,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
-	public async getOrderEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<PerpetualsOrderEvent>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/events/order`,
-			inputs
+	public async getOrderHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
+		return this.fetchApi<
+			PerpetualsAccountTradesWithCursor,
+			ApiPerpetualsAccountOrderHistoryBody
+		>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-history`,
+			{
+				...inputs,
+				accountCapId: this.accountCap.objectId,
+			}
 		);
 	}
 
@@ -462,9 +524,8 @@ export class PerpetualsAccount extends Caller {
 			this.positionForMarketId({ marketId }) ??
 			this.emptyPosition({ marketId });
 
-		const marginRatioInitial = IFixedUtils.numberFromIFixed(
-			inputs.market.marketParams.marginRatioInitial
-		);
+		const marginRatioInitial = 1 / position.leverage;
+		// const marginRatioInitial = inputs.market.initialMarginRatio();
 		const marginRatioMaintenance = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioMaintenance
 		);
@@ -671,6 +732,7 @@ export class PerpetualsAccount extends Caller {
 							market.calcCollateralUsedForOrder({
 								...inputs,
 								orderData,
+								leverage: position.leverage,
 							}).collateral
 					)
 			),
@@ -741,6 +803,7 @@ export class PerpetualsAccount extends Caller {
 			pendingOrders: [],
 			makerFee: BigInt(1000000000000000000), // 100%
 			takerFee: BigInt(1000000000000000000), // 100%
+			leverage: 1,
 		};
 	};
 }

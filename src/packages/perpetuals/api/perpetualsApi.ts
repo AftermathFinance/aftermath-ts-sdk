@@ -20,6 +20,10 @@ import {
 	Byte,
 	StringByte,
 	ObjectVersion,
+	TransactionDigest,
+	ApiDataWithCursorBody,
+	BigIntAsString,
+	NumberAsString,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -40,7 +44,6 @@ import {
 	ApiPerpetualsPreviewOrderResponse,
 	ApiPerpetualsAccountsBody,
 	PerpetualsOrderData,
-	ApiPerpetualsAccountEventsBody,
 	CollateralEvent,
 	PerpetualsOrderEvent,
 	PerpetualsOrderInfo,
@@ -48,15 +51,13 @@ import {
 	OrderbookDataPoint,
 	ApiPerpetualsOrderbookStateBody,
 	PerpetualsOrderPrice,
-	ApiPerpetualsMarketEventsBody,
 	FilledMakerOrderEvent,
 	FilledTakerOrderEvent,
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
 	ApiPerpetualsCancelOrdersBody,
-	PerpetualsMarketPriceDataPoint,
+	PerpetualsMarketCandleDataPoint,
 	ApiPerpetualsHistoricalMarketDataResponse,
-	PerpetualsMarketVolumeDataPoint,
 	PerpetualsAccountCap,
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsLimitOrderBody,
@@ -69,11 +70,22 @@ import {
 	ApiPerpetualsMaxOrderSizeBody,
 	ApiPerpetualsAccountOrderDatasBody,
 	ApiPerpetualsMarket24hrVolumeResponse,
+	PerpetualsTradeHistoryWithCursor,
+	PerpetualsAccountTradesWithCursor,
+	PerpetualsAccountCollateralChangesWithCursor,
+	ApiPerpetualsSetPositionLeverageBody,
+	ApiPerpetualsAccountOrderHistoryBody,
+	ApiPerpetualsAccountCollateralHistoryBody,
+	PerpetualsCollateralEventName,
+	PerpetualsTradeEventName,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import { EventOnChain } from "../../../general/types/castingTypes";
+import {
+	EventOnChain,
+	SuiAddressWithout0x,
+} from "../../../general/types/castingTypes";
 import {
 	AllocatedCollateralEventOnChain,
 	CanceledOrderEventOnChain,
@@ -115,6 +127,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			clearingHouse: "clearing_house",
 			account: "account",
 		},
+		defaultLimitStepSize: 256,
 	};
 
 	public readonly addresses: {
@@ -330,39 +343,53 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	};
 
 	public fetchAccountOrderDatas = async (
-		inputs: ApiPerpetualsAccountOrderDatasBody & {
-			accountId: PerpetualsAccountId;
-		}
+		inputs: ApiPerpetualsAccountOrderDatasBody
 	): Promise<PerpetualsOrderData[]> => {
-		const { accountId, orderDatas } = inputs;
+		const { accountCapId, orderDatas } = inputs;
 
-		const orderReceiptEvents: PostedOrderReceiptEventOnChain[] =
-			await this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/accounts/${accountId}/orders`,
-				undefined,
-				{
-					order_ids: orderDatas.map((order) =>
-						String(order.orderId).replaceAll("n", "")
-					),
-				}
-			);
-		if (orderReceiptEvents.length !== orderDatas.length)
+		const orders = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				timestamp: Timestamp;
+				tx_digest: TransactionDigest;
+				ch_id: PerpetualsMarketId;
+				order_id: string;
+				initial_size: number;
+			}[],
+			{
+				account_id: ObjectId; // accountCapId
+				order_ids: string[];
+			}
+		>(
+			`perpetuals/accounts/orders`,
+			{
+				account_id: Helpers.addLeadingZeroesToType(accountCapId),
+				order_ids: orderDatas.map((orderData) =>
+					String(orderData.orderId).replaceAll("n", "")
+				),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+		if (orders.length !== orderDatas.length)
 			throw new Error("unable to find all orders");
 
-		return orderReceiptEvents.map((event, index) => {
-			const { size: initialSize, ...castEvent } =
-				Casting.perpetuals.postedOrderReceiptEventFromOnChain(event);
+		return orders.map((order) => {
+			const orderId = BigInt(order.order_id);
+			const initialSize = BigInt(order.initial_size);
 
 			const orderData = orderDatas.find(
-				(orderData) => orderData.orderId === castEvent.orderId
+				(orderData) => orderData.orderId === orderId
 			);
 			if (!orderData) throw new Error("unable to find all orders");
 
 			return {
-				...castEvent,
-				side: Perpetuals.orderIdToSide(castEvent.orderId),
+				marketId: Helpers.addLeadingZeroesToType(order.ch_id),
+				side: Perpetuals.orderIdToSide(orderId),
 				filledSize: initialSize - orderData.currentSize,
 				initialSize,
+				orderId,
 			};
 		});
 	};
@@ -386,162 +413,183 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Events
 	// =========================================================================
 
-	public async fetchAccountCollateralEvents(
-		inputs: ApiPerpetualsAccountEventsBody
-	): Promise<IndexerEventsWithCursor<CollateralEvent>> {
-		const { accountId, cursor, limit } = inputs;
+	public async fetchAccountCollateralHistory(
+		inputs: ApiPerpetualsAccountCollateralHistoryBody
+	): Promise<PerpetualsAccountCollateralChangesWithCursor> {
+		const { accountCapId, cursor, limit } = inputs;
 
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/accounts/${accountId}/events/collateral`,
+		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
-				cursor,
-				limit,
-			},
-			(event) => {
-				const eventType = (event as EventOnChain<any>).type;
-				return eventType === this.eventTypes.withdrewCollateral
-					? Casting.perpetuals.withdrewCollateralEventFromOnChain(
-							event as WithdrewCollateralEventOnChain
-					  )
-					: eventType === this.eventTypes.depositedCollateral
-					? Casting.perpetuals.depositedCollateralEventFromOnChain(
-							event as DepositedCollateralEventOnChain
-					  )
-					: eventType === this.eventTypes.settledFunding
-					? Casting.perpetuals.settledFundingEventFromOnChain(
-							event as SettledFundingEventOnChain
-					  )
-					: eventType === this.eventTypes.allocatedCollateral
-					? Casting.perpetuals.allocatedCollateralEventFromOnChain(
-							event as AllocatedCollateralEventOnChain
-					  )
-					: eventType === this.eventTypes.deallocatedCollateral
-					? Casting.perpetuals.deallocatedCollateralEventFromOnChain(
-							event as DeallocatedCollateralEventOnChain
-					  )
-					: eventType === this.eventTypes.liquidated
-					? Casting.perpetuals.liquidatedEventFromOnChain(
-							event as LiquidatedEventOnChain
-					  )
-					: eventType === this.eventTypes.filledMakerOrder
-					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
-							event as FilledMakerOrderEventOnChain
-					  )
-					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
-							event as FilledTakerOrderEventOnChain
-					  );
+				timestamp: Timestamp; // u64
+				tx_digest: TransactionDigest;
+				ch_id: ObjectId | "";
+				event_type: PerpetualsCollateralEventName;
+				collateral_change: BigIntAsString; // u64
+				collateral_change_usd: string; // f64
+			}[],
+			{
+				account_id: ObjectId; // accountCapId
+				timestamp_before_ms: Timestamp; // u64
+				limit: number; // u64
 			}
+		>(
+			`perpetuals/accounts/collateral-history`,
+			{
+				account_id: Helpers.addLeadingZeroesToType(accountCapId),
+				timestamp_before_ms: cursor ?? new Date().valueOf(),
+				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
 		);
 
-		// // set collateral delta based off of previous event
-		// for (const [index, event] of eventsData.events.entries()) {
-		// 	if (index >= eventsData.events.length - 1) {
-		// 		eventsData.events[index].collateralDelta = event.collateral;
-		// 		continue;
-		// 	}
-
-		// 	const previousEvent = eventsData.events[index + 1];
-		// 	eventsData.events[index].collateralDelta =
-		// 		Casting.IFixed.iFixedFromNumber(
-		// 			Math.abs(
-		// 				Casting.IFixed.numberFromIFixed(event.collateral)
-		// 			) -
-		// 				Math.abs(
-		// 					Casting.IFixed.numberFromIFixed(
-		// 						previousEvent.collateral
-		// 					)
-		// 				)
-		// 		);
-		// }
-
-		// // if more events exist then remove last event since unable to calculate collateral delta
-		// if (cursor !== undefined) {
-		// 	eventsData.events = eventsData.events.slice(0, -1);
-		// }
-
-		// return eventsData;
+		const collateralChanges = response.map((data) => ({
+			eventName: data.event_type,
+			timestamp: data.timestamp,
+			txDigest: data.tx_digest,
+			// marketId: Helpers.addLeadingZeroesToType(data.ch_id),
+			...(data.event_type === "Deposit" ||
+			data.event_type === "Withdraw" ||
+			data.event_type === "Allocate" ||
+			data.event_type === "Deallocate"
+				? {
+						collateralChange: BigInt(data.collateral_change),
+				  }
+				: {
+						collateralChangeUsd: Number(data.collateral_change_usd),
+				  }),
+		}));
+		return {
+			collateralChanges,
+			// TODO: move `nextCursor` finding pattern to helper ?
+			nextCursor:
+				collateralChanges.length > 0
+					? collateralChanges[collateralChanges.length - 1].timestamp
+					: undefined,
+		};
 	}
 
-	public async fetchAccountOrderEvents(
-		inputs: ApiPerpetualsAccountEventsBody
-	): Promise<IndexerEventsWithCursor<PerpetualsOrderEvent>> {
-		const { accountId, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/accounts/${accountId}/events/order`,
+	public async fetchAccountOrderHistory(
+		inputs: ApiPerpetualsAccountOrderHistoryBody
+	): Promise<PerpetualsAccountTradesWithCursor> {
+		const { accountCapId, cursor, limit } = inputs;
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
-				cursor,
-				limit,
-			},
-			(event) => {
-				const eventType = (event as EventOnChain<any>).type;
-				return eventType === this.eventTypes.canceledOrder
-					? Casting.perpetuals.canceledOrderEventFromOnChain(
-							event as CanceledOrderEventOnChain
-					  )
-					: eventType === this.eventTypes.postedOrderReceipt
-					? Casting.perpetuals.postedOrderReceiptEventFromOnChain(
-							event as PostedOrderReceiptEventOnChain
-					  )
-					: eventType === this.eventTypes.liquidated
-					? Casting.perpetuals.liquidatedEventFromOnChain(
-							event as LiquidatedEventOnChain
-					  )
-					: eventType === this.eventTypes.filledMakerOrder
-					? Casting.perpetuals.filledMakerOrderEventFromOnChain(
-							event as FilledMakerOrderEventOnChain
-					  )
-					: Casting.perpetuals.filledTakerOrderEventFromOnChain(
-							event as FilledTakerOrderEventOnChain
-					  );
+				timestamp: Timestamp;
+				tx_digest: TransactionDigest;
+				ch_id: ObjectId;
+				event_type: PerpetualsTradeEventName;
+				is_ask: boolean;
+				size: NumberAsString | BigIntAsString;
+				price: NumberAsString | BigIntAsString;
+			}[],
+			{
+				account_id: ObjectId; // accountCapId
+				timestamp_before_ms: Timestamp; // u64
+				limit: number; // u64
 			}
+		>(
+			`perpetuals/accounts/trade-history`,
+			{
+				account_id: Helpers.addLeadingZeroesToType(accountCapId),
+				timestamp_before_ms: cursor ?? new Date().valueOf(),
+				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
 		);
+
+		const trades = response.map((data) => ({
+			eventName: data.event_type,
+			timestamp: data.timestamp,
+			txDigest: data.tx_digest,
+			marketId: Helpers.addLeadingZeroesToType(data.ch_id),
+			side: data.is_ask
+				? PerpetualsOrderSide.Ask
+				: PerpetualsOrderSide.Bid,
+			...(data.event_type === "Canceled" ||
+			data.event_type === "Posted" ||
+			data.event_type === "FilledMaker"
+				? {
+						sizeLots: BigInt(data.size),
+				  }
+				: {
+						size: Number(data.size),
+				  }),
+			...(data.event_type === "Canceled" ||
+			data.event_type === "Posted" ||
+			data.event_type === "FilledMaker"
+				? {
+						orderPrice: BigInt(data.price),
+				  }
+				: {
+						price: Number(data.price),
+				  }),
+		}));
+		return {
+			trades,
+			// TODO: move `nextCursor` finding pattern to helper ?
+			nextCursor:
+				trades.length > 0
+					? trades[trades.length - 1].timestamp
+					: undefined,
+		};
 	}
 
-	public async fetchMarketFilledOrderEvents(
-		inputs: ApiPerpetualsMarketEventsBody
-	): Promise<IndexerEventsWithCursor<FilledTakerOrderEvent>> {
+	public async fetchMarketTradeHistory(
+		inputs: ApiDataWithCursorBody<Timestamp> & {
+			marketId: PerpetualsMarketId;
+		}
+	): Promise<PerpetualsTradeHistoryWithCursor> {
 		const { marketId, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`perpetuals/markets/${marketId}/events/filled-order`,
+		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
-				cursor,
-				limit,
+				timestamp: Timestamp; // u64
+				tx_digest: TransactionDigest;
+				is_ask: boolean;
+				size_filled: number; // f64
+				order_price: number; // f64
+			}[],
+			{
+				ch_id: ObjectId;
+				timestamp_before_ms: Timestamp; // u64
+				limit: number; // u64
+			}
+		>(
+			`perpetuals/markets/trade-history`,
+			{
+				ch_id: Helpers.addLeadingZeroesToType(marketId),
+				timestamp_before_ms: cursor ?? new Date().valueOf(),
+				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
 			},
-			(event) =>
-				Casting.perpetuals.filledTakerOrderEventFromOnChain(
-					event as FilledTakerOrderEventOnChain
-				)
+			undefined,
+			undefined,
+			undefined,
+			true
 		);
+
+		const trades = response.map((data) => ({
+			timestamp: data.timestamp,
+			txDigest: data.tx_digest,
+			side: data.is_ask
+				? PerpetualsOrderSide.Ask
+				: PerpetualsOrderSide.Bid,
+			sizeFilled: data.size_filled,
+			orderPrice: data.order_price,
+		}));
+		return {
+			trades,
+			nextCursor:
+				trades.length > 0
+					? trades[trades.length - 1].timestamp
+					: undefined,
+		};
 	}
-
-	public fetchSubscribeToAllEvents = async (inputs: {
-		onEvent: (event: SuiEvent) => void;
-	}): Promise<Unsubscribe> => {
-		const { onEvent } = inputs;
-
-		const unsubscribe = await this.Provider.provider.subscribeEvent({
-			// filter: {
-			// 	MoveModule: {
-			// 		module: PerpetualsApi.constants.moduleNames.events,
-			// 		package: this.addresses.perpetuals.packages.perpetuals,
-			// 	},
-			// },
-			// filter: {
-			// 	MoveEventModule: {
-			// 		module: PerpetualsApi.constants.moduleNames.events,
-			// 		package: this.addresses.perpetuals.packages.events,
-			// 	},
-			// },
-			filter: {
-				MoveEventModule: {
-					module: "interface",
-					package: this.addresses.perpetuals.packages.events,
-				},
-			},
-			onMessage: onEvent,
-		});
-		return unsubscribe;
-	};
 
 	// =========================================================================
 	//  Indexer Data
@@ -552,19 +600,21 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	}): Promise<ApiPerpetualsMarket24hrVolumeResponse> {
 		const { marketId } = inputs;
 
-		const response: [{ volumeUsd: number; volume: number }] | [] =
-			await this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/markets/${marketId}/24hr-volume`
-			);
-		if (response.length === 0)
-			return {
-				volumeUsd: 0,
-				volumeBaseAssetAmount: 0,
-			};
+		const response = await this.Provider.indexerCaller.fetchIndexer<{
+			market_volume: number; // f64
+			market_volume_usd: number; // f64
+		}>(
+			`perpetuals/markets/${marketId}/24hr-volume`,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 
 		return {
-			volumeUsd: response[0].volumeUsd,
-			volumeBaseAssetAmount: response[0].volume,
+			volumeBaseAssetAmount: response.market_volume,
+			volumeUsd: response.market_volume_usd,
 		};
 	}
 
@@ -575,30 +625,44 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		intervalMs: number;
 	}): Promise<ApiPerpetualsHistoricalMarketDataResponse> => {
 		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
-		const [prices, volumes] = (await Promise.all([
-			this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/markets/${marketId}/historical-price`,
-				undefined,
-				{
-					from: fromTimestamp,
-					to: toTimestamp,
-					interval: intervalMs,
-				}
-			),
-			this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/markets/${marketId}/historical-volume`,
-				undefined,
-				{
-					from: fromTimestamp,
-					to: toTimestamp,
-					interval: intervalMs,
-				}
-			),
-		])) as [
-			prices: PerpetualsMarketPriceDataPoint[],
-			volumes: PerpetualsMarketVolumeDataPoint[]
-		];
-		return { prices, volumes };
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				timestamp_ms: number; // u64,
+				open: number; // f64,
+				close: number; // f64,
+				high: number; // f64,
+				low: number; // f64,
+				volume: number; // f64,
+			}[],
+			{
+				ch_id: string;
+				timestamp_ms_from: Timestamp; // u64,
+				timestamp_ms_to: Timestamp; // u64,
+				resolution_ms: number; // u64,
+			}
+		>(
+			`perpetuals/markets/candle-history`,
+			{
+				ch_id: Helpers.addLeadingZeroesToType(marketId),
+				timestamp_ms_from: fromTimestamp,
+				timestamp_ms_to: toTimestamp,
+				resolution_ms: intervalMs,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+
+		return response.map((data) => ({
+			timestamp: data.timestamp_ms,
+			open: data.open,
+			close: data.close,
+			high: data.high,
+			low: data.low,
+			volume: data.volume,
+		}));
 	};
 
 	public async fetchMarketPrice24hrsAgo(inputs: {
@@ -626,6 +690,94 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
+
+	public setPositionLeverage = async (
+		inputs: ApiPerpetualsSetPositionLeverageBody
+	): Promise<boolean> => {
+		return this.Provider.indexerCaller.fetchIndexer<
+			boolean,
+			{
+				wallet_address: string;
+				signature: string;
+				bytes: string;
+			}
+		>(
+			`perpetuals/account/set-position-leverage`,
+			{
+				wallet_address: Helpers.addLeadingZeroesToType(
+					inputs.walletAddress
+				),
+				signature: inputs.signature,
+				bytes: inputs.bytes,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+	};
+
+	public fetchAllPositionLeverages = async (inputs: {
+		accountId: PerpetualsAccountId;
+	}): Promise<
+		{
+			marketId: PerpetualsMarketId;
+			leverage: number;
+		}[]
+	> => {
+		return (
+			await this.Provider.indexerCaller.fetchIndexer<
+				{
+					market_id: PerpetualsMarketId;
+					leverage: number;
+				}[]
+			>(
+				`perpetuals/accounts/${inputs.accountId}/position-leverages`,
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				true
+			)
+		).map((data) => ({
+			marketId: data.market_id,
+			leverage: data.leverage,
+		}));
+	};
+
+	public fetchPositionLeverages = async (inputs: {
+		accountId: PerpetualsAccountId;
+		marketIds: PerpetualsMarketId[];
+	}): Promise<number[]> => {
+		const marketIds = inputs.marketIds.map((objectId) =>
+			Helpers.addLeadingZeroesToType(objectId)
+		);
+		const leverages = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				market_id: PerpetualsMarketId;
+				leverage: number;
+			}[]
+		>(
+			`perpetuals/accounts/${inputs.accountId}/position-leverages`,
+			undefined,
+			{
+				market_ids: marketIds,
+			},
+			undefined,
+			undefined,
+			true
+		);
+		return marketIds.map(
+			(objectId) =>
+				(
+					leverages.find(
+						(leverage) => leverage.market_id === objectId
+					) ?? {
+						leverage: 1,
+					}
+				).leverage
+		);
+	};
 
 	public fetchPreviewOrder = async (
 		// TODO: remove unused inputs
@@ -709,6 +861,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					position: response.position,
 					collateralCoinType: inputs.collateralCoinType,
 					marketId: inputs.marketId,
+					leverage,
 				});
 
 			return {
@@ -2193,58 +2346,58 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	// };
 	// };
 
-	private createTxAndStartSession = (inputs: {
-		tx?: Transaction;
-		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		marketId: PerpetualsMarketId;
-		marketInitialSharedVersion: ObjectVersion;
-		basePriceFeedId: ObjectId;
-		collateralPriceFeedId: ObjectId;
-		walletAddress: SuiAddress;
-		collateralChange: Balance;
-		hasPosition: boolean;
-	}) => {
-		const { collateralChange, walletAddress, hasPosition } = inputs;
-		const { tx: inputsTx, ...nonTxInputs } = inputs;
+	// private createTxAndStartSession = (inputs: {
+	// 	tx?: Transaction;
+	// 	collateralCoinType: CoinType;
+	// 	accountCapId: ObjectId | TransactionArgument;
+	// 	marketId: PerpetualsMarketId;
+	// 	marketInitialSharedVersion: ObjectVersion;
+	// 	basePriceFeedId: ObjectId;
+	// 	collateralPriceFeedId: ObjectId;
+	// 	walletAddress: SuiAddress;
+	// 	collateralChange: Balance;
+	// 	hasPosition: boolean;
+	// }) => {
+	// 	const { collateralChange, walletAddress, hasPosition } = inputs;
+	// 	const { tx: inputsTx, ...nonTxInputs } = inputs;
 
-		const tx = inputsTx ?? new Transaction();
-		tx.setSender(walletAddress);
+	// 	const tx = inputsTx ?? new Transaction();
+	// 	tx.setSender(walletAddress);
 
-		if (!hasPosition) {
-			this.createMarketPositionTx({
-				...nonTxInputs,
-				tx,
-			});
-		}
+	// 	if (!hasPosition) {
+	// 		this.createMarketPositionTx({
+	// 			...nonTxInputs,
+	// 			tx,
+	// 		});
+	// 	}
 
-		if (collateralChange > BigInt(0)) {
-			this.allocateCollateralTx({
-				...nonTxInputs,
-				tx,
-				amount: collateralChange,
-			});
-		}
+	// 	if (collateralChange > BigInt(0)) {
+	// 		this.allocateCollateralTx({
+	// 			...nonTxInputs,
+	// 			tx,
+	// 			amount: collateralChange,
+	// 		});
+	// 	}
 
-		const sessionPotatoId = this.startSessionTx({
-			...nonTxInputs,
-			tx,
-		});
+	// 	const sessionPotatoId = this.startSessionTx({
+	// 		...nonTxInputs,
+	// 		tx,
+	// 	});
 
-		return { tx, sessionPotatoId };
-	};
+	// 	return { tx, sessionPotatoId };
+	// };
 
-	private endSessionAndShareMarket = (inputs: {
-		tx: Transaction;
-		collateralCoinType: CoinType;
-		sessionPotatoId: ObjectId | TransactionArgument;
-	}) => {
-		const marketId = this.endSessionTx(inputs);
-		this.shareClearingHouseTx({
-			...inputs,
-			marketId,
-		});
-	};
+	// private endSessionAndShareMarket = (inputs: {
+	// 	tx: Transaction;
+	// 	collateralCoinType: CoinType;
+	// 	sessionPotatoId: ObjectId | TransactionArgument;
+	// }) => {
+	// 	const marketId = this.endSessionTx(inputs);
+	// 	this.shareClearingHouseTx({
+	// 		...inputs,
+	// 		marketId,
+	// 	});
+	// };
 
 	// =========================================================================
 	//  Public Static Helpers
@@ -2267,89 +2420,86 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			initialBucketedOrders,
 		} = inputs;
 
-		let dataPoints: OrderbookDataPoint[] = orders.reduce((acc, order) => {
+		let dataPoints: OrderbookDataPoint[] = initialBucketedOrders ?? [];
+
+		const roundPrice = (price: number, bucketSize: number): number => {
+			return Math.round(price / bucketSize) * bucketSize;
+		};
+
+		const comparePrices = (
+			price1: number,
+			price2: number,
+			bucketSize: number
+		): boolean => {
+			return Math.abs(price1 - price2) < bucketSize / 2;
+		};
+
+		orders.forEach((order) => {
 			const actualPrice = Perpetuals.orderPriceToPrice({
 				lotSize,
 				tickSize: Math.abs(tickSize),
 				orderPrice: order.price,
 			});
-			const roundedPrice =
-				Math.round(actualPrice / priceBucketSize) * priceBucketSize;
-			// negative tick size means order filled
+			const roundedPrice = roundPrice(actualPrice, priceBucketSize);
 			const size = lotSize * Number(order.size) * (tickSize < 0 ? -1 : 1);
 			const sizeUsd = size * actualPrice;
 
-			const placementIndex = acc.findIndex(
+			const placementIndex = dataPoints.findIndex(
 				(dataPoint: OrderbookDataPoint) =>
-					side === PerpetualsOrderSide.Ask
-						? roundedPrice <= dataPoint.price &&
-						  roundedPrice > dataPoint.price - priceBucketSize
-						: roundedPrice >= dataPoint.price &&
-						  roundedPrice < dataPoint.price + priceBucketSize
+					comparePrices(
+						roundedPrice,
+						dataPoint.price,
+						priceBucketSize
+					)
 			);
+
 			if (placementIndex < 0) {
-				// no bucket exists; create bucket
-				const insertIndex = acc.findIndex((dataPoint) =>
+				const newDataPoint: OrderbookDataPoint = {
+					size,
+					sizeUsd,
+					totalSize: size,
+					totalSizeUsd: sizeUsd,
+					price: roundedPrice,
+				};
+				const insertIndex = dataPoints.findIndex((dataPoint) =>
 					side === PerpetualsOrderSide.Ask
 						? roundedPrice <= dataPoint.price
 						: roundedPrice >= dataPoint.price
 				);
-
-				const newDataPoint = {
-					size,
-					sizeUsd,
-					totalSize: 0,
-					totalSizeUsd: 0,
-					price: roundedPrice,
-				};
-				if (insertIndex === 0) {
-					return [newDataPoint, ...acc];
-				} else if (insertIndex < 0) {
-					return [...acc, newDataPoint];
+				if (insertIndex < 0) {
+					dataPoints.push(newDataPoint);
 				} else {
-					return [
-						...acc.slice(0, insertIndex),
-						newDataPoint,
-						...acc.slice(insertIndex + 1),
-					];
+					dataPoints.splice(insertIndex, 0, newDataPoint);
 				}
 			} else {
-				// bucket found
-				const newAcc = Array.from(acc);
-				newAcc[placementIndex] = {
-					...newAcc[placementIndex],
-					size: newAcc[placementIndex].size + size,
-					totalSize: newAcc[placementIndex].totalSize + size,
-					sizeUsd: newAcc[placementIndex].sizeUsd + sizeUsd,
-					totalSizeUsd: newAcc[placementIndex].totalSizeUsd + sizeUsd,
-				};
-				return newAcc;
+				dataPoints[placementIndex].size += size;
+				dataPoints[placementIndex].sizeUsd += sizeUsd;
+				dataPoints[placementIndex].totalSize += size;
+				dataPoints[placementIndex].totalSizeUsd += sizeUsd;
 			}
-		}, initialBucketedOrders ?? ([] as OrderbookDataPoint[]));
+		});
 
-		// remove 0 size buckets
 		dataPoints = dataPoints.filter(
 			(data) => data.size > 0 && data.sizeUsd > 0
 		);
 
-		// compute total sizes
-		for (const [index, data] of dataPoints.entries()) {
-			dataPoints[index] = {
-				...data,
-				totalSize:
-					index > 0
-						? dataPoints[index - 1].totalSize + data.size
-						: data.size,
-				totalSizeUsd:
-					index > 0
-						? dataPoints[index - 1].totalSizeUsd + data.sizeUsd
-						: data.sizeUsd,
-			};
+		for (let index = 0; index < dataPoints.length; index++) {
+			if (index > 0) {
+				dataPoints[index].totalSize =
+					dataPoints[index - 1].totalSize + dataPoints[index].size;
+				dataPoints[index].totalSizeUsd =
+					dataPoints[index - 1].totalSizeUsd +
+					dataPoints[index].sizeUsd;
+			} else {
+				dataPoints[index].totalSize = dataPoints[index].size;
+				dataPoints[index].totalSizeUsd = dataPoints[index].sizeUsd;
+			}
 		}
 
 		if (side === PerpetualsOrderSide.Ask) {
 			dataPoints.reverse();
 		}
+
 		return dataPoints;
 	};
 
