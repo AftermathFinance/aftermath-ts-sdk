@@ -73,7 +73,6 @@ export interface DcaOrderOverviewObject {
 		coin: CoinType;
 		amount: Balance;
 	};
-	averagePrice: Balance;
 	totalSpent: Balance;
 	intervalMs: Timestamp;
 	totalTrades: number;

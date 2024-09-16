@@ -176,10 +176,6 @@ export class DcaApiCasting {
 					coin: outputCoinType,
 					amount: totalBought,
 				},
-				averagePrice:
-					tradesPrepared.length > 0
-						? totalBought / BigInt(tradesPrepared.length)
-						: BigInt(0),
 				totalSpent: totalSpent,
 				intervalMs: Number(response.frequency_ms),
 				totalTrades: totalOrdersAmount,
