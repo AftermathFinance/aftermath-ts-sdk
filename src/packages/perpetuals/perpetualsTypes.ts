@@ -210,7 +210,7 @@ export interface PerpetualsMarketState {
 }
 
 export interface PerpetualsMarketCandleDataPoint {
-	timestamp: Timestamp;
+	time: Timestamp;
 	high: number;
 	low: number;
 	open: number;

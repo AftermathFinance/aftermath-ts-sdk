@@ -646,7 +646,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		);
 
 		return response.map((data) => ({
-			timestamp: data.timestamp_ms,
+			time: data.timestamp_ms,
 			open: data.open,
 			close: data.close,
 			high: data.high,
