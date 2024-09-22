@@ -41,6 +41,7 @@ import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
+import { RouterPricesApi } from "../prices/router/routerPricesApi";
 // import { MultisigApi } from "../../packages/multisig/api/multisigApi";
 
 /**
@@ -135,12 +136,13 @@ export class AftermathApi {
 	public Nfts = () => new NftsApi(this);
 
 	public Prices = this?.config?.prices?.coinGeckoApiKey
-		? () =>
-				new CoinGeckoPricesApi(
-					this,
-					this?.config?.prices?.coinGeckoApiKey ?? "",
-					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
-				)
+		? // ? () =>
+		  // 		new CoinGeckoPricesApi(
+		  // 			this,
+		  // 			this?.config?.prices?.coinGeckoApiKey ?? "",
+		  // 			this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
+		  // 		)
+		  () => new RouterPricesApi(this)
 		: () => new PlaceholderPricesApi();
 
 	public HistoricalData = this?.config?.prices?.coinGeckoApiKey
