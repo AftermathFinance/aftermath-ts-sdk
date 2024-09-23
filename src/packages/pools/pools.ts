@@ -170,19 +170,30 @@ export class Pools extends Caller {
 	 * @returns The pool object ID.
 	 * @throws An error if the LP coin type is invalid.
 	 */
-	public getPoolObjectIdForLpCoinType = (
+	public getPoolObjectIdForLpCoinType = (inputs: {
+		lpCoinType: CoinType;
+	}) => {
+		return this.getPoolObjectIdsForLpCoinTypes({
+			lpCoinTypes: [inputs.lpCoinType],
+		});
+	};
+
+	public getPoolObjectIdsForLpCoinTypes = async (
 		inputs: ApiPoolObjectIdForLpCoinTypeBody
-	) => {
-		if (!Pools.isPossibleLpCoinType(inputs))
-			throw new Error("invalid lp coin type");
+	): Promise<(ObjectId | undefined)[]> => {
+		// TODO: handle this case
 
-		const poolId = this.fetchApi<
-			ObjectId | undefined,
+		// if (
+		// 	inputs.lpCoinTypes.some(
+		// 		(lpCoinType) => !Pools.isPossibleLpCoinType({ lpCoinType })
+		// 	)
+		// )
+		// 	throw new Error("invalid lp coin type");
+
+		return this.fetchApi<
+			(ObjectId | undefined)[],
 			ApiPoolObjectIdForLpCoinTypeBody
-		>("pool-object-id", inputs);
-
-		if (!poolId) throw new Error("invalid lp coin type");
-		return poolId;
+		>("pool-object-ids", inputs);
 	};
 
 	/**
