@@ -80,14 +80,11 @@ export class Coin extends Caller {
 	}): Promise<CoinsToDecimals> {
 		const { coins } = inputs;
 
-		const allDecimals = await Promise.all(
-			coins.map(
-				async (coin) => (await this.getCoinMetadata(coin)).decimals
-			)
-		);
+		const metadatas = await this.getCoinMetadatas(inputs);
 
-		const coinsToDecimals: Record<CoinType, CoinDecimal> =
-			allDecimals.reduce((acc, decimals, index) => {
+		const coinsToDecimals: Record<CoinType, CoinDecimal> = metadatas
+			.map((data) => data.decimals)
+			.reduce((acc, decimals, index) => {
 				return { ...acc, [coins[index]]: decimals };
 			}, {});
 		return coinsToDecimals;
@@ -99,9 +96,19 @@ export class Coin extends Caller {
 		const coinType = this.coinType ?? coin;
 		if (!coinType) throw new Error("no valid coin type");
 
-		const metadata = await this.fetchApi<CoinMetadaWithInfo>(coinType);
+		const [metadata] = await this.fetchApi<CoinMetadaWithInfo[]>(
+			JSON.stringify([coinType])
+		);
 		this.setCoinMetadata(metadata);
 		return metadata;
+	}
+
+	public async getCoinMetadatas(inputs: {
+		coins: CoinType[];
+	}): Promise<CoinMetadaWithInfo[]> {
+		return this.fetchApi<CoinMetadaWithInfo[]>(
+			JSON.stringify(inputs.coins)
+		);
 	}
 
 	public setCoinMetadata(metadata: CoinMetadaWithInfo) {
