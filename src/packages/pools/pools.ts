@@ -120,19 +120,19 @@ export class Pools extends Caller {
 	 * @returns New `Pool[]` instances
 	 */
 	public async getPools(inputs: { objectIds: ObjectId[] }) {
-		// NOTE: should this pass array of pools directly instead (caching performance though...)
-		// could put logic for handling into api itself (prob best idea)
-		const pools = await Promise.all(
-			inputs.objectIds.map((objectId) => this.getPool({ objectId }))
-		);
-		return pools;
+		const pools = await this.fetchApi<
+			PoolObject[],
+			{
+				objectIds: ObjectId[];
+			}
+		>("objects", inputs);
+		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
 	}
 
 	/**
 	 * Retrieves all pools from the API and returns an array of Pool objects.
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of Pool objects.
 	 */
-
 	public async getAllPools() {
 		const pools = await this.fetchApi<PoolObject[]>("");
 		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
