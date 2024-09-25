@@ -106,8 +106,9 @@ export class Coin extends Caller {
 	public async getCoinMetadatas(inputs: {
 		coins: CoinType[];
 	}): Promise<CoinMetadaWithInfo[]> {
-		return this.fetchApi<CoinMetadaWithInfo[]>(
-			JSON.stringify(inputs.coins)
+		return this.fetchApi<CoinMetadaWithInfo[], { coins: CoinType[] }>(
+			"metadata",
+			inputs
 		);
 	}
 

@@ -38,7 +38,7 @@ export class Wallet extends Caller {
 		// 	inputs.coins.map((coin) => this.getBalance({ coin }))
 		// );
 		// return balances;
-		return this.fetchApi(`balances/${JSON.stringify(inputs.coins)}`);
+		return this.fetchApi(`balances/coins`, inputs);
 	}
 
 	public async getAllBalances(): Promise<CoinsToBalance> {
