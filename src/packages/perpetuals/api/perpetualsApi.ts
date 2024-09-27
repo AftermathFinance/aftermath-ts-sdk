@@ -24,6 +24,7 @@ import {
 	ApiDataWithCursorBody,
 	BigIntAsString,
 	NumberAsString,
+	PackageId,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
@@ -150,6 +151,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		updatedPremiumTwap: AnyObjectType;
 		updatedSpreadTwap: AnyObjectType;
 		updatedFunding: AnyObjectType;
+		updatedMarketVersion: AnyObjectType;
 		filledTakerOrderLiquidator: AnyObjectType;
 	};
 	public readonly moveErrors: MoveErrors;
@@ -196,6 +198,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			updatedSpreadTwap: this.eventType("UpdatedSpreadTwap"),
 			// Funding
 			updatedFunding: this.eventType("UpdatedFunding"),
+			// Version
+			updatedMarketVersion: this.eventType("UpdatedClearingHouseVersion"),
 		};
 		this.moveErrors = {
 			[this.addresses.perpetuals.packages.perpetuals]: {
@@ -1153,6 +1157,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public allocateCollateralTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
@@ -1163,7 +1168,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"allocate_collateral"
 			),
@@ -1184,6 +1189,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public deallocateCollateralTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId;
 		basePriceFeedId: ObjectId;
@@ -1196,7 +1202,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"deallocate_collateral"
 			),
@@ -1218,6 +1224,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public createMarketPositionTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		marketId: PerpetualsMarketId;
@@ -1226,7 +1233,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, collateralCoinType, accountCapId, marketId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"create_market_position"
 			),
@@ -1246,13 +1253,14 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public shareClearingHouseTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		marketId: PerpetualsMarketId | TransactionArgument;
 	}) => {
 		const { tx, collateralCoinType, marketId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"share_clearing_house"
 			),
@@ -1265,6 +1273,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public startSessionTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		basePriceFeedId: ObjectId;
@@ -1275,7 +1284,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, collateralCoinType, accountCapId, marketId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"start_session"
 			),
@@ -1298,13 +1307,14 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public endSessionTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
 	}) /* ClearingHouse<T> */ => {
 		const { tx, collateralCoinType, sessionPotatoId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"end_session"
 			),
@@ -1319,6 +1329,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public placeMarketOrderTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
 		side: PerpetualsOrderSide;
@@ -1327,7 +1338,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, collateralCoinType, sessionPotatoId, side, size } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"place_market_order"
 			),
@@ -1344,6 +1355,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public placeLimitOrderTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		sessionPotatoId: ObjectId | TransactionArgument;
 		side: PerpetualsOrderSide;
@@ -1362,7 +1374,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		} = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"place_limit_order"
 			),
@@ -1381,6 +1393,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public cancelOrdersTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId;
 		marketId: PerpetualsMarketId;
@@ -1391,7 +1404,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.interface,
 				"cancel_orders"
 			),
@@ -1479,7 +1492,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	const { tx, collateralCoinType, sessionPotatoId } = inputs;
 	// 	return tx.moveCall({
 	// 		target: Helpers.transactions.createTxTarget(
-	// 			this.addresses.perpetuals.packages.perpetuals,
+	// 			inputs.packageId,
 	// 			PerpetualsApi.constants.moduleNames.clearingHouse,
 	// 			"get_hot_potato_fields"
 	// 		),
@@ -1552,6 +1565,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public getPositionTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		accountId: PerpetualsAccountId;
 		marketId: PerpetualsMarketId;
@@ -1561,7 +1575,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.clearingHouse,
 				"get_position"
 			),
@@ -1579,13 +1593,14 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public getOrderbookTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		collateralCoinType: CoinType;
 		marketId: PerpetualsMarketId;
 	}) /* Orderbook */ => {
 		const { tx, collateralCoinType } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.clearingHouse,
 				"get_orderbook"
 			),
@@ -1596,6 +1611,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public getBookPriceTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		marketId: PerpetualsMarketId;
 		// marketInitialSharedVersion: ObjectVersion;
 		collateralCoinType: CoinType;
@@ -1603,7 +1619,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, marketId, collateralCoinType } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.clearingHouse,
 				"get_book_price"
 			),
@@ -1621,6 +1637,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public getBestPriceTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		marketId: PerpetualsMarketId;
 		marketInitialSharedVersion: ObjectVersion;
 		side: PerpetualsOrderSide;
@@ -1629,7 +1646,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, marketId, collateralCoinType } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.clearingHouse,
 				"get_best_price"
 			),
@@ -1647,6 +1664,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public inspectOrdersTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		orderbookId: ObjectId | TransactionArgument;
 		side: PerpetualsOrderSide;
 		fromPrice: IFixed;
@@ -1655,7 +1673,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, orderbookId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.orderbook,
 				"inspect_orders"
 			),
@@ -1673,13 +1691,14 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	public getOrderSizeTx = (inputs: {
 		tx: Transaction;
+		packageId: PackageId;
 		orderbookId: ObjectId | TransactionArgument;
 		orderId: PerpetualsOrderId;
 	}) /* u64 */ => {
 		const { tx, orderbookId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				inputs.packageId,
 				PerpetualsApi.constants.moduleNames.orderbook,
 				"get_order_size"
 			),
@@ -1892,6 +1911,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		inputs: ApiPerpetualsCancelOrderBody
 	): Transaction => {
 		const {
+			packageId,
 			orderId,
 			marketId,
 			marketInitialSharedVersion,
@@ -1905,6 +1925,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			...otherInputs,
 			orderDatas: [
 				{
+					packageId,
 					orderId,
 					marketId,
 					marketInitialSharedVersion,
@@ -1943,6 +1964,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			{} as Record<
 				PerpetualsMarketId,
 				{
+					packageId: PackageId;
 					orderId: PerpetualsOrderId;
 					marketId: PerpetualsMarketId;
 					marketInitialSharedVersion: ObjectVersion;
@@ -1958,6 +1980,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 			const marketInitialSharedVersion =
 				orders[0].marketInitialSharedVersion;
+			const packageId = orders[0].packageId;
 
 			this.cancelOrdersTx({
 				tx,
@@ -1965,6 +1988,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				accountCapId,
 				marketId,
 				marketInitialSharedVersion,
+				packageId,
 				orderIds: orders.map((order) => order.orderId),
 			});
 
@@ -1978,6 +2002,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					collateralCoinType,
 					marketId,
 					marketInitialSharedVersion,
+					packageId,
 					amount: Helpers.absBigInt(netCollateralChange),
 					basePriceFeedId: orders[0].basePriceFeedId,
 					collateralPriceFeedId: orders[0].collateralPriceFeedId,
@@ -1989,6 +2014,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					collateralCoinType,
 					marketId,
 					marketInitialSharedVersion,
+					packageId,
 					amount: netCollateralChange,
 				});
 			} else {
@@ -2552,7 +2578,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	// private marketObjectType = (inputs: { collateralCoinType: CoinType }) =>
 	// 	`${
-	// 		this.addresses.perpetuals.packages.perpetuals
+	// 		inputs.packageId
 	// 	}::clearing_house::ClearingHouse<${Helpers.addLeadingZeroesToType(
 	// 		inputs.collateralCoinType
 	// 	)}>`;

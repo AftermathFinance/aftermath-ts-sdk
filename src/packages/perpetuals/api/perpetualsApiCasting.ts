@@ -29,6 +29,7 @@ import {
 	PerpetualsOrderIdAsString,
 	PerpetualsAccountId,
 	UpdatedFundingEvent,
+	UpdatedMarketVersionEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -56,6 +57,7 @@ import {
 	PerpetualsMarketDataIndexerResponse,
 	PerpetualsOrderbookIndexerResponse,
 	UpdatedFundingEventOnChain,
+	UpdatedMarketVersionEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
 import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types";
@@ -196,6 +198,7 @@ export class PerpetualsApiCasting {
 		baseAssetSymbol: CoinSymbol
 	): PerpetualsMarketData {
 		return {
+			packageId: Casting.addressFromStringBytes(data.pkg_id),
 			objectId: Casting.addressFromStringBytes(data.object.id.id),
 			initialSharedVersion: Number(data.initial_shared_version),
 			collateralCoinType,
@@ -391,6 +394,23 @@ export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Events
 	// =========================================================================
+
+	// =========================================================================
+	//  Updated Version
+	// =========================================================================
+
+	public static UpdatedMarketVersionEventFromOnChain = (
+		eventOnChain: UpdatedMarketVersionEventOnChain
+	): UpdatedMarketVersionEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+			version: BigInt(fields.version),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
 
 	// =========================================================================
 	//  Collateral

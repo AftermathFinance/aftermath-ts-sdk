@@ -10,6 +10,7 @@ import {
 	ObjectDigest,
 	ObjectId,
 	ObjectVersion,
+	PackageId,
 	Percentage,
 	SuiAddress,
 	Timestamp,
@@ -102,6 +103,7 @@ const Vault = bcs.struct("Vault", {
 });
 
 export interface PerpetualsMarketData {
+	packageId: PackageId;
 	objectId: ObjectId;
 	initialSharedVersion: ObjectVersion;
 	collateralCoinType: CoinType;
@@ -372,6 +374,21 @@ export interface PerpetualsAccountObject {
 // =========================================================================
 //  Events
 // =========================================================================
+
+// =========================================================================
+//  Version
+// =========================================================================
+
+export interface UpdatedMarketVersionEvent extends Event {
+	marketId: PerpetualsMarketId;
+	version: bigint;
+}
+
+export const isUpdatedMarketVersion = (
+	event: Event
+): event is UpdatedMarketVersionEvent => {
+	return event.type.toLowerCase().endsWith("::updatedclearinghouseversion");
+};
 
 // =========================================================================
 //  Collateral
@@ -896,6 +913,7 @@ export interface ApiPerpetualsLimitOrderBody {
 }
 
 export interface ApiPerpetualsCancelOrderBody {
+	packageId: PackageId;
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
@@ -912,6 +930,7 @@ export interface ApiPerpetualsCancelOrdersBody {
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	orderDatas: {
+		packageId: PackageId;
 		orderId: PerpetualsOrderId;
 		marketId: PerpetualsMarketId;
 		marketInitialSharedVersion: ObjectVersion;

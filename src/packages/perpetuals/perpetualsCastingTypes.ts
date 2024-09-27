@@ -21,6 +21,7 @@ import {
 /// Used to dynamically load market objects as needed.
 /// Used to dynamically load traders' position objects as needed.
 export interface PerpetualsMarketDataIndexerResponse {
+	pkg_id: IdAsStringBytes;
 	initial_shared_version: BigIntAsString;
 	object: {
 		id: {
@@ -238,6 +239,11 @@ export type PerpetualsMarketIndexerResponse = {
 // =========================================================================
 //  Collateral
 // =========================================================================
+
+export type UpdatedMarketVersionEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	version: BigIntAsString;
+}>;
 
 export type WithdrewCollateralEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;

@@ -47,6 +47,7 @@ import {
 	ApiPerpetualsAccountOrderHistoryBody,
 	ApiPerpetualsPreviewCancelOrdersBody,
 	ApiPerpetualsPreviewCancelOrdersResponse,
+	PackageId,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -86,6 +87,7 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	public async getDepositCollateralTx(inputs: {
+		packageId: PackageId;
 		walletAddress: SuiAddress;
 		amount: Balance;
 		isSponsoredTx?: boolean;
@@ -174,6 +176,7 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getCancelOrderTx(inputs: {
+		packageId: PackageId;
 		walletAddress: SuiAddress;
 		marketId: PerpetualsMarketId;
 		marketInitialSharedVersion: ObjectVersion;
@@ -196,6 +199,7 @@ export class PerpetualsAccount extends Caller {
 	public async getCancelOrdersTx(inputs: {
 		walletAddress: SuiAddress;
 		orderDatas: {
+			packageId: PackageId;
 			marketId: PerpetualsMarketId;
 			marketInitialSharedVersion: ObjectVersion;
 			basePriceFeedId: ObjectId;
