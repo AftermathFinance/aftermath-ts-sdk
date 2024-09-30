@@ -73,7 +73,6 @@ export interface DcaOrderOverviewObject {
 		coin: CoinType;
 		amount: Balance;
 	};
-	averagePrice: Balance;
 	totalSpent: Balance;
 	intervalMs: Timestamp;
 	totalTrades: number;
@@ -125,6 +124,7 @@ export interface DcaCreatedOrderEvent extends Event {
 	minAmountOut: Balance;
 	maxAmountOut: Balance;
 	remainingTrades: bigint;
+	recipient: SuiAddress;
 }
 
 export interface DcaClosedOrderEvent extends Event {
