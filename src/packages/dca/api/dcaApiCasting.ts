@@ -46,6 +46,7 @@ export class DcaApiCasting {
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
+			recipient: Helpers.addLeadingZeroesToType(fields.recipient),
 		};
 	};
 

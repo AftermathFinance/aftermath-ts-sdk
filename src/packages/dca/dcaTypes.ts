@@ -124,6 +124,7 @@ export interface DcaCreatedOrderEvent extends Event {
 	minAmountOut: Balance;
 	maxAmountOut: Balance;
 	remainingTrades: bigint;
+	recipient: SuiAddress;
 }
 
 export interface DcaClosedOrderEvent extends Event {
