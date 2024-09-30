@@ -1793,6 +1793,28 @@ export class PoolsApi implements MoveErrorsInterface {
 		},
 	});
 
+	// TODO: add cache and generalize logic
+	// public fetchPoolObjectIdForLpCoinTypes = this.Provider.withCache({
+	// 	key: "fetchPoolObjectIdForLpCoinTypes",
+	// 	expirationSeconds: -1,
+	// 	callback: async (inputs: {
+	// 		lpCoinType: CoinType;
+	// 	}): Promise<ObjectId | undefined> => {
+	// 		if (!Pools.isPossibleLpCoinType(inputs)) return "";
+
+	// 		const tx = new Transaction();
+
+	// 		this.poolObjectIdForLpCoinTypeTx({ tx, ...inputs });
+
+	// 		const bytes =
+	// 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+	// 				tx,
+	// 			});
+
+	// 		return Casting.addressFromBytes(bytes);
+	// 	},
+	// });
+
 	public fetchIsLpCoinType = this.Provider.withCache({
 		key: "fetchIsLpCoinType",
 		expirationSeconds: -1,

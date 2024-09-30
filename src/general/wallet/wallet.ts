@@ -31,11 +31,14 @@ export class Wallet extends Caller {
 	}
 
 	// TODO: change return type to Record<Coin, Balance> ?
-	public async getBalances(inputs: { coins: CoinType[] }) {
-		const balances = await Promise.all(
-			inputs.coins.map((coin) => this.getBalance({ coin }))
-		);
-		return balances;
+	public async getBalances(inputs: {
+		coins: CoinType[];
+	}): Promise<Balance[]> {
+		// const balances = await Promise.all(
+		// 	inputs.coins.map((coin) => this.getBalance({ coin }))
+		// );
+		// return balances;
+		return this.fetchApi(`balances/coins`, inputs);
 	}
 
 	public async getAllBalances(): Promise<CoinsToBalance> {

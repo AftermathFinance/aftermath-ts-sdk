@@ -272,7 +272,7 @@ export interface ApiPoolSpotPriceBody {
 }
 
 export interface ApiPoolObjectIdForLpCoinTypeBody {
-	lpCoinType: CoinType;
+	lpCoinTypes: CoinType[];
 }
 
 export interface ApiPoolsStatsBody {
