@@ -42,7 +42,7 @@ import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leverag
 import { NftsApi } from "../nfts/nftsApi";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
 import { RouterPricesApi } from "../prices/router/routerPricesApi";
-import { Networkish } from "ethers";
+// import { Networkish } from "ethers";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
