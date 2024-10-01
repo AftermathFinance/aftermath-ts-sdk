@@ -31,6 +31,8 @@ import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leverag
 import { NftsApi } from "../nfts/nftsApi";
 import { Helpers } from "../utils";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
+import { LimitApi } from "../../packages/limit/api/limitApi";
+import { UserDataApi } from "../../packages/userData/api/userDataApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -124,6 +126,8 @@ export class AftermathApi {
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
 	public Dca = () => new DcaApi(this);
+	public Limit = () => new LimitApi(this);
+	public UserData = () => new UserDataApi(this);
 	// public Multisig = () => new MultisigApi(this);
 
 	/**
