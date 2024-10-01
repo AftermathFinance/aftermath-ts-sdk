@@ -8,7 +8,6 @@ import {
 	ApiDcaTransactionForCreateOrderBody,
 	ApiDcaTransactionForCloseOrderBody,
 	DcaOrderObject,
-	ApiDcaCreateUserBody,
 } from "./dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
@@ -130,57 +129,5 @@ export class Dca extends Caller {
 					: "CANCEL_DCA_ORDERS",
 			order_object_ids: inputs.orderIds,
 		};
-	}
-
-	/**
-	 * Method for getting the creation user message to sign.
-	 * @param inputs - The inputs for the message.
-	 * @returns Message to sign.
-	 */
-
-	public createUserAccountMessageToSign(): {
-		action: string;
-	} {
-		return {
-			action: "CREATE_DCA_ACCOUNT",
-		};
-	}
-
-	// =========================================================================
-	// User Public Key
-	// =========================================================================
-
-	/**
-	 * Fetches the API for users public key.
-	 * @async
-	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns { Promise<string | undefined> } A promise that resolves users public key.
-	 */
-
-	public async getUserPublicKey(inputs: {
-		walletAddress: SuiAddress;
-	}): Promise<string | undefined> {
-		return this.fetchApi<
-			string | undefined,
-			{
-				walletAddress: SuiAddress;
-			}
-		>(`public-key`, inputs);
-	}
-
-	/**
-	 * Fetches the API to create users public key.
-	 * @async
-	 * @param { ApiDcaCreateUserBody } inputs - The inputs for creating users public key on BE side.
-	 * @returns { Promise<boolean> } A promise that resolves to result if user pk has been created.
-	 */
-
-	public async createUserPublicKey(
-		inputs: ApiDcaCreateUserBody
-	): Promise<boolean> {
-		return this.fetchApi<boolean, ApiDcaCreateUserBody>(
-			`save-public-key`,
-			inputs
-		);
 	}
 }

@@ -169,27 +169,3 @@ export type DcaIndexerOrderCloseRequest = {
 };
 
 export type DcaIndexerOrderCloseResponse = boolean;
-
-// =========================================================================
-// User Fetch
-// =========================================================================
-
-export type DcaIndexerUserRequest = {
-	wallet_address: string;
-};
-
-export type DcaIndexerUserResponse = {
-	public_key?: string;
-};
-
-// =========================================================================
-// User Create
-// =========================================================================
-
-export type DcaIndexerCreateUserRequest = {
-	wallet_address: string;
-	signature: string;
-	bytes: string;
-};
-
-export type DcaIndexerCreateUserResponse = boolean;
