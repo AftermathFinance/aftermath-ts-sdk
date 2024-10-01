@@ -1,51 +1,41 @@
 import { AftermathApi } from "../../../general/providers";
-import { Casting, Helpers } from "../../../general/utils";
-import { Coin } from "../../coin";
-import {
-	ApiDCAsOwnedBody,
-	ApiDcaTransactionForCloseOrderBody,
-	ApiDcaTransactionForCreateOrderBody,
-	DcaOrderObject,
-	DcaOrdersObject,
-	DcaOrderTradeObject,
-} from "../dcaTypes";
-import {
-	AnyObjectType,
-	Balance,
-	DcaAddresses,
-	SuiAddress,
-} from "../../../types";
-import {
-	DcaIndexerOrderCloseRequest,
-	DcaIndexerOrderCloseResponse,
-	DcaIndexerOrderCreateRequest,
-	DcaIndexerOrderCreateResponse,
-	DcaIndexerOrdersRequest,
-	DcaIndexerOrdersResponse,
-} from "./dcaApiCastingTypes";
+import { AnyObjectType, LimitAddresses, SuiAddress } from "../../../types";
 import {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import {
+	ApiLimitTransactionForCancelOrderBody,
+	ApiLimitTransactionForCreateOrderBody,
+	LimitOrderObject,
+	LimitOrdersObject,
+} from "../limitTypes";
+import { Coin } from "../../coin";
+import {
+	LimitIndexerOrderCancelRequest,
+	LimitIndexerOrderCancelResponse,
+	LimitIndexerOrderCreateRequest,
+	LimitIndexerOrderCreateResponse,
+	LimitIndexerOrderResponse,
+	LimitIndexerOrdersRequest,
+} from "./limitApiCastingTypes";
+import { Casting, Helpers } from "../../../general/utils";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
-import { Dca } from "../dca";
+import { Limit } from "../limit";
 
-export class DcaApi {
+export class LimitApi {
 	// =========================================================================
 	// Constants
 	// =========================================================================
 
 	private static readonly constants = {
 		moduleNames: {
-			dca: "order",
+			limit: "order",
 			events: "events",
-			config: "config",
 		},
 		eventNames: {
 			createdOrder: "CreatedOrderEvent",
-			closedOrder: "ClosedOrderEvent",
-			executedTrade: "ExecutedTradeEvent",
 		},
 	};
 
@@ -53,11 +43,9 @@ export class DcaApi {
 	// Class Members
 	// =========================================================================
 
-	public readonly addresses: DcaAddresses;
+	public readonly addresses: LimitAddresses;
 	public readonly eventTypes: {
 		createdOrder: AnyObjectType;
-		closedOrder: AnyObjectType;
-		executedTrade: AnyObjectType;
 	};
 
 	// =========================================================================
@@ -65,17 +53,16 @@ export class DcaApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.dca;
-		if (!addresses)
+		const addresses = this.Provider.addresses.limit;
+		if (!addresses) {
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
+		}
 
 		this.addresses = addresses;
 		this.eventTypes = {
 			createdOrder: this.createdOrderEventType(),
-			closedOrder: this.closedOrderEventType(),
-			executedTrade: this.executedOrderEventType(),
 		};
 	}
 
@@ -84,16 +71,13 @@ export class DcaApi {
 	// =========================================================================
 
 	public fetchBuildCreateOrderTx = async (
-		inputs: ApiDcaTransactionForCreateOrderBody
+		inputs: ApiLimitTransactionForCreateOrderBody
 	): Promise<Transaction> => {
 		const { walletAddress } = inputs;
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const tradesGasAmount =
-			BigInt(inputs.tradesAmount) * Dca.constants.gasAmount;
-		const orderAmountPerTrade =
-			inputs.allocateCoinAmount / BigInt(inputs.tradesAmount);
+		const gasAmount = Limit.constants.gasAmount;
 		const recipientAddress = inputs.customRecipient
 			? inputs.customRecipient
 			: walletAddress;
@@ -103,7 +87,7 @@ export class DcaApi {
 				tx,
 				walletAddress,
 				coinType: Coin.constants.suiCoinType,
-				coinAmount: tradesGasAmount,
+				coinAmount: gasAmount,
 				isSponsoredTx: inputs.isSponsoredTx,
 			}),
 			this.Provider.Coin().fetchCoinWithAmountTx({
@@ -120,7 +104,6 @@ export class DcaApi {
 			tx,
 			gasCoinTxArg,
 			inputCoinTxArg,
-			orderAmountPerTrade,
 			recipientAddress,
 		});
 
@@ -137,8 +120,7 @@ export class DcaApi {
 			inputCoinTxArg: TransactionObjectArgument;
 			gasCoinTxArg: TransactionObjectArgument;
 			recipientAddress: SuiAddress;
-			orderAmountPerTrade: Balance;
-		} & ApiDcaTransactionForCreateOrderBody
+		} & ApiLimitTransactionForCreateOrderBody
 	) => {
 		const initTx = inputs.tx ?? new Transaction();
 
@@ -148,12 +130,13 @@ export class DcaApi {
 		});
 
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
-
-		const { tx_data } = await this.Provider.indexerCaller.fetchIndexer<
-			DcaIndexerOrderCreateResponse,
-			DcaIndexerOrderCreateRequest
+		// TODO: - replace fetchIndexerTest with fetchIndexer
+		const { tx_data } = await this.Provider.indexerCaller.fetchIndexerTest<
+			LimitIndexerOrderCreateResponse,
+			LimitIndexerOrderCreateRequest
 		>(
-			"dca/create",
+			// TODO: - add `limit/` in front for AF-FE
+			"orders/create",
 			{
 				tx_kind: b64TxBytes,
 				order: {
@@ -170,19 +153,10 @@ export class DcaApi {
 					),
 					owner: inputs.walletAddress,
 					recipient: inputs.recipientAddress,
-					frequency_ms: inputs.frequencyMs.toString(),
-					delay_timestamp_ms: inputs.delayTimeMs.toString(),
-					amount_per_trade: inputs.orderAmountPerTrade.toString(),
-					max_allowable_slippage_bps: inputs.maxAllowableSlippageBps,
-					min_amount_out: (inputs.strategy?.minPrice ?? 0)
+					min_amount_out: inputs.minAmountOut
 						.toString()
 						.replace("n", ""),
-					max_amount_out: (
-						inputs.strategy?.maxPrice ?? Casting.u64MaxBigInt
-					)
-						.toString()
-						.replace("n", ""),
-					number_of_trades: Number(inputs.tradesAmount),
+					expiry_timestamp_ms: inputs.expiryTimestampMs,
 				},
 			},
 			undefined,
@@ -203,14 +177,16 @@ export class DcaApi {
 	//  Inspections
 	// =========================================================================
 
-	public fetchCloseDcaOrder = async (
-		inputs: ApiDcaTransactionForCloseOrderBody
+	public fetchCancelLimitOrder = async (
+		inputs: ApiLimitTransactionForCancelOrderBody
 	): Promise<boolean> => {
-		return this.Provider.indexerCaller.fetchIndexer<
-			DcaIndexerOrderCloseResponse,
-			DcaIndexerOrderCloseRequest
+		// TODO: - replace fetchIndexerTest with fetchIndexer
+		return this.Provider.indexerCaller.fetchIndexerTest<
+			LimitIndexerOrderCancelResponse,
+			LimitIndexerOrderCancelRequest
 		>(
-			`dca/cancel`,
+			// TODO: - add `limit/` in front for AF-FE
+			`orders/close`,
 			{
 				wallet_address: inputs.walletAddress,
 				signature: inputs.signature,
@@ -229,104 +205,65 @@ export class DcaApi {
 
 	public fetchAllOrdersObjects = async (inputs: {
 		walletAddress: SuiAddress;
-	}): Promise<DcaOrdersObject> => {
+	}): Promise<LimitOrdersObject> => {
 		const [activeOrders = [], pastOrders = []] = await Promise.all([
 			this.fetchActiveOrdersObjects(inputs),
-			this.fetchPastOrdersObjects(inputs),
+			this.fetchExecutedOrdersObjects(inputs),
 		]);
 		return {
 			active: activeOrders,
-			past: pastOrders,
+			executed: pastOrders,
 		};
 	};
 
 	public fetchActiveOrdersObjects = async (inputs: {
 		walletAddress: SuiAddress;
-	}): Promise<DcaOrderObject[]> => {
+	}): Promise<LimitOrderObject[]> => {
 		return this.fetchOrdersObjectsByType({
 			...inputs,
 			type: "active",
 		});
 	};
 
-	public fetchPastOrdersObjects = async (inputs: {
+	public fetchExecutedOrdersObjects = async (inputs: {
 		walletAddress: SuiAddress;
-	}): Promise<DcaOrderObject[]> => {
+	}): Promise<LimitOrderObject[]> => {
 		return this.fetchOrdersObjectsByType({
 			...inputs,
-			type: "past",
+			type: "executed",
 		});
 	};
 
 	public fetchOrdersObjectsByType = async (inputs: {
 		walletAddress: SuiAddress;
-		type: "active" | "past";
-	}): Promise<DcaOrderObject[]> => {
+		type: "active" | "executed";
+	}): Promise<LimitOrderObject[]> => {
 		const { type, walletAddress } = inputs;
-		const uncastedResponse = await this.Provider.indexerCaller.fetchIndexer<
-			DcaIndexerOrdersResponse,
-			DcaIndexerOrdersRequest
-		>(
-			`dca/get/${type}`,
-			{
-				sender: walletAddress,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
-		const orders = uncastedResponse.orders
-			.sort((lhs, rhs) => rhs.created.timestamp - lhs.created.timestamp)
-			.map((order) => Casting.dca.createdOrderEventOnIndexer(order));
-
-		const preparedOrders = await Promise.all(
-			orders.map(async (order) => {
-				const preparedTrades = await Promise.all(
-					order.trades.map(async (trade) => {
-						const rate = await this.getRate(trade);
-						return { ...trade, rate };
-					})
-				);
-				return { ...order, trades: preparedTrades };
-			})
-		);
-
-		return preparedOrders;
-	};
-
-	private getRate = async (trade: DcaOrderTradeObject) => {
-		const allocatedCoinType = Helpers.addLeadingZeroesToType(
-			trade.allocatedCoin.coin
-		);
-		const buyCoinType = Helpers.addLeadingZeroesToType(trade.buyCoin.coin);
-
-		const [allocateCoinDecimals, buyCoinDecimals] = await Promise.all([
-			(
-				await this.Provider.Coin().fetchCoinMetadata({
-					coin: allocatedCoinType,
-				})
-			).decimals,
-			(
-				await this.Provider.Coin().fetchCoinMetadata({
-					coin: buyCoinType,
-				})
-			).decimals,
-		]);
-
-		const allocatedBalance = Coin.balanceWithDecimals(
-			trade.allocatedCoin.amount,
-			allocateCoinDecimals
-		);
-
-		const buyBalance = Coin.balanceWithDecimals(
-			trade.buyCoin.amount,
-			buyCoinDecimals
-		);
-
-		return allocatedBalance !== 0
-			? buyBalance / allocatedBalance
-			: undefined;
+		const uncastedResponse =
+			// TODO: - replace fetchIndexerTest with fetchIndexer
+			await this.Provider.indexerCaller.fetchIndexerTest<
+				LimitIndexerOrderResponse[],
+				LimitIndexerOrdersRequest
+			>(
+				// TODO: - add `limit/` in front for AF-FE
+				`orders/${type}/${walletAddress}`,
+				{
+					sender: walletAddress,
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+		const orders = uncastedResponse
+			.sort(
+				(lhs, rhs) =>
+					rhs.create_order_tx_info.timestamp -
+					lhs.create_order_tx_info.timestamp
+			)
+			.map((order) => Casting.limit.createdOrderEventOnIndexer(order));
+		return orders;
+		// return this.getMockOrders(type);
 	};
 
 	// =========================================================================
@@ -335,22 +272,46 @@ export class DcaApi {
 
 	private createdOrderEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.dca,
-			DcaApi.constants.moduleNames.events,
-			DcaApi.constants.eventNames.createdOrder
+			this.addresses.packages.limit,
+			LimitApi.constants.moduleNames.events,
+			LimitApi.constants.eventNames.createdOrder
 		);
 
-	private closedOrderEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.dca,
-			DcaApi.constants.moduleNames.events,
-			DcaApi.constants.eventNames.closedOrder
-		);
-
-	private executedOrderEventType = () =>
-		EventsApiHelpers.createEventType(
-			this.addresses.packages.dca,
-			DcaApi.constants.moduleNames.events,
-			DcaApi.constants.eventNames.executedTrade
-		);
+	private getMockOrders(type: string) {
+		return [
+			type === "active"
+				? {
+						objectId: "test_active",
+						allocatedCoin: {
+							coin: Coin.constants.suiCoinType,
+							amount: BigInt(50_000_000),
+						},
+						buyCoin: {
+							coin: "0xce7ff77a83ea0cb6fd39bd8748e2ec89a3f41e8efdc3f4eb123e0ca37b184db2::buck::BUCK",
+							amount: BigInt(50_000_000),
+						},
+						created: {
+							time: 321,
+							tnxDigest: "",
+						},
+				  }
+				: {
+						objectId: "test_executed",
+						allocatedCoin: {
+							coin: "0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD",
+							amount: BigInt(500_000_000),
+						},
+						buyCoin: {
+							coin: Coin.constants.suiCoinType,
+							amount: BigInt(500_000_000),
+						},
+						recipient:
+							"0xe374570e5da1c1776ef5f99148b4319707b1f25ccc9c148e827add8cc782f818",
+						created: {
+							time: 123,
+							tnxDigest: "",
+						},
+				  },
+		];
+	}
 }

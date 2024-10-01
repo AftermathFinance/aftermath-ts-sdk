@@ -29,6 +29,7 @@ export interface ConfigAddresses {
 	scallop?: ScallopAddresses;
 	leveragedStaking?: LeveragedStakingAddresses;
 	dca?: DcaAddresses;
+	limit?: LimitAddresses;
 	sharedCustody?: SharedCustodyAddresses;
 }
 
@@ -188,6 +189,15 @@ export interface ScallopAddresses {
 export interface DcaAddresses {
 	packages: {
 		dca: SuiAddress;
+	};
+	objects: {
+		config: ObjectId;
+	};
+}
+
+export interface LimitAddresses {
+	packages: {
+		limit: SuiAddress;
 	};
 	objects: {
 		config: ObjectId;

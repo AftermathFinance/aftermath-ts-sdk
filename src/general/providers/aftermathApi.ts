@@ -42,6 +42,8 @@ import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leverag
 import { NftsApi } from "../nfts/nftsApi";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
 import { RouterPricesApi } from "../prices/router/routerPricesApi";
+import { LimitApi } from "../../packages/limit/api/limitApi";
+import { UserDataApi } from "../../packages/userData/api/userDataApi";
 // import { MultisigApi } from "../../packages/multisig/api/multisigApi";
 
 /**
@@ -177,6 +179,8 @@ export class AftermathApi {
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
 	public Dca = () => new DcaApi(this);
+	public Limit = () => new LimitApi(this);
+	public UserData = () => new UserDataApi(this);
 	// public Multisig = () => new MultisigApi(this);
 
 	/**
