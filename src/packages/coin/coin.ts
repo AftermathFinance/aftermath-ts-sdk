@@ -18,7 +18,6 @@ import { Helpers } from "../../general/utils/helpers";
 import { Prices } from "../../general/prices/prices";
 import { AftermathApi } from "../../general/providers";
 import { CoinMetadata } from "@mysten/sui/client";
-import { CoinGeckoChain } from "../../general/prices/coingecko/coinGeckoTypes";
 
 export class Coin extends Caller {
 	// =========================================================================
@@ -102,9 +101,7 @@ export class Coin extends Caller {
 		const coinType = this.coinType ?? coin;
 		if (!coinType) throw new Error("no valid coin type");
 
-		const [metadata] = await this.fetchApi<CoinMetadaWithInfo[]>(
-			JSON.stringify([coinType])
-		);
+		const [metadata] = await this.getCoinMetadatas({ coins: [coinType] });
 		this.setCoinMetadata(metadata);
 		return metadata;
 	}
@@ -116,22 +113,6 @@ export class Coin extends Caller {
 			"metadata",
 			inputs
 		);
-	}
-
-	public async getEvmCoinMetadata(inputs: {
-		coinType?: CoinType;
-		chain: Exclude<CoinGeckoChain, "sui">;
-	}): Promise<CoinMetadaWithInfo> {
-		if (this.metadata) return this.metadata;
-
-		const coinType = this.coinType ?? inputs.coinType;
-		if (!coinType) throw new Error("no valid coin type");
-
-		const metadata = await this.fetchApi<CoinMetadaWithInfo>(
-			`evm/${inputs.chain}/${coinType}`
-		);
-		this.setCoinMetadata(metadata);
-		return metadata;
 	}
 
 	public setCoinMetadata(metadata: CoinMetadaWithInfo) {

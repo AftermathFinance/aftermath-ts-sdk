@@ -154,8 +154,8 @@ export class AftermathApi {
 		? () =>
 				new HistoricalDataApi(
 					this,
-					this?.config?.coinGecko?.apiKey ?? "",
-					this?.config?.coinGecko?.coinApiIdsToCoinTypes ?? {}
+					this?.config?.coinGecko?.apiKey ?? ""
+					// this?.config?.coinGecko?.coinApiIdsToCoinTypes ?? {}
 				)
 		: () => new PlaceholderHistoricalDataApi();
 

@@ -1,5 +1,6 @@
 import { CoinSymbol, CoinType } from "../../types";
 import {
+	CoinGeckoChain,
 	CoinGeckoCoinData,
 	CoinGeckoCoinSymbolData,
 } from "../prices/coingecko/coinGeckoTypes";
@@ -14,6 +15,19 @@ export class PlaceholderHistoricalDataApi
 	// > => {
 	// 	return {};
 	// };
+
+	public fetchAllCoinDataForChains = async (inputs: {
+		chains: CoinGeckoChain[];
+	}): Promise<
+		Partial<
+			Record<
+				"ethereum" | "arbitrum" | "bsc" | "solana" | "sui",
+				Record<CoinType, CoinGeckoCoinData>
+			>
+		>
+	> => {
+		return {};
+	};
 
 	public fetchAllCoinData = async (): Promise<
 		Record<CoinType, CoinGeckoCoinData>

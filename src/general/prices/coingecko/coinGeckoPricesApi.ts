@@ -29,9 +29,12 @@ export class CoinGeckoPricesApi
 	constructor(
 		Provider: AftermathApi,
 		coinGeckoApiKey: string,
-		coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>
+		private readonly coinApiIdsToCoinTypes: Record<
+			CoinGeckoCoinApiId,
+			CoinType[]
+		>
 	) {
-		super(Provider, coinGeckoApiKey, coinApiIdsToCoinTypes);
+		super(Provider, coinGeckoApiKey);
 	}
 
 	// =========================================================================
@@ -81,58 +84,58 @@ export class CoinGeckoPricesApi
 							})
 					);
 
-					const allSuiCoinData: Record<
-						CoinSymbol,
-						CoinGeckoCoinSymbolData
-					> =
-						(
-							await this.fetchAllCoinDataForChains({
-								chains: ["sui"],
-							})
-						)["sui"] ?? {};
-					const neededCoinData = Helpers.filterObject(
-						allSuiCoinData,
-						(coin) =>
-							regularCoins
-								.map(Helpers.addLeadingZeroesToType)
-								.includes(Helpers.addLeadingZeroesToType(coin))
-					);
-					const coinsToApiId: Record<CoinType, CoinGeckoCoinApiId> =
-						Object.entries(neededCoinData).reduce(
-							(acc, [coin, data]) => ({
-								...acc,
-								[coin]: data.apiId,
-							}),
-							{}
-						);
+					// const allSuiCoinData: Record<
+					// 	CoinSymbol,
+					// 	CoinGeckoCoinSymbolData
+					// > =
+					// 	(
+					// 		await this.fetchAllCoinDataForChains({
+					// 			chains: ["sui"],
+					// 		})
+					// 	)["sui"] ?? {};
+					// const neededCoinData = Helpers.filterObject(
+					// 	allSuiCoinData,
+					// 	(coin) =>
+					// 		regularCoins
+					// 			.map(Helpers.addLeadingZeroesToType)
+					// 			.includes(Helpers.addLeadingZeroesToType(coin))
+					// );
+					// const coinsToApiId: Record<CoinType, CoinGeckoCoinApiId> =
+					// 	Object.entries(neededCoinData).reduce(
+					// 		(acc, [coin, data]) => ({
+					// 			...acc,
+					// 			[coin]: data.apiId,
+					// 		}),
+					// 		{}
+					// 	);
 
-					const [coinsToPrice, lpCoinsToPrice, missingCoinsToPrice] =
-						await Promise.all([
-							this.fetchCoinsToPriceGivenApiIds({
-								coinsToApiId,
-							}),
-							this.Provider.Pools().fetchLpCoinsToPrice({
-								lpCoins,
-							}),
-							new RouterPricesApi(
-								this.Provider
-							).fetchCoinsToPrice({
-								coins: suiCoins.filter(
-									(coin) =>
-										!Object.keys(neededCoinData)
-											.map(Helpers.addLeadingZeroesToType)
-											.includes(
-												Helpers.addLeadingZeroesToType(
-													coin
-												)
-											)
-								),
-							}),
-						]);
+					const [
+						// coinsToPrice,
+						lpCoinsToPrice,
+						// missingCoinsToPrice,
+						coinsToPrice,
+					] = await Promise.all([
+						// this.fetchCoinsToPriceGivenApiIds({
+						// 	coinsToApiId,
+						// }),
+						this.Provider.Pools().fetchLpCoinsToPrice({
+							lpCoins,
+						}),
+						new RouterPricesApi(this.Provider).fetchCoinsToPrice({
+							coins: suiCoins.filter((coin) =>
+								// !Object.keys(neededCoinData)
+								regularCoins
+									.map(Helpers.addLeadingZeroesToType)
+									.includes(
+										Helpers.addLeadingZeroesToType(coin)
+									)
+							),
+						}),
+					]);
 					return {
 						...coinsToPrice,
 						...lpCoinsToPrice,
-						...missingCoinsToPrice,
+						// ...missingCoinsToPrice,
 					};
 				})(),
 				async () => {
@@ -236,60 +239,58 @@ export class CoinGeckoPricesApi
 									})
 							);
 
-						const allSuiCoinData: Record<
-							CoinType,
-							CoinGeckoCoinSymbolData
-						> =
-							(
-								await this.fetchAllCoinDataForChains({
-									chains: ["sui"],
-								})
-							)["sui"] ?? {};
-						const neededCoinData = Helpers.filterObject(
-							allSuiCoinData,
-							(coin) =>
-								regularCoins
-									.map(Helpers.addLeadingZeroesToType)
-									.includes(
-										Helpers.addLeadingZeroesToType(coin)
-									)
-						);
-
-						const coinsToApiId: Record<
-							CoinType,
-							CoinGeckoCoinApiId
-						> = Object.entries(neededCoinData).reduce(
-							(acc, [coin, data]) => ({
-								...acc,
-								[coin]: data.apiId,
-							}),
-							{}
-						);
+						// const allSuiCoinData: Record<
+						// 	CoinType,
+						// 	CoinGeckoCoinSymbolData
+						// > =
+						// 	(
+						// 		await this.fetchAllCoinDataForChains({
+						// 			chains: ["sui"],
+						// 		})
+						// 	)["sui"] ?? {};
+						// const neededCoinData = Helpers.filterObject(
+						// 	allSuiCoinData,
+						// 	(coin) =>
+						// 		regularCoins
+						// 			.map(Helpers.addLeadingZeroesToType)
+						// 			.includes(
+						// 				Helpers.addLeadingZeroesToType(coin)
+						// 			)
+						// );
+						// const coinsToApiId: Record<
+						// 	CoinType,
+						// 	CoinGeckoCoinApiId
+						// > = Object.entries(neededCoinData).reduce(
+						// 	(acc, [coin, data]) => ({
+						// 		...acc,
+						// 		[coin]: data.apiId,
+						// 	}),
+						// 	{}
+						// );
 
 						// get coin price info for regular coins and calc info for LP coins
 						const [
-							regularCoinsToPriceInfo,
+							// regularCoinsToPriceInfo,
 							lpCoinsToPrice,
-							missingRegularCoins,
+							// missingRegularCoins,
+							regularCoinsToPriceInfo,
 						] = await Promise.all([
-							this.fetchCoinsToPriceInfoInternal({
-								coinsToApiId,
-							}),
+							// this.fetchCoinsToPriceInfoInternal({
+							// 	coinsToApiId,
+							// }),
 							this.Provider.Pools().fetchLpCoinsToPrice({
 								lpCoins,
 							}),
 							new RouterPricesApi(
 								this.Provider
 							).fetchCoinsToPriceInfo({
-								coins: suiCoins.filter(
-									(coin) =>
-										!Object.keys(neededCoinData)
-											.map(Helpers.addLeadingZeroesToType)
-											.includes(
-												Helpers.addLeadingZeroesToType(
-													coin
-												)
-											)
+								coins: suiCoins.filter((coin) =>
+									// !Object.keys(neededCoinData)
+									regularCoins
+										.map(Helpers.addLeadingZeroesToType)
+										.includes(
+											Helpers.addLeadingZeroesToType(coin)
+										)
 								),
 							}),
 						]);
@@ -308,7 +309,7 @@ export class CoinGeckoPricesApi
 
 						// merge all collected data
 						const allInfo: CoinsToPriceInfo = {
-							...missingRegularCoins,
+							// ...missingRegularCoins,
 							...lpCoinsToPriceInfo,
 							...regularCoinsToPriceInfo,
 						};
@@ -316,6 +317,33 @@ export class CoinGeckoPricesApi
 					})(),
 					(async () => {
 						if (nonSuiCoins.length <= 0) return {};
+						if (
+							nonSuiCoins.every((coin) =>
+								Object.values(this.coinApiIdsToCoinTypes)
+									.reduce(
+										(acc, coinTypes) => [
+											...acc,
+											...coinTypes,
+										],
+										[]
+									)
+									.includes(coin)
+							)
+						) {
+							return this.fetchCoinsToPriceInfoInternal({
+								coinsToApiId: nonSuiCoins.reduce(
+									(acc, coin) => ({
+										...acc,
+										[coin]: Object.entries(
+											this.coinApiIdsToCoinTypes
+										).find(([, coinTypes]) =>
+											coinTypes.includes(coin)
+										)![0],
+									}),
+									{}
+								),
+							});
+						}
 
 						const chains = Helpers.uniqueArray(
 							nonSuiCoins.map(
@@ -323,7 +351,6 @@ export class CoinGeckoPricesApi
 									Helpers.splitNonSuiCoinType(coin).chain
 							)
 						);
-
 						const allNonSuiCoinData: Partial<
 							Record<
 								CoinGeckoChain,

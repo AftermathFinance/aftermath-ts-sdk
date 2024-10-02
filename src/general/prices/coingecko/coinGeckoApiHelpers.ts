@@ -24,11 +24,7 @@ export class CoinGeckoApiHelpers {
 
 	constructor(
 		protected readonly Provider: AftermathApi,
-		private readonly coinGeckoApiKey: string,
-		private readonly coinApiIdsToCoinTypes: Record<
-			CoinGeckoCoinApiId,
-			CoinType[]
-		>
+		private readonly coinGeckoApiKey: string
 	) {}
 
 	// =========================================================================
@@ -81,7 +77,8 @@ export class CoinGeckoApiHelpers {
 				.reduce((acc, data) => [...acc, ...data], [])
 				.filter((data) => data !== undefined) as CoinGeckoCoinData[];
 
-			const partialCoinDataObject: Record<CoinType, CoinGeckoCoinData> =
+			// const partialCoinDataObject: Record<CoinType, CoinGeckoCoinData> =
+			const coinDataObject: Record<CoinType, CoinGeckoCoinData> =
 				chainsCoinData.reduce((acc, data) => {
 					return {
 						[data.coinType]: data,
@@ -89,48 +86,48 @@ export class CoinGeckoApiHelpers {
 					};
 				}, {});
 
-			const coinDataObject = Object.entries(
-				this.coinApiIdsToCoinTypes
-			).reduce((acc, [coinApiId, coinTypes]) => {
-				const foundChainData = Object.values(
-					partialCoinDataObject
-				).find((data) => data.apiId === coinApiId);
+			// const coinDataObject = Object.entries(
+			// 	this.coinApiIdsToCoinTypes
+			// ).reduce((acc, [coinApiId, coinTypes]) => {
+			// 	const foundChainData = Object.values(
+			// 		partialCoinDataObject
+			// 	).find((data) => data.apiId === coinApiId);
 
-				let foundData = foundChainData;
+			// 	let foundData = foundChainData;
 
-				if (!foundData) {
-					const foundCoinData = coinData.find(
-						(data) => data.id === coinApiId
-					);
-					if (!foundCoinData) return acc;
+			// 	if (!foundData) {
+			// 		const foundCoinData = coinData.find(
+			// 			(data) => data.id === coinApiId
+			// 		);
+			// 		if (!foundCoinData) return acc;
 
-					foundData = {
-						apiId: coinApiId,
-						name: foundCoinData.name,
-						symbol: foundCoinData.symbol,
-						coinType: "",
-						chain: "",
-					};
-				}
-				if (!foundData) return acc;
+			// 		foundData = {
+			// 			apiId: coinApiId,
+			// 			name: foundCoinData.name,
+			// 			symbol: foundCoinData.symbol,
+			// 			coinType: "",
+			// 			chain: "",
+			// 		};
+			// 	}
+			// 	if (!foundData) return acc;
 
-				const dataToDuplicate = foundData;
-				const newData = coinTypes.reduce((acc, coinType) => {
-					const chain: CoinGeckoChain = Helpers.isValidType(coinType)
-						? "sui"
-						: Helpers.splitNonSuiCoinType(coinType).chain;
-					return {
-						[coinType]: {
-							...dataToDuplicate,
-							coinType,
-							chain,
-						},
-						...acc,
-					};
-				}, acc);
+			// 	const dataToDuplicate = foundData;
+			// 	const newData = coinTypes.reduce((acc, coinType) => {
+			// 		const chain: CoinGeckoChain = Helpers.isValidType(coinType)
+			// 			? "sui"
+			// 			: Helpers.splitNonSuiCoinType(coinType).chain;
+			// 		return {
+			// 			[coinType]: {
+			// 				...dataToDuplicate,
+			// 				coinType,
+			// 				chain,
+			// 			},
+			// 			...acc,
+			// 		};
+			// 	}, acc);
 
-				return newData;
-			}, partialCoinDataObject);
+			// 	return newData;
+			// }, partialCoinDataObject);
 
 			return Object.entries(coinDataObject).reduce(
 				(acc, [coinType, data]) =>

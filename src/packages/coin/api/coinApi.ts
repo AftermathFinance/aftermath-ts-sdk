@@ -32,9 +32,8 @@ export class CoinApi {
 
 	constructor(
 		private readonly Provider: AftermathApi,
-		private readonly coinGeckoApiKey?: string // private readonly infuraConfig?: { // 	network: Networkish;
-	) // 	projectId: string;
-	// 	projectSecret: string;
+		private readonly coinGeckoApiKey?: string // private readonly infuraConfig?: { // 	network: Networkish; // 	projectId: string;
+	) // 	projectSecret: string;
 	// }
 	{}
 
@@ -353,8 +352,8 @@ export class CoinApi {
 
 				const coingeckoApi = new CoinGeckoApiHelpers(
 					this.Provider,
-					this.coinGeckoApiKey,
-					{}
+					this.coinGeckoApiKey
+					// {}
 				);
 
 				let coinMetadata = await coingeckoApi.fetchCoinMetadata(inputs);
@@ -433,8 +432,8 @@ export class CoinApi {
 
 				const coingeckoApi = new CoinGeckoApiHelpers(
 					this.Provider,
-					this.coinGeckoApiKey,
-					{}
+					this.coinGeckoApiKey
+					// {}
 				);
 
 				const coinMetadata = await coingeckoApi.fetchCoinMetadata({

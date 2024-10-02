@@ -12,11 +12,7 @@ export class HistoricalDataApi
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		Provider: AftermathApi,
-		coinGeckoApiKey: string,
-		coinApiIdsToCoinTypes: Record<CoinGeckoCoinApiId, CoinType[]>
-	) {
-		super(Provider, coinGeckoApiKey, coinApiIdsToCoinTypes);
+	constructor(Provider: AftermathApi, coinGeckoApiKey: string) {
+		super(Provider, coinGeckoApiKey);
 	}
 }
