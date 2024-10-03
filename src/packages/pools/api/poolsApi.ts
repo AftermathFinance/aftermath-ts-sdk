@@ -1503,7 +1503,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			});
 
 		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
-			lpCoinAmountOut: lpCoinAmount,
+			lpCoinAmountIn: lpCoinAmount,
 		});
 
 		const amountsOut = pool.getWithdrawAmountsOut({
