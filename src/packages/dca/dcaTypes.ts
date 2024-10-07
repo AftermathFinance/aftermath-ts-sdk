@@ -59,6 +59,11 @@ export interface DcaOrderTradeObject {
 	rate: number | undefined;
 }
 
+export interface DcaOrderFailedTradeObject {
+	timestamp: number;
+	reason: string;
+}
+
 export interface DcaOrdertStrategyObject {
 	minPrice: Balance;
 	maxPrice: Balance;
@@ -99,6 +104,7 @@ export interface DcaOrderObject {
 	objectId: ObjectId;
 	overview: DcaOrderOverviewObject;
 	trades: DcaOrderTradeObject[];
+	failed: DcaOrderFailedTradeObject[];
 }
 
 export interface DcaOrdersObject {
