@@ -166,6 +166,13 @@ export class DcaApiCasting {
 				  }
 				: undefined;
 
+		const failed = response.failed.map((element) => {
+			return {
+				timestamp: element.timestamp_ms,
+				reason: element.reason,
+			};
+		});
+
 		return {
 			objectId: Helpers.addLeadingZeroesToType(response.order_object_id),
 			overview: {
@@ -200,6 +207,7 @@ export class DcaApiCasting {
 					  }
 					: undefined,
 			},
+			failed: failed,
 			trades: tradesPrepared,
 		};
 	};
