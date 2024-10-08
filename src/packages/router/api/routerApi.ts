@@ -48,6 +48,7 @@ export class RouterApi implements MoveErrorsInterface {
 	public static readonly constants = {
 		moduleNames: {
 			router: "router",
+			events: "events",
 			protocolFee: "protocol_fee",
 			version: "version",
 			admin: "admin",
@@ -854,7 +855,7 @@ export class RouterApi implements MoveErrorsInterface {
 	private routerTradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.utils,
-			RouterApi.constants.moduleNames.router,
+			RouterApi.constants.moduleNames.events,
 			RouterApi.constants.eventNames.routerTrade
 		);
 }
