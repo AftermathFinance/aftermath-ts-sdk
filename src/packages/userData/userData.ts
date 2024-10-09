@@ -4,6 +4,7 @@ import { AftermathApi } from "../../general/providers";
 import {
 	ApiUserDataCreateUserBody,
 	ApiUserDataOwnedBody,
+	ApiUserDataSignTermsAndConditionsBody,
 	UserDataKeyType,
 } from "./userDataTypes";
 
@@ -55,6 +56,22 @@ export class UserData extends Caller {
 	}
 
 	/**
+	 * Fetches the API to sign terms and conditions.
+	 * @async
+	 * @param { ApiUserDataCreateUserBody } inputs - The inputs for creating users public key on BE side.
+	 * @returns { Promise<boolean> } A promise that resolves to result if user pk has been created.
+	 */
+
+	public async signTermsAndConditions(
+		inputs: ApiUserDataSignTermsAndConditionsBody
+	): Promise<boolean> {
+		return this.fetchApi<boolean, ApiUserDataSignTermsAndConditionsBody>(
+			`sign-terms-and-conditions`,
+			inputs
+		);
+	}
+
+	/**
 	 * Fetches the API for user create message to sign.
 	 * @async
 	 * @param { UserDataKeyType } inputs - key of the service you interract with.
@@ -66,6 +83,21 @@ export class UserData extends Caller {
 	} {
 		return {
 			action: `CREATE_${key.toUpperCase()}_ACCOUNT`,
+		};
+	}
+
+	/**
+	 * Fetches the API for creating sign and terms message to sign.
+	 * @async
+	 * @param { UserDataKeyType } inputs - key of the service you interract with.
+	 * @returns { string } message to sign with action related to the service you interract with.
+	 */
+
+	public createSignTermsAndConditionsMessageToSign(): {
+		action: string;
+	} {
+		return {
+			action: `SIGN_TERMS_AND_CONDITIONS`,
 		};
 	}
 }

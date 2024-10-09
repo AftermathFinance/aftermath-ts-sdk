@@ -17,3 +17,11 @@ export type UserDataIndexerCreateUserRequest = {
 };
 
 export type UserDataIndexerCreateUserResponse = boolean;
+
+export type UserDataIndexerSignTermsAndConditionsRequest = {
+	wallet_address: string;
+	signature: string;
+	bytes: string;
+};
+
+export type UserDataIndexerSignTermsAndConditionsResponse = boolean;

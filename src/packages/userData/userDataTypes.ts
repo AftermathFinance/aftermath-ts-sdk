@@ -21,3 +21,9 @@ export interface ApiUserDataOwnedBody {
 	key: UserDataKeyType;
 	walletAddress: SuiAddress;
 }
+
+export interface ApiUserDataSignTermsAndConditionsBody {
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+}

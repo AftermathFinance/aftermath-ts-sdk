@@ -48,6 +48,12 @@ export type LimitIndexerOrdersRequest = {
 	sender: SuiAddress;
 };
 
+export type LimitIndexerActiveOrdersRequest = {
+	wallet_address: SuiAddress;
+	bytes: string;
+	signature: string;
+};
+
 export type LimitIndexerOrdersResponse = {
 	orders: LimitIndexerOrderResponse[];
 };

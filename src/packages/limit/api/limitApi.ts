@@ -13,6 +13,7 @@ import {
 } from "../limitTypes";
 import { Coin } from "../../coin";
 import {
+	LimitIndexerActiveOrdersRequest,
 	LimitIndexerOrderCancelRequest,
 	LimitIndexerOrderCancelResponse,
 	LimitIndexerOrderCreateRequest,
@@ -186,7 +187,7 @@ export class LimitApi {
 			LimitIndexerOrderCancelRequest
 		>(
 			// TODO: - add `limit/` in front for AF-FE
-			`orders/close`,
+			`orders/cancel`,
 			{
 				wallet_address: inputs.walletAddress,
 				signature: inputs.signature,
@@ -203,58 +204,31 @@ export class LimitApi {
 	// Class Objects
 	// =========================================================================
 
-	public fetchAllOrdersObjects = async (inputs: {
-		walletAddress: SuiAddress;
-	}): Promise<LimitOrdersObject> => {
-		const [activeOrders = [], pastOrders = []] = await Promise.all([
-			this.fetchActiveOrdersObjects(inputs),
-			this.fetchExecutedOrdersObjects(inputs),
-		]);
-		return {
-			active: activeOrders,
-			executed: pastOrders,
-		};
-	};
-
 	public fetchActiveOrdersObjects = async (inputs: {
 		walletAddress: SuiAddress;
+		bytes: string;
+		signature: string;
 	}): Promise<LimitOrderObject[]> => {
-		return this.fetchOrdersObjectsByType({
-			...inputs,
-			type: "active",
-		});
-	};
-
-	public fetchExecutedOrdersObjects = async (inputs: {
-		walletAddress: SuiAddress;
-	}): Promise<LimitOrderObject[]> => {
-		return this.fetchOrdersObjectsByType({
-			...inputs,
-			type: "executed",
-		});
-	};
-
-	public fetchOrdersObjectsByType = async (inputs: {
-		walletAddress: SuiAddress;
-		type: "active" | "executed";
-	}): Promise<LimitOrderObject[]> => {
-		const { type, walletAddress } = inputs;
+		const { walletAddress, bytes, signature } = inputs;
 		const uncastedResponse =
 			// TODO: - replace fetchIndexerTest with fetchIndexer
 			await this.Provider.indexerCaller.fetchIndexerTest<
 				LimitIndexerOrderResponse[],
-				LimitIndexerOrdersRequest
+				LimitIndexerActiveOrdersRequest
 			>(
 				// TODO: - add `limit/` in front for AF-FE
-				`orders/${type}/${walletAddress}`,
+				`orders/active/${walletAddress}`,
 				{
-					sender: walletAddress,
+					wallet_address: walletAddress,
+					bytes,
+					signature,
 				},
 				undefined,
 				undefined,
 				undefined,
 				true
 			);
+		console.log("fetchActiveOrdersObjects", { uncastedResponse });
 		const orders = uncastedResponse
 			.sort(
 				(lhs, rhs) =>
@@ -263,7 +237,37 @@ export class LimitApi {
 			)
 			.map((order) => Casting.limit.createdOrderEventOnIndexer(order));
 		return orders;
-		// return this.getMockOrders(type);
+	};
+
+	public fetchExecutedOrdersObjects = async (inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<LimitOrderObject[]> => {
+		const { walletAddress } = inputs;
+		const uncastedResponse =
+			// TODO: - replace fetchIndexerTest with fetchIndexer
+			await this.Provider.indexerCaller.fetchIndexerTest<
+				LimitIndexerOrderResponse[],
+				LimitIndexerOrdersRequest
+			>(
+				// TODO: - add `limit/` in front for AF-FE
+				`orders/executed/${walletAddress}`,
+				{
+					sender: walletAddress,
+				},
+				undefined,
+				undefined,
+				undefined,
+				true
+			);
+		console.log("fetchExecutedOrdersObjects", { uncastedResponse });
+		const orders = uncastedResponse
+			.sort(
+				(lhs, rhs) =>
+					rhs.create_order_tx_info.timestamp -
+					lhs.create_order_tx_info.timestamp
+			)
+			.map((order) => Casting.limit.createdOrderEventOnIndexer(order));
+		return orders;
 	};
 
 	// =========================================================================

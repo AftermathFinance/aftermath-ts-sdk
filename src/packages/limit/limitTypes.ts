@@ -86,3 +86,9 @@ export interface LimitCreatedOrderEvent extends Event {
 export interface ApiLimitsOwnedBody {
 	walletAddress: SuiAddress;
 }
+
+export interface ApiLimitsActiveOrdersOwnedBody {
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+}

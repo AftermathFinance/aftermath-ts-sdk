@@ -7,6 +7,7 @@ import {
 	ApiLimitTransactionForCreateOrderBody,
 	ApiLimitTransactionForCancelOrderBody,
 	LimitOrderObject,
+	ApiLimitsActiveOrdersOwnedBody,
 } from "./limitTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
@@ -55,11 +56,11 @@ export class Limit extends Caller {
 	 * @returns { Promise<LimitOrderObject[]> } A promise that resolves to object with array of fetched events for active dca's.
 	 */
 
-	public async getActiveLimitOrders(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApi<LimitOrderObject[], ApiLimitsOwnedBody>(
-			"orders/active",
-			inputs
-		);
+	public async getActiveLimitOrders(inputs: ApiLimitsActiveOrdersOwnedBody) {
+		return this.fetchApi<
+			LimitOrderObject[],
+			ApiLimitsActiveOrdersOwnedBody
+		>("orders/active", inputs);
 	}
 
 	/**
