@@ -39,18 +39,19 @@ export type RouterExternalFee = ExternalFee;
 
 export type RouterProtocolName =
 	| "Aftermath"
-	| "Interest"
-	| "Kriya"
-	| "BaySwap"
-	| "Suiswap"
 	| "BlueMove"
-	// TODO: handle stable bluemove
-	| "afSUI"
+	| "BlueMoveStable"
 	| "Cetus"
-	| "Turbos"
 	| "DeepBook"
+	| "DeepBookV3"
 	| "FlowX"
-	| "FlowXClmm";
+	| "FlowXClmm"
+	| "Kriya"
+	| "KriyaClmm"
+	| "Pump"
+	| "SuiSwap"
+	| "Turbos"
+	| "afSUI"; // NOTE: this is not added yet
 
 // =========================================================================
 //  Paths
@@ -125,8 +126,14 @@ export type ApiRouterPartialCompleteTradeRouteBody = {
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
 	externalFee?: ExternalFee;
-	excludeProtocols?: RouterProtocolName[];
-};
+} & (
+	| {
+			protocolBlacklist?: RouterProtocolName[];
+	  }
+	| {
+			protocolWhitelist?: RouterProtocolName[];
+	  }
+);
 
 /**
  * Details for router to construct trade route

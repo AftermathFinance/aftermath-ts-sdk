@@ -1,12 +1,16 @@
 import { Balance, Helpers } from "../../..";
 import {
 	RouterCompleteTradeRoute,
+	RouterProtocolName,
 	RouterServicePath,
 	RouterServicePaths,
 	RouterTradeEvent,
 	RouterTradeRoute,
 } from "../routerTypes";
-import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
+import {
+	RouterProtocolNameIndexerData,
+	RouterTradeEventOnChain,
+} from "./routerApiCastingTypes";
 
 export class RouterApiCasting {
 	// =========================================================================
@@ -141,6 +145,40 @@ export class RouterApiCasting {
 				input_fee_amount: Number(completeTradeRoute.coinIn.tradeFee),
 				output_fee_amount: Number(completeTradeRoute.coinOut.tradeFee),
 			},
+		};
+	};
+
+	public static routerProtocolNameToIndexerData = (
+		routerProtocolName: RouterProtocolName
+	): RouterProtocolNameIndexerData => {
+		if (routerProtocolName === "Aftermath") {
+			return {
+				protocol: {
+					Aftermath: {
+						pool_type: "Both",
+						extension: "All",
+					},
+				},
+			};
+		} else if (routerProtocolName === "Kriya") {
+			return {
+				protocol: {
+					Kriya: {
+						pool_type: "Both",
+					},
+				},
+			};
+		} else if (routerProtocolName === "SuiSwap") {
+			return {
+				protocol: {
+					SuiSwap: {
+						pool_type: "Both",
+					},
+				},
+			};
+		}
+		return {
+			protocol: routerProtocolName,
 		};
 	};
 }
