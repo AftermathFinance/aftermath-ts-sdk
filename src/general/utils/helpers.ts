@@ -6,7 +6,6 @@ import {
 import {
 	AnyObjectType,
 	Balance,
-	ScallopProviders,
 	SuiNetwork,
 	CoinsToDecimals,
 	CoinsToPrice,
@@ -27,8 +26,7 @@ import {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { Scallop } from "@scallop-io/sui-scallop-sdk";
-import { NetworkType } from "@scallop-io/sui-kit";
+// import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { Coin } from "../..";
 import { MoveErrors } from "../types/moveErrorsInterface";
@@ -379,35 +377,35 @@ export class Helpers {
 	//  Constructors
 	// =========================================================================
 
-	public static async createScallopProviders(inputs: {
-		network: SuiNetwork;
-	}): Promise<ScallopProviders> {
-		const network = inputs.network.toLowerCase();
-		const networkType =
-			network === "local"
-				? "localnet"
-				: network !== "mainnet" &&
-				  network !== "testnet" &&
-				  network !== "localnet"
-				? undefined
-				: network;
-		if (!networkType)
-			throw new Error(`network \`${inputs.network}\` not found`);
+	// public static async createScallopProviders(inputs: {
+	// 	network: SuiNetwork;
+	// }): Promise<ScallopProviders> {
+	// 	const network = inputs.network.toLowerCase();
+	// 	const networkType =
+	// 		network === "local"
+	// 			? "localnet"
+	// 			: network !== "mainnet" &&
+	// 			  network !== "testnet" &&
+	// 			  network !== "localnet"
+	// 			? undefined
+	// 			: network;
+	// 	if (!networkType)
+	// 		throw new Error(`network \`${inputs.network}\` not found`);
 
-		const Main = new Scallop({
-			networkType,
-		});
-		const [Builder, Query] = await Promise.all([
-			Main.createScallopBuilder(),
-			Main.createScallopQuery(),
-		]);
-		// await Promise.all([Builder.init(), Query.init()]);
-		return {
-			Main,
-			Builder,
-			Query,
-		};
-	}
+	// 	const Main = new Scallop({
+	// 		networkType,
+	// 	});
+	// 	const [Builder, Query] = await Promise.all([
+	// 		Main.createScallopBuilder(),
+	// 		Main.createScallopQuery(),
+	// 	]);
+	// 	// await Promise.all([Builder.init(), Query.init()]);
+	// 	return {
+	// 		Main,
+	// 		Builder,
+	// 		Query,
+	// 	};
+	// }
 
 	// =========================================================================
 	//  Indexer Calculations

@@ -1,8 +1,8 @@
 import {
 	SuiNetwork,
 	Url,
-	ScallopMarketPool,
-	ScallopMarketCollateral,
+	// ScallopMarketPool,
+	// ScallopMarketCollateral,
 	ApiLeveragedStakePositionBody,
 	ApiLeveragedStakePositionResponse,
 	LeveragedAfSuiState,
@@ -63,7 +63,8 @@ export class LeveragedStaking extends Caller {
 	 * Retrieves the SUI market pool.
 	 * @returns A promise that resolves to a ScallopMarketPool object.
 	 */
-	public async getSuiMarketPool(): Promise<ScallopMarketPool> {
+	public async getSuiMarketPool(): Promise<any> {
+		// ScallopMarketPool
 		return this.fetchApi("sui-market-pool");
 	}
 
@@ -71,7 +72,8 @@ export class LeveragedStaking extends Caller {
 	 * Retrieves the AfSui market collateral.
 	 * @returns A promise that resolves to a `ScallopMarketCollateral` object.
 	 */
-	public async getAfSuiMarketCollateral(): Promise<ScallopMarketCollateral> {
+	public async getAfSuiMarketCollateral(): Promise<any> {
+		// ScallopMarketCollateral
 		return this.fetchApi("afsui-market-collateral");
 	}
 

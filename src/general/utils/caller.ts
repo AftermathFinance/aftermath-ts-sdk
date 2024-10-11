@@ -98,9 +98,17 @@ export class Caller {
 		const apiCallUrl = this.urlForApiCall(url);
 
 		const uncastResponse = await (body === undefined
-			? fetch(apiCallUrl, { signal })
+			? fetch(apiCallUrl, {
+					headers: {
+						"Content-Type": "text/plain",
+					},
+					signal,
+			  })
 			: fetch(apiCallUrl, {
 					method: "POST",
+					headers: {
+						"Content-Type": "text/plain",
+					},
 					body: JSON.stringify(body),
 					signal,
 			  }));
