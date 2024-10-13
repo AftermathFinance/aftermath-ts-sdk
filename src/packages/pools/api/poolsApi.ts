@@ -379,26 +379,12 @@ export class PoolsApi implements MoveErrorsInterface {
 	public fetchPools = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<PoolObject[]> => {
-		const poolIds = inputs.objectIds.map((objectId) =>
-			Helpers.addLeadingZeroesToType(objectId)
-		);
-		const response =
-			await this.Provider.indexerCaller.fetchIndexer<PoolsIndexerResponse>(
-				"pools",
-				undefined,
-				{
-					pool_ids: poolIds,
-				}
-			);
-		const pools = PoolsApiCasting.poolObjectsFromIndexerResponse(response);
-		return poolIds.map(
-			(objectId) =>
-				pools.find(
-					(pool) =>
-						pool.objectId ===
-						Helpers.addLeadingZeroesToType(objectId)
-					// TODO: handle this error case better
-				)!
+		return this.Provider.indexerCaller.fetchIndexer<PoolObject[]>(
+			"pools",
+			undefined,
+			{
+				pool_ids: inputs.objectIds,
+			}
 		);
 	};
 
@@ -408,11 +394,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
 	public fetchAllPools = async (): Promise<PoolObject[]> => {
-		const response =
-			await this.Provider.indexerCaller.fetchIndexer<PoolsIndexerResponse>(
-				"pools"
-			);
-		return PoolsApiCasting.poolObjectsFromIndexerResponse(response);
+		return this.Provider.indexerCaller.fetchIndexer<PoolObject[]>("pools");
 	};
 
 	public fetchOwnedDaoFeePoolOwnerCaps = async (

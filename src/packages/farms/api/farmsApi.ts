@@ -41,7 +41,6 @@ import {
 	FarmsCreatedVaultEventOnChain,
 	FarmsDepositedPrincipalEventOnChain,
 	FarmsHarvestedRewardsEventOnChain,
-	FarmsIndexerVaultsResponse,
 	FarmsLockedEventOnChain,
 	FarmsStakedEventOnChain,
 	FarmsStakedRelaxedEventOnChain,
@@ -256,38 +255,33 @@ export class FarmsApi implements MoveErrorsInterface {
 	public fetchStakingPools = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<FarmsStakingPoolObject[]> => {
-		const vaultIds = inputs.objectIds.map((objectId) =>
-			Helpers.addLeadingZeroesToType(objectId)
-		);
-		const uncastFarms =
-			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
-				"afterburner-vaults/vaults",
-				undefined,
-				{
-					vault_ids: vaultIds,
-				}
-			);
-		const farms =
-			Casting.farms.stakingPoolObjectsFromIndexerResponse(uncastFarms);
-		return vaultIds.map(
-			(objectId) =>
-				farms.find(
-					(farm) =>
-						farm.objectId ===
-						Helpers.addLeadingZeroesToType(objectId)
-					// TODO: handle this error case better
-				)!
+		return this.Provider.indexerCaller.fetchIndexer<
+			FarmsStakingPoolObject[]
+		>(
+			"afterburner-vaults/vaults",
+			undefined,
+			{
+				vault_ids: inputs.objectIds,
+			},
+			undefined,
+			undefined,
+			true
 		);
 	};
 
 	public fetchAllStakingPools = async (): Promise<
 		FarmsStakingPoolObject[]
 	> => {
-		const farms =
-			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
-				"afterburner-vaults/vaults"
-			);
-		return Casting.farms.stakingPoolObjectsFromIndexerResponse(farms);
+		return this.Provider.indexerCaller.fetchIndexer<
+			FarmsStakingPoolObject[]
+		>(
+			"afterburner-vaults/vaults",
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 	};
 
 	public fetchOwnedStakingPoolOwnerCaps = async (
