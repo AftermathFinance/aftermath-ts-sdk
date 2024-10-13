@@ -1,5 +1,5 @@
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork } from "../../types";
+import { SuiAddress, SuiNetwork } from "../../types";
 import { AftermathApi } from "../../general/providers";
 import {
 	ApiUserDataCreateUserBody,
@@ -19,6 +19,10 @@ export class UserData extends Caller {
 	) {
 		super(network, "user-data");
 	}
+
+	public static readonly constants = {
+		termsAndConsKey: "user-signedTermsAndCons",
+	};
 
 	// =========================================================================
 	//  API
@@ -99,5 +103,11 @@ export class UserData extends Caller {
 		return {
 			action: `SIGN_TERMS_AND_CONDITIONS`,
 		};
+	}
+
+	public static getTermsAndConsKey(inputs: {
+		walletAddress: SuiAddress | undefined;
+	}) {
+		return `${this.constants.termsAndConsKey}-${inputs.walletAddress}`;
 	}
 }
