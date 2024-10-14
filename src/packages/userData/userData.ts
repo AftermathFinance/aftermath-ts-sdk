@@ -4,7 +4,6 @@ import { AftermathApi } from "../../general/providers";
 import {
 	ApiUserDataCreateUserBody,
 	ApiUserDataOwnedBody,
-	ApiUserDataSignTermsAndConditionsBody,
 	UserDataKeyType,
 } from "./userDataTypes";
 
@@ -55,22 +54,6 @@ export class UserData extends Caller {
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiUserDataCreateUserBody>(
 			`save-public-key`,
-			inputs
-		);
-	}
-
-	/**
-	 * Fetches the API to sign terms and conditions.
-	 * @async
-	 * @param { ApiUserDataCreateUserBody } inputs - The inputs for creating users public key on BE side.
-	 * @returns { Promise<boolean> } A promise that resolves to result if user pk has been created.
-	 */
-
-	public async signTermsAndConditions(
-		inputs: ApiUserDataSignTermsAndConditionsBody
-	): Promise<boolean> {
-		return this.fetchApi<boolean, ApiUserDataSignTermsAndConditionsBody>(
-			`sign-terms-and-conditions`,
 			inputs
 		);
 	}

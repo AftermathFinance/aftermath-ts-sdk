@@ -2,13 +2,10 @@ import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	ApiUserDataCreateUserBody,
 	ApiUserDataOwnedBody,
-	ApiUserDataSignTermsAndConditionsBody,
 } from "../userDataTypes";
 import {
 	UserDataIndexerCreateUserRequest,
 	UserDataIndexerCreateUserResponse,
-	UserDataIndexerSignTermsAndConditionsRequest,
-	UserDataIndexerSignTermsAndConditionsResponse,
 	UserDataIndexerUserRequest,
 	UserDataIndexerUserResponse,
 } from "./userDataCastingTypes";
@@ -58,27 +55,6 @@ export class UserDataApi {
 			UserDataIndexerCreateUserRequest
 		>(
 			// TODO: - add ${inputs.key}/ in front for AF-FE
-			`user/create`,
-			{
-				wallet_address: inputs.walletAddress,
-				signature: inputs.signature,
-				bytes: inputs.bytes,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
-	};
-
-	public fetchSignTermsAndConditions = async (
-		inputs: ApiUserDataSignTermsAndConditionsBody
-	): Promise<boolean> => {
-		// TODO: - replace fetchIndexerTest with fetchIndexer
-		return this.Provider.indexerCaller.fetchIndexerTest<
-			UserDataIndexerSignTermsAndConditionsResponse,
-			UserDataIndexerSignTermsAndConditionsRequest
-		>(
 			`user/create`,
 			{
 				wallet_address: inputs.walletAddress,
