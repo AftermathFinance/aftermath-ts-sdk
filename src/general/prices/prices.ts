@@ -35,7 +35,7 @@ export class Prices extends Caller {
 	public async getCoinsToPriceInfo(inputs: {
 		coins: CoinType[];
 	}): Promise<CoinsToPriceInfo> {
-		return this.fetchApi(JSON.stringify(inputs.coins));
+		return this.fetchApi("", inputs);
 	}
 
 	public async getCoinPrice(inputs: { coin: CoinType }): Promise<number> {

@@ -21,7 +21,7 @@ import {
 	MoveErrorCode,
 	ObjectId,
 	RouterProtocolName,
-	ScallopProviders,
+	// ScallopProviders,
 	UniqueId,
 	Url,
 } from "../../types";
@@ -36,10 +36,13 @@ import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { Helpers, IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui/client";
 import { SuiClient as SuiClientV0 } from "@mysten/sui.js/client";
+import { DcaApi } from "../../packages/dca/api/dcaApi";
 import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
+import { RouterPricesApi } from "../prices/router/routerPricesApi";
+// import { MultisigApi } from "../../packages/multisig/api/multisigApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -133,12 +136,13 @@ export class AftermathApi {
 	public Nfts = () => new NftsApi(this);
 
 	public Prices = this?.config?.prices?.coinGeckoApiKey
-		? () =>
-				new CoinGeckoPricesApi(
-					this,
-					this?.config?.prices?.coinGeckoApiKey ?? "",
-					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
-				)
+		? // ? () =>
+		  // 		new CoinGeckoPricesApi(
+		  // 			this,
+		  // 			this?.config?.prices?.coinGeckoApiKey ?? "",
+		  // 			this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
+		  // 		)
+		  () => new RouterPricesApi(this)
 		: () => new PlaceholderPricesApi();
 
 	public HistoricalData = this?.config?.prices?.coinGeckoApiKey
@@ -172,14 +176,18 @@ export class AftermathApi {
 	public Perpetuals = () => new PerpetualsApi(this);
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
+	public Dca = () => new DcaApi(this);
+	// public Multisig = () => new MultisigApi(this);
+
 	/**
 	 * Creates a new instance of the RouterApi class.
 	 * @returns A new instance of the RouterApi class.
 	 */
 	public Router = () => new RouterApi(this);
 
-	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
-		new LeveragedStakingApi(this, ScallopProviders);
+	public LeveragedStaking = (
+		ScallopProviders?: any // ScallopProviders
+	) => new LeveragedStakingApi(this, ScallopProviders);
 
 	// =========================================================================
 	//  Helpers

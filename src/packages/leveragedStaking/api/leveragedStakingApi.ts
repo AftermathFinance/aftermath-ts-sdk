@@ -12,10 +12,10 @@ import {
 	StakingAddresses,
 	SuiAddress,
 	LeveragedStakingAddresses,
-	ScallopProviders,
+	// ScallopProviders,
 	ScallopAddresses,
-	ScallopMarketPool,
-	ScallopMarketCollateral,
+	// ScallopMarketPool,
+	// ScallopMarketCollateral,
 	ApiLeveragedStakePositionBody,
 	ApiLeveragedStakePositionResponse,
 	LeveragedAfSuiState,
@@ -42,15 +42,14 @@ import {
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { Pool, Staking } from "../..";
-import BigNumber from "bignumber.js";
-import {
-	BalanceSheet,
-	BorrowIndex,
-	InterestModel,
-	MarketPool,
-	ScallopTxBlock,
-	SupportPoolCoins,
-} from "@scallop-io/sui-scallop-sdk";
+// import BigNumber from "bignumber.js";
+// import {
+// 	BalanceSheet,
+// 	BorrowIndex,
+// 	InterestModel,
+// 	ScallopTxBlock,
+// 	SupportPoolCoins,
+// } from "@scallop-io/sui-scallop-sdk";
 
 /**
  * Represents the API for interacting with the Leveraged Staking module.
@@ -114,7 +113,7 @@ export class LeveragedStakingApi {
 	 */
 	constructor(
 		private readonly Provider: AftermathApi,
-		private readonly ScallopProviders?: ScallopProviders
+		private readonly ScallopProviders?: any // ScallopProviders
 	) {
 		const leveragedStaking = this.Provider.addresses.leveragedStaking;
 		const staking = this.Provider.addresses.staking;
@@ -176,7 +175,8 @@ export class LeveragedStakingApi {
 	 * @returns A promise that resolves to the ScallopMarketPool object representing the SUI market pool.
 	 * @throws An error if the SUI market pool is not found.
 	 */
-	public fetchSuiMarketPool = async (): Promise<ScallopMarketPool> => {
+	public fetchSuiMarketPool = async (): Promise<any> => {
+		// ScallopMarketPool
 		if (!this.ScallopProviders)
 			throw new Error("Scallop providers not set");
 
@@ -207,17 +207,17 @@ export class LeveragedStakingApi {
 	 * @returns A promise that resolves to the ScallopMarketCollateral object.
 	 * @throws An error if the Sui market pool is not found.
 	 */
-	public fetchAfSuiMarketCollateral =
-		async (): Promise<ScallopMarketCollateral> => {
-			if (!this.ScallopProviders)
-				throw new Error("Scallop providers not set");
+	public fetchAfSuiMarketCollateral = async (): Promise<any> => {
+		// ScallopMarketCollateral
+		if (!this.ScallopProviders)
+			throw new Error("Scallop providers not set");
 
-			const afSuiMarketCollateral =
-				await this.ScallopProviders.Query.getMarketCollateral("afsui");
-			if (!afSuiMarketCollateral)
-				throw new Error("sui market pool not found");
-			return afSuiMarketCollateral;
-		};
+		const afSuiMarketCollateral =
+			await this.ScallopProviders.Query.getMarketCollateral("afsui");
+		if (!afSuiMarketCollateral)
+			throw new Error("sui market pool not found");
+		return afSuiMarketCollateral;
+	};
 
 	public fetchLeveragedAfSuiPosition = async (inputs: {
 		leveragedAfSuiPositionId: ObjectId;
@@ -269,14 +269,15 @@ export class LeveragedStakingApi {
 		);
 		const increasedRate = newBorrowIndex / positionBorrowIndex - 1;
 
-		const positionSuiDebt = BigNumber(obligation.debts[0].amount || 0);
-		const availableRepayAmount = positionSuiDebt
-			.multipliedBy(increasedRate + 1)
-			// .multipliedBy(1.01)
-			.toNumber();
+		// const positionSuiDebt = BigNumber(obligation.debts[0].amount || 0);
+		// const availableRepayAmount = positionSuiDebt
+		// 	.multipliedBy(increasedRate + 1)
+		// 	// .multipliedBy(1.01)
+		// 	.toNumber();
 
-		const positionSuiDebtUpdated = BigInt(Math.ceil(availableRepayAmount));
+		// const positionSuiDebtUpdated = BigInt(Math.ceil(availableRepayAmount));
 
+		const positionSuiDebtUpdated = BigInt(0);
 		return {
 			...leveragedAfSuiPosition,
 			suiDebt: positionSuiDebtUpdated,
@@ -563,7 +564,7 @@ export class LeveragedStakingApi {
 	//      this name (with the value and type specified))
 
 	public fetchBuildWithdrawAfSuiCollateralTx = async (inputs: {
-		scallopTx: ScallopTxBlock;
+		scallopTx: any; // ScallopTxBlock;
 		leveragedActionCapId: ObjectId | TransactionObjectArgument;
 		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
@@ -667,7 +668,7 @@ export class LeveragedStakingApi {
 
 	// TODO(kevin): Documentation
 	private buildLeveragedStakeTx = async (inputs: {
-		scallopTx: ScallopTxBlock;
+		scallopTx: any; // ScallopTxBlock;
 		walletAddress: SuiAddress;
 		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
@@ -1014,7 +1015,7 @@ export class LeveragedStakingApi {
 
 	// TODO(Kevin): Documentation.
 	private fetchBuildIncreaseLeverageTx = async (inputs: {
-		scallopTx: ScallopTxBlock;
+		scallopTx: any; // ScallopTxBlock;
 		leveragedActionCapId: ObjectId | TransactionObjectArgument;
 		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
 		// REVIEW(Kevin): this arg can be deleted.
@@ -1127,7 +1128,7 @@ export class LeveragedStakingApi {
 	//   5. Convert afSUI to SUI.
 	//   6. Repay flash loan.
 	private fetchBuildDecreaseLeverageTx = async (inputs: {
-		scallopTx: ScallopTxBlock;
+		scallopTx: any; // ScallopTxBlock;
 		leveragedActionCapId: ObjectId | TransactionObjectArgument;
 		leveragedAfSuiPositionId: ObjectId | TransactionObjectArgument;
 		obligationId: ObjectId | TransactionObjectArgument;
@@ -1438,7 +1439,9 @@ export class LeveragedStakingApi {
 
 	// NOTE: ported from Scallop's SDK.
 	//
-	private async getMarketData(inputs: { poolCoinName: SupportPoolCoins }) {
+	private async getMarketData(inputs: {
+		poolCoinName: any; // SupportPoolCoins
+	}) {
 		if (!this.ScallopProviders)
 			throw new Error("Scallop providers not set");
 
@@ -1453,9 +1456,9 @@ export class LeveragedStakingApi {
 			})
 		).data;
 
-		let balanceSheet: BalanceSheet | undefined;
-		let borrowIndex: BorrowIndex | undefined;
-		let interestModel: InterestModel | undefined;
+		let balanceSheet: any; // BalanceSheet | undefined;
+		let borrowIndex: any; // BorrowIndex | undefined;
+		let interestModel: any; // InterestModel | undefined;
 		let borrowFeeRate: { value: string } | undefined;
 		if (marketObject) {
 			if (marketObject.content && "fields" in marketObject.content) {

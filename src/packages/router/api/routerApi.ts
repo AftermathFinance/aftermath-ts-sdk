@@ -34,6 +34,7 @@ import {
 	MoveErrors,
 	MoveErrorsInterface,
 } from "../../../general/types/moveErrorsInterface";
+import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 
 /**
  * RouterApi class provides methods for interacting with the Aftermath Router API.
@@ -47,6 +48,7 @@ export class RouterApi implements MoveErrorsInterface {
 	public static readonly constants = {
 		moduleNames: {
 			router: "router",
+			events: "events",
 			protocolFee: "protocol_fee",
 			version: "version",
 			admin: "admin",
@@ -418,7 +420,7 @@ export class RouterApi implements MoveErrorsInterface {
 			);
 
 		const tx = Transaction.fromKind(tx_kind);
-		RouterApi.transferTxMetadata({
+		TransactionsApiHelpers.transferTxMetadata({
 			initTx,
 			newTx: tx,
 		});
@@ -500,7 +502,7 @@ export class RouterApi implements MoveErrorsInterface {
 		const { tx, coinOut } = await this.fetchTxForCompleteTradeRoute({
 			...inputs,
 			completeRoute,
-			coinIn: coinTxArg,
+			coinInId: coinTxArg,
 		});
 
 		if (transferCoinOut && walletAddress) {
@@ -523,7 +525,7 @@ export class RouterApi implements MoveErrorsInterface {
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		tx?: Transaction;
-		coinIn?: TransactionObjectArgument;
+		coinInId?: TransactionObjectArgument;
 		walletAddress?: SuiAddress;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
@@ -534,7 +536,7 @@ export class RouterApi implements MoveErrorsInterface {
 		const {
 			completeRoute,
 			walletAddress,
-			coinIn,
+			coinInId,
 			isSponsoredTx,
 			slippage,
 			transferCoinOut,
@@ -547,7 +549,7 @@ export class RouterApi implements MoveErrorsInterface {
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
-			coinIn ??
+			coinInId ??
 			(walletAddress
 				? await this.Provider.Coin().fetchCoinWithAmountTx({
 						tx: initTx,
@@ -612,7 +614,7 @@ export class RouterApi implements MoveErrorsInterface {
 
 		const tx = Transaction.fromKind(tx_kind);
 
-		RouterApi.transferTxMetadata({
+		TransactionsApiHelpers.transferTxMetadata({
 			initTx,
 			newTx: tx,
 		});
@@ -634,7 +636,7 @@ export class RouterApi implements MoveErrorsInterface {
 		completeRoute: RouterCompleteTradeRoute;
 		slippage: Slippage;
 		tx?: TransactionBlock;
-		coinIn?: TransactionObjectArgumentV0;
+		coinInId?: TransactionObjectArgumentV0;
 		walletAddress?: SuiAddress;
 		isSponsoredTx?: boolean;
 		transferCoinOut?: boolean;
@@ -645,7 +647,7 @@ export class RouterApi implements MoveErrorsInterface {
 		const {
 			completeRoute,
 			walletAddress,
-			coinIn,
+			coinInId,
 			isSponsoredTx,
 			slippage,
 			transferCoinOut,
@@ -658,7 +660,7 @@ export class RouterApi implements MoveErrorsInterface {
 		if (walletAddress) initTx.setSender(walletAddress);
 
 		const coinTxArg =
-			coinIn ??
+			coinInId ??
 			(walletAddress
 				? await this.Provider.Coin().fetchCoinWithAmountTx({
 						tx: initTx,
@@ -723,7 +725,7 @@ export class RouterApi implements MoveErrorsInterface {
 
 		const tx = TransactionBlock.fromKind(tx_kind);
 
-		RouterApi.transferTxMetadataV0({
+		TransactionsApiHelpers.transferTxMetadataV0({
 			initTx,
 			newTx: tx,
 		});
@@ -847,78 +849,13 @@ export class RouterApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	// =========================================================================
-	//  Private Static Helpers
-	// =========================================================================
-
-	private static transferTxMetadata = (inputs: {
-		initTx: Transaction;
-		newTx: Transaction;
-	}) => {
-		const { initTx, newTx } = inputs;
-
-		const sender = initTx.getData().sender;
-		if (sender) newTx.setSender(sender);
-
-		const expiration = initTx.getData().expiration;
-		if (expiration) newTx.setExpiration(expiration);
-
-		const gasData = initTx.getData().gasData;
-
-		if (gasData.budget && typeof gasData.budget !== "string")
-			newTx.setGasBudget(gasData.budget);
-
-		if (gasData.owner) newTx.setGasOwner(gasData.owner);
-
-		if (gasData.payment) newTx.setGasPayment(gasData.payment);
-
-		if (gasData.price && typeof gasData.price !== "string")
-			newTx.setGasPrice(gasData.price);
-	};
-
-	private static transferTxMetadataV0 = (inputs: {
-		initTx: TransactionBlock;
-		newTx: TransactionBlock;
-	}) => {
-		const { initTx, newTx } = inputs;
-
-		const sender = initTx.blockData.sender;
-		if (sender) newTx.setSender(sender);
-
-		const expiration = initTx.blockData.expiration;
-		if (expiration && !("None" in expiration && expiration.None === null))
-			// @ts-ignore
-			newTx.setExpiration(expiration);
-
-		const gasData = initTx.blockData.gasConfig;
-
-		if (gasData.budget && typeof gasData.budget !== "string")
-			newTx.setGasBudget(gasData.budget);
-
-		if (gasData.owner) newTx.setGasOwner(gasData.owner);
-
-		if (gasData.payment)
-			newTx.setGasPayment(
-				gasData.payment.map((payment) => ({
-					...payment,
-					version:
-						typeof payment.version === "bigint"
-							? Number(payment.version)
-							: payment.version,
-				}))
-			);
-
-		if (gasData.price && typeof gasData.price !== "string")
-			newTx.setGasPrice(gasData.price);
-	};
-
-	// =========================================================================
 	//  Event Types
 	// =========================================================================
 
 	private routerTradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.utils,
-			RouterApi.constants.moduleNames.router,
+			RouterApi.constants.moduleNames.events,
 			RouterApi.constants.eventNames.routerTrade
 		);
 }

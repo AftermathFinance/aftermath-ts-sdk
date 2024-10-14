@@ -1503,7 +1503,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			});
 
 		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
-			lpCoinAmountOut: lpCoinAmount,
+			lpCoinAmountIn: lpCoinAmount,
 		});
 
 		const amountsOut = pool.getWithdrawAmountsOut({
@@ -1793,6 +1793,28 @@ export class PoolsApi implements MoveErrorsInterface {
 		},
 	});
 
+	// TODO: add cache and generalize logic
+	// public fetchPoolObjectIdForLpCoinTypes = this.Provider.withCache({
+	// 	key: "fetchPoolObjectIdForLpCoinTypes",
+	// 	expirationSeconds: -1,
+	// 	callback: async (inputs: {
+	// 		lpCoinType: CoinType;
+	// 	}): Promise<ObjectId | undefined> => {
+	// 		if (!Pools.isPossibleLpCoinType(inputs)) return "";
+
+	// 		const tx = new Transaction();
+
+	// 		this.poolObjectIdForLpCoinTypeTx({ tx, ...inputs });
+
+	// 		const bytes =
+	// 			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+	// 				tx,
+	// 			});
+
+	// 		return Casting.addressFromBytes(bytes);
+	// 	},
+	// });
+
 	public fetchIsLpCoinType = this.Provider.withCache({
 		key: "fetchIsLpCoinType",
 		expirationSeconds: -1,
@@ -1866,7 +1888,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 */
 	public fetchPoolStats = this.Provider.withCache({
 		key: "fetchPoolStats",
-		expirationSeconds: 60 * 60,
+		expirationSeconds: 60 * 5,
 		callback: async (inputs: { poolId: ObjectId }): Promise<PoolStats> => {
 			const { poolId } = inputs;
 

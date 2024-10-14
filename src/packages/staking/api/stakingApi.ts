@@ -46,7 +46,6 @@ import { Coin } from "../../coin";
 import { Sui } from "../../sui";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { StakingApiCasting } from "./stakingApiCasting";
-import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { ValidatorConfigOnIndexer } from "./stakingApiCastingTypes";
 import { Staking } from "../..";
 import {

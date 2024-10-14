@@ -221,7 +221,6 @@ export interface RouterServicePath {
 }
 
 export interface RouterServiceHop {
-	protocol: RouterProtocolName;
 	pool: RouterServicePoolMetadata;
 	input: CoinType;
 	output: CoinType;
@@ -236,7 +235,9 @@ export interface RouterServiceSwapFee {
 }
 
 export interface RouterServicePoolMetadata {
-	protocol: any; // ?
+	protocol: {
+		protocol: RouterProtocolName;
+	};
 	pool_id: ObjectId;
 	tb_data: any; // TBData
 	assets: [CoinType, CoinType];
