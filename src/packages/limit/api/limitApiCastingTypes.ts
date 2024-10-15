@@ -45,7 +45,7 @@ export type LimitCreatedOrderEventOnChain = EventOnChain<{
 // =========================================================================
 
 export type LimitIndexerOrdersRequest = {
-	sender: SuiAddress;
+	user_address: SuiAddress;
 };
 
 export type LimitIndexerActiveOrdersRequest = {

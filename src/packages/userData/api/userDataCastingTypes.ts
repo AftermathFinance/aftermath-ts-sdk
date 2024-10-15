@@ -1,9 +1,11 @@
 export type UserDataIndexerUserRequest = {
-	wallet_address: string;
+	address: string;
 };
 
 export type UserDataIndexerUserResponse = {
-	public_key?: string;
+	address: string;
+	public_key_object: string;
+	public_key_bytes: string;
 };
 
 // =========================================================================
@@ -11,9 +13,9 @@ export type UserDataIndexerUserResponse = {
 // =========================================================================
 
 export type UserDataIndexerCreateUserRequest = {
-	wallet_address: string;
+	address: string;
 	signature: string;
-	bytes: string;
+	message: string;
 };
 
 export type UserDataIndexerCreateUserResponse = boolean;

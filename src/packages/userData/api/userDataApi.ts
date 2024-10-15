@@ -32,14 +32,15 @@ export class UserDataApi {
 			// TODO: - add ${inputs.key}/ in front for AF-FE
 			`user/get`,
 			{
-				wallet_address: inputs.walletAddress,
+				address: inputs.walletAddress,
 			},
 			undefined,
 			undefined,
 			undefined,
 			true
 		);
-		return data.public_key;
+		console.log({ data });
+		return data ? data.public_key_object : undefined;
 	};
 
 	// =========================================================================
@@ -55,11 +56,11 @@ export class UserDataApi {
 			UserDataIndexerCreateUserRequest
 		>(
 			// TODO: - add ${inputs.key}/ in front for AF-FE
-			`user/create`,
+			`user/add`,
 			{
-				wallet_address: inputs.walletAddress,
+				address: inputs.walletAddress,
 				signature: inputs.signature,
-				bytes: inputs.bytes,
+				message: inputs.bytes,
 			},
 			undefined,
 			undefined,

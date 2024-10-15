@@ -136,8 +136,7 @@ export class LimitApi {
 			LimitIndexerOrderCreateResponse,
 			LimitIndexerOrderCreateRequest
 		>(
-			// TODO: - add `limit/` in front for AF-FE
-			"orders/create",
+			"limit/create",
 			{
 				tx_kind: b64TxBytes,
 				order: {
@@ -186,8 +185,7 @@ export class LimitApi {
 			LimitIndexerOrderCancelResponse,
 			LimitIndexerOrderCancelRequest
 		>(
-			// TODO: - add `limit/` in front for AF-FE
-			`orders/cancel`,
+			`limit/cancel`,
 			{
 				wallet_address: inputs.walletAddress,
 				signature: inputs.signature,
@@ -213,11 +211,12 @@ export class LimitApi {
 		const uncastedResponse =
 			// TODO: - replace fetchIndexerTest with fetchIndexer
 			await this.Provider.indexerCaller.fetchIndexerTest<
-				LimitIndexerOrderResponse[],
+				{
+					orders: LimitIndexerOrderResponse[];
+				},
 				LimitIndexerActiveOrdersRequest
 			>(
-				// TODO: - add `limit/` in front for AF-FE
-				`orders/active/${walletAddress}`,
+				`limit/active`,
 				{
 					wallet_address: walletAddress,
 					bytes,
@@ -229,7 +228,7 @@ export class LimitApi {
 				true
 			);
 		console.log("fetchActiveOrdersObjects", { uncastedResponse });
-		const orders = uncastedResponse
+		const orders = uncastedResponse.orders
 			.sort(
 				(lhs, rhs) =>
 					rhs.create_order_tx_info.timestamp -
@@ -246,13 +245,14 @@ export class LimitApi {
 		const uncastedResponse =
 			// TODO: - replace fetchIndexerTest with fetchIndexer
 			await this.Provider.indexerCaller.fetchIndexerTest<
-				LimitIndexerOrderResponse[],
+				{
+					orders: LimitIndexerOrderResponse[];
+				},
 				LimitIndexerOrdersRequest
 			>(
-				// TODO: - add `limit/` in front for AF-FE
-				`orders/executed/${walletAddress}`,
+				`limit/executed`,
 				{
-					sender: walletAddress,
+					user_address: walletAddress,
 				},
 				undefined,
 				undefined,
@@ -260,7 +260,7 @@ export class LimitApi {
 				true
 			);
 		console.log("fetchExecutedOrdersObjects", { uncastedResponse });
-		const orders = uncastedResponse
+		const orders = uncastedResponse.orders
 			.sort(
 				(lhs, rhs) =>
 					rhs.create_order_tx_info.timestamp -
@@ -281,7 +281,7 @@ export class LimitApi {
 			LimitApi.constants.eventNames.createdOrder
 		);
 
-	private getMockOrders(type: string) {
+	private getMockOrders(type: string): LimitOrderObject[] {
 		return [
 			type === "active"
 				? {
@@ -298,6 +298,7 @@ export class LimitApi {
 							time: 321,
 							tnxDigest: "",
 						},
+						expiry: 0,
 				  }
 				: {
 						objectId: "test_executed",
@@ -315,6 +316,8 @@ export class LimitApi {
 							time: 123,
 							tnxDigest: "",
 						},
+
+						expiry: 0,
 				  },
 		];
 	}
