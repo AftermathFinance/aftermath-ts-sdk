@@ -114,7 +114,7 @@ export type DcaIndexerOrderResponse = {
 
 export type DcaIndexerOrderFailedTradesResponse = {
 	timestamp_ms: Timestamp;
-	reason: string;
+	reason: "INTERNAL" | "STRATEGY" | "GAS_CAP" | "UNKNOWN_USER" | undefined;
 };
 
 export type DcaIndexerOrderTradeResponse = {
