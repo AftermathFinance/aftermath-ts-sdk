@@ -42,7 +42,7 @@ export class RouterApiCasting {
 		const routes: RouterTradeRoute[] = paths.data.map((path) => ({
 			// TODO: add spot price
 			paths: path.path.data.map((hop) => ({
-				protocolName: hop.protocol,
+				protocolName: hop.pool.protocol.protocol,
 				pool: hop.pool,
 				coinIn: {
 					type: hop.input,
@@ -125,7 +125,6 @@ export class RouterApiCasting {
 				amount: Number(route.coinIn.amount),
 				path: {
 					data: route.paths.map((path) => ({
-						protocol: path.protocolName,
 						pool: path.pool,
 						input: path.coinIn.type,
 						output: path.coinOut.type,

@@ -1,4 +1,3 @@
-import { ObligationAccount } from "@scallop-io/sui-scallop-sdk";
 import {
 	ApiEventsBody,
 	Balance,
@@ -16,10 +15,10 @@ import { LeveragedStakingApi } from "./api/leveragedStakingApi";
 //  Scallop
 // =========================================================================
 
-export type {
-	MarketPool as ScallopMarketPool,
-	MarketCollateral as ScallopMarketCollateral,
-} from "@scallop-io/sui-scallop-sdk";
+// export type {
+// 	MarketPool as ScallopMarketPool,
+// 	MarketCollateral as ScallopMarketCollateral,
+// } from "@scallop-io/sui-scallop-sdk";
 
 // =========================================================================
 //  Objects

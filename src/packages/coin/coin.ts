@@ -96,9 +96,7 @@ export class Coin extends Caller {
 		const coinType = this.coinType ?? coin;
 		if (!coinType) throw new Error("no valid coin type");
 
-		const [metadata] = await this.fetchApi<CoinMetadaWithInfo[]>(
-			JSON.stringify([coinType])
-		);
+		const [metadata] = await this.getCoinMetadatas({ coins: [coinType] });
 		this.setCoinMetadata(metadata);
 		return metadata;
 	}

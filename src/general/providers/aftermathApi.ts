@@ -21,7 +21,7 @@ import {
 	MoveErrorCode,
 	ObjectId,
 	RouterProtocolName,
-	ScallopProviders,
+	// ScallopProviders,
 	UniqueId,
 	Url,
 } from "../../types";
@@ -185,8 +185,9 @@ export class AftermathApi {
 	 */
 	public Router = () => new RouterApi(this);
 
-	public LeveragedStaking = (ScallopProviders?: ScallopProviders) =>
-		new LeveragedStakingApi(this, ScallopProviders);
+	public LeveragedStaking = (
+		ScallopProviders?: any // ScallopProviders
+	) => new LeveragedStakingApi(this, ScallopProviders);
 
 	// =========================================================================
 	//  Helpers

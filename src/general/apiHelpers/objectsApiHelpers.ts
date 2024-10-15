@@ -7,8 +7,10 @@ import {
 	SuiObjectResponse,
 } from "@mysten/sui/client";
 import { BcsTypeName } from "../types/castingTypes";
-import { TransactionObjectArgument } from "@scallop-io/sui-kit";
-import { Transaction } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	TransactionObjectArgument,
+} from "@mysten/sui/transactions";
 import { BcsType } from "@mysten/sui/bcs";
 
 export class ObjectsApiHelpers {
