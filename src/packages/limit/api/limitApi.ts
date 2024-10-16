@@ -280,45 +280,4 @@ export class LimitApi {
 			LimitApi.constants.moduleNames.events,
 			LimitApi.constants.eventNames.createdOrder
 		);
-
-	private getMockOrders(type: string): LimitOrderObject[] {
-		return [
-			type === "active"
-				? {
-						objectId: "test_active",
-						allocatedCoin: {
-							coin: Coin.constants.suiCoinType,
-							amount: BigInt(50_000_000),
-						},
-						buyCoin: {
-							coin: "0xce7ff77a83ea0cb6fd39bd8748e2ec89a3f41e8efdc3f4eb123e0ca37b184db2::buck::BUCK",
-							amount: BigInt(50_000_000),
-						},
-						created: {
-							time: 321,
-							tnxDigest: "",
-						},
-						expiry: 0,
-				  }
-				: {
-						objectId: "test_executed",
-						allocatedCoin: {
-							coin: "0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD",
-							amount: BigInt(500_000_000),
-						},
-						buyCoin: {
-							coin: Coin.constants.suiCoinType,
-							amount: BigInt(500_000_000),
-						},
-						recipient:
-							"0xe374570e5da1c1776ef5f99148b4319707b1f25ccc9c148e827add8cc782f818",
-						created: {
-							time: 123,
-							tnxDigest: "",
-						},
-
-						expiry: 0,
-				  },
-		];
-	}
 }

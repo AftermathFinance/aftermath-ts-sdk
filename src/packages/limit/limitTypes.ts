@@ -61,6 +61,7 @@ export interface LimitOrderObject {
 		tnxDigest: TransactionDigest;
 	};
 	expiry: Timestamp;
+	status: string;
 }
 
 // =========================================================================

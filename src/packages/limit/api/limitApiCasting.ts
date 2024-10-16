@@ -71,7 +71,8 @@ export class LimitApiCasting {
 						tnxDigest: finishTime.digest,
 				  }
 				: undefined,
-			expiry: Date.now() + response.expiry_timestamp_ms,
+			expiry: response.expiry_timestamp_ms,
+			status: response.status,
 		};
 	};
 }

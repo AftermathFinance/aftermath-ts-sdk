@@ -74,7 +74,7 @@ export type LimitIndexerOrderResponse = {
 		timestamp: Timestamp;
 	};
 	expiry_timestamp_ms: Timestamp;
-	status: string;
+	status: "Active" | "Canceled" | "Failed" | "Filled";
 };
 
 // =========================================================================
