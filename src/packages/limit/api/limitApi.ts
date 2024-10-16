@@ -156,7 +156,7 @@ export class LimitApi {
 					min_amount_out: inputs.minAmountOut
 						.toString()
 						.replace("n", ""),
-					expiry_timestamp_ms: inputs.expiryTimestampMs,
+					expiry_interval_ms: inputs.expiryTimestampMs,
 				},
 			},
 			undefined,

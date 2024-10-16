@@ -91,7 +91,7 @@ export type LimitIndexerOrderCreateRequest = {
 		owner: SuiAddress;
 		recipient: SuiAddress;
 		min_amount_out: string;
-		expiry_timestamp_ms: Timestamp;
+		expiry_interval_ms: Timestamp;
 	};
 };
 
