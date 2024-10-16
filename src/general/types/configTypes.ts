@@ -199,9 +199,6 @@ export interface LimitAddresses {
 	packages: {
 		limit: SuiAddress;
 	};
-	objects: {
-		config: ObjectId;
-	};
 }
 
 export interface SharedCustodyAddresses {
