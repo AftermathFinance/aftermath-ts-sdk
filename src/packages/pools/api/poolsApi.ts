@@ -384,7 +384,10 @@ export class PoolsApi implements MoveErrorsInterface {
 			undefined,
 			{
 				pool_ids: inputs.objectIds,
-			}
+			},
+			undefined,
+			undefined,
+			true
 		);
 	};
 
@@ -394,7 +397,14 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
 	public fetchAllPools = async (): Promise<PoolObject[]> => {
-		return this.Provider.indexerCaller.fetchIndexer<PoolObject[]>("pools");
+		return this.Provider.indexerCaller.fetchIndexer<PoolObject[]>(
+			"pools",
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 	};
 
 	public fetchOwnedDaoFeePoolOwnerCaps = async (
@@ -1949,15 +1959,14 @@ export class PoolsApi implements MoveErrorsInterface {
 		durationMs: number;
 	}): Promise<IndexerSwapVolumeResponse> => {
 		const { poolId, durationMs } = inputs;
-		const response =
-			await this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
-				`pools/${poolId}/swap-volume/${durationMs}`
-			);
-		return response.map((data) => ({
-			...data,
-			coinTypeIn: Helpers.addLeadingZeroesToType(data.coinTypeIn),
-			coinTypeOut: Helpers.addLeadingZeroesToType(data.coinTypeOut),
-		}));
+		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+			`pools/${poolId}/swap-volume/${durationMs}`,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 	};
 
 	/**
@@ -1968,7 +1977,12 @@ export class PoolsApi implements MoveErrorsInterface {
 	public fetchTotalVolume = async (inputs: { durationMs: number }) => {
 		const { durationMs } = inputs;
 		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
-			`pools/total-swap-volume/${durationMs}`
+			`pools/total-swap-volume/${durationMs}`,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
 		);
 	};
 

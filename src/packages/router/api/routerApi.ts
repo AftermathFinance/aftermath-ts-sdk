@@ -137,7 +137,12 @@ export class RouterApi implements MoveErrorsInterface {
 	public fetchVolume = async (inputs: { durationMs: number }) => {
 		const { durationMs } = inputs;
 		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
-			`router/swap-volume/${durationMs}`
+			`router/swap-volume/${durationMs}`,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			true
 		);
 	};
 
@@ -201,51 +206,33 @@ export class RouterApi implements MoveErrorsInterface {
 		coinOutType: CoinType;
 		referrer?: SuiAddress;
 		externalFee?: ExternalFee;
-	}): Promise<RouterCompleteTradeRoute> => {
+	}): Promise<Omit<RouterCompleteTradeRoute, "slippage">> => {
 		const { coinInType, coinOutType, coinInAmount, referrer, externalFee } =
 			inputs;
-
-		const { paths, output_amount } =
-			await this.Provider.indexerCaller.fetchIndexer<
-				{
-					output_amount: number;
-					paths: RouterServicePaths;
-				},
-				{
-					from_coin_type: CoinType;
-					to_coin_type: CoinType;
-					input_amount: number;
-					referred: boolean;
-				}
-			>(
-				"router/forward-trade-route",
-				{
-					from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
-					to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
-					// NOTE: is this conversion safe ?
-					input_amount: Number(coinInAmount),
-					referred: referrer !== undefined,
-				},
-				undefined,
-				undefined,
-				undefined,
-				true
-			);
-
-		const completeRoute =
-			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
-				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths({
-						paths,
-						outputAmount: output_amount,
-					}),
-			});
-		return {
-			...completeRoute,
-			// NOTE: should these be here ?
-			referrer,
-			externalFee,
-		};
+		return this.Provider.indexerCaller.fetchIndexer<
+			Omit<RouterCompleteTradeRoute, "slippage">,
+			{
+				coinInType: CoinType;
+				coinOutType: CoinType;
+				coinInAmount: number;
+				referrer: SuiAddress | undefined;
+				externalFee: ExternalFee | undefined;
+			}
+		>(
+			"router/forward-trade-route",
+			{
+				referrer,
+				externalFee,
+				coinInType,
+				coinOutType,
+				// NOTE: is this conversion safe ?
+				coinInAmount: Number(coinInAmount),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 	};
 
 	/**
