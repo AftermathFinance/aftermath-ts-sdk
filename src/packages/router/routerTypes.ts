@@ -40,18 +40,19 @@ export type RouterExternalFee = ExternalFee;
 export type RouterProtocolName =
 	| "Aftermath"
 	| "BlueMove"
-	| "BlueMoveStable"
 	| "Cetus"
 	| "DeepBook"
 	| "DeepBookV3"
+	| "DoubleUpPump"
 	| "FlowX"
 	| "FlowXClmm"
+	| "HopFun"
 	| "Kriya"
 	| "KriyaClmm"
-	| "Pump"
+	| "MovePump"
 	| "SuiSwap"
-	| "Turbos"
-	| "afSUI"; // NOTE: this is not added yet
+	| "Turbos";
+// | "afSUI"; // NOTE: this is not added yet
 
 // =========================================================================
 //  Paths

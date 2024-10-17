@@ -152,28 +152,18 @@ export class RouterApiCasting {
 	): RouterProtocolNameIndexerData => {
 		if (routerProtocolName === "Aftermath") {
 			return {
-				protocol: {
-					Aftermath: {
-						pool_type: "Both",
-						extension: "All",
-					},
-				},
+				protocol: routerProtocolName,
+				pool_type: "Both",
+				extension: "All",
 			};
-		} else if (routerProtocolName === "Kriya") {
+		} else if (
+			routerProtocolName === "Kriya" ||
+			routerProtocolName === "SuiSwap" ||
+			routerProtocolName === "BlueMove"
+		) {
 			return {
-				protocol: {
-					Kriya: {
-						pool_type: "Both",
-					},
-				},
-			};
-		} else if (routerProtocolName === "SuiSwap") {
-			return {
-				protocol: {
-					SuiSwap: {
-						pool_type: "Both",
-					},
-				},
+				protocol: routerProtocolName,
+				pool_type: "Both",
 			};
 		}
 		return {

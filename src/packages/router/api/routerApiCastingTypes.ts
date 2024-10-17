@@ -26,23 +26,23 @@ export type RouterTradeEventOnChain = EventOnChain<{
 //  Indexer
 // =========================================================================
 
-export type RouterProtocolNameIndexerData = {
-	protocol:
-		| Exclude<RouterProtocolName, "Aftermath" | "Kriya" | "SuiSwap">
-		| {
-				Aftermath: {
-					pool_type: "Either" | "Stable" | "Uncorrelated" | "Both";
-					extension: "Any" | "Direct" | "DaoFee" | "All";
-				};
-		  }
-		| {
-				Kriya: {
-					pool_type: "Either" | "Stable" | "Uncorrelated" | "Both";
-				};
-		  }
-		| {
-				SuiSwap: {
-					pool_type: "Either" | "Stable" | "Uncorrelated" | "Both";
-				};
-		  };
-};
+// type IndexerPoolType = "Any" | "Stable" | "Uncorrelated";
+type IndexerPoolType = "Both" | "Stable" | "Uncorrelated";
+
+export type RouterProtocolNameIndexerData =
+	| {
+			protocol: Exclude<
+				RouterProtocolName,
+				"Aftermath" | "Kriya" | "SuiSwap" | "BlueMove"
+			>;
+	  }
+	| {
+			protocol: "Aftermath";
+			pool_type: IndexerPoolType;
+			// extension: "Any" | "Direct" | "DaoFee";
+			extension: "All" | "Direct" | "DaoFee";
+	  }
+	| {
+			protocol: "Kriya" | "SuiSwap" | "BlueMove";
+			pool_type: IndexerPoolType;
+	  };
