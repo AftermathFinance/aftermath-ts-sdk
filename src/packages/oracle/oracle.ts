@@ -22,12 +22,6 @@ export class Oracle extends Caller {
 		return this.fetchApi(`${inputs.priceFeedId}/price`);
 	}
 
-	public async getSymbol(inputs: {
-		priceFeedId: ObjectId;
-	}): Promise<CoinSymbol> {
-		return this.fetchApi(`${inputs.priceFeedId}/symbol`);
-	}
-
 	public async getPrices(inputs: {
 		priceFeedIds: ObjectId[];
 	}): Promise<number[]> {

@@ -3,6 +3,7 @@ import {
 	AnyObjectType,
 	BigIntAsString,
 	Byte,
+	CoinSymbol,
 	IdAsStringBytes,
 	IFixedAsBytes,
 	IFixedAsString,
@@ -224,11 +225,11 @@ export type PerpetualsPreviewCancelOrdersIndexerResponse = {
 
 export type PerpetualsMarketsIndexerResponse = Record<
 	PerpetualsMarketId,
-	PerpetualsMarketDataIndexerResponse
+	[PerpetualsMarketDataIndexerResponse, CoinSymbol]
 >;
 
 export type PerpetualsMarketIndexerResponse = {
-	ch: PerpetualsMarketDataIndexerResponse;
+	ch: [PerpetualsMarketDataIndexerResponse, CoinSymbol];
 	orderbook: PerpetualsOrderbookIndexerResponse;
 };
 

@@ -992,30 +992,11 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				true
 			);
 		const markets = Object.values(response);
-
-		// const priceFeedIds = markets
-		// 	.map((market) => [
-		// 		Casting.addressFromStringBytes(
-		// 			market.market_params.base_pfs_id
-		// 		),
-		// 		Casting.addressFromStringBytes(
-		// 			market.market_params.collateral_pfs_id
-		// 		),
-		// 	])
-		// 	.reduce((acc, curr) => [...acc, ...curr], []);
-		const priceFeedIds = markets.map((market) =>
-			Casting.addressFromStringBytes(
-				market.object.market_params.base_pfs_id
-			)
-		);
-		const symbols = await this.Provider.Oracle().fetchPriceFeedSymbols({
-			priceFeedIds,
-		});
-		return markets.map((market, index) =>
+		return markets.map((market) =>
 			Casting.perpetuals.marketDataFromIndexerResponse(
-				market,
+				market[0],
 				Helpers.addLeadingZeroesToType(collateralCoinType),
-				symbols[index].symbol
+				market[1]
 			)
 		);
 	};
@@ -1038,19 +1019,11 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				undefined,
 				true
 			);
-
-		const priceFeedId = Casting.addressFromStringBytes(
-			response.ch.object.market_params.base_pfs_id
-		);
-		const symbols = await this.Provider.Oracle().fetchPriceFeedSymbols({
-			priceFeedIds: [priceFeedId],
-		});
 		const market = Casting.perpetuals.marketDataFromIndexerResponse(
-			response.ch,
+			response.ch[0],
 			Helpers.addLeadingZeroesToType(collateralCoinType),
-			symbols[0].symbol
+			response.ch[1]
 		);
-
 		return {
 			market,
 			orderbook: Casting.perpetuals.orderbookFromIndexerResponse(

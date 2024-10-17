@@ -67,42 +67,6 @@ export class OracleApi {
 		return IFixedUtils.numberFromIFixed(price);
 	};
 
-	public fetchPriceFeedSymbols = async (inputs: {
-		priceFeedIds: ObjectId[];
-	}): Promise<
-		{
-			symbol: CoinSymbol;
-			decimals: CoinDecimal;
-		}[]
-	> => {
-		const { priceFeedIds } = inputs;
-
-		const response = await this.Provider.indexerCaller.fetchIndexer<
-			{
-				symbol: CoinSymbol;
-				decimals: BigIntAsString;
-				priceFeedId: ObjectId;
-			}[]
-		>(`oracle/price-feed-symbols`, undefined, {
-			price_feed_ids: priceFeedIds,
-		});
-
-		let result: {
-			symbol: CoinSymbol;
-			decimals: CoinDecimal;
-		}[] = [];
-		for (const priceFeedId of priceFeedIds) {
-			const foundData = response.find(
-				(data) => data.priceFeedId === priceFeedId
-			)!;
-			result.push({
-				symbol: foundData.symbol,
-				decimals: Math.log10(Number(foundData.decimals)),
-			});
-		}
-		return result;
-	};
-
 	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
