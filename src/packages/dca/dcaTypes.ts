@@ -45,7 +45,7 @@ export interface ApiDcaTransactionForCloseOrderBody {
 //  DCA Order Fetch
 // =========================================================================
 
-export type DcaFailedTradeReasonObject =
+export type DcaFailedTradeReason =
 	| "INTERNAL"
 	| "STRATEGY"
 	| "GAS_CAP"
@@ -67,7 +67,7 @@ export interface DcaOrderTradeObject {
 
 export interface DcaOrderFailedTradeObject {
 	timestamp: number;
-	reason: DcaFailedTradeReasonObject | undefined;
+	reason: DcaFailedTradeReason | undefined;
 }
 
 export interface DcaOrdertStrategyObject {

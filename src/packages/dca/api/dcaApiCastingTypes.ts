@@ -9,6 +9,7 @@ import {
 	Timestamp,
 	TransactionDigest,
 } from "../../../types";
+import { DcaFailedTradeReason } from "../dcaTypes";
 
 // =========================================================================
 // Objects
@@ -114,7 +115,7 @@ export type DcaIndexerOrderResponse = {
 
 export type DcaIndexerOrderFailedTradesResponse = {
 	timestamp_ms: Timestamp;
-	reason: "INTERNAL" | "STRATEGY" | "GAS_CAP" | "UNKNOWN_USER" | undefined;
+	reason: DcaFailedTradeReason | undefined;
 };
 
 export type DcaIndexerOrderTradeResponse = {
