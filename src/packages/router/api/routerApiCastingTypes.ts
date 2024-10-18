@@ -29,7 +29,7 @@ export type RouterTradeEventOnChain = EventOnChain<{
 // type IndexerPoolType = "Any" | "Stable" | "Uncorrelated";
 type IndexerPoolType = "Both" | "Stable" | "Uncorrelated";
 
-export type RouterProtocolNameIndexerData =
+export type RouterServiceProtocol =
 	| {
 			protocol: Exclude<
 				RouterProtocolName,

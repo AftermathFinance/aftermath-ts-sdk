@@ -8,7 +8,7 @@ import {
 	RouterTradeRoute,
 } from "../routerTypes";
 import {
-	RouterProtocolNameIndexerData,
+	RouterServiceProtocol,
 	RouterTradeEventOnChain,
 } from "./routerApiCastingTypes";
 
@@ -33,123 +33,112 @@ export class RouterApiCasting {
 		};
 	};
 
-	public static routerCompleteTradeRouteFromServicePaths = (inputs: {
-		paths: RouterServicePaths;
-		outputAmount: number;
-	}): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> => {
-		const { paths, outputAmount } = inputs;
-
-		const routes: RouterTradeRoute[] = paths.data.map((path) => ({
+	public static routerCompleteTradeRouteFromServicePaths = (
+		paths: RouterServicePaths
+	): Omit<RouterCompleteTradeRoute, "netTradeFeePercentage"> => {
+		const routes: RouterTradeRoute[] = paths.paths.map((path) => ({
 			// TODO: add spot price
+			portion: BigInt(path.portion),
 			paths: path.path.data.map((hop) => ({
-				protocolName: hop.pool.protocol.protocol,
-				pool: hop.pool,
+				protocolName: hop.protocol.protocol,
+				poolId: hop.pool,
+				poolMetadata: {
+					protocol: hop.protocol,
+					tbData: hop.tb_data,
+				},
 				coinIn: {
 					type: hop.input,
-					amount: BigInt(Math.round(hop.input_amount)),
-					tradeFee: BigInt(Math.round(hop.swap_fee.input_fee_amount)),
+					amount: BigInt(hop.input_amount),
+					tradeFee: BigInt(hop.swap_fee.input_fee_amount),
 				},
 				coinOut: {
 					type: hop.output,
-					amount: BigInt(Math.round(hop.output_amount)),
-					tradeFee: BigInt(
-						Math.round(hop.swap_fee.output_fee_amount)
-					),
+					amount: BigInt(hop.output_amount),
+					tradeFee: BigInt(hop.swap_fee.output_fee_amount),
 				},
 				spotPrice:
-					Number(BigInt(Math.round(hop.input_amount))) /
-					Number(BigInt(Math.round(hop.output_amount))),
+					Number(BigInt(hop.input_amount)) /
+					Number(BigInt(hop.output_amount)),
 			})),
 			coinIn: {
 				type: path.path.data[0].input,
-				amount: BigInt(Math.round(path.path.data[0].input_amount)),
-				tradeFee: BigInt(
-					Math.round(path.path.data[0].swap_fee.input_fee_amount)
-				),
+				amount: BigInt(path.path.data[0].input_amount),
+				tradeFee: BigInt(path.path.data[0].swap_fee.input_fee_amount),
 			},
 			coinOut: {
 				type: path.path.data[path.path.data.length - 1].output,
 				amount: BigInt(
-					Math.round(
-						path.path.data[path.path.data.length - 1].output_amount
-					)
+					path.path.data[path.path.data.length - 1].output_amount
 				),
 				tradeFee: BigInt(
-					Math.round(
-						path.path.data[path.path.data.length - 1].swap_fee
-							.output_fee_amount
-					)
+					path.path.data[path.path.data.length - 1].swap_fee
+						.output_fee_amount
 				),
 			},
 			spotPrice:
-				Number(BigInt(Math.round(path.path.data[0].input_amount))) /
+				Number(BigInt(path.path.data[0].input_amount)) /
 				Number(
 					BigInt(
-						Math.round(
-							path.path.data[path.path.data.length - 1]
-								.output_amount
-						)
+						path.path.data[path.path.data.length - 1].output_amount
 					)
 				),
 		}));
-
-		const coinInAmount = Helpers.sumBigInt(
-			routes.map((route) => route.coinIn.amount)
-		);
-
 		return {
 			routes,
 			coinIn: {
 				type: routes[0].coinIn.type,
-				amount: coinInAmount,
-				tradeFee: BigInt(
-					Math.round(paths.protocol_fee.input_fee_amount)
-				),
+				amount: BigInt(paths.amount_in),
+				tradeFee: BigInt(paths.protocol_fee.input_fee_amount),
 			},
 			coinOut: {
 				type: routes[routes.length - 1].coinOut.type,
-				amount: BigInt(Math.round(outputAmount)),
-				tradeFee: BigInt(
-					Math.round(paths.protocol_fee.output_fee_amount)
-				),
+				amount: BigInt(paths.amount_out),
+				tradeFee: BigInt(paths.protocol_fee.output_fee_amount),
 			},
-			spotPrice: Number(coinInAmount) / Number(outputAmount),
+			spotPrice: Number(paths.amount_in) / Number(paths.amount_out),
 		};
 	};
 
 	public static routerServicePathsFromCompleteTradeRoute = (
 		completeTradeRoute: RouterCompleteTradeRoute
 	): RouterServicePaths => {
-		const data: RouterServicePath[] = completeTradeRoute.routes.map(
+		const paths: RouterServicePath[] = completeTradeRoute.routes.map(
 			(route) => ({
-				amount: Number(route.coinIn.amount),
+				portion: route.portion.toString(),
 				path: {
 					data: route.paths.map((path) => ({
-						pool: path.pool,
+						pool: path.poolId,
+						protocol: path.poolMetadata.protocol,
+						tb_data: path.poolMetadata.tbData,
 						input: path.coinIn.type,
 						output: path.coinOut.type,
-						input_amount: Number(path.coinIn.amount),
-						output_amount: Number(path.coinOut.amount),
+						input_amount: path.coinIn.amount.toString(),
+						output_amount: path.coinOut.amount.toString(),
+						acceptable_price_impact: true,
 						swap_fee: {
-							input_fee_amount: Number(path.coinIn.tradeFee),
-							output_fee_amount: Number(path.coinOut.tradeFee),
+							input_fee_amount: path.coinIn.tradeFee.toString(),
+							output_fee_amount: path.coinOut.tradeFee.toString(),
 						},
 					})),
 				},
 			})
 		);
 		return {
-			data,
+			paths,
+			amount_in: completeTradeRoute.coinIn.amount.toString(),
+			amount_out: completeTradeRoute.coinOut.amount.toString(),
+			acceptable_price_impact: true,
 			protocol_fee: {
-				input_fee_amount: Number(completeTradeRoute.coinIn.tradeFee),
-				output_fee_amount: Number(completeTradeRoute.coinOut.tradeFee),
+				input_fee_amount: completeTradeRoute.coinIn.tradeFee.toString(),
+				output_fee_amount:
+					completeTradeRoute.coinOut.tradeFee.toString(),
 			},
 		};
 	};
 
-	public static routerProtocolNameToIndexerData = (
+	public static routerProtocolNameToRouterServiceProtocol = (
 		routerProtocolName: RouterProtocolName
-	): RouterProtocolNameIndexerData => {
+	): RouterServiceProtocol => {
 		if (routerProtocolName === "Aftermath") {
 			return {
 				protocol: routerProtocolName,

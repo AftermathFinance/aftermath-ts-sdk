@@ -27,7 +27,7 @@ import {
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 import { Casting, Coin, Helpers } from "../../..";
 import {
-	RouterProtocolNameIndexerData,
+	RouterServiceProtocol,
 	RouterTradeEventOnChain,
 } from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
@@ -229,8 +229,8 @@ export class RouterApi implements MoveErrorsInterface {
 					to_coin_type: CoinType;
 					input_amount: number;
 					referred: boolean;
-					protocol_blacklist?: RouterProtocolNameIndexerData[];
-					protocol_whitelist?: RouterProtocolNameIndexerData[];
+					protocol_blacklist?: RouterServiceProtocol[];
+					protocol_whitelist?: RouterServiceProtocol[];
 				}
 			>(
 				"router/forward-trade-route",
@@ -244,14 +244,14 @@ export class RouterApi implements MoveErrorsInterface {
 						? {
 								protocol_blacklist:
 									inputs.protocolBlacklist?.map(
-										RouterApiCasting.routerProtocolNameToIndexerData
+										RouterApiCasting.routerProtocolNameToRouterServiceProtocol
 									),
 						  }
 						: "protocolWhitelist" in inputs
 						? {
 								protocol_whitelist:
 									inputs.protocolWhitelist?.map(
-										RouterApiCasting.routerProtocolNameToIndexerData
+										RouterApiCasting.routerProtocolNameToRouterServiceProtocol
 									),
 						  }
 						: {}),
@@ -261,14 +261,15 @@ export class RouterApi implements MoveErrorsInterface {
 				undefined,
 				true
 			);
+		console.log("paths", JSON.stringify(paths, null, 4));
+		console.log("output_amount", output_amount);
 
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths({
-						paths,
-						outputAmount: output_amount,
-					}),
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
 			});
 		return {
 			...completeRoute,
@@ -319,8 +320,8 @@ export class RouterApi implements MoveErrorsInterface {
 				to_coin_type: CoinType;
 				output_amount: number;
 				referred: boolean;
-				protocol_blacklist?: RouterProtocolNameIndexerData[];
-				protocol_whitelist?: RouterProtocolNameIndexerData[];
+				protocol_blacklist?: RouterServiceProtocol[];
+				protocol_whitelist?: RouterServiceProtocol[];
 			}
 		>(
 			"router/backward-trade-route",
@@ -336,13 +337,13 @@ export class RouterApi implements MoveErrorsInterface {
 				...("protocolBlacklist" in inputs
 					? {
 							protocol_blacklist: inputs.protocolBlacklist?.map(
-								RouterApiCasting.routerProtocolNameToIndexerData
+								RouterApiCasting.routerProtocolNameToRouterServiceProtocol
 							),
 					  }
 					: "protocolWhitelist" in inputs
 					? {
 							protocol_whitelist: inputs.protocolWhitelist?.map(
-								RouterApiCasting.routerProtocolNameToIndexerData
+								RouterApiCasting.routerProtocolNameToRouterServiceProtocol
 							),
 					  }
 					: {}),
@@ -356,10 +357,9 @@ export class RouterApi implements MoveErrorsInterface {
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths({
-						paths,
-						outputAmount: Number(coinOutAmount),
-					}),
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
 			});
 		return {
 			...completeRoute,
@@ -451,8 +451,8 @@ export class RouterApi implements MoveErrorsInterface {
 					referrer?: SuiAddress;
 					router_fee_recipient?: SuiAddress;
 					router_fee?: number; // u64 format (same as on-chain)
-					protocol_blacklist?: RouterProtocolNameIndexerData[];
-					protocol_whitelist?: RouterProtocolNameIndexerData[];
+					protocol_blacklist?: RouterServiceProtocol[];
+					protocol_whitelist?: RouterServiceProtocol[];
 				}
 			>(
 				"router/forward-trade-route-tx",
@@ -481,14 +481,14 @@ export class RouterApi implements MoveErrorsInterface {
 						? {
 								protocol_blacklist:
 									inputs.protocolBlacklist?.map(
-										RouterApiCasting.routerProtocolNameToIndexerData
+										RouterApiCasting.routerProtocolNameToRouterServiceProtocol
 									),
 						  }
 						: "protocolWhitelist" in inputs
 						? {
 								protocol_whitelist:
 									inputs.protocolWhitelist?.map(
-										RouterApiCasting.routerProtocolNameToIndexerData
+										RouterApiCasting.routerProtocolNameToRouterServiceProtocol
 									),
 						  }
 						: {}),
@@ -515,10 +515,9 @@ export class RouterApi implements MoveErrorsInterface {
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths({
-						paths,
-						outputAmount: output_amount,
-					}),
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
 			});
 		return {
 			tx,
@@ -647,6 +646,17 @@ export class RouterApi implements MoveErrorsInterface {
 			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
+
+		console.log(
+			"DATA",
+			JSON.stringify(
+				Casting.router.routerServicePathsFromCompleteTradeRoute(
+					completeRoute
+				),
+				null,
+				4
+			)
+		);
 
 		const { output_coin, tx_kind } =
 			await this.Provider.indexerCaller.fetchIndexer<
