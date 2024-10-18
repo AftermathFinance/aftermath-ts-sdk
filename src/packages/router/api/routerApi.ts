@@ -261,8 +261,6 @@ export class RouterApi implements MoveErrorsInterface {
 				undefined,
 				true
 			);
-		console.log("paths", JSON.stringify(paths, null, 4));
-		console.log("output_amount", output_amount);
 
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
@@ -646,17 +644,6 @@ export class RouterApi implements MoveErrorsInterface {
 			onlyTransactionKind: true,
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
-
-		console.log(
-			"DATA",
-			JSON.stringify(
-				Casting.router.routerServicePathsFromCompleteTradeRoute(
-					completeRoute
-				),
-				null,
-				4
-			)
-		);
 
 		const { output_coin, tx_kind } =
 			await this.Provider.indexerCaller.fetchIndexer<
