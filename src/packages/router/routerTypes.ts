@@ -12,10 +12,13 @@ import {
 	BigIntAsString,
 	SerializedTransaction,
 	ExternalFee,
+	IFixedAsString,
+	IFixed,
 } from "../../general/types/generalTypes";
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
 import { TransactionObjectArgument as TransactionObjectArgumentV0 } from "@mysten/sui.js/transactions";
+import { RouterServiceProtocol } from "./api/routerApiCastingTypes";
 
 // =========================================================================
 //  Name Only
@@ -39,18 +42,20 @@ export type RouterExternalFee = ExternalFee;
 
 export type RouterProtocolName =
 	| "Aftermath"
-	| "Interest"
-	| "Kriya"
-	| "BaySwap"
-	| "Suiswap"
 	| "BlueMove"
-	// TODO: handle stable bluemove
-	| "afSUI"
 	| "Cetus"
-	| "Turbos"
 	| "DeepBook"
+	| "DeepBookV3"
+	| "DoubleUpPump"
 	| "FlowX"
-	| "FlowXClmm";
+	| "FlowXClmm"
+	// | "HopFun" // NOTE: this is not added yet
+	| "Kriya"
+	| "KriyaClmm"
+	| "MovePump"
+	| "SuiSwap"
+	| "Turbos";
+// | "afSUI"; // NOTE: this is not added yet
 
 // =========================================================================
 //  Paths
@@ -71,11 +76,16 @@ export type RouterCompleteTradeRouteWithFee = RouterCompleteTradeRoute;
 
 export type RouterTradeRoute = RouterTradeInfo & {
 	paths: RouterTradePath[];
+	portion: IFixed;
 };
 
 export type RouterTradePath = RouterTradeInfo & {
 	protocolName: RouterProtocolName;
-	pool: RouterServicePoolMetadata;
+	poolId: ObjectId;
+	poolMetadata: {
+		tbData: any;
+		protocol: RouterServiceProtocol;
+	};
 };
 
 export interface RouterTradeInfo {
@@ -125,8 +135,14 @@ export type ApiRouterPartialCompleteTradeRouteBody = {
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
 	externalFee?: ExternalFee;
-	excludeProtocols?: RouterProtocolName[];
-};
+} & (
+	| {
+			protocolBlacklist?: RouterProtocolName[];
+	  }
+	| {
+			protocolWhitelist?: RouterProtocolName[];
+	  }
+);
 
 /**
  * Details for router to construct trade route
@@ -209,36 +225,33 @@ export interface ApiRouterDynamicGasBody {
 // =========================================================================
 
 export interface RouterServicePaths {
-	data: RouterServicePath[];
+	amount_in: BigIntAsString;
+	amount_out: BigIntAsString;
+	paths: RouterServicePath[];
+	acceptable_price_impact: boolean;
 	protocol_fee: RouterServiceSwapFee;
 }
 
 export interface RouterServicePath {
-	amount: number;
+	portion: IFixedAsString;
 	path: {
 		data: RouterServiceHop[];
 	};
 }
 
 export interface RouterServiceHop {
-	pool: RouterServicePoolMetadata;
+	pool: ObjectId;
+	protocol: RouterServiceProtocol;
+	tb_data: any; // TBData
 	input: CoinType;
 	output: CoinType;
-	input_amount: number;
-	output_amount: number;
+	input_amount: BigIntAsString;
+	output_amount: BigIntAsString;
+	acceptable_price_impact: boolean;
 	swap_fee: RouterServiceSwapFee;
 }
 
 export interface RouterServiceSwapFee {
-	input_fee_amount: number;
-	output_fee_amount: number;
-}
-
-export interface RouterServicePoolMetadata {
-	protocol: {
-		protocol: RouterProtocolName;
-	};
-	pool_id: ObjectId;
-	tb_data: any; // TBData
-	assets: [CoinType, CoinType];
+	input_fee_amount: BigIntAsString;
+	output_fee_amount: BigIntAsString;
 }

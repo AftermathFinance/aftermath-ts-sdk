@@ -18,6 +18,7 @@ import {
 	MoveErrorCode,
 	ModuleName,
 	PackageId,
+	RouterProtocolName,
 } from "../../../types";
 import {
 	TransactionObjectArgument,
@@ -25,7 +26,10 @@ import {
 } from "@mysten/sui/transactions";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 import { Casting, Coin, Helpers } from "../../..";
-import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
+import {
+	RouterServiceProtocol,
+	RouterTradeEventOnChain,
+} from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
@@ -195,13 +199,22 @@ export class RouterApi implements MoveErrorsInterface {
 	 * @param inputs An object containing the necessary inputs for the trade route calculation.
 	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
 	 */
-	public fetchCompleteTradeRouteGivenAmountIn = async (inputs: {
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		referrer?: SuiAddress;
-		externalFee?: ExternalFee;
-	}): Promise<RouterCompleteTradeRoute> => {
+	public fetchCompleteTradeRouteGivenAmountIn = async (
+		inputs: {
+			coinInType: CoinType;
+			coinInAmount: Balance;
+			coinOutType: CoinType;
+			referrer?: SuiAddress;
+			externalFee?: ExternalFee;
+		} & (
+			| {
+					protocolBlacklist?: RouterProtocolName[];
+			  }
+			| {
+					protocolWhitelist?: RouterProtocolName[];
+			  }
+		)
+	): Promise<RouterCompleteTradeRoute> => {
 		const { coinInType, coinOutType, coinInAmount, referrer, externalFee } =
 			inputs;
 
@@ -216,6 +229,8 @@ export class RouterApi implements MoveErrorsInterface {
 					to_coin_type: CoinType;
 					input_amount: number;
 					referred: boolean;
+					protocol_blacklist?: RouterServiceProtocol[];
+					protocol_whitelist?: RouterServiceProtocol[];
 				}
 			>(
 				"router/forward-trade-route",
@@ -225,6 +240,21 @@ export class RouterApi implements MoveErrorsInterface {
 					// NOTE: is this conversion safe ?
 					input_amount: Number(coinInAmount),
 					referred: referrer !== undefined,
+					...("protocolBlacklist" in inputs
+						? {
+								protocol_blacklist:
+									inputs.protocolBlacklist?.map(
+										RouterApiCasting.routerProtocolNameToRouterServiceProtocol
+									),
+						  }
+						: "protocolWhitelist" in inputs
+						? {
+								protocol_whitelist:
+									inputs.protocolWhitelist?.map(
+										RouterApiCasting.routerProtocolNameToRouterServiceProtocol
+									),
+						  }
+						: {}),
 				},
 				undefined,
 				undefined,
@@ -235,10 +265,9 @@ export class RouterApi implements MoveErrorsInterface {
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths({
-						paths,
-						outputAmount: output_amount,
-					}),
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
 			});
 		return {
 			...completeRoute,
@@ -253,14 +282,23 @@ export class RouterApi implements MoveErrorsInterface {
 	 * @param inputs - An object containing the necessary inputs for fetching the trade route.
 	 * @returns A Promise that resolves to a RouterCompleteTradeRoute object.
 	 */
-	public fetchCompleteTradeRouteGivenAmountOut = async (inputs: {
-		coinInType: CoinType;
-		coinOutAmount: Balance;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-		externalFee?: ExternalFee;
-	}): Promise<RouterCompleteTradeRoute> => {
+	public fetchCompleteTradeRouteGivenAmountOut = async (
+		inputs: {
+			coinInType: CoinType;
+			coinOutAmount: Balance;
+			coinOutType: CoinType;
+			slippage: Slippage;
+			referrer?: SuiAddress;
+			externalFee?: ExternalFee;
+		} & (
+			| {
+					protocolBlacklist?: RouterProtocolName[];
+			  }
+			| {
+					protocolWhitelist?: RouterProtocolName[];
+			  }
+		)
+	): Promise<RouterCompleteTradeRoute> => {
 		const {
 			coinInType,
 			coinOutType,
@@ -280,6 +318,8 @@ export class RouterApi implements MoveErrorsInterface {
 				to_coin_type: CoinType;
 				output_amount: number;
 				referred: boolean;
+				protocol_blacklist?: RouterServiceProtocol[];
+				protocol_whitelist?: RouterServiceProtocol[];
 			}
 		>(
 			"router/backward-trade-route",
@@ -292,6 +332,19 @@ export class RouterApi implements MoveErrorsInterface {
 						Number(coinOutAmount)
 				),
 				referred: referrer !== undefined,
+				...("protocolBlacklist" in inputs
+					? {
+							protocol_blacklist: inputs.protocolBlacklist?.map(
+								RouterApiCasting.routerProtocolNameToRouterServiceProtocol
+							),
+					  }
+					: "protocolWhitelist" in inputs
+					? {
+							protocol_whitelist: inputs.protocolWhitelist?.map(
+								RouterApiCasting.routerProtocolNameToRouterServiceProtocol
+							),
+					  }
+					: {}),
 			},
 			undefined,
 			undefined,
@@ -302,10 +355,9 @@ export class RouterApi implements MoveErrorsInterface {
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths({
-						paths,
-						outputAmount: Number(coinOutAmount),
-					}),
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
 			});
 		return {
 			...completeRoute,
@@ -316,19 +368,28 @@ export class RouterApi implements MoveErrorsInterface {
 		};
 	};
 
-	public fetchCompleteTradeRouteAndTxGivenAmountIn = async (inputs: {
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		tx?: Transaction;
-		coinIn?: TransactionObjectArgument;
-		walletAddress?: SuiAddress;
-		referrer?: SuiAddress;
-		externalFee?: ExternalFee;
-		isSponsoredTx?: boolean;
-		transferCoinOut?: boolean;
-	}): Promise<{
+	public fetchCompleteTradeRouteAndTxGivenAmountIn = async (
+		inputs: {
+			coinInType: CoinType;
+			coinInAmount: Balance;
+			coinOutType: CoinType;
+			slippage: Slippage;
+			tx?: Transaction;
+			coinIn?: TransactionObjectArgument;
+			walletAddress?: SuiAddress;
+			referrer?: SuiAddress;
+			externalFee?: ExternalFee;
+			isSponsoredTx?: boolean;
+			transferCoinOut?: boolean;
+		} & (
+			| {
+					protocolBlacklist?: RouterProtocolName[];
+			  }
+			| {
+					protocolWhitelist?: RouterProtocolName[];
+			  }
+		)
+	): Promise<{
 		tx: Transaction;
 		completeRoute: RouterCompleteTradeRoute;
 		coinOut: TransactionObjectArgument;
@@ -388,6 +449,8 @@ export class RouterApi implements MoveErrorsInterface {
 					referrer?: SuiAddress;
 					router_fee_recipient?: SuiAddress;
 					router_fee?: number; // u64 format (same as on-chain)
+					protocol_blacklist?: RouterServiceProtocol[];
+					protocol_whitelist?: RouterServiceProtocol[];
 				}
 			>(
 				"router/forward-trade-route-tx",
@@ -412,6 +475,21 @@ export class RouterApi implements MoveErrorsInterface {
 								)
 						  )
 						: undefined,
+					...("protocolBlacklist" in inputs
+						? {
+								protocol_blacklist:
+									inputs.protocolBlacklist?.map(
+										RouterApiCasting.routerProtocolNameToRouterServiceProtocol
+									),
+						  }
+						: "protocolWhitelist" in inputs
+						? {
+								protocol_whitelist:
+									inputs.protocolWhitelist?.map(
+										RouterApiCasting.routerProtocolNameToRouterServiceProtocol
+									),
+						  }
+						: {}),
 				},
 				undefined,
 				undefined,
@@ -435,10 +513,9 @@ export class RouterApi implements MoveErrorsInterface {
 		const completeRoute =
 			await this.fetchAddNetTradeFeePercentageToCompleteTradeRoute({
 				completeRoute:
-					Casting.router.routerCompleteTradeRouteFromServicePaths({
-						paths,
-						outputAmount: output_amount,
-					}),
+					Casting.router.routerCompleteTradeRouteFromServicePaths(
+						paths
+					),
 			});
 		return {
 			tx,
