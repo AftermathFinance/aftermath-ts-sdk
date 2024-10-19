@@ -142,8 +142,8 @@ export class RouterApiCasting {
 		if (routerProtocolName === "Aftermath") {
 			return {
 				protocol: routerProtocolName,
-				pool_type: "Both",
-				extension: "All",
+				pool_type: "Any",
+				extension: "Any",
 			};
 		} else if (
 			routerProtocolName === "Kriya" ||
@@ -152,7 +152,7 @@ export class RouterApiCasting {
 		) {
 			return {
 				protocol: routerProtocolName,
-				pool_type: "Both",
+				pool_type: "Any",
 			};
 		}
 		return {

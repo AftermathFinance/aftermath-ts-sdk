@@ -26,8 +26,7 @@ export type RouterTradeEventOnChain = EventOnChain<{
 //  Indexer
 // =========================================================================
 
-// type IndexerPoolType = "Any" | "Stable" | "Uncorrelated";
-type IndexerPoolType = "Both" | "Stable" | "Uncorrelated";
+type IndexerPoolType = "Any" | "Stable" | "Uncorrelated";
 
 export type RouterServiceProtocol =
 	| {
@@ -39,8 +38,7 @@ export type RouterServiceProtocol =
 	| {
 			protocol: "Aftermath";
 			pool_type: IndexerPoolType;
-			// extension: "Any" | "Direct" | "DaoFee";
-			extension: "All" | "Direct" | "DaoFee";
+			extension: "Any" | "Direct" | "DaoFee";
 	  }
 	| {
 			protocol: "Kriya" | "SuiSwap" | "BlueMove";
