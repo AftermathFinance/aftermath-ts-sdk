@@ -45,7 +45,21 @@ export class CoinApi {
 		coins: CoinType[];
 	}): Promise<CoinMetadaWithInfo[]> => {
 		const { coins } = inputs;
-		return this.Provider.indexerCaller.fetchIndexer(
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<{
+			coin_metadata: [
+				{
+					decimals: number;
+					description: string;
+					icon_url?: string | null;
+					id?: string | null;
+					name: string;
+					symbol: string;
+					metadata_type: string; // "Standard" | ?
+				},
+				boolean
+			][];
+		}>(
 			"coins/metadata",
 			undefined,
 			{
@@ -57,6 +71,14 @@ export class CoinApi {
 			undefined,
 			true
 		);
+		return response.coin_metadata.map((metadata) => ({
+			decimals: metadata[0].decimals,
+			description: metadata[0].description,
+			iconUrl: metadata[0].icon_url,
+			id: metadata[0].id,
+			name: metadata[0].name,
+			symbol: metadata[0].symbol,
+		}));
 	};
 
 	public fetchCoinsToDecimals = this.Provider.withCache({
