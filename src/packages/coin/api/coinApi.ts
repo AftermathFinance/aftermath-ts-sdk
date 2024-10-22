@@ -46,22 +46,26 @@ export class CoinApi {
 	}): Promise<CoinMetadaWithInfo[]> => {
 		const { coins } = inputs;
 
-		const response = await this.Provider.indexerCaller.fetchIndexer<{
-			coin_metadata: [
-				{
-					decimals: number;
-					description: string;
-					icon_url?: string | null;
-					id?: string | null;
-					name: string;
-					symbol: string;
-					metadata_type: string; // "Standard" | ?
-				},
-				boolean
-			][];
-		}>(
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				coin_metadata: [
+					{
+						decimals: number;
+						description: string;
+						icon_url?: string | null;
+						id?: string | null;
+						name: string;
+						symbol: string;
+						metadata_type: string; // "Standard" | ?
+					} | null,
+					boolean
+				][];
+			},
+			{
+				coin_types: CoinType[];
+			}
+		>(
 			"coins/metadata",
-			undefined,
 			{
 				coin_types: coins.map((coin) =>
 					Helpers.addLeadingZeroesToType(coin)
@@ -69,16 +73,57 @@ export class CoinApi {
 			},
 			undefined,
 			undefined,
+			undefined,
 			true
 		);
-		return response.coin_metadata.map((metadata) => ({
-			decimals: metadata[0].decimals,
-			description: metadata[0].description,
-			iconUrl: metadata[0].icon_url,
-			id: metadata[0].id,
-			name: metadata[0].name,
-			symbol: metadata[0].symbol,
-		}));
+
+		return Promise.all(
+			response.coin_metadata.map((metadata, index) => {
+				try {
+					if (metadata[0] === null)
+						throw new Error("coin metadata is null");
+					return {
+						decimals: metadata[0].decimals,
+						description: metadata[0].description,
+						iconUrl: metadata[0].icon_url,
+						id: metadata[0].id,
+						name: metadata[0].name,
+						symbol: metadata[0].symbol,
+						isGenerated: false,
+					};
+				} catch (error) {
+					try {
+						return this.createLpCoinMetadata({
+							lpCoinType: coins[index],
+						});
+					} catch (e) {}
+					const maxSymbolLength = 10;
+					const maxPackageNameLength = 24;
+					const coinClass = new Coin(coins[index]);
+					const symbol = coinClass.coinTypeSymbol
+						.toUpperCase()
+						.slice(0, maxSymbolLength);
+					const packageName = coinClass.coinTypePackageName.slice(
+						0,
+						maxPackageNameLength
+					);
+					return {
+						symbol,
+						id: null,
+						description: `${symbol} (${packageName})`,
+						name: symbol
+							.split("_")
+							.map((word) =>
+								Helpers.capitalizeOnlyFirstLetter(word)
+							)
+							.join(" "),
+						decimals: 9,
+						iconUrl: null,
+						isGenerated: true,
+					};
+				}
+			})
+		);
 	};
 
 	public fetchCoinsToDecimals = this.Provider.withCache({

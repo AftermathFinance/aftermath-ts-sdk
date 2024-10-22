@@ -382,14 +382,14 @@ export class PoolsApi implements MoveErrorsInterface {
 		const poolIds = inputs.objectIds.map((objectId) =>
 			Helpers.addLeadingZeroesToType(objectId)
 		);
-		const response =
-			await this.Provider.indexerCaller.fetchIndexer<PoolsIndexerResponse>(
-				"pools",
-				undefined,
-				{
-					pool_ids: poolIds,
-				}
-			);
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			PoolsIndexerResponse,
+			{
+				pool_ids: ObjectId[];
+			}
+		>("pools", {
+			pool_ids: poolIds,
+		});
 		const pools = PoolsApiCasting.poolObjectsFromIndexerResponse(response);
 		return poolIds.map(
 			(objectId) =>
@@ -408,10 +408,10 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
 	public fetchAllPools = async (): Promise<PoolObject[]> => {
-		const response =
-			await this.Provider.indexerCaller.fetchIndexer<PoolsIndexerResponse>(
-				"pools"
-			);
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			PoolsIndexerResponse,
+			{}
+		>("pools", {});
 		return PoolsApiCasting.poolObjectsFromIndexerResponse(response);
 	};
 

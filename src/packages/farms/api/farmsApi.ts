@@ -259,14 +259,14 @@ export class FarmsApi implements MoveErrorsInterface {
 		const vaultIds = inputs.objectIds.map((objectId) =>
 			Helpers.addLeadingZeroesToType(objectId)
 		);
-		const uncastFarms =
-			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
-				"afterburner-vaults/vaults",
-				undefined,
-				{
-					vault_ids: vaultIds,
-				}
-			);
+		const uncastFarms = await this.Provider.indexerCaller.fetchIndexer<
+			FarmsIndexerVaultsResponse,
+			{
+				vault_ids: ObjectId[];
+			}
+		>("afterburner-vaults/vaults", {
+			vault_ids: vaultIds,
+		});
 		const farms =
 			Casting.farms.stakingPoolObjectsFromIndexerResponse(uncastFarms);
 		return vaultIds.map(
@@ -283,10 +283,10 @@ export class FarmsApi implements MoveErrorsInterface {
 	public fetchAllStakingPools = async (): Promise<
 		FarmsStakingPoolObject[]
 	> => {
-		const farms =
-			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
-				"afterburner-vaults/vaults"
-			);
+		const farms = await this.Provider.indexerCaller.fetchIndexer<
+			FarmsIndexerVaultsResponse,
+			{}
+		>("afterburner-vaults/vaults", {});
 		return Casting.farms.stakingPoolObjectsFromIndexerResponse(farms);
 	};
 

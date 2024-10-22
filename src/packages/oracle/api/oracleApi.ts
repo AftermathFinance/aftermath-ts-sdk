@@ -63,8 +63,11 @@ export class OracleApi {
 				symbol: CoinSymbol;
 				decimals: BigIntAsString;
 				priceFeedId: ObjectId;
-			}[]
-		>(`oracle/price-feed-symbols`, undefined, {
+			}[],
+			{
+				price_feed_ids: ObjectId[];
+			}
+		>(`oracle/price-feed-symbols`, {
 			price_feed_ids: priceFeedIds,
 		});
 

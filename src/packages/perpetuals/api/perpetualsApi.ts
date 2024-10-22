@@ -756,13 +756,16 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			{
 				market_id: PerpetualsMarketId;
 				leverage: number;
-			}[]
+			}[],
+			{
+				market_ids: ObjectId[];
+			}
 		>(
 			`perpetuals/accounts/${inputs.accountId}/position-leverages`,
-			undefined,
 			{
 				market_ids: marketIds,
 			},
+			undefined,
 			undefined,
 			undefined,
 			true
