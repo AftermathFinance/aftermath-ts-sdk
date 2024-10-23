@@ -157,44 +157,34 @@ export class DcaApi {
 		const { tx_data } = await this.Provider.indexerCaller.fetchIndexer<
 			DcaIndexerOrderCreateResponse,
 			DcaIndexerOrderCreateRequest
-		>(
-			"dca/create",
-			{
-				tx_kind: b64TxBytes,
-				order: {
-					input_coin:
-						Helpers.transactions.serviceCoinDataFromCoinTxArg({
-							coinTxArg: inputs.inputCoinTxArg,
-						}),
-					input_coin_type: inputs.allocateCoinType,
-					output_coin_type: inputs.buyCoinType,
-					gas_coin: Helpers.transactions.serviceCoinDataFromCoinTxArg(
-						{
-							coinTxArg: inputs.gasCoinTxArg,
-						}
-					),
-					owner: inputs.walletAddress,
-					recipient: inputs.recipientAddress,
-					frequency_ms: inputs.frequencyMs.toString(),
-					delay_timestamp_ms: inputs.delayTimeMs.toString(),
-					amount_per_trade: inputs.orderAmountPerTrade.toString(),
-					max_allowable_slippage_bps: inputs.maxAllowableSlippageBps,
-					min_amount_out: (inputs.strategy?.minPrice ?? 0)
-						.toString()
-						.replace("n", ""),
-					max_amount_out: (
-						inputs.strategy?.maxPrice ?? Casting.u64MaxBigInt
-					)
-						.toString()
-						.replace("n", ""),
-					number_of_trades: Number(inputs.tradesAmount),
-				},
+		>("dca/create", {
+			tx_kind: b64TxBytes,
+			order: {
+				input_coin: Helpers.transactions.serviceCoinDataFromCoinTxArg({
+					coinTxArg: inputs.inputCoinTxArg,
+				}),
+				input_coin_type: inputs.allocateCoinType,
+				output_coin_type: inputs.buyCoinType,
+				gas_coin: Helpers.transactions.serviceCoinDataFromCoinTxArg({
+					coinTxArg: inputs.gasCoinTxArg,
+				}),
+				owner: inputs.walletAddress,
+				recipient: inputs.recipientAddress,
+				frequency_ms: inputs.frequencyMs.toString(),
+				delay_timestamp_ms: inputs.delayTimeMs.toString(),
+				amount_per_trade: inputs.orderAmountPerTrade.toString(),
+				max_allowable_slippage_bps: inputs.maxAllowableSlippageBps,
+				min_amount_out: (inputs.strategy?.minPrice ?? 0)
+					.toString()
+					.replace("n", ""),
+				max_amount_out: (
+					inputs.strategy?.maxPrice ?? Casting.u64MaxBigInt
+				)
+					.toString()
+					.replace("n", ""),
+				number_of_trades: Number(inputs.tradesAmount),
 			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		});
 
 		const tx = Transaction.fromKind(tx_data);
 		TransactionsApiHelpers.transferTxMetadata({
@@ -214,18 +204,11 @@ export class DcaApi {
 		return this.Provider.indexerCaller.fetchIndexer<
 			DcaIndexerOrderCloseResponse,
 			DcaIndexerOrderCloseRequest
-		>(
-			`dca/cancel`,
-			{
-				wallet_address: inputs.walletAddress,
-				signature: inputs.signature,
-				bytes: inputs.bytes,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`dca/cancel`, {
+			wallet_address: inputs.walletAddress,
+			signature: inputs.signature,
+			bytes: inputs.bytes,
+		});
 	};
 
 	// =========================================================================
@@ -238,16 +221,9 @@ export class DcaApi {
 		const data = await this.Provider.indexerCaller.fetchIndexer<
 			DcaIndexerUserResponse,
 			DcaIndexerUserRequest
-		>(
-			`dca/user/get`,
-			{
-				wallet_address: inputs.walletAddress,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`dca/user/get`, {
+			wallet_address: inputs.walletAddress,
+		});
 		return data.public_key;
 	};
 
@@ -257,18 +233,11 @@ export class DcaApi {
 		return this.Provider.indexerCaller.fetchIndexer<
 			DcaIndexerCreateUserResponse,
 			DcaIndexerCreateUserRequest
-		>(
-			`dca/user/add`,
-			{
-				wallet_address: inputs.walletAddress,
-				signature: inputs.signature,
-				bytes: inputs.bytes,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`dca/user/add`, {
+			wallet_address: inputs.walletAddress,
+			signature: inputs.signature,
+			bytes: inputs.bytes,
+		});
 	};
 
 	// =========================================================================
@@ -314,16 +283,9 @@ export class DcaApi {
 		const uncastedResponse = await this.Provider.indexerCaller.fetchIndexer<
 			DcaIndexerOrdersResponse,
 			DcaIndexerOrdersRequest
-		>(
-			`dca/get/${type}`,
-			{
-				sender: walletAddress,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`dca/get/${type}`, {
+			sender: walletAddress,
+		});
 		const orders = uncastedResponse.orders
 			.sort((lhs, rhs) => rhs.created.timestamp - lhs.created.timestamp)
 			.map((order) => Casting.dca.createdOrderEventOnIndexer(order));

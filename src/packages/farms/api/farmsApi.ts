@@ -257,16 +257,9 @@ export class FarmsApi implements MoveErrorsInterface {
 	}): Promise<FarmsStakingPoolObject[]> => {
 		return this.Provider.indexerCaller.fetchIndexer<
 			FarmsStakingPoolObject[]
-		>(
-			"afterburner-vaults/vaults",
-			undefined,
-			{
-				vault_ids: inputs.objectIds,
-			},
-			undefined,
-			undefined,
-			true
-		);
+		>("afterburner-vaults/vaults", undefined, {
+			vault_ids: inputs.objectIds,
+		});
 	};
 
 	public fetchAllStakingPools = async (): Promise<
@@ -274,14 +267,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	> => {
 		return this.Provider.indexerCaller.fetchIndexer<
 			FarmsStakingPoolObject[]
-		>(
-			"afterburner-vaults/vaults",
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>("afterburner-vaults/vaults");
 	};
 
 	public fetchOwnedStakingPoolOwnerCaps = async (

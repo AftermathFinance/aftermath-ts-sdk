@@ -329,12 +329,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { accountId } = inputs;
 		const response: PerpetualsAccountPositionsIndexerResponse =
 			await this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/accounts/${accountId}/positions`,
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				true
+				`perpetuals/accounts/${accountId}/positions`
 			);
 		return Casting.perpetuals.accountObjectFromIndexerResponse(
 			response,
@@ -359,19 +354,12 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				account_id: ObjectId; // accountCapId
 				order_ids: string[];
 			}
-		>(
-			`perpetuals/accounts/orders`,
-			{
-				account_id: Helpers.addLeadingZeroesToType(accountCapId),
-				order_ids: orderDatas.map((orderData) =>
-					String(orderData.orderId).replaceAll("n", "")
-				),
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`perpetuals/accounts/orders`, {
+			account_id: Helpers.addLeadingZeroesToType(accountCapId),
+			order_ids: orderDatas.map((orderData) =>
+				String(orderData.orderId).replaceAll("n", "")
+			),
+		});
 		if (orders.length !== orderDatas.length)
 			throw new Error("unable to find all orders");
 
@@ -432,18 +420,11 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
-		>(
-			`perpetuals/accounts/collateral-history`,
-			{
-				account_id: Helpers.addLeadingZeroesToType(accountCapId),
-				timestamp_before_ms: cursor ?? new Date().valueOf(),
-				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`perpetuals/accounts/collateral-history`, {
+			account_id: Helpers.addLeadingZeroesToType(accountCapId),
+			timestamp_before_ms: cursor ?? new Date().valueOf(),
+			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
+		});
 
 		const collateralChanges = response.map((data) => ({
 			eventName: data.event_type,
@@ -491,18 +472,11 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
-		>(
-			`perpetuals/accounts/trade-history`,
-			{
-				account_id: Helpers.addLeadingZeroesToType(accountCapId),
-				timestamp_before_ms: cursor ?? new Date().valueOf(),
-				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`perpetuals/accounts/trade-history`, {
+			account_id: Helpers.addLeadingZeroesToType(accountCapId),
+			timestamp_before_ms: cursor ?? new Date().valueOf(),
+			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
+		});
 
 		const trades = response.map((data) => ({
 			eventName: data.event_type,
@@ -560,18 +534,11 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
-		>(
-			`perpetuals/markets/trade-history`,
-			{
-				ch_id: Helpers.addLeadingZeroesToType(marketId),
-				timestamp_before_ms: cursor ?? new Date().valueOf(),
-				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`perpetuals/markets/trade-history`, {
+			ch_id: Helpers.addLeadingZeroesToType(marketId),
+			timestamp_before_ms: cursor ?? new Date().valueOf(),
+			limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
+		});
 
 		const trades = response.map((data) => ({
 			timestamp: data.timestamp,
@@ -603,14 +570,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const response = await this.Provider.indexerCaller.fetchIndexer<{
 			market_volume: number; // f64
 			market_volume_usd: number; // f64
-		}>(
-			`perpetuals/markets/${marketId}/24hr-volume`,
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		}>(`perpetuals/markets/${marketId}/24hr-volume`);
 
 		return {
 			volumeBaseAssetAmount: response.market_volume,
@@ -641,19 +601,12 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				timestamp_ms_to: Timestamp; // u64,
 				resolution_ms: number; // u64,
 			}
-		>(
-			`perpetuals/markets/candle-history`,
-			{
-				ch_id: Helpers.addLeadingZeroesToType(marketId),
-				timestamp_ms_from: fromTimestamp,
-				timestamp_ms_to: toTimestamp,
-				resolution_ms: intervalMs,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`perpetuals/markets/candle-history`, {
+			ch_id: Helpers.addLeadingZeroesToType(marketId),
+			timestamp_ms_from: fromTimestamp,
+			timestamp_ms_to: toTimestamp,
+			resolution_ms: intervalMs,
+		});
 
 		return response.map((data) => ({
 			timestamp: data.timestamp_ms,
@@ -701,20 +654,13 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				signature: string;
 				bytes: string;
 			}
-		>(
-			`perpetuals/account/set-position-leverage`,
-			{
-				wallet_address: Helpers.addLeadingZeroesToType(
-					inputs.walletAddress
-				),
-				signature: inputs.signature,
-				bytes: inputs.bytes,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`perpetuals/account/set-position-leverage`, {
+			wallet_address: Helpers.addLeadingZeroesToType(
+				inputs.walletAddress
+			),
+			signature: inputs.signature,
+			bytes: inputs.bytes,
+		});
 	};
 
 	public fetchAllPositionLeverages = async (inputs: {
@@ -731,14 +677,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 					market_id: PerpetualsMarketId;
 					leverage: number;
 				}[]
-			>(
-				`perpetuals/accounts/${inputs.accountId}/position-leverages`,
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				true
-			)
+			>(`perpetuals/accounts/${inputs.accountId}/position-leverages`)
 		).map((data) => ({
 			marketId: data.market_id,
 			leverage: data.leverage,
@@ -756,17 +695,13 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			{
 				market_id: PerpetualsMarketId;
 				leverage: number;
-			}[]
-		>(
-			`perpetuals/accounts/${inputs.accountId}/position-leverages`,
-			undefined,
+			}[],
 			{
-				market_ids: marketIds,
-			},
-			undefined,
-			undefined,
-			true
-		);
+				market_ids: ObjectId[];
+			}
+		>(`perpetuals/accounts/${inputs.accountId}/position-leverages`, {
+			market_ids: marketIds,
+		});
 		return marketIds.map(
 			(objectId) =>
 				(
@@ -823,11 +758,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 						: {
 								// market order
 						  }),
-				},
-				undefined,
-				undefined,
-				undefined,
-				true
+				}
 			);
 
 			const executionPrice = Casting.IFixed.numberFromIFixed(
@@ -938,12 +869,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			await this.Provider.indexerCaller.fetchIndexer<PerpetualsMarketsIndexerResponse>(
 				`perpetuals/markets/${Helpers.stripLeadingZeroesFromType(
 					collateralCoinType
-				)}`,
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				true
+				)}`
 			);
 		const markets = Object.values(response);
 
@@ -1087,11 +1013,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				collateral_to_allocate: Number(collateral),
 				side: Boolean(side),
 				...(price !== undefined ? { price: Number(price) } : {}),
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
+			}
 		);
 		return BigInt(Math.floor(maxSize));
 	};
@@ -1733,28 +1655,21 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				collateral_to_deallocate: number; // Balance
 				position_found: boolean;
 			}
-		>(
-			`perpetuals/transactions/market-order`,
-			{
-				ch_id: marketId,
-				account_obj_id: accountObjectId,
-				account_obj_version: accountObjectVersion,
-				account_obj_digest: accountObjectDigest,
-				side: Boolean(side),
-				size: Number(size),
-				collateral_to_allocate:
-					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
-				collateral_to_deallocate:
-					collateralChange < BigInt(0)
-						? Math.abs(Number(collateralChange))
-						: 0,
-				position_found: hasPosition,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`perpetuals/transactions/market-order`, {
+			ch_id: marketId,
+			account_obj_id: accountObjectId,
+			account_obj_version: accountObjectVersion,
+			account_obj_digest: accountObjectDigest,
+			side: Boolean(side),
+			size: Number(size),
+			collateral_to_allocate:
+				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
+			collateral_to_deallocate:
+				collateralChange < BigInt(0)
+					? Math.abs(Number(collateralChange))
+					: 0,
+			position_found: hasPosition,
+		});
 
 		const tx = Transaction.fromKind(
 			new Uint8Array(txKind.map((byte) => Number(byte)))
@@ -1818,30 +1733,23 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				collateral_to_deallocate: number; // Balance
 				position_found: boolean;
 			}
-		>(
-			`perpetuals/transactions/limit-order`,
-			{
-				ch_id: marketId,
-				account_obj_id: accountObjectId,
-				account_obj_version: accountObjectVersion,
-				account_obj_digest: accountObjectDigest,
-				side: Boolean(side),
-				size: Number(size),
-				price: Number(price),
-				order_type: orderType,
-				collateral_to_allocate:
-					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
-				collateral_to_deallocate:
-					collateralChange < BigInt(0)
-						? Math.abs(Number(collateralChange))
-						: 0,
-				position_found: hasPosition,
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>(`perpetuals/transactions/limit-order`, {
+			ch_id: marketId,
+			account_obj_id: accountObjectId,
+			account_obj_version: accountObjectVersion,
+			account_obj_digest: accountObjectDigest,
+			side: Boolean(side),
+			size: Number(size),
+			price: Number(price),
+			order_type: orderType,
+			collateral_to_allocate:
+				collateralChange > BigInt(0) ? Number(collateralChange) : 0,
+			collateral_to_deallocate:
+				collateralChange < BigInt(0)
+					? Math.abs(Number(collateralChange))
+					: 0,
+			position_found: hasPosition,
+		});
 
 		const tx = Transaction.fromKind(
 			new Uint8Array(txKind.map((byte) => Number(byte)))

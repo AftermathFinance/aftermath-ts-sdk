@@ -243,11 +243,9 @@ export class StakingApi implements MoveErrorsInterface {
 	public fetchValidatorConfigs = async (): Promise<
 		ValidatorConfigObject[]
 	> => {
-		const configs: ValidatorConfigOnIndexer[] =
-			await this.Provider.indexerCaller.fetchIndexer(
-				`staking/validator-configs`
-			);
-		return configs.map(StakingApiCasting.validatorConfigObjectFromIndexer);
+		return this.Provider.indexerCaller.fetchIndexer(
+			`staking/validator-configs`
+		);
 	};
 
 	public fetchOwnedValidatorOperationCaps = async (inputs: {
@@ -862,12 +860,7 @@ export class StakingApi implements MoveErrorsInterface {
 
 	public fetchUniqueStakers = async (): Promise<number> => {
 		return this.Provider.indexerCaller.fetchIndexer(
-			"staking/unique-stakers",
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			true
+			"staking/unique-stakers"
 		);
 	};
 
@@ -914,28 +907,13 @@ export class StakingApi implements MoveErrorsInterface {
 
 	public async fetchEpochWasChangedEvents(inputs: ApiIndexerEventsBody) {
 		const { cursor, limit } = inputs;
-		// const eventsData = await this.Provider.indexerCaller.fetchIndexerEvents(
-		// 	`staking/events/epoch-was-changed`,
-		// 	{
-		// 		cursor,
-		// 		limit,
-		// 	},
-		// 	Casting.staking.epochWasChangedEventFromOnChain
-		// );
-		// // TODO: move timestamp ordering reversal to indexer
-		// eventsData.events.reverse();
-		// return eventsData;
-		const eventsData =
-			await this.Provider.Events().fetchCastEventsWithCursor({
-				query: {
-					MoveEventType: this.eventTypes.epochWasChanged,
-				},
-				eventFromEventOnChain:
-					Casting.staking.epochWasChangedEventFromOnChain,
+		return this.Provider.indexerCaller.fetchIndexerEvents(
+			`staking/events/epoch-was-changed`,
+			{
+				cursor,
 				limit,
-			});
-		eventsData.events.reverse();
-		return eventsData;
+			}
+		);
 	}
 
 	public async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {

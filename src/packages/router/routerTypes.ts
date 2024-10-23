@@ -75,7 +75,7 @@ export type RouterTradeRoute = RouterTradeInfo & {
 
 export type RouterTradePath = RouterTradeInfo & {
 	protocolName: RouterProtocolName;
-	pool: RouterServicePoolMetadata;
+	pool: any; // RouterServicePoolMetadata
 };
 
 export interface RouterTradeInfo {
@@ -202,43 +202,4 @@ export interface ApiRouterDynamicGasBody {
 	senderAddress: SuiAddress;
 	sponsorAddress: SuiAddress;
 	referrer?: SuiAddress;
-}
-
-// =========================================================================
-//  Service
-// =========================================================================
-
-export interface RouterServicePaths {
-	data: RouterServicePath[];
-	protocol_fee: RouterServiceSwapFee;
-}
-
-export interface RouterServicePath {
-	amount: number;
-	path: {
-		data: RouterServiceHop[];
-	};
-}
-
-export interface RouterServiceHop {
-	pool: RouterServicePoolMetadata;
-	input: CoinType;
-	output: CoinType;
-	input_amount: number;
-	output_amount: number;
-	swap_fee: RouterServiceSwapFee;
-}
-
-export interface RouterServiceSwapFee {
-	input_fee_amount: number;
-	output_fee_amount: number;
-}
-
-export interface RouterServicePoolMetadata {
-	protocol: {
-		protocol: RouterProtocolName;
-	};
-	pool_id: ObjectId;
-	tb_data: any; // TBData
-	assets: [CoinType, CoinType];
 }

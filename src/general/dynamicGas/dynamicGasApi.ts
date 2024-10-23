@@ -119,11 +119,7 @@ export class DynamicGasApi {
 			signature: string;
 		} = await this.Provider.indexerCaller.fetchIndexer(
 			"dynamic-gas/apply",
-			body,
-			undefined,
-			undefined,
-			undefined,
-			true
+			body
 		);
 
 		return {

@@ -112,8 +112,7 @@ export class IndexerCaller {
 		body?: BodyType,
 		queryParams?: QueryParamsType,
 		urlPrefix?: string,
-		signal?: AbortSignal,
-		noNestedData?: boolean
+		signal?: AbortSignal
 	): Promise<Output> {
 		// TODO: handle bigint sending via indexer pattern ?
 
@@ -138,20 +137,13 @@ export class IndexerCaller {
 						Accept: "*/*",
 					},
 			  }));
-		if (noNestedData) {
-			return IndexerCaller.fetchResponseToType<Output>(uncastResponse);
-		}
-
-		const response = await IndexerCaller.fetchResponseToType<
-			IndexerResponse<Output>
-		>(uncastResponse);
-		return response.data;
+		return IndexerCaller.fetchResponseToType<Output>(uncastResponse);
 	}
 
 	public async fetchIndexerEvents<EventTypeOnChain, EventType>(
 		url: Url,
 		queryParams: ApiIndexerEventsBody,
-		castingFunc: (eventOnChain: EventTypeOnChain) => EventType,
+		castingFunc?: (eventOnChain: EventTypeOnChain) => EventType,
 		signal?: AbortSignal
 	): Promise<IndexerEventsWithCursor<EventType>> {
 		const limit = queryParams.limit ?? 10;
@@ -170,7 +162,9 @@ export class IndexerCaller {
 			signal
 		);
 
-		const events = eventsOnChain.map(castingFunc);
+		const events = castingFunc
+			? eventsOnChain.map(castingFunc)
+			: (eventsOnChain as unknown as EventType[]);
 		return {
 			events,
 			nextCursor: events.length < limit ? undefined : limit,

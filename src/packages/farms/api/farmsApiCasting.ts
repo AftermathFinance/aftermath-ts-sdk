@@ -17,7 +17,6 @@ import {
 	FarmsUnlockedEventOnChain,
 	FarmsWithdrewPrincipalEventOnChain,
 	FarmsStakingPoolOneTimeAdminCapFieldsOnChain,
-	FarmsIndexerVaultsResponse,
 } from "./farmsApiCastingTypes";
 import {
 	FarmsAddedRewardEvent,

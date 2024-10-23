@@ -53,10 +53,7 @@ export class RouterPricesApi implements PricesApiInterface {
 					undefined,
 					{
 						coin_types: coins,
-					},
-					undefined,
-					undefined,
-					true
+					}
 				);
 			return coins.reduce(
 				(acc, coin, index) => ({
