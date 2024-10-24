@@ -18,7 +18,6 @@ import {
 	StakedSuiVaultStateV1FieldsOnChain,
 	UnstakeRequestedEventOnChain,
 	UnstakedEventOnChain,
-	ValidatorConfigOnIndexer,
 	ValidatorOperationCapFieldsOnChain,
 } from "./stakingApiCastingTypes";
 import { Helpers } from "../../../general/utils";
