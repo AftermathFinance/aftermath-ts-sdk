@@ -904,6 +904,28 @@ export interface ApiPerpetualsTransferCollateralBody {
 	amount: Balance;
 }
 
+export interface ApiPerpetualsAllocateCollateralBody {
+	walletAddress: SuiAddress;
+	packageId: PackageId;
+	collateralCoinType: CoinType;
+	accountCapId: ObjectId;
+	marketId: PerpetualsMarketId;
+	marketInitialSharedVersion: ObjectVersion;
+	amount: Balance;
+}
+
+export interface ApiPerpetualsDeallocateCollateralBody {
+	walletAddress: SuiAddress;
+	packageId: PackageId;
+	collateralCoinType: CoinType;
+	accountCapId: ObjectId;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
+	marketId: PerpetualsMarketId;
+	marketInitialSharedVersion: ObjectVersion;
+	amount: Balance;
+}
+
 export interface ApiPerpetualsMarketOrderBody {
 	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
@@ -956,6 +978,17 @@ export interface ApiPerpetualsCancelOrdersBody {
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;
 	}[];
+}
+
+export interface ApiPerpetualsReduceOrdersBody {
+	walletAddress: SuiAddress;
+	packageId: PackageId;
+	collateralCoinType: CoinType;
+	accountCapId: ObjectId;
+	marketId: PerpetualsMarketId;
+	marketInitialSharedVersion: ObjectVersion;
+	orderIds: PerpetualsOrderId[];
+	sizesToSubtract: bigint[];
 }
 
 export type ApiPerpetualsSLTPOrderBody = (

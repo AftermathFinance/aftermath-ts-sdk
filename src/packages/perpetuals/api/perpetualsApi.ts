@@ -1459,6 +1459,45 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		});
 	};
 
+	public reduceOrdersTx = (inputs: {
+		tx: Transaction;
+		packageId: PackageId;
+		collateralCoinType: CoinType;
+		accountCapId: ObjectId;
+		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
+		orderIds: PerpetualsOrderId[];
+		sizesToSubtract: bigint[];
+	}) => {
+		const {
+			tx,
+			packageId,
+			collateralCoinType,
+			accountCapId,
+			marketId,
+			orderIds,
+			sizesToSubtract,
+		} = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				packageId,
+				PerpetualsApi.constants.moduleNames.interface,
+				"reduce_orders"
+			),
+			typeArguments: [collateralCoinType],
+			arguments: [
+				tx.sharedObjectRef({
+					objectId: marketId,
+					initialSharedVersion: inputs.marketInitialSharedVersion,
+					mutable: true,
+				}),
+				tx.object(accountCapId),
+				tx.pure(bcs.vector(bcs.u128()).serialize(orderIds)),
+				tx.pure(bcs.vector(bcs.u64()).serialize(sizesToSubtract)),
+			],
+		});
+	};
+
 	public withdrawCollateralTx = (inputs: {
 		tx: Transaction;
 		collateralCoinType: CoinType;
@@ -2147,14 +2186,16 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
-	// TODO: add to sdk
 	public buildAllocateCollateralTx = TransactionsApiHelpers.createBuildTxFunc(
 		this.allocateCollateralTx
 	);
 
-	// TODO: add to sdk
 	public buildDeallocateCollateralTx =
 		TransactionsApiHelpers.createBuildTxFunc(this.deallocateCollateralTx);
+
+	public buildReduceOrdersTx = TransactionsApiHelpers.createBuildTxFunc(
+		this.reduceOrdersTx
+	);
 
 	// =========================================================================
 	//  Helpers

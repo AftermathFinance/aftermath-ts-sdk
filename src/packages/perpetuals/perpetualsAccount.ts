@@ -50,6 +50,9 @@ import {
 	PackageId,
 	ApiPerpetualsPreviewReduceOrdersBody,
 	ApiPerpetualsPreviewReduceOrdersResponse,
+	ApiPerpetualsAllocateCollateralBody,
+	ApiPerpetualsDeallocateCollateralBody,
+	ApiPerpetualsReduceOrdersBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -112,6 +115,49 @@ export class PerpetualsAccount extends Caller {
 			"transactions/withdraw-collateral",
 			{
 				...inputs,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				accountCapId: this.accountCap.objectId,
+			}
+		);
+	}
+
+	public async getAllocateCollateralTx(inputs: {
+		walletAddress: SuiAddress;
+		market: PerpetualsMarket;
+		amount: Balance;
+	}) {
+		const { market } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsAllocateCollateralBody>(
+			"transactions/allocate-collateral",
+			{
+				...inputs,
+				packageId: market.marketData.packageId,
+				marketInitialSharedVersion:
+					market.marketData.initialSharedVersion,
+				marketId: market.marketId,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				accountCapId: this.accountCap.objectId,
+			}
+		);
+	}
+
+	public async getDeallocateCollateralTx(inputs: {
+		walletAddress: SuiAddress;
+		market: PerpetualsMarket;
+		amount: Balance;
+	}) {
+		const { market } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsDeallocateCollateralBody>(
+			"transactions/deallocate-collateral",
+			{
+				...inputs,
+				packageId: market.marketData.packageId,
+				marketInitialSharedVersion:
+					market.marketData.initialSharedVersion,
+				marketId: market.marketId,
+				basePriceFeedId: market.marketParams.basePriceFeedId,
+				collateralPriceFeedId:
+					market.marketParams.collateralPriceFeedId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
@@ -215,6 +261,33 @@ export class PerpetualsAccount extends Caller {
 			"transactions/cancel-orders",
 			{
 				...inputs,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				accountCapId: this.accountCap.objectId,
+			}
+		);
+	}
+
+	public async getReduceOrdersTx(inputs: {
+		walletAddress: SuiAddress;
+		market: PerpetualsMarket;
+		orderDatas: {
+			orderId: PerpetualsOrderId;
+			sizeToSubtract: bigint;
+		}[];
+	}) {
+		const { market, orderDatas } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsReduceOrdersBody>(
+			"transactions/reduce-orders",
+			{
+				...inputs,
+				orderIds: orderDatas.map((order) => order.orderId),
+				sizesToSubtract: orderDatas.map(
+					(order) => order.sizeToSubtract
+				),
+				packageId: market.marketData.packageId,
+				marketInitialSharedVersion:
+					market.marketData.initialSharedVersion,
+				marketId: market.marketId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
