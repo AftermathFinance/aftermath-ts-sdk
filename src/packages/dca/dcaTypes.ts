@@ -45,6 +45,12 @@ export interface ApiDcaTransactionForCloseOrderBody {
 //  DCA Order Fetch
 // =========================================================================
 
+export type DcaFailedTradeReason =
+	| "INTERNAL"
+	| "STRATEGY"
+	| "GAS_CAP"
+	| "UNKNOWN_USER";
+
 export interface DcaOrderTradeObject {
 	allocatedCoin: {
 		coin: CoinType;
@@ -57,6 +63,11 @@ export interface DcaOrderTradeObject {
 	tnxDigest: TransactionDigest;
 	tnxDate: Timestamp;
 	rate: number | undefined;
+}
+
+export interface DcaOrderFailedTradeObject {
+	timestamp: number;
+	reason: DcaFailedTradeReason | undefined;
 }
 
 export interface DcaOrdertStrategyObject {
@@ -99,6 +110,7 @@ export interface DcaOrderObject {
 	objectId: ObjectId;
 	overview: DcaOrderOverviewObject;
 	trades: DcaOrderTradeObject[];
+	failed: DcaOrderFailedTradeObject[];
 }
 
 export interface DcaOrdersObject {
