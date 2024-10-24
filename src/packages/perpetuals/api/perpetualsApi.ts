@@ -2098,7 +2098,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	public getAccountCapType = (inputs: {
 		collateralCoinType: CoinType;
 	}): string => {
-		return `${this.addresses.perpetuals.packages.perpetuals}::${PerpetualsApi.constants.moduleNames.account}::Account<${inputs.collateralCoinType}>`;
+		return `${this.addresses.perpetuals.packages.events}::${PerpetualsApi.constants.moduleNames.account}::Account<${inputs.collateralCoinType}>`;
 	};
 
 	// =========================================================================
