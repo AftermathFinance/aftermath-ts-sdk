@@ -215,13 +215,23 @@ export type PerpetualsPreviewOrderIndexerResponse =
 			error: string;
 	  };
 
-export type PerpetualsPreviewCancelOrdersIndexerResponse = {
-	position: PerpetualsPositionIndexerResponse;
-	collateral_change: IFixedAsStringBytes;
-};
-// | {
-// 		error: string;
-//   };
+export type PerpetualsPreviewCancelOrdersIndexerResponse =
+	| {
+			position: PerpetualsPositionIndexerResponse;
+			collateral_change: IFixedAsStringBytes;
+	  }
+	| {
+			error: string;
+	  };
+
+export type PerpetualsPreviewReduceOrdersIndexerResponse =
+	| {
+			position: PerpetualsPositionIndexerResponse;
+			collateral_change: IFixedAsStringBytes;
+	  }
+	| {
+			error: string;
+	  };
 
 export type PerpetualsMarketsIndexerResponse = Record<
 	PerpetualsMarketId,

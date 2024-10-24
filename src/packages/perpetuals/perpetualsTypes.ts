@@ -784,6 +784,24 @@ export interface ApiPerpetualsPreviewCancelOrdersBody {
 		}
 	>;
 }
+export interface ApiPerpetualsPreviewReduceOrdersBody {
+	marketId: PerpetualsMarketId;
+	accountId: PerpetualsAccountId;
+	leverage: number;
+	orderIds: PerpetualsOrderId[];
+	sizesToSubtract: bigint[];
+	// TODO: remove eventually ?
+	collateralCoinType: CoinType;
+}
+
+export type ApiPerpetualsPreviewReduceOrdersResponse =
+	| {
+			error: string;
+	  }
+	| {
+			positionAfterReduceOrders: PerpetualsPosition;
+			collateralChange: number;
+	  };
 
 export type ApiPerpetualsPreviewOrderResponse =
 	| {

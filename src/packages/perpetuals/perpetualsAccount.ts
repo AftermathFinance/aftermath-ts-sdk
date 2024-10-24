@@ -48,6 +48,8 @@ import {
 	ApiPerpetualsPreviewCancelOrdersBody,
 	ApiPerpetualsPreviewCancelOrdersResponse,
 	PackageId,
+	ApiPerpetualsPreviewReduceOrdersBody,
+	ApiPerpetualsPreviewReduceOrdersResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -367,6 +369,43 @@ export class PerpetualsAccount extends Caller {
 		return {
 			marketIdsToPositionAfterCancelOrders:
 				response.marketIdsToPositionAfterCancelOrders,
+			collateralChange: Coin.normalizeBalance(
+				response.collateralChange,
+				this.collateralDecimals()
+			),
+		};
+	}
+
+	public async getReduceOrdersPreview(
+		inputs: Omit<
+			ApiPerpetualsPreviewReduceOrdersBody,
+			"accountId" | "collateralCoinType"
+		>
+	): Promise<
+		| {
+				positionAfterReduceOrders: PerpetualsPosition;
+				collateralChange: Balance;
+		  }
+		| {
+				error: string;
+		  }
+	> {
+		// NOTE: should this case not throw an error instead ?
+		if (Object.keys(inputs.orderIds).length <= 0)
+			throw new Error("no order ids provided");
+
+		const response = await this.fetchApi<
+			ApiPerpetualsPreviewReduceOrdersResponse,
+			ApiPerpetualsPreviewReduceOrdersBody
+		>("preview-reduce-orders", {
+			...inputs,
+			accountId: this.accountCap.accountId,
+			collateralCoinType: this.accountCap.collateralCoinType,
+		});
+		if ("error" in response) return response;
+
+		return {
+			positionAfterReduceOrders: response.positionAfterReduceOrders,
 			collateralChange: Coin.normalizeBalance(
 				response.collateralChange,
 				this.collateralDecimals()

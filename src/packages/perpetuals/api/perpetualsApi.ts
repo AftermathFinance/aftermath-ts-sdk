@@ -76,6 +76,8 @@ import {
 	ApiPerpetualsAccountCollateralHistoryBody,
 	ApiPerpetualsPreviewCancelOrdersBody,
 	ApiPerpetualsPreviewCancelOrdersResponse,
+	ApiPerpetualsPreviewReduceOrdersBody,
+	ApiPerpetualsPreviewReduceOrdersResponse,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -97,6 +99,7 @@ import {
 	PerpetualsMarketsIndexerResponse,
 	PerpetualsPreviewCancelOrdersIndexerResponse,
 	PerpetualsPreviewOrderIndexerResponse,
+	PerpetualsPreviewReduceOrdersIndexerResponse,
 	PostedOrderEventOnChain,
 	PostedOrderReceiptEventOnChain,
 	SettledFundingEventOnChain,
@@ -907,6 +910,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 							undefined,
 							true
 						);
+					if ("error" in response) return response;
 
 					const positionAfterCancelOrders =
 						Casting.perpetuals.positionFromIndexerReponse({
@@ -927,11 +931,18 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				}
 			)
 		);
+		const errorResponse = responses.find((response) => "error" in response);
+		if (errorResponse && "error" in errorResponse) return errorResponse;
+
 		return responses.reduce(
-			(
-				acc,
-				{ marketId, positionAfterCancelOrders, collateralChange }
-			) => {
+			(acc, response) => {
+				if ("error" in response) return acc;
+
+				const {
+					marketId,
+					positionAfterCancelOrders,
+					collateralChange,
+				} = response;
 				return {
 					marketIdsToPositionAfterCancelOrders: {
 						...acc.marketIdsToPositionAfterCancelOrders,
@@ -945,6 +956,60 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				collateralChange: 0,
 			}
 		);
+	};
+
+	public fetchPreviewReduceOrders = async (
+		inputs: ApiPerpetualsPreviewReduceOrdersBody
+	): Promise<ApiPerpetualsPreviewReduceOrdersResponse> => {
+		const {
+			accountId,
+			leverage,
+			marketId,
+			orderIds,
+			sizesToSubtract,
+			collateralCoinType,
+		} = inputs;
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			PerpetualsPreviewReduceOrdersIndexerResponse,
+			{
+				ch_id: PerpetualsMarketId;
+				account_id: number;
+				leverage: number;
+				order_ids: string[];
+				sizes_to_sub: number[]; // Vec<u64>
+			}
+		>(
+			`perpetuals/previews/reduce-orders`,
+			{
+				leverage,
+				ch_id: marketId,
+				account_id: Number(accountId),
+				order_ids: orderIds.map((orderId) =>
+					orderId.toString().replaceAll("n", "")
+				),
+				sizes_to_sub: sizesToSubtract.map((size) => Number(size)),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+		if ("error" in response) return response;
+
+		const positionAfterReduceOrders =
+			Casting.perpetuals.positionFromIndexerReponse({
+				marketId,
+				leverage,
+				collateralCoinType,
+				position: response.position,
+			});
+		return {
+			positionAfterReduceOrders,
+			collateralChange: Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(response.collateral_change)
+			),
+		};
 	};
 
 	// public fetchOrderbookPrice = async (inputs: {
