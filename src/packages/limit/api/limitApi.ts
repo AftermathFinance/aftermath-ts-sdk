@@ -131,8 +131,7 @@ export class LimitApi {
 		});
 
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
-		// TODO: - replace fetchIndexerTest with fetchIndexer
-		const { tx_data } = await this.Provider.indexerCaller.fetchIndexerTest<
+		const { tx_data } = await this.Provider.indexerCaller.fetchIndexer<
 			LimitIndexerOrderCreateResponse,
 			LimitIndexerOrderCreateRequest
 		>(
@@ -180,8 +179,7 @@ export class LimitApi {
 	public fetchCancelLimitOrder = async (
 		inputs: ApiLimitTransactionForCancelOrderBody
 	): Promise<boolean> => {
-		// TODO: - replace fetchIndexerTest with fetchIndexer
-		return this.Provider.indexerCaller.fetchIndexerTest<
+		return this.Provider.indexerCaller.fetchIndexer<
 			LimitIndexerOrderCancelResponse,
 			LimitIndexerOrderCancelRequest
 		>(
@@ -208,25 +206,23 @@ export class LimitApi {
 		signature: string;
 	}): Promise<LimitOrderObject[]> => {
 		const { walletAddress, bytes, signature } = inputs;
-		const uncastedResponse =
-			// TODO: - replace fetchIndexerTest with fetchIndexer
-			await this.Provider.indexerCaller.fetchIndexerTest<
-				{
-					orders: LimitIndexerOrderResponse[];
-				},
-				LimitIndexerActiveOrdersRequest
-			>(
-				`limit/active`,
-				{
-					wallet_address: walletAddress,
-					bytes,
-					signature,
-				},
-				undefined,
-				undefined,
-				undefined,
-				true
-			);
+		const uncastedResponse = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				orders: LimitIndexerOrderResponse[];
+			},
+			LimitIndexerActiveOrdersRequest
+		>(
+			`limit/active`,
+			{
+				wallet_address: walletAddress,
+				bytes,
+				signature,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 		console.log("fetchActiveOrdersObjects", { uncastedResponse });
 		const orders = uncastedResponse.orders
 			.sort(
@@ -242,23 +238,21 @@ export class LimitApi {
 		walletAddress: SuiAddress;
 	}): Promise<LimitOrderObject[]> => {
 		const { walletAddress } = inputs;
-		const uncastedResponse =
-			// TODO: - replace fetchIndexerTest with fetchIndexer
-			await this.Provider.indexerCaller.fetchIndexerTest<
-				{
-					orders: LimitIndexerOrderResponse[];
-				},
-				LimitIndexerOrdersRequest
-			>(
-				`limit/executed`,
-				{
-					user_address: walletAddress,
-				},
-				undefined,
-				undefined,
-				undefined,
-				true
-			);
+		const uncastedResponse = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				orders: LimitIndexerOrderResponse[];
+			},
+			LimitIndexerOrdersRequest
+		>(
+			`limit/executed`,
+			{
+				user_address: walletAddress,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
 		console.log("fetchExecutedOrdersObjects", { uncastedResponse });
 		const orders = uncastedResponse.orders
 			.sort(

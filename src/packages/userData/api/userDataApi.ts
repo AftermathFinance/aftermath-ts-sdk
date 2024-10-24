@@ -24,8 +24,7 @@ export class UserDataApi {
 	public fetchUserPublicKey = async (
 		inputs: ApiUserDataOwnedBody
 	): Promise<string | undefined> => {
-		// TODO: - replace fetchIndexerTest with fetchIndexer
-		const data = await this.Provider.indexerCaller.fetchIndexerTest<
+		const data = await this.Provider.indexerCaller.fetchIndexer<
 			UserDataIndexerUserResponse,
 			UserDataIndexerUserRequest
 		>(
@@ -50,8 +49,7 @@ export class UserDataApi {
 	public fetchCreateUserPublicKey = async (
 		inputs: ApiUserDataCreateUserBody
 	): Promise<boolean> => {
-		// TODO: - replace fetchIndexerTest with fetchIndexer
-		return this.Provider.indexerCaller.fetchIndexerTest<
+		return this.Provider.indexerCaller.fetchIndexer<
 			UserDataIndexerCreateUserResponse,
 			UserDataIndexerCreateUserRequest
 		>(
