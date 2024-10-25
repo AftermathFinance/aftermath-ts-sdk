@@ -78,6 +78,7 @@ import {
 	ApiPerpetualsPreviewCancelOrdersResponse,
 	ApiPerpetualsPreviewReduceOrdersBody,
 	ApiPerpetualsPreviewReduceOrdersResponse,
+	ApiPerpetualsReduceOrdersBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -2197,19 +2198,9 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	public buildDeallocateCollateralTx =
 		TransactionsApiHelpers.createBuildTxFunc(this.deallocateCollateralTx);
 
-	public buildReduceOrdersTx = (inputs: {
-		walletAddress: SuiAddress;
-		packageId: PackageId;
-		collateralCoinType: CoinType;
-		accountCapId: ObjectId;
-		marketId: PerpetualsMarketId;
-		marketInitialSharedVersion: ObjectVersion;
-		orderIds: PerpetualsOrderId[];
-		sizesToSubtract: bigint[];
-		basePriceFeedId: ObjectId;
-		collateralPriceFeedId: ObjectId;
-		collateralChange: Balance;
-	}): Transaction => {
+	public buildReduceOrdersTx = (
+		inputs: ApiPerpetualsReduceOrdersBody
+	): Transaction => {
 		const {
 			walletAddress,
 			collateralChange,

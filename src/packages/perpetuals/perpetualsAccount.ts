@@ -270,6 +270,7 @@ export class PerpetualsAccount extends Caller {
 	public async getReduceOrdersTx(inputs: {
 		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
+		collateralChange: Balance;
 		orderDatas: {
 			orderId: PerpetualsOrderId;
 			sizeToSubtract: bigint;

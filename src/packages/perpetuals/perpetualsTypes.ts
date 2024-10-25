@@ -991,6 +991,7 @@ export interface ApiPerpetualsReduceOrdersBody {
 	sizesToSubtract: bigint[];
 	basePriceFeedId: ObjectId;
 	collateralPriceFeedId: ObjectId;
+	collateralChange: Balance;
 }
 
 export type ApiPerpetualsSLTPOrderBody = (
