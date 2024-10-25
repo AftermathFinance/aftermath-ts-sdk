@@ -989,6 +989,8 @@ export interface ApiPerpetualsReduceOrdersBody {
 	marketInitialSharedVersion: ObjectVersion;
 	orderIds: PerpetualsOrderId[];
 	sizesToSubtract: bigint[];
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
 }
 
 export type ApiPerpetualsSLTPOrderBody = (

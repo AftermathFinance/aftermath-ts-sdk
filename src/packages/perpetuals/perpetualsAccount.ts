@@ -288,6 +288,9 @@ export class PerpetualsAccount extends Caller {
 				marketInitialSharedVersion:
 					market.marketData.initialSharedVersion,
 				marketId: market.marketId,
+				basePriceFeedId: market.marketParams.basePriceFeedId,
+				collateralPriceFeedId:
+					market.marketParams.collateralPriceFeedId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 				accountCapId: this.accountCap.objectId,
 			}
@@ -452,8 +455,13 @@ export class PerpetualsAccount extends Caller {
 	public async getReduceOrdersPreview(
 		inputs: Omit<
 			ApiPerpetualsPreviewReduceOrdersBody,
-			"accountId" | "collateralCoinType"
-		>
+			"accountId" | "collateralCoinType" | "orderIds" | "sizesToSubtract"
+		> & {
+			orderDatas: {
+				orderId: PerpetualsOrderId;
+				sizeToSubtract: bigint;
+			}[];
+		}
 	): Promise<
 		| {
 				positionAfterReduceOrders: PerpetualsPosition;
@@ -464,14 +472,18 @@ export class PerpetualsAccount extends Caller {
 		  }
 	> {
 		// NOTE: should this case not throw an error instead ?
-		if (Object.keys(inputs.orderIds).length <= 0)
-			throw new Error("no order ids provided");
+		if (Object.keys(inputs.orderDatas).length <= 0)
+			throw new Error("no orderDatas provided");
 
 		const response = await this.fetchApi<
 			ApiPerpetualsPreviewReduceOrdersResponse,
 			ApiPerpetualsPreviewReduceOrdersBody
 		>("preview-reduce-orders", {
 			...inputs,
+			orderIds: inputs.orderDatas.map((order) => order.orderId),
+			sizesToSubtract: inputs.orderDatas.map(
+				(order) => order.sizeToSubtract
+			),
 			accountId: this.accountCap.accountId,
 			collateralCoinType: this.accountCap.collateralCoinType,
 		});

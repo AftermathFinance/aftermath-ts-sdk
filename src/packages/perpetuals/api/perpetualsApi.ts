@@ -431,9 +431,10 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	public async fetchAccountCollateralHistory(
 		inputs: ApiPerpetualsAccountCollateralHistoryBody & {
 			accountId: PerpetualsAccountId;
+			collateralCoinType: CoinType;
 		}
 	): Promise<PerpetualsAccountCollateralChangesWithCursor> {
-		const { accountId, cursor, limit } = inputs;
+		const { accountId, collateralCoinType, cursor, limit } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
 			{
@@ -446,6 +447,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			}[],
 			{
 				account_id: number;
+				collateral_type: CoinType;
 				timestamp_before_ms: Timestamp; // u64
 				limit: number; // u64
 			}
@@ -453,6 +455,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			`perpetuals/accounts/collateral-history`,
 			{
 				account_id: Number(accountId),
+				collateral_type:
+					Helpers.addLeadingZeroesToType(collateralCoinType),
 				timestamp_before_ms: cursor ?? new Date().valueOf(),
 				limit: limit ?? PerpetualsApi.constants.defaultLimitStepSize,
 			},
@@ -2193,9 +2197,75 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	public buildDeallocateCollateralTx =
 		TransactionsApiHelpers.createBuildTxFunc(this.deallocateCollateralTx);
 
-	public buildReduceOrdersTx = TransactionsApiHelpers.createBuildTxFunc(
-		this.reduceOrdersTx
-	);
+	public buildReduceOrdersTx = (inputs: {
+		walletAddress: SuiAddress;
+		packageId: PackageId;
+		collateralCoinType: CoinType;
+		accountCapId: ObjectId;
+		marketId: PerpetualsMarketId;
+		marketInitialSharedVersion: ObjectVersion;
+		orderIds: PerpetualsOrderId[];
+		sizesToSubtract: bigint[];
+		basePriceFeedId: ObjectId;
+		collateralPriceFeedId: ObjectId;
+		collateralChange: Balance;
+	}): Transaction => {
+		const {
+			walletAddress,
+			collateralChange,
+			accountCapId,
+			collateralCoinType,
+			marketId,
+			marketInitialSharedVersion,
+			packageId,
+			basePriceFeedId,
+			collateralPriceFeedId,
+			orderIds,
+			sizesToSubtract,
+		} = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		this.reduceOrdersTx({
+			tx,
+			packageId,
+			collateralCoinType,
+			accountCapId,
+			marketId,
+			marketInitialSharedVersion,
+			orderIds,
+			sizesToSubtract,
+		});
+
+		if (collateralChange < BigInt(0)) {
+			this.deallocateCollateralTx({
+				tx,
+				accountCapId,
+				collateralCoinType,
+				marketId,
+				marketInitialSharedVersion,
+				packageId,
+				basePriceFeedId,
+				collateralPriceFeedId,
+				amount: Helpers.absBigInt(collateralChange),
+			});
+		} else if (collateralChange > BigInt(0)) {
+			this.allocateCollateralTx({
+				tx,
+				accountCapId,
+				collateralCoinType,
+				marketId,
+				marketInitialSharedVersion,
+				packageId,
+				amount: collateralChange,
+			});
+		} else {
+			// no collateral change
+		}
+
+		return tx;
+	};
 
 	// =========================================================================
 	//  Helpers
