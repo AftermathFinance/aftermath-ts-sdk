@@ -30,6 +30,7 @@ import {
 	PerpetualsAccountId,
 	UpdatedFundingEvent,
 	UpdatedMarketVersionEvent,
+	ReducedOrderEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -58,6 +59,7 @@ import {
 	PerpetualsOrderbookIndexerResponse,
 	UpdatedFundingEventOnChain,
 	UpdatedMarketVersionEventOnChain,
+	ReducedOrderEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
 import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types";
@@ -634,6 +636,21 @@ export class PerpetualsApiCasting {
 			size: BigInt(fields.order_size),
 			orderId: BigInt(fields.order_id),
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static reducedOrderEventFromOnChain = (
+		eventOnChain: ReducedOrderEventOnChain
+	): ReducedOrderEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			accountId: BigInt(fields.account_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+			sizeChange: BigInt(fields.size_change),
+			orderId: BigInt(fields.order_id),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

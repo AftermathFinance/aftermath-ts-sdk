@@ -369,6 +369,13 @@ export type PostedOrderReceiptEventOnChain = EventOnChain<{
 	order_size: BigIntAsString;
 }>;
 
+export type ReducedOrderEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	account_id: BigIntAsString;
+	size_change: BigIntAsString;
+	order_id: BigIntAsString;
+}>;
+
 // =========================================================================
 //  Twap
 // =========================================================================

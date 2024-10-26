@@ -615,7 +615,8 @@ export type PerpetualsOrderEvent =
 	| PostedOrderReceiptEvent
 	| FilledMakerOrderEvent
 	| FilledTakerOrderEvent
-	| LiquidatedEvent;
+	| LiquidatedEvent
+	| ReducedOrderEvent;
 
 export interface PostedOrderReceiptEvent extends Event {
 	accountId: PerpetualsAccountId;
@@ -623,6 +624,13 @@ export interface PostedOrderReceiptEvent extends Event {
 	orderId: PerpetualsOrderId;
 	size: bigint;
 	side: PerpetualsOrderSide;
+}
+
+export interface ReducedOrderEvent extends Event {
+	marketId: PerpetualsMarketId;
+	accountId: PerpetualsAccountId;
+	sizeChange: bigint;
+	orderId: PerpetualsOrderId;
 }
 
 // TODO: make all these checks use string value from perps api
@@ -653,6 +661,12 @@ export const isFilledTakerOrderEvent = (
 	event: Event
 ): event is FilledTakerOrderEvent => {
 	return event.type.toLowerCase().endsWith("::filledtakerorder");
+};
+
+export const isReducedOrderEvent = (
+	event: Event
+): event is ReducedOrderEvent => {
+	return event.type.toLowerCase().endsWith("::reducedorder");
 };
 
 // =========================================================================

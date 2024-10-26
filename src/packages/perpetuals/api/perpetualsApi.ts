@@ -157,6 +157,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		updatedFunding: AnyObjectType;
 		updatedMarketVersion: AnyObjectType;
 		filledTakerOrderLiquidator: AnyObjectType;
+		reducedOrder: AnyObjectType;
 	};
 	public readonly moveErrors: MoveErrors;
 
@@ -195,6 +196,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			postedOrder: this.eventType("PostedOrder"),
 			filledMakerOrder: this.eventType("FilledMakerOrder"),
 			filledTakerOrder: this.eventType("FilledTakerOrder"),
+			reducedOrder: this.eventType("ReducedOrder"),
 			// Order Receipts
 			postedOrderReceipt: this.eventType("OrderbookPostReceipt"),
 			// Twap
