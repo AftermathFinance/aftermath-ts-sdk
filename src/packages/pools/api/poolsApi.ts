@@ -436,8 +436,8 @@ export class PoolsApi implements MoveErrorsInterface {
 			{
 				cursor,
 				limit,
-			},
-			Casting.pools.poolTradeEventFromIndexerOnChain
+			}
+			// Casting.pools.poolTradeEventFromIndexerOnChain
 		);
 	}
 
@@ -458,8 +458,8 @@ export class PoolsApi implements MoveErrorsInterface {
 			{
 				cursor,
 				limit,
-			},
-			Casting.pools.poolWithdrawEventFromIndexerOnChain
+			}
+			// Casting.pools.poolWithdrawEventFromIndexerOnChain
 		);
 	}
 
@@ -480,8 +480,8 @@ export class PoolsApi implements MoveErrorsInterface {
 			{
 				cursor,
 				limit,
-			},
-			Casting.pools.poolDepositEventFromIndexerOnChain
+			}
+			// Casting.pools.poolDepositEventFromIndexerOnChain
 		);
 	}
 
@@ -504,23 +504,22 @@ export class PoolsApi implements MoveErrorsInterface {
 			dayjs.extend(duration);
 			const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
 
-			const tradeEventsOnChain =
-				await this.Provider.indexerCaller.fetchIndexer<
-					IndexerEventOnChain<PoolTradeEventOnChainFields>[],
-					undefined,
-					IndexerDataWithCursorQueryParams
-				>(
-					`pools/${poolId}/swap-events-within-time/${durationMs}`,
-					undefined,
-					{
-						skip: 0,
-						limit: 10000, // max from mongo ?
-					}
-				);
-
-			return tradeEventsOnChain.map(
-				Casting.pools.poolTradeEventFromIndexerOnChain
+			return this.Provider.indexerCaller.fetchIndexer<
+				PoolTradeEvent[],
+				undefined,
+				IndexerDataWithCursorQueryParams
+			>(
+				`pools/${poolId}/swap-events-within-time/${durationMs}`,
+				undefined,
+				{
+					skip: 0,
+					limit: 10000, // max from mongo ?
+				}
 			);
+
+			// return tradeEventsOnChain.map(
+			// 	Casting.pools.poolTradeEventFromIndexerOnChain
+			// );
 		} catch (e) {
 			return [];
 		}

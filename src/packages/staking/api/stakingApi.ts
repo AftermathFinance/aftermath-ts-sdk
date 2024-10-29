@@ -28,6 +28,7 @@ import {
 	UnstakeRequestedEvent,
 	StakedSuiVaultStateObject,
 	AfSuiRouterPoolObject,
+	EpochWasChangedEvent,
 } from "../stakingTypes";
 import {
 	AnyObjectType,
@@ -906,13 +907,13 @@ export class StakingApi implements MoveErrorsInterface {
 
 	public async fetchEpochWasChangedEvents(inputs: ApiIndexerEventsBody) {
 		const { cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/events/epoch-was-changed`,
-			{
-				cursor,
-				limit,
-			}
-		);
+		return this.Provider.indexerCaller.fetchIndexerEvents<
+			unknown,
+			EpochWasChangedEvent
+		>(`staking/events/epoch-was-changed`, {
+			cursor,
+			limit,
+		});
 	}
 
 	public async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
