@@ -48,13 +48,14 @@ export class RouterPricesApi implements PricesApiInterface {
 			if (coins.length <= 0) return {};
 
 			const prices: number[] =
-				await this.Provider.indexerCaller.fetchIndexer(
-					"prices",
-					undefined,
+				await this.Provider.indexerCaller.fetchIndexer<
+					number[],
 					{
-						coin_types: coins,
+						coin_types: CoinType[];
 					}
-				);
+				>("prices", {
+					coin_types: coins,
+				});
 			return coins.reduce(
 				(acc, coin, index) => ({
 					...acc,

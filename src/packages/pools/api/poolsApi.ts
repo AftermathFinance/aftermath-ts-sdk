@@ -379,13 +379,14 @@ export class PoolsApi implements MoveErrorsInterface {
 	public fetchPools = async (inputs: {
 		objectIds: ObjectId[];
 	}): Promise<PoolObject[]> => {
-		return this.Provider.indexerCaller.fetchIndexer<PoolObject[]>(
-			"pools",
-			undefined,
+		return this.Provider.indexerCaller.fetchIndexer<
+			PoolObject[],
 			{
-				pool_ids: inputs.objectIds,
+				pool_ids: ObjectId[];
 			}
-		);
+		>("pools", {
+			pool_ids: inputs.objectIds,
+		});
 	};
 
 	/**
@@ -394,7 +395,10 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @returns {Promise<PoolObject[]>} A promise that resolves to an array of all fetched pool objects.
 	 */
 	public fetchAllPools = async (): Promise<PoolObject[]> => {
-		return this.Provider.indexerCaller.fetchIndexer<PoolObject[]>("pools");
+		return this.Provider.indexerCaller.fetchIndexer<PoolObject[], {}>(
+			"pools",
+			{}
+		);
 	};
 
 	public fetchOwnedDaoFeePoolOwnerCaps = async (

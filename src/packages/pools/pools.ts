@@ -157,7 +157,7 @@ export class Pools extends Caller {
 	 * @returns A Promise that resolves to the transaction data.
 	 */
 	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
-		return this.useProvider().fetchCreatePoolTx(inputs);
+		return this.fetchApiTransaction("transactions/create-pool", inputs);
 	}
 
 	// =========================================================================

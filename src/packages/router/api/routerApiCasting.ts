@@ -4,7 +4,10 @@ import {
 	RouterTradeEvent,
 	RouterTradeRoute,
 } from "../routerTypes";
-import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
+import {
+	RouterServiceProtocol,
+	RouterTradeEventOnChain,
+} from "./routerApiCastingTypes";
 
 export class RouterApiCasting {
 	// =========================================================================
