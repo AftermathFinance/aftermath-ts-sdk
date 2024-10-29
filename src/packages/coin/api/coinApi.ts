@@ -64,18 +64,11 @@ export class CoinApi {
 			{
 				coin_types: CoinType[];
 			}
-		>(
-			"coins/metadata",
-			{
-				coin_types: coins.map((coin) =>
-					Helpers.addLeadingZeroesToType(coin)
-				),
-			},
-			undefined,
-			undefined,
-			undefined,
-			true
-		);
+		>("coins/metadata", {
+			coin_types: coins.map((coin) =>
+				Helpers.addLeadingZeroesToType(coin)
+			),
+		});
 
 		return Promise.all(
 			response.coin_metadata.map((metadata, index) => {
