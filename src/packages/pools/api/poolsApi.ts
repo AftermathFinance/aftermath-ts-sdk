@@ -1866,81 +1866,14 @@ export class PoolsApi implements MoveErrorsInterface {
 	//  Stats
 	// =========================================================================
 
-	/**
-	 * Fetches statistics for a given pool.
-	 * @param inputs An object containing the pool, trade events within a certain time frame, coins to price, and coins to decimals.
-	 * @returns A Promise that resolves to a PoolStats object containing the volume, TVL, supply per LP token, LP token price, fees, and APY.
-	 */
-	public fetchPoolStats = this.Provider.withCache({
-		key: "fetchPoolStats",
-		expirationSeconds: 60 * 5,
-		callback: async (inputs: { poolId: ObjectId }): Promise<PoolStats> => {
-			const { poolId } = inputs;
-
-			const pool = await this.fetchPool({ objectId: poolId });
-
-			const poolCoins = pool.coins;
-			const poolCoinTypes = Object.keys(pool.coins);
-
-			// TODO: move common milliseconds to constants or use dayjs
-			const durationMs24hrs = 86400000;
-
-			const [coinsToPrice, coinsToDecimals, volumes] = await Promise.all([
-				this.Provider.Prices().fetchCoinsToPrice({
-					coins: poolCoinTypes,
-				}),
-				this.Provider.Coin().fetchCoinsToDecimals({
-					coins: poolCoinTypes,
-				}),
-				this.fetchPoolVolume({
-					poolId: pool.objectId,
-					durationMs: durationMs24hrs,
-				}),
-			]);
-			const volume = Helpers.calcIndexerVolumeUsd({
-				volumes,
-				coinsToDecimals,
-				coinsToPrice,
-			});
-
-			const tvl = this.calcPoolTvl({
-				poolCoins: pool.coins,
-				coinsToPrice,
-				coinsToDecimals,
-			});
-			const supplyPerLps = this.calcPoolSupplyPerLps(
-				poolCoins,
-				pool.lpCoinSupply
-			);
-			const lpPrice = this.calcPoolLpPrice({
-				lpCoinDecimals: pool.lpCoinDecimals,
-				lpCoinSupply: pool.lpCoinSupply,
-				tvl,
-			});
-
-			// this is okay since all trade fees are currently the same for every coin
-			const firstCoin = Object.values(pool.coins)[0];
-			const fees =
-				volume *
-				FixedUtils.directCast(
-					firstCoin.tradeFeeIn + firstCoin.tradeFeeOut
-				);
-
-			const apr = this.calcApr({
-				fees24Hours: fees,
-				tvl,
-			});
-
-			return {
-				volume,
-				tvl,
-				supplyPerLps,
-				lpPrice,
-				fees,
-				apr,
-			};
-		},
-	});
+	public fetchPoolsStats = async (inputs: {
+		poolIds: ObjectId[];
+	}): Promise<PoolStats[]> => {
+		const { poolIds } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer("pools/stats", {
+			pool_ids: poolIds,
+		});
+	};
 
 	/**
 	 * Fetches the pool volume for a given pool and duration.
@@ -2102,9 +2035,9 @@ export class PoolsApi implements MoveErrorsInterface {
 			}
 		) as ObjectId[];
 
-		const poolStats = await Promise.all(
-			lpCoinPoolObjectIds.map((poolId) => this.fetchPoolStats({ poolId }))
-		);
+		const poolStats = await this.fetchPoolsStats({
+			poolIds: lpCoinPoolObjectIds.map((poolId) => poolId),
+		});
 
 		let lpCoinsToPrice: CoinsToPrice = {};
 

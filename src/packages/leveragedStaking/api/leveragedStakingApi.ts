@@ -1274,55 +1274,56 @@ export class LeveragedStakingApi {
 	public async fetchPerformanceData(
 		inputs: LeveragedStakingPerformanceDataBody
 	): Promise<LeveragedStakingPerformanceDataPoint[]> {
-		const { timeframe, borrowRate, maxLeverage } = inputs;
+		// const { timeframe, borrowRate, maxLeverage } = inputs;
 
-		dayjs.extend(duration);
-		const limit = // days ~ epochs
-			dayjs
-				.duration(
-					LeveragedStakingApi.dataTimeframesToDays[timeframe],
-					"days"
-				)
-				// + 2 to account for apy being calculated from events delta
-				// (and possible initial 0 afsui supply)
-				.asDays() + 2;
+		// dayjs.extend(duration);
+		// const limit = // days ~ epochs
+		// 	dayjs
+		// 		.duration(
+		// 			LeveragedStakingApi.dataTimeframesToDays[timeframe],
+		// 			"days"
+		// 		)
+		// 		// + 2 to account for apy being calculated from events delta
+		// 		// (and possible initial 0 afsui supply)
+		// 		.asDays() + 2;
 
-		// TODO: fetch borrow rate historically once scallop implements
-		const [recentEpochChanges] = await Promise.all([
-			this.Provider.Staking().fetchEpochWasChangedEvents({
-				limit,
-			}),
-		]);
-		if (recentEpochChanges.events.length <= 2) return [];
+		// // TODO: fetch borrow rate historically once scallop implements
+		// const [recentEpochChanges] = await Promise.all([
+		// 	this.Provider.Staking().fetchEpochWasChangedEvents({
+		// 		limit,
+		// 	}),
+		// ]);
+		// if (recentEpochChanges.events.length <= 2) return [];
 
-		const daysInYear = 365;
-		const timeData = recentEpochChanges.events
-			.slice(2)
-			.map((event, index) => {
-				const currentRate = Number(event.totalAfSuiSupply)
-					? Number(event.totalSuiAmount) /
-					  Number(event.totalAfSuiSupply)
-					: 1;
+		// const daysInYear = 365;
+		// const timeData = recentEpochChanges.events
+		// 	.slice(2)
+		// 	.map((event, index) => {
+		// 		const currentRate = Number(event.totalAfSuiSupply)
+		// 			? Number(event.totalSuiAmount) /
+		// 			  Number(event.totalAfSuiSupply)
+		// 			: 1;
 
-				const pastEvent = recentEpochChanges.events[index + 1];
-				const pastRate = Number(pastEvent.totalAfSuiSupply)
-					? Number(pastEvent.totalSuiAmount) /
-					  Number(pastEvent.totalAfSuiSupply)
-					: 1;
+		// 		const pastEvent = recentEpochChanges.events[index + 1];
+		// 		const pastRate = Number(pastEvent.totalAfSuiSupply)
+		// 			? Number(pastEvent.totalSuiAmount) /
+		// 			  Number(pastEvent.totalAfSuiSupply)
+		// 			: 1;
 
-				const afSuiApy =
-					((currentRate - pastRate) / pastRate) * daysInYear;
-				return {
-					time: event.timestamp ?? 0,
-					sui: 0,
-					afSui: afSuiApy,
-					leveragedAfSui:
-						maxLeverage *
-						(afSuiApy - borrowRate * (1 - 1 / maxLeverage)),
-				};
-			});
+		// 		const afSuiApy =
+		// 			((currentRate - pastRate) / pastRate) * daysInYear;
+		// 		return {
+		// 			time: event.timestamp ?? 0,
+		// 			sui: 0,
+		// 			afSui: afSuiApy,
+		// 			leveragedAfSui:
+		// 				maxLeverage *
+		// 				(afSuiApy - borrowRate * (1 - 1 / maxLeverage)),
+		// 		};
+		// 	});
 
-		return timeData;
+		// return timeData;
+		throw new Error("not implemented");
 	}
 
 	// =========================================================================

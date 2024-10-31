@@ -262,6 +262,7 @@ export class StakingApi implements MoveErrorsInterface {
 		});
 	};
 
+	// TODO: move to indexer
 	public fetchStakedSuiVaultState =
 		async (): Promise<StakedSuiVaultStateObject> => {
 			return this.Provider.Objects().fetchCastObject({
@@ -719,16 +720,17 @@ export class StakingApi implements MoveErrorsInterface {
 	 */
 	public fetchAllPositions = async (inputs: {
 		walletAddress: SuiAddress;
+		cursor?: number;
+		limit?: number;
 	}): Promise<StakingPosition[]> => {
-		const [stakes, unstakes] = await Promise.all([
-			this.fetchAllStakePositions(inputs),
-			this.fetchAllUnstakePositions(inputs),
-		]);
-
-		const positions = [...stakes, ...unstakes];
-
-		return positions.sort(
-			(a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer(
+			`staking/${walletAddress}/positions/all`,
+			undefined,
+			{
+				cursor,
+				limit,
+			}
 		);
 	};
 
@@ -740,18 +742,18 @@ export class StakingApi implements MoveErrorsInterface {
 	 */
 	public fetchAllStakePositions = async (inputs: {
 		walletAddress: SuiAddress;
+		cursor?: number;
+		limit?: number;
 	}): Promise<StakePosition[]> => {
-		const { walletAddress } = inputs;
-
-		const stakedEvents = (
-			await this.fetchStakedEvents({
-				cursor: 0,
-				limit: 100,
-				walletAddress,
-			})
-		).events;
-
-		return stakedEvents;
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer(
+			`staking/${walletAddress}/positions/stake`,
+			undefined,
+			{
+				cursor,
+				limit,
+			}
+		);
 	};
 
 	/**
@@ -762,67 +764,18 @@ export class StakingApi implements MoveErrorsInterface {
 	 */
 	public fetchAllUnstakePositions = async (inputs: {
 		walletAddress: SuiAddress;
+		cursor?: number;
+		limit?: number;
 	}): Promise<UnstakePosition[]> => {
-		const { walletAddress } = inputs;
-
-		const cursor = 0;
-		const limit = 100;
-		const [unstakedEvents, requestedEvents] = await Promise.all([
-			// unstaked
-			(
-				await this.fetchUnstakedEvents({
-					cursor,
-					limit,
-					walletAddress,
-				})
-			).events,
-			// unstake requested
-			(
-				await this.fetchUnstakeRequestedEvents({
-					cursor,
-					limit,
-					walletAddress,
-				})
-			).events,
-		]);
-
-		const partiallyMergedPositions: UnstakePosition[] = requestedEvents.map(
-			(request) => {
-				const foundMintIndex = unstakedEvents.findIndex(
-					(mint) => mint.afSuiId === request.afSuiId
-				);
-				if (foundMintIndex >= 0)
-					return {
-						...unstakedEvents[foundMintIndex],
-						state: "SUI_MINTED",
-						epoch: request.epoch,
-					};
-
-				return {
-					state: "REQUEST",
-					...request,
-				};
+		const { walletAddress, cursor, limit } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer(
+			`staking/${walletAddress}/positions/unstake`,
+			undefined,
+			{
+				cursor,
+				limit,
 			}
 		);
-		const completeMergedPositions: UnstakePosition[] =
-			unstakedEvents.reduce((acc, unstakedEvent) => {
-				if (
-					acc.some(
-						(position) => position.afSuiId === unstakedEvent.afSuiId
-					)
-				)
-					return acc;
-
-				return [
-					{
-						...unstakedEvent,
-						state: "SUI_MINTED",
-					},
-					...acc,
-				];
-			}, partiallyMergedPositions);
-
-		return completeMergedPositions;
 	};
 
 	// =========================================================================
@@ -869,88 +822,8 @@ export class StakingApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	public liquidStakingApy = async (): Promise<number> => {
-		const limit = 30 + 2; // ~30 days/epochs of data
-		// + 2 to account for apy being calculated from events delta
-		// (and possible initial 0 afsui supply)
-		const recentEpochChanges = await this.fetchEpochWasChangedEvents({
-			limit,
-		});
-		if (recentEpochChanges.events.length <= 2) return 0;
-
-		const daysInYear = 365;
-		const avgApy =
-			(Helpers.sum(
-				recentEpochChanges.events.slice(2).map((event, index) => {
-					const currentRate = Number(event.totalAfSuiSupply)
-						? Number(event.totalSuiAmount) /
-						  Number(event.totalAfSuiSupply)
-						: 1;
-
-					const pastEvent = recentEpochChanges.events[index + 1];
-					const pastRate = Number(pastEvent.totalAfSuiSupply)
-						? Number(pastEvent.totalSuiAmount) /
-						  Number(pastEvent.totalAfSuiSupply)
-						: 1;
-
-					return (currentRate - pastRate) / pastRate;
-				})
-			) /
-				(recentEpochChanges.events.length - 2)) *
-			daysInYear;
-
-		return avgApy;
+		return this.Provider.indexerCaller.fetchIndexer(`staking/apy`);
 	};
-
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	public async fetchEpochWasChangedEvents(inputs: ApiIndexerEventsBody) {
-		const { cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents<
-			unknown,
-			EpochWasChangedEvent
-		>(`staking/events/epoch-was-changed`, {
-			cursor,
-			limit,
-		});
-	}
-
-	public async fetchStakedEvents(inputs: ApiIndexerUserEventsBody) {
-		const { walletAddress, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/${walletAddress}/events/staked`,
-			{
-				cursor,
-				limit,
-			},
-			Casting.staking.stakedEventFromOnChain
-		);
-	}
-
-	public async fetchUnstakedEvents(inputs: ApiIndexerUserEventsBody) {
-		const { walletAddress, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/${walletAddress}/events/unstaked`,
-			{
-				cursor,
-				limit,
-			},
-			Casting.staking.unstakedEventFromOnChain
-		);
-	}
-
-	public async fetchUnstakeRequestedEvents(inputs: ApiIndexerUserEventsBody) {
-		const { walletAddress, cursor, limit } = inputs;
-		return this.Provider.indexerCaller.fetchIndexerEvents(
-			`staking/${walletAddress}/events/unstake-requested`,
-			{
-				cursor,
-				limit,
-			},
-			Casting.staking.unstakeRequestedEventFromOnChain
-		);
-	}
 
 	// =========================================================================
 	//  Private Methods

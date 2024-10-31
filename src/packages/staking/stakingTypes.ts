@@ -216,6 +216,8 @@ export interface ApiUpdateValidatorFeeBody {
 
 export interface ApiStakingPositionsBody {
 	walletAddress: SuiAddress;
+	cursor?: number;
+	limit?: number;
 }
 
 export interface ApiDelegatedStakesBody {
