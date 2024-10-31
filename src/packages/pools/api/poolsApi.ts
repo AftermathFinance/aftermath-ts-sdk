@@ -489,46 +489,6 @@ export class PoolsApi implements MoveErrorsInterface {
 		);
 	}
 
-	/**
-	 * Fetches trade events for a pool within a specified time frame.
-	 * @async
-	 * @param {ObjectId} inputs.poolId - The object ID of the pool to fetch trade events for.
-	 * @param {DurationUnitType} inputs.timeUnit - The time unit of the time frame.
-	 * @param {number} inputs.time - The duration of the time frame.
-	 * @returns {Promise<PoolTradeEvent[]>} A promise that resolves to an array of fetched trade events.
-	 */
-	public async fetchTradeEventsWithinTime(inputs: {
-		poolId: ObjectId;
-		timeUnit: DurationUnitType;
-		time: number;
-	}): Promise<PoolTradeEvent[]> {
-		try {
-			const { poolId, timeUnit, time } = inputs;
-
-			dayjs.extend(duration);
-			const durationMs = dayjs.duration(time, timeUnit).asMilliseconds();
-
-			return this.Provider.indexerCaller.fetchIndexer<
-				PoolTradeEvent[],
-				undefined,
-				IndexerDataWithCursorQueryParams
-			>(
-				`pools/${poolId}/swap-events-within-time/${durationMs}`,
-				undefined,
-				{
-					skip: 0,
-					limit: 10000, // max from mongo ?
-				}
-			);
-
-			// return tradeEventsOnChain.map(
-			// 	Casting.pools.poolTradeEventFromIndexerOnChain
-			// );
-		} catch (e) {
-			return [];
-		}
-	}
-
 	// =========================================================================
 	//  Transaction Commands
 	// =========================================================================
@@ -2097,73 +2057,11 @@ export class PoolsApi implements MoveErrorsInterface {
 	public fetchCalcPoolVolumeData = async (inputs: {
 		poolId: ObjectId;
 		timeframe: PoolGraphDataTimeframeKey;
-	}) => {
+	}): Promise<PoolDataPoint[]> => {
 		const { poolId, timeframe } = inputs;
-
-		const pool = await this.fetchPool({ objectId: poolId });
-		const coins = Object.keys(pool.coins);
-
-		const [coinsToPrice, coinsToDecimals] = await Promise.all([
-			this.Provider.Prices().fetchCoinsToPrice({
-				coins,
-			}),
-			this.Provider.Coin().fetchCoinsToDecimals({ coins }),
-		]);
-
-		const { time, timeUnit } = PoolsApi.poolVolumeDataTimeframes[timeframe];
-		const tradeEvents = await this.fetchTradeEventsWithinTime({
-			time,
-			timeUnit,
-			poolId,
-		});
-
-		const buckets = time;
-
-		const now = Date.now();
-		const maxTimeAgo = dayjs(now).subtract(time, timeUnit);
-		const timeGap = dayjs(now).diff(maxTimeAgo);
-
-		const bucketTimestampSize = timeGap / buckets;
-		const emptyDataPoints: PoolDataPoint[] = Array(buckets)
-			.fill({
-				time: 0,
-				value: 0,
-			})
-			.map((dataPoint, index) => {
-				return {
-					...dataPoint,
-					time: maxTimeAgo.valueOf() + index * bucketTimestampSize,
-				};
-			});
-
-		const dataPoints = tradeEvents.reduce((acc, trade) => {
-			if (trade.timestamp === undefined) return acc;
-
-			const tradeDate = dayjs.unix(trade.timestamp / 1000);
-			const bucketIndex =
-				acc.length -
-				Math.floor(dayjs(now).diff(tradeDate) / bucketTimestampSize) -
-				1;
-
-			const amountUsd = trade.typesIn.reduce((acc, cur, index) => {
-				const price = coinsToPrice[cur];
-				const amountInUsd =
-					price < 0
-						? 0
-						: Coin.balanceWithDecimalsUsd(
-								trade.amountsIn[index],
-								coinsToDecimals[cur],
-								price
-						  );
-				return acc + (amountInUsd < 0 ? 0 : amountInUsd);
-			}, 0);
-
-			acc[bucketIndex].value += amountUsd;
-
-			return acc;
-		}, emptyDataPoints);
-
-		return dataPoints;
+		return this.Provider.indexerCaller.fetchIndexer(
+			`pools/${poolId}/volume-data/${timeframe}`
+		);
 	};
 
 	// =========================================================================
