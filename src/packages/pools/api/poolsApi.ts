@@ -70,10 +70,7 @@ import { Coin } from "../../coin";
 import dayjs, { ManipulateType } from "dayjs";
 import { PoolsApiCasting } from "./poolsApiCasting";
 import duration, { DurationUnitType } from "dayjs/plugin/duration";
-import {
-	IndexerEventOnChain,
-	IndexerSwapVolumeResponse,
-} from "../../../general/types/castingTypes";
+import { IndexerEventOnChain } from "../../../general/types/castingTypes";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { bcs } from "@mysten/sui/bcs";
@@ -1843,9 +1840,9 @@ export class PoolsApi implements MoveErrorsInterface {
 	public fetchPoolVolume = async (inputs: {
 		poolId: ObjectId;
 		durationMs: number;
-	}): Promise<IndexerSwapVolumeResponse> => {
+	}): Promise<number> => {
 		const { poolId, durationMs } = inputs;
-		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+		return this.Provider.indexerCaller.fetchIndexer<number>(
 			`pools/${poolId}/swap-volume/${durationMs}`
 		);
 	};
@@ -1855,110 +1852,13 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - The inputs for fetching the total volume.
 	 * @returns A Promise that resolves to an array of total volumes.
 	 */
-	public fetchTotalVolume = async (inputs: { durationMs: number }) => {
+	public fetchTotalVolume = async (inputs: {
+		durationMs: number;
+	}): Promise<number> => {
 		const { durationMs } = inputs;
-		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+		return this.Provider.indexerCaller.fetchIndexer(
 			`pools/total-swap-volume/${durationMs}`
 		);
-	};
-
-	/**
-	 * Calculates the total value locked (TVL) for a given pool, based on its current balances and prices.
-	 * @param inputs - An object containing the pool's coins, their prices, and their decimal places.
-	 * @returns The total value locked (TVL) for the pool.
-	 */
-	public calcPoolTvl = (inputs: {
-		poolCoins: PoolCoins;
-		coinsToPrice: CoinsToPrice;
-		coinsToDecimals: Record<CoinType, CoinDecimal>;
-	}) => {
-		const { poolCoins, coinsToPrice, coinsToDecimals } = inputs;
-
-		let tvl = 0;
-
-		for (const [poolCoinType, poolCoin] of Object.entries(poolCoins)) {
-			const amountWithDecimals = Coin.balanceWithDecimals(
-				poolCoin.balance,
-				coinsToDecimals[poolCoinType]
-			);
-			const price = coinsToPrice[poolCoinType];
-
-			tvl += amountWithDecimals * (price < 0 ? 0 : price);
-		}
-
-		return tvl;
-	};
-
-	public fetchCalcPoolVolume24hrs = this.Provider.withCache({
-		key: "fetchPool",
-		expirationSeconds: 300, // 5 minutes
-		callback: async (inputs: { poolId: ObjectId }) => {
-			const { poolId } = inputs;
-
-			const durationMs = 86400000; // 24hrs
-			const volumes = await this.fetchPoolVolume({
-				durationMs,
-				poolId,
-			});
-
-			const coins = Helpers.uniqueArray([
-				...volumes.map((vol) => vol.coinTypeIn),
-				...volumes.map((vol) => vol.coinTypeOut),
-			]);
-			const [coinsToPrice, coinsToDecimals] = await Promise.all([
-				this.Provider.Prices().fetchCoinsToPrice({ coins }),
-				this.Provider.Coin().fetchCoinsToDecimals({ coins }),
-			]);
-			return Helpers.calcIndexerVolumeUsd({
-				volumes,
-				coinsToPrice,
-				coinsToDecimals,
-			});
-		},
-	});
-
-	/**
-	 * Calculates the pool supply per LP token.
-	 * @param poolCoins - The pool coins object.
-	 * @param lpSupply - The total supply of LP tokens.
-	 * @returns An array of supply per LP token for each pool coin.
-	 */
-	public calcPoolSupplyPerLps = (poolCoins: PoolCoins, lpSupply: Balance) => {
-		const supplyPerLps = Object.values(poolCoins).map(
-			(poolCoin) => Number(poolCoin.balance) / Number(lpSupply)
-		);
-
-		return supplyPerLps;
-	};
-
-	/**
-	 * Calculates the price of a liquidity pool token.
-	 * @param inputs - An object containing the liquidity pool token supply, total value locked, and the number of decimal places for the token.
-	 * @returns The price of the liquidity pool token.
-	 */
-	public calcPoolLpPrice = (inputs: {
-		lpCoinSupply: Balance;
-		tvl: number;
-		lpCoinDecimals: CoinDecimal;
-	}) => {
-		const { lpCoinSupply, tvl, lpCoinDecimals } = inputs;
-		const lpPrice = Number(
-			Number(tvl) / Coin.balanceWithDecimals(lpCoinSupply, lpCoinDecimals)
-		);
-		return lpPrice;
-	};
-
-	/**
-	 * Calculates the APR (Annual Percentage Rate) based on the fees collected in the last 24 hours and the TVL (Total Value Locked) of a pool.
-	 * @param inputs - An object containing the fees collected in the last 24 hours and the TVL of a pool.
-	 * @returns The APR (Annual Percentage Rate) of the pool.
-	 */
-	public calcApr = (inputs: { fees24Hours: number; tvl: number }): number => {
-		const { fees24Hours, tvl } = inputs;
-		// TODO: use daysjs instead
-		const daysInYear = 365;
-
-		return (fees24Hours * daysInYear) / tvl;
 	};
 
 	// =========================================================================
@@ -2049,18 +1949,30 @@ export class PoolsApi implements MoveErrorsInterface {
 	/**
 	 * Calculates the pool volume data based on the provided inputs.
 	 * @param inputs An object containing the necessary inputs for the calculation.
-	 * @param inputs.tradeEvents An array of pool trade events.
-	 * @param inputs.timeUnit The time unit to use for the calculation.
-	 * @param inputs.time The time duration to use for the calculation.
 	 * @returns An array of pool data points.
 	 */
-	public fetchCalcPoolVolumeData = async (inputs: {
+	public fetchPoolVolumeData = async (inputs: {
 		poolId: ObjectId;
 		timeframe: PoolGraphDataTimeframeKey;
 	}): Promise<PoolDataPoint[]> => {
 		const { poolId, timeframe } = inputs;
 		return this.Provider.indexerCaller.fetchIndexer(
 			`pools/${poolId}/volume-data/${timeframe}`
+		);
+	};
+
+	/**
+	 * Calculates the pool volume data based on the provided inputs.
+	 * @param inputs An object containing the necessary inputs for the calculation.
+	 * @returns An array of pool data points.
+	 */
+	public fetchPoolFeeData = async (inputs: {
+		poolId: ObjectId;
+		timeframe: PoolGraphDataTimeframeKey;
+	}): Promise<PoolDataPoint[]> => {
+		const { poolId, timeframe } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer(
+			`pools/${poolId}/fee-data/${timeframe}`
 		);
 	};
 
@@ -2100,126 +2012,14 @@ export class PoolsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	public fetchCoinGeckoTickerData = async (inputs: {
-		pools: Pool[];
-		coinsToDecimals: CoinsToDecimals;
+		poolIds: ObjectId[];
 	}): Promise<CoinGeckoTickerData[]> => {
-		const { pools, coinsToDecimals } = inputs;
-
-		return (
-			await Promise.all(
-				pools.map(async (pool) => {
-					const durationMs24hrs = 86400000;
-					const volumes = await this.fetchPoolVolume({
-						poolId: pool.pool.objectId,
-						durationMs: durationMs24hrs,
-					});
-
-					return Object.keys(pool.pool.coins)
-						.slice(0, -1)
-						.map((baseCoinType, index) => {
-							return Object.keys(pool.pool.coins)
-								.slice(index + 1)
-								.map((targetCoinType) => {
-									if (!pool.stats)
-										throw new Error(
-											"pool is missing stats"
-										);
-
-									if (baseCoinType === targetCoinType)
-										return undefined;
-
-									const volumeData = (() => {
-										const volumeDataIn = volumes.find(
-											(volume) =>
-												volume.coinTypeIn ===
-												baseCoinType
-										) ?? {
-											totalAmountIn: 0,
-											totalAmountOut: 0,
-										};
-										const volumeDataOut = volumes.find(
-											(volume) =>
-												volume.coinTypeOut ===
-												baseCoinType
-										) ?? {
-											totalAmountIn: 0,
-											totalAmountOut: 0,
-										};
-
-										return {
-											baseVolume:
-												volumeDataIn.totalAmountIn +
-												volumeDataOut.totalAmountOut,
-											targetVolume:
-												volumeDataIn.totalAmountOut +
-												volumeDataOut.totalAmountIn,
-										};
-									})();
-
-									const baseDecimals =
-										coinsToDecimals[baseCoinType];
-									const targetDecimals =
-										coinsToDecimals[targetCoinType];
-									if (
-										baseDecimals === undefined ||
-										targetDecimals === undefined
-									)
-										throw new Error(
-											"coin decimals not found"
-										);
-
-									const baseVolume = Coin.balanceWithDecimals(
-										BigInt(volumeData.baseVolume),
-										baseDecimals
-									);
-									const targetVolume =
-										Coin.balanceWithDecimals(
-											BigInt(volumeData.targetVolume),
-											targetDecimals
-										);
-
-									const unscaledPrice = pool.getSpotPrice({
-										coinInType: baseCoinType,
-										coinOutType: targetCoinType,
-									});
-									const denominator =
-										Coin.balanceWithDecimals(
-											unscaledPrice,
-											baseDecimals - targetDecimals
-										);
-									const price = denominator
-										? 1 / denominator
-										: 0;
-
-									const data: CoinGeckoTickerData = {
-										pool_id: pool.pool.objectId,
-										base_currency: baseCoinType,
-										target_currency: targetCoinType,
-										ticker_id: `${baseCoinType}_${targetCoinType}`,
-										liquidity_in_usd: pool.stats.tvl,
-										base_volume: baseVolume,
-										target_volume: targetVolume,
-										last_price: price,
-									};
-									return data;
-								})
-								.reduce(
-									(prev, curr) => [
-										...prev,
-										...(curr ? [curr] : []),
-									],
-									[] as CoinGeckoTickerData[]
-								);
-						})
-						.reduce(
-							(prev, curr) => [...prev, ...curr],
-							[] as CoinGeckoTickerData[]
-						);
-				})
-			)
-		).reduce(
-			(prev, curr) => [...prev, ...curr],
-			[] as CoinGeckoTickerData[]
+		const { poolIds } = inputs;
+		return this.Provider.indexerCaller.fetchIndexer(
+			"pools/coingecko-ticker-data",
+			{
+				poolIds,
+			}
 		);
 	};
 

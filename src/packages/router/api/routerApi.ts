@@ -23,7 +23,6 @@ import {
 	TransactionObjectArgument,
 	Transaction,
 } from "@mysten/sui/transactions";
-import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 import { Casting, Coin, Helpers } from "../../..";
 import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
@@ -134,9 +133,11 @@ export class RouterApi implements MoveErrorsInterface {
 	 * @param inputs - The inputs for fetching the total volume.
 	 * @returns A Promise that resolves to an array of total volumes.
 	 */
-	public fetchVolume = async (inputs: { durationMs: number }) => {
+	public fetchVolume = async (inputs: {
+		durationMs: number;
+	}): Promise<number> => {
 		const { durationMs } = inputs;
-		return this.Provider.indexerCaller.fetchIndexer<IndexerSwapVolumeResponse>(
+		return this.Provider.indexerCaller.fetchIndexer(
 			`router/swap-volume/${durationMs}`
 		);
 	};
