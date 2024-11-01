@@ -258,10 +258,10 @@ export class FarmsApi implements MoveErrorsInterface {
 		return this.Provider.indexerCaller.fetchIndexer<
 			FarmsStakingPoolObject[],
 			{
-				vault_ids: ObjectId[];
+				vaultIds: ObjectId[];
 			}
 		>("afterburner-vaults/vaults", {
-			vault_ids: inputs.objectIds,
+			vaultIds: inputs.objectIds,
 		});
 	};
 

@@ -382,10 +382,10 @@ export class PoolsApi implements MoveErrorsInterface {
 		return this.Provider.indexerCaller.fetchIndexer<
 			PoolObject[],
 			{
-				pool_ids: ObjectId[];
+				poolIds: ObjectId[];
 			}
 		>("pools", {
-			pool_ids: inputs.objectIds,
+			poolIds: inputs.objectIds,
 		});
 	};
 
@@ -1831,7 +1831,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	}): Promise<PoolStats[]> => {
 		const { poolIds } = inputs;
 		return this.Provider.indexerCaller.fetchIndexer("pools/stats", {
-			pool_ids: poolIds,
+			poolIds,
 		});
 	};
 

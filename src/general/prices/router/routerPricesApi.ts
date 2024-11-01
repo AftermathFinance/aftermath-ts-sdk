@@ -51,10 +51,10 @@ export class RouterPricesApi implements PricesApiInterface {
 				await this.Provider.indexerCaller.fetchIndexer<
 					number[],
 					{
-						coin_types: CoinType[];
+						coinTypes: CoinType[];
 					}
 				>("prices", {
-					coin_types: coins,
+					coinTypes: coins,
 				});
 			return coins.reduce(
 				(acc, coin, index) => ({

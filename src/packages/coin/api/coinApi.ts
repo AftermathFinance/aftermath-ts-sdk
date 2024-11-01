@@ -18,7 +18,7 @@ import {
 import { Helpers } from "../../../general/utils/helpers";
 import { Pools } from "../../pools/pools";
 import { Casting } from "../../../general/utils";
-import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
+import { CoinMetadata, CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
@@ -47,41 +47,23 @@ export class CoinApi {
 		const { coins } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
+			CoinMetadata[],
 			{
-				coin_metadata: [
-					{
-						decimals: number;
-						description: string;
-						icon_url?: string | null;
-						id?: string | null;
-						name: string;
-						symbol: string;
-						metadata_type: string; // "Standard" | ?
-					} | null,
-					boolean
-				][];
-			},
-			{
-				coin_types: CoinType[];
+				coinTypes: CoinType[];
 			}
 		>("coins/metadata", {
-			coin_types: coins.map((coin) =>
+			coinTypes: coins.map((coin) =>
 				Helpers.addLeadingZeroesToType(coin)
 			),
 		});
 
 		return Promise.all(
-			response.coin_metadata.map((metadata, index) => {
+			response.map((metadata, index) => {
 				try {
-					if (metadata[0] === null)
+					if (metadata === null)
 						throw new Error("coin metadata is null");
 					return {
-						decimals: metadata[0].decimals,
-						description: metadata[0].description,
-						iconUrl: metadata[0].icon_url,
-						id: metadata[0].id,
-						name: metadata[0].name,
-						symbol: metadata[0].symbol,
+						...metadata,
 						isGenerated: false,
 					};
 				} catch (error) {

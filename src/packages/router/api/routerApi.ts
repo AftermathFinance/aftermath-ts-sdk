@@ -25,10 +25,7 @@ import {
 } from "@mysten/sui/transactions";
 import { IndexerSwapVolumeResponse } from "../../../general/types/castingTypes";
 import { Casting, Coin, Helpers } from "../../..";
-import {
-	RouterServiceProtocol,
-	RouterTradeEventOnChain,
-} from "./routerApiCastingTypes";
+import { RouterTradeEventOnChain } from "./routerApiCastingTypes";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { RouterApiCasting } from "./routerApiCasting";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
@@ -219,6 +216,8 @@ export class RouterApi implements MoveErrorsInterface {
 				coinInAmount: number;
 				referrer: SuiAddress | undefined;
 				externalFee: ExternalFee | undefined;
+				protocolBlacklist: RouterProtocolName[] | undefined;
+				protocolWhitelist: RouterProtocolName[] | undefined;
 			}
 		>("router/forward-trade-route", {
 			referrer,
@@ -227,6 +226,20 @@ export class RouterApi implements MoveErrorsInterface {
 			coinOutType,
 			// NOTE: is this conversion safe ?
 			coinInAmount: Number(coinInAmount),
+			...("protocolBlacklist" in inputs
+				? {
+						protocolBlacklist: inputs.protocolBlacklist,
+						protocolWhitelist: undefined,
+				  }
+				: "protocolWhitelist" in inputs
+				? {
+						protocolWhitelist: inputs.protocolWhitelist,
+						protocolBlacklist: undefined,
+				  }
+				: {
+						protocolWhitelist: undefined,
+						protocolBlacklist: undefined,
+				  }),
 		});
 	};
 
@@ -261,46 +274,40 @@ export class RouterApi implements MoveErrorsInterface {
 			slippage,
 		} = inputs;
 
-		const { paths } = await this.Provider.indexerCaller.fetchIndexer<
+		return await this.Provider.indexerCaller.fetchIndexer<
+			RouterCompleteTradeRoute,
 			{
-				input_amount: number;
-				paths: RouterCompleteTradeRoute;
-			},
-			{
-				from_coin_type: CoinType;
-				to_coin_type: CoinType;
-				output_amount: number;
-				referred: boolean;
-				protocol_blacklist?: RouterServiceProtocol[];
-				protocol_whitelist?: RouterServiceProtocol[];
+				coinInType: CoinType;
+				coinOutType: CoinType;
+				coinOutAmount: number;
+				slippage: Slippage | undefined;
+				referrer: SuiAddress | undefined;
+				externalFee: ExternalFee | undefined;
+				protocolBlacklist: RouterProtocolName[] | undefined;
+				protocolWhitelist: RouterProtocolName[] | undefined;
 			}
 		>("router/backward-trade-route", {
-			from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
-			to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
-			// NOTE: is this conversion safe ?
-			output_amount: Math.ceil(
-				(1 + slippage + (externalFee?.feePercentage ?? 0)) *
-					Number(coinOutAmount)
-			),
-			referred: referrer !== undefined,
-			// ...("protocolBlacklist" in inputs
-			// 	? {
-			// 			protocol_blacklist: inputs.protocolBlacklist
-			// 	  }
-			// 	: "protocolWhitelist" in inputs
-			// 	? {
-			// 			protocol_whitelist: inputs.protocolWhitelist
-			// 	  }
-			// 	: {}),
-		});
-
-		return {
-			...paths,
-			// NOTE: should these be here ?
+			coinInType,
+			coinOutType,
+			slippage,
 			referrer,
 			externalFee,
-			slippage,
-		};
+			coinOutAmount: Number(coinOutAmount),
+			...("protocolBlacklist" in inputs
+				? {
+						protocolBlacklist: inputs.protocolBlacklist,
+						protocolWhitelist: undefined,
+				  }
+				: "protocolWhitelist" in inputs
+				? {
+						protocolWhitelist: inputs.protocolWhitelist,
+						protocolBlacklist: undefined,
+				  }
+				: {
+						protocolWhitelist: undefined,
+						protocolBlacklist: undefined,
+				  }),
+		});
 	};
 
 	public fetchCompleteTradeRouteAndTxGivenAmountIn = async (
@@ -366,68 +373,63 @@ export class RouterApi implements MoveErrorsInterface {
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
 
-		const { output_coin, tx_kind, output_amount, paths } =
-			await this.Provider.indexerCaller.fetchIndexer<
-				{
-					output_coin: ServiceCoinData;
-					tx_kind: SerializedTransaction;
-					output_amount: number;
-					paths: RouterCompleteTradeRoute;
-				},
-				{
-					from_coin_type: CoinType;
-					to_coin_type: CoinType;
-					input_amount: number;
-					input_coin: ServiceCoinData;
-					slippage: number;
-					tx_kind: SerializedTransaction;
-					referrer?: SuiAddress;
-					router_fee_recipient?: SuiAddress;
-					router_fee?: number; // u64 format (same as on-chain)
-					protocol_blacklist?: RouterServiceProtocol[];
-					protocol_whitelist?: RouterServiceProtocol[];
-				}
-			>("router/forward-trade-route-tx", {
-				slippage,
-				referrer,
-				from_coin_type: Helpers.addLeadingZeroesToType(coinInType),
-				to_coin_type: Helpers.addLeadingZeroesToType(coinOutType),
-				// NOTE: is this conversion safe ?
-				input_amount: Number(coinInAmount),
-				input_coin: Helpers.transactions.serviceCoinDataFromCoinTxArg({
-					coinTxArg,
-				}),
-				tx_kind: b64TxBytes,
-				router_fee_recipient: externalFee?.recipient,
-				// NOTE: is this conversion safe ?
-				router_fee: externalFee
-					? Number(
-							Casting.numberToFixedBigInt(
-								externalFee.feePercentage
-							)
-					  )
-					: undefined,
-				// ...("protocolBlacklist" in inputs
-				// 	? {
-				// 			protocol_blacklist:
-				// 				inputs.protocolBlacklist,
-				// 	  }
-				// 	: "protocolWhitelist" in inputs
-				// 	? {
-				// 			protocol_whitelist:
-				// 				inputs.protocolWhitelist,
-				// 	  }
-				// 	: {}),
-			});
+		const {
+			coinOut: coinOutArg,
+			txKind,
+			completeRoute,
+		} = await this.Provider.indexerCaller.fetchIndexer<
+			{
+				coinOut: ServiceCoinData;
+				txKind: SerializedTransaction;
+				completeRoute: RouterCompleteTradeRoute;
+			},
+			{
+				coinInType: CoinType;
+				coinOutType: CoinType;
+				coinInAmount: number;
+				slippage: Slippage | undefined;
+				referrer: SuiAddress | undefined;
+				externalFee: ExternalFee | undefined;
+				protocolBlacklist: RouterProtocolName[] | undefined;
+				protocolWhitelist: RouterProtocolName[] | undefined;
+				coinIn: ServiceCoinData;
+				txKind: SerializedTransaction;
+			}
+		>("router/forward-trade-route-tx", {
+			slippage,
+			referrer,
+			coinInType,
+			coinOutType,
+			externalFee,
+			coinInAmount: Number(coinInAmount),
+			coinIn: Helpers.transactions.serviceCoinDataFromCoinTxArg({
+				coinTxArg,
+			}),
+			txKind: b64TxBytes,
+			...("protocolBlacklist" in inputs
+				? {
+						protocolBlacklist: inputs.protocolBlacklist,
+						protocolWhitelist: undefined,
+				  }
+				: "protocolWhitelist" in inputs
+				? {
+						protocolWhitelist: inputs.protocolWhitelist,
+						protocolBlacklist: undefined,
+				  }
+				: {
+						protocolWhitelist: undefined,
+						protocolBlacklist: undefined,
+				  }),
+		});
 
-		const tx = Transaction.fromKind(tx_kind);
+		const tx = Transaction.fromKind(txKind);
 		TransactionsApiHelpers.transferTxMetadata({
 			initTx,
 			newTx: tx,
 		});
 
 		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinData({
-			serviceCoinData: output_coin,
+			serviceCoinData: coinOutArg,
 		});
 		if (transferCoinOut && walletAddress) {
 			tx.transferObjects([coinOut], walletAddress);
@@ -436,9 +438,9 @@ export class RouterApi implements MoveErrorsInterface {
 		return {
 			tx,
 			coinOut,
-			coinOutAmount: BigInt(Math.round(output_amount)),
+			coinOutAmount: completeRoute.coinOut.amount,
 			completeRoute: {
-				...paths,
+				...completeRoute,
 				referrer,
 				externalFee,
 			},
@@ -561,41 +563,32 @@ export class RouterApi implements MoveErrorsInterface {
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
 
-		const { output_coin, tx_kind } =
+		const { coinOut: coinOutArg, txKind } =
 			await this.Provider.indexerCaller.fetchIndexer<
 				{
-					output_coin: ServiceCoinData;
-					tx_kind: SerializedTransaction;
+					coinOut: ServiceCoinData;
+					txKind: SerializedTransaction;
 				},
 				{
-					paths: RouterCompleteTradeRoute;
-					input_coin: ServiceCoinData;
+					completeRoute: RouterCompleteTradeRoute;
+					coinIn: ServiceCoinData;
 					slippage: number;
-					tx_kind: SerializedTransaction;
-					referrer?: SuiAddress;
-					router_fee_recipient?: SuiAddress;
-					router_fee?: number; // u64 format (same as on-chain)
+					txKind: SerializedTransaction;
+					referrer: SuiAddress | undefined;
+					externalFee: ExternalFee | undefined;
 				}
 			>("router/tx-from-trade-route", {
 				slippage,
 				referrer,
-				paths: completeRoute,
-				input_coin: Helpers.transactions.serviceCoinDataFromCoinTxArg({
+				externalFee,
+				completeRoute,
+				coinIn: Helpers.transactions.serviceCoinDataFromCoinTxArg({
 					coinTxArg,
 				}),
-				tx_kind: b64TxBytes,
-				router_fee_recipient: externalFee?.recipient,
-				// NOTE: is this conversion safe ?
-				router_fee: externalFee
-					? Number(
-							Casting.numberToFixedBigInt(
-								externalFee.feePercentage
-							)
-					  )
-					: undefined,
+				txKind: b64TxBytes,
 			});
 
-		const tx = Transaction.fromKind(tx_kind);
+		const tx = Transaction.fromKind(txKind);
 
 		TransactionsApiHelpers.transferTxMetadata({
 			initTx,
@@ -603,7 +596,7 @@ export class RouterApi implements MoveErrorsInterface {
 		});
 
 		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinData({
-			serviceCoinData: output_coin,
+			serviceCoinData: coinOutArg,
 		});
 		if (transferCoinOut && walletAddress) {
 			tx.transferObjects([coinOut], walletAddress);
@@ -662,43 +655,32 @@ export class RouterApi implements MoveErrorsInterface {
 		});
 		const b64TxBytes = Buffer.from(txBytes).toString("base64");
 
-		const { output_coin, tx_kind } =
+		const { coinOut: coinOutArg, txKind } =
 			await this.Provider.indexerCaller.fetchIndexer<
 				{
-					output_coin: ServiceCoinData;
-					tx_kind: SerializedTransaction;
+					coinOut: ServiceCoinData;
+					txKind: SerializedTransaction;
 				},
 				{
-					paths: RouterCompleteTradeRoute;
-					input_coin: ServiceCoinData;
+					completeRoute: RouterCompleteTradeRoute;
+					coinIn: ServiceCoinData;
 					slippage: number;
-					tx_kind: SerializedTransaction;
-					referrer?: SuiAddress;
-					router_fee_recipient?: SuiAddress;
-					router_fee?: number; // u64 format (same as on-chain)
+					txKind: SerializedTransaction;
+					referrer: SuiAddress | undefined;
+					externalFee: ExternalFee | undefined;
 				}
 			>("router/tx-from-trade-route", {
 				slippage,
 				referrer,
-				paths: completeRoute,
-				input_coin: Helpers.transactions.serviceCoinDataFromCoinTxArgV0(
-					{
-						coinTxArg,
-					}
-				),
-				tx_kind: b64TxBytes,
-				router_fee_recipient: externalFee?.recipient,
-				// NOTE: is this conversion safe ?
-				router_fee: externalFee
-					? Number(
-							Casting.numberToFixedBigInt(
-								externalFee.feePercentage
-							)
-					  )
-					: undefined,
+				externalFee,
+				completeRoute,
+				coinIn: Helpers.transactions.serviceCoinDataFromCoinTxArgV0({
+					coinTxArg,
+				}),
+				txKind: b64TxBytes,
 			});
 
-		const tx = TransactionBlock.fromKind(tx_kind);
+		const tx = TransactionBlock.fromKind(txKind);
 
 		TransactionsApiHelpers.transferTxMetadataV0({
 			initTx,
@@ -706,7 +688,7 @@ export class RouterApi implements MoveErrorsInterface {
 		});
 
 		const coinOut = Helpers.transactions.coinTxArgFromServiceCoinDataV0({
-			serviceCoinData: output_coin,
+			serviceCoinData: coinOutArg,
 		});
 		if (transferCoinOut && walletAddress) {
 			tx.transferObjects([coinOut], walletAddress);

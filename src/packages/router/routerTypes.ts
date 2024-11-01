@@ -18,7 +18,6 @@ import {
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
 import { TransactionObjectArgument as TransactionObjectArgumentV0 } from "@mysten/sui.js/transactions";
-import { RouterServiceProtocol } from "./api/routerApiCastingTypes";
 
 // =========================================================================
 //  Name Only
@@ -82,10 +81,7 @@ export type RouterTradeRoute = RouterTradeInfo & {
 export type RouterTradePath = RouterTradeInfo & {
 	protocolName: RouterProtocolName;
 	poolId: ObjectId;
-	poolMetadata: {
-		tbData: any;
-		protocol: RouterServiceProtocol;
-	};
+	poolMetadata: any;
 };
 
 export interface RouterTradeInfo {
