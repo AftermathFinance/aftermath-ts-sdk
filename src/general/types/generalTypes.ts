@@ -181,6 +181,11 @@ export type ApiIndexerUserEventsBody = ApiIndexerEventsBody & {
 	walletAddress: SuiAddress;
 };
 
+export interface IndexerDataWithCursorQueryParams {
+	skip: number;
+	limit: number;
+}
+
 // =========================================================================
 //  Scallop
 // =========================================================================
