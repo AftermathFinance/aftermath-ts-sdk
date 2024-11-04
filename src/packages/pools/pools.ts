@@ -18,6 +18,8 @@ import {
 	PoolStats,
 	ApiPoolsStatsBody,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
+	PoolLpInfo,
+	SuiAddress,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -136,6 +138,12 @@ export class Pools extends Caller {
 	public async getAllPools() {
 		const pools = await this.fetchApi<PoolObject[]>("");
 		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
+	}
+
+	public async getOwnedLpCoins(inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<PoolLpInfo> {
+		return this.fetchApi("owned-lp-coins", inputs);
 	}
 
 	// =========================================================================
