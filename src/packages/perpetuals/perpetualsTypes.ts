@@ -402,7 +402,7 @@ export interface PerpetualsAccountCollateralChangesWithCursor {
 export type PerpetualsAccountCollateralChange = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
-	// marketId: PerpetualsMarketId;
+	marketId: PerpetualsMarketId | undefined;
 	eventType: AnyObjectType;
 	collateralChange: number;
 	collateralChangeUsd: number;

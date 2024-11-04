@@ -473,7 +473,10 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			eventType: data.event_type,
 			timestamp: data.timestamp,
 			txDigest: data.tx_digest,
-			// marketId: Helpers.addLeadingZeroesToType(data.ch_id),
+			marketId:
+				data.ch_id === ""
+					? undefined
+					: Helpers.addLeadingZeroesToType(data.ch_id),
 			collateralChange: data.collateral_change,
 			collateralChangeUsd: data.collateral_change_usd,
 		}));
