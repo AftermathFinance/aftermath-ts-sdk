@@ -6,7 +6,7 @@ import { CoinHistoricalData } from "./historicalDataTypes";
 import {
 	CoinGeckoCoinData,
 	CoinGeckoCoinSymbolData,
-} from "../prices/coingecko/coinGeckoTypes";
+} from "../prices/coinGeckoTypes";
 
 export class HistoricalData extends Caller {
 	// =========================================================================

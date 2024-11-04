@@ -29,7 +29,6 @@ import { Oracle } from "../../packages/oracle/oracle";
 import { Farms } from "../../packages/farms/farms";
 import { DynamicGas } from "../dynamicGas/dynamicGas";
 import { AftermathApi } from "./aftermathApi";
-import { IndexerCaller } from "../utils";
 import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
 import { Dca } from "../../packages/dca/dca";
 // import { Multisig } from "../../packages/multisig/multisig";
@@ -87,8 +86,7 @@ export class Aftermath extends Caller {
 					url: fullnodeUrl,
 				}),
 			}),
-			addresses,
-			new IndexerCaller(this.network)
+			addresses
 		);
 	}
 

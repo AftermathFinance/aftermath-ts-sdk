@@ -1,4 +1,4 @@
-import { CoinSymbol, CoinType, Percentage } from "../../../types";
+import { CoinSymbol, CoinType } from "../../types";
 
 // =========================================================================
 //  Coin Gecko

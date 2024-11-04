@@ -1,24 +1,12 @@
 import {
-	TransactionArgument,
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { Coin } from "../coin";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	Balance,
-	CoinDecimal,
-	CoinMetadaWithInfo,
-	CoinType,
-	CoinsToDecimals,
-	ObjectId,
-	ServiceCoinData,
-	SuiAddress,
-} from "../../../types";
+import { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
-import { Pools } from "../../pools/pools";
-import { Casting } from "../../../general/utils";
-import { CoinMetadata, CoinStruct, PaginatedCoins } from "@mysten/sui/client";
+import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
@@ -28,103 +16,6 @@ export class CoinApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {}
-
-	// =========================================================================
-	//  Inspections
-	// =========================================================================
-
-	public fetchCoinMetadata = async (inputs: {
-		coin: CoinType;
-	}): Promise<CoinMetadaWithInfo> => {
-		const { coin } = inputs;
-		const [metadata] = await this.fetchCoinMetadatas({ coins: [coin] });
-		return metadata;
-	};
-
-	public fetchCoinMetadatas = async (inputs: {
-		coins: CoinType[];
-	}): Promise<CoinMetadaWithInfo[]> => {
-		const { coins } = inputs;
-
-		const response = await this.Provider.indexerCaller.fetchIndexer<
-			CoinMetadata[],
-			{
-				coinTypes: CoinType[];
-			}
-		>("coins/metadata", {
-			coinTypes: coins.map((coin) =>
-				Helpers.addLeadingZeroesToType(coin)
-			),
-		});
-
-		return Promise.all(
-			response.map((metadata, index) => {
-				try {
-					if (metadata === null)
-						throw new Error("coin metadata is null");
-					return {
-						...metadata,
-						isGenerated: false,
-					};
-				} catch (error) {
-					try {
-						return this.createLpCoinMetadata({
-							lpCoinType: coins[index],
-						});
-					} catch (e) {}
-					const maxSymbolLength = 10;
-					const maxPackageNameLength = 24;
-					const coinClass = new Coin(coins[index]);
-					const symbol = coinClass.coinTypeSymbol
-						.toUpperCase()
-						.slice(0, maxSymbolLength);
-					const packageName = coinClass.coinTypePackageName.slice(
-						0,
-						maxPackageNameLength
-					);
-					return {
-						symbol,
-						id: null,
-						description: `${symbol} (${packageName})`,
-						name: symbol
-							.split("_")
-							.map((word) =>
-								Helpers.capitalizeOnlyFirstLetter(word)
-							)
-							.join(" "),
-						decimals: 9,
-						iconUrl: null,
-						isGenerated: true,
-					};
-				}
-			})
-		);
-	};
-
-	public fetchCoinsToDecimals = this.Provider.withCache({
-		key: "fetchCoinsToDecimals",
-		expirationSeconds: -1,
-		callback: async (inputs: {
-			coins: CoinType[];
-		}): Promise<CoinsToDecimals> => {
-			const { coins } = inputs;
-
-			const allDecimals = await Promise.all(
-				coins.map(
-					async (coin) =>
-						(
-							await this.fetchCoinMetadata({ coin })
-						).decimals
-				)
-			);
-
-			const coinsToDecimals: Record<CoinType, CoinDecimal> =
-				allDecimals.reduce((acc, decimals, index) => {
-					return { ...acc, [coins[index]]: decimals };
-				}, {});
-			return coinsToDecimals;
-		},
-	});
 
 	// =========================================================================
 	//  Transaction Builders
@@ -228,76 +119,6 @@ export class CoinApi {
 
 			cursor = paginatedCoins.nextCursor;
 		} while (true);
-	};
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	public static formatCoinTypesForMoveCall = (coins: CoinType[]) =>
-		coins.map((coin) => Casting.u8VectorFromString(coin.slice(2))); // slice to remove 0x
-
-	// =========================================================================
-	//  Private Methods
-	// =========================================================================
-
-	// =========================================================================
-	//  Helpers
-	// =========================================================================
-
-	// NOTE: this is temporary until LP coin metadata issue is solved on Sui
-	private createLpCoinMetadata = async (inputs: {
-		lpCoinType: CoinType;
-	}): Promise<CoinMetadaWithInfo> => {
-		try {
-			const PoolsApi = this.Provider.Pools();
-
-			const poolObjectId = await PoolsApi.fetchPoolObjectIdForLpCoinType(
-				inputs
-			);
-			if (!poolObjectId) throw new Error("invalid lp coin type");
-
-			const pool = await PoolsApi.fetchPool({ objectId: poolObjectId });
-
-			const coinSymbols = Object.keys(pool.coins).map(
-				(coin) => new Coin(coin).coinTypeSymbol
-			);
-			// const coinSymbols = (
-			// 	await Promise.all(
-			// 		Object.keys(pool.coins).map((coin) =>
-			// 			this.Provider.Coin().fetchCoinMetadata({
-			// 				coin,
-			// 			})
-			// 		)
-			// 	)
-			// ).map((metadata) => metadata.symbol);
-
-			const coinsString = `${coinSymbols.reduce(
-				(acc, symbol, index) =>
-					acc + symbol + (index >= coinSymbols.length - 1 ? "" : "/"),
-				""
-			)}`;
-
-			return {
-				symbol: `${coinsString} afLP`,
-				id: null,
-				description: `Aftermath LP Coin for ${coinsString} Pool`,
-				name: `${coinsString} LP`,
-				decimals: pool.lpCoinDecimals,
-				iconUrl: null,
-				isGenerated: true,
-			};
-		} catch (e) {
-			return {
-				symbol: "afLP",
-				id: null,
-				description: "Aftermath Finance LP",
-				name: "LP",
-				decimals: Pools.constants.defaults.lpCoinDecimals,
-				iconUrl: null,
-				isGenerated: true,
-			};
-		}
 	};
 
 	// =========================================================================

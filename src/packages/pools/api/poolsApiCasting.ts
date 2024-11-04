@@ -17,7 +17,6 @@ import {
 	PoolDepositEventOnChain,
 	PoolWithdrawEventOnChain,
 	DaoFeePoolFieldsOnChain,
-	PoolsIndexerResponse,
 	DaoFeePoolOwnerCapFieldsOnChain,
 } from "./poolsApiCastingTypes";
 import { Coin } from "../../coin";
