@@ -329,8 +329,8 @@ export class Helpers {
 
 	public static getObjectType(data: SuiObjectResponse): ObjectId {
 		const objectType = data.data?.type;
-		// NOTE: should `Helpers.addLeadingZeroesToType` be used here ?
-		if (objectType) return objectType;
+		// NOTE: should `Helpers.addLeadingZeroesToType` not be used here ?
+		if (objectType) return Helpers.addLeadingZeroesToType(objectType);
 
 		throw new Error("no object type found on " + data.data?.objectId);
 	}

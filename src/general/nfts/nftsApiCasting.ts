@@ -56,6 +56,21 @@ export class NftsApiCasting {
 		};
 	};
 
+	public static kioskOwnerCapFromPersonalKioskCapSuiObject = (
+		object: SuiObjectResponse
+	): KioskOwnerCapObject => {
+		const fields = Helpers.getObjectFields(object);
+		const objectId = Helpers.getObjectId(object);
+		const objectType = Helpers.getObjectType(object);
+		return {
+			objectId,
+			objectType,
+			kioskObjectId: Helpers.addLeadingZeroesToType(
+				fields.cap.fields.for
+			),
+		};
+	};
+
 	// =========================================================================
 	//  Private Methods
 	// =========================================================================

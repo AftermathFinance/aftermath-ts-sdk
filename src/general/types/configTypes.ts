@@ -30,6 +30,7 @@ export interface ConfigAddresses {
 	leveragedStaking?: LeveragedStakingAddresses;
 	dca?: DcaAddresses;
 	sharedCustody?: SharedCustodyAddresses;
+	nfts?: NftsAddresses;
 }
 
 // =========================================================================
@@ -197,4 +198,10 @@ export interface DcaAddresses {
 export interface SharedCustodyAddresses {
 	address: ObjectId;
 	// publicKey: ObjectId;
+}
+
+export interface NftsAddresses {
+	packages: {
+		mystenTransferPolicy: SuiAddress;
+	};
 }
