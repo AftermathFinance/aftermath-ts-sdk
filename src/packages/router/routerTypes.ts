@@ -49,7 +49,7 @@ export type RouterProtocolName =
 	| "DoubleUpPump"
 	| "FlowX"
 	| "FlowXClmm"
-	// | "HopFun" // NOTE: this is not added yet
+	| "HopFun"
 	| "Kriya"
 	| "KriyaClmm"
 	| "MovePump"
