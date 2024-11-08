@@ -12,6 +12,8 @@ import {
 	BigIntAsString,
 	SerializedTransaction,
 	ExternalFee,
+	IFixedAsString,
+	IFixed,
 } from "../../general/types/generalTypes";
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
@@ -39,18 +41,20 @@ export type RouterExternalFee = ExternalFee;
 
 export type RouterProtocolName =
 	| "Aftermath"
-	| "Interest"
-	| "Kriya"
-	| "BaySwap"
-	| "Suiswap"
 	| "BlueMove"
-	// TODO: handle stable bluemove
-	| "afSUI"
 	| "Cetus"
-	| "Turbos"
 	| "DeepBook"
+	| "DeepBookV3"
+	| "DoubleUpPump"
 	| "FlowX"
-	| "FlowXClmm";
+	| "FlowXClmm"
+	| "HopFun"
+	| "Kriya"
+	| "KriyaClmm"
+	| "MovePump"
+	| "SuiSwap"
+	| "Turbos";
+// | "afSUI"; // NOTE: this is not added yet
 
 // =========================================================================
 //  Paths
@@ -71,11 +75,13 @@ export type RouterCompleteTradeRouteWithFee = RouterCompleteTradeRoute;
 
 export type RouterTradeRoute = RouterTradeInfo & {
 	paths: RouterTradePath[];
+	portion: IFixed;
 };
 
 export type RouterTradePath = RouterTradeInfo & {
 	protocolName: RouterProtocolName;
-	pool: RouterServicePoolMetadata;
+	poolId: ObjectId;
+	poolMetadata: any;
 };
 
 export interface RouterTradeInfo {
@@ -125,8 +131,14 @@ export type ApiRouterPartialCompleteTradeRouteBody = {
 	 * Fee info for third party packages wanting to fee route transactions
 	 */
 	externalFee?: ExternalFee;
-	excludeProtocols?: RouterProtocolName[];
-};
+} & (
+	| {
+			protocolBlacklist?: RouterProtocolName[];
+	  }
+	| {
+			protocolWhitelist?: RouterProtocolName[];
+	  }
+);
 
 /**
  * Details for router to construct trade route
@@ -202,42 +214,4 @@ export interface ApiRouterDynamicGasBody {
 	senderAddress: SuiAddress;
 	sponsorAddress: SuiAddress;
 	referrer?: SuiAddress;
-}
-
-// =========================================================================
-//  Service
-// =========================================================================
-
-export interface RouterServicePaths {
-	data: RouterServicePath[];
-	protocol_fee: RouterServiceSwapFee;
-}
-
-export interface RouterServicePath {
-	amount: number;
-	path: {
-		data: RouterServiceHop[];
-	};
-}
-
-export interface RouterServiceHop {
-	protocol: RouterProtocolName;
-	pool: RouterServicePoolMetadata;
-	input: CoinType;
-	output: CoinType;
-	input_amount: number;
-	output_amount: number;
-	swap_fee: RouterServiceSwapFee;
-}
-
-export interface RouterServiceSwapFee {
-	input_fee_amount: number;
-	output_fee_amount: number;
-}
-
-export interface RouterServicePoolMetadata {
-	protocol: any; // ?
-	pool_id: ObjectId;
-	tb_data: any; // TBData
-	assets: [CoinType, CoinType];
 }

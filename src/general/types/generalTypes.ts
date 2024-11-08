@@ -3,11 +3,11 @@ import {
 	EventId,
 	SuiTransactionBlockResponse,
 } from "@mysten/sui/client";
-import {
-	Scallop,
-	ScallopBuilder,
-	ScallopQuery,
-} from "@scallop-io/sui-scallop-sdk";
+// import {
+// 	Scallop,
+// 	ScallopBuilder,
+// 	ScallopQuery,
+// } from "@scallop-io/sui-scallop-sdk";
 
 // =========================================================================
 //  bigint
@@ -181,10 +181,6 @@ export type ApiIndexerUserEventsBody = ApiIndexerEventsBody & {
 	walletAddress: SuiAddress;
 };
 
-export interface IndexerResponse<DataType> {
-	data: DataType;
-}
-
 export interface IndexerDataWithCursorQueryParams {
 	skip: number;
 	limit: number;
@@ -194,8 +190,8 @@ export interface IndexerDataWithCursorQueryParams {
 //  Scallop
 // =========================================================================
 
-export interface ScallopProviders {
-	Main: Scallop;
-	Builder: ScallopBuilder;
-	Query: ScallopQuery;
-}
+// export interface ScallopProviders {
+// 	Main: Scallop;
+// 	Builder: ScallopBuilder;
+// 	Query: ScallopQuery;
+// }

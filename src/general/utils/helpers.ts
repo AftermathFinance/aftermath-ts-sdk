@@ -6,7 +6,6 @@ import {
 import {
 	AnyObjectType,
 	Balance,
-	ScallopProviders,
 	SuiNetwork,
 	CoinsToDecimals,
 	CoinsToPrice,
@@ -29,9 +28,7 @@ import {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { Scallop } from "@scallop-io/sui-scallop-sdk";
-import { NetworkType } from "@scallop-io/sui-kit";
-import { IndexerSwapVolumeResponse } from "../types/castingTypes";
+// import { Scallop } from "@scallop-io/sui-scallop-sdk";
 import { Coin } from "../..";
 import { MoveErrors } from "../types/moveErrorsInterface";
 import { isValidSuiAddress } from "@mysten/sui/utils";
@@ -377,8 +374,8 @@ export class Helpers {
 
 	public static getObjectType(data: SuiObjectResponse): ObjectId {
 		const objectType = data.data?.type;
-		// NOTE: should `Helpers.addLeadingZeroesToType` be used here ?
-		if (objectType) return objectType;
+		// NOTE: should `Helpers.addLeadingZeroesToType` not be used here ?
+		if (objectType) return Helpers.addLeadingZeroesToType(objectType);
 
 		throw new Error("no object type found on " + data.data?.objectId);
 	}
@@ -425,79 +422,35 @@ export class Helpers {
 	//  Constructors
 	// =========================================================================
 
-	public static async createScallopProviders(inputs: {
-		network: SuiNetwork;
-	}): Promise<ScallopProviders> {
-		const network = inputs.network.toLowerCase();
-		const networkType =
-			network === "local"
-				? "localnet"
-				: network !== "mainnet" &&
-				  network !== "testnet" &&
-				  network !== "localnet"
-				? undefined
-				: network;
-		if (!networkType)
-			throw new Error(`network \`${inputs.network}\` not found`);
+	// public static async createScallopProviders(inputs: {
+	// 	network: SuiNetwork;
+	// }): Promise<ScallopProviders> {
+	// 	const network = inputs.network.toLowerCase();
+	// 	const networkType =
+	// 		network === "local"
+	// 			? "localnet"
+	// 			: network !== "mainnet" &&
+	// 			  network !== "testnet" &&
+	// 			  network !== "localnet"
+	// 			? undefined
+	// 			: network;
+	// 	if (!networkType)
+	// 		throw new Error(`network \`${inputs.network}\` not found`);
 
-		const Main = new Scallop({
-			networkType,
-		});
-		const [Builder, Query] = await Promise.all([
-			Main.createScallopBuilder(),
-			Main.createScallopQuery(),
-		]);
-		// await Promise.all([Builder.init(), Query.init()]);
-		return {
-			Main,
-			Builder,
-			Query,
-		};
-	}
-
-	// =========================================================================
-	//  Indexer Calculations
-	// =========================================================================
-
-	/**
-	 * Calculates the total volume in USD.
-	 *
-	 * @param inputs - The input parameters for the calculation.
-	 * @param inputs.volumes - Swap volumes.
-	 * @param inputs.coinsToPrice - The mapping of coin types to their respective prices.
-	 * @param inputs.coinsToDecimals - The mapping of coin types to their respective decimal places.
-	 * @returns The total volume in USD.
-	 */
-	public static calcIndexerVolumeUsd = (inputs: {
-		volumes: IndexerSwapVolumeResponse;
-		coinsToPrice: CoinsToPrice;
-		coinsToDecimals: CoinsToDecimals;
-	}): number => {
-		const { volumes, coinsToPrice, coinsToDecimals } = inputs;
-		return volumes.reduce((acc, data) => {
-			const coinInPrice = coinsToPrice[data.coinTypeIn];
-			if (coinInPrice > 0) {
-				const decimals = coinsToDecimals[data.coinTypeIn];
-				const tradeAmount = Coin.balanceWithDecimals(
-					data.totalAmountIn,
-					decimals
-				);
-
-				const amountUsd = tradeAmount * coinInPrice;
-				return acc + amountUsd;
-			}
-
-			const coinOutPrice = coinsToPrice[data.coinTypeOut];
-			const decimals = coinsToDecimals[data.coinTypeOut];
-			const tradeAmount = Coin.balanceWithDecimals(
-				data.totalAmountOut,
-				decimals
-			);
-
-			const amountUsd = coinInPrice < 0 ? 0 : tradeAmount * coinOutPrice;
-			return acc + amountUsd;
-		}, 0);
-	};
+	// 	const Main = new Scallop({
+	// 		networkType,
+	// 	});
+	// 	const [Builder, Query] = await Promise.all([
+	// 		Main.createScallopBuilder(),
+	// 		Main.createScallopQuery(),
+	// 	]);
+	// 	// await Promise.all([Builder.init(), Query.init()]);
+	// 	return {
+	// 		Main,
+	// 		Builder,
+	// 		Query,
+	// 	};
+	// }
 
 	public static isValidSuiAddress = (address: SuiAddress) =>
 		isValidSuiAddress(

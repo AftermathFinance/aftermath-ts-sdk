@@ -1,14 +1,7 @@
 import { Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
-import {
-	BigIntAsString,
-	CoinDecimal,
-	CoinSymbol,
-	ObjectId,
-	OracleAddresses,
-} from "../../../types";
-import { IFixedUtils } from "../../../general/utils/iFixedUtils";
+import { ObjectId, OracleAddresses } from "../../../types";
 import { Sui } from "../../sui";
 
 export class OracleApi {
@@ -27,62 +20,6 @@ export class OracleApi {
 
 		this.addresses = addresses;
 	}
-
-	// =========================================================================
-	//  Inspections
-	// =========================================================================
-
-	public fetchPrice = async (inputs: {
-		priceFeedId: ObjectId;
-	}): Promise<number> => {
-		const tx = new Transaction();
-
-		this.getPriceTx({ ...inputs, tx });
-
-		const priceBytes =
-			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
-				tx,
-			});
-
-		const price = Casting.bigIntFromBytes(priceBytes);
-		return IFixedUtils.numberFromIFixed(price);
-	};
-
-	public fetchPriceFeedSymbols = async (inputs: {
-		priceFeedIds: ObjectId[];
-	}): Promise<
-		{
-			symbol: CoinSymbol;
-			decimals: CoinDecimal;
-		}[]
-	> => {
-		const { priceFeedIds } = inputs;
-
-		const response = await this.Provider.indexerCaller.fetchIndexer<
-			{
-				symbol: CoinSymbol;
-				decimals: BigIntAsString;
-				priceFeedId: ObjectId;
-			}[]
-		>(`oracle/price-feed-symbols`, undefined, {
-			price_feed_ids: priceFeedIds,
-		});
-
-		let result: {
-			symbol: CoinSymbol;
-			decimals: CoinDecimal;
-		}[] = [];
-		for (const priceFeedId of priceFeedIds) {
-			const foundData = response.find(
-				(data) => data.priceFeedId === priceFeedId
-			)!;
-			result.push({
-				symbol: foundData.symbol,
-				decimals: Math.log10(Number(foundData.decimals)),
-			});
-		}
-		return result;
-	};
 
 	// =========================================================================
 	//  Transaction Commands

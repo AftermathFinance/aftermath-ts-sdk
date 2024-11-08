@@ -488,6 +488,67 @@ export class Pool extends Caller {
 		return amountsOut;
 	};
 
+	public getWithdrawAmountsOutSimple = (inputs: {
+		lpCoinAmountIn: Balance;
+		coinTypesOut: CoinType[];
+		referral?: boolean;
+	}): CoinsToBalance => {
+		const { lpCoinAmountIn, coinTypesOut, referral } = inputs;
+
+		const lpCoinSupply = this.pool.lpCoinSupply;
+
+		let withdrawAmountsEstimates: CoinsToBalance = {};
+		coinTypesOut.forEach((poolCoin) => {
+			const poolCoinAmountInPool =
+				this.pool.coins[Helpers.addLeadingZeroesToType(poolCoin)]
+					.balance;
+
+			const poolCoinAmount =
+				Number(poolCoinAmountInPool) *
+				(Number(lpCoinAmountIn) / Number(lpCoinSupply));
+
+			withdrawAmountsEstimates[Helpers.addLeadingZeroesToType(poolCoin)] =
+				BigInt(Math.floor(poolCoinAmount));
+		});
+
+		const lpRatio = this.getMultiCoinWithdrawLpRatio({
+			lpCoinAmountIn,
+		});
+		const amountsOut = this.getWithdrawAmountsOut({
+			lpRatio,
+			amountsOutDirection: withdrawAmountsEstimates,
+			referral,
+		});
+
+		for (const coin of Object.keys(amountsOut)) {
+			if (
+				!coinTypesOut
+					.map((coinOut) => Helpers.addLeadingZeroesToType(coinOut))
+					.includes(coin)
+			)
+				continue;
+
+			const amountOut = amountsOut[coin];
+
+			if (amountOut <= BigInt(0))
+				throw new Error(`amountsOut[${coin}] <= 0 `);
+
+			if (
+				amountOut / this.pool.coins[coin].balance >=
+				Pools.constants.bounds.maxWithdrawPercentageOfPoolBalance
+			)
+				throw new Error(
+					"coinOutAmount / coinOutPoolBalance >= maxWithdrawPercentageOfPoolBalance"
+				);
+
+			amountsOut[coin] = this.getAmountWithDAOFee({
+				amount: amountOut,
+			});
+		}
+
+		return amountsOut;
+	};
+
 	/**
 	 * Calculates the output amounts for an all coin withdraw.
 	 * @param {Object} inputs - The inputs for the method.
@@ -520,25 +581,25 @@ export class Pool extends Caller {
 	/**
 	 * Calculates the LP ratio for a multi-coin withdraw.
 	 * @param {Object} inputs - The inputs for the method.
-	 * @param {bigint} inputs.lpCoinAmountOut - The LP coin amount out.
+	 * @param {bigint} inputs.lpCoinAmountIn - The LP coin amount out.
 	 * @returns {number} The LP ratio for the multi-coin withdraw.
 	 */
 	public getMultiCoinWithdrawLpRatio = (inputs: {
-		lpCoinAmountOut: bigint;
+		lpCoinAmountIn: bigint;
 	}): number =>
-		Number(this.pool.lpCoinSupply - inputs.lpCoinAmountOut) /
+		Number(this.pool.lpCoinSupply - inputs.lpCoinAmountIn) /
 		Number(this.pool.lpCoinSupply);
 
 	/**
 	 * Calculates the LP ratio for an all coin withdraw.
 	 * @param {Object} inputs - The inputs for the method.
-	 * @param {bigint} inputs.lpCoinAmountOut - The LP coin amount out.
+	 * @param {bigint} inputs.lpCoinAmountIn - The LP coin amount out.
 	 * @returns {number} The LP ratio for the all coin withdraw.
 	 */
 	public getAllCoinWithdrawLpRatio = (inputs: {
-		lpCoinAmountOut: bigint;
+		lpCoinAmountIn: bigint;
 	}): number =>
-		Number(inputs.lpCoinAmountOut) / Number(this.pool.lpCoinSupply);
+		Number(inputs.lpCoinAmountIn) / Number(this.pool.lpCoinSupply);
 
 	// =========================================================================
 	//  Getters

@@ -1,8 +1,10 @@
 import { AftermathApi } from "../providers/aftermathApi";
 import {
+	AnyObjectType,
 	KioskObject,
 	KioskOwnerCapObject,
 	Nft,
+	NftsAddresses,
 	ObjectId,
 	SuiAddress,
 } from "../../types";
@@ -21,7 +23,27 @@ export class NftsApi {
 	// 	};
 	// };
 
-	constructor(private readonly Provider: AftermathApi) {}
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	public readonly addresses: NftsAddresses;
+	public readonly objectTypes: {
+		personalKioskCap: AnyObjectType;
+	};
+
+	constructor(private readonly Provider: AftermathApi) {
+		if (!this.Provider.addresses.nfts)
+			throw new Error(
+				"not all required addresses have been set in provider"
+			);
+
+		this.addresses = this.Provider.addresses.nfts;
+
+		this.objectTypes = {
+			personalKioskCap: `${this.addresses.packages.mystenTransferPolicy}::personal_kiosk::PersonalKioskCap`,
+		};
+	}
 
 	// =========================================================================
 	//  Public Methods
@@ -76,13 +98,22 @@ export class NftsApi {
 	}): Promise<KioskOwnerCapObject[]> => {
 		const { walletAddress } = inputs;
 
-		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
-			walletAddress,
-			objectType:
-				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap",
-			objectFromSuiObjectResponse:
-				Casting.nfts.kioskOwnerCapFromSuiObject,
-		});
+		const [kioskOwnerCaps, personalKioskOwnerCaps] = await Promise.all([
+			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType:
+					"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::KioskOwnerCap",
+				objectFromSuiObjectResponse:
+					Casting.nfts.kioskOwnerCapFromSuiObject,
+			}),
+			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType: this.objectTypes.personalKioskCap,
+				objectFromSuiObjectResponse:
+					Casting.nfts.kioskOwnerCapFromPersonalKioskCapSuiObject,
+			}),
+		]);
+		return [...kioskOwnerCaps, ...personalKioskOwnerCaps];
 	};
 
 	public fetchNftsInKiosk = async (inputs: {
@@ -102,8 +133,14 @@ export class NftsApi {
 
 		return this.Provider.Objects().fetchCastObjectBatch({
 			objectIds: kioskOwnerCapIds,
-			objectFromSuiObjectResponse:
-				Casting.nfts.kioskOwnerCapFromSuiObject,
+			objectFromSuiObjectResponse: (response) =>
+				response.data?.type &&
+				Helpers.addLeadingZeroesToType(response.data?.type) ===
+					this.objectTypes.personalKioskCap
+					? Casting.nfts.kioskOwnerCapFromPersonalKioskCapSuiObject(
+							response
+					  )
+					: Casting.nfts.kioskOwnerCapFromSuiObject(response),
 		});
 	};
 
@@ -126,6 +163,8 @@ export class NftsApi {
 				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
 			kioskOwnerCapId: kioskOwnerCap.objectId,
 			nfts: nfts[index],
+			isPersonal:
+				kioskOwnerCap.objectType === this.objectTypes.personalKioskCap,
 		}));
 	};
 
@@ -155,6 +194,8 @@ export class NftsApi {
 				"0x0000000000000000000000000000000000000000000000000000000000000002::kiosk::Kiosk",
 			kioskOwnerCapId: kioskOwnerCap.objectId,
 			nfts: nfts[index],
+			isPersonal:
+				kioskOwnerCap.objectType === this.objectTypes.personalKioskCap,
 		}));
 	};
 }
