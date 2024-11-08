@@ -11,6 +11,7 @@ export interface KioskOwnerCapObject extends Object {
 export interface KioskObject extends Object {
 	kioskOwnerCapId: ObjectId;
 	nfts: Nft[];
+	isPersonal: boolean;
 }
 
 // =========================================================================
