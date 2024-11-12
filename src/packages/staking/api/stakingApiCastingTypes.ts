@@ -14,14 +14,6 @@ import {
 //  Objects
 // =========================================================================
 
-export interface ValidatorConfigOnIndexer {
-	objectType: AnyObjectType;
-	objectId: ObjectId;
-	suiAddress: SuiAddress;
-	operationCapId: ObjectId;
-	fee: IFixedAsString;
-}
-
 export interface ValidatorOperationCapFieldsOnChain {
 	authorizer_validator_address: SuiAddress;
 }

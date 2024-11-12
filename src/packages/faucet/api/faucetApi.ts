@@ -74,55 +74,8 @@ export class FaucetApi {
 	}
 
 	// =========================================================================
-	//  Inspections
-	// =========================================================================
-
-	public fetchSupportedCoins = async (): Promise<CoinType[]> => {
-		const addCoinEvents = await this.fetchAddCoinEvents({});
-		const coins = addCoinEvents.events.map(
-			(event) => "0x" + event.coinType
-		);
-		return coins;
-	};
-
-	// =========================================================================
 	//  Transaction Builders
 	// =========================================================================
-
-	public fetchRequestCoinAmountTx = async (inputs: {
-		coinType: CoinType;
-		walletAddress: SuiAddress;
-	}): Promise<Transaction> => {
-		const { coinType, walletAddress } = inputs;
-
-		const [coinPrice, coinDecimals] = await Promise.all([
-			this.Provider.Prices().fetchPrice({
-				coin: coinType,
-			}),
-			(
-				await this.Provider.Coin().fetchCoinMetadata({ coin: coinType })
-			).decimals,
-		]);
-
-		const requestAmount =
-			Faucet.constants.defaultRequestAmountUsd /
-			(coinPrice <= 0 ? 1 : coinPrice);
-		const requestAmountWithDecimals = Coin.normalizeBalance(
-			requestAmount,
-			coinDecimals
-		);
-
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
-
-		this.requestCoinAmountTx({
-			tx,
-			coinType,
-			amount: requestAmountWithDecimals,
-		});
-
-		return tx;
-	};
 
 	public fetchRequestCustomCoinAmountTx = async (inputs: {
 		walletAddress: SuiAddress;
@@ -254,6 +207,7 @@ export class FaucetApi {
 	//  Events
 	// =========================================================================
 
+	// TODO: add to indexer
 	public fetchMintCoinEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
@@ -267,6 +221,7 @@ export class FaucetApi {
 				FaucetApiCasting.faucetMintCoinEventFromOnChain,
 		});
 
+	// TODO: add to indexer
 	public fetchAddCoinEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetAddCoinEventOnChain,

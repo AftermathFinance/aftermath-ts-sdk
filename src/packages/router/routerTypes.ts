@@ -18,7 +18,6 @@ import {
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
 import { TransactionObjectArgument as TransactionObjectArgumentV0 } from "@mysten/sui.js/transactions";
-import { RouterServiceProtocol } from "./api/routerApiCastingTypes";
 
 // =========================================================================
 //  Name Only
@@ -82,10 +81,7 @@ export type RouterTradeRoute = RouterTradeInfo & {
 export type RouterTradePath = RouterTradeInfo & {
 	protocolName: RouterProtocolName;
 	poolId: ObjectId;
-	poolMetadata: {
-		tbData: any;
-		protocol: RouterServiceProtocol;
-	};
+	poolMetadata: any;
 };
 
 export interface RouterTradeInfo {
@@ -218,40 +214,4 @@ export interface ApiRouterDynamicGasBody {
 	senderAddress: SuiAddress;
 	sponsorAddress: SuiAddress;
 	referrer?: SuiAddress;
-}
-
-// =========================================================================
-//  Service
-// =========================================================================
-
-export interface RouterServicePaths {
-	amount_in: BigIntAsString;
-	amount_out: BigIntAsString;
-	paths: RouterServicePath[];
-	acceptable_price_impact: boolean;
-	protocol_fee: RouterServiceSwapFee;
-}
-
-export interface RouterServicePath {
-	portion: IFixedAsString;
-	path: {
-		data: RouterServiceHop[];
-	};
-}
-
-export interface RouterServiceHop {
-	pool: ObjectId;
-	protocol: RouterServiceProtocol;
-	tb_data: any; // TBData
-	input: CoinType;
-	output: CoinType;
-	input_amount: BigIntAsString;
-	output_amount: BigIntAsString;
-	acceptable_price_impact: boolean;
-	swap_fee: RouterServiceSwapFee;
-}
-
-export interface RouterServiceSwapFee {
-	input_fee_amount: BigIntAsString;
-	output_fee_amount: BigIntAsString;
 }
