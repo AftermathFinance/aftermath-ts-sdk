@@ -53,7 +53,8 @@ export type RouterProtocolName =
 	| "KriyaClmm"
 	| "MovePump"
 	| "SuiSwap"
-	| "Turbos";
+	| "Turbos"
+	| "TurbosFun";
 // | "afSUI"; // NOTE: this is not added yet
 
 // =========================================================================
