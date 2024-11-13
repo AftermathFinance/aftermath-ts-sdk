@@ -74,8 +74,7 @@ export class AftermathApi {
 	 * Creates an instance of AftermathApi.
 	 * @param provider - The SuiClient instance to use for interacting with the blockchain.
 	 * @param addresses - The configuration addresses for the Aftermath protocol.
-	 * @param indexerCaller - The IndexerCaller instance to use for querying the blockchain.
-	 * @param coinGeckoApiKey - (Optional) The API key to use for querying CoinGecko for token prices.
+	 * @param providerV0 - The SuiClient instance to use for interacting with the blockchain.
 	 */
 	public constructor(
 		public readonly provider: SuiClient,
