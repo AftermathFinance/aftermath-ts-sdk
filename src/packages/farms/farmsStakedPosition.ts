@@ -250,25 +250,25 @@ export class FarmsStakedPosition extends Caller {
 		this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
 	};
 
-	public calcTotalApr = (inputs: {
-		rewardsUsd: number;
-		stakeUsd: number;
-	}): Apr => {
-		const { rewardsUsd, stakeUsd } = inputs;
+	// public calcTotalApr = (inputs: {
+	// 	rewardsUsd: number;
+	// 	stakeUsd: number;
+	// }): Apr => {
+	// 	const { rewardsUsd, stakeUsd } = inputs;
 
-		dayjs.extend(duration);
-		const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
-		const timeSinceLastHarvestMs =
-			dayjs().valueOf() - this.trueLastHarvestRewardsTimestamp;
+	// 	dayjs.extend(duration);
+	// 	const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
+	// 	const timeSinceLastHarvestMs =
+	// 		dayjs().valueOf() - this.trueLastHarvestRewardsTimestamp;
 
-		const rewardsUsdOneYear =
-			timeSinceLastHarvestMs > 0
-				? rewardsUsd * (oneYearMs / timeSinceLastHarvestMs)
-				: 0;
+	// 	const rewardsUsdOneYear =
+	// 		timeSinceLastHarvestMs > 0
+	// 			? rewardsUsd * (oneYearMs / timeSinceLastHarvestMs)
+	// 			: 0;
 
-		const apr = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
-		return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
-	};
+	// 	const apr = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
+	// 	return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
+	// };
 
 	// =========================================================================
 	//  Transactions

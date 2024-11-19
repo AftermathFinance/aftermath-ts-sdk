@@ -1,15 +1,7 @@
 import { Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
-import {
-	AnyObjectType,
-	BigIntAsString,
-	CoinDecimal,
-	CoinSymbol,
-	ObjectId,
-	OracleAddresses,
-} from "../../../types";
-import { IFixedUtils } from "../../../general/utils/iFixedUtils";
+import { AnyObjectType, ObjectId, OracleAddresses } from "../../../types";
 import { Sui } from "../../sui";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
@@ -64,7 +56,7 @@ export class OracleApi {
 			});
 
 		const price = Casting.bigIntFromBytes(priceBytes);
-		return IFixedUtils.numberFromIFixed(price);
+		return Casting.IFixed.numberFromIFixed(price);
 	};
 
 	// =========================================================================

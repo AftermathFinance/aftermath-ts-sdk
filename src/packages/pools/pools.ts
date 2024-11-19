@@ -18,6 +18,8 @@ import {
 	PoolStats,
 	ApiPoolsStatsBody,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
+	PoolLpInfo,
+	SuiAddress,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -138,6 +140,12 @@ export class Pools extends Caller {
 		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
 	}
 
+	public async getOwnedLpCoins(inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<PoolLpInfo> {
+		return this.fetchApi("owned-lp-coins", inputs);
+	}
+
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
@@ -157,7 +165,7 @@ export class Pools extends Caller {
 	 * @returns A Promise that resolves to the transaction data.
 	 */
 	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
-		return this.useProvider().fetchCreatePoolTx(inputs);
+		return this.fetchApiTransaction("transactions/create-pool", inputs);
 	}
 
 	// =========================================================================

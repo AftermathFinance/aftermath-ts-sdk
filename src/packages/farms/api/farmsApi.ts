@@ -41,7 +41,6 @@ import {
 	FarmsCreatedVaultEventOnChain,
 	FarmsDepositedPrincipalEventOnChain,
 	FarmsHarvestedRewardsEventOnChain,
-	FarmsIndexerVaultsResponse,
 	FarmsLockedEventOnChain,
 	FarmsStakedEventOnChain,
 	FarmsStakedRelaxedEventOnChain,
@@ -244,51 +243,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Staking Pool Objects
 	// =========================================================================
-
-	public fetchStakingPool = async (inputs: {
-		objectId: ObjectId;
-	}): Promise<FarmsStakingPoolObject> => {
-		return (
-			await this.fetchStakingPools({ objectIds: [inputs.objectId] })
-		)[0];
-	};
-
-	public fetchStakingPools = async (inputs: {
-		objectIds: ObjectId[];
-	}): Promise<FarmsStakingPoolObject[]> => {
-		const vaultIds = inputs.objectIds.map((objectId) =>
-			Helpers.addLeadingZeroesToType(objectId)
-		);
-		const uncastFarms =
-			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
-				"afterburner-vaults/vaults",
-				undefined,
-				{
-					vault_ids: vaultIds,
-				}
-			);
-		const farms =
-			Casting.farms.stakingPoolObjectsFromIndexerResponse(uncastFarms);
-		return vaultIds.map(
-			(objectId) =>
-				farms.find(
-					(farm) =>
-						farm.objectId ===
-						Helpers.addLeadingZeroesToType(objectId)
-					// TODO: handle this error case better
-				)!
-		);
-	};
-
-	public fetchAllStakingPools = async (): Promise<
-		FarmsStakingPoolObject[]
-	> => {
-		const farms =
-			await this.Provider.indexerCaller.fetchIndexer<FarmsIndexerVaultsResponse>(
-				"afterburner-vaults/vaults"
-			);
-		return Casting.farms.stakingPoolObjectsFromIndexerResponse(farms);
-	};
 
 	public fetchOwnedStakingPoolOwnerCaps = async (
 		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody
@@ -1277,82 +1231,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	public buildGrantOneTimeAdminCapTx = Helpers.transactions.createBuildTxFunc(
 		this.grantOneTimeAdminCapTx
 	);
-
-	public async fetchIsStakingPoolUnlocked(inputs: {
-		stakingPoolId: ObjectId;
-		stakeCoinType: CoinType;
-	}): Promise<boolean> {
-		return (
-			await this.fetchIsUnlockedForStakingPools({
-				stakingPoolIds: [inputs.stakingPoolId],
-				stakeCoinTypes: [inputs.stakeCoinType],
-			})
-		)[0];
-	}
-
-	public async fetchStakingPoolRemainingRewards(inputs: {
-		stakingPoolId: ObjectId;
-		stakeCoinType: CoinType;
-	}): Promise<Balance[]> {
-		return (
-			await this.fetchRemainingRewardsForStakingPools({
-				stakingPoolIds: [inputs.stakingPoolId],
-				stakeCoinTypes: [inputs.stakeCoinType],
-			})
-		)[0];
-	}
-
-	public async fetchIsUnlockedForStakingPools(inputs: {
-		stakingPoolIds: ObjectId[];
-		stakeCoinTypes: CoinType[];
-	}): Promise<boolean[]> {
-		const tx = new Transaction();
-
-		for (const [index, stakingPoolId] of inputs.stakingPoolIds.entries()) {
-			this.isVaultUnlockedTx({
-				tx,
-				stakingPoolId,
-				stakeCoinType: inputs.stakeCoinTypes[index],
-			});
-		}
-
-		const { allBytes } =
-			await this.Provider.Inspections().fetchAllBytesFromTx({
-				tx,
-			});
-
-		return allBytes.map((bytes) =>
-			bcs.bool().parse(new Uint8Array(bytes[0]))
-		);
-	}
-
-	public async fetchRemainingRewardsForStakingPools(inputs: {
-		stakingPoolIds: ObjectId[];
-		stakeCoinTypes: CoinType[];
-	}): Promise<Balance[][]> {
-		const tx = new Transaction();
-
-		for (const [index, stakingPoolId] of inputs.stakingPoolIds.entries()) {
-			this.remainingRewardsTx({
-				tx,
-				stakingPoolId,
-				stakeCoinType: inputs.stakeCoinTypes[index],
-			});
-		}
-
-		const { allBytes } =
-			await this.Provider.Inspections().fetchAllBytesFromTx({
-				tx,
-			});
-
-		return allBytes.map((bytes) =>
-			(
-				bcs
-					.vector(bcs.u64())
-					.parse(new Uint8Array(bytes[0])) as BigIntAsString[]
-			).map((num) => BigInt(num))
-		);
-	}
 
 	// =========================================================================
 	//  Private Methods

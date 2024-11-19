@@ -18,7 +18,6 @@ import {
 	StakedSuiVaultStateV1FieldsOnChain,
 	UnstakeRequestedEventOnChain,
 	UnstakedEventOnChain,
-	ValidatorConfigOnIndexer,
 	ValidatorOperationCapFieldsOnChain,
 } from "./stakingApiCastingTypes";
 import { Helpers } from "../../../general/utils";
@@ -28,18 +27,6 @@ export class StakingApiCasting {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
-
-	public static validatorConfigObjectFromIndexer = (
-		data: ValidatorConfigOnIndexer
-	): ValidatorConfigObject => {
-		return {
-			objectType: Helpers.addLeadingZeroesToType(data.objectType),
-			objectId: Helpers.addLeadingZeroesToType(data.objectId),
-			suiAddress: Helpers.addLeadingZeroesToType(data.suiAddress),
-			operationCapId: Helpers.addLeadingZeroesToType(data.operationCapId),
-			fee: FixedUtils.directCast(BigInt(data.fee)),
-		};
-	};
 
 	public static validatorOperationCapObjectFromSuiObjectResponse = (
 		data: SuiObjectResponse
@@ -143,21 +130,6 @@ export class StakingApiCasting {
 			providedAfSuiAmount: BigInt(fields.provided_afsui_amount),
 			requester: Helpers.addLeadingZeroesToType(fields.requester),
 			epoch: BigInt(fields.epoch),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static epochWasChangedEventFromOnChain = (
-		eventOnChain: EpochWasChangedEventOnChain
-	): EpochWasChangedEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			activeEpoch: BigInt(fields.active_epoch),
-			totalAfSuiSupply: BigInt(fields.total_afsui_supply),
-			totalSuiRewardsAmount: BigInt(fields.total_rewards_amount),
-			totalSuiAmount: BigInt(fields.total_sui_amount),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

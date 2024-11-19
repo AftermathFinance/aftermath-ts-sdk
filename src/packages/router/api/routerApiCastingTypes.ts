@@ -1,9 +1,4 @@
-import {
-	AnyObjectType,
-	BigIntAsString,
-	CoinType,
-	SuiAddress,
-} from "../../../types";
+import { BigIntAsString, CoinType, SuiAddress } from "../../../types";
 import { EventOnChain } from "../../../general/types/castingTypes";
 
 // =========================================================================

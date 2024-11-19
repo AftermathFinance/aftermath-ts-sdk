@@ -76,6 +76,16 @@ export class FarmsStakingPool extends Caller {
 		return foundCoin;
 	};
 
+	public maxLockDurationMs = (): number => {
+		return Math.max(
+			Math.min(
+				this.stakingPool.maxLockDurationMs,
+				this.stakingPool.emissionEndTimestamp - dayjs().valueOf()
+			),
+			0
+		);
+	};
+
 	// =========================================================================
 	//  Calculations
 	// =========================================================================
