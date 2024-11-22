@@ -54,8 +54,10 @@ export type RouterProtocolName =
 	| "MovePump"
 	| "SuiSwap"
 	| "Turbos"
+	| "SpringSui"
+	| "AftermathLsd"
+	| "Bluefin"
 	| "TurbosFun";
-// | "afSUI"; // NOTE: this is not added yet
 
 // =========================================================================
 //  Paths
