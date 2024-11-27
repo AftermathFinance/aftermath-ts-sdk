@@ -3,7 +3,6 @@ import { LimitCreatedOrderEvent, LimitOrderObject } from "../limitTypes";
 import {
 	LimitCreatedOrderEventOnChain,
 	LimitIndexerOrderResponse,
-	LimitOrderFieldsOnChain,
 } from "./limitApiCastingTypes";
 
 export class LimitApiCasting {
@@ -74,6 +73,17 @@ export class LimitApiCasting {
 			expiry: response.expiry_timestamp_ms,
 			status: response.status,
 			error: response.error,
+			integratorFeeBps:
+				response.integrator_fee_bps === undefined
+					? undefined
+					: Number(response.integrator_fee_bps),
+			integratorFeeRecipient:
+				!response.integrator_fee_recipient ||
+				response.integrator_fee_recipient.length === 0
+					? undefined
+					: Helpers.addLeadingZeroesToType(
+							response.integrator_fee_recipient
+					  ),
 		};
 	};
 }

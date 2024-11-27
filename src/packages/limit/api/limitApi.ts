@@ -1,29 +1,6 @@
 import { AftermathApi } from "../../../general/providers";
 import { AnyObjectType, LimitAddresses, SuiAddress } from "../../../types";
-import {
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import {
-	ApiLimitTransactionForCancelOrderBody,
-	ApiLimitTransactionForCreateOrderBody,
-	LimitOrderObject,
-	LimitOrdersObject,
-} from "../limitTypes";
-import { Coin } from "../../coin";
-import {
-	LimitIndexerActiveOrdersRequest,
-	LimitIndexerOrderCancelRequest,
-	LimitIndexerOrderCancelResponse,
-	LimitIndexerOrderCreateRequest,
-	LimitIndexerOrderCreateResponse,
-	LimitIndexerOrderResponse,
-	LimitIndexerOrdersRequest,
-} from "./limitApiCastingTypes";
-import { Casting, Helpers } from "../../../general/utils";
-import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
-import { Limit } from "../limit";
 
 export class LimitApi {
 	// =========================================================================

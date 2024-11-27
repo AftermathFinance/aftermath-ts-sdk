@@ -116,7 +116,7 @@ export class Limit extends Caller {
 	// =========================================================================
 
 	/**
-	 * Method for getting the cancelation dca order message to sign.
+	 * Method for getting the cancellation dca order message to sign.
 	 * @param inputs - The inputs for the message.
 	 * @returns Message to sign.
 	 */
