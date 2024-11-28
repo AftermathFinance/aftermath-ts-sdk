@@ -17,7 +17,7 @@ export class LimitApiCasting {
 		return {
 			orderId: Helpers.addLeadingZeroesToType(fields.order_id),
 			user: Helpers.addLeadingZeroesToType(fields.user),
-			// TODO: - handle user_pk
+			// TODO: - should i convert to string?
 			userPublicKey: fields.user_pk,
 			recipient: Helpers.addLeadingZeroesToType(fields.recipient),
 			inputAmount: BigInt(fields.input_amount),
@@ -73,13 +73,13 @@ export class LimitApiCasting {
 			expiry: response.expiry_timestamp_ms,
 			status: response.status,
 			error: response.error,
-			integratorFeeBps:
-				response.integrator_fee_bps === undefined
-					? undefined
-					: Number(response.integrator_fee_bps),
+			integratorFeeBps: !response.integrator_fee_bps
+				? undefined
+				: response.integrator_fee_bps,
 			integratorFeeRecipient:
 				!response.integrator_fee_recipient ||
-				response.integrator_fee_recipient.length === 0
+				response.integrator_fee_recipient.length === 0 ||
+				response.integrator_fee_recipient === "0x0"
 					? undefined
 					: Helpers.addLeadingZeroesToType(
 							response.integrator_fee_recipient
