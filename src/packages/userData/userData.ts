@@ -4,7 +4,6 @@ import { AftermathApi } from "../../general/providers";
 import {
 	ApiUserDataCreateUserBody,
 	ApiUserDataOwnedBody,
-	UserDataKeyType,
 } from "./userDataTypes";
 
 export class UserData extends Caller {
@@ -61,23 +60,19 @@ export class UserData extends Caller {
 	/**
 	 * Fetches the API for user create message to sign.
 	 * @async
-	 * @param { UserDataKeyType } inputs - key of the service you interract with.
-	 * @returns { string } message to sign with action related to the service you interract with.
+	 * @returns { string } message to sign with action related to the service you interact with.
 	 */
 
-	public createUserAccountMessageToSign(key: UserDataKeyType): {
-		action: string;
-	} {
+	public createUserAccountMessageToSign() {
 		return {
-			action: `CREATE_${key.toUpperCase()}_ACCOUNT`,
+			action: `CREATE_USER_ACCOUNT`,
 		};
 	}
 
 	/**
 	 * Fetches the API for creating sign and terms message to sign.
 	 * @async
-	 * @param { UserDataKeyType } inputs - key of the service you interract with.
-	 * @returns { string } message to sign with action related to the service you interract with.
+	 * @returns { string } message to sign with action related to the service you interact with.
 	 */
 
 	public createSignTermsAndConditionsMessageToSign(): {
