@@ -72,7 +72,7 @@ export interface LimitOrderObject {
 	expiry: Timestamp;
 	status: LimitIndexerOrderStatus | undefined;
 	error: string | undefined;
-	integratorFeeBps?: number;
+	integratorFeeBps: number;
 	integratorFeeRecipient?: string;
 }
 

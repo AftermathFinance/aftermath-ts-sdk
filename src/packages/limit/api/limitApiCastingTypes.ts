@@ -77,8 +77,8 @@ export type LimitIndexerOrderResponse = {
 	expiry_timestamp_ms: Timestamp;
 	status: LimitIndexerOrderStatus | undefined;
 	error: string | undefined;
-	integrator_fee_bps?: number;
-	integrator_fee_recipient?: string;
+	integrator_fee_bps: number;
+	integrator_fee_recipient: string;
 };
 
 // =========================================================================
