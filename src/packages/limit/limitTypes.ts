@@ -21,7 +21,7 @@ export interface ApiLimitTransactionForCreateOrderBody {
 	expiryTimestampMs: Timestamp;
 	isSponsoredTx?: boolean;
 	integratorFeeBps?: number;
-	integratorFeeRecipient?: string;
+	integratorFeeRecipient?: SuiAddress;
 }
 
 // =========================================================================
@@ -73,7 +73,7 @@ export interface LimitOrderObject {
 	status: LimitIndexerOrderStatus | undefined;
 	error: string | undefined;
 	integratorFeeBps: number;
-	integratorFeeRecipient?: string;
+	integratorFeeRecipient?: SuiAddress;
 }
 
 // =========================================================================
