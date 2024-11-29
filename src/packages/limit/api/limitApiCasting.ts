@@ -1,4 +1,5 @@
 import { Helpers } from "../../../general/utils";
+import { Sui } from "../../sui";
 import { LimitCreatedOrderEvent, LimitOrderObject } from "../limitTypes";
 import {
 	LimitCreatedOrderEventOnChain,
@@ -73,13 +74,11 @@ export class LimitApiCasting {
 			expiry: response.expiry_timestamp_ms,
 			status: response.status,
 			error: response.error,
-			integratorFeeBps: !response.integrator_fee_bps
-				? undefined
-				: response.integrator_fee_bps,
+			integratorFeeBps: response.integrator_fee_bps,
 			integratorFeeRecipient:
-				!response.integrator_fee_recipient ||
 				response.integrator_fee_recipient.length === 0 ||
-				response.integrator_fee_recipient === "0x0"
+				response.integrator_fee_recipient ===
+					Sui.constants.addresses.zero
 					? undefined
 					: Helpers.addLeadingZeroesToType(
 							response.integrator_fee_recipient
