@@ -8,6 +8,15 @@ import {
 } from "../../general/types/generalTypes";
 
 // =========================================================================
+//  Common Types
+// =========================================================================
+
+export interface LimitIntegratorFeeData {
+	feeBps: number;
+	feeRecipient: SuiAddress;
+}
+
+// =========================================================================
 //  Initialize Order Transaction
 // =========================================================================
 
@@ -20,8 +29,7 @@ export interface ApiLimitTransactionForCreateOrderBody {
 	customRecipient?: SuiAddress;
 	expiryTimestampMs: Timestamp;
 	isSponsoredTx?: boolean;
-	integratorFeeBps?: number;
-	integratorFeeRecipient?: SuiAddress;
+	integratorFee?: LimitIntegratorFeeData;
 }
 
 // =========================================================================
@@ -72,8 +80,7 @@ export interface LimitOrderObject {
 	expiry: Timestamp;
 	status: LimitIndexerOrderStatus | undefined;
 	error: string | undefined;
-	integratorFeeBps: number;
-	integratorFeeRecipient?: SuiAddress;
+	integratorFee?: LimitIntegratorFeeData;
 }
 
 // =========================================================================
