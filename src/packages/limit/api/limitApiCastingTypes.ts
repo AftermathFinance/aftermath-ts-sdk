@@ -78,7 +78,7 @@ export type LimitIndexerOrderResponse = {
 	status: LimitIndexerOrderStatus | undefined;
 	error: string | undefined;
 	integrator_fee_bps: number;
-	integrator_fee_recipient: string;
+	integrator_fee_recipient: SuiAddress;
 };
 
 // =========================================================================
@@ -97,7 +97,7 @@ export type LimitIndexerOrderCreateRequest = {
 		min_amount_out: string;
 		expiry_interval_ms: Timestamp;
 		integrator_fee_bps: number;
-		integrator_fee_recipient: string;
+		integrator_fee_recipient: SuiAddress;
 	};
 };
 
