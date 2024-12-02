@@ -50,6 +50,13 @@ export class LimitApiCasting {
 			String(response.coin_buy)
 		);
 		const finishTime = response.finish_order_tx_info;
+		const integratorFeeRecipient =
+			response.integrator_fee_recipient.length === 0 ||
+			response.integrator_fee_recipient === Sui.constants.addresses.zero
+				? undefined
+				: Helpers.addLeadingZeroesToType(
+						response.integrator_fee_recipient
+				  );
 		return {
 			objectId: Helpers.addLeadingZeroesToType(response.order_object_id),
 			allocatedCoin: {
@@ -74,15 +81,12 @@ export class LimitApiCasting {
 			expiry: response.expiry_timestamp_ms,
 			status: response.status,
 			error: response.error,
-			integratorFeeBps: response.integrator_fee_bps,
-			integratorFeeRecipient:
-				response.integrator_fee_recipient.length === 0 ||
-				response.integrator_fee_recipient ===
-					Sui.constants.addresses.zero
-					? undefined
-					: Helpers.addLeadingZeroesToType(
-							response.integrator_fee_recipient
-					  ),
+			integratorFee: !integratorFeeRecipient
+				? undefined
+				: {
+						feeBps: response.integrator_fee_bps,
+						feeRecipient: integratorFeeRecipient,
+				  },
 		};
 	};
 }
