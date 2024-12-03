@@ -18,7 +18,7 @@ import { LimitIndexerOrderStatus } from "../limitTypes";
 
 export interface LimitOrderFieldsOnChain {
 	id: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	recipient: ObjectId;
 	balance: BigIntAsString;
 	gas: BigIntAsString;
@@ -31,7 +31,7 @@ export interface LimitOrderFieldsOnChain {
 
 export type LimitCreatedOrderEventOnChain = EventOnChain<{
 	order_id: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	user_pk: Uint8Array;
 	recipient: ObjectId;
 	input_amount: BigIntAsString;

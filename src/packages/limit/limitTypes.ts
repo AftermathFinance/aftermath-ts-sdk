@@ -89,7 +89,7 @@ export interface LimitOrderObject {
 
 export interface LimitCreatedOrderEvent extends Event {
 	orderId: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	userPublicKey: Uint8Array;
 	recipient: SuiAddress;
 	inputAmount: Balance;
