@@ -107,7 +107,7 @@ export interface DcaOrderOverviewObject {
 	tradesRemaining: number;
 	maxSlippageBps: number;
 	strategy?: DcaOrderStrategyData;
-	recipient?: SuiAddress;
+	recipient: SuiAddress;
 	progress: number;
 	created: {
 		time: Timestamp;
@@ -175,7 +175,7 @@ export interface DcaClosedOrderEvent extends Event {
 
 export interface DcaExecutedTradeEvent extends Event {
 	orderId: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	inputType: CoinType;
 	inputAmount: Balance;
 	outputType: CoinType;
