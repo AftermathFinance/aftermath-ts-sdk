@@ -163,7 +163,7 @@ export interface DcaClosedOrderEvent extends Event {
 
 export interface DcaExecutedTradeEvent extends Event {
 	orderId: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	inputType: CoinType;
 	inputAmount: Balance;
 	outputType: CoinType;

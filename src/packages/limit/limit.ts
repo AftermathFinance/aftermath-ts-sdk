@@ -11,7 +11,7 @@ import {
 } from "./limitTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
-export class Limit extends Caller {
+export class LimitOrders extends Caller {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -121,15 +121,15 @@ export class Limit extends Caller {
 	 * @returns Message to sign.
 	 */
 
-	public cancelLimitOrderMessageToSign(inputs: {
-		action: string;
-		orderIds: ObjectId[];
-	}): {
+	public cancelLimitOrderMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;
 		order_object_ids: string[];
 	} {
 		return {
-			action: inputs.action,
+			action:
+				inputs.orderIds.length === 1
+					? "CANCEL_LIMIT_ORDER"
+					: "CANCEL_LIMIT_ORDERS",
 			order_object_ids: inputs.orderIds,
 		};
 	}

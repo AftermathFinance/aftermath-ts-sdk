@@ -59,7 +59,6 @@ export class UserData extends Caller {
 
 	/**
 	 * Fetches the API for user create message to sign.
-	 * @async
 	 * @returns { string } message to sign with action related to the service you interact with.
 	 */
 
@@ -71,7 +70,6 @@ export class UserData extends Caller {
 
 	/**
 	 * Fetches the API for creating sign and terms message to sign.
-	 * @async
 	 * @returns { string } message to sign with action related to the service you interact with.
 	 */
 

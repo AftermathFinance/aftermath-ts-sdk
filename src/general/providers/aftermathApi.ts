@@ -126,7 +126,7 @@ export class AftermathApi {
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
 	public Dca = () => new DcaApi(this);
-	public Limit = () => new LimitApi(this);
+	public LimitOrders = () => new LimitApi(this);
 	public UserData = () => new UserDataApi(this);
 	// public Multisig = () => new MultisigApi(this);
 
