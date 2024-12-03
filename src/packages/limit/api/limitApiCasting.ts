@@ -1,12 +1,8 @@
 import { Helpers } from "../../../general/utils";
-import { Sui } from "../../sui";
-import { LimitCreatedOrderEvent, LimitOrderObject } from "../limitTypes";
-import {
-	LimitCreatedOrderEventOnChain,
-	LimitIndexerOrderResponse,
-} from "./limitApiCastingTypes";
+import { LimitCreatedOrderEvent } from "../limitTypes";
+import { LimitCreatedOrderEventOnChain } from "./limitApiCastingTypes";
 
-export class LimitApiCasting {
+export class LimitOrdersApiCasting {
 	// =========================================================================
 	// Chain Event objects
 	// =========================================================================
@@ -33,60 +29,6 @@ export class LimitApiCasting {
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
-		};
-	};
-
-	// =========================================================================
-	// Chain Event objects
-	// =========================================================================
-
-	public static createdOrderEventOnIndexer = (
-		response: LimitIndexerOrderResponse
-	): LimitOrderObject => {
-		const inputCoinType = Helpers.addLeadingZeroesToType(
-			String(response.coin_sell)
-		);
-		const outputCoinType = Helpers.addLeadingZeroesToType(
-			String(response.coin_buy)
-		);
-		const finishTime = response.finish_order_tx_info;
-		const integratorFeeRecipient =
-			response.integrator_fee_recipient.length === 0 ||
-			response.integrator_fee_recipient === Sui.constants.addresses.zero
-				? undefined
-				: Helpers.addLeadingZeroesToType(
-						response.integrator_fee_recipient
-				  );
-		return {
-			objectId: Helpers.addLeadingZeroesToType(response.order_object_id),
-			allocatedCoin: {
-				coin: inputCoinType,
-				amount: BigInt(response.coin_sell_amount),
-			},
-			buyCoin: {
-				coin: outputCoinType,
-				amount: BigInt(response.coin_buy_min_amount_out),
-			},
-			recipient: Helpers.addLeadingZeroesToType(response.recipient),
-			created: {
-				time: response.create_order_tx_info.timestamp,
-				tnxDigest: response.create_order_tx_info.digest,
-			},
-			finish: finishTime
-				? {
-						time: finishTime.timestamp,
-						tnxDigest: finishTime.digest,
-				  }
-				: undefined,
-			expiry: response.expiry_timestamp_ms,
-			status: response.status,
-			error: response.error,
-			integratorFee: !integratorFeeRecipient
-				? undefined
-				: {
-						feeBps: response.integrator_fee_bps,
-						feeRecipient: integratorFeeRecipient,
-				  },
 		};
 	};
 }
