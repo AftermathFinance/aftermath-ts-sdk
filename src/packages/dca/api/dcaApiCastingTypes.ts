@@ -17,7 +17,7 @@ import { DcaFailedTradeReason } from "../dcaTypes";
 
 export interface DcaOrderFieldsOnChain {
 	id: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	recipient: ObjectId;
 	balance: BigIntAsString;
 	frequency_ms: BigIntAsString;
@@ -36,7 +36,7 @@ export interface DcaOrderFieldsOnChain {
 
 export type DcaCreatedOrderEventOnChain = EventOnChain<{
 	order_id: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	recipient: ObjectId;
 	user_pk: Uint8Array;
 	input_amount: BigIntAsString;
@@ -54,7 +54,7 @@ export type DcaCreatedOrderEventOnChain = EventOnChain<{
 
 export type DcaClosedOrderEventOnChain = EventOnChain<{
 	order_id: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	recipient: ObjectId;
 	remaining_amount: BigIntAsString;
 	input_type: Uint8Array;
@@ -71,7 +71,7 @@ export type DcaClosedOrderEventOnChain = EventOnChain<{
 
 export type DcaExecutedTradeEventOnChain = EventOnChain<{
 	order_id: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	recipient: ObjectId;
 	input_amount: BigIntAsString;
 	input_type: Uint8Array;

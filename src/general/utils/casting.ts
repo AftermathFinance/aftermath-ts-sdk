@@ -17,7 +17,7 @@ import { SuiObjectResponse } from "@mysten/sui/client";
 import { NftsApiCasting } from "../nfts/nftsApiCasting";
 import { OracleApiCasting } from "../../packages/oracle/api/oracleApiCasting";
 import { DcaApiCasting } from "../../packages/dca/api/dcaApiCasting";
-import { LimitApiCasting } from "../../packages/limit/api/limitApiCasting";
+import { LimitOrdersApiCasting } from "../../packages/limitOrders/api/limitOrdersApiCasting";
 
 /**
  * Utility class for casting and conversion functions.
@@ -40,7 +40,7 @@ export class Casting {
 	public static farms = FarmsApiCasting;
 	public static nfts = NftsApiCasting;
 	public static dca = DcaApiCasting;
-	public static limit = LimitApiCasting;
+	public static limit = LimitOrdersApiCasting;
 
 	// =========================================================================
 	//  Constants

@@ -2,7 +2,7 @@ import { AftermathApi } from "../../../general/providers";
 import { AnyObjectType, LimitAddresses, SuiAddress } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
-export class LimitApi {
+export class LimitOrdersApi {
 	// =========================================================================
 	// Constants
 	// =========================================================================
@@ -51,7 +51,7 @@ export class LimitApi {
 	private createdOrderEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.limit,
-			LimitApi.constants.moduleNames.events,
-			LimitApi.constants.eventNames.createdOrder
+			LimitOrdersApi.constants.moduleNames.events,
+			LimitOrdersApi.constants.eventNames.createdOrder
 		);
 }

@@ -33,7 +33,7 @@ import { AftermathApi } from "./aftermathApi";
 import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
 import { Dca } from "../../packages/dca/dca";
 import { Multisig } from "../../packages/multisig/multisig";
-import { Limit } from "../../packages/limit/limit";
+import { LimitOrders } from "../../packages/limitOrders/limitOrders";
 import { UserData } from "../../packages/userData/userData";
 
 /**
