@@ -11,7 +11,7 @@ import {
 //  Common Types
 // =========================================================================
 
-export interface LimitIntegratorFeeData {
+export interface LimitOrdersIntegratorFeeData {
 	feeBps: number;
 	feeRecipient: SuiAddress;
 }
@@ -20,7 +20,7 @@ export interface LimitIntegratorFeeData {
 //  Initialize Order Transaction
 // =========================================================================
 
-export interface ApiLimitTransactionForCreateOrderBody {
+export interface ApiLimitOrdersTransactionForCreateOrderBody {
 	walletAddress: SuiAddress;
 	allocateCoinType: CoinType;
 	allocateCoinAmount: Balance;
@@ -29,14 +29,14 @@ export interface ApiLimitTransactionForCreateOrderBody {
 	customRecipient?: SuiAddress;
 	expiryTimestampMs: Timestamp;
 	isSponsoredTx?: boolean;
-	integratorFee?: LimitIntegratorFeeData;
+	integratorFee?: LimitOrdersIntegratorFeeData;
 }
 
 // =========================================================================
 // Cancel Order Transaction
 // =========================================================================
 
-export interface ApiLimitTransactionForCancelOrderBody {
+export interface ApiLimitOrdersTransactionForCancelOrderBody {
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;
@@ -46,7 +46,7 @@ export interface ApiLimitTransactionForCancelOrderBody {
 //  Limit Order Fetch
 // =========================================================================
 
-export type LimitIndexerOrderStatus =
+export type LimitOrdersIndexerOrderStatus =
 	| "Active"
 	| "Canceled"
 	| "Failed"
@@ -55,7 +55,7 @@ export type LimitIndexerOrderStatus =
 
 export interface LimitOrdersObject {
 	active: LimitOrderObject[];
-	executed: LimitOrderObject[];
+	past: LimitOrderObject[];
 }
 
 export interface LimitOrderObject {
@@ -68,7 +68,9 @@ export interface LimitOrderObject {
 		coin: CoinType;
 		amount: Balance;
 	};
-	recipient?: SuiAddress;
+	actualAmountSold: Balance;
+	actualAmountBought: Balance;
+	recipient: SuiAddress;
 	created: {
 		time: Timestamp;
 		tnxDigest: TransactionDigest | undefined;
@@ -78,18 +80,18 @@ export interface LimitOrderObject {
 		tnxDigest: TransactionDigest;
 	};
 	expiry: Timestamp;
-	status: LimitIndexerOrderStatus | undefined;
+	status: LimitOrdersIndexerOrderStatus | undefined;
 	error: string | undefined;
-	integratorFee?: LimitIntegratorFeeData;
+	integratorFee?: LimitOrdersIntegratorFeeData;
 }
 
 // =========================================================================
-//  DCA Events
+//  Limit Orders Events
 // =========================================================================
 
-export interface LimitCreatedOrderEvent extends Event {
+export interface LimitOrdersCreatedOrderEvent extends Event {
 	orderId: ObjectId;
-	user: ObjectId;
+	user: SuiAddress;
 	userPublicKey: Uint8Array;
 	recipient: SuiAddress;
 	inputAmount: Balance;
@@ -100,14 +102,14 @@ export interface LimitCreatedOrderEvent extends Event {
 }
 
 // =========================================================================
-//  Owned DCAs
+//  Owned Limit Orders
 // =========================================================================
 
-export interface ApiLimitsOwnedBody {
+export interface ApiLimitOrdersOwnedBody {
 	walletAddress: SuiAddress;
 }
 
-export interface ApiLimitsActiveOrdersOwnedBody {
+export interface ApiLimitOrdersActiveOrdersOwnedBody {
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;

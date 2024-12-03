@@ -34,7 +34,7 @@ export class UserData extends Caller {
 
 	public async getUserPublicKey(
 		inputs: ApiUserDataOwnedBody
-	): Promise<string | undefined> {
+	): Promise<string | undefined | null> {
 		return this.fetchApi<string | undefined, ApiUserDataOwnedBody>(
 			`public-key`,
 			inputs
@@ -59,7 +59,6 @@ export class UserData extends Caller {
 
 	/**
 	 * Fetches the API for user create message to sign.
-	 * @async
 	 * @returns { string } message to sign with action related to the service you interact with.
 	 */
 
@@ -71,7 +70,6 @@ export class UserData extends Caller {
 
 	/**
 	 * Fetches the API for creating sign and terms message to sign.
-	 * @async
 	 * @returns { string } message to sign with action related to the service you interact with.
 	 */
 
@@ -81,11 +79,5 @@ export class UserData extends Caller {
 		return {
 			action: `SIGN_TERMS_AND_CONDITIONS`,
 		};
-	}
-
-	public static getTermsAndConsKey(inputs: {
-		walletAddress: SuiAddress | undefined;
-	}) {
-		return `${this.constants.termsAndConsKey}-${inputs.walletAddress}`;
 	}
 }
