@@ -68,7 +68,7 @@ export interface LimitOrderObject {
 		coin: CoinType;
 		amount: Balance;
 	};
-	recipient?: SuiAddress;
+	recipient: SuiAddress;
 	created: {
 		time: Timestamp;
 		tnxDigest: TransactionDigest | undefined;
