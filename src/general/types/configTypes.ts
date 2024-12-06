@@ -43,7 +43,6 @@ export interface FaucetAddresses {
 	};
 	objects: {
 		faucet: ObjectId;
-		faucetRegistry: ObjectId;
 		suiFrensMint: ObjectId;
 	};
 }

@@ -11,11 +11,9 @@ import { CoinType } from "../../coin/coinTypes";
 
 export type FaucetMintCoinEventOnChain = EventOnChain<{
 	amount: BigIntAsString;
-	type: CoinType;
 	user: SuiAddress;
 }>;
 
 export type FaucetAddCoinEventOnChain = EventOnChain<{
-	symbol: string;
-	type: CoinType;
+	default_mint_amount: BigIntAsString;
 }>;

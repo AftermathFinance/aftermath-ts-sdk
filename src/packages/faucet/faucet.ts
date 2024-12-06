@@ -47,7 +47,7 @@ export class Faucet extends Caller {
 	// =========================================================================
 
 	public async getRequestCoinTransaction(inputs: ApiFaucetRequestBody) {
-		return this.useProvider().fetchRequestCoinAmountTx(inputs);
+		return this.useProvider().buildRequestCoinTx(inputs);
 	}
 
 	public async getMintSuiFrenTransaction(inputs: ApiFaucetMintSuiFrenBody) {

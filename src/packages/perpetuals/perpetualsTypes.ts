@@ -196,7 +196,8 @@ export interface PerpetualsMarketParams {
 	tickSize: bigint;
 	liquidationTolerance: bigint;
 	maxPendingOrders: bigint;
-	oracleTolerance: bigint;
+	baseOracleTolerance: bigint;
+	collateralOracleTolerance: bigint;
 }
 
 export interface PerpetualsMarketState {

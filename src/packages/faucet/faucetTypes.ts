@@ -12,12 +12,11 @@ import { CoinType } from "../coin/coinTypes";
 
 export interface FaucetMintCoinEvent extends Event {
 	minter: SuiAddress;
-	coinMinted: CoinType;
-	balanceMinted: BigInt;
+	coinType: CoinType;
+	amount: Balance;
 }
 
 export interface FaucetAddCoinEvent extends Event {
-	coinSymbol: string;
 	coinType: CoinType;
 }
 

@@ -254,7 +254,8 @@ export class PerpetualsApiCasting {
 			minOrderUsdValue: Casting.IFixed.iFixedFromStringBytes(
 				data.min_order_usd_value
 			),
-			oracleTolerance: BigInt(data.oracle_tolerance),
+			baseOracleTolerance: BigInt(data.base_oracle_tolerance),
+			collateralOracleTolerance: BigInt(data.collateral_oracle_tolerance),
 		};
 	};
 

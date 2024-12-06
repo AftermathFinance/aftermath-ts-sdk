@@ -110,8 +110,10 @@ export interface PerpetualsMarketParamsFieldsIndexerReponse {
 	liquidation_tolerance: BigIntAsString;
 	/// Maximum number of pending orders that a position can have.
 	max_pending_orders: BigIntAsString;
-	/// Timestamp tolerance for oracle prices
-	oracle_tolerance: BigIntAsString;
+	/// Timestamp tolerance for base oracle price
+	base_oracle_tolerance: BigIntAsString;
+	/// Timestamp tolerance for collateral oracle price
+	collateral_oracle_tolerance: BigIntAsString;
 }
 
 /// The state of a perpetuals market.
