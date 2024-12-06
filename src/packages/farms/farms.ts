@@ -27,7 +27,8 @@ export class Farms extends Caller {
 	// =========================================================================
 
 	public static readonly constants = {
-		minimalRewardsToClaim: BigInt(10),
+		minRewardsToClaim: BigInt(10),
+		maxLockMultiplier: 18,
 	};
 
 	// =========================================================================
