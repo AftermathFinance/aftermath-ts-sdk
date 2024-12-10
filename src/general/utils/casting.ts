@@ -16,7 +16,7 @@ import { BcsTypeName } from "../types/castingTypes";
 import { SuiObjectResponse } from "@mysten/sui/client";
 import { NftsApiCasting } from "../nfts/nftsApiCasting";
 import { DcaApiCasting } from "../../packages/dca/api/dcaApiCasting";
-import { LimitOrdersApiCasting } from "../../packages/limit/api/limitApiCasting";
+import { LimitOrdersApiCasting } from "../../packages/limitOrders/api/limitOrdersApiCasting";
 
 /**
  * Utility class for casting and conversion functions.
