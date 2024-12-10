@@ -117,18 +117,21 @@ export class Dca extends Caller {
 	// =========================================================================
 
 	/**
-	 * Method for getting the cancelation dca order message to sign.
+	 * Method for getting the cancellation dca order message to sign.
 	 * @param inputs - The inputs for the message.
 	 * @returns Message to sign.
 	 */
 
-	public closeDcaOrderMessageToSign(inputs: { orderId: ObjectId }): {
+	public closeDcaOrdersMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;
-		order_object_id: string;
+		order_object_ids: string[];
 	} {
 		return {
-			action: "CANCEL_DCA_ORDER",
-			order_object_id: inputs.orderId,
+			action:
+				inputs.orderIds.length === 1
+					? "CANCEL_DCA_ORDER"
+					: "CANCEL_DCA_ORDERS",
+			order_object_ids: inputs.orderIds,
 		};
 	}
 

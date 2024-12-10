@@ -134,6 +134,9 @@ export class CoinApi {
 	}): TransactionObjectArgument => {
 		const { tx, coinData, coinAmount, coinType, isSponsoredTx } = inputs;
 
+		if (coinData.length <= 0)
+			throw new Error("wallet does not have coins of sufficient balance");
+
 		const isSuiCoin = Coin.isSuiCoin(coinData[0].coinType);
 
 		const totalCoinBalance = Helpers.sumBigInt(
