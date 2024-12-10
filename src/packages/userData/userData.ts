@@ -80,10 +80,4 @@ export class UserData extends Caller {
 			action: `SIGN_TERMS_AND_CONDITIONS`,
 		};
 	}
-
-	public static getTermsAndConsKey(inputs: {
-		walletAddress: SuiAddress | undefined;
-	}) {
-		return `${this.constants.termsAndConsKey}-${inputs.walletAddress}`;
-	}
 }
