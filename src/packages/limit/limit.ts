@@ -36,20 +36,6 @@ export class LimitOrders extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches the API for dollar cost averaging orders list.
-	 * @async
-	 * @param { LimitOrderObject } inputs - An object containing the walletAddress.
-	 * @returns { Promise<LimitOrderObject> } A promise that resolves to object with array of fetched events for active and past dca's.
-	 */
-
-	public async getAllLimitOrders(inputs: ApiLimitsOwnedBody) {
-		return this.fetchApi<LimitOrderObject[], ApiLimitsOwnedBody>(
-			"orders",
-			inputs
-		);
-	}
-
-	/**
 	 * Fetches the API for dollar cost averaging active orders list.
 	 * @async
 	 * @param { LimitOrderObject } inputs - An object containing the walletAddress.

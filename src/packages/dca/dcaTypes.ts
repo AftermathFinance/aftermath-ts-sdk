@@ -95,7 +95,7 @@ export interface DcaOrderOverviewObject {
 	tradesRemaining: number;
 	maxSlippageBps: number;
 	strategy?: DcaOrderStrategyData;
-	recipient?: SuiAddress;
+	recipient: SuiAddress;
 	progress: number;
 	created: {
 		time: Timestamp;

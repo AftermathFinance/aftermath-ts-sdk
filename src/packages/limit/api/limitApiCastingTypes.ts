@@ -90,6 +90,7 @@ export type LimitIndexerOrderCreateRequest = {
 	order: {
 		input_coin: ServiceCoinData;
 		input_coin_type: CoinType;
+		input_coin_amount: string;
 		output_coin_type: CoinType;
 		gas_coin: ServiceCoinData;
 		owner: SuiAddress;
