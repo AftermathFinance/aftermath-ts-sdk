@@ -3,12 +3,12 @@ import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import {
-	ApiLimitsOwnedBody,
-	ApiLimitTransactionForCreateOrderBody,
-	ApiLimitTransactionForCancelOrderBody,
+	ApiLimitOrdersOwnedBody,
+	ApiLimitOrdersTransactionForCreateOrderBody,
+	ApiLimitOrdersTransactionForCancelOrderBody,
 	LimitOrderObject,
-	ApiLimitsActiveOrdersOwnedBody,
-} from "./limitTypes";
+	ApiLimitOrdersActiveOrdersOwnedBody,
+} from "./limitOrdersTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
 export class LimitOrders extends Caller {
@@ -28,7 +28,7 @@ export class LimitOrders extends Caller {
 		public readonly network?: SuiNetwork,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "limit");
+		super(network, "limit-orders");
 	}
 
 	// =========================================================================
@@ -42,10 +42,12 @@ export class LimitOrders extends Caller {
 	 * @returns { Promise<LimitOrderObject[]> } A promise that resolves to object with array of fetched events for active dca's.
 	 */
 
-	public async getActiveLimitOrders(inputs: ApiLimitsActiveOrdersOwnedBody) {
+	public async getActiveLimitOrders(
+		inputs: ApiLimitOrdersActiveOrdersOwnedBody
+	) {
 		return this.fetchApi<
 			LimitOrderObject[],
-			ApiLimitsActiveOrdersOwnedBody
+			ApiLimitOrdersActiveOrdersOwnedBody
 		>("orders/active", inputs);
 	}
 
@@ -57,7 +59,7 @@ export class LimitOrders extends Caller {
 	 */
 
 	public async getExecutedLimitOrders(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApi<LimitOrderObject[], ApiLimitsOwnedBody>(
+		return this.fetchApi<LimitOrderObject[], ApiLimitOrdersOwnedBody>(
 			"orders/executed",
 			inputs
 		);
@@ -69,14 +71,14 @@ export class LimitOrders extends Caller {
 
 	/**
 	 * Fetches the API transaction for creating Limit order.
-	 * @param { ApiLimitTransactionForCreateOrderBody } inputs - The inputs for the transaction.
+	 * @param { ApiLimitOrdersTransactionForCreateOrderBody } inputs - The inputs for the transaction.
 	 * @returns { Promise<Transaction> } A promise that resolves with the API transaction.
 	 */
 
 	public async getCreateLimitOrderTx(
-		inputs: ApiLimitTransactionForCreateOrderBody
+		inputs: ApiLimitOrdersTransactionForCreateOrderBody
 	): Promise<Transaction> {
-		return this.fetchApiTransaction<ApiLimitTransactionForCreateOrderBody>(
+		return this.fetchApiTransaction<ApiLimitOrdersTransactionForCreateOrderBody>(
 			"transactions/create-order",
 			inputs
 		);
@@ -89,12 +91,12 @@ export class LimitOrders extends Caller {
 	 */
 
 	public async cancelLimitOrder(
-		inputs: ApiLimitTransactionForCancelOrderBody
+		inputs: ApiLimitOrdersTransactionForCancelOrderBody
 	): Promise<boolean> {
-		return this.fetchApi<boolean, ApiLimitTransactionForCancelOrderBody>(
-			`interactions/cancel-order`,
-			inputs
-		);
+		return this.fetchApi<
+			boolean,
+			ApiLimitOrdersTransactionForCancelOrderBody
+		>(`interactions/cancel-order`, inputs);
 	}
 
 	// =========================================================================

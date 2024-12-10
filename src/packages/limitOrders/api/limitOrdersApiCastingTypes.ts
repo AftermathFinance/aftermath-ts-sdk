@@ -10,7 +10,7 @@ import {
 	Timestamp,
 	TransactionDigest,
 } from "../../../types";
-import { LimitIndexerOrderStatus } from "../limitTypes";
+import { LimitOrdersIndexerOrderStatus } from "../limitOrdersTypes";
 
 // =========================================================================
 // Objects
@@ -75,7 +75,7 @@ export type LimitIndexerOrderResponse = {
 		timestamp: Timestamp;
 	};
 	expiry_timestamp_ms: Timestamp;
-	status: LimitIndexerOrderStatus | undefined;
+	status: LimitOrdersIndexerOrderStatus | undefined;
 	error: string | undefined;
 	integrator_fee_bps: number;
 	integrator_fee_recipient: SuiAddress;

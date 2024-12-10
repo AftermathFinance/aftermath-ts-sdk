@@ -1,6 +1,6 @@
 import { Helpers } from "../../../general/utils";
-import { LimitCreatedOrderEvent } from "../limitTypes";
-import { LimitCreatedOrderEventOnChain } from "./limitApiCastingTypes";
+import { LimitOrdersCreatedOrderEvent } from "../limitOrdersTypes";
+import { LimitCreatedOrderEventOnChain } from "./limitOrdersApiCastingTypes";
 
 export class LimitOrdersApiCasting {
 	// =========================================================================
@@ -9,7 +9,7 @@ export class LimitOrdersApiCasting {
 
 	public static createdLimitOrderEventFromOnChain = (
 		eventOnChain: LimitCreatedOrderEventOnChain
-	): LimitCreatedOrderEvent => {
+	): LimitOrdersCreatedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			orderId: Helpers.addLeadingZeroesToType(fields.order_id),
