@@ -777,6 +777,7 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "accountObjectDigest"
 	  >
 ) & {
+	collateral: Balance;
 	// TODO: remove eventually ?
 	collateralCoinType: CoinType;
 	accountId: PerpetualsAccountId;
@@ -788,6 +789,7 @@ export type ApiPerpetualsPreviewOrderBody = (
 };
 
 export interface ApiPerpetualsPreviewCancelOrdersBody {
+	collateral: Balance;
 	accountId: PerpetualsAccountId;
 	// TODO: remove eventually ?
 	collateralCoinType: CoinType;
@@ -951,6 +953,7 @@ export interface ApiPerpetualsMarketOrderBody {
 	size: bigint;
 	collateralChange: Balance;
 	hasPosition: boolean;
+	leverage: number;
 }
 
 export interface ApiPerpetualsLimitOrderBody {
@@ -965,6 +968,7 @@ export interface ApiPerpetualsLimitOrderBody {
 	orderType: PerpetualsOrderType;
 	collateralChange: Balance;
 	hasPosition: boolean;
+	leverage: number;
 }
 
 export interface ApiPerpetualsCancelOrderBody {
@@ -995,19 +999,31 @@ export interface ApiPerpetualsCancelOrdersBody {
 	}[];
 }
 
-export interface ApiPerpetualsReduceOrdersBody {
+export interface ApiPerpetualsReduceOrderBody {
 	walletAddress: SuiAddress;
-	packageId: PackageId;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
-	marketInitialSharedVersion: ObjectVersion;
-	orderIds: PerpetualsOrderId[];
-	sizesToSubtract: bigint[];
-	basePriceFeedId: ObjectId;
-	collateralPriceFeedId: ObjectId;
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
 	collateralChange: Balance;
+	leverage: number;
+	orderId: PerpetualsOrderId;
+	sizeToSubtract: bigint;
 }
+
+// export interface ApiPerpetualsReduceOrdersBody {
+// 	walletAddress: SuiAddress;
+// 	packageId: PackageId;
+// 	collateralCoinType: CoinType;
+// 	accountCapId: ObjectId;
+// 	marketId: PerpetualsMarketId;
+// 	marketInitialSharedVersion: ObjectVersion;
+// 	orderIds: PerpetualsOrderId[];
+// 	sizesToSubtract: bigint[];
+// 	basePriceFeedId: ObjectId;
+// 	collateralPriceFeedId: ObjectId;
+// 	collateralChange: Balance;
+// }
 
 export type ApiPerpetualsSLTPOrderBody = (
 	| (ApiPerpetualsMarketOrderBody & {

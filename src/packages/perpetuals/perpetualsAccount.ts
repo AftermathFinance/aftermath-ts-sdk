@@ -52,7 +52,7 @@ import {
 	ApiPerpetualsPreviewReduceOrdersResponse,
 	ApiPerpetualsAllocateCollateralBody,
 	ApiPerpetualsDeallocateCollateralBody,
-	ApiPerpetualsReduceOrdersBody,
+	ApiPerpetualsReduceOrderBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -277,7 +277,7 @@ export class PerpetualsAccount extends Caller {
 		}[];
 	}) {
 		const { market, orderDatas } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsReduceOrdersBody>(
+		return this.fetchApiTransaction<ApiPerpetualsReduceOrderBody>(
 			"transactions/reduce-orders",
 			{
 				...inputs,
