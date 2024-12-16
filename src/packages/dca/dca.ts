@@ -9,6 +9,7 @@ import {
 	ApiDcaTransactionForCloseOrderBody,
 	DcaOrderObject,
 	ApiDcaCreateUserBody,
+	ApiDcaManualCloseOrderBody,
 } from "./dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
@@ -112,6 +113,16 @@ export class Dca extends Caller {
 		);
 	}
 
+	/**
+	 * Fetches the API for tx to manually close dca order.
+	 * @param inputs - The inputs for the transaction.
+	 * @returns { Promise<boolean> } A promise that resolves with transaction execution status.
+	 */
+
+	public async getCancelDcaOrderTx(inputs: ApiDcaManualCloseOrderBody) {
+		return this.useProvider().fetchBuildCancelOrderTx(inputs);
+	}
+
 	// =========================================================================
 	// Interactions
 	// =========================================================================
@@ -186,4 +197,14 @@ export class Dca extends Caller {
 			inputs
 		);
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Dca();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

@@ -1,6 +1,18 @@
 import { AftermathApi } from "../../../general/providers";
-import { AnyObjectType, DcaAddresses } from "../../../types";
+import {
+	AnyObjectType,
+	CoinType,
+	DcaAddresses,
+	ObjectId,
+	SuiAddress,
+} from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
+import { Helpers } from "../../../general/utils";
+import {
+	TransactionArgument,
+	TransactionBlock,
+} from "@mysten/sui.js/transactions";
+import { ApiDcaManualCloseOrderBody } from "../dcaTypes";
 
 export class DcaApi {
 	// =========================================================================
@@ -50,6 +62,39 @@ export class DcaApi {
 		};
 	}
 
+	public fetchBuildCancelOrderTx = async (
+		inputs: ApiDcaManualCloseOrderBody
+	): Promise<TransactionBlock> => {
+		const { walletAddress } = inputs;
+		const tx = await this.getSponsorTransaction(walletAddress);
+		this.createCancelOrderTx({
+			...inputs,
+			tx,
+		});
+		return tx;
+	};
+
+	public createCancelOrderTx = (inputs: {
+		tx: TransactionBlock;
+		allocateCoinType: CoinType;
+		buyCoinType: CoinType;
+		orderId: ObjectId | TransactionArgument;
+	}) => {
+		const { tx } = inputs;
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.dca,
+				DcaApi.constants.moduleNames.dca,
+				"close_order"
+			),
+			typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
+			arguments: [
+				tx.object(inputs.orderId),
+				tx.object(this.addresses.objects.config),
+			],
+		});
+	};
+
 	// =========================================================================
 	// Events
 	// =========================================================================
@@ -74,4 +119,14 @@ export class DcaApi {
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.executedTrade
 		);
+
+	private getSponsorTransaction = async (
+		sponsor: SuiAddress
+	): Promise<TransactionBlock> => {
+		const txBlock = new TransactionBlock();
+		const kindBytes = await txBlock.build({ onlyTransactionKind: true });
+		const tx = TransactionBlock.fromKind(kindBytes);
+		tx.setGasOwner(sponsor);
+		return tx;
+	};
 }
