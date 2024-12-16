@@ -52,6 +52,17 @@ export interface ApiDcaTransactionForCloseOrderBody {
 }
 
 // =========================================================================
+// Manual Close Order Transaction
+// =========================================================================
+
+export type ApiDcaManualCloseOrderBody = {
+	walletAddress: SuiAddress;
+	buyCoinType: CoinType;
+	allocateCoinType: CoinType;
+	orderId: SuiAddress;
+};
+
+// =========================================================================
 //  DCA Order Fetch
 // =========================================================================
 
@@ -59,7 +70,8 @@ export type DcaFailedTradeReason =
 	| "INTERNAL"
 	| "STRATEGY"
 	| "GAS_CAP"
-	| "UNKNOWN_USER";
+	| "UNKNOWN_USER"
+	| "SLIPPAGE";
 
 export interface DcaOrderTradeObject {
 	allocatedCoin: {
