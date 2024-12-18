@@ -63,11 +63,9 @@ import {
 	PerpetualsMarketData,
 	PerpetualsRawAccountCap,
 	PostedOrderReceiptEvent,
-	ApiPerpetualsCancelOrderBody,
 	PerpetualsFilledOrderData,
 	ApiPerpetualsMaxOrderSizeBody,
 	ApiPerpetualsAccountOrderDatasBody,
-	ApiPerpetualsMarket24hrVolumeResponse,
 	PerpetualsTradeHistoryWithCursor,
 	PerpetualsAccountTradesWithCursor,
 	PerpetualsAccountCollateralChangesWithCursor,
@@ -76,9 +74,13 @@ import {
 	ApiPerpetualsAccountCollateralHistoryBody,
 	ApiPerpetualsPreviewCancelOrdersBody,
 	ApiPerpetualsPreviewCancelOrdersResponse,
-	ApiPerpetualsPreviewReduceOrdersBody,
-	ApiPerpetualsPreviewReduceOrdersResponse,
+	ApiPerpetualsPreviewReduceOrderBody,
+	ApiPerpetualsPreviewReduceOrderResponse,
 	ApiPerpetualsReduceOrderBody,
+	ApiPerpetualsSetLeverageBody,
+	ApiPerpetualsPreviewSetLeverageBody,
+	ApiPerpetualsPreviewSetLeverageResponse,
+	ApiPerpetualsMarketDailyStatsResponse,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -100,7 +102,8 @@ import {
 	PerpetualsMarketsIndexerResponse,
 	PerpetualsPreviewCancelOrdersIndexerResponse,
 	PerpetualsPreviewOrderIndexerResponse,
-	PerpetualsPreviewReduceOrdersIndexerResponse,
+	PerpetualsPreviewReduceOrderIndexerResponse,
+	PerpetualsPreviewSetLeverageIndexerResponse,
 	PostedOrderEventOnChain,
 	PostedOrderReceiptEventOnChain,
 	SettledFundingEventOnChain,
@@ -602,16 +605,17 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Indexer Data
 	// =========================================================================
 
-	public async fetchMarket24hrVolume(inputs: {
+	public async fetchMarketDailyStats(inputs: {
 		marketId: PerpetualsMarketId;
-	}): Promise<ApiPerpetualsMarket24hrVolumeResponse> {
+	}): Promise<ApiPerpetualsMarketDailyStatsResponse> {
 		const { marketId } = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<{
 			market_volume: number; // f64
 			market_volume_usd: number; // f64
+			market_price_change: number; // f64
 		}>(
-			`perpetuals/markets/${marketId}/24hr-volume`,
+			`perpetuals/markets/${marketId}/daily-stats`,
 			undefined,
 			undefined,
 			undefined,
@@ -622,6 +626,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		return {
 			volumeBaseAssetAmount: response.market_volume,
 			volumeUsd: response.market_volume_usd,
+			priceChange: response.market_price_change,
 		};
 	}
 
@@ -672,28 +677,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		}));
 	};
 
-	public async fetchMarketPrice24hrsAgo(inputs: {
-		marketId: PerpetualsMarketId;
-	}): Promise<number> {
-		const { marketId } = inputs;
-
-		dayjs.extend(duration);
-		const timestamp =
-			dayjs().valueOf() - dayjs.duration(24, "hours").asMilliseconds();
-
-		const response: [{ timestamp: Timestamp; bookPrice: number }] | [] =
-			await this.Provider.indexerCaller.fetchIndexer(
-				`perpetuals/markets/${marketId}/first-historical-price`,
-				undefined,
-				{
-					timestamp,
-				}
-			);
-		if (response.length === 0) return 0;
-
-		return response[0].bookPrice;
-	}
-
 	// =========================================================================
 	//  Inspections
 	// =========================================================================
@@ -737,10 +720,15 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				{
 					market_id: PerpetualsMarketId;
 					leverage: number;
-				}[]
+				}[],
+				{
+					market_ids: PerpetualsMarketId[];
+				}
 			>(
 				`perpetuals/accounts/${inputs.accountId}/position-leverages`,
-				undefined,
+				{
+					market_ids: [],
+				},
 				undefined,
 				undefined,
 				undefined,
@@ -763,13 +751,16 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			{
 				market_id: PerpetualsMarketId;
 				leverage: number;
-			}[]
+			}[],
+			{
+				market_ids: PerpetualsMarketId[];
+			}
 		>(
 			`perpetuals/accounts/${inputs.accountId}/position-leverages`,
-			undefined,
 			{
 				market_ids: marketIds,
 			},
+			undefined,
 			undefined,
 			undefined,
 			true
@@ -896,74 +887,62 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { accountId, collateralCoinType, marketIdsToData, collateral } =
 			inputs;
 
-		const responses = await Promise.all(
-			Object.entries(marketIdsToData).map(
-				async ([marketId, { leverage, orderIds }]) => {
-					const response =
-						await this.Provider.indexerCaller.fetchIndexer<
-							PerpetualsPreviewCancelOrdersIndexerResponse,
-							{
-								ch_id: PerpetualsMarketId;
-								account_id: number;
-								account_collateral: number; // Balance
-								leverage: number;
-								order_ids: string[];
-							}
-						>(
-							`perpetuals/previews/cancel-orders`,
-							{
-								leverage,
-								ch_id: marketId,
-								account_id: Number(accountId),
-								account_collateral: Number(collateral),
-								order_ids: orderIds.map((orderId) =>
-									orderId.toString().replaceAll("n", "")
-								),
-							},
-							undefined,
-							undefined,
-							undefined,
-							true
-						);
-					if ("error" in response) return response;
-
-					const positionAfterCancelOrders =
-						Casting.perpetuals.positionFromIndexerReponse({
-							marketId,
-							leverage,
-							collateralCoinType,
-							position: response.position,
-						});
-					return {
-						marketId,
-						positionAfterCancelOrders,
-						collateralChange: Casting.IFixed.numberFromIFixed(
-							Casting.IFixed.iFixedFromStringBytes(
-								response.collateral_change
-							)
-						),
-					};
-				}
+		const marketIds = Object.keys(marketIdsToData);
+		const leverages = marketIds.map(
+			(marketId) => marketIdsToData[marketId].leverage
+		);
+		const orderIds = marketIds.map((marketId) =>
+			marketIdsToData[marketId].orderIds.map((orderId) =>
+				orderId.toString().replaceAll("n", "")
 			)
 		);
-		const errorResponse = responses.find((response) => "error" in response);
-		if (errorResponse && "error" in errorResponse) return errorResponse;
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			PerpetualsPreviewCancelOrdersIndexerResponse,
+			{
+				ch_ids: PerpetualsMarketId[];
+				account_id: number;
+				account_collateral: number; // Balance
+				leverages: number[];
+				order_ids: string[][];
+			}
+		>(
+			`perpetuals/previews/cancel-orders`,
+			{
+				leverages,
+				ch_ids: marketIds,
+				account_id: Number(accountId),
+				account_collateral: Number(collateral),
+				order_ids: orderIds,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+		if ("error" in response) return response;
 
-		return responses.reduce(
-			(acc, response) => {
-				if ("error" in response) return acc;
+		return marketIds.reduce(
+			(acc, marketId, index) => {
+				const positionAfterCancelOrders =
+					Casting.perpetuals.positionFromIndexerReponse({
+						marketId,
+						collateralCoinType,
+						leverage: leverages[index],
+						position: response.positions[index],
+					});
 
-				const {
-					marketId,
-					positionAfterCancelOrders,
-					collateralChange,
-				} = response;
 				return {
 					marketIdsToPositionAfterCancelOrders: {
 						...acc.marketIdsToPositionAfterCancelOrders,
 						[marketId]: positionAfterCancelOrders,
 					},
-					collateralChange: acc.collateralChange + collateralChange,
+					collateralChange:
+						acc.collateralChange +
+						Casting.IFixed.numberFromIFixed(
+							Casting.IFixed.iFixedFromStringBytes(
+								response.collaterals_change[index]
+							)
+						),
 				};
 			},
 			{
@@ -973,37 +952,38 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		);
 	};
 
-	public fetchPreviewReduceOrders = async (
-		inputs: ApiPerpetualsPreviewReduceOrdersBody
-	): Promise<ApiPerpetualsPreviewReduceOrdersResponse> => {
+	public fetchPreviewReduceOrder = async (
+		inputs: ApiPerpetualsPreviewReduceOrderBody
+	): Promise<ApiPerpetualsPreviewReduceOrderResponse> => {
 		const {
 			accountId,
 			leverage,
 			marketId,
-			orderIds,
-			sizesToSubtract,
+			orderId,
+			sizeToSubtract,
 			collateralCoinType,
+			collateral,
 		} = inputs;
 
 		const response = await this.Provider.indexerCaller.fetchIndexer<
-			PerpetualsPreviewReduceOrdersIndexerResponse,
+			PerpetualsPreviewReduceOrderIndexerResponse,
 			{
 				ch_id: PerpetualsMarketId;
 				account_id: number;
+				account_collateral: number; // u64
 				leverage: number;
-				order_ids: string[];
-				sizes_to_sub: number[]; // Vec<u64>
+				order_id: string;
+				size_to_sub: number; // u64
 			}
 		>(
-			`perpetuals/previews/reduce-orders`,
+			`perpetuals/previews/reduce-order`,
 			{
 				leverage,
 				ch_id: marketId,
 				account_id: Number(accountId),
-				order_ids: orderIds.map((orderId) =>
-					orderId.toString().replaceAll("n", "")
-				),
-				sizes_to_sub: sizesToSubtract.map((size) => Number(size)),
+				order_id: orderId.toString().replaceAll("n", ""),
+				size_to_sub: Number(sizeToSubtract),
+				account_collateral: Number(collateral),
 			},
 			undefined,
 			undefined,
@@ -1012,7 +992,10 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		);
 		if ("error" in response) return response;
 
-		const positionAfterReduceOrders =
+		console.log("RESPONSE");
+		console.log(JSON.stringify(response, null, 4));
+
+		const positionAfterReduceOrder =
 			Casting.perpetuals.positionFromIndexerReponse({
 				marketId,
 				leverage,
@@ -1020,7 +1003,57 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				position: response.position,
 			});
 		return {
-			positionAfterReduceOrders,
+			positionAfterReduceOrder,
+			collateralChange: Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(response.collateral_change)
+			),
+		};
+	};
+
+	public fetchPreviewSetLeverage = async (
+		inputs: ApiPerpetualsPreviewSetLeverageBody
+	): Promise<ApiPerpetualsPreviewSetLeverageResponse> => {
+		const {
+			marketId,
+			accountId,
+			collateral,
+			leverage,
+			collateralCoinType,
+		} = inputs;
+
+		const response = await this.Provider.indexerCaller.fetchIndexer<
+			PerpetualsPreviewSetLeverageIndexerResponse,
+			{
+				ch_id: PerpetualsMarketId;
+				account_id: number; // u64
+				account_collateral: number; // Balance
+				leverage: number;
+			}
+		>(
+			`perpetuals/previews/set-leverage`,
+			{
+				leverage,
+				ch_id: marketId,
+				account_id: Number(accountId),
+				account_collateral: Number(collateral),
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+
+		if ("error" in response) return response;
+
+		const positionAfterSetLeverage =
+			Casting.perpetuals.positionFromIndexerReponse({
+				marketId,
+				leverage,
+				collateralCoinType,
+				position: response.position,
+			});
+		return {
+			positionAfterSetLeverage,
 			collateralChange: Casting.IFixed.numberFromIFixed(
 				Casting.IFixed.iFixedFromStringBytes(response.collateral_change)
 			),
@@ -1996,38 +2029,50 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	public fetchBuildCancelOrdersTx = async (
 		inputs: ApiPerpetualsCancelOrdersBody
 	): Promise<Transaction> => {
-		const { walletAddress, collateralCoinType, accountCapId, orderDatas } =
-			inputs;
+		const {
+			walletAddress,
+			marketIdsToData,
+			accountObjectId,
+			accountObjectVersion,
+			accountObjectDigest,
+		} = inputs;
+
+		const marketIds = Object.keys(marketIdsToData);
+		const leverages = marketIds.map(
+			(marketId) => marketIdsToData[marketId].leverage
+		);
+		const orderIds = marketIds.map((marketId) =>
+			marketIdsToData[marketId].orderIds.map((orderId) =>
+				orderId.toString().replaceAll("n", "")
+			)
+		);
+		const collateralsToAllocate = marketIds.map((marketId) =>
+			marketIdsToData[marketId].collateralChange > BigInt(0)
+				? Number(marketIdsToData[marketId].collateralChange)
+				: 0
+		);
 
 		const txKind = await this.Provider.indexerCaller.fetchIndexer<
 			StringByte[],
 			{
-				ch_id: PerpetualsMarketId;
+				ch_ids: PerpetualsMarketId[];
 				account_obj_id: ObjectId;
 				account_obj_version: number;
 				account_obj_digest: ObjectId;
-				collateral_to_allocate: number; // Balance
-				leverage: number;
-				order_ids: string[];
+				collaterals_to_allocate: number[]; // Balance[]
+				leverages: number[];
+				order_ids: string[][];
 			}
 		>(
 			`perpetuals/transactions/cancel-orders`,
 			{
-				ch_id: marketId,
+				leverages,
+				ch_ids: marketIds,
 				account_obj_id: accountObjectId,
 				account_obj_version: accountObjectVersion,
 				account_obj_digest: accountObjectDigest,
-				side: Boolean(side),
-				size: Number(size),
-				price: Number(price),
-				order_type: orderType,
-				collateral_to_allocate:
-					collateralChange > BigInt(0) ? Number(collateralChange) : 0,
-				collateral_to_deallocate:
-					collateralChange < BigInt(0)
-						? Math.abs(Number(collateralChange))
-						: 0,
-				position_found: hasPosition,
+				collaterals_to_allocate: collateralsToAllocate,
+				order_ids: orderIds,
 			},
 			undefined,
 			undefined,
@@ -2082,6 +2127,55 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				),
 				order_id: String(orderId).replaceAll("n", ""),
 				size_to_sub: Number(sizeToSubtract),
+				leverage: collateralChange > BigInt(0) ? 0 : leverage,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+
+		const tx = Transaction.fromKind(
+			new Uint8Array(txKind.map((byte) => Number(byte)))
+		);
+		tx.setSender(walletAddress);
+
+		return tx;
+	};
+
+	public fetchBuildSetLeverageTx = async (
+		inputs: ApiPerpetualsSetLeverageBody
+	): Promise<Transaction> => {
+		const {
+			walletAddress,
+			marketId,
+			accountObjectId,
+			accountObjectVersion,
+			accountObjectDigest,
+			collateralChange,
+			leverage,
+		} = inputs;
+
+		const txKind = await this.Provider.indexerCaller.fetchIndexer<
+			StringByte[],
+			{
+				ch_id: PerpetualsMarketId;
+				account_obj_id: ObjectId;
+				account_obj_version: number;
+				account_obj_digest: ObjectId;
+				collateral_to_allocate: number; // Balance
+				leverage: number;
+			}
+		>(
+			`perpetuals/transactions/set-leverage`,
+			{
+				ch_id: marketId,
+				account_obj_id: accountObjectId,
+				account_obj_version: accountObjectVersion,
+				account_obj_digest: accountObjectDigest,
+				collateral_to_allocate: Number(
+					collateralChange > BigInt(0) ? collateralChange : 0
+				),
 				leverage: collateralChange > BigInt(0) ? 0 : leverage,
 			},
 			undefined,

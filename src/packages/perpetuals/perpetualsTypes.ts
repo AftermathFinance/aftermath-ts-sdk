@@ -801,22 +801,41 @@ export interface ApiPerpetualsPreviewCancelOrdersBody {
 		}
 	>;
 }
-export interface ApiPerpetualsPreviewReduceOrdersBody {
+
+export interface ApiPerpetualsPreviewReduceOrderBody {
 	marketId: PerpetualsMarketId;
 	accountId: PerpetualsAccountId;
 	leverage: number;
-	orderIds: PerpetualsOrderId[];
-	sizesToSubtract: bigint[];
+	orderId: PerpetualsOrderId;
+	sizeToSubtract: bigint;
+	collateral: Balance;
 	// TODO: remove eventually ?
 	collateralCoinType: CoinType;
 }
 
-export type ApiPerpetualsPreviewReduceOrdersResponse =
+export interface ApiPerpetualsPreviewSetLeverageBody {
+	marketId: PerpetualsMarketId;
+	accountId: PerpetualsAccountId;
+	collateral: Balance;
+	leverage: number;
+	collateralCoinType: CoinType;
+}
+
+export type ApiPerpetualsPreviewReduceOrderResponse =
 	| {
 			error: string;
 	  }
 	| {
-			positionAfterReduceOrders: PerpetualsPosition;
+			positionAfterReduceOrder: PerpetualsPosition;
+			collateralChange: number;
+	  };
+
+export type ApiPerpetualsPreviewSetLeverageResponse =
+	| {
+			error: string;
+	  }
+	| {
+			positionAfterSetLeverage: PerpetualsPosition;
 			collateralChange: number;
 	  };
 
@@ -971,32 +990,19 @@ export interface ApiPerpetualsLimitOrderBody {
 	leverage: number;
 }
 
-export interface ApiPerpetualsCancelOrderBody {
-	packageId: PackageId;
-	walletAddress: SuiAddress;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
-	marketId: PerpetualsMarketId;
-	marketInitialSharedVersion: ObjectVersion;
-	orderId: PerpetualsOrderId;
-	collateralChange: Balance;
-	basePriceFeedId: ObjectId;
-	collateralPriceFeedId: ObjectId;
-}
-
 export interface ApiPerpetualsCancelOrdersBody {
 	walletAddress: SuiAddress;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
-	orderDatas: {
-		packageId: PackageId;
-		orderId: PerpetualsOrderId;
-		marketId: PerpetualsMarketId;
-		marketInitialSharedVersion: ObjectVersion;
-		collateralChange: Balance;
-		basePriceFeedId: ObjectId;
-		collateralPriceFeedId: ObjectId;
-	}[];
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
+	marketIdsToData: Record<
+		PerpetualsMarketId,
+		{
+			orderIds: PerpetualsOrderId[];
+			collateralChange: Balance;
+			leverage: number;
+		}
+	>;
 }
 
 export interface ApiPerpetualsReduceOrderBody {
@@ -1011,7 +1017,17 @@ export interface ApiPerpetualsReduceOrderBody {
 	sizeToSubtract: bigint;
 }
 
-// export interface ApiPerpetualsReduceOrdersBody {
+export interface ApiPerpetualsSetLeverageBody {
+	walletAddress: SuiAddress;
+	marketId: PerpetualsMarketId;
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
+	collateralChange: Balance;
+	leverage: number;
+}
+
+// export interface ApiPerpetualsReduceOrderBody {
 // 	walletAddress: SuiAddress;
 // 	packageId: PackageId;
 // 	collateralCoinType: CoinType;
@@ -1044,14 +1060,10 @@ export type ApiPerpetualsSLTPOrderBody = (
 		  }
 	);
 
-export interface ApiPerpetualsMarket24hrVolumeResponse {
-	volumeBaseAssetAmount: number;
-	volumeUsd: number;
-}
-
-export interface ApiPerpetualsMarket24hrVolumeResponse {
+export interface ApiPerpetualsMarketDailyStatsResponse {
 	volumeUsd: number;
 	volumeBaseAssetAmount: number;
+	priceChange: number;
 }
 
 // =========================================================================

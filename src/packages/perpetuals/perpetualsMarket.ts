@@ -27,7 +27,7 @@ import {
 	Balance,
 	PerpetualsFilledOrderData,
 	ApiPerpetualsMaxOrderSizeBody,
-	ApiPerpetualsMarket24hrVolumeResponse,
+	ApiPerpetualsMarketDailyStatsResponse,
 	ApiDataWithCursorBody,
 	PerpetualsTradeHistoryWithCursor,
 } from "../../types";
@@ -71,14 +71,10 @@ export class PerpetualsMarket extends Caller {
 		return this.fetchApi<number | undefined>("orderbook-price");
 	}
 
-	public get24hrVolume(): Promise<ApiPerpetualsMarket24hrVolumeResponse> {
-		return this.fetchApi<ApiPerpetualsMarket24hrVolumeResponse>(
-			"24hr-volume"
+	public getDailyStats(): Promise<ApiPerpetualsMarketDailyStatsResponse> {
+		return this.fetchApi<ApiPerpetualsMarketDailyStatsResponse>(
+			"daily-stats"
 		);
-	}
-
-	public getPrice24hrsAgo() {
-		return this.fetchApi<number>("price-24hrs-ago");
 	}
 
 	public getOrderbook() {

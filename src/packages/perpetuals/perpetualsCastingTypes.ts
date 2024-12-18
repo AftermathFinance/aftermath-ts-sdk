@@ -219,6 +219,15 @@ export type PerpetualsPreviewOrderIndexerResponse =
 
 export type PerpetualsPreviewCancelOrdersIndexerResponse =
 	| {
+			positions: PerpetualsPositionIndexerResponse[];
+			collaterals_change: IFixedAsStringBytes[];
+	  }
+	| {
+			error: string;
+	  };
+
+export type PerpetualsPreviewReduceOrderIndexerResponse =
+	| {
 			position: PerpetualsPositionIndexerResponse;
 			collateral_change: IFixedAsStringBytes;
 	  }
@@ -226,7 +235,7 @@ export type PerpetualsPreviewCancelOrdersIndexerResponse =
 			error: string;
 	  };
 
-export type PerpetualsPreviewReduceOrdersIndexerResponse =
+export type PerpetualsPreviewSetLeverageIndexerResponse =
 	| {
 			position: PerpetualsPositionIndexerResponse;
 			collateral_change: IFixedAsStringBytes;
