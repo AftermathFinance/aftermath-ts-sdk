@@ -36,7 +36,8 @@ export class MultisigApi {
 			this.sharedCustodyAddresses.publicKey || "",
 			"base64"
 		);
-		const afPublicKeyArray = new Uint8Array(afPublicKeyBuffer).subarray(1); // Shifting the first byte
+		// MARK: Shifting the first byte
+		const afPublicKeyArray = new Uint8Array(afPublicKeyBuffer).subarray(1);
 		const afPK = new Ed25519PublicKey(afPublicKeyArray);
 		const userPK = new Ed25519PublicKey(inputs.userPublicKey);
 

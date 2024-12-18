@@ -13,6 +13,7 @@ import {
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
 import { ApiDcaManualCloseOrderBody } from "../dcaTypes";
+import { Transaction } from "@mysten/sui/transactions";
 
 export class DcaApi {
 	// =========================================================================
@@ -62,20 +63,8 @@ export class DcaApi {
 		};
 	}
 
-	public fetchBuildCancelOrderTx = async (
-		inputs: ApiDcaManualCloseOrderBody
-	): Promise<TransactionBlock> => {
-		const { walletAddress } = inputs;
-		const tx = await this.getSponsorTransaction(walletAddress);
-		this.createCancelOrderTx({
-			...inputs,
-			tx,
-		});
-		return tx;
-	};
-
 	public createCancelOrderTx = (inputs: {
-		tx: TransactionBlock;
+		tx: Transaction | TransactionBlock;
 		allocateCoinType: CoinType;
 		buyCoinType: CoinType;
 		orderId: ObjectId | TransactionArgument;
@@ -119,14 +108,4 @@ export class DcaApi {
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.executedTrade
 		);
-
-	private getSponsorTransaction = async (
-		sponsor: SuiAddress
-	): Promise<TransactionBlock> => {
-		const txBlock = new TransactionBlock();
-		const kindBytes = await txBlock.build({ onlyTransactionKind: true });
-		const tx = TransactionBlock.fromKind(kindBytes);
-		tx.setGasOwner(sponsor);
-		return tx;
-	};
 }
