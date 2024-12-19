@@ -25,8 +25,8 @@ export class Multisig extends Caller {
 	 * @param { ApiMultisigUserBody } inputs - An object containing the users public key.
 	 * @returns {Promise<MultisigBody>} A promise that resolves to object with multisig address and public key.
 	 */
-	public async getMultisigForUser(inputs: ApiMultisigUserBody) {
-		return this.useProvider().fetchMultisigForUser(inputs);
+	public getMultisigForUser(inputs: ApiMultisigUserBody) {
+		return this.useProvider().getMultisigForUser(inputs);
 	}
 
 	// =========================================================================

@@ -8,7 +8,7 @@ export interface ApiMultisigUserBody {
 	userPublicKey: Uint8Array;
 }
 
-export interface MultisigBody {
+export interface MultisigData {
 	publicKey: MultiSigPublicKey;
 	address: string;
 }

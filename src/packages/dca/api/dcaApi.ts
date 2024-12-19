@@ -63,7 +63,7 @@ export class DcaApi {
 		};
 	}
 
-	public createCancelOrderTx = (inputs: {
+	public createCloseOrderTx = (inputs: {
 		tx: Transaction | TransactionBlock;
 		allocateCoinType: CoinType;
 		buyCoinType: CoinType;
