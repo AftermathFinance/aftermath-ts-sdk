@@ -1,14 +1,14 @@
-// import { MultiSigPublicKey } from "@mysten/sui/multisig";
+import { MultiSigPublicKey } from "@mysten/sui/multisig";
 
-// // =========================================================================
-// // API
-// // =========================================================================
+// =========================================================================
+// API
+// =========================================================================
 
-// export interface ApiMultisigUserBody {
-// 	userPublicKey: Uint8Array;
-// }
+export interface ApiMultisigUserBody {
+	userPublicKey: Uint8Array;
+}
 
-// export interface MultisigBody {
-// 	publicKey: MultiSigPublicKey;
-// 	address: string;
-// }
+export interface MultisigData {
+	publicKey: MultiSigPublicKey;
+	address: string;
+}
