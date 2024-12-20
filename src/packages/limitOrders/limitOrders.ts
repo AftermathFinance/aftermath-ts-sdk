@@ -3,15 +3,15 @@ import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import {
-	ApiDCAsOwnedBody,
-	DcaOrdersObject,
-	ApiDcaTransactionForCreateOrderBody,
-	ApiDcaTransactionForCloseOrderBody,
-	DcaOrderObject,
-} from "./dcaTypes";
+	ApiLimitOrdersOwnedBody,
+	ApiLimitOrdersTransactionForCreateOrderBody,
+	ApiLimitOrdersTransactionForCancelOrderBody,
+	LimitOrderObject,
+	ApiLimitOrdersActiveOrdersOwnedBody,
+} from "./limitOrdersTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
-export class Dca extends Caller {
+export class LimitOrders extends Caller {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -28,7 +28,7 @@ export class Dca extends Caller {
 		public readonly network?: SuiNetwork,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "dca");
+		super(network, "limit-orders");
 	}
 
 	// =========================================================================
@@ -36,43 +36,31 @@ export class Dca extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches the API for dollar cost averaging orders list.
-	 * @async
-	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns { Promise<DcaOrdersObject> } A promise that resolves to object with array of fetched events for active and past dca's.
-	 */
-
-	public async getAllDcaOrders(inputs: ApiDCAsOwnedBody) {
-		return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>(
-			"orders",
-			inputs
-		);
-	}
-
-	/**
 	 * Fetches the API for dollar cost averaging active orders list.
 	 * @async
-	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns { Promise<DcaOrderObject[]> } A promise that resolves to object with array of fetched events for active dca's.
+	 * @param { LimitOrderObject } inputs - An object containing the walletAddress.
+	 * @returns { Promise<LimitOrderObject[]> } A promise that resolves to object with array of fetched events for active dca's.
 	 */
 
-	public async getActiveDcaOrders(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"orders/active",
-			inputs
-		);
+	public async getActiveLimitOrders(
+		inputs: ApiLimitOrdersActiveOrdersOwnedBody
+	) {
+		return this.fetchApi<
+			LimitOrderObject[],
+			ApiLimitOrdersActiveOrdersOwnedBody
+		>("orders/active", inputs);
 	}
 
 	/**
-	 * Fetches the API for dollar cost averaging past orders list.
+	 * Fetches the API for limit cost finished orders list.
 	 * @async
-	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns { Promise<DcaOrderObject[]> } A promise that resolves to object with array of fetched events for past dca's.
+	 * @param { LimitOrderObject } inputs - An object containing the walletAddress.
+	 * @returns { Promise<LimitOrderObject[]> } A promise that resolves to object with array of fetched events for past dca's.
 	 */
 
-	public async getPastDcaOrders(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"orders/past",
+	public async getExecutedLimitOrders(inputs: { walletAddress: SuiAddress }) {
+		return this.fetchApi<LimitOrderObject[], ApiLimitOrdersOwnedBody>(
+			"orders/executed",
 			inputs
 		);
 	}
@@ -82,33 +70,33 @@ export class Dca extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches the API transaction for creating DCA order.
-	 * @param { ApiDcaTransactionForCreateOrderBody } inputs - The inputs for the transaction.
+	 * Fetches the API transaction for creating Limit order.
+	 * @param { ApiLimitOrdersTransactionForCreateOrderBody } inputs - The inputs for the transaction.
 	 * @returns { Promise<Transaction> } A promise that resolves with the API transaction.
 	 */
 
-	public async getCreateDcaOrderTx(
-		inputs: ApiDcaTransactionForCreateOrderBody
+	public async getCreateLimitOrderTx(
+		inputs: ApiLimitOrdersTransactionForCreateOrderBody
 	): Promise<Transaction> {
-		return this.fetchApiTransaction<ApiDcaTransactionForCreateOrderBody>(
+		return this.fetchApiTransaction<ApiLimitOrdersTransactionForCreateOrderBody>(
 			"transactions/create-order",
 			inputs
 		);
 	}
 
 	/**
-	 * Fetches the API for canceling DCA order.
+	 * Fetches the API for canceling Limit order.
 	 * @param inputs - The inputs for the transaction.
 	 * @returns { Promise<boolean> } A promise that resolves with transaction execution status.
 	 */
 
-	public async closeDcaOrder(
-		inputs: ApiDcaTransactionForCloseOrderBody
+	public async cancelLimitOrder(
+		inputs: ApiLimitOrdersTransactionForCancelOrderBody
 	): Promise<boolean> {
-		return this.fetchApi<boolean, ApiDcaTransactionForCloseOrderBody>(
-			`interactions/close-order`,
-			inputs
-		);
+		return this.fetchApi<
+			boolean,
+			ApiLimitOrdersTransactionForCancelOrderBody
+		>(`interactions/cancel-order`, inputs);
 	}
 
 	// =========================================================================
@@ -121,15 +109,15 @@ export class Dca extends Caller {
 	 * @returns Message to sign.
 	 */
 
-	public closeDcaOrdersMessageToSign(inputs: { orderIds: ObjectId[] }): {
+	public cancelLimitOrderMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;
 		order_object_ids: string[];
 	} {
 		return {
 			action:
 				inputs.orderIds.length === 1
-					? "CANCEL_DCA_ORDER"
-					: "CANCEL_DCA_ORDERS",
+					? "CANCEL_LIMIT_ORDER"
+					: "CANCEL_LIMIT_ORDERS",
 			order_object_ids: inputs.orderIds,
 		};
 	}
