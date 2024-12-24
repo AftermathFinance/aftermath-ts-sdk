@@ -357,7 +357,7 @@ export class PerpetualsAccount extends Caller {
 	public async getOrderPreview(
 		inputs: Omit<
 			ApiPerpetualsPreviewOrderBody,
-			"accountId" | "collateralCoinType" | "accountCapId"
+			"accountId" | "collateralCoinType" | "accountCapId" | "collateral"
 		>,
 		abortSignal?: AbortSignal
 	): Promise<
@@ -385,6 +385,7 @@ export class PerpetualsAccount extends Caller {
 				...inputs,
 				accountId: this.accountCap.accountId,
 				collateralCoinType: this.accountCap.collateralCoinType,
+				collateral: this.collateralBalance(),
 			},
 			abortSignal
 		);
@@ -404,7 +405,7 @@ export class PerpetualsAccount extends Caller {
 	public async getCancelOrdersPreview(
 		inputs: Omit<
 			ApiPerpetualsPreviewCancelOrdersBody,
-			"accountId" | "collateralCoinType"
+			"accountId" | "collateralCoinType" | "collateral"
 		>
 	): Promise<
 		| {
@@ -432,6 +433,7 @@ export class PerpetualsAccount extends Caller {
 			...inputs,
 			accountId: this.accountCap.accountId,
 			collateralCoinType: this.accountCap.collateralCoinType,
+			collateral: this.collateralBalance(),
 		});
 		if ("error" in response) return response;
 
