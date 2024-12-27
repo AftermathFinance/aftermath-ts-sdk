@@ -3,7 +3,7 @@
 ## Install
 
 ```bash
-npm i aftermath-ts-sdk
+npm i aftermath-ts-sdk @mysten/sui @mysten/sui.js
 ```
 
 ## Usage
