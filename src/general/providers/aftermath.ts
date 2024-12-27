@@ -16,6 +16,7 @@ import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
 import {
+	Auth,
 	LeveragedStaking,
 	NftAmm,
 	ReferralVault,
@@ -167,6 +168,7 @@ export class Aftermath extends Caller {
 	public HistoricalData = () => new HistoricalData(this.network);
 	// public PriceFeeds = () => new PriceFeeds(this.network, this.Provider);
 	public DynamicGas = () => new DynamicGas(this.network);
+	public Auth = () => new Auth(this.network);
 
 	// =========================================================================
 	//  Utils
