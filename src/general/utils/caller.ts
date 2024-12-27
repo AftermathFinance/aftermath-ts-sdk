@@ -12,6 +12,7 @@ import { Helpers } from "./helpers";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class Caller {
+	protected accessToken: string | undefined;
 	protected readonly apiBaseUrl?: Url;
 
 	// =========================================================================
@@ -26,6 +27,7 @@ export class Caller {
 			network === undefined
 				? undefined
 				: Caller.apiBaseUrlForNetwork(network);
+		this.accessToken = undefined;
 	}
 
 	// =========================================================================
@@ -97,19 +99,21 @@ export class Caller {
 
 		const apiCallUrl = this.urlForApiCall(url);
 
+		const headers = {
+			"Content-Type": "text/plain",
+			...(this.accessToken
+				? { Authorization: `Bearer ${this.accessToken}` }
+				: {}),
+		};
 		const uncastResponse = await (body === undefined
 			? fetch(apiCallUrl, {
-					headers: {
-						"Content-Type": "text/plain",
-					},
+					headers,
 					signal,
 			  })
 			: fetch(apiCallUrl, {
 					method: "POST",
-					headers: {
-						"Content-Type": "text/plain",
-					},
 					body: JSON.stringify(body),
+					headers,
 					signal,
 			  }));
 
@@ -190,4 +194,8 @@ export class Caller {
 			options
 		);
 	}
+
+	protected setAccessToken = (accessToken: string) => {
+		this.accessToken = accessToken;
+	};
 }

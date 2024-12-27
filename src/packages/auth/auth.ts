@@ -9,12 +9,6 @@ import { Helpers } from "../../general/utils";
 
 export class Auth extends Caller {
 	// =========================================================================
-	//  Constants
-	// =========================================================================
-
-	public static readonly constants = {};
-
-	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
@@ -23,31 +17,22 @@ export class Auth extends Caller {
 	}
 
 	// =========================================================================
-	//  Admin
+	//  User-Facing
 	// =========================================================================
 
-	public async getAccessToken(inputs: {
-		privateKey: string;
-	}): Promise<ApiGetAccessTokenResponse> {
-		const { privateKey } = inputs;
-
-		const serializedJson = Auth.createSerializedJson("GetAccessToken");
-		const message = new TextEncoder().encode(serializedJson);
-
-		const keypair = Helpers.keypairFromPrivateKey(privateKey);
-
-		const { signature } = await keypair.signPersonalMessage(message);
-
-		return this.fetchApi<ApiGetAccessTokenResponse, ApiGetAccessTokenBody>(
-			"access-token",
-			{
-				signature,
-				serializedJson,
-				walletAddress: Helpers.addLeadingZeroesToType(
-					keypair.toSuiAddress()
-				),
-			}
+	public async init(inputs: { privateKey: string }): Promise<() => void> {
+		const { accessToken, expirationTimestamp } = await this.getAccessToken(
+			inputs
 		);
+
+		this.setAccessToken(accessToken);
+
+		const TIMEOUT_REDUCTION_RATIO = 0.9;
+		const interval =
+			(expirationTimestamp - Date.now()) * TIMEOUT_REDUCTION_RATIO;
+		const timer = setInterval(() => this.init(inputs), interval);
+
+		return () => clearInterval(timer);
 	}
 
 	// =========================================================================
@@ -94,6 +79,34 @@ export class Auth extends Caller {
 
 	// =========================================================================
 	//  Private
+	// =========================================================================
+
+	private async getAccessToken(inputs: {
+		privateKey: string;
+	}): Promise<ApiGetAccessTokenResponse> {
+		const { privateKey } = inputs;
+
+		const serializedJson = Auth.createSerializedJson("GetAccessToken");
+		const message = new TextEncoder().encode(serializedJson);
+
+		const keypair = Helpers.keypairFromPrivateKey(privateKey);
+
+		const { signature } = await keypair.signPersonalMessage(message);
+
+		return this.fetchApi<ApiGetAccessTokenResponse, ApiGetAccessTokenBody>(
+			"access-token",
+			{
+				signature,
+				serializedJson,
+				walletAddress: Helpers.addLeadingZeroesToType(
+					keypair.toSuiAddress()
+				),
+			}
+		);
+	}
+
+	// =========================================================================
+	//  Private Static
 	// =========================================================================
 
 	private static createSerializedJson(method: string, value = {}) {
