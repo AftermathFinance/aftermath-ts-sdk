@@ -4,7 +4,6 @@ import {
 	CoinType,
 	DcaAddresses,
 	ObjectId,
-	SuiAddress,
 } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Helpers } from "../../../general/utils";
@@ -12,7 +11,6 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
-import { ApiDcaManualCloseOrderBody } from "../dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
 export class DcaApi {

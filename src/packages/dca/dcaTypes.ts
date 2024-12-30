@@ -2,7 +2,6 @@ import { ObjectId, SuiAddress } from "../../types";
 import { CoinType } from "../coin/coinTypes";
 import {
 	Balance,
-	Event,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
@@ -134,52 +133,6 @@ export interface DcaOrderObject {
 export interface DcaOrdersObject {
 	active: DcaOrderObject[];
 	past: DcaOrderObject[];
-}
-
-// =========================================================================
-//  DCA Events
-// =========================================================================
-
-export interface DcaCreatedOrderEvent extends Event {
-	orderId: ObjectId;
-	owner: ObjectId;
-	inputValue: Balance;
-	inputType: CoinType;
-	outputType: CoinType;
-	gasValue: Balance;
-	frequencyMs: Timestamp;
-	startTimestampMs: Timestamp;
-	amountPerTrade: Balance;
-	maxAllowableSlippageBps: Balance;
-	minAmountOut: Balance;
-	maxAmountOut: Balance;
-	remainingTrades: bigint;
-	recipient: SuiAddress;
-}
-
-export interface DcaClosedOrderEvent extends Event {
-	orderId: ObjectId;
-	owner: ObjectId;
-	remainingValue: Balance;
-	inputType: CoinType;
-	outputType: CoinType;
-	gasValue: Balance;
-	frequencyMs: Timestamp;
-	lastTradeTimestampMs: Timestamp;
-	amountPerTrade: Balance;
-	maxAllowableSlippageBps: Balance;
-	minAmountOut: Balance;
-	maxAmountOut: Balance;
-	remainingTrades: bigint;
-}
-
-export interface DcaExecutedTradeEvent extends Event {
-	orderId: ObjectId;
-	user: SuiAddress;
-	inputType: CoinType;
-	inputAmount: Balance;
-	outputType: CoinType;
-	outputAmount: Balance;
 }
 
 // =========================================================================
