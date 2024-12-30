@@ -1,11 +1,11 @@
-import { ObjectId, SuiNetwork } from "../../types";
+import { CoinType, ObjectId, SuiNetwork } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import {
-	ApiLimitOrdersOwnedBody,
-	ApiLimitOrdersTransactionForCreateOrderBody,
-	ApiLimitOrdersTransactionForCancelOrderBody,
+	ApiLimitOrdersPastOrdersOwnedBody,
+	ApiLimitOrdersCreateOrderTransactionBody,
+	ApiLimitOrdersCancelOrderTransactionBody,
 	LimitOrderObject,
 	ApiLimitOrdersActiveOrdersOwnedBody,
 } from "./limitOrdersTypes";
@@ -59,10 +59,10 @@ export class LimitOrders extends Caller {
 	 */
 
 	public async getPastLimitOrders(inputs: { walletAddress: SuiAddress }) {
-		return this.fetchApi<LimitOrderObject[], ApiLimitOrdersOwnedBody>(
-			"orders/past",
-			inputs
-		);
+		return this.fetchApi<
+			LimitOrderObject[],
+			ApiLimitOrdersPastOrdersOwnedBody
+		>("orders/past", inputs);
 	}
 
 	// =========================================================================
@@ -71,14 +71,14 @@ export class LimitOrders extends Caller {
 
 	/**
 	 * Fetches the API transaction for creating Limit order.
-	 * @param { ApiLimitOrdersTransactionForCreateOrderBody } inputs - The inputs for the transaction.
+	 * @param { ApiLimitOrdersCreateOrderTransactionBody } inputs - The inputs for the transaction.
 	 * @returns { Promise<Transaction> } A promise that resolves with the API transaction.
 	 */
 
 	public async getCreateLimitOrderTx(
-		inputs: ApiLimitOrdersTransactionForCreateOrderBody
+		inputs: ApiLimitOrdersCreateOrderTransactionBody
 	): Promise<Transaction> {
-		return this.fetchApiTransaction<ApiLimitOrdersTransactionForCreateOrderBody>(
+		return this.fetchApiTransaction<ApiLimitOrdersCreateOrderTransactionBody>(
 			"transactions/create-order",
 			inputs
 		);
@@ -91,12 +91,12 @@ export class LimitOrders extends Caller {
 	 */
 
 	public async cancelLimitOrder(
-		inputs: ApiLimitOrdersTransactionForCancelOrderBody
+		inputs: ApiLimitOrdersCancelOrderTransactionBody
 	): Promise<boolean> {
-		return this.fetchApi<
-			boolean,
-			ApiLimitOrdersTransactionForCancelOrderBody
-		>(`interactions/cancel-order`, inputs);
+		return this.fetchApi<boolean, ApiLimitOrdersCancelOrderTransactionBody>(
+			`interactions/cancel-order`,
+			inputs
+		);
 	}
 
 	// =========================================================================
@@ -120,5 +120,25 @@ export class LimitOrders extends Caller {
 					: "CANCEL_LIMIT_ORDERS",
 			order_object_ids: inputs.orderIds,
 		};
+	}
+
+	// =========================================================================
+	// Configuration
+	// =========================================================================
+
+	/**
+	 * Method for getting a minimum allowable order size.
+	 * @returns Minimum order size in usd.
+	 */
+
+	public async getMinOrderSize() {
+		return this.fetchApi<
+			| {
+					minOrderCoinType: CoinType;
+					minOrderSizeUsd: number;
+			  }
+			| undefined,
+			undefined
+		>("min-order-size-usd");
 	}
 }
