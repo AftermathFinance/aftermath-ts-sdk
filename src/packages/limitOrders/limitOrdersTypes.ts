@@ -2,7 +2,6 @@ import { ObjectId, SuiAddress } from "../../types";
 import { CoinType } from "../coin/coinTypes";
 import {
 	Balance,
-	Event,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
@@ -20,7 +19,7 @@ export interface LimitOrdersIntegratorFeeData {
 //  Initialize Order Transaction
 // =========================================================================
 
-export interface ApiLimitOrdersTransactionForCreateOrderBody {
+export interface ApiLimitOrdersCreateOrderTransactionBody {
 	walletAddress: SuiAddress;
 	allocateCoinType: CoinType;
 	allocateCoinAmount: Balance;
@@ -36,7 +35,7 @@ export interface ApiLimitOrdersTransactionForCreateOrderBody {
 // Cancel Order Transaction
 // =========================================================================
 
-export interface ApiLimitOrdersTransactionForCancelOrderBody {
+export interface ApiLimitOrdersCancelOrderTransactionBody {
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;
@@ -46,7 +45,7 @@ export interface ApiLimitOrdersTransactionForCancelOrderBody {
 //  Limit Order Fetch
 // =========================================================================
 
-export type LimitOrdersIndexerOrderStatus =
+export type LimitOrdersOrderStatus =
 	| "Active"
 	| "Canceled"
 	| "Failed"
@@ -80,32 +79,16 @@ export interface LimitOrderObject {
 		tnxDigest: TransactionDigest;
 	};
 	expiry: Timestamp;
-	status: LimitOrdersIndexerOrderStatus | undefined;
+	status: LimitOrdersOrderStatus | undefined;
 	error: string | undefined;
 	integratorFee?: LimitOrdersIntegratorFeeData;
-}
-
-// =========================================================================
-//  Limit Orders Events
-// =========================================================================
-
-export interface LimitOrdersCreatedOrderEvent extends Event {
-	orderId: ObjectId;
-	user: SuiAddress;
-	userPublicKey: Uint8Array;
-	recipient: SuiAddress;
-	inputAmount: Balance;
-	inputType: CoinType;
-	outputType: CoinType;
-	gasAmount: Balance;
-	encryptedFields: Uint8Array;
 }
 
 // =========================================================================
 //  Owned Limit Orders
 // =========================================================================
 
-export interface ApiLimitOrdersOwnedBody {
+export interface ApiLimitOrdersPastOrdersOwnedBody {
 	walletAddress: SuiAddress;
 }
 
