@@ -34,7 +34,7 @@ export class UserData extends Caller {
 
 	public async getUserPublicKey(
 		inputs: ApiUserDataOwnedBody
-	): Promise<string | undefined | null> {
+	): Promise<string | undefined | "None"> {
 		return this.fetchApi<string | undefined, ApiUserDataOwnedBody>(
 			`public-key`,
 			inputs
