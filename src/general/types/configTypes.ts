@@ -198,7 +198,7 @@ export interface DcaAddresses {
 
 export interface SharedCustodyAddresses {
 	address: ObjectId;
-	// publicKey: ObjectId;
+	publicKey: ObjectId;
 }
 
 export interface NftsAddresses {

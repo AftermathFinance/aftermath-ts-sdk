@@ -139,7 +139,8 @@ export interface PoolDataPoint {
 	value: number;
 }
 
-export type PoolGraphDataTimeframeKey = "1H" | "1D" | "1W" | "1M" | "1Y";
+export type PoolGraphDataTimeframeKey = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y";
+// export type PoolGraphDataTimeframeKey = "1D";
 export interface PoolGraphDataTimeframe {
 	time: Timestamp;
 	timeUnit: ManipulateType;
