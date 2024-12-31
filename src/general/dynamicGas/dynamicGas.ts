@@ -1,5 +1,5 @@
 import { SuiNetwork } from "../types/suiTypes";
-import { SuiAddress, Url } from "../types/generalTypes";
+import { CallerConfig, SuiAddress, Url } from "../types/generalTypes";
 import { CoinType } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
 import { Transaction } from "@mysten/sui/transactions";
@@ -10,8 +10,8 @@ export class DynamicGas extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
-		super(network, "dynamic-gas");
+	constructor(config: CallerConfig) {
+		super(config, "dynamic-gas");
 	}
 
 	// =========================================================================

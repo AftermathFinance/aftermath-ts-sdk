@@ -1,4 +1,4 @@
-import { ObjectId, SuiNetwork } from "../../types";
+import { CallerConfig, ObjectId, SuiNetwork } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
@@ -25,11 +25,8 @@ export class Dca extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
-	) {
-		super(network, "dca");
+	constructor(config: CallerConfig) {
+		super(config, "dca");
 	}
 
 	// =========================================================================

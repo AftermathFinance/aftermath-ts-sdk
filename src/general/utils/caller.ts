@@ -2,17 +2,18 @@ import { Transaction } from "@mysten/sui/transactions";
 import {
 	ApiEventsBody,
 	ApiIndexerEventsBody,
+	CallerConfig,
 	EventsWithCursor,
 	IndexerEventsWithCursor,
 	SerializedTransaction,
 	SuiNetwork,
+	UniqueId,
 	Url,
 } from "../../types";
 import { Helpers } from "./helpers";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class Caller {
-	protected accessToken: string | undefined;
 	protected readonly apiBaseUrl?: Url;
 
 	// =========================================================================
@@ -20,14 +21,13 @@ export class Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		public readonly config: CallerConfig,
 		private readonly apiUrlPrefix: Url = ""
 	) {
 		this.apiBaseUrl =
-			network === undefined
+			this.config.network === undefined
 				? undefined
-				: Caller.apiBaseUrlForNetwork(network);
-		this.accessToken = undefined;
+				: Caller.apiBaseUrlForNetwork(this.config.network);
 	}
 
 	// =========================================================================
@@ -99,10 +99,12 @@ export class Caller {
 
 		const apiCallUrl = this.urlForApiCall(url);
 
+		console.log("this.accessToken", this.config.accessToken);
+
 		const headers = {
 			"Content-Type": "text/plain",
-			...(this.accessToken
-				? { Authorization: `Bearer ${this.accessToken}` }
+			...(this.config.accessToken
+				? { Authorization: `Bearer ${this.config.accessToken}` }
 				: {}),
 		};
 		const uncastResponse = await (body === undefined
@@ -195,7 +197,7 @@ export class Caller {
 		);
 	}
 
-	protected setAccessToken = (accessToken: string) => {
-		this.accessToken = accessToken;
+	protected setAccessToken = (accessToken: UniqueId) => {
+		this.config.accessToken = accessToken;
 	};
 }

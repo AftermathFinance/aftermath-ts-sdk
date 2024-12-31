@@ -1,4 +1,4 @@
-import { SuiAddress, SuiNetwork } from "../../types";
+import { CallerConfig, SuiAddress, SuiNetwork } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiCreateAuthAccountBody,
@@ -12,8 +12,8 @@ export class Auth extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
-		super(network, "auth");
+	constructor(config: CallerConfig) {
+		super(config, "auth");
 	}
 
 	// =========================================================================
@@ -21,18 +21,23 @@ export class Auth extends Caller {
 	// =========================================================================
 
 	public async init(inputs: { privateKey: string }): Promise<() => void> {
-		const { accessToken, expirationTimestamp } = await this.getAccessToken(
-			inputs
-		);
+		const { accessToken, expirationTimestamp, header } =
+			await this.getAccessToken(inputs);
+		console.log({
+			accessToken,
+			expirationTimestamp,
+			header,
+		});
 
 		this.setAccessToken(accessToken);
 
-		const TIMEOUT_REDUCTION_RATIO = 0.9;
+		// const TIMEOUT_REDUCTION_RATIO = 0.9;
+		const TIMEOUT_REDUCTION_RATIO = (1 / 60) * (1 / 6);
 		const interval =
 			(expirationTimestamp - Date.now()) * TIMEOUT_REDUCTION_RATIO;
-		const timer = setInterval(() => this.init(inputs), interval);
+		const timer = setTimeout(() => this.init(inputs), interval);
 
-		return () => clearInterval(timer);
+		return () => clearTimeout(timer);
 	}
 
 	// =========================================================================
@@ -86,7 +91,7 @@ export class Auth extends Caller {
 	}): Promise<ApiGetAccessTokenResponse> {
 		const { privateKey } = inputs;
 
-		const serializedJson = Auth.createSerializedJson("GetAccessToken");
+		const serializedJson = Auth.createSerializedJson("GetAccessToken", {});
 		const message = new TextEncoder().encode(serializedJson);
 
 		const keypair = Helpers.keypairFromPrivateKey(privateKey);
@@ -109,11 +114,11 @@ export class Auth extends Caller {
 	//  Private Static
 	// =========================================================================
 
-	private static createSerializedJson(method: string, value = {}) {
-		const unixTimestamp = Math.floor(Date.now() / 1000);
+	private static createSerializedJson(method: string, value: Object) {
+		const timestampSeconds = Math.floor(Date.now() / 1000);
 		const random = Math.floor(Math.random() * 1024 * 1024);
 		const data = {
-			date: unixTimestamp,
+			date: timestampSeconds,
 			nonce: random,
 			method: method,
 			value: value,

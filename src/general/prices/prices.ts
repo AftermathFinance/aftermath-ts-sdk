@@ -8,15 +8,15 @@ import {
 	CoinsToPriceInfo,
 } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
-import { Url } from "../types";
+import { CallerConfig, Url } from "../types";
 
 export class Prices extends Caller {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
-		super(network, "price-info");
+	constructor(config: CallerConfig) {
+		super(config, "price-info");
 	}
 
 	// =========================================================================

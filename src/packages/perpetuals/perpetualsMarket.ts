@@ -32,6 +32,7 @@ import {
 	ApiPerpetualsMarket24hrVolumeResponse,
 	ApiDataWithCursorBody,
 	PerpetualsTradeHistoryWithCursor,
+	CallerConfig,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -50,12 +51,9 @@ export class PerpetualsMarket extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		public marketData: PerpetualsMarketData,
-		public readonly network?: SuiNetwork
-	) {
+	constructor(public marketData: PerpetualsMarketData, config: CallerConfig) {
 		super(
-			network,
+			config,
 			`perpetuals/${marketData.collateralCoinType}/markets/${marketData.objectId}`
 		);
 		this.marketId = marketData.objectId;

@@ -3,6 +3,7 @@ import {
 	EventId,
 	SuiTransactionBlockResponse,
 } from "@mysten/sui/client";
+import { SuiNetwork } from "./suiTypes";
 // import {
 // 	Scallop,
 // 	ScallopBuilder,
@@ -195,3 +196,12 @@ export interface IndexerDataWithCursorQueryParams {
 // 	Builder: ScallopBuilder;
 // 	Query: ScallopQuery;
 // }
+
+// =========================================================================
+//  Interal
+// =========================================================================
+
+export interface CallerConfig {
+	network: SuiNetwork | undefined;
+	accessToken: string | undefined;
+}

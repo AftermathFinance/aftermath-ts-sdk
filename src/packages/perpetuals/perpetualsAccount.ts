@@ -45,6 +45,7 @@ import {
 	PerpetualsAccountId,
 	ApiPerpetualsAccountCollateralHistoryBody,
 	ApiPerpetualsAccountOrderHistoryBody,
+	CallerConfig,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -70,9 +71,9 @@ export class PerpetualsAccount extends Caller {
 	constructor(
 		public readonly account: PerpetualsAccountObject,
 		public readonly accountCap: PerpetualsAccountCap,
-		public readonly network?: SuiNetwork
+		config: CallerConfig
 	) {
-		super(network, "perpetuals");
+		super(config, "perpetuals");
 	}
 
 	// =========================================================================

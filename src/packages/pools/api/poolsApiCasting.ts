@@ -41,7 +41,7 @@ export class PoolsApiCasting {
 		) as PoolFieldsOnChain;
 
 		const lpCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(poolFieldsOnChain.lp_supply.type).innerCoinType
+			Coin.getInnerCoinType(poolFieldsOnChain.lp_supply.type)
 		);
 
 		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(

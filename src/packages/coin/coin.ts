@@ -1,6 +1,7 @@
 import {
 	AnyObjectType,
 	Balance,
+	CallerConfig,
 	CoinDecimal,
 	CoinMetadaWithInfo,
 	CoinPriceInfo,
@@ -49,11 +50,11 @@ export class Coin extends Caller {
 
 	// TODO: update this class to not be instantiated with a coin type at all
 	constructor(
-		public readonly coinType?: CoinType,
-		public readonly network?: SuiNetwork,
+		public readonly coinType: CoinType | undefined = undefined,
+		config: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "coins");
+		super(config, "coins");
 		this.coinType = coinType;
 
 		this.coinTypePackageName = this.coinType
@@ -120,7 +121,7 @@ export class Coin extends Caller {
 		const coinType = this.coinType ?? coin;
 		if (!coinType) throw new Error("no valid coin type");
 
-		const priceInfo = await new Prices(this.network).getCoinPriceInfo({
+		const priceInfo = await new Prices(this.config).getCoinPriceInfo({
 			coin: coinType,
 		});
 

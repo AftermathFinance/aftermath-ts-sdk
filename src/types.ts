@@ -6,6 +6,7 @@ export * from "./packages/leveragedStaking/leveragedStakingTypes";
 export * from "./packages/coin/coinTypes";
 export * from "./packages/router/routerTypes";
 export * from "./packages/nftAmm/nftAmmTypes";
+export * from "./packages/auth/authTypes";
 // export * from "./packages/referralVault/referralVaultTypes";
 export * from "./packages/farms/farmsTypes";
 export * from "./packages/perpetuals/perpetualsTypes";
