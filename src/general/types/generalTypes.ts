@@ -93,6 +93,10 @@ export interface ExternalFee {
 	feePercentage: Percentage;
 }
 
+export type SignMessageCallback = (args: { message: Uint8Array }) => Promise<{
+	signature: string;
+}>;
+
 // =========================================================================
 //  Events
 // =========================================================================

@@ -1,11 +1,20 @@
-import { CallerConfig, SuiAddress, SuiNetwork } from "../../types";
+import {
+	CallerConfig,
+	SignMessageCallback,
+	SuiAddress,
+	SuiNetwork,
+} from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiCreateAuthAccountBody,
 	ApiGetAccessTokenBody,
 	ApiGetAccessTokenResponse,
+	RateLimit,
 } from "./authTypes";
 import { Helpers } from "../../general/utils";
+import fs from "fs";
+import path from "path";
+import os from "os";
 
 export class Auth extends Caller {
 	// =========================================================================
@@ -22,9 +31,7 @@ export class Auth extends Caller {
 
 	public async init(inputs: {
 		walletAddress: SuiAddress;
-		signMessageCallback: (args: { message: Uint8Array }) => Promise<{
-			signature: string;
-		}>;
+		signMessageCallback: SignMessageCallback;
 	}): Promise<() => void> {
 		const { accessToken, expirationTimestamp, header } =
 			await this.getAccessToken(inputs);
@@ -45,6 +52,68 @@ export class Auth extends Caller {
 		return () => clearTimeout(timer);
 	}
 
+	public async initFromSuiKeystore(inputs: {
+		walletAddress: SuiAddress;
+		path?: string;
+	}): Promise<() => void> {
+		const { walletAddress, path: pathStr } = inputs;
+
+		const keystorePath = pathStr
+			? path.join(pathStr)
+			: (() => {
+					// Locate the user’s home directory
+					const homeDir = os.homedir();
+					if (!homeDir) {
+						throw new Error("cannot obtain home directory path");
+					}
+					// Construct the path: ~/.sui/sui_config/sui.keystore
+					return path.join(
+						homeDir,
+						".sui",
+						"sui_config",
+						"sui.keystore"
+					);
+			  })();
+
+		// Read the JSON file from `keystorePath`
+		let privateKeys: string[];
+		try {
+			const fileContent = fs.readFileSync(keystorePath, "utf-8");
+			privateKeys = JSON.parse(fileContent);
+
+			if (!Array.isArray(privateKeys)) {
+				throw new Error(
+					"Invalid keystore format: Expected an array of private keys"
+				);
+			}
+		} catch (error) {
+			throw new Error(`Failed to read keystore file: ${error}`);
+		}
+		if (privateKeys.length <= 0) {
+			throw new Error(`Empty keystore file`);
+		}
+
+		const foundKeypair = privateKeys
+			.map((privateKey) => Helpers.keypairFromPrivateKey(privateKey))
+			.find(
+				(keypair) =>
+					Helpers.addLeadingZeroesToType(keypair.toSuiAddress()) ===
+					Helpers.addLeadingZeroesToType(walletAddress)
+			);
+		if (!foundKeypair) {
+			throw new Error(
+				`No private key found in keystore file for ${walletAddress}`
+			);
+		}
+
+		return this.init({
+			signMessageCallback: async ({ message }) => {
+				return foundKeypair.signPersonalMessage(message);
+			},
+			walletAddress,
+		});
+	}
+
 	// =========================================================================
 	//  Admin
 	// =========================================================================
@@ -52,15 +121,10 @@ export class Auth extends Caller {
 	// NOTE: admin only (should add docs)
 	public async adminCreateAuthAccount(inputs: {
 		walletAddress: SuiAddress;
-		signMessageCallback: (args: { message: Uint8Array }) => Promise<{
-			signature: string;
-		}>;
+		signMessageCallback: SignMessageCallback;
 		accountName: string;
 		accountWalletAddress: SuiAddress;
-		rateLimits: {
-			p: string;
-			m: { GET?: { l: number }; POST?: { l: number } };
-		}[];
+		rateLimits: RateLimit[];
 	}): Promise<boolean> {
 		const {
 			walletAddress,
@@ -70,7 +134,11 @@ export class Auth extends Caller {
 			rateLimits,
 		} = inputs;
 
-		const serializedJson = Auth.createSerializedJson("AccountCreate", {
+		const serializedJson = Auth.createSerializedJson<{
+			sub: string;
+			wallet_address: SuiAddress;
+			rate_limits: RateLimit[];
+		}>("AccountCreate", {
 			sub: accountName,
 			wallet_address:
 				Helpers.addLeadingZeroesToType(accountWalletAddress),
@@ -96,9 +164,7 @@ export class Auth extends Caller {
 
 	private async getAccessToken(inputs: {
 		walletAddress: SuiAddress;
-		signMessageCallback: (args: { message: Uint8Array }) => Promise<{
-			signature: string;
-		}>;
+		signMessageCallback: SignMessageCallback;
 	}): Promise<ApiGetAccessTokenResponse> {
 		const { walletAddress, signMessageCallback } = inputs;
 
@@ -121,7 +187,10 @@ export class Auth extends Caller {
 	//  Private Static
 	// =========================================================================
 
-	private static createSerializedJson(method: string, value: Object) {
+	private static createSerializedJson<DataToSerialize extends Object>(
+		method: string,
+		value: DataToSerialize
+	) {
 		const timestampSeconds = Math.floor(Date.now() / 1000);
 		const random = Math.floor(Math.random() * 1024 * 1024);
 		const data = {
