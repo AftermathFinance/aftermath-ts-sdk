@@ -20,7 +20,12 @@ export class Auth extends Caller {
 	//  User-Facing
 	// =========================================================================
 
-	public async init(inputs: { privateKey: string }): Promise<() => void> {
+	public async init(inputs: {
+		walletAddress: SuiAddress;
+		signMessageCallback: (args: { message: Uint8Array }) => Promise<{
+			signature: string;
+		}>;
+	}): Promise<() => void> {
 		const { accessToken, expirationTimestamp, header } =
 			await this.getAccessToken(inputs);
 		console.log({
@@ -44,40 +49,43 @@ export class Auth extends Caller {
 	//  Admin
 	// =========================================================================
 
-	// NOTE: admin only (add docs)
+	// NOTE: admin only (should add docs)
 	public async adminCreateAuthAccount(inputs: {
-		privateKey: string;
+		walletAddress: SuiAddress;
+		signMessageCallback: (args: { message: Uint8Array }) => Promise<{
+			signature: string;
+		}>;
 		accountName: string;
 		accountWalletAddress: SuiAddress;
 		rateLimits: {
-			// TODO: refine type definition
 			p: string;
-			m: { GET?: { l: number }; POST?: { l: number }; l: number };
+			m: { GET?: { l: number }; POST?: { l: number } };
 		}[];
 	}): Promise<boolean> {
-		const { privateKey, accountName, accountWalletAddress, rateLimits } =
-			inputs;
+		const {
+			walletAddress,
+			signMessageCallback,
+			accountName,
+			accountWalletAddress,
+			rateLimits,
+		} = inputs;
 
 		const serializedJson = Auth.createSerializedJson("AccountCreate", {
 			sub: accountName,
 			wallet_address:
 				Helpers.addLeadingZeroesToType(accountWalletAddress),
-			rate_limits: rateLimits, // [{ p: "/test", m: { POST: { l: 1000 } } }]
+			rate_limits: rateLimits,
 		});
 		const message = new TextEncoder().encode(serializedJson);
 
-		const keypair = Helpers.keypairFromPrivateKey(privateKey);
-
-		const { signature } = await keypair.signPersonalMessage(message);
+		const { signature } = await signMessageCallback({ message });
 
 		return this.fetchApi<boolean, ApiCreateAuthAccountBody>(
 			"create-account",
 			{
 				signature,
 				serializedJson,
-				walletAddress: Helpers.addLeadingZeroesToType(
-					keypair.toSuiAddress()
-				),
+				walletAddress: Helpers.addLeadingZeroesToType(walletAddress),
 			}
 		);
 	}
@@ -87,25 +95,24 @@ export class Auth extends Caller {
 	// =========================================================================
 
 	private async getAccessToken(inputs: {
-		privateKey: string;
+		walletAddress: SuiAddress;
+		signMessageCallback: (args: { message: Uint8Array }) => Promise<{
+			signature: string;
+		}>;
 	}): Promise<ApiGetAccessTokenResponse> {
-		const { privateKey } = inputs;
+		const { walletAddress, signMessageCallback } = inputs;
 
 		const serializedJson = Auth.createSerializedJson("GetAccessToken", {});
 		const message = new TextEncoder().encode(serializedJson);
 
-		const keypair = Helpers.keypairFromPrivateKey(privateKey);
-
-		const { signature } = await keypair.signPersonalMessage(message);
+		const { signature } = await signMessageCallback({ message });
 
 		return this.fetchApi<ApiGetAccessTokenResponse, ApiGetAccessTokenBody>(
 			"access-token",
 			{
 				signature,
 				serializedJson,
-				walletAddress: Helpers.addLeadingZeroesToType(
-					keypair.toSuiAddress()
-				),
+				walletAddress: Helpers.addLeadingZeroesToType(walletAddress),
 			}
 		);
 	}
