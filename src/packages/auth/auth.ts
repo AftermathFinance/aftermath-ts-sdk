@@ -12,9 +12,6 @@ import {
 	RateLimit,
 } from "./authTypes";
 import { Helpers } from "../../general/utils";
-// import fs from "fs";
-// import path from "path";
-// import os from "os";
 
 export class Auth extends Caller {
 	// =========================================================================
@@ -47,66 +44,77 @@ export class Auth extends Caller {
 		return () => clearTimeout(timer);
 	}
 
-	// public async initFromSuiKeystore(inputs: {
-	// 	walletAddress: SuiAddress;
-	// 	path?: string;
-	// }): Promise<() => void> {
-	// 	const { walletAddress, path: pathStr } = inputs;
+	public async initFromSuiKeystore(inputs: {
+		walletAddress: SuiAddress;
+		path?: string;
+	}): Promise<() => void> {
+		const { walletAddress, path: pathStr } = inputs;
 
-	// 	const keystorePath = pathStr
-	// 		? path.join(pathStr)
-	// 		: (() => {
-	// 				// Locate the user’s home directory
-	// 				const homeDir = os.homedir();
-	// 				if (!homeDir) {
-	// 					throw new Error("cannot obtain home directory path");
-	// 				}
-	// 				// Construct the path: ~/.sui/sui_config/sui.keystore
-	// 				return path.join(
-	// 					homeDir,
-	// 					".sui",
-	// 					"sui_config",
-	// 					"sui.keystore"
-	// 				);
-	// 		  })();
+		if (typeof window === "undefined") {
+			const fs = require("fs");
+			const path = require("path");
+			const os = require("os");
 
-	// 	// Read the JSON file from `keystorePath`
-	// 	let privateKeys: string[];
-	// 	try {
-	// 		const fileContent = fs.readFileSync(keystorePath, "utf-8");
-	// 		privateKeys = JSON.parse(fileContent);
+			const keystorePath = pathStr
+				? path.join(pathStr)
+				: (() => {
+						// Locate the user’s home directory
+						const homeDir = os.homedir();
+						if (!homeDir) {
+							throw new Error(
+								"cannot obtain home directory path"
+							);
+						}
+						// Construct the path: ~/.sui/sui_config/sui.keystore
+						return path.join(
+							homeDir,
+							".sui",
+							"sui_config",
+							"sui.keystore"
+						);
+				  })();
 
-	// 		if (!Array.isArray(privateKeys)) {
-	// 			throw new Error(
-	// 				"Invalid keystore format: Expected an array of private keys"
-	// 			);
-	// 		}
-	// 	} catch (error) {
-	// 		throw new Error(`Failed to read keystore file: ${error}`);
-	// 	}
-	// 	if (privateKeys.length <= 0) {
-	// 		throw new Error(`Empty keystore file`);
-	// 	}
+			// Read the JSON file from `keystorePath`
+			let privateKeys: string[];
+			try {
+				const fileContent = fs.readFileSync(keystorePath, "utf-8");
+				privateKeys = JSON.parse(fileContent);
 
-	// 	const foundKeypair = privateKeys
-	// 		.map((privateKey) => Helpers.keypairFromPrivateKey(privateKey))
-	// 		.find(
-	// 			(keypair) =>
-	// 				Helpers.addLeadingZeroesToType(keypair.toSuiAddress()) ===
-	// 				Helpers.addLeadingZeroesToType(walletAddress)
-	// 		);
-	// 	if (!foundKeypair) {
-	// 		throw new Error(
-	// 			`No private key found in keystore file for ${walletAddress}`
-	// 		);
-	// 	}
+				if (!Array.isArray(privateKeys)) {
+					throw new Error(
+						"Invalid keystore format: Expected an array of private keys"
+					);
+				}
+			} catch (error) {
+				throw new Error(`Failed to read keystore file: ${error}`);
+			}
+			if (privateKeys.length <= 0) {
+				throw new Error(`Empty keystore file`);
+			}
 
-	// 	return this.init({
-	// 		walletAddress,
-	// 		signMessageCallback: async ({ message }) =>
-	// 			foundKeypair.signPersonalMessage(message),
-	// 	});
-	// }
+			const foundKeypair = privateKeys
+				.map((privateKey) => Helpers.keypairFromPrivateKey(privateKey))
+				.find(
+					(keypair) =>
+						Helpers.addLeadingZeroesToType(
+							keypair.toSuiAddress()
+						) === Helpers.addLeadingZeroesToType(walletAddress)
+				);
+			if (!foundKeypair) {
+				throw new Error(
+					`No private key found in keystore file for ${walletAddress}`
+				);
+			}
+
+			return this.init({
+				walletAddress,
+				signMessageCallback: async ({ message }) =>
+					foundKeypair.signPersonalMessage(message),
+			});
+		}
+
+		throw new Error("`initFromSuiKeystore` must be called on server-side");
+	}
 
 	// =========================================================================
 	//  Admin
