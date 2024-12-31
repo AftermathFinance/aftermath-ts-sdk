@@ -40,8 +40,6 @@ export class Caller {
 	): Promise<OutputType> {
 		if (!response.ok) throw new Error(await response.text());
 
-		console.log("response.headers", response.headers);
-
 		const json = JSON.stringify(await response.json());
 		const output = disableBigIntJsonParsing
 			? JSON.parse(json)
@@ -100,8 +98,6 @@ export class Caller {
 		}
 
 		const apiCallUrl = this.urlForApiCall(url);
-
-		console.log("this.accessToken", this.config.accessToken);
 
 		const headers = {
 			"Content-Type": "text/plain",
