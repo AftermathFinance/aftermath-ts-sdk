@@ -21,7 +21,7 @@ export class Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly config: CallerConfig,
+		public readonly config: CallerConfig = {},
 		private readonly apiUrlPrefix: Url = ""
 	) {
 		this.apiBaseUrl =

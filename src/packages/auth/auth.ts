@@ -15,6 +15,13 @@ import { Helpers } from "../../general/utils";
 
 export class Auth extends Caller {
 	// =========================================================================
+	//  Private Class Members
+	// =========================================================================
+
+	private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+	private isCanceled = false;
+
+	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
@@ -30,18 +37,41 @@ export class Auth extends Caller {
 		walletAddress: SuiAddress;
 		signMessageCallback: SignMessageCallback;
 	}): Promise<() => void> {
-		const { accessToken, expirationTimestamp, header } =
-			await this.getAccessToken(inputs);
+		// Step 1: Mark as "not canceled" before the new run
+		this.isCanceled = false;
 
-		this.setAccessToken(accessToken);
+		// Step 2: Define a function that does the “work” + schedules next call
+		const startRefresh = async () => {
+			// If canceled at the time we enter, don’t do anything
+			if (this.isCanceled) return;
 
-		// const TIMEOUT_REDUCTION_RATIO = 0.9;
-		const TIMEOUT_REDUCTION_RATIO = (1 / 60) * (1 / 6);
-		const interval =
-			(expirationTimestamp - Date.now()) * TIMEOUT_REDUCTION_RATIO;
-		const timer = setTimeout(() => this.init(inputs), interval);
+			const { accessToken, expirationTimestamp } =
+				await this.getAccessToken(inputs);
+			this.setAccessToken(accessToken);
 
-		return () => clearTimeout(timer);
+			if (this.isCanceled) return; // double-check before scheduling next timer
+
+			// TODO: reset this back for prod
+
+			// const TIMEOUT_REDUCTION_RATIO = 0.9;
+			const TIMEOUT_REDUCTION_RATIO = (1 / 60) * (1 / 6);
+			const interval =
+				(expirationTimestamp - Date.now()) * TIMEOUT_REDUCTION_RATIO;
+
+			// Store the timer so we can cancel it later
+			this.refreshTimer = setTimeout(startRefresh, interval);
+		};
+
+		// Step 3: Kick off the first refresh
+		await startRefresh();
+
+		// Step 4: Return a function that cancels further refreshes
+		return () => {
+			this.isCanceled = true;
+			if (this.refreshTimer) {
+				clearTimeout(this.refreshTimer);
+			}
+		};
 	}
 
 	public async initFromSuiKeystore(inputs: {

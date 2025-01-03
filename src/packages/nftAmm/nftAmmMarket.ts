@@ -37,7 +37,7 @@ export class NftAmmMarket extends Caller {
 
 	constructor(
 		public readonly market: NftAmmMarketObject,
-		config: CallerConfig,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
 		super(config, `nft-amm/markets/${market.objectId}`);

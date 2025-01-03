@@ -51,7 +51,7 @@ export class Coin extends Caller {
 	// TODO: update this class to not be instantiated with a coin type at all
 	constructor(
 		public readonly coinType: CoinType | undefined = undefined,
-		config: CallerConfig,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
 		super(config, "coins");

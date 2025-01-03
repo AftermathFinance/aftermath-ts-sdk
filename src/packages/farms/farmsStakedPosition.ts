@@ -39,7 +39,7 @@ export class FarmsStakedPosition extends Caller {
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
 		trueLastHarvestRewardsTimestamp: Timestamp | undefined = undefined,
-		config: CallerConfig,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
 		super(config, "farms");

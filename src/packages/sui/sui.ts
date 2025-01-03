@@ -25,7 +25,7 @@ export class Sui extends Caller {
 	// =========================================================================
 
 	constructor(
-		config: CallerConfig,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
 		super(config, "sui");

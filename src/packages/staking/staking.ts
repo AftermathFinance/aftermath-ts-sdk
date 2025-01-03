@@ -62,7 +62,7 @@ export class Staking extends Caller {
 	 * @param network - The network to use for interacting with the Staking contract.
 	 */
 	constructor(
-		config: CallerConfig,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
 		super(config, "staking");

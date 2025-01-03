@@ -206,6 +206,6 @@ export interface IndexerDataWithCursorQueryParams {
 // =========================================================================
 
 export interface CallerConfig {
-	network: SuiNetwork | undefined;
-	accessToken: string | undefined;
+	network?: SuiNetwork;
+	accessToken?: string;
 }

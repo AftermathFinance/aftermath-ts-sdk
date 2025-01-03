@@ -55,7 +55,7 @@ export class Pool extends Caller {
 	 */
 	constructor(
 		public readonly pool: PoolObject,
-		config: CallerConfig,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
 		super(config, `pools/${pool.objectId}`);

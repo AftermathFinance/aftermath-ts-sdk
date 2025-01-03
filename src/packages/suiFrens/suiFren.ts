@@ -27,7 +27,7 @@ export class SuiFren extends Caller {
 
 	constructor(
 		public readonly suiFren: SuiFrenObject,
-		config: CallerConfig,
+		config?: CallerConfig,
 		public readonly isStaked: boolean = false,
 		public readonly isOwned: boolean = false,
 		private readonly Provider?: AftermathApi

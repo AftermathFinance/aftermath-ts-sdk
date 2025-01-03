@@ -29,7 +29,7 @@ export class StakedSuiFren extends Caller {
 
 	constructor(
 		public readonly info: StakedSuiFrenInfo,
-		config: CallerConfig,
+		config?: CallerConfig,
 		public readonly isOwned: boolean = false,
 		private readonly Provider?: AftermathApi
 	) {
