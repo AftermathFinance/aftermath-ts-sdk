@@ -51,10 +51,7 @@ export class Auth extends Caller {
 
 			if (this.isCanceled) return; // double-check before scheduling next timer
 
-			// TODO: reset this back for prod
-
-			// const TIMEOUT_REDUCTION_RATIO = 0.9;
-			const TIMEOUT_REDUCTION_RATIO = (1 / 60) * (1 / 6);
+			const TIMEOUT_REDUCTION_RATIO = 0.9;
 			const interval =
 				(expirationTimestamp - Date.now()) * TIMEOUT_REDUCTION_RATIO;
 

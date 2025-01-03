@@ -68,8 +68,8 @@ export class Caller {
 
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.apiBaseUrl}/api/${
-			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix + "/"
-		}${url}`;
+			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix
+		}${url === "" ? "" : `/${url}`}`;
 	};
 
 	// =========================================================================
