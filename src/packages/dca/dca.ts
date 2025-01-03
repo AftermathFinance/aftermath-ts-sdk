@@ -25,7 +25,7 @@ export class Dca extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(config: CallerConfig) {
+	constructor(config?: CallerConfig) {
 		super(config, "dca");
 	}
 

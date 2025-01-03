@@ -43,7 +43,7 @@ export class Perpetuals extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(config: CallerConfig) {
+	constructor(config?: CallerConfig) {
 		super(config, "perpetuals");
 	}
 

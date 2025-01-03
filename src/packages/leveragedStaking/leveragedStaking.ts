@@ -33,7 +33,7 @@ export class LeveragedStaking extends Caller {
 	 * Creates an instance of the LeveragedStaking class.
 	 * @param network The network to connect to.
 	 */
-	constructor(config: CallerConfig) {
+	constructor(config?: CallerConfig) {
 		super(config, "leveraged-staking");
 	}
 

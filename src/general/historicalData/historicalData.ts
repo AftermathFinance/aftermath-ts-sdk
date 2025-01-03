@@ -13,7 +13,7 @@ export class HistoricalData extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(config: CallerConfig) {
+	constructor(config?: CallerConfig) {
 		super(config, "historical-data");
 	}
 

@@ -51,7 +51,10 @@ export class PerpetualsMarket extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public marketData: PerpetualsMarketData, config: CallerConfig) {
+	constructor(
+		public marketData: PerpetualsMarketData,
+		config?: CallerConfig
+	) {
 		super(
 			config,
 			`perpetuals/${marketData.collateralCoinType}/markets/${marketData.objectId}`

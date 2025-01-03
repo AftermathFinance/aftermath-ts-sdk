@@ -15,7 +15,7 @@ export class Prices extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(config: CallerConfig) {
+	constructor(config?: CallerConfig) {
 		super(config, "price-info");
 	}
 

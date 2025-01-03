@@ -71,7 +71,7 @@ export class PerpetualsAccount extends Caller {
 	constructor(
 		public readonly account: PerpetualsAccountObject,
 		public readonly accountCap: PerpetualsAccountCap,
-		config: CallerConfig
+		config?: CallerConfig
 	) {
 		super(config, "perpetuals");
 	}

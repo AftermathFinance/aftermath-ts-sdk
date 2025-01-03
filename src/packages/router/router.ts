@@ -53,7 +53,7 @@ export class Router extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Router` instance
 	 */
-	constructor(config: CallerConfig) {
+	constructor(config?: CallerConfig) {
 		super(config, "router");
 	}
 
