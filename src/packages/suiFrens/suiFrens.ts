@@ -23,6 +23,7 @@ import {
 	ApiHarvestSuiFrenFeesBody,
 	HarvestSuiFrenFeesEvent,
 	ObjectId,
+	CallerConfig,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { StakedSuiFren } from "./stakedSuiFren";
@@ -54,10 +55,10 @@ export class SuiFrens extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork | Url,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "sui-frens");
+		super(config, "sui-frens");
 	}
 
 	// =========================================================================
@@ -129,7 +130,7 @@ export class SuiFrens extends Caller {
 		const suiFrens = await this.fetchApi<SuiFrenObject[]>(
 			`${JSON.stringify(inputs.suiFrenObjectIds)}`
 		);
-		return suiFrens.map((suiFren) => new SuiFren(suiFren, this.network));
+		return suiFrens.map((suiFren) => new SuiFren(suiFren, this.config));
 	}
 
 	public async getOwnedSuiFrens(inputs: ApiOwnedSuiFrensBody) {
@@ -139,7 +140,7 @@ export class SuiFrens extends Caller {
 		>(`owned-sui-frens`, inputs);
 
 		return ownedSuiFrens.map(
-			(suiFren) => new SuiFren(suiFren, this.network, false, true)
+			(suiFren) => new SuiFren(suiFren, this.config, false, true)
 		);
 	}
 
@@ -150,7 +151,7 @@ export class SuiFrens extends Caller {
 		>(`owned-staked-sui-frens`, inputs);
 
 		return stakesInfo.map(
-			(info) => new StakedSuiFren(info, this.network, true)
+			(info) => new StakedSuiFren(info, this.config, true)
 		);
 	}
 
@@ -171,7 +172,7 @@ export class SuiFrens extends Caller {
 		);
 
 		const suiFrens = stakesInfoWithCursor.dynamicFieldObjects.map(
-			(info) => new StakedSuiFren(info, this.network)
+			(info) => new StakedSuiFren(info, this.config)
 		);
 		return {
 			dynamicFieldObjects: suiFrens,
@@ -183,9 +184,7 @@ export class SuiFrens extends Caller {
 		const suiFrenInfos = await this.fetchApi<StakedSuiFrenInfo[]>(
 			`staked-sui-frens/${JSON.stringify(inputs.stakedSuiFrenIds)}`
 		);
-		return suiFrenInfos.map(
-			(info) => new StakedSuiFren(info, this.network)
-		);
+		return suiFrenInfos.map((info) => new StakedSuiFren(info, this.config));
 	}
 
 	// =========================================================================

@@ -3,6 +3,7 @@ import {
 	EventId,
 	SuiTransactionBlockResponse,
 } from "@mysten/sui/client";
+import { SuiNetwork } from "./suiTypes";
 // import {
 // 	Scallop,
 // 	ScallopBuilder,
@@ -91,6 +92,10 @@ export interface ExternalFee {
 	 */
 	feePercentage: Percentage;
 }
+
+export type SignMessageCallback = (args: { message: Uint8Array }) => Promise<{
+	signature: string;
+}>;
 
 // =========================================================================
 //  Events
@@ -195,3 +200,12 @@ export interface IndexerDataWithCursorQueryParams {
 // 	Builder: ScallopBuilder;
 // 	Query: ScallopQuery;
 // }
+
+// =========================================================================
+//  Interal
+// =========================================================================
+
+export interface CallerConfig {
+	network?: SuiNetwork;
+	accessToken?: string;
+}

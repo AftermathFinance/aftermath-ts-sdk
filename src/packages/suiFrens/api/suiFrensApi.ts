@@ -1254,8 +1254,9 @@ export class SuiFrensApi {
 				suiFrenIds: partialSuiFrenNonBullsharks.map(
 					(suiFren) => suiFren.objectId
 				),
-				suiFrenType: new Coin(partialSuiFrenNonBullsharks[0].objectType)
-					.innerCoinType,
+				suiFrenType: Coin.getInnerCoinType(
+					partialSuiFrenNonBullsharks[0].objectType
+				),
 			});
 
 		const suiFrenBullsharks = bullsharkDynamicFields.map((data, index) => ({

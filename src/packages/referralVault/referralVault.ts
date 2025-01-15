@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { SuiAddress, SuiNetwork, Url } from "../../types";
+import { CallerConfig, SuiAddress, SuiNetwork, Url } from "../../types";
 
 export class ReferralVault extends Caller {
 	// =========================================================================
@@ -14,10 +14,10 @@ export class ReferralVault extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "referral-vault");
+		super(config, "referral-vault");
 	}
 
 	// =========================================================================

@@ -14,6 +14,7 @@ import {
 	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
 	ModuleName,
 	Slippage,
+	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Transaction } from "@mysten/sui/transactions";
@@ -52,8 +53,8 @@ export class Router extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Router` instance
 	 */
-	constructor(public readonly network?: SuiNetwork) {
-		super(network, "router");
+	constructor(config?: CallerConfig) {
+		super(config, "router");
 	}
 
 	// =========================================================================

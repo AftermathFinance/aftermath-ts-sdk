@@ -30,6 +30,10 @@ import {
 import { Coin } from "../..";
 import { MoveErrors } from "../types/moveErrorsInterface";
 import { isValidSuiAddress } from "@mysten/sui/utils";
+import { decodeSuiPrivateKey, Keypair } from "@mysten/sui/cryptography";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
+import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 
 /**
  * A utility class containing various helper functions for general use.
@@ -555,4 +559,23 @@ export class Helpers {
 			],
 		};
 	}
+
+	// =========================================================================
+	//  Keypair
+	// =========================================================================
+
+	public static keypairFromPrivateKey = (privateKey: string): Keypair => {
+		const parsedKeypair = decodeSuiPrivateKey(privateKey);
+		return parsedKeypair.schema === "ED25519"
+			? Ed25519Keypair.fromSecretKey(parsedKeypair.secretKey)
+			: parsedKeypair.schema === "Secp256k1"
+			? Secp256k1Keypair.fromSecretKey(parsedKeypair.secretKey)
+			: parsedKeypair.schema === "Secp256r1"
+			? Secp256r1Keypair.fromSecretKey(parsedKeypair.secretKey)
+			: (() => {
+					throw new Error(
+						`unsupported schema \`${parsedKeypair.schema}\``
+					);
+			  })();
+	};
 }

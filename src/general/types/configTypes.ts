@@ -191,7 +191,7 @@ export interface DcaAddresses {
 		dca: SuiAddress;
 	};
 	objects: {
-		config: ObjectId;
+		readonly config: ObjectId;
 	};
 }
 

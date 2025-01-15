@@ -1,6 +1,7 @@
 import {
 	Apr,
 	Balance,
+	CallerConfig,
 	CoinType,
 	CoinsToDecimals,
 	CoinsToPrice,
@@ -37,10 +38,10 @@ export class FarmsStakingPool extends Caller {
 
 	constructor(
 		public stakingPool: FarmsStakingPoolObject,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "farms");
+		super(config, "farms");
 		this.stakingPool = stakingPool;
 		// this.emitRewards();
 	}

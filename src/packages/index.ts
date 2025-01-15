@@ -8,6 +8,7 @@ export * from "./nftAmm";
 export * from "./referralVault";
 export * from "./farms";
 export * from "./perpetuals";
+export * from "./auth";
 
 export * from "./sui";
 export * from "./coin";

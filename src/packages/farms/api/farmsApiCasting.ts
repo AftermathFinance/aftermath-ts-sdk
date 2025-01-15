@@ -56,7 +56,7 @@ export class FarmsApiCasting {
 			data
 		) as FarmsStakedPositionFieldsOnChain;
 		const stakeCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(objectType).innerCoinType
+			Coin.getInnerCoinType(objectType)
 		);
 
 		return {

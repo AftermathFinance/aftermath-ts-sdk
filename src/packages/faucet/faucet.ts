@@ -1,6 +1,7 @@
 import {
 	ApiFaucetMintSuiFrenBody,
 	ApiFaucetRequestBody,
+	CallerConfig,
 	CoinType,
 	SuiNetwork,
 	Url,
@@ -23,10 +24,10 @@ export class Faucet extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork | Url,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "faucet");
+		super(config, "faucet");
 	}
 
 	// =========================================================================

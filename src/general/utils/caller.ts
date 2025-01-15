@@ -2,10 +2,12 @@ import { Transaction } from "@mysten/sui/transactions";
 import {
 	ApiEventsBody,
 	ApiIndexerEventsBody,
+	CallerConfig,
 	EventsWithCursor,
 	IndexerEventsWithCursor,
 	SerializedTransaction,
 	SuiNetwork,
+	UniqueId,
 	Url,
 } from "../../types";
 import { Helpers } from "./helpers";
@@ -19,13 +21,13 @@ export class Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		public readonly config: CallerConfig = {},
 		private readonly apiUrlPrefix: Url = ""
 	) {
 		this.apiBaseUrl =
-			network === undefined
+			this.config.network === undefined
 				? undefined
-				: Caller.apiBaseUrlForNetwork(network);
+				: Caller.apiBaseUrlForNetwork(this.config.network);
 	}
 
 	// =========================================================================
@@ -66,8 +68,8 @@ export class Caller {
 
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.apiBaseUrl}/api/${
-			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix + "/"
-		}${url}`;
+			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix
+		}${url === "" ? "" : `/${url}`}`;
 	};
 
 	// =========================================================================
@@ -97,19 +99,21 @@ export class Caller {
 
 		const apiCallUrl = this.urlForApiCall(url);
 
+		const headers = {
+			"Content-Type": "text/plain",
+			...(this.config.accessToken
+				? { Authorization: `Bearer ${this.config.accessToken}` }
+				: {}),
+		};
 		const uncastResponse = await (body === undefined
 			? fetch(apiCallUrl, {
-					headers: {
-						"Content-Type": "text/plain",
-					},
+					headers,
 					signal,
 			  })
 			: fetch(apiCallUrl, {
 					method: "POST",
-					headers: {
-						"Content-Type": "text/plain",
-					},
 					body: JSON.stringify(body),
+					headers,
 					signal,
 			  }));
 
@@ -190,4 +194,8 @@ export class Caller {
 			options
 		);
 	}
+
+	protected setAccessToken = (accessToken: UniqueId) => {
+		this.config.accessToken = accessToken;
+	};
 }

@@ -8,6 +8,7 @@ import {
 	ApiHarvestFarmsRewardsBody,
 	Apr,
 	Balance,
+	CallerConfig,
 	CoinType,
 	CoinsToBalance,
 	FarmsStakedPositionObject,
@@ -37,11 +38,11 @@ export class FarmsStakedPosition extends Caller {
 
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
-		trueLastHarvestRewardsTimestamp?: Timestamp,
-		public readonly network?: SuiNetwork,
+		trueLastHarvestRewardsTimestamp: Timestamp | undefined = undefined,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "farms");
+		super(config, "farms");
 		this.stakedPosition = stakedPosition;
 		this.trueLastHarvestRewardsTimestamp =
 			trueLastHarvestRewardsTimestamp ??
@@ -158,7 +159,8 @@ export class FarmsStakedPosition extends Caller {
 
 		// i. Increase the vault's `rewardsAccumulatedPerShare` values.
 		const stakingPool = new FarmsStakingPool(
-			Helpers.deepCopy(inputs.stakingPool.stakingPool)
+			Helpers.deepCopy(inputs.stakingPool.stakingPool),
+			this.config
 		);
 		stakingPool.emitRewards();
 
