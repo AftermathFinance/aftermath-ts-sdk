@@ -81,6 +81,7 @@ import {
 	ApiPerpetualsPreviewSetLeverageBody,
 	ApiPerpetualsPreviewSetLeverageResponse,
 	ApiPerpetualsMarketDailyStatsResponse,
+	ApiPerpetualsSetPositionLeverageFromTxBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
@@ -699,6 +700,32 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				),
 				signature: inputs.signature,
 				bytes: inputs.bytes,
+			},
+			undefined,
+			undefined,
+			undefined,
+			true
+		);
+	};
+
+	public setPositionLeverageFromTx = async (
+		inputs: ApiPerpetualsSetPositionLeverageFromTxBody
+	): Promise<void> => {
+		await this.Provider.indexerCaller.fetchIndexer<
+			void,
+			{
+				account_id: number;
+				market_id: PerpetualsMarketId;
+				leverage: number;
+				digest: string;
+			}
+		>(
+			`perpetuals/account/set-position-leverage-from-tx`,
+			{
+				account_id: Number(inputs.accountId),
+				market_id: Helpers.addLeadingZeroesToType(inputs.marketId),
+				leverage: inputs.leverage,
+				digest: inputs.txDigest,
 			},
 			undefined,
 			undefined,

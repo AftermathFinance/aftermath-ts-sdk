@@ -751,6 +751,13 @@ export interface ApiPerpetualsSetPositionLeverageBody {
 	signature: string;
 }
 
+export interface ApiPerpetualsSetPositionLeverageFromTxBody {
+	accountId: PerpetualsAccountId;
+	marketId: PerpetualsMarketId;
+	leverage: number;
+	txDigest: TransactionDigest;
+}
+
 export type ApiPerpetualsPreviewOrderBody = (
 	| Omit<
 			ApiPerpetualsLimitOrderBody,

@@ -55,6 +55,8 @@ import {
 	ApiPerpetualsPreviewSetLeverageBody,
 	ApiPerpetualsPreviewSetLeverageResponse,
 	ApiPerpetualsSetLeverageBody,
+	TransactionDigest,
+	ApiPerpetualsSetPositionLeverageFromTxBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -268,23 +270,40 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getSetLeverageTx(inputs: {
+	public async executeSetLeverageTx(inputs: {
 		walletAddress: SuiAddress;
 		collateralChange: Balance;
 		marketId: PerpetualsMarketId;
-	}) {
+		executeTxCallback: (args: { tx: Transaction }) => Promise<{
+			txDigest: TransactionDigest;
+		}>;
+	}): Promise<void> {
 		if (inputs.collateralChange === BigInt(0))
 			throw new Error("collateralChange cannot be 0");
-		return this.fetchApiTransaction<ApiPerpetualsSetLeverageBody>(
+
+		const leverage =
+			this.positionForMarketId({ marketId: inputs.marketId })?.leverage ||
+			1;
+
+		const tx = await this.fetchApiTransaction<ApiPerpetualsSetLeverageBody>(
 			"transactions/set-leverage",
 			{
 				...inputs,
+				leverage,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
-				leverage:
-					this.positionForMarketId({ marketId: inputs.marketId })
-						?.leverage || 1,
+			}
+		);
+		const { txDigest } = await inputs.executeTxCallback({ tx });
+
+		await this.fetchApi<void, ApiPerpetualsSetPositionLeverageFromTxBody>(
+			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/set-position-leverage-from-tx`,
+			{
+				txDigest,
+				leverage,
+				accountId: this.accountCap.accountId,
+				marketId: inputs.marketId,
 			}
 		);
 	}
