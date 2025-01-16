@@ -271,6 +271,7 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async executeSetLeverageTx(inputs: {
+		leverage: number;
 		walletAddress: SuiAddress;
 		collateralChange: Balance;
 		marketId: PerpetualsMarketId;
@@ -278,12 +279,10 @@ export class PerpetualsAccount extends Caller {
 			txDigest: TransactionDigest;
 		}>;
 	}): Promise<void> {
+		const { leverage } = inputs;
+
 		if (inputs.collateralChange === BigInt(0))
 			throw new Error("collateralChange cannot be 0");
-
-		const leverage =
-			this.positionForMarketId({ marketId: inputs.marketId })?.leverage ||
-			1;
 
 		const tx = await this.fetchApiTransaction<ApiPerpetualsSetLeverageBody>(
 			"transactions/set-leverage",
@@ -302,7 +301,6 @@ export class PerpetualsAccount extends Caller {
 			{
 				txDigest,
 				leverage,
-				accountId: this.accountCap.accountId,
 				marketId: inputs.marketId,
 			}
 		);

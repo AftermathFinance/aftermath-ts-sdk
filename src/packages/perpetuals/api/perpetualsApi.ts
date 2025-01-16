@@ -709,7 +709,9 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	};
 
 	public setPositionLeverageFromTx = async (
-		inputs: ApiPerpetualsSetPositionLeverageFromTxBody
+		inputs: ApiPerpetualsSetPositionLeverageFromTxBody & {
+			accountId: PerpetualsAccountId;
+		}
 	): Promise<void> => {
 		await this.Provider.indexerCaller.fetchIndexer<
 			void,
