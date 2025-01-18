@@ -53,6 +53,7 @@ export type RouterProtocolName =
 	| "KriyaClmm"
 	| "Metastable"
 	| "MovePump"
+	| "Obric"
 	| "SuiSwap"
 	| "Turbos"
 	| "SpringSui"
