@@ -57,7 +57,7 @@ export type RouterProtocolName =
 	| "SuiSwap"
 	| "Turbos"
 	| "SpringSui"
-	| "AftermathLsd"
+	// | "AftermathLsd"
 	| "Bluefin"
 	| "TurbosFun";
 
