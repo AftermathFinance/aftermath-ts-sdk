@@ -24,11 +24,41 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	allocateCoinType: CoinType;
 	allocateCoinAmount: Balance;
 	buyCoinType: CoinType;
-	minAmountOut: Balance;
 	customRecipient?: SuiAddress;
 	expiryTimestampMs: Timestamp;
 	isSponsoredTx?: boolean;
 	integratorFee?: LimitOrdersIntegratorFeeData;
+	strategy: LimitOrderStrategy;
+}
+
+export type LimitOrderStrategy = {
+	type: "takeProfitStopLoss";
+	minAmountOut: Balance;
+	stopLossPrice: Balance;
+};
+// | {
+// 		type: "iceberg";
+// 		minAmountOut: Balance;
+// 		stopLossPrice: Balance;
+// 		subOrders: ApiLimitOrdersSubOrdersBody;
+//   }
+// | {
+// 		type: "ladder";
+// 		orders: ApiLimitLaddersOrdersBody[];
+//   };
+
+export interface ApiLimitOrdersSubOrdersBody {
+	orderPrice: Balance;
+	ordersAmount: number;
+}
+
+// =========================================================================
+//  Initialize Ladders Order Transaction
+// =========================================================================
+
+export interface ApiLimitLaddersOrdersBody {
+	price: Balance;
+	quantity: Balance;
 }
 
 // =========================================================================
@@ -52,11 +82,6 @@ export type LimitOrdersOrderStatus =
 	| "Filled"
 	| "Expired";
 
-export interface LimitOrdersObject {
-	active: LimitOrderObject[];
-	past: LimitOrderObject[];
-}
-
 export interface LimitOrderObject {
 	objectId: ObjectId | undefined;
 	allocatedCoin: {
@@ -71,14 +96,14 @@ export interface LimitOrderObject {
 	actualAmountBought: Balance;
 	recipient: SuiAddress;
 	created: {
-		time: Timestamp;
-		tnxDigest: TransactionDigest | undefined;
+		timestamp: Timestamp;
+		txnDigest: TransactionDigest | undefined;
 	};
-	finish?: {
-		time: Timestamp;
-		tnxDigest: TransactionDigest;
+	finished?: {
+		timestamp: Timestamp;
+		txnDigest: TransactionDigest;
 	};
-	expiry: Timestamp;
+	expiryMs: Timestamp;
 	status: LimitOrdersOrderStatus | undefined;
 	error: string | undefined;
 	integratorFee?: LimitOrdersIntegratorFeeData;
