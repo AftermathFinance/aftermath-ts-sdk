@@ -152,8 +152,8 @@ export class Aftermath extends Caller {
 	 */
 	public Dca = () => new Dca(this.config);
 	public Multisig = () => new Multisig(this.config, this.Provider);
-	public Limit = () => new Limit(this.network, this.Provider);
-	public UserData = () => new UserData(this.network, this.Provider);
+	public LimitOrders = () => new LimitOrders(this.config);
+	public UserData = () => new UserData(this.config);
 
 	// =========================================================================
 	//  General

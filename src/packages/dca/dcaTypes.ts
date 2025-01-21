@@ -81,8 +81,8 @@ export interface DcaOrderTradeObject {
 		coin: CoinType;
 		amount: Balance;
 	};
-	tnxDigest: TransactionDigest;
-	tnxDate: Timestamp;
+	txnDigest: TransactionDigest;
+	txnDate: Timestamp;
 	rate: number | undefined;
 }
 
@@ -109,16 +109,16 @@ export interface DcaOrderOverviewObject {
 	recipient: SuiAddress;
 	progress: number;
 	created: {
-		time: Timestamp;
-		tnxDigest: TransactionDigest;
+		timestamp: Timestamp;
+		txnDigest: TransactionDigest;
 	};
 	nextTrade: {
-		time: Timestamp;
-		tnxDigest: TransactionDigest;
+		timestamp: Timestamp;
+		txnDigest: TransactionDigest;
 	};
 	lastExecutedTrade?: {
-		time: Timestamp;
-		tnxDigest: TransactionDigest;
+		timestamp: Timestamp;
+		txnDigest: TransactionDigest;
 	};
 	integratorFee?: DcaIntegratorFeeData;
 }

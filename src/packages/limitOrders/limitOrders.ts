@@ -1,6 +1,5 @@
-import { CoinType, ObjectId, SuiNetwork } from "../../types";
+import { CallerConfig, CoinType, ObjectId } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import {
 	ApiLimitOrdersPastOrdersOwnedBody,
@@ -24,11 +23,8 @@ export class LimitOrders extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
-	) {
-		super(network, "limit-orders");
+	constructor(config?: CallerConfig) {
+		super(config, "limit-orders");
 	}
 
 	// =========================================================================
