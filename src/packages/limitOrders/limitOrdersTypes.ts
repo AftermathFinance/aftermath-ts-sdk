@@ -19,6 +19,11 @@ export interface LimitOrdersIntegratorFeeData {
 //  Initialize Order Transaction
 // =========================================================================
 
+export interface ApiLimitOrdersSubOrdersBody {
+	orderPrice: Balance;
+	ordersAmount: number;
+}
+
 export interface ApiLimitOrdersCreateOrderTransactionBody {
 	walletAddress: SuiAddress;
 	allocateCoinType: CoinType;
@@ -29,6 +34,8 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	expiryTimestampMs: Timestamp;
 	isSponsoredTx?: boolean;
 	integratorFee?: LimitOrdersIntegratorFeeData;
+	stopLossPrice: Balance;
+	subOrders?: ApiLimitOrdersSubOrdersBody;
 }
 
 // =========================================================================

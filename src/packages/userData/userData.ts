@@ -1,6 +1,5 @@
 import { Caller } from "../../general/utils/caller";
-import { SuiAddress, SuiNetwork } from "../../types";
-import { AftermathApi } from "../../general/providers";
+import { CallerConfig } from "../../types";
 import {
 	ApiUserDataCreateUserBody,
 	ApiUserDataOwnedBody,
@@ -11,11 +10,8 @@ export class UserData extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
-	) {
-		super(network, "user-data");
+	constructor(config?: CallerConfig) {
+		super(config, "user-data");
 	}
 
 	public static readonly constants = {
