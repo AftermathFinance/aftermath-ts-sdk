@@ -246,12 +246,21 @@ export type PerpetualsPreviewSetLeverageIndexerResponse =
 
 export type PerpetualsMarketsIndexerResponse = Record<
 	PerpetualsMarketId,
-	[PerpetualsMarketDataIndexerResponse, CoinSymbol]
+	[
+		PerpetualsMarketDataIndexerResponse,
+		CoinSymbol,
+		// index price
+		IFixedAsStringBytes,
+		// collateral price
+		IFixedAsStringBytes
+	]
 >;
 
 export type PerpetualsMarketIndexerResponse = {
 	ch: [PerpetualsMarketDataIndexerResponse, CoinSymbol];
 	orderbook: PerpetualsOrderbookIndexerResponse;
+	index_price: IFixedAsStringBytes;
+	collateral_price: IFixedAsStringBytes;
 };
 
 // =========================================================================

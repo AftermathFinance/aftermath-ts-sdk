@@ -11,7 +11,6 @@ import {
 	PerpetualsAddresses,
 	ObjectId,
 	SuiAddress,
-	OracleAddresses,
 	AnyObjectType,
 	IndexerEventsWithCursor,
 	IFixed,
@@ -138,10 +137,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		defaultLimitStepSize: 256,
 	};
 
-	public readonly addresses: {
-		perpetuals: PerpetualsAddresses;
-		oracle: OracleAddresses;
-	};
+	public readonly addresses: PerpetualsAddresses;
 
 	public readonly eventTypes: {
 		withdrewCollateral: AnyObjectType;
@@ -170,17 +166,13 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const perpetuals = this.Provider.addresses.perpetuals;
-		const oracle = this.Provider.addresses.oracle;
-		if (!perpetuals || !oracle)
+		const addresses = this.Provider.addresses.perpetuals;
+		if (!addresses)
 			throw new Error(
 				"not all required addresses have been set in provider"
 			);
 
-		this.addresses = {
-			perpetuals,
-			oracle,
-		};
+		this.addresses = addresses;
 		this.eventTypes = {
 			// Collateral
 			withdrewCollateral: this.eventType("WithdrewCollateral"),
@@ -212,7 +204,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			updatedMarketVersion: this.eventType("UpdatedClearingHouseVersion"),
 		};
 		this.moveErrors = {
-			[this.addresses.perpetuals.packages.perpetuals]: {
+			[this.addresses.packages.perpetuals]: {
 				// Clearing House
 
 				// Cannot deposit/withdraw zero coins to/from the account's collateral.
@@ -1021,9 +1013,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		);
 		if ("error" in response) return response;
 
-		console.log("RESPONSE");
-		console.log(JSON.stringify(response, null, 4));
-
 		const positionAfterReduceOrder =
 			Casting.perpetuals.positionFromIndexerReponse({
 				marketId,
@@ -1138,7 +1127,9 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			Casting.perpetuals.marketDataFromIndexerResponse(
 				market[0],
 				Helpers.addLeadingZeroesToType(collateralCoinType),
-				market[1]
+				market[1],
+				market[2],
+				market[3]
 			)
 		);
 	};
@@ -1161,10 +1152,13 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				undefined,
 				true
 			);
+
 		const market = Casting.perpetuals.marketDataFromIndexerResponse(
 			response.ch[0],
 			Helpers.addLeadingZeroesToType(collateralCoinType),
-			response.ch[1]
+			response.ch[1],
+			response.index_price,
+			response.collateral_price
 		);
 		return {
 			market,
@@ -1252,7 +1246,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, collateralCoinType, accountCapId } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				this.addresses.packages.perpetuals,
 				PerpetualsApi.constants.moduleNames.interface,
 				"deposit_collateral"
 			),
@@ -1584,7 +1578,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, collateralCoinType, accountCapId, amount } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				this.addresses.packages.perpetuals,
 				PerpetualsApi.constants.moduleNames.interface,
 				"withdraw_collateral"
 			),
@@ -1605,12 +1599,12 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		const { tx, collateralCoinType } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.perpetuals.packages.perpetuals,
+				this.addresses.packages.perpetuals,
 				PerpetualsApi.constants.moduleNames.interface,
 				"create_account"
 			),
 			typeArguments: [collateralCoinType],
-			arguments: [tx.object(this.addresses.perpetuals.objects.registry)],
+			arguments: [tx.object(this.addresses.objects.registry)],
 		});
 	};
 
@@ -2497,7 +2491,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	public getAccountCapType = (inputs: {
 		collateralCoinType: CoinType;
 	}): string => {
-		return `${this.addresses.perpetuals.packages.events}::${PerpetualsApi.constants.moduleNames.account}::Account<${inputs.collateralCoinType}>`;
+		return `${this.addresses.packages.events}::${PerpetualsApi.constants.moduleNames.account}::Account<${inputs.collateralCoinType}>`;
 	};
 
 	// =========================================================================
@@ -2939,7 +2933,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 
 	private eventType = (eventName: string) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.perpetuals.packages.events,
+			this.addresses.packages.events,
 			PerpetualsApi.constants.moduleNames.events,
 			eventName
 		);

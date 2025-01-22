@@ -40,6 +40,8 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	public readonly marketId: PerpetualsMarketId;
+	public readonly indexPrice: number;
+	public readonly collateralPrice: number;
 	public readonly collateralCoinType: CoinType;
 	public readonly marketParams: PerpetualsMarketParams;
 	public readonly marketState: PerpetualsMarketState;
@@ -57,6 +59,8 @@ export class PerpetualsMarket extends Caller {
 			`perpetuals/${marketData.collateralCoinType}/markets/${marketData.objectId}`
 		);
 		this.marketId = marketData.objectId;
+		this.indexPrice = marketData.indexPrice;
+		this.collateralPrice = marketData.collateralPrice;
 		this.collateralCoinType = marketData.collateralCoinType;
 		this.marketParams = marketData.marketParams;
 		this.marketState = marketData.marketState;

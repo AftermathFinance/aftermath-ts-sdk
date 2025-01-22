@@ -23,7 +23,6 @@ export interface ConfigAddresses {
 	router?: RouterAddresses;
 	referralVault?: ReferralVaultAddresses;
 	perpetuals?: PerpetualsAddresses;
-	oracle?: OracleAddresses;
 	farms?: FarmsAddresses;
 	dynamicGas?: DynamicGasAddresses;
 	scallop?: ScallopAddresses;
@@ -167,13 +166,6 @@ export interface FarmsAddresses {
 
 export interface DynamicGasAddresses {
 	sponsorAddress: SuiAddress;
-}
-
-export interface OracleAddresses {
-	packages: {
-		events: SuiAddress;
-		oracleReader: SuiAddress;
-	};
 }
 
 export interface ScallopAddresses {

@@ -62,7 +62,12 @@ import {
 	ReducedOrderEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
-import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types";
+import {
+	BigIntAsString,
+	IFixedAsStringBytes,
+	ObjectDigest,
+	ObjectVersion,
+} from "../../../types";
 
 // TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {
@@ -197,7 +202,9 @@ export class PerpetualsApiCasting {
 	public static marketDataFromIndexerResponse(
 		data: PerpetualsMarketDataIndexerResponse,
 		collateralCoinType: CoinType,
-		baseAssetSymbol: CoinSymbol
+		baseAssetSymbol: CoinSymbol,
+		indexPrice: IFixedAsStringBytes,
+		collateralPrice: IFixedAsStringBytes
 	): PerpetualsMarketData {
 		return {
 			packageId: Casting.addressFromStringBytes(data.pkg_id),
@@ -210,6 +217,12 @@ export class PerpetualsApiCasting {
 			),
 			marketState: this.marketStateFromIndexerResponse(
 				data.object.market_state
+			),
+			indexPrice: Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(indexPrice)
+			),
+			collateralPrice: Casting.IFixed.numberFromIFixed(
+				Casting.IFixed.iFixedFromStringBytes(collateralPrice)
 			),
 		};
 	}

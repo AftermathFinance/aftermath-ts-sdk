@@ -1,18 +1,9 @@
 import process from "node:process";
 import fs from "fs";
 import YAML from "yaml";
-import {
-	FaucetAddresses,
-	ObjectId,
-	OracleAddresses,
-	PerpetualsAddresses,
-} from "../src/types";
+import { FaucetAddresses, ObjectId, PerpetualsAddresses } from "../src/types";
 
-export function getConfigs(): [
-	PerpetualsAddresses,
-	FaucetAddresses,
-	OracleAddresses
-] {
+export function getConfigs(): [PerpetualsAddresses, FaucetAddresses] {
 	if (!process.env.RUST_CFG_PATH) {
 		throw "RUST_CFG_PATH not set, set it to the path returned by the `config path` command of the Rust api";
 	}
@@ -30,17 +21,6 @@ export function getConfigs(): [
 		};
 	}
 
-	let oracleCfg: OracleAddresses = {
-		packages: {
-			oracle: rustCfg.perpetuals?.oracle?.package!,
-		},
-		objects: {
-			authorityCapability:
-				rustCfg.perpetuals?.oracle?.authority_capability!,
-			priceFeedStorage: rustCfg.perpetuals?.oracle?.price_feed_storage!,
-		},
-	};
-
 	let perpetualsCfg: PerpetualsAddresses = {
 		packages: {
 			perpetuals: rustCfg.perpetuals?.package!,
@@ -49,7 +29,6 @@ export function getConfigs(): [
 		objects: {
 			adminCapability: rustCfg.perpetuals?.admin_capability!,
 			registry: rustCfg.perpetuals?.registry!,
-			exchanges,
 		},
 	};
 
@@ -65,7 +44,7 @@ export function getConfigs(): [
 		},
 	};
 
-	return [perpetualsCfg, faucetCfg, oracleCfg];
+	return [perpetualsCfg, faucetCfg];
 }
 
 // =========================================================================

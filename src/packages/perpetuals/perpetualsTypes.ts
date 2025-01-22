@@ -109,6 +109,8 @@ export interface PerpetualsMarketData {
 	collateralCoinType: CoinType;
 	marketParams: PerpetualsMarketParams;
 	marketState: PerpetualsMarketState;
+	collateralPrice: number;
+	indexPrice: number;
 }
 
 export interface PerpetualsAccountCap extends Object {
