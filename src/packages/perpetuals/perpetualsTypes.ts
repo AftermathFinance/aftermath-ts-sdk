@@ -742,10 +742,14 @@ export interface ApiPerpetualsAccountsBody {
 // =========================================================================
 
 export type ApiPerpetualsAccountOrderHistoryBody =
-	ApiDataWithCursorBody<Timestamp>;
+	ApiDataWithCursorBody<Timestamp> & {
+		accountId: PerpetualsAccountId;
+	};
 
 export type ApiPerpetualsAccountCollateralHistoryBody =
-	ApiDataWithCursorBody<Timestamp>;
+	ApiDataWithCursorBody<Timestamp> & {
+		accountId: PerpetualsAccountId;
+	};
 
 export interface ApiPerpetualsSetPositionLeverageBody {
 	walletAddress: SuiAddress;
@@ -910,6 +914,7 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 }
 
 export interface ApiPerpetualsAccountOrderDatasBody {
+	accountId: PerpetualsAccountId;
 	orderDatas: {
 		orderId: PerpetualsOrderId;
 		currentSize: bigint;
@@ -971,7 +976,6 @@ export interface ApiPerpetualsDeallocateCollateralBody {
 }
 
 export interface ApiPerpetualsMarketOrderBody {
-	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
@@ -984,7 +988,6 @@ export interface ApiPerpetualsMarketOrderBody {
 }
 
 export interface ApiPerpetualsLimitOrderBody {
-	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
@@ -999,7 +1002,6 @@ export interface ApiPerpetualsLimitOrderBody {
 }
 
 export interface ApiPerpetualsCancelOrdersBody {
-	walletAddress: SuiAddress;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
 	accountObjectDigest: ObjectId;
@@ -1014,7 +1016,6 @@ export interface ApiPerpetualsCancelOrdersBody {
 }
 
 export interface ApiPerpetualsReduceOrderBody {
-	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
@@ -1026,7 +1027,6 @@ export interface ApiPerpetualsReduceOrderBody {
 }
 
 export interface ApiPerpetualsSetLeverageBody {
-	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;

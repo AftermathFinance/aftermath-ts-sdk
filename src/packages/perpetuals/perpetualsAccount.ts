@@ -65,6 +65,7 @@ import { Perpetuals } from "./perpetuals";
 import { Coin } from "..";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Transaction } from "@mysten/sui/transactions";
+import { AftermathApi } from "../../general/providers";
 
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
@@ -82,7 +83,8 @@ export class PerpetualsAccount extends Caller {
 	constructor(
 		public readonly account: PerpetualsAccountObject,
 		public readonly accountCap: PerpetualsAccountCap,
-		public readonly network?: SuiNetwork
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
 	) {
 		super(network, "perpetuals");
 	}
@@ -101,28 +103,38 @@ export class PerpetualsAccount extends Caller {
 		amount: Balance;
 		isSponsoredTx?: boolean;
 	}) {
-		return this.fetchApiTransaction<ApiPerpetualsDepositCollateralBody>(
-			"transactions/deposit-collateral",
-			{
-				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
-			}
-		);
+		// return this.fetchApiTransaction<ApiPerpetualsDepositCollateralBody>(
+		// 	"transactions/deposit-collateral",
+		// 	{
+		// 		...inputs,
+		// 		collateralCoinType: this.accountCap.collateralCoinType,
+		// 		accountCapId: this.accountCap.objectId,
+		// 	}
+		// );
+		return this.useProvider().fetchBuildDepositCollateralTx({
+			...inputs,
+			collateralCoinType: this.accountCap.collateralCoinType,
+			accountCapId: this.accountCap.objectId,
+		});
 	}
 
 	public async getWithdrawCollateralTx(inputs: {
 		walletAddress: SuiAddress;
 		amount: Balance;
 	}) {
-		return this.fetchApiTransaction<ApiPerpetualsWithdrawCollateralBody>(
-			"transactions/withdraw-collateral",
-			{
-				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
-			}
-		);
+		// return this.fetchApiTransaction<ApiPerpetualsWithdrawCollateralBody>(
+		// 	"transactions/withdraw-collateral",
+		// 	{
+		// 		...inputs,
+		// 		collateralCoinType: this.accountCap.collateralCoinType,
+		// 		accountCapId: this.accountCap.objectId,
+		// 	}
+		// );
+		return this.useProvider().buildWithdrawCollateralTx({
+			...inputs,
+			collateralCoinType: this.accountCap.collateralCoinType,
+			accountCapId: this.accountCap.objectId,
+		});
 	}
 
 	public async getAllocateCollateralTx(inputs: {
@@ -131,18 +143,26 @@ export class PerpetualsAccount extends Caller {
 		amount: Balance;
 	}) {
 		const { market } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsAllocateCollateralBody>(
-			"transactions/allocate-collateral",
-			{
-				...inputs,
-				packageId: market.marketData.packageId,
-				marketInitialSharedVersion:
-					market.marketData.initialSharedVersion,
-				marketId: market.marketId,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
-			}
-		);
+		// return this.fetchApiTransaction<ApiPerpetualsAllocateCollateralBody>(
+		// 	"transactions/allocate-collateral",
+		// 	{
+		// 		...inputs,
+		// 		packageId: market.marketData.packageId,
+		// 		marketInitialSharedVersion:
+		// 			market.marketData.initialSharedVersion,
+		// 		marketId: market.marketId,
+		// 		collateralCoinType: this.accountCap.collateralCoinType,
+		// 		accountCapId: this.accountCap.objectId,
+		// 	}
+		// );
+		return this.useProvider().buildAllocateCollateralTx({
+			...inputs,
+			packageId: market.marketData.packageId,
+			marketInitialSharedVersion: market.marketData.initialSharedVersion,
+			marketId: market.marketId,
+			collateralCoinType: this.accountCap.collateralCoinType,
+			accountCapId: this.accountCap.objectId,
+		});
 	}
 
 	public async getDeallocateCollateralTx(inputs: {
@@ -151,21 +171,31 @@ export class PerpetualsAccount extends Caller {
 		amount: Balance;
 	}) {
 		const { market } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsDeallocateCollateralBody>(
-			"transactions/deallocate-collateral",
-			{
-				...inputs,
-				packageId: market.marketData.packageId,
-				marketInitialSharedVersion:
-					market.marketData.initialSharedVersion,
-				marketId: market.marketId,
-				basePriceFeedId: market.marketParams.basePriceFeedId,
-				collateralPriceFeedId:
-					market.marketParams.collateralPriceFeedId,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				accountCapId: this.accountCap.objectId,
-			}
-		);
+		// return this.fetchApiTransaction<ApiPerpetualsDeallocateCollateralBody>(
+		// 	"transactions/deallocate-collateral",
+		// 	{
+		// 		...inputs,
+		// 		packageId: market.marketData.packageId,
+		// 		marketInitialSharedVersion:
+		// 			market.marketData.initialSharedVersion,
+		// 		marketId: market.marketId,
+		// 		basePriceFeedId: market.marketParams.basePriceFeedId,
+		// 		collateralPriceFeedId:
+		// 			market.marketParams.collateralPriceFeedId,
+		// 		collateralCoinType: this.accountCap.collateralCoinType,
+		// 		accountCapId: this.accountCap.objectId,
+		// 	}
+		// );
+		return this.useProvider().buildDeallocateCollateralTx({
+			...inputs,
+			packageId: market.marketData.packageId,
+			marketInitialSharedVersion: market.marketData.initialSharedVersion,
+			marketId: market.marketId,
+			basePriceFeedId: market.marketParams.basePriceFeedId,
+			collateralPriceFeedId: market.marketParams.collateralPriceFeedId,
+			collateralCoinType: this.accountCap.collateralCoinType,
+			accountCapId: this.accountCap.objectId,
+		});
 	}
 
 	public async getTransferCollateralTx(inputs: {
@@ -173,21 +203,30 @@ export class PerpetualsAccount extends Caller {
 		amount: Balance;
 		toAccountCapId: ObjectId;
 	}) {
-		return this.fetchApiTransaction<ApiPerpetualsTransferCollateralBody>(
-			"transactions/transfer-collateral",
-			{
-				...inputs,
-				collateralCoinType: this.accountCap.collateralCoinType,
-				fromAccountCapId: this.accountCap.objectId,
-			}
-		);
+		// return this.fetchApiTransaction<ApiPerpetualsTransferCollateralBody>(
+		// 	"transactions/transfer-collateral",
+		// 	{
+		// 		...inputs,
+		// 		collateralCoinType: this.accountCap.collateralCoinType,
+		// 		fromAccountCapId: this.accountCap.objectId,
+		// 	}
+		// );
+		return this.useProvider().buildTransferCollateralTx({
+			...inputs,
+			collateralCoinType: this.accountCap.collateralCoinType,
+			fromAccountCapId: this.accountCap.objectId,
+		});
 	}
 
 	// =========================================================================
 	//  Order Txs
 	// =========================================================================
 
-	public async getPlaceMarketOrderTx(inputs: SdkPerpetualsMarketOrderInputs) {
+	public async getPlaceMarketOrderTx(
+		inputs: SdkPerpetualsMarketOrderInputs & {
+			walletAddress: SuiAddress;
+		}
+	) {
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
 			"transactions/market-order",
 			{
@@ -200,7 +239,11 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getPlaceLimitOrderTx(inputs: SdkPerpetualsLimitOrderInputs) {
+	public async getPlaceLimitOrderTx(
+		inputs: SdkPerpetualsLimitOrderInputs & {
+			walletAddress: SuiAddress;
+		}
+	) {
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
 			"transactions/limit-order",
 			{
@@ -216,15 +259,16 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceSLTPOrder(
 		inputs: SdkPerpetualsSLTPOrderInputs
 	): Promise<Transaction> {
-		return this.fetchApiTransaction<ApiPerpetualsSLTPOrderBody>(
-			"transactions/sltp-order",
-			{
-				...inputs,
-				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
-			}
-		);
+		throw new Error("TODO");
+		// return this.fetchApiTransaction<ApiPerpetualsSLTPOrderBody>(
+		// 	"transactions/sltp-order",
+		// 	{
+		// 		...inputs,
+		// 		accountObjectId: this.accountCap.objectId,
+		// 		accountObjectVersion: this.accountCap.objectVersion,
+		// 		accountObjectDigest: this.accountCap.objectDigest,
+		// 	}
+		// );
 	}
 
 	public async getCancelOrdersTx(inputs: {
@@ -297,7 +341,7 @@ export class PerpetualsAccount extends Caller {
 		const { txDigest } = await inputs.executeTxCallback({ tx });
 
 		await this.fetchApi<void, ApiPerpetualsSetPositionLeverageFromTxBody>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/set-position-leverage-from-tx`,
+			"account/set-position-leverage-from-tx",
 			{
 				txDigest,
 				leverage,
@@ -318,7 +362,10 @@ export class PerpetualsAccount extends Caller {
 		indexPrice: number;
 		collateralPrice: number;
 	}) {
-		return this.getPlaceMarketOrderTx(this.closePositionTxInputs(inputs));
+		return this.getPlaceMarketOrderTx({
+			walletAddress: inputs.walletAddress,
+			...this.closePositionTxInputs(inputs),
+		});
 	}
 
 	// =========================================================================
@@ -329,7 +376,7 @@ export class PerpetualsAccount extends Caller {
 		inputs: ApiPerpetualsSetPositionLeverageBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiPerpetualsSetPositionLeverageBody>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/set-position-leverage`,
+			"account/set-position-leverage",
 			inputs
 		);
 	}
@@ -349,11 +396,10 @@ export class PerpetualsAccount extends Caller {
 		marketIds: PerpetualsMarketId[];
 	}): Promise<number[]> {
 		// if (inputs.marketIds.length <= 0) return [];
-		return this.fetchApi(
-			`${this.accountCap.collateralCoinType}/accounts/${
-				this.accountCap.accountId
-			}/position-leverages/${JSON.stringify(inputs.marketIds)}`
-		);
+		return this.fetchApi(`account/position-leverages`, {
+			...inputs,
+			accountId: this.accountCap.accountId,
+		});
 	}
 
 	public setPositionLeverageMessageToSign(inputs: {
@@ -554,12 +600,10 @@ export class PerpetualsAccount extends Caller {
 		return this.fetchApi<
 			PerpetualsOrderData[],
 			ApiPerpetualsAccountOrderDatasBody
-		>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-datas`,
-			{
-				orderDatas,
-			}
-		);
+		>("account/order-datas", {
+			accountId: this.accountCap.accountId,
+			orderDatas,
+		});
 	}
 
 	public async getCollateralHistory(
@@ -568,20 +612,20 @@ export class PerpetualsAccount extends Caller {
 		return this.fetchApi<
 			PerpetualsAccountCollateralChangesWithCursor,
 			ApiPerpetualsAccountCollateralHistoryBody
-		>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/collateral-history`,
-			inputs
-		);
+		>("account/collateral-history", {
+			...inputs,
+			accountId: this.accountCap.accountId,
+		});
 	}
 
 	public async getOrderHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
 		return this.fetchApi<
 			PerpetualsAccountTradesWithCursor,
 			ApiPerpetualsAccountOrderHistoryBody
-		>(
-			`${this.accountCap.collateralCoinType}/accounts/${this.accountCap.accountId}/order-history`,
-			inputs
-		);
+		>("account/trade-history", {
+			...inputs,
+			accountId: this.accountCap.accountId,
+		});
 	}
 
 	// =========================================================================
@@ -910,14 +954,12 @@ export class PerpetualsAccount extends Caller {
 
 	public closePositionTxInputs = (inputs: {
 		size: bigint;
-		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
 		orderDatas: PerpetualsOrderData[];
 		indexPrice: number;
 		collateralPrice: number;
 	}): SdkPerpetualsMarketOrderInputs => {
-		const { size, market, walletAddress, orderDatas, collateralPrice } =
-			inputs;
+		const { size, market, orderDatas, collateralPrice } = inputs;
 
 		const marketId = market.marketId;
 		const position =
@@ -980,7 +1022,6 @@ export class PerpetualsAccount extends Caller {
 		return {
 			size,
 			marketId,
-			walletAddress,
 			collateralChange,
 			leverage: position.leverage,
 			side:
@@ -1010,5 +1051,15 @@ export class PerpetualsAccount extends Caller {
 			takerFee: BigInt(1000000000000000000), // 100%
 			leverage: 1,
 		};
+	};
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Perpetuals();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
 	};
 }

@@ -30,6 +30,8 @@ import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Casting, Helpers } from "../../general/utils";
 import { PerpetualsOrderUtils } from "./utils";
+import { AftermathApi } from "../../general/providers";
+import { Coin } from "../coin";
 
 export class Perpetuals extends Caller {
 	// =========================================================================
@@ -42,7 +44,10 @@ export class Perpetuals extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
+	constructor(
+		public readonly network?: SuiNetwork,
+		private readonly Provider?: AftermathApi
+	) {
 		super(network, "perpetuals");
 	}
 
@@ -94,7 +99,12 @@ export class Perpetuals extends Caller {
 		const account = await this.fetchApi<PerpetualsAccountObject>(
 			`${accountCap.collateralCoinType}/accounts/${accountCap.accountId}`
 		);
-		return new PerpetualsAccount(account, accountCap, this.network);
+		return new PerpetualsAccount(
+			account,
+			accountCap,
+			this.network,
+			this.Provider
+		);
 	}
 
 	public async getUserAccountCaps(
@@ -103,12 +113,22 @@ export class Perpetuals extends Caller {
 		}
 	): Promise<PerpetualsAccountCap[]> {
 		const { collateralCoinType, walletAddress } = inputs;
-		return this.fetchApi<PerpetualsAccountCap[], ApiPerpetualsAccountsBody>(
-			`${collateralCoinType}/accounts`,
-			{
-				walletAddress,
-			}
-		);
+		// return this.fetchApi<PerpetualsAccountCap[], ApiPerpetualsAccountsBody>(
+		// 	`${collateralCoinType}/accounts`,
+		// 	{
+		// 		walletAddress,
+		// 	}
+		// );
+
+		// TODO: move logic into endpoint
+		const [rawAccountCaps, collateralMetadata] = await Promise.all([
+			this.useProvider().fetchOwnedRawAccountCapsOfType(inputs),
+			new Coin().getCoinMetadata(collateralCoinType),
+		]);
+		return rawAccountCaps.map((accountCap) => ({
+			...accountCap,
+			collateralDecimals: collateralMetadata.decimals,
+		}));
 	}
 
 	// =========================================================================
@@ -116,22 +136,18 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public getMarketHistoricalData(inputs: {
-		collateralCoinType: CoinType;
 		marketId: PerpetualsMarketId;
 		fromTimestamp: Timestamp;
 		toTimestamp: Timestamp;
 		intervalMs: number;
-	}) {
-		const {
-			collateralCoinType,
+	}): Promise<ApiPerpetualsHistoricalMarketDataResponse> {
+		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
+		return this.fetchApi("markets/candle-history", {
 			marketId,
 			fromTimestamp,
 			toTimestamp,
 			intervalMs,
-		} = inputs;
-		return this.fetchApi<ApiPerpetualsHistoricalMarketDataResponse>(
-			`${collateralCoinType}/markets/${marketId}/historical-data/${fromTimestamp}/${toTimestamp}/${intervalMs}`
-		);
+		});
 	}
 
 	// =========================================================================
@@ -139,10 +155,11 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public async getCreateAccountTx(inputs: ApiPerpetualsCreateAccountBody) {
-		return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
-			"transactions/create-account",
-			inputs
-		);
+		// return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
+		// 	"transactions/create-account",
+		// 	inputs
+		// );
+		return this.useProvider().buildCreateAccountTx(inputs);
 	}
 
 	// =========================================================================
@@ -256,4 +273,14 @@ export class Perpetuals extends Caller {
 				denominator
 		);
 	}
+
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
+
+	private useProvider = () => {
+		const provider = this.Provider?.Perpetuals();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
 }

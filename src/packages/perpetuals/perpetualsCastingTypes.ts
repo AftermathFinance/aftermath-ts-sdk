@@ -19,8 +19,6 @@ import {
 //  Objects
 // =========================================================================
 
-/// Used to dynamically load market objects as needed.
-/// Used to dynamically load traders' position objects as needed.
 export interface PerpetualsMarketDataIndexerResponse {
 	pkg_id: IdAsStringBytes;
 	initial_shared_version: BigIntAsString;

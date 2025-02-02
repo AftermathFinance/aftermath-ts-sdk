@@ -5,6 +5,7 @@ import {
 	EventsWithCursor,
 	IndexerEventsWithCursor,
 	SerializedTransaction,
+	SuiAddress,
 	SuiNetwork,
 	Url,
 } from "../../types";
@@ -65,7 +66,7 @@ export class Caller {
 			throw new Error("no apiBaseUrl: unable to fetch data");
 
 		// TODO: handle url prefixing and api calls based on network differently
-		return `${this.apiBaseUrl}/api/${
+		return `${this.apiBaseUrl}/af-fe/${
 			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix + "/"
 		}${url}`;
 	};
@@ -122,13 +123,13 @@ export class Caller {
 
 	protected async fetchApiTransaction<BodyType = undefined>(
 		url: Url,
-		body?: BodyType,
+		body?: BodyType & { walletAddress: SuiAddress },
 		signal?: AbortSignal,
 		options?: {
 			disableBigIntJsonParsing?: boolean;
 		}
 	) {
-		return Transaction.from(
+		const tx = Transaction.from(
 			await this.fetchApi<SerializedTransaction, BodyType>(
 				url,
 				body,
@@ -136,6 +137,11 @@ export class Caller {
 				options
 			)
 		);
+		// NOTE: is this needed ?
+		if (body?.walletAddress) {
+			tx.setSender(body.walletAddress);
+		}
+		return tx;
 	}
 
 	protected async fetchApiTransactionV0<BodyType = undefined>(
