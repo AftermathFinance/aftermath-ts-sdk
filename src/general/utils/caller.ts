@@ -67,7 +67,9 @@ export class Caller {
 
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.apiBaseUrl}/af-fe/${
-			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix + "/"
+			this.apiUrlPrefix === ""
+				? ""
+				: this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;
 	};
 
@@ -101,14 +103,14 @@ export class Caller {
 		const uncastResponse = await (body === undefined
 			? fetch(apiCallUrl, {
 					headers: {
-						"Content-Type": "text/plain",
+						"Content-Type": "application/json",
 					},
 					signal,
 			  })
 			: fetch(apiCallUrl, {
 					method: "POST",
 					headers: {
-						"Content-Type": "text/plain",
+						"Content-Type": "application/json",
 					},
 					body: JSON.stringify(body),
 					signal,
