@@ -12,6 +12,7 @@ import {
 	ObjectId,
 	SerializedTransaction,
 	ServiceCoinData,
+	ServiceCoinDataV2,
 	SuiAddress,
 	TransactionDigest,
 	TransactionsWithCursor,
@@ -299,6 +300,45 @@ export class TransactionsApiHelpers {
 		return {
 			Result: Object.values(serviceCoinData)[0],
 		};
+	};
+
+	public static coinTxArgFromServiceCoinDataV2 = (inputs: {
+		serviceCoinDataV2: ServiceCoinDataV2;
+	}): TransactionObjectArgument => {
+		const { serviceCoinDataV2 } = inputs;
+
+		if (typeof serviceCoinDataV2 === "string") {
+			return { GasCoin: true };
+		}
+
+		const key = Object.keys(serviceCoinDataV2)[0];
+		const value: number | [number, number] =
+			Object.values(serviceCoinDataV2)[0];
+
+		// TODO: handle this cleaner ?
+		const kind = key as "input" | "result";
+
+		if (kind === "result") {
+			if (typeof value === "number") {
+				return {
+					Result: value,
+				};
+			}
+			return {
+				NestedResult: value,
+			};
+		}
+		if (kind === "input" && typeof value === "number") {
+			return {
+				Input: value,
+			};
+		}
+
+		throw new Error(
+			`serviceCoinDataV2 format ${JSON.stringify(
+				serviceCoinDataV2
+			)} not supported`
+		);
 	};
 
 	public static coinTxArgFromServiceCoinDataV0 = (inputs: {
