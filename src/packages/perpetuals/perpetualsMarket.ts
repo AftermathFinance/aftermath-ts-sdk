@@ -54,10 +54,7 @@ export class PerpetualsMarket extends Caller {
 		public marketData: PerpetualsMarketData,
 		public readonly network?: SuiNetwork
 	) {
-		super(
-			network,
-			`perpetuals/${marketData.collateralCoinType}/markets/${marketData.objectId}`
-		);
+		super(network, "perpetuals");
 		this.marketId = marketData.objectId;
 		this.indexPrice = marketData.indexPrice;
 		this.collateralPrice = marketData.collateralPrice;
@@ -71,18 +68,45 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 
 	// NOTE: should this be entirely removed since data already in orderbook function ?
-	public getOrderbookPrice() {
-		return this.fetchApi<number | undefined>("orderbook-price");
+	public getOrderbookMidPrice() {
+		return this.fetchApi<
+			number | undefined,
+			{
+				marketId: PerpetualsMarketId;
+			}
+		>("market/orderbook-price", {
+			marketId: this.marketId,
+		});
 	}
 
 	public getDailyStats(): Promise<ApiPerpetualsMarketDailyStatsResponse> {
-		return this.fetchApi<ApiPerpetualsMarketDailyStatsResponse>(
-			"daily-stats"
-		);
+		return this.fetchApi<
+			ApiPerpetualsMarketDailyStatsResponse,
+			{
+				marketId: PerpetualsMarketId;
+			}
+		>("market/24hr-stats", {
+			marketId: this.marketId,
+		});
 	}
 
-	public getOrderbook() {
-		return this.fetchApi<PerpetualsOrderbook>("orderbook");
+	public async getOrderbook() {
+		// TODO: create own endpoint for just orderbook
+
+		// return this.fetchApi<PerpetualsOrderbook>("market/orderbook");
+
+		const marketData = await this.fetchApi<
+			{
+				market: PerpetualsMarketData;
+				orderbook: PerpetualsOrderbook;
+			},
+			{
+				marketId: PerpetualsMarketId;
+			}
+		>("market", {
+			marketId: this.marketId,
+		});
+		return new PerpetualsMarket(marketData.market, this.network);
 	}
 
 	public getMaxOrderSizeUsd = async (inputs: {
@@ -96,13 +120,15 @@ export class PerpetualsMarket extends Caller {
 		const maxSize: bigint = await this.fetchApi<
 			bigint,
 			ApiPerpetualsMaxOrderSizeBody
-		>("max-order-size", {
+		>("account/order-max-size", {
+			marketId: this.marketId,
 			accountId: account.accountCap.accountId,
 			collateral: account.collateralBalance(),
 			side,
 			price,
 			leverage,
 		});
+		// TODO: perform calculation on endpoint ?
 		return Number(maxSize) * this.lotSize() * indexPrice;
 	};
 
@@ -113,8 +139,13 @@ export class PerpetualsMarket extends Caller {
 	public async getTradeHistory(inputs: ApiDataWithCursorBody<Timestamp>) {
 		return this.fetchApi<
 			PerpetualsTradeHistoryWithCursor,
-			ApiDataWithCursorBody<Timestamp>
-		>(`trade-history`, inputs);
+			ApiDataWithCursorBody<Timestamp> & {
+				marketId: PerpetualsMarketId;
+			}
+		>("market/trade-history", {
+			...inputs,
+			marketId: this.marketId,
+		});
 	}
 
 	// =========================================================================

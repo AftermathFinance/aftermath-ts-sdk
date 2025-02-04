@@ -906,6 +906,7 @@ export type ApiPerpetualsHistoricalMarketDataResponse =
 	PerpetualsMarketCandleDataPoint[];
 
 export interface ApiPerpetualsMaxOrderSizeBody {
+	marketId: PerpetualsMarketId;
 	accountId: PerpetualsAccountId;
 	collateral: Balance;
 	side: PerpetualsOrderSide;

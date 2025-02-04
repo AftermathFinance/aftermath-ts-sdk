@@ -58,10 +58,12 @@ export class Perpetuals extends Caller {
 	public async getAllMarkets(inputs: {
 		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket[]> {
-		const { collateralCoinType } = inputs;
-		const marketDatas = await this.fetchApi<PerpetualsMarketData[]>(
-			`${collateralCoinType}/markets`
-		);
+		const marketDatas = await this.fetchApi<
+			PerpetualsMarketData[],
+			{
+				collateralCoinType: CoinType;
+			}
+		>("markets", inputs);
 		return marketDatas.map(
 			(marketData) => new PerpetualsMarket(marketData, this.network)
 		);
@@ -69,24 +71,26 @@ export class Perpetuals extends Caller {
 
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
-		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket> {
-		const marketData = await this.fetchApi<PerpetualsMarketData>(
-			`${inputs.collateralCoinType}/markets/${inputs.marketId}`
-		);
-		return new PerpetualsMarket(marketData, this.network);
+		const marketData = await this.fetchApi<
+			{
+				market: PerpetualsMarketData;
+				orderbook: PerpetualsOrderbook;
+			},
+			{
+				marketId: PerpetualsMarketId;
+			}
+		>("market", inputs);
+		return new PerpetualsMarket(marketData.market, this.network);
 	}
 
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
-		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket[]> {
-		const { collateralCoinType } = inputs;
 		return Promise.all(
 			inputs.marketIds.map((marketId) =>
 				this.getMarket({
 					marketId,
-					collateralCoinType,
 				})
 			)
 		);
@@ -96,9 +100,14 @@ export class Perpetuals extends Caller {
 		accountCap: PerpetualsAccountCap;
 	}): Promise<PerpetualsAccount> {
 		const { accountCap } = inputs;
-		const account = await this.fetchApi<PerpetualsAccountObject>(
-			`${accountCap.collateralCoinType}/accounts/${accountCap.accountId}`
-		);
+		const account = await this.fetchApi<
+			PerpetualsAccountObject,
+			{
+				accountId: PerpetualsAccountId;
+			}
+		>("account/positions", {
+			accountId: accountCap.accountId,
+		});
 		return new PerpetualsAccount(
 			account,
 			accountCap,
@@ -142,7 +151,7 @@ export class Perpetuals extends Caller {
 		intervalMs: number;
 	}): Promise<ApiPerpetualsHistoricalMarketDataResponse> {
 		const { marketId, fromTimestamp, toTimestamp, intervalMs } = inputs;
-		return this.fetchApi("markets/candle-history", {
+		return this.fetchApi("market/candle-history", {
 			marketId,
 			fromTimestamp,
 			toTimestamp,

@@ -396,7 +396,7 @@ export class PerpetualsAccount extends Caller {
 		marketIds: PerpetualsMarketId[];
 	}): Promise<number[]> {
 		// if (inputs.marketIds.length <= 0) return [];
-		return this.fetchApi(`account/position-leverages`, {
+		return this.fetchApi("account/position-leverages", {
 			...inputs,
 			accountId: this.accountCap.accountId,
 		});
