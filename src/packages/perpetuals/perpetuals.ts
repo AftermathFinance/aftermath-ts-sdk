@@ -71,6 +71,7 @@ export class Perpetuals extends Caller {
 
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket> {
 		const marketData = await this.fetchApi<
 			{
@@ -79,6 +80,7 @@ export class Perpetuals extends Caller {
 			},
 			{
 				marketId: PerpetualsMarketId;
+				collateralCoinType: CoinType;
 			}
 		>("market", inputs);
 		return new PerpetualsMarket(marketData.market, this.network);
@@ -86,11 +88,14 @@ export class Perpetuals extends Caller {
 
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
+		collateralCoinType: CoinType;
 	}): Promise<PerpetualsMarket[]> {
+		const { collateralCoinType } = inputs;
 		return Promise.all(
 			inputs.marketIds.map((marketId) =>
 				this.getMarket({
 					marketId,
+					collateralCoinType,
 				})
 			)
 		);
@@ -104,9 +109,11 @@ export class Perpetuals extends Caller {
 			PerpetualsAccountObject,
 			{
 				accountId: PerpetualsAccountId;
+				collateralCoinType: CoinType;
 			}
 		>("account/positions", {
 			accountId: accountCap.accountId,
+			collateralCoinType: accountCap.collateralCoinType,
 		});
 		return new PerpetualsAccount(
 			account,
@@ -132,7 +139,8 @@ export class Perpetuals extends Caller {
 		// TODO: move logic into endpoint
 		const [rawAccountCaps, collateralMetadata] = await Promise.all([
 			this.useProvider().fetchOwnedRawAccountCapsOfType(inputs),
-			new Coin().getCoinMetadata(collateralCoinType),
+			// new Coin().getCoinMetadata(collateralCoinType),
+			{ decimals: 9 },
 		]);
 		return rawAccountCaps.map((accountCap) => ({
 			...accountCap,

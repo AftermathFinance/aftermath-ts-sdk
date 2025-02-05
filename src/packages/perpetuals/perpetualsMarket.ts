@@ -102,11 +102,13 @@ export class PerpetualsMarket extends Caller {
 			},
 			{
 				marketId: PerpetualsMarketId;
+				collateralCoinType: CoinType;
 			}
 		>("market", {
 			marketId: this.marketId,
+			collateralCoinType: this.collateralCoinType,
 		});
-		return new PerpetualsMarket(marketData.market, this.network);
+		return marketData.orderbook;
 	}
 
 	public getMaxOrderSizeUsd = async (inputs: {
