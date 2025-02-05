@@ -63,7 +63,7 @@ export class Perpetuals extends Caller {
 			{
 				collateralCoinType: CoinType;
 			}
-		>("markets", inputs);
+		>("all-markets", inputs);
 		return marketDatas.map(
 			(marketData) => new PerpetualsMarket(marketData, this.network)
 		);
@@ -72,32 +72,38 @@ export class Perpetuals extends Caller {
 	public async getMarket(inputs: {
 		marketId: PerpetualsMarketId;
 		collateralCoinType: CoinType;
+		// withOrderbook: boolean;
 	}): Promise<PerpetualsMarket> {
-		const marketData = await this.fetchApi<
-			{
-				market: PerpetualsMarketData;
-				orderbook: PerpetualsOrderbook;
-			},
-			{
-				marketId: PerpetualsMarketId;
-				collateralCoinType: CoinType;
-			}
-		>("market", inputs);
-		return new PerpetualsMarket(marketData.market, this.network);
+		const markets = await this.getMarkets({
+			marketIds: [inputs.marketId],
+			collateralCoinType: inputs.collateralCoinType,
+		});
+		return markets[0];
 	}
 
 	public async getMarkets(inputs: {
 		marketIds: PerpetualsMarketId[];
 		collateralCoinType: CoinType;
+		// withOrderbook: boolean;
 	}): Promise<PerpetualsMarket[]> {
-		const { collateralCoinType } = inputs;
-		return Promise.all(
-			inputs.marketIds.map((marketId) =>
-				this.getMarket({
-					marketId,
-					collateralCoinType,
-				})
-			)
+		const marketDatas = await this.fetchApi<
+			{
+				market: PerpetualsMarketData;
+				orderbook: PerpetualsOrderbook;
+			}[],
+			{
+				marketIds: PerpetualsMarketId[];
+				collateralCoinType: CoinType;
+				withOrderbook: boolean;
+			}
+		>("markets", {
+			...inputs,
+			withOrderbook: false,
+		});
+		return marketDatas.map(
+			(marketData) =>
+				// TODO: make orderbook as input
+				new PerpetualsMarket(marketData.market, this.network)
 		);
 	}
 

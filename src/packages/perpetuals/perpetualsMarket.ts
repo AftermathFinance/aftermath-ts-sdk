@@ -95,20 +95,22 @@ export class PerpetualsMarket extends Caller {
 
 		// return this.fetchApi<PerpetualsOrderbook>("market/orderbook");
 
-		const marketData = await this.fetchApi<
+		const marketDatas = await this.fetchApi<
 			{
 				market: PerpetualsMarketData;
 				orderbook: PerpetualsOrderbook;
-			},
+			}[],
 			{
-				marketId: PerpetualsMarketId;
+				marketIds: PerpetualsMarketId[];
 				collateralCoinType: CoinType;
+				withOrderbook: boolean;
 			}
-		>("market", {
-			marketId: this.marketId,
+		>("markets", {
+			marketIds: [this.marketId],
 			collateralCoinType: this.collateralCoinType,
+			withOrderbook: true,
 		});
-		return marketData.orderbook;
+		return marketDatas[0].orderbook;
 	}
 
 	public getMaxOrderSizeUsd = async (inputs: {
