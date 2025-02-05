@@ -251,6 +251,38 @@ export class TransactionsApiHelpers {
 		return { [coinTxArg.$kind]: coinTxArg.Input };
 	};
 
+	public static serviceCoinDataV2FromCoinTxArg = (inputs: {
+		coinTxArg: TransactionObjectArgument | Argument;
+	}): ServiceCoinDataV2 => {
+		const { coinTxArg } = inputs;
+
+		if (!("$kind" in coinTxArg)) {
+			if ("Result" in coinTxArg) return { result: coinTxArg.Result };
+
+			if ("NestedResult" in coinTxArg)
+				return { result: coinTxArg.NestedResult };
+
+			if ("GasCoin" in coinTxArg) return "gas";
+
+			if ("Input" in coinTxArg) return { input: coinTxArg.Input };
+
+			// TODO: handle this case better
+			throw new Error(`coinTxArg in format ${coinTxArg} not supported`);
+		}
+
+		if (coinTxArg.$kind === "NestedResult")
+			return {
+				result: coinTxArg.NestedResult,
+			};
+
+		if (coinTxArg.$kind === "Result") return { result: coinTxArg.Result };
+
+		if (coinTxArg.$kind === "GasCoin") return "gas";
+
+		// Input
+		return { input: coinTxArg.Input };
+	};
+
 	public static serviceCoinDataFromCoinTxArgV0 = (inputs: {
 		coinTxArg: CoinTransactionObjectArgumentV0 | ObjectId;
 	}): ServiceCoinData => {
