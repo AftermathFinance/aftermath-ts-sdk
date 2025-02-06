@@ -66,7 +66,7 @@ export class Caller {
 			throw new Error("no apiBaseUrl: unable to fetch data");
 
 		// TODO: handle url prefixing and api calls based on network differently
-		return `${this.apiBaseUrl}/af-fe/${
+		return `${this.apiBaseUrl}/api/${
 			this.apiUrlPrefix === ""
 				? ""
 				: this.apiUrlPrefix + (url === "" ? "" : "/")
