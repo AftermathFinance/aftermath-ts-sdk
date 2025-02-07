@@ -79,12 +79,12 @@ export class PerpetualsApiCasting {
 	//  Account
 	// =========================================================================
 
-	public static rawAccountCapFromRaw(
+	public static partialRawAccountCapFromRaw(
 		data: any,
 		collateralCoinType: CoinType,
 		version: ObjectVersion,
 		digest: ObjectDigest
-	): PerpetualsRawAccountCap {
+	): Omit<PerpetualsRawAccountCap, "walletAddress"> {
 		return {
 			collateralCoinType,
 			objectId: Helpers.addLeadingZeroesToType(data.id),

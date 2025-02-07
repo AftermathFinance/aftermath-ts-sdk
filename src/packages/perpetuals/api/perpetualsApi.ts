@@ -303,7 +303,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	public fetchOwnedRawAccountCapsOfType = async (inputs: {
 		walletAddress: SuiAddress;
 		collateralCoinType: CoinType;
-	}): Promise<PerpetualsRawAccountCap[]> => {
+	}): Promise<Omit<PerpetualsRawAccountCap, "walletAddress">[]> => {
 		const { walletAddress, collateralCoinType } = inputs;
 		const objectType = this.getAccountCapType({ collateralCoinType });
 
@@ -317,21 +317,18 @@ export class PerpetualsApi implements MoveErrorsInterface {
 				},
 			});
 
-		const accCaps: PerpetualsRawAccountCap[] = objectResponse.map(
-			(accCap) => {
-				const accCapObj = perpetualsRegistry.Account.fromBase64(
-					Casting.bcsBytesFromSuiObjectResponse(accCap)
-				);
-				return PerpetualsApiCasting.rawAccountCapFromRaw(
-					accCapObj,
-					collateralCoinType,
-					Number(accCap.data?.version!),
-					accCap.data?.digest!
-				);
-			}
-		);
-
-		return accCaps;
+		return objectResponse.map((accCap) => {
+			const accCapObj = perpetualsRegistry.Account.fromBase64(
+				Casting.bcsBytesFromSuiObjectResponse(accCap)
+			);
+			console.log("accCapObj", accCapObj);
+			return PerpetualsApiCasting.partialRawAccountCapFromRaw(
+				accCapObj,
+				collateralCoinType,
+				Number(accCap.data?.version!),
+				accCap.data?.digest!
+			);
+		});
 	};
 
 	// public fetchMarket = async (inputs: {

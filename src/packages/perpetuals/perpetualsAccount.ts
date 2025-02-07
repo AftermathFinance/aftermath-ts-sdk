@@ -99,7 +99,6 @@ export class PerpetualsAccount extends Caller {
 
 	public async getDepositCollateralTx(inputs: {
 		packageId: PackageId;
-		walletAddress: SuiAddress;
 		amount: Balance;
 		isSponsoredTx?: boolean;
 	}) {
@@ -113,15 +112,13 @@ export class PerpetualsAccount extends Caller {
 		// );
 		return this.useProvider().fetchBuildDepositCollateralTx({
 			...inputs,
+			walletAddress: this.accountCap.walletAddress,
 			collateralCoinType: this.accountCap.collateralCoinType,
 			accountCapId: this.accountCap.objectId,
 		});
 	}
 
-	public async getWithdrawCollateralTx(inputs: {
-		walletAddress: SuiAddress;
-		amount: Balance;
-	}) {
+	public async getWithdrawCollateralTx(inputs: { amount: Balance }) {
 		// return this.fetchApiTransaction<ApiPerpetualsWithdrawCollateralBody>(
 		// 	"transactions/withdraw-collateral",
 		// 	{
@@ -132,13 +129,13 @@ export class PerpetualsAccount extends Caller {
 		// );
 		return this.useProvider().buildWithdrawCollateralTx({
 			...inputs,
+			walletAddress: this.accountCap.walletAddress,
 			collateralCoinType: this.accountCap.collateralCoinType,
 			accountCapId: this.accountCap.objectId,
 		});
 	}
 
 	public async getAllocateCollateralTx(inputs: {
-		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
 		amount: Balance;
 	}) {
@@ -157,6 +154,7 @@ export class PerpetualsAccount extends Caller {
 		// );
 		return this.useProvider().buildAllocateCollateralTx({
 			...inputs,
+			walletAddress: this.accountCap.walletAddress,
 			packageId: market.marketData.packageId,
 			marketInitialSharedVersion: market.marketData.initialSharedVersion,
 			marketId: market.marketId,
@@ -166,7 +164,6 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getDeallocateCollateralTx(inputs: {
-		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
 		amount: Balance;
 	}) {
@@ -188,6 +185,7 @@ export class PerpetualsAccount extends Caller {
 		// );
 		return this.useProvider().buildDeallocateCollateralTx({
 			...inputs,
+			walletAddress: this.accountCap.walletAddress,
 			packageId: market.marketData.packageId,
 			marketInitialSharedVersion: market.marketData.initialSharedVersion,
 			marketId: market.marketId,
@@ -199,7 +197,6 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getTransferCollateralTx(inputs: {
-		walletAddress: SuiAddress;
 		amount: Balance;
 		toAccountCapId: ObjectId;
 	}) {
@@ -213,6 +210,7 @@ export class PerpetualsAccount extends Caller {
 		// );
 		return this.useProvider().buildTransferCollateralTx({
 			...inputs,
+			walletAddress: this.accountCap.walletAddress,
 			collateralCoinType: this.accountCap.collateralCoinType,
 			fromAccountCapId: this.accountCap.objectId,
 		});
@@ -222,15 +220,12 @@ export class PerpetualsAccount extends Caller {
 	//  Order Txs
 	// =========================================================================
 
-	public async getPlaceMarketOrderTx(
-		inputs: SdkPerpetualsMarketOrderInputs & {
-			walletAddress: SuiAddress;
-		}
-	) {
+	public async getPlaceMarketOrderTx(inputs: SdkPerpetualsMarketOrderInputs) {
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
 			"transactions/market-order",
 			{
 				...inputs,
+				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
@@ -243,15 +238,12 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getPlaceLimitOrderTx(
-		inputs: SdkPerpetualsLimitOrderInputs & {
-			walletAddress: SuiAddress;
-		}
-	) {
+	public async getPlaceLimitOrderTx(inputs: SdkPerpetualsLimitOrderInputs) {
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
 			"transactions/limit-order",
 			{
 				...inputs,
+				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
@@ -280,7 +272,6 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getCancelOrdersTx(inputs: {
-		walletAddress: SuiAddress;
 		marketIdsToData: Record<
 			PerpetualsMarketId,
 			{
@@ -294,6 +285,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/cancel-orders",
 			{
 				...inputs,
+				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
@@ -306,7 +298,6 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getReduceOrderTx(inputs: {
-		walletAddress: SuiAddress;
 		collateralChange: Balance;
 		marketId: PerpetualsMarketId;
 		orderId: PerpetualsOrderId;
@@ -316,6 +307,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/reduce-order",
 			{
 				...inputs,
+				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
@@ -332,7 +324,6 @@ export class PerpetualsAccount extends Caller {
 
 	public async executeSetLeverageTx(inputs: {
 		leverage: number;
-		walletAddress: SuiAddress;
 		collateralChange: Balance;
 		marketId: PerpetualsMarketId;
 		executeTxCallback: (args: { tx: Transaction }) => Promise<{
@@ -349,6 +340,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				...inputs,
 				leverage,
+				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
@@ -376,14 +368,12 @@ export class PerpetualsAccount extends Caller {
 
 	public async getClosePositionTx(inputs: {
 		size: bigint;
-		walletAddress: SuiAddress;
 		market: PerpetualsMarket;
 		orderDatas: PerpetualsOrderData[];
 		indexPrice: number;
 		collateralPrice: number;
 	}) {
 		return this.getPlaceMarketOrderTx({
-			walletAddress: inputs.walletAddress,
 			...this.closePositionTxInputs(inputs),
 		});
 	}
@@ -392,12 +382,16 @@ export class PerpetualsAccount extends Caller {
 	//  Inspections
 	// =========================================================================
 
-	public async setPositionLeverage(
-		inputs: ApiPerpetualsSetPositionLeverageBody
-	): Promise<boolean> {
+	public async setPositionLeverage(inputs: {
+		bytes: string;
+		signature: string;
+	}): Promise<boolean> {
 		return this.fetchApi<boolean, ApiPerpetualsSetPositionLeverageBody>(
 			"account/set-position-leverage",
-			inputs
+			{
+				...inputs,
+				walletAddress: this.accountCap.walletAddress,
+			}
 		);
 	}
 

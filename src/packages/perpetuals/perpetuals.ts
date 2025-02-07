@@ -145,14 +145,23 @@ export class Perpetuals extends Caller {
 		// TODO: move logic into endpoint
 		const [rawAccountCaps, collateralMetadata] = await Promise.all([
 			this.useProvider().fetchOwnedRawAccountCapsOfType(inputs),
-			// new Coin(undefined, this.network, this.Provider).getCoinMetadata(
-			// 	collateralCoinType
-			// ),
-			{ decimals: 9 },
+			new Coin(undefined, this.network, this.Provider).getCoinMetadata(
+				collateralCoinType
+			),
+			// { decimals: 9 },
 		]);
+		console.log("rawAccountCaps", rawAccountCaps);
+		console.log("collateralMetadata", collateralMetadata);
 		return rawAccountCaps.map((accountCap) => ({
 			...accountCap,
+			walletAddress,
 			collateralDecimals: collateralMetadata.decimals,
+			collateral: Casting.IFixed.iFixedFromNumber(
+				Coin.balanceWithDecimals(
+					accountCap.collateral,
+					collateralMetadata.decimals
+				)
+			),
 		}));
 	}
 
