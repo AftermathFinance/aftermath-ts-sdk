@@ -104,10 +104,10 @@ export class Coin extends Caller {
 	public async getCoinMetadatas(inputs: {
 		coins: CoinType[];
 	}): Promise<CoinMetadaWithInfo[]> {
-		return this.fetchApi<CoinMetadaWithInfo[], { coinTypes: CoinType[] }>(
+		return this.fetchApi<CoinMetadaWithInfo[], { coins: CoinType[] }>(
 			"metadata",
 			{
-				coinTypes: inputs.coins.map((coin) =>
+				coins: inputs.coins.map((coin) =>
 					Helpers.addLeadingZeroesToType(coin)
 				),
 			}
