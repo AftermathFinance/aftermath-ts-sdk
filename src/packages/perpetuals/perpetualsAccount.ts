@@ -235,6 +235,10 @@ export class PerpetualsAccount extends Caller {
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
 				hasPosition: this.positionForMarketId(inputs) !== undefined,
+			},
+			undefined,
+			{
+				txKind: true,
 			}
 		);
 	}
@@ -252,6 +256,10 @@ export class PerpetualsAccount extends Caller {
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
 				hasPosition: this.positionForMarketId(inputs) !== undefined,
+			},
+			undefined,
+			{
+				txKind: true,
 			}
 		);
 	}
@@ -289,6 +297,10 @@ export class PerpetualsAccount extends Caller {
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
+			},
+			undefined,
+			{
+				txKind: true,
 			}
 		);
 	}
@@ -310,6 +322,10 @@ export class PerpetualsAccount extends Caller {
 				leverage:
 					this.positionForMarketId({ marketId: inputs.marketId })
 						?.leverage || 1,
+			},
+			undefined,
+			{
+				txKind: true,
 			}
 		);
 	}
@@ -336,6 +352,10 @@ export class PerpetualsAccount extends Caller {
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
+			},
+			undefined,
+			{
+				txKind: true,
 			}
 		);
 		const { txDigest } = await inputs.executeTxCallback({ tx });
@@ -615,6 +635,7 @@ export class PerpetualsAccount extends Caller {
 		>("account/collateral-history", {
 			...inputs,
 			accountId: this.accountCap.accountId,
+			collateralCoinType: this.accountCap.collateralCoinType,
 		});
 	}
 

@@ -132,7 +132,7 @@ export class Aftermath extends Caller {
 	public Router = () => new Router(this.network);
 	public NftAmm = () => new NftAmm(this.network, this.Provider);
 	public ReferralVault = () => new ReferralVault(this.network, this.Provider);
-	public Perpetuals = () => new Perpetuals(this.network);
+	public Perpetuals = () => new Perpetuals(this.network, this.Provider);
 	public Oracle = () => new Oracle(this.network);
 	/**
 	 * Creates a new instance of the Farms class.

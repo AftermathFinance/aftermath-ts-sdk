@@ -2,6 +2,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import {
 	ApiEventsBody,
 	ApiIndexerEventsBody,
+	Byte,
 	EventsWithCursor,
 	IndexerEventsWithCursor,
 	SerializedTransaction,
@@ -11,6 +12,7 @@ import {
 } from "../../types";
 import { Helpers } from "./helpers";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { bcs } from "@mysten/sui/bcs";
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
@@ -129,16 +131,18 @@ export class Caller {
 		signal?: AbortSignal,
 		options?: {
 			disableBigIntJsonParsing?: boolean;
+			txKind?: boolean;
 		}
 	) {
-		const tx = Transaction.from(
-			await this.fetchApi<SerializedTransaction, BodyType>(
-				url,
-				body,
-				signal,
-				options
-			)
+		const txKind = await this.fetchApi<SerializedTransaction, BodyType>(
+			url,
+			body,
+			signal,
+			options
 		);
+		const tx = options?.txKind
+			? Transaction.fromKind(txKind)
+			: Transaction.from(txKind);
 		// NOTE: is this needed ?
 		if (body?.walletAddress) {
 			tx.setSender(body.walletAddress);

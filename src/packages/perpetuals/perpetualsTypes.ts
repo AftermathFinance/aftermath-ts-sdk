@@ -749,6 +749,7 @@ export type ApiPerpetualsAccountOrderHistoryBody =
 export type ApiPerpetualsAccountCollateralHistoryBody =
 	ApiDataWithCursorBody<Timestamp> & {
 		accountId: PerpetualsAccountId;
+		collateralCoinType: CoinType;
 	};
 
 export interface ApiPerpetualsSetPositionLeverageBody {
