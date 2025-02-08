@@ -67,6 +67,7 @@ import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../general/providers";
 
+// TODO: create refresh account positions function ?
 export class PerpetualsAccount extends Caller {
 	// =========================================================================
 	//  Private Constants
@@ -84,7 +85,7 @@ export class PerpetualsAccount extends Caller {
 		public readonly account: PerpetualsAccountObject,
 		public readonly accountCap: PerpetualsAccountCap,
 		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, "perpetuals");
 	}

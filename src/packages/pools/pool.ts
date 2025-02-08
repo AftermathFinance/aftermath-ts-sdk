@@ -55,7 +55,7 @@ export class Pool extends Caller {
 	constructor(
 		public readonly pool: PoolObject,
 		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, `pools/${pool.objectId}`);
 		this.pool = pool;

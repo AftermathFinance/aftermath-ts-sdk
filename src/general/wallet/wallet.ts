@@ -14,7 +14,7 @@ export class Wallet extends Caller {
 	constructor(
 		public readonly address: SuiAddress,
 		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, `wallet/${address}`);
 	}

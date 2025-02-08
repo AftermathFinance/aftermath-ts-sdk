@@ -36,7 +36,7 @@ export class Farms extends Caller {
 
 	constructor(
 		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, "farms");
 	}

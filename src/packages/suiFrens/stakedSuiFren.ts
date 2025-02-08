@@ -30,7 +30,7 @@ export class StakedSuiFren extends Caller {
 		public readonly info: StakedSuiFrenInfo,
 		public readonly network?: SuiNetwork,
 		public readonly isOwned: boolean = false,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, "sui-frens");
 		this.suiFren = new SuiFren(info.suiFren, this.network, true, isOwned);

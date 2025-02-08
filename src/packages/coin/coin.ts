@@ -51,7 +51,7 @@ export class Coin extends Caller {
 	constructor(
 		public readonly coinType?: CoinType,
 		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, "coins");
 		this.coinType = coinType;

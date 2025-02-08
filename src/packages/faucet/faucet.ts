@@ -23,7 +23,7 @@ export class Faucet extends Caller {
 
 	constructor(
 		public readonly network?: SuiNetwork | Url,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, "faucet");
 	}

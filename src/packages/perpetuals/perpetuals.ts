@@ -46,7 +46,7 @@ export class Perpetuals extends Caller {
 
 	constructor(
 		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, "perpetuals");
 	}
@@ -110,14 +110,18 @@ export class Perpetuals extends Caller {
 	public async getAccount(inputs: {
 		accountCap: PerpetualsAccountCap;
 		marketIds?: PerpetualsMarketId[];
-		withLeverage?: boolean;
+		// withLeverage?: boolean;
 	}): Promise<PerpetualsAccount> {
-		const { accountCap, marketIds, withLeverage } = inputs;
+		const {
+			accountCap,
+			marketIds,
+			// withLeverage
+		} = inputs;
 		return (
 			await this.getAccounts({
 				accountCaps: [accountCap],
 				marketIds,
-				withLeverage,
+				// withLeverage,
 			})
 		)[0];
 	}
@@ -126,27 +130,23 @@ export class Perpetuals extends Caller {
 	public async getAccounts(inputs: {
 		accountCaps: PerpetualsAccountCap[];
 		marketIds?: PerpetualsMarketId[];
-		withLeverage?: boolean;
+		// withLeverage?: boolean;
 	}): Promise<PerpetualsAccount[]> {
-		const { accountCaps, marketIds, withLeverage } = inputs;
+		const {
+			accountCaps,
+			marketIds,
+			// withLeverage
+		} = inputs;
 		if (accountCaps.length <= 0) return [];
 
 		// TODO: handle different collateral coin types
-		const accounts = await this.fetchApi<
-			PerpetualsAccountObject[],
-			{
-				accountIds: PerpetualsAccountId[];
-				collateralCoinType: CoinType;
-				marketIds: PerpetualsMarketId[] | undefined;
-				withLeverage: boolean | undefined;
-			}
-		>("accounts/positions", {
+		const accountObjects = await this.getAccountObjects({
 			accountIds: accountCaps.map((accountCap) => accountCap.accountId),
 			collateralCoinType: accountCaps[0].collateralCoinType,
 			marketIds,
-			withLeverage,
+			// withLeverage,
 		});
-		return accounts.map(
+		return accountObjects.map(
 			(account, index) =>
 				new PerpetualsAccount(
 					account,
@@ -155,6 +155,38 @@ export class Perpetuals extends Caller {
 					this.Provider
 				)
 		);
+	}
+
+	// TODO: handle different collateral coin types ?
+	public async getAccountObjects(inputs: {
+		accountIds: PerpetualsAccountId[];
+		collateralCoinType: CoinType;
+		marketIds?: PerpetualsMarketId[];
+		// withLeverage?: boolean;
+	}): Promise<PerpetualsAccountObject[]> {
+		const {
+			accountIds,
+			collateralCoinType,
+			marketIds,
+			// withLeverage
+		} = inputs;
+		if (accountIds.length <= 0) return [];
+
+		return this.fetchApi<
+			PerpetualsAccountObject[],
+			{
+				accountIds: PerpetualsAccountId[];
+				collateralCoinType: CoinType;
+				marketIds: PerpetualsMarketId[] | undefined;
+				withLeverage: boolean | undefined;
+			}
+		>("accounts/positions", {
+			accountIds,
+			collateralCoinType,
+			marketIds,
+			// withLeverage: withLeverage ?? true,
+			withLeverage: true,
+		});
 	}
 
 	public async getUserAccountCaps(

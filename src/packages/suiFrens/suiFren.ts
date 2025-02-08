@@ -29,7 +29,7 @@ export class SuiFren extends Caller {
 		public readonly network?: SuiNetwork,
 		public readonly isStaked: boolean = false,
 		public readonly isOwned: boolean = false,
-		private readonly Provider?: AftermathApi
+		public readonly Provider?: AftermathApi
 	) {
 		super(network, "sui-frens");
 	}
