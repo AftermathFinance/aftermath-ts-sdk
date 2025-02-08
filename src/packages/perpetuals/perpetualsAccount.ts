@@ -357,6 +357,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				txDigest,
 				leverage,
+				accountId: this.accountCap.accountId,
 				marketId: inputs.marketId,
 			}
 		);

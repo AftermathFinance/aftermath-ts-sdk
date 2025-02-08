@@ -760,6 +760,7 @@ export interface ApiPerpetualsSetPositionLeverageBody {
 }
 
 export interface ApiPerpetualsSetPositionLeverageFromTxBody {
+	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	leverage: number;
 	txDigest: TransactionDigest;
