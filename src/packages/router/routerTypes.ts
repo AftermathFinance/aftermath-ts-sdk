@@ -181,6 +181,7 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 */
 	slippage: Slippage;
 	isSponsoredTx?: boolean;
+	customRecipient?: SuiAddress;
 }
 
 export type ApiRouterAddTransactionForCompleteTradeRouteBody =
