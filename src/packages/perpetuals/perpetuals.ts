@@ -94,7 +94,7 @@ export class Perpetuals extends Caller {
 			{
 				marketIds: PerpetualsMarketId[];
 				collateralCoinType: CoinType;
-				withOrderbook: boolean;
+				withOrderbook: boolean | undefined;
 			}
 		>("markets", {
 			...inputs,
@@ -109,23 +109,51 @@ export class Perpetuals extends Caller {
 
 	public async getAccount(inputs: {
 		accountCap: PerpetualsAccountCap;
+		marketIds?: PerpetualsMarketId[];
+		withLeverage?: boolean;
 	}): Promise<PerpetualsAccount> {
-		const { accountCap } = inputs;
-		const account = await this.fetchApi<
-			PerpetualsAccountObject,
+		const { accountCap, marketIds, withLeverage } = inputs;
+		return (
+			await this.getAccounts({
+				accountCaps: [accountCap],
+				marketIds,
+				withLeverage,
+			})
+		)[0];
+	}
+
+	// TODO: make account fetching get positions and account cap data all at once ?
+	public async getAccounts(inputs: {
+		accountCaps: PerpetualsAccountCap[];
+		marketIds?: PerpetualsMarketId[];
+		withLeverage?: boolean;
+	}): Promise<PerpetualsAccount[]> {
+		const { accountCaps, marketIds, withLeverage } = inputs;
+		if (accountCaps.length <= 0) return [];
+
+		// TODO: handle different collateral coin types
+		const accounts = await this.fetchApi<
+			PerpetualsAccountObject[],
 			{
-				accountId: PerpetualsAccountId;
+				accountIds: PerpetualsAccountId[];
 				collateralCoinType: CoinType;
+				marketIds: PerpetualsMarketId[] | undefined;
+				withLeverage: boolean | undefined;
 			}
-		>("account/positions", {
-			accountId: accountCap.accountId,
-			collateralCoinType: accountCap.collateralCoinType,
+		>("accounts/positions", {
+			accountIds: accountCaps.map((accountCap) => accountCap.accountId),
+			collateralCoinType: accountCaps[0].collateralCoinType,
+			marketIds,
+			withLeverage,
 		});
-		return new PerpetualsAccount(
-			account,
-			accountCap,
-			this.network,
-			this.Provider
+		return accounts.map(
+			(account, index) =>
+				new PerpetualsAccount(
+					account,
+					accountCaps[index],
+					this.network,
+					this.Provider
+				)
 		);
 	}
 
@@ -287,6 +315,13 @@ export class Perpetuals extends Caller {
 		return Perpetuals.OrderUtils.isAsk(orderId)
 			? PerpetualsOrderSide.Ask
 			: PerpetualsOrderSide.Bid;
+	};
+
+	public static eventTypeForCollateral = (inputs: {
+		eventType: string;
+		collateralCoinType: CoinType;
+	}): string => {
+		return `${inputs.eventType}<${inputs.collateralCoinType}>`;
 	};
 
 	// =========================================================================

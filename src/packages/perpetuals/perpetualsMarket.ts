@@ -103,7 +103,7 @@ export class PerpetualsMarket extends Caller {
 			{
 				marketIds: PerpetualsMarketId[];
 				collateralCoinType: CoinType;
-				withOrderbook: boolean;
+				withOrderbook: boolean | undefined;
 			}
 		>("markets", {
 			marketIds: [this.marketId],

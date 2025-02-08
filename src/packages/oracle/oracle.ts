@@ -17,6 +17,7 @@ export class Oracle extends Caller {
 	public async getPrices(inputs: {
 		priceFeedIds: ObjectId[];
 	}): Promise<number[]> {
+		if (inputs.priceFeedIds.length <= 0) return [];
 		return this.fetchApi(`prices`, inputs);
 	}
 
