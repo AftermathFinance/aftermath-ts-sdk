@@ -321,7 +321,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			const accCapObj = perpetualsRegistry.Account.fromBase64(
 				Casting.bcsBytesFromSuiObjectResponse(accCap)
 			);
-			console.log("accCapObj", accCapObj);
 			return PerpetualsApiCasting.partialRawAccountCapFromRaw(
 				accCapObj,
 				collateralCoinType,

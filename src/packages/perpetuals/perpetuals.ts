@@ -210,8 +210,6 @@ export class Perpetuals extends Caller {
 			),
 			// { decimals: 9 },
 		]);
-		console.log("rawAccountCaps", rawAccountCaps);
-		console.log("collateralMetadata", collateralMetadata);
 		return rawAccountCaps.map((accountCap) => ({
 			...accountCap,
 			walletAddress,

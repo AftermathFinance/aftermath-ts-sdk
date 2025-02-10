@@ -480,6 +480,7 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			accountId: BigInt(fields.account_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			collateralDelta: BigInt(fields.collateral),
 			positionCollateralAfter: BigInt(fields.position_collateral_after),
 			timestamp: eventOnChain.timestampMs,
@@ -494,6 +495,7 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			accountId: BigInt(fields.account_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			collateralDelta: BigInt(fields.collateral),
 			positionCollateralAfter: BigInt(fields.position_collateral_after),
 			timestamp: eventOnChain.timestampMs,
