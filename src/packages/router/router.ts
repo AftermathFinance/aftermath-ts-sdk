@@ -14,6 +14,7 @@ import {
 	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
 	ModuleName,
 	Slippage,
+	ApiIndexerEventsBody,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Transaction } from "@mysten/sui/transactions";
@@ -203,6 +204,9 @@ export class Router extends Caller {
 	// =========================================================================
 
 	public async getTradeEvents(inputs: ApiRouterTradeEventsBody) {
-		return this.fetchApiEvents<RouterTradeEvent>("events/trade", inputs);
+		return this.fetchApiEvents<RouterTradeEvent, ApiRouterTradeEventsBody>(
+			"events-by-user",
+			inputs
+		);
 	}
 }

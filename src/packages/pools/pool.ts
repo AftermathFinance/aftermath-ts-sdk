@@ -216,47 +216,19 @@ export class Pool extends Caller {
 		return this.fetchApi("volume-24hrs");
 	};
 
-	/**
-	 * Fetches the deposit events for the pool.
-	 * @async
-	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
-	 * @returns {Promise<IndexerEventsWithCursor<PoolDepositEvent>>} The deposit events for the pool.
-	 */
-	public async getDepositEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<PoolDepositEvent>(
-			"events/deposit",
-			inputs
-		);
-	}
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
-	/**
-	 * Fetches the withdraw events for the pool.
-	 * @async
-	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
-	 * @returns {Promise<IndexerEventsWithCursor<PoolWithdrawEvent>>} The withdraw events for the pool.
-	 */
-	public async getWithdrawEvents(
-		inputs: ApiIndexerEventsBody
-	): Promise<IndexerEventsWithCursor<PoolWithdrawEvent>> {
-		return this.fetchApiIndexerEvents<PoolWithdrawEvent>(
-			"events/withdraw",
-			inputs
-		);
-	}
-
-	/**
-	 * Fetches the trade events for the pool.
-	 * @async
-	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
-	 * @returns {Promise<IndexerEventsWithCursor<PoolTradeEvent>>} The trade events for the pool.
-	 */
-	public async getTradeEvents(
-		inputs: ApiIndexerEventsBody
-	): Promise<IndexerEventsWithCursor<PoolTradeEvent>> {
-		return this.fetchApiIndexerEvents<PoolTradeEvent>(
-			"events/trade",
-			inputs
-		);
+	public async getInteractionEvents(
+		inputs: ApiIndexerEventsBody & {
+			walletAddress: SuiAddress;
+		}
+	) {
+		return this.fetchApiEvents<
+			PoolDepositEvent | PoolWithdrawEvent,
+			ApiIndexerEventsBody
+		>("interaction-events-by-user", inputs);
 	}
 
 	// =========================================================================
