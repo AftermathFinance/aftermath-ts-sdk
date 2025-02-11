@@ -50,7 +50,7 @@ const afApi = new AftermathApi(
 
 ```ts
 const poolsApi = afApi.Pools();
-const stakinApi = afApi.Staking();
+const stakingApi = afApi.Staking();
 const farmsApi = afApi.Farms();
 ```
 
