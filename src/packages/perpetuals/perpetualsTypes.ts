@@ -487,13 +487,13 @@ export type CollateralEvent =
 export const isWithdrewCollateralEvent = (
 	event: Event
 ): event is WithdrewCollateralEvent => {
-	return event.type.toLowerCase().endsWith("::withdrewcollateral");
+	return event.type.toLowerCase().includes("::withdrewcollateral");
 };
 
 export const isDepositedCollateralEvent = (
 	event: Event
 ): event is DepositedCollateralEvent => {
-	return event.type.toLowerCase().endsWith("::depositedcollateral");
+	return event.type.toLowerCase().includes("::depositedcollateral");
 };
 
 export const isDeallocatedCollateralEvent = (
