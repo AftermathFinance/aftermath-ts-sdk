@@ -29,6 +29,7 @@ import duration from "dayjs/plugin/duration";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Coin } from "../coin/coin";
 import { AftermathApi } from "../../general/providers";
+import { Farms } from "./farms";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -48,6 +49,22 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 	//  Public
 	// =========================================================================
+
+	// =========================================================================
+	//  Stats
+	// =========================================================================
+
+	public async getTVL(): Promise<number> {
+		return new Farms(this.network, this.Provider).getTVL({
+			farmIds: [this.stakingPool.objectId],
+		});
+	}
+
+	public async getRewardsTVL(): Promise<number> {
+		return new Farms(this.network, this.Provider).getRewardsTVL({
+			farmIds: [this.stakingPool.objectId],
+		});
+	}
 
 	// =========================================================================
 	//  Getters
