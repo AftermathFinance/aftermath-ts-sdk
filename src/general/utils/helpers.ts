@@ -215,7 +215,24 @@ export class Helpers {
 		return maxIndex;
 	};
 
-	public static uniqueArray = <T>(arr: T[]): T[] => [...new Set(arr)];
+	private static uniqueObjectArray<T>(arr: T[]): T[] {
+		const seen = new Set<string>();
+		return arr.filter((obj) => {
+			const str = JSON.stringify(obj);
+			if (seen.has(str)) {
+				return false;
+			}
+			seen.add(str);
+			return true;
+		});
+	}
+
+	public static uniqueArray = <T>(arr: T[]): T[] =>
+		arr.length <= 0
+			? []
+			: typeof arr[0] === "object"
+			? Helpers.uniqueObjectArray(arr)
+			: [...new Set(arr)];
 
 	public static sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
