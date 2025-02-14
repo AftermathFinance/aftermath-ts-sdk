@@ -20,6 +20,7 @@ import {
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	PoolLpInfo,
 	SuiAddress,
+	ApiIndexerEventsBody,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -245,6 +246,23 @@ export class Pools extends Caller {
 		inputs: ApiPoolsOwnedDaoFeePoolOwnerCapsBody
 	) {
 		return this.useProvider().fetchOwnedDaoFeePoolOwnerCaps(inputs);
+	}
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async getEvents(
+		inputs: ApiIndexerEventsBody & {
+			walletAddress: SuiAddress;
+		}
+	) {
+		return this.fetchApiEvents<
+			PoolDepositEvent | PoolWithdrawEvent,
+			ApiIndexerEventsBody & {
+				walletAddress: SuiAddress;
+			}
+		>("events-by-user", inputs);
 	}
 
 	// =========================================================================

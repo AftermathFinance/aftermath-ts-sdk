@@ -20,6 +20,7 @@ import {
 	Percentage,
 	SuiAddress,
 	ObjectId,
+	PoolCoin,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -576,6 +577,22 @@ export class Pool extends Caller {
 	// =========================================================================
 	//  Getters
 	// =========================================================================
+
+	public coins = (): CoinType[] => {
+		return Object.keys(this.pool.coins).sort((a, b) => a.localeCompare(b));
+	};
+
+	public poolCoins = (): PoolCoin[] => {
+		return Object.entries(this.pool.coins)
+			.sort((a, b) => a[0].localeCompare(b[0]))
+			.map((data) => data[1]);
+	};
+
+	public poolCoinEntries = (): [CoinType, PoolCoin][] => {
+		return Object.entries(this.pool.coins).sort((a, b) =>
+			a[0].localeCompare(b[0])
+		);
+	};
 
 	public daoFeePercentage = (): Percentage | undefined => {
 		return this.pool.daoFeePoolObject

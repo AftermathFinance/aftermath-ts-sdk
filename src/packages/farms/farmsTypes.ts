@@ -100,6 +100,34 @@ export type PartialFarmsStakedPositionObject = Omit<
 //  Events
 // =========================================================================
 
+export type FarmEvent =
+	| FarmsAddedRewardEvent
+	| FarmsCreatedVaultEvent
+	| FarmsDepositedPrincipalEvent
+	| FarmsDestroyedStakedPositionEvent
+	| FarmsHarvestedRewardsEvent
+	| FarmsIncreasedEmissionsEvent
+	| FarmsInitializedRewardEvent
+	| FarmsJoinedEvent
+	| FarmsLockedEvent
+	| FarmsSplitEvent
+	| FarmsStakedEvent
+	| FarmsStakedRelaxedEvent
+	| FarmsUnlockedEvent
+	| FarmsWithdrewPrincipalEvent;
+
+export type FarmUserEvent =
+	| FarmsDepositedPrincipalEvent
+	| FarmsHarvestedRewardsEvent
+	| FarmsLockedEvent
+	| FarmsStakedEvent
+	| FarmsUnlockedEvent
+	| FarmsWithdrewPrincipalEvent;
+// | FarmsDestroyedStakedPositionEvent
+// | FarmsJoinedEvent
+// | FarmsSplitEvent
+// | FarmsStakedRelaxedEvent
+
 export interface FarmsAddedRewardEvent extends Event {
 	vaultId: ObjectId;
 	rewardType: CoinType;
