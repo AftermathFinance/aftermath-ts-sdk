@@ -127,11 +127,11 @@ export class Farms extends Caller {
 	//  Stats
 	// =========================================================================
 
-	public async getTVL(inputs: { farmIds?: ObjectId[] }): Promise<number> {
+	public async getTVL(inputs?: { farmIds?: ObjectId[] }): Promise<number> {
 		return this.fetchApi("tvl", inputs);
 	}
 
-	public async getRewardsTVL(inputs: {
+	public async getRewardsTVL(inputs?: {
 		farmIds?: ObjectId[];
 	}): Promise<number> {
 		return this.fetchApi("rewards-tvl", inputs);

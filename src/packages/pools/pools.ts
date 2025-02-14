@@ -226,7 +226,7 @@ export class Pools extends Caller {
 		return this.fetchApi("volume-24hrs");
 	};
 
-	public async getTVL(inputs: { poolIds?: ObjectId[] }): Promise<number> {
+	public async getTVL(inputs?: { poolIds?: ObjectId[] }): Promise<number> {
 		return this.fetchApi("tvl", inputs);
 	}
 
