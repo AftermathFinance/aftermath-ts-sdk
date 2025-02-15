@@ -252,7 +252,7 @@ export class Pools extends Caller {
 	//  Events
 	// =========================================================================
 
-	public async getEvents(
+	public async getInteractionEvents(
 		inputs: ApiIndexerEventsBody & {
 			walletAddress: SuiAddress;
 		}
