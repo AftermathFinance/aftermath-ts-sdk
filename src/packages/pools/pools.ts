@@ -126,9 +126,12 @@ export class Pools extends Caller {
 		const pools = await this.fetchApi<
 			PoolObject[],
 			{
-				objectIds: ObjectId[];
+				poolIds: ObjectId[];
 			}
-		>("objects", inputs);
+			// TODO: change to "objects"
+		>("", {
+			poolIds: inputs.objectIds,
+		});
 		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
 	}
 

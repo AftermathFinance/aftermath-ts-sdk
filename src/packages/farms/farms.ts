@@ -73,9 +73,11 @@ export class Farms extends Caller {
 		const stakingPools = await this.fetchApi<
 			FarmsStakingPoolObject[],
 			{
-				objectIds: ObjectId[];
+				farmIds: ObjectId[];
 			}
-		>("objects", inputs);
+		>("objects", {
+			farmIds: inputs.objectIds,
+		});
 		return stakingPools.map(
 			(stakingPool) =>
 				new FarmsStakingPool(stakingPool, this.network, this.Provider)
