@@ -159,7 +159,7 @@ export class Farms extends Caller {
 	//  Events
 	// =========================================================================
 
-	public async getEvents(
+	public async getInteractionEvents(
 		inputs: ApiIndexerEventsBody & {
 			walletAddress: SuiAddress;
 		}

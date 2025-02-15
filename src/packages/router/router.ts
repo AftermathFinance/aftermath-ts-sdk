@@ -203,7 +203,7 @@ export class Router extends Caller {
 	//  Events
 	// =========================================================================
 
-	public async getTradeEvents(inputs: ApiRouterTradeEventsBody) {
+	public async getInteractionEvents(inputs: ApiRouterTradeEventsBody) {
 		return this.fetchApiEvents<RouterTradeEvent, ApiRouterTradeEventsBody>(
 			"events-by-user",
 			inputs
