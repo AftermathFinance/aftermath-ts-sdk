@@ -65,6 +65,13 @@ export const isSuiDelegatedStake = (
 	);
 };
 
+export interface StakingApyDataPoint {
+	timestamp: Timestamp;
+	apy: number;
+}
+
+export type StakingApyTimeframeKey = "1W" | "1M" | "3M" | "6M" | "1Y" | "ALL";
+
 // =========================================================================
 //  Events
 // =========================================================================

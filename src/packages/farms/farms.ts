@@ -75,7 +75,7 @@ export class Farms extends Caller {
 			{
 				farmIds: ObjectId[];
 			}
-		>("objects", {
+		>("", {
 			farmIds: inputs.objectIds,
 		});
 		return stakingPools.map(
@@ -85,7 +85,10 @@ export class Farms extends Caller {
 	}
 
 	public async getAllStakingPools() {
-		const stakingPools = await this.fetchApi<FarmsStakingPoolObject[]>("");
+		const stakingPools: FarmsStakingPoolObject[] = await this.fetchApi(
+			"",
+			{}
+		);
 		return stakingPools.map(
 			(pool) => new FarmsStakingPool(pool, this.network, this.Provider)
 		);
@@ -138,13 +141,13 @@ export class Farms extends Caller {
 	// =========================================================================
 
 	public async getTVL(inputs?: { farmIds?: ObjectId[] }): Promise<number> {
-		return this.fetchApi("tvl", inputs);
+		return this.fetchApi("tvl", inputs ?? {});
 	}
 
 	public async getRewardsTVL(inputs?: {
 		farmIds?: ObjectId[];
 	}): Promise<number> {
-		return this.fetchApi("rewards-tvl", inputs);
+		return this.fetchApi("rewards-tvl", inputs ?? {});
 	}
 
 	// =========================================================================
@@ -166,7 +169,7 @@ export class Farms extends Caller {
 			walletAddress: SuiAddress;
 		}
 	) {
-		return this.fetchApiEvents<
+		return this.fetchApiIndexerEvents<
 			FarmUserEvent,
 			ApiIndexerEventsBody & {
 				walletAddress: SuiAddress;

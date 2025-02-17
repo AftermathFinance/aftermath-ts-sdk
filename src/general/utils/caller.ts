@@ -174,7 +174,7 @@ export class Caller {
 
 	protected async fetchApiIndexerEvents<
 		EventType,
-		BodyType = ApiIndexerEventsBody
+		BodyType extends ApiIndexerEventsBody
 	>(
 		url: Url,
 		body: BodyType,
@@ -182,12 +182,20 @@ export class Caller {
 		options?: {
 			disableBigIntJsonParsing?: boolean;
 		}
-	) {
-		return this.fetchApi<IndexerEventsWithCursor<EventType>, BodyType>(
+	): Promise<IndexerEventsWithCursor<EventType>> {
+		const events = await this.fetchApi<EventType[], BodyType>(
 			url,
 			body,
 			signal,
 			options
 		);
+		// TODO: handle this logic on af-fe instead (to handle max limit case)
+		return {
+			events,
+			nextCursor:
+				events.length < (body.limit ?? 1)
+					? undefined
+					: events.length + (body.cursor ?? 0),
+		};
 	}
 }

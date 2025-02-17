@@ -128,7 +128,6 @@ export class Pools extends Caller {
 			{
 				poolIds: ObjectId[];
 			}
-			// TODO: change to "objects"
 		>("", {
 			poolIds: inputs.objectIds,
 		});
@@ -140,7 +139,7 @@ export class Pools extends Caller {
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of Pool objects.
 	 */
 	public async getAllPools() {
-		const pools = await this.fetchApi<PoolObject[]>("");
+		const pools: PoolObject[] = await this.fetchApi("", {});
 		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
 	}
 
@@ -231,7 +230,7 @@ export class Pools extends Caller {
 	};
 
 	public async getTVL(inputs?: { poolIds?: ObjectId[] }): Promise<number> {
-		return this.fetchApi("tvl", inputs);
+		return this.fetchApi("tvl", inputs ?? {});
 	}
 
 	/**
@@ -260,12 +259,12 @@ export class Pools extends Caller {
 			walletAddress: SuiAddress;
 		}
 	) {
-		return this.fetchApiEvents<
+		return this.fetchApiIndexerEvents<
 			PoolDepositEvent | PoolWithdrawEvent,
 			ApiIndexerEventsBody & {
 				walletAddress: SuiAddress;
 			}
-		>("events-by-user", inputs);
+		>("interaction-events-by-user", inputs);
 	}
 
 	// =========================================================================

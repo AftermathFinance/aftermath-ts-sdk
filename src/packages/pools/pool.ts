@@ -226,7 +226,7 @@ export class Pool extends Caller {
 			walletAddress: SuiAddress;
 		}
 	) {
-		return this.fetchApiEvents<
+		return this.fetchApiIndexerEvents<
 			PoolDepositEvent | PoolWithdrawEvent,
 			ApiIndexerEventsBody
 		>("interaction-events-by-user", inputs);
