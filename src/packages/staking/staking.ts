@@ -20,6 +20,7 @@ import {
 	SuiAddress,
 	StakingApyDataPoint,
 	StakingApyTimeframeKey,
+	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { SuiValidatorSummary, ValidatorsApy } from "@mysten/sui/client";
@@ -63,10 +64,10 @@ export class Staking extends Caller {
 	 * @param network - The network to use for interacting with the Staking contract.
 	 */
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "staking");
+		super(config, "staking");
 	}
 
 	// =========================================================================

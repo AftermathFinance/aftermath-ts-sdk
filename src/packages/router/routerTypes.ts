@@ -52,11 +52,13 @@ export type RouterProtocolName =
 	| "HopFun"
 	| "Kriya"
 	| "KriyaClmm"
+	| "Metastable"
 	| "MovePump"
+	| "Obric"
 	| "SuiSwap"
 	| "Turbos"
 	| "SpringSui"
-	| "AftermathLsd"
+	// | "AftermathLsd"
 	| "Bluefin"
 	| "TurbosFun";
 

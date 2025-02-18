@@ -5,6 +5,7 @@ import {
 	ObjectId,
 	SuiAddress,
 	ApiIndexerEventsBody,
+	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import {
@@ -44,10 +45,10 @@ export class Farms extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "farms");
+		super(config, "farms");
 	}
 
 	// =========================================================================
@@ -64,7 +65,7 @@ export class Farms extends Caller {
 		const stakingPool = await this.fetchApi<FarmsStakingPoolObject>(
 			inputs.objectId
 		);
-		return new FarmsStakingPool(stakingPool, this.network, this.Provider);
+		return new FarmsStakingPool(stakingPool, this.config, this.Provider);
 	}
 
 	public async getStakingPools(inputs: {
@@ -80,7 +81,7 @@ export class Farms extends Caller {
 		});
 		return stakingPools.map(
 			(stakingPool) =>
-				new FarmsStakingPool(stakingPool, this.network, this.Provider)
+				new FarmsStakingPool(stakingPool, this.config, this.Provider)
 		);
 	}
 
@@ -90,7 +91,7 @@ export class Farms extends Caller {
 			{}
 		);
 		return stakingPools.map(
-			(pool) => new FarmsStakingPool(pool, this.network, this.Provider)
+			(pool) => new FarmsStakingPool(pool, this.config, this.Provider)
 		);
 	}
 
@@ -106,7 +107,7 @@ export class Farms extends Caller {
 				new FarmsStakedPosition(
 					pool,
 					undefined,
-					this.network,
+					this.config,
 					this.Provider
 				)
 		);

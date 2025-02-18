@@ -1,5 +1,5 @@
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork } from "../../types";
+import { CallerConfig, SuiNetwork } from "../../types";
 import { AftermathApi } from "../../general/providers";
 import { ApiMultisigUserBody } from "./multisigTypes";
 
@@ -9,10 +9,10 @@ export class Multisig extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "multisig");
+		super(config, "multisig");
 	}
 
 	// =========================================================================

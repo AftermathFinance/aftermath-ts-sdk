@@ -23,6 +23,7 @@ import {
 	PerpetualsAccountObject,
 	IFixed,
 	MoveErrorCode,
+	CallerConfig,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -42,8 +43,8 @@ export class Perpetuals extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
-		super(network, "perpetuals");
+	constructor(config?: CallerConfig) {
+		super(config, "perpetuals");
 	}
 
 	// =========================================================================
@@ -58,7 +59,7 @@ export class Perpetuals extends Caller {
 			`${collateralCoinType}/markets`
 		);
 		return marketDatas.map(
-			(marketData) => new PerpetualsMarket(marketData, this.network)
+			(marketData) => new PerpetualsMarket(marketData, this.config)
 		);
 	}
 
@@ -69,7 +70,7 @@ export class Perpetuals extends Caller {
 		const marketData = await this.fetchApi<PerpetualsMarketData>(
 			`${inputs.collateralCoinType}/markets/${inputs.marketId}`
 		);
-		return new PerpetualsMarket(marketData, this.network);
+		return new PerpetualsMarket(marketData, this.config);
 	}
 
 	public async getMarkets(inputs: {
@@ -94,7 +95,7 @@ export class Perpetuals extends Caller {
 		const account = await this.fetchApi<PerpetualsAccountObject>(
 			`${accountCap.collateralCoinType}/accounts/${accountCap.accountId}`
 		);
-		return new PerpetualsAccount(account, accountCap, this.network);
+		return new PerpetualsAccount(account, accountCap, this.config);
 	}
 
 	public async getUserAccountCaps(

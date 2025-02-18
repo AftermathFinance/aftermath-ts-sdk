@@ -11,6 +11,7 @@ import {
 	ApiNftAmmSellBody,
 	Url,
 	ObjectId,
+	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Pool } from "../pools";
@@ -36,12 +37,12 @@ export class NftAmmMarket extends Caller {
 
 	constructor(
 		public readonly market: NftAmmMarketObject,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, `nft-amm/markets/${market.objectId}`);
+		super(config, `nft-amm/markets/${market.objectId}`);
 		this.market = market;
-		this.pool = new Pool(market.pool, network);
+		this.pool = new Pool(market.pool, config);
 	}
 
 	// =========================================================================

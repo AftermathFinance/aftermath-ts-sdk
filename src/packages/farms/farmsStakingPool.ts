@@ -1,6 +1,7 @@
 import {
 	Apr,
 	Balance,
+	CallerConfig,
 	CoinType,
 	CoinsToDecimals,
 	CoinsToPrice,
@@ -38,10 +39,10 @@ export class FarmsStakingPool extends Caller {
 
 	constructor(
 		public stakingPool: FarmsStakingPoolObject,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "farms");
+		super(config, "farms");
 		this.stakingPool = stakingPool;
 		// this.emitRewards();
 	}
@@ -55,13 +56,13 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 
 	public async getTVL(): Promise<number> {
-		return new Farms(this.network, this.Provider).getTVL({
+		return new Farms(this.config, this.Provider).getTVL({
 			farmIds: [this.stakingPool.objectId],
 		});
 	}
 
 	public async getRewardsTVL(): Promise<number> {
-		return new Farms(this.network, this.Provider).getRewardsTVL({
+		return new Farms(this.config, this.Provider).getRewardsTVL({
 			farmIds: [this.stakingPool.objectId],
 		});
 	}

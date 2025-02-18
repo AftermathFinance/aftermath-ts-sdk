@@ -21,6 +21,7 @@ import {
 	SuiAddress,
 	ObjectId,
 	PoolCoin,
+	CallerConfig,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -55,10 +56,10 @@ export class Pool extends Caller {
 	 */
 	constructor(
 		public readonly pool: PoolObject,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, `pools/${pool.objectId}`);
+		super(config, `pools/${pool.objectId}`);
 		this.pool = pool;
 	}
 

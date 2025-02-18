@@ -27,10 +27,11 @@ export class NftAmmApiCasting {
 
 		const pool = PoolsApiCasting.poolObjectFromSuiObject(fields.pool);
 
-		const fractionalizedCoinType = new Coin(fields.supply.type)
-			.innerCoinType;
+		const fractionalizedCoinType = Coin.getInnerCoinType(
+			fields.supply.type
+		);
 
-		const innerMarketTypes = new Coin(marketType).innerCoinType;
+		const innerMarketTypes = Coin.getInnerCoinType(marketType);
 		const genericTypes = innerMarketTypes.replaceAll(" ", "").split(",");
 
 		const assetCoinType = genericTypes[2];

@@ -21,6 +21,7 @@ import {
 	PoolLpInfo,
 	SuiAddress,
 	ApiIndexerEventsBody,
+	CallerConfig,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -91,10 +92,10 @@ export class Pools extends Caller {
 	 */
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "pools");
+		super(config, "pools");
 	}
 
 	// =========================================================================
@@ -113,7 +114,7 @@ export class Pools extends Caller {
 	 */
 	public async getPool(inputs: { objectId: ObjectId }) {
 		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
-		return new Pool(pool, this.network, this.Provider);
+		return new Pool(pool, this.config, this.Provider);
 	}
 
 	/**
@@ -131,7 +132,7 @@ export class Pools extends Caller {
 		>("", {
 			poolIds: inputs.objectIds,
 		});
-		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
+		return pools.map((pool) => new Pool(pool, this.config, this.Provider));
 	}
 
 	/**
@@ -140,7 +141,7 @@ export class Pools extends Caller {
 	 */
 	public async getAllPools() {
 		const pools: PoolObject[] = await this.fetchApi("", {});
-		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
+		return pools.map((pool) => new Pool(pool, this.config, this.Provider));
 	}
 
 	public async getOwnedLpCoins(inputs: {
@@ -318,7 +319,7 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
-		new Coin(lpCoinType).coinTypeSymbol
+		Coin.getCoinTypeSymbol(lpCoinType)
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")

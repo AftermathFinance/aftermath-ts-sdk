@@ -71,6 +71,12 @@ export type ServiceCoinData =
 	| { Result: number }
 	| { NestedResult: [number, number] };
 
+export type ServiceCoinDataV2 =
+	| "gas"
+	| { input: number }
+	| { result: number }
+	| { result: [number, number] };
+
 export type CoinTransactionObjectArgumentV0 =
 	| {
 			kind: "Input";

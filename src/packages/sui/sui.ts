@@ -1,6 +1,6 @@
 import { SuiSystemStateSummary } from "@mysten/sui/client";
 import { Caller } from "../../general/utils/caller";
-import { SuiNetwork, Url } from "../../types";
+import { CallerConfig, SuiNetwork, Url } from "../../types";
 import { AftermathApi } from "../../general/providers";
 
 export class Sui extends Caller {
@@ -25,10 +25,10 @@ export class Sui extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "sui");
+		super(config, "sui");
 	}
 
 	// =========================================================================
