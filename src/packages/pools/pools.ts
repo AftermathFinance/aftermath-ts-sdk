@@ -18,6 +18,10 @@ import {
 	PoolStats,
 	ApiPoolsStatsBody,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
+	PoolLpInfo,
+	SuiAddress,
+	ApiIndexerEventsBody,
+	CallerConfig,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -88,10 +92,10 @@ export class Pools extends Caller {
 	 */
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		public readonly Provider?: AftermathApi
 	) {
-		super(network, "pools");
+		super(config, "pools");
 	}
 
 	// =========================================================================
@@ -110,7 +114,7 @@ export class Pools extends Caller {
 	 */
 	public async getPool(inputs: { objectId: ObjectId }) {
 		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
-		return new Pool(pool, this.network, this.Provider);
+		return new Pool(pool, this.config, this.Provider);
 	}
 
 	/**
@@ -123,10 +127,12 @@ export class Pools extends Caller {
 		const pools = await this.fetchApi<
 			PoolObject[],
 			{
-				objectIds: ObjectId[];
+				poolIds: ObjectId[];
 			}
-		>("objects", inputs);
-		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
+		>("", {
+			poolIds: inputs.objectIds,
+		});
+		return pools.map((pool) => new Pool(pool, this.config, this.Provider));
 	}
 
 	/**
@@ -134,8 +140,14 @@ export class Pools extends Caller {
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of Pool objects.
 	 */
 	public async getAllPools() {
-		const pools = await this.fetchApi<PoolObject[]>("");
-		return pools.map((pool) => new Pool(pool, this.network, this.Provider));
+		const pools: PoolObject[] = await this.fetchApi("", {});
+		return pools.map((pool) => new Pool(pool, this.config, this.Provider));
+	}
+
+	public async getOwnedLpCoins(inputs: {
+		walletAddress: SuiAddress;
+	}): Promise<PoolLpInfo> {
+		return this.fetchApi("owned-lp-coins", inputs);
 	}
 
 	// =========================================================================
@@ -157,7 +169,7 @@ export class Pools extends Caller {
 	 * @returns A Promise that resolves to the transaction data.
 	 */
 	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
-		return this.useProvider().fetchCreatePoolTx(inputs);
+		return this.fetchApiTransaction("transactions/create-pool", inputs);
 	}
 
 	// =========================================================================
@@ -218,6 +230,10 @@ export class Pools extends Caller {
 		return this.fetchApi("volume-24hrs");
 	};
 
+	public async getTVL(inputs?: { poolIds?: ObjectId[] }): Promise<number> {
+		return this.fetchApi("tvl", inputs ?? {});
+	}
+
 	/**
 	 * Fetches statistics for pools.
 	 * @async
@@ -233,6 +249,23 @@ export class Pools extends Caller {
 		inputs: ApiPoolsOwnedDaoFeePoolOwnerCapsBody
 	) {
 		return this.useProvider().fetchOwnedDaoFeePoolOwnerCaps(inputs);
+	}
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async getInteractionEvents(
+		inputs: ApiIndexerEventsBody & {
+			walletAddress: SuiAddress;
+		}
+	) {
+		return this.fetchApiIndexerEvents<
+			PoolDepositEvent | PoolWithdrawEvent,
+			ApiIndexerEventsBody & {
+				walletAddress: SuiAddress;
+			}
+		>("interaction-events-by-user", inputs);
 	}
 
 	// =========================================================================
@@ -286,7 +319,7 @@ export class Pools extends Caller {
 	// =========================================================================
 
 	public static displayLpCoinType = (lpCoinType: CoinType): string =>
-		new Coin(lpCoinType).coinTypeSymbol
+		Coin.getCoinTypeSymbol(lpCoinType)
 			.toLowerCase()
 			.replace("af_lp_", "")
 			.split("_")

@@ -13,6 +13,7 @@ import {
 	AnyObjectType,
 	ObjectId,
 	SuiAddress,
+	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import dayjs from "dayjs";
@@ -26,12 +27,12 @@ export class SuiFren extends Caller {
 
 	constructor(
 		public readonly suiFren: SuiFrenObject,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		public readonly isStaked: boolean = false,
 		public readonly isOwned: boolean = false,
 		public readonly Provider?: AftermathApi
 	) {
-		super(network, "sui-frens");
+		super(config, "sui-frens");
 	}
 
 	// =========================================================================
@@ -39,7 +40,7 @@ export class SuiFren extends Caller {
 	// =========================================================================
 
 	public suiFrenType(): AnyObjectType {
-		return new Coin(this.suiFren.objectType).innerCoinType;
+		return Coin.getInnerCoinType(this.suiFren.objectType);
 	}
 
 	public properties(): Record<string, string> {
@@ -80,7 +81,7 @@ export class SuiFren extends Caller {
 	public clone(): SuiFren {
 		return new SuiFren(
 			this.suiFren,
-			this.network,
+			this.config,
 			this.isStaked,
 			this.isOwned
 		);

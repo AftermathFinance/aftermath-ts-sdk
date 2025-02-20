@@ -9,6 +9,7 @@ import {
 	Timestamp,
 	TransactionDigest,
 } from "../../../types";
+import { DcaFailedTradeReason } from "../dcaTypes";
 
 // =========================================================================
 // Objects
@@ -109,6 +110,14 @@ export type DcaIndexerOrderResponse = {
 	max_amount_out: BigIntAsString;
 	next_execution_timestamp_ms: string;
 	trades: DcaIndexerOrderTradeResponse[];
+	failed: DcaIndexerOrderFailedTradeResponse[];
+	integrator_fee_bps: number;
+	integrator_fee_recipient: SuiAddress;
+};
+
+export type DcaIndexerOrderFailedTradeResponse = {
+	timestamp_ms: Timestamp;
+	reason: DcaFailedTradeReason | undefined;
 };
 
 export type DcaIndexerOrderTradeResponse = {
@@ -140,6 +149,8 @@ export type DcaIndexerOrderCreateRequest = {
 		min_amount_out: string;
 		max_amount_out: string;
 		number_of_trades: number;
+		integrator_fee_bps: number;
+		integrator_fee_recipient: SuiAddress;
 	};
 };
 

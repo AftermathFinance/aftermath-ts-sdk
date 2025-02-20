@@ -27,10 +27,13 @@ import {
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 // import { Scallop } from "@scallop-io/sui-scallop-sdk";
-import { IndexerSwapVolumeResponse } from "../types/castingTypes";
 import { Coin } from "../..";
 import { MoveErrors } from "../types/moveErrorsInterface";
 import { isValidSuiAddress } from "@mysten/sui/utils";
+import { decodeSuiPrivateKey, Keypair } from "@mysten/sui/cryptography";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
+import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
 
 /**
  * A utility class containing various helper functions for general use.
@@ -346,8 +349,8 @@ export class Helpers {
 
 	public static getObjectType(data: SuiObjectResponse): ObjectId {
 		const objectType = data.data?.type;
-		// NOTE: should `Helpers.addLeadingZeroesToType` be used here ?
-		if (objectType) return objectType;
+		// NOTE: should `Helpers.addLeadingZeroesToType` not be used here ?
+		if (objectType) return Helpers.addLeadingZeroesToType(objectType);
 
 		throw new Error("no object type found on " + data.data?.objectId);
 	}
@@ -423,50 +426,6 @@ export class Helpers {
 	// 		Query,
 	// 	};
 	// }
-
-	// =========================================================================
-	//  Indexer Calculations
-	// =========================================================================
-
-	/**
-	 * Calculates the total volume in USD.
-	 *
-	 * @param inputs - The input parameters for the calculation.
-	 * @param inputs.volumes - Swap volumes.
-	 * @param inputs.coinsToPrice - The mapping of coin types to their respective prices.
-	 * @param inputs.coinsToDecimals - The mapping of coin types to their respective decimal places.
-	 * @returns The total volume in USD.
-	 */
-	public static calcIndexerVolumeUsd = (inputs: {
-		volumes: IndexerSwapVolumeResponse;
-		coinsToPrice: CoinsToPrice;
-		coinsToDecimals: CoinsToDecimals;
-	}): number => {
-		const { volumes, coinsToPrice, coinsToDecimals } = inputs;
-		return volumes.reduce((acc, data) => {
-			const coinInPrice = coinsToPrice[data.coinTypeIn];
-			if (coinInPrice > 0) {
-				const decimals = coinsToDecimals[data.coinTypeIn];
-				const tradeAmount = Coin.balanceWithDecimals(
-					data.totalAmountIn,
-					decimals
-				);
-
-				const amountUsd = tradeAmount * coinInPrice;
-				return acc + amountUsd;
-			}
-
-			const coinOutPrice = coinsToPrice[data.coinTypeOut];
-			const decimals = coinsToDecimals[data.coinTypeOut];
-			const tradeAmount = Coin.balanceWithDecimals(
-				data.totalAmountOut,
-				decimals
-			);
-
-			const amountUsd = coinInPrice < 0 ? 0 : tradeAmount * coinOutPrice;
-			return acc + amountUsd;
-		}, 0);
-	};
 
 	public static isValidSuiAddress = (address: SuiAddress) =>
 		isValidSuiAddress(
@@ -617,4 +576,23 @@ export class Helpers {
 			],
 		};
 	}
+
+	// =========================================================================
+	//  Keypair
+	// =========================================================================
+
+	public static keypairFromPrivateKey = (privateKey: string): Keypair => {
+		const parsedKeypair = decodeSuiPrivateKey(privateKey);
+		return parsedKeypair.schema === "ED25519"
+			? Ed25519Keypair.fromSecretKey(parsedKeypair.secretKey)
+			: parsedKeypair.schema === "Secp256k1"
+			? Secp256k1Keypair.fromSecretKey(parsedKeypair.secretKey)
+			: parsedKeypair.schema === "Secp256r1"
+			? Secp256r1Keypair.fromSecretKey(parsedKeypair.secretKey)
+			: (() => {
+					throw new Error(
+						`unsupported schema \`${parsedKeypair.schema}\``
+					);
+			  })();
+	};
 }

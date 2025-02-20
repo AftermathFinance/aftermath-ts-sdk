@@ -100,6 +100,70 @@ export type PartialFarmsStakedPositionObject = Omit<
 //  Events
 // =========================================================================
 
+export type FarmEvent =
+	| FarmsAddedRewardEvent
+	| FarmsCreatedVaultEvent
+	| FarmsDepositedPrincipalEvent
+	| FarmsDestroyedStakedPositionEvent
+	| FarmsHarvestedRewardsEvent
+	| FarmsIncreasedEmissionsEvent
+	| FarmsInitializedRewardEvent
+	| FarmsJoinedEvent
+	| FarmsLockedEvent
+	| FarmsSplitEvent
+	| FarmsStakedEvent
+	| FarmsStakedRelaxedEvent
+	| FarmsUnlockedEvent
+	| FarmsWithdrewPrincipalEvent;
+
+export type FarmUserEvent =
+	| FarmsDepositedPrincipalEvent
+	| FarmsHarvestedRewardsEvent
+	| FarmsLockedEvent
+	| FarmsStakedEvent
+	| FarmsUnlockedEvent
+	| FarmsWithdrewPrincipalEvent;
+// | FarmsDestroyedStakedPositionEvent
+// | FarmsJoinedEvent
+// | FarmsSplitEvent
+// | FarmsStakedRelaxedEvent
+
+export const isFarmsDepositedPrincipalEvent = (
+	event: FarmUserEvent
+): event is FarmsDepositedPrincipalEvent => {
+	return event.type.toLowerCase().includes("::depositedprincipalevent");
+};
+
+export const isFarmsHarvestedRewardsEvent = (
+	event: FarmUserEvent
+): event is FarmsHarvestedRewardsEvent => {
+	return event.type.toLowerCase().includes("::harvestedrewardsevent");
+};
+
+export const isFarmsLockedEvent = (
+	event: FarmUserEvent
+): event is FarmsLockedEvent => {
+	return event.type.toLowerCase().includes("::lockedevent");
+};
+
+export const isFarmsStakedEvent = (
+	event: FarmUserEvent
+): event is FarmsStakedEvent => {
+	return event.type.toLowerCase().includes("::stakedevent");
+};
+
+export const isFarmsUnlockedEvent = (
+	event: FarmUserEvent
+): event is FarmsUnlockedEvent => {
+	return event.type.toLowerCase().includes("::unlockedevent");
+};
+
+export const isFarmsWithdrewPrincipalEvent = (
+	event: FarmUserEvent
+): event is FarmsWithdrewPrincipalEvent => {
+	return event.type.toLowerCase().includes("::withdrewprincipalevent");
+};
+
 export interface FarmsAddedRewardEvent extends Event {
 	vaultId: ObjectId;
 	rewardType: CoinType;

@@ -1,13 +1,13 @@
 import { Caller } from "../../general/utils/caller";
-import { CoinSymbol, ObjectId, SuiNetwork, Url } from "../../types";
+import { CallerConfig, ObjectId, SuiNetwork, Url } from "../../types";
 
 export class Oracle extends Caller {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
-		super(network, "oracle");
+	constructor(config?: CallerConfig) {
+		super(config, "oracle");
 	}
 
 	// =========================================================================

@@ -10,54 +10,34 @@ import { TransactionsApiHelpers } from "../apiHelpers/transactionsApiHelpers";
 import { SuiApi } from "../../packages/sui/api/suiApi";
 import { WalletApi } from "../wallet/walletApi";
 import { RouterApi } from "../../packages/router/api/routerApi";
-import { PlaceholderPricesApi } from "../prices/placeholder/placeholderPricesApi";
 import { SuiFrensApi } from "../../packages/suiFrens/api/suiFrensApi";
 import { StakingApi } from "../../packages/staking/api/stakingApi";
 import { NftAmmApi } from "../../packages/nftAmm/api/nftAmmApi";
 import { ReferralVaultApi } from "../../packages/referralVault/api/referralVaultApi";
 import {
-	CoinType,
 	ModuleName,
 	MoveErrorCode,
 	ObjectId,
-	RouterProtocolName,
 	// ScallopProviders,
 	UniqueId,
-	Url,
 } from "../../types";
-import { HistoricalDataApi } from "../historicalData/historicalDataApi";
-import { CoinGeckoPricesApi } from "../prices/coingecko/coinGeckoPricesApi";
-import { PlaceholderHistoricalDataApi } from "../historicalData/placeholderHistoricalDataApi";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { OracleApi } from "../../packages/oracle/api/oracleApi";
-import { CoinGeckoCoinApiId } from "../prices/coingecko/coinGeckoTypes";
-// import { PriceFeedsApi } from "../priceFeeds/priceFeedsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
-import { Helpers, IndexerCaller } from "../utils";
 import { SuiClient } from "@mysten/sui/client";
 import { SuiClient as SuiClientV0 } from "@mysten/sui.js/client";
 import { DcaApi } from "../../packages/dca/api/dcaApi";
-import { DynamicGasApi } from "../dynamicGas/dynamicGasApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
+import { Helpers } from "../utils";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
-import { RouterPricesApi } from "../prices/router/routerPricesApi";
-// import { MultisigApi } from "../../packages/multisig/api/multisigApi";
+import { MultisigApi } from "../../packages/multisig/api/multisigApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
  * @class
  */
 export class AftermathApi {
-	private cache: Record<
-		UniqueId,
-		{
-			data: unknown;
-			expirationMs: number;
-			lastUsed: number;
-		}
-	>;
-
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
@@ -95,23 +75,13 @@ export class AftermathApi {
 	 * Creates an instance of AftermathApi.
 	 * @param provider - The SuiClient instance to use for interacting with the blockchain.
 	 * @param addresses - The configuration addresses for the Aftermath protocol.
-	 * @param indexerCaller - The IndexerCaller instance to use for querying the blockchain.
-	 * @param coinGeckoApiKey - (Optional) The API key to use for querying CoinGecko for token prices.
+	 * @param providerV0 - The SuiClient instance to use for interacting with the blockchain.
 	 */
 	public constructor(
 		public readonly provider: SuiClient,
 		public readonly addresses: ConfigAddresses,
-		public readonly indexerCaller: IndexerCaller,
-		private readonly config?: {
-			prices?: {
-				coinGeckoApiKey?: string;
-				coinApiIdsToCoinTypes?: Record<CoinGeckoCoinApiId, CoinType[]>;
-			};
-		},
 		public readonly providerV0?: SuiClientV0
-	) {
-		this.cache = {};
-	}
+	) {}
 
 	// =========================================================================
 	//  Class Object Creation
@@ -132,29 +102,7 @@ export class AftermathApi {
 	// =========================================================================
 
 	public Wallet = () => new WalletApi(this);
-	public DynamicGas = () => new DynamicGasApi(this);
 	public Nfts = () => new NftsApi(this);
-
-	public Prices = this?.config?.prices?.coinGeckoApiKey
-		? // ? () =>
-		  // 		new CoinGeckoPricesApi(
-		  // 			this,
-		  // 			this?.config?.prices?.coinGeckoApiKey ?? "",
-		  // 			this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
-		  // 		)
-		  () => new RouterPricesApi(this)
-		: () => new PlaceholderPricesApi();
-
-	public HistoricalData = this?.config?.prices?.coinGeckoApiKey
-		? () =>
-				new HistoricalDataApi(
-					this,
-					this?.config?.prices?.coinGeckoApiKey ?? "",
-					this?.config?.prices?.coinApiIdsToCoinTypes ?? {}
-				)
-		: () => new PlaceholderHistoricalDataApi();
-
-	// public PriceFeeds = new PriceFeedsApi(this.pythPriceServiceEndpoint);
 
 	// =========================================================================
 	//  General Packages
@@ -177,7 +125,7 @@ export class AftermathApi {
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
 	public Dca = () => new DcaApi(this);
-	// public Multisig = () => new MultisigApi(this);
+	public Multisig = () => new MultisigApi(this);
 
 	/**
 	 * Creates a new instance of the RouterApi class.
@@ -232,85 +180,5 @@ export class AftermathApi {
 		}
 
 		return undefined;
-	};
-
-	// =========================================================================
-	//  Cache
-	// =========================================================================
-
-	public withCache = <Input, Output>(inputs: {
-		key: string;
-		expirationSeconds: number; // < 0 means never expires
-		callback: (...inputs: Input[]) => Promise<Output>;
-	}): ((...inputs: Input[]) => Promise<Output>) => {
-		const { key, expirationSeconds, callback } = inputs;
-
-		const fetchFunc = async (...inputs: Input[]): Promise<Output> => {
-			// this allows BigInt to be JSON serialized (as string)
-			(BigInt.prototype as any).toJSON = function () {
-				return this.toString() + "n";
-			};
-
-			const cachedData = this.getCache<Input, Output>({ key, inputs });
-			if (cachedData !== "NO_CACHED_DATA") {
-				return cachedData;
-			}
-
-			const newData = await callback(...inputs);
-
-			this.setCache({
-				key,
-				expirationSeconds,
-				inputs,
-				data: newData,
-			});
-			return newData;
-		};
-
-		return fetchFunc;
-	};
-
-	public setCache = <Input, Output>(inputs: {
-		key: string;
-		expirationSeconds: number; // < 0 means never expires
-		data: Output;
-		inputs: Input[];
-	}) => {
-		const cacheKey = this.getCacheKey(inputs);
-
-		this.cache[cacheKey] = {
-			data: inputs.data,
-			lastUsed: Date.now(),
-			expirationMs: inputs.expirationSeconds * 1000, // convert to ms
-		};
-	};
-
-	public getCache = <Input, Output>(inputs: {
-		key: string;
-		inputs: Input[];
-	}): Output | "NO_CACHED_DATA" => {
-		const cacheKey = this.getCacheKey(inputs);
-
-		if (
-			cacheKey in this.cache &&
-			(this.cache[cacheKey].lastUsed +
-				this.cache[cacheKey].expirationMs >=
-				Date.now() ||
-				this.cache[cacheKey].expirationMs < 0)
-		) {
-			return this.cache[cacheKey].data as Output;
-		}
-		return "NO_CACHED_DATA";
-	};
-
-	private getCacheKey = <Input, Output>(inputs: {
-		key: string;
-		inputs: Input[];
-	}) => {
-		// this allows BigInt to be JSON serialized (as string)
-		(BigInt.prototype as any).toJSON = function () {
-			return this.toString() + "n";
-		};
-		return `${inputs.key}_${JSON.stringify(inputs.inputs)}`; // TODO: hash me
 	};
 }

@@ -20,6 +20,8 @@ import {
 	Percentage,
 	SuiAddress,
 	ObjectId,
+	PoolCoin,
+	CallerConfig,
 } from "../../types";
 import { CmmmCalculations } from "./utils/cmmmCalculations";
 import { Caller } from "../../general/utils/caller";
@@ -50,14 +52,14 @@ export class Pool extends Caller {
 	 * Creates a new instance of the Pool class.
 	 * @constructor
 	 * @param {PoolObject} pool - The pool object.
-	 * @param {SuiNetwork} [network] - The network to use.
+	 * @param {SuiNetwork} [config] - The config to use.
 	 */
 	constructor(
 		public readonly pool: PoolObject,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		public readonly Provider?: AftermathApi
 	) {
-		super(network, `pools/${pool.objectId}`);
+		super(config, `pools/${pool.objectId}`);
 		this.pool = pool;
 	}
 
@@ -216,47 +218,19 @@ export class Pool extends Caller {
 		return this.fetchApi("volume-24hrs");
 	};
 
-	/**
-	 * Fetches the deposit events for the pool.
-	 * @async
-	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
-	 * @returns {Promise<IndexerEventsWithCursor<PoolDepositEvent>>} The deposit events for the pool.
-	 */
-	public async getDepositEvents(inputs: ApiIndexerEventsBody) {
-		return this.fetchApiIndexerEvents<PoolDepositEvent>(
-			"events/deposit",
-			inputs
-		);
-	}
+	// =========================================================================
+	//  Events
+	// =========================================================================
 
-	/**
-	 * Fetches the withdraw events for the pool.
-	 * @async
-	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
-	 * @returns {Promise<IndexerEventsWithCursor<PoolWithdrawEvent>>} The withdraw events for the pool.
-	 */
-	public async getWithdrawEvents(
-		inputs: ApiIndexerEventsBody
-	): Promise<IndexerEventsWithCursor<PoolWithdrawEvent>> {
-		return this.fetchApiIndexerEvents<PoolWithdrawEvent>(
-			"events/withdraw",
-			inputs
-		);
-	}
-
-	/**
-	 * Fetches the trade events for the pool.
-	 * @async
-	 * @param {ApiIndexerEventsBody} inputs - The inputs for the method.
-	 * @returns {Promise<IndexerEventsWithCursor<PoolTradeEvent>>} The trade events for the pool.
-	 */
-	public async getTradeEvents(
-		inputs: ApiIndexerEventsBody
-	): Promise<IndexerEventsWithCursor<PoolTradeEvent>> {
-		return this.fetchApiIndexerEvents<PoolTradeEvent>(
-			"events/trade",
-			inputs
-		);
+	public async getInteractionEvents(
+		inputs: ApiIndexerEventsBody & {
+			walletAddress: SuiAddress;
+		}
+	) {
+		return this.fetchApiIndexerEvents<
+			PoolDepositEvent | PoolWithdrawEvent,
+			ApiIndexerEventsBody
+		>("interaction-events-by-user", inputs);
 	}
 
 	// =========================================================================
@@ -604,6 +578,22 @@ export class Pool extends Caller {
 	// =========================================================================
 	//  Getters
 	// =========================================================================
+
+	public coins = (): CoinType[] => {
+		return Object.keys(this.pool.coins).sort((a, b) => a.localeCompare(b));
+	};
+
+	public poolCoins = (): PoolCoin[] => {
+		return Object.entries(this.pool.coins)
+			.sort((a, b) => a[0].localeCompare(b[0]))
+			.map((data) => data[1]);
+	};
+
+	public poolCoinEntries = (): [CoinType, PoolCoin][] => {
+		return Object.entries(this.pool.coins).sort((a, b) =>
+			a[0].localeCompare(b[0])
+		);
+	};
 
 	public daoFeePercentage = (): Percentage | undefined => {
 		return this.pool.daoFeePoolObject

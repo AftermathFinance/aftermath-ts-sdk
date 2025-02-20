@@ -12,6 +12,7 @@ import {
 	ObjectId,
 	SerializedTransaction,
 	ServiceCoinData,
+	ServiceCoinDataV2,
 	SuiAddress,
 	TransactionDigest,
 	TransactionsWithCursor,
@@ -250,6 +251,38 @@ export class TransactionsApiHelpers {
 		return { [coinTxArg.$kind]: coinTxArg.Input };
 	};
 
+	public static serviceCoinDataV2FromCoinTxArg = (inputs: {
+		coinTxArg: TransactionObjectArgument | Argument;
+	}): ServiceCoinDataV2 => {
+		const { coinTxArg } = inputs;
+
+		if (!("$kind" in coinTxArg)) {
+			if ("Result" in coinTxArg) return { result: coinTxArg.Result };
+
+			if ("NestedResult" in coinTxArg)
+				return { result: coinTxArg.NestedResult };
+
+			if ("GasCoin" in coinTxArg) return "gas";
+
+			if ("Input" in coinTxArg) return { input: coinTxArg.Input };
+
+			// TODO: handle this case better
+			throw new Error(`coinTxArg in format ${coinTxArg} not supported`);
+		}
+
+		if (coinTxArg.$kind === "NestedResult")
+			return {
+				result: coinTxArg.NestedResult,
+			};
+
+		if (coinTxArg.$kind === "Result") return { result: coinTxArg.Result };
+
+		if (coinTxArg.$kind === "GasCoin") return "gas";
+
+		// Input
+		return { input: coinTxArg.Input };
+	};
+
 	public static serviceCoinDataFromCoinTxArgV0 = (inputs: {
 		coinTxArg: CoinTransactionObjectArgumentV0 | ObjectId;
 	}): ServiceCoinData => {
@@ -299,6 +332,45 @@ export class TransactionsApiHelpers {
 		return {
 			Result: Object.values(serviceCoinData)[0],
 		};
+	};
+
+	public static coinTxArgFromServiceCoinDataV2 = (inputs: {
+		serviceCoinDataV2: ServiceCoinDataV2;
+	}): TransactionObjectArgument => {
+		const { serviceCoinDataV2 } = inputs;
+
+		if (typeof serviceCoinDataV2 === "string") {
+			return { GasCoin: true };
+		}
+
+		const key = Object.keys(serviceCoinDataV2)[0];
+		const value: number | [number, number] =
+			Object.values(serviceCoinDataV2)[0];
+
+		// TODO: handle this cleaner ?
+		const kind = key as "input" | "result";
+
+		if (kind === "result") {
+			if (typeof value === "number") {
+				return {
+					Result: value,
+				};
+			}
+			return {
+				NestedResult: value,
+			};
+		}
+		if (kind === "input" && typeof value === "number") {
+			return {
+				Input: value,
+			};
+		}
+
+		throw new Error(
+			`serviceCoinDataV2 format ${JSON.stringify(
+				serviceCoinDataV2
+			)} not supported`
+		);
 	};
 
 	public static coinTxArgFromServiceCoinDataV0 = (inputs: {

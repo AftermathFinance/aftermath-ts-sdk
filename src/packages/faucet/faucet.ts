@@ -1,12 +1,14 @@
 import {
 	ApiFaucetMintSuiFrenBody,
 	ApiFaucetRequestBody,
+	CallerConfig,
 	CoinType,
 	SuiNetwork,
 	Url,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
+import { Transaction } from "@mysten/sui/transactions";
 
 export class Faucet extends Caller {
 	// =========================================================================
@@ -22,10 +24,10 @@ export class Faucet extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork | Url,
+		config?: CallerConfig,
 		public readonly Provider?: AftermathApi
 	) {
-		super(network, "faucet");
+		super(config, "faucet");
 	}
 
 	// =========================================================================
@@ -40,7 +42,7 @@ export class Faucet extends Caller {
 	//  Events
 	// =========================================================================
 
-	// TODO: add mint coin event getter
+	// TODO: add mint coin event getter ?
 
 	// =========================================================================
 	//  Transactions

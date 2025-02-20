@@ -14,6 +14,8 @@ import {
 	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
 	ModuleName,
 	Slippage,
+	ApiIndexerEventsBody,
+	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Transaction } from "@mysten/sui/transactions";
@@ -52,8 +54,8 @@ export class Router extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Router` instance
 	 */
-	constructor(public readonly network?: SuiNetwork) {
-		super(network, "router");
+	constructor(config?: CallerConfig) {
+		super(config, "router");
 	}
 
 	// =========================================================================
@@ -202,7 +204,10 @@ export class Router extends Caller {
 	//  Events
 	// =========================================================================
 
-	public async getTradeEvents(inputs: ApiRouterTradeEventsBody) {
-		return this.fetchApiEvents<RouterTradeEvent>("events/trade", inputs);
+	public async getInteractionEvents(inputs: ApiRouterTradeEventsBody) {
+		return this.fetchApiIndexerEvents<
+			RouterTradeEvent,
+			ApiRouterTradeEventsBody
+		>("events-by-user", inputs);
 	}
 }

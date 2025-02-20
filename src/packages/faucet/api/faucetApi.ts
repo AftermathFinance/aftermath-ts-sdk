@@ -184,6 +184,7 @@ export class FaucetApi {
 	//  Events
 	// =========================================================================
 
+	// TODO: add to indexer
 	public fetchMintCoinEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetMintCoinEventOnChain,
@@ -197,6 +198,7 @@ export class FaucetApi {
 				FaucetApiCasting.faucetMintCoinEventFromOnChain,
 		});
 
+	// TODO: add to indexer
 	public fetchAddCoinEvents = async (inputs: EventsInputs) =>
 		await this.Provider.Events().fetchCastEventsWithCursor<
 			FaucetAddCoinEventOnChain,

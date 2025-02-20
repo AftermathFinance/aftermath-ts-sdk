@@ -10,6 +10,7 @@ import {
 	Url,
 	ObjectId,
 	SuiAddress,
+	CallerConfig,
 } from "../../types";
 import { SuiFren } from "./suiFren";
 import { Caller } from "../../general/utils/caller";
@@ -28,12 +29,12 @@ export class StakedSuiFren extends Caller {
 
 	constructor(
 		public readonly info: StakedSuiFrenInfo,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		public readonly isOwned: boolean = false,
 		public readonly Provider?: AftermathApi
 	) {
-		super(network, "sui-frens");
-		this.suiFren = new SuiFren(info.suiFren, this.network, true, isOwned);
+		super(config, "sui-frens");
+		this.suiFren = new SuiFren(info.suiFren, this.config, true, isOwned);
 	}
 
 	// =========================================================================
@@ -51,7 +52,7 @@ export class StakedSuiFren extends Caller {
 	public clone(): StakedSuiFren {
 		return new StakedSuiFren(
 			this.info,
-			this.network,
+			this.config,
 			this.isOwned,
 			this.Provider
 		);

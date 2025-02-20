@@ -134,7 +134,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			clearingHouse: "clearing_house",
 			account: "account",
 		},
-		defaultLimitStepSize: 256,
 	};
 
 	public readonly addresses: PerpetualsAddresses;

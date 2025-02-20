@@ -1,20 +1,20 @@
 import { SuiNetwork } from "../types/suiTypes";
 import { CoinSymbol, CoinType } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
-import { Url } from "../types";
+import { CallerConfig, Url } from "../types";
 import { CoinHistoricalData } from "./historicalDataTypes";
 import {
 	CoinGeckoCoinData,
 	CoinGeckoCoinSymbolData,
-} from "../prices/coingecko/coinGeckoTypes";
+} from "../prices/coinGeckoTypes";
 
 export class HistoricalData extends Caller {
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
 
-	constructor(public readonly network?: SuiNetwork) {
-		super(network, "historical-data");
+	constructor(config?: CallerConfig) {
+		super(config, "historical-data");
 	}
 
 	// =========================================================================

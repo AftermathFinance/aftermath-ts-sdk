@@ -1,6 +1,12 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { NftAmmMarketObject, ObjectId, SuiNetwork, Url } from "../../types";
+import {
+	CallerConfig,
+	NftAmmMarketObject,
+	ObjectId,
+	SuiNetwork,
+	Url,
+} from "../../types";
 import { NftAmmMarket } from "./nftAmmMarket";
 
 export class NftAmm extends Caller {
@@ -15,10 +21,10 @@ export class NftAmm extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		public readonly Provider?: AftermathApi
 	) {
-		super(network, "nft-amm");
+		super(config, "nft-amm");
 	}
 
 	// =========================================================================
@@ -33,7 +39,7 @@ export class NftAmm extends Caller {
 		const market = await this.fetchApi<NftAmmMarketObject>(
 			`markets/${inputs.objectId}`
 		);
-		return new NftAmmMarket(market, this.network);
+		return new NftAmmMarket(market, this.config);
 	}
 
 	public async getMarkets(inputs: { objectIds: ObjectId[] }) {
@@ -45,7 +51,7 @@ export class NftAmm extends Caller {
 
 	public async getAllMarkets() {
 		const markets = await this.fetchApi<NftAmmMarketObject[]>("markets");
-		return markets.map((pool) => new NftAmmMarket(pool, this.network));
+		return markets.map((pool) => new NftAmmMarket(pool, this.config));
 	}
 
 	// =========================================================================

@@ -65,6 +65,13 @@ export const isSuiDelegatedStake = (
 	);
 };
 
+export interface StakingApyDataPoint {
+	timestamp: Timestamp;
+	apy: number;
+}
+
+export type StakingApyTimeframeKey = "1W" | "1M" | "3M" | "6M" | "1Y" | "ALL";
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -216,6 +223,8 @@ export interface ApiUpdateValidatorFeeBody {
 
 export interface ApiStakingPositionsBody {
 	walletAddress: SuiAddress;
+	cursor?: number;
+	limit?: number;
 }
 
 export interface ApiDelegatedStakesBody {

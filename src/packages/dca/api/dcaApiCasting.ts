@@ -5,7 +5,7 @@ import {
 	DcaExecutedTradeEvent,
 	DcaOrderObject,
 	DcaOrderTradeObject,
-	DcaOrdertStrategyObject,
+	DcaOrderStrategyData,
 } from "../dcaTypes";
 import {
 	DcaClosedOrderEventOnChain,
@@ -15,6 +15,7 @@ import {
 	DcaIndexerOrderTradeResponse,
 } from "./dcaApiCastingTypes";
 import { Balance, CoinType } from "../../../types";
+import { Sui } from "../../sui";
 
 export class DcaApiCasting {
 	// =========================================================================
@@ -118,7 +119,7 @@ export class DcaApiCasting {
 		const outputCoinType = Helpers.addLeadingZeroesToType(
 			String(response.coin_buy)
 		);
-		const strategy: DcaOrdertStrategyObject | undefined =
+		const strategy: DcaOrderStrategyData | undefined =
 			BigInt(response.min_amount_out) === BigInt(0) &&
 			BigInt(response.max_amount_out) === Casting.u64MaxBigInt
 				? undefined
@@ -166,6 +167,21 @@ export class DcaApiCasting {
 				  }
 				: undefined;
 
+		const failed = response.failed.map((element) => {
+			return {
+				timestamp: element.timestamp_ms,
+				reason: element.reason,
+			};
+		});
+
+		const integratorFeeRecipient =
+			response.integrator_fee_recipient.length === 0 ||
+			response.integrator_fee_recipient === Sui.constants.addresses.zero
+				? undefined
+				: Helpers.addLeadingZeroesToType(
+						response.integrator_fee_recipient
+				  );
+
 		return {
 			objectId: Helpers.addLeadingZeroesToType(response.order_object_id),
 			overview: {
@@ -199,7 +215,14 @@ export class DcaApiCasting {
 							tnxDigest: lastTrade.digest,
 					  }
 					: undefined,
+				integratorFee: !integratorFeeRecipient
+					? undefined
+					: {
+							feeBps: response.integrator_fee_bps,
+							feeRecipient: integratorFeeRecipient,
+					  },
 			},
+			failed: failed,
 			trades: tradesPrepared,
 		};
 	};

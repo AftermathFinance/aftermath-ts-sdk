@@ -23,6 +23,7 @@ import {
 	PerpetualsAccountObject,
 	IFixed,
 	MoveErrorCode,
+	CallerConfig,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -45,10 +46,10 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		public readonly Provider?: AftermathApi
 	) {
-		super(network, "perpetuals");
+		super(config, "perpetuals");
 	}
 
 	// =========================================================================
@@ -65,7 +66,7 @@ export class Perpetuals extends Caller {
 			}
 		>("all-markets", inputs);
 		return marketDatas.map(
-			(marketData) => new PerpetualsMarket(marketData, this.network)
+			(marketData) => new PerpetualsMarket(marketData, this.config)
 		);
 	}
 
@@ -103,7 +104,7 @@ export class Perpetuals extends Caller {
 		return marketDatas.map(
 			(marketData) =>
 				// TODO: make orderbook as input
-				new PerpetualsMarket(marketData.market, this.network)
+				new PerpetualsMarket(marketData.market, this.config)
 		);
 	}
 
@@ -151,7 +152,7 @@ export class Perpetuals extends Caller {
 				new PerpetualsAccount(
 					account,
 					accountCaps[index],
-					this.network,
+					this.config,
 					this.Provider
 				)
 		);
@@ -205,7 +206,7 @@ export class Perpetuals extends Caller {
 		// TODO: move logic into endpoint
 		const [rawAccountCaps, collateralMetadata] = await Promise.all([
 			this.useProvider().fetchOwnedRawAccountCapsOfType(inputs),
-			new Coin(undefined, this.network, this.Provider).getCoinMetadata(
+			new Coin(undefined, this.config, this.Provider).getCoinMetadata(
 				collateralCoinType
 			),
 			// { decimals: 9 },
