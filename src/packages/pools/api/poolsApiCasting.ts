@@ -145,7 +145,6 @@ export class PoolsApiCasting {
 		return {
 			poolId: fields.pool_id,
 			depositor: fields.issuer,
-			// TODO: create a function for all this 0x nonsense
 			types: fields.types.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),

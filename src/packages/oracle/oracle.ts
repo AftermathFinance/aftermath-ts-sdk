@@ -19,7 +19,7 @@ export class Oracle extends Caller {
 	// =========================================================================
 
 	public async getPrice(inputs: { priceFeedId: ObjectId }): Promise<number> {
-		return this.fetchApi(`price/${inputs.priceFeedId}`);
+		return this.fetchApi(`${inputs.priceFeedId}/price`);
 	}
 
 	public async getPrices(inputs: {

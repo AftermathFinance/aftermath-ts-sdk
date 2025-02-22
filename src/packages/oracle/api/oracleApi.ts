@@ -1,11 +1,26 @@
 import { Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../../general/providers";
 import { Casting, Helpers } from "../../../general/utils";
-import { ObjectId, OracleAddresses } from "../../../types";
+import { AnyObjectType, ObjectId, OracleAddresses } from "../../../types";
 import { Sui } from "../../sui";
+import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 
 export class OracleApi {
+	// =========================================================================
+	//  Class Members
+	// =========================================================================
+
+	private static readonly constants = {
+		moduleNames: {
+			events: "events",
+		},
+	};
+
 	public readonly addresses: OracleAddresses;
+
+	public readonly eventTypes: {
+		updatedPriceFeed: AnyObjectType;
+	};
 
 	// =========================================================================
 	//  Constructor
@@ -19,7 +34,30 @@ export class OracleApi {
 			);
 
 		this.addresses = addresses;
+		this.eventTypes = {
+			updatedPriceFeed: this.eventType("UpdatedPriceFeed"),
+		};
 	}
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
+
+	public fetchPrice = async (inputs: {
+		priceFeedId: ObjectId;
+	}): Promise<number> => {
+		const tx = new Transaction();
+
+		this.getPriceTx({ ...inputs, tx });
+
+		const priceBytes =
+			await this.Provider.Inspections().fetchFirstBytesFromTxOutput({
+				tx,
+			});
+
+		const price = Casting.bigIntFromBytes(priceBytes);
+		return Casting.IFixed.numberFromIFixed(price);
+	};
 
 	// =========================================================================
 	//  Transaction Commands
@@ -46,4 +84,19 @@ export class OracleApi {
 			],
 		});
 	};
+
+	// =========================================================================
+	//  Private
+	// =========================================================================
+
+	// =========================================================================
+	//  Event Types
+	// =========================================================================
+
+	private eventType = (eventName: string) =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.events,
+			OracleApi.constants.moduleNames.events,
+			eventName
+		);
 }

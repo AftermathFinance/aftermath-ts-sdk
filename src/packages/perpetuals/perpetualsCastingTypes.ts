@@ -3,12 +3,15 @@ import {
 	AnyObjectType,
 	BigIntAsString,
 	Byte,
+	CoinSymbol,
 	IdAsStringBytes,
 	IFixedAsBytes,
 	IFixedAsString,
 	IFixedAsStringBytes,
 	ObjectId,
 	PerpetualsMarketId,
+	PerpetualsOrderId,
+	PerpetualsOrderIdAsString,
 	SuiAddress,
 } from "../../types";
 
@@ -19,6 +22,7 @@ import {
 /// Used to dynamically load market objects as needed.
 /// Used to dynamically load traders' position objects as needed.
 export interface PerpetualsMarketDataIndexerResponse {
+	pkg_id: IdAsStringBytes;
 	initial_shared_version: BigIntAsString;
 	object: {
 		id: {
@@ -28,6 +32,25 @@ export interface PerpetualsMarketDataIndexerResponse {
 		market_params: PerpetualsMarketParamsFieldsIndexerReponse;
 		market_state: PerpetualsMarketStateFieldsIndexerReponse;
 	};
+}
+
+export interface PerpetualsOrderbookIndexerResponse {
+	asks: Record<
+		PerpetualsOrderIdAsString,
+		{
+			account_id: BigIntAsString;
+			size: BigIntAsString;
+		}
+	>;
+	bids: Record<
+		PerpetualsOrderIdAsString,
+		{
+			account_id: BigIntAsString;
+			size: BigIntAsString;
+		}
+	>;
+	asks_size: BigIntAsString;
+	bids_size: BigIntAsString;
 }
 
 /// Static attributes of a perpetuals market.
@@ -177,24 +200,48 @@ export type PerpetualsAccountPositionsIndexerResponse = [
 	IFixedAsStringBytes // leverage
 ][];
 
-export type PerpetualsPreviewOrderIndexerResponse = {
-	position: PerpetualsPositionIndexerResponse;
-	price_slippage: IFixedAsStringBytes;
-	percent_slippage: IFixedAsStringBytes;
-	execution_price: IFixedAsStringBytes;
-	size_filled: IFixedAsStringBytes;
-	collateral_change: IFixedAsStringBytes;
-	position_found: boolean;
-	size_posted?: IFixedAsStringBytes;
-};
-// | {
-// 		error: string;
-//   };
+export type PerpetualsPreviewOrderIndexerResponse =
+	| {
+			position: PerpetualsPositionIndexerResponse;
+			price_slippage: IFixedAsStringBytes;
+			percent_slippage: IFixedAsStringBytes;
+			execution_price: IFixedAsStringBytes;
+			size_filled: IFixedAsStringBytes;
+			collateral_change: IFixedAsStringBytes;
+			position_found: boolean;
+			size_posted?: IFixedAsStringBytes;
+	  }
+	| {
+			error: string;
+	  };
+
+export type PerpetualsPreviewCancelOrdersIndexerResponse =
+	| {
+			position: PerpetualsPositionIndexerResponse;
+			collateral_change: IFixedAsStringBytes;
+	  }
+	| {
+			error: string;
+	  };
+
+export type PerpetualsPreviewReduceOrdersIndexerResponse =
+	| {
+			position: PerpetualsPositionIndexerResponse;
+			collateral_change: IFixedAsStringBytes;
+	  }
+	| {
+			error: string;
+	  };
 
 export type PerpetualsMarketsIndexerResponse = Record<
 	PerpetualsMarketId,
-	PerpetualsMarketDataIndexerResponse
+	[PerpetualsMarketDataIndexerResponse, CoinSymbol]
 >;
+
+export type PerpetualsMarketIndexerResponse = {
+	ch: [PerpetualsMarketDataIndexerResponse, CoinSymbol];
+	orderbook: PerpetualsOrderbookIndexerResponse;
+};
 
 // =========================================================================
 //  Events
@@ -203,6 +250,11 @@ export type PerpetualsMarketsIndexerResponse = Record<
 // =========================================================================
 //  Collateral
 // =========================================================================
+
+export type UpdatedMarketVersionEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	version: BigIntAsString;
+}>;
 
 export type WithdrewCollateralEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
@@ -317,6 +369,13 @@ export type PostedOrderReceiptEventOnChain = EventOnChain<{
 	order_size: BigIntAsString;
 }>;
 
+export type ReducedOrderEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	account_id: BigIntAsString;
+	size_change: BigIntAsString;
+	order_id: BigIntAsString;
+}>;
+
 // =========================================================================
 //  Twap
 // =========================================================================
@@ -335,4 +394,15 @@ export type UpdatedSpreadTwapEventOnChain = EventOnChain<{
 	index_price: IFixedAsString;
 	spread_twap: IFixedAsString;
 	spread_twap_last_upd_ms: BigIntAsString;
+}>;
+
+// =========================================================================
+//  Funding
+// =========================================================================
+
+export type UpdatedFundingEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	cum_funding_rate_long: IFixedAsString;
+	cum_funding_rate_short: IFixedAsString;
+	funding_last_upd_ms: BigIntAsString;
 }>;

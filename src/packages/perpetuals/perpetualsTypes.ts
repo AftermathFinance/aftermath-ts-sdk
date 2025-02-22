@@ -10,6 +10,7 @@ import {
 	ObjectDigest,
 	ObjectId,
 	ObjectVersion,
+	PackageId,
 	Percentage,
 	SuiAddress,
 	Timestamp,
@@ -24,6 +25,7 @@ import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
 export type PerpetualsMarketId = ObjectId;
 export type PerpetualsAccountId = bigint;
 export type PerpetualsOrderId = bigint;
+export type PerpetualsOrderIdAsString = string;
 export type PerpetualsOrderPrice = bigint;
 
 // =========================================================================
@@ -101,6 +103,7 @@ const Vault = bcs.struct("Vault", {
 });
 
 export interface PerpetualsMarketData {
+	packageId: PackageId;
 	objectId: ObjectId;
 	initialSharedVersion: ObjectVersion;
 	collateralCoinType: CoinType;
@@ -199,17 +202,17 @@ export interface PerpetualsMarketParams {
 export interface PerpetualsMarketState {
 	cumFundingRateLong: IFixed;
 	cumFundingRateShort: IFixed;
-	fundingLastUpdMs: Timestamp;
+	fundingLastUpdateMs: Timestamp;
 	premiumTwap: IFixed;
-	premiumTwapLastUpdMs: Timestamp;
+	premiumTwapLastUpdateMs: Timestamp;
 	spreadTwap: IFixed;
-	spreadTwapLastUpdMs: Timestamp;
+	spreadTwapLastUpdateMs: Timestamp;
 	openInterest: IFixed;
 	feesAccrued: IFixed;
 }
 
 export interface PerpetualsMarketCandleDataPoint {
-	timestamp: Timestamp;
+	time: Timestamp;
 	high: number;
 	low: number;
 	open: number;
@@ -221,20 +224,44 @@ export interface PerpetualsMarketCandleDataPoint {
 //  Orderbook
 // =========================================================================
 
-export interface OrderbookDataPoint {
-	price: number;
-	size: number;
-	totalSize: number;
-	sizeUsd: number;
-	totalSizeUsd: number;
+export interface PerpetualsOrderbook {
+	bids: Record<
+		PerpetualsOrderIdAsString,
+		{
+			accountId: PerpetualsAccountId;
+			size: number;
+			price: number;
+		}
+	>;
+	asks: Record<
+		PerpetualsOrderIdAsString,
+		{
+			accountId: PerpetualsAccountId;
+			size: number;
+			price: number;
+		}
+	>;
+	asksTotalSize: number;
+	bidsTotalSize: number;
+	bestBidPrice: number | undefined;
+	bestAskPrice: number | undefined;
+	midPrice: number | undefined;
 }
 
-export interface PerpetualsOrderbookState {
-	bids: OrderbookDataPoint[];
-	asks: OrderbookDataPoint[];
-	minAskPrice: number;
-	maxBidPrice: number;
-}
+// export interface OrderbookDataPoint {
+// 	price: number;
+// 	size: number;
+// 	totalSize: number;
+// 	sizeUsd: number;
+// 	totalSizeUsd: number;
+// }
+
+// export interface PerpetualsOrderbookState {
+// 	bids: OrderbookDataPoint[];
+// 	asks: OrderbookDataPoint[];
+// 	minAskPrice: number;
+// 	maxBidPrice: number;
+// }
 
 export interface PerpetualsOrderData {
 	orderId: PerpetualsOrderId;
@@ -249,28 +276,28 @@ export interface PerpetualsFilledOrderData {
 	price: number;
 }
 
-export interface PerpetualsOrderbook extends Object {
-	asks: PerpetualsOrderedMap<PerpetualsOrder>;
-	bids: PerpetualsOrderedMap<PerpetualsOrder>;
-	counter: bigint;
-}
+// export interface PerpetualsOrderbook extends Object {
+// 	asks: PerpetualsOrderedMap<PerpetualsOrder>;
+// 	bids: PerpetualsOrderedMap<PerpetualsOrder>;
+// 	counter: bigint;
+// }
 
-const Order = bcs.struct("Order", {
-	accountId: bcs.u64(),
-	size: bcs.u64(),
-});
+// const Order = bcs.struct("Order", {
+// 	accountId: bcs.u64(),
+// 	size: bcs.u64(),
+// });
 
-const Orderbook = bcs.struct("Orderbook", {
-	id: bcs.Address,
-	asks: PerpetualsMap(Order),
-	bids: PerpetualsMap(Order),
-	counter: bcs.u64(),
-});
+// const Orderbook = bcs.struct("Orderbook", {
+// 	id: bcs.Address,
+// 	asks: PerpetualsMap(Order),
+// 	bids: PerpetualsMap(Order),
+// 	counter: bcs.u64(),
+// });
 
-export interface PerpetualsOrder {
-	accountId: PerpetualsAccountId;
-	size: bigint;
-}
+// export interface PerpetualsOrder {
+// 	accountId: PerpetualsAccountId;
+// 	size: bigint;
+// }
 
 export interface PerpetualsOrderInfo {
 	price: PerpetualsOrderPrice;
@@ -282,58 +309,58 @@ const OrderInfo = bcs.struct("OrderInfo", {
 	size: bcs.u64(),
 });
 
-export interface PerpetualsOrderedMap<T> extends Object {
-	size: bigint;
-	counter: bigint;
-	root: bigint;
-	first: bigint;
-	branchMin: bigint;
-	branchMax: bigint;
-	leafMin: bigint;
-	leafMax: bigint;
-	branchesMergeMax: bigint;
-	leavesMergeMax: bigint;
-}
+// export interface PerpetualsOrderedMap<T> extends Object {
+// 	size: bigint;
+// 	counter: bigint;
+// 	root: bigint;
+// 	first: bigint;
+// 	branchMin: bigint;
+// 	branchMax: bigint;
+// 	leafMin: bigint;
+// 	leafMax: bigint;
+// 	branchesMergeMax: bigint;
+// 	leavesMergeMax: bigint;
+// }
 
-function PerpetualsMap<T extends BcsType<any>>(T: T) {
-	return bcs.struct("Map", {
-		id: bcs.Address,
-		size: bcs.u64(),
-		counter: bcs.u64(),
-		root: bcs.u64(),
-		first: bcs.u64(),
-		branchMin: bcs.u64(),
-		branchMax: bcs.u64(),
-		leafMin: bcs.u64(),
-		leafMax: bcs.u64(),
-		branchesMergeMax: bcs.u64(),
-		leavesMergeMax: bcs.u64(),
-	});
-}
+// function PerpetualsMap<T extends BcsType<any>>(T: T) {
+// 	return bcs.struct("Map", {
+// 		id: bcs.Address,
+// 		size: bcs.u64(),
+// 		counter: bcs.u64(),
+// 		root: bcs.u64(),
+// 		first: bcs.u64(),
+// 		branchMin: bcs.u64(),
+// 		branchMax: bcs.u64(),
+// 		leafMin: bcs.u64(),
+// 		leafMax: bcs.u64(),
+// 		branchesMergeMax: bcs.u64(),
+// 		leavesMergeMax: bcs.u64(),
+// 	});
+// }
 
-export interface PerpetualsBranch {
-	keys: bigint[];
-	kids: bigint[];
-}
+// export interface PerpetualsBranch {
+// 	keys: bigint[];
+// 	kids: bigint[];
+// }
 
-export const Branch = bcs.struct("Branch", {
-	keys: bcs.vector(bcs.u128()),
-	kids: bcs.vector(bcs.u64()),
-});
+// export const Branch = bcs.struct("Branch", {
+// 	keys: bcs.vector(bcs.u128()),
+// 	kids: bcs.vector(bcs.u64()),
+// });
 
-export interface PerpetualsLeaf<V> {
-	keys: bigint[];
-	vals: V[];
-	next: bigint;
-}
+// export interface PerpetualsLeaf<V> {
+// 	keys: bigint[];
+// 	vals: V[];
+// 	next: bigint;
+// }
 
-export function Leaf<V extends BcsType<any>>(V: V) {
-	return bcs.struct("Leaf", {
-		keys: bcs.vector(bcs.u128()),
-		vals: bcs.vector(V),
-		next: bcs.u64(),
-	});
-}
+// export function Leaf<V extends BcsType<any>>(V: V) {
+// 	return bcs.struct("Leaf", {
+// 		keys: bcs.vector(bcs.u128()),
+// 		vals: bcs.vector(V),
+// 		next: bcs.u64(),
+// 	});
+// }
 
 export interface PerpetualsAccountData {
 	accountCap: PerpetualsAccountCap;
@@ -349,6 +376,21 @@ export interface PerpetualsAccountObject {
 // =========================================================================
 
 // =========================================================================
+//  Version
+// =========================================================================
+
+export interface UpdatedMarketVersionEvent extends Event {
+	marketId: PerpetualsMarketId;
+	version: bigint;
+}
+
+export const isUpdatedMarketVersion = (
+	event: Event
+): event is UpdatedMarketVersionEvent => {
+	return event.type.toLowerCase().endsWith("::updatedclearinghouseversion");
+};
+
+// =========================================================================
 //  Collateral
 // =========================================================================
 
@@ -357,47 +399,25 @@ export interface PerpetualsAccountCollateralChangesWithCursor {
 	nextCursor: Timestamp | undefined;
 }
 
-export type PerpetualsCollateralEventName =
-	| "Withdraw"
-	| "Deposit"
-	| "Allocate"
-	| "Deallocate"
-	| "SettleFunding"
-	| "Liquidated"
-	| "FilledTaker"
-	| "FilledMaker";
-
 export type PerpetualsAccountCollateralChange = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
-	// marketId: PerpetualsMarketId;
-	eventName: PerpetualsCollateralEventName;
-} & (
-	| {
-			collateralChange: Balance;
-	  }
-	| {
-			collateralChangeUsd: number;
-	  }
-);
+	marketId: PerpetualsMarketId | undefined;
+	eventType: AnyObjectType;
+	collateralChange: number;
+	collateralChangeUsd: number;
+};
 
 export interface PerpetualsAccountTradesWithCursor {
 	trades: PerpetualsAccountTrade[];
 	nextCursor: Timestamp | undefined;
 }
 
-export type PerpetualsTradeEventName =
-	| "Canceled"
-	| "Posted"
-	| "FilledMaker"
-	| "FilledTaker"
-	| "Liquidated";
-
 export type PerpetualsAccountTrade = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
 	marketId: PerpetualsMarketId;
-	eventName: PerpetualsTradeEventName;
+	eventType: AnyObjectType;
 	side: PerpetualsOrderSide;
 } & (
 	| {
@@ -595,7 +615,8 @@ export type PerpetualsOrderEvent =
 	| PostedOrderReceiptEvent
 	| FilledMakerOrderEvent
 	| FilledTakerOrderEvent
-	| LiquidatedEvent;
+	| LiquidatedEvent
+	| ReducedOrderEvent;
 
 export interface PostedOrderReceiptEvent extends Event {
 	accountId: PerpetualsAccountId;
@@ -603,6 +624,13 @@ export interface PostedOrderReceiptEvent extends Event {
 	orderId: PerpetualsOrderId;
 	size: bigint;
 	side: PerpetualsOrderSide;
+}
+
+export interface ReducedOrderEvent extends Event {
+	marketId: PerpetualsMarketId;
+	accountId: PerpetualsAccountId;
+	sizeChange: bigint;
+	orderId: PerpetualsOrderId;
 }
 
 // TODO: make all these checks use string value from perps api
@@ -635,6 +663,12 @@ export const isFilledTakerOrderEvent = (
 	return event.type.toLowerCase().endsWith("::filledtakerorder");
 };
 
+export const isReducedOrderEvent = (
+	event: Event
+): event is ReducedOrderEvent => {
+	return event.type.toLowerCase().endsWith("::reducedorder");
+};
+
 // =========================================================================
 //  Twap
 // =========================================================================
@@ -659,6 +693,35 @@ export type PerpetualsTwapEvent =
 	| UpdatedPremiumTwapEvent
 	| UpdatedSpreadTwapEvent;
 
+export const isUpdatedPremiumTwapEvent = (
+	event: Event
+): event is UpdatedPremiumTwapEvent => {
+	return event.type.toLowerCase().endsWith("::updatedpremiumtwap");
+};
+
+export const isUpdatedSpreadTwapEvent = (
+	event: Event
+): event is UpdatedSpreadTwapEvent => {
+	return event.type.toLowerCase().endsWith("::updatedspreadtwap");
+};
+
+// =========================================================================
+//  Funding
+// =========================================================================
+
+export interface UpdatedFundingEvent extends Event {
+	marketId: PerpetualsMarketId;
+	cumFundingRateLong: IFixed;
+	cumFundingRateShort: IFixed;
+	fundingLastUpdateMs: Timestamp;
+}
+
+export const isUpdatedFundingEvent = (
+	event: Event
+): event is UpdatedFundingEvent => {
+	return event.type.toLowerCase().endsWith("::updatedfunding");
+};
+
 // =========================================================================
 //  API
 // =========================================================================
@@ -676,14 +739,10 @@ export interface ApiPerpetualsAccountsBody {
 // =========================================================================
 
 export type ApiPerpetualsAccountOrderHistoryBody =
-	ApiDataWithCursorBody<Timestamp> & {
-		accountCapId: ObjectId;
-	};
+	ApiDataWithCursorBody<Timestamp>;
 
 export type ApiPerpetualsAccountCollateralHistoryBody =
-	ApiDataWithCursorBody<Timestamp> & {
-		accountCapId: ObjectId;
-	};
+	ApiDataWithCursorBody<Timestamp>;
 
 export interface ApiPerpetualsSetPositionLeverageBody {
 	walletAddress: SuiAddress;
@@ -727,6 +786,37 @@ export type ApiPerpetualsPreviewOrderBody = (
 	// isClose?: boolean;
 };
 
+export interface ApiPerpetualsPreviewCancelOrdersBody {
+	accountId: PerpetualsAccountId;
+	// TODO: remove eventually ?
+	collateralCoinType: CoinType;
+	marketIdsToData: Record<
+		PerpetualsMarketId,
+		{
+			orderIds: PerpetualsOrderId[];
+			leverage: number;
+		}
+	>;
+}
+export interface ApiPerpetualsPreviewReduceOrdersBody {
+	marketId: PerpetualsMarketId;
+	accountId: PerpetualsAccountId;
+	leverage: number;
+	orderIds: PerpetualsOrderId[];
+	sizesToSubtract: bigint[];
+	// TODO: remove eventually ?
+	collateralCoinType: CoinType;
+}
+
+export type ApiPerpetualsPreviewReduceOrdersResponse =
+	| {
+			error: string;
+	  }
+	| {
+			positionAfterReduceOrders: PerpetualsPosition;
+			collateralChange: number;
+	  };
+
 export type ApiPerpetualsPreviewOrderResponse =
 	| {
 			error: string;
@@ -743,12 +833,24 @@ export type ApiPerpetualsPreviewOrderResponse =
 			executionPrice: number;
 	  };
 
-export interface ApiPerpetualsOrderbookStateBody {
-	orderbookPrice: number;
-	lotSize: number;
-	tickSize: number;
-	priceBucketSize: number;
-}
+export type ApiPerpetualsPreviewCancelOrdersResponse =
+	| {
+			error: string;
+	  }
+	| {
+			marketIdsToPositionAfterCancelOrders: Record<
+				PerpetualsMarketId,
+				PerpetualsPosition
+			>;
+			collateralChange: number;
+	  };
+
+// export interface ApiPerpetualsOrderbookStateBody {
+// 	orderbookPrice: number;
+// 	lotSize: number;
+// 	tickSize: number;
+// 	priceBucketSize: number;
+// }
 
 export interface ApiPerpetualsExecutionPriceBody {
 	side: PerpetualsOrderSide;
@@ -778,7 +880,6 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 }
 
 export interface ApiPerpetualsAccountOrderDatasBody {
-	accountCapId: ObjectId;
 	orderDatas: {
 		orderId: PerpetualsOrderId;
 		currentSize: bigint;
@@ -817,6 +918,28 @@ export interface ApiPerpetualsTransferCollateralBody {
 	amount: Balance;
 }
 
+export interface ApiPerpetualsAllocateCollateralBody {
+	walletAddress: SuiAddress;
+	packageId: PackageId;
+	collateralCoinType: CoinType;
+	accountCapId: ObjectId;
+	marketId: PerpetualsMarketId;
+	marketInitialSharedVersion: ObjectVersion;
+	amount: Balance;
+}
+
+export interface ApiPerpetualsDeallocateCollateralBody {
+	walletAddress: SuiAddress;
+	packageId: PackageId;
+	collateralCoinType: CoinType;
+	accountCapId: ObjectId;
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
+	marketId: PerpetualsMarketId;
+	marketInitialSharedVersion: ObjectVersion;
+	amount: Balance;
+}
+
 export interface ApiPerpetualsMarketOrderBody {
 	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
@@ -844,13 +967,14 @@ export interface ApiPerpetualsLimitOrderBody {
 }
 
 export interface ApiPerpetualsCancelOrderBody {
+	packageId: PackageId;
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	marketId: PerpetualsMarketId;
 	marketInitialSharedVersion: ObjectVersion;
 	orderId: PerpetualsOrderId;
-	collateral: Balance;
+	collateralChange: Balance;
 	basePriceFeedId: ObjectId;
 	collateralPriceFeedId: ObjectId;
 }
@@ -860,13 +984,28 @@ export interface ApiPerpetualsCancelOrdersBody {
 	collateralCoinType: CoinType;
 	accountCapId: ObjectId;
 	orderDatas: {
+		packageId: PackageId;
 		orderId: PerpetualsOrderId;
 		marketId: PerpetualsMarketId;
 		marketInitialSharedVersion: ObjectVersion;
-		collateral: Balance;
+		collateralChange: Balance;
 		basePriceFeedId: ObjectId;
 		collateralPriceFeedId: ObjectId;
 	}[];
+}
+
+export interface ApiPerpetualsReduceOrdersBody {
+	walletAddress: SuiAddress;
+	packageId: PackageId;
+	collateralCoinType: CoinType;
+	accountCapId: ObjectId;
+	marketId: PerpetualsMarketId;
+	marketInitialSharedVersion: ObjectVersion;
+	orderIds: PerpetualsOrderId[];
+	sizesToSubtract: bigint[];
+	basePriceFeedId: ObjectId;
+	collateralPriceFeedId: ObjectId;
+	collateralChange: Balance;
 }
 
 export type ApiPerpetualsSLTPOrderBody = (
@@ -935,15 +1074,15 @@ export const perpetualsRegistry = {
 	Account,
 	AdminCapability,
 	BalanceStruct,
-	Branch,
+	// Branch,
 	Coin,
 	Field,
-	Leaf,
+	// Leaf,
 	MarketKey,
-	Order,
-	Orderbook,
+	// Order,
+	// Orderbook,
 	OrderInfo,
-	PerpetualsMap,
+	// PerpetualsMap,
 	Position,
 	PositionKey,
 	Registry,

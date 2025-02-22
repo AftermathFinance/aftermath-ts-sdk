@@ -29,7 +29,7 @@ import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Casting } from "../../general/utils";
+import { Casting, Helpers } from "../../general/utils";
 import { PerpetualsOrderUtils } from "./utils";
 
 export class Perpetuals extends Caller {

@@ -14,6 +14,7 @@ import {
 	ExternalFee,
 	IFixedAsString,
 	IFixed,
+	ApiIndexerEventsBody,
 } from "../../general/types/generalTypes";
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
@@ -183,6 +184,7 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 */
 	slippage: Slippage;
 	isSponsoredTx?: boolean;
+	customRecipient?: SuiAddress;
 }
 
 export type ApiRouterAddTransactionForCompleteTradeRouteBody =
@@ -207,7 +209,7 @@ export interface ApiRouterAddTransactionForCompleteTradeRouteV0Response {
 	coinOutId: TransactionObjectArgumentV0 | undefined;
 }
 
-export type ApiRouterTradeEventsBody = ApiEventsBody & {
+export type ApiRouterTradeEventsBody = ApiIndexerEventsBody & {
 	walletAddress: SuiAddress;
 };
 

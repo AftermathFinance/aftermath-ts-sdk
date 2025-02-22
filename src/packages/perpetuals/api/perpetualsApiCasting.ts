@@ -2,8 +2,6 @@ import { SuiObjectResponse } from "@mysten/sui/client";
 import {
 	PerpetualsMarketState,
 	PerpetualsOrderbook,
-	PerpetualsOrder,
-	PerpetualsOrderedMap,
 	PerpetualsMarketParams,
 	PerpetualsAccountObject,
 	PerpetualsPosition,
@@ -28,6 +26,11 @@ import {
 	AllocatedCollateralEvent,
 	DeallocatedCollateralEvent,
 	PerpetualsMarketId,
+	PerpetualsOrderIdAsString,
+	PerpetualsAccountId,
+	UpdatedFundingEvent,
+	UpdatedMarketVersionEvent,
+	ReducedOrderEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -53,6 +56,10 @@ import {
 	PerpetualsAccountPositionsIndexerResponse,
 	PerpetualsPositionIndexerResponse,
 	PerpetualsMarketDataIndexerResponse,
+	PerpetualsOrderbookIndexerResponse,
+	UpdatedFundingEventOnChain,
+	UpdatedMarketVersionEventOnChain,
+	ReducedOrderEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
 import { BigIntAsString, ObjectDigest, ObjectVersion } from "../../../types";
@@ -193,6 +200,7 @@ export class PerpetualsApiCasting {
 		baseAssetSymbol: CoinSymbol
 	): PerpetualsMarketData {
 		return {
+			packageId: Casting.addressFromStringBytes(data.pkg_id),
 			objectId: Casting.addressFromStringBytes(data.object.id.id),
 			initialSharedVersion: Number(data.initial_shared_version),
 			collateralCoinType,
@@ -260,13 +268,13 @@ export class PerpetualsApiCasting {
 			cumFundingRateShort: Casting.IFixed.iFixedFromStringBytes(
 				data.cum_funding_rate_short
 			),
-			fundingLastUpdMs: Number(data.funding_last_upd_ms),
+			fundingLastUpdateMs: Number(data.funding_last_upd_ms),
 			premiumTwap: Casting.IFixed.iFixedFromStringBytes(
 				data.premium_twap
 			),
-			premiumTwapLastUpdMs: Number(data.premium_twap_last_upd_ms),
+			premiumTwapLastUpdateMs: Number(data.premium_twap_last_upd_ms),
 			spreadTwap: Casting.IFixed.iFixedFromStringBytes(data.spread_twap),
-			spreadTwapLastUpdMs: Number(data.spread_twap_last_upd_ms),
+			spreadTwapLastUpdateMs: Number(data.spread_twap_last_upd_ms),
 			openInterest: Casting.IFixed.iFixedFromStringBytes(
 				data.open_interest
 			),
@@ -279,6 +287,97 @@ export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Orderbook
 	// =========================================================================
+
+	public static orderbookFromIndexerResponse(
+		data: PerpetualsOrderbookIndexerResponse,
+		lotSize: bigint,
+		tickSize: bigint
+	): PerpetualsOrderbook {
+		const partialOrderbook = {
+			asks: Object.entries(data.asks).reduce(
+				(acc, [orderId, order]) => ({
+					...acc,
+					[orderId]: {
+						accountId: BigInt(order.account_id),
+						size:
+							Number(order.size) *
+							Perpetuals.lotOrTickSizeToNumber(lotSize),
+						price: Perpetuals.orderPriceToPrice({
+							orderPrice: Perpetuals.OrderUtils.price(
+								BigInt(orderId)
+							),
+							lotSize,
+							tickSize,
+						}),
+					},
+				}),
+				{} as Record<
+					PerpetualsOrderIdAsString,
+					{
+						accountId: PerpetualsAccountId;
+						size: number;
+						price: number;
+					}
+				>
+			),
+			bids: Object.entries(data.bids).reduce(
+				(acc, [orderId, order]) => ({
+					...acc,
+					[orderId]: {
+						accountId: BigInt(order.account_id),
+						size:
+							Number(order.size) *
+							Perpetuals.lotOrTickSizeToNumber(lotSize),
+						price: Perpetuals.orderPriceToPrice({
+							orderPrice: Perpetuals.OrderUtils.price(
+								BigInt(orderId)
+							),
+							lotSize,
+							tickSize,
+						}),
+					},
+				}),
+				{} as Record<
+					PerpetualsOrderIdAsString,
+					{
+						accountId: PerpetualsAccountId;
+						size: number;
+						price: number;
+					}
+				>
+			),
+			asksTotalSize:
+				Number(data.asks_size) *
+				Perpetuals.lotOrTickSizeToNumber(lotSize),
+			bidsTotalSize:
+				Number(data.bids_size) *
+				Perpetuals.lotOrTickSizeToNumber(lotSize),
+		};
+
+		const bids = Object.values(partialOrderbook.bids);
+		const asks = Object.values(partialOrderbook.asks);
+
+		const bestBidPrice =
+			bids.length <= 0
+				? undefined
+				: Math.max(...bids.map((order) => order.price));
+		const bestAskPrice =
+			asks.length <= 0
+				? undefined
+				: Math.min(...asks.map((order) => order.price));
+
+		const midPrice =
+			bestBidPrice === undefined || bestAskPrice === undefined
+				? undefined
+				: (bestBidPrice + bestAskPrice) / 2;
+
+		return {
+			...partialOrderbook,
+			bestBidPrice,
+			bestAskPrice,
+			midPrice,
+		};
+	}
 
 	public static orderbookPriceFromBytes = (bytes: number[]): number => {
 		const unwrapped = bcs.option(bcs.u256()).parse(new Uint8Array(bytes));
@@ -297,6 +396,23 @@ export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Events
 	// =========================================================================
+
+	// =========================================================================
+	//  Updated Version
+	// =========================================================================
+
+	public static UpdatedMarketVersionEventFromOnChain = (
+		eventOnChain: UpdatedMarketVersionEventOnChain
+	): UpdatedMarketVersionEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+			version: BigInt(fields.version),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
 
 	// =========================================================================
 	//  Collateral
@@ -526,6 +642,21 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	public static reducedOrderEventFromOnChain = (
+		eventOnChain: ReducedOrderEventOnChain
+	): ReducedOrderEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			accountId: BigInt(fields.account_id),
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+			sizeChange: BigInt(fields.size_change),
+			orderId: BigInt(fields.order_id),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
 	// =========================================================================
 	//  Twap
 	// =========================================================================
@@ -556,6 +687,25 @@ export class PerpetualsApiCasting {
 			indexPrice: BigInt(fields.index_price),
 			spreadTwap: BigInt(fields.spread_twap),
 			spreadTwapLastUpdateMs: Number(fields.spread_twap_last_upd_ms),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Funding
+	// =========================================================================
+
+	public static updatedFundingEventFromOnChain = (
+		eventOnChain: UpdatedFundingEventOnChain
+	): UpdatedFundingEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+			cumFundingRateLong: BigInt(fields.cum_funding_rate_long),
+			cumFundingRateShort: BigInt(fields.cum_funding_rate_short),
+			fundingLastUpdateMs: Number(fields.funding_last_upd_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

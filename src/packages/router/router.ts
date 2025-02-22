@@ -14,6 +14,7 @@ import {
 	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
 	ModuleName,
 	Slippage,
+	ApiIndexerEventsBody,
 	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
@@ -203,7 +204,10 @@ export class Router extends Caller {
 	//  Events
 	// =========================================================================
 
-	public async getTradeEvents(inputs: ApiRouterTradeEventsBody) {
-		return this.fetchApiEvents<RouterTradeEvent>("events/trade", inputs);
+	public async getInteractionEvents(inputs: ApiRouterTradeEventsBody) {
+		return this.fetchApiIndexerEvents<
+			RouterTradeEvent,
+			ApiRouterTradeEventsBody
+		>("events-by-user", inputs);
 	}
 }

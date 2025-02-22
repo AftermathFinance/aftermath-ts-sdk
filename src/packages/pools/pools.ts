@@ -20,6 +20,7 @@ import {
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	PoolLpInfo,
 	SuiAddress,
+	ApiIndexerEventsBody,
 	CallerConfig,
 } from "../../types";
 import { Pool } from "./pool";
@@ -126,9 +127,11 @@ export class Pools extends Caller {
 		const pools = await this.fetchApi<
 			PoolObject[],
 			{
-				objectIds: ObjectId[];
+				poolIds: ObjectId[];
 			}
-		>("objects", inputs);
+		>("", {
+			poolIds: inputs.objectIds,
+		});
 		return pools.map((pool) => new Pool(pool, this.config, this.Provider));
 	}
 
@@ -137,7 +140,7 @@ export class Pools extends Caller {
 	 * @returns {Promise<Pool[]>} A promise that resolves to an array of Pool objects.
 	 */
 	public async getAllPools() {
-		const pools = await this.fetchApi<PoolObject[]>("");
+		const pools: PoolObject[] = await this.fetchApi("", {});
 		return pools.map((pool) => new Pool(pool, this.config, this.Provider));
 	}
 
@@ -227,6 +230,10 @@ export class Pools extends Caller {
 		return this.fetchApi("volume-24hrs");
 	};
 
+	public async getTVL(inputs?: { poolIds?: ObjectId[] }): Promise<number> {
+		return this.fetchApi("tvl", inputs ?? {});
+	}
+
 	/**
 	 * Fetches statistics for pools.
 	 * @async
@@ -242,6 +249,23 @@ export class Pools extends Caller {
 		inputs: ApiPoolsOwnedDaoFeePoolOwnerCapsBody
 	) {
 		return this.useProvider().fetchOwnedDaoFeePoolOwnerCaps(inputs);
+	}
+
+	// =========================================================================
+	//  Events
+	// =========================================================================
+
+	public async getInteractionEvents(
+		inputs: ApiIndexerEventsBody & {
+			walletAddress: SuiAddress;
+		}
+	) {
+		return this.fetchApiIndexerEvents<
+			PoolDepositEvent | PoolWithdrawEvent,
+			ApiIndexerEventsBody & {
+				walletAddress: SuiAddress;
+			}
+		>("interaction-events-by-user", inputs);
 	}
 
 	// =========================================================================

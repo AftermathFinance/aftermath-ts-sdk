@@ -68,8 +68,8 @@ export class Caller {
 
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.apiBaseUrl}/api/${
-			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix
-		}${url === "" ? "" : `/${url}`}`;
+			this.apiUrlPrefix + (url === "" ? "" : "/")
+		}${url}`;
 	};
 
 	// =========================================================================
@@ -100,7 +100,8 @@ export class Caller {
 		const apiCallUrl = this.urlForApiCall(url);
 
 		const headers = {
-			"Content-Type": "text/plain",
+			// "Content-Type": "text/plain",
+			"Content-Type": "application/json",
 			...(this.config.accessToken
 				? { Authorization: `Bearer ${this.config.accessToken}` }
 				: {}),
@@ -178,7 +179,7 @@ export class Caller {
 
 	protected async fetchApiIndexerEvents<
 		EventType,
-		BodyType = ApiIndexerEventsBody
+		BodyType extends ApiIndexerEventsBody
 	>(
 		url: Url,
 		body: BodyType,
@@ -186,13 +187,21 @@ export class Caller {
 		options?: {
 			disableBigIntJsonParsing?: boolean;
 		}
-	) {
-		return this.fetchApi<IndexerEventsWithCursor<EventType>, BodyType>(
+	): Promise<IndexerEventsWithCursor<EventType>> {
+		const events = await this.fetchApi<EventType[], BodyType>(
 			url,
 			body,
 			signal,
 			options
 		);
+		// TODO: handle this logic on af-fe instead (to handle max limit case)
+		return {
+			events,
+			nextCursor:
+				events.length < (body.limit ?? 1)
+					? undefined
+					: events.length + (body.cursor ?? 0),
+		};
 	}
 
 	protected setAccessToken = (accessToken: UniqueId) => {

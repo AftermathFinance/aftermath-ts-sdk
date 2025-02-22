@@ -18,6 +18,8 @@ import {
 	Percentage,
 	StakedSuiVaultStateObject,
 	SuiAddress,
+	StakingApyDataPoint,
+	StakingApyTimeframeKey,
 	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
@@ -207,6 +209,12 @@ export class Staking extends Caller {
 	 */
 	public async getApy(): Promise<number> {
 		return this.fetchApi("apy");
+	}
+
+	public async getHistoricalApy(inputs: {
+		timeframe: StakingApyTimeframeKey;
+	}): Promise<StakingApyDataPoint[]> {
+		return this.fetchApi("historical-apy", inputs);
 	}
 
 	// =========================================================================

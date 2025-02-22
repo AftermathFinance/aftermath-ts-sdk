@@ -3,6 +3,8 @@ import {
 	SuiNetwork,
 	Url,
 	ObjectId,
+	SuiAddress,
+	ApiIndexerEventsBody,
 	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
@@ -20,6 +22,7 @@ import {
 	FarmsStakingPoolObject,
 	FarmsUnlockedEvent,
 	FarmsWithdrewPrincipalEvent,
+	FarmUserEvent,
 	StakingPoolOneTimeAdminCapObject,
 	StakingPoolOwnerCapObject,
 } from "./farmsTypes";
@@ -33,7 +36,8 @@ export class Farms extends Caller {
 	// =========================================================================
 
 	public static readonly constants = {
-		minimalRewardsToClaim: BigInt(10),
+		minRewardsToClaim: BigInt(10),
+		maxLockMultiplier: 18,
 	};
 
 	// =========================================================================
@@ -70,9 +74,11 @@ export class Farms extends Caller {
 		const stakingPools = await this.fetchApi<
 			FarmsStakingPoolObject[],
 			{
-				objectIds: ObjectId[];
+				farmIds: ObjectId[];
 			}
-		>("objects", inputs);
+		>("", {
+			farmIds: inputs.objectIds,
+		});
 		return stakingPools.map(
 			(stakingPool) =>
 				new FarmsStakingPool(stakingPool, this.config, this.Provider)
@@ -80,7 +86,10 @@ export class Farms extends Caller {
 	}
 
 	public async getAllStakingPools() {
-		const stakingPools = await this.fetchApi<FarmsStakingPoolObject[]>("");
+		const stakingPools: FarmsStakingPoolObject[] = await this.fetchApi(
+			"",
+			{}
+		);
 		return stakingPools.map(
 			(pool) => new FarmsStakingPool(pool, this.config, this.Provider)
 		);
@@ -129,6 +138,20 @@ export class Farms extends Caller {
 	}
 
 	// =========================================================================
+	//  Stats
+	// =========================================================================
+
+	public async getTVL(inputs?: { farmIds?: ObjectId[] }): Promise<number> {
+		return this.fetchApi("tvl", inputs ?? {});
+	}
+
+	public async getRewardsTVL(inputs?: {
+		farmIds?: ObjectId[];
+	}): Promise<number> {
+		return this.fetchApi("rewards-tvl", inputs ?? {});
+	}
+
+	// =========================================================================
 	//  Transactions
 	// =========================================================================
 
@@ -142,63 +165,17 @@ export class Farms extends Caller {
 	//  Events
 	// =========================================================================
 
-	// =========================================================================
-	//  Staking Position Creation
-	// =========================================================================
-
-	public async getStakedEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<FarmsStakedEvent>("events/staked", inputs);
-	}
-
-	public async getStakedRelaxedEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<FarmsStakedRelaxedEvent>(
-			"events/staked-relaxed",
-			inputs
-		);
-	}
-
-	// =========================================================================
-	//  Staking Position Locking
-	// =========================================================================
-
-	public async getLockedEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<FarmsLockedEvent>("events/locked", inputs);
-	}
-
-	public async getUnlockedEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<FarmsUnlockedEvent>(
-			"events/unlocked",
-			inputs
-		);
-	}
-
-	// =========================================================================
-	//  Staking Position Staking
-	// =========================================================================
-
-	public async getDepositedPrincipalEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<FarmsDepositedPrincipalEvent>(
-			"events/deposited-principal",
-			inputs
-		);
-	}
-
-	public async getWithdrewPrincipalEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<FarmsWithdrewPrincipalEvent>(
-			"events/withdrew-principal",
-			inputs
-		);
-	}
-
-	// =========================================================================
-	//  Staking Position Reward Harvesting
-	// =========================================================================
-
-	public async getHarvestedRewardsEvents(inputs: EventsInputs) {
-		return this.fetchApiEvents<FarmsHarvestedRewardsEvent>(
-			"events/harvested-rewards",
-			inputs
-		);
+	public async getInteractionEvents(
+		inputs: ApiIndexerEventsBody & {
+			walletAddress: SuiAddress;
+		}
+	) {
+		return this.fetchApiIndexerEvents<
+			FarmUserEvent,
+			ApiIndexerEventsBody & {
+				walletAddress: SuiAddress;
+			}
+		>("events-by-user", inputs);
 	}
 
 	// =========================================================================
