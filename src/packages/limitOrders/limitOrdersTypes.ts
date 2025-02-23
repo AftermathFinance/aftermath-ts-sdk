@@ -107,6 +107,7 @@ export interface LimitOrderObject {
 	status: LimitOrdersOrderStatus | undefined;
 	error: string | undefined;
 	integratorFee?: LimitOrdersIntegratorFeeData;
+	stopLossTrigger: Balance;
 }
 
 // =========================================================================
