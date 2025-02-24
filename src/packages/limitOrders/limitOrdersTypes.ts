@@ -80,7 +80,8 @@ export type LimitOrdersOrderStatus =
 	| "Canceled"
 	| "Failed"
 	| "Filled"
-	| "Expired";
+	| "Expired"
+	| "StopLossTriggered";
 
 export interface LimitOrderObject {
 	objectId: ObjectId | undefined;
