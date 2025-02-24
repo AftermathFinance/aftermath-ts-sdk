@@ -110,9 +110,9 @@ export interface DcaOrderOverviewObject {
 	progress: number;
 	created: {
 		timestamp: Timestamp;
-		txnDigest: TransactionDigest;
+		txnDigest: TransactionDigest | undefined;
 	};
-	nextTrade: {
+	nextTrade?: {
 		timestamp: Timestamp;
 		txnDigest: TransactionDigest;
 	};
@@ -124,7 +124,7 @@ export interface DcaOrderOverviewObject {
 }
 
 export interface DcaOrderObject {
-	objectId: ObjectId;
+	objectId: ObjectId | undefined;
 	overview: DcaOrderOverviewObject;
 	trades: DcaOrderTradeObject[];
 	failed: DcaOrderFailedTradeObject[];
