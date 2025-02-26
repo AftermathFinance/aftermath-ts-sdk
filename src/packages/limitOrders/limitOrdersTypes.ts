@@ -28,14 +28,16 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	expiryTimestampMs: Timestamp;
 	isSponsoredTx?: boolean;
 	integratorFee?: LimitOrdersIntegratorFeeData;
-	strategy: LimitOrderStrategy;
-}
-
-export type LimitOrderStrategy = {
-	type: "takeProfitStopLoss";
+	// strategy: LimitOrderStrategy;
 	minAmountOut: Balance;
 	stopLossPrice: Balance;
-};
+}
+
+// export type LimitOrderStrategy = {
+// 	type: "takeProfitStopLoss";
+// 	minAmountOut: Balance;
+// 	stopLossPrice: Balance;
+// };
 // | {
 // 		type: "iceberg";
 // 		minAmountOut: Balance;
