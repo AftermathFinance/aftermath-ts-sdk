@@ -33,20 +33,6 @@ export class Dca extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches the API for dollar cost averaging orders list.
-	 * @async
-	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns { Promise<DcaOrdersObject> } A promise that resolves to object with array of fetched events for active and past dca's.
-	 */
-
-	public async getAllDcaOrders(inputs: ApiDCAsOwnedBody) {
-		return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>(
-			"orders",
-			inputs
-		);
-	}
-
-	/**
 	 * Fetches the API for dollar cost averaging active orders list.
 	 * @async
 	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
@@ -55,7 +41,7 @@ export class Dca extends Caller {
 
 	public async getActiveDcaOrders(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"orders/active",
+			"active",
 			inputs
 		);
 	}
@@ -69,7 +55,7 @@ export class Dca extends Caller {
 
 	public async getPastDcaOrders(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"orders/past",
+			"past",
 			inputs
 		);
 	}
@@ -88,7 +74,7 @@ export class Dca extends Caller {
 		inputs: ApiDcaTransactionForCreateOrderBody
 	): Promise<Transaction> {
 		return this.fetchApiTransaction<ApiDcaTransactionForCreateOrderBody>(
-			"transactions/create-order",
+			"create",
 			inputs
 		);
 	}
@@ -103,7 +89,7 @@ export class Dca extends Caller {
 		inputs: ApiDcaTransactionForCloseOrderBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiDcaTransactionForCloseOrderBody>(
-			`interactions/close-order`,
+			`cancel`,
 			inputs
 		);
 	}
