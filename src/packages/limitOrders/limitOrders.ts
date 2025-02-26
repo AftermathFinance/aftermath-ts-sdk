@@ -44,7 +44,7 @@ export class LimitOrders extends Caller {
 		return this.fetchApi<
 			LimitOrderObject[],
 			ApiLimitOrdersActiveOrdersOwnedBody
-		>("orders/active", inputs);
+		>("active", inputs);
 	}
 
 	/**
@@ -58,7 +58,7 @@ export class LimitOrders extends Caller {
 		return this.fetchApi<
 			LimitOrderObject[],
 			ApiLimitOrdersPastOrdersOwnedBody
-		>("orders/past", inputs);
+		>("executed", inputs);
 	}
 
 	// =========================================================================
@@ -75,7 +75,7 @@ export class LimitOrders extends Caller {
 		inputs: ApiLimitOrdersCreateOrderTransactionBody
 	): Promise<Transaction> {
 		return this.fetchApiTransaction<ApiLimitOrdersCreateOrderTransactionBody>(
-			"transactions/create-order",
+			"create",
 			inputs
 		);
 	}
@@ -90,7 +90,7 @@ export class LimitOrders extends Caller {
 		inputs: ApiLimitOrdersCancelOrderTransactionBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiLimitOrdersCancelOrderTransactionBody>(
-			`interactions/cancel-order`,
+			`cancel`,
 			inputs
 		);
 	}
