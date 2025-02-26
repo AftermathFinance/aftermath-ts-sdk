@@ -75,7 +75,7 @@ export class LimitOrders extends Caller {
 		inputs: ApiLimitOrdersCreateOrderTransactionBody
 	): Promise<Transaction> {
 		return this.fetchApiTransaction<ApiLimitOrdersCreateOrderTransactionBody>(
-			"create",
+			"transactions/create-order",
 			inputs
 		);
 	}

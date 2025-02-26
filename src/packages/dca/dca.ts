@@ -73,8 +73,9 @@ export class Dca extends Caller {
 	public async getCreateDcaOrderTx(
 		inputs: ApiDcaTransactionForCreateOrderBody
 	): Promise<Transaction> {
+		console.log("getCreateDcaOrderTx", { inputs });
 		return this.fetchApiTransaction<ApiDcaTransactionForCreateOrderBody>(
-			"create",
+			"transactions/create-order",
 			inputs
 		);
 	}
