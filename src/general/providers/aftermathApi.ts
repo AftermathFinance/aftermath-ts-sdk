@@ -22,7 +22,6 @@ import {
 	UniqueId,
 } from "../../types";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
-import { OracleApi } from "../../packages/oracle/api/oracleApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { SuiClient } from "@mysten/sui/client";
 import { SuiClient as SuiClientV0 } from "@mysten/sui.js/client";
@@ -122,7 +121,6 @@ export class AftermathApi {
 	public NftAmm = () => new NftAmmApi(this);
 	public ReferralVault = () => new ReferralVaultApi(this);
 	public Perpetuals = () => new PerpetualsApi(this);
-	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
 	public Dca = () => new DcaApi(this);
 	public Multisig = () => new MultisigApi(this);

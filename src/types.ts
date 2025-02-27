@@ -10,7 +10,6 @@ export * from "./packages/auth/authTypes";
 // export * from "./packages/referralVault/referralVaultTypes";
 export * from "./packages/farms/farmsTypes";
 export * from "./packages/perpetuals/perpetualsTypes";
-export * from "./packages/oracle/oracleTypes";
 
 // TODO: make it so that casting types are not exported ?
 export * from "./general/types";

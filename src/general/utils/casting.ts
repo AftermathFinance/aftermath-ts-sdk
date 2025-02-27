@@ -15,7 +15,6 @@ import { Helpers } from "../..";
 import { BcsTypeName } from "../types/castingTypes";
 import { SuiObjectResponse } from "@mysten/sui/client";
 import { NftsApiCasting } from "../nfts/nftsApiCasting";
-import { OracleApiCasting } from "../../packages/oracle/api/oracleApiCasting";
 import { DcaApiCasting } from "../../packages/dca/api/dcaApiCasting";
 
 /**
@@ -35,7 +34,6 @@ export class Casting {
 	public static nftAmm = NftAmmApiCasting;
 	public static router = RouterApiCasting;
 	public static perpetuals = PerpetualsApiCasting;
-	public static oracle = OracleApiCasting;
 	public static farms = FarmsApiCasting;
 	public static nfts = NftsApiCasting;
 	public static dca = DcaApiCasting;

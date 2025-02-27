@@ -25,7 +25,6 @@ import {
 } from "../../packages";
 import { HistoricalData } from "../historicalData/historicalData";
 import { Perpetuals } from "../../packages/perpetuals";
-import { Oracle } from "../../packages/oracle/oracle";
 // import { PriceFeeds } from "../priceFeeds/priceFeeds";
 import { Farms } from "../../packages/farms/farms";
 import { DynamicGas } from "../dynamicGas/dynamicGas";
@@ -138,7 +137,6 @@ export class Aftermath extends Caller {
 	public NftAmm = () => new NftAmm(this.config, this.Provider);
 	public ReferralVault = () => new ReferralVault(this.config, this.Provider);
 	public Perpetuals = () => new Perpetuals(this.config, this.Provider);
-	public Oracle = () => new Oracle(this.config);
 	/**
 	 * Creates a new instance of the Farms class.
 	 * @returns A new instance of the Farms class.

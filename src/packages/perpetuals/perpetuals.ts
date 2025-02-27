@@ -24,6 +24,8 @@ import {
 	IFixed,
 	MoveErrorCode,
 	CallerConfig,
+	SuiAddress,
+	ObjectId,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -108,6 +110,7 @@ export class Perpetuals extends Caller {
 		);
 	}
 
+	// TODO: merge this with `getAccountObjects` as an option ?
 	public async getAccount(inputs: {
 		accountCap: PerpetualsAccountCap;
 		marketIds?: PerpetualsMarketId[];
@@ -192,36 +195,21 @@ export class Perpetuals extends Caller {
 
 	public async getUserAccountCaps(
 		inputs: ApiPerpetualsAccountsBody & {
-			collateralCoinType: CoinType;
+			collateralCoinTypes?: CoinType[];
 		}
 	): Promise<PerpetualsAccountCap[]> {
-		const { collateralCoinType, walletAddress } = inputs;
-		// return this.fetchApi<PerpetualsAccountCap[], ApiPerpetualsAccountsBody>(
-		// 	`${collateralCoinType}/accounts`,
-		// 	{
-		// 		walletAddress,
-		// 	}
-		// );
+		const { walletAddress, collateralCoinTypes } = inputs;
 
-		// TODO: move logic into endpoint
-		const [rawAccountCaps, collateralMetadata] = await Promise.all([
-			this.useProvider().fetchOwnedRawAccountCapsOfType(inputs),
-			new Coin(undefined, this.config, this.Provider).getCoinMetadata(
-				collateralCoinType
-			),
-			// { decimals: 9 },
-		]);
-		return rawAccountCaps.map((accountCap) => ({
-			...accountCap,
+		return this.fetchApi<
+			PerpetualsAccountCap[],
+			{
+				walletAddress: SuiAddress;
+				collateralCoinTypes: CoinType[] | undefined;
+			}
+		>("accounts/owned", {
 			walletAddress,
-			collateralDecimals: collateralMetadata.decimals,
-			collateral: Casting.IFixed.iFixedFromNumber(
-				Coin.balanceWithDecimals(
-					accountCap.collateral,
-					collateralMetadata.decimals
-				)
-			),
-		}));
+			collateralCoinTypes,
+		});
 	}
 
 	// =========================================================================
@@ -241,6 +229,20 @@ export class Perpetuals extends Caller {
 			toTimestamp,
 			intervalMs,
 		});
+	}
+
+	// =========================================================================
+	//  Prices
+	// =========================================================================
+
+	public async getPrices(inputs: { marketIds: ObjectId[] }): Promise<
+		{
+			basePrice: number;
+			collateralPrice: number;
+		}[]
+	> {
+		if (inputs.marketIds.length <= 0) return [];
+		return this.fetchApi("markets/prices", inputs);
 	}
 
 	// =========================================================================

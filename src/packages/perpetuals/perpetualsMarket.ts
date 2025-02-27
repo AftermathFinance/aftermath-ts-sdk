@@ -1,4 +1,4 @@
-import { Casting, Coin, Helpers, PerpetualsAccount } from "../..";
+import { AftermathApi, Casting, Coin, Helpers, PerpetualsAccount } from "../..";
 import { Caller } from "../../general/utils/caller";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -54,6 +54,7 @@ export class PerpetualsMarket extends Caller {
 	constructor(
 		public marketData: PerpetualsMarketData,
 		config?: CallerConfig
+		// public readonly Provider?: AftermathApi
 	) {
 		super(config, "perpetuals");
 		this.marketId = marketData.objectId;
@@ -151,6 +152,24 @@ export class PerpetualsMarket extends Caller {
 			...inputs,
 			marketId: this.marketId,
 		});
+	}
+
+	// =========================================================================
+	//  Prices
+	// =========================================================================
+
+	public async getPrices(): Promise<{
+		basePrice: number;
+		collateralPrice: number;
+	}> {
+		return (
+			await new Perpetuals(
+				this.config
+				// this.Provider
+			).getPrices({
+				marketIds: [this.marketId],
+			})
+		)[0];
 	}
 
 	// =========================================================================

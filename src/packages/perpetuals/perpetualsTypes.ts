@@ -123,13 +123,6 @@ export interface PerpetualsAccountCap extends Object {
 	objectDigest: ObjectDigest;
 }
 
-export type PerpetualsRawAccountCap = Omit<
-	PerpetualsAccountCap,
-	"collateral" | "collateralDecimals"
-> & {
-	collateral: Balance;
-};
-
 const Account = bcs.struct("Account", {
 	id: bcs.Address,
 	accountId: bcs.u64(),

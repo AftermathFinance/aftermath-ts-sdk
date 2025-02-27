@@ -1,12 +1,9 @@
-import { SuiObjectResponse } from "@mysten/sui/client";
 import {
 	PerpetualsMarketState,
 	PerpetualsOrderbook,
 	PerpetualsMarketParams,
 	PerpetualsAccountObject,
 	PerpetualsPosition,
-	perpetualsRegistry,
-	PerpetualsAccountCap,
 	DepositedCollateralEvent,
 	WithdrewCollateralEvent,
 	CreatedAccountEvent,
@@ -22,7 +19,6 @@ import {
 	LiquidatedEvent,
 	PerpetualsMarketData,
 	PostedOrderReceiptEvent,
-	PerpetualsRawAccountCap,
 	AllocatedCollateralEvent,
 	DeallocatedCollateralEvent,
 	PerpetualsMarketId,
@@ -62,12 +58,7 @@ import {
 	ReducedOrderEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
-import {
-	BigIntAsString,
-	IFixedAsStringBytes,
-	ObjectDigest,
-	ObjectVersion,
-} from "../../../types";
+import { IFixedAsStringBytes } from "../../../types";
 
 // TODO: handle 0xs and leading 0s everywhere
 export class PerpetualsApiCasting {
@@ -78,23 +69,6 @@ export class PerpetualsApiCasting {
 	// =========================================================================
 	//  Account
 	// =========================================================================
-
-	public static partialRawAccountCapFromRaw(
-		data: any,
-		collateralCoinType: CoinType,
-		version: ObjectVersion,
-		digest: ObjectDigest
-	): Omit<PerpetualsRawAccountCap, "walletAddress"> {
-		return {
-			collateralCoinType,
-			objectId: Helpers.addLeadingZeroesToType(data.id),
-			objectType: data.objectType, // use Helpers.addLeadingZeroesToType ?
-			objectVersion: version,
-			objectDigest: digest,
-			accountId: BigInt(data.accountId),
-			collateral: BigInt(data.collateral.value),
-		};
-	}
 
 	// public static partialPositionFromRaw = (
 	// 	data: any

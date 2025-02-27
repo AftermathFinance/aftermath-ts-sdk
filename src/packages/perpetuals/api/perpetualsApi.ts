@@ -3,34 +3,22 @@ import {
 	Transaction,
 	TransactionObjectArgument,
 } from "@mysten/sui/transactions";
-import { SuiEvent, Unsubscribe } from "@mysten/sui/client";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	CoinType,
-	PerpetualsAccountObject,
 	PerpetualsAddresses,
 	ObjectId,
 	SuiAddress,
 	AnyObjectType,
-	IndexerEventsWithCursor,
 	IFixed,
 	Balance,
-	Timestamp,
-	Byte,
-	StringByte,
 	ObjectVersion,
-	TransactionDigest,
-	ApiDataWithCursorBody,
-	BigIntAsString,
-	NumberAsString,
 	PackageId,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import {
 	perpetualsRegistry,
-	PerpetualsMarketParams,
-	PerpetualsMarketState,
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsCreateAccountBody,
 	PerpetualsMarketId,
@@ -39,81 +27,9 @@ import {
 	ApiPerpetualsSLTPOrderBody,
 	PerpetualsOrderSide,
 	PerpetualsOrderType,
-	PerpetualsOrderbook,
-	ApiPerpetualsPreviewOrderBody,
-	ApiPerpetualsPreviewOrderResponse,
-	ApiPerpetualsAccountsBody,
-	PerpetualsOrderData,
-	CollateralEvent,
-	PerpetualsOrderEvent,
-	PerpetualsOrderInfo,
-	PerpetualsOrderPrice,
-	FilledMakerOrderEvent,
-	FilledTakerOrderEvent,
-	ApiPerpetualsExecutionPriceBody,
-	ApiPerpetualsExecutionPriceResponse,
-	ApiPerpetualsCancelOrdersBody,
-	PerpetualsMarketCandleDataPoint,
-	ApiPerpetualsHistoricalMarketDataResponse,
-	PerpetualsAccountCap,
-	ApiPerpetualsMarketOrderBody,
-	ApiPerpetualsLimitOrderBody,
-	PerpetualsPosition,
-	PerpetualsMarketData,
-	PerpetualsRawAccountCap,
-	PostedOrderReceiptEvent,
-	PerpetualsFilledOrderData,
-	ApiPerpetualsMaxOrderSizeBody,
-	ApiPerpetualsAccountOrderDatasBody,
-	PerpetualsTradeHistoryWithCursor,
-	PerpetualsAccountTradesWithCursor,
-	PerpetualsAccountCollateralChangesWithCursor,
-	ApiPerpetualsSetPositionLeverageBody,
-	ApiPerpetualsAccountOrderHistoryBody,
-	ApiPerpetualsAccountCollateralHistoryBody,
-	ApiPerpetualsPreviewCancelOrdersBody,
-	ApiPerpetualsPreviewCancelOrdersResponse,
-	ApiPerpetualsPreviewReduceOrderBody,
-	ApiPerpetualsPreviewReduceOrderResponse,
-	ApiPerpetualsReduceOrderBody,
-	ApiPerpetualsSetLeverageBody,
-	ApiPerpetualsPreviewSetLeverageBody,
-	ApiPerpetualsPreviewSetLeverageResponse,
-	ApiPerpetualsMarketDailyStatsResponse,
-	ApiPerpetualsSetPositionLeverageFromTxBody,
 } from "../perpetualsTypes";
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
-import { Perpetuals } from "../perpetuals";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import {
-	EventOnChain,
-	SuiAddressWithout0x,
-} from "../../../general/types/castingTypes";
-import {
-	AllocatedCollateralEventOnChain,
-	CanceledOrderEventOnChain,
-	DeallocatedCollateralEventOnChain,
-	DepositedCollateralEventOnChain,
-	FilledMakerOrderEventOnChain,
-	FilledTakerOrderEventOnChain,
-	LiquidatedEventOnChain,
-	PerpetualsAccountPositionsIndexerResponse,
-	PerpetualsMarketIndexerResponse,
-	PerpetualsMarketsIndexerResponse,
-	PerpetualsPreviewCancelOrdersIndexerResponse,
-	PerpetualsPreviewOrderIndexerResponse,
-	PerpetualsPreviewReduceOrderIndexerResponse,
-	PerpetualsPreviewSetLeverageIndexerResponse,
-	PostedOrderEventOnChain,
-	PostedOrderReceiptEventOnChain,
-	SettledFundingEventOnChain,
-	WithdrewCollateralEventOnChain,
-} from "../perpetualsCastingTypes";
-import { Aftermath } from "../../..";
-import { PerpetualsOrderUtils } from "../utils";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-import { InspectionsApiHelpers } from "../../../general/apiHelpers/inspectionsApiHelpers";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 import { bcs } from "@mysten/sui/bcs";
 import {
@@ -298,36 +214,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Objects
 	// =========================================================================
-
-	public fetchOwnedRawAccountCapsOfType = async (inputs: {
-		walletAddress: SuiAddress;
-		collateralCoinType: CoinType;
-	}): Promise<Omit<PerpetualsRawAccountCap, "walletAddress">[]> => {
-		const { walletAddress, collateralCoinType } = inputs;
-		const objectType = this.getAccountCapType({ collateralCoinType });
-
-		const objectResponse =
-			await this.Provider.Objects().fetchObjectsOfTypeOwnedByAddress({
-				objectType,
-				walletAddress,
-				options: {
-					showBcs: true,
-					showType: true,
-				},
-			});
-
-		return objectResponse.map((accCap) => {
-			const accCapObj = perpetualsRegistry.Account.fromBase64(
-				Casting.bcsBytesFromSuiObjectResponse(accCap)
-			);
-			return PerpetualsApiCasting.partialRawAccountCapFromRaw(
-				accCapObj,
-				collateralCoinType,
-				Number(accCap.data?.version!),
-				accCap.data?.digest!
-			);
-		});
-	};
 
 	// public fetchMarket = async (inputs: {
 	// 	marketId: PerpetualsMarketId;
