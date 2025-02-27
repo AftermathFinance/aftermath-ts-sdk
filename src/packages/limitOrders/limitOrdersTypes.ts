@@ -30,7 +30,7 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	integratorFee?: LimitOrdersIntegratorFeeData;
 	// strategy: LimitOrderStrategy;
 	minAmountOut: Balance;
-	stopLossPrice: Balance;
+	stopLossPrice: number;
 }
 
 // export type LimitOrderStrategy = {
@@ -110,7 +110,7 @@ export interface LimitOrderObject {
 	status: LimitOrdersOrderStatus | undefined;
 	error: string | undefined;
 	integratorFee?: LimitOrdersIntegratorFeeData;
-	stopLossTrigger: Balance;
+	stopLossTrigger: number;
 }
 
 // =========================================================================
