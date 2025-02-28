@@ -113,7 +113,8 @@ export interface PerpetualsMarketData {
 	indexPrice: number;
 }
 
-export interface PerpetualsAccountCap extends Object {
+export interface PerpetualsAccountCap {
+	objectId: ObjectId;
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;

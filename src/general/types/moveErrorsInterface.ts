@@ -6,5 +6,7 @@ export interface MoveErrorsInterface {
 
 export type MoveErrors = Record<
 	PackageId,
-	Record<ModuleName, Record<MoveErrorCode, string>>
+	// TODO: handle this case better
+	// "ANY" | (ModuleName & {})
+	Record<"ANY" | ModuleName, Record<MoveErrorCode, string>>
 >;

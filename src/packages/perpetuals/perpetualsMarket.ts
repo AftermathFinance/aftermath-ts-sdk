@@ -243,7 +243,7 @@ export class PerpetualsMarket extends Caller {
 	} => {
 		const { leverage, orderData, indexPrice, collateralPrice } = inputs;
 
-		const imr = 1 / leverage;
+		const imr = 1 / (leverage || 1);
 		// const imr = this.initialMarginRatio();
 
 		const collateralUsd =

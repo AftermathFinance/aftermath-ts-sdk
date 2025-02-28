@@ -455,6 +455,8 @@ export class Helpers {
 
 		/*
 			MoveAbort(MoveLocation { module: ModuleId { address: 8d8946c2a433e2bf795414498d9f7b32e04aca8dbf35a20257542dc51406242b, name: Identifier("orderbook") }, function: 11, instruction: 117, function_name: Some("fill_market_order") }, 3005) in command 2
+
+			MoveAbort(MoveLocation { module: ModuleId { address: 7c995f9c0c0553c0f3bfac7cf3c8b85716f0ca522305586bd0168ca20aeed277, name: Identifier("clearing_house") }, function: 37, instruction: 17, function_name: Some("place_limit_order") }, 1) in command 1
 		*/
 
 		const moveErrorCode = (inputs: {
@@ -561,19 +563,25 @@ export class Helpers {
 		const { errorMessage, moveErrors } = inputs;
 
 		const parsed = this.parseMoveErrorMessage({ errorMessage });
+		if (!parsed || !(parsed.packageId in moveErrors)) return undefined;
+
+		let error: string;
 		if (
-			!parsed ||
-			!(parsed.packageId in moveErrors) ||
-			!(parsed.module in moveErrors[parsed.packageId]) ||
-			!(parsed.errorCode in moveErrors[parsed.packageId][parsed.module])
-		)
-			return undefined;
+			parsed.module in moveErrors[parsed.packageId] &&
+			parsed.errorCode in moveErrors[parsed.packageId][parsed.module]
+		) {
+			error =
+				moveErrors[parsed.packageId][parsed.module][parsed.errorCode];
+		} else if (
+			"ANY" in moveErrors[parsed.packageId] &&
+			parsed.errorCode in moveErrors[parsed.packageId]["ANY"]
+		) {
+			error = moveErrors[parsed.packageId]["ANY"][parsed.errorCode];
+		} else return undefined;
 
 		return {
 			...parsed,
-			error: moveErrors[parsed.packageId][parsed.module][
-				parsed.errorCode
-			],
+			error,
 		};
 	}
 

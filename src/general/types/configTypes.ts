@@ -153,7 +153,6 @@ export interface PerpetualsAddresses {
 		events: SuiAddress;
 	};
 	objects: {
-		adminCapability: ObjectId;
 		registry: ObjectId;
 	};
 }

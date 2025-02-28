@@ -120,93 +120,95 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		};
 		this.moveErrors = {
 			[this.addresses.packages.perpetuals]: {
-				// Clearing House
+				["ANY"]: {
+					// Clearing House
 
-				// Cannot deposit/withdraw zero coins to/from the account's collateral.
-				0: "Deposit Or Withdraw Amount Zero",
-				// Orderbook size or price are invalid values
-				1: "Invalid Size Or Price",
-				// When trying to access a particular insurance fund, but it does not exist.
-				2: "Invalid Insurance Fund Id",
-				// Index price returned from oracle is 0 or invalid value
-				3: "Bad Index Price",
-				// Registry already contains the specified collateral type
-				4: "Invalid Collateral Type",
-				// Order value in USD is too low
-				5: "Order Usd Value Too Low",
-				// Wrong number of sizes passed to liquidation.
-				// It must match the number of liqee's positions.
-				6: "Invalid Number Of Sizes",
+					// Cannot deposit/withdraw zero coins to/from the account's collateral.
+					0: "Deposit Or Withdraw Amount Zero",
+					// Orderbook size or price are invalid values
+					1: "Invalid Size Or Price",
+					// When trying to access a particular insurance fund, but it does not exist.
+					2: "Invalid Insurance Fund Id",
+					// Index price returned from oracle is 0 or invalid value
+					3: "Bad Index Price",
+					// Registry already contains the specified collateral type
+					4: "Invalid Collateral Type",
+					// Order value in USD is too low
+					5: "Order Usd Value Too Low",
+					// Wrong number of sizes passed to liquidation.
+					// It must match the number of liqee's positions.
+					6: "Invalid Number Of Sizes",
 
-				// MarketManager
+					// MarketManager
 
-				// Tried to create a new market with invalid parameters.
-				1000: "Invalid Market Parameters",
-				// Tried to call `update_funding` before enough time has passed since the
-				// last update.
-				1001: "Updating Funding Too Early",
-				// Margin ratio update proposal already exists for market
-				1002: "Proposal Already Exists",
-				// Margin ratio update proposal cannot be commited too early
-				1003: "Premature Proposal",
-				// Margin ratio update proposal delay is outside the valid range
-				1004: "Invalid Proposal Delay",
-				// Market does not exist
-				1005: "Market Does Not Exist",
-				// Tried to update a config with a value outside of the allowed range
-				1006: "Value Out Of Range",
-				// Margin ratio update proposal does not exist for market
-				1007: "Proposal Does Not Exist",
-				// Exchange has no available fees to withdraw
-				1008: "No Fees Accrued",
-				// Tried to withdraw more insurance funds than the allowed amount
-				1009: "Insufficient Insurance Surplus",
-				// Cannot create a market for which a price feed does not exist
-				1010: "No Price Feed For Market",
+					// Tried to create a new market with invalid parameters.
+					1000: "Invalid Market Parameters",
+					// Tried to call `update_funding` before enough time has passed since the
+					// last update.
+					1001: "Updating Funding Too Early",
+					// Margin ratio update proposal already exists for market
+					1002: "Proposal Already Exists",
+					// Margin ratio update proposal cannot be commited too early
+					1003: "Premature Proposal",
+					// Margin ratio update proposal delay is outside the valid range
+					1004: "Invalid Proposal Delay",
+					// Market does not exist
+					1005: "Market Does Not Exist",
+					// Tried to update a config with a value outside of the allowed range
+					1006: "Value Out Of Range",
+					// Margin ratio update proposal does not exist for market
+					1007: "Proposal Does Not Exist",
+					// Exchange has no available fees to withdraw
+					1008: "No Fees Accrued",
+					// Tried to withdraw more insurance funds than the allowed amount
+					1009: "Insufficient Insurance Surplus",
+					// Cannot create a market for which a price feed does not exist
+					1010: "No Price Feed For Market",
 
-				// Account Manager
+					// Account Manager
 
-				// Tried accessing a nonexistent account.
-				2000: "Account Not Found",
-				// Tried accessing a nonexistent account position.
-				2001: "Position Not Found",
-				// Tried creating a new position when the account already has the maximum
-				// allowed number of open positions.
-				2002: "Max Positions Exceeded",
-				// An operation brought an account below initial margin requirements.
-				// 2003: "Initial Margin Requirement Violated",
-				2003: "Margin Requirements Violated, Try Lowering Size",
-				// Account is above MMR, so can't be liquidated.
-				2004: "Account Above MMR",
-				// Cannot realize bad debt via means other than calling 'liquidate'.
-				2005: "Account Bad Debt",
-				// Cannot withdraw more than the account's free collateral.
-				2006: "Insufficient Free Collateral",
-				// Cannot delete a position that is not worthless
-				2007: "Position Not Null",
-				// Tried placing a new pending order when the position already has the maximum
-				// allowed number of pending orders.
-				2008: "Max Pending Orders Exceeded",
-				// Used for checking both liqee and liqor positions during liquidation
-				2009: "Account Below IMR",
-				// When leaving liqee's account with a margin ratio above tolerance,
-				// meaning that liqor has overbought position
-				2010: "Account Above Tolerance",
+					// Tried accessing a nonexistent account.
+					2000: "Account Not Found",
+					// Tried accessing a nonexistent account position.
+					2001: "Position Not Found",
+					// Tried creating a new position when the account already has the maximum
+					// allowed number of open positions.
+					2002: "Max Positions Exceeded",
+					// An operation brought an account below initial margin requirements.
+					// 2003: "Initial Margin Requirement Violated",
+					2003: "Margin Requirements Violated, Try Lowering Size",
+					// Account is above MMR, so can't be liquidated.
+					2004: "Account Above MMR",
+					// Cannot realize bad debt via means other than calling 'liquidate'.
+					2005: "Account Bad Debt",
+					// Cannot withdraw more than the account's free collateral.
+					2006: "Insufficient Free Collateral",
+					// Cannot delete a position that is not worthless
+					2007: "Position Not Null",
+					// Tried placing a new pending order when the position already has the maximum
+					// allowed number of pending orders.
+					2008: "Max Pending Orders Exceeded",
+					// Used for checking both liqee and liqor positions during liquidation
+					2009: "Account Below IMR",
+					// When leaving liqee's account with a margin ratio above tolerance,
+					// meaning that liqor has overbought position
+					2010: "Account Above Tolerance",
 
-				// Orderbook & OrderedMap
+					// Orderbook & OrderedMap
 
-				// While searching for a key, but it doesn't exist.
-				3000: "Key Does Not Exist",
-				// While inserting already existing key.
-				3001: "Key Already Exists",
-				// When attempting to destroy a non-empty map
-				3002: "Destroying Not Empty Map",
-				// Invalid user tries to modify an order
-				3003: "Invalid User For Order",
-				// Orderbook flag requirements violated
-				3004: "Flag Requirements Violated",
-				// Minimum size matched not reached
-				3005: "Not Enough Liquidity",
+					// While searching for a key, but it doesn't exist.
+					3000: "Key Does Not Exist",
+					// While inserting already existing key.
+					3001: "Key Already Exists",
+					// When attempting to destroy a non-empty map
+					3002: "Destroying Not Empty Map",
+					// Invalid user tries to modify an order
+					3003: "Invalid User For Order",
+					// Orderbook flag requirements violated
+					3004: "Flag Requirements Violated",
+					// Minimum size matched not reached
+					3005: "Not Enough Liquidity",
+				},
 			},
 		};
 	}
