@@ -25,12 +25,12 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	allocateCoinAmount: Balance;
 	buyCoinType: CoinType;
 	customRecipient?: SuiAddress;
-	expiryTimestampMs: Timestamp;
+	expiryIntervalMs: Timestamp;
 	isSponsoredTx?: boolean;
 	integratorFee?: LimitOrdersIntegratorFeeData;
 	// strategy: LimitOrderStrategy;
 	minAmountOut: Balance;
-	stopLossPrice: number;
+	stopLossPrice: number | undefined;
 }
 
 // export type LimitOrderStrategy = {
@@ -106,7 +106,7 @@ export interface LimitOrderObject {
 		timestamp: Timestamp;
 		txnDigest: TransactionDigest;
 	};
-	expiryMs: Timestamp;
+	expiryTimestampMs: Timestamp;
 	status: LimitOrdersOrderStatus | undefined;
 	error: string | undefined;
 	integratorFee?: LimitOrdersIntegratorFeeData;
