@@ -334,6 +334,18 @@ export class FarmsStakingPool extends Caller {
 		});
 	}
 
+	public async getUpdateMinStakeAmountTransaction(inputs: {
+		ownerCapId: ObjectId;
+		minStakeAmount: bigint;
+		walletAddress: SuiAddress;
+	}) {
+		return this.useProvider().buildSetStakingPoolMinStakeAmountTx({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
+	}
+
 	public getGrantOneTimeAdminCapTransaction(
 		inputs: ApiFarmsGrantOneTimeAdminCapBody
 	) {
