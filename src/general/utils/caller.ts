@@ -67,15 +67,6 @@ export class Caller {
 			throw new Error("no apiBaseUrl: unable to fetch data");
 
 		// TODO: handle url prefixing and api calls based on network differently
-		console.log("urlForApiCall", {
-			url,
-			apiBaseUrl: this.apiBaseUrl,
-			prefix: this.apiUrlPrefix,
-			fullUrl: `${this.apiBaseUrl}/api/${
-				this.apiUrlPrefix + (url === "" ? "" : "/")
-			}${url}`,
-		});
-
 		return `${this.apiBaseUrl}/api/${
 			this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;
@@ -141,7 +132,6 @@ export class Caller {
 			disableBigIntJsonParsing?: boolean;
 		}
 	) {
-		console.log("fetchApiTransaction", { url });
 		return Transaction.from(
 			await this.fetchApi<SerializedTransaction, BodyType>(
 				url,

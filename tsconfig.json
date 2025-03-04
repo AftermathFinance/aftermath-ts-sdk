@@ -2,7 +2,6 @@
 	"include": ["src/**/*"],
 	"exclude": ["node_modules"],
 	"compilerOptions": {
-		"sourceMap": true,
 		"target": "ES6",
 		"declaration": true,
 		"outDir": "dist",

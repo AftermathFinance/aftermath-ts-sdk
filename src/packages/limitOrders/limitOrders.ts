@@ -58,7 +58,7 @@ export class LimitOrders extends Caller {
 		return this.fetchApi<
 			LimitOrderObject[],
 			ApiLimitOrdersPastOrdersOwnedBody
-		>("executed", inputs);
+		>("past", inputs);
 	}
 
 	// =========================================================================
@@ -105,7 +105,7 @@ export class LimitOrders extends Caller {
 	 * @returns Message to sign.
 	 */
 
-	public cancelLimitOrderMessageToSign(inputs: { orderIds: ObjectId[] }): {
+	public cancelLimitOrdersMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;
 		order_object_ids: string[];
 	} {

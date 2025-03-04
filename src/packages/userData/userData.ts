@@ -14,10 +14,6 @@ export class UserData extends Caller {
 		super(config, "user-data");
 	}
 
-	public static readonly constants = {
-		termsAndConsKey: "user-signedTermsAndCons",
-	};
-
 	// =========================================================================
 	//  API
 	// =========================================================================
@@ -25,7 +21,7 @@ export class UserData extends Caller {
 	 * Fetches the API for users public key.
 	 * @async
 	 * @param { SuiAddress } inputs - An object containing the walletAddress.
-	 * @returns { Promise<string | undefined> } A promise that resolves users public key.
+	 * @returns { Promise<string | undefined | "None"> } A promise that resolves users public key.
 	 */
 
 	public async getUserPublicKey(

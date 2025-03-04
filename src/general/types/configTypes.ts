@@ -29,7 +29,7 @@ export interface ConfigAddresses {
 	scallop?: ScallopAddresses;
 	leveragedStaking?: LeveragedStakingAddresses;
 	dca?: DcaAddresses;
-	limit?: LimitAddresses;
+	limitOrders?: LimitAddresses;
 	sharedCustody?: SharedCustodyAddresses;
 	nfts?: NftsAddresses;
 }
