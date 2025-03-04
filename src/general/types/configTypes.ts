@@ -199,7 +199,7 @@ export interface DcaAddresses {
 
 export interface LimitAddresses {
 	packages: {
-		limit: SuiAddress;
+		limitOrders: SuiAddress;
 	};
 }
 
