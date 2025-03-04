@@ -82,7 +82,7 @@ export interface DcaOrderTradeObject {
 		amount: Balance;
 	};
 	txnDigest: TransactionDigest;
-	txnDate: Timestamp;
+	txnTimestamp: Timestamp;
 	rate: number | undefined;
 }
 

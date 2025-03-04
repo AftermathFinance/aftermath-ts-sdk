@@ -17,7 +17,7 @@ export class LimitOrdersApi {
 	// =========================================================================
 
 	constructor(private readonly Provider: AftermathApi) {
-		const addresses = this.Provider.addresses.limit;
+		const addresses = this.Provider.addresses.limitOrders;
 		if (!addresses) {
 			throw new Error(
 				"not all required addresses have been set in provider"

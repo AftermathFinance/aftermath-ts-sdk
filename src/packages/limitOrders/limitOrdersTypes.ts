@@ -28,26 +28,9 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	expiryIntervalMs: Timestamp;
 	isSponsoredTx?: boolean;
 	integratorFee?: LimitOrdersIntegratorFeeData;
-	// strategy: LimitOrderStrategy;
 	minAmountOut: Balance;
 	stopLossPrice: number | undefined;
 }
-
-// export type LimitOrderStrategy = {
-// 	type: "takeProfitStopLoss";
-// 	minAmountOut: Balance;
-// 	stopLossPrice: Balance;
-// };
-// | {
-// 		type: "iceberg";
-// 		minAmountOut: Balance;
-// 		stopLossPrice: Balance;
-// 		subOrders: ApiLimitOrdersSubOrdersBody;
-//   }
-// | {
-// 		type: "ladder";
-// 		orders: ApiLimitLaddersOrdersBody[];
-//   };
 
 export interface ApiLimitOrdersSubOrdersBody {
 	orderPrice: Balance;
@@ -106,11 +89,11 @@ export interface LimitOrderObject {
 		timestamp: Timestamp;
 		txnDigest: TransactionDigest;
 	};
-	expiryTimestampMs: Timestamp;
-	status: LimitOrdersOrderStatus | undefined;
-	error: string | undefined;
+	expiryTimestamp: Timestamp;
+	status: LimitOrdersOrderStatus;
+	error?: string;
 	integratorFee?: LimitOrdersIntegratorFeeData;
-	stopLossTrigger: number;
+	stopLossTrigger?: number;
 }
 
 // =========================================================================

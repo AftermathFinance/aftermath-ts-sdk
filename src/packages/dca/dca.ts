@@ -1,10 +1,8 @@
-import { CallerConfig, ObjectId, SuiNetwork } from "../../types";
+import { CallerConfig, ObjectId } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import {
 	ApiDCAsOwnedBody,
-	DcaOrdersObject,
 	ApiDcaTransactionForCreateOrderBody,
 	ApiDcaTransactionForCloseOrderBody,
 	DcaOrderObject,
