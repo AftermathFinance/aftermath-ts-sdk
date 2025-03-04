@@ -36,7 +36,7 @@ export class LimitOrdersApi {
 
 	private createdOrderEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.limit,
+			this.addresses.packages.limitOrders,
 			"events",
 			"CreatedOrderEvent"
 		);
