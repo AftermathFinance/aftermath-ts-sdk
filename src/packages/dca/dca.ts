@@ -6,6 +6,7 @@ import {
 	ApiDcaTransactionForCreateOrderBody,
 	ApiDcaTransactionForCloseOrderBody,
 	DcaOrderObject,
+	DcaOrdersObject,
 } from "./dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
@@ -29,6 +30,18 @@ export class Dca extends Caller {
 	// =========================================================================
 	//  Class Objects
 	// =========================================================================
+
+	/**
+	 * Fetches the API for dollar cost averaging orders list.
+	 * @deprecated please use `getActiveDcaOrders` and `getPastDcaOrders` instead
+	 */
+
+	public async getAllDcaOrders(inputs: ApiDCAsOwnedBody) {
+		return this.fetchApi<DcaOrdersObject, ApiDCAsOwnedBody>(
+			"orders",
+			inputs
+		);
+	}
 
 	/**
 	 * Fetches the API for dollar cost averaging active orders list.
@@ -108,10 +121,7 @@ export class Dca extends Caller {
 		order_object_ids: string[];
 	} {
 		return {
-			action:
-				inputs.orderIds.length === 1
-					? "CANCEL_DCA_ORDER"
-					: "CANCEL_DCA_ORDERS",
+			action: "CANCEL_DCA_ORDERS",
 			order_object_ids: inputs.orderIds,
 		};
 	}

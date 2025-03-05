@@ -110,10 +110,7 @@ export class LimitOrders extends Caller {
 		order_object_ids: string[];
 	} {
 		return {
-			action:
-				inputs.orderIds.length === 1
-					? "CANCEL_LIMIT_ORDER"
-					: "CANCEL_LIMIT_ORDERS",
+			action: "CANCEL_LIMIT_ORDERS",
 			order_object_ids: inputs.orderIds,
 		};
 	}
