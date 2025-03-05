@@ -25,7 +25,7 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	allocateCoinAmount: Balance;
 	buyCoinType: CoinType;
 	customRecipient?: SuiAddress;
-	expiryIntervalMs: Timestamp;
+	expiryDurationMs: number;
 	isSponsoredTx?: boolean;
 	integratorFee?: LimitOrdersIntegratorFeeData;
 	minAmountOut: Balance;
@@ -69,7 +69,7 @@ export type LimitOrdersOrderStatus =
 	| "StopLossTriggered";
 
 export interface LimitOrderObject {
-	objectId: ObjectId | undefined;
+	objectId: ObjectId;
 	allocatedCoin: {
 		coin: CoinType;
 		amount: Balance;

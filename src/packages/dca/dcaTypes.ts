@@ -124,7 +124,7 @@ export interface DcaOrderOverviewObject {
 }
 
 export interface DcaOrderObject {
-	objectId: ObjectId | undefined;
+	objectId: ObjectId;
 	overview: DcaOrderOverviewObject;
 	trades: DcaOrderTradeObject[];
 	failed: DcaOrderFailedTradeObject[];
