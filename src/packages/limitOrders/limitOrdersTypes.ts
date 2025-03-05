@@ -78,8 +78,8 @@ export interface LimitOrderObject {
 		coin: CoinType;
 		amount: Balance;
 	};
-	actualAmountSold: Balance;
-	actualAmountBought: Balance;
+	currentAmountSold: Balance;
+	currentAmountBought: Balance;
 	recipient: SuiAddress;
 	created: {
 		timestamp: Timestamp;
