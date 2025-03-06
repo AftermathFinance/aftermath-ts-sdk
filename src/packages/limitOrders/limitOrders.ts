@@ -130,7 +130,7 @@ export class LimitOrders extends Caller {
 					minOrderSizeUsd: number;
 			  }
 			| undefined,
-			undefined
-		>("min-order-size");
+			{}
+		>("min-order-size", {});
 	}
 }
