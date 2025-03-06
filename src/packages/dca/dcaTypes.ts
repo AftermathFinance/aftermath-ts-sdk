@@ -110,7 +110,7 @@ export interface DcaOrderOverviewObject {
 	progress: number;
 	created: {
 		timestamp: Timestamp;
-		txnDigest: TransactionDigest | undefined;
+		txnDigest: TransactionDigest;
 	};
 	nextTrade?: {
 		timestamp: Timestamp;

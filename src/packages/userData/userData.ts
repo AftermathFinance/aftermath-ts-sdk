@@ -2,7 +2,7 @@ import { Caller } from "../../general/utils/caller";
 import { CallerConfig } from "../../types";
 import {
 	ApiUserDataCreateUserBody,
-	ApiUserDataOwnedBody,
+	ApiUserDataFetchPublicKeyBody,
 	UserPublicKey,
 } from "./userDataTypes";
 
@@ -22,13 +22,13 @@ export class UserData extends Caller {
 	 * Fetches the API for users public key.
 	 * @async
 	 * @param { SuiAddress } inputs - An object containing the walletAddress.
-	 * @returns { Promise<string | undefined | "None"> } A promise that resolves users public key.
+	 * @returns { Promise<UserPublicKey> } A promise that resolves users public key.
 	 */
 
 	public async getUserPublicKey(
-		inputs: ApiUserDataOwnedBody
+		inputs: ApiUserDataFetchPublicKeyBody
 	): Promise<UserPublicKey> {
-		return this.fetchApi<UserPublicKey, ApiUserDataOwnedBody>(
+		return this.fetchApi<UserPublicKey, ApiUserDataFetchPublicKeyBody>(
 			`public-key`,
 			inputs
 		);

@@ -127,11 +127,10 @@ export class LimitOrders extends Caller {
 	public async getMinOrderSize() {
 		return this.fetchApi<
 			| {
-					minOrderCoinType: CoinType;
 					minOrderSizeUsd: number;
 			  }
 			| undefined,
 			undefined
-		>("min-order-size-usd");
+		>("min-order-size");
 	}
 }
