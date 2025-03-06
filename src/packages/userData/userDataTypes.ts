@@ -12,6 +12,6 @@ export interface ApiUserDataCreateUserBody {
 	signature: string;
 }
 
-export interface ApiUserDataOwnedBody {
+export interface ApiUserDataFetchPublicKeyBody {
 	walletAddress: SuiAddress;
 }

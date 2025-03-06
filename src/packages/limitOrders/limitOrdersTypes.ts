@@ -28,8 +28,8 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	expiryDurationMs: number;
 	isSponsoredTx?: boolean;
 	integratorFee?: LimitOrdersIntegratorFeeData;
-	minAmountOut: Balance;
-	stopLossPrice: number | undefined;
+	outputToInputExchangeRate: number;
+	outputToInputStopLossExchangeRate: number | undefined;
 }
 
 export interface ApiLimitOrdersSubOrdersBody {
@@ -83,7 +83,7 @@ export interface LimitOrderObject {
 	recipient: SuiAddress;
 	created: {
 		timestamp: Timestamp;
-		txnDigest: TransactionDigest | undefined;
+		txnDigest: TransactionDigest;
 	};
 	finished?: {
 		timestamp: Timestamp;
@@ -93,7 +93,7 @@ export interface LimitOrderObject {
 	status: LimitOrdersOrderStatus;
 	error?: string;
 	integratorFee?: LimitOrdersIntegratorFeeData;
-	stopLossTrigger?: number;
+	outputToInputStopLossExchangeRate?: number;
 }
 
 // =========================================================================
