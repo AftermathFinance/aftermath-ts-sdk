@@ -1,5 +1,10 @@
 import { EventOnChain } from "../../../general/types/castingTypes";
-import { BigIntAsString, ObjectId, SuiAddress } from "../../../types";
+import {
+	BigIntAsString,
+	NumberAsString,
+	ObjectId,
+	SuiAddress,
+} from "../../../types";
 
 // =========================================================================
 //  DCA onchain Events
@@ -16,7 +21,7 @@ export type LimitOrdersCreatedOrderEventOnChain = EventOnChain<{
 		output_type: Uint8Array;
 		gas_amount: BigIntAsString;
 		encrypted_fields: Uint8Array;
-		// integrator_fee_bps: BigIntAsString;
+		integrator_fee_bps: NumberAsString;
 		integrator_fee_recipient: SuiAddress;
 	};
 }>;

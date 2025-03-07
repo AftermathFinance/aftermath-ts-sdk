@@ -119,7 +119,7 @@ export interface LimitOrdersCreatedOrderEvent extends Event {
 	inputAmount: Balance;
 	outputType: CoinType;
 	gasValue: Balance;
-	// integratorFeeBps: number;
+	integratorFeeBps: number;
 	integratorFeeRecipient: SuiAddress;
 	encryptedFields: Uint8Array;
 }

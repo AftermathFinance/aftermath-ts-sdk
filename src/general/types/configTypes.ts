@@ -190,6 +190,7 @@ export interface ScallopAddresses {
 
 export interface DcaAddresses {
 	packages: {
+		dcaInitial: SuiAddress;
 		dca: SuiAddress;
 	};
 	objects: {
@@ -199,6 +200,7 @@ export interface DcaAddresses {
 
 export interface LimitAddresses {
 	packages: {
+		limitOrdersInitial: SuiAddress;
 		limitOrders: SuiAddress;
 	};
 }
