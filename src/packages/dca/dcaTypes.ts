@@ -1,10 +1,12 @@
 import { ObjectId, SuiAddress } from "../../types";
-import { CoinType } from "../coin/coinTypes";
+import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import {
 	Balance,
 	Timestamp,
 	Event,
 	TransactionDigest,
+	SerializedTransaction,
+	BigIntAsString,
 } from "../../general/types/generalTypes";
 
 // =========================================================================
@@ -82,8 +84,14 @@ export interface DcaOrderTradeObject {
 		coin: CoinType;
 		amount: Balance;
 	};
+	/** @deprecated use txnDigest instead */
+	tnxDigest: TransactionDigest;
 	txnDigest: TransactionDigest;
+
+	/** @deprecated use txnTimestamp instead */
+	tnxDate: Timestamp;
 	txnTimestamp: Timestamp;
+
 	rate: number | undefined;
 }
 
@@ -216,4 +224,24 @@ export interface DcaExecutedTradeEvent extends Event {
 	inputAmount: Balance;
 	outputType: CoinType;
 	outputAmount: Balance;
+}
+
+// =========================================================================
+// User Fetch
+// =========================================================================
+
+/** @deprecated use `userData` package instead */
+export interface ApiDcaCreateUserBody {
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+}
+
+// =========================================================================
+//  Owned DCAs
+// =========================================================================
+
+/** @deprecated use `userData` package instead */
+export interface ApiDCAsOwnedBody {
+	walletAddress: SuiAddress;
 }
