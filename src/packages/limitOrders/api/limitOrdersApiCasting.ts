@@ -27,6 +27,7 @@ export class LimitOrdersApiCasting {
 			integratorFeeRecipient: Helpers.addLeadingZeroesToType(
 				fields.integrator_fee_recipient
 			),
+			integratorFeeBps: Number(fields.integrator_fee_bps),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
