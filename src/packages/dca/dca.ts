@@ -126,6 +126,10 @@ export class Dca extends Caller {
 		};
 	}
 
+	// =========================================================================
+	// Interactions - Deprecated
+	// =========================================================================
+
 	/**
 	 * Method for getting the creation user message to sign.
 	 * @param inputs - The inputs for the message.
@@ -161,7 +165,7 @@ export class Dca extends Caller {
 			{
 				walletAddress: SuiAddress;
 			}
-		>(`public-key`, inputs);
+		>(`user/get`, inputs);
 	}
 
 	/**
@@ -176,7 +180,7 @@ export class Dca extends Caller {
 		inputs: ApiDcaCreateUserBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiDcaCreateUserBody>(
-			`save-public-key`,
+			`/user/add`,
 			inputs
 		);
 	}

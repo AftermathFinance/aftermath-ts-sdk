@@ -155,6 +155,9 @@ export interface DcaOrdersObject {
 // User Fetch
 // =========================================================================
 
+/**
+ * @deprecated please use ApiUserDataCreateUserBody from userData package instead
+ * */
 export interface ApiDcaCreateUserBody {
 	walletAddress: SuiAddress;
 	bytes: string;
