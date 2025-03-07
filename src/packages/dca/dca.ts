@@ -1,4 +1,4 @@
-import { ObjectId, SuiNetwork } from "../../types";
+import { CallerConfig, ObjectId, SuiNetwork } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
@@ -25,11 +25,8 @@ export class Dca extends Caller {
 	//  Constructor
 	// =========================================================================
 
-	constructor(
-		public readonly network?: SuiNetwork,
-		private readonly Provider?: AftermathApi
-	) {
-		super(network, "dca");
+	constructor(config?: CallerConfig) {
+		super(config, "dca");
 	}
 
 	// =========================================================================
@@ -117,18 +114,21 @@ export class Dca extends Caller {
 	// =========================================================================
 
 	/**
-	 * Method for getting the cancelation dca order message to sign.
+	 * Method for getting the cancellation dca order message to sign.
 	 * @param inputs - The inputs for the message.
 	 * @returns Message to sign.
 	 */
 
-	public closeDcaOrderMessageToSign(inputs: { orderId: ObjectId }): {
+	public closeDcaOrdersMessageToSign(inputs: { orderIds: ObjectId[] }): {
 		action: string;
-		order_object_id: string;
+		order_object_ids: string[];
 	} {
 		return {
-			action: "CANCEL_DCA_ORDER",
-			order_object_id: inputs.orderId,
+			action:
+				inputs.orderIds.length === 1
+					? "CANCEL_DCA_ORDER"
+					: "CANCEL_DCA_ORDERS",
+			order_object_ids: inputs.orderIds,
 		};
 	}
 

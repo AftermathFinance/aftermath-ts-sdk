@@ -204,6 +204,7 @@ export class FarmsApi implements MoveErrorsInterface {
 					9: "Invalid Lock Multiplier",
 					10: "Invalid Argument",
 					11: "Deprecated",
+					12: "Afterburner Vault Still Active",
 				},
 				[FarmsApi.constants.moduleNames.stakedPosition]: {
 					/// A user attempts provides a `Coin` or `u64` with value zero.
@@ -894,6 +895,30 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
+	public setStakingPoolMinStakeAmountTx = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		minStakeAmount: bigint;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"set_min_stake_amount"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.pure.u64(inputs.minStakeAmount),
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Staking Pool Inspection Transaction Commands
 	// =========================================================================
@@ -1227,6 +1252,11 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx;
 	};
+
+	public buildSetStakingPoolMinStakeAmountTx =
+		Helpers.transactions.createBuildTxFunc(
+			this.setStakingPoolMinStakeAmountTx
+		);
 
 	public buildGrantOneTimeAdminCapTx = Helpers.transactions.createBuildTxFunc(
 		this.grantOneTimeAdminCapTx

@@ -654,7 +654,7 @@ describe("Perpetuals Tests", () => {
 		)?.timestamp_ms;
 		console.log(
 			"Last upd ms",
-			mktState.fundingLastUpdMs,
+			mktState.fundingLastUpdateMs,
 			"onchain time",
 			onchainTime
 		);

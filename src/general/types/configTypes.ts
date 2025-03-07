@@ -173,6 +173,7 @@ export interface DynamicGasAddresses {
 
 export interface OracleAddresses {
 	packages: {
+		events: SuiAddress;
 		oracleReader: SuiAddress;
 	};
 }
@@ -191,13 +192,13 @@ export interface DcaAddresses {
 		dca: SuiAddress;
 	};
 	objects: {
-		config: ObjectId;
+		readonly config: ObjectId;
 	};
 }
 
 export interface SharedCustodyAddresses {
 	address: ObjectId;
-	// publicKey: ObjectId;
+	publicKey: ObjectId;
 }
 
 export interface NftsAddresses {

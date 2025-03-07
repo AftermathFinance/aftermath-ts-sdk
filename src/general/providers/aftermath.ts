@@ -16,6 +16,7 @@ import { Casting } from "../utils/casting";
 import { Caller } from "../utils/caller";
 import { Prices } from "../prices/prices";
 import {
+	Auth,
 	LeveragedStaking,
 	NftAmm,
 	ReferralVault,
@@ -31,7 +32,7 @@ import { DynamicGas } from "../dynamicGas/dynamicGas";
 import { AftermathApi } from "./aftermathApi";
 import { SuiClient, SuiHTTPTransport } from "@mysten/sui/client";
 import { Dca } from "../../packages/dca/dca";
-// import { Multisig } from "../../packages/multisig/multisig";
+import { Multisig } from "../../packages/multisig/multisig";
 
 /**
  * @class Aftermath Provider
@@ -60,8 +61,14 @@ export class Aftermath extends Caller {
 	 * @param network - The Sui network to interact with
 	 * @returns New `Aftermath` instance
 	 */
-	constructor(network?: SuiNetwork, private Provider?: AftermathApi) {
-		super(network);
+	constructor(
+		private readonly network?: SuiNetwork,
+		private Provider?: AftermathApi
+	) {
+		super({
+			network,
+			accessToken: undefined,
+		});
 	}
 
 	// =========================================================================
@@ -114,59 +121,60 @@ export class Aftermath extends Caller {
 	 * Returns an instance of the Pools class.
 	 * @returns {Pools} An instance of the Pools class.
 	 */
-	public Pools = () => new Pools(this.network, this.Provider);
+	public Pools = () => new Pools(this.config, this.Provider);
 	/**
 	 * Creates a new instance of the Staking class.
 	 * @returns A new instance of the Staking class.
 	 */
-	public Staking = () => new Staking(this.network, this.Provider);
-	public LeveragedStaking = () => new LeveragedStaking(this.network);
-	public SuiFrens = () => new SuiFrens(this.network, this.Provider);
-	public Faucet = () => new Faucet(this.network, this.Provider);
+	public Staking = () => new Staking(this.config, this.Provider);
+	public LeveragedStaking = () => new LeveragedStaking(this.config);
+	public SuiFrens = () => new SuiFrens(this.config, this.Provider);
+	public Faucet = () => new Faucet(this.config, this.Provider);
 	/**
 	 * Creates a new instance of the Router class with the current network.
 	 * @returns A new instance of the Router class.
 	 */
-	public Router = () => new Router(this.network);
-	public NftAmm = () => new NftAmm(this.network, this.Provider);
-	public ReferralVault = () => new ReferralVault(this.network, this.Provider);
-	public Perpetuals = () => new Perpetuals(this.network);
-	public Oracle = () => new Oracle(this.network, this.Provider);
+	public Router = () => new Router(this.config);
+	public NftAmm = () => new NftAmm(this.config, this.Provider);
+	public ReferralVault = () => new ReferralVault(this.config, this.Provider);
+	public Perpetuals = () => new Perpetuals(this.config);
+	public Oracle = () => new Oracle(this.config, this.Provider);
 	/**
 	 * Creates a new instance of the Farms class.
 	 * @returns A new instance of the Farms class.
 	 */
-	public Farms = () => new Farms(this.network, this.Provider);
+	public Farms = () => new Farms(this.config, this.Provider);
 	/**
 	 * Creates a new instance of the DCA class.
 	 * @returns A new instance of the DCA class.
 	 */
-	public Dca = () => new Dca(this.network, this.Provider);
-	// public Multisig = () => new Multisig(this.network, this.Provider);
+	public Dca = () => new Dca(this.config);
+	public Multisig = () => new Multisig(this.config, this.Provider);
 
 	// =========================================================================
 	//  General
 	// =========================================================================
 
-	public Sui = () => new Sui(this.network, this.Provider);
-	public Prices = () => new Prices(this.network);
+	public Sui = () => new Sui(this.config, this.Provider);
+	public Prices = () => new Prices(this.config);
 	/**
 	 * Creates a new instance of the Wallet class.
 	 * @param address - The address of the wallet.
 	 * @returns A new instance of the Wallet class.
 	 */
 	public Wallet = (address: SuiAddress) =>
-		new Wallet(address, this.network, this.Provider);
+		new Wallet(address, this.config, this.Provider);
 	/**
 	 * Creates a new instance of the Coin class.
 	 * @param coinType The type of coin to create.
 	 * @returns A new instance of the Coin class.
 	 */
 	public Coin = (coinType?: CoinType) =>
-		new Coin(coinType, this.network, this.Provider);
-	public HistoricalData = () => new HistoricalData(this.network);
-	// public PriceFeeds = () => new PriceFeeds(this.network, this.Provider);
-	public DynamicGas = () => new DynamicGas(this.network);
+		new Coin(coinType, this.config, this.Provider);
+	public HistoricalData = () => new HistoricalData(this.config);
+	// public PriceFeeds = () => new PriceFeeds(this.config, this.Provider);
+	public DynamicGas = () => new DynamicGas(this.config);
+	public Auth = () => new Auth(this.config);
 
 	// =========================================================================
 	//  Utils

@@ -2,6 +2,7 @@ import { SuiNetwork } from "../types/suiTypes";
 import {
 	ApiTransactionsBody,
 	Balance,
+	CallerConfig,
 	SuiAddress,
 	TransactionsWithCursor,
 	Url,
@@ -13,10 +14,10 @@ import { AftermathApi } from "../providers";
 export class Wallet extends Caller {
 	constructor(
 		public readonly address: SuiAddress,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, `wallet/${address}`);
+		super(config, `wallet/${address}`);
 	}
 
 	// =========================================================================

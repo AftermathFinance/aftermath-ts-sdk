@@ -41,7 +41,7 @@ export class PoolsApiCasting {
 		) as PoolFieldsOnChain;
 
 		const lpCoinType = Helpers.addLeadingZeroesToType(
-			new Coin(poolFieldsOnChain.lp_supply.type).innerCoinType
+			Coin.getInnerCoinType(poolFieldsOnChain.lp_supply.type)
 		);
 
 		const coins: PoolCoins = poolFieldsOnChain.type_names.reduce(
@@ -145,7 +145,6 @@ export class PoolsApiCasting {
 		return {
 			poolId: fields.pool_id,
 			depositor: fields.issuer,
-			// TODO: create a function for all this 0x nonsense
 			types: fields.types.map((type) =>
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),

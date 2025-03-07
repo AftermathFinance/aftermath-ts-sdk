@@ -1,41 +1,41 @@
-// import { Caller } from "../../general/utils/caller";
-// import { SuiNetwork } from "../../types";
-// import { AftermathApi } from "../../general/providers";
-// import { ApiMultisigUserBody } from "./multisigTypes";
+import { Caller } from "../../general/utils/caller";
+import { CallerConfig, SuiNetwork } from "../../types";
+import { AftermathApi } from "../../general/providers";
+import { ApiMultisigUserBody } from "./multisigTypes";
 
-// export class Multisig extends Caller {
-// 	// =========================================================================
-// 	//  Constructor
-// 	// =========================================================================
+export class Multisig extends Caller {
+	// =========================================================================
+	//  Constructor
+	// =========================================================================
 
-// 	constructor(
-// 		public readonly network?: SuiNetwork,
-// 		private readonly Provider?: AftermathApi
-// 	) {
-// 		super(network, "multisig");
-// 	}
+	constructor(
+		config?: CallerConfig,
+		private readonly Provider?: AftermathApi
+	) {
+		super(config, "multisig");
+	}
 
-// 	// =========================================================================
-// 	//  API
-// 	// =========================================================================
+	// =========================================================================
+	//  API
+	// =========================================================================
 
-// 	/**
-// 	 * Fetches API for multisig sign for user.
-// 	 * @async
-// 	 * @param { ApiMultisigUserBody } inputs - An object containing the users public key.
-// 	 * @returns {Promise<MultisigBody>} A promise that resolves to object with multisig address and public key.
-// 	 */
-// 	public async getMultisigForUser(inputs: ApiMultisigUserBody) {
-// 		return this.useProvider().fetchMultisigForUser(inputs);
-// 	}
+	/**
+	 * Fetches API for multisig sign for user.
+	 * @async
+	 * @param { ApiMultisigUserBody } inputs - An object containing the users public key.
+	 * @returns {Promise<MultisigBody>} A promise that resolves to object with multisig address and public key.
+	 */
+	public getMultisigForUser(inputs: ApiMultisigUserBody) {
+		return this.useProvider().getMultisigForUser(inputs);
+	}
 
-// 	// =========================================================================
-// 	//  Private Helpers
-// 	// =========================================================================
+	// =========================================================================
+	//  Private Helpers
+	// =========================================================================
 
-// 	private useProvider = () => {
-// 		const provider = this.Provider?.Multisig();
-// 		if (!provider) throw new Error("missing AftermathApi Provider");
-// 		return provider;
-// 	};
-// }
+	private useProvider = () => {
+		const provider = this.Provider?.Multisig();
+		if (!provider) throw new Error("missing AftermathApi Provider");
+		return provider;
+	};
+}

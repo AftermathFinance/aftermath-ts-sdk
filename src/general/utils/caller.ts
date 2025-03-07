@@ -2,10 +2,12 @@ import { Transaction } from "@mysten/sui/transactions";
 import {
 	ApiEventsBody,
 	ApiIndexerEventsBody,
+	CallerConfig,
 	EventsWithCursor,
 	IndexerEventsWithCursor,
 	SerializedTransaction,
 	SuiNetwork,
+	UniqueId,
 	Url,
 } from "../../types";
 import { Helpers } from "./helpers";
@@ -19,13 +21,13 @@ export class Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		public readonly config: CallerConfig = {},
 		private readonly apiUrlPrefix: Url = ""
 	) {
 		this.apiBaseUrl =
-			network === undefined
+			this.config.network === undefined
 				? undefined
-				: Caller.apiBaseUrlForNetwork(network);
+				: Caller.apiBaseUrlForNetwork(this.config.network);
 	}
 
 	// =========================================================================
@@ -66,7 +68,7 @@ export class Caller {
 
 		// TODO: handle url prefixing and api calls based on network differently
 		return `${this.apiBaseUrl}/api/${
-			this.apiUrlPrefix === "" ? "" : this.apiUrlPrefix + "/"
+			this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;
 	};
 
@@ -97,19 +99,22 @@ export class Caller {
 
 		const apiCallUrl = this.urlForApiCall(url);
 
+		const headers = {
+			// "Content-Type": "text/plain",
+			"Content-Type": "application/json",
+			...(this.config.accessToken
+				? { Authorization: `Bearer ${this.config.accessToken}` }
+				: {}),
+		};
 		const uncastResponse = await (body === undefined
 			? fetch(apiCallUrl, {
-					headers: {
-						"Content-Type": "text/plain",
-					},
+					headers,
 					signal,
 			  })
 			: fetch(apiCallUrl, {
 					method: "POST",
-					headers: {
-						"Content-Type": "text/plain",
-					},
 					body: JSON.stringify(body),
+					headers,
 					signal,
 			  }));
 
@@ -174,7 +179,7 @@ export class Caller {
 
 	protected async fetchApiIndexerEvents<
 		EventType,
-		BodyType = ApiIndexerEventsBody
+		BodyType extends ApiIndexerEventsBody
 	>(
 		url: Url,
 		body: BodyType,
@@ -182,12 +187,24 @@ export class Caller {
 		options?: {
 			disableBigIntJsonParsing?: boolean;
 		}
-	) {
-		return this.fetchApi<IndexerEventsWithCursor<EventType>, BodyType>(
+	): Promise<IndexerEventsWithCursor<EventType>> {
+		const events = await this.fetchApi<EventType[], BodyType>(
 			url,
 			body,
 			signal,
 			options
 		);
+		// TODO: handle this logic on af-fe instead (to handle max limit case)
+		return {
+			events,
+			nextCursor:
+				events.length < (body.limit ?? 1)
+					? undefined
+					: events.length + (body.cursor ?? 0),
+		};
 	}
+
+	protected setAccessToken = (accessToken: UniqueId) => {
+		this.config.accessToken = accessToken;
+	};
 }

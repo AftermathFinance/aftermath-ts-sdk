@@ -14,6 +14,7 @@ import {
 	ExternalFee,
 	IFixedAsString,
 	IFixed,
+	ApiIndexerEventsBody,
 } from "../../general/types/generalTypes";
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
@@ -51,10 +52,16 @@ export type RouterProtocolName =
 	| "HopFun"
 	| "Kriya"
 	| "KriyaClmm"
+	| "Metastable"
 	| "MovePump"
+	| "Obric"
 	| "SuiSwap"
-	| "Turbos";
-// | "afSUI"; // NOTE: this is not added yet
+	| "Turbos"
+	| "SpringSui"
+	| "Steamm"
+	// | "AftermathLsd"
+	| "Bluefin"
+	| "TurbosFun";
 
 // =========================================================================
 //  Paths
@@ -178,6 +185,7 @@ export interface ApiRouterTransactionForCompleteTradeRouteBody {
 	 */
 	slippage: Slippage;
 	isSponsoredTx?: boolean;
+	customRecipient?: SuiAddress;
 }
 
 export type ApiRouterAddTransactionForCompleteTradeRouteBody =
@@ -202,7 +210,7 @@ export interface ApiRouterAddTransactionForCompleteTradeRouteV0Response {
 	coinOutId: TransactionObjectArgumentV0 | undefined;
 }
 
-export type ApiRouterTradeEventsBody = ApiEventsBody & {
+export type ApiRouterTradeEventsBody = ApiIndexerEventsBody & {
 	walletAddress: SuiAddress;
 };
 

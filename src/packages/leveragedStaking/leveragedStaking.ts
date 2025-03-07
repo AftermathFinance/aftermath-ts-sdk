@@ -11,6 +11,7 @@ import {
 	LeveragedStakingPerformanceDataPoint,
 	LeveragedStakingEvent,
 	ApiIndexerUserEventsBody,
+	CallerConfig,
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 
@@ -32,8 +33,8 @@ export class LeveragedStaking extends Caller {
 	 * Creates an instance of the LeveragedStaking class.
 	 * @param network The network to connect to.
 	 */
-	constructor(public readonly network?: SuiNetwork | Url) {
-		super(network, "leveraged-staking");
+	constructor(config?: CallerConfig) {
+		super(config, "leveraged-staking");
 	}
 
 	// =========================================================================

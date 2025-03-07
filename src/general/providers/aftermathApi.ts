@@ -31,6 +31,7 @@ import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leverag
 import { NftsApi } from "../nfts/nftsApi";
 import { Helpers } from "../utils";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
+import { MultisigApi } from "../../packages/multisig/api/multisigApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -74,8 +75,7 @@ export class AftermathApi {
 	 * Creates an instance of AftermathApi.
 	 * @param provider - The SuiClient instance to use for interacting with the blockchain.
 	 * @param addresses - The configuration addresses for the Aftermath protocol.
-	 * @param indexerCaller - The IndexerCaller instance to use for querying the blockchain.
-	 * @param apiKey - (Optional) The API key to use for querying CoinGecko for token prices.
+	 * @param providerV0 - The SuiClient instance to use for interacting with the blockchain.
 	 */
 	public constructor(
 		public readonly provider: SuiClient,
@@ -125,7 +125,7 @@ export class AftermathApi {
 	public Oracle = () => new OracleApi(this);
 	public Farms = () => new FarmsApi(this);
 	public Dca = () => new DcaApi(this);
-	// public Multisig = () => new MultisigApi(this);
+	public Multisig = () => new MultisigApi(this);
 
 	/**
 	 * Creates a new instance of the RouterApi class.

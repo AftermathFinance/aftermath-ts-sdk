@@ -1,6 +1,6 @@
 import { AftermathApi } from "../../general/providers";
 import { Caller } from "../../general/utils/caller";
-import { ObjectId, SuiNetwork, Url } from "../../types";
+import { CallerConfig, ObjectId, SuiNetwork, Url } from "../../types";
 
 export class Oracle extends Caller {
 	// =========================================================================
@@ -8,10 +8,10 @@ export class Oracle extends Caller {
 	// =========================================================================
 
 	constructor(
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "oracle");
+		super(config, "oracle");
 	}
 
 	// =========================================================================
@@ -19,7 +19,7 @@ export class Oracle extends Caller {
 	// =========================================================================
 
 	public async getPrice(inputs: { priceFeedId: ObjectId }): Promise<number> {
-		return this.fetchApi(`price/${inputs.priceFeedId}`);
+		return this.fetchApi(`${inputs.priceFeedId}/price`);
 	}
 
 	public async getPrices(inputs: {

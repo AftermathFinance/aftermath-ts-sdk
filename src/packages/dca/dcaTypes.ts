@@ -8,13 +8,22 @@ import {
 } from "../../general/types/generalTypes";
 
 // =========================================================================
-//  Initialize Order Transaction
+//  Common Types
 // =========================================================================
 
-export interface ApiDcaInitializeOrdertStrategyBody {
+export interface DcaIntegratorFeeData {
+	feeBps: number;
+	feeRecipient: SuiAddress;
+}
+
+export interface DcaOrderStrategyData {
 	minPrice: Balance;
 	maxPrice: Balance;
 }
+
+// =========================================================================
+//  Initialize Order Transaction
+// =========================================================================
 
 export interface ApiDcaTransactionForCreateOrderBody {
 	walletAddress: SuiAddress;
@@ -23,12 +32,13 @@ export interface ApiDcaTransactionForCreateOrderBody {
 	buyCoinType: CoinType;
 	frequencyMs: Timestamp;
 	tradesAmount: number;
-	strategy?: ApiDcaInitializeOrdertStrategyBody;
+	strategy?: DcaOrderStrategyData;
 	isSponsoredTx?: boolean;
 	delayTimeMs: Timestamp;
 	maxAllowableSlippageBps: number;
 	coinPerTradeAmount: Balance;
 	customRecipient?: SuiAddress;
+	integratorFee?: DcaIntegratorFeeData;
 }
 
 // =========================================================================
@@ -42,6 +52,17 @@ export interface ApiDcaTransactionForCloseOrderBody {
 }
 
 // =========================================================================
+// Manual Close Order Transaction
+// =========================================================================
+
+export type ApiDcaManualCloseOrderBody = {
+	walletAddress: SuiAddress;
+	buyCoinType: CoinType;
+	allocateCoinType: CoinType;
+	orderId: SuiAddress;
+};
+
+// =========================================================================
 //  DCA Order Fetch
 // =========================================================================
 
@@ -49,7 +70,8 @@ export type DcaFailedTradeReason =
 	| "INTERNAL"
 	| "STRATEGY"
 	| "GAS_CAP"
-	| "UNKNOWN_USER";
+	| "UNKNOWN_USER"
+	| "SLIPPAGE";
 
 export interface DcaOrderTradeObject {
 	allocatedCoin: {
@@ -70,11 +92,6 @@ export interface DcaOrderFailedTradeObject {
 	reason: DcaFailedTradeReason | undefined;
 }
 
-export interface DcaOrdertStrategyObject {
-	minPrice: Balance;
-	maxPrice: Balance;
-}
-
 export interface DcaOrderOverviewObject {
 	allocatedCoin: {
 		coin: CoinType;
@@ -89,7 +106,7 @@ export interface DcaOrderOverviewObject {
 	totalTrades: number;
 	tradesRemaining: number;
 	maxSlippageBps: number;
-	strategy?: DcaOrdertStrategyObject;
+	strategy?: DcaOrderStrategyData;
 	recipient?: SuiAddress;
 	progress: number;
 	created: {
@@ -104,6 +121,7 @@ export interface DcaOrderOverviewObject {
 		time: Timestamp;
 		tnxDigest: TransactionDigest;
 	};
+	integratorFee?: DcaIntegratorFeeData;
 }
 
 export interface DcaOrderObject {

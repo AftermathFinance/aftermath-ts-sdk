@@ -1,6 +1,7 @@
 import {
 	Apr,
 	Balance,
+	CallerConfig,
 	CoinType,
 	CoinsToDecimals,
 	CoinsToPrice,
@@ -29,6 +30,7 @@ import duration from "dayjs/plugin/duration";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Coin } from "../coin/coin";
 import { AftermathApi } from "../../general/providers";
+import { Farms } from "./farms";
 
 export class FarmsStakingPool extends Caller {
 	// =========================================================================
@@ -37,10 +39,10 @@ export class FarmsStakingPool extends Caller {
 
 	constructor(
 		public stakingPool: FarmsStakingPoolObject,
-		public readonly network?: SuiNetwork,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "farms");
+		super(config, "farms");
 		this.stakingPool = stakingPool;
 		// this.emitRewards();
 	}
@@ -48,6 +50,22 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 	//  Public
 	// =========================================================================
+
+	// =========================================================================
+	//  Stats
+	// =========================================================================
+
+	public async getTVL(): Promise<number> {
+		return new Farms(this.config, this.Provider).getTVL({
+			farmIds: [this.stakingPool.objectId],
+		});
+	}
+
+	public async getRewardsTVL(): Promise<number> {
+		return new Farms(this.config, this.Provider).getRewardsTVL({
+			farmIds: [this.stakingPool.objectId],
+		});
+	}
 
 	// =========================================================================
 	//  Getters
@@ -74,6 +92,16 @@ export class FarmsStakingPool extends Caller {
 		if (!foundCoin) throw new Error("Invalid coin type");
 
 		return foundCoin;
+	};
+
+	public maxLockDurationMs = (): number => {
+		return Math.max(
+			Math.min(
+				this.stakingPool.maxLockDurationMs,
+				this.stakingPool.emissionEndTimestamp - dayjs().valueOf()
+			),
+			0
+		);
 	};
 
 	// =========================================================================
@@ -300,6 +328,18 @@ export class FarmsStakingPool extends Caller {
 		walletAddress: SuiAddress;
 	}) {
 		return this.useProvider().fetchIncreaseStakingPoolRewardsEmissionsTx({
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		});
+	}
+
+	public async getUpdateMinStakeAmountTransaction(inputs: {
+		ownerCapId: ObjectId;
+		minStakeAmount: bigint;
+		walletAddress: SuiAddress;
+	}) {
+		return this.useProvider().buildSetStakingPoolMinStakeAmountTx({
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,

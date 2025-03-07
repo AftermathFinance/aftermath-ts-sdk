@@ -8,6 +8,7 @@ import {
 	ApiHarvestFarmsRewardsBody,
 	Apr,
 	Balance,
+	CallerConfig,
 	CoinType,
 	CoinsToBalance,
 	FarmsStakedPositionObject,
@@ -37,11 +38,11 @@ export class FarmsStakedPosition extends Caller {
 
 	constructor(
 		public stakedPosition: FarmsStakedPositionObject,
-		trueLastHarvestRewardsTimestamp?: Timestamp,
-		public readonly network?: SuiNetwork,
+		trueLastHarvestRewardsTimestamp: Timestamp | undefined = undefined,
+		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(network, "farms");
+		super(config, "farms");
 		this.stakedPosition = stakedPosition;
 		this.trueLastHarvestRewardsTimestamp =
 			trueLastHarvestRewardsTimestamp ??
@@ -145,7 +146,7 @@ export class FarmsStakedPosition extends Caller {
 		const totalRewards =
 			rewardCoin.multiplierRewardsAccumulated +
 			rewardCoin.baseRewardsAccumulated;
-		return totalRewards < Farms.constants.minimalRewardsToClaim ||
+		return totalRewards < Farms.constants.minRewardsToClaim ||
 			totalRewards > inputs.stakingPool.rewardCoin(inputs).actualRewards
 			? BigInt(0)
 			: totalRewards;
@@ -158,7 +159,8 @@ export class FarmsStakedPosition extends Caller {
 
 		// i. Increase the vault's `rewardsAccumulatedPerShare` values.
 		const stakingPool = new FarmsStakingPool(
-			Helpers.deepCopy(inputs.stakingPool.stakingPool)
+			Helpers.deepCopy(inputs.stakingPool.stakingPool),
+			this.config
 		);
 		stakingPool.emitRewards();
 
@@ -250,25 +252,25 @@ export class FarmsStakedPosition extends Caller {
 		this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
 	};
 
-	public calcTotalApr = (inputs: {
-		rewardsUsd: number;
-		stakeUsd: number;
-	}): Apr => {
-		const { rewardsUsd, stakeUsd } = inputs;
+	// public calcTotalApr = (inputs: {
+	// 	rewardsUsd: number;
+	// 	stakeUsd: number;
+	// }): Apr => {
+	// 	const { rewardsUsd, stakeUsd } = inputs;
 
-		dayjs.extend(duration);
-		const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
-		const timeSinceLastHarvestMs =
-			dayjs().valueOf() - this.trueLastHarvestRewardsTimestamp;
+	// 	dayjs.extend(duration);
+	// 	const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
+	// 	const timeSinceLastHarvestMs =
+	// 		dayjs().valueOf() - this.trueLastHarvestRewardsTimestamp;
 
-		const rewardsUsdOneYear =
-			timeSinceLastHarvestMs > 0
-				? rewardsUsd * (oneYearMs / timeSinceLastHarvestMs)
-				: 0;
+	// 	const rewardsUsdOneYear =
+	// 		timeSinceLastHarvestMs > 0
+	// 			? rewardsUsd * (oneYearMs / timeSinceLastHarvestMs)
+	// 			: 0;
 
-		const apr = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
-		return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
-	};
+	// 	const apr = stakeUsd > 0 ? rewardsUsdOneYear / stakeUsd : 0;
+	// 	return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
+	// };
 
 	// =========================================================================
 	//  Transactions

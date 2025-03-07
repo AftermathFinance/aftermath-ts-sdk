@@ -117,7 +117,7 @@ export class StakingApi implements MoveErrorsInterface {
 			afSui: `${this.addresses.packages.afsui}::afsui::AFSUI`,
 		};
 		this.objectTypes = {
-			unverifiedValidatorOperationCap: `${this.addresses.packages.lsd}::validator::UnverifiedValidatorOperationCap`,
+			unverifiedValidatorOperationCap: `${this.addresses.packages.events}::validator::UnverifiedValidatorOperationCap`,
 		};
 		this.moveErrors = {
 			[this.addresses.packages.lsd]: {
