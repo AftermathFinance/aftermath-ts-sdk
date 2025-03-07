@@ -2,7 +2,7 @@ import { Caller } from "../../general/utils/caller";
 import { CallerConfig } from "../../types";
 import {
 	ApiUserDataCreateUserBody,
-	ApiUserDataFetchPublicKeyBody,
+	ApiUserDataPublicKeyBody,
 	UserPublicKey,
 } from "./userDataTypes";
 
@@ -26,9 +26,9 @@ export class UserData extends Caller {
 	 */
 
 	public async getUserPublicKey(
-		inputs: ApiUserDataFetchPublicKeyBody
+		inputs: ApiUserDataPublicKeyBody
 	): Promise<UserPublicKey> {
-		return this.fetchApi<UserPublicKey, ApiUserDataFetchPublicKeyBody>(
+		return this.fetchApi<UserPublicKey, ApiUserDataPublicKeyBody>(
 			`public-key`,
 			inputs
 		);

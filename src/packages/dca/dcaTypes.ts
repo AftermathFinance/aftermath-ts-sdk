@@ -3,6 +3,7 @@ import { CoinType } from "../coin/coinTypes";
 import {
 	Balance,
 	Timestamp,
+	Event,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
 
@@ -151,4 +152,25 @@ export interface ApiDcaCreateUserBody {
 
 export interface ApiDCAsOwnedBody {
 	walletAddress: SuiAddress;
+}
+
+// =========================================================================
+//  DCA Events
+// =========================================================================
+
+export interface DcaCreatedOrderEvent extends Event {
+	orderId: ObjectId;
+	owner: ObjectId;
+	inputValue: Balance;
+	inputType: CoinType;
+	outputType: CoinType;
+	gasValue: Balance;
+	frequencyMs: Timestamp;
+	startTimestampMs: Timestamp;
+	amountPerTrade: Balance;
+	maxAllowableSlippageBps: Balance;
+	minAmountOut: Balance;
+	maxAmountOut: Balance;
+	remainingTrades: bigint;
+	recipient: SuiAddress;
 }

@@ -124,13 +124,7 @@ export class LimitOrders extends Caller {
 	 * @returns Minimum order size in usd.
 	 */
 
-	public async getMinOrderSize() {
-		return this.fetchApi<
-			| {
-					minOrderSizeUsd: number;
-			  }
-			| undefined,
-			{}
-		>("min-order-size", {});
+	public async getMinOrderSizeUsd() {
+		return this.fetchApi<number | undefined, {}>("min-order-size-usd", {});
 	}
 }
