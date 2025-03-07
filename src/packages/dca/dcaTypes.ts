@@ -110,15 +110,30 @@ export interface DcaOrderOverviewObject {
 	recipient: SuiAddress;
 	progress: number;
 	created: {
+		/** @deprecated use timestamp instead */
+		time: Timestamp;
 		timestamp: Timestamp;
+
+		/** @deprecated use txnDigest instead */
+		tnxDigest: TransactionDigest;
 		txnDigest: TransactionDigest;
 	};
 	nextTrade?: {
+		/** @deprecated use timestamp instead */
+		time: Timestamp;
 		timestamp: Timestamp;
+
+		/** @deprecated use txnDigest instead */
+		tnxDigest: TransactionDigest;
 		txnDigest: TransactionDigest;
 	};
 	lastExecutedTrade?: {
+		/** @deprecated use timestamp instead */
+		time: Timestamp;
 		timestamp: Timestamp;
+
+		/** @deprecated use txnDigest instead */
+		tnxDigest: TransactionDigest;
 		txnDigest: TransactionDigest;
 	};
 	integratorFee?: DcaIntegratorFeeData;
@@ -173,4 +188,29 @@ export interface DcaCreatedOrderEvent extends Event {
 	maxAmountOut: Balance;
 	remainingTrades: bigint;
 	recipient: SuiAddress;
+}
+
+export interface DcaClosedOrderEvent extends Event {
+	orderId: ObjectId;
+	owner: ObjectId;
+	remainingValue: Balance;
+	inputType: CoinType;
+	outputType: CoinType;
+	gasValue: Balance;
+	frequencyMs: Timestamp;
+	lastTradeTimestampMs: Timestamp;
+	amountPerTrade: Balance;
+	maxAllowableSlippageBps: Balance;
+	minAmountOut: Balance;
+	maxAmountOut: Balance;
+	remainingTrades: bigint;
+}
+
+export interface DcaExecutedTradeEvent extends Event {
+	orderId: ObjectId;
+	user: ObjectId;
+	inputType: CoinType;
+	inputAmount: Balance;
+	outputType: CoinType;
+	outputAmount: Balance;
 }
