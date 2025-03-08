@@ -26,6 +26,7 @@ export class DcaApi {
 		},
 		eventNames: {
 			createdOrder: "CreatedOrderEvent",
+			createdOrderV2: "CreatedOrderEventV2",
 			closedOrder: "ClosedOrderEvent",
 			executedTrade: "ExecutedTradeEvent",
 		},
@@ -38,6 +39,7 @@ export class DcaApi {
 	public readonly addresses: DcaAddresses;
 	public readonly eventTypes: {
 		createdOrder: AnyObjectType;
+		createdOrderV2: AnyObjectType;
 		closedOrder: AnyObjectType;
 		executedTrade: AnyObjectType;
 	};
@@ -56,6 +58,7 @@ export class DcaApi {
 		this.addresses = addresses;
 		this.eventTypes = {
 			createdOrder: this.createdOrderEventType(),
+			createdOrderV2: this.createdOrderEventTypeV2(),
 			closedOrder: this.closedOrderEventType(),
 			executedTrade: this.executedOrderEventType(),
 		};
@@ -91,6 +94,13 @@ export class DcaApi {
 			this.addresses.packages.dcaInitial,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.createdOrder
+		);
+
+	private createdOrderEventTypeV2 = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.dca,
+			DcaApi.constants.moduleNames.events,
+			DcaApi.constants.eventNames.createdOrderV2
 		);
 
 	private closedOrderEventType = () =>

@@ -181,52 +181,6 @@ export interface ApiDCAsOwnedBody {
 }
 
 // =========================================================================
-//  DCA Events
-// =========================================================================
-
-export interface DcaCreatedOrderEvent extends Event {
-	orderId: ObjectId;
-	owner: ObjectId;
-	inputValue: Balance;
-	inputType: CoinType;
-	outputType: CoinType;
-	gasValue: Balance;
-	frequencyMs: Timestamp;
-	startTimestampMs: Timestamp;
-	amountPerTrade: Balance;
-	maxAllowableSlippageBps: Balance;
-	minAmountOut: Balance;
-	maxAmountOut: Balance;
-	remainingTrades: bigint;
-	recipient: SuiAddress;
-}
-
-export interface DcaClosedOrderEvent extends Event {
-	orderId: ObjectId;
-	owner: ObjectId;
-	remainingValue: Balance;
-	inputType: CoinType;
-	outputType: CoinType;
-	gasValue: Balance;
-	frequencyMs: Timestamp;
-	lastTradeTimestampMs: Timestamp;
-	amountPerTrade: Balance;
-	maxAllowableSlippageBps: Balance;
-	minAmountOut: Balance;
-	maxAmountOut: Balance;
-	remainingTrades: bigint;
-}
-
-export interface DcaExecutedTradeEvent extends Event {
-	orderId: ObjectId;
-	user: ObjectId;
-	inputType: CoinType;
-	inputAmount: Balance;
-	outputType: CoinType;
-	outputAmount: Balance;
-}
-
-// =========================================================================
 // User Fetch
 // =========================================================================
 

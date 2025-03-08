@@ -4,7 +4,6 @@ import {
 	Balance,
 	Timestamp,
 	TransactionDigest,
-	Event,
 } from "../../general/types/generalTypes";
 
 // =========================================================================
@@ -109,17 +108,4 @@ export interface ApiLimitOrdersActiveOrdersOwnedBody {
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;
-}
-
-export interface LimitOrdersCreatedOrderEvent extends Event {
-	orderId: ObjectId;
-	owner: ObjectId;
-	recipient: SuiAddress;
-	inputType: CoinType;
-	inputAmount: Balance;
-	outputType: CoinType;
-	gasValue: Balance;
-	integratorFeeBps: number;
-	integratorFeeRecipient: SuiAddress;
-	encryptedFields: Uint8Array;
 }
