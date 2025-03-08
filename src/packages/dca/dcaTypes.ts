@@ -1,10 +1,12 @@
 import { ObjectId, SuiAddress } from "../../types";
-import { CoinType } from "../coin/coinTypes";
+import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import {
 	Balance,
-	Event,
 	Timestamp,
+	Event,
 	TransactionDigest,
+	SerializedTransaction,
+	BigIntAsString,
 } from "../../general/types/generalTypes";
 
 // =========================================================================
@@ -82,8 +84,14 @@ export interface DcaOrderTradeObject {
 		coin: CoinType;
 		amount: Balance;
 	};
+	/** @deprecated use txnDigest instead */
 	tnxDigest: TransactionDigest;
+	txnDigest: TransactionDigest;
+
+	/** @deprecated use txnTimestamp instead */
 	tnxDate: Timestamp;
+	txnTimestamp: Timestamp;
+
 	rate: number | undefined;
 }
 
@@ -107,19 +115,34 @@ export interface DcaOrderOverviewObject {
 	tradesRemaining: number;
 	maxSlippageBps: number;
 	strategy?: DcaOrderStrategyData;
-	recipient?: SuiAddress;
+	recipient: SuiAddress;
 	progress: number;
 	created: {
+		/** @deprecated use timestamp instead */
 		time: Timestamp;
+		timestamp: Timestamp;
+
+		/** @deprecated use txnDigest instead */
 		tnxDigest: TransactionDigest;
+		txnDigest: TransactionDigest;
 	};
-	nextTrade: {
+	nextTrade?: {
+		/** @deprecated use timestamp instead */
 		time: Timestamp;
+		timestamp: Timestamp;
+
+		/** @deprecated use txnDigest instead */
 		tnxDigest: TransactionDigest;
+		txnDigest: TransactionDigest;
 	};
 	lastExecutedTrade?: {
+		/** @deprecated use timestamp instead */
 		time: Timestamp;
+		timestamp: Timestamp;
+
+		/** @deprecated use txnDigest instead */
 		tnxDigest: TransactionDigest;
+		txnDigest: TransactionDigest;
 	};
 	integratorFee?: DcaIntegratorFeeData;
 }
@@ -137,55 +160,12 @@ export interface DcaOrdersObject {
 }
 
 // =========================================================================
-//  DCA Events
-// =========================================================================
-
-export interface DcaCreatedOrderEvent extends Event {
-	orderId: ObjectId;
-	owner: ObjectId;
-	inputValue: Balance;
-	inputType: CoinType;
-	outputType: CoinType;
-	gasValue: Balance;
-	frequencyMs: Timestamp;
-	startTimestampMs: Timestamp;
-	amountPerTrade: Balance;
-	maxAllowableSlippageBps: Balance;
-	minAmountOut: Balance;
-	maxAmountOut: Balance;
-	remainingTrades: bigint;
-	recipient: SuiAddress;
-}
-
-export interface DcaClosedOrderEvent extends Event {
-	orderId: ObjectId;
-	owner: ObjectId;
-	remainingValue: Balance;
-	inputType: CoinType;
-	outputType: CoinType;
-	gasValue: Balance;
-	frequencyMs: Timestamp;
-	lastTradeTimestampMs: Timestamp;
-	amountPerTrade: Balance;
-	maxAllowableSlippageBps: Balance;
-	minAmountOut: Balance;
-	maxAmountOut: Balance;
-	remainingTrades: bigint;
-}
-
-export interface DcaExecutedTradeEvent extends Event {
-	orderId: ObjectId;
-	user: ObjectId;
-	inputType: CoinType;
-	inputAmount: Balance;
-	outputType: CoinType;
-	outputAmount: Balance;
-}
-
-// =========================================================================
 // User Fetch
 // =========================================================================
 
+/**
+ * @deprecated please use ApiUserDataCreateUserBody from userData package instead
+ * */
 export interface ApiDcaCreateUserBody {
 	walletAddress: SuiAddress;
 	bytes: string;
@@ -196,6 +176,26 @@ export interface ApiDcaCreateUserBody {
 //  Owned DCAs
 // =========================================================================
 
+export interface ApiDCAsOwnedBody {
+	walletAddress: SuiAddress;
+}
+
+// =========================================================================
+// User Fetch
+// =========================================================================
+
+/** @deprecated use `userData` package instead */
+export interface ApiDcaCreateUserBody {
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+}
+
+// =========================================================================
+//  Owned DCAs
+// =========================================================================
+
+/** @deprecated use `userData` package instead */
 export interface ApiDCAsOwnedBody {
 	walletAddress: SuiAddress;
 }

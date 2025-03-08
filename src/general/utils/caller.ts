@@ -96,7 +96,6 @@ export class Caller {
 				};
 			})();
 		}
-
 		const apiCallUrl = this.urlForApiCall(url);
 
 		const headers = {
