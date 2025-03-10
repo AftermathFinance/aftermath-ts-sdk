@@ -231,7 +231,7 @@ export class FarmsStakingPool extends Caller {
 		const multiplier = Casting.numberToFixedBigInt(newMultiplier);
 		return multiplier < FixedUtils.fixedOneB
 			? FixedUtils.fixedOneB
-			: multiplier;
+			: Helpers.minBigInt(multiplier, this.stakingPool.maxLockMultiplier);
 	};
 
 	// public calc_emitted_rewards(): bigint[] {

@@ -155,13 +155,63 @@ export class FarmsStakedPosition extends Caller {
 	// Updates the amount of rewards that can be harvested from `self` + the position's
 	// debt. If the position's lock duration has elapsed, it will be unlocked.
 	public updatePosition = (inputs: { stakingPool: FarmsStakingPool }) => {
-		const currentTimestamp = dayjs().valueOf();
-
-		// i. Increase the vault's `rewardsAccumulatedPerShare` values.
 		const stakingPool = new FarmsStakingPool(
 			Helpers.deepCopy(inputs.stakingPool.stakingPool),
 			this.config
 		);
+
+		// If the position's `lock_multiplier` is larger than the `Vault`'s `max_lock_multiplier`;
+
+		// We want to only cap position's who have a `lock_duration_ms` or `lock_multiplier` that exceeds
+		// the vault's limits.
+		if (
+			this.stakedPosition.lockDurationMs <=
+				stakingPool.stakingPool.maxLockDurationMs &&
+			this.stakedPosition.lockMultiplier <=
+				stakingPool.stakingPool.maxLockMultiplier
+		) {
+		} else {
+			// i. Reset the `Vault`'s `total_staked_amount_with_multiplier` that applies to this position.
+			stakingPool.stakingPool.stakedAmountWithMultiplier -=
+				this.stakedPosition.stakedAmountWithMultiplier;
+
+			// ii. Update the `lock_duration` and `lock_multiplier` related fields.
+			this.stakedPosition.lockDurationMs =
+				stakingPool.stakingPool.maxLockDurationMs;
+			this.stakedPosition.lockMultiplier =
+				stakingPool.stakingPool.maxLockMultiplier;
+
+			this.stakedPosition.stakedAmountWithMultiplier =
+				(this.stakedPosition.stakedAmount *
+					(this.stakedPosition.lockMultiplier -
+						FixedUtils.fixedOneB)) /
+				FixedUtils.fixedOneB;
+
+			this.stakedPosition.rewardCoins = [
+				...this.stakedPosition.rewardCoins.map((rewardCoin) => ({
+					...rewardCoin,
+					multiplierRewardsDebt: (() => {
+						let currentDebtPerShare = stakingPool.rewardCoin({
+							coinType: rewardCoin.coinType,
+						}).rewardsAccumulatedPerShare;
+						return (
+							(this.stakedPosition.stakedAmountWithMultiplier *
+								currentDebtPerShare) /
+							FixedUtils.fixedOneB
+						);
+					})(),
+				})),
+			];
+
+			// iii. Increase the `Vault`'s `total_staked_amount_with_multiplier` to account for the
+			//  positions new lock multiplier.
+			stakingPool.stakingPool.stakedAmountWithMultiplier +=
+				this.stakedPosition.stakedAmountWithMultiplier;
+		}
+
+		const currentTimestamp = dayjs().valueOf();
+
+		// i. Increase the vault's `rewardsAccumulatedPerShare` values.
 		stakingPool.emitRewards();
 
 		for (const [
