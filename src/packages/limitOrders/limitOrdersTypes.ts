@@ -29,7 +29,7 @@ export interface ApiLimitOrdersCreateOrderTransactionBody {
 	isSponsoredTx?: boolean;
 	integratorFee?: LimitOrdersIntegratorFeeData;
 	outputToInputExchangeRate: number;
-	outputToInputStopLossExchangeRate: number | undefined;
+	outputToInputStopLossExchangeRate?: number;
 }
 
 export interface ApiLimitOrdersSubOrdersBody {
