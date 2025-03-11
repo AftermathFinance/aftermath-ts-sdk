@@ -1,13 +1,12 @@
-import { CallerConfig, ObjectId, SuiNetwork } from "../../types";
+import { CallerConfig, ObjectId } from "../../types";
 import { Caller } from "../../general/utils/caller";
-import { AftermathApi } from "../../general/providers";
 import { SuiAddress } from "../../types";
 import {
 	ApiDCAsOwnedBody,
-	DcaOrdersObject,
 	ApiDcaTransactionForCreateOrderBody,
 	ApiDcaTransactionForCloseOrderBody,
 	DcaOrderObject,
+	DcaOrdersObject,
 	ApiDcaCreateUserBody,
 } from "./dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
@@ -35,9 +34,7 @@ export class Dca extends Caller {
 
 	/**
 	 * Fetches the API for dollar cost averaging orders list.
-	 * @async
-	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
-	 * @returns { Promise<DcaOrdersObject> } A promise that resolves to object with array of fetched events for active and past dca's.
+	 * @deprecated please use `getActiveDcaOrders` and `getPastDcaOrders` instead
 	 */
 
 	public async getAllDcaOrders(inputs: ApiDCAsOwnedBody) {
@@ -56,7 +53,7 @@ export class Dca extends Caller {
 
 	public async getActiveDcaOrders(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"orders/active",
+			"active",
 			inputs
 		);
 	}
@@ -70,7 +67,7 @@ export class Dca extends Caller {
 
 	public async getPastDcaOrders(inputs: { walletAddress: SuiAddress }) {
 		return this.fetchApi<DcaOrderObject[], ApiDCAsOwnedBody>(
-			"orders/past",
+			"past",
 			inputs
 		);
 	}
@@ -104,7 +101,7 @@ export class Dca extends Caller {
 		inputs: ApiDcaTransactionForCloseOrderBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiDcaTransactionForCloseOrderBody>(
-			`interactions/close-order`,
+			`cancel`,
 			inputs
 		);
 	}
@@ -124,18 +121,20 @@ export class Dca extends Caller {
 		order_object_ids: string[];
 	} {
 		return {
-			action:
-				inputs.orderIds.length === 1
-					? "CANCEL_DCA_ORDER"
-					: "CANCEL_DCA_ORDERS",
+			action: "CANCEL_DCA_ORDERS",
 			order_object_ids: inputs.orderIds,
 		};
 	}
+
+	// =========================================================================
+	// Interactions - Deprecated
+	// =========================================================================
 
 	/**
 	 * Method for getting the creation user message to sign.
 	 * @param inputs - The inputs for the message.
 	 * @returns Message to sign.
+	 * @deprecated please use method from `userData` package instead
 	 */
 
 	public createUserAccountMessageToSign(): {
@@ -155,6 +154,7 @@ export class Dca extends Caller {
 	 * @async
 	 * @param { ApiDCAsOwnedBody } inputs - An object containing the walletAddress.
 	 * @returns { Promise<string | undefined> } A promise that resolves users public key.
+	 * @deprecated please use method `getUserPublicKey` from `userData` package instead
 	 */
 
 	public async getUserPublicKey(inputs: {
@@ -165,7 +165,7 @@ export class Dca extends Caller {
 			{
 				walletAddress: SuiAddress;
 			}
-		>(`public-key`, inputs);
+		>(`user/get`, inputs);
 	}
 
 	/**
@@ -173,13 +173,14 @@ export class Dca extends Caller {
 	 * @async
 	 * @param { ApiDcaCreateUserBody } inputs - The inputs for creating users public key on BE side.
 	 * @returns { Promise<boolean> } A promise that resolves to result if user pk has been created.
+	 * @deprecated please use method `createUserPublicKey` from `userData` package instead
 	 */
 
 	public async createUserPublicKey(
 		inputs: ApiDcaCreateUserBody
 	): Promise<boolean> {
 		return this.fetchApi<boolean, ApiDcaCreateUserBody>(
-			`save-public-key`,
+			`/user/add`,
 			inputs
 		);
 	}

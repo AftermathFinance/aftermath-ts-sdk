@@ -32,6 +32,8 @@ import { NftsApi } from "../nfts/nftsApi";
 import { Helpers } from "../utils";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
 import { MultisigApi } from "../../packages/multisig/api/multisigApi";
+import { UserDataApi } from "../../packages/userData/api/userDataApi";
+import { LimitOrdersApi } from "../../packages/limitOrders/api/limitOrdersApi";
 
 /**
  * This class represents the Aftermath API and provides helper methods for various functionalities.
@@ -126,6 +128,8 @@ export class AftermathApi {
 	public Farms = () => new FarmsApi(this);
 	public Dca = () => new DcaApi(this);
 	public Multisig = () => new MultisigApi(this);
+	public LimitOrders = () => new LimitOrdersApi(this);
+	public UserData = () => new UserDataApi(this);
 
 	/**
 	 * Creates a new instance of the RouterApi class.
