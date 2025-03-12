@@ -91,28 +91,28 @@ export class DcaApi {
 
 	private createdOrderEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.dcaInitial,
+			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.createdOrder
 		);
 
 	private createdOrderEventTypeV2 = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.dca,
+			this.addresses.packages.eventsV2,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.createdOrderV2
 		);
 
 	private closedOrderEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.dcaInitial,
+			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.closedOrder
 		);
 
 	private executedOrderEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.dcaInitial,
+			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.executedTrade
 		);
