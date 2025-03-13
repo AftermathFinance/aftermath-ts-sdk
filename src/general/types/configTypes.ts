@@ -190,8 +190,9 @@ export interface ScallopAddresses {
 
 export interface DcaAddresses {
 	packages: {
-		dcaInitial: SuiAddress;
 		dca: SuiAddress;
+		events: SuiAddress;
+		eventsV2: SuiAddress;
 	};
 	objects: {
 		readonly config: ObjectId;
@@ -200,8 +201,8 @@ export interface DcaAddresses {
 
 export interface LimitAddresses {
 	packages: {
-		limitOrdersInitial: SuiAddress;
 		limitOrders: SuiAddress;
+		events: SuiAddress;
 	};
 }
 
