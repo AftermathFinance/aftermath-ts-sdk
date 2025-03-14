@@ -16,6 +16,7 @@ import { SuiNetwork } from "./suiTypes";
 
 export type Balance = bigint;
 export type IFixed = bigint;
+export type SuiCheckpoint = bigint;
 
 // =========================================================================
 //  number

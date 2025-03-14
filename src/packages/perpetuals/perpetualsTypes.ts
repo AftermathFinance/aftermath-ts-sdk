@@ -13,6 +13,7 @@ import {
 	PackageId,
 	Percentage,
 	SuiAddress,
+	SuiCheckpoint,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
@@ -244,6 +245,7 @@ export interface PerpetualsOrderbook {
 	bestBidPrice: number | undefined;
 	bestAskPrice: number | undefined;
 	midPrice: number | undefined;
+	lastCheckpointUpdate: SuiCheckpoint;
 }
 
 // export interface OrderbookDataPoint {
