@@ -6,11 +6,15 @@ import { CoinSymbol, CoinType } from "../../types";
 
 // NOTE: these are taken from wormhole chain naming scheme
 export type CoinGeckoChain = Lowercase<
-	"Ethereum" | "Arbitrum" | "Bsc" | "Solana" | "Sui"
-
-	// | "Polygon"
-	// | "Avalanche"
-	// | "Optimism"
+	| "Ethereum"
+	| "Arbitrum"
+	| "Bsc"
+	| "Solana"
+	| "Sui"
+	| "Polygon"
+	| "Avalanche"
+	| "Optimism"
+	| "Base"
 
 	// | "Oasis"
 	// | "Terra"
@@ -32,7 +36,6 @@ export type CoinGeckoChain = Lowercase<
 	// | "Pythnet"
 	// | "Xpla"
 	// | "Btc"
-	// | "Base"
 	// | "Sei"
 	// | "Rootstock"
 	// | "Scroll"
