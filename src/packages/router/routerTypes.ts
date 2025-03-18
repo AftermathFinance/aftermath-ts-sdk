@@ -52,6 +52,7 @@ export type RouterProtocolName =
 	| "HopFun"
 	| "Kriya"
 	| "KriyaClmm"
+	| "Magma"
 	| "Metastable"
 	| "MovePump"
 	| "Obric"
