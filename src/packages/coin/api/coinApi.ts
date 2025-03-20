@@ -9,6 +9,7 @@ import { Helpers } from "../../../general/utils/helpers";
 import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
+// import { ethers, Networkish } from "ethers";
 
 export class CoinApi {
 	// =========================================================================

@@ -4,6 +4,7 @@ import {
 	ObjectId,
 	Percentage,
 } from "../../general/types/generalTypes";
+import { CoinGeckoCoinApiId } from "../../types";
 
 // =========================================================================
 //  Name Only
@@ -59,6 +60,7 @@ export interface CoinPriceInfo {
 
 export type CoinMetadaWithInfo = CoinMetadata & {
 	isGenerated?: boolean;
+	coingeckoId?: CoinGeckoCoinApiId;
 };
 
 // =========================================================================

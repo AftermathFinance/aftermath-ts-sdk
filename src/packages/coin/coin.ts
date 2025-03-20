@@ -31,6 +31,11 @@ export class Coin extends Caller {
 		suiCoinDecimals: 9,
 		coinObjectType:
 			"0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin",
+		defaultCoinDecimals: {
+			sui: 9,
+			evm: 18,
+			svm: 9,
+		},
 	};
 
 	// =========================================================================

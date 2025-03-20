@@ -15,6 +15,8 @@ import {
 	PackageId,
 	MoveErrorCode,
 	SuiAddress,
+	CoinType,
+	CoinGeckoChain,
 } from "../../types";
 import { DynamicFieldsApiHelpers } from "../apiHelpers/dynamicFieldsApiHelpers";
 import { EventsApiHelpers } from "../apiHelpers/eventsApiHelpers";
@@ -72,7 +74,10 @@ export class Helpers {
 	public static addLeadingZeroesToType = (
 		type: AnyObjectType
 	): AnyObjectType => {
-		const expectedTypeLength = 64;
+		// NOTE: is this safe to add ?
+		// if (!Helpers.isValidType(type)) return type;
+
+		const EXPECTED_TYPE_LENGTH = 64;
 
 		let strippedType = type.replace("0x", "");
 		let typeSuffix = "";
@@ -88,15 +93,27 @@ export class Helpers {
 
 		const typeLength = strippedType.length;
 
-		if (typeLength > expectedTypeLength)
+		if (typeLength > EXPECTED_TYPE_LENGTH)
 			throw new Error("invalid type length");
 
-		const zeros = Array(expectedTypeLength - typeLength)
+		const zeros = Array(EXPECTED_TYPE_LENGTH - typeLength)
 			.fill("0")
 			.reduce((acc, val) => acc + val, "");
 		const newType = "0x" + zeros + strippedType;
 
 		return newType + typeSuffix;
+	};
+
+	public static splitNonSuiCoinType = (
+		coin: CoinType
+	): {
+		chain: Exclude<CoinGeckoChain, "sui">;
+		coinType: CoinType;
+	} => {
+		const [uncastChain, coinType] = coin.split(":");
+		if (!uncastChain || !coinType) throw new Error("invalid coin type");
+		const chain = uncastChain as Exclude<CoinGeckoChain, "sui">;
+		return { chain, coinType };
 	};
 
 	// =========================================================================
@@ -296,6 +313,35 @@ export class Helpers {
 		}
 
 		return zipped;
+	}
+
+	public static removeCircularReferences<T>(
+		obj: T,
+		seen: WeakSet<object> = new WeakSet()
+	): T | undefined {
+		type AnyObject = { [key: string]: any };
+
+		if (obj && typeof obj === "object") {
+			if (seen.has(obj as object)) {
+				return undefined; // Circular reference found, skip it
+			}
+			seen.add(obj as object);
+
+			if (Array.isArray(obj)) {
+				return obj.map((item) =>
+					this.removeCircularReferences(item, seen)
+				) as unknown as T;
+			} else {
+				const entries = Object.entries(obj as AnyObject).map(
+					([key, value]) => [
+						key,
+						this.removeCircularReferences(value, seen),
+					]
+				);
+				return Object.fromEntries(entries) as unknown as T;
+			}
+		}
+		return obj;
 	}
 
 	// =========================================================================
