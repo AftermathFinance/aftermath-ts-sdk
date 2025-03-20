@@ -475,6 +475,7 @@ export class PerpetualsAccount extends Caller {
 		const { collateralChange, ...remainingResponse } = response;
 		return {
 			...remainingResponse,
+			// TODO: move this logic to af-fe endpoint
 			collateralChange: Coin.normalizeBalance(
 				collateralChange,
 				this.collateralDecimals()
