@@ -1,6 +1,6 @@
 {
 	"name": "aftermath-ts-sdk",
-	"version": "1.2.60",
+	"version": "1.2.61",
 	"description": "Aftermath TypeScript SDK",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
