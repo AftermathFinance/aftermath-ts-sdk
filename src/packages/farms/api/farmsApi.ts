@@ -290,6 +290,60 @@ export class FarmsApi implements MoveErrorsInterface {
 					10: "Zero Rewards",
 				},
 			},
+			[this.addresses.packages.vaultsV2]: {
+				[FarmsApi.constants.moduleNames.vault]: {
+					/// A user provides a `Coin` with value zero.
+					0: "Zero",
+					/// A user tries to create a `Vault` where `min_lock_duration_ms` is strictly greater than
+					/// `max_lock_duration_ms`.
+					1: "Invalid Min Max Lock Durations",
+					/// A user tries to create a `Vault` and provides a `u8` that does not map to a valid lock
+					/// enforcement policy.
+					2: "Invalid Lock Enforcement",
+					/// The creator of a `Vault` tries to update the emission schedule or add more of a specific
+					/// reward type that has not yet been initialized into the `Vault`.
+					3: "Emissions Not Initialized",
+					/// A `Reward` `Coin` type was passed to a function and either the `Reward` type does not
+					/// correspond to any of the `Vault`'s reward types--for the functions that act on the `Reward`
+					/// type--or, for `initialize_reward`, the `Reward` type has already had its emissions initialized.
+					4: "Invalid Reward Coin Type",
+					/// A user attempts to withdraw an amount of principal that would bring their position below the
+					/// `Vault`'s `min_stake_amount`.
+					5: "Invalid Stake Amount",
+					/// A user tries to claim zero rewards
+					6: "Zero Claim",
+					/// A user provided a max lock multiplier that was strictly less than the minimum lower bound.
+					7: "Invalid Lock Multiplier",
+				},
+				[FarmsApi.constants.moduleNames.stakedPosition]: {
+					/// A user attempts to perform a restricted action on a `StakedPosition` that is still locked. For
+					/// example `unlock` can only be called on a `StakedPosition` that is no longer locked.
+					0: "Locked",
+					/// A user provides a `StakedPosition` and a `Vault` that don't correspond with one another.
+					/// This can only occur if two `Vault`s with the same underlying `Stake` generic are created.
+					1: "Invalid Vault",
+					/// A user tries to stake into a `Vault` with a `lock_duration_ms` below the vault's
+					/// `min_lock_duration_ms`.
+					2: "Invalid Lock Duration",
+					/// A user attempts to withdraw an amount of principal that would bring their position below the
+					/// `Vault`'s `min_stake_amount`.
+					3: "Invalid Stake Amount",
+					/// A user attempts to withdraw more principal than their `StakedPosition` holds.
+					4: "Invalid Withdraw Amount",
+					/// A user attempts to split more principal than their `StakedPosition` holds.
+					5: "Invalid Split Amount",
+					/// A user attempts to stake into a `Vault` that has no rewards.
+					6: "Vault Is Inactive",
+					/// A user requested to harvest a reward type for which they've only accrued less than the minimal
+					/// claim amount.
+					7: "Zero Rewards",
+					/// A user attempts to stake into a `Vault` with a `LockEnforcement` policy that the vault does
+					/// not support.
+					8: "Invalid Lock Enforcement",
+					/// A user attempts to call `destroy` on a `StakedPosition` that has unharvested rewards.
+					9: "Position Has Unclaimed Rewards",
+				},
+			},
 		};
 	}
 
