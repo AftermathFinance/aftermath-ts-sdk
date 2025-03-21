@@ -46,7 +46,7 @@ import {
 	FarmsHarvestedRewardsEventOnChain,
 	FarmsLockedEventOnChain,
 	FarmsStakedEventOnChainV1,
-	FarmsStakedRelaxedEventOnChainV1,
+	FarmsStakedRelaxedEventOnChain,
 	FarmsUnlockedEventOnChain,
 	FarmsWithdrewPrincipalEventOnChain,
 } from "./farmsApiCastingTypes";
