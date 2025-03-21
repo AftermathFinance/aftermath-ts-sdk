@@ -45,8 +45,8 @@ import {
 	FarmsDepositedPrincipalEventOnChain,
 	FarmsHarvestedRewardsEventOnChain,
 	FarmsLockedEventOnChain,
-	FarmsStakedEventOnChain,
-	FarmsStakedRelaxedEventOnChain,
+	FarmsStakedEventOnChainV1,
+	FarmsStakedRelaxedEventOnChainV1,
 	FarmsUnlockedEventOnChain,
 	FarmsWithdrewPrincipalEventOnChain,
 } from "./farmsApiCastingTypes";
@@ -82,6 +82,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			initializedReward: "InitializedRewardEvent",
 			addedReward: "AddedRewardEvent",
 			increasedEmissions: "IncreasedEmissionsEvent",
+			updatedEmissions: "UpdatedEmissionsEvent",
 
 			// staking positions
 			// creation
@@ -146,12 +147,11 @@ export class FarmsApi implements MoveErrorsInterface {
 		// mutation
 		initializedRewardV2: AnyObjectType;
 		addedRewardV2: AnyObjectType;
-		increasedEmissionsV2: AnyObjectType;
+		updatedEmissionsV2: AnyObjectType;
 
 		// staking positions
 		// creation
 		stakedV2: AnyObjectType;
-		stakedRelaxedV2: AnyObjectType;
 		// locking
 		lockedV2: AnyObjectType;
 		unlockedV2: AnyObjectType;
@@ -197,7 +197,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			// mutation
 			initializedRewardV1: this.initializedRewardEventType(1),
 			addedRewardV1: this.addedRewardEventType(1),
-			increasedEmissionsV1: this.increasedEmissionsEventType(1),
+			increasedEmissionsV1: this.increasedEmissionsEventType(),
 
 			// staking positions
 			// creation
@@ -219,12 +219,11 @@ export class FarmsApi implements MoveErrorsInterface {
 			// mutation
 			initializedRewardV2: this.initializedRewardEventType(2),
 			addedRewardV2: this.addedRewardEventType(2),
-			increasedEmissionsV2: this.increasedEmissionsEventType(2),
+			updatedEmissionsV2: this.updatedEmissionsEventType(),
 
 			// staking positions
 			// creation
 			stakedV2: this.stakedEventType(2),
-			stakedRelaxedV2: this.stakedRelaxedEventType(2),
 			// locking
 			lockedV2: this.lockedEventType(2),
 			unlockedV2: this.unlockedEventType(2),
@@ -2557,11 +2556,20 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * Creates the event type for emission increase events
 	 * @returns Fully qualified event type string
 	 */
-	private increasedEmissionsEventType = (version: FarmsVersion) =>
+	private increasedEmissionsEventType = () =>
 		EventsApiHelpers.createEventType(
-			version === 1
-				? this.addresses.packages.vaultsInitial
-				: this.addresses.packages.eventsV2,
+			this.addresses.packages.vaultsInitial,
+			FarmsApi.constants.moduleNames.events,
+			FarmsApi.constants.eventNames.increasedEmissions
+		);
+
+	/**
+	 * Creates the event type for emission update events
+	 * @returns Fully qualified event type string
+	 */
+	private updatedEmissionsEventType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.increasedEmissions
 		);

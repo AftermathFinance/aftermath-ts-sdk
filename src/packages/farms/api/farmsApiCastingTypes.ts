@@ -120,7 +120,7 @@ export type FarmsHarvestedRewardsEventOnChain = EventOnChain<{
 	reward_amounts: BigIntAsString[];
 }>;
 
-export type FarmsIncreasedEmissionsEventOnChain = EventOnChain<{
+export type FarmsIncreasedEmissionsEventOnChainV1 = EventOnChain<{
 	vault_id: ObjectId;
 	reward_type: CoinType;
 	emission_schedule_ms: BigIntAsString;
@@ -155,12 +155,23 @@ export type FarmsSplitEventOnChain = EventOnChain<{
 	split_staked_position_id: ObjectId;
 }>;
 
-export type FarmsStakedEventOnChain = EventOnChain<{
+export type FarmsStakedEventOnChainV1 = EventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	staked_type: CoinType;
 	staked_amount: BigIntAsString;
 	multiplied_staked_amount: BigIntAsString;
+	lock_start_timestamp_ms: BigIntAsString;
+	lock_duration_ms: BigIntAsString;
+	lock_multiplier: BigIntAsString;
+}>;
+
+export type FarmsStakedEventOnChainV2 = EventOnChain<{
+	staked_position_id: ObjectId;
+	vault_id: ObjectId;
+	staked_type: CoinType;
+	staked_amount: BigIntAsString;
+	multiplier_staked_amount: BigIntAsString;
 	lock_start_timestamp_ms: BigIntAsString;
 	lock_duration_ms: BigIntAsString;
 	lock_multiplier: BigIntAsString;

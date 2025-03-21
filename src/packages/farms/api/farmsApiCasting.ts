@@ -5,12 +5,12 @@ import {
 	FarmsDepositedPrincipalEventOnChain,
 	FarmsDestroyedStakedPositionEventOnChain,
 	FarmsHarvestedRewardsEventOnChain,
-	FarmsIncreasedEmissionsEventOnChain,
+	FarmsIncreasedEmissionsEventOnChainV1,
 	FarmsInitializedRewardEventOnChain,
 	FarmsJoinedEventOnChain,
 	FarmsLockedEventOnChain,
 	FarmsSplitEventOnChain,
-	FarmsStakedEventOnChain,
+	FarmsStakedEventOnChainV1,
 	FarmsStakedRelaxedEventOnChain,
 	FarmsStakedPositionFieldsOnChainV1,
 	FarmsStakingPoolOwnerCapFieldsOnChainV1,
@@ -20,6 +20,7 @@ import {
 	FarmsStakedPositionFieldsOnChainV2,
 	FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2,
 	FarmsStakingPoolOwnerCapFieldsOnChainV2,
+	FarmsStakedEventOnChainV2,
 } from "./farmsApiCastingTypes";
 import {
 	FarmsAddedRewardEvent,
@@ -279,8 +280,8 @@ export class FarmsApiCasting {
 		};
 	};
 
-	public static increasedEmissionsEventFromOnChain = (
-		eventOnChain: FarmsIncreasedEmissionsEventOnChain
+	public static increasedEmissionsEventFromOnChainV1 = (
+		eventOnChain: FarmsIncreasedEmissionsEventOnChainV1
 	): FarmsIncreasedEmissionsEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -360,8 +361,8 @@ export class FarmsApiCasting {
 		};
 	};
 
-	public static stakedEventFromOnChain = (
-		eventOnChain: FarmsStakedEventOnChain
+	public static stakedEventFromOnChainV1 = (
+		eventOnChain: FarmsStakedEventOnChainV1
 	): FarmsStakedEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
@@ -372,6 +373,27 @@ export class FarmsApiCasting {
 			),
 			stakedAmount: BigInt(fields.staked_amount),
 			multipliedStakedAmount: BigInt(fields.multiplied_staked_amount),
+			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
+			lockDurationMs: Number(fields.lock_duration_ms),
+			lockMultiplier: BigInt(fields.lock_multiplier),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static stakedEventFromOnChainV2 = (
+		eventOnChain: FarmsStakedEventOnChainV2
+	): FarmsStakedEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			stakedPositionId: fields.staked_position_id,
+			vaultId: fields.vault_id,
+			stakedType: Helpers.addLeadingZeroesToType(
+				"0x" + fields.staked_type
+			),
+			stakedAmount: BigInt(fields.staked_amount),
+			multipliedStakedAmount: BigInt(fields.multiplier_staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
 			lockMultiplier: BigInt(fields.lock_multiplier),
