@@ -47,7 +47,7 @@ export class FarmsApiCasting {
 	//  Objects
 	// =========================================================================
 
-	public static partialStakedPositionObjectFromSuiObjectResponse = (
+	public static partialStakedPositionObjectFromSuiObjectResponseV1 = (
 		data: SuiObjectResponse
 	): PartialFarmsStakedPositionObject => {
 		const objectType = Helpers.getObjectType(data);
@@ -87,7 +87,47 @@ export class FarmsApiCasting {
 		};
 	};
 
-	public static stakingPoolOwnerCapObjectFromSuiObjectResponse = (
+	public static partialStakedPositionObjectFromSuiObjectResponseV2 = (
+		data: SuiObjectResponse
+	): PartialFarmsStakedPositionObject => {
+		const objectType = Helpers.getObjectType(data);
+
+		const fields = Helpers.getObjectFields(
+			data
+		) as FarmsStakedPositionFieldsOnChain;
+		const stakeCoinType = Helpers.addLeadingZeroesToType(
+			Coin.getInnerCoinType(objectType)
+		);
+
+		return {
+			objectType,
+			objectId: Helpers.getObjectId(data),
+			stakeCoinType,
+			stakingPoolObjectId: fields.afterburner_vault_id,
+			stakedAmount: BigInt(fields.balance),
+			stakedAmountWithMultiplier: BigInt(fields.multiplier_staked_amount),
+			lockStartTimestamp: Number(fields.lock_start_timestamp_ms),
+			lockDurationMs: Number(fields.lock_duration_ms),
+			lockMultiplier: BigInt(fields.lock_multiplier),
+			lastHarvestRewardsTimestamp: Number(
+				fields.last_reward_timestamp_ms
+			),
+			rewardCoins: fields.base_rewards_accumulated.map(
+				(baseRewardsAccumulated, index) => ({
+					baseRewardsAccumulated: BigInt(baseRewardsAccumulated),
+					baseRewardsDebt: BigInt(fields.base_rewards_debt[index]),
+					multiplierRewardsAccumulated: BigInt(
+						fields.multiplier_rewards_accumulated[index]
+					),
+					multiplierRewardsDebt: BigInt(
+						fields.multiplier_rewards_debt[index]
+					),
+				})
+			),
+		};
+	};
+
+	public static stakingPoolOwnerCapObjectFromSuiObjectResponseV1 = (
 		data: SuiObjectResponse
 	): StakingPoolOwnerCapObject => {
 		const objectType = Helpers.getObjectType(data);
@@ -103,7 +143,39 @@ export class FarmsApiCasting {
 		};
 	};
 
-	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponse = (
+	public static stakingPoolOwnerCapObjectFromSuiObjectResponseV2 = (
+		data: SuiObjectResponse
+	): StakingPoolOwnerCapObject => {
+		const objectType = Helpers.getObjectType(data);
+
+		const fields = Helpers.getObjectFields(
+			data
+		) as FarmsStakingPoolOwnerCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: Helpers.getObjectId(data),
+			stakingPoolId: fields.afterburner_vault_id,
+		};
+	};
+
+	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1 = (
+		data: SuiObjectResponse
+	): StakingPoolOneTimeAdminCapObject => {
+		const objectType = Helpers.getObjectType(data);
+
+		const fields = Helpers.getObjectFields(
+			data
+		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChain;
+
+		return {
+			objectType,
+			objectId: Helpers.getObjectId(data),
+			stakingPoolId: fields.afterburner_vault_id,
+		};
+	};
+
+	public static stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2 = (
 		data: SuiObjectResponse
 	): StakingPoolOneTimeAdminCapObject => {
 		const objectType = Helpers.getObjectType(data);

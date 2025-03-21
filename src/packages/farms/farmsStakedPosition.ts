@@ -12,6 +12,7 @@ import {
 	CoinType,
 	CoinsToBalance,
 	FarmsStakedPositionObject,
+	FarmsVersion,
 	SuiAddress,
 	SuiNetwork,
 	Timestamp,
@@ -56,6 +57,10 @@ export class FarmsStakedPosition extends Caller {
 	// =========================================================================
 	//  Getters
 	// =========================================================================
+
+	public version = (): FarmsVersion => {
+		return this.stakedPosition.version;
+	};
 
 	public isLocked = (inputs: { stakingPool: FarmsStakingPool }): boolean => {
 		return !this.isUnlocked(inputs);
@@ -335,12 +340,15 @@ export class FarmsStakedPosition extends Caller {
 		walletAddress: SuiAddress;
 		isSponsoredTx?: boolean;
 	}) {
-		return this.useProvider().fetchBuildDepositPrincipalTx({
+		const args = {
 			...inputs,
 			stakedPositionId: this.stakedPosition.objectId,
 			stakeCoinType: this.stakedPosition.stakeCoinType,
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().fetchBuildDepositPrincipalTxV1(args)
+			: this.useProvider().fetchBuildDepositPrincipalTxV2(args);
 	}
 
 	public async getUnstakeTransaction(inputs: {
@@ -348,14 +356,17 @@ export class FarmsStakedPosition extends Caller {
 		stakingPool: FarmsStakingPool;
 		claimSuiAsAfSui?: boolean;
 	}) {
-		return this.useProvider().fetchBuildUnstakeTx({
+		const args = {
 			...inputs,
 			stakedPositionId: this.stakedPosition.objectId,
 			stakeCoinType: this.stakedPosition.stakeCoinType,
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
 			withdrawAmount: this.stakedPosition.stakedAmount,
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().fetchBuildUnstakeTxV1(args)
+			: this.useProvider().fetchBuildUnstakeTxV2(args);
 	}
 
 	// =========================================================================
@@ -366,32 +377,41 @@ export class FarmsStakedPosition extends Caller {
 		lockDurationMs: Timestamp;
 		walletAddress: SuiAddress;
 	}) {
-		return this.useProvider().buildLockTx({
+		const args = {
 			...inputs,
 			stakedPositionId: this.stakedPosition.objectId,
 			stakeCoinType: this.stakedPosition.stakeCoinType,
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().buildLockTxV1(args)
+			: this.useProvider().buildLockTxV2(args);
 	}
 
 	public async getRenewLockTransaction(inputs: {
 		walletAddress: SuiAddress;
 	}) {
-		return this.useProvider().buildRenewLockTx({
+		const args = {
 			...inputs,
 			stakedPositionId: this.stakedPosition.objectId,
 			stakeCoinType: this.stakedPosition.stakeCoinType,
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().buildRenewLockTxV1(args)
+			: this.useProvider().buildRenewLockTxV2(args);
 	}
 
 	public async getUnlockTransaction(inputs: { walletAddress: SuiAddress }) {
-		return this.useProvider().buildUnlockTx({
+		const args = {
 			...inputs,
 			stakedPositionId: this.stakedPosition.objectId,
 			stakeCoinType: this.stakedPosition.stakeCoinType,
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().buildUnlockTxV1(args)
+			: this.useProvider().buildUnlockTxV2(args);
 	}
 
 	// =========================================================================
@@ -403,13 +423,16 @@ export class FarmsStakedPosition extends Caller {
 		stakingPool: FarmsStakingPool;
 		claimSuiAsAfSui?: boolean;
 	}) {
-		return this.useProvider().fetchBuildHarvestRewardsTx({
+		const args = {
 			...inputs,
 			stakedPositionIds: [this.stakedPosition.objectId],
 			stakeCoinType: this.stakedPosition.stakeCoinType,
 			stakingPoolId: this.stakedPosition.stakingPoolObjectId,
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().fetchBuildHarvestRewardsTxV1(args)
+			: this.useProvider().fetchBuildHarvestRewardsTxV2(args);
 	}
 
 	// =========================================================================

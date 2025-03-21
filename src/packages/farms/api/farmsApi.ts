@@ -33,6 +33,9 @@ import {
 	ObjectId,
 	SuiAddress,
 	BigIntAsString,
+	ApiFarmsCreateStakingPoolBodyV1,
+	ApiFarmsStakeBodyV1,
+	FarmsVersion,
 } from "../../../types";
 import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
@@ -106,31 +109,57 @@ export class FarmsApi implements MoveErrorsInterface {
 
 	public readonly addresses: FarmsAddresses;
 	public readonly objectTypes: {
-		stakedPosition: AnyObjectType;
-		stakingPoolOwnerCap: AnyObjectType;
-		stakingPoolOneTimeAdminCap: AnyObjectType;
+		stakedPositionV1: AnyObjectType;
+		stakingPoolOwnerCapV1: AnyObjectType;
+		stakingPoolOneTimeAdminCapV1: AnyObjectType;
+		stakedPositionV2: AnyObjectType;
+		stakingPoolOwnerCapV2: AnyObjectType;
+		stakingPoolOneTimeAdminCapV2: AnyObjectType;
 	};
 	public readonly eventTypes: {
+		// v1
 		// staking pools
 		// creation
-		createdVault: AnyObjectType;
+		createdVaultV1: AnyObjectType;
 		// mutation
-		initializedReward: AnyObjectType;
-		addedReward: AnyObjectType;
-		increasedEmissions: AnyObjectType;
+		initializedRewardV1: AnyObjectType;
+		addedRewardV1: AnyObjectType;
+		increasedEmissionsV1: AnyObjectType;
 
 		// staking positions
 		// creation
-		staked: AnyObjectType;
-		stakedRelaxed: AnyObjectType;
+		stakedV1: AnyObjectType;
+		stakedRelaxedV1: AnyObjectType;
 		// locking
-		locked: AnyObjectType;
-		unlocked: AnyObjectType;
+		lockedV1: AnyObjectType;
+		unlockedV1: AnyObjectType;
 		// staking
-		depositedPrincipal: AnyObjectType;
-		withdrewPrincipal: AnyObjectType;
+		depositedPrincipalV1: AnyObjectType;
+		withdrewPrincipalV1: AnyObjectType;
 		// reward harvesting
-		harvestedRewards: AnyObjectType;
+		harvestedRewardsV1: AnyObjectType;
+
+		// v2
+		// staking pools
+		// creation
+		createdVaultV2: AnyObjectType;
+		// mutation
+		initializedRewardV2: AnyObjectType;
+		addedRewardV2: AnyObjectType;
+		increasedEmissionsV2: AnyObjectType;
+
+		// staking positions
+		// creation
+		stakedV2: AnyObjectType;
+		stakedRelaxedV2: AnyObjectType;
+		// locking
+		lockedV2: AnyObjectType;
+		unlockedV2: AnyObjectType;
+		// staking
+		depositedPrincipalV2: AnyObjectType;
+		withdrewPrincipalV2: AnyObjectType;
+		// reward harvesting
+		harvestedRewardsV2: AnyObjectType;
 	};
 	public readonly moveErrors: MoveErrors;
 
@@ -138,6 +167,11 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Constructor
 	// =========================================================================
 
+	/**
+	 * Constructor for FarmsApi
+	 * @param Provider The AftermathApi provider instance
+	 * @throws Error if not all required addresses have been set in provider
+	 */
 	constructor(private readonly Provider: AftermathApi) {
 		const addresses = this.Provider.addresses.farms;
 		if (!addresses)
@@ -147,31 +181,57 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		this.addresses = addresses;
 		this.objectTypes = {
-			stakedPosition: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
-			stakingPoolOwnerCap: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
-			stakingPoolOneTimeAdminCap: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OneTimeAdminCap`,
+			stakedPositionV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
+			stakingPoolOwnerCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
+			stakingPoolOneTimeAdminCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OneTimeAdminCap`,
+			stakedPositionV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
+			stakingPoolOwnerCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
+			stakingPoolOneTimeAdminCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::OneTimeAdminCap`,
 		};
 		this.eventTypes = {
+			// v1
 			// staking pools
 			// creation
-			createdVault: this.createdVaultEventType(),
+			createdVaultV1: this.createdVaultEventType(1),
 			// mutation
-			initializedReward: this.initializedRewardEventType(),
-			addedReward: this.addedRewardEventType(),
-			increasedEmissions: this.increasedEmissionsEventType(),
+			initializedRewardV1: this.initializedRewardEventType(1),
+			addedRewardV1: this.addedRewardEventType(1),
+			increasedEmissionsV1: this.increasedEmissionsEventType(1),
 
 			// staking positions
 			// creation
-			staked: this.stakedEventType(),
-			stakedRelaxed: this.stakedRelaxedEventType(),
+			stakedV1: this.stakedEventType(1),
+			stakedRelaxedV1: this.stakedRelaxedEventType(1),
 			// locking
-			locked: this.lockedEventType(),
-			unlocked: this.unlockedEventType(),
+			lockedV1: this.lockedEventType(1),
+			unlockedV1: this.unlockedEventType(1),
 			// staking
-			depositedPrincipal: this.depositedPrincipalEventType(),
-			withdrewPrincipal: this.withdrewPrincipalEventType(),
+			depositedPrincipalV1: this.depositedPrincipalEventType(1),
+			withdrewPrincipalV1: this.withdrewPrincipalEventType(1),
 			// reward harvesting
-			harvestedRewards: this.harvestedRewardsEventType(),
+			harvestedRewardsV1: this.harvestedRewardsEventType(1),
+
+			// v2
+			// staking pools
+			// creation
+			createdVaultV2: this.createdVaultEventType(2),
+			// mutation
+			initializedRewardV2: this.initializedRewardEventType(2),
+			addedRewardV2: this.addedRewardEventType(2),
+			increasedEmissionsV2: this.increasedEmissionsEventType(2),
+
+			// staking positions
+			// creation
+			stakedV2: this.stakedEventType(2),
+			stakedRelaxedV2: this.stakedRelaxedEventType(2),
+			// locking
+			lockedV2: this.lockedEventType(2),
+			unlockedV2: this.unlockedEventType(2),
+			// staking
+			depositedPrincipalV2: this.depositedPrincipalEventType(2),
+			withdrewPrincipalV2: this.withdrewPrincipalEventType(2),
+			// reward harvesting
+			harvestedRewardsV2: this.harvestedRewardsEventType(2),
 		};
 		this.moveErrors = {
 			[this.addresses.packages.vaults]: {
@@ -245,172 +305,96 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Pool Objects
 	// =========================================================================
 
+	/**
+	 * Fetches the owner caps for staking pools owned by a specific wallet address
+	 * @param inputs Object containing wallet address
+	 * @returns Array of StakingPoolOwnerCapObject
+	 */
 	public fetchOwnedStakingPoolOwnerCaps = async (
 		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody
 	): Promise<StakingPoolOwnerCapObject[]> => {
 		const { walletAddress } = inputs;
 
-		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
-			walletAddress,
-			objectType: this.objectTypes.stakingPoolOwnerCap,
-			objectFromSuiObjectResponse:
-				Casting.farms.stakingPoolOwnerCapObjectFromSuiObjectResponse,
-		});
+		const [capsV1, capsV2] = await Promise.all([
+			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType: this.objectTypes.stakingPoolOwnerCapV1,
+				objectFromSuiObjectResponse:
+					Casting.farms
+						.stakingPoolOwnerCapObjectFromSuiObjectResponseV1,
+			}),
+			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType: this.objectTypes.stakingPoolOwnerCapV2,
+				objectFromSuiObjectResponse:
+					Casting.farms
+						.stakingPoolOwnerCapObjectFromSuiObjectResponseV2,
+			}),
+		]);
+		return [...capsV1, ...capsV2];
 	};
 
+	/**
+	 * Fetches the one-time admin caps for staking pools owned by a specific wallet address
+	 * @param inputs Object containing wallet address
+	 * @returns Array of StakingPoolOneTimeAdminCapObject
+	 */
 	public fetchOwnedStakingPoolOneTimeAdminCaps = async (
 		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody
 	): Promise<StakingPoolOneTimeAdminCapObject[]> => {
 		const { walletAddress } = inputs;
 
-		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
-			walletAddress,
-			objectType: this.objectTypes.stakingPoolOneTimeAdminCap,
-			objectFromSuiObjectResponse:
-				Casting.farms
-					.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponse,
-		});
+		const [capsV1, capsV2] = await Promise.all([
+			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType: this.objectTypes.stakingPoolOneTimeAdminCapV1,
+				objectFromSuiObjectResponse:
+					Casting.farms
+						.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV1,
+			}),
+			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType: this.objectTypes.stakingPoolOneTimeAdminCapV2,
+				objectFromSuiObjectResponse:
+					Casting.farms
+						.stakingPoolOneTimeAdminCapObjectFromSuiObjectResponseV2,
+			}),
+		]);
+		return [...capsV1, ...capsV2];
 	};
 
 	// =========================================================================
 	//  Staked Position Objects
 	// =========================================================================
 
+	/**
+	 * Fetches partial staked positions owned by a specific wallet address
+	 * @param inputs Object containing wallet address
+	 * @returns Array of PartialFarmsStakedPositionObject
+	 */
 	public fetchOwnedPartialStakedPositions = async (inputs: {
 		walletAddress: SuiAddress;
 	}): Promise<PartialFarmsStakedPositionObject[]> => {
 		const { walletAddress } = inputs;
 
-		return this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
-			walletAddress,
-			objectType: this.objectTypes.stakedPosition,
-			objectFromSuiObjectResponse:
-				Casting.farms.partialStakedPositionObjectFromSuiObjectResponse,
-		});
+		const [positionsV1, positionsV2] = await Promise.all([
+			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType: this.objectTypes.stakedPositionV1,
+				objectFromSuiObjectResponse:
+					Casting.farms
+						.partialStakedPositionObjectFromSuiObjectResponseV1,
+			}),
+			this.Provider.Objects().fetchCastObjectsOwnedByAddressOfType({
+				walletAddress,
+				objectType: this.objectTypes.stakedPositionV2,
+				objectFromSuiObjectResponse:
+					Casting.farms
+						.partialStakedPositionObjectFromSuiObjectResponseV2,
+			}),
+		]);
+		return [...positionsV1, ...positionsV2];
 	};
-
-	// =========================================================================
-	//  Events
-	// =========================================================================
-
-	// =========================================================================
-	//  Created Vault
-	// =========================================================================
-
-	public fetchCreatedVaultEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			FarmsCreatedVaultEventOnChain,
-			FarmsCreatedVaultEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.createdVault,
-			},
-			eventFromEventOnChain: Casting.farms.createdVaultEventFromOnChain,
-		});
-
-	// =========================================================================
-	//  Staking Position Creation
-	// =========================================================================
-
-	public fetchStakedEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			FarmsStakedEventOnChain,
-			FarmsStakedEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.staked,
-			},
-			eventFromEventOnChain: Casting.farms.stakedEventFromOnChain,
-		});
-
-	public fetchStakedRelaxedEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			FarmsStakedRelaxedEventOnChain,
-			FarmsStakedRelaxedEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.stakedRelaxed,
-			},
-			eventFromEventOnChain: Casting.farms.stakedRelaxedEventFromOnChain,
-		});
-
-	// =========================================================================
-	//  Staking Position Locking
-	// =========================================================================
-
-	public fetchLockedEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			FarmsLockedEventOnChain,
-			FarmsLockedEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.locked,
-			},
-			eventFromEventOnChain: Casting.farms.lockedEventFromOnChain,
-		});
-
-	public fetchUnlockedEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			FarmsUnlockedEventOnChain,
-			FarmsUnlockedEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.unlocked,
-			},
-			eventFromEventOnChain: Casting.farms.unlockedEventFromOnChain,
-		});
-
-	// =========================================================================
-	//  Staking Position Staking
-	// =========================================================================
-
-	public fetchDepositedPrincipalEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			FarmsDepositedPrincipalEventOnChain,
-			FarmsDepositedPrincipalEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.depositedPrincipal,
-			},
-			eventFromEventOnChain:
-				Casting.farms.depositedPrincipalEventFromOnChain,
-		});
-
-	public fetchWithdrewPrincipalEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			FarmsWithdrewPrincipalEventOnChain,
-			FarmsWithdrewPrincipalEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.withdrewPrincipal,
-			},
-			eventFromEventOnChain:
-				Casting.farms.withdrewPrincipalEventFromOnChain,
-		});
-
-	// =========================================================================
-	//  Staking Position Reward Harvesting
-	// =========================================================================
-
-	public fetchHarvestedRewardsEvents = (inputs: EventsInputs) =>
-		this.Provider.Events().fetchCastEventsWithCursor<
-			FarmsHarvestedRewardsEventOnChain,
-			FarmsHarvestedRewardsEvent
-		>({
-			...inputs,
-			query: {
-				MoveEventType: this.eventTypes.harvestedRewards,
-			},
-			eventFromEventOnChain:
-				Casting.farms.harvestedRewardsEventFromOnChain,
-		});
 
 	// =========================================================================
 	//  Transaction Commands
@@ -420,7 +404,13 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Transaction Commands
 	// =========================================================================
 
-	public stakeTx = (inputs: {
+	/**
+	 * @deprecated use stakeTxV2 instead
+	 * Creates a transaction to stake coins in a staking pool (original version)
+	 * @param inputs Staking parameters including transaction, pool ID, coin ID, lock duration, and coin type
+	 * @returns Transaction object argument for StakedPosition
+	 */
+	public stakeTxV1 = (inputs: {
 		tx: Transaction;
 		stakingPoolId: ObjectId;
 		stakeCoinId: ObjectId | TransactionArgument;
@@ -447,7 +437,48 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public depositPrincipalTx = (inputs: {
+	/**
+	 * Creates a transaction to stake coins in a staking pool
+	 * @param inputs Staking parameters including transaction, pool ID, coin ID, lock duration, lock enforcement, and coin type
+	 * @returns Transaction object argument for StakedPosition
+	 */
+	public stakeTxV2 = (inputs: {
+		tx: Transaction;
+		stakingPoolId: ObjectId;
+		stakeCoinId: ObjectId | TransactionArgument;
+		lockDurationMs: Timestamp;
+		lockEnforcement: FarmsLockEnforcement;
+		stakeCoinType: CoinType;
+	}) /* (StakedPosition) */ => {
+		const { tx, stakeCoinId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"stake"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				typeof stakeCoinId === "string"
+					? tx.object(stakeCoinId)
+					: stakeCoinId, // Coin
+				tx.pure.u64(inputs.lockEnforcement === "Strict" ? 0 : 1), // lock_enforcement
+				tx.pure.u64(inputs.lockDurationMs), // lock_duration_ms
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use depositPrincipalTxV2 instead
+	 * Creates a transaction to deposit additional principal to a staked position (original version)
+	 * @param inputs Deposit parameters including transaction, position ID, pool ID, coin ID, and coin type
+	 * @returns Transaction command to deposit principal
+	 */
+	public depositPrincipalTxV1 = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -474,7 +505,46 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public withdrawPrincipalTx = (inputs: {
+	/**
+	 * Creates a transaction to deposit additional principal to a staked position
+	 * @param inputs Deposit parameters including transaction, position ID, pool ID, coin ID, and coin type
+	 * @returns Transaction command to deposit principal
+	 */
+	public depositPrincipalTxV2 = (inputs: {
+		tx: Transaction;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinId: ObjectId | TransactionArgument;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx, stakeCoinId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"deposit_principal"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				typeof stakeCoinId === "string"
+					? tx.object(stakeCoinId)
+					: stakeCoinId, // Coin
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use withdrawPrincipalTxV2 instead
+	 * Creates a transaction to withdraw principal from a staked position (original version)
+	 * @param inputs Withdrawal parameters including transaction, position ID, pool ID, amount, and coin type
+	 * @returns Transaction object argument for the withdrawn Coin
+	 */
+	public withdrawPrincipalTxV1 = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -499,7 +569,44 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public destroyStakedPositionTx = (inputs: {
+	/**
+	 * Creates a transaction to withdraw principal from a staked position
+	 * @param inputs Withdrawal parameters including transaction, position ID, pool ID, amount, and coin type
+	 * @returns Transaction object argument for the withdrawn Coin
+	 */
+	public withdrawPrincipalTxV2 = (inputs: {
+		tx: Transaction;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		withdrawAmount: Balance;
+		stakeCoinType: CoinType;
+	}) /* (Coin) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"withdraw_principal"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				tx.pure.u64(inputs.withdrawAmount),
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use destroyStakedPositionTxV2 instead
+	 * Creates a transaction to destroy a staked position (original version)
+	 * @param inputs Destroy parameters including transaction, position ID, pool ID, and coin type
+	 * @returns Transaction command to destroy the position
+	 */
+	public destroyStakedPositionTxV1 = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -522,12 +629,44 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public updatePositionTx = (inputs: {
+	/**
+	 * Creates a transaction to destroy a staked position
+	 * @param inputs Destroy parameters including transaction, position ID, and coin type
+	 * @returns Transaction command to destroy the position
+	 */
+	public destroyStakedPositionTxV2 = (inputs: {
+		tx: Transaction;
+		stakedPositionId: ObjectId;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"destroy"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(this.addresses.objects.version), // Version
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use updatePositionTxV2 instead
+	 * Creates a transaction to update a staked position, recalculating rewards (original version)
+	 * @param inputs Update parameters including transaction, position ID, pool ID, and coin type
+	 * @returns Transaction command to update the position
+	 */
+	public updatePositionTxV1 = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
 		stakeCoinType: CoinType;
-	}) /* (Coin) */ => {
+	}) => {
 		const { tx } = inputs;
 
 		return tx.moveCall({
@@ -545,11 +684,46 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Creates a transaction to update a staked position, recalculating rewards
+	 * @param inputs Update parameters including transaction, position ID, pool ID, and coin type
+	 * @returns Transaction command to update the position
+	 */
+	public updatePositionTxV2 = (inputs: {
+		tx: Transaction;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"update_position"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Locking Transaction Commands
 	// =========================================================================
 
-	public lockTx = (inputs: {
+	/**
+	 * @deprecated use lockTxV2 instead
+	 * Creates a transaction to lock a staked position for a specific duration (original version)
+	 * @param inputs Lock parameters including transaction, position ID, pool ID, lock duration, and coin type
+	 * @returns Transaction command to lock the position
+	 */
+	public lockTxV1 = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -574,7 +748,44 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public renewLockTx = (inputs: {
+	/**
+	 * Creates a transaction to lock a staked position for a specific duration
+	 * @param inputs Lock parameters including transaction, position ID, pool ID, lock duration, and coin type
+	 * @returns Transaction command to lock the position
+	 */
+	public lockTxV2 = (inputs: {
+		tx: Transaction;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		lockDurationMs: Timestamp;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"lock"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				tx.pure.u64(inputs.lockDurationMs),
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use renewLockTxV2 instead
+	 * Creates a transaction to renew the lock on a staked position (original version)
+	 * @param inputs Renew lock parameters including transaction, position ID, pool ID, and coin type
+	 * @returns Transaction command to renew the lock
+	 */
+	public renewLockTxV1 = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -597,7 +808,42 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public unlockTx = (inputs: {
+	/**
+	 * Creates a transaction to renew the lock on a staked position
+	 * @param inputs Renew lock parameters including transaction, position ID, pool ID, and coin type
+	 * @returns Transaction command to renew the lock
+	 */
+	public renewLockTxV2 = (inputs: {
+		tx: Transaction;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"renew_lock"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				tx.object(this.addresses.objects.version), // Version
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use unlockTxV2 instead
+	 * Creates a transaction to unlock a staked position (original version)
+	 * @param inputs Unlock parameters including transaction, position ID, pool ID, and coin type
+	 * @returns Transaction command to unlock the position
+	 */
+	public unlockTxV1 = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -620,11 +866,46 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Creates a transaction to unlock a staked position
+	 * @param inputs Unlock parameters including transaction, position ID, pool ID, and coin type
+	 * @returns Transaction command to unlock the position
+	 */
+	public unlockTxV2 = (inputs: {
+		tx: Transaction;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"unlock"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Reward Harvesting Transaction Commands
 	// =========================================================================
 
-	public beginHarvestTx = (inputs: {
+	/**
+	 * @deprecated use beginHarvestTxV2 instead
+	 * Creates a transaction to begin the reward harvesting process (original version)
+	 * @param inputs Begin harvest parameters including transaction, pool ID, and coin type
+	 * @returns Transaction object argument for the harvest metadata
+	 */
+	public beginHarvestTxV1 = (inputs: {
 		tx: Transaction;
 		stakingPoolId: ObjectId;
 		stakeCoinType: CoinType;
@@ -644,7 +925,42 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public harvestRewardsTx = (inputs: {
+	/**
+	 * Creates a transaction to begin the reward harvesting process
+	 * @param inputs Begin harvest parameters including transaction, position ID, pool ID, and coin type
+	 * @returns Transaction object argument for the harvest cap
+	 */
+	public beginHarvestTxV2 = (inputs: {
+		tx: Transaction;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+	}) /* (HarvestRewardsCap) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"begin_harvest_tx"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use harvestRewardsTxV2 instead
+	 * Creates a transaction to harvest rewards from a staked position (original version)
+	 * @param inputs Harvest parameters including transaction, position ID, pool ID, harvest metadata, stake coin type, and reward coin type
+	 * @returns Transaction object argument for the harvested rewards
+	 */
+	public harvestRewardsTxV1 = (inputs: {
 		tx: Transaction;
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -672,7 +988,47 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public endHarvestTx = (inputs: {
+	/**
+	 * Creates a transaction to harvest rewards from a staked position
+	 * @param inputs Harvest parameters including transaction, harvest cap, position ID, pool ID, stake coin type, and reward coin type
+	 * @returns Transaction object argument for the harvested rewards
+	 */
+	public harvestRewardsTxV2 = (inputs: {
+		tx: Transaction;
+		harvestRewardsCap: ObjectId | TransactionArgument;
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+		rewardCoinType: CoinType;
+	}) /* (Coin) */ => {
+		const { tx, harvestRewardsCap } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"harvest_rewards"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				typeof harvestRewardsCap === "string"
+					? tx.object(harvestRewardsCap)
+					: harvestRewardsCap, // HarvestRewardsCap
+				tx.object(inputs.stakedPositionId), // StakedPosition
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use endHarvestTxV2 instead
+	 * Creates a transaction to end the reward harvesting process (original version)
+	 * @param inputs End harvest parameters including transaction and harvest metadata
+	 * @returns Transaction command to end the harvest
+	 */
+	public endHarvestTxV1 = (inputs: {
 		tx: Transaction;
 		harvestedRewardsEventMetadataId: ObjectId | TransactionArgument;
 	}) => {
@@ -693,11 +1049,44 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Creates a transaction to end the reward harvesting process
+	 * @param inputs End harvest parameters including transaction and harvest cap
+	 * @returns Transaction command to end the harvest
+	 */
+	public endHarvestTxV2 = (inputs: {
+		tx: Transaction;
+		harvestRewardsCap: ObjectId | TransactionArgument;
+	}) => {
+		const { tx, harvestRewardsCap } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.stakedPosition,
+				"end_harvest"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof harvestRewardsCap === "string"
+					? tx.object(harvestRewardsCap)
+					: harvestRewardsCap, // HarvestRewardsCap
+				tx.object(this.addresses.objects.version), // Version
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Staking Pool Creation Transaction Commands
 	// =========================================================================
 
-	public newStakingPoolTx = (inputs: {
+	/**
+	 * @deprecated use newStakingPoolTxV2 instead
+	 * Creates a transaction for the deprecated version of staking pool creation
+	 * @param inputs Pool creation parameters including transaction, lock enforcement, durations, multiplier, stake amount, and coin type
+	 * @returns Transaction objects for the vault and owner cap
+	 */
+	public newStakingPoolTxV1 = (inputs: {
 		tx: Transaction;
 		lockEnforcement: FarmsLockEnforcement;
 		minLockDurationMs: Timestamp;
@@ -725,7 +1114,51 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public shareStakingPoolTx = (inputs: {
+	/**
+	 * Creates a transaction for the current version of staking pool creation
+	 * @param inputs Pool creation parameters including transaction, lock enforcements array, durations, multiplier, stake amount, and coin type
+	 * @returns Transaction objects for the vault and authority cap
+	 */
+	public newStakingPoolTxV2 = (inputs: {
+		tx: Transaction;
+		lockEnforcements: FarmsLockEnforcement[];
+		minLockDurationMs: Timestamp;
+		maxLockDurationMs: Timestamp;
+		maxLockMultiplier: FarmsMultiplier;
+		minStakeAmount: Balance;
+		stakeCoinType: CoinType;
+	}) /* (AfterburnerVault, AuthorityCap) */ => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"new"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(this.addresses.objects.version),
+				tx.pure.vector(
+					"u8",
+					inputs.lockEnforcements.map((lockEnforcement) =>
+						lockEnforcement === "Strict" ? 0 : 1
+					)
+				),
+				tx.pure.u64(inputs.minLockDurationMs),
+				tx.pure.u64(inputs.maxLockDurationMs),
+				tx.pure.u64(inputs.maxLockMultiplier),
+				tx.pure.u64(inputs.minStakeAmount),
+			],
+		});
+	};
+
+	/**
+	 * Creates a transaction to share a staking pool, making it public
+	 * @param inputs Share pool parameters including transaction, pool ID, and coin type
+	 * @returns Transaction command to share the pool
+	 */
+	public shareStakingPoolTxV1 = (inputs: {
 		tx: Transaction;
 		stakingPoolId: ObjectId | TransactionArgument;
 		stakeCoinType: CoinType;
@@ -747,7 +1180,12 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public transferOwnerCapTx = (inputs: {
+	/**
+	 * Creates a transaction to transfer ownership of a staking pool
+	 * @param inputs Transfer parameters including transaction, owner cap ID, and recipient address
+	 * @returns Transaction command to transfer the owner cap
+	 */
+	public transferOwnerCapTxV1 = (inputs: {
 		tx: Transaction;
 		ownerCapId: ObjectId | TransactionArgument;
 		recipientAddress: SuiAddress;
@@ -770,7 +1208,68 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public grantOneTimeAdminCapTx = (inputs: {
+	/**
+	 * Creates a transaction to share a staking pool, making it public
+	 * @param inputs Share pool parameters including transaction, pool ID, and coin type
+	 * @returns Transaction command to share the pool
+	 */
+	public shareStakingPoolTxV2 = (inputs: {
+		tx: Transaction;
+		stakingPoolId: ObjectId | TransactionArgument;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx, stakingPoolId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"share_vault"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				typeof stakingPoolId === "string"
+					? tx.object(stakingPoolId)
+					: stakingPoolId, // AfterburnerVault
+			],
+		});
+	};
+
+	/**
+	 * Creates a transaction to transfer ownership of a staking pool
+	 * @param inputs Transfer parameters including transaction, owner cap ID, and recipient address
+	 * @returns Transaction command to transfer the owner cap
+	 */
+	public transferOwnerCapTxV2 = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId | TransactionArgument;
+		recipientAddress: SuiAddress;
+	}) => {
+		const { tx, ownerCapId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"transfer_owner_cap"
+			),
+			typeArguments: [],
+			arguments: [
+				typeof ownerCapId === "string"
+					? tx.object(ownerCapId)
+					: ownerCapId, // OwnerCap
+				tx.pure.address(inputs.recipientAddress),
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use grantOneTimeAdminCapTxV2 instead
+	 * Creates a transaction to grant a one-time admin capability for a staking pool (original version)
+	 * @param inputs Grant parameters including transaction, owner cap ID, recipient address, and reward coin type
+	 * @returns Transaction command to grant the one-time admin cap
+	 */
+	public grantOneTimeAdminCapTxV1 = (inputs: {
 		tx: Transaction;
 		ownerCapId: ObjectId | TransactionArgument;
 		recipientAddress: SuiAddress;
@@ -794,11 +1293,47 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Creates a transaction to grant a one-time admin capability for a staking pool
+	 * @param inputs Grant parameters including transaction, owner cap ID, recipient address, and reward coin type
+	 * @returns Transaction command to grant the one-time admin cap
+	 */
+	public grantOneTimeAdminCapTxV2 = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId | TransactionArgument;
+		recipientAddress: SuiAddress;
+		rewardCoinType: CoinType;
+	}) => {
+		const { tx, ownerCapId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"grant_one_time_admin_cap"
+			),
+			typeArguments: [inputs.rewardCoinType],
+			arguments: [
+				typeof ownerCapId === "string"
+					? tx.object(ownerCapId)
+					: ownerCapId, // OwnerCap
+				tx.object(this.addresses.objects.version), // Version
+				tx.pure.address(inputs.recipientAddress),
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Staking Pool Mutation Transaction Commands
 	// =========================================================================
 
-	public initializeStakingPoolRewardTx = (
+	/**
+	 * @deprecated use initializeStakingPoolRewardTxV2 instead
+	 * Creates a transaction to initialize rewards for a staking pool (original version)
+	 * @param inputs Initialize reward parameters including transaction, pool ID, reward coin ID, emission parameters, stake coin type, and reward coin type
+	 * @returns Transaction command to initialize the reward
+	 */
+	public initializeStakingPoolRewardTxV1 = (
 		inputs: {
 			tx: Transaction;
 			stakingPoolId: ObjectId;
@@ -811,19 +1346,20 @@ export class FarmsApi implements MoveErrorsInterface {
 		} & FarmOwnerOrOneTimeAdminCap
 	) => {
 		const { tx, rewardCoinId } = inputs;
+		const isOneTimeAdminCap = FarmsApi.isFarmOneTimeAdminCapId(inputs);
+		const capId = FarmsApi.farmCapId(inputs);
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vault,
-				"initialize_reward" +
-					(FarmsApi.isFarmOneTimeAdminCapId(inputs)
-						? "_and_consume_admin_cap"
-						: "")
+				isOneTimeAdminCap
+					? "initialize_reward_and_consume_admin_cap"
+					: "initialize_reward"
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
-				tx.object(FarmsApi.farmCapId(inputs)), // OwnerCap / OneTimeAdminCap
+				tx.object(capId), // OwnerCap / OneTimeAdminCap
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(Sui.constants.addresses.suiClockId), // Clock
 				typeof rewardCoinId === "string"
@@ -836,7 +1372,58 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public topUpStakingPoolRewardTx = (
+	/**
+	 * Creates a transaction to initialize rewards for a staking pool
+	 * @param inputs Initialize reward parameters including transaction, pool ID, reward coin ID, emission parameters, stake coin type, and reward coin type
+	 * @returns Transaction command to initialize the reward
+	 */
+	public initializeStakingPoolRewardTxV2 = (
+		inputs: {
+			tx: Transaction;
+			stakingPoolId: ObjectId;
+			rewardCoinId: ObjectId | TransactionArgument;
+			emissionScheduleMs: Timestamp;
+			emissionRate: bigint;
+			emissionDelayTimestampMs: Timestamp;
+			stakeCoinType: CoinType;
+			rewardCoinType: CoinType;
+		} & FarmOwnerOrOneTimeAdminCap
+	) => {
+		const { tx, rewardCoinId } = inputs;
+		const isOneTimeAdminCap = FarmsApi.isFarmOneTimeAdminCapId(inputs);
+		const capId = FarmsApi.farmCapId(inputs);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				isOneTimeAdminCap
+					? "initialize_reward_and_consume_admin_cap"
+					: "initialize_reward"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				tx.object(capId), // OwnerCap / OneTimeAdminCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				typeof rewardCoinId === "string"
+					? tx.object(rewardCoinId)
+					: rewardCoinId, // Coin
+				tx.pure.u64(inputs.emissionScheduleMs),
+				tx.pure.u64(inputs.emissionRate),
+				tx.pure.u64(inputs.emissionDelayTimestampMs),
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use topUpStakingPoolRewardTxV2 instead
+	 * Creates a transaction to add more rewards to a staking pool (original version)
+	 * @param inputs Top up parameters including transaction, pool ID, reward coin ID, stake coin type, and reward coin type
+	 * @returns Transaction command to add rewards
+	 */
+	public topUpStakingPoolRewardTxV1 = (
 		inputs: {
 			tx: Transaction;
 			stakingPoolId: ObjectId;
@@ -846,19 +1433,20 @@ export class FarmsApi implements MoveErrorsInterface {
 		} & FarmOwnerOrOneTimeAdminCap
 	) => {
 		const { tx, rewardCoinId } = inputs;
+		const isOneTimeAdminCap = FarmsApi.isFarmOneTimeAdminCapId(inputs);
+		const capId = FarmsApi.farmCapId(inputs);
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
 				FarmsApi.constants.moduleNames.vault,
-				"add_reward" +
-					(FarmsApi.isFarmOneTimeAdminCapId(inputs)
-						? "_and_consume_admin_cap"
-						: "")
+				isOneTimeAdminCap
+					? "add_reward_and_consume_admin_cap"
+					: "add_reward"
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
 			arguments: [
-				tx.object(FarmsApi.farmCapId(inputs)), // OwnerCap / OneTimeAdminCap
+				tx.object(capId), // OwnerCap / OneTimeAdminCap
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				typeof rewardCoinId === "string"
 					? tx.object(rewardCoinId)
@@ -867,7 +1455,51 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public increaseStakingPoolRewardEmissionsTx = (inputs: {
+	/**
+	 * Creates a transaction to add more rewards to a staking pool
+	 * @param inputs Top up parameters including transaction, pool ID, reward coin ID, stake coin type, and reward coin type
+	 * @returns Transaction command to add rewards
+	 */
+	public topUpStakingPoolRewardTxV2 = (
+		inputs: {
+			tx: Transaction;
+			stakingPoolId: ObjectId;
+			rewardCoinId: ObjectId | TransactionArgument;
+			stakeCoinType: CoinType;
+			rewardCoinType: CoinType;
+		} & FarmOwnerOrOneTimeAdminCap
+	) => {
+		const { tx, rewardCoinId } = inputs;
+		const isOneTimeAdminCap = FarmsApi.isFarmOneTimeAdminCapId(inputs);
+		const capId = FarmsApi.farmCapId(inputs);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				isOneTimeAdminCap
+					? "add_reward_and_consume_admin_cap"
+					: "add_reward"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				tx.object(capId), // OwnerCap / OneTimeAdminCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				typeof rewardCoinId === "string"
+					? tx.object(rewardCoinId)
+					: rewardCoinId, // Coin
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use increaseStakingPoolRewardEmissionsTxV2 instead
+	 * Creates a transaction to increase the emission rate for a staking pool reward (original version)
+	 * @param inputs Increase emissions parameters including transaction, owner cap ID, pool ID, emission parameters, stake coin type, and reward coin type
+	 * @returns Transaction command to update emissions
+	 */
+	public increaseStakingPoolRewardEmissionsTxV1 = (inputs: {
 		tx: Transaction;
 		ownerCapId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -895,7 +1527,47 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public setStakingPoolMinStakeAmountTx = (inputs: {
+	/**
+	 * Creates a transaction to increase the emission rate for a staking pool reward
+	 * @param inputs Increase emissions parameters including transaction, owner cap ID, pool ID, emission parameters, stake coin type, and reward coin type
+	 * @returns Transaction command to update emissions
+	 */
+	public increaseStakingPoolRewardEmissionsTxV2 = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		emissionScheduleMs: Timestamp;
+		emissionRate: bigint;
+		stakeCoinType: CoinType;
+		rewardCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"update_emission_schedule"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.object(Sui.constants.addresses.suiClockId), // Clock
+				tx.pure.u64(inputs.emissionScheduleMs),
+				tx.pure.u64(inputs.emissionRate),
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use setStakingPoolMinStakeAmountTxV2 instead
+	 * Creates a transaction to set the minimum stake amount for a staking pool (original version)
+	 * @param inputs Min stake amount parameters including transaction, owner cap ID, pool ID, minimum amount, and stake coin type
+	 * @returns Transaction command to set the minimum stake amount
+	 */
+	public setStakingPoolMinStakeAmountTxV1 = (inputs: {
 		tx: Transaction;
 		ownerCapId: ObjectId;
 		stakingPoolId: ObjectId;
@@ -919,10 +1591,45 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Creates a transaction to set the minimum stake amount for a staking pool
+	 * @param inputs Min stake amount parameters including transaction, owner cap ID, pool ID, minimum amount, and stake coin type
+	 * @returns Transaction command to set the minimum stake amount
+	 */
+	public setStakingPoolMinStakeAmountTxV2 = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		minStakeAmount: bigint;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vault,
+				"set_min_stake_amount"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.pure.u64(inputs.minStakeAmount),
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Staking Pool Inspection Transaction Commands
 	// =========================================================================
 
+	/**
+	 * Creates a transaction to check if a staking pool is unlocked
+	 * @param inputs Check parameters including transaction, pool ID, and coin type
+	 * @returns Transaction object argument for the boolean result
+	 */
 	public isVaultUnlockedTx = (inputs: {
 		tx: Transaction;
 		stakingPoolId: ObjectId;
@@ -942,6 +1649,11 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Creates a transaction to get the remaining rewards for a staking pool
+	 * @param inputs Remaining rewards parameters including transaction, pool ID, and coin type
+	 * @returns Transaction object argument for the vector of remaining rewards
+	 */
 	public remainingRewardsTx = (inputs: {
 		tx: Transaction;
 		stakingPoolId: ObjectId;
@@ -969,7 +1681,13 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Transactions
 	// =========================================================================
 
-	public fetchBuildStakeTx = async (inputs: ApiFarmsStakeBody) => {
+	/**
+	 * @deprecated use fetchBuildStakeTxV2 instead
+	 * Builds a complete transaction for staking coins
+	 * @param inputs Staking parameters including wallet address, lock enforcement, stake amount, pool ID, lock duration, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildStakeTxV1 = async (inputs: ApiFarmsStakeBodyV1) => {
 		const { walletAddress, isSponsoredTx } = inputs;
 
 		const tx = new Transaction();
@@ -983,13 +1701,52 @@ export class FarmsApi implements MoveErrorsInterface {
 			isSponsoredTx,
 		});
 
-		const stakedPosition = this.stakeTx({ ...inputs, tx, stakeCoinId });
+		const stakedPosition = this.stakeTxV1({
+			...inputs,
+			tx,
+			stakeCoinId,
+		});
 		tx.transferObjects([stakedPosition], walletAddress);
 
 		return tx;
 	};
 
-	public fetchBuildDepositPrincipalTx = async (
+	/**
+	 * Builds a complete transaction for staking coins
+	 * @param inputs Staking parameters including wallet address, lock enforcement, stake amount, pool ID, lock duration, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildStakeTxV2 = async (inputs: ApiFarmsStakeBody) => {
+		const { walletAddress, isSponsoredTx } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		const stakeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: inputs.stakeCoinType,
+			coinAmount: inputs.stakeAmount,
+			isSponsoredTx,
+		});
+
+		const stakedPosition = this.stakeTxV2({
+			...inputs,
+			tx,
+			stakeCoinId,
+		});
+		tx.transferObjects([stakedPosition], walletAddress);
+
+		return tx;
+	};
+
+	/**
+	 * @deprecated use fetchBuildDepositPrincipalTxV2 instead
+	 * Builds a complete transaction for depositing additional principal to a staked position
+	 * @param inputs Deposit parameters including wallet address, position ID, pool ID, deposit amount, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildDepositPrincipalTxV1 = async (
 		inputs: ApiFarmsDepositPrincipalBody
 	) => {
 		const { walletAddress, isSponsoredTx } = inputs;
@@ -1005,7 +1762,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			isSponsoredTx,
 		});
 
-		this.depositPrincipalTx({
+		this.depositPrincipalTxV1({
 			...inputs,
 			tx,
 			stakeCoinId,
@@ -1014,7 +1771,43 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
-	public fetchBuildWithdrawPrincipalTx = async (inputs: {
+	/**
+	 * Builds a complete transaction for depositing additional principal to a staked position
+	 * @param inputs Deposit parameters including wallet address, position ID, pool ID, deposit amount, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildDepositPrincipalTxV2 = async (
+		inputs: ApiFarmsDepositPrincipalBody
+	) => {
+		const { walletAddress, isSponsoredTx } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		const stakeCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: inputs.stakeCoinType,
+			coinAmount: inputs.depositAmount,
+			isSponsoredTx,
+		});
+
+		this.depositPrincipalTxV2({
+			...inputs,
+			tx,
+			stakeCoinId,
+		});
+
+		return tx;
+	};
+
+	/**
+	 * @deprecated use fetchBuildWithdrawPrincipalTxV2 instead
+	 * Builds a complete transaction for withdrawing principal from a staked position
+	 * @param inputs Withdraw parameters including wallet address, position ID, pool ID, withdraw amount, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildWithdrawPrincipalTxV1 = async (inputs: {
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
 		withdrawAmount: Balance;
@@ -1026,7 +1819,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const withdrawnCoin = this.withdrawPrincipalTx({
+		const withdrawnCoin = this.withdrawPrincipalTxV1({
 			...inputs,
 			tx,
 		});
@@ -1035,13 +1828,45 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
-	public fetchBuildUnstakeTx = async (inputs: ApiFarmsUnstakeBody) => {
+	/**
+	 * Builds a complete transaction for withdrawing principal from a staked position
+	 * @param inputs Withdraw parameters including wallet address, position ID, pool ID, withdraw amount, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildWithdrawPrincipalTxV2 = async (inputs: {
+		stakedPositionId: ObjectId;
+		stakingPoolId: ObjectId;
+		withdrawAmount: Balance;
+		stakeCoinType: CoinType;
+		walletAddress: SuiAddress;
+	}) => {
+		const { walletAddress } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		const withdrawnCoin = this.withdrawPrincipalTxV2({
+			...inputs,
+			tx,
+		});
+		tx.transferObjects([withdrawnCoin], walletAddress);
+
+		return tx;
+	};
+
+	/**
+	 * @deprecated use fetchBuildUnstakeTxV2 instead
+	 * Builds a complete transaction for unstaking (withdrawing and destroying a position)
+	 * @param inputs Unstake parameters including wallet address, position ID, pool ID, reward coin types, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildUnstakeTxV1 = async (inputs: ApiFarmsUnstakeBody) => {
 		const { walletAddress } = inputs;
 
 		let tx;
 		if (inputs.rewardCoinTypes.length > 0) {
 			// harvest rewards
-			tx = await this.fetchBuildHarvestRewardsTx({
+			tx = await this.fetchBuildHarvestRewardsTxV1({
 				...inputs,
 				stakedPositionIds: [inputs.stakedPositionId],
 			});
@@ -1052,41 +1877,152 @@ export class FarmsApi implements MoveErrorsInterface {
 		}
 
 		// withdraw principal
-		const withdrawnCoin = this.withdrawPrincipalTx({
+		const withdrawnCoin = this.withdrawPrincipalTxV1({
 			...inputs,
 			tx,
 		});
 		tx.transferObjects([withdrawnCoin], walletAddress);
 
 		// destroy position
-		this.destroyStakedPositionTx({ ...inputs, tx });
+		this.destroyStakedPositionTxV1({
+			tx,
+			stakingPoolId: inputs.stakingPoolId,
+			stakedPositionId: inputs.stakedPositionId,
+			stakeCoinType: inputs.stakeCoinType,
+		});
 
 		return tx;
 	};
 
-	public buildUpdatePositionTx = Helpers.transactions.createBuildTxFunc(
-		this.updatePositionTx
+	/**
+	 * Builds a complete transaction for unstaking (withdrawing and destroying a position)
+	 * @param inputs Unstake parameters including wallet address, position ID, pool ID, reward coin types, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildUnstakeTxV2 = async (inputs: ApiFarmsUnstakeBody) => {
+		const { walletAddress } = inputs;
+
+		let tx;
+		if (inputs.rewardCoinTypes.length > 0) {
+			// harvest rewards
+			tx = await this.fetchBuildHarvestRewardsTxV2({
+				...inputs,
+				stakedPositionIds: [inputs.stakedPositionId],
+			});
+		} else {
+			// no rewards to harvest
+			tx = new Transaction();
+			tx.setSender(walletAddress);
+		}
+
+		// withdraw principal
+		const withdrawnCoin = this.withdrawPrincipalTxV2({
+			...inputs,
+			tx,
+		});
+		tx.transferObjects([withdrawnCoin], walletAddress);
+
+		// destroy position
+		this.destroyStakedPositionTxV2({
+			tx,
+			stakedPositionId: inputs.stakedPositionId,
+			stakeCoinType: inputs.stakeCoinType,
+		});
+
+		return tx;
+	};
+
+	/**
+	 * @deprecated use buildUpdatePositionTxV2 instead
+	 * Builds a transaction for updating a staked position
+	 * @param parameters for updatePositionTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildUpdatePositionTxV1 = Helpers.transactions.createBuildTxFunc(
+		this.updatePositionTxV1
+	);
+
+	/**
+	 * Builds a transaction for updating a staked position
+	 * @param parameters for updatePositionTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildUpdatePositionTx2 = Helpers.transactions.createBuildTxFunc(
+		this.updatePositionTxV2
 	);
 
 	// =========================================================================
 	//  Locking Transactions
 	// =========================================================================
 
-	public buildLockTx = Helpers.transactions.createBuildTxFunc(this.lockTx);
-
-	public buildRenewLockTx = Helpers.transactions.createBuildTxFunc(
-		this.renewLockTx
+	/**
+	 * @deprecated use buildLockTxV2 instead
+	 * Builds a transaction for locking a staked position
+	 * @param parameters for lockTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildLockTxV1 = Helpers.transactions.createBuildTxFunc(
+		this.lockTxV1
 	);
 
-	public buildUnlockTx = Helpers.transactions.createBuildTxFunc(
-		this.unlockTx
+	/**
+	 * Builds a transaction for locking a staked position
+	 * @param parameters for lockTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildLockTxV2 = Helpers.transactions.createBuildTxFunc(
+		this.lockTxV2
+	);
+
+	/**
+	 * @deprecated use buildRenewLockTxV2 instead
+	 * Builds a transaction for renewing the lock on a staked position
+	 * @param parameters for renewLockTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildRenewLockTxV1 = Helpers.transactions.createBuildTxFunc(
+		this.renewLockTxV1
+	);
+
+	/**
+	 * Builds a transaction for renewing the lock on a staked position
+	 * @param parameters for renewLockTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildRenewLockTxV2 = Helpers.transactions.createBuildTxFunc(
+		this.renewLockTxV2
+	);
+
+	/**
+	 * @deprecated use buildUnlockTxV2 instead
+	 * Builds a transaction for unlocking a staked position
+	 * @param parameters for unlockTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildUnlockTxV1 = Helpers.transactions.createBuildTxFunc(
+		this.unlockTxV1
+	);
+
+	/**
+	 * Builds a transaction for unlocking a staked position
+	 * @param parameters for unlockTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildUnlockTxV2 = Helpers.transactions.createBuildTxFunc(
+		this.unlockTxV2
 	);
 
 	// =========================================================================
 	//  Reward Harvesting Transactions
 	// =========================================================================
 
-	public fetchBuildHarvestRewardsTx = async (
+	/**
+	 * @deprecated use fetchBuildHarvestRewardsTxV2 instead
+	 * Builds a complete transaction for harvesting rewards from staked positions
+	 * @param inputs Harvest parameters including wallet address, position IDs, pool ID, reward coin types, and optional claim as AfSui flag
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildHarvestRewardsTxV1 = async (
 		inputs: ApiHarvestFarmsRewardsBody
 	): Promise<Transaction> => {
 		const { walletAddress, stakedPositionIds } = inputs;
@@ -1094,7 +2030,8 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const harvestedRewardsEventMetadataId = this.beginHarvestTx({
+		// For the first position, begin harvest
+		const harvestRewardsCap = this.beginHarvestTxV1({
 			...inputs,
 			tx,
 		});
@@ -1103,11 +2040,82 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		for (const stakedPositionId of stakedPositionIds) {
 			for (const rewardCoinType of inputs.rewardCoinTypes) {
-				const harvestedCoin = this.harvestRewardsTx({
+				const harvestedCoin = this.harvestRewardsTxV1({
 					...inputs,
 					tx,
 					stakedPositionId,
-					harvestedRewardsEventMetadataId,
+					rewardCoinType,
+					harvestedRewardsEventMetadataId: harvestRewardsCap,
+				});
+
+				if (rewardCoinType in harvestedCoins) {
+					harvestedCoins[rewardCoinType].push(harvestedCoin);
+				} else {
+					harvestedCoins[rewardCoinType] = [harvestedCoin];
+				}
+			}
+		}
+
+		this.endHarvestTxV1({
+			tx,
+			harvestedRewardsEventMetadataId: harvestRewardsCap,
+		});
+
+		for (const [coinType, harvestedCoinIds] of Object.entries(
+			harvestedCoins
+		)) {
+			const coinToTransfer = harvestedCoinIds[0];
+
+			if (harvestedCoinIds.length > 1)
+				tx.mergeCoins(coinToTransfer, harvestedCoinIds.slice(1));
+
+			if (inputs.claimSuiAsAfSui && Coin.isCoinObjectType(coinType)) {
+				this.Provider.Staking().stakeTx({
+					tx,
+					suiCoin: coinToTransfer,
+					withTransfer: true,
+					validatorAddress:
+						this.Provider.Staking().addresses.objects
+							.aftermathValidator,
+				});
+			} else {
+				tx.transferObjects([coinToTransfer], walletAddress);
+			}
+		}
+
+		return tx;
+	};
+
+	/**
+	 * Builds a complete transaction for harvesting rewards from staked positions
+	 * @param inputs Harvest parameters including wallet address, position IDs, pool ID, reward coin types, and optional claim as AfSui flag
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildHarvestRewardsTxV2 = async (
+		inputs: ApiHarvestFarmsRewardsBody
+	): Promise<Transaction> => {
+		const { walletAddress, stakedPositionIds } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		// For the first position, begin harvest
+		const firstPositionId = stakedPositionIds[0];
+		const harvestRewardsCap = this.beginHarvestTxV2({
+			...inputs,
+			tx,
+			stakedPositionId: firstPositionId,
+		});
+
+		let harvestedCoins: Record<CoinType, TransactionObjectArgument[]> = {};
+
+		for (const stakedPositionId of stakedPositionIds) {
+			for (const rewardCoinType of inputs.rewardCoinTypes) {
+				const harvestedCoin = this.harvestRewardsTxV2({
+					...inputs,
+					tx,
+					stakedPositionId,
+					harvestRewardsCap,
 					rewardCoinType,
 				});
 
@@ -1119,7 +2127,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			}
 		}
 
-		this.endHarvestTx({ tx, harvestedRewardsEventMetadataId });
+		this.endHarvestTxV2({ tx, harvestRewardsCap });
 
 		for (const [coinType, harvestedCoinIds] of Object.entries(
 			harvestedCoins
@@ -1154,7 +2162,44 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Pool Creation Transactions
 	// =========================================================================
 
-	public fetchBuildCreateStakingPoolTx = async (
+	/**
+	 * @deprecated use fetchBuildCreateStakingPoolTxV2 instead
+	 * Builds a complete transaction for creating a new staking pool
+	 * @param inputs Pool creation parameters including wallet address, lock enforcements, durations, multiplier, stake amount, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildCreateStakingPoolTxV1 = async (
+		inputs: ApiFarmsCreateStakingPoolBodyV1
+	): Promise<Transaction> => {
+		const { walletAddress } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		const [stakingPoolId, ownerCapId] = this.newStakingPoolTxV1({
+			...inputs,
+			tx,
+		});
+		this.shareStakingPoolTxV1({
+			tx,
+			stakingPoolId,
+			stakeCoinType: inputs.stakeCoinType,
+		});
+		this.transferOwnerCapTxV1({
+			tx,
+			ownerCapId,
+			recipientAddress: walletAddress,
+		});
+
+		return tx;
+	};
+
+	/**
+	 * Builds a complete transaction for creating a new staking pool
+	 * @param inputs Pool creation parameters including wallet address, lock enforcements, durations, multiplier, stake amount, and coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildCreateStakingPoolTxV2 = async (
 		inputs: ApiFarmsCreateStakingPoolBody
 	): Promise<Transaction> => {
 		const { walletAddress } = inputs;
@@ -1162,16 +2207,16 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		const [stakingPoolId, ownerCapId] = this.newStakingPoolTx({
+		const [stakingPoolId, ownerCapId] = this.newStakingPoolTxV2({
 			...inputs,
 			tx,
 		});
-		this.shareStakingPoolTx({
+		this.shareStakingPoolTxV2({
 			tx,
 			stakingPoolId,
 			stakeCoinType: inputs.stakeCoinType,
 		});
-		this.transferOwnerCapTx({
+		this.transferOwnerCapTxV2({
 			tx,
 			ownerCapId,
 			recipientAddress: walletAddress,
@@ -1184,7 +2229,13 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Pool Mutation Transactions
 	// =========================================================================
 
-	public fetchBuildInitializeStakingPoolRewardTx = async (
+	/**
+	 * @deprecated use fetchBuildInitializeStakingPoolRewardTxV2 instead
+	 * Builds a complete transaction for initializing rewards for a staking pool
+	 * @param inputs Initialize rewards parameters including wallet address, owner cap ID, pool ID, reward amount, emission parameters, stake coin type, and reward coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildInitializeStakingPoolRewardTxV1 = async (
 		inputs: ApiFarmsInitializeStakingPoolRewardBody
 	): Promise<Transaction> => {
 		const { walletAddress, isSponsoredTx } = inputs;
@@ -1200,12 +2251,44 @@ export class FarmsApi implements MoveErrorsInterface {
 			isSponsoredTx,
 		});
 
-		this.initializeStakingPoolRewardTx({ ...inputs, tx, rewardCoinId });
+		this.initializeStakingPoolRewardTxV1({ ...inputs, tx, rewardCoinId });
 
 		return tx;
 	};
 
-	public fetchBuildTopUpStakingPoolRewardsTx = async (
+	/**
+	 * Builds a complete transaction for initializing rewards for a staking pool
+	 * @param inputs Initialize rewards parameters including wallet address, owner cap ID, pool ID, reward amount, emission parameters, stake coin type, and reward coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildInitializeStakingPoolRewardTxV2 = async (
+		inputs: ApiFarmsInitializeStakingPoolRewardBody
+	): Promise<Transaction> => {
+		const { walletAddress, isSponsoredTx } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		const rewardCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			walletAddress,
+			coinType: inputs.rewardCoinType,
+			coinAmount: inputs.rewardAmount,
+			isSponsoredTx,
+		});
+
+		this.initializeStakingPoolRewardTxV2({ ...inputs, tx, rewardCoinId });
+
+		return tx;
+	};
+
+	/**
+	 * @deprecated use fetchBuildTopUpStakingPoolRewardsTxV2 instead
+	 * Builds a complete transaction for adding more rewards to a staking pool
+	 * @param inputs Top up rewards parameters including wallet address, owner cap ID, pool ID, rewards array with amounts and coin types, and stake coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildTopUpStakingPoolRewardsTxV1 = async (
 		inputs: ApiFarmsTopUpStakingPoolRewardsBody
 	): Promise<Transaction> => {
 		const { walletAddress, isSponsoredTx } = inputs;
@@ -1223,7 +2306,7 @@ export class FarmsApi implements MoveErrorsInterface {
 					isSponsoredTx,
 				});
 
-			this.topUpStakingPoolRewardTx({
+			this.topUpStakingPoolRewardTxV1({
 				...inputs,
 				...reward,
 				tx,
@@ -1234,7 +2317,47 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
-	public fetchIncreaseStakingPoolRewardsEmissionsTx = (
+	/**
+	 * Builds a complete transaction for adding more rewards to a staking pool
+	 * @param inputs Top up rewards parameters including wallet address, owner cap ID, pool ID, rewards array with amounts and coin types, and stake coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchBuildTopUpStakingPoolRewardsTxV2 = async (
+		inputs: ApiFarmsTopUpStakingPoolRewardsBody
+	): Promise<Transaction> => {
+		const { walletAddress, isSponsoredTx } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		for (const reward of inputs.rewards) {
+			const rewardCoinId =
+				await this.Provider.Coin().fetchCoinWithAmountTx({
+					tx,
+					walletAddress,
+					coinType: reward.rewardCoinType,
+					coinAmount: reward.rewardAmount,
+					isSponsoredTx,
+				});
+
+			this.topUpStakingPoolRewardTxV2({
+				...inputs,
+				...reward,
+				tx,
+				rewardCoinId,
+			});
+		}
+
+		return tx;
+	};
+
+	/**
+	 * @deprecated use fetchIncreaseStakingPoolRewardsEmissionsTxV2 instead
+	 * Builds a complete transaction for increasing the emission rate of rewards for a staking pool
+	 * @param inputs Increase emissions parameters including wallet address, owner cap ID, pool ID, rewards array with emission parameters and coin types, and stake coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchIncreaseStakingPoolRewardsEmissionsTxV1 = (
 		inputs: ApiFarmsIncreaseStakingPoolRewardsEmissionsBody
 	) => {
 		const { walletAddress } = inputs;
@@ -1243,7 +2366,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		tx.setSender(walletAddress);
 
 		for (const reward of inputs.rewards) {
-			this.increaseStakingPoolRewardEmissionsTx({
+			this.increaseStakingPoolRewardEmissionsTxV1({
 				...inputs,
 				...reward,
 				tx,
@@ -1253,14 +2376,67 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx;
 	};
 
-	public buildSetStakingPoolMinStakeAmountTx =
+	/**
+	 * Builds a complete transaction for increasing the emission rate of rewards for a staking pool
+	 * @param inputs Increase emissions parameters including wallet address, owner cap ID, pool ID, rewards array with emission parameters and coin types, and stake coin type
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public fetchIncreaseStakingPoolRewardsEmissionsTxV2 = (
+		inputs: ApiFarmsIncreaseStakingPoolRewardsEmissionsBody
+	) => {
+		const { walletAddress } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		for (const reward of inputs.rewards) {
+			this.increaseStakingPoolRewardEmissionsTxV2({
+				...inputs,
+				...reward,
+				tx,
+			});
+		}
+
+		return tx;
+	};
+
+	/**
+	 * @deprecated use buildSetStakingPoolMinStakeAmountTxV2 instead
+	 * Builds a transaction for setting the minimum stake amount for a staking pool
+	 * @param parameters for setStakingPoolMinStakeAmountTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildSetStakingPoolMinStakeAmountTxV1 =
 		Helpers.transactions.createBuildTxFunc(
-			this.setStakingPoolMinStakeAmountTx
+			this.setStakingPoolMinStakeAmountTxV1
 		);
 
-	public buildGrantOneTimeAdminCapTx = Helpers.transactions.createBuildTxFunc(
-		this.grantOneTimeAdminCapTx
-	);
+	/**
+	 * Builds a transaction for setting the minimum stake amount for a staking pool
+	 * @param parameters for setStakingPoolMinStakeAmountTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildSetStakingPoolMinStakeAmountTxV2 =
+		Helpers.transactions.createBuildTxFunc(
+			this.setStakingPoolMinStakeAmountTxV2
+		);
+
+	/**
+	 * @deprecated use buildGrantOneTimeAdminCapTxV2 instead
+	 * Builds a transaction for granting a one-time admin capability for a staking pool
+	 * @param parameters for grantOneTimeAdminCapTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildGrantOneTimeAdminCapTxV1 =
+		Helpers.transactions.createBuildTxFunc(this.grantOneTimeAdminCapTxV1);
+
+	/**
+	 * Builds a transaction for granting a one-time admin capability for a staking pool
+	 * @param parameters for grantOneTimeAdminCapTx
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildGrantOneTimeAdminCapTxV2 =
+		Helpers.transactions.createBuildTxFunc(this.grantOneTimeAdminCapTxV2);
 
 	// =========================================================================
 	//  Private Methods
@@ -1274,9 +2450,15 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Vault Creation
 	// =========================================================================
 
-	private createdVaultEventType = () =>
+	/**
+	 * Creates the event type for vault creation events
+	 * @returns Fully qualified event type string
+	 */
+	private createdVaultEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.createdVault
 		);
@@ -1285,23 +2467,41 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Vault Mutation
 	// =========================================================================
 
-	private initializedRewardEventType = () =>
+	/**
+	 * Creates the event type for reward initialization events
+	 * @returns Fully qualified event type string
+	 */
+	private initializedRewardEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.initializedReward
 		);
 
-	private addedRewardEventType = () =>
+	/**
+	 * Creates the event type for reward addition events
+	 * @returns Fully qualified event type string
+	 */
+	private addedRewardEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.addedReward
 		);
 
-	private increasedEmissionsEventType = () =>
+	/**
+	 * Creates the event type for emission increase events
+	 * @returns Fully qualified event type string
+	 */
+	private increasedEmissionsEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.increasedEmissions
 		);
@@ -1310,16 +2510,28 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Position Creation
 	// =========================================================================
 
-	private stakedEventType = () =>
+	/**
+	 * Creates the event type for strict staking events
+	 * @returns Fully qualified event type string
+	 */
+	private stakedEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.staked
 		);
 
-	private stakedRelaxedEventType = () =>
+	/**
+	 * Creates the event type for relaxed staking events
+	 * @returns Fully qualified event type string
+	 */
+	private stakedRelaxedEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.stakedRelaxed
 		);
@@ -1328,16 +2540,28 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Position Locking
 	// =========================================================================
 
-	private lockedEventType = () =>
+	/**
+	 * Creates the event type for position locking events
+	 * @returns Fully qualified event type string
+	 */
+	private lockedEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.locked
 		);
 
-	private unlockedEventType = () =>
+	/**
+	 * Creates the event type for position unlocking events
+	 * @returns Fully qualified event type string
+	 */
+	private unlockedEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.unlocked
 		);
@@ -1346,16 +2570,28 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Position Staking
 	// =========================================================================
 
-	private depositedPrincipalEventType = () =>
+	/**
+	 * Creates the event type for principal deposit events
+	 * @returns Fully qualified event type string
+	 */
+	private depositedPrincipalEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.depositedPrincipal
 		);
 
-	private withdrewPrincipalEventType = () =>
+	/**
+	 * Creates the event type for principal withdrawal events
+	 * @returns Fully qualified event type string
+	 */
+	private withdrewPrincipalEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.withdrewPrincipal
 		);
@@ -1364,9 +2600,15 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Staking Position Reward Harvesting
 	// =========================================================================
 
-	private harvestedRewardsEventType = () =>
+	/**
+	 * Creates the event type for reward harvesting events
+	 * @returns Fully qualified event type string
+	 */
+	private harvestedRewardsEventType = (version: FarmsVersion) =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.vaultsInitial,
+			version === 1
+				? this.addresses.packages.vaultsInitial
+				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
 			FarmsApi.constants.eventNames.harvestedRewards
 		);
@@ -1379,13 +2621,20 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Helpers
 	// =========================================================================
 
-	private static isFarmOwnerCapId = (inputs: FarmOwnerOrOneTimeAdminCap) =>
-		"ownerCapId" in inputs;
-
+	/**
+	 * Checks if the input contains a one-time admin cap ID
+	 * @param inputs FarmOwnerOrOneTimeAdminCap object
+	 * @returns True if the input contains a one-time admin cap ID
+	 */
 	private static isFarmOneTimeAdminCapId = (
 		inputs: FarmOwnerOrOneTimeAdminCap
 	) => "oneTimeAdminCapId" in inputs;
 
+	/**
+	 * Gets the appropriate cap ID from the input
+	 * @param inputs FarmOwnerOrOneTimeAdminCap object
+	 * @returns Either the owner cap ID or one-time admin cap ID
+	 */
 	private static farmCapId = (inputs: FarmOwnerOrOneTimeAdminCap) =>
 		"ownerCapId" in inputs ? inputs.ownerCapId : inputs.oneTimeAdminCapId;
 }

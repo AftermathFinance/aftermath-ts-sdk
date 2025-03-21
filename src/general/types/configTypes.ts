@@ -165,6 +165,11 @@ export interface FarmsAddresses {
 	packages: {
 		vaults: SuiAddress;
 		vaultsInitial: SuiAddress;
+		vaultsV2: SuiAddress;
+		eventsV2: SuiAddress;
+	};
+	objects: {
+		version: ObjectId;
 	};
 }
 
