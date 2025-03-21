@@ -185,8 +185,9 @@ export class FarmsApi implements MoveErrorsInterface {
 			stakingPoolOwnerCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
 			stakingPoolOneTimeAdminCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OneTimeAdminCap`,
 			stakedPositionV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
-			stakingPoolOwnerCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
-			stakingPoolOneTimeAdminCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::OneTimeAdminCap`,
+			stakingPoolOwnerCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::AuthorityCap<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::VAULT<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::ADMIN>>`,
+			// NOTE: will this work with `<phantom Role, phantom Reward>` ?
+			stakingPoolOneTimeAdminCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::OneTime`,
 		};
 		this.eventTypes = {
 			// v1
@@ -508,7 +509,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"stake"
 			),
@@ -575,7 +576,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"deposit_principal"
 			),
@@ -639,7 +640,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"withdraw_principal"
 			),
@@ -697,7 +698,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"destroy"
 			),
@@ -753,7 +754,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"update_position"
 			),
@@ -818,7 +819,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"lock"
 			),
@@ -877,7 +878,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"renew_lock"
 			),
@@ -935,7 +936,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"unlock"
 			),
@@ -994,7 +995,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"begin_harvest_tx"
 			),
@@ -1059,7 +1060,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"harvest_rewards"
 			),
@@ -1116,7 +1117,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
 				"end_harvest"
 			),
@@ -1186,7 +1187,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.vault,
 				"new"
 			),
@@ -1208,6 +1209,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	};
 
 	/**
+	 * @deprecated use shareStakingPoolTxV2 instead
 	 * Creates a transaction to share a staking pool, making it public
 	 * @param inputs Share pool parameters including transaction, pool ID, and coin type
 	 * @returns Transaction command to share the pool
@@ -1235,6 +1237,34 @@ export class FarmsApi implements MoveErrorsInterface {
 	};
 
 	/**
+	 * Creates a transaction to share a staking pool, making it public
+	 * @param inputs Share pool parameters including transaction, pool ID, and coin type
+	 * @returns Transaction command to share the pool
+	 */
+	public shareStakingPoolTxV2 = (inputs: {
+		tx: Transaction;
+		stakingPoolId: ObjectId | TransactionArgument;
+		stakeCoinType: CoinType;
+	}) => {
+		const { tx, stakingPoolId } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaultsV2,
+				FarmsApi.constants.moduleNames.vault,
+				"share_vault"
+			),
+			typeArguments: [inputs.stakeCoinType],
+			arguments: [
+				typeof stakingPoolId === "string"
+					? tx.object(stakingPoolId)
+					: stakingPoolId, // AfterburnerVault
+			],
+		});
+	};
+
+	/**
+	 * @deprecated use transferOwnerCapTxV2 instead
 	 * Creates a transaction to transfer ownership of a staking pool
 	 * @param inputs Transfer parameters including transaction, owner cap ID, and recipient address
 	 * @returns Transaction command to transfer the owner cap
@@ -1263,33 +1293,6 @@ export class FarmsApi implements MoveErrorsInterface {
 	};
 
 	/**
-	 * Creates a transaction to share a staking pool, making it public
-	 * @param inputs Share pool parameters including transaction, pool ID, and coin type
-	 * @returns Transaction command to share the pool
-	 */
-	public shareStakingPoolTxV2 = (inputs: {
-		tx: Transaction;
-		stakingPoolId: ObjectId | TransactionArgument;
-		stakeCoinType: CoinType;
-	}) => {
-		const { tx, stakingPoolId } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
-				"share_vault"
-			),
-			typeArguments: [inputs.stakeCoinType],
-			arguments: [
-				typeof stakingPoolId === "string"
-					? tx.object(stakingPoolId)
-					: stakingPoolId, // AfterburnerVault
-			],
-		});
-	};
-
-	/**
 	 * Creates a transaction to transfer ownership of a staking pool
 	 * @param inputs Transfer parameters including transaction, owner cap ID, and recipient address
 	 * @returns Transaction command to transfer the owner cap
@@ -1303,7 +1306,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.vault,
 				"transfer_owner_cap"
 			),
@@ -1362,7 +1365,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.vault,
 				"grant_one_time_admin_cap"
 			),
@@ -1449,7 +1452,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.vault,
 				isOneTimeAdminCap
 					? "initialize_reward_and_consume_admin_cap"
@@ -1529,7 +1532,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.vault,
 				isOneTimeAdminCap
 					? "add_reward_and_consume_admin_cap"
@@ -1599,7 +1602,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.vault,
 				"update_emission_schedule"
 			),
@@ -1661,7 +1664,7 @@ export class FarmsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaults,
+				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.vault,
 				"set_min_stake_amount"
 			),
@@ -1684,7 +1687,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param inputs Check parameters including transaction, pool ID, and coin type
 	 * @returns Transaction object argument for the boolean result
 	 */
-	public isVaultUnlockedTx = (inputs: {
+	public isVaultUnlockedTxV1 = (inputs: {
 		tx: Transaction;
 		stakingPoolId: ObjectId;
 		stakeCoinType: CoinType;
@@ -1708,7 +1711,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param inputs Remaining rewards parameters including transaction, pool ID, and coin type
 	 * @returns Transaction object argument for the vector of remaining rewards
 	 */
-	public remainingRewardsTx = (inputs: {
+	public remainingRewardsTxV1 = (inputs: {
 		tx: Transaction;
 		stakingPoolId: ObjectId;
 		stakeCoinType: CoinType;
@@ -1788,6 +1791,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			...inputs,
 			tx,
 			stakeCoinId,
+			lockEnforcement: "Strict",
 		});
 		tx.transferObjects([stakedPosition], walletAddress);
 
@@ -2233,6 +2237,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const [stakingPoolId, ownerCapId] = this.newStakingPoolTxV1({
 			...inputs,
 			tx,
+			lockEnforcement: "Strict",
 		});
 		this.shareStakingPoolTxV1({
 			tx,
@@ -2264,6 +2269,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		const [stakingPoolId, ownerCapId] = this.newStakingPoolTxV2({
 			...inputs,
 			tx,
+			lockEnforcements: ["Strict"],
 		});
 		this.shareStakingPoolTxV2({
 			tx,

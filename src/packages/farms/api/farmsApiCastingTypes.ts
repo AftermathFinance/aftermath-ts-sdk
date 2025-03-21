@@ -28,7 +28,7 @@ export interface FarmsAfterburnerVaultFieldsOnChain {
 	min_stake_amount: BigIntAsString;
 }
 
-export interface FarmsStakedPositionFieldsOnChain {
+export interface FarmsStakedPositionFieldsOnChainV1 {
 	id: ObjectId;
 	afterburner_vault_id: ObjectId;
 	balance: BigIntAsString;
@@ -43,19 +43,45 @@ export interface FarmsStakedPositionFieldsOnChain {
 	multiplier_rewards_debt: BigIntAsString[];
 }
 
+export interface FarmsStakedPositionFieldsOnChainV2 {
+	id: ObjectId;
+	vault_id: ObjectId;
+	balance: BigIntAsString;
+	multiplier_staked_amount: BigIntAsString;
+	lock_start_timestamp_ms: BigIntAsString;
+	lock_duration_ms: BigIntAsString;
+	lock_multiplier: BigIntAsString;
+	last_reward_timestamp_ms: BigIntAsString;
+	base_rewards_accumulated: BigIntAsString[];
+	multiplier_rewards_accumulated: BigIntAsString[];
+	base_rewards_debt: BigIntAsString[];
+	multiplier_rewards_debt: BigIntAsString[];
+	// lock_enforcement: LockEnforcement;
+}
+
 export interface FarmsVaultRegistryFieldsOnChain {
 	id: ObjectId;
 	registered_vaults: TableOnChain;
 }
 
-export interface FarmsStakingPoolOwnerCapFieldsOnChain {
+export interface FarmsStakingPoolOwnerCapFieldsOnChainV1 {
 	id: ObjectId;
 	afterburner_vault_id: ObjectId;
 }
 
-export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChain {
+export interface FarmsStakingPoolOwnerCapFieldsOnChainV2 {
+	id: ObjectId;
+	for: ObjectId;
+}
+
+export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1 {
 	id: ObjectId;
 	afterburner_vault_id: ObjectId;
+}
+
+export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2 {
+	id: ObjectId;
+	cap: FarmsStakingPoolOwnerCapFieldsOnChainV2;
 }
 
 // =========================================================================

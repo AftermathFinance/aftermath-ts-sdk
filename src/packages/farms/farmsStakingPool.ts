@@ -19,7 +19,7 @@ import {
 	ApiFarmsTopUpStakingPoolRewardsBody,
 	ApiHarvestFarmsRewardsBody,
 	FarmOwnerOrOneTimeAdminCap,
-	FarmsLockEnforcement,
+	// FarmsLockEnforcement,
 	FarmsMultiplier,
 	FarmsStakingPoolObject,
 	FarmsStakingPoolRewardCoin,
@@ -294,7 +294,7 @@ export class FarmsStakingPool extends Caller {
 		stakeAmount: Balance;
 		lockDurationMs: Timestamp;
 		walletAddress: SuiAddress;
-		lockEnforcement?: FarmsLockEnforcement;
+		// lockEnforcement?: FarmsLockEnforcement;
 		isSponsoredTx?: boolean;
 	}) {
 		const args = {
@@ -305,13 +305,13 @@ export class FarmsStakingPool extends Caller {
 		return this.version() === 1
 			? this.useProvider().fetchBuildStakeTxV1(args)
 			: (() => {
-					if (!inputs.lockEnforcement)
-						throw new Error(
-							"`lockEnforcement` argument required for V2 transaction"
-						);
+					// if (!inputs.lockEnforcement)
+					// 	throw new Error(
+					// 		"`lockEnforcement` argument required for V2 transaction"
+					// 	);
 					return this.useProvider().fetchBuildStakeTxV2({
 						...args,
-						lockEnforcement: inputs.lockEnforcement,
+						// lockEnforcement: inputs.lockEnforcement,
 					});
 			  })();
 	}

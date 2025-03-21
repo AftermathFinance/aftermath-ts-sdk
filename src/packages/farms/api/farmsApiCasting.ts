@@ -12,11 +12,14 @@ import {
 	FarmsSplitEventOnChain,
 	FarmsStakedEventOnChain,
 	FarmsStakedRelaxedEventOnChain,
-	FarmsStakedPositionFieldsOnChain,
-	FarmsStakingPoolOwnerCapFieldsOnChain,
+	FarmsStakedPositionFieldsOnChainV1,
+	FarmsStakingPoolOwnerCapFieldsOnChainV1,
 	FarmsUnlockedEventOnChain,
 	FarmsWithdrewPrincipalEventOnChain,
-	FarmsStakingPoolOneTimeAdminCapFieldsOnChain,
+	FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1,
+	FarmsStakedPositionFieldsOnChainV2,
+	FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2,
+	FarmsStakingPoolOwnerCapFieldsOnChainV2,
 } from "./farmsApiCastingTypes";
 import {
 	FarmsAddedRewardEvent,
@@ -54,7 +57,7 @@ export class FarmsApiCasting {
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakedPositionFieldsOnChain;
+		) as FarmsStakedPositionFieldsOnChainV1;
 		const stakeCoinType = Helpers.addLeadingZeroesToType(
 			Coin.getInnerCoinType(objectType)
 		);
@@ -84,6 +87,7 @@ export class FarmsApiCasting {
 					),
 				})
 			),
+			version: 1,
 		};
 	};
 
@@ -94,7 +98,7 @@ export class FarmsApiCasting {
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakedPositionFieldsOnChain;
+		) as FarmsStakedPositionFieldsOnChainV2;
 		const stakeCoinType = Helpers.addLeadingZeroesToType(
 			Coin.getInnerCoinType(objectType)
 		);
@@ -103,7 +107,7 @@ export class FarmsApiCasting {
 			objectType,
 			objectId: Helpers.getObjectId(data),
 			stakeCoinType,
-			stakingPoolObjectId: fields.afterburner_vault_id,
+			stakingPoolObjectId: fields.vault_id,
 			stakedAmount: BigInt(fields.balance),
 			stakedAmountWithMultiplier: BigInt(fields.multiplier_staked_amount),
 			lockStartTimestamp: Number(fields.lock_start_timestamp_ms),
@@ -124,6 +128,7 @@ export class FarmsApiCasting {
 					),
 				})
 			),
+			version: 2,
 		};
 	};
 
@@ -134,7 +139,7 @@ export class FarmsApiCasting {
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakingPoolOwnerCapFieldsOnChain;
+		) as FarmsStakingPoolOwnerCapFieldsOnChainV1;
 
 		return {
 			objectType,
@@ -150,12 +155,12 @@ export class FarmsApiCasting {
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakingPoolOwnerCapFieldsOnChain;
+		) as FarmsStakingPoolOwnerCapFieldsOnChainV2;
 
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
-			stakingPoolId: fields.afterburner_vault_id,
+			stakingPoolId: fields.for,
 		};
 	};
 
@@ -166,7 +171,7 @@ export class FarmsApiCasting {
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChain;
+		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1;
 
 		return {
 			objectType,
@@ -182,12 +187,13 @@ export class FarmsApiCasting {
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChain;
+		) as FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2;
 
+		// TODO: add reward coin type ?
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
-			stakingPoolId: fields.afterburner_vault_id,
+			stakingPoolId: fields.cap.for,
 		};
 	};
 

@@ -54,7 +54,7 @@ export interface FarmsStakingPoolObject extends Object {
 	rewardCoins: FarmsStakingPoolRewardCoin[];
 	emissionEndTimestamp: Timestamp;
 	minStakeAmount: Balance;
-	lockEnforcement: FarmsLockEnforcement;
+	// lockEnforcement: FarmsLockEnforcement;
 	isUnlocked: boolean;
 	version: FarmsVersion;
 }
@@ -290,7 +290,7 @@ export interface ApiFarmsStakeBody {
 	stakeCoinType: CoinType;
 	stakeAmount: Balance;
 	walletAddress: SuiAddress;
-	lockEnforcement: FarmsLockEnforcement;
+	// lockEnforcement: FarmsLockEnforcement;
 	isSponsoredTx?: boolean;
 }
 
@@ -371,7 +371,7 @@ export interface ApiHarvestFarmsRewardsBody {
 // =========================================================================
 
 export interface ApiFarmsCreateStakingPoolBody {
-	lockEnforcements: FarmsLockEnforcement[];
+	// lockEnforcements: FarmsLockEnforcement[];
 	minLockDurationMs: Timestamp;
 	maxLockDurationMs: Timestamp;
 	maxLockMultiplier: FarmsMultiplier;
@@ -382,7 +382,7 @@ export interface ApiFarmsCreateStakingPoolBody {
 
 /** @deprecated use ApiFarmsCreateStakingPoolBody instead */
 export interface ApiFarmsCreateStakingPoolBodyV1 {
-	lockEnforcement: FarmsLockEnforcement;
+	// lockEnforcement: FarmsLockEnforcement;
 	minLockDurationMs: Timestamp;
 	maxLockDurationMs: Timestamp;
 	maxLockMultiplier: FarmsMultiplier;
