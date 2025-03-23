@@ -2478,6 +2478,13 @@ export class FarmsApi implements MoveErrorsInterface {
 	//  Vault Creation
 	// =========================================================================
 
+	private eventWrapperType = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.eventsV2,
+			FarmsApi.constants.moduleNames.events,
+			"Event"
+		);
+
 	/**
 	 * Creates the event type for vault creation events
 	 * @returns Fully qualified event type string
@@ -2488,7 +2495,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.createdVault
+			FarmsApi.constants.eventNames.createdVault,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	// =========================================================================
@@ -2505,7 +2513,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.initializedReward
+			FarmsApi.constants.eventNames.initializedReward,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	/**
@@ -2518,7 +2527,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.addedReward
+			FarmsApi.constants.eventNames.addedReward,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	/**
@@ -2540,7 +2550,8 @@ export class FarmsApi implements MoveErrorsInterface {
 		EventsApiHelpers.createEventType(
 			this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.increasedEmissions
+			FarmsApi.constants.eventNames.increasedEmissions,
+			this.eventWrapperType()
 		);
 
 	// =========================================================================
@@ -2557,7 +2568,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.staked
+			FarmsApi.constants.eventNames.staked,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	/**
@@ -2570,7 +2582,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.stakedRelaxed
+			FarmsApi.constants.eventNames.stakedRelaxed,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	// =========================================================================
@@ -2587,7 +2600,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.locked
+			FarmsApi.constants.eventNames.locked,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	/**
@@ -2600,7 +2614,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.unlocked
+			FarmsApi.constants.eventNames.unlocked,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	// =========================================================================
@@ -2617,7 +2632,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.depositedPrincipal
+			FarmsApi.constants.eventNames.depositedPrincipal,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	/**
@@ -2630,7 +2646,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.withdrewPrincipal
+			FarmsApi.constants.eventNames.withdrewPrincipal,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	// =========================================================================
@@ -2647,7 +2664,8 @@ export class FarmsApi implements MoveErrorsInterface {
 				? this.addresses.packages.vaultsInitial
 				: this.addresses.packages.eventsV2,
 			FarmsApi.constants.moduleNames.events,
-			FarmsApi.constants.eventNames.harvestedRewards
+			FarmsApi.constants.eventNames.harvestedRewards,
+			version === 1 ? undefined : this.eventWrapperType()
 		);
 
 	// =========================================================================
