@@ -41,14 +41,14 @@ import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Sui } from "../../sui";
 import {
-	FarmsCreatedVaultEventOnChain,
-	FarmsDepositedPrincipalEventOnChain,
-	FarmsHarvestedRewardsEventOnChain,
-	FarmsLockedEventOnChain,
+	FarmsCreatedVaultEventOnChainV1,
+	FarmsDepositedPrincipalEventOnChainV1,
+	FarmsHarvestedRewardsEventOnChainV1,
+	FarmsLockedEventOnChainV1,
 	FarmsStakedEventOnChainV1,
-	FarmsStakedRelaxedEventOnChain,
-	FarmsUnlockedEventOnChain,
-	FarmsWithdrewPrincipalEventOnChain,
+	FarmsStakedRelaxedEventOnChainV1,
+	FarmsUnlockedEventOnChainV1,
+	FarmsWithdrewPrincipalEventOnChainV1,
 } from "./farmsApiCastingTypes";
 import {
 	TransactionArgument,
@@ -69,7 +69,8 @@ export class FarmsApi implements MoveErrorsInterface {
 
 	private static readonly constants = {
 		moduleNames: {
-			vault: "afterburner_vault",
+			vaultV1: "afterburner_vault",
+			vaultV2: "vault",
 			stakedPosition: "staked_position",
 			vaultRegistry: "vault_registry",
 			events: "vents",
@@ -182,12 +183,12 @@ export class FarmsApi implements MoveErrorsInterface {
 		this.addresses = addresses;
 		this.objectTypes = {
 			stakedPositionV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
-			stakingPoolOwnerCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OwnerCap`,
-			stakingPoolOneTimeAdminCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vault}::OneTimeAdminCap`,
+			stakingPoolOwnerCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vaultV1}::OwnerCap`,
+			stakingPoolOneTimeAdminCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vaultV1}::OneTimeAdminCap`,
 			stakedPositionV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
-			stakingPoolOwnerCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::AuthorityCap<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::VAULT<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::ADMIN>>`,
+			stakingPoolOwnerCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV1}::AuthorityCap<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV1}::VAULT<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV1}::ADMIN>>`,
 			// NOTE: will this work with `<phantom Role, phantom Reward>` ?
-			stakingPoolOneTimeAdminCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vault}::OneTime`,
+			stakingPoolOneTimeAdminCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV1}::OneTime`,
 		};
 		this.eventTypes = {
 			// v1
@@ -235,7 +236,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		};
 		this.moveErrors = {
 			[this.addresses.packages.vaults]: {
-				[FarmsApi.constants.moduleNames.vault]: {
+				[FarmsApi.constants.moduleNames.vaultV1]: {
 					/// A user attempts provides a `Coin` or `u64` with value zero.
 					0: "Zero",
 					/// A user provides a `StakedPosition` and a `AfterburnerVault` that don't correspond with one
@@ -291,7 +292,7 @@ export class FarmsApi implements MoveErrorsInterface {
 				},
 			},
 			[this.addresses.packages.vaultsV2]: {
-				[FarmsApi.constants.moduleNames.vault]: {
+				[FarmsApi.constants.moduleNames.vaultV2]: {
 					/// A user provides a `Coin` with value zero.
 					0: "Zero",
 					/// A user tries to create a `Vault` where `min_lock_duration_ms` is strictly greater than
@@ -1154,7 +1155,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				"new"
 			),
 			typeArguments: [inputs.stakeCoinType],
@@ -1187,7 +1188,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV2,
 				"new"
 			),
 			typeArguments: [inputs.stakeCoinType],
@@ -1223,7 +1224,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				"share_vault"
 			),
 			typeArguments: [inputs.stakeCoinType],
@@ -1250,8 +1251,8 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
-				FarmsApi.constants.moduleNames.vault,
-				"share_vault"
+				FarmsApi.constants.moduleNames.vaultV2,
+				"share"
 			),
 			typeArguments: [inputs.stakeCoinType],
 			arguments: [
@@ -1278,35 +1279,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
-				"transfer_owner_cap"
-			),
-			typeArguments: [],
-			arguments: [
-				typeof ownerCapId === "string"
-					? tx.object(ownerCapId)
-					: ownerCapId, // OwnerCap
-				tx.pure.address(inputs.recipientAddress),
-			],
-		});
-	};
-
-	/**
-	 * Creates a transaction to transfer ownership of a staking pool
-	 * @param inputs Transfer parameters including transaction, owner cap ID, and recipient address
-	 * @returns Transaction command to transfer the owner cap
-	 */
-	public transferOwnerCapTxV2 = (inputs: {
-		tx: Transaction;
-		ownerCapId: ObjectId | TransactionArgument;
-		recipientAddress: SuiAddress;
-	}) => {
-		const { tx, ownerCapId } = inputs;
-
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.vaultsV2,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				"transfer_owner_cap"
 			),
 			typeArguments: [],
@@ -1336,7 +1309,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				"grant_one_time_admin_cap"
 			),
 			typeArguments: [inputs.rewardCoinType],
@@ -1365,7 +1338,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV2,
 				"grant_one_time_admin_cap"
 			),
 			typeArguments: [inputs.rewardCoinType],
@@ -1408,7 +1381,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				isOneTimeAdminCap
 					? "initialize_reward_and_consume_admin_cap"
 					: "initialize_reward"
@@ -1452,7 +1425,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV2,
 				isOneTimeAdminCap
 					? "initialize_reward_and_consume_admin_cap"
 					: "initialize_reward"
@@ -1495,7 +1468,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				isOneTimeAdminCap
 					? "add_reward_and_consume_admin_cap"
 					: "add_reward"
@@ -1532,7 +1505,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV2,
 				isOneTimeAdminCap
 					? "add_reward_and_consume_admin_cap"
 					: "add_reward"
@@ -1569,7 +1542,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				"update_emissions_for"
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
@@ -1602,7 +1575,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV2,
 				"update_emission_schedule"
 			),
 			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
@@ -1635,7 +1608,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				"set_min_stake_amount"
 			),
 			typeArguments: [inputs.stakeCoinType],
@@ -1664,7 +1637,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV2,
 				"set_min_stake_amount"
 			),
 			typeArguments: [inputs.stakeCoinType],
@@ -1695,7 +1668,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				"is_vault_unlocked"
 			),
 			typeArguments: [inputs.stakeCoinType],
@@ -1719,7 +1692,7 @@ export class FarmsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaults,
-				FarmsApi.constants.moduleNames.vault,
+				FarmsApi.constants.moduleNames.vaultV1,
 				"remaining_rewards"
 			),
 			typeArguments: [inputs.stakeCoinType],
@@ -2275,11 +2248,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			stakingPoolId,
 			stakeCoinType: inputs.stakeCoinType,
 		});
-		this.transferOwnerCapTxV2({
-			tx,
-			ownerCapId,
-			recipientAddress: walletAddress,
-		});
+		tx.transferObjects([ownerCapId], walletAddress);
 
 		return tx;
 	};

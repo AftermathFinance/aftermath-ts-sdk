@@ -2,6 +2,7 @@ import { BigIntAsString, CoinType, ObjectId } from "../../../types";
 import {
 	EventOnChain,
 	TableOnChain,
+	WrappedEventOnChain,
 } from "../../../general/types/castingTypes";
 import { SuiObjectData } from "@mysten/sui/client";
 
@@ -88,13 +89,19 @@ export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2 {
 //  Events
 // =========================================================================
 
-export type FarmsAddedRewardEventOnChain = EventOnChain<{
+export type FarmsAddedRewardEventOnChainV1 = EventOnChain<{
 	vault_id: ObjectId;
 	reward_type: CoinType;
 	reward_amount: BigIntAsString;
 }>;
 
-export type FarmsCreatedVaultEventOnChain = EventOnChain<{
+export type FarmsAddedRewardEventOnChainV2 = WrappedEventOnChain<{
+	vault_id: ObjectId;
+	reward_type: CoinType;
+	reward_amount: BigIntAsString;
+}>;
+
+export type FarmsCreatedVaultEventOnChainV1 = EventOnChain<{
 	vault_id: ObjectId;
 	stake_type: CoinType;
 	min_lock_duration_ms: BigIntAsString;
@@ -103,18 +110,44 @@ export type FarmsCreatedVaultEventOnChain = EventOnChain<{
 	min_stake_amount: BigIntAsString;
 }>;
 
-export type FarmsDepositedPrincipalEventOnChain = EventOnChain<{
+export type FarmsCreatedVaultEventOnChainV2 = WrappedEventOnChain<{
+	vault_id: ObjectId;
+	stake_type: CoinType;
+	min_lock_duration_ms: BigIntAsString;
+	max_lock_duration_ms: BigIntAsString;
+	max_lock_multiplier: BigIntAsString;
+	min_stake_amount: BigIntAsString;
+}>;
+
+export type FarmsDepositedPrincipalEventOnChainV1 = EventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	amount: BigIntAsString;
 	stake_type: CoinType;
 }>;
 
-export type FarmsDestroyedStakedPositionEventOnChain = EventOnChain<{
+export type FarmsDepositedPrincipalEventOnChainV2 = WrappedEventOnChain<{
+	staked_position_id: ObjectId;
+	vault_id: ObjectId;
+	amount: BigIntAsString;
+	stake_type: CoinType;
+}>;
+
+export type FarmsDestroyedStakedPositionEventOnChainV1 = EventOnChain<{
 	staked_position_id: ObjectId;
 }>;
 
-export type FarmsHarvestedRewardsEventOnChain = EventOnChain<{
+export type FarmsDestroyedStakedPositionEventOnChainV2 = WrappedEventOnChain<{
+	staked_position_id: ObjectId;
+}>;
+
+export type FarmsHarvestedRewardsEventOnChainV1 = EventOnChain<{
+	afterburner_vault_id: ObjectId;
+	reward_types: CoinType[];
+	reward_amounts: BigIntAsString[];
+}>;
+
+export type FarmsHarvestedRewardsEventOnChainV2 = WrappedEventOnChain<{
 	afterburner_vault_id: ObjectId;
 	reward_types: CoinType[];
 	reward_amounts: BigIntAsString[];
@@ -127,7 +160,14 @@ export type FarmsIncreasedEmissionsEventOnChainV1 = EventOnChain<{
 	emission_rate: BigIntAsString;
 }>;
 
-export type FarmsInitializedRewardEventOnChain = EventOnChain<{
+export type FarmsUpdatedEmissionsEventOnChainV2 = WrappedEventOnChain<{
+	vault_id: ObjectId;
+	reward_type: CoinType;
+	emission_schedule_ms: BigIntAsString;
+	emission_rate: BigIntAsString;
+}>;
+
+export type FarmsInitializedRewardEventOnChainV1 = EventOnChain<{
 	vault_id: ObjectId;
 	reward_type: CoinType;
 	reward_amount: BigIntAsString;
@@ -135,12 +175,25 @@ export type FarmsInitializedRewardEventOnChain = EventOnChain<{
 	emission_start_ms: BigIntAsString;
 }>;
 
-export type FarmsJoinedEventOnChain = EventOnChain<{
+export type FarmsInitializedRewardEventOnChainV2 = WrappedEventOnChain<{
+	vault_id: ObjectId;
+	reward_type: CoinType;
+	reward_amount: BigIntAsString;
+	emission_rate: BigIntAsString;
+	emission_start_ms: BigIntAsString;
+}>;
+
+export type FarmsJoinedEventOnChainV1 = EventOnChain<{
 	staked_position_id: ObjectId;
 	other_staked_position_id: ObjectId;
 }>;
 
-export type FarmsLockedEventOnChain = EventOnChain<{
+export type FarmsJoinedEventOnChainV2 = WrappedEventOnChain<{
+	staked_position_id: ObjectId;
+	other_staked_position_id: ObjectId;
+}>;
+
+export type FarmsLockedEventOnChainV1 = EventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	staked_type: CoinType;
@@ -150,7 +203,22 @@ export type FarmsLockedEventOnChain = EventOnChain<{
 	lock_multiplier: BigIntAsString;
 }>;
 
-export type FarmsSplitEventOnChain = EventOnChain<{
+export type FarmsLockedEventOnChainV2 = WrappedEventOnChain<{
+	staked_position_id: ObjectId;
+	vault_id: ObjectId;
+	staked_type: CoinType;
+	staked_amount: BigIntAsString;
+	lock_start_timestamp_ms: BigIntAsString;
+	lock_duration_ms: BigIntAsString;
+	lock_multiplier: BigIntAsString;
+}>;
+
+export type FarmsSplitEventOnChainV1 = EventOnChain<{
+	staked_position_id: ObjectId;
+	split_staked_position_id: ObjectId;
+}>;
+
+export type FarmsSplitEventOnChainV2 = WrappedEventOnChain<{
 	staked_position_id: ObjectId;
 	split_staked_position_id: ObjectId;
 }>;
@@ -166,7 +234,7 @@ export type FarmsStakedEventOnChainV1 = EventOnChain<{
 	lock_multiplier: BigIntAsString;
 }>;
 
-export type FarmsStakedEventOnChainV2 = EventOnChain<{
+export type FarmsStakedEventOnChainV2 = WrappedEventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	staked_type: CoinType;
@@ -177,7 +245,7 @@ export type FarmsStakedEventOnChainV2 = EventOnChain<{
 	lock_multiplier: BigIntAsString;
 }>;
 
-export type FarmsStakedRelaxedEventOnChain = EventOnChain<{
+export type FarmsStakedRelaxedEventOnChainV1 = EventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	staked_type: CoinType;
@@ -186,14 +254,28 @@ export type FarmsStakedRelaxedEventOnChain = EventOnChain<{
 	lock_end_timestamp_ms: BigIntAsString;
 }>;
 
-export type FarmsUnlockedEventOnChain = EventOnChain<{
+export type FarmsUnlockedEventOnChainV1 = EventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	staked_type: CoinType;
 	staked_amount: BigIntAsString;
 }>;
 
-export type FarmsWithdrewPrincipalEventOnChain = EventOnChain<{
+export type FarmsUnlockedEventOnChainV2 = WrappedEventOnChain<{
+	staked_position_id: ObjectId;
+	vault_id: ObjectId;
+	staked_type: CoinType;
+	staked_amount: BigIntAsString;
+}>;
+
+export type FarmsWithdrewPrincipalEventOnChainV1 = EventOnChain<{
+	staked_position_id: ObjectId;
+	vault_id: ObjectId;
+	amount: BigIntAsString;
+	stake_type: CoinType;
+}>;
+
+export type FarmsWithdrewPrincipalEventOnChainV2 = WrappedEventOnChain<{
 	staked_position_id: ObjectId;
 	vault_id: ObjectId;
 	amount: BigIntAsString;

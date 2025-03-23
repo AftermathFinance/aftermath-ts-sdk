@@ -38,6 +38,22 @@ export interface EventOnChain<Fields> {
 	timestampMs: number | undefined;
 }
 
+export interface WrappedEventOnChain<Fields> {
+	id: {
+		txDigest: TransactionDigest;
+		eventSeq: BigIntAsString;
+	};
+	packageId: ObjectId;
+	transactionModule: ModuleName;
+	sender: SuiAddress;
+	type: AnyObjectType;
+	parsedJson: {
+		pos0: Fields; // | undefined;
+	};
+	bcs: string; // | undefined;
+	timestampMs: number | undefined;
+}
+
 export type IndexerEventOnChain<Fields> = {
 	type: AnyObjectType;
 	timestamp: number | null;
