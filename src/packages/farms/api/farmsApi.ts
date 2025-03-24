@@ -1161,7 +1161,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [inputs.stakeCoinType],
 			arguments: [
-				tx.pure.u8(inputs.lockEnforcement === "Strict" ? 0 : 1),
+				tx.pure.u64(inputs.lockEnforcement === "Strict" ? 0 : 1),
 				tx.pure.u64(inputs.minLockDurationMs),
 				tx.pure.u64(inputs.maxLockDurationMs),
 				tx.pure.u64(inputs.maxLockMultiplier),
@@ -2061,7 +2061,6 @@ export class FarmsApi implements MoveErrorsInterface {
 		const tx = new Transaction();
 		tx.setSender(walletAddress);
 
-		// For the first position, begin harvest
 		const harvestRewardsCap = this.beginHarvestTxV1({
 			...inputs,
 			tx,
