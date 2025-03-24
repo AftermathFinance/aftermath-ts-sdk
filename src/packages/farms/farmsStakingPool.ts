@@ -16,13 +16,14 @@ import {
 	ApiFarmsGrantOneTimeAdminCapBody,
 	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
 	ApiFarmsInitializeStakingPoolRewardBody,
-	ApiFarmsStakeBody,
 	ApiFarmsTopUpStakingPoolRewardsBody,
 	ApiHarvestFarmsRewardsBody,
 	FarmOwnerOrOneTimeAdminCap,
+	// FarmsLockEnforcement,
 	FarmsMultiplier,
 	FarmsStakingPoolObject,
 	FarmsStakingPoolRewardCoin,
+	FarmsVersion,
 } from "./farmsTypes";
 import { Casting, Helpers } from "../../general/utils";
 import dayjs from "dayjs";
@@ -70,6 +71,10 @@ export class FarmsStakingPool extends Caller {
 	// =========================================================================
 	//  Getters
 	// =========================================================================
+
+	public version = (): FarmsVersion => {
+		return this.stakingPool.version;
+	};
 
 	public rewardCoinTypes = (): CoinType[] => {
 		return this.stakingPool.rewardCoins.map((coin) => coin.coinType);
@@ -289,13 +294,26 @@ export class FarmsStakingPool extends Caller {
 		stakeAmount: Balance;
 		lockDurationMs: Timestamp;
 		walletAddress: SuiAddress;
+		// lockEnforcement?: FarmsLockEnforcement;
 		isSponsoredTx?: boolean;
 	}) {
-		return this.useProvider().fetchBuildStakeTx({
+		const args = {
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().fetchBuildStakeTxV1(args)
+			: (() => {
+					// if (!inputs.lockEnforcement)
+					// 	throw new Error(
+					// 		"`lockEnforcement` argument required for V2 transaction"
+					// 	);
+					return this.useProvider().fetchBuildStakeTxV2({
+						...args,
+						// lockEnforcement: inputs.lockEnforcement,
+					});
+			  })();
 	}
 
 	// =========================================================================
@@ -306,12 +324,15 @@ export class FarmsStakingPool extends Caller {
 		stakedPositionIds: ObjectId[];
 		walletAddress: SuiAddress;
 	}) {
-		return this.useProvider().fetchBuildHarvestRewardsTx({
+		const args = {
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(),
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().fetchBuildHarvestRewardsTxV1(args)
+			: this.useProvider().fetchBuildHarvestRewardsTxV2(args);
 	}
 
 	// =========================================================================
@@ -327,11 +348,18 @@ export class FarmsStakingPool extends Caller {
 		}[];
 		walletAddress: SuiAddress;
 	}) {
-		return this.useProvider().fetchIncreaseStakingPoolRewardsEmissionsTx({
+		const args = {
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().fetchIncreaseStakingPoolRewardsEmissionsTxV1(
+					args
+			  )
+			: this.useProvider().fetchIncreaseStakingPoolRewardsEmissionsTxV2(
+					args
+			  );
 	}
 
 	public async getUpdateMinStakeAmountTransaction(inputs: {
@@ -339,17 +367,22 @@ export class FarmsStakingPool extends Caller {
 		minStakeAmount: bigint;
 		walletAddress: SuiAddress;
 	}) {
-		return this.useProvider().buildSetStakingPoolMinStakeAmountTx({
+		const args = {
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().buildSetStakingPoolMinStakeAmountTxV1(args)
+			: this.useProvider().buildSetStakingPoolMinStakeAmountTxV2(args);
 	}
 
 	public getGrantOneTimeAdminCapTransaction(
 		inputs: ApiFarmsGrantOneTimeAdminCapBody
 	) {
-		return this.useProvider().buildGrantOneTimeAdminCapTx(inputs);
+		return this.version() === 1
+			? this.useProvider().buildGrantOneTimeAdminCapTxV1(inputs)
+			: this.useProvider().buildGrantOneTimeAdminCapTxV2(inputs);
 	}
 
 	// =========================================================================
@@ -367,11 +400,16 @@ export class FarmsStakingPool extends Caller {
 			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
-		return this.useProvider().fetchBuildInitializeStakingPoolRewardTx({
+		const args = {
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().fetchBuildInitializeStakingPoolRewardTxV1(args)
+			: this.useProvider().fetchBuildInitializeStakingPoolRewardTxV2(
+					args
+			  );
 	}
 
 	public async getTopUpRewardsTransaction(
@@ -384,11 +422,14 @@ export class FarmsStakingPool extends Caller {
 			isSponsoredTx?: boolean;
 		} & FarmOwnerOrOneTimeAdminCap
 	) {
-		return this.useProvider().fetchBuildTopUpStakingPoolRewardsTx({
+		const args = {
 			...inputs,
 			stakeCoinType: this.stakingPool.stakeCoinType,
 			stakingPoolId: this.stakingPool.objectId,
-		});
+		};
+		return this.version() === 1
+			? this.useProvider().fetchBuildTopUpStakingPoolRewardsTxV1(args)
+			: this.useProvider().fetchBuildTopUpStakingPoolRewardsTxV2(args);
 	}
 
 	// =========================================================================

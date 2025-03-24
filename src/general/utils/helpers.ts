@@ -107,11 +107,11 @@ export class Helpers {
 	public static splitNonSuiCoinType = (
 		coin: CoinType
 	): {
-		chain: Exclude<CoinGeckoChain, "sui">;
+		chain: CoinGeckoChain;
 		coinType: CoinType;
 	} => {
 		const [uncastChain, coinType] = coin.split(":");
-		if (!uncastChain || !coinType) throw new Error("invalid coin type");
+		if (!uncastChain || !coinType) return { coinType: coin, chain: "sui" };
 		const chain = uncastChain as Exclude<CoinGeckoChain, "sui">;
 		return { chain, coinType };
 	};

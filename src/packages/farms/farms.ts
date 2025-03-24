@@ -10,6 +10,7 @@ import {
 import { Caller } from "../../general/utils/caller";
 import {
 	ApiFarmsCreateStakingPoolBody,
+	ApiFarmsCreateStakingPoolBodyV1,
 	ApiFarmsOwnedStakedPositionsBody,
 	ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody,
 	ApiFarmsOwnedStakingPoolOwnerCapsBody,
@@ -155,10 +156,17 @@ export class Farms extends Caller {
 	//  Transactions
 	// =========================================================================
 
-	public async getCreateStakingPoolTransaction(
+	/** @deprecated use getCreateStakingPoolTransactionV2 instead */
+	public async getCreateStakingPoolTransactionV1(
+		inputs: ApiFarmsCreateStakingPoolBodyV1
+	) {
+		return this.useProvider().fetchBuildCreateStakingPoolTxV1(inputs);
+	}
+
+	public async getCreateStakingPoolTransactionV2(
 		inputs: ApiFarmsCreateStakingPoolBody
 	) {
-		return this.useProvider().fetchBuildCreateStakingPoolTx(inputs);
+		return this.useProvider().fetchBuildCreateStakingPoolTxV2(inputs);
 	}
 
 	// =========================================================================

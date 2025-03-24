@@ -282,6 +282,10 @@ export class EventsApiHelpers {
 	public static createEventType = (
 		packageAddress: string,
 		packageName: string,
-		eventType: string
-	) => `${packageAddress}::${packageName}::${eventType}`;
+		eventType: string,
+		wrapperType?: string
+	) => {
+		const innerType = `${packageAddress}::${packageName}::${eventType}`;
+		return wrapperType ? `${wrapperType}<${innerType}>` : innerType;
+	};
 }

@@ -12,6 +12,7 @@ import { CoinType } from "../coin/coinTypes";
 // =========================================================================
 
 export type FarmsMultiplier = bigint;
+export type FarmsVersion = 1 | 2;
 
 // =========================================================================
 //  Helpers
@@ -53,8 +54,9 @@ export interface FarmsStakingPoolObject extends Object {
 	rewardCoins: FarmsStakingPoolRewardCoin[];
 	emissionEndTimestamp: Timestamp;
 	minStakeAmount: Balance;
-	lockEnforcement: FarmsLockEnforcement;
+	// lockEnforcement: FarmsLockEnforcement;
 	isUnlocked: boolean;
+	version: FarmsVersion;
 }
 
 export interface StakingPoolOwnerCapObject extends Object {
@@ -87,6 +89,7 @@ export interface FarmsStakedPositionObject extends Object {
 	lockMultiplier: FarmsMultiplier;
 	rewardCoins: FarmsStakedPositionRewardCoin[];
 	lastHarvestRewardsTimestamp: Timestamp;
+	version: FarmsVersion;
 }
 
 export type PartialFarmsStakedPositionObject = Omit<
@@ -287,6 +290,17 @@ export interface ApiFarmsStakeBody {
 	stakeCoinType: CoinType;
 	stakeAmount: Balance;
 	walletAddress: SuiAddress;
+	// lockEnforcement: FarmsLockEnforcement;
+	isSponsoredTx?: boolean;
+}
+
+/** @deprecated use ApiFarmsStakeBody instead */
+export interface ApiFarmsStakeBodyV1 {
+	stakingPoolId: ObjectId;
+	lockDurationMs: Timestamp;
+	stakeCoinType: CoinType;
+	stakeAmount: Balance;
+	walletAddress: SuiAddress;
 	isSponsoredTx?: boolean;
 }
 
@@ -357,7 +371,18 @@ export interface ApiHarvestFarmsRewardsBody {
 // =========================================================================
 
 export interface ApiFarmsCreateStakingPoolBody {
-	lockEnforcement: FarmsLockEnforcement;
+	// lockEnforcements: FarmsLockEnforcement[];
+	minLockDurationMs: Timestamp;
+	maxLockDurationMs: Timestamp;
+	maxLockMultiplier: FarmsMultiplier;
+	minStakeAmount: Balance;
+	stakeCoinType: CoinType;
+	walletAddress: SuiAddress;
+}
+
+/** @deprecated use ApiFarmsCreateStakingPoolBody instead */
+export interface ApiFarmsCreateStakingPoolBodyV1 {
+	// lockEnforcement: FarmsLockEnforcement;
 	minLockDurationMs: Timestamp;
 	maxLockDurationMs: Timestamp;
 	maxLockMultiplier: FarmsMultiplier;
