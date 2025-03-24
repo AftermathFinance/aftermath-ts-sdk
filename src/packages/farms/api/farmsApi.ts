@@ -73,7 +73,8 @@ export class FarmsApi implements MoveErrorsInterface {
 			vaultV2: "vault",
 			stakedPosition: "staked_position",
 			vaultRegistry: "vault_registry",
-			events: "vents",
+			events: "events",
+			authority: "authority",
 		},
 		eventNames: {
 			// staking pools
@@ -186,9 +187,9 @@ export class FarmsApi implements MoveErrorsInterface {
 			stakingPoolOwnerCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vaultV1}::OwnerCap`,
 			stakingPoolOneTimeAdminCapV1: `${addresses.packages.vaultsInitial}::${FarmsApi.constants.moduleNames.vaultV1}::OneTimeAdminCap`,
 			stakedPositionV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.stakedPosition}::StakedPosition`,
-			stakingPoolOwnerCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV1}::AuthorityCap<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV1}::VAULT<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV1}::ADMIN>>`,
+			stakingPoolOwnerCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.authority}::AuthorityCap<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.authority}::VAULT<${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.authority}::ADMIN>>`,
 			// NOTE: will this work with `<phantom Role, phantom Reward>` ?
-			stakingPoolOneTimeAdminCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV1}::OneTime`,
+			stakingPoolOneTimeAdminCapV2: `${addresses.packages.eventsV2}::${FarmsApi.constants.moduleNames.vaultV2}::OneTime`,
 		};
 		this.eventTypes = {
 			// v1
@@ -521,7 +522,7 @@ export class FarmsApi implements MoveErrorsInterface {
 				typeof stakeCoinId === "string"
 					? tx.object(stakeCoinId)
 					: stakeCoinId, // Coin
-				tx.pure.u64(inputs.lockEnforcement === "Strict" ? 0 : 1), // lock_enforcement
+				tx.pure.u8(inputs.lockEnforcement === "Strict" ? 0 : 1), // lock_enforcement
 				tx.pure.u64(inputs.lockDurationMs), // lock_duration_ms
 			],
 		});
@@ -1119,7 +1120,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.packages.vaultsV2,
 				FarmsApi.constants.moduleNames.stakedPosition,
-				"end_harvest"
+				"end_harvest_tx"
 			),
 			typeArguments: [],
 			arguments: [
@@ -1160,7 +1161,7 @@ export class FarmsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [inputs.stakeCoinType],
 			arguments: [
-				tx.pure.u64(inputs.lockEnforcement === "Strict" ? 0 : 1),
+				tx.pure.u8(inputs.lockEnforcement === "Strict" ? 0 : 1),
 				tx.pure.u64(inputs.minLockDurationMs),
 				tx.pure.u64(inputs.maxLockDurationMs),
 				tx.pure.u64(inputs.maxLockMultiplier),

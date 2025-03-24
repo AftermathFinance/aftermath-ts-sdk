@@ -61,27 +61,22 @@ export interface FarmsStakedPositionFieldsOnChainV2 {
 }
 
 export interface FarmsVaultRegistryFieldsOnChain {
-	id: ObjectId;
 	registered_vaults: TableOnChain;
 }
 
 export interface FarmsStakingPoolOwnerCapFieldsOnChainV1 {
-	id: ObjectId;
 	afterburner_vault_id: ObjectId;
 }
 
 export interface FarmsStakingPoolOwnerCapFieldsOnChainV2 {
-	id: ObjectId;
 	for: ObjectId;
 }
 
 export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1 {
-	id: ObjectId;
 	afterburner_vault_id: ObjectId;
 }
 
 export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV2 {
-	id: ObjectId;
 	cap: FarmsStakingPoolOwnerCapFieldsOnChainV2;
 }
 
