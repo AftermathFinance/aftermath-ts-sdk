@@ -1005,7 +1005,6 @@ export class FarmsApi implements MoveErrorsInterface {
 				tx.object(inputs.stakedPositionId), // StakedPosition
 				tx.object(inputs.stakingPoolId), // AfterburnerVault
 				tx.object(this.addresses.objects.version), // Version
-				tx.object(Sui.constants.addresses.suiClockId), // Clock
 			],
 		});
 	};
