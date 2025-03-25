@@ -138,11 +138,7 @@ export class FarmsStakedPosition extends Caller {
 		coinType: CoinType;
 		stakingPool: FarmsStakingPool;
 	}) => {
-		if (
-			inputs.stakingPool.rewardCoin(inputs).actualRewards === BigInt(0) ||
-			inputs.stakingPool.rewardCoin(inputs).actualRewards <
-				inputs.stakingPool.rewardCoin(inputs).emissionRate
-		)
+		if (inputs.stakingPool.rewardCoin(inputs).actualRewards === BigInt(0))
 			return BigInt(0);
 
 		this.updatePosition(inputs);
@@ -151,9 +147,14 @@ export class FarmsStakedPosition extends Caller {
 		const totalRewards =
 			rewardCoin.multiplierRewardsAccumulated +
 			rewardCoin.baseRewardsAccumulated;
-		return totalRewards < Farms.constants.minRewardsToClaim ||
-			totalRewards > inputs.stakingPool.rewardCoin(inputs).actualRewards
+		return totalRewards < Farms.constants.minRewardsToClaim
 			? BigInt(0)
+			: totalRewards > inputs.stakingPool.rewardCoin(inputs).actualRewards
+			? // ? Helpers.minBigInt(
+			  // 		inputs.stakingPool.rewardCoin(inputs).actualRewards,
+			  // 		inputs.stakingPool.rewardCoin(inputs).emissionRate
+			  //   )
+			  BigInt(0)
 			: totalRewards;
 	};
 
