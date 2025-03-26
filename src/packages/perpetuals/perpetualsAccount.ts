@@ -58,6 +58,8 @@ import {
 	TransactionDigest,
 	ApiPerpetualsSetPositionLeverageFromTxBody,
 	CallerConfig,
+	SdkPerpetualsPlaceOrderPreviewInputs,
+	SdkPerpetualsCancelOrdersPreviewInputs,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -434,11 +436,8 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
-	public async getOrderPreview(
-		inputs: Omit<
-			ApiPerpetualsPreviewOrderBody,
-			"accountId" | "collateralCoinType" | "accountCapId" | "collateral"
-		>,
+	public async getPlaceOrderPreview(
+		inputs: SdkPerpetualsPlaceOrderPreviewInputs,
 		abortSignal?: AbortSignal
 	): Promise<
 		| {
@@ -456,7 +455,7 @@ export class PerpetualsAccount extends Caller {
 				executionPrice: number;
 		  }
 	> {
-		const response = await this.fetchApi<
+		return this.fetchApi<
 			ApiPerpetualsPreviewOrderResponse,
 			ApiPerpetualsPreviewOrderBody
 		>(
@@ -469,25 +468,11 @@ export class PerpetualsAccount extends Caller {
 			},
 			abortSignal
 		);
-
-		if ("error" in response) return response;
-
-		const { collateralChange, ...remainingResponse } = response;
-		return {
-			...remainingResponse,
-			// TODO: move this logic to af-fe endpoint
-			collateralChange: Coin.normalizeBalance(
-				collateralChange,
-				this.collateralDecimals()
-			),
-		};
 	}
 
 	public async getCancelOrdersPreview(
-		inputs: Omit<
-			ApiPerpetualsPreviewCancelOrdersBody,
-			"accountId" | "collateralCoinType" | "collateral"
-		>
+		inputs: SdkPerpetualsCancelOrdersPreviewInputs,
+		abortSignal?: AbortSignal
 	): Promise<
 		| {
 				marketIdsToPositionAfterCancelOrders: Record<
@@ -507,32 +492,29 @@ export class PerpetualsAccount extends Caller {
 				marketIdsToPositionAfterCancelOrders: {},
 			};
 
-		const response = await this.fetchApi<
+		return this.fetchApi<
 			ApiPerpetualsPreviewCancelOrdersResponse,
 			ApiPerpetualsPreviewCancelOrdersBody
-		>("previews/cancel-orders", {
-			...inputs,
-			accountId: this.accountCap.accountId,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			collateral: this.collateralBalance(),
-		});
-		if ("error" in response) return response;
-
-		return {
-			marketIdsToPositionAfterCancelOrders:
-				response.marketIdsToPositionAfterCancelOrders,
-			collateralChange: Coin.normalizeBalance(
-				response.collateralChange,
-				this.collateralDecimals()
-			),
-		};
+		>(
+			"previews/cancel-orders",
+			{
+				...inputs,
+				accountId: this.accountCap.accountId,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				collateral: this.collateralBalance(),
+			},
+			abortSignal
+		);
 	}
 
-	public async getReduceOrderPreview(inputs: {
-		marketId: PerpetualsMarketId;
-		orderId: PerpetualsOrderId;
-		sizeToSubtract: bigint;
-	}): Promise<
+	public async getReduceOrderPreview(
+		inputs: {
+			marketId: PerpetualsMarketId;
+			orderId: PerpetualsOrderId;
+			sizeToSubtract: bigint;
+		},
+		abortSignal?: AbortSignal
+	): Promise<
 		| {
 				positionAfterReduceOrder: PerpetualsPosition;
 				collateralChange: Balance;
@@ -541,33 +523,31 @@ export class PerpetualsAccount extends Caller {
 				error: string;
 		  }
 	> {
-		const response = await this.fetchApi<
+		return this.fetchApi<
 			ApiPerpetualsPreviewReduceOrderResponse,
 			ApiPerpetualsPreviewReduceOrderBody
-		>("previews/reduce-order", {
-			...inputs,
-			accountId: this.accountCap.accountId,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			collateral: this.collateralBalance(),
-			leverage:
-				this.positionForMarketId({ marketId: inputs.marketId })
-					?.leverage || 1,
-		});
-		if ("error" in response) return response;
-
-		return {
-			positionAfterReduceOrder: response.positionAfterReduceOrder,
-			collateralChange: Coin.normalizeBalance(
-				response.collateralChange,
-				this.collateralDecimals()
-			),
-		};
+		>(
+			"previews/reduce-order",
+			{
+				...inputs,
+				accountId: this.accountCap.accountId,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				collateral: this.collateralBalance(),
+				leverage:
+					this.positionForMarketId({ marketId: inputs.marketId })
+						?.leverage || 1,
+			},
+			abortSignal
+		);
 	}
 
-	public async getSetLeveragePreview(inputs: {
-		marketId: PerpetualsMarketId;
-		leverage: number;
-	}): Promise<
+	public async getSetLeveragePreview(
+		inputs: {
+			marketId: PerpetualsMarketId;
+			leverage: number;
+		},
+		abortSignal?: AbortSignal
+	): Promise<
 		| {
 				positionAfterSetLeverage: PerpetualsPosition;
 				collateralChange: Balance;
@@ -578,25 +558,20 @@ export class PerpetualsAccount extends Caller {
 	> {
 		const { marketId, leverage } = inputs;
 
-		const response = await this.fetchApi<
+		return this.fetchApi<
 			ApiPerpetualsPreviewSetLeverageResponse,
 			ApiPerpetualsPreviewSetLeverageBody
-		>("previews/set-leverage", {
-			marketId,
-			leverage,
-			accountId: this.accountCap.accountId,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			collateral: this.collateralBalance(),
-		});
-		if ("error" in response) return response;
-
-		return {
-			positionAfterSetLeverage: response.positionAfterSetLeverage,
-			collateralChange: Coin.normalizeBalance(
-				response.collateralChange,
-				this.collateralDecimals()
-			),
-		};
+		>(
+			"previews/set-leverage",
+			{
+				marketId,
+				leverage,
+				accountId: this.accountCap.accountId,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				collateral: this.collateralBalance(),
+			},
+			abortSignal
+		);
 	}
 
 	public async getOrderDatas(): Promise<PerpetualsOrderData[]> {
@@ -661,7 +636,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ market: inputs.market });
+			inputs.market.emptyPosition();
 
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 		const { pnl, minInitialMargin } =
@@ -699,7 +674,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ market });
+			market.emptyPosition();
 
 		const funding = this.calcUnrealizedFundingsForPosition({
 			market,
@@ -749,7 +724,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ market: inputs.market });
+			inputs.market.emptyPosition();
 
 		const baseAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
@@ -789,7 +764,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ market: inputs.market });
+			inputs.market.emptyPosition();
 
 		const marginRatioInitial = 1 / (position.leverage || 1);
 		// const marginRatioInitial = inputs.market.initialMarginRatio();
@@ -832,7 +807,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ market: inputs.market });
+			inputs.market.emptyPosition();
 
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 
@@ -872,7 +847,7 @@ export class PerpetualsAccount extends Caller {
 		const position =
 			inputs.position ??
 			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ market: inputs.market });
+			inputs.market.emptyPosition();
 
 		const totalFunding = this.calcUnrealizedFundingsForPosition(inputs);
 
@@ -910,7 +885,7 @@ export class PerpetualsAccount extends Caller {
 			const marketId = market.marketId;
 			const position =
 				this.positionForMarketId({ marketId }) ??
-				this.emptyPosition({ market });
+				market.emptyPosition();
 
 			const funding = this.calcUnrealizedFundingsForPosition({
 				market,
@@ -982,8 +957,7 @@ export class PerpetualsAccount extends Caller {
 
 		const marketId = market.marketId;
 		const position =
-			this.positionForMarketId({ marketId }) ??
-			this.emptyPosition({ market });
+			this.positionForMarketId({ marketId }) ?? market.emptyPosition();
 
 		// TODO: move conversion to helper function, since used often
 		const ordersCollateral = Coin.normalizeBalance(
@@ -1047,28 +1021,7 @@ export class PerpetualsAccount extends Caller {
 				positionSide === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
-			hasPosition: this.positionForMarketId({ marketId }) !== undefined,
-		};
-	};
-
-	public emptyPosition = (inputs: {
-		market: PerpetualsMarket;
-	}): PerpetualsPosition => {
-		const { market } = inputs;
-		return {
-			marketId: market.marketId,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			collateral: BigInt(0),
-			baseAssetAmount: BigInt(0),
-			quoteAssetNotionalAmount: BigInt(0),
-			cumFundingRateLong: market.marketState.cumFundingRateLong,
-			cumFundingRateShort: market.marketState.cumFundingRateShort,
-			asksQuantity: BigInt(0),
-			bidsQuantity: BigInt(0),
-			pendingOrders: [],
-			makerFee: BigInt(1000000000000000000), // 100%
-			takerFee: BigInt(1000000000000000000), // 100%
-			leverage: 1,
+			// hasPosition: this.positionForMarketId({ marketId }) !== undefined,
 		};
 	};
 

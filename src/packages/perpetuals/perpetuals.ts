@@ -26,6 +26,7 @@ import {
 	CallerConfig,
 	SuiAddress,
 	ObjectId,
+	ApiPerpetualsMarkets24hrStatsResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -229,6 +230,17 @@ export class Perpetuals extends Caller {
 			toTimestamp,
 			intervalMs,
 		});
+	}
+
+	public getMarkets24hrStats(inputs: {
+		marketIds: PerpetualsMarketId[];
+	}): Promise<ApiPerpetualsMarkets24hrStatsResponse> {
+		return this.fetchApi<
+			ApiPerpetualsMarkets24hrStatsResponse,
+			{
+				marketIds: PerpetualsMarketId[];
+			}
+		>("markets/24hr-stats", inputs);
 	}
 
 	// =========================================================================

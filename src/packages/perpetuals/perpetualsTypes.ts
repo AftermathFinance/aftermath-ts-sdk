@@ -49,12 +49,12 @@ export enum PerpetualsOrderType {
 //  BCS - Binary Canonical Serialization
 // =========================================================================
 
-function Field<N extends BcsType<any>, V extends BcsType<any>>(
-	name: N,
-	value: V
-) {
-	return bcs.struct("Field", { name, value });
-}
+// function Field<N extends BcsType<any>, V extends BcsType<any>>(
+// 	name: N,
+// 	value: V
+// ) {
+// 	return bcs.struct("Field", { name, value });
+// }
 
 // =========================================================================
 //  Admin
@@ -62,23 +62,23 @@ function Field<N extends BcsType<any>, V extends BcsType<any>>(
 
 export interface PerpetualsAdminCapability extends Object {}
 
-const AdminCapability = bcs.struct("AdminCapability", {
-	id: bcs.Address,
-});
+// const AdminCapability = bcs.struct("AdminCapability", {
+// 	id: bcs.Address,
+// });
 
 export interface PerpetualsRegistry extends Object {
 	activeCollaterals: CoinType[];
 }
 
-const Registry = bcs.struct("Registry", {
-	id: bcs.Address,
-	activeCollaterals: bcs.vector(bcs.string()),
-	nextAccountId: bcs.u64(),
-});
+// const Registry = bcs.struct("Registry", {
+// 	id: bcs.Address,
+// 	activeCollaterals: bcs.vector(bcs.string()),
+// 	nextAccountId: bcs.u64(),
+// });
 
-const MarketKey = bcs.struct("MarketKey", {
-	marketId: bcs.u64(),
-});
+// const MarketKey = bcs.struct("MarketKey", {
+// 	marketId: bcs.u64(),
+// });
 
 // =========================================================================
 //  Clearing House
@@ -89,19 +89,19 @@ export interface PerpetualsVault extends Object {
 	scalingFactor: bigint;
 }
 
-const BalanceStruct = bcs.struct("Balance", { value: bcs.u64() });
+// const BalanceStruct = bcs.struct("Balance", { value: bcs.u64() });
 
-const Coin = bcs.struct("Coin", {
-	id: bcs.Address,
-	balance: BalanceStruct,
-});
+// const Coin = bcs.struct("Coin", {
+// 	id: bcs.Address,
+// 	balance: BalanceStruct,
+// });
 
-const Vault = bcs.struct("Vault", {
-	id: bcs.Address,
-	collateral_balance: BalanceStruct,
-	insurance_fund_balance: BalanceStruct,
-	scalingFactor: bcs.u64(),
-});
+// const Vault = bcs.struct("Vault", {
+// 	id: bcs.Address,
+// 	collateral_balance: BalanceStruct,
+// 	insurance_fund_balance: BalanceStruct,
+// 	scalingFactor: bcs.u64(),
+// });
 
 export interface PerpetualsMarketData {
 	packageId: PackageId;
@@ -125,11 +125,11 @@ export interface PerpetualsAccountCap {
 	objectDigest: ObjectDigest;
 }
 
-const Account = bcs.struct("Account", {
-	id: bcs.Address,
-	accountId: bcs.u64(),
-	collateral: BalanceStruct,
-});
+// const Account = bcs.struct("Account", {
+// 	id: bcs.Address,
+// 	accountId: bcs.u64(),
+// 	collateral: BalanceStruct,
+// });
 
 export interface PerpetualsPosition {
 	collateral: IFixed;
@@ -151,22 +151,22 @@ export interface PerpetualsPosition {
 	leverage: number;
 }
 
-const Position = bcs.struct("Position", {
-	collateral: bcs.u256(),
-	baseAssetAmount: bcs.u256(),
-	quoteAssetNotionalAmount: bcs.u256(),
-	cumFundingRateLong: bcs.u256(),
-	cumFundingRateShort: bcs.u256(),
-	asksQuantity: bcs.u256(),
-	bidsQuantity: bcs.u256(),
-	pendingOrders: bcs.u64(),
-	makerFee: bcs.u256(),
-	takerFee: bcs.u256(),
-});
+// const Position = bcs.struct("Position", {
+// 	collateral: bcs.u256(),
+// 	baseAssetAmount: bcs.u256(),
+// 	quoteAssetNotionalAmount: bcs.u256(),
+// 	cumFundingRateLong: bcs.u256(),
+// 	cumFundingRateShort: bcs.u256(),
+// 	asksQuantity: bcs.u256(),
+// 	bidsQuantity: bcs.u256(),
+// 	pendingOrders: bcs.u64(),
+// 	makerFee: bcs.u256(),
+// 	takerFee: bcs.u256(),
+// });
 
-const PositionKey = bcs.struct("PositionKey", {
-	accountId: bcs.u64(),
-});
+// const PositionKey = bcs.struct("PositionKey", {
+// 	accountId: bcs.u64(),
+// });
 
 // =========================================================================
 //  Market
@@ -304,10 +304,10 @@ export interface PerpetualsOrderInfo {
 	size: bigint;
 }
 
-const OrderInfo = bcs.struct("OrderInfo", {
-	price: bcs.u64(),
-	size: bcs.u64(),
-});
+// const OrderInfo = bcs.struct("OrderInfo", {
+// 	price: bcs.u64(),
+// 	size: bcs.u64(),
+// });
 
 // export interface PerpetualsOrderedMap<T> extends Object {
 // 	size: bigint;
@@ -404,7 +404,7 @@ export type PerpetualsAccountCollateralChange = {
 	txDigest: TransactionDigest;
 	marketId: PerpetualsMarketId | undefined;
 	eventType: AnyObjectType;
-	collateralChange: number;
+	collateralChange: Balance;
 	collateralChangeUsd: number;
 };
 
@@ -772,6 +772,7 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "accountObjectId"
 			| "accountObjectVersion"
 			| "accountObjectDigest"
+			| "hasPosition"
 	  >
 	| Omit<
 			ApiPerpetualsMarketOrderBody,
@@ -780,6 +781,7 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "accountObjectId"
 			| "accountObjectVersion"
 			| "accountObjectDigest"
+			| "hasPosition"
 	  >
 	| Omit<
 			ApiPerpetualsSLTPOrderBody,
@@ -788,6 +790,7 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "accountObjectId"
 			| "accountObjectVersion"
 			| "accountObjectDigest"
+			| "hasPosition"
 	  >
 ) & {
 	collateral: Balance;
@@ -840,7 +843,7 @@ export type ApiPerpetualsPreviewReduceOrderResponse =
 	  }
 	| {
 			positionAfterReduceOrder: PerpetualsPosition;
-			collateralChange: number;
+			collateralChange: Balance;
 	  };
 
 export type ApiPerpetualsPreviewSetLeverageResponse =
@@ -849,7 +852,7 @@ export type ApiPerpetualsPreviewSetLeverageResponse =
 	  }
 	| {
 			positionAfterSetLeverage: PerpetualsPosition;
-			collateralChange: number;
+			collateralChange: Balance;
 	  };
 
 export type ApiPerpetualsPreviewOrderResponse =
@@ -864,7 +867,7 @@ export type ApiPerpetualsPreviewOrderResponse =
 			filledSizeUsd: number;
 			postedSize: number;
 			postedSizeUsd: number;
-			collateralChange: number;
+			collateralChange: Balance;
 			executionPrice: number;
 	  };
 
@@ -877,7 +880,7 @@ export type ApiPerpetualsPreviewCancelOrdersResponse =
 				PerpetualsMarketId,
 				PerpetualsPosition
 			>;
-			collateralChange: number;
+			collateralChange: Balance;
 	  };
 
 // export interface ApiPerpetualsOrderbookStateBody {
@@ -1070,11 +1073,14 @@ export type ApiPerpetualsSLTPOrderBody = (
 		  }
 	);
 
-export interface ApiPerpetualsMarketDailyStatsResponse {
+export interface PerpetualsMarket24hrStats {
 	volumeUsd: number;
 	volumeBaseAssetAmount: number;
 	priceChange: number;
+	priceChangePercentage: number;
 }
+
+export type ApiPerpetualsMarkets24hrStatsResponse = PerpetualsMarket24hrStats[];
 
 // =========================================================================
 //  SDK
@@ -1082,12 +1088,18 @@ export interface ApiPerpetualsMarketDailyStatsResponse {
 
 export type SdkPerpetualsMarketOrderInputs = Omit<
 	ApiPerpetualsMarketOrderBody,
-	"accountObjectId" | "accountObjectVersion" | "accountObjectDigest"
+	| "accountObjectId"
+	| "accountObjectVersion"
+	| "accountObjectDigest"
+	| "hasPosition"
 >;
 
 export type SdkPerpetualsLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
-	"accountObjectId" | "accountObjectVersion" | "accountObjectDigest"
+	| "accountObjectId"
+	| "accountObjectVersion"
+	| "accountObjectDigest"
+	| "hasPosition"
 >;
 
 export type SdkPerpetualsSLTPOrderInputs = (
@@ -1109,21 +1121,31 @@ export type SdkPerpetualsSLTPOrderInputs = (
 		  }
 	);
 
-export const perpetualsRegistry = {
-	Account,
-	AdminCapability,
-	BalanceStruct,
-	// Branch,
-	Coin,
-	Field,
-	// Leaf,
-	MarketKey,
-	// Order,
-	// Orderbook,
-	OrderInfo,
-	// PerpetualsMap,
-	Position,
-	PositionKey,
-	Registry,
-	Vault,
-};
+export type SdkPerpetualsPlaceOrderPreviewInputs = Omit<
+	ApiPerpetualsPreviewOrderBody,
+	"accountId" | "collateralCoinType" | "collateral"
+>;
+
+export type SdkPerpetualsCancelOrdersPreviewInputs = Omit<
+	ApiPerpetualsPreviewCancelOrdersBody,
+	"accountId" | "collateralCoinType" | "collateral"
+>;
+
+// export const perpetualsRegistry = {
+// 	Account,
+// 	AdminCapability,
+// 	BalanceStruct,
+// 	// Branch,
+// 	Coin,
+// 	Field,
+// 	// Leaf,
+// 	MarketKey,
+// 	// Order,
+// 	// Orderbook,
+// 	OrderInfo,
+// 	// PerpetualsMap,
+// 	Position,
+// 	PositionKey,
+// 	Registry,
+// 	Vault,
+// };

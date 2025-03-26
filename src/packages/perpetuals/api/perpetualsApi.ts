@@ -18,7 +18,6 @@ import {
 import { Casting, Helpers } from "../../../general/utils";
 import { Sui } from "../../sui";
 import {
-	perpetualsRegistry,
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsCreateAccountBody,
 	PerpetualsMarketId,

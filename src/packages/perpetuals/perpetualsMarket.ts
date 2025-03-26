@@ -27,10 +27,15 @@ import {
 	Balance,
 	PerpetualsFilledOrderData,
 	ApiPerpetualsMaxOrderSizeBody,
-	ApiPerpetualsMarketDailyStatsResponse,
+	ApiPerpetualsMarkets24hrStatsResponse,
 	ApiDataWithCursorBody,
 	PerpetualsTradeHistoryWithCursor,
 	CallerConfig,
+	ApiPerpetualsPreviewOrderBody,
+	Percentage,
+	ApiPerpetualsPreviewOrderResponse,
+	SdkPerpetualsPlaceOrderPreviewInputs,
+	PerpetualsMarket24hrStats,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -81,15 +86,11 @@ export class PerpetualsMarket extends Caller {
 		});
 	}
 
-	public getDailyStats(): Promise<ApiPerpetualsMarketDailyStatsResponse> {
-		return this.fetchApi<
-			ApiPerpetualsMarketDailyStatsResponse,
-			{
-				marketId: PerpetualsMarketId;
-			}
-		>("market/24hr-stats", {
-			marketId: this.marketId,
+	public async get24hrStats(): Promise<PerpetualsMarket24hrStats> {
+		const stats = await new Perpetuals(this.config).getMarkets24hrStats({
+			marketIds: [this.marketId],
 		});
+		return stats[0];
 	}
 
 	public async getOrderbook() {
@@ -137,6 +138,38 @@ export class PerpetualsMarket extends Caller {
 		// TODO: perform calculation on endpoint ?
 		return Number(maxSize) * this.lotSize() * indexPrice;
 	};
+
+	public async getPlaceOrderPreview(
+		inputs: SdkPerpetualsPlaceOrderPreviewInputs,
+		abortSignal?: AbortSignal
+	): Promise<
+		| {
+				error: string;
+		  }
+		| {
+				positionAfterOrder: PerpetualsPosition;
+				priceSlippage: number;
+				percentSlippage: Percentage;
+				filledSize: number;
+				filledSizeUsd: number;
+				postedSize: number;
+				postedSizeUsd: number;
+				collateralChange: Balance;
+				executionPrice: number;
+		  }
+	> {
+		return this.fetchApi<
+			ApiPerpetualsPreviewOrderResponse,
+			Omit<ApiPerpetualsPreviewOrderBody, "accountId" | "collateral">
+		>(
+			"previews/place-order",
+			{
+				...inputs,
+				collateralCoinType: this.collateralCoinType,
+			},
+			abortSignal
+		);
+	}
 
 	// =========================================================================
 	//  Trade History
@@ -319,6 +352,25 @@ export class PerpetualsMarket extends Caller {
 				? Math.ceil(lots)
 				: Math.round(lots)) * this.lotSize()
 		);
+	};
+
+	public emptyPosition = (): PerpetualsPosition => {
+		return {
+			marketId: this.marketId,
+			collateralCoinType: this.marketData.collateralCoinType,
+			collateral: BigInt(0),
+			baseAssetAmount: BigInt(0),
+			quoteAssetNotionalAmount: BigInt(0),
+			cumFundingRateLong: this.marketData.marketState.cumFundingRateLong,
+			cumFundingRateShort:
+				this.marketData.marketState.cumFundingRateShort,
+			asksQuantity: BigInt(0),
+			bidsQuantity: BigInt(0),
+			pendingOrders: [],
+			makerFee: BigInt(1000000000000000000), // 100%
+			takerFee: BigInt(1000000000000000000), // 100%
+			leverage: 1,
+		};
 	};
 
 	// =========================================================================
