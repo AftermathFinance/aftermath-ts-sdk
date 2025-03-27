@@ -364,12 +364,12 @@ export interface PoolGraphDataTimeframe {
  */
 export interface PoolCreationCoinInfo {
 	coinType: CoinType;
-	weight: bigint;
-	decimals?: number;
-	tradeFeeIn: bigint;
-	tradeFeeOut?: bigint; // Optional if needed
-	depositFee?: bigint;
-	withdrawFee?: bigint;
+	weight: PoolWeight;
+	decimals?: CoinDecimal;
+	tradeFeeIn: PoolTradeFee;
+	tradeFeeOut: PoolTradeFee;
+	depositFee: PoolDepositFee;
+	withdrawFee: PoolWithdrawFee;
 	initialDeposit: Balance;
 }
 
