@@ -17,9 +17,7 @@ import {
 	ApiFarmsIncreaseStakingPoolRewardsEmissionsBody,
 	ApiFarmsInitializeStakingPoolRewardBody,
 	ApiFarmsTopUpStakingPoolRewardsBody,
-	ApiHarvestFarmsRewardsBody,
 	FarmOwnerOrOneTimeAdminCap,
-	// FarmsLockEnforcement,
 	FarmsMultiplier,
 	FarmsStakingPoolObject,
 	FarmsStakingPoolRewardCoin,
@@ -33,11 +31,21 @@ import { Coin } from "../coin/coin";
 import { AftermathApi } from "../../general/providers";
 import { Farms } from "./farms";
 
+/**
+ * The `FarmsStakingPool` class represents a staking pool (also referred
+ * to as a "vault" in some contexts). It allows reading details about
+ * emission schedules, reward tokens, stake coin type, and lock durations,
+ * as well as constructing transactions to stake, harvest, and mutate the
+ * pool parameters if the user has the correct admin privileges.
+ */
 export class FarmsStakingPool extends Caller {
-	// =========================================================================
-	//  Constructor
-	// =========================================================================
-
+	/**
+	 * Creates a `FarmsStakingPool` instance based on on-chain pool data.
+	 *
+	 * @param stakingPool - The on-chain data object describing the pool.
+	 * @param config - An optional `CallerConfig` for network settings.
+	 * @param Provider - An optional `AftermathApi` for transaction building.
+	 */
 	constructor(
 		public stakingPool: FarmsStakingPoolObject,
 		config?: CallerConfig,
@@ -45,7 +53,6 @@ export class FarmsStakingPool extends Caller {
 	) {
 		super(config, "farms");
 		this.stakingPool = stakingPool;
-		// this.emitRewards();
 	}
 
 	// =========================================================================
@@ -56,12 +63,34 @@ export class FarmsStakingPool extends Caller {
 	//  Stats
 	// =========================================================================
 
+	/**
+	 * Fetches the total value locked (TVL) for this staking pool alone.
+	 *
+	 * @returns A `number` representing this pool's TVL in USD (or another currency).
+	 *
+	 * @example
+	 * ```typescript
+	 * const poolTvl = await someFarmsPool.getTVL();
+	 * console.log(poolTvl);
+	 * ```
+	 */
 	public async getTVL(): Promise<number> {
 		return new Farms(this.config, this.Provider).getTVL({
 			farmIds: [this.stakingPool.objectId],
 		});
 	}
 
+	/**
+	 * Fetches the total value locked (TVL) of the reward coins in this specific staking pool.
+	 *
+	 * @returns A `number` representing this pool's reward TVL.
+	 *
+	 * @example
+	 * ```typescript
+	 * const rewardTvl = await someFarmsPool.getRewardsTVL();
+	 * console.log(rewardTvl);
+	 * ```
+	 */
 	public async getRewardsTVL(): Promise<number> {
 		return new Farms(this.config, this.Provider).getRewardsTVL({
 			farmIds: [this.stakingPool.objectId],
@@ -72,14 +101,27 @@ export class FarmsStakingPool extends Caller {
 	//  Getters
 	// =========================================================================
 
+	/**
+	 * Retrieves the version of this staking pool (1 or 2).
+	 */
 	public version = (): FarmsVersion => {
 		return this.stakingPool.version;
 	};
 
+	/**
+	 * Lists all reward coin types offered by this staking pool.
+	 *
+	 * @returns An array of `CoinType` strings.
+	 */
 	public rewardCoinTypes = (): CoinType[] => {
 		return this.stakingPool.rewardCoins.map((coin) => coin.coinType);
 	};
 
+	/**
+	 * Lists all reward coin types for which this pool currently has a non-zero actual reward balance.
+	 *
+	 * @returns An array of `CoinType` strings that have > 0 actual rewards.
+	 */
 	public nonZeroRewardCoinTypes = (): CoinType[] => {
 		return this.stakingPool.rewardCoins
 			.filter(
@@ -90,6 +132,13 @@ export class FarmsStakingPool extends Caller {
 			.map((coin) => coin.coinType);
 	};
 
+	/**
+	 * Retrieves the on-chain record for a specific reward coin type in this pool.
+	 *
+	 * @param inputs - Contains the `coinType` to look up.
+	 * @throws If the specified coinType is not found in `rewardCoins`.
+	 * @returns A `FarmsStakingPoolRewardCoin` object.
+	 */
 	public rewardCoin = (inputs: { coinType: CoinType }) => {
 		const foundCoin = this.stakingPool.rewardCoins.find(
 			(coin) => coin.coinType === inputs.coinType
@@ -99,6 +148,12 @@ export class FarmsStakingPool extends Caller {
 		return foundCoin;
 	};
 
+	/**
+	 * Computes the maximum lock duration (in ms) that remains valid in this staking pool,
+	 * factoring in the current time and the pool's emission end.
+	 *
+	 * @returns The maximum possible lock duration in milliseconds, or 0 if the pool is effectively closed.
+	 */
 	public maxLockDurationMs = (): number => {
 		return Math.max(
 			Math.min(
@@ -113,15 +168,25 @@ export class FarmsStakingPool extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	// Calculates the amount of rewards that have emitted since the last time this function has been
-	// called. Updates `rewards_accumulated_per_share`.
+	/**
+	 * Calculates and applies newly emitted rewards for each reward coin in this pool,
+	 * updating the `rewardsAccumulatedPerShare`. This simulates the on-chain
+	 * `emitRewards` logic.
+	 *
+	 * @example
+	 * ```typescript
+	 * someFarmsPool.emitRewards();
+	 * // The pool's rewardsAccumulatedPerShare fields are now updated.
+	 * ```
+	 */
 	public emitRewards = () => {
 		const currentTimestamp = dayjs().valueOf();
 
-		// ia. Check that the vault has deposits.
+		// If no staked amount, no distribution
 		if (this.stakingPool.stakedAmount === BigInt(0)) return;
 
 		const rewardCoins = Helpers.deepCopy(this.stakingPool.rewardCoins);
+
 		for (const [rewardCoinIndex, rewardCoin] of rewardCoins.entries()) {
 			// ib. Check that enough time has passed since the last emission.
 			if (
@@ -153,6 +218,14 @@ export class FarmsStakingPool extends Caller {
 		}
 	};
 
+	/**
+	 * Computes an approximate APR for a specific reward coin, based on the current
+	 * emission rate, coin price, pool TVL, and the lock multiplier range. This assumes
+	 * maximum lock multiplier for the final APR result.
+	 *
+	 * @param inputs - Includes the `coinType`, its `price` and `decimals`, plus the total `tvlUsd` in the pool.
+	 * @returns A numeric APR (0.05 = 5%).
+	 */
 	public calcApr = (inputs: {
 		coinType: CoinType;
 		price: number;
@@ -160,36 +233,45 @@ export class FarmsStakingPool extends Caller {
 		tvlUsd: number;
 	}): Apr => {
 		const { coinType, price, decimals, tvlUsd } = inputs;
-
 		if (price <= 0 || tvlUsd <= 0) return 0;
-
-		// this.emitRewards();
 
 		const rewardCoin = this.rewardCoin({ coinType });
 		const currentTimestamp = dayjs().valueOf();
 
+		// If the current emission rate is below the actual supply, or if the pool hasn't started or is ended, yield 0
 		if (rewardCoin.emissionRate > rewardCoin.actualRewards) return 0;
 		if (
 			rewardCoin.emissionStartTimestamp > currentTimestamp ||
 			currentTimestamp > this.stakingPool.emissionEndTimestamp
-		)
+		) {
 			return 0;
+		}
 
+		const emissionRateTokens = rewardCoin.emissionRate;
 		const emissionRateUsd =
-			Coin.balanceWithDecimals(rewardCoin.emissionRate, decimals) * price;
+			Coin.balanceWithDecimals(emissionRateTokens, decimals) * price;
 
 		dayjs.extend(duration);
 		const oneYearMs = dayjs.duration(1, "year").asMilliseconds();
 		const rewardsUsdOneYear =
 			emissionRateUsd * (oneYearMs / rewardCoin.emissionSchedulesMs);
 
+		// The final APR is normalized by total staked value and the maximum lock multiplier
 		const apr =
 			rewardsUsdOneYear /
 			tvlUsd /
 			Casting.bigIntToFixedNumber(this.stakingPool.maxLockMultiplier);
+
 		return apr < 0 ? 0 : isNaN(apr) ? 0 : apr;
 	};
 
+	/**
+	 * Computes the total APR contributed by all reward coin types in this pool, summing
+	 * up the individual APR for each coin type. This also assumes max lock multiplier.
+	 *
+	 * @param inputs - Contains price data (`coinsToPrice`), decimal data (`coinsToDecimals`), and the total TVL in USD.
+	 * @returns The sum of all coin APRs (0.10 = 10%).
+	 */
 	public calcTotalApr = (inputs: {
 		coinsToPrice: CoinsToPrice;
 		coinsToDecimals: CoinsToDecimals;
@@ -208,6 +290,14 @@ export class FarmsStakingPool extends Caller {
 		return Helpers.sum(aprs);
 	};
 
+	/**
+	 * Given a lock duration in ms, calculates the lock multiplier to be used by staked positions.
+	 * This function clamps the input duration between the pool's `minLockDurationMs` and
+	 * `maxLockDurationMs`.
+	 *
+	 * @param inputs - An object containing the `lockDurationMs` for which to calculate a multiplier.
+	 * @returns A `FarmsMultiplier` (bigint) representing the scaled factor (1.0 = 1e9 if using fixedOneB).
+	 */
 	public calcMultiplier = (inputs: {
 		lockDurationMs: number;
 	}): FarmsMultiplier => {
@@ -239,49 +329,6 @@ export class FarmsStakingPool extends Caller {
 			: Helpers.minBigInt(multiplier, this.stakingPool.maxLockMultiplier);
 	};
 
-	// public calc_emitted_rewards(): bigint[] {
-	// 	let emitted_rewards: bigint[] = [];
-
-	// 	let length = this.stakingPool.rewardCoins.length;
-	// 	let index = 0;
-
-	// 	while (index < length) {
-	// 		let emission_start_timestamp_ms =
-	// 			this.stakingPool.rewardCoins[index].emissionStartTimestamp;
-	// 		let last_reward_timestamp_ms =
-	// 			this.stakingPool.rewardCoins[index].lastRewardTimestamp;
-
-	// 		emitted_rewards.push(
-	// 			this.calcRewardsEmittedFromTimeTmToTn({
-	// 				timestampTm: emission_start_timestamp_ms,
-	// 				timestampTn: last_reward_timestamp_ms,
-	// 				rewardCoin: this.stakingPool.rewardCoins[index],
-	// 			})
-	// 		);
-
-	// 		index = index + 1;
-	// 	}
-
-	// 	return emitted_rewards;
-	// }
-
-	// public calc_emitted_rewards_for(inputs: {
-	// 	rewardCoinIndex: number;
-	// }): bigint {
-	// 	let reward_index = inputs.rewardCoinIndex;
-
-	// 	let emission_start_timestamp_ms =
-	// 		this.stakingPool.rewardCoins[reward_index].emissionStartTimestamp;
-	// 	let last_reward_timestamp_ms =
-	// 		this.stakingPool.rewardCoins[reward_index].lastRewardTimestamp;
-
-	// 	return this.calcRewardsEmittedFromTimeTmToTn({
-	// 		timestampTm: emission_start_timestamp_ms,
-	// 		timestampTn: last_reward_timestamp_ms,
-	// 		rewardCoin: this.stakingPool.rewardCoins[reward_index],
-	// 	});
-	// }
-
 	// =========================================================================
 	//  Transactions
 	// =========================================================================
@@ -290,6 +337,12 @@ export class FarmsStakingPool extends Caller {
 	//  Staking Transactions
 	// =========================================================================
 
+	/**
+	 * Builds a transaction to stake tokens into this pool, optionally locking them.
+	 *
+	 * @param inputs - Contains `stakeAmount`, `lockDurationMs`, `walletAddress`, and optional sponsorship.
+	 * @returns A transaction object (or bytes) that can be signed and executed to create a staked position.
+	 */
 	public async getStakeTransaction(inputs: {
 		stakeAmount: Balance;
 		lockDurationMs: Timestamp;
@@ -304,22 +357,21 @@ export class FarmsStakingPool extends Caller {
 		};
 		return this.version() === 1
 			? this.useProvider().fetchBuildStakeTxV1(args)
-			: (() => {
-					// if (!inputs.lockEnforcement)
-					// 	throw new Error(
-					// 		"`lockEnforcement` argument required for V2 transaction"
-					// 	);
-					return this.useProvider().fetchBuildStakeTxV2({
-						...args,
-						// lockEnforcement: inputs.lockEnforcement,
-					});
-			  })();
+			: this.useProvider().fetchBuildStakeTxV2({
+					...args,
+			  });
 	}
 
 	// =========================================================================
 	//  Reward Harvesting Transactions
 	// =========================================================================
 
+	/**
+	 * Builds a transaction to harvest rewards from multiple staked positions in this pool.
+	 *
+	 * @param inputs - Contains `stakedPositionIds`, the `walletAddress`, and optionally any others.
+	 * @returns A transaction that can be signed and executed to claim rewards from multiple positions.
+	 */
 	public async getHarvestRewardsTransaction(inputs: {
 		stakedPositionIds: ObjectId[];
 		walletAddress: SuiAddress;
@@ -339,6 +391,12 @@ export class FarmsStakingPool extends Caller {
 	//  Mutation/Creation Transactions (Owner Only)
 	// =========================================================================
 
+	/**
+	 * Builds a transaction to increase the emission rate (or schedule) for specific reward coins.
+	 *
+	 * @param inputs - Contains the `ownerCapId` that authorizes changes, plus an array of `rewards` with new emission details.
+	 * @returns A transaction to be signed and executed by the owner cap holder.
+	 */
 	public async getIncreaseRewardsEmissionsTransaction(inputs: {
 		ownerCapId: ObjectId;
 		rewards: {
@@ -362,6 +420,12 @@ export class FarmsStakingPool extends Caller {
 			  );
 	}
 
+	/**
+	 * Builds a transaction to update the pool's minimum stake amount, only authorized by the `ownerCapId`.
+	 *
+	 * @param inputs - Contains the new `minStakeAmount`, the `ownerCapId`, and the calling `walletAddress`.
+	 * @returns A transaction that can be signed and executed to change the minimum stake requirement.
+	 */
 	public async getUpdateMinStakeAmountTransaction(inputs: {
 		ownerCapId: ObjectId;
 		minStakeAmount: bigint;
@@ -377,6 +441,13 @@ export class FarmsStakingPool extends Caller {
 			: this.useProvider().buildSetStakingPoolMinStakeAmountTxV2(args);
 	}
 
+	/**
+	 * Builds a transaction granting a one-time admin cap to another address, allowing them to perform specific
+	 * one-time administrative actions (like initializing a reward).
+	 *
+	 * @param inputs - Body containing the `ownerCapId`, the `recipientAddress`, and the `rewardCoinType`.
+	 * @returns A transaction to be executed by the current pool owner.
+	 */
 	public getGrantOneTimeAdminCapTransaction(
 		inputs: ApiFarmsGrantOneTimeAdminCapBody
 	) {
@@ -389,6 +460,13 @@ export class FarmsStakingPool extends Caller {
 	//  Mutation Transactions (Owner/Admin Only)
 	// =========================================================================
 
+	/**
+	 * Builds a transaction to initialize a new reward coin in this pool, specifying the amount, emission rate,
+	 * and schedule parameters. This can be done by either the `ownerCapId` or a `oneTimeAdminCapId`.
+	 *
+	 * @param inputs - Contains emission info (rate, schedule) and which cap is used (`ownerCapId` or `oneTimeAdminCapId`).
+	 * @returns A transaction object for the reward initialization.
+	 */
 	public async getInitializeRewardTransaction(
 		inputs: {
 			rewardAmount: Balance;
@@ -412,6 +490,13 @@ export class FarmsStakingPool extends Caller {
 			  );
 	}
 
+	/**
+	 * Builds a transaction to add more reward coins (top-up) to an existing reward
+	 * coin configuration, either as the owner or via a one-time admin cap.
+	 *
+	 * @param inputs - Contains an array of reward objects, each specifying amount and coin type.
+	 * @returns A transaction that can be signed and executed to increase the reward distribution pool.
+	 */
 	public async getTopUpRewardsTransaction(
 		inputs: {
 			rewards: {
@@ -440,44 +525,38 @@ export class FarmsStakingPool extends Caller {
 	//  Calculations
 	// =========================================================================
 
+	/**
+	 * Updates `rewardsAccumulatedPerShare` by distributing `rewardsToEmit` among
+	 * the total staked amount with multiplier. This mimics on-chain distribution logic.
+	 *
+	 * @param inputs - Contains the `rewardsToEmit` and which `rewardCoinIndex` to update.
+	 */
 	private increaseRewardsAccumulatedPerShare(inputs: {
 		rewardsToEmit: Balance;
 		rewardCoinIndex: number;
 	}) {
 		const { rewardsToEmit, rewardCoinIndex } = inputs;
+		const stakedWithMultiplier =
+			this.stakingPool.stakedAmountWithMultiplier;
 
-		// i. Calculate the pro-rata amount of rewards allocated to each staked amount.
+		if (stakedWithMultiplier === BigInt(0)) return;
+
+		// Distribute proportionally
 		const newRewardsAccumulatedPerShare =
 			(rewardsToEmit * BigInt(1_000_000_000_000_000_000)) /
-			this.stakingPool.stakedAmountWithMultiplier;
+			stakedWithMultiplier;
 
 		if (newRewardsAccumulatedPerShare === BigInt(0)) return;
 
-		// ii. Increase the amount of rewards emitted per share.
 		this.stakingPool.rewardCoins[
 			rewardCoinIndex
 		].rewardsAccumulatedPerShare += newRewardsAccumulatedPerShare;
 	}
 
-	private rewardsRemaining(inputs: { rewardCoinIndex: number }): Balance {
-		const rewardCoin = this.stakingPool.rewardCoins[inputs.rewardCoinIndex];
-
-		const currentTimestamp = dayjs().valueOf();
-
-		const numberOfEmissions = BigInt(
-			Math.floor(
-				(currentTimestamp - rewardCoin.emissionStartTimestamp) /
-					rewardCoin.emissionSchedulesMs
-			)
-		);
-		const emittedRewards = rewardCoin.emissionRate * numberOfEmissions;
-
-		const totalRewards = rewardCoin.rewards;
-		if (totalRewards <= emittedRewards) return BigInt(0);
-
-		return totalRewards - emittedRewards;
-	}
-
+	/**
+	 * Computes how many rewards to emit based on the time since `lastRewardTimestamp` and
+	 * the pool's emission schedule, clamped by the total `rewardsRemaining`.
+	 */
 	private calcRewardsToEmit(inputs: {
 		rewardCoin: FarmsStakingPoolRewardCoin;
 	}): Balance {
@@ -490,26 +569,29 @@ export class FarmsStakingPool extends Caller {
 			timestampTn: currentTimestamp,
 			rewardCoin,
 		});
-		const rewardsRemaining = rewardCoin.rewardsRemaining;
+		const { rewardsRemaining } = rewardCoin;
 
 		// IMPORTANT: Cap the amount of rewards to emit by the amount of remaining rewards.
-		//
 		return rewardsRemaining < rewardsToEmit
 			? rewardsRemaining
 			: rewardsToEmit;
 	}
 
+	/**
+	 * Calculates how many tokens were emitted between two timestamps (Tm and Tn) for a given reward coin,
+	 * based on the discrete `emissionRate` and `emissionSchedulesMs`.
+	 *
+	 * @param inputs - Contains `timestampTm`, `timestampTn`, and the relevant `rewardCoin`.
+	 * @returns The total number of tokens emitted in that time window.
+	 */
 	private calcRewardsEmittedFromTimeTmToTn(inputs: {
 		timestampTm: Timestamp;
 		timestampTn: Timestamp;
 		rewardCoin: FarmsStakingPoolRewardCoin;
 	}): Balance {
 		const { timestampTm, timestampTn, rewardCoin } = inputs;
-
 		const numberOfEmissionsFromTimeTmToTn =
-			(timestampTn - timestampTm) /
-			// -----------------------------------------------
-			rewardCoin.emissionSchedulesMs;
+			(timestampTn - timestampTm) / rewardCoin.emissionSchedulesMs;
 
 		return (
 			BigInt(Math.floor(numberOfEmissionsFromTimeTmToTn)) *
@@ -521,6 +603,9 @@ export class FarmsStakingPool extends Caller {
 	//  Helpers
 	// =========================================================================
 
+	/**
+	 * Provides access to the farm-specific provider methods for building transactions.
+	 */
 	private useProvider = () => {
 		const provider = this.Provider?.Farms();
 		if (!provider) throw new Error("missing AftermathApi Provider");

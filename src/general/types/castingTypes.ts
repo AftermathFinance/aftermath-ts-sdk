@@ -18,7 +18,7 @@ export type BcsTypeName = string | [string, ...(BcsTypeName | string)[]];
 //  Name Only
 // =========================================================================
 
-export type SuiAddressWithout0x = string;
+// export type SuiAddressWithout0x = string;
 
 // =========================================================================
 //  On Chain
@@ -77,9 +77,9 @@ export interface SupplyOnChain {
 	};
 }
 
-export interface TypeNameOnChain {
-	type: AnyObjectType;
-	fields: {
-		name: AnyObjectType;
-	};
-}
+// export interface TypeNameOnChain {
+// 	type: AnyObjectType;
+// 	fields: {
+// 		name: AnyObjectType;
+// 	};
+// }
