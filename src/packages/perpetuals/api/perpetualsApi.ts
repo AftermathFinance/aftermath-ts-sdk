@@ -83,10 +83,7 @@ import {
 import { PerpetualsApiCasting } from "./perpetualsApiCasting";
 import { Perpetuals } from "../perpetuals";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
-import {
-	EventOnChain,
-	SuiAddressWithout0x,
-} from "../../../general/types/castingTypes";
+import { EventOnChain } from "../../../general/types/castingTypes";
 import {
 	AllocatedCollateralEventOnChain,
 	CanceledOrderEventOnChain,

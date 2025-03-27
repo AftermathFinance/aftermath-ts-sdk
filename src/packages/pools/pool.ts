@@ -32,27 +32,50 @@ import { Coin } from "..";
 import { AftermathApi } from "../../general/providers";
 
 /**
- * Represents a pool object and provides methods for interacting with the pool.
- * @class
+ * The `Pool` class encapsulates all the functionality needed to interact
+ * with a specific AMM pool on the Aftermath platform. It allows you to
+ * calculate trade amounts, deposit/withdraw amounts, fetch transactions,
+ * and retrieve on-chain statistics and event data.
+ *
+ * @example
+ * ```typescript
+ * const afSdk = new Aftermath("MAINNET");
+ * await afSdk.init(); // initialize provider
+ *
+ * const pools = afSdk.Pools();
+ * const pool = await pools.getPool({ objectId: "0x..." });
+ *
+ * const stats = await pool.getStats();
+ * const tradeTx = await pool.getTradeTransaction({
+ *   walletAddress: "0x...",
+ *   coinInType: "0x2::sui::SUI",
+ *   coinInAmount: BigInt(1e9),
+ *   coinOutType: "0x<yourCoin>",
+ *   slippage: 0.01,
+ * });
+ * ```
  */
 export class Pool extends Caller {
 	/**
-	 * Private constants used in the class.
+	 * Internal margin of error used in trade calculations to prevent
+	 * exceeding maximum allowed percentages of pool balances.
 	 */
 	private static readonly constants = {
 		percentageBoundsMarginOfError: 0.001, // 0.1%
 	};
 
 	/**
-	 * The pool statistics.
+	 * An optional cached object containing statistical data about the pool
+	 * (volume, fees, APR, etc.).
 	 */
 	public stats: PoolStats | undefined;
 
 	/**
-	 * Creates a new instance of the Pool class.
-	 * @constructor
-	 * @param {PoolObject} pool - The pool object.
-	 * @param {SuiNetwork} [network] - The network to use.
+	 * Creates a new instance of the `Pool` class for on-chain interaction.
+	 *
+	 * @param pool - The fetched `PoolObject` from Aftermath API or on-chain query.
+	 * @param config - Optional caller configuration (e.g., network, access token).
+	 * @param Provider - An optional `AftermathApi` instance for advanced transaction usage.
 	 */
 	constructor(
 		public readonly pool: PoolObject,
@@ -68,10 +91,20 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches the deposit transaction for the pool.
-	 * @async
-	 * @param {ApiPoolDepositBody} inputs - The inputs for the method.
-	 * @returns {Promise<Transaction>} The deposit transaction for the pool.
+	 * Builds or fetches a deposit transaction to add liquidity to this pool.
+	 * The resulting `Transaction` can be signed and submitted by the user.
+	 *
+	 * @param inputs - The deposit parameters including coin amounts, slippage, etc.
+	 * @returns A `Transaction` to deposit funds into the pool.
+	 *
+	 * @example
+	 * ```typescript
+	 * const depositTx = await pool.getDepositTransaction({
+	 *   walletAddress: "0x...",
+	 *   amountsIn: { "0x<coin>": BigInt(1000000) },
+	 *   slippage: 0.01,
+	 * });
+	 * ```
 	 */
 	public async getDepositTransaction(
 		inputs: ApiPoolDepositBody
@@ -83,10 +116,22 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Fetches the withdraw transaction for the pool.
-	 * @async
-	 * @param {ApiPoolWithdrawBody} inputs - The inputs for the method.
-	 * @returns {Promise<Transaction>} The withdraw transaction for the pool.
+	 * Builds or fetches a withdrawal transaction to remove liquidity from this pool.
+	 *
+	 * @param inputs - The parameters specifying how much LP is burned, desired coins out, slippage, etc.
+	 * @returns A `Transaction` to withdraw funds from the pool.
+	 *
+	 * @example
+	 * ```typescript
+	 * const withdrawTx = await pool.getWithdrawTransaction({
+	 *   walletAddress: "0x...",
+	 *   amountsOutDirection: {
+	 *     "0x<coin>": BigInt(500000),
+	 *   },
+	 *   lpCoinAmount: BigInt(1000000),
+	 *   slippage: 0.01,
+	 * });
+	 * ```
 	 */
 	public async getWithdrawTransaction(
 		inputs: ApiPoolWithdrawBody
@@ -98,10 +143,19 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Fetches the all coin withdraw transaction for the pool.
-	 * @async
-	 * @param {ApiPoolAllCoinWithdrawBody} inputs - The inputs for the method.
-	 * @returns {Promise<Transaction>} The all coin withdraw transaction for the pool.
+	 * Builds or fetches a transaction to withdraw all coin types from this pool,
+	 * effectively "burning" an LP position in exchange for multiple coin outputs.
+	 *
+	 * @param inputs - The parameters specifying how much LP to burn.
+	 * @returns A `Transaction` to withdraw all coins from the pool in proportion.
+	 *
+	 * @example
+	 * ```typescript
+	 * const allCoinWithdrawTx = await pool.getAllCoinWithdrawTransaction({
+	 *   walletAddress: "0x...",
+	 *   lpCoinAmount: BigInt(500000),
+	 * });
+	 * ```
 	 */
 	public async getAllCoinWithdrawTransaction(
 		inputs: ApiPoolAllCoinWithdrawBody
@@ -113,10 +167,21 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Fetches the trade transaction for the pool.
-	 * @async
-	 * @param {ApiPoolTradeBody} inputs - The inputs for the method.
-	 * @returns {Promise<Transaction>} The trade transaction for the pool.
+	 * Builds or fetches a trade transaction to swap between two coin types in this pool.
+	 *
+	 * @param inputs - The trade parameters including coin in/out, amounts, slippage, etc.
+	 * @returns A `Transaction` that can be signed and executed for the swap.
+	 *
+	 * @example
+	 * ```typescript
+	 * const tradeTx = await pool.getTradeTransaction({
+	 *   walletAddress: "0x...",
+	 *   coinInType: "0x<coinA>",
+	 *   coinInAmount: BigInt(1000000),
+	 *   coinOutType: "0x<coinB>",
+	 *   slippage: 0.005,
+	 * });
+	 * ```
 	 */
 	public async getTradeTransaction(
 		inputs: ApiPoolTradeBody
@@ -127,6 +192,24 @@ export class Pool extends Caller {
 		});
 	}
 
+	/**
+	 * Builds a transaction to update the DAO fee percentage for this pool,
+	 * if it has a DAO fee configured. The user must own the appropriate
+	 * `daoFeePoolOwnerCap`.
+	 *
+	 * @param inputs - Includes user wallet, `daoFeePoolOwnerCapId`, and the new fee percentage.
+	 * @returns A `Transaction` that can be signed to update the DAO fee on chain.
+	 * @throws If this pool has no DAO fee configuration.
+	 *
+	 * @example
+	 * ```typescript
+	 * const tx = await pool.getUpdateDaoFeeTransaction({
+	 *   walletAddress: "0x...",
+	 *   daoFeePoolOwnerCapId: "0x<capId>",
+	 *   newFeePercentage: 0.01, // 1%
+	 * });
+	 * ```
+	 */
 	public async getUpdateDaoFeeTransaction(inputs: {
 		walletAddress: SuiAddress;
 		daoFeePoolOwnerCapId: ObjectId;
@@ -143,6 +226,24 @@ export class Pool extends Caller {
 		});
 	}
 
+	/**
+	 * Builds a transaction to update the DAO fee recipient for this pool,
+	 * if it has a DAO fee configured. The user must own the appropriate
+	 * `daoFeePoolOwnerCap`.
+	 *
+	 * @param inputs - Includes user wallet, `daoFeePoolOwnerCapId`, and the new fee recipient.
+	 * @returns A `Transaction` that can be signed to update the DAO fee recipient on chain.
+	 * @throws If this pool has no DAO fee configuration.
+	 *
+	 * @example
+	 * ```typescript
+	 * const tx = await pool.getUpdateDaoFeeRecipientTransaction({
+	 *   walletAddress: "0x...",
+	 *   daoFeePoolOwnerCapId: "0x<capId>",
+	 *   newFeeRecipient: "0x<recipient>",
+	 * });
+	 * ```
+	 */
 	public async getUpdateDaoFeeRecipientTransaction(inputs: {
 		walletAddress: SuiAddress;
 		daoFeePoolOwnerCapId: ObjectId;
@@ -166,9 +267,16 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Fetches the pool statistics.
-	 * @async
-	 * @returns {Promise<PoolStats>} The pool statistics.
+	 * Fetches comprehensive pool statistics (volume, TVL, fees, APR, etc.) from the Aftermath API.
+	 * Also caches the result in `this.stats`.
+	 *
+	 * @returns A promise resolving to `PoolStats` object.
+	 *
+	 * @example
+	 * ```typescript
+	 * const stats = await pool.getStats();
+	 * console.log(stats.volume, stats.fees, stats.apr);
+	 * ```
 	 */
 	public async getStats(): Promise<PoolStats> {
 		const stats = await this.fetchApi<PoolStats>("stats");
@@ -177,19 +285,26 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Sets the pool statistics.
-	 * @param {PoolStats} stats - The pool statistics.
+	 * Caches the provided stats object into `this.stats`.
+	 *
+	 * @param stats - The `PoolStats` object to store.
 	 */
 	public setStats(stats: PoolStats): void {
 		this.stats = stats;
 	}
 
 	/**
-	 * Fetches the volume data for the pool.
-	 * @async
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {PoolGraphDataTimeframeKey} inputs.timeframe - The timeframe for the data.
-	 * @returns {Promise<PoolDataPoint[]>} The volume data for the pool.
+	 * Fetches an array of volume data points for a specified timeframe.
+	 * This is often used for charting or historical references.
+	 *
+	 * @param inputs - Contains a `timeframe` key, such as `"1D"` or `"1W"`.
+	 * @returns A promise resolving to an array of `PoolDataPoint`.
+	 *
+	 * @example
+	 * ```typescript
+	 * const volumeData = await pool.getVolumeData({ timeframe: "1D" });
+	 * console.log(volumeData); // e.g. [{ time: 1686000000, value: 123.45 }, ...]
+	 * ```
 	 */
 	public async getVolumeData(inputs: {
 		timeframe: PoolGraphDataTimeframeKey;
@@ -198,11 +313,16 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Fetches the fee data for the pool.
-	 * @async
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {PoolGraphDataTimeframeKey} inputs.timeframe - The timeframe for the data.
-	 * @returns {Promise<PoolDataPoint[]>} The fee data for the pool.
+	 * Fetches an array of fee data points for a specified timeframe.
+	 *
+	 * @param inputs - Contains a `timeframe` key, e.g., `"1D"` or `"1W"`.
+	 * @returns A promise resolving to an array of `PoolDataPoint`.
+	 *
+	 * @example
+	 * ```typescript
+	 * const feeData = await pool.getFeeData({ timeframe: "1D" });
+	 * console.log(feeData);
+	 * ```
 	 */
 	public async getFeeData(inputs: {
 		timeframe: PoolGraphDataTimeframeKey;
@@ -211,8 +331,15 @@ export class Pool extends Caller {
 	}
 
 	/**
-	 * Retrieves the volume in the last 24 hours for the pool.
-	 * @returns A promise that resolves to the volume in the last 24 hours.
+	 * Retrieves the 24-hour volume for this specific pool.
+	 *
+	 * @returns A promise resolving to a number (volume in 24h).
+	 *
+	 * @example
+	 * ```typescript
+	 * const vol24h = await pool.getVolume24hrs();
+	 * console.log("Pool 24h Volume:", vol24h);
+	 * ```
 	 */
 	public getVolume24hrs = async (): Promise<number> => {
 		return this.fetchApi("volume-24hrs");
@@ -222,6 +349,18 @@ export class Pool extends Caller {
 	//  Events
 	// =========================================================================
 
+	/**
+	 * Fetches user interaction events (deposit/withdraw) with this pool, optionally paginated.
+	 *
+	 * @param inputs - Includes user `walletAddress` and optional pagination fields.
+	 * @returns A promise that resolves to `PoolDepositEvent | PoolWithdrawEvent` objects with a cursor if more exist.
+	 *
+	 * @example
+	 * ```typescript
+	 * const events = await pool.getInteractionEvents({ walletAddress: "0x...", limit: 10 });
+	 * console.log(events.events, events.nextCursor);
+	 * ```
+	 */
 	public async getInteractionEvents(
 		inputs: ApiIndexerEventsBody & {
 			walletAddress: SuiAddress;
@@ -238,12 +377,21 @@ export class Pool extends Caller {
 	// =========================================================================
 
 	/**
-	 * Calculates the spot price for the pool.
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {CoinType} inputs.coinInType - The input coin type.
-	 * @param {CoinType} inputs.coinOutType - The output coin type.
-	 * @param {boolean} [inputs.withFees] - Whether to include fees in the calculation.
-	 * @returns {number} The spot price for the pool.
+	 * Calculates the instantaneous spot price for swapping from `coinInType`
+	 * to `coinOutType` within this pool. Optionally includes fees in the price.
+	 *
+	 * @param inputs - Object specifying input coin, output coin, and a boolean for `withFees`.
+	 * @returns The numerical spot price (float).
+	 *
+	 * @example
+	 * ```typescript
+	 * const price = pool.getSpotPrice({
+	 *   coinInType: "0x<coinA>",
+	 *   coinOutType: "0x<coinB>",
+	 *   withFees: true,
+	 * });
+	 * console.log("Spot Price:", price);
+	 * ```
 	 */
 	public getSpotPrice = (inputs: {
 		coinInType: CoinType;
@@ -257,6 +405,7 @@ export class Pool extends Caller {
 			!inputs.withFees
 		);
 
+		// Adjust for decimals difference
 		return (
 			(spotPriceWithDecimals *
 				Number(this.pool.coins[inputs.coinOutType].decimalsScalar)) /
@@ -267,13 +416,22 @@ export class Pool extends Caller {
 	// TODO: account for referral discount for all calculations
 
 	/**
-	 * Calculates the output amount for a trade.
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {CoinType} inputs.coinInType - The input coin type.
-	 * @param {Balance} inputs.coinInAmount - The input coin amount.
-	 * @param {CoinType} inputs.coinOutType - The output coin type.
-	 * @param {boolean} [inputs.referral] - Whether the trade includes a referral.
-	 * @returns {Balance} The output amount for the trade.
+	 * Calculates how much output coin you would receive when trading
+	 * a given input coin and amount in this pool, factoring in protocol
+	 * and optional DAO fees.
+	 *
+	 * @param inputs - Includes `coinInType`, `coinInAmount`, and `coinOutType`.
+	 * @returns A bigint representing how many output coins you'd get.
+	 * @throws Error if the trade amount is too large relative to the pool balance.
+	 *
+	 * @example
+	 * ```typescript
+	 * const amountOut = pool.getTradeAmountOut({
+	 *   coinInType: "0x<coinA>",
+	 *   coinInAmount: BigInt(1000000),
+	 *   coinOutType: "0x<coinB>",
+	 * });
+	 * ```
 	 */
 	public getTradeAmountOut = (inputs: {
 		coinInType: CoinType;
@@ -322,13 +480,21 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates the input amount for a trade.
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {CoinType} inputs.coinInType - The input coin type.
-	 * @param {Balance} inputs.coinOutAmount - The output coin amount.
-	 * @param {CoinType} inputs.coinOutType - The output coin type.
-	 * @param {boolean} [inputs.referral] - Whether the trade includes a referral.
-	 * @returns {Balance} The input amount for the trade.
+	 * Calculates how much input coin is required to obtain a certain output coin amount
+	 * from this pool, factoring in fees.
+	 *
+	 * @param inputs - Includes `coinInType`, desired `coinOutAmount`, and `coinOutType`.
+	 * @returns A bigint representing the needed input amount.
+	 * @throws Error if the desired output is too large relative to pool balances.
+	 *
+	 * @example
+	 * ```typescript
+	 * const amountIn = pool.getTradeAmountIn({
+	 *   coinInType: "0x<coinA>",
+	 *   coinOutAmount: BigInt(1000000),
+	 *   coinOutType: "0x<coinB>"
+	 * });
+	 * ```
 	 */
 	public getTradeAmountIn = (inputs: {
 		coinInType: CoinType;
@@ -377,11 +543,19 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates the LP amount and ratio for a deposit.
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {CoinsToBalance} inputs.amountsIn - The input amounts.
-	 * @param {boolean} [inputs.referral] - Whether the deposit includes a referral.
-	 * @returns {Object} The LP amount and ratio for the deposit.
+	 * Calculates how many LP tokens you receive for providing liquidity
+	 * in specific coin amounts. Also returns a ratio for reference.
+	 *
+	 * @param inputs - Contains the amounts in for each coin in the pool.
+	 * @returns An object with `lpAmountOut` and `lpRatio`.
+	 *
+	 * @example
+	 * ```typescript
+	 * const depositCalc = pool.getDepositLpAmountOut({
+	 *   amountsIn: { "0x<coinA>": BigInt(1000000), "0x<coinB>": BigInt(500000) },
+	 * });
+	 * console.log(depositCalc.lpAmountOut, depositCalc.lpRatio);
+	 * ```
 	 */
 	public getDepositLpAmountOut = (inputs: {
 		amountsIn: CoinsToBalance;
@@ -416,12 +590,20 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates the output amounts for a withdraw.
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {number} inputs.lpRatio - The LP ratio.
-	 * @param {CoinsToBalance} inputs.amountsOutDirection - The output amounts.
-	 * @param {boolean} [inputs.referral] - Whether the withdraw includes a referral.
-	 * @returns {CoinsToBalance} The output amounts for the withdraw.
+	 * Calculates how many coins a user will receive when withdrawing a specific ratio or LP amount.
+	 * This method is used in multi-coin withdrawals where you specify how much of each coin you want.
+	 *
+	 * @param inputs - The LP ratio and an object specifying direction amounts for each coin.
+	 * @returns A `CoinsToBalance` object with final amounts out, factoring in DAO fees.
+	 *
+	 * @example
+	 * ```typescript
+	 * const outAmounts = pool.getWithdrawAmountsOut({
+	 *   lpRatio: 0.1,
+	 *   amountsOutDirection: { "0x<coinA>": BigInt(500000) },
+	 * });
+	 * console.log(outAmounts);
+	 * ```
 	 */
 	public getWithdrawAmountsOut = (inputs: {
 		lpRatio: number;
@@ -442,26 +624,32 @@ export class Pool extends Caller {
 				continue;
 
 			const amountOut = amountsOut[coin];
-
-			if (amountOut <= BigInt(0))
-				throw new Error(`amountsOut[${coin}] <= 0 `);
+			if (amountOut <= 0) {
+				throw new Error(`amountsOut[${coin}] <= 0`);
+			}
 
 			if (
-				amountOut / this.pool.coins[coin].balance >=
+				Number(amountOut) / Number(this.pool.coins[coin].balance) >=
 				Pools.constants.bounds.maxWithdrawPercentageOfPoolBalance
-			)
+			) {
 				throw new Error(
 					"coinOutAmount / coinOutPoolBalance >= maxWithdrawPercentageOfPoolBalance"
 				);
+			}
 
-			amountsOut[coin] = this.getAmountWithDAOFee({
-				amount: amountOut,
-			});
+			amountsOut[coin] = this.getAmountWithDAOFee({ amount: amountOut });
 		}
 
 		return amountsOut;
 	};
 
+	/**
+	 * A simplified multi-coin withdraw approach: calculates all outputs by proportion of the
+	 * user's LP share among selected coin types. Useful for approximate or "blind" all-coin out logic.
+	 *
+	 * @param inputs - Contains the `lpCoinAmountIn` to burn, and which coin types to receive.
+	 * @returns A record mapping coin type => final amounts out.
+	 */
 	public getWithdrawAmountsOutSimple = (inputs: {
 		lpCoinAmountIn: Balance;
 		coinTypesOut: CoinType[];
@@ -503,7 +691,6 @@ export class Pool extends Caller {
 				continue;
 
 			const amountOut = amountsOut[coin];
-
 			if (amountOut <= BigInt(0))
 				throw new Error(`amountsOut[${coin}] <= 0 `);
 
@@ -524,11 +711,17 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates the output amounts for an all coin withdraw.
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {number} inputs.lpRatio - The LP ratio.
-	 * @param {boolean} [inputs.referral] - Whether the withdraw includes a referral.
-	 * @returns {CoinsToBalance} The output amounts for the all coin withdraw.
+	 * Calculates how many coins you get when withdrawing **all** coin types from the pool,
+	 * given a ratio. This is typically used for proportionate withdrawal.
+	 *
+	 * @param inputs - Includes `lpRatio`, the portion of your LP to burn (0 < ratio < 1).
+	 * @returns A record of coin type => amounts out, after factoring in any fees.
+	 *
+	 * @example
+	 * ```typescript
+	 * const allOut = pool.getAllCoinWithdrawAmountsOut({ lpRatio: 0.1 });
+	 * console.log(allOut); // amounts for each coin
+	 * ```
 	 */
 	public getAllCoinWithdrawAmountsOut = (inputs: {
 		lpRatio: number;
@@ -553,10 +746,11 @@ export class Pool extends Caller {
 	};
 
 	/**
-	 * Calculates the LP ratio for a multi-coin withdraw.
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {bigint} inputs.lpCoinAmountIn - The LP coin amount out.
-	 * @returns {number} The LP ratio for the multi-coin withdraw.
+	 * For multi-coin withdraw, calculates the ratio of how much LP you are burning
+	 * relative to the total supply. e.g. if user burns 100 of 1000 supply => ratio 0.1.
+	 *
+	 * @param inputs - Contains the `lpCoinAmountIn` to burn.
+	 * @returns A float ratio (0 < ratio < 1).
 	 */
 	public getMultiCoinWithdrawLpRatio = (inputs: {
 		lpCoinAmountIn: bigint;
@@ -565,10 +759,11 @@ export class Pool extends Caller {
 		Number(this.pool.lpCoinSupply);
 
 	/**
-	 * Calculates the LP ratio for an all coin withdraw.
-	 * @param {Object} inputs - The inputs for the method.
-	 * @param {bigint} inputs.lpCoinAmountIn - The LP coin amount out.
-	 * @returns {number} The LP ratio for the all coin withdraw.
+	 * For an all-coin withdraw, calculates the ratio of how much LP is burned
+	 * relative to total supply. e.g. if user burns 50 of 200 supply => ratio 0.25.
+	 *
+	 * @param inputs - Contains the `lpCoinAmountIn`.
+	 * @returns A float ratio, typically 0 < ratio < 1.
 	 */
 	public getAllCoinWithdrawLpRatio = (inputs: {
 		lpCoinAmountIn: bigint;
@@ -579,28 +774,56 @@ export class Pool extends Caller {
 	//  Getters
 	// =========================================================================
 
+	/**
+	 * Returns an array of coin types in ascending lexicographic order
+	 * for the coins contained in this pool.
+	 *
+	 * @returns An array of coin type strings.
+	 */
 	public coins = (): CoinType[] => {
 		return Object.keys(this.pool.coins).sort((a, b) => a.localeCompare(b));
 	};
 
+	/**
+	 * Returns an array of `PoolCoin` objects, one for each coin in this pool,
+	 * sorted lexicographically by coin type.
+	 *
+	 * @returns An array of `PoolCoin`.
+	 */
 	public poolCoins = (): PoolCoin[] => {
 		return Object.entries(this.pool.coins)
 			.sort((a, b) => a[0].localeCompare(b[0]))
 			.map((data) => data[1]);
 	};
 
+	/**
+	 * Returns an array of `[CoinType, PoolCoin]` pairs, sorted by coin type.
+	 *
+	 * @returns An array of coin-type => `PoolCoin` pairs.
+	 */
 	public poolCoinEntries = (): [CoinType, PoolCoin][] => {
 		return Object.entries(this.pool.coins).sort((a, b) =>
 			a[0].localeCompare(b[0])
 		);
 	};
 
+	/**
+	 * Returns the current DAO fee percentage, if configured (0 < fee <= 100%).
+	 *
+	 * @returns A decimal fraction representing the fee (e.g., 0.01 = 1%) or `undefined`.
+	 */
 	public daoFeePercentage = (): Percentage | undefined => {
 		return this.pool.daoFeePoolObject
 			? Casting.bpsToPercentage(this.pool.daoFeePoolObject.feeBps)
 			: undefined;
 	};
 
+	/**
+	 * Returns the Sui address that currently receives the DAO fee portion of
+	 * pool trades, or `undefined` if no DAO fee is configured.
+	 *
+	 * @returns The DAO fee recipient address.
+	 */
 	public daoFeeRecipient = (): SuiAddress | undefined => {
 		return this.pool.daoFeePoolObject?.feeRecipient;
 	};
@@ -609,6 +832,13 @@ export class Pool extends Caller {
 	//  Private Helpers
 	// =========================================================================
 
+	/**
+	 * Applies the DAO fee (if present) to a given `amount`, effectively reducing
+	 * that amount by the fee fraction. e.g. if fee is 2%, it returns 98% of the input.
+	 *
+	 * @param inputs - Contains `amount` as a bigint.
+	 * @returns The post-fee amount as a bigint.
+	 */
 	private getAmountWithDAOFee = (inputs: { amount: Balance }) => {
 		const daoFeePercentage = this.daoFeePercentage();
 		if (!daoFeePercentage) return inputs.amount;
@@ -618,6 +848,13 @@ export class Pool extends Caller {
 		);
 	};
 
+	/**
+	 * The inverse operation of `getAmountWithDAOFee`, used in internal calculations
+	 * when we need to back out how much input was needed prior to the fee cut.
+	 *
+	 * @param inputs - Contains `amount` as a bigint.
+	 * @returns The pre-fee amount as a bigint.
+	 */
 	private getAmountWithoutDAOFee = (inputs: { amount: Balance }) => {
 		const daoFeePercentage = this.daoFeePercentage();
 		if (!daoFeePercentage) return inputs.amount;
@@ -627,6 +864,10 @@ export class Pool extends Caller {
 		);
 	};
 
+	/**
+	 * Provides an instance of the Pools provider from `AftermathApi`.
+	 * Throws an error if not defined.
+	 */
 	private useProvider = () => {
 		const provider = this.Provider?.Pools();
 		if (!provider) throw new Error("missing AftermathApi Provider");

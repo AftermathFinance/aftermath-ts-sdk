@@ -23,10 +23,8 @@ import {
 	Router,
 	Sui,
 } from "../../packages";
-import { HistoricalData } from "../historicalData/historicalData";
 import { Perpetuals } from "../../packages/perpetuals";
 import { Oracle } from "../../packages/oracle/oracle";
-// import { PriceFeeds } from "../priceFeeds/priceFeeds";
 import { Farms } from "../../packages/farms/farms";
 import { DynamicGas } from "../dynamicGas/dynamicGas";
 import { AftermathApi } from "./aftermathApi";
@@ -37,10 +35,13 @@ import { LimitOrders } from "../../packages/limitOrders/limitOrders";
 import { UserData } from "../../packages/userData/userData";
 
 /**
- * @class Aftermath Provider
+ * The `Aftermath` class serves as the primary entry point for interacting with
+ * the Aftermath Finance protocols and utilities on the Sui blockchain.
+ * It provides various sub-providers (e.g. `Router`, `Staking`, `Farms`)
+ * initialized under the specified network environment (MAINNET, TESTNET, etc).
  *
  * @example
- * ```
+ * ```typescript
  * // Create provider
  * const aftermath = new Aftermath("MAINNET");
  * // Create package provider
@@ -58,10 +59,11 @@ export class Aftermath extends Caller {
 	// =========================================================================
 
 	/**
-	 * Creates `Aftermath` provider to call api.
+	 * Creates an `Aftermath` provider instance to call the Aftermath Finance APIs
+	 * and interact with Sui-based protocols.
 	 *
-	 * @param network - The Sui network to interact with
-	 * @returns New `Aftermath` instance
+	 * @param network - The target Sui network ("MAINNET", "TESTNET", "DEVNET", or "LOCAL").
+	 * @param Provider - Optionally pass a custom `AftermathApi` instance if you already have one.
 	 */
 	constructor(
 		private readonly network?: SuiNetwork,
@@ -77,8 +79,22 @@ export class Aftermath extends Caller {
 	//  Public Methods
 	// =========================================================================
 
+	/**
+	 * Initializes the Aftermath provider by fetching addresses from the backend
+	 * and configuring the Sui fullnode client. This method must be called before
+	 * performing many API operations.
+	 *
+	 * @param inputs - Optional object allowing you to override the default `fullnodeUrl`.
+	 * @example
+	 * ```typescript
+	 * const afSdk = new Aftermath("MAINNET");
+	 * await afSdk.init(); // sets up internal providers
+	 * ```
+	 */
 	public async init(inputs?: { fullnodeUrl: Url }) {
 		const addresses = await this.getAddresses();
+
+		// Determine the fullnode URL based on the chosen network or user override
 		const fullnodeUrl =
 			inputs?.fullnodeUrl ??
 			(this.network === "LOCAL"
@@ -89,6 +105,7 @@ export class Aftermath extends Caller {
 				? "https://fullnode.testnet.sui.io:443"
 				: "https://fullnode.mainnet.sui.io:443");
 
+		// Create a new AftermathApi provider
 		this.Provider = new AftermathApi(
 			new SuiClient({
 				transport: new SuiHTTPTransport({
@@ -100,13 +117,31 @@ export class Aftermath extends Caller {
 	}
 
 	/**
-	 * Retrieves the addresses from the Aftermath API.
-	 * @returns A promise that resolves to a ConfigAddresses object.
+	 * Retrieves the Aftermath-specific on-chain addresses (object IDs, packages, etc.).
+	 *
+	 * @returns A `ConfigAddresses` object containing relevant addresses for the protocol.
+	 *
+	 * @example
+	 * ```typescript
+	 * const addresses = await aftermath.getAddresses();
+	 * console.log(addresses); // { routerPackageId: "...", someOtherPackageId: "..." }
+	 * ```
 	 */
 	public async getAddresses() {
 		return this.fetchApi<ConfigAddresses>("addresses");
 	}
 
+	/**
+	 * Returns the base URL used for Aftermath API calls.
+	 *
+	 * @returns The base URL for this instance's API.
+	 *
+	 * @example
+	 * ```typescript
+	 * const apiBaseUrl = aftermath.getApiBaseUrl();
+	 * console.log(apiBaseUrl); // "https://api.after..."
+	 * ```
+	 */
 	public getApiBaseUrl() {
 		return this.apiBaseUrl;
 	}
@@ -120,70 +155,137 @@ export class Aftermath extends Caller {
 	// =========================================================================
 
 	/**
-	 * Returns an instance of the Pools class.
-	 * @returns {Pools} An instance of the Pools class.
+	 * Returns an instance of the `Pools` class, which handles DEX pool operations
+	 * within the Aftermath platform (if supported).
 	 */
 	public Pools = () => new Pools(this.config, this.Provider);
+
 	/**
-	 * Creates a new instance of the Staking class.
-	 * @returns A new instance of the Staking class.
+	 * Returns an instance of the `Staking` class for Aftermath's staking and unstaking features.
 	 */
 	public Staking = () => new Staking(this.config, this.Provider);
-	public LeveragedStaking = () => new LeveragedStaking(this.config);
-	public SuiFrens = () => new SuiFrens(this.config, this.Provider);
-	public Faucet = () => new Faucet(this.config, this.Provider);
+
 	/**
-	 * Creates a new instance of the Router class with the current network.
-	 * @returns A new instance of the Router class.
+	 * Returns an instance of `LeveragedStaking` for advanced leveraged staking workflows (if supported).
+	 */
+	public LeveragedStaking = () => new LeveragedStaking(this.config);
+
+	/**
+	 * Returns an instance of `SuiFrens`, a specialized package for social or utility services.
+	 */
+	public SuiFrens = () => new SuiFrens(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `Faucet`, allowing test/dev networks to dispense tokens.
+	 */
+	public Faucet = () => new Faucet(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of the `Router` class, which handles smart order routing
+	 * across multiple DEX protocols.
 	 */
 	public Router = () => new Router(this.config);
-	public NftAmm = () => new NftAmm(this.config, this.Provider);
-	public ReferralVault = () => new ReferralVault(this.config, this.Provider);
-	public Perpetuals = () => new Perpetuals(this.config);
-	public Oracle = () => new Oracle(this.config, this.Provider);
+
 	/**
-	 * Creates a new instance of the Farms class.
-	 * @returns A new instance of the Farms class.
+	 * Returns an instance of `NftAmm`, which supports NFT AMM (automated market maker) features.
+	 */
+	public NftAmm = () => new NftAmm(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `ReferralVault` for referral-based interactions in the protocol.
+	 */
+	public ReferralVault = () => new ReferralVault(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `Perpetuals` for futures or perpetual contract interactions.
+	 */
+	public Perpetuals = () => new Perpetuals(this.config);
+
+	/**
+	 * Returns an instance of `Oracle`, which provides price oracles or other data feed services.
+	 */
+	public Oracle = () => new Oracle(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `Farms` for yield farming or liquidity mining functionalities.
 	 */
 	public Farms = () => new Farms(this.config, this.Provider);
+
 	/**
-	 * Creates a new instance of the DCA class.
-	 * @returns A new instance of the DCA class.
+	 * Returns an instance of the `Dca` class, supporting dollar-cost averaging logic.
 	 */
 	public Dca = () => new Dca(this.config);
+
+	/**
+	 * Returns an instance of `Multisig`, enabling multi-signature address creation and management.
+	 */
 	public Multisig = () => new Multisig(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `LimitOrders`, supporting limit order placement on certain DEX protocols.
+	 */
 	public LimitOrders = () => new LimitOrders(this.config);
+
+	/**
+	 * Returns an instance of `UserData` for creating and managing user-specific data or key storage.
+	 */
 	public UserData = () => new UserData(this.config);
 
 	// =========================================================================
 	//  General
 	// =========================================================================
 
-	public Sui = () => new Sui(this.config, this.Provider);
-	public Prices = () => new Prices(this.config);
 	/**
-	 * Creates a new instance of the Wallet class.
-	 * @param address - The address of the wallet.
-	 * @returns A new instance of the Wallet class.
+	 * Returns an instance of `Sui` for low-level Sui chain information and utilities.
+	 */
+	public Sui = () => new Sui(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `Prices`, which provides coin price data from external or internal feeds.
+	 */
+	public Prices = () => new Prices(this.config);
+
+	/**
+	 * Creates a new `Wallet` instance for a specific user address, enabling you to fetch balances,
+	 * transaction history, etc.
+	 *
+	 * @param address - The Sui address of the wallet (e.g., "0x<32_byte_hex>").
 	 */
 	public Wallet = (address: SuiAddress) =>
 		new Wallet(address, this.config, this.Provider);
+
 	/**
-	 * Creates a new instance of the Coin class.
-	 * @param coinType The type of coin to create.
-	 * @returns A new instance of the Coin class.
+	 * Returns an instance of the `Coin` class, which handles coin metadata, decimal conversions,
+	 * and other coin-related utilities for a specified `CoinType`.
+	 *
+	 * @param coinType - Optionally specify a coin type for immediate usage in coin methods.
 	 */
 	public Coin = (coinType?: CoinType) =>
 		new Coin(coinType, this.config, this.Provider);
-	public HistoricalData = () => new HistoricalData(this.config);
-	// public PriceFeeds = () => new PriceFeeds(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of `DynamicGas`, enabling dynamic assignment of gas
+	 * objects or sponsored transactions for user operations.
+	 */
 	public DynamicGas = () => new DynamicGas(this.config);
+
+	/**
+	 * Returns an instance of `Auth`, handling user authentication or token-based flows (if applicable).
+	 */
 	public Auth = () => new Auth(this.config);
 
 	// =========================================================================
 	//  Utils
 	// =========================================================================
 
+	/**
+	 * Exposes a set of helper functions for general-purpose usage across
+	 * the Aftermath ecosystem. Includes utilities for math, logging, etc.
+	 */
 	public static helpers = Helpers;
+
+	/**
+	 * Exposes a set of casting utilities for data type conversions (e.g., BigInt <-> fixed).
+	 */
 	public static casting = Casting;
 }
