@@ -238,7 +238,7 @@ export class Pools extends Caller {
 	 */
 	public async getOwnedLpCoins(inputs: {
 		walletAddress: SuiAddress;
-	}): Promise<PoolLpInfo> {
+	}): Promise<PoolLpInfo[]> {
 		return this.fetchApi("owned-lp-coins", inputs);
 	}
 
