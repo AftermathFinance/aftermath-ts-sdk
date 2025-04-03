@@ -591,7 +591,9 @@ export class FarmsStakingPool extends Caller {
 	}): Balance {
 		const { timestampTm, timestampTn, rewardCoin } = inputs;
 		const numberOfEmissionsFromTimeTmToTn =
-			(timestampTn - timestampTm) / rewardCoin.emissionSchedulesMs;
+			rewardCoin.emissionSchedulesMs === 0
+				? 0
+				: (timestampTn - timestampTm) / rewardCoin.emissionSchedulesMs;
 
 		return (
 			BigInt(Math.floor(numberOfEmissionsFromTimeTmToTn)) *
