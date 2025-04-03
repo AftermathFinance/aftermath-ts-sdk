@@ -474,7 +474,7 @@ export type CollateralEvent =
 	| SettledFundingEvent
 	| LiquidatedEvent
 	| FilledTakerOrderEvent
-	| FilledMakerOrderEvent
+	| FilledMakerOrdersEvent
 	| AllocatedCollateralEvent
 	| DeallocatedCollateralEvent;
 
@@ -518,10 +518,14 @@ export interface LiquidatedEvent extends Event {
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	liqorAccountId: PerpetualsAccountId;
-	size: bigint;
-	markPrice: IFixed;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
+	baseLiquidated: IFixed;
+	quoteLiquidated: IFixed;
+	liqeePnlUsd: IFixed;
+	liquidationFeesUsd: IFixed;
+	forceCancelFeesUsd: IFixed;
+	insuranceFundFeesUsd: IFixed;
 }
 
 export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
@@ -585,18 +589,22 @@ export interface PostedOrderEvent extends Event {
 	bidsQuantity: IFixed;
 }
 
-export interface FilledMakerOrderEvent extends Event {
+export interface FilledMakerOrdersEvent extends Event {
+	events: FilledMakerOrderEventFields[];
+}
+
+export interface FilledMakerOrderEventFields {
 	accountId: PerpetualsAccountId;
+	takerAccountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
+	sizeRemaining: bigint;
 	orderId: PerpetualsOrderId;
 	dropped: boolean;
-	baseAssetAmount: IFixed;
-	quoteAssetNotionalAmount: IFixed;
-	asksQuantity: IFixed;
-	bidsQuantity: IFixed;
+	pnlUsd: IFixed;
+	feesUsd: IFixed;
 }
 
 export interface FilledTakerOrderEvent extends Event {
@@ -609,13 +617,15 @@ export interface FilledTakerOrderEvent extends Event {
 	baseAssetDelta: IFixed;
 	quoteAssetDelta: IFixed;
 	liquidatedVolume: IFixed;
+	takerPnlUsd: IFixed;
+	takerFeesUsd: IFixed;
 }
 
 export type PerpetualsOrderEvent =
 	| CanceledOrderEvent
 	// | PostedOrderEvent
 	| PostedOrderReceiptEvent
-	| FilledMakerOrderEvent
+	| FilledMakerOrdersEvent
 	| FilledTakerOrderEvent
 	| LiquidatedEvent
 	| ReducedOrderEvent;
@@ -653,10 +663,10 @@ export const isPostedOrderReceiptEvent = (
 	return event.type.toLowerCase().endsWith("::orderbookpostreceipt");
 };
 
-export const isFilledMakerOrderEvent = (
+export const isFilledMakerOrdersEvent = (
 	event: Event
-): event is FilledMakerOrderEvent => {
-	return event.type.toLowerCase().endsWith("::filledmakerorder");
+): event is FilledMakerOrdersEvent => {
+	return event.type.toLowerCase().endsWith("::filledmakerorders");
 };
 
 export const isFilledTakerOrderEvent = (

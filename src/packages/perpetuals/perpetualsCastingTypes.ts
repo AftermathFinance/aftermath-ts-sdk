@@ -315,12 +315,24 @@ export type LiquidatedEventOnChain = EventOnChain<{
 	liqee_account_id: BigIntAsString;
 	liqor_account_id: BigIntAsString;
 	is_liqee_long: boolean;
-	size_liquidated: BigIntAsString;
-	mark_price: IFixedAsString;
-	liqee_collateral_change_usd: IFixedAsString;
-	liqee_base_amount: IFixedAsString;
-	liqee_quote_amount: IFixedAsString;
+	base_liquidated: IFixedAsString;
+	quote_liquidated: IFixedAsString;
+	liqee_pnl: IFixedAsString;
+	liquidation_fees: IFixedAsString;
+	force_cancel_fees: IFixedAsString;
+	insurance_fund_fees: IFixedAsString;
 	bad_debt: IFixedAsString;
+}>;
+
+export type PerformedLiquidationEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	liqee_account_id: BigIntAsString;
+	liqor_account_id: BigIntAsString;
+	is_liqee_long: boolean;
+	base_liquidated: IFixedAsString;
+	quote_liquidated: IFixedAsString;
+	liqor_pnl: IFixedAsString;
+	liqor_fees: IFixedAsString;
 }>;
 
 // =========================================================================
@@ -352,25 +364,24 @@ export type PostedOrderEventOnChain = EventOnChain<{
 	pending_bids: IFixedAsString;
 }>;
 
-export type FilledMakerOrderEventOnChain = EventOnChain<{
-	ch_id: ObjectId;
-	maker_account_id: BigIntAsString;
-	collateral_change_usd: IFixedAsString;
-	maker_base_amount: IFixedAsString;
-	maker_collateral: IFixedAsString;
-	maker_final_size: BigIntAsString;
-	maker_pending_asks_quantity: IFixedAsString;
-	maker_pending_bids_quantity: IFixedAsString;
-	maker_quote_amount: IFixedAsString;
-	maker_size: BigIntAsString;
-	order_id: BigIntAsString;
+export type FilledMakerOrdersEventOnChain = EventOnChain<{
+	events: {
+		ch_id: ObjectId;
+		maker_account_id: BigIntAsString;
+		taker_account_id: BigIntAsString;
+		fees: IFixedAsString;
+		filled_size: BigIntAsString;
+		order_id: BigIntAsString;
+		pnl: IFixedAsString;
+		remaining_size: BigIntAsString;
+	}[];
 }>;
 
 export type FilledTakerOrderEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	taker_account_id: BigIntAsString;
-	taker_collateral: IFixedAsString;
-	collateral_change_usd: IFixedAsString;
+	taker_pnl: IFixedAsString;
+	taker_fees: IFixedAsString;
 	base_asset_delta_ask: IFixedAsString;
 	quote_asset_delta_ask: IFixedAsString;
 	base_asset_delta_bid: IFixedAsString;
@@ -393,6 +404,23 @@ export type ReducedOrderEventOnChain = EventOnChain<{
 	size_change: BigIntAsString;
 	order_id: BigIntAsString;
 }>;
+
+// =========================================================================
+//  Stop Orders
+// =========================================================================
+
+// export type CreatedStopOrderTicketEventOnChain = EventOnChain<{
+// 	ticket_id: ID,
+// 	account_id: u64,
+// 	recipient: address,
+// 	encrypted_details: vector<u8>
+// }>;
+
+// export type DeletedStopOrderTicketEventOnChain = EventOnChain<{
+// 	ticket_id: ID;
+// 	account_id: u64;
+// 	executed: bool;
+// }>;
 
 // =========================================================================
 //  Twap

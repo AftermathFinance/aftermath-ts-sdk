@@ -7,7 +7,7 @@ import {
 	ApiPerpetualsExecutionPriceBody,
 	ApiPerpetualsExecutionPriceResponse,
 	CoinType,
-	FilledMakerOrderEvent,
+	FilledMakerOrdersEvent,
 	FilledTakerOrderEvent,
 	ObjectId,
 	PerpetualsMarketCandleDataPoint,

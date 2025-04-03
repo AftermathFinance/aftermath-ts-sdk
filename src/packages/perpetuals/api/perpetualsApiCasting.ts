@@ -11,7 +11,7 @@ import {
 	PostedOrderEvent,
 	PerpetualsOrderSide,
 	FilledTakerOrderEvent,
-	FilledMakerOrderEvent,
+	FilledMakerOrdersEvent,
 	PerpetualsOrderInfo,
 	SettledFundingEvent,
 	UpdatedSpreadTwapEvent,
@@ -38,7 +38,7 @@ import {
 	DepositedCollateralEventOnChain,
 	PostedOrderEventOnChain,
 	WithdrewCollateralEventOnChain,
-	FilledMakerOrderEventOnChain,
+	FilledMakerOrdersEventOnChain,
 	FilledTakerOrderEventOnChain,
 	LiquidatedEventOnChain,
 	SettledFundingEventOnChain,
@@ -397,11 +397,26 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			accountId: BigInt(fields.liqee_account_id),
-			collateralDeltaUsd: BigInt(fields.liqee_collateral_change_usd),
+			collateralDeltaUsd: Casting.IFixed.iFixedFromNumber(
+				Casting.IFixed.numberFromIFixed(BigInt(fields.liqee_pnl)) -
+					Casting.IFixed.numberFromIFixed(
+						BigInt(fields.liquidation_fees)
+					) -
+					Casting.IFixed.numberFromIFixed(
+						BigInt(fields.force_cancel_fees)
+					) -
+					Casting.IFixed.numberFromIFixed(
+						BigInt(fields.insurance_fund_fees)
+					)
+			),
 			liqorAccountId: BigInt(fields.liqor_account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			markPrice: BigInt(fields.mark_price),
-			size: BigInt(fields.size_liquidated),
+			baseLiquidated: BigInt(fields.base_liquidated),
+			quoteLiquidated: BigInt(fields.quote_liquidated),
+			liqeePnlUsd: BigInt(fields.liqee_pnl),
+			liquidationFeesUsd: BigInt(fields.liquidation_fees),
+			forceCancelFeesUsd: BigInt(fields.force_cancel_fees),
+			insuranceFundFeesUsd: BigInt(fields.insurance_fund_fees),
 			side: fields.is_liqee_long
 				? PerpetualsOrderSide.Bid
 				: PerpetualsOrderSide.Ask,
@@ -468,22 +483,26 @@ export class PerpetualsApiCasting {
 		};
 	};
 
-	public static filledMakerOrderEventFromOnChain = (
-		eventOnChain: FilledMakerOrderEventOnChain
-	): FilledMakerOrderEvent => {
-		const fields = eventOnChain.parsedJson;
+	public static filledMakerOrdersEventFromOnChain = (
+		eventOnChain: FilledMakerOrdersEventOnChain
+	): FilledMakerOrdersEvent => {
 		return {
-			baseAssetAmount: BigInt(fields.maker_base_amount),
-			accountId: BigInt(fields.maker_account_id),
-			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
-			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			orderId: BigInt(fields.order_id),
-			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
-			size: BigInt(fields.maker_size),
-			dropped: BigInt(fields.maker_final_size) === BigInt(0),
-			quoteAssetNotionalAmount: BigInt(fields.maker_quote_amount),
-			asksQuantity: BigInt(fields.maker_pending_asks_quantity),
-			bidsQuantity: BigInt(fields.maker_pending_bids_quantity),
+			events: eventOnChain.parsedJson.events.map((fields) => ({
+				accountId: BigInt(fields.maker_account_id),
+				takerAccountId: BigInt(fields.taker_account_id),
+				collateralDeltaUsd: Casting.IFixed.iFixedFromNumber(
+					Casting.IFixed.numberFromIFixed(BigInt(fields.pnl)) -
+						Casting.IFixed.numberFromIFixed(BigInt(fields.fees))
+				),
+				pnlUsd: BigInt(fields.pnl),
+				feesUsd: BigInt(fields.fees),
+				marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+				orderId: BigInt(fields.order_id),
+				side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
+				size: BigInt(fields.filled_size),
+				dropped: BigInt(fields.remaining_size) === BigInt(0),
+				sizeRemaining: BigInt(fields.remaining_size),
+			})),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -505,7 +524,12 @@ export class PerpetualsApiCasting {
 		return {
 			baseAssetDelta,
 			accountId: BigInt(fields.taker_account_id),
-			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
+			collateralDeltaUsd: Casting.IFixed.iFixedFromNumber(
+				Casting.IFixed.numberFromIFixed(BigInt(fields.taker_pnl)) -
+					Casting.IFixed.numberFromIFixed(BigInt(fields.taker_fees))
+			),
+			takerPnlUsd: BigInt(fields.taker_pnl),
+			takerFeesUsd: BigInt(fields.taker_fees),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			baseAssetAmount: BigInt(fields.taker_base_amount),
 			quoteAssetNotionalAmount: BigInt(fields.taker_quote_amount),

@@ -799,7 +799,6 @@ export class PerpetualsAccount extends Caller {
 
 	public calcLiquidationPriceForPosition = (inputs: {
 		market: PerpetualsMarket;
-		indexPrice: number;
 		collateralPrice: number;
 		position?: PerpetualsPosition;
 	}): number => {
@@ -811,30 +810,35 @@ export class PerpetualsAccount extends Caller {
 
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 
-		const collateralUsd =
-			IFixedUtils.numberFromIFixed(position?.collateral) *
-				inputs.collateralPrice +
-			funding;
-
 		const baseAssetAmount = IFixedUtils.numberFromIFixed(
 			position.baseAssetAmount
 		);
 		const quoteAssetAmount = IFixedUtils.numberFromIFixed(
 			position.quoteAssetNotionalAmount
 		);
+
+		const numerator =
+			IFixedUtils.numberFromIFixed(position.collateral) *
+				inputs.collateralPrice +
+			funding -
+			quoteAssetAmount;
+
 		const MMR = IFixedUtils.numberFromIFixed(
 			inputs.market.marketParams.marginRatioMaintenance
 		);
-		const numerator = collateralUsd - quoteAssetAmount;
+		const bidsQuantity = IFixedUtils.numberFromIFixed(
+			position.bidsQuantity
+		);
+		const asksQuantity = IFixedUtils.numberFromIFixed(
+			position.asksQuantity
+		);
+		const netAbs = Math.max(
+			Math.abs(baseAssetAmount + bidsQuantity),
+			Math.abs(baseAssetAmount - asksQuantity)
+		);
 
-		const price = (() => {
-			if (baseAssetAmount > 0) {
-				return numerator / ((1 - MMR) * -baseAssetAmount);
-			} else {
-				return numerator / ((1 + MMR) * -baseAssetAmount);
-			}
-		})();
-		return price < 0 ? 0 : price;
+		const denominator = netAbs * MMR - baseAssetAmount;
+		return denominator === 0 ? 0 : numerator / denominator;
 	};
 
 	public calcFreeMarginUsdForPosition = (inputs: {
