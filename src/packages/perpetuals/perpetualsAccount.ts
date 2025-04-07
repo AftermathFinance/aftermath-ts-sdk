@@ -838,7 +838,10 @@ export class PerpetualsAccount extends Caller {
 		);
 
 		const denominator = netAbs * MMR - baseAssetAmount;
-		return denominator === 0 ? 0 : numerator / denominator;
+		if (!denominator) return 0;
+
+		const liquidationPrice = numerator / denominator;
+		return liquidationPrice <= 0 ? 0 : liquidationPrice;
 	};
 
 	public calcFreeMarginUsdForPosition = (inputs: {

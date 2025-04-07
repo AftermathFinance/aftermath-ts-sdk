@@ -406,6 +406,20 @@ export type PerpetualsAccountCollateralChange = {
 	eventType: AnyObjectType;
 	collateralChange: Balance;
 	collateralChangeUsd: number;
+	fees?:
+		| {
+				netFeesUsd: number;
+				liquidationFeesUsd: number;
+				forceCancelFeesUsd: number;
+				insuranceFundFeesUsd: number;
+		  }
+		| {
+				netFeesUsd: number;
+				liqorFeesUsd: number;
+		  }
+		| {
+				netFeesUsd: number;
+		  };
 };
 
 export interface PerpetualsAccountTradesWithCursor {
@@ -742,8 +756,12 @@ export const isUpdatedFundingEvent = (
 //  Objects
 // =========================================================================
 
-export interface ApiPerpetualsAccountsBody {
+export interface ApiPerpetualsOwnedAccountCapsBody {
 	walletAddress: SuiAddress;
+}
+
+export interface ApiPerpetualsAccountCapsBody {
+	accountCapIds: ObjectId[];
 }
 
 // =========================================================================

@@ -7,7 +7,7 @@ import {
 	PerpetualsMarketData,
 	PerpetualsAccountData,
 	PerpetualsMarketId,
-	ApiPerpetualsAccountsBody,
+	ApiPerpetualsOwnedAccountCapsBody,
 	PerpetualsPosition,
 	PerpetualsOrderSide,
 	PerpetualsOrderbook,
@@ -27,6 +27,7 @@ import {
 	SuiAddress,
 	ObjectId,
 	ApiPerpetualsMarkets24hrStatsResponse,
+	ApiPerpetualsAccountCapsBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -195,7 +196,7 @@ export class Perpetuals extends Caller {
 	}
 
 	public async getUserAccountCaps(
-		inputs: ApiPerpetualsAccountsBody & {
+		inputs: ApiPerpetualsOwnedAccountCapsBody & {
 			collateralCoinTypes?: CoinType[];
 		}
 	): Promise<PerpetualsAccountCap[]> {
@@ -211,6 +212,15 @@ export class Perpetuals extends Caller {
 			walletAddress,
 			collateralCoinTypes,
 		});
+	}
+
+	public async getAccountCaps(
+		inputs: ApiPerpetualsAccountCapsBody
+	): Promise<PerpetualsAccountCap[]> {
+		return this.fetchApi<
+			PerpetualsAccountCap[],
+			ApiPerpetualsAccountCapsBody
+		>("accounts", inputs);
 	}
 
 	// =========================================================================
