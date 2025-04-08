@@ -625,12 +625,9 @@ export interface FilledTakerOrderEvent extends Event {
 	accountId: PerpetualsAccountId;
 	collateralDeltaUsd: IFixed;
 	marketId: PerpetualsMarketId;
-	baseAssetAmount: IFixed;
-	quoteAssetNotionalAmount: IFixed;
 	side: PerpetualsOrderSide;
 	baseAssetDelta: IFixed;
 	quoteAssetDelta: IFixed;
-	liquidatedVolume: IFixed;
 	takerPnlUsd: IFixed;
 	takerFeesUsd: IFixed;
 }

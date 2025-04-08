@@ -531,8 +531,6 @@ export class PerpetualsApiCasting {
 			takerPnlUsd: BigInt(fields.taker_pnl),
 			takerFeesUsd: BigInt(fields.taker_fees),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			baseAssetAmount: BigInt(fields.taker_base_amount),
-			quoteAssetNotionalAmount: BigInt(fields.taker_quote_amount),
 			side: Perpetuals.positionSide({ baseAssetAmount: baseAssetDelta }),
 			quoteAssetDelta: Casting.IFixed.iFixedFromNumber(
 				Casting.IFixed.numberFromIFixed(
@@ -542,7 +540,6 @@ export class PerpetualsApiCasting {
 						BigInt(fields.quote_asset_delta_ask)
 					)
 			),
-			liquidatedVolume: BigInt(fields.liquidated_volume),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

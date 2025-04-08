@@ -386,9 +386,6 @@ export type FilledTakerOrderEventOnChain = EventOnChain<{
 	quote_asset_delta_ask: IFixedAsString;
 	base_asset_delta_bid: IFixedAsString;
 	quote_asset_delta_bid: IFixedAsString;
-	taker_base_amount: IFixedAsString;
-	taker_quote_amount: IFixedAsString;
-	liquidated_volume: IFixedAsString;
 }>;
 
 export type PostedOrderReceiptEventOnChain = EventOnChain<{
