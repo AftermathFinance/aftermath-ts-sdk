@@ -406,18 +406,18 @@ export type ReducedOrderEventOnChain = EventOnChain<{
 //  Stop Orders
 // =========================================================================
 
-// export type CreatedStopOrderTicketEventOnChain = EventOnChain<{
-// 	ticket_id: ID,
-// 	account_id: u64,
-// 	recipient: address,
-// 	encrypted_details: vector<u8>
-// }>;
+export type CreatedStopOrderTicketEventOnChain = EventOnChain<{
+	ticket_id: ObjectId;
+	account_id: BigIntAsString;
+	recipient: SuiAddress;
+	encrypted_details: Byte[]; // vector<u8>
+}>;
 
-// export type DeletedStopOrderTicketEventOnChain = EventOnChain<{
-// 	ticket_id: ID;
-// 	account_id: u64;
-// 	executed: bool;
-// }>;
+export type DeletedStopOrderTicketEventOnChain = EventOnChain<{
+	ticket_id: ObjectId;
+	account_id: BigIntAsString;
+	executed: boolean;
+}>;
 
 // =========================================================================
 //  Twap

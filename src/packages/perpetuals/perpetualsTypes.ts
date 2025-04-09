@@ -4,6 +4,7 @@ import {
 	ApiDataWithCursorBody,
 	ApiIndexerEventsBody,
 	Balance,
+	Byte,
 	Event,
 	IFixed,
 	Object,
@@ -269,6 +270,17 @@ export interface PerpetualsOrderData {
 	filledSize: bigint;
 	side: PerpetualsOrderSide;
 	marketId: PerpetualsMarketId;
+	SLTPDetails?: {
+		expiryTimestamp: Timestamp;
+		isLimitOrder: boolean;
+		stopIndexPrice: number;
+		geStopIndexPrice: boolean;
+		side: PerpetualsOrderSide;
+		size: bigint;
+		price: IFixed; // TODO: make into number ?
+		orderType: PerpetualsOrderType;
+		state: "TODO"; // u8,
+	};
 }
 
 export interface PerpetualsFilledOrderData {
@@ -693,6 +705,23 @@ export const isReducedOrderEvent = (
 };
 
 // =========================================================================
+//  Stop Orders
+// =========================================================================
+
+export interface CreatedStopOrderTicketEvent extends Event {
+	ticketId: ObjectId;
+	accountId: PerpetualsAccountId;
+	recipient: SuiAddress;
+	encryptedDetails: Byte[];
+}
+
+export interface DeletedStopOrderTicketEvent extends Event {
+	ticketId: ObjectId;
+	accountId: PerpetualsAccountId;
+	executed: boolean;
+}
+
+// =========================================================================
 //  Twap
 // =========================================================================
 
@@ -762,7 +791,7 @@ export interface ApiPerpetualsAccountCapsBody {
 }
 
 // =========================================================================
-//  Inspections
+//  Interactions
 // =========================================================================
 
 export type ApiPerpetualsAccountOrderHistoryBody =
@@ -775,6 +804,12 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 		accountId: PerpetualsAccountId;
 		collateralCoinType: CoinType;
 	};
+
+export interface ApiPerpetualsCancelSLTPOrdersBody {
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+}
 
 export interface ApiPerpetualsSetPositionLeverageBody {
 	walletAddress: SuiAddress;
@@ -801,15 +836,6 @@ export type ApiPerpetualsPreviewOrderBody = (
 	  >
 	| Omit<
 			ApiPerpetualsMarketOrderBody,
-			| "collateralChange"
-			| "walletAddress"
-			| "accountObjectId"
-			| "accountObjectVersion"
-			| "accountObjectDigest"
-			| "hasPosition"
-	  >
-	| Omit<
-			ApiPerpetualsSLTPOrderBody,
 			| "collateralChange"
 			| "walletAddress"
 			| "accountObjectId"
@@ -951,6 +977,21 @@ export interface ApiPerpetualsAccountOrderDatasBody {
 	}[];
 }
 
+export interface ApiPerpetualsAccountOrderDatasBody {
+	accountId: PerpetualsAccountId;
+	orderDatas: {
+		orderId: PerpetualsOrderId;
+		currentSize: bigint;
+	}[];
+}
+
+export interface ApiPerpetualsAccountSLTPOrderDatasBody {
+	accountId: PerpetualsAccountId;
+	walletAddress: SuiAddress;
+	bytes: string;
+	signature: string;
+}
+
 // =========================================================================
 //  Transactions
 // =========================================================================
@@ -1005,7 +1046,25 @@ export interface ApiPerpetualsDeallocateCollateralBody {
 	amount: Balance;
 }
 
-export interface ApiPerpetualsMarketOrderBody {
+interface StopOrderDetails {
+	accountId: PerpetualsAccountId;
+	walletAddress: SuiAddress;
+	recipient: SuiAddress;
+	expiryTimestamp: Timestamp;
+	isLimitOrder: boolean;
+	stopIndexPrice: number;
+	geStopIndexPrice: boolean;
+	side: PerpetualsOrderSide;
+	size: bigint;
+	price: IFixed; // ???
+	orderType: PerpetualsOrderType;
+	gasCoinObjId: ObjectId;
+	gasCoinObjVersion: ObjectVersion;
+	gasCoinObjDigest: ObjectDigest;
+	reduceOnly: boolean;
+}
+
+export type ApiPerpetualsMarketOrderBody = {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
@@ -1015,9 +1074,12 @@ export interface ApiPerpetualsMarketOrderBody {
 	collateralChange: Balance;
 	hasPosition: boolean;
 	leverage: number;
-}
+} & Partial<{
+	stopLoss: StopOrderDetails;
+	takeProfit: StopOrderDetails;
+}>;
 
-export interface ApiPerpetualsLimitOrderBody {
+export type ApiPerpetualsLimitOrderBody = {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
@@ -1029,7 +1091,10 @@ export interface ApiPerpetualsLimitOrderBody {
 	collateralChange: Balance;
 	hasPosition: boolean;
 	leverage: number;
-}
+} & Partial<{
+	stopLoss: StopOrderDetails;
+	takeProfit: StopOrderDetails;
+}>;
 
 export interface ApiPerpetualsCancelOrdersBody {
 	accountObjectId: ObjectId;
@@ -1079,25 +1144,6 @@ export interface ApiPerpetualsSetLeverageBody {
 // 	collateralChange: Balance;
 // }
 
-export type ApiPerpetualsSLTPOrderBody = (
-	| (ApiPerpetualsMarketOrderBody & {
-			marketPrice: PerpetualsOrderPrice;
-	  })
-	| ApiPerpetualsLimitOrderBody
-) &
-	(
-		| {
-				slPrice: PerpetualsOrderPrice;
-		  }
-		| {
-				tpPrice: PerpetualsOrderPrice;
-		  }
-		| {
-				slPrice: PerpetualsOrderPrice;
-				tpPrice: PerpetualsOrderPrice;
-		  }
-	);
-
 export interface PerpetualsMarket24hrStats {
 	volumeUsd: number;
 	volumeBaseAssetAmount: number;
@@ -1126,25 +1172,6 @@ export type SdkPerpetualsLimitOrderInputs = Omit<
 	| "accountObjectDigest"
 	| "hasPosition"
 >;
-
-export type SdkPerpetualsSLTPOrderInputs = (
-	| (SdkPerpetualsMarketOrderInputs & {
-			marketPrice: PerpetualsOrderPrice;
-	  })
-	| SdkPerpetualsLimitOrderInputs
-) &
-	(
-		| {
-				slPrice: PerpetualsOrderPrice;
-		  }
-		| {
-				tpPrice: PerpetualsOrderPrice;
-		  }
-		| {
-				slPrice: PerpetualsOrderPrice;
-				tpPrice: PerpetualsOrderPrice;
-		  }
-	);
 
 export type SdkPerpetualsPlaceOrderPreviewInputs = Omit<
 	ApiPerpetualsPreviewOrderBody,

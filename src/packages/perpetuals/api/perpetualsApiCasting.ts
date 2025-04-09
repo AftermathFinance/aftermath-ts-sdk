@@ -27,6 +27,8 @@ import {
 	UpdatedFundingEvent,
 	UpdatedMarketVersionEvent,
 	ReducedOrderEvent,
+	CreatedStopOrderTicketEvent,
+	DeletedStopOrderTicketEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -56,6 +58,8 @@ import {
 	UpdatedFundingEventOnChain,
 	UpdatedMarketVersionEventOnChain,
 	ReducedOrderEventOnChain,
+	CreatedStopOrderTicketEventOnChain,
+	DeletedStopOrderTicketEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
 import { IFixedAsStringBytes } from "../../../types";
@@ -571,6 +575,39 @@ export class PerpetualsApiCasting {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			sizeChange: BigInt(fields.size_change),
 			orderId: BigInt(fields.order_id),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	// =========================================================================
+	//  Stop Orders
+	// =========================================================================
+
+	public static createdStopOrderTicketEventFromOnChain = (
+		eventOnChain: CreatedStopOrderTicketEventOnChain
+	): CreatedStopOrderTicketEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			ticketId: Helpers.addLeadingZeroesToType(fields.ticket_id),
+			accountId: BigInt(fields.account_id),
+			recipient: Helpers.addLeadingZeroesToType(fields.recipient),
+			encryptedDetails: fields.encrypted_details,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static deletedStopOrderTicketEventFromOnChain = (
+		eventOnChain: DeletedStopOrderTicketEventOnChain
+	): DeletedStopOrderTicketEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			ticketId: Helpers.addLeadingZeroesToType(fields.ticket_id),
+			accountId: BigInt(fields.account_id),
+			executed: fields.executed,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

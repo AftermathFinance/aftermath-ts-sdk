@@ -23,7 +23,6 @@ import {
 	PerpetualsMarketId,
 	PerpetualsAccountId,
 	PerpetualsOrderId,
-	ApiPerpetualsSLTPOrderBody,
 	PerpetualsOrderSide,
 	PerpetualsOrderType,
 } from "../perpetualsTypes";
@@ -70,6 +69,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		updatedSpreadTwap: AnyObjectType;
 		updatedFunding: AnyObjectType;
 		updatedMarketVersion: AnyObjectType;
+		createdStopOrderTicket: AnyObjectType;
+		deletedStopOrderTicket: AnyObjectType;
 		filledTakerOrderLiquidator: AnyObjectType;
 		reducedOrder: AnyObjectType;
 	};
@@ -116,6 +117,9 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			updatedFunding: this.eventType("UpdatedFunding"),
 			// Version
 			updatedMarketVersion: this.eventType("UpdatedClearingHouseVersion"),
+			// Stop Order
+			createdStopOrderTicket: this.eventType("CreatedStopOrderTicket"),
+			deletedStopOrderTicket: this.eventType("DeletedStopOrderTicket"),
 		};
 		this.moveErrors = {
 			[this.addresses.packages.perpetuals]: {
@@ -709,64 +713,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	});
 	// };
 
-	public placeSLTPOrderTx = (
-		inputs: ApiPerpetualsSLTPOrderBody & {
-			tx: Transaction;
-			sessionPotatoId: TransactionObjectArgument;
-		}
-	) => {
-		throw new Error("TODO");
-
-		// const { tx } = inputs;
-
-		// if ("price" in inputs) {
-		// 	this.placeLimitOrderTx({ ...inputs, tx });
-		// } else {
-		// 	this.placeMarketOrderTx({ ...inputs, tx });
-		// }
-
-		// const orderType = PerpetualsOrderType.PostOnly;
-		// const side =
-		// 	inputs.side === PerpetualsOrderSide.Ask
-		// 		? PerpetualsOrderSide.Bid
-		// 		: PerpetualsOrderSide.Ask;
-
-		// const orderPrice =
-		// 	"price" in inputs ? inputs.price : inputs.marketPrice;
-
-		// if (
-		// 	"slPrice" in inputs &&
-		// 	((inputs.side === PerpetualsOrderSide.Ask &&
-		// 		inputs.slPrice > orderPrice) ||
-		// 		(inputs.side === PerpetualsOrderSide.Bid &&
-		// 			inputs.slPrice < orderPrice))
-		// ) {
-		// 	this.placeLimitOrderTx({
-		// 		...inputs,
-		// 		tx,
-		// 		orderType,
-		// 		side,
-		// 		price: inputs.slPrice,
-		// 	});
-		// }
-
-		// if (
-		// 	"tpPrice" in inputs &&
-		// 	((inputs.side === PerpetualsOrderSide.Ask &&
-		// 		inputs.tpPrice < orderPrice) ||
-		// 		(inputs.side === PerpetualsOrderSide.Bid &&
-		// 			inputs.tpPrice > orderPrice))
-		// ) {
-		// 	this.placeLimitOrderTx({
-		// 		...inputs,
-		// 		tx,
-		// 		orderType,
-		// 		side,
-		// 		price: inputs.tpPrice,
-		// 	});
-		// }
-	};
-
 	public getPositionTx = (inputs: {
 		tx: Transaction;
 		packageId: PackageId;
@@ -1092,22 +1038,6 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		tx.transferObjects([accountCap], inputs.walletAddress);
 
 		return tx;
-	};
-
-	public fetchBuildPlaceSLTPOrderTx = (
-		inputs: ApiPerpetualsSLTPOrderBody
-	): Promise<Transaction> => {
-		throw new Error("TODO");
-
-		// const { tx, sessionPotatoId } = this.createTxAndStartSession(inputs);
-
-		// this.placeSLTPOrderTx({
-		// 	...inputs,
-		// 	tx,
-		// 	sessionPotatoId,
-		// });
-
-		// return tx;
 	};
 
 	public buildTransferCollateralTx = (inputs: {

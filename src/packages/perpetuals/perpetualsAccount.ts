@@ -5,7 +5,6 @@ import {
 	ApiPerpetualsMarketOrderBody,
 	ApiPerpetualsPreviewOrderBody,
 	ApiPerpetualsPreviewOrderResponse,
-	ApiPerpetualsSLTPOrderBody,
 	ApiPerpetualsWithdrawCollateralBody,
 	Balance,
 	PerpetualsAccountCap,
@@ -17,7 +16,6 @@ import {
 	PerpetualsPosition,
 	SdkPerpetualsLimitOrderInputs,
 	SdkPerpetualsMarketOrderInputs,
-	SdkPerpetualsSLTPOrderInputs,
 	SuiNetwork,
 	Url,
 	SuiAddress,
@@ -60,6 +58,8 @@ import {
 	CallerConfig,
 	SdkPerpetualsPlaceOrderPreviewInputs,
 	SdkPerpetualsCancelOrdersPreviewInputs,
+	ApiPerpetualsCancelSLTPOrdersBody,
+	ApiPerpetualsAccountSLTPOrderDatasBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -260,21 +260,6 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getPlaceSLTPOrder(
-		inputs: SdkPerpetualsSLTPOrderInputs
-	): Promise<Transaction> {
-		throw new Error("TODO");
-		// return this.fetchApiTransaction<ApiPerpetualsSLTPOrderBody>(
-		// 	"transactions/sltp-order",
-		// 	{
-		// 		...inputs,
-		// 		accountObjectId: this.accountCap.objectId,
-		// 		accountObjectVersion: this.accountCap.objectVersion,
-		// 		accountObjectDigest: this.accountCap.objectDigest,
-		// 	}
-		// );
-	}
-
 	public async getCancelOrdersTx(inputs: {
 		marketIdsToData: Record<
 			PerpetualsMarketId,
@@ -384,8 +369,51 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	// =========================================================================
-	//  Inspections
+	//  Interactions
 	// =========================================================================
+
+	public getSLTPOrdersMessageToSign(inputs?: {
+		marketIds: PerpetualsMarketId[];
+	}): {
+		action: string;
+		account_id: string;
+		clearing_house_ids: string[];
+	} {
+		return {
+			action: "GET_STOP_ORDERS",
+			account_id: this.accountCap.accountId
+				.toString()
+				.replaceAll("n", ""),
+			clearing_house_ids: inputs?.marketIds ?? [],
+		};
+	}
+
+	public cancelSLTPOrdersMessageToSign(inputs: {
+		orderIds: PerpetualsOrderId[];
+	}): {
+		action: string;
+		order_object_ids: string[];
+	} {
+		return {
+			action: "CANCEL_STOP_ORDERS",
+			order_object_ids: inputs.orderIds.map((orderId) =>
+				orderId.toString().replaceAll("n", "")
+			),
+		};
+	}
+
+	public async cancelSLTPOrders(inputs: {
+		bytes: string;
+		signature: string;
+	}): Promise<boolean> {
+		return this.fetchApi<boolean, ApiPerpetualsCancelSLTPOrdersBody>(
+			"account/cancel-sltp-orders",
+			{
+				...inputs,
+				walletAddress: this.accountCap.walletAddress,
+			}
+		);
+	}
 
 	public async setPositionLeverage(inputs: {
 		bytes: string;
@@ -596,6 +624,23 @@ export class PerpetualsAccount extends Caller {
 		>("account/order-datas", {
 			accountId: this.accountCap.accountId,
 			orderDatas,
+		});
+	}
+
+	public async getSLTPOrderDatas(inputs: {
+		bytes: string;
+		signature: string;
+	}): Promise<PerpetualsOrderData[]> {
+		const { bytes, signature } = inputs;
+
+		return this.fetchApi<
+			PerpetualsOrderData[],
+			ApiPerpetualsAccountSLTPOrderDatasBody
+		>("account/sltp-order-datas", {
+			accountId: this.accountCap.accountId,
+			walletAddress: this.accountCap.walletAddress,
+			bytes,
+			signature,
 		});
 	}
 
