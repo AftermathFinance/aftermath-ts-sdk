@@ -58,8 +58,9 @@ import {
 	CallerConfig,
 	SdkPerpetualsPlaceOrderPreviewInputs,
 	SdkPerpetualsCancelOrdersPreviewInputs,
-	ApiPerpetualsCancelSLTPOrdersBody,
-	ApiPerpetualsAccountSLTPOrderDatasBody,
+	ApiPerpetualsCancelStopOrdersBody,
+	ApiPerpetualsAccountStopOrderDatasBody,
+	PerpetualsStopOrderData,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -225,15 +226,27 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 
 	public async getPlaceMarketOrderTx(inputs: SdkPerpetualsMarketOrderInputs) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
 			"transactions/market-order",
 			{
-				...inputs,
+				...otherInputs,
+				txKind: await (async () => {
+					if (!tx) return;
+
+					const txBytes = await tx.build({
+						// NOTE: is this safe ?
+						client: this.Provider?.provider,
+						onlyTransactionKind: true,
+					});
+					return Buffer.from(txBytes).toString("base64");
+				})(),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
-				hasPosition: this.positionForMarketId(inputs) !== undefined,
+				hasPosition:
+					this.positionForMarketId(otherInputs) !== undefined,
 			},
 			undefined,
 			{
@@ -243,15 +256,27 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getPlaceLimitOrderTx(inputs: SdkPerpetualsLimitOrderInputs) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
 			"transactions/limit-order",
 			{
-				...inputs,
+				...otherInputs,
+				txKind: await (async () => {
+					if (!tx) return;
+
+					const txBytes = await tx.build({
+						// NOTE: is this safe ?
+						client: this.Provider?.provider,
+						onlyTransactionKind: true,
+					});
+					return Buffer.from(txBytes).toString("base64");
+				})(),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
-				hasPosition: this.positionForMarketId(inputs) !== undefined,
+				hasPosition:
+					this.positionForMarketId(otherInputs) !== undefined,
 			},
 			undefined,
 			{
@@ -261,6 +286,7 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getCancelOrdersTx(inputs: {
+		tx?: Transaction;
 		marketIdsToData: Record<
 			PerpetualsMarketId,
 			{
@@ -270,10 +296,21 @@ export class PerpetualsAccount extends Caller {
 			}
 		>;
 	}) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsCancelOrdersBody>(
 			"transactions/cancel-orders",
 			{
-				...inputs,
+				...otherInputs,
+				txKind: await (async () => {
+					if (!tx) return;
+
+					const txBytes = await tx.build({
+						// NOTE: is this safe ?
+						client: this.Provider?.provider,
+						onlyTransactionKind: true,
+					});
+					return Buffer.from(txBytes).toString("base64");
+				})(),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
@@ -287,21 +324,33 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getReduceOrderTx(inputs: {
+		tx?: Transaction;
 		collateralChange: Balance;
 		marketId: PerpetualsMarketId;
 		orderId: PerpetualsOrderId;
 		sizeToSubtract: bigint;
 	}) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsReduceOrderBody>(
 			"transactions/reduce-order",
 			{
-				...inputs,
+				...otherInputs,
+				txKind: await (async () => {
+					if (!tx) return;
+
+					const txBytes = await tx.build({
+						// NOTE: is this safe ?
+						client: this.Provider?.provider,
+						onlyTransactionKind: true,
+					});
+					return Buffer.from(txBytes).toString("base64");
+				})(),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
 				accountObjectDigest: this.accountCap.objectDigest,
 				leverage:
-					this.positionForMarketId({ marketId: inputs.marketId })
+					this.positionForMarketId({ marketId: otherInputs.marketId })
 						?.leverage || 1,
 			},
 			undefined,
@@ -312,6 +361,7 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async executeSetLeverageTx(inputs: {
+		tx?: Transaction;
 		leverage: number;
 		collateralChange: Balance;
 		marketId: PerpetualsMarketId;
@@ -319,7 +369,7 @@ export class PerpetualsAccount extends Caller {
 			txDigest: TransactionDigest;
 		}>;
 	}): Promise<void> {
-		const { leverage } = inputs;
+		const { leverage, tx: txFromInputs, ...otherInputs } = inputs;
 
 		if (inputs.collateralChange === BigInt(0))
 			throw new Error("collateralChange cannot be 0");
@@ -327,8 +377,18 @@ export class PerpetualsAccount extends Caller {
 		const tx = await this.fetchApiTransaction<ApiPerpetualsSetLeverageBody>(
 			"transactions/set-leverage",
 			{
-				...inputs,
+				...otherInputs,
 				leverage,
+				txKind: await (async () => {
+					if (!txFromInputs) return;
+
+					const txBytes = await txFromInputs.build({
+						// NOTE: is this safe ?
+						client: this.Provider?.provider,
+						onlyTransactionKind: true,
+					});
+					return Buffer.from(txBytes).toString("base64");
+				})(),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
@@ -372,7 +432,7 @@ export class PerpetualsAccount extends Caller {
 	//  Interactions
 	// =========================================================================
 
-	public getSLTPOrdersMessageToSign(inputs?: {
+	public getStopOrdersMessageToSign(inputs?: {
 		marketIds: PerpetualsMarketId[];
 	}): {
 		action: string;
@@ -388,7 +448,7 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
-	public cancelSLTPOrdersMessageToSign(inputs: {
+	public cancelStopOrdersMessageToSign(inputs: {
 		orderIds: PerpetualsOrderId[];
 	}): {
 		action: string;
@@ -402,12 +462,12 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
-	public async cancelSLTPOrders(inputs: {
+	public async cancelStopOrders(inputs: {
 		bytes: string;
 		signature: string;
 	}): Promise<boolean> {
-		return this.fetchApi<boolean, ApiPerpetualsCancelSLTPOrdersBody>(
-			"account/cancel-sltp-orders",
+		return this.fetchApi<boolean, ApiPerpetualsCancelStopOrdersBody>(
+			"account/cancel-stop-orders",
 			{
 				...inputs,
 				walletAddress: this.accountCap.walletAddress,
@@ -627,16 +687,16 @@ export class PerpetualsAccount extends Caller {
 		});
 	}
 
-	public async getSLTPOrderDatas(inputs: {
+	public async getStopOrderDatas(inputs: {
 		bytes: string;
 		signature: string;
-	}): Promise<PerpetualsOrderData[]> {
+	}): Promise<PerpetualsStopOrderData[]> {
 		const { bytes, signature } = inputs;
 
 		return this.fetchApi<
-			PerpetualsOrderData[],
-			ApiPerpetualsAccountSLTPOrderDatasBody
-		>("account/sltp-order-datas", {
+			PerpetualsStopOrderData[],
+			ApiPerpetualsAccountStopOrderDatasBody
+		>("account/stop-order-datas", {
 			accountId: this.accountCap.accountId,
 			walletAddress: this.accountCap.walletAddress,
 			bytes,

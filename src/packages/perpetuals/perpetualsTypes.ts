@@ -13,12 +13,14 @@ import {
 	ObjectVersion,
 	PackageId,
 	Percentage,
+	SerializedTransaction,
 	SuiAddress,
 	SuiCheckpoint,
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
 import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
+import { Transaction } from "@mysten/sui/transactions";
 
 // =========================================================================
 //  Name Only
@@ -270,17 +272,19 @@ export interface PerpetualsOrderData {
 	filledSize: bigint;
 	side: PerpetualsOrderSide;
 	marketId: PerpetualsMarketId;
-	SLTPDetails?: {
-		expiryTimestamp: Timestamp;
-		isLimitOrder: boolean;
-		stopIndexPrice: number;
-		geStopIndexPrice: boolean;
-		side: PerpetualsOrderSide;
-		size: bigint;
-		price: IFixed; // TODO: make into number ?
+}
+
+export interface PerpetualsStopOrderData {
+	limitOrder?: {
+		price: PerpetualsOrderPrice;
 		orderType: PerpetualsOrderType;
-		state: "TODO"; // u8,
 	};
+	expiryTimestamp: Timestamp;
+	stopIndexPrice: number;
+	triggerIfGEStopIndexPrice: boolean;
+	marketId: PerpetualsMarketId;
+	side: PerpetualsOrderSide;
+	size: bigint;
 }
 
 export interface PerpetualsFilledOrderData {
@@ -805,7 +809,7 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 		collateralCoinType: CoinType;
 	};
 
-export interface ApiPerpetualsCancelSLTPOrdersBody {
+export interface ApiPerpetualsCancelStopOrdersBody {
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;
@@ -985,7 +989,7 @@ export interface ApiPerpetualsAccountOrderDatasBody {
 	}[];
 }
 
-export interface ApiPerpetualsAccountSLTPOrderDatasBody {
+export interface ApiPerpetualsAccountStopOrderDatasBody {
 	accountId: PerpetualsAccountId;
 	walletAddress: SuiAddress;
 	bytes: string;
@@ -1049,18 +1053,16 @@ export interface ApiPerpetualsDeallocateCollateralBody {
 interface StopOrderDetails {
 	accountId: PerpetualsAccountId;
 	walletAddress: SuiAddress;
-	recipient: SuiAddress;
+	limitOrder?: {
+		price: PerpetualsOrderPrice;
+		orderType: PerpetualsOrderType;
+	};
 	expiryTimestamp: Timestamp;
-	isLimitOrder: boolean;
 	stopIndexPrice: number;
-	geStopIndexPrice: boolean;
+	triggerIfGEStopIndexPrice: boolean;
+	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
-	price: IFixed; // ???
-	orderType: PerpetualsOrderType;
-	gasCoinObjId: ObjectId;
-	gasCoinObjVersion: ObjectVersion;
-	gasCoinObjDigest: ObjectDigest;
 	reduceOnly: boolean;
 }
 
@@ -1074,10 +1076,10 @@ export type ApiPerpetualsMarketOrderBody = {
 	collateralChange: Balance;
 	hasPosition: boolean;
 	leverage: number;
-} & Partial<{
-	stopLoss: StopOrderDetails;
-	takeProfit: StopOrderDetails;
-}>;
+	stopLoss?: StopOrderDetails;
+	takeProfit?: StopOrderDetails;
+	txKind?: SerializedTransaction;
+};
 
 export type ApiPerpetualsLimitOrderBody = {
 	marketId: PerpetualsMarketId;
@@ -1091,10 +1093,10 @@ export type ApiPerpetualsLimitOrderBody = {
 	collateralChange: Balance;
 	hasPosition: boolean;
 	leverage: number;
-} & Partial<{
-	stopLoss: StopOrderDetails;
-	takeProfit: StopOrderDetails;
-}>;
+	stopLoss?: StopOrderDetails;
+	takeProfit?: StopOrderDetails;
+	txKind?: SerializedTransaction;
+};
 
 export interface ApiPerpetualsCancelOrdersBody {
 	accountObjectId: ObjectId;
@@ -1108,6 +1110,7 @@ export interface ApiPerpetualsCancelOrdersBody {
 			leverage: number;
 		}
 	>;
+	txKind?: SerializedTransaction;
 }
 
 export interface ApiPerpetualsReduceOrderBody {
@@ -1119,6 +1122,7 @@ export interface ApiPerpetualsReduceOrderBody {
 	leverage: number;
 	orderId: PerpetualsOrderId;
 	sizeToSubtract: bigint;
+	txKind?: SerializedTransaction;
 }
 
 export interface ApiPerpetualsSetLeverageBody {
@@ -1128,6 +1132,7 @@ export interface ApiPerpetualsSetLeverageBody {
 	accountObjectDigest: ObjectId;
 	collateralChange: Balance;
 	leverage: number;
+	txKind?: SerializedTransaction;
 }
 
 // export interface ApiPerpetualsReduceOrderBody {
@@ -1163,7 +1168,10 @@ export type SdkPerpetualsMarketOrderInputs = Omit<
 	| "accountObjectVersion"
 	| "accountObjectDigest"
 	| "hasPosition"
->;
+	| "txKind"
+> & {
+	tx?: Transaction;
+};
 
 export type SdkPerpetualsLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
@@ -1171,7 +1179,10 @@ export type SdkPerpetualsLimitOrderInputs = Omit<
 	| "accountObjectVersion"
 	| "accountObjectDigest"
 	| "hasPosition"
->;
+	| "txKind"
+> & {
+	tx?: Transaction;
+};
 
 export type SdkPerpetualsPlaceOrderPreviewInputs = Omit<
 	ApiPerpetualsPreviewOrderBody,
