@@ -279,12 +279,13 @@ export interface PerpetualsStopOrderData {
 		price: PerpetualsOrderPrice;
 		orderType: PerpetualsOrderType;
 	};
-	expiryTimestamp: Timestamp;
+	expiryTimestamp: bigint;
 	stopIndexPrice: number;
-	triggerIfGEStopIndexPrice: boolean;
+	triggerIfGeStopIndexPrice: boolean;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
+	reduceOnly: boolean;
 }
 
 export interface PerpetualsFilledOrderData {
@@ -990,7 +991,6 @@ export interface ApiPerpetualsAccountOrderDatasBody {
 }
 
 export interface ApiPerpetualsAccountStopOrderDatasBody {
-	accountId: PerpetualsAccountId;
 	walletAddress: SuiAddress;
 	bytes: string;
 	signature: string;
@@ -1050,23 +1050,22 @@ export interface ApiPerpetualsDeallocateCollateralBody {
 	amount: Balance;
 }
 
-interface StopOrderDetails {
-	accountId: PerpetualsAccountId;
-	walletAddress: SuiAddress;
-	limitOrder?: {
-		price: PerpetualsOrderPrice;
-		orderType: PerpetualsOrderType;
-	};
-	expiryTimestamp: Timestamp;
+interface slTpOrderDetails {
+	// limitOrder?: {
+	// 	price: PerpetualsOrderPrice;
+	// 	orderType: PerpetualsOrderType;
+	// };
+	// expiryTimestamp: bigint;
 	stopIndexPrice: number;
-	triggerIfGEStopIndexPrice: boolean;
-	marketId: PerpetualsMarketId;
-	side: PerpetualsOrderSide;
+	// triggerIfGeStopIndexPrice: boolean;
+	// side: PerpetualsOrderSide;
 	size: bigint;
-	reduceOnly: boolean;
+	// reduceOnly: boolean;
 }
 
 export type ApiPerpetualsMarketOrderBody = {
+	accountId: PerpetualsAccountId;
+	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
@@ -1076,8 +1075,8 @@ export type ApiPerpetualsMarketOrderBody = {
 	collateralChange: Balance;
 	hasPosition: boolean;
 	leverage: number;
-	stopLoss?: StopOrderDetails;
-	takeProfit?: StopOrderDetails;
+	stopLoss?: slTpOrderDetails;
+	takeProfit?: slTpOrderDetails;
 	txKind?: SerializedTransaction;
 };
 
@@ -1093,8 +1092,8 @@ export type ApiPerpetualsLimitOrderBody = {
 	collateralChange: Balance;
 	hasPosition: boolean;
 	leverage: number;
-	stopLoss?: StopOrderDetails;
-	takeProfit?: StopOrderDetails;
+	stopLoss?: slTpOrderDetails;
+	takeProfit?: slTpOrderDetails;
 	txKind?: SerializedTransaction;
 };
 

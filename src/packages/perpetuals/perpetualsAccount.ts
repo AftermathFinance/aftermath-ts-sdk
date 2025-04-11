@@ -697,7 +697,6 @@ export class PerpetualsAccount extends Caller {
 			PerpetualsStopOrderData[],
 			ApiPerpetualsAccountStopOrderDatasBody
 		>("account/stop-order-datas", {
-			accountId: this.accountCap.accountId,
 			walletAddress: this.accountCap.walletAddress,
 			bytes,
 			signature,
@@ -1128,6 +1127,8 @@ export class PerpetualsAccount extends Caller {
 			size,
 			marketId,
 			collateralChange,
+			accountId: this.accountCap.accountId,
+			walletAddress: this.accountCap.walletAddress,
 			leverage: position.leverage || 1,
 			side:
 				positionSide === PerpetualsOrderSide.Bid
