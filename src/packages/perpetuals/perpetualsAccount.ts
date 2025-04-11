@@ -61,6 +61,7 @@ import {
 	ApiPerpetualsCancelStopOrdersBody,
 	ApiPerpetualsAccountStopOrderDatasBody,
 	PerpetualsStopOrderData,
+	ApiPerpetualsSlTpOrderDetailsBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -70,6 +71,7 @@ import { Coin } from "..";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../general/providers";
+import { TransactionsApiHelpers } from "../../general/apiHelpers/transactionsApiHelpers";
 
 // TODO: create refresh account positions function ?
 export class PerpetualsAccount extends Caller {
@@ -225,18 +227,112 @@ export class PerpetualsAccount extends Caller {
 	//  Order Txs
 	// =========================================================================
 
+	private async getSlTpArgs(inputs: {
+		tx: Transaction;
+		stopLoss:
+			| Omit<ApiPerpetualsSlTpOrderDetailsBody, "gasCoin">
+			| undefined;
+		takeProfit:
+			| Omit<ApiPerpetualsSlTpOrderDetailsBody, "gasCoin">
+			| undefined;
+		isSponsoredTx: boolean | undefined;
+	}) {
+		const { tx, stopLoss, takeProfit, isSponsoredTx } = inputs;
+
+		const provider = this.Provider;
+
+		const [stopLossArgs, takeProfitArgs] = await Promise.all([
+			stopLoss
+				? (async () => {
+						if (!provider)
+							throw new Error("missing AftermathApi Provider");
+
+						const slGasCoin = await provider
+							.Coin()
+							.fetchCoinWithAmountTx({
+								tx,
+								isSponsoredTx,
+								coinType: Coin.constants.suiCoinType,
+								walletAddress: this.accountCap.walletAddress,
+								coinAmount:
+									Perpetuals.constants.stopOrderGasCostSUI,
+							});
+
+						return {
+							stopLoss: {
+								...stopLoss,
+								gasCoin:
+									TransactionsApiHelpers.serviceCoinDataFromCoinTxArg(
+										{ coinTxArg: slGasCoin }
+									),
+							},
+						};
+				  })()
+				: undefined,
+			takeProfit
+				? (async () => {
+						if (!provider)
+							throw new Error("missing AftermathApi Provider");
+
+						const slGasCoin = await provider
+							.Coin()
+							.fetchCoinWithAmountTx({
+								tx,
+								isSponsoredTx,
+								coinType: Coin.constants.suiCoinType,
+								walletAddress: this.accountCap.walletAddress,
+								coinAmount:
+									Perpetuals.constants.stopOrderGasCostSUI,
+							});
+
+						return {
+							takeProfit: {
+								...takeProfit,
+								gasCoin:
+									TransactionsApiHelpers.serviceCoinDataFromCoinTxArg(
+										{ coinTxArg: slGasCoin }
+									),
+							},
+						};
+				  })()
+				: undefined,
+		]);
+		return {
+			...(stopLossArgs ?? {}),
+			...(takeProfitArgs ?? {}),
+		};
+	}
+
 	public async getPlaceMarketOrderTx(inputs: SdkPerpetualsMarketOrderInputs) {
-		const { tx, ...otherInputs } = inputs;
+		const {
+			tx: txFromInputs,
+			stopLoss,
+			takeProfit,
+			isSponsoredTx,
+			...otherInputs
+		} = inputs;
+
+		const tx = txFromInputs ?? new Transaction();
+
+		const slTpArgs = await this.getSlTpArgs({
+			tx,
+			stopLoss,
+			takeProfit,
+			isSponsoredTx,
+		});
+
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
 			"transactions/market-order",
 			{
 				...otherInputs,
+				...slTpArgs,
 				txKind: await (async () => {
 					if (!tx) return;
+					if (!this.Provider)
+						throw new Error("missing AftermathApi Provider");
 
 					const txBytes = await tx.build({
-						// NOTE: is this safe ?
-						client: this.Provider?.provider,
+						client: this.Provider.provider,
 						onlyTransactionKind: true,
 					});
 					return Buffer.from(txBytes).toString("base64");
@@ -256,17 +352,35 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getPlaceLimitOrderTx(inputs: SdkPerpetualsLimitOrderInputs) {
-		const { tx, ...otherInputs } = inputs;
+		const {
+			tx: txFromInputs,
+			stopLoss,
+			takeProfit,
+			isSponsoredTx,
+			...otherInputs
+		} = inputs;
+
+		const tx = txFromInputs ?? new Transaction();
+
+		const slTpArgs = await this.getSlTpArgs({
+			tx,
+			stopLoss,
+			takeProfit,
+			isSponsoredTx,
+		});
+
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
 			"transactions/limit-order",
 			{
 				...otherInputs,
+				...slTpArgs,
 				txKind: await (async () => {
 					if (!tx) return;
+					if (!this.Provider)
+						throw new Error("missing AftermathApi Provider");
 
 					const txBytes = await tx.build({
-						// NOTE: is this safe ?
-						client: this.Provider?.provider,
+						client: this.Provider.provider,
 						onlyTransactionKind: true,
 					});
 					return Buffer.from(txBytes).toString("base64");

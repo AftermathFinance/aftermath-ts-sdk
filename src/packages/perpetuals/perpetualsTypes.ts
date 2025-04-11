@@ -19,7 +19,12 @@ import {
 	Timestamp,
 	TransactionDigest,
 } from "../../general/types/generalTypes";
-import { CoinDecimal, CoinSymbol, CoinType } from "../coin/coinTypes";
+import {
+	CoinDecimal,
+	CoinSymbol,
+	CoinType,
+	ServiceCoinData,
+} from "../coin/coinTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
 // =========================================================================
@@ -1050,7 +1055,7 @@ export interface ApiPerpetualsDeallocateCollateralBody {
 	amount: Balance;
 }
 
-interface slTpOrderDetails {
+export interface ApiPerpetualsSlTpOrderDetailsBody {
 	// limitOrder?: {
 	// 	price: PerpetualsOrderPrice;
 	// 	orderType: PerpetualsOrderType;
@@ -1061,6 +1066,7 @@ interface slTpOrderDetails {
 	// side: PerpetualsOrderSide;
 	size: bigint;
 	// reduceOnly: boolean;
+	gasCoin: ServiceCoinData;
 }
 
 export type ApiPerpetualsMarketOrderBody = {
@@ -1075,8 +1081,8 @@ export type ApiPerpetualsMarketOrderBody = {
 	collateralChange: Balance;
 	hasPosition: boolean;
 	leverage: number;
-	stopLoss?: slTpOrderDetails;
-	takeProfit?: slTpOrderDetails;
+	stopLoss?: ApiPerpetualsSlTpOrderDetailsBody;
+	takeProfit?: ApiPerpetualsSlTpOrderDetailsBody;
 	txKind?: SerializedTransaction;
 };
 
@@ -1092,8 +1098,8 @@ export type ApiPerpetualsLimitOrderBody = {
 	collateralChange: Balance;
 	hasPosition: boolean;
 	leverage: number;
-	stopLoss?: slTpOrderDetails;
-	takeProfit?: slTpOrderDetails;
+	stopLoss?: ApiPerpetualsSlTpOrderDetailsBody;
+	takeProfit?: ApiPerpetualsSlTpOrderDetailsBody;
 	txKind?: SerializedTransaction;
 };
 
@@ -1168,8 +1174,13 @@ export type SdkPerpetualsMarketOrderInputs = Omit<
 	| "accountObjectDigest"
 	| "hasPosition"
 	| "txKind"
+	| "stopLoss"
+	| "takeProfit"
 > & {
 	tx?: Transaction;
+	stopLoss?: Omit<ApiPerpetualsSlTpOrderDetailsBody, "gasCoin">;
+	takeProfit?: Omit<ApiPerpetualsSlTpOrderDetailsBody, "gasCoin">;
+	isSponsoredTx?: boolean;
 };
 
 export type SdkPerpetualsLimitOrderInputs = Omit<
@@ -1179,8 +1190,13 @@ export type SdkPerpetualsLimitOrderInputs = Omit<
 	| "accountObjectDigest"
 	| "hasPosition"
 	| "txKind"
+	| "stopLoss"
+	| "takeProfit"
 > & {
 	tx?: Transaction;
+	stopLoss?: Omit<ApiPerpetualsSlTpOrderDetailsBody, "gasCoin">;
+	takeProfit?: Omit<ApiPerpetualsSlTpOrderDetailsBody, "gasCoin">;
+	isSponsoredTx?: boolean;
 };
 
 export type SdkPerpetualsPlaceOrderPreviewInputs = Omit<
