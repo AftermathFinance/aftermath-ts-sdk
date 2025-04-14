@@ -18,7 +18,7 @@ export type BcsTypeName = string | [string, ...(BcsTypeName | string)[]];
 //  Name Only
 // =========================================================================
 
-export type SuiAddressWithout0x = string;
+// export type SuiAddressWithout0x = string;
 
 // =========================================================================
 //  On Chain
@@ -34,6 +34,22 @@ export interface EventOnChain<Fields> {
 	sender: SuiAddress;
 	type: AnyObjectType;
 	parsedJson: Fields; // | undefined;
+	bcs: string; // | undefined;
+	timestampMs: number | undefined;
+}
+
+export interface WrappedEventOnChain<Fields> {
+	id: {
+		txDigest: TransactionDigest;
+		eventSeq: BigIntAsString;
+	};
+	packageId: ObjectId;
+	transactionModule: ModuleName;
+	sender: SuiAddress;
+	type: AnyObjectType;
+	parsedJson: {
+		pos0: Fields; // | undefined;
+	};
 	bcs: string; // | undefined;
 	timestampMs: number | undefined;
 }
@@ -61,9 +77,9 @@ export interface SupplyOnChain {
 	};
 }
 
-export interface TypeNameOnChain {
-	type: AnyObjectType;
-	fields: {
-		name: AnyObjectType;
-	};
-}
+// export interface TypeNameOnChain {
+// 	type: AnyObjectType;
+// 	fields: {
+// 		name: AnyObjectType;
+// 	};
+// }

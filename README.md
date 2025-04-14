@@ -1,57 +1,91 @@
-﻿# Aftermath TypeScript SDK
+﻿# Aftermath SDK
 
-## Install
+The Aftermath SDK provides easy access to Aftermath Finance's protocols on the Sui blockchain. Please note that not all of our protocols are on Testnet, but all of them are Mainnet.
+
+## Installation
 
 ```bash
 npm i aftermath-ts-sdk
 ```
 
-## Usage
+## Quick Start (Aftermath SDK)
 
-Create an instance of `Aftermath` for ease of use to make calls to our server, or create an instance of `AftermathApi` for finer control of transaction construction.
+For most integrations, use the Aftermath SDK for simplified access:
 
-## Aftermath SDK
+```typescript
+const afSdk = new Aftermath("MAINNET"); // "MAINNET" | "TESTNET"
+await afSdk.init(); // initialize provider
 
-### 1. Create Aftermath provider
-
-```ts
-const afSdk = new Aftermath("MAINNET"); // "MAINNET" | "TESTNET" | "DEVNET"
-```
-
-### 2. Create protocol provider
-
-```ts
+// Access protocols
 const router = afSdk.Router();
 const pools = afSdk.Pools();
 const staking = afSdk.Staking();
 const farms = afSdk.Farms();
+const dca = afSdk.Dca();
 ```
 
-## Aftermath API
+## Advanced Usage (AftermathApi)
 
-### 1. Create Aftermath Api provider
+For complex transaction construction, use AftermathApi for direct control:
 
-```ts
-const fullnodeEndpoint = "https://fullnode.mainnet.sui.io";
-const addresses = {...};
+```typescript
+const afSdk = new Aftermath("MAINNET");
+const addresses = afSdk.getAddresses();
 
 const afApi = new AftermathApi(
 	new SuiClient({
 		transport: new SuiHTTPTransport({
-			url: fullnodeEndpoint,
+			url: "https://fullnode.mainnet.sui.io",
 		}),
 	}),
-	addresses,
-	new IndexerCaller("MAINNET"), // "MAINNET" | "TESTNET" | "DEVNET"
+	addresses // Configuration addresses
 );
-```
 
-### 2. Create protocol provider
-
-```ts
+// Access protocol APIs
 const poolsApi = afApi.Pools();
 const stakingApi = afApi.Staking();
 const farmsApi = afApi.Farms();
 ```
 
-Find the complete documentation for using our router, AMM pools, liquid staking, and more in our [GitBook](https://docs.aftermath.finance/aftermath-typescript-sdk/getting-started).
+## Available Protocols
+
+### Pools (AMM)
+
+-   Automated Market Maker pools for trading
+-   Support for stable and uncorrelated assets
+-   Up to 8 assets per pool
+-   [View Pools Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/pools)
+
+### Router
+
+-   Smart order routing across multiple pools
+-   Optimal trade execution via split routes
+-   [View Router Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/router)
+
+### Staking
+
+-   Liquid staking for SUI tokens
+-   Earn yield with afSUI
+-   [View Staking Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/liquid-staking)
+
+### Farms
+
+-   Yield farming opportunities
+-   Stake LP tokens and earn rewards
+-   [View Farms Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/farms)
+
+### DCA (Dollar-Cost Averaging)
+
+-   Automated periodic investments
+-   Reduce impact of market volatility
+-   [View DCA Documentation](https://docs.aftermath.finance/developers/aftermath-ts-sdk/products/DCA)
+
+## Rate Limits
+
+Default rate limit: 1000 requests per 10 seconds
+
+For higher limits, contact us via:
+
+-   [Telegram](https://t.me/aftermath_fi)
+-   [Discord](https://discord.gg/VFqMUqKHF3)
+-   [X/Twitter](https://x.com/AftermathFi)

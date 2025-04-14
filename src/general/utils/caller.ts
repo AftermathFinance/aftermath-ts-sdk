@@ -98,10 +98,10 @@ export class Caller {
 				};
 			})();
 		}
-
 		const apiCallUrl = this.urlForApiCall(url);
 
 		const headers = {
+			// "Content-Type": "text/plain",
 			"Content-Type": "application/json",
 			...(this.config.accessToken
 				? { Authorization: `Bearer ${this.config.accessToken}` }

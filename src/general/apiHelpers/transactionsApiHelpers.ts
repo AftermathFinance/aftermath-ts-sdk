@@ -288,6 +288,8 @@ export class TransactionsApiHelpers {
 	}): ServiceCoinData => {
 		const { coinTxArg } = inputs;
 
+		// TODO: handle gas coin
+
 		if (typeof coinTxArg === "string")
 			return { Coin: Helpers.addLeadingZeroesToType(coinTxArg) };
 
@@ -301,6 +303,28 @@ export class TransactionsApiHelpers {
 
 		// Input
 		return { [coinTxArg.kind]: coinTxArg.index };
+	};
+
+	public static serviceCoinDataV2FromCoinTxArgV0 = (inputs: {
+		coinTxArg: CoinTransactionObjectArgumentV0 | ObjectId;
+	}): ServiceCoinDataV2 => {
+		const { coinTxArg } = inputs;
+
+		// TODO: handle gas coin
+
+		if (typeof coinTxArg === "string")
+			// TODO: handle this case better
+			throw new Error(`coinTxArg in format ${coinTxArg} not supported`);
+
+		if (coinTxArg.kind === "NestedResult")
+			return {
+				result: [coinTxArg.index, coinTxArg.resultIndex],
+			};
+
+		if (coinTxArg.kind === "Result") return { result: coinTxArg.index };
+
+		// Input
+		return { input: coinTxArg.index };
 	};
 
 	public static coinTxArgFromServiceCoinData = (inputs: {
@@ -400,6 +424,53 @@ export class TransactionsApiHelpers {
 			kind,
 			index: Object.values(serviceCoinData)[0],
 		};
+	};
+
+	public static coinTxArgFromServiceCoinDataV2V0 = (inputs: {
+		serviceCoinDataV2: ServiceCoinDataV2;
+	}): CoinTransactionObjectArgumentV0 => {
+		const { serviceCoinDataV2 } = inputs;
+
+		if (typeof serviceCoinDataV2 === "string") {
+			throw new Error(
+				`serviceCoinDataV2 format ${JSON.stringify(
+					serviceCoinDataV2
+				)} not supported`
+			);
+		}
+
+		const key = Object.keys(serviceCoinDataV2)[0];
+		const value: number | [number, number] =
+			Object.values(serviceCoinDataV2)[0];
+
+		// TODO: handle this cleaner ?
+		const kind = key as "input" | "result";
+
+		if (kind === "result") {
+			if (typeof value === "number") {
+				return {
+					kind: "Result",
+					index: value,
+				};
+			}
+			return {
+				kind: "NestedResult",
+				index: value[0],
+				resultIndex: value[1],
+			};
+		}
+		if (kind === "input" && typeof value === "number") {
+			return {
+				kind: "Input",
+				index: value,
+			};
+		}
+
+		throw new Error(
+			`serviceCoinDataV2 format ${JSON.stringify(
+				serviceCoinDataV2
+			)} not supported`
+		);
 	};
 
 	// public static mergeCoinsTx(inputs: {

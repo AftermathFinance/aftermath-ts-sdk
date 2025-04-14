@@ -4,7 +4,6 @@ import {
 	CoinType,
 	DcaAddresses,
 	ObjectId,
-	SuiAddress,
 } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Helpers } from "../../../general/utils";
@@ -12,7 +11,6 @@ import {
 	TransactionArgument,
 	TransactionBlock,
 } from "@mysten/sui.js/transactions";
-import { ApiDcaManualCloseOrderBody } from "../dcaTypes";
 import { Transaction } from "@mysten/sui/transactions";
 
 export class DcaApi {
@@ -28,6 +26,7 @@ export class DcaApi {
 		},
 		eventNames: {
 			createdOrder: "CreatedOrderEvent",
+			createdOrderV2: "CreatedOrderEventV2",
 			closedOrder: "ClosedOrderEvent",
 			executedTrade: "ExecutedTradeEvent",
 		},
@@ -40,6 +39,7 @@ export class DcaApi {
 	public readonly addresses: DcaAddresses;
 	public readonly eventTypes: {
 		createdOrder: AnyObjectType;
+		createdOrderV2: AnyObjectType;
 		closedOrder: AnyObjectType;
 		executedTrade: AnyObjectType;
 	};
@@ -58,6 +58,7 @@ export class DcaApi {
 		this.addresses = addresses;
 		this.eventTypes = {
 			createdOrder: this.createdOrderEventType(),
+			createdOrderV2: this.createdOrderEventTypeV2(),
 			closedOrder: this.closedOrderEventType(),
 			executedTrade: this.executedOrderEventType(),
 		};
@@ -90,21 +91,28 @@ export class DcaApi {
 
 	private createdOrderEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.dca,
+			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.createdOrder
 		);
 
+	private createdOrderEventTypeV2 = () =>
+		EventsApiHelpers.createEventType(
+			this.addresses.packages.eventsV2,
+			DcaApi.constants.moduleNames.events,
+			DcaApi.constants.eventNames.createdOrderV2
+		);
+
 	private closedOrderEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.dca,
+			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.closedOrder
 		);
 
 	private executedOrderEventType = () =>
 		EventsApiHelpers.createEventType(
-			this.addresses.packages.dca,
+			this.addresses.packages.events,
 			DcaApi.constants.moduleNames.events,
 			DcaApi.constants.eventNames.executedTrade
 		);
