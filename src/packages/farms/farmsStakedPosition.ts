@@ -368,7 +368,7 @@ export class FarmsStakedPosition extends Caller {
 			this.unlock();
 		}
 
-		this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
+		// this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
 	};
 
 	// =========================================================================
@@ -542,7 +542,6 @@ export class FarmsStakedPosition extends Caller {
 			emissionEndTimestamp,
 		} = inputs;
 
-		const currentTimestamp = dayjs().valueOf();
 		const lastRewardTimestamp =
 			this.stakedPosition.lastHarvestRewardsTimestamp;
 		const lockEndTimestamp = this.unlockTimestamp();
@@ -552,38 +551,26 @@ export class FarmsStakedPosition extends Caller {
 			(principalStakedAmount * rewardsAccumulatedPerShare) /
 			FixedUtils.fixedOneB;
 
-		const totalMultiplierRewards =
-			(this.stakedPosition.stakedAmountWithMultiplier *
-				rewardsAccumulatedPerShare) /
-			FixedUtils.fixedOneB;
+		// const totalMultiplierRewards =
+		// 	(this.stakedPosition.stakedAmountWithMultiplier *
+		// 		rewardsAccumulatedPerShare) /
+		// 	FixedUtils.fixedOneB;
+
+		const multiplierEndTimestamp = Math.min(
+			lockEndTimestamp,
+			emissionEndTimestamp
+		);
 
 		const multiplierRewards = (() => {
-			// If position is fully locked throughout the last harvest period
-			if (currentTimestamp <= lockEndTimestamp) {
-				return totalMultiplierRewards;
-			}
-			// If lock ended before or at the last harvest, fallback to previously calculated debt
-			if (lockEndTimestamp <= lastRewardTimestamp) {
+			if (lastRewardTimestamp <= multiplierEndTimestamp) {
+				return (
+					(rewardsAccumulatedPerShare *
+						this.stakedPosition.stakedAmountWithMultiplier) /
+					FixedUtils.fixedOneB
+				);
+			} else {
 				return multiplierRewardsDebt;
 			}
-			// If emission ended while still locked, or fully locked within emission window
-			if (emissionEndTimestamp <= lockEndTimestamp) {
-				return totalMultiplierRewards;
-			}
-			// Otherwise, partial locking scenario
-			const timeSpentLockedSinceLastHarvestMs =
-				lockEndTimestamp - lastRewardTimestamp;
-			const timeSinceLastHarvestMs =
-				currentTimestamp - lastRewardTimestamp;
-
-			const possibleMultiplierRewardsDebt =
-				(totalMultiplierRewards *
-					BigInt(Math.floor(timeSpentLockedSinceLastHarvestMs))) /
-				BigInt(Math.floor(timeSinceLastHarvestMs));
-
-			return possibleMultiplierRewardsDebt > multiplierRewardsDebt
-				? possibleMultiplierRewardsDebt
-				: multiplierRewardsDebt;
 		})();
 
 		return [baseRewards, multiplierRewards];
