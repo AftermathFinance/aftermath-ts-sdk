@@ -212,7 +212,7 @@ export class FarmsStakedPosition extends Caller {
 		if (inputs.stakingPool.rewardCoin(inputs).actualRewards === BigInt(0))
 			return BigInt(0);
 
-		this.updatePosition(inputs);
+		// this.updatePosition(inputs);
 
 		const rewardCoin = this.rewardCoin(inputs);
 		const totalRewards =
@@ -364,11 +364,11 @@ export class FarmsStakedPosition extends Caller {
 		}
 
 		// Check if this position’s lock has expired
-		if (this.unlockTimestamp() < currentTimestamp) {
-			this.unlock();
-		}
+		// if (this.unlockTimestamp() < currentTimestamp) {
+		// 	this.unlock();
+		// }
 
-		// this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
+		this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
 	};
 
 	// =========================================================================
@@ -576,19 +576,19 @@ export class FarmsStakedPosition extends Caller {
 		return [baseRewards, multiplierRewards];
 	}
 
-	/**
-	 * Removes the lock multiplier from this position if the current time is beyond the lock duration,
-	 * reverting `lockMultiplier` to 1.0 (fixedOneB).
-	 */
-	private unlock = () => {
-		// ia. Remove position's `multiplier_staked_amount` from the pool.
-		// afterburner_vault::decrease_stake_with_multiplier(vault, self.multiplier_staked_amount);
-		this.stakedPosition.stakedAmountWithMultiplier = BigInt(0);
+	// /**
+	//  * Removes the lock multiplier from this position if the current time is beyond the lock duration,
+	//  * reverting `lockMultiplier` to 1.0 (fixedOneB).
+	//  */
+	// private unlock = () => {
+	// 	// ia. Remove position's `multiplier_staked_amount` from the pool.
+	// 	// afterburner_vault::decrease_stake_with_multiplier(vault, self.multiplier_staked_amount);
+	// 	this.stakedPosition.stakedAmountWithMultiplier = BigInt(0);
 
-		// ib. Reset position's lock parameters.
-		this.stakedPosition.lockDurationMs = 0;
-		this.stakedPosition.lockMultiplier = FixedUtils.fixedOneB;
-	};
+	// 	// ib. Reset position's lock parameters.
+	// 	this.stakedPosition.lockDurationMs = 0;
+	// 	this.stakedPosition.lockMultiplier = FixedUtils.fixedOneB;
+	// };
 
 	/**
 	 * Determines if this position is unlocked based on the lock end timestamp, the emission end timestamp,
