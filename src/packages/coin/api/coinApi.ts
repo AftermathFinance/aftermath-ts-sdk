@@ -126,6 +126,46 @@ export class CoinApi {
 		} while (true);
 	};
 
+	// fetchCoinsUntilAmountReachedOrEnd
+	public fetchAllCoins = async (inputs: {
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		// coinAmount: Balance;
+	}): Promise<CoinStruct[]> => {
+		let allCoinData: CoinStruct[] = [];
+		let cursor: string | undefined = undefined;
+		do {
+			const paginatedCoins: PaginatedCoins =
+				await this.Provider.provider.getCoins({
+					...inputs,
+					owner: inputs.walletAddress,
+					cursor,
+				});
+
+			// const coinData = paginatedCoins.data.filter(
+			// 	(data) => BigInt(data.balance) > BigInt(0)
+			// );
+			const coinData = paginatedCoins.data;
+			allCoinData = [...allCoinData, ...coinData];
+
+			// const totalAmount = Helpers.sumBigInt(
+			// 	allCoinData.map((data) => BigInt(data.balance))
+			// );
+			// if (totalAmount >= inputs.coinAmount) return allCoinData;
+
+			if (
+				paginatedCoins.data.length === 0 ||
+				!paginatedCoins.hasNextPage ||
+				!paginatedCoins.nextCursor
+			)
+				return allCoinData.sort((b, a) =>
+					Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
+				);
+
+			cursor = paginatedCoins.nextCursor;
+		} while (true);
+	};
+
 	// =========================================================================
 	//  Private Static Methods
 	// =========================================================================
