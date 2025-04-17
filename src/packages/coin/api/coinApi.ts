@@ -34,7 +34,7 @@ export class CoinApi {
 
 		tx.setSender(walletAddress);
 
-		const coinData = await this.fetchAllCoins(inputs);
+		const coinData = await this.fetchCoinsWithAtLeastAmount(inputs);
 		return CoinApi.coinWithAmountTx({
 			tx,
 			coinData,
@@ -58,9 +58,9 @@ export class CoinApi {
 
 		const allCoinsData = await Promise.all(
 			coinTypes.map(async (coinType, index) =>
-				this.fetchAllCoins({
+				this.fetchCoinsWithAtLeastAmount({
 					...inputs,
-					// coinAmount: coinAmounts[index],
+					coinAmount: coinAmounts[index],
 					coinType,
 				})
 			)
@@ -82,11 +82,10 @@ export class CoinApi {
 		return coinArgs;
 	};
 
-	// fetchCoinsUntilAmountReachedOrEnd
-	public fetchAllCoins = async (inputs: {
+	public fetchCoinsWithAtLeastAmount = async (inputs: {
 		walletAddress: SuiAddress;
 		coinType: CoinType;
-		// coinAmount: Balance;
+		coinAmount: Balance;
 	}): Promise<CoinStruct[]> => {
 		let allCoinData: CoinStruct[] = [];
 		let cursor: string | undefined = undefined;
@@ -98,25 +97,30 @@ export class CoinApi {
 					cursor,
 				});
 
-			// const coinData = paginatedCoins.data.filter(
-			// 	(data) => BigInt(data.balance) > BigInt(0)
-			// );
 			const coinData = paginatedCoins.data;
 			allCoinData = [...allCoinData, ...coinData];
-
-			// const totalAmount = Helpers.sumBigInt(
-			// 	allCoinData.map((data) => BigInt(data.balance))
-			// );
-			// if (totalAmount >= inputs.coinAmount) return allCoinData;
 
 			if (
 				paginatedCoins.data.length === 0 ||
 				!paginatedCoins.hasNextPage ||
 				!paginatedCoins.nextCursor
-			)
-				return allCoinData.sort((b, a) =>
-					Number(BigInt(b.coinObjectId) - BigInt(a.coinObjectId))
+			) {
+				allCoinData.sort((b, a) =>
+					Number(BigInt(a.balance) - BigInt(b.balance))
 				);
+
+				let coinDatas: CoinStruct[] = [];
+				let sum = BigInt(0);
+				for (const coinData of allCoinData) {
+					coinDatas.push(coinData);
+					sum += BigInt(coinData.balance);
+
+					if (sum >= inputs.coinAmount) return coinDatas;
+				}
+				throw new Error(
+					"wallet does not have coins of sufficient balance"
+				);
+			}
 
 			cursor = paginatedCoins.nextCursor;
 		} while (true);
