@@ -1156,7 +1156,7 @@ export class PerpetualsAccount extends Caller {
 		}
 	}
 
-	public nonSlTpStopOrdersForMarketId(inputs: {
+	public nonSlTpStopOrderDatasForMarketId(inputs: {
 		marketId: PerpetualsMarketId;
 		stopOrderDatas: PerpetualsStopOrderData[];
 	}): PerpetualsStopOrderData[] | undefined {
@@ -1166,7 +1166,7 @@ export class PerpetualsAccount extends Caller {
 		if (!position) return undefined;
 
 		const { fullSlOrder, fullTpOrder, partialSlOrders, partialTpOrders } =
-			this.slTpOrdersForMarketId(inputs);
+			this.slTpStopOrderDatasForMarketId(inputs);
 
 		const stopOrders = stopOrderDatas.filter(
 			(stopOrder) =>
@@ -1182,7 +1182,7 @@ export class PerpetualsAccount extends Caller {
 		return stopOrders.length <= 0 ? undefined : stopOrders;
 	}
 
-	public slTpOrdersForMarketId(inputs: {
+	public slTpStopOrderDatasForMarketId(inputs: {
 		marketId: PerpetualsMarketId;
 		stopOrderDatas: PerpetualsStopOrderData[];
 	}): {
