@@ -1156,6 +1156,233 @@ export class PerpetualsAccount extends Caller {
 		}
 	}
 
+	public nonSlTpStopOrdersForMarketId(inputs: {
+		marketId: PerpetualsMarketId;
+		stopOrderDatas: PerpetualsStopOrderData[];
+	}): PerpetualsStopOrderData[] | undefined {
+		const { marketId, stopOrderDatas } = inputs;
+
+		const position = this.positionForMarketId({ marketId });
+		if (!position) return undefined;
+
+		const { fullSlOrder, fullTpOrder, partialSlOrders, partialTpOrders } =
+			this.slTpOrdersForMarketId(inputs);
+
+		const stopOrders = stopOrderDatas.filter(
+			(stopOrder) =>
+				![
+					fullSlOrder,
+					fullTpOrder,
+					...(partialSlOrders ?? []),
+					...(partialTpOrders ?? []),
+				]
+					.map((slTpOrder) => JSON.stringify(slTpOrder))
+					.includes(JSON.stringify(stopOrder))
+		);
+		return stopOrders.length <= 0 ? undefined : stopOrders;
+	}
+
+	public slTpOrdersForMarketId(inputs: {
+		marketId: PerpetualsMarketId;
+		stopOrderDatas: PerpetualsStopOrderData[];
+	}): {
+		fullSlOrder: PerpetualsStopOrderData | undefined;
+		fullTpOrder: PerpetualsStopOrderData | undefined;
+		partialSlOrders: PerpetualsStopOrderData[] | undefined;
+		partialTpOrders: PerpetualsStopOrderData[] | undefined;
+	} {
+		const { marketId, stopOrderDatas } = inputs;
+
+		const position = this.positionForMarketId({ marketId });
+		if (!position) {
+			return {
+				fullSlOrder: undefined,
+				fullTpOrder: undefined,
+				partialSlOrders: undefined,
+				partialTpOrders: undefined,
+			};
+		}
+
+		const side = !position ? undefined : Perpetuals.positionSide(position);
+
+		// TODO: clean this up
+		const fullSlOrder: PerpetualsStopOrderData | undefined =
+			side === undefined || !position
+				? // TODO: check if at least one order present ? -- if only one order then use that side ?
+				  stopOrderDatas.find(
+						(order) =>
+							order.marketId === marketId &&
+							// order.side !== side &&
+							!("limitOrder" in order) &&
+							order.expiryTimestamp >=
+								BigInt(Number.MAX_SAFE_INTEGER) &&
+							// order.triggerIfGeStopIndexPrice ===
+							// 	(side === PerpetualsOrderSide.Ask) &&
+							order.size >= Casting.u64MaxBigInt &&
+							// (side === PerpetualsOrderSide.Bid
+							// 	? order.stopIndexPrice < indexPrice
+							// 	: order.stopIndexPrice > indexPrice)
+
+							((!order.triggerIfGeStopIndexPrice &&
+								// order.stopIndexPrice < indexPrice &&
+								order.side === PerpetualsOrderSide.Ask) ||
+								(order.triggerIfGeStopIndexPrice &&
+									// order.stopIndexPrice > indexPrice &&
+									order.side === PerpetualsOrderSide.Bid)) &&
+							order.reduceOnly
+				  )
+				: stopOrderDatas.find(
+						(order) =>
+							order.marketId === marketId &&
+							order.side !== side &&
+							!("limitOrder" in order) &&
+							order.expiryTimestamp >=
+								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.triggerIfGeStopIndexPrice ===
+								(side === PerpetualsOrderSide.Ask) &&
+							order.size >= Casting.u64MaxBigInt &&
+							(side === PerpetualsOrderSide.Bid
+								? order.stopIndexPrice <
+								  Perpetuals.calcEntryPrice(position)
+								: order.stopIndexPrice >
+								  Perpetuals.calcEntryPrice(position)) &&
+							order.reduceOnly
+				  );
+		const fullTpOrder: PerpetualsStopOrderData | undefined =
+			side === undefined || !position
+				? // TODO: check if at least one order present ? -- if only one order then use that side ?
+				  stopOrderDatas.find(
+						(order) =>
+							order.marketId === marketId &&
+							// order.side !== side &&
+							!("limitOrder" in order) &&
+							order.expiryTimestamp >=
+								BigInt(Number.MAX_SAFE_INTEGER) &&
+							// order.triggerIfGeStopIndexPrice ===
+							// 	(side === PerpetualsOrderSide.Bid) &&
+							order.size >= Casting.u64MaxBigInt &&
+							// (side === PerpetualsOrderSide.Bid
+							// 	? order.stopIndexPrice > indexPrice
+							// 	: order.stopIndexPrice < indexPrice)
+
+							((!order.triggerIfGeStopIndexPrice &&
+								// order.stopIndexPrice < indexPrice &&
+								order.side === PerpetualsOrderSide.Bid) ||
+								(order.triggerIfGeStopIndexPrice &&
+									// order.stopIndexPrice > indexPrice &&
+									order.side === PerpetualsOrderSide.Ask)) &&
+							order.reduceOnly
+				  )
+				: stopOrderDatas.find(
+						(order) =>
+							order.marketId === marketId &&
+							order.side !== side &&
+							!("limitOrder" in order) &&
+							order.expiryTimestamp >=
+								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.triggerIfGeStopIndexPrice ===
+								(side === PerpetualsOrderSide.Bid) &&
+							order.size >= Casting.u64MaxBigInt &&
+							(side === PerpetualsOrderSide.Bid
+								? order.stopIndexPrice >
+								  Perpetuals.calcEntryPrice(position)
+								: order.stopIndexPrice <
+								  Perpetuals.calcEntryPrice(position)) &&
+							order.reduceOnly
+				  );
+
+		const partialSlOrders: PerpetualsStopOrderData[] =
+			side === undefined || !position
+				? // TODO: check if at least one order present ? -- if only one order then use that side ?
+				  stopOrderDatas.filter(
+						(order) =>
+							order.marketId === marketId &&
+							// order.side !== side &&
+							!("limitOrder" in order) &&
+							order.expiryTimestamp >=
+								BigInt(Number.MAX_SAFE_INTEGER) &&
+							// order.triggerIfGeStopIndexPrice ===
+							// 	(side === PerpetualsOrderSide.Ask) &&
+							// (side === PerpetualsOrderSide.Bid
+							// 	? order.stopIndexPrice < indexPrice
+							// 	: order.stopIndexPrice > indexPrice)
+
+							((!order.triggerIfGeStopIndexPrice &&
+								// order.stopIndexPrice < indexPrice &&
+								order.side === PerpetualsOrderSide.Ask) ||
+								(order.triggerIfGeStopIndexPrice &&
+									// order.stopIndexPrice > indexPrice &&
+									order.side === PerpetualsOrderSide.Bid)) &&
+							order.reduceOnly
+				  )
+				: stopOrderDatas.filter(
+						(order) =>
+							order.marketId === marketId &&
+							order.side !== side &&
+							!("limitOrder" in order) &&
+							order.expiryTimestamp >=
+								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.triggerIfGeStopIndexPrice ===
+								(side === PerpetualsOrderSide.Ask) &&
+							(side === PerpetualsOrderSide.Bid
+								? order.stopIndexPrice <
+								  Perpetuals.calcEntryPrice(position)
+								: order.stopIndexPrice >
+								  Perpetuals.calcEntryPrice(position)) &&
+							order.reduceOnly
+				  );
+
+		const partialTpOrders: PerpetualsStopOrderData[] =
+			side === undefined || !position
+				? // TODO: check if at least one order present ? -- if only one order then use that side ?
+				  stopOrderDatas.filter(
+						(order) =>
+							order.marketId === marketId &&
+							// order.side !== side &&
+							!("limitOrder" in order) &&
+							order.expiryTimestamp >=
+								BigInt(Number.MAX_SAFE_INTEGER) &&
+							// order.triggerIfGeStopIndexPrice ===
+							// 	(side === PerpetualsOrderSide.Bid) &&
+							// (side === PerpetualsOrderSide.Bid
+							// 	? order.stopIndexPrice > indexPrice
+							// 	: order.stopIndexPrice < indexPrice)
+
+							((!order.triggerIfGeStopIndexPrice &&
+								// order.stopIndexPrice < indexPrice &&
+								order.side === PerpetualsOrderSide.Bid) ||
+								(order.triggerIfGeStopIndexPrice &&
+									// order.stopIndexPrice > indexPrice &&
+									order.side === PerpetualsOrderSide.Ask)) &&
+							order.reduceOnly
+				  )
+				: stopOrderDatas.filter(
+						(order) =>
+							order.marketId === marketId &&
+							order.side !== side &&
+							!("limitOrder" in order) &&
+							order.expiryTimestamp >=
+								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.triggerIfGeStopIndexPrice ===
+								(side === PerpetualsOrderSide.Bid) &&
+							(side === PerpetualsOrderSide.Bid
+								? order.stopIndexPrice >
+								  Perpetuals.calcEntryPrice(position)
+								: order.stopIndexPrice <
+								  Perpetuals.calcEntryPrice(position)) &&
+							order.reduceOnly
+				  );
+
+		return {
+			fullSlOrder,
+			fullTpOrder,
+			partialSlOrders:
+				partialSlOrders.length <= 0 ? undefined : partialSlOrders,
+			partialTpOrders:
+				partialTpOrders.length <= 0 ? undefined : partialTpOrders,
+		};
+	}
+
 	public collateral(): number {
 		return Casting.IFixed.numberFromIFixed(this.accountCap.collateral);
 	}
