@@ -1156,6 +1156,50 @@ export class PerpetualsAccount extends Caller {
 		}
 	}
 
+	public nonSlTpStopOrderDatas(inputs: {
+		stopOrderDatas: PerpetualsStopOrderData[];
+	}): PerpetualsStopOrderData[] | undefined {
+		const { stopOrderDatas } = inputs;
+
+		const slTpOrders = this.slTpStopOrderDatas(inputs);
+
+		const stopOrders = stopOrderDatas.filter(
+			(stopOrder) =>
+				!(slTpOrders ?? [])
+					.map((slTpOrder) => JSON.stringify(slTpOrder))
+					.includes(JSON.stringify(stopOrder))
+		);
+		return stopOrders.length <= 0 ? undefined : stopOrders;
+	}
+
+	public slTpStopOrderDatas(inputs: {
+		stopOrderDatas: PerpetualsStopOrderData[];
+	}): PerpetualsStopOrderData[] | undefined {
+		const { stopOrderDatas } = inputs;
+
+		let slTpOrders: PerpetualsStopOrderData[] = [];
+
+		for (const { marketId } of this.account.positions) {
+			const {
+				fullSlOrder,
+				fullTpOrder,
+				partialSlOrders,
+				partialTpOrders,
+			} = this.slTpStopOrderDatasForMarketId({
+				marketId,
+				stopOrderDatas,
+			});
+			slTpOrders = [
+				...slTpOrders,
+				...(fullSlOrder ? [fullSlOrder] : []),
+				...(fullTpOrder ? [fullTpOrder] : []),
+				...(partialSlOrders ?? []),
+				...(partialTpOrders ?? []),
+			];
+		}
+		return slTpOrders.length <= 0 ? undefined : slTpOrders;
+	}
+
 	public nonSlTpStopOrderDatasForMarketId(inputs: {
 		marketId: PerpetualsMarketId;
 		stopOrderDatas: PerpetualsStopOrderData[];
@@ -1171,8 +1215,8 @@ export class PerpetualsAccount extends Caller {
 		const stopOrders = stopOrderDatas.filter(
 			(stopOrder) =>
 				![
-					fullSlOrder,
-					fullTpOrder,
+					...(fullSlOrder ? [fullSlOrder] : []),
+					...(fullTpOrder ? [fullTpOrder] : []),
 					...(partialSlOrders ?? []),
 					...(partialTpOrders ?? []),
 				]
@@ -1194,7 +1238,7 @@ export class PerpetualsAccount extends Caller {
 		const { marketId, stopOrderDatas } = inputs;
 
 		const position = this.positionForMarketId({ marketId });
-		if (!position) {
+		if (!position || position.baseAssetAmount === BigInt(0)) {
 			return {
 				fullSlOrder: undefined,
 				fullTpOrder: undefined,
