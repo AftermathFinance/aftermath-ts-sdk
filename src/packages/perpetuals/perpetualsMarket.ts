@@ -354,6 +354,25 @@ export class PerpetualsMarket extends Caller {
 		);
 	};
 
+	public roundToValidSizeBigInt = (inputs: {
+		size: number;
+		floor?: boolean;
+		ceil?: boolean;
+	}) => {
+		const sizeLots = Number(inputs.size * Casting.Fixed.fixedOneN9);
+
+		// TODO: make sure this calc is safe
+		return (
+			BigInt(
+				inputs.floor
+					? Math.floor(sizeLots)
+					: inputs.ceil
+					? Math.ceil(sizeLots)
+					: Math.round(sizeLots)
+			) / this.marketParams.lotSize
+		);
+	};
+
 	public emptyPosition = (): PerpetualsPosition => {
 		return {
 			marketId: this.marketId,
