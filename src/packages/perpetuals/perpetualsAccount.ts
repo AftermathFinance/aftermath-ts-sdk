@@ -58,10 +58,15 @@ import {
 	CallerConfig,
 	SdkPerpetualsPlaceOrderPreviewInputs,
 	SdkPerpetualsCancelOrdersPreviewInputs,
-	ApiPerpetualsCancelStopOrdersBody,
+	// ApiPerpetualsCancelStopOrdersBody,
 	ApiPerpetualsAccountStopOrderDatasBody,
 	PerpetualsStopOrderData,
-	ApiPerpetualsSlTpOrderDetailsBody,
+	PerpetualsSlTpOrderDetails,
+	SerializedTransaction,
+	ApiPerpetualsCancelStopOrdersBody,
+	ApiPerpetualsPlaceStopOrdersBody,
+	SdkPerpetualsStopOrdersInputs,
+	ApiPerpetualsUpdateStopOrdersBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -72,6 +77,7 @@ import { FixedUtils } from "../../general/utils/fixedUtils";
 import { Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../general/providers";
 import { TransactionsApiHelpers } from "../../general/apiHelpers/transactionsApiHelpers";
+import { TransactionObjectArgument } from "@mysten/sui.js/transactions";
 
 // TODO: create refresh account positions function ?
 export class PerpetualsAccount extends Caller {
@@ -227,82 +233,6 @@ export class PerpetualsAccount extends Caller {
 	//  Order Txs
 	// =========================================================================
 
-	private async getSlTpArgs(inputs: {
-		tx: Transaction;
-		stopLoss:
-			| Omit<ApiPerpetualsSlTpOrderDetailsBody, "gasCoin">
-			| undefined;
-		takeProfit:
-			| Omit<ApiPerpetualsSlTpOrderDetailsBody, "gasCoin">
-			| undefined;
-		isSponsoredTx: boolean | undefined;
-	}) {
-		const { tx, stopLoss, takeProfit, isSponsoredTx } = inputs;
-
-		const provider = this.Provider;
-
-		const [stopLossArgs, takeProfitArgs] = await Promise.all([
-			stopLoss
-				? (async () => {
-						if (!provider)
-							throw new Error("missing AftermathApi Provider");
-
-						const slGasCoin = await provider
-							.Coin()
-							.fetchCoinWithAmountTx({
-								tx,
-								isSponsoredTx,
-								coinType: Coin.constants.suiCoinType,
-								walletAddress: this.accountCap.walletAddress,
-								coinAmount:
-									Perpetuals.constants.stopOrderGasCostSUI,
-							});
-
-						return {
-							stopLoss: {
-								...stopLoss,
-								gasCoin:
-									TransactionsApiHelpers.serviceCoinDataFromCoinTxArg(
-										{ coinTxArg: slGasCoin }
-									),
-							},
-						};
-				  })()
-				: undefined,
-			takeProfit
-				? (async () => {
-						if (!provider)
-							throw new Error("missing AftermathApi Provider");
-
-						const slGasCoin = await provider
-							.Coin()
-							.fetchCoinWithAmountTx({
-								tx,
-								isSponsoredTx,
-								coinType: Coin.constants.suiCoinType,
-								walletAddress: this.accountCap.walletAddress,
-								coinAmount:
-									Perpetuals.constants.stopOrderGasCostSUI,
-							});
-
-						return {
-							takeProfit: {
-								...takeProfit,
-								gasCoin:
-									TransactionsApiHelpers.serviceCoinDataFromCoinTxArg(
-										{ coinTxArg: slGasCoin }
-									),
-							},
-						};
-				  })()
-				: undefined,
-		]);
-		return {
-			...(stopLossArgs ?? {}),
-			...(takeProfitArgs ?? {}),
-		};
-	}
-
 	public async getPlaceMarketOrderTx(inputs: SdkPerpetualsMarketOrderInputs) {
 		const {
 			tx: txFromInputs,
@@ -313,6 +243,7 @@ export class PerpetualsAccount extends Caller {
 		} = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
+		// tx.setSender(this.accountCap.walletAddress);
 
 		const slTpArgs = await this.getSlTpArgs({
 			tx,
@@ -326,17 +257,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				...otherInputs,
 				...slTpArgs,
-				txKind: await (async () => {
-					if (!tx) return;
-					if (!this.Provider)
-						throw new Error("missing AftermathApi Provider");
-
-					const txBytes = await tx.build({
-						client: this.Provider.provider,
-						onlyTransactionKind: true,
-					});
-					return Buffer.from(txBytes).toString("base64");
-				})(),
+				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
@@ -361,6 +282,7 @@ export class PerpetualsAccount extends Caller {
 		} = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
+		// tx.setSender(this.accountCap.walletAddress);
 
 		const slTpArgs = await this.getSlTpArgs({
 			tx,
@@ -374,17 +296,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				...otherInputs,
 				...slTpArgs,
-				txKind: await (async () => {
-					if (!tx) return;
-					if (!this.Provider)
-						throw new Error("missing AftermathApi Provider");
-
-					const txBytes = await tx.build({
-						client: this.Provider.provider,
-						onlyTransactionKind: true,
-					});
-					return Buffer.from(txBytes).toString("base64");
-				})(),
+				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
@@ -415,16 +327,98 @@ export class PerpetualsAccount extends Caller {
 			"transactions/cancel-orders",
 			{
 				...otherInputs,
-				txKind: await (async () => {
-					if (!tx) return;
+				txKind: await this.getTxKind({ tx }),
+				walletAddress: this.accountCap.walletAddress,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
 
-					const txBytes = await tx.build({
-						// NOTE: is this safe ?
-						client: this.Provider?.provider,
-						onlyTransactionKind: true,
-					});
-					return Buffer.from(txBytes).toString("base64");
-				})(),
+	public async getCancelStopOrdersTx(inputs: {
+		tx?: Transaction;
+		stopOrderIds: ObjectId[];
+	}) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsCancelStopOrdersBody>(
+			"transactions/cancel-stop-orders",
+			{
+				...otherInputs,
+				txKind: await this.getTxKind({ tx }),
+				walletAddress: this.accountCap.walletAddress,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getPlaceStopOrdersTx(inputs: SdkPerpetualsStopOrdersInputs) {
+		const { tx: txFromInputs, isSponsoredTx, stopOrders } = inputs;
+
+		const tx = txFromInputs ?? new Transaction();
+		// tx.setSender(this.accountCap.walletAddress);
+
+		if (!this.Provider) throw new Error("missing AftermathApi Provider");
+
+		// TODO: handle case of user passed gas coin object(s)
+		const gasCoins = await this.Provider.Coin().fetchCoinsWithAmountTx({
+			tx,
+			isSponsoredTx,
+			coinTypes: inputs.stopOrders.map(() => Coin.constants.suiCoinType),
+			walletAddress: this.accountCap.walletAddress,
+			coinAmounts: inputs.stopOrders.map(
+				() => Perpetuals.constants.stopOrderGasCostSUI
+			),
+		});
+
+		return this.fetchApiTransaction<ApiPerpetualsPlaceStopOrdersBody>(
+			"transactions/stop-orders",
+			{
+				stopOrders: stopOrders.map((stopOrder, index) => ({
+					...stopOrder,
+					gasCoin:
+						TransactionsApiHelpers.serviceCoinDataFromCoinTxArg({
+							coinTxArg: gasCoins[index],
+						}),
+				})),
+				txKind: await this.getTxKind({ tx }),
+				walletAddress: this.accountCap.walletAddress,
+				accountObjectId: this.accountCap.objectId,
+				accountObjectVersion: this.accountCap.objectVersion,
+				accountObjectDigest: this.accountCap.objectDigest,
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getUpdateStopOrdersTx(
+		inputs: Omit<ApiPerpetualsUpdateStopOrdersBody, "txKind"> & {
+			tx?: Transaction;
+		}
+	) {
+		const { tx: txFromInputs, stopOrders } = inputs;
+
+		const tx = txFromInputs ?? new Transaction();
+		// tx.setSender(this.accountCap.walletAddress);
+
+		return this.fetchApiTransaction<ApiPerpetualsUpdateStopOrdersBody>(
+			"transactions/update-stop-orders",
+			{
+				stopOrders,
+				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
@@ -449,16 +443,7 @@ export class PerpetualsAccount extends Caller {
 			"transactions/reduce-order",
 			{
 				...otherInputs,
-				txKind: await (async () => {
-					if (!tx) return;
-
-					const txBytes = await tx.build({
-						// NOTE: is this safe ?
-						client: this.Provider?.provider,
-						onlyTransactionKind: true,
-					});
-					return Buffer.from(txBytes).toString("base64");
-				})(),
+				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
 				accountObjectVersion: this.accountCap.objectVersion,
@@ -562,32 +547,32 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
-	public cancelStopOrdersMessageToSign(inputs: {
-		orderIds: PerpetualsOrderId[];
-	}): {
-		action: string;
-		order_object_ids: string[];
-	} {
-		return {
-			action: "CANCEL_STOP_ORDERS",
-			order_object_ids: inputs.orderIds.map((orderId) =>
-				orderId.toString().replaceAll("n", "")
-			),
-		};
-	}
+	// public cancelStopOrdersMessageToSign(inputs: {
+	// 	orderIds: PerpetualsOrderId[];
+	// }): {
+	// 	action: string;
+	// 	order_object_ids: string[];
+	// } {
+	// 	return {
+	// 		action: "CANCEL_STOP_ORDERS",
+	// 		order_object_ids: inputs.orderIds.map((orderId) =>
+	// 			orderId.toString().replaceAll("n", "")
+	// 		),
+	// 	};
+	// }
 
-	public async cancelStopOrders(inputs: {
-		bytes: string;
-		signature: string;
-	}): Promise<boolean> {
-		return this.fetchApi<boolean, ApiPerpetualsCancelStopOrdersBody>(
-			"account/cancel-stop-orders",
-			{
-				...inputs,
-				walletAddress: this.accountCap.walletAddress,
-			}
-		);
-	}
+	// public async cancelStopOrders(inputs: {
+	// 	bytes: string;
+	// 	signature: string;
+	// }): Promise<boolean> {
+	// 	return this.fetchApi<boolean, ApiPerpetualsCancelStopOrdersBody>(
+	// 		"account/cancel-stop-orders",
+	// 		{
+	// 			...inputs,
+	// 			walletAddress: this.accountCap.walletAddress,
+	// 		}
+	// 	);
+	// }
 
 	public async setPositionLeverage(inputs: {
 		bytes: string;
@@ -1526,6 +1511,98 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
+
+	private async getSlTpArgs(inputs: {
+		tx: Transaction;
+		stopLoss: Omit<PerpetualsSlTpOrderDetails, "gasCoin"> | undefined;
+		takeProfit: Omit<PerpetualsSlTpOrderDetails, "gasCoin"> | undefined;
+		isSponsoredTx: boolean | undefined;
+	}) {
+		const { tx, stopLoss, takeProfit, isSponsoredTx } = inputs;
+
+		if (!this.Provider) throw new Error("missing AftermathApi Provider");
+		if (!stopLoss && !takeProfit) return {};
+
+		let slGasCoin: TransactionObjectArgument | undefined = undefined;
+		let tpGasCoin: TransactionObjectArgument | undefined = undefined;
+
+		if (stopLoss && takeProfit) {
+			[slGasCoin, tpGasCoin] =
+				await this.Provider.Coin().fetchCoinsWithAmountTx({
+					tx,
+					isSponsoredTx,
+					coinTypes: [
+						Coin.constants.suiCoinType,
+						Coin.constants.suiCoinType,
+					],
+					walletAddress: this.accountCap.walletAddress,
+					coinAmounts: [
+						Perpetuals.constants.stopOrderGasCostSUI,
+						Perpetuals.constants.stopOrderGasCostSUI,
+					],
+				});
+		} else if (stopLoss) {
+			slGasCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
+				isSponsoredTx,
+				coinType: Coin.constants.suiCoinType,
+				walletAddress: this.accountCap.walletAddress,
+				coinAmount: Perpetuals.constants.stopOrderGasCostSUI,
+			});
+		} else {
+			// take profit
+			tpGasCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+				tx,
+				isSponsoredTx,
+				coinType: Coin.constants.suiCoinType,
+				walletAddress: this.accountCap.walletAddress,
+				coinAmount: Perpetuals.constants.stopOrderGasCostSUI,
+			});
+		}
+
+		const [stopLossArgs, takeProfitArgs] = [
+			stopLoss
+				? {
+						stopLoss: {
+							...stopLoss,
+							gasCoin:
+								TransactionsApiHelpers.serviceCoinDataFromCoinTxArg(
+									{ coinTxArg: slGasCoin }
+								),
+						},
+				  }
+				: undefined,
+			takeProfit
+				? {
+						takeProfit: {
+							...takeProfit,
+							gasCoin:
+								TransactionsApiHelpers.serviceCoinDataFromCoinTxArg(
+									{ coinTxArg: tpGasCoin }
+								),
+						},
+				  }
+				: undefined,
+		];
+		return {
+			...(stopLossArgs ?? {}),
+			...(takeProfitArgs ?? {}),
+		};
+	}
+
+	private getTxKind = async (inputs: {
+		tx: Transaction | undefined;
+	}): Promise<SerializedTransaction | undefined> => {
+		const { tx } = inputs;
+		if (!tx) return;
+
+		const txBytes = await tx.build({
+			// NOTE: is this safe ?
+			client: this.Provider?.provider,
+			onlyTransactionKind: true,
+		});
+		return Buffer.from(txBytes).toString("base64");
+	};
 
 	private useProvider = () => {
 		const provider = this.Provider?.Perpetuals();
