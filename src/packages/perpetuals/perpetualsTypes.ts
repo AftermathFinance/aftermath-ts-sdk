@@ -1164,6 +1164,8 @@ export type ApiPerpetualsMarketOrderBody = {
 };
 
 export type ApiPerpetualsLimitOrderBody = {
+	accountId: PerpetualsAccountId;
+	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
