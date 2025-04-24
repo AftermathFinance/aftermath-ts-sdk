@@ -280,10 +280,7 @@ export interface PerpetualsOrderData {
 }
 
 export interface PerpetualsStopOrderData {
-	limitOrder?: {
-		price: PerpetualsOrderPrice;
-		orderType: PerpetualsOrderType;
-	};
+	objectId: ObjectId;
 	expiryTimestamp: bigint;
 	stopIndexPrice: number;
 	triggerIfGeStopIndexPrice: boolean;
@@ -291,6 +288,10 @@ export interface PerpetualsStopOrderData {
 	side: PerpetualsOrderSide;
 	size: bigint;
 	reduceOnly: boolean;
+	limitOrder?: {
+		price: PerpetualsOrderPrice;
+		orderType: PerpetualsOrderType;
+	};
 }
 
 export interface PerpetualsFilledOrderData {
@@ -843,6 +844,9 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "accountObjectVersion"
 			| "accountObjectDigest"
 			| "hasPosition"
+			| "stopLoss"
+			| "takeProfit"
+			| "txKind"
 	  >
 	| Omit<
 			ApiPerpetualsMarketOrderBody,
@@ -852,6 +856,9 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "accountObjectVersion"
 			| "accountObjectDigest"
 			| "hasPosition"
+			| "stopLoss"
+			| "takeProfit"
+			| "txKind"
 	  >
 ) & {
 	collateral: Balance;

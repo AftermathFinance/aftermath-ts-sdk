@@ -405,7 +405,13 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getUpdateStopOrdersTx(
-		inputs: Omit<ApiPerpetualsUpdateStopOrdersBody, "txKind"> & {
+		inputs: Omit<
+			ApiPerpetualsUpdateStopOrdersBody,
+			| "txKind"
+			| "accountObjectId"
+			| "accountObjectVersion"
+			| "accountObjectDigest"
+		> & {
 			tx?: Transaction;
 		}
 	) {
