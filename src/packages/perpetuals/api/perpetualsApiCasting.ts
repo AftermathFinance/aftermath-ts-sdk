@@ -29,6 +29,13 @@ import {
 	ReducedOrderEvent,
 	CreatedStopOrderTicketEvent,
 	DeletedStopOrderTicketEvent,
+	ReceivedCollateralEvent,
+	TransferredDeallocatedCollateralEvent,
+	EditedStopOrderTicketExecutorEvent,
+	AddedStopOrderTicketCollateralEvent,
+	RemovedStopOrderTicketCollateralEvent,
+	EditedStopOrderTicketDetailsEvent,
+	ExecutedStopOrderTicketEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -59,6 +66,13 @@ import {
 	ReducedOrderEventOnChain,
 	CreatedStopOrderTicketEventOnChain,
 	DeletedStopOrderTicketEventOnChain,
+	ReceivedCollateralEventOnChain,
+	TransferredDeallocatedCollateralEventOnChain,
+	EditedStopOrderTicketExecutorEventOnChain,
+	AddedStopOrderTicketCollateralEventOnChain,
+	RemovedStopOrderTicketCollateralEventOnChain,
+	EditedStopOrderTicketDetailsEventOnChain,
+	ExecutedStopOrderTicketEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
 import { IFixedAsStringBytes } from "../../../types";
@@ -568,9 +582,25 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			ticketId: Helpers.addLeadingZeroesToType(fields.ticket_id),
+			objectId: Helpers.addLeadingZeroesToType(fields.obj_id),
 			accountId: BigInt(fields.account_id),
-			recipient: Helpers.addLeadingZeroesToType(fields.recipient),
+			executor: Helpers.addLeadingZeroesToType(fields.executor),
+			gas: BigInt(fields.gas),
+			collateralToAllocate: BigInt(fields.collateral_to_allocate),
 			encryptedDetails: fields.encrypted_details,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static executedStopOrderTicketEventFromOnChain = (
+		eventOnChain: ExecutedStopOrderTicketEventOnChain
+	): ExecutedStopOrderTicketEvent => {
+		const f = eventOnChain.parsedJson;
+		return {
+			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			accountId: BigInt(f.account_id),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -580,11 +610,110 @@ export class PerpetualsApiCasting {
 	public static deletedStopOrderTicketEventFromOnChain = (
 		eventOnChain: DeletedStopOrderTicketEventOnChain
 	): DeletedStopOrderTicketEvent => {
-		const fields = eventOnChain.parsedJson;
+		const f = eventOnChain.parsedJson;
 		return {
-			ticketId: Helpers.addLeadingZeroesToType(fields.ticket_id),
-			accountId: BigInt(fields.account_id),
-			executed: fields.executed,
+			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			accountId: BigInt(f.account_id),
+			subaccountId: f.subaccount_id
+				? Helpers.addLeadingZeroesToType(f.subaccount_id)
+				: undefined,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static editedStopOrderTicketDetailsEventFromOnChain = (
+		eventOnChain: EditedStopOrderTicketDetailsEventOnChain
+	): EditedStopOrderTicketDetailsEvent => {
+		const f = eventOnChain.parsedJson;
+		return {
+			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			accountId: BigInt(f.account_id),
+			subaccountId: f.subaccount_id
+				? Helpers.addLeadingZeroesToType(f.subaccount_id)
+				: undefined,
+			encryptedDetails: f.encrypted_details,
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static editedStopOrderTicketExecutorEventFromOnChain = (
+		eventOnChain: EditedStopOrderTicketExecutorEventOnChain
+	): EditedStopOrderTicketExecutorEvent => {
+		const f = eventOnChain.parsedJson;
+		return {
+			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			accountId: BigInt(f.account_id),
+			subaccountId: f.subaccount_id
+				? Helpers.addLeadingZeroesToType(f.subaccount_id)
+				: undefined,
+			executor: Helpers.addLeadingZeroesToType(f.executor),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static addedStopOrderTicketCollateralEventFromOnChain = (
+		eventOnChain: AddedStopOrderTicketCollateralEventOnChain
+	): AddedStopOrderTicketCollateralEvent => {
+		const f = eventOnChain.parsedJson;
+		return {
+			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			accountId: BigInt(f.account_id),
+			subaccountId: f.subaccount_id
+				? Helpers.addLeadingZeroesToType(f.subaccount_id)
+				: undefined,
+			collateralToAllocate: BigInt(f.collateral_to_allocate),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static removedStopOrderTicketCollateralEventFromOnChain = (
+		eventOnChain: RemovedStopOrderTicketCollateralEventOnChain
+	): RemovedStopOrderTicketCollateralEvent => {
+		const f = eventOnChain.parsedJson;
+		return {
+			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			accountId: BigInt(f.account_id),
+			subaccountId: f.subaccount_id
+				? Helpers.addLeadingZeroesToType(f.subaccount_id)
+				: undefined,
+			collateralToRemove: BigInt(f.collateral_to_remove),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static transferredDeallocatedCollateralEventFromOnChain = (
+		eventOnChain: TransferredDeallocatedCollateralEventOnChain
+	): TransferredDeallocatedCollateralEvent => {
+		const f = eventOnChain.parsedJson;
+		return {
+			chId: Helpers.addLeadingZeroesToType(f.ch_id),
+			objectId: Helpers.addLeadingZeroesToType(f.obj_id),
+			accountId: BigInt(f.account_id),
+			collateral: BigInt(f.collateral),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static receivedCollateralEventFromOnChain = (
+		eventOnChain: ReceivedCollateralEventOnChain
+	): ReceivedCollateralEvent => {
+		const f = eventOnChain.parsedJson;
+		return {
+			objectId: Helpers.addLeadingZeroesToType(f.obj_id),
+			accountId: BigInt(f.account_id),
+			collateral: BigInt(f.collateral),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

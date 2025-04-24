@@ -719,15 +719,64 @@ export const isReducedOrderEvent = (
 
 export interface CreatedStopOrderTicketEvent extends Event {
 	ticketId: ObjectId;
+	objectId: ObjectId;
 	accountId: PerpetualsAccountId;
-	recipient: SuiAddress;
+	executor: SuiAddress;
+	gas: Balance;
+	collateralToAllocate: Balance;
 	encryptedDetails: Byte[];
+}
+
+export interface ExecutedStopOrderTicketEvent extends Event {
+	ticketId: ObjectId;
+	accountId: PerpetualsAccountId;
 }
 
 export interface DeletedStopOrderTicketEvent extends Event {
 	ticketId: ObjectId;
 	accountId: PerpetualsAccountId;
-	executed: boolean;
+	subaccountId?: ObjectId;
+}
+
+export interface EditedStopOrderTicketDetailsEvent extends Event {
+	ticketId: ObjectId;
+	accountId: PerpetualsAccountId;
+	subaccountId?: ObjectId;
+	encryptedDetails: Byte[];
+}
+
+export interface EditedStopOrderTicketExecutorEvent extends Event {
+	ticketId: ObjectId;
+	accountId: PerpetualsAccountId;
+	subaccountId?: ObjectId;
+	executor: SuiAddress;
+}
+
+export interface AddedStopOrderTicketCollateralEvent extends Event {
+	ticketId: ObjectId;
+	accountId: PerpetualsAccountId;
+	subaccountId?: ObjectId;
+	collateralToAllocate: Balance;
+}
+
+export interface RemovedStopOrderTicketCollateralEvent extends Event {
+	ticketId: ObjectId;
+	accountId: PerpetualsAccountId;
+	subaccountId?: ObjectId;
+	collateralToRemove: Balance;
+}
+
+export interface TransferredDeallocatedCollateralEvent extends Event {
+	chId: ObjectId;
+	objectId: ObjectId; // Account or SubAccount object id
+	accountId: PerpetualsAccountId;
+	collateral: Balance;
+}
+
+export interface ReceivedCollateralEvent extends Event {
+	objectId: ObjectId; // Account or SubAccount object id
+	accountId: PerpetualsAccountId;
+	collateral: Balance;
 }
 
 // =========================================================================

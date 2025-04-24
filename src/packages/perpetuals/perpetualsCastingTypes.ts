@@ -401,15 +401,66 @@ export type ReducedOrderEventOnChain = EventOnChain<{
 
 export type CreatedStopOrderTicketEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
+	obj_id: ObjectId;
 	account_id: BigIntAsString;
-	recipient: SuiAddress;
+	executor: SuiAddress;
+	gas: BigIntAsString;
+	collateral_to_allocate: BigIntAsString;
 	encrypted_details: Byte[]; // vector<u8>
+}>;
+
+export type ExecutedStopOrderTicketEventOnChain = EventOnChain<{
+	ticket_id: ObjectId;
+	account_id: BigIntAsString;
 }>;
 
 export type DeletedStopOrderTicketEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
 	account_id: BigIntAsString;
-	executed: boolean;
+	subaccount_id: ObjectId | undefined;
+}>;
+
+export type EditedStopOrderTicketDetailsEventOnChain = EventOnChain<{
+	ticket_id: ObjectId;
+	account_id: BigIntAsString;
+	subaccount_id: ObjectId | undefined;
+	encrypted_details: Byte[]; // vector<u8>
+}>;
+
+export type EditedStopOrderTicketExecutorEventOnChain = EventOnChain<{
+	ticket_id: ObjectId;
+	account_id: BigIntAsString;
+	subaccount_id: ObjectId | undefined;
+	executor: SuiAddress;
+}>;
+
+export type AddedStopOrderTicketCollateralEventOnChain = EventOnChain<{
+	ticket_id: ObjectId;
+	account_id: BigIntAsString;
+	subaccount_id: ObjectId | undefined;
+	collateral_to_allocate: BigIntAsString;
+}>;
+
+export type RemovedStopOrderTicketCollateralEventOnChain = EventOnChain<{
+	ticket_id: ObjectId;
+	account_id: BigIntAsString;
+	subaccount_id: ObjectId | undefined;
+	collateral_to_remove: BigIntAsString;
+}>;
+
+export type TransferredDeallocatedCollateralEventOnChain = EventOnChain<{
+	ch_id: ObjectId;
+	/// Can be the `Account` or `SubAccount` object id
+	obj_id: ObjectId;
+	account_id: BigIntAsString;
+	collateral: BigIntAsString;
+}>;
+
+export type ReceivedCollateralEventOnChain = EventOnChain<{
+	/// Can be the `Account` or `SubAccount` object id
+	obj_id: ObjectId;
+	account_id: BigIntAsString;
+	collateral: BigIntAsString;
 }>;
 
 // =========================================================================
