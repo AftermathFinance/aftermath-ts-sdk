@@ -482,14 +482,12 @@ export interface AllocatedCollateralEvent extends Event {
 	marketId: PerpetualsMarketId;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
-	positionCollateralAfter: IFixed;
 }
 
 export interface DeallocatedCollateralEvent extends Event {
 	marketId: PerpetualsMarketId;
 	accountId: PerpetualsAccountId;
 	collateralDelta: Balance;
-	positionCollateralAfter: IFixed;
 }
 
 export interface WithdrewCollateralEvent extends Event {

@@ -276,26 +276,28 @@ export type UpdatedMarketVersionEventOnChain = EventOnChain<{
 
 export type WithdrewCollateralEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
+	// subaccount_id: ObjectId | undefined;
 	collateral: BigIntAsString;
 }>;
 
 export type DepositedCollateralEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
+	// subaccount_id: ObjectId | undefined;
 	collateral: BigIntAsString;
 }>;
 
 export type AllocatedCollateralEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	account_id: BigIntAsString;
+	// subaccount_id: ObjectId | undefined;
 	collateral: BigIntAsString;
-	position_collateral_after: IFixedAsString;
 }>;
 
 export type DeallocatedCollateralEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	account_id: BigIntAsString;
+	// subaccount_id: ObjectId | undefined;
 	collateral: BigIntAsString;
-	position_collateral_after: IFixedAsString;
 }>;
 
 export type SettledFundingEventOnChain = EventOnChain<{
@@ -353,15 +355,6 @@ export type CanceledOrderEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
 	size: BigIntAsString;
 	order_id: BigIntAsString;
-}>;
-
-export type PostedOrderEventOnChain = EventOnChain<{
-	ch_id: ObjectId;
-	account_id: BigIntAsString;
-	posted_base_ask: BigIntAsString;
-	posted_base_bid: BigIntAsString;
-	pending_asks: IFixedAsString;
-	pending_bids: IFixedAsString;
 }>;
 
 export type FilledMakerOrdersEventOnChain = EventOnChain<{

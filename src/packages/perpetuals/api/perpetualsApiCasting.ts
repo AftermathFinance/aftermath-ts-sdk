@@ -38,7 +38,6 @@ import {
 	CanceledOrderEventOnChain,
 	CreatedAccountEventOnChain,
 	DepositedCollateralEventOnChain,
-	PostedOrderEventOnChain,
 	WithdrewCollateralEventOnChain,
 	FilledMakerOrdersEventOnChain,
 	FilledTakerOrderEventOnChain,
@@ -369,7 +368,6 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			collateralDelta: BigInt(fields.collateral),
-			positionCollateralAfter: BigInt(fields.position_collateral_after),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -384,7 +382,6 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			collateralDelta: BigInt(fields.collateral),
-			positionCollateralAfter: BigInt(fields.position_collateral_after),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -461,26 +458,6 @@ export class PerpetualsApiCasting {
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
 			size: BigInt(fields.size),
 			orderId: BigInt(fields.order_id),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
-
-	public static postedOrderEventFromOnChain = (
-		eventOnChain: PostedOrderEventOnChain
-	): PostedOrderEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			accountId: BigInt(fields.account_id),
-			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			side:
-				BigInt(fields.posted_base_ask) > BigInt(fields.posted_base_bid)
-					? PerpetualsOrderSide.Ask
-					: PerpetualsOrderSide.Bid,
-			size: BigInt(fields.posted_base_ask + fields.posted_base_bid),
-			asksQuantity: BigInt(fields.pending_asks),
-			bidsQuantity: BigInt(fields.pending_bids),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
