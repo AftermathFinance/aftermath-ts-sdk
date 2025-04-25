@@ -260,6 +260,16 @@ export class PerpetualsApiCasting {
 			),
 			baseOracleTolerance: BigInt(data.base_oracle_tolerance),
 			collateralOracleTolerance: BigInt(data.collateral_oracle_tolerance),
+			maxOpenInterest: Casting.IFixed.iFixedFromStringBytes(
+				data.max_open_interest
+			),
+			maxOpenInterestThreshold: Casting.IFixed.iFixedFromStringBytes(
+				data.max_open_interest_threshold
+			),
+			maxOpenInterestPositionPercent:
+				Casting.IFixed.iFixedFromStringBytes(
+					data.max_open_interest_position_percent
+				),
 		};
 	};
 

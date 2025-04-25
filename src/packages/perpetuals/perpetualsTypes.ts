@@ -204,6 +204,9 @@ export interface PerpetualsMarketParams {
 	maxPendingOrders: bigint;
 	baseOracleTolerance: bigint;
 	collateralOracleTolerance: bigint;
+	maxOpenInterest: IFixed;
+	maxOpenInterestThreshold: IFixed;
+	maxOpenInterestPositionPercent: IFixed;
 }
 
 export interface PerpetualsMarketState {
@@ -288,6 +291,7 @@ export interface PerpetualsStopOrderData {
 	side: PerpetualsOrderSide;
 	size: bigint;
 	reduceOnly: boolean;
+	marginRatio?: IFixed; // NOTE: should this be leverage instead ?
 	limitOrder?: {
 		price: PerpetualsOrderPrice;
 		orderType: PerpetualsOrderType;

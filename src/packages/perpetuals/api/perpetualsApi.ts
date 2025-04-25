@@ -70,6 +70,11 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		updatedMarketVersion: AnyObjectType;
 		createdStopOrderTicket: AnyObjectType;
 		deletedStopOrderTicket: AnyObjectType;
+		editedStopOrderTicketExecutor: AnyObjectType;
+		addedStopOrderTicketCollateral: AnyObjectType;
+		removedStopOrderTicketCollateral: AnyObjectType;
+		editedStopOrderTicketDetails: AnyObjectType;
+		executedStopOrderTicket: AnyObjectType;
 		filledTakerOrderLiquidator: AnyObjectType;
 		reducedOrder: AnyObjectType;
 	};
@@ -118,6 +123,19 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			// Stop Order
 			createdStopOrderTicket: this.eventType("CreatedStopOrderTicket"),
 			deletedStopOrderTicket: this.eventType("DeletedStopOrderTicket"),
+			editedStopOrderTicketExecutor: this.eventType(
+				"EditedStopOrderTicketExecutor"
+			),
+			addedStopOrderTicketCollateral: this.eventType(
+				"AddedStopOrderTicketCollateral"
+			),
+			removedStopOrderTicketCollateral: this.eventType(
+				"RemovedStopOrderTicketCollateral"
+			),
+			editedStopOrderTicketDetails: this.eventType(
+				"EditedStopOrderTicketDetails"
+			),
+			executedStopOrderTicket: this.eventType("ExecutedStopOrderTicket"),
 		};
 		this.moveErrors = {
 			[this.addresses.packages.perpetuals]: {

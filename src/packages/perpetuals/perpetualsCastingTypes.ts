@@ -112,6 +112,13 @@ export interface PerpetualsMarketParamsFieldsIndexerReponse {
 	base_oracle_tolerance: BigIntAsString;
 	/// Timestamp tolerance for collateral oracle price
 	collateral_oracle_tolerance: BigIntAsString;
+	/// Max open interest (in base tokens) available for this market
+	max_open_interest: IFixedAsStringBytes;
+	/// The check on `max_open_interest_position_percent` is not performed if
+	/// the market's open interest is below this threshold.
+	max_open_interest_threshold: IFixedAsStringBytes;
+	/// Max open interest percentage a position can have relative to total market's open interest
+	max_open_interest_position_percent: IFixedAsStringBytes;
 }
 
 /// The state of a perpetuals market.
