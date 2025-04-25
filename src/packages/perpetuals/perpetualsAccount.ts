@@ -58,7 +58,6 @@ import {
 	CallerConfig,
 	SdkPerpetualsPlaceOrderPreviewInputs,
 	SdkPerpetualsCancelOrdersPreviewInputs,
-	// ApiPerpetualsCancelStopOrdersBody,
 	ApiPerpetualsAccountStopOrderDatasBody,
 	PerpetualsStopOrderData,
 	PerpetualsSlTpOrderDetails,
@@ -66,7 +65,7 @@ import {
 	ApiPerpetualsCancelStopOrdersBody,
 	ApiPerpetualsPlaceStopOrdersBody,
 	SdkPerpetualsStopOrdersInputs,
-	ApiPerpetualsUpdateStopOrdersBody,
+	ApiPerpetualsEditStopOrdersBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -342,7 +341,7 @@ export class PerpetualsAccount extends Caller {
 
 	public async getCancelStopOrdersTx(inputs: {
 		tx?: Transaction;
-		stopOrderIds: ObjectId[];
+		marketIdsToStopOrderIds: Record<PerpetualsMarketId, ObjectId[]>;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsCancelStopOrdersBody>(
@@ -404,9 +403,9 @@ export class PerpetualsAccount extends Caller {
 		);
 	}
 
-	public async getUpdateStopOrdersTx(
+	public async getEditStopOrdersTx(
 		inputs: Omit<
-			ApiPerpetualsUpdateStopOrdersBody,
+			ApiPerpetualsEditStopOrdersBody,
 			| "txKind"
 			| "accountObjectId"
 			| "accountObjectVersion"
@@ -420,8 +419,8 @@ export class PerpetualsAccount extends Caller {
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.accountCap.walletAddress);
 
-		return this.fetchApiTransaction<ApiPerpetualsUpdateStopOrdersBody>(
-			"transactions/update-stop-orders",
+		return this.fetchApiTransaction<ApiPerpetualsEditStopOrdersBody>(
+			"transactions/edit-stop-orders",
 			{
 				stopOrders,
 				txKind: await this.getTxKind({ tx }),
@@ -552,33 +551,6 @@ export class PerpetualsAccount extends Caller {
 			clearing_house_ids: inputs?.marketIds ?? [],
 		};
 	}
-
-	// public cancelStopOrdersMessageToSign(inputs: {
-	// 	orderIds: PerpetualsOrderId[];
-	// }): {
-	// 	action: string;
-	// 	order_object_ids: string[];
-	// } {
-	// 	return {
-	// 		action: "CANCEL_STOP_ORDERS",
-	// 		order_object_ids: inputs.orderIds.map((orderId) =>
-	// 			orderId.toString().replaceAll("n", "")
-	// 		),
-	// 	};
-	// }
-
-	// public async cancelStopOrders(inputs: {
-	// 	bytes: string;
-	// 	signature: string;
-	// }): Promise<boolean> {
-	// 	return this.fetchApi<boolean, ApiPerpetualsCancelStopOrdersBody>(
-	// 		"account/cancel-stop-orders",
-	// 		{
-	// 			...inputs,
-	// 			walletAddress: this.accountCap.walletAddress,
-	// 		}
-	// 	);
-	// }
 
 	public async setPositionLeverage(inputs: {
 		bytes: string;

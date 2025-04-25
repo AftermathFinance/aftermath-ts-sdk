@@ -291,7 +291,8 @@ export interface PerpetualsStopOrderData {
 	side: PerpetualsOrderSide;
 	size: bigint;
 	reduceOnly: boolean;
-	marginRatio?: IFixed; // NOTE: should this be leverage instead ?
+	// collateralToAllocate: Balance;
+	marginRatio?: number; // NOTE: should this be leverage instead ?
 	limitOrder?: {
 		price: PerpetualsOrderPrice;
 		orderType: PerpetualsOrderType;
@@ -867,12 +868,6 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 		collateralCoinType: CoinType;
 	};
 
-// export interface ApiPerpetualsCancelStopOrdersBody {
-// 	walletAddress: SuiAddress;
-// 	bytes: string;
-// 	signature: string;
-// }
-
 export interface ApiPerpetualsSetPositionLeverageBody {
 	walletAddress: SuiAddress;
 	bytes: string;
@@ -1114,10 +1109,6 @@ export interface ApiPerpetualsDeallocateCollateralBody {
 }
 
 export interface PerpetualsSlTpOrderDetails {
-	// limitOrder?: {
-	// 	price: PerpetualsOrderPrice;
-	// 	orderType: PerpetualsOrderType;
-	// };
 	// expiryTimestamp: bigint;
 	stopIndexPrice: number;
 	// triggerIfGeStopIndexPrice: boolean;
@@ -1125,6 +1116,13 @@ export interface PerpetualsSlTpOrderDetails {
 	size: bigint;
 	// reduceOnly: boolean;
 	gasCoin: ServiceCoinData;
+	// TODO: add back once ready on be
+	// collateralToAllocate: Balance;
+	marginRatio?: number;
+	// limitOrder?: {
+	// 	price: PerpetualsOrderPrice;
+	// 	orderType: PerpetualsOrderType;
+	// };
 }
 
 export interface ApiPerpetualsPlaceStopOrdersBody {
@@ -1132,10 +1130,6 @@ export interface ApiPerpetualsPlaceStopOrdersBody {
 	accountObjectVersion: number;
 	accountObjectDigest: ObjectId;
 	stopOrders: {
-		limitOrder?: {
-			price: PerpetualsOrderPrice;
-			orderType: PerpetualsOrderType;
-		};
 		expiryTimestamp: bigint;
 		stopIndexPrice: number;
 		triggerIfGeStopIndexPrice: boolean;
@@ -1143,16 +1137,18 @@ export interface ApiPerpetualsPlaceStopOrdersBody {
 		size: bigint;
 		reduceOnly: boolean;
 		gasCoin: ServiceCoinData;
+		collateralToAllocate: Balance;
+		marginRatio?: number;
+		limitOrder?: {
+			price: PerpetualsOrderPrice;
+			orderType: PerpetualsOrderType;
+		};
 	}[];
 	txKind?: SerializedTransaction;
 }
 
 export interface SdkPerpetualsStopOrdersInputs {
 	stopOrders: {
-		limitOrder?: {
-			price: PerpetualsOrderPrice;
-			orderType: PerpetualsOrderType;
-		};
 		expiryTimestamp: bigint;
 		stopIndexPrice: number;
 		triggerIfGeStopIndexPrice: boolean;
@@ -1160,6 +1156,12 @@ export interface SdkPerpetualsStopOrdersInputs {
 		size: bigint;
 		reduceOnly: boolean;
 		// gasCoin: ServiceCoinData;
+		collateralToAllocate: Balance;
+		marginRatio?: number;
+		limitOrder?: {
+			price: PerpetualsOrderPrice;
+			orderType: PerpetualsOrderType;
+		};
 	}[];
 	tx?: Transaction;
 	isSponsoredTx?: boolean;
@@ -1170,10 +1172,6 @@ export interface ApiPerpetualsPlaceStopOrdersBody {
 	accountObjectVersion: number;
 	accountObjectDigest: ObjectId;
 	stopOrders: {
-		limitOrder?: {
-			price: PerpetualsOrderPrice;
-			orderType: PerpetualsOrderType;
-		};
 		expiryTimestamp: bigint;
 		stopIndexPrice: number;
 		triggerIfGeStopIndexPrice: boolean;
@@ -1181,25 +1179,33 @@ export interface ApiPerpetualsPlaceStopOrdersBody {
 		size: bigint;
 		reduceOnly: boolean;
 		gasCoin: ServiceCoinData;
-	}[];
-	txKind?: SerializedTransaction;
-}
-
-export interface ApiPerpetualsUpdateStopOrdersBody {
-	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
-	stopOrders: {
+		collateralToAllocate: Balance;
+		marginRatio?: number;
 		limitOrder?: {
 			price: PerpetualsOrderPrice;
 			orderType: PerpetualsOrderType;
 		};
+	}[];
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsEditStopOrdersBody {
+	accountObjectId: ObjectId;
+	accountObjectVersion: number;
+	accountObjectDigest: ObjectId;
+	stopOrders: {
 		expiryTimestamp: bigint;
 		stopIndexPrice: number;
 		triggerIfGeStopIndexPrice: boolean;
 		side: PerpetualsOrderSide;
 		size: bigint;
 		reduceOnly: boolean;
+		collateralToAllocate: Balance;
+		marginRatio?: number;
+		limitOrder?: {
+			price: PerpetualsOrderPrice;
+			orderType: PerpetualsOrderType;
+		};
 	}[];
 	txKind?: SerializedTransaction;
 }
@@ -1259,7 +1265,7 @@ export interface ApiPerpetualsCancelStopOrdersBody {
 	accountObjectId: ObjectId;
 	accountObjectVersion: number;
 	accountObjectDigest: ObjectId;
-	stopOrderIds: ObjectId[];
+	marketIdsToStopOrderIds: Record<PerpetualsMarketId, ObjectId[]>;
 	txKind?: SerializedTransaction;
 }
 
