@@ -1,8 +1,8 @@
 import {
-	ApiCreatePoolBody,
+	ApiCreatePoolBodyV1,
 	ApiEventsBody,
 	ApiPoolObjectIdForLpCoinTypeBody,
-	ApiPublishLpCoinBody,
+	ApiPublishLpCoinBodyV1,
 	Balance,
 	CoinType,
 	PoolDepositEvent,
@@ -21,6 +21,8 @@ import {
 	SuiAddress,
 	ApiIndexerEventsBody,
 	CallerConfig,
+	ApiPublishLpCoinBodyV2,
+	ApiCreatePoolBodyV2,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -261,8 +263,27 @@ export class Pools extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
-		return this.useProvider().buildPublishLpCoinTx(inputs);
+	public async getPublishLpCoinTransactionV1(inputs: ApiPublishLpCoinBodyV1) {
+		return this.useProvider().buildPublishLpCoinTxV1(inputs);
+	}
+
+	/**
+	 * Constructs or fetches a transaction to publish a new LP coin package,
+	 * typically used by advanced users or devs establishing new liquidity pools.
+	 *
+	 * @param inputs - Includes the user `walletAddress` and other relevant pool metadata.
+	 * @returns A transaction object (or data) that can be signed and published to Sui.
+	 *
+	 * @example
+	 * ```typescript
+	 * const publishTx = await pools.getPublishLpCoinTransaction({
+	 *   walletAddress: "0x<address>",
+	 *   ...
+	 * });
+	 * ```
+	 */
+	public async getPublishLpCoinTransactionV2(inputs: ApiPublishLpCoinBodyV2) {
+		return this.useProvider().buildPublishLpCoinTxV2(inputs);
 	}
 
 	/**
@@ -297,8 +318,40 @@ export class Pools extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
+	public async getCreatePoolTransactionV1(inputs: ApiCreatePoolBodyV1) {
 		return this.fetchApiTransaction("transactions/create-pool", inputs);
+	}
+
+	/**
+	 * Constructs a transaction to create a brand new pool on-chain, given coin types,
+	 * initial weights, fees, and possible DAO fee info.
+	 *
+	 * @param inputs - The body describing how to form the new pool.
+	 * @returns A transaction object that can be signed and executed.
+	 *
+	 * @example
+	 * ```typescript
+	 * const createPoolTx = await pools.getCreatePoolTransaction({
+	 *   walletAddress: "0x<address>",
+	 *   lpCoinType: "0x<lpCoin>",
+	 *   coinsInfo: [
+	 *     {
+	 *       coinType: "0x<coinA>",
+	 *       weight: 0.5,
+	 *       decimals: 9,
+	 *       tradeFeeIn: 0.003,
+	 *       initialDeposit: 1_000_000_000n
+	 *     },
+	 *     // ...
+	 *   ],
+	 *   poolName: "My Weighted Pool",
+	 *   createPoolCapId: "0x<capId>",
+	 *   respectDecimals: true,
+	 * });
+	 * ```
+	 */
+	public async getCreatePoolTransactionV2(inputs: ApiCreatePoolBodyV2) {
+		return this.fetchApiTransaction("transactions/create-pool-v2", inputs);
 	}
 
 	// =========================================================================

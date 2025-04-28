@@ -39,7 +39,7 @@ import {
 	ApiIndexerEventsBody,
 	ObjectId,
 	SuiAddress,
-	ApiPublishLpCoinBody,
+	ApiPublishLpCoinBodyV1,
 	PoolLpInfo,
 	CoinGeckoTickerData,
 	CoinGeckoHistoricalTradeData,
@@ -47,9 +47,10 @@ import {
 	UniqueId,
 	PoolObject,
 	DaoFeePoolsAddresses,
-	ApiCreatePoolBody,
+	ApiCreatePoolBodyV1,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	DaoFeePoolOwnerCapObject,
+	ApiPublishLpCoinBodyV2,
 } from "../../../types";
 import {
 	DaoFeePoolFieldsOnChain,
@@ -76,6 +77,10 @@ import {
 	MoveErrors,
 	MoveErrorsInterface,
 } from "../../../general/types/moveErrorsInterface";
+import {
+	update_constants,
+	update_identifiers,
+} from "@mysten/move-bytecode-template";
 
 /**
  * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
@@ -762,7 +767,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs An object containing the transaction block and the decimal value of the liquidity pool coin.
 	 * @returns A promise that resolves to the result of the transaction publishing.
 	 */
-	public publishLpCoinTx = (inputs: {
+	public publishLpCoinTxV1 = (inputs: {
 		tx: Transaction;
 		lpCoinDecimals: CoinDecimal;
 	}) => {
@@ -775,6 +780,125 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		const { tx, lpCoinDecimals } = inputs;
 		const compiledModulesAndDeps = JSON.parse(compilations[lpCoinDecimals]);
+
+		return tx.publish({
+			modules: compiledModulesAndDeps.modules.map((m: any) =>
+				Array.from(fromB64(m))
+			),
+			dependencies: compiledModulesAndDeps.dependencies.map(
+				(addr: string) => normalizeSuiObjectId(addr)
+			),
+		});
+	};
+
+	/**
+	 * Publishes a transaction block for creating a liquidity pool coin.
+	 * @param inputs An object containing the transaction block and the decimal value of the liquidity pool coin.
+	 * @returns A promise that resolves to the result of the transaction publishing.
+	 */
+	public publishLpCoinTxV2 = (inputs: {
+		tx: Transaction;
+		respectDecimals: boolean;
+		poolFlatness: PoolFlatness;
+		weights: PoolWeight[];
+		lpCoinMetadata: {
+			name: string;
+			symbol: string;
+			iconUrl: Url;
+			decimals: CoinDecimal;
+			description: string;
+		};
+	}) => {
+		const compilation =
+			this.addresses.pools.other?.createLpCoinCompilationV2;
+		if (!compilation)
+			throw new Error(
+				"not all required addresses have been set in provider for lp coin publishing (requires bytecode compilation in `addresses.pools.other.createLpCoinCompilationV2`)"
+			);
+
+		const { tx, respectDecimals, poolFlatness, weights, lpCoinMetadata } =
+			inputs;
+
+		const encoder = new TextEncoder();
+		const bytecode = encoder.encode(compilation);
+
+		let updatedBytecode = update_identifiers(bytecode, {
+			AF_LP: lpCoinMetadata.symbol.toUpperCase(),
+			af_lp: lpCoinMetadata.symbol.toLowerCase(),
+		});
+
+		// update SYMBOL
+		updatedBytecode = update_constants(
+			bytecode,
+			bcs.vector(bcs.string()).serialize(lpCoinMetadata.symbol).toBytes(), // new value
+			bcs.vector(bcs.string()).serialize("1000").toBytes(), // current value
+			"Vector(U8)" // type of the constant
+		);
+		// update NAME
+		updatedBytecode = update_constants(
+			bytecode,
+			bcs.vector(bcs.string()).serialize(lpCoinMetadata.name).toBytes(), // new value
+			bcs.vector(bcs.string()).serialize("1001").toBytes(), // current value
+			"Vector(U8)" // type of the constant
+		);
+		// update DESCRIPTION
+		updatedBytecode = update_constants(
+			bytecode,
+			bcs
+				.vector(bcs.string())
+				.serialize(lpCoinMetadata.description)
+				.toBytes(), // new value
+			bcs.vector(bcs.string()).serialize("1002").toBytes(), // current value
+			"Vector(U8)" // type of the constant
+		);
+		// update URL
+		updatedBytecode = update_constants(
+			bytecode,
+			bcs
+				.vector(bcs.string())
+				.serialize(lpCoinMetadata.iconUrl)
+				.toBytes(), // new value
+			bcs.vector(bcs.string()).serialize("empty").toBytes(), // current value
+			"Vector(U8)" // type of the constant
+		);
+		// update POOL_COIN_DECIMALS
+		updatedBytecode = update_constants(
+			bytecode,
+			bcs.u64().serialize(lpCoinMetadata.decimals).toBytes(), // new value
+			bcs.u64().serialize(2313).toBytes(), // current value
+			"U64" // type of the constant
+		);
+		// update RESPECT_DECIMALS
+		updatedBytecode = update_constants(
+			bytecode,
+			bcs.bool().serialize(respectDecimals).toBytes(), // new value
+			bcs.bool().serialize(false).toBytes(), // current value
+			"Bool" // type of the constant
+		);
+		// update FLATNESS
+		updatedBytecode = update_constants(
+			bytecode,
+			bcs.u64().serialize(poolFlatness).toBytes(), // new value
+			bcs.u64().serialize(1014).toBytes(), // current value
+			"U64" // type of the constant
+		);
+
+		for (const [index, weight] of weights.entries()) {
+			// update WEIGHT_X
+			updatedBytecode = update_constants(
+				bytecode,
+				bcs.u64().serialize(weight).toBytes(), // new value
+				bcs
+					.u64()
+					.serialize(1006 + index)
+					.toBytes(), // current value
+				"U64" // type of the constant
+			);
+		}
+
+		const decoder = new TextDecoder();
+		const updatedCompilation = decoder.decode(updatedBytecode);
+		const compiledModulesAndDeps = JSON.parse(updatedCompilation);
 
 		return tx.publish({
 			modules: compiledModulesAndDeps.modules.map((m: any) =>
@@ -1644,15 +1768,34 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - The input parameters for the transaction.
 	 * @returns The built transaction block.
 	 */
-	public buildPublishLpCoinTx = (
-		inputs: ApiPublishLpCoinBody
+	public buildPublishLpCoinTxV1 = (
+		inputs: ApiPublishLpCoinBodyV1
 	): Transaction => {
 		const { lpCoinDecimals } = inputs;
 
 		const tx = new Transaction();
 		tx.setSender(inputs.walletAddress);
 
-		const upgradeCap = this.publishLpCoinTx({ tx, lpCoinDecimals });
+		const upgradeCap = this.publishLpCoinTxV1({ tx, lpCoinDecimals });
+		tx.transferObjects([upgradeCap], inputs.walletAddress);
+
+		return tx;
+	};
+
+	/**
+	 * Builds a transaction block for publishing an LP coin.
+	 * @param inputs - The input parameters for the transaction.
+	 * @returns The built transaction block.
+	 */
+	public buildPublishLpCoinTxV2 = (
+		inputs: ApiPublishLpCoinBodyV2
+	): Transaction => {
+		const { walletAddress, ...otherInputs } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(inputs.walletAddress);
+
+		const upgradeCap = this.publishLpCoinTxV2({ tx, ...otherInputs });
 		tx.transferObjects([upgradeCap], inputs.walletAddress);
 
 		return tx;

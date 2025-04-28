@@ -96,6 +96,7 @@ export interface PoolsAddresses {
 	};
 	other?: {
 		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
+		createLpCoinCompilationV2: string;
 	};
 }
 

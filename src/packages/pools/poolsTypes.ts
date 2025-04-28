@@ -470,16 +470,34 @@ export interface ApiPoolAllCoinWithdrawBody {
  * Request body for publishing a new LP coin on-chain,
  * typically specifying the coin's decimals.
  */
-export interface ApiPublishLpCoinBody {
+export interface ApiPublishLpCoinBodyV1 {
 	walletAddress: SuiAddress;
 	lpCoinDecimals: number;
+}
+
+/**
+ * Request body for publishing a new LP coin on-chain,
+ * typically specifying the coin's decimals.
+ */
+export interface ApiPublishLpCoinBodyV2 {
+	walletAddress: SuiAddress;
+	respectDecimals: boolean;
+	poolFlatness: PoolFlatness;
+	weights: PoolWeight[];
+	lpCoinMetadata: {
+		name: string;
+		symbol: string;
+		iconUrl: Url;
+		decimals: CoinDecimal;
+		description: string;
+	};
 }
 
 /**
  * Request body for creating a new pool, specifying coin information,
  * the LP coin metadata, and optional DAO fee info.
  */
-export interface ApiCreatePoolBody {
+export interface ApiCreatePoolBodyV1 {
 	walletAddress: SuiAddress;
 	lpCoinType: CoinType;
 	lpCoinMetadata: PoolCreationLpCoinMetadata;
@@ -495,6 +513,32 @@ export interface ApiCreatePoolBody {
 	createPoolCapId: ObjectId;
 	respectDecimals: boolean;
 	forceLpDecimals?: CoinDecimal;
+	isSponsoredTx?: boolean;
+	burnLpCoin?: boolean;
+	daoFeeInfo?: {
+		feePercentage: Percentage;
+		feeRecipient: SuiAddress;
+	};
+}
+
+/**
+ * Request body for creating a new pool, specifying coin information,
+ * the LP coin metadata, and optional DAO fee info.
+ */
+export interface ApiCreatePoolBodyV2 {
+	walletAddress: SuiAddress;
+	lpCoinType: CoinType;
+	coinsInfo: {
+		coinType: CoinType;
+		weight: Percentage;
+		decimals?: number;
+		tradeFeeIn: Percentage;
+		initialDeposit: Balance;
+	}[];
+	poolName: PoolName;
+	poolFlatness: 0 | 1;
+	createPoolCapId: ObjectId;
+	respectDecimals: boolean;
 	isSponsoredTx?: boolean;
 	burnLpCoin?: boolean;
 	daoFeeInfo?: {
