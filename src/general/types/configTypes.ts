@@ -82,6 +82,8 @@ export interface PoolsAddresses {
 	packages: {
 		amm: SuiAddress;
 		ammInterface: SuiAddress;
+		ammV2: SuiAddress;
+		ammInterfaceV2: SuiAddress;
 		events: SuiAddress;
 		eventsV2: SuiAddress;
 	};
@@ -100,6 +102,7 @@ export interface PoolsAddresses {
 export interface DaoFeePoolsAddresses {
 	packages: {
 		amm: SuiAddress;
+		ammV2: SuiAddress;
 	};
 	objects: {
 		version: ObjectId;

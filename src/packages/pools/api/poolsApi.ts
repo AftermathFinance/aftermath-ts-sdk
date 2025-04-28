@@ -312,9 +312,147 @@ export class PoolsApi implements MoveErrorsInterface {
 				[PoolsApi.constants.moduleNames.geometricMeanCalculations]: {},
 				[PoolsApi.constants.moduleNames.stableCalculations]: {},
 			},
+			[this.addresses.pools.packages.ammV2]: {
+				[PoolsApi.constants.moduleNames.pool]: {
+					/// A user provides a input that should be between 0 and `FIXED_ONE` but isn't.
+					0: "Flatness Not Normalized",
+					/// A user attempts to create a Pool with a `flatness` parameter we do not support yet.
+					1: "Flatness Not Supported",
+					/// A user attempts to create a pool with weights that don't sum to `FIXED_ONE`.
+					2: "Weights Not Normalized",
+					/// A user attempts to create a Pool with an individual weight outside of the
+					///  range [MIN_WEIGHT, MAX_WEIGHT].
+					3: "Invalid Weight",
+					/// A user attempts to create a Pool with an individual fee outside of the
+					///  range [MIN_FEE, MAX_FEE].
+					4: "Invalid Fee",
+					/// A user provides an input vector (with length m != n) for a pool of size n.
+					5: "Bad Vector Length",
+					/// A user tries to create a Pool but provides an initial deposit that equates to less than
+					///  `MIN_LP_SUPPLY` worth of LP Coins.
+					6: "Not Enough Initial Liquidity",
+					/// A user attempts to create a Pool with an LP `TreasuryCap` that has already minted Coins.
+					7: "Non Zero Total Supply",
+					/// A user attempts to interact with the Pool and specifies a type that isn't in the Pool.
+					8: "Bad Type",
+					/// A user attempts to create a pool with invalid decimal scalars
+					9: "Bad Decimals",
+					/// A user attempts to create a pool with type names which are not sorted
+					10: "Not Sorted",
+				},
+				[PoolsApi.constants.moduleNames.poolRegistry]: {
+					/// A user tries to create a Pool and the generic parameters of `create_pool_n_coins` were
+					///  provided in nonlexicographical order.
+					60: "Not Sorted",
+					/// A user tries to create a Pool with exact parameters as an already active Pool.
+					61: "Duplicate Pool",
+					/// A user tries to upgrade the `PoolRegistry` to a value
+					62: "Invalid Upgrade",
+				},
+				[PoolsApi.constants.moduleNames.deposit]: {
+					/// A user attempts to perform a `deposit` with an older contract.
+					20: "Invalid Protocol Version",
+					/// A user attempts to perform `deposit-n-coins` on a Pool with a size `m` < `n`.
+					21: "Invalid Pool Size",
+					/// A user attempts to perform a deposit and provides a coin with a value of zero.
+					22: "Zero Value",
+					// A user calls `deposit_n_coins` or `all_coin_deposit_n_coins` and provides the same generic
+					//  at least twice.
+					23: "Duplicate Types",
+				},
+				[PoolsApi.constants.moduleNames.poolFactory]: {
+					/// A user attempts to create a pool on an older contract.
+					10: "Invalid Protocol Version",
+					/// A user attempts to create a Pool and provides a coin with a value of zero.
+					11: "Zero Value",
+				},
+				[PoolsApi.constants.moduleNames.price]: {
+					/// A user attempts to query spot/oracle price using an old contract.
+					10: "Invalid Protocol Version",
+				},
+				[PoolsApi.constants.moduleNames.swap]: {
+					/// A user attempts to perform a `swap` with an older contract.
+					40: "Invalid Protocol Version",
+					/// A user attempts to perform `multi-swap-exact-in/out-n-to-m` on a Pool with a size
+					///  `s` < `n` + `m`.
+					41: "Invalid Pool Size",
+					/// A user attempts to perform swap and providing provides a coin with a
+					///  value of zero.
+					42: "Zero Value",
+					/// A user attempts to perform a multi-coin withdraw and provides an `amounts_out`
+					///  vector whose length does
+					43: "Bad Vector Length",
+					/// A user attempts to swap attempts to swap `Coin<CI>` for `amount_out` of `Coin<CO>`
+					///  but its value is insufficient.
+					44: "Insufficient Coin In",
+					// A user calls `multi_swap_exact_in_1_to_n` or `multi_swap_exact_out_1_to_n` and provides the same
+					//  generic at least twice.
+					45: "Duplicate Types",
+					/// Something went wrong with the internal calculations
+					46: "Internal Error",
+					/// An external app is trying to call authorized functions without permission.
+					47: "Not Authorized",
+				},
+				[PoolsApi.constants.moduleNames.withdraw]: {
+					/// A user attempts to perform a `withdraw` with an older contract.
+					30: "Invalid Protocol Version",
+					/// A user attempts to perform `withdraw-n-coins` on a Pool with a size `m` < `n`.
+					31: "Invalid PoolSize",
+					/// A user attempts to perform a withdraw and provides an LP coin with a value of zero.
+					32: "Zero Value",
+					/// A user attempts to perform a multi-coin withdraw and provides an `amounts_out`
+					///  vector whose length does
+					33: "Bad Vector Length",
+					// A user calls `withdraw_n_coins` or `all_coin_withdraw_n_coins` and provides the same generic
+					//  at least twice.
+					34: "Duplicate Types",
+				},
+				[PoolsApi.constants.moduleNames.math]: {
+					// TODO: change error code in move
+
+					/// A user tries to create a Pool that would result in the Pool's invariant equalling zero.
+					// 51: "ZeroInvariant",
+
+					/// A user tries to perform an action with the Pool that results in too much slippage.
+					51: "Slippage",
+					/// A user tries to perform a swap that would result in more than `MAX_SWAP_AMOUNT_IN` worth of
+					///  one of the Pool's coins entering the Pool.
+					52: "Invalid Swap Amount In",
+					/// A user tries to perform a swap that would result in more than `MAX_SWAP_AMOUNT_OUT` worth of
+					///  one of the Pool's coins exiting the Pool.
+					53: "Invalid Swap Amount Out",
+					/// A user tries to perform a `swap_exact_out` with a value for `amount_out` that equates to
+					///  zero amount of `Coin<CI>`.
+					54: "Zero Amount In",
+					/// A user tries to perform a `swap_exact_in` with an amount of `Coin<CI>` that equates to
+					///  zero amount of `Coin<CO>`.
+					55: "Zero Amount Out",
+					/// A user tries to deposit into a Pool with a deposit that is worth zero LP coins.
+					56: "Zero Lp Out",
+					/// A user tries to invest with an lp ratio of 0
+					57: "Zero Lp Ratio",
+				},
+				[PoolsApi.constants.moduleNames.geometricMeanCalculations]: {},
+				[PoolsApi.constants.moduleNames.stableCalculations]: {},
+				[PoolsApi.constants.moduleNames.interface]: {
+					410: "Deprecated",
+				},
+			},
 			...(this.addresses.daoFeePools
 				? {
 						[this.addresses.daoFeePools.packages.amm]: {
+							version: {
+								/// A user tried to interact with an old contract.
+								0: "Invalid Version",
+								/// `init_package_version` has been called outside of this packages `init` function.
+								1: "Version Object Already Created",
+							},
+						},
+				  }
+				: {}),
+			...(this.addresses.daoFeePools
+				? {
+						[this.addresses.daoFeePools.packages.ammV2]: {
 							version: {
 								/// A user tried to interact with an old contract.
 								0: "Invalid Version",
@@ -388,8 +526,8 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
-					? this.addresses.pools.packages.ammInterface
-					: this.addresses.pools.packages.amm,
+					? this.addresses.pools.packages.ammInterfaceV2
+					: this.addresses.pools.packages.ammV2,
 				withTransfer
 					? PoolsApi.constants.moduleNames.interface
 					: PoolsApi.constants.moduleNames.swap,
@@ -406,6 +544,50 @@ export class PoolsApi implements MoveErrorsInterface {
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure.u64(expectedCoinOutAmount.toString()),
 				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
+			],
+		});
+	};
+
+	/**
+	 * Executes a trade transaction on the specified pool.
+	 * @param inputs An object containing the necessary inputs for the trade transaction.
+	 * @returns A `TransactionObjectArgument` representing the trade transaction.
+	 */
+	public simpleTradeTx = (inputs: {
+		tx: Transaction;
+		poolId: ObjectId;
+		coinInId: ObjectId | TransactionObjectArgument;
+		coinInType: CoinType;
+		minCoinOutAmount: Balance;
+		coinOutType: CoinType;
+		lpCoinType: CoinType;
+	}): TransactionObjectArgument => {
+		const {
+			tx,
+			poolId,
+			coinInId,
+			coinInType,
+			minCoinOutAmount,
+			coinOutType,
+			lpCoinType,
+		} = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.pools.packages.ammV2,
+				PoolsApi.constants.moduleNames.swap,
+				"swap_exact_in_direct"
+			),
+			typeArguments: [lpCoinType, coinInType, coinOutType],
+			arguments: [
+				tx.object(poolId),
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.object(this.addresses.pools.objects.protocolFeeVault),
+				tx.object(this.addresses.pools.objects.treasury),
+				tx.object(this.addresses.pools.objects.insuranceFund),
+				tx.object(this.addresses.referralVault.objects.referralVault),
+				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
+				tx.pure.u64(minCoinOutAmount.toString()),
 			],
 		});
 	};
@@ -442,8 +624,8 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
-					? this.addresses.pools.packages.ammInterface
-					: this.addresses.pools.packages.amm,
+					? this.addresses.pools.packages.ammInterfaceV2
+					: this.addresses.pools.packages.ammV2,
 				withTransfer
 					? PoolsApi.constants.moduleNames.interface
 					: PoolsApi.constants.moduleNames.deposit,
@@ -497,8 +679,8 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
-					? this.addresses.pools.packages.ammInterface
-					: this.addresses.pools.packages.amm,
+					? this.addresses.pools.packages.ammInterfaceV2
+					: this.addresses.pools.packages.ammV2,
 				withTransfer
 					? PoolsApi.constants.moduleNames.interface
 					: PoolsApi.constants.moduleNames.withdraw,
@@ -555,8 +737,8 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				withTransfer
-					? this.addresses.pools.packages.ammInterface
-					: this.addresses.pools.packages.amm,
+					? this.addresses.pools.packages.ammInterfaceV2
+					: this.addresses.pools.packages.ammV2,
 				withTransfer
 					? PoolsApi.constants.moduleNames.interface
 					: PoolsApi.constants.moduleNames.withdraw,
@@ -610,7 +792,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @param inputs - An object containing the necessary inputs to create the pool.
 	 * @returns A transaction block to create the pool.
 	 */
-	public createPoolTx = (inputs: {
+	public createPoolTxV1 = (inputs: {
 		tx: Transaction;
 		lpCoinType: CoinType;
 		coinsInfo: {
@@ -745,6 +927,107 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
+	// TODO: handle bounds checks here instead of just on-chain ?
+	/**
+	 * Creates a transaction to create a new pool.
+	 * @param inputs - An object containing the necessary inputs to create the pool.
+	 * @returns A transaction block to create the pool.
+	 */
+	public createPoolTxV2 = (inputs: {
+		tx: Transaction;
+		lpCoinType: CoinType;
+		coinsInfo: {
+			coinId: ObjectId | TransactionObjectArgument;
+			coinType: CoinType;
+			weight: PoolWeight;
+			decimals?: CoinDecimal;
+			tradeFeeIn: PoolTradeFee;
+			tradeFeeOut: PoolTradeFee;
+			depositFee: PoolDepositFee;
+			withdrawFee: PoolWithdrawFee;
+		}[];
+		lpCoinIconUrl: Url;
+		createPoolCapId: ObjectId | TransactionObjectArgument;
+		poolName: PoolName;
+		poolFlatness: PoolFlatness;
+		lpCoinDescription: string;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
+		withTransfer?: boolean;
+	}): TransactionObjectArgument[] /* (Pool<L>, Coin<L>) */ => {
+		const { tx, lpCoinType, createPoolCapId, coinsInfo, withTransfer } =
+			inputs;
+
+		const poolSize = coinsInfo.length;
+		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+		const decimals = coinsInfo.map((coin) => coin.decimals);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterfaceV2
+					: this.addresses.pools.packages.ammV2,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.poolFactory,
+				`create_pool_${poolSize}_coins`
+			),
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				typeof createPoolCapId === "string"
+					? tx.object(createPoolCapId)
+					: createPoolCapId,
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.pure(
+					bcs
+						.vector(bcs.u8())
+						.serialize(Casting.u8VectorFromString(inputs.poolName))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.weight))
+				),
+				tx.pure.u64(inputs.poolFlatness),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.tradeFeeIn))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.tradeFeeOut))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.depositFee))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.withdrawFee))
+				),
+				...coinsInfo.map((coin) =>
+					typeof coin.coinId === "string"
+						? tx.object(coin.coinId)
+						: coin.coinId
+				),
+				tx.pure(
+					bcs
+						.option(bcs.vector(bcs.u8()))
+						.serialize(
+							decimals.includes(undefined)
+								? undefined
+								: (decimals as number[])
+						)
+				), // decimals
+				tx.pure.bool(inputs.respectDecimals), // respect_decimals
+			],
+		});
+	};
+
 	/**
 	 * Returns the pool object ID for a given LP coin type transaction.
 	 * @param inputs - An object containing the transaction block and LP coin type.
@@ -758,7 +1041,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.pools.packages.amm,
+				this.addresses.pools.packages.ammV2,
 				PoolsApi.constants.moduleNames.poolRegistry,
 				"lp_type_to_pool_id"
 			),
@@ -782,7 +1065,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.daoFeePools.packages.amm,
+				this.addresses.daoFeePools.packages.ammV2,
 				PoolsApi.constants.moduleNames.pool,
 				"new"
 			),
@@ -811,7 +1094,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.daoFeePools.packages.amm,
+				this.addresses.daoFeePools.packages.ammV2,
 				PoolsApi.constants.moduleNames.pool,
 				"update_fee_bps"
 			),
@@ -840,7 +1123,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.daoFeePools.packages.amm,
+				this.addresses.daoFeePools.packages.ammV2,
 				PoolsApi.constants.moduleNames.pool,
 				"update_fee_recipient"
 			),
@@ -887,7 +1170,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.daoFeePools.packages.amm,
+				this.addresses.daoFeePools.packages.ammV2,
 				PoolsApi.constants.moduleNames.swap,
 				"swap_exact_in"
 			),
@@ -941,7 +1224,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.daoFeePools.packages.amm,
+				this.addresses.daoFeePools.packages.ammV2,
 				PoolsApi.constants.moduleNames.deposit,
 				`deposit_${poolSize}_coins`
 			),
@@ -991,7 +1274,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
-				this.addresses.daoFeePools.packages.amm,
+				this.addresses.daoFeePools.packages.ammV2,
 				PoolsApi.constants.moduleNames.withdraw,
 				`all_coin_withdraw_${poolSize}_coins`
 			),
