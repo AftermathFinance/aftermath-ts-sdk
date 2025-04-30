@@ -80,6 +80,9 @@ import {
 import {
 	update_constants,
 	update_identifiers,
+	serialize,
+	deserialize,
+	version,
 } from "@mysten/move-bytecode-template";
 
 /**
@@ -819,8 +822,13 @@ export class PoolsApi implements MoveErrorsInterface {
 		const { tx, respectDecimals, poolFlatness, weights, lpCoinMetadata } =
 			inputs;
 
-		const encoder = new TextEncoder();
-		const bytecode = encoder.encode(compilation);
+		// const encoder = new TextEncoder();
+		// const bytecode = encoder.encode(compilation);
+		const versionVal = version();
+		const bytecode = serialize({
+			...JSON.parse(compilation),
+			version: versionVal,
+		});
 
 		let updatedBytecode = update_identifiers(bytecode, {
 			AF_LP: lpCoinMetadata.symbol.toUpperCase(),
@@ -896,9 +904,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			);
 		}
 
-		const decoder = new TextDecoder();
-		const updatedCompilation = decoder.decode(updatedBytecode);
-		const compiledModulesAndDeps = JSON.parse(updatedCompilation);
+		const compiledModulesAndDeps = deserialize(updatedBytecode);
 
 		return tx.publish({
 			modules: compiledModulesAndDeps.modules.map((m: any) =>
