@@ -1,5 +1,6 @@
 export * from "./suiFrens";
 export * from "./pools";
+export * from "./oraclePools";
 export * from "./router";
 export * from "./staking";
 export * from "./leveragedStaking";
