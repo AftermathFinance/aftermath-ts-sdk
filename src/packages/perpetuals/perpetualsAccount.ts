@@ -259,8 +259,6 @@ export class PerpetualsAccount extends Caller {
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -298,8 +296,6 @@ export class PerpetualsAccount extends Caller {
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -329,8 +325,6 @@ export class PerpetualsAccount extends Caller {
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
 			},
 			undefined,
 			{
@@ -351,8 +345,6 @@ export class PerpetualsAccount extends Caller {
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
 			},
 			undefined,
 			{
@@ -393,8 +385,6 @@ export class PerpetualsAccount extends Caller {
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
 			},
 			undefined,
 			{
@@ -406,10 +396,7 @@ export class PerpetualsAccount extends Caller {
 	public async getEditStopOrdersTx(
 		inputs: Omit<
 			ApiPerpetualsEditStopOrdersBody,
-			| "txKind"
-			| "accountObjectId"
-			| "accountObjectVersion"
-			| "accountObjectDigest"
+			"txKind" | "accountObjectId"
 		> & {
 			tx?: Transaction;
 		}
@@ -426,8 +413,6 @@ export class PerpetualsAccount extends Caller {
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
 			},
 			undefined,
 			{
@@ -451,8 +436,6 @@ export class PerpetualsAccount extends Caller {
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
 				leverage:
 					this.positionForMarketId({ marketId: otherInputs.marketId })
 						?.leverage || 1,
@@ -495,8 +478,6 @@ export class PerpetualsAccount extends Caller {
 				})(),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				accountObjectVersion: this.accountCap.objectVersion,
-				accountObjectDigest: this.accountCap.objectDigest,
 			},
 			undefined,
 			{

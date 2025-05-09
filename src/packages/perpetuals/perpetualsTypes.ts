@@ -887,8 +887,6 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "collateralChange"
 			| "walletAddress"
 			| "accountObjectId"
-			| "accountObjectVersion"
-			| "accountObjectDigest"
 			| "hasPosition"
 			| "stopLoss"
 			| "takeProfit"
@@ -899,8 +897,6 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "collateralChange"
 			| "walletAddress"
 			| "accountObjectId"
-			| "accountObjectVersion"
-			| "accountObjectDigest"
 			| "hasPosition"
 			| "stopLoss"
 			| "takeProfit"
@@ -1127,8 +1123,6 @@ export interface PerpetualsSlTpOrderDetails {
 
 export interface ApiPerpetualsPlaceStopOrdersBody {
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	stopOrders: {
 		expiryTimestamp: bigint;
 		stopIndexPrice: number;
@@ -1169,8 +1163,6 @@ export interface SdkPerpetualsStopOrdersInputs {
 
 export interface ApiPerpetualsPlaceStopOrdersBody {
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	stopOrders: {
 		expiryTimestamp: bigint;
 		stopIndexPrice: number;
@@ -1191,8 +1183,6 @@ export interface ApiPerpetualsPlaceStopOrdersBody {
 
 export interface ApiPerpetualsEditStopOrdersBody {
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	stopOrders: {
 		expiryTimestamp: bigint;
 		stopIndexPrice: number;
@@ -1215,8 +1205,6 @@ export type ApiPerpetualsMarketOrderBody = {
 	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	collateralChange: Balance;
@@ -1232,8 +1220,6 @@ export type ApiPerpetualsLimitOrderBody = {
 	walletAddress: SuiAddress;
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	price: PerpetualsOrderPrice;
@@ -1248,8 +1234,6 @@ export type ApiPerpetualsLimitOrderBody = {
 
 export interface ApiPerpetualsCancelOrdersBody {
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	marketIdsToData: Record<
 		PerpetualsMarketId,
 		{
@@ -1263,8 +1247,6 @@ export interface ApiPerpetualsCancelOrdersBody {
 
 export interface ApiPerpetualsCancelStopOrdersBody {
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	marketIdsToStopOrderIds: Record<PerpetualsMarketId, ObjectId[]>;
 	txKind?: SerializedTransaction;
 }
@@ -1272,8 +1254,6 @@ export interface ApiPerpetualsCancelStopOrdersBody {
 export interface ApiPerpetualsReduceOrderBody {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	collateralChange: Balance;
 	leverage: number;
 	orderId: PerpetualsOrderId;
@@ -1284,8 +1264,6 @@ export interface ApiPerpetualsReduceOrderBody {
 export interface ApiPerpetualsSetLeverageBody {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
-	accountObjectVersion: number;
-	accountObjectDigest: ObjectId;
 	collateralChange: Balance;
 	leverage: number;
 	txKind?: SerializedTransaction;
@@ -1320,13 +1298,7 @@ export type ApiPerpetualsMarkets24hrStatsResponse = PerpetualsMarket24hrStats[];
 
 export type SdkPerpetualsMarketOrderInputs = Omit<
 	ApiPerpetualsMarketOrderBody,
-	| "accountObjectId"
-	| "accountObjectVersion"
-	| "accountObjectDigest"
-	| "hasPosition"
-	| "txKind"
-	| "stopLoss"
-	| "takeProfit"
+	"accountObjectId" | "hasPosition" | "txKind" | "stopLoss" | "takeProfit"
 > & {
 	tx?: Transaction;
 	stopLoss?: Omit<PerpetualsSlTpOrderDetails, "gasCoin">;
@@ -1336,13 +1308,7 @@ export type SdkPerpetualsMarketOrderInputs = Omit<
 
 export type SdkPerpetualsLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
-	| "accountObjectId"
-	| "accountObjectVersion"
-	| "accountObjectDigest"
-	| "hasPosition"
-	| "txKind"
-	| "stopLoss"
-	| "takeProfit"
+	"accountObjectId" | "hasPosition" | "txKind" | "stopLoss" | "takeProfit"
 > & {
 	tx?: Transaction;
 	stopLoss?: Omit<PerpetualsSlTpOrderDetails, "gasCoin">;
