@@ -66,6 +66,7 @@ import {
 	ApiPerpetualsPlaceStopOrdersBody,
 	SdkPerpetualsStopOrdersInputs,
 	ApiPerpetualsEditStopOrdersBody,
+	ServiceCoinData,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -235,8 +236,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceMarketOrderTx(inputs: SdkPerpetualsMarketOrderInputs) {
 		const {
 			tx: txFromInputs,
-			stopLoss,
-			takeProfit,
+			slTp,
 			isSponsoredTx,
 			...otherInputs
 		} = inputs;
@@ -246,9 +246,11 @@ export class PerpetualsAccount extends Caller {
 
 		const slTpArgs = await this.getSlTpArgs({
 			tx,
-			stopLoss,
-			takeProfit,
+			stopLoss: slTp?.stopLoss,
+			takeProfit: slTp?.takeProfit,
 			isSponsoredTx,
+			// TODO: take this as an arg instead ?
+			walletAddress: this.accountCap.walletAddress,
 		});
 
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
@@ -272,8 +274,7 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceLimitOrderTx(inputs: SdkPerpetualsLimitOrderInputs) {
 		const {
 			tx: txFromInputs,
-			stopLoss,
-			takeProfit,
+			slTp,
 			isSponsoredTx,
 			...otherInputs
 		} = inputs;
@@ -283,9 +284,11 @@ export class PerpetualsAccount extends Caller {
 
 		const slTpArgs = await this.getSlTpArgs({
 			tx,
-			stopLoss,
-			takeProfit,
+			stopLoss: slTp?.stopLoss,
+			takeProfit: slTp?.takeProfit,
 			isSponsoredTx,
+			// TODO: take this as an arg instead ?
+			walletAddress: this.accountCap.walletAddress,
 		});
 
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
@@ -608,9 +611,8 @@ export class PerpetualsAccount extends Caller {
 			"previews/place-order",
 			{
 				...inputs,
-				accountId: this.accountCap.accountId,
+				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				collateral: this.collateralBalance(),
 			},
 			abortSignal
 		);
@@ -645,9 +647,8 @@ export class PerpetualsAccount extends Caller {
 			"previews/cancel-orders",
 			{
 				...inputs,
-				accountId: this.accountCap.accountId,
+				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				collateral: this.collateralBalance(),
 			},
 			abortSignal
 		);
@@ -676,9 +677,8 @@ export class PerpetualsAccount extends Caller {
 			"previews/reduce-order",
 			{
 				...inputs,
-				accountId: this.accountCap.accountId,
+				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				collateral: this.collateralBalance(),
 				leverage:
 					this.positionForMarketId({ marketId: inputs.marketId })
 						?.leverage || 1,
@@ -712,9 +712,8 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				leverage,
-				accountId: this.accountCap.accountId,
+				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				collateral: this.collateralBalance(),
 			},
 			abortSignal
 		);
@@ -1456,8 +1455,6 @@ export class PerpetualsAccount extends Caller {
 			size,
 			marketId,
 			collateralChange,
-			accountId: this.accountCap.accountId,
-			walletAddress: this.accountCap.walletAddress,
 			leverage: position.leverage || 1,
 			side:
 				positionSide === PerpetualsOrderSide.Bid
@@ -1473,79 +1470,42 @@ export class PerpetualsAccount extends Caller {
 
 	private async getSlTpArgs(inputs: {
 		tx: Transaction;
-		stopLoss: Omit<PerpetualsSlTpOrderDetails, "gasCoin"> | undefined;
-		takeProfit: Omit<PerpetualsSlTpOrderDetails, "gasCoin"> | undefined;
+		walletAddress: SuiAddress;
+		stopLoss: PerpetualsSlTpOrderDetails | undefined;
+		takeProfit: PerpetualsSlTpOrderDetails | undefined;
 		isSponsoredTx: boolean | undefined;
-	}) {
-		const { tx, stopLoss, takeProfit, isSponsoredTx } = inputs;
+	}): Promise<{
+		slTp?: {
+			walletAddress: SuiAddress;
+			gasCoin: ServiceCoinData;
+			stopLoss?: PerpetualsSlTpOrderDetails;
+			takeProfit?: PerpetualsSlTpOrderDetails;
+		};
+	}> {
+		const { tx, walletAddress, stopLoss, takeProfit, isSponsoredTx } =
+			inputs;
 
 		if (!this.Provider) throw new Error("missing AftermathApi Provider");
 		if (!stopLoss && !takeProfit) return {};
 
-		let slGasCoin: TransactionObjectArgument | undefined = undefined;
-		let tpGasCoin: TransactionObjectArgument | undefined = undefined;
-
-		if (stopLoss && takeProfit) {
-			[slGasCoin, tpGasCoin] =
-				await this.Provider.Coin().fetchCoinsWithAmountTx({
-					tx,
-					isSponsoredTx,
-					coinTypes: [
-						Coin.constants.suiCoinType,
-						Coin.constants.suiCoinType,
-					],
-					walletAddress: this.accountCap.walletAddress,
-					coinAmounts: [
-						Perpetuals.constants.stopOrderGasCostSUI,
-						Perpetuals.constants.stopOrderGasCostSUI,
-					],
-				});
-		} else if (stopLoss) {
-			slGasCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
-				tx,
-				isSponsoredTx,
-				coinType: Coin.constants.suiCoinType,
-				walletAddress: this.accountCap.walletAddress,
-				coinAmount: Perpetuals.constants.stopOrderGasCostSUI,
-			});
-		} else {
-			// take profit
-			tpGasCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
-				tx,
-				isSponsoredTx,
-				coinType: Coin.constants.suiCoinType,
-				walletAddress: this.accountCap.walletAddress,
-				coinAmount: Perpetuals.constants.stopOrderGasCostSUI,
-			});
-		}
-
-		const [stopLossArgs, takeProfitArgs] = [
-			stopLoss
-				? {
-						stopLoss: {
-							...stopLoss,
-							gasCoin:
-								TransactionsApiHelpers.serviceCoinDataFromCoinTxArg(
-									{ coinTxArg: slGasCoin }
-								),
-						},
-				  }
-				: undefined,
-			takeProfit
-				? {
-						takeProfit: {
-							...takeProfit,
-							gasCoin:
-								TransactionsApiHelpers.serviceCoinDataFromCoinTxArg(
-									{ coinTxArg: tpGasCoin }
-								),
-						},
-				  }
-				: undefined,
-		];
+		const gasCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
+			tx,
+			isSponsoredTx,
+			coinType: Coin.constants.suiCoinType,
+			walletAddress: this.accountCap.walletAddress,
+			coinAmount:
+				Perpetuals.constants.stopOrderGasCostSUI *
+				BigInt(stopLoss && takeProfit ? 2 : 1),
+		});
 		return {
-			...(stopLossArgs ?? {}),
-			...(takeProfitArgs ?? {}),
+			slTp: {
+				walletAddress,
+				stopLoss,
+				takeProfit,
+				gasCoin: TransactionsApiHelpers.serviceCoinDataFromCoinTxArg({
+					coinTxArg: gasCoin,
+				}),
+			},
 		};
 	}
 
