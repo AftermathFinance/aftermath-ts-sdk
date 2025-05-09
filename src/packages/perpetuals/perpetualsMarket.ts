@@ -116,6 +116,7 @@ export class PerpetualsMarket extends Caller {
 		return marketDatas[0].orderbook;
 	}
 
+	// TODO: move/add to account ?
 	public getMaxOrderSizeUsd = async (inputs: {
 		account: PerpetualsAccount;
 		indexPrice: number;
@@ -124,12 +125,12 @@ export class PerpetualsMarket extends Caller {
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
 		const { side, price, account, indexPrice, leverage } = inputs;
-		const maxSize: bigint = await this.fetchApi<
+		const maxSize = await this.fetchApi<
 			bigint,
 			ApiPerpetualsMaxOrderSizeBody
 		>("account/order-max-size", {
 			marketId: this.marketId,
-			accountId: account.accountCap.accountId,
+			accountObjectId: account.accountCap.objectId,
 			collateral: account.collateralBalance(),
 			side,
 			price,
