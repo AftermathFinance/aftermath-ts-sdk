@@ -161,12 +161,13 @@ export class PerpetualsMarket extends Caller {
 	> {
 		return this.fetchApi<
 			ApiPerpetualsPreviewOrderResponse,
-			Omit<ApiPerpetualsPreviewOrderBody, "accountId" | "collateral">
+			ApiPerpetualsPreviewOrderBody
 		>(
 			"previews/place-order",
 			{
 				...inputs,
 				collateralCoinType: this.collateralCoinType,
+				accountObjectId: undefined,
 			},
 			abortSignal
 		);

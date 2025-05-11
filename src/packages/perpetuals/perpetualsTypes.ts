@@ -516,7 +516,9 @@ export type CollateralEvent =
 	| FilledTakerOrderEvent
 	| FilledMakerOrdersEvent
 	| AllocatedCollateralEvent
-	| DeallocatedCollateralEvent;
+	| DeallocatedCollateralEvent
+	| AddedStopOrderTicketCollateralEvent
+	| RemovedStopOrderTicketCollateralEvent;
 
 // TODO: make all these checks use string value from perps api
 
@@ -887,21 +889,22 @@ export type ApiPerpetualsPreviewOrderBody = (
 			| "collateralChange"
 			| "walletAddress"
 			| "hasPosition"
-			| "stopLoss"
-			| "takeProfit"
 			| "txKind"
+			| "accountObjectId"
+			| "slTp"
 	  >
 	| Omit<
 			ApiPerpetualsMarketOrderBody,
 			| "collateralChange"
 			| "walletAddress"
 			| "hasPosition"
-			| "stopLoss"
-			| "takeProfit"
 			| "txKind"
+			| "accountObjectId"
+			| "slTp"
 	  >
 ) & {
 	// TODO: remove eventually ?
+	accountObjectId: ObjectId | undefined;
 	collateralCoinType: CoinType;
 	lotSize: number;
 	tickSize: number;
@@ -1243,7 +1246,7 @@ export interface ApiPerpetualsCancelOrdersBody {
 
 export interface ApiPerpetualsCancelStopOrdersBody {
 	accountObjectId: ObjectId;
-	marketIdsToStopOrderIds: Record<PerpetualsMarketId, ObjectId[]>;
+	stopOrderIds: ObjectId[];
 	txKind?: SerializedTransaction;
 }
 
@@ -1318,12 +1321,12 @@ export type SdkPerpetualsLimitOrderInputs = Omit<
 
 export type SdkPerpetualsPlaceOrderPreviewInputs = Omit<
 	ApiPerpetualsPreviewOrderBody,
-	"collateralCoinType"
+	"collateralCoinType" | "accountObjectId"
 >;
 
 export type SdkPerpetualsCancelOrdersPreviewInputs = Omit<
 	ApiPerpetualsPreviewCancelOrdersBody,
-	"collateralCoinType"
+	"collateralCoinType" | "accountObjectId"
 >;
 
 // export const perpetualsRegistry = {

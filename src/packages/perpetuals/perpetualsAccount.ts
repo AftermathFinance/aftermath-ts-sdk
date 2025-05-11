@@ -338,7 +338,7 @@ export class PerpetualsAccount extends Caller {
 
 	public async getCancelStopOrdersTx(inputs: {
 		tx?: Transaction;
-		marketIdsToStopOrderIds: Record<PerpetualsMarketId, ObjectId[]>;
+		stopOrderIds: ObjectId[];
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsCancelStopOrdersBody>(
