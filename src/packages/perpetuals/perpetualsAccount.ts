@@ -747,15 +747,18 @@ export class PerpetualsAccount extends Caller {
 	public async getStopOrderDatas(inputs: {
 		bytes: string;
 		signature: string;
+		marketIds?: PerpetualsMarketId[];
 	}): Promise<PerpetualsStopOrderData[]> {
-		const { bytes, signature } = inputs;
+		const { bytes, signature, marketIds } = inputs;
 
 		return this.fetchApi<
 			PerpetualsStopOrderData[],
 			ApiPerpetualsAccountStopOrderDatasBody
 		>("account/stop-order-datas", {
+			accountId: this.accountCap.accountId,
 			walletAddress: this.accountCap.walletAddress,
-			bytes,
+			marketIds: marketIds ?? [],
+			message: bytes,
 			signature,
 		});
 	}

@@ -1041,9 +1041,12 @@ export interface ApiPerpetualsAccountOrderDatasBody {
 }
 
 export interface ApiPerpetualsAccountStopOrderDatasBody {
+	accountId: PerpetualsAccountId;
 	walletAddress: SuiAddress;
-	bytes: string;
+	// TODO: change to bytes ?
+	message: string;
 	signature: string;
+	marketIds: PerpetualsMarketId[];
 }
 
 // =========================================================================
