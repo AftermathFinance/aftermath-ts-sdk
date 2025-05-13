@@ -46,7 +46,7 @@ export class Perpetuals extends Caller {
 	public static readonly OrderUtils = PerpetualsOrderUtils;
 
 	public static readonly constants = {
-		stopOrderGasCostSUI: BigInt(150000000), // 0.15 SUI
+		stopOrderGasCostSUI: BigInt(15000000), // 0.15 SUI
 	};
 
 	// =========================================================================
