@@ -755,11 +755,11 @@ export class PerpetualsAccount extends Caller {
 			PerpetualsStopOrderData[],
 			ApiPerpetualsAccountStopOrderDatasBody
 		>("account/stop-order-datas", {
+			bytes,
+			signature,
 			accountId: this.accountCap.accountId,
 			walletAddress: this.accountCap.walletAddress,
 			marketIds: marketIds ?? [],
-			message: bytes,
-			signature,
 		});
 	}
 
