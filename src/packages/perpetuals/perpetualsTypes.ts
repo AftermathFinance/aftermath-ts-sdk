@@ -1111,7 +1111,7 @@ export interface PerpetualsSlTpOrderDetails {
 	// reduceOnly: boolean;
 	// TODO: add back once ready on be
 	// collateralToAllocate: Balance;
-	leverage?: number;
+	// leverage?: number;
 	// limitOrder?: {
 	// 	price: PerpetualsOrderPrice;
 	// 	orderType: PerpetualsOrderType;
