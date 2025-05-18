@@ -1142,13 +1142,13 @@ export interface ApiPerpetualsPlaceStopOrdersBody {
 	accountObjectId: ObjectId;
 	walletAddress: SuiAddress;
 	stopOrders: {
-		expiryTimestamp: bigint;
 		stopIndexPrice: number;
 		triggerIfGeStopIndexPrice: boolean;
 		side: PerpetualsOrderSide;
 		size: bigint;
 		reduceOnly: boolean;
 		collateralToAllocate: Balance;
+		expiryTimestamp?: bigint;
 		limitOrder?: {
 			price: PerpetualsOrderPrice;
 			orderType: PerpetualsOrderType;
