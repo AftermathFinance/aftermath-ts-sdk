@@ -1264,8 +1264,7 @@ export class PerpetualsAccount extends Caller {
 							order.marketId === marketId &&
 							// order.side !== side &&
 							!("limitOrder" in order) &&
-							order.expiryTimestamp >=
-								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.expiryTimestamp >= Casting.u64MaxBigInt &&
 							// order.triggerIfGeStopIndexPrice ===
 							// 	(side === PerpetualsOrderSide.Ask) &&
 							order.size >= Casting.u64MaxBigInt &&
@@ -1286,8 +1285,7 @@ export class PerpetualsAccount extends Caller {
 							order.marketId === marketId &&
 							order.side !== side &&
 							!("limitOrder" in order) &&
-							order.expiryTimestamp >=
-								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.expiryTimestamp >= Casting.u64MaxBigInt &&
 							order.triggerIfGeStopIndexPrice ===
 								(side === PerpetualsOrderSide.Ask) &&
 							order.size >= Casting.u64MaxBigInt &&
@@ -1306,8 +1304,7 @@ export class PerpetualsAccount extends Caller {
 							order.marketId === marketId &&
 							// order.side !== side &&
 							!("limitOrder" in order) &&
-							order.expiryTimestamp >=
-								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.expiryTimestamp >= Casting.u64MaxBigInt &&
 							// order.triggerIfGeStopIndexPrice ===
 							// 	(side === PerpetualsOrderSide.Bid) &&
 							order.size >= Casting.u64MaxBigInt &&
@@ -1328,8 +1325,7 @@ export class PerpetualsAccount extends Caller {
 							order.marketId === marketId &&
 							order.side !== side &&
 							!("limitOrder" in order) &&
-							order.expiryTimestamp >=
-								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.expiryTimestamp >= Casting.u64MaxBigInt &&
 							order.triggerIfGeStopIndexPrice ===
 								(side === PerpetualsOrderSide.Bid) &&
 							order.size >= Casting.u64MaxBigInt &&
@@ -1349,8 +1345,7 @@ export class PerpetualsAccount extends Caller {
 							order.marketId === marketId &&
 							// order.side !== side &&
 							!("limitOrder" in order) &&
-							order.expiryTimestamp >=
-								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.expiryTimestamp >= Casting.u64MaxBigInt &&
 							// order.triggerIfGeStopIndexPrice ===
 							// 	(side === PerpetualsOrderSide.Ask) &&
 							// (side === PerpetualsOrderSide.Bid
@@ -1370,8 +1365,7 @@ export class PerpetualsAccount extends Caller {
 							order.marketId === marketId &&
 							order.side !== side &&
 							!("limitOrder" in order) &&
-							order.expiryTimestamp >=
-								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.expiryTimestamp >= Casting.u64MaxBigInt &&
 							order.triggerIfGeStopIndexPrice ===
 								(side === PerpetualsOrderSide.Ask) &&
 							(side === PerpetualsOrderSide.Bid
@@ -1390,8 +1384,7 @@ export class PerpetualsAccount extends Caller {
 							order.marketId === marketId &&
 							// order.side !== side &&
 							!("limitOrder" in order) &&
-							order.expiryTimestamp >=
-								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.expiryTimestamp >= Casting.u64MaxBigInt &&
 							// order.triggerIfGeStopIndexPrice ===
 							// 	(side === PerpetualsOrderSide.Bid) &&
 							// (side === PerpetualsOrderSide.Bid
@@ -1411,8 +1404,7 @@ export class PerpetualsAccount extends Caller {
 							order.marketId === marketId &&
 							order.side !== side &&
 							!("limitOrder" in order) &&
-							order.expiryTimestamp >=
-								BigInt(Number.MAX_SAFE_INTEGER) &&
+							order.expiryTimestamp >= Casting.u64MaxBigInt &&
 							order.triggerIfGeStopIndexPrice ===
 								(side === PerpetualsOrderSide.Bid) &&
 							(side === PerpetualsOrderSide.Bid
