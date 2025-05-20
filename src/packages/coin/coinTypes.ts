@@ -151,22 +151,3 @@ export type ServiceCoinDataV2 =
 	| { input: number }
 	| { result: number }
 	| { result: [number, number] };
-
-/**
- * **Legacy type** representing how a transaction argument is encoded in the older
- * Sui Transaction format.
- */
-export type CoinTransactionObjectArgumentV0 =
-	| {
-			kind: "Input";
-			index: number;
-	  }
-	| {
-			kind: "NestedResult";
-			index: number;
-			resultIndex: number;
-	  }
-	| {
-			kind: "Result";
-			index: number;
-	  };

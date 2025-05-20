@@ -11,7 +11,6 @@ import {
 	Url,
 } from "../../types";
 import { Helpers } from "./helpers";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
@@ -133,24 +132,6 @@ export class Caller {
 		}
 	) {
 		return Transaction.from(
-			await this.fetchApi<SerializedTransaction, BodyType>(
-				url,
-				body,
-				signal,
-				options
-			)
-		);
-	}
-
-	protected async fetchApiTransactionV0<BodyType = undefined>(
-		url: Url,
-		body?: BodyType,
-		signal?: AbortSignal,
-		options?: {
-			disableBigIntJsonParsing?: boolean;
-		}
-	) {
-		return TransactionBlock.from(
 			await this.fetchApi<SerializedTransaction, BodyType>(
 				url,
 				body,
