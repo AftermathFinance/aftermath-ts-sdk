@@ -8,7 +8,6 @@ import { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
 // import { ethers, Networkish } from "ethers";
 
 export class CoinApi {
@@ -23,7 +22,7 @@ export class CoinApi {
 	// =========================================================================
 
 	public fetchCoinWithAmountTx = async (inputs: {
-		tx: Transaction | TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		coinAmount: Balance;
@@ -171,7 +170,7 @@ export class CoinApi {
 	// =========================================================================
 
 	private static coinWithAmountTx = (inputs: {
-		tx: Transaction | TransactionBlock;
+		tx: Transaction;
 		coinData: CoinStruct[];
 		coinAmount: Balance;
 		coinType: CoinType;
