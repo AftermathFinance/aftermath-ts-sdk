@@ -3,15 +3,10 @@ import {
 	Event,
 	Object,
 	ObjectId,
-	Percentage,
 	Slippage,
 	SuiAddress,
-	Timestamp,
-	Url,
 } from "../../general/types/generalTypes";
-import { ManipulateType } from "dayjs";
 import { CoinDecimal, CoinsToBalance, CoinType } from "../coin/coinTypes";
-import { UniqueId } from "../router/routerTypes";
 import { PoolName } from "../pools/poolsTypes";
 
 /**
@@ -89,7 +84,7 @@ export interface OraclePoolObject extends Object {
  * Represents a trade event within a pool, indicating coins in/out,
  * final amounts, etc.
  */
-export interface PoolTradeEvent extends Event {
+export interface OraclePoolTradeEvent extends Event {
 	poolId: ObjectId;
 	trader: SuiAddress;
 	/**
@@ -169,7 +164,7 @@ export interface OraclePoolWithdrawEvent extends Event {
  * Request body for a user trade, specifying which coin to send in and how much,
  * which coin to receive, plus slippage and optional referral info.
  */
-export interface ApiPoolTradeBody {
+export interface ApiOraclePoolTradeBody {
 	walletAddress: SuiAddress;
 	coinInType: CoinType;
 	coinInAmount: Balance;
@@ -183,7 +178,7 @@ export interface ApiPoolTradeBody {
  * Request body for depositing liquidity into a pool, specifying the amounts in,
  * slippage, and optional referral or sponsorship data.
  */
-export interface ApiPoolDepositBody {
+export interface ApiOraclePoolDepositBody {
 	walletAddress: SuiAddress;
 	amountsIn: CoinsToBalance;
 	slippage: Slippage;
@@ -195,7 +190,7 @@ export interface ApiPoolDepositBody {
  * Request body for withdrawing specific amounts from the pool, specifying
  * which coins to remove, how much LP is burned, slippage, etc.
  */
-export interface ApiPoolWithdrawBody {
+export interface ApiOraclePoolWithdrawBody {
 	walletAddress: SuiAddress;
 	amountsOutDirection: CoinsToBalance;
 	lpCoinAmount: Balance;
@@ -207,7 +202,7 @@ export interface ApiPoolWithdrawBody {
  * Request body for withdrawing all coin types from a pool using a single
  * ratio or entire LP amount, simplifying the multi-coin approach.
  */
-export interface ApiPoolAllCoinWithdrawBody {
+export interface ApiOraclePoolAllCoinWithdrawBody {
 	walletAddress: SuiAddress;
 	lpCoinAmount: Balance;
 	referrer?: SuiAddress;
@@ -217,7 +212,7 @@ export interface ApiPoolAllCoinWithdrawBody {
  * For retrieving the spot price of a pool, specifying coin in/out.
  * Not always used directly, but present in certain route building contexts.
  */
-export interface ApiPoolSpotPriceBody {
+export interface ApiOraclePoolSpotPriceBody {
 	coinInType: CoinType;
 	coinOutType: CoinType;
 }
@@ -226,13 +221,13 @@ export interface ApiPoolSpotPriceBody {
  * Request body for obtaining a pool object ID from an LP coin type.
  * Useful to confirm if a coin is indeed an LP token and which pool it references.
  */
-export interface ApiPoolObjectIdForLpCoinTypeBody {
+export interface ApiOraclePoolObjectIdForLpCoinTypeBody {
 	lpCoinTypes: CoinType[];
 }
 
 /**
  * Request body for fetching statistics about one or more pools.
  */
-export interface ApiPoolsStatsBody {
+export interface ApiOraclePoolsStatsBody {
 	poolIds: ObjectId[];
 }

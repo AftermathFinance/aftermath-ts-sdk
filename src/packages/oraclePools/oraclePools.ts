@@ -1,18 +1,13 @@
 import {
 	ApiCreatePoolBody,
-	ApiEventsBody,
 	ApiPoolObjectIdForLpCoinTypeBody,
 	ApiPublishLpCoinBody,
 	Balance,
 	CoinType,
 	PoolDepositEvent,
-	PoolObject,
-	PoolTradeEvent,
-	PoolTradeFee,
+	OraclePoolObject,
 	PoolWithdrawEvent,
 	Slippage,
-	SuiNetwork,
-	Url,
 	ObjectId,
 	PoolStats,
 	ApiPoolsStatsBody,
@@ -28,7 +23,6 @@ import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { AftermathApi } from "../../general/providers";
-import { PoolsApi } from "./api/oraclePoolsApi";
 
 /**
  * The `Pools` class provides a high-level interface for interacting with
@@ -179,7 +173,7 @@ export class OraclePools extends Caller {
 	 * ```
 	 */
 	public async getPool(inputs: { objectId: ObjectId }) {
-		const pool = await this.fetchApi<PoolObject>(inputs.objectId);
+		const pool = await this.fetchApi<OraclePoolObject>(inputs.objectId);
 		return new OraclePool(pool, this.config, this.Provider);
 	}
 
@@ -197,7 +191,7 @@ export class OraclePools extends Caller {
 	 */
 	public async getPools(inputs: { objectIds: ObjectId[] }) {
 		const pools = await this.fetchApi<
-			PoolObject[],
+			OraclePoolObject[],
 			{
 				poolIds: ObjectId[];
 			}
@@ -221,7 +215,7 @@ export class OraclePools extends Caller {
 	 * ```
 	 */
 	public async getAllPools() {
-		const pools: PoolObject[] = await this.fetchApi("", {});
+		const pools: OraclePoolObject[] = await this.fetchApi("", {});
 		return pools.map(
 			(pool) => new OraclePool(pool, this.config, this.Provider)
 		);

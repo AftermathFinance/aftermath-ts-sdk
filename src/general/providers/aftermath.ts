@@ -19,6 +19,7 @@ import {
 	Auth,
 	LeveragedStaking,
 	NftAmm,
+	OraclePools,
 	ReferralVault,
 	Router,
 	Sui,
@@ -159,6 +160,12 @@ export class Aftermath extends Caller {
 	 * within the Aftermath platform (if supported).
 	 */
 	public Pools = () => new Pools(this.config, this.Provider);
+
+	/**
+	 * Returns an instance of the `OraclePools` class, which handles DEX pool operations
+	 * within the Aftermath platform (if supported).
+	 */
+	public OraclePools = () => new OraclePools(this.config, this.Provider);
 
 	/**
 	 * Returns an instance of the `Staking` class for Aftermath's staking and unstaking features.

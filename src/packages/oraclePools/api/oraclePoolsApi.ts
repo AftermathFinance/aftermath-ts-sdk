@@ -4,7 +4,7 @@ import {
 } from "@mysten/sui/transactions";
 import { fromB64, normalizeSuiObjectId } from "@mysten/sui/utils";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import { CoinDecimal, CoinType, CoinsToBalance } from "../../coin/coinTypes";
+import { CoinDecimal, CoinType } from "../../coin/coinTypes";
 import {
 	Balance,
 	Slippage,
@@ -27,25 +27,23 @@ import {
 	DaoFeePoolOwnerCapObject,
 } from "../../../types";
 import { Casting } from "../../../general/utils/casting";
-import { Pool } from "../oraclePool";
-import { Pools } from "../oraclePools";
 import { Helpers } from "../../../general/utils";
-import { Coin } from "../../coin";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { bcs } from "@mysten/sui/bcs";
 import {
 	MoveErrors,
 	MoveErrorsInterface,
 } from "../../../general/types/moveErrorsInterface";
+import { OraclePools } from "../oraclePools";
 
 /**
- * This file contains the implementation of the PoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
+ * This file contains the implementation of the OraclePoolsApi class, which provides methods for interacting with the Aftermath protocol's pools.
  * @packageDocumentation
  */
 /**
- * Provides methods to interact with the Pools API.
+ * Provides methods to interact with the OraclePools API.
  */
-export class PoolsApi implements MoveErrorsInterface {
+export class OraclePoolsApi implements MoveErrorsInterface {
 	// =========================================================================
 	//  Constants
 	// =========================================================================
@@ -113,7 +111,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	/**
-	 * Creates an instance of PoolsApi.
+	 * Creates an instance of OraclePoolsApi.
 	 * @param {AftermathApi} Provider - An instance of AftermathApi.
 	 * @throws {Error} Throws an error if not all required addresses have been set in AfSdk
 	 */
@@ -133,7 +131,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			daoFeePools,
 		};
 		this.objectTypes = {
-			pool: `${pools.packages.events}::pool::Pool`,
+			pool: `${pools.packages.events}::pool::OraclePool`,
 			daoFeePool: daoFeePools
 				? `${daoFeePools.packages.amm}::pool::DaoFeePool`
 				: undefined,
@@ -151,69 +149,69 @@ export class PoolsApi implements MoveErrorsInterface {
 		};
 		this.moveErrors = {
 			[this.addresses.pools.packages.amm]: {
-				[PoolsApi.constants.moduleNames.pool]: {
+				[OraclePoolsApi.constants.moduleNames.pool]: {
 					/// A user provides a input that should be between 0 and `FIXED_ONE` but isn't.
 					0: "Flatness Not Normalized",
-					/// A user attempts to create a Pool with a `flatness` parameter we do not support yet.
+					/// A user attempts to create a OraclePool with a `flatness` parameter we do not support yet.
 					1: "Flatness Not Supported",
 					/// A user attempts to create a pool with weights that don't sum to `FIXED_ONE`.
 					2: "Weights Not Normalized",
-					/// A user attempts to create a Pool with an individual weight outside of the
+					/// A user attempts to create a OraclePool with an individual weight outside of the
 					///  range [MIN_WEIGHT, MAX_WEIGHT].
 					3: "Invalid Weight",
-					/// A user attempts to create a Pool with an individual fee outside of the
+					/// A user attempts to create a OraclePool with an individual fee outside of the
 					///  range [MIN_FEE, MAX_FEE].
 					4: "Invalid Fee",
 					/// A user provides an input vector (with length m != n) for a pool of size n.
 					5: "Bad Vector Length",
-					/// A user tries to create a Pool but provides an initial deposit that equates to less than
+					/// A user tries to create a OraclePool but provides an initial deposit that equates to less than
 					///  `MIN_LP_SUPPLY` worth of LP Coins.
 					6: "Not Enough Initial Liquidity",
-					/// A user attempts to create a Pool with an LP `TreasuryCap` that has already minted Coins.
+					/// A user attempts to create a OraclePool with an LP `TreasuryCap` that has already minted Coins.
 					7: "Non Zero Total Supply",
-					/// A user attempts to interact with the Pool and specifies a type that isn't in the Pool.
+					/// A user attempts to interact with the OraclePool and specifies a type that isn't in the OraclePool.
 					8: "Bad Type",
 					/// A user attempts to create a pool with invalid decimal scalars
 					9: "Bad Decimals",
 					/// A user attempts to create a pool with type names which are not sorted
 					10: "Not Sorted",
 				},
-				[PoolsApi.constants.moduleNames.poolRegistry]: {
-					/// A user tries to create a Pool and the generic parameters of `create_pool_n_coins` were
+				[OraclePoolsApi.constants.moduleNames.poolRegistry]: {
+					/// A user tries to create a OraclePool and the generic parameters of `create_pool_n_coins` were
 					///  provided in nonlexicographical order.
 					60: "Not Sorted",
-					/// A user tries to create a Pool with exact parameters as an already active Pool.
-					61: "Duplicate Pool",
+					/// A user tries to create a OraclePool with exact parameters as an already active OraclePool.
+					61: "Duplicate OraclePool",
 					/// A user tries to upgrade the `PoolRegistry` to a value
 					62: "Invalid Upgrade",
 				},
-				[PoolsApi.constants.moduleNames.deposit]: {
+				[OraclePoolsApi.constants.moduleNames.deposit]: {
 					/// A user attempts to perform a `deposit` with an older contract.
 					20: "Invalid Protocol Version",
-					/// A user attempts to perform `deposit-n-coins` on a Pool with a size `m` < `n`.
-					21: "Invalid Pool Size",
+					/// A user attempts to perform `deposit-n-coins` on a OraclePool with a size `m` < `n`.
+					21: "Invalid OraclePool Size",
 					/// A user attempts to perform a deposit and provides a coin with a value of zero.
 					22: "Zero Value",
 					// A user calls `deposit_n_coins` or `all_coin_deposit_n_coins` and provides the same generic
 					//  at least twice.
 					23: "Duplicate Types",
 				},
-				[PoolsApi.constants.moduleNames.poolFactory]: {
+				[OraclePoolsApi.constants.moduleNames.poolFactory]: {
 					/// A user attempts to create a pool on an older contract.
 					10: "Invalid Protocol Version",
-					/// A user attempts to create a Pool and provides a coin with a value of zero.
+					/// A user attempts to create a OraclePool and provides a coin with a value of zero.
 					11: "Zero Value",
 				},
-				[PoolsApi.constants.moduleNames.price]: {
+				[OraclePoolsApi.constants.moduleNames.price]: {
 					/// A user attempts to query spot/oracle price using an old contract.
 					10: "Invalid Protocol Version",
 				},
-				[PoolsApi.constants.moduleNames.swap]: {
+				[OraclePoolsApi.constants.moduleNames.swap]: {
 					/// A user attempts to perform a `swap` with an older contract.
 					40: "Invalid Protocol Version",
-					/// A user attempts to perform `multi-swap-exact-in/out-n-to-m` on a Pool with a size
+					/// A user attempts to perform `multi-swap-exact-in/out-n-to-m` on a OraclePool with a size
 					///  `s` < `n` + `m`.
-					41: "Invalid Pool Size",
+					41: "Invalid OraclePool Size",
 					/// A user attempts to perform swap and providing provides a coin with a
 					///  value of zero.
 					42: "Zero Value",
@@ -231,10 +229,10 @@ export class PoolsApi implements MoveErrorsInterface {
 					/// An external app is trying to call authorized functions without permission.
 					47: "Not Authorized",
 				},
-				[PoolsApi.constants.moduleNames.withdraw]: {
+				[OraclePoolsApi.constants.moduleNames.withdraw]: {
 					/// A user attempts to perform a `withdraw` with an older contract.
 					30: "Invalid Protocol Version",
-					/// A user attempts to perform `withdraw-n-coins` on a Pool with a size `m` < `n`.
+					/// A user attempts to perform `withdraw-n-coins` on a OraclePool with a size `m` < `n`.
 					31: "Invalid PoolSize",
 					/// A user attempts to perform a withdraw and provides an LP coin with a value of zero.
 					32: "Zero Value",
@@ -245,19 +243,19 @@ export class PoolsApi implements MoveErrorsInterface {
 					//  at least twice.
 					34: "Duplicate Types",
 				},
-				[PoolsApi.constants.moduleNames.math]: {
+				[OraclePoolsApi.constants.moduleNames.math]: {
 					// TODO: change error code in move
 
-					/// A user tries to create a Pool that would result in the Pool's invariant equalling zero.
+					/// A user tries to create a OraclePool that would result in the OraclePool's invariant equalling zero.
 					// 51: "ZeroInvariant",
 
-					/// A user tries to perform an action with the Pool that results in too much slippage.
+					/// A user tries to perform an action with the OraclePool that results in too much slippage.
 					51: "Slippage",
 					/// A user tries to perform a swap that would result in more than `MAX_SWAP_AMOUNT_IN` worth of
-					///  one of the Pool's coins entering the Pool.
+					///  one of the OraclePool's coins entering the OraclePool.
 					52: "Invalid Swap Amount In",
 					/// A user tries to perform a swap that would result in more than `MAX_SWAP_AMOUNT_OUT` worth of
-					///  one of the Pool's coins exiting the Pool.
+					///  one of the OraclePool's coins exiting the OraclePool.
 					53: "Invalid Swap Amount Out",
 					/// A user tries to perform a `swap_exact_out` with a value for `amount_out` that equates to
 					///  zero amount of `Coin<CI>`.
@@ -265,13 +263,14 @@ export class PoolsApi implements MoveErrorsInterface {
 					/// A user tries to perform a `swap_exact_in` with an amount of `Coin<CI>` that equates to
 					///  zero amount of `Coin<CO>`.
 					55: "Zero Amount Out",
-					/// A user tries to deposit into a Pool with a deposit that is worth zero LP coins.
+					/// A user tries to deposit into a OraclePool with a deposit that is worth zero LP coins.
 					56: "Zero Lp Out",
 					/// A user tries to invest with an lp ratio of 0
 					57: "Zero Lp Ratio",
 				},
-				[PoolsApi.constants.moduleNames.geometricMeanCalculations]: {},
-				[PoolsApi.constants.moduleNames.stableCalculations]: {},
+				[OraclePoolsApi.constants.moduleNames
+					.geometricMeanCalculations]: {},
+				[OraclePoolsApi.constants.moduleNames.stableCalculations]: {},
 			},
 			...(this.addresses.daoFeePools
 				? {
@@ -352,8 +351,8 @@ export class PoolsApi implements MoveErrorsInterface {
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
 				withTransfer
-					? PoolsApi.constants.moduleNames.interface
-					: PoolsApi.constants.moduleNames.swap,
+					? OraclePoolsApi.constants.moduleNames.interface
+					: OraclePoolsApi.constants.moduleNames.swap,
 				"swap_exact_in"
 			),
 			typeArguments: [lpCoinType, coinInType, coinOutType],
@@ -366,7 +365,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure.u64(expectedCoinOutAmount.toString()),
-				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
+				tx.pure.u64(OraclePools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -406,8 +405,8 @@ export class PoolsApi implements MoveErrorsInterface {
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
 				withTransfer
-					? PoolsApi.constants.moduleNames.interface
-					: PoolsApi.constants.moduleNames.deposit,
+					? OraclePoolsApi.constants.moduleNames.interface
+					: OraclePoolsApi.constants.moduleNames.deposit,
 				`deposit_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
@@ -422,7 +421,7 @@ export class PoolsApi implements MoveErrorsInterface {
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
 				tx.pure.u128(expectedLpRatio.toString()),
-				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
+				tx.pure.u64(OraclePools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -461,8 +460,8 @@ export class PoolsApi implements MoveErrorsInterface {
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
 				withTransfer
-					? PoolsApi.constants.moduleNames.interface
-					: PoolsApi.constants.moduleNames.withdraw,
+					? OraclePoolsApi.constants.moduleNames.interface
+					: OraclePoolsApi.constants.moduleNames.withdraw,
 				`withdraw_${poolSize}_coins`
 			),
 
@@ -484,7 +483,7 @@ export class PoolsApi implements MoveErrorsInterface {
 							)
 						)
 				),
-				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
+				tx.pure.u64(OraclePools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -519,8 +518,8 @@ export class PoolsApi implements MoveErrorsInterface {
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
 				withTransfer
-					? PoolsApi.constants.moduleNames.interface
-					: PoolsApi.constants.moduleNames.withdraw,
+					? OraclePoolsApi.constants.moduleNames.interface
+					: OraclePoolsApi.constants.moduleNames.withdraw,
 				`all_coin_withdraw_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
@@ -593,7 +592,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		respectDecimals: boolean;
 		forceLpDecimals?: CoinDecimal;
 		withTransfer?: boolean;
-	}): TransactionObjectArgument[] /* (Pool<L>, Coin<L>) */ => {
+	}): TransactionObjectArgument[] /* (OraclePool<L>, Coin<L>) */ => {
 		const {
 			tx,
 			lpCoinType,
@@ -615,8 +614,8 @@ export class PoolsApi implements MoveErrorsInterface {
 					? this.addresses.pools.packages.ammInterface
 					: this.addresses.pools.packages.amm,
 				withTransfer
-					? PoolsApi.constants.moduleNames.interface
-					: PoolsApi.constants.moduleNames.poolFactory,
+					? OraclePoolsApi.constants.moduleNames.interface
+					: OraclePoolsApi.constants.moduleNames.poolFactory,
 				`create_pool_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
@@ -720,7 +719,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.pools.packages.amm,
-				PoolsApi.constants.moduleNames.poolRegistry,
+				OraclePoolsApi.constants.moduleNames.poolRegistry,
 				"lp_type_to_pool_id"
 			),
 			typeArguments: [lpCoinType],
@@ -744,12 +743,12 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.daoFeePools.packages.amm,
-				PoolsApi.constants.moduleNames.pool,
+				OraclePoolsApi.constants.moduleNames.pool,
 				"new"
 			),
 			typeArguments: [inputs.lpCoinType],
 			arguments: [
-				typeof poolId === "string" ? tx.object(poolId) : poolId, // Pool
+				typeof poolId === "string" ? tx.object(poolId) : poolId, // OraclePool
 				tx.object(this.addresses.daoFeePools.objects.version),
 				tx.pure.u16(Number(inputs.feeBps)),
 				tx.pure.address(inputs.feeRecipient),
@@ -773,7 +772,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.daoFeePools.packages.amm,
-				PoolsApi.constants.moduleNames.pool,
+				OraclePoolsApi.constants.moduleNames.pool,
 				"update_fee_bps"
 			),
 			typeArguments: [inputs.lpCoinType],
@@ -802,7 +801,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.daoFeePools.packages.amm,
-				PoolsApi.constants.moduleNames.pool,
+				OraclePoolsApi.constants.moduleNames.pool,
 				"update_fee_recipient"
 			),
 			typeArguments: [inputs.lpCoinType],
@@ -849,7 +848,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.daoFeePools.packages.amm,
-				PoolsApi.constants.moduleNames.swap,
+				OraclePoolsApi.constants.moduleNames.swap,
 				"swap_exact_in"
 			),
 			typeArguments: [lpCoinType, coinInType, coinOutType],
@@ -863,7 +862,7 @@ export class PoolsApi implements MoveErrorsInterface {
 				tx.object(this.addresses.referralVault.objects.referralVault),
 				typeof coinInId === "string" ? tx.object(coinInId) : coinInId,
 				tx.pure.u64(expectedCoinOutAmount.toString()),
-				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
+				tx.pure.u64(OraclePools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -903,7 +902,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.daoFeePools.packages.amm,
-				PoolsApi.constants.moduleNames.deposit,
+				OraclePoolsApi.constants.moduleNames.deposit,
 				`deposit_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
@@ -919,7 +918,7 @@ export class PoolsApi implements MoveErrorsInterface {
 					typeof coinId === "string" ? tx.object(coinId) : coinId
 				),
 				tx.pure.u128(expectedLpRatio.toString()),
-				tx.pure.u64(Pools.normalizeInvertSlippage(slippage)),
+				tx.pure.u64(OraclePools.normalizeInvertSlippage(slippage)),
 			],
 		});
 	};
@@ -953,7 +952,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.daoFeePools.packages.amm,
-				PoolsApi.constants.moduleNames.withdraw,
+				OraclePoolsApi.constants.moduleNames.withdraw,
 				`all_coin_withdraw_${poolSize}_coins`
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
@@ -974,348 +973,348 @@ export class PoolsApi implements MoveErrorsInterface {
 	//  Transaction Builders
 	// =========================================================================
 
-	/**
-	 * Fetches a transaction block for trading in a pool.
-	 * @async
-	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user trading in the pool.
-	 * @param {Pool} inputs.pool - The pool to trade in.
-	 * @param {CoinType} inputs.coinInType - The coin type of the coin being traded in.
-	 * @param {Balance} inputs.coinInAmount - The amount of the coin being traded in.
-	 * @param {CoinType} inputs.coinOutType - The coin type of the coin being traded out.
-	 * @param {Slippage} inputs.slippage - The slippage of the trade.
-	 * @param {SuiAddress} [inputs.referrer] - The referrer of the trade.
-	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
-	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
-	 */
-	public fetchBuildTradeTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-		isSponsoredTx?: boolean;
-	}): Promise<Transaction> => {
-		const {
-			walletAddress,
-			pool,
-			coinInAmount,
-			coinInType,
-			coinOutType,
-			slippage,
-			referrer,
-			isSponsoredTx,
-		} = inputs;
+	// /**
+	//  * Fetches a transaction block for trading in a pool.
+	//  * @async
+	//  * @param {SuiAddress} inputs.walletAddress - The wallet address of the user trading in the pool.
+	//  * @param {OraclePool} inputs.pool - The pool to trade in.
+	//  * @param {CoinType} inputs.coinInType - The coin type of the coin being traded in.
+	//  * @param {Balance} inputs.coinInAmount - The amount of the coin being traded in.
+	//  * @param {CoinType} inputs.coinOutType - The coin type of the coin being traded out.
+	//  * @param {Slippage} inputs.slippage - The slippage of the trade.
+	//  * @param {SuiAddress} [inputs.referrer] - The referrer of the trade.
+	//  * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
+	//  * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
+	//  */
+	// public fetchBuildTradeTx = async (inputs: {
+	// 	walletAddress: SuiAddress;
+	// 	pool: OraclePool;
+	// 	coinInType: CoinType;
+	// 	coinInAmount: Balance;
+	// 	coinOutType: CoinType;
+	// 	slippage: Slippage;
+	// 	referrer?: SuiAddress;
+	// 	isSponsoredTx?: boolean;
+	// }): Promise<Transaction> => {
+	// 	const {
+	// 		walletAddress,
+	// 		pool,
+	// 		coinInAmount,
+	// 		coinInType,
+	// 		coinOutType,
+	// 		slippage,
+	// 		referrer,
+	// 		isSponsoredTx,
+	// 	} = inputs;
 
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
+	// 	const tx = new Transaction();
+	// 	tx.setSender(walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
-				tx,
-				referrer,
-			});
+	// 	if (referrer)
+	// 		this.Provider.ReferralVault().updateReferrerTx({
+	// 			tx,
+	// 			referrer,
+	// 		});
 
-		const amountOut = pool.getTradeAmountOut({
-			coinInAmount,
-			coinInType,
-			coinOutType,
-			referral: referrer !== undefined,
-		});
+	// 	const amountOut = pool.getTradeAmountOut({
+	// 		coinInAmount,
+	// 		coinInType,
+	// 		coinOutType,
+	// 		referral: referrer !== undefined,
+	// 	});
 
-		const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: coinInType,
-			coinAmount: coinInAmount,
-			isSponsoredTx,
-		});
+	// 	const coinInId = await this.Provider.Coin().fetchCoinWithAmountTx({
+	// 		tx,
+	// 		walletAddress,
+	// 		coinType: coinInType,
+	// 		coinAmount: coinInAmount,
+	// 		isSponsoredTx,
+	// 	});
 
-		if (pool.pool.daoFeePoolObject) {
-			const coinOutId = this.daoFeePoolTradeTx({
-				tx,
-				coinInId,
-				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
-				expectedCoinOutAmount: amountOut,
-				lpCoinType: pool.pool.lpCoinType,
-				coinInType,
-				coinOutType,
-				slippage,
-			});
-			tx.transferObjects([coinOutId], walletAddress);
-		} else {
-			this.tradeTx({
-				tx,
-				coinInId,
-				poolId: pool.pool.objectId,
-				expectedCoinOutAmount: amountOut,
-				lpCoinType: pool.pool.lpCoinType,
-				coinInType,
-				coinOutType,
-				slippage,
-				withTransfer: true,
-			});
-		}
+	// 	if (pool.pool.daoFeePoolObject) {
+	// 		const coinOutId = this.daoFeePoolTradeTx({
+	// 			tx,
+	// 			coinInId,
+	// 			daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+	// 			expectedCoinOutAmount: amountOut,
+	// 			lpCoinType: pool.pool.lpCoinType,
+	// 			coinInType,
+	// 			coinOutType,
+	// 			slippage,
+	// 		});
+	// 		tx.transferObjects([coinOutId], walletAddress);
+	// 	} else {
+	// 		this.tradeTx({
+	// 			tx,
+	// 			coinInId,
+	// 			poolId: pool.pool.objectId,
+	// 			expectedCoinOutAmount: amountOut,
+	// 			lpCoinType: pool.pool.lpCoinType,
+	// 			coinInType,
+	// 			coinOutType,
+	// 			slippage,
+	// 			withTransfer: true,
+	// 		});
+	// 	}
 
-		return tx;
-	};
+	// 	return tx;
+	// };
 
-	public fetchAddTradeTx = async (inputs: {
-		tx: Transaction;
-		coinInId: ObjectId | TransactionObjectArgument;
-		coinInType: CoinType;
-		coinInAmount: Balance;
-		coinOutType: CoinType;
-		slippage: Slippage;
-		pool: Pool;
-		referrer?: SuiAddress;
-	}): Promise<TransactionObjectArgument> /* Coin */ => {
-		const {
-			tx,
-			coinInId,
-			coinInAmount,
-			coinInType,
-			coinOutType,
-			slippage,
-			pool,
-			referrer,
-		} = inputs;
+	// public fetchAddTradeTx = async (inputs: {
+	// 	tx: Transaction;
+	// 	coinInId: ObjectId | TransactionObjectArgument;
+	// 	coinInType: CoinType;
+	// 	coinInAmount: Balance;
+	// 	coinOutType: CoinType;
+	// 	slippage: Slippage;
+	// 	pool: OraclePool;
+	// 	referrer?: SuiAddress;
+	// }): Promise<TransactionObjectArgument> /* Coin */ => {
+	// 	const {
+	// 		tx,
+	// 		coinInId,
+	// 		coinInAmount,
+	// 		coinInType,
+	// 		coinOutType,
+	// 		slippage,
+	// 		pool,
+	// 		referrer,
+	// 	} = inputs;
 
-		const amountOut = pool.getTradeAmountOut({
-			coinInAmount,
-			coinInType,
-			coinOutType,
-			referral: referrer !== undefined,
-		});
+	// 	const amountOut = pool.getTradeAmountOut({
+	// 		coinInAmount,
+	// 		coinInType,
+	// 		coinOutType,
+	// 		referral: referrer !== undefined,
+	// 	});
 
-		return this.tradeTx({
-			tx,
-			coinInId,
-			poolId: pool.pool.objectId,
-			expectedCoinOutAmount: amountOut,
-			lpCoinType: pool.pool.lpCoinType,
-			coinInType,
-			coinOutType,
-			slippage,
-		});
-	};
+	// 	return this.tradeTx({
+	// 		tx,
+	// 		coinInId,
+	// 		poolId: pool.pool.objectId,
+	// 		expectedCoinOutAmount: amountOut,
+	// 		lpCoinType: pool.pool.lpCoinType,
+	// 		coinInType,
+	// 		coinOutType,
+	// 		slippage,
+	// 	});
+	// };
 
-	/**
-	 * Fetches a transaction block for depositing in a pool.
-	 * @async
-	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user depositing in the pool.
-	 * @param {Pool} inputs.pool - The pool to deposit in.
-	 * @param {CoinsToBalance} inputs.amountsIn - The amounts of coins being deposited.
-	 * @param {Slippage} inputs.slippage - The slippage of the deposit.
-	 * @param {SuiAddress} [inputs.referrer] - The referrer of the deposit.
-	 * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
-	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
-	 */
-	public fetchBuildDepositTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		amountsIn: CoinsToBalance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-		isSponsoredTx?: boolean;
-	}): Promise<Transaction> => {
-		const {
-			walletAddress,
-			pool,
-			amountsIn,
-			slippage,
-			referrer,
-			isSponsoredTx,
-		} = inputs;
+	// /**
+	//  * Fetches a transaction block for depositing in a pool.
+	//  * @async
+	//  * @param {SuiAddress} inputs.walletAddress - The wallet address of the user depositing in the pool.
+	//  * @param {OraclePool} inputs.pool - The pool to deposit in.
+	//  * @param {CoinsToBalance} inputs.amountsIn - The amounts of coins being deposited.
+	//  * @param {Slippage} inputs.slippage - The slippage of the deposit.
+	//  * @param {SuiAddress} [inputs.referrer] - The referrer of the deposit.
+	//  * @param {boolean} [inputs.isSponsoredTx] - Whether the transaction is sponsored.
+	//  * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
+	//  */
+	// public fetchBuildDepositTx = async (inputs: {
+	// 	walletAddress: SuiAddress;
+	// 	pool: OraclePool;
+	// 	amountsIn: CoinsToBalance;
+	// 	slippage: Slippage;
+	// 	referrer?: SuiAddress;
+	// 	isSponsoredTx?: boolean;
+	// }): Promise<Transaction> => {
+	// 	const {
+	// 		walletAddress,
+	// 		pool,
+	// 		amountsIn,
+	// 		slippage,
+	// 		referrer,
+	// 		isSponsoredTx,
+	// 	} = inputs;
 
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
+	// 	const tx = new Transaction();
+	// 	tx.setSender(walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
-				tx,
-				referrer,
-			});
+	// 	if (referrer)
+	// 		this.Provider.ReferralVault().updateReferrerTx({
+	// 			tx,
+	// 			referrer,
+	// 		});
 
-		const { coins: coinTypes, balances: coinAmounts } =
-			Coin.coinsAndBalancesOverZero(amountsIn);
+	// 	const { coins: coinTypes, balances: coinAmounts } =
+	// 		Coin.coinsAndBalancesOverZero(amountsIn);
 
-		const { lpRatio } = pool.getDepositLpAmountOut({
-			amountsIn,
-			referral: referrer !== undefined,
-		});
+	// 	const { lpRatio } = pool.getDepositLpAmountOut({
+	// 		amountsIn,
+	// 		referral: referrer !== undefined,
+	// 	});
 
-		// TODO: move this somewhere else and into its own func
-		const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
+	// 	// TODO: move this somewhere else and into its own func
+	// 	const expectedLpRatio = Casting.numberToFixedBigInt(lpRatio);
 
-		const coinIds = await this.Provider.Coin().fetchCoinsWithAmountTx({
-			...inputs,
-			tx,
-			coinTypes,
-			coinAmounts,
-			isSponsoredTx,
-		});
+	// 	const coinIds = await this.Provider.Coin().fetchCoinsWithAmountTx({
+	// 		...inputs,
+	// 		tx,
+	// 		coinTypes,
+	// 		coinAmounts,
+	// 		isSponsoredTx,
+	// 	});
 
-		if (pool.pool.daoFeePoolObject) {
-			const lpCoinId = this.daoFeePoolMultiCoinDepositTx({
-				tx,
-				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				coinIds,
-				coinTypes,
-				expectedLpRatio,
-				slippage,
-			});
-			tx.transferObjects([lpCoinId], walletAddress);
-		} else {
-			this.multiCoinDepositTx({
-				tx,
-				poolId: pool.pool.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				coinIds,
-				coinTypes,
-				expectedLpRatio,
-				slippage,
-				withTransfer: true,
-			});
-		}
+	// 	if (pool.pool.daoFeePoolObject) {
+	// 		const lpCoinId = this.daoFeePoolMultiCoinDepositTx({
+	// 			tx,
+	// 			daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+	// 			lpCoinType: pool.pool.lpCoinType,
+	// 			coinIds,
+	// 			coinTypes,
+	// 			expectedLpRatio,
+	// 			slippage,
+	// 		});
+	// 		tx.transferObjects([lpCoinId], walletAddress);
+	// 	} else {
+	// 		this.multiCoinDepositTx({
+	// 			tx,
+	// 			poolId: pool.pool.objectId,
+	// 			lpCoinType: pool.pool.lpCoinType,
+	// 			coinIds,
+	// 			coinTypes,
+	// 			expectedLpRatio,
+	// 			slippage,
+	// 			withTransfer: true,
+	// 		});
+	// 	}
 
-		return tx;
-	};
+	// 	return tx;
+	// };
 
-	/**
-	 * Fetches a transaction block for withdrawing from a pool.
-	 * @async
-	 * @param {SuiAddress} inputs.walletAddress - The wallet address of the user withdrawing from the pool.
-	 * @param {Pool} inputs.pool - The pool to withdraw from.
-	 * @param {CoinsToBalance} inputs.amountsOutDirection - The amounts of coins being withdrawn.
-	 * @param {Balance} inputs.lpCoinAmount - The amount of LP tokens being withdrawn.
-	 * @param {Slippage} inputs.slippage - The slippage of the withdrawal.
-	 * @param {SuiAddress} [inputs.referrer] - The referrer of the withdrawal.
-	 * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
-	 */
-	public fetchBuildWithdrawTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		amountsOutDirection: CoinsToBalance;
-		lpCoinAmount: Balance;
-		slippage: Slippage;
-		referrer?: SuiAddress;
-	}): Promise<Transaction> => {
-		const {
-			walletAddress,
-			pool,
-			amountsOutDirection,
-			lpCoinAmount,
-			slippage,
-			referrer,
-		} = inputs;
+	// /**
+	//  * Fetches a transaction block for withdrawing from a pool.
+	//  * @async
+	//  * @param {SuiAddress} inputs.walletAddress - The wallet address of the user withdrawing from the pool.
+	//  * @param {OraclePool} inputs.pool - The pool to withdraw from.
+	//  * @param {CoinsToBalance} inputs.amountsOutDirection - The amounts of coins being withdrawn.
+	//  * @param {Balance} inputs.lpCoinAmount - The amount of LP tokens being withdrawn.
+	//  * @param {Slippage} inputs.slippage - The slippage of the withdrawal.
+	//  * @param {SuiAddress} [inputs.referrer] - The referrer of the withdrawal.
+	//  * @returns {Promise<Transaction>} A promise that resolves to the fetched transaction block.
+	//  */
+	// public fetchBuildWithdrawTx = async (inputs: {
+	// 	walletAddress: SuiAddress;
+	// 	pool: OraclePool;
+	// 	amountsOutDirection: CoinsToBalance;
+	// 	lpCoinAmount: Balance;
+	// 	slippage: Slippage;
+	// 	referrer?: SuiAddress;
+	// }): Promise<Transaction> => {
+	// 	const {
+	// 		walletAddress,
+	// 		pool,
+	// 		amountsOutDirection,
+	// 		lpCoinAmount,
+	// 		slippage,
+	// 		referrer,
+	// 	} = inputs;
 
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
+	// 	const tx = new Transaction();
+	// 	tx.setSender(walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
-				tx,
-				referrer,
-			});
+	// 	if (referrer)
+	// 		this.Provider.ReferralVault().updateReferrerTx({
+	// 			tx,
+	// 			referrer,
+	// 		});
 
-		const lpRatio = pool.getMultiCoinWithdrawLpRatio({
-			lpCoinAmountIn: lpCoinAmount,
-		});
+	// 	const lpRatio = pool.getMultiCoinWithdrawLpRatio({
+	// 		lpCoinAmountIn: lpCoinAmount,
+	// 	});
 
-		const amountsOut = pool.getWithdrawAmountsOut({
-			lpRatio,
-			amountsOutDirection,
-			referral: referrer !== undefined,
-		});
+	// 	const amountsOut = pool.getWithdrawAmountsOut({
+	// 		lpRatio,
+	// 		amountsOutDirection,
+	// 		referral: referrer !== undefined,
+	// 	});
 
-		const { coins: coinTypes, balances: coinAmounts } =
-			Coin.coinsAndBalancesOverZero(amountsOut);
+	// 	const { coins: coinTypes, balances: coinAmounts } =
+	// 		Coin.coinsAndBalancesOverZero(amountsOut);
 
-		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: pool.pool.lpCoinType,
-			coinAmount: lpCoinAmount,
-		});
+	// 	const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+	// 		tx,
+	// 		walletAddress,
+	// 		coinType: pool.pool.lpCoinType,
+	// 		coinAmount: lpCoinAmount,
+	// 	});
 
-		if (pool.pool.daoFeePoolObject) {
-			// TODO: handle dao fee pool
-			// TODO: handle transfer
-		} else {
-			this.multiCoinWithdrawTx({
-				tx,
-				poolId: pool.pool.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				expectedAmountsOut: coinAmounts,
-				coinTypes: coinTypes,
-				lpCoinId,
-				slippage,
-				withTransfer: true,
-			});
-		}
+	// 	if (pool.pool.daoFeePoolObject) {
+	// 		// TODO: handle dao fee pool
+	// 		// TODO: handle transfer
+	// 	} else {
+	// 		this.multiCoinWithdrawTx({
+	// 			tx,
+	// 			poolId: pool.pool.objectId,
+	// 			lpCoinType: pool.pool.lpCoinType,
+	// 			expectedAmountsOut: coinAmounts,
+	// 			coinTypes: coinTypes,
+	// 			lpCoinId,
+	// 			slippage,
+	// 			withTransfer: true,
+	// 		});
+	// 	}
 
-		return tx;
-	};
+	// 	return tx;
+	// };
 
-	/**
-	 * Fetches a transaction block that withdraws all coins from a pool in exchange for the corresponding LP tokens.
-	 * @param inputs An object containing the wallet address, pool, LP coin amount, and optional referrer.
-	 * @returns A promise that resolves to a Transaction object.
-	 */
-	public fetchBuildAllCoinWithdrawTx = async (inputs: {
-		walletAddress: SuiAddress;
-		pool: Pool;
-		lpCoinAmount: Balance;
-		referrer?: SuiAddress;
-	}): Promise<Transaction> => {
-		const { walletAddress, pool, lpCoinAmount, referrer } = inputs;
+	// /**
+	//  * Fetches a transaction block that withdraws all coins from a pool in exchange for the corresponding LP tokens.
+	//  * @param inputs An object containing the wallet address, pool, LP coin amount, and optional referrer.
+	//  * @returns A promise that resolves to a Transaction object.
+	//  */
+	// public fetchBuildAllCoinWithdrawTx = async (inputs: {
+	// 	walletAddress: SuiAddress;
+	// 	pool: OraclePool;
+	// 	lpCoinAmount: Balance;
+	// 	referrer?: SuiAddress;
+	// }): Promise<Transaction> => {
+	// 	const { walletAddress, pool, lpCoinAmount, referrer } = inputs;
 
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
+	// 	const tx = new Transaction();
+	// 	tx.setSender(walletAddress);
 
-		if (referrer)
-			this.Provider.ReferralVault().updateReferrerTx({
-				tx,
-				referrer,
-			});
+	// 	if (referrer)
+	// 		this.Provider.ReferralVault().updateReferrerTx({
+	// 			tx,
+	// 			referrer,
+	// 		});
 
-		const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: pool.pool.lpCoinType,
-			coinAmount: lpCoinAmount,
-		});
+	// 	const lpCoinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+	// 		tx,
+	// 		walletAddress,
+	// 		coinType: pool.pool.lpCoinType,
+	// 		coinAmount: lpCoinAmount,
+	// 	});
 
-		const coinTypes = Object.keys(pool.pool.coins);
+	// 	const coinTypes = Object.keys(pool.pool.coins);
 
-		if (pool.pool.daoFeePoolObject) {
-			const withdrawnCoinIds = this.daoFeePoolAllCoinWithdrawTx({
-				tx,
-				daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				coinTypes,
-				lpCoinId,
-			});
-			tx.transferObjects(
-				coinTypes.map((_, index) => withdrawnCoinIds[index]),
-				walletAddress
-			);
-		} else {
-			this.allCoinWithdrawTx({
-				tx,
-				poolId: pool.pool.objectId,
-				lpCoinType: pool.pool.lpCoinType,
-				coinTypes,
-				lpCoinId,
-				withTransfer: true,
-			});
-		}
+	// 	if (pool.pool.daoFeePoolObject) {
+	// 		const withdrawnCoinIds = this.daoFeePoolAllCoinWithdrawTx({
+	// 			tx,
+	// 			daoFeePoolId: pool.pool.daoFeePoolObject.objectId,
+	// 			lpCoinType: pool.pool.lpCoinType,
+	// 			coinTypes,
+	// 			lpCoinId,
+	// 		});
+	// 		tx.transferObjects(
+	// 			coinTypes.map((_, index) => withdrawnCoinIds[index]),
+	// 			walletAddress
+	// 		);
+	// 	} else {
+	// 		this.allCoinWithdrawTx({
+	// 			tx,
+	// 			poolId: pool.pool.objectId,
+	// 			lpCoinType: pool.pool.lpCoinType,
+	// 			coinTypes,
+	// 			lpCoinId,
+	// 			withTransfer: true,
+	// 		});
+	// 	}
 
-		return tx;
-	};
+	// 	return tx;
+	// };
 
 	/**
 	 * Builds a transaction block for publishing an LP coin.
@@ -1351,42 +1350,42 @@ export class PoolsApi implements MoveErrorsInterface {
 	private tradeEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.events,
-			PoolsApi.constants.moduleNames.events,
-			PoolsApi.constants.eventNames.swap
+			OraclePoolsApi.constants.moduleNames.events,
+			OraclePoolsApi.constants.eventNames.swap
 		);
 
 	private depositEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.events,
-			PoolsApi.constants.moduleNames.events,
-			PoolsApi.constants.eventNames.deposit
+			OraclePoolsApi.constants.moduleNames.events,
+			OraclePoolsApi.constants.eventNames.deposit
 		);
 
 	private withdrawEventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.events,
-			PoolsApi.constants.moduleNames.events,
-			PoolsApi.constants.eventNames.withdraw
+			OraclePoolsApi.constants.moduleNames.events,
+			OraclePoolsApi.constants.eventNames.withdraw
 		);
 
 	private tradeV2EventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.eventsV2,
-			PoolsApi.constants.moduleNames.events,
-			PoolsApi.constants.eventNames.swapV2
+			OraclePoolsApi.constants.moduleNames.events,
+			OraclePoolsApi.constants.eventNames.swapV2
 		);
 
 	private depositV2EventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.eventsV2,
-			PoolsApi.constants.moduleNames.events,
-			PoolsApi.constants.eventNames.depositV2
+			OraclePoolsApi.constants.moduleNames.events,
+			OraclePoolsApi.constants.eventNames.depositV2
 		);
 
 	private withdrawV2EventType = () =>
 		EventsApiHelpers.createEventType(
 			this.addresses.pools.packages.eventsV2,
-			PoolsApi.constants.moduleNames.events,
-			PoolsApi.constants.eventNames.withdrawV2
+			OraclePoolsApi.constants.moduleNames.events,
+			OraclePoolsApi.constants.eventNames.withdrawV2
 		);
 }

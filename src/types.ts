@@ -1,6 +1,7 @@
 export * from "./packages/suiFrens/suiFrensTypes";
 export * from "./packages/faucet/faucetTypes";
 export * from "./packages/pools/poolsTypes";
+export * from "./packages/oraclePools/oraclePoolsTypes";
 export * from "./packages/staking/stakingTypes";
 export * from "./packages/leveragedStaking/leveragedStakingTypes";
 export * from "./packages/coin/coinTypes";

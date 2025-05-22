@@ -27,6 +27,7 @@ import { MoveErrorsInterface } from "../types/moveErrorsInterface";
 import { MultisigApi } from "../../packages/multisig/api/multisigApi";
 import { UserDataApi } from "../../packages/userData/api/userDataApi";
 import { LimitOrdersApi } from "../../packages/limitOrders/api/limitOrdersApi";
+import { OraclePoolsApi } from "../../packages/oraclePools/api/oraclePoolsApi";
 
 /**
  * The `AftermathApi` class is a low-level factory and reference point for
@@ -177,6 +178,11 @@ export class AftermathApi {
 	 * Creates a new `PoolsApi` instance for pool-related interactions (AMM pools, liquidity, etc.).
 	 */
 	public Pools = () => new PoolsApi(this);
+
+	/**
+	 * Creates a new `OraclePoolsApi` instance for pool-related interactions (AMM pools, liquidity, etc.).
+	 */
+	public OraclePools = () => new OraclePoolsApi(this);
 
 	/**
 	 * Creates a new `FaucetApi` instance for dispensing tokens on supported dev/test networks.
