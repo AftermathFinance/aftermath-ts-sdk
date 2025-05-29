@@ -5,7 +5,7 @@ The Aftermath SDK provides easy access to Aftermath Finance's protocols on the S
 ## Installation
 
 ```bash
-npm i aftermath-ts-sdk
+npm i aftermath-ts-sdk @mysten/sui @mysten/sui.js
 ```
 
 ## Quick Start (Aftermath SDK)
