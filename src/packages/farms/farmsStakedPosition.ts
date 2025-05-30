@@ -421,8 +421,8 @@ export class FarmsStakedPosition extends Caller {
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildUnstakeTxV1(args)
-			: this.useProvider().fetchBuildUnstakeTxV2(args);
+			? this.useProvider().buildUnstakeTxV1(args)
+			: this.useProvider().buildUnstakeTxV2(args);
 	}
 
 	// =========================================================================
@@ -512,8 +512,8 @@ export class FarmsStakedPosition extends Caller {
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildHarvestRewardsTxV1(args)
-			: this.useProvider().fetchBuildHarvestRewardsTxV2(args);
+			? this.useProvider().buildHarvestRewardsTxV1(args)
+			: this.useProvider().buildHarvestRewardsTxV2(args);
 	}
 
 	// =========================================================================

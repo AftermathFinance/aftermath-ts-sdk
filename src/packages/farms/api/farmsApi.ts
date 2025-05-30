@@ -1832,12 +1832,12 @@ export class FarmsApi implements MoveErrorsInterface {
 	};
 
 	/**
-	 * @deprecated use fetchBuildWithdrawPrincipalTxV2 instead
+	 * @deprecated use buildWithdrawPrincipalTxV2 instead
 	 * Builds a complete transaction for withdrawing principal from a staked position
 	 * @param inputs Withdraw parameters including wallet address, position ID, pool ID, withdraw amount, and coin type
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchBuildWithdrawPrincipalTxV1 = async (inputs: {
+	public buildWithdrawPrincipalTxV1 = (inputs: {
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
 		withdrawAmount: Balance;
@@ -1863,7 +1863,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param inputs Withdraw parameters including wallet address, position ID, pool ID, withdraw amount, and coin type
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchBuildWithdrawPrincipalTxV2 = async (inputs: {
+	public buildWithdrawPrincipalTxV2 = (inputs: {
 		stakedPositionId: ObjectId;
 		stakingPoolId: ObjectId;
 		withdrawAmount: Balance;
@@ -1885,18 +1885,18 @@ export class FarmsApi implements MoveErrorsInterface {
 	};
 
 	/**
-	 * @deprecated use fetchBuildUnstakeTxV2 instead
+	 * @deprecated use buildUnstakeTxV2 instead
 	 * Builds a complete transaction for unstaking (withdrawing and destroying a position)
 	 * @param inputs Unstake parameters including wallet address, position ID, pool ID, reward coin types, and coin type
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchBuildUnstakeTxV1 = async (inputs: ApiFarmsUnstakeBody) => {
+	public buildUnstakeTxV1 = (inputs: ApiFarmsUnstakeBody) => {
 		const { walletAddress } = inputs;
 
 		let tx;
 		if (inputs.rewardCoinTypes.length > 0) {
 			// harvest rewards
-			tx = await this.fetchBuildHarvestRewardsTxV1({
+			tx = this.buildHarvestRewardsTxV1({
 				...inputs,
 				stakedPositionIds: [inputs.stakedPositionId],
 			});
@@ -1929,13 +1929,13 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param inputs Unstake parameters including wallet address, position ID, pool ID, reward coin types, and coin type
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchBuildUnstakeTxV2 = async (inputs: ApiFarmsUnstakeBody) => {
+	public buildUnstakeTxV2 = (inputs: ApiFarmsUnstakeBody) => {
 		const { walletAddress } = inputs;
 
 		let tx;
 		if (inputs.rewardCoinTypes.length > 0) {
 			// harvest rewards
-			tx = await this.fetchBuildHarvestRewardsTxV2({
+			tx = this.buildHarvestRewardsTxV2({
 				...inputs,
 				stakedPositionIds: [inputs.stakedPositionId],
 			});
@@ -2047,17 +2047,19 @@ export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	/**
-	 * @deprecated use fetchBuildHarvestRewardsTxV2 instead
+	 * @deprecated use buildHarvestRewardsTxV2 instead
 	 * Builds a complete transaction for harvesting rewards from staked positions
 	 * @param inputs Harvest parameters including wallet address, position IDs, pool ID, reward coin types, and optional claim as AfSui flag
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchBuildHarvestRewardsTxV1 = async (
-		inputs: ApiHarvestFarmsRewardsBody
-	): Promise<Transaction> => {
+	public buildHarvestRewardsTxV1 = (
+		inputs: ApiHarvestFarmsRewardsBody & {
+			tx?: Transaction;
+		}
+	): Transaction => {
 		const { walletAddress, stakedPositionIds } = inputs;
 
-		const tx = new Transaction();
+		const tx = inputs.tx ?? new Transaction();
 		tx.setSender(walletAddress);
 
 		const harvestRewardsCap = this.beginHarvestTxV1({
@@ -2120,12 +2122,14 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param inputs Harvest parameters including wallet address, position IDs, pool ID, reward coin types, and optional claim as AfSui flag
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchBuildHarvestRewardsTxV2 = async (
-		inputs: ApiHarvestFarmsRewardsBody
-	): Promise<Transaction> => {
+	public buildHarvestRewardsTxV2 = (
+		inputs: ApiHarvestFarmsRewardsBody & {
+			tx?: Transaction;
+		}
+	): Transaction => {
 		const { walletAddress, stakedPositionIds } = inputs;
 
-		const tx = new Transaction();
+		const tx = inputs.tx ?? new Transaction();
 		tx.setSender(walletAddress);
 
 		// For the first position, begin harvest
@@ -2192,14 +2196,14 @@ export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	/**
-	 * @deprecated use fetchBuildCreateStakingPoolTxV2 instead
+	 * @deprecated use buildCreateStakingPoolTxV2 instead
 	 * Builds a complete transaction for creating a new staking pool
 	 * @param inputs Pool creation parameters including wallet address, lock enforcements, durations, multiplier, stake amount, and coin type
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchBuildCreateStakingPoolTxV1 = async (
+	public buildCreateStakingPoolTxV1 = (
 		inputs: ApiFarmsCreateStakingPoolBodyV1
-	): Promise<Transaction> => {
+	): Transaction => {
 		const { walletAddress } = inputs;
 
 		const tx = new Transaction();
@@ -2229,9 +2233,9 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param inputs Pool creation parameters including wallet address, lock enforcements, durations, multiplier, stake amount, and coin type
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchBuildCreateStakingPoolTxV2 = async (
+	public buildCreateStakingPoolTxV2 = (
 		inputs: ApiFarmsCreateStakingPoolBody
-	): Promise<Transaction> => {
+	): Transaction => {
 		const { walletAddress } = inputs;
 
 		const tx = new Transaction();
@@ -2379,12 +2383,12 @@ export class FarmsApi implements MoveErrorsInterface {
 	};
 
 	/**
-	 * @deprecated use fetchIncreaseStakingPoolRewardsEmissionsTxV2 instead
+	 * @deprecated use buildIncreaseStakingPoolRewardsEmissionsTxV2 instead
 	 * Builds a complete transaction for increasing the emission rate of rewards for a staking pool
 	 * @param inputs Increase emissions parameters including wallet address, owner cap ID, pool ID, rewards array with emission parameters and coin types, and stake coin type
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchIncreaseStakingPoolRewardsEmissionsTxV1 = (
+	public buildIncreaseStakingPoolRewardsEmissionsTxV1 = (
 		inputs: ApiFarmsIncreaseStakingPoolRewardsEmissionsBody
 	) => {
 		const { walletAddress } = inputs;
@@ -2408,7 +2412,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	 * @param inputs Increase emissions parameters including wallet address, owner cap ID, pool ID, rewards array with emission parameters and coin types, and stake coin type
 	 * @returns Complete transaction ready for signing and execution
 	 */
-	public fetchIncreaseStakingPoolRewardsEmissionsTxV2 = (
+	public buildIncreaseStakingPoolRewardsEmissionsTxV2 = (
 		inputs: ApiFarmsIncreaseStakingPoolRewardsEmissionsBody
 	) => {
 		const { walletAddress } = inputs;

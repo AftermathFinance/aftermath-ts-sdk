@@ -293,7 +293,7 @@ export class Farms extends Caller {
 	public async getCreateStakingPoolTransactionV1(
 		inputs: ApiFarmsCreateStakingPoolBodyV1
 	) {
-		return this.useProvider().fetchBuildCreateStakingPoolTxV1(inputs);
+		return this.useProvider().buildCreateStakingPoolTxV1(inputs);
 	}
 
 	/**
@@ -318,7 +318,7 @@ export class Farms extends Caller {
 	public async getCreateStakingPoolTransactionV2(
 		inputs: ApiFarmsCreateStakingPoolBody
 	) {
-		return this.useProvider().fetchBuildCreateStakingPoolTxV2(inputs);
+		return this.useProvider().buildCreateStakingPoolTxV2(inputs);
 	}
 
 	// =========================================================================

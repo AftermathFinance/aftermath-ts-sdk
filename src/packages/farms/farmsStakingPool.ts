@@ -383,8 +383,8 @@ export class FarmsStakingPool extends Caller {
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(),
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildHarvestRewardsTxV1(args)
-			: this.useProvider().fetchBuildHarvestRewardsTxV2(args);
+			? this.useProvider().buildHarvestRewardsTxV1(args)
+			: this.useProvider().buildHarvestRewardsTxV2(args);
 	}
 
 	// =========================================================================
@@ -412,10 +412,10 @@ export class FarmsStakingPool extends Caller {
 			stakingPoolId: this.stakingPool.objectId,
 		};
 		return this.version() === 1
-			? this.useProvider().fetchIncreaseStakingPoolRewardsEmissionsTxV1(
+			? this.useProvider().buildIncreaseStakingPoolRewardsEmissionsTxV1(
 					args
 			  )
-			: this.useProvider().fetchIncreaseStakingPoolRewardsEmissionsTxV2(
+			: this.useProvider().buildIncreaseStakingPoolRewardsEmissionsTxV2(
 					args
 			  );
 	}
