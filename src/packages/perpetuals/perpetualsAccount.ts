@@ -515,11 +515,6 @@ export class PerpetualsAccount extends Caller {
 		marketId: PerpetualsMarketId;
 	}): Promise<Transaction> {
 		const { leverage, tx, collateralChange, marketId } = inputs;
-
-		// TODO: move to af-fe
-		if (inputs.collateralChange === BigInt(0))
-			throw new Error("collateralChange cannot be 0");
-
 		return this.fetchApiTransaction<ApiPerpetualsSetLeverageTxBody>(
 			"transactions/set-leverage",
 			{
