@@ -910,19 +910,6 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 		collateralCoinType: CoinType;
 	};
 
-export interface ApiPerpetualsSetPositionLeverageBody {
-	walletAddress: SuiAddress;
-	bytes: string;
-	signature: string;
-}
-
-export interface ApiPerpetualsSetPositionLeverageFromTxBody {
-	accountId: PerpetualsAccountId;
-	marketId: PerpetualsMarketId;
-	leverage: number;
-	txDigest: TransactionDigest;
-}
-
 export type ApiPerpetualsPreviewOrderBody = (
 	| Omit<
 			ApiPerpetualsLimitOrderBody,
@@ -1348,7 +1335,7 @@ export interface ApiPerpetualsReduceOrderBody {
 	txKind?: SerializedTransaction;
 }
 
-export interface ApiPerpetualsSetLeverageBody {
+export interface ApiPerpetualsSetLeverageTxBody {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	collateralChange: Balance;
