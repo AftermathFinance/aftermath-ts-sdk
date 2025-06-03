@@ -53,6 +53,15 @@ export enum PerpetualsOrderType {
 	ImmediateOrCancel = 3,
 }
 
+export enum PerpetualsStopOrderType {
+	/// Stop Loss / Take Profit stop order. Can to be placed to close (fully or partially)
+	/// the position.
+	SlTp = 0,
+	/// Stop order that can be both reduce or increase the position's size. May require
+	/// some collateral to be allocated to be able to be placed.
+	Standalone = 1,
+}
+
 // =========================================================================
 //  BCS - Binary Canonical Serialization
 // =========================================================================
@@ -175,6 +184,13 @@ export interface PerpetualsPosition {
 // const PositionKey = bcs.struct("PositionKey", {
 // 	accountId: bcs.u64(),
 // });
+
+export interface PerpetualsSubAccount {
+	objectId: ObjectId;
+	users: SuiAddress[];
+	accountId: PerpetualsAccountId;
+	collateral: Balance;
+}
 
 // =========================================================================
 //  Market
@@ -397,6 +413,7 @@ export interface PerpetualsAccountData {
 
 export interface PerpetualsAccountObject {
 	positions: PerpetualsPosition[];
+	subAccounts: PerpetualsSubAccount[];
 }
 
 // =========================================================================
@@ -516,9 +533,9 @@ export type CollateralEvent =
 	| FilledTakerOrderEvent
 	| FilledMakerOrdersEvent
 	| AllocatedCollateralEvent
-	| DeallocatedCollateralEvent
-	| AddedStopOrderTicketCollateralEvent
-	| RemovedStopOrderTicketCollateralEvent;
+	| DeallocatedCollateralEvent;
+// | AddedStopOrderTicketCollateralEvent
+// | RemovedStopOrderTicketCollateralEvent;
 
 // TODO: make all these checks use string value from perps api
 
@@ -581,6 +598,25 @@ export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
 export interface CreatedAccountEvent extends Event {
 	user: SuiAddress;
 	accountId: PerpetualsAccountId;
+}
+
+export interface CreatedSubAccountEvent extends Event {
+	users: SuiAddress[];
+	accountId: PerpetualsAccountId;
+	subAccountId: ObjectId;
+}
+
+export interface SetSubAccountUsersEvent extends Event {
+	users: SuiAddress[];
+	accountId: PerpetualsAccountId;
+	subAccountId: ObjectId;
+}
+
+export interface SetPositionInitialMarginRatioEvent extends Event {
+	marketId: PerpetualsMarketId;
+	accountId: PerpetualsAccountId;
+	// NOTE: should this be made into string ?
+	initialMarginRatio: IFixed;
 }
 
 // =========================================================================
@@ -728,50 +764,54 @@ export interface CreatedStopOrderTicketEvent extends Event {
 	ticketId: ObjectId;
 	objectId: ObjectId;
 	accountId: PerpetualsAccountId;
-	executor: SuiAddress;
+	subAccountId?: ObjectId;
+	executors: SuiAddress[];
 	gas: Balance;
-	collateralToAllocate: Balance;
+	stopOrderType: PerpetualsStopOrderType;
 	encryptedDetails: Byte[];
 }
 
 export interface ExecutedStopOrderTicketEvent extends Event {
 	ticketId: ObjectId;
 	accountId: PerpetualsAccountId;
+	executor: SuiAddress;
 }
 
 export interface DeletedStopOrderTicketEvent extends Event {
 	ticketId: ObjectId;
 	accountId: PerpetualsAccountId;
-	subaccountId?: ObjectId;
+	subAccountId?: ObjectId;
+	executor: SuiAddress;
 }
 
 export interface EditedStopOrderTicketDetailsEvent extends Event {
 	ticketId: ObjectId;
 	accountId: PerpetualsAccountId;
-	subaccountId?: ObjectId;
+	subAccountId?: ObjectId;
 	encryptedDetails: Byte[];
+	executor: SuiAddress;
 }
 
 export interface EditedStopOrderTicketExecutorEvent extends Event {
 	ticketId: ObjectId;
 	accountId: PerpetualsAccountId;
-	subaccountId?: ObjectId;
-	executor: SuiAddress;
+	subAccountId?: ObjectId;
+	executors: SuiAddress[];
 }
 
-export interface AddedStopOrderTicketCollateralEvent extends Event {
-	ticketId: ObjectId;
-	accountId: PerpetualsAccountId;
-	subaccountId?: ObjectId;
-	collateralToAllocate: Balance;
-}
+// export interface AddedStopOrderTicketCollateralEvent extends Event {
+// 	ticketId: ObjectId;
+// 	accountId: PerpetualsAccountId;
+// 	subAccountId?: ObjectId;
+// 	collateralToAllocate: Balance;
+// }
 
-export interface RemovedStopOrderTicketCollateralEvent extends Event {
-	ticketId: ObjectId;
-	accountId: PerpetualsAccountId;
-	subaccountId?: ObjectId;
-	collateralToRemove: Balance;
-}
+// export interface RemovedStopOrderTicketCollateralEvent extends Event {
+// 	ticketId: ObjectId;
+// 	accountId: PerpetualsAccountId;
+// 	subAccountId?: ObjectId;
+// 	collateralToRemove: Balance;
+// }
 
 export interface TransferredDeallocatedCollateralEvent extends Event {
 	chId: ObjectId;

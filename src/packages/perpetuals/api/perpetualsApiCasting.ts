@@ -32,10 +32,13 @@ import {
 	ReceivedCollateralEvent,
 	TransferredDeallocatedCollateralEvent,
 	EditedStopOrderTicketExecutorEvent,
-	AddedStopOrderTicketCollateralEvent,
-	RemovedStopOrderTicketCollateralEvent,
+	// AddedStopOrderTicketCollateralEvent,
+	// RemovedStopOrderTicketCollateralEvent,
 	EditedStopOrderTicketDetailsEvent,
 	ExecutedStopOrderTicketEvent,
+	SetPositionInitialMarginRatioEvent,
+	CreatedSubAccountEvent,
+	SetSubAccountUsersEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -55,12 +58,6 @@ import {
 	PostedOrderReceiptEventOnChain,
 	AllocatedCollateralEventOnChain,
 	DeallocatedCollateralEventOnChain,
-	PerpetualsMarketParamsFieldsIndexerReponse,
-	PerpetualsMarketStateFieldsIndexerReponse,
-	PerpetualsAccountPositionsIndexerResponse,
-	PerpetualsPositionIndexerResponse,
-	PerpetualsMarketDataIndexerResponse,
-	PerpetualsOrderbookIndexerResponse,
 	UpdatedFundingEventOnChain,
 	UpdatedMarketVersionEventOnChain,
 	ReducedOrderEventOnChain,
@@ -69,10 +66,13 @@ import {
 	ReceivedCollateralEventOnChain,
 	TransferredDeallocatedCollateralEventOnChain,
 	EditedStopOrderTicketExecutorEventOnChain,
-	AddedStopOrderTicketCollateralEventOnChain,
-	RemovedStopOrderTicketCollateralEventOnChain,
+	// AddedStopOrderTicketCollateralEventOnChain,
+	// RemovedStopOrderTicketCollateralEventOnChain,
 	EditedStopOrderTicketDetailsEventOnChain,
 	ExecutedStopOrderTicketEventOnChain,
+	SetPositionInitialMarginRatioEventOnChain,
+	CreatedSubAccountEventOnChain,
+	SetSubAccountUsersEventOnChain,
 } from "../perpetualsCastingTypes";
 import { bcs } from "@mysten/sui/bcs";
 import { IFixedAsStringBytes } from "../../../types";
@@ -103,201 +103,6 @@ export class PerpetualsApiCasting {
 	// 		takerFee: BigInt(data.takerFee),
 	// 	};
 	// };
-
-	public static positionFromIndexerReponse = (inputs: {
-		position: PerpetualsPositionIndexerResponse;
-		collateralCoinType: CoinType;
-		marketId: PerpetualsMarketId;
-		leverage: number;
-	}): PerpetualsPosition => {
-		const { position, collateralCoinType, marketId, leverage } = inputs;
-		return {
-			collateralCoinType,
-			leverage,
-			collateral: Casting.IFixed.iFixedFromStringBytes(
-				position.position.collateral
-			),
-			baseAssetAmount: Casting.IFixed.iFixedFromStringBytes(
-				position.position.base_asset_amount
-			),
-			quoteAssetNotionalAmount: Casting.IFixed.iFixedFromStringBytes(
-				position.position.quote_asset_notional_amount
-			),
-			cumFundingRateLong: Casting.IFixed.iFixedFromStringBytes(
-				position.position.cum_funding_rate_long
-			),
-			cumFundingRateShort: Casting.IFixed.iFixedFromStringBytes(
-				position.position.cum_funding_rate_short
-			),
-			asksQuantity: Casting.IFixed.iFixedFromStringBytes(
-				position.position.asks_quantity
-			),
-			bidsQuantity: Casting.IFixed.iFixedFromStringBytes(
-				position.position.bids_quantity
-			),
-			marketId: Helpers.addLeadingZeroesToType(marketId),
-			// NOTE: do we want to store all pending order data here as well ?
-			pendingOrders: [
-				...Object.entries(position.pending_orders.bids).map(
-					([orderId, size]) => ({
-						size: BigInt(size),
-						orderId: BigInt(orderId),
-						side: PerpetualsOrderSide.Bid,
-					})
-				),
-				...Object.entries(position.pending_orders.asks).map(
-					([orderId, size]) => ({
-						size: BigInt(size),
-						orderId: BigInt(orderId),
-						side: PerpetualsOrderSide.Ask,
-					})
-				),
-			],
-			makerFee: Casting.IFixed.iFixedFromStringBytes(
-				position.position.maker_fee
-			),
-			takerFee: Casting.IFixed.iFixedFromStringBytes(
-				position.position.taker_fee
-			),
-		};
-	};
-
-	public static accountObjectFromIndexerResponse = (
-		response: PerpetualsAccountPositionsIndexerResponse,
-		collateralCoinType: CoinType
-	): PerpetualsAccountObject => {
-		return {
-			positions: response.map(
-				([marketIdAsStringBytes, position, leverageAsStringBytes]) =>
-					this.positionFromIndexerReponse({
-						position,
-						collateralCoinType,
-						leverage:
-							Casting.IFixed.numberFromIFixed(
-								Casting.IFixed.iFixedFromStringBytes(
-									leverageAsStringBytes
-								)
-							) || 1,
-						marketId: Casting.addressFromStringBytes(
-							marketIdAsStringBytes
-						),
-					})
-			),
-		};
-	};
-
-	// =========================================================================
-	//  Clearing House
-	// =========================================================================
-
-	public static marketDataFromIndexerResponse(
-		data: PerpetualsMarketDataIndexerResponse,
-		collateralCoinType: CoinType,
-		baseAssetSymbol: CoinSymbol,
-		indexPrice: IFixedAsStringBytes,
-		collateralPrice: IFixedAsStringBytes
-	): PerpetualsMarketData {
-		return {
-			packageId: Casting.addressFromStringBytes(data.pkg_id),
-			objectId: Casting.addressFromStringBytes(data.object.id.id),
-			initialSharedVersion: Number(data.initial_shared_version),
-			collateralCoinType,
-			marketParams: this.marketParamsFromIndexerResponse(
-				data.object.market_params,
-				baseAssetSymbol
-			),
-			marketState: this.marketStateFromIndexerResponse(
-				data.object.market_state
-			),
-			indexPrice: Casting.IFixed.numberFromIFixed(
-				Casting.IFixed.iFixedFromStringBytes(indexPrice)
-			),
-			collateralPrice: Casting.IFixed.numberFromIFixed(
-				Casting.IFixed.iFixedFromStringBytes(collateralPrice)
-			),
-		};
-	}
-
-	private static marketParamsFromIndexerResponse = (
-		data: PerpetualsMarketParamsFieldsIndexerReponse,
-		baseAssetSymbol: CoinSymbol
-	): PerpetualsMarketParams => {
-		return {
-			baseAssetSymbol,
-			basePriceFeedId: Casting.addressFromStringBytes(data.base_pfs_id),
-			collateralPriceFeedId: Casting.addressFromStringBytes(
-				data.collateral_pfs_id
-			),
-			marginRatioInitial: Casting.IFixed.iFixedFromStringBytes(
-				data.margin_ratio_initial
-			),
-			marginRatioMaintenance: Casting.IFixed.iFixedFromStringBytes(
-				data.margin_ratio_maintenance
-			),
-			fundingFrequencyMs: BigInt(data.funding_frequency_ms),
-			fundingPeriodMs: BigInt(data.funding_period_ms),
-			premiumTwapFrequencyMs: BigInt(data.premium_twap_frequency_ms),
-			premiumTwapPeriodMs: BigInt(data.premium_twap_period_ms),
-			spreadTwapFrequencyMs: BigInt(data.spread_twap_frequency_ms),
-			spreadTwapPeriodMs: BigInt(data.spread_twap_period_ms),
-			makerFee: Casting.IFixed.iFixedFromStringBytes(data.maker_fee),
-			takerFee: Casting.IFixed.iFixedFromStringBytes(data.taker_fee),
-			liquidationFee: Casting.IFixed.iFixedFromStringBytes(
-				data.liquidation_fee
-			),
-			forceCancelFee: Casting.IFixed.iFixedFromStringBytes(
-				data.force_cancel_fee
-			),
-			insuranceFundFee: Casting.IFixed.iFixedFromStringBytes(
-				data.insurance_fund_fee
-			),
-			lotSize: BigInt(data.lot_size),
-			tickSize: BigInt(data.tick_size),
-			liquidationTolerance: BigInt(data.liquidation_tolerance),
-			maxPendingOrders: BigInt(data.max_pending_orders),
-			minOrderUsdValue: Casting.IFixed.iFixedFromStringBytes(
-				data.min_order_usd_value
-			),
-			baseOracleTolerance: BigInt(data.base_oracle_tolerance),
-			collateralOracleTolerance: BigInt(data.collateral_oracle_tolerance),
-			maxOpenInterest: Casting.IFixed.iFixedFromStringBytes(
-				data.max_open_interest
-			),
-			maxOpenInterestThreshold: Casting.IFixed.iFixedFromStringBytes(
-				data.max_open_interest_threshold
-			),
-			maxOpenInterestPositionPercent:
-				Casting.IFixed.iFixedFromStringBytes(
-					data.max_open_interest_position_percent
-				),
-		};
-	};
-
-	private static marketStateFromIndexerResponse = (
-		data: PerpetualsMarketStateFieldsIndexerReponse
-	): PerpetualsMarketState => {
-		return {
-			cumFundingRateLong: Casting.IFixed.iFixedFromStringBytes(
-				data.cum_funding_rate_long
-			),
-			cumFundingRateShort: Casting.IFixed.iFixedFromStringBytes(
-				data.cum_funding_rate_short
-			),
-			fundingLastUpdateMs: Number(data.funding_last_upd_ms),
-			premiumTwap: Casting.IFixed.iFixedFromStringBytes(
-				data.premium_twap
-			),
-			premiumTwapLastUpdateMs: Number(data.premium_twap_last_upd_ms),
-			spreadTwap: Casting.IFixed.iFixedFromStringBytes(data.spread_twap),
-			spreadTwapLastUpdateMs: Number(data.spread_twap_last_upd_ms),
-			openInterest: Casting.IFixed.iFixedFromStringBytes(
-				data.open_interest
-			),
-			feesAccrued: Casting.IFixed.iFixedFromStringBytes(
-				data.fees_accrued
-			),
-		};
-	};
 
 	// =========================================================================
 	//  Orderbook
@@ -468,6 +273,52 @@ export class PerpetualsApiCasting {
 		};
 	};
 
+	public static createdSubAccountEventFromOnChain = (
+		eventOnChain: CreatedSubAccountEventOnChain
+	): CreatedSubAccountEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			users: fields.users.map((user) =>
+				Helpers.addLeadingZeroesToType(user)
+			),
+			accountId: BigInt(fields.account_id),
+			subAccountId: Helpers.addLeadingZeroesToType(fields.subaccount_id),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static setSubAccountUsersEventFromOnChain = (
+		eventOnChain: SetSubAccountUsersEventOnChain
+	): SetSubAccountUsersEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			users: fields.users.map((user) =>
+				Helpers.addLeadingZeroesToType(user)
+			),
+			accountId: BigInt(fields.account_id),
+			subAccountId: Helpers.addLeadingZeroesToType(fields.subaccount_id),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
+	public static SetPositionInitialMarginRatioEventFromOnChain = (
+		eventOnChain: SetPositionInitialMarginRatioEventOnChain
+	): SetPositionInitialMarginRatioEvent => {
+		const fields = eventOnChain.parsedJson;
+		return {
+			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
+			accountId: BigInt(fields.account_id),
+			initialMarginRatio: BigInt(fields.initial_margin_ratio),
+			timestamp: eventOnChain.timestampMs,
+			txnDigest: eventOnChain.id.txDigest,
+			type: eventOnChain.type,
+		};
+	};
+
 	// =========================================================================
 	//  Order
 	// =========================================================================
@@ -594,9 +445,11 @@ export class PerpetualsApiCasting {
 			ticketId: Helpers.addLeadingZeroesToType(fields.ticket_id),
 			objectId: Helpers.addLeadingZeroesToType(fields.obj_id),
 			accountId: BigInt(fields.account_id),
-			executor: Helpers.addLeadingZeroesToType(fields.executor),
+			executors: fields.executors.map((executor) =>
+				Helpers.addLeadingZeroesToType(executor)
+			),
 			gas: BigInt(fields.gas),
-			collateralToAllocate: BigInt(fields.collateral_to_allocate),
+			stopOrderType: Number(fields.stop_order_type),
 			encryptedDetails: fields.encrypted_details,
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -610,6 +463,7 @@ export class PerpetualsApiCasting {
 		const f = eventOnChain.parsedJson;
 		return {
 			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			executor: Helpers.addLeadingZeroesToType(f.executor),
 			accountId: BigInt(f.account_id),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -623,8 +477,9 @@ export class PerpetualsApiCasting {
 		const f = eventOnChain.parsedJson;
 		return {
 			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			executor: Helpers.addLeadingZeroesToType(f.executor),
 			accountId: BigInt(f.account_id),
-			subaccountId: f.subaccount_id
+			subAccountId: f.subaccount_id
 				? Helpers.addLeadingZeroesToType(f.subaccount_id)
 				: undefined,
 			timestamp: eventOnChain.timestampMs,
@@ -639,8 +494,9 @@ export class PerpetualsApiCasting {
 		const f = eventOnChain.parsedJson;
 		return {
 			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+			executor: Helpers.addLeadingZeroesToType(f.executor),
 			accountId: BigInt(f.account_id),
-			subaccountId: f.subaccount_id
+			subAccountId: f.subaccount_id
 				? Helpers.addLeadingZeroesToType(f.subaccount_id)
 				: undefined,
 			encryptedDetails: f.encrypted_details,
@@ -657,49 +513,51 @@ export class PerpetualsApiCasting {
 		return {
 			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
 			accountId: BigInt(f.account_id),
-			subaccountId: f.subaccount_id
+			subAccountId: f.subaccount_id
 				? Helpers.addLeadingZeroesToType(f.subaccount_id)
 				: undefined,
-			executor: Helpers.addLeadingZeroesToType(f.executor),
+			executors: f.executors.map((executor) =>
+				Helpers.addLeadingZeroesToType(executor)
+			),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
 	};
 
-	public static addedStopOrderTicketCollateralEventFromOnChain = (
-		eventOnChain: AddedStopOrderTicketCollateralEventOnChain
-	): AddedStopOrderTicketCollateralEvent => {
-		const f = eventOnChain.parsedJson;
-		return {
-			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
-			accountId: BigInt(f.account_id),
-			subaccountId: f.subaccount_id
-				? Helpers.addLeadingZeroesToType(f.subaccount_id)
-				: undefined,
-			collateralToAllocate: BigInt(f.collateral_to_allocate),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
+	// public static addedStopOrderTicketCollateralEventFromOnChain = (
+	// 	eventOnChain: AddedStopOrderTicketCollateralEventOnChain
+	// ): AddedStopOrderTicketCollateralEvent => {
+	// 	const f = eventOnChain.parsedJson;
+	// 	return {
+	// 		ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+	// 		accountId: BigInt(f.account_id),
+	// 		subAccountId: f.subaccount_id
+	// 			? Helpers.addLeadingZeroesToType(f.subaccount_id)
+	// 			: undefined,
+	// 		collateralToAllocate: BigInt(f.collateral_to_allocate),
+	// 		timestamp: eventOnChain.timestampMs,
+	// 		txnDigest: eventOnChain.id.txDigest,
+	// 		type: eventOnChain.type,
+	// 	};
+	// };
 
-	public static removedStopOrderTicketCollateralEventFromOnChain = (
-		eventOnChain: RemovedStopOrderTicketCollateralEventOnChain
-	): RemovedStopOrderTicketCollateralEvent => {
-		const f = eventOnChain.parsedJson;
-		return {
-			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
-			accountId: BigInt(f.account_id),
-			subaccountId: f.subaccount_id
-				? Helpers.addLeadingZeroesToType(f.subaccount_id)
-				: undefined,
-			collateralToRemove: BigInt(f.collateral_to_remove),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
+	// public static removedStopOrderTicketCollateralEventFromOnChain = (
+	// 	eventOnChain: RemovedStopOrderTicketCollateralEventOnChain
+	// ): RemovedStopOrderTicketCollateralEvent => {
+	// 	const f = eventOnChain.parsedJson;
+	// 	return {
+	// 		ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
+	// 		accountId: BigInt(f.account_id),
+	// 		subAccountId: f.subaccount_id
+	// 			? Helpers.addLeadingZeroesToType(f.subaccount_id)
+	// 			: undefined,
+	// 		collateralToRemove: BigInt(f.collateral_to_remove),
+	// 		timestamp: eventOnChain.timestampMs,
+	// 		txnDigest: eventOnChain.id.txDigest,
+	// 		type: eventOnChain.type,
+	// 	};
+	// };
 
 	public static transferredDeallocatedCollateralEventFromOnChain = (
 		eventOnChain: TransferredDeallocatedCollateralEventOnChain

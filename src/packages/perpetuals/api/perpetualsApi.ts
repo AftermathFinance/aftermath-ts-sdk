@@ -76,6 +76,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		editedStopOrderTicketDetails: AnyObjectType;
 		executedStopOrderTicket: AnyObjectType;
 		filledTakerOrderLiquidator: AnyObjectType;
+		performedLiquidation: AnyObjectType;
 		reducedOrder: AnyObjectType;
 	};
 	public readonly moveErrors: MoveErrors;
@@ -104,6 +105,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			filledTakerOrderLiquidator: this.eventType(
 				"FilledTakerOrderLiquidator"
 			),
+			performedLiquidation: this.eventType("PerformedLiquidation"),
 			// Account
 			createdAccount: this.eventType("CreatedAccount"),
 			// Order
