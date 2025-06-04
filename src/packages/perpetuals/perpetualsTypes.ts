@@ -413,7 +413,7 @@ export interface PerpetualsAccountData {
 
 export interface PerpetualsAccountObject {
 	positions: PerpetualsPosition[];
-	subAccounts: PerpetualsSubAccount[];
+	subAccount: PerpetualsSubAccount;
 }
 
 // =========================================================================
