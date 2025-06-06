@@ -67,6 +67,8 @@ import {
 	ServiceCoinData,
 	SdkPerpetualsPlaceSlTpOrdersInputs,
 	ApiPerpetualsPlaceSlTpOrdersBody,
+	ApiPerpetualsAccountMarginHistoryBody,
+	PerpetualsAccountMarginData,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -488,6 +490,7 @@ export class PerpetualsAccount extends Caller {
 		marketId: PerpetualsMarketId;
 		orderId: PerpetualsOrderId;
 		sizeToSubtract: bigint;
+		leverage?: number;
 	}) {
 		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsReduceOrderBody>(
@@ -497,9 +500,6 @@ export class PerpetualsAccount extends Caller {
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.objectId,
-				leverage:
-					this.positionForMarketId({ marketId: otherInputs.marketId })
-						?.leverage || 1,
 			},
 			undefined,
 			{
@@ -642,6 +642,7 @@ export class PerpetualsAccount extends Caller {
 			marketId: PerpetualsMarketId;
 			orderId: PerpetualsOrderId;
 			sizeToSubtract: bigint;
+			leverage?: number;
 		},
 		abortSignal?: AbortSignal
 	): Promise<
@@ -662,9 +663,6 @@ export class PerpetualsAccount extends Caller {
 				...inputs,
 				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				leverage:
-					this.positionForMarketId({ marketId: inputs.marketId })
-						?.leverage || 1,
 			},
 			abortSignal
 		);
@@ -766,6 +764,16 @@ export class PerpetualsAccount extends Caller {
 		>("account/trade-history", {
 			...inputs,
 			accountId: this.accountCap.accountId,
+		});
+	}
+
+	public async getMarginHistory() {
+		return this.fetchApi<
+			PerpetualsAccountMarginData[],
+			ApiPerpetualsAccountMarginHistoryBody
+		>("account/trade-history", {
+			accountId: this.accountCap.accountId,
+			collateralCoinType: this.accountCap.collateralCoinType,
 		});
 	}
 
@@ -1433,7 +1441,8 @@ export class PerpetualsAccount extends Caller {
 			size,
 			marketId,
 			collateralChange,
-			leverage: position.leverage || 1,
+			// leverage: position.leverage || 1,
+			// leverage: undefined,
 			side:
 				positionSide === PerpetualsOrderSide.Bid
 					? PerpetualsOrderSide.Ask

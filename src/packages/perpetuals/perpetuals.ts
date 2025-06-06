@@ -120,18 +120,12 @@ export class Perpetuals extends Caller {
 	public async getAccount(inputs: {
 		accountCap: PerpetualsAccountCap;
 		marketIds?: PerpetualsMarketId[];
-		// withLeverage?: boolean;
 	}): Promise<PerpetualsAccount> {
-		const {
-			accountCap,
-			marketIds,
-			// withLeverage
-		} = inputs;
+		const { accountCap, marketIds } = inputs;
 		return (
 			await this.getAccounts({
 				accountCaps: [accountCap],
 				marketIds,
-				// withLeverage,
 			})
 		)[0];
 	}
@@ -140,13 +134,8 @@ export class Perpetuals extends Caller {
 	public async getAccounts(inputs: {
 		accountCaps: PerpetualsAccountCap[];
 		marketIds?: PerpetualsMarketId[];
-		// withLeverage?: boolean;
 	}): Promise<PerpetualsAccount[]> {
-		const {
-			accountCaps,
-			marketIds,
-			// withLeverage
-		} = inputs;
+		const { accountCaps, marketIds } = inputs;
 		if (accountCaps.length <= 0) return [];
 
 		// TODO: handle different collateral coin types
@@ -154,7 +143,6 @@ export class Perpetuals extends Caller {
 			accountIds: accountCaps.map((accountCap) => accountCap.accountId),
 			collateralCoinType: accountCaps[0].collateralCoinType,
 			marketIds,
-			// withLeverage,
 		});
 		return accountObjects.map(
 			(account, index) =>
@@ -172,14 +160,8 @@ export class Perpetuals extends Caller {
 		accountIds: PerpetualsAccountId[];
 		collateralCoinType: CoinType;
 		marketIds?: PerpetualsMarketId[];
-		// withLeverage?: boolean;
 	}): Promise<PerpetualsAccountObject[]> {
-		const {
-			accountIds,
-			collateralCoinType,
-			marketIds,
-			// withLeverage
-		} = inputs;
+		const { accountIds, collateralCoinType, marketIds } = inputs;
 		if (accountIds.length <= 0) return [];
 
 		return this.fetchApi<
@@ -188,14 +170,11 @@ export class Perpetuals extends Caller {
 				accountIds: PerpetualsAccountId[];
 				collateralCoinType: CoinType;
 				marketIds: PerpetualsMarketId[] | undefined;
-				withLeverage: boolean | undefined;
 			}
 		>("accounts/positions", {
 			accountIds,
 			collateralCoinType,
 			marketIds,
-			// withLeverage: withLeverage ?? true,
-			withLeverage: true,
 		});
 	}
 

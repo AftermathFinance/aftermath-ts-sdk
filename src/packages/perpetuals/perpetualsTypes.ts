@@ -472,6 +472,13 @@ export interface PerpetualsAccountTradesWithCursor {
 	nextCursor: Timestamp | undefined;
 }
 
+export interface PerpetualsAccountMarginData {
+	timestamp: Timestamp;
+	collateralUsd: number;
+	unrealizedFundingUsd: number;
+	unrealizedPnlUsd: number;
+}
+
 export type PerpetualsAccountTrade = {
 	timestamp: Timestamp;
 	txDigest: TransactionDigest;
@@ -899,6 +906,11 @@ export interface ApiPerpetualsAccountCapsBody {
 //  Interactions
 // =========================================================================
 
+export interface ApiPerpetualsAccountMarginHistoryBody {
+	accountId: PerpetualsAccountId;
+	collateralCoinType: CoinType;
+}
+
 export type ApiPerpetualsAccountOrderHistoryBody =
 	ApiDataWithCursorBody<Timestamp> & {
 		accountId: PerpetualsAccountId;
@@ -935,7 +947,7 @@ export type ApiPerpetualsPreviewOrderBody = (
 	collateralCoinType: CoinType;
 	lotSize: number;
 	tickSize: number;
-	leverage: number;
+	leverage?: number;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
 };
@@ -956,7 +968,7 @@ export interface ApiPerpetualsPreviewCancelOrdersBody {
 export interface ApiPerpetualsPreviewReduceOrderBody {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
-	leverage: number;
+	leverage?: number;
 	orderId: PerpetualsOrderId;
 	sizeToSubtract: bigint;
 	// TODO: remove eventually ?
@@ -1047,7 +1059,7 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 	accountObjectId: ObjectId;
 	collateral: Balance;
 	side: PerpetualsOrderSide;
-	leverage: number;
+	leverage?: number;
 	price?: PerpetualsOrderPrice;
 }
 
@@ -1253,7 +1265,7 @@ export type ApiPerpetualsMarketOrderBody = {
 	size: bigint;
 	collateralChange: Balance;
 	hasPosition: boolean;
-	leverage: number;
+	leverage?: number;
 	slTp?: {
 		walletAddress: SuiAddress;
 		gasCoin: ServiceCoinData;
@@ -1284,7 +1296,7 @@ export type ApiPerpetualsLimitOrderBody = {
 	orderType: PerpetualsOrderType;
 	collateralChange: Balance;
 	hasPosition: boolean;
-	leverage: number;
+	leverage?: number;
 	slTp?: {
 		walletAddress: SuiAddress;
 		gasCoin: ServiceCoinData;
@@ -1329,7 +1341,7 @@ export interface ApiPerpetualsReduceOrderBody {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	collateralChange: Balance;
-	leverage: number;
+	leverage?: number;
 	orderId: PerpetualsOrderId;
 	sizeToSubtract: bigint;
 	txKind?: SerializedTransaction;
