@@ -5,7 +5,7 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
-		"clean": "rm -rf ./dist",
+		"clean": "rimraf ./dist",
 		"build": "npm run clean && tsc",
 		"prepack": "npm run build",
 		"prepare": "npm run build",
@@ -46,9 +46,9 @@
 		"eslint-plugin-tsdoc": "^0.2.17",
 		"jest": "^29.5.0",
 		"prettier": "^2.8.8",
+		"rimraf": "^6.0.1",
 		"ts-jest": "^29.1.0",
 		"ts-node": "^10.9.1",
-		"typedoc": "^0.24.4",
 		"typescript": "^5.8.3",
 		"yaml": "^2.3.1"
 	},
