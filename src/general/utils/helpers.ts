@@ -413,7 +413,7 @@ export class Helpers {
 	 */
 	public static bifilter = <ArrayType>(
 		array: ArrayType[],
-		func: (item: ArrayType, index?: number, arr?: ArrayType[]) => boolean
+		func: (item: ArrayType, index: number, arr: ArrayType[]) => boolean
 	): [trues: ArrayType[], falses: ArrayType[]] => {
 		const trues: ArrayType[] = [];
 		const falses: ArrayType[] = [];
