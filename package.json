@@ -7,6 +7,7 @@
 	"scripts": {
 		"clean": "rimraf ./dist",
 		"build": "npm run clean && tsc",
+		"link": "npm link && cd ../aftermath-frontend/ && npm link aftermath-ts-sdk",
 		"prepack": "npm run build",
 		"prepare": "npm run build",
 		"test": "jest"
