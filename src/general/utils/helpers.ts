@@ -415,13 +415,18 @@ export class Helpers {
 		array: ArrayType[],
 		func: (item: ArrayType, index: number, arr: ArrayType[]) => boolean
 	): [trues: ArrayType[], falses: ArrayType[]] => {
-		return array.reduce(
-			([T, F], x, i, arr) => {
-				if (func(x, i, arr) === false) return [T, [...F, x]];
-				else return [[...T, x], F];
-			},
-			[[], []] as [ArrayType[], ArrayType[]]
-		);
+		const trues: ArrayType[] = [];
+		const falses: ArrayType[] = [];
+
+		for (let index = 0; index < array.length; index++) {
+			const item = array[index];
+			if(func(item, index,array))
+				trues[trues.length] = item;
+			else
+				falses[falses.length] = item;
+		}
+
+		return [trues, falses];
 	};
 
 	/**
