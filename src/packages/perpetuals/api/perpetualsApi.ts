@@ -645,7 +645,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		collateralCoinType: CoinType;
 		accountCapId: ObjectId | TransactionArgument;
 		amount: Balance;
-	}): TransactionArgument => {
+	}): TransactionObjectArgument => {
 		const { tx, collateralCoinType, accountCapId, amount } = inputs;
 		return tx.moveCall({
 			target: Helpers.transactions.createTxTarget(
