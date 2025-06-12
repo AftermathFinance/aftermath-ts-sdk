@@ -75,7 +75,9 @@ export class DcaApi {
 			),
 			typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
 			arguments: [
-				tx.object(inputs.orderId),
+				typeof inputs.orderId === "string"
+					? tx.object(inputs.orderId)
+					: inputs.orderId,
 				tx.object(this.addresses.objects.config),
 			],
 		});
