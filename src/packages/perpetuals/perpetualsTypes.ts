@@ -140,6 +140,7 @@ export interface PerpetualsAccountCap {
 	collateralDecimals: CoinDecimal;
 	objectVersion: ObjectVersion;
 	objectDigest: ObjectDigest;
+	subAccount: PerpetualsSubAccount;
 }
 
 // const Account = bcs.struct("Account", {
@@ -187,9 +188,11 @@ export interface PerpetualsPosition {
 
 export interface PerpetualsSubAccount {
 	objectId: ObjectId;
+	objectVersion: ObjectVersion;
+	// objectDigest: ObjectDigest;
 	users: SuiAddress[];
 	accountId: PerpetualsAccountId;
-	collateral: Balance;
+	collateral: IFixed;
 }
 
 // =========================================================================
@@ -300,18 +303,24 @@ export interface PerpetualsOrderData {
 
 export interface PerpetualsStopOrderData {
 	objectId: ObjectId;
-	expiryTimestamp: bigint;
 	stopIndexPrice: number;
-	triggerIfGeStopIndexPrice: boolean;
 	marketId: PerpetualsMarketId;
-	side: PerpetualsOrderSide;
 	size: bigint;
-	reduceOnly: boolean;
 	// collateralToAllocate: Balance;
 	marginRatio?: number; // NOTE: should this be leverage instead ?
+	expiryTimestamp?: bigint;
 	limitOrder?: {
 		price: PerpetualsOrderPrice;
 		orderType: PerpetualsOrderType;
+	};
+	slTp?: {
+		isStopLoss: boolean;
+		forPositionSide: PerpetualsOrderSide;
+	};
+	nonSlTp?: {
+		triggerIfGeStopIndexPrice: boolean;
+		side: PerpetualsOrderSide;
+		reduceOnly: boolean;
 	};
 }
 
@@ -413,7 +422,6 @@ export interface PerpetualsAccountData {
 
 export interface PerpetualsAccountObject {
 	positions: PerpetualsPosition[];
-	subAccount: PerpetualsSubAccount;
 }
 
 // =========================================================================
@@ -1142,7 +1150,7 @@ export interface ApiPerpetualsDeallocateCollateralBody {
 }
 
 export interface PerpetualsSlTpOrderDetails {
-	// expiryTimestamp: bigint;
+	// expiryTimestamp?: bigint;
 	stopIndexPrice: number;
 	// triggerIfGeStopIndexPrice: boolean;
 	// side: PerpetualsOrderSide;
@@ -1160,13 +1168,13 @@ export interface PerpetualsSlTpOrderDetails {
 export interface SdkPerpetualsPlaceStopOrdersInputs {
 	marketId: PerpetualsMarketId;
 	stopOrders: {
-		expiryTimestamp: bigint;
 		stopIndexPrice: number;
 		triggerIfGeStopIndexPrice: boolean;
 		side: PerpetualsOrderSide;
 		size: bigint;
 		reduceOnly: boolean;
 		collateralToAllocate: Balance;
+		expiryTimestamp?: bigint;
 		limitOrder?: {
 			price: PerpetualsOrderPrice;
 			orderType: PerpetualsOrderType;
@@ -1242,7 +1250,6 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 export interface ApiPerpetualsEditStopOrdersBody {
 	accountObjectId: ObjectId;
 	stopOrders: {
-		expiryTimestamp: bigint;
 		stopIndexPrice: number;
 		triggerIfGeStopIndexPrice: boolean;
 		side: PerpetualsOrderSide;
@@ -1250,6 +1257,7 @@ export interface ApiPerpetualsEditStopOrdersBody {
 		reduceOnly: boolean;
 		collateralToAllocate: Balance;
 		marginRatio?: number;
+		expiryTimestamp?: bigint;
 		limitOrder?: {
 			price: PerpetualsOrderPrice;
 			orderType: PerpetualsOrderType;
