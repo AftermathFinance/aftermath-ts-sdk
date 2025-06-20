@@ -346,40 +346,40 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Transaction Commands
 	// =========================================================================
 
-	public depositCollateralTx = (
-		inputs: {
-			tx: Transaction;
-			collateralCoinType: CoinType;
-			accountCapId: ObjectId | TransactionArgument;
-		} & (
-			| {
-					coinId: ObjectId | TransactionArgument;
-			  }
-			| {
-					coinBytes: Uint8Array;
-			  }
-		)
-	) => {
-		const { tx, collateralCoinType, accountCapId } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"deposit_collateral"
-			),
-			typeArguments: [collateralCoinType],
-			arguments: [
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
-				"coinBytes" in inputs
-					? tx.pure(inputs.coinBytes)
-					: typeof inputs.coinId === "string"
-					? tx.object(inputs.coinId)
-					: inputs.coinId,
-			],
-		});
-	};
+	// public depositCollateralTx = (
+	// 	inputs: {
+	// 		tx: Transaction;
+	// 		collateralCoinType: CoinType;
+	// 		accountCapId: ObjectId | TransactionArgument;
+	// 	} & (
+	// 		| {
+	// 				coinId: ObjectId | TransactionArgument;
+	// 		  }
+	// 		| {
+	// 				coinBytes: Uint8Array;
+	// 		  }
+	// 	)
+	// ) => {
+	// 	const { tx, collateralCoinType, accountCapId } = inputs;
+	// 	return tx.moveCall({
+	// 		target: Helpers.transactions.createTxTarget(
+	// 			this.addresses.packages.perpetuals,
+	// 			PerpetualsApi.constants.moduleNames.interface,
+	// 			"deposit_collateral"
+	// 		),
+	// 		typeArguments: [collateralCoinType],
+	// 		arguments: [
+	// 			typeof accountCapId === "string"
+	// 				? tx.object(accountCapId)
+	// 				: accountCapId,
+	// 			"coinBytes" in inputs
+	// 				? tx.pure(inputs.coinBytes)
+	// 				: typeof inputs.coinId === "string"
+	// 				? tx.object(inputs.coinId)
+	// 				: inputs.coinId,
+	// 		],
+	// 	});
+	// };
 
 	public allocateCollateralTx = (inputs: {
 		tx: Transaction;
@@ -686,28 +686,28 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public withdrawCollateralTx = (inputs: {
-		tx: Transaction;
-		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		amount: Balance;
-	}): TransactionArgument => {
-		const { tx, collateralCoinType, accountCapId, amount } = inputs;
-		return tx.moveCall({
-			target: Helpers.transactions.createTxTarget(
-				this.addresses.packages.perpetuals,
-				PerpetualsApi.constants.moduleNames.interface,
-				"withdraw_collateral"
-			),
-			typeArguments: [collateralCoinType],
-			arguments: [
-				typeof accountCapId === "string"
-					? tx.object(accountCapId)
-					: accountCapId,
-				tx.pure.u64(amount),
-			],
-		});
-	};
+	// public withdrawCollateralTx = (inputs: {
+	// 	tx: Transaction;
+	// 	collateralCoinType: CoinType;
+	// 	accountCapId: ObjectId | TransactionArgument;
+	// 	amount: Balance;
+	// }): TransactionArgument => {
+	// 	const { tx, collateralCoinType, accountCapId, amount } = inputs;
+	// 	return tx.moveCall({
+	// 		target: Helpers.transactions.createTxTarget(
+	// 			this.addresses.packages.perpetuals,
+	// 			PerpetualsApi.constants.moduleNames.interface,
+	// 			"withdraw_collateral"
+	// 		),
+	// 		typeArguments: [collateralCoinType],
+	// 		arguments: [
+	// 			typeof accountCapId === "string"
+	// 				? tx.object(accountCapId)
+	// 				: accountCapId,
+	// 			tx.pure.u64(amount),
+	// 		],
+	// 	});
+	// };
 
 	public createAccountTx = (inputs: {
 		tx: Transaction;
@@ -923,27 +923,27 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	//  Transaction Builders
 	// =========================================================================
 
-	public fetchBuildDepositCollateralTx = async (
-		inputs: ApiPerpetualsDepositCollateralBody
-	): Promise<Transaction> => {
-		const tx = new Transaction();
-		tx.setSender(inputs.walletAddress);
+	// public fetchBuildDepositCollateralTx = async (
+	// 	inputs: ApiPerpetualsDepositCollateralBody
+	// ): Promise<Transaction> => {
+	// 	const tx = new Transaction();
+	// 	tx.setSender(inputs.walletAddress);
 
-		const { walletAddress, collateralCoinType, amount } = inputs;
-		const coinId = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			walletAddress,
-			coinType: collateralCoinType,
-			coinAmount: amount,
-		});
-		this.depositCollateralTx({
-			tx,
-			coinId,
-			...inputs,
-		});
+	// 	const { walletAddress, collateralCoinType, amount } = inputs;
+	// 	const coinId = await this.Provider.Coin().fetchCoinWithAmountTx({
+	// 		tx,
+	// 		walletAddress,
+	// 		coinType: collateralCoinType,
+	// 		coinAmount: amount,
+	// 	});
+	// 	this.depositCollateralTx({
+	// 		tx,
+	// 		coinId,
+	// 		...inputs,
+	// 	});
 
-		return tx;
-	};
+	// 	return tx;
+	// };
 
 	// public buildCancelOrderTx = (
 	// 	inputs: ApiPerpetualsCancelOrderBody
@@ -1063,73 +1063,39 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	return tx;
 	// };
 
-	public buildWithdrawCollateralTx = (inputs: {
-		walletAddress: SuiAddress;
-		collateralCoinType: CoinType;
-		accountCapId: ObjectId | TransactionArgument;
-		amount: Balance;
-	}): Transaction => {
-		const tx = new Transaction();
-		tx.setSender(inputs.walletAddress);
+	// public buildTransferCollateralTx = (inputs: {
+	// 	walletAddress: SuiAddress;
+	// 	collateralCoinType: CoinType;
+	// 	fromAccountCapId: ObjectId | TransactionArgument;
+	// 	toAccountCapId: ObjectId | TransactionArgument;
+	// 	amount: Balance;
+	// }): Transaction => {
+	// 	const {
+	// 		walletAddress,
+	// 		collateralCoinType,
+	// 		fromAccountCapId,
+	// 		toAccountCapId,
+	// 		amount,
+	// 	} = inputs;
 
-		const coin = this.withdrawCollateralTx({
-			tx,
-			...inputs,
-		});
+	// 	const tx = new Transaction();
+	// 	tx.setSender(walletAddress);
 
-		tx.transferObjects([coin], inputs.walletAddress);
+	// 	const coinId = this.withdrawCollateralTx({
+	// 		tx,
+	// 		collateralCoinType,
+	// 		amount,
+	// 		accountCapId: fromAccountCapId,
+	// 	});
+	// 	this.depositCollateralTx({
+	// 		tx,
+	// 		collateralCoinType,
+	// 		coinId,
+	// 		accountCapId: toAccountCapId,
+	// 	});
 
-		return tx;
-	};
-
-	public buildCreateAccountTx = (
-		inputs: ApiPerpetualsCreateAccountBody
-	): Transaction => {
-		const tx = new Transaction();
-		tx.setSender(inputs.walletAddress);
-
-		const accountCap = this.createAccountTx({
-			tx,
-			...inputs,
-		});
-		tx.transferObjects([accountCap], inputs.walletAddress);
-
-		return tx;
-	};
-
-	public buildTransferCollateralTx = (inputs: {
-		walletAddress: SuiAddress;
-		collateralCoinType: CoinType;
-		fromAccountCapId: ObjectId | TransactionArgument;
-		toAccountCapId: ObjectId | TransactionArgument;
-		amount: Balance;
-	}): Transaction => {
-		const {
-			walletAddress,
-			collateralCoinType,
-			fromAccountCapId,
-			toAccountCapId,
-			amount,
-		} = inputs;
-
-		const tx = new Transaction();
-		tx.setSender(walletAddress);
-
-		const coinId = this.withdrawCollateralTx({
-			tx,
-			collateralCoinType,
-			amount,
-			accountCapId: fromAccountCapId,
-		});
-		this.depositCollateralTx({
-			tx,
-			collateralCoinType,
-			coinId,
-			accountCapId: toAccountCapId,
-		});
-
-		return tx;
-	};
+	// 	return tx;
+	// };
 
 	public buildAllocateCollateralTx = TransactionsApiHelpers.createBuildTxFunc(
 		this.allocateCollateralTx

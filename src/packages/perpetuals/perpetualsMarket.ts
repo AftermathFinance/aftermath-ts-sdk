@@ -155,7 +155,7 @@ export class PerpetualsMarket extends Caller {
 				filledSizeUsd: number;
 				postedSize: number;
 				postedSizeUsd: number;
-				collateralChange: Balance;
+				collateralChange: number;
 				executionPrice: number;
 		  }
 	> {

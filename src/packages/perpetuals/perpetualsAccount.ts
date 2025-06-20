@@ -69,17 +69,19 @@ import {
 	ApiPerpetualsPlaceSlTpOrdersBody,
 	ApiPerpetualsAccountMarginHistoryBody,
 	PerpetualsAccountMarginData,
+	ApiPerpetualsWithdrawCollateralResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
 import { Casting, Helpers } from "../../general/utils";
 import { Perpetuals } from "./perpetuals";
 import { Coin } from "..";
-import { FixedUtils } from "../../general/utils/fixedUtils";
-import { Transaction } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	TransactionObjectArgument,
+} from "@mysten/sui/transactions";
 import { AftermathApi } from "../../general/providers";
 import { TransactionsApiHelpers } from "../../general/apiHelpers/transactionsApiHelpers";
-import { TransactionObjectArgument } from "@mysten/sui.js/transactions";
 
 // TODO: create refresh account positions function ?
 export class PerpetualsAccount extends Caller {
@@ -112,42 +114,62 @@ export class PerpetualsAccount extends Caller {
 	//  Collateral Txs
 	// =========================================================================
 
-	public async getDepositCollateralTx(inputs: {
-		packageId: PackageId;
-		amount: Balance;
-		isSponsoredTx?: boolean;
-	}) {
-		// return this.fetchApiTransaction<ApiPerpetualsDepositCollateralBody>(
-		// 	"transactions/deposit-collateral",
-		// 	{
-		// 		...inputs,
-		// 		collateralCoinType: this.accountCap.collateralCoinType,
-		// 		accountCapId: this.accountCap.objectId,
-		// 	}
-		// );
-		return this.useProvider().fetchBuildDepositCollateralTx({
-			...inputs,
-			walletAddress: this.accountCap.walletAddress,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			accountCapId: this.accountCap.objectId,
-		});
+	public async getDepositCollateralTx(
+		inputs: {
+			tx?: Transaction;
+			isSponsoredTx?: boolean;
+		} & (
+			| {
+					depositAmount: Balance;
+			  }
+			| {
+					coinInArg: TransactionObjectArgument;
+			  }
+		)
+	) {
+		return this.fetchApiTransaction<ApiPerpetualsDepositCollateralBody>(
+			"transactions/deposit-collateral",
+			{
+				...inputs,
+				walletAddress: this.accountCap.walletAddress,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				accountObjectId: this.accountCap.subAccount.objectId,
+				txKind: await this.getTxKind({
+					tx: inputs.tx ?? new Transaction(),
+				}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
 	}
 
-	public async getWithdrawCollateralTx(inputs: { amount: Balance }) {
-		// return this.fetchApiTransaction<ApiPerpetualsWithdrawCollateralBody>(
-		// 	"transactions/withdraw-collateral",
-		// 	{
-		// 		...inputs,
-		// 		collateralCoinType: this.accountCap.collateralCoinType,
-		// 		accountCapId: this.accountCap.objectId,
-		// 	}
-		// );
-		return this.useProvider().buildWithdrawCollateralTx({
+	public async getWithdrawCollateralTx(inputs: {
+		withdrawAmount: Balance;
+		recipientAddress?: SuiAddress;
+		tx?: Transaction;
+	}) {
+		const { txKind, coinOutArg } = await this.fetchApi<
+			ApiPerpetualsWithdrawCollateralResponse,
+			ApiPerpetualsWithdrawCollateralBody
+		>("transactions/withdraw-collateral", {
 			...inputs,
 			walletAddress: this.accountCap.walletAddress,
 			collateralCoinType: this.accountCap.collateralCoinType,
-			accountCapId: this.accountCap.objectId,
+			accountObjectId: this.accountCap.subAccount.objectId,
+			txKind: await this.getTxKind({
+				tx: inputs.tx ?? new Transaction(),
+			}),
 		});
+
+		const tx = Transaction.fromKind(txKind);
+		tx.setSender(this.accountCap.walletAddress);
+
+		return {
+			tx,
+			coinOutArg,
+		};
 	}
 
 	public async getAllocateCollateralTx(inputs: {
@@ -212,23 +234,26 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getTransferCollateralTx(inputs: {
-		amount: Balance;
-		toAccountCapId: ObjectId;
+		transferAmount: Balance;
+		toAccountObjectId: ObjectId;
+		tx?: Transaction;
 	}) {
-		// return this.fetchApiTransaction<ApiPerpetualsTransferCollateralBody>(
-		// 	"transactions/transfer-collateral",
-		// 	{
-		// 		...inputs,
-		// 		collateralCoinType: this.accountCap.collateralCoinType,
-		// 		fromAccountCapId: this.accountCap.objectId,
-		// 	}
-		// );
-		return this.useProvider().buildTransferCollateralTx({
-			...inputs,
-			walletAddress: this.accountCap.walletAddress,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			fromAccountCapId: this.accountCap.objectId,
-		});
+		return this.fetchApiTransaction<ApiPerpetualsTransferCollateralBody>(
+			"transactions/transfer-collateral",
+			{
+				...inputs,
+				walletAddress: this.accountCap.walletAddress,
+				collateralCoinType: this.accountCap.collateralCoinType,
+				fromAccountObjectId: this.accountCap.objectId,
+				txKind: await this.getTxKind({
+					tx: inputs.tx ?? new Transaction(),
+				}),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
 	}
 
 	// =========================================================================
@@ -238,34 +263,18 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceMarketOrderTx(
 		inputs: SdkPerpetualsPlaceMarketOrderInputs
 	) {
-		const {
-			tx: txFromInputs,
-			slTp,
-			isSponsoredTx,
-			...otherInputs
-		} = inputs;
+		const { tx: txFromInputs, slTp, ...otherInputs } = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.accountCap.walletAddress);
-
-		const slTpArgs = await this.getSlTpArgs({
-			tx,
-			isSponsoredTx,
-			stopLoss: slTp && "stopLoss" in slTp ? slTp.stopLoss : undefined,
-			takeProfit:
-				slTp && "takeProfit" in slTp ? slTp.takeProfit : undefined,
-			// TODO: take this as an arg instead ?
-			walletAddress: this.accountCap.walletAddress,
-		});
 
 		return this.fetchApiTransaction<ApiPerpetualsMarketOrderBody>(
 			"transactions/place-market-order",
 			{
 				...otherInputs,
-				...slTpArgs,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -279,34 +288,18 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceLimitOrderTx(
 		inputs: SdkPerpetualsPlaceLimitOrderInputs
 	) {
-		const {
-			tx: txFromInputs,
-			slTp,
-			isSponsoredTx,
-			...otherInputs
-		} = inputs;
+		const { tx: txFromInputs, slTp, ...otherInputs } = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.accountCap.walletAddress);
-
-		const slTpArgs = await this.getSlTpArgs({
-			tx,
-			isSponsoredTx,
-			stopLoss: slTp && "stopLoss" in slTp ? slTp.stopLoss : undefined,
-			takeProfit:
-				slTp && "takeProfit" in slTp ? slTp.takeProfit : undefined,
-			// TODO: take this as an arg instead ?
-			walletAddress: this.accountCap.walletAddress,
-		});
 
 		return this.fetchApiTransaction<ApiPerpetualsLimitOrderBody>(
 			"transactions/place-limit-order",
 			{
 				...otherInputs,
-				...slTpArgs,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -323,7 +316,7 @@ export class PerpetualsAccount extends Caller {
 			PerpetualsMarketId,
 			{
 				orderIds: PerpetualsOrderId[];
-				collateralChange: Balance;
+				collateralChange: number;
 				leverage: number;
 			}
 		>;
@@ -335,7 +328,7 @@ export class PerpetualsAccount extends Caller {
 				...otherInputs,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 			},
 			undefined,
 			{
@@ -355,7 +348,7 @@ export class PerpetualsAccount extends Caller {
 				...otherInputs,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 			},
 			undefined,
 			{
@@ -367,32 +360,27 @@ export class PerpetualsAccount extends Caller {
 	public async getPlaceStopOrdersTx(
 		inputs: SdkPerpetualsPlaceStopOrdersInputs
 	) {
-		const { tx: txFromInputs, isSponsoredTx, stopOrders } = inputs;
+		const {
+			tx: txFromInputs,
+			isSponsoredTx,
+			stopOrders,
+			marketId,
+			gasCoinArg,
+		} = inputs;
 
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.accountCap.walletAddress);
-
-		if (!this.Provider) throw new Error("missing AftermathApi Provider");
-		// TODO: handle case of user passed gas coin object(s)
-		const gasCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			isSponsoredTx,
-			coinType: Coin.constants.suiCoinType,
-			walletAddress: this.accountCap.walletAddress,
-			coinAmount: Perpetuals.constants.stopOrderGasCostSUI,
-		});
 
 		return this.fetchApiTransaction<ApiPerpetualsPlaceStopOrdersBody>(
 			"transactions/place-stop-orders",
 			{
 				stopOrders,
-				marketId: inputs.marketId,
-				gasCoin: TransactionsApiHelpers.serviceCoinDataFromCoinTxArg({
-					coinTxArg: gasCoin,
-				}),
+				marketId,
+				gasCoinArg,
+				isSponsoredTx,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 			},
 			undefined,
 			{
@@ -417,23 +405,6 @@ export class PerpetualsAccount extends Caller {
 		const tx = txFromInputs ?? new Transaction();
 		// tx.setSender(this.accountCap.walletAddress);
 
-		const slTpOrders = [
-			...("stopLoss" in inputs ? [inputs.stopLoss] : []),
-			...("takeProfit" in inputs ? [inputs.takeProfit] : []),
-		];
-
-		if (!this.Provider) throw new Error("missing AftermathApi Provider");
-		// TODO: handle case of user passed gas coin object(s)
-		const gasCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			isSponsoredTx,
-			coinType: Coin.constants.suiCoinType,
-			walletAddress: this.accountCap.walletAddress,
-			coinAmount:
-				Perpetuals.constants.stopOrderGasCostSUI *
-				BigInt(slTpOrders.length),
-		});
-
 		return this.fetchApiTransaction<ApiPerpetualsPlaceSlTpOrdersBody>(
 			"transactions/place-sl-tp-orders",
 			{
@@ -441,10 +412,7 @@ export class PerpetualsAccount extends Caller {
 				marketId,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
-				gasCoin: TransactionsApiHelpers.serviceCoinDataFromCoinTxArg({
-					coinTxArg: gasCoin,
-				}),
+				accountObjectId: this.accountCap.subAccount.objectId,
 				positionSide: Perpetuals.positionSide({
 					baseAssetAmount: position.baseAssetAmount,
 				}),
@@ -475,7 +443,7 @@ export class PerpetualsAccount extends Caller {
 				stopOrders,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 			},
 			undefined,
 			{
@@ -486,7 +454,7 @@ export class PerpetualsAccount extends Caller {
 
 	public async getReduceOrderTx(inputs: {
 		tx?: Transaction;
-		collateralChange: Balance;
+		collateralChange: number;
 		marketId: PerpetualsMarketId;
 		orderId: PerpetualsOrderId;
 		sizeToSubtract: bigint;
@@ -499,7 +467,7 @@ export class PerpetualsAccount extends Caller {
 				...otherInputs,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 			},
 			undefined,
 			{
@@ -511,7 +479,7 @@ export class PerpetualsAccount extends Caller {
 	public async getSetLeverageTx(inputs: {
 		tx?: Transaction;
 		leverage: number;
-		collateralChange: Balance;
+		collateralChange: number;
 		marketId: PerpetualsMarketId;
 	}): Promise<Transaction> {
 		const { leverage, tx, collateralChange, marketId } = inputs;
@@ -523,7 +491,7 @@ export class PerpetualsAccount extends Caller {
 				collateralChange,
 				txKind: await this.getTxKind({ tx }),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 			},
 			undefined,
 			{
@@ -583,7 +551,7 @@ export class PerpetualsAccount extends Caller {
 				filledSizeUsd: number;
 				postedSize: number;
 				postedSizeUsd: number;
-				collateralChange: Balance;
+				collateralChange: number;
 				executionPrice: number;
 		  }
 	> {
@@ -594,7 +562,7 @@ export class PerpetualsAccount extends Caller {
 			"previews/place-order",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -610,7 +578,7 @@ export class PerpetualsAccount extends Caller {
 					PerpetualsMarketId,
 					PerpetualsPosition
 				>;
-				collateralChange: Balance;
+				collateralChange: number;
 		  }
 		| {
 				error: string;
@@ -619,7 +587,7 @@ export class PerpetualsAccount extends Caller {
 		// NOTE: should this case return an error instead ?
 		if (Object.keys(inputs.marketIdsToData).length <= 0)
 			return {
-				collateralChange: BigInt(0),
+				collateralChange: 0,
 				marketIdsToPositionAfterCancelOrders: {},
 			};
 
@@ -630,7 +598,7 @@ export class PerpetualsAccount extends Caller {
 			"previews/cancel-orders",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -648,7 +616,7 @@ export class PerpetualsAccount extends Caller {
 	): Promise<
 		| {
 				positionAfterReduceOrder: PerpetualsPosition;
-				collateralChange: Balance;
+				collateralChange: number;
 		  }
 		| {
 				error: string;
@@ -661,7 +629,7 @@ export class PerpetualsAccount extends Caller {
 			"previews/reduce-order",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -677,7 +645,7 @@ export class PerpetualsAccount extends Caller {
 	): Promise<
 		| {
 				positionAfterSetLeverage: PerpetualsPosition;
-				collateralChange: Balance;
+				collateralChange: number;
 		  }
 		| {
 				error: string;
@@ -693,7 +661,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				leverage,
-				accountObjectId: this.accountCap.objectId,
+				accountObjectId: this.accountCap.subAccount.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -1188,163 +1156,43 @@ export class PerpetualsAccount extends Caller {
 
 		// TODO: clean this up
 		const fullSlOrder: PerpetualsStopOrderData | undefined =
-			side === undefined || !position
-				? // TODO: check if at least one order present ? -- if only one order then use that side ?
-				  stopOrderDatas.find(
-						(order) =>
-							order.marketId === marketId &&
-							// order.side !== side &&
-							!("limitOrder" in order) &&
-							order.expiryTimestamp >= Casting.u64MaxBigInt &&
-							// order.triggerIfGeStopIndexPrice ===
-							// 	(side === PerpetualsOrderSide.Ask) &&
-							order.size >= Casting.u64MaxBigInt &&
-							// (side === PerpetualsOrderSide.Bid
-							// 	? order.stopIndexPrice < indexPrice
-							// 	: order.stopIndexPrice > indexPrice)
-
-							((!order.triggerIfGeStopIndexPrice &&
-								// order.stopIndexPrice < indexPrice &&
-								order.side === PerpetualsOrderSide.Ask) ||
-								(order.triggerIfGeStopIndexPrice &&
-									// order.stopIndexPrice > indexPrice &&
-									order.side === PerpetualsOrderSide.Bid)) &&
-							order.reduceOnly
-				  )
-				: stopOrderDatas.find(
-						(order) =>
-							order.marketId === marketId &&
-							order.side !== side &&
-							!("limitOrder" in order) &&
-							order.expiryTimestamp >= Casting.u64MaxBigInt &&
-							order.triggerIfGeStopIndexPrice ===
-								(side === PerpetualsOrderSide.Ask) &&
-							order.size >= Casting.u64MaxBigInt &&
-							(side === PerpetualsOrderSide.Bid
-								? order.stopIndexPrice <
-								  Perpetuals.calcEntryPrice(position)
-								: order.stopIndexPrice >
-								  Perpetuals.calcEntryPrice(position)) &&
-							order.reduceOnly
-				  );
+			stopOrderDatas.find(
+				(order) =>
+					order.marketId === marketId &&
+					order.slTp &&
+					order.slTp.forPositionSide === side &&
+					order.slTp.isStopLoss &&
+					order.size >= Casting.u64MaxBigInt
+			);
 		const fullTpOrder: PerpetualsStopOrderData | undefined =
-			side === undefined || !position
-				? // TODO: check if at least one order present ? -- if only one order then use that side ?
-				  stopOrderDatas.find(
-						(order) =>
-							order.marketId === marketId &&
-							// order.side !== side &&
-							!("limitOrder" in order) &&
-							order.expiryTimestamp >= Casting.u64MaxBigInt &&
-							// order.triggerIfGeStopIndexPrice ===
-							// 	(side === PerpetualsOrderSide.Bid) &&
-							order.size >= Casting.u64MaxBigInt &&
-							// (side === PerpetualsOrderSide.Bid
-							// 	? order.stopIndexPrice > indexPrice
-							// 	: order.stopIndexPrice < indexPrice)
-
-							((!order.triggerIfGeStopIndexPrice &&
-								// order.stopIndexPrice < indexPrice &&
-								order.side === PerpetualsOrderSide.Bid) ||
-								(order.triggerIfGeStopIndexPrice &&
-									// order.stopIndexPrice > indexPrice &&
-									order.side === PerpetualsOrderSide.Ask)) &&
-							order.reduceOnly
-				  )
-				: stopOrderDatas.find(
-						(order) =>
-							order.marketId === marketId &&
-							order.side !== side &&
-							!("limitOrder" in order) &&
-							order.expiryTimestamp >= Casting.u64MaxBigInt &&
-							order.triggerIfGeStopIndexPrice ===
-								(side === PerpetualsOrderSide.Bid) &&
-							order.size >= Casting.u64MaxBigInt &&
-							(side === PerpetualsOrderSide.Bid
-								? order.stopIndexPrice >
-								  Perpetuals.calcEntryPrice(position)
-								: order.stopIndexPrice <
-								  Perpetuals.calcEntryPrice(position)) &&
-							order.reduceOnly
-				  );
+			stopOrderDatas.find(
+				(order) =>
+					order.marketId === marketId &&
+					order.slTp &&
+					order.slTp.forPositionSide === side &&
+					!order.slTp.isStopLoss &&
+					order.size >= Casting.u64MaxBigInt
+			);
 
 		const partialSlOrders: PerpetualsStopOrderData[] =
-			side === undefined || !position
-				? // TODO: check if at least one order present ? -- if only one order then use that side ?
-				  stopOrderDatas.filter(
-						(order) =>
-							order.marketId === marketId &&
-							// order.side !== side &&
-							!("limitOrder" in order) &&
-							order.expiryTimestamp >= Casting.u64MaxBigInt &&
-							// order.triggerIfGeStopIndexPrice ===
-							// 	(side === PerpetualsOrderSide.Ask) &&
-							// (side === PerpetualsOrderSide.Bid
-							// 	? order.stopIndexPrice < indexPrice
-							// 	: order.stopIndexPrice > indexPrice)
-
-							((!order.triggerIfGeStopIndexPrice &&
-								// order.stopIndexPrice < indexPrice &&
-								order.side === PerpetualsOrderSide.Ask) ||
-								(order.triggerIfGeStopIndexPrice &&
-									// order.stopIndexPrice > indexPrice &&
-									order.side === PerpetualsOrderSide.Bid)) &&
-							order.reduceOnly
-				  )
-				: stopOrderDatas.filter(
-						(order) =>
-							order.marketId === marketId &&
-							order.side !== side &&
-							!("limitOrder" in order) &&
-							order.expiryTimestamp >= Casting.u64MaxBigInt &&
-							order.triggerIfGeStopIndexPrice ===
-								(side === PerpetualsOrderSide.Ask) &&
-							(side === PerpetualsOrderSide.Bid
-								? order.stopIndexPrice <
-								  Perpetuals.calcEntryPrice(position)
-								: order.stopIndexPrice >
-								  Perpetuals.calcEntryPrice(position)) &&
-							order.reduceOnly
-				  );
+			stopOrderDatas.filter(
+				(order) =>
+					order.marketId === marketId &&
+					order.slTp &&
+					order.slTp.forPositionSide === side &&
+					order.slTp.isStopLoss &&
+					order.size < Casting.u64MaxBigInt
+			);
 
 		const partialTpOrders: PerpetualsStopOrderData[] =
-			side === undefined || !position
-				? // TODO: check if at least one order present ? -- if only one order then use that side ?
-				  stopOrderDatas.filter(
-						(order) =>
-							order.marketId === marketId &&
-							// order.side !== side &&
-							!("limitOrder" in order) &&
-							order.expiryTimestamp >= Casting.u64MaxBigInt &&
-							// order.triggerIfGeStopIndexPrice ===
-							// 	(side === PerpetualsOrderSide.Bid) &&
-							// (side === PerpetualsOrderSide.Bid
-							// 	? order.stopIndexPrice > indexPrice
-							// 	: order.stopIndexPrice < indexPrice)
-
-							((!order.triggerIfGeStopIndexPrice &&
-								// order.stopIndexPrice < indexPrice &&
-								order.side === PerpetualsOrderSide.Bid) ||
-								(order.triggerIfGeStopIndexPrice &&
-									// order.stopIndexPrice > indexPrice &&
-									order.side === PerpetualsOrderSide.Ask)) &&
-							order.reduceOnly
-				  )
-				: stopOrderDatas.filter(
-						(order) =>
-							order.marketId === marketId &&
-							order.side !== side &&
-							!("limitOrder" in order) &&
-							order.expiryTimestamp >= Casting.u64MaxBigInt &&
-							order.triggerIfGeStopIndexPrice ===
-								(side === PerpetualsOrderSide.Bid) &&
-							(side === PerpetualsOrderSide.Bid
-								? order.stopIndexPrice >
-								  Perpetuals.calcEntryPrice(position)
-								: order.stopIndexPrice <
-								  Perpetuals.calcEntryPrice(position)) &&
-							order.reduceOnly
-				  );
+			stopOrderDatas.filter(
+				(order) =>
+					order.marketId === marketId &&
+					order.slTp &&
+					order.slTp.forPositionSide === side &&
+					!order.slTp.isStopLoss &&
+					order.size < Casting.u64MaxBigInt
+			);
 
 		return {
 			fullSlOrder,
@@ -1357,7 +1205,12 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public collateral(): number {
-		return Casting.IFixed.numberFromIFixed(this.accountCap.collateral);
+		return (
+			Casting.IFixed.numberFromIFixed(this.accountCap.collateral) +
+			Casting.IFixed.numberFromIFixed(
+				this.accountCap.subAccount.collateral
+			)
+		);
 	}
 
 	public collateralDecimals(): CoinDecimal {
@@ -1429,11 +1282,15 @@ export class PerpetualsAccount extends Caller {
 				)
 			)
 		);
-		const collateralChange = BigInt(
-			Math.round(
-				Number(fullPositionCollateralChange) *
-					(Number(size) / Number(positionSize))
-			)
+		// NOTE: is this safe / correct ?
+		const collateralChange = Coin.balanceWithDecimals(
+			BigInt(
+				Math.round(
+					Number(fullPositionCollateralChange) *
+						(Number(size) / Number(positionSize))
+				)
+			),
+			this.collateralDecimals()
 		);
 
 		const positionSide = Perpetuals.positionSide(position);
@@ -1454,47 +1311,6 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
-
-	private async getSlTpArgs(inputs: {
-		tx: Transaction;
-		walletAddress: SuiAddress;
-		stopLoss: PerpetualsSlTpOrderDetails | undefined;
-		takeProfit: PerpetualsSlTpOrderDetails | undefined;
-		isSponsoredTx: boolean | undefined;
-	}): Promise<{
-		slTp?: {
-			walletAddress: SuiAddress;
-			gasCoin: ServiceCoinData;
-			stopLoss?: PerpetualsSlTpOrderDetails;
-			takeProfit?: PerpetualsSlTpOrderDetails;
-		};
-	}> {
-		const { tx, walletAddress, stopLoss, takeProfit, isSponsoredTx } =
-			inputs;
-
-		if (!stopLoss && !takeProfit) return {};
-
-		if (!this.Provider) throw new Error("missing AftermathApi Provider");
-		const gasCoin = await this.Provider.Coin().fetchCoinWithAmountTx({
-			tx,
-			isSponsoredTx,
-			coinType: Coin.constants.suiCoinType,
-			walletAddress: this.accountCap.walletAddress,
-			coinAmount:
-				Perpetuals.constants.stopOrderGasCostSUI *
-				BigInt(stopLoss && takeProfit ? 2 : 1),
-		});
-		return {
-			slTp: {
-				walletAddress,
-				stopLoss,
-				takeProfit,
-				gasCoin: TransactionsApiHelpers.serviceCoinDataFromCoinTxArg({
-					coinTxArg: gasCoin,
-				}),
-			},
-		};
-	}
 
 	private getTxKind = async (inputs: {
 		tx: Transaction | undefined;
