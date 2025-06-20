@@ -127,16 +127,19 @@ export class PerpetualsAccount extends Caller {
 			  }
 		)
 	) {
+		const { tx, ...otherInputs } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsDepositCollateralBody>(
 			"transactions/deposit-collateral",
 			{
-				...inputs,
+				...otherInputs,
 				walletAddress: this.accountCap.walletAddress,
 				collateralCoinType: this.accountCap.collateralCoinType,
 				accountObjectId: this.accountCap.subAccount.objectId,
-				txKind: await this.getTxKind({
-					tx: inputs.tx ?? new Transaction(),
-				}),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
 			},
 			undefined,
 			{
@@ -150,17 +153,22 @@ export class PerpetualsAccount extends Caller {
 		recipientAddress?: SuiAddress;
 		tx?: Transaction;
 	}) {
+		const { withdrawAmount, recipientAddress, tx: txFromInputs } = inputs;
+
 		const { txKind, coinOutArg } = await this.fetchApi<
 			ApiPerpetualsWithdrawCollateralResponse,
 			ApiPerpetualsWithdrawCollateralBody
 		>("transactions/withdraw-collateral", {
-			...inputs,
+			withdrawAmount,
+			recipientAddress,
 			walletAddress: this.accountCap.walletAddress,
 			collateralCoinType: this.accountCap.collateralCoinType,
 			accountObjectId: this.accountCap.subAccount.objectId,
-			txKind: await this.getTxKind({
-				tx: inputs.tx ?? new Transaction(),
-			}),
+			txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+				{
+					tx: txFromInputs ?? new Transaction(),
+				}
+			),
 		});
 
 		const tx = Transaction.fromKind(txKind);
@@ -238,16 +246,18 @@ export class PerpetualsAccount extends Caller {
 		toAccountObjectId: ObjectId;
 		tx?: Transaction;
 	}) {
+		const { transferAmount, toAccountObjectId, tx } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsTransferCollateralBody>(
 			"transactions/transfer-collateral",
 			{
-				...inputs,
+				transferAmount,
+				toAccountObjectId,
 				walletAddress: this.accountCap.walletAddress,
 				collateralCoinType: this.accountCap.collateralCoinType,
 				fromAccountObjectId: this.accountCap.objectId,
-				txKind: await this.getTxKind({
-					tx: inputs.tx ?? new Transaction(),
-				}),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx: tx ?? new Transaction() }
+				),
 			},
 			undefined,
 			{
@@ -272,7 +282,9 @@ export class PerpetualsAccount extends Caller {
 			"transactions/place-market-order",
 			{
 				...otherInputs,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 				hasPosition:
@@ -297,7 +309,9 @@ export class PerpetualsAccount extends Caller {
 			"transactions/place-limit-order",
 			{
 				...otherInputs,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 				hasPosition:
@@ -326,7 +340,9 @@ export class PerpetualsAccount extends Caller {
 			"transactions/cancel-orders",
 			{
 				...otherInputs,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 			},
@@ -346,7 +362,9 @@ export class PerpetualsAccount extends Caller {
 			"transactions/cancel-stop-orders",
 			{
 				...otherInputs,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 			},
@@ -378,7 +396,9 @@ export class PerpetualsAccount extends Caller {
 				marketId,
 				gasCoinArg,
 				isSponsoredTx,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 			},
@@ -410,7 +430,9 @@ export class PerpetualsAccount extends Caller {
 			{
 				...slTpInputs,
 				marketId,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 				positionSide: Perpetuals.positionSide({
@@ -441,7 +463,9 @@ export class PerpetualsAccount extends Caller {
 			"transactions/edit-stop-orders",
 			{
 				stopOrders,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 			},
@@ -465,7 +489,9 @@ export class PerpetualsAccount extends Caller {
 			"transactions/reduce-order",
 			{
 				...otherInputs,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 			},
@@ -489,7 +515,9 @@ export class PerpetualsAccount extends Caller {
 				leverage,
 				marketId,
 				collateralChange,
-				txKind: await this.getTxKind({ tx }),
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
 				walletAddress: this.accountCap.walletAddress,
 				accountObjectId: this.accountCap.subAccount.objectId,
 			},
@@ -1311,20 +1339,6 @@ export class PerpetualsAccount extends Caller {
 	// =========================================================================
 	//  Private Helpers
 	// =========================================================================
-
-	private getTxKind = async (inputs: {
-		tx: Transaction | undefined;
-	}): Promise<SerializedTransaction | undefined> => {
-		const { tx } = inputs;
-		if (!tx) return;
-
-		const txBytes = await tx.build({
-			// NOTE: is this safe ?
-			client: this.Provider?.provider,
-			onlyTransactionKind: true,
-		});
-		return Buffer.from(txBytes).toString("base64");
-	};
 
 	private useProvider = () => {
 		const provider = this.Provider?.Perpetuals();

@@ -37,6 +37,7 @@ import { Casting, Helpers } from "../../general/utils";
 import { PerpetualsOrderUtils } from "./utils";
 import { AftermathApi } from "../../general/providers";
 import { Coin } from "../coin";
+import { Transaction } from "@mysten/sui/transactions";
 
 export class Perpetuals extends Caller {
 	// =========================================================================
@@ -254,12 +255,26 @@ export class Perpetuals extends Caller {
 	//  Transactions
 	// =========================================================================
 
-	public async getCreateAccountTx(inputs: ApiPerpetualsCreateAccountBody) {
-		// return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
-		// 	"transactions/create-account",
-		// 	inputs
-		// );
-		return this.useProvider().buildCreateAccountTx(inputs);
+	public async getCreateAccountTx(inputs: {
+		walletAddress: SuiAddress;
+		collateralCoinType: CoinType;
+		tx?: Transaction;
+	}) {
+		const { walletAddress, collateralCoinType, tx } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
+			"transactions/create-account",
+			{
+				walletAddress,
+				collateralCoinType,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
 	}
 
 	// =========================================================================

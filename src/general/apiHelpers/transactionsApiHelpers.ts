@@ -153,6 +153,20 @@ export class TransactionsApiHelpers {
 		).serialize();
 	};
 
+	public fetchBase64TxKindFromTx = async (inputs: {
+		tx: Transaction | undefined;
+	}): Promise<SerializedTransaction | undefined> => {
+		const { tx } = inputs;
+		if (!tx) return;
+
+		const txBytes = await tx.build({
+			// NOTE: is this safe ?
+			client: this.Provider?.provider,
+			onlyTransactionKind: true,
+		});
+		return Buffer.from(txBytes).toString("base64");
+	};
+
 	// =========================================================================
 	//  Public Static Methods
 	// =========================================================================

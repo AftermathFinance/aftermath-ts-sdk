@@ -1105,6 +1105,7 @@ export interface ApiPerpetualsAccountStopOrderDatasBody {
 export interface ApiPerpetualsCreateAccountBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
+	txKind?: SerializedTransaction;
 }
 
 export type ApiPerpetualsDepositCollateralBody = {
