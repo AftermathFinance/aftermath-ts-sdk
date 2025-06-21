@@ -1175,7 +1175,7 @@ export class PerpetualsAccount extends Caller {
 				(order) =>
 					order.marketId === marketId &&
 					order.slTp &&
-					order.slTp.forPositionSide === side &&
+					order.side !== side &&
 					order.slTp.isStopLoss &&
 					order.size >= Casting.u64MaxBigInt
 			);
@@ -1184,7 +1184,7 @@ export class PerpetualsAccount extends Caller {
 				(order) =>
 					order.marketId === marketId &&
 					order.slTp &&
-					order.slTp.forPositionSide === side &&
+					order.side !== side &&
 					!order.slTp.isStopLoss &&
 					order.size >= Casting.u64MaxBigInt
 			);
@@ -1194,7 +1194,7 @@ export class PerpetualsAccount extends Caller {
 				(order) =>
 					order.marketId === marketId &&
 					order.slTp &&
-					order.slTp.forPositionSide === side &&
+					order.side !== side &&
 					order.slTp.isStopLoss &&
 					order.size < Casting.u64MaxBigInt
 			);
@@ -1204,7 +1204,7 @@ export class PerpetualsAccount extends Caller {
 				(order) =>
 					order.marketId === marketId &&
 					order.slTp &&
-					order.slTp.forPositionSide === side &&
+					order.side !== side &&
 					!order.slTp.isStopLoss &&
 					order.size < Casting.u64MaxBigInt
 			);

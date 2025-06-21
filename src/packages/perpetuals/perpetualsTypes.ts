@@ -218,6 +218,7 @@ export interface PerpetualsStopOrderData {
 	stopIndexPrice: number;
 	marketId: PerpetualsMarketId;
 	size: bigint;
+	side: PerpetualsOrderSide;
 	// collateralToAllocate: Balance;
 	marginRatio?: number; // NOTE: should this be leverage instead ?
 	expiryTimestamp?: bigint;
@@ -231,7 +232,6 @@ export interface PerpetualsStopOrderData {
 	};
 	nonSlTp?: {
 		triggerIfGeStopIndexPrice: boolean;
-		side: PerpetualsOrderSide;
 		reduceOnly: boolean;
 	};
 }
