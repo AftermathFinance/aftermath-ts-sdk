@@ -66,62 +66,8 @@ export enum PerpetualsStopOrderType {
 }
 
 // =========================================================================
-//  BCS - Binary Canonical Serialization
+//  Market
 // =========================================================================
-
-// function Field<N extends BcsType<any>, V extends BcsType<any>>(
-// 	name: N,
-// 	value: V
-// ) {
-// 	return bcs.struct("Field", { name, value });
-// }
-
-// =========================================================================
-//  Admin
-// =========================================================================
-
-export interface PerpetualsAdminCapability extends Object {}
-
-// const AdminCapability = bcs.struct("AdminCapability", {
-// 	id: bcs.Address,
-// });
-
-export interface PerpetualsRegistry extends Object {
-	activeCollaterals: CoinType[];
-}
-
-// const Registry = bcs.struct("Registry", {
-// 	id: bcs.Address,
-// 	activeCollaterals: bcs.vector(bcs.string()),
-// 	nextAccountId: bcs.u64(),
-// });
-
-// const MarketKey = bcs.struct("MarketKey", {
-// 	marketId: bcs.u64(),
-// });
-
-// =========================================================================
-//  Clearing House
-// =========================================================================
-
-export interface PerpetualsVault extends Object {
-	balance: Balance;
-	scalingFactor: bigint;
-}
-
-// const BalanceStruct = bcs.struct("Balance", { value: bcs.u64() });
-
-// const Coin = bcs.struct("Coin", {
-// 	id: bcs.Address,
-// 	balance: BalanceStruct,
-// });
-
-// const Vault = bcs.struct("Vault", {
-// 	id: bcs.Address,
-// 	collateral_balance: BalanceStruct,
-// 	insurance_fund_balance: BalanceStruct,
-// 	scalingFactor: bcs.u64(),
-// });
 
 export interface PerpetualsMarketData {
 	packageId: PackageId;
@@ -146,12 +92,6 @@ export interface PerpetualsAccountCap {
 	subAccount: PerpetualsSubAccount;
 }
 
-// const Account = bcs.struct("Account", {
-// 	id: bcs.Address,
-// 	accountId: bcs.u64(),
-// 	collateral: BalanceStruct,
-// });
-
 export interface PerpetualsPosition {
 	collateral: IFixed;
 	baseAssetAmount: IFixed;
@@ -171,23 +111,6 @@ export interface PerpetualsPosition {
 	takerFee: IFixed;
 	leverage: number;
 }
-
-// const Position = bcs.struct("Position", {
-// 	collateral: bcs.u256(),
-// 	baseAssetAmount: bcs.u256(),
-// 	quoteAssetNotionalAmount: bcs.u256(),
-// 	cumFundingRateLong: bcs.u256(),
-// 	cumFundingRateShort: bcs.u256(),
-// 	asksQuantity: bcs.u256(),
-// 	bidsQuantity: bcs.u256(),
-// 	pendingOrders: bcs.u64(),
-// 	makerFee: bcs.u256(),
-// 	takerFee: bcs.u256(),
-// });
-
-// const PositionKey = bcs.struct("PositionKey", {
-// 	accountId: bcs.u64(),
-// });
 
 export interface PerpetualsSubAccount {
 	accountId: PerpetualsAccountId;
@@ -282,21 +205,6 @@ export interface PerpetualsOrderbook {
 	lastCheckpointUpdate: SuiCheckpoint;
 }
 
-// export interface OrderbookDataPoint {
-// 	price: number;
-// 	size: number;
-// 	totalSize: number;
-// 	sizeUsd: number;
-// 	totalSizeUsd: number;
-// }
-
-// export interface PerpetualsOrderbookState {
-// 	bids: OrderbookDataPoint[];
-// 	asks: OrderbookDataPoint[];
-// 	minAskPrice: number;
-// 	maxBidPrice: number;
-// }
-
 export interface PerpetualsOrderData {
 	orderId: PerpetualsOrderId;
 	initialSize: bigint;
@@ -333,92 +241,10 @@ export interface PerpetualsFilledOrderData {
 	price: number;
 }
 
-// export interface PerpetualsOrderbook extends Object {
-// 	asks: PerpetualsOrderedMap<PerpetualsOrder>;
-// 	bids: PerpetualsOrderedMap<PerpetualsOrder>;
-// 	counter: bigint;
-// }
-
-// const Order = bcs.struct("Order", {
-// 	accountId: bcs.u64(),
-// 	size: bcs.u64(),
-// });
-
-// const Orderbook = bcs.struct("Orderbook", {
-// 	id: bcs.Address,
-// 	asks: PerpetualsMap(Order),
-// 	bids: PerpetualsMap(Order),
-// 	counter: bcs.u64(),
-// });
-
-// export interface PerpetualsOrder {
-// 	accountId: PerpetualsAccountId;
-// 	size: bigint;
-// }
-
 export interface PerpetualsOrderInfo {
 	price: PerpetualsOrderPrice;
 	size: bigint;
 }
-
-// const OrderInfo = bcs.struct("OrderInfo", {
-// 	price: bcs.u64(),
-// 	size: bcs.u64(),
-// });
-
-// export interface PerpetualsOrderedMap<T> extends Object {
-// 	size: bigint;
-// 	counter: bigint;
-// 	root: bigint;
-// 	first: bigint;
-// 	branchMin: bigint;
-// 	branchMax: bigint;
-// 	leafMin: bigint;
-// 	leafMax: bigint;
-// 	branchesMergeMax: bigint;
-// 	leavesMergeMax: bigint;
-// }
-
-// function PerpetualsMap<T extends BcsType<any>>(T: T) {
-// 	return bcs.struct("Map", {
-// 		id: bcs.Address,
-// 		size: bcs.u64(),
-// 		counter: bcs.u64(),
-// 		root: bcs.u64(),
-// 		first: bcs.u64(),
-// 		branchMin: bcs.u64(),
-// 		branchMax: bcs.u64(),
-// 		leafMin: bcs.u64(),
-// 		leafMax: bcs.u64(),
-// 		branchesMergeMax: bcs.u64(),
-// 		leavesMergeMax: bcs.u64(),
-// 	});
-// }
-
-// export interface PerpetualsBranch {
-// 	keys: bigint[];
-// 	kids: bigint[];
-// }
-
-// export const Branch = bcs.struct("Branch", {
-// 	keys: bcs.vector(bcs.u128()),
-// 	kids: bcs.vector(bcs.u64()),
-// });
-
-// export interface PerpetualsLeaf<V> {
-// 	keys: bigint[];
-// 	vals: V[];
-// 	next: bigint;
-// }
-
-// export function Leaf<V extends BcsType<any>>(V: V) {
-// 	return bcs.struct("Leaf", {
-// 		keys: bcs.vector(bcs.u128()),
-// 		vals: bcs.vector(V),
-// 		next: bcs.u64(),
-// 	});
-// }
-
 export interface PerpetualsAccountData {
 	accountCap: PerpetualsAccountCap;
 	account: PerpetualsAccountObject;
@@ -1147,25 +973,17 @@ export interface ApiPerpetualsTransferCollateralBody {
 }
 
 export interface ApiPerpetualsAllocateCollateralBody {
-	walletAddress: SuiAddress;
-	packageId: PackageId;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
+	accountObjectId: ObjectId;
 	marketId: PerpetualsMarketId;
-	marketInitialSharedVersion: ObjectVersion;
-	amount: Balance;
+	allocateAmount: Balance;
+	txKind?: SerializedTransaction;
 }
 
 export interface ApiPerpetualsDeallocateCollateralBody {
-	walletAddress: SuiAddress;
-	packageId: PackageId;
-	collateralCoinType: CoinType;
-	accountCapId: ObjectId;
-	basePriceFeedId: ObjectId;
-	collateralPriceFeedId: ObjectId;
+	accountObjectId: ObjectId;
 	marketId: PerpetualsMarketId;
-	marketInitialSharedVersion: ObjectVersion;
-	amount: Balance;
+	deallocateAmount: Balance;
+	txKind?: SerializedTransaction;
 }
 
 export interface PerpetualsSlTpOrderDetails {
@@ -1470,22 +1288,3 @@ export type SdkPerpetualsCancelOrdersPreviewInputs = Omit<
 	ApiPerpetualsPreviewCancelOrdersBody,
 	"collateralCoinType" | "accountObjectId"
 >;
-
-// export const perpetualsRegistry = {
-// 	Account,
-// 	AdminCapability,
-// 	BalanceStruct,
-// 	// Branch,
-// 	Coin,
-// 	Field,
-// 	// Leaf,
-// 	MarketKey,
-// 	// Order,
-// 	// Orderbook,
-// 	OrderInfo,
-// 	// PerpetualsMap,
-// 	Position,
-// 	PositionKey,
-// 	Registry,
-// 	Vault,
-// };

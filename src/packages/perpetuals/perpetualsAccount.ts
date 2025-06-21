@@ -181,64 +181,51 @@ export class PerpetualsAccount extends Caller {
 	}
 
 	public async getAllocateCollateralTx(inputs: {
-		market: PerpetualsMarket;
-		amount: Balance;
+		marketId: PerpetualsMarketId;
+		allocateAmount: Balance;
+		tx?: Transaction;
 	}) {
-		const { market } = inputs;
-		// return this.fetchApiTransaction<ApiPerpetualsAllocateCollateralBody>(
-		// 	"transactions/allocate-collateral",
-		// 	{
-		// 		...inputs,
-		// 		packageId: market.marketData.packageId,
-		// 		marketInitialSharedVersion:
-		// 			market.marketData.initialSharedVersion,
-		// 		marketId: market.marketId,
-		// 		collateralCoinType: this.accountCap.collateralCoinType,
-		// 		accountCapId: this.accountCap.objectId,
-		// 	}
-		// );
-		return this.useProvider().buildAllocateCollateralTx({
-			...inputs,
-			walletAddress: this.accountCap.walletAddress,
-			packageId: market.marketData.packageId,
-			marketInitialSharedVersion: market.marketData.initialSharedVersion,
-			marketId: market.marketId,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			accountCapId: this.accountCap.objectId,
-		});
+		const { tx, allocateAmount, marketId } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsAllocateCollateralBody>(
+			"transactions/allocate-collateral",
+			{
+				marketId,
+				allocateAmount,
+				accountObjectId: this.accountCap.subAccount.objectId,
+				walletAddress: this.accountCap.walletAddress,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx: tx ?? new Transaction() }
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
 	}
 
 	public async getDeallocateCollateralTx(inputs: {
-		market: PerpetualsMarket;
-		amount: Balance;
+		marketId: PerpetualsMarketId;
+		deallocateAmount: Balance;
+		tx?: Transaction;
 	}) {
-		const { market } = inputs;
-		// return this.fetchApiTransaction<ApiPerpetualsDeallocateCollateralBody>(
-		// 	"transactions/deallocate-collateral",
-		// 	{
-		// 		...inputs,
-		// 		packageId: market.marketData.packageId,
-		// 		marketInitialSharedVersion:
-		// 			market.marketData.initialSharedVersion,
-		// 		marketId: market.marketId,
-		// 		basePriceFeedId: market.marketParams.basePriceFeedId,
-		// 		collateralPriceFeedId:
-		// 			market.marketParams.collateralPriceFeedId,
-		// 		collateralCoinType: this.accountCap.collateralCoinType,
-		// 		accountCapId: this.accountCap.objectId,
-		// 	}
-		// );
-		return this.useProvider().buildDeallocateCollateralTx({
-			...inputs,
-			walletAddress: this.accountCap.walletAddress,
-			packageId: market.marketData.packageId,
-			marketInitialSharedVersion: market.marketData.initialSharedVersion,
-			marketId: market.marketId,
-			basePriceFeedId: market.marketParams.basePriceFeedId,
-			collateralPriceFeedId: market.marketParams.collateralPriceFeedId,
-			collateralCoinType: this.accountCap.collateralCoinType,
-			accountCapId: this.accountCap.objectId,
-		});
+		const { tx, deallocateAmount, marketId } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsDeallocateCollateralBody>(
+			"transactions/deallocate-collateral",
+			{
+				marketId,
+				deallocateAmount,
+				accountObjectId: this.accountCap.subAccount.objectId,
+				walletAddress: this.accountCap.walletAddress,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx: tx ?? new Transaction() }
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
 	}
 
 	public async getTransferCollateralTx(inputs: {
