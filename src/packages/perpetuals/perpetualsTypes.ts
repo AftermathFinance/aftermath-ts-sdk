@@ -894,7 +894,6 @@ export type ApiPerpetualsHistoricalMarketDataResponse =
 export interface ApiPerpetualsMaxOrderSizeBody {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
-	collateral: Balance;
 	side: PerpetualsOrderSide;
 	leverage?: number;
 	price?: PerpetualsOrderPrice;

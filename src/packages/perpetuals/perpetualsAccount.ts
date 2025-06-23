@@ -134,7 +134,7 @@ export class PerpetualsAccount extends Caller {
 				...otherInputs,
 				walletAddress: this.accountCap.walletAddress,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -163,7 +163,7 @@ export class PerpetualsAccount extends Caller {
 			recipientAddress,
 			walletAddress: this.accountCap.walletAddress,
 			collateralCoinType: this.accountCap.collateralCoinType,
-			accountObjectId: this.accountCap.subAccount.objectId,
+			accountObjectId: this.accountCap.objectId,
 			txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 				{
 					tx: txFromInputs ?? new Transaction(),
@@ -191,7 +191,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				allocateAmount,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				walletAddress: this.accountCap.walletAddress,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx: tx ?? new Transaction() }
@@ -215,7 +215,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				deallocateAmount,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				walletAddress: this.accountCap.walletAddress,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx: tx ?? new Transaction() }
@@ -241,7 +241,7 @@ export class PerpetualsAccount extends Caller {
 				toAccountObjectId,
 				walletAddress: this.accountCap.walletAddress,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				fromAccountObjectId: this.accountCap.subAccount.objectId,
+				fromAccountObjectId: this.accountCap.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx: tx ?? new Transaction() }
 				),
@@ -273,7 +273,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -300,7 +300,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -331,7 +331,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 			},
 			undefined,
 			{
@@ -353,7 +353,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 			},
 			undefined,
 			{
@@ -387,7 +387,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 			},
 			undefined,
 			{
@@ -421,7 +421,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				positionSide: Perpetuals.positionSide({
 					baseAssetAmount: position.baseAssetAmount,
 				}),
@@ -454,7 +454,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 			},
 			undefined,
 			{
@@ -480,7 +480,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 			},
 			undefined,
 			{
@@ -506,7 +506,7 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 			},
 			undefined,
 			{
@@ -577,7 +577,7 @@ export class PerpetualsAccount extends Caller {
 			"previews/place-order",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -613,7 +613,7 @@ export class PerpetualsAccount extends Caller {
 			"previews/cancel-orders",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -644,7 +644,7 @@ export class PerpetualsAccount extends Caller {
 			"previews/reduce-order",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -676,7 +676,7 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				leverage,
-				accountObjectId: this.accountCap.subAccount.objectId,
+				accountObjectId: this.accountCap.objectId,
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
