@@ -369,7 +369,6 @@ export class PerpetualsAccount extends Caller {
 			tx: txFromInputs,
 			isSponsoredTx,
 			stopOrders,
-			marketId,
 			gasCoinArg,
 		} = inputs;
 
@@ -380,7 +379,6 @@ export class PerpetualsAccount extends Caller {
 			"transactions/place-stop-orders",
 			{
 				stopOrders,
-				marketId,
 				gasCoinArg,
 				isSponsoredTx,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
@@ -1177,7 +1175,7 @@ export class PerpetualsAccount extends Caller {
 					order.slTp &&
 					order.side !== side &&
 					order.slTp.isStopLoss &&
-					order.size >= Casting.u64MaxBigInt
+					order.size >= Casting.i64MaxBigInt
 			);
 		const fullTpOrder: PerpetualsStopOrderData | undefined =
 			stopOrderDatas.find(
@@ -1186,7 +1184,7 @@ export class PerpetualsAccount extends Caller {
 					order.slTp &&
 					order.side !== side &&
 					!order.slTp.isStopLoss &&
-					order.size >= Casting.u64MaxBigInt
+					order.size >= Casting.i64MaxBigInt
 			);
 
 		const partialSlOrders: PerpetualsStopOrderData[] =
@@ -1196,7 +1194,7 @@ export class PerpetualsAccount extends Caller {
 					order.slTp &&
 					order.side !== side &&
 					order.slTp.isStopLoss &&
-					order.size < Casting.u64MaxBigInt
+					order.size < Casting.i64MaxBigInt
 			);
 
 		const partialTpOrders: PerpetualsStopOrderData[] =
@@ -1206,7 +1204,7 @@ export class PerpetualsAccount extends Caller {
 					order.slTp &&
 					order.side !== side &&
 					!order.slTp.isStopLoss &&
-					order.size < Casting.u64MaxBigInt
+					order.size < Casting.i64MaxBigInt
 			);
 
 		return {

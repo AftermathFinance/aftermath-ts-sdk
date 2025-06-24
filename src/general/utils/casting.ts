@@ -85,6 +85,11 @@ export class Casting {
 	 */
 	public static u64MaxBigInt: bigint = BigInt("0xFFFFFFFFFFFFFFFF");
 
+	/**
+	 * The maximum signed 64-bit integer value as a bigint.
+	 */
+	public static i64MaxBigInt: bigint = BigInt("9223372036854775807");
+
 	// =========================================================================
 	//  Functions
 	// =========================================================================

@@ -213,14 +213,19 @@ export interface PerpetualsOrderData {
 	marketId: PerpetualsMarketId;
 }
 
+// reduceOnly: boolean;
+// expiryTimestamp?: bigint;
+// limitOrder?: {
+// 	price: PerpetualsOrderPrice;
+// 	orderType: PerpetualsOrderType;
+// };
+
 export interface PerpetualsStopOrderData {
 	objectId: ObjectId;
 	stopIndexPrice: number;
 	marketId: PerpetualsMarketId;
 	size: bigint;
 	side: PerpetualsOrderSide;
-	// collateralToAllocate: Balance;
-	marginRatio?: number; // NOTE: should this be leverage instead ?
 	expiryTimestamp?: bigint;
 	limitOrder?: {
 		price: PerpetualsOrderPrice;
@@ -1002,40 +1007,16 @@ export interface PerpetualsSlTpOrderDetails {
 }
 
 export interface SdkPerpetualsPlaceStopOrdersInputs {
-	marketId: PerpetualsMarketId;
-	stopOrders: {
-		stopIndexPrice: number;
-		triggerIfGeStopIndexPrice: boolean;
-		side: PerpetualsOrderSide;
-		size?: bigint;
-		reduceOnly: boolean;
-		expiryTimestamp?: bigint;
-		limitOrder?: {
-			price: PerpetualsOrderPrice;
-			orderType: PerpetualsOrderType;
-		};
-	}[];
+	stopOrders: Omit<PerpetualsStopOrderData, "objectId">[];
 	tx?: Transaction;
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
 }
 
 export interface ApiPerpetualsPlaceStopOrdersBody {
-	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	walletAddress: SuiAddress;
-	stopOrders: {
-		stopIndexPrice: number;
-		triggerIfGeStopIndexPrice: boolean;
-		side: PerpetualsOrderSide;
-		size?: bigint;
-		reduceOnly: boolean;
-		expiryTimestamp?: bigint;
-		limitOrder?: {
-			price: PerpetualsOrderPrice;
-			orderType: PerpetualsOrderType;
-		};
-	}[];
+	stopOrders: Omit<PerpetualsStopOrderData, "objectId">[];
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
 	txKind?: SerializedTransaction;
@@ -1086,20 +1067,7 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 
 export interface ApiPerpetualsEditStopOrdersBody {
 	accountObjectId: ObjectId;
-	stopOrders: {
-		stopIndexPrice: number;
-		triggerIfGeStopIndexPrice: boolean;
-		side: PerpetualsOrderSide;
-		size?: bigint;
-		reduceOnly: boolean;
-		collateralToAllocate: Balance;
-		marginRatio?: number;
-		expiryTimestamp?: bigint;
-		limitOrder?: {
-			price: PerpetualsOrderPrice;
-			orderType: PerpetualsOrderType;
-		};
-	}[];
+	stopOrders: PerpetualsStopOrderData[];
 	txKind?: SerializedTransaction;
 }
 
