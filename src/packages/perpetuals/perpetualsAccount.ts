@@ -269,6 +269,12 @@ export class PerpetualsAccount extends Caller {
 			"transactions/place-market-order",
 			{
 				...otherInputs,
+				slTp: slTp
+					? {
+							walletAddress: this.accountCap.walletAddress,
+							...slTp,
+					  }
+					: undefined,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
@@ -296,6 +302,12 @@ export class PerpetualsAccount extends Caller {
 			"transactions/place-limit-order",
 			{
 				...otherInputs,
+				slTp: slTp
+					? {
+							walletAddress: this.accountCap.walletAddress,
+							...slTp,
+					  }
+					: undefined,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx }
 				),
