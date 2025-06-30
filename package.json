@@ -1,6 +1,6 @@
 {
 	"name": "aftermath-ts-sdk",
-	"version": "1.2.52-perps.97",
+	"version": "1.2.52-perps.98",
 	"description": "Aftermath TypeScript SDK",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -54,7 +54,7 @@
 		"yaml": "^2.3.1"
 	},
 	"peerDependencies": {
-		"@mysten/sui": "^1.12.0",
+		"@mysten/sui": "^1.30.5",
 		"@mysten/sui.js": "^0.54.1"
 	},
 	"prettier": {
