@@ -34,7 +34,6 @@
 	},
 	"homepage": "https://github.com/AftermathFinance/aftermath-ts-sdk#readme",
 	"dependencies": {
-		"@pythnetwork/pyth-sui-js": "^1.2.3",
 		"bn.js": "^5.2.1",
 		"dayjs": "^1.11.7",
 		"i": "^0.3.7",
