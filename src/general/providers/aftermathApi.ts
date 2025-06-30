@@ -18,7 +18,6 @@ import { ModuleName, MoveErrorCode, ObjectId, UniqueId } from "../../types";
 import { PerpetualsApi } from "../../packages/perpetuals/api/perpetualsApi";
 import { FarmsApi } from "../../packages/farms/api/farmsApi";
 import { SuiClient } from "@mysten/sui/client";
-import { SuiClient as SuiClientV0 } from "@mysten/sui.js/client";
 import { DcaApi } from "../../packages/dca/api/dcaApi";
 import { LeveragedStakingApi } from "../../packages/leveragedStaking/api/leveragedStakingApi";
 import { NftsApi } from "../nfts/nftsApi";
@@ -98,17 +97,14 @@ export class AftermathApi {
 
 	/**
 	 * Constructs a new instance of the `AftermathApi`, binding the given Sui client
-	 * to the known `addresses`. Optionally, a `providerV0` can be passed for
-	 * legacy transaction building or older Sui libraries.
+	 * to the known `addresses`.
 	 *
 	 * @param provider - The `SuiClient` for on-chain queries and transactions.
 	 * @param addresses - The config addresses (object IDs, package IDs, etc.) for the Aftermath protocol.
-	 * @param providerV0 - An optional legacy `SuiClient` from `@mysten/sui.js/client`.
 	 */
 	public constructor(
 		public readonly provider: SuiClient,
-		public readonly addresses: ConfigAddresses,
-		public readonly providerV0?: SuiClientV0
+		public readonly addresses: ConfigAddresses
 	) {}
 
 	// =========================================================================

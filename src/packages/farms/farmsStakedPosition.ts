@@ -212,7 +212,7 @@ export class FarmsStakedPosition extends Caller {
 		if (inputs.stakingPool.rewardCoin(inputs).actualRewards === BigInt(0))
 			return BigInt(0);
 
-		this.updatePosition(inputs);
+		// this.updatePosition(inputs);
 
 		const rewardCoin = this.rewardCoin(inputs);
 		const totalRewards =
@@ -364,9 +364,9 @@ export class FarmsStakedPosition extends Caller {
 		}
 
 		// Check if this position’s lock has expired
-		if (this.unlockTimestamp() < currentTimestamp) {
-			this.unlock();
-		}
+		// if (this.unlockTimestamp() < currentTimestamp) {
+		// 	this.unlock();
+		// }
 
 		this.stakedPosition.lastHarvestRewardsTimestamp = currentTimestamp;
 	};
@@ -421,8 +421,8 @@ export class FarmsStakedPosition extends Caller {
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildUnstakeTxV1(args)
-			: this.useProvider().fetchBuildUnstakeTxV2(args);
+			? this.useProvider().buildUnstakeTxV1(args)
+			: this.useProvider().buildUnstakeTxV2(args);
 	}
 
 	// =========================================================================
@@ -512,8 +512,8 @@ export class FarmsStakedPosition extends Caller {
 			rewardCoinTypes: this.nonZeroRewardCoinTypes(inputs),
 		};
 		return this.version() === 1
-			? this.useProvider().fetchBuildHarvestRewardsTxV1(args)
-			: this.useProvider().fetchBuildHarvestRewardsTxV2(args);
+			? this.useProvider().buildHarvestRewardsTxV1(args)
+			: this.useProvider().buildHarvestRewardsTxV2(args);
 	}
 
 	// =========================================================================
@@ -542,7 +542,6 @@ export class FarmsStakedPosition extends Caller {
 			emissionEndTimestamp,
 		} = inputs;
 
-		const currentTimestamp = dayjs().valueOf();
 		const lastRewardTimestamp =
 			this.stakedPosition.lastHarvestRewardsTimestamp;
 		const lockEndTimestamp = this.unlockTimestamp();
@@ -552,56 +551,44 @@ export class FarmsStakedPosition extends Caller {
 			(principalStakedAmount * rewardsAccumulatedPerShare) /
 			FixedUtils.fixedOneB;
 
-		const totalMultiplierRewards =
-			(this.stakedPosition.stakedAmountWithMultiplier *
-				rewardsAccumulatedPerShare) /
-			FixedUtils.fixedOneB;
+		// const totalMultiplierRewards =
+		// 	(this.stakedPosition.stakedAmountWithMultiplier *
+		// 		rewardsAccumulatedPerShare) /
+		// 	FixedUtils.fixedOneB;
+
+		const multiplierEndTimestamp = Math.min(
+			lockEndTimestamp,
+			emissionEndTimestamp
+		);
 
 		const multiplierRewards = (() => {
-			// If position is fully locked throughout the last harvest period
-			if (currentTimestamp <= lockEndTimestamp) {
-				return totalMultiplierRewards;
-			}
-			// If lock ended before or at the last harvest, fallback to previously calculated debt
-			if (lockEndTimestamp <= lastRewardTimestamp) {
+			if (lastRewardTimestamp <= multiplierEndTimestamp) {
+				return (
+					(rewardsAccumulatedPerShare *
+						this.stakedPosition.stakedAmountWithMultiplier) /
+					FixedUtils.fixedOneB
+				);
+			} else {
 				return multiplierRewardsDebt;
 			}
-			// If emission ended while still locked, or fully locked within emission window
-			if (emissionEndTimestamp <= lockEndTimestamp) {
-				return totalMultiplierRewards;
-			}
-			// Otherwise, partial locking scenario
-			const timeSpentLockedSinceLastHarvestMs =
-				lockEndTimestamp - lastRewardTimestamp;
-			const timeSinceLastHarvestMs =
-				currentTimestamp - lastRewardTimestamp;
-
-			const possibleMultiplierRewardsDebt =
-				(totalMultiplierRewards *
-					BigInt(Math.floor(timeSpentLockedSinceLastHarvestMs))) /
-				BigInt(Math.floor(timeSinceLastHarvestMs));
-
-			return possibleMultiplierRewardsDebt > multiplierRewardsDebt
-				? possibleMultiplierRewardsDebt
-				: multiplierRewardsDebt;
 		})();
 
 		return [baseRewards, multiplierRewards];
 	}
 
-	/**
-	 * Removes the lock multiplier from this position if the current time is beyond the lock duration,
-	 * reverting `lockMultiplier` to 1.0 (fixedOneB).
-	 */
-	private unlock = () => {
-		// ia. Remove position's `multiplier_staked_amount` from the pool.
-		// afterburner_vault::decrease_stake_with_multiplier(vault, self.multiplier_staked_amount);
-		this.stakedPosition.stakedAmountWithMultiplier = BigInt(0);
+	// /**
+	//  * Removes the lock multiplier from this position if the current time is beyond the lock duration,
+	//  * reverting `lockMultiplier` to 1.0 (fixedOneB).
+	//  */
+	// private unlock = () => {
+	// 	// ia. Remove position's `multiplier_staked_amount` from the pool.
+	// 	// afterburner_vault::decrease_stake_with_multiplier(vault, self.multiplier_staked_amount);
+	// 	this.stakedPosition.stakedAmountWithMultiplier = BigInt(0);
 
-		// ib. Reset position's lock parameters.
-		this.stakedPosition.lockDurationMs = 0;
-		this.stakedPosition.lockMultiplier = FixedUtils.fixedOneB;
-	};
+	// 	// ib. Reset position's lock parameters.
+	// 	this.stakedPosition.lockDurationMs = 0;
+	// 	this.stakedPosition.lockMultiplier = FixedUtils.fixedOneB;
+	// };
 
 	/**
 	 * Determines if this position is unlocked based on the lock end timestamp, the emission end timestamp,

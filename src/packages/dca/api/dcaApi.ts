@@ -7,11 +7,7 @@ import {
 } from "../../../types";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Helpers } from "../../../general/utils";
-import {
-	TransactionArgument,
-	TransactionBlock,
-} from "@mysten/sui.js/transactions";
-import { Transaction } from "@mysten/sui/transactions";
+import { Transaction, TransactionArgument } from "@mysten/sui/transactions";
 
 export class DcaApi {
 	// =========================================================================
@@ -65,7 +61,7 @@ export class DcaApi {
 	}
 
 	public createCloseOrderTx = (inputs: {
-		tx: Transaction | TransactionBlock;
+		tx: Transaction;
 		allocateCoinType: CoinType;
 		buyCoinType: CoinType;
 		orderId: ObjectId | TransactionArgument;
@@ -79,7 +75,9 @@ export class DcaApi {
 			),
 			typeArguments: [inputs.allocateCoinType, inputs.buyCoinType],
 			arguments: [
-				tx.object(inputs.orderId),
+				typeof inputs.orderId === "string"
+					? tx.object(inputs.orderId)
+					: inputs.orderId,
 				tx.object(this.addresses.objects.config),
 			],
 		});

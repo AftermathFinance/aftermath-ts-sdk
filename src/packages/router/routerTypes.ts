@@ -1,4 +1,3 @@
-import { TransactionArgument } from "@mysten/sui.js/transactions";
 import {
 	AnyObjectType,
 	Balance,
@@ -18,7 +17,6 @@ import {
 } from "../../general/types/generalTypes";
 import { CoinType, ServiceCoinData } from "../coin/coinTypes";
 import { TransactionObjectArgument } from "@mysten/sui/transactions";
-import { TransactionObjectArgument as TransactionObjectArgumentV0 } from "@mysten/sui.js/transactions";
 
 /**
  * A unique identifier, typically used to track items or route segments.
@@ -44,11 +42,13 @@ export type RouterProtocolName =
 	| "DoubleUpPump"
 	| "FlowX"
 	| "FlowXClmm"
+	| "FullSail"
 	| "HopFun"
 	| "Kriya"
 	| "KriyaClmm"
 	| "Magma"
 	| "Metastable"
+	| "Momentum"
 	| "MovePump"
 	| "Obric"
 	| "SuiSwap"
@@ -295,21 +295,6 @@ export type ApiRouterAddTransactionForCompleteTradeRouteBody =
 	};
 
 /**
- * **Legacy version** of the above. Uses older transaction format.
- */
-export type ApiRouterAddTransactionForCompleteTradeRouteV0Body =
-	ApiRouterTransactionForCompleteTradeRouteBody & {
-		/**
-		 * The already-serialized transaction (legacy format) to which the router instructions will be added.
-		 */
-		serializedTx: SerializedTransaction;
-		/**
-		 * Optional coin input ID if you are managing coin objects yourself (legacy version).
-		 */
-		coinInId?: TransactionObjectArgumentV0;
-	};
-
-/**
  * The response returned after adding a trade route to an existing transaction.
  */
 export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
@@ -321,20 +306,6 @@ export interface ApiRouterAddTransactionForCompleteTradeRouteResponse {
 	 * A reference to the output coin after the swap. May be undefined if not applicable.
 	 */
 	coinOutId: TransactionObjectArgument | undefined;
-}
-
-/**
- * **Legacy version** of the above. Uses older transaction format.
- */
-export interface ApiRouterAddTransactionForCompleteTradeRouteV0Response {
-	/**
-	 * The updated serialized transaction (legacy format).
-	 */
-	tx: SerializedTransaction;
-	/**
-	 * A reference to the output coin after the swap (legacy version). May be undefined if not applicable.
-	 */
-	coinOutId: TransactionObjectArgumentV0 | undefined;
 }
 
 /**

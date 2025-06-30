@@ -8,7 +8,6 @@ import { Balance, CoinType, ObjectId, SuiAddress } from "../../../types";
 import { Helpers } from "../../../general/utils/helpers";
 import { CoinStruct, PaginatedCoins } from "@mysten/sui/client";
 import { TransactionsApiHelpers } from "../../../general/apiHelpers/transactionsApiHelpers";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
 // import { ethers, Networkish } from "ethers";
 
 export class CoinApi {
@@ -23,7 +22,7 @@ export class CoinApi {
 	// =========================================================================
 
 	public fetchCoinWithAmountTx = async (inputs: {
-		tx: Transaction | TransactionBlock;
+		tx: Transaction;
 		walletAddress: SuiAddress;
 		coinType: CoinType;
 		coinAmount: Balance;
@@ -34,7 +33,7 @@ export class CoinApi {
 
 		tx.setSender(walletAddress);
 
-		const coinData = await this.fetchAllCoins(inputs);
+		const coinData = await this.fetchCoinsWithAtLeastAmount(inputs);
 		return CoinApi.coinWithAmountTx({
 			tx,
 			coinData,
@@ -58,9 +57,9 @@ export class CoinApi {
 
 		const allCoinsData = await Promise.all(
 			coinTypes.map(async (coinType, index) =>
-				this.fetchAllCoins({
+				this.fetchCoinsWithAtLeastAmount({
 					...inputs,
-					// coinAmount: coinAmounts[index],
+					coinAmount: coinAmounts[index],
 					coinType,
 				})
 			)
@@ -80,6 +79,50 @@ export class CoinApi {
 		}
 
 		return coinArgs;
+	};
+
+	public fetchCoinsWithAtLeastAmount = async (inputs: {
+		walletAddress: SuiAddress;
+		coinType: CoinType;
+		coinAmount: Balance;
+	}): Promise<CoinStruct[]> => {
+		let allCoinData: CoinStruct[] = [];
+		let cursor: string | undefined = undefined;
+		do {
+			const paginatedCoins: PaginatedCoins =
+				await this.Provider.provider.getCoins({
+					...inputs,
+					owner: inputs.walletAddress,
+					cursor,
+				});
+
+			const coinData = paginatedCoins.data;
+			allCoinData = [...allCoinData, ...coinData];
+
+			if (
+				paginatedCoins.data.length === 0 ||
+				!paginatedCoins.hasNextPage ||
+				!paginatedCoins.nextCursor
+			) {
+				allCoinData.sort((b, a) =>
+					Number(BigInt(a.balance) - BigInt(b.balance))
+				);
+
+				let coinDatas: CoinStruct[] = [];
+				let sum = BigInt(0);
+				for (const coinData of allCoinData) {
+					coinDatas.push(coinData);
+					sum += BigInt(coinData.balance);
+
+					if (sum >= inputs.coinAmount) return coinDatas;
+				}
+				throw new Error(
+					"wallet does not have coins of sufficient balance"
+				);
+			}
+
+			cursor = paginatedCoins.nextCursor;
+		} while (true);
 	};
 
 	// fetchCoinsUntilAmountReachedOrEnd
@@ -127,7 +170,7 @@ export class CoinApi {
 	// =========================================================================
 
 	private static coinWithAmountTx = (inputs: {
-		tx: Transaction | TransactionBlock;
+		tx: Transaction;
 		coinData: CoinStruct[];
 		coinAmount: Balance;
 		coinType: CoinType;

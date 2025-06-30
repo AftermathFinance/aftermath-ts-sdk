@@ -10,8 +10,6 @@ import {
 	ApiRouterPartialCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteBody,
 	ApiRouterAddTransactionForCompleteTradeRouteResponse,
-	ApiRouterAddTransactionForCompleteTradeRouteV0Body,
-	ApiRouterAddTransactionForCompleteTradeRouteV0Response,
 	ModuleName,
 	Slippage,
 	ApiIndexerEventsBody,
@@ -19,7 +17,6 @@ import {
 } from "../../types";
 import { Caller } from "../../general/utils/caller";
 import { Transaction } from "@mysten/sui/transactions";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
 
 /**
  * The `Router` class provides a collection of methods to interact with Aftermath's
@@ -249,33 +246,6 @@ export class Router extends Caller {
 	}
 
 	/**
-	 * **Legacy method** for generating a transaction to execute a complete trade route.
-	 * Uses an older version of transaction serialization.
-	 *
-	 * @param inputs - Similar to `getTransactionForCompleteTradeRoute` but serialized using the legacy method.
-	 * @returns A promise resolving to a `Uint8Array` representing the serialized transaction.
-	 *
-	 * @example
-	 * ```typescript
-	 * const route = await router.getCompleteTradeRouteGivenAmountIn({ ... });
-	 * const transactionBytesV0 = await router.getTransactionForCompleteTradeRouteV0({
-	 *   walletAddress: "0x<your_address>",
-	 *   completeRoute: route,
-	 *   slippage: 0.01
-	 * });
-	 * // Use this if your environment requires legacy transaction structure
-	 * ```
-	 */
-	public async getTransactionForCompleteTradeRouteV0(
-		inputs: ApiRouterTransactionForCompleteTradeRouteBody
-	) {
-		return this.fetchApiTransactionV0<ApiRouterTransactionForCompleteTradeRouteBody>(
-			"transactions/trade-v0",
-			inputs
-		);
-	}
-
-	/**
 	 * Adds a trade route to an existing transaction, allowing you to build complex
 	 * transactions containing multiple actions (swaps, transfers, etc.) in a single
 	 * atomic transaction.
@@ -324,58 +294,6 @@ export class Router extends Caller {
 		});
 		return {
 			tx: Transaction.from(newTx),
-			coinOutId,
-		};
-	}
-
-	/**
-	 * **Legacy method** for adding a trade route to an existing transaction.
-	 * Uses an older version of transaction serialization.
-	 *
-	 * @param inputs - Similar to `addTransactionForCompleteTradeRoute` but returns a `TransactionBlock`.
-	 * @returns An object containing:
-	 *  - `tx`: The updated `TransactionBlock`
-	 *  - `coinOutId`: A `TransactionObjectArgumentV0` referencing the output coin
-	 *
-	 * @example
-	 * ```typescript
-	 * // 1) Create a route
-	 * const route = await router.getCompleteTradeRouteGivenAmountIn({ ... });
-	 *
-	 * // 2) Initialize your transaction block
-	 * const txBlock = new TransactionBlock();
-	 *
-	 * // 3) Add router instructions (legacy)
-	 * const { tx: updatedTxBlock, coinOutId } =
-	 *   await router.addTransactionForCompleteTradeRouteV0({
-	 *     tx: txBlock,
-	 *     completeRoute: route,
-	 *     slippage: 0.01,
-	 *     walletAddress: "0x<your_address>"
-	 * });
-	 *
-	 * // 4) Continue building your transaction with the resulting coinOutId
-	 * updatedTxBlock.transferObjects([coinOutId!], "0x<your_address>");
-	 * ```
-	 */
-	public async addTransactionForCompleteTradeRouteV0(
-		inputs: Omit<
-			ApiRouterAddTransactionForCompleteTradeRouteV0Body,
-			"serializedTx"
-		> & {
-			tx: TransactionBlock;
-		}
-	) {
-		const { tx, ...otherInputs } = inputs;
-		const { tx: newTx, coinOutId } = await this.fetchApi<
-			ApiRouterAddTransactionForCompleteTradeRouteV0Response,
-			ApiRouterAddTransactionForCompleteTradeRouteV0Body
-		>("transactions/add-trade-v0", {
-			...otherInputs,
-			serializedTx: tx.serialize(),
-		});
-		return {
-			tx: TransactionBlock.from(newTx),
 			coinOutId,
 		};
 	}
