@@ -63,8 +63,8 @@ import {
 	ReducedOrderEventOnChain,
 	CreatedStopOrderTicketEventOnChain,
 	DeletedStopOrderTicketEventOnChain,
-	ReceivedCollateralEventOnChain,
-	TransferredDeallocatedCollateralEventOnChain,
+	// ReceivedCollateralEventOnChain,
+	// TransferredDeallocatedCollateralEventOnChain,
 	EditedStopOrderTicketExecutorEventOnChain,
 	// AddedStopOrderTicketCollateralEventOnChain,
 	// RemovedStopOrderTicketCollateralEventOnChain,
@@ -443,7 +443,6 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			ticketId: Helpers.addLeadingZeroesToType(fields.ticket_id),
-			objectId: Helpers.addLeadingZeroesToType(fields.obj_id),
 			accountId: BigInt(fields.account_id),
 			executors: fields.executors.map((executor) =>
 				Helpers.addLeadingZeroesToType(executor)
@@ -494,7 +493,7 @@ export class PerpetualsApiCasting {
 		const f = eventOnChain.parsedJson;
 		return {
 			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
-			executor: Helpers.addLeadingZeroesToType(f.executor),
+			stopOrderType: Number(f.stop_order_type),
 			accountId: BigInt(f.account_id),
 			subAccountId: f.subaccount_id
 				? Helpers.addLeadingZeroesToType(f.subaccount_id)
@@ -559,34 +558,34 @@ export class PerpetualsApiCasting {
 	// 	};
 	// };
 
-	public static transferredDeallocatedCollateralEventFromOnChain = (
-		eventOnChain: TransferredDeallocatedCollateralEventOnChain
-	): TransferredDeallocatedCollateralEvent => {
-		const f = eventOnChain.parsedJson;
-		return {
-			chId: Helpers.addLeadingZeroesToType(f.ch_id),
-			objectId: Helpers.addLeadingZeroesToType(f.obj_id),
-			accountId: BigInt(f.account_id),
-			collateral: BigInt(f.collateral),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
+	// public static transferredDeallocatedCollateralEventFromOnChain = (
+	// 	eventOnChain: TransferredDeallocatedCollateralEventOnChain
+	// ): TransferredDeallocatedCollateralEvent => {
+	// 	const f = eventOnChain.parsedJson;
+	// 	return {
+	// 		chId: Helpers.addLeadingZeroesToType(f.ch_id),
+	// 		objectId: Helpers.addLeadingZeroesToType(f.obj_id),
+	// 		accountId: BigInt(f.account_id),
+	// 		collateral: BigInt(f.collateral),
+	// 		timestamp: eventOnChain.timestampMs,
+	// 		txnDigest: eventOnChain.id.txDigest,
+	// 		type: eventOnChain.type,
+	// 	};
+	// };
 
-	public static receivedCollateralEventFromOnChain = (
-		eventOnChain: ReceivedCollateralEventOnChain
-	): ReceivedCollateralEvent => {
-		const f = eventOnChain.parsedJson;
-		return {
-			objectId: Helpers.addLeadingZeroesToType(f.obj_id),
-			accountId: BigInt(f.account_id),
-			collateral: BigInt(f.collateral),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
+	// public static receivedCollateralEventFromOnChain = (
+	// 	eventOnChain: ReceivedCollateralEventOnChain
+	// ): ReceivedCollateralEvent => {
+	// 	const f = eventOnChain.parsedJson;
+	// 	return {
+	// 		objectId: Helpers.addLeadingZeroesToType(f.obj_id),
+	// 		accountId: BigInt(f.account_id),
+	// 		collateral: BigInt(f.collateral),
+	// 		timestamp: eventOnChain.timestampMs,
+	// 		txnDigest: eventOnChain.id.txDigest,
+	// 		type: eventOnChain.type,
+	// 	};
+	// };
 
 	// =========================================================================
 	//  Twap

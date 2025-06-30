@@ -174,7 +174,6 @@ export type ReducedOrderEventOnChain = EventOnChain<{
 
 export type CreatedStopOrderTicketEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
-	obj_id: ObjectId;
 	account_id: BigIntAsString;
 	subaccount_id: BigIntAsString | undefined;
 	executors: SuiAddress[];
@@ -186,7 +185,6 @@ export type CreatedStopOrderTicketEventOnChain = EventOnChain<{
 export type ExecutedStopOrderTicketEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
 	account_id: BigIntAsString;
-	subaccount_id: ObjectId | undefined;
 	executor: SuiAddress;
 }>;
 
@@ -201,8 +199,8 @@ export type EditedStopOrderTicketDetailsEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
 	account_id: BigIntAsString;
 	subaccount_id: ObjectId | undefined;
+	stop_order_type: BigIntAsString;
 	encrypted_details: Byte[]; // vector<u8>
-	executor: SuiAddress;
 }>;
 
 export type EditedStopOrderTicketExecutorEventOnChain = EventOnChain<{
@@ -226,20 +224,20 @@ export type EditedStopOrderTicketExecutorEventOnChain = EventOnChain<{
 // 	collateral_to_remove: BigIntAsString;
 // }>;
 
-export type TransferredDeallocatedCollateralEventOnChain = EventOnChain<{
-	ch_id: ObjectId;
-	/// Can be the `Account` or `SubAccount` object id
-	obj_id: ObjectId;
-	account_id: BigIntAsString;
-	collateral: BigIntAsString;
-}>;
+// export type TransferredDeallocatedCollateralEventOnChain = EventOnChain<{
+// 	ch_id: ObjectId;
+// 	/// Can be the `Account` or `SubAccount` object id
+// 	obj_id: ObjectId;
+// 	account_id: BigIntAsString;
+// 	collateral: BigIntAsString;
+// }>;
 
-export type ReceivedCollateralEventOnChain = EventOnChain<{
-	/// Can be the `Account` or `SubAccount` object id
-	obj_id: ObjectId;
-	account_id: BigIntAsString;
-	collateral: BigIntAsString;
-}>;
+// export type ReceivedCollateralEventOnChain = EventOnChain<{
+// 	/// Can be the `Account` or `SubAccount` object id
+// 	obj_id: ObjectId;
+// 	account_id: BigIntAsString;
+// 	collateral: BigIntAsString;
+// }>;
 
 // =========================================================================
 //  Twap

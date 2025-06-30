@@ -612,7 +612,6 @@ export const isReducedOrderEvent = (
 
 export interface CreatedStopOrderTicketEvent extends Event {
 	ticketId: ObjectId;
-	objectId: ObjectId;
 	accountId: PerpetualsAccountId;
 	subAccountId?: ObjectId;
 	executors: SuiAddress[];
@@ -639,7 +638,7 @@ export interface EditedStopOrderTicketDetailsEvent extends Event {
 	accountId: PerpetualsAccountId;
 	subAccountId?: ObjectId;
 	encryptedDetails: Byte[];
-	executor: SuiAddress;
+	stopOrderType: PerpetualsStopOrderType;
 }
 
 export interface EditedStopOrderTicketExecutorEvent extends Event {

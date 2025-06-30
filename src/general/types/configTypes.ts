@@ -150,7 +150,7 @@ export interface ReferralVaultAddresses {
 
 export interface PerpetualsAddresses {
 	packages: {
-		perpetuals: SuiAddress;
+		// perpetuals: SuiAddress;
 		events: SuiAddress;
 	};
 	objects: {

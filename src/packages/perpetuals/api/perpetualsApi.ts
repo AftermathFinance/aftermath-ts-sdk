@@ -140,136 +140,130 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			executedStopOrderTicket: this.eventType("ExecutedStopOrderTicket"),
 		};
 		this.moveErrors = {
-			[this.addresses.packages.perpetuals]: {
-				["ANY"]: {
-					// ClearingHouse
-
-					/// Cannot deposit/withdraw zero coins to/from the account's collateral.
-					0: "Deposit Or Withdraw Amount Zero",
-					/// Orderbook size or price are invalid values
-					1: "Invalid Size Or Price",
-					/// Index price returned from oracle is 0 or invalid value
-					2: "Bad Index Price",
-					/// Order value in USD is too low
-					4: "Order Usd Value Too Low",
-					/// Passed a vector of invalid order ids to perform force cancellation during liquidation
-					5: "Invalid Force Cancel Ids",
-					/// Liquidate must be the first operation of the session, if performed.
-					6: "Liquidate Not First Operation",
-					/// Passed a vector of invalid order ids to cancel
-					7: "Invalid Cancel Order Ids",
-					/// Ticket has already passed `expire_timestamp` and can only be cancelled
-					8: "Stop Order Ticket Expired",
-					/// Index price is not at correct value to satisfy stop order conditions
-					9: "Stop Order Conditions Violated",
-					/// Index price is not at correct value to satisfy stop order conditions
-					10: "Wrong Order Details",
-					/// Invalid base price feed storage for the clearing house
-					11: "Invalid Base Price Feed Storage",
-					/// Same liquidator and liqee account ids
-					12: "Self Liquidation",
-					/// User trying to access the subaccount is not the one specified by parent
-					13: "Invalid Sub Account User",
-					/// The parent `Account` trying to delete the subaccount is not the correct one.
-					14: "Wrong Parent For Sub Account",
-					/// Raised when trying to delete a subaccount still containing collateral.
-					15: "Sub Account Contains Collateral",
-					/// Raised when trying to call a function with the wrong package's version
-					16: "Wrong Version",
-					/// Raised when trying to have a session composed by only `start_session` and `end_session`
-					17: "Empty Session",
-					/// Market already registered in the registry
-					18: "Market Already Registered",
-					/// Collateral is not registered in the registry
-					19: "Collateral Is Not Registered",
-					/// Market is not registered in the registry
-					20: "Market Is Not Registered",
-					/// Invalid collateral price feed storage for the clearing house
-					21: "Invalid Collateral Price Feed Storage",
-					/// Fees accrued are negative
-					22: "Negative Fees Accrued",
-					/// Reduce-only conditions are not respected for stop order execution
-					23: "Not Reduce Only Stop Order",
-					/// Stop order gas cost provided is not enough
-					24: "Not Enough Gas For Stop Order",
-					/// Stop order collateral to allocate provided is not enough
-					25: "Not Enough Collateral To Allocate For Stop Order",
-					/// Invalid account trying to perform an action on a StopOrderTicket
-					26: "Invalid Account For Stop Order",
-					/// Invalid executor trying to execute the StopOrderTicket
-					27: "Invalid Executor For Stop Order",
-					/// Raised when the market's max open interest is surpassed as a result of the session's actions
-					28: "Max Open Interest Surpassed",
-					/// Raised when a position would get a base amount higher than the allowed percentage of open interest
-					29: "Max Open Interest Position Percent Surpassed",
-
-					// Market
-
-					/// While creating ordered map with invalid parameters, or changing them improperly for an existent map.
-					1000: "Invalid Market Parameters",
-					/// Tried to call `update_funding` before enough time has passed since the last update.
-					1001: "Updating Funding Too Early",
-					/// Margin-ratio update proposal already exists for market
-					1002: "Proposal Already Exists",
-					/// Margin-ratio update proposal cannot be committed too early
-					1003: "Premature Proposal",
-					/// Margin-ratio update proposal delay is outside the valid range
-					1004: "Invalid Proposal Delay",
-					/// Margin-ratio update proposal does not exist for market
-					1005: "Proposal Does Not Exist",
-					/// Exchange has no available fees to withdraw
-					1006: "No Fees Accrued",
-					/// Tried to withdraw more insurance funds than the allowed amount
-					1007: "Insufficient Insurance Surplus",
-					/// Cannot create a market for which a price feed does not exist
-					1008: "No Price Feed For Market",
-					/// Cannot delete a proposal that already matured. It can only be committed.
-					1009: "Proposal Already Matured",
-
-					// Position
-
-					/// Tried placing a new pending order when the position already has the maximum allowed number of pending orders.
-					2000: "Max Pending Orders Exceeded",
-					/// Used for checking both liqee and liqor positions during liquidation
-					2001: "Position Below IMR",
-					///When leaving liqee's position with a margin ratio above tolerance,
-					/// meaning that liqor has overbought position
-					2002: "Position Above Tolerance",
-					/// An operation brought an account below initial margin requirements.
-					2003: "Initial Margin Requirement Violated",
-					/// Position is above MMR, so can't be liquidated.
-					2004: "Position Above MMR",
-					/// Cannot realize bad debt via means other than calling 'liquidate'.
-					2005: "Position Bad Debt",
-					/// Cannot withdraw more than the account's free collateral.
-					2006: "Insufficient Free Collateral",
-					/// Cannot have more than 1 position in a market.
-					2007: "Position Already Exists",
-					/// Cannot compute deallocate amount for a target MR < IMR.
-					2008: "Deallocate Target MR Too Low",
-
-					// Orderbook & OrderedMap
-
-					/// While creating ordered map with wrong parameters.
-					3000: "Invalid Map Parameters",
-					/// While searching for a key, but it doesn't exist.
-					3001: "Key Not Exist",
-					/// While inserting already existing key.
-					3002: "Key Already Exists",
-					/// When attempting to destroy a non-empty map
-					3003: "Destroy Not Empty",
-					/// Invalid user tries to modify an order
-					3004: "Invalid User For Order",
-					/// Orderbook flag requirements violated
-					3005: "Flag Requirements Violated",
-					/// Minimum size matched not reached
-					3006: "Not Enough Liquidity",
-					/// When trying to change a map configuration, but the map has length less than 4
-					3007: "Map Too Small",
-					/// When taker matches its own order
-					3008: "Self Trading",
-				},
-			},
+			// TODO: add support for this back in some way ?
+			// [this.addresses.packages.perpetuals]: {
+			// 	["ANY"]: {
+			// 		// ClearingHouse
+			// 		/// Cannot deposit/withdraw zero coins to/from the account's collateral.
+			// 		0: "Deposit Or Withdraw Amount Zero",
+			// 		/// Orderbook size or price are invalid values
+			// 		1: "Invalid Size Or Price",
+			// 		/// Index price returned from oracle is 0 or invalid value
+			// 		2: "Bad Index Price",
+			// 		/// Order value in USD is too low
+			// 		4: "Order Usd Value Too Low",
+			// 		/// Passed a vector of invalid order ids to perform force cancellation during liquidation
+			// 		5: "Invalid Force Cancel Ids",
+			// 		/// Liquidate must be the first operation of the session, if performed.
+			// 		6: "Liquidate Not First Operation",
+			// 		/// Passed a vector of invalid order ids to cancel
+			// 		7: "Invalid Cancel Order Ids",
+			// 		/// Ticket has already passed `expire_timestamp` and can only be cancelled
+			// 		8: "Stop Order Ticket Expired",
+			// 		/// Index price is not at correct value to satisfy stop order conditions
+			// 		9: "Stop Order Conditions Violated",
+			// 		/// Index price is not at correct value to satisfy stop order conditions
+			// 		10: "Wrong Order Details",
+			// 		/// Invalid base price feed storage for the clearing house
+			// 		11: "Invalid Base Price Feed Storage",
+			// 		/// Same liquidator and liqee account ids
+			// 		12: "Self Liquidation",
+			// 		/// User trying to access the subaccount is not the one specified by parent
+			// 		13: "Invalid Sub Account User",
+			// 		/// The parent `Account` trying to delete the subaccount is not the correct one.
+			// 		14: "Wrong Parent For Sub Account",
+			// 		/// Raised when trying to delete a subaccount still containing collateral.
+			// 		15: "Sub Account Contains Collateral",
+			// 		/// Raised when trying to call a function with the wrong package's version
+			// 		16: "Wrong Version",
+			// 		/// Raised when trying to have a session composed by only `start_session` and `end_session`
+			// 		17: "Empty Session",
+			// 		/// Market already registered in the registry
+			// 		18: "Market Already Registered",
+			// 		/// Collateral is not registered in the registry
+			// 		19: "Collateral Is Not Registered",
+			// 		/// Market is not registered in the registry
+			// 		20: "Market Is Not Registered",
+			// 		/// Invalid collateral price feed storage for the clearing house
+			// 		21: "Invalid Collateral Price Feed Storage",
+			// 		/// Fees accrued are negative
+			// 		22: "Negative Fees Accrued",
+			// 		/// Reduce-only conditions are not respected for stop order execution
+			// 		23: "Not Reduce Only Stop Order",
+			// 		/// Stop order gas cost provided is not enough
+			// 		24: "Not Enough Gas For Stop Order",
+			// 		/// Stop order collateral to allocate provided is not enough
+			// 		25: "Not Enough Collateral To Allocate For Stop Order",
+			// 		/// Invalid account trying to perform an action on a StopOrderTicket
+			// 		26: "Invalid Account For Stop Order",
+			// 		/// Invalid executor trying to execute the StopOrderTicket
+			// 		27: "Invalid Executor For Stop Order",
+			// 		/// Raised when the market's max open interest is surpassed as a result of the session's actions
+			// 		28: "Max Open Interest Surpassed",
+			// 		/// Raised when a position would get a base amount higher than the allowed percentage of open interest
+			// 		29: "Max Open Interest Position Percent Surpassed",
+			// 		// Market
+			// 		/// While creating ordered map with invalid parameters, or changing them improperly for an existent map.
+			// 		1000: "Invalid Market Parameters",
+			// 		/// Tried to call `update_funding` before enough time has passed since the last update.
+			// 		1001: "Updating Funding Too Early",
+			// 		/// Margin-ratio update proposal already exists for market
+			// 		1002: "Proposal Already Exists",
+			// 		/// Margin-ratio update proposal cannot be committed too early
+			// 		1003: "Premature Proposal",
+			// 		/// Margin-ratio update proposal delay is outside the valid range
+			// 		1004: "Invalid Proposal Delay",
+			// 		/// Margin-ratio update proposal does not exist for market
+			// 		1005: "Proposal Does Not Exist",
+			// 		/// Exchange has no available fees to withdraw
+			// 		1006: "No Fees Accrued",
+			// 		/// Tried to withdraw more insurance funds than the allowed amount
+			// 		1007: "Insufficient Insurance Surplus",
+			// 		/// Cannot create a market for which a price feed does not exist
+			// 		1008: "No Price Feed For Market",
+			// 		/// Cannot delete a proposal that already matured. It can only be committed.
+			// 		1009: "Proposal Already Matured",
+			// 		// Position
+			// 		/// Tried placing a new pending order when the position already has the maximum allowed number of pending orders.
+			// 		2000: "Max Pending Orders Exceeded",
+			// 		/// Used for checking both liqee and liqor positions during liquidation
+			// 		2001: "Position Below IMR",
+			// 		///When leaving liqee's position with a margin ratio above tolerance,
+			// 		/// meaning that liqor has overbought position
+			// 		2002: "Position Above Tolerance",
+			// 		/// An operation brought an account below initial margin requirements.
+			// 		2003: "Initial Margin Requirement Violated",
+			// 		/// Position is above MMR, so can't be liquidated.
+			// 		2004: "Position Above MMR",
+			// 		/// Cannot realize bad debt via means other than calling 'liquidate'.
+			// 		2005: "Position Bad Debt",
+			// 		/// Cannot withdraw more than the account's free collateral.
+			// 		2006: "Insufficient Free Collateral",
+			// 		/// Cannot have more than 1 position in a market.
+			// 		2007: "Position Already Exists",
+			// 		/// Cannot compute deallocate amount for a target MR < IMR.
+			// 		2008: "Deallocate Target MR Too Low",
+			// 		// Orderbook & OrderedMap
+			// 		/// While creating ordered map with wrong parameters.
+			// 		3000: "Invalid Map Parameters",
+			// 		/// While searching for a key, but it doesn't exist.
+			// 		3001: "Key Not Exist",
+			// 		/// While inserting already existing key.
+			// 		3002: "Key Already Exists",
+			// 		/// When attempting to destroy a non-empty map
+			// 		3003: "Destroy Not Empty",
+			// 		/// Invalid user tries to modify an order
+			// 		3004: "Invalid User For Order",
+			// 		/// Orderbook flag requirements violated
+			// 		3005: "Flag Requirements Violated",
+			// 		/// Minimum size matched not reached
+			// 		3006: "Not Enough Liquidity",
+			// 		/// When trying to change a map configuration, but the map has length less than 4
+			// 		3007: "Map Too Small",
+			// 		/// When taker matches its own order
+			// 		3008: "Self Trading",
+			// 	},
+			// },
 		};
 	}
 
