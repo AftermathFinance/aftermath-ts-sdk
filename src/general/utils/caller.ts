@@ -14,6 +14,7 @@ import { Helpers } from "./helpers";
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
+	protected readonly apiEndpoint: Url;
 
 	// =========================================================================
 	//  Constructor
@@ -27,6 +28,8 @@ export class Caller {
 			this.config.network === undefined
 				? undefined
 				: Caller.apiBaseUrlForNetwork(this.config.network);
+
+		this.apiEndpoint = this.config.network === "INTERNAL" ? "af-fe" : "api";
 	}
 
 	// =========================================================================
@@ -55,10 +58,8 @@ export class Caller {
 		if (network === "TESTNET") return "https://testnet.aftermath.finance";
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
 		if (network === "LOCAL") return "http://localhost:3000";
-
-		const safeUrl =
-			network.slice(-1) === "/" ? network.slice(0, -1) : network;
-		return safeUrl;
+		if (network === "INTERNAL") return "http://";
+		return network;
 	}
 
 	private urlForApiCall = (url: string): Url => {
@@ -66,7 +67,14 @@ export class Caller {
 			throw new Error("no apiBaseUrl: unable to fetch data");
 
 		// TODO: handle url prefixing and api calls based on network differently
-		return `${this.apiBaseUrl}/api/${
+
+		// Note: this slash removal is need to avoid double slashes in the url
+		const safeUrl =
+			this.apiBaseUrl.slice(-1) === "/"
+				? this.apiBaseUrl.slice(0, -1)
+				: this.apiBaseUrl;
+
+		return `${safeUrl}/${this.apiEndpoint}/${
 			this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;
 	};
