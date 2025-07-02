@@ -14,6 +14,7 @@ import { Helpers } from "./helpers";
 
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
+	protected readonly apiEndpoint: Url;
 
 	// =========================================================================
 	//  Constructor
@@ -27,6 +28,8 @@ export class Caller {
 			this.config.network === undefined
 				? undefined
 				: Caller.apiBaseUrlForNetwork(this.config.network);
+
+		this.apiEndpoint = this.config.network === "INTERNAL" ? "af-fe" : "api";
 	}
 
 	// =========================================================================
@@ -55,6 +58,7 @@ export class Caller {
 		if (network === "TESTNET") return "https://testnet.aftermath.finance";
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
 		if (network === "LOCAL") return "http://localhost:3000";
+		if (network === "INTERNAL") return "http:/";
 
 		const safeUrl =
 			network.slice(-1) === "/" ? network.slice(0, -1) : network;
@@ -64,9 +68,8 @@ export class Caller {
 	private urlForApiCall = (url: string): Url => {
 		if (this.apiBaseUrl === undefined)
 			throw new Error("no apiBaseUrl: unable to fetch data");
-
 		// TODO: handle url prefixing and api calls based on network differently
-		return `${this.apiBaseUrl}/api/${
+		return `${this.apiBaseUrl}/${this.apiEndpoint}/${
 			this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;
 	};

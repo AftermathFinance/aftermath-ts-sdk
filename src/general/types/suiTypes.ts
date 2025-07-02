@@ -7,4 +7,5 @@ export type SuiNetwork =
 	| "TESTNET"
 	| "LOCAL"
 	| "MAINNET"
+	| "INTERNAL"
 	| (string & {});
