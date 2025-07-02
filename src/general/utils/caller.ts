@@ -58,18 +58,23 @@ export class Caller {
 		if (network === "TESTNET") return "https://testnet.aftermath.finance";
 		if (network === "DEVNET") return "https://devnet.aftermath.finance";
 		if (network === "LOCAL") return "http://localhost:3000";
-		if (network === "INTERNAL") return "http:/";
-
-		const safeUrl =
-			network.slice(-1) === "/" ? network.slice(0, -1) : network;
-		return safeUrl;
+		if (network === "INTERNAL") return "http://";
+		return network;
 	}
 
 	private urlForApiCall = (url: string): Url => {
 		if (this.apiBaseUrl === undefined)
 			throw new Error("no apiBaseUrl: unable to fetch data");
+
 		// TODO: handle url prefixing and api calls based on network differently
-		return `${this.apiBaseUrl}/${this.apiEndpoint}/${
+
+		// Note: this slash removal is need to avoid double slashes in the url
+		const safeUrl =
+			this.apiBaseUrl.slice(-1) === "/"
+				? this.apiBaseUrl.slice(0, -1)
+				: this.apiBaseUrl;
+
+		return `${safeUrl}/${this.apiEndpoint}/${
 			this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;
 	};
