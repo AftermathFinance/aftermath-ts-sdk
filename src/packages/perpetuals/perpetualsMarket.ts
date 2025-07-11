@@ -31,11 +31,13 @@ import {
 	ApiDataWithCursorBody,
 	PerpetualsTradeHistoryWithCursor,
 	CallerConfig,
-	ApiPerpetualsPreviewOrderBody,
 	Percentage,
-	ApiPerpetualsPreviewOrderResponse,
-	SdkPerpetualsPlaceOrderPreviewInputs,
+	ApiPerpetualsPreviewPlaceOrderResponse,
 	PerpetualsMarket24hrStats,
+	ApiPerpetualsPreviewPlaceLimitOrderBody,
+	SdkPerpetualsPlaceLimitOrderPreviewInputs,
+	ApiPerpetualsPreviewPlaceMarketOrderBody,
+	SdkPerpetualsPlaceMarketOrderPreviewInputs,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -139,8 +141,8 @@ export class PerpetualsMarket extends Caller {
 		return Number(maxSize) * this.lotSize() * indexPrice;
 	};
 
-	public async getPlaceOrderPreview(
-		inputs: SdkPerpetualsPlaceOrderPreviewInputs,
+	public async getPlaceMarketOrderPreview(
+		inputs: SdkPerpetualsPlaceMarketOrderPreviewInputs,
 		abortSignal?: AbortSignal
 	): Promise<
 		| {
@@ -159,10 +161,43 @@ export class PerpetualsMarket extends Caller {
 		  }
 	> {
 		return this.fetchApi<
-			ApiPerpetualsPreviewOrderResponse,
-			ApiPerpetualsPreviewOrderBody
+			ApiPerpetualsPreviewPlaceOrderResponse,
+			ApiPerpetualsPreviewPlaceMarketOrderBody
 		>(
-			"previews/place-order",
+			"previews/place-market-order",
+			{
+				...inputs,
+				collateralCoinType: this.collateralCoinType,
+				accountObjectId: undefined,
+			},
+			abortSignal
+		);
+	}
+
+	public async getPlaceLimitOrderPreview(
+		inputs: SdkPerpetualsPlaceLimitOrderPreviewInputs,
+		abortSignal?: AbortSignal
+	): Promise<
+		| {
+				error: string;
+		  }
+		| {
+				positionAfterOrder: PerpetualsPosition;
+				priceSlippage: number;
+				percentSlippage: Percentage;
+				filledSize: number;
+				filledSizeUsd: number;
+				postedSize: number;
+				postedSizeUsd: number;
+				collateralChange: number;
+				executionPrice: number;
+		  }
+	> {
+		return this.fetchApi<
+			ApiPerpetualsPreviewPlaceOrderResponse,
+			ApiPerpetualsPreviewPlaceLimitOrderBody
+		>(
+			"previews/place-limit-order",
 			{
 				...inputs,
 				collateralCoinType: this.collateralCoinType,

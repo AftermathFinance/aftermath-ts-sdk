@@ -395,14 +395,4 @@ export class Perpetuals extends Caller {
 				denominator
 		);
 	}
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	private useProvider = () => {
-		const provider = this.Provider?.Perpetuals();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
-	};
 }

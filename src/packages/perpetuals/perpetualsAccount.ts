@@ -3,8 +3,7 @@ import {
 	ApiPerpetualsDepositCollateralBody,
 	ApiPerpetualsLimitOrderBody,
 	ApiPerpetualsMarketOrderBody,
-	ApiPerpetualsPreviewOrderBody,
-	ApiPerpetualsPreviewOrderResponse,
+	ApiPerpetualsPreviewPlaceOrderResponse,
 	ApiPerpetualsWithdrawCollateralBody,
 	Balance,
 	PerpetualsAccountCap,
@@ -54,7 +53,6 @@ import {
 	ApiPerpetualsSetLeverageTxBody,
 	TransactionDigest,
 	CallerConfig,
-	SdkPerpetualsPlaceOrderPreviewInputs,
 	SdkPerpetualsCancelOrdersPreviewInputs,
 	ApiPerpetualsAccountStopOrderDatasBody,
 	PerpetualsStopOrderData,
@@ -70,6 +68,10 @@ import {
 	ApiPerpetualsAccountMarginHistoryBody,
 	PerpetualsAccountMarginData,
 	ApiPerpetualsWithdrawCollateralResponse,
+	SdkPerpetualsPlaceMarketOrderPreviewInputs,
+	SdkPerpetualsPlaceLimitOrderPreviewInputs,
+	ApiPerpetualsPreviewPlaceMarketOrderBody,
+	ApiPerpetualsPreviewPlaceLimitOrderBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -561,8 +563,41 @@ export class PerpetualsAccount extends Caller {
 		};
 	}
 
-	public async getPlaceOrderPreview(
-		inputs: SdkPerpetualsPlaceOrderPreviewInputs,
+	// public async getPlaceOrderPreview(
+	// 	inputs: SdkPerpetualsPlaceOrderPreviewInputs,
+	// 	abortSignal?: AbortSignal
+	// ): Promise<
+	// 	| {
+	// 			error: string;
+	// 	  }
+	// 	| {
+	// 			positionAfterOrder: PerpetualsPosition;
+	// 			priceSlippage: number;
+	// 			percentSlippage: Percentage;
+	// 			filledSize: number;
+	// 			filledSizeUsd: number;
+	// 			postedSize: number;
+	// 			postedSizeUsd: number;
+	// 			collateralChange: number;
+	// 			executionPrice: number;
+	// 	  }
+	// > {
+	// 	return this.fetchApi<
+	// 		ApiPerpetualsPreviewOrderResponse,
+	// 		ApiPerpetualsPreviewOrderBody
+	// 	>(
+	// 		"previews/place-order",
+	// 		{
+	// 			...inputs,
+	// 			accountObjectId: this.accountCap.objectId,
+	// 			collateralCoinType: this.accountCap.collateralCoinType,
+	// 		},
+	// 		abortSignal
+	// 	);
+	// }
+
+	public async getPlaceMarketOrderPreview(
+		inputs: SdkPerpetualsPlaceMarketOrderPreviewInputs,
 		abortSignal?: AbortSignal
 	): Promise<
 		| {
@@ -581,10 +616,43 @@ export class PerpetualsAccount extends Caller {
 		  }
 	> {
 		return this.fetchApi<
-			ApiPerpetualsPreviewOrderResponse,
-			ApiPerpetualsPreviewOrderBody
+			ApiPerpetualsPreviewPlaceOrderResponse,
+			ApiPerpetualsPreviewPlaceMarketOrderBody
 		>(
-			"previews/place-order",
+			"previews/place-market-order",
+			{
+				...inputs,
+				accountObjectId: this.accountCap.objectId,
+				collateralCoinType: this.accountCap.collateralCoinType,
+			},
+			abortSignal
+		);
+	}
+
+	public async getPlaceLimitOrderPreview(
+		inputs: SdkPerpetualsPlaceLimitOrderPreviewInputs,
+		abortSignal?: AbortSignal
+	): Promise<
+		| {
+				error: string;
+		  }
+		| {
+				positionAfterOrder: PerpetualsPosition;
+				priceSlippage: number;
+				percentSlippage: Percentage;
+				filledSize: number;
+				filledSizeUsd: number;
+				postedSize: number;
+				postedSizeUsd: number;
+				collateralChange: number;
+				executionPrice: number;
+		  }
+	> {
+		return this.fetchApi<
+			ApiPerpetualsPreviewPlaceOrderResponse,
+			ApiPerpetualsPreviewPlaceLimitOrderBody
+		>(
+			"previews/place-limit-order",
 			{
 				...inputs,
 				accountObjectId: this.accountCap.objectId,
@@ -1330,16 +1398,7 @@ export class PerpetualsAccount extends Caller {
 					? PerpetualsOrderSide.Ask
 					: PerpetualsOrderSide.Bid,
 			// hasPosition: this.positionForMarketId({ marketId }) !== undefined,
+			reduceOnly: true,
 		};
-	};
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	private useProvider = () => {
-		const provider = this.Provider?.Perpetuals();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
 	};
 }

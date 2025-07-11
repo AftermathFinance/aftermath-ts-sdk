@@ -764,26 +764,62 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 		collateralCoinType: CoinType;
 	};
 
-export type ApiPerpetualsPreviewOrderBody = (
-	| Omit<
-			ApiPerpetualsLimitOrderBody,
-			| "collateralChange"
-			| "walletAddress"
-			| "hasPosition"
-			| "txKind"
-			| "accountObjectId"
-			| "slTp"
-	  >
-	| Omit<
-			ApiPerpetualsMarketOrderBody,
-			| "collateralChange"
-			| "walletAddress"
-			| "hasPosition"
-			| "txKind"
-			| "accountObjectId"
-			| "slTp"
-	  >
-) & {
+// export type ApiPerpetualsPreviewOrderBody = (
+// 	| Omit<
+// 			ApiPerpetualsLimitOrderBody,
+// 			| "collateralChange"
+// 			| "walletAddress"
+// 			| "hasPosition"
+// 			| "txKind"
+// 			| "accountObjectId"
+// 			| "slTp"
+// 	  >
+// 	| Omit<
+// 			ApiPerpetualsMarketOrderBody,
+// 			| "collateralChange"
+// 			| "walletAddress"
+// 			| "hasPosition"
+// 			| "txKind"
+// 			| "accountObjectId"
+// 			| "slTp"
+// 	  >
+// ) & {
+// 	// TODO: remove eventually ?
+// 	accountObjectId: ObjectId | undefined;
+// 	collateralCoinType: CoinType;
+// 	lotSize: number;
+// 	tickSize: number;
+// 	leverage?: number;
+// 	// NOTE: do we need this ?
+// 	// isClose?: boolean;
+// };
+
+export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
+	ApiPerpetualsMarketOrderBody,
+	| "collateralChange"
+	| "walletAddress"
+	| "hasPosition"
+	| "txKind"
+	| "accountObjectId"
+	| "slTp"
+> & {
+	// TODO: remove eventually ?
+	accountObjectId: ObjectId | undefined;
+	collateralCoinType: CoinType;
+	leverage?: number;
+	// NOTE: do we need this ?
+	// isClose?: boolean;
+};
+
+export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
+	ApiPerpetualsLimitOrderBody,
+	| "collateralChange"
+	| "walletAddress"
+	| "hasPosition"
+	| "txKind"
+	| "accountObjectId"
+	| "slTp"
+> & {
 	// TODO: remove eventually ?
 	accountObjectId: ObjectId | undefined;
 	collateralCoinType: CoinType;
@@ -841,7 +877,7 @@ export type ApiPerpetualsPreviewSetLeverageResponse =
 			collateralChange: number;
 	  };
 
-export type ApiPerpetualsPreviewOrderResponse =
+export type ApiPerpetualsPreviewPlaceOrderResponse =
 	| {
 			error: string;
 	  }
@@ -1077,6 +1113,7 @@ export type ApiPerpetualsMarketOrderBody = {
 	size: bigint;
 	collateralChange: number;
 	hasPosition: boolean;
+	reduceOnly: boolean;
 	leverage?: number;
 	slTp?: {
 		walletAddress: SuiAddress;
@@ -1109,6 +1146,8 @@ export type ApiPerpetualsLimitOrderBody = {
 	orderType: PerpetualsOrderType;
 	collateralChange: number;
 	hasPosition: boolean;
+	reduceOnly: boolean;
+	expiryTimestamp?: bigint;
 	leverage?: number;
 	slTp?: {
 		walletAddress: SuiAddress;
@@ -1245,8 +1284,18 @@ export type SdkPerpetualsPlaceLimitOrderInputs = Omit<
 	// );
 };
 
-export type SdkPerpetualsPlaceOrderPreviewInputs = Omit<
-	ApiPerpetualsPreviewOrderBody,
+// export type SdkPerpetualsPlaceOrderPreviewInputs = Omit<
+// 	ApiPerpetualsPreviewOrderBody,
+// 	"collateralCoinType" | "accountObjectId"
+// >;
+
+export type SdkPerpetualsPlaceMarketOrderPreviewInputs = Omit<
+	ApiPerpetualsPreviewPlaceMarketOrderBody,
+	"collateralCoinType" | "accountObjectId"
+>;
+
+export type SdkPerpetualsPlaceLimitOrderPreviewInputs = Omit<
+	ApiPerpetualsPreviewPlaceLimitOrderBody,
 	"collateralCoinType" | "accountObjectId"
 >;
 
