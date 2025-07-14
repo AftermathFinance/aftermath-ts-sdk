@@ -8,7 +8,6 @@ import {
 	WithdrewCollateralEvent,
 	CreatedAccountEvent,
 	CanceledOrderEvent,
-	PostedOrderEvent,
 	PerpetualsOrderSide,
 	FilledTakerOrderEvent,
 	FilledMakerOrdersEvent,
@@ -18,7 +17,7 @@ import {
 	UpdatedPremiumTwapEvent,
 	LiquidatedEvent,
 	PerpetualsMarketData,
-	PostedOrderReceiptEvent,
+	PostedOrderEvent,
 	AllocatedCollateralEvent,
 	DeallocatedCollateralEvent,
 	PerpetualsMarketId,
@@ -55,7 +54,7 @@ import {
 	SettledFundingEventOnChain,
 	UpdatedPremiumTwapEventOnChain,
 	UpdatedSpreadTwapEventOnChain,
-	PostedOrderReceiptEventOnChain,
+	PostedOrderEventOnChain,
 	AllocatedCollateralEventOnChain,
 	DeallocatedCollateralEventOnChain,
 	UpdatedFundingEventOnChain,
@@ -358,6 +357,7 @@ export class PerpetualsApiCasting {
 				size: BigInt(fields.filled_size),
 				dropped: BigInt(fields.remaining_size) === BigInt(0),
 				sizeRemaining: BigInt(fields.remaining_size),
+				canceledSize: BigInt(fields.canceled_size),
 			})),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -402,9 +402,9 @@ export class PerpetualsApiCasting {
 		};
 	};
 
-	public static postedOrderReceiptEventFromOnChain = (
-		eventOnChain: PostedOrderReceiptEventOnChain
-	): PostedOrderReceiptEvent => {
+	public static postedOrderEventFromOnChain = (
+		eventOnChain: PostedOrderEventOnChain
+	): PostedOrderEvent => {
 		const fields = eventOnChain.parsedJson;
 		return {
 			accountId: BigInt(fields.account_id),
@@ -412,6 +412,11 @@ export class PerpetualsApiCasting {
 			size: BigInt(fields.order_size),
 			orderId: BigInt(fields.order_id),
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
+			reduceOnly: fields.reduce_only,
+			expiryTimestamp:
+				fields.expiration_timestamp_ms === undefined
+					? undefined
+					: BigInt(fields.expiration_timestamp_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,

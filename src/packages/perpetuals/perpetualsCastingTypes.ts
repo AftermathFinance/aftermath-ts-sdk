@@ -140,6 +140,7 @@ export type FilledMakerOrdersEventOnChain = EventOnChain<{
 		order_id: BigIntAsString;
 		pnl: IFixedAsString;
 		remaining_size: BigIntAsString;
+		canceled_size: BigIntAsString;
 	}[];
 }>;
 
@@ -154,11 +155,13 @@ export type FilledTakerOrderEventOnChain = EventOnChain<{
 	quote_asset_delta_bid: IFixedAsString;
 }>;
 
-export type PostedOrderReceiptEventOnChain = EventOnChain<{
+export type PostedOrderEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	account_id: BigIntAsString;
 	order_id: BigIntAsString;
 	order_size: BigIntAsString;
+	reduce_only: boolean;
+	expiration_timestamp_ms: BigIntAsString | undefined;
 }>;
 
 export type ReducedOrderEventOnChain = EventOnChain<{

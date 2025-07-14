@@ -487,12 +487,6 @@ export interface PerpetualsTradeHistoryWithCursor {
 	nextCursor: Timestamp | undefined;
 }
 
-export interface OrderbookPostReceiptEvent extends Event {
-	accountId: PerpetualsAccountId;
-	orderId: PerpetualsOrderId;
-	size: bigint;
-}
-
 export interface OrderbookFillReceiptEvent extends Event {
 	accountId: PerpetualsAccountId;
 	orderId: PerpetualsOrderId;
@@ -511,10 +505,11 @@ export interface CanceledOrderEvent extends Event {
 export interface PostedOrderEvent extends Event {
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
-	side: PerpetualsOrderSide;
+	orderId: PerpetualsOrderId;
 	size: bigint;
-	asksQuantity: IFixed;
-	bidsQuantity: IFixed;
+	// TODO: change to `isReduceOnly` ?
+	reduceOnly: boolean;
+	expiryTimestamp?: bigint;
 }
 
 export interface FilledMakerOrdersEvent extends Event {
@@ -533,6 +528,7 @@ export interface FilledMakerOrderEventFields {
 	dropped: boolean;
 	pnlUsd: IFixed;
 	feesUsd: IFixed;
+	canceledSize: bigint;
 }
 
 export interface FilledTakerOrderEvent extends Event {
@@ -548,14 +544,14 @@ export interface FilledTakerOrderEvent extends Event {
 
 export type PerpetualsOrderEvent =
 	| CanceledOrderEvent
-	// | PostedOrderEvent
-	| PostedOrderReceiptEvent
+	| PostedOrderEvent
+	| PostedOrderEvent
 	| FilledMakerOrdersEvent
 	| FilledTakerOrderEvent
 	| LiquidatedEvent
 	| ReducedOrderEvent;
 
-export interface PostedOrderReceiptEvent extends Event {
+export interface PostedOrderEvent extends Event {
 	accountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	orderId: PerpetualsOrderId;
@@ -580,12 +576,6 @@ export const isCanceledOrderEvent = (
 
 export const isPostedOrderEvent = (event: Event): event is PostedOrderEvent => {
 	return event.type.toLowerCase().endsWith("::postedorder");
-};
-
-export const isPostedOrderReceiptEvent = (
-	event: Event
-): event is PostedOrderReceiptEvent => {
-	return event.type.toLowerCase().endsWith("::orderbookpostreceipt");
 };
 
 export const isFilledMakerOrdersEvent = (
