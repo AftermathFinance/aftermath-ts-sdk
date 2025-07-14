@@ -31,27 +31,27 @@ export type UpdatedMarketVersionEventOnChain = EventOnChain<{
 
 export type WithdrewCollateralEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
-	// subaccount_id: ObjectId | undefined;
+	// subaccount_id: ObjectId | null;
 	collateral: BigIntAsString;
 }>;
 
 export type DepositedCollateralEventOnChain = EventOnChain<{
 	account_id: BigIntAsString;
-	// subaccount_id: ObjectId | undefined;
+	// subaccount_id: ObjectId | null;
 	collateral: BigIntAsString;
 }>;
 
 export type AllocatedCollateralEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	account_id: BigIntAsString;
-	// subaccount_id: ObjectId | undefined;
+	// subaccount_id: ObjectId | null;
 	collateral: BigIntAsString;
 }>;
 
 export type DeallocatedCollateralEventOnChain = EventOnChain<{
 	ch_id: ObjectId;
 	account_id: BigIntAsString;
-	// subaccount_id: ObjectId | undefined;
+	// subaccount_id: ObjectId | null;
 	collateral: BigIntAsString;
 }>;
 
@@ -161,7 +161,7 @@ export type PostedOrderEventOnChain = EventOnChain<{
 	order_id: BigIntAsString;
 	order_size: BigIntAsString;
 	reduce_only: boolean;
-	expiration_timestamp_ms: BigIntAsString | undefined;
+	expiration_timestamp_ms: BigIntAsString | null;
 }>;
 
 export type ReducedOrderEventOnChain = EventOnChain<{
@@ -178,7 +178,7 @@ export type ReducedOrderEventOnChain = EventOnChain<{
 export type CreatedStopOrderTicketEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
 	account_id: BigIntAsString;
-	subaccount_id: BigIntAsString | undefined;
+	subaccount_id: BigIntAsString | null;
 	executors: SuiAddress[];
 	gas: BigIntAsString;
 	stop_order_type: BigIntAsString;
@@ -194,14 +194,14 @@ export type ExecutedStopOrderTicketEventOnChain = EventOnChain<{
 export type DeletedStopOrderTicketEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
 	account_id: BigIntAsString;
-	subaccount_id: ObjectId | undefined;
+	subaccount_id: ObjectId | null;
 	executor: SuiAddress;
 }>;
 
 export type EditedStopOrderTicketDetailsEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
 	account_id: BigIntAsString;
-	subaccount_id: ObjectId | undefined;
+	subaccount_id: ObjectId | null;
 	stop_order_type: BigIntAsString;
 	encrypted_details: Byte[]; // vector<u8>
 }>;
@@ -209,21 +209,21 @@ export type EditedStopOrderTicketDetailsEventOnChain = EventOnChain<{
 export type EditedStopOrderTicketExecutorEventOnChain = EventOnChain<{
 	ticket_id: ObjectId;
 	account_id: BigIntAsString;
-	subaccount_id: ObjectId | undefined;
+	subaccount_id: ObjectId | null;
 	executors: SuiAddress[];
 }>;
 
 // export type AddedStopOrderTicketCollateralEventOnChain = EventOnChain<{
 // 	ticket_id: ObjectId;
 // 	account_id: BigIntAsString;
-// 	subaccount_id: ObjectId | undefined;
+// 	subaccount_id: ObjectId | null;
 // 	collateral_to_allocate: BigIntAsString;
 // }>;
 
 // export type RemovedStopOrderTicketCollateralEventOnChain = EventOnChain<{
 // 	ticket_id: ObjectId;
 // 	account_id: BigIntAsString;
-// 	subaccount_id: ObjectId | undefined;
+// 	subaccount_id: ObjectId | null;
 // 	collateral_to_remove: BigIntAsString;
 // }>;
 

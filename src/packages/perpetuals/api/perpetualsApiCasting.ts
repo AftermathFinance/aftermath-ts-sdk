@@ -413,10 +413,9 @@ export class PerpetualsApiCasting {
 			orderId: BigInt(fields.order_id),
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
 			reduceOnly: fields.reduce_only,
-			expiryTimestamp:
-				fields.expiration_timestamp_ms === undefined
-					? undefined
-					: BigInt(fields.expiration_timestamp_ms),
+			expiryTimestamp: !fields.expiration_timestamp_ms
+				? undefined
+				: BigInt(fields.expiration_timestamp_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
