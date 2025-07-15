@@ -63,6 +63,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 		canceledOrder: AnyObjectType;
 		postedOrder: AnyObjectType;
 		filledMakerOrders: AnyObjectType;
+		filledMakerOrder: AnyObjectType;
 		filledTakerOrder: AnyObjectType;
 		updatedPremiumTwap: AnyObjectType;
 		updatedSpreadTwap: AnyObjectType;
@@ -111,6 +112,7 @@ export class PerpetualsApi implements MoveErrorsInterface {
 			// Order
 			canceledOrder: this.eventType("CanceledOrder"),
 			filledMakerOrders: this.eventType("FilledMakerOrders"),
+			filledMakerOrder: this.eventType("FilledMakerOrder"),
 			filledTakerOrder: this.eventType("FilledTakerOrder"),
 			reducedOrder: this.eventType("ReducedOrder"),
 			postedOrder: this.eventType("PostedOrder"),
