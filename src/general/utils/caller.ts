@@ -119,7 +119,7 @@ export class Caller {
 
 		const response = await Caller.fetchResponseToType<Output>(
 			uncastResponse,
-			options?.disableBigIntJsonParsing!!
+			!!options?.disableBigIntJsonParsing
 		);
 		return response;
 	}

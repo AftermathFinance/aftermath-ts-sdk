@@ -1299,6 +1299,13 @@ export class PerpetualsAccount extends Caller {
 
 	public collateral(): number {
 		return (
+			Helpers.sum(
+				this.account.positions.map((position) =>
+					position.baseAssetAmount === BigInt(0)
+						? Casting.IFixed.numberFromIFixed(position.collateral)
+						: 0
+				)
+			) +
 			Casting.IFixed.numberFromIFixed(this.accountCap.collateral) +
 			Casting.IFixed.numberFromIFixed(
 				this.accountCap.subAccount.collateral
