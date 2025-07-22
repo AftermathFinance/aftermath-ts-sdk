@@ -257,6 +257,7 @@ export interface PerpetualsAccountData {
 
 export interface PerpetualsAccountObject {
 	positions: PerpetualsPosition[];
+	availableCollateral: number;
 }
 
 // =========================================================================
