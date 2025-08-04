@@ -147,7 +147,7 @@ export type ServiceCoinData =
  * older transaction output indexing structures.
  */
 export type ServiceCoinDataV2 =
-	| "gas"
+	| "Gas"
 	| { Input: number }
 	| { Result: number }
 	| { NestedResult: [number, number] };
