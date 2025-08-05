@@ -56,7 +56,6 @@ import {
 	SdkPerpetualsCancelOrdersPreviewInputs,
 	ApiPerpetualsAccountStopOrderDatasBody,
 	PerpetualsStopOrderData,
-	PerpetualsSlTpOrderDetails,
 	SerializedTransaction,
 	ApiPerpetualsCancelStopOrdersBody,
 	ApiPerpetualsPlaceStopOrdersBody,
@@ -1178,21 +1177,15 @@ export class PerpetualsAccount extends Caller {
 		let slTpOrders: PerpetualsStopOrderData[] = [];
 
 		for (const { marketId } of this.account.positions) {
-			const {
-				fullSlOrder,
-				fullTpOrder,
-				partialSlOrders,
-				partialTpOrders,
-			} = this.slTpStopOrderDatasForMarketId({
-				marketId,
-				stopOrderDatas,
-			});
+			const { fullSlTpOrder, partialSlTpOrders } =
+				this.slTpStopOrderDatasForMarketId({
+					marketId,
+					stopOrderDatas,
+				});
 			slTpOrders = [
 				...slTpOrders,
-				...(fullSlOrder ? [fullSlOrder] : []),
-				...(fullTpOrder ? [fullTpOrder] : []),
-				...(partialSlOrders ?? []),
-				...(partialTpOrders ?? []),
+				...(fullSlTpOrder ? [fullSlTpOrder] : []),
+				...(partialSlTpOrders ?? []),
 			];
 		}
 		return slTpOrders.length <= 0 ? undefined : slTpOrders;
@@ -1207,16 +1200,14 @@ export class PerpetualsAccount extends Caller {
 		const position = this.positionForMarketId({ marketId });
 		if (!position) return undefined;
 
-		const { fullSlOrder, fullTpOrder, partialSlOrders, partialTpOrders } =
+		const { fullSlTpOrder, partialSlTpOrders } =
 			this.slTpStopOrderDatasForMarketId(inputs);
 
 		const stopOrders = stopOrderDatas.filter(
 			(stopOrder) =>
 				![
-					...(fullSlOrder ? [fullSlOrder] : []),
-					...(fullTpOrder ? [fullTpOrder] : []),
-					...(partialSlOrders ?? []),
-					...(partialTpOrders ?? []),
+					...(fullSlTpOrder ? [fullSlTpOrder] : []),
+					...(partialSlTpOrders ?? []),
 				]
 					.map((slTpOrder) => JSON.stringify(slTpOrder))
 					.includes(JSON.stringify(stopOrder))
@@ -1228,72 +1219,48 @@ export class PerpetualsAccount extends Caller {
 		marketId: PerpetualsMarketId;
 		stopOrderDatas: PerpetualsStopOrderData[];
 	}): {
-		fullSlOrder: PerpetualsStopOrderData | undefined;
-		fullTpOrder: PerpetualsStopOrderData | undefined;
-		partialSlOrders: PerpetualsStopOrderData[] | undefined;
-		partialTpOrders: PerpetualsStopOrderData[] | undefined;
+		fullSlTpOrder: PerpetualsStopOrderData | undefined;
+		partialSlTpOrders: PerpetualsStopOrderData[] | undefined;
 	} {
 		const { marketId, stopOrderDatas } = inputs;
 
 		const position = this.positionForMarketId({ marketId });
 		if (!position || position.baseAssetAmount === BigInt(0)) {
 			return {
-				fullSlOrder: undefined,
-				fullTpOrder: undefined,
-				partialSlOrders: undefined,
-				partialTpOrders: undefined,
+				fullSlTpOrder: undefined,
+				partialSlTpOrders: undefined,
 			};
 		}
 
 		const side = !position ? undefined : Perpetuals.positionSide(position);
 
 		// TODO: clean this up
-		const fullSlOrder: PerpetualsStopOrderData | undefined =
+		const fullSlTpOrder: PerpetualsStopOrderData | undefined =
 			stopOrderDatas.find(
 				(order) =>
 					order.marketId === marketId &&
 					order.slTp &&
 					order.side !== side &&
-					order.slTp.isStopLoss &&
-					order.size >= Casting.i64MaxBigInt
-			);
-		const fullTpOrder: PerpetualsStopOrderData | undefined =
-			stopOrderDatas.find(
-				(order) =>
-					order.marketId === marketId &&
-					order.slTp &&
-					order.side !== side &&
-					!order.slTp.isStopLoss &&
+					(order.slTp.stopLossIndexPrice ||
+						order.slTp.takeProfitIndexPrice) &&
 					order.size >= Casting.i64MaxBigInt
 			);
 
-		const partialSlOrders: PerpetualsStopOrderData[] =
+		const partialSlTpOrders: PerpetualsStopOrderData[] =
 			stopOrderDatas.filter(
 				(order) =>
 					order.marketId === marketId &&
 					order.slTp &&
 					order.side !== side &&
-					order.slTp.isStopLoss &&
-					order.size < Casting.i64MaxBigInt
-			);
-
-		const partialTpOrders: PerpetualsStopOrderData[] =
-			stopOrderDatas.filter(
-				(order) =>
-					order.marketId === marketId &&
-					order.slTp &&
-					order.side !== side &&
-					!order.slTp.isStopLoss &&
+					(order.slTp.stopLossIndexPrice ||
+						order.slTp.takeProfitIndexPrice) &&
 					order.size < Casting.i64MaxBigInt
 			);
 
 		return {
-			fullSlOrder,
-			fullTpOrder,
-			partialSlOrders:
-				partialSlOrders.length <= 0 ? undefined : partialSlOrders,
-			partialTpOrders:
-				partialTpOrders.length <= 0 ? undefined : partialTpOrders,
+			fullSlTpOrder,
+			partialSlTpOrders:
+				partialSlTpOrders.length <= 0 ? undefined : partialSlTpOrders,
 		};
 	}
 

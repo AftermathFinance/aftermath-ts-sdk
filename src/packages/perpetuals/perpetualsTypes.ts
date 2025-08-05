@@ -222,7 +222,6 @@ export interface PerpetualsOrderData {
 
 export interface PerpetualsStopOrderData {
 	objectId: ObjectId;
-	stopIndexPrice: number;
 	marketId: PerpetualsMarketId;
 	size: bigint;
 	side: PerpetualsOrderSide;
@@ -232,10 +231,12 @@ export interface PerpetualsStopOrderData {
 		orderType: PerpetualsOrderType;
 	};
 	slTp?: {
-		isStopLoss: boolean;
-		forPositionSide: PerpetualsOrderSide;
+		stopLossIndexPrice?: number;
+		takeProfitIndexPrice?: number;
+		// forPositionSide: PerpetualsOrderSide;
 	};
 	nonSlTp?: {
+		stopIndexPrice: number;
 		triggerIfGeStopIndexPrice: boolean;
 		reduceOnly: boolean;
 	};
@@ -1016,22 +1017,6 @@ export interface ApiPerpetualsDeallocateCollateralBody {
 	txKind?: SerializedTransaction;
 }
 
-export interface PerpetualsSlTpOrderDetails {
-	// expiryTimestamp?: bigint;
-	stopIndexPrice: number;
-	// triggerIfGeStopIndexPrice: boolean;
-	// side: PerpetualsOrderSide;
-	size?: bigint;
-	// reduceOnly: boolean;
-	// TODO: add back once ready on be
-	// collateralToAllocate: Balance;
-	// leverage?: number;
-	// limitOrder?: {
-	// 	price: PerpetualsOrderPrice;
-	// 	orderType: PerpetualsOrderType;
-	// };
-}
-
 export interface SdkPerpetualsPlaceStopOrdersInputs {
 	stopOrders: Omit<PerpetualsStopOrderData, "objectId">[];
 	tx?: Transaction;
@@ -1050,44 +1035,49 @@ export interface ApiPerpetualsPlaceStopOrdersBody {
 
 export type SdkPerpetualsPlaceSlTpOrdersInputs = {
 	marketId: PerpetualsMarketId;
+	size?: bigint;
+	stopLossIndexPrice?: number;
+	takeProfitIndexPrice?: number;
 	tx?: Transaction;
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
-} & (
-	| {
-			stopLoss: PerpetualsSlTpOrderDetails;
-			takeProfit: PerpetualsSlTpOrderDetails;
-	  }
-	| {
-			stopLoss: PerpetualsSlTpOrderDetails;
-	  }
-	| {
-			takeProfit: PerpetualsSlTpOrderDetails;
-	  }
-);
+};
+// & (
+// 	| {
+// 			stopLossIndexPrice: number;
+// 			takeProfitIndexPrice: number;
+// 	  }
+// 	| {
+// 			stopLossIndexPrice: number;
+// 	  }
+// 	| {
+// 			takeProfitIndexPrice: number;
+// 	  }
+// );
 
 export type ApiPerpetualsPlaceSlTpOrdersBody = {
 	marketId: PerpetualsMarketId;
 	accountObjectId: ObjectId;
 	walletAddress: SuiAddress;
+	positionSide: PerpetualsOrderSide;
+	size?: bigint;
+	stopLossIndexPrice?: number;
+	takeProfitIndexPrice?: number;
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
-	positionSide: PerpetualsOrderSide;
-	stopLoss?: PerpetualsSlTpOrderDetails;
-	takeProfit?: PerpetualsSlTpOrderDetails;
 	leverage?: number;
 	txKind?: SerializedTransaction;
 };
 // & (
 // 	| {
-// 			stopLoss: PerpetualsSlTpOrderDetails;
-// 			takeProfit: PerpetualsSlTpOrderDetails;
+// 			stopLossIndexPrice: number;
+// 			takeProfitIndexPrice: number;
 // 	  }
 // 	| {
-// 			stopLoss: PerpetualsSlTpOrderDetails;
+// 			stopLossIndexPrice: number;
 // 	  }
 // 	| {
-// 			takeProfit: PerpetualsSlTpOrderDetails;
+// 			takeProfitIndexPrice: number;
 // 	  }
 // );
 
@@ -1110,19 +1100,20 @@ export type ApiPerpetualsMarketOrderBody = {
 		walletAddress: SuiAddress;
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
-		stopLoss?: PerpetualsSlTpOrderDetails;
-		takeProfit?: PerpetualsSlTpOrderDetails;
+		size?: bigint;
+		stopLossIndexPrice?: number;
+		takeProfitIndexPrice?: number;
 	};
 	// & (
 	// 	| {
-	// 			stopLoss: PerpetualsSlTpOrderDetails;
-	// 			takeProfit: PerpetualsSlTpOrderDetails;
+	// 			stopLossIndexPrice: number;
+	// 			takeProfitIndexPrice: number;
 	// 	  }
 	// 	| {
-	// 			stopLoss: PerpetualsSlTpOrderDetails;
+	// 			stopLossIndexPrice: number;
 	// 	  }
 	// 	| {
-	// 			takeProfit: PerpetualsSlTpOrderDetails;
+	// 			takeProfitIndexPrice: number;
 	// 	  }
 	// );
 	txKind?: SerializedTransaction;
@@ -1144,19 +1135,20 @@ export type ApiPerpetualsLimitOrderBody = {
 		walletAddress: SuiAddress;
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
-		stopLoss?: PerpetualsSlTpOrderDetails;
-		takeProfit?: PerpetualsSlTpOrderDetails;
+		size?: bigint;
+		stopLossIndexPrice?: number;
+		takeProfitIndexPrice?: number;
 	};
 	// & (
 	// 	| {
-	// 			stopLoss: PerpetualsSlTpOrderDetails;
-	// 			takeProfit: PerpetualsSlTpOrderDetails;
+	// 			stopLossIndexPrice: number;
+	// 			takeProfitIndexPrice: number;
 	// 	  }
 	// 	| {
-	// 			stopLoss: PerpetualsSlTpOrderDetails;
+	// 			stopLossIndexPrice: number;
 	// 	  }
 	// 	| {
-	// 			takeProfit: PerpetualsSlTpOrderDetails;
+	// 			takeProfitIndexPrice: number;
 	// 	  }
 	// );
 	txKind?: SerializedTransaction;
@@ -1233,19 +1225,20 @@ export type SdkPerpetualsPlaceMarketOrderInputs = Omit<
 	slTp?: {
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
-		stopLoss?: PerpetualsSlTpOrderDetails;
-		takeProfit?: PerpetualsSlTpOrderDetails;
+		size?: bigint;
+		stopLossIndexPrice?: number;
+		takeProfitIndexPrice?: number;
 	};
-	// } & (
+	// & (
 	// 	| {
-	// 			stopLoss: PerpetualsSlTpOrderDetails;
-	// 			takeProfit: PerpetualsSlTpOrderDetails;
+	// 			stopLossIndexPrice: number;
+	// 			takeProfitIndexPrice: number;
 	// 	  }
 	// 	| {
-	// 			stopLoss: PerpetualsSlTpOrderDetails;
+	// 			stopLossIndexPrice: number;
 	// 	  }
 	// 	| {
-	// 			takeProfit: PerpetualsSlTpOrderDetails;
+	// 			takeProfitIndexPrice: number;
 	// 	  }
 	// );
 };
@@ -1258,19 +1251,20 @@ export type SdkPerpetualsPlaceLimitOrderInputs = Omit<
 	slTp?: {
 		gasCoinArg?: TransactionObjectArgument;
 		isSponsoredTx?: boolean;
-		stopLoss?: PerpetualsSlTpOrderDetails;
-		takeProfit?: PerpetualsSlTpOrderDetails;
+		size?: bigint;
+		stopLossIndexPrice?: number;
+		takeProfitIndexPrice?: number;
 	};
-	// } & (
+	// & (
 	// 	| {
-	// 			stopLoss: PerpetualsSlTpOrderDetails;
-	// 			takeProfit: PerpetualsSlTpOrderDetails;
+	// 			stopLossIndexPrice: number;
+	// 			takeProfitIndexPrice: number;
 	// 	  }
 	// 	| {
-	// 			stopLoss: PerpetualsSlTpOrderDetails;
+	// 			stopLossIndexPrice: number;
 	// 	  }
 	// 	| {
-	// 			takeProfit: PerpetualsSlTpOrderDetails;
+	// 			takeProfitIndexPrice: number;
 	// 	  }
 	// );
 };
