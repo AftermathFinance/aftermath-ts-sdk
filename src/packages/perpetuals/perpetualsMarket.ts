@@ -123,7 +123,7 @@ export class PerpetualsMarket extends Caller {
 		accountObjectId: ObjectId;
 		indexPrice: number;
 		side: PerpetualsOrderSide;
-		leverage: number;
+		leverage?: number;
 		price?: PerpetualsOrderPrice;
 	}): Promise<number> => {
 		const { side, price, accountObjectId, indexPrice, leverage } = inputs;
