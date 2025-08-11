@@ -1650,6 +1650,86 @@ export class FarmsApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * Creates a Move call (V1) to **remove undistributed reward coins** from a staking pool.
+	 * Only callable by the pool **owner** (validated via `ownerCapId`). This does not claw back
+	 * rewards already accrued/claimed by stakers—only reduces the remaining reward balance
+	 * for the specified `rewardCoinType`.
+	 *
+	 * @param inputs Transaction assembly parameters
+	 * @param inputs.tx Transaction instance to append the command to
+	 * @param inputs.ownerCapId OwnerCap object ID authorizing the removal
+	 * @param inputs.stakingPoolId The staking pool (vault) object ID
+	 * @param inputs.rewardAmount Amount to remove (base units, encoded as u64)
+	 * @param inputs.stakeCoinType Stake coin type argument for the vault module
+	 * @param inputs.rewardCoinType Reward coin type to be removed
+	 * @returns The transaction command added to `tx`
+	 */
+	public removeStakingPoolRewardTxV1 = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		rewardAmount: Balance;
+		stakeCoinType: CoinType;
+		rewardCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaults,
+				FarmsApi.constants.moduleNames.vaultV1,
+				"remove_reward"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.pure.u64(inputs.rewardAmount),
+			],
+		});
+	};
+
+	/**
+	 * Creates a Move call (V2) to **remove undistributed reward coins** from a staking pool.
+	 * Only callable by the pool **owner** (validated via `ownerCapId`). Includes the protocol
+	 * `version` object as required by V2 modules.
+	 *
+	 * @param inputs Transaction assembly parameters
+	 * @param inputs.tx Transaction instance to append the command to
+	 * @param inputs.ownerCapId OwnerCap object ID authorizing the removal
+	 * @param inputs.stakingPoolId The staking pool (vault) object ID
+	 * @param inputs.rewardAmount Amount to remove (base units, encoded as u64)
+	 * @param inputs.stakeCoinType Stake coin type argument for the vault module
+	 * @param inputs.rewardCoinType Reward coin type to be removed
+	 * @returns The transaction command added to `tx`
+	 */
+	public removeStakingPoolRewardTxV2 = (inputs: {
+		tx: Transaction;
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		rewardAmount: Balance;
+		stakeCoinType: CoinType;
+		rewardCoinType: CoinType;
+	}) => {
+		const { tx } = inputs;
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				this.addresses.packages.vaultsV2,
+				FarmsApi.constants.moduleNames.vaultV2,
+				"remove_reward"
+			),
+			typeArguments: [inputs.stakeCoinType, inputs.rewardCoinType],
+			arguments: [
+				tx.object(inputs.ownerCapId), // OwnerCap
+				tx.object(inputs.stakingPoolId), // AfterburnerVault
+				tx.object(this.addresses.objects.version), // Version
+				tx.pure.u64(inputs.rewardAmount),
+			],
+		});
+	};
+
 	// =========================================================================
 	//  Staking Pool Inspection Transaction Commands
 	// =========================================================================
@@ -2451,6 +2531,72 @@ export class FarmsApi implements MoveErrorsInterface {
 		Helpers.transactions.createBuildTxFunc(
 			this.setStakingPoolMinStakeAmountTxV2
 		);
+
+	/**
+	 * Builds a transaction for **removing undistributed reward coins** from a staking pool (V1).
+	 * Requires the pool **OwnerCap**. The removal is specific to a `rewardCoinType`.
+	 *
+	 * @param parameters Inputs accepted by `removeStakingPoolRewardTxV1`
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildRemoveStakingPoolRewardTxV1 = (inputs: {
+		rewards: {
+			rewardCoinType: CoinType;
+			rewardAmount: Balance;
+		}[];
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+		walletAddress: SuiAddress;
+	}) => {
+		const { walletAddress } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		for (const reward of inputs.rewards) {
+			this.removeStakingPoolRewardTxV1({
+				...inputs,
+				...reward,
+				tx,
+			});
+		}
+
+		return tx;
+	};
+
+	/**
+	 * Builds a transaction for **removing undistributed reward coins** from a staking pool (V2).
+	 * Requires the pool **OwnerCap** and includes the on-chain **version object**.
+	 *
+	 * @param parameters Inputs accepted by `removeStakingPoolRewardTxV2`
+	 * @returns Complete transaction ready for signing and execution
+	 */
+	public buildRemoveStakingPoolRewardTxV2 = (inputs: {
+		rewards: {
+			rewardCoinType: CoinType;
+			rewardAmount: Balance;
+		}[];
+		ownerCapId: ObjectId;
+		stakingPoolId: ObjectId;
+		stakeCoinType: CoinType;
+		walletAddress: SuiAddress;
+	}) => {
+		const { walletAddress } = inputs;
+
+		const tx = new Transaction();
+		tx.setSender(walletAddress);
+
+		for (const reward of inputs.rewards) {
+			this.removeStakingPoolRewardTxV2({
+				...inputs,
+				...reward,
+				tx,
+			});
+		}
+
+		return tx;
+	};
 
 	/**
 	 * @deprecated use buildGrantOneTimeAdminCapTxV2 instead
