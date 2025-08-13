@@ -100,6 +100,7 @@ export interface PoolsAddresses {
 export interface DaoFeePoolsAddresses {
 	packages: {
 		amm: SuiAddress;
+		events: SuiAddress
 	};
 	objects: {
 		version: ObjectId;
