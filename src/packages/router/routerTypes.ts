@@ -58,7 +58,8 @@ export type RouterProtocolName =
 	| "SuiAi"
 	// | "AftermathLsd"
 	| "Bluefin"
-	| "TurbosFun";
+	| "TurbosFun"
+	| "BlastFun";
 
 /**
  * Represents a complete trade route object. Includes all relevant information
