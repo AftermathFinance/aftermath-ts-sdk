@@ -28,6 +28,7 @@ import {
 	ObjectId,
 	ApiPerpetualsMarkets24hrStatsResponse,
 	ApiPerpetualsAccountCapsBody,
+	PerpetualsVaultObject,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -38,6 +39,7 @@ import { PerpetualsOrderUtils } from "./utils";
 import { AftermathApi } from "../../general/providers";
 import { Coin } from "../coin";
 import { Transaction } from "@mysten/sui/transactions";
+import { PerpetualsVault } from "./perpetualsVault";
 
 export class Perpetuals extends Caller {
 	// =========================================================================
@@ -112,8 +114,41 @@ export class Perpetuals extends Caller {
 		});
 		return marketDatas.map(
 			(marketData) =>
-				// TODO: make orderbook as input
+				// TODO: make orderbook as input ?
 				new PerpetualsMarket(marketData.market, this.config)
+		);
+	}
+
+	public async getAllVaults(): Promise<PerpetualsVault[]> {
+		const vaultObjects = await this.fetchApi<PerpetualsVaultObject[], {}>(
+			"all-vaults",
+			{}
+		);
+		return vaultObjects.map(
+			(vaultObject) => new PerpetualsVault(vaultObject, this.config)
+		);
+	}
+
+	public async getVault(inputs: {
+		marketId: ObjectId;
+	}): Promise<PerpetualsVault> {
+		const vaults = await this.getVaults({
+			vaultIds: [inputs.marketId],
+		});
+		return vaults[0];
+	}
+
+	public async getVaults(inputs: {
+		vaultIds: ObjectId[];
+	}): Promise<PerpetualsVault[]> {
+		const vaultObjects = await this.fetchApi<
+			PerpetualsVaultObject[],
+			{
+				vaultIds: ObjectId[];
+			}
+		>("vaults", inputs);
+		return vaultObjects.map(
+			(vaultObject) => new PerpetualsVault(vaultObject, this.config)
 		);
 	}
 

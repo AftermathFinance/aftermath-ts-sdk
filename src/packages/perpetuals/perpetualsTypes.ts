@@ -261,6 +261,50 @@ export interface PerpetualsAccountObject {
 	availableCollateral: number;
 }
 
+export interface PerpetualsVaultObject {
+	/// Unique identifier for distinct network identification.
+	objectId: ObjectId;
+	/// Contract version number for controlled upgrades.
+	version: bigint;
+	/// Supply of LP coins from a `TreasuryCap` for liquidity integrity.
+	lpSupply: Balance;
+	/// Total balance of underlying Coin (`C`), deposited by users.
+	collateral: Balance;
+	/// IDs of `ClearingHouse` where `Vault` has positions.
+	marketIds: PerpetualsMarketId[];
+	/// A linked table that keeps track of pending withdrawal requests made by users.
+	withdrawQueue: PerpetualsVaultWithdrawRequest[];
+	/// Vault parameters
+	parameters: {
+		/// Lock-in duration for engaged assets in milliseconds.
+		lockPeriodMs: bigint;
+		/// Fee rate for vault's owner, collected from user's profits when they withdraw
+		ownerFeePercentage: number;
+		/// Delay period to wait for eventual force withdrawing
+		forceWithdrawDelayMs: bigint;
+		/// Price feed storage id idetifying the oracle price for `C`
+		collateralPriceFeedStorageId: ObjectId;
+		/// Scaling factor to apply to `C` to convert a balance to ifixed.
+		/// Used to calculate user's minimum deposit value in usd
+		scalingFactor: number;
+		/// The maximum number of distinct `ClearingHouse`.
+		maxMarketsInVault: bigint;
+		/// The maximum number of pending orders allowed for a single position in the `Vault`.
+		maxPendingOrdersPerPosition: bigint;
+	};
+}
+
+export interface PerpetualsVaultWithdrawRequest {
+	/// The address of the user that created the withdraw request
+	userAddress: SuiAddress;
+	/// The amount of the shares requested for withdrawal.
+	lpAmountOut: Balance;
+	/// Timestamp of request's creation
+	requestTimestamp: Timestamp;
+	/// The minimum amount of the balance expected as output for this withdrawal
+	minLpAmountOut: Balance;
+}
+
 // =========================================================================
 //  Events
 // =========================================================================
@@ -1212,6 +1256,60 @@ export interface PerpetualsMarket24hrStats {
 }
 
 export type ApiPerpetualsMarkets24hrStatsResponse = PerpetualsMarket24hrStats[];
+
+// =========================================================================
+//  Vaults
+// =========================================================================
+
+export interface ApiPerpetualsVaultProcessForceWithdrawTxBody {
+	vaultId: ObjectId;
+	sizesToClose: Record<PerpetualsMarketId, Balance>;
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsVaultProcessWithdrawRequestsTxBody {
+	vaultId: ObjectId;
+	userAddresses: SuiAddress[];
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody {
+	vaultId: ObjectId;
+	forceWithdrawDelayMs: bigint;
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsVaultUpdateLockPeriodTxBody {
+	vaultId: ObjectId;
+	lockPeriodMs: bigint;
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody {
+	vaultId: ObjectId;
+	ownerFeePercentage: number;
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsVaultWithdrawOwnerFeesTxBody {
+	vaultId: ObjectId;
+	withdrawAmount: Balance;
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsVaultWithdrawOwnerFeesTxResponse {
+	txKind: SerializedTransaction;
+	coinOutArg: TransactionObjectArgument | undefined;
+}
+
+export interface ApiPerpetualsVaultAllWithdrawRequestsBody {
+	vaultId: ObjectId;
+}
+
+export interface ApiPerpetualsVaultWithdrawRequestsBody {
+	walletAddress: SuiAddress;
+	vaultIds: ObjectId[] | undefined;
+}
 
 // =========================================================================
 //  SDK

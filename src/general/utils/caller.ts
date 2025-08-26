@@ -126,7 +126,7 @@ export class Caller {
 
 	protected async fetchApiTransaction<BodyType = undefined>(
 		url: Url,
-		body?: BodyType & { walletAddress: SuiAddress },
+		body?: BodyType & { walletAddress?: SuiAddress },
 		signal?: AbortSignal,
 		options?: {
 			disableBigIntJsonParsing?: boolean;
