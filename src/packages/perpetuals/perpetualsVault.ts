@@ -7,7 +7,7 @@ import { Caller } from "../../general/utils/caller";
 import {
 	ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody,
 	ApiPerpetualsVaultUpdateLockPeriodTxBody,
-	ApiPerpetualsVaultProcessForceWithdrawTxBody,
+	ApiPerpetualsVaultProcessForceWithdrawsTxBody,
 	ApiPerpetualsVaultProcessWithdrawRequestsTxBody,
 	Balance,
 	CallerConfig,
@@ -20,9 +20,26 @@ import {
 	PerpetualsVaultWithdrawRequest,
 	ApiPerpetualsVaultAllWithdrawRequestsBody,
 	ApiPerpetualsVaultWithdrawRequestsBody,
+	ApiPerpetualsVaultCreateWithdrawRequestTxBody,
+	ApiPerpetualsVaultCancelWithdrawRequestsTxBody,
+	ApiPerpetualsVaultDepositTxBody,
+	ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody,
+	ApiPerpetualsVaultPreviewCreateWithdrawRequestBody,
+	ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse,
+	ApiPerpetualsVaultPreviewDepositResponse,
+	ApiPerpetualsVaultPreviewDepositBody,
+	ApiPerpetualsVaultPreviewProcessForceWithdrawsResponse,
+	ApiPerpetualsVaultPreviewProcessForceWithdrawsBody,
+	ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
+	ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody,
+	ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
+	ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody,
 } from "../../types";
+import { PerpetualsAccount } from "./perpetualsAccount";
 
 export class PerpetualsVault extends Caller {
+	public readonly account: PerpetualsAccount;
+
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -33,6 +50,12 @@ export class PerpetualsVault extends Caller {
 		public readonly Provider?: AftermathApi
 	) {
 		super(config, "perpetuals/vaults");
+		this.account = new PerpetualsAccount(
+			vaultObject.account,
+			vaultObject.accountCap,
+			config,
+			Provider
+		);
 	}
 
 	// =========================================================================
@@ -43,15 +66,17 @@ export class PerpetualsVault extends Caller {
 	//  Withdraw Request Txs
 	// =========================================================================
 
-	public async getProcessForceWithdrawTx(inputs: {
+	public async getProcessForceWithdrawsTx(inputs: {
+		// TODO: change to arr ?
 		sizesToClose: Record<PerpetualsMarketId, Balance>;
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultProcessForceWithdrawTxBody>(
-			"transactions/process-force-withdraw",
+		return this.fetchApiTransaction<ApiPerpetualsVaultProcessForceWithdrawsTxBody>(
+			"transactions/process-force-withdraws",
 			{
 				...otherInputs,
+				// NOTE: should this be `vaultIds` ?
 				vaultId: this.vaultObject.objectId,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
@@ -75,7 +100,32 @@ export class PerpetualsVault extends Caller {
 			"transactions/process-withdraw-requests",
 			{
 				...otherInputs,
+				// NOTE: should this be `vaultIds` ?
 				vaultId: this.vaultObject.objectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getUpdateWithdrawRequestSlippageTx(inputs: {
+		minLpAmountOut: Balance;
+		tx?: Transaction;
+	}) {
+		const { tx, minLpAmountOut, ...otherInputs } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody>(
+			"transactions/update-withdraw-request-slippages",
+			{
+				...otherInputs,
+				vaultIds: [this.vaultObject.objectId],
+				minLpAmountsOut: [minLpAmountOut],
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -198,6 +248,88 @@ export class PerpetualsVault extends Caller {
 	//  User Interactions Txs
 	// =========================================================================
 
+	public async getCreateWithdrawRequestTx(inputs: {
+		lpWithdrawAmount: Balance;
+		minLpWithdrawAmount: Balance;
+		tx?: Transaction;
+	}) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsVaultCreateWithdrawRequestTxBody>(
+			"transactions/create-withdraw-request",
+			{
+				...otherInputs,
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getCancelWithdrawRequestTx(inputs: {
+		walletAddress: SuiAddress;
+		tx?: Transaction;
+	}) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsVaultCancelWithdrawRequestsTxBody>(
+			"transactions/cancel-withdraw-requests",
+			{
+				...otherInputs,
+				vaultIds: [this.vaultObject.objectId],
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	// TODO: make return lp coin out ?
+	public async getDepositTx(
+		inputs: {
+			walletAddress: SuiAddress;
+			minLpAmountOut: Balance;
+			tx?: Transaction;
+			isSponsoredTx?: boolean;
+		} & (
+			| {
+					depositAmount: Balance;
+			  }
+			| {
+					coinInArg: TransactionObjectArgument;
+			  }
+		)
+	) {
+		const { tx, ...otherInputs } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsVaultDepositTxBody>(
+			"transactions/deposit",
+			{
+				...otherInputs,
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: tx ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
 	// =========================================================================
 	//  Objects
 	// =========================================================================
@@ -224,4 +356,80 @@ export class PerpetualsVault extends Caller {
 			vaultIds: [this.vaultObject.objectId],
 		});
 	}
+
+	// =========================================================================
+	//  Admin Previews
+	// =========================================================================
+
+	// TODO: change all `withdraws` to `withdrawals` ?
+	public async getPreviewProcessForceWithdraws(inputs: {
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApi<
+			ApiPerpetualsVaultPreviewProcessForceWithdrawsResponse,
+			ApiPerpetualsVaultPreviewProcessForceWithdrawsBody
+		>("previews/process-force-withdraws", {
+			...inputs,
+			vaultId: this.vaultObject.objectId,
+		});
+	}
+
+	public async getPreviewWithdrawOwnerFees(inputs: {
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApi<
+			ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
+			ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody
+		>("previews/withdraw-owner-fees", {
+			...inputs,
+			vaultId: this.vaultObject.objectId,
+		});
+	}
+
+	// =========================================================================
+	//  User Previews
+	// =========================================================================
+
+	public async getPreviewCreateWithdrawRequest(inputs: {
+		lpWithdrawAmount: Balance;
+	}) {
+		return this.fetchApi<
+			ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse,
+			ApiPerpetualsVaultPreviewCreateWithdrawRequestBody
+		>("previews/create-withdraw-request", {
+			...inputs,
+			vaultId: this.vaultObject.objectId,
+		});
+	}
+
+	public async getPreviewDeposit(inputs: { depositAmount: Balance }) {
+		return this.fetchApi<
+			ApiPerpetualsVaultPreviewDepositResponse,
+			ApiPerpetualsVaultPreviewDepositBody
+		>("previews/deposit", {
+			...inputs,
+			vaultId: this.vaultObject.objectId,
+		});
+	}
+
+	public async getPreviewProcessWithdrawRequests(inputs: {
+		// NOTE: should these be `walletAddresses` instead ?
+		userAddresses: SuiAddress[];
+	}) {
+		return this.fetchApi<
+			ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
+			ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody
+		>("previews/process-withdraw-requests", {
+			...inputs,
+			vaultId: this.vaultObject.objectId,
+		});
+	}
+
+	// // =========================================================================
+	// //  Getters
+	// // =========================================================================
+
+	// public account() {
+	// 	return this.account;
+	// }
 }

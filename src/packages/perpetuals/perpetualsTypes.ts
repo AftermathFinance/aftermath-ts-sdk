@@ -1261,7 +1261,7 @@ export type ApiPerpetualsMarkets24hrStatsResponse = PerpetualsMarket24hrStats[];
 //  Vaults
 // =========================================================================
 
-export interface ApiPerpetualsVaultProcessForceWithdrawTxBody {
+export interface ApiPerpetualsVaultProcessForceWithdrawsTxBody {
 	vaultId: ObjectId;
 	sizesToClose: Record<PerpetualsMarketId, Balance>;
 	txKind?: SerializedTransaction;
@@ -1270,6 +1270,12 @@ export interface ApiPerpetualsVaultProcessForceWithdrawTxBody {
 export interface ApiPerpetualsVaultProcessWithdrawRequestsTxBody {
 	vaultId: ObjectId;
 	userAddresses: SuiAddress[];
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody {
+	vaultIds: ObjectId[];
+	minLpAmountsOut: Balance[];
 	txKind?: SerializedTransaction;
 }
 
@@ -1309,6 +1315,91 @@ export interface ApiPerpetualsVaultAllWithdrawRequestsBody {
 export interface ApiPerpetualsVaultWithdrawRequestsBody {
 	walletAddress: SuiAddress;
 	vaultIds: ObjectId[] | undefined;
+}
+
+export interface ApiPerpetualsVaultCreateWithdrawRequestTxBody {
+	vaultId: ObjectId;
+	lpWithdrawAmount: Balance;
+	minLpWithdrawAmount: Balance;
+	// user_lp_coin_id
+	txKind?: SerializedTransaction;
+}
+
+export interface ApiPerpetualsVaultCancelWithdrawRequestsTxBody {
+	vaultIds: ObjectId[];
+	walletAddress: SuiAddress;
+	// user_lp_coins_ids
+	txKind?: SerializedTransaction;
+}
+
+export type ApiPerpetualsVaultDepositTxBody = {
+	vaultId: ObjectId;
+	walletAddress: SuiAddress;
+	minLpAmountOut: Balance;
+	// user_lp_coins_ids
+	txKind?: SerializedTransaction;
+	isSponsoredTx?: boolean;
+} & (
+	| {
+			depositAmount: Balance;
+	  }
+	| {
+			coinInArg: TransactionObjectArgument;
+	  }
+);
+
+export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestBody {
+	vaultId: ObjectId;
+	lpWithdrawAmount: Balance;
+	// user_lp_coin_id
+}
+
+export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse {
+	collateralAmountOut: Balance;
+	collateralAmountOutUsd: number;
+}
+
+export interface ApiPerpetualsVaultPreviewDepositBody {
+	vaultId: ObjectId;
+	depositAmount: Balance;
+}
+
+export interface ApiPerpetualsVaultPreviewDepositResponse {
+	// provided_balance -- what is this ?
+	lpAmountOut: Balance;
+	lpAmountOutUsd: number;
+}
+
+export interface ApiPerpetualsVaultPreviewProcessForceWithdrawsBody {
+	vaultId: ObjectId;
+	walletAddress: SuiAddress;
+}
+
+export interface ApiPerpetualsVaultPreviewProcessForceWithdrawsResponse {
+	lpAmountOut: Balance;
+	lpAmountOutUsd: number;
+	// TODO: change to arr ?
+	sizesToClose: Record<PerpetualsMarketId, Balance>;
+}
+
+export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody {
+	vaultId: ObjectId;
+	userAddresses: SuiAddress[];
+}
+
+export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse {
+	lpAmountOut: Balance;
+	lpAmountOutUsd: number;
+}
+
+export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody {
+	vaultId: ObjectId;
+}
+
+export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse {
+	maxFeesToWithdraw: Balance;
+	maxFeesToWithdrawUsd: number;
+	// collateral_type -- is this needed ?
 }
 
 // =========================================================================
