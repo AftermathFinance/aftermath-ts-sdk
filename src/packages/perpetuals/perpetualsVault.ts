@@ -51,8 +51,10 @@ export class PerpetualsVault extends Caller {
 	) {
 		super(config, "perpetuals/vaults");
 		this.account = new PerpetualsAccount(
+			// @ts-ignore
 			vaultObject.account,
 			{
+				// @ts-ignore
 				...vaultObject.accountCap,
 				vaultId: vaultObject.objectId,
 			},
