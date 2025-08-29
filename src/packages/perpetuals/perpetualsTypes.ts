@@ -81,6 +81,7 @@ export interface PerpetualsMarketData {
 }
 
 export interface PerpetualsAccountCap {
+	vaultId?: ObjectId;
 	objectId: ObjectId;
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
@@ -839,13 +840,20 @@ export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
 	| "accountObjectId"
 	| "slTp"
 > & {
-	// TODO: remove eventually ?
-	accountObjectId: ObjectId | undefined;
 	collateralCoinType: CoinType;
 	leverage?: number;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
-};
+} & (
+		| {
+				// TODO: remove eventually ?
+				accountObjectId: ObjectId | undefined;
+		  }
+		| {
+				// TODO: remove eventually ?
+				vaultId: ObjectId | undefined;
+		  }
+	);
 
 export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 	ApiPerpetualsLimitOrderBody,
@@ -856,18 +864,24 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 	| "accountObjectId"
 	| "slTp"
 > & {
-	// TODO: remove eventually ?
-	accountObjectId: ObjectId | undefined;
 	collateralCoinType: CoinType;
 	lotSize: number;
 	tickSize: number;
 	leverage?: number;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
-};
+} & (
+		| {
+				// TODO: remove eventually ?
+				accountObjectId: ObjectId | undefined;
+		  }
+		| {
+				// TODO: remove eventually ?
+				vaultId: ObjectId | undefined;
+		  }
+	);
 
-export interface ApiPerpetualsPreviewCancelOrdersBody {
-	accountObjectId: ObjectId;
+export type ApiPerpetualsPreviewCancelOrdersBody = {
 	// TODO: remove eventually ?
 	collateralCoinType: CoinType;
 	marketIdsToData: Record<
@@ -876,24 +890,43 @@ export interface ApiPerpetualsPreviewCancelOrdersBody {
 			orderIds: PerpetualsOrderId[];
 		}
 	>;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
-export interface ApiPerpetualsPreviewReduceOrderBody {
+export type ApiPerpetualsPreviewReduceOrderBody = {
 	marketId: PerpetualsMarketId;
-	accountObjectId: ObjectId;
 	leverage?: number;
 	orderId: PerpetualsOrderId;
 	sizeToSubtract: bigint;
 	// TODO: remove eventually ?
 	collateralCoinType: CoinType;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
-export interface ApiPerpetualsPreviewSetLeverageBody {
+export type ApiPerpetualsPreviewSetLeverageBody = {
 	marketId: PerpetualsMarketId;
-	accountObjectId: ObjectId;
 	leverage: number;
 	collateralCoinType: CoinType;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 export type ApiPerpetualsPreviewReduceOrderResponse =
 	| {
@@ -1011,7 +1044,6 @@ export interface ApiPerpetualsCreateAccountBody {
 
 export type ApiPerpetualsDepositCollateralBody = {
 	walletAddress: SuiAddress;
-	accountObjectId: ObjectId;
 	collateralCoinType: CoinType;
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
@@ -1022,16 +1054,30 @@ export type ApiPerpetualsDepositCollateralBody = {
 	| {
 			coinInArg: TransactionObjectArgument;
 	  }
-);
+) &
+	(
+		| {
+				accountObjectId: ObjectId;
+		  }
+		| {
+				vaultId: ObjectId;
+		  }
+	);
 
-export interface ApiPerpetualsWithdrawCollateralBody {
+export type ApiPerpetualsWithdrawCollateralBody = {
 	walletAddress: SuiAddress;
-	accountObjectId: ObjectId;
 	collateralCoinType: CoinType;
 	withdrawAmount: Balance;
 	recipientAddress?: SuiAddress;
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 export interface ApiPerpetualsWithdrawCollateralResponse {
 	txKind: SerializedTransaction;
@@ -1047,19 +1093,31 @@ export interface ApiPerpetualsTransferCollateralBody {
 	txKind?: SerializedTransaction;
 }
 
-export interface ApiPerpetualsAllocateCollateralBody {
-	accountObjectId: ObjectId;
+export type ApiPerpetualsAllocateCollateralBody = {
 	marketId: PerpetualsMarketId;
 	allocateAmount: Balance;
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
-export interface ApiPerpetualsDeallocateCollateralBody {
-	accountObjectId: ObjectId;
+export type ApiPerpetualsDeallocateCollateralBody = {
 	marketId: PerpetualsMarketId;
 	deallocateAmount: Balance;
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 export interface SdkPerpetualsPlaceStopOrdersInputs {
 	stopOrders: Omit<PerpetualsStopOrderData, "objectId">[];
@@ -1068,14 +1126,20 @@ export interface SdkPerpetualsPlaceStopOrdersInputs {
 	isSponsoredTx?: boolean;
 }
 
-export interface ApiPerpetualsPlaceStopOrdersBody {
-	accountObjectId: ObjectId;
+export type ApiPerpetualsPlaceStopOrdersBody = {
 	walletAddress: SuiAddress;
 	stopOrders: Omit<PerpetualsStopOrderData, "objectId">[];
 	gasCoinArg?: TransactionObjectArgument;
 	isSponsoredTx?: boolean;
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 export type SdkPerpetualsPlaceSlTpOrdersInputs = {
 	marketId: PerpetualsMarketId;
@@ -1101,7 +1165,6 @@ export type SdkPerpetualsPlaceSlTpOrdersInputs = {
 
 export type ApiPerpetualsPlaceSlTpOrdersBody = {
 	marketId: PerpetualsMarketId;
-	accountObjectId: ObjectId;
 	walletAddress: SuiAddress;
 	positionSide: PerpetualsOrderSide;
 	size?: bigint;
@@ -1111,7 +1174,14 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 	isSponsoredTx?: boolean;
 	leverage?: number;
 	txKind?: SerializedTransaction;
-};
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 // & (
 // 	| {
 // 			stopLossIndexPrice: number;
@@ -1125,15 +1195,20 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 // 	  }
 // );
 
-export interface ApiPerpetualsEditStopOrdersBody {
-	accountObjectId: ObjectId;
+export type ApiPerpetualsEditStopOrdersBody = {
 	stopOrders: PerpetualsStopOrderData[];
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 export type ApiPerpetualsMarketOrderBody = {
 	marketId: PerpetualsMarketId;
-	accountObjectId: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	collateralChange: number;
@@ -1161,11 +1236,17 @@ export type ApiPerpetualsMarketOrderBody = {
 	// 	  }
 	// );
 	txKind?: SerializedTransaction;
-};
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 export type ApiPerpetualsLimitOrderBody = {
 	marketId: PerpetualsMarketId;
-	accountObjectId: ObjectId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	price: PerpetualsOrderPrice;
@@ -1196,10 +1277,16 @@ export type ApiPerpetualsLimitOrderBody = {
 	// 	  }
 	// );
 	txKind?: SerializedTransaction;
-};
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
-export interface ApiPerpetualsCancelOrdersBody {
-	accountObjectId: ObjectId;
+export type ApiPerpetualsCancelOrdersBody = {
 	marketIdsToData: Record<
 		PerpetualsMarketId,
 		{
@@ -1208,31 +1295,56 @@ export interface ApiPerpetualsCancelOrdersBody {
 		}
 	>;
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
-export interface ApiPerpetualsCancelStopOrdersBody {
-	accountObjectId: ObjectId;
+export type ApiPerpetualsCancelStopOrdersBody = {
 	stopOrderIds: ObjectId[];
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
-export interface ApiPerpetualsReduceOrderBody {
+export type ApiPerpetualsReduceOrderBody = {
 	marketId: PerpetualsMarketId;
-	accountObjectId: ObjectId;
 	collateralChange: number;
 	leverage?: number;
 	orderId: PerpetualsOrderId;
 	sizeToSubtract: bigint;
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
-export interface ApiPerpetualsSetLeverageTxBody {
+export type ApiPerpetualsSetLeverageTxBody = {
 	marketId: PerpetualsMarketId;
-	accountObjectId: ObjectId;
 	collateralChange: number;
 	leverage: number;
 	txKind?: SerializedTransaction;
-}
+} & (
+	| {
+			accountObjectId: ObjectId;
+	  }
+	| {
+			vaultId: ObjectId;
+	  }
+);
 
 // export interface ApiPerpetualsReduceOrderBody {
 // 	walletAddress: SuiAddress;

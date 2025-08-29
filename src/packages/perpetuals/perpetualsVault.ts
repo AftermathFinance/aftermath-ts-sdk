@@ -52,7 +52,10 @@ export class PerpetualsVault extends Caller {
 		super(config, "perpetuals/vaults");
 		this.account = new PerpetualsAccount(
 			vaultObject.account,
-			vaultObject.accountCap,
+			{
+				...vaultObject.accountCap,
+				vaultId: vaultObject.objectId,
+			},
 			config,
 			Provider
 		);

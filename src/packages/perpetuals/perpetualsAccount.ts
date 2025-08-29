@@ -104,7 +104,7 @@ export class PerpetualsAccount extends Caller {
 		config?: CallerConfig,
 		public readonly Provider?: AftermathApi
 	) {
-		super(config, "perpetuals");
+		super(config, `perpetuals/${accountCap.vaultId ? "vault" : "account"}`);
 	}
 
 	// =========================================================================
@@ -135,7 +135,13 @@ export class PerpetualsAccount extends Caller {
 				...otherInputs,
 				walletAddress: this.accountCap.walletAddress,
 				collateralCoinType: this.accountCap.collateralCoinType,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{
 						tx: tx ?? new Transaction(),
@@ -164,7 +170,13 @@ export class PerpetualsAccount extends Caller {
 			recipientAddress,
 			walletAddress: this.accountCap.walletAddress,
 			collateralCoinType: this.accountCap.collateralCoinType,
-			accountObjectId: this.accountCap.objectId,
+			...(this.accountCap.vaultId
+				? {
+						vaultId: this.accountCap.vaultId,
+				  }
+				: {
+						accountObjectId: this.accountCap.objectId,
+				  }),
 			txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 				{
 					tx: txFromInputs ?? new Transaction(),
@@ -192,7 +204,13 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				allocateAmount,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				walletAddress: this.accountCap.walletAddress,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx: tx ?? new Transaction() }
@@ -216,7 +234,13 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				deallocateAmount,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				walletAddress: this.accountCap.walletAddress,
 				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
 					{ tx: tx ?? new Transaction() }
@@ -235,6 +259,12 @@ export class PerpetualsAccount extends Caller {
 		tx?: Transaction;
 	}) {
 		const { transferAmount, toAccountObjectId, tx } = inputs;
+
+		if (!this.accountCap.vaultId)
+			throw new Error(
+				"`getTransferCollateralTx` not supported by vault accounts"
+			);
+
 		return this.fetchApiTransaction<ApiPerpetualsTransferCollateralBody>(
 			"transactions/transfer-collateral",
 			{
@@ -280,7 +310,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -313,7 +349,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				hasPosition:
 					this.positionForMarketId(otherInputs) !== undefined,
 			},
@@ -344,7 +386,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 			},
 			undefined,
 			{
@@ -366,7 +414,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 			},
 			undefined,
 			{
@@ -398,7 +452,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 			},
 			undefined,
 			{
@@ -432,7 +492,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				positionSide: Perpetuals.positionSide({
 					baseAssetAmount: position.baseAssetAmount,
 				}),
@@ -465,7 +531,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 			},
 			undefined,
 			{
@@ -491,7 +563,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 			},
 			undefined,
 			{
@@ -517,7 +595,13 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.accountCap.walletAddress,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 			},
 			undefined,
 			{
@@ -621,7 +705,13 @@ export class PerpetualsAccount extends Caller {
 			"previews/place-market-order",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -654,7 +744,13 @@ export class PerpetualsAccount extends Caller {
 			"previews/place-limit-order",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -690,7 +786,13 @@ export class PerpetualsAccount extends Caller {
 			"previews/cancel-orders",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -721,7 +823,13 @@ export class PerpetualsAccount extends Caller {
 			"previews/reduce-order",
 			{
 				...inputs,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
@@ -753,7 +861,13 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				leverage,
-				accountObjectId: this.accountCap.objectId,
+				...(this.accountCap.vaultId
+					? {
+							vaultId: this.accountCap.vaultId,
+					  }
+					: {
+							accountObjectId: this.accountCap.objectId,
+					  }),
 				collateralCoinType: this.accountCap.collateralCoinType,
 			},
 			abortSignal
