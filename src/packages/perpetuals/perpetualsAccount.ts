@@ -124,7 +124,8 @@ export class PerpetualsAccount extends Caller {
 					depositAmount: Balance;
 			  }
 			| {
-					coinInArg: TransactionObjectArgument;
+					// TODO: update on af-fe side
+					depositCoinArg: TransactionObjectArgument;
 			  }
 		)
 	) {

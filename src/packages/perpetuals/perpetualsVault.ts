@@ -38,6 +38,38 @@ import {
 import { PerpetualsAccount } from "./perpetualsAccount";
 
 export class PerpetualsVault extends Caller {
+	// =========================================================================
+	//  Public Constants
+	// =========================================================================
+
+	public static readonly constants = {
+		// NOTE: what is this ?
+
+		// /// Time necessary for the next vault's params update
+		// vaultParamsUpdateFrequency: (u64 = 86400000),
+
+		/// Maximum lock period in milliseconds.
+		maxLockPeriodMs: 604800000, // 1 week
+		/// Minimum lock period in milliseconds.
+		minLockPeriodMs: 3600000, // 1 hour
+		/// Maximum period for force withdraw delay in milliseconds.
+		maxForceWithdrawDelayMs: 86400000, // 1 day
+		/// Minimum period for force withdraw delay in milliseconds.
+		minForceWithdrawDelayMs: 3600000, // 1 hour
+		/// Minimum vault fee.
+		minOwnerFeePercentage: 0.0, // 0%
+		/// Maximum vault fee.
+		maxOwnerFeePercentage: 0.2, // 20%
+		// Minimum USD value required for users deposits.
+		minDepositUsd: 1,
+		// Minimum USD value required to be locked by vault owner during vault creation.
+		minOwnerLockUsd: 10,
+		/// The maximum number of distinct `ClearingHouse`.
+		maxMarketsInVault: 12,
+		/// The maximum number of pending orders allowed for a single position in the `Vault`.
+		maxPendingOrdersPerPosition: 70,
+	};
+
 	public readonly account: PerpetualsAccount;
 
 	// =========================================================================
@@ -312,7 +344,7 @@ export class PerpetualsVault extends Caller {
 					depositAmount: Balance;
 			  }
 			| {
-					coinInArg: TransactionObjectArgument;
+					depositCoinArg: TransactionObjectArgument;
 			  }
 		)
 	) {

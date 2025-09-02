@@ -29,6 +29,9 @@ import {
 	ApiPerpetualsMarkets24hrStatsResponse,
 	ApiPerpetualsAccountCapsBody,
 	PerpetualsVaultObject,
+	Percentage,
+	Balance,
+	PerpetualsVaultCap,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -38,7 +41,10 @@ import { Casting, Helpers } from "../../general/utils";
 import { PerpetualsOrderUtils } from "./utils";
 import { AftermathApi } from "../../general/providers";
 import { Coin } from "../coin";
-import { Transaction } from "@mysten/sui/transactions";
+import {
+	Transaction,
+	TransactionObjectArgument,
+} from "@mysten/sui/transactions";
 import { PerpetualsVault } from "./perpetualsVault";
 
 export class Perpetuals extends Caller {
@@ -214,7 +220,7 @@ export class Perpetuals extends Caller {
 		});
 	}
 
-	public async getUserAccountCaps(
+	public async getOwnedAccountCaps(
 		inputs: ApiPerpetualsOwnedAccountCapsBody & {
 			collateralCoinTypes?: CoinType[];
 		}
@@ -231,6 +237,17 @@ export class Perpetuals extends Caller {
 			walletAddress,
 			collateralCoinTypes,
 		});
+	}
+
+	public async getOwnedVaultCaps(
+		inputs: ApiPerpetualsOwnedAccountCapsBody
+	): Promise<PerpetualsVaultCap[]> {
+		return this.fetchApi<
+			PerpetualsVaultCap[],
+			{
+				walletAddress: SuiAddress;
+			}
+		>("vaults/owned", inputs);
 	}
 
 	public async getAccountCaps(
@@ -298,6 +315,48 @@ export class Perpetuals extends Caller {
 		const { walletAddress, collateralCoinType, tx } = inputs;
 		return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
 			"transactions/create-account",
+			{
+				walletAddress,
+				collateralCoinType,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{ tx }
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
+	}
+
+	public async getCreateVaultTx(
+		inputs: {
+			walletAddress: SuiAddress;
+			collateralCoinType: CoinType;
+			lockPeriodMs: number;
+			ownerFeePercentage: Percentage;
+			forceWithdrawDelayMs: number;
+			lpCoinMetadata: {
+				// NOTE: is this needed ?
+				// decimals: number;
+				symbol: string;
+				description: string;
+				name: string;
+				iconUrl?: string;
+			};
+			tx?: Transaction;
+		} & (
+			| {
+					initialDepositAmount?: Balance;
+			  }
+			| {
+					initialDepositCoinArg: TransactionObjectArgument;
+			  }
+		)
+	) {
+		const { walletAddress, collateralCoinType, tx } = inputs;
+		return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
+			"transactions/create-vault",
 			{
 				walletAddress,
 				collateralCoinType,

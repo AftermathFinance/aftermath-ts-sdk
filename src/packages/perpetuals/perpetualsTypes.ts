@@ -93,6 +93,19 @@ export interface PerpetualsAccountCap {
 	subAccount: PerpetualsSubAccount;
 }
 
+export interface PerpetualsVaultCap {
+	vaultId?: ObjectId;
+	objectId: ObjectId;
+	walletAddress: SuiAddress;
+	accountId: PerpetualsAccountId;
+	collateralCoinType: CoinType;
+	collateral: IFixed;
+	collateralDecimals: CoinDecimal;
+	objectVersion: ObjectVersion;
+	objectDigest: ObjectDigest;
+	subAccount: PerpetualsSubAccount;
+}
+
 export interface PerpetualsPosition {
 	collateral: IFixed;
 	baseAssetAmount: IFixed;
@@ -1052,7 +1065,7 @@ export type ApiPerpetualsDepositCollateralBody = {
 			depositAmount: Balance;
 	  }
 	| {
-			coinInArg: TransactionObjectArgument;
+			depositCoinArg: TransactionObjectArgument;
 	  }
 ) &
 	(
@@ -1456,7 +1469,7 @@ export type ApiPerpetualsVaultDepositTxBody = {
 			depositAmount: Balance;
 	  }
 	| {
-			coinInArg: TransactionObjectArgument;
+			depositCoinArg: TransactionObjectArgument;
 	  }
 );
 
