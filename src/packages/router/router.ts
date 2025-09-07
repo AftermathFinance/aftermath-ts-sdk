@@ -157,7 +157,8 @@ export class Router extends Caller {
 	 *     recipient: "0x<fee_collector>",
 	 *     feePercentage: 0.01
 	 *   },
-	 *   protocolBlacklist: ["Cetus", "BlueMove"]
+	 *   protocolBlacklist: ["Cetus", "BlueMove"],
+	 *   poolBlacklist: ["0x<pool_id>"]
 	 * });
 	 * console.log(route);
 	 * ```
@@ -193,7 +194,8 @@ export class Router extends Caller {
 	 *   coinOutType: "0x<...>::coin::TOKEN",
 	 *   coinOutAmount: BigInt(20_000_000),
 	 *   slippage: 0.01, // 1%
-	 *   protocolWhitelist: ["Aftermath", "Cetus"]
+	 *   protocolWhitelist: ["Aftermath", "Cetus"],
+	 *   poolWhitelist: ["0x<pool_id>"]
 	 * });
 	 * console.log(route);
 	 * ```

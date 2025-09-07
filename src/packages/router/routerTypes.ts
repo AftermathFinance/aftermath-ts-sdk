@@ -226,7 +226,21 @@ export type ApiRouterPartialCompleteTradeRouteBody = {
 			 */
 			protocolWhitelist?: RouterProtocolName[];
 	  }
-);
+) &
+	(
+		| {
+				/**
+				 * Optionally exclude certain pools from routing.
+				 */
+				poolBlacklist?: ObjectId[];
+		  }
+		| {
+				/**
+				 * Optionally include only certain pools in routing.
+				 */
+				poolWhitelist?: ObjectId[];
+		  }
+	);
 
 /**
  * Full body for router route construction. Either `coinInAmount` or `coinOutAmount`
