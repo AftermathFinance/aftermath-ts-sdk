@@ -32,6 +32,8 @@ import {
 	Percentage,
 	Balance,
 	PerpetualsVaultCap,
+	PerpetualsVaultWithdrawRequest,
+	ApiPerpetualsVaultWithdrawRequestsBody,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -250,6 +252,18 @@ export class Perpetuals extends Caller {
 		>("vaults/owned", inputs);
 	}
 
+	public async getOwnedWithdrawRequests(inputs: {
+		walletAddress: SuiAddress;
+	}) {
+		return this.fetchApi<
+			PerpetualsVaultWithdrawRequest[],
+			ApiPerpetualsVaultWithdrawRequestsBody
+		>("vaults/withdraw-requests", {
+			...inputs,
+			vaultIds: undefined,
+		});
+	}
+
 	public async getAccountCaps(
 		inputs: ApiPerpetualsAccountCapsBody
 	): Promise<PerpetualsAccountCap[]> {
@@ -301,6 +315,13 @@ export class Perpetuals extends Caller {
 	> {
 		if (inputs.marketIds.length <= 0) return [];
 		return this.fetchApi("markets/prices", inputs);
+	}
+
+	public async getVaulIdsToLpCoinPrice(inputs: {
+		vaultIds: ObjectId[];
+	}): Promise<Record<ObjectId, number>> {
+		if (inputs.vaultIds.length <= 0) return {};
+		return this.fetchApi("vaults/lp-coin-prices", inputs);
 	}
 
 	// =========================================================================

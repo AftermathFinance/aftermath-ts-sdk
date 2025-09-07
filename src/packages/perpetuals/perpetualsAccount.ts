@@ -71,6 +71,8 @@ import {
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
+	ApiPerpetualsVaultWithdrawRequestsBody,
+	PerpetualsVaultWithdrawRequest,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { IFixedUtils } from "../../general/utils/iFixedUtils";
@@ -951,6 +953,15 @@ export class PerpetualsAccount extends Caller {
 			collateralCoinType: this.accountCap.collateralCoinType,
 		});
 	}
+
+	// public async getOwnedWithdrawRequests() {
+	// 	return new Perpetuals(
+	// 		this.config,
+	// 		this.Provider
+	// 	).getOwnedWithdrawRequests({
+	// 		walletAddress: this.accountCap.walletAddress,
+	// 	});
+	// }
 
 	// =========================================================================
 	//  Calculations

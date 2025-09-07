@@ -36,6 +36,7 @@ import {
 	ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
+import { Perpetuals } from "./perpetuals";
 
 export class PerpetualsVault extends Caller {
 	// =========================================================================
@@ -398,14 +399,14 @@ export class PerpetualsVault extends Caller {
 	//  Admin Previews
 	// =========================================================================
 
-	// TODO: change all `withdraws` to `withdrawals` ?
-	public async getPreviewProcessForceWithdraws(inputs: {
-		walletAddress: SuiAddress;
+	public async getPreviewProcessWithdrawRequests(inputs: {
+		// NOTE: should these be `walletAddresses` instead ?
+		userAddresses: SuiAddress[];
 	}) {
 		return this.fetchApi<
-			ApiPerpetualsVaultPreviewProcessForceWithdrawsResponse,
-			ApiPerpetualsVaultPreviewProcessForceWithdrawsBody
-		>("previews/process-force-withdraws", {
+			ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
+			ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody
+		>("previews/process-withdraw-requests", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
@@ -449,17 +450,30 @@ export class PerpetualsVault extends Caller {
 		});
 	}
 
-	public async getPreviewProcessWithdrawRequests(inputs: {
-		// NOTE: should these be `walletAddresses` instead ?
-		userAddresses: SuiAddress[];
+	// TODO: change all `withdraws` to `withdrawals` ?
+	public async getPreviewProcessForceWithdraws(inputs: {
+		walletAddress: SuiAddress;
 	}) {
 		return this.fetchApi<
-			ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
-			ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody
-		>("previews/process-withdraw-requests", {
+			ApiPerpetualsVaultPreviewProcessForceWithdrawsResponse,
+			ApiPerpetualsVaultPreviewProcessForceWithdrawsBody
+		>("previews/process-force-withdraws", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
+	}
+
+	// =========================================================================
+	//  Inspections
+	// =========================================================================
+
+	public async getLpCoinPrice(): Promise<number> {
+		return Object.values(
+			await new Perpetuals(
+				this.config,
+				this.Provider
+			).getVaulIdsToLpCoinPrice({ vaultIds: [this.vaultObject.objectId] })
+		)[0];
 	}
 
 	// // =========================================================================
