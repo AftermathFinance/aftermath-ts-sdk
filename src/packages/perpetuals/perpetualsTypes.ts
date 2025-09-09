@@ -147,9 +147,9 @@ export interface PerpetualsMarketParams {
 	minOrderUsdValue: IFixed;
 	lotSize: bigint;
 	tickSize: bigint;
-	scaling_factor: IFixed;
-	gas_price_taker_fee: IFixed;
-	z_score_threshold: IFixed;
+	scalingFactor: IFixed;
+	gasPriceTakerFee: IFixed;
+	zScoreThreshold: IFixed;
 	maxPendingOrders: bigint;
 	baseOracleTolerance: bigint;
 	collateralOracleTolerance: bigint;
