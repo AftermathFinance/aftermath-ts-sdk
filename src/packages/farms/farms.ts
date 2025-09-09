@@ -55,7 +55,7 @@ export class Farms extends Caller {
 		/**
 		 * The maximum lock multiplier that can be applied when locking a staked position.
 		 */
-		maxLockMultiplier: 18,
+		maxLockMultiplier: 2,
 	};
 
 	// =========================================================================
