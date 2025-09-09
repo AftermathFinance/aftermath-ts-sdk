@@ -69,7 +69,12 @@ export interface FarmsStakingPoolOwnerCapFieldsOnChainV1 {
 }
 
 export interface FarmsStakingPoolOwnerCapFieldsOnChainV2 {
-	for: ObjectId;
+	fields: {
+		for: ObjectId;
+		id: {
+			id: ObjectId;
+		};
+	};
 }
 
 export interface FarmsStakingPoolOneTimeAdminCapFieldsOnChainV1 {
