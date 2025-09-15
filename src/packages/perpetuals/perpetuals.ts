@@ -129,7 +129,7 @@ export class Perpetuals extends Caller {
 
 	public async getAllVaults(): Promise<PerpetualsVault[]> {
 		const vaultObjects = await this.fetchApi<PerpetualsVaultObject[], {}>(
-			"all-vaults",
+			"vaults",
 			{}
 		);
 		return vaultObjects.map(
