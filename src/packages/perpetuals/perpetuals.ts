@@ -249,7 +249,7 @@ export class Perpetuals extends Caller {
 			{
 				walletAddress: SuiAddress;
 			}
-		>("vaults/owned", inputs);
+		>("vaults/owned-vault-caps", inputs);
 	}
 
 	public async getOwnedWithdrawRequests(inputs: {

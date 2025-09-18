@@ -377,23 +377,24 @@ export class PerpetualsVault extends Caller {
 		return this.fetchApi<
 			PerpetualsVaultWithdrawRequest[],
 			ApiPerpetualsVaultAllWithdrawRequestsBody
-		>("all-withdraw-requests", {
+		>("withdraw-requests", {
 			vaultId: this.vaultObject.objectId,
 		});
 	}
 
-	// TODO: add to perps account as well
-	public async getWithdrawRequestsForUser(inputs: {
-		walletAddress: SuiAddress;
-	}) {
-		return this.fetchApi<
-			PerpetualsVaultWithdrawRequest[],
-			ApiPerpetualsVaultWithdrawRequestsBody
-		>("withdraw-requests", {
-			...inputs,
-			vaultIds: [this.vaultObject.objectId],
-		});
-	}
+	// // TODO: add to perps account as well
+
+	// public async getWithdrawRequestsForUser(inputs: {
+	// 	walletAddress: SuiAddress;
+	// }) {
+	// 	return this.fetchApi<
+	// 		PerpetualsVaultWithdrawRequest[],
+	// 		ApiPerpetualsVaultWithdrawRequestsBody
+	// 	>("owned-withdraw-requests", {
+	// 		...inputs,
+	// 		vaultIds: [this.vaultObject.objectId],
+	// 	});
+	// }
 
 	// =========================================================================
 	//  Admin Previews

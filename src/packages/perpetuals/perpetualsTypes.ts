@@ -172,11 +172,11 @@ export interface PerpetualsMarketParams {
 export interface PerpetualsMarketState {
 	cumFundingRateLong: IFixed;
 	cumFundingRateShort: IFixed;
-	fundingLastUpdateMs: Timestamp;
+	fundingLastUpdateTimestamp: Timestamp;
 	premiumTwap: IFixed;
-	premiumTwapLastUpdateMs: Timestamp;
+	premiumTwapLastUpdateTimestamp: Timestamp;
 	spreadTwap: IFixed;
-	spreadTwapLastUpdateMs: Timestamp;
+	spreadTwapLastUpdateTimestamp: Timestamp;
 	openInterest: IFixed;
 	feesAccrued: IFixed;
 }
@@ -1439,7 +1439,7 @@ export interface ApiPerpetualsVaultAllWithdrawRequestsBody {
 
 export interface ApiPerpetualsVaultWithdrawRequestsBody {
 	walletAddress: SuiAddress;
-	vaultIds: ObjectId[] | undefined;
+	// vaultIds: ObjectId[] | undefined;
 }
 
 export interface ApiPerpetualsVaultCreateWithdrawRequestTxBody {
