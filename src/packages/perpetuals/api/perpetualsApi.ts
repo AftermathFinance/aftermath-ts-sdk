@@ -869,8 +869,8 @@ export class PerpetualsApi implements MoveErrorsInterface {
 	// 	packageId: PackageId;
 	// 	orderbookId: ObjectId | TransactionArgument;
 	// 	side: PerpetualsOrderSide;
-	// 	fromPrice: IFixed;
-	// 	toPrice: IFixed;
+	// 	fromPrice: number;
+	// 	toPrice: number;
 	// }) /* vector<OrderInfo> */ => {
 	// 	const { tx, orderbookId } = inputs;
 	// 	return tx.moveCall({

@@ -401,9 +401,9 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public static positionSide(inputs: {
-		baseAssetAmount: IFixed;
+		baseAssetAmount: number;
 	}): PerpetualsOrderSide {
-		const baseAmount = IFixedUtils.numberFromIFixed(inputs.baseAssetAmount);
+		const baseAmount = inputs.baseAssetAmount;
 		const isLong = Math.sign(baseAmount);
 		const side =
 			isLong >= 0 ? PerpetualsOrderSide.Bid : PerpetualsOrderSide.Ask;
@@ -414,10 +414,7 @@ export class Perpetuals extends Caller {
 		orderEvent: FilledTakerOrderEvent;
 	}): number {
 		const { orderEvent } = inputs;
-		return (
-			IFixedUtils.numberFromIFixed(orderEvent.quoteAssetDelta) /
-			IFixedUtils.numberFromIFixed(orderEvent.baseAssetDelta)
-		);
+		return orderEvent.quoteAssetDelta / orderEvent.baseAssetDelta;
 	}
 
 	public static priceToOrderPrice = (inputs: {
@@ -497,17 +494,14 @@ export class Perpetuals extends Caller {
 	// =========================================================================
 
 	public static calcEntryPrice(inputs: {
-		baseAssetAmount: IFixed;
-		quoteAssetNotionalAmount: IFixed;
+		baseAssetAmount: number;
+		quoteAssetNotionalAmount: number;
 	}): number {
 		const { baseAssetAmount, quoteAssetNotionalAmount } = inputs;
 
-		const denominator = Casting.IFixed.numberFromIFixed(baseAssetAmount);
+		const denominator = baseAssetAmount;
 		if (!denominator) return 0;
 
-		return Math.abs(
-			Casting.IFixed.numberFromIFixed(quoteAssetNotionalAmount) /
-				denominator
-		);
+		return Math.abs(quoteAssetNotionalAmount / denominator);
 	}
 }

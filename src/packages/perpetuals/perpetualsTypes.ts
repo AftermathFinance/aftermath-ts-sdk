@@ -86,7 +86,7 @@ export interface PerpetualsAccountCap {
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
-	collateral: IFixed;
+	collateral: number;
 	collateralDecimals: CoinDecimal;
 	objectVersion: ObjectVersion;
 	objectDigest: ObjectDigest;
@@ -99,7 +99,7 @@ export interface PerpetualsVaultCap {
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
-	collateral: IFixed;
+	collateral: number;
 	collateralDecimals: CoinDecimal;
 	objectVersion: ObjectVersion;
 	objectDigest: ObjectDigest;
@@ -107,13 +107,13 @@ export interface PerpetualsVaultCap {
 }
 
 export interface PerpetualsPosition {
-	collateral: IFixed;
-	baseAssetAmount: IFixed;
-	quoteAssetNotionalAmount: IFixed;
-	cumFundingRateLong: IFixed;
-	cumFundingRateShort: IFixed;
-	asksQuantity: IFixed;
-	bidsQuantity: IFixed;
+	collateral: number;
+	baseAssetAmount: number;
+	quoteAssetNotionalAmount: number;
+	cumFundingRateLong: number;
+	cumFundingRateShort: number;
+	asksQuantity: number;
+	bidsQuantity: number;
 	collateralCoinType: CoinType;
 	marketId: PerpetualsMarketId;
 	pendingOrders: {
@@ -121,15 +121,15 @@ export interface PerpetualsPosition {
 		side: PerpetualsOrderSide;
 		size: bigint;
 	}[];
-	makerFee: IFixed;
-	takerFee: IFixed;
+	makerFee: number;
+	takerFee: number;
 	leverage: number;
 }
 
 export interface PerpetualsSubAccount {
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
-	collateral: IFixed;
+	collateral: number;
 	objectVersion: ObjectVersion;
 	// objectDigest: ObjectDigest;
 	objectId: ObjectId;
@@ -140,8 +140,8 @@ export interface PerpetualsSubAccount {
 // =========================================================================
 
 export interface PerpetualsMarketParams {
-	marginRatioInitial: IFixed;
-	marginRatioMaintenance: IFixed;
+	marginRatioInitial: number;
+	marginRatioMaintenance: number;
 	baseAssetSymbol: CoinSymbol;
 	basePriceFeedId: ObjectId;
 	collateralPriceFeedId: ObjectId;
@@ -152,35 +152,35 @@ export interface PerpetualsMarketParams {
 	spreadTwapFrequencyMs: bigint;
 	spreadTwapPeriodMs: bigint;
 	gasPriceTwapPeriodMs: bigint;
-	makerFee: IFixed;
-	takerFee: IFixed;
-	liquidationFee: IFixed;
-	forceCancelFee: IFixed;
-	insuranceFundFee: IFixed;
-	minOrderUsdValue: IFixed;
+	makerFee: number;
+	takerFee: number;
+	liquidationFee: number;
+	forceCancelFee: number;
+	insuranceFundFee: number;
+	minOrderUsdValue: number;
 	lotSize: bigint;
 	tickSize: bigint;
-	scalingFactor: IFixed;
-	gasPriceTakerFee: IFixed;
-	zScoreThreshold: IFixed;
+	scalingFactor: number;
+	gasPriceTakerFee: number;
+	zScoreThreshold: number;
 	maxPendingOrders: bigint;
 	baseOracleTolerance: bigint;
 	collateralOracleTolerance: bigint;
-	maxOpenInterest: IFixed;
-	maxOpenInterestThreshold: IFixed;
-	maxOpenInterestPositionPercent: IFixed;
+	maxOpenInterest: number;
+	maxOpenInterestThreshold: number;
+	maxOpenInterestPositionPercent: number;
 }
 
 export interface PerpetualsMarketState {
-	cumFundingRateLong: IFixed;
-	cumFundingRateShort: IFixed;
+	cumFundingRateLong: number;
+	cumFundingRateShort: number;
 	fundingLastUpdateTimestamp: Timestamp;
-	premiumTwap: IFixed;
+	premiumTwap: number;
 	premiumTwapLastUpdateTimestamp: Timestamp;
-	spreadTwap: IFixed;
+	spreadTwap: number;
 	spreadTwapLastUpdateTimestamp: Timestamp;
-	openInterest: IFixed;
-	feesAccrued: IFixed;
+	openInterest: number;
+	feesAccrued: number;
 }
 
 export interface PerpetualsMarketCandleDataPoint {
@@ -431,10 +431,10 @@ export interface WithdrewCollateralEvent extends Event {
 
 export interface SettledFundingEvent extends Event {
 	accountId: PerpetualsAccountId;
-	collateralDeltaUsd: IFixed;
+	collateralDeltaUsd: number;
 	marketId: PerpetualsMarketId;
-	marketFundingRateLong: IFixed;
-	marketFundingRateShort: IFixed;
+	marketFundingRateLong: number;
+	marketFundingRateShort: number;
 }
 
 export type CollateralEvent =
@@ -487,16 +487,16 @@ export const isSettledFundingEvent = (
 
 export interface LiquidatedEvent extends Event {
 	accountId: PerpetualsAccountId;
-	collateralDeltaUsd: IFixed;
+	collateralDeltaUsd: number;
 	liqorAccountId: PerpetualsAccountId;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
-	baseLiquidated: IFixed;
-	quoteLiquidated: IFixed;
-	liqeePnlUsd: IFixed;
-	liquidationFeesUsd: IFixed;
-	forceCancelFeesUsd: IFixed;
-	insuranceFundFeesUsd: IFixed;
+	baseLiquidated: number;
+	quoteLiquidated: number;
+	liqeePnlUsd: number;
+	liquidationFeesUsd: number;
+	forceCancelFeesUsd: number;
+	insuranceFundFeesUsd: number;
 }
 
 export const isLiquidatedEvent = (event: Event): event is LiquidatedEvent => {
@@ -526,7 +526,7 @@ export interface SetPositionInitialMarginRatioEvent extends Event {
 	marketId: PerpetualsMarketId;
 	accountId: PerpetualsAccountId;
 	// NOTE: should this be made into string ?
-	initialMarginRatio: IFixed;
+	initialMarginRatio: number;
 }
 
 // =========================================================================
@@ -579,27 +579,27 @@ export interface FilledMakerOrdersEvent extends Event {
 export interface FilledMakerOrderEventFields {
 	accountId: PerpetualsAccountId;
 	takerAccountId: PerpetualsAccountId;
-	collateralDeltaUsd: IFixed;
+	collateralDeltaUsd: number;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
 	sizeRemaining: bigint;
 	orderId: PerpetualsOrderId;
 	dropped: boolean;
-	pnlUsd: IFixed;
-	feesUsd: IFixed;
+	pnlUsd: number;
+	feesUsd: number;
 	canceledSize: bigint;
 }
 
 export interface FilledTakerOrderEvent extends Event {
 	accountId: PerpetualsAccountId;
-	collateralDeltaUsd: IFixed;
+	collateralDeltaUsd: number;
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
-	baseAssetDelta: IFixed;
-	quoteAssetDelta: IFixed;
-	takerPnlUsd: IFixed;
-	takerFeesUsd: IFixed;
+	baseAssetDelta: number;
+	quoteAssetDelta: number;
+	takerPnlUsd: number;
+	takerFeesUsd: number;
 }
 
 export type PerpetualsOrderEvent =
@@ -731,17 +731,17 @@ export interface ReceivedCollateralEvent extends Event {
 
 export interface UpdatedPremiumTwapEvent extends Event {
 	marketId: PerpetualsMarketId;
-	bookPrice: IFixed;
-	indexPrice: IFixed;
-	premiumTwap: IFixed;
+	bookPrice: number;
+	indexPrice: number;
+	premiumTwap: number;
 	premiumTwapLastUpdateMs: number;
 }
 
 export interface UpdatedSpreadTwapEvent extends Event {
 	marketId: PerpetualsMarketId;
-	bookPrice: IFixed;
-	indexPrice: IFixed;
-	spreadTwap: IFixed;
+	bookPrice: number;
+	indexPrice: number;
+	spreadTwap: number;
 	spreadTwapLastUpdateMs: number;
 }
 
@@ -767,8 +767,8 @@ export const isUpdatedSpreadTwapEvent = (
 
 export interface UpdatedFundingEvent extends Event {
 	marketId: PerpetualsMarketId;
-	cumFundingRateLong: IFixed;
-	cumFundingRateShort: IFixed;
+	cumFundingRateLong: number;
+	cumFundingRateShort: number;
 	fundingLastUpdateMs: Timestamp;
 }
 

@@ -178,10 +178,16 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			accountId: BigInt(fields.account_id),
-			collateralDeltaUsd: BigInt(fields.collateral_change_usd),
+			collateralDeltaUsd: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.collateral_change_usd)
+			),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			marketFundingRateLong: BigInt(fields.mkt_funding_rate_long),
-			marketFundingRateShort: BigInt(fields.mkt_funding_rate_short),
+			marketFundingRateLong: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.mkt_funding_rate_long)
+			),
+			marketFundingRateShort: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.mkt_funding_rate_short)
+			),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -226,26 +232,37 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			accountId: BigInt(fields.liqee_account_id),
-			collateralDeltaUsd: Casting.IFixed.iFixedFromNumber(
+			collateralDeltaUsd:
 				Casting.IFixed.numberFromIFixed(BigInt(fields.liqee_pnl)) -
-					Casting.IFixed.numberFromIFixed(
-						BigInt(fields.liquidation_fees)
-					) -
-					Casting.IFixed.numberFromIFixed(
-						BigInt(fields.force_cancel_fees)
-					) -
-					Casting.IFixed.numberFromIFixed(
-						BigInt(fields.insurance_fund_fees)
-					)
-			),
+				Casting.IFixed.numberFromIFixed(
+					BigInt(fields.liquidation_fees)
+				) -
+				Casting.IFixed.numberFromIFixed(
+					BigInt(fields.force_cancel_fees)
+				) -
+				Casting.IFixed.numberFromIFixed(
+					BigInt(fields.insurance_fund_fees)
+				),
 			liqorAccountId: BigInt(fields.liqor_account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			baseLiquidated: BigInt(fields.base_liquidated),
-			quoteLiquidated: BigInt(fields.quote_liquidated),
-			liqeePnlUsd: BigInt(fields.liqee_pnl),
-			liquidationFeesUsd: BigInt(fields.liquidation_fees),
-			forceCancelFeesUsd: BigInt(fields.force_cancel_fees),
-			insuranceFundFeesUsd: BigInt(fields.insurance_fund_fees),
+			baseLiquidated: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.base_liquidated)
+			),
+			quoteLiquidated: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.quote_liquidated)
+			),
+			liqeePnlUsd: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.liqee_pnl)
+			),
+			liquidationFeesUsd: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.liquidation_fees)
+			),
+			forceCancelFeesUsd: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.force_cancel_fees)
+			),
+			insuranceFundFeesUsd: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.insurance_fund_fees)
+			),
 			side: fields.is_liqee_long
 				? PerpetualsOrderSide.Bid
 				: PerpetualsOrderSide.Ask,
@@ -311,7 +328,9 @@ export class PerpetualsApiCasting {
 		return {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			accountId: BigInt(fields.account_id),
-			initialMarginRatio: BigInt(fields.initial_margin_ratio),
+			initialMarginRatio: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.initial_margin_ratio)
+			),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -345,12 +364,11 @@ export class PerpetualsApiCasting {
 			events: eventOnChain.parsedJson.events.map((fields) => ({
 				accountId: BigInt(fields.maker_account_id),
 				takerAccountId: BigInt(fields.taker_account_id),
-				collateralDeltaUsd: Casting.IFixed.iFixedFromNumber(
+				collateralDeltaUsd:
 					Casting.IFixed.numberFromIFixed(BigInt(fields.pnl)) -
-						Casting.IFixed.numberFromIFixed(BigInt(fields.fees))
-				),
-				pnlUsd: BigInt(fields.pnl),
-				feesUsd: BigInt(fields.fees),
+					Casting.IFixed.numberFromIFixed(BigInt(fields.fees)),
+				pnlUsd: Casting.IFixed.numberFromIFixed(BigInt(fields.pnl)),
+				feesUsd: Casting.IFixed.numberFromIFixed(BigInt(fields.fees)),
 				marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 				orderId: BigInt(fields.order_id),
 				side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
@@ -369,33 +387,34 @@ export class PerpetualsApiCasting {
 		eventOnChain: FilledTakerOrderEventOnChain
 	): FilledTakerOrderEvent => {
 		const fields = eventOnChain.parsedJson;
-		const baseAssetDelta = Casting.IFixed.iFixedFromNumber(
+		const baseAssetDelta =
 			Casting.IFixed.numberFromIFixed(
 				BigInt(fields.base_asset_delta_bid)
 			) -
-				Casting.IFixed.numberFromIFixed(
-					BigInt(fields.base_asset_delta_ask)
-				)
-		);
+			Casting.IFixed.numberFromIFixed(
+				BigInt(fields.base_asset_delta_ask)
+			);
 		return {
 			baseAssetDelta,
 			accountId: BigInt(fields.taker_account_id),
-			collateralDeltaUsd: Casting.IFixed.iFixedFromNumber(
+			collateralDeltaUsd:
 				Casting.IFixed.numberFromIFixed(BigInt(fields.taker_pnl)) -
-					Casting.IFixed.numberFromIFixed(BigInt(fields.taker_fees))
+				Casting.IFixed.numberFromIFixed(BigInt(fields.taker_fees)),
+			takerPnlUsd: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.taker_pnl)
 			),
-			takerPnlUsd: BigInt(fields.taker_pnl),
-			takerFeesUsd: BigInt(fields.taker_fees),
+			takerFeesUsd: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.taker_fees)
+			),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			side: Perpetuals.positionSide({ baseAssetAmount: baseAssetDelta }),
-			quoteAssetDelta: Casting.IFixed.iFixedFromNumber(
+			quoteAssetDelta:
 				Casting.IFixed.numberFromIFixed(
 					BigInt(fields.quote_asset_delta_bid)
 				) -
-					Casting.IFixed.numberFromIFixed(
-						BigInt(fields.quote_asset_delta_ask)
-					)
-			),
+				Casting.IFixed.numberFromIFixed(
+					BigInt(fields.quote_asset_delta_ask)
+				),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
@@ -601,9 +620,15 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			indexPrice: BigInt(fields.index_price),
-			bookPrice: BigInt(fields.book_price),
-			premiumTwap: BigInt(fields.premium_twap),
+			indexPrice: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.index_price)
+			),
+			bookPrice: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.book_price)
+			),
+			premiumTwap: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.premium_twap)
+			),
 			premiumTwapLastUpdateMs: Number(fields.premium_twap_last_upd_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -617,9 +642,15 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			bookPrice: BigInt(fields.book_price),
-			indexPrice: BigInt(fields.index_price),
-			spreadTwap: BigInt(fields.spread_twap),
+			bookPrice: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.book_price)
+			),
+			indexPrice: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.index_price)
+			),
+			spreadTwap: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.spread_twap)
+			),
 			spreadTwapLastUpdateMs: Number(fields.spread_twap_last_upd_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,
@@ -637,8 +668,12 @@ export class PerpetualsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
-			cumFundingRateLong: BigInt(fields.cum_funding_rate_long),
-			cumFundingRateShort: BigInt(fields.cum_funding_rate_short),
+			cumFundingRateLong: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.cum_funding_rate_long)
+			),
+			cumFundingRateShort: Casting.IFixed.numberFromIFixed(
+				BigInt(fields.cum_funding_rate_short)
+			),
 			fundingLastUpdateMs: Number(fields.funding_last_upd_ms),
 			timestamp: eventOnChain.timestampMs,
 			txnDigest: eventOnChain.id.txDigest,

@@ -252,7 +252,7 @@ export class PerpetualsMarket extends Caller {
 	public nextFundingTimeMs = (): Timestamp => {
 		const fundingFrequencyMs = Number(this.marketParams.fundingFrequencyMs);
 		const lastFundingIntervalNumber = Math.floor(
-			this.marketState.fundingLastUpdateMs / fundingFrequencyMs
+			this.marketState.fundingLastUpdateTimestamp / fundingFrequencyMs
 		);
 		return (lastFundingIntervalNumber + 1) * fundingFrequencyMs;
 	};
@@ -265,9 +265,7 @@ export class PerpetualsMarket extends Caller {
 	public estimatedFundingRate = (inputs: { indexPrice: number }): number => {
 		const { indexPrice } = inputs;
 
-		const premiumTwap = IFixedUtils.numberFromIFixed(
-			this.marketState.premiumTwap
-		);
+		const premiumTwap = this.marketState.premiumTwap;
 		const relativePremium = premiumTwap / indexPrice;
 		const periodAdjustment =
 			Number(this.marketParams.fundingFrequencyMs) /
@@ -341,24 +339,15 @@ export class PerpetualsMarket extends Caller {
 	}
 
 	public maxLeverage() {
-		return (
-			1 /
-			Casting.IFixed.numberFromIFixed(
-				this.marketParams.marginRatioInitial
-			)
-		);
+		return 1 / this.marketParams.marginRatioInitial;
 	}
 
 	public initialMarginRatio() {
-		return Casting.IFixed.numberFromIFixed(
-			this.marketParams.marginRatioInitial
-		);
+		return this.marketParams.marginRatioInitial;
 	}
 
 	public maintenanceMarginRatio() {
-		return Casting.IFixed.numberFromIFixed(
-			this.marketParams.marginRatioMaintenance
-		);
+		return this.marketParams.marginRatioMaintenance;
 	}
 
 	// =========================================================================
@@ -413,17 +402,17 @@ export class PerpetualsMarket extends Caller {
 		return {
 			marketId: this.marketId,
 			collateralCoinType: this.marketData.collateralCoinType,
-			collateral: BigInt(0),
-			baseAssetAmount: BigInt(0),
-			quoteAssetNotionalAmount: BigInt(0),
+			collateral: 0,
+			baseAssetAmount: 0,
+			quoteAssetNotionalAmount: 0,
 			cumFundingRateLong: this.marketData.marketState.cumFundingRateLong,
 			cumFundingRateShort:
 				this.marketData.marketState.cumFundingRateShort,
-			asksQuantity: BigInt(0),
-			bidsQuantity: BigInt(0),
+			asksQuantity: 0,
+			bidsQuantity: 0,
 			pendingOrders: [],
-			makerFee: BigInt(1000000000000000000), // 100%
-			takerFee: BigInt(1000000000000000000), // 100%
+			makerFee: 1, // 100%
+			takerFee: 1, // 100%
 			leverage: 1,
 		};
 	};
@@ -466,17 +455,17 @@ export class PerpetualsMarket extends Caller {
 
 	// 	const imr = 1 / position.leverage;
 	// 	// const imr = this.initialMarginRatio();
-	// 	const takerFee = Casting.IFixed.numberFromIFixed(
+	// 	const takerFee = (
 	// 		this.marketParams.takerFee
 	// 	);
 
-	// 	const positionSizeNum = Casting.IFixed.numberFromIFixed(
+	// 	const positionSizeNum = (
 	// 		position.baseAssetAmount
 	// 	);
-	// 	const positionBidsNum = Casting.IFixed.numberFromIFixed(
+	// 	const positionBidsNum = (
 	// 		position.bidsQuantity
 	// 	);
-	// 	const positionAsksNum = Casting.IFixed.numberFromIFixed(
+	// 	const positionAsksNum = (
 	// 		position.asksQuantity
 	// 	);
 	// 	const netSizeBefore = Math.max(

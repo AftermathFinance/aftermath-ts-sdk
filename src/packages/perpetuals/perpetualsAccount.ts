@@ -983,9 +983,7 @@ export class PerpetualsAccount extends Caller {
 		const { pnl, minInitialMargin } =
 			this.calcPnLAndMarginForPosition(inputs);
 
-		let collateralUsd =
-			IFixedUtils.numberFromIFixed(position.collateral) *
-			inputs.collateralPrice;
+		let collateralUsd = position.collateral * inputs.collateralPrice;
 
 		collateralUsd += funding;
 
@@ -1021,10 +1019,7 @@ export class PerpetualsAccount extends Caller {
 			market,
 			position,
 		});
-		const collateralUsd =
-			IFixedUtils.numberFromIFixed(position?.collateral) *
-				collateralPrice +
-			funding;
+		const collateralUsd = position?.collateral * collateralPrice + funding;
 
 		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
 			market,
@@ -1067,26 +1062,18 @@ export class PerpetualsAccount extends Caller {
 			this.positionForMarketId({ marketId }) ??
 			inputs.market.emptyPosition();
 
-		const baseAmount = IFixedUtils.numberFromIFixed(
-			position.baseAssetAmount
-		);
+		const baseAmount = position.baseAssetAmount;
 		const isLong = Math.sign(baseAmount);
 
 		if (isLong < 0) {
-			const fundingShort = IFixedUtils.numberFromIFixed(
-				position.cumFundingRateShort
-			);
-			const marketFundingShort = IFixedUtils.numberFromIFixed(
-				inputs.market.marketState.cumFundingRateShort
-			);
+			const fundingShort = position.cumFundingRateShort;
+			const marketFundingShort =
+				inputs.market.marketState.cumFundingRateShort;
 			return -baseAmount * (marketFundingShort - fundingShort);
 		} else {
-			const fundingLong = IFixedUtils.numberFromIFixed(
-				position.cumFundingRateLong
-			);
-			const marketFundingLong = IFixedUtils.numberFromIFixed(
-				inputs.market.marketState.cumFundingRateLong
-			);
+			const fundingLong = position.cumFundingRateLong;
+			const marketFundingLong =
+				inputs.market.marketState.cumFundingRateLong;
 			return -baseAmount * (marketFundingLong - fundingLong);
 		}
 	};
@@ -1109,21 +1096,12 @@ export class PerpetualsAccount extends Caller {
 
 		const marginRatioInitial = 1 / (position.leverage || 1);
 		// const marginRatioInitial = inputs.market.initialMarginRatio();
-		const marginRatioMaintenance = IFixedUtils.numberFromIFixed(
-			inputs.market.marketParams.marginRatioMaintenance
-		);
-		const baseAssetAmount = IFixedUtils.numberFromIFixed(
-			position.baseAssetAmount
-		);
-		const quoteAssetAmount = IFixedUtils.numberFromIFixed(
-			position.quoteAssetNotionalAmount
-		);
-		const bidsQuantity = IFixedUtils.numberFromIFixed(
-			position.bidsQuantity
-		);
-		const asksQuantity = IFixedUtils.numberFromIFixed(
-			position.asksQuantity
-		);
+		const marginRatioMaintenance =
+			inputs.market.marketParams.marginRatioMaintenance;
+		const baseAssetAmount = position.baseAssetAmount;
+		const quoteAssetAmount = position.quoteAssetNotionalAmount;
+		const bidsQuantity = position.bidsQuantity;
+		const asksQuantity = position.asksQuantity;
 		const pnl = baseAssetAmount * inputs.indexPrice - quoteAssetAmount;
 
 		const netAbs = Math.max(
@@ -1151,28 +1129,17 @@ export class PerpetualsAccount extends Caller {
 
 		const funding = this.calcUnrealizedFundingsForPosition(inputs);
 
-		const baseAssetAmount = IFixedUtils.numberFromIFixed(
-			position.baseAssetAmount
-		);
-		const quoteAssetAmount = IFixedUtils.numberFromIFixed(
-			position.quoteAssetNotionalAmount
-		);
+		const baseAssetAmount = position.baseAssetAmount;
+		const quoteAssetAmount = position.quoteAssetNotionalAmount;
 
 		const numerator =
-			IFixedUtils.numberFromIFixed(position.collateral) *
-				inputs.collateralPrice +
+			position.collateral * inputs.collateralPrice +
 			funding -
 			quoteAssetAmount;
 
-		const MMR = IFixedUtils.numberFromIFixed(
-			inputs.market.marketParams.marginRatioMaintenance
-		);
-		const bidsQuantity = IFixedUtils.numberFromIFixed(
-			position.bidsQuantity
-		);
-		const asksQuantity = IFixedUtils.numberFromIFixed(
-			position.asksQuantity
-		);
+		const MMR = inputs.market.marketParams.marginRatioMaintenance;
+		const bidsQuantity = position.bidsQuantity;
+		const asksQuantity = position.asksQuantity;
 		const netAbs = Math.max(
 			Math.abs(baseAssetAmount + bidsQuantity),
 			Math.abs(baseAssetAmount - asksQuantity)
@@ -1202,9 +1169,7 @@ export class PerpetualsAccount extends Caller {
 		const { pnl, minInitialMargin } =
 			this.calcPnLAndMarginForPosition(inputs);
 
-		let collateralUsd =
-			IFixedUtils.numberFromIFixed(position.collateral) *
-			inputs.collateralPrice;
+		let collateralUsd = position.collateral * inputs.collateralPrice;
 
 		const margin = collateralUsd + totalFunding + pnl;
 
@@ -1246,9 +1211,7 @@ export class PerpetualsAccount extends Caller {
 				position,
 			});
 
-			let collateralUsd =
-				IFixedUtils.numberFromIFixed(position.collateral) *
-				inputs.collateralPrice;
+			let collateralUsd = position.collateral * inputs.collateralPrice;
 
 			totalPnL += pnl;
 			totalFunding += funding;
@@ -1351,7 +1314,7 @@ export class PerpetualsAccount extends Caller {
 		const { marketId, stopOrderDatas } = inputs;
 
 		const position = this.positionForMarketId({ marketId });
-		if (!position || position.baseAssetAmount === BigInt(0)) {
+		if (!position || position.baseAssetAmount === 0) {
 			return {
 				fullSlTpOrder: undefined,
 				partialSlTpOrders: undefined,
@@ -1456,12 +1419,7 @@ export class PerpetualsAccount extends Caller {
 				BigInt(0)
 			) * BigInt(-1);
 		const positionSize = BigInt(
-			Math.round(
-				Math.abs(
-					Casting.IFixed.numberFromIFixed(position.baseAssetAmount) /
-						market.lotSize()
-				)
-			)
+			Math.round(Math.abs(position.baseAssetAmount / market.lotSize()))
 		);
 		// NOTE: is this safe / correct ?
 		const collateralChange = Coin.balanceWithDecimals(
