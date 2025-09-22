@@ -36,8 +36,8 @@ import {
 	EditedStopOrderTicketDetailsEvent,
 	ExecutedStopOrderTicketEvent,
 	SetPositionInitialMarginRatioEvent,
-	CreatedSubAccountEvent,
-	SetSubAccountUsersEvent,
+	// CreatedSubAccountEvent,
+	// SetSubAccountUsersEvent,
 } from "../perpetualsTypes";
 import { Casting, Helpers } from "../../../general/utils";
 import { Coin, Perpetuals } from "../..";
@@ -272,37 +272,37 @@ export class PerpetualsApiCasting {
 		};
 	};
 
-	public static createdSubAccountEventFromOnChain = (
-		eventOnChain: CreatedSubAccountEventOnChain
-	): CreatedSubAccountEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			users: fields.users.map((user) =>
-				Helpers.addLeadingZeroesToType(user)
-			),
-			accountId: BigInt(fields.account_id),
-			subAccountId: Helpers.addLeadingZeroesToType(fields.subaccount_id),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
+	// public static createdSubAccountEventFromOnChain = (
+	// 	eventOnChain: CreatedSubAccountEventOnChain
+	// ): CreatedSubAccountEvent => {
+	// 	const fields = eventOnChain.parsedJson;
+	// 	return {
+	// 		users: fields.users.map((user) =>
+	// 			Helpers.addLeadingZeroesToType(user)
+	// 		),
+	// 		accountId: BigInt(fields.account_id),
+	// 		subAccountId: Helpers.addLeadingZeroesToType(fields.subaccount_id),
+	// 		timestamp: eventOnChain.timestampMs,
+	// 		txnDigest: eventOnChain.id.txDigest,
+	// 		type: eventOnChain.type,
+	// 	};
+	// };
 
-	public static setSubAccountUsersEventFromOnChain = (
-		eventOnChain: SetSubAccountUsersEventOnChain
-	): SetSubAccountUsersEvent => {
-		const fields = eventOnChain.parsedJson;
-		return {
-			users: fields.users.map((user) =>
-				Helpers.addLeadingZeroesToType(user)
-			),
-			accountId: BigInt(fields.account_id),
-			subAccountId: Helpers.addLeadingZeroesToType(fields.subaccount_id),
-			timestamp: eventOnChain.timestampMs,
-			txnDigest: eventOnChain.id.txDigest,
-			type: eventOnChain.type,
-		};
-	};
+	// public static setSubAccountUsersEventFromOnChain = (
+	// 	eventOnChain: SetSubAccountUsersEventOnChain
+	// ): SetSubAccountUsersEvent => {
+	// 	const fields = eventOnChain.parsedJson;
+	// 	return {
+	// 		users: fields.users.map((user) =>
+	// 			Helpers.addLeadingZeroesToType(user)
+	// 		),
+	// 		accountId: BigInt(fields.account_id),
+	// 		subAccountId: Helpers.addLeadingZeroesToType(fields.subaccount_id),
+	// 		timestamp: eventOnChain.timestampMs,
+	// 		txnDigest: eventOnChain.id.txDigest,
+	// 		type: eventOnChain.type,
+	// 	};
+	// };
 
 	public static SetPositionInitialMarginRatioEventFromOnChain = (
 		eventOnChain: SetPositionInitialMarginRatioEventOnChain

@@ -130,7 +130,6 @@ export interface PerpetualsSubAccount {
 	accountId: PerpetualsAccountId;
 	collateralCoinType: CoinType;
 	collateral: IFixed;
-	users: SuiAddress[];
 	objectVersion: ObjectVersion;
 	// objectDigest: ObjectDigest;
 	objectId: ObjectId;
@@ -152,6 +151,7 @@ export interface PerpetualsMarketParams {
 	premiumTwapPeriodMs: bigint;
 	spreadTwapFrequencyMs: bigint;
 	spreadTwapPeriodMs: bigint;
+	gasPriceTwapPeriodMs: bigint;
 	makerFee: IFixed;
 	takerFee: IFixed;
 	liquidationFee: IFixed;
@@ -160,7 +160,9 @@ export interface PerpetualsMarketParams {
 	minOrderUsdValue: IFixed;
 	lotSize: bigint;
 	tickSize: bigint;
-	liquidationTolerance: bigint;
+	scalingFactor: IFixed;
+	gasPriceTakerFee: IFixed;
+	zScoreThreshold: IFixed;
 	maxPendingOrders: bigint;
 	baseOracleTolerance: bigint;
 	collateralOracleTolerance: bigint;
@@ -510,17 +512,15 @@ export interface CreatedAccountEvent extends Event {
 	accountId: PerpetualsAccountId;
 }
 
-export interface CreatedSubAccountEvent extends Event {
-	users: SuiAddress[];
-	accountId: PerpetualsAccountId;
-	subAccountId: ObjectId;
-}
+// export interface CreatedSubAccountEvent extends Event {
+// 	accountId: PerpetualsAccountId;
+// 	subAccountId: ObjectId;
+// }
 
-export interface SetSubAccountUsersEvent extends Event {
-	users: SuiAddress[];
-	accountId: PerpetualsAccountId;
-	subAccountId: ObjectId;
-}
+// export interface SetSubAccountUsersEvent extends Event {
+// 	accountId: PerpetualsAccountId;
+// 	subAccountId: ObjectId;
+// }
 
 export interface SetPositionInitialMarginRatioEvent extends Event {
 	marketId: PerpetualsMarketId;
