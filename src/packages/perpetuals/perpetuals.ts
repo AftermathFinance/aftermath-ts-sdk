@@ -260,7 +260,7 @@ export class Perpetuals extends Caller {
 			ApiPerpetualsVaultWithdrawRequestsBody
 		>("vaults/withdraw-requests", {
 			...inputs,
-			vaultIds: undefined,
+			// vaultIds: undefined,
 		});
 	}
 
