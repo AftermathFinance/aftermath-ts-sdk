@@ -2,6 +2,44 @@
 
 The Aftermath SDK provides easy access to Aftermath Finance's protocols on the Sui blockchain. Please note that not all of our protocols are on Testnet, but all of them are Mainnet.
 
+## WebAssembly Setup
+
+This SDK uses WebAssembly modules. For proper operation in browser environments, webpack configuration is required.
+
+### Next.js Setup
+
+Add to your `next.config.js`:
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack: (config) => {
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+    };
+    return config;
+  },
+};
+module.exports = nextConfig;
+```
+
+### Vite Setup
+
+Add to your `vite.config.js`:
+
+```javascript
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  optimizeDeps: {
+    include: ['@mysten/move-bytecode-template']
+  }
+})
+```
+
+For detailed instructions, see [WEBPACK_SETUP.md](./WEBPACK_SETUP.md)
+
 ## Installation
 
 ```bash
