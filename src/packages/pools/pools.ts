@@ -2,7 +2,7 @@ import {
 	ApiCreatePoolBody,
 	ApiEventsBody,
 	ApiPoolObjectIdForLpCoinTypeBody,
-	ApiPublishLpCoinBody,
+	ApiPublishLpCoinBodyV1,
 	Balance,
 	CoinType,
 	PoolDepositEvent,
@@ -21,6 +21,7 @@ import {
 	SuiAddress,
 	ApiIndexerEventsBody,
 	CallerConfig,
+	ApiPublishLpCoinBodyV2,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -102,6 +103,10 @@ export class Pools extends Caller {
 		 * Various bounds used to prevent extreme trades or invalid pool configurations.
 		 */
 		bounds: {
+			/**
+			 * Maximum decimals for LP coins.
+			 */
+			maxCoinDecimals: 18,
 			/**
 			 * Maximum number of distinct coins allowed in a single pool.
 			 */
@@ -252,17 +257,54 @@ export class Pools extends Caller {
 	 *
 	 * @param inputs - Includes the user `walletAddress` and the `lpCoinDecimals`.
 	 * @returns A transaction object (or data) that can be signed and published to Sui.
+	 * @deprecated Use getPublishLpCoinTransactionV2
 	 *
 	 * @example
 	 * ```typescript
-	 * const publishTx = await pools.getPublishLpCoinTransaction({
+	 * const publishTx = await pools.getPublishLpCoinTransactionV1({
 	 *   walletAddress: "0x<address>",
 	 *   lpCoinDecimals: 9
 	 * });
 	 * ```
 	 */
-	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
+	public async getPublishLpCoinTransactionV1(inputs: ApiPublishLpCoinBodyV1) {
 		return this.useProvider().buildPublishLpCoinTx(inputs);
+	}
+
+	/**
+	 * Constructs a transaction to create a new LP coin on-chain,
+	 * typically used by advanced users or devs establishing new liquidity pools.
+	 *
+	 * @param inputs - The body describing how to form the new LP coin.
+	 * @returns A transaction object that can be signed and executed.
+	 *
+	 * @example
+	 * ```typescript
+	 * const createLpTx = await pools.getCreateLpTransaction({
+	 *   walletAddress: "0x<address>",
+	 *   lpCoinMetadata: {
+	 *     name: "MyPool LP",
+	 *     symbol: "MYPLP"
+	 *   },
+	 *   coinsInfo: [
+	 *     {
+	 *       coinType: "0x<coinA>",
+	 *       weight: 0.5,
+	 *       decimals: 9
+	 *     },
+	 *     // ...
+	 *   ],
+	 *   poolName: "My Weighted Pool",
+	 *   poolFlatness: 1,
+	 *   respectDecimals: true,
+	 * });
+	 * ```
+	 */
+	public async getPublishLpCoinTransactionV2(inputs: ApiPublishLpCoinBodyV2) {
+		return this.fetchApiTransaction(
+			"transactions/publish-lp-coin-v2",
+			inputs
+		);
 	}
 
 	/**

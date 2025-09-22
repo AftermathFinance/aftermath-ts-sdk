@@ -93,14 +93,17 @@ export interface PoolsAddresses {
 		lpCoinsTable: ObjectId;
 	};
 	other?: {
-		createLpCoinPackageCompilations: Record<CoinDecimal, string>;
+		createLpCoinPackageCompilations: Record<
+			CoinDecimal | "template",
+			string
+		>;
 	};
 }
 
 export interface DaoFeePoolsAddresses {
 	packages: {
 		amm: SuiAddress;
-		events: SuiAddress
+		events: SuiAddress;
 	};
 	objects: {
 		version: ObjectId;
