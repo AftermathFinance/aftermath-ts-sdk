@@ -218,7 +218,7 @@ export class PoolsApi implements MoveErrorsInterface {
 					10: "Not Sorted",
 				},
 				[PoolsApi.constants.moduleNames.poolRegistry]: {
-					/// A user tries to create a Pool and the generic parameters of `create_pool_n_coins` were
+					/// A user tries to create a Pool and the generic parameters of `create_pool_n_coins_v2` were
 					///  provided in nonlexicographical order.
 					60: "Not Sorted",
 					/// A user tries to create a Pool with exact parameters as an already active Pool.
@@ -579,6 +579,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * Publishes a transaction block for creating a liquidity pool coin.
 	 * @param inputs An object containing the transaction block and the decimal value of the liquidity pool coin.
 	 * @returns A promise that resolves to the result of the transaction publishing.
+	 * @deprecated
 	 */
 	public publishLpCoinTx = (inputs: {
 		tx: Transaction;
@@ -604,11 +605,11 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
-	// TODO: handle bounds checks here instead of just on-chain ?
 	/**
 	 * Creates a transaction to create a new pool.
 	 * @param inputs - An object containing the necessary inputs to create the pool.
 	 * @returns A transaction block to create the pool.
+	 * @deprecated
 	 */
 	public createPoolTx = (inputs: {
 		tx: Transaction;
@@ -745,6 +746,105 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
+	// TODO: handle bounds checks here instead of just on-chain ?
+	/**
+	 * Creates a transaction to create a new pool.
+	 * @param inputs - An object containing the necessary inputs to create the pool.
+	 * @returns A transaction block to create the pool.
+	 */
+	public createPoolTxV2 = (inputs: {
+		tx: Transaction;
+		lpCoinType: CoinType;
+		coinsInfo: {
+			coinId: ObjectId | TransactionObjectArgument;
+			coinType: CoinType;
+			weight: PoolWeight;
+			decimals?: CoinDecimal;
+			tradeFeeIn: PoolTradeFee;
+			tradeFeeOut: PoolTradeFee;
+			depositFee: PoolDepositFee;
+			withdrawFee: PoolWithdrawFee;
+		}[];
+		createPoolCapId: ObjectId | TransactionObjectArgument;
+		poolName: PoolName;
+		poolFlatness: PoolFlatness;
+		respectDecimals: boolean;
+		forceLpDecimals?: CoinDecimal;
+		withTransfer?: boolean;
+	}): TransactionObjectArgument[] /* (Pool<L>, Coin<L>) */ => {
+		const { tx, lpCoinType, createPoolCapId, coinsInfo, withTransfer } =
+			inputs;
+
+		const poolSize = coinsInfo.length;
+		const coinTypes = coinsInfo.map((coin) => coin.coinType);
+		const decimals = coinsInfo.map((coin) => coin.decimals);
+
+		return tx.moveCall({
+			target: Helpers.transactions.createTxTarget(
+				withTransfer
+					? this.addresses.pools.packages.ammInterface
+					: this.addresses.pools.packages.amm,
+				withTransfer
+					? PoolsApi.constants.moduleNames.interface
+					: PoolsApi.constants.moduleNames.poolFactory,
+				`create_pool_${poolSize}_coins_v2`
+			),
+			typeArguments: [lpCoinType, ...coinTypes],
+			arguments: [
+				typeof createPoolCapId === "string"
+					? tx.object(createPoolCapId)
+					: createPoolCapId,
+				tx.object(this.addresses.pools.objects.poolRegistry),
+				tx.pure(
+					bcs
+						.vector(bcs.u8())
+						.serialize(Casting.u8VectorFromString(inputs.poolName))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.weight))
+				),
+				tx.pure.u64(inputs.poolFlatness),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.tradeFeeIn))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.tradeFeeOut))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.depositFee))
+				),
+				tx.pure(
+					bcs
+						.vector(bcs.u64())
+						.serialize(coinsInfo.map((coin) => coin.withdrawFee))
+				),
+				...coinsInfo.map((coin) =>
+					typeof coin.coinId === "string"
+						? tx.object(coin.coinId)
+						: coin.coinId
+				),
+				tx.pure(
+					bcs
+						.option(bcs.vector(bcs.u8()))
+						.serialize(
+							decimals.includes(undefined)
+								? undefined
+								: (decimals as number[])
+						)
+				), // decimals
+				tx.pure.bool(inputs.respectDecimals), // respect_decimals
+			],
+		});
+	};
+
 	/**
 	 * Returns the pool object ID for a given LP coin type transaction.
 	 * @param inputs - An object containing the transaction block and LP coin type.
@@ -784,7 +884,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.daoFeePools.packages.amm,
 				PoolsApi.constants.moduleNames.pool,
-				"new"
+				"new_v2"
 			),
 			typeArguments: [inputs.lpCoinType],
 			arguments: [
@@ -1360,6 +1460,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * Builds a transaction block for publishing an LP coin.
 	 * @param inputs - The input parameters for the transaction.
 	 * @returns The built transaction block.
+	 * @deprecated
 	 */
 	public buildPublishLpCoinTx = (
 		inputs: ApiPublishLpCoinBody

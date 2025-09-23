@@ -252,6 +252,7 @@ export class Pools extends Caller {
 	 *
 	 * @param inputs - Includes the user `walletAddress` and the `lpCoinDecimals`.
 	 * @returns A transaction object (or data) that can be signed and published to Sui.
+	 * @deprecated Use getPublishLpCoinTransactionV2
 	 *
 	 * @example
 	 * ```typescript
@@ -263,6 +264,25 @@ export class Pools extends Caller {
 	 */
 	public async getPublishLpCoinTransaction(inputs: ApiPublishLpCoinBody) {
 		return this.useProvider().buildPublishLpCoinTx(inputs);
+	}
+
+	/**
+	 * Constructs or fetches a transaction to publish a new LP coin package,
+	 * typically used by advanced users or devs establishing new liquidity pools.
+	 *
+	 * @param inputs - Includes the user `walletAddress` and the `lpCoinDecimals`.
+	 * @returns A transaction object (or data) that can be signed and published to Sui.
+	 *
+	 * @example
+	 * ```typescript
+	 * const publishTx = await pools.getPublishLpCoinTransaction({
+	 *   walletAddress: "0x<address>",
+	 *   lpCoinDecimals: 9
+	 * });
+	 * ```
+	 */
+	public async getPublishLpCoinTransactionV2(inputs: ApiPublishLpCoinBody) {
+		return this.fetchApiTransaction("transactions/publish-lp-coin", inputs);
 	}
 
 	/**
