@@ -606,43 +606,6 @@ export class PoolsApi implements MoveErrorsInterface {
 	};
 
 	/**
-	 * Publishes a transaction block for creating a liquidity pool coin.
-	 * @param inputs An object containing the transaction block and the decimal value of the liquidity pool coin.
-	 * @returns A promise that resolves to the result of the transaction publishing.
-	 */
-	public publishLpCoinTxV2 = async (inputs: {
-		tx: Transaction;
-		lpCoinDecimals: CoinDecimal;
-	}) => {
-		const compilations =
-			this.addresses.pools.other?.createLpCoinPackageCompilations;
-		if (!compilations)
-			throw new Error(
-				"not all required addresses have been set in provider for lp coin publishing (requires package compilations)"
-			);
-
-		const { tx, lpCoinDecimals } = inputs;
-
-		const constants = template.get_constants(
-			template.serialize(compilations.template)
-		);
-
-		console.log(1234, constants);
-		debugger;
-
-		const compiledModulesAndDeps = JSON.parse(compilations.template);
-
-		return tx.publish({
-			modules: compiledModulesAndDeps.modules.map((m: any) =>
-				Array.from(fromB64(m))
-			),
-			dependencies: compiledModulesAndDeps.dependencies.map(
-				(addr: string) => normalizeSuiObjectId(addr)
-			),
-		});
-	};
-
-	/**
 	 * Creates a transaction to create a new pool.
 	 * @param inputs - An object containing the necessary inputs to create the pool.
 	 * @returns A transaction block to create the pool.
@@ -1508,23 +1471,6 @@ export class PoolsApi implements MoveErrorsInterface {
 		tx.setSender(inputs.walletAddress);
 
 		const upgradeCap = this.publishLpCoinTx({ tx, lpCoinDecimals });
-		tx.transferObjects([upgradeCap], inputs.walletAddress);
-
-		return tx;
-	};
-
-	/**
-	 * Builds a transaction block for publishing an LP coin.
-	 * @param inputs - The input parameters for the transaction.
-	 * @returns The built transaction block.
-	 */
-	public buildPublishLpCoinTxV2 = async (inputs: ApiPublishLpCoinBody) => {
-		const { lpCoinDecimals } = inputs;
-
-		const tx = new Transaction();
-		tx.setSender(inputs.walletAddress);
-
-		const upgradeCap = await this.publishLpCoinTxV2({ tx, lpCoinDecimals });
 		tx.transferObjects([upgradeCap], inputs.walletAddress);
 
 		return tx;

@@ -252,7 +252,7 @@ export class Pools extends Caller {
 	 *
 	 * @param inputs - Includes the user `walletAddress` and the `lpCoinDecimals`.
 	 * @returns A transaction object (or data) that can be signed and published to Sui.
-	 * @deprecated
+	 * @deprecated Use getPublishLpCoinTransactionV2
 	 *
 	 * @example
 	 * ```typescript
@@ -282,7 +282,7 @@ export class Pools extends Caller {
 	 * ```
 	 */
 	public async getPublishLpCoinTransactionV2(inputs: ApiPublishLpCoinBody) {
-		return this.useProvider().buildPublishLpCoinTxV2(inputs);
+		return this.fetchApiTransaction("transactions/publish-lp-coin", inputs);
 	}
 
 	/**
