@@ -769,7 +769,6 @@ export class PoolsApi implements MoveErrorsInterface {
 		poolName: PoolName;
 		poolFlatness: PoolFlatness;
 		respectDecimals: boolean;
-		forceLpDecimals?: CoinDecimal;
 		withTransfer?: boolean;
 	}): TransactionObjectArgument[] /* (Pool<L>, Coin<L>) */ => {
 		const { tx, lpCoinType, createPoolCapId, coinsInfo, withTransfer } =
@@ -791,46 +790,67 @@ export class PoolsApi implements MoveErrorsInterface {
 			),
 			typeArguments: [lpCoinType, ...coinTypes],
 			arguments: [
+				// create_pool_cap_v2
 				typeof createPoolCapId === "string"
 					? tx.object(createPoolCapId)
 					: createPoolCapId,
+
+				// pool_registry
 				tx.object(this.addresses.pools.objects.poolRegistry),
+
+				// name
 				tx.pure(
 					bcs
 						.vector(bcs.u8())
 						.serialize(Casting.u8VectorFromString(inputs.poolName))
 				),
+
+				// weights
 				tx.pure(
 					bcs
 						.vector(bcs.u64())
 						.serialize(coinsInfo.map((coin) => coin.weight))
 				),
+
+				// flatness
 				tx.pure.u64(inputs.poolFlatness),
+
+				// fees_swap_in
 				tx.pure(
 					bcs
 						.vector(bcs.u64())
 						.serialize(coinsInfo.map((coin) => coin.tradeFeeIn))
 				),
+
+				// fees_swap_out
 				tx.pure(
 					bcs
 						.vector(bcs.u64())
 						.serialize(coinsInfo.map((coin) => coin.tradeFeeOut))
 				),
+
+				// fees_deposit
 				tx.pure(
 					bcs
 						.vector(bcs.u64())
 						.serialize(coinsInfo.map((coin) => coin.depositFee))
 				),
+
+				// fees_withdraw
 				tx.pure(
 					bcs
 						.vector(bcs.u64())
 						.serialize(coinsInfo.map((coin) => coin.withdrawFee))
 				),
+
+				// coin_n
 				...coinsInfo.map((coin) =>
 					typeof coin.coinId === "string"
 						? tx.object(coin.coinId)
 						: coin.coinId
 				),
+
+				// decimals
 				tx.pure(
 					bcs
 						.option(bcs.vector(bcs.u8()))
@@ -839,8 +859,10 @@ export class PoolsApi implements MoveErrorsInterface {
 								? undefined
 								: (decimals as number[])
 						)
-				), // decimals
-				tx.pure.bool(inputs.respectDecimals), // respect_decimals
+				),
+
+				// respect_decimals
+				tx.pure.bool(inputs.respectDecimals),
 			],
 		});
 	};
@@ -884,7 +906,7 @@ export class PoolsApi implements MoveErrorsInterface {
 			target: Helpers.transactions.createTxTarget(
 				this.addresses.daoFeePools.packages.amm,
 				PoolsApi.constants.moduleNames.pool,
-				"new_v2"
+				"new"
 			),
 			typeArguments: [inputs.lpCoinType],
 			arguments: [

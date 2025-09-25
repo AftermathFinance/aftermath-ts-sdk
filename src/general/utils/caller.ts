@@ -74,6 +74,10 @@ export class Caller {
 				? this.apiBaseUrl.slice(0, -1)
 				: this.apiBaseUrl;
 
+		if (url === "transactions/create-lp" && this.apiUrlPrefix === "pools") {
+			return "http://localhost:3000/api/pools/transactions/create-lp";
+		}
+
 		return `${safeUrl}/${this.apiEndpoint}/${
 			this.apiUrlPrefix + (url === "" ? "" : "/")
 		}${url}`;

@@ -21,6 +21,7 @@ import {
 	SuiAddress,
 	ApiIndexerEventsBody,
 	CallerConfig,
+	ApiCreateLPBody,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -252,7 +253,7 @@ export class Pools extends Caller {
 	 *
 	 * @param inputs - Includes the user `walletAddress` and the `lpCoinDecimals`.
 	 * @returns A transaction object (or data) that can be signed and published to Sui.
-	 * @deprecated Use getPublishLpCoinTransactionV2
+	 * @deprecated Use getCreateLpTransaction
 	 *
 	 * @example
 	 * ```typescript
@@ -267,22 +268,35 @@ export class Pools extends Caller {
 	}
 
 	/**
-	 * Constructs or fetches a transaction to publish a new LP coin package,
+	 * Constructs a transaction to create a new LP coin on-chain,
 	 * typically used by advanced users or devs establishing new liquidity pools.
 	 *
-	 * @param inputs - Includes the user `walletAddress` and the `lpCoinDecimals`.
-	 * @returns A transaction object (or data) that can be signed and published to Sui.
+	 * @param inputs - The body describing how to form the new LP coin.
+	 * @returns A transaction object that can be signed and executed.
 	 *
 	 * @example
 	 * ```typescript
-	 * const publishTx = await pools.getPublishLpCoinTransaction({
+	 * const createLpTx = await pools.getCreateLpTransaction({
 	 *   walletAddress: "0x<address>",
-	 *   lpCoinDecimals: 9
+	 *   lpCoinMetadata: {
+	 *     name: "MyPool LP",
+	 *     symbol: "MYPLP"
+	 *   },
+	 *   coinsInfo: [
+	 *     {
+	 *       coinType: "0x<coinA>",
+	 *       weight: 0.5,
+	 *     },
+	 *     // ...
+	 *   ],
+	 *   poolName: "My Weighted Pool",
+	 *   poolFlatness: 1,
+	 *   respectDecimals: true,
 	 * });
 	 * ```
 	 */
-	public async getPublishLpCoinTransactionV2(inputs: ApiPublishLpCoinBody) {
-		return this.fetchApiTransaction("transactions/publish-lp-coin", inputs);
+	public async getCreateLpTransaction(inputs: ApiCreateLPBody) {
+		return this.fetchApiTransaction("transactions/create-lp", inputs);
 	}
 
 	/**

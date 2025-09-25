@@ -504,6 +504,23 @@ export interface ApiCreatePoolBody {
 }
 
 /**
+ * Request body for creating a new LP, specifying coin information
+ * and the LP coin metadata.
+ */
+export interface ApiCreateLPBody {
+	walletAddress: SuiAddress;
+	lpCoinMetadata: PoolCreationLpCoinMetadata;
+	lpCoinDecimals: CoinDecimal;
+	coinsInfo: {
+		coinType: CoinType;
+		weight: Percentage;
+	}[];
+	poolName: PoolName;
+	poolFlatness: 0 | 1;
+	respectDecimals: boolean;
+}
+
+/**
  * For retrieving the spot price of a pool, specifying coin in/out.
  * Not always used directly, but present in certain route building contexts.
  */
