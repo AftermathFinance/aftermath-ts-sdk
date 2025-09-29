@@ -258,7 +258,7 @@ export class Perpetuals extends Caller {
 		return this.fetchApi<
 			PerpetualsVaultWithdrawRequest[],
 			ApiPerpetualsVaultWithdrawRequestsBody
-		>("vaults/withdraw-requests", {
+		>("vaults/owned-withdraw-requests", {
 			...inputs,
 			// vaultIds: undefined,
 		});

@@ -1446,14 +1446,12 @@ export interface ApiPerpetualsVaultCreateWithdrawRequestTxBody {
 	vaultId: ObjectId;
 	lpWithdrawAmount: Balance;
 	minLpWithdrawAmount: Balance;
-	// user_lp_coin_id
 	txKind?: SerializedTransaction;
 }
 
 export interface ApiPerpetualsVaultCancelWithdrawRequestsTxBody {
 	vaultIds: ObjectId[];
 	walletAddress: SuiAddress;
-	// user_lp_coins_ids
 	txKind?: SerializedTransaction;
 }
 
@@ -1461,7 +1459,6 @@ export type ApiPerpetualsVaultDepositTxBody = {
 	vaultId: ObjectId;
 	walletAddress: SuiAddress;
 	minLpAmountOut: Balance;
-	// user_lp_coins_ids
 	txKind?: SerializedTransaction;
 	isSponsoredTx?: boolean;
 } & (
