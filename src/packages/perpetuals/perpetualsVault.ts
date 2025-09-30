@@ -28,12 +28,13 @@ import {
 	ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse,
 	ApiPerpetualsVaultPreviewDepositResponse,
 	ApiPerpetualsVaultPreviewDepositBody,
-	ApiPerpetualsVaultPreviewProcessForceWithdrawsResponse,
-	ApiPerpetualsVaultPreviewProcessForceWithdrawsBody,
+	ApiPerpetualsVaultPreviewProcessForceWithdrawResponse,
+	ApiPerpetualsVaultPreviewProcessForceWithdrawBody,
 	ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse,
 	ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody,
 	ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
 	ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody,
+	PerpetualsVaultCap,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -71,8 +72,6 @@ export class PerpetualsVault extends Caller {
 		maxPendingOrdersPerPosition: 70,
 	};
 
-	public readonly account: PerpetualsAccount;
-
 	// =========================================================================
 	//  Constructor
 	// =========================================================================
@@ -83,17 +82,6 @@ export class PerpetualsVault extends Caller {
 		public readonly Provider?: AftermathApi
 	) {
 		super(config, "perpetuals/vaults");
-		this.account = new PerpetualsAccount(
-			// @ts-ignore
-			vaultObject.account,
-			{
-				// @ts-ignore
-				...vaultObject.accountCap,
-				vaultId: vaultObject.objectId,
-			},
-			config,
-			Provider
-		);
 	}
 
 	// =========================================================================
@@ -254,6 +242,7 @@ export class PerpetualsVault extends Caller {
 	//  Admin Interactions Txs
 	// =========================================================================
 
+	// TODO: find out if returns coin out or not
 	public async getWithdrawOwnerFeesTx(inputs: {
 		withdrawAmount: Balance;
 		ownerFeePercentage: number;
@@ -377,12 +366,12 @@ export class PerpetualsVault extends Caller {
 		return this.fetchApi<
 			PerpetualsVaultWithdrawRequest[],
 			ApiPerpetualsVaultAllWithdrawRequestsBody
-		>("withdraw-requests", {
+		>("admin-withdraw-requests", {
 			vaultId: this.vaultObject.objectId,
 		});
 	}
 
-	// // TODO: add to perps account as well
+	// // TODO: add to perps account as well ?
 
 	// public async getWithdrawRequestsForUser(inputs: {
 	// 	walletAddress: SuiAddress;
@@ -452,13 +441,13 @@ export class PerpetualsVault extends Caller {
 	}
 
 	// TODO: change all `withdraws` to `withdrawals` ?
-	public async getPreviewProcessForceWithdraws(inputs: {
+	public async getPreviewProcessForceWithdraw(inputs: {
 		walletAddress: SuiAddress;
 	}) {
 		return this.fetchApi<
-			ApiPerpetualsVaultPreviewProcessForceWithdrawsResponse,
-			ApiPerpetualsVaultPreviewProcessForceWithdrawsBody
-		>("previews/process-force-withdraws", {
+			ApiPerpetualsVaultPreviewProcessForceWithdrawResponse,
+			ApiPerpetualsVaultPreviewProcessForceWithdrawBody
+		>("previews/process-force-withdraw", {
 			...inputs,
 			vaultId: this.vaultObject.objectId,
 		});
@@ -469,19 +458,36 @@ export class PerpetualsVault extends Caller {
 	// =========================================================================
 
 	public async getLpCoinPrice(): Promise<number> {
-		return Object.values(
-			await new Perpetuals(
-				this.config,
-				this.Provider
-			).getVaulIdsToLpCoinPrice({ vaultIds: [this.vaultObject.objectId] })
+		return (
+			await new Perpetuals(this.config, this.Provider).getLpCoinPrices({
+				vaultIds: [this.vaultObject.objectId],
+			})
 		)[0];
 	}
 
-	// // =========================================================================
-	// //  Getters
-	// // =========================================================================
+	// =========================================================================
+	//  Account
+	// =========================================================================
 
-	// public account() {
-	// 	return this.account;
-	// }
+	public async getAccountObject() {
+		return (
+			await new Perpetuals(this.config, this.Provider).getAccountObjects({
+				accountIds: [this.vaultObject.accountId],
+				collateralCoinType: this.vaultObject.collateralCoinType,
+			})
+		)[0];
+	}
+
+	public async getAccount() {
+		return new Perpetuals(this.config, this.Provider).getAccount({
+			accountCap: {
+				vaultId: this.vaultObject.objectId,
+				ownerAddress: this.vaultObject.ownerAddress,
+				accountId: this.vaultObject.accountId,
+				accountObjectId: this.vaultObject.accountObjectId,
+				collateralCoinType: this.vaultObject.collateralCoinType,
+				collateralDecimals: "TODO",
+			},
+		});
+	}
 }

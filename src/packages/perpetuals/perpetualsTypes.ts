@@ -81,7 +81,6 @@ export interface PerpetualsMarketData {
 }
 
 export interface PerpetualsAccountCap {
-	vaultId?: ObjectId;
 	objectId: ObjectId;
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
@@ -90,21 +89,24 @@ export interface PerpetualsAccountCap {
 	collateralDecimals: CoinDecimal;
 	objectVersion: ObjectVersion;
 	objectDigest: ObjectDigest;
-	subAccount: PerpetualsSubAccount;
+	// subAccount: PerpetualsSubAccount;
 }
 
 export interface PerpetualsVaultCap {
-	vaultId?: ObjectId;
+	vaultId: ObjectId;
 	objectId: ObjectId;
-	walletAddress: SuiAddress;
-	accountId: PerpetualsAccountId;
-	collateralCoinType: CoinType;
-	collateral: number;
-	collateralDecimals: CoinDecimal;
-	objectVersion: ObjectVersion;
-	objectDigest: ObjectDigest;
-	subAccount: PerpetualsSubAccount;
+	ownerAddress: SuiAddress;
 }
+
+// TODO: rename
+export type PerpetualsVaultCapExtended = {
+	vaultId: ObjectId;
+	ownerAddress: SuiAddress;
+	accountId: PerpetualsAccountId;
+	accountObjectId: ObjectId;
+	collateralCoinType: CoinType;
+	collateralDecimals: CoinDecimal;
+};
 
 export interface PerpetualsPosition {
 	collateral: number;
@@ -126,14 +128,14 @@ export interface PerpetualsPosition {
 	leverage: number;
 }
 
-export interface PerpetualsSubAccount {
-	accountId: PerpetualsAccountId;
-	collateralCoinType: CoinType;
-	collateral: number;
-	objectVersion: ObjectVersion;
-	// objectDigest: ObjectDigest;
-	objectId: ObjectId;
-}
+// export interface PerpetualsSubAccount {
+// 	accountId: PerpetualsAccountId;
+// 	collateralCoinType: CoinType;
+// 	collateral: number;
+// 	objectVersion: ObjectVersion;
+// 	// objectDigest: ObjectDigest;
+// 	objectId: ObjectId;
+// }
 
 // =========================================================================
 //  Market
@@ -278,6 +280,8 @@ export interface PerpetualsAccountObject {
 }
 
 export interface PerpetualsVaultObject {
+	// TODO: add owner
+
 	/// Unique identifier for distinct network identification.
 	objectId: ObjectId;
 	/// Contract version number for controlled upgrades.
@@ -308,6 +312,8 @@ export interface PerpetualsVaultObject {
 		/// The maximum number of pending orders allowed for a single position in the `Vault`.
 		maxPendingOrdersPerPosition: bigint;
 	};
+	accountId: PerpetualsAccountId;
+	accountObjectId: ObjectId;
 }
 
 export interface PerpetualsVaultWithdrawRequest {
@@ -1424,6 +1430,7 @@ export interface ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody {
 
 export interface ApiPerpetualsVaultWithdrawOwnerFeesTxBody {
 	vaultId: ObjectId;
+	// recipientAddress: SuiAddress
 	withdrawAmount: Balance;
 	txKind?: SerializedTransaction;
 }
@@ -1473,33 +1480,32 @@ export type ApiPerpetualsVaultDepositTxBody = {
 export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestBody {
 	vaultId: ObjectId;
 	lpWithdrawAmount: Balance;
-	// user_lp_coin_id
 }
 
 export interface ApiPerpetualsVaultPreviewCreateWithdrawRequestResponse {
-	collateralAmountOut: Balance;
+	collateralAmountOut: number;
 	collateralAmountOutUsd: number;
 }
 
 export interface ApiPerpetualsVaultPreviewDepositBody {
 	vaultId: ObjectId;
+	// TODO: rename collateralDepositAmount ?
 	depositAmount: Balance;
 }
 
 export interface ApiPerpetualsVaultPreviewDepositResponse {
 	// provided_balance -- what is this ?
-	lpAmountOut: Balance;
-	lpAmountOutUsd: number;
+	lpAmountOut: number;
 }
 
-export interface ApiPerpetualsVaultPreviewProcessForceWithdrawsBody {
+export interface ApiPerpetualsVaultPreviewProcessForceWithdrawBody {
 	vaultId: ObjectId;
 	walletAddress: SuiAddress;
 }
 
-export interface ApiPerpetualsVaultPreviewProcessForceWithdrawsResponse {
-	lpAmountOut: Balance;
-	lpAmountOutUsd: number;
+export interface ApiPerpetualsVaultPreviewProcessForceWithdrawResponse {
+	collateralAmountOut: number;
+	collateralAmountOutUsd: number;
 	// TODO: change to arr ?
 	sizesToClose: Record<PerpetualsMarketId, Balance>;
 }
@@ -1509,10 +1515,10 @@ export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsBody {
 	userAddresses: SuiAddress[];
 }
 
-export interface ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse {
-	lpAmountOut: Balance;
-	lpAmountOutUsd: number;
-}
+export type ApiPerpetualsVaultPreviewProcessWithdrawRequestsResponse = {
+	// userAddress: SuiAddress;
+	lpAmountOut: number;
+}[];
 
 export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody {
 	vaultId: ObjectId;
@@ -1520,8 +1526,8 @@ export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody {
 
 export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse {
 	maxFeesToWithdraw: Balance;
-	maxFeesToWithdrawUsd: number;
-	// collateral_type -- is this needed ?
+	// maxFeesToWithdrawUsd: number;
+	feeCoinType: CoinType;
 }
 
 // =========================================================================

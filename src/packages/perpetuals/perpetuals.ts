@@ -34,6 +34,7 @@ import {
 	PerpetualsVaultCap,
 	PerpetualsVaultWithdrawRequest,
 	ApiPerpetualsVaultWithdrawRequestsBody,
+	PerpetualsVaultCapExtended,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -162,7 +163,7 @@ export class Perpetuals extends Caller {
 
 	// TODO: merge this with `getAccountObjects` as an option ?
 	public async getAccount(inputs: {
-		accountCap: PerpetualsAccountCap;
+		accountCap: PerpetualsAccountCap | PerpetualsVaultCapExtended;
 		marketIds?: PerpetualsMarketId[];
 	}): Promise<PerpetualsAccount> {
 		const { accountCap, marketIds } = inputs;
@@ -176,7 +177,7 @@ export class Perpetuals extends Caller {
 
 	// TODO: make account fetching get positions and account cap data all at once ?
 	public async getAccounts(inputs: {
-		accountCaps: PerpetualsAccountCap[];
+		accountCaps: (PerpetualsAccountCap | PerpetualsVaultCapExtended)[];
 		marketIds?: PerpetualsMarketId[];
 	}): Promise<PerpetualsAccount[]> {
 		const { accountCaps, marketIds } = inputs;
@@ -317,10 +318,10 @@ export class Perpetuals extends Caller {
 		return this.fetchApi("markets/prices", inputs);
 	}
 
-	public async getVaulIdsToLpCoinPrice(inputs: {
+	public async getLpCoinPrices(inputs: {
 		vaultIds: ObjectId[];
-	}): Promise<Record<ObjectId, number>> {
-		if (inputs.vaultIds.length <= 0) return {};
+	}): Promise<number[]> {
+		if (inputs.vaultIds.length <= 0) return [];
 		return this.fetchApi("vaults/lp-coin-prices", inputs);
 	}
 
