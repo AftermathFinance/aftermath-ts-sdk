@@ -1,14 +1,7 @@
-import {
-	TransactionArgument,
-	Transaction,
-	TransactionObjectArgument,
-} from "@mysten/sui/transactions";
-import { DelegatedStake, ValidatorsApy } from "@mysten/sui/client";
+import { TransactionArgument, Transaction } from "@mysten/sui/transactions";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
 import {
 	StakeEvent,
-	StakePosition,
-	StakedEvent,
 	StakingPosition,
 	UnstakePosition,
 	UnstakedEvent,
@@ -16,24 +9,15 @@ import {
 	isUnstakePosition,
 	isStakeEvent,
 	isUnstakeEvent,
-	ValidatorConfigObject,
 	ApiStakeStakedSuiBody,
 	ApiUnstakeBody,
 	ApiStakeBody,
-	ApiDelegatedStakesBody,
-	SuiDelegatedStake,
-	ValidatorOperationCapObject,
 	ApiUpdateValidatorFeeBody,
 	UnstakeEvent,
 	UnstakeRequestedEvent,
-	StakedSuiVaultStateObject,
-	AfSuiRouterPoolObject,
-	EpochWasChangedEvent,
 } from "../stakingTypes";
 import {
 	AnyObjectType,
-	ApiIndexerEventsBody,
-	ApiIndexerUserEventsBody,
 	Balance,
 	CoinType,
 	ExternalFee,
@@ -45,8 +29,6 @@ import { Casting, Helpers } from "../../../general/utils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { Coin } from "../../coin";
 import { Sui } from "../../sui";
-import { FixedUtils } from "../../../general/utils/fixedUtils";
-import { StakingApiCasting } from "./stakingApiCasting";
 import { Staking } from "../..";
 import {
 	MoveErrors,
@@ -344,6 +326,9 @@ export class StakingApi implements MoveErrorsInterface {
 	//  Inspection Transaction Commands
 	// =========================================================================
 
+	/**
+	 * @deprecated Use `getAfSuiToSuiExchangeRate` instead
+	 */
 	public afSuiToSuiExchangeRateTx = (inputs: {
 		tx: Transaction;
 	}) /* (u128) */ => {
@@ -362,6 +347,9 @@ export class StakingApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * @deprecated Use `getAfSuiToSuiExchangeRate` instead
+	 */
 	public suiToAfSuiExchangeRateTx = (inputs: {
 		tx: Transaction;
 	}) /* (u128) */ => {
@@ -380,6 +368,9 @@ export class StakingApi implements MoveErrorsInterface {
 		});
 	};
 
+	/**
+	 * @deprecated Use `getSuiTvl` instead
+	 */
 	public totalSuiAmountTx = (inputs: { tx: Transaction }) => {
 		const { tx } = inputs;
 		return tx.moveCall({

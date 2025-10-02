@@ -17,6 +17,19 @@ export class SuiApi {
 	//  Inspections
 	// =========================================================================
 
+	/**
+	 * @deprecated Use `getSystemState()` method instead.
+	 * This method will be removed in a future release.
+	 * @example
+	 * ```typescript
+	 * const afSdk = new Aftermath("MAINNET");
+	 * await afSdk.init(); // initialize provider
+	 *
+	 * const sui = afSdk.Sui();
+	 *
+	 * const systemState = await sui.getSystemState();
+	 * console.log(systemState.epoch, systemState.validators);
+	 */
 	public fetchSystemState = async (): Promise<SuiSystemStateSummary> => {
 		const systemState =
 			await this.Provider.provider.getLatestSuiSystemState();
