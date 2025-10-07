@@ -326,9 +326,6 @@ export class StakingApi implements MoveErrorsInterface {
 	//  Inspection Transaction Commands
 	// =========================================================================
 
-	/**
-	 * @deprecated Use `getAfSuiToSuiExchangeRate` instead
-	 */
 	public afSuiToSuiExchangeRateTx = (inputs: {
 		tx: Transaction;
 	}) /* (u128) */ => {
@@ -347,9 +344,6 @@ export class StakingApi implements MoveErrorsInterface {
 		});
 	};
 
-	/**
-	 * @deprecated Use `getAfSuiToSuiExchangeRate` instead
-	 */
 	public suiToAfSuiExchangeRateTx = (inputs: {
 		tx: Transaction;
 	}) /* (u128) */ => {
@@ -368,9 +362,6 @@ export class StakingApi implements MoveErrorsInterface {
 		});
 	};
 
-	/**
-	 * @deprecated Use `getSuiTvl` instead
-	 */
 	public totalSuiAmountTx = (inputs: { tx: Transaction }) => {
 		const { tx } = inputs;
 		return tx.moveCall({

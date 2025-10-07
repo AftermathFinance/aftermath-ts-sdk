@@ -53,10 +53,7 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getBalance(inputs: { coin: CoinType }): Promise<Balance> {
-		const balances: Balance[] = await this.fetchApi(`balances/coins`, {
-			coins: [inputs.coin],
-		});
-		return balances[0];
+		return (await this.getBalances({ coins: [inputs.coin] }))[0];
 	}
 
 	/**
@@ -94,7 +91,7 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getAllBalances(): Promise<CoinsToBalance> {
-		return this.fetchApi(`balances`);
+		return this.fetchApi(`balances`, {});
 	}
 
 	// =========================================================================
