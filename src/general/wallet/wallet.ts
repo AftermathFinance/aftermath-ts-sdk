@@ -27,7 +27,7 @@ export class Wallet extends Caller {
 		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(config, `wallet/${address}`);
+		super(config, `wallet`);
 	}
 
 	// =========================================================================
@@ -74,7 +74,10 @@ export class Wallet extends Caller {
 	public async getBalances(inputs: {
 		coins: CoinType[];
 	}): Promise<Balance[]> {
-		return this.fetchApi(`balances/coins`, inputs);
+		return this.fetchApi(`balances/coins`, {
+			...inputs,
+			walletAddress: this.address,
+		});
 	}
 
 	/**
@@ -91,7 +94,9 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getAllBalances(): Promise<CoinsToBalance> {
-		return this.fetchApi(`balances`, {});
+		return this.fetchApi(`balances`, {
+			walletAddress: this.address,
+		});
 	}
 
 	// =========================================================================
@@ -116,6 +121,7 @@ export class Wallet extends Caller {
 	): Promise<TransactionsWithCursor> {
 		return this.fetchApi(`transactions`, {
 			...inputs,
+			walletAddress: this.address,
 		});
 	}
 }
