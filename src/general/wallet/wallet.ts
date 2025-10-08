@@ -74,7 +74,7 @@ export class Wallet extends Caller {
 	public async getBalances(inputs: {
 		coins: CoinType[];
 	}): Promise<Balance[]> {
-		return this.fetchApi(`balances/coins`, {
+		return this.fetchApi(`coin-balances`, {
 			...inputs,
 			walletAddress: this.address,
 		});
@@ -94,7 +94,7 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getAllBalances(): Promise<CoinsToBalance> {
-		return this.fetchApi(`balances`, {
+		return this.fetchApi(`all-coin-balances`, {
 			walletAddress: this.address,
 		});
 	}
@@ -119,7 +119,7 @@ export class Wallet extends Caller {
 	public async getPastTransactions(
 		inputs: ApiTransactionsBody
 	): Promise<TransactionsWithCursor> {
-		return this.fetchApi(`transactions`, {
+		return this.fetchApi(`past-transactions`, {
 			...inputs,
 			walletAddress: this.address,
 		});
