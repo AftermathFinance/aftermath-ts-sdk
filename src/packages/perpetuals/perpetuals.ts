@@ -14,7 +14,6 @@ import {
 	CoinType,
 	PerpetualsOrderId,
 	FilledTakerOrderEvent,
-	PerpetualsOrderPrice,
 	Timestamp,
 	PerpetualsMarketCandleDataPoint,
 	ApiPerpetualsHistoricalMarketDataResponse,
@@ -35,6 +34,7 @@ import {
 	PerpetualsVaultWithdrawRequest,
 	ApiPerpetualsVaultWithdrawRequestsBody,
 	PerpetualsVaultCapExtended,
+	PerpetualsOrderPrice,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -411,60 +411,33 @@ export class Perpetuals extends Caller {
 		return side;
 	}
 
-	public static orderPrice(inputs: {
+	public static orderPriceFromEvent(inputs: {
 		orderEvent: FilledTakerOrderEvent;
 	}): number {
 		const { orderEvent } = inputs;
 		return orderEvent.quoteAssetDelta / orderEvent.baseAssetDelta;
 	}
 
+	public static orderPriceFromOrderId(inputs: {
+		orderId: PerpetualsOrderId;
+	}): number {
+		const { orderId } = inputs;
+		const orderPrice = PerpetualsOrderUtils.price(orderId);
+		return this.orderPriceToPrice({ orderPrice });
+	}
+
 	public static priceToOrderPrice = (inputs: {
 		price: number;
-		lotSize: number | bigint;
-		tickSize: number | bigint;
 	}): PerpetualsOrderPrice => {
-		const { price, lotSize, tickSize } = inputs;
-
-		const priceFixed = FixedUtils.directUncast(price);
-		// convert f18 to b9 (assuming the former is positive)
-		const price9 = priceFixed / FixedUtils.fixedOneB9;
-
-		const denominator =
-			FixedUtils.fixedOneB9 /
-			(typeof lotSize === "number"
-				? this.lotOrTickSizeToBigInt(lotSize)
-				: lotSize);
-		if (denominator <= BigInt(0)) return BigInt(0);
-
-		return (
-			price9 /
-			(typeof tickSize === "number"
-				? this.lotOrTickSizeToBigInt(tickSize)
-				: tickSize) /
-			denominator
-		);
+		const { price } = inputs;
+		return BigInt(Math.round(price * FixedUtils.fixedOneN9));
 	};
 
 	public static orderPriceToPrice = (inputs: {
 		orderPrice: PerpetualsOrderPrice;
-		lotSize: number | bigint;
-		tickSize: number | bigint;
 	}): number => {
-		const { orderPrice, lotSize, tickSize } = inputs;
-
-		const temp =
-			FixedUtils.fixedOneB9 /
-			(typeof lotSize === "number"
-				? this.lotOrTickSizeToBigInt(lotSize)
-				: lotSize);
-		return FixedUtils.directCast(
-			orderPrice *
-				(typeof tickSize === "number"
-					? this.lotOrTickSizeToBigInt(tickSize)
-					: tickSize) *
-				temp *
-				FixedUtils.fixedOneB9
-		);
+		const { orderPrice } = inputs;
+		return Number(orderPrice) / FixedUtils.fixedOneN9;
 	};
 
 	public static lotOrTickSizeToNumber(lotOrTickSize: bigint): number {

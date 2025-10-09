@@ -245,7 +245,7 @@ export interface PerpetualsStopOrderData {
 	side: PerpetualsOrderSide;
 	expiryTimestamp?: bigint;
 	limitOrder?: {
-		price: PerpetualsOrderPrice;
+		price: number;
 		orderType: PerpetualsOrderType;
 	};
 	slTp?: {
@@ -266,7 +266,7 @@ export interface PerpetualsFilledOrderData {
 }
 
 export interface PerpetualsOrderInfo {
-	price: PerpetualsOrderPrice;
+	price: number;
 	size: bigint;
 }
 export interface PerpetualsAccountData {
@@ -398,7 +398,7 @@ export type PerpetualsAccountTrade = {
 	side: PerpetualsOrderSide;
 } & (
 	| {
-			orderPrice: bigint;
+			orderPrice: number;
 	  }
 	| {
 			price: number;
@@ -884,8 +884,6 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 	| "slTp"
 > & {
 	collateralCoinType: CoinType;
-	lotSize: number;
-	tickSize: number;
 	leverage?: number;
 	// NOTE: do we need this ?
 	// isClose?: boolean;
@@ -1007,7 +1005,7 @@ export interface ApiPerpetualsExecutionPriceBody {
 	collateral: Balance;
 	basePriceFeedId: ObjectId;
 	collateralPriceFeedId: ObjectId;
-	price?: PerpetualsOrderPrice;
+	price?: number;
 }
 export interface ApiPerpetualsExecutionPriceResponse {
 	executionPrice: number;
@@ -1024,7 +1022,7 @@ export interface ApiPerpetualsMaxOrderSizeBody {
 	accountObjectId: ObjectId;
 	side: PerpetualsOrderSide;
 	leverage?: number;
-	price?: PerpetualsOrderPrice;
+	price?: number;
 }
 
 export interface ApiPerpetualsAccountOrderDatasBody {
@@ -1268,7 +1266,7 @@ export type ApiPerpetualsLimitOrderBody = {
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
-	price: PerpetualsOrderPrice;
+	price: number;
 	orderType: PerpetualsOrderType;
 	collateralChange: number;
 	hasPosition: boolean;

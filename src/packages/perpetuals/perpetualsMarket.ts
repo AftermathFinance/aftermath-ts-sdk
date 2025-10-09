@@ -124,7 +124,7 @@ export class PerpetualsMarket extends Caller {
 		indexPrice: number;
 		side: PerpetualsOrderSide;
 		leverage?: number;
-		price?: PerpetualsOrderPrice;
+		price?: number;
 	}): Promise<number> => {
 		const { side, price, accountObjectId, indexPrice, leverage } = inputs;
 		const maxSize = await this.fetchApi<
@@ -273,32 +273,6 @@ export class PerpetualsMarket extends Caller {
 		return relativePremium * periodAdjustment;
 	};
 
-	public priceToOrderPrice = (inputs: {
-		price: number;
-	}): PerpetualsOrderPrice => {
-		const { price } = inputs;
-		const lotSize = this.marketParams.lotSize;
-		const tickSize = this.marketParams.tickSize;
-		return Perpetuals.priceToOrderPrice({
-			price,
-			lotSize,
-			tickSize,
-		});
-	};
-
-	public orderPriceToPrice = (inputs: {
-		orderPrice: PerpetualsOrderPrice;
-	}): number => {
-		const { orderPrice } = inputs;
-		const lotSize = this.marketParams.lotSize;
-		const tickSize = this.marketParams.tickSize;
-		return Perpetuals.orderPriceToPrice({
-			orderPrice,
-			lotSize,
-			tickSize,
-		});
-	};
-
 	public calcCollateralUsedForOrder = (inputs: {
 		leverage: number;
 		orderData: PerpetualsOrderData;
@@ -353,12 +327,6 @@ export class PerpetualsMarket extends Caller {
 	// =========================================================================
 	//  Helpers
 	// =========================================================================
-
-	public orderPrice(inputs: { orderId: PerpetualsOrderId }): number {
-		const { orderId } = inputs;
-		const orderPrice = PerpetualsOrderUtils.price(orderId);
-		return this.orderPriceToPrice({ orderPrice });
-	}
 
 	public roundToValidPrice = (inputs: { price: number }) => {
 		return Math.round(inputs.price / this.tickSize()) * this.tickSize();

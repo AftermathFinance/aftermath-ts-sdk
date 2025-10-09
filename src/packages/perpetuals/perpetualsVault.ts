@@ -470,24 +470,26 @@ export class PerpetualsVault extends Caller {
 	// =========================================================================
 
 	public async getAccountObject() {
-		return (
-			await new Perpetuals(this.config, this.Provider).getAccountObjects({
-				accountIds: [this.vaultObject.accountId],
-				collateralCoinType: this.vaultObject.collateralCoinType,
-			})
-		)[0];
+		throw new Error("TODO");
+		// return (
+		// 	await new Perpetuals(this.config, this.Provider).getAccountObjects({
+		// 		accountIds: [this.vaultObject.accountId],
+		// 		collateralCoinType: this.vaultObject.collateralCoinType,
+		// 	})
+		// )[0];
 	}
 
 	public async getAccount() {
-		return new Perpetuals(this.config, this.Provider).getAccount({
-			accountCap: {
-				vaultId: this.vaultObject.objectId,
-				ownerAddress: this.vaultObject.ownerAddress,
-				accountId: this.vaultObject.accountId,
-				accountObjectId: this.vaultObject.accountObjectId,
-				collateralCoinType: this.vaultObject.collateralCoinType,
-				collateralDecimals: "TODO",
-			},
-		});
+		throw new Error("TODO");
+		// return new Perpetuals(this.config, this.Provider).getAccount({
+		// 	accountCap: {
+		// 		vaultId: this.vaultObject.objectId,
+		// 		ownerAddress: this.vaultObject.ownerAddress,
+		// 		accountId: this.vaultObject.accountId,
+		// 		accountObjectId: this.vaultObject.accountObjectId,
+		// 		collateralCoinType: this.vaultObject.collateralCoinType,
+		// 		collateralDecimals: "TODO",
+		// 	},
+		// });
 	}
 }

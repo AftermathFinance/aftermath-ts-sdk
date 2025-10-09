@@ -107,19 +107,19 @@ export class PerpetualsApiCasting {
 	//  Orderbook
 	// =========================================================================
 
-	public static orderbookPriceFromBytes = (bytes: number[]): number => {
-		const unwrapped = bcs.option(bcs.u256()).parse(new Uint8Array(bytes));
-		return FixedUtils.directCast(
-			unwrapped != null ? BigInt(unwrapped) : BigInt(0)
-		);
-	};
+	// public static orderbookPriceFromBytes = (bytes: number[]): number => {
+	// 	const unwrapped = bcs.option(bcs.u256()).parse(new Uint8Array(bytes));
+	// 	return FixedUtils.directCast(
+	// 		unwrapped != null ? BigInt(unwrapped) : BigInt(0)
+	// 	);
+	// };
 
-	public static orderInfoFromRaw = (data: any): PerpetualsOrderInfo => {
-		return {
-			price: BigInt(data.price),
-			size: BigInt(data.size),
-		};
-	};
+	// public static orderInfoFromRaw = (data: any): PerpetualsOrderInfo => {
+	// 	return {
+	// 		price: BigInt(data.price),
+	// 		size: BigInt(data.size),
+	// 	};
+	// };
 
 	// =========================================================================
 	//  Events

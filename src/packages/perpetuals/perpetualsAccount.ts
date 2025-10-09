@@ -157,9 +157,9 @@ export class PerpetualsAccount extends Caller {
 				...otherInputs,
 				walletAddress: this.ownerAddress(),
 				collateralCoinType: this.accountCap.collateralCoinType,
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -196,9 +196,9 @@ export class PerpetualsAccount extends Caller {
 			recipientAddress,
 			walletAddress: this.ownerAddress(),
 			collateralCoinType: this.accountCap.collateralCoinType,
-			...(this.vaultId
+			...("vaultId" in this.accountCap
 				? {
-						vaultId: this.vaultId,
+						vaultId: this.accountCap.vaultId,
 				  }
 				: {
 						accountObjectId: this.accountCap.objectId,
@@ -230,9 +230,9 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				allocateAmount,
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -260,9 +260,9 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				deallocateAmount,
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -286,7 +286,7 @@ export class PerpetualsAccount extends Caller {
 	}) {
 		const { transferAmount, toAccountObjectId, tx } = inputs;
 
-		if (!this.vaultId)
+		if ("vaultId" in this.accountCap)
 			throw new Error(
 				"`getTransferCollateralTx` not supported by vault accounts"
 			);
@@ -336,9 +336,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -375,9 +375,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -412,9 +412,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -440,9 +440,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -478,9 +478,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -518,9 +518,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -557,9 +557,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -589,9 +589,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -621,9 +621,9 @@ export class PerpetualsAccount extends Caller {
 					{ tx }
 				),
 				walletAddress: this.ownerAddress(),
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -731,9 +731,9 @@ export class PerpetualsAccount extends Caller {
 			"previews/place-market-order",
 			{
 				...inputs,
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -770,9 +770,9 @@ export class PerpetualsAccount extends Caller {
 			"previews/place-limit-order",
 			{
 				...inputs,
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -812,9 +812,9 @@ export class PerpetualsAccount extends Caller {
 			"previews/cancel-orders",
 			{
 				...inputs,
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -849,9 +849,9 @@ export class PerpetualsAccount extends Caller {
 			"previews/reduce-order",
 			{
 				...inputs,
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
@@ -887,9 +887,9 @@ export class PerpetualsAccount extends Caller {
 			{
 				marketId,
 				leverage,
-				...(this.vaultId
+				...("vaultId" in this.accountCap
 					? {
-							vaultId: this.vaultId,
+							vaultId: this.accountCap.vaultId,
 					  }
 					: {
 							accountObjectId: this.accountCap.objectId,
