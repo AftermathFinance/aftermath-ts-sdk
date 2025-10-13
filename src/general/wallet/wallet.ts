@@ -1,11 +1,9 @@
-import { SuiNetwork } from "../types/suiTypes";
 import {
 	ApiTransactionsBody,
 	Balance,
 	CallerConfig,
 	SuiAddress,
 	TransactionsWithCursor,
-	Url,
 } from "../types/generalTypes";
 import { CoinType, CoinsToBalance } from "../../packages/coin/coinTypes";
 import { Caller } from "../utils/caller";
@@ -29,7 +27,7 @@ export class Wallet extends Caller {
 		config?: CallerConfig,
 		private readonly Provider?: AftermathApi
 	) {
-		super(config, `wallet/${address}`);
+		super(config, `wallet`);
 	}
 
 	// =========================================================================
@@ -55,10 +53,7 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getBalance(inputs: { coin: CoinType }): Promise<Balance> {
-		return this.useProvider().fetchCoinBalance({
-			...inputs,
-			walletAddress: this.address,
-		});
+		return (await this.getBalances({ coins: [inputs.coin] }))[0];
 	}
 
 	/**
@@ -79,7 +74,10 @@ export class Wallet extends Caller {
 	public async getBalances(inputs: {
 		coins: CoinType[];
 	}): Promise<Balance[]> {
-		return this.fetchApi(`balances/coins`, inputs);
+		return this.fetchApi(`coin-balances`, {
+			...inputs,
+			walletAddress: this.address,
+		});
 	}
 
 	/**
@@ -96,7 +94,7 @@ export class Wallet extends Caller {
 	 * ```
 	 */
 	public async getAllBalances(): Promise<CoinsToBalance> {
-		return this.useProvider().fetchAllCoinBalances({
+		return this.fetchApi(`all-coin-balances`, {
 			walletAddress: this.address,
 		});
 	}
@@ -118,24 +116,12 @@ export class Wallet extends Caller {
 	 * console.log(txHistory.transactions, txHistory.nextCursor);
 	 * ```
 	 */
-	public async getPastTransactions(inputs: ApiTransactionsBody) {
-		return this.useProvider().fetchPastTransactions({
+	public async getPastTransactions(
+		inputs: ApiTransactionsBody
+	): Promise<TransactionsWithCursor> {
+		return this.fetchApi(`past-transactions`, {
 			...inputs,
 			walletAddress: this.address,
 		});
 	}
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	/**
-	 * Internal helper to return the `Wallet` provider from `AftermathApi`, throwing
-	 * an error if the provider is not defined.
-	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Wallet();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
-	};
 }

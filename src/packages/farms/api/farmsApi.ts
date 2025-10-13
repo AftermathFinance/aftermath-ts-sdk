@@ -362,6 +362,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	/**
+	 * @deprecated Use the new API method in Farms class instead.
 	 * Fetches the owner caps for staking pools owned by a specific wallet address
 	 * @param inputs Object containing wallet address
 	 * @returns Array of StakingPoolOwnerCapObject
@@ -391,6 +392,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	};
 
 	/**
+	 * @deprecated Use the new API method in Farms class instead.
 	 * Fetches the one-time admin caps for staking pools owned by a specific wallet address
 	 * @param inputs Object containing wallet address
 	 * @returns Array of StakingPoolOneTimeAdminCapObject
@@ -424,6 +426,7 @@ export class FarmsApi implements MoveErrorsInterface {
 	// =========================================================================
 
 	/**
+	 * @deprecated Use `getOwnedStakedPositions` method in Farms class instead.
 	 * Fetches partial staked positions owned by a specific wallet address
 	 * @param inputs Object containing wallet address
 	 * @returns Array of PartialFarmsStakedPositionObject
