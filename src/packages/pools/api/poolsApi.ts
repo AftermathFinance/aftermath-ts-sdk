@@ -874,18 +874,10 @@ export class PoolsApi implements MoveErrorsInterface {
 		);
 
 		// iii. Each vector must have one entry for each underlying Coin type.
-		const coinDecimalsCount = coinsInfo.reduce(
-			(prev, coin) => (coin.decimals === undefined ? prev : prev + 1),
-			0
+		Helpers.assert(
+			coinsInfo.some((coin) => coin.decimals === undefined),
+			"Must have decimals for each underlying Coin type if decimals are specified"
 		);
-		const hasDecimals = coinDecimalsCount > 0;
-
-		if (hasDecimals) {
-			Helpers.assert(
-				coinDecimalsCount === coinsInfo.length,
-				"Must have decimals for each underlying Coin type if decimals are specified"
-			);
-		}
 
 		// vii. stables must respect coin decimals
 		Helpers.assert(
@@ -960,7 +952,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		if (respectDecimals) {
 			// respecting decimals sets lp to min decimals
 			lpDecimals = minDecimal;
-		} else if (hasDecimals) {
+		} else if (coinsInfo.some((coin) => coin.decimals !== undefined)) {
 			// using coin decimals but not respecting them (this is only possible for gmmm)
 			// decimals is weighted average of coin decimals
 			let weightedSum = 0;
