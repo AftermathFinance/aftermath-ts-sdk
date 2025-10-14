@@ -1,18 +1,13 @@
 import {
 	ApiCreatePoolBody,
-	ApiEventsBody,
 	ApiPoolObjectIdForLpCoinTypeBody,
-	ApiPublishLpCoinBodyV1,
+	ApiPoolsPublishLpCoinTxBodyV1,
 	Balance,
 	CoinType,
 	PoolDepositEvent,
 	PoolObject,
-	PoolTradeEvent,
-	PoolTradeFee,
 	PoolWithdrawEvent,
 	Slippage,
-	SuiNetwork,
-	Url,
 	ObjectId,
 	PoolStats,
 	ApiPoolsStatsBody,
@@ -21,7 +16,7 @@ import {
 	SuiAddress,
 	ApiIndexerEventsBody,
 	CallerConfig,
-	ApiPublishLpCoinBodyV2,
+	ApiPoolsPublishLpCoinTxBodyV2,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -29,7 +24,6 @@ import { Caller } from "../../general/utils/caller";
 import { Helpers } from "../../general/utils/helpers";
 import { FixedUtils } from "../../general/utils/fixedUtils";
 import { AftermathApi } from "../../general/providers";
-import { PoolsApi } from "./api/poolsApi";
 
 /**
  * The `Pools` class provides a high-level interface for interacting with
@@ -267,7 +261,9 @@ export class Pools extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getPublishLpCoinTransactionV1(inputs: ApiPublishLpCoinBodyV1) {
+	public async getPublishLpCoinTransactionV1(
+		inputs: ApiPoolsPublishLpCoinTxBodyV1
+	) {
 		return this.useProvider().buildPublishLpCoinTx(inputs);
 	}
 
@@ -300,7 +296,9 @@ export class Pools extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getPublishLpCoinTransactionV2(inputs: ApiPublishLpCoinBodyV2) {
+	public async getPublishLpCoinTransactionV2(
+		inputs: ApiPoolsPublishLpCoinTxBodyV2
+	) {
 		return this.fetchApiTransaction(
 			"transactions/publish-lp-coin-v2",
 			inputs
@@ -625,6 +623,26 @@ export class Pools extends Caller {
 			lpCoinType.split("::")[1].includes("af_lp") &&
 			lpCoinType.split("::")[2].includes("AF_LP")
 		);
+	};
+
+	/**
+	 * Checks if a string is a valid LP coin name.
+	 *
+	 * @param value - The string to check.
+	 * @returns `true` if `value` is can be used as a valid LP coin name, otherwise `false`.
+	 */
+	public static isValidLpCoinName = (value: string): boolean => {
+		return /^[A-Z][_a-zA-Z0-9]*$/.test(value);
+	};
+
+	/**
+	 * Checks if a string is a valid LP coin type.
+	 *
+	 * @param value - The string to check.
+	 * @returns `true` if `value` is can be used as a valid LP coin type, otherwise `false`.
+	 */
+	public static isValidLpCoinTypeSymbol = (value: string): boolean => {
+		return /^[A-Z][A-Z0-9]*$/i.test(value);
 	};
 
 	// =========================================================================

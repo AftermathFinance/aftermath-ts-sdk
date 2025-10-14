@@ -6,9 +6,6 @@ import {
 import {
 	AnyObjectType,
 	Balance,
-	SuiNetwork,
-	CoinsToDecimals,
-	CoinsToPrice,
 	ObjectId,
 	Slippage,
 	ModuleName,
@@ -888,29 +885,5 @@ export class Helpers {
 					`unsupported schema \`${parsedKeypair.schema}\``
 				);
 		}
-	};
-
-	// =========================================================================
-	//  POOL
-	// =========================================================================
-
-	/**
-	 * Checks if a string is a valid LP coin name.
-	 *
-	 * @param value - The string to check.
-	 * @returns `true` if `value` is can be used as a valid LP coin name, otherwise `false`.
-	 */
-	public static isValidLpCoinName = (value: string): boolean => {
-		return /^[A-Z][_a-zA-Z0-9]*$/.test(value);
-	};
-
-	/**
-	 * Checks if a string is a valid LP coin type.
-	 *
-	 * @param value - The string to check.
-	 * @returns `true` if `value` is can be used as a valid LP coin type, otherwise `false`.
-	 */
-	public static isValidLpCoinTypeSymbol = (value: string): boolean => {
-		return /^[A-Z][A-Z0-9]*$/i.test(value);
 	};
 }

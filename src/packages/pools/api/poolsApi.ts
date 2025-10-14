@@ -4,13 +4,7 @@ import {
 } from "@mysten/sui/transactions";
 import { fromB64, normalizeSuiObjectId } from "@mysten/sui/utils";
 import { AftermathApi } from "../../../general/providers/aftermathApi";
-import {
-	CoinDecimal,
-	CoinType,
-	CoinsToBalance,
-	CoinsToDecimals,
-	CoinsToPrice,
-} from "../../coin/coinTypes";
+import { CoinDecimal, CoinType, CoinsToBalance } from "../../coin/coinTypes";
 import {
 	Balance,
 	Slippage,
@@ -27,7 +21,7 @@ import {
 	Url,
 	ObjectId,
 	SuiAddress,
-	ApiPublishLpCoinBodyV1,
+	ApiPoolsPublishLpCoinTxBodyV1,
 	DaoFeePoolsAddresses,
 	ApiPoolsOwnedDaoFeePoolOwnerCapsBody,
 	DaoFeePoolOwnerCapObject,
@@ -85,6 +79,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		},
 		defaultLpCoinIconImageUrl:
 			"https://aftermath.finance/coins/lp/af_lp.svg",
+		minWeightDivergence: 0.0001,
 	};
 
 	// =========================================================================
@@ -993,7 +988,7 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		// v. Weights must be normalized.
 		Helpers.assert(
-			Math.abs(weightsSum - 1) < 0.0001, // Allow small floating point errors
+			Math.abs(weightsSum - 1) < PoolsApi.constants.minWeightDivergence, // Allow small floating point errors
 			"Weights must sum to 1 (100%)"
 		);
 	};
@@ -1616,7 +1611,7 @@ export class PoolsApi implements MoveErrorsInterface {
 	 * @deprecated
 	 */
 	public buildPublishLpCoinTx = (
-		inputs: ApiPublishLpCoinBodyV1
+		inputs: ApiPoolsPublishLpCoinTxBodyV1
 	): Transaction => {
 		const { lpCoinDecimals } = inputs;
 

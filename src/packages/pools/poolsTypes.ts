@@ -471,7 +471,7 @@ export interface ApiPoolAllCoinWithdrawBody {
  * Request body for publishing a new LP coin on-chain,
  * typically specifying the coin's decimals.
  */
-export interface ApiPublishLpCoinBodyV1 {
+export interface ApiPoolsPublishLpCoinTxBodyV1 {
 	walletAddress: SuiAddress;
 	lpCoinDecimals: number;
 }
@@ -508,7 +508,7 @@ export interface ApiCreatePoolBody {
  * Request body for creating a new LP, specifying coin information
  * and the LP coin metadata.
  */
-export interface ApiPublishLpCoinBodyV2 {
+export interface ApiPoolsPublishLpCoinTxBodyV2 {
 	walletAddress: SuiAddress;
 	lpCoinMetadata: PoolCreationLpCoinMetadata;
 	coinsInfo: {
