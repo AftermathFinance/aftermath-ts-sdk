@@ -35,7 +35,7 @@ import {
 import { Pool } from "../pool";
 import { Pools } from "../pools";
 import { Coin } from "../../coin";
-import { assert, Casting, Helpers } from "../../../general/utils";
+import { Casting, Helpers } from "../../../general/utils";
 import { FixedUtils } from "../../../general/utils/fixedUtils";
 import { EventsApiHelpers } from "../../../general/apiHelpers/eventsApiHelpers";
 import { bcs } from "@mysten/sui/bcs";
@@ -748,7 +748,11 @@ export class PoolsApi implements MoveErrorsInterface {
 		} = inputs;
 
 		// Check bounds
-		this.assertCreatePoolTxV2({ coinsInfo, poolFlatness, respectDecimals });
+		PoolsApi.assertCreatePoolTxV2({
+			coinsInfo,
+			poolFlatness,
+			respectDecimals,
+		});
 
 		const poolSize = coinsInfo.length;
 		const coinTypes = coinsInfo.map((coin) => coin.coinType);
@@ -843,7 +847,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		});
 	};
 
-	public assertCreatePoolTxV2 = (inputs: {
+	public static assertCreatePoolTxV2 = (inputs: {
 		coinsInfo: {
 			coinId: ObjectId | TransactionObjectArgument;
 			coinType: CoinType;
@@ -860,7 +864,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		const { coinsInfo, poolFlatness, respectDecimals } = inputs;
 
 		// i. `flatness` must be within the bounds [0, FIXED_ONE].
-		assert(
+		Helpers.assert(
 			BigInt(0) <= poolFlatness && poolFlatness <= FixedUtils.fixedOneB,
 			"`poolFlatness` must be within the bounds [0, 1]"
 		);
@@ -869,7 +873,7 @@ export class PoolsApi implements MoveErrorsInterface {
 		//  assert should be removed.
 		//
 		// ii. `flatness` can only be set to either extreme: 0 or 1__000_000_000_000_000_000.
-		assert(
+		Helpers.assert(
 			poolFlatness === BigInt(0) || poolFlatness === FixedUtils.fixedOneB,
 			"`poolFlatness` can only be set to either extreme: 0 or 1"
 		);
@@ -882,20 +886,20 @@ export class PoolsApi implements MoveErrorsInterface {
 		const hasDecimals = coinDecimalsCount > 0;
 
 		if (hasDecimals) {
-			assert(
+			Helpers.assert(
 				coinDecimalsCount === coinsInfo.length,
 				"Must have decimals for each underlying Coin type if decimals are specified"
 			);
 		}
 
 		// vii. stables must respect coin decimals
-		assert(
+		Helpers.assert(
 			poolFlatness === BigInt(0) || respectDecimals,
 			"Stables must respect coin decimals"
 		);
 
 		// vii. can only respect decimals if decimals are given
-		assert(
+		Helpers.assert(
 			!(
 				respectDecimals &&
 				coinsInfo.every((coin) => coin.decimals === undefined)
@@ -918,14 +922,14 @@ export class PoolsApi implements MoveErrorsInterface {
 			weightsSum += weight;
 
 			// iv. Each weight must be within the bounds [MIN_WEIGHT, MAX_WEIGHT].
-			assert(
+			Helpers.assert(
 				Pools.constants.bounds.minWeight <= weight /* &&
 					weight <= PoolsApi.constants.validation.MAX_WEIGHT */,
 				`Each weight must be within the bounds [${Pools.constants.bounds.minWeight}, ${Pools.constants.bounds.maxWeight}]`
 			);
 
 			// v. Each swap fee in must be within the bounds [MIN_FEE, MAX_FEE].
-			assert(
+			Helpers.assert(
 				Pools.constants.bounds.minSwapFee <= tradeFeeIn &&
 					tradeFeeIn <= Pools.constants.bounds.maxSwapFee,
 				`Each swap fee in must be within the bounds [${Pools.constants.bounds.minSwapFee}, ${Pools.constants.bounds.maxSwapFee}]`
@@ -938,9 +942,9 @@ export class PoolsApi implements MoveErrorsInterface {
 			//  `fees_deposit` and `fees_withdraw`, the below asserts should
 			//  be replaced.
 			//
-			assert(tradeFeeOut === 0, "tradeFeeOut !== 0");
-			assert(depositFee === 0, "depositFee !== 0");
-			assert(withdrawFee === 0, "withdrawFee !== 0");
+			Helpers.assert(tradeFeeOut === 0, "tradeFeeOut !== 0");
+			Helpers.assert(depositFee === 0, "depositFee !== 0");
+			Helpers.assert(withdrawFee === 0, "withdrawFee !== 0");
 
 			// Handle decimals
 			if (coin.decimals !== undefined) {
@@ -950,9 +954,9 @@ export class PoolsApi implements MoveErrorsInterface {
 		}
 
 		// vii. u64 (actually i64) can only hold 18 decimals
-		assert(
-			maxDecimal <= Pools.constants.bounds.maxCoinDecimals,
-			`Can only hold ${Pools.constants.bounds.maxCoinDecimals} decimals`
+		Helpers.assert(
+			maxDecimal <= Pools.constants.bounds.maxLpCoinDecimals,
+			`Can only hold ${Pools.constants.bounds.maxLpCoinDecimals} decimals`
 		);
 
 		// how the pool determines lp decimals:
@@ -982,15 +986,15 @@ export class PoolsApi implements MoveErrorsInterface {
 			lpDecimals = Pools.constants.defaults.lpCoinDecimals;
 		}
 
-		assert(
-			lpDecimals <= Pools.constants.bounds.maxCoinDecimals,
-			`lpDecimals > ${Pools.constants.bounds.maxCoinDecimals}`
+		Helpers.assert(
+			lpDecimals <= Pools.constants.bounds.maxLpCoinDecimals,
+			`lpDecimals > ${Pools.constants.bounds.maxLpCoinDecimals}`
 		);
 
 		// v. Weights must be normalized.
-		assert(
+		Helpers.assert(
 			Math.abs(weightsSum - 1) < 0.0001, // Allow small floating point errors
-			"Weights must be normalized"
+			"Weights must sum to 1 (100%)"
 		);
 	};
 

@@ -75,6 +75,20 @@ export class Helpers {
 	 */
 	public static readonly transactions = TransactionsApiHelpers;
 
+	/**
+	 * Asserts that a condition is true, throwing an error with the specified message
+	 * if the condition is false.
+	 *
+	 * @param condition - The boolean condition to check
+	 * @param errorMessage - The error message to throw if the condition is false
+	 * @throws {Error} Throws an error with the provided message if the condition is false
+	 */
+	public static assert = (condition: boolean, errorMessage: string) => {
+		if (!condition) {
+			throw new Error(errorMessage);
+		}
+	};
+
 	// =========================================================================
 	//  Type Manipulation
 	// =========================================================================
@@ -896,7 +910,7 @@ export class Helpers {
 	 * @param value - The string to check.
 	 * @returns `true` if `value` is can be used as a valid LP coin type, otherwise `false`.
 	 */
-	public static isValidLpCoinType = (value: string): boolean => {
+	public static isValidLpCoinTypeSymbol = (value: string): boolean => {
 		return /^[A-Z][A-Z0-9]*$/i.test(value);
 	};
 }

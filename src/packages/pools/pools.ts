@@ -106,7 +106,7 @@ export class Pools extends Caller {
 			/**
 			 * Maximum decimals for LP coins.
 			 */
-			maxCoinDecimals: 18,
+			maxLpCoinDecimals: 18,
 			/**
 			 * Maximum number of distinct coins allowed in a single pool.
 			 */
