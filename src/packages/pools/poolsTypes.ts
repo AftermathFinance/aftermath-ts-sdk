@@ -483,7 +483,6 @@ export interface ApiPoolsPublishLpCoinTxBodyV1 {
 export interface ApiCreatePoolBody {
 	walletAddress: SuiAddress;
 	lpCoinType: CoinType;
-	lpCoinMetadata: PoolCreationLpCoinMetadata;
 	coinsInfo: {
 		coinType: CoinType;
 		weight: Percentage;
