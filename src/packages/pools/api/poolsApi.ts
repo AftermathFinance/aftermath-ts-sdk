@@ -873,12 +873,6 @@ export class PoolsApi implements MoveErrorsInterface {
 			"`poolFlatness` can only be set to either extreme: 0 or 1"
 		);
 
-		// iii. Each vector must have one entry for each underlying Coin type.
-		Helpers.assert(
-			coinsInfo.some((coin) => coin.decimals === undefined),
-			"Must have decimals for each underlying Coin type if decimals are specified"
-		);
-
 		// vii. stables must respect coin decimals
 		Helpers.assert(
 			poolFlatness === BigInt(0) || respectDecimals,
@@ -942,8 +936,8 @@ export class PoolsApi implements MoveErrorsInterface {
 
 		// vii. u64 (actually i64) can only hold 18 decimals
 		Helpers.assert(
-			maxDecimal <= Pools.constants.bounds.maxLpCoinDecimals,
-			`Can only hold ${Pools.constants.bounds.maxLpCoinDecimals} decimals`
+			maxDecimal <= Coin.constants.maxCoinDecimals,
+			`Can only hold ${Coin.constants.maxCoinDecimals} decimals`
 		);
 
 		// how the pool determines lp decimals:
@@ -974,8 +968,8 @@ export class PoolsApi implements MoveErrorsInterface {
 		}
 
 		Helpers.assert(
-			lpDecimals <= Pools.constants.bounds.maxLpCoinDecimals,
-			`lpDecimals > ${Pools.constants.bounds.maxLpCoinDecimals}`
+			lpDecimals <= Coin.constants.maxCoinDecimals,
+			`lpDecimals > ${Coin.constants.maxCoinDecimals}`
 		);
 
 		// v. Weights must be normalized.
