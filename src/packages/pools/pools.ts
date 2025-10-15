@@ -1,5 +1,5 @@
 import {
-	ApiCreatePoolBody,
+	ApiCreatePoolBodyV2,
 	ApiPoolObjectIdForLpCoinTypeBody,
 	ApiPoolsPublishLpCoinTxBodyV1,
 	Balance,
@@ -17,6 +17,7 @@ import {
 	ApiIndexerEventsBody,
 	CallerConfig,
 	ApiPoolsPublishLpCoinTxBodyV2,
+	ApiCreatePoolBodyV1,
 } from "../../types";
 import { Pool } from "./pool";
 import { Coin } from "../../packages/coin/coin";
@@ -312,6 +313,8 @@ export class Pools extends Caller {
 	 * @param inputs - The body describing how to form the new pool.
 	 * @returns A transaction object that can be signed and executed.
 	 *
+	 * @deprecated use getCreatePoolTransactionV2 instead
+	 *
 	 * @example
 	 * ```typescript
 	 * const createPoolTx = await pools.getCreatePoolTransaction({
@@ -337,8 +340,40 @@ export class Pools extends Caller {
 	 * });
 	 * ```
 	 */
-	public async getCreatePoolTransaction(inputs: ApiCreatePoolBody) {
+	public async getCreatePoolTransactionV1(inputs: ApiCreatePoolBodyV1) {
 		return this.fetchApiTransaction("transactions/create-pool", inputs);
+	}
+
+	/**
+	 * Constructs a transaction to create a brand new pool on-chain, given coin types,
+	 * initial weights, fees, and possible DAO fee info.
+	 *
+	 * @param inputs - The body describing how to form the new pool.
+	 * @returns A transaction object that can be signed and executed.
+	 *
+	 * @example
+	 * ```typescript
+	 * const createPoolTx = await pools.getCreatePoolTransaction({
+	 *   walletAddress: "0x<address>",
+	 *   lpCoinType: "0x<lpCoin>",
+	 *   coinsInfo: [
+	 *     {
+	 *       coinType: "0x<coinA>",
+	 *       weight: 0.5,
+	 *       decimals: 9,
+	 *       tradeFeeIn: 0.003,
+	 *       initialDeposit: 1_000_000_000n
+	 *     },
+	 *     // ...
+	 *   ],
+	 *   poolName: "My Weighted Pool",
+	 *   createPoolCapId: "0x<capId>",
+	 *   respectDecimals: true,
+	 * });
+	 * ```
+	 */
+	public async getCreatePoolTransactionV2(inputs: ApiCreatePoolBodyV2) {
+		return this.fetchApiTransaction("transactions/create-pool-v2", inputs);
 	}
 
 	// =========================================================================
