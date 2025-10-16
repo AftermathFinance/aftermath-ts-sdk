@@ -873,6 +873,16 @@ export class PoolsApi implements MoveErrorsInterface {
 			"`poolFlatness` can only be set to either extreme: 0 or 1"
 		);
 
+		// iii. Each vector must have one entry for each underlying Coin type.
+		const coinsWithDecimals = coinsInfo.filter(
+			(coin) => coin.decimals !== undefined
+		).length;
+
+		Helpers.assert(
+			coinsWithDecimals === 0 || coinsWithDecimals === coinsInfo.length,
+			"Must have decimals for each underlying Coin type if decimals are specified"
+		);
+
 		// vii. stables must respect coin decimals
 		Helpers.assert(
 			poolFlatness === BigInt(0) || respectDecimals,
