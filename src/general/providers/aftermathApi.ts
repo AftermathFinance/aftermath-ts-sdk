@@ -24,7 +24,6 @@ import { NftsApi } from "../nfts/nftsApi";
 import { Helpers } from "../utils";
 import { MoveErrorsInterface } from "../types/moveErrorsInterface";
 import { MultisigApi } from "../../packages/multisig/api/multisigApi";
-import { UserDataApi } from "../../packages/userData/api/userDataApi";
 import { LimitOrdersApi } from "../../packages/limitOrders/api/limitOrdersApi";
 
 /**
@@ -226,11 +225,6 @@ export class AftermathApi {
 	 * Creates a new `LimitOrdersApi` instance for placing limit orders on supported DEX protocols.
 	 */
 	public LimitOrders = () => new LimitOrdersApi(this);
-
-	/**
-	 * Creates a new `UserDataApi` instance for managing user-specific data storage or sign-on logic.
-	 */
-	public UserData = () => new UserDataApi(this);
 
 	/**
 	 * Creates a new `RouterApi` instance for best-price trade routing across multiple DEX liquidity sources.

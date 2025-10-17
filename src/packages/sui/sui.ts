@@ -1,6 +1,6 @@
 import { SuiSystemStateSummary } from "@mysten/sui/client";
 import { Caller } from "../../general/utils/caller";
-import { CallerConfig, SuiNetwork, Url } from "../../types";
+import { CallerConfig, CoinType, SuiNetwork, Url } from "../../types";
 import { AftermathApi } from "../../general/providers";
 
 /**
@@ -71,20 +71,6 @@ export class Sui extends Caller {
 	 * ```
 	 */
 	public async getSystemState(): Promise<SuiSystemStateSummary> {
-		return this.useProvider().fetchSystemState();
+		return this.fetchApi("system-state");
 	}
-
-	// =========================================================================
-	//  Private Helpers
-	// =========================================================================
-
-	/**
-	 * Internal helper to return the configured `Sui` provider. Throws an error if
-	 * no `AftermathApi` provider is defined.
-	 */
-	private useProvider = () => {
-		const provider = this.Provider?.Sui();
-		if (!provider) throw new Error("missing AftermathApi Provider");
-		return provider;
-	};
 }

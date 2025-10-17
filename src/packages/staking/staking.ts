@@ -1,13 +1,9 @@
 import {
 	ApiStakeBody,
 	ApiUnstakeBody,
-	SuiNetwork,
 	ApiStakingPositionsBody,
 	StakingPosition,
-	ApiStakingEventsBody,
 	Balance,
-	Url,
-	UnstakeEvent,
 	ValidatorConfigObject,
 	ApiStakeStakedSuiBody,
 	ApiDelegatedStakesBody,

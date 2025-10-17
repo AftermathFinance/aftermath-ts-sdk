@@ -55,7 +55,7 @@ export class Farms extends Caller {
 		/**
 		 * The maximum lock multiplier that can be applied when locking a staked position.
 		 */
-		maxLockMultiplier: 18,
+		maxLockMultiplier: 2,
 	};
 
 	// =========================================================================
@@ -206,9 +206,8 @@ export class Farms extends Caller {
 	 */
 	public async getOwnedStakingPoolOwnerCaps(
 		inputs: ApiFarmsOwnedStakingPoolOwnerCapsBody
-	) {
-		// In this code, the direct endpoint is commented out. We use the provider method.
-		return this.useProvider().fetchOwnedStakingPoolOwnerCaps(inputs);
+	): Promise<StakingPoolOwnerCapObject[]> {
+		return this.fetchApi("owned-staking-pool-owner-caps", inputs);
 	}
 
 	/**
@@ -228,8 +227,8 @@ export class Farms extends Caller {
 	 */
 	public async getOwnedStakingPoolOneTimeAdminCaps(
 		inputs: ApiFarmsOwnedStakingPoolOneTimeAdminCapsBody
-	) {
-		return this.useProvider().fetchOwnedStakingPoolOneTimeAdminCaps(inputs);
+	): Promise<StakingPoolOneTimeAdminCapObject[]> {
+		return this.fetchApi("owned-staking-pool-one-time-admin-caps", inputs);
 	}
 
 	// =========================================================================

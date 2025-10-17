@@ -174,10 +174,10 @@ export class PoolsApi implements MoveErrorsInterface {
 		this.objectTypes = {
 			pool: `${pools.packages.events}::pool::Pool`,
 			daoFeePool: daoFeePools
-				? `${daoFeePools.packages.amm}::pool::DaoFeePool`
+				? `${daoFeePools.packages.events}::pool::DaoFeePool`
 				: undefined,
 			daoFeePoolOwnerCap: daoFeePools
-				? `${daoFeePools.packages.amm}::pool::OwnerCap`
+				? `${daoFeePools.packages.events}::pool::OwnerCap`
 				: undefined,
 		};
 		this.eventTypes = {

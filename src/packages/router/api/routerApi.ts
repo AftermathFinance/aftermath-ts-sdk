@@ -106,33 +106,6 @@ export class RouterApi implements MoveErrorsInterface {
 	//  Events
 	// =========================================================================
 
-	/**
-	 * Fetches trade events for a given user.
-	 * @param inputs - The inputs for fetching trade events.
-	 * @returns A Promise that resolves with the fetched trade events.
-	 */
-	public async fetchTradeEvents(inputs: UserEventsInputs) {
-		throw new Error("move to indexer");
-		// return this.Provider.Events().fetchCastEventsWithCursor<
-		// 	RouterTradeEventOnChain,
-		// 	RouterTradeEvent
-		// >({
-		// 	cursor: inputs.cursor,
-		// 	limit: inputs.limit,
-		// 	query: {
-		// 		And: [
-		// 			{
-		// 				Sender: inputs.walletAddress,
-		// 			},
-		// 			{
-		// 				MoveEventType: this.eventTypes.routerTrade,
-		// 			},
-		// 		],
-		// 	},
-		// 	eventFromEventOnChain: RouterApiCasting.routerTradeEventFromOnChain,
-		// });
-	}
-
 	// =========================================================================
 	//  Events
 	// =========================================================================

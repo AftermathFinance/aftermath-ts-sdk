@@ -517,6 +517,50 @@ export class FarmsStakingPool extends Caller {
 			: this.useProvider().fetchBuildTopUpStakingPoolRewardsTxV2(args);
 	}
 
+	/**
+	 * Builds a transaction to **remove (withdraw) undistributed reward coins** from the
+	 * staking pool for **one or more reward coin types** in a single call.
+	 *
+	 * Only the **pool owner** (via `ownerCapId`) can remove rewards. One-time admin caps
+	 * are **not** permitted for removals. This operation reduces the pool’s remaining
+	 * undistributed reward balances; it does **not** affect rewards already accrued/claimed
+	 * by stakers.
+	 *
+	 * Versioning:
+	 * - V1 → calls `buildRemoveStakingPoolRewardTxV1`
+	 * - V2 → calls `buildRemoveStakingPoolRewardTxV2`
+	 *
+	 * Notes:
+	 * - The effective `stakingPoolId` and `stakeCoinType` are taken from this instance’s
+	 *   `this.stakingPool` and override any values passed in `inputs`.
+	 *
+	 * @param inputs Parameters for reward removal.
+	 * @param inputs.rewards Array of removal entries. Each entry specifies:
+	 *   - `rewardCoinType`: Coin type to withdraw.
+	 *   - `rewardAmount`: Amount to withdraw (base units).
+	 * @param inputs.ownerCapId Object ID of the pool OwnerCap that authorizes the removal.
+	 * @param inputs.walletAddress Address that will sign/submit the transaction.
+	 * @returns A transaction object ready to sign and execute that removes the specified
+	 *          undistributed rewards for each entry in `inputs.rewards`.
+	 */
+	public getRemoveRewardsTransaction(inputs: {
+		rewards: {
+			rewardCoinType: CoinType;
+			rewardAmount: Balance;
+		}[];
+		ownerCapId: ObjectId;
+		walletAddress: SuiAddress;
+	}) {
+		const args = {
+			...inputs,
+			stakeCoinType: this.stakingPool.stakeCoinType,
+			stakingPoolId: this.stakingPool.objectId,
+		};
+		return this.version() === 1
+			? this.useProvider().buildRemoveStakingPoolRewardTxV1(args)
+			: this.useProvider().buildRemoveStakingPoolRewardTxV2(args);
+	}
+
 	// =========================================================================
 	//  Private
 	// =========================================================================

@@ -223,14 +223,14 @@ export class TransactionsApiHelpers {
 		const { coinTxArg } = inputs;
 
 		if (!("$kind" in coinTxArg)) {
-			if ("Result" in coinTxArg) return { result: coinTxArg.Result };
+			if ("Result" in coinTxArg) return { Result: coinTxArg.Result };
 
 			if ("NestedResult" in coinTxArg)
-				return { result: coinTxArg.NestedResult };
+				return { NestedResult: coinTxArg.NestedResult };
 
-			if ("GasCoin" in coinTxArg) return "gas";
+			if ("GasCoin" in coinTxArg) return "Gas";
 
-			if ("Input" in coinTxArg) return { input: coinTxArg.Input };
+			if ("Input" in coinTxArg) return { Input: coinTxArg.Input };
 
 			// TODO: handle this case better
 			throw new Error(`coinTxArg in format ${coinTxArg} not supported`);
@@ -238,15 +238,15 @@ export class TransactionsApiHelpers {
 
 		if (coinTxArg.$kind === "NestedResult")
 			return {
-				result: coinTxArg.NestedResult,
+				NestedResult: coinTxArg.NestedResult,
 			};
 
-		if (coinTxArg.$kind === "Result") return { result: coinTxArg.Result };
+		if (coinTxArg.$kind === "Result") return { Result: coinTxArg.Result };
 
-		if (coinTxArg.$kind === "GasCoin") return "gas";
+		if (coinTxArg.$kind === "GasCoin") return "Gas";
 
 		// Input
-		return { input: coinTxArg.Input };
+		return { Input: coinTxArg.Input };
 	};
 
 	public static coinTxArgFromServiceCoinData = (inputs: {
@@ -294,19 +294,19 @@ export class TransactionsApiHelpers {
 			Object.values(serviceCoinDataV2)[0];
 
 		// TODO: handle this cleaner ?
-		const kind = key as "input" | "result";
+		const kind = key as "Input" | "Result" | "NestedResult";
 
-		if (kind === "result") {
-			if (typeof value === "number") {
-				return {
-					Result: value,
-				};
-			}
+		if (kind === "Result" && typeof value === "number") {
+			return {
+				Result: value,
+			};
+		}
+		if (kind === "NestedResult" && typeof value !== "number") {
 			return {
 				NestedResult: value,
 			};
 		}
-		if (kind === "input" && typeof value === "number") {
+		if (kind === "Input" && typeof value === "number") {
 			return {
 				Input: value,
 			};

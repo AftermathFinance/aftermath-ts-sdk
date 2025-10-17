@@ -168,7 +168,7 @@ export class FarmsApiCasting {
 
 		const fields = Helpers.getObjectFields(
 			data
-		) as FarmsStakingPoolOwnerCapFieldsOnChainV2;
+		) as FarmsStakingPoolOwnerCapFieldsOnChainV2["fields"];
 
 		return {
 			objectType,
@@ -206,7 +206,7 @@ export class FarmsApiCasting {
 		return {
 			objectType,
 			objectId: Helpers.getObjectId(data),
-			stakingPoolId: fields.cap.for,
+			stakingPoolId: fields.cap.fields.for,
 		};
 	};
 
