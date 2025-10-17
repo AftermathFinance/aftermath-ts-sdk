@@ -35,6 +35,7 @@ import {
 	ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse,
 	ApiPerpetualsVaultPreviewWithdrawOwnerFeesBody,
 	PerpetualsVaultCap,
+	ApiTransactionResponse,
 } from "../../types";
 import { PerpetualsAccount } from "./perpetualsAccount";
 import { Perpetuals } from "./perpetuals";
@@ -98,7 +99,10 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultProcessForceWithdrawsTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultProcessForceWithdrawsTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/process-force-withdraws",
 			{
 				...otherInputs,
@@ -122,7 +126,10 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultProcessWithdrawRequestsTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultProcessWithdrawRequestsTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/process-withdraw-requests",
 			{
 				...otherInputs,
@@ -146,7 +153,10 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx, minLpAmountOut, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultUpdateWithdrawRequestSlippagesTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/update-withdraw-request-slippages",
 			{
 				...otherInputs,
@@ -174,7 +184,10 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultUpdateForceWithdrawDelayTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/update-force-withdraw-delay",
 			{
 				...otherInputs,
@@ -197,7 +210,10 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultUpdateLockPeriodTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultUpdateLockPeriodTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/update-lock-period",
 			{
 				...otherInputs,
@@ -220,7 +236,10 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultUpdateOwnerFeePercentageTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/update-owner-fee-percentage",
 			{
 				...otherInputs,
@@ -249,26 +268,25 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx: txFromInputs, ...otherInputs } = inputs;
-		const { txKind, coinOutArg } = await this.fetchApi<
-			ApiPerpetualsVaultWithdrawOwnerFeesTxResponse,
-			ApiPerpetualsVaultWithdrawOwnerFeesTxBody
-		>("transactions/withdraw-owner-fees", {
-			...otherInputs,
-			vaultId: this.vaultObject.objectId,
-			txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
-				{
-					tx: txFromInputs ?? new Transaction(),
-				}
-			),
-		});
-
-		const tx = Transaction.fromKind(txKind);
-		// tx.setSender(this.accountCap.walletAddress);
-
-		return {
-			tx,
-			coinOutArg,
-		};
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultWithdrawOwnerFeesTxBody,
+			ApiPerpetualsVaultWithdrawOwnerFeesTxResponse
+		>(
+			"transactions/withdraw-owner-fees",
+			{
+				...otherInputs,
+				vaultId: this.vaultObject.objectId,
+				txKind: await this.Provider?.Transactions().fetchBase64TxKindFromTx(
+					{
+						tx: txFromInputs ?? new Transaction(),
+					}
+				),
+			},
+			undefined,
+			{
+				txKind: true,
+			}
+		);
 	}
 
 	// =========================================================================
@@ -281,7 +299,10 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultCreateWithdrawRequestTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultCreateWithdrawRequestTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/create-withdraw-request",
 			{
 				...otherInputs,
@@ -304,7 +325,10 @@ export class PerpetualsVault extends Caller {
 		tx?: Transaction;
 	}) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultCancelWithdrawRequestsTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultCancelWithdrawRequestsTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/cancel-withdraw-requests",
 			{
 				...otherInputs,
@@ -339,7 +363,10 @@ export class PerpetualsVault extends Caller {
 		)
 	) {
 		const { tx, ...otherInputs } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsVaultDepositTxBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsVaultDepositTxBody,
+			ApiTransactionResponse
+		>(
 			"transactions/deposit",
 			{
 				...otherInputs,

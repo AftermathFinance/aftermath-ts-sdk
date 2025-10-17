@@ -13,6 +13,15 @@ import {
 } from "../../types";
 import { Helpers } from "./helpers";
 
+type ResponseWithTxKind = { txKind: SerializedTransaction } & (
+	| Record<string, unknown>
+	| {}
+);
+
+function hasTxKind(x: unknown): x is ResponseWithTxKind {
+	return !!x && typeof x === "object" && "txKind" in x;
+}
+
 export class Caller {
 	protected readonly apiBaseUrl?: Url;
 
@@ -147,6 +156,37 @@ export class Caller {
 			tx.setSender(body.walletAddress);
 		}
 		return tx;
+	}
+
+	protected async fetchApiTxObject<
+		BodyType extends object,
+		OutputType extends ResponseWithTxKind
+	>(
+		url: Url,
+		body?: BodyType & { walletAddress?: SuiAddress },
+		signal?: AbortSignal,
+		options?: { disableBigIntJsonParsing?: boolean; txKind?: boolean }
+	): Promise<
+		Omit<Extract<OutputType, ResponseWithTxKind>, "txKind"> & {
+			tx: Transaction;
+		}
+	> {
+		const response = await this.fetchApi<OutputType, BodyType>(
+			url,
+			body,
+			signal,
+			options
+		);
+
+		const tx = Transaction.fromKind(response.txKind);
+
+		if (body?.walletAddress) {
+			tx.setSender(body.walletAddress);
+		}
+
+		const { txKind, ...rest } = response;
+		type Rest = Omit<Extract<OutputType, ResponseWithTxKind>, "txKind">;
+		return { ...(rest as Rest), tx };
 	}
 
 	protected async fetchApiEvents<EventType, BodyType = ApiEventsBody>(

@@ -84,6 +84,7 @@ export interface PerpetualsAccountCap {
 	objectId: ObjectId;
 	walletAddress: SuiAddress;
 	accountId: PerpetualsAccountId;
+	accountObjectId: ObjectId;
 	collateralCoinType: CoinType;
 	collateral: number;
 	collateralDecimals: CoinDecimal;
@@ -245,7 +246,7 @@ export interface PerpetualsStopOrderData {
 	side: PerpetualsOrderSide;
 	expiryTimestamp?: bigint;
 	limitOrder?: {
-		price: number;
+		price: bigint;
 		orderType: PerpetualsOrderType;
 	};
 	slTp?: {
@@ -396,22 +397,9 @@ export type PerpetualsAccountTrade = {
 	marketId: PerpetualsMarketId;
 	eventType: AnyObjectType;
 	side: PerpetualsOrderSide;
-} & (
-	| {
-			orderPrice: number;
-	  }
-	| {
-			price: number;
-	  }
-) &
-	(
-		| {
-				sizeLots: bigint;
-		  }
-		| {
-				size: number;
-		  }
-	);
+	price: number;
+	size: number;
+};
 
 export interface DepositedCollateralEvent extends Event {
 	accountId: PerpetualsAccountId;
@@ -827,7 +815,7 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 // 			| "walletAddress"
 // 			| "hasPosition"
 // 			| "txKind"
-// 			| "accountObjectId"
+// 			| "accountId"
 // 			| "slTp"
 // 	  >
 // 	| Omit<
@@ -836,7 +824,7 @@ export type ApiPerpetualsAccountCollateralHistoryBody =
 // 			| "walletAddress"
 // 			| "hasPosition"
 // 			| "txKind"
-// 			| "accountObjectId"
+// 			| "accountId"
 // 			| "slTp"
 // 	  >
 // ) & {
@@ -856,7 +844,7 @@ export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
 	| "walletAddress"
 	| "hasPosition"
 	| "txKind"
-	| "accountObjectId"
+	| "accountId"
 	| "slTp"
 > & {
 	collateralCoinType: CoinType;
@@ -866,7 +854,7 @@ export type ApiPerpetualsPreviewPlaceMarketOrderBody = Omit<
 } & (
 		| {
 				// TODO: remove eventually ?
-				accountObjectId: ObjectId | undefined;
+				accountId: PerpetualsAccountId | undefined;
 		  }
 		| {
 				// TODO: remove eventually ?
@@ -880,7 +868,7 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 	| "walletAddress"
 	| "hasPosition"
 	| "txKind"
-	| "accountObjectId"
+	| "accountId"
 	| "slTp"
 > & {
 	collateralCoinType: CoinType;
@@ -890,7 +878,7 @@ export type ApiPerpetualsPreviewPlaceLimitOrderBody = Omit<
 } & (
 		| {
 				// TODO: remove eventually ?
-				accountObjectId: ObjectId | undefined;
+				accountId: PerpetualsAccountId | undefined;
 		  }
 		| {
 				// TODO: remove eventually ?
@@ -909,7 +897,7 @@ export type ApiPerpetualsPreviewCancelOrdersBody = {
 	>;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -925,7 +913,7 @@ export type ApiPerpetualsPreviewReduceOrderBody = {
 	collateralCoinType: CoinType;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -938,7 +926,7 @@ export type ApiPerpetualsPreviewSetLeverageBody = {
 	collateralCoinType: CoinType;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1019,7 +1007,7 @@ export type ApiPerpetualsHistoricalMarketDataResponse =
 
 export interface ApiPerpetualsMaxOrderSizeBody {
 	marketId: PerpetualsMarketId;
-	accountObjectId: ObjectId;
+	accountId: PerpetualsAccountId;
 	side: PerpetualsOrderSide;
 	leverage?: number;
 	price?: number;
@@ -1074,7 +1062,7 @@ export type ApiPerpetualsDepositCollateralBody = {
 ) &
 	(
 		| {
-				accountObjectId: ObjectId;
+				accountId: PerpetualsAccountId;
 		  }
 		| {
 				vaultId: ObjectId;
@@ -1089,7 +1077,7 @@ export type ApiPerpetualsWithdrawCollateralBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1104,8 +1092,8 @@ export interface ApiPerpetualsWithdrawCollateralResponse {
 export interface ApiPerpetualsTransferCollateralBody {
 	walletAddress: SuiAddress;
 	collateralCoinType: CoinType;
-	fromAccountObjectId: ObjectId;
-	toAccountObjectId: ObjectId;
+	fromAccountId: PerpetualsAccountId;
+	toAccountId: PerpetualsAccountId;
 	transferAmount: Balance;
 	txKind?: SerializedTransaction;
 }
@@ -1116,7 +1104,7 @@ export type ApiPerpetualsAllocateCollateralBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1129,7 +1117,7 @@ export type ApiPerpetualsDeallocateCollateralBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1151,7 +1139,7 @@ export type ApiPerpetualsPlaceStopOrdersBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1193,7 +1181,7 @@ export type ApiPerpetualsPlaceSlTpOrdersBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1217,7 +1205,7 @@ export type ApiPerpetualsEditStopOrdersBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1255,7 +1243,7 @@ export type ApiPerpetualsMarketOrderBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1266,7 +1254,7 @@ export type ApiPerpetualsLimitOrderBody = {
 	marketId: PerpetualsMarketId;
 	side: PerpetualsOrderSide;
 	size: bigint;
-	price: number;
+	price: bigint;
 	orderType: PerpetualsOrderType;
 	collateralChange: number;
 	hasPosition: boolean;
@@ -1296,7 +1284,7 @@ export type ApiPerpetualsLimitOrderBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1314,7 +1302,7 @@ export type ApiPerpetualsCancelOrdersBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1326,7 +1314,7 @@ export type ApiPerpetualsCancelStopOrdersBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1342,7 +1330,7 @@ export type ApiPerpetualsReduceOrderBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1356,7 +1344,7 @@ export type ApiPerpetualsSetLeverageTxBody = {
 	txKind?: SerializedTransaction;
 } & (
 	| {
-			accountObjectId: ObjectId;
+			accountId: PerpetualsAccountId;
 	  }
 	| {
 			vaultId: ObjectId;
@@ -1534,7 +1522,7 @@ export interface ApiPerpetualsVaultPreviewWithdrawOwnerFeesResponse {
 
 export type SdkPerpetualsPlaceMarketOrderInputs = Omit<
 	ApiPerpetualsMarketOrderBody,
-	"accountObjectId" | "hasPosition" | "txKind" | "slTp"
+	"accountId" | "hasPosition" | "txKind" | "slTp"
 > & {
 	tx?: Transaction;
 	slTp?: {
@@ -1560,7 +1548,7 @@ export type SdkPerpetualsPlaceMarketOrderInputs = Omit<
 
 export type SdkPerpetualsPlaceLimitOrderInputs = Omit<
 	ApiPerpetualsLimitOrderBody,
-	"accountObjectId" | "hasPosition" | "txKind" | "slTp"
+	"accountId" | "hasPosition" | "txKind" | "slTp"
 > & {
 	tx?: Transaction;
 	slTp?: {
@@ -1586,20 +1574,20 @@ export type SdkPerpetualsPlaceLimitOrderInputs = Omit<
 
 // export type SdkPerpetualsPlaceOrderPreviewInputs = Omit<
 // 	ApiPerpetualsPreviewOrderBody,
-// 	"collateralCoinType" | "accountObjectId"
+// 	"collateralCoinType" | "accountId"
 // >;
 
 export type SdkPerpetualsPlaceMarketOrderPreviewInputs = Omit<
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
-	"collateralCoinType" | "accountObjectId"
+	"collateralCoinType" | "accountId"
 >;
 
 export type SdkPerpetualsPlaceLimitOrderPreviewInputs = Omit<
 	ApiPerpetualsPreviewPlaceLimitOrderBody,
-	"collateralCoinType" | "accountObjectId"
+	"collateralCoinType" | "accountId"
 >;
 
 export type SdkPerpetualsCancelOrdersPreviewInputs = Omit<
 	ApiPerpetualsPreviewCancelOrdersBody,
-	"collateralCoinType" | "accountObjectId"
+	"collateralCoinType" | "accountId"
 >;

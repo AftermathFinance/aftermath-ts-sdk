@@ -394,3 +394,7 @@ export interface CallerConfig {
 	 */
 	accessToken?: string;
 }
+
+export interface ApiTransactionResponse {
+	txKind: SerializedTransaction;
+}

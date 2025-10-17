@@ -35,6 +35,7 @@ import {
 	ApiPerpetualsVaultWithdrawRequestsBody,
 	PerpetualsVaultCapExtended,
 	PerpetualsOrderPrice,
+	ApiTransactionResponse,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -335,7 +336,10 @@ export class Perpetuals extends Caller {
 		tx?: Transaction;
 	}) {
 		const { walletAddress, collateralCoinType, tx } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsCreateAccountBody,
+			ApiTransactionResponse
+		>(
 			"transactions/create-account",
 			{
 				walletAddress,
@@ -377,7 +381,10 @@ export class Perpetuals extends Caller {
 		)
 	) {
 		const { walletAddress, collateralCoinType, tx } = inputs;
-		return this.fetchApiTransaction<ApiPerpetualsCreateAccountBody>(
+		return this.fetchApiTxObject<
+			ApiPerpetualsCreateAccountBody,
+			ApiTransactionResponse
+		>(
 			"transactions/create-vault",
 			{
 				walletAddress,

@@ -38,6 +38,7 @@ import {
 	SdkPerpetualsPlaceLimitOrderPreviewInputs,
 	ApiPerpetualsPreviewPlaceMarketOrderBody,
 	SdkPerpetualsPlaceMarketOrderPreviewInputs,
+	PerpetualsAccountId,
 } from "../../types";
 import { Perpetuals } from "./perpetuals";
 import { PerpetualsOrderUtils } from "./utils";
@@ -119,26 +120,25 @@ export class PerpetualsMarket extends Caller {
 	}
 
 	// TODO: move/add to account ?
-	public getMaxOrderSizeUsd = async (inputs: {
-		accountObjectId: ObjectId;
-		indexPrice: number;
+	public getMaxOrderSize = async (inputs: {
+		accountId: PerpetualsAccountId;
 		side: PerpetualsOrderSide;
 		leverage?: number;
 		price?: number;
-	}): Promise<number> => {
-		const { side, price, accountObjectId, indexPrice, leverage } = inputs;
-		const maxSize = await this.fetchApi<
-			bigint,
+	}) => {
+		const { side, price, accountId, leverage } = inputs;
+		return this.fetchApi<
+			{
+				maxOrderSize: bigint;
+			},
 			ApiPerpetualsMaxOrderSizeBody
-		>("account/order-max-size", {
+		>("account/max-order-size", {
 			side,
 			price,
 			leverage,
-			accountObjectId,
+			accountId,
 			marketId: this.marketId,
 		});
-		// TODO: perform calculation on endpoint ?
-		return Number(maxSize) * this.lotSize() * indexPrice;
 	};
 
 	public async getPlaceMarketOrderPreview(
@@ -168,7 +168,7 @@ export class PerpetualsMarket extends Caller {
 			{
 				...inputs,
 				collateralCoinType: this.collateralCoinType,
-				accountObjectId: undefined,
+				accountId: undefined,
 			},
 			abortSignal
 		);
@@ -201,7 +201,7 @@ export class PerpetualsMarket extends Caller {
 			{
 				...inputs,
 				collateralCoinType: this.collateralCoinType,
-				accountObjectId: undefined,
+				accountId: undefined,
 			},
 			abortSignal
 		);
@@ -328,8 +328,39 @@ export class PerpetualsMarket extends Caller {
 	//  Helpers
 	// =========================================================================
 
-	public roundToValidPrice = (inputs: { price: number }) => {
-		return Math.round(inputs.price / this.tickSize()) * this.tickSize();
+	public roundToValidPrice = (inputs: {
+		price: number;
+		floor?: boolean;
+		ceil?: boolean;
+	}) => {
+		const ticks = inputs.price / this.tickSize();
+		return (
+			(inputs.floor
+				? Math.floor(ticks)
+				: inputs.ceil
+				? Math.ceil(ticks)
+				: Math.round(ticks)) * this.lotSize()
+		);
+	};
+
+	public roundToValidPriceBigInt = (inputs: {
+		price: number;
+		floor?: boolean;
+		ceil?: boolean;
+	}) => {
+		const scaledPrice = Number(inputs.price * Casting.Fixed.fixedOneN9);
+		// TODO: make sure this calc is safe
+		return (
+			(BigInt(
+				inputs.floor
+					? Math.floor(scaledPrice)
+					: inputs.ceil
+					? Math.ceil(scaledPrice)
+					: Math.round(scaledPrice)
+			) /
+				this.marketParams.tickSize) *
+			this.marketParams.tickSize
+		);
 	};
 
 	public roundToValidSize = (inputs: {
@@ -352,17 +383,18 @@ export class PerpetualsMarket extends Caller {
 		floor?: boolean;
 		ceil?: boolean;
 	}) => {
-		const sizeLots = Number(inputs.size * Casting.Fixed.fixedOneN9);
-
+		const scaledSize = Number(inputs.size * Casting.Fixed.fixedOneN9);
 		// TODO: make sure this calc is safe
 		return (
-			BigInt(
+			(BigInt(
 				inputs.floor
-					? Math.floor(sizeLots)
+					? Math.floor(scaledSize)
 					: inputs.ceil
-					? Math.ceil(sizeLots)
-					: Math.round(sizeLots)
-			) / this.marketParams.lotSize
+					? Math.ceil(scaledSize)
+					: Math.round(scaledSize)
+			) /
+				this.marketParams.lotSize) *
+			this.marketParams.lotSize
 		);
 	};
 
