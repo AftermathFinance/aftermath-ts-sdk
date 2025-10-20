@@ -224,7 +224,7 @@ export class FarmsApiCasting {
 				"0x" + fields.reward_type
 			),
 			rewardAmount: BigInt(fields.reward_amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -240,7 +240,7 @@ export class FarmsApiCasting {
 				"0x" + fields.reward_type
 			),
 			rewardAmount: BigInt(fields.reward_amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -257,7 +257,7 @@ export class FarmsApiCasting {
 			maxLockDurationMs: Number(fields.max_lock_duration_ms),
 			maxLockMultiplier: BigInt(fields.max_lock_multiplier),
 			minStakeAmount: BigInt(fields.min_stake_amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -274,7 +274,7 @@ export class FarmsApiCasting {
 			maxLockDurationMs: Number(fields.max_lock_duration_ms),
 			maxLockMultiplier: BigInt(fields.max_lock_multiplier),
 			minStakeAmount: BigInt(fields.min_stake_amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -289,7 +289,7 @@ export class FarmsApiCasting {
 			vaultId: fields.vault_id,
 			amount: BigInt(fields.amount),
 			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -304,7 +304,7 @@ export class FarmsApiCasting {
 			vaultId: fields.vault_id,
 			amount: BigInt(fields.amount),
 			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -316,7 +316,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson;
 		return {
 			stakedPositionId: fields.staked_position_id,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -328,7 +328,7 @@ export class FarmsApiCasting {
 		const fields = eventOnChain.parsedJson.pos0;
 		return {
 			stakedPositionId: fields.staked_position_id,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -346,7 +346,7 @@ export class FarmsApiCasting {
 			rewardAmounts: fields.reward_amounts.map((amount) =>
 				BigInt(amount)
 			),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -364,7 +364,7 @@ export class FarmsApiCasting {
 			rewardAmounts: fields.reward_amounts.map((amount) =>
 				BigInt(amount)
 			),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -381,7 +381,7 @@ export class FarmsApiCasting {
 			),
 			emissionScheduleMs: Number(fields.emission_schedule_ms),
 			emissionRate: BigInt(fields.emission_rate),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -398,7 +398,7 @@ export class FarmsApiCasting {
 			),
 			emissionScheduleMs: Number(fields.emission_schedule_ms),
 			emissionRate: BigInt(fields.emission_rate),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -416,7 +416,7 @@ export class FarmsApiCasting {
 			rewardAmount: BigInt(fields.reward_amount),
 			emissionRate: BigInt(fields.emission_rate),
 			emissionStartMs: Number(fields.emission_start_ms),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -434,7 +434,7 @@ export class FarmsApiCasting {
 			rewardAmount: BigInt(fields.reward_amount),
 			emissionRate: BigInt(fields.emission_rate),
 			emissionStartMs: Number(fields.emission_start_ms),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -447,7 +447,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			otherStakedPositionId: fields.other_staked_position_id,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -460,7 +460,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			otherStakedPositionId: fields.other_staked_position_id,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -480,7 +480,7 @@ export class FarmsApiCasting {
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
 			lockMultiplier: BigInt(fields.lock_multiplier),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -500,7 +500,7 @@ export class FarmsApiCasting {
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
 			lockMultiplier: BigInt(fields.lock_multiplier),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -513,7 +513,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			splitStakedPositionId: fields.split_staked_position_id,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -526,7 +526,7 @@ export class FarmsApiCasting {
 		return {
 			stakedPositionId: fields.staked_position_id,
 			splitStakedPositionId: fields.split_staked_position_id,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -547,7 +547,7 @@ export class FarmsApiCasting {
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
 			lockMultiplier: BigInt(fields.lock_multiplier),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -568,7 +568,7 @@ export class FarmsApiCasting {
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockDurationMs: Number(fields.lock_duration_ms),
 			lockMultiplier: BigInt(fields.lock_multiplier),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -587,7 +587,7 @@ export class FarmsApiCasting {
 			stakedAmount: BigInt(fields.staked_amount),
 			lockStartTimestampMs: Number(fields.lock_start_timestamp_ms),
 			lockEndTimestampMs: Number(fields.lock_end_timestamp_ms),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -604,7 +604,7 @@ export class FarmsApiCasting {
 				"0x" + fields.staked_type
 			),
 			stakedAmount: BigInt(fields.staked_amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -621,7 +621,7 @@ export class FarmsApiCasting {
 				"0x" + fields.staked_type
 			),
 			stakedAmount: BigInt(fields.staked_amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -636,7 +636,7 @@ export class FarmsApiCasting {
 			vaultId: fields.vault_id,
 			amount: BigInt(fields.amount),
 			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -651,7 +651,7 @@ export class FarmsApiCasting {
 			vaultId: fields.vault_id,
 			amount: BigInt(fields.amount),
 			stakeType: Helpers.addLeadingZeroesToType("0x" + fields.stake_type),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};

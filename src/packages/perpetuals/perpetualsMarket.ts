@@ -288,8 +288,9 @@ export class PerpetualsMarket extends Caller {
 		// const imr = this.initialMarginRatio();
 
 		const collateralUsd =
-			Number(orderData.initialSize - orderData.filledSize) *
-			this.lotSize() *
+			// NOTE: is this safe ?
+			(Number(orderData.initialSize - orderData.filledSize) /
+				Casting.Fixed.fixedOneN9) *
 			indexPrice *
 			imr;
 		const collateral = collateralUsd / collateralPrice;

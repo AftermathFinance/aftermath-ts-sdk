@@ -35,7 +35,7 @@ export interface EventOnChain<Fields> {
 	type: AnyObjectType;
 	parsedJson: Fields; // | undefined;
 	bcs: string; // | undefined;
-	timestampMs: number | undefined;
+	timestampMs: number | string | undefined;
 }
 
 export interface WrappedEventOnChain<Fields> {
@@ -51,7 +51,7 @@ export interface WrappedEventOnChain<Fields> {
 		pos0: Fields; // | undefined;
 	};
 	bcs: string; // | undefined;
-	timestampMs: number | undefined;
+	timestampMs: number | string | undefined;
 }
 
 export type IndexerEventOnChain<Fields> = {

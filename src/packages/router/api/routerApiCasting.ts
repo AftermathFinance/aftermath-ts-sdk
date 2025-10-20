@@ -21,7 +21,7 @@ export class RouterApiCasting {
 			coinInAmount: BigInt(fields.amount_in),
 			coinOutType: fields.type_out,
 			coinOutAmount: BigInt(fields.amount_out),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};

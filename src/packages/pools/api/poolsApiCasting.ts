@@ -132,7 +132,7 @@ export class PoolsApiCasting {
 				Helpers.addLeadingZeroesToType("0x" + type)
 			),
 			amountsOut: fields.amounts_out.map((amount) => BigInt(amount)),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -150,7 +150,7 @@ export class PoolsApiCasting {
 			),
 			deposits: fields.deposits.map((deposit) => BigInt(deposit)),
 			lpMinted: BigInt(fields.lp_coins_minted),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -168,7 +168,7 @@ export class PoolsApiCasting {
 			),
 			withdrawn: fields.withdrawn.map((withdraw) => BigInt(withdraw)),
 			lpBurned: BigInt(fields.lp_coins_burned),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};

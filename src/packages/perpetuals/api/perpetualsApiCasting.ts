@@ -136,7 +136,7 @@ export class PerpetualsApiCasting {
 		return {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			version: BigInt(fields.version),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -153,7 +153,7 @@ export class PerpetualsApiCasting {
 		return {
 			accountId: BigInt(fields.account_id),
 			collateralDelta: BigInt(fields.collateral),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -166,7 +166,7 @@ export class PerpetualsApiCasting {
 		return {
 			accountId: BigInt(fields.account_id),
 			collateralDelta: BigInt(fields.collateral),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -188,7 +188,7 @@ export class PerpetualsApiCasting {
 			marketFundingRateShort: Casting.IFixed.numberFromIFixed(
 				BigInt(fields.mkt_funding_rate_short)
 			),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -202,7 +202,7 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			collateralDelta: BigInt(fields.collateral),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -216,7 +216,7 @@ export class PerpetualsApiCasting {
 			accountId: BigInt(fields.account_id),
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			collateralDelta: BigInt(fields.collateral),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -266,7 +266,7 @@ export class PerpetualsApiCasting {
 			side: fields.is_liqee_long
 				? PerpetualsOrderSide.Bid
 				: PerpetualsOrderSide.Ask,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -283,7 +283,7 @@ export class PerpetualsApiCasting {
 		return {
 			user: Helpers.addLeadingZeroesToType(fields.user),
 			accountId: BigInt(fields.account_id),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -299,7 +299,7 @@ export class PerpetualsApiCasting {
 	// 		),
 	// 		accountId: BigInt(fields.account_id),
 	// 		subAccountId: Helpers.addLeadingZeroesToType(fields.subaccount_id),
-	// 		timestamp: eventOnChain.timestampMs,
+	// 		timestamp: Number(eventOnChain.timestampMs),
 	// 		txnDigest: eventOnChain.id.txDigest,
 	// 		type: eventOnChain.type,
 	// 	};
@@ -315,7 +315,7 @@ export class PerpetualsApiCasting {
 	// 		),
 	// 		accountId: BigInt(fields.account_id),
 	// 		subAccountId: Helpers.addLeadingZeroesToType(fields.subaccount_id),
-	// 		timestamp: eventOnChain.timestampMs,
+	// 		timestamp: Number(eventOnChain.timestampMs),
 	// 		txnDigest: eventOnChain.id.txDigest,
 	// 		type: eventOnChain.type,
 	// 	};
@@ -331,7 +331,7 @@ export class PerpetualsApiCasting {
 			initialMarginRatio: Casting.IFixed.numberFromIFixed(
 				BigInt(fields.initial_margin_ratio)
 			),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -351,7 +351,7 @@ export class PerpetualsApiCasting {
 			side: Perpetuals.orderIdToSide(BigInt(fields.order_id)),
 			size: BigInt(fields.size),
 			orderId: BigInt(fields.order_id),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -377,7 +377,7 @@ export class PerpetualsApiCasting {
 				sizeRemaining: BigInt(fields.remaining_size),
 				canceledSize: BigInt(fields.canceled_size),
 			})),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -415,7 +415,7 @@ export class PerpetualsApiCasting {
 				Casting.IFixed.numberFromIFixed(
 					BigInt(fields.quote_asset_delta_ask)
 				),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -435,7 +435,7 @@ export class PerpetualsApiCasting {
 			expiryTimestamp: !fields.expiration_timestamp_ms
 				? undefined
 				: BigInt(fields.expiration_timestamp_ms),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -450,7 +450,7 @@ export class PerpetualsApiCasting {
 			marketId: Helpers.addLeadingZeroesToType(fields.ch_id),
 			sizeChange: BigInt(fields.size_change),
 			orderId: BigInt(fields.order_id),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -473,7 +473,7 @@ export class PerpetualsApiCasting {
 			gas: BigInt(fields.gas),
 			stopOrderType: Number(fields.stop_order_type),
 			encryptedDetails: fields.encrypted_details,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -487,7 +487,7 @@ export class PerpetualsApiCasting {
 			ticketId: Helpers.addLeadingZeroesToType(f.ticket_id),
 			executor: Helpers.addLeadingZeroesToType(f.executor),
 			accountId: BigInt(f.account_id),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -504,7 +504,7 @@ export class PerpetualsApiCasting {
 			subAccountId: f.subaccount_id
 				? Helpers.addLeadingZeroesToType(f.subaccount_id)
 				: undefined,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -522,7 +522,7 @@ export class PerpetualsApiCasting {
 				? Helpers.addLeadingZeroesToType(f.subaccount_id)
 				: undefined,
 			encryptedDetails: f.encrypted_details,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -541,7 +541,7 @@ export class PerpetualsApiCasting {
 			executors: f.executors.map((executor) =>
 				Helpers.addLeadingZeroesToType(executor)
 			),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -558,7 +558,7 @@ export class PerpetualsApiCasting {
 	// 			? Helpers.addLeadingZeroesToType(f.subaccount_id)
 	// 			: undefined,
 	// 		collateralToAllocate: BigInt(f.collateral_to_allocate),
-	// 		timestamp: eventOnChain.timestampMs,
+	// 		timestamp: Number(eventOnChain.timestampMs),
 	// 		txnDigest: eventOnChain.id.txDigest,
 	// 		type: eventOnChain.type,
 	// 	};
@@ -575,7 +575,7 @@ export class PerpetualsApiCasting {
 	// 			? Helpers.addLeadingZeroesToType(f.subaccount_id)
 	// 			: undefined,
 	// 		collateralToRemove: BigInt(f.collateral_to_remove),
-	// 		timestamp: eventOnChain.timestampMs,
+	// 		timestamp: Number(eventOnChain.timestampMs),
 	// 		txnDigest: eventOnChain.id.txDigest,
 	// 		type: eventOnChain.type,
 	// 	};
@@ -590,7 +590,7 @@ export class PerpetualsApiCasting {
 	// 		objectId: Helpers.addLeadingZeroesToType(f.obj_id),
 	// 		accountId: BigInt(f.account_id),
 	// 		collateral: BigInt(f.collateral),
-	// 		timestamp: eventOnChain.timestampMs,
+	// 		timestamp: Number(eventOnChain.timestampMs),
 	// 		txnDigest: eventOnChain.id.txDigest,
 	// 		type: eventOnChain.type,
 	// 	};
@@ -604,7 +604,7 @@ export class PerpetualsApiCasting {
 	// 		objectId: Helpers.addLeadingZeroesToType(f.obj_id),
 	// 		accountId: BigInt(f.account_id),
 	// 		collateral: BigInt(f.collateral),
-	// 		timestamp: eventOnChain.timestampMs,
+	// 		timestamp: Number(eventOnChain.timestampMs),
 	// 		txnDigest: eventOnChain.id.txDigest,
 	// 		type: eventOnChain.type,
 	// 	};
@@ -630,7 +630,7 @@ export class PerpetualsApiCasting {
 				BigInt(fields.premium_twap)
 			),
 			premiumTwapLastUpdateMs: Number(fields.premium_twap_last_upd_ms),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -652,7 +652,7 @@ export class PerpetualsApiCasting {
 				BigInt(fields.spread_twap)
 			),
 			spreadTwapLastUpdateMs: Number(fields.spread_twap_last_upd_ms),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -675,7 +675,7 @@ export class PerpetualsApiCasting {
 				BigInt(fields.cum_funding_rate_short)
 			),
 			fundingLastUpdateMs: Number(fields.funding_last_upd_ms),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};

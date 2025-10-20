@@ -222,7 +222,7 @@ export class SuiFrensApiCasting {
 		return {
 			harvester: Helpers.addLeadingZeroesToType(fields.issuer),
 			fees: BigInt(fields.fees),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -238,7 +238,7 @@ export class SuiFrensApiCasting {
 			parentTwoId: Helpers.addLeadingZeroesToType(fields.parent_two_id),
 			childId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			fee: BigInt(fields.fee),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -253,7 +253,7 @@ export class SuiFrensApiCasting {
 			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			// TODO: generalize casting of event types with passing of
 			// timestamp and txnDigest (create wrapper)
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -267,7 +267,7 @@ export class SuiFrensApiCasting {
 			unstaker: Helpers.addLeadingZeroesToType(fields.issuer),
 			suiFrenId: Helpers.addLeadingZeroesToType(fields.suifren_id),
 			fees: BigInt(fields.fees),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};

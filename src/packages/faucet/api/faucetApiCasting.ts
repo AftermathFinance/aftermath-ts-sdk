@@ -22,7 +22,7 @@ export class FaucetApiCasting {
 			coinType,
 			minter: Helpers.addLeadingZeroesToType(fields.user),
 			amount: BigInt(fields.amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -37,7 +37,7 @@ export class FaucetApiCasting {
 		);
 		return {
 			coinType,
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};

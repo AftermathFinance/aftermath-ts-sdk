@@ -72,7 +72,7 @@ export class LeveragedStakingApiCasting {
 			userAddress: Helpers.addLeadingZeroesToType(fields.user),
 			leverage: Casting.Fixed.directCast(BigInt(fields.leverage)),
 			newAfSuiCollateral: BigInt(fields.new_afsui_collateral),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -85,7 +85,7 @@ export class LeveragedStakingApiCasting {
 		return {
 			userAddress: Helpers.addLeadingZeroesToType(fields.user),
 			afsuiCollateral: BigInt(fields.afsui_collateral),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -101,7 +101,7 @@ export class LeveragedStakingApiCasting {
 			initialLeverage: Casting.Fixed.directCast(
 				BigInt(fields.initial_leverage)
 			),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};

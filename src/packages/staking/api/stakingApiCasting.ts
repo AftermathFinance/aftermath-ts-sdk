@@ -98,7 +98,7 @@ export class StakingApiCasting {
 			referrer: fields.referrer ? fields.referrer : undefined,
 			afSuiId: Helpers.addLeadingZeroesToType(fields.afsui_id),
 			afSuiAmount: BigInt(fields.afsui_amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -115,7 +115,7 @@ export class StakingApiCasting {
 			epoch: BigInt(fields.epoch),
 			providedAfSuiAmount: BigInt(fields.provided_afsui_amount),
 			returnedSuiAmount: BigInt(fields.returned_sui_amount),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
@@ -130,7 +130,7 @@ export class StakingApiCasting {
 			providedAfSuiAmount: BigInt(fields.provided_afsui_amount),
 			requester: Helpers.addLeadingZeroesToType(fields.requester),
 			epoch: BigInt(fields.epoch),
-			timestamp: eventOnChain.timestampMs,
+			timestamp: Number(eventOnChain.timestampMs),
 			txnDigest: eventOnChain.id.txDigest,
 			type: eventOnChain.type,
 		};
