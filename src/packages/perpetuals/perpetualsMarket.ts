@@ -340,7 +340,7 @@ export class PerpetualsMarket extends Caller {
 				? Math.floor(ticks)
 				: inputs.ceil
 				? Math.ceil(ticks)
-				: Math.round(ticks)) * this.lotSize()
+				: Math.round(ticks)) * this.tickSize()
 		);
 	};
 
