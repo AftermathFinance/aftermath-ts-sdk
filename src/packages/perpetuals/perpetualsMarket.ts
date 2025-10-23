@@ -164,7 +164,7 @@ export class PerpetualsMarket extends Caller {
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceMarketOrderBody
 		>(
-			"previews/place-market-order",
+			"account/previews/place-market-order",
 			{
 				...inputs,
 				collateralCoinType: this.collateralCoinType,
@@ -197,7 +197,7 @@ export class PerpetualsMarket extends Caller {
 			ApiPerpetualsPreviewPlaceOrderResponse,
 			ApiPerpetualsPreviewPlaceLimitOrderBody
 		>(
-			"previews/place-limit-order",
+			"account/previews/place-limit-order",
 			{
 				...inputs,
 				collateralCoinType: this.collateralCoinType,

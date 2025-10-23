@@ -1487,55 +1487,35 @@ export class PerpetualsAccount extends Caller {
 			this.positionForMarketId({ marketId }) ?? market.emptyPosition();
 
 		// TODO: move conversion to helper function, since used often
-		const ordersCollateral = Coin.normalizeBalance(
-			Helpers.sum(
-				orderDatas
-					.filter(
-						(orderData) => orderData.marketId === market.marketId
-					)
-					.map(
-						(orderData) =>
-							market.calcCollateralUsedForOrder({
-								...inputs,
-								orderData,
-								leverage: position.leverage,
-							}).collateral
-					)
-			),
-			this.collateralDecimals()
+		const ordersCollateral = Helpers.sum(
+			orderDatas
+				.filter((orderData) => orderData.marketId === market.marketId)
+				.map(
+					(orderData) =>
+						market.calcCollateralUsedForOrder({
+							...inputs,
+							orderData,
+							leverage: position.leverage,
+						}).collateral
+				)
 		);
 
 		const fullPositionCollateralChange =
-			Helpers.maxBigInt(
-				BigInt(
-					Math.floor(
-						Number(
-							Coin.normalizeBalance(
-								this.calcFreeMarginUsdForPosition(inputs) *
-									collateralPrice,
-								this.collateralDecimals()
-							) - ordersCollateral
-						) *
-							(1 -
-								PerpetualsAccount.constants
-									.closePositionMarginOfError)
-					)
-				),
-				BigInt(0)
-			) * BigInt(-1);
-		const positionSize = BigInt(
-			Math.round(Math.abs(position.baseAssetAmount / market.lotSize()))
-		);
+			Math.max(
+				this.calcFreeMarginUsdForPosition(inputs) / collateralPrice -
+					ordersCollateral *
+						(1 -
+							PerpetualsAccount.constants
+								.closePositionMarginOfError),
+				0
+			) * -1;
+
 		// NOTE: is this safe / correct ?
-		const collateralChange = Coin.balanceWithDecimals(
-			BigInt(
-				Math.round(
-					Number(fullPositionCollateralChange) *
-						(Number(size) / Number(positionSize))
-				)
-			),
-			this.collateralDecimals()
-		);
+		const collateralChange =
+			Number(fullPositionCollateralChange) *
+			(Number(size) /
+				Casting.Fixed.fixedOneN9 /
+				position.baseAssetAmount);
 
 		const positionSide = Perpetuals.positionSide(position);
 		return {
