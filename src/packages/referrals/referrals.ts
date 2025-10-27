@@ -11,6 +11,8 @@ import {
 	CallerConfig,
 	ApiReferralsIsRefCodeTakenBody,
 	ApiReferralsIsRefCodeTakenResponse,
+	ApiReferralsGetLinkedRefCodeBody,
+	ApiReferralsGetLinkedRefCodeResponse,
 } from "../../types";
 
 export class Referrals extends Caller {
@@ -38,16 +40,22 @@ export class Referrals extends Caller {
 		return this.fetchApi("ref-code", inputs);
 	}
 
+	public async getLinkedRefCode(
+		inputs: ApiReferralsGetLinkedRefCodeBody
+	): Promise<ApiReferralsGetLinkedRefCodeResponse> {
+		return this.fetchApi("linked-ref-code", inputs);
+	}
+
 	public async getReferees(
 		inputs: ApiReferralsGetRefereesBody
 	): Promise<ApiReferralsGetRefereesResponse> {
-		return this.fetchApi("referees", inputs);
+		return this.fetchApi("query", inputs);
 	}
 
 	public async isRefCodeTaken(
 		inputs: ApiReferralsIsRefCodeTakenBody
 	): Promise<ApiReferralsIsRefCodeTakenResponse> {
-		return this.fetchApi("is-ref-code-taken", inputs);
+		return this.fetchApi("availability", inputs);
 	}
 
 	// =========================================================================
@@ -57,28 +65,46 @@ export class Referrals extends Caller {
 	public async createReferralLink(
 		inputs: ApiReferralsCreateReferralLinkBody
 	): Promise<ApiReferralsCreateReferralLinkResponse> {
-		return this.fetchApi("create-referral-link", inputs);
+		return this.fetchApi("create", inputs);
 	}
 
 	public async setReferrer(
 		inputs: ApiReferralsSetReferrerBody
 	): Promise<ApiReferralsSetReferrerResponse> {
-		return this.fetchApi("set-referrer", inputs);
+		return this.fetchApi("link", inputs);
 	}
 
 	// =========================================================================
 	//  Messages to Sign
 	// =========================================================================
 
-	public createReferralLinkMessageToSign() {
+	// public getRefCodeMessageToSign() {
+	// 	return {
+	// 		action: "GET_REF_CODE",
+	// 		date: Date.now(),
+	// 	};
+	// }
+
+	// public getLinkedRefCodeMessageToSign() {
+	// 	return {
+	// 		action: "GET_LINKED_REF_CODE",
+	// 		date: Date.now(),
+	// 	};
+	// }
+
+	public createReferralLinkMessageToSign(inputs: { refCode: string }) {
 		return {
-			action: "CREATE_REFERRAL_LINK",
+			action: "CREATE_REFERRAL",
+			ref_code: inputs.refCode,
+			date: Math.round(Date.now() / 1000),
 		};
 	}
 
-	public setReferrerMessageToSign() {
+	public setReferrerMessageToSign(inputs: { refCode: string }) {
 		return {
-			action: "SET_REFERRER",
+			action: "LINK_REFERRAL",
+			ref_code: inputs.refCode,
+			date: Math.round(Date.now() / 1000),
 		};
 	}
 }

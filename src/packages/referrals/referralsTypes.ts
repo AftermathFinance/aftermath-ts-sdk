@@ -24,13 +24,55 @@ export interface ApiReferralsGetRefCodeBody {
 	 *  The wallet address to get referral code of
 	 */
 	walletAddress: SuiAddress;
+	/**
+	 * The bytes of the message signed by the user's wallet. Required for authentication.
+	 */
+	bytes: string;
+	/**
+	 * The signature of the message signed by the user's wallet. Required for authentication.
+	 */
+	signature: string;
 }
 
 export interface ApiReferralsGetRefCodeResponse {
 	/**
+	 *  The wallet address queried
+	 */
+	address: SuiAddress;
+	/**
 	 * The referral code of queried wallet address
 	 */
-	refCode: string;
+	refCode: string | undefined;
+}
+
+export interface ApiReferralsGetLinkedRefCodeBody {
+	/**
+	 *  The wallet address to get linked referral code of
+	 */
+	walletAddress: SuiAddress;
+	/**
+	 * The bytes of the message signed by the user's wallet. Required for authentication.
+	 */
+	bytes: string;
+	/**
+	 * The signature of the message signed by the user's wallet. Required for authentication.
+	 */
+	signature: string;
+}
+
+export interface ApiReferralsGetLinkedRefCodeResponse {
+	/**
+	 *  The wallet address queried
+	 */
+	address: SuiAddress;
+	/**
+	 * The referral code linked to the queried wallet address
+	 */
+	linkedRefCode: string | undefined;
+	/**
+	 * Timestamp when the referral link was created (None if not linked)
+	 */
+	linkedAt: Timestamp | undefined;
 }
 
 export interface ApiReferralsGetRefereesBody {
@@ -38,6 +80,8 @@ export interface ApiReferralsGetRefereesBody {
 	 * Ref code to get referees for
 	 */
 	refCode: string;
+	limit?: number;
+	offset?: number;
 }
 
 export interface ApiReferralsGetRefereesResponse {
@@ -46,13 +90,13 @@ export interface ApiReferralsGetRefereesResponse {
 	 */
 	refCode: string;
 	/**
-	 * The referrer's wallet address
-	 */
-	referrerAddress: SuiAddress;
-	/**
 	 * List of referees
 	 */
 	referees: ReferralsRefereeInfo[];
+	/**
+	 * Total number of referees (before pagination)
+	 */
+	totalCount: number;
 }
 
 export interface ApiReferralsIsRefCodeTakenBody {
@@ -64,9 +108,13 @@ export interface ApiReferralsIsRefCodeTakenBody {
 
 export interface ApiReferralsIsRefCodeTakenResponse {
 	/**
-	 * True if the ref code is already claimed by a user
+	 * The referral code that was checked
 	 */
-	isTaken: boolean;
+	refCode: string;
+	/**
+	 * Whether this ref code is available for use (true = available, false = taken)
+	 */
+	isAvailable: boolean;
 }
 
 export interface ApiReferralsCreateReferralLinkBody {
@@ -82,10 +130,6 @@ export interface ApiReferralsCreateReferralLinkBody {
 	 * The signature of the message signed by the user's wallet. Required for authentication.
 	 */
 	signature: string;
-	/**
-	 * Optional custom ref code (if not provided, will be auto-generated)
-	 */
-	refCode: string | undefined;
 }
 
 export interface ApiReferralsCreateReferralLinkResponse {
@@ -120,10 +164,6 @@ export interface ApiReferralsSetReferrerBody {
 	 * The signature of the message signed by the referee's wallet. Required for authentication.
 	 */
 	signature: string;
-	/**
-	 * Ref code for referral to link
-	 */
-	refCode: string;
 }
 
 export interface ApiReferralsSetReferrerResponse {
