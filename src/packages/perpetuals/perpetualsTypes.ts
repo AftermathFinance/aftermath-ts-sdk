@@ -127,6 +127,13 @@ export interface PerpetualsPosition {
 	makerFee: number;
 	takerFee: number;
 	leverage: number;
+	marginRatio: number;
+	freeMarginUsd: number;
+	freeCollateral: number;
+	unrealizedFundingsUsd: number;
+	unrealizedPnlUsd: number;
+	entryPrice: number;
+	liquidationPrice: number;
 }
 
 // export interface PerpetualsSubAccount {
@@ -184,6 +191,8 @@ export interface PerpetualsMarketState {
 	spreadTwapLastUpdateTimestamp: Timestamp;
 	openInterest: number;
 	feesAccrued: number;
+	nextFundingTimestamp: Timestamp;
+	estimatedFundingRate: Percentage;
 }
 
 export interface PerpetualsMarketCandleDataPoint {
@@ -278,6 +287,9 @@ export interface PerpetualsAccountData {
 export interface PerpetualsAccountObject {
 	positions: PerpetualsPosition[];
 	availableCollateral: number;
+	totalUnrealizedFundingsUsd: number;
+	totalUnrealizedPnlUsd: number;
+	totalEquityUsd: number;
 }
 
 export interface PerpetualsVaultObject {

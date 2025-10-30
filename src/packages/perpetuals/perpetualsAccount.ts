@@ -699,9 +699,10 @@ export class PerpetualsAccount extends Caller {
 		indexPrice: number;
 		collateralPrice: number;
 	}) {
-		return this.getPlaceMarketOrderTx({
-			...this.closePositionTxInputs(inputs),
-		});
+		throw new Error("TODO");
+		// return this.getPlaceMarketOrderTx({
+		// 	...this.closePositionTxInputs(inputs),
+		// });
 	}
 
 	// =========================================================================
@@ -1041,269 +1042,6 @@ export class PerpetualsAccount extends Caller {
 	// }
 
 	// =========================================================================
-	//  Calculations
-	// =========================================================================
-
-	public calcFreeCollateralForPosition = (inputs: {
-		market: PerpetualsMarket;
-		indexPrice: number;
-		collateralPrice: number;
-		position?: PerpetualsPosition;
-	}): number => {
-		const marketId = inputs.market.marketId;
-		const position =
-			inputs.position ??
-			this.positionForMarketId({ marketId }) ??
-			inputs.market.emptyPosition();
-
-		const funding = this.calcUnrealizedFundingsForPosition(inputs);
-		const { pnl, minInitialMargin } =
-			this.calcPnLAndMarginForPosition(inputs);
-
-		let collateralUsd = position.collateral * inputs.collateralPrice;
-
-		collateralUsd += funding;
-
-		let cappedMargin;
-		if (pnl < 0) {
-			cappedMargin = collateralUsd + pnl;
-		} else {
-			cappedMargin = collateralUsd;
-		}
-
-		if (cappedMargin >= minInitialMargin) {
-			return (cappedMargin - minInitialMargin) / inputs.collateralPrice;
-		} else return 0;
-	};
-
-	public calcMarginRatioAndLeverageForPosition = (inputs: {
-		market: PerpetualsMarket;
-		indexPrice: number;
-		collateralPrice: number;
-		position?: PerpetualsPosition;
-	}): {
-		marginRatio: number;
-		leverage: number;
-	} => {
-		const { market, indexPrice, collateralPrice } = inputs;
-		const marketId = market.marketId;
-		const position =
-			inputs.position ??
-			this.positionForMarketId({ marketId }) ??
-			market.emptyPosition();
-
-		const funding = this.calcUnrealizedFundingsForPosition({
-			market,
-			position,
-		});
-		const collateralUsd = position?.collateral * collateralPrice + funding;
-
-		const { pnl, netAbsBaseValue } = this.calcPnLAndMarginForPosition({
-			market,
-			indexPrice,
-			position,
-		});
-
-		const marginRatio =
-			netAbsBaseValue === 0 ? 0 : (collateralUsd + pnl) / netAbsBaseValue;
-		const leverage = marginRatio === 0 ? 0 : 1 / marginRatio;
-
-		return {
-			marginRatio,
-			leverage,
-		};
-	};
-
-	public calcUnrealizedFundings = (inputs: {
-		markets: PerpetualsMarket[];
-	}): number => {
-		let totalFunding = 0;
-
-		inputs.markets.forEach((market) => {
-			totalFunding += this.calcUnrealizedFundingsForPosition({
-				market,
-			});
-		});
-
-		return totalFunding;
-	};
-
-	public calcUnrealizedFundingsForPosition = (inputs: {
-		market: PerpetualsMarket;
-		position?: PerpetualsPosition;
-	}): number => {
-		const marketId = inputs.market.marketId;
-
-		const position =
-			inputs.position ??
-			this.positionForMarketId({ marketId }) ??
-			inputs.market.emptyPosition();
-
-		const baseAmount = position.baseAssetAmount;
-		const isLong = Math.sign(baseAmount);
-
-		if (isLong < 0) {
-			const fundingShort = position.cumFundingRateShort;
-			const marketFundingShort =
-				inputs.market.marketState.cumFundingRateShort;
-			return -baseAmount * (marketFundingShort - fundingShort);
-		} else {
-			const fundingLong = position.cumFundingRateLong;
-			const marketFundingLong =
-				inputs.market.marketState.cumFundingRateLong;
-			return -baseAmount * (marketFundingLong - fundingLong);
-		}
-	};
-
-	public calcPnLAndMarginForPosition = (inputs: {
-		market: PerpetualsMarket;
-		indexPrice: number;
-		position?: PerpetualsPosition;
-	}): {
-		pnl: number;
-		minInitialMargin: number;
-		minMaintenanceMargin: number;
-		netAbsBaseValue: number;
-	} => {
-		const marketId = inputs.market.marketId;
-		const position =
-			inputs.position ??
-			this.positionForMarketId({ marketId }) ??
-			inputs.market.emptyPosition();
-
-		const marginRatioInitial = 1 / (position.leverage || 1);
-		// const marginRatioInitial = inputs.market.initialMarginRatio();
-		const marginRatioMaintenance =
-			inputs.market.marketParams.marginRatioMaintenance;
-		const baseAssetAmount = position.baseAssetAmount;
-		const quoteAssetAmount = position.quoteAssetNotionalAmount;
-		const bidsQuantity = position.bidsQuantity;
-		const asksQuantity = position.asksQuantity;
-		const pnl = baseAssetAmount * inputs.indexPrice - quoteAssetAmount;
-
-		const netAbs = Math.max(
-			Math.abs(baseAssetAmount + bidsQuantity),
-			Math.abs(baseAssetAmount - asksQuantity)
-		);
-
-		const netAbsBaseValue = netAbs * inputs.indexPrice;
-		const minInitialMargin = netAbsBaseValue * marginRatioInitial;
-		const minMaintenanceMargin = netAbsBaseValue * marginRatioMaintenance;
-
-		return { pnl, minInitialMargin, minMaintenanceMargin, netAbsBaseValue };
-	};
-
-	public calcLiquidationPriceForPosition = (inputs: {
-		market: PerpetualsMarket;
-		collateralPrice: number;
-		position?: PerpetualsPosition;
-	}): number => {
-		const marketId = inputs.market.marketId;
-		const position =
-			inputs.position ??
-			this.positionForMarketId({ marketId }) ??
-			inputs.market.emptyPosition();
-
-		const funding = this.calcUnrealizedFundingsForPosition(inputs);
-
-		const baseAssetAmount = position.baseAssetAmount;
-		const quoteAssetAmount = position.quoteAssetNotionalAmount;
-
-		const numerator =
-			position.collateral * inputs.collateralPrice +
-			funding -
-			quoteAssetAmount;
-
-		const MMR = inputs.market.marketParams.marginRatioMaintenance;
-		const bidsQuantity = position.bidsQuantity;
-		const asksQuantity = position.asksQuantity;
-		const netAbs = Math.max(
-			Math.abs(baseAssetAmount + bidsQuantity),
-			Math.abs(baseAssetAmount - asksQuantity)
-		);
-
-		const denominator = netAbs * MMR - baseAssetAmount;
-		if (!denominator) return 0;
-
-		const liquidationPrice = numerator / denominator;
-		return liquidationPrice <= 0 ? 0 : liquidationPrice;
-	};
-
-	public calcFreeMarginUsdForPosition = (inputs: {
-		market: PerpetualsMarket;
-		indexPrice: number;
-		collateralPrice: number;
-		position?: PerpetualsPosition;
-	}): number => {
-		const marketId = inputs.market.marketId;
-		const position =
-			inputs.position ??
-			this.positionForMarketId({ marketId }) ??
-			inputs.market.emptyPosition();
-
-		const totalFunding = this.calcUnrealizedFundingsForPosition(inputs);
-
-		const { pnl, minInitialMargin } =
-			this.calcPnLAndMarginForPosition(inputs);
-
-		let collateralUsd = position.collateral * inputs.collateralPrice;
-
-		const margin = collateralUsd + totalFunding + pnl;
-
-		if (margin >= minInitialMargin) {
-			return margin - minInitialMargin;
-		} else return 0;
-	};
-
-	public calcAccountState = (inputs: {
-		markets: PerpetualsMarket[];
-		indexPrices: number[];
-		collateralPrice: number;
-	}): {
-		accountEquity: number;
-		totalPnL: number;
-		totalFunding: number;
-		totalCollateralAllocated: number;
-	} => {
-		const zipped = Helpers.zip(inputs.markets, inputs.indexPrices);
-		let accountEquity = 0;
-		let totalPnL = 0;
-		let totalFunding = 0;
-		let totalCollateralAllocated = 0;
-
-		zipped.forEach(([market, indexPrice]) => {
-			const marketId = market.marketId;
-			const position =
-				this.positionForMarketId({ marketId }) ??
-				market.emptyPosition();
-
-			const funding = this.calcUnrealizedFundingsForPosition({
-				market,
-				position,
-			});
-
-			const { pnl } = this.calcPnLAndMarginForPosition({
-				market,
-				indexPrice,
-				position,
-			});
-
-			let collateralUsd = position.collateral * inputs.collateralPrice;
-
-			totalPnL += pnl;
-			totalFunding += funding;
-			totalCollateralAllocated += collateralUsd;
-			accountEquity += collateralUsd + funding + pnl;
-		});
-		return {
-			accountEquity,
-			totalPnL,
-			totalFunding,
-			totalCollateralAllocated,
-		};
-	};
-
-	// =========================================================================
 	//  Helpers
 	// =========================================================================
 
@@ -1473,63 +1211,63 @@ export class PerpetualsAccount extends Caller {
 		return this.accountCap.objectId;
 	}
 
-	public closePositionTxInputs = (inputs: {
-		size: bigint;
-		market: PerpetualsMarket;
-		orderDatas: PerpetualsOrderData[];
-		indexPrice: number;
-		collateralPrice: number;
-	}): SdkPerpetualsPlaceMarketOrderInputs => {
-		const { size, market, orderDatas, collateralPrice } = inputs;
+	// public closePositionTxInputs = (inputs: {
+	// 	size: bigint;
+	// 	market: PerpetualsMarket;
+	// 	orderDatas: PerpetualsOrderData[];
+	// 	indexPrice: number;
+	// 	collateralPrice: number;
+	// }): SdkPerpetualsPlaceMarketOrderInputs => {
+	// 	const { size, market, orderDatas, collateralPrice } = inputs;
 
-		const marketId = market.marketId;
-		const position =
-			this.positionForMarketId({ marketId }) ?? market.emptyPosition();
+	// 	const marketId = market.marketId;
+	// 	const position =
+	// 		this.positionForMarketId({ marketId }) ?? market.emptyPosition();
 
-		// TODO: move conversion to helper function, since used often
-		const ordersCollateral = Helpers.sum(
-			orderDatas
-				.filter((orderData) => orderData.marketId === market.marketId)
-				.map(
-					(orderData) =>
-						market.calcCollateralUsedForOrder({
-							...inputs,
-							orderData,
-							leverage: position.leverage,
-						}).collateral
-				)
-		);
+	// 	// TODO: move conversion to helper function, since used often
+	// 	const ordersCollateral = Helpers.sum(
+	// 		orderDatas
+	// 			.filter((orderData) => orderData.marketId === market.marketId)
+	// 			.map(
+	// 				(orderData) =>
+	// 					market.calcCollateralUsedForOrder({
+	// 						...inputs,
+	// 						orderData,
+	// 						leverage: position.leverage,
+	// 					}).collateral
+	// 			)
+	// 	);
 
-		const fullPositionCollateralChange =
-			Math.max(
-				this.calcFreeMarginUsdForPosition(inputs) / collateralPrice -
-					ordersCollateral *
-						(1 -
-							PerpetualsAccount.constants
-								.closePositionMarginOfError),
-				0
-			) * -1;
+	// 	const fullPositionCollateralChange =
+	// 		Math.max(
+	// 			this.calcFreeMarginUsdForPosition(inputs) / collateralPrice -
+	// 				ordersCollateral *
+	// 					(1 -
+	// 						PerpetualsAccount.constants
+	// 							.closePositionMarginOfError),
+	// 			0
+	// 		) * -1;
 
-		// NOTE: is this safe / correct ?
-		const collateralChange =
-			Number(fullPositionCollateralChange) *
-			(Number(size) /
-				Casting.Fixed.fixedOneN9 /
-				position.baseAssetAmount);
+	// 	// NOTE: is this safe / correct ?
+	// 	const collateralChange =
+	// 		Number(fullPositionCollateralChange) *
+	// 		(Number(size) /
+	// 			Casting.Fixed.fixedOneN9 /
+	// 			position.baseAssetAmount);
 
-		const positionSide = Perpetuals.positionSide(position);
-		return {
-			size,
-			marketId,
-			collateralChange,
-			// leverage: position.leverage || 1,
-			// leverage: undefined,
-			side:
-				positionSide === PerpetualsOrderSide.Bid
-					? PerpetualsOrderSide.Ask
-					: PerpetualsOrderSide.Bid,
-			// hasPosition: this.positionForMarketId({ marketId }) !== undefined,
-			reduceOnly: true,
-		};
-	};
+	// 	const positionSide = Perpetuals.positionSide(position);
+	// 	return {
+	// 		size,
+	// 		marketId,
+	// 		collateralChange,
+	// 		// leverage: position.leverage || 1,
+	// 		// leverage: undefined,
+	// 		side:
+	// 			positionSide === PerpetualsOrderSide.Bid
+	// 				? PerpetualsOrderSide.Ask
+	// 				: PerpetualsOrderSide.Bid,
+	// 		// hasPosition: this.positionForMarketId({ marketId }) !== undefined,
+	// 		reduceOnly: true,
+	// 	};
+	// };
 }

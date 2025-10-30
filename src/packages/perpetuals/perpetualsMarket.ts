@@ -250,27 +250,14 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	public nextFundingTimeMs = (): Timestamp => {
-		const fundingFrequencyMs = Number(this.marketParams.fundingFrequencyMs);
-		const lastFundingIntervalNumber = Math.floor(
-			this.marketState.fundingLastUpdateTimestamp / fundingFrequencyMs
-		);
-		return (lastFundingIntervalNumber + 1) * fundingFrequencyMs;
+		return this.marketState.nextFundingTimestamp;
 	};
 
 	// The funding rate as the difference between book and index TWAPs relative to the index price,
 	// scaled by the funding period adjustment:
 	// (bookTwap - indexTwap) / indexPrice * (fundingFrequency / fundingPeriod)
-	//
-	// To get the rate as a percentage, multiply the output by 100.
-	public estimatedFundingRate = (inputs: { indexPrice: number }): number => {
-		const { indexPrice } = inputs;
-
-		const premiumTwap = this.marketState.premiumTwap;
-		const relativePremium = premiumTwap / indexPrice;
-		const periodAdjustment =
-			Number(this.marketParams.fundingFrequencyMs) /
-			Number(this.marketParams.fundingPeriodMs);
-		return relativePremium * periodAdjustment;
+	public estimatedFundingRate = (): Percentage => {
+		return this.marketState.estimatedFundingRate;
 	};
 
 	public calcCollateralUsedForOrder = (inputs: {
@@ -415,6 +402,13 @@ export class PerpetualsMarket extends Caller {
 			makerFee: 1, // 100%
 			takerFee: 1, // 100%
 			leverage: 1,
+			entryPrice: 0,
+			freeCollateral: 0,
+			freeMarginUsd: 0,
+			liquidationPrice: 0,
+			marginRatio: 1,
+			unrealizedFundingsUsd: 0,
+			unrealizedPnlUsd: 0,
 		};
 	};
 
