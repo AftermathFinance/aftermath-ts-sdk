@@ -194,7 +194,7 @@ export class Aftermath extends Caller {
 
 	/**
 	 * Returns an instance of `ReferralVault` for referral-based interactions in the protocol.
-	 * @deprecated Use `Referral` instead
+	 * @deprecated Use `Referrals` instead
 	 */
 	public ReferralVault = () => new ReferralVault(this.config);
 
