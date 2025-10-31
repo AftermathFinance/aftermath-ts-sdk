@@ -13,6 +13,8 @@ import {
 	ApiReferralsIsRefCodeTakenResponse,
 	ApiReferralsGetLinkedRefCodeBody,
 	ApiReferralsGetLinkedRefCodeResponse,
+	SuiAddress,
+	Timestamp,
 } from "../../types";
 
 export class Referrals extends Caller {
@@ -37,13 +39,32 @@ export class Referrals extends Caller {
 	public async getRefCode(
 		inputs: ApiReferralsGetRefCodeBody
 	): Promise<ApiReferralsGetRefCodeResponse> {
-		return this.fetchApi("ref-code", inputs);
+		// TODO: handle this better
+		const res: {
+			address: SuiAddress;
+			refCode: string | null;
+		} = await this.fetchApi("ref-code", inputs);
+		return {
+			...res,
+			refCode: res.refCode === null ? undefined : res.refCode,
+		};
 	}
 
 	public async getLinkedRefCode(
 		inputs: ApiReferralsGetLinkedRefCodeBody
 	): Promise<ApiReferralsGetLinkedRefCodeResponse> {
-		return this.fetchApi("linked-ref-code", inputs);
+		// TODO: handle this better
+		const res: {
+			address: SuiAddress;
+			linkedRefCode: string | null;
+			linkedAt: Timestamp | null;
+		} = await this.fetchApi("linked-ref-code", inputs);
+		return {
+			...res,
+			linkedRefCode:
+				res.linkedRefCode === null ? undefined : res.linkedRefCode,
+			linkedAt: res.linkedAt === null ? undefined : res.linkedAt,
+		};
 	}
 
 	public async getReferees(
