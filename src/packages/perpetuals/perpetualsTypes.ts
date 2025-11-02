@@ -127,6 +127,7 @@ export interface PerpetualsPosition {
 	makerFee: number;
 	takerFee: number;
 	leverage: number;
+	collateralUsd: number;
 	marginRatio: number;
 	freeMarginUsd: number;
 	freeCollateral: number;
@@ -285,11 +286,13 @@ export interface PerpetualsAccountData {
 }
 
 export interface PerpetualsAccountObject {
-	positions: PerpetualsPosition[];
+	accountId: PerpetualsAccountId;
+	totalEquityUsd: number;
 	availableCollateral: number;
+	availableCollateralUsd: number;
 	totalUnrealizedFundingsUsd: number;
 	totalUnrealizedPnlUsd: number;
-	totalEquityUsd: number;
+	positions: PerpetualsPosition[];
 }
 
 export interface PerpetualsVaultObject {
@@ -1603,3 +1606,150 @@ export type SdkPerpetualsCancelOrdersPreviewInputs = Omit<
 	ApiPerpetualsPreviewCancelOrdersBody,
 	"collateralCoinType" | "accountId"
 >;
+
+// =========================================================================
+//  Websocket
+// =========================================================================
+
+// /ws-updates
+
+export type PerpetualsWsSubscriptionAction = "Subscribe" | "Unsubscribe";
+
+export interface PerpetualsWsMarketSubscriptionType {
+	Market: {
+		ch_id: PerpetualsMarketId;
+	};
+}
+
+export interface PerpetualsWsUserSubscriptionType {
+	User: {
+		// NOTE: this should be string in the future bc of overflow
+		account_id: number; // u64
+		with_stop_orders:
+			| {
+					wallet_address: SuiAddress;
+					bytes: string;
+					signature: string;
+			  }
+			| undefined;
+	};
+}
+
+export interface PerpetualsWsOracleSubscriptionType {
+	Oracle: {
+		ch_id: PerpetualsMarketId;
+	};
+}
+
+export interface PerpetualsWsOrderbookSubscriptionType {
+	Orderbook: {
+		ch_id: PerpetualsMarketId;
+	};
+}
+
+export interface PerpetualsWsTradesSubscriptionType {
+	Trades: {
+		ch_id: PerpetualsMarketId;
+	};
+}
+
+export type PerpetualsWsSubscriptionType =
+	| PerpetualsWsMarketSubscriptionType
+	| PerpetualsWsUserSubscriptionType
+	| PerpetualsWsOracleSubscriptionType
+	| PerpetualsWsOrderbookSubscriptionType
+	| PerpetualsWsTradesSubscriptionType;
+
+export interface PerpetualsWsSubscriptionMessage {
+	action: PerpetualsWsSubscriptionAction;
+	subscription_type: PerpetualsWsSubscriptionType;
+}
+
+export interface PerpetualsWsMarketResponseMessage {
+	Market: {
+		ch_id: PerpetualsMarketId;
+		pkg_id: ObjectId;
+		ch: ClearingHouse;
+		estimated_funding_rate: number;
+		next_funding_timestamp_ms: number;
+	};
+}
+
+export interface PerpetualsWsUserResponseMessage {
+	User: {
+		account_id: string; // u64
+		account: {
+			total_equity_usd: number;
+			available_collateral: number;
+			total_unrealized_fundings_usd: number;
+			total_unrealized_pnl_usd: number;
+		};
+		positions: Record<
+			PerpetualsMarketId,
+			{
+				position: IPerpsPosition; // TODO: collateral used by each order
+				margin_ratio: number;
+				free_margin_usd: number;
+				free_collateral: number;
+				unrealized_fundings_usd: number;
+				unrealized_pnl_usd: number;
+				entry_price: number;
+				liquidation_price: number;
+			}
+		>;
+		stop_orders: Record<PerpetualsMarketId, StopOrderResponse[]>;
+	};
+}
+
+export interface PerpetualsWsOracleResponseMessage {
+	Oracle: {
+		price_id: ObjectId;
+		price: number;
+		is_base_feed: boolean;
+	};
+}
+
+export interface PerpetualsWsOrderbookResponseMessage {
+	Orderbook: {
+		ch_id: PerpetualsMarketId;
+		// (price level, amount delta) pairs.
+		asks: [number, number][];
+		// (price level, amount delta) pairs.
+		bids: [number, number][];
+		nonce: string; // u64
+	};
+}
+
+export interface PerpetualsWsTradesResponseMessage {
+	Trades: {
+		ch_id: PerpetualsMarketId;
+		trade_infos: {
+			timestamp_ms: Timestamp;
+			tx_digest: TransactionDigest;
+			is_ask: boolean;
+			size: number;
+			price: number;
+		}[];
+	};
+}
+
+export type PerpetualsWsResponseMessage =
+	| PerpetualsWsMarketResponseMessage
+	| PerpetualsWsUserResponseMessage
+	| PerpetualsWsOracleResponseMessage
+	| PerpetualsWsOrderbookResponseMessage
+	| PerpetualsWsTradesResponseMessage;
+
+// /ws/market-candles/{ch_id}/{interval_ms}
+
+export interface PerpetualsWsCandleResponseMessage {
+	ch_id: PerpetualsMarketId;
+	last_candle: {
+		timestamp_ms: Timestamp;
+		open: number;
+		close: number;
+		high: number;
+		low: number;
+		volume: number;
+	};
+}
