@@ -250,14 +250,17 @@ export class PerpetualsMarket extends Caller {
 	};
 
 	public nextFundingTimeMs = (): Timestamp => {
-		return this.marketState.nextFundingTimestamp;
+		return this.marketData.nextFundingTimestampMs >
+			BigInt(Number.MAX_SAFE_INTEGER)
+			? Number.MAX_SAFE_INTEGER
+			: Number(this.marketData.nextFundingTimestampMs);
 	};
 
 	// The funding rate as the difference between book and index TWAPs relative to the index price,
 	// scaled by the funding period adjustment:
 	// (bookTwap - indexTwap) / indexPrice * (fundingFrequency / fundingPeriod)
 	public estimatedFundingRate = (): Percentage => {
-		return this.marketState.estimatedFundingRate;
+		return this.marketData.estimatedFundingRate;
 	};
 
 	public calcCollateralUsedForOrder = (inputs: {
@@ -389,8 +392,9 @@ export class PerpetualsMarket extends Caller {
 	public emptyPosition = (): PerpetualsPosition => {
 		return {
 			marketId: this.marketId,
-			collateralCoinType: this.marketData.collateralCoinType,
+			// collateralCoinType: this.marketData.collateralCoinType,
 			collateral: 0,
+			collateralUsd: 0,
 			baseAssetAmount: 0,
 			quoteAssetNotionalAmount: 0,
 			cumFundingRateLong: this.marketData.marketState.cumFundingRateLong,

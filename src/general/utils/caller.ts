@@ -243,4 +243,93 @@ export class Caller {
 	protected setAccessToken = (accessToken: UniqueId) => {
 		this.config.accessToken = accessToken;
 	};
+
+	/**
+	 * Open a generic websocket stream.
+	 * - Automatically parses inbound JSON via `Helpers.parseJsonWithBigint`.
+	 * - Automatically enables BigInt -> "123n" serialization (same one-liner as `fetchApi`).
+	 */
+	protected openWsStream<WsRequestMessage, WsResponseMessage>(args: {
+		path: Url;
+		onMessage: (message: WsResponseMessage) => void;
+		onOpen?: (ev: Event) => void;
+		onError?: (ev: Event) => void;
+		onClose?: (ev: CloseEvent) => void;
+	}) {
+		const { path, onMessage, onOpen, onError, onClose } = args;
+
+		/**
+		 * Build a WS URL using the same base the HTTP calls use, plus this.apiEndpoint and apiUrlPrefix.
+		 * Mirrors `urlForApiCall`, but swaps http(s) -> ws(s).
+		 */
+		const buildWsUrl = (path: string): Url => {
+			if (this.apiBaseUrl === undefined) {
+				throw new Error("no apiBaseUrl: unable to open websocket");
+			}
+
+			// Normalize base & path
+			const baseHttp = this.apiBaseUrl.replace(/\/+$/, "");
+			const baseWs = baseHttp.replace(/^http(s?):\/\//, "ws$1://");
+
+			// Prefix with endpoint + service prefix (same pattern as fetch)
+			const prefix = `${this.apiEndpoint}/${this.apiUrlPrefix}`;
+			const normalizedPrefix = prefix.replace(/\/+$/, "");
+			const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+
+			return `${baseWs}/${normalizedPrefix}${
+				normalizedPath ? "/" + normalizedPath : ""
+			}`;
+		};
+
+		const url = buildWsUrl(path);
+		const ws = new WebSocket(url);
+
+		ws.addEventListener("open", (ev) => onOpen?.(ev));
+		ws.addEventListener("error", (ev) => onError?.(ev));
+		ws.addEventListener("close", (ev) => onClose?.(ev));
+
+		ws.addEventListener("message", (ev) => {
+			// Auto BigInt parsing for any "123n" encountered
+			try {
+				const data = Helpers.parseJsonWithBigint(
+					ev.data as string
+				) as WsResponseMessage;
+				onMessage?.(data);
+			} catch {
+				// Optionally surface raw text here
+			}
+		});
+
+		// Match fetchApi’s BigInt JSON behavior (install on-demand before send)
+		const enableBigIntJson = () => {
+			(() => {
+				(BigInt.prototype as any).toJSON = function () {
+					return this.toString() + "n";
+				};
+			})();
+		};
+
+		const send = (value: WsRequestMessage) => {
+			if (ws.readyState !== WebSocket.OPEN)
+				throw new Error("WebSocket is not open");
+			enableBigIntJson();
+			ws.send(JSON.stringify(value));
+		};
+
+		// const sendRaw = (raw: string) => {
+		// 	if (ws.readyState !== WebSocket.OPEN)
+		// 		throw new Error("WebSocket is not open");
+		// 	// If caller already stringified with BigInt, assume they handled JSON shape
+		// 	ws.send(raw);
+		// };
+
+		const close = () => ws.close();
+
+		return {
+			ws,
+			send,
+			// sendRaw,
+			close,
+		};
+	}
 }

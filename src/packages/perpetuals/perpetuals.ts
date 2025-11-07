@@ -36,6 +36,9 @@ import {
 	PerpetualsVaultCapExtended,
 	PerpetualsOrderPrice,
 	ApiTransactionResponse,
+	PerpetualsWsUpdatesSubscriptionMessage,
+	PerpetualsWsUpdatesResponseMessage,
+	PerpetualsWsCandleResponseMessage,
 } from "../../types";
 import { PerpetualsMarket } from "./perpetualsMarket";
 import { PerpetualsAccount } from "./perpetualsAccount";
@@ -474,15 +477,213 @@ export class Perpetuals extends Caller {
 	//  Calculations
 	// =========================================================================
 
-	public static calcEntryPrice(inputs: {
-		baseAssetAmount: number;
-		quoteAssetNotionalAmount: number;
-	}): number {
-		const { baseAssetAmount, quoteAssetNotionalAmount } = inputs;
+	// public static calcEntryPrice(inputs: {
+	// 	baseAssetAmount: number;
+	// 	quoteAssetNotionalAmount: number;
+	// }): number {
+	// 	const { baseAssetAmount, quoteAssetNotionalAmount } = inputs;
 
-		const denominator = baseAssetAmount;
-		if (!denominator) return 0;
+	// 	const denominator = baseAssetAmount;
+	// 	if (!denominator) return 0;
 
-		return Math.abs(quoteAssetNotionalAmount / denominator);
+	// 	return Math.abs(quoteAssetNotionalAmount / denominator);
+	// }
+
+	// =========================================================================
+	//  Websocket
+	// =========================================================================
+
+	/**
+	 * Open the main updates websocket: /perpetuals/ws/updates
+	 *
+	 * @returns controller with perps-specific subscribe/unsubscribe helpers
+	 */
+	public openUpdatesWebsocketStream(args: {
+		onMessage: (env: PerpetualsWsUpdatesResponseMessage) => void;
+		onOpen?: (ev: Event) => void;
+		onError?: (ev: Event) => void;
+		onClose?: (ev: CloseEvent) => void;
+	}) {
+		const { onMessage, onOpen, onError, onClose } = args;
+
+		const ctl = this.openWsStream<
+			PerpetualsWsUpdatesSubscriptionMessage,
+			PerpetualsWsUpdatesResponseMessage
+		>({
+			path: "ws/updates",
+			onMessage,
+			onOpen,
+			onError,
+			onClose,
+		});
+
+		// ---- subscribe/unsubscribe helpers ----
+		const subscribeMarket = ({
+			marketId,
+		}: {
+			marketId: PerpetualsMarketId;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { market: { marketId } },
+			});
+
+		const unsubscribeMarket = ({
+			marketId,
+		}: {
+			marketId: PerpetualsMarketId;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { market: { marketId } },
+			});
+
+		const subscribeUser = ({
+			accountId,
+			withStopOrders,
+		}: {
+			accountId: PerpetualsAccountId;
+			withStopOrders:
+				| {
+						walletAddress: SuiAddress;
+						bytes: string;
+						signature: string;
+				  }
+				| undefined;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { user: { accountId, withStopOrders } },
+			});
+
+		const unsubscribeUser = ({
+			accountId,
+			withStopOrders,
+		}: {
+			accountId: PerpetualsAccountId;
+			withStopOrders:
+				| {
+						walletAddress: SuiAddress;
+						bytes: string;
+						signature: string;
+				  }
+				| undefined;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { user: { accountId, withStopOrders } },
+			});
+
+		const subscribeOracle = ({
+			marketId,
+		}: {
+			marketId: PerpetualsMarketId;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { oracle: { marketId } },
+			});
+
+		const unsubscribeOracle = ({
+			marketId,
+		}: {
+			marketId: PerpetualsMarketId;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { oracle: { marketId } },
+			});
+
+		const subscribeOrderbook = ({
+			marketId,
+		}: {
+			marketId: PerpetualsMarketId;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { orderbook: { marketId } },
+			});
+
+		const unsubscribeOrderbook = ({
+			marketId,
+		}: {
+			marketId: PerpetualsMarketId;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { orderbook: { marketId } },
+			});
+
+		const subscribeTrades = ({
+			marketId,
+		}: {
+			marketId: PerpetualsMarketId;
+		}) =>
+			ctl.send({
+				action: "subscribe",
+				subscriptionType: { trades: { marketId } },
+			});
+
+		const unsubscribeTrades = ({
+			marketId,
+		}: {
+			marketId: PerpetualsMarketId;
+		}) =>
+			ctl.send({
+				action: "unsubscribe",
+				subscriptionType: { trades: { marketId } },
+			});
+
+		return {
+			ws: ctl.ws,
+			subscribeMarket,
+			unsubscribeMarket,
+			subscribeUser,
+			unsubscribeUser,
+			subscribeOracle,
+			unsubscribeOracle,
+			subscribeOrderbook,
+			unsubscribeOrderbook,
+			subscribeTrades,
+			unsubscribeTrades,
+			close: ctl.close,
+		};
+	}
+
+	/**
+	 * Open market-candles websocket for a single market/interval:
+	 * /perpetuals/ws/market-candles/{market_id}/{interval_ms}
+	 */
+	public openMarketCandlesWebsocketStream(args: {
+		marketId: PerpetualsMarketId;
+		intervalMs: number;
+		onMessage: (msg: PerpetualsWsCandleResponseMessage) => void;
+		onOpen?: (ev: Event) => void;
+		onError?: (ev: Event) => void;
+		onClose?: (ev: CloseEvent) => void;
+	}) {
+		const { marketId, intervalMs, onMessage, onOpen, onError, onClose } =
+			args;
+
+		const path = `ws/market-candles/${encodeURIComponent(
+			marketId
+		)}/${intervalMs}`;
+
+		// Generic handler already BigInt-parses any "123n" in payloads
+		const ctl = this.openWsStream<
+			undefined,
+			PerpetualsWsCandleResponseMessage
+		>({
+			path,
+			onMessage,
+			onOpen,
+			onError,
+			onClose,
+		});
+
+		return {
+			ws: ctl.ws,
+			close: ctl.close,
+		};
 	}
 }
